@@ -82,9 +82,10 @@ export async function issueTokenPair(userId: string): Promise<TokenPair> {
 
 /** Atomically rotates a website refresh family and issues a fresh access token. */
 export async function refreshTokenPair(
-  refreshToken: string
+  refreshToken: string,
+  channel: "website",
 ): Promise<TokenPair | null> {
-  const rotation = await rotateRefreshTokenForChannel(refreshToken, "website");
+  const rotation = await rotateRefreshTokenForChannel(refreshToken, channel);
   if (!rotation) return null;
 
   const accessToken = await signAccessTokenForUser(rotation.userId);
@@ -97,7 +98,7 @@ export async function refreshTokenPair(
 export async function refreshAccessToken(
   refreshToken: string
 ): Promise<string | null> {
-  return (await refreshTokenPair(refreshToken))?.accessToken ?? null;
+  return (await refreshTokenPair(refreshToken, "website"))?.accessToken ?? null;
 }
 
 export async function revokeRefreshToken(

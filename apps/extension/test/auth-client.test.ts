@@ -34,6 +34,7 @@ import {
 import {
   AUTH_TOKENS_KEY,
   AUTH_TOKENS_STORAGE_KEY,
+  createAuthSessionStorageAuthority,
   type ExtensionAuthTokens,
   isSameExtensionAuthSession,
   normalizeAuthenticatedUser,
@@ -277,25 +278,26 @@ describe("extension auth client", () => {
   });
 
   it("keeps storage but rejects actions when refresh is temporarily unavailable", async () => {
-    const clearStored = vi.fn(async () => undefined);
-    const setStored = vi.fn(async () => undefined);
+    const commitIfCurrent = vi.fn();
 
     await expect(
       refreshExtensionSession({
         getStored: async () => storedTokens,
         requestRefresh: async () => ({ kind: "unavailable", status: 503 }),
         resolveUser: async () => null,
-        setStored,
-        clearStored,
+        commitIfCurrent,
       }),
     ).rejects.toBeInstanceOf(ExtensionAuthTemporarilyUnavailableError);
 
-    expect(clearStored).not.toHaveBeenCalled();
-    expect(setStored).not.toHaveBeenCalled();
+    expect(commitIfCurrent).not.toHaveBeenCalled();
   });
 
   it("clears the cached session only when the refresh token is invalid", async () => {
-    const clearStored = vi.fn(async () => undefined);
+    const commitIfCurrent = vi.fn(async () => ({
+      committed: true,
+      current: null,
+      previous: storedTokens,
+    }));
     const clearAccountData = vi.fn(async () => undefined);
 
     await expect(
@@ -303,13 +305,12 @@ describe("extension auth client", () => {
         getStored: async () => storedTokens,
         requestRefresh: async () => ({ kind: "invalid" }),
         resolveUser: async () => null,
-        setStored: vi.fn(async () => undefined),
-        clearStored,
+        commitIfCurrent,
         clearAccountData,
       }),
     ).resolves.toBeNull();
 
-    expect(clearStored).toHaveBeenCalledTimes(1);
+    expect(commitIfCurrent).toHaveBeenCalledWith(storedTokens, null);
     expect(clearAccountData).toHaveBeenCalledWith(storedTokens.user.id);
   });
 
@@ -321,13 +322,16 @@ describe("extension auth client", () => {
           resolveRefresh = resolve;
         }),
     );
-    const setStored = vi.fn(async () => undefined);
+    const commitIfCurrent = vi.fn(async (_expected, replacement) => ({
+      committed: true,
+      current: replacement,
+      previous: storedTokens,
+    }));
     const dependencies = {
       getStored: async () => storedTokens,
       requestRefresh,
       resolveUser: async () => storedTokens.user,
-      setStored,
-      clearStored: vi.fn(async () => undefined),
+      commitIfCurrent,
     };
 
     const first = refreshExtensionSession(dependencies);
@@ -339,52 +343,50 @@ describe("extension auth client", () => {
       { ...storedTokens, accessToken: "access-2" },
       { ...storedTokens, accessToken: "access-2" },
     ]);
-    expect(setStored).toHaveBeenCalledTimes(1);
+    expect(commitIfCurrent).toHaveBeenCalledTimes(1);
   });
 
   it("does not restore a session that was cleared while refresh was in flight", async () => {
-    let storedReadCount = 0;
-    const setStored = vi.fn(async () => undefined);
+    const commitIfCurrent = vi.fn(async () => ({
+      committed: false,
+      current: null,
+      previous: null,
+    }));
 
     await expect(
       refreshExtensionSession({
-        getStored: async () => {
-          storedReadCount += 1;
-          return storedReadCount === 1 ? storedTokens : null;
-        },
+        getStored: async () => storedTokens,
         requestRefresh: async () => ({ kind: "success", accessToken: "access-2" }),
         resolveUser: async () => storedTokens.user,
-        setStored,
-        clearStored: vi.fn(async () => undefined),
+        commitIfCurrent,
       }),
     ).resolves.toBeNull();
 
-    expect(setStored).not.toHaveBeenCalled();
+    expect(commitIfCurrent).toHaveBeenCalledTimes(1);
   });
 
   it("does not restore a session changed while refreshed user data was loading", async () => {
-    let storedReadCount = 0;
     const replacement = {
       ...storedTokens,
       refreshToken: "replacement-refresh",
       user: { ...storedTokens.user, id: "user-2" },
     };
-    const setStored = vi.fn(async () => undefined);
+    const commitIfCurrent = vi.fn(async () => ({
+      committed: false,
+      current: replacement,
+      previous: replacement,
+    }));
 
     await expect(
       refreshExtensionSession({
-        getStored: async () => {
-          storedReadCount += 1;
-          return storedReadCount < 3 ? storedTokens : replacement;
-        },
+        getStored: async () => storedTokens,
         requestRefresh: async () => ({ kind: "success", accessToken: "access-2" }),
         resolveUser: async () => storedTokens.user,
-        setStored,
-        clearStored: vi.fn(async () => undefined),
+        commitIfCurrent,
       }),
     ).resolves.toBe(replacement);
 
-    expect(setStored).not.toHaveBeenCalled();
+    expect(commitIfCurrent).toHaveBeenCalledTimes(1);
   });
 
   it("uses both predecessor token and account for refresh compare-and-set", async () => {
@@ -392,46 +394,124 @@ describe("extension auth client", () => {
       ...storedTokens,
       user: { ...storedTokens.user, id: "user-2" },
     };
-    let storedReadCount = 0;
-    const clearStored = vi.fn(async () => undefined);
-    const setStored = vi.fn(async () => undefined);
+    const commitIfCurrent = vi.fn(async () => ({
+      committed: false,
+      current: replacement,
+      previous: replacement,
+    }));
 
     await expect(
       refreshExtensionSession({
-        getStored: async () => {
-          storedReadCount += 1;
-          return storedReadCount === 1 ? storedTokens : replacement;
-        },
+        getStored: async () => storedTokens,
         requestRefresh: async () => ({ kind: "invalid" }),
         resolveUser: async () => storedTokens.user,
-        setStored,
-        clearStored,
+        commitIfCurrent,
       }),
     ).resolves.toBe(replacement);
 
-    expect(clearStored).not.toHaveBeenCalled();
-    expect(setStored).not.toHaveBeenCalled();
+    expect(commitIfCurrent).toHaveBeenCalledWith(storedTokens, null);
     expect(isSameExtensionAuthSession(storedTokens, replacement)).toBe(false);
     expect(isSameExtensionAuthSession(storedTokens, { ...storedTokens })).toBe(true);
   });
 
+  it("serializes a newer sign-in behind an in-flight conditional refresh persist", async () => {
+    const refreshed = {
+      ...storedTokens,
+      accessToken: "old-account-access-2",
+      refreshToken: "old-account-refresh-2",
+    };
+    const replacement = {
+      ...storedTokens,
+      accessToken: "new-account-access",
+      refreshToken: "new-account-refresh",
+      user: { ...storedTokens.user, id: "user-2" },
+    };
+    let current: ExtensionAuthTokens | null = storedTokens;
+    let releaseOldPersist: (() => void) | undefined;
+    let markOldPersistStarted: (() => void) | undefined;
+    const oldPersistStarted = new Promise<void>((resolve) => {
+      markOldPersistStarted = resolve;
+    });
+    const oldPersistGate = new Promise<void>((resolve) => {
+      releaseOldPersist = resolve;
+    });
+    const authority = createAuthSessionStorageAuthority({
+      get: async () => current,
+      set: async (tokens) => {
+        if (tokens.refreshToken === refreshed.refreshToken) {
+          markOldPersistStarted?.();
+          await oldPersistGate;
+        }
+        current = tokens;
+      },
+      remove: async () => {
+        current = null;
+      },
+    });
+
+    const oldCommit = authority.commitIfCurrent(storedTokens, refreshed);
+    await oldPersistStarted;
+    const newerSignIn = authority.replace(replacement);
+    releaseOldPersist?.();
+    await Promise.all([oldCommit, newerSignIn]);
+
+    expect(current).toEqual(replacement);
+  });
+
+  it("serializes a newer sign-in behind an in-flight conditional invalid clear", async () => {
+    const replacement = {
+      ...storedTokens,
+      accessToken: "new-account-access",
+      refreshToken: "new-account-refresh",
+      user: { ...storedTokens.user, id: "user-2" },
+    };
+    let current: ExtensionAuthTokens | null = storedTokens;
+    let releaseOldClear: (() => void) | undefined;
+    let markOldClearStarted: (() => void) | undefined;
+    const oldClearStarted = new Promise<void>((resolve) => {
+      markOldClearStarted = resolve;
+    });
+    const oldClearGate = new Promise<void>((resolve) => {
+      releaseOldClear = resolve;
+    });
+    const authority = createAuthSessionStorageAuthority({
+      get: async () => current,
+      set: async (tokens) => {
+        current = tokens;
+      },
+      remove: async () => {
+        markOldClearStarted?.();
+        await oldClearGate;
+        current = null;
+      },
+    });
+
+    const oldClear = authority.commitIfCurrent(storedTokens, null);
+    await oldClearStarted;
+    const newerSignIn = authority.replace(replacement);
+    releaseOldClear?.();
+    await Promise.all([oldClear, newerSignIn]);
+
+    expect(current).toEqual(replacement);
+  });
+
   it("does not restore a session that was cleared during user validation", async () => {
-    let storedReadCount = 0;
-    const setStored = vi.fn(async () => undefined);
+    const commitIfCurrent = vi.fn(async () => ({
+      committed: false,
+      current: null,
+      previous: null,
+    }));
 
     await expect(
       getCurrentExtensionSession({
-        getStored: async () => {
-          storedReadCount += 1;
-          return storedReadCount === 1 ? storedTokens : null;
-        },
+        getStored: async () => storedTokens,
         resolveUser: async () => storedTokens.user,
-        setStored,
+        commitIfCurrent,
         refresh: async () => storedTokens,
       }),
     ).resolves.toBeNull();
 
-    expect(setStored).not.toHaveBeenCalled();
+    expect(commitIfCurrent).toHaveBeenCalledTimes(1);
   });
 
   it("tries one refresh and then silent website adoption for an invalid family", async () => {
@@ -447,7 +527,7 @@ describe("extension auth client", () => {
       getCurrentExtensionSession({
         getStored: async () => storedTokens,
         resolveUser,
-        setStored: vi.fn(async () => undefined),
+        commitIfCurrent: vi.fn(),
         refresh,
         adoptSilently,
       }),
@@ -472,19 +552,22 @@ describe("extension auth client", () => {
       accessToken: "access-2",
       refreshToken: "refresh-2",
     }));
-    const setStored = vi.fn(async () => undefined);
+    const commitIfCurrent = vi.fn(async (_expected, replacement) => ({
+      committed: true,
+      current: replacement,
+      previous: storedTokens,
+    }));
 
     const result = await getCurrentExtensionSession({
       getStored: async () => storedTokens,
       resolveUser,
-      setStored,
+      commitIfCurrent,
       refresh: () =>
         refreshExtensionSession({
           getStored: async () => storedTokens,
           requestRefresh,
           resolveUser,
-          setStored,
-          clearStored: vi.fn(async () => undefined),
+          commitIfCurrent,
         }),
       adoptSilently: vi.fn(async () => null),
     });
@@ -496,7 +579,7 @@ describe("extension auth client", () => {
     });
     expect(resolveUser).toHaveBeenCalledTimes(2);
     expect(requestRefresh).toHaveBeenCalledTimes(1);
-    expect(setStored).toHaveBeenCalledTimes(1);
+    expect(commitIfCurrent).toHaveBeenCalledTimes(1);
   });
 
   it("keeps interactive browser auth exclusive to explicit sign-in", async () => {
@@ -530,31 +613,37 @@ describe("extension auth client", () => {
       refreshToken: "replacement-refresh",
       user: { ...storedTokens.user, id: "user-2" },
     };
-    const clearStored = vi.fn(async () => undefined);
+    const clearIfRefreshToken = vi.fn(async () => ({
+      committed: false,
+      current: replacement,
+      previous: replacement,
+    }));
 
     await expect(
       clearExtensionSessionIfCurrent(storedTokens.refreshToken, {
-        getStored: async () => replacement,
-        clearStored,
+        clearIfRefreshToken,
       }),
     ).resolves.toBe(false);
 
-    expect(clearStored).not.toHaveBeenCalled();
+    expect(clearIfRefreshToken).toHaveBeenCalledWith(storedTokens.refreshToken);
   });
 
   it("clears account-scoped data together with the matching session", async () => {
-    const clearStored = vi.fn(async () => undefined);
+    const clearIfRefreshToken = vi.fn(async () => ({
+      committed: true,
+      current: null,
+      previous: storedTokens,
+    }));
     const clearAccountData = vi.fn(async () => undefined);
 
     await expect(
       clearExtensionSessionIfCurrent(storedTokens.refreshToken, {
-        getStored: async () => storedTokens,
-        clearStored,
+        clearIfRefreshToken,
         clearAccountData,
       }),
     ).resolves.toBe(true);
 
-    expect(clearStored).toHaveBeenCalledTimes(1);
+    expect(clearIfRefreshToken).toHaveBeenCalledTimes(1);
     expect(clearAccountData).toHaveBeenCalledWith(storedTokens.user.id);
   });
 

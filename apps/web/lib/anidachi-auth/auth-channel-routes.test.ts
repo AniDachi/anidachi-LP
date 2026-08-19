@@ -13,6 +13,9 @@ type RpcCall = {
 
 async function withMockedRefreshAuthority<T>(
   run: (calls: RpcCall[]) => Promise<T>,
+  rotationResponse: unknown = [
+    { rotation_outcome: "invalid", user_id: null, family_id: null },
+  ],
 ): Promise<T> {
   const previousUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const previousKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -30,9 +33,7 @@ async function withMockedRefreshAuthority<T>(
     calls.push({ name, body });
 
     if (name === "rotate_refresh_token_family_v1") {
-      return Response.json([
-        { rotation_outcome: "invalid", user_id: null, family_id: null },
-      ]);
+      return Response.json(rotationResponse);
     }
     if (name === "revoke_refresh_token_family_v1") {
       return Response.json(true);
@@ -79,6 +80,46 @@ test("website and extension refresh routes send tokens to only their own channel
       ],
     );
   });
+});
+
+test("refresh routes propagate malformed authority output instead of clearing a session", async () => {
+  const malformedResults: unknown[] = [
+    null,
+    [],
+    [
+      { rotation_outcome: "invalid", user_id: null, family_id: null },
+      { rotation_outcome: "invalid", user_id: null, family_id: null },
+    ],
+    [{ rotation_outcome: "unknown", user_id: null, family_id: null }],
+    [{ rotation_outcome: "rotated", user_id: null, family_id: null }],
+  ];
+
+  for (const malformed of malformedResults) {
+    await withMockedRefreshAuthority(
+      async () => {
+        await assert.rejects(
+          websiteRefresh(
+            new NextRequest("http://localhost/api/auth/refresh", {
+              method: "POST",
+              headers: { cookie: "anidachi_refresh_token=website-family-token" },
+            }),
+          ),
+          /Malformed refresh token rotation response/,
+        );
+        await assert.rejects(
+          extensionRefresh(
+            new NextRequest("http://localhost/api/extension/auth/refresh", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ refreshToken: "extension-family-token" }),
+            }),
+          ),
+          /Malformed refresh token rotation response/,
+        );
+      },
+      malformed,
+    );
+  }
 });
 
 test("website and extension logout routes revoke only their own channel", async () => {

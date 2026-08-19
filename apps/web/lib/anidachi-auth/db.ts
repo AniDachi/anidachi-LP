@@ -212,11 +212,56 @@ export type RefreshChannel = "website" | "extension";
 
 export type RefreshRotationOutcome = "rotated" | "reused" | "replayed" | "invalid";
 
-type RefreshRotationRow = {
+export type RefreshRotationRow = {
   rotation_outcome: RefreshRotationOutcome;
   user_id: string | null;
   family_id: string | null;
 };
+
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
+
+function isNullableUuid(value: unknown): value is string | null {
+  return value === null || (typeof value === "string" && UUID_PATTERN.test(value));
+}
+
+export function parseRefreshTokenRotationResult(value: unknown): RefreshRotationRow {
+  if (!Array.isArray(value) || value.length !== 1) {
+    throw new Error("Malformed refresh token rotation response");
+  }
+
+  const row = value[0];
+  if (
+    typeof row !== "object" ||
+    row === null ||
+    Array.isArray(row) ||
+    Object.keys(row).sort().join(",") !== "family_id,rotation_outcome,user_id"
+  ) {
+    throw new Error("Malformed refresh token rotation response");
+  }
+
+  const { rotation_outcome: outcome, user_id: userId, family_id: familyId } = row as Record<
+    string,
+    unknown
+  >;
+  if (!isNullableUuid(userId) || !isNullableUuid(familyId)) {
+    throw new Error("Malformed refresh token rotation response");
+  }
+
+  const coherent =
+    ((outcome === "rotated" || outcome === "reused") && userId !== null && familyId !== null) ||
+    (outcome === "replayed" && userId === null && familyId !== null) ||
+    (outcome === "invalid" && userId === null);
+  if (!coherent) {
+    throw new Error("Malformed refresh token rotation response");
+  }
+
+  return {
+    rotation_outcome: outcome,
+    user_id: userId,
+    family_id: familyId,
+  };
+}
 
 export async function createRefreshTokenFamily(
   userId: string,
@@ -256,13 +301,9 @@ export async function rotateRefreshTokenFamily(
   });
   const rows = databaseResultOrThrow(
     "rotate refresh token family",
-    result as { data: RefreshRotationRow[] | null; error: { message: string } | null },
+    result as { data: unknown; error: { message: string } | null },
   );
-  return rows?.[0] ?? {
-    rotation_outcome: "invalid",
-    user_id: null,
-    family_id: null,
-  };
+  return parseRefreshTokenRotationResult(rows);
 }
 
 export async function revokeRefreshTokenFamily(

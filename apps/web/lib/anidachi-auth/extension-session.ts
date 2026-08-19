@@ -55,6 +55,7 @@ export async function verifyExtensionAccessToken(
       audience: EXTENSION_ACCESS_AUDIENCE,
       requiredClaims: ["iss", "aud", "sub", "iat", "exp"],
     });
+    if (payload.aud !== EXTENSION_ACCESS_AUDIENCE) return null;
     if (payload.typ !== EXTENSION_ACCESS_TYPE) return null;
     if (
       typeof payload.sub !== "string" ||
@@ -123,8 +124,9 @@ export async function issueExtensionTokenPair(userId: string): Promise<{
 
 export async function refreshExtensionTokenPair(
   refreshToken: string,
+  channel: "extension",
 ): Promise<{ accessToken: string; refreshToken: string } | null> {
-  const rotation = await rotateRefreshTokenForChannel(refreshToken, "extension");
+  const rotation = await rotateRefreshTokenForChannel(refreshToken, channel);
   if (!rotation) return null;
 
   const user = await getExtensionUserProfile(rotation.userId);
@@ -142,5 +144,5 @@ export async function refreshExtensionTokenPair(
 export async function refreshExtensionAccessToken(
   refreshToken: string,
 ): Promise<string | null> {
-  return (await refreshExtensionTokenPair(refreshToken))?.accessToken ?? null;
+  return (await refreshExtensionTokenPair(refreshToken, "extension"))?.accessToken ?? null;
 }

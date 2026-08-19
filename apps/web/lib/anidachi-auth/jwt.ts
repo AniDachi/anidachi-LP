@@ -53,6 +53,7 @@ export async function verifyAccessToken(
       audience: WEBSITE_ACCESS_AUDIENCE,
       requiredClaims: ["iss", "aud", "sub", "iat", "exp"],
     });
+    if (payload.aud !== WEBSITE_ACCESS_AUDIENCE) return null;
     if (payload.typ !== WEBSITE_ACCESS_TYPE) return null;
     if (
       typeof payload.sub !== "string" ||

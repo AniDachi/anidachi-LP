@@ -105,6 +105,7 @@ test("extension verifier rejects wrong or missing protected claims", async () =>
     const cases: Array<{ claims: Record<string, unknown>; alg?: "HS256" | "HS384" }> = [
       { claims: { ...validClaims, iss: "wrong-issuer" } },
       { claims: { ...validClaims, aud: "anidachi-web" } },
+      { claims: { ...validClaims, aud: ["anidachi-extension", "anidachi-web"] } },
       { claims: { ...validClaims, typ: "website_access" } },
       { claims: { ...validClaims, sub: undefined } },
       { claims: { ...validClaims, iat: undefined } },
@@ -139,6 +140,7 @@ test("website verifier rejects wrong or missing protected claims", async () => {
     const cases: Array<{ claims: Record<string, unknown>; alg?: "HS256" | "HS384" }> = [
       { claims: { ...validClaims, iss: "wrong-issuer" } },
       { claims: { ...validClaims, aud: "anidachi-extension" } },
+      { claims: { ...validClaims, aud: ["anidachi-web", "anidachi-extension"] } },
       { claims: { ...validClaims, typ: "extension_access" } },
       { claims: { ...validClaims, sub: undefined } },
       { claims: { ...validClaims, iat: undefined } },

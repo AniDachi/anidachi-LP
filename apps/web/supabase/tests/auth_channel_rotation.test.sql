@@ -88,43 +88,164 @@ select ok(
     'service_role',
     'public.create_refresh_token_family_v1(uuid,text,text,uuid,timestamptz)',
     'execute'
-  )
-  and pg_catalog.has_function_privilege(
+  ),
+  'service_role can create refresh families'
+);
+select ok(
+  not pg_catalog.has_function_privilege(
+    'public',
+    'public.create_refresh_token_family_v1(uuid,text,text,uuid,timestamptz)',
+    'execute'
+  ),
+  'PUBLIC cannot create refresh families'
+);
+select ok(
+  not pg_catalog.has_function_privilege(
+    'anon',
+    'public.create_refresh_token_family_v1(uuid,text,text,uuid,timestamptz)',
+    'execute'
+  ),
+  'anon cannot create refresh families'
+);
+select ok(
+  not pg_catalog.has_function_privilege(
+    'authenticated',
+    'public.create_refresh_token_family_v1(uuid,text,text,uuid,timestamptz)',
+    'execute'
+  ),
+  'authenticated cannot create refresh families'
+);
+
+select ok(
+  pg_catalog.has_function_privilege(
     'service_role',
     'public.resolve_refresh_token_family_v1(text,text,timestamptz)',
     'execute'
-  )
-  and pg_catalog.has_function_privilege(
+  ),
+  'service_role can resolve refresh families'
+);
+select ok(
+  not pg_catalog.has_function_privilege(
+    'public',
+    'public.resolve_refresh_token_family_v1(text,text,timestamptz)',
+    'execute'
+  ),
+  'PUBLIC cannot resolve refresh families'
+);
+select ok(
+  not pg_catalog.has_function_privilege(
+    'anon',
+    'public.resolve_refresh_token_family_v1(text,text,timestamptz)',
+    'execute'
+  ),
+  'anon cannot resolve refresh families'
+);
+select ok(
+  not pg_catalog.has_function_privilege(
+    'authenticated',
+    'public.resolve_refresh_token_family_v1(text,text,timestamptz)',
+    'execute'
+  ),
+  'authenticated cannot resolve refresh families'
+);
+
+select ok(
+  pg_catalog.has_function_privilege(
     'service_role',
     'public.rotate_refresh_token_family_v1(text,text,text,timestamptz)',
     'execute'
-  )
-  and pg_catalog.has_function_privilege(
-    'service_role',
-    'public.revoke_refresh_token_family_v1(text,text,timestamptz)',
-    'execute'
-  )
-  and pg_catalog.has_function_privilege(
-    'service_role',
-    'public.revoke_refresh_token_families_for_user_v1(uuid,timestamptz)',
-    'execute'
-  )
-  and not pg_catalog.has_function_privilege(
+  ),
+  'service_role can rotate refresh families'
+);
+select ok(
+  not pg_catalog.has_function_privilege(
     'public',
     'public.rotate_refresh_token_family_v1(text,text,text,timestamptz)',
     'execute'
-  )
-  and not pg_catalog.has_function_privilege(
+  ),
+  'PUBLIC cannot rotate refresh families'
+);
+select ok(
+  not pg_catalog.has_function_privilege(
     'anon',
     'public.rotate_refresh_token_family_v1(text,text,text,timestamptz)',
     'execute'
-  )
-  and not pg_catalog.has_function_privilege(
+  ),
+  'anon cannot rotate refresh families'
+);
+select ok(
+  not pg_catalog.has_function_privilege(
     'authenticated',
     'public.rotate_refresh_token_family_v1(text,text,text,timestamptz)',
     'execute'
   ),
-  'refresh-family RPCs are service-role-only'
+  'authenticated cannot rotate refresh families'
+);
+
+select ok(
+  pg_catalog.has_function_privilege(
+    'service_role',
+    'public.revoke_refresh_token_family_v1(text,text,timestamptz)',
+    'execute'
+  ),
+  'service_role can revoke refresh families by channel'
+);
+select ok(
+  not pg_catalog.has_function_privilege(
+    'public',
+    'public.revoke_refresh_token_family_v1(text,text,timestamptz)',
+    'execute'
+  ),
+  'PUBLIC cannot revoke refresh families by channel'
+);
+select ok(
+  not pg_catalog.has_function_privilege(
+    'anon',
+    'public.revoke_refresh_token_family_v1(text,text,timestamptz)',
+    'execute'
+  ),
+  'anon cannot revoke refresh families by channel'
+);
+select ok(
+  not pg_catalog.has_function_privilege(
+    'authenticated',
+    'public.revoke_refresh_token_family_v1(text,text,timestamptz)',
+    'execute'
+  ),
+  'authenticated cannot revoke refresh families by channel'
+);
+
+select ok(
+  pg_catalog.has_function_privilege(
+    'service_role',
+    'public.revoke_refresh_token_families_for_user_v1(uuid,timestamptz)',
+    'execute'
+  ),
+  'service_role can revoke all refresh families for an account'
+);
+select ok(
+  not pg_catalog.has_function_privilege(
+    'public',
+    'public.revoke_refresh_token_families_for_user_v1(uuid,timestamptz)',
+    'execute'
+  ),
+  'PUBLIC cannot revoke all refresh families for an account'
+);
+select ok(
+  not pg_catalog.has_function_privilege(
+    'anon',
+    'public.revoke_refresh_token_families_for_user_v1(uuid,timestamptz)',
+    'execute'
+  ),
+  'anon cannot revoke all refresh families for an account'
+);
+select ok(
+  not pg_catalog.has_function_privilege(
+    'authenticated',
+    'public.revoke_refresh_token_families_for_user_v1(uuid,timestamptz)',
+    'execute'
+  ),
+  'authenticated cannot revoke all refresh families for an account'
 );
 
 select ok(
@@ -300,6 +421,44 @@ select is(
     from public.rotate_refresh_token_family_v1(
       repeat('a', 64),
       repeat('b', 64),
+      'extension',
+      '2100-01-01 00:00:01+00'
+    )
+  ),
+  'invalid'::text,
+  'an extension rotation cannot consume a website family'
+);
+set role postgres;
+select is(
+  (
+    select current_token_hash || ':' || (revoked_at is null)::text
+    from public.refresh_token_families
+    where current_token_hash = repeat('a', 64)
+  ),
+  repeat('a', 64) || ':true',
+  'wrong-channel extension rotation leaves the website family current and active'
+);
+select is(
+  (
+    select pg_catalog.count(*)
+    from public.refresh_token_lineage
+    where family_id = (
+      select id
+      from public.refresh_token_families
+      where current_token_hash = repeat('a', 64)
+    )
+  ),
+  0::bigint,
+  'wrong-channel extension rotation creates no website lineage'
+);
+set role service_role;
+
+select is(
+  (
+    select rotation_outcome
+    from public.rotate_refresh_token_family_v1(
+      repeat('a', 64),
+      repeat('b', 64),
       'website',
       '2100-01-01 00:00:02+00'
     )
@@ -422,6 +581,43 @@ select public.create_refresh_token_family_v1(
   null,
   '2100-02-01 00:00:00+00'
 );
+select is(
+  (
+    select rotation_outcome
+    from public.rotate_refresh_token_family_v1(
+      repeat('c', 64),
+      repeat('d', 64),
+      'website',
+      '2100-02-01 00:00:00.5+00'
+    )
+  ),
+  'invalid'::text,
+  'a website rotation cannot consume an extension family'
+);
+set role postgres;
+select is(
+  (
+    select current_token_hash || ':' || (revoked_at is null)::text
+    from public.refresh_token_families
+    where current_token_hash = repeat('c', 64)
+  ),
+  repeat('c', 64) || ':true',
+  'wrong-channel website rotation leaves the extension family current and active'
+);
+select is(
+  (
+    select pg_catalog.count(*)
+    from public.refresh_token_lineage
+    where family_id = (
+      select id
+      from public.refresh_token_families
+      where current_token_hash = repeat('c', 64)
+    )
+  ),
+  0::bigint,
+  'wrong-channel website rotation creates no extension lineage'
+);
+set role service_role;
 select rotation_outcome
 from public.rotate_refresh_token_family_v1(
   repeat('c', 64), repeat('d', 64), 'extension', '2100-02-01 00:00:01+00'

@@ -7,7 +7,9 @@ import {
 import { clearCachedAccountInboxForUser } from "./account-inbox-cache";
 import {
   type AuthenticatedUser,
-  clearStoredAuthTokens,
+  type AuthSessionMutationResult,
+  clearStoredAuthTokensIfRefreshToken,
+  commitStoredAuthTokensIfCurrent,
   type ExtensionAuthTokens,
   getStoredAuthTokens,
   isSameExtensionAuthSession,
@@ -73,15 +75,20 @@ export interface ExtensionSessionRefreshDependencies {
   getStored: () => Promise<ExtensionAuthTokens | null>;
   requestRefresh: (refreshToken: string) => Promise<ExtensionRefreshRequestResult>;
   resolveUser: (accessToken: string) => Promise<AuthenticatedUser | null>;
-  setStored: (tokens: ExtensionAuthTokens) => Promise<void>;
-  clearStored: () => Promise<void>;
+  commitIfCurrent: (
+    expected: ExtensionAuthTokens,
+    replacement: ExtensionAuthTokens | null,
+  ) => Promise<AuthSessionMutationResult>;
   clearAccountData?: (userId: string) => Promise<void>;
 }
 
 export interface ExtensionSessionDependencies {
   getStored: () => Promise<ExtensionAuthTokens | null>;
   resolveUser: (accessToken: string) => Promise<AuthenticatedUser | null>;
-  setStored: (tokens: ExtensionAuthTokens) => Promise<void>;
+  commitIfCurrent: (
+    expected: ExtensionAuthTokens,
+    replacement: ExtensionAuthTokens | null,
+  ) => Promise<AuthSessionMutationResult>;
   refresh: () => Promise<ExtensionAuthTokens | null>;
   adoptSilently?: () => Promise<ExtensionAuthTokens | null>;
 }
@@ -347,8 +354,7 @@ const defaultRefreshDependencies: ExtensionSessionRefreshDependencies = {
   getStored: getStoredAuthTokens,
   requestRefresh: requestExtensionSessionRefresh,
   resolveUser: fetchAuthenticatedUser,
-  setStored: setStoredAuthTokens,
-  clearStored: clearStoredAuthTokens,
+  commitIfCurrent: commitStoredAuthTokensIfCurrent,
   clearAccountData: clearCachedAccountDataForUser,
 };
 
@@ -364,28 +370,35 @@ async function performExtensionSessionRefresh(
   }
 
   const result = await dependencies.requestRefresh(stored.refreshToken);
-  const current = await dependencies.getStored();
-  if (!current || !isSameExtensionAuthSession(stored, current)) {
-    recordDiagnosticEvent("auth.refresh", "discarded after stored session changed", {
-      previousUserId: stored.user.id,
-      currentUserId: current?.user.id,
-    });
-    return current;
-  }
 
   if (result.kind === "invalid") {
+    const commit = await dependencies.commitIfCurrent(stored, null);
+    if (!commit.committed) {
+      recordDiagnosticEvent("auth.refresh", "discarded after stored session changed", {
+        previousUserId: stored.user.id,
+        currentUserId: commit.current?.user.id,
+      });
+      return commit.current;
+    }
     recordDiagnosticEvent(
       "auth.refresh",
       "refresh token rejected; clearing stored session",
       { status: 401, userId: stored.user.id },
       "warn",
     );
-    await dependencies.clearStored();
     await dependencies.clearAccountData?.(stored.user.id);
     return null;
   }
 
   if (result.kind === "unavailable") {
+    const current = await dependencies.getStored();
+    if (!current || !isSameExtensionAuthSession(stored, current)) {
+      recordDiagnosticEvent("auth.refresh", "discarded after stored session changed", {
+        previousUserId: stored.user.id,
+        currentUserId: current?.user.id,
+      });
+      return current;
+    }
     recordDiagnosticEvent(
       "auth.refresh",
       "temporarily unavailable; keeping stored session",
@@ -396,23 +409,22 @@ async function performExtensionSessionRefresh(
   }
 
   const tokens: ExtensionAuthTokens = {
-    ...current,
+    ...stored,
     accessToken: result.accessToken,
-    refreshToken: result.refreshToken ?? current.refreshToken,
+    refreshToken: result.refreshToken ?? stored.refreshToken,
   };
   const freshUser = await dependencies.resolveUser(tokens.accessToken).catch(() => null);
   if (freshUser) {
     tokens.user = freshUser;
   }
-  const latest = await dependencies.getStored();
-  if (!latest || !isSameExtensionAuthSession(stored, latest)) {
+  const commit = await dependencies.commitIfCurrent(stored, tokens);
+  if (!commit.committed) {
     recordDiagnosticEvent("auth.refresh", "discarded after user resolution changed session", {
       previousUserId: stored.user.id,
-      currentUserId: latest?.user.id,
+      currentUserId: commit.current?.user.id,
     });
-    return latest;
+    return commit.current;
   }
-  await dependencies.setStored(tokens);
   recordDiagnosticEvent("auth.refresh", "succeeded", {
     userId: tokens.user.id,
     plan: tokens.user.plan,
@@ -461,14 +473,12 @@ async function revokeExtensionRefreshToken(refreshToken: string): Promise<void> 
 }
 
 interface ConditionalSessionClearDependencies {
-  getStored: () => Promise<ExtensionAuthTokens | null>;
-  clearStored: () => Promise<void>;
+  clearIfRefreshToken: (expectedRefreshToken: string) => Promise<AuthSessionMutationResult>;
   clearAccountData?: (userId: string) => Promise<void>;
 }
 
 const defaultConditionalClearDependencies: ConditionalSessionClearDependencies = {
-  getStored: getStoredAuthTokens,
-  clearStored: clearStoredAuthTokens,
+  clearIfRefreshToken: clearStoredAuthTokensIfRefreshToken,
   clearAccountData: clearCachedAccountDataForUser,
 };
 
@@ -476,13 +486,12 @@ export async function clearExtensionSessionIfCurrent(
   expectedRefreshToken: string,
   dependencies: ConditionalSessionClearDependencies = defaultConditionalClearDependencies,
 ): Promise<boolean> {
-  const current = await dependencies.getStored();
-  if (!current || current.refreshToken !== expectedRefreshToken) {
+  const result = await dependencies.clearIfRefreshToken(expectedRefreshToken);
+  if (!result.committed || !result.previous) {
     return false;
   }
 
-  await dependencies.clearStored();
-  await dependencies.clearAccountData?.(current.user.id);
+  await dependencies.clearAccountData?.(result.previous.user.id);
   return true;
 }
 
@@ -635,7 +644,7 @@ export async function getCachedExtensionSession(): Promise<ExtensionAuthTokens |
 const defaultSessionDependencies: ExtensionSessionDependencies = {
   getStored: getStoredAuthTokens,
   resolveUser: fetchAuthenticatedUser,
-  setStored: setStoredAuthTokens,
+  commitIfCurrent: commitStoredAuthTokensIfCurrent,
   refresh: refreshExtensionSession,
   adoptSilently: signInWithWebsiteSilently,
 };
@@ -648,14 +657,9 @@ export async function getCurrentExtensionSession(
 
   const user = await dependencies.resolveUser(stored.accessToken);
   if (user) {
-    const current = await dependencies.getStored();
-    if (!current || !isSameExtensionAuthSession(stored, current)) {
-      return current;
-    }
-
-    const tokens = { ...current, user };
-    await dependencies.setStored(tokens);
-    return tokens;
+    const tokens = { ...stored, user };
+    const commit = await dependencies.commitIfCurrent(stored, tokens);
+    return commit.committed ? tokens : commit.current;
   }
 
   const refreshed = await dependencies.refresh();

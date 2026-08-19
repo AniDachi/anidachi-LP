@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { parseRefreshTokenRotationResult } from "./db";
 import { deriveRefreshTokenSuccessor } from "./tokens";
 
 async function withJwtSecret<T>(fn: () => Promise<T>): Promise<T> {
@@ -35,4 +36,60 @@ test("the same predecessor and channel always derive the same opaque successor",
     assert.notEqual(first, deriveRefreshTokenSuccessor("predecessor", "extension"));
     assert.notEqual(first, deriveRefreshTokenSuccessor("other-predecessor", "website"));
   });
+});
+
+test("refresh rotation accepts exactly one coherent typed RPC row", () => {
+  const familyId = "70000000-0000-4000-8000-000000000001";
+  const userId = "70000000-0000-4000-8000-000000000002";
+
+  assert.deepEqual(
+    parseRefreshTokenRotationResult([
+      { rotation_outcome: "rotated", user_id: userId, family_id: familyId },
+    ]),
+    { rotation_outcome: "rotated", user_id: userId, family_id: familyId },
+  );
+  assert.deepEqual(
+    parseRefreshTokenRotationResult([
+      { rotation_outcome: "reused", user_id: userId, family_id: familyId },
+    ]),
+    { rotation_outcome: "reused", user_id: userId, family_id: familyId },
+  );
+  assert.deepEqual(
+    parseRefreshTokenRotationResult([
+      { rotation_outcome: "invalid", user_id: null, family_id: null },
+    ]),
+    { rotation_outcome: "invalid", user_id: null, family_id: null },
+  );
+  assert.deepEqual(
+    parseRefreshTokenRotationResult([
+      { rotation_outcome: "replayed", user_id: null, family_id: familyId },
+    ]),
+    { rotation_outcome: "replayed", user_id: null, family_id: familyId },
+  );
+});
+
+test("refresh rotation rejects absent, ambiguous, malformed, or unknown successful RPC data", () => {
+  const familyId = "70000000-0000-4000-8000-000000000001";
+  const userId = "70000000-0000-4000-8000-000000000002";
+  const invalidResults: unknown[] = [
+    null,
+    [],
+    [
+      { rotation_outcome: "invalid", user_id: null, family_id: null },
+      { rotation_outcome: "invalid", user_id: null, family_id: null },
+    ],
+    [{ rotation_outcome: "unknown", user_id: null, family_id: null }],
+    [{ rotation_outcome: "rotated", user_id: null, family_id: familyId }],
+    [{ rotation_outcome: "reused", user_id: userId, family_id: null }],
+    [{ rotation_outcome: "replayed", user_id: userId, family_id: familyId }],
+    [{ rotation_outcome: "invalid", user_id: null }],
+    [{ rotation_outcome: "invalid", user_id: null, family_id: null, extra: true }],
+  ];
+
+  for (const result of invalidResults) {
+    assert.throws(
+      () => parseRefreshTokenRotationResult(result),
+      /Malformed refresh token rotation response/,
+    );
+  }
 });
