@@ -833,13 +833,16 @@ run `git diff --cached --check`.
 
 ## Task 7: Separate Token Channels And Rotate Refresh Families
 
-**Local source status (2026-08-19): complete; staging cutover pending.** The
-additive database prerequisite is commit `2b38727`; runtime is `7ae4ff8`, with
-review fixes `2dd3efd`, test-only proof `45efde1`, and final authority hardening
-`0029653`. Local verification includes 180 pgTAP assertions and a final
-CodeRabbit review with zero findings. The migration has not been applied to
-staging, the new runtime has not been deployed, and the two staging profiles
-have not been signed out or reauthenticated. Stop before that attended cutover.
+**Status (2026-08-20): staging accepted; Task 8 remains.** The additive database
+prerequisite is commit `2b38727`; runtime is `7ae4ff8`, with review fixes
+`2dd3efd`, test-only proof `45efde1`, and final authority hardening `0029653`.
+Local verification includes 180 pgTAP assertions and a final CodeRabbit review
+with zero findings. PR #201 merged as `13a30fa` after the migration was applied
+first. Post-merge CI, database workflow, extension build, Rooms/P2P, Vercel, and
+staging smoke passed. Both established staging profiles completed forced
+reauthentication; the user confirmed correct account adoption, isolated
+extension logout, and successful reconnect. Task 7 is complete. Do not mark
+Wave 2 complete until Task 8 bounded cleanup and its stop gate pass.
 
 **Files:**
 
