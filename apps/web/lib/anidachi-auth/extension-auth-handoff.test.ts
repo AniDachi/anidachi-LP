@@ -92,8 +92,13 @@ describe("extension authorization login handoff", () => {
     );
     assert.ok(envelope);
 
-    const replacement = envelope.endsWith("A") ? "B" : "A";
-    const tampered = `${envelope.slice(0, -1)}${replacement}`;
+    const segments = envelope.split(".");
+    assert.equal(segments.length, 5);
+    const tag = segments[4];
+    assert.ok(tag);
+    const replacement = tag.startsWith("A") ? "B" : "A";
+    segments[4] = `${replacement}${tag.slice(1)}`;
+    const tampered = segments.join(".");
     assert.equal(await openExtensionAuthHandoff(tampered, start), null);
     assert.equal(
       await openExtensionAuthHandoff(
