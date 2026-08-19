@@ -178,11 +178,24 @@ algorithm to `jose`, then validates the application `typ`. A website verifier
 never accepts an extension access token, and the reverse path is equally
 explicit.
 
-Refresh-token rows gain a client channel, token family, absolute session
-expiry, current token hash, rotation/revocation state, and device identity where
-already available. Refresh rotates atomically. Reuse of a predecessor revokes
-the family. Absolute expiry never slides. Existing sessions use a bounded
-pre-release compatibility transition rather than an unbounded dual-mode path.
+Refresh-token rows gain a client channel, token family, idle and absolute
+session expiry, current token hash, rotation/revocation state, and device
+identity where already available. Refresh rotates atomically. Reuse of a
+predecessor revokes the family. Each family expires after 90 consecutive days
+without a successful refresh and after an absolute maximum of 365 days from
+family creation. A successful rotation moves the last-used and idle-expiry
+timestamps but never moves family creation or absolute expiry. Existing sessions
+use a bounded pre-release compatibility transition rather than an unbounded
+dual-mode path.
+
+The extension follows the browser-native seamless-session pattern without
+delegating AniDachi credentials to Chrome's Google-token cache. Cached identity
+renders immediately while one background refresh is coalesced. Failed access-
+token validation permits one refresh attempt and session-resolution retry. If
+the refresh family is no longer usable, the extension may use the existing non-
+interactive website session flow to obtain a new extension-channel family. It
+never launches an interactive auth flow from startup, content observation, or a
+background retry; interactive auth requires an explicit user sign-in action.
 
 ### 3. Extension Authorization Code Binding
 

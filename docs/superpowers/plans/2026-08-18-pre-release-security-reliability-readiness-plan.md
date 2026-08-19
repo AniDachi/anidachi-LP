@@ -97,6 +97,15 @@ preserve a legacy path just because it is mentioned here.
 - Website and extension auth become explicit channels. Because the product is
   pre-release and current data is test data, legacy refresh sessions are revoked
   at cutover instead of maintaining a permanent dual verifier.
+- Each website or extension refresh family expires after 90 consecutive days
+  without a successful refresh and after an absolute maximum of 365 days from
+  family creation. Rotation advances `last_used_at` but never moves the family
+  creation time or absolute expiry.
+- Extension auth remains seamless: cached identity renders immediately, refresh
+  is single-flight and non-interactive in the background, and an existing valid
+  website session may silently authorize a new extension family. The extension
+  opens an interactive browser auth flow only after an explicit user action; a
+  background failure returns a signed-out/retryable state without surprise UI.
 - The current signing secret may remain for MVP with strict claim separation.
 - Public or media limits must be backed by benchmark evidence recorded in the
   task report before staging.
@@ -841,14 +850,21 @@ run `git diff --cached --check`.
 Cover exact HS256, issuer, audience, type, subject, issued/expiry claims;
 website-rejects-extension and extension-rejects-website; wrong-channel refresh;
 atomic rotation; predecessor replay family revocation; concurrent refresh winner;
-the existing 90-day session horizon converted from sliding to absolute expiry;
-logout family revocation; account deletion.
+90 consecutive days without refresh expiring the family; a 365-day absolute
+family expiry that successful rotation never extends; logout family revocation;
+account deletion. Extension tests also prove immediate cached-session return,
+single-flight background refresh, one refresh attempt after failed access-token
+validation, silent website-session adoption, and no interactive auth flow
+without an explicit user action.
 
 **Step 2: Add refresh family storage**
 
 Add channel, family ID, device ID when present, token hash, parent/current token
 state, created/last-used/absolute-expiry/revoked timestamps, and the indexes used
-by rotation and cleanup. Keep RLS enabled and service-role-only access.
+by rotation and cleanup. Server-side rotation updates `last_used_at`; refresh is
+rejected when it is more than 90 days old, while the original 365-day absolute
+expiry remains unchanged. Do not store a redundant derived idle-expiry column.
+Keep RLS enabled and service-role-only access.
 
 **Step 3: Implement clean pre-release cutover**
 
@@ -860,7 +876,12 @@ Access tokens without the new exact channel claims are rejected.
 
 The extension persists a rotated refresh token only if the current stored token
 still matches the request predecessor. A late response from an older account or
-token is discarded. Existing Watch History account fences remain intact.
+token is discarded. Session reads return the cached identity immediately and
+coalesce background refresh. Failed access-token validation permits one refresh
+attempt and session-resolution retry, never a retry loop. If the refresh family
+is expired or revoked, attempt only the existing non-interactive website session
+adoption; interactive `launchWebAuthFlow` remains restricted to the user-
+initiated sign-in command. Existing Watch History account fences remain intact.
 
 **Step 5: Verify and commit**
 
