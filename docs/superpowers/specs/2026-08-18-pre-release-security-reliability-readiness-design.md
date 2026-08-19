@@ -190,6 +190,16 @@ idle boundary is derived from it and is not stored redundantly. Family creation
 and absolute expiry never move. Existing sessions use a bounded pre-release
 compatibility transition rather than an unbounded dual-mode path.
 
+Raw or encrypted refresh tokens are never stored in PostgreSQL. The server
+derives the same opaque successor deterministically from the channel and
+presented predecessor with a domain-separated HMAC-SHA-256 keyed by the existing
+server-only auth secret; PostgreSQL stores only token hashes and atomically
+confirms which successor is current. Hash-only lineage retains every consumed
+predecessor until family expiry and bounded cleanup. The 10-second
+non-destructive reuse case applies only when that predecessor's recorded
+successor is still the family's current token; every other known replay revokes
+the family.
+
 The database migration is additive for the still-running old application: it
 creates the new authority and revokes the legacy rows present at migration time
 without dropping or tightening the legacy table. The new application reads

@@ -101,6 +101,13 @@ preserve a legacy path just because it is mentioned here.
   without a successful refresh and after an absolute maximum of 365 days from
   family creation. Rotation advances `last_used_at` but never moves the family
   creation time or absolute expiry.
+- Raw or encrypted refresh tokens are not durable data. Successors are derived
+  with a domain-separated HMAC-SHA-256 using the existing server-only auth
+  secret, while PostgreSQL stores only hashes and atomic family state.
+- Hash-only lineage retains every consumed refresh token until family expiry
+  and bounded Task 8 cleanup. The 10-second non-destructive reuse case applies
+  only while that predecessor's recorded successor is still current; any other
+  known replay revokes the family.
 - Extension auth remains seamless: cached identity renders immediately, refresh
   is single-flight and non-interactive in the background, and an existing valid
   website session may silently authorize a new extension family. The extension
@@ -826,6 +833,13 @@ run `git diff --cached --check`.
 
 ## Task 7: Separate Token Channels And Rotate Refresh Families
 
+**Local source status (2026-08-19): complete; staging cutover pending.** The
+additive database prerequisite is commit `2b38727`; runtime is `7ae4ff8`, with
+review fixes `2dd3efd` and test-only proof `45efde1`. The migration has not been
+applied to staging, the new runtime has not been deployed, and the two staging
+profiles have not been signed out or reauthenticated. Stop before that attended
+cutover.
+
 **Files:**
 
 - Create with `supabase migration new auth_channel_rotation`:
@@ -871,7 +885,12 @@ state, created/last-used/absolute-expiry/revoked timestamps, and the indexes use
 by rotation and cleanup. Server-side rotation updates `last_used_at`; refresh is
 rejected when it is more than 90 days old, while the original 365-day absolute
 expiry remains unchanged. Do not store a redundant derived idle-expiry column.
-Keep RLS enabled and service-role-only access.
+Keep RLS enabled and service-role-only access. Store every consumed predecessor
+only as a hash in bounded-cleanup lineage; never store a raw or encrypted refresh
+token. Derive the already-issued successor deterministically with a
+domain-separated HMAC-SHA-256 over channel and predecessor using the existing
+server-only auth secret, and accept the 10-second reuse case only while that
+recorded successor remains current.
 
 **Step 3: Implement clean pre-release cutover**
 
