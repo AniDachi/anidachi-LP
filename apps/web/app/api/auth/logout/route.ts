@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
   const refreshToken = request.cookies.get(REFRESH_TOKEN_COOKIE)?.value;
   if (refreshToken) {
-    await revokeRefreshToken(refreshToken);
+    await revokeRefreshToken(refreshToken, "website");
   }
 
   const response = NextResponse.json({ ok: true });

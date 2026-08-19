@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "refreshToken is required" }, { status: 400 });
   }
 
-  const tokens = await refreshExtensionTokenPair(body.refreshToken);
+  const tokens = await refreshExtensionTokenPair(body.refreshToken, "extension");
   if (!tokens) {
     return NextResponse.json({ error: "Invalid refresh token" }, { status: 401 });
   }

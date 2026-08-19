@@ -208,58 +208,146 @@ export function generateRefreshToken(): string {
   return randomBytes(48).toString("hex");
 }
 
-export async function storeRefreshToken(
+export type RefreshChannel = "website" | "extension";
+
+export type RefreshRotationOutcome = "rotated" | "reused" | "replayed" | "invalid";
+
+export type RefreshRotationRow = {
+  rotation_outcome: RefreshRotationOutcome;
+  user_id: string | null;
+  family_id: string | null;
+};
+
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
+
+function isUuid(value: unknown): value is string {
+  return typeof value === "string" && UUID_PATTERN.test(value);
+}
+
+function isNullableUuid(value: unknown): value is string | null {
+  return value === null || isUuid(value);
+}
+
+function isRefreshRotationOutcome(value: unknown): value is RefreshRotationOutcome {
+  return value === "rotated" || value === "reused" || value === "replayed" || value === "invalid";
+}
+
+export function parseRefreshTokenResolutionResult(value: unknown): string | null {
+  if (value === null) return null;
+  if (!isUuid(value)) {
+    throw new Error("Malformed refresh token resolution response");
+  }
+  return value;
+}
+
+export function parseRefreshTokenRotationResult(value: unknown): RefreshRotationRow {
+  if (!Array.isArray(value) || value.length !== 1) {
+    throw new Error("Malformed refresh token rotation response");
+  }
+
+  const row = value[0];
+  if (
+    typeof row !== "object" ||
+    row === null ||
+    Array.isArray(row) ||
+    Object.keys(row).sort().join(",") !== "family_id,rotation_outcome,user_id"
+  ) {
+    throw new Error("Malformed refresh token rotation response");
+  }
+
+  const { rotation_outcome: outcome, user_id: userId, family_id: familyId } = row as Record<
+    string,
+    unknown
+  >;
+  if (
+    !isRefreshRotationOutcome(outcome) ||
+    !isNullableUuid(userId) ||
+    !isNullableUuid(familyId)
+  ) {
+    throw new Error("Malformed refresh token rotation response");
+  }
+
+  const coherent =
+    ((outcome === "rotated" || outcome === "reused") && userId !== null && familyId !== null) ||
+    (outcome === "replayed" && userId === null && familyId !== null) ||
+    (outcome === "invalid" && userId === null);
+  if (!coherent) {
+    throw new Error("Malformed refresh token rotation response");
+  }
+
+  return {
+    rotation_outcome: outcome,
+    user_id: userId,
+    family_id: familyId,
+  };
+}
+
+export async function createRefreshTokenFamily(
   userId: string,
   token: string,
-  expiresAt: Date
+  channel: RefreshChannel,
+  deviceId: string | null = null,
 ): Promise<void> {
-  const { error } = await db().from("refresh_tokens").insert({
-    user_id: userId,
-    token_hash: hashToken(token),
-    expires_at: expiresAt.toISOString(),
+  const result = await db().rpc("create_refresh_token_family_v1", {
+    p_user_id: userId,
+    p_channel: channel,
+    p_token_hash: hashToken(token),
+    p_device_id: deviceId,
   });
-  if (error) throw new Error(`Failed to store refresh token: ${error.message}`);
+  databaseResultOrThrow("create refresh token family", result);
 }
 
-export async function validateRefreshToken(
-  token: string
-): Promise<string | null> {
-  const hash = hashToken(token);
-  const result = await db()
-    .from("refresh_tokens")
-    .select("user_id, expires_at")
-    .eq("token_hash", hash)
-    .maybeSingle();
-  const data = databaseResultOrThrow("validate refresh token", result);
-  if (!data) return null;
-  if (new Date(data.expires_at) < new Date()) return null;
-  return data.user_id as string;
-}
-
-export async function extendRefreshToken(
+export async function resolveRefreshTokenFamily(
   token: string,
-  expiresAt: Date
+  channel: RefreshChannel,
+): Promise<string | null> {
+  const result = await db().rpc("resolve_refresh_token_family_v1", {
+    p_token_hash: hashToken(token),
+    p_channel: channel,
+  });
+  const resolved = databaseResultOrThrow(
+    "resolve refresh token family",
+    result as { data: unknown; error: { message: string } | null },
+  );
+  return parseRefreshTokenResolutionResult(resolved);
+}
+
+export async function rotateRefreshTokenFamily(
+  token: string,
+  successorToken: string,
+  channel: RefreshChannel,
+): Promise<RefreshRotationRow> {
+  const result = await db().rpc("rotate_refresh_token_family_v1", {
+    p_token_hash: hashToken(token),
+    p_successor_token_hash: hashToken(successorToken),
+    p_channel: channel,
+  });
+  const rows = databaseResultOrThrow(
+    "rotate refresh token family",
+    result as { data: unknown; error: { message: string } | null },
+  );
+  return parseRefreshTokenRotationResult(rows);
+}
+
+export async function revokeRefreshTokenFamily(
+  token: string,
+  channel: RefreshChannel,
 ): Promise<void> {
-  const { error } = await db()
-    .from("refresh_tokens")
-    .update({ expires_at: expiresAt.toISOString() })
-    .eq("token_hash", hashToken(token));
-  if (error) throw new Error(`Failed to extend refresh token: ${error.message}`);
+  const result = await db().rpc("revoke_refresh_token_family_v1", {
+    p_token_hash: hashToken(token),
+    p_channel: channel,
+  });
+  databaseResultOrThrow("revoke refresh token family", result);
 }
 
-export async function deleteRefreshToken(token: string): Promise<void> {
-  const { error } = await db()
-    .from("refresh_tokens")
-    .delete()
-    .eq("token_hash", hashToken(token));
-  if (error) throw new Error(`Failed to delete refresh token: ${error.message}`);
-}
-
-export async function deleteAllRefreshTokensForUser(
+export async function revokeAllRefreshTokenFamiliesForUser(
   userId: string
 ): Promise<void> {
-  const { error } = await db().from("refresh_tokens").delete().eq("user_id", userId);
-  if (error) throw new Error(`Failed to delete user refresh tokens: ${error.message}`);
+  const result = await db().rpc("revoke_refresh_token_families_for_user_v1", {
+    p_user_id: userId,
+  });
+  databaseResultOrThrow("revoke user refresh token families", result);
 }
 
 // ---------- Billing helpers ----------

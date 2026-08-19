@@ -97,6 +97,22 @@ preserve a legacy path just because it is mentioned here.
 - Website and extension auth become explicit channels. Because the product is
   pre-release and current data is test data, legacy refresh sessions are revoked
   at cutover instead of maintaining a permanent dual verifier.
+- Each website or extension refresh family expires after 90 consecutive days
+  without a successful refresh and after an absolute maximum of 365 days from
+  family creation. Rotation advances `last_used_at` but never moves the family
+  creation time or absolute expiry.
+- Raw or encrypted refresh tokens are not durable data. Successors are derived
+  with a domain-separated HMAC-SHA-256 using the existing server-only auth
+  secret, while PostgreSQL stores only hashes and atomic family state.
+- Hash-only lineage retains every consumed refresh token until family expiry
+  and bounded Task 8 cleanup. The 10-second non-destructive reuse case applies
+  only while that predecessor's recorded successor is still current; any other
+  known replay revokes the family.
+- Extension auth remains seamless: cached identity renders immediately, refresh
+  is single-flight and non-interactive in the background, and an existing valid
+  website session may silently authorize a new extension family. The extension
+  opens an interactive browser auth flow only after an explicit user action; a
+  background failure returns a signed-out/retryable state without surprise UI.
 - The current signing secret may remain for MVP with strict claim separation.
 - Public or media limits must be backed by benchmark evidence recorded in the
   task report before staging.
@@ -817,6 +833,14 @@ run `git diff --cached --check`.
 
 ## Task 7: Separate Token Channels And Rotate Refresh Families
 
+**Local source status (2026-08-19): complete; staging cutover pending.** The
+additive database prerequisite is commit `2b38727`; runtime is `7ae4ff8`, with
+review fixes `2dd3efd`, test-only proof `45efde1`, and final authority hardening
+`0029653`. Local verification includes 180 pgTAP assertions and a final
+CodeRabbit review with zero findings. The migration has not been applied to
+staging, the new runtime has not been deployed, and the two staging profiles
+have not been signed out or reauthenticated. Stop before that attended cutover.
+
 **Files:**
 
 - Create with `supabase migration new auth_channel_rotation`:
@@ -841,14 +865,33 @@ run `git diff --cached --check`.
 Cover exact HS256, issuer, audience, type, subject, issued/expiry claims;
 website-rejects-extension and extension-rejects-website; wrong-channel refresh;
 atomic rotation; predecessor replay family revocation; concurrent refresh winner;
-the existing 90-day session horizon converted from sliding to absolute expiry;
-logout family revocation; account deletion.
+90 consecutive days without refresh expiring the family; a 365-day absolute
+family expiry that successful rotation never extends; logout family revocation;
+account deletion. Extension tests also prove immediate cached-session return,
+single-flight background refresh, one refresh attempt after failed access-token
+validation, silent website-session adoption, and no interactive auth flow
+without an explicit user action.
+
+For ordinary browser concurrency, use one named 10-second refresh-token reuse
+interval, matching the current Supabase Auth default and recommendation. A
+predecessor reused inside that interval returns the already-issued current
+successor without rotating again or revoking the family. Reuse at or after the
+boundary revokes the family. The interval never changes the family's idle or
+absolute lifetime.
 
 **Step 2: Add refresh family storage**
 
 Add channel, family ID, device ID when present, token hash, parent/current token
 state, created/last-used/absolute-expiry/revoked timestamps, and the indexes used
-by rotation and cleanup. Keep RLS enabled and service-role-only access.
+by rotation and cleanup. Server-side rotation updates `last_used_at`; refresh is
+rejected when it is more than 90 days old, while the original 365-day absolute
+expiry remains unchanged. Do not store a redundant derived idle-expiry column.
+Keep RLS enabled and service-role-only access. Store every consumed predecessor
+only as a hash in bounded-cleanup lineage; never store a raw or encrypted refresh
+token. Derive the already-issued successor deterministically with a
+domain-separated HMAC-SHA-256 over channel and predecessor using the existing
+server-only auth secret, and accept the 10-second reuse case only while that
+recorded successor remains current.
 
 **Step 3: Implement clean pre-release cutover**
 
@@ -856,11 +899,24 @@ Mark every legacy refresh row revoked during migration. Do not add a legacy
 fallback verifier. Existing staging users and extensions sign in once again.
 Access tokens without the new exact channel claims are rejected.
 
+Keep the migration compatible with the still-running old application during
+the migration-first deployment window: add the new authority and revoke the
+rows that exist at migration time without dropping or tightening the legacy
+table. The new application must never read that legacy table. Any legacy row
+briefly issued by an old instance after the migration is ignored by the new
+runtime and is left for bounded Task 8 cleanup. Rollback is forward recovery;
+do not restore the legacy verifier after new refresh families are issued.
+
 **Step 4: Make extension rotation race-safe**
 
 The extension persists a rotated refresh token only if the current stored token
 still matches the request predecessor. A late response from an older account or
-token is discarded. Existing Watch History account fences remain intact.
+token is discarded. Session reads return the cached identity immediately and
+coalesce background refresh. Failed access-token validation permits one refresh
+attempt and session-resolution retry, never a retry loop. If the refresh family
+is expired or revoked, attempt only the existing non-interactive website session
+adoption; interactive `launchWebAuthFlow` remains restricted to the user-
+initiated sign-in command. Existing Watch History account fences remain intact.
 
 **Step 5: Verify and commit**
 

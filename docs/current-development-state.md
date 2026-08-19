@@ -192,6 +192,24 @@ exchange, which cannot enforce PKCE. Staging/public release scripts force their
 canonical web/API/WS endpoints and narrow mode, and artifact validation rejects
 any extra host permission or content-script match. Broad staging remains a
 separate explicit local testing command and output path.
+
+Task 7 is source-complete on feature branch
+`codex/security-wave2-task7-token-rotation` and has not reached staging. The
+additive migration `20260819133849_auth_channel_rotation.sql` creates
+service-role-only website/extension refresh families and hash-only consumed-token
+lineage; raw or encrypted refresh tokens are not stored. Access tokens require
+exact scalar issuer/audience/type channel claims. Refresh rotation is atomic,
+uses a ten-second concurrency-reuse interval, expires after 90 consecutive days
+without refresh and after an immutable 365-day maximum, and revokes the active
+family on any other known replay. The extension serializes sign-in, refresh
+persistence, and invalid-session clearing so an old response cannot overwrite a
+new account. Local database reset, 180 pgTAP assertions, web/extension suites and
+checks, staging artifact build/validation, independent task review, scoped fix
+re-reviews, and the final CodeRabbit review with zero findings passed. Staging
+migration, application deployment, and the required attended sign-out and
+reauthentication of both staging profiles remain pending; do not describe Task
+7 as deployed or accepted.
+
 Continue from current `staging` and keep the plan's stop gates; do not promote
 these security changes directly to `main`.
 

@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
 
     const refreshToken = request.cookies.get(REFRESH_TOKEN_COOKIE)?.value;
     if (refreshToken) {
-      const tokens = await refreshTokenPair(refreshToken);
+      const tokens = await refreshTokenPair(refreshToken, "website");
       if (tokens) {
         setAuthCookies(response, tokens.accessToken, tokens.refreshToken);
       }

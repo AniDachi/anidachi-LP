@@ -1,25 +1,18 @@
 import { SignJWT, jwtVerify } from "jose";
 import {
-  extendRefreshToken,
-  generateRefreshToken,
   getUserById,
-  storeRefreshToken,
-  validateRefreshToken,
 } from "./db";
+import { ANIDACHI_AUTH_ISSUER, getJwtSecret } from "./jwt";
 import { normalizePlanCode, type PlanCode } from "./plan-entitlements";
+import { isAcceptedPlanCode } from "./plan-codes";
+import { ACCESS_TOKEN_TTL_SECONDS } from "./token-policy";
 import {
-  ACCESS_TOKEN_TTL_SECONDS,
-  REFRESH_TOKEN_TTL_DAYS,
-} from "./token-policy";
+  issueRefreshTokenFamily,
+  rotateRefreshTokenForChannel,
+} from "./tokens";
 
 const EXTENSION_ACCESS_AUDIENCE = "anidachi-extension";
 const EXTENSION_ACCESS_TYPE = "extension_access";
-
-function getJwtSecret(): Uint8Array {
-  const secret = process.env.ANIDACHI_JWT_SECRET;
-  if (!secret) throw new Error("ANIDACHI_JWT_SECRET is not set");
-  return new TextEncoder().encode(secret);
-}
 
 export type ExtensionAccessTokenPayload = {
   sub: string;
@@ -44,6 +37,7 @@ export async function signExtensionAccessToken(
     typ: EXTENSION_ACCESS_TYPE,
   })
     .setProtectedHeader({ alg: "HS256" })
+    .setIssuer(ANIDACHI_AUTH_ISSUER)
     .setSubject(payload.sub)
     .setAudience(EXTENSION_ACCESS_AUDIENCE)
     .setIssuedAt()
@@ -56,10 +50,22 @@ export async function verifyExtensionAccessToken(
 ): Promise<ExtensionAccessTokenPayload | null> {
   try {
     const { payload } = await jwtVerify(token, getJwtSecret(), {
+      algorithms: ["HS256"],
+      issuer: ANIDACHI_AUTH_ISSUER,
       audience: EXTENSION_ACCESS_AUDIENCE,
+      requiredClaims: ["iss", "aud", "sub", "iat", "exp"],
     });
+    if (payload.aud !== EXTENSION_ACCESS_AUDIENCE) return null;
     if (payload.typ !== EXTENSION_ACCESS_TYPE) return null;
-    if (!payload.sub || typeof payload.email !== "string") return null;
+    if (
+      typeof payload.sub !== "string" ||
+      !payload.sub ||
+      typeof payload.email !== "string" ||
+      !payload.email ||
+      !isAcceptedPlanCode(payload.plan)
+    ) {
+      return null;
+    }
     const plan = normalizePlanCode(payload.plan);
 
     return {
@@ -111,21 +117,19 @@ export async function issueExtensionTokenPair(userId: string): Promise<{
     plan: user.plan,
   });
 
-  const refreshToken = generateRefreshToken();
-  const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_TTL_DAYS);
-  await storeRefreshToken(user.id, refreshToken, expiresAt);
+  const refreshToken = await issueRefreshTokenFamily(user.id, "extension");
 
   return { accessToken, refreshToken, user };
 }
 
 export async function refreshExtensionTokenPair(
   refreshToken: string,
+  channel: "extension",
 ): Promise<{ accessToken: string; refreshToken: string } | null> {
-  const userId = await validateRefreshToken(refreshToken);
-  if (!userId) return null;
+  const rotation = await rotateRefreshTokenForChannel(refreshToken, channel);
+  if (!rotation) return null;
 
-  const user = await getExtensionUserProfile(userId);
+  const user = await getExtensionUserProfile(rotation.userId);
   if (!user) return null;
 
   const accessToken = await signExtensionAccessToken({
@@ -134,15 +138,11 @@ export async function refreshExtensionTokenPair(
     plan: user.plan,
   });
 
-  const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_TTL_DAYS);
-  await extendRefreshToken(refreshToken, expiresAt);
-
-  return { accessToken, refreshToken };
+  return { accessToken, refreshToken: rotation.refreshToken };
 }
 
 export async function refreshExtensionAccessToken(
   refreshToken: string,
 ): Promise<string | null> {
-  return (await refreshExtensionTokenPair(refreshToken))?.accessToken ?? null;
+  return (await refreshExtensionTokenPair(refreshToken, "extension"))?.accessToken ?? null;
 }

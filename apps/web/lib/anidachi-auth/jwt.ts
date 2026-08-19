@@ -8,7 +8,11 @@ import {
 import { isAcceptedPlanCode } from "./plan-codes";
 import { ACCESS_TOKEN_TTL_SECONDS } from "./token-policy";
 
-function getJwtSecret(): Uint8Array {
+export const ANIDACHI_AUTH_ISSUER = "anidachi-auth";
+export const WEBSITE_ACCESS_AUDIENCE = "anidachi-web";
+export const WEBSITE_ACCESS_TYPE = "website_access";
+
+export function getJwtSecret(): Uint8Array {
   const secret = process.env.ANIDACHI_JWT_SECRET;
   if (!secret) throw new Error("ANIDACHI_JWT_SECRET is not set");
   return new TextEncoder().encode(secret);
@@ -25,8 +29,14 @@ export type AccessTokenPayload = {
 export async function signAccessToken(
   payload: AccessTokenPayload
 ): Promise<string> {
-  return new SignJWT({ email: payload.email, plan: payload.plan })
+  return new SignJWT({
+    email: payload.email,
+    plan: payload.plan,
+    typ: WEBSITE_ACCESS_TYPE,
+  })
     .setProtectedHeader({ alg: "HS256" })
+    .setIssuer(ANIDACHI_AUTH_ISSUER)
+    .setAudience(WEBSITE_ACCESS_AUDIENCE)
     .setSubject(payload.sub)
     .setIssuedAt()
     .setExpirationTime(`${ACCESS_TOKEN_TTL_SECONDS}s`)
@@ -37,8 +47,23 @@ export async function verifyAccessToken(
   token: string
 ): Promise<AccessTokenPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, getJwtSecret());
-    if (!payload.sub || !payload.email || !payload.plan) return null;
+    const { payload } = await jwtVerify(token, getJwtSecret(), {
+      algorithms: ["HS256"],
+      issuer: ANIDACHI_AUTH_ISSUER,
+      audience: WEBSITE_ACCESS_AUDIENCE,
+      requiredClaims: ["iss", "aud", "sub", "iat", "exp"],
+    });
+    if (payload.aud !== WEBSITE_ACCESS_AUDIENCE) return null;
+    if (payload.typ !== WEBSITE_ACCESS_TYPE) return null;
+    if (
+      typeof payload.sub !== "string" ||
+      !payload.sub ||
+      typeof payload.email !== "string" ||
+      !payload.email ||
+      !payload.plan
+    ) {
+      return null;
+    }
     if (!isAcceptedPlanCode(payload.plan)) return null;
     return {
       sub: payload.sub,

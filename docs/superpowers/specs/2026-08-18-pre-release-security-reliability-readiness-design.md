@@ -178,11 +178,44 @@ algorithm to `jose`, then validates the application `typ`. A website verifier
 never accepts an extension access token, and the reverse path is equally
 explicit.
 
-Refresh-token rows gain a client channel, token family, absolute session
-expiry, current token hash, rotation/revocation state, and device identity where
-already available. Refresh rotates atomically. Reuse of a predecessor revokes
-the family. Absolute expiry never slides. Existing sessions use a bounded
-pre-release compatibility transition rather than an unbounded dual-mode path.
+Refresh-token rows gain a client channel, token family, idle and absolute
+session expiry, current token hash, rotation/revocation state, and device
+identity where already available. Refresh rotates atomically. Reuse of a
+predecessor inside one named 10-second concurrency interval returns the already
+issued current successor without rotating again or revoking the family; reuse
+at or after that boundary revokes the family. Each family expires after 90
+consecutive days without a successful refresh and after an absolute maximum of
+365 days from family creation. A successful rotation moves `last_used_at`; the
+idle boundary is derived from it and is not stored redundantly. Family creation
+and absolute expiry never move. Existing sessions use a bounded pre-release
+compatibility transition rather than an unbounded dual-mode path.
+
+Raw or encrypted refresh tokens are never stored in PostgreSQL. The server
+derives the same opaque successor deterministically from the channel and
+presented predecessor with a domain-separated HMAC-SHA-256 keyed by the existing
+server-only auth secret; PostgreSQL stores only token hashes and atomically
+confirms which successor is current. Hash-only lineage retains every consumed
+predecessor until family expiry and bounded cleanup. The 10-second
+non-destructive reuse case applies only when that predecessor's recorded
+successor is still the family's current token; every other known replay revokes
+the family.
+
+The database migration is additive for the still-running old application: it
+creates the new authority and revokes the legacy rows present at migration time
+without dropping or tightening the legacy table. The new application reads
+only the channel-bound authority. A legacy row briefly issued by an old
+instance after migration is ignored and later removed by bounded cleanup;
+rollback after new-family issuance is forward recovery, never restoration of
+the legacy verifier.
+
+The extension follows the browser-native seamless-session pattern without
+delegating AniDachi credentials to Chrome's Google-token cache. Cached identity
+renders immediately while one background refresh is coalesced. Failed access-
+token validation permits one refresh attempt and session-resolution retry. If
+the refresh family is no longer usable, the extension may use the existing non-
+interactive website session flow to obtain a new extension-channel family. It
+never launches an interactive auth flow from startup, content observation, or a
+background retry; interactive auth requires an explicit user sign-in action.
 
 ### 3. Extension Authorization Code Binding
 
