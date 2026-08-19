@@ -13,6 +13,7 @@ import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const repoRoot = resolve(process.cwd(), "../..");
+const BUILD_TEST_TIMEOUT_MS = 30_000;
 const stagingId = "ndkfphbchhfephdodcpehdcoclojagje";
 const broadPatterns = ["http://*/*", "https://*/*", "file:///*", "<all_urls>"];
 const localHostPermissions = [
@@ -161,7 +162,9 @@ describe.sequential("extension release channel builds", () => {
     );
   });
 
-  it("forces the public script to its exact production runtime profile", () => {
+  it("forces the public script to its exact production runtime profile", {
+    timeout: BUILD_TEST_TIMEOUT_MS,
+  }, () => {
     const result = run("bash", ["scripts/build-extension-public.sh"], {
       WXT_EXTENSION_CHANNEL: "local",
       WXT_VAPID_PUBLIC_KEY: testVapidPublicKey,
@@ -183,7 +186,9 @@ describe.sequential("extension release channel builds", () => {
     });
   });
 
-  it("forces the narrow staging script to its exact staging runtime profile", () => {
+  it("forces the narrow staging script to its exact staging runtime profile", {
+    timeout: BUILD_TEST_TIMEOUT_MS,
+  }, () => {
     const result = run("bash", ["scripts/build-extension-staging.sh"], {
       WXT_EXTENSION_CHANNEL: "production",
       ...hostileEnvironment,
@@ -208,7 +213,9 @@ describe.sequential("extension release channel builds", () => {
     });
   });
 
-  it("keeps broad staging available only through the explicit broad command", () => {
+  it("keeps broad staging available only through the explicit broad command", {
+    timeout: BUILD_TEST_TIMEOUT_MS,
+  }, () => {
     const result = run("pnpm", ["build:extension:staging:broad"], {
       ...hostileEnvironment,
       WXT_BROAD_HOST_PERMISSIONS: "false",
