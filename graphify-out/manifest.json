@@ -1950,9 +1950,9 @@
     "semantic_hash": "1828197cc2e734653c06fe7fde317041"
   },
   "apps/web/lib/anidachi-auth/db.ts": {
-    "mtime": 1787152724.1006024,
-    "ast_hash": "2b07ae3301db0ccadba4ef72567b3575",
-    "semantic_hash": "2b07ae3301db0ccadba4ef72567b3575"
+    "mtime": 1787157235.1927822,
+    "ast_hash": "5684b01b3081eb5a23d224796c3ffcba",
+    "semantic_hash": "5684b01b3081eb5a23d224796c3ffcba"
   },
   "apps/web/lib/anidachi-auth/extension-codes.ts": {
     "mtime": 1787140027.9174688,
@@ -3005,9 +3005,9 @@
     "semantic_hash": "7222da43b1fe21764ac60a152d060d29"
   },
   "docs/current-development-state.md": {
-    "mtime": 1787154150.3292143,
-    "ast_hash": "1d3449b9e2f3830c20739b9022960c43",
-    "semantic_hash": "1d3449b9e2f3830c20739b9022960c43"
+    "mtime": 1787158490.4599361,
+    "ast_hash": "515c04a1c6813888dfd864a21871fa01",
+    "semantic_hash": "515c04a1c6813888dfd864a21871fa01"
   },
   "docs/development-environments.md": {
     "mtime": 1786689011.3582418,
@@ -4730,9 +4730,9 @@
     "semantic_hash": "1de7f552345e6903b25d0462bd831fec"
   },
   "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md": {
-    "mtime": 1787154104.3549616,
-    "ast_hash": "7274aa06b39556e9e594b6edfca3daca",
-    "semantic_hash": "7274aa06b39556e9e594b6edfca3daca"
+    "mtime": 1787158490.4604638,
+    "ast_hash": "77bbbbe4b8034f2b4110be7a453eb6b9",
+    "semantic_hash": "77bbbbe4b8034f2b4110be7a453eb6b9"
   },
   "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md": {
     "mtime": 1787154104.3540092,
@@ -4830,23 +4830,23 @@
     "semantic_hash": "93919e977f2d384c45c42dd1a54f7a8b"
   },
   "apps/web/lib/anidachi-auth/auth-channel-routes.test.ts": {
-    "mtime": 1787151420.6054795,
-    "ast_hash": "3446169bb51b73078ef986d97aa5cc0d",
-    "semantic_hash": "3446169bb51b73078ef986d97aa5cc0d"
+    "mtime": 1787157166.3081057,
+    "ast_hash": "355b520981e5584aff18c70d457d9715",
+    "semantic_hash": "355b520981e5584aff18c70d457d9715"
   },
   "apps/web/lib/anidachi-auth/tokens.test.ts": {
-    "mtime": 1787152995.1258597,
-    "ast_hash": "9f5709ea0919748001b510632d22c434",
-    "semantic_hash": "9f5709ea0919748001b510632d22c434"
+    "mtime": 1787157126.383792,
+    "ast_hash": "bb541c014aa83604ce02d21c34d3aa63",
+    "semantic_hash": "bb541c014aa83604ce02d21c34d3aa63"
   },
   "apps/web/supabase/migrations/20260819133849_auth_channel_rotation.sql": {
-    "mtime": 1787146996.9818773,
-    "ast_hash": "1ffd729f47a7fbbe94549fafe306f647",
-    "semantic_hash": "1ffd729f47a7fbbe94549fafe306f647"
+    "mtime": 1787157235.192283,
+    "ast_hash": "3647e590f45e96e648dc7b7d2921404d",
+    "semantic_hash": "3647e590f45e96e648dc7b7d2921404d"
   },
   "apps/web/supabase/tests/auth_channel_rotation.test.sql": {
-    "mtime": 1787153761.7826536,
-    "ast_hash": "b6e134663170ca99ce87f037a46e9e16",
-    "semantic_hash": "b6e134663170ca99ce87f037a46e9e16"
+    "mtime": 1787157126.3831754,
+    "ast_hash": "506fafcf5a4fbd57be617eeba0d46b69",
+    "semantic_hash": "506fafcf5a4fbd57be617eeba0d46b69"
   }
 }
