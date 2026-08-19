@@ -395,6 +395,15 @@ select is(
   'refresh families do not invent a device identity'
 );
 
+create temporary table wrong_channel_last_used_snapshots (
+  channel text primary key,
+  last_used_at timestamptz not null
+) on commit drop;
+insert into wrong_channel_last_used_snapshots (channel, last_used_at)
+select channel, last_used_at
+from public.refresh_token_families
+where current_token_hash = repeat('a', 64);
+
 set role service_role;
 select is(
   public.resolve_refresh_token_family_v1(
@@ -437,6 +446,19 @@ select is(
   ),
   repeat('a', 64) || ':true',
   'wrong-channel extension rotation leaves the website family current and active'
+);
+select is(
+  (
+    select last_used_at
+    from public.refresh_token_families
+    where current_token_hash = repeat('a', 64)
+  ),
+  (
+    select last_used_at
+    from wrong_channel_last_used_snapshots
+    where channel = 'website'
+  ),
+  'wrong-channel extension rotation does not extend the website family idle lifetime'
 );
 select is(
   (
@@ -581,6 +603,12 @@ select public.create_refresh_token_family_v1(
   null,
   '2100-02-01 00:00:00+00'
 );
+set role postgres;
+insert into wrong_channel_last_used_snapshots (channel, last_used_at)
+select channel, last_used_at
+from public.refresh_token_families
+where current_token_hash = repeat('c', 64);
+set role service_role;
 select is(
   (
     select rotation_outcome
@@ -603,6 +631,19 @@ select is(
   ),
   repeat('c', 64) || ':true',
   'wrong-channel website rotation leaves the extension family current and active'
+);
+select is(
+  (
+    select last_used_at
+    from public.refresh_token_families
+    where current_token_hash = repeat('c', 64)
+  ),
+  (
+    select last_used_at
+    from wrong_channel_last_used_snapshots
+    where channel = 'extension'
+  ),
+  'wrong-channel website rotation does not extend the extension family idle lifetime'
 );
 select is(
   (
