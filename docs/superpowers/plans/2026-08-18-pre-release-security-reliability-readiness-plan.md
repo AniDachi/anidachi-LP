@@ -7,9 +7,9 @@
 > drift gates or continue after a failed stop condition.
 
 Status: Wave 1 complete on staging; Wave 2 Task 5 deployed to staging, with
-interactive provider acceptance pending; Task 6 source and additive staging
-database prerequisite complete in PR `#199`, with web runtime and browser
-acceptance pending
+interactive provider acceptance pending; Task 6 staging acceptance complete
+for the approved artifact, exact PKCE/replay bindings, and first-profile
+logout callback
 
 Date: 2026-08-18
 
@@ -758,12 +758,29 @@ Record browser evidence from that exact artifact after old web instances have
 drained:
 
 - successful `/extension/connect` authorization, `/auth` callback, and
-  `/api/extension/auth/exchange` completion for the approved staging ID;
-- successful `/extension/logout` flow and exact `/logout` callback;
+  `/api/extension/auth/exchange` completion for the approved staging ID
+  (**user-confirmed on 2026-08-19 in both established staging test profiles:
+  each loaded and authorized the exact merged narrow artifact; separately, one
+  first-profile MV3-worker flow observed the exact `/auth` callback and one
+  successful exchange**);
+- successful `/extension/logout` flow and exact `/logout` callback (recorded
+  on 2026-08-19 from the first-profile MV3 worker: approved Chromium callback
+  host, `/logout` path, matching state, `signed_out=1`, and exactly the expected
+  callback parameters);
 - rejection of a wrong client ID before issuance;
-- rejection of a wrong PKCE verifier at exchange;
+- rejection of a wrong PKCE verifier at exchange (recorded on 2026-08-19 from
+  the exact staging MV3 worker: 401 `invalid_grant`; the following correct
+  exchange succeeded, proving the wrong-verifier attempt did not consume the
+  bound code);
 - rejection of a tampered or expired authenticated handoff; and
-- rejection of authorization-code replay after one successful exchange.
+- rejection of authorization-code replay after one successful exchange
+  (recorded on 2026-08-19: 401 `invalid_grant`).
+
+Separately, the token pair issued during the single PKCE/replay proof was
+cleaned up through supported extension refresh-token logout (200), and an
+immediate refresh with that in-memory token was rejected (401 `Invalid refresh
+token`). This issued-session revocation proof supplements, rather than replaces,
+the required browser logout callback above.
 
 This evidence is required before any future promotion to `main`. Task 6 itself
 still stops at reviewed `staging` acceptance and performs no production release.

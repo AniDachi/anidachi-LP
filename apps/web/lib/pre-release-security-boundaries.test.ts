@@ -119,12 +119,12 @@ describe("pre-release security boundaries", () => {
     );
   });
 
-  it("keeps the plan and design aligned after the Task 6 binding amendment", async () => {
+  it("keeps the plan and design aligned after Task 6 staging acceptance", async () => {
     const expectedStatus = [
       "Status: Wave 1 complete on staging; Wave 2 Task 5 deployed to staging, with",
-      "interactive provider acceptance pending; Task 6 source and additive staging",
-      "database prerequisite complete in PR `#199`, with web runtime and browser",
-      "acceptance pending",
+      "interactive provider acceptance pending; Task 6 staging acceptance complete",
+      "for the approved artifact, exact PKCE/replay bindings, and first-profile",
+      "logout callback",
     ].join("\n");
     const [plan, design] = await Promise.all([
       readFile(

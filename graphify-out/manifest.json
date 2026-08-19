@@ -2685,9 +2685,9 @@
     "semantic_hash": "ce9a13d5caef960b099135302fce3507"
   },
   "package.json": {
-    "mtime": 1787090757.7335513,
-    "ast_hash": "01dd4415377705d57ca795141dea2ebe",
-    "semantic_hash": "01dd4415377705d57ca795141dea2ebe"
+    "mtime": 1787111034.9486442,
+    "ast_hash": "2a04df7154fa9400eb622316b7b45b41",
+    "semantic_hash": "2a04df7154fa9400eb622316b7b45b41"
   },
   "packages/protocol/package.json": {
     "mtime": 1786689011.3760242,
@@ -2735,9 +2735,9 @@
     "semantic_hash": "ba679f385be717506ade6c435d5c799f"
   },
   "scripts/build-extension-staging.sh": {
-    "mtime": 1787090757.7330897,
-    "ast_hash": "02b2a97991b13f1de35fd479c320cb0f",
-    "semantic_hash": "02b2a97991b13f1de35fd479c320cb0f"
+    "mtime": 1787111034.948071,
+    "ast_hash": "f960f18af1ab71c7d9c3e0cea05af6d1",
+    "semantic_hash": "f960f18af1ab71c7d9c3e0cea05af6d1"
   },
   "scripts/dev-check.mjs": {
     "mtime": 1786689011.3791113,
@@ -2995,9 +2995,9 @@
     "semantic_hash": "716fbcc199cb190511193bf0ca39aa1e"
   },
   "docs/architecture.md": {
-    "mtime": 1786689011.357856,
-    "ast_hash": "4f8bc07151786b1e9503090c19b6b892",
-    "semantic_hash": "4f8bc07151786b1e9503090c19b6b892"
+    "mtime": 1787111109.68081,
+    "ast_hash": "a8e2ac5a7857993560a839b04be5bf25",
+    "semantic_hash": "a8e2ac5a7857993560a839b04be5bf25"
   },
   "docs/crunchyroll-adapter-notes.md": {
     "mtime": 1787041482.63707,
@@ -3005,9 +3005,9 @@
     "semantic_hash": "7222da43b1fe21764ac60a152d060d29"
   },
   "docs/current-development-state.md": {
-    "mtime": 1787091476.2215617,
-    "ast_hash": "035ee18b084623cefb16ac37ba2dfbf6",
-    "semantic_hash": "035ee18b084623cefb16ac37ba2dfbf6"
+    "mtime": 1787137588.0611556,
+    "ast_hash": "55a3e12d7564c8ac14de06c88cdf009f",
+    "semantic_hash": "55a3e12d7564c8ac14de06c88cdf009f"
   },
   "docs/development-environments.md": {
     "mtime": 1786689011.3582418,
@@ -3030,9 +3030,9 @@
     "semantic_hash": "349c1f6db9421f91fba5dc7888d11ed5"
   },
   "docs/extension-release-channels.md": {
-    "mtime": 1787091310.9261708,
-    "ast_hash": "0ed966fad3755c1d5e6f02452fc7b572",
-    "semantic_hash": "0ed966fad3755c1d5e6f02452fc7b572"
+    "mtime": 1787111034.949639,
+    "ast_hash": "23dcdd7f4644b7d1cfce6112b7f3953b",
+    "semantic_hash": "23dcdd7f4644b7d1cfce6112b7f3953b"
   },
   "docs/new-chat-project-context.md": {
     "mtime": 1786689011.3585618,
@@ -3045,9 +3045,9 @@
     "semantic_hash": "816771011a43e6458031004aba8d35d6"
   },
   "docs/project-architecture-and-development.md": {
-    "mtime": 1786689011.3587592,
-    "ast_hash": "70da6d0fa66b9f826f3ba3a6225d2a70",
-    "semantic_hash": "70da6d0fa66b9f826f3ba3a6225d2a70"
+    "mtime": 1787111109.6795268,
+    "ast_hash": "a50cc4eda61e03162ca8bce1f0f32c6a",
+    "semantic_hash": "a50cc4eda61e03162ca8bce1f0f32c6a"
   },
   "docs/project-knowledge-map.md": {
     "mtime": 1786689011.3588312,
@@ -3055,14 +3055,14 @@
     "semantic_hash": "06516679c7ca112f42eb205e840f2f41"
   },
   "docs/project-operating-manual.md": {
-    "mtime": 1786689011.3589113,
-    "ast_hash": "9fa86aeb56b42d0b312563930e5dd5bb",
-    "semantic_hash": "9fa86aeb56b42d0b312563930e5dd5bb"
+    "mtime": 1787111109.6801455,
+    "ast_hash": "e9dedacb54d1af9fcb9cfe6c5647d13c",
+    "semantic_hash": "e9dedacb54d1af9fcb9cfe6c5647d13c"
   },
   "docs/release-and-rollback-runbook.md": {
-    "mtime": 1787041482.6375268,
-    "ast_hash": "855d9a28642d086bfe12b9d1e31e6245",
-    "semantic_hash": "855d9a28642d086bfe12b9d1e31e6245"
+    "mtime": 1787111109.681388,
+    "ast_hash": "f616658f5980225f2d17d7ce2c58896a",
+    "semantic_hash": "f616658f5980225f2d17d7ce2c58896a"
   },
   "docs/shared-watch-progress-tracker.md": {
     "mtime": 1787041482.6377532,
@@ -4695,9 +4695,9 @@
     "semantic_hash": "a759a470b25398670234655ff5217a42"
   },
   "apps/web/lib/pre-release-security-boundaries.test.ts": {
-    "mtime": 1787082191.0034559,
-    "ast_hash": "0dae186c8c8d4c0ea1ac3c5e240ff04c",
-    "semantic_hash": "0dae186c8c8d4c0ea1ac3c5e240ff04c"
+    "mtime": 1787137554.1478763,
+    "ast_hash": "f1e2e0a49b08a44f28eca42cc9819a5f",
+    "semantic_hash": "f1e2e0a49b08a44f28eca42cc9819a5f"
   },
   "apps/web/lib/private-integration-blob-migration.test.ts": {
     "mtime": 1787045820.1640816,
@@ -4730,14 +4730,14 @@
     "semantic_hash": "1de7f552345e6903b25d0462bd831fec"
   },
   "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md": {
-    "mtime": 1787091351.646951,
-    "ast_hash": "0a0a7f345164e89601703b2a4eb770b5",
-    "semantic_hash": "0a0a7f345164e89601703b2a4eb770b5"
+    "mtime": 1787137588.060611,
+    "ast_hash": "4465ef4fb7237ed5297dce8c7b75fdc4",
+    "semantic_hash": "4465ef4fb7237ed5297dce8c7b75fdc4"
   },
   "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md": {
-    "mtime": 1787091351.647434,
-    "ast_hash": "70f8e25bfe5d78750b15e4f62fcedd64",
-    "semantic_hash": "70f8e25bfe5d78750b15e4f62fcedd64"
+    "mtime": 1787137588.0609055,
+    "ast_hash": "9ebdade19df39fd6e53fa9cf8d15e16b",
+    "semantic_hash": "9ebdade19df39fd6e53fa9cf8d15e16b"
   },
   "apps/web/lib/anidachi-auth/oauth-routes.test.ts": {
     "mtime": 1787062211.0195055,
@@ -4775,9 +4775,9 @@
     "semantic_hash": "49537f659e8d96b3b6d1ae39675a7d0d"
   },
   "apps/extension/test/release-channel-build.test.ts": {
-    "mtime": 1787090441.108914,
-    "ast_hash": "98c80465e703c8a4437c229d40439f70",
-    "semantic_hash": "98c80465e703c8a4437c229d40439f70"
+    "mtime": 1787111222.1055944,
+    "ast_hash": "e359688787e789aa8d6e6cdc3f8dab9a",
+    "semantic_hash": "e359688787e789aa8d6e6cdc3f8dab9a"
   },
   "apps/web/lib/anidachi-auth/extension-codes.test.ts": {
     "mtime": 1787082118.5544724,
@@ -4815,13 +4815,18 @@
     "semantic_hash": "9371a533bd5cf4de1416d58382a9b3a0"
   },
   "apps/web/lib/anidachi-auth/extension-auth-handoff.test.ts": {
-    "mtime": 1787091422.1394992,
-    "ast_hash": "6ee09c799c6f87ac7747442960f31220",
-    "semantic_hash": "6ee09c799c6f87ac7747442960f31220"
+    "mtime": 1787106149.644477,
+    "ast_hash": "f56bc30a55849b6797cf5e8f810fb4d7",
+    "semantic_hash": "f56bc30a55849b6797cf5e8f810fb4d7"
   },
   "apps/web/lib/anidachi-auth/extension-auth-handoff.ts": {
     "mtime": 1787090877.077126,
     "ast_hash": "c55b38bf5d4283da444cf39be5c42825",
     "semantic_hash": "c55b38bf5d4283da444cf39be5c42825"
+  },
+  "graphify-out/memory/query_20260819_031739_\u0442\u0430\u043a_\u0447\u0442\u043e_\u0442\u044b_\u0441\u0434\u0435\u043b\u0430\u043b_\u0438_\u0437\u0430\u0447\u0435\u043c_\u0438_\u0447\u0442\u043e_\u0435\u0449\u0435_\u043e\u0441\u0442\u0430\u043b\u043e\u0441\u044c__\u0445\u043e\u0440\u043e.md": {
+    "mtime": 1787109459.62409,
+    "ast_hash": "93919e977f2d384c45c42dd1a54f7a8b",
+    "semantic_hash": "93919e977f2d384c45c42dd1a54f7a8b"
   }
 }
