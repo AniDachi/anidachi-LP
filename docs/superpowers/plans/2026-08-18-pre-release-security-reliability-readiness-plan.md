@@ -6,10 +6,9 @@
 > and `superpowers:requesting-code-review` at every wave stop. Do not skip the
 > drift gates or continue after a failed stop condition.
 
-Status: Wave 1 complete on staging; Wave 2 Task 5 deployed to staging, with
-interactive provider acceptance pending; Task 6 staging acceptance complete
-for the approved artifact, exact PKCE/replay bindings, and first-profile
-logout callback
+Status: Wave 1 complete on staging; Wave 2 Tasks 5-8 implemented and deployed;
+Tasks 6-8 staging-accepted; Task 5 interactive Google and Discord provider
+acceptance remains the sole open Wave 2 stop gate
 
 Date: 2026-08-18
 
@@ -833,7 +832,7 @@ run `git diff --cached --check`.
 
 ## Task 7: Separate Token Channels And Rotate Refresh Families
 
-**Status (2026-08-20): staging accepted; Task 8 remains.** The additive database
+**Status (2026-08-20): staging accepted.** The additive database
 prerequisite is commit `2b38727`; runtime is `7ae4ff8`, with review fixes
 `2dd3efd`, test-only proof `45efde1`, and final authority hardening `0029653`.
 Local verification includes 180 pgTAP assertions and a final CodeRabbit review
@@ -841,8 +840,7 @@ with zero findings. PR #201 merged as `13a30fa` after the migration was applied
 first. Post-merge CI, database workflow, extension build, Rooms/P2P, Vercel, and
 staging smoke passed. Both established staging profiles completed forced
 reauthentication; the user confirmed correct account adoption, isolated
-extension logout, and successful reconnect. Task 7 is complete. Do not mark
-Wave 2 complete until Task 8 bounded cleanup and its stop gate pass.
+extension logout, and successful reconnect. Task 7 is complete.
 
 **Files:**
 
@@ -936,6 +934,31 @@ git commit -m "fix(auth): separate channels and rotate refresh families"
 
 ## Task 8: Add Bounded Auth Artifact Cleanup
 
+**Status (2026-08-20): implemented, reviewed, merged, and staging-accepted.**
+PR `#203` merged to `staging` as `e8c55193a1cca1397f4248d049c5ac293c22209a`.
+Migration `20260820040229_auth_artifact_cleanup.sql` is applied. It installs one
+active hourly Supabase Cron job named
+`anidachi-auth-artifact-cleanup-hourly`, owned by `postgres`, with command
+`select public.cleanup_auth_artifacts_v1();`. The service-role-only,
+security-invoker cleanup has an empty search path and a hard ceiling of 100
+physical rows per call. It removes only consumed/expired codes, expired OAuth
+transactions, expired or revoked legacy refresh rows, eligible lineage, and
+empty unusable families; active families remain ineligible.
+
+The implementation deliberately adds no Vercel route, secret, queue, worker,
+dashboard, polling loop, or user setting. Exact production DELETE statements
+are covered under the normal PostgreSQL planner with tie-heavy and lock-skewed
+fixtures. Local gates passed with 226/226 pgTAP assertions, full web/extension/
+protocol suites and checks, database lint/advisors, repeatability, and
+independent plus CodeRabbit review. Post-merge database deployment, CI,
+Rooms/P2P, Vercel, and staging smoke passed. One bounded staging acceptance
+call deleted exactly 100 eligible rows (47 extension codes, 5 OAuth
+transactions, 46 legacy refresh rows, and 2 unusable families); all 7 active
+families remained. The remaining eligible backlog is left to the hourly bounded
+job. Its first scheduled execution at `2026-08-20 07:00 UTC` succeeded and
+removed another 100 eligible rows; all 7 active families remained. No
+production or `main` promotion occurred.
+
 **Files:**
 
 - Create with `supabase migration new auth_artifact_cleanup`:
@@ -975,6 +998,14 @@ Required GREEN: new login and extension connection, exact channel rejection,
 refresh replay/concurrency, cleanup, full web/extension/protocol checks, and a
 documented staging reauthentication consequence. Stop if any legacy token is
 accepted cross-channel.
+
+**Current stop status (2026-08-20): not yet closed.** Tasks 6-8 satisfy their
+staging acceptance boundaries, including exact channel rejection, refresh
+rotation/replay/concurrency, bounded cleanup, and forced reauthentication. The
+sole remaining gate is Task 5's attended real Google and Discord
+consent/callback check inside the initial ten-minute OAuth transaction window.
+Do not start Wave 3 or promote this wave to `main` until that evidence is
+recorded.
 
 ---
 
