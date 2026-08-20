@@ -459,6 +459,113 @@ describe("worker routes", () => {
     expect(socket.close).not.toHaveBeenCalled();
   });
 
+  it("finalizes a replacement when the incumbent close throws after durable join", async () => {
+    const now = Date.now();
+    const room = new RoomState("room-1");
+    const oldSocket = {
+      close: vi.fn(() => { throw new Error("incumbent close failed"); }),
+    } as unknown as WebSocket;
+    const replacementSocket = { close: vi.fn() } as unknown as WebSocket;
+    const verified = { avatarUrl: null, role: "member" as const, roomId: "room-1", sub: "member-1" };
+    const oldParticipant = room.join({
+      cameraEnabled: false,
+      displayName: "Member",
+      id: "member-1",
+      lastSeenAt: now,
+      mediaSeat: "none",
+      role: "viewer",
+      syncStatus: "unknown",
+    });
+    const admission = new RoomAdmission({ maxParticipants: 4 });
+    const admissionId = "replacement-admission";
+    const reservation = admission.reserve("member-1", admissionId, now);
+    if (!reservation.allowed) throw new Error("expected reservation");
+    let attachment = createRoomSocketAttachment("room-1", verified, now, {
+      deadlineAt: reservation.deadlineAt,
+      joined: false,
+    });
+    const clearAdmissionTimeout = vi.fn();
+    const participantsBySocket = new Map<WebSocket, string>([[oldSocket, "member-1"]]);
+    const socketsByParticipant = new Map<string, WebSocket>([["member-1", oldSocket]]);
+    const sessionIdBySocket = new Map<WebSocket, string | undefined>([[oldSocket, "shared-session"]]);
+    const verifiedBySocket = new Map<WebSocket, typeof verified>([
+      [oldSocket, verified],
+      [replacementSocket, verified],
+    ]);
+    const sendRoomHistoryAuthority = vi.fn(async () => undefined);
+    const lifecycleTransaction = {
+      deleteAlarm: async () => undefined,
+      get: async () => undefined,
+      put: async () => undefined,
+    };
+    const roomObject = {
+      admission,
+      admissionIdBySocket: new Map<WebSocket, string>([[replacementSocket, admissionId]]),
+      broadcast: vi.fn(),
+      clearAdmissionTimeout,
+      currentRoomSnapshot: vi.fn(() => ({ type: "ROOM_SNAPSHOT", roomId: "room-1" })),
+      endedTombstone: null,
+      expirePendingAdmission: vi.fn(),
+      getSocketAttachment: () => attachment,
+      hasJoinDeadlineElapsed: () => false,
+      participantsBySocket,
+      p2pSignalBuffer: { requiresResyncAfter: () => false },
+      persistRoomState: vi.fn(),
+      reconcileRoomUsage: vi.fn(),
+      replayP2PSignals: vi.fn(),
+      room,
+      roomEndInProgress: false,
+      send: vi.fn(),
+      sendRoomHistoryAuthority,
+      sessionIdBySocket,
+      socketsByParticipant,
+      state: {
+        storage: {
+          transaction: async <T>(callback: (transaction: typeof lifecycleTransaction) => Promise<T>) =>
+            callback(lifecycleTransaction),
+        },
+      },
+      track: vi.fn(),
+      verifiedBySocket,
+      writeSocketAttachment: (_socket: WebSocket, next: typeof attachment) => {
+        attachment = next;
+      },
+    };
+    Object.setPrototypeOf(roomObject, RoomDurableObject.prototype);
+
+    await (RoomDurableObject.prototype as unknown as {
+      handleJoin(
+        this: typeof roomObject,
+        socket: WebSocket,
+        event: {
+          type: "JOIN";
+          roomId: string;
+          participant: typeof oldParticipant;
+          participantSessionId: string;
+          videoFingerprint: string;
+        },
+      ): Promise<void>;
+    }).handleJoin.call(roomObject, replacementSocket, {
+      type: "JOIN",
+      roomId: "room-1",
+      participant: oldParticipant,
+      participantSessionId: "shared-session",
+      videoFingerprint: "video-1",
+    }).catch(() => undefined);
+
+    expect(admission.isPending(admissionId)).toBe(false);
+    expect(clearAdmissionTimeout).toHaveBeenCalledWith(replacementSocket);
+    expect(attachment.admission.joined).toBe(true);
+    expect(roomObject.room.participants).toHaveLength(1);
+    expect(socketsByParticipant.get("member-1")).toBe(replacementSocket);
+    expect(participantsBySocket.get(replacementSocket)).toBe("member-1");
+    expect(sessionIdBySocket.get(replacementSocket)).toBe("shared-session");
+    expect(participantsBySocket.has(oldSocket)).toBe(false);
+    expect(verifiedBySocket.has(oldSocket)).toBe(false);
+    expect(sessionIdBySocket.has(oldSocket)).toBe(false);
+    expect(sendRoomHistoryAuthority).toHaveBeenCalledWith(replacementSocket);
+  });
+
   it("keeps admission pending when joined attachment serialization fails before participant replacement", async () => {
     const now = Date.now();
     const room = new RoomState("room-1");
@@ -484,7 +591,9 @@ describe("worker routes", () => {
     });
     const attachmentsBySocket = new Map<WebSocket, typeof attachment>([[replacementSocket, attachment]]);
     let failJoinedAttachmentWrite = true;
+    let failPendingAttachmentWrite = false;
     let failPersistRoomState = false;
+    let failRollbackPersistRoomState = false;
     const clearAdmissionTimeout = vi.fn();
     const participantsBySocket = new Map<WebSocket, string>([[oldSocket, "member-1"]]);
     const socketsByParticipant = new Map<string, WebSocket>([["member-1", oldSocket]]);
@@ -514,6 +623,10 @@ describe("worker routes", () => {
           failPersistRoomState = false;
           throw new Error("room persistence failed");
         }
+        if (failRollbackPersistRoomState) {
+          failRollbackPersistRoomState = false;
+          throw new Error("room persistence rollback failed");
+        }
       }),
       reconcileRoomUsage: vi.fn(),
       replayP2PSignals: vi.fn(),
@@ -535,6 +648,10 @@ describe("worker routes", () => {
         if (failJoinedAttachmentWrite && next.admission.joined) {
           failJoinedAttachmentWrite = false;
           throw new Error("serializeAttachment failed");
+        }
+        if (failPendingAttachmentWrite && !next.admission.joined) {
+          failPendingAttachmentWrite = false;
+          throw new Error("serializeAttachment rollback failed");
         }
         attachment = next;
         attachmentsBySocket.set(_socket, next);
@@ -593,7 +710,8 @@ describe("worker routes", () => {
     attachmentsBySocket.set(persistenceSocket, pendingPersistenceAttachment);
     verifiedBySocket.set(persistenceSocket, verified);
     roomObject.admissionIdBySocket.set(persistenceSocket, persistenceAdmissionId);
-    const roomBeforePersistenceFailure = roomObject.room.toSnapshot();
+    const { updatedAt: _roomBeforePersistenceUpdatedAt, ...roomBeforePersistenceFailure } =
+      roomObject.room.toSnapshot();
     failPersistRoomState = true;
 
     await join(persistenceSocket, "persistence-session");
@@ -602,12 +720,68 @@ describe("worker routes", () => {
     expect(attachmentsBySocket.get(persistenceSocket)?.admission.joined).toBe(false);
     expect(socketsByParticipant.get("member-1")).toBe(replacementSocket);
     expect(participantsBySocket.has(persistenceSocket)).toBe(false);
-    expect(roomObject.room.toSnapshot()).toEqual(roomBeforePersistenceFailure);
+    const { updatedAt: _roomAfterPersistenceUpdatedAt, ...roomAfterPersistenceFailure } =
+      roomObject.room.toSnapshot();
+    expect(roomAfterPersistenceFailure).toEqual(roomBeforePersistenceFailure);
 
     await join(persistenceSocket, "persistence-session");
 
     expect(attachmentsBySocket.get(persistenceSocket)?.admission.joined).toBe(true);
     expect(socketsByParticipant.get("member-1")).toBe(persistenceSocket);
+
+    const rollbackFailureSocket = { close: vi.fn() } as unknown as WebSocket;
+    const rollbackFailureAdmissionId = "rollback-failure-admission";
+    const rollbackFailureReservation = admission.reserve(
+      "member-1",
+      rollbackFailureAdmissionId,
+      Date.now(),
+    );
+    if (!rollbackFailureReservation.allowed) throw new Error("expected rollback-failure reservation");
+    attachmentsBySocket.set(rollbackFailureSocket, createRoomSocketAttachment("room-1", verified, Date.now(), {
+      deadlineAt: rollbackFailureReservation.deadlineAt,
+      joined: false,
+    }));
+    verifiedBySocket.set(rollbackFailureSocket, verified);
+    roomObject.admissionIdBySocket.set(rollbackFailureSocket, rollbackFailureAdmissionId);
+    failJoinedAttachmentWrite = true;
+    failPendingAttachmentWrite = true;
+
+    await join(rollbackFailureSocket, "rollback-failure-session");
+
+    expect(rollbackFailureSocket.close).toHaveBeenCalledWith(1011, "Room join rollback failed");
+    expect(admission.isPending(rollbackFailureAdmissionId)).toBe(false);
+    expect(roomObject.admissionIdBySocket.has(rollbackFailureSocket)).toBe(false);
+
+    const persistenceRollbackFailureSocket = { close: vi.fn() } as unknown as WebSocket;
+    const persistenceRollbackFailureAdmissionId = "persistence-rollback-failure-admission";
+    const persistenceRollbackFailureReservation = admission.reserve(
+      "member-1",
+      persistenceRollbackFailureAdmissionId,
+      Date.now(),
+    );
+    if (!persistenceRollbackFailureReservation.allowed) {
+      throw new Error("expected persistence rollback-failure reservation");
+    }
+    attachmentsBySocket.set(
+      persistenceRollbackFailureSocket,
+      createRoomSocketAttachment("room-1", verified, Date.now(), {
+        deadlineAt: persistenceRollbackFailureReservation.deadlineAt,
+        joined: false,
+      }),
+    );
+    verifiedBySocket.set(persistenceRollbackFailureSocket, verified);
+    roomObject.admissionIdBySocket.set(
+      persistenceRollbackFailureSocket,
+      persistenceRollbackFailureAdmissionId,
+    );
+    failPersistRoomState = true;
+    failRollbackPersistRoomState = true;
+
+    await join(persistenceRollbackFailureSocket, "persistence-rollback-failure-session");
+
+    expect(persistenceRollbackFailureSocket.close).toHaveBeenCalledWith(1011, "Room join rollback failed");
+    expect(admission.isPending(persistenceRollbackFailureAdmissionId)).toBe(false);
+    expect(roomObject.admissionIdBySocket.has(persistenceRollbackFailureSocket)).toBe(false);
   });
   it("does not expose the legacy LiveKit token endpoint", async () => {
     const response = await app.request(

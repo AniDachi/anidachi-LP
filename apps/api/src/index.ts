@@ -1185,7 +1185,13 @@ export class RoomDurableObject {
         this.writeSocketAttachment(socket, attachment);
         this.persistRoomState();
       } catch {
-        socket.close(1011, "Room join rollback failed");
+        this.releaseAdmission(socket);
+        try {
+          socket.close(1011, "Room join rollback failed");
+        } catch {
+          /* stale socket */
+        }
+        return;
       }
       this.send(socket, {
         type: "ERROR",
@@ -1204,43 +1210,63 @@ export class RoomDurableObject {
         this.writeSocketAttachment(socket, attachment);
         this.persistRoomState();
       } catch {
-        socket.close(1011, "Room join rollback failed");
+        this.releaseAdmission(socket);
+        try {
+          socket.close(1011, "Room join rollback failed");
+        } catch {
+          /* stale socket */
+        }
+        return;
       }
       this.expirePendingAdmission(socket, attachment.admission.deadlineAt);
       return;
     }
     this.clearAdmissionTimeout(socket);
 
+    const existingSessionId = existingSocket && existingSocket !== socket
+      ? this.sessionIdBySocket.get(existingSocket)
+      : undefined;
     if (existingSocket && existingSocket !== socket) {
-      const existingSessionId = this.sessionIdBySocket.get(existingSocket);
+      this.participantsBySocket.delete(existingSocket);
+      this.verifiedBySocket.delete(existingSocket);
+      this.sessionIdBySocket.delete(existingSocket);
+    }
+
+    // Install the replacement before attempting best-effort retirement of the
+    // incumbent. A stale socket can throw from send/close, but it must never
+    // prevent the already durable replacement from becoming authoritative.
+    this.participantsBySocket.set(socket, joined.id);
+    this.socketsByParticipant.set(joined.id, socket);
+    this.sessionIdBySocket.set(socket, event.participantSessionId);
+
+    if (existingSocket && existingSocket !== socket) {
       const sameSession =
         event.participantSessionId !== undefined &&
         existingSessionId === event.participantSessionId;
 
-      this.participantsBySocket.delete(existingSocket);
-      this.verifiedBySocket.delete(existingSocket);
-      this.sessionIdBySocket.delete(existingSocket);
-
-      if (sameSession) {
-        // Same tab reconnecting: silently retire the stale socket.
-        existingSocket.close(4000, "Replaced by a newer Anidachi session");
-      } else {
-        // A different tab/device took the session over. Tell the displaced
-        // socket terminally so it stops instead of reconnect-fighting (one
-        // active session). The displaced client suppresses reconnect on this.
-        this.track("session_taken_over");
-        this.send(existingSocket, {
-          type: "ERROR",
-          code: "SESSION_TAKEN_OVER",
-          message: "This room was opened in another tab or device.",
-        });
-        existingSocket.close(4002, "Session taken over");
+      try {
+        if (sameSession) {
+          // Same tab reconnecting: silently retire the stale socket.
+          existingSocket.close(4000, "Replaced by a newer Anidachi session");
+        } else {
+          // A different tab/device took the session over. Tell the displaced
+          // socket terminally so it stops instead of reconnect-fighting (one
+          // active session). The displaced client suppresses reconnect on this.
+          this.track("session_taken_over");
+          this.send(existingSocket, {
+            type: "ERROR",
+            code: "SESSION_TAKEN_OVER",
+            message: "This room was opened in another tab or device.",
+          });
+          existingSocket.close(4002, "Session taken over");
+        }
+      } catch {
+        // The incumbent is no longer authoritative; continue the committed
+        // replacement's snapshot/history path even if stale-socket cleanup
+        // cannot be observed by the platform.
       }
     }
 
-    this.participantsBySocket.set(socket, joined.id);
-    this.socketsByParticipant.set(joined.id, socket);
-    this.sessionIdBySocket.set(socket, event.participantSessionId);
     this.reconcileRoomUsage(Date.now());
     const lastSeenP2PServerSeq = event.lastSeenP2PServerSeq ?? 0;
     const replayAt = Date.now();
