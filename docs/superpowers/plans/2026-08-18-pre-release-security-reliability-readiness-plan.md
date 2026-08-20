@@ -139,10 +139,13 @@ socket value remains an evidence-gated hypothesis:
 - a 10-second pre-JOIN deadline and at most two pending sockets per authenticated
   participant, intended to cover the supported two-tab/device reconnect model.
 
-Task 0 must validate them against the documented product promise, current room
-reconnect traces, multi-tab behavior, and staging measurements. If the evidence
-does not support a candidate, amend this design/plan before runtime work. Do not
-silently raise it or preserve it merely because it is written here.
+Task 0 recorded `ROOM_ADMISSION_LIMITS_AMENDMENT_REQUIRED`. The reviewed Task
+10 amendment therefore approves the same narrow pre-release product boundary:
+at most two pending sockets per authenticated subject, a 10,000 ms absolute
+JOIN deadline, and a pending-room allowance of `2 * signed maxParticipants`.
+This records a product decision, not measured staging evidence. Do not silently
+raise it or preserve it merely because it is written here; a different limit
+requires another reviewed amendment.
 
 ## Findings And Task Ownership
 
@@ -1071,6 +1074,11 @@ git commit -m "fix(history): expire room authority safely"
 ```
 
 ## Task 10: Enforce Admission Before Retaining WebSockets
+
+**Approved amendment:** Use the reviewed two-pending-sockets-per-subject,
+10,000 ms absolute deadline, and `2 * signed maxParticipants` pending-room
+allowance. They are an explicit product boundary after Task 0's missing
+measurement gate, not a staging-capacity claim.
 
 **Files:**
 

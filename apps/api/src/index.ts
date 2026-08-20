@@ -63,9 +63,11 @@ import {
 } from "./room-socket-attachment";
 import {
   RoomRateLimiter,
+  RoomSubjectRateLimiters,
   type RoomEventClass,
   type RoomRateLimitDecision,
 } from "./room-rate-limit";
+import { RoomAdmission } from "./room-admission";
 import { RoomState } from "./room-state";
 import {
   emitRoomTelemetry,
@@ -371,7 +373,10 @@ export class RoomDurableObject {
   private readonly socketsByParticipant = new Map<string, WebSocket>();
   private readonly verifiedBySocket = new Map<WebSocket, VerifiedRoomToken>();
   private readonly sessionIdBySocket = new Map<WebSocket, string | undefined>();
-  private readonly rateLimiterBySocket = new Map<WebSocket, RoomRateLimiter>();
+  private readonly admissionIdBySocket = new Map<WebSocket, string>();
+  private readonly admissionTimeoutBySocket = new Map<WebSocket, ReturnType<typeof setTimeout>>();
+  private admission: RoomAdmission;
+  private readonly rateLimitersBySubject = new RoomSubjectRateLimiters();
   private nextP2PServerSeq = 1;
   private endedTombstone: ReturnType<typeof endedRoomTombstone> | null;
   private roomMeter: RoomMeterState;
@@ -388,6 +393,9 @@ export class RoomDurableObject {
     this.endedTombstone = readEndedRoomTombstone(state.storage);
     this.roomMeter = readStoredRoomMeter(state.storage) ?? createRoomMeterState();
     this.room = new RoomState(roomId, undefined, readStoredRoomState(state.storage) ?? undefined);
+    this.admission = new RoomAdmission({
+      maxParticipants: this.room.roomCapabilities.maxParticipants,
+    });
     const replayMetadata = this.endedTombstone ? [] : readStoredP2PReplayMetadata(state.storage);
     const latestStoredSeq = replayMetadata.at(-1)?.serverSeq ?? 0;
     for (const item of replayMetadata) {
@@ -428,6 +436,7 @@ export class RoomDurableObject {
   }
 
   private restoreWebSocketsFromAttachments(): void {
+    const now = Date.now();
     for (const socket of this.state.getWebSockets()) {
       const attachment = parseRoomSocketAttachment(
         socket.deserializeAttachment(),
@@ -441,6 +450,33 @@ export class RoomDurableObject {
       this.verifiedBySocket.set(socket, attachmentToVerifiedRoomToken(attachment));
       if (attachment.verified.capabilities) {
         this.room.setCapabilities(attachment.verified.capabilities);
+        this.admission.setMaxParticipants(attachment.verified.capabilities.maxParticipants);
+        this.rateLimitersBySubject.setMaxParticipants(
+          attachment.verified.capabilities.maxParticipants,
+        );
+      }
+      const admissionId = crypto.randomUUID();
+      this.admissionIdBySocket.set(socket, admissionId);
+      if (!attachment.admission.joined) {
+        if (now >= attachment.admission.deadlineAt || !this.admission.restore({
+          deadlineAt: attachment.admission.deadlineAt,
+          joined: false,
+          socketId: admissionId,
+          subject: attachment.verified.sub,
+        })) {
+          this.admissionIdBySocket.delete(socket);
+          this.verifiedBySocket.delete(socket);
+          socket.close(4001, "Room JOIN admission expired");
+          continue;
+        }
+        this.scheduleAdmissionTimeout(socket, attachment.admission.deadlineAt);
+      } else {
+        this.admission.restore({
+          deadlineAt: attachment.admission.deadlineAt,
+          joined: true,
+          socketId: admissionId,
+          subject: attachment.verified.sub,
+        });
       }
       if (!attachment.participant) {
         continue;
@@ -486,6 +522,59 @@ export class RoomDurableObject {
       return;
     }
     this.writeSocketAttachment(socket, updateRoomSocketAttachment(attachment, { lastSeenAt: Date.now() }));
+  }
+
+  private scheduleAdmissionTimeout(socket: WebSocket, deadlineAt: number): void {
+    const timeout = setTimeout(() => {
+      this.expirePendingAdmission(socket, deadlineAt);
+    }, Math.max(0, deadlineAt - Date.now()));
+    this.admissionTimeoutBySocket.set(socket, timeout);
+  }
+
+  private clearAdmissionTimeout(socket: WebSocket): void {
+    const timeout = this.admissionTimeoutBySocket.get(socket);
+    if (timeout !== undefined) clearTimeout(timeout);
+    this.admissionTimeoutBySocket.delete(socket);
+  }
+
+  private releaseAdmission(socket: WebSocket): boolean {
+    this.clearAdmissionTimeout(socket);
+    const admissionId = this.admissionIdBySocket.get(socket);
+    this.admissionIdBySocket.delete(socket);
+    return admissionId ? this.admission.release(admissionId) : false;
+  }
+
+  private expirePendingAdmission(socket: WebSocket, deadlineAt: number): void {
+    const attachment = this.getSocketAttachment(socket);
+    if (!attachment || attachment.admission.joined || attachment.admission.deadlineAt !== deadlineAt) {
+      return;
+    }
+    this.send(socket, {
+      type: "ERROR",
+      code: "JOIN_DEADLINE_EXCEEDED",
+      message: "Join the room within 10 seconds of connecting.",
+    });
+    this.releaseAdmission(socket);
+    try {
+      socket.close(4001, "Room JOIN admission expired");
+    } catch {
+      /* stale socket */
+    }
+  }
+
+  private hasJoinDeadlineElapsed(socket: WebSocket, now = Date.now()): boolean {
+    const attachment = this.getSocketAttachment(socket);
+    if (!attachment || attachment.admission.joined) return false;
+    if (now < attachment.admission.deadlineAt) return false;
+    this.expirePendingAdmission(socket, attachment.admission.deadlineAt);
+    return true;
+  }
+
+  private hasSocketForSubject(subject: string): boolean {
+    for (const verified of this.verifiedBySocket.values()) {
+      if (verified.sub === subject) return true;
+    }
+    return false;
   }
 
   private persistRoomState(): void {
@@ -603,6 +692,8 @@ export class RoomDurableObject {
     }
     if (verified.capabilities) {
       this.room.setCapabilities(verified.capabilities);
+      this.admission.setMaxParticipants(verified.capabilities.maxParticipants);
+      this.rateLimitersBySubject.setMaxParticipants(verified.capabilities.maxParticipants);
     }
     const tombstoneAfterVerification = readEndedRoomTombstone(this.state.storage);
     if (tombstoneAfterVerification) {
@@ -629,18 +720,50 @@ export class RoomDurableObject {
       return Response.json({ error: "ROOM_ENDING" }, { status: 409 });
     }
 
-    const pair = new WebSocketPair();
-    const client = pair[0];
-    const server = pair[1];
-    this.state.acceptWebSocket(server);
-    this.writeSocketAttachment(
-      server,
-      createRoomSocketAttachment(this.room.roomId, verified),
-    );
-    this.verifiedBySocket.set(server, verified);
-    this.track("ws_open", { role: verified.role });
+    const admissionId = crypto.randomUUID();
+    const admittedAt = Date.now();
+    const reservation = this.admission.reserve(verified.sub, admissionId, admittedAt);
+    if (!reservation.allowed) {
+      return Response.json({ error: "ROOM_ADMISSION_LIMIT" }, { status: 429 });
+    }
 
-    return new Response(null, { status: 101, webSocket: client });
+    let server: WebSocket | undefined;
+    let accepted = false;
+    try {
+      const pair = new WebSocketPair();
+      const client = pair[0];
+      server = pair[1];
+      this.state.acceptWebSocket(server);
+      accepted = true;
+      this.writeSocketAttachment(
+        server,
+        createRoomSocketAttachment(this.room.roomId, verified, admittedAt, {
+          deadlineAt: reservation.deadlineAt,
+          joined: false,
+        }),
+      );
+      this.admissionIdBySocket.set(server, admissionId);
+      this.scheduleAdmissionTimeout(server, reservation.deadlineAt);
+      this.verifiedBySocket.set(server, verified);
+      this.track("ws_open", { role: verified.role });
+
+      return new Response(null, { status: 101, webSocket: client });
+    } catch {
+      if (server && this.admissionIdBySocket.has(server)) {
+        this.releaseAdmission(server);
+        this.verifiedBySocket.delete(server);
+      } else {
+        this.admission.release(admissionId);
+      }
+      if (accepted && server) {
+        try {
+          server.close(1011, "Room admission setup failed");
+        } catch {
+          /* stale socket */
+        }
+      }
+      return Response.json({ error: "ROOM_ADMISSION_SETUP_FAILED" }, { status: 503 });
+    }
   }
 
   private endRoom(command: EndRoomCommand): Promise<Response> {
@@ -720,7 +843,13 @@ export class RoomDurableObject {
     this.socketsByParticipant.clear();
     this.verifiedBySocket.clear();
     this.sessionIdBySocket.clear();
-    this.rateLimiterBySocket.clear();
+    for (const timeout of this.admissionTimeoutBySocket.values()) clearTimeout(timeout);
+    this.admissionTimeoutBySocket.clear();
+    this.admissionIdBySocket.clear();
+    this.admission = new RoomAdmission({
+      maxParticipants: this.room.roomCapabilities.maxParticipants,
+    });
+    this.rateLimitersBySubject.clear();
   }
 
   async webSocketMessage(socket: WebSocket, raw: string | ArrayBuffer): Promise<void> {
@@ -754,6 +883,11 @@ export class RoomDurableObject {
       name: error instanceof Error ? error.name : "WebSocketError",
     });
     await this.handleClose(socket);
+    try {
+      socket.close(1011, "Room WebSocket error");
+    } catch {
+      /* already closed */
+    }
   }
 
   async alarm(): Promise<void> {
@@ -821,8 +955,17 @@ export class RoomDurableObject {
   }
 
   private async handleMessage(socket: WebSocket, raw: string | ArrayBuffer): Promise<void> {
-    const limiter = this.rateLimiterBySocket.get(socket) ?? new RoomRateLimiter();
-    this.rateLimiterBySocket.set(socket, limiter);
+    if (this.hasJoinDeadlineElapsed(socket)) return;
+    const verified = this.verifiedBySocket.get(socket);
+    if (!verified) {
+      socket.close(4000, "Invalid Anidachi socket state");
+      return;
+    }
+    const limiter = this.rateLimitersBySubject.forSubject(verified.sub);
+    if (!limiter) {
+      socket.close(1008, "Room event rate capacity exceeded");
+      return;
+    }
     const frameRateLimit = consumeRoomFrameBoundary(socket, limiter, raw);
     if (!frameRateLimit) {
       return;
@@ -919,6 +1062,7 @@ export class RoomDurableObject {
     socket: WebSocket,
     event: Extract<ClientEvent, { type: "JOIN" }>,
   ): Promise<void> {
+    if (this.hasJoinDeadlineElapsed(socket)) return;
     const verified = this.verifiedBySocket.get(socket);
     if (!verified) {
       this.send(socket, {
@@ -926,6 +1070,13 @@ export class RoomDurableObject {
         code: "AUTH_REQUIRED",
         message: "Room token is required before joining",
       });
+      return;
+    }
+
+    const admissionId = this.admissionIdBySocket.get(socket);
+    const admission = admissionId ? this.admission.canJoin(admissionId, Date.now()) : null;
+    if (!admission?.allowed) {
+      this.expirePendingAdmission(socket, this.getSocketAttachment(socket)?.admission.deadlineAt ?? 0);
       return;
     }
 
@@ -989,6 +1140,13 @@ export class RoomDurableObject {
       return;
     }
 
+    const joinedAdmission = admissionId ? this.admission.join(admissionId, Date.now()) : null;
+    if (!joinedAdmission?.allowed) {
+      this.expirePendingAdmission(socket, this.getSocketAttachment(socket)?.admission.deadlineAt ?? 0);
+      return;
+    }
+    this.clearAdmissionTimeout(socket);
+
     const existingSocket = this.socketsByParticipant.get(serverParticipant.id);
     if (existingSocket && existingSocket !== socket) {
       const existingSessionId = this.sessionIdBySocket.get(existingSocket);
@@ -1024,6 +1182,7 @@ export class RoomDurableObject {
     const attachment = this.getSocketAttachment(socket);
     if (attachment) {
       const patch: Parameters<typeof updateRoomSocketAttachment>[1] = {
+        admission: { ...attachment.admission, joined: true },
         lastSeenAt: Date.now(),
         participant: joined,
       };
@@ -1490,9 +1649,13 @@ export class RoomDurableObject {
 
   private async handleClose(socket: WebSocket): Promise<void> {
     const participantId = this.participantsBySocket.get(socket);
+    const verified = this.verifiedBySocket.get(socket);
+    this.releaseAdmission(socket);
     this.verifiedBySocket.delete(socket);
     this.sessionIdBySocket.delete(socket);
-    this.rateLimiterBySocket.delete(socket);
+    if (verified && !this.hasSocketForSubject(verified.sub)) {
+      this.rateLimitersBySubject.releaseSubject(verified.sub);
+    }
     if (!participantId) {
       return;
     }

@@ -372,10 +372,15 @@ the supported number of tabs/devices and current room participant ceiling. Once
 JOIN succeeds, existing participant replacement and room capacity rules remain
 authoritative.
 
-Two pending sockets per authenticated participant and a ten-second JOIN
-deadline are initial candidates for the current two-tab/device reconnect model.
-They become constants only after current reconnect traces and staging behavior
-support them; otherwise the design and plan are amended before code changes.
+`ROOM_ADMISSION_LIMITS_AMENDMENT_REQUIRED` was recorded because Task 0 did not
+produce measured staging evidence for the initial candidates. The reviewed
+Task 10 product amendment nevertheless approves a deliberately narrow
+pre-release boundary: at most two pending sockets per authenticated subject, an
+absolute 10,000 ms JOIN deadline, and at most `2 * signed maxParticipants`
+pending sockets per room. These are reviewed product limits, not a claim that
+staging capacity measurements proved them. A pre-JOIN timer may keep a room
+awake only through that deadline; joined sockets remain hibernatable. A later
+different limit requires a new reviewed amendment.
 
 Rate limiting aggregates by authenticated participant/room rather than giving
 every new socket a fresh independent budget. Hibernation-compatible attachment

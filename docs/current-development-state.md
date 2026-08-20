@@ -242,6 +242,16 @@ acceptance boundaries, and the Wave 2 Stop is closed. Wave 3 may proceed from
 current `staging`. No security work from this wave has been promoted to `main`;
 production promotion remains a separate decision and is out of this closeout.
 
+Wave 3 Task 10 has a reviewed local admission boundary for authenticated room
+WebSockets: before retention, the Worker permits at most two pending sockets per
+subject, uses a 10,000 ms absolute JOIN deadline, and permits at most
+`2 * signed maxParticipants` pending sockets per room. This is a product
+amendment following `ROOM_ADMISSION_LIMITS_AMENDMENT_REQUIRED`, not measured
+staging capacity evidence. Pending sockets are bounded only during pre-JOIN;
+their compact attachment state supports reconstruction after a wake, while the
+short deadline timer may keep the object awake until it fires. Complete Task 10
+manual/staging acceptance remains pending.
+
 ## Subscription Plan Codes
 
 Canonical subscription plan codes are:

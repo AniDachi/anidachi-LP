@@ -14,7 +14,10 @@ import app, {
 } from "../src/index";
 import { RecentP2PSignalBuffer } from "../src/p2p-signal-buffer";
 import * as privacyId from "../src/privacy-id";
+import { RoomAdmission } from "../src/room-admission";
 import { RoomRateLimiter } from "../src/room-rate-limit";
+import { createRoomSocketAttachment } from "../src/room-socket-attachment";
+import { RoomState } from "../src/room-state";
 
 const authEnv = { ANIDACHI_JWT_SECRET: "test-secret-at-least-32-characters-long" };
 const internalEnv = {
@@ -420,6 +423,40 @@ describe("worker routes", () => {
       () => calls.push("persist"),
     );
     expect(calls).toEqual(["disable", "persist"]);
+  });
+
+  it("reconstructs a pending reservation from a hibernating socket attachment", () => {
+    const deadlineAt = Date.now() + 5_000;
+    const socket = {
+      close: vi.fn(),
+      deserializeAttachment: () => createRoomSocketAttachment(
+        "room-1",
+        { avatarUrl: null, role: "member", roomId: "room-1", sub: "member-1" },
+        Date.now(),
+        { deadlineAt, joined: false },
+      ),
+    } as unknown as WebSocket;
+    const roomObject = {
+      admission: new RoomAdmission({ maxParticipants: 4 }),
+      admissionIdBySocket: new Map<WebSocket, string>(),
+      admissionTimeoutBySocket: new Map<WebSocket, ReturnType<typeof setTimeout>>(),
+      participantsBySocket: new Map<WebSocket, string>(),
+      room: new RoomState("room-1"),
+      scheduleAdmissionTimeout: vi.fn(),
+      sessionIdBySocket: new Map<WebSocket, string | undefined>(),
+      socketsByParticipant: new Map<string, WebSocket>(),
+      state: { getWebSockets: () => [socket] },
+      verifiedBySocket: new Map(),
+    };
+    Object.setPrototypeOf(roomObject, RoomDurableObject.prototype);
+
+    (RoomDurableObject.prototype as unknown as {
+      restoreWebSocketsFromAttachments(this: typeof roomObject): void;
+    }).restoreWebSocketsFromAttachments.call(roomObject);
+
+    expect(roomObject.admission.pendingCount).toBe(1);
+    expect(roomObject.scheduleAdmissionTimeout).toHaveBeenCalledWith(socket, deadlineAt);
+    expect(socket.close).not.toHaveBeenCalled();
   });
   it("does not expose the legacy LiveKit token endpoint", async () => {
     const response = await app.request(

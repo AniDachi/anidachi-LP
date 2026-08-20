@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { RoomRateLimiter } from "../src/room-rate-limit";
+import { RoomRateLimiter, RoomSubjectRateLimiters } from "../src/room-rate-limit";
 
 describe("RoomRateLimiter", () => {
 	it("rejects SDP events beyond eight per ten-second window", () => {
@@ -55,5 +55,44 @@ describe("RoomRateLimiter", () => {
 		}
 
 		expect(limiter.consume("sdp", 0).allowed).toBe(false);
+	});
+
+	it("aggregates the existing total frame budget across replacement sockets for one subject", () => {
+		const limiters = new RoomSubjectRateLimiters();
+		const originalSocket = limiters.forSubject("member-1");
+		expect(originalSocket).toBeDefined();
+		if (!originalSocket) throw new Error("expected subject limiter");
+		for (let index = 0; index < 119; index += 1) {
+			expect(originalSocket.consumeTotal(0).allowed).toBe(true);
+		}
+		limiters.releaseSubject("member-1", 100);
+
+		const replacementSocket = limiters.forSubject("member-1", 1_000);
+		expect(replacementSocket?.consumeTotal(1_000).allowed).toBe(true);
+		expect(replacementSocket?.consumeTotal(1_000)).toMatchObject({
+			allowed: false,
+		});
+	});
+
+	it("expires a released subject budget after its active window so the instance stays bounded", () => {
+		const limiters = new RoomSubjectRateLimiters();
+		const original = limiters.forSubject("member-1", 0);
+		expect(original).toBeDefined();
+		if (!original) throw new Error("expected subject limiter");
+		for (let index = 0; index < 120; index += 1) {
+			expect(original.consumeTotal(0).allowed).toBe(true);
+		}
+		limiters.releaseSubject("member-1", 100);
+
+		expect(limiters.forSubject("member-1", 10_100)?.consumeTotal(10_100).allowed).toBe(true);
+	});
+
+	it("bounds released subject budgets by room capacity instead of accumulating new subjects", () => {
+		const limiters = new RoomSubjectRateLimiters({ maxParticipants: 1 });
+		expect(limiters.forSubject("joined-member", 0)).toBeDefined();
+		expect(limiters.forSubject("pending-member-1", 0)).toBeDefined();
+		expect(limiters.forSubject("pending-member-2", 0)).toBeDefined();
+
+		expect(limiters.forSubject("overflow-member", 0)).toBeUndefined();
 	});
 });
