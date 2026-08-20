@@ -5724,10 +5724,10 @@
     "semantic_hash": "b038fdcb256c18768da64448665304b4"
   },
   "apps/web/supabase/contracts/extension_auth_pkce_concurrency_contract.mjs": {
-    "mtime": 1787140027.9184508,
-    "seen": 1787168236.384619,
-    "ast_hash": "19bca26ee8107f4cffdacdd76f103d91",
-    "semantic_hash": "19bca26ee8107f4cffdacdd76f103d91"
+    "mtime": 1787200385.7912483,
+    "seen": 1787206581.2975008,
+    "ast_hash": "113b4b174e846d5f5794fbee6371e5c5",
+    "semantic_hash": ""
   },
   "apps/web/supabase/contracts/extension_auth_pkce_migration_contract.mjs": {
     "mtime": 1787140027.9185026,
@@ -5742,10 +5742,10 @@
     "semantic_hash": "d99ea5883afb1f9c14993ec93c210f4c"
   },
   "apps/web/supabase/tests/extension_auth_pkce.test.sql": {
-    "mtime": 1787140027.9188268,
-    "seen": 1787168236.38463,
-    "ast_hash": "87fd263369dcfce042c0ea533b22f092",
-    "semantic_hash": "87fd263369dcfce042c0ea533b22f092"
+    "mtime": 1787198361.5666597,
+    "seen": 1787206581.297504,
+    "ast_hash": "1b02091baecaffe820191cfccd36d941",
+    "semantic_hash": ""
   },
   "packages/protocol/src/auth.ts": {
     "mtime": 1787140027.9299989,
@@ -5824,5 +5824,23 @@
     "seen": 1787168236.384655,
     "ast_hash": "54db17fabb057e92dd6e06ff0aa140a3",
     "semantic_hash": "54db17fabb057e92dd6e06ff0aa140a3"
+  },
+  "apps/web/supabase/contracts/auth_artifact_cleanup_plan_contract.mjs": {
+    "mtime": 1787204516.5644128,
+    "seen": 1787206581.297497,
+    "ast_hash": "5147e9d58df2eb853a71fa4f8d5a53a8",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/migrations/20260820040229_auth_artifact_cleanup.sql": {
+    "mtime": 1787203799.2033594,
+    "seen": 1787206581.297502,
+    "ast_hash": "afd3cb545c79c5859c81ad1565e18549",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/tests/auth_artifact_cleanup.test.sql": {
+    "mtime": 1787204804.0160437,
+    "seen": 1787206581.297503,
+    "ast_hash": "e0c031bd3a7766d3d5fd279947bd808e",
+    "semantic_hash": ""
   }
 }

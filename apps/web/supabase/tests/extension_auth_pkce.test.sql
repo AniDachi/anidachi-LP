@@ -270,6 +270,18 @@ select is(
   null::uuid,
   'the wrong PKCE challenge cannot consume the code'
 );
+set role postgres;
+select is(
+  (
+    select pg_catalog.count(*)
+    from public.extension_auth_codes
+    where code_hash = repeat('a', 64)
+      and consumed_at is null
+  ),
+  1::bigint,
+  'a failed PKCE exchange preserves the still-usable authorization code row'
+);
+set role service_role;
 select is(
   public.consume_extension_auth_code_v1(
     repeat('a', 64), repeat('b', 64),
@@ -297,10 +309,9 @@ select is(
     select pg_catalog.count(*)
     from public.extension_auth_codes
     where code_hash = repeat('a', 64)
-      and consumed_at is not null
   ),
-  1::bigint,
-  'paired consume attempts leave exactly one durable consumed row'
+  0::bigint,
+  'successful consumption deletes the authorization code immediately'
 );
 
 select throws_like(
