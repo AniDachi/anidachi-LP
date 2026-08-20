@@ -1341,6 +1341,23 @@ select is(
   'preferences RPC persists the YouTube opt-in'
 );
 
+create temporary view watch_v2_recent_people_pair as
+select
+  evidence.user_id,
+  evidence.other_user_id,
+  evidence.last_room_id,
+  evidence.last_watched_at
+from public.recent_people_evidence as evidence
+where
+  (
+    evidence.user_id = '11111111-1111-4111-8111-111111111111'::uuid
+    and evidence.other_user_id = '22222222-2222-4222-8222-222222222222'::uuid
+  )
+  or (
+    evidence.user_id = '22222222-2222-4222-8222-222222222222'::uuid
+    and evidence.other_user_id = '11111111-1111-4111-8111-111111111111'::uuid
+  );
+
 insert into public.rooms (
   room_id,
   host_user_id,
@@ -1408,7 +1425,7 @@ select lives_ok(
 );
 
 select is(
-  (select pg_catalog.count(*) from public.recent_people_evidence),
+  (select pg_catalog.count(*) from watch_v2_recent_people_pair),
   0::bigint,
   'one shared writer alone cannot create Recent People evidence'
 );
@@ -1448,7 +1465,7 @@ select is(
 );
 
 select is(
-  (select pg_catalog.count(*) from public.recent_people_evidence),
+  (select pg_catalog.count(*) from watch_v2_recent_people_pair),
   2::bigint,
   'two accepted shared writers derive both directional evidence rows'
 );
@@ -1543,7 +1560,7 @@ select
   evidence.other_user_id,
   evidence.last_room_id,
   evidence.last_watched_at
-from public.recent_people_evidence as evidence;
+from watch_v2_recent_people_pair as evidence;
 
 select throws_like(
   $$
@@ -1584,7 +1601,7 @@ select is(
           and participant.schema_version = 2
       ),
       ':',
-      (select pg_catalog.count(*) from public.recent_people_evidence)
+      (select pg_catalog.count(*) from watch_v2_recent_people_pair)
     )
     from public.watch_episode_progress as episode
     where episode.user_id = '11111111-1111-4111-8111-111111111111'
@@ -1600,7 +1617,7 @@ select is(
     from (
       (
         select user_id, other_user_id, last_room_id, last_watched_at
-        from public.recent_people_evidence
+        from watch_v2_recent_people_pair
         except all
         select user_id, other_user_id, last_room_id, last_watched_at
         from watch_v2_recent_people_before_expired
@@ -1726,7 +1743,7 @@ select
   evidence.other_user_id,
   evidence.last_room_id,
   evidence.last_watched_at
-from public.recent_people_evidence as evidence;
+from watch_v2_recent_people_pair as evidence;
 
 select throws_like(
   $$
@@ -1755,7 +1772,7 @@ select is(
     select pg_catalog.concat(
       episode.current_time_seconds,
       ':',
-      (select pg_catalog.count(*) from public.recent_people_evidence)
+      (select pg_catalog.count(*) from watch_v2_recent_people_pair)
     )
     from public.watch_episode_progress as episode
     where episode.user_id = '11111111-1111-4111-8111-111111111111'
@@ -1771,7 +1788,7 @@ select is(
     from (
       (
         select user_id, other_user_id, last_room_id, last_watched_at
-        from public.recent_people_evidence
+        from watch_v2_recent_people_pair
         except all
         select user_id, other_user_id, last_room_id, last_watched_at
         from watch_v2_recent_people_before_post_end
