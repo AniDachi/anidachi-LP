@@ -18,16 +18,17 @@
         "source_file": "apps/web/crm-data/SCHEMA.md"
       },
       {
-        "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_channel_bound_auth",
-        "label": "Channel-bound auth lifecycle",
+        "id": "wave_2_updated_acceptance_status",
+        "label": "Wave 2 deployed state, accepted tasks, and remaining attended gate",
         "nodes": [
-          "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_explicit_auth_channels",
-          "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_refresh_family_lifecycle",
-          "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_additive_migration"
+          "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_tasks_5_8_deployed",
+          "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_tasks_6_8_staging_accepted",
+          "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_task_5_google_discord_gate",
+          "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_wave_2_open_stop_gate"
         ],
-        "relation": "implement",
+        "relation": "form",
         "confidence": "EXTRACTED",
-        "confidence_score": 1.0,
+        "confidence_score": 1,
         "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md"
       },
       {
@@ -88,46 +89,6 @@
         "source_file": ".codex/skills/graphify/references/update.md"
       },
       {
-        "id": "wave_2_auth_hardening_flow",
-        "label": "Wave 2 Auth Hardening Flow",
-        "nodes": [
-          "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_5_browser_oauth_transactions",
-          "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_6_extension_connection_binding",
-          "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_7_refresh_family_rotation",
-          "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_8_bounded_auth_cleanup"
-        ],
-        "relation": "participate_in",
-        "confidence": "EXTRACTED",
-        "confidence_score": 1.0,
-        "source_file": "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md"
-      },
-      {
-        "id": "wave_3_live_runtime_boundaries",
-        "label": "Wave 3 Live Runtime Boundaries",
-        "nodes": [
-          "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_9_room_history_authority",
-          "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_10_websocket_admission",
-          "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_11_extension_isolation"
-        ],
-        "relation": "participate_in",
-        "confidence": "EXTRACTED",
-        "confidence_score": 1.0,
-        "source_file": "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md"
-      },
-      {
-        "id": "wave_5_public_and_server_boundaries",
-        "label": "Wave 5 Public and Server Boundaries",
-        "nodes": [
-          "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_14_server_media_intake",
-          "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_15_ownership_and_safe_destinations",
-          "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_16_public_abuse_boundaries"
-        ],
-        "relation": "participate_in",
-        "confidence": "EXTRACTED",
-        "confidence_score": 1.0,
-        "source_file": "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md"
-      },
-      {
         "id": "human_gated_outreach_flow",
         "label": "Human-gated Outreach Flow",
         "nodes": [
@@ -140,6 +101,34 @@
         "confidence": "INFERRED",
         "confidence_score": 0.95,
         "source_file": "apps/web/crm-data/WORKFLOW.md"
+      },
+      {
+        "id": "task_8_bounded_cleanup_acceptance_flow",
+        "label": "Task 8 bounded cleanup deployment and staging acceptance",
+        "nodes": [
+          "docs_current_development_state_auth_artifact_cleanup_migration",
+          "docs_current_development_state_bounded_cleanup_contract",
+          "docs_current_development_state_active_artifact_preservation",
+          "docs_current_development_state_task_8_staging_acceptance"
+        ],
+        "relation": "form",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0,
+        "source_file": "docs/current-development-state.md"
+      },
+      {
+        "id": "wave_2_open_stop_gate",
+        "label": "Wave 2 progression remains gated by Task 5 provider acceptance",
+        "nodes": [
+          "docs_current_development_state_task_5_provider_acceptance_gate",
+          "docs_current_development_state_wave_2_progression_restriction",
+          "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_5_provider_acceptance_gate",
+          "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_wave_2_stop_status"
+        ],
+        "relation": "participate_in",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0,
+        "source_file": "docs/current-development-state.md"
       }
     ]
   },
@@ -14511,26 +14500,39 @@
       "source_location": "L7"
     },
     {
-      "id": "apps_web_lib_pre_release_security_boundaries_test",
-      "label": "pre-release-security-boundaries.test.ts",
+      "id": "ref_node_module",
       "_origin": "ast",
       "community": 133,
       "community_name": "client.ts",
-      "file_type": "code",
-      "norm_label": "pre-release-security-boundaries.test.ts",
+      "file_type": "concept",
+      "norm_label": "node:module",
+      "label": "node:module",
       "source_file": "apps/web/lib/pre-release-security-boundaries.test.ts",
-      "source_location": "L1"
+      "source_location": "L3"
+    },
+    {
+      "id": "apps_web_lib_pre_release_security_boundaries_test",
+      "label": "pre-release-security-boundaries.test.ts",
+      "file_type": "code",
+      "source_file": "apps/web/lib/pre-release-security-boundaries.test.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 133,
+      "community_name": "client.ts",
+      "norm_label": "pre-release-security-boundaries.test.ts"
     },
     {
       "id": "apps_web_lib_pre_release_security_boundaries_test_moduleloader",
       "label": "ModuleLoader",
+      "file_type": "code",
+      "source_file": "apps/web/lib/pre-release-security-boundaries.test.ts",
+      "source_location": "L8",
+      "_callable": true,
+      "_callable_class": true,
       "_origin": "ast",
       "community": 133,
       "community_name": "client.ts",
-      "file_type": "code",
-      "norm_label": "moduleloader",
-      "source_file": "apps/web/lib/pre-release-security-boundaries.test.ts",
-      "source_location": "L8"
+      "norm_label": "moduleloader"
     },
     {
       "id": "apps_web_scripts_google_ads_diagnose",
@@ -85878,84 +85880,80 @@
       "source_location": "L1380"
     },
     {
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_additive_migration",
-      "label": "Additive Auth Migration",
-      "_origin": "semantic",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_document",
+      "label": "Pre-release Security And Reliability Readiness Design",
+      "file_type": "document",
+      "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
       "author": null,
-      "captured_at": "2026-08-18",
+      "contributor": null,
       "community": 323,
       "community_name": "Explicit Website and Extension Auth Channels",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "additive auth migration",
-      "rationale": "The migration adds the new authority and revokes legacy rows without dropping the legacy table; rollback after issuance is forward recovery.",
-      "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
-      "source_location": "203-209",
-      "source_url": null
+      "norm_label": "pre-release security and reliability readiness design",
+      "_origin": "semantic"
     },
     {
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_explicit_auth_channels",
-      "label": "Explicit Website and Extension Auth Channels",
-      "_origin": "semantic",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_tasks_5_8_deployed",
+      "label": "Wave 2 Tasks 5-8 implemented and deployed",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
       "author": null,
-      "captured_at": "2026-08-18",
+      "contributor": null,
       "community": 323,
       "community_name": "Explicit Website and Extension Auth Channels",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "explicit website and extension auth channels",
-      "rationale": "Sessions are cryptographically and durably channel-bound; verifiers enforce exact issuer, audience, claims, algorithm, and application type.",
-      "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
-      "source_location": "160-179",
-      "source_url": null
+      "norm_label": "wave 2 tasks 5-8 implemented and deployed",
+      "_origin": "semantic"
     },
     {
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_refresh_family_lifecycle",
-      "label": "Refresh Family Lifecycle",
-      "_origin": "semantic",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_tasks_6_8_staging_accepted",
+      "label": "Tasks 6-8 staging-accepted",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
       "author": null,
-      "captured_at": "2026-08-18",
+      "contributor": null,
       "community": 323,
       "community_name": "Explicit Website and Extension Auth Channels",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "refresh family lifecycle",
-      "rationale": "Refresh families rotate atomically, support only bounded concurrent reuse, expire after 90 idle days or 365 absolute days, and revoke on other known replay.",
-      "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
-      "source_location": "181-201",
-      "source_url": null
+      "norm_label": "tasks 6-8 staging-accepted",
+      "_origin": "semantic"
     },
     {
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_definition_of_ready",
-      "label": "Definition of Ready Auth Boundary",
-      "_origin": "semantic",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_task_5_google_discord_gate",
+      "label": "Task 5 interactive Google and Discord provider acceptance",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
       "author": null,
-      "captured_at": "2026-08-18",
+      "contributor": null,
       "community": 323,
       "community_name": "Explicit Website and Extension Auth Channels",
-      "contributor": null,
+      "norm_label": "task 5 interactive google and discord provider acceptance",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_wave_2_open_stop_gate",
+      "label": "Sole open Wave 2 stop gate",
       "file_type": "rationale",
-      "norm_label": "definition of ready auth boundary",
-      "rationale": "Readiness requires website and extension credentials to be rejected across channels and current local and staging evidence.",
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
-      "source_location": "551-568",
-      "source_url": null
-    },
-    {
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_seamless_extension_session",
-      "label": "Seamless Extension Session",
-      "_origin": "semantic",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
       "author": null,
-      "captured_at": "2026-08-18",
-      "community": 556,
-      "community_name": "Seamless Extension Session",
       "contributor": null,
-      "file_type": "concept",
-      "norm_label": "seamless extension session",
-      "rationale": "Cached identity renders immediately, background refresh is coalesced and non-interactive, and interactive authentication requires explicit user action.",
-      "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
-      "source_location": "211-218",
-      "source_url": null
+      "rationale": "Tasks 5-8 are deployed and Tasks 6-8 are staging-accepted, leaving only Task 5 attended Google and Discord provider acceptance open.",
+      "community": 323,
+      "community_name": "Explicit Website and Extension Auth Channels",
+      "norm_label": "sole open wave 2 stop gate",
+      "_origin": "semantic"
     },
     {
       "id": "apps_extension_entrypoints_popup_index_extension_popup_shell",
@@ -231069,61 +231067,84 @@
       "source": "apps_web_lib_pre_release_security_boundaries_test",
       "target": "ref_node_assert_strict",
       "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pre-release-security-boundaries.test.ts",
       "source_location": "L1",
-      "weight": 1.0
+      "weight": 1,
+      "_origin": "ast",
+      "confidence_score": 1
     },
     {
       "source": "apps_web_lib_pre_release_security_boundaries_test",
       "target": "ref_node_fs_promises",
       "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pre-release-security-boundaries.test.ts",
       "source_location": "L2",
-      "weight": 1.0
+      "weight": 1,
+      "_origin": "ast",
+      "confidence_score": 1
+    },
+    {
+      "source": "apps_web_lib_pre_release_security_boundaries_test",
+      "target": "ref_node_module",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/pre-release-security-boundaries.test.ts",
+      "source_location": "L3",
+      "weight": 1,
+      "_origin": "ast",
+      "confidence_score": 1
     },
     {
       "source": "apps_web_lib_pre_release_security_boundaries_test",
       "target": "ref_node_url",
       "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pre-release-security-boundaries.test.ts",
       "source_location": "L4",
-      "weight": 1.0
+      "weight": 1,
+      "_origin": "ast",
+      "confidence_score": 1
     },
     {
       "source": "apps_web_lib_pre_release_security_boundaries_test",
       "target": "ref_node_path",
       "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pre-release-security-boundaries.test.ts",
       "source_location": "L5",
-      "weight": 1.0
+      "weight": 1,
+      "_origin": "ast",
+      "confidence_score": 1
     },
     {
       "source": "apps_web_lib_pre_release_security_boundaries_test",
       "target": "ref_node_test",
       "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pre-release-security-boundaries.test.ts",
       "source_location": "L6",
-      "weight": 1.0
+      "weight": 1,
+      "_origin": "ast",
+      "confidence_score": 1
+    },
+    {
+      "source": "apps_web_lib_pre_release_security_boundaries_test",
+      "target": "apps_web_lib_pre_release_security_boundaries_test_moduleloader",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/pre-release-security-boundaries.test.ts",
+      "source_location": "L8",
+      "weight": 1,
+      "_origin": "ast",
+      "confidence_score": 1
     },
     {
       "source": "apps_web_lib_pricing_tiers",
@@ -283159,17 +283180,6 @@
       "weight": 1.0
     },
     {
-      "source": "apps_web_lib_pre_release_security_boundaries_test",
-      "target": "apps_web_lib_pre_release_security_boundaries_test_moduleloader",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/lib/pre-release-security-boundaries.test.ts",
-      "source_location": "L16",
-      "weight": 1.0
-    },
-    {
       "source": "apps_web_lib_pricing_copy",
       "target": "apps_web_lib_pricing_copy_pricingwatchpagefaqanswer",
       "relation": "contains",
@@ -313850,26 +313860,81 @@
       "weight": 1.0
     },
     {
-      "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_explicit_auth_channels",
-      "target": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_refresh_family_lifecycle",
-      "relation": "conceptually_related_to",
-      "_origin": "semantic",
+      "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_document",
+      "target": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_tasks_5_8_deployed",
+      "relation": "references",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
-      "source_location": "160-201",
-      "weight": 1.0
+      "source_location": null,
+      "weight": 1,
+      "_origin": "semantic"
     },
     {
-      "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_refresh_family_lifecycle",
-      "target": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_additive_migration",
-      "relation": "conceptually_related_to",
-      "_origin": "semantic",
+      "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_document",
+      "target": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_tasks_6_8_staging_accepted",
+      "relation": "references",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
-      "source_location": "181-209",
-      "weight": 1.0
+      "source_location": null,
+      "weight": 1,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_document",
+      "target": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_task_5_google_discord_gate",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
+      "source_location": null,
+      "weight": 1,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_document",
+      "target": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_wave_2_open_stop_gate",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
+      "source_location": null,
+      "weight": 1,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_tasks_5_8_deployed",
+      "target": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_tasks_6_8_staging_accepted",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
+      "source_location": null,
+      "weight": 1,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_task_5_google_discord_gate",
+      "target": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_wave_2_open_stop_gate",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
+      "source_location": null,
+      "weight": 1,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_tasks_6_8_staging_accepted",
+      "target": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_wave_2_open_stop_gate",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
+      "source_location": null,
+      "weight": 1,
+      "_origin": "semantic"
     },
     {
       "source": "docs_site_extension_integration_notes_authenticated_room_flow",
@@ -313902,17 +313967,6 @@
       "confidence_score": 1.0,
       "source_file": "docs/site-extension-integration-notes.md",
       "source_location": null,
-      "weight": 1.0
-    },
-    {
-      "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_definition_of_ready",
-      "target": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_explicit_auth_channels",
-      "relation": "rationale_for",
-      "_origin": "semantic",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
-      "source_location": "551-568",
       "weight": 1.0
     },
     {
@@ -316215,16 +316269,17 @@
       "source_file": "apps/web/crm-data/SCHEMA.md"
     },
     {
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_channel_bound_auth",
-      "label": "Channel-bound auth lifecycle",
+      "id": "wave_2_updated_acceptance_status",
+      "label": "Wave 2 deployed state, accepted tasks, and remaining attended gate",
       "nodes": [
-        "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_explicit_auth_channels",
-        "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_refresh_family_lifecycle",
-        "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_additive_migration"
+        "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_tasks_5_8_deployed",
+        "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_tasks_6_8_staging_accepted",
+        "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_task_5_google_discord_gate",
+        "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_wave_2_open_stop_gate"
       ],
-      "relation": "implement",
+      "relation": "form",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md"
     },
     {
@@ -316327,5 +316382,5 @@
       "source_file": "docs/current-development-state.md"
     }
   ],
-  "built_at_commit": "c31df41a0711998f27835db23d2244b4a42a3357"
+  "built_at_commit": "31c1f2f8a6238a7545723bee3590a68e36dc9478"
 }
