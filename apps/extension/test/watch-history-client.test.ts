@@ -1516,6 +1516,49 @@ describe("watch history v2 client", () => {
       .toHaveLength(1);
   });
 
+  it("retains rejected shared work with a stable invalid-room-authority status", async () => {
+    const owner = session.user.id;
+    const pending = progressEvent("00000000-0000-4000-8000-000000000104");
+    const { sharedRoom: _sharedRoom, ...localObservation } = pending;
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: {
+        [watchHistoryPartitionKey(owner, 1)]: {
+          ...readyPartition(owner, false),
+          currentObservation: localObservation,
+          currentObservationMeaningfulSolo: false,
+          currentObservationDisplayMode: "together",
+          outbox: {
+            ownerUserId: owner,
+            accountGeneration: 1,
+            entries: [{ event: pending, key: "shared", slot: "latest", persistedAt: 1 }],
+          },
+        },
+      },
+    };
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => session,
+      fetch: vi.fn(async () => new Response(
+        JSON.stringify({ code: "INVALID_AUTHORITY" }),
+        { status: 403 },
+      )) as typeof fetch,
+      storage: createWatchHistoryStorage({
+        item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+
+    await expect(client.handle({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "flush" }))
+      .resolves.toEqual({ ok: false, status: "invalid-room-authority" });
+    expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]).toMatchObject({
+      currentObservationMeaningfulSolo: false,
+      currentObservationDisplayMode: "together",
+      outbox: { entries: [{ event: { sharedRoom: { attestation: "room-attestation-proof" } } }] },
+    });
+  });
+
   it("refreshes a stale access token once and acknowledges the same idempotent event", async () => {
     const owner = session.user.id;
     const pending = { ...progressEvent(), sharedRoom: null };

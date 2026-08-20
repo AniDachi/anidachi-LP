@@ -35,7 +35,8 @@ create or replace function pg_temp.watch_v2_event(
   account_generation bigint default 1,
   shared_room jsonb default null,
   episode_key text default 'episode-one',
-  title_key text default 'series-one'
+  title_key text default 'series-one',
+  event_kind text default 'heartbeat'
 )
 returns jsonb
 language sql
@@ -61,7 +62,7 @@ as $$
     'duration', 1200,
     'progress', current_seconds / 1200,
     'observedAt', observed_at,
-    'kind', 'heartbeat',
+    'kind', event_kind,
     'sharedRoom', shared_room
   );
 $$;
@@ -90,12 +91,35 @@ returns jsonb
 language sql
 as $$
   select pg_catalog.jsonb_build_object(
+    'typ', 'room_history',
+    'iss', 'anidachi-worker',
+    'aud', 'anidachi-web-history',
     'sub', user_id,
     'roomId', 'watch-v2-room',
     'participantSessionId', participant_session_id,
     'roomGeneration', 1,
     'sourceGeneration', source_generation,
-    'iat', extract(epoch from pg_catalog.clock_timestamp())::bigint
+    'iat', extract(epoch from pg_catalog.statement_timestamp())::bigint,
+    'exp', extract(epoch from pg_catalog.statement_timestamp())::bigint + 86400,
+    'jti', '99999999-9999-4999-8999-999999999999'
+  );
+$$;
+
+create or replace function pg_temp.watch_v2_legacy_authority(
+  user_id uuid,
+  participant_session_id text,
+  source_generation bigint default 1
+)
+returns jsonb
+language sql
+as $$
+  select pg_catalog.jsonb_build_object(
+    'sub', user_id,
+    'roomId', 'watch-v2-room',
+    'participantSessionId', participant_session_id,
+    'roomGeneration', 1,
+    'sourceGeneration', source_generation,
+    'iat', extract(epoch from pg_catalog.statement_timestamp())::bigint
   );
 $$;
 
@@ -1329,7 +1353,7 @@ values (
   'watch-v2-room',
   '11111111-1111-4111-8111-111111111111',
   'live',
-  pg_catalog.clock_timestamp() - interval '1 hour',
+  pg_catalog.clock_timestamp() - interval '2 days',
   'https://www.crunchyroll.com/watch/episode-one/demo',
   'Watch V2 Room'
 );
@@ -1339,6 +1363,27 @@ values (
   'watch-v2-room',
   '22222222-2222-4222-8222-222222222222',
   pg_catalog.clock_timestamp() - interval '30 minutes'
+);
+
+select lives_ok(
+  $$
+    select public.apply_watch_progress_v2(
+      '11111111-1111-4111-8111-111111111111',
+      pg_temp.watch_v2_event(
+        'cccccccc-cccc-4ccc-8ccc-ccccccccccc0',
+        'host-participant-session',
+        pg_catalog.clock_timestamp(),
+        390,
+        1,
+        pg_temp.watch_v2_shared_room('host-participant-session')
+      ),
+      pg_temp.watch_v2_legacy_authority(
+        '11111111-1111-4111-8111-111111111111',
+        'host-participant-session'
+      )
+    )
+  $$,
+  'migration-first accepts a fresh old-runtime authority with the same derived expiry'
 );
 
 select lives_ok(
@@ -1410,6 +1455,80 @@ select is(
 
 select is(
   (
+    public.apply_watch_progress_v2(
+      '11111111-1111-4111-8111-111111111111',
+      pg_temp.watch_v2_event(
+        'cccccccc-cccc-4ccc-8ccc-ccccccccccc1',
+        'host-participant-session',
+        pg_catalog.clock_timestamp(),
+        999,
+        1,
+        pg_temp.watch_v2_shared_room('host-participant-session')
+      ),
+      pg_temp.watch_v2_authority(
+        '11111111-1111-4111-8111-111111111111',
+        'host-participant-session'
+      ) || pg_catalog.jsonb_build_object(
+        'iat', extract(epoch from pg_catalog.statement_timestamp())::bigint - 86401,
+        'exp', extract(epoch from pg_catalog.statement_timestamp())::bigint - 1
+      )
+    ) ->> 'acceptedEventId'
+  ),
+  'cccccccc-cccc-4ccc-8ccc-ccccccccccc1'::text,
+  'an already-receipted duplicate succeeds after its authority expires'
+);
+
+select throws_like(
+  $$
+    select public.apply_watch_progress_v2(
+      '11111111-1111-4111-8111-111111111111',
+      pg_temp.watch_v2_event(
+        'cccccccc-cccc-4ccc-8ccc-ccccccccccc4',
+        'host-participant-session',
+        pg_catalog.clock_timestamp(),
+        999,
+        1,
+        pg_temp.watch_v2_shared_room('host-participant-session')
+      ),
+      pg_temp.watch_v2_authority(
+        '11111111-1111-4111-8111-111111111111',
+        'host-participant-session'
+      ) || pg_catalog.jsonb_build_object(
+        'iat', extract(epoch from pg_catalog.statement_timestamp())::bigint - 86401,
+        'exp', extract(epoch from pg_catalog.statement_timestamp())::bigint - 1
+      )
+    )
+  $$,
+  '%watch_history_authority_expired%',
+  'an expired authority cannot authorize a new shared event'
+);
+
+select is(
+  (
+    select pg_catalog.concat(
+      episode.current_time_seconds,
+      ':',
+      (
+        select pg_catalog.count(*)
+        from public.watch_session_participants as participant
+        inner join public.watch_sessions as session on session.id = participant.session_id
+        where session.room_id = 'watch-v2-room'
+          and session.schema_version = 2
+          and participant.schema_version = 2
+      ),
+      ':',
+      (select pg_catalog.count(*) from public.recent_people_evidence)
+    )
+    from public.watch_episode_progress as episode
+    where episode.user_id = '11111111-1111-4111-8111-111111111111'
+      and episode.episode_key = 'episode-one'
+  ),
+  '400:2:2'::text,
+  'expired replay fails before progress, participant, or Recent People mutation'
+);
+
+select is(
+  (
     select pg_catalog.count(*)
     from public.list_recent_people_evidence_v2(
       '11111111-1111-4111-8111-111111111111'
@@ -1474,6 +1593,75 @@ select throws_like(
   $$,
   '%watch_history_shared_session_pending%',
   'a viewer cannot create a new shared source generation before its host'
+);
+
+update public.rooms
+set ended_at = pg_catalog.statement_timestamp() - interval '5 minutes'
+where room_id = 'watch-v2-room';
+
+select lives_ok(
+  $$
+    select public.apply_watch_progress_v2(
+      '11111111-1111-4111-8111-111111111111',
+      pg_temp.watch_v2_event(
+        'cccccccc-cccc-4ccc-8ccc-ccccccccccc5',
+        'host-participant-session',
+        pg_catalog.statement_timestamp(),
+        450,
+        1,
+        pg_temp.watch_v2_shared_room('host-participant-session'),
+        'episode-one',
+        'series-one',
+        'room_end'
+      ),
+      pg_temp.watch_v2_authority(
+        '11111111-1111-4111-8111-111111111111',
+        'host-participant-session'
+      ) || pg_catalog.jsonb_build_object(
+        'iat', extract(epoch from pg_catalog.statement_timestamp())::bigint - 600,
+        'exp', extract(epoch from pg_catalog.statement_timestamp())::bigint + 85800,
+        'jti', '88888888-8888-4888-8888-888888888888'
+      )
+    )
+  $$,
+  'a terminal attested before room end remains valid when delivered later inside grace'
+);
+
+select throws_like(
+  $$
+    select public.apply_watch_progress_v2(
+      '11111111-1111-4111-8111-111111111111',
+      pg_temp.watch_v2_event(
+        'cccccccc-cccc-4ccc-8ccc-ccccccccccc6',
+        'host-participant-session',
+        pg_catalog.statement_timestamp(),
+        500,
+        1,
+        pg_temp.watch_v2_shared_room('host-participant-session')
+      ),
+      pg_temp.watch_v2_authority(
+        '11111111-1111-4111-8111-111111111111',
+        'host-participant-session'
+      )
+    )
+  $$,
+  '%watch_history_authority_after_end%',
+  'authority issued after room end cannot authorize delayed shared work'
+);
+
+select is(
+  (
+    select pg_catalog.concat(
+      episode.current_time_seconds,
+      ':',
+      (select pg_catalog.count(*) from public.recent_people_evidence)
+    )
+    from public.watch_episode_progress as episode
+    where episode.user_id = '11111111-1111-4111-8111-111111111111'
+      and episode.episode_key = 'episode-one'
+  ),
+  '450:2'::text,
+  'post-end rejection cannot mutate progress or refresh Recent People'
 );
 
 select is(

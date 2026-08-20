@@ -292,18 +292,17 @@ The acceptance model distinguishes:
 - a delayed terminal event observed before leave/end;
 - a replay after the allowed delayed-delivery window.
 
-Shared offline delivery receives a bounded grace period derived from the
-documented offline-room product promise and staging measurements. The grace is
-one named server configuration used by Worker issuance, web verification, and
-SQL acceptance tests. It is not silently inferred from receipt retention.
+`ROOM_HISTORY_GRACE_AMENDMENT_REQUIRED`: the Task 0 report was unavailable, so
+the reviewed Task 9 amendment approves exactly 86,400 seconds of shared offline
+grace. `ROOM_HISTORY_OFFLINE_GRACE_SECONDS` is the one named protocol constant
+used by Worker issuance, web verification, and SQL acceptance tests. It is not
+silently inferred from receipt retention.
 Receipts remain 14 days for idempotency, but a 14-day receipt does not make a
 room capability valid for 14 days.
 
-A 24-hour grace is the initial MVP candidate because it covers an overnight
-client/network interruption without retaining room authority for the receipt
-lifetime. It is not an approved invariant until the execution evidence gate
-confirms the actual product promise and reconnect behavior. Any different value
-requires a reviewed design/plan amendment before implementation.
+The exact 24-hour boundary is now an approved pre-release invariant under that
+reviewed amendment. Any different value requires a later reviewed design/plan
+amendment before implementation.
 
 An exact accepted event remains idempotent after capability expiry. A new event
 using an expired/replayed attestation is rejected and cannot refresh Recent

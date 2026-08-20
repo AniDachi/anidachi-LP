@@ -7,11 +7,13 @@ import {
 import { env } from "cloudflare:workers";
 import {
 	EMPTY_ROOM_TIMEOUT_MS,
+	ROOM_HISTORY_OFFLINE_GRACE_SECONDS,
 	type Participant,
 	type ServerEvent,
 	ServerEventSchema,
 	createEmptyRoomEndEventId,
 } from "@anidachi/protocol";
+import { jwtVerify } from "jose";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { signRoomTokenForTest } from "../../src/auth";
 
@@ -70,6 +72,22 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 			roomGeneration: 1,
 			sourceGeneration: 1,
 		});
+		if (hostInitial.type !== "ROOM_HISTORY_AUTHORITY") {
+			throw new Error("Expected host history authority");
+		}
+		const { payload, protectedHeader } = await jwtVerify(
+			hostInitial.attestation,
+			new TextEncoder().encode(TEST_SECRET_ENV.ANIDACHI_JWT_SECRET),
+			{
+				algorithms: ["HS256"],
+				issuer: "anidachi-worker",
+				audience: "anidachi-web-history",
+				requiredClaims: ["exp", "iat", "jti"],
+			},
+		);
+		expect(protectedHeader).toEqual({ alg: "HS256" });
+		expect(payload.exp).toBe(payload.iat! + ROOM_HISTORY_OFFLINE_GRACE_SECONDS);
+		expect(payload.jti).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
 		expect(host.hasEvent(
 			(event) =>
 				event.type === "ROOM_HISTORY_AUTHORITY" &&

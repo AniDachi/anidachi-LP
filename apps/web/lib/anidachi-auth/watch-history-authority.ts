@@ -1,18 +1,16 @@
-import type { WatchSharedRoomAuthority } from "@anidachi/protocol";
+import {
+  ROOM_HISTORY_OFFLINE_GRACE_SECONDS,
+  RoomHistoryAttestationClaimsSchema,
+  type RoomHistoryAttestationClaims,
+  type WatchSharedRoomAuthority,
+} from "@anidachi/protocol";
 import { jwtVerify } from "jose";
 
 const HISTORY_AUTHORITY_ISSUER = "anidachi-worker";
 const HISTORY_AUTHORITY_AUDIENCE = "anidachi-web-history";
 const HISTORY_AUTHORITY_TYPE = "room_history";
 
-export type ValidatedWatchHistoryAuthority = {
-  sub: string;
-  roomId: string;
-  participantSessionId: string;
-  roomGeneration: number;
-  sourceGeneration: number;
-  iat: number;
-};
+export type ValidatedWatchHistoryAuthority = RoomHistoryAttestationClaims;
 
 export class WatchHistoryAuthorityError extends Error {
   readonly code = "INVALID_AUTHORITY" as const;
@@ -32,6 +30,7 @@ export async function verifyWatchHistoryAuthority(params: {
   authenticatedUserId: string;
   authority: WatchSharedRoomAuthority;
   secret?: Uint8Array;
+  now?: Date;
 }): Promise<ValidatedWatchHistoryAuthority> {
   try {
     const { payload, protectedHeader } = await jwtVerify(
@@ -41,57 +40,32 @@ export async function verifyWatchHistoryAuthority(params: {
         algorithms: ["HS256"],
         issuer: HISTORY_AUTHORITY_ISSUER,
         audience: HISTORY_AUTHORITY_AUDIENCE,
+        requiredClaims: ["exp", "iat", "jti", "iss", "aud", "sub"],
+        maxTokenAge: ROOM_HISTORY_OFFLINE_GRACE_SECONDS,
+        currentDate: params.now,
       },
     );
-    const allowedClaims = new Set([
-      "aud",
-      "iat",
-      "iss",
-      "participantSessionId",
-      "roomGeneration",
-      "roomId",
-      "sourceGeneration",
-      "sub",
-      "typ",
-    ]);
+    const claims = RoomHistoryAttestationClaimsSchema.safeParse(payload);
 
     if (
-      Object.keys(payload).length !== allowedClaims.size ||
-      Object.keys(payload).some((claim) => !allowedClaims.has(claim)) ||
+      !claims.success ||
+      Object.keys(protectedHeader).length !== 1 ||
       protectedHeader.alg !== "HS256" ||
-      payload.typ !== HISTORY_AUTHORITY_TYPE ||
-      payload.iss !== HISTORY_AUTHORITY_ISSUER ||
-      payload.aud !== HISTORY_AUTHORITY_AUDIENCE ||
-      payload.sub !== params.authenticatedUserId ||
-      typeof payload.roomId !== "string" ||
-      typeof payload.participantSessionId !== "string" ||
-      !isPositiveInteger(payload.roomGeneration) ||
-      !isPositiveInteger(payload.sourceGeneration) ||
-      typeof payload.iat !== "number" ||
-      !Number.isInteger(payload.iat) ||
-      payload.iat < 0 ||
-      payload.roomId !== params.authority.roomId ||
-      payload.participantSessionId !== params.authority.participantSessionId ||
-      payload.roomGeneration !== params.authority.roomGeneration ||
-      payload.sourceGeneration !== params.authority.sourceGeneration
+      claims.data.typ !== HISTORY_AUTHORITY_TYPE ||
+      claims.data.iss !== HISTORY_AUTHORITY_ISSUER ||
+      claims.data.aud !== HISTORY_AUTHORITY_AUDIENCE ||
+      claims.data.sub !== params.authenticatedUserId ||
+      claims.data.roomId !== params.authority.roomId ||
+      claims.data.participantSessionId !== params.authority.participantSessionId ||
+      claims.data.roomGeneration !== params.authority.roomGeneration ||
+      claims.data.sourceGeneration !== params.authority.sourceGeneration
     ) {
       throw new WatchHistoryAuthorityError();
     }
 
-    return {
-      sub: payload.sub,
-      roomId: payload.roomId,
-      participantSessionId: payload.participantSessionId,
-      roomGeneration: payload.roomGeneration,
-      sourceGeneration: payload.sourceGeneration,
-      iat: payload.iat,
-    };
+    return claims.data;
   } catch (error) {
     if (error instanceof WatchHistoryAuthorityError) throw error;
     throw new WatchHistoryAuthorityError();
   }
-}
-
-function isPositiveInteger(value: unknown): value is number {
-  return Number.isInteger(value) && (value as number) > 0;
 }

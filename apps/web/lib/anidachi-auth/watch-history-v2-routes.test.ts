@@ -5,7 +5,11 @@ import {
   createWatchHistoryV2RouteHandlers,
   type WatchHistoryV2RouteDependencies,
 } from "./watch-history-v2-routes";
-import { encodeWatchHistoryCursor } from "./watch-history-v2";
+import {
+  applyWatchProgressV2,
+  encodeWatchHistoryCursor,
+  type WatchHistoryV2Store,
+} from "./watch-history-v2";
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
 const EVENT_ID = "22222222-2222-4222-8222-222222222222";
@@ -213,6 +217,54 @@ test("progress derives ownership from the authenticated session", async () => {
   );
   assert.equal(response.status, 200);
   assert.equal(receivedUserId, USER_ID);
+});
+
+test("progress route returns a shared canonical receipt before expired-authority verification", async () => {
+  const deps = dependencies();
+  const canonicalReceipt = await deps.applyProgress({ userId: USER_ID, input: progressBody() });
+  let verifyCalls = 0;
+  let writerCalls = 0;
+  const store: WatchHistoryV2Store = {
+    getProgressReceipt: async () => canonicalReceipt,
+    applyProgress: async () => {
+      writerCalls += 1;
+      throw new Error("must not write an already-receipted event");
+    },
+    loadHistory: async () => ({ accountGeneration: 1, progressRows: [], sessions: [] }),
+    getPreferences: async () => ({ accountGeneration: 1, youtubeHistoryEnabled: false }),
+    setPreferences: async () => { throw new Error("not used"); },
+    deleteHistory: async () => { throw new Error("not used"); },
+    getRoomSource: async () => null,
+  };
+  const routes = createWatchHistoryV2RouteHandlers(dependencies({
+    applyProgress: ({ userId, input }) => applyWatchProgressV2({
+      userId,
+      input,
+      store,
+      verifyAuthority: async () => {
+        verifyCalls += 1;
+        throw new Error("expired");
+      },
+    }),
+  }));
+  const response = await routes.postProgress(request("/api/watch-history/v2/progress", {
+    method: "POST",
+    body: JSON.stringify({
+      ...progressBody(),
+      sharedRoom: {
+        roomId: "room-one",
+        participantSessionId: "participant-session-one",
+        roomGeneration: 1,
+        sourceGeneration: 1,
+        attestation: "expired-but-already-receipted",
+      },
+    }),
+  }));
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), canonicalReceipt);
+  assert.equal(verifyCalls, 0);
+  assert.equal(writerCalls, 0);
 });
 
 test("history validates limit and opaque cursor boundaries", async () => {

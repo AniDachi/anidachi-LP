@@ -124,6 +124,8 @@ participantSessionId
 roomGeneration
 sourceGeneration
 iat
+exp = iat + 86,400 seconds
+jti = unique UUID
 ```
 
 There is no participant list, progress value, provider payload, source URL,
@@ -139,20 +141,26 @@ Authority is sent only to its subject's accepted socket:
   joined socket;
 - never on a timer, before JOIN, without a session ID, or after end begins.
 
-An old authority remains valid for delayed work from its exact generation. It is
-not silently upgraded to the new source generation. Leaving the socket does not
-revoke previously issued authority because no durable leave interval exists; that
-is an explicit availability/security tradeoff for offline terminal delivery.
+`ROOM_HISTORY_GRACE_AMENDMENT_REQUIRED`: because the Task 0 report was
+unavailable, the reviewed Task 9 amendment approves exactly 86,400 seconds of
+offline grace. An old authority remains valid for delayed work from its exact
+generation only until `exp`; it is not silently upgraded to a new source
+generation. Leaving the socket does not revoke it earlier because no durable
+leave interval exists. `jti` gives every issuance a unique identity but is not a
+one-use ledger.
 
 ## 4. Verification Order
 
 The web history boundary must fail closed in this order:
 
 1. authenticate the web/extension account session and derive the user ID from it;
-2. strictly parse the progress envelope, reject unknown fields, and reject an
-   absent or oversized opaque authority before JWT work;
-3. verify only HS256 with the server-side secret, then require the exact purpose,
-   issuer, audience, subject, room/session, generations, and issued-at claims;
+2. strictly parse the progress envelope, then, only for shared progress, return
+   an exact owner-bound, unexpired 14-day progress receipt for the same
+   `clientEventId` before JWT work;
+3. on a receipt miss, reject an absent or oversized opaque authority, verify only
+   HS256 with the server-side secret, and require the exact scalar purpose,
+   issuer, audience, subject, room/session, generations, `iat`, `exp`, and `jti`
+   claim shape with no clock tolerance;
 4. require exact equality between every signed claim and the visible shared-room
    authority fields; the authenticated user must equal `sub`;
 5. load the durable room. For the host require matching `host_user_id`; for a
@@ -161,8 +169,9 @@ The web history boundary must fail closed in this order:
    bound (`rooms.created_at` for host or `room_members.joined_at` for member),
    normalized to JWT whole-second precision; when `ended_at` exists, require
    issuance no later than the terminal upper bound at the same precision;
-7. inside the account-locked history transaction, require the current account
-   generation, deletion fences, idempotency receipt, and deterministic event
+7. inside the account-locked history transaction, re-check the receipt first,
+   then require the 86,400-second expiry boundary, current account generation,
+   deletion fences, and deterministic event
    ordering before mutating history;
 8. update shared-session participant evidence only for this authenticated writer;
    create directional Recent People evidence only when a second distinct user has
@@ -179,7 +188,7 @@ never verify as a Worker connection token.
 | --- | --- | --- | --- |
 | A client submits an ordinary room token as history proof. | Token confusion could bypass the generation/session requirement. | Separate verifier; exact `typ`, issuer, audience, algorithm, and required claims; cross-purpose negative tests. | None expected without secret compromise. |
 | A participant edits visible room/session/generation fields. | Progress could be assigned to a different shared boundary. | Verify signature, then exact-match all four visible fields to signed claims and authenticated `sub`. | None expected without secret compromise. |
-| A participant replays a valid old authority after source change, leave, or room end. | It could claim additional progress for the old shared session. | Exact generation boundary, account generation, deletion fences, idempotency receipts, and self-only writes. New source claims require new authority. | A legitimate holder can continue submitting new self-owned events for the previously attested session because there is no expiry or leave ledger. This cannot directly mutate another account. |
+| A participant replays a valid old authority after source change, leave, room end, or expiry. | It could claim additional progress for the old shared session. | Exact generation and 86,400-second expiry boundaries, unique `jti`, account generation, deletion fences, receipt-first idempotency, and self-only writes. New source claims require new authority; new events at or after `exp` fail before mutation. | A legitimate holder can submit new self-owned events for the exact attested session during the approved grace because there is no leave ledger. This cannot directly mutate another account. |
 | A single account tries to fabricate Recent People. | Another person could appear without independent participation. | The transactional writer records only the authenticated writer and requires a second distinct authenticated accepted writer for the exact shared session before pair evidence. | Two colluding real accounts can manufacture their own relationship evidence; preventing that is outside MVP and does not justify presence history. |
 | A stolen opaque authority is used with another account. | Cross-account history or social corruption. | Signed `sub` must equal the authenticated account; no writable `userId`; receipts, rows, and lock boundary are account-owned. | Theft from the same authenticated account has the same power as that account until the account/session is secured or history generation changes. |
 | A delayed event arrives after database cleanup. | Verification either rejects legitimate offline work or loses its lifecycle bound. | Keep room/member rows while this contract is supported. Any cleanup requires a reviewed compact authority ledger or an explicit delayed-delivery contract change. | Room or account deletion intentionally invalidates delayed work. |

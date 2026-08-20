@@ -199,12 +199,17 @@ test("progress calls the transactional RPC once and never passes the raw authori
       input: progressEvent({ sharedRoom }),
       store,
       verifyAuthority: async () => ({
+        typ: "room_history",
+        iss: "anidachi-worker",
+        aud: "anidachi-web-history",
         sub: USER_ID,
         roomId: "room-one",
         participantSessionId: "participant-session-one",
         roomGeneration: 2,
         sourceGeneration: 3,
         iat: 1_786_680_000,
+        exp: 1_786_766_400,
+        jti: "44444444-4444-4444-8444-444444444444",
       }),
     }),
     ack(),
@@ -212,12 +217,17 @@ test("progress calls the transactional RPC once and never passes the raw authori
   assert.equal(calls.length, 1);
   assert.equal(JSON.stringify(calls).includes("opaque-secret-authority"), false);
   assert.deepEqual(calls[0]?.[2], {
+    typ: "room_history",
+    iss: "anidachi-worker",
+    aud: "anidachi-web-history",
     sub: USER_ID,
     roomId: "room-one",
     participantSessionId: "participant-session-one",
     roomGeneration: 2,
     sourceGeneration: 3,
     iat: 1_786_680_000,
+    exp: 1_786_766_400,
+    jti: "44444444-4444-4444-8444-444444444444",
   });
 });
 
@@ -242,6 +252,39 @@ test("progress accepts an exact duplicate acknowledgement and rejects malformed 
       }),
     hasCode("INVALID_DATABASE_RESPONSE"),
   );
+});
+
+test("shared progress returns its canonical receipt before verifying an expired authority", async () => {
+  let verifyCalls = 0;
+  let applyCalls = 0;
+  const duplicate = ack({ duplicate: true });
+  const store = storeStub({
+    getProgressReceipt: async () => duplicate,
+    applyProgress: async () => {
+      applyCalls += 1;
+      return ack();
+    },
+  });
+
+  assert.deepEqual(await applyWatchProgressV2({
+    userId: USER_ID,
+    input: progressEvent({
+      sharedRoom: {
+        roomId: "room-one",
+        participantSessionId: "participant-session-one",
+        roomGeneration: 2,
+        sourceGeneration: 3,
+        attestation: "expired-but-already-receipted",
+      },
+    }),
+    store,
+    verifyAuthority: async () => {
+      verifyCalls += 1;
+      throw new Error("expired");
+    },
+  }), duplicate);
+  assert.equal(verifyCalls, 0);
+  assert.equal(applyCalls, 0);
 });
 
 test("domain failures map to bounded stable public errors", async () => {
@@ -1031,6 +1074,7 @@ test("website refreshes canonical history when the account page regains focus", 
 
 function storeStub(overrides: Partial<WatchHistoryV2Store>): WatchHistoryV2Store {
   return {
+    getProgressReceipt: async () => null,
     applyProgress: async () => ack(),
     loadHistory: async () => ({ accountGeneration: 1, progressRows: [], sessions: [] }),
     getPreferences: async () => ({ accountGeneration: 1, youtubeHistoryEnabled: false }),

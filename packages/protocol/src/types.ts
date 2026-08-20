@@ -20,6 +20,26 @@ const UrlSchema = z.string().max(MAX_URL_CHARS).url();
 const textEncoder = new TextEncoder();
 
 export const MAX_ROOM_HISTORY_ATTESTATION_CHARS = 4_096;
+export const ROOM_HISTORY_OFFLINE_GRACE_SECONDS = 86_400;
+
+export const RoomHistoryAttestationClaimsSchema = z
+  .strictObject({
+    typ: z.literal("room_history"),
+    iss: z.literal("anidachi-worker"),
+    aud: z.literal("anidachi-web-history"),
+    sub: ParticipantIdSchema,
+    roomId: RoomIdSchema,
+    participantSessionId: SessionIdSchema,
+    roomGeneration: z.number().int().positive(),
+    sourceGeneration: z.number().int().positive(),
+    iat: z.number().int().nonnegative(),
+    exp: z.number().int().positive(),
+    jti: z.string().uuid(),
+  })
+  .refine(
+    (claims) => claims.exp === claims.iat + ROOM_HISTORY_OFFLINE_GRACE_SECONDS,
+    { path: ["exp"], message: "Room history authority must use the canonical grace window" },
+  );
 
 export const RoomHistoryAuthoritySchema = z.strictObject({
   roomId: RoomIdSchema,
@@ -366,6 +386,7 @@ export type P2PIceCandidate = z.infer<typeof P2PIceCandidateSchema>;
 export type P2PSignal = z.infer<typeof P2PSignalSchema>;
 export type VoiceMode = z.infer<typeof VoiceModeSchema>;
 export type RoomHistoryAuthority = z.infer<typeof RoomHistoryAuthoritySchema>;
+export type RoomHistoryAttestationClaims = z.infer<typeof RoomHistoryAttestationClaimsSchema>;
 export type ClientEvent = z.infer<typeof ClientEventSchema>;
 export type ServerEvent = z.infer<typeof ServerEventSchema>;
 export type RoomEndReason = z.infer<typeof RoomEndReasonSchema>;

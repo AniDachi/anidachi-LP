@@ -4,6 +4,7 @@ import {
   MAX_DISPLAY_NAME_CHARS,
   MAX_PARTICIPANT_ID_CHARS,
   MAX_ROOM_ID_CHARS,
+  ROOM_HISTORY_OFFLINE_GRACE_SECONDS,
   MAX_URL_CHARS,
 } from "@anidachi/protocol";
 import {
@@ -169,7 +170,7 @@ describe("worker room auth", () => {
     await expect(verifyRoomToken(token, "room-1", env)).resolves.toBeNull();
   });
 
-  it("signs one purpose-bound room history authority without an arbitrary expiry", async () => {
+  it("signs one purpose-bound room history authority with exact expiry and a unique id", async () => {
     const beforeIssuedAt = Math.floor(Date.now() / 1_000);
     const token = await signRoomHistoryAttestation(
       {
@@ -192,8 +193,10 @@ describe("worker room auth", () => {
     expect(protectedHeader).toEqual({ alg: "HS256" });
     expect(Object.keys(payload).sort()).toEqual([
       "aud",
+      "exp",
       "iat",
       "iss",
+      "jti",
       "participantSessionId",
       "roomGeneration",
       "roomId",
@@ -211,9 +214,23 @@ describe("worker room auth", () => {
       sub: "user-1",
       typ: "room_history",
     });
-    expect(payload.exp).toBeUndefined();
     expect(payload.iat).toBeGreaterThanOrEqual(beforeIssuedAt);
     expect(payload.iat).toBeLessThanOrEqual(afterIssuedAt);
+    expect(payload.exp).toBe(payload.iat! + ROOM_HISTORY_OFFLINE_GRACE_SECONDS);
+    expect(payload.jti).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+  });
+
+  it("never reuses the room history attestation jti", async () => {
+    const claims = {
+      sub: "user-1",
+      roomId: "room-1",
+      participantSessionId: "participant-session-1",
+      roomGeneration: 1,
+      sourceGeneration: 1,
+    };
+    const first = await jwtVerify(await signRoomHistoryAttestation(claims, env), testSecret());
+    const second = await jwtVerify(await signRoomHistoryAttestation(claims, env), testSecret());
+    expect(first.payload.jti).not.toBe(second.payload.jti);
   });
 
   it("keeps room connection tokens and history attestations mutually isolated", async () => {

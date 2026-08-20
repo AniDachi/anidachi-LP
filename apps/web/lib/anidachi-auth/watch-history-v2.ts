@@ -104,6 +104,7 @@ export type WatchHistoryCursor = {
 };
 
 export type WatchHistoryV2Store = {
+  getProgressReceipt(userId: string, clientEventId: string): Promise<unknown | null>;
   applyProgress(
     userId: string,
     event: Record<string, unknown>,
@@ -196,15 +197,32 @@ export async function applyWatchProgressV2(params: {
   }) => Promise<ValidatedWatchHistoryAuthority>;
 }): Promise<WatchProgressAck> {
   const event = parseWatchProgressEventV2(params.input);
+  const store = params.store ?? supabaseWatchHistoryV2Store;
   let validatedAuthority: ValidatedWatchHistoryAuthority | null = null;
   if (event.sharedRoom) {
+    try {
+      const receipt = await store.getProgressReceipt(params.userId, event.clientEventId);
+      if (receipt !== null) {
+        const parsedReceipt = WatchProgressAckSchema.safeParse(receipt);
+        if (
+          !parsedReceipt.success ||
+          parsedReceipt.data.meta.ownerUserId !== params.userId ||
+          parsedReceipt.data.acceptedEventId !== event.clientEventId
+        ) {
+          throw invalidDatabaseResponse();
+        }
+        return parsedReceipt.data;
+      }
+    } catch (error) {
+      throw publicDatabaseError(error);
+    }
     try {
       validatedAuthority = await (params.verifyAuthority ?? verifyWatchHistoryAuthority)({
         authenticatedUserId: params.userId,
         authority: event.sharedRoom,
       });
     } catch {
-      throw new WatchHistoryV2ApiError(403, "INVALID_AUTHORITY", "Shared room authority is invalid");
+      throw new WatchHistoryV2ApiError(403, "INVALID_ROOM_AUTHORITY", "Shared room authority is invalid");
     }
   }
 
@@ -221,7 +239,7 @@ export async function applyWatchProgressV2(params: {
     : event;
 
   try {
-    const value = await (params.store ?? supabaseWatchHistoryV2Store).applyProgress(
+    const value = await store.applyProgress(
       params.userId,
       rpcEvent,
       validatedAuthority,
@@ -668,6 +686,22 @@ export async function deleteWatchHistoryV2(params: {
 }
 
 export const supabaseWatchHistoryV2Store: WatchHistoryV2Store = {
+  async getProgressReceipt(userId, clientEventId) {
+    const result = await db()
+      .from("watch_history_receipts")
+      .select("kind,acknowledgement")
+      .eq("user_id", userId)
+      .eq("client_id", clientEventId)
+      .gt("expires_at", new Date().toISOString())
+      .maybeSingle();
+    if (result.error) throw result.error;
+    if (result.data === null) return null;
+    if (!isRecord(result.data) || result.data.kind !== "progress") {
+      throw new Error("watch_history_client_id_conflict");
+    }
+    return result.data.acknowledgement;
+  },
+
   async applyProgress(userId, event, authority) {
     const result = await db().rpc("apply_watch_progress_v2", {
       p_user_id: userId,
@@ -1353,12 +1387,13 @@ function publicDatabaseError(error: unknown): WatchHistoryV2ApiError {
     ["watch_history_authority_after_end", 403, "AUTHORITY_AFTER_ROOM_END", "Shared room authority is outside the room lifecycle"],
     ["watch_history_authority_before_join", 403, "AUTHORITY_BEFORE_JOIN", "Shared room authority is outside the room lifecycle"],
     ["watch_history_authority_before_room", 403, "AUTHORITY_BEFORE_JOIN", "Shared room authority is outside the room lifecycle"],
+    ["watch_history_authority_expired", 403, "INVALID_ROOM_AUTHORITY", "Shared room authority is invalid"],
     ["watch_history_client_id_conflict", 409, "CLIENT_ID_CONFLICT", "Client operation identifier conflicts with existing history"],
     ["watch_history_generation_mismatch", 409, "GENERATION_MISMATCH", "Watch history generation changed"],
     ["watch_history_observation_stale", 409, "STALE_OBSERVATION", "A newer watch observation already exists"],
     ["watch_history_deleted", 409, "DELETED_HISTORY", "This watch observation is behind a deletion fence"],
     ["watch_history_provider_domain_mismatch", 400, "PROVIDER_DOMAIN_MISMATCH", "Provider source does not match the event"],
-    ["watch_history_authority_mismatch", 403, "INVALID_AUTHORITY", "Shared room authority is invalid"],
+    ["watch_history_authority_mismatch", 403, "INVALID_ROOM_AUTHORITY", "Shared room authority is invalid"],
     ["watch_history_authority_unexpected", 400, "INVALID_REQUEST", "Invalid watch progress event"],
     ["watch_history_event_invalid", 400, "INVALID_REQUEST", "Invalid watch progress event"],
     ["watch_history_delete_invalid", 400, "INVALID_REQUEST", "Invalid watch history deletion"],

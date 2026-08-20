@@ -6,6 +6,8 @@ import {
   MAX_ICE_CANDIDATE_BYTES,
   MAX_PARTICIPANT_ID_CHARS,
   MAX_ROOM_HISTORY_ATTESTATION_CHARS,
+  ROOM_HISTORY_OFFLINE_GRACE_SECONDS,
+  RoomHistoryAttestationClaimsSchema,
   MAX_ROOM_ID_CHARS,
   MAX_SDP_BYTES,
   MAX_SESSION_ID_CHARS,
@@ -661,6 +663,29 @@ describe("room protocol schemas", () => {
         attestation: "a".repeat(MAX_ROOM_HISTORY_ATTESTATION_CHARS + 1),
       }),
     ).toThrow();
+  });
+
+  it("defines one exact 24-hour room history attestation contract", () => {
+    expect(ROOM_HISTORY_OFFLINE_GRACE_SECONDS).toBe(86_400);
+    const claims = {
+      typ: "room_history",
+      iss: "anidachi-worker",
+      aud: "anidachi-web-history",
+      sub: "user-1",
+      roomId: "room-1",
+      participantSessionId: "participant-session-1",
+      roomGeneration: 2,
+      sourceGeneration: 3,
+      iat: 1_786_680_000,
+      exp: 1_786_766_400,
+      jti: "11111111-1111-4111-8111-111111111111",
+    };
+
+    expect(RoomHistoryAttestationClaimsSchema.parse(claims)).toEqual(claims);
+    expect(() => RoomHistoryAttestationClaimsSchema.parse({ ...claims, exp: undefined })).toThrow();
+    expect(() => RoomHistoryAttestationClaimsSchema.parse({ ...claims, jti: undefined })).toThrow();
+    expect(() => RoomHistoryAttestationClaimsSchema.parse({ ...claims, aud: [claims.aud] })).toThrow();
+    expect(() => RoomHistoryAttestationClaimsSchema.parse({ ...claims, email: "private@example.com" })).toThrow();
   });
 
   it("accepts explicit playback command server events", () => {
