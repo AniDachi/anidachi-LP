@@ -684,6 +684,8 @@ describe("room protocol schemas", () => {
     expect(RoomHistoryAttestationClaimsSchema.parse(claims)).toEqual(claims);
     expect(() => RoomHistoryAttestationClaimsSchema.parse({ ...claims, exp: undefined })).toThrow();
     expect(() => RoomHistoryAttestationClaimsSchema.parse({ ...claims, jti: undefined })).toThrow();
+    expect(() => RoomHistoryAttestationClaimsSchema.parse({ ...claims, exp: claims.exp - 1 })).toThrow();
+    expect(() => RoomHistoryAttestationClaimsSchema.parse({ ...claims, exp: claims.exp + 1 })).toThrow();
     expect(() => RoomHistoryAttestationClaimsSchema.parse({ ...claims, aud: [claims.aud] })).toThrow();
     expect(() => RoomHistoryAttestationClaimsSchema.parse({ ...claims, email: "private@example.com" })).toThrow();
   });

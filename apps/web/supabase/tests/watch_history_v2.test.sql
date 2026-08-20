@@ -1453,6 +1453,64 @@ select is(
   'two accepted shared writers derive both directional evidence rows'
 );
 
+select throws_like(
+  $$
+    select public.apply_watch_progress_v2(
+      '11111111-1111-4111-8111-111111111111',
+      pg_temp.watch_v2_event(
+        'cccccccc-cccc-4ccc-8ccc-ccccccccccc7',
+        'host-participant-session',
+        pg_catalog.clock_timestamp(),
+        425,
+        1,
+        pg_temp.watch_v2_shared_room('host-participant-session')
+      ),
+      pg_temp.watch_v2_authority(
+        '11111111-1111-4111-8111-111111111111',
+        'host-participant-session'
+      ) || pg_catalog.jsonb_build_object(
+        'iat', pg_catalog.floor(extract(epoch from pg_catalog.transaction_timestamp()))::bigint - 86400,
+        'exp', pg_catalog.floor(extract(epoch from pg_catalog.transaction_timestamp()))::bigint
+      )
+    )
+  $$,
+  '%watch_history_authority_expired%',
+  'authority rejects exactly at its exp boundary'
+);
+
+select lives_ok(
+  $$
+    do $watch_v2_boundary$
+    begin
+      perform public.apply_watch_progress_v2(
+        '11111111-1111-4111-8111-111111111111',
+        pg_temp.watch_v2_event(
+          'cccccccc-cccc-4ccc-8ccc-ccccccccccc8',
+          'host-participant-session',
+          pg_catalog.clock_timestamp(),
+          425,
+          1,
+          pg_temp.watch_v2_shared_room('host-participant-session')
+        ),
+        pg_temp.watch_v2_authority(
+          '11111111-1111-4111-8111-111111111111',
+          'host-participant-session'
+        ) || pg_catalog.jsonb_build_object(
+          'iat', pg_catalog.floor(extract(epoch from pg_catalog.transaction_timestamp()))::bigint - 86399,
+          'exp', pg_catalog.floor(extract(epoch from pg_catalog.transaction_timestamp()))::bigint + 1
+        )
+      );
+      raise exception 'watch_v2_boundary_rollback';
+    exception when raise_exception then
+      if sqlerrm <> 'watch_v2_boundary_rollback' then
+        raise;
+      end if;
+    end;
+    $watch_v2_boundary$
+  $$,
+  'authority remains valid in the adjacent second before exp'
+);
+
 select is(
   (
     public.apply_watch_progress_v2(
@@ -1477,6 +1535,15 @@ select is(
   'cccccccc-cccc-4ccc-8ccc-ccccccccccc1'::text,
   'an already-receipted duplicate succeeds after its authority expires'
 );
+
+create temporary table watch_v2_recent_people_before_expired
+as
+select
+  evidence.user_id,
+  evidence.other_user_id,
+  evidence.last_room_id,
+  evidence.last_watched_at
+from public.recent_people_evidence as evidence;
 
 select throws_like(
   $$
@@ -1525,6 +1592,31 @@ select is(
   ),
   '400:2:2'::text,
   'expired replay fails before progress, participant, or Recent People mutation'
+);
+
+select is(
+  (
+    select pg_catalog.count(*)
+    from (
+      (
+        select user_id, other_user_id, last_room_id, last_watched_at
+        from public.recent_people_evidence
+        except all
+        select user_id, other_user_id, last_room_id, last_watched_at
+        from watch_v2_recent_people_before_expired
+      )
+      union all
+      (
+        select user_id, other_user_id, last_room_id, last_watched_at
+        from watch_v2_recent_people_before_expired
+        except all
+        select user_id, other_user_id, last_room_id, last_watched_at
+        from public.recent_people_evidence
+      )
+    ) as directional_difference
+  ),
+  0::bigint,
+  'expired rejection preserves both exact directional Recent People rows'
 );
 
 select is(
@@ -1627,6 +1719,15 @@ select lives_ok(
   'a terminal attested before room end remains valid when delivered later inside grace'
 );
 
+create temporary table watch_v2_recent_people_before_post_end
+as
+select
+  evidence.user_id,
+  evidence.other_user_id,
+  evidence.last_room_id,
+  evidence.last_watched_at
+from public.recent_people_evidence as evidence;
+
 select throws_like(
   $$
     select public.apply_watch_progress_v2(
@@ -1662,6 +1763,31 @@ select is(
   ),
   '450:2'::text,
   'post-end rejection cannot mutate progress or refresh Recent People'
+);
+
+select is(
+  (
+    select pg_catalog.count(*)
+    from (
+      (
+        select user_id, other_user_id, last_room_id, last_watched_at
+        from public.recent_people_evidence
+        except all
+        select user_id, other_user_id, last_room_id, last_watched_at
+        from watch_v2_recent_people_before_post_end
+      )
+      union all
+      (
+        select user_id, other_user_id, last_room_id, last_watched_at
+        from watch_v2_recent_people_before_post_end
+        except all
+        select user_id, other_user_id, last_room_id, last_watched_at
+        from public.recent_people_evidence
+      )
+    ) as directional_difference
+  ),
+  0::bigint,
+  'post-end rejection preserves both exact directional Recent People rows'
 );
 
 select is(

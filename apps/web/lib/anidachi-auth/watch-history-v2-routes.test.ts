@@ -267,6 +267,108 @@ test("progress route returns a shared canonical receipt before expired-authority
   assert.equal(writerCalls, 0);
 });
 
+test("progress route fails closed for every noncanonical receipt-first outcome", async (t) => {
+  const deps = dependencies();
+  const canonicalReceipt = await deps.applyProgress({ userId: USER_ID, input: progressBody() });
+  const cases = [
+    {
+      name: "malformed acknowledgement",
+      receipt: { duplicate: true },
+      status: 502,
+      code: "INVALID_DATABASE_RESPONSE",
+      expectedVerifyCalls: 0,
+    },
+    {
+      name: "wrong owner",
+      receipt: {
+        ...canonicalReceipt,
+        meta: {
+          ...canonicalReceipt.meta,
+          ownerUserId: "55555555-5555-4555-8555-555555555555",
+        },
+      },
+      status: 502,
+      code: "INVALID_DATABASE_RESPONSE",
+      expectedVerifyCalls: 0,
+    },
+    {
+      name: "wrong event id",
+      receipt: {
+        ...canonicalReceipt,
+        acceptedEventId: "66666666-6666-4666-8666-666666666666",
+      },
+      status: 502,
+      code: "INVALID_DATABASE_RESPONSE",
+      expectedVerifyCalls: 0,
+    },
+    {
+      name: "wrong kind",
+      receiptError: new Error("watch_history_client_id_conflict"),
+      status: 409,
+      code: "CLIENT_ID_CONFLICT",
+      expectedVerifyCalls: 0,
+    },
+    {
+      name: "expired receipt miss",
+      receipt: null,
+      status: 403,
+      code: "INVALID_ROOM_AUTHORITY",
+      expectedVerifyCalls: 1,
+    },
+  ] as const;
+
+  for (const scenario of cases) {
+    await t.test(scenario.name, async () => {
+      let verifyCalls = 0;
+      let writerCalls = 0;
+      const store: WatchHistoryV2Store = {
+        getProgressReceipt: async () => {
+          if ("receiptError" in scenario) throw scenario.receiptError;
+          return scenario.receipt;
+        },
+        applyProgress: async () => {
+          writerCalls += 1;
+          return canonicalReceipt;
+        },
+        loadHistory: async () => ({ accountGeneration: 1, progressRows: [], sessions: [] }),
+        getPreferences: async () => ({ accountGeneration: 1, youtubeHistoryEnabled: false }),
+        setPreferences: async () => { throw new Error("not used"); },
+        deleteHistory: async () => { throw new Error("not used"); },
+        getRoomSource: async () => null,
+      };
+      const routes = createWatchHistoryV2RouteHandlers(dependencies({
+        applyProgress: ({ userId, input }) => applyWatchProgressV2({
+          userId,
+          input,
+          store,
+          verifyAuthority: async () => {
+            verifyCalls += 1;
+            throw new Error("invalid or expired authority");
+          },
+        }),
+      }));
+      const response = await routes.postProgress(request("/api/watch-history/v2/progress", {
+        method: "POST",
+        body: JSON.stringify({
+          ...progressBody(),
+          sharedRoom: {
+            roomId: "room-one",
+            participantSessionId: "participant-session-one",
+            roomGeneration: 1,
+            sourceGeneration: 1,
+            attestation: "untrusted-unless-exactly-receipted",
+          },
+        }),
+      }));
+
+      assert.equal(response.status, scenario.status);
+      assert.equal((await response.json()).code, scenario.code);
+      assert.equal(verifyCalls, scenario.expectedVerifyCalls);
+      assert.equal(writerCalls, 0);
+    });
+  }
+});
+
 test("history validates limit and opaque cursor boundaries", async () => {
   const routes = createWatchHistoryV2RouteHandlers(dependencies());
   for (const query of ["limit=0", "limit=101", "limit=1.5", "cursor=not-a-cursor"]) {

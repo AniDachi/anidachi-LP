@@ -115,8 +115,15 @@ test("history authority requires exact exp and jti claims and rejects expiry wit
   await assert.rejects(() => verify({}, { jti: undefined }), isInvalidAuthority);
   await assert.rejects(() => verify({}, { exp: 1_786_766_401 }), isInvalidAuthority);
   await assert.rejects(() => verify({}, { jti: "not-a-uuid" }), isInvalidAuthority);
+  await assert.doesNotReject(
+    () => verify({}, {}, { now: 1_786_766_399 }),
+  );
   await assert.rejects(
     () => verify({}, {}, { now: 1_786_766_400 }),
+    isInvalidAuthority,
+  );
+  await assert.rejects(
+    () => verify({}, {}, { now: 1_786_679_999 }),
     isInvalidAuthority,
   );
 });

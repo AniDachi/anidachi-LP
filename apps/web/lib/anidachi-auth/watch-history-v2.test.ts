@@ -14,6 +14,7 @@ import {
   isMeaningfulWatchHistoryV2SessionIdentity,
   listWatchHistoryV2,
   parseWatchProgressEventV2,
+  supabaseWatchHistoryV2Store,
   WatchHistoryV2ApiError,
   type WatchHistoryV2Store,
 } from "./watch-history-v2";
@@ -283,6 +284,161 @@ test("shared progress returns its canonical receipt before verifying an expired 
       throw new Error("expired");
     },
   }), duplicate);
+  assert.equal(verifyCalls, 0);
+  assert.equal(applyCalls, 0);
+});
+
+test("shared receipt-first failures close every noncanonical bypass before writing", async (t) => {
+  const otherUserId = "55555555-5555-4555-8555-555555555555";
+  const otherEventId = "66666666-6666-4666-8666-666666666666";
+  const cases = [
+    {
+      name: "malformed acknowledgement",
+      receipt: { duplicate: true },
+      errorCode: "INVALID_DATABASE_RESPONSE",
+      expectedVerifyCalls: 0,
+    },
+    {
+      name: "wrong receipt owner",
+      receipt: ack({ meta: { ...ack().meta, ownerUserId: otherUserId } }),
+      errorCode: "INVALID_DATABASE_RESPONSE",
+      expectedVerifyCalls: 0,
+    },
+    {
+      name: "wrong receipt event id",
+      receipt: ack({ acceptedEventId: otherEventId }),
+      errorCode: "INVALID_DATABASE_RESPONSE",
+      expectedVerifyCalls: 0,
+    },
+    {
+      name: "wrong receipt kind",
+      receiptError: new Error("watch_history_client_id_conflict"),
+      errorCode: "CLIENT_ID_CONFLICT",
+      expectedVerifyCalls: 0,
+    },
+    {
+      name: "expired receipt miss",
+      receipt: null,
+      errorCode: "INVALID_ROOM_AUTHORITY",
+      expectedVerifyCalls: 1,
+    },
+  ] as const;
+
+  for (const scenario of cases) {
+    await t.test(scenario.name, async () => {
+      let verifyCalls = 0;
+      let applyCalls = 0;
+      const store = storeStub({
+        getProgressReceipt: async () => {
+          if ("receiptError" in scenario) throw scenario.receiptError;
+          return scenario.receipt;
+        },
+        applyProgress: async () => {
+          applyCalls += 1;
+          return ack();
+        },
+      });
+
+      await assert.rejects(
+        () => applyWatchProgressV2({
+          userId: USER_ID,
+          input: progressEvent({
+            sharedRoom: {
+              roomId: "room-one",
+              participantSessionId: "participant-session-one",
+              roomGeneration: 2,
+              sourceGeneration: 3,
+              attestation: "untrusted-unless-exactly-receipted",
+            },
+          }),
+          store,
+          verifyAuthority: async () => {
+            verifyCalls += 1;
+            throw new Error("invalid or expired authority");
+          },
+        }),
+        hasCode(scenario.errorCode),
+      );
+      assert.equal(verifyCalls, scenario.expectedVerifyCalls);
+      assert.equal(applyCalls, 0);
+    });
+  }
+});
+
+test("production receipt lookup is owner-event-expiry scoped and fails closed on kind or ack", async (t) => {
+  const previousUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const previousKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  process.env.NEXT_PUBLIC_SUPABASE_URL = "https://watch-history-receipt.test";
+  process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role-key";
+  t.after(() => {
+    if (previousUrl === undefined) delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+    else process.env.NEXT_PUBLIC_SUPABASE_URL = previousUrl;
+    if (previousKey === undefined) delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    else process.env.SUPABASE_SERVICE_ROLE_KEY = previousKey;
+  });
+
+  let databaseRow: unknown = { kind: "progress", acknowledgement: ack({ duplicate: true }) };
+  const requestUrls: string[] = [];
+  t.mock.method(globalThis, "fetch", async (input: string | URL | Request) => {
+    requestUrls.push(input instanceof Request ? input.url : input.toString());
+    return new Response(JSON.stringify(databaseRow), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  });
+
+  const beforeLookup = Date.now();
+  assert.deepEqual(
+    await supabaseWatchHistoryV2Store.getProgressReceipt(USER_ID, EVENT_ID),
+    ack({ duplicate: true }),
+  );
+  const afterLookup = Date.now();
+  const query = new URL(requestUrls[0] ?? "");
+  assert.equal(query.pathname, "/rest/v1/watch_history_receipts");
+  assert.equal(query.searchParams.get("select"), "kind,acknowledgement");
+  assert.equal(query.searchParams.get("user_id"), `eq.${USER_ID}`);
+  assert.equal(query.searchParams.get("client_id"), `eq.${EVENT_ID}`);
+  const expiresFilter = query.searchParams.get("expires_at");
+  assert.match(expiresFilter ?? "", /^gt\./);
+  const filterTime = Date.parse((expiresFilter ?? "").slice(3));
+  assert.ok(filterTime >= beforeLookup && filterTime <= afterLookup);
+
+  databaseRow = { kind: "delete", acknowledgement: ack({ duplicate: true }) };
+  await assert.rejects(
+    () => supabaseWatchHistoryV2Store.getProgressReceipt(USER_ID, EVENT_ID),
+    /watch_history_client_id_conflict/,
+  );
+
+  databaseRow = { kind: "progress", acknowledgement: { duplicate: true } };
+  let verifyCalls = 0;
+  let applyCalls = 0;
+  await assert.rejects(
+    () => applyWatchProgressV2({
+      userId: USER_ID,
+      input: progressEvent({
+        sharedRoom: {
+          roomId: "room-one",
+          participantSessionId: "participant-session-one",
+          roomGeneration: 2,
+          sourceGeneration: 3,
+          attestation: "must-not-bypass-on-malformed-store-ack",
+        },
+      }),
+      store: storeStub({
+        getProgressReceipt: (userId, clientEventId) =>
+          supabaseWatchHistoryV2Store.getProgressReceipt(userId, clientEventId),
+        applyProgress: async () => {
+          applyCalls += 1;
+          return ack();
+        },
+      }),
+      verifyAuthority: async () => {
+        verifyCalls += 1;
+        throw new Error("must not verify a malformed receipt");
+      },
+    }),
+    hasCode("INVALID_DATABASE_RESPONSE"),
+  );
   assert.equal(verifyCalls, 0);
   assert.equal(applyCalls, 0);
 });
