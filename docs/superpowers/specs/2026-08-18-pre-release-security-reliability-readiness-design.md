@@ -1,9 +1,8 @@
 # Pre-release Security And Reliability Readiness Design
 
-Status: Wave 1 complete on staging; Wave 2 Task 5 deployed to staging, with
-interactive provider acceptance pending; Task 6 staging acceptance complete
-for the approved artifact, exact PKCE/replay bindings, and first-profile
-logout callback
+Status: Wave 1 complete on staging; Wave 2 Tasks 5-8 implemented and deployed;
+Tasks 6-8 staging-accepted; Task 5 interactive Google and Discord provider
+acceptance remains the sole open Wave 2 stop gate
 
 Date: 2026-08-18
 

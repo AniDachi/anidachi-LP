@@ -4,116 +4,19 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 8959 nodes · 18778 edges · 1113 communities (328 shown, 785 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 233 edges (avg confidence: 0.73)
+- 8938 nodes · 18751 edges · 1109 communities (326 shown, 783 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 228 edges (avg confidence: 0.72)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `7760cf78`
+- Built from commit: `31c1f2f8`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - primary-checkout-cta.tsx
 - social.ts
-- seo-page-layout.tsx
-- db.ts
-- pricing-copy.ts
-- getResolvedSiteOrigin
-- getGuideLinks
-- overlay-app.tsx
-- plan-entitlements.ts
-- watch-history-client.ts
 - SeoPageLayout
-- auth-client.ts
-- next
-- PlaybackSyncController
-- logDebug
-- room-session-storage.ts
-- watch-history-v2.ts
-- ref_next_link
-- social-client.ts
-- db
-- watch-history.ts
-- account.ts
-- p2p-media.ts
-- send-connection-requests.mjs
-- room-invite-notifications.ts
-- crm-client.tsx
-- popup-people-model.ts
-- video/prepare/route.ts
-- chrome-extension-demo-async-overlay.tsx
-- core/types.ts
-- hasPrivateIntegrationBlobConfiguration
-- watch-history-v2-routes.ts
-- protocol/src/index.ts
-- diagnostic-log.ts
-- content-lifecycle.test.tsx
-- crunchyroll/progress.ts
-- content.tsx
-- AniDachi Pre-release Security and Reliability Readiness Plan
-- popup-app.tsx
-- Watch History v2 Clean MVP Implementation Plan
-- room-persistence.ts
-- account-inbox.ts
-- p2p-media-harness.mjs
-- Harness
-- post/prepare/route.ts
-- YouTubeVideoAdapter
-- watch-history-controller.ts
-- [slug]/page.tsx
-- api/src/index.ts
-- debug-log.ts
-- voice-audio-preferences.ts
-- crunchyroll/navigation.ts
-- device-push.ts
-- ref_next_server
-- middleware.ts
-- youtube/player-chrome.ts
-- button.tsx
-- overlay-layout-engine.ts
-- plan-survey-modal.tsx
-- RoomDurableObject
-- youtube/navigation.ts
-- popup-watch-history.tsx
-- room-client.ts
-- survey-lead.ts
-- overlay-layout-editor.tsx
-- pseo-new-guides.tsx
-- p2p-media.test.ts
-- ref_next_navigation
-- gmail.ts
-- Watch History Catalog And Progress Design
-- scripts
-- oauth-transaction.ts
-- verifyKreatliCrmSession
-- cn
-- portfolio-audit.ts
-- Participant
-- room-hibernation-runtime.ts
-- ghost-cam.ts
-- crunchyroll.content.ts
-- overlay-voice-session.ts
-- ref_react
-- invites-client.tsx
-- watch-library-client.tsx
-- demo/package.json
-- popup-people-panel.test.tsx
-- anidachi-auth/room-lifecycle.ts
-- friends-client.tsx
-- overlay-layout-model.ts
-- app/layout.tsx
-- cache-jikan-posters.ts
-- Anidachi Auth Integration Implementation Plan
-- api/src/auth.ts
-- .sampleRemoteAudioActivityOnce
-- best-classic-anime-to-watch-with-friends/page.tsx
-- store.ts
-- seo-landing-path.ts
-- pricing.tsx
-- p2p-ice.ts
-- cli.ts
-- Main Repository Monorepo Migration Implementation Plan
 - dependencies
 - ref_vitest
 - jsonUnauthorizedUnlessKreatliSession
@@ -121,11 +24,13 @@
 - ref_node_assert_strict
 - src/types.ts
 - tasks
-- Graphify
 - migrate-private-integration-blobs.ts
 - What You Must Do When Invoked
+- auth-client.ts
 - Commercial Room, P2P, and Watch Progress Architecture Implementation Plan
 - Source Adapter Architecture Implementation Plan
+- overlay-voice-controls.test.tsx
+- package.json
 - user-identity.ts
 - popup-watch-history.test.tsx
 - study.ts
@@ -134,16 +39,17 @@
 - Anidachi Architecture and Stack Notes
 - getSession
 - scripts
+- next
 - Overlay Layout Engine V2 Design
 - room-signaling-harness.mjs
 - hotkeys.ts
 - extension-codes.ts
 - public-media-blob.ts
 - home-client.tsx
-- Kreatli CRM Data Schema
 - Production Room, Realtime, and P2P Hardening Roadmap
 - event
 - internal-web-client.ts
+- PlaybackSyncController
 - src/account-inbox-client.ts
 - wxt.config.ts
 - overlay-layout-editor.test.tsx
@@ -153,7 +59,7 @@
 - Development Flow Quality System Plan
 - LinkedIn Sales Navigator Connection Requests
 - Anidachi Project Architecture And Development
-- AniDachi Extension Icon 48px
+- logDebug
 - overlay-layout-runtime.ts
 - overlay-room-media-controls.tsx
 - contact-messages.ts
@@ -164,6 +70,7 @@
 - AniDachi New Chat Project Context
 - YouTube Playback Synchronization Hardening Implementation Plan
 - Interface Visibility Settings Design
+- room-session-storage.ts
 - Account Data, Watch History, Social, And Inbox Foundation Design
 - dev-check.mjs
 - api/package.json
@@ -174,6 +81,7 @@
 - nav-bar-client.tsx
 - generate-extension-icons.mjs
 - devDependencies
+- watch-history-v2.ts
 - Anidachi Development Environments
 - OpenClaw: YouTube Shorts posting
 - Room Flow And P2P Flawless Execution Plan
@@ -184,6 +92,7 @@
 - ControlledWebSocket
 - rules
 - Live CDP Research: Navigation and Player Lifecycle
+- ref_next_link
 - account-inbox-cache.ts
 - top-bubble-reveal.test.tsx
 - .ensurePeer
@@ -194,6 +103,7 @@
 - watch-history-authority.test.ts
 - Core Contract
 - Voice Controls and Participant Audio Implementation Plan
+- social-client.ts
 - Watch History Room Authority Threat Model
 - protocol/src/auth.ts
 - AGENTS.md
@@ -204,6 +114,7 @@
 - best-anime-to-binge-with-friends-this-weekend/page.tsx
 - best-anime-to-watch-with-friends/page.tsx
 - discord-contact.tsx
+- db
 - AniDachi SEO Content Guidelines
 - seo-cta-cleanup.py
 - compilerOptions
@@ -214,6 +125,8 @@
 - File Map
 - typescript
 - protocol/package.json
+- seo-page-layout.tsx
+- watch-history.ts
 - scripts
 - ghost-cam-size.ts
 - AdapterManager
@@ -224,16 +137,16 @@
 - room-metering.ts
 - overlay-interface-settings.tsx
 - overlay-room-rail.test.tsx
+- account.ts
 - keyword-opportunities.ts
 - Popup People And Social Directory Implementation Plan
 - smoke-staging-web.mjs
 - validate-extension-artifact.mjs
-- Incremental Re-extraction
 - Deploy API Check Test Dry Run
 - include
 - use-interface-preferences.test.tsx
-- Download on the App Store Badge
 - extension_auth_pkce_migration_contract.mjs
+- p2p-media.ts
 - scratchpad.md
 - Project Knowledge Map
 - Resources Progress Menu Implementation Plan
@@ -244,8 +157,8 @@
 - dependencies
 - artwork.ts
 - ref_node_fs
+- send-connection-requests.mjs
 - SEO Trust & Authority plan (2026-07-28)
-- AniDachi Logo Asset
 - Release And Rollback Runbook
 - Rollout Order
 - V1 Product Decisions (Historical)
@@ -254,46 +167,43 @@
 - panel-account-title.tsx
 - overlay-layout-ghost-preview.tsx
 - room-invite-target-status.ts
+- room-invite-notifications.ts
 - overlay-layout-engine.test.ts
 - google.ts
 - Conversion metrics (GA4)
-- Host Avatar Asset
 - include
 - graphify reference: extra exports and benchmark
 - Environment And Secrets Matrix
 - Shared Watch Progress Tracker
 - API Surface
 - Database Model
+- crm-client.tsx
 - Approved Voice UX Simplification V2
 - demo/tsconfig.json
 - room-tab-lock.ts
 - extension/tsconfig.json
-- Haruto Avatar Image
-- Natsuki Avatar Asset
-- extension_auth_pkce_concurrency_contract.mjs
 - Staging Acceptance Checklist
 - Global Constraints
 - Global Constraints
+- popup-people-model.ts
 - Participant Audio Controls
 - Watch Progress Model
 - YouTube Adapter Notes
 - seekWithTimelineInput
 - findKatamariPlayerFromReactNode
 - room-quota-display.ts
-- AniDachi Apple Touch Icon
 - best-sci-fi-anime-to-watch-with-friends/page.tsx
 - how-to-watch-youtube-together-without-screen-share/page.tsx
 - switch-from-discord-screen-share/page.tsx
-- AniDachi Web Logo Asset
+- video/prepare/route.ts
 - Operating contract (mandatory)
 - Project Status Board
-- Site, Extension, Auth, and Database Integration Notes
 - V1 Staging Acceptance Matrix (Historical)
 - api/tsconfig.json
 - lib
 - handleSeriesPosterRequest
-- AniDachi App Icon
 - graphify reference: query, path, explain
+- chrome-extension-demo-async-overlay.tsx
 - YouTube keyword bank + templates (Keyword Planner US)
 - Executor's Feedback or Assistance Requests
 - High-level Task Breakdown (historical)
@@ -304,6 +214,7 @@
 - Required Tests
 - Extension UX
 - Testing Strategy
+- core/types.ts
 - smoke-worker.mjs
 - apps/api Agent Instructions
 - apps/extension Agent Instructions
@@ -313,7 +224,8 @@
 - skills.ts
 - Crunchyroll conversion stack (required)
 - Programmatic anime pages (`/watch/[slug]`)
-- Anidachi Extension Release Channels
+- db.ts
+- hasPrivateIntegrationBlobConfiguration
 - Core Product Rules
 - Web Account Dashboard UX
 - Product Surfaces And Sync Model
@@ -324,6 +236,7 @@
 - Q: Trace Watch History v2 extension background ownership, outbox/storage, provider progress adapters, overlay and popup writers for Wave 3.
 - packages/protocol Agent Instructions
 - Real-WebRTC two-browser P2P harness (Block 1.5)
+- watch-history-v2-routes.ts
 - vitest.cloudflare.config.ts
 - vercel.json
 - graphify reference: add a URL and watch a folder
@@ -334,40 +247,115 @@
 - Homepage CRO Rework (Execution Summary)
 - Experimental Features
 - Privacy, Security, And Abuse Controls
+- protocol/src/index.ts
 - Voice Activity and Flow Model
-- Wave 5 Server Media Ownership Redirects and Public Abuse
 - Surface Behavior
-- Explicit Website and Extension Auth Channels
 - launch-chrome.sh
 - main.ts
 - env.d.ts
 - graphify reference: GitHub clone and cross-repo merge
 - graphify reference: transcribe video and audio
 - AEO (answer engines)
-- Staging Smoke Workflow
-- LiveKit Dev Server
+- diagnostic-log.ts
 - Notification Delivery
-- AniDachi Stack Overview
-- Local Video Demo Page
 - vite-env.d.ts
 - postcss.config.mjs
 - web/README.md
 - extraction-spec.md
-- Extension Channels
+- content-lifecycle.test.tsx
 - plans/README.md
 - Room Invites
 - build-extension-public.sh
 - build-extension-staging.sh
+- crunchyroll/progress.ts
+- content.tsx
+- popup-app.tsx
+- Watch History v2 Clean MVP Implementation Plan
+- pricing-copy.ts
+- room-persistence.ts
+- account-inbox.ts
+- p2p-media-harness.mjs
+- Harness
+- post/prepare/route.ts
+- YouTubeVideoAdapter
+- watch-history-controller.ts
+- [slug]/page.tsx
+- api/src/index.ts
+- debug-log.ts
+- getResolvedSiteOrigin
+- voice-audio-preferences.ts
+- crunchyroll/navigation.ts
+- device-push.ts
+- ref_next_server
+- middleware.ts
+- youtube/player-chrome.ts
+- button.tsx
+- overlay-layout-engine.ts
+- plan-survey-modal.tsx
+- WatchSharedRoomAuthoritySchema
+- RoomDurableObject
+- getGuideLinks
+- youtube/navigation.ts
+- popup-watch-history.tsx
+- room-client.ts
+- survey-lead.ts
+- overlay-layout-editor.tsx
+- pseo-new-guides.tsx
+- p2p-media.test.ts
+- ref_next_navigation
+- gmail.ts
+- Watch History Catalog And Progress Design
+- overlay-app.tsx
+- scripts
+- oauth-transaction.ts
+- verifyKreatliCrmSession
+- cn
+- portfolio-audit.ts
+- Participant
+- room-hibernation-runtime.ts
+- ghost-cam.ts
+- crunchyroll.content.ts
+- overlay-voice-session.ts
+- plan-entitlements.ts
+- ref_react
+- invites-client.tsx
+- watch-library-client.tsx
+- demo/package.json
+- popup-people-panel.test.tsx
+- anidachi-auth/room-lifecycle.ts
+- friends-client.tsx
+- overlay-layout-model.ts
+- app/layout.tsx
+- cache-jikan-posters.ts
+- watch-history-client.ts
+- Anidachi Auth Integration Implementation Plan
+- api/src/auth.ts
+- .sampleRemoteAudioActivityOnce
+- best-classic-anime-to-watch-with-friends/page.tsx
+- store.ts
+- seo-landing-path.ts
+- pricing.tsx
+- p2p-ice.ts
+- cli.ts
+- Main Repository Monorepo Migration Implementation Plan
+- AniDachi Extension Icon 48px
+- Download on the App Store Badge
+- AniDachi Logo Asset
+- Host Avatar Asset
+- Haruto Avatar Image
+- Natsuki Avatar Asset
+- AniDachi Apple Touch Icon
+- AniDachi Web Logo Asset
+- Site, Extension, Auth, and Database Integration Notes
+- AniDachi App Icon
+- Anidachi Extension Release Channels
+- Staging Smoke Workflow
+- LiveKit Dev Server
+- AniDachi Stack Overview
+- Local Video Demo Page
 - Project Graphify Rules
 - Room P2P Verification Requirements
 - Contributor Startup Contract
-- anidachi auth session refresh token cookie
-- anidachi auth tokens revokerefreshtoken
-- kreatli email crm crm client copyfilteredsurveyleadstsv
-- kreatli email crm crm client copyrendered
-- kreatli email crm crm client runexport
-- kreatli email crm crm client runexportsurveyleads
-- kreatli email crm crm client runpreview
 - Extension Privacy Notes
 - Chrome Web Store Listing Copy
 - Store Screenshot Guidance
@@ -386,12 +374,8 @@
 - Template B Comparison Pages
 - Template D Listicles
 - Table Of Contents Component
-- kreatli crm survey lead shared survey lead segment
 - Web App Scope
 - Web Commands
-- blob
-- cache
-- client
 - Graphify File Watcher
 - Graphify URL Ingest
 - Graphify Extra Export Formats
@@ -410,9 +394,6 @@
 - Path and Explain Query Flows
 - Graphify Query Feedback Save
 - Whisper Transcription Flow
-- components seo page layout tocheading
-- config
-- crypto
 - SEO Conversion CTA Rules
 - Genre Hub Page Pattern
 - SEO Internal Linking Rules
@@ -433,7 +414,6 @@
 - Programmatic Watch Page Expansion
 - Sitewide CTA Survey Modal
 - Survey Email CRM Integration
-- define content script
 - Safe Site Paths
 - Sensitive Paths
 - Site Development Handoff Brief
@@ -569,9 +549,141 @@
 - Web v2 APIs
 - Worker Room Authority
 - Owner-Scoped Local YouTube Capture Authority
-- Seamless Extension Session
-- eslintrc
 - PR AI Contribution Notes
+- README Graphify Workflow
+- AniDachi Repository Source of Truth
+- Hub and Spoke SEO Content Model
+- Fake Media Chromium
+- P2P Media Harness
+- Real WebRTC Harness README
+- Workspace Isolation
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_components_plan_survey_plan_survey_modal_startcheckout
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_components_plan_survey_plan_survey_modal_submitemail
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_components_plan_survey_use_plan_survey_useplansurvey
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_components_pricing_handlesubscribe
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_components_seo_page_layout_tocheading
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_cookies_access_token_cookie
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_cookies_refresh_token_cookie
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_plan_codes_free_plan_code
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_plan_codes_paid_plan_codes
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_plan_entitlements_checkoutinputtopaidplancode
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_plan_entitlements_free_plan_code
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_plan_entitlements_legacycheckouttier
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_plan_entitlements_legacytiertoplancode
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_plan_entitlements_normalizepaidplancode
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_plan_entitlements_normalizeplancode
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_plan_entitlements_paidplancode
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_plan_entitlements_plancode
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_session_refresh_auth_refresh_path
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_session_refresh_token_cookie
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_stripe_env_stripe_api_version
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_token_policy_access_token_ttl_seconds
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_token_policy_refresh_token_ttl_days
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_token_policy_refresh_token_ttl_seconds
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_community_discord_discord_server_cta_label
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_community_discord_discord_server_invite_url
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_founder_discord_founder_discord_username
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_gtag_ga_measurement_id
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_home_survey_pricing_cta_label
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_instagram_graph_instagramcredentials
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_kreatli_crm_auth_cookie_name
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_kreatli_crm_survey_lead_shared_referral_bump_spots
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_kreatli_crm_survey_lead_shared_survey_lead_segment
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_amazon_subscription_row
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_async_host_snippet
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_compare_overview
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_crunchyroll_guide_paid_mention
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_discord_compare_faq
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_early_access_price
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_first_checklist_faq
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_free_tier_table
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_friends_need_subscription_answer
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_group_onboarding
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_is_anidachi_free_answer
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_long_distance_snippet
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_plus_vs_pro_answer
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_price_table
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_rave_compare_faq
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_refund_note
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_starting_at
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_teleparty_compare_faq
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_tiers_pricing_plus_label
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_tiers_pricing_plus_short
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_tiers_pricing_pro_label
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_tiers_pricing_pro_short
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_tiers_pricing_starting_at
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_room_quota_min_session_start_seconds
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_room_quota_room_token_ttl_seconds
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_social_account_limits_max_instagram_accounts
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_social_account_limits_max_tiktok_accounts
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_social_account_limits_max_youtube_accounts
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_staging_access_staging_access_cookie
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_staging_access_staging_access_path
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_tiktok_api_tiktokcredentials
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_youtube_api_youtubecredentials
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_clientevent
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_clienteventschema
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_createemptyroomendeventid
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_empty_room_timeout_ms
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_getexpectedhosttime
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_getsynccorrection
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_isemptyroomendeventid
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_max_display_name_chars
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_max_ice_candidate_bytes
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_max_participant_id_chars
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_max_reaction_emoji_chars
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_max_room_frame_bytes
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_max_room_id_chars
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_max_sdp_bytes
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_max_session_id_chars
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_max_url_chars
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_max_video_fingerprint_chars
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_max_watch_title_chars
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_normalizeremoteplaybackstate
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_p2picecandidate
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_p2psignal
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_participant
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_participantschema
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_playbackstate
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_playbackstateschema
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_reactionevent
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_reactioneventschema
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_roomcapabilities
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_roomcapabilitiesschema
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_roomendreason
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_roomendreasonschema
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_roomusagesummary
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_roomusagesummaryschema
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_serverevent
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_servereventschema
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_watchsourcedescriptor
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_watchsourcedescriptorschema
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_limits_max_display_name_chars
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_limits_max_ice_candidate_bytes
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_limits_max_participant_id_chars
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_limits_max_reaction_emoji_chars
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_limits_max_room_id_chars
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_limits_max_sdp_bytes
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_limits_max_session_id_chars
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_limits_max_url_chars
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_limits_max_video_fingerprint_chars
+- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_limits_max_watch_title_chars
+- anidachi auth session refresh token cookie
+- anidachi auth tokens revokerefreshtoken
+- kreatli email crm crm client copyfilteredsurveyleadstsv
+- kreatli email crm crm client copyrendered
+- kreatli email crm crm client runexport
+- kreatli email crm crm client runexportsurveyleads
+- kreatli email crm crm client runpreview
+- kreatli crm survey lead shared survey lead segment
+- blob
+- cache
+- client
+- components seo page layout tocheading
+- config
+- crypto
+- define content script
+- eslintrc
 - google
 - google ads tokens mergegoogleadstokens
 - google ads tokens readgoogleadstokens
@@ -600,14 +712,10 @@
 - node url
 - node zlib
 - og
-- WatchSharedRoomAuthoritySchema
 - path
 - plan survey use plan survey useplansurvey
 - promises
 - react slot
-- README Graphify Workflow
-- AniDachi Repository Source of Truth
-- Hub and Spoke SEO Content Model
 - ref_ai
 - ref_ai_sdk_openai
 - ref_babel_standalone
@@ -651,10 +759,6 @@
 - src message composer events anidachi message composer shortcut event
 - src message composer events anidachi message composer submit event
 - strict
-- Fake Media Chromium
-- P2P Media Harness
-- Real WebRTC Harness README
-- Workspace Isolation
 - tiktok api tiktokcredentials
 - unified
 - url
@@ -1013,119 +1117,11 @@
 - users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_app_kreatli_email_crm_crm_client_runexportsurveyleads
 - users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_app_kreatli_email_crm_crm_client_runpreview
 - users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_components_plan_survey_plan_survey_modal_closesurvey
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_components_plan_survey_plan_survey_modal_startcheckout
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_components_plan_survey_plan_survey_modal_submitemail
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_components_plan_survey_use_plan_survey_useplansurvey
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_components_pricing_handlesubscribe
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_components_seo_page_layout_tocheading
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_cookies_access_token_cookie
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_cookies_refresh_token_cookie
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_plan_codes_free_plan_code
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_plan_codes_paid_plan_codes
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_plan_entitlements_checkoutinputtopaidplancode
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_plan_entitlements_free_plan_code
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_plan_entitlements_legacycheckouttier
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_plan_entitlements_legacytiertoplancode
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_plan_entitlements_normalizepaidplancode
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_plan_entitlements_normalizeplancode
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_plan_entitlements_paidplancode
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_plan_entitlements_plancode
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_session_refresh_auth_refresh_path
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_session_refresh_token_cookie
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_stripe_env_stripe_api_version
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_token_policy_access_token_ttl_seconds
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_token_policy_refresh_token_ttl_days
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_anidachi_auth_token_policy_refresh_token_ttl_seconds
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_community_discord_discord_server_cta_label
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_community_discord_discord_server_invite_url
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_founder_discord_founder_discord_username
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_gtag_ga_measurement_id
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_home_survey_pricing_cta_label
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_instagram_graph_instagramcredentials
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_kreatli_crm_auth_cookie_name
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_kreatli_crm_survey_lead_shared_referral_bump_spots
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_kreatli_crm_survey_lead_shared_survey_lead_segment
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_amazon_subscription_row
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_async_host_snippet
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_compare_overview
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_crunchyroll_guide_paid_mention
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_discord_compare_faq
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_early_access_price
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_first_checklist_faq
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_free_tier_table
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_friends_need_subscription_answer
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_group_onboarding
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_is_anidachi_free_answer
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_long_distance_snippet
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_plus_vs_pro_answer
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_price_table
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_rave_compare_faq
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_refund_note
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_starting_at
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_copy_pricing_teleparty_compare_faq
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_tiers_pricing_plus_label
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_tiers_pricing_plus_short
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_tiers_pricing_pro_label
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_tiers_pricing_pro_short
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_pricing_tiers_pricing_starting_at
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_room_quota_min_session_start_seconds
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_room_quota_room_token_ttl_seconds
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_social_account_limits_max_instagram_accounts
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_social_account_limits_max_tiktok_accounts
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_social_account_limits_max_youtube_accounts
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_staging_access_staging_access_cookie
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_staging_access_staging_access_path
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_tiktok_api_tiktokcredentials
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_apps_web_lib_youtube_api_youtubecredentials
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_clientevent
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_clienteventschema
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_createemptyroomendeventid
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_empty_room_timeout_ms
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_getexpectedhosttime
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_getsynccorrection
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_isemptyroomendeventid
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_max_display_name_chars
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_max_ice_candidate_bytes
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_max_participant_id_chars
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_max_reaction_emoji_chars
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_max_room_frame_bytes
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_max_room_id_chars
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_max_sdp_bytes
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_max_session_id_chars
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_max_url_chars
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_max_video_fingerprint_chars
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_max_watch_title_chars
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_normalizeremoteplaybackstate
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_p2picecandidate
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_p2psignal
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_participant
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_participantschema
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_playbackstate
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_playbackstateschema
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_reactionevent
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_reactioneventschema
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_roomcapabilities
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_roomcapabilitiesschema
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_roomendreason
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_roomendreasonschema
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_roomusagesummary
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_roomusagesummaryschema
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_serverevent
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_servereventschema
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_watchsourcedescriptor
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_index_watchsourcedescriptorschema
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_limits_max_display_name_chars
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_limits_max_ice_candidate_bytes
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_limits_max_participant_id_chars
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_limits_max_reaction_emoji_chars
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_limits_max_room_id_chars
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_limits_max_sdp_bytes
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_limits_max_session_id_chars
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_limits_max_url_chars
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_limits_max_video_fingerprint_chars
-- users_vladyslavhulyi_anidachi_lp_monorepo_worktrees_room_p2p_release_hardening_packages_protocol_src_limits_max_watch_title_chars
-- overlay-voice-controls.test.tsx
-- package.json
+- Graphify
+- Kreatli CRM Data Schema
+- Incremental Re-extraction
+- AniDachi Pre-release Security and Reliability Readiness Plan
+- Explicit Website and Extension Auth Channels
 
 ## God Nodes (most connected - your core abstractions)
 1. `next` - 174 edges
@@ -1153,20 +1149,20 @@
 
 ## Import Cycles
 - 1-file cycle: `apps/web/scripts/export-anidachi-logo.py -> apps/web/scripts/export-anidachi-logo.py`
+- 1-file cycle: `apps/web/lib/pre-release-security-boundaries.test.ts -> apps/web/lib/pre-release-security-boundaries.test.ts`
 
 ## Hyperedges (group relationships)
 - **CRM Data Model** — apps_web_crm_data_schema_crm_data_layout, apps_web_crm_data_schema_contact_record, apps_web_crm_data_schema_touch_event, apps_web_crm_data_schema_outreach_queue_eligibility [EXTRACTED 1.00]
-- **Channel-bound auth lifecycle** — docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_explicit_auth_channels, docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_refresh_family_lifecycle, docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_additive_migration [EXTRACTED 1.00]
 - **Graphify Extraction Pipeline** — _codex_skills_graphify_skill_file_detection, _codex_skills_graphify_skill_ast_structural_extraction, _codex_skills_graphify_skill_semantic_extraction, _codex_skills_graphify_skill_ast_semantic_merge, _codex_skills_graphify_skill_graph_build_pipeline [EXTRACTED 1.00]
 - **Graph Integrity and Persistence** — _codex_skills_graphify_skill_graph_shrink_guard, _codex_skills_graphify_skill_graph_health_check, _codex_skills_graphify_skill_manifest_and_cost_tracking, _codex_skills_graphify_skill_incremental_update [EXTRACTED 1.00]
 - **Graph Navigation Commands** — _codex_skills_graphify_skill_graph_query_navigation, _codex_skills_graphify_skill_graph_path_navigation, _codex_skills_graphify_skill_graph_node_explanation [EXTRACTED 1.00]
 - **Incremental Graph Consistency Controls** — _codex_skills_graphify_references_update_incremental_detection, _codex_skills_graphify_references_update_semantic_cache_invalidation, _codex_skills_graphify_references_update_changed_file_replacement, _codex_skills_graphify_references_update_portable_manifest, _codex_skills_graphify_references_update_semantic_output_stamp_gate [EXTRACTED 1.00]
-- **Wave 2 Auth Hardening Flow** — docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_5_browser_oauth_transactions, docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_6_extension_connection_binding, docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_7_refresh_family_rotation, docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_8_bounded_auth_cleanup [EXTRACTED 1.00]
-- **Wave 3 Live Runtime Boundaries** — docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_9_room_history_authority, docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_10_websocket_admission, docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_11_extension_isolation [EXTRACTED 1.00]
-- **Wave 5 Public and Server Boundaries** — docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_14_server_media_intake, docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_15_ownership_and_safe_destinations, docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_16_public_abuse_boundaries [EXTRACTED 1.00]
 - **Human-gated Outreach Flow** — apps_web_crm_data_agents_human_controlled_sending, apps_web_crm_data_workflow_gmail_send_step, apps_web_crm_data_workflow_touch_logging_step, apps_web_crm_data_workflow_next_action_scheduling [INFERRED 0.95]
+- **Task 8 bounded cleanup deployment and staging acceptance** — docs_current_development_state_auth_artifact_cleanup_migration, docs_current_development_state_bounded_cleanup_contract, docs_current_development_state_active_artifact_preservation, docs_current_development_state_task_8_staging_acceptance [EXTRACTED 1.00]
+- **Wave 2 progression remains gated by Task 5 provider acceptance** — docs_current_development_state_task_5_provider_acceptance_gate, docs_current_development_state_wave_2_progression_restriction, docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_5_provider_acceptance_gate, docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_wave_2_stop_status [EXTRACTED 1.00]
+- **Wave 2 deployed state, accepted tasks, and remaining attended gate** — docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_tasks_5_8_deployed, docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_tasks_6_8_staging_accepted, docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_task_5_google_discord_gate, docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_wave_2_open_stop_gate [EXTRACTED 1.00]
 
-## Communities (1113 total, 785 thin omitted)
+## Communities (1109 total, 783 thin omitted)
 
 ### Community 0 - "primary-checkout-cta.tsx"
 Cohesion: 0.03
@@ -1176,401 +1172,13 @@ Nodes (133): faq, headings, metadata, SITE_URL, faq, headings, metadata, SITE_UR
 Cohesion: 0.06
 Nodes (71): AccountOverviewPage(), metadata, FriendInvitePage(), acceptFriendInviteLink(), acceptFriendRequest(), acceptFriendshipFromInvite(), addFriendGroupMember(), assertActiveFriendInviteLinkLimit() (+63 more)
 
-### Community 2 - "seo-page-layout.tsx"
-Cohesion: 0.02
-Nodes (85): faq, itemList, metadata, tocHeadings, faq, headings, metadata, SITE_URL (+77 more)
-
-### Community 3 - "db.ts"
-Cohesion: 0.05
-Nodes (61): POST(), GET(), loginRedirectUrl(), POST(), refreshSessionFromCookie(), POST(), POST(), GET() (+53 more)
-
-### Community 4 - "pricing-copy.ts"
-Cohesion: 0.02
-Nodes (96): faq, itemList, metadata, tocHeadings, faq, headings, metadata, SITE_URL (+88 more)
-
-### Community 5 - "getResolvedSiteOrigin"
-Cohesion: 0.02
-Nodes (88): faq, headings, metadata, SITE_URL, faq, headings, metadata, SITE_URL (+80 more)
-
-### Community 6 - "getGuideLinks"
-Cohesion: 0.02
-Nodes (98): AnimeWatchPartyPage(), faq, metadata, pillarItemList, SITE_URL, tocHeadings, AnimeWatchPartyToolkitPage(), faq (+90 more)
-
-### Community 7 - "overlay-app.tsx"
-Cohesion: 0.03
-Nodes (92): AnidachiLogoMark(), AnidachiLogoMarkProps, HOLD_FIRE_SUPER_REACTION_EXPERIMENT, normalizeExperimentFlag(), attachAndPlayVideoElement(), isMessageComposerShortcutEvent(), buildCurrentSourceUrlForInvite(), CameraBubble() (+84 more)
-
-### Community 8 - "plan-entitlements.ts"
-Cohesion: 0.05
-Nodes (81): checkoutSessionUserId(), POST(), CheckoutTier, getOrCreateStripeCustomer(), loginUrlForRequest(), POST(), POST(), sanitizeDiscordHandle() (+73 more)
-
-### Community 9 - "watch-history-client.ts"
-Cohesion: 0.04
-Nodes (64): bestEffortFlushWatchHistoryBeforeSignOut(), capturePauseKey(), createWatchHistoryClient(), defaultStoredWatchHistorySession(), defaultWatchHistorySession(), flushWatchHistoryInBackground(), handleWatchHistoryAuthSessionChange(), handleWatchHistoryHttpMessage() (+56 more)
-
 ### Community 10 - "SeoPageLayout"
 Cohesion: 0.03
 Nodes (58): faq, FirstAnimeWatchPartyChecklistPage(), howToSteps, metadata, prepItemList, SITE_URL, tocHeadings, faq (+50 more)
 
-### Community 11 - "auth-client.ts"
-Cohesion: 0.06
-Nodes (75): assertExtensionLogoutRedirect(), attemptWebsiteLogoutFlow(), AuthCommand, AuthMessage, AuthMessageResponse, buildExtensionConnectUrl(), buildExtensionLogoutUrl(), buildWebUrl() (+67 more)
-
-### Community 12 - "next"
-Cohesion: 0.03
-Nodes (62): metadata, faq, metadata, tocHeadings, WatchActionAnimeWithFriendsPage(), faq, metadata, tocHeadings (+54 more)
-
-### Community 13 - "PlaybackSyncController"
-Cohesion: 0.10
-Nodes (10): RoomStateSnapshot, OverlayAppProps, isMediaSettling(), PendingSourceNavigation, PlaybackSyncController, PlayerEvent, VideoAdapter, createHarness() (+2 more)
-
-### Community 14 - "logDebug"
-Cohesion: 0.08
-Nodes (11): logDebug(), shouldPrintDebugToConsole(), classifyMicrophoneTerminalFailure(), configureSender(), formatCameraErrorMessage(), formatMicrophoneErrorMessage(), microphoneErrorName(), P2PMediaController (+3 more)
-
-### Community 15 - "room-session-storage.ts"
-Cohesion: 0.06
-Nodes (50): clearRoomSession(), clearRoomSessionIfMatch(), clearRoomSessionIfMatchForTab(), createParticipantSessionId(), enqueueRoomSessionOperation(), handleRoomSessionStorageMessage(), handleRoomSessionStorageRuntimeMessage(), isCompleteLegacyRecordForUser() (+42 more)
-
-### Community 16 - "watch-history-v2.ts"
-Cohesion: 0.08
-Nodes (60): AccountWatchLibraryPage(), metadata, applyWatchProgressV2(), buildHostAuthoritativeWatchHistoryRoomSource(), buildWatchHistoryV2Response(), compareEpisodeRows(), compareObservationDescending(), databaseRowKey() (+52 more)
-
-### Community 17 - "ref_next_link"
-Cohesion: 0.03
-Nodes (44): metadata, faq, headings, itemList, metadata, SITE_URL, faq, headings (+36 more)
-
-### Community 18 - "social-client.ts"
-Cohesion: 0.11
-Nodes (61): createWebsiteRoomHeaders(), acceptFriendRequest(), acceptFriendRequestFromApi(), acceptFriendRequestHttpMessage(), acceptInviteHttpMessage(), acceptRoomInvite(), acceptRoomInviteFromApi(), addFriendGroupMember() (+53 more)
-
-### Community 19 - "db"
-Cohesion: 0.05
-Nodes (74): db(), getActiveRoomByClientRequestId(), listRoomMembers(), RoomMemberRow, RoomRow, UserRow, ProfileRow, PublicProfile (+66 more)
-
-### Community 20 - "watch-history.ts"
-Cohesion: 0.03
-Nodes (59): updateWatchHistoryPreferencesV2(), AccountOwnedResponseMetaSchema, WatchItemKindSchema, WatchProviderSchema, AccountGenerationSchema, DisplayTitleSchema, DurableIdSchema, HttpUrlSchema (+51 more)
-
-### Community 21 - "account.ts"
-Cohesion: 0.04
-Nodes (57): AcceptedRoomInviteResponse, AcceptedRoomInviteResponseSchema, ACCOUNT_RESPONSE_SCHEMA_VERSION, AccountInboxActiveRoomInviteItemSchema, AccountInboxCountsSchema, AccountInboxFriendRequestItemSchema, AccountInboxItemSchema, AccountInboxMissedRoomInviteItemSchema (+49 more)
-
-### Community 22 - "p2p-media.ts"
-Cohesion: 0.05
-Nodes (59): createLocalAudioLevelMeter(), LocalAudioLevelMeter, MicrophoneTerminalFailureReason, addOptionalNumbers(), applyP2PCodecPreferences(), copyDefinedStat(), countMatches(), createP2PMediaSignalDedupeKey() (+51 more)
-
-### Community 23 - "send-connection-requests.mjs"
-Cohesion: 0.07
-Nodes (60): CachedCloudflareIceServers, clearIceServersCacheForTest(), cloneIceServersPayload(), CloudflareIceServersResponse, createIceServersPayload(), dropEmptyIceServers(), FALLBACK_ICE_SERVERS, filterBrowserBlockedTurnUrls() (+52 more)
-
-### Community 24 - "room-invite-notifications.ts"
-Cohesion: 0.06
-Nodes (61): BackgroundPushEvent, getCurrentExtensionSession(), isAuthMessage(), isDiagnosticMessage(), AccountInboxRoomInvite, applicationServerKeyMatches(), base64UrlToUint8Array(), buildRoomInviteNotificationPlan() (+53 more)
-
-### Community 25 - "crm-client.tsx"
-Cohesion: 0.07
-Nodes (57): addContactAction(), applyImportAction(), CrmActionState, deleteContactAction(), exportCsvDataAction(), exportSurveyLeadsCsvAction(), guard(), ImportPreviewResult (+49 more)
-
-### Community 26 - "popup-people-model.ts"
-Cohesion: 0.05
-Nodes (39): AccountInboxItem, buildPopupInboxModel(), buildPopupPeopleModel(), cloneFriend(), cloneGroup(), cloneInboxItem(), cloneProfile(), cloneRecentPerson() (+31 more)
-
-### Community 27 - "video/prepare/route.ts"
-Cohesion: 0.10
-Nodes (50): AccountResult, blobUrlToProxyUrl(), POST(), prepareTikTokImages(), publishToIgAccount(), AccountResult, blobUrlToProxyUrl(), POST() (+42 more)
-
-### Community 28 - "chrome-extension-demo-async-overlay.tsx"
-Cohesion: 0.06
-Nodes (35): delay(), ActiveWatcher, ASYNC_STEP_LABELS, AsyncDemoOverlayKeyframes(), AsyncDemoOverlayLayer(), BEAT_CAPTIONS, BEAT_TITLES, DemoMode (+27 more)
-
-### Community 29 - "core/types.ts"
-Cohesion: 0.06
-Nodes (39): ActiveAdapterPlaybackOptions, useActiveAdapterPlayback(), isMediaTimeBuffered(), MediaReadyReason, READY_EVENTS, RemoteSeekAttempt, shouldDeferHostStateSeek(), shouldSeekForHostState() (+31 more)
-
-### Community 30 - "hasPrivateIntegrationBlobConfiguration"
-Cohesion: 0.08
-Nodes (47): POST(), compat, __dirname, eslintConfig, __filename, clearGoogleAdsTokens(), GoogleAdsStoredTokens, mergeGoogleAdsTokens() (+39 more)
-
-### Community 31 - "watch-history-v2-routes.ts"
-Cohesion: 0.08
-Nodes (28): POST(), cleanHttpUrl(), cleanString(), POST(), createRoom(), getUsageSecondsForDay(), roomCapabilitiesFromRoom(), signRoomToken() (+20 more)
-
-### Community 32 - "protocol/src/index.ts"
-Cohesion: 0.05
-Nodes (30): duckVideoVolume(), getDocumentVideoKey(), getStableVideoSourceKey(), Html5VideoAdapter, PlayerOverlayGeometryListener, buildWatchSourceDescriptor(), normalizeWatchTitle(), canonicalWatchSourceUrl() (+22 more)
-
-### Community 33 - "diagnostic-log.ts"
-Cohesion: 0.07
-Nodes (48): appendDiagnosticEntry(), clearDiagnosticEntries(), clearDiagnosticsFromPage(), compactDiagnosticPageData(), compactPageDebug(), compactPageDebugEntry(), createClearDiagnosticsMessage(), createDiagnosticsFilename() (+40 more)
-
-### Community 34 - "content-lifecycle.test.tsx"
-Cohesion: 0.07
-Nodes (35): usePlayerOverlayGeometry(), arePlayerOverlayGeometriesEqual(), DEFAULT_PLAYER_OVERLAY_GEOMETRY, normalizeBoundedValue(), normalizeDimension(), normalizeNonNegativeInteger(), normalizePlayerOverlayGeometry(), PlayerOverlayAnchor (+27 more)
-
-### Community 35 - "crunchyroll/progress.ts"
-Cohesion: 0.08
-Nodes (48): cleanCrunchyrollTitle(), cleanImageUrl(), collectJsonLdSeasonCandidates(), collectJsonLdSeriesCandidates(), CrunchyrollProgressInput, CrunchyrollSeasonCandidate, CrunchyrollSeasonInfo, CrunchyrollSeriesCandidate (+40 more)
-
-### Community 36 - "content.tsx"
-Cohesion: 0.06
-Nodes (25): ContentLifecycleDependencies, ContentLifecycleRuntime, createReactOverlayRenderer(), detectLifecycleResult(), ensurePageStyles(), installMessageComposerKeyboardGuard(), LOCAL_CONTENT_SCRIPT_MATCHES, main() (+17 more)
-
-### Community 37 - "AniDachi Pre-release Security and Reliability Readiness Plan"
-Cohesion: 0.05
-Nodes (51): Account Read Contracts and Popup Isolation, Current Development State, Development Quality System, Extension Session Ownership, Feature to Staging to Main Git Flow, Graphify Project Knowledge Graph, Migration-first Rollout, Operational Source of Truth (+43 more)
-
-### Community 38 - "popup-app.tsx"
-Cohesion: 0.07
-Nodes (49): rootElement, accountErrorState(), accountIdentityChanged(), accountLoadingState(), accountReadyState(), AccountRequestGate, AccountRequestToken, AccountScopeToken (+41 more)
-
-### Community 39 - "Watch History v2 Clean MVP Implementation Plan"
-Cohesion: 0.04
-Nodes (47): Durable storage, Final Acceptance Matrix, Global Constraints, Out Of Scope Follow-Ups, Rollback Rules, Rollout Phases, Runtime ownership, Shared protocol (+39 more)
-
-### Community 40 - "room-persistence.ts"
-Cohesion: 0.07
-Nodes (43): hasValidInternalAuthorization(), BufferedP2PSignalEvent, activeRoomLifecycle, emptyRoomLifecycle, emptyRoomRetryAt(), EndingRoomLifecycle, isRecord(), isTimestamp() (+35 more)
-
-### Community 41 - "account-inbox.ts"
-Cohesion: 0.09
-Nodes (36): GET(), POST(), AccountInboxApiError, AccountInboxCountRow, accountInboxCountsFromRow(), accountInboxDatabaseError(), AccountInboxEntryRow, accountInboxItemFromRow() (+28 more)
-
-### Community 42 - "p2p-media-harness.mjs"
-Cohesion: 0.09
-Nodes (45): ref_esbuild, ref_node_http, API_DIR, appendWorkerVar(), b64url(), buildWorkerArgs(), bundleHarness(), cleanupHarness() (+37 more)
-
-### Community 43 - "Harness"
-Cohesion: 0.08
-Nodes (15): P2PMediaSessionInput, selectP2PMediaParticipants(), createRoomConnectionId(), isOlderHistoryBoundary(), RoomClient, RoomClientOptions, RoomConnectionStatus, sameHistoryBoundary() (+7 more)
-
-### Community 44 - "post/prepare/route.ts"
-Cohesion: 0.13
-Nodes (38): publishToTtAccount(), publishToTtAccount(), GET(), safeRefreshTiktok(), ALLOWED_TYPES, POST(), GET(), processInstagramAccount() (+30 more)
-
-### Community 45 - "YouTubeVideoAdapter"
-Cohesion: 0.07
-Nodes (19): AdapterPlaybackSnapshot, clampVolumePercent(), YouTubeVideoAdapter, youtubeDefinition, ensureYouTubeSource, AD_CONTAINER_SELECTOR, finiteNonNegative(), isVisibleMarker() (+11 more)
-
-### Community 46 - "watch-history-controller.ts"
-Cohesion: 0.08
-Nodes (29): CurrentResourcePanel(), CurrentResourcePanelProps, formatProgressClock(), HistoryObservation, HistoryPolicyInput, isValidHistoryMedia(), normalizeHistoryUrl(), ProviderPlaybackMetadata (+21 more)
-
-### Community 47 - "[slug]/page.tsx"
-Cohesion: 0.12
-Nodes (38): AnimeWithFriendsPage(), buildTitleTag(), buildToc(), generateMetadata(), getAnimeBySlug(), getPageLastModified(), Props, MovieJsonLd() (+30 more)
-
-### Community 48 - "api/src/index.ts"
-Cohesion: 0.09
-Nodes (22): app, closeInvalidRoomFrame(), closeRoomRateLimitedSocket(), consumeParsedRoomEventBoundary(), consumeRoomFrameBoundary(), encode(), getRoomEventClass(), handleRoomWebSocketMessageBoundary() (+14 more)
-
-### Community 49 - "debug-log.ts"
-Cohesion: 0.09
-Nodes (34): cleanClassName(), cleanText(), clearDebugLog(), compactDebugData(), compactInputData(), compactVideoData(), controlsDebugSnapshot(), copyDebugFields() (+26 more)
-
-### Community 50 - "voice-audio-preferences.ts"
-Cohesion: 0.07
-Nodes (34): MicrophoneIntent, shouldPublishMicrophone(), isWithinOverlayHotkeyBoundary(), overlayHotkeyBoundaryProps, OverlayInteractionBoundaryProps, ParticipantAudioContourControl(), ParticipantAudioControlProps, ParticipantAudioInlineControl() (+26 more)
-
-### Community 51 - "crunchyroll/navigation.ts"
-Cohesion: 0.08
-Nodes (22): DefinitionLookup, ensureGenericSource(), SourceAdapterDefinition, findBestVideo(), findPlayerContainer(), findVideosDeep(), isUsableVideo(), scoreVideo() (+14 more)
-
-### Community 52 - "device-push.ts"
-Cohesion: 0.09
-Nodes (28): POST(), defaultDevicePushRepository, deliverInboxChangedPush(), DevicePushApiError, devicePushErrorResponse(), DevicePushIdentityRow, DevicePushRegistration, DevicePushRepository (+20 more)
-
-### Community 53 - "ref_next_server"
-Cohesion: 0.11
-Nodes (41): DELETE(), POST(), POST(), POST(), POST(), POST(), GET(), DELETE() (+33 more)
-
-### Community 54 - "middleware.ts"
-Cohesion: 0.11
-Nodes (31): verifyAccessToken(), isSafeAuthReturnTo(), sanitizeAuthReturnTo(), isStaticOrInternalAssetPath(), shouldAutoRefreshWebsiteSession(), INTERNAL_TOOL_APP_SEGMENTS, INTERNAL_TOOL_ROBOTS_DISALLOW, isInternalToolPath() (+23 more)
-
-### Community 55 - "youtube/player-chrome.ts"
-Cohesion: 0.11
-Nodes (32): AvailableElementRect, childListMutationMayChangeChromeRoots(), childListMutationTouchesChromeRoots(), clampNumber(), getActiveFallbackChromeElements(), getAvailableElementRects(), getAvailableRect(), getAvailableRects() (+24 more)
-
-### Community 56 - "button.tsx"
-Cohesion: 0.07
-Nodes (25): metadata, ManagerLayout(), metadata, BlouManagerLogoutButton(), metadata, metadata, LoginForm(), KreatliCrmLoginPage() (+17 more)
-
-### Community 57 - "overlay-layout-engine.ts"
-Cohesion: 0.14
-Nodes (34): CHAT_TEXT_METRICS, clampAxisPosition(), clampInteger(), clampRectToSafeRect(), ContactAxis, createCameraPriorityFallback(), createChatLayout(), createMinimumFallback() (+26 more)
-
-### Community 58 - "plan-survey-modal.tsx"
-Cohesion: 0.09
-Nodes (31): AccountWaitlistCard(), Props, PlanSurveyModal(), PlanSurveyOpenContext, SurveyStep, isStaleDefaultSurvey(), isValidSegment(), OpenSurveyArgs (+23 more)
-
-### Community 59 - "RoomDurableObject"
-Cohesion: 0.16
-Nodes (6): RoomDurableObject, RoomMeterState, RoomSocketAttachment, updateRoomSocketAttachment(), PlaybackSyncTransport, ClientEvent
-
-### Community 60 - "youtube/navigation.ts"
-Cohesion: 0.14
-Nodes (21): getOverlayMountDecision(), getOverlayPageDecision(), isOverlayAllowedOnPage(), mutationsAffectVideo(), nodeContainsVideo(), OverlayMountDecision, OverlayPageDecision, shouldRefreshSameVideoAdapter() (+13 more)
-
-### Community 61 - "popup-watch-history.tsx"
-Cohesion: 0.11
-Nodes (36): canonicalHistoryIncludesEvent(), defaultClient, deleteScopeKey(), eventMatchesScope(), filterWatchHistoryItems(), formatClock(), groupWatchHistoryItems(), isNewerThanCanonicalHistory() (+28 more)
-
-### Community 62 - "room-client.ts"
-Cohesion: 0.11
-Nodes (32): assertRoomHttpResponse(), bridgeError(), buildRoomWebSocketUrl(), connectRoomHttpMessage(), connectWebsiteRoom(), connectWebsiteRoomFromApi(), createRoom(), createRoomHttpMessage() (+24 more)
-
-### Community 63 - "survey-lead.ts"
-Cohesion: 0.15
-Nodes (31): buildInterestEmail(), POST(), POST(), GET(), GET(), AccountWaitlistStatus, buildResult(), buildSurveyNote() (+23 more)
-
-### Community 64 - "overlay-layout-editor.tsx"
-Cohesion: 0.11
-Nodes (37): CHAT_TEXT_SCALE_OPTIONS, createPreviewContext(), FALLBACK_PREVIEW_CONTEXT, finitePositive(), formatChatWidth(), getArrowDelta(), getChatPointerSteps(), getObjectDragPointer() (+29 more)
-
-### Community 65 - "pseo-new-guides.tsx"
-Cohesion: 0.08
-Nodes (21): metadata, metadata, metadata, metadata, metadata, metadata, metadata, metadata (+13 more)
-
-### Community 66 - "p2p-media.test.ts"
-Cohesion: 0.05
-Nodes (17): getNetworkInformation(), getP2PAudioTransceiverDirection(), isPoliteP2PPeer(), p2pAudioTrackSwapNeedsNegotiation(), reconcilePeerAction(), shouldInitiateP2POffers(), shouldProactivelyRestartIceForNetworkSignal(), summarizeNetworkInformation() (+9 more)
-
-### Community 67 - "ref_next_navigation"
-Cohesion: 0.09
-Nodes (21): metadata, Props, metadata, JoinCompleteClient(), JoinState, metadata, JoinClient(), metadata (+13 more)
-
-### Community 68 - "gmail.ts"
-Cohesion: 0.13
-Nodes (30): errorToShortString(), failRedirect(), GET(), GET(), Body, POST(), createGmailOAuth2(), exchangeCodeForTokens() (+22 more)
-
-### Community 69 - "Watch History Catalog And Progress Design"
-Cohesion: 0.06
-Nodes (35): Acceptance Criteria, Adapter Tests, Canonical Data Model, Conflict Resolution, Crunchyroll, Deletion Semantics, Episode Progress, Existing History Hierarchy (+27 more)
-
-### Community 70 - "scripts"
-Cohesion: 0.06
-Nodes (36): scripts, build, build:extension:icons, build:extension:public, build:extension:staging, build:extension:staging:broad, check, check:extension:icons (+28 more)
-
-### Community 71 - "oauth-transaction.ts"
-Cohesion: 0.12
-Nodes (24): GET(), GET(), callbackRequest(), fixedStart(), originalEnv, handleDiscordOAuthStart(), handleGoogleOAuthStart(), handleOAuthStart() (+16 more)
-
-### Community 72 - "verifyKreatliCrmSession"
-Cohesion: 0.13
-Nodes (25): failRedirect(), GET(), GET(), POST(), createGoogleAdsOAuth2(), exchangeGoogleAdsCode(), getGoogleAdsOAuthCredentials(), getGoogleAdsRedirectUri() (+17 more)
-
-### Community 73 - "cn"
-Cohesion: 0.11
-Nodes (25): ConnectClient(), ERROR_MESSAGES, IgAccount, IgStatus, TtAccount, TtStatus, YtAccount, YtStatus (+17 more)
-
-### Community 74 - "portfolio-audit.ts"
-Cohesion: 0.12
-Nodes (31): fetchGa4LandingByChannel(), fetchGa4LandingConversions(), fetchGa4TopPages(), Ga4LandingChannelRow, Ga4LandingConversionRow, Ga4PageRow, resolveGa4PropertyName(), dateRange() (+23 more)
-
-### Community 75 - "Participant"
-Cohesion: 0.07
-Nodes (19): RoomSocketVerifiedIdentity, HostStateUpdateErrorCode, HostStateUpdateResult, isValidYouTubeVideoId(), LEGACY_ROOM_CAPABILITIES, MediaSeatChangeCode, MediaSeatChangeResult, parseHttpUrl() (+11 more)
-
-### Community 76 - "room-hibernation-runtime.ts"
-Cohesion: 0.09
-Nodes (17): ConnectParams, connectRoomClient(), makeEmptyAlarmDue(), openRoomSocket(), participant(), readRoomRuntime(), RoomRuntimeSnapshot, roomToken() (+9 more)
-
-### Community 77 - "ghost-cam.ts"
-Cohesion: 0.14
-Nodes (24): GhostCamOptions, GhostCamSession, IncomingP2PSignalSender, p2pSignalMatchesActiveGeneration(), p2pSignalMetadata(), replayPendingP2PSignals(), syncRemoteVoiceParticipant(), useGhostCam() (+16 more)
-
-### Community 78 - "crunchyroll.content.ts"
-Cohesion: 0.11
-Nodes (30): BitmovinLikePlayer, BitmovinNamespace, BitmovinPlayerConstructor, BitmovinPlayerMethod, clickElement(), findBestVideo(), findCrunchyrollNextEpisodeButton(), findCrunchyrollRouteLink() (+22 more)
-
-### Community 79 - "overlay-voice-session.ts"
-Cohesion: 0.16
-Nodes (16): HotkeyState, VoiceMode, getNextVoiceMode(), VoiceModeButtonProps, VoiceSettingsPanel(), VoiceSettingsPanelProps, createVoiceSessionState(), getVoiceIndicatorParticipantIds() (+8 more)
-
-### Community 80 - "ref_react"
-Cohesion: 0.10
-Nodes (23): AccountNav(), isActive(), ITEMS, BlouLoginForm(), safeNextParam(), BlouLoginPage(), metadata, FriendInviteClient() (+15 more)
-
-### Community 81 - "invites-client.tsx"
-Cohesion: 0.12
-Nodes (23): AcceptInviteResponse, AccountInboxItem, acknowledgeInboxPageSeen(), ActiveRoomInvite, Avatar(), formatDate(), FriendRequestRow(), InboxFriendRequest (+15 more)
-
-### Community 82 - "watch-library-client.tsx"
-Cohesion: 0.11
-Nodes (29): bindWatchHistoryPageRefresh(), buildLaunchUrl(), clampProgress(), deleteConfirmation(), deleteScopeKey(), EpisodeRow(), errorMessage(), formatClock() (+21 more)
-
-### Community 83 - "demo/package.json"
-Cohesion: 0.13
-Nodes (14): devDependencies, typescript, vite, vitest, name, private, scripts, build (+6 more)
-
-### Community 84 - "popup-people-panel.test.tsx"
-Cohesion: 0.08
-Nodes (20): AccountOwnedState, mapSocialStateToPeoplePresentation(), popupInboxBadgeCount(), PopupNavigation(), directory(), findButton(), flushPromises(), legalPresentationStates() (+12 more)
-
-### Community 85 - "anidachi-auth/room-lifecycle.ts"
-Cohesion: 0.14
-Nodes (24): endedRoomLifecycle, RoomUsageDisplayAnchor, POST(), POST(), finalizeRoomUsage(), completeHostRoomEnd(), completeInternalRoomEnd(), EndDependencies (+16 more)
-
-### Community 86 - "friends-client.tsx"
-Cohesion: 0.10
-Nodes (23): addOptimisticMember(), Avatar(), CurrentUser, EMPTY_FRIENDS, formatRecentMeta(), FriendGroup, FriendInviteLinkResponse, FriendListItem (+15 more)
-
-### Community 87 - "overlay-layout-model.ts"
-Cohesion: 0.10
-Nodes (31): ResolvedChatLayout, ResolvedVideoLayout, clampInteger(), cloneDefinition(), DEFAULT_LAYOUT, getDefaultOverlayLayoutDefinition(), getDefaultOverlayLayoutPreferencesV2(), isRecord() (+23 more)
-
-### Community 88 - "app/layout.tsx"
-Cohesion: 0.10
-Nodes (19): metadata, geistMono, geistSans, metadata, shouldNoindex, viewport, AnidachiLogoLink(), AuthMinimalNav() (+11 more)
-
-### Community 89 - "cache-jikan-posters.ts"
-Cohesion: 0.09
-Nodes (22): AnimeJikanCacheFile, cache, CachedJikanEntry, MAL_ID_BY_SLUG, fetchOptions, getAnimeById(), getAnimeRecommendations(), JikanAnime (+14 more)
-
-### Community 90 - "Anidachi Auth Integration Implementation Plan"
-Cohesion: 0.07
-Nodes (28): Anidachi Auth Integration Implementation Plan, Authenticated Room Flow, Branch, Backup, and Commit Strategy, Current Research Snapshot, Database Migration Design, Extension Files to Add, Extension Files to Modify, Extension Login Flow (+20 more)
-
-### Community 91 - "api/src/auth.ts"
-Cohesion: 0.14
-Nodes (24): getSecret(), isBoundedId(), isBoundedUrl(), isPositiveInteger(), RoomHistoryAttestationClaims, signRoomHistoryAttestation(), signRoomTokenForTest(), VerifiedRoomToken (+16 more)
-
-### Community 92 - ".sampleRemoteAudioActivityOnce"
-Cohesion: 0.18
-Nodes (12): audioActivityStatsChanged(), getAudioTrackFromElement(), P2PMediaPeerDiagnostics, AudioActivityStats, AudioReceiverTrackState, AudioSpeechActivity, AudioTransportFlow, AudioTransportSample (+4 more)
-
-### Community 93 - "best-classic-anime-to-watch-with-friends/page.tsx"
-Cohesion: 0.06
-Nodes (20): faq, headings, itemList, metadata, SITE_URL, faq, headings, itemList (+12 more)
-
-### Community 94 - "store.ts"
-Cohesion: 0.16
-Nodes (21): KreatliCrmPage(), size, appendTouch(), blobReadText(), blobWriteText(), contactsFilePath(), crmDataDir(), CrmMeta (+13 more)
-
-### Community 95 - "seo-landing-path.ts"
-Cohesion: 0.13
-Nodes (24): AnalyticsEvents(), ensureReady(), initAmplitudeClient(), startInit(), trackAmplitudeEvent(), captureFirstLandingPath(), getFirstLandingPath(), getFirstLandingReferrer() (+16 more)
-
-### Community 96 - "pricing.tsx"
-Cohesion: 0.20
-Nodes (15): FooterPricingCta(), Hero(), JoinDiscordButton(), JoinDiscordButtonProps, trackDiscordClick(), NavPricingButton(), NavPricingLink(), usePlanSurvey() (+7 more)
-
-### Community 97 - "p2p-ice.ts"
-Cohesion: 0.14
-Nodes (27): buildIceServersRequest(), CachedIceServers, cachedIceServersByScope, clearP2PIceServersCacheForTest(), cloneIceServers(), dedupeIceServers(), getIceServerUrls(), hasTurnServer() (+19 more)
-
-### Community 98 - "cli.ts"
-Cohesion: 0.18
-Nodes (22): isContactDue(), renderTemplate(), Contact, ContactStatus, assertValidContact(), parseStatus(), STATUSES, cmdAddContact() (+14 more)
-
-### Community 99 - "Main Repository Monorepo Migration Implementation Plan"
-Cohesion: 0.07
-Nodes (26): Commit Strategy, Current Status, Definition Of Done, Environment Model, Execution Order, Known Migration Risks And Mitigations, Main Repository Monorepo Migration Implementation Plan, Non-Negotiable Rules (+18 more)
-
 ### Community 100 - "dependencies"
 Cohesion: 0.08
-Nodes (26): amplitude unified, dependencies, @amplitude/unified, class-variance-authority, clsx, google-auth-library, googleapis, next (+18 more)
+Nodes (26): dependencies, @amplitude/unified, class-variance-authority, clsx, google-auth-library, googleapis, next, @radix-ui/react-slot (+18 more)
 
 ### Community 101 - "ref_vitest"
 Cohesion: 0.10
@@ -1594,11 +1202,7 @@ Nodes (24): boundedUtf8String(), CanonicalPlanCodeSchema, ClientEventSchema, Cli
 
 ### Community 106 - "tasks"
 Cohesion: 0.09
-Nodes (26): ref_build, dist, next cache, output, dependsOn, outputs, dependsOn, outputs (+18 more)
-
-### Community 107 - "Graphify"
-Cohesion: 0.09
-Nodes (25): AST and Semantic Merge, AST Structural Extraction, Community Detection, Community Labeling, Corpus Size Guard, Existing Graph Fast Path, Corpus File Detection, GitHub and Multi-Path Merge (+17 more)
+Nodes (26): dependsOn, outputs, dependsOn, outputs, dependsOn, outputs, dependsOn, outputs (+18 more)
 
 ### Community 108 - "migrate-private-integration-blobs.ts"
 Cohesion: 0.12
@@ -1608,6 +1212,10 @@ Nodes (20): readResult(), stream(), streamingReadResult(), assertReadableResult(
 Cohesion: 0.08
 Nodes (24): For /graphify add and --watch, For /graphify query, For the commit hook and native CLAUDE.md integration, For --update and --cluster-only, /graphify, Honesty Rules, Interpreter guard for subcommands, Part A - Structural extraction for code files (+16 more)
 
+### Community 11 - "auth-client.ts"
+Cohesion: 0.06
+Nodes (75): assertExtensionLogoutRedirect(), attemptWebsiteLogoutFlow(), AuthCommand, AuthMessage, AuthMessageResponse, buildExtensionConnectUrl(), buildExtensionLogoutUrl(), buildWebUrl() (+67 more)
+
 ### Community 110 - "Commercial Room, P2P, and Watch Progress Architecture Implementation Plan"
 Cohesion: 0.08
 Nodes (24): Architecture Boundaries, Cloudflare Worker + Durable Object / Live Plane, Commercial Room, P2P, and Watch Progress Architecture Implementation Plan, Commit Strategy, Current Status, Definition Of Done, Durable Room Lifecycle, Execution Order (+16 more)
@@ -1615,6 +1223,10 @@ Nodes (24): Architecture Boundaries, Cloudflare Worker + Durable Object / Live P
 ### Community 111 - "Source Adapter Architecture Implementation Plan"
 Cohesion: 0.08
 Nodes (24): Core Contracts, Definition Of Done, Global Constraints, Non-Goals, PR 1: Behavior-Preserving Provider Extraction, PR 2: Lifecycle, Capabilities, And First-Class YouTube, Provider And Room Isolation Invariants, Registry Rules (+16 more)
+
+### Community 1112 - "package.json"
+Cohesion: 0.29
+Nodes (6): engines, pnpm, name, packageManager, private, version
 
 ### Community 112 - "user-identity.ts"
 Cohesion: 0.16
@@ -1648,6 +1260,10 @@ Nodes (30): AccountFriendsPage(), metadata, AccountInvitesPage(), metadata, Acco
 Cohesion: 0.09
 Nodes (22): name, private, scripts, blob:migrate:private, build, cache:jikan, check, crm (+14 more)
 
+### Community 12 - "next"
+Cohesion: 0.03
+Nodes (62): metadata, faq, metadata, tocHeadings, WatchActionAnimeWithFriendsPage(), faq, metadata, tocHeadings (+54 more)
+
 ### Community 120 - "Overlay Layout Engine V2 Design"
 Cohesion: 0.09
 Nodes (22): Camera Group, Chat, Clean Version 2 Start, Code Boundaries, Component Tests, Delivery Stages, Draft And Apply, Failure Handling (+14 more)
@@ -1672,10 +1288,6 @@ Nodes (18): GET(), Blob200, Blob304, contentTypesForExtension(), discardStream()
 Cohesion: 0.16
 Nodes (14): ChromeExtensionDemo(), columns, CompareTable(), rows, HomeClient(), HomeSectionHeader(), HowItWorks(), howToSteps (+6 more)
 
-### Community 126 - "Kreatli CRM Data Schema"
-Cohesion: 0.13
-Nodes (22): Kreatli CRM Agent Instructions, Conservative Outreach Governance, CRM CLI Workflow, Human-controlled Sending, Personal Outreach Source of Truth, UTC Queue Interpretation, Contact Import Modes, Contact Record (+14 more)
-
 ### Community 127 - "Production Room, Realtime, and P2P Hardening Roadmap"
 Cohesion: 0.09
 Nodes (21): Already Good Enough To Build On, Current Reality Check, Definition Of Done For The Whole Roadmap, How To Use This Plan, Non-Negotiable Order, Not Done Yet, Partial Or Misleading, Product Constraints (+13 more)
@@ -1688,6 +1300,10 @@ Nodes (7): addP2PSignalForDispatch(), AddP2PSignalResult, getP2PSignalDedupeKey(
 Cohesion: 0.16
 Nodes (11): persistRoomEndAfterDisablingAutoResponse(), internalWebCallbackConfig(), InternalWebLifecycleEnv, isLoopbackHostname(), notifyWebRoomEnded(), RoomEndCallback, endedRoomTombstone, EndRoomCommand (+3 more)
 
+### Community 13 - "PlaybackSyncController"
+Cohesion: 0.10
+Nodes (10): RoomStateSnapshot, OverlayAppProps, isMediaSettling(), PendingSourceNavigation, PlaybackSyncController, PlayerEvent, VideoAdapter, createHarness() (+2 more)
+
 ### Community 130 - "src/account-inbox-client.ts"
 Cohesion: 0.22
 Nodes (17): accountInboxFromBridge(), accountInboxHttpError(), AccountInboxHttpMessage, AccountInboxHttpMessageResponse, decodeAccountInboxResponse(), handleAccountInboxHttpMessage(), isAccountInboxHttpMessage(), isRecord() (+9 more)
@@ -1697,8 +1313,8 @@ Cohesion: 0.10
 Nodes (16): ExtensionChannel, getExtensionManifestKey(), LOCAL_EXTENSION_ID, resolveExtensionChannel(), STAGING_EXTENSION_ID, apiHttpHostPermission, apiWsHostPermission, buildId (+8 more)
 
 ### Community 133 - "client.ts"
-Cohesion: 0.16
-Nodes (17): buildSeed(), generateKeywordIdeas(), GenerateKeywordIdeasInput, getAccessToken(), getCustomerId(), getDeveloperToken(), KeywordIdeaResult, normalizeCustomerId() (+9 more)
+Cohesion: 0.15
+Nodes (18): buildSeed(), generateKeywordIdeas(), GenerateKeywordIdeasInput, getAccessToken(), getCustomerId(), getDeveloperToken(), KeywordIdeaResult, normalizeCustomerId() (+10 more)
 
 ### Community 134 - "Survey → Subscription Conversion (Planner Notes)"
 Cohesion: 0.10
@@ -1718,11 +1334,11 @@ Nodes (20): Architecture, CLI flags, Common skip reasons, Exit codes, Files, `la
 
 ### Community 138 - "Anidachi Project Architecture And Development"
 Cohesion: 0.10
-Nodes (20): Extension Popup Shell, Anidachi Project Architecture And Development, Branch Model, Current Stack, Documentation Maintenance, Environments, Extension Runtime, High-Level System (+12 more)
+Nodes (20): Anidachi Project Architecture And Development, Branch Model, Current Stack, Documentation Maintenance, Environments, Extension Runtime, High-Level System, Important Documents (+12 more)
 
-### Community 139 - "AniDachi Extension Icon 48px"
-Cohesion: 0.13
-Nodes (20): AniDachi Extension Icon, Blue Purple Gradient Badge, Browser Extension Brand Identity, Dark Rounded Square Canvas, Stylized A Mark, AniDachi Extension Icon 16px, White Stylized A Brand Mark, Extension Toolbar Icon (+12 more)
+### Community 14 - "logDebug"
+Cohesion: 0.08
+Nodes (11): logDebug(), shouldPrintDebugToConsole(), classifyMicrophoneTerminalFailure(), configureSender(), formatCameraErrorMessage(), formatMicrophoneErrorMessage(), microphoneErrorName(), P2PMediaController (+3 more)
 
 ### Community 140 - "overlay-layout-runtime.ts"
 Cohesion: 0.23
@@ -1746,7 +1362,7 @@ Nodes (19): Completion Criteria, Current Problems, Evidence Reviewed, File Struc
 
 ### Community 145 - "linkedin/package.json"
 Cohesion: 0.10
-Nodes (18): esbuild, playwright, dependencies, playwright, name, private, scripts, chrome (+10 more)
+Nodes (18): dependencies, playwright, name, private, scripts, chrome, send, type (+10 more)
 
 ### Community 146 - "overlay-interface-settings.test.tsx"
 Cohesion: 0.13
@@ -1763,6 +1379,10 @@ Nodes (18): Current Verified Baseline, Definition Of Done, External Constraints 
 ### Community 149 - "Interface Visibility Settings Design"
 Cohesion: 0.11
 Nodes (18): Accessibility, Architecture, Goals, Information Architecture, Interface Visibility Settings Design, Main Control, Manual Staging Acceptance, Non-Goals (+10 more)
+
+### Community 15 - "room-session-storage.ts"
+Cohesion: 0.06
+Nodes (50): clearRoomSession(), clearRoomSessionIfMatch(), clearRoomSessionIfMatchForTab(), createParticipantSessionId(), enqueueRoomSessionOperation(), handleRoomSessionStorageMessage(), handleRoomSessionStorageRuntimeMessage(), isCompleteLegacyRecordForUser() (+42 more)
 
 ### Community 150 - "Account Data, Watch History, Social, And Inbox Foundation Design"
 Cohesion: 0.11
@@ -1798,11 +1418,15 @@ Nodes (14): ContactNavMenu(), fetchNavUser(), isWatchClusterPath(), MeResponse, 
 
 ### Community 158 - "generate-extension-icons.mjs"
 Cohesion: 0.14
-Nodes (17): readBoundedJson(), ref_node_zlib, CHECK_ONLY, chunk(), crc32(), encodePng(), OUTPUT_DIR, paethPredictor() (+9 more)
+Nodes (17): readBoundedJson(), CHECK_ONLY, chunk(), crc32(), encodePng(), OUTPUT_DIR, paethPredictor(), PNG_SIGNATURE (+9 more)
 
 ### Community 159 - "devDependencies"
 Cohesion: 0.11
 Nodes (18): devDependencies, eslint, eslint-config-next, @eslint/eslintrc, tailwindcss, @tailwindcss/postcss, tsx, tw-animate-css (+10 more)
+
+### Community 16 - "watch-history-v2.ts"
+Cohesion: 0.08
+Nodes (60): AccountWatchLibraryPage(), metadata, applyWatchProgressV2(), buildHostAuthoritativeWatchHistoryRoomSource(), buildWatchHistoryV2Response(), compareEpisodeRows(), compareObservationDescending(), databaseRowKey() (+52 more)
 
 ### Community 160 - "Anidachi Development Environments"
 Cohesion: 0.11
@@ -1844,6 +1468,10 @@ Nodes (17): noLabelWithoutControl, useButtonType, useKeyWithClickEvents, useSema
 Cohesion: 0.12
 Nodes (16): Active Player vs Detail-Only Page, Catalog Observation, Crunchyroll Adapter Notes, Fullscreen, Hash Behavior, Live CDP Research: Navigation and Player Lifecycle, Next Episode Transition, Observed Player Structure (+8 more)
 
+### Community 17 - "ref_next_link"
+Cohesion: 0.03
+Nodes (44): metadata, faq, headings, itemList, metadata, SITE_URL, faq, headings (+36 more)
+
 ### Community 170 - "account-inbox-cache.ts"
 Cohesion: 0.21
 Nodes (13): ACCOUNT_INBOX_CACHE_VERSION, accountInboxCacheKeyForUser(), CachedAccountInbox, clearCachedAccountInboxForUser(), getCachedAccountInboxForUser(), isCanonicalUtcTimestamp(), isCurrentStoredAccount(), isRecord() (+5 more)
@@ -1883,6 +1511,10 @@ Nodes (14): Core Contract, Done Means, File Structure, Global Constraints, Prere
 ### Community 179 - "Voice Controls and Participant Audio Implementation Plan"
 Cohesion: 0.13
 Nodes (14): Final Definition of Done, Implementation Status, Preference Model, Pull Request and Promotion, Runtime State Model, Task 1: Add the Voice Domain and Preference Codec, Task 2: Separate Microphone Publication, Speech, and Audio Flow, Task 3: Generalize the P2P Microphone Lifecycle (+6 more)
+
+### Community 18 - "social-client.ts"
+Cohesion: 0.11
+Nodes (61): createWebsiteRoomHeaders(), acceptFriendRequest(), acceptFriendRequestFromApi(), acceptFriendRequestHttpMessage(), acceptInviteHttpMessage(), acceptRoomInvite(), acceptRoomInviteFromApi(), addFriendGroupMember() (+53 more)
 
 ### Community 180 - "Watch History Room Authority Threat Model"
 Cohesion: 0.13
@@ -1924,13 +1556,17 @@ Nodes (9): faq, headings, itemList, metadata, faq, metadata, tocHeadings, DataTa
 Cohesion: 0.20
 Nodes (8): LoginOAuthButtons(), oauthHref(), Props, Provider, DiscordContact(), DiscordContactProps, DiscordIcon(), PrePurchaseDiscordWalkthroughProps
 
+### Community 19 - "db"
+Cohesion: 0.05
+Nodes (74): db(), getActiveRoomByClientRequestId(), listRoomMembers(), RoomMemberRow, RoomRow, UserRow, ProfileRow, PublicProfile (+66 more)
+
 ### Community 190 - "AniDachi SEO Content Guidelines"
 Cohesion: 0.14
 Nodes (14): AniDachi SEO Content Guidelines, Canonical anime URL (programmatic), Guides / compare / listicles, Hard safety rules (ranking / indexation), Information architecture, Measurement, Page checklist (new or substantial edit), Pre-publish checklist (+6 more)
 
 ### Community 191 - "seo-cta-cleanup.py"
 Cohesion: 0.20
-Nodes (12): bg_like(), main(), collections, math, pathlib, pil, re, main() (+4 more)
+Nodes (12): bg_like(), main(), main(), process_file(), remove_above_fold(), remove_all_ctas(), strip_extra_ctas(), collections (+4 more)
 
 ### Community 192 - "compilerOptions"
 Cohesion: 0.14
@@ -1964,6 +1600,14 @@ Nodes (14): vitest, vitest, typescript, devDependencies, @biomejs/biome, turbo, 
 Cohesion: 0.14
 Nodes (13): dependencies, zod, exports, name, private, scripts, build, check (+5 more)
 
+### Community 2 - "seo-page-layout.tsx"
+Cohesion: 0.02
+Nodes (85): faq, itemList, metadata, tocHeadings, faq, headings, metadata, SITE_URL (+77 more)
+
+### Community 20 - "watch-history.ts"
+Cohesion: 0.03
+Nodes (59): updateWatchHistoryPreferencesV2(), AccountOwnedResponseMetaSchema, WatchItemKindSchema, WatchProviderSchema, AccountGenerationSchema, DisplayTitleSchema, DurableIdSchema, HttpUrlSchema (+51 more)
+
 ### Community 200 - "scripts"
 Cohesion: 0.15
 Nodes (12): name, private, scripts, build, check, dev, dev:local, dev:staging (+4 more)
@@ -1986,7 +1630,7 @@ Nodes (12): Done Means, Global Constraints, Rollout And Rollback, Room And P2P R
 
 ### Community 206 - "AniDachi — Watch Anime Together"
 Cohesion: 0.17
-Nodes (7): Workspace Package Globs, AniDachi — Watch Anime Together, Environment Variables, Local Development, Project Structure, SEO / Content, Stack
+Nodes (7): AniDachi — Watch Anime Together, Environment Variables, Local Development, Project Structure, SEO / Content, Stack, Workspace Package Globs
 
 ### Community 207 - "room-metering.ts"
 Cohesion: 0.42
@@ -1999,6 +1643,10 @@ Nodes (10): InterfaceSegmentedControl(), InterfaceSettingsPanel(), InterfaceSett
 ### Community 209 - "overlay-room-rail.test.tsx"
 Cohesion: 0.19
 Nodes (6): ParticipantPillVisibility, getPresentations(), getSlots(), participant(), renderRail(), RenderRailOverrides
+
+### Community 21 - "account.ts"
+Cohesion: 0.04
+Nodes (57): AcceptedRoomInviteResponse, AcceptedRoomInviteResponseSchema, ACCOUNT_RESPONSE_SCHEMA_VERSION, AccountInboxActiveRoomInviteItemSchema, AccountInboxCountsSchema, AccountInboxFriendRequestItemSchema, AccountInboxItemSchema, AccountInboxMissedRoomInviteItemSchema (+49 more)
 
 ### Community 210 - "keyword-opportunities.ts"
 Cohesion: 0.29
@@ -2016,25 +1664,21 @@ Nodes (10): assertHeaderIncludes(), assertStatus(), assertTextIncludes(), baseUr
 Cohesion: 0.17
 Nodes (8): args, broadPatterns, channel, contentMatches, expectedByChannel, manifest, manifestPath, videoHosts
 
-### Community 214 - "Incremental Re-extraction"
-Cohesion: 0.18
-Nodes (11): Changed-file Replacement, Cluster-only Refresh, Code-only Fast Path, Deleted-source Pruning, Graph Update Diff, Incremental File Detection, Incremental Re-extraction, Incremental Update Runbook (+3 more)
-
 ### Community 215 - "Deploy API Check Test Dry Run"
 Cohesion: 0.18
-Nodes (11): Baseline Verification Commands, GitHub Actions Review Scope, Verification, CI Check and Test Job, CI Node pnpm Setup, CI Worker Dry Run, Deploy API Check Test Dry Run, P2P Media Workflow Path Filters (+3 more)
+Nodes (11): Verification, Baseline Verification Commands, GitHub Actions Review Scope, CI Check and Test Job, CI Node pnpm Setup, CI Worker Dry Run, Deploy API Check Test Dry Run, P2P Media Workflow Path Filters (+3 more)
 
 ### Community 216 - "include"
 Cohesion: 0.22
 Nodes (11): include, include, include, include, entrypoints, index html, src, test (+3 more)
 
-### Community 218 - "Download on the App Store Badge"
-Cohesion: 0.31
-Nodes (11): Download on the App Store Badge, App Store Conversion CTA, Apple Logo Glyph, Black Rounded Badge Container, Download on the App Store Lettering, Gray Badge Outline, iOS App Distribution Trust Signal, Mobile App Download Funnel (+3 more)
-
 ### Community 219 - "extension_auth_pkce_migration_contract.mjs"
-Cohesion: 0.20
-Nodes (8): legacyCodeHash, psqlArgs, secondLegacyCodeHash, psqlArgs, query(), start(), waitForLock(), ref_node_child_process
+Cohesion: 0.06
+Nodes (25): legacyCodeHash, psqlArgs, secondLegacyCodeHash, psqlArgs, query(), start(), waitForLock(), ref_node_child_process (+17 more)
+
+### Community 22 - "p2p-media.ts"
+Cohesion: 0.05
+Nodes (59): createLocalAudioLevelMeter(), LocalAudioLevelMeter, MicrophoneTerminalFailureReason, addOptionalNumbers(), applyP2PCodecPreferences(), copyDefinedStat(), countMatches(), createP2PMediaSignalDedupeKey() (+51 more)
 
 ### Community 220 - "scratchpad.md"
 Cohesion: 0.18
@@ -2062,11 +1706,11 @@ Nodes (10): Project Planes, Read First Documentation Order, API Review Scope, Ex
 
 ### Community 226 - "Safety Rules"
 Cohesion: 0.20
-Nodes (10): Safety Rules, Staging / Release Notes, Worker Deploy Secrets, Development Workflow, Staging Safety Requirements, Promotion Auto Merge, Site Promotion Blocked Paths, Promotion Diff Classifier (+2 more)
+Nodes (10): Safety Rules, Staging / Release Notes, Development Workflow, Worker Deploy Secrets, Promotion Auto Merge, Promotion Diff Classifier, Promotion PR Creation, Site Promotion Safe Allowlist (+2 more)
 
 ### Community 227 - "dependencies"
 Cohesion: 0.20
-Nodes (10): @anidachi/protocol, dependencies, @anidachi/protocol, hono, jose, @anidachi/protocol, @anidachi/protocol, jose (+2 more)
+Nodes (10): dependencies, @anidachi/protocol, hono, jose, @anidachi/protocol, @anidachi/protocol, jose, @anidachi/protocol (+2 more)
 
 ### Community 228 - "artwork.ts"
 Cohesion: 0.44
@@ -2076,13 +1720,13 @@ Nodes (9): getCrunchyrollApiUrl(), getCrunchyrollContentToken(), getCrunchyrollL
 Cohesion: 0.20
 Nodes (7): providerDirectories, sharedOverlayRuntimeFiles, sourceAdaptersDirectory, sourceDirectory, source, SOURCE_URL, ref_node_fs
 
+### Community 23 - "send-connection-requests.mjs"
+Cohesion: 0.07
+Nodes (60): CachedCloudflareIceServers, clearIceServersCacheForTest(), cloneIceServersPayload(), CloudflareIceServersResponse, createIceServersPayload(), dropEmptyIceServers(), FALLBACK_ICE_SERVERS, filterBrowserBlockedTurnUrls() (+52 more)
+
 ### Community 230 - "SEO Trust & Authority plan (2026-07-28)"
 Cohesion: 0.20
 Nodes (10): Agent / guidelines, Attribution, Freeze exit criteria, Hard safety constraint, Run the portfolio audit, SEO Trust & Authority plan (2026-07-28), URL stability (ranked pages), What it does not replace (+2 more)
-
-### Community 231 - "AniDachi Logo Asset"
-Cohesion: 0.33
-Nodes (10): AniDachi Logo Asset, Anime Mascot Face, App Icon Readability, Circular Badge Shape, Closed Smile Expression, Dark Curved Eyes, Friendly Brand Tone, Hair Flame Shape (+2 more)
 
 ### Community 232 - "Release And Rollback Runbook"
 Cohesion: 0.20
@@ -2116,6 +1760,10 @@ Nodes (6): CHAT_PREVIEW_MESSAGES, OverlayLayoutChatPreview(), ResolvedOverlayLay
 Cohesion: 0.42
 Nodes (6): aggregateRecipientStatus(), mergeRoomInviteTargetStatus(), recipientStatus(), RoomInviteTargetStatus, roomInviteTargetStatuses(), RoomInvite
 
+### Community 24 - "room-invite-notifications.ts"
+Cohesion: 0.06
+Nodes (61): BackgroundPushEvent, getCurrentExtensionSession(), isAuthMessage(), isDiagnosticMessage(), AccountInboxRoomInvite, applicationServerKeyMatches(), base64UrlToUint8Array(), buildRoomInviteNotificationPlan() (+53 more)
+
 ### Community 240 - "overlay-layout-engine.test.ts"
 Cohesion: 0.31
 Nodes (8): blockChatGridCell(), blockChatGridSpan(), blockChatRow(), chatTopForSelectionRow(), createCompactChatDefinition(), reservedCameraViewport, selectionViewport, viewport
@@ -2127,10 +1775,6 @@ Nodes (7): GET(), buildGoogleAuthUrl(), exchangeGoogleCode(), getCredentials(), 
 ### Community 242 - "Conversion metrics (GA4)"
 Cohesion: 0.22
 Nodes (8): Conversion metrics (GA4), Event names (funnel), Next test hypotheses, Parameters (all string-friendly for GA4), QA checklist (post-deploy), SEO portfolio audit, Stripe checkout metadata, Web vitals (field data)
-
-### Community 243 - "Host Avatar Asset"
-Cohesion: 0.28
-Nodes (9): Calm Neutral Expression, Cool Blue Purple Lighting, Demo Avatar Profile, Frontal Headshot Composition, Host Avatar Asset, Host Persona, Minimal Dark Wardrobe, Square Avatar Crop (+1 more)
 
 ### Community 244 - "include"
 Cohesion: 0.22
@@ -2156,6 +1800,10 @@ Nodes (9): API Surface, Billing, Dashboard Aggregates, Devices, Friends And Rece
 Cohesion: 0.22
 Nodes (9): Billing Tables, Database Model, Devices And Web Push Subscriptions, Friend Invite Link Table, Friendship Tables, Groups, Invites, Profile Tables (+1 more)
 
+### Community 25 - "crm-client.tsx"
+Cohesion: 0.07
+Nodes (57): addContactAction(), applyImportAction(), CrmActionState, deleteContactAction(), exportCsvDataAction(), exportSurveyLeadsCsvAction(), guard(), ImportPreviewResult (+49 more)
+
 ### Community 250 - "Approved Voice UX Simplification V2"
 Cohesion: 0.22
 Nodes (9): Approved Voice UX Simplification V2, Product Contract, Room-Scoped Voice State, Runtime Contract, Task 10: Add Room-Scoped Voice Restore (Complete), Task 11: Simplify Voice UI and Remove Dictation (Complete), Task 12: Verify and Hand Off (Automated Complete, Manual Pending), Task 9: Replace the V1 Voice Interaction Contract (Complete) (+1 more)
@@ -2172,18 +1820,6 @@ Nodes (5): acquireRoomTabLock(), getLockManager(), isRoomTabLockSupported(), Loc
 Cohesion: 0.25
 Nodes (7): compilerOptions, jsx, types, extends, chrome, vitest globals, wxt.tsconfig.json
 
-### Community 254 - "Haruto Avatar Image"
-Cohesion: 0.39
-Nodes (8): Approachable Demo Identity, Haruto Avatar Image, Direct Eye Contact, Friendly Smiling Portrait, Haruto Persona, Neutral Profile Background, Profile Placeholder Asset, Watch Party Avatar
-
-### Community 255 - "Natsuki Avatar Asset"
-Cohesion: 0.43
-Nodes (8): Approachable Social Presence, Demo Watch-Party Persona, Natsuki Avatar Asset, Red Turtleneck Styling, Smiling Portrait Subject, Soft Blurred Background, Square Avatar Composition, Warm Expressive Smile
-
-### Community 256 - "extension_auth_pkce_concurrency_contract.mjs"
-Cohesion: 0.29
-Nodes (6): challenge, codeHash, psqlArgs, query(), stateHash, waitForActivity()
-
 ### Community 257 - "Staging Acceptance Checklist"
 Cohesion: 0.25
 Nodes (7): Always Check, Evidence To Attach To PR, Extension, Promotion Rule, Room / P2P, Site / Auth, Staging Acceptance Checklist
@@ -2195,6 +1831,10 @@ Nodes (7): Execution Note, Global Constraints, Overlay Layout Engine V2 Core Imp
 ### Community 259 - "Global Constraints"
 Cohesion: 0.25
 Nodes (7): Global Constraints, Overlay Layout Runtime And Editor V2 Implementation Plan, Task 1: V2 Storage Contract And Runtime Style Adapter, Task 2: Live Runtime Parity, Task 3: Draft-Based V2 Layout Editor, Task 4: Delete V1 And Finish Visual Styling, Task 5: Acceptance, Documentation, And Staging Delivery
+
+### Community 26 - "popup-people-model.ts"
+Cohesion: 0.05
+Nodes (39): AccountInboxItem, buildPopupInboxModel(), buildPopupPeopleModel(), cloneFriend(), cloneGroup(), cloneInboxItem(), cloneProfile(), cloneRecentPerson() (+31 more)
 
 ### Community 260 - "Participant Audio Controls"
 Cohesion: 0.25
@@ -2220,10 +1860,6 @@ Nodes (7): findAncestor(), findKatamariPlayer(), findKatamariPlayerFromReactNode
 Cohesion: 0.52
 Nodes (5): applyRoomUsageSnapshot(), isNewerRoomUsage(), nonnegative(), quotaDayFromResetAt(), roomQuotaRemainingSeconds()
 
-### Community 266 - "AniDachi Apple Touch Icon"
-Cohesion: 0.43
-Nodes (7): AniDachi Apple Touch Icon, Flame Hair Gradient, Friendly Closed-Eye Expression, iOS Home Screen Asset, Mascot Face, Web App Brand Asset, White Face Shape
-
 ### Community 267 - "best-sci-fi-anime-to-watch-with-friends/page.tsx"
 Cohesion: 0.29
 Nodes (5): faq, headings, itemList, metadata, SITE_URL
@@ -2236,9 +1872,9 @@ Nodes (6): faq, howToSteps, HowToWatchYoutubeTogetherWithoutScreenSharePage(), m
 Cohesion: 0.29
 Nodes (6): faq, howToSteps, metadata, SITE_URL, SwitchFromDiscordScreenSharePage(), tocHeadings
 
-### Community 270 - "AniDachi Web Logo Asset"
-Cohesion: 0.52
-Nodes (7): Smiling Anime Face Mascot, AniDachi Web Logo Asset, Circular Logo Badge, Closed Eye Smile Expression, Friendly Anime Brand Identity, Red Orange Gradient Hair Silhouette, White Face Shape
+### Community 27 - "video/prepare/route.ts"
+Cohesion: 0.10
+Nodes (50): AccountResult, blobUrlToProxyUrl(), POST(), prepareTikTokImages(), publishToIgAccount(), AccountResult, blobUrlToProxyUrl(), POST() (+42 more)
 
 ### Community 271 - "Operating contract (mandatory)"
 Cohesion: 0.29
@@ -2247,10 +1883,6 @@ Nodes (7): Evidence hierarchy, Measurement commands, Operating contract (mandato
 ### Community 272 - "Project Status Board"
 Cohesion: 0.29
 Nodes (7): AniDachi SEO audit (Executor — awaiting Planner confirm), Full SEO Analysis (2026-08-02), Keyword Enrichment Analysis (2026-08-02), Keyword Enrichment Implementation (2026-08-03) — Executor, Project Status Board, SEO agent critical fixes (Executor — awaiting Planner confirm), SEO Trust & Authority
-
-### Community 273 - "Site, Extension, Auth, and Database Integration Notes"
-Cohesion: 0.29
-Nodes (7): Authenticated Room Flow, Custom Website Auth Model, Extension PKCE Login Flow, Server-derived Participant Identity, Shared Protocol Monorepo, Site, Extension, Auth, and Database Integration Notes, Web and Worker Source of Truth Split
 
 ### Community 274 - "V1 Staging Acceptance Matrix (Historical)"
 Cohesion: 0.29
@@ -2268,13 +1900,13 @@ Nodes (6): lib, lib, dom, dom iterable, es2022, esnext
 Cohesion: 0.40
 Nodes (6): getCrunchyrollApiUrl(), getCrunchyrollContentToken(), getCrunchyrollLocale(), handleSeriesPosterRequest(), loadCrunchyrollCmsObject(), postResult()
 
-### Community 278 - "AniDachi App Icon"
-Cohesion: 0.40
-Nodes (6): AniDachi App Icon, Browser Tab Identity, Red Orange Circular Badge, Stylized Anime Mascot Face, Transparent PNG Icon Asset, White Face Silhouette
-
 ### Community 279 - "graphify reference: query, path, explain"
 Cohesion: 0.33
 Nodes (5): For /graphify explain, For /graphify path, graphify reference: query, path, explain, Step 0 — Constrained query expansion (REQUIRED before traversal), Step 1 — Traversal
+
+### Community 28 - "chrome-extension-demo-async-overlay.tsx"
+Cohesion: 0.06
+Nodes (35): delay(), ActiveWatcher, ASYNC_STEP_LABELS, AsyncDemoOverlayKeyframes(), AsyncDemoOverlayLayer(), BEAT_CAPTIONS, BEAT_TITLES, DemoMode (+27 more)
 
 ### Community 280 - "YouTube keyword bank + templates (Keyword Planner US)"
 Cohesion: 0.33
@@ -2316,6 +1948,10 @@ Nodes (6): Extension UX, Friend And Group Actions, Main Invite Surface, Notifica
 Cohesion: 0.33
 Nodes (6): Cross-Surface Acceptance, Database And Web Integration, Extension, Protocol, Staging, Testing Strategy
 
+### Community 29 - "core/types.ts"
+Cohesion: 0.06
+Nodes (39): ActiveAdapterPlaybackOptions, useActiveAdapterPlayback(), isMediaTimeBuffered(), MediaReadyReason, READY_EVENTS, RemoteSeekAttempt, shouldDeferHostStateSeek(), shouldSeekForHostState() (+31 more)
+
 ### Community 290 - "smoke-worker.mjs"
 Cohesion: 0.40
 Nodes (3): baseUrl, fetchJson(), url()
@@ -2352,9 +1988,13 @@ Nodes (5): Crunchyroll anti-cannibalization map (owned queries), Crunchyroll con
 Cohesion: 0.40
 Nodes (5): Genre hub pages (`/watch-{genre}-anime-with-friends`), New `/watch/{slug}-with-friends` pages — hub backlinks (**always**), Programmatic anime pages (`/watch/[slug]`), Programmatic quality guardrails, Watch template (`app/watch/[slug]/page.tsx`)
 
-### Community 299 - "Anidachi Extension Release Channels"
-Cohesion: 0.40
-Nodes (5): Anidachi Extension Release Channels, Channel Identity Binding, Extension Artifact Validation, Fail-closed Production Identity, Release Permission Boundary
+### Community 3 - "db.ts"
+Cohesion: 0.05
+Nodes (61): POST(), GET(), loginRedirectUrl(), POST(), refreshSessionFromCookie(), POST(), POST(), GET() (+53 more)
+
+### Community 30 - "hasPrivateIntegrationBlobConfiguration"
+Cohesion: 0.08
+Nodes (47): POST(), compat, __dirname, eslintConfig, __filename, clearGoogleAdsTokens(), GoogleAdsStoredTokens, mergeGoogleAdsTokens() (+39 more)
 
 ### Community 300 - "Core Product Rules"
 Cohesion: 0.40
@@ -2396,6 +2036,10 @@ Nodes (4): packages/protocol Agent Instructions, Rules, Source Of Truth, Verific
 Cohesion: 0.40
 Nodes (4): Real-WebRTC two-browser P2P harness (Block 1.5), Relay/TURN Mode, Run, What This Harness Does Not Prove
 
+### Community 31 - "watch-history-v2-routes.ts"
+Cohesion: 0.08
+Nodes (28): POST(), cleanHttpUrl(), cleanString(), POST(), createRoom(), getUsageSecondsForDay(), roomCapabilitiesFromRoom(), signRoomToken() (+20 more)
+
 ### Community 311 - "vercel.json"
 Cohesion: 0.50
 Nodes (3): regions, $schema, ref_sfo1
@@ -2432,21 +2076,17 @@ Nodes (3): Experimental Features, Hold Fire Super Reaction, P2P Media Transport
 Cohesion: 0.50
 Nodes (4): Abuse Controls, Chrome Web Store, Privacy, Security, And Abuse Controls, Supabase
 
+### Community 32 - "protocol/src/index.ts"
+Cohesion: 0.05
+Nodes (30): duckVideoVolume(), getDocumentVideoKey(), getStableVideoSourceKey(), Html5VideoAdapter, PlayerOverlayGeometryListener, buildWatchSourceDescriptor(), normalizeWatchTitle(), canonicalWatchSourceUrl() (+22 more)
+
 ### Community 320 - "Voice Activity and Flow Model"
 Cohesion: 0.50
 Nodes (4): Sampling Cost, Speech Classification, Transport Flow Classification, Voice Activity and Flow Model
 
-### Community 321 - "Wave 5 Server Media Ownership Redirects and Public Abuse"
-Cohesion: 0.50
-Nodes (4): Task 14 Bounded Server Media Intake, Task 15 Billing Ownership and Safe Room Destinations, Task 16 Public Forms and Shared-password Bounds, Wave 5 Server Media Ownership Redirects and Public Abuse
-
 ### Community 322 - "Surface Behavior"
 Cohesion: 0.50
 Nodes (4): Extension Popup, Popup Social Information Architecture, Surface Behavior, Web Account Dashboard
-
-### Community 323 - "Explicit Website and Extension Auth Channels"
-Cohesion: 0.50
-Nodes (4): Additive Auth Migration, Definition of Ready Auth Boundary, Explicit Website and Extension Auth Channels, Refresh Family Lifecycle
 
 ### Community 324 - "launch-chrome.sh"
 Cohesion: 0.83
@@ -2456,45 +2096,393 @@ Nodes (3): port_in_use(), print_port_conflict_help(), launch-chrome.sh script
 Cohesion: 0.67
 Nodes (3): AEO (answer engines), FAQ strategy, Opening answer format (featured snippet capture)
 
-### Community 330 - "Staging Smoke Workflow"
-Cohesion: 0.67
-Nodes (3): Staging Password Gate, Staging Smoke Workflow, Staging Web Smoke Script
-
-### Community 331 - "LiveKit Dev Server"
-Cohesion: 0.67
-Nodes (3): Build Output Policy, LiveKit Dev Server, LiveKit Ports
+### Community 33 - "diagnostic-log.ts"
+Cohesion: 0.07
+Nodes (48): appendDiagnosticEntry(), clearDiagnosticEntries(), clearDiagnosticsFromPage(), compactDiagnosticPageData(), compactPageDebug(), compactPageDebugEntry(), createClearDiagnosticsMessage(), createDiagnosticsFilename() (+40 more)
 
 ### Community 332 - "Notification Delivery"
 Cohesion: 0.67
 Nodes (3): Browser Notifications, MVP Channel, Notification Delivery
 
+### Community 34 - "content-lifecycle.test.tsx"
+Cohesion: 0.07
+Nodes (35): usePlayerOverlayGeometry(), arePlayerOverlayGeometriesEqual(), DEFAULT_PLAYER_OVERLAY_GEOMETRY, normalizeBoundedValue(), normalizeDimension(), normalizeNonNegativeInteger(), normalizePlayerOverlayGeometry(), PlayerOverlayAnchor (+27 more)
+
+### Community 35 - "crunchyroll/progress.ts"
+Cohesion: 0.08
+Nodes (48): cleanCrunchyrollTitle(), cleanImageUrl(), collectJsonLdSeasonCandidates(), collectJsonLdSeriesCandidates(), CrunchyrollProgressInput, CrunchyrollSeasonCandidate, CrunchyrollSeasonInfo, CrunchyrollSeriesCandidate (+40 more)
+
+### Community 36 - "content.tsx"
+Cohesion: 0.06
+Nodes (25): ContentLifecycleDependencies, ContentLifecycleRuntime, createReactOverlayRenderer(), detectLifecycleResult(), ensurePageStyles(), installMessageComposerKeyboardGuard(), LOCAL_CONTENT_SCRIPT_MATCHES, main() (+17 more)
+
+### Community 38 - "popup-app.tsx"
+Cohesion: 0.07
+Nodes (49): rootElement, accountErrorState(), accountIdentityChanged(), accountLoadingState(), accountReadyState(), AccountRequestGate, AccountRequestToken, AccountScopeToken (+41 more)
+
+### Community 39 - "Watch History v2 Clean MVP Implementation Plan"
+Cohesion: 0.04
+Nodes (47): Durable storage, Final Acceptance Matrix, Global Constraints, Out Of Scope Follow-Ups, Rollback Rules, Rollout Phases, Runtime ownership, Shared protocol (+39 more)
+
+### Community 4 - "pricing-copy.ts"
+Cohesion: 0.02
+Nodes (96): faq, itemList, metadata, tocHeadings, faq, headings, metadata, SITE_URL (+88 more)
+
+### Community 40 - "room-persistence.ts"
+Cohesion: 0.07
+Nodes (43): hasValidInternalAuthorization(), BufferedP2PSignalEvent, activeRoomLifecycle, emptyRoomLifecycle, emptyRoomRetryAt(), EndingRoomLifecycle, isRecord(), isTimestamp() (+35 more)
+
+### Community 41 - "account-inbox.ts"
+Cohesion: 0.09
+Nodes (36): GET(), POST(), AccountInboxApiError, AccountInboxCountRow, accountInboxCountsFromRow(), accountInboxDatabaseError(), AccountInboxEntryRow, accountInboxItemFromRow() (+28 more)
+
+### Community 42 - "p2p-media-harness.mjs"
+Cohesion: 0.09
+Nodes (45): API_DIR, appendWorkerVar(), b64url(), buildWorkerArgs(), bundleHarness(), cleanupHarness(), closeHarnessServer(), createVoiceTestWav() (+37 more)
+
+### Community 43 - "Harness"
+Cohesion: 0.08
+Nodes (15): P2PMediaSessionInput, selectP2PMediaParticipants(), createRoomConnectionId(), isOlderHistoryBoundary(), RoomClient, RoomClientOptions, RoomConnectionStatus, sameHistoryBoundary() (+7 more)
+
+### Community 44 - "post/prepare/route.ts"
+Cohesion: 0.13
+Nodes (38): publishToTtAccount(), publishToTtAccount(), GET(), safeRefreshTiktok(), ALLOWED_TYPES, POST(), GET(), processInstagramAccount() (+30 more)
+
+### Community 45 - "YouTubeVideoAdapter"
+Cohesion: 0.07
+Nodes (19): AdapterPlaybackSnapshot, clampVolumePercent(), YouTubeVideoAdapter, youtubeDefinition, ensureYouTubeSource, AD_CONTAINER_SELECTOR, finiteNonNegative(), isVisibleMarker() (+11 more)
+
+### Community 46 - "watch-history-controller.ts"
+Cohesion: 0.08
+Nodes (29): CurrentResourcePanel(), CurrentResourcePanelProps, formatProgressClock(), HistoryObservation, HistoryPolicyInput, isValidHistoryMedia(), normalizeHistoryUrl(), ProviderPlaybackMetadata (+21 more)
+
+### Community 47 - "[slug]/page.tsx"
+Cohesion: 0.12
+Nodes (38): AnimeWithFriendsPage(), buildTitleTag(), buildToc(), generateMetadata(), getAnimeBySlug(), getPageLastModified(), Props, MovieJsonLd() (+30 more)
+
+### Community 48 - "api/src/index.ts"
+Cohesion: 0.09
+Nodes (22): app, closeInvalidRoomFrame(), closeRoomRateLimitedSocket(), consumeParsedRoomEventBoundary(), consumeRoomFrameBoundary(), encode(), getRoomEventClass(), handleRoomWebSocketMessageBoundary() (+14 more)
+
+### Community 49 - "debug-log.ts"
+Cohesion: 0.09
+Nodes (34): cleanClassName(), cleanText(), clearDebugLog(), compactDebugData(), compactInputData(), compactVideoData(), controlsDebugSnapshot(), copyDebugFields() (+26 more)
+
+### Community 5 - "getResolvedSiteOrigin"
+Cohesion: 0.02
+Nodes (88): faq, headings, metadata, SITE_URL, faq, headings, metadata, SITE_URL (+80 more)
+
+### Community 50 - "voice-audio-preferences.ts"
+Cohesion: 0.07
+Nodes (34): MicrophoneIntent, shouldPublishMicrophone(), isWithinOverlayHotkeyBoundary(), overlayHotkeyBoundaryProps, OverlayInteractionBoundaryProps, ParticipantAudioContourControl(), ParticipantAudioControlProps, ParticipantAudioInlineControl() (+26 more)
+
+### Community 51 - "crunchyroll/navigation.ts"
+Cohesion: 0.08
+Nodes (22): DefinitionLookup, ensureGenericSource(), SourceAdapterDefinition, findBestVideo(), findPlayerContainer(), findVideosDeep(), isUsableVideo(), scoreVideo() (+14 more)
+
+### Community 52 - "device-push.ts"
+Cohesion: 0.09
+Nodes (28): POST(), defaultDevicePushRepository, deliverInboxChangedPush(), DevicePushApiError, devicePushErrorResponse(), DevicePushIdentityRow, DevicePushRegistration, DevicePushRepository (+20 more)
+
+### Community 53 - "ref_next_server"
+Cohesion: 0.11
+Nodes (41): DELETE(), POST(), POST(), POST(), POST(), POST(), GET(), DELETE() (+33 more)
+
+### Community 54 - "middleware.ts"
+Cohesion: 0.11
+Nodes (31): verifyAccessToken(), isSafeAuthReturnTo(), sanitizeAuthReturnTo(), isStaticOrInternalAssetPath(), shouldAutoRefreshWebsiteSession(), INTERNAL_TOOL_APP_SEGMENTS, INTERNAL_TOOL_ROBOTS_DISALLOW, isInternalToolPath() (+23 more)
+
+### Community 55 - "youtube/player-chrome.ts"
+Cohesion: 0.11
+Nodes (32): AvailableElementRect, childListMutationMayChangeChromeRoots(), childListMutationTouchesChromeRoots(), clampNumber(), getActiveFallbackChromeElements(), getAvailableElementRects(), getAvailableRect(), getAvailableRects() (+24 more)
+
+### Community 56 - "button.tsx"
+Cohesion: 0.07
+Nodes (25): metadata, ManagerLayout(), metadata, BlouManagerLogoutButton(), metadata, metadata, LoginForm(), KreatliCrmLoginPage() (+17 more)
+
+### Community 57 - "overlay-layout-engine.ts"
+Cohesion: 0.14
+Nodes (34): CHAT_TEXT_METRICS, clampAxisPosition(), clampInteger(), clampRectToSafeRect(), ContactAxis, createCameraPriorityFallback(), createChatLayout(), createMinimumFallback() (+26 more)
+
+### Community 58 - "plan-survey-modal.tsx"
+Cohesion: 0.09
+Nodes (31): AccountWaitlistCard(), Props, PlanSurveyModal(), PlanSurveyOpenContext, SurveyStep, isStaleDefaultSurvey(), isValidSegment(), OpenSurveyArgs (+23 more)
+
+### Community 59 - "RoomDurableObject"
+Cohesion: 0.16
+Nodes (6): RoomDurableObject, RoomMeterState, RoomSocketAttachment, updateRoomSocketAttachment(), PlaybackSyncTransport, ClientEvent
+
+### Community 6 - "getGuideLinks"
+Cohesion: 0.02
+Nodes (98): AnimeWatchPartyPage(), faq, metadata, pillarItemList, SITE_URL, tocHeadings, AnimeWatchPartyToolkitPage(), faq (+90 more)
+
+### Community 60 - "youtube/navigation.ts"
+Cohesion: 0.14
+Nodes (21): getOverlayMountDecision(), getOverlayPageDecision(), isOverlayAllowedOnPage(), mutationsAffectVideo(), nodeContainsVideo(), OverlayMountDecision, OverlayPageDecision, shouldRefreshSameVideoAdapter() (+13 more)
+
+### Community 61 - "popup-watch-history.tsx"
+Cohesion: 0.11
+Nodes (36): canonicalHistoryIncludesEvent(), defaultClient, deleteScopeKey(), eventMatchesScope(), filterWatchHistoryItems(), formatClock(), groupWatchHistoryItems(), isNewerThanCanonicalHistory() (+28 more)
+
+### Community 62 - "room-client.ts"
+Cohesion: 0.11
+Nodes (32): assertRoomHttpResponse(), bridgeError(), buildRoomWebSocketUrl(), connectRoomHttpMessage(), connectWebsiteRoom(), connectWebsiteRoomFromApi(), createRoom(), createRoomHttpMessage() (+24 more)
+
+### Community 63 - "survey-lead.ts"
+Cohesion: 0.15
+Nodes (31): buildInterestEmail(), POST(), POST(), GET(), GET(), AccountWaitlistStatus, buildResult(), buildSurveyNote() (+23 more)
+
+### Community 64 - "overlay-layout-editor.tsx"
+Cohesion: 0.11
+Nodes (37): CHAT_TEXT_SCALE_OPTIONS, createPreviewContext(), FALLBACK_PREVIEW_CONTEXT, finitePositive(), formatChatWidth(), getArrowDelta(), getChatPointerSteps(), getObjectDragPointer() (+29 more)
+
+### Community 65 - "pseo-new-guides.tsx"
+Cohesion: 0.08
+Nodes (21): metadata, metadata, metadata, metadata, metadata, metadata, metadata, metadata (+13 more)
+
+### Community 66 - "p2p-media.test.ts"
+Cohesion: 0.05
+Nodes (17): getNetworkInformation(), getP2PAudioTransceiverDirection(), isPoliteP2PPeer(), p2pAudioTrackSwapNeedsNegotiation(), reconcilePeerAction(), shouldInitiateP2POffers(), shouldProactivelyRestartIceForNetworkSignal(), summarizeNetworkInformation() (+9 more)
+
+### Community 67 - "ref_next_navigation"
+Cohesion: 0.09
+Nodes (21): metadata, Props, metadata, JoinCompleteClient(), JoinState, metadata, JoinClient(), metadata (+13 more)
+
+### Community 68 - "gmail.ts"
+Cohesion: 0.13
+Nodes (30): errorToShortString(), failRedirect(), GET(), GET(), Body, POST(), createGmailOAuth2(), exchangeCodeForTokens() (+22 more)
+
+### Community 69 - "Watch History Catalog And Progress Design"
+Cohesion: 0.06
+Nodes (35): Acceptance Criteria, Adapter Tests, Canonical Data Model, Conflict Resolution, Crunchyroll, Deletion Semantics, Episode Progress, Existing History Hierarchy (+27 more)
+
+### Community 7 - "overlay-app.tsx"
+Cohesion: 0.03
+Nodes (92): AnidachiLogoMark(), AnidachiLogoMarkProps, HOLD_FIRE_SUPER_REACTION_EXPERIMENT, normalizeExperimentFlag(), attachAndPlayVideoElement(), isMessageComposerShortcutEvent(), buildCurrentSourceUrlForInvite(), CameraBubble() (+84 more)
+
+### Community 70 - "scripts"
+Cohesion: 0.06
+Nodes (36): scripts, build, build:extension:icons, build:extension:public, build:extension:staging, build:extension:staging:broad, check, check:extension:icons (+28 more)
+
+### Community 71 - "oauth-transaction.ts"
+Cohesion: 0.12
+Nodes (24): GET(), GET(), callbackRequest(), fixedStart(), originalEnv, handleDiscordOAuthStart(), handleGoogleOAuthStart(), handleOAuthStart() (+16 more)
+
+### Community 72 - "verifyKreatliCrmSession"
+Cohesion: 0.13
+Nodes (25): failRedirect(), GET(), GET(), POST(), createGoogleAdsOAuth2(), exchangeGoogleAdsCode(), getGoogleAdsOAuthCredentials(), getGoogleAdsRedirectUri() (+17 more)
+
+### Community 73 - "cn"
+Cohesion: 0.11
+Nodes (25): ConnectClient(), ERROR_MESSAGES, IgAccount, IgStatus, TtAccount, TtStatus, YtAccount, YtStatus (+17 more)
+
+### Community 74 - "portfolio-audit.ts"
+Cohesion: 0.12
+Nodes (31): fetchGa4LandingByChannel(), fetchGa4LandingConversions(), fetchGa4TopPages(), Ga4LandingChannelRow, Ga4LandingConversionRow, Ga4PageRow, resolveGa4PropertyName(), dateRange() (+23 more)
+
+### Community 75 - "Participant"
+Cohesion: 0.07
+Nodes (19): RoomSocketVerifiedIdentity, HostStateUpdateErrorCode, HostStateUpdateResult, isValidYouTubeVideoId(), LEGACY_ROOM_CAPABILITIES, MediaSeatChangeCode, MediaSeatChangeResult, parseHttpUrl() (+11 more)
+
+### Community 76 - "room-hibernation-runtime.ts"
+Cohesion: 0.09
+Nodes (17): ConnectParams, connectRoomClient(), makeEmptyAlarmDue(), openRoomSocket(), participant(), readRoomRuntime(), RoomRuntimeSnapshot, roomToken() (+9 more)
+
+### Community 77 - "ghost-cam.ts"
+Cohesion: 0.14
+Nodes (24): GhostCamOptions, GhostCamSession, IncomingP2PSignalSender, p2pSignalMatchesActiveGeneration(), p2pSignalMetadata(), replayPendingP2PSignals(), syncRemoteVoiceParticipant(), useGhostCam() (+16 more)
+
+### Community 78 - "crunchyroll.content.ts"
+Cohesion: 0.11
+Nodes (30): BitmovinLikePlayer, BitmovinNamespace, BitmovinPlayerConstructor, BitmovinPlayerMethod, clickElement(), findBestVideo(), findCrunchyrollNextEpisodeButton(), findCrunchyrollRouteLink() (+22 more)
+
+### Community 79 - "overlay-voice-session.ts"
+Cohesion: 0.16
+Nodes (16): HotkeyState, VoiceMode, getNextVoiceMode(), VoiceModeButtonProps, VoiceSettingsPanel(), VoiceSettingsPanelProps, createVoiceSessionState(), getVoiceIndicatorParticipantIds() (+8 more)
+
+### Community 8 - "plan-entitlements.ts"
+Cohesion: 0.05
+Nodes (81): checkoutSessionUserId(), POST(), CheckoutTier, getOrCreateStripeCustomer(), loginUrlForRequest(), POST(), POST(), sanitizeDiscordHandle() (+73 more)
+
+### Community 80 - "ref_react"
+Cohesion: 0.10
+Nodes (23): AccountNav(), isActive(), ITEMS, BlouLoginForm(), safeNextParam(), BlouLoginPage(), metadata, FriendInviteClient() (+15 more)
+
+### Community 81 - "invites-client.tsx"
+Cohesion: 0.12
+Nodes (23): AcceptInviteResponse, AccountInboxItem, acknowledgeInboxPageSeen(), ActiveRoomInvite, Avatar(), formatDate(), FriendRequestRow(), InboxFriendRequest (+15 more)
+
+### Community 82 - "watch-library-client.tsx"
+Cohesion: 0.11
+Nodes (29): bindWatchHistoryPageRefresh(), buildLaunchUrl(), clampProgress(), deleteConfirmation(), deleteScopeKey(), EpisodeRow(), errorMessage(), formatClock() (+21 more)
+
+### Community 83 - "demo/package.json"
+Cohesion: 0.13
+Nodes (14): devDependencies, typescript, vite, vitest, name, private, scripts, build (+6 more)
+
+### Community 84 - "popup-people-panel.test.tsx"
+Cohesion: 0.08
+Nodes (20): AccountOwnedState, mapSocialStateToPeoplePresentation(), popupInboxBadgeCount(), PopupNavigation(), directory(), findButton(), flushPromises(), legalPresentationStates() (+12 more)
+
+### Community 85 - "anidachi-auth/room-lifecycle.ts"
+Cohesion: 0.14
+Nodes (24): endedRoomLifecycle, RoomUsageDisplayAnchor, POST(), POST(), finalizeRoomUsage(), completeHostRoomEnd(), completeInternalRoomEnd(), EndDependencies (+16 more)
+
+### Community 86 - "friends-client.tsx"
+Cohesion: 0.10
+Nodes (23): addOptimisticMember(), Avatar(), CurrentUser, EMPTY_FRIENDS, formatRecentMeta(), FriendGroup, FriendInviteLinkResponse, FriendListItem (+15 more)
+
+### Community 87 - "overlay-layout-model.ts"
+Cohesion: 0.10
+Nodes (31): ResolvedChatLayout, ResolvedVideoLayout, clampInteger(), cloneDefinition(), DEFAULT_LAYOUT, getDefaultOverlayLayoutDefinition(), getDefaultOverlayLayoutPreferencesV2(), isRecord() (+23 more)
+
+### Community 88 - "app/layout.tsx"
+Cohesion: 0.10
+Nodes (19): metadata, geistMono, geistSans, metadata, shouldNoindex, viewport, AnidachiLogoLink(), AuthMinimalNav() (+11 more)
+
+### Community 89 - "cache-jikan-posters.ts"
+Cohesion: 0.09
+Nodes (22): AnimeJikanCacheFile, cache, CachedJikanEntry, MAL_ID_BY_SLUG, fetchOptions, getAnimeById(), getAnimeRecommendations(), JikanAnime (+14 more)
+
+### Community 9 - "watch-history-client.ts"
+Cohesion: 0.04
+Nodes (64): bestEffortFlushWatchHistoryBeforeSignOut(), capturePauseKey(), createWatchHistoryClient(), defaultStoredWatchHistorySession(), defaultWatchHistorySession(), flushWatchHistoryInBackground(), handleWatchHistoryAuthSessionChange(), handleWatchHistoryHttpMessage() (+56 more)
+
+### Community 90 - "Anidachi Auth Integration Implementation Plan"
+Cohesion: 0.07
+Nodes (28): Anidachi Auth Integration Implementation Plan, Authenticated Room Flow, Branch, Backup, and Commit Strategy, Current Research Snapshot, Database Migration Design, Extension Files to Add, Extension Files to Modify, Extension Login Flow (+20 more)
+
+### Community 91 - "api/src/auth.ts"
+Cohesion: 0.14
+Nodes (24): getSecret(), isBoundedId(), isBoundedUrl(), isPositiveInteger(), RoomHistoryAttestationClaims, signRoomHistoryAttestation(), signRoomTokenForTest(), VerifiedRoomToken (+16 more)
+
+### Community 92 - ".sampleRemoteAudioActivityOnce"
+Cohesion: 0.18
+Nodes (12): audioActivityStatsChanged(), getAudioTrackFromElement(), P2PMediaPeerDiagnostics, AudioActivityStats, AudioReceiverTrackState, AudioSpeechActivity, AudioTransportFlow, AudioTransportSample (+4 more)
+
+### Community 93 - "best-classic-anime-to-watch-with-friends/page.tsx"
+Cohesion: 0.06
+Nodes (20): faq, headings, itemList, metadata, SITE_URL, faq, headings, itemList (+12 more)
+
+### Community 94 - "store.ts"
+Cohesion: 0.16
+Nodes (21): KreatliCrmPage(), size, appendTouch(), blobReadText(), blobWriteText(), contactsFilePath(), crmDataDir(), CrmMeta (+13 more)
+
+### Community 95 - "seo-landing-path.ts"
+Cohesion: 0.13
+Nodes (24): AnalyticsEvents(), ensureReady(), initAmplitudeClient(), startInit(), trackAmplitudeEvent(), captureFirstLandingPath(), getFirstLandingPath(), getFirstLandingReferrer() (+16 more)
+
+### Community 96 - "pricing.tsx"
+Cohesion: 0.20
+Nodes (15): FooterPricingCta(), Hero(), JoinDiscordButton(), JoinDiscordButtonProps, trackDiscordClick(), NavPricingButton(), NavPricingLink(), usePlanSurvey() (+7 more)
+
+### Community 97 - "p2p-ice.ts"
+Cohesion: 0.14
+Nodes (27): buildIceServersRequest(), CachedIceServers, cachedIceServersByScope, clearP2PIceServersCacheForTest(), cloneIceServers(), dedupeIceServers(), getIceServerUrls(), hasTurnServer() (+19 more)
+
+### Community 98 - "cli.ts"
+Cohesion: 0.18
+Nodes (22): isContactDue(), renderTemplate(), Contact, ContactStatus, assertValidContact(), parseStatus(), STATUSES, cmdAddContact() (+14 more)
+
+### Community 99 - "Main Repository Monorepo Migration Implementation Plan"
+Cohesion: 0.07
+Nodes (26): Commit Strategy, Current Status, Definition Of Done, Environment Model, Execution Order, Known Migration Risks And Mitigations, Main Repository Monorepo Migration Implementation Plan, Non-Negotiable Rules (+18 more)
+
+### Community 139 - "AniDachi Extension Icon 48px"
+Cohesion: 0.13
+Nodes (20): Browser Extension Brand Identity, White Stylized A Brand Mark, Extension Toolbar Icon, Blue Purple Rounded Icon Background, Low Resolution 16 Pixel Icon Variant, Browser Extension Launcher Asset, Compact Brand Recognition, Medium Density Browser Extension Asset (+12 more)
+
+### Community 218 - "Download on the App Store Badge"
+Cohesion: 0.31
+Nodes (11): App Store Conversion CTA, iOS App Distribution Trust Signal, Mobile App Download Funnel, Public Web Badge Asset, Download on the App Store Badge, Apple Logo Glyph, Black Rounded Badge Container, Download on the App Store Lettering (+3 more)
+
+### Community 231 - "AniDachi Logo Asset"
+Cohesion: 0.33
+Nodes (10): App Icon Readability, Friendly Brand Tone, AniDachi Logo Asset, Anime Mascot Face, Circular Badge Shape, Closed Smile Expression, Dark Curved Eyes, Hair Flame Shape (+2 more)
+
+### Community 243 - "Host Avatar Asset"
+Cohesion: 0.28
+Nodes (9): Demo Avatar Profile, Host Persona, Watch Party Host Role, Calm Neutral Expression, Cool Blue Purple Lighting, Frontal Headshot Composition, Host Avatar Asset, Minimal Dark Wardrobe (+1 more)
+
+### Community 254 - "Haruto Avatar Image"
+Cohesion: 0.39
+Nodes (8): Approachable Demo Identity, Haruto Persona, Profile Placeholder Asset, Watch Party Avatar, Haruto Avatar Image, Direct Eye Contact, Friendly Smiling Portrait, Neutral Profile Background
+
+### Community 255 - "Natsuki Avatar Asset"
+Cohesion: 0.43
+Nodes (8): Approachable Social Presence, Demo Watch-Party Persona, Natsuki Avatar Asset, Red Turtleneck Styling, Smiling Portrait Subject, Soft Blurred Background, Square Avatar Composition, Warm Expressive Smile
+
+### Community 266 - "AniDachi Apple Touch Icon"
+Cohesion: 0.43
+Nodes (7): iOS Home Screen Asset, Web App Brand Asset, AniDachi Apple Touch Icon, Flame Hair Gradient, Friendly Closed-Eye Expression, Mascot Face, White Face Shape
+
+### Community 270 - "AniDachi Web Logo Asset"
+Cohesion: 0.52
+Nodes (7): Friendly Anime Brand Identity, Smiling Anime Face Mascot, AniDachi Web Logo Asset, Circular Logo Badge, Closed Eye Smile Expression, Red Orange Gradient Hair Silhouette, White Face Shape
+
+### Community 273 - "Site, Extension, Auth, and Database Integration Notes"
+Cohesion: 0.29
+Nodes (7): Authenticated Room Flow, Custom Website Auth Model, Extension PKCE Login Flow, Server-derived Participant Identity, Site, Extension, Auth, and Database Integration Notes, Shared Protocol Monorepo, Web and Worker Source of Truth Split
+
+### Community 278 - "AniDachi App Icon"
+Cohesion: 0.40
+Nodes (6): Browser Tab Identity, AniDachi App Icon, Red Orange Circular Badge, Stylized Anime Mascot Face, Transparent PNG Icon Asset, White Face Silhouette
+
+### Community 299 - "Anidachi Extension Release Channels"
+Cohesion: 0.40
+Nodes (5): Channel Identity Binding, Extension Artifact Validation, Release Permission Boundary, Anidachi Extension Release Channels, Fail-closed Production Identity
+
+### Community 330 - "Staging Smoke Workflow"
+Cohesion: 0.67
+Nodes (3): Staging Smoke Workflow, Staging Web Smoke Script, Staging Password Gate
+
+### Community 331 - "LiveKit Dev Server"
+Cohesion: 0.67
+Nodes (3): LiveKit Dev Server, Build Output Policy, LiveKit Ports
+
 ### Community 333 - "AniDachi Stack Overview"
 Cohesion: 0.67
 Nodes (3): Allowed Native Build Dependencies, Minimum Release Age Exclusion, AniDachi Stack Overview
 
-### Community 1112 - "package.json"
-Cohesion: 0.29
-Nodes (6): engines, pnpm, name, packageManager, private, version
+### Community 107 - "Graphify"
+Cohesion: 0.09
+Nodes (25): AST and Semantic Merge, AST Structural Extraction, Community Detection, Community Labeling, Corpus File Detection, GitHub and Multi-Path Merge, Graph Build Pipeline, Graph Health Check (+17 more)
+
+### Community 126 - "Kreatli CRM Data Schema"
+Cohesion: 0.13
+Nodes (22): CRM CLI Workflow, Personal Outreach Source of Truth, UTC Queue Interpretation, Contact Import Modes, Contact Record, CRM Data Layout, Outreach Queue Eligibility, CRM Template Placeholders (+14 more)
+
+### Community 214 - "Incremental Re-extraction"
+Cohesion: 0.18
+Nodes (11): Cluster-only Refresh, Deleted-source Pruning, Graph Update Diff, Incremental File Detection, Incremental Re-extraction, Incremental Update Runbook, Changed-file Replacement, Code-only Fast Path (+3 more)
+
+### Community 37 - "AniDachi Pre-release Security and Reliability Readiness Plan"
+Cohesion: 0.18
+Nodes (14): Current Development State, Task 8 staging acceptance, 20260820040229 auth artifact cleanup migration, Service-role-only cleanup bounded to 100 rows per call, Active refresh families and live auth artifacts remain ineligible, Task 5 attended Google and Discord provider acceptance gate, Wave 2 cannot be accepted or followed by Wave 3 yet, AniDachi Pre-release Security And Reliability Readiness Plan (+6 more)
+
+### Community 323 - "Explicit Website and Extension Auth Channels"
+Cohesion: 0.70
+Nodes (5): Pre-release Security And Reliability Readiness Design, Wave 2 Tasks 5-8 implemented and deployed, Tasks 6-8 staging-accepted, Task 5 interactive Google and Discord provider acceptance, Sole open Wave 2 stop gate
 
 ## Knowledge Gaps
-- **2919 isolated node(s):** `faq`, `headings`, `metadata`, `SITE_URL`, `faq` (+2914 more)
+- **2907 isolated node(s):** `faq`, `headings`, `metadata`, `SITE_URL`, `faq` (+2902 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **785 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **783 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `next` connect `next` to `primary-checkout-cta.tsx`, `social.ts`, `seo-page-layout.tsx`, `pricing-copy.ts`, `getResolvedSiteOrigin`, `getGuideLinks`, `SeoPageLayout`, `best-sci-fi-anime-to-watch-with-friends/page.tsx`, `how-to-watch-youtube-together-without-screen-share/page.tsx`, `switch-from-discord-screen-share/page.tsx`, `watch-history-v2.ts`, `ref_next_link`, `extension-auth-handoff.test.ts`, `[slug]/page.tsx`, `button.tsx`, `best-anime-to-binge-with-friends-this-weekend/page.tsx`, `best-anime-to-watch-with-friends/page.tsx`, `pseo-new-guides.tsx`, `ref_next_navigation`, `cn`, `ref_react`, `app/layout.tsx`, `best-classic-anime-to-watch-with-friends/page.tsx`, `tasks`, `sitemap-discovery.ts`, `getSession`?**
-  _High betweenness centrality (0.045) - this node is a cross-community bridge._
+  _High betweenness centrality (0.035) - this node is a cross-community bridge._
 - **Why does `devDependencies` connect `typescript` to `package.json`?**
-  _High betweenness centrality (0.029) - this node is a cross-community bridge._
+  _High betweenness centrality (0.023) - this node is a cross-community bridge._
 - **Are the 8 inferred relationships involving `OverlayApp()` (e.g. with `fallbackCopy()` and `reduceVoiceSession()`) actually correct?**
   _`OverlayApp()` has 8 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `faq`, `headings`, `metadata` to the rest of the system?**
-  _2919 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _2907 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `primary-checkout-cta.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.027044025157232705 - nodes in this community are weakly interconnected._
 - **Should `social.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.056943056943056944 - nodes in this community are weakly interconnected._
-- **Should `seo-page-layout.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.01943947525342874 - nodes in this community are weakly interconnected._
+- **Should `SeoPageLayout` be split into smaller, more focused modules?**
+  _Cohesion score 0.02762268586541287 - nodes in this community are weakly interconnected._

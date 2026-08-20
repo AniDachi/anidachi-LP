@@ -119,12 +119,11 @@ describe("pre-release security boundaries", () => {
     );
   });
 
-  it("keeps the plan and design aligned after Task 6 staging acceptance", async () => {
+  it("keeps the plan and design aligned after Task 8 staging acceptance", async () => {
     const expectedStatus = [
-      "Status: Wave 1 complete on staging; Wave 2 Task 5 deployed to staging, with",
-      "interactive provider acceptance pending; Task 6 staging acceptance complete",
-      "for the approved artifact, exact PKCE/replay bindings, and first-profile",
-      "logout callback",
+      "Status: Wave 1 complete on staging; Wave 2 Tasks 5-8 implemented and deployed;",
+      "Tasks 6-8 staging-accepted; Task 5 interactive Google and Discord provider",
+      "acceptance remains the sole open Wave 2 stop gate",
     ].join("\n");
     const [plan, design] = await Promise.all([
       readFile(

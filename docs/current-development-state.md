@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-08-19.
+Last updated: 2026-08-20.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -209,8 +209,38 @@ migration-first staging deployment, post-merge CI, Rooms/P2P, extension build,
 Vercel status, and staging smoke passed. Both established test profiles completed
 the forced reauthentication; the user confirmed correct website/Popup accounts,
 single-profile extension logout isolation, and successful reconnect. Task 7 is
-staging-accepted. Task 8 bounded auth-artifact cleanup remains separate and is
-not implemented; Wave 2 is therefore not complete.
+staging-accepted.
+
+Task 8 reached staging through PR #203 and merge commit `e8c5519`. Migration
+`20260820040229_auth_artifact_cleanup.sql` is applied and installs one active
+hourly Supabase Cron job, `anidachi-auth-artifact-cleanup-hourly`, which invokes
+the service-role-only bounded cleanup function. Each call deletes at most 100
+physical expired, revoked, consumed, or otherwise unusable auth-artifact rows;
+active refresh families, live OAuth transactions, and unexpired extension codes
+are not eligible. Successful extension-code exchange now deletes its exact code
+atomically instead of retaining a consumed row. There is no Vercel cleanup
+route, new secret, queue, worker, dashboard, polling loop, or user-visible
+setting.
+
+Local verification includes a fresh database reset, 226/226 pgTAP assertions,
+the exact production-statement normal-planner contract, full web/extension/
+protocol tests and checks, database lint/advisors, repeatability, concurrent
+lock-progress coverage, independent review, and CodeRabbit review. Post-merge
+database deployment, CI, Rooms/P2P, Vercel, and staging smoke passed. One
+attended bounded staging invocation removed exactly 100 eligible rows (47
+expired extension codes, 5 expired OAuth transactions, 46 expired/revoked
+legacy refresh rows, and 2 unusable refresh families) while all 7 active refresh
+families remained. Task 8 is staging-accepted; the hourly job will drain the
+remaining eligible backlog in bounded calls. Its first scheduled execution at
+`2026-08-20 07:00 UTC` succeeded and removed another 100 eligible rows while
+the active-family count remained 7.
+
+Wave 2 implementation is complete, but its stop gate remains open only for the
+already documented Task 5 attended provider acceptance: one real Google and one
+real Discord consent/callback completed inside the initial ten-minute OAuth
+transaction window. Do not call Wave 2 fully accepted or begin Wave 3 until that
+manual check is recorded. No security work from this wave has been promoted to
+`main`.
 
 Continue from current `staging` and keep the plan's stop gates; do not promote
 these security changes directly to `main`.
