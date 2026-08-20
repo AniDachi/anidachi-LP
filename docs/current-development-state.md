@@ -155,9 +155,11 @@ applied; the linked migration dry run is empty. Local web/pgTAP gates,
 independent and CodeRabbit review, GitHub CI, migration deployment, rooms/P2P
 E2E, Vercel deployment, and staging smoke passed.
 
-Task 5 still has one attended acceptance gate: complete a real Google and
-Discord consent/callback within the initial ten-minute transaction window. Do
-not adjust that window without the measured result. Task 6 now has stable,
+Task 5's attended provider gate is accepted.
+On 2026-08-20, real Google and real Discord consent/callback flows
+succeeded on staging inside the enforced initial ten-minute OAuth transaction
+window. Exact elapsed times and screenshots are not claimed. Task 6 now has
+stable,
 repository-controlled unpacked local and staging identities, exact per-channel
 callback binding, S256 PKCE, atomic one-time exchange, and fail-closed
 production. When extension connection needs website login, the validated
@@ -235,15 +237,10 @@ remaining eligible backlog in bounded calls. Its first scheduled execution at
 `2026-08-20 07:00 UTC` succeeded and removed another 100 eligible rows while
 the active-family count remained 7.
 
-Wave 2 implementation is complete, but its stop gate remains open only for the
-already documented Task 5 attended provider acceptance: one real Google and one
-real Discord consent/callback completed inside the initial ten-minute OAuth
-transaction window. Do not call Wave 2 fully accepted or begin Wave 3 until that
-manual check is recorded. No security work from this wave has been promoted to
-`main`.
-
-Continue from current `staging` and keep the plan's stop gates; do not promote
-these security changes directly to `main`.
+Wave 2 is complete and staging-accepted: Tasks 5-8 satisfy their staging
+acceptance boundaries, and the Wave 2 Stop is closed. Wave 3 may proceed from
+current `staging`. No security work from this wave has been promoted to `main`;
+production promotion remains a separate decision and is out of this closeout.
 
 ## Subscription Plan Codes
 

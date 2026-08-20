@@ -119,13 +119,26 @@ describe("pre-release security boundaries", () => {
     );
   });
 
-  it("keeps the plan and design aligned after Task 8 staging acceptance", async () => {
+  it("records the closed Wave 2 staging acceptance without a main promotion", async () => {
     const expectedStatus = [
-      "Status: Wave 1 complete on staging; Wave 2 Tasks 5-8 implemented and deployed;",
-      "Tasks 6-8 staging-accepted; Task 5 interactive Google and Discord provider",
-      "acceptance remains the sole open Wave 2 stop gate",
+      "Status: Wave 1 and Wave 2 are complete on staging; Tasks 5-8 are",
+      "staging-accepted. Wave 2 Stop is closed, and Wave 3 may proceed from",
+      "current staging. No security work from this wave is promoted to `main`;",
+      "production promotion remains separate and out of scope.",
     ].join("\n");
-    const [plan, design] = await Promise.all([
+    const providerAcceptance = [
+      "On 2026-08-20, real Google and real Discord consent/callback flows",
+      "succeeded on staging inside the enforced initial ten-minute OAuth transaction",
+      "window. Exact elapsed times and screenshots are not claimed.",
+    ].join("\n");
+    const [currentState, plan, design] = await Promise.all([
+      readFile(
+        new URL(
+          "../../../docs/current-development-state.md",
+          import.meta.url,
+        ),
+        "utf8",
+      ),
       readFile(
         new URL(
           "../../../docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md",
@@ -144,6 +157,16 @@ describe("pre-release security boundaries", () => {
 
     assert.ok(plan.includes(expectedStatus));
     assert.ok(design.includes(expectedStatus));
+    assert.ok(currentState.includes(providerAcceptance));
+    assert.ok(plan.includes(providerAcceptance));
+    assert.ok(design.includes(providerAcceptance));
+    for (const source of [currentState, plan, design]) {
+      assert.doesNotMatch(source, /acceptance remains the sole open Wave 2 stop gate/);
+      assert.doesNotMatch(
+        source,
+        /Do not start Wave 3 or promote this wave to `main` until that evidence is recorded/,
+      );
+    }
   });
 
   it("does not report credential disconnect success after a Blob delete failure", async () => {

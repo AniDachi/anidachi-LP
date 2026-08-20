@@ -1,8 +1,13 @@
 # Pre-release Security And Reliability Readiness Design
 
-Status: Wave 1 complete on staging; Wave 2 Tasks 5-8 implemented and deployed;
-Tasks 6-8 staging-accepted; Task 5 interactive Google and Discord provider
-acceptance remains the sole open Wave 2 stop gate
+Status: Wave 1 and Wave 2 are complete on staging; Tasks 5-8 are
+staging-accepted. Wave 2 Stop is closed, and Wave 3 may proceed from
+current staging. No security work from this wave is promoted to `main`;
+production promotion remains separate and out of scope.
+
+On 2026-08-20, real Google and real Discord consent/callback flows
+succeeded on staging inside the enforced initial ten-minute OAuth transaction
+window. Exact elapsed times and screenshots are not claimed.
 
 Date: 2026-08-18
 
