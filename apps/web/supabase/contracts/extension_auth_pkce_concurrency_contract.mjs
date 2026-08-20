@@ -113,10 +113,10 @@ try {
     query(`
       select pg_catalog.count(*)
       from public.extension_auth_codes
-      where code_hash = '${codeHash}' and consumed_at is not null
+      where code_hash = '${codeHash}'
     `),
-    "1",
-    "exactly one durable consumption must be committed",
+    "0",
+    "the exactly-once successful consumption must delete the code row",
   );
   console.log("Extension auth concurrent single-consumption contract passed");
 } finally {
