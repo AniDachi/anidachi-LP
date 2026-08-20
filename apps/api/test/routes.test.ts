@@ -458,6 +458,157 @@ describe("worker routes", () => {
     expect(roomObject.scheduleAdmissionTimeout).toHaveBeenCalledWith(socket, deadlineAt);
     expect(socket.close).not.toHaveBeenCalled();
   });
+
+  it("keeps admission pending when joined attachment serialization fails before participant replacement", async () => {
+    const now = Date.now();
+    const room = new RoomState("room-1");
+    const oldSocket = { close: vi.fn() } as unknown as WebSocket;
+    const replacementSocket = { close: vi.fn() } as unknown as WebSocket;
+    const verified = { avatarUrl: null, role: "member" as const, roomId: "room-1", sub: "member-1" };
+    const oldParticipant = room.join({
+      cameraEnabled: false,
+      displayName: "Member",
+      id: "member-1",
+      lastSeenAt: now,
+      mediaSeat: "none",
+      role: "viewer",
+      syncStatus: "unknown",
+    });
+    const admission = new RoomAdmission({ maxParticipants: 4 });
+    const admissionId = "replacement-admission";
+    const reservation = admission.reserve("member-1", admissionId, now);
+    if (!reservation.allowed) throw new Error("expected reservation");
+    let attachment = createRoomSocketAttachment("room-1", verified, now, {
+      deadlineAt: reservation.deadlineAt,
+      joined: false,
+    });
+    const attachmentsBySocket = new Map<WebSocket, typeof attachment>([[replacementSocket, attachment]]);
+    let failJoinedAttachmentWrite = true;
+    let failPersistRoomState = false;
+    const clearAdmissionTimeout = vi.fn();
+    const participantsBySocket = new Map<WebSocket, string>([[oldSocket, "member-1"]]);
+    const socketsByParticipant = new Map<string, WebSocket>([["member-1", oldSocket]]);
+    const sessionIdBySocket = new Map<WebSocket, string | undefined>([[oldSocket, "old-session"]]);
+    const verifiedBySocket = new Map<WebSocket, typeof verified>([
+      [oldSocket, verified],
+      [replacementSocket, verified],
+    ]);
+    const lifecycleTransaction = {
+      deleteAlarm: async () => undefined,
+      get: async () => undefined,
+      put: async () => undefined,
+    };
+    const roomObject = {
+      admission,
+      admissionIdBySocket: new Map<WebSocket, string>([[replacementSocket, admissionId]]),
+      clearAdmissionTimeout,
+      currentRoomSnapshot: vi.fn(() => ({ type: "ROOM_SNAPSHOT", roomId: "room-1" })),
+      endedTombstone: null,
+      expirePendingAdmission: vi.fn(),
+      getSocketAttachment: (socket: WebSocket) => attachmentsBySocket.get(socket) ?? null,
+      hasJoinDeadlineElapsed: () => false,
+      participantsBySocket,
+      p2pSignalBuffer: { requiresResyncAfter: () => false },
+      persistRoomState: vi.fn(() => {
+        if (failPersistRoomState) {
+          failPersistRoomState = false;
+          throw new Error("room persistence failed");
+        }
+      }),
+      reconcileRoomUsage: vi.fn(),
+      replayP2PSignals: vi.fn(),
+      room,
+      roomEndInProgress: false,
+      send: vi.fn(),
+      sendRoomHistoryAuthority: vi.fn(async () => undefined),
+      sessionIdBySocket,
+      socketsByParticipant,
+      state: {
+        storage: {
+          transaction: async <T>(callback: (transaction: typeof lifecycleTransaction) => Promise<T>) =>
+            callback(lifecycleTransaction),
+        },
+      },
+      track: vi.fn(),
+      verifiedBySocket,
+      writeSocketAttachment: (_socket: WebSocket, next: typeof attachment) => {
+        if (failJoinedAttachmentWrite && next.admission.joined) {
+          failJoinedAttachmentWrite = false;
+          throw new Error("serializeAttachment failed");
+        }
+        attachment = next;
+        attachmentsBySocket.set(_socket, next);
+      },
+    };
+    Object.setPrototypeOf(roomObject, RoomDurableObject.prototype);
+    const join = (
+      joiningSocket = replacementSocket,
+      participantSessionId = "replacement-session",
+    ) => (
+      RoomDurableObject.prototype as unknown as {
+        handleJoin(
+          this: typeof roomObject,
+          socket: WebSocket,
+          event: {
+            type: "JOIN";
+            roomId: string;
+            participant: typeof oldParticipant;
+            participantSessionId: string;
+            videoFingerprint: string;
+          },
+        ): Promise<void>;
+      }
+    ).handleJoin.call(roomObject, joiningSocket, {
+      type: "JOIN",
+      roomId: "room-1",
+      participant: oldParticipant,
+      participantSessionId,
+      videoFingerprint: "video-1",
+    });
+
+    await join().catch(() => undefined);
+
+    expect(admission.isPending(admissionId)).toBe(true);
+    expect(attachment.admission.joined).toBe(false);
+    expect(clearAdmissionTimeout).not.toHaveBeenCalled();
+    expect(socketsByParticipant.get("member-1")).toBe(oldSocket);
+    expect(participantsBySocket.has(replacementSocket)).toBe(false);
+    expect(oldSocket.close).not.toHaveBeenCalled();
+    expect(roomObject.room.participants).toEqual([oldParticipant]);
+
+    await join();
+
+    expect(attachment.admission.joined).toBe(true);
+    expect(socketsByParticipant.get("member-1")).toBe(replacementSocket);
+    expect(oldSocket.close).toHaveBeenCalledOnce();
+
+    const persistenceSocket = { close: vi.fn() } as unknown as WebSocket;
+    const persistenceAdmissionId = "persistence-admission";
+    const persistenceReservation = admission.reserve("member-1", persistenceAdmissionId, Date.now());
+    if (!persistenceReservation.allowed) throw new Error("expected persistence reservation");
+    const pendingPersistenceAttachment = createRoomSocketAttachment("room-1", verified, Date.now(), {
+      deadlineAt: persistenceReservation.deadlineAt,
+      joined: false,
+    });
+    attachmentsBySocket.set(persistenceSocket, pendingPersistenceAttachment);
+    verifiedBySocket.set(persistenceSocket, verified);
+    roomObject.admissionIdBySocket.set(persistenceSocket, persistenceAdmissionId);
+    const roomBeforePersistenceFailure = roomObject.room.toSnapshot();
+    failPersistRoomState = true;
+
+    await join(persistenceSocket, "persistence-session");
+
+    expect(admission.isPending(persistenceAdmissionId)).toBe(true);
+    expect(attachmentsBySocket.get(persistenceSocket)?.admission.joined).toBe(false);
+    expect(socketsByParticipant.get("member-1")).toBe(replacementSocket);
+    expect(participantsBySocket.has(persistenceSocket)).toBe(false);
+    expect(roomObject.room.toSnapshot()).toEqual(roomBeforePersistenceFailure);
+
+    await join(persistenceSocket, "persistence-session");
+
+    expect(attachmentsBySocket.get(persistenceSocket)?.admission.joined).toBe(true);
+    expect(socketsByParticipant.get("member-1")).toBe(persistenceSocket);
+  });
   it("does not expose the legacy LiveKit token endpoint", async () => {
     const response = await app.request(
       "/livekit/token",

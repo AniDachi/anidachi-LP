@@ -1140,14 +1140,77 @@ export class RoomDurableObject {
       return;
     }
 
-    const joinedAdmission = admissionId ? this.admission.join(admissionId, Date.now()) : null;
+    const existingSocket = this.socketsByParticipant.get(serverParticipant.id);
+    const attachment = this.getSocketAttachment(socket);
+    if (!attachment) {
+      this.send(socket, {
+        type: "ERROR",
+        code: "JOIN_COMMIT_FAILED",
+        message: "Unable to commit this room join. Please reconnect and try again.",
+      });
+      socket.close(1011, "Room admission attachment is unavailable");
+      return;
+    }
+
+    // Keep the existing participant socket and the pending admission intact
+    // until both durable writes have succeeded. A failed attachment or room
+    // persistence write must leave this socket eligible to retry before its
+    // original absolute deadline.
+    const roomBeforeJoin = this.room.toSnapshot();
+    const joined = this.room.join(serverParticipant);
+    const commitAt = Date.now();
+    const commitAdmission = admissionId ? this.admission.canJoin(admissionId, commitAt) : null;
+    if (!commitAdmission?.allowed) {
+      this.room = new RoomState(this.room.roomId, undefined, roomBeforeJoin);
+      this.expirePendingAdmission(socket, attachment.admission.deadlineAt);
+      return;
+    }
+
+    const patch: Parameters<typeof updateRoomSocketAttachment>[1] = {
+      admission: { ...attachment.admission, joined: true },
+      lastSeenAt: commitAt,
+      participant: joined,
+    };
+    if (event.participantSessionId !== undefined) {
+      patch.participantSessionId = event.participantSessionId;
+    }
+    const joinedAttachment = updateRoomSocketAttachment(attachment, patch);
+
+    try {
+      this.writeSocketAttachment(socket, joinedAttachment);
+      this.persistRoomState();
+    } catch {
+      this.room = new RoomState(this.room.roomId, undefined, roomBeforeJoin);
+      try {
+        this.writeSocketAttachment(socket, attachment);
+        this.persistRoomState();
+      } catch {
+        socket.close(1011, "Room join rollback failed");
+      }
+      this.send(socket, {
+        type: "ERROR",
+        code: "JOIN_COMMIT_FAILED",
+        message: "Unable to commit this room join. Please retry before the join deadline.",
+      });
+      return;
+    }
+
+    const joinedAdmission = admissionId ? this.admission.join(admissionId, commitAt) : null;
     if (!joinedAdmission?.allowed) {
-      this.expirePendingAdmission(socket, this.getSocketAttachment(socket)?.admission.deadlineAt ?? 0);
+      // `canJoin` above and this call share the same timestamp, so this is only
+      // defensive against an unexpected in-memory admission inconsistency.
+      this.room = new RoomState(this.room.roomId, undefined, roomBeforeJoin);
+      try {
+        this.writeSocketAttachment(socket, attachment);
+        this.persistRoomState();
+      } catch {
+        socket.close(1011, "Room join rollback failed");
+      }
+      this.expirePendingAdmission(socket, attachment.admission.deadlineAt);
       return;
     }
     this.clearAdmissionTimeout(socket);
 
-    const existingSocket = this.socketsByParticipant.get(serverParticipant.id);
     if (existingSocket && existingSocket !== socket) {
       const existingSessionId = this.sessionIdBySocket.get(existingSocket);
       const sameSession =
@@ -1175,23 +1238,9 @@ export class RoomDurableObject {
       }
     }
 
-    const joined = this.room.join(serverParticipant);
     this.participantsBySocket.set(socket, joined.id);
     this.socketsByParticipant.set(joined.id, socket);
     this.sessionIdBySocket.set(socket, event.participantSessionId);
-    const attachment = this.getSocketAttachment(socket);
-    if (attachment) {
-      const patch: Parameters<typeof updateRoomSocketAttachment>[1] = {
-        admission: { ...attachment.admission, joined: true },
-        lastSeenAt: Date.now(),
-        participant: joined,
-      };
-      if (event.participantSessionId !== undefined) {
-        patch.participantSessionId = event.participantSessionId;
-      }
-      this.writeSocketAttachment(socket, updateRoomSocketAttachment(attachment, patch));
-    }
-    this.persistRoomState();
     this.reconcileRoomUsage(Date.now());
     const lastSeenP2PServerSeq = event.lastSeenP2PServerSeq ?? 0;
     const replayAt = Date.now();
