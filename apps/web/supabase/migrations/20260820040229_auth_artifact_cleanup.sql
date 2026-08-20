@@ -167,23 +167,22 @@ begin
     end if;
 
     if total_deleted < p_batch_size then
-      with revoked_candidate as materialized (
+      -- plan-contract:auth-artifact-lineage-delete:start
+      with revoked_candidates as materialized (
         select family.id, family.revoked_at as eligible_at
         from public.refresh_token_families as family
         where family.revoked_at is not null
         order by family.revoked_at, family.id
-        limit 1
-        for update of family skip locked
+        limit 100
       ),
-      absolute_candidate as materialized (
+      absolute_candidates as materialized (
         select family.id, family.absolute_expires_at as eligible_at
         from public.refresh_token_families as family
         where family.absolute_expires_at <= v_now
         order by family.absolute_expires_at, family.id
-        limit 1
-        for update of family skip locked
+        limit 100
       ),
-      idle_candidate as materialized (
+      idle_candidates as materialized (
         select
           family.id,
           family.last_used_at + interval '90 days' as eligible_at
@@ -191,46 +190,70 @@ begin
         where family.revoked_at is null
           and family.last_used_at <= v_now - interval '90 days'
         order by family.last_used_at, family.id
-        limit 1
-        for update of family skip locked
+        limit 100
       ),
       candidate_pool as materialized (
         select distinct on (candidate.id)
           candidate.id,
           candidate.eligible_at
         from (
-          select * from revoked_candidate
+          select * from revoked_candidates
           union all
-          select * from absolute_candidate
+          select * from absolute_candidates
           union all
-          select * from idle_candidate
+          select * from idle_candidates
         ) as candidate
         order by candidate.id, candidate.eligible_at
       ),
-      selected_family as (
-        select candidate_pool.id
+      bounded_candidates as materialized (
+        select candidate_pool.id, candidate_pool.eligible_at
         from candidate_pool
-        cross join lateral (
-            select true as has_lineage
-            from public.refresh_token_lineage as lineage
-            where lineage.family_id = candidate_pool.id
-            limit 1
-            offset 0
-        ) as existing_lineage
         order by candidate_pool.eligible_at, candidate_pool.id
-        limit 1
+        limit 100
+      ),
+      locked_lineage_candidates as materialized (
+        select
+          bounded_candidates.id,
+          bounded_candidates.eligible_at,
+          locked_lineage.token_hash
+        from bounded_candidates
+        cross join lateral (
+          select family.id
+          from public.refresh_token_families as family
+          where family.id = bounded_candidates.id
+            and (
+              family.revoked_at is not null
+              or family.absolute_expires_at <= v_now
+              or (
+                family.revoked_at is null
+                and family.last_used_at <= v_now - interval '90 days'
+              )
+            )
+          limit 1
+          for update of family skip locked
+        ) as locked_family
+        cross join lateral (
+          select lineage.token_hash
+          from public.refresh_token_lineage as lineage
+          where lineage.family_id = locked_family.id
+          order by lineage.used_at, lineage.token_hash
+          limit 1
+          for update of lineage skip locked
+        ) as locked_lineage
       ),
       candidate as (
-        select lineage.token_hash
-        from public.refresh_token_lineage as lineage
-        join selected_family on selected_family.id = lineage.family_id
-        order by lineage.used_at, lineage.token_hash
+        select locked_lineage_candidates.token_hash
+        from locked_lineage_candidates
+        order by
+          locked_lineage_candidates.eligible_at,
+          locked_lineage_candidates.id,
+          locked_lineage_candidates.token_hash
         limit 1
-        for update of lineage skip locked
       )
       delete from public.refresh_token_lineage as lineage
       using candidate
       where lineage.token_hash = candidate.token_hash;
+      -- plan-contract:auth-artifact-lineage-delete:end
 
       get diagnostics v_deleted = row_count;
       refresh_token_lineage_deleted := refresh_token_lineage_deleted + v_deleted;
@@ -239,6 +262,7 @@ begin
     end if;
 
     if total_deleted < p_batch_size then
+      -- plan-contract:auth-artifact-family-delete:start
       with revoked_candidate as materialized (
         select family.id, family.revoked_at as eligible_at
         from public.refresh_token_families as family
@@ -296,6 +320,7 @@ begin
       delete from public.refresh_token_families as family
       using candidate
       where family.id = candidate.id;
+      -- plan-contract:auth-artifact-family-delete:end
 
       get diagnostics v_deleted = row_count;
       refresh_token_families_deleted := refresh_token_families_deleted + v_deleted;

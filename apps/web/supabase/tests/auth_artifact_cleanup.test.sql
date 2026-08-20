@@ -225,26 +225,25 @@ select ok(
     select plan::text like '%refresh_token_families_revoked_cleanup_idx%'
       and plan::text like '%refresh_token_families_absolute_cleanup_idx%'
       and plan::text like '%refresh_token_families_idle_cleanup_idx%'
+      and plan::text like '%refresh_token_families_pkey%'
       and plan::text like '%refresh_token_lineage_family_idx%'
     from (
       select pg_temp.explain_json($query$
-        with revoked_candidate as materialized (
+        with revoked_candidates as materialized (
           select family.id, family.revoked_at as eligible_at
           from public.refresh_token_families as family
           where family.revoked_at is not null
           order by family.revoked_at, family.id
-          limit 1
-          for update of family skip locked
+          limit 100
         ),
-        absolute_candidate as materialized (
+        absolute_candidates as materialized (
           select family.id, family.absolute_expires_at as eligible_at
           from public.refresh_token_families as family
           where family.absolute_expires_at <= current_timestamp
           order by family.absolute_expires_at, family.id
-          limit 1
-          for update of family skip locked
+          limit 100
         ),
-        idle_candidate as materialized (
+        idle_candidates as materialized (
           select
             family.id,
             family.last_used_at + interval '90 days' as eligible_at
@@ -252,37 +251,68 @@ select ok(
           where family.revoked_at is null
             and family.last_used_at <= current_timestamp - interval '90 days'
           order by family.last_used_at, family.id
-          limit 1
-          for update of family skip locked
+          limit 100
         ),
         candidate_pool as materialized (
           select distinct on (candidate.id)
             candidate.id,
             candidate.eligible_at
           from (
-            select * from revoked_candidate
+            select * from revoked_candidates
             union all
-            select * from absolute_candidate
+            select * from absolute_candidates
             union all
-            select * from idle_candidate
+            select * from idle_candidates
           ) as candidate
           order by candidate.id, candidate.eligible_at
-        )
-        select candidate_pool.id
-        from candidate_pool
-        cross join lateral (
-            select true as has_lineage
-            from public.refresh_token_lineage as lineage
-            where lineage.family_id = candidate_pool.id
+        ),
+        bounded_candidates as materialized (
+          select candidate_pool.id, candidate_pool.eligible_at
+          from candidate_pool
+          order by candidate_pool.eligible_at, candidate_pool.id
+          limit 100
+        ),
+        locked_lineage_candidates as materialized (
+          select
+            bounded_candidates.id,
+            bounded_candidates.eligible_at,
+            locked_lineage.token_hash
+          from bounded_candidates
+          cross join lateral (
+            select family.id
+            from public.refresh_token_families as family
+            where family.id = bounded_candidates.id
+              and (
+                family.revoked_at is not null
+                or family.absolute_expires_at <= current_timestamp
+                or (
+                  family.revoked_at is null
+                  and family.last_used_at <= current_timestamp - interval '90 days'
+                )
+              )
             limit 1
-            offset 0
-        ) as existing_lineage
-        order by candidate_pool.eligible_at, candidate_pool.id
+            for update of family skip locked
+          ) as locked_family
+          cross join lateral (
+            select lineage.token_hash
+            from public.refresh_token_lineage as lineage
+            where lineage.family_id = locked_family.id
+            order by lineage.used_at, lineage.token_hash
+            limit 1
+            for update of lineage skip locked
+          ) as locked_lineage
+        )
+        select locked_lineage_candidates.token_hash
+        from locked_lineage_candidates
+        order by
+          locked_lineage_candidates.eligible_at,
+          locked_lineage_candidates.id,
+          locked_lineage_candidates.token_hash
         limit 1
       $query$) as plan
     ) as combined_family_plan
   ),
-  'combined family lock query bounds all three eligibility branches with their indexes'
+  'combined lineage lock query bounds family selection, revalidation, and lineage probes with indexes'
 );
 select ok(
   pg_temp.explain_json($query$
@@ -384,14 +414,14 @@ select extensions.dblink_connect(
 select extensions.dblink_exec('auth_cleanup_worker', 'set role service_role');
 select is(
   (
-    select total_deleted
+    select refresh_token_lineage_deleted
     from extensions.dblink(
       'auth_cleanup_worker',
-      'select total_deleted from public.cleanup_auth_artifacts_v1(1)'
-    ) as result(total_deleted integer)
+      'select refresh_token_lineage_deleted from public.cleanup_auth_artifacts_v1(1)'
+    ) as result(refresh_token_lineage_deleted integer)
   ),
   1,
-  'cleanup skips a locked eligible family and progresses another eligible family'
+  'cleanup skips a locked eligible family and deletes one unlocked lineage row'
 );
 
 select is(
@@ -424,6 +454,257 @@ select extensions.dblink_exec(
   $$
 );
 select extensions.dblink_disconnect('auth_cleanup_worker');
+
+select extensions.dblink_connect(
+  'auth_cleanup_lineage_setup',
+  'host=host.docker.internal port=54322 dbname=postgres user=postgres password=postgres application_name=auth_cleanup_lineage_setup'
+);
+select extensions.dblink_exec(
+  'auth_cleanup_lineage_setup',
+  $setup$
+    delete from public.users
+    where id = '80000000-0000-4000-8000-000000000004';
+
+    insert into public.users (id, email, display_name)
+    values (
+      '80000000-0000-4000-8000-000000000004',
+      'auth-cleanup-lineage-lock@example.test',
+      'Auth Cleanup Lineage Lock'
+    );
+
+    insert into public.refresh_token_families (
+      id,
+      user_id,
+      channel,
+      current_token_hash,
+      created_at,
+      last_used_at,
+      absolute_expires_at,
+      revoked_at
+    )
+    values
+      (
+        '80000000-0000-4000-8000-000000000041',
+        '80000000-0000-4000-8000-000000000004',
+        'extension', repeat('6', 64),
+        current_timestamp - interval '2 days',
+        current_timestamp - interval '1 day',
+        current_timestamp + interval '363 days',
+        current_timestamp - interval '2 hours'
+      ),
+      (
+        '80000000-0000-4000-8000-000000000042',
+        '80000000-0000-4000-8000-000000000004',
+        'extension', repeat('8', 64),
+        current_timestamp - interval '2 days',
+        current_timestamp - interval '1 day',
+        current_timestamp + interval '363 days',
+        current_timestamp - interval '1 hour'
+      );
+
+    insert into public.refresh_token_lineage (
+      token_hash, family_id, successor_token_hash, used_at
+    )
+    values
+      (
+        repeat('5', 64),
+        '80000000-0000-4000-8000-000000000041',
+        repeat('6', 64),
+        current_timestamp - interval '1 day'
+      ),
+      (
+        repeat('7', 64),
+        '80000000-0000-4000-8000-000000000042',
+        repeat('8', 64),
+        current_timestamp - interval '1 day'
+      );
+  $setup$
+);
+select extensions.dblink_disconnect('auth_cleanup_lineage_setup');
+
+select extensions.dblink_connect(
+  'auth_cleanup_lineage_lock',
+  'host=host.docker.internal port=54322 dbname=postgres user=postgres password=postgres application_name=auth_cleanup_lineage_lock'
+);
+select extensions.dblink_exec('auth_cleanup_lineage_lock', 'begin');
+select extensions.dblink_exec(
+  'auth_cleanup_lineage_lock',
+  $lock$
+    update public.refresh_token_lineage
+    set used_at = used_at
+    where token_hash = repeat('5', 64)
+  $lock$
+);
+
+select extensions.dblink_connect(
+  'auth_cleanup_lineage_worker',
+  'host=host.docker.internal port=54322 dbname=postgres user=postgres password=postgres application_name=auth_cleanup_lineage_worker'
+);
+select extensions.dblink_exec('auth_cleanup_lineage_worker', 'set role service_role');
+select is(
+  (
+    select refresh_token_lineage_deleted
+    from extensions.dblink(
+      'auth_cleanup_lineage_worker',
+      'select refresh_token_lineage_deleted from public.cleanup_auth_artifacts_v1(1)'
+    ) as result(refresh_token_lineage_deleted integer)
+  ),
+  1,
+  'cleanup skips a locked lineage row and deletes lineage from another eligible family'
+);
+
+select is(
+  (
+    select pg_catalog.count(*)
+    from public.refresh_token_lineage
+    where family_id = '80000000-0000-4000-8000-000000000041'
+  ),
+  1::bigint,
+  'cleanup leaves the concurrently locked lineage row untouched'
+);
+select is(
+  (
+    select pg_catalog.count(*)
+    from public.refresh_token_lineage
+    where family_id = '80000000-0000-4000-8000-000000000042'
+  ),
+  0::bigint,
+  'cleanup drains the unlocked second eligible family lineage'
+);
+
+select extensions.dblink_exec('auth_cleanup_lineage_lock', 'commit');
+select extensions.dblink_disconnect('auth_cleanup_lineage_lock');
+select extensions.dblink_exec('auth_cleanup_lineage_worker', 'reset role');
+select extensions.dblink_exec(
+  'auth_cleanup_lineage_worker',
+  $$
+    delete from public.users
+    where id = '80000000-0000-4000-8000-000000000004'
+  $$
+);
+select extensions.dblink_disconnect('auth_cleanup_lineage_worker');
+
+select extensions.dblink_connect(
+  'auth_cleanup_family_lineage_setup',
+  'host=host.docker.internal port=54322 dbname=postgres user=postgres password=postgres application_name=auth_cleanup_family_lineage_setup'
+);
+select extensions.dblink_exec(
+  'auth_cleanup_family_lineage_setup',
+  $setup$
+    delete from public.users
+    where id = '80000000-0000-4000-8000-000000000005';
+
+    insert into public.users (id, email, display_name)
+    values (
+      '80000000-0000-4000-8000-000000000005',
+      'auth-cleanup-family-lineage-lock@example.test',
+      'Auth Cleanup Family Lineage Lock'
+    );
+
+    insert into public.refresh_token_families (
+      id,
+      user_id,
+      channel,
+      current_token_hash,
+      created_at,
+      last_used_at,
+      absolute_expires_at,
+      revoked_at
+    )
+    values (
+      '80000000-0000-4000-8000-000000000051',
+      '80000000-0000-4000-8000-000000000005',
+      'extension', repeat('b', 64),
+      current_timestamp - interval '2 days',
+      current_timestamp - interval '1 day',
+      current_timestamp + interval '363 days',
+      current_timestamp - interval '2 hours'
+    );
+
+    insert into public.refresh_token_lineage (
+      token_hash, family_id, successor_token_hash, used_at
+    )
+    values
+      (
+        repeat('9', 64),
+        '80000000-0000-4000-8000-000000000051',
+        repeat('a', 64),
+        current_timestamp - interval '2 hours'
+      ),
+      (
+        repeat('a', 64),
+        '80000000-0000-4000-8000-000000000051',
+        repeat('b', 64),
+        current_timestamp - interval '1 hour'
+      );
+  $setup$
+);
+select extensions.dblink_disconnect('auth_cleanup_family_lineage_setup');
+
+select extensions.dblink_connect(
+  'auth_cleanup_family_lineage_lock',
+  'host=host.docker.internal port=54322 dbname=postgres user=postgres password=postgres application_name=auth_cleanup_family_lineage_lock'
+);
+select extensions.dblink_exec('auth_cleanup_family_lineage_lock', 'begin');
+select extensions.dblink_exec(
+  'auth_cleanup_family_lineage_lock',
+  $lock$
+    update public.refresh_token_lineage
+    set used_at = used_at
+    where token_hash = repeat('9', 64)
+  $lock$
+);
+
+select extensions.dblink_connect(
+  'auth_cleanup_family_lineage_worker',
+  'host=host.docker.internal port=54322 dbname=postgres user=postgres password=postgres application_name=auth_cleanup_family_lineage_worker'
+);
+select extensions.dblink_exec(
+  'auth_cleanup_family_lineage_worker',
+  'set role service_role'
+);
+select is(
+  (
+    select refresh_token_lineage_deleted
+    from extensions.dblink(
+      'auth_cleanup_family_lineage_worker',
+      'select refresh_token_lineage_deleted from public.cleanup_auth_artifacts_v1(1)'
+    ) as result(refresh_token_lineage_deleted integer)
+  ),
+  1,
+  'cleanup skips a locked older lineage row and deletes the next row in the same family'
+);
+
+select is(
+  (
+    select pg_catalog.count(*)
+    from public.refresh_token_lineage
+    where token_hash = repeat('9', 64)
+  ),
+  1::bigint,
+  'cleanup leaves the locked older lineage row untouched'
+);
+select is(
+  (
+    select pg_catalog.count(*)
+    from public.refresh_token_lineage
+    where token_hash = repeat('a', 64)
+  ),
+  0::bigint,
+  'cleanup drains the unlocked newer lineage row in the same family'
+);
+
+select extensions.dblink_exec('auth_cleanup_family_lineage_lock', 'commit');
+select extensions.dblink_disconnect('auth_cleanup_family_lineage_lock');
+select extensions.dblink_exec('auth_cleanup_family_lineage_worker', 'reset role');
+select extensions.dblink_exec(
+  'auth_cleanup_family_lineage_worker',
+  $$
+    delete from public.users
+    where id = '80000000-0000-4000-8000-000000000005'
+  $$
+);
+select extensions.dblink_disconnect('auth_cleanup_family_lineage_worker');
 
 insert into public.users (id, email, display_name)
 values (
