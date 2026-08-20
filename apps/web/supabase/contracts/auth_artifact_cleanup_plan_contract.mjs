@@ -405,6 +405,10 @@ try {
   } catch {}
   if (lockProcess) await lockProcess.completion.catch(() => undefined);
   try {
-    query(`delete from public.users where id = '${fixtureUserId}'::uuid`);
+    query(`
+      delete from public.users where id = '${fixtureUserId}'::uuid;
+      analyze public.refresh_token_lineage;
+      analyze public.refresh_token_families;
+    `);
   } catch {}
 }

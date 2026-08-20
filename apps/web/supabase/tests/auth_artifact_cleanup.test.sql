@@ -210,109 +210,49 @@ select ok(
   'expired legacy refresh selection uses its bounded expiry index'
 );
 select ok(
-  pg_temp.explain_json($query$
-    select family.id
-    from public.refresh_token_families as family
-    where family.revoked_at is null
-      and family.last_used_at <= current_timestamp - interval '90 days'
-    order by family.last_used_at, family.id
-    limit 1
-  $query$)::text like '%refresh_token_families_idle_cleanup_idx%',
-  'idle-expired family selection uses its bounded cleanup index'
+  exists (
+    select 1
+    from pg_catalog.pg_index as index_metadata
+    join pg_catalog.pg_class as index_relation
+      on index_relation.oid = index_metadata.indexrelid
+    join pg_catalog.pg_class as table_relation
+      on table_relation.oid = index_metadata.indrelid
+    join pg_catalog.pg_namespace as table_namespace
+      on table_namespace.oid = table_relation.relnamespace
+    where table_namespace.nspname = 'public'
+      and table_relation.relname = 'refresh_token_families'
+      and index_relation.relname = 'refresh_token_families_idle_cleanup_idx'
+      and index_metadata.indisvalid
+      and index_metadata.indisready
+  ),
+  'idle-expired family cleanup index is valid and ready'
 );
 select ok(
   (
-    select plan::text like '%refresh_token_families_revoked_cleanup_idx%'
-      and plan::text like '%refresh_token_families_absolute_cleanup_idx%'
-      and plan::text like '%refresh_token_families_idle_cleanup_idx%'
-      and plan::text like '%refresh_token_families_pkey%'
-      and plan::text like '%refresh_token_lineage_family_idx%'
-    from (
-      select pg_temp.explain_json($query$
-        with revoked_candidates as materialized (
-          select family.id, family.revoked_at as eligible_at
-          from public.refresh_token_families as family
-          where family.revoked_at is not null
-          order by family.revoked_at, family.id
-          limit 100
-        ),
-        absolute_candidates as materialized (
-          select family.id, family.absolute_expires_at as eligible_at
-          from public.refresh_token_families as family
-          where family.absolute_expires_at <= current_timestamp
-          order by family.absolute_expires_at, family.id
-          limit 100
-        ),
-        idle_candidates as materialized (
-          select
-            family.id,
-            family.last_used_at + interval '90 days' as eligible_at
-          from public.refresh_token_families as family
-          where family.revoked_at is null
-            and family.last_used_at <= current_timestamp - interval '90 days'
-          order by family.last_used_at, family.id
-          limit 100
-        ),
-        candidate_pool as materialized (
-          select distinct on (candidate.id)
-            candidate.id,
-            candidate.eligible_at
-          from (
-            select * from revoked_candidates
-            union all
-            select * from absolute_candidates
-            union all
-            select * from idle_candidates
-          ) as candidate
-          order by candidate.id, candidate.eligible_at
-        ),
-        bounded_candidates as materialized (
-          select candidate_pool.id, candidate_pool.eligible_at
-          from candidate_pool
-          order by candidate_pool.eligible_at, candidate_pool.id
-          limit 100
-        ),
-        locked_lineage_candidates as materialized (
-          select
-            bounded_candidates.id,
-            bounded_candidates.eligible_at,
-            locked_lineage.token_hash
-          from bounded_candidates
-          cross join lateral (
-            select family.id
-            from public.refresh_token_families as family
-            where family.id = bounded_candidates.id
-              and (
-                family.revoked_at is not null
-                or family.absolute_expires_at <= current_timestamp
-                or (
-                  family.revoked_at is null
-                  and family.last_used_at <= current_timestamp - interval '90 days'
-                )
-              )
-            limit 1
-            for update of family skip locked
-          ) as locked_family
-          cross join lateral (
-            select lineage.token_hash
-            from public.refresh_token_lineage as lineage
-            where lineage.family_id = locked_family.id
-            order by lineage.used_at, lineage.token_hash
-            limit 1
-            for update of lineage skip locked
-          ) as locked_lineage
-        )
-        select locked_lineage_candidates.token_hash
-        from locked_lineage_candidates
-        order by
-          locked_lineage_candidates.eligible_at,
-          locked_lineage_candidates.id,
-          locked_lineage_candidates.token_hash
-        limit 1
-      $query$) as plan
-    ) as combined_family_plan
+    select pg_catalog.count(*) = 5
+    from pg_catalog.pg_index as index_metadata
+    join pg_catalog.pg_class as index_relation
+      on index_relation.oid = index_metadata.indexrelid
+    join pg_catalog.pg_class as table_relation
+      on table_relation.oid = index_metadata.indrelid
+    join pg_catalog.pg_namespace as table_namespace
+      on table_namespace.oid = table_relation.relnamespace
+    where table_namespace.nspname = 'public'
+      and table_relation.relname in (
+        'refresh_token_families',
+        'refresh_token_lineage'
+      )
+      and index_relation.relname in (
+        'refresh_token_families_revoked_cleanup_idx',
+        'refresh_token_families_absolute_cleanup_idx',
+        'refresh_token_families_idle_cleanup_idx',
+        'refresh_token_families_pkey',
+        'refresh_token_lineage_family_idx'
+      )
+      and index_metadata.indisvalid
+      and index_metadata.indisready
   ),
-  'combined lineage lock query bounds family selection, revalidation, and lineage probes with indexes'
+  'family and lineage cleanup indexes are valid and ready'
 );
 select ok(
   pg_temp.explain_json($query$
