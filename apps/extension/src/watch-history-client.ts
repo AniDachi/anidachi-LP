@@ -1268,6 +1268,7 @@ function mapHttpFailure(status: number, body: unknown): WatchHistoryMessageRespo
   }
   const mapped: Record<string, WatchHistoryLocalStatus> = {
     GENERATION_MISMATCH: "generation-mismatch",
+    INVALID_AUTHORITY: "invalid-room-authority",
     INVALID_ROOM_AUTHORITY: "invalid-room-authority",
     UPGRADE_REQUIRED: "upgrade-required",
   };

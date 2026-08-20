@@ -5,6 +5,8 @@ import {
   MAX_ROOM_ID_CHARS,
   MAX_SESSION_ID_CHARS,
   MAX_URL_CHARS,
+  ROOM_HISTORY_OFFLINE_GRACE_SECONDS,
+  RoomHistoryAttestationClaimsSchema,
   RoomCapabilitiesSchema,
   type RoomCapabilities,
 } from "@anidachi/protocol";
@@ -105,18 +107,35 @@ export async function signRoomHistoryAttestation(
     throw new Error("Invalid room history authority claims");
   }
 
-  return new SignJWT({
+  const issuedAt = Math.floor(Date.now() / 1_000);
+  const signedClaims = RoomHistoryAttestationClaimsSchema.parse({
     typ: "room_history",
+    iss: "anidachi-worker",
+    aud: "anidachi-web-history",
+    sub: claims.sub,
     roomId: claims.roomId,
     participantSessionId: claims.participantSessionId,
     roomGeneration: claims.roomGeneration,
     sourceGeneration: claims.sourceGeneration,
+    iat: issuedAt,
+    exp: issuedAt + ROOM_HISTORY_OFFLINE_GRACE_SECONDS,
+    jti: crypto.randomUUID(),
+  });
+
+  return new SignJWT({
+    typ: signedClaims.typ,
+    roomId: signedClaims.roomId,
+    participantSessionId: signedClaims.participantSessionId,
+    roomGeneration: signedClaims.roomGeneration,
+    sourceGeneration: signedClaims.sourceGeneration,
   })
     .setProtectedHeader({ alg: "HS256" })
-    .setIssuer("anidachi-worker")
-    .setAudience("anidachi-web-history")
-    .setSubject(claims.sub)
-    .setIssuedAt()
+    .setIssuer(signedClaims.iss)
+    .setAudience(signedClaims.aud)
+    .setSubject(signedClaims.sub)
+    .setIssuedAt(signedClaims.iat)
+    .setExpirationTime(signedClaims.exp)
+    .setJti(signedClaims.jti)
     .sign(getSecret(env));
 }
 

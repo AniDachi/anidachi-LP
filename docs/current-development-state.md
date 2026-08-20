@@ -695,6 +695,13 @@ These are intentionally not treated as solved:
   account-scoped cache/outbox, while Popup and website consume the same strict
   v2 response. The v1 HTTP paths return `426 UPGRADE_REQUIRED`, and the legacy
   tables remain inert for rollback rather than being deleted.
+- `ROOM_HISTORY_GRACE_AMENDMENT_REQUIRED` is the reviewed Task 9 decision after
+  the Task 0 report proved unavailable: Worker-issued shared-history authority
+  has mandatory exact scalar claims, a unique `jti`, and `exp = iat + 86,400`
+  seconds. New expired authority fails before history/session/participant/Recent
+  People mutation, while an exact unexpired 14-day receipt remains idempotent
+  after authority expiry. Rejected delayed shared work stays in the extension's
+  bounded outbox as `invalid-room-authority` and is never reclassified as solo.
 - The additive foundation and Recent People v2 migrations are applied on
   staging through `20260814020000`. A user confirmed the repaired solo
   Crunchyroll -> Popup -> staging website path. Full two-profile/two-network

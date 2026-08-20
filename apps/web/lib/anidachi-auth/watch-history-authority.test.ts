@@ -19,14 +19,17 @@ const visibleAuthority = {
 
 async function token(
   overrides: Record<string, unknown> = {},
-  options: { secret?: Uint8Array; audience?: string; issuer?: string } = {},
+  options: { secret?: Uint8Array; audience?: string | string[]; issuer?: string; now?: number } = {},
 ) {
+  const issuedAt = 1_786_680_000;
   const payload = {
     typ: "room_history",
     roomId: visibleAuthority.roomId,
     participantSessionId: visibleAuthority.participantSessionId,
     roomGeneration: visibleAuthority.roomGeneration,
     sourceGeneration: visibleAuthority.sourceGeneration,
+    exp: issuedAt + 86_400,
+    jti: "22222222-2222-4222-8222-222222222222",
     ...overrides,
   };
   return new SignJWT(payload)
@@ -34,14 +37,14 @@ async function token(
     .setIssuer(options.issuer ?? "anidachi-worker")
     .setAudience(options.audience ?? "anidachi-web-history")
     .setSubject(typeof overrides.sub === "string" ? overrides.sub : USER_ID)
-    .setIssuedAt(1_786_680_000)
+    .setIssuedAt(issuedAt)
     .sign(options.secret ?? SECRET);
 }
 
 async function verify(
   overrides: Partial<typeof visibleAuthority> = {},
   tokenOverrides: Record<string, unknown> = {},
-  options: { secret?: Uint8Array; audience?: string; issuer?: string } = {},
+  options: { secret?: Uint8Array; audience?: string | string[]; issuer?: string; now?: number } = {},
 ) {
   return verifyWatchHistoryAuthority({
     authenticatedUserId: USER_ID,
@@ -51,17 +54,23 @@ async function verify(
       attestation: await token(tokenOverrides, options),
     },
     secret: SECRET,
+    now: new Date((options.now ?? 1_786_680_000) * 1_000),
   });
 }
 
 test("history authority returns only validated purpose-bound claims", async () => {
   assert.deepEqual(await verify(), {
+    typ: "room_history",
+    iss: "anidachi-worker",
+    aud: "anidachi-web-history",
     sub: USER_ID,
     roomId: "room-one",
     participantSessionId: "participant-session-one",
     roomGeneration: 2,
     sourceGeneration: 3,
     iat: 1_786_680_000,
+    exp: 1_786_766_400,
+    jti: "22222222-2222-4222-8222-222222222222",
   });
 });
 
@@ -93,6 +102,28 @@ test("history authority rejects the wrong purpose, issuer, or audience", async (
   );
   await assert.rejects(
     () => verify({}, {}, { audience: "another-audience" }),
+    isInvalidAuthority,
+  );
+  await assert.rejects(
+    () => verify({}, {}, { audience: ["anidachi-web-history"] }),
+    isInvalidAuthority,
+  );
+});
+
+test("history authority requires exact exp and jti claims and rejects expiry without tolerance", async () => {
+  await assert.rejects(() => verify({}, { exp: undefined }), isInvalidAuthority);
+  await assert.rejects(() => verify({}, { jti: undefined }), isInvalidAuthority);
+  await assert.rejects(() => verify({}, { exp: 1_786_766_401 }), isInvalidAuthority);
+  await assert.rejects(() => verify({}, { jti: "not-a-uuid" }), isInvalidAuthority);
+  await assert.doesNotReject(
+    () => verify({}, {}, { now: 1_786_766_399 }),
+  );
+  await assert.rejects(
+    () => verify({}, {}, { now: 1_786_766_400 }),
+    isInvalidAuthority,
+  );
+  await assert.rejects(
+    () => verify({}, {}, { now: 1_786_679_999 }),
     isInvalidAuthority,
   );
 });

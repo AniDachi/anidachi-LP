@@ -11,6 +11,10 @@ const CUTOVER_MIGRATION_URL = new URL(
   "../../supabase/migrations/20260814020000_watch_history_v2_clean_cutover.sql",
   import.meta.url,
 );
+const AUTHORITY_EXPIRY_MIGRATION_URL = new URL(
+  "../../supabase/migrations/20260820111116_room_history_authority_expiry.sql",
+  import.meta.url,
+);
 
 function migrationSql() {
   try {
@@ -41,6 +45,31 @@ function normalizedCutoverSql() {
     throw error;
   }
 }
+
+function normalizedAuthorityExpirySql() {
+  return readFileSync(AUTHORITY_EXPIRY_MIGRATION_URL, "utf8")
+    .replace(/--.*$/gm, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+test("room history authority expiry migration is additive and receipt-first", () => {
+  const sql = normalizedAuthorityExpirySql();
+  assert.match(sql, /create or replace function public\.apply_watch_progress_v2/);
+  assert.doesNotMatch(sql, /\b(drop|truncate)\b/);
+  assert.match(sql, /security invoker/);
+  assert.match(sql, /set search_path = ''/);
+  assert.match(sql, /revoke all on function public\.apply_watch_progress_v2/);
+  assert.match(sql, /grant execute on function public\.apply_watch_progress_v2/);
+  const receiptAt = sql.indexOf("from public.watch_history_receipts");
+  const expiryAt = sql.indexOf("watch_history_authority_expired");
+  const mutationAt = sql.indexOf("insert into public.watch_sessions");
+  assert.ok(receiptAt >= 0 && expiryAt > receiptAt && mutationAt > expiryAt);
+  assert.match(sql, /room_authority[^;]*'exp'/);
+  assert.match(sql, /room_authority[^;]*'jti'/);
+  assert.match(sql, /86\s*400|86400/);
+});
 
 function functionDefinition(name: string) {
   const match = migrationSql().match(

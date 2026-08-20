@@ -131,11 +131,11 @@ preserve a legacy path just because it is mentioned here.
 
 ## Evidence-gated Initial Candidates
 
-These values are starting hypotheses, not approved constants:
+Task 0 did not produce the required room-history evidence report. The reviewed
+Task 9 amendment therefore records `ROOM_HISTORY_GRACE_AMENDMENT_REQUIRED` and
+approves exactly 86,400 seconds for delayed shared-room delivery. The pending
+socket value remains an evidence-gated hypothesis:
 
-- a 24-hour delayed shared-room delivery window, intended to cover an overnight
-  client/network interruption without equating authority lifetime to 14-day
-  receipt retention;
 - a 10-second pre-JOIN deadline and at most two pending sockets per authenticated
   participant, intended to cover the supported two-tab/device reconnect model.
 
@@ -1044,8 +1044,9 @@ and after room end, and no expired replay refresh of Recent People.
 **Step 2: Close the shared contract**
 
 Add one exported `ROOM_HISTORY_OFFLINE_GRACE_SECONDS` and the exact attestation
-claims. Initialize it to 86,400 seconds only if Task 0 records
-`ROOM_HISTORY_GRACE_PROVEN`; otherwise use the reviewed amended value. Worker
+claims. Task 0 did not record `ROOM_HISTORY_GRACE_PROVEN`; the reviewed Task 9
+amendment `ROOM_HISTORY_GRACE_AMENDMENT_REQUIRED` sets it to exactly 86,400
+seconds. Worker
 issuance, web verifier, SQL acceptance, and tests use that single
 constant/configured value. Do not reuse the 14-day receipt lifetime.
 
