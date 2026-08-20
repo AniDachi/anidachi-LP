@@ -6,9 +6,14 @@
 > and `superpowers:requesting-code-review` at every wave stop. Do not skip the
 > drift gates or continue after a failed stop condition.
 
-Status: Wave 1 complete on staging; Wave 2 Tasks 5-8 implemented and deployed;
-Tasks 6-8 staging-accepted; Task 5 interactive Google and Discord provider
-acceptance remains the sole open Wave 2 stop gate
+Status: Wave 1 and Wave 2 are complete on staging; Tasks 5-8 are
+staging-accepted. Wave 2 Stop is closed, and Wave 3 may proceed from
+current staging. No security work from this wave is promoted to `main`;
+production promotion remains separate and out of scope.
+
+On 2026-08-20, real Google and real Discord consent/callback flows
+succeeded on staging inside the enforced initial ten-minute OAuth transaction
+window. Exact elapsed times and screenshots are not claimed.
 
 Date: 2026-08-18
 
@@ -671,8 +676,7 @@ git add apps/web/lib/anidachi-auth/oauth-transaction.ts \
 git commit -m "fix(auth): bind browser OAuth transactions"
 ```
 
-Outcome on 2026-08-18: **SOURCE, DATABASE, AND AUTOMATED STAGING GATES PASSED;
-INTERACTIVE PROVIDER ACCEPTANCE PENDING.** PR `#197` merged to `staging` as
+Outcome on 2026-08-20: **STAGING ACCEPTED.** PR `#197` merged to `staging` as
 `d330be47cb23ee58eeba3e0db18ec1f2f2e86e21`. Migration
 `20260818131602_oauth_login_transactions.sql` is applied and the linked dry run
 is empty. Local web tests, pgTAP, typecheck, independent review, CodeRabbit,
@@ -681,8 +685,9 @@ smoke are green. The deployed flow uses random one-time state, independent
 browser correlation, S256 PKCE, provider binding, atomic consumption, exact
 cookie cleanup, and generic public failures.
 
-Do not yet call the ten-minute interaction window accepted: completing a real
-Google and Discord consent/callback on staging remains an attended manual gate.
+On 2026-08-20, real Google and real Discord consent/callback flows
+succeeded on staging inside the enforced initial ten-minute OAuth transaction
+window. Exact elapsed times and screenshots are not claimed.
 Task 6's earlier Chrome Web Store prerequisite is superseded by the approved
 pre-release binding: stable repository-controlled unpacked local/staging
 identities, exact per-environment allowlisting, and fail-closed production. The
@@ -999,13 +1004,13 @@ refresh replay/concurrency, cleanup, full web/extension/protocol checks, and a
 documented staging reauthentication consequence. Stop if any legacy token is
 accepted cross-channel.
 
-**Current stop status (2026-08-20): not yet closed.** Tasks 6-8 satisfy their
-staging acceptance boundaries, including exact channel rejection, refresh
-rotation/replay/concurrency, bounded cleanup, and forced reauthentication. The
-sole remaining gate is Task 5's attended real Google and Discord
-consent/callback check inside the initial ten-minute OAuth transaction window.
-Do not start Wave 3 or promote this wave to `main` until that evidence is
-recorded.
+**Current stop status (2026-08-20): closed.** Tasks 5-8 satisfy their staging
+acceptance boundaries, including Task 5's attended real Google and Discord
+consent/callback acceptance, exact channel rejection, refresh
+rotation/replay/concurrency, bounded cleanup, and forced reauthentication.
+Wave 3 may proceed from current `staging`. No security work from this wave is
+promoted to `main`; production promotion remains a separate decision and is out
+of this closeout.
 
 ---
 

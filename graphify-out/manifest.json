@@ -3604,10 +3604,10 @@
     "semantic_hash": "7222da43b1fe21764ac60a152d060d29"
   },
   "docs/current-development-state.md": {
-    "mtime": 1787209628.7217705,
-    "seen": 1787210027.8220491,
-    "ast_hash": "995ab7d73450c716d1f72adeacc9edec",
-    "semantic_hash": "995ab7d73450c716d1f72adeacc9edec"
+    "mtime": 1787218884.370742,
+    "seen": 1787220180.315577,
+    "ast_hash": "11296fdd211a31cb12795077b8a5542f",
+    "semantic_hash": "11296fdd211a31cb12795077b8a5542f"
   },
   "docs/development-environments.md": {
     "mtime": 1786689011.3582418,
@@ -5616,10 +5616,10 @@
     "semantic_hash": "a759a470b25398670234655ff5217a42"
   },
   "apps/web/lib/pre-release-security-boundaries.test.ts": {
-    "mtime": 1787210378.9577556,
-    "seen": 1787211001.216929,
-    "ast_hash": "fbcc1ab4f300d580d1e6f9402179d7da",
-    "semantic_hash": "fbcc1ab4f300d580d1e6f9402179d7da"
+    "mtime": 1787218785.0341098,
+    "seen": 1787220180.3155751,
+    "ast_hash": "bb7edbf7fd8341b9d79f5d28b6f10c32",
+    "semantic_hash": "bb7edbf7fd8341b9d79f5d28b6f10c32"
   },
   "apps/web/lib/private-integration-blob-migration.test.ts": {
     "mtime": 1787045820.1640816,
@@ -5658,16 +5658,16 @@
     "semantic_hash": "1de7f552345e6903b25d0462bd831fec"
   },
   "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md": {
-    "mtime": 1787209628.7227187,
-    "seen": 1787210027.822051,
-    "ast_hash": "dbe94ae0495e7141a562f37498bb7424",
-    "semantic_hash": "dbe94ae0495e7141a562f37498bb7424"
+    "mtime": 1787218854.1443627,
+    "seen": 1787220180.3155782,
+    "ast_hash": "3e95db025448b5d325f0750559cafb4e",
+    "semantic_hash": "3e95db025448b5d325f0750559cafb4e"
   },
   "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md": {
-    "mtime": 1787210378.9571047,
-    "seen": 1787211001.216932,
-    "ast_hash": "a3d2e08f6b959c62d6d64c41a94ed23e",
-    "semantic_hash": "a3d2e08f6b959c62d6d64c41a94ed23e"
+    "mtime": 1787218854.1448305,
+    "seen": 1787220180.315579,
+    "ast_hash": "fcd690f8c0426e571de5e50e50de869f",
+    "semantic_hash": "fcd690f8c0426e571de5e50e50de869f"
   },
   "apps/web/lib/anidachi-auth/oauth-routes.test.ts": {
     "mtime": 1787140027.917653,

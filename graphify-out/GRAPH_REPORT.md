@@ -4,12 +4,12 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 8938 nodes · 18751 edges · 1109 communities (326 shown, 783 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 228 edges (avg confidence: 0.72)
+- 8950 nodes · 18756 edges · 1109 communities (326 shown, 783 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 225 edges (avg confidence: 0.72)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `31c1f2f8`
+- Built from commit: `77e2eb6e`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -338,6 +338,7 @@
 - p2p-ice.ts
 - cli.ts
 - Main Repository Monorepo Migration Implementation Plan
+- Explicit Website and Extension Auth Channels
 - AniDachi Extension Icon 48px
 - Download on the App Store Badge
 - AniDachi Logo Asset
@@ -1121,7 +1122,6 @@
 - Kreatli CRM Data Schema
 - Incremental Re-extraction
 - AniDachi Pre-release Security and Reliability Readiness Plan
-- Explicit Website and Extension Auth Channels
 
 ## God Nodes (most connected - your core abstractions)
 1. `next` - 174 edges
@@ -1148,19 +1148,19 @@
   AGENTS.md → .coderabbit.yaml
 
 ## Import Cycles
-- 1-file cycle: `apps/web/scripts/export-anidachi-logo.py -> apps/web/scripts/export-anidachi-logo.py`
 - 1-file cycle: `apps/web/lib/pre-release-security-boundaries.test.ts -> apps/web/lib/pre-release-security-boundaries.test.ts`
+- 1-file cycle: `apps/web/scripts/export-anidachi-logo.py -> apps/web/scripts/export-anidachi-logo.py`
 
 ## Hyperedges (group relationships)
 - **CRM Data Model** — apps_web_crm_data_schema_crm_data_layout, apps_web_crm_data_schema_contact_record, apps_web_crm_data_schema_touch_event, apps_web_crm_data_schema_outreach_queue_eligibility [EXTRACTED 1.00]
+- **Design Staging Hardening Constraints** — docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_existing_boundary_hardening, docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_protocol_first_compatibility, docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_staging_evidence_gate, docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_production_release_exclusion, docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_failure_closed_privileged_operations [EXTRACTED 1.00]
 - **Graphify Extraction Pipeline** — _codex_skills_graphify_skill_file_detection, _codex_skills_graphify_skill_ast_structural_extraction, _codex_skills_graphify_skill_semantic_extraction, _codex_skills_graphify_skill_ast_semantic_merge, _codex_skills_graphify_skill_graph_build_pipeline [EXTRACTED 1.00]
 - **Graph Integrity and Persistence** — _codex_skills_graphify_skill_graph_shrink_guard, _codex_skills_graphify_skill_graph_health_check, _codex_skills_graphify_skill_manifest_and_cost_tracking, _codex_skills_graphify_skill_incremental_update [EXTRACTED 1.00]
 - **Graph Navigation Commands** — _codex_skills_graphify_skill_graph_query_navigation, _codex_skills_graphify_skill_graph_path_navigation, _codex_skills_graphify_skill_graph_node_explanation [EXTRACTED 1.00]
 - **Incremental Graph Consistency Controls** — _codex_skills_graphify_references_update_incremental_detection, _codex_skills_graphify_references_update_semantic_cache_invalidation, _codex_skills_graphify_references_update_changed_file_replacement, _codex_skills_graphify_references_update_portable_manifest, _codex_skills_graphify_references_update_semantic_output_stamp_gate [EXTRACTED 1.00]
 - **Human-gated Outreach Flow** — apps_web_crm_data_agents_human_controlled_sending, apps_web_crm_data_workflow_gmail_send_step, apps_web_crm_data_workflow_touch_logging_step, apps_web_crm_data_workflow_next_action_scheduling [INFERRED 0.95]
-- **Task 8 bounded cleanup deployment and staging acceptance** — docs_current_development_state_auth_artifact_cleanup_migration, docs_current_development_state_bounded_cleanup_contract, docs_current_development_state_active_artifact_preservation, docs_current_development_state_task_8_staging_acceptance [EXTRACTED 1.00]
-- **Wave 2 progression remains gated by Task 5 provider acceptance** — docs_current_development_state_task_5_provider_acceptance_gate, docs_current_development_state_wave_2_progression_restriction, docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_5_provider_acceptance_gate, docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_wave_2_stop_status [EXTRACTED 1.00]
-- **Wave 2 deployed state, accepted tasks, and remaining attended gate** — docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_tasks_5_8_deployed, docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_tasks_6_8_staging_accepted, docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_task_5_google_discord_gate, docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_wave_2_open_stop_gate [EXTRACTED 1.00]
+- **Wave 2 Staging Acceptance Bundle** — docs_current_development_state_task_5_staging_acceptance, docs_current_development_state_task_6_staging_acceptance, docs_current_development_state_task_7_staging_acceptance, docs_current_development_state_task_8_staging_acceptance, docs_current_development_state_wave_2_stop_closed [EXTRACTED 1.00]
+- **Wave 3 Execution Bundle** — docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_wave_3_room_worker_extension_isolation, docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_9_room_history_authority_lifetime, docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_10_websocket_admission, docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_11_extension_isolation, docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_wave_3_stop [EXTRACTED 1.00]
 
 ## Communities (1109 total, 783 thin omitted)
 
@@ -2388,6 +2388,10 @@ Nodes (22): isContactDue(), renderTemplate(), Contact, ContactStatus, assertVali
 Cohesion: 0.07
 Nodes (26): Commit Strategy, Current Status, Definition Of Done, Environment Model, Execution Order, Known Migration Risks And Mitigations, Main Repository Monorepo Migration Implementation Plan, Non-Negotiable Rules (+18 more)
 
+### Community 323 - "Explicit Website and Extension Auth Channels"
+Cohesion: 0.22
+Nodes (9): Pre-release Security Reliability Readiness Design, Existing Boundary Hardening, Protocol-first Cross-plane Compatibility, Staging Evidence Gate, Production Release Exclusion, Readiness Delivery Wave Sequence, Wave 2 Auth Boundary, Wave 3 Room Worker Extension Boundary (+1 more)
+
 ### Community 139 - "AniDachi Extension Icon 48px"
 Cohesion: 0.13
 Nodes (20): Browser Extension Brand Identity, White Stylized A Brand Mark, Extension Toolbar Icon, Blue Purple Rounded Icon Background, Low Resolution 16 Pixel Icon Variant, Browser Extension Launcher Asset, Compact Brand Recognition, Medium Density Browser Extension Asset (+12 more)
@@ -2457,15 +2461,11 @@ Cohesion: 0.18
 Nodes (11): Cluster-only Refresh, Deleted-source Pruning, Graph Update Diff, Incremental File Detection, Incremental Re-extraction, Incremental Update Runbook, Changed-file Replacement, Code-only Fast Path (+3 more)
 
 ### Community 37 - "AniDachi Pre-release Security and Reliability Readiness Plan"
-Cohesion: 0.18
-Nodes (14): Current Development State, Task 8 staging acceptance, 20260820040229 auth artifact cleanup migration, Service-role-only cleanup bounded to 100 rows per call, Active refresh families and live auth artifacts remain ineligible, Task 5 attended Google and Discord provider acceptance gate, Wave 2 cannot be accepted or followed by Wave 3 yet, AniDachi Pre-release Security And Reliability Readiness Plan (+6 more)
-
-### Community 323 - "Explicit Website and Extension Auth Channels"
-Cohesion: 0.70
-Nodes (5): Pre-release Security And Reliability Readiness Design, Wave 2 Tasks 5-8 implemented and deployed, Tasks 6-8 staging-accepted, Task 5 interactive Google and Discord provider acceptance, Sole open Wave 2 stop gate
+Cohesion: 0.07
+Nodes (22): Pre-release Security Readiness, Wave 1 Completion, Task 5 Staging Acceptance, Task 6 Staging Acceptance, Task 7 Staging Acceptance, Task 8 Staging Acceptance, Wave 2 Stop Closed, Wave 3 Progression From Staging (+14 more)
 
 ## Knowledge Gaps
-- **2907 isolated node(s):** `faq`, `headings`, `metadata`, `SITE_URL`, `faq` (+2902 more)
+- **2924 isolated node(s):** `faq`, `headings`, `metadata`, `SITE_URL`, `faq` (+2919 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **783 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -2473,16 +2473,16 @@ Nodes (5): Pre-release Security And Reliability Readiness Design, Wave 2 Tasks 5
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `next` connect `next` to `primary-checkout-cta.tsx`, `social.ts`, `seo-page-layout.tsx`, `pricing-copy.ts`, `getResolvedSiteOrigin`, `getGuideLinks`, `SeoPageLayout`, `best-sci-fi-anime-to-watch-with-friends/page.tsx`, `how-to-watch-youtube-together-without-screen-share/page.tsx`, `switch-from-discord-screen-share/page.tsx`, `watch-history-v2.ts`, `ref_next_link`, `extension-auth-handoff.test.ts`, `[slug]/page.tsx`, `button.tsx`, `best-anime-to-binge-with-friends-this-weekend/page.tsx`, `best-anime-to-watch-with-friends/page.tsx`, `pseo-new-guides.tsx`, `ref_next_navigation`, `cn`, `ref_react`, `app/layout.tsx`, `best-classic-anime-to-watch-with-friends/page.tsx`, `tasks`, `sitemap-discovery.ts`, `getSession`?**
-  _High betweenness centrality (0.035) - this node is a cross-community bridge._
+  _High betweenness centrality (0.036) - this node is a cross-community bridge._
 - **Why does `devDependencies` connect `typescript` to `package.json`?**
-  _High betweenness centrality (0.023) - this node is a cross-community bridge._
+  _High betweenness centrality (0.022) - this node is a cross-community bridge._
+- **Why does `logDebug()` connect `logDebug` to `src/account-inbox-client.ts`, `overlay-app.tsx`, `PlaybackSyncController`, `social-client.ts`, `p2p-media.ts`, `chrome-extension-demo-async-overlay.tsx`, `core/types.ts`, `protocol/src/index.ts`, `diagnostic-log.ts`, `content-lifecycle.test.tsx`, `content.tsx`, `popup-app.tsx`, `Harness`, `.ensurePeer`, `debug-log.ts`, `room-client.ts`, `p2p-media.test.ts`, `ghost-cam.ts`, `.sampleRemoteAudioActivityOnce`, `p2p-ice.ts`?**
+  _High betweenness centrality (0.021) - this node is a cross-community bridge._
 - **Are the 8 inferred relationships involving `OverlayApp()` (e.g. with `fallbackCopy()` and `reduceVoiceSession()`) actually correct?**
   _`OverlayApp()` has 8 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `faq`, `headings`, `metadata` to the rest of the system?**
-  _2907 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _2924 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `primary-checkout-cta.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.027044025157232705 - nodes in this community are weakly interconnected._
 - **Should `social.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.056943056943056944 - nodes in this community are weakly interconnected._
-- **Should `SeoPageLayout` be split into smaller, more focused modules?**
-  _Cohesion score 0.02762268586541287 - nodes in this community are weakly interconnected._
