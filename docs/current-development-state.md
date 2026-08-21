@@ -242,15 +242,18 @@ acceptance boundaries, and the Wave 2 Stop is closed. Wave 3 may proceed from
 current `staging`. No security work from this wave has been promoted to `main`;
 production promotion remains a separate decision and is out of this closeout.
 
-Wave 3 Tasks 9-10 are merged to staging. Task 10's WebSocket-admission change
-merged in PR `#208` at `1707703efb6ec5e85b6a3c40fc9192134f23be3a` on 2026-08-21.
-Post-merge CI, API deploy, migration workflow, Rooms E2E, P2P E2E, Vercel, and
-staging smoke passed. Manual staging acceptance with two authenticated browser
-profiles passed host room creation, guest join, synchronized play/pause/seek,
-and guest reload/reconnect without duplicate or ghost participants. This proves
-the normal two-profile join/reconnect path only; it is not a two-network/TURN,
-production, or exhaustive adversarial-traffic result. Task 11 is next, and the
-Wave 3 Stop remains open.
+Wave 3 Tasks 9-11 implementation is current for staging. Task 10's
+WebSocket-admission change merged in PR `#208` at
+`1707703efb6ec5e85b6a3c40fc9192134f23be3a` on 2026-08-21. Post-merge CI, API
+deploy, migration workflow, Rooms E2E, P2P E2E, Vercel, and staging smoke
+passed. Manual staging acceptance with two authenticated browser profiles passed
+host room creation, guest join, synchronized play/pause/seek, and guest
+reload/reconnect without duplicate or ghost participants. This proves the normal
+two-profile join/reconnect path only; it is not a two-network/TURN, production,
+or exhaustive adversarial-traffic result. Task 11's local automated
+implementation and review gates passed, but loaded-artifact Chrome and staging
+acceptance remain pending. The integrated Wave 3 matrix and Wave 3 Stop remain
+open.
 
 ## Subscription Plan Codes
 
@@ -640,10 +643,17 @@ The extension currently supports:
   missing Vercel `ANIDACHI_API_INTERNAL_BASE_URL` and correctly failed closed
   with `502`; the staging URL was configured, Web was redeployed, and a real
   staging room then transitioned from `live` to persisted `ended` state;
-- debug export from the extension panel. Current diagnostic bundles include a
-  unified top-level timeline that merges background diagnostics with page debug
-  entries, while still keeping the split `diagnosticEntries` and
-  `pageDebugEntries` for deeper inspection.
+- debug export from the extension panel. Routine page/content diagnostics are
+  bounded in memory and sanitized: titles, user text, identifiers, tokens, and
+  attestations are absent, while the explicit support export remains available.
+  The overlay uses a closed shadow root. Account-only sign-out requires a trusted
+  UI event and is bound to the exact validated extension account and refresh-token
+  family; it does not use room authority. Manual room end requires a trusted UI
+  event, while manual and quota room end use per-tab authority issued by the
+  background from authenticated create/connect, with a persistent, non-reused
+  session generation and exact current account, room, host role, and generation
+  checks before the server's final authorization. Playback and Watch History
+  behavior are unaffected.
 
 The extension still does not host, proxy, record, or distribute source video.
 

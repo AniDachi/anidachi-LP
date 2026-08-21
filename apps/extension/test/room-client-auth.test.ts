@@ -8,8 +8,6 @@ import {
   createRoom,
   createWebsiteRoomFromApi,
   createWebsiteRoomHeaders,
-  endRoom,
-  endRoomHttpMessage,
   endWebsiteRoomFromApi,
   handleRoomHttpMessage,
   isQuotaExhaustedError,
@@ -352,16 +350,6 @@ describe("authenticated room client", () => {
       },
     });
 
-    expect(isRoomHttpMessage(endRoomHttpMessage("room-3", "access-1"))).toBe(true);
-    const sendMessage = vi.fn().mockResolvedValue({
-      ok: true,
-      ended: { endedAt: "2026-06-13T12:00:00.000Z" },
-    });
-    vi.stubGlobal("chrome", { runtime: { sendMessage } });
-    await expect(endRoom("room-3", "access-1")).resolves.toEqual({
-      endedAt: "2026-06-13T12:00:00.000Z",
-    });
-    expect(sendMessage).toHaveBeenCalledWith(endRoomHttpMessage("room-3", "access-1"));
   });
 
   it("creates rooms through the extension runtime bridge", async () => {
@@ -386,6 +374,90 @@ describe("authenticated room client", () => {
       shareableLink: "http://localhost:3003/room/room-1",
     });
     expect(sendMessage).toHaveBeenCalledWith(createRoomHttpMessage("access-1", input));
+  });
+
+  it("returns background-issued host authority only from a successful room response", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          roomId: "room-privileged",
+          roomToken: trustedRoomToken({
+            sub: "user-a",
+            roomId: "room-privileged",
+            role: "host",
+          }),
+          shareableLink: "http://localhost:3003/room/room-privileged",
+        }),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const issueAuthority = vi.fn().mockResolvedValue({
+      accountUserId: "user-a",
+      roomId: "room-privileged",
+      role: "host",
+      authorityGeneration: 7,
+    });
+
+    const response = await (
+      handleRoomHttpMessage as unknown as (
+        message: ReturnType<typeof createRoomHttpMessage>,
+        sender: { tab: { id: number } },
+        dependencies: { issueAuthority: typeof issueAuthority },
+      ) => Promise<unknown>
+    )(
+      createRoomHttpMessage("access-1"),
+      { tab: { id: 41 } },
+      { issueAuthority },
+    );
+
+    expect(response).toMatchObject({
+      ok: true,
+      room: {
+        roomId: "room-privileged",
+        privilegedRoomAuthority: {
+          accountUserId: "user-a",
+          roomId: "room-privileged",
+          role: "host",
+          authorityGeneration: 7,
+        },
+      },
+    });
+  });
+
+  it("does not let a late room bridge response issue authority over a newer join", async () => {
+    const firstResponse = deferred<Response>();
+    const secondResponse = deferred<Response>();
+    vi.stubGlobal("fetch", vi.fn().mockReturnValueOnce(firstResponse.promise).mockReturnValueOnce(secondResponse.promise));
+    const issueAuthority = vi.fn(async ({ roomId }: { roomId: string }) => ({
+      accountUserId: "user-a",
+      roomId,
+      role: "host" as const,
+      authorityGeneration: roomId === "room-new" ? 2 : 1,
+    }));
+    const sender = { tab: { id: 42 } };
+    const first = handleRoomHttpMessage(
+      connectRoomHttpMessage("room-old", "access-1"),
+      sender,
+      { issueAuthority },
+    );
+    const second = handleRoomHttpMessage(
+      connectRoomHttpMessage("room-new", "access-1"),
+      sender,
+      { issueAuthority },
+    );
+
+    secondResponse.resolve(roomConnectionResponse("room-new"));
+    await expect(second).resolves.toMatchObject({
+      ok: true,
+      connection: { privilegedRoomAuthority: { roomId: "room-new", authorityGeneration: 2 } },
+    });
+    firstResponse.resolve(roomConnectionResponse("room-old"));
+    await expect(first).resolves.toMatchObject({
+      ok: true,
+      connection: { privilegedRoomAuthority: null },
+    });
+    expect(issueAuthority).toHaveBeenCalledTimes(1);
   });
 
   it("connects rooms through the extension runtime bridge", async () => {
@@ -939,3 +1011,21 @@ describe("authenticated room client", () => {
     expect(onTerminalClose).toHaveBeenCalledOnce();
   });
 });
+
+function trustedRoomToken(payload: Record<string, unknown>): string {
+  return `eyJhbGciOiJIUzI1NiJ9.${btoa(JSON.stringify({ typ: "room", ...payload }))}.signature`;
+}
+
+function roomConnectionResponse(roomId: string): Response {
+  return new Response(JSON.stringify({ roomToken: trustedRoomToken({ sub: "user-a", roomId, role: "host" }) }), {
+    status: 200,
+  });
+}
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((nextResolve) => {
+    resolve = nextResolve;
+  });
+  return { promise, resolve };
+}

@@ -4,6 +4,7 @@ import { defineContentScript } from "wxt/utils/define-content-script";
 import {
   elementDebugSnapshot,
   logDebug,
+  removeLegacyPageDebugBufferOnce,
   videoDebugSnapshot,
 } from "../src/debug-log";
 import { startDebugProbe } from "../src/debug-probe";
@@ -107,6 +108,7 @@ export default defineContentScript({
 export function startContentLifecycle(
   overrides: Partial<ContentLifecycleDependencies> = {},
 ): ContentLifecycleRuntime {
+  removeLegacyPageDebugBufferOnce();
   const dependencies: ContentLifecycleDependencies = {
     detect: detectLifecycleResult,
     ensureStyles: ensurePageStyles,
@@ -401,7 +403,7 @@ export function mountOverlay(
   host.style.display = "block";
   host.style.overflow = "hidden";
 
-  const shadow = host.attachShadow({ mode: "open" });
+  const shadow = host.attachShadow({ mode: "closed" });
   const appRoot = document.createElement("div");
   shadow.append(appRoot);
   const renderer = options.renderer ?? createReactOverlayRenderer(appRoot);

@@ -1,5 +1,35 @@
 const SECRET_FIELD_RE = /token|secret|cookie|authorization|password|credential|icepwd|attestation/i;
 
+const USER_AUTHORED_CONTENT_FIELDS = new Set([
+  "comment",
+  "content",
+  "displayName",
+  "emoji",
+  "episodeTitle",
+  "groupName",
+  "label",
+  "message",
+  "name",
+  "reaction",
+  "seasonTitle",
+  "seriesTitle",
+  "sourceTitle",
+  "text",
+  "title",
+  "userText",
+]);
+
+const STABLE_PSEUDONYM_FIELDS = new Set([
+  "email",
+  "fingerprint",
+  "sourceFingerprint",
+  "targetKey",
+  "username",
+  "videoFingerprint",
+]);
+
+const STABLE_PSEUDONYM_KEY_RE = /(?:fingerprint|targetKey)$/i;
+
 const HASH_IDENTIFIER_FIELDS = new Set([
   "id",
   "roomId",
@@ -16,6 +46,7 @@ const HASH_IDENTIFIER_FIELDS = new Set([
   "byUserId",
   "sessionId",
   "clientSignalId",
+  "clientActionId",
   "senderConnectionId",
   "senderMediaSessionId",
   "mediaSessionId",
@@ -70,6 +101,10 @@ const RAW_FRAME_FIELDS = new Set(["raw", "rawFrame", "rawMessage"]);
 
 export function sanitizePrivacySafeData(value: unknown): unknown {
   const serialized = JSON.stringify(value, (key, item) => {
+    if (USER_AUTHORED_CONTENT_FIELDS.has(key)) {
+      return undefined;
+    }
+
     if (SECRET_FIELD_RE.test(key)) {
       if (typeof item === "boolean" || typeof item === "number" || item === null) {
         return item;
@@ -87,6 +122,13 @@ export function sanitizePrivacySafeData(value: unknown): unknown {
 
     if (MEDIA_IDENTIFIER_FIELDS.has(key)) {
       return item === undefined ? item : "<redacted-media-id>";
+    }
+
+    if (
+      (STABLE_PSEUDONYM_FIELDS.has(key) || STABLE_PSEUDONYM_KEY_RE.test(key)) &&
+      typeof item === "string"
+    ) {
+      return hashPrivacySafeId(item);
     }
 
     if (
@@ -134,16 +176,91 @@ export function redactPrivacySafeUrl(value: string): string {
     const url = new URL(value);
     url.username = "";
     url.password = "";
-    const pathname = url.pathname.replace(
+    if (url.pathname === "/%3Credacted-media-source%3E") {
+      return `${url.origin}/<redacted-media-source>`;
+    }
+    const providerPathname = redactProviderContentPath(url);
+    const pathname = (providerPathname ?? url.pathname).replace(
       /\/(room|rooms|join|invite|invites)\/[^/]+/gi,
       (_match, route: string) => `/${route}/<redacted-id>`,
     );
-    return `${url.origin}${pathname}${url.search ? "?<redacted>" : ""}${
-      url.hash ? "#<redacted>" : ""
-    }`;
+    return `${url.origin}${pathname}`;
   } catch {
     return value;
   }
+}
+
+export function redactPrivacySafeMediaSourceUrl(value: string): string {
+  if (!value) {
+    return "";
+  }
+
+  if (/^blob:/i.test(value)) {
+    try {
+      const source = new URL(value.slice("blob:".length));
+      if (source.protocol === "http:" || source.protocol === "https:") {
+        return `blob:${source.origin}/<redacted-media-source>`;
+      }
+    } catch {
+      // Malformed media URLs must fail closed instead of retaining opaque data.
+    }
+    return "blob:<redacted-media-source>";
+  }
+
+  if (/^https?:\/\//i.test(value)) {
+    try {
+      const source = new URL(value);
+      return `${source.origin}/<redacted-media-source>`;
+    } catch {
+      // Malformed media URLs must fail closed instead of retaining opaque data.
+    }
+  }
+
+  return "<redacted-media-source>";
+}
+
+function redactProviderContentPath(url: URL): string | null {
+  const hostname = url.hostname.toLowerCase();
+
+  if (isHostOrSubdomain(hostname, "crunchyroll.com")) {
+    const match = url.pathname.match(
+      /^\/(?:(?<locale>[a-z]{2}(?:-[a-z]{2})?)\/)?watch\/[^/]+(?:\/[^/]*)?\/?$/i,
+    );
+    if (match) {
+      const locale = match.groups?.locale;
+      return `/${locale ? `${locale}/` : ""}watch/<redacted-id>`;
+    }
+  }
+
+  if (isHostOrSubdomain(hostname, "youtu.be")) {
+    const segments = url.pathname.split("/").filter(Boolean);
+    if (segments.length === 1) {
+      return "/<redacted-id>";
+    }
+  }
+
+  if (isHostOrSubdomain(hostname, "youtube.com")) {
+    if (/^\/watch\/?$/i.test(url.pathname)) {
+      return "/watch";
+    }
+    const pathMatch = url.pathname.match(/^\/(shorts|embed)\/[^/]+(?:\/.*)?$/i);
+    if (pathMatch?.[1]) {
+      return `/${pathMatch[1].toLowerCase()}/<redacted-id>`;
+    }
+  }
+
+  if (isHostOrSubdomain(hostname, "youtube-nocookie.com")) {
+    const embedMatch = url.pathname.match(/^\/embed\/[^/]+(?:\/.*)?$/i);
+    if (embedMatch) {
+      return "/embed/<redacted-id>";
+    }
+  }
+
+  return null;
+}
+
+function isHostOrSubdomain(hostname: string, domain: string): boolean {
+  return hostname === domain || hostname.endsWith(`.${domain}`);
 }
 
 function looksLikeRawMediaPayload(value: string): boolean {

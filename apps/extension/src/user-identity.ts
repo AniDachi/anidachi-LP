@@ -126,16 +126,3 @@ export async function signInAndCreateParticipant(): Promise<CurrentParticipantRe
     tokens: response.tokens,
   };
 }
-
-export async function signOutAndClearParticipant(): Promise<CurrentParticipantResult> {
-  const response = await sendAuthCommand("sign-out");
-  if (!response.ok) {
-    throw new Error(response.error);
-  }
-
-  return {
-    participant: null,
-    authenticated: false,
-    tokens: null,
-  };
-}
