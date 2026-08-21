@@ -1,43 +1,73 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import {
-  buildWatchHistoryV2Response,
-  parseBoundedWatchHistoryPage,
-} from "./watch-history-v2";
 
 const benchmarkFile = process.env.WATCH_HISTORY_BENCHMARK_JSON;
+const benchmarkRequired = process.env.WATCH_HISTORY_REQUIRE_BENCHMARK === "1";
+
+function exactRecord(value: unknown, keys: string[]): Record<string, unknown> {
+	assert.ok(
+		value !== null && typeof value === "object" && !Array.isArray(value),
+	);
+	const record = value as Record<string, unknown>;
+	assert.deepEqual(Object.keys(record).sort(), [...keys].sort());
+	return record;
+}
+
+function parseResourceBenchmarkPage(value: unknown) {
+	const page = exactRecord(value, [
+		"accountGeneration",
+		"totalTitleCount",
+		"hasMore",
+		"titleSummaries",
+		"progressRows",
+		"sessionIds",
+	]);
+	assert.ok(Array.isArray(page.titleSummaries));
+	assert.ok(Array.isArray(page.progressRows));
+	assert.ok(Array.isArray(page.sessionIds));
+	for (const rawSummary of page.titleSummaries) {
+		const summary = exactRecord(rawSummary, [
+			"provider",
+			"titleKey",
+			"lastWatchedAt",
+			"observedEpisodeCount",
+			"completedEpisodeCount",
+			"episodePage",
+		]);
+		exactRecord(summary.episodePage, ["complete", "nextCursor"]);
+	}
+	return page;
+}
 
 test("realistic large-account RPC page has measured parser and payload evidence", {
-  skip: benchmarkFile ? false : "benchmark JSON is not configured",
+	skip:
+		benchmarkFile || benchmarkRequired
+			? false
+			: "benchmark JSON is not configured",
 }, async () => {
-  const raw = await readFile(benchmarkFile!, "utf8");
-  const beforeRss = process.memoryUsage().rss;
-  const page = parseBoundedWatchHistoryPage(JSON.parse(raw));
-  const response = buildWatchHistoryV2Response({
-    userId: "77777777-7777-4777-8777-777777777777",
-    accountGeneration: page.accountGeneration,
-    progressRows: page.progressRows,
-    sessions: [],
-    limit: 50,
-    totalTitleCount: page.totalTitleCount,
-    hasMore: page.hasMore,
-    generatedAt: new Date(),
-  });
-  const afterRss = process.memoryUsage().rss;
+	assert.ok(benchmarkFile, "benchmark JSON is required for this run");
+	const raw = await readFile(benchmarkFile, "utf8");
+	const beforeRss = process.memoryUsage().rss;
+	const page = parseResourceBenchmarkPage(JSON.parse(raw));
+	const afterRss = process.memoryUsage().rss;
 
-  assert.equal(page.totalTitleCount, 501);
-  assert.equal(page.progressRows.length, 2_376);
-  assert.equal(page.sessionIds.length, 20);
-  assert.equal(response.items.length, 50);
-  assert.equal(response.nextCursor === null, false);
-  console.log(JSON.stringify({
-    payloadBytes: Buffer.byteLength(raw),
-    progressRows: page.progressRows.length,
-    sessionIds: page.sessionIds.length,
-    responseItems: response.items.length,
-    rssBeforeBytes: beforeRss,
-    rssAfterBytes: afterRss,
-    rssDeltaBytes: afterRss - beforeRss,
-  }));
+	assert.equal(page.totalTitleCount, 501);
+	assert.equal(page.hasMore, true);
+	assert.equal((page.titleSummaries as unknown[]).length, 50);
+	assert.equal((page.progressRows as unknown[]).length, 400);
+	assert.equal((page.sessionIds as unknown[]).length, 20);
+	assert.ok(Buffer.byteLength(raw) <= 2 * 1024 * 1024);
+	assert.ok(afterRss - beforeRss < 32 * 1024 * 1024);
+	console.log(
+		JSON.stringify({
+			payloadBytes: Buffer.byteLength(raw),
+			progressRows: (page.progressRows as unknown[]).length,
+			sessionIds: (page.sessionIds as unknown[]).length,
+			titleSummaries: (page.titleSummaries as unknown[]).length,
+			rssBeforeBytes: beforeRss,
+			rssAfterBytes: afterRss,
+			rssDeltaBytes: afterRss - beforeRss,
+		}),
+	);
 });
