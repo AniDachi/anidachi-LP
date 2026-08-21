@@ -411,6 +411,11 @@ begin
                       pg_catalog.convert_to(
                         pg_catalog.jsonb_build_object(
                           'v', 1,
+                          'userId', p_user_id,
+                          'accountGeneration', (
+                            select settings.history_generation
+                            from canonical_settings as settings
+                          ),
                           'provider', cursor_row.provider,
                           'titleKey', cursor_row.title_key,
                           'observedAt', cursor_row.observed_at,
@@ -480,8 +485,11 @@ set search_path = ''
 as $$
 declare
   cursor_value jsonb;
+  cursor_user_id uuid;
+  cursor_history_generation bigint;
   cursor_observed_at timestamptz;
   cursor_episode_key text;
+  canonical_history_generation bigint;
 begin
   if p_user_id is null
     or p_history_generation is null
@@ -498,6 +506,11 @@ begin
     raise exception 'watch_history_invalid_episode_page' using errcode = '22023';
   end if;
 
+  select settings.history_generation
+  into canonical_history_generation
+  from public.user_watch_settings as settings
+  where settings.user_id = p_user_id;
+
   if p_cursor is not null then
     begin
       cursor_value := pg_catalog.convert_from(
@@ -512,13 +525,18 @@ begin
       raise exception 'watch_history_invalid_episode_cursor' using errcode = '22023';
     end if;
 
-    if (select pg_catalog.count(*) from pg_catalog.jsonb_object_keys(cursor_value)) <> 5
+    if (select pg_catalog.count(*) from pg_catalog.jsonb_object_keys(cursor_value)) <> 7
       or not (cursor_value ? 'v')
+      or not (cursor_value ? 'userId')
+      or not (cursor_value ? 'accountGeneration')
       or not (cursor_value ? 'provider')
       or not (cursor_value ? 'titleKey')
       or not (cursor_value ? 'observedAt')
       or not (cursor_value ? 'episodeKey')
-      or cursor_value ->> 'v' <> '1'
+      or pg_catalog.jsonb_typeof(cursor_value -> 'v') <> 'number'
+      or cursor_value -> 'v' <> pg_catalog.to_jsonb(1)
+      or pg_catalog.jsonb_typeof(cursor_value -> 'userId') <> 'string'
+      or pg_catalog.jsonb_typeof(cursor_value -> 'accountGeneration') <> 'number'
       or pg_catalog.jsonb_typeof(cursor_value -> 'provider') <> 'string'
       or pg_catalog.jsonb_typeof(cursor_value -> 'titleKey') <> 'string'
       or pg_catalog.jsonb_typeof(cursor_value -> 'observedAt') <> 'string'
@@ -528,18 +546,22 @@ begin
       raise exception 'watch_history_invalid_episode_cursor' using errcode = '22023';
     end if;
 
-    if cursor_value ->> 'provider' <> p_provider
-      or cursor_value ->> 'titleKey' <> p_title_key
-    then
-      raise exception 'watch_history_cursor_target_mismatch' using errcode = '22023';
-    end if;
-
     begin
+      cursor_user_id := (cursor_value ->> 'userId')::uuid;
+      cursor_history_generation := (cursor_value ->> 'accountGeneration')::bigint;
       cursor_observed_at := (cursor_value ->> 'observedAt')::timestamptz;
       cursor_episode_key := cursor_value ->> 'episodeKey';
     exception when others then
       raise exception 'watch_history_invalid_episode_cursor' using errcode = '22023';
     end;
+
+    if cursor_user_id is distinct from p_user_id
+      or cursor_history_generation is distinct from canonical_history_generation
+      or (cursor_value ->> 'provider') is distinct from p_provider
+      or (cursor_value ->> 'titleKey') is distinct from p_title_key
+    then
+      raise exception 'watch_history_cursor_target_mismatch' using errcode = '22023';
+    end if;
   end if;
 
   return (
@@ -608,6 +630,8 @@ begin
             pg_catalog.convert_to(
               pg_catalog.jsonb_build_object(
                 'v', 1,
+                'userId', p_user_id,
+                'accountGeneration', canonical_history_generation,
                 'provider', p_provider,
                 'titleKey', p_title_key,
                 'observedAt', row.observed_at,

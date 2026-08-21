@@ -81,6 +81,26 @@ begin
 end;
 $$;
 
+create or replace function pg_temp.watch_v2_patch_cursor(
+  p_cursor text,
+  p_patch jsonb
+)
+returns text
+language sql
+set search_path = ''
+as $$
+  select pg_catalog.encode(
+    pg_catalog.convert_to(
+      (
+        pg_catalog.convert_from(pg_catalog.decode(p_cursor, 'hex'), 'UTF8')::jsonb
+        || p_patch
+      )::text,
+      'UTF8'
+    ),
+    'hex'
+  );
+$$;
+
 select has_column(
   'public',
   'watch_history_title_summaries',
@@ -294,6 +314,216 @@ select is(
   'title counts are exact after progress writes'
 );
 
+update public.watch_episode_progress
+set completed_at = observed_at
+where user_id = '33333333-3333-4333-8333-333333333331'
+  and provider = 'crunchyroll'
+  and title_key = 'bounded-title'
+  and episode_key = 'episode-1';
+select is(
+  (
+    select pg_catalog.concat(
+      summary.observed_episode_count,
+      ':',
+      summary.completed_episode_count
+    )
+    from public.watch_history_title_summaries as summary
+    where summary.user_id = '33333333-3333-4333-8333-333333333331'
+      and summary.history_generation = 1
+      and summary.provider = 'crunchyroll'
+      and summary.title_key = 'bounded-title'
+  ),
+  '12:7',
+  'an incomplete-to-completed transition increments the exact completed count'
+);
+
+update public.watch_episode_progress
+set completed_at = null
+where user_id = '33333333-3333-4333-8333-333333333331'
+  and provider = 'crunchyroll'
+  and title_key = 'bounded-title'
+  and episode_key = 'episode-1';
+select is(
+  (
+    select pg_catalog.concat(
+      summary.observed_episode_count,
+      ':',
+      summary.completed_episode_count
+    )
+    from public.watch_history_title_summaries as summary
+    where summary.user_id = '33333333-3333-4333-8333-333333333331'
+      and summary.history_generation = 1
+      and summary.provider = 'crunchyroll'
+      and summary.title_key = 'bounded-title'
+  ),
+  '12:6',
+  'a completed-to-incomplete transition decrements the exact completed count'
+);
+
+update public.watch_episode_progress
+set observed_at = '2026-08-21 09:59:59+00'
+where user_id = '33333333-3333-4333-8333-333333333331'
+  and provider = 'crunchyroll'
+  and title_key = 'bounded-title'
+  and episode_key = 'episode-12';
+select is(
+  (
+    select pg_catalog.concat(
+      summary.last_watched_at,
+      ':',
+      summary.observed_episode_count,
+      ':',
+      summary.completed_episode_count
+    )
+    from public.watch_history_title_summaries as summary
+    where summary.user_id = '33333333-3333-4333-8333-333333333331'
+      and summary.history_generation = 1
+      and summary.provider = 'crunchyroll'
+      and summary.title_key = 'bounded-title'
+  ),
+  '2026-08-21 10:00:11+00:12:6',
+  'a timestamp regression recomputes the exact title maximum without changing counts'
+);
+update public.watch_episode_progress
+set observed_at = '2026-08-21 10:00:12+00'
+where user_id = '33333333-3333-4333-8333-333333333331'
+  and provider = 'crunchyroll'
+  and title_key = 'bounded-title'
+  and episode_key = 'episode-12';
+
+update public.watch_episode_progress
+set title_key = 'moved-title'
+where user_id = '33333333-3333-4333-8333-333333333331'
+  and provider = 'crunchyroll'
+  and title_key = 'bounded-title'
+  and episode_key = 'episode-1';
+select is(
+  (
+    select pg_catalog.string_agg(
+      summary.title_key || ':' || summary.observed_episode_count || ':' || summary.completed_episode_count,
+      ','
+      order by summary.title_key
+    )
+    from public.watch_history_title_summaries as summary
+    where summary.user_id = '33333333-3333-4333-8333-333333333331'
+      and summary.history_generation = 1
+      and summary.provider = 'crunchyroll'
+      and summary.title_key in ('bounded-title', 'moved-title')
+  ),
+  'bounded-title:11:6,moved-title:1:0',
+  'an identity move recomputes the source and initializes exact destination counts'
+);
+update public.watch_episode_progress
+set title_key = 'bounded-title'
+where user_id = '33333333-3333-4333-8333-333333333331'
+  and provider = 'crunchyroll'
+  and title_key = 'moved-title'
+  and episode_key = 'episode-1';
+select is(
+  (
+    select pg_catalog.concat(
+      pg_catalog.count(*) filter (where summary.title_key = 'moved-title'),
+      ':',
+      pg_catalog.max(summary.observed_episode_count) filter (where summary.title_key = 'bounded-title'),
+      ':',
+      pg_catalog.max(summary.completed_episode_count) filter (where summary.title_key = 'bounded-title')
+    )
+    from public.watch_history_title_summaries as summary
+    where summary.user_id = '33333333-3333-4333-8333-333333333331'
+      and summary.history_generation = 1
+      and summary.provider = 'crunchyroll'
+      and summary.title_key in ('bounded-title', 'moved-title')
+  ),
+  '0:12:6',
+  'moving an identity back removes the empty destination and restores source counts'
+);
+
+update public.watch_episode_progress
+set history_generation = 2
+where user_id = '33333333-3333-4333-8333-333333333331'
+  and history_generation = 1
+  and provider = 'crunchyroll'
+  and title_key = 'bounded-title'
+  and episode_key = 'episode-2';
+select is(
+  (
+    select pg_catalog.string_agg(
+      summary.history_generation || ':' || summary.observed_episode_count || ':' || summary.completed_episode_count,
+      ','
+      order by summary.history_generation
+    )
+    from public.watch_history_title_summaries as summary
+    where summary.user_id = '33333333-3333-4333-8333-333333333331'
+      and summary.provider = 'crunchyroll'
+      and summary.title_key = 'bounded-title'
+  ),
+  '1:11:5,2:1:1',
+  'a generation move recomputes the source and initializes exact destination counts'
+);
+update public.watch_episode_progress
+set history_generation = 1
+where user_id = '33333333-3333-4333-8333-333333333331'
+  and history_generation = 2
+  and provider = 'crunchyroll'
+  and title_key = 'bounded-title'
+  and episode_key = 'episode-2';
+select is(
+  (
+    select pg_catalog.concat(
+      pg_catalog.count(*) filter (where summary.history_generation = 2),
+      ':',
+      pg_catalog.max(summary.observed_episode_count) filter (where summary.history_generation = 1),
+      ':',
+      pg_catalog.max(summary.completed_episode_count) filter (where summary.history_generation = 1)
+    )
+    from public.watch_history_title_summaries as summary
+    where summary.user_id = '33333333-3333-4333-8333-333333333331'
+      and summary.provider = 'crunchyroll'
+      and summary.title_key = 'bounded-title'
+  ),
+  '0:12:6',
+  'moving an episode back removes the empty generation summary and restores current counts'
+);
+
+update public.watch_episode_progress
+set completed_at = observed_at
+where user_id = '33333333-3333-4333-8333-333333333331'
+  and history_generation = 1
+  and provider = 'crunchyroll'
+  and title_key = 'bounded-title'
+  and episode_key in ('episode-1', 'episode-3');
+select is(
+  (
+    select pg_catalog.concat(summary.observed_episode_count, ':', summary.completed_episode_count)
+    from public.watch_history_title_summaries as summary
+    where summary.user_id = '33333333-3333-4333-8333-333333333331'
+      and summary.history_generation = 1
+      and summary.provider = 'crunchyroll'
+      and summary.title_key = 'bounded-title'
+  ),
+  '12:8',
+  'a multi-row update applies every completion transition exactly once'
+);
+update public.watch_episode_progress
+set completed_at = null
+where user_id = '33333333-3333-4333-8333-333333333331'
+  and history_generation = 1
+  and provider = 'crunchyroll'
+  and title_key = 'bounded-title'
+  and episode_key in ('episode-1', 'episode-3');
+select is(
+  (
+    select pg_catalog.concat(summary.observed_episode_count, ':', summary.completed_episode_count)
+    from public.watch_history_title_summaries as summary
+    where summary.user_id = '33333333-3333-4333-8333-333333333331'
+      and summary.history_generation = 1
+      and summary.provider = 'crunchyroll'
+      and summary.title_key = 'bounded-title'
+  ),
+  '12:6',
+  'a reverse multi-row update restores the exact completed count'
+);
+
 create temporary table resource_pages (
   name text primary key,
   page jsonb not null
@@ -335,6 +565,30 @@ select is(
 );
 select is(
   (
+    select pg_catalog.concat(
+      decoded.cursor_value ->> 'userId',
+      ':',
+      decoded.cursor_value ->> 'accountGeneration',
+      ':',
+      (
+        select pg_catalog.count(*)
+        from pg_catalog.jsonb_object_keys(decoded.cursor_value)
+      )
+    )
+    from (
+      select pg_catalog.convert_from(
+        pg_catalog.decode(page #>> '{titleSummaries,0,episodePage,nextCursor}', 'hex'),
+        'UTF8'
+      )::jsonb as cursor_value
+      from resource_pages
+      where name = 'title'
+    ) as decoded
+  ),
+  '33333333-3333-4333-8333-333333333331:1:7',
+  'title continuation binds the owner and canonical account generation in an exact seven-field cursor'
+);
+select is(
+  (
     select pg_catalog.string_agg(row ->> 'episode_key', ',' order by ordinal)
     from resource_pages,
       pg_catalog.jsonb_array_elements(page -> 'progressRows') with ordinality as rows(row, ordinal)
@@ -342,6 +596,104 @@ select is(
   ),
   'episode-12,episode-11,episode-10,episode-9,episode-7,episode-8,episode-6,episode-5',
   'recent slices use observed time then C-collated episode identity'
+);
+
+insert into resource_pages (name, page)
+values (
+  'static-one',
+  public.list_watch_history_v2_title_episodes_page(
+    '33333333-3333-4333-8333-333333333331',
+    1,
+    'crunchyroll',
+    'bounded-title',
+    5,
+    null
+  )
+);
+insert into resource_pages (name, page)
+select
+  'static-two',
+  public.list_watch_history_v2_title_episodes_page(
+    '33333333-3333-4333-8333-333333333331',
+    1,
+    'crunchyroll',
+    'bounded-title',
+    5,
+    page ->> 'nextCursor'
+  )
+from resource_pages
+where name = 'static-one';
+insert into resource_pages (name, page)
+select
+  'static-three',
+  public.list_watch_history_v2_title_episodes_page(
+    '33333333-3333-4333-8333-333333333331',
+    1,
+    'crunchyroll',
+    'bounded-title',
+    5,
+    page ->> 'nextCursor'
+  )
+from resource_pages
+where name = 'static-two';
+
+select is(
+  (
+    select pg_catalog.string_agg(
+      pg_catalog.jsonb_array_length(page -> 'progressRows')::text,
+      ':'
+      order by case name
+        when 'static-one' then 1
+        when 'static-two' then 2
+        else 3
+      end
+    )
+    from resource_pages
+    where name in ('static-one', 'static-two', 'static-three')
+  ),
+  '5:5:2',
+  'an unmodified title traverses in exact 5/5/2 page sizes'
+);
+select is(
+  (
+    select pg_catalog.string_agg(row ->> 'episode_key', ',' order by page_number, ordinal)
+    from resource_pages
+    cross join lateral (
+      select case name
+        when 'static-one' then 1
+        when 'static-two' then 2
+        else 3
+      end as page_number
+    ) as page_order
+    cross join lateral pg_catalog.jsonb_array_elements(page -> 'progressRows')
+      with ordinality as rows(row, ordinal)
+    where name in ('static-one', 'static-two', 'static-three')
+  ),
+  'episode-12,episode-11,episode-10,episode-9,episode-7,episode-8,episode-6,episode-5,episode-4,episode-3,episode-2,episode-1',
+  'an unmodified traversal returns the full canonical ordered identity sequence'
+);
+select is(
+  (
+    select pg_catalog.count(distinct row ->> 'episode_key')
+    from resource_pages
+    cross join lateral pg_catalog.jsonb_array_elements(page -> 'progressRows') as rows(row)
+    where name in ('static-one', 'static-two', 'static-three')
+  ),
+  12::bigint,
+  'an unmodified traversal covers every identity exactly once'
+);
+select is(
+  (
+    select pg_catalog.concat(
+      page ->> 'complete',
+      ':',
+      (page ->> 'nextCursor') is null
+    )
+    from resource_pages
+    where name = 'static-three'
+  ),
+  'true:t',
+  'the terminal static detail page is complete and has no continuation'
 );
 
 insert into resource_pages (name, page)
@@ -429,7 +781,74 @@ select is(
     where name in ('detail-one', 'detail-two')
   ),
   10::bigint,
-  'consecutive detail pages do not skip a static row'
+  'live continuation returns the next five rows without duplicating the moved identity'
+);
+
+select throws_like(
+  $$
+    select public.list_watch_history_v2_title_episodes_page(
+      '33333333-3333-4333-8333-333333333332',
+      1,
+      'crunchyroll',
+      'bounded-title',
+      5,
+      (select page ->> 'nextCursor' from resource_pages where name = 'detail-one')
+    )
+  $$,
+  '%watch_history_cursor_target_mismatch%',
+  'a detail cursor is bound to its owner'
+);
+
+select throws_like(
+  $$
+    select public.list_watch_history_v2_title_episodes_page(
+      '33333333-3333-4333-8333-333333333331',
+      1,
+      'crunchyroll',
+      'bounded-title',
+      5,
+      pg_temp.watch_v2_patch_cursor(
+        (select page ->> 'nextCursor' from resource_pages where name = 'detail-one'),
+        pg_catalog.jsonb_build_object('v', '1')
+      )
+    )
+  $$,
+  '%watch_history_invalid_episode_cursor%',
+  'detail cursors reject a string version'
+);
+select throws_like(
+  $$
+    select public.list_watch_history_v2_title_episodes_page(
+      '33333333-3333-4333-8333-333333333331',
+      1,
+      'crunchyroll',
+      'bounded-title',
+      5,
+      pg_temp.watch_v2_patch_cursor(
+        (select page ->> 'nextCursor' from resource_pages where name = 'detail-one'),
+        pg_catalog.jsonb_build_object('v', null)
+      )
+    )
+  $$,
+  '%watch_history_invalid_episode_cursor%',
+  'detail cursors reject a null version'
+);
+select throws_like(
+  $$
+    select public.list_watch_history_v2_title_episodes_page(
+      '33333333-3333-4333-8333-333333333331',
+      1,
+      'crunchyroll',
+      'bounded-title',
+      5,
+      pg_temp.watch_v2_patch_cursor(
+        (select page ->> 'nextCursor' from resource_pages where name = 'detail-one'),
+        pg_catalog.jsonb_build_object('v', true)
+      )
+    )
+  $$,
+  '%watch_history_invalid_episode_cursor%',
+  'detail cursors reject a boolean version'
 );
 
 select throws_like(
@@ -458,6 +877,8 @@ select throws_like(
         pg_catalog.convert_to(
           pg_catalog.jsonb_build_object(
             'v', 1,
+            'userId', '33333333-3333-4333-8333-333333333331',
+            'accountGeneration', 1,
             'provider', 'crunchyroll',
             'titleKey', 'bounded-title',
             'observedAt', '2026-08-21T10:00:08+00:00',
@@ -485,6 +906,8 @@ select throws_like(
         pg_catalog.convert_to(
           pg_catalog.jsonb_build_object(
             'v', 1,
+            'userId', '33333333-3333-4333-8333-333333333331',
+            'accountGeneration', 1,
             'provider', 'crunchyroll',
             'titleKey', 'bounded-title',
             'observedAt', '2026-08-21T10:00:08+00:00',
@@ -890,6 +1313,19 @@ select is(
   'one active hourly Watch History receipt cleanup job is installed'
 );
 
+insert into resource_pages (name, page)
+values (
+  'before-full-clear',
+  public.list_watch_history_v2_title_episodes_page(
+    '33333333-3333-4333-8333-333333333332',
+    1,
+    'crunchyroll',
+    'two-thousand-title',
+    5,
+    null
+  )
+);
+
 set role service_role;
 select lives_ok(
   $$
@@ -926,6 +1362,20 @@ select is(
   ),
   '2:0:0',
   'full clear leaves zero count projections and durable rows in the new generation'
+);
+select throws_like(
+  $$
+    select public.list_watch_history_v2_title_episodes_page(
+      '33333333-3333-4333-8333-333333333332',
+      2,
+      'crunchyroll',
+      'two-thousand-title',
+      5,
+      (select page ->> 'nextCursor' from resource_pages where name = 'before-full-clear')
+    )
+  $$,
+  '%watch_history_cursor_target_mismatch%',
+  'a cursor issued before full clear is rejected against the new canonical generation'
 );
 select is(
   (

@@ -21,6 +21,35 @@ function exactRecord(value: unknown, keys: string[]): RecordValue {
 	return record;
 }
 
+function parseResourceEpisodeCursor(
+	cursor: string,
+	expected: {
+		userId: string;
+		accountGeneration: number;
+		provider: string;
+		titleKey: string;
+	},
+) {
+	assert.match(cursor, /^(?:[0-9a-f]{2})+$/);
+	const value: unknown = JSON.parse(Buffer.from(cursor, "hex").toString("utf8"));
+	const record = exactRecord(value, [
+		"v",
+		"userId",
+		"accountGeneration",
+		"provider",
+		"titleKey",
+		"observedAt",
+		"episodeKey",
+	]);
+	assert.equal(record.v, 1);
+	assert.equal(record.userId, expected.userId);
+	assert.equal(record.accountGeneration, expected.accountGeneration);
+	assert.equal(record.provider, expected.provider);
+	assert.equal(record.titleKey, expected.titleKey);
+	assert.equal(typeof record.observedAt, "string");
+	assert.equal(typeof record.episodeKey, "string");
+}
+
 function parseResourceTitlePage(value: unknown) {
 	const page = exactRecord(value, [
 		"accountGeneration",
@@ -33,6 +62,7 @@ function parseResourceTitlePage(value: unknown) {
 	assert.ok(Array.isArray(page.titleSummaries));
 	assert.ok(Array.isArray(page.progressRows));
 	assert.ok(Array.isArray(page.sessionIds));
+	assert.equal(typeof page.accountGeneration, "number");
 	for (const rawSummary of page.titleSummaries) {
 		const summary = exactRecord(rawSummary, [
 			"provider",
@@ -51,6 +81,14 @@ function parseResourceTitlePage(value: unknown) {
 			episodePage.nextCursor === null ||
 				typeof episodePage.nextCursor === "string",
 		);
+		if (typeof episodePage.nextCursor === "string") {
+			parseResourceEpisodeCursor(episodePage.nextCursor, {
+				userId: USER_ID,
+				accountGeneration: page.accountGeneration as number,
+				provider: summary.provider as string,
+				titleKey: summary.titleKey as string,
+			});
+		}
 	}
 	return page;
 }
@@ -70,6 +108,15 @@ function parseResourceDetailPage(value: unknown) {
 	assert.ok(page.progressRows.length <= 50);
 	assert.equal(typeof page.complete, "boolean");
 	assert.ok(page.nextCursor === null || typeof page.nextCursor === "string");
+	assert.equal(typeof page.accountGeneration, "number");
+	if (typeof page.nextCursor === "string") {
+		parseResourceEpisodeCursor(page.nextCursor, {
+			userId: USER_ID,
+			accountGeneration: page.accountGeneration as number,
+			provider: page.provider as string,
+			titleKey: page.titleKey as string,
+		});
+	}
 	return page;
 }
 
