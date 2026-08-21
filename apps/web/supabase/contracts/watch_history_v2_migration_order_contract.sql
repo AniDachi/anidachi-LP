@@ -96,7 +96,9 @@ insert into public.watch_history_title_summaries (
   provider,
   title_key,
   stable_id,
-  last_watched_at
+  last_watched_at,
+  observed_episode_count,
+  completed_episode_count
 )
 select
   progress.user_id,
@@ -104,7 +106,9 @@ select
   progress.provider,
   progress.title_key,
   progress.provider || ':' || progress.title_key,
-  pg_catalog.max(progress.observed_at)
+  pg_catalog.max(progress.observed_at),
+  pg_catalog.count(*),
+  pg_catalog.count(*) filter (where progress.completed_at is not null)
 from public.watch_episode_progress as progress
 where progress.user_id = '88888888-8888-4888-8888-888888888888'
 group by
@@ -113,21 +117,28 @@ group by
   progress.provider,
   progress.title_key
 on conflict (user_id, history_generation, provider, title_key)
-do update set last_watched_at = case
-  when watch_history_title_summaries.last_watched_at < excluded.last_watched_at
-    then excluded.last_watched_at
-  else watch_history_title_summaries.last_watched_at
-end;
+do update set
+  last_watched_at = excluded.last_watched_at,
+  observed_episode_count = excluded.observed_episode_count,
+  completed_episode_count = excluded.completed_episode_count;
 
 do $$
 begin
   if (
-    select pg_catalog.concat(pg_catalog.count(*), ':', pg_catalog.max(summary.last_watched_at))
+    select pg_catalog.concat(
+      pg_catalog.count(*),
+      ':',
+      pg_catalog.max(summary.last_watched_at),
+      ':',
+      pg_catalog.max(summary.observed_episode_count),
+      ':',
+      pg_catalog.max(summary.completed_episode_count)
+    )
     from public.watch_history_title_summaries as summary
     where summary.user_id = '88888888-8888-4888-8888-888888888888'
       and summary.provider = 'crunchyroll'
       and summary.title_key = 'migration-order-title'
-  ) <> '1:2102-01-02 00:00:00+00'
+  ) <> '1:2102-01-02 00:00:00+00:2:0'
   then
     raise exception 'watch_history_migration_order_contract_failed';
   end if;
