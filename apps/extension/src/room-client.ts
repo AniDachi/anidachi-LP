@@ -14,6 +14,7 @@ import type { RoomSendDisposition, SignalingTransportReady } from "./media-types
 import {
   issuePrivilegedRoomAuthority,
   type IssuedRoomAuthorityInput,
+  type PrivilegedOverlayIntentDependencies,
   type PrivilegedOverlayContext,
 } from "./privileged-overlay-intent";
 
@@ -95,6 +96,8 @@ const ROOM_KEEPALIVE_TIMEOUT_MS = 45_000;
 const HIBERNATION_KEEPALIVE_PING = "ping";
 const HIBERNATION_KEEPALIVE_PONG = "pong";
 export const ROOM_ENDED_CLOSE_CODE = 4004;
+
+const roomAuthorityRequestSequenceByTab = new Map<number, number>();
 
 export function isTerminalRoomCloseCode(code: number): boolean {
   return code === ROOM_ENDED_CLOSE_CODE;
@@ -333,30 +336,47 @@ export async function endWebsiteRoomFromApi(
   return { endedAt: typeof payload.endedAt === "string" ? payload.endedAt : null };
 }
 
+export interface RoomHttpBackgroundDependencies {
+  issueAuthority?: (
+    input: IssuedRoomAuthorityInput,
+    sender: { tab?: { id?: number } },
+    dependencies?: PrivilegedOverlayIntentDependencies,
+  ) => Promise<PrivilegedOverlayContext | null>;
+  authorityDependencies?: PrivilegedOverlayIntentDependencies;
+  authorityRequestSequences?: Map<number, number>;
+}
+
 export async function handleRoomHttpMessage(
   message: RoomHttpMessage,
   sender: { tab?: { id?: number } } = {},
-  dependencies: {
-    issueAuthority?: (
-      input: IssuedRoomAuthorityInput,
-      sender: { tab?: { id?: number } },
-    ) => Promise<PrivilegedOverlayContext | null>;
-  } = {},
+  dependencies: RoomHttpBackgroundDependencies = {},
 ): Promise<RoomHttpMessageResponse> {
+  const authorityRequest = reserveRoomAuthorityRequest(sender, dependencies.authorityRequestSequences);
+  const issueAuthority = dependencies.issueAuthority ?? issuePrivilegedRoomAuthority;
+  const issueCurrentAuthority = (input: IssuedRoomAuthorityInput) => {
+    if (!isCurrentRoomAuthorityRequest(authorityRequest, dependencies.authorityRequestSequences)) {
+      return Promise.resolve(null);
+    }
+    return issueAuthority(input, sender, {
+      ...dependencies.authorityDependencies,
+      isAuthorityRequestCurrent: () =>
+        isCurrentRoomAuthorityRequest(authorityRequest, dependencies.authorityRequestSequences),
+    });
+  };
   try {
     if (message.command === "create-room") {
       const room = await createWebsiteRoomFromApi(message.accessToken, message.input);
-      const privilegedRoomAuthority = await (dependencies.issueAuthority ?? issuePrivilegedRoomAuthority)(
-        { roomId: room.roomId, roomToken: room.roomToken },
-        sender,
-      );
+      const privilegedRoomAuthority = await issueCurrentAuthority({
+        roomId: room.roomId,
+        roomToken: room.roomToken,
+      });
       return { ok: true, room: { ...room, privilegedRoomAuthority } };
     }
     const connection = await connectWebsiteRoomFromApi(message.roomId, message.accessToken);
-    const privilegedRoomAuthority = await (dependencies.issueAuthority ?? issuePrivilegedRoomAuthority)(
-      { roomId: message.roomId, roomToken: connection.roomToken },
-      sender,
-    );
+    const privilegedRoomAuthority = await issueCurrentAuthority({
+      roomId: message.roomId,
+      roomToken: connection.roomToken,
+    });
     return {
       ok: true,
       connection: { ...connection, privilegedRoomAuthority },
@@ -376,6 +396,30 @@ export async function handleRoomHttpMessage(
       error: error instanceof Error ? error.message : "Room request failed",
     };
   }
+}
+
+export function clearRoomAuthorityRequestForTab(tabId: number): void {
+  roomAuthorityRequestSequenceByTab.delete(tabId);
+}
+
+function reserveRoomAuthorityRequest(
+  sender: { tab?: { id?: number } },
+  sequences: Map<number, number> | undefined,
+): { tabId: number; sequence: number } | null {
+  const tabId = sender.tab?.id;
+  if (!Number.isInteger(tabId) || (tabId ?? -1) < 0) return null;
+  const target = sequences ?? roomAuthorityRequestSequenceByTab;
+  const sequence = (target.get(tabId as number) ?? 0) + 1;
+  target.set(tabId as number, sequence);
+  return { tabId: tabId as number, sequence };
+}
+
+function isCurrentRoomAuthorityRequest(
+  reservation: { tabId: number; sequence: number } | null,
+  sequences: Map<number, number> | undefined,
+): boolean {
+  if (!reservation) return true;
+  return (sequences ?? roomAuthorityRequestSequenceByTab).get(reservation.tabId) === reservation.sequence;
 }
 
 async function sendRoomHttpMessage(message: RoomHttpMessage): Promise<RoomHttpMessageResponse> {

@@ -425,6 +425,41 @@ describe("authenticated room client", () => {
     });
   });
 
+  it("does not let a late room bridge response issue authority over a newer join", async () => {
+    const firstResponse = deferred<Response>();
+    const secondResponse = deferred<Response>();
+    vi.stubGlobal("fetch", vi.fn().mockReturnValueOnce(firstResponse.promise).mockReturnValueOnce(secondResponse.promise));
+    const issueAuthority = vi.fn(async ({ roomId }: { roomId: string }) => ({
+      accountUserId: "user-a",
+      roomId,
+      role: "host" as const,
+      authorityGeneration: roomId === "room-new" ? 2 : 1,
+    }));
+    const sender = { tab: { id: 42 } };
+    const first = handleRoomHttpMessage(
+      connectRoomHttpMessage("room-old", "access-1"),
+      sender,
+      { issueAuthority },
+    );
+    const second = handleRoomHttpMessage(
+      connectRoomHttpMessage("room-new", "access-1"),
+      sender,
+      { issueAuthority },
+    );
+
+    secondResponse.resolve(roomConnectionResponse("room-new"));
+    await expect(second).resolves.toMatchObject({
+      ok: true,
+      connection: { privilegedRoomAuthority: { roomId: "room-new", authorityGeneration: 2 } },
+    });
+    firstResponse.resolve(roomConnectionResponse("room-old"));
+    await expect(first).resolves.toMatchObject({
+      ok: true,
+      connection: { privilegedRoomAuthority: null },
+    });
+    expect(issueAuthority).toHaveBeenCalledTimes(1);
+  });
+
   it("connects rooms through the extension runtime bridge", async () => {
     const sendMessage = vi.fn().mockResolvedValue({
       ok: true,
@@ -979,4 +1014,18 @@ describe("authenticated room client", () => {
 
 function trustedRoomToken(payload: Record<string, unknown>): string {
   return `eyJhbGciOiJIUzI1NiJ9.${btoa(JSON.stringify({ typ: "room", ...payload }))}.signature`;
+}
+
+function roomConnectionResponse(roomId: string): Response {
+  return new Response(JSON.stringify({ roomToken: trustedRoomToken({ sub: "user-a", roomId, role: "host" }) }), {
+    status: 200,
+  });
+}
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((nextResolve) => {
+    resolve = nextResolve;
+  });
+  return { promise, resolve };
 }

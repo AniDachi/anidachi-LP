@@ -18,11 +18,14 @@ import {
   clearPrivilegedOverlayContextForTab,
   handlePrivilegedOverlayIntentMessage,
   isPrivilegedOverlayIntentMessage,
+  type PrivilegedOverlayIntentDependencies,
 } from "../src/privileged-overlay-intent";
 import {
+  clearRoomAuthorityRequestForTab,
   endWebsiteRoomFromApi,
   handleRoomHttpMessage,
   isRoomHttpMessage,
+  type RoomHttpBackgroundDependencies,
 } from "../src/room-client";
 import {
   createRoomInviteNotificationMaintenanceAlarm,
@@ -48,16 +51,39 @@ import {
   reconcileWatchHistoryThenDrain,
 } from "../src/watch-history-client";
 
+export interface PrivilegedRoomRuntimeDependencies {
+  endRoom?: PrivilegedOverlayIntentDependencies["endRoom"];
+  intentDependencies?: Omit<PrivilegedOverlayIntentDependencies, "endRoom">;
+  roomDependencies?: RoomHttpBackgroundDependencies;
+}
+
+/** Narrow runtime route for room authority issuance and privileged room actions. */
+export function dispatchPrivilegedRoomRuntimeMessage(
+  message: unknown,
+  sender: { tab?: { id?: number } },
+  dependencies: PrivilegedRoomRuntimeDependencies = {},
+): Promise<unknown> | null {
+  if (isPrivilegedOverlayIntentMessage(message)) {
+    return handlePrivilegedOverlayIntentMessage(message, sender, {
+      ...dependencies.intentDependencies,
+      endRoom: dependencies.endRoom ?? endWebsiteRoomFromApi,
+    });
+  }
+  if (isRoomHttpMessage(message)) {
+    return handleRoomHttpMessage(message, sender, dependencies.roomDependencies);
+  }
+  return null;
+}
+
 export default defineBackground(() => {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (handleRoomSessionStorageRuntimeMessage(message, sender, sendResponse)) {
       return true;
     }
 
-    if (isPrivilegedOverlayIntentMessage(message)) {
-      void handlePrivilegedOverlayIntentMessage(message, sender, {
-        endRoom: endWebsiteRoomFromApi,
-      }).then(
+    const privilegedRoomResponse = dispatchPrivilegedRoomRuntimeMessage(message, sender);
+    if (privilegedRoomResponse) {
+      void privilegedRoomResponse.then(
         sendResponse,
         (error) =>
           sendResponse({
@@ -75,11 +101,6 @@ export default defineBackground(() => {
 
     if (isRoomInviteNotificationMessage(message)) {
       void handleRoomInviteNotificationMessage(message).then(sendResponse);
-      return true;
-    }
-
-    if (isRoomHttpMessage(message)) {
-      void handleRoomHttpMessage(message, sender).then(sendResponse);
       return true;
     }
 
@@ -159,6 +180,7 @@ export default defineBackground(() => {
 
   chrome.tabs.onRemoved.addListener((tabId) => {
     void clearPrivilegedOverlayContextForTab(tabId).catch(() => undefined);
+    clearRoomAuthorityRequestForTab(tabId);
     void removeRoomSessionForTab(tabId).catch(() => undefined);
   });
 });

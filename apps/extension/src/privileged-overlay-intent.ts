@@ -47,6 +47,7 @@ export interface PrivilegedOverlayIntentDependencies {
   getCurrentSession?: typeof getCurrentExtensionSession;
   signOut?: typeof signOutWithWebsite;
   endRoom?: (roomId: string, accessToken: string) => Promise<{ endedAt: string | null }>;
+  isAuthorityRequestCurrent?: () => boolean;
 }
 
 export interface IssuedRoomAuthorityInput {
@@ -100,6 +101,7 @@ export async function issuePrivilegedRoomAuthority(
 ): Promise<PrivilegedOverlayContext | null> {
   const tabId = getSenderTabId(sender);
   if (tabId === null) return null;
+  if (dependencies.isAuthorityRequestCurrent?.() === false) return null;
 
   const claims = parseTrustedRoomToken(input.roomToken);
   if (!claims || claims.roomId !== input.roomId) return null;
@@ -107,10 +109,12 @@ export async function issuePrivilegedRoomAuthority(
   const getStoredSession = dependencies.getStoredSession ?? getStoredAuthTokens;
   const currentSession = await getStoredSession();
   if (currentSession?.user.id !== claims.sub) return null;
+  if (dependencies.isAuthorityRequestCurrent?.() === false) return null;
 
   const storage = dependencies.sessionStorage ?? getSessionStorage();
   const key = authorityStorageKey(tabId);
   const existing = parsePrivilegedOverlayContext((await storage.get(key))[key]);
+  if (dependencies.isAuthorityRequestCurrent?.() === false) return null;
   const authorityGeneration = (existing?.authorityGeneration ?? 0) + 1;
   const authority: PrivilegedOverlayContext = {
     accountUserId: claims.sub,
