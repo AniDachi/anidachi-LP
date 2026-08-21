@@ -1025,8 +1025,9 @@ of this closeout.
 
 ## Task 9: Bound Room-history Authority Lifetime
 
-**Status (2026-08-21): staging-accepted.** Task 9 is merged to staging and its
-expiry/replay behavior is covered by the completed automated and staging gates.
+**Status (2026-08-21): merged/deployed on staging.** Task 9 runtime and
+migration are merged/deployed on staging; final integrated expiry/replay
+acceptance remains pending in the open Wave 3 matrix.
 
 **Files:**
 
