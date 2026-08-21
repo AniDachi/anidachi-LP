@@ -11,6 +11,7 @@ import {
   fetchWebsiteSessionProbe,
   getFastSessionAndRefreshInBackground,
   getCurrentExtensionSession,
+  handleWebsiteAuthCookieChange,
   isAuthMessage,
   normalizeExtensionRefreshResponse,
   parseExtensionAuthRedirect,
@@ -22,6 +23,8 @@ import {
   shouldClearExtensionSessionForWebsiteProbe,
   shouldClearExtensionSessionForWebsiteCookieChange,
   shouldSyncExtensionSessionForWebsiteCookieChange,
+  type WebsiteSessionProbe,
+  type WebsiteSessionReconciliationDependencies,
 } from "../src/auth-client";
 import {
   LOCAL_EXTENSION_ID,
@@ -61,6 +64,52 @@ function deferred<T>() {
     reject = nextReject;
   });
   return { promise, resolve, reject };
+}
+
+function websiteReconciliationHarness({
+  initial,
+  probe,
+  websiteTokens = null,
+}: {
+  initial: ExtensionAuthTokens | null;
+  probe: WebsiteSessionProbe;
+  websiteTokens?: ExtensionAuthTokens | null;
+}) {
+  let current = initial;
+  const revokeRefreshToken = vi.fn(async (_refreshToken: string) => undefined);
+  const dependencies: WebsiteSessionReconciliationDependencies = {
+    getStored: vi.fn(async () => current),
+    ensureMatches: vi.fn(async (stored) => {
+      if (probe.status === "browser-flow-required") return "browser-flow-required";
+      if (!shouldClearExtensionSessionForWebsiteProbe(stored, probe)) return "matches";
+
+      await revokeRefreshToken(stored.refreshToken);
+      if (current && isSameExtensionAuthSession(stored, current)) {
+        current = null;
+        return "cleared";
+      }
+      return "matches";
+    }),
+    signInSilently: vi.fn(async () => {
+      if (!websiteTokens) return null;
+      current = websiteTokens;
+      return websiteTokens;
+    }),
+    getCurrent: vi.fn(async () => current),
+    revokeRefreshToken,
+  };
+
+  return {
+    dependencies,
+    revokeRefreshToken,
+    current: () => current,
+    clearExactFamily: (expected: ExtensionAuthTokens) => {
+      if (current && isSameExtensionAuthSession(expected, current)) current = null;
+    },
+    install: (tokens: ExtensionAuthTokens) => {
+      current = tokens;
+    },
+  };
 }
 
 describe("extension auth client", () => {
@@ -733,6 +782,109 @@ describe("extension auth client", () => {
     ).resolves.toBeNull();
 
     expect(signInSilently).not.toHaveBeenCalled();
+  });
+
+  it("keeps replacement B when delayed account-A cookie removal observes website B", async () => {
+    const replacement = {
+      ...storedTokens,
+      accessToken: "access-b",
+      refreshToken: "refresh-b",
+      user: { ...storedTokens.user, id: "user-b", email: "b@example.com" },
+    };
+    const harness = websiteReconciliationHarness({
+      initial: storedTokens,
+      probe: { status: "authenticated", user: replacement.user },
+      websiteTokens: replacement,
+    });
+    harness.clearExactFamily(storedTokens);
+    expect(harness.current()).toBeNull();
+    harness.install(replacement);
+
+    await expect(
+      handleWebsiteAuthCookieChange(
+        {
+          removed: true,
+          cause: "explicit",
+          cookie: { name: "anidachi_refresh_token", domain: "localhost" },
+        },
+        harness.dependencies,
+      ),
+    ).resolves.toBeUndefined();
+
+    expect(harness.dependencies.ensureMatches).toHaveBeenCalledWith(replacement);
+    expect(harness.current()).toEqual(replacement);
+    expect(harness.revokeRefreshToken).not.toHaveBeenCalled();
+  });
+
+  it("reconciles a real external website logout against only the exact current family", async () => {
+    const harness = websiteReconciliationHarness({
+      initial: storedTokens,
+      probe: { status: "signed-out" },
+    });
+
+    await expect(
+      handleWebsiteAuthCookieChange(
+        {
+          removed: true,
+          cause: "explicit",
+          cookie: { name: "anidachi_refresh_token", domain: "localhost" },
+        },
+        harness.dependencies,
+      ),
+    ).resolves.toBeUndefined();
+
+    expect(harness.revokeRefreshToken).toHaveBeenCalledOnce();
+    expect(harness.revokeRefreshToken).toHaveBeenCalledWith(storedTokens.refreshToken);
+    expect(harness.current()).toBeNull();
+  });
+
+  it("reconciles a configured cookie-set event and adopts the website session", async () => {
+    const websiteTokens = {
+      ...storedTokens,
+      accessToken: "website-access",
+      refreshToken: "website-refresh",
+    };
+    const harness = websiteReconciliationHarness({
+      initial: null,
+      probe: { status: "authenticated", user: websiteTokens.user },
+      websiteTokens,
+    });
+
+    await expect(
+      handleWebsiteAuthCookieChange(
+        {
+          removed: false,
+          cause: "explicit",
+          cookie: { name: "anidachi_refresh_token", domain: "localhost" },
+        },
+        harness.dependencies,
+      ),
+    ).resolves.toBeUndefined();
+
+    expect(harness.dependencies.signInSilently).toHaveBeenCalledOnce();
+    expect(harness.current()).toEqual(websiteTokens);
+  });
+
+  it.each([
+    ["unknown/network", { status: "unknown" } as const],
+    ["browser-flow-required", { status: "browser-flow-required" } as const],
+  ])("does not blindly clear for a %s website probe", async (_label, probe) => {
+    const harness = websiteReconciliationHarness({ initial: storedTokens, probe });
+
+    await expect(
+      handleWebsiteAuthCookieChange(
+        {
+          removed: true,
+          cause: "explicit",
+          cookie: { name: "anidachi_refresh_token", domain: "localhost" },
+        },
+        harness.dependencies,
+      ),
+    ).resolves.toBeUndefined();
+
+    expect(harness.dependencies.ensureMatches).toHaveBeenCalledWith(storedTokens);
+    expect(harness.current()).toEqual(storedTokens);
+    expect(harness.revokeRefreshToken).not.toHaveBeenCalled();
   });
 
   it("clears extension auth only for configured website refresh cookie removals", () => {

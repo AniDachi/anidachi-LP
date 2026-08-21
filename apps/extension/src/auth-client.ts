@@ -880,26 +880,20 @@ export async function getFastSessionAndRefreshInBackground({
 
 export async function handleWebsiteAuthCookieChange(
   changeInfo: WebAuthCookieChange,
+  reconciliationDependencies: WebsiteSessionReconciliationDependencies =
+    defaultWebsiteReconciliationDependencies,
 ): Promise<void> {
   if (shouldClearExtensionSessionForWebsiteCookieChange(changeInfo)) {
     recordDiagnosticEvent(
       "auth.cookie",
-      "website refresh cookie removed; clearing extension session",
+      "website refresh cookie removed; reconciling extension session",
       {
         cause: changeInfo.cause,
         domain: changeInfo.cookie.domain,
       },
       "warn",
     );
-    const stored = await getStoredAuthTokens();
-    if (stored) {
-      await revokeExtensionRefreshToken(stored.refreshToken).catch(() => undefined);
-      await clearExtensionSessionIfCurrent(stored.refreshToken);
-    }
-    return;
-  }
-
-  if (shouldSyncExtensionSessionForWebsiteCookieChange(changeInfo)) {
+  } else if (shouldSyncExtensionSessionForWebsiteCookieChange(changeInfo)) {
     recordDiagnosticEvent(
       "auth.cookie",
       "website refresh cookie changed; syncing extension session",
@@ -908,8 +902,13 @@ export async function handleWebsiteAuthCookieChange(
         domain: changeInfo.cookie.domain,
       },
     );
-    await reconcileExtensionSessionAgainstWebsite().catch(() => undefined);
+  } else {
+    return;
   }
+
+  await reconcileExtensionSessionAgainstWebsite({}, reconciliationDependencies).catch(
+    () => undefined,
+  );
 }
 
 export async function handleAuthMessage(message: AuthMessage): Promise<AuthMessageResponse> {
