@@ -12,11 +12,10 @@ current staging. No security work from this wave is promoted to `main`;
 production promotion remains separate and out of scope.
 
 Wave 3 Tasks 9-11 implementation is current for staging, and Task 10's normal
-two-profile join/reconnect acceptance passed. Task 11's native logout-bound
-residual implementation and local automated verification are complete in this
-changeset, but its residual scoped re-review, loaded-artifact Chrome/staging
-acceptance, and the integrated Wave 3 matrix remain pending; the Wave 3 Stop is
-open.
+two-profile join/reconnect acceptance passed. Task 11's implementation, local
+automated verification, and scoped review are complete in this changeset, but
+its loaded-artifact Chrome/staging acceptance and the integrated Wave 3 matrix
+remain pending; the Wave 3 Stop is open.
 
 On 2026-08-20, real Google and real Discord consent/callback flows
 succeeded on staging inside the enforced initial ten-minute OAuth transaction
@@ -1155,11 +1154,11 @@ git commit -m "fix(api): bound room WebSocket admission"
 
 ## Task 11: Isolate Diagnostics And Privileged Overlay Actions
 
-**Status (2026-08-21): native logout-bound residual implementation and local
-automated verification complete.** Final local evidence: 98 files,
-1,250/1,250 tests; extension check, changed-path lint, staging build, staging
-validation, and `pnpm dev:check` passed. Residual scoped re-review,
-loaded-artifact Chrome, and staging acceptance remain pending.
+**Status (2026-08-21): implementation, local automated verification, and scoped
+review complete.** Final local evidence: 98 files, 1,250/1,250 tests; extension
+check, changed-path lint, staging build, staging validation, and
+`pnpm dev:check` passed. Loaded-artifact Chrome and staging acceptance remain
+pending.
 
 **Implementation note:** privileged-action `generation` is the background-issued
 authority generation established from authenticated create/connect. It is
@@ -1212,12 +1211,12 @@ git commit -m "fix(extension): isolate diagnostics and privileged actions"
 
 **Current stop status (2026-08-21): open.** Tasks 9-11 implementation is
 current for staging, Task 10's normal two-profile acceptance passed, and Task
-11's native logout-bound residual implementation and local automated
-verification are complete. Task 11 residual scoped re-review, loaded-artifact
-Chrome/staging acceptance, and the integrated Wave 3 matrix remain pending. The
-acceptance proves the normal two-profile join/reconnect path only; it does not
-claim two-network/TURN, production, or exhaustive adversarial staging traffic.
-Stop before history/database work if shared tracking regresses.
+11's implementation, local automated verification, and scoped review are
+complete. Task 11 loaded-artifact Chrome/staging acceptance and the integrated
+Wave 3 matrix remain pending. The acceptance proves the normal two-profile
+join/reconnect path only; it does not claim two-network/TURN, production, or
+exhaustive adversarial staging traffic. Stop before history/database work if
+shared tracking regresses.
 
 ---
 
