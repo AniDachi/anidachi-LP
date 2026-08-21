@@ -119,11 +119,16 @@ Graphify is now available through repo scripts:
 
 ```bash
 pnpm graph:baseline
-pnpm graph:update
+pnpm graph:update:code
 pnpm graph:watch
 pnpm graph:hook:install
 pnpm graph:query "Trace room token flow from web to Worker WebSocket join."
 ```
+
+`pnpm graph:update` remains a compatibility alias for the code-only command.
+After changing docs, plans, images, PDFs, or other semantic inputs, use
+`$graphify . --update` inside Codex; it uses Codex subagents and does not need a
+separate provider API key.
 
 Use it before cross-plane work, especially room/P2P/auth/Worker/CI changes. Do
 not promote Graphify to a required CI check unless the team explicitly accepts

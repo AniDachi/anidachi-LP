@@ -469,11 +469,15 @@ graphify explain "P2PMediaController"
 Graphify is navigation help, not proof. Verify important claims against source
 files, tests, and docs.
 
-After meaningful code or architecture changes:
+After meaningful code-only changes:
 
 ```bash
-pnpm graph:update
+pnpm graph:update:code
 ```
+
+After docs, plans, images, PDFs, or other semantic inputs change, use
+`$graphify . --update` inside Codex. It uses Codex subagents and does not need a
+separate provider API key.
 
 Do not commit local Graphify scratch outputs. Only team graph artifacts from
 `graphify-out/` are allowed when intentionally refreshed: `graph.json`,
