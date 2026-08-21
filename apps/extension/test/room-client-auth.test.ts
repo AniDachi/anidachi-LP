@@ -8,8 +8,6 @@ import {
   createRoom,
   createWebsiteRoomFromApi,
   createWebsiteRoomHeaders,
-  endRoom,
-  endRoomHttpMessage,
   endWebsiteRoomFromApi,
   handleRoomHttpMessage,
   isQuotaExhaustedError,
@@ -352,16 +350,6 @@ describe("authenticated room client", () => {
       },
     });
 
-    expect(isRoomHttpMessage(endRoomHttpMessage("room-3", "access-1"))).toBe(true);
-    const sendMessage = vi.fn().mockResolvedValue({
-      ok: true,
-      ended: { endedAt: "2026-06-13T12:00:00.000Z" },
-    });
-    vi.stubGlobal("chrome", { runtime: { sendMessage } });
-    await expect(endRoom("room-3", "access-1")).resolves.toEqual({
-      endedAt: "2026-06-13T12:00:00.000Z",
-    });
-    expect(sendMessage).toHaveBeenCalledWith(endRoomHttpMessage("room-3", "access-1"));
   });
 
   it("creates rooms through the extension runtime bridge", async () => {

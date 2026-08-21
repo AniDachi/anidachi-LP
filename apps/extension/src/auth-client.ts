@@ -29,7 +29,6 @@ const WEB_REFRESH_TOKEN_COOKIE = "anidachi_refresh_token";
 export type AuthCommand =
   | "sign-in"
   | "sign-in-silent"
-  | "sign-out"
   | "refresh"
   | "get-session"
   | "get-session-fast";
@@ -170,7 +169,6 @@ export function isAuthMessage(value: unknown): value is AuthMessage {
     message.type === AUTH_MESSAGE_TYPE &&
     (message.command === "sign-in" ||
       message.command === "sign-in-silent" ||
-      message.command === "sign-out" ||
       message.command === "refresh" ||
       message.command === "get-session" ||
       message.command === "get-session-fast")
@@ -918,10 +916,6 @@ export async function handleAuthMessage(message: AuthMessage): Promise<AuthMessa
     }
     if (message.command === "sign-in-silent") {
       return { ok: true, tokens: await signInWithWebsiteSilently() };
-    }
-    if (message.command === "sign-out") {
-      await signOutWithWebsite();
-      return { ok: true, tokens: null };
     }
     if (message.command === "refresh") {
       return { ok: true, tokens: await refreshExtensionSession() };

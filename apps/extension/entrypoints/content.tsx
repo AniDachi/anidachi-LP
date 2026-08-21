@@ -401,7 +401,7 @@ export function mountOverlay(
   host.style.display = "block";
   host.style.overflow = "hidden";
 
-  const shadow = host.attachShadow({ mode: "open" });
+  const shadow = host.attachShadow({ mode: "closed" });
   const appRoot = document.createElement("div");
   shadow.append(appRoot);
   const renderer = options.renderer ?? createReactOverlayRenderer(appRoot);

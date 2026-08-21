@@ -93,7 +93,7 @@ export function isTerminalRoomCloseCode(code: number): boolean {
   return code === ROOM_ENDED_CLOSE_CODE;
 }
 
-export type RoomHttpCommand = "create-room" | "connect-room" | "end-room";
+export type RoomHttpCommand = "create-room" | "connect-room";
 
 export type RoomHttpMessage =
   | {
@@ -108,12 +108,7 @@ export type RoomHttpMessage =
       accessToken: string;
       roomId: string;
     }
-  | {
-      type: typeof ROOM_HTTP_MESSAGE_TYPE;
-      command: "end-room";
-      accessToken: string;
-      roomId: string;
-    };
+  ;
 
 export type RoomHttpMessageResponse =
   | { ok: true; room: CreatedRoom }
@@ -212,15 +207,6 @@ export function connectRoomHttpMessage(roomId: string, accessToken: string): Roo
   };
 }
 
-export function endRoomHttpMessage(roomId: string, accessToken: string): RoomHttpMessage {
-  return {
-    type: ROOM_HTTP_MESSAGE_TYPE,
-    command: "end-room",
-    roomId,
-    accessToken,
-  };
-}
-
 export function isRoomHttpMessage(value: unknown): value is RoomHttpMessage {
   if (typeof value !== "object" || value === null) return false;
   const message = value as Partial<RoomHttpMessage>;
@@ -228,7 +214,7 @@ export function isRoomHttpMessage(value: unknown): value is RoomHttpMessage {
   if (message.command === "create-room") {
     return typeof message.accessToken === "string" && isCreateRoomInput(message.input);
   }
-  if (message.command === "connect-room" || message.command === "end-room") {
+  if (message.command === "connect-room") {
     return typeof message.accessToken === "string" && typeof message.roomId === "string";
   }
   return false;
@@ -346,12 +332,6 @@ export async function handleRoomHttpMessage(
     if (message.command === "create-room") {
       return { ok: true, room: await createWebsiteRoomFromApi(message.accessToken, message.input) };
     }
-    if (message.command === "end-room") {
-      return {
-        ok: true,
-        ended: await endWebsiteRoomFromApi(message.roomId, message.accessToken),
-      };
-    }
     return {
       ok: true,
       connection: await connectWebsiteRoomFromApi(message.roomId, message.accessToken),
@@ -420,21 +400,6 @@ export async function connectWebsiteRoom(
   return response.connection;
 }
 
-export async function endRoom(
-  roomId: string,
-  accessToken: string,
-): Promise<{ endedAt: string | null }> {
-  logDebug("room.http", "end room through background bridge", {
-    webHttpBase: WEB_HTTP_BASE,
-    roomId,
-  });
-  const response = assertRoomHttpResponse(
-    await sendRoomHttpMessage(endRoomHttpMessage(roomId, accessToken)),
-  );
-  if (!response.ok) throw bridgeError(response);
-  if (!("ended" in response)) throw new Error("Room bridge response is missing ended");
-  return response.ended;
-}
 
 export class RoomClient {
   private currentSenderConnectionId = createRoomConnectionId();

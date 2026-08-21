@@ -16,18 +16,14 @@ export interface DebugEntry {
   data?: unknown;
 }
 
-const STORAGE_KEY = "anidachi:debug-log:v1";
-const CONSOLE_DEBUG_STORAGE_KEY = "anidachi:debug-console";
 const MAX_ENTRIES = 1200;
 const COMPACT_ENTRIES = 350;
-const PERSIST_DEBOUNCE_MS = 2000;
+const CONSOLE_DEBUG_STORAGE_KEY = "anidachi:debug-console";
 const MAX_ENTRY_AGE_MS = 15 * 60_000;
 const STARTED_AT = performance.now();
 
 let sequence = 0;
-let entries: DebugEntry[] = loadEntries();
-let persistTimer: ReturnType<typeof setTimeout> | null = null;
-let persistScheduled = false;
+let entries: DebugEntry[] = [];
 
 export function logDebug(scope: string, message: string, data?: unknown): void {
   const entry: DebugEntry = {
@@ -36,13 +32,12 @@ export function logDebug(scope: string, message: string, data?: unknown): void {
     elapsedMs: Math.round(performance.now() - STARTED_AT),
     scope: sanitizePrivacySafeText(scope),
     message: sanitizePrivacySafeText(message),
-    ...(data === undefined ? {} : { data: sanitizePrivacySafeData(data) }),
+    ...(data === undefined ? {} : { data: sanitizeRoutineDebugData(data) }),
   };
 
   entries.push(entry);
   pruneEntries();
 
-  persistEntries();
   if (shouldPrintDebugToConsole()) {
     console.info("[Anidachi Debug]", entry.scope, entry.message, entry.data ?? "");
   }
@@ -55,7 +50,6 @@ export function getDebugEntries(): DebugEntry[] {
 export function clearDebugLog(): void {
   entries = [];
   sequence = 0;
-  writeEntriesToStorage();
   logDebug("debug", "cleared");
 }
 
@@ -67,7 +61,6 @@ export function getDebugLogText(): string {
       generatedAt: new Date().toISOString(),
       page: {
         url: redactPrivacySafeUrl(location.href),
-        title: document.title,
         visibilityState: document.visibilityState,
       },
       runtime: {
@@ -104,7 +97,6 @@ export function getCompactDebugLogText(): string {
       generatedAt: new Date().toISOString(),
       page: {
         url: redactPrivacySafeUrl(location.href),
-        title: document.title,
         visibilityState: document.visibilityState,
       },
       runtime: {
@@ -209,7 +201,6 @@ export function roomEventDebugSnapshot(event: ClientEvent | ServerEvent): Record
               videoFingerprint: event.source.videoFingerprint,
               sourceUrl: redactUrl(event.source.sourceUrl),
               canonicalUrl: redactUrl(event.source.canonicalUrl),
-              title: event.source.title,
             }
           : undefined,
       };
@@ -233,7 +224,6 @@ export function roomEventDebugSnapshot(event: ClientEvent | ServerEvent): Record
           videoFingerprint: event.source.videoFingerprint,
           sourceUrl: redactUrl(event.source.sourceUrl),
           canonicalUrl: redactUrl(event.source.canonicalUrl),
-          title: event.source.title,
         },
         previousSource: event.previousSource
           ? {
@@ -241,7 +231,6 @@ export function roomEventDebugSnapshot(event: ClientEvent | ServerEvent): Record
               videoFingerprint: event.previousSource.videoFingerprint,
               sourceUrl: redactUrl(event.previousSource.sourceUrl),
               canonicalUrl: redactUrl(event.previousSource.canonicalUrl),
-              title: event.previousSource.title,
             }
           : undefined,
         hostState: playbackStateDebugSnapshot(event.hostState),
@@ -258,7 +247,6 @@ export function roomEventDebugSnapshot(event: ClientEvent | ServerEvent): Record
                 videoFingerprint: event.source.videoFingerprint,
                 sourceUrl: redactUrl(event.source.sourceUrl),
                 canonicalUrl: redactUrl(event.source.canonicalUrl),
-                title: event.source.title,
               }
             : undefined,
       };
@@ -288,9 +276,7 @@ export function roomEventDebugSnapshot(event: ClientEvent | ServerEvent): Record
         type: event.type,
         roomId: "roomId" in event ? event.roomId : event.reaction.roomId,
         reaction: {
-          userId: event.reaction.userId,
           emoji: event.reaction.emoji,
-          text: event.reaction.text,
           videoTime: round(event.reaction.videoTime),
         },
       };
@@ -364,9 +350,7 @@ export function elementDebugSnapshot(element: Element | null): Record<string, un
     id: element.id || undefined,
     className: cleanClassName(element.getAttribute("class")),
     testId: element.getAttribute("data-testid") ?? undefined,
-    aria: element.getAttribute("aria-label") ?? undefined,
     role: element.getAttribute("role") ?? undefined,
-    text: cleanText(element.textContent),
     rect: rectSnapshot(element),
   };
 }
@@ -378,7 +362,6 @@ export function inputDebugSnapshot(input: HTMLInputElement | null): Record<strin
 
   return {
     ...elementDebugSnapshot(input),
-    value: input.value,
     min: input.min,
     max: input.max,
     step: input.step,
@@ -410,25 +393,6 @@ export function controlsDebugSnapshot(container: HTMLElement): Array<Record<stri
     .slice(0, 80);
 }
 
-function loadEntries(): DebugEntry[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return [];
-    }
-
-    const parsed = JSON.parse(raw) as DebugEntry[];
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-
-    sequence = parsed.reduce((max, entry) => Math.max(max, entry.id), 0);
-    return pruneDebugEntries(parsed).slice(-MAX_ENTRIES).map(sanitizeDebugEntry);
-  } catch {
-    return [];
-  }
-}
-
 function pruneEntries(): void {
   entries = pruneDebugEntries(entries).slice(-MAX_ENTRIES);
 }
@@ -439,40 +403,6 @@ function pruneDebugEntries(source: DebugEntry[]): DebugEntry[] {
     const timestamp = Date.parse(entry.at);
     return Number.isNaN(timestamp) || timestamp >= cutoff;
   });
-}
-
-function writeEntriesToStorage(): void {
-  persistScheduled = false;
-  if (persistTimer !== null) {
-    clearTimeout(persistTimer);
-    persistTimer = null;
-  }
-
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries.map(sanitizeDebugEntry)));
-  } catch {
-    // Ignore storage pressure; debug export is best-effort in content scripts.
-  }
-}
-
-function persistEntries(): void {
-  // logDebug fires very frequently during an active session (sync ticks, P2P
-  // signals, ICE/connection events, the reconcile loop…), and serialising the
-  // whole buffer plus a synchronous localStorage write on every call is a real
-  // main-thread cost — multiplied by every frame the content script runs in.
-  // Debounce so bursts collapse into at most one write per interval.
-  if (persistScheduled) {
-    return;
-  }
-
-  persistScheduled = true;
-  persistTimer = setTimeout(writeEntriesToStorage, PERSIST_DEBOUNCE_MS);
-}
-
-// Best-effort flush so the most recent entries survive a normal navigation.
-// A hard crash won't fire this, but debug export is best-effort anyway.
-if (typeof window !== "undefined") {
-  window.addEventListener("pagehide", writeEntriesToStorage);
 }
 
 function shouldPrintDebugToConsole(): boolean {
@@ -495,8 +425,25 @@ function sanitizeDebugEntry(entry: DebugEntry): DebugEntry {
     ...entry,
     scope: sanitizePrivacySafeText(entry.scope),
     message: sanitizePrivacySafeText(entry.message),
-    ...(entry.data === undefined ? {} : { data: sanitizePrivacySafeData(entry.data) }),
+    ...(entry.data === undefined ? {} : { data: sanitizeRoutineDebugData(entry.data) }),
   };
+}
+
+function sanitizeRoutineDebugData(value: unknown): unknown {
+  return sanitizePrivacySafeData(stripRoutineContent(value));
+}
+
+function stripRoutineContent(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(stripRoutineContent);
+  if (!value || typeof value !== "object") return value;
+  const result: Record<string, unknown> = {};
+  for (const [key, nested] of Object.entries(value)) {
+    if (/^(?:title|text|userText|accessToken|refreshToken|token|attestation|roomHistoryAttestation)$/i.test(key)) {
+      continue;
+    }
+    result[key] = stripRoutineContent(nested);
+  }
+  return result;
 }
 
 function isUsefulCompactEntry(entry: DebugEntry): boolean {
@@ -704,10 +651,6 @@ function readBuffered(video: HTMLVideoElement): Array<[number, number]> {
 
 function cleanClassName(className: string | null): string | undefined {
   return className?.trim().replace(/\s+/g, " ").slice(0, 140) || undefined;
-}
-
-function cleanText(text: string | null): string | undefined {
-  return text?.trim().replace(/\s+/g, " ").slice(0, 90) || undefined;
 }
 
 function finiteOrNull(value: number): number | null {

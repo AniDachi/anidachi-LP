@@ -67,6 +67,41 @@ describe("debug log", () => {
     expect(info).not.toHaveBeenCalled();
   });
 
+  it("keeps the bounded page diagnostics buffer out of page localStorage", () => {
+    localStorage.clear();
+
+    logDebug("room.ws", "connected", { roomId: "room-private" });
+    window.dispatchEvent(new Event("pagehide"));
+
+    expect(localStorage.getItem("anidachi:debug-log:v1")).toBeNull();
+  });
+
+  it("omits page titles, reaction text, user text, tokens, and attestations from routine diagnostics", () => {
+    document.title = "Private episode title";
+    const token = "access-token-private";
+    const attestation = "header.private-payload.signature";
+
+    logDebug("reaction", "sent", {
+      text: "Private reaction text",
+      title: "Private episode title",
+      userText: "Private user text",
+      accessToken: token,
+      attestation,
+    });
+
+    const exported = getDebugLogText();
+    for (const privateValue of [
+      "Private episode title",
+      "Private reaction text",
+      "Private user text",
+      token,
+      attestation,
+      "private-payload",
+    ]) {
+      expect(exported).not.toContain(privateValue);
+    }
+  });
+
   it("prints debug entries when console debug is explicitly enabled", () => {
     clearDebugLog();
     localStorage.setItem("anidachi:debug-console", "1");

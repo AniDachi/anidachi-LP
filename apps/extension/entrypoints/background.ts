@@ -14,6 +14,11 @@ import {
   normalizeExtensionAuthTokens,
 } from "../src/auth-tokens";
 import { handleDiagnosticMessage, isDiagnosticMessage } from "../src/diagnostic-log";
+import {
+  clearPrivilegedOverlayContextForTab,
+  handlePrivilegedOverlayIntentMessage,
+  isPrivilegedOverlayIntentMessage,
+} from "../src/privileged-overlay-intent";
 import { handleRoomHttpMessage, isRoomHttpMessage } from "../src/room-client";
 import {
   createRoomInviteNotificationMaintenanceAlarm,
@@ -42,6 +47,18 @@ import {
 export default defineBackground(() => {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (handleRoomSessionStorageRuntimeMessage(message, sender, sendResponse)) {
+      return true;
+    }
+
+    if (isPrivilegedOverlayIntentMessage(message)) {
+      void handlePrivilegedOverlayIntentMessage(message, sender).then(
+        sendResponse,
+        (error) =>
+          sendResponse({
+            ok: false,
+            error: error instanceof Error ? error.message : "Privileged overlay action failed",
+          }),
+      );
       return true;
     }
 
@@ -135,6 +152,7 @@ export default defineBackground(() => {
   void createRoomInviteNotificationMaintenanceAlarm().catch(() => undefined);
 
   chrome.tabs.onRemoved.addListener((tabId) => {
+    clearPrivilegedOverlayContextForTab(tabId);
     void removeRoomSessionForTab(tabId).catch(() => undefined);
   });
 });

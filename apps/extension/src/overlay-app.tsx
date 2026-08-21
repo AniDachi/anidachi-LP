@@ -22,6 +22,7 @@ import type {
   CSSProperties,
   FormEvent,
   PointerEvent,
+  MouseEvent as ReactMouseEvent,
   KeyboardEvent as ReactKeyboardEvent,
   WheelEvent as ReactWheelEvent,
   SyntheticEvent,
@@ -124,7 +125,6 @@ import { PlaybackSyncController } from "./playback-sync-controller";
 import {
   connectWebsiteRoom,
   createRoom,
-  endRoom,
   isQuotaExhaustedError,
   isTerminalRoomJoinError,
   RoomClient,
@@ -134,6 +134,12 @@ import {
 import { applyRoomUsageSnapshot, roomQuotaRemainingSeconds } from "./room-quota-display";
 import { selectVoiceRailParticipants, shouldRenderRoomRail } from "./room-rail-intent";
 import { getRoomReconnectDelayMs } from "./room-reconnect";
+import {
+  requestPrivilegedOverlayAction,
+  requestQuotaRoomEnd,
+  syncPrivilegedOverlayContext,
+  type PrivilegedOverlayContext,
+} from "./privileged-overlay-intent";
 import {
   clearRoomSession,
   clearRoomSessionIfMatch,
@@ -184,7 +190,6 @@ import {
   EXTENSION_CONTEXT_INVALIDATED_MESSAGE,
   isExtensionContextInvalidatedError,
   signInAndCreateParticipant,
-  signOutAndClearParticipant,
   trySilentSignIn,
 } from "./user-identity";
 import {
@@ -1347,6 +1352,31 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       : "No media seats";
   const roomPeopleCountText = `${participantCount}/${roomParticipantLimit} in room`;
   const isHost = currentParticipant?.role === "host";
+  const privilegedOverlayContext = useMemo<PrivilegedOverlayContext>(() => {
+    const accountUserId = accountUser?.id ?? null;
+    if (!accountUserId || !roomId || !currentParticipant || roomGeneration <= 0) {
+      return {
+        accountUserId,
+        roomId: null,
+        role: null,
+        roomGeneration: null,
+      };
+    }
+    return {
+      accountUserId,
+      roomId,
+      role: isHost ? "host" : "guest",
+      roomGeneration,
+    };
+  }, [accountUser?.id, currentParticipant, isHost, roomGeneration, roomId]);
+
+  useEffect(() => {
+    void syncPrivilegedOverlayContext(privilegedOverlayContext).catch((error) => {
+      logDebug("overlay.privileged", "context sync failed", {
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    });
+  }, [privilegedOverlayContext]);
 
   useEffect(() => {
     if (!roomId || !isHost) {
@@ -3071,23 +3101,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
     quotaEndTriggeredRef.current = true;
     const exhaustedRoomId = roomIdRef.current;
-    const cachedAccessToken = authAccessTokenRef.current;
     logDebug("overlay.room", "free host quota exhausted; ending session", {
       resetAt: roomQuota?.resetAt ?? null,
       roomId: exhaustedRoomId,
     });
     if (exhaustedRoomId) {
       void (async () => {
-        const accessToken = (await getFreshAuthAccessToken("quota-exhausted")) ?? cachedAccessToken;
-        if (!accessToken) {
-          logDebug("overlay.room", "quota exhausted end skipped without access token", {
-            roomId: exhaustedRoomId,
-          });
-          return;
-        }
-
         try {
-          await endRoom(exhaustedRoomId, accessToken);
+          await requestQuotaRoomEnd(privilegedOverlayContext);
           logDebug("overlay.room", "quota exhausted room ended on server", {
             roomId: exhaustedRoomId,
           });
@@ -3101,9 +3122,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     }
     terminateRoomSession(quotaExhaustedMessage(roomQuota?.resetAt));
   }, [
-    getFreshAuthAccessToken,
     quotaMeteringActive,
     quotaRemainingSeconds,
+    privilegedOverlayContext,
     roomQuota,
     terminateRoomSession,
   ]);
@@ -3160,7 +3181,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     }
   }, [applyParticipantIdentity]);
 
-  const handleSignOut = useCallback(async () => {
+  const handleSignOut = useCallback(async (event: ReactMouseEvent<HTMLButtonElement>) => {
     setAuthBusy(true);
     setAuthMessage(null);
     suppressSilentSignInUntilRef.current =
@@ -3168,7 +3189,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     try {
       roomReconnectSuppressedRef.current = true;
       clearRoomReconnectTimer();
-      applyParticipantIdentity(await signOutAndClearParticipant(), "sign-out", false);
+      await requestPrivilegedOverlayAction(event, "sign-out", privilegedOverlayContext);
+      applyParticipantIdentity(await createCurrentParticipant(), "sign-out", false);
       clientRef.current.close();
       releaseRoomTabLock();
       roomIdRef.current = null;
@@ -3183,7 +3205,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     } finally {
       setAuthBusy(false);
     }
-  }, [applyParticipantIdentity, clearRoomQuotaDisplay, clearRoomReconnectTimer]);
+  }, [
+    applyParticipantIdentity,
+    clearRoomQuotaDisplay,
+    clearRoomReconnectTimer,
+    privilegedOverlayContext,
+  ]);
 
   useEffect(() => {
     applyParticipantIdentityRef.current = applyParticipantIdentity;
@@ -3546,7 +3573,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     }
   };
 
-  const handleEndRoom = async () => {
+  const handleEndRoom = async (event: ReactMouseEvent<HTMLButtonElement>) => {
     if (roomEndPending) {
       return;
     }
@@ -3556,14 +3583,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     setRoomEndPending(true);
     try {
       const activeRoomId = roomIdRef.current;
-      const accessToken = await getFreshAuthAccessToken("end-room");
-      if (!activeRoomId || !isHost || !accessToken) {
+      if (!activeRoomId || !isHost) {
         return;
       }
 
       roomReconnectSuppressedRef.current = true;
       clearRoomReconnectTimer();
-      await endRoom(activeRoomId, accessToken);
+      await requestPrivilegedOverlayAction(event, "end-room", privilegedOverlayContext);
       clientRef.current.close();
       releaseRoomTabLock();
       roomIdRef.current = null;
@@ -3594,7 +3620,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     }
   };
 
-  const handleRequestEndRoom = async () => {
+  const handleRequestEndRoom = async (event: ReactMouseEvent<HTMLButtonElement>) => {
     if (roomEndPending || !roomId || !isHost) {
       return;
     }
@@ -3611,7 +3637,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       return;
     }
 
-    await handleEndRoom();
+    await handleEndRoom(event);
   };
 
   const handleLeaveRoom = async () => {
@@ -3831,7 +3857,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       const response = await saveDiagnosticsFromPage(mode, {
         mode,
         url: location.href,
-        title: document.title,
         visibilityState: document.visibilityState,
         adapterId: adapter.id,
         roomId,
