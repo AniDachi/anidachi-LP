@@ -1053,6 +1053,11 @@ refresh replay/concurrency, cleanup, full web/extension/protocol checks, and a
 documented staging reauthentication consequence. Stop if any legacy token is
 accepted cross-channel.
 
+Status: Wave 1 and Wave 2 are complete on staging; Tasks 5-8 are
+staging-accepted. Wave 2 Stop is closed, and Wave 3 may proceed from
+current staging. No security work from this wave is promoted to `main`;
+production promotion remains separate and out of scope.
+
 **Current stop status (2026-08-20): closed.** Tasks 5-8 satisfy their staging
 acceptance boundaries, including Task 5's attended real Google and Discord
 consent/callback acceptance, exact channel rejection, refresh
