@@ -674,7 +674,16 @@ const defaultWebsiteReconciliationDependencies: WebsiteSessionReconciliationDepe
   revokeRefreshToken: revokeExtensionRefreshToken,
 };
 
-let websiteReconciliationInFlight: Promise<ExtensionAuthTokens | null> | null = null;
+type WebsiteSessionReconciliationPass = {
+  adoptIfMissing: boolean;
+  dependencies: WebsiteSessionReconciliationDependencies;
+  promise: Promise<ExtensionAuthTokens | null>;
+  resolve: (tokens: ExtensionAuthTokens | null) => void;
+  reject: (error: unknown) => void;
+};
+
+let activeWebsiteReconciliation: WebsiteSessionReconciliationPass | null = null;
+let trailingWebsiteReconciliation: WebsiteSessionReconciliationPass | null = null;
 
 async function performWebsiteSessionReconciliation(
   options: { adoptIfMissing: boolean },
@@ -705,20 +714,66 @@ export function reconcileExtensionSessionAgainstWebsite(
   options: { adoptIfMissing?: boolean } = {},
   dependencies: WebsiteSessionReconciliationDependencies = defaultWebsiteReconciliationDependencies,
 ): Promise<ExtensionAuthTokens | null> {
-  if (websiteReconciliationInFlight) {
-    return websiteReconciliationInFlight;
+  const adoptIfMissing = options.adoptIfMissing ?? true;
+  if (!activeWebsiteReconciliation) {
+    const pass = createWebsiteSessionReconciliationPass(adoptIfMissing, dependencies);
+    startWebsiteSessionReconciliationPass(pass);
+    return pass.promise;
   }
 
-  const operation = performWebsiteSessionReconciliation(
-    { adoptIfMissing: options.adoptIfMissing ?? true },
-    dependencies,
-  ).finally(() => {
-    if (websiteReconciliationInFlight === operation) {
-      websiteReconciliationInFlight = null;
-    }
+  if (!trailingWebsiteReconciliation) {
+    trailingWebsiteReconciliation = createWebsiteSessionReconciliationPass(
+      adoptIfMissing,
+      dependencies,
+    );
+  } else {
+    trailingWebsiteReconciliation.adoptIfMissing ||= adoptIfMissing;
+    trailingWebsiteReconciliation.dependencies = dependencies;
+  }
+  return trailingWebsiteReconciliation.promise;
+}
+
+function createWebsiteSessionReconciliationPass(
+  adoptIfMissing: boolean,
+  dependencies: WebsiteSessionReconciliationDependencies,
+): WebsiteSessionReconciliationPass {
+  let resolve!: (tokens: ExtensionAuthTokens | null) => void;
+  let reject!: (error: unknown) => void;
+  const promise = new Promise<ExtensionAuthTokens | null>((nextResolve, nextReject) => {
+    resolve = nextResolve;
+    reject = nextReject;
   });
-  websiteReconciliationInFlight = operation;
-  return operation;
+  return { adoptIfMissing, dependencies, promise, resolve, reject };
+}
+
+function startWebsiteSessionReconciliationPass(
+  pass: WebsiteSessionReconciliationPass,
+): void {
+  activeWebsiteReconciliation = pass;
+  void performWebsiteSessionReconciliation(
+    { adoptIfMissing: pass.adoptIfMissing },
+    pass.dependencies,
+  ).then(
+    (tokens) => finishWebsiteSessionReconciliationPass(pass, { ok: true, tokens }),
+    (error) => finishWebsiteSessionReconciliationPass(pass, { ok: false, error }),
+  );
+}
+
+function finishWebsiteSessionReconciliationPass(
+  pass: WebsiteSessionReconciliationPass,
+  outcome:
+    | { ok: true; tokens: ExtensionAuthTokens | null }
+    | { ok: false; error: unknown },
+): void {
+  if (activeWebsiteReconciliation !== pass) return;
+
+  activeWebsiteReconciliation = null;
+  const next = trailingWebsiteReconciliation;
+  trailingWebsiteReconciliation = null;
+  if (next) startWebsiteSessionReconciliationPass(next);
+
+  if (outcome.ok) pass.resolve(outcome.tokens);
+  else pass.reject(outcome.error);
 }
 
 async function runWebsiteAuthFlow(interactive: boolean): Promise<ExtensionAuthTokens | null> {

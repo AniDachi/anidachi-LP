@@ -784,6 +784,208 @@ describe("extension auth client", () => {
     expect(signInSilently).not.toHaveBeenCalled();
   });
 
+  it("runs a trailing logout reconciliation when removal arrives during an authenticated probe", async () => {
+    const firstProbe = deferred<void>();
+    const logoutProbe = deferred<void>();
+    let current: ExtensionAuthTokens | null = storedTokens;
+    let probeCalls = 0;
+    let activeProbes = 0;
+    let maxActiveProbes = 0;
+    const revokeRefreshToken = vi.fn(async (_refreshToken: string) => undefined);
+    const dependencies: WebsiteSessionReconciliationDependencies = {
+      getStored: vi.fn(async () => current),
+      ensureMatches: vi.fn(async (stored) => {
+        probeCalls += 1;
+        activeProbes += 1;
+        maxActiveProbes = Math.max(maxActiveProbes, activeProbes);
+        try {
+          if (probeCalls === 1) {
+            await firstProbe.promise;
+            return "matches";
+          }
+
+          await logoutProbe.promise;
+          await revokeRefreshToken(stored.refreshToken);
+          if (current && isSameExtensionAuthSession(stored, current)) current = null;
+          return "cleared";
+        } finally {
+          activeProbes -= 1;
+        }
+      }),
+      signInSilently: vi.fn(async () => null),
+      getCurrent: vi.fn(async () => current),
+      revokeRefreshToken,
+    };
+
+    const initial = reconcileExtensionSessionAgainstWebsite(
+      { adoptIfMissing: false },
+      dependencies,
+    );
+    await vi.waitFor(() => expect(probeCalls).toBe(1));
+
+    let removalSettled = false;
+    const removal = handleWebsiteAuthCookieChange(
+      {
+        removed: true,
+        cause: "explicit",
+        cookie: { name: "anidachi_refresh_token", domain: "localhost" },
+      },
+      dependencies,
+    ).then(() => {
+      removalSettled = true;
+    });
+    await Promise.resolve();
+    expect(removalSettled).toBe(false);
+    expect(probeCalls).toBe(1);
+
+    firstProbe.resolve();
+    await expect(initial).resolves.toEqual(storedTokens);
+    await vi.waitFor(() => expect(probeCalls).toBe(2));
+    expect(removalSettled).toBe(false);
+    expect(maxActiveProbes).toBe(1);
+
+    logoutProbe.resolve();
+    await removal;
+    expect(current).toBeNull();
+    expect(revokeRefreshToken).toHaveBeenCalledOnce();
+    expect(revokeRefreshToken).toHaveBeenCalledWith(storedTokens.refreshToken);
+    expect(probeCalls).toBe(2);
+    expect(maxActiveProbes).toBe(1);
+  });
+
+  it("OR-merges overlapping cookie-set adoption into one trailing startup pass", async () => {
+    const startupRead = deferred<void>();
+    const adoption = deferred<void>();
+    const adopted = {
+      ...storedTokens,
+      accessToken: "adopted-access",
+      refreshToken: "adopted-refresh",
+    };
+    let current: ExtensionAuthTokens | null = null;
+    let storageReads = 0;
+    let activeReads = 0;
+    let maxActiveReads = 0;
+    const dependencies: WebsiteSessionReconciliationDependencies = {
+      getStored: vi.fn(async () => {
+        storageReads += 1;
+        activeReads += 1;
+        maxActiveReads = Math.max(maxActiveReads, activeReads);
+        try {
+          if (storageReads === 1) await startupRead.promise;
+          return current;
+        } finally {
+          activeReads -= 1;
+        }
+      }),
+      ensureMatches: vi.fn(async (_stored: ExtensionAuthTokens) => "matches" as const),
+      signInSilently: vi.fn(async () => {
+        await adoption.promise;
+        current = adopted;
+        return adopted;
+      }),
+      getCurrent: vi.fn(async () => current),
+      revokeRefreshToken: vi.fn(async (_refreshToken: string) => undefined),
+    };
+
+    const startup = reconcileExtensionSessionAgainstWebsite(
+      { adoptIfMissing: false },
+      dependencies,
+    );
+    await vi.waitFor(() => expect(storageReads).toBe(1));
+
+    let firstCookieSettled = false;
+    let secondCookieSettled = false;
+    let laterStartupSettled = false;
+    const cookieChange = {
+      removed: false,
+      cause: "explicit",
+      cookie: { name: "anidachi_refresh_token", domain: "localhost" },
+    };
+    const firstCookie = handleWebsiteAuthCookieChange(cookieChange, dependencies).then(() => {
+      firstCookieSettled = true;
+    });
+    const laterStartup = reconcileExtensionSessionAgainstWebsite(
+      { adoptIfMissing: false },
+      dependencies,
+    ).then((tokens) => {
+      laterStartupSettled = true;
+      return tokens;
+    });
+    const secondCookie = handleWebsiteAuthCookieChange(cookieChange, dependencies).then(() => {
+      secondCookieSettled = true;
+    });
+
+    startupRead.resolve();
+    await expect(startup).resolves.toBeNull();
+    await vi.waitFor(() => expect(storageReads).toBe(2));
+    expect(firstCookieSettled).toBe(false);
+    expect(secondCookieSettled).toBe(false);
+    expect(laterStartupSettled).toBe(false);
+    expect(dependencies.signInSilently).toHaveBeenCalledOnce();
+    expect(maxActiveReads).toBe(1);
+
+    adoption.resolve();
+    await Promise.all([firstCookie, secondCookie]);
+    await expect(laterStartup).resolves.toEqual(adopted);
+    expect(current).toEqual(adopted);
+    expect(storageReads).toBe(2);
+    expect(maxActiveReads).toBe(1);
+  });
+
+  it("queues one further pass during a trailing pass and forwards its error", async () => {
+    const probes = [deferred<void>(), deferred<void>(), deferred<void>()];
+    const trailingFailure = new Error("trailing reconciliation failed");
+    let probeCalls = 0;
+    let activeProbes = 0;
+    let maxActiveProbes = 0;
+    const dependencies: WebsiteSessionReconciliationDependencies = {
+      getStored: vi.fn(async () => storedTokens),
+      ensureMatches: vi.fn(async (_stored: ExtensionAuthTokens) => {
+        const callIndex = probeCalls;
+        probeCalls += 1;
+        activeProbes += 1;
+        maxActiveProbes = Math.max(maxActiveProbes, activeProbes);
+        try {
+          await probes[callIndex].promise;
+          if (callIndex === 2) throw trailingFailure;
+          return "matches" as const;
+        } finally {
+          activeProbes -= 1;
+        }
+      }),
+      signInSilently: vi.fn(async () => null),
+      getCurrent: vi.fn(async () => storedTokens),
+      revokeRefreshToken: vi.fn(async (_refreshToken: string) => undefined),
+    };
+
+    const first = reconcileExtensionSessionAgainstWebsite({}, dependencies);
+    await vi.waitFor(() => expect(probeCalls).toBe(1));
+    const secondA = reconcileExtensionSessionAgainstWebsite({}, dependencies);
+    const secondB = reconcileExtensionSessionAgainstWebsite(
+      { adoptIfMissing: false },
+      dependencies,
+    );
+
+    probes[0].resolve();
+    await expect(first).resolves.toEqual(storedTokens);
+    await vi.waitFor(() => expect(probeCalls).toBe(2));
+    const thirdA = reconcileExtensionSessionAgainstWebsite({}, dependencies);
+    const thirdB = reconcileExtensionSessionAgainstWebsite({}, dependencies);
+
+    probes[1].resolve();
+    await expect(Promise.all([secondA, secondB])).resolves.toEqual([
+      storedTokens,
+      storedTokens,
+    ]);
+    await vi.waitFor(() => expect(probeCalls).toBe(3));
+
+    probes[2].resolve();
+    await expect(thirdA).rejects.toBe(trailingFailure);
+    await expect(thirdB).rejects.toBe(trailingFailure);
+    expect(probeCalls).toBe(3);
+    expect(maxActiveProbes).toBe(1);
+  });
+
   it("keeps replacement B when delayed account-A cookie removal observes website B", async () => {
     const replacement = {
       ...storedTokens,
