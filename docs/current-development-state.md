@@ -136,13 +136,16 @@ the runtime and backend requirements.
 
 ## Pre-release Security Readiness
 
-Wave 1 of the active pre-release security plan is complete on `staging` at
-merge `07dfaf4a8bd0c192e21fd381f4350ab88cdab322` (PRs `#192`-`#195`). The web
-runtime uses Next.js `15.5.23`, the public media route accepts only exact public
-media identifiers, and sensitive integration/CRM Blob paths now read, write,
-and delete through the private store only. The temporary staging compatibility
-flag has been removed; the retained public legacy objects are not a runtime
-fallback and were not deleted or changed during cutover.
+Waves 1-3 of the now-historical pre-release security plan retain their staging
+evidence. Wave 1 completed at merge
+`07dfaf4a8bd0c192e21fd381f4350ab88cdab322` (PRs `#192`-`#195`). The web runtime
+uses Next.js `15.5.23`, the public media route accepts only exact public media
+identifiers, and sensitive integration/CRM Blob paths now read, write, and
+delete through the private store only. The temporary staging compatibility flag
+has been removed; the retained public legacy objects are not a runtime fallback
+and were not deleted or changed during cutover. On 2026-08-21 the broad program
+was closed by explicit scope disposition, not by claiming that all original
+tasks were implemented; the focused successor is named below.
 
 The live staging deployment is `dpl_B6dD3YJdGJrkBfkppQGsXH9PdaBL`. Both staging
 aliases, CI, deployment smoke, noindex/no-store behavior, the bounded private
@@ -747,8 +750,10 @@ These are intentionally not treated as solved:
   full two-profile/two-network acceptance or two-network/TURN evidence, and
   production promotion remains out of scope; this is not a
   production-readiness claim.
-- The locally verified `20260816090000_watch_history_v2_bounded_read.sql`
-  removes the full-account episode aggregation from title pagination with a
+- The `20260816090000_watch_history_v2_bounded_read.sql` migration was merged
+  and applied to staging in ordered prerequisite PR #189 (`6c7e1b1b`); the web
+  consumer followed in PR #190 (`847d5e32`). It removes the full-account episode
+  aggregation from title pagination with a
   transactionally maintained one-row-per-title v2 projection. A second compact
   projection stores one row per v2 `(user, session)` membership with that
   user's current generation and title key. Its ordering timestamp is canonical
@@ -782,21 +787,27 @@ These are intentionally not treated as solved:
   hard room deletion removes derived rows for the resulting internal tombstone.
   A 501-title/13,200-episode local probe returned 50 titles and 2,376 episode
   rows plus 20 session IDs in a 1,455,993-byte payload, with about 21 MiB parser
-  RSS growth. This is evidence, not a universal resource bound, so public release remains blocked
-  pending an explicit episode-pagination contract or a separately approved
-  defensible bound.
-- The additive projection/RPC must deploy in a migration-only prerequisite PR
-  before the web consumer PR. Use that order on both staging and production: on
-  production, merge the migration-only promotion to `main`, wait for `Deploy
-  migrations to production` and verify migration history, then merge the
-  runtime promotion. A direct combined staging-to-main promotion is unsafe
-  because database and application deploys trigger independently and can expose
-  runtime before its RPC.
+  RSS growth. This is evidence, not a universal resource bound, so public
+  release remains blocked pending an explicit episode-pagination contract or a
+  separately approved defensible bound.
+- The additive projection/RPC was deployed to staging in a migration-only
+  prerequisite PR before the web consumer PR. The same dependency order remains
+  mandatory if a separately approved production promotion happens later. A
+  direct combined staging-to-main promotion is unsafe because database and
+  application deploys trigger independently and can expose runtime before its
+  RPC.
 - The migration-only prerequisite is compatible with the old web runtime, but
   it is not dormant: projection maintenance runs on v2 progress, session, and
   participant writes/deletes. If it must be undone, use the reviewed forward
   cleanup sequence in `docs/release-and-rollback-runbook.md`; never delete or
   rewrite canonical `watch_episode_progress` rows.
+- The primary active pre-UI technical plan is
+  `docs/superpowers/plans/2026-08-21-core-foundation-ui-handoff-plan.md`. It
+  carries only the remaining bounded episode-page/receipt lifecycle,
+  canonical/durable room source, and room-lifecycle invite semantics. The broad
+  2026-08-18 readiness program and the 2026-08-14 Watch History v2 foundation
+  plan are historical scope/evidence records; their deferred items are not
+  silently treated as complete.
 - Custom API domain for hiding the Cloudflare account subdomain is deferred.
 - Stripe production webhook appears wired, but end-to-end subscription testing is
   still a separate follow-up.
@@ -810,6 +821,8 @@ These are intentionally not treated as solved:
 - Agent/contributor startup contract: `AGENTS.md`
 - Development flow quality plan:
   `docs/superpowers/plans/2026-06-17-development-flow-quality-system-plan.md`
+- Active core-foundation-to-UI/UX handoff plan:
+  `docs/superpowers/plans/2026-08-21-core-foundation-ui-handoff-plan.md`
 - Environment and secrets matrix: `docs/environment-and-secrets-matrix.md`
 - Staging acceptance checklist: `docs/staging-acceptance-checklist.md`
 - Release and rollback runbook: `docs/release-and-rollback-runbook.md`
