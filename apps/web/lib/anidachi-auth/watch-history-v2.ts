@@ -370,7 +370,10 @@ export function buildWatchHistoryV2Response(params: {
 
   const isServerBounded = params.totalTitleCount !== undefined || params.hasMore !== undefined;
   const databaseTitleSummaries = params.titleSummaries?.map(parseWatchHistoryTitleSummary);
-  if (!isServerBounded && databaseTitleSummaries !== undefined) {
+  if (
+    (!isServerBounded && databaseTitleSummaries !== undefined) ||
+    (isServerBounded && databaseTitleSummaries === undefined)
+  ) {
     throw invalidDatabaseResponse();
   }
   const titleSummariesById = new Map<string, WatchHistoryTitleSummary>();
@@ -379,21 +382,31 @@ export function buildWatchHistoryV2Response(params: {
     if (titleSummariesById.has(stableId)) throw invalidDatabaseResponse();
     titleSummariesById.set(stableId, summary);
   }
+  if (
+    isServerBounded &&
+    (titleSummariesById.size !== groups.size ||
+      [...groups.keys()].some((stableId) => !titleSummariesById.has(stableId)))
+  ) {
+    throw invalidDatabaseResponse();
+  }
 
   const summaries = Array.from(groups.entries()).map(([stableId, titleRows]) => {
     titleRows.sort(compareEpisodeRows);
     const latest = [...titleRows].sort(compareObservationDescending)[0]!;
     const databaseSummary = titleSummariesById.get(stableId);
     const completedInSlice = titleRows.filter((row) => row.completed_at !== null).length;
-    const summary = databaseSummary ?? {
-      provider: latest.provider,
-      titleKey: latest.title_key,
-      lastWatchedAt: latest.observed_at,
-      observedEpisodeCount: titleRows.length,
-      completedEpisodeCount: completedInSlice,
-      episodePage: { complete: true, nextCursor: null },
-    };
+    const summary = isServerBounded
+      ? databaseSummary
+      : {
+          provider: latest.provider,
+          titleKey: latest.title_key,
+          lastWatchedAt: latest.observed_at,
+          observedEpisodeCount: titleRows.length,
+          completedEpisodeCount: completedInSlice,
+          episodePage: { complete: true, nextCursor: null },
+        };
     if (
+      !summary ||
       summary.provider !== latest.provider ||
       summary.titleKey !== latest.title_key ||
       summary.lastWatchedAt !== latest.observed_at ||
@@ -479,13 +492,6 @@ export function buildWatchHistoryV2Response(params: {
     };
   });
 
-  if (
-    isServerBounded &&
-    databaseTitleSummaries !== undefined &&
-    titleSummariesById.size !== groups.size
-  ) {
-    throw invalidDatabaseResponse();
-  }
   if (!isServerBounded) {
     summaries.sort(
       (a, b) =>

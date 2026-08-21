@@ -185,6 +185,9 @@ importers:
       eslint-config-next:
         specifier: 15.5.23
         version: 15.5.23(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)
+      happy-dom:
+        specifier: ^20.0.10
+        version: 20.9.0
       tailwindcss:
         specifier: ^4
         version: 4.3.0

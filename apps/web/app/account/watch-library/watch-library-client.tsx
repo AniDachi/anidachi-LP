@@ -15,7 +15,7 @@ import {
   type WatchHistoryTitleEpisodesResponse,
 } from "@anidachi/protocol";
 import { Clock3, Film, Play, RefreshCw, Trash2, Users } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/client-api";
 
 type Notice = { tone: "success" | "error"; text: string };
@@ -238,15 +238,25 @@ function WatchItemCard({ accountGeneration, busyAction, item, onCreateRoom, onDe
   const [visibleItem, setVisibleItem] = useState(item);
   const [loadingEpisodes, setLoadingEpisodes] = useState(false);
   const [episodeLoadError, setEpisodeLoadError] = useState(false);
+  const canonicalRevision = useRef(0);
+  const detailRequestRevision = useRef(0);
 
   useEffect(() => {
+    canonicalRevision.current += 1;
+    detailRequestRevision.current += 1;
     setVisibleItem(item);
     setEpisodeLoadError(false);
+    setLoadingEpisodes(false);
   }, [accountGeneration, item, ownerUserId]);
 
   const loadMoreEpisodes = useCallback(async () => {
     const cursor = visibleItem.episodePage.nextCursor;
     if (!cursor || loadingEpisodes) return;
+    const expectedCanonicalRevision = canonicalRevision.current;
+    const requestRevision = ++detailRequestRevision.current;
+    const requestIsCurrent = () =>
+      canonicalRevision.current === expectedCanonicalRevision &&
+      detailRequestRevision.current === requestRevision;
     setLoadingEpisodes(true);
     setEpisodeLoadError(false);
     try {
@@ -257,11 +267,13 @@ function WatchItemCard({ accountGeneration, busyAction, item, onCreateRoom, onDe
         cursor,
         request: (path) => api<unknown>(path),
       });
-      setVisibleItem((current) => mergeWatchHistoryTitleEpisodePage(current, page));
+      if (requestIsCurrent()) {
+        setVisibleItem((current) => mergeWatchHistoryTitleEpisodePage(current, page));
+      }
     } catch {
-      setEpisodeLoadError(true);
+      if (requestIsCurrent()) setEpisodeLoadError(true);
     } finally {
-      setLoadingEpisodes(false);
+      if (requestIsCurrent()) setLoadingEpisodes(false);
     }
   }, [accountGeneration, loadingEpisodes, ownerUserId, visibleItem]);
 

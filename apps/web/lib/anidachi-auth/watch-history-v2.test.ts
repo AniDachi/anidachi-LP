@@ -714,6 +714,14 @@ test("canonical read delegates the title page boundary to storage", async () => 
           sessions: [],
           totalTitleCount: 2,
           hasMore: true,
+          titleSummaries: [{
+            provider: "crunchyroll",
+            titleKey: "series-one",
+            lastWatchedAt: NOW,
+            observedEpisodeCount: 1,
+            completedEpisodeCount: 0,
+            episodePage: { complete: true, nextCursor: null },
+          }],
         };
       },
     }),
@@ -761,6 +769,50 @@ test("canonical read preserves deployed bounded title metadata", async () => {
     completedEpisodeCount: 6,
     episodePage: { complete: false, nextCursor: "episode_cursor" },
   });
+});
+
+test("server-bounded response requires an exact title-summary key set", () => {
+  const rowOne = progressRow({ latest_session_id: null });
+  const rowTwo = progressRow({
+    title_key: "series-two",
+    episode_key: "episode-two",
+    title: "Series Two",
+    episode_title: "Episode Two",
+    latest_session_id: null,
+  });
+  const summary = (titleKey: string, titleRow = rowOne) => ({
+    provider: "crunchyroll",
+    titleKey,
+    lastWatchedAt: titleRow.observed_at,
+    observedEpisodeCount: 1,
+    completedEpisodeCount: 0,
+    episodePage: { complete: true, nextCursor: null },
+  });
+  const build = (progressRows: unknown[], titleSummaries: unknown[]) =>
+    buildWatchHistoryV2Response({
+      userId: USER_ID,
+      accountGeneration: 1,
+      generatedAt: new Date(NOW),
+      limit: 50,
+      progressRows,
+      sessions: [],
+      totalTitleCount: progressRows.length,
+      hasMore: false,
+      titleSummaries,
+    });
+
+  assert.throws(
+    () => build([rowOne], [summary("series-two")]),
+    hasCode("INVALID_DATABASE_RESPONSE"),
+  );
+  assert.throws(
+    () => build([rowOne, rowTwo], [summary("series-one")]),
+    hasCode("INVALID_DATABASE_RESPONSE"),
+  );
+  assert.throws(
+    () => build([rowOne], [summary("series-one"), summary("series-two", rowTwo)]),
+    hasCode("INVALID_DATABASE_RESPONSE"),
+  );
 });
 
 test("title detail service is owner-bound and returns a strict bounded page", async () => {
@@ -992,6 +1044,14 @@ test("server-bounded read preserves database binary title order for its cursor",
     sessions: [],
     totalTitleCount: 4,
     hasMore: true,
+    titleSummaries: ["A", "a-", "a_"].map((titleKey) => ({
+      provider: "crunchyroll",
+      titleKey,
+      lastWatchedAt: NOW,
+      observedEpisodeCount: 1,
+      completedEpisodeCount: 0,
+      episodePage: { complete: true, nextCursor: null },
+    })),
   });
 
   assert.deepEqual(response.items.map((item) => item.titleKey), ["A", "a-", "a_"]);
