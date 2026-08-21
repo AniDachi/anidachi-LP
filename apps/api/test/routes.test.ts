@@ -459,6 +459,95 @@ describe("worker routes", () => {
     expect(socket.close).not.toHaveBeenCalled();
   });
 
+  it("releases admission when a pending socket loses its attachment before JOIN", async () => {
+    const now = Date.now();
+    const socket = { close: vi.fn() } as unknown as WebSocket;
+    const verified = {
+      avatarUrl: null,
+      role: "member" as const,
+      roomId: "room-1",
+      sub: "member-1",
+    };
+    const admission = new RoomAdmission({ maxParticipants: 4 });
+    const admissionId = "missing-attachment-admission";
+    const reservation = admission.reserve(verified.sub, admissionId, now);
+    if (!reservation.allowed) throw new Error("expected reservation");
+    const clearAdmissionTimeout = vi.fn();
+    const send = vi.fn();
+    const lifecycleTransaction = {
+      deleteAlarm: async () => undefined,
+      get: async () => undefined,
+      put: async () => undefined,
+    };
+    const roomObject = {
+      admission,
+      admissionIdBySocket: new Map<WebSocket, string>([[socket, admissionId]]),
+      clearAdmissionTimeout,
+      endedTombstone: null,
+      getSocketAttachment: () => null,
+      hasJoinDeadlineElapsed: () => false,
+      room: new RoomState("room-1"),
+      roomEndInProgress: false,
+      send,
+      socketsByParticipant: new Map<string, WebSocket>(),
+      state: {
+        storage: {
+          transaction: async <T>(callback: (transaction: typeof lifecycleTransaction) => Promise<T>) =>
+            callback(lifecycleTransaction),
+        },
+      },
+      track: vi.fn(),
+      verifiedBySocket: new Map<WebSocket, typeof verified>([[socket, verified]]),
+    };
+    Object.setPrototypeOf(roomObject, RoomDurableObject.prototype);
+
+    await (
+      RoomDurableObject.prototype as unknown as {
+        handleJoin(
+          this: typeof roomObject,
+          socket: WebSocket,
+          event: {
+            type: "JOIN";
+            roomId: string;
+            participant: {
+              id: string;
+              displayName: string;
+              role: "viewer";
+              cameraEnabled: false;
+              mediaSeat: "none";
+              syncStatus: "unknown";
+              lastSeenAt: number;
+            };
+            videoFingerprint: string;
+          },
+        ): Promise<void>;
+      }
+    ).handleJoin.call(roomObject, socket, {
+      type: "JOIN",
+      roomId: "room-1",
+      participant: {
+        id: verified.sub,
+        displayName: "Member",
+        role: "viewer",
+        cameraEnabled: false,
+        mediaSeat: "none",
+        syncStatus: "unknown",
+        lastSeenAt: now,
+      },
+      videoFingerprint: "video-1",
+    });
+
+    expect(send).toHaveBeenCalledWith(socket, {
+      type: "ERROR",
+      code: "JOIN_COMMIT_FAILED",
+      message: "Unable to commit this room join. Please reconnect and try again.",
+    });
+    expect(socket.close).toHaveBeenCalledWith(1011, "Room admission attachment is unavailable");
+    expect(admission.isPending(admissionId)).toBe(false);
+    expect(roomObject.admissionIdBySocket.has(socket)).toBe(false);
+    expect(clearAdmissionTimeout).toHaveBeenCalledWith(socket);
+  });
+
   it("finalizes a replacement when the incumbent close throws after durable join", async () => {
     const now = Date.now();
     const room = new RoomState("room-1");

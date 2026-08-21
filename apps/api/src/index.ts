@@ -1148,7 +1148,12 @@ export class RoomDurableObject {
         code: "JOIN_COMMIT_FAILED",
         message: "Unable to commit this room join. Please reconnect and try again.",
       });
-      socket.close(1011, "Room admission attachment is unavailable");
+      this.releaseAdmission(socket);
+      try {
+        socket.close(1011, "Room admission attachment is unavailable");
+      } catch {
+        /* stale socket */
+      }
       return;
     }
 
