@@ -5,6 +5,10 @@ staging-accepted. Wave 2 Stop is closed, and Wave 3 may proceed from
 current staging. No security work from this wave is promoted to `main`;
 production promotion remains separate and out of scope.
 
+Wave 3 Tasks 9-10 are on staging, and Task 10's normal two-profile
+join/reconnect acceptance passed. Task 11 and the integrated Wave 3 matrix
+remain pending; the Wave 3 Stop is open.
+
 On 2026-08-20, real Google and real Discord consent/callback flows
 succeeded on staging inside the enforced initial ten-minute OAuth transaction
 window. Exact elapsed times and screenshots are not claimed.
