@@ -12,8 +12,8 @@ import { API_WS_BASE, WEB_HTTP_BASE } from "./constants";
 import { logDebug, roomEventDebugSnapshot } from "./debug-log";
 import type { RoomSendDisposition, SignalingTransportReady } from "./media-types";
 import {
-  clearPrivilegedOverlayContextForTab,
   issuePrivilegedRoomAuthority,
+  reservePrivilegedRoomAuthorityForTab,
   type IssuedRoomAuthorityInput,
   type PrivilegedOverlayIntentDependencies,
   type PrivilegedOverlayContext,
@@ -99,6 +99,7 @@ const HIBERNATION_KEEPALIVE_PONG = "pong";
 export const ROOM_ENDED_CLOSE_CODE = 4004;
 
 const roomAuthorityRequestSequenceByTab = new Map<number, number>();
+let nextRoomAuthorityRequestSequence = 0;
 
 export function isTerminalRoomCloseCode(code: number): boolean {
   return code === ROOM_ENDED_CLOSE_CODE;
@@ -353,21 +354,41 @@ export async function handleRoomHttpMessage(
   dependencies: RoomHttpBackgroundDependencies = {},
 ): Promise<RoomHttpMessageResponse> {
   const authorityRequest = reserveRoomAuthorityRequest(sender, dependencies.authorityRequestSequences);
-  if (authorityRequest && dependencies.issueAuthority === undefined) {
-    void clearPrivilegedOverlayContextForTab(authorityRequest.tabId, {
-      sessionStorage: dependencies.authorityDependencies?.sessionStorage,
-    }).catch(() => undefined);
-  }
+  const usesPersistentAuthority = dependencies.issueAuthority === undefined;
+  const authorityReservation =
+    authorityRequest && usesPersistentAuthority
+      ? reservePrivilegedRoomAuthorityForTab(authorityRequest.tabId, {
+          sessionStorage: dependencies.authorityDependencies?.sessionStorage,
+        }).then(
+          (authorityGeneration) => ({ ok: true as const, authorityGeneration }),
+          (error: unknown) => ({ ok: false as const, error }),
+        )
+      : Promise.resolve({
+          ok: true as const,
+          authorityGeneration: authorityRequest?.sequence ?? null,
+        });
   const issueAuthority = dependencies.issueAuthority ?? issuePrivilegedRoomAuthority;
-  const issueCurrentAuthority = (input: IssuedRoomAuthorityInput) => {
+  const issueCurrentAuthority = async (
+    input: Omit<IssuedRoomAuthorityInput, "authorityGeneration">,
+  ) => {
+    const reservation = await authorityReservation;
+    if (!reservation.ok) throw reservation.error;
+    if (usesPersistentAuthority && reservation.authorityGeneration === null) return null;
     if (!isCurrentRoomAuthorityRequest(authorityRequest, dependencies.authorityRequestSequences)) {
-      return Promise.resolve(null);
+      return null;
     }
-    return issueAuthority(input, sender, {
-      ...dependencies.authorityDependencies,
-      isAuthorityRequestCurrent: () =>
-        isCurrentRoomAuthorityRequest(authorityRequest, dependencies.authorityRequestSequences),
-    });
+    return issueAuthority(
+      {
+        ...input,
+        authorityGeneration: reservation.authorityGeneration ?? 1,
+      },
+      sender,
+      {
+        ...dependencies.authorityDependencies,
+        isAuthorityRequestCurrent: () =>
+          isCurrentRoomAuthorityRequest(authorityRequest, dependencies.authorityRequestSequences),
+      },
+    );
   };
   try {
     if (message.command === "create-room") {
@@ -388,18 +409,20 @@ export async function handleRoomHttpMessage(
       connection: { ...connection, privilegedRoomAuthority },
     };
   } catch (error) {
-    if (error instanceof RoomApiError) {
+    const reservation = await authorityReservation;
+    const responseError = reservation.ok ? error : reservation.error;
+    if (responseError instanceof RoomApiError) {
       return {
         ok: false,
-        error: error.message,
-        code: error.code,
-        resetAt: error.resetAt,
-        status: error.status,
+        error: responseError.message,
+        code: responseError.code,
+        resetAt: responseError.resetAt,
+        status: responseError.status,
       };
     }
     return {
       ok: false,
-      error: error instanceof Error ? error.message : "Room request failed",
+      error: responseError instanceof Error ? responseError.message : "Room request failed",
     };
   }
 }
@@ -415,7 +438,10 @@ function reserveRoomAuthorityRequest(
   const tabId = sender.tab?.id;
   if (!Number.isInteger(tabId) || (tabId ?? -1) < 0) return null;
   const target = sequences ?? roomAuthorityRequestSequenceByTab;
-  const sequence = (target.get(tabId as number) ?? 0) + 1;
+  if (nextRoomAuthorityRequestSequence >= Number.MAX_SAFE_INTEGER) {
+    throw new Error("Room authority request sequence is exhausted");
+  }
+  const sequence = ++nextRoomAuthorityRequestSequence;
   target.set(tabId as number, sequence);
   return { tabId: tabId as number, sequence };
 }

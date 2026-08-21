@@ -15,9 +15,9 @@ import {
 } from "../src/auth-tokens";
 import { handleDiagnosticMessage, isDiagnosticMessage } from "../src/diagnostic-log";
 import {
-  clearPrivilegedOverlayContextForTab,
   handlePrivilegedOverlayIntentMessage,
   isPrivilegedOverlayIntentMessage,
+  removePrivilegedRoomAuthorityStateForTab,
   type PrivilegedOverlayIntentDependencies,
 } from "../src/privileged-overlay-intent";
 import {
@@ -179,8 +179,8 @@ export default defineBackground(() => {
   void createRoomInviteNotificationMaintenanceAlarm().catch(() => undefined);
 
   chrome.tabs.onRemoved.addListener((tabId) => {
-    void clearPrivilegedOverlayContextForTab(tabId).catch(() => undefined);
     clearRoomAuthorityRequestForTab(tabId);
+    void removePrivilegedRoomAuthorityStateForTab(tabId).catch(() => undefined);
     void removeRoomSessionForTab(tabId).catch(() => undefined);
   });
 });
