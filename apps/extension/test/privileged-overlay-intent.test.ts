@@ -189,6 +189,67 @@ describe("privileged overlay intent boundary", () => {
     });
   });
 
+  it.each(["end-room", "quota-end-room"] as const)(
+    "rejects a concurrent %s replay that arrived before failed-end authority restoration",
+    async (action) => {
+      const storage = createSessionStorage();
+      const sender = { tab: { id: action === "end-room" ? 15 : 16 } };
+      const firstEndResult = deferred<{ endedAt: string | null }>();
+      const firstEndStarted = deferred<void>();
+      const replaySessionResult = deferred<ReturnType<typeof sessionFor> | null>();
+      let sessionCall = 0;
+      const getCurrentSession = vi.fn(() => {
+        sessionCall += 1;
+        if (sessionCall === 2) return replaySessionResult.promise;
+        return Promise.resolve(sessionFor("user-a"));
+      });
+      const endRoom = vi
+        .fn()
+        .mockImplementationOnce(() => {
+          firstEndStarted.resolve();
+          return firstEndResult.promise;
+        })
+        .mockResolvedValueOnce({ endedAt: "2026-08-21T00:00:00.000Z" });
+      const authority = await reserveAndIssueRoomAuthority(
+        { roomId: "room-a", roomToken: trustedRoomToken("user-a", "room-a", "host") },
+        sender,
+        { sessionStorage: storage, getStoredSession: async () => sessionFor("user-a") },
+      );
+      const message = {
+        type: "ANIDACHI_PRIVILEGED_OVERLAY_INTENT" as const,
+        command: "invoke" as const,
+        action,
+        context: authority as PrivilegedOverlayContext,
+      };
+      const dependencies = {
+        sessionStorage: storage,
+        endRoom,
+        getCurrentSession,
+      };
+
+      const first = handlePrivilegedOverlayIntentMessage(message, sender, dependencies);
+      await firstEndStarted.promise;
+      const replay = handlePrivilegedOverlayIntentMessage(message, sender, dependencies);
+      await Promise.resolve();
+      await Promise.resolve();
+
+      firstEndResult.reject(new Error("temporary end failure"));
+      await expect(first).rejects.toThrow("temporary end failure");
+      replaySessionResult.resolve(sessionFor("user-a"));
+
+      await expect(replay).resolves.toEqual({
+        ok: false,
+        error: "Privileged overlay room authority is stale",
+      });
+      expect(endRoom).toHaveBeenCalledOnce();
+
+      await expect(
+        handlePrivilegedOverlayIntentMessage(message, sender, dependencies),
+      ).resolves.toEqual({ ok: true, endedAt: "2026-08-21T00:00:00.000Z" });
+      expect(endRoom).toHaveBeenCalledTimes(2);
+    },
+  );
+
   it("restores consumed authority for an idempotent retry after an unsuperseded end failure", async () => {
     const storage = createSessionStorage();
     const sender = { tab: { id: 13 } };
@@ -291,7 +352,7 @@ describe("privileged overlay intent boundary", () => {
     expect(endRoom).not.toHaveBeenCalled();
   });
 
-  it("rejects a host invoke after the current extension account switches", async () => {
+  it("rejects a host invoke after the current extension account switches without restoring authority", async () => {
     const storage = createSessionStorage();
     const endRoom = vi.fn(async () => ({ endedAt: "2026-08-21T00:00:00.000Z" }));
     const sender = { tab: { id: 10 } };
@@ -313,6 +374,19 @@ describe("privileged overlay intent boundary", () => {
         { sessionStorage: storage, endRoom, getCurrentSession: async () => sessionFor("user-b") },
       ),
     ).resolves.toEqual({ ok: false, error: "Privileged overlay account changed" });
+
+    await expect(
+      handlePrivilegedOverlayIntentMessage(
+        {
+          type: "ANIDACHI_PRIVILEGED_OVERLAY_INTENT",
+          command: "invoke",
+          action: "end-room",
+          context: authority as PrivilegedOverlayContext,
+        },
+        sender,
+        { sessionStorage: storage, endRoom, getCurrentSession: async () => sessionFor("user-a") },
+      ),
+    ).resolves.toEqual({ ok: false, error: "Privileged overlay room authority is stale" });
     expect(endRoom).not.toHaveBeenCalled();
   });
 });

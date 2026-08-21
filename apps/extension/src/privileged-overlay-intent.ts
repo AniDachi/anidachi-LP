@@ -183,13 +183,12 @@ export async function handlePrivilegedOverlayIntentMessage(
     return { ok: false, error: "Privileged overlay intent is missing a sender tab" };
   }
 
-  const getCurrentSession = dependencies.getCurrentSession ?? getCurrentExtensionSession;
-  const currentSession = await getCurrentSession();
-  if (currentSession?.user.id !== message.context.accountUserId) {
-    return { ok: false, error: "Privileged overlay account changed" };
-  }
-
   if (message.action === "sign-out") {
+    const getCurrentSession = dependencies.getCurrentSession ?? getCurrentExtensionSession;
+    const currentSession = await getCurrentSession();
+    if (currentSession?.user.id !== message.context.accountUserId) {
+      return { ok: false, error: "Privileged overlay account changed" };
+    }
     if (!isSignOutContext(message.context)) {
       return { ok: false, error: "Privileged sign-out context is invalid" };
     }
@@ -229,6 +228,12 @@ export async function handlePrivilegedOverlayIntentMessage(
   });
   if (!consumed.consumed) {
     return { ok: false, error: consumed.error };
+  }
+
+  const getCurrentSession = dependencies.getCurrentSession ?? getCurrentExtensionSession;
+  const currentSession = await getCurrentSession();
+  if (currentSession?.user.id !== consumed.authority.accountUserId) {
+    return { ok: false, error: "Privileged overlay account changed" };
   }
 
   try {
