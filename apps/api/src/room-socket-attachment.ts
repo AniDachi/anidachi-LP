@@ -5,8 +5,10 @@ import {
   type RoomCapabilities,
 } from "@anidachi/protocol";
 import type { VerifiedRoomToken } from "./auth";
+import { ROOM_ADMISSION_JOIN_DEADLINE_MS } from "./room-admission";
 
-export const ROOM_SOCKET_ATTACHMENT_VERSION = 1;
+export const ROOM_SOCKET_ATTACHMENT_VERSION = 2;
+const LEGACY_ROOM_SOCKET_ATTACHMENT_VERSION = 1;
 
 export interface RoomSocketVerifiedIdentity {
   avatarUrl?: string | null;
@@ -18,6 +20,7 @@ export interface RoomSocketVerifiedIdentity {
 }
 
 export interface RoomSocketAttachment {
+  admission: RoomSocketAdmission;
   connectedAt: number;
   lastSeenAt: number;
   participant?: Participant;
@@ -27,12 +30,22 @@ export interface RoomSocketAttachment {
   verified: RoomSocketVerifiedIdentity;
 }
 
+export interface RoomSocketAdmission {
+  deadlineAt: number;
+  joined: boolean;
+}
+
 export function createRoomSocketAttachment(
   roomId: string,
   verified: VerifiedRoomToken,
   now = Date.now(),
+  admission: RoomSocketAdmission = {
+    deadlineAt: now + ROOM_ADMISSION_JOIN_DEADLINE_MS,
+    joined: false,
+  },
 ): RoomSocketAttachment {
   return {
+    admission,
     connectedAt: now,
     lastSeenAt: now,
     roomId,
@@ -48,7 +61,10 @@ export function parseRoomSocketAttachment(
   if (!isRecord(value)) {
     return null;
   }
-  if (value.schemaVersion !== ROOM_SOCKET_ATTACHMENT_VERSION) {
+  if (
+    value.schemaVersion !== ROOM_SOCKET_ATTACHMENT_VERSION &&
+    value.schemaVersion !== LEGACY_ROOM_SOCKET_ATTACHMENT_VERSION
+  ) {
     return null;
   }
   if (value.roomId !== expectedRoomId) {
@@ -63,7 +79,24 @@ export function parseRoomSocketAttachment(
     return null;
   }
 
+  const participant = value.participant === undefined
+    ? undefined
+    : ParticipantSchema.safeParse(value.participant);
+  if (participant && !participant.success) {
+    return null;
+  }
+
+  const admission = value.schemaVersion === LEGACY_ROOM_SOCKET_ATTACHMENT_VERSION
+    ? participant?.success
+      ? { deadlineAt: 0, joined: true }
+      : null
+    : parseAdmission(value.admission);
+  if (!admission || (admission.joined && !participant?.success)) {
+    return null;
+  }
+
   const attachment: RoomSocketAttachment = {
+    admission,
     connectedAt: value.connectedAt,
     lastSeenAt: value.lastSeenAt,
     roomId: expectedRoomId,
@@ -75,11 +108,7 @@ export function parseRoomSocketAttachment(
     attachment.participantSessionId = value.participantSessionId;
   }
 
-  if (value.participant !== undefined) {
-    const participant = ParticipantSchema.safeParse(value.participant);
-    if (!participant.success) {
-      return null;
-    }
+  if (participant?.success) {
     attachment.participant = participant.data;
   }
 
@@ -108,12 +137,14 @@ export function updateRoomSocketAttachment(
   attachment: RoomSocketAttachment,
   patch: {
     lastSeenAt?: number;
+    admission?: RoomSocketAdmission;
     participant?: Participant;
     participantSessionId?: string;
   },
 ): RoomSocketAttachment {
   const next: RoomSocketAttachment = {
     ...attachment,
+    admission: patch.admission ?? attachment.admission,
     lastSeenAt: patch.lastSeenAt ?? Date.now(),
   };
   if (patch.participant) {
@@ -123,6 +154,14 @@ export function updateRoomSocketAttachment(
     next.participantSessionId = patch.participantSessionId;
   }
   return next;
+}
+
+function parseAdmission(value: unknown): RoomSocketAdmission | null {
+  if (!isRecord(value)) return null;
+  if (!isNonNegativeInteger(value.deadlineAt) || typeof value.joined !== "boolean") {
+    return null;
+  }
+  return { deadlineAt: value.deadlineAt, joined: value.joined };
 }
 
 function serializeVerifiedRoomToken(verified: VerifiedRoomToken): RoomSocketVerifiedIdentity {

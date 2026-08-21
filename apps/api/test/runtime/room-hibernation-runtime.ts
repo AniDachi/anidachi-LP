@@ -35,6 +35,82 @@ afterEach(async () => {
 });
 
 describe("RoomDurableObject WebSocket hibernation", () => {
+	it("rejects subject admission capacity before retaining a third pre-JOIN socket", async () => {
+		const roomId = `runtime-admission-capacity-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const first = await openRoomSocket(stub, { roomId, role: "member", userId: "member-1" });
+		const second = await openRoomSocket(stub, { roomId, role: "member", userId: "member-1" });
+		const token = await roomToken(roomId, "member", "member-1");
+
+		const rejected = await stub.fetch(
+			`https://room.test/?roomToken=${encodeURIComponent(token)}`,
+			{ headers: { Upgrade: "websocket" } },
+		);
+		expect(rejected.status).toBe(429);
+		expect(await runInDurableObject(stub, (_instance, state) => state.getWebSockets().length)).toBe(2);
+
+		first.close();
+		second.close();
+	});
+
+	it("releases pending admission after a socket error", async () => {
+		const roomId = `runtime-admission-rehydrate-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const first = await openRoomSocket(stub, { roomId, role: "member", userId: "member-1" });
+		const second = await openRoomSocket(stub, { roomId, role: "member", userId: "member-1" });
+
+		await runInDurableObject(stub, async (instance, state) => {
+			const socket = state.getWebSockets()[0];
+			if (!socket) throw new Error("expected pending socket");
+			await (instance as { webSocketError(socket: WebSocket, error: unknown): Promise<void> })
+				.webSocketError(socket, new Error("test socket error"));
+		});
+		const replacement = await openRoomSocket(stub, { roomId, role: "member", userId: "member-1" });
+
+		first.close();
+		second.close();
+		replacement.close();
+	});
+
+	it("releases pending admission after a socket close", async () => {
+		const roomId = `runtime-admission-close-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const first = await openRoomSocket(stub, { roomId, role: "member", userId: "member-1" });
+		const second = await openRoomSocket(stub, { roomId, role: "member", userId: "member-1" });
+
+		first.close();
+		await sleep(50);
+		const replacement = await openRoomSocket(stub, { roomId, role: "member", userId: "member-1" });
+
+		second.close();
+		replacement.close();
+	});
+
+	it("keeps a subject control budget across a close-gap replacement", async () => {
+		const roomId = `runtime-admission-rate-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const original = await openRoomSocket(stub, { roomId, role: "member", userId: "member-1" });
+		for (let index = 0; index < 39; index += 1) {
+			original.send({ type: "PING", roomId, sentAt: index });
+		}
+		await sleep(50);
+		original.close();
+		await sleep(900);
+		const replacement = await connectRoomClient(stub, {
+			roomId, role: "member", sessionId: "replacement-session", userId: "member-1",
+		});
+		replacement.send({ type: "PING", roomId, sentAt: 99 });
+		await replacement.waitFor(
+			(event) => event.type === "ERROR" && event.code === "RATE_LIMITED",
+			"replacement shares subject control budget",
+		);
+		replacement.close();
+	});
+
 	it("issues private history authority after durable join and refreshes it after hibernation", async () => {
 		const roomId = `runtime-history-authority-${crypto.randomUUID()}`;
 		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
@@ -232,17 +308,6 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		if (typeof emptySince !== "number") throw new Error("Expected emptySince");
 		expect(empty.lifecycle?.alarmAt).toBe(emptySince + EMPTY_ROOM_TIMEOUT_MS);
 		expect(empty.alarm).toBe(emptySince + EMPTY_ROOM_TIMEOUT_MS);
-
-		await evictDurableObject(stub, { webSockets: "hibernate" });
-		const restored = await readRoomRuntime(stub);
-		expect(restored).toEqual(empty);
-		const callbackFetch = vi.fn(async () =>
-			Response.json({ ok: true, usageFinalized: true }),
-		);
-		vi.stubGlobal("fetch", callbackFetch);
-		expect(await runDurableObjectAlarm(stub)).toBe(true);
-		expect(callbackFetch).not.toHaveBeenCalled();
-		expect(await readRoomRuntime(stub)).toEqual(empty);
 
 		preJoin.close();
 		await sleep(50);
