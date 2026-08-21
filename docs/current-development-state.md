@@ -242,7 +242,7 @@ acceptance boundaries, and the Wave 2 Stop is closed. Wave 3 may proceed from
 current `staging`. No security work from this wave has been promoted to `main`;
 production promotion remains a separate decision and is out of this closeout.
 
-Wave 3 Tasks 9-11 implementation is current for staging. Task 10's
+Wave 3 is green and the Wave 3 Stop is closed for staging readiness. Task 10's
 WebSocket-admission change merged in PR `#208` at
 `1707703efb6ec5e85b6a3c40fc9192134f23be3a` on 2026-08-21. Post-merge CI, API
 deploy, migration workflow, Rooms E2E, P2P E2E, Vercel, and staging smoke
@@ -250,10 +250,24 @@ passed. Manual staging acceptance with two authenticated browser profiles passed
 host room creation, guest join, synchronized play/pause/seek, and guest
 reload/reconnect without duplicate or ghost participants. This proves the normal
 two-profile join/reconnect path only; it is not a two-network/TURN, production,
-or exhaustive adversarial-traffic result. Task 11's local automated
-implementation and review gates passed, but loaded-artifact Chrome and staging
-acceptance remain pending. The integrated Wave 3 matrix and Wave 3 Stop remain
-open.
+or exhaustive adversarial-traffic result. Task 11 PR `#210` merged to staging
+at `ae9022b1a5667654e69e1348633721037dcb63dc`; final local evidence was 98 files
+and 1,250/1,250 extension tests plus extension check, changed-path lint,
+staging build/validation, and `pnpm dev:check`. Post-merge CI, Rooms/P2P,
+Vercel, and staging smoke passed. Packaging hygiene PR `#211` merged at
+`b2d209504ed991bc7df0d334c2bc263ccc03e447`; authoritative artifact
+`b2d209504ed991bc7df0d334c2bc263ccc03e447-staging-118` has ZIP SHA-256
+`76bcd133fabc82e10f9c1881b5dc99405150ac5b85f7409aa182a814d14e9e61`, exactly
+one referenced popup chunk, narrow permissions, and byte-for-byte
+synchronization to the two established test folders. The user loaded the exact
+artifact in the habitual Chrome staging profile and reported that it works.
+This is normal visible-flow loaded-artifact acceptance only; it does not claim
+two-network/TURN, production, exhaustive adversarial traffic, or Chrome Web
+Store. The integrated Wave 3 matrix is green from final automated Task 9
+expiry/replay and privileged-action evidence, post-merge CI/Rooms/P2P/staging
+smoke, prior Task 10 acceptance, and this Task 11 acceptance. No security work
+from this wave has been promoted to `main`; production promotion remains a
+separate decision and is out of this closeout.
 
 ## Subscription Plan Codes
 
@@ -724,9 +738,9 @@ These are intentionally not treated as solved:
   bounded outbox as `invalid-room-authority` and is never reclassified as solo.
 - The additive foundation and Recent People v2 migrations are applied on
   staging through `20260814020000`. A user confirmed the repaired solo
-  Crunchyroll -> Popup -> staging website path. Full two-profile/two-network
-  acceptance, two-network/two-profile P2P evidence, the integrated Wave 3
-  matrix, and production promotion are still pending; this is not a
+  Crunchyroll -> Popup -> staging website path. This closeout does not claim
+  full two-profile/two-network acceptance or two-network/TURN evidence, and
+  production promotion remains out of scope; this is not a
   production-readiness claim.
 - The locally verified `20260816090000_watch_history_v2_bounded_read.sql`
   removes the full-account episode aggregation from title pagination with a
