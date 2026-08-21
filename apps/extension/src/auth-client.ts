@@ -853,6 +853,35 @@ interface WebsiteSignOutSequenceActions {
   clearTokens: (expectedRefreshToken: string | null) => Promise<void>;
 }
 
+const REMOTE_SIGN_OUT_STAGE_TIMEOUT_MS = 2_000;
+
+async function runRemoteSignOutStage(
+  stage: "watch-history-flush" | "refresh-token-revocation" | "website-logout",
+  operation: () => Promise<void>,
+): Promise<void> {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  const outcome = await Promise.race([
+    Promise.resolve()
+      .then(operation)
+      .then(() => "completed" as const)
+      .catch(() => "failed" as const),
+    new Promise<"timed-out">((resolve) => {
+      timeout = setTimeout(() => resolve("timed-out"), REMOTE_SIGN_OUT_STAGE_TIMEOUT_MS);
+    }),
+  ]);
+  if (timeout !== undefined) {
+    clearTimeout(timeout);
+  }
+  if (outcome !== "completed") {
+    recordDiagnosticEvent(
+      "auth.logout",
+      "remote sign-out stage did not complete",
+      { stage, outcome },
+      "warn",
+    );
+  }
+}
+
 export async function runWebsiteSignOutSequence({
   getStoredTokens,
   flushBeforeSignOut,
@@ -862,12 +891,16 @@ export async function runWebsiteSignOutSequence({
 }: WebsiteSignOutSequenceActions): Promise<void> {
   const stored = await getStoredTokens();
   if (stored) {
-    await flushBeforeSignOut?.(stored).catch(() => undefined);
-    await revokeRefreshToken(stored.refreshToken).catch(() => undefined);
+    if (flushBeforeSignOut) {
+      await runRemoteSignOutStage("watch-history-flush", () => flushBeforeSignOut(stored));
+    }
+    await runRemoteSignOutStage("refresh-token-revocation", () =>
+      revokeRefreshToken(stored.refreshToken),
+    );
   }
 
   try {
-    await attemptWebsiteLogout();
+    await runRemoteSignOutStage("website-logout", attemptWebsiteLogout);
   } finally {
     await clearTokens(stored?.refreshToken ?? null);
   }

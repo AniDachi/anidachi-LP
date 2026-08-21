@@ -4,6 +4,7 @@ import { defineContentScript } from "wxt/utils/define-content-script";
 import {
   elementDebugSnapshot,
   logDebug,
+  removeLegacyPageDebugBufferOnce,
   videoDebugSnapshot,
 } from "../src/debug-log";
 import { startDebugProbe } from "../src/debug-probe";
@@ -107,6 +108,7 @@ export default defineContentScript({
 export function startContentLifecycle(
   overrides: Partial<ContentLifecycleDependencies> = {},
 ): ContentLifecycleRuntime {
+  removeLegacyPageDebugBufferOnce();
   const dependencies: ContentLifecycleDependencies = {
     detect: detectLifecycleResult,
     ensureStyles: ensurePageStyles,

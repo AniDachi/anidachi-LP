@@ -3,6 +3,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { mountOverlay, type OverlayRenderer } from "../entrypoints/content";
 import * as overlayApp from "../src/overlay-app";
+import { AUTH_TOKENS_KEY } from "../src/auth-tokens";
 import type { PrivilegedOverlayContext } from "../src/privileged-overlay-intent";
 import { RoomClient } from "../src/room-client";
 import type { VideoAdapter } from "../src/source-adapters/core/types";
@@ -105,6 +106,132 @@ describe("privileged overlay wiring", () => {
 
     expect(teardown).toHaveBeenCalledTimes(1);
   });
+
+  it("does not suppress silent auth recovery after a trusted sign-out request is rejected", async () => {
+    let currentSession: ReturnType<typeof sessionFor> | null = sessionFor("user-a");
+    const sendMessage = vi.fn(async (message: { type?: string; command?: string }) => {
+      if (message.type === "ANIDACHI_AUTH" && message.command === "sign-in-silent") {
+        currentSession = sessionFor("user-a");
+        return { ok: true, tokens: currentSession };
+      }
+      if (message.type === "ANIDACHI_AUTH") {
+        return { ok: true, tokens: currentSession };
+      }
+      if (message.type === "ANIDACHI_PRIVILEGED_OVERLAY_INTENT") {
+        return { ok: false, error: "Privileged sign-out rejected" };
+      }
+      throw new Error(`Unexpected runtime message ${message.type}:${message.command}`);
+    });
+    installOverlayRuntime(sendMessage);
+    const view = await renderOverlay();
+
+    await click(button(view.container, "Open Anidachi controls"));
+    await trustedClick(button(view.container, "Sign out"));
+    expect(button(view.container, "Sign out")).toBeInstanceOf(HTMLButtonElement);
+
+    currentSession = null;
+    await extensionStorage.storage.removeItem(AUTH_TOKENS_KEY);
+    await flushMountedWork();
+    await click(button(view.container, "Close Anidachi controls"));
+    await click(button(view.container, "Open Anidachi controls"));
+    await flushMountedWork();
+
+    expect(
+      sendMessage.mock.calls.filter(
+        ([message]) =>
+          (message as { type?: string; command?: string }).type === "ANIDACHI_AUTH" &&
+          (message as { command?: string }).command === "sign-in-silent",
+      ),
+    ).toHaveLength(1);
+    expect(button(view.container, "Sign out")).toBeInstanceOf(HTMLButtonElement);
+    await unmount(view.root);
+  });
+
+  it.each(["sign-out", "end-room"] as const)(
+    "keeps the mounted room reconnect timer after a trusted %s request is rejected",
+    async (action) => {
+      const sendMessage = vi.fn(async (message: { type?: string; command?: string }) => {
+        if (message.type === "ANIDACHI_AUTH") {
+          return { ok: true, tokens: sessionFor("user-a") };
+        }
+        if (message.type === "ANIDACHI_ROOM_HTTP" && message.command === "create-room") {
+          return {
+            ok: true,
+            room: {
+              roomId: "room-a",
+              roomToken: "room-token-a",
+              shareableLink: "http://localhost:3003/room/room-a",
+              privilegedRoomAuthority: roomAuthority(),
+            },
+          };
+        }
+        if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE" && message.command === "load") {
+          return { ok: true, record: null };
+        }
+        if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE" && message.command === "persist") {
+          return {
+            ok: true,
+            record: {
+              version: 1,
+              revision: 1,
+              roomId: "room-a",
+              ownerUserId: "user-a",
+              participantSessionId: "participant-session-a",
+              voiceMode: "camera",
+            },
+          };
+        }
+        if (message.type === "ANIDACHI_PRIVILEGED_OVERLAY_INTENT") {
+          return { ok: false, error: `Privileged ${action} rejected` };
+        }
+        throw new Error(`Unexpected runtime message ${message.type}:${message.command}`);
+      });
+      installOverlayRuntime(sendMessage);
+      let roomConnectionOptions: Parameters<RoomClient["connect"]>[0] | null = null;
+      vi.spyOn(RoomClient.prototype, "connect").mockImplementation((options) => {
+        roomConnectionOptions = options;
+        options.onStatus("connected");
+        options.onEvent({
+          type: "ROOM_SNAPSHOT",
+          roomId: "room-a",
+          roomGeneration: 1,
+          sourceGeneration: 1,
+          serverSeq: 1,
+          participants: [hostParticipant()],
+        });
+      });
+      const setTimeoutSpy = vi.spyOn(window, "setTimeout");
+      const clearTimeoutSpy = vi.spyOn(window, "clearTimeout");
+      const close = vi.spyOn(RoomClient.prototype, "close");
+      const view = await renderOverlay();
+
+      await click(button(view.container, "Open Anidachi controls"));
+      await click(button(view.container, "Create room"));
+      close.mockClear();
+      await act(async () => {
+        roomConnectionOptions?.onStatus("closed");
+        await Promise.resolve();
+      });
+      const reconnectCallIndex = setTimeoutSpy.mock.calls.findIndex(
+        ([, delay]) => delay === 900,
+      );
+      expect(reconnectCallIndex).toBeGreaterThanOrEqual(0);
+      const reconnectTimerId = setTimeoutSpy.mock.results[reconnectCallIndex]?.value;
+      const actionButton =
+        action === "sign-out"
+          ? button(view.container, "Sign out")
+          : primaryRoomAction(view.container);
+
+      await trustedClick(actionButton);
+
+      expect(privilegedInvokes(sendMessage)).toHaveLength(1);
+      expect(close).not.toHaveBeenCalled();
+      expect(clearTimeoutSpy).not.toHaveBeenCalledWith(reconnectTimerId);
+      expect(button(view.container, "Sign out")).toBeInstanceOf(HTMLButtonElement);
+      expect(primaryRoomAction(view.container)).toBeInstanceOf(HTMLButtonElement);
+      await unmount(view.root);
+    },
+  );
 
   it("keeps the mounted OverlayApp signed in after a synthetic sign-out control click", async () => {
     const sendMessage = vi.fn(async (message: { type?: string; command?: string }) => {
@@ -339,4 +466,12 @@ function privilegedInvokes(sendMessage: ReturnType<typeof vi.fn>) {
 
 async function unmount(root: Root): Promise<void> {
   await act(async () => root.unmount());
+}
+
+async function flushMountedWork(): Promise<void> {
+  await act(async () => {
+    for (let index = 0; index < 8; index += 1) {
+      await Promise.resolve();
+    }
+  });
 }

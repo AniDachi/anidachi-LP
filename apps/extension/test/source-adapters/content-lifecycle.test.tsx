@@ -32,6 +32,32 @@ describe("content adapter lifecycle", () => {
 		document.body.replaceChildren();
 	});
 
+	it("removes only the legacy page debug key before no-adapter startup work", () => {
+		localStorage.setItem("anidachi:debug-log:v1", "legacy-sensitive-buffer");
+		localStorage.setItem("page-owned-neighbor", "must-remain");
+		const installKeyboardGuard = vi.fn(() => vi.fn());
+		const startProviderStudy = vi.fn(() => vi.fn());
+		const ensureStyles = vi.fn();
+		const detect = vi.fn(() => {
+			expect(localStorage.getItem("anidachi:debug-log:v1")).toBeNull();
+			expect(localStorage.getItem("page-owned-neighbor")).toBe("must-remain");
+			return { status: "none" as const };
+		});
+
+		const runtime = startContentLifecycle({
+			detect,
+			ensureStyles,
+			installKeyboardGuard,
+			mount: vi.fn(),
+			startProviderStudy,
+		});
+
+		expect(detect).toHaveBeenCalledTimes(1);
+		expect(localStorage.getItem("anidachi:debug-log:v1")).toBeNull();
+		expect(localStorage.getItem("page-owned-neighbor")).toBe("must-remain");
+		runtime.dispose();
+	});
+
 	it("keeps the mounted room shell while suspending and replacing the player", () => {
 		const first = createAdapter();
 		const replacement = createAdapter();

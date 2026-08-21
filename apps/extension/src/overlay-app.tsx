@@ -3187,12 +3187,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     }
     setAuthBusy(true);
     setAuthMessage(null);
-    suppressSilentSignInUntilRef.current =
-      Date.now() + SILENT_SIGN_IN_SUPPRESSION_AFTER_SIGN_OUT_MS;
     try {
-      roomReconnectSuppressedRef.current = true;
-      clearRoomReconnectTimer();
       await runOverlayPrivilegedAction(event, "sign-out", signOutPrivilegedContext, async () => {
+        suppressSilentSignInUntilRef.current =
+          Date.now() + SILENT_SIGN_IN_SUPPRESSION_AFTER_SIGN_OUT_MS;
+        roomReconnectSuppressedRef.current = true;
+        clearRoomReconnectTimer();
         applyParticipantIdentity(await createCurrentParticipant(), "sign-out", false);
         clientRef.current.close();
         releaseRoomTabLock();
@@ -3595,9 +3595,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         return;
       }
 
-      roomReconnectSuppressedRef.current = true;
-      clearRoomReconnectTimer();
       await runOverlayPrivilegedAction(event, "end-room", privilegedRoomContext, () => {
+        roomReconnectSuppressedRef.current = true;
+        clearRoomReconnectTimer();
         clientRef.current.close();
         releaseRoomTabLock();
         roomIdRef.current = null;
@@ -3618,7 +3618,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         logDebug("overlay.room", "ended by host", { roomId: activeRoomId });
       });
     } catch (error) {
-      roomReconnectSuppressedRef.current = false;
       const message = error instanceof Error ? error.message : "Failed to end room";
       logDebug("overlay.room", "end failed", {
         roomId: roomIdRef.current,

@@ -1210,7 +1210,7 @@ describe("extension auth client", () => {
     expect(events).toEqual(["flush-history", "revoke", "logout-flow", "clear"]);
   });
 
-  it("clears extension tokens even when website logout fails", async () => {
+  it("treats a failed website logout as best effort and still clears extension tokens", async () => {
     const events: string[] = [];
 
     await expect(
@@ -1227,7 +1227,7 @@ describe("extension auth client", () => {
           events.push("clear");
         }),
       }),
-    ).rejects.toThrow("Invalid extension logout state");
+    ).resolves.toBeUndefined();
 
     expect(events).toEqual(["revoke", "logout-flow", "clear"]);
   });

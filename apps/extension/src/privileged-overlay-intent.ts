@@ -204,14 +204,14 @@ export async function handlePrivilegedOverlayIntentMessage(
     if (!isSignOutContext(message.context)) {
       return { ok: false, error: "Privileged sign-out context is invalid" };
     }
-    const getCurrentSession = dependencies.getCurrentSession ?? getCurrentExtensionSession;
-    const currentSession = await getCurrentSession();
-    if (currentSession?.user.id !== message.context.accountUserId) {
+    const getStoredSession = dependencies.getStoredSession ?? getStoredAuthTokens;
+    const storedSession = await getStoredSession();
+    if (storedSession?.user.id !== message.context.accountUserId) {
       return { ok: false, error: "Privileged overlay account changed" };
     }
     const signOut = dependencies.signOut ?? signOutWithWebsite;
     if (
-      !(await signOut(currentSession, () =>
+      !(await signOut(storedSession, () =>
         clearPrivilegedOverlayContextForTab(tabId, dependencies),
       ))
     ) {

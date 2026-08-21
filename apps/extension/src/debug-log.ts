@@ -1,6 +1,7 @@
 import type { ClientEvent, PlaybackState, ServerEvent } from "@anidachi/protocol";
 import { ANIDACHI_BUILD_ID, API_HTTP_BASE, API_WS_BASE } from "./constants";
 import {
+  redactPrivacySafeMediaSourceUrl,
   redactPrivacySafeUrl,
   sanitizePrivacySafeData,
   sanitizePrivacySafeText,
@@ -46,7 +47,7 @@ export function logDebug(scope: string, message: string, data?: unknown): void {
   }
 }
 
-function removeLegacyPageDebugBufferOnce(): void {
+export function removeLegacyPageDebugBufferOnce(): void {
   if (legacyPageDebugRemovalAttempted) return;
   legacyPageDebugRemovalAttempted = true;
   try {
@@ -351,7 +352,7 @@ export function videoDebugSnapshot(video: HTMLVideoElement): Record<string, unkn
     volume: round(video.volume),
     muted: video.muted,
     buffered: readBuffered(video),
-    currentSrc: redactUrl(video.currentSrc || video.src || ""),
+    currentSrc: redactPrivacySafeMediaSourceUrl(video.currentSrc || video.src || ""),
     rect: rectSnapshot(video),
     controls: video.controls,
   };

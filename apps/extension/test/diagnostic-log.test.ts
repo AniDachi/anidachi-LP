@@ -4,6 +4,7 @@ import {
   recordDiagnosticEvent,
   type DiagnosticMessage,
 } from "../src/diagnostic-log";
+import { videoDebugSnapshot } from "../src/debug-log";
 
 const DIAGNOSTIC_STORAGE_KEY = "anidachi:diagnostic-log:v1";
 
@@ -345,6 +346,65 @@ describe("diagnostic log", () => {
       expect(bundleText).toContain("https://www.youtube-nocookie.com/embed/<redacted-id>");
       expect(bundleText).not.toContain("?<redacted>");
       expect(bundleText).not.toContain("#<redacted>");
+    },
+  );
+
+  it.each(["light", "full"] as const)(
+    "removes transient CDN and blob media identifiers from serialized %s support bundles",
+    async (mode) => {
+      const { download } = installChromeMock();
+      const cdnLiteral = "token-host/master.m3u8";
+      const blobLiteral = "youtube-private-blob-support-4a9d";
+      const cdnVideo = document.createElement("video");
+      const blobVideo = document.createElement("video");
+      Object.defineProperty(cdnVideo, "currentSrc", {
+        configurable: true,
+        value: `https://cdn-user:cdn-password@v.vrv.co/evs1/${cdnLiteral}?Policy=support-query#support-fragment`,
+      });
+      Object.defineProperty(blobVideo, "currentSrc", {
+        configurable: true,
+        value: `blob:https://www.youtube.com/${blobLiteral}`,
+      });
+      const cdnSnapshot = videoDebugSnapshot(cdnVideo);
+      const blobSnapshot = videoDebugSnapshot(blobVideo);
+
+      const response = await handleDiagnosticMessage({
+        type: "ANIDACHI_DIAGNOSTICS",
+        command: "save",
+        mode,
+        page: {
+          mode,
+          video: { cdn: cdnSnapshot, blob: blobSnapshot },
+          pageDebug: {
+            entries: [
+              {
+                at: new Date().toISOString(),
+                elapsedMs: 1,
+                scope: "video.event",
+                message: "media snapshot",
+                data: { video: cdnSnapshot, after: blobSnapshot },
+              },
+            ],
+          },
+        },
+      });
+
+      expect(response).toEqual(expect.objectContaining({ ok: true, action: "downloaded" }));
+      const bundleText = JSON.stringify(parseDownloadedBundle(download));
+      for (const literal of [
+        cdnLiteral,
+        blobLiteral,
+        "cdn-user",
+        "cdn-password",
+        "support-query",
+        "support-fragment",
+      ]) {
+        expect(bundleText).not.toContain(literal);
+      }
+      expect(bundleText).toContain("https://v.vrv.co/<redacted-media-source>");
+      expect(bundleText).toContain(
+        "blob:https://www.youtube.com/<redacted-media-source>",
+      );
     },
   );
 

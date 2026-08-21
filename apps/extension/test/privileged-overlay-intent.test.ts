@@ -583,7 +583,7 @@ describe("privileged overlay intent boundary", () => {
       sender,
       {
         sessionStorage: createSessionStorage(),
-        getCurrentSession: () => {
+        getStoredSession: () => {
           validationStarted.resolve();
           return validatedSession.promise;
         },
@@ -601,6 +601,34 @@ describe("privileged overlay intent boundary", () => {
     expect(signOut).toHaveBeenCalledWith(accountA, expect.any(Function));
     expect(websiteLogout).not.toHaveBeenCalled();
     expect(currentSession).toBe(accountB);
+  });
+
+  it("authorizes sign-out from the stored exact family without live refresh or profile lookup", async () => {
+    const account = sessionFor("user-a");
+    const signOut = vi.fn(async () => true);
+    const getCurrentSession = vi.fn(async () => {
+      throw new Error("offline live auth must not run");
+    });
+
+    await expect(
+      handlePrivilegedOverlayIntentMessage(
+        {
+          type: "ANIDACHI_PRIVILEGED_OVERLAY_INTENT",
+          command: "invoke",
+          action: "sign-out",
+          context: signOutContext("user-a"),
+        },
+        { tab: { id: 28 } },
+        {
+          sessionStorage: createSessionStorage(),
+          getStoredSession: async () => account,
+          getCurrentSession,
+          signOut,
+        },
+      ),
+    ).resolves.toEqual({ ok: true });
+    expect(getCurrentSession).not.toHaveBeenCalled();
+    expect(signOut).toHaveBeenCalledWith(account, expect.any(Function));
   });
 
   it.each(["end-room", "quota-end-room"] as const)(
@@ -681,7 +709,7 @@ describe("privileged overlay intent boundary", () => {
         sender,
         {
           sessionStorage: storage,
-          getCurrentSession: authAdapter.get,
+          getStoredSession: authAdapter.get,
           signOut,
         },
       );
@@ -778,7 +806,7 @@ describe("privileged overlay intent boundary", () => {
         sender,
         {
           sessionStorage: storage,
-          getCurrentSession: async () => accountA,
+          getStoredSession: async () => accountA,
           signOut,
         },
       ),
@@ -840,7 +868,7 @@ describe("privileged overlay intent boundary", () => {
         sender,
         {
           sessionStorage: storage,
-          getCurrentSession: async () => account,
+          getStoredSession: async () => account,
           signOut,
         },
       ),

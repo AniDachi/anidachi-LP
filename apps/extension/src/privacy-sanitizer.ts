@@ -176,6 +176,9 @@ export function redactPrivacySafeUrl(value: string): string {
     const url = new URL(value);
     url.username = "";
     url.password = "";
+    if (url.pathname === "/%3Credacted-media-source%3E") {
+      return `${url.origin}/<redacted-media-source>`;
+    }
     const providerPathname = redactProviderContentPath(url);
     const pathname = (providerPathname ?? url.pathname).replace(
       /\/(room|rooms|join|invite|invites)\/[^/]+/gi,
@@ -185,6 +188,35 @@ export function redactPrivacySafeUrl(value: string): string {
   } catch {
     return value;
   }
+}
+
+export function redactPrivacySafeMediaSourceUrl(value: string): string {
+  if (!value) {
+    return "";
+  }
+
+  if (/^blob:/i.test(value)) {
+    try {
+      const source = new URL(value.slice("blob:".length));
+      if (source.protocol === "http:" || source.protocol === "https:") {
+        return `blob:${source.origin}/<redacted-media-source>`;
+      }
+    } catch {
+      // Malformed media URLs must fail closed instead of retaining opaque data.
+    }
+    return "blob:<redacted-media-source>";
+  }
+
+  if (/^https?:\/\//i.test(value)) {
+    try {
+      const source = new URL(value);
+      return `${source.origin}/<redacted-media-source>`;
+    } catch {
+      // Malformed media URLs must fail closed instead of retaining opaque data.
+    }
+  }
+
+  return "<redacted-media-source>";
 }
 
 function redactProviderContentPath(url: URL): string | null {

@@ -7,6 +7,7 @@ import {
   logDebug,
   playerOverlayGeometryDebugSnapshot,
   roomEventDebugSnapshot,
+  videoDebugSnapshot,
 } from "../src/debug-log";
 
 function createStorageMock(): Storage {
@@ -83,6 +84,49 @@ describe("debug log", () => {
       ]),
     );
     expect(info).not.toHaveBeenCalled();
+  });
+
+  it("removes transient CDN and blob media identifiers from routine and serialized debug", () => {
+    const cdnLiteral = "token-host/master.m3u8";
+    const blobLiteral = "youtube-private-blob-7f2e";
+    const cdnVideo = document.createElement("video");
+    const blobVideo = document.createElement("video");
+    Object.defineProperty(cdnVideo, "currentSrc", {
+      configurable: true,
+      value: `https://media-user:media-password@v.vrv.co/evs1/${cdnLiteral}?Policy=private-query#private-fragment`,
+    });
+    Object.defineProperty(blobVideo, "currentSrc", {
+      configurable: true,
+      value: `blob:https://www.youtube.com/${blobLiteral}`,
+    });
+
+    const snapshots = {
+      cdn: videoDebugSnapshot(cdnVideo),
+      blob: videoDebugSnapshot(blobVideo),
+    };
+    logDebug("video.event", "media sources", { video: snapshots.cdn });
+    logDebug("video.event", "blob source", { video: snapshots.blob });
+
+    const outputs = [
+      JSON.stringify(snapshots),
+      JSON.stringify(getDebugEntries()),
+      getCompactDebugLogText(),
+      getDebugLogText(),
+    ];
+    for (const output of outputs) {
+      expect(output).not.toContain(cdnLiteral);
+      expect(output).not.toContain(blobLiteral);
+      expect(output).not.toContain("media-user");
+      expect(output).not.toContain("media-password");
+      expect(output).not.toContain("private-query");
+      expect(output).not.toContain("private-fragment");
+    }
+    expect(JSON.stringify(snapshots.cdn)).toContain(
+      "https://v.vrv.co/<redacted-media-source>",
+    );
+    expect(JSON.stringify(snapshots.blob)).toContain(
+      "blob:https://www.youtube.com/<redacted-media-source>",
+    );
   });
 
   it("keeps the bounded page diagnostics buffer out of page localStorage", () => {
