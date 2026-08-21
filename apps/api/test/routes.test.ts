@@ -622,7 +622,7 @@ describe("worker routes", () => {
     };
     Object.setPrototypeOf(roomObject, RoomDurableObject.prototype);
 
-    await (RoomDurableObject.prototype as unknown as {
+    await expect((RoomDurableObject.prototype as unknown as {
       handleJoin(
         this: typeof roomObject,
         socket: WebSocket,
@@ -640,7 +640,7 @@ describe("worker routes", () => {
       participant: oldParticipant,
       participantSessionId: "shared-session",
       videoFingerprint: "video-1",
-    }).catch(() => undefined);
+    })).resolves.toBeUndefined();
 
     expect(admission.isPending(admissionId)).toBe(false);
     expect(clearAdmissionTimeout).toHaveBeenCalledWith(replacementSocket);
