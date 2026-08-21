@@ -3606,10 +3606,10 @@
     "semantic_hash": "7222da43b1fe21764ac60a152d060d29"
   },
   "docs/current-development-state.md": {
-    "mtime": 1787323039.4361582,
-    "seen": 1787323233.16154,
-    "ast_hash": "ff4dddfaf6841edb2bd6e02d8180b85c",
-    "semantic_hash": "ff4dddfaf6841edb2bd6e02d8180b85c"
+    "mtime": 1787326071.3281865,
+    "seen": 1787326462.9018,
+    "ast_hash": "733f69312dcc94c31fa53e7a9a6a4ca5",
+    "semantic_hash": "733f69312dcc94c31fa53e7a9a6a4ca5"
   },
   "docs/development-environments.md": {
     "mtime": 1786689011.3582418,
@@ -3768,10 +3768,10 @@
     "semantic_hash": "6e650e1cecebb157686b6e1daa58f2a4"
   },
   "docs/superpowers/plans/README.md": {
-    "mtime": 1787041482.6387274,
-    "seen": 1787168236.384672,
-    "ast_hash": "945072dbc6def632a9fdb6e4a1dc152c",
-    "semantic_hash": "945072dbc6def632a9fdb6e4a1dc152c"
+    "mtime": 1787326012.558926,
+    "seen": 1787326462.901803,
+    "ast_hash": "a674fa633108749afa28826b0264e2cc",
+    "semantic_hash": "a674fa633108749afa28826b0264e2cc"
   },
   "packages/protocol/AGENTS.md": {
     "mtime": 1786689011.3759747,
@@ -5316,10 +5316,10 @@
     "semantic_hash": "19c07fa543f5ae2aa0c6c3add9ea9889"
   },
   "docs/superpowers/plans/2026-08-14-watch-history-v2-clean-mvp-implementation.md": {
-    "mtime": 1787041482.638433,
-    "seen": 1787168236.384671,
-    "ast_hash": "2499bbaca0def152d34dc8e203fd3dd8",
-    "semantic_hash": "2499bbaca0def152d34dc8e203fd3dd8"
+    "mtime": 1787326071.3289168,
+    "seen": 1787326462.9018009,
+    "ast_hash": "4801c9cf3f9ef5083c3aec068cb9fb9e",
+    "semantic_hash": "4801c9cf3f9ef5083c3aec068cb9fb9e"
   },
   "docs/superpowers/specs/2026-08-13-watch-history-catalog-progress-design.md": {
     "mtime": 1786728374.7163763,
@@ -5664,10 +5664,10 @@
     "semantic_hash": "1de7f552345e6903b25d0462bd831fec"
   },
   "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md": {
-    "mtime": 1787320086.994559,
-    "seen": 1787320943.4495208,
-    "ast_hash": "d0f6e76dfbfe0ae9c5ce2ecd06f59c97",
-    "semantic_hash": "d0f6e76dfbfe0ae9c5ce2ecd06f59c97"
+    "mtime": 1787327236.628872,
+    "seen": 1787327616.1283789,
+    "ast_hash": "ef6d368d7ad69a1009e09276508939cf",
+    "semantic_hash": "ef6d368d7ad69a1009e09276508939cf"
   },
   "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md": {
     "mtime": 1787320094.8011692,
@@ -5926,5 +5926,11 @@
     "seen": 1787323233.1615329,
     "ast_hash": "56fd409bf1d735ced19c9f1d9ffc8407",
     "semantic_hash": "56fd409bf1d735ced19c9f1d9ffc8407"
+  },
+  "docs/superpowers/plans/2026-08-21-core-foundation-ui-handoff-plan.md": {
+    "mtime": 1787326330.544407,
+    "seen": 1787326462.901802,
+    "ast_hash": "39f8fc608f48024436fce40d34f838d8",
+    "semantic_hash": "39f8fc608f48024436fce40d34f838d8"
   }
 }

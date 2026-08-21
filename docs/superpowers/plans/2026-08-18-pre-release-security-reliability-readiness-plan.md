@@ -6,10 +6,12 @@
 > and `superpowers:requesting-code-review` at every wave stop. Do not skip the
 > drift gates or continue after a failed stop condition.
 
-Status: Wave 1 and Wave 2 are complete on staging; Tasks 5-8 are
-staging-accepted. Wave 2 Stop is closed, and Wave 3 may proceed from
-current staging. No security work from this wave is promoted to `main`;
-production promotion remains separate and out of scope.
+Status: **Closed as an execution program by scope disposition on 2026-08-21.**
+This does not mean that every original task was implemented. Waves 1-3 and
+Tasks 1-11 retain their recorded staging evidence below. The remaining work is
+either transferred to the focused foundation plan or explicitly deferred
+outside the currently approved technical/UI-handoff scope. No work from this
+program is promoted to `main`; production remains separate and out of scope.
 
 Wave 3 is green and the Wave 3 Stop is closed for staging readiness. Task 10's
 normal two-profile join/reconnect acceptance passed. Task 11 PR #210 merged to
@@ -35,6 +37,31 @@ succeeded on staging inside the enforced initial ten-minute OAuth transaction
 window. Exact elapsed times and screenshots are not claimed.
 
 Date: 2026-08-18
+
+## Program Closure And Remaining-scope Disposition
+
+The original plan was intentionally broad. Keeping it “active” after its first
+three staging waves made unrelated future work look like one unfinished task.
+The table below closes that planning ambiguity without erasing findings or
+inventing completion evidence.
+
+| Original scope | Disposition on 2026-08-21 |
+| --- | --- |
+| Task 0 evidence freeze | The original full report was not produced. Later Tasks 9 and 10 proceeded only through explicit reviewed amendments recorded in their status sections. No missing report is retrospectively claimed. |
+| Tasks 1-4 / Wave 1 | Closed with the staging evidence recorded below. |
+| Tasks 5-8 / Wave 2 | Closed with the migration-first staging and real OAuth acceptance evidence recorded below. |
+| Tasks 9-11 / Wave 3 | Closed with the recorded room-authority, pre-JOIN admission, diagnostics/isolation, CI, staging smoke, and loaded-artifact evidence. This remains staging evidence, not production or full two-network/TURN proof. |
+| Tasks 12-13 / Watch History bounds | Transferred to `2026-08-21-core-foundation-ui-handoff-plan.md`. The title-page projection is deployed on staging, but per-visible-title episode fan-out and global receipt lifecycle still require the focused work. |
+| Task 14 / Bloü and OpenClaw media | Not implemented by this closeout and explicitly outside the currently authorized scope. The findings remain visible for a separate pre-public decision. |
+| Task 15 / billing, room source, ICE | Canonical/durable room source and the legacy ICE query bearer are transferred to the focused foundation plan. Billing ownership remains a separate pre-public hardening task and is not claimed complete. |
+| Task 16 / public forms and shared passwords | Deferred to separate pre-public hardening. It is not required for the approved technical UI/UX handoff and is not claimed complete. |
+| Tasks 17-18 / integrated rescan and closeout | Superseded as one giant closeout by the focused plan's per-domain verification and staging evidence task. The original 20-finding completion criterion is not claimed. |
+
+The primary active technical-foundation plan is now
+`docs/superpowers/plans/2026-08-21-core-foundation-ui-handoff-plan.md`. This
+historical file remains the evidence log and design context for completed waves
+and deferred findings. Reopening any deferred item requires its own current
+source review, scope, approval, and quality gates.
 
 Design authority:
 `docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md`
@@ -1026,6 +1053,11 @@ refresh replay/concurrency, cleanup, full web/extension/protocol checks, and a
 documented staging reauthentication consequence. Stop if any legacy token is
 accepted cross-channel.
 
+Status: Wave 1 and Wave 2 are complete on staging; Tasks 5-8 are
+staging-accepted. Wave 2 Stop is closed, and Wave 3 may proceed from
+current staging. No security work from this wave is promoted to `main`;
+production promotion remains separate and out of scope.
+
 **Current stop status (2026-08-20): closed.** Tasks 5-8 satisfy their staging
 acceptance boundaries, including Task 5's attended real Google and Discord
 consent/callback acceptance, exact channel rejection, refresh
@@ -1768,7 +1800,7 @@ apply production migrations, deploy production, or call the product released.
 
 ## Final Completion Criteria
 
-This plan is complete only when:
+The original implementation-complete standard was:
 
 - Tasks 0-18 have evidence or an approved documented skip;
 - all high findings are fixed;
@@ -1784,6 +1816,9 @@ This plan is complete only when:
 - the work is cleanly reviewed on `staging`;
 - no production release action has occurred.
 
-After that, AniDachi can continue with UI/UX, People, Groups, invites, shared
-tracking polish, and other product work on a clean hardened foundation. The
-future production release remains a separate plan and explicit user decision.
+This standard was not met and is retained as historical context. The program is
+closed by the explicit disposition near the top of this file, not by treating
+the unchecked/deferred criteria as passed. AniDachi continues through the
+focused technical-foundation plan before UI/UX, People, Groups, invites, shared
+tracking polish, and other product work. A future production release remains a
+separate plan and explicit user decision.

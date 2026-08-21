@@ -24,15 +24,16 @@ WXT 0.20/Chrome Manifest V3 storage, Cloudflare Workers/Durable Objects with
 hibernatable WebSockets, `jose` HS256 JWTs, Vitest, Node test runner, Playwright
 room harness, pnpm 11.2.2, Node 22.23.1.
 
-**Status:** Waves 0-4 and Tasks 8-9 are implemented on `staging` through
-`f82fdf6`; the v1 runtime cutover is active and a user confirmed the repaired
-solo Crunchyroll -> Popup -> staging website path. Task 10 automated gates are
-green locally, but the complete two-profile/two-network manual acceptance matrix
-has not been run. The title-page read fix is locally verified in a standalone
-additive migration followed by a separate web consumer commit; neither has been
-deployed. Because all observed episodes for a visible title remain intentionally
-exact and untruncated, the payload is not absolutely bounded and public release
-remains blocked. Production promotion and legacy cleanup remain stopped.
+**Status:** **Historical foundation program, closed by scope transfer on
+2026-08-21.** Watch History v2 is the active staging runtime. The additive
+title-page projection/RPC was merged and applied through PR #189, followed by
+the web consumer in PR #190. The verified local-first solo, shared, offline,
+seek, Popup, and website behavior remains the baseline. A visible title can
+still return an unbounded episode array, so the remaining episode-page and
+receipt-lifecycle work is transferred to
+`2026-08-21-core-foundation-ui-handoff-plan.md`. The unexecuted full
+two-profile/two-network matrix is not retrospectively claimed. Production
+promotion and legacy cleanup remain stopped.
 
 ## Execution Waves And Mandatory Stops
 
@@ -1350,13 +1351,13 @@ loaded extension artifacts before any promotion.
   `768c219-staging-20260816185317`; the live staging Worker smoke also passes.
 - GitHub evidence for staging commit `f82fdf6` shows the staging migration,
   extension build, CI, Rooms, P2P Media, and staging smoke workflows succeeded.
-  The bounded-read commits are local only and are not included in that evidence.
-- Staging has the v2 foundation and clean-cutover migrations through
-  `20260814020000`. The new `20260816090000` title projection/bounded-read RPC has
-  only local Supabase proof: full migration reset, 71/71 pgTAP, schema lint,
-  local dry run, and actual RPC output parsed by the production runtime. It must
-  be the first staging PR; the web consumer is a second PR after the database
-  workflow and migration history are verified.
+  This evidence predates the bounded-read rollout. The additive
+  `20260816090000_watch_history_v2_bounded_read.sql` migration was subsequently
+  merged/applied to staging in PR #189 (`6c7e1b1b`), and its web consumer was
+  merged in the ordered follow-up PR #190 (`847d5e32`).
+- Staging therefore has the v2 foundation, clean cutover, title projection, and
+  title-page consumer. The ordered rollout closed the account-wide aggregation
+  defect but did not bound the number of episode rows for one visible title.
 - Production requires the same split. `.github/workflows/db-production.yml` and
   the application deployment react independently to a push on `main`, so a
   combined promotion can expose runtime before its RPC. Merge a migration-only
@@ -1395,10 +1396,11 @@ loaded extension artifacts before any promotion.
   hits). The pre-fix measured planner already chose the requester participant
   index for this skew (20 participant rows plus 20 session PK probes, 0.029 ms,
   82 hits), so no global-scan claim is inferred from that run.
-- The unapplied migration now opens an explicit transaction, sets a ten-second
-  lock timeout, and takes a write-conflicting settings-first lock before the
-  session, participant, and progress sources. This matches apply/delete writer order,
-  prevents initializer/delete resurrection for both projections, and avoids
+- At the pre-deployment review, the then-unapplied migration opened an explicit
+  transaction, set a ten-second lock timeout, and took a write-conflicting
+  settings-first lock before the session, participant, and progress sources.
+  This matches apply/delete writer order, prevents initializer/delete
+  resurrection for both projections, and avoids
   relying on undocumented per-file runner atomicity. A local three-session
   concurrency contract proves in-flight settings and session writers drain at
   their ordered locks, later writers wait and resume after commit, and a forced
