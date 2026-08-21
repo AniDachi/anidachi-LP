@@ -11,6 +11,10 @@ staging-accepted. Wave 2 Stop is closed, and Wave 3 may proceed from
 current staging. No security work from this wave is promoted to `main`;
 production promotion remains separate and out of scope.
 
+Wave 3 Tasks 9-10 are on staging, and Task 10's normal two-profile
+join/reconnect acceptance passed. Task 11 and the integrated Wave 3 matrix
+remain pending; the Wave 3 Stop is open.
+
 On 2026-08-20, real Google and real Discord consent/callback flows
 succeeded on staging inside the enforced initial ten-minute OAuth transaction
 window. Exact elapsed times and screenshots are not claimed.
@@ -1021,6 +1025,9 @@ of this closeout.
 
 ## Task 9: Bound Room-history Authority Lifetime
 
+**Status (2026-08-21): staging-accepted.** Task 9 is merged to staging and its
+expiry/replay behavior is covered by the completed automated and staging gates.
+
 **Files:**
 
 - Modify: `packages/protocol/src/types.ts`
@@ -1074,6 +1081,14 @@ git commit -m "fix(history): expire room authority safely"
 ```
 
 ## Task 10: Enforce Admission Before Retaining WebSockets
+
+**Status (2026-08-21): staging-accepted.** PR `#208` merged to staging at
+`1707703efb6ec5e85b6a3c40fc9192134f23be3a`. Post-merge CI, API deploy,
+migration workflow, Rooms E2E, P2P E2E, Vercel, and staging smoke passed. Two
+authenticated browser profiles completed the normal host/join, synchronized
+playback, and guest reload/reconnect path without duplicate or ghost
+participants. This does not claim two-network/TURN, production, or exhaustive
+adversarial staging traffic.
 
 **Approved amendment:** Use the reviewed two-pending-sockets-per-subject,
 10,000 ms absolute deadline, and `2 * signed maxParticipants` pending-room
@@ -1179,9 +1194,12 @@ git commit -m "fix(extension): isolate diagnostics and privileged actions"
 
 ### Wave 3 Stop
 
-Required GREEN: protocol/API/web/extension focused suites, room harness, loaded
-artifact smoke, expiry/replay matrix, pending-socket exhaustion, and hostile-page
-fixtures. Stop before history/database work if shared tracking regresses.
+**Current stop status (2026-08-21): open.** Tasks 9-10 are on staging, and
+Task 10's normal two-profile acceptance passed. Task 11 and the integrated Wave
+3 matrix remain pending. The acceptance proves the normal two-profile
+join/reconnect path only; it does not claim two-network/TURN, production, or
+exhaustive adversarial staging traffic. Stop before history/database work if
+shared tracking regresses.
 
 ---
 

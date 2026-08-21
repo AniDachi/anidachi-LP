@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-08-20.
+Last updated: 2026-08-21.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -242,15 +242,15 @@ acceptance boundaries, and the Wave 2 Stop is closed. Wave 3 may proceed from
 current `staging`. No security work from this wave has been promoted to `main`;
 production promotion remains a separate decision and is out of this closeout.
 
-Wave 3 Task 10 has a reviewed local admission boundary for authenticated room
-WebSockets: before retention, the Worker permits at most two pending sockets per
-subject, uses a 10,000 ms absolute JOIN deadline, and permits at most
-`2 * signed maxParticipants` pending sockets per room. This is a product
-amendment following `ROOM_ADMISSION_LIMITS_AMENDMENT_REQUIRED`, not measured
-staging capacity evidence. Pending sockets are bounded only during pre-JOIN;
-their compact attachment state supports reconstruction after a wake, while the
-short deadline timer may keep the object awake until it fires. Complete Task 10
-manual/staging acceptance remains pending.
+Wave 3 Tasks 9-10 are merged to staging. Task 10's WebSocket-admission change
+merged in PR `#208` at `1707703efb6ec5e85b6a3c40fc9192134f23be3a` on 2026-08-21.
+Post-merge CI, API deploy, migration workflow, Rooms E2E, P2P E2E, Vercel, and
+staging smoke passed. Manual staging acceptance with two authenticated browser
+profiles passed host room creation, guest join, synchronized play/pause/seek,
+and guest reload/reconnect without duplicate or ghost participants. This proves
+the normal two-profile join/reconnect path only; it is not a two-network/TURN,
+production, or exhaustive adversarial-traffic result. Task 11 is next, and the
+Wave 3 Stop remains open.
 
 ## Subscription Plan Codes
 
@@ -715,8 +715,9 @@ These are intentionally not treated as solved:
 - The additive foundation and Recent People v2 migrations are applied on
   staging through `20260814020000`. A user confirmed the repaired solo
   Crunchyroll -> Popup -> staging website path. Full two-profile/two-network
-  acceptance, the complete Task 10 manual matrix, and production promotion are
-  still pending; this is not a production-readiness claim.
+  acceptance, two-network/two-profile P2P evidence, the integrated Wave 3
+  matrix, and production promotion are still pending; this is not a
+  production-readiness claim.
 - The locally verified `20260816090000_watch_history_v2_bounded_read.sql`
   removes the full-account episode aggregation from title pagination with a
   transactionally maintained one-row-per-title v2 projection. A second compact
