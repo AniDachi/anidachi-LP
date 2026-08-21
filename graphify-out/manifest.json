@@ -3604,10 +3604,10 @@
     "semantic_hash": "7222da43b1fe21764ac60a152d060d29"
   },
   "docs/current-development-state.md": {
-    "mtime": 1787245759.615359,
-    "seen": 1787249354.967965,
-    "ast_hash": "87474ce58aab22c60b6fde57f5983745",
-    "semantic_hash": "87474ce58aab22c60b6fde57f5983745"
+    "mtime": 1787289081.1844997,
+    "seen": 1787290064.101381,
+    "ast_hash": "6fe5d0f6782f3d8a1d7f5c695b2d7b70",
+    "semantic_hash": "6fe5d0f6782f3d8a1d7f5c695b2d7b70"
   },
   "docs/development-environments.md": {
     "mtime": 1786689011.3582418,
@@ -5658,16 +5658,16 @@
     "semantic_hash": "1de7f552345e6903b25d0462bd831fec"
   },
   "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md": {
-    "mtime": 1787245759.615054,
-    "seen": 1787249354.9679658,
-    "ast_hash": "7e1e5daeee75524e42c22244628b0e0a",
-    "semantic_hash": "7e1e5daeee75524e42c22244628b0e0a"
+    "mtime": 1787289270.1020467,
+    "seen": 1787290064.1013818,
+    "ast_hash": "83c3c4de35378bbbbb39459c734c468f",
+    "semantic_hash": "83c3c4de35378bbbbb39459c734c468f"
   },
   "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md": {
-    "mtime": 1787245759.61455,
-    "seen": 1787249354.9679658,
-    "ast_hash": "80052e9da0844217e04f6d2cf8b6b468",
-    "semantic_hash": "80052e9da0844217e04f6d2cf8b6b468"
+    "mtime": 1787289104.0028636,
+    "seen": 1787290064.1013818,
+    "ast_hash": "f1c6523326a8be29fcbb2eecb78bc102",
+    "semantic_hash": "f1c6523326a8be29fcbb2eecb78bc102"
   },
   "apps/web/lib/anidachi-auth/oauth-routes.test.ts": {
     "mtime": 1787140027.917653,

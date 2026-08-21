@@ -85,7 +85,7 @@
         ],
         "relation": "form",
         "confidence": "EXTRACTED",
-        "confidence_score": 1.0,
+        "confidence_score": 1,
         "source_file": "docs/current-development-state.md"
       },
       {
@@ -99,7 +99,7 @@
         ],
         "relation": "form",
         "confidence": "EXTRACTED",
-        "confidence_score": 1.0,
+        "confidence_score": 1,
         "source_file": "docs/current-development-state.md"
       },
       {
@@ -99891,7 +99891,7 @@
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
       "source_location": null,
       "source_url": null,
-      "summary": "Tasks 5-8 are staging-accepted, Wave 2 Stop is closed, Wave 3 may proceed, and production promotion remains out of scope."
+      "summary": "Tasks 9-10 are on staging; Task 10 normal two-profile join/reconnect acceptance passed; Task 11 and the integrated Wave 3 matrix remain pending; Wave 3 Stop is open; no main or production promotion is claimed."
     },
     {
       "id": "docs_current_development_state_absolute_join_deadline",
@@ -100043,20 +100043,6 @@
       "contributor": null,
       "file_type": "concept",
       "norm_label": "receipt-first idempotency after authority expiry",
-      "source_file": "docs/current-development-state.md",
-      "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "docs_current_development_state_task_10_acceptance_pending",
-      "label": "Task 10 manual and staging acceptance pending",
-      "author": null,
-      "captured_at": null,
-      "community": 81,
-      "community_name": "Task 10 reviewed admission amendment",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "task 10 manual and staging acceptance pending",
       "source_file": "docs/current-development-state.md",
       "source_location": null,
       "source_url": null
@@ -100368,6 +100354,126 @@
       "source_file": "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md",
       "source_location": null,
       "source_url": null
+    },
+    {
+      "id": "docs_current_development_state_task_10_staging_acceptance_passed",
+      "label": "Task 10 staging acceptance passed",
+      "file_type": "concept",
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "summary": "Task 10 passed normal two-profile join/reconnect acceptance; PR #208 merge 1707703efb6ec5e85b6a3c40fc9192134f23be3a; CI, API deploy, migrations, Rooms E2E, P2P E2E, Vercel, and staging smoke passed.",
+      "community": 81,
+      "community_name": "Task 10 reviewed admission amendment",
+      "norm_label": "task 10 staging acceptance passed"
+    },
+    {
+      "id": "docs_current_development_state_task_9_runtime_migration_on_staging_acceptance_pending",
+      "label": "Task 9 staging runtime and migration acceptance pending",
+      "file_type": "concept",
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "summary": "Task 9 runtime and migration are on staging, but integrated expiry/replay acceptance remains pending.",
+      "community": 81,
+      "community_name": "Task 10 reviewed admission amendment",
+      "norm_label": "task 9 staging runtime and migration acceptance pending"
+    },
+    {
+      "id": "docs_current_development_state_task_11_integrated_wave_3_matrix_pending",
+      "label": "Task 11 and integrated Wave 3 matrix pending",
+      "file_type": "concept",
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "summary": "Task 11 and the integrated Wave 3 matrix remain pending.",
+      "community": 81,
+      "community_name": "Task 10 reviewed admission amendment",
+      "norm_label": "task 11 and integrated wave 3 matrix pending"
+    },
+    {
+      "id": "docs_current_development_state_wave_3_stop_open",
+      "label": "Wave 3 Stop open",
+      "file_type": "concept",
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "summary": "Wave 3 Stop remains open; no two-network/TURN, production, or exhaustive adversarial-traffic claim is made.",
+      "community": 81,
+      "community_name": "Task 10 reviewed admission amendment",
+      "norm_label": "wave 3 stop open"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_9_staging_runtime_migration_acceptance_pending",
+      "label": "Task 9 staging runtime and migration acceptance pending",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "summary": "Task 9 runtime and migration are on staging, but integrated expiry/replay acceptance remains pending.",
+      "community": 81,
+      "community_name": "Task 10 reviewed admission amendment",
+      "norm_label": "task 9 staging runtime and migration acceptance pending"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_10_staging_acceptance_passed",
+      "label": "Task 10 staging acceptance passed",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "summary": "Task 10 normal two-profile join/reconnect acceptance passed; PR #208 merge 1707703efb6ec5e85b6a3c40fc9192134f23be3a and automation evidence passed.",
+      "community": 81,
+      "community_name": "Task 10 reviewed admission amendment",
+      "norm_label": "task 10 staging acceptance passed"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_11_integrated_wave_3_matrix_pending",
+      "label": "Task 11 and integrated Wave 3 matrix pending",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "summary": "Task 11 and the integrated Wave 3 matrix remain pending.",
+      "community": 81,
+      "community_name": "Task 10 reviewed admission amendment",
+      "norm_label": "task 11 and integrated wave 3 matrix pending"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_wave_3_stop_open",
+      "label": "Wave 3 Stop open",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "summary": "Wave 3 Stop is open; no two-network/TURN, production, or exhaustive adversarial-traffic claim is made.",
+      "community": 81,
+      "community_name": "Task 10 reviewed admission amendment",
+      "norm_label": "wave 3 stop open"
     }
   ],
   "links": [
@@ -318721,150 +318827,140 @@
       "target": "docs_current_development_state_hourly_supabase_cleanup_job",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/current-development-state.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_current_development_state_auth_artifact_eligibility",
       "target": "docs_current_development_state_active_auth_artifact_preservation",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/current-development-state.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_current_development_state_cleanup_batch_ceiling",
       "target": "docs_current_development_state_auth_artifact_eligibility",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/current-development-state.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_current_development_state_hourly_supabase_cleanup_job",
       "target": "docs_current_development_state_cleanup_batch_ceiling",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/current-development-state.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_current_development_state_task_10_admission_amendment",
       "target": "docs_current_development_state_hibernation_attachment_reconstruction",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/current-development-state.md",
       "source_location": null,
-      "weight": 1.0
-    },
-    {
-      "source": "docs_current_development_state_task_10_admission_amendment",
-      "target": "docs_current_development_state_task_10_acceptance_pending",
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/current-development-state.md",
-      "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_current_development_state_task_8_staging_acceptance",
       "target": "docs_current_development_state_wave_2_complete",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/current-development-state.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_current_development_state_task_9_offline_grace",
       "target": "docs_current_development_state_invalid_room_authority_outbox",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/current-development-state.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_current_development_state_task_9_offline_grace",
       "target": "docs_current_development_state_receipt_first_idempotency",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/current-development-state.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_current_development_state_task_9_offline_grace",
       "target": "docs_current_development_state_task_9_exact_authority_claims",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/current-development-state.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_current_development_state_wave_2_complete",
       "target": "docs_current_development_state_wave_3_authorized",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/current-development-state.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_expired_authority_enforcement",
       "target": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_two_writer_recent_people_rule",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_hibernation_safe_reservations",
       "target": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_pre_join_deadline_timer",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_10_websocket_admission",
       "target": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_hibernation_safe_reservations",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_9_room_history_lifetime",
       "target": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_expired_authority_enforcement",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_specs_2026_08_14_watch_history_room_authority_threat_model_account_fences_and_self_only_writes",
@@ -318971,230 +319067,230 @@
       "target": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_current_staging_status",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_document",
       "target": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_task10_websocket_admission",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_document",
       "target": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_task9_room_history_capability_lifecycle",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_receipt_retention_14_days",
       "target": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_expired_capability_event_behavior",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_room_history_offline_grace_seconds",
       "target": "docs_superpowers_specs_2026_08_14_watch_history_room_authority_threat_model_offline_grace_86400_seconds",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_room_history_offline_grace_seconds",
       "target": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_receipt_retention_14_days",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_shared_bounded_cleanup_function",
       "target": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_receipt_retention_14_days",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_task10_websocket_admission",
       "target": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_aggregated_admission_rate_limit",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_task10_websocket_admission",
       "target": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_hibernation_compatible_admission_state",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_task10_websocket_admission",
       "target": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_join_deadline_10000_ms",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_task10_websocket_admission",
       "target": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_pending_sockets_per_room",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_task10_websocket_admission",
       "target": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_pending_sockets_per_subject",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_task8_bounded_artifact_cleanup",
       "target": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_auth_artifact_cleanup",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_task8_bounded_artifact_cleanup",
       "target": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_receipt_retention_14_days",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_task8_bounded_artifact_cleanup",
       "target": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_shared_bounded_cleanup_function",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_task9_room_history_capability_lifecycle",
       "target": "docs_superpowers_specs_2026_08_14_watch_history_room_authority_threat_model_worker_history_attestation",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_task9_room_history_capability_lifecycle",
       "target": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_expired_capability_event_behavior",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_task9_room_history_capability_lifecycle",
       "target": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_room_history_offline_grace_seconds",
       "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_current_development_state_task_10_admission_amendment",
       "target": "docs_current_development_state_absolute_join_deadline",
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/current-development-state.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_current_development_state_task_10_admission_amendment",
       "target": "docs_current_development_state_pending_room_allowance",
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/current-development-state.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_current_development_state_task_10_admission_amendment",
       "target": "docs_current_development_state_two_pending_sockets_per_subject",
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/current-development-state.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_no_extra_cleanup_infrastructure",
       "target": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_8_bounded_cleanup",
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_reviewed_product_limits",
       "target": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_10_websocket_admission",
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_specs_2026_08_14_watch_history_room_authority_threat_model_self_contained_attestation_approval",
@@ -319221,130 +319317,130 @@
       "target": "docs_current_development_state_task_10_admission_amendment",
       "relation": "references",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/current-development-state.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_current_development_state_current_development_state",
       "target": "docs_current_development_state_task_8_staging_acceptance",
       "relation": "references",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/current-development-state.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_current_development_state_current_development_state",
       "target": "docs_current_development_state_task_9_offline_grace",
       "relation": "references",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/current-development-state.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_current_development_state_task_8_staging_acceptance",
       "target": "docs_current_development_state_atomic_extension_code_deletion",
       "relation": "references",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/current-development-state.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_current_development_state_task_8_staging_acceptance",
       "target": "docs_current_development_state_auth_artifact_cleanup_migration",
       "relation": "references",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/current-development-state.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_current_development_state_task_8_staging_acceptance",
       "target": "docs_current_development_state_task_8_verification_evidence",
       "relation": "references",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/current-development-state.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_current_development_state_task_8_verification_evidence",
       "target": "docs_current_development_state_active_auth_artifact_preservation",
       "relation": "references",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/current-development-state.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_readiness_plan",
       "target": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_10_websocket_admission",
       "relation": "references",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_readiness_plan",
       "target": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_8_bounded_cleanup",
       "relation": "references",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_readiness_plan",
       "target": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_9_room_history_lifetime",
       "relation": "references",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_10_websocket_admission",
       "target": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_10_resource_test_matrix",
       "relation": "references",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_8_bounded_cleanup",
       "target": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_cleanup_auth_artifacts_v1",
       "relation": "references",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_9_room_history_lifetime",
       "target": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_room_history_offline_grace_seconds",
       "relation": "references",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_current_development_state_receipt_first_idempotency",
@@ -319354,17 +319450,7 @@
       "confidence_score": 0.85,
       "source_file": "docs/current-development-state.md",
       "source_location": null,
-      "weight": 1.0
-    },
-    {
-      "source": "docs_current_development_state_task_10_acceptance_pending",
-      "target": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_10_resource_test_matrix",
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "docs/current-development-state.md",
-      "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_current_development_state_hourly_supabase_cleanup_job",
@@ -319374,7 +319460,7 @@
       "confidence_score": 0.95,
       "source_file": "docs/current-development-state.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_expired_capability_event_behavior",
@@ -319384,7 +319470,7 @@
       "confidence_score": 0.95,
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_pending_sockets_per_room",
@@ -319394,7 +319480,7 @@
       "confidence_score": 0.95,
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_pending_sockets_per_subject",
@@ -319404,7 +319490,7 @@
       "confidence_score": 0.95,
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_task9_room_history_capability_lifecycle",
@@ -319414,7 +319500,7 @@
       "confidence_score": 0.95,
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_current_staging_status",
@@ -319424,7 +319510,7 @@
       "confidence_score": 0.95,
       "source_file": "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_current_development_state_absolute_join_deadline",
@@ -319434,7 +319520,7 @@
       "confidence_score": 0.95,
       "source_file": "docs/current-development-state.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_current_development_state_hibernation_attachment_reconstruction",
@@ -319444,7 +319530,7 @@
       "confidence_score": 0.95,
       "source_file": "docs/current-development-state.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_current_development_state_task_10_admission_amendment",
@@ -319454,7 +319540,7 @@
       "confidence_score": 0.95,
       "source_file": "docs/current-development-state.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_current_development_state_task_8_staging_acceptance",
@@ -319464,7 +319550,7 @@
       "confidence_score": 0.95,
       "source_file": "docs/current-development-state.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
     },
     {
       "source": "docs_current_development_state_task_9_offline_grace",
@@ -319474,7 +319560,87 @@
       "confidence_score": 0.95,
       "source_file": "docs/current-development-state.md",
       "source_location": null,
-      "weight": 1.0
+      "weight": 1
+    },
+    {
+      "source": "docs_current_development_state_current_development_state",
+      "target": "docs_current_development_state_task_10_staging_acceptance_passed",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_current_development_state_current_development_state",
+      "target": "docs_current_development_state_task_9_runtime_migration_on_staging_acceptance_pending",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_current_development_state_current_development_state",
+      "target": "docs_current_development_state_task_11_integrated_wave_3_matrix_pending",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_current_development_state_current_development_state",
+      "target": "docs_current_development_state_wave_3_stop_open",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_readiness_plan",
+      "target": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_9_staging_runtime_migration_acceptance_pending",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_readiness_plan",
+      "target": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_10_staging_acceptance_passed",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_readiness_plan",
+      "target": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_11_integrated_wave_3_matrix_pending",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_readiness_plan",
+      "target": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_wave_3_stop_open",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md",
+      "source_location": null,
+      "weight": 1
     }
   ],
   "hyperedges": [
@@ -319560,7 +319726,7 @@
       ],
       "relation": "form",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/current-development-state.md"
     },
     {
@@ -319574,7 +319740,7 @@
       ],
       "relation": "form",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
+      "confidence_score": 1,
       "source_file": "docs/current-development-state.md"
     },
     {
@@ -319592,5 +319758,5 @@
       "source_file": "apps/web/crm-data/WORKFLOW.md"
     }
   ],
-  "built_at_commit": "5d4bd21d415d4a41cff2af173bafd659faf5fa8b"
+  "built_at_commit": "2123c288f35693ddd2ffd4426289b9b438ae49de"
 }

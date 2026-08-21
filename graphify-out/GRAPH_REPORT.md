@@ -5,7 +5,7 @@
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 9074 nodes · 18877 edges · 1110 communities (329 shown, 781 thin omitted)
+- 9081 nodes · 18883 edges · 1110 communities (329 shown, 781 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 238 edges (avg confidence: 0.74)
 - Token cost: 99,005 input · 16,587 output
 
@@ -1483,7 +1483,7 @@ Nodes (30): AccountInboxCountRow, accountInboxCountsFromRow(), accountInboxDatab
 
 ### Community 81 - "Task 10 reviewed admission amendment"
 Cohesion: 0.07
-Nodes (34): Absolute 10000 millisecond JOIN deadline, Active auth artifact preservation, Atomic deletion after extension code exchange, Auth artifact cleanup migration, Expired revoked consumed or unusable artifact eligibility, Cleanup batch ceiling of 100 rows, Current Development State, Pending admission reconstruction from socket attachments (+26 more)
+Nodes (41): Absolute 10000 millisecond JOIN deadline, Active auth artifact preservation, Atomic deletion after extension code exchange, Auth artifact cleanup migration, Expired revoked consumed or unusable artifact eligibility, Cleanup batch ceiling of 100 rows, Current Development State, Pending admission reconstruction from socket attachments (+33 more)
 
 ### Community 82 - "overlay-interaction-boundary.ts"
 Cohesion: 0.09
