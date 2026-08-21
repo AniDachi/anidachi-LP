@@ -78,7 +78,7 @@ describe("debug log", () => {
         expect.objectContaining({
           scope: "test.scope",
           message: "captured message",
-          data: { sourceUrl: "https://example.com/watch?<redacted>" },
+          data: { sourceUrl: "https://example.com/watch" },
         }),
       ]),
     );
@@ -153,6 +153,54 @@ describe("debug log", () => {
       }
     }
     expect(outputs.join("\n")).toContain("connected");
+  });
+
+  it("removes current Crunchyroll and YouTube content identifiers from routine, compact, and full output", () => {
+    const privateLiterals = [
+      "G14PRIVATE1",
+      "unique-private-episode-slug-91c2",
+      "YtWatchA91Q",
+      "YtShortB82W",
+      "YtShortsC73E",
+      "YtEmbedD64R",
+      "YtNoCookieE55T",
+      "unique-list-query-54db",
+      "unique-share-query-3ed1",
+      "unique-player-hash-a27f",
+    ];
+
+    logDebug("room.ws", "provider URL snapshot", {
+      crunchyrollUrl:
+        "https://www.crunchyroll.com/watch/G14PRIVATE1/unique-private-episode-slug-91c2?from=unique-list-query-54db#unique-player-hash-a27f",
+      youtubeWatchUrl:
+        "https://www.youtube.com/watch?v=YtWatchA91Q&list=unique-list-query-54db#unique-player-hash-a27f",
+      youtubeShortUrl: "https://youtu.be/YtShortB82W?si=unique-share-query-3ed1",
+      youtubeShortsUrl:
+        "https://www.youtube.com/shorts/YtShortsC73E?feature=unique-share-query-3ed1",
+      youtubeEmbedUrl:
+        "https://www.youtube.com/embed/YtEmbedD64R?start=unique-list-query-54db",
+      youtubePrivacyEmbedUrl:
+        "https://www.youtube-nocookie.com/embed/YtNoCookieE55T#unique-player-hash-a27f",
+    });
+
+    const outputs = [
+      JSON.stringify(getDebugEntries()),
+      getCompactDebugLogText(),
+      getDebugLogText(),
+    ];
+    for (const output of outputs) {
+      for (const literal of privateLiterals) {
+        expect(output).not.toContain(literal);
+      }
+      expect(output).toContain("https://www.crunchyroll.com/watch/<redacted-id>");
+      expect(output).toContain("https://www.youtube.com/watch");
+      expect(output).toContain("https://youtu.be/<redacted-id>");
+      expect(output).toContain("https://www.youtube.com/shorts/<redacted-id>");
+      expect(output).toContain("https://www.youtube.com/embed/<redacted-id>");
+      expect(output).toContain("https://www.youtube-nocookie.com/embed/<redacted-id>");
+      expect(output).not.toContain("?<redacted>");
+      expect(output).not.toContain("#<redacted>");
+    }
   });
 
   it("prints debug entries when console debug is explicitly enabled", () => {
@@ -305,7 +353,7 @@ describe("debug log", () => {
         candidate: "<redacted-media>",
         participantSessionId: expect.stringMatching(/^id_[a-z0-9]+$/),
         reason: "join:hash",
-        url: "https://staging.anidachi.app/room?<redacted>",
+        url: "https://staging.anidachi.app/room",
       }),
     );
     expect(JSON.stringify(entry?.data)).not.toContain("session-secret-value");

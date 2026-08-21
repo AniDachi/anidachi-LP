@@ -46,6 +46,7 @@ const HASH_IDENTIFIER_FIELDS = new Set([
   "byUserId",
   "sessionId",
   "clientSignalId",
+  "clientActionId",
   "senderConnectionId",
   "senderMediaSessionId",
   "mediaSessionId",
@@ -175,16 +176,59 @@ export function redactPrivacySafeUrl(value: string): string {
     const url = new URL(value);
     url.username = "";
     url.password = "";
-    const pathname = url.pathname.replace(
+    const providerPathname = redactProviderContentPath(url);
+    const pathname = (providerPathname ?? url.pathname).replace(
       /\/(room|rooms|join|invite|invites)\/[^/]+/gi,
       (_match, route: string) => `/${route}/<redacted-id>`,
     );
-    return `${url.origin}${pathname}${url.search ? "?<redacted>" : ""}${
-      url.hash ? "#<redacted>" : ""
-    }`;
+    return `${url.origin}${pathname}`;
   } catch {
     return value;
   }
+}
+
+function redactProviderContentPath(url: URL): string | null {
+  const hostname = url.hostname.toLowerCase();
+
+  if (isHostOrSubdomain(hostname, "crunchyroll.com")) {
+    const match = url.pathname.match(
+      /^\/(?:(?<locale>[a-z]{2}(?:-[a-z]{2})?)\/)?watch\/[^/]+(?:\/[^/]*)?\/?$/i,
+    );
+    if (match) {
+      const locale = match.groups?.locale;
+      return `/${locale ? `${locale}/` : ""}watch/<redacted-id>`;
+    }
+  }
+
+  if (isHostOrSubdomain(hostname, "youtu.be")) {
+    const segments = url.pathname.split("/").filter(Boolean);
+    if (segments.length === 1) {
+      return "/<redacted-id>";
+    }
+  }
+
+  if (isHostOrSubdomain(hostname, "youtube.com")) {
+    if (/^\/watch\/?$/i.test(url.pathname)) {
+      return "/watch";
+    }
+    const pathMatch = url.pathname.match(/^\/(shorts|embed)\/[^/]+(?:\/.*)?$/i);
+    if (pathMatch?.[1]) {
+      return `/${pathMatch[1].toLowerCase()}/<redacted-id>`;
+    }
+  }
+
+  if (isHostOrSubdomain(hostname, "youtube-nocookie.com")) {
+    const embedMatch = url.pathname.match(/^\/embed\/[^/]+(?:\/.*)?$/i);
+    if (embedMatch) {
+      return "/embed/<redacted-id>";
+    }
+  }
+
+  return null;
+}
+
+function isHostOrSubdomain(hostname: string, domain: string): boolean {
+  return hostname === domain || hostname.endsWith(`.${domain}`);
 }
 
 function looksLikeRawMediaPayload(value: string): boolean {

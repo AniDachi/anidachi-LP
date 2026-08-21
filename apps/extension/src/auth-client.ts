@@ -893,11 +893,20 @@ async function attemptWebsiteLogoutFlow(): Promise<void> {
   }
 }
 
-export async function signOutWithWebsite(expected: ExtensionAuthTokens): Promise<boolean> {
+/**
+ * Runs `onMatchedSession` inside the exact-family auth mutation. The callback
+ * must not enqueue another auth mutation; privileged sign-out uses only the
+ * independent per-tab room-authority queue here.
+ */
+export async function signOutWithWebsite(
+  expected: ExtensionAuthTokens,
+  onMatchedSession?: (matchedSession: ExtensionAuthTokens) => Promise<void>,
+): Promise<boolean> {
   let matchedExpectedSession = false;
   try {
     const result = await clearStoredAuthTokensIfCurrentAfter(expected, async (stored) => {
       matchedExpectedSession = true;
+      await onMatchedSession?.(stored);
       await runWebsiteSignOutSequence({
         getStoredTokens: async () => stored,
         flushBeforeSignOut: async (tokens) => {

@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { ExtensionAuthTemporarilyUnavailableError, isAuthMessage } from "../src/auth-client";
-import type { ExtensionAuthTokens } from "../src/auth-tokens";
+import {
+  createAuthSessionStorageAuthority,
+  type ExtensionAuthTokens,
+} from "../src/auth-tokens";
 import { isRoomHttpMessage } from "../src/room-client";
 import {
   handlePrivilegedOverlayIntentMessage,
@@ -595,16 +598,228 @@ describe("privileged overlay intent boundary", () => {
       ok: false,
       error: "Privileged overlay account changed",
     });
-    expect(signOut).toHaveBeenCalledWith(accountA);
+    expect(signOut).toHaveBeenCalledWith(accountA, expect.any(Function));
     expect(websiteLogout).not.toHaveBeenCalled();
     expect(currentSession).toBe(accountB);
+  });
+
+  it.each(["end-room", "quota-end-room"] as const)(
+    "invalidates matched account A authority before queued account B can issue authority for %s",
+    async (action) => {
+      const storage = createSessionStorage();
+      const sender = { tab: { id: action === "end-room" ? 25 : 26 } };
+      const accountA = sessionFor("user-a");
+      const accountB = sessionFor("user-b");
+      let currentSession: ExtensionAuthTokens | null = accountA;
+      const authAdapter = {
+        get: async () => currentSession,
+        set: async (tokens: ExtensionAuthTokens) => {
+          currentSession = tokens;
+        },
+        remove: async () => {
+          currentSession = null;
+        },
+      };
+      const authAuthority = createAuthSessionStorageAuthority(authAdapter);
+      const signOutSideEffectsStarted = deferred<void>();
+      const releaseSignOutSideEffects = deferred<void>();
+      const accountBAuthorityIssued = deferred<PrivilegedOverlayContext | null>();
+      let replacementInstall: Promise<void> | null = null;
+      let matchedCallbackWasProvided = false;
+      const accountAAuthority = await reserveAndIssueRoomAuthority(
+        {
+          roomId: "room-a",
+          roomToken: trustedRoomToken("user-a", "room-a", "host"),
+        },
+        sender,
+        { sessionStorage: storage, getStoredSession: authAdapter.get },
+      );
+      expect(accountAAuthority).toEqual(roomHostContext(1));
+
+      const signOut = async (
+        expectedSession: ExtensionAuthTokens,
+        onMatchedSession?: (matchedSession: ExtensionAuthTokens) => Promise<void>,
+      ) => {
+        matchedCallbackWasProvided = typeof onMatchedSession === "function";
+        const result = await authAuthority.clearIfCurrentAfter(
+          expectedSession,
+          async (matchedSession) => {
+            await onMatchedSession?.(matchedSession);
+            signOutSideEffectsStarted.resolve();
+            await releaseSignOutSideEffects.promise;
+          },
+        );
+        if (!replacementInstall) {
+          throw new Error("Replacement account was not queued");
+        }
+        await replacementInstall;
+        const authorityGeneration = await reservePrivilegedRoomAuthorityForTab(
+          sender.tab.id,
+          { sessionStorage: storage },
+        );
+        accountBAuthorityIssued.resolve(
+          await issuePrivilegedRoomAuthority(
+            {
+              roomId: "room-b",
+              roomToken: trustedRoomToken("user-b", "room-b", "host"),
+              authorityGeneration,
+            },
+            sender,
+            { sessionStorage: storage, getStoredSession: authAdapter.get },
+          ),
+        );
+        return result.committed;
+      };
+
+      const signOutInvoke = handlePrivilegedOverlayIntentMessage(
+        {
+          type: "ANIDACHI_PRIVILEGED_OVERLAY_INTENT",
+          command: "invoke",
+          action: "sign-out",
+          context: signOutContext("user-a"),
+        },
+        sender,
+        {
+          sessionStorage: storage,
+          getCurrentSession: authAdapter.get,
+          signOut,
+        },
+      );
+      await signOutSideEffectsStarted.promise;
+      replacementInstall = authAuthority.replace(accountB);
+      await Promise.resolve();
+      expect(currentSession).toBe(accountA);
+      releaseSignOutSideEffects.resolve();
+
+      await expect(signOutInvoke).resolves.toEqual({ ok: true });
+      const accountBAuthority = await accountBAuthorityIssued.promise;
+      expect(matchedCallbackWasProvided).toBe(true);
+      expect(currentSession).toBe(accountB);
+      expect(accountBAuthority).toEqual({
+        accountUserId: "user-b",
+        roomId: "room-b",
+        role: "host",
+        authorityGeneration: 3,
+      });
+      if (!accountBAuthority) {
+        throw new Error("Account B authority was not issued");
+      }
+
+      const endRoom = vi.fn(async () => ({ endedAt: "2026-08-21T00:00:00.000Z" }));
+      await expect(
+        handlePrivilegedOverlayIntentMessage(
+          {
+            type: "ANIDACHI_PRIVILEGED_OVERLAY_INTENT",
+            command: "invoke",
+            action,
+            context: accountBAuthority,
+          },
+          sender,
+          {
+            sessionStorage: storage,
+            endRoom,
+            getCurrentSession: authAdapter.get,
+          },
+        ),
+      ).resolves.toEqual({ ok: true, endedAt: "2026-08-21T00:00:00.000Z" });
+      expect(endRoom).toHaveBeenCalledWith("room-b", "access-token-user-b");
+    },
+  );
+
+  it("does not run account A's matched-session callback or clear account B authority when A is stale", async () => {
+    const storage = createSessionStorage();
+    const sender = { tab: { id: 27 } };
+    const accountA = sessionFor("user-a");
+    const accountB = sessionFor("user-b");
+    let currentSession: ExtensionAuthTokens | null = accountB;
+    const authAdapter = {
+      get: async () => currentSession,
+      set: async (tokens: ExtensionAuthTokens) => {
+        currentSession = tokens;
+      },
+      remove: async () => {
+        currentSession = null;
+      },
+    };
+    const authAuthority = createAuthSessionStorageAuthority(authAdapter);
+    const accountBAuthority = await reserveAndIssueRoomAuthority(
+      {
+        roomId: "room-b",
+        roomToken: trustedRoomToken("user-b", "room-b", "host"),
+      },
+      sender,
+      { sessionStorage: storage, getStoredSession: authAdapter.get },
+    );
+    let matchedCallbackWasProvided = false;
+    let matchedCallbackCalls = 0;
+    const signOut = async (
+      expectedSession: ExtensionAuthTokens,
+      onMatchedSession?: (matchedSession: ExtensionAuthTokens) => Promise<void>,
+    ) => {
+      matchedCallbackWasProvided = typeof onMatchedSession === "function";
+      const result = await authAuthority.clearIfCurrentAfter(
+        expectedSession,
+        async (matchedSession) => {
+          matchedCallbackCalls += 1;
+          await onMatchedSession?.(matchedSession);
+        },
+      );
+      return result.committed;
+    };
+
+    await expect(
+      handlePrivilegedOverlayIntentMessage(
+        {
+          type: "ANIDACHI_PRIVILEGED_OVERLAY_INTENT",
+          command: "invoke",
+          action: "sign-out",
+          context: signOutContext("user-a"),
+        },
+        sender,
+        {
+          sessionStorage: storage,
+          getCurrentSession: async () => accountA,
+          signOut,
+        },
+      ),
+    ).resolves.toEqual({ ok: false, error: "Privileged overlay account changed" });
+    expect(matchedCallbackWasProvided).toBe(true);
+    expect(matchedCallbackCalls).toBe(0);
+    expect(currentSession).toBe(accountB);
+
+    const endRoom = vi.fn(async () => ({ endedAt: null }));
+    await expect(
+      handlePrivilegedOverlayIntentMessage(
+        {
+          type: "ANIDACHI_PRIVILEGED_OVERLAY_INTENT",
+          command: "invoke",
+          action: "end-room",
+          context: accountBAuthority as PrivilegedOverlayContext,
+        },
+        sender,
+        {
+          sessionStorage: storage,
+          endRoom,
+          getCurrentSession: authAdapter.get,
+        },
+      ),
+    ).resolves.toEqual({ ok: true, endedAt: null });
+    expect(endRoom).toHaveBeenCalledWith("room-b", "access-token-user-b");
   });
 
   it("signs out the exact validated session and clears the tab room authority", async () => {
     const storage = createSessionStorage();
     const sender = { tab: { id: 22 } };
     const account = sessionFor("user-a");
-    const signOut = vi.fn(async () => true);
+    const signOut = vi.fn(
+      async (
+        _expectedSession: ExtensionAuthTokens,
+        onMatchedSession?: (matchedSession: ExtensionAuthTokens) => Promise<void>,
+      ) => {
+        await onMatchedSession?.(account);
+        return true;
+      },
+    );
     const authority = await reserveAndIssueRoomAuthority(
       {
         roomId: "room-a",
@@ -630,7 +845,7 @@ describe("privileged overlay intent boundary", () => {
         },
       ),
     ).resolves.toEqual({ ok: true });
-    expect(signOut).toHaveBeenCalledWith(account);
+    expect(signOut).toHaveBeenCalledWith(account, expect.any(Function));
 
     await expect(
       handlePrivilegedOverlayIntentMessage(

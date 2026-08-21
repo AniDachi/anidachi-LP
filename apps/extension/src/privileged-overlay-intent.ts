@@ -210,10 +210,13 @@ export async function handlePrivilegedOverlayIntentMessage(
       return { ok: false, error: "Privileged overlay account changed" };
     }
     const signOut = dependencies.signOut ?? signOutWithWebsite;
-    if (!(await signOut(currentSession))) {
+    if (
+      !(await signOut(currentSession, () =>
+        clearPrivilegedOverlayContextForTab(tabId, dependencies),
+      ))
+    ) {
       return { ok: false, error: "Privileged overlay account changed" };
     }
-    await clearPrivilegedOverlayContextForTab(tabId, dependencies);
     return { ok: true };
   }
 

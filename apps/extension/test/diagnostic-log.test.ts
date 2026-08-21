@@ -115,7 +115,7 @@ describe("diagnostic log", () => {
             refreshToken: "<redacted>",
             roomHistoryAttestation: "<redacted>",
             targetKey: expect.stringMatching(/^id_[a-z0-9]+$/),
-            url: "https://staging.anidachi.app/room?<redacted>",
+            url: "https://staging.anidachi.app/room",
           },
         }),
       ]);
@@ -143,6 +143,12 @@ describe("diagnostic log", () => {
       },
     });
     storage.set("anidachi.watchLibraryCache.v1.user-1", { entries: [] });
+    const rawVoiceUserId = "voice/account+unique@example.com";
+    const encodedVoiceUserId = encodeURIComponent(rawVoiceUserId);
+    storage.set(
+      `local:voiceAudioPreferencesV1.${encodeURIComponent(`user:${rawVoiceUserId}`)}`,
+      { mode: "open-mic" },
+    );
 
     const pageDebug = {
       entries: Array.from({ length: 620 }, (_, index) => ({
@@ -239,7 +245,7 @@ describe("diagnostic log", () => {
     const bundleText = JSON.stringify(bundle);
     expect(bundle.format).toBe("diagnostics");
     expect(bundle.mode).toBe("full");
-    expect(bundle.page.url).toBe("https://www.crunchyroll.com/watch?<redacted>");
+    expect(bundle.page.url).toBe("https://www.crunchyroll.com/watch");
     expect(bundle.page.participantId).toMatch(/^id_[a-z0-9]+$/);
     expect(bundle.page.voice).toEqual({
       mode: "open-mic",
@@ -264,6 +270,13 @@ describe("diagnostic log", () => {
     expect(bundle.storage.keys).toContain(
       "anidachi.watchLibraryCache.v1.<redacted-id>",
     );
+    expect(bundle.storage.keys).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(
+          /^local:voiceAudioPreferencesV1\.user%3Aid_[a-z0-9]+$/,
+        ),
+      ]),
+    );
     expect(bundle.storage.auth.user).toEqual({
       id: expect.stringMatching(/^id_[a-z0-9]+$/),
       hasAvatar: true,
@@ -274,9 +287,95 @@ describe("diagnostic log", () => {
     expect(bundleText).not.toContain("user-1");
     expect(bundleText).not.toContain("remote-user-1");
     expect(bundleText).not.toContain("token=secret");
+    expect(bundleText).not.toContain(rawVoiceUserId);
+    expect(bundleText).not.toContain(encodedVoiceUserId);
     expect(bundleText).not.toMatch(
       /Unique Support Display Name b06e|Unique Page Display Name c44a|Unique Support Invite Label 9df1|group:unique-support-target-2a18|Unique Support Reaction 88e4|Unique Support Source Title 645b/,
     );
+  });
+
+  it.each(["light", "full"] as const)(
+    "removes current provider content identifiers from serialized %s support bundles",
+    async (mode) => {
+      const { download } = installChromeMock();
+      const privateLiterals = [
+        "G14SUPPORT1",
+        "unique-support-episode-slug-4a2c",
+        "YtSupportWatch1",
+        "YtSupportShort2",
+        "YtSupportShorts3",
+        "YtSupportEmbed4",
+        "YtSupportNoCookie5",
+        "unique-support-query-6f3a",
+        "unique-support-hash-7d9e",
+      ];
+
+      const response = await handleDiagnosticMessage({
+        type: "ANIDACHI_DIAGNOSTICS",
+        command: "save",
+        mode,
+        page: {
+          mode,
+          url: "https://www.crunchyroll.com/watch/G14SUPPORT1/unique-support-episode-slug-4a2c?from=unique-support-query-6f3a#unique-support-hash-7d9e",
+          video: {
+            youtubeWatchUrl:
+              "https://www.youtube.com/watch?v=YtSupportWatch1&list=unique-support-query-6f3a#unique-support-hash-7d9e",
+            youtubeShortUrl:
+              "https://youtu.be/YtSupportShort2?si=unique-support-query-6f3a",
+            youtubeShortsUrl:
+              "https://www.youtube.com/shorts/YtSupportShorts3?feature=unique-support-query-6f3a",
+            youtubeEmbedUrl:
+              "https://www.youtube.com/embed/YtSupportEmbed4?start=unique-support-query-6f3a",
+            youtubePrivacyEmbedUrl:
+              "https://www.youtube-nocookie.com/embed/YtSupportNoCookie5#unique-support-hash-7d9e",
+          },
+        },
+      });
+
+      expect(response).toEqual(expect.objectContaining({ ok: true, action: "downloaded" }));
+      const bundleText = JSON.stringify(parseDownloadedBundle(download));
+      for (const literal of privateLiterals) {
+        expect(bundleText).not.toContain(literal);
+      }
+      expect(bundleText).toContain("https://www.crunchyroll.com/watch/<redacted-id>");
+      expect(bundleText).toContain("https://www.youtube.com/watch");
+      expect(bundleText).toContain("https://youtu.be/<redacted-id>");
+      expect(bundleText).toContain("https://www.youtube.com/shorts/<redacted-id>");
+      expect(bundleText).toContain("https://www.youtube.com/embed/<redacted-id>");
+      expect(bundleText).toContain("https://www.youtube-nocookie.com/embed/<redacted-id>");
+      expect(bundleText).not.toContain("?<redacted>");
+      expect(bundleText).not.toContain("#<redacted>");
+    },
+  );
+
+  it("pseudonymizes encoded account ids in serialized voice preference storage keys", async () => {
+    const { storage, download } = installChromeMock();
+    const rawVoiceUserId = "voice/storage+private@example.com";
+    const encodedVoiceUserId = encodeURIComponent(rawVoiceUserId);
+    storage.set(
+      `local:voiceAudioPreferencesV1.${encodeURIComponent(`user:${rawVoiceUserId}`)}`,
+      { mode: "open-mic" },
+    );
+
+    const response = await handleDiagnosticMessage({
+      type: "ANIDACHI_DIAGNOSTICS",
+      command: "save",
+      mode: "full",
+      page: { mode: "full" },
+    });
+
+    expect(response).toEqual(expect.objectContaining({ ok: true, action: "downloaded" }));
+    const bundle = parseDownloadedBundle(download) as { storage: { keys: string[] } };
+    const bundleText = JSON.stringify(bundle);
+    expect(bundle.storage.keys).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(
+          /^local:voiceAudioPreferencesV1\.user%3Aid_[a-z0-9]+$/,
+        ),
+      ]),
+    );
+    expect(bundleText).not.toContain(rawVoiceUserId);
+    expect(bundleText).not.toContain(encodedVoiceUserId);
   });
 
   it("returns an error when downloads permission is unavailable", async () => {

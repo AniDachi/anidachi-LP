@@ -30,6 +30,7 @@ import {
   updateGroupHttpMessage,
   updateFriendGroupFromApi,
 } from "../src/social-client";
+import { clearDebugLog, getDebugEntries, getDebugLogText } from "../src/debug-log";
 
 const NOW = "2026-08-06T12:00:00.000Z";
 const USER_ID = "11111111-1111-4111-8111-111111111111";
@@ -147,7 +148,9 @@ function socialDirectoryResponses() {
 }
 
 afterEach(() => {
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
+  clearDebugLog();
 });
 
 describe("extension social HTTP bridge", () => {
@@ -444,15 +447,17 @@ describe("extension social HTTP bridge", () => {
   });
 
   it("sends the stable invite action id to the web API", async () => {
+    const privateClientActionId = "77777777-7777-4777-8777-unique-action-71c9";
     const fetchMock = vi
       .fn()
       .mockResolvedValue(jsonResponse({ invite: roomInvite(), created: true }));
     vi.stubGlobal("fetch", fetchMock);
+    clearDebugLog();
 
     await expect(
       createRoomInviteFromApi("access-1", {
         roomId: "room-1",
-        clientActionId: CLIENT_ACTION_ID,
+        clientActionId: privateClientActionId,
         recipientUserIds: [USER_ID],
       }),
     ).resolves.toMatchObject({ created: true, invite: { id: INVITE_ID } });
@@ -462,11 +467,18 @@ describe("extension social HTTP bridge", () => {
       expect.objectContaining({
         body: JSON.stringify({
           roomId: "room-1",
-          clientActionId: CLIENT_ACTION_ID,
+          clientActionId: privateClientActionId,
           recipientUserIds: [USER_ID],
         }),
       }),
     );
+
+    const routineLog = JSON.stringify(getDebugEntries());
+    const fullExport = getDebugLogText();
+    for (const serializedOutput of [routineLog, fullExport]) {
+      expect(serializedOutput).not.toContain(privateClientActionId);
+      expect(serializedOutput).toMatch(/"clientActionId"\s*:\s*"id_[a-z0-9]+"/);
+    }
   });
 
   it("accepts durable inbox list and response messages", () => {
