@@ -766,6 +766,38 @@ describe("Popup Watch History v2", () => {
     await unmount(view.root);
   });
 
+  it("renders exact canonical counts from the compact snapshot and never requests old detail pages", async () => {
+    const base = historyFixture();
+    const item = base.items[0]!;
+    const first = item.seasons[0]!.episodes[0]!;
+    const episodes = Array.from({ length: 8 }, (_, index) => ({
+      ...first,
+      episodeKey: `crunchyroll:episode-${index + 1}`,
+      episodeTitle: `Episode ${index + 1}`,
+      episodeNumber: index + 1,
+    }));
+    const compact = {
+      ...base,
+      items: [{
+        ...item,
+        observedEpisodeCount: 2_000,
+        completedEpisodeCount: 100,
+        episodePage: { complete: false, nextCursor: "episode_cursor" },
+        aggregate: { ...item.aggregate, completedEpisodes: 100 },
+        seasons: [{ ...item.seasons[0]!, episodes }],
+      }],
+    } as WatchHistoryResponse;
+    const request = vi.fn(requestForHistory(compact));
+    const view = await renderPanel(clientFixture({ cached: null, request }));
+
+    await waitFor(() => expect(view.container.textContent).toContain("2000 observed episodes"));
+    expect(view.container.textContent).toContain("Episode 1");
+    expect(view.container.textContent).toContain("Episode 8");
+    expect(request.mock.calls.filter(([message]) => message.command === "list")).toHaveLength(1);
+    expect(request.mock.calls.some(([message]) => "titleKey" in message)).toBe(false);
+    await unmount(view.root);
+  });
+
   it("searches canonical v2 history by title and episode without mutating the response", async () => {
     const history = twoEpisodeHistoryFixture();
     const request = requestForHistory(history);
@@ -1083,6 +1115,9 @@ function historyFixture(overrides: {
       {
         provider: "crunchyroll",
         titleKey: "crunchyroll:frieren",
+        observedEpisodeCount: 1,
+        completedEpisodeCount: 0,
+        episodePage: { complete: true, nextCursor: null },
         itemKind: "series",
         title: overrides.title ?? "Frieren",
         sourceUrl: episode.sourceUrl,
@@ -1130,6 +1165,8 @@ function twoEpisodeHistoryFixture(): WatchHistoryResponse {
     ...history,
     items: history.items.map((item) => ({
       ...item,
+      observedEpisodeCount: 2,
+      episodePage: { complete: true, nextCursor: null },
       seasons: item.seasons.map((season) => ({ ...season, episodes: [first, second] })),
     })),
   };

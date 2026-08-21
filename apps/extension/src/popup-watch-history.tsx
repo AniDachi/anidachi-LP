@@ -602,8 +602,7 @@ function PopupWatchHistoryItem({
   onDelete: (target: WatchHistoryDeleteScope) => void;
   pendingByEpisode: Map<string, WatchProgressEvent>;
 }) {
-  const episodeCount = item.seasons.reduce((sum, season) => sum + season.episodes.length, 0);
-  const observedCount = episodeCount || (item.itemKind === "movie" ? 1 : 0);
+  const observedCount = item.observedEpisodeCount;
   const latestActivityPending = pendingByEpisode.get(
     pendingEpisodeKey(item.provider, item.titleKey, item.latestActivity.episodeKey),
   );
@@ -837,6 +836,10 @@ function projectPendingWatchHistoryItems(
         : season);
     const nextItem: WatchHistoryItem = {
       ...item,
+      observedEpisodeCount: Math.max(
+        item.observedEpisodeCount,
+        seasons.reduce((total, season) => total + season.episodes.length, 0),
+      ),
       seasons,
       latestActivity: Date.parse(event.observedAt) >= Date.parse(item.latestActivity.lastWatchedAt)
         ? pendingWatchHistoryLatestActivity(event)
@@ -854,6 +857,9 @@ function pendingWatchHistoryItem(event: WatchProgressEvent): WatchHistoryItem {
   return {
     provider: event.provider,
     titleKey: event.titleKey,
+    observedEpisodeCount: 1,
+    completedEpisodeCount: 0,
+    episodePage: { complete: true, nextCursor: null },
     itemKind: event.itemKind,
     title: event.title,
     sourceUrl: event.sourceUrl,
@@ -1197,13 +1203,31 @@ function removeHistoryTarget(
   }
   const items = history.items.flatMap((item) => {
     if (item.provider !== target.provider || item.titleKey !== target.titleKey) return [item];
+    const removedEpisode = item.seasons
+      .flatMap((season) => season.episodes)
+      .find((episode) => episode.episodeKey === target.episodeKey);
     const seasons = item.seasons
       .map((season) => ({
         ...season,
         episodes: season.episodes.filter((episode) => episode.episodeKey !== target.episodeKey),
       }))
       .filter((season) => season.episodes.length > 0);
-    return seasons.length > 0 ? [{ ...item, seasons }] : [];
+    const observedEpisodeCount = Math.max(
+      0,
+      item.observedEpisodeCount - (removedEpisode ? 1 : 0),
+    );
+    if (observedEpisodeCount === 0) return [];
+    const completedEpisodeCount = Math.max(
+      0,
+      item.completedEpisodeCount - (removedEpisode?.completedAt ? 1 : 0),
+    );
+    return [{
+      ...item,
+      observedEpisodeCount,
+      completedEpisodeCount,
+      aggregate: { ...item.aggregate, completedEpisodes: completedEpisodeCount },
+      seasons,
+    }];
   });
   return {
     ...history,

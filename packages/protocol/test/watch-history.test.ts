@@ -9,6 +9,7 @@ import {
   WatchHistoryPreferencesUpdateSchema,
   WatchHistoryRoomRecreationResponseSchema,
   WatchHistoryResponseSchema,
+  WatchHistoryTitleEpisodesResponseSchema,
   WatchLibraryResponseSchema,
   WatchProgressAckSchema,
   WatchProgressEventSchema,
@@ -483,6 +484,9 @@ describe("watch history v2 read and mutation contracts", () => {
         {
           provider: "crunchyroll" as const,
           titleKey: "series-one",
+          observedEpisodeCount: 1,
+          completedEpisodeCount: 1,
+          episodePage: { complete: true, nextCursor: null },
           itemKind: "series" as const,
           title: "Series One",
           sourceUrl: "https://www.crunchyroll.com/series/GYQ4MW246/series-one",
@@ -527,6 +531,9 @@ describe("watch history v2 read and mutation contracts", () => {
         {
           provider: "youtube" as const,
           titleKey: "abcdefghijk",
+          observedEpisodeCount: 1,
+          completedEpisodeCount: 0,
+          episodePage: { complete: true, nextCursor: null },
           itemKind: "movie" as const,
           title: "Demo",
           sourceUrl: "https://www.youtube.com/watch?v=abcdefghijk",
@@ -557,6 +564,86 @@ describe("watch history v2 read and mutation contracts", () => {
       WatchHistoryResponseSchema.parse({
         ...response,
         meta: { ...response.meta, accountGeneration: undefined },
+      }),
+    ).toThrow();
+  });
+
+  it("requires an honest bounded episode slice with exact title counts", () => {
+    const response = responseFixture();
+    const item = response.items[0];
+    if (!item) throw new Error("Response fixture must include a title");
+
+    expect(WatchHistoryResponseSchema.parse(response).items[0]).toMatchObject({
+      observedEpisodeCount: 1,
+      completedEpisodeCount: 1,
+      episodePage: { complete: true, nextCursor: null },
+    });
+    expect(() =>
+      WatchHistoryResponseSchema.parse({
+        ...response,
+        items: [{ ...item, unexpected: true }, ...response.items.slice(1)],
+      }),
+    ).toThrow();
+    expect(() =>
+      WatchHistoryResponseSchema.parse({
+        ...response,
+        items: [
+          {
+            ...item,
+            observedEpisodeCount: 9,
+            completedEpisodeCount: 0,
+            episodePage: { complete: false, nextCursor: "episode_cursor" },
+            seasons: [{
+              ...item.seasons[0]!,
+              episodes: Array.from({ length: 9 }, (_, index) => ({
+                ...canonicalEpisodeState(),
+                episodeKey: `episode-${index}`,
+                episodeTitle: `Episode ${index}`,
+              })),
+            }],
+          },
+        ],
+        nextCursor: null,
+      }),
+    ).toThrow();
+    expect(() => WatchHistoryResponseSchema.parse({
+      ...response,
+      items: [{
+        ...item,
+        observedEpisodeCount: 9,
+        episodePage: { complete: false, nextCursor: "episode_cursor" },
+        seasons: Array.from({ length: 9 }, (_, index) => ({
+          ...item.seasons[0]!,
+          seasonKey: `empty-season-${index}`,
+          order: index,
+          episodes: [],
+        })),
+      }],
+      nextCursor: null,
+    })).toThrow();
+  });
+
+  it("defines a strict 50-row title episode detail response", () => {
+    const detail = {
+      meta: accountMeta(),
+      generatedAt: NOW,
+      provider: "crunchyroll" as const,
+      titleKey: "series-one",
+      observedEpisodeCount: 51,
+      completedEpisodeCount: 1,
+      episodes: [canonicalEpisodeState()],
+      complete: false,
+      nextCursor: "episode_cursor",
+    };
+    expect(WatchHistoryTitleEpisodesResponseSchema.parse(detail)).toEqual(detail);
+    expect(() => WatchHistoryTitleEpisodesResponseSchema.parse({ ...detail, unknown: true })).toThrow();
+    expect(() =>
+      WatchHistoryTitleEpisodesResponseSchema.parse({
+        ...detail,
+        episodes: Array.from({ length: 51 }, (_, index) => ({
+          ...canonicalEpisodeState(),
+          episodeKey: `episode-${index}`,
+        })),
       }),
     ).toThrow();
   });
@@ -708,7 +795,7 @@ describe("watch history v2 read and mutation contracts", () => {
     ).toThrow();
   });
 
-  it("keeps observed history exact beyond the former nested array caps", () => {
+  it("caps the title snapshot at eight episodes without claiming the title is complete", () => {
     const response = responseFixture();
     const unavailableItem = response.items[1];
     if (!unavailableItem) {
@@ -731,31 +818,7 @@ describe("watch history v2 read and mutation contracts", () => {
       episodes: [observedEpisode],
       nextEpisode: null,
     };
-    const seasons = Array.from({ length: 101 }, (_, index) => ({
-      ...observedSeason,
-      seasonKey: `season-${index}`,
-      seasonTitle: `Season ${index}`,
-      seasonNumber: index,
-      order: index,
-      episodes: [
-        {
-          ...observedEpisode,
-          episodeKey: `season-${index}-episode-1`,
-          seasonKey: `season-${index}`,
-          seasonTitle: `Season ${index}`,
-          seasonNumber: index,
-        },
-      ],
-    }));
-    expect(
-      WatchHistoryResponseSchema.parse({
-        ...response,
-        items: [{ ...unavailableItem, itemKind: "series", seasons }],
-        nextCursor: null,
-      }).items[0]?.seasons,
-    ).toHaveLength(101);
-
-    const episodes = Array.from({ length: 501 }, (_, index) => ({
+    const episodes = Array.from({ length: 8 }, (_, index) => ({
       ...observedEpisode,
       episodeKey: `episode-${index}`,
       episodeTitle: `Episode ${index}`,
@@ -764,19 +827,21 @@ describe("watch history v2 read and mutation contracts", () => {
       seasonNumber: 0,
       episodeNumber: index,
     }));
-    expect(
-      WatchHistoryResponseSchema.parse({
+    const parsed = WatchHistoryResponseSchema.parse({
         ...response,
         items: [
           {
             ...unavailableItem,
             itemKind: "series",
+            observedEpisodeCount: 501,
+            completedEpisodeCount: 0,
+            episodePage: { complete: false, nextCursor: "episode_cursor" },
             seasons: [{ ...observedSeason, episodes }],
           },
         ],
         nextCursor: null,
-      }).items[0]?.seasons[0]?.episodes,
-    ).toHaveLength(501);
+      });
+    expect(parsed.items[0]?.seasons[0]?.episodes).toHaveLength(8);
   });
 
   it("accepts season zero and rejects season numbers above 1000", () => {

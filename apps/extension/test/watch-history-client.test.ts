@@ -1381,6 +1381,101 @@ describe("watch history v2 client", () => {
     expect(requestOrder).toEqual(["progress", "list"]);
   });
 
+  it("accepts only the compact canonical title snapshot without requesting detail pages", async () => {
+    const owner = session.user.id;
+    const key = watchHistoryPartitionKey(owner, 1);
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: { [key]: readyPartition(owner, false) },
+    };
+    const episodes = Array.from({ length: 8 }, (_, index) => ({
+      episodeKey: `episode-${index}`,
+      episodeTitle: `Episode ${index}`,
+      seasonKey: "season-one",
+      seasonTitle: "Season One",
+      seasonNumber: 1,
+      episodeNumber: index + 1,
+      sourceUrl: `https://www.crunchyroll.com/watch/episode-${index}`,
+      currentTime: 60,
+      duration: 1_200,
+      progress: 0.05,
+      completedAt: null,
+      lastWatchedAt: "2026-08-15T10:01:00.000Z",
+      sessions: [],
+    }));
+    const compact = {
+      meta: {
+        serverTime: "2026-08-15T10:01:00.000Z",
+        schemaVersion: 2,
+        ownerUserId: owner,
+        accountGeneration: 1,
+      },
+      generatedAt: "2026-08-15T10:01:00.000Z",
+      totalTitleCount: 1,
+      items: [{
+        provider: "crunchyroll",
+        titleKey: "title-a",
+        observedEpisodeCount: 2_000,
+        completedEpisodeCount: 100,
+        episodePage: { complete: false, nextCursor: "episode_cursor" },
+        itemKind: "series",
+        title: "Title A",
+        sourceUrl: episodes[0]!.sourceUrl,
+        artworkUrl: null,
+        catalogState: "unavailable",
+        aggregate: { completedEpisodes: 100, availableEpisodes: null, progress: null },
+        seasons: [{
+          seasonKey: "season-one",
+          seasonTitle: "Season One",
+          seasonNumber: 1,
+          order: 0,
+          aggregate: { completedEpisodes: 0, availableEpisodes: null, progress: null },
+          episodes,
+          nextEpisode: null,
+        }],
+        sessions: [],
+        latestActivity: {
+          episodeKey: episodes[0]!.episodeKey,
+          currentTime: 60,
+          duration: 1_200,
+          progress: 0.05,
+          completedAt: null,
+          lastWatchedAt: "2026-08-15T10:01:00.000Z",
+        },
+        lastWatchedAt: "2026-08-15T10:01:00.000Z",
+      }],
+      nextCursor: null,
+    };
+    const requests: string[] = [];
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => session,
+      fetch: vi.fn(async (input) => {
+        requests.push(String(input));
+        return new Response(JSON.stringify(compact));
+      }) as typeof fetch,
+      storage: createWatchHistoryStorage({
+        item: {
+          getValue: async () => stored,
+          setValue: async (value) => { stored = value; },
+        },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+
+    await expect(client.handle(createListWatchHistoryMessage())).resolves.toMatchObject({
+      ok: true,
+      data: { items: [{ observedEpisodeCount: 2_000 }] },
+    });
+    expect(requests).toHaveLength(1);
+    expect(requests[0]).toContain("/api/watch-history/v2");
+    expect(requests[0]).not.toContain("title-episodes");
+    expect(stored.partitions[key]?.cache).toMatchObject({
+      items: [{ episodePage: { complete: false, nextCursor: "episode_cursor" } }],
+    });
+  });
+
   it("negative-acknowledges a stale older latest after accepting the terminal and continues the drain", async () => {
     const owner = session.user.id;
     const terminal = {

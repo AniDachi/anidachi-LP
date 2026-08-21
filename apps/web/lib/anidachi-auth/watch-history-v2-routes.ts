@@ -6,6 +6,7 @@ import {
   type WatchHistoryDeletionAck,
   type WatchHistoryPreferencesResponse,
   type WatchHistoryResponse,
+  type WatchHistoryTitleEpisodesResponse,
   type WatchProgressAck,
 } from "@anidachi/protocol";
 import { type NextRequest, NextResponse } from "next/server";
@@ -31,6 +32,7 @@ import {
   decodeWatchHistoryCursor,
   deleteWatchHistoryV2,
   getWatchHistoryPreferencesV2,
+  listWatchHistoryTitleEpisodesV2,
   listWatchHistoryV2,
   parseWatchProgressEventV2,
   supabaseWatchHistoryV2Store,
@@ -53,6 +55,13 @@ export type WatchHistoryV2RouteDependencies = {
     limit: number;
     cursor: WatchHistoryCursor | null;
   }): Promise<WatchHistoryResponse>;
+  listTitleEpisodes(params: {
+    userId: string;
+    provider: "crunchyroll" | "youtube";
+    titleKey: string;
+    limit: number;
+    cursor: string | null;
+  }): Promise<WatchHistoryTitleEpisodesResponse>;
   applyProgress(params: { userId: string; input: unknown }): Promise<WatchProgressAck>;
   getPreferences(params: { userId: string }): Promise<WatchHistoryPreferencesResponse>;
   updatePreferences(params: {
@@ -71,6 +80,7 @@ export type WatchHistoryV2RouteDependencies = {
 const productionDependencies: WatchHistoryV2RouteDependencies = {
   getSession: getApiSession,
   listHistory: listWatchHistoryV2,
+  listTitleEpisodes: listWatchHistoryTitleEpisodesV2,
   applyProgress: applyWatchProgressV2,
   getPreferences: getWatchHistoryPreferencesV2,
   updatePreferences: updateWatchHistoryPreferencesV2,
@@ -92,6 +102,19 @@ export function createWatchHistoryV2RouteHandlers(
         const cursor = rawCursor ? decodeWatchHistoryCursor(rawCursor) : null;
         return NextResponse.json(
           await dependencies.listHistory({ userId: session.userId, limit, cursor }),
+        );
+      } catch (error) {
+        return watchHistoryErrorResponse(error);
+      }
+    },
+
+    async getTitleEpisodes(request: NextRequest) {
+      const session = await dependencies.getSession(request);
+      if (!session) return unauthorizedResponse();
+      try {
+        const query = parseTitleEpisodesQuery(request.nextUrl.searchParams);
+        return NextResponse.json(
+          await dependencies.listTitleEpisodes({ userId: session.userId, ...query }),
         );
       } catch (error) {
         return watchHistoryErrorResponse(error);
@@ -220,6 +243,7 @@ function parseRoomRecreationRequest(
 const productionRoutes = createWatchHistoryV2RouteHandlers();
 
 export const handleWatchHistoryV2Get = productionRoutes.getHistory;
+export const handleWatchHistoryV2TitleEpisodesGet = productionRoutes.getTitleEpisodes;
 export const handleWatchHistoryV2ProgressPost = productionRoutes.postProgress;
 export const handleWatchHistoryV2PreferencesGet = productionRoutes.getPreferences;
 export const handleWatchHistoryV2PreferencesPatch = productionRoutes.patchPreferences;
@@ -343,6 +367,47 @@ function validateHistoryQuery(searchParams: URLSearchParams): void {
       );
     }
   }
+}
+
+function parseTitleEpisodesQuery(searchParams: URLSearchParams): {
+  provider: "crunchyroll" | "youtube";
+  titleKey: string;
+  limit: number;
+  cursor: string | null;
+} {
+  const allowed = new Set(["provider", "titleKey", "limit", "cursor"]);
+  for (const key of searchParams.keys()) {
+    if (!allowed.has(key) || searchParams.getAll(key).length !== 1) {
+      throw invalidTitleEpisodesQuery();
+    }
+  }
+  const provider = searchParams.get("provider");
+  const titleKey = searchParams.get("titleKey");
+  const rawLimit = searchParams.get("limit");
+  const cursor = searchParams.get("cursor");
+  if (
+    (provider !== "crunchyroll" && provider !== "youtube") ||
+    titleKey === null ||
+    titleKey !== titleKey.trim() ||
+    titleKey.length < 1 ||
+    titleKey.length > 220 ||
+    (rawLimit !== null && !/^\d{1,2}$/.test(rawLimit)) ||
+    (cursor !== null &&
+      (cursor.length < 1 || cursor.length > 2_048 || !/^[A-Za-z0-9_-]+$/.test(cursor)))
+  ) {
+    throw invalidTitleEpisodesQuery();
+  }
+  const limit = rawLimit === null ? 50 : Number(rawLimit);
+  if (limit < 1 || limit > 50) throw invalidTitleEpisodesQuery();
+  return { provider, titleKey, limit, cursor };
+}
+
+function invalidTitleEpisodesQuery(): WatchHistoryV2ApiError {
+  return new WatchHistoryV2ApiError(
+    400,
+    "INVALID_QUERY",
+    "History detail query is invalid",
+  );
 }
 
 function parseLimit(value: string | null): number {

@@ -1,10 +1,12 @@
 import {
+  WATCH_HISTORY_TITLE_EPISODE_PAGE_LIMIT,
   WatchHistoryDeletionAckSchema,
   WatchHistoryDeletionRequestSchema,
   WatchHistoryPreferencesResponseSchema,
   WatchHistoryPreferencesUpdateSchema,
   WatchHistoryResponseSchema,
   WatchHistorySessionSchema,
+  WatchHistoryTitleEpisodesResponseSchema,
   WatchProgressAckSchema,
   WatchProgressEventSchema,
   type WatchHistoryDeletionAck,
@@ -13,6 +15,7 @@ import {
   type WatchHistoryPreferencesUpdate,
   type WatchHistoryResponse,
   type WatchHistorySession,
+  type WatchHistoryTitleEpisodesResponse,
   type WatchProgressAck,
   type WatchProgressEvent,
   type WatchSharedRoomAuthority,
@@ -103,6 +106,30 @@ export type WatchHistoryCursor = {
   stableId: string;
 };
 
+export type WatchHistoryTitleSummary = {
+  provider: "crunchyroll" | "youtube";
+  titleKey: string;
+  lastWatchedAt: string;
+  observedEpisodeCount: number;
+  completedEpisodeCount: number;
+  episodePage: {
+    complete: boolean;
+    nextCursor: string | null;
+  };
+};
+
+type WatchHistoryTitleEpisodePage = {
+  accountGeneration: number;
+  provider: "crunchyroll" | "youtube";
+  titleKey: string;
+  observedEpisodeCount: number;
+  completedEpisodeCount: number;
+  progressRows: unknown[];
+  sessions: unknown[];
+  complete: boolean;
+  nextCursor: string | null;
+};
+
 export type WatchHistoryV2Store = {
   getProgressReceipt(userId: string, clientEventId: string): Promise<unknown | null>;
   applyProgress(
@@ -119,7 +146,14 @@ export type WatchHistoryV2Store = {
     sessions: unknown[];
     totalTitleCount?: number;
     hasMore?: boolean;
+    titleSummaries?: unknown[];
   }>;
+  loadTitleEpisodes?(userId: string, page: {
+    provider: "crunchyroll" | "youtube";
+    titleKey: string;
+    limit: number;
+    cursor: string | null;
+  }): Promise<WatchHistoryTitleEpisodePage>;
   getPreferences(userId: string): Promise<{
     accountGeneration: number;
     youtubeHistoryEnabled: boolean;
@@ -281,6 +315,7 @@ export async function listWatchHistoryV2(params: {
       cursor,
       totalTitleCount: snapshot.totalTitleCount,
       hasMore: snapshot.hasMore,
+      titleSummaries: snapshot.titleSummaries,
       generatedAt: params.now ?? new Date(),
     });
   } catch (error) {
@@ -297,6 +332,7 @@ export function buildWatchHistoryV2Response(params: {
   cursor?: WatchHistoryCursor | null;
   totalTitleCount?: number;
   hasMore?: boolean;
+  titleSummaries?: unknown[];
   generatedAt: Date;
 }): WatchHistoryResponse {
   if (!Number.isInteger(params.limit) || params.limit < 1 || params.limit > 100) {
@@ -332,9 +368,40 @@ export function buildWatchHistoryV2Response(params: {
     groups.set(stableId, group);
   }
 
+  const isServerBounded = params.totalTitleCount !== undefined || params.hasMore !== undefined;
+  const databaseTitleSummaries = params.titleSummaries?.map(parseWatchHistoryTitleSummary);
+  if (!isServerBounded && databaseTitleSummaries !== undefined) {
+    throw invalidDatabaseResponse();
+  }
+  const titleSummariesById = new Map<string, WatchHistoryTitleSummary>();
+  for (const summary of databaseTitleSummaries ?? []) {
+    const stableId = `${summary.provider}:${summary.titleKey}`;
+    if (titleSummariesById.has(stableId)) throw invalidDatabaseResponse();
+    titleSummariesById.set(stableId, summary);
+  }
+
   const summaries = Array.from(groups.entries()).map(([stableId, titleRows]) => {
     titleRows.sort(compareEpisodeRows);
     const latest = [...titleRows].sort(compareObservationDescending)[0]!;
+    const databaseSummary = titleSummariesById.get(stableId);
+    const completedInSlice = titleRows.filter((row) => row.completed_at !== null).length;
+    const summary = databaseSummary ?? {
+      provider: latest.provider,
+      titleKey: latest.title_key,
+      lastWatchedAt: latest.observed_at,
+      observedEpisodeCount: titleRows.length,
+      completedEpisodeCount: completedInSlice,
+      episodePage: { complete: true, nextCursor: null },
+    };
+    if (
+      summary.provider !== latest.provider ||
+      summary.titleKey !== latest.title_key ||
+      summary.lastWatchedAt !== latest.observed_at ||
+      summary.observedEpisodeCount < titleRows.length ||
+      summary.completedEpisodeCount < completedInSlice
+    ) {
+      throw invalidDatabaseResponse();
+    }
     const seasonRows = new Map<string, WatchHistoryProgressRow[]>();
     if (latest.item_kind === "series") {
       for (const row of titleRows) {
@@ -353,20 +420,22 @@ export function buildWatchHistoryV2Response(params: {
       .map((record) => record.session)
       .sort((a, b) => b.lastWatchedAt.localeCompare(a.lastWatchedAt))
       .slice(0, 20);
-    const completedEpisodes = titleRows.filter((row) => row.completed_at !== null).length;
 
     return {
-      cursor: { lastWatchedAt: latest.observed_at, stableId },
+      cursor: { lastWatchedAt: summary.lastWatchedAt, stableId },
       item: {
         provider: latest.provider,
         titleKey: latest.title_key,
+        observedEpisodeCount: summary.observedEpisodeCount,
+        completedEpisodeCount: summary.completedEpisodeCount,
+        episodePage: summary.episodePage,
         itemKind: latest.item_kind,
         title: latest.title,
         sourceUrl: latest.source_url,
         artworkUrl: latest.artwork_url,
         catalogState: "unavailable" as const,
         aggregate: {
-          completedEpisodes,
+          completedEpisodes: summary.completedEpisodeCount,
           availableEpisodes: null,
           progress: null,
         },
@@ -384,30 +453,9 @@ export function buildWatchHistoryV2Response(params: {
                 availableEpisodes: null,
                 progress: null,
               },
-              episodes: observedRows.map((row) => ({
-                episodeKey: row.episode_key,
-                episodeTitle: row.episode_title,
-                seasonKey: row.season_key,
-                seasonTitle: row.season_title,
-                seasonNumber: row.season_number,
-                episodeNumber: row.episode_number,
-                sourceUrl: row.source_url,
-                currentTime: row.current_time_seconds,
-                duration: row.duration,
-                progress: row.progress,
-                completedAt: row.completed_at,
-                lastWatchedAt: row.observed_at,
-                sessions: sessionRecords
-                  .filter(
-                    (record) =>
-                      record.provider === row.provider &&
-                      record.titleKey === row.title_key &&
-                      record.episodeKey === row.episode_key,
-                  )
-                  .map((record) => record.session)
-                  .sort((a, b) => b.lastWatchedAt.localeCompare(a.lastWatchedAt))
-                  .slice(0, 20),
-              })),
+              episodes: observedRows.map((row) =>
+                mapProgressRowToEpisode(row, sessionRecords)
+              ),
               nextEpisode: null,
             };
           })
@@ -431,7 +479,13 @@ export function buildWatchHistoryV2Response(params: {
     };
   });
 
-  const isServerBounded = params.totalTitleCount !== undefined || params.hasMore !== undefined;
+  if (
+    isServerBounded &&
+    databaseTitleSummaries !== undefined &&
+    titleSummariesById.size !== groups.size
+  ) {
+    throw invalidDatabaseResponse();
+  }
   if (!isServerBounded) {
     summaries.sort(
       (a, b) =>
@@ -488,6 +542,84 @@ export function buildWatchHistoryV2Response(params: {
     );
   }
   return parsed.data;
+}
+
+export async function listWatchHistoryTitleEpisodesV2(params: {
+  userId: string;
+  provider: "crunchyroll" | "youtube";
+  titleKey: string;
+  limit?: number;
+  cursor?: string | null;
+  store?: WatchHistoryV2Store;
+  now?: Date;
+}): Promise<WatchHistoryTitleEpisodesResponse> {
+  const limit = params.limit ?? WATCH_HISTORY_TITLE_EPISODE_PAGE_LIMIT;
+  const cursor = params.cursor ?? null;
+  if (
+    !isUuid(params.userId) ||
+    !MVP_PROVIDERS.has(params.provider) ||
+    !isBoundedString(params.titleKey, 220) ||
+    !Number.isInteger(limit) ||
+    limit < 1 ||
+    limit > WATCH_HISTORY_TITLE_EPISODE_PAGE_LIMIT ||
+    !(cursor === null || isOpaqueEpisodeCursor(cursor))
+  ) {
+    throw new WatchHistoryV2ApiError(400, "INVALID_QUERY", "History detail query is invalid");
+  }
+
+  try {
+    const store = params.store ?? supabaseWatchHistoryV2Store;
+    if (!store.loadTitleEpisodes) throw invalidDatabaseResponse();
+    const page = await store.loadTitleEpisodes(params.userId, {
+      provider: params.provider,
+      titleKey: params.titleKey,
+      limit,
+      cursor,
+    });
+    if (
+      page.provider !== params.provider ||
+      page.titleKey !== params.titleKey ||
+      page.progressRows.length > limit ||
+      page.completedEpisodeCount > page.observedEpisodeCount
+    ) {
+      throw invalidDatabaseResponse();
+    }
+    const rows = page.progressRows.map(parseProgressRow);
+    if (
+      rows.some(
+        (row) =>
+          row.user_id !== params.userId ||
+          row.history_generation !== page.accountGeneration ||
+          row.provider !== params.provider ||
+          row.title_key !== params.titleKey,
+      ) ||
+      new Set(rows.map((row) => row.episode_key)).size !== rows.length
+    ) {
+      throw invalidDatabaseResponse();
+    }
+    const sessionRecords = page.sessions.map(parseHistorySessionRecord);
+    const generatedAt = params.now ?? new Date();
+    const response = WatchHistoryTitleEpisodesResponseSchema.safeParse({
+      meta: {
+        serverTime: generatedAt.toISOString(),
+        schemaVersion: 2,
+        ownerUserId: params.userId,
+        accountGeneration: page.accountGeneration,
+      },
+      generatedAt: generatedAt.toISOString(),
+      provider: page.provider,
+      titleKey: page.titleKey,
+      observedEpisodeCount: page.observedEpisodeCount,
+      completedEpisodeCount: page.completedEpisodeCount,
+      episodes: rows.map((row) => mapProgressRowToEpisode(row, sessionRecords)),
+      complete: page.complete,
+      nextCursor: page.nextCursor,
+    });
+    if (!response.success) throw invalidDatabaseResponse();
+    return response.data;
+  } catch (error) {
+    throw publicDatabaseError(error);
+  }
 }
 
 export function encodeWatchHistoryCursor(cursor: WatchHistoryCursor): string {
@@ -714,7 +846,7 @@ export const supabaseWatchHistoryV2Store: WatchHistoryV2Store = {
 
   async loadHistory(userId, page) {
     const preferences = await this.getPreferences(userId);
-    const result = await db().rpc("list_watch_history_v2_page", {
+    const result = await db().rpc("list_watch_history_v2_bounded_page", {
       p_user_id: userId,
       p_history_generation: preferences.accountGeneration,
       p_limit: page.limit,
@@ -722,7 +854,7 @@ export const supabaseWatchHistoryV2Store: WatchHistoryV2Store = {
       p_cursor_stable_id: page.cursor?.stableId ?? null,
     });
     if (result.error) throw result.error;
-    const boundedPage = parseBoundedWatchHistoryPage(result.data);
+    const boundedPage = parseResourceBoundedWatchHistoryPage(result.data);
     boundedPage.progressRows.forEach(parseProgressRow);
     const sessions = await loadCanonicalSessions(userId, boundedPage.sessionIds);
     return {
@@ -731,6 +863,47 @@ export const supabaseWatchHistoryV2Store: WatchHistoryV2Store = {
       sessions,
       totalTitleCount: boundedPage.totalTitleCount,
       hasMore: boundedPage.hasMore,
+      titleSummaries: boundedPage.titleSummaries,
+    };
+  },
+
+  async loadTitleEpisodes(userId, page) {
+    const preferences = await this.getPreferences(userId);
+    const result = await db().rpc("list_watch_history_v2_title_episodes_page", {
+      p_user_id: userId,
+      p_history_generation: preferences.accountGeneration,
+      p_provider: page.provider,
+      p_title_key: page.titleKey,
+      p_limit: page.limit,
+      p_cursor: page.cursor,
+    });
+    if (result.error) throw result.error;
+    const episodePage = parseWatchHistoryTitleEpisodesPage(result.data);
+    const rows = episodePage.progressRows.map(parseProgressRow);
+    if (
+      episodePage.accountGeneration !== preferences.accountGeneration ||
+      episodePage.provider !== page.provider ||
+      episodePage.titleKey !== page.titleKey ||
+      rows.length > page.limit ||
+      rows.some(
+        (row) =>
+          row.user_id !== userId ||
+          row.history_generation !== preferences.accountGeneration ||
+          row.provider !== page.provider ||
+          row.title_key !== page.titleKey,
+      )
+    ) {
+      throw invalidDatabaseResponse();
+    }
+    const sessionIds = Array.from(
+      new Set(
+        rows.flatMap((row) => row.latest_session_id === null ? [] : [row.latest_session_id]),
+      ),
+    );
+    return {
+      ...episodePage,
+      progressRows: rows,
+      sessions: await loadCanonicalSessions(userId, sessionIds),
     };
   },
 
@@ -1110,6 +1283,169 @@ export function parseBoundedWatchHistoryPage(value: unknown): {
   };
 }
 
+export function parseResourceBoundedWatchHistoryPage(value: unknown): {
+  accountGeneration: number;
+  totalTitleCount: number;
+  hasMore: boolean;
+  titleSummaries: WatchHistoryTitleSummary[];
+  progressRows: unknown[];
+  sessionIds: string[];
+} {
+  if (
+    !isRecord(value) ||
+    !hasOnlyKeys(value, [
+      "accountGeneration",
+      "totalTitleCount",
+      "hasMore",
+      "titleSummaries",
+      "progressRows",
+      "sessionIds",
+    ]) ||
+    !isPositiveInteger(value.accountGeneration) ||
+    !isNonnegativeInteger(value.totalTitleCount) ||
+    typeof value.hasMore !== "boolean" ||
+    !Array.isArray(value.titleSummaries) ||
+    !Array.isArray(value.progressRows) ||
+    !Array.isArray(value.sessionIds) ||
+    value.sessionIds.some((id) => !isUuid(id)) ||
+    new Set(value.sessionIds).size !== value.sessionIds.length
+  ) {
+    throw invalidDatabaseResponse();
+  }
+  const titleSummaries = value.titleSummaries.map(parseWatchHistoryTitleSummary);
+  if (
+    titleSummaries.length > 100 ||
+    titleSummaries.length > value.totalTitleCount ||
+    (value.hasMore && titleSummaries.length === 0)
+  ) {
+    throw invalidDatabaseResponse();
+  }
+  return {
+    accountGeneration: value.accountGeneration,
+    totalTitleCount: value.totalTitleCount,
+    hasMore: value.hasMore,
+    titleSummaries,
+    progressRows: value.progressRows,
+    sessionIds: value.sessionIds,
+  };
+}
+
+export function parseWatchHistoryTitleEpisodesPage(value: unknown): Omit<
+  WatchHistoryTitleEpisodePage,
+  "sessions"
+> {
+  if (
+    !isRecord(value) ||
+    !hasOnlyKeys(value, [
+      "accountGeneration",
+      "provider",
+      "titleKey",
+      "observedEpisodeCount",
+      "completedEpisodeCount",
+      "complete",
+      "nextCursor",
+      "progressRows",
+    ]) ||
+    !isPositiveInteger(value.accountGeneration) ||
+    (value.provider !== "crunchyroll" && value.provider !== "youtube") ||
+    !isBoundedString(value.titleKey, 220) ||
+    !isNonnegativeInteger(value.observedEpisodeCount) ||
+    !isNonnegativeInteger(value.completedEpisodeCount) ||
+    value.completedEpisodeCount > value.observedEpisodeCount ||
+    typeof value.complete !== "boolean" ||
+    !(value.nextCursor === null || isOpaqueEpisodeCursor(value.nextCursor)) ||
+    (value.complete ? value.nextCursor !== null : value.nextCursor === null) ||
+    !Array.isArray(value.progressRows) ||
+    value.progressRows.length > WATCH_HISTORY_TITLE_EPISODE_PAGE_LIMIT ||
+    value.progressRows.length > value.observedEpisodeCount
+  ) {
+    throw invalidDatabaseResponse();
+  }
+  return {
+    accountGeneration: value.accountGeneration,
+    provider: value.provider,
+    titleKey: value.titleKey,
+    observedEpisodeCount: value.observedEpisodeCount,
+    completedEpisodeCount: value.completedEpisodeCount,
+    progressRows: value.progressRows,
+    complete: value.complete,
+    nextCursor: value.nextCursor,
+  };
+}
+
+function parseWatchHistoryTitleSummary(value: unknown): WatchHistoryTitleSummary {
+  if (
+    !isRecord(value) ||
+    !hasOnlyKeys(value, [
+      "provider",
+      "titleKey",
+      "lastWatchedAt",
+      "observedEpisodeCount",
+      "completedEpisodeCount",
+      "episodePage",
+    ]) ||
+    (value.provider !== "crunchyroll" && value.provider !== "youtube") ||
+    !isBoundedString(value.titleKey, 220) ||
+    !isTimestamp(value.lastWatchedAt) ||
+    !isNonnegativeInteger(value.observedEpisodeCount) ||
+    !isNonnegativeInteger(value.completedEpisodeCount) ||
+    value.completedEpisodeCount > value.observedEpisodeCount ||
+    !isRecord(value.episodePage) ||
+    !hasOnlyKeys(value.episodePage, ["complete", "nextCursor"]) ||
+    typeof value.episodePage.complete !== "boolean" ||
+    !(
+      value.episodePage.nextCursor === null ||
+      isOpaqueEpisodeCursor(value.episodePage.nextCursor)
+    ) ||
+    (value.episodePage.complete
+      ? value.episodePage.nextCursor !== null
+      : value.episodePage.nextCursor === null)
+  ) {
+    throw invalidDatabaseResponse();
+  }
+  return {
+    provider: value.provider,
+    titleKey: value.titleKey,
+    lastWatchedAt: value.lastWatchedAt,
+    observedEpisodeCount: value.observedEpisodeCount,
+    completedEpisodeCount: value.completedEpisodeCount,
+    episodePage: {
+      complete: value.episodePage.complete,
+      nextCursor: value.episodePage.nextCursor,
+    },
+  };
+}
+
+function mapProgressRowToEpisode(
+  row: WatchHistoryProgressRow,
+  sessionRecords: WatchHistorySessionRecord[],
+) {
+  return {
+    episodeKey: row.episode_key,
+    episodeTitle: row.episode_title,
+    seasonKey: row.season_key,
+    seasonTitle: row.season_title,
+    seasonNumber: row.season_number,
+    episodeNumber: row.episode_number,
+    sourceUrl: row.source_url,
+    currentTime: row.current_time_seconds,
+    duration: row.duration,
+    progress: row.progress,
+    completedAt: row.completed_at,
+    lastWatchedAt: row.observed_at,
+    sessions: sessionRecords
+      .filter(
+        (record) =>
+          record.provider === row.provider &&
+          record.titleKey === row.title_key &&
+          record.episodeKey === row.episode_key,
+      )
+      .map((record) => record.session)
+      .sort((a, b) => b.lastWatchedAt.localeCompare(a.lastWatchedAt))
+      .slice(0, 20),
+  };
+}
+
 function compareEpisodeRows(a: WatchHistoryProgressRow, b: WatchHistoryProgressRow): number {
   return (
     (a.season_number ?? Number.MAX_SAFE_INTEGER) -
@@ -1346,6 +1682,15 @@ function isProgress(value: unknown): value is number {
   return isNonnegativeNumber(value) && value <= 1;
 }
 
+function isOpaqueEpisodeCursor(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    value.length >= 1 &&
+    value.length <= 2_048 &&
+    /^[A-Za-z0-9_-]+$/.test(value)
+  );
+}
+
 function isHttpUrl(value: unknown, maxLength: number): value is string {
   if (
     typeof value !== "string" ||
@@ -1380,6 +1725,9 @@ function publicDatabaseError(error: unknown): WatchHistoryV2ApiError {
       ? (error as { message: string }).message
       : "";
   const mappings: Array<[string, number, string, string]> = [
+    ["watch_history_cursor_target_mismatch", 400, "INVALID_CURSOR", "History detail cursor is invalid"],
+    ["watch_history_invalid_episode_cursor", 400, "INVALID_CURSOR", "History detail cursor is invalid"],
+    ["watch_history_invalid_episode_page", 400, "INVALID_QUERY", "History detail query is invalid"],
     ["watch_history_shared_session_pending", 409, "SHARED_SESSION_PENDING", "Shared session is waiting for the host"],
     ["watch_history_shared_source_mismatch", 409, "SHARED_SOURCE_MISMATCH", "Shared source does not match the host session"],
     ["watch_history_room_unknown", 404, "UNKNOWN_ROOM", "Shared room was not found"],
