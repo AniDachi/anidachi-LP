@@ -146,7 +146,7 @@ describe("diagnostic log", () => {
     const rawVoiceUserId = "voice/account+unique@example.com";
     const encodedVoiceUserId = encodeURIComponent(rawVoiceUserId);
     storage.set(
-      `local:voiceAudioPreferencesV1.${encodeURIComponent(`user:${rawVoiceUserId}`)}`,
+      `voiceAudioPreferencesV1.${encodeURIComponent(`user:${rawVoiceUserId}`)}`,
       { mode: "open-mic" },
     );
 
@@ -273,7 +273,7 @@ describe("diagnostic log", () => {
     expect(bundle.storage.keys).toEqual(
       expect.arrayContaining([
         expect.stringMatching(
-          /^local:voiceAudioPreferencesV1\.user%3Aid_[a-z0-9]+$/,
+          /^voiceAudioPreferencesV1\.user%3Aid_[a-z0-9]+$/,
         ),
       ]),
     );
@@ -348,13 +348,18 @@ describe("diagnostic log", () => {
     },
   );
 
-  it("pseudonymizes encoded account ids in serialized voice preference storage keys", async () => {
+  it("pseudonymizes real raw and malformed account ids in serialized voice preference storage keys", async () => {
     const { storage, download } = installChromeMock();
     const rawVoiceUserId = "voice/storage+private@example.com";
     const encodedVoiceUserId = encodeURIComponent(rawVoiceUserId);
+    const malformedEncodedVoiceUserId = "voice%2Fmalformed%ZZprivate%40example.com";
     storage.set(
-      `local:voiceAudioPreferencesV1.${encodeURIComponent(`user:${rawVoiceUserId}`)}`,
+      `voiceAudioPreferencesV1.${encodeURIComponent(`user:${rawVoiceUserId}`)}`,
       { mode: "open-mic" },
+    );
+    storage.set(
+      `voiceAudioPreferencesV1.user%3A${malformedEncodedVoiceUserId}`,
+      { mode: "push-to-talk" },
     );
 
     const response = await handleDiagnosticMessage({
@@ -367,15 +372,18 @@ describe("diagnostic log", () => {
     expect(response).toEqual(expect.objectContaining({ ok: true, action: "downloaded" }));
     const bundle = parseDownloadedBundle(download) as { storage: { keys: string[] } };
     const bundleText = JSON.stringify(bundle);
-    expect(bundle.storage.keys).toEqual(
-      expect.arrayContaining([
-        expect.stringMatching(
-          /^local:voiceAudioPreferencesV1\.user%3Aid_[a-z0-9]+$/,
-        ),
-      ]),
+    const voicePreferenceKeys = bundle.storage.keys.filter((key) =>
+      key.startsWith("voiceAudioPreferencesV1.user%3A"),
     );
+    expect(voicePreferenceKeys).toHaveLength(2);
+    expect(voicePreferenceKeys).toEqual([
+      expect.stringMatching(/^voiceAudioPreferencesV1\.user%3Aid_[a-z0-9]+$/),
+      expect.stringMatching(/^voiceAudioPreferencesV1\.user%3Aid_[a-z0-9]+$/),
+    ]);
+    expect(new Set(voicePreferenceKeys).size).toBe(2);
     expect(bundleText).not.toContain(rawVoiceUserId);
     expect(bundleText).not.toContain(encodedVoiceUserId);
+    expect(bundleText).not.toContain(malformedEncodedVoiceUserId);
   });
 
   it("returns an error when downloads permission is unavailable", async () => {

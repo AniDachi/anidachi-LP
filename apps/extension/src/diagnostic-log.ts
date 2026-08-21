@@ -271,16 +271,16 @@ async function readSafeStorageSnapshot(): Promise<Record<string, unknown>> {
 
 function sanitizeDiagnosticStorageKey(key: string): string {
   const voicePreferenceKey = key.match(
-    /^local:voiceAudioPreferencesV1\.user%3A(.+)$/i,
+    /^(local:)?voiceAudioPreferencesV1\.user%3A(.+)$/i,
   );
-  if (voicePreferenceKey?.[1]) {
-    let accountId = voicePreferenceKey[1];
+  if (voicePreferenceKey?.[2]) {
+    let accountId = voicePreferenceKey[2];
     try {
       accountId = decodeURIComponent(accountId);
     } catch {
       // Hash malformed legacy suffixes as-is rather than returning them.
     }
-    return `local:voiceAudioPreferencesV1.user%3A${hashPrivacySafeId(accountId)}`;
+    return `${voicePreferenceKey[1] ?? ""}voiceAudioPreferencesV1.user%3A${hashPrivacySafeId(accountId)}`;
   }
 
   const accountScopedKey = key.match(

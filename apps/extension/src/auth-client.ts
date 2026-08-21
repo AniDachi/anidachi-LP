@@ -906,7 +906,14 @@ export async function signOutWithWebsite(
   try {
     const result = await clearStoredAuthTokensIfCurrentAfter(expected, async (stored) => {
       matchedExpectedSession = true;
-      await onMatchedSession?.(stored);
+      await onMatchedSession?.(stored).catch(() => {
+        recordDiagnosticEvent(
+          "auth.logout",
+          "matched-session cleanup failed",
+          undefined,
+          "warn",
+        );
+      });
       await runWebsiteSignOutSequence({
         getStoredTokens: async () => stored,
         flushBeforeSignOut: async (tokens) => {
