@@ -8,6 +8,7 @@ import { clearCachedAccountInboxForUser } from "./account-inbox-cache";
 import {
   type AuthenticatedUser,
   type AuthSessionMutationResult,
+  clearStoredAuthTokensIfCurrentAfter,
   clearStoredAuthTokensIfRefreshToken,
   commitStoredAuthTokensIfCurrent,
   type ExtensionAuthTokens,
@@ -837,26 +838,28 @@ async function attemptWebsiteLogoutFlow(): Promise<void> {
   }
 }
 
-export async function signOutWithWebsite(): Promise<void> {
-  const stored = await getStoredAuthTokens();
+export async function signOutWithWebsite(expected: ExtensionAuthTokens): Promise<boolean> {
+  let matchedExpectedSession = false;
   try {
-    await runWebsiteSignOutSequence({
-      getStoredTokens: async () => stored,
-      flushBeforeSignOut: async (tokens) => {
-        const { bestEffortFlushWatchHistoryBeforeSignOut } = await import("./watch-history-client");
-        await bestEffortFlushWatchHistoryBeforeSignOut(tokens);
-      },
-      revokeRefreshToken: revokeExtensionRefreshToken,
-      attemptWebsiteLogout: attemptWebsiteLogoutFlow,
-      clearTokens: async (expectedRefreshToken) => {
-        if (expectedRefreshToken) {
-          await clearExtensionSessionIfCurrent(expectedRefreshToken);
-        }
-      },
+    const result = await clearStoredAuthTokensIfCurrentAfter(expected, async (stored) => {
+      matchedExpectedSession = true;
+      await runWebsiteSignOutSequence({
+        getStoredTokens: async () => stored,
+        flushBeforeSignOut: async (tokens) => {
+          const { bestEffortFlushWatchHistoryBeforeSignOut } = await import(
+            "./watch-history-client"
+          );
+          await bestEffortFlushWatchHistoryBeforeSignOut(tokens);
+        },
+        revokeRefreshToken: revokeExtensionRefreshToken,
+        attemptWebsiteLogout: attemptWebsiteLogoutFlow,
+        clearTokens: async () => undefined,
+      });
     });
+    return result.committed;
   } finally {
-    if (stored) {
-      await clearCachedAccountDataForUser(stored.user.id);
+    if (matchedExpectedSession) {
+      await clearCachedAccountDataForUser(expected.user.id);
     }
   }
 }

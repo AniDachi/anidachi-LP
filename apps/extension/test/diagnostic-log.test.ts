@@ -84,6 +84,11 @@ describe("diagnostic log", () => {
         userId: "user-secret-id",
         refreshToken: "refresh-secret",
         roomHistoryAttestation: "opaque-room-authority",
+        displayName: "Unique Routine Display Name 0bd3",
+        label: "Unique Routine Invite Label c912",
+        targetKey: "friend:unique-routine-target-77af",
+        reaction: "Unique Routine Reaction 349e",
+        sourceTitle: "Unique Routine Source Title a881",
         url: "https://staging.anidachi.app/room?token=secret",
       },
       "warn",
@@ -109,6 +114,7 @@ describe("diagnostic log", () => {
             userId: expect.stringMatching(/^id_[a-z0-9]+$/),
             refreshToken: "<redacted>",
             roomHistoryAttestation: "<redacted>",
+            targetKey: expect.stringMatching(/^id_[a-z0-9]+$/),
             url: "https://staging.anidachi.app/room?<redacted>",
           },
         }),
@@ -119,6 +125,9 @@ describe("diagnostic log", () => {
     expect(JSON.stringify(storage.get(DIAGNOSTIC_STORAGE_KEY))).not.toMatch(
       /stored-user-secret|probe-user-secret|current-user-secret|voice-user-(?:one|two)/,
     );
+    expect(JSON.stringify(storage.get(DIAGNOSTIC_STORAGE_KEY))).not.toMatch(
+      /Unique Routine Display Name 0bd3|Unique Routine Invite Label c912|friend:unique-routine-target-77af|Unique Routine Reaction 349e|Unique Routine Source Title a881/,
+    );
   });
 
   it("downloads a compact diagnostics bundle without raw tokens", async () => {
@@ -128,7 +137,7 @@ describe("diagnostic log", () => {
       refreshToken: "refresh-secret",
       user: {
         id: "user-1",
-        displayName: "Alina",
+        displayName: "Unique Support Display Name b06e",
         plan: "plus",
         avatarUrl: "https://example.com/avatar.png",
       },
@@ -140,6 +149,17 @@ describe("diagnostic log", () => {
         id: index + 1,
         scope: "identity",
         message: `entry-${index + 1}`,
+        ...(index === 619
+          ? {
+              data: {
+                displayName: "Unique Page Display Name c44a",
+                label: "Unique Support Invite Label 9df1",
+                targetKey: "group:unique-support-target-2a18",
+                reaction: "Unique Support Reaction 88e4",
+                sourceTitle: "Unique Support Source Title 645b",
+              },
+            }
+          : {}),
       })),
     };
     const message: DiagnosticMessage = {
@@ -212,7 +232,7 @@ describe("diagnostic log", () => {
         auth: {
           hasAccessToken: boolean;
           hasRefreshToken: boolean;
-          user: { id: string; displayName: string; plan: string };
+          user: { id: string; plan: string };
         };
       };
     };
@@ -246,7 +266,6 @@ describe("diagnostic log", () => {
     );
     expect(bundle.storage.auth.user).toEqual({
       id: expect.stringMatching(/^id_[a-z0-9]+$/),
-      displayName: "Alina",
       hasAvatar: true,
       plan: "plus",
     });
@@ -255,6 +274,9 @@ describe("diagnostic log", () => {
     expect(bundleText).not.toContain("user-1");
     expect(bundleText).not.toContain("remote-user-1");
     expect(bundleText).not.toContain("token=secret");
+    expect(bundleText).not.toMatch(
+      /Unique Support Display Name b06e|Unique Page Display Name c44a|Unique Support Invite Label 9df1|group:unique-support-target-2a18|Unique Support Reaction 88e4|Unique Support Source Title 645b/,
+    );
   });
 
   it("returns an error when downloads permission is unavailable", async () => {

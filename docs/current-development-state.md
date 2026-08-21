@@ -646,12 +646,14 @@ The extension currently supports:
 - debug export from the extension panel. Routine page/content diagnostics are
   bounded in memory and sanitized: titles, user text, identifiers, tokens, and
   attestations are absent, while the explicit support export remains available.
-  The overlay uses a closed shadow root. Sign-out and manual room end require a
-  trusted UI event; sign-out, manual end, and quota end use per-tab authority
-  issued by the background from authenticated create/connect, with a persistent,
-  non-reused session generation and exact current account, room, host role, and
-  generation checks before the server's final authorization. Playback and Watch
-  History behavior are unaffected.
+  The overlay uses a closed shadow root. Account-only sign-out requires a trusted
+  UI event and is bound to the exact validated extension account and refresh-token
+  family; it does not use room authority. Manual room end requires a trusted UI
+  event, while manual and quota room end use per-tab authority issued by the
+  background from authenticated create/connect, with a persistent, non-reused
+  session generation and exact current account, room, host role, and generation
+  checks before the server's final authorization. Playback and Watch History
+  behavior are unaffected.
 
 The extension still does not host, proxy, record, or distribute source video.
 

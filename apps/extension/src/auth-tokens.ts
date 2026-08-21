@@ -38,6 +38,10 @@ export interface AuthSessionStorageAuthority {
     expected: ExtensionAuthTokens,
     replacement: ExtensionAuthTokens | null,
   ) => Promise<AuthSessionMutationResult>;
+  clearIfCurrentAfter: (
+    expected: ExtensionAuthTokens,
+    beforeClear: (current: ExtensionAuthTokens) => Promise<void>,
+  ) => Promise<AuthSessionMutationResult>;
   clearIfRefreshToken: (expectedRefreshToken: string) => Promise<AuthSessionMutationResult>;
 }
 
@@ -137,6 +141,21 @@ export function createAuthSessionStorageAuthority(
         return { committed: true, current: replacement, previous: current };
       });
     },
+    clearIfCurrentAfter(expected, beforeClear) {
+      return runSerialized(async () => {
+        const current = await adapter.get();
+        if (!current || !isSameExtensionAuthSession(expected, current)) {
+          return { committed: false, current, previous: current };
+        }
+
+        try {
+          await beforeClear(current);
+        } finally {
+          await adapter.remove();
+        }
+        return { committed: true, current: null, previous: current };
+      });
+    },
     clearIfRefreshToken(expectedRefreshToken) {
       return runSerialized(async () => {
         const current = await adapter.get();
@@ -185,6 +204,13 @@ export async function commitStoredAuthTokensIfCurrent(
   replacement: ExtensionAuthTokens | null,
 ): Promise<AuthSessionMutationResult> {
   return authSessionStorageAuthority.commitIfCurrent(expected, replacement);
+}
+
+export async function clearStoredAuthTokensIfCurrentAfter(
+  expected: ExtensionAuthTokens,
+  beforeClear: (current: ExtensionAuthTokens) => Promise<void>,
+): Promise<AuthSessionMutationResult> {
+  return authSessionStorageAuthority.clearIfCurrentAfter(expected, beforeClear);
 }
 
 export async function clearStoredAuthTokensIfRefreshToken(

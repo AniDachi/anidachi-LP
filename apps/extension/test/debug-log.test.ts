@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   clearDebugLog,
+  getCompactDebugLogText,
   getDebugEntries,
   getDebugLogText,
   logDebug,
@@ -45,6 +46,23 @@ describe("debug log", () => {
     localStorage.clear();
     vi.restoreAllMocks();
     clearDebugLog();
+  });
+
+  it("removes exactly the legacy page-origin debug buffer once before logging", () => {
+    localStorage.clear();
+    localStorage.setItem("anidachi:debug-log:v1", "legacy-sensitive-buffer");
+    localStorage.setItem("page-owned-neighbor", "must-remain");
+    const getItem = vi.spyOn(localStorage, "getItem");
+    const removeItem = vi.spyOn(localStorage, "removeItem");
+
+    logDebug("room.ws", "connected");
+    logDebug("room.ws", "still connected");
+
+    expect(getItem).not.toHaveBeenCalledWith("anidachi:debug-log:v1");
+    expect(localStorage.getItem("anidachi:debug-log:v1")).toBeNull();
+    expect(localStorage.getItem("page-owned-neighbor")).toBe("must-remain");
+    expect(removeItem).toHaveBeenCalledTimes(1);
+    expect(removeItem).toHaveBeenCalledWith("anidachi:debug-log:v1");
   });
 
   it("stores debug entries without printing to the console by default", () => {
@@ -100,6 +118,41 @@ describe("debug log", () => {
     ]) {
       expect(exported).not.toContain(privateValue);
     }
+  });
+
+  it("removes display names, invite labels, target keys, and reactions from memory, console, compact, and full diagnostics", () => {
+    const privateValues = [
+      "Unique Display Name 7f1d",
+      "Unique Invite Label 81ab",
+      "friend:unique-target-key-4e2c",
+      "Unique Reaction 19cd",
+      "Unique Source Title 65ee",
+    ];
+    localStorage.setItem("anidachi:debug-console", "1");
+    const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
+
+    logDebug("identity", "participant ready", {
+      displayName: privateValues[0],
+      label: privateValues[1],
+      targetKey: privateValues[2],
+      reaction: privateValues[3],
+      sourceTitle: privateValues[4],
+      roomId: "room-technical-id",
+      status: "connected",
+    });
+
+    const outputs = [
+      JSON.stringify(getDebugEntries()),
+      getCompactDebugLogText(),
+      getDebugLogText(),
+      JSON.stringify(info.mock.calls),
+    ];
+    for (const output of outputs) {
+      for (const privateValue of privateValues) {
+        expect(output).not.toContain(privateValue);
+      }
+    }
+    expect(outputs.join("\n")).toContain("connected");
   });
 
   it("prints debug entries when console debug is explicitly enabled", () => {

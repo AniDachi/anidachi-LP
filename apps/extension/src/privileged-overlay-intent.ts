@@ -1,11 +1,18 @@
-import { getCurrentExtensionSession, signOutWithWebsite } from "./auth-client";
+import {
+  ExtensionAuthTemporarilyUnavailableError,
+  getCurrentExtensionSession,
+  signOutWithWebsite,
+} from "./auth-client";
 import { getStoredAuthTokens } from "./auth-tokens";
 
 export const PRIVILEGED_OVERLAY_INTENT_MESSAGE_TYPE = "ANIDACHI_PRIVILEGED_OVERLAY_INTENT";
 
 const PRIVILEGED_ROOM_AUTHORITY_STORAGE_KEY_PREFIX = "anidachi:privileged-room-authority:v1:tab:";
-const PRIVILEGED_ROOM_AUTHORITY_STATE_VERSION = 1;
+const LEGACY_PRIVILEGED_ROOM_AUTHORITY_STATE_VERSION = 1;
+const PRIVILEGED_ROOM_AUTHORITY_STATE_VERSION = 2;
+const WORKER_ROOM_AUTHORITY_CLAIM_OWNER_ID = createClaimOwnerId();
 const authorityStorageMutationQueuesByTab = new Map<number, Promise<void>>();
+const activeRoomAuthorityClaimExecutionsByTab = new Map<number, string>();
 
 export type PrivilegedOverlayAction = "sign-out" | "end-room" | "quota-end-room";
 export type PrivilegedOverlayRole = "host" | "member" | null;
@@ -47,6 +54,12 @@ interface PrivilegedRoomAuthorityState {
   version: typeof PRIVILEGED_ROOM_AUTHORITY_STATE_VERSION;
   lastAuthorityGeneration: number;
   currentAuthority: PrivilegedOverlayContext | null;
+  inFlightClaim: PrivilegedRoomAuthorityClaim | null;
+}
+
+interface PrivilegedRoomAuthorityClaim {
+  authority: PrivilegedOverlayContext;
+  ownerId: string;
 }
 
 export interface PrivilegedOverlayIntentDependencies {
@@ -56,6 +69,7 @@ export interface PrivilegedOverlayIntentDependencies {
   signOut?: typeof signOutWithWebsite;
   endRoom?: (roomId: string, accessToken: string) => Promise<{ endedAt: string | null }>;
   isAuthorityRequestCurrent?: () => boolean;
+  claimOwnerId?: string;
 }
 
 export interface IssuedRoomAuthorityInput {
@@ -129,7 +143,8 @@ export async function issuePrivilegedRoomAuthority(
     if (dependencies.isAuthorityRequestCurrent?.() === false) return null;
     if (
       state.lastAuthorityGeneration !== input.authorityGeneration ||
-      state.currentAuthority !== null
+      state.currentAuthority !== null ||
+      state.inFlightClaim !== null
     ) {
       return null;
     }
@@ -162,12 +177,14 @@ export function reservePrivilegedRoomAuthorityForTab(
   const storage = dependencies.sessionStorage ?? getSessionStorage();
   const key = authorityStorageKey(tabId);
   return enqueueAuthorityStorageMutation(tabId, async () => {
+    activeRoomAuthorityClaimExecutionsByTab.delete(tabId);
     const state = await readPrivilegedRoomAuthorityState(storage, key);
     const authorityGeneration = nextAuthorityGeneration(state.lastAuthorityGeneration);
     await writePrivilegedRoomAuthorityState(storage, key, {
       version: PRIVILEGED_ROOM_AUTHORITY_STATE_VERSION,
       lastAuthorityGeneration: authorityGeneration,
       currentAuthority: null,
+      inFlightClaim: null,
     });
     return authorityGeneration;
   });
@@ -184,16 +201,18 @@ export async function handlePrivilegedOverlayIntentMessage(
   }
 
   if (message.action === "sign-out") {
+    if (!isSignOutContext(message.context)) {
+      return { ok: false, error: "Privileged sign-out context is invalid" };
+    }
     const getCurrentSession = dependencies.getCurrentSession ?? getCurrentExtensionSession;
     const currentSession = await getCurrentSession();
     if (currentSession?.user.id !== message.context.accountUserId) {
       return { ok: false, error: "Privileged overlay account changed" };
     }
-    if (!isSignOutContext(message.context)) {
-      return { ok: false, error: "Privileged sign-out context is invalid" };
-    }
     const signOut = dependencies.signOut ?? signOutWithWebsite;
-    await signOut();
+    if (!(await signOut(currentSession))) {
+      return { ok: false, error: "Privileged overlay account changed" };
+    }
     await clearPrivilegedOverlayContextForTab(tabId, dependencies);
     return { ok: true };
   }
@@ -205,55 +224,195 @@ export async function handlePrivilegedOverlayIntentMessage(
 
   const storage = dependencies.sessionStorage ?? getSessionStorage();
   const key = authorityStorageKey(tabId);
-  const consumed = await enqueueAuthorityStorageMutation(tabId, async () => {
+  const claimOwnerId = dependencies.claimOwnerId?.trim() || WORKER_ROOM_AUTHORITY_CLAIM_OWNER_ID;
+  const claimExecutionId = createClaimOwnerId();
+  const claimed = await enqueueAuthorityStorageMutation(tabId, async () => {
     const state = await readPrivilegedRoomAuthorityState(storage, key);
-    const storedAuthority = state.currentAuthority;
-    if (!storedAuthority || !samePrivilegedOverlayContext(storedAuthority, message.context)) {
+    let authority: PrivilegedOverlayContext | null = null;
+    if (
+      state.currentAuthority &&
+      samePrivilegedOverlayContext(state.currentAuthority, message.context)
+    ) {
+      authority = state.currentAuthority;
+    } else if (
+      state.inFlightClaim &&
+      state.inFlightClaim.ownerId !== claimOwnerId &&
+      samePrivilegedOverlayContext(state.inFlightClaim.authority, message.context)
+    ) {
+      authority = state.inFlightClaim.authority;
+    }
+    if (!authority) {
       return {
-        consumed: false,
+        claimed: false,
         error: "Privileged overlay room authority is stale",
       } as const;
     }
-    if (storedAuthority.role !== "host" || !storedAuthority.roomId) {
+    if (authority.role !== "host" || !authority.roomId) {
       return {
-        consumed: false,
+        claimed: false,
         error: "Privileged room action is not authorized for the current room",
       } as const;
     }
     await writePrivilegedRoomAuthorityState(storage, key, {
       ...state,
       currentAuthority: null,
+      inFlightClaim: { authority, ownerId: claimOwnerId },
     });
-    return { consumed: true, authority: storedAuthority, roomId: storedAuthority.roomId } as const;
+    activeRoomAuthorityClaimExecutionsByTab.set(tabId, claimExecutionId);
+    return { claimed: true, authority, roomId: authority.roomId } as const;
   });
-  if (!consumed.consumed) {
-    return { ok: false, error: consumed.error };
+  if (!claimed.claimed) {
+    return { ok: false, error: claimed.error };
   }
 
   const getCurrentSession = dependencies.getCurrentSession ?? getCurrentExtensionSession;
-  const currentSession = await getCurrentSession();
-  if (currentSession?.user.id !== consumed.authority.accountUserId) {
+  let currentSession: Awaited<ReturnType<typeof getCurrentSession>>;
+  try {
+    currentSession = await getCurrentSession();
+  } catch (error) {
+    if (error instanceof ExtensionAuthTemporarilyUnavailableError) {
+      await restoreRoomAuthorityClaimIfOwned(
+        tabId,
+        storage,
+        key,
+        claimed.authority,
+        claimOwnerId,
+        claimExecutionId,
+      );
+    } else {
+      await clearRoomAuthorityClaimIfOwned(
+        tabId,
+        storage,
+        key,
+        claimed.authority,
+        claimOwnerId,
+        claimExecutionId,
+      );
+    }
+    throw error;
+  }
+  if (currentSession?.user.id !== claimed.authority.accountUserId) {
+    await clearRoomAuthorityClaimIfOwned(
+      tabId,
+      storage,
+      key,
+      claimed.authority,
+      claimOwnerId,
+      claimExecutionId,
+    );
     return { ok: false, error: "Privileged overlay account changed" };
+  }
+  if (
+    !(await isRoomAuthorityClaimOwned(
+      tabId,
+      storage,
+      key,
+      claimed.authority,
+      claimOwnerId,
+      claimExecutionId,
+    ))
+  ) {
+    return { ok: false, error: "Privileged overlay room authority is stale" };
   }
 
   try {
-    const ended = await endRoom(consumed.roomId, currentSession.accessToken);
+    const ended = await endRoom(claimed.roomId, currentSession.accessToken);
+    await clearRoomAuthorityClaimIfOwned(
+      tabId,
+      storage,
+      key,
+      claimed.authority,
+      claimOwnerId,
+      claimExecutionId,
+    );
     return { ok: true, endedAt: ended.endedAt };
   } catch (error) {
-    await enqueueAuthorityStorageMutation(tabId, async () => {
-      const state = await readPrivilegedRoomAuthorityState(storage, key);
-      if (
-        state.lastAuthorityGeneration === consumed.authority.authorityGeneration &&
-        state.currentAuthority === null
-      ) {
-        await writePrivilegedRoomAuthorityState(storage, key, {
-          ...state,
-          currentAuthority: consumed.authority,
-        });
-      }
-    });
+    await restoreRoomAuthorityClaimIfOwned(
+      tabId,
+      storage,
+      key,
+      claimed.authority,
+      claimOwnerId,
+      claimExecutionId,
+    );
     throw error;
   }
+}
+
+function isMatchingRoomAuthorityClaim(
+  claim: PrivilegedRoomAuthorityClaim | null,
+  authority: PrivilegedOverlayContext,
+  ownerId: string,
+): boolean {
+  return Boolean(
+    claim && claim.ownerId === ownerId && samePrivilegedOverlayContext(claim.authority, authority),
+  );
+}
+
+function isRoomAuthorityClaimOwned(
+  tabId: number,
+  storage: SessionStorageLike,
+  key: string,
+  authority: PrivilegedOverlayContext,
+  ownerId: string,
+  executionId: string,
+): Promise<boolean> {
+  return enqueueAuthorityStorageMutation(tabId, async () => {
+    if (activeRoomAuthorityClaimExecutionsByTab.get(tabId) !== executionId) return false;
+    const state = await readPrivilegedRoomAuthorityState(storage, key);
+    return isMatchingRoomAuthorityClaim(state.inFlightClaim, authority, ownerId);
+  });
+}
+
+function clearRoomAuthorityClaimIfOwned(
+  tabId: number,
+  storage: SessionStorageLike,
+  key: string,
+  authority: PrivilegedOverlayContext,
+  ownerId: string,
+  executionId: string,
+): Promise<void> {
+  return enqueueAuthorityStorageMutation(tabId, async () => {
+    if (activeRoomAuthorityClaimExecutionsByTab.get(tabId) !== executionId) return;
+    const state = await readPrivilegedRoomAuthorityState(storage, key);
+    if (!isMatchingRoomAuthorityClaim(state.inFlightClaim, authority, ownerId)) return;
+    await writePrivilegedRoomAuthorityState(storage, key, {
+      ...state,
+      inFlightClaim: null,
+    });
+    if (activeRoomAuthorityClaimExecutionsByTab.get(tabId) === executionId) {
+      activeRoomAuthorityClaimExecutionsByTab.delete(tabId);
+    }
+  });
+}
+
+function restoreRoomAuthorityClaimIfOwned(
+  tabId: number,
+  storage: SessionStorageLike,
+  key: string,
+  authority: PrivilegedOverlayContext,
+  ownerId: string,
+  executionId: string,
+): Promise<void> {
+  return enqueueAuthorityStorageMutation(tabId, async () => {
+    if (activeRoomAuthorityClaimExecutionsByTab.get(tabId) !== executionId) return;
+    const state = await readPrivilegedRoomAuthorityState(storage, key);
+    if (
+      state.lastAuthorityGeneration !== authority.authorityGeneration ||
+      state.currentAuthority !== null ||
+      !isMatchingRoomAuthorityClaim(state.inFlightClaim, authority, ownerId)
+    ) {
+      return;
+    }
+    await writePrivilegedRoomAuthorityState(storage, key, {
+      ...state,
+      currentAuthority: authority,
+      inFlightClaim: null,
+    });
+    if (activeRoomAuthorityClaimExecutionsByTab.get(tabId) === executionId) {
+      activeRoomAuthorityClaimExecutionsByTab.delete(tabId);
+    }
+  });
 }
 
 export async function clearPrivilegedOverlayContextForTab(
@@ -264,12 +423,14 @@ export async function clearPrivilegedOverlayContextForTab(
   const storage = dependencies.sessionStorage ?? getSessionStorage();
   const key = authorityStorageKey(tabId);
   await enqueueAuthorityStorageMutation(tabId, async () => {
+    activeRoomAuthorityClaimExecutionsByTab.delete(tabId);
     const state = await readPrivilegedRoomAuthorityState(storage, key);
     const authorityGeneration = nextAuthorityGeneration(state.lastAuthorityGeneration);
     await writePrivilegedRoomAuthorityState(storage, key, {
       version: PRIVILEGED_ROOM_AUTHORITY_STATE_VERSION,
       lastAuthorityGeneration: authorityGeneration,
       currentAuthority: null,
+      inFlightClaim: null,
     });
   });
 }
@@ -281,7 +442,10 @@ export async function removePrivilegedRoomAuthorityStateForTab(
 ): Promise<void> {
   if (!Number.isInteger(tabId) || tabId < 0) return;
   const storage = dependencies.sessionStorage ?? getSessionStorage();
-  await enqueueAuthorityStorageMutation(tabId, () => storage.remove(authorityStorageKey(tabId)));
+  await enqueueAuthorityStorageMutation(tabId, async () => {
+    activeRoomAuthorityClaimExecutionsByTab.delete(tabId);
+    await storage.remove(authorityStorageKey(tabId));
+  });
 }
 
 function enqueueAuthorityStorageMutation<T>(tabId: number, mutation: () => Promise<T>): Promise<T> {
@@ -331,35 +495,73 @@ function parsePrivilegedOverlayContext(value: unknown): PrivilegedOverlayContext
 
 function parsePrivilegedRoomAuthorityState(value: unknown): PrivilegedRoomAuthorityState | null {
   const legacyAuthority = parsePrivilegedOverlayContext(value);
-  if (legacyAuthority && legacyAuthority.roomId !== null && legacyAuthority.authorityGeneration !== null) {
+  if (
+    legacyAuthority &&
+    legacyAuthority.roomId !== null &&
+    legacyAuthority.authorityGeneration !== null
+  ) {
     return {
       version: PRIVILEGED_ROOM_AUTHORITY_STATE_VERSION,
       lastAuthorityGeneration: legacyAuthority.authorityGeneration,
       currentAuthority: legacyAuthority,
+      inFlightClaim: null,
     };
   }
-  if (!isRecord(value) || value.version !== PRIVILEGED_ROOM_AUTHORITY_STATE_VERSION) return null;
+  if (!isRecord(value)) return null;
   if (!isValidAuthorityGeneration(value.lastAuthorityGeneration)) return null;
-  if (value.currentAuthority === null) {
+  const currentAuthority = parseStoredAuthorityForGeneration(
+    value.currentAuthority,
+    value.lastAuthorityGeneration,
+  );
+  if (value.currentAuthority !== null && !currentAuthority) return null;
+
+  if (value.version === LEGACY_PRIVILEGED_ROOM_AUTHORITY_STATE_VERSION) {
     return {
       version: PRIVILEGED_ROOM_AUTHORITY_STATE_VERSION,
       lastAuthorityGeneration: value.lastAuthorityGeneration,
-      currentAuthority: null,
+      currentAuthority,
+      inFlightClaim: null,
     };
   }
-  const currentAuthority = parsePrivilegedOverlayContext(value.currentAuthority);
-  if (
-    !currentAuthority ||
-    currentAuthority.roomId === null ||
-    currentAuthority.authorityGeneration !== value.lastAuthorityGeneration
-  ) {
-    return null;
-  }
+  if (value.version !== PRIVILEGED_ROOM_AUTHORITY_STATE_VERSION) return null;
+  const inFlightClaim = parseStoredRoomAuthorityClaim(
+    value.inFlightClaim,
+    value.lastAuthorityGeneration,
+  );
+  if (value.inFlightClaim !== null && !inFlightClaim) return null;
+  if (currentAuthority && inFlightClaim) return null;
   return {
     version: PRIVILEGED_ROOM_AUTHORITY_STATE_VERSION,
     lastAuthorityGeneration: value.lastAuthorityGeneration,
     currentAuthority,
+    inFlightClaim,
   };
+}
+
+function parseStoredAuthorityForGeneration(
+  value: unknown,
+  authorityGeneration: number,
+): PrivilegedOverlayContext | null {
+  if (value === null) return null;
+  const authority = parsePrivilegedOverlayContext(value);
+  if (
+    !authority ||
+    authority.roomId === null ||
+    authority.authorityGeneration !== authorityGeneration
+  ) {
+    return null;
+  }
+  return authority;
+}
+
+function parseStoredRoomAuthorityClaim(
+  value: unknown,
+  authorityGeneration: number,
+): PrivilegedRoomAuthorityClaim | null {
+  if (value === null) return null;
+  if (!isRecord(value) || typeof value.ownerId !== "string" || !value.ownerId.trim()) return null;
+  const authority = parseStoredAuthorityForGeneration(value.authority, authorityGeneration);
+  return authority ? { authority, ownerId: value.ownerId } : null;
 }
 
 async function readPrivilegedRoomAuthorityState(
@@ -372,6 +574,7 @@ async function readPrivilegedRoomAuthorityState(
       version: PRIVILEGED_ROOM_AUTHORITY_STATE_VERSION,
       lastAuthorityGeneration: 0,
       currentAuthority: null,
+      inFlightClaim: null,
     };
   }
   const state = parsePrivilegedRoomAuthorityState(value);
@@ -481,6 +684,10 @@ function getSessionStorage(): SessionStorageLike {
     throw new Error("Privileged room authority session storage is unavailable");
   }
   return chrome.storage.session;
+}
+
+function createClaimOwnerId(): string {
+  return crypto.randomUUID();
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

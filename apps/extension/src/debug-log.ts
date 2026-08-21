@@ -19,13 +19,16 @@ export interface DebugEntry {
 const MAX_ENTRIES = 1200;
 const COMPACT_ENTRIES = 350;
 const CONSOLE_DEBUG_STORAGE_KEY = "anidachi:debug-console";
+const LEGACY_PAGE_DEBUG_STORAGE_KEY = "anidachi:debug-log:v1";
 const MAX_ENTRY_AGE_MS = 15 * 60_000;
 const STARTED_AT = performance.now();
 
 let sequence = 0;
 let entries: DebugEntry[] = [];
+let legacyPageDebugRemovalAttempted = false;
 
 export function logDebug(scope: string, message: string, data?: unknown): void {
+  removeLegacyPageDebugBufferOnce();
   const entry: DebugEntry = {
     id: ++sequence,
     at: new Date().toISOString(),
@@ -40,6 +43,16 @@ export function logDebug(scope: string, message: string, data?: unknown): void {
 
   if (shouldPrintDebugToConsole()) {
     console.info("[Anidachi Debug]", entry.scope, entry.message, entry.data ?? "");
+  }
+}
+
+function removeLegacyPageDebugBufferOnce(): void {
+  if (legacyPageDebugRemovalAttempted) return;
+  legacyPageDebugRemovalAttempted = true;
+  try {
+    localStorage.removeItem(LEGACY_PAGE_DEBUG_STORAGE_KEY);
+  } catch {
+    // Page-origin storage can be unavailable; logging must remain best effort.
   }
 }
 

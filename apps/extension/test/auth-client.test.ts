@@ -53,6 +53,16 @@ const storedTokens: ExtensionAuthTokens = {
   },
 };
 
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((nextResolve, nextReject) => {
+    resolve = nextResolve;
+    reject = nextReject;
+  });
+  return { promise, resolve, reject };
+}
+
 describe("extension auth client", () => {
   it("builds the website extension connect URL", () => {
     const url = new URL(
@@ -492,6 +502,65 @@ describe("extension auth client", () => {
     releaseOldClear?.();
     await Promise.all([oldClear, newerSignIn]);
 
+    expect(current).toEqual(replacement);
+  });
+
+  it("serializes a replacement account behind exact-family sign-out side effects and preserves the replacement", async () => {
+    const replacement = {
+      ...storedTokens,
+      accessToken: "replacement-access",
+      refreshToken: "replacement-refresh",
+      user: { ...storedTokens.user, id: "user-2" },
+    };
+    let current: ExtensionAuthTokens | null = storedTokens;
+    const signOutStarted = deferred<void>();
+    const releaseSignOut = deferred<void>();
+    const events: string[] = [];
+    const authority = createAuthSessionStorageAuthority({
+      get: async () => current,
+      set: async (tokens) => {
+        current = tokens;
+        events.push(`set:${tokens.user.id}`);
+      },
+      remove: async () => {
+        current = null;
+        events.push("remove:user-1");
+      },
+    });
+    const clearIfCurrentAfter = (
+      authority as typeof authority & {
+        clearIfCurrentAfter?: (
+          expected: ExtensionAuthTokens,
+          beforeClear: (tokens: ExtensionAuthTokens) => Promise<void>,
+        ) => Promise<unknown>;
+      }
+    ).clearIfCurrentAfter;
+
+    expect(clearIfCurrentAfter).toBeTypeOf("function");
+    if (!clearIfCurrentAfter) return;
+
+    const signOut = clearIfCurrentAfter(storedTokens, async (tokens) => {
+      expect(tokens).toBe(storedTokens);
+      events.push("sign-out:user-1");
+      signOutStarted.resolve();
+      await releaseSignOut.promise;
+    });
+    await signOutStarted.promise;
+    const replacementSignIn = authority.replace(replacement);
+    await Promise.resolve();
+    expect(current).toBe(storedTokens);
+
+    releaseSignOut.resolve();
+    await Promise.all([signOut, replacementSignIn]);
+
+    expect(current).toEqual(replacement);
+    expect(events).toEqual(["sign-out:user-1", "remove:user-1", "set:user-2"]);
+
+    const staleSignOutSideEffects = vi.fn(async () => undefined);
+    await expect(
+      authority.clearIfCurrentAfter(storedTokens, staleSignOutSideEffects),
+    ).resolves.toMatchObject({ committed: false, current: replacement });
+    expect(staleSignOutSideEffects).not.toHaveBeenCalled();
     expect(current).toEqual(replacement);
   });
 

@@ -1,5 +1,35 @@
 const SECRET_FIELD_RE = /token|secret|cookie|authorization|password|credential|icepwd|attestation/i;
 
+const USER_AUTHORED_CONTENT_FIELDS = new Set([
+  "comment",
+  "content",
+  "displayName",
+  "emoji",
+  "episodeTitle",
+  "groupName",
+  "label",
+  "message",
+  "name",
+  "reaction",
+  "seasonTitle",
+  "seriesTitle",
+  "sourceTitle",
+  "text",
+  "title",
+  "userText",
+]);
+
+const STABLE_PSEUDONYM_FIELDS = new Set([
+  "email",
+  "fingerprint",
+  "sourceFingerprint",
+  "targetKey",
+  "username",
+  "videoFingerprint",
+]);
+
+const STABLE_PSEUDONYM_KEY_RE = /(?:fingerprint|targetKey)$/i;
+
 const HASH_IDENTIFIER_FIELDS = new Set([
   "id",
   "roomId",
@@ -70,6 +100,10 @@ const RAW_FRAME_FIELDS = new Set(["raw", "rawFrame", "rawMessage"]);
 
 export function sanitizePrivacySafeData(value: unknown): unknown {
   const serialized = JSON.stringify(value, (key, item) => {
+    if (USER_AUTHORED_CONTENT_FIELDS.has(key)) {
+      return undefined;
+    }
+
     if (SECRET_FIELD_RE.test(key)) {
       if (typeof item === "boolean" || typeof item === "number" || item === null) {
         return item;
@@ -87,6 +121,13 @@ export function sanitizePrivacySafeData(value: unknown): unknown {
 
     if (MEDIA_IDENTIFIER_FIELDS.has(key)) {
       return item === undefined ? item : "<redacted-media-id>";
+    }
+
+    if (
+      (STABLE_PSEUDONYM_FIELDS.has(key) || STABLE_PSEUDONYM_KEY_RE.test(key)) &&
+      typeof item === "string"
+    ) {
+      return hashPrivacySafeId(item);
     }
 
     if (
