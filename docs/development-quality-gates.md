@@ -12,8 +12,9 @@ human judgment.
 - Run `pnpm dev:check` before opening a PR, then run the recommended profile.
 - Update docs in the same PR when behavior, ownership, endpoints, env, release
   flow, protocol, or user-facing workflow changes.
-- Use Graphify before broad cross-plane work. Run `pnpm graph:update` after
-  meaningful code, docs, or architecture changes.
+- Use Graphify before broad cross-plane work. Run `pnpm graph:update:code`
+  after meaningful code-only changes. After docs, plans, images, PDFs, or other
+  semantic inputs change, run `$graphify . --update` inside Codex instead.
 - In the PR template, record verification, staging/release impact, docs status,
   Graphify status, and rollback notes.
 

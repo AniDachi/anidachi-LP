@@ -1,7 +1,7 @@
 {
   ".codex/hooks.json": {
-    "mtime": 1787164715.665618,
-    "seen": 1787320943.44911,
+    "mtime": 1787321917.7342348,
+    "seen": 1787322625.692379,
     "ast_hash": "363c222f50e6f7b1e54d30457cf4c42b",
     "semantic_hash": "363c222f50e6f7b1e54d30457cf4c42b"
   },
@@ -3222,10 +3222,10 @@
     "semantic_hash": "ce9a13d5caef960b099135302fce3507"
   },
   "package.json": {
-    "mtime": 1787140027.9299421,
-    "seen": 1787168236.384632,
-    "ast_hash": "2a04df7154fa9400eb622316b7b45b41",
-    "semantic_hash": "2a04df7154fa9400eb622316b7b45b41"
+    "mtime": 1787322912.565866,
+    "seen": 1787322926.412027,
+    "ast_hash": "4fa08b6a570d6c90d4e45b28ce3183f8",
+    "semantic_hash": "4fa08b6a570d6c90d4e45b28ce3183f8"
   },
   "packages/protocol/package.json": {
     "mtime": 1786689011.3760242,
@@ -3516,16 +3516,16 @@
     "semantic_hash": "c8e7373108449d6a2b49ada3464d8681"
   },
   "AGENTS.md": {
-    "mtime": 1787164750.3949547,
-    "seen": 1787168236.384651,
-    "ast_hash": "86a07afea2f616238ff0f1056acb61a8",
-    "semantic_hash": "86a07afea2f616238ff0f1056acb61a8"
+    "mtime": 1787321940.399135,
+    "seen": 1787322625.692789,
+    "ast_hash": "efa681fb8cf06be13c48275e6759b1a1",
+    "semantic_hash": "efa681fb8cf06be13c48275e6759b1a1"
   },
   "README.md": {
-    "mtime": 1786689011.2455993,
-    "seen": 1787168236.384651,
-    "ast_hash": "c9652cd6e6f3bd981c04abbf370f8f65",
-    "semantic_hash": "c9652cd6e6f3bd981c04abbf370f8f65"
+    "mtime": 1787321917.7355468,
+    "seen": 1787322625.692789,
+    "ast_hash": "a5c12762fb60659682d20748632eb589",
+    "semantic_hash": "a5c12762fb60659682d20748632eb589"
   },
   "apps/api/AGENTS.md": {
     "mtime": 1786689011.2457054,
@@ -3606,10 +3606,10 @@
     "semantic_hash": "7222da43b1fe21764ac60a152d060d29"
   },
   "docs/current-development-state.md": {
-    "mtime": 1787320152.9611747,
-    "seen": 1787320943.44952,
-    "ast_hash": "0cc0c15b33e8272d09339ff0c0a751ad",
-    "semantic_hash": "0cc0c15b33e8272d09339ff0c0a751ad"
+    "mtime": 1787323039.4361582,
+    "seen": 1787323233.16154,
+    "ast_hash": "ff4dddfaf6841edb2bd6e02d8180b85c",
+    "semantic_hash": "ff4dddfaf6841edb2bd6e02d8180b85c"
   },
   "docs/development-environments.md": {
     "mtime": 1786689011.3582418,
@@ -3618,10 +3618,10 @@
     "semantic_hash": "e536a0e7fbd2ffe404df7387a43d5365"
   },
   "docs/development-quality-gates.md": {
-    "mtime": 1786689011.3583004,
-    "seen": 1787168236.384659,
-    "ast_hash": "ce5b665d2d9cce20969b813023e6bff2",
-    "semantic_hash": "ce5b665d2d9cce20969b813023e6bff2"
+    "mtime": 1787321917.7363365,
+    "seen": 1787322625.69279,
+    "ast_hash": "b0979d5c3588dbbfd34ff46d5274f5d2",
+    "semantic_hash": "b0979d5c3588dbbfd34ff46d5274f5d2"
   },
   "docs/environment-and-secrets-matrix.md": {
     "mtime": 1786689011.3583667,
@@ -3642,10 +3642,10 @@
     "semantic_hash": "23dcdd7f4644b7d1cfce6112b7f3953b"
   },
   "docs/new-chat-project-context.md": {
-    "mtime": 1786689011.3585618,
-    "seen": 1787168236.38466,
-    "ast_hash": "c751392a56f79d7d1d61b224a93a5aef",
-    "semantic_hash": "c751392a56f79d7d1d61b224a93a5aef"
+    "mtime": 1787321940.4011788,
+    "seen": 1787322625.69279,
+    "ast_hash": "4c30f2c0ef76a3f40e24e883211bc012",
+    "semantic_hash": "4c30f2c0ef76a3f40e24e883211bc012"
   },
   "docs/openclaw-youtube-shorts.md": {
     "mtime": 1786689011.3586724,
@@ -3660,10 +3660,10 @@
     "semantic_hash": "a50cc4eda61e03162ca8bce1f0f32c6a"
   },
   "docs/project-knowledge-map.md": {
-    "mtime": 1786689011.3588312,
-    "seen": 1787168236.384661,
-    "ast_hash": "06516679c7ca112f42eb205e840f2f41",
-    "semantic_hash": "06516679c7ca112f42eb205e840f2f41"
+    "mtime": 1787323039.435448,
+    "seen": 1787323233.1615412,
+    "ast_hash": "1439d9389a71113329a7115fab6853f9",
+    "semantic_hash": "1439d9389a71113329a7115fab6853f9"
   },
   "docs/project-operating-manual.md": {
     "mtime": 1787140027.919457,
@@ -5920,5 +5920,11 @@
     "seen": 1787320943.4495249,
     "ast_hash": "e694ea53d016b7c385c65d11bb575567",
     "semantic_hash": "e694ea53d016b7c385c65d11bb575567"
+  },
+  "scripts/graphify-code-update.mjs": {
+    "mtime": 1787323039.4345348,
+    "seen": 1787323233.1615329,
+    "ast_hash": "56fd409bf1d735ced19c9f1d9ffc8407",
+    "semantic_hash": "56fd409bf1d735ced19c9f1d9ffc8407"
   }
 }
