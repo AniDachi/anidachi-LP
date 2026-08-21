@@ -169,7 +169,7 @@ describe("exact-family sign-out reliability", () => {
       harness.events.push("revoke-refresh");
       throw new Error("private revoke failure text");
     });
-    harness.websiteLogout.mockImplementationOnce(async () => {
+    harness.websiteLogout.mockImplementationOnce(() => {
       harness.events.push("website-logout");
       throw new Error("private browser failure text");
     });
@@ -227,6 +227,35 @@ describe("exact-family sign-out reliability", () => {
     expectBefore("website-logout", `remove:${AUTH_TOKENS_KEY}`);
     expectBefore(`remove:${AUTH_TOKENS_KEY}`, `set:${AUTH_TOKENS_KEY}`);
     expect(await getStoredAuthTokens()).toEqual(accountB);
+  });
+
+  it("captures the production website logout launch before registering its outer safety timer", async () => {
+    await setStoredAuthTokens(accountA);
+    harness.events.length = 0;
+    const nativeFlow = deferred<string | undefined>();
+    const setTimeoutSpy = vi.spyOn(globalThis, "setTimeout");
+    let outerTimerCountAtLaunch = -1;
+    harness.websiteLogout.mockImplementationOnce(() => {
+      harness.events.push("website-logout");
+      outerTimerCountAtLaunch = setTimeoutSpy.mock.calls.filter(
+        ([, delay]) => delay === 2_000,
+      ).length;
+      return nativeFlow.promise;
+    });
+
+    const signOut = signOutWithWebsite(accountA);
+    await flushMicrotasks(50);
+
+    try {
+      expect(outerTimerCountAtLaunch).toBe(2);
+      expect(
+        setTimeoutSpy.mock.calls.filter(([, delay]) => delay === 2_000),
+      ).toHaveLength(3);
+    } finally {
+      nativeFlow.resolve(undefined);
+      await signOut;
+    }
+    await expect(signOut).resolves.toBe(true);
   });
 
   it.each(["resolve", "reject"] as const)(

@@ -860,12 +860,17 @@ async function runRemoteSignOutStage(
   stage: "watch-history-flush" | "refresh-token-revocation" | "website-logout",
   operation: () => Promise<void>,
 ): Promise<void> {
+  let operationOutcome: Promise<"completed" | "failed">;
+  try {
+    operationOutcome = Promise.resolve(operation())
+      .then(() => "completed" as const)
+      .catch(() => "failed" as const);
+  } catch {
+    operationOutcome = Promise.resolve("failed");
+  }
   let timeout: ReturnType<typeof setTimeout> | undefined;
   const outcome = await Promise.race([
-    Promise.resolve()
-      .then(operation)
-      .then(() => "completed" as const)
-      .catch(() => "failed" as const),
+    operationOutcome,
     new Promise<"timed-out">((resolve) => {
       timeout = setTimeout(() => resolve("timed-out"), REMOTE_SIGN_OUT_STAGE_TIMEOUT_MS);
     }),

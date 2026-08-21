@@ -1157,7 +1157,7 @@ git commit -m "fix(api): bound room WebSocket admission"
 
 **Status (2026-08-21): native logout-bound residual implementation and local
 automated verification complete.** Final local evidence: 98 files,
-1,249/1,249 tests; extension check, changed-path lint, staging build, staging
+1,250/1,250 tests; extension check, changed-path lint, staging build, staging
 validation, and `pnpm dev:check` passed. Residual scoped re-review,
 loaded-artifact Chrome, and staging acceptance remain pending.
 
