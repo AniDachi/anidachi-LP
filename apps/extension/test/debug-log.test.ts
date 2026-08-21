@@ -144,14 +144,65 @@ describe("debug log", () => {
 
     expect(snapshot).toEqual({
       type: "ROOM_HISTORY_AUTHORITY",
-      roomId: "room-1",
-      participantSessionId: "participant-session-1",
+      roomId: expect.stringMatching(/^id_[a-z0-9]+$/),
+      participantSessionId: expect.stringMatching(/^id_[a-z0-9]+$/),
       roomGeneration: 2,
       sourceGeneration: 3,
     });
     expect(snapshot).not.toHaveProperty("attestation");
     expect(JSON.stringify(snapshot)).not.toContain(attestation);
     expect(JSON.stringify(snapshot)).not.toContain("private-payload");
+  });
+
+  it("keeps literal room and participant identifiers out of routine room snapshots", () => {
+    const serialized = JSON.stringify([
+      roomEventDebugSnapshot({
+        type: "ROOM_SNAPSHOT",
+        roomId: "room-private-literal",
+        roomGeneration: 2,
+        sourceGeneration: 3,
+        serverSeq: 4,
+        participants: [
+          {
+            id: "participant-private-literal",
+            displayName: "Private user",
+            role: "host",
+            cameraEnabled: false,
+            mediaSeat: "none",
+            syncStatus: "unknown",
+            lastSeenAt: 0,
+          },
+        ],
+      }),
+      roomEventDebugSnapshot({
+        type: "ROOM_HISTORY_AUTHORITY",
+        roomId: "room-private-literal",
+        participantSessionId: "participant-session-private-literal",
+        roomGeneration: 2,
+        sourceGeneration: 3,
+        attestation: "private-attestation",
+      }),
+      roomEventDebugSnapshot({
+        type: "PLAY",
+        roomId: "room-private-literal",
+        byUserId: "by-user-private-literal",
+        at: 10,
+      }),
+      roomEventDebugSnapshot({
+        type: "CAMERA_ON",
+        roomId: "room-private-literal",
+        userId: "user-private-literal",
+      }),
+    ]);
+    for (const rawIdentifier of [
+      "room-private-literal",
+      "participant-private-literal",
+      "participant-session-private-literal",
+      "by-user-private-literal",
+      "user-private-literal",
+    ]) {
+      expect(serialized).not.toContain(rawIdentifier);
+    }
   });
 
   it("hashes P2P participant identifiers and redacts ICE addresses", () => {

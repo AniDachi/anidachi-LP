@@ -19,7 +19,11 @@ import {
   handlePrivilegedOverlayIntentMessage,
   isPrivilegedOverlayIntentMessage,
 } from "../src/privileged-overlay-intent";
-import { handleRoomHttpMessage, isRoomHttpMessage } from "../src/room-client";
+import {
+  endWebsiteRoomFromApi,
+  handleRoomHttpMessage,
+  isRoomHttpMessage,
+} from "../src/room-client";
 import {
   createRoomInviteNotificationMaintenanceAlarm,
   handleAuthSessionChanged,
@@ -51,7 +55,9 @@ export default defineBackground(() => {
     }
 
     if (isPrivilegedOverlayIntentMessage(message)) {
-      void handlePrivilegedOverlayIntentMessage(message, sender).then(
+      void handlePrivilegedOverlayIntentMessage(message, sender, {
+        endRoom: endWebsiteRoomFromApi,
+      }).then(
         sendResponse,
         (error) =>
           sendResponse({
@@ -73,7 +79,7 @@ export default defineBackground(() => {
     }
 
     if (isRoomHttpMessage(message)) {
-      void handleRoomHttpMessage(message).then(sendResponse);
+      void handleRoomHttpMessage(message, sender).then(sendResponse);
       return true;
     }
 
@@ -152,7 +158,7 @@ export default defineBackground(() => {
   void createRoomInviteNotificationMaintenanceAlarm().catch(() => undefined);
 
   chrome.tabs.onRemoved.addListener((tabId) => {
-    clearPrivilegedOverlayContextForTab(tabId);
+    void clearPrivilegedOverlayContextForTab(tabId).catch(() => undefined);
     void removeRoomSessionForTab(tabId).catch(() => undefined);
   });
 });

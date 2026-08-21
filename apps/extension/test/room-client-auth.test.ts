@@ -376,6 +376,55 @@ describe("authenticated room client", () => {
     expect(sendMessage).toHaveBeenCalledWith(createRoomHttpMessage("access-1", input));
   });
 
+  it("returns background-issued host authority only from a successful room response", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          roomId: "room-privileged",
+          roomToken: trustedRoomToken({
+            sub: "user-a",
+            roomId: "room-privileged",
+            role: "host",
+          }),
+          shareableLink: "http://localhost:3003/room/room-privileged",
+        }),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const issueAuthority = vi.fn().mockResolvedValue({
+      accountUserId: "user-a",
+      roomId: "room-privileged",
+      role: "host",
+      authorityGeneration: 7,
+    });
+
+    const response = await (
+      handleRoomHttpMessage as unknown as (
+        message: ReturnType<typeof createRoomHttpMessage>,
+        sender: { tab: { id: number } },
+        dependencies: { issueAuthority: typeof issueAuthority },
+      ) => Promise<unknown>
+    )(
+      createRoomHttpMessage("access-1"),
+      { tab: { id: 41 } },
+      { issueAuthority },
+    );
+
+    expect(response).toMatchObject({
+      ok: true,
+      room: {
+        roomId: "room-privileged",
+        privilegedRoomAuthority: {
+          accountUserId: "user-a",
+          roomId: "room-privileged",
+          role: "host",
+          authorityGeneration: 7,
+        },
+      },
+    });
+  });
+
   it("connects rooms through the extension runtime bridge", async () => {
     const sendMessage = vi.fn().mockResolvedValue({
       ok: true,
@@ -927,3 +976,7 @@ describe("authenticated room client", () => {
     expect(onTerminalClose).toHaveBeenCalledOnce();
   });
 });
+
+function trustedRoomToken(payload: Record<string, unknown>): string {
+  return `eyJhbGciOiJIUzI1NiJ9.${btoa(JSON.stringify({ typ: "room", ...payload }))}.signature`;
+}

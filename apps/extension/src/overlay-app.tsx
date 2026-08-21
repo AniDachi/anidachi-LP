@@ -135,9 +135,9 @@ import { applyRoomUsageSnapshot, roomQuotaRemainingSeconds } from "./room-quota-
 import { selectVoiceRailParticipants, shouldRenderRoomRail } from "./room-rail-intent";
 import { getRoomReconnectDelayMs } from "./room-reconnect";
 import {
+  isTrustedOverlayActionEvent,
   requestPrivilegedOverlayAction,
   requestQuotaRoomEnd,
-  syncPrivilegedOverlayContext,
   type PrivilegedOverlayContext,
 } from "./privileged-overlay-intent";
 import {
@@ -354,6 +354,16 @@ export function usePlayerOverlayGeometry(
   return geometry;
 }
 
+export async function runOverlayPrivilegedAction(
+  event: { nativeEvent?: { isTrusted?: unknown } },
+  action: "sign-out" | "end-room",
+  context: PrivilegedOverlayContext,
+  afterApproval: () => Promise<void> | void,
+): Promise<void> {
+  await requestPrivilegedOverlayAction(event, action, context);
+  await afterApproval();
+}
+
 export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const clientRef = useRef(new RoomClient());
   const adapterActiveRef = useRef(adapterActive);
@@ -411,6 +421,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     string | null | undefined
   >(undefined);
   const [roomId, setRoomId] = useState<string | null>(null);
+  const [privilegedRoomAuthority, setPrivilegedRoomAuthority] =
+    useState<PrivilegedOverlayContext | null>(null);
   const [roomToken, setRoomToken] = useState<string | null>(null);
   const [roomShareableLink, setRoomShareableLink] = useState<string | null>(null);
   const [roomQuota, setRoomQuota] = useState<RoomQuotaSummary | null>(null);
@@ -916,6 +928,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     roomIdRef.current = roomId;
     inviteActionIdsRef.current.clear();
     if (!roomId) {
+      setPrivilegedRoomAuthority(null);
       setRoomCapabilities(null);
       setInvitePanelOpen(false);
       setInviteTargets(null);
@@ -1352,31 +1365,17 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       : "No media seats";
   const roomPeopleCountText = `${participantCount}/${roomParticipantLimit} in room`;
   const isHost = currentParticipant?.role === "host";
-  const privilegedOverlayContext = useMemo<PrivilegedOverlayContext>(() => {
-    const accountUserId = accountUser?.id ?? null;
-    if (!accountUserId || !roomId || !currentParticipant || roomGeneration <= 0) {
-      return {
-        accountUserId,
-        roomId: null,
-        role: null,
-        roomGeneration: null,
-      };
-    }
+  const signOutPrivilegedContext = useMemo<PrivilegedOverlayContext>(() => {
+    const accountUserId = accountUser?.id ?? "";
     return {
       accountUserId,
-      roomId,
-      role: isHost ? "host" : "guest",
-      roomGeneration,
+      roomId: null,
+      role: null,
+      authorityGeneration: null,
     };
-  }, [accountUser?.id, currentParticipant, isHost, roomGeneration, roomId]);
+  }, [accountUser?.id]);
 
-  useEffect(() => {
-    void syncPrivilegedOverlayContext(privilegedOverlayContext).catch((error) => {
-      logDebug("overlay.privileged", "context sync failed", {
-        message: error instanceof Error ? error.message : "Unknown error",
-      });
-    });
-  }, [privilegedOverlayContext]);
+  const privilegedRoomContext = privilegedRoomAuthority ?? signOutPrivilegedContext;
 
   useEffect(() => {
     if (!roomId || !isHost) {
@@ -2849,6 +2848,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
         roomTokenRef.current = connected.roomToken;
         setRoomToken(connected.roomToken);
+        setPrivilegedRoomAuthority(connected.privilegedRoomAuthority ?? null);
         setRoomCapabilities(connected.capabilities ?? null);
         updateRoomQuota(connected.quota ?? null);
         const shareableLink = buildRoomShareableUrl(nextRoomId);
@@ -3108,7 +3108,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     if (exhaustedRoomId) {
       void (async () => {
         try {
-          await requestQuotaRoomEnd(privilegedOverlayContext);
+          await requestQuotaRoomEnd(privilegedRoomContext);
           logDebug("overlay.room", "quota exhausted room ended on server", {
             roomId: exhaustedRoomId,
           });
@@ -3124,7 +3124,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   }, [
     quotaMeteringActive,
     quotaRemainingSeconds,
-    privilegedOverlayContext,
+    privilegedRoomContext,
     roomQuota,
     terminateRoomSession,
   ]);
@@ -3182,6 +3182,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   }, [applyParticipantIdentity]);
 
   const handleSignOut = useCallback(async (event: ReactMouseEvent<HTMLButtonElement>) => {
+    if (!isTrustedOverlayActionEvent(event)) {
+      return;
+    }
     setAuthBusy(true);
     setAuthMessage(null);
     suppressSilentSignInUntilRef.current =
@@ -3189,16 +3192,17 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     try {
       roomReconnectSuppressedRef.current = true;
       clearRoomReconnectTimer();
-      await requestPrivilegedOverlayAction(event, "sign-out", privilegedOverlayContext);
-      applyParticipantIdentity(await createCurrentParticipant(), "sign-out", false);
-      clientRef.current.close();
-      releaseRoomTabLock();
-      roomIdRef.current = null;
-      setRoomId(null);
-      setParticipants([]);
-      setCamsEnabled(DEFAULT_LOCAL_CAMERA_ENABLED);
-      clearRoomQuotaDisplay();
-      setRoomCapabilities(null);
+      await runOverlayPrivilegedAction(event, "sign-out", signOutPrivilegedContext, async () => {
+        applyParticipantIdentity(await createCurrentParticipant(), "sign-out", false);
+        clientRef.current.close();
+        releaseRoomTabLock();
+        roomIdRef.current = null;
+        setRoomId(null);
+        setParticipants([]);
+        setCamsEnabled(DEFAULT_LOCAL_CAMERA_ENABLED);
+        clearRoomQuotaDisplay();
+        setRoomCapabilities(null);
+      });
     } catch (error) {
       setExtensionContextInvalidated(isExtensionContextInvalidatedError(error));
       setAuthMessage(authErrorMessage(error, "Sign out failed"));
@@ -3209,7 +3213,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     applyParticipantIdentity,
     clearRoomQuotaDisplay,
     clearRoomReconnectTimer,
-    privilegedOverlayContext,
+    signOutPrivilegedContext,
   ]);
 
   useEffect(() => {
@@ -3365,6 +3369,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       roomShareableLinkRef.current = nextShareableLink;
       setRoomToken(nextRoomToken);
       setRoomShareableLink(nextShareableLink);
+      setPrivilegedRoomAuthority(created.privilegedRoomAuthority ?? null);
       logDebug("overlay.room", "created", {
         reason,
         roomId: created.roomId,
@@ -3574,6 +3579,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   };
 
   const handleEndRoom = async (event: ReactMouseEvent<HTMLButtonElement>) => {
+    if (!isTrustedOverlayActionEvent(event)) {
+      return;
+    }
     if (roomEndPending) {
       return;
     }
@@ -3589,24 +3597,26 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
       roomReconnectSuppressedRef.current = true;
       clearRoomReconnectTimer();
-      await requestPrivilegedOverlayAction(event, "end-room", privilegedOverlayContext);
-      clientRef.current.close();
-      releaseRoomTabLock();
-      roomIdRef.current = null;
-      setRoomId(null);
-      setParticipants([]);
-      setCamsEnabled(DEFAULT_LOCAL_CAMERA_ENABLED);
-      clearRoomQuotaDisplay();
-      setRoomCapabilities(null);
-      roomTokenRef.current = null;
-      roomShareableLinkRef.current = null;
-      setRoomToken(null);
-      setRoomShareableLink(null);
-      clearStoredRoomSession();
-      clearRoomHash();
-      setAuthMessage(null);
-      showRoomActionFeedback("room-closed");
-      logDebug("overlay.room", "ended by host", { roomId: activeRoomId });
+      await runOverlayPrivilegedAction(event, "end-room", privilegedRoomContext, () => {
+        clientRef.current.close();
+        releaseRoomTabLock();
+        roomIdRef.current = null;
+        setRoomId(null);
+        setPrivilegedRoomAuthority(null);
+        setParticipants([]);
+        setCamsEnabled(DEFAULT_LOCAL_CAMERA_ENABLED);
+        clearRoomQuotaDisplay();
+        setRoomCapabilities(null);
+        roomTokenRef.current = null;
+        roomShareableLinkRef.current = null;
+        setRoomToken(null);
+        setRoomShareableLink(null);
+        clearStoredRoomSession();
+        clearRoomHash();
+        setAuthMessage(null);
+        showRoomActionFeedback("room-closed");
+        logDebug("overlay.room", "ended by host", { roomId: activeRoomId });
+      });
     } catch (error) {
       roomReconnectSuppressedRef.current = false;
       const message = error instanceof Error ? error.message : "Failed to end room";
@@ -3621,6 +3631,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   };
 
   const handleRequestEndRoom = async (event: ReactMouseEvent<HTMLButtonElement>) => {
+    if (!isTrustedOverlayActionEvent(event)) {
+      return;
+    }
     if (roomEndPending || !roomId || !isHost) {
       return;
     }

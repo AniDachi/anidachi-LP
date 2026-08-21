@@ -152,6 +152,10 @@ export function playerOverlayGeometryDebugSnapshot(
 }
 
 export function roomEventDebugSnapshot(event: ClientEvent | ServerEvent): Record<string, unknown> {
+  return sanitizePrivacySafeData(roomEventDebugSnapshotRaw(event)) as Record<string, unknown>;
+}
+
+function roomEventDebugSnapshotRaw(event: ClientEvent | ServerEvent): Record<string, unknown> {
   switch (event.type) {
     case "ROOM_ENDED":
       return {

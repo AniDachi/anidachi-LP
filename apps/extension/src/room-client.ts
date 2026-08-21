@@ -11,6 +11,11 @@ import {
 import { API_WS_BASE, WEB_HTTP_BASE } from "./constants";
 import { logDebug, roomEventDebugSnapshot } from "./debug-log";
 import type { RoomSendDisposition, SignalingTransportReady } from "./media-types";
+import {
+  issuePrivilegedRoomAuthority,
+  type IssuedRoomAuthorityInput,
+  type PrivilegedOverlayContext,
+} from "./privileged-overlay-intent";
 
 export type RoomConnectionStatus = "idle" | "connecting" | "connected" | "closed" | "error";
 
@@ -43,6 +48,8 @@ export interface CreatedRoom {
   reused?: boolean;
   capabilities?: RoomCapabilities;
   quota?: RoomQuotaSummary | null;
+  /** Background-issued per-tab authority for privileged room actions. */
+  privilegedRoomAuthority?: PrivilegedOverlayContext | null;
 }
 
 export interface CreateRoomInput {
@@ -118,6 +125,7 @@ export type RoomHttpMessageResponse =
         roomToken: string;
         capabilities?: RoomCapabilities;
         quota?: RoomQuotaSummary | null;
+        privilegedRoomAuthority?: PrivilegedOverlayContext | null;
       };
     }
   | { ok: true; ended: { endedAt: string | null } }
@@ -327,14 +335,31 @@ export async function endWebsiteRoomFromApi(
 
 export async function handleRoomHttpMessage(
   message: RoomHttpMessage,
+  sender: { tab?: { id?: number } } = {},
+  dependencies: {
+    issueAuthority?: (
+      input: IssuedRoomAuthorityInput,
+      sender: { tab?: { id?: number } },
+    ) => Promise<PrivilegedOverlayContext | null>;
+  } = {},
 ): Promise<RoomHttpMessageResponse> {
   try {
     if (message.command === "create-room") {
-      return { ok: true, room: await createWebsiteRoomFromApi(message.accessToken, message.input) };
+      const room = await createWebsiteRoomFromApi(message.accessToken, message.input);
+      const privilegedRoomAuthority = await (dependencies.issueAuthority ?? issuePrivilegedRoomAuthority)(
+        { roomId: room.roomId, roomToken: room.roomToken },
+        sender,
+      );
+      return { ok: true, room: { ...room, privilegedRoomAuthority } };
     }
+    const connection = await connectWebsiteRoomFromApi(message.roomId, message.accessToken);
+    const privilegedRoomAuthority = await (dependencies.issueAuthority ?? issuePrivilegedRoomAuthority)(
+      { roomId: message.roomId, roomToken: connection.roomToken },
+      sender,
+    );
     return {
       ok: true,
-      connection: await connectWebsiteRoomFromApi(message.roomId, message.accessToken),
+      connection: { ...connection, privilegedRoomAuthority },
     };
   } catch (error) {
     if (error instanceof RoomApiError) {
@@ -387,6 +412,7 @@ export async function connectWebsiteRoom(
   roomToken: string;
   capabilities?: RoomCapabilities;
   quota?: RoomQuotaSummary | null;
+  privilegedRoomAuthority?: PrivilegedOverlayContext | null;
 }> {
   logDebug("room.http", "connect room through background bridge", {
     webHttpBase: WEB_HTTP_BASE,

@@ -1,10 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { mountOverlay, type OverlayRenderer } from "../entrypoints/content";
+import * as overlayApp from "../src/overlay-app";
+import type { PrivilegedOverlayContext } from "../src/privileged-overlay-intent";
 import type { VideoAdapter } from "../src/source-adapters/core/types";
 
 describe("privileged overlay wiring", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
     document.body.replaceChildren();
   });
 
@@ -25,6 +28,49 @@ describe("privileged overlay wiring", () => {
     expect(host?.shadowRoot).toBeNull();
 
     mounted.dispose();
+  });
+
+  it("keeps both OverlayApp teardown paths untouched after synthetic privileged controls", async () => {
+    const teardown = vi.fn();
+    const context: PrivilegedOverlayContext = {
+      accountUserId: "user-a",
+      roomId: "room-a",
+      role: "host",
+      authorityGeneration: 3,
+    };
+
+    for (const action of ["sign-out", "end-room"] as const) {
+      await expect(
+        overlayApp.runOverlayPrivilegedAction(
+          { nativeEvent: { isTrusted: false } },
+          action,
+          action === "sign-out" ? { ...context, roomId: null, role: null, authorityGeneration: null } : context,
+          teardown,
+        ),
+      ).rejects.toThrow("Privileged action requires a trusted user gesture");
+    }
+
+    expect(teardown).not.toHaveBeenCalled();
+  });
+
+  it("runs an OverlayApp teardown once after a trusted privileged action succeeds", async () => {
+    const sendMessage = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal("chrome", { runtime: { sendMessage } });
+    const teardown = vi.fn();
+
+    await overlayApp.runOverlayPrivilegedAction(
+      { nativeEvent: { isTrusted: true } },
+      "end-room",
+      {
+        accountUserId: "user-a",
+        roomId: "room-a",
+        role: "host",
+        authorityGeneration: 3,
+      },
+      teardown,
+    );
+
+    expect(teardown).toHaveBeenCalledTimes(1);
   });
 });
 

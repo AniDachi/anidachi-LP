@@ -3,8 +3,9 @@ import { isAuthMessage } from "../src/auth-client";
 import { isRoomHttpMessage } from "../src/room-client";
 import {
   handlePrivilegedOverlayIntentMessage,
+  isPrivilegedOverlayIntentMessage,
+  issuePrivilegedRoomAuthority,
   requestPrivilegedOverlayAction,
-  syncPrivilegedOverlayContext,
   type PrivilegedOverlayContext,
 } from "../src/privileged-overlay-intent";
 
@@ -24,7 +25,7 @@ describe("privileged overlay intent boundary", () => {
     ).toBe(false);
   });
 
-  it("does not send a synthetic click to the privileged sign-out action", async () => {
+  it("rejects a synthetic click before a sign-out caller can run local teardown", async () => {
     const sendMessage = vi.fn();
 
     await expect(
@@ -34,36 +35,125 @@ describe("privileged overlay intent boundary", () => {
         signOutContext(),
         sendMessage,
       ),
-    ).resolves.toEqual({ ok: false, error: "Privileged action requires a trusted user gesture" });
+    ).rejects.toThrow("Privileged action requires a trusted user gesture");
 
     expect(sendMessage).not.toHaveBeenCalled();
   });
 
-  it("fails forged room, role, generation, and account contexts before the server mutation", async () => {
-    const contexts = new Map<number, PrivilegedOverlayContext>();
+  it("rejects the complete forged set-context then end-room message sequence", async () => {
+    const storage = createSessionStorage();
     const endRoom = vi.fn(async () => ({ endedAt: "2026-08-21T00:00:00.000Z" }));
-    const dependencies = {
-      contexts,
-      endRoom,
-      getStoredSession: async () => sessionFor("user-a"),
-      getCurrentSession: async () => sessionFor("user-a"),
-    };
-    const trusted = roomHostContext();
+    const forged = roomHostContext();
     const sender = { tab: { id: 7 } };
+    const setContext = {
+      type: "ANIDACHI_PRIVILEGED_OVERLAY_INTENT",
+      command: "set-context",
+      context: forged,
+    };
+
+    expect(isPrivilegedOverlayIntentMessage(setContext)).toBe(false);
+    if (isPrivilegedOverlayIntentMessage(setContext)) {
+      await handlePrivilegedOverlayIntentMessage(setContext, sender, {
+        sessionStorage: storage,
+        endRoom,
+        getCurrentSession: async () => sessionFor("user-a"),
+      });
+    }
 
     await expect(
       handlePrivilegedOverlayIntentMessage(
-        { type: "ANIDACHI_PRIVILEGED_OVERLAY_INTENT", command: "set-context", context: trusted },
+        {
+          type: "ANIDACHI_PRIVILEGED_OVERLAY_INTENT",
+          command: "invoke",
+          action: "end-room",
+          context: forged,
+        },
         sender,
-        dependencies,
+        {
+          sessionStorage: storage,
+          endRoom,
+          getCurrentSession: async () => sessionFor("user-a"),
+        },
       ),
-    ).resolves.toEqual({ ok: true });
+    ).resolves.toEqual({ ok: false, error: "Privileged overlay room authority is stale" });
+    expect(endRoom).not.toHaveBeenCalled();
+  });
+
+  it("issues host authority only from a matching trusted room token and current extension account", async () => {
+    const storage = createSessionStorage();
+    const authority = await issuePrivilegedRoomAuthority(
+      { roomId: "room-a", roomToken: trustedRoomToken("user-a", "room-a", "host") },
+      { tab: { id: 8 } },
+      { sessionStorage: storage, getStoredSession: async () => sessionFor("user-a") },
+    );
+
+    expect(authority).toEqual(roomHostContext(1));
+
+    await expect(
+      issuePrivilegedRoomAuthority(
+        { roomId: "room-a", roomToken: trustedRoomToken("user-forged", "room-a", "host") },
+        { tab: { id: 8 } },
+        { sessionStorage: storage, getStoredSession: async () => sessionFor("user-a") },
+      ),
+    ).resolves.toBeNull();
+  });
+
+  it("executes one trusted host end only with the background-issued authority generation", async () => {
+    const storage = createSessionStorage();
+    const endRoom = vi.fn(async () => ({ endedAt: "2026-08-21T00:00:00.000Z" }));
+    const sender = { tab: { id: 9 } };
+    const authority = await issuePrivilegedRoomAuthority(
+      { roomId: "room-a", roomToken: trustedRoomToken("user-a", "room-a", "host") },
+      sender,
+      { sessionStorage: storage, getStoredSession: async () => sessionFor("user-a") },
+    );
+    expect(authority).toEqual(roomHostContext(1));
+    const sendMessage = (message: Parameters<typeof handlePrivilegedOverlayIntentMessage>[0]) =>
+      handlePrivilegedOverlayIntentMessage(message, sender, {
+        sessionStorage: storage,
+        endRoom,
+        getCurrentSession: async () => sessionFor("user-a"),
+      });
+
+    await expect(
+      requestPrivilegedOverlayAction(
+        { nativeEvent: { isTrusted: true } },
+        "end-room",
+        authority as PrivilegedOverlayContext,
+        sendMessage,
+      ),
+    ).resolves.toEqual({ ok: true, endedAt: "2026-08-21T00:00:00.000Z" });
+    expect(endRoom).toHaveBeenCalledWith("room-a", "access-token-user-a");
+
+    await expect(
+      handlePrivilegedOverlayIntentMessage(
+        {
+          type: "ANIDACHI_PRIVILEGED_OVERLAY_INTENT",
+          command: "invoke",
+          action: "end-room",
+          context: authority as PrivilegedOverlayContext,
+        },
+        sender,
+        { sessionStorage: storage, endRoom, getCurrentSession: async () => sessionFor("user-a") },
+      ),
+    ).resolves.toEqual({ ok: false, error: "Privileged overlay room authority is stale" });
+    expect(endRoom).toHaveBeenCalledOnce();
+  });
+
+  it("rejects every caller alteration to the issued room authority", async () => {
+    const storage = createSessionStorage();
+    const endRoom = vi.fn(async () => ({ endedAt: "2026-08-21T00:00:00.000Z" }));
+    const sender = { tab: { id: 11 } };
+    const authority = await issuePrivilegedRoomAuthority(
+      { roomId: "room-a", roomToken: trustedRoomToken("user-a", "room-a", "host") },
+      sender,
+      { sessionStorage: storage, getStoredSession: async () => sessionFor("user-a") },
+    );
 
     for (const context of [
-      { ...trusted, accountUserId: "user-forged" },
-      { ...trusted, roomId: "room-forged" },
-      { ...trusted, role: "guest" as const },
-      { ...trusted, roomGeneration: 99 },
+      { ...(authority as PrivilegedOverlayContext), roomId: "room-forged" },
+      { ...(authority as PrivilegedOverlayContext), role: "member" as const },
+      { ...(authority as PrivilegedOverlayContext), authorityGeneration: 99 },
     ]) {
       await expect(
         handlePrivilegedOverlayIntentMessage(
@@ -74,71 +164,33 @@ describe("privileged overlay intent boundary", () => {
             context,
           },
           sender,
-          dependencies,
+          { sessionStorage: storage, endRoom, getCurrentSession: async () => sessionFor("user-a") },
         ),
-      ).resolves.toEqual(expect.objectContaining({ ok: false }));
+      ).resolves.toEqual({ ok: false, error: "Privileged overlay room authority is stale" });
     }
     expect(endRoom).not.toHaveBeenCalled();
   });
 
-  it("executes one trusted host end only after matching the extension-owned context", async () => {
-    const contexts = new Map<number, PrivilegedOverlayContext>();
+  it("rejects a host invoke after the current extension account switches", async () => {
+    const storage = createSessionStorage();
     const endRoom = vi.fn(async () => ({ endedAt: "2026-08-21T00:00:00.000Z" }));
-    const dependencies = {
-      contexts,
-      endRoom,
-      getStoredSession: async () => sessionFor("user-a"),
-      getCurrentSession: async () => sessionFor("user-a"),
-    };
-    const context = roomHostContext();
-    const sender = { tab: { id: 8 } };
-    const sendMessage = (message: Parameters<typeof handlePrivilegedOverlayIntentMessage>[0]) =>
-      handlePrivilegedOverlayIntentMessage(message, sender, dependencies);
-
-    await syncPrivilegedOverlayContext(context, sendMessage);
-    await expect(
-      requestPrivilegedOverlayAction(
-        { nativeEvent: { isTrusted: true } },
-        "end-room",
-        context,
-        sendMessage,
-      ),
-    ).resolves.toEqual({ ok: true, endedAt: "2026-08-21T00:00:00.000Z" });
-
-    expect(endRoom).toHaveBeenCalledTimes(1);
-    expect(endRoom).toHaveBeenCalledWith("room-a", "access-token-user-a");
-  });
-
-  it("rejects an otherwise exact intent after the extension account switches", async () => {
-    const contexts = new Map<number, PrivilegedOverlayContext>();
-    const endRoom = vi.fn(async () => ({ endedAt: "2026-08-21T00:00:00.000Z" }));
-    const context = roomHostContext();
-    const sender = { tab: { id: 9 } };
-
-    await handlePrivilegedOverlayIntentMessage(
-      { type: "ANIDACHI_PRIVILEGED_OVERLAY_INTENT", command: "set-context", context },
+    const sender = { tab: { id: 10 } };
+    const authority = await issuePrivilegedRoomAuthority(
+      { roomId: "room-a", roomToken: trustedRoomToken("user-a", "room-a", "host") },
       sender,
-      {
-        contexts,
-        endRoom,
-        getStoredSession: async () => sessionFor("user-a"),
-        getCurrentSession: async () => sessionFor("user-b"),
-      },
+      { sessionStorage: storage, getStoredSession: async () => sessionFor("user-a") },
     );
+
     await expect(
       handlePrivilegedOverlayIntentMessage(
         {
           type: "ANIDACHI_PRIVILEGED_OVERLAY_INTENT",
           command: "invoke",
           action: "end-room",
-          context,
+          context: authority as PrivilegedOverlayContext,
         },
         sender,
-        {
-          contexts,
-          endRoom,
-          getCurrentSession: async () => sessionFor("user-b"),
-        },
+        { sessionStorage: storage, endRoom, getCurrentSession: async () => sessionFor("user-b") },
       ),
     ).resolves.toEqual({ ok: false, error: "Privileged overlay account changed" });
     expect(endRoom).not.toHaveBeenCalled();
@@ -146,11 +198,11 @@ describe("privileged overlay intent boundary", () => {
 });
 
 function signOutContext(): PrivilegedOverlayContext {
-  return { accountUserId: "user-a", roomId: null, role: null, roomGeneration: null };
+  return { accountUserId: "user-a", roomId: null, role: null, authorityGeneration: null };
 }
 
-function roomHostContext(): PrivilegedOverlayContext {
-  return { accountUserId: "user-a", roomId: "room-a", role: "host", roomGeneration: 3 };
+function roomHostContext(authorityGeneration = 3): PrivilegedOverlayContext {
+  return { accountUserId: "user-a", roomId: "room-a", role: "host", authorityGeneration };
 }
 
 function sessionFor(userId: string) {
@@ -163,6 +215,25 @@ function sessionFor(userId: string) {
       displayName: "User",
       avatarUrl: null,
       plan: "free" as const,
+    },
+  };
+}
+
+function trustedRoomToken(sub: string, roomId: string, role: "host" | "member"): string {
+  return `eyJhbGciOiJIUzI1NiJ9.${btoa(JSON.stringify({ typ: "room", sub, roomId, role }))}.signature`;
+}
+
+function createSessionStorage() {
+  const values = new Map<string, unknown>();
+  return {
+    async get(key: string) {
+      return values.has(key) ? { [key]: values.get(key) } : {};
+    },
+    async set(items: Record<string, unknown>) {
+      for (const [key, value] of Object.entries(items)) values.set(key, value);
+    },
+    async remove(key: string) {
+      values.delete(key);
     },
   };
 }
