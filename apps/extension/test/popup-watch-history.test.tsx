@@ -490,7 +490,7 @@ describe("Popup Watch History v2", () => {
         episodeKey: `crunchyroll:episode-${number}`,
         episodeTitle: `Episode ${number} - Queued`,
         episodeNumber: number,
-        observedAt: `2026-08-15T03:00:${number}.000Z`,
+        observedAt: `2026-08-15T03:00:${String(number).padStart(2, "0")}.000Z`,
       })),
       pendingEvent({
         currentTime: 1_200,
@@ -525,6 +525,49 @@ describe("Popup Watch History v2", () => {
     expect(view.container.textContent).not.toContain("Episode 12 - Queued later");
     expect(view.container.textContent).not.toContain("Episode 1 - Cached");
     expect(pending).toEqual(originalPending);
+    await unmount(view.root);
+  });
+
+  it("uses binary episode-key order for equal timestamps while pinning older local progress", async () => {
+    const canonical = historyWithEpisodesFixture(8);
+    const tied = [
+      ["crunchyroll:episode-a", "Episode tie lowercase", 21],
+      ["crunchyroll:episode-_", "Episode tie underscore", 22],
+      ["crunchyroll:episode-A", "Episode tie uppercase", 23],
+    ] as const;
+    const pending = tied.map(([episodeKey, episodeTitle, id]) => pendingEvent({
+      currentTime: id,
+      progress: id / 2_100,
+      clientEventId: `00000000-0000-4000-8000-${String(id).padStart(12, "0")}`,
+      episodeKey,
+      episodeTitle,
+      episodeNumber: id,
+      observedAt: "2026-08-15T03:00:20.000Z",
+    }));
+    const local = pendingEvent({
+      currentTime: 7,
+      progress: 7 / 2_100,
+      clientEventId: "00000000-0000-4000-8000-000000000024",
+      episodeKey: "crunchyroll:episode-local",
+      episodeTitle: "Episode local pinned",
+      episodeNumber: 24,
+      observedAt: "2026-08-15T01:00:00.000Z",
+    });
+    const view = await renderPanel(clientFixture({
+      cached: snapshotFixture(canonical, pending, false, { event: local, mode: "mine" }),
+      request: requestForHistory(canonical),
+    }));
+
+    await waitFor(() => expect(view.container.textContent).toContain("Episode local pinned"));
+    const tiedTitles = [...view.container.querySelectorAll(".popup-episode-title")]
+      .map((node) => node.textContent)
+      .filter((title) => title?.startsWith("Episode tie"));
+    expect(tiedTitles).toEqual([
+      "Episode tie uppercase",
+      "Episode tie underscore",
+      "Episode tie lowercase",
+    ]);
+    expect(view.container.querySelectorAll(".popup-episode-row")).toHaveLength(8);
     await unmount(view.root);
   });
 

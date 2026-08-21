@@ -929,8 +929,12 @@ function compareWatchHistoryEpisodesNewest(
   a: WatchHistoryItem["seasons"][number]["episodes"][number],
   b: WatchHistoryItem["seasons"][number]["episodes"][number],
 ): number {
-  return b.lastWatchedAt.localeCompare(a.lastWatchedAt) ||
-    a.episodeKey.localeCompare(b.episodeKey);
+  return compareCodeUnits(b.lastWatchedAt, a.lastWatchedAt) ||
+    compareCodeUnits(a.episodeKey, b.episodeKey);
+}
+
+function compareCodeUnits(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0;
 }
 
 function compareWatchHistorySeasonsNewest(
