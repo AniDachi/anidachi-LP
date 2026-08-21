@@ -854,6 +854,7 @@ interface WebsiteSignOutSequenceActions {
 }
 
 const REMOTE_SIGN_OUT_STAGE_TIMEOUT_MS = 2_000;
+const NATIVE_NON_INTERACTIVE_LOGOUT_TIMEOUT_MS = 1_500;
 
 async function runRemoteSignOutStage(
   stage: "watch-history-flush" | "refresh-token-revocation" | "website-logout",
@@ -919,7 +920,11 @@ async function attemptWebsiteLogoutFlow(): Promise<void> {
     state,
   });
   const redirectUrl = await chrome.identity
-    .launchWebAuthFlow({ url, interactive: false })
+    .launchWebAuthFlow({
+      url,
+      interactive: false,
+      timeoutMsForNonInteractive: NATIVE_NON_INTERACTIVE_LOGOUT_TIMEOUT_MS,
+    })
     .catch(() => null);
   if (redirectUrl) {
     assertExtensionLogoutRedirect(redirectUrl, state, redirectUri);

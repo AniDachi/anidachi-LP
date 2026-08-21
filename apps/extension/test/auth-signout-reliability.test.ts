@@ -11,7 +11,9 @@ const harness = vi.hoisted(() => ({
     harness.events.push("revoke-refresh");
     return new Response(null, { status: 200 });
   }),
-  websiteLogout: vi.fn(async () => {
+  websiteLogout: vi.fn<
+    (details: chrome.identity.WebAuthFlowDetails) => Promise<string | undefined>
+  >(async () => {
     harness.events.push("website-logout");
     return undefined;
   }),
@@ -226,6 +228,67 @@ describe("exact-family sign-out reliability", () => {
     expectBefore(`remove:${AUTH_TOKENS_KEY}`, `set:${AUTH_TOKENS_KEY}`);
     expect(await getStoredAuthTokens()).toEqual(accountB);
   });
+
+  it.each(["resolve", "reject"] as const)(
+    "uses Chrome's shorter native logout deadline and ignores a late old-flow %s after account B is queued",
+    async (lateSettlement) => {
+      vi.useFakeTimers();
+      await setStoredAuthTokens(accountA);
+      harness.events.length = 0;
+      const nativeFlow = deferred<string | undefined>();
+      let launchDetails: chrome.identity.WebAuthFlowDetails | undefined;
+      harness.websiteLogout.mockImplementationOnce((details) => {
+        harness.events.push("website-logout");
+        launchDetails = details;
+        setTimeout(() => {
+          nativeFlow.reject(new Error("native timeout secret old-flow-4f9c"));
+        }, details.timeoutMsForNonInteractive);
+        return nativeFlow.promise;
+      });
+
+      let signOutResult: boolean | undefined;
+      const signOut = signOutWithWebsite(accountA).then((result) => {
+        signOutResult = result;
+        return result;
+      });
+      await vi.advanceTimersByTimeAsync(0);
+      await flushMicrotasks(50);
+      expect(harness.events).toEqual([
+        "flush-history",
+        "revoke-refresh",
+        "website-logout",
+      ]);
+      expect(launchDetails).toEqual({
+        url: expect.stringContaining("/extension/logout?"),
+        interactive: false,
+        timeoutMsForNonInteractive: 1_500,
+      });
+      const replacement = setStoredAuthTokens(accountB);
+
+      await vi.advanceTimersByTimeAsync(1_499);
+      await flushMicrotasks();
+      expect(signOutResult).toBeUndefined();
+      await vi.advanceTimersByTimeAsync(1);
+      await signOut;
+      await replacement;
+
+      expect(signOutResult).toBe(true);
+      expect(await getStoredAuthTokens()).toEqual(accountB);
+      if (lateSettlement === "resolve") {
+        nativeFlow.resolve(
+          "https://ndkfphbchhfephdodcpehdcoclojagje.chromiumapp.org/logout?signed_out=1&state=late-old-state",
+        );
+      } else {
+        nativeFlow.reject(new Error("late old-flow rejection secret 8bd2"));
+      }
+      await flushMicrotasks();
+
+      expect(await getStoredAuthTokens()).toEqual(accountB);
+      expect(JSON.stringify(harness.recordDiagnosticEvent.mock.calls)).not.toMatch(
+        /native timeout secret|old-flow|late old-flow rejection/,
+      );
+    },
+  );
 });
 
 function expectBefore(first: string, second: string): void {
