@@ -5,11 +5,24 @@ staging-accepted. Wave 2 Stop is closed, and Wave 3 may proceed from
 current staging. No security work from this wave is promoted to `main`;
 production promotion remains separate and out of scope.
 
-Wave 3 Tasks 9-11 implementation is current for staging, and Task 10's normal
-two-profile join/reconnect acceptance passed. Task 11's automated
-implementation and review are complete in this changeset, but its
-loaded-artifact Chrome/staging acceptance and the integrated Wave 3 matrix
-remain pending; the Wave 3 Stop is open.
+Wave 3 is green and the Wave 3 Stop is closed for staging readiness. Task 10's
+normal two-profile join/reconnect acceptance passed. Task 11 PR #210 merged to
+staging at `ae9022b1a5667654e69e1348633721037dcb63dc`; final local evidence was
+98 files and 1,250/1,250 extension tests plus extension check, changed-path
+lint, staging build/validation, and `pnpm dev:check`. Post-merge CI,
+Rooms/P2P, Vercel, and staging smoke passed. Packaging hygiene PR #211 merged
+at `b2d209504ed991bc7df0d334c2bc263ccc03e447`; authoritative artifact version
+`b2d209504ed991bc7df0d334c2bc263ccc03e447-staging-118` has ZIP SHA-256
+`76bcd133fabc82e10f9c1881b5dc99405150ac5b85f7409aa182a814d14e9e61`, exactly
+one referenced popup chunk, narrow permissions, and byte-for-byte
+synchronization to the two established test folders. The user loaded that
+exact artifact in the habitual Chrome staging profile and reported that it
+works. This is normal visible-flow loaded-artifact acceptance only; it does not
+claim two-network/TURN, production, exhaustive adversarial traffic, or Chrome
+Web Store. The integrated matrix combines automated Task 9 expiry/replay and
+privileged-action evidence, post-merge CI/Rooms/P2P/staging smoke, prior Task
+10 acceptance, and this Task 11 acceptance. No security work from this wave is
+promoted to `main`; production promotion remains separate and out of scope.
 
 On 2026-08-20, real Google and real Discord consent/callback flows
 succeeded on staging inside the enforced initial ten-minute OAuth transaction
