@@ -1,7 +1,8 @@
-import type {
-  WatchHistoryPreferencesResponse,
-  WatchHistoryResponse,
-  WatchProgressEvent,
+import {
+  WatchHistoryResponseSchema,
+  type WatchHistoryPreferencesResponse,
+  type WatchHistoryResponse,
+  type WatchProgressEvent,
 } from "@anidachi/protocol";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -402,6 +403,174 @@ describe("Popup Watch History v2", () => {
     expect(selectConfirmedPopupWatchHistorySnapshot(root, OWNER_ID)?.localObservation).toBeNull();
   });
 
+  it("keeps a truthful bounded projection of a pre-Task3 v2 cache while offline", async () => {
+    const legacyCache = legacyHistoryFixture(10);
+    expect(WatchHistoryResponseSchema.safeParse(legacyCache).success).toBe(false);
+    const local = pendingEvent({
+      currentTime: 660,
+      progress: 660 / 2_100,
+      clientEventId: "00000000-0000-4000-8000-000000000011",
+      episodeKey: "crunchyroll:episode-11",
+      episodeTitle: "Episode 11 - Local",
+      episodeNumber: 11,
+      observedAt: "2026-08-15T03:00:11.000Z",
+    });
+    const queued = pendingEvent({
+      currentTime: 720,
+      progress: 720 / 2_100,
+      clientEventId: "00000000-0000-4000-8000-000000000012",
+      episodeKey: "crunchyroll:episode-12",
+      episodeTitle: "Episode 12 - Queued",
+      episodeNumber: 12,
+      observedAt: "2026-08-15T03:00:12.000Z",
+    });
+    const partitionKey = watchHistoryPartitionKey(OWNER_ID, 1);
+    const root: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [OWNER_ID]: 1 },
+      partitions: {
+        [partitionKey]: {
+          ownerUserId: OWNER_ID,
+          accountGeneration: 1,
+          cache: legacyCache,
+          preferences: { youtubeHistoryEnabled: false },
+          preferencesConfirmed: true,
+          currentObservation: local,
+          currentObservationMeaningfulSolo: false,
+          currentObservationDisplayMode: "mine",
+          capturePaused: false,
+          captureMarkersReady: true,
+          outbox: {
+            ownerUserId: OWNER_ID,
+            accountGeneration: 1,
+            entries: [{ event: queued, key: "queued", slot: "latest", persistedAt: 1 }],
+          },
+        },
+      },
+    };
+
+    const snapshot = selectConfirmedPopupWatchHistorySnapshot(root, OWNER_ID);
+    expect(snapshot).not.toBeNull();
+    expect(snapshot?.history.items[0]).toMatchObject({
+      observedEpisodeCount: 10,
+      completedEpisodeCount: 5,
+      episodePage: { complete: false },
+    });
+    expect(snapshot?.history.items[0]?.episodePage.nextCursor).toBe(
+      "local_cache_refresh_required",
+    );
+    expect(snapshot?.history.items[0]?.seasons.flatMap((season) => season.episodes)).toHaveLength(8);
+    expect(snapshot?.pendingEvents).toEqual([queued]);
+    expect(snapshot?.localObservation).toEqual({ event: local, mode: "mine" });
+    expect(root.partitions[partitionKey]?.outbox.entries).toHaveLength(1);
+
+    const request = vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
+      if (message.command === "list") return { ok: false, status: "retryable" };
+      if (message.command === "get-preferences") return { ok: false, status: "retryable" };
+      if (message.command === "other-owner-pending") {
+        return { ok: true, hasPendingWork: false, byteUse: 0 };
+      }
+      return { ok: true };
+    });
+    const view = await renderPanel(clientFixture({ cached: snapshot, request }));
+    await waitFor(() => expect(view.container.textContent).toContain("Frieren"));
+    expect(view.container.textContent).toContain("Episode 11 - Local");
+    expect(view.container.textContent).toContain("Episode 12 - Queued");
+    expect(view.container.querySelectorAll(".popup-episode-row")).toHaveLength(8);
+    await unmount(view.root);
+  });
+
+  it("bounds pending projection newest-first without mutating work and always pins local progress", async () => {
+    const canonical = historyWithEpisodesFixture(8);
+    const pending = [
+      ...[9, 10, 11].map((number) => pendingEvent({
+        currentTime: number * 60,
+        progress: number / 20,
+        clientEventId: `00000000-0000-4000-8000-${String(number).padStart(12, "0")}`,
+        episodeKey: `crunchyroll:episode-${number}`,
+        episodeTitle: `Episode ${number} - Queued`,
+        episodeNumber: number,
+        observedAt: `2026-08-15T03:00:${String(number).padStart(2, "0")}.000Z`,
+      })),
+      pendingEvent({
+        currentTime: 1_200,
+        progress: 1_200 / 2_100,
+        clientEventId: "00000000-0000-4000-8000-000000000013",
+        episodeKey: "crunchyroll:episode-12",
+        episodeTitle: "Episode 12 - Queued later",
+        episodeNumber: 12,
+        observedAt: "2026-08-15T03:00:12.000Z",
+      }),
+    ];
+    const local = pendingEvent({
+      currentTime: 12,
+      progress: 12 / 2_100,
+      clientEventId: "00000000-0000-4000-8000-000000000012",
+      episodeKey: "crunchyroll:episode-12",
+      episodeTitle: "Episode 12 - Immediate local",
+      episodeNumber: 12,
+      observedAt: "2026-08-15T03:00:01.000Z",
+    });
+    const originalPending = structuredClone(pending);
+    const view = await renderPanel(clientFixture({
+      cached: snapshotFixture(canonical, pending, false, { event: local, mode: "mine" }),
+      request: requestForHistory(canonical),
+    }));
+
+    await waitFor(() => expect(view.container.textContent).toContain("Episode 12 - Immediate local"));
+    const rows = [...view.container.querySelectorAll(".popup-episode-row")];
+    expect(rows).toHaveLength(8);
+    expect(view.container.textContent).toContain("Episode 11 - Queued");
+    expect(view.container.textContent).toContain("0:12");
+    expect(view.container.textContent).not.toContain("Episode 12 - Queued later");
+    expect(view.container.textContent).not.toContain("Episode 1 - Cached");
+    expect(pending).toEqual(originalPending);
+    await unmount(view.root);
+  });
+
+  it("uses binary episode-key order for equal timestamps while pinning older local progress", async () => {
+    const canonical = historyWithEpisodesFixture(8);
+    const tied = [
+      ["crunchyroll:episode-a", "Episode tie lowercase", 21],
+      ["crunchyroll:episode-_", "Episode tie underscore", 22],
+      ["crunchyroll:episode-A", "Episode tie uppercase", 23],
+    ] as const;
+    const pending = tied.map(([episodeKey, episodeTitle, id]) => pendingEvent({
+      currentTime: id,
+      progress: id / 2_100,
+      clientEventId: `00000000-0000-4000-8000-${String(id).padStart(12, "0")}`,
+      episodeKey,
+      episodeTitle,
+      episodeNumber: id,
+      observedAt: "2026-08-15T03:00:20.000Z",
+    }));
+    const local = pendingEvent({
+      currentTime: 7,
+      progress: 7 / 2_100,
+      clientEventId: "00000000-0000-4000-8000-000000000024",
+      episodeKey: "crunchyroll:episode-local",
+      episodeTitle: "Episode local pinned",
+      episodeNumber: 24,
+      observedAt: "2026-08-15T01:00:00.000Z",
+    });
+    const view = await renderPanel(clientFixture({
+      cached: snapshotFixture(canonical, pending, false, { event: local, mode: "mine" }),
+      request: requestForHistory(canonical),
+    }));
+
+    await waitFor(() => expect(view.container.textContent).toContain("Episode local pinned"));
+    const tiedTitles = [...view.container.querySelectorAll(".popup-episode-title")]
+      .map((node) => node.textContent)
+      .filter((title) => title?.startsWith("Episode tie"));
+    expect(tiedTitles).toEqual([
+      "Episode tie uppercase",
+      "Episode tie underscore",
+      "Episode tie lowercase",
+    ]);
+    expect(view.container.querySelectorAll(".popup-episode-row")).toHaveLength(8);
+    await unmount(view.root);
+  });
+
   it("shows the cached YouTube switch immediately while live confirmation is pending", async () => {
     let resolvePreferences: ((value: WatchHistoryMessageResponse) => void) | undefined;
     const client = clientFixture({
@@ -766,6 +935,38 @@ describe("Popup Watch History v2", () => {
     await unmount(view.root);
   });
 
+  it("renders exact canonical counts from the compact snapshot and never requests old detail pages", async () => {
+    const base = historyFixture();
+    const item = base.items[0]!;
+    const first = item.seasons[0]!.episodes[0]!;
+    const episodes = Array.from({ length: 8 }, (_, index) => ({
+      ...first,
+      episodeKey: `crunchyroll:episode-${index + 1}`,
+      episodeTitle: `Episode ${index + 1}`,
+      episodeNumber: index + 1,
+    }));
+    const compact = {
+      ...base,
+      items: [{
+        ...item,
+        observedEpisodeCount: 2_000,
+        completedEpisodeCount: 100,
+        episodePage: { complete: false, nextCursor: "episode_cursor" },
+        aggregate: { ...item.aggregate, completedEpisodes: 100 },
+        seasons: [{ ...item.seasons[0]!, episodes }],
+      }],
+    } as WatchHistoryResponse;
+    const request = vi.fn(requestForHistory(compact));
+    const view = await renderPanel(clientFixture({ cached: null, request }));
+
+    await waitFor(() => expect(view.container.textContent).toContain("2000 observed episodes"));
+    expect(view.container.textContent).toContain("Episode 1");
+    expect(view.container.textContent).toContain("Episode 8");
+    expect(request.mock.calls.filter(([message]) => message.command === "list")).toHaveLength(1);
+    expect(request.mock.calls.some(([message]) => "titleKey" in message)).toBe(false);
+    await unmount(view.root);
+  });
+
   it("searches canonical v2 history by title and episode without mutating the response", async () => {
     const history = twoEpisodeHistoryFixture();
     const request = requestForHistory(history);
@@ -1083,6 +1284,9 @@ function historyFixture(overrides: {
       {
         provider: "crunchyroll",
         titleKey: "crunchyroll:frieren",
+        observedEpisodeCount: 1,
+        completedEpisodeCount: 0,
+        episodePage: { complete: true, nextCursor: null },
         itemKind: "series",
         title: overrides.title ?? "Frieren",
         sourceUrl: episode.sourceUrl,
@@ -1130,9 +1334,73 @@ function twoEpisodeHistoryFixture(): WatchHistoryResponse {
     ...history,
     items: history.items.map((item) => ({
       ...item,
+      observedEpisodeCount: 2,
+      episodePage: { complete: true, nextCursor: null },
       seasons: item.seasons.map((season) => ({ ...season, episodes: [first, second] })),
     })),
   };
+}
+
+function historyWithEpisodesFixture(count: number): WatchHistoryResponse {
+  const history = historyFixture();
+  const item = history.items[0];
+  const season = item?.seasons[0];
+  const first = season?.episodes[0];
+  if (!item || !season || !first) throw new Error("history fixture missing");
+  const episodes = Array.from({ length: count }, (_, index) => {
+    const number = index + 1;
+    const lastWatchedAt = new Date(Date.parse(NOW) - (count - number + 1) * 60_000).toISOString();
+    return {
+      ...first,
+      episodeKey: `crunchyroll:episode-${number}`,
+      episodeTitle: `Episode ${number} - Cached`,
+      episodeNumber: number,
+      sourceUrl: `https://www.crunchyroll.com/watch/EPISODE${number}`,
+      currentTime: number * 60,
+      progress: number / 20,
+      completedAt: number % 2 === 0 ? lastWatchedAt : null,
+      lastWatchedAt,
+      sessions: [],
+    };
+  }).reverse();
+  const completedEpisodeCount = episodes.filter((episode) => episode.completedAt).length;
+  const latest = episodes[0]!;
+  return {
+    ...history,
+    items: [{
+      ...item,
+      observedEpisodeCount: count,
+      completedEpisodeCount,
+      episodePage: { complete: true, nextCursor: null },
+      aggregate: { ...item.aggregate, completedEpisodes: completedEpisodeCount },
+      seasons: [{
+        ...season,
+        aggregate: { ...season.aggregate, completedEpisodes: completedEpisodeCount },
+        episodes,
+      }],
+      latestActivity: {
+        episodeKey: latest.episodeKey,
+        currentTime: latest.currentTime,
+        duration: latest.duration,
+        progress: latest.progress,
+        completedAt: latest.completedAt,
+        lastWatchedAt: latest.lastWatchedAt,
+      },
+      lastWatchedAt: latest.lastWatchedAt,
+    }],
+  };
+}
+
+function legacyHistoryFixture(count: number): WatchHistoryResponse {
+  const legacy = structuredClone(historyWithEpisodesFixture(count)) as unknown as {
+    items: Array<Record<string, unknown>>;
+  };
+  for (const item of legacy.items) {
+    delete item.observedEpisodeCount;
+    delete item.completedEpisodeCount;
+    delete item.episodePage;
+  }
+  return legacy as unknown as WatchHistoryResponse;
 }
 
 function mixedSessionHistoryFixture(): WatchHistoryResponse {
@@ -1263,10 +1531,15 @@ function pendingEvent(overrides: {
   currentTime: number;
   progress: number;
   shared?: boolean;
+  clientEventId?: string;
+  episodeKey?: string;
+  episodeTitle?: string;
+  episodeNumber?: number;
+  observedAt?: string;
 }): WatchProgressEvent {
   return {
     schemaVersion: 2,
-    clientEventId: "00000000-0000-4000-8000-000000000003",
+    clientEventId: overrides.clientEventId ?? "00000000-0000-4000-8000-000000000003",
     clientSessionKey: "popup-test-session",
     accountGeneration: 1,
     provider: "crunchyroll",
@@ -1274,17 +1547,17 @@ function pendingEvent(overrides: {
     itemKind: "series",
     title: "Cached Frieren",
     artworkUrl: null,
-    episodeKey: "crunchyroll:episode-1",
-    episodeTitle: "Episode 1 - The Journey",
+    episodeKey: overrides.episodeKey ?? "crunchyroll:episode-1",
+    episodeTitle: overrides.episodeTitle ?? "Episode 1 - The Journey",
     seasonKey: "crunchyroll:season-1",
     seasonTitle: "Season 1",
     seasonNumber: 1,
-    episodeNumber: 1,
+    episodeNumber: overrides.episodeNumber ?? 1,
     sourceUrl: "https://www.crunchyroll.com/watch/EPISODE1",
     currentTime: overrides.currentTime,
     duration: 2_100,
     progress: overrides.progress,
-    observedAt: NOW,
+    observedAt: overrides.observedAt ?? NOW,
     kind: "pause",
     sharedRoom: overrides.shared ? {
       roomId: "room-popup-shared",

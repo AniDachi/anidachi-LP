@@ -12,7 +12,10 @@ import {
   deleteWatchHistoryV2,
   encodeWatchHistoryCursor,
   isMeaningfulWatchHistoryV2SessionIdentity,
+  listWatchHistoryTitleEpisodesV2,
   listWatchHistoryV2,
+  parseResourceBoundedWatchHistoryPage,
+  parseWatchHistoryTitleEpisodesPage,
   parseWatchProgressEventV2,
   supabaseWatchHistoryV2Store,
   WatchHistoryV2ApiError,
@@ -711,6 +714,14 @@ test("canonical read delegates the title page boundary to storage", async () => 
           sessions: [],
           totalTitleCount: 2,
           hasMore: true,
+          titleSummaries: [{
+            provider: "crunchyroll",
+            titleKey: "series-one",
+            lastWatchedAt: NOW,
+            observedEpisodeCount: 1,
+            completedEpisodeCount: 0,
+            episodePage: { complete: true, nextCursor: null },
+          }],
         };
       },
     }),
@@ -723,6 +734,285 @@ test("canonical read delegates the title page boundary to storage", async () => 
     lastWatchedAt: NOW,
     stableId: "crunchyroll:series-one",
   });
+});
+
+test("canonical read preserves deployed bounded title metadata", async () => {
+  const response = await listWatchHistoryV2({
+    userId: USER_ID,
+    limit: 1,
+    now: new Date(NOW),
+    store: storeStub({
+      loadHistory: async () => ({
+        accountGeneration: 1,
+        progressRows: [progressRow()],
+        sessions: [],
+        totalTitleCount: 1,
+        hasMore: false,
+        titleSummaries: [{
+          provider: "crunchyroll",
+          titleKey: "series-one",
+          lastWatchedAt: NOW,
+          observedEpisodeCount: 12,
+          completedEpisodeCount: 6,
+          episodePage: { complete: false, nextCursor: "episode_cursor" },
+        }],
+      }),
+    }),
+  });
+
+  assert.deepEqual(response.items[0] && {
+    observedEpisodeCount: response.items[0].observedEpisodeCount,
+    completedEpisodeCount: response.items[0].completedEpisodeCount,
+    episodePage: response.items[0].episodePage,
+  }, {
+    observedEpisodeCount: 12,
+    completedEpisodeCount: 6,
+    episodePage: { complete: false, nextCursor: "episode_cursor" },
+  });
+});
+
+test("server-bounded response requires an exact title-summary key set", () => {
+  const rowOne = progressRow({ latest_session_id: null });
+  const rowTwo = progressRow({
+    title_key: "series-two",
+    episode_key: "episode-two",
+    title: "Series Two",
+    episode_title: "Episode Two",
+    latest_session_id: null,
+  });
+  const summary = (titleKey: string, titleRow = rowOne) => ({
+    provider: "crunchyroll",
+    titleKey,
+    lastWatchedAt: titleRow.observed_at,
+    observedEpisodeCount: 1,
+    completedEpisodeCount: 0,
+    episodePage: { complete: true, nextCursor: null },
+  });
+  const build = (progressRows: unknown[], titleSummaries: unknown[]) =>
+    buildWatchHistoryV2Response({
+      userId: USER_ID,
+      accountGeneration: 1,
+      generatedAt: new Date(NOW),
+      limit: 50,
+      progressRows,
+      sessions: [],
+      totalTitleCount: progressRows.length,
+      hasMore: false,
+      titleSummaries,
+    });
+
+  assert.throws(
+    () => build([rowOne], [summary("series-two")]),
+    hasCode("INVALID_DATABASE_RESPONSE"),
+  );
+  assert.throws(
+    () => build([rowOne, rowTwo], [summary("series-one")]),
+    hasCode("INVALID_DATABASE_RESPONSE"),
+  );
+  assert.throws(
+    () => build([rowOne], [summary("series-one"), summary("series-two", rowTwo)]),
+    hasCode("INVALID_DATABASE_RESPONSE"),
+  );
+});
+
+test("title detail service is owner-bound and returns a strict bounded page", async () => {
+  let requested: unknown;
+  const response = await listWatchHistoryTitleEpisodesV2({
+    userId: USER_ID,
+    provider: "crunchyroll",
+    titleKey: "series-one",
+    limit: 50,
+    cursor: "episode_cursor",
+    now: new Date(NOW),
+    store: storeStub({
+      loadTitleEpisodes: async (_userId, page) => {
+        requested = page;
+        return {
+          accountGeneration: 1,
+          provider: "crunchyroll",
+          titleKey: "series-one",
+          observedEpisodeCount: 12,
+          completedEpisodeCount: 6,
+          progressRows: [progressRow()],
+          sessions: [{
+            session: session(),
+            provider: "crunchyroll",
+            titleKey: "series-one",
+            episodeKey: "episode-one",
+          }],
+          complete: true,
+          nextCursor: null,
+        };
+      },
+    }),
+  });
+
+  assert.deepEqual(requested, {
+    provider: "crunchyroll",
+    titleKey: "series-one",
+    limit: 50,
+    cursor: "episode_cursor",
+  });
+  assert.deepEqual(response, {
+    meta: {
+      serverTime: NOW,
+      schemaVersion: 2,
+      ownerUserId: USER_ID,
+      accountGeneration: 1,
+    },
+    generatedAt: NOW,
+    provider: "crunchyroll",
+    titleKey: "series-one",
+    observedEpisodeCount: 12,
+    completedEpisodeCount: 6,
+    episodes: [{
+      episodeKey: "episode-one",
+      episodeTitle: "Episode One",
+      seasonKey: "season-one",
+      seasonTitle: "Season One",
+      seasonNumber: 1,
+      episodeNumber: 1,
+      sourceUrl: "https://www.crunchyroll.com/watch/episode-one/demo",
+      currentTime: 600,
+      duration: 1_200,
+      progress: 0.5,
+      completedAt: null,
+      lastWatchedAt: NOW,
+      sessions: [session()],
+    }],
+    complete: true,
+    nextCursor: null,
+  });
+});
+
+test("bounded database page parsers reject legacy, missing, and unknown fields", () => {
+  const summary = {
+    provider: "crunchyroll",
+    titleKey: "series-one",
+    lastWatchedAt: NOW,
+    observedEpisodeCount: 1,
+    completedEpisodeCount: 0,
+    episodePage: { complete: true, nextCursor: null },
+  };
+  const titlePage = {
+    accountGeneration: 1,
+    totalTitleCount: 1,
+    hasMore: false,
+    titleSummaries: [summary],
+    progressRows: [progressRow({ latest_session_id: null })],
+    sessionIds: [],
+  };
+  assert.equal(parseResourceBoundedWatchHistoryPage(titlePage).titleSummaries.length, 1);
+  assert.throws(() => parseResourceBoundedWatchHistoryPage({
+    accountGeneration: 1,
+    totalTitleCount: 1,
+    hasMore: false,
+    progressRows: [],
+    sessionIds: [],
+  }), hasCode("INVALID_DATABASE_RESPONSE"));
+  assert.throws(() => parseResourceBoundedWatchHistoryPage({
+    ...titlePage,
+    unknown: true,
+  }), hasCode("INVALID_DATABASE_RESPONSE"));
+
+  const detailPage = {
+    accountGeneration: 1,
+    provider: "crunchyroll",
+    titleKey: "series-one",
+    observedEpisodeCount: 1,
+    completedEpisodeCount: 0,
+    complete: true,
+    nextCursor: null,
+    progressRows: [progressRow({ latest_session_id: null })],
+  };
+  assert.equal(parseWatchHistoryTitleEpisodesPage(detailPage).progressRows.length, 1);
+  assert.throws(() => parseWatchHistoryTitleEpisodesPage({
+    ...detailPage,
+    unknown: true,
+  }), hasCode("INVALID_DATABASE_RESPONSE"));
+});
+
+test("production reads call only the deployed resource-bounded RPCs", async (t) => {
+  const previousUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const previousKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  process.env.NEXT_PUBLIC_SUPABASE_URL = "https://watch-history-bounded.test";
+  process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role-key";
+  t.after(() => {
+    if (previousUrl === undefined) delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+    else process.env.NEXT_PUBLIC_SUPABASE_URL = previousUrl;
+    if (previousKey === undefined) delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    else process.env.SUPABASE_SERVICE_ROLE_KEY = previousKey;
+  });
+
+  const requests: Array<{ url: URL; body: unknown }> = [];
+  t.mock.method(globalThis, "fetch", async (input: string | URL | Request, init?: RequestInit) => {
+    const request = input instanceof Request ? input : new Request(input, init);
+    const url = new URL(request.url);
+    const bodyText = request.method === "GET" ? "" : await request.clone().text();
+    requests.push({ url, body: bodyText ? JSON.parse(bodyText) : null });
+    if (url.pathname === "/rest/v1/user_watch_settings" && request.method === "GET") {
+      return Response.json({ history_generation: 1, youtube_history_enabled: false });
+    }
+    if (url.pathname === "/rest/v1/rpc/list_watch_history_v2_bounded_page") {
+      return Response.json({
+        accountGeneration: 1,
+        totalTitleCount: 1,
+        hasMore: false,
+        titleSummaries: [{
+          provider: "crunchyroll",
+          titleKey: "series-one",
+          lastWatchedAt: NOW,
+          observedEpisodeCount: 1,
+          completedEpisodeCount: 0,
+          episodePage: { complete: true, nextCursor: null },
+        }],
+        progressRows: [progressRow({ latest_session_id: null })],
+        sessionIds: [],
+      });
+    }
+    if (url.pathname === "/rest/v1/rpc/list_watch_history_v2_title_episodes_page") {
+      return Response.json({
+        accountGeneration: 1,
+        provider: "crunchyroll",
+        titleKey: "series-one",
+        observedEpisodeCount: 1,
+        completedEpisodeCount: 0,
+        complete: true,
+        nextCursor: null,
+        progressRows: [progressRow({ latest_session_id: null })],
+      });
+    }
+    return Response.json([]);
+  });
+
+  const page = await supabaseWatchHistoryV2Store.loadHistory(USER_ID, {
+    limit: 50,
+    cursor: null,
+  });
+  assert.equal(page.titleSummaries?.length, 1);
+  assert.ok(requests.some(({ url }) =>
+    url.pathname === "/rest/v1/rpc/list_watch_history_v2_bounded_page"));
+  assert.equal(requests.some(({ url }) =>
+    url.pathname === "/rest/v1/rpc/list_watch_history_v2_page"), false);
+  const detail = await supabaseWatchHistoryV2Store.loadTitleEpisodes?.(USER_ID, {
+    provider: "crunchyroll",
+    titleKey: "series-one",
+    limit: 50,
+    cursor: null,
+  });
+  assert.equal(detail?.progressRows.length, 1);
+  assert.deepEqual(
+    requests.find(({ url }) =>
+      url.pathname === "/rest/v1/rpc/list_watch_history_v2_title_episodes_page")?.body,
+    {
+      p_user_id: USER_ID,
+      p_history_generation: 1,
+      p_provider: "crunchyroll",
+      p_title_key: "series-one",
+      p_limit: 50,
+      p_cursor: null,
+    },
+  );
 });
 
 test("server-bounded read preserves database binary title order for its cursor", () => {
@@ -754,6 +1044,14 @@ test("server-bounded read preserves database binary title order for its cursor",
     sessions: [],
     totalTitleCount: 4,
     hasMore: true,
+    titleSummaries: ["A", "a-", "a_"].map((titleKey) => ({
+      provider: "crunchyroll",
+      titleKey,
+      lastWatchedAt: NOW,
+      observedEpisodeCount: 1,
+      completedEpisodeCount: 0,
+      episodePage: { complete: true, nextCursor: null },
+    })),
   });
 
   assert.deepEqual(response.items.map((item) => item.titleKey), ["A", "a-", "a_"]);
@@ -763,34 +1061,13 @@ test("server-bounded read preserves database binary title order for its cursor",
   });
 });
 
-test("observed history supports 101 seasons and 501 episodes exactly", () => {
-  const seasons = buildWatchHistoryV2Response({
+test("canonical title snapshots enforce the eight-episode resource boundary", () => {
+  const response = buildWatchHistoryV2Response({
     userId: USER_ID,
     accountGeneration: 1,
     generatedAt: new Date(NOW),
     limit: 100,
-    progressRows: Array.from({ length: 101 }, (_, index) =>
-      progressRow({
-        episode_key: `season-${index}-episode`,
-        episode_title: `Episode ${index}`,
-        season_key: `season-${index}`,
-        season_title: `Season ${index}`,
-        season_number: index,
-        episode_number: 1,
-        latest_session_id: null,
-        server_order: index + 1,
-      }),
-    ),
-    sessions: [],
-  });
-  assert.equal(seasons.items[0]?.seasons.length, 101);
-
-  const episodes = buildWatchHistoryV2Response({
-    userId: USER_ID,
-    accountGeneration: 1,
-    generatedAt: new Date(NOW),
-    limit: 100,
-    progressRows: Array.from({ length: 501 }, (_, index) =>
+    progressRows: Array.from({ length: 8 }, (_, index) =>
       progressRow({
         episode_key: `episode-${index}`,
         episode_title: `Episode ${index}`,
@@ -801,7 +1078,24 @@ test("observed history supports 101 seasons and 501 episodes exactly", () => {
     ),
     sessions: [],
   });
-  assert.equal(episodes.items[0]?.seasons[0]?.episodes.length, 501);
+  assert.equal(response.items[0]?.seasons[0]?.episodes.length, 8);
+
+  assert.throws(() => buildWatchHistoryV2Response({
+    userId: USER_ID,
+    accountGeneration: 1,
+    generatedAt: new Date(NOW),
+    limit: 100,
+    progressRows: Array.from({ length: 9 }, (_, index) =>
+      progressRow({
+        episode_key: `episode-${index}`,
+        episode_title: `Episode ${index}`,
+        episode_number: index,
+        latest_session_id: null,
+        server_order: index + 1,
+      }),
+    ),
+    sessions: [],
+  }), hasCode("INVALID_DATABASE_RESPONSE"));
 });
 
 test("history progress loading advances by capped page length until exact total", async () => {

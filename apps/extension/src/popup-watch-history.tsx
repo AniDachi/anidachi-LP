@@ -1,5 +1,7 @@
 import {
+  WATCH_HISTORY_TITLE_EPISODE_SLICE_LIMIT,
   WatchHistoryDeletionAckSchema,
+  WatchHistoryEpisodeSchema,
   type WatchHistoryDeleteScope,
   WatchHistoryPreferencesResponseSchema,
   WatchHistoryResponseSchema,
@@ -52,6 +54,8 @@ export type PopupWatchHistoryClient = {
   confirmDiscard(message: string): boolean;
   openUrl(url: string): Promise<void>;
 };
+
+const LOCAL_CACHE_REFRESH_CURSOR = "local_cache_refresh_required";
 
 const defaultClient: PopupWatchHistoryClient = {
   loadCached: loadConfirmedPopupWatchHistorySnapshot,
@@ -258,15 +262,29 @@ export function PopupWatchHistoryPanel({
     ? localObservation.event
     : null;
   const pendingByEpisode = useMemo(
-    () => latestPendingByEpisode([
-      ...visiblePendingEvents,
-      ...(visibleLocalObservation ? [visibleLocalObservation] : []),
-    ]),
+    () => {
+      const pending = latestPendingByEpisode(visiblePendingEvents);
+      if (visibleLocalObservation) {
+        pending.set(
+          pendingEpisodeKey(
+            visibleLocalObservation.provider,
+            visibleLocalObservation.titleKey,
+            visibleLocalObservation.episodeKey,
+          ),
+          visibleLocalObservation,
+        );
+      }
+      return pending;
+    },
     [visibleLocalObservation, visiblePendingEvents],
   );
   const itemsWithPending = useMemo(
-    () => projectPendingWatchHistoryItems(history?.items ?? [], pendingByEpisode),
-    [history?.items, pendingByEpisode],
+    () => projectPendingWatchHistoryItems(
+      history?.items ?? [],
+      pendingByEpisode,
+      visibleLocalObservation,
+    ),
+    [history?.items, pendingByEpisode, visibleLocalObservation],
   );
   const visibleItems = useMemo(
     () => filterWatchHistoryItems(itemsWithPending, mode, searchQuery, pendingByEpisode),
@@ -602,8 +620,7 @@ function PopupWatchHistoryItem({
   onDelete: (target: WatchHistoryDeleteScope) => void;
   pendingByEpisode: Map<string, WatchProgressEvent>;
 }) {
-  const episodeCount = item.seasons.reduce((sum, season) => sum + season.episodes.length, 0);
-  const observedCount = episodeCount || (item.itemKind === "movie" ? 1 : 0);
+  const observedCount = item.observedEpisodeCount;
   const latestActivityPending = pendingByEpisode.get(
     pendingEpisodeKey(item.provider, item.titleKey, item.latestActivity.episodeKey),
   );
@@ -811,9 +828,12 @@ function filterWatchHistoryItems(
 function projectPendingWatchHistoryItems(
   items: WatchHistoryItem[],
   pendingByEpisode: Map<string, WatchProgressEvent>,
+  localObservation: WatchProgressEvent | null,
 ): WatchHistoryItem[] {
   let projected = items;
+  const affectedTitles = new Set<string>();
   for (const event of pendingByEpisode.values()) {
+    affectedTitles.add(pendingTitleKey(event.provider, event.titleKey));
     const itemIndex = projected.findIndex((item) =>
       item.provider === event.provider && item.titleKey === event.titleKey,
     );
@@ -837,6 +857,10 @@ function projectPendingWatchHistoryItems(
         : season);
     const nextItem: WatchHistoryItem = {
       ...item,
+      observedEpisodeCount: Math.max(
+        item.observedEpisodeCount,
+        seasons.reduce((total, season) => total + season.episodes.length, 0),
+      ),
       seasons,
       latestActivity: Date.parse(event.observedAt) >= Date.parse(item.latestActivity.lastWatchedAt)
         ? pendingWatchHistoryLatestActivity(event)
@@ -847,13 +871,90 @@ function projectPendingWatchHistoryItems(
     };
     projected = projected.map((candidate, index) => index === itemIndex ? nextItem : candidate);
   }
-  return projected;
+  return projected.map((item) => affectedTitles.has(pendingTitleKey(item.provider, item.titleKey))
+    ? boundProjectedWatchHistoryItem(item, localObservation)
+    : item);
+}
+
+function boundProjectedWatchHistoryItem(
+  item: WatchHistoryItem,
+  localObservation: WatchProgressEvent | null,
+): WatchHistoryItem {
+  if (item.seasons.length === 0) return item;
+  const episodes = item.seasons
+    .flatMap((season) => season.episodes)
+    .sort(compareWatchHistoryEpisodesNewest);
+  let selected = episodes.slice(0, WATCH_HISTORY_TITLE_EPISODE_SLICE_LIMIT);
+  const localEpisodeKey = localObservation?.provider === item.provider &&
+      localObservation.titleKey === item.titleKey
+    ? localObservation.episodeKey
+    : null;
+  const localEpisode = localEpisodeKey
+    ? episodes.find((episode) => episode.episodeKey === localEpisodeKey)
+    : undefined;
+  if (localEpisode && !selected.some((episode) => episode.episodeKey === localEpisode.episodeKey)) {
+    selected = [
+      ...selected.slice(0, WATCH_HISTORY_TITLE_EPISODE_SLICE_LIMIT - 1),
+      localEpisode,
+    ].sort(compareWatchHistoryEpisodesNewest);
+  }
+  const selectedKeys = new Set(selected.map((episode) => episode.episodeKey));
+  const seasons = item.seasons
+    .map((season) => ({
+      ...season,
+      episodes: season.episodes
+        .filter((episode) => selectedKeys.has(episode.episodeKey))
+        .sort(compareWatchHistoryEpisodesNewest),
+    }))
+    .filter((season) => season.episodes.length > 0)
+    .sort(compareWatchHistorySeasonsNewest)
+    .map((season, order) => ({ ...season, order }));
+  const observedEpisodeCount = Math.max(item.observedEpisodeCount, episodes.length);
+  const representedEpisodeCount = selected.length;
+  const incomplete = !item.episodePage.complete || observedEpisodeCount > representedEpisodeCount;
+  return {
+    ...item,
+    observedEpisodeCount,
+    episodePage: incomplete
+      ? {
+          complete: false,
+          nextCursor: item.episodePage.nextCursor ?? LOCAL_CACHE_REFRESH_CURSOR,
+        }
+      : { complete: true, nextCursor: null },
+    seasons,
+  };
+}
+
+function compareWatchHistoryEpisodesNewest(
+  a: WatchHistoryItem["seasons"][number]["episodes"][number],
+  b: WatchHistoryItem["seasons"][number]["episodes"][number],
+): number {
+  return compareCodeUnits(b.lastWatchedAt, a.lastWatchedAt) ||
+    compareCodeUnits(a.episodeKey, b.episodeKey);
+}
+
+function compareCodeUnits(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
+function compareWatchHistorySeasonsNewest(
+  a: { episodes: WatchHistoryItem["seasons"][number]["episodes"] },
+  b: { episodes: WatchHistoryItem["seasons"][number]["episodes"] },
+): number {
+  const aNewest = a.episodes[0];
+  const bNewest = b.episodes[0];
+  if (!aNewest) return bNewest ? 1 : 0;
+  if (!bNewest) return -1;
+  return compareWatchHistoryEpisodesNewest(aNewest, bNewest);
 }
 
 function pendingWatchHistoryItem(event: WatchProgressEvent): WatchHistoryItem {
   return {
     provider: event.provider,
     titleKey: event.titleKey,
+    observedEpisodeCount: 1,
+    completedEpisodeCount: 0,
+    episodePage: { complete: true, nextCursor: null },
     itemKind: event.itemKind,
     title: event.title,
     sourceUrl: event.sourceUrl,
@@ -1031,10 +1132,10 @@ export function selectConfirmedPopupWatchHistorySnapshot(
     partition.preferencesConfirmed !== true) {
     return null;
   }
-  const history = WatchHistoryResponseSchema.safeParse(partition.cache);
-  if (!history.success ||
-    history.data.meta.ownerUserId !== ownerUserId ||
-    history.data.meta.accountGeneration !== accountGeneration) {
+  const history = normalizeCachedWatchHistoryResponse(partition.cache);
+  if (!history ||
+    history.meta.ownerUserId !== ownerUserId ||
+    history.meta.accountGeneration !== accountGeneration) {
     return null;
   }
   const pendingEvents = new Map<string, WatchProgressEvent>();
@@ -1043,7 +1144,7 @@ export function selectConfirmedPopupWatchHistorySnapshot(
     const current = WatchProgressEventSchema.safeParse(partition.currentObservation);
     if (current.success &&
       current.data.accountGeneration === accountGeneration &&
-      isNewerThanCanonicalHistory(history.data, current.data)) {
+      isNewerThanCanonicalHistory(history, current.data)) {
       const displayMode = partition.currentObservationDisplayMode === "mine" ||
           partition.currentObservationDisplayMode === "together"
         ? partition.currentObservationDisplayMode
@@ -1063,13 +1164,103 @@ export function selectConfirmedPopupWatchHistorySnapshot(
     }
   }
   return {
-    history: history.data,
+    history,
     accountGeneration,
     preferences: partition.preferences ?? { youtubeHistoryEnabled: false },
     pendingEvents: [...pendingEvents.values()],
     localObservation,
     capturePaused: partition.capturePaused === true,
   };
+}
+
+function normalizeCachedWatchHistoryResponse(value: unknown): WatchHistoryResponse | null {
+  const current = WatchHistoryResponseSchema.safeParse(value);
+  if (current.success) return current.data;
+  if (!isPopupRecord(value) || !Array.isArray(value.items)) return null;
+  const items: unknown[] = [];
+  for (const item of value.items) {
+    const normalized = normalizeLegacyCachedWatchHistoryItem(item);
+    if (!normalized) return null;
+    items.push(normalized);
+  }
+  const normalized = WatchHistoryResponseSchema.safeParse({ ...value, items });
+  return normalized.success ? normalized.data : null;
+}
+
+function normalizeLegacyCachedWatchHistoryItem(value: unknown): unknown | null {
+  if (!isPopupRecord(value) ||
+    Object.hasOwn(value, "observedEpisodeCount") ||
+    Object.hasOwn(value, "completedEpisodeCount") ||
+    Object.hasOwn(value, "episodePage") ||
+    !Array.isArray(value.seasons)) {
+    return null;
+  }
+  type ParsedEpisode = ReturnType<typeof WatchHistoryEpisodeSchema.parse>;
+  const episodesByKey = new Map<string, ParsedEpisode>();
+  const parsedSeasons: Array<{
+    source: Record<string, unknown>;
+    episodes: ParsedEpisode[];
+  }> = [];
+  for (const season of value.seasons) {
+    if (!isPopupRecord(season) || !Array.isArray(season.episodes)) return null;
+    const episodes: ParsedEpisode[] = [];
+    for (const episodeValue of season.episodes) {
+      const episode = WatchHistoryEpisodeSchema.safeParse(episodeValue);
+      if (!episode.success || episodesByKey.has(episode.data.episodeKey)) return null;
+      episodesByKey.set(episode.data.episodeKey, episode.data);
+      episodes.push(episode.data);
+    }
+    parsedSeasons.push({ source: season, episodes });
+  }
+  const allEpisodes = [...episodesByKey.values()].sort(compareWatchHistoryEpisodesNewest);
+  const selected = allEpisodes.slice(0, WATCH_HISTORY_TITLE_EPISODE_SLICE_LIMIT);
+  const selectedKeys = new Set(selected.map((episode) => episode.episodeKey));
+  const seasons = parsedSeasons
+    .map(({ source, episodes }) => {
+      const visibleEpisodes = episodes
+        .filter((episode) => selectedKeys.has(episode.episodeKey))
+        .sort(compareWatchHistoryEpisodesNewest);
+      return {
+        ...source,
+        aggregate: {
+          completedEpisodes: visibleEpisodes.filter((episode) => episode.completedAt !== null).length,
+          availableEpisodes: null,
+          progress: null,
+        },
+        episodes: visibleEpisodes,
+        nextEpisode: null,
+      };
+    })
+    .filter((season) => season.episodes.length > 0)
+    .sort(compareWatchHistorySeasonsNewest)
+    .map((season, order) => ({ ...season, order }));
+  const isMovie = value.itemKind === "movie";
+  const latestActivity = isPopupRecord(value.latestActivity) ? value.latestActivity : null;
+  const observedEpisodeCount = isMovie ? 1 : allEpisodes.length;
+  const completedEpisodeCount = isMovie
+    ? latestActivity?.completedAt ? 1 : 0
+    : allEpisodes.filter((episode) => episode.completedAt !== null).length;
+  const complete = isMovie || observedEpisodeCount <= WATCH_HISTORY_TITLE_EPISODE_SLICE_LIMIT;
+  return {
+    ...value,
+    observedEpisodeCount,
+    completedEpisodeCount,
+    episodePage: {
+      complete,
+      nextCursor: complete ? null : LOCAL_CACHE_REFRESH_CURSOR,
+    },
+    catalogState: "unavailable",
+    aggregate: {
+      completedEpisodes: completedEpisodeCount,
+      availableEpisodes: null,
+      progress: null,
+    },
+    seasons,
+  };
+}
+
+function isPopupRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function isNewerThanCanonicalHistory(
@@ -1148,6 +1339,10 @@ function pendingEpisodeKey(provider: string, titleKey: string, episodeKey: strin
   return `${provider}\u0000${titleKey}\u0000${episodeKey}`;
 }
 
+function pendingTitleKey(provider: string, titleKey: string): string {
+  return `${provider}\u0000${titleKey}`;
+}
+
 function formatClock(seconds: number): string {
   const value = Math.max(0, Math.floor(seconds));
   const hours = Math.floor(value / 3_600);
@@ -1197,13 +1392,31 @@ function removeHistoryTarget(
   }
   const items = history.items.flatMap((item) => {
     if (item.provider !== target.provider || item.titleKey !== target.titleKey) return [item];
+    const removedEpisode = item.seasons
+      .flatMap((season) => season.episodes)
+      .find((episode) => episode.episodeKey === target.episodeKey);
     const seasons = item.seasons
       .map((season) => ({
         ...season,
         episodes: season.episodes.filter((episode) => episode.episodeKey !== target.episodeKey),
       }))
       .filter((season) => season.episodes.length > 0);
-    return seasons.length > 0 ? [{ ...item, seasons }] : [];
+    const observedEpisodeCount = Math.max(
+      0,
+      item.observedEpisodeCount - (removedEpisode ? 1 : 0),
+    );
+    if (observedEpisodeCount === 0) return [];
+    const completedEpisodeCount = Math.max(
+      0,
+      item.completedEpisodeCount - (removedEpisode?.completedAt ? 1 : 0),
+    );
+    return [{
+      ...item,
+      observedEpisodeCount,
+      completedEpisodeCount,
+      aggregate: { ...item.aggregate, completedEpisodes: completedEpisodeCount },
+      seasons,
+    }];
   });
   return {
     ...history,

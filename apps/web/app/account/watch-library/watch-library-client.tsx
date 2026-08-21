@@ -5,15 +5,17 @@ import {
   WatchHistoryPreferencesResponseSchema,
   WatchHistoryResponseSchema,
   WatchHistoryRoomRecreationResponseSchema,
+  WatchHistoryTitleEpisodesResponseSchema,
   type WatchHistoryDeleteScope,
   type WatchHistoryEpisode,
   type WatchHistoryItem,
   type WatchHistoryPreferencesResponse,
   type WatchHistoryResponse,
   type WatchHistorySession,
+  type WatchHistoryTitleEpisodesResponse,
 } from "@anidachi/protocol";
 import { Clock3, Film, Play, RefreshCw, Trash2, Users } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/client-api";
 
 type Notice = { tone: "success" | "error"; text: string };
@@ -180,7 +182,7 @@ export function WatchLibraryClient({
 
       {history.items.length ? (
         <div className="grid gap-4">
-          {history.items.map((item) => <WatchItemCard busyAction={busyAction} item={item} key={`${item.provider}:${item.titleKey}`} onCreateRoom={createRoom} onDelete={deleteHistory} />)}
+          {history.items.map((item) => <WatchItemCard accountGeneration={history.meta.accountGeneration} busyAction={busyAction} item={item} key={`${history.meta.ownerUserId}:${history.meta.accountGeneration}:${item.provider}:${item.titleKey}`} onCreateRoom={createRoom} onDelete={deleteHistory} ownerUserId={history.meta.ownerUserId} />)}
         </div>
       ) : (
         <section className="rounded-lg border border-brand-border bg-brand-surface p-6 text-sm text-foreground/50">Progress will appear after meaningful playback while signed in to the extension.</section>
@@ -231,7 +233,50 @@ export function bindWatchHistoryPageRefresh(options: {
   };
 }
 
-function WatchItemCard({ busyAction, item, onCreateRoom, onDelete }: { busyAction: string | null; item: WatchHistoryItem; onCreateRoom: (session: WatchHistorySession, sourceUrl: string) => void; onDelete: (target: WatchHistoryDeleteScope) => void }) {
+function WatchItemCard({ accountGeneration, busyAction, item, onCreateRoom, onDelete, ownerUserId }: { accountGeneration: number; busyAction: string | null; item: WatchHistoryItem; onCreateRoom: (session: WatchHistorySession, sourceUrl: string) => void; onDelete: (target: WatchHistoryDeleteScope) => void; ownerUserId: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const [visibleItem, setVisibleItem] = useState(item);
+  const [loadingEpisodes, setLoadingEpisodes] = useState(false);
+  const [episodeLoadError, setEpisodeLoadError] = useState(false);
+  const canonicalRevision = useRef(0);
+  const detailRequestRevision = useRef(0);
+
+  useEffect(() => {
+    canonicalRevision.current += 1;
+    detailRequestRevision.current += 1;
+    setVisibleItem(item);
+    setEpisodeLoadError(false);
+    setLoadingEpisodes(false);
+  }, [accountGeneration, item, ownerUserId]);
+
+  const loadMoreEpisodes = useCallback(async () => {
+    const cursor = visibleItem.episodePage.nextCursor;
+    if (!cursor || loadingEpisodes) return;
+    const expectedCanonicalRevision = canonicalRevision.current;
+    const requestRevision = ++detailRequestRevision.current;
+    const requestIsCurrent = () =>
+      canonicalRevision.current === expectedCanonicalRevision &&
+      detailRequestRevision.current === requestRevision;
+    setLoadingEpisodes(true);
+    setEpisodeLoadError(false);
+    try {
+      const page = await loadWatchHistoryTitleEpisodePage({
+        ownerUserId,
+        accountGeneration,
+        item: visibleItem,
+        cursor,
+        request: (path) => api<unknown>(path),
+      });
+      if (requestIsCurrent()) {
+        setVisibleItem((current) => mergeWatchHistoryTitleEpisodePage(current, page));
+      }
+    } catch {
+      if (requestIsCurrent()) setEpisodeLoadError(true);
+    } finally {
+      if (requestIsCurrent()) setLoadingEpisodes(false);
+    }
+  }, [accountGeneration, loadingEpisodes, ownerUserId, visibleItem]);
+
   return (
     <section className="overflow-hidden rounded-2xl border border-brand-border/80 bg-brand-surface">
       <div className="flex items-center gap-4 border-b border-brand-border/80 p-4">
@@ -241,20 +286,33 @@ function WatchItemCard({ busyAction, item, onCreateRoom, onDelete }: { busyActio
           <h3 className="mt-1 truncate text-lg font-bold text-foreground">{item.title}</h3>
           <p className="mt-1 text-sm text-foreground/50">{getWatchHistoryAggregateLabel(item)} · last watched {formatDate(item.lastWatchedAt)}</p>
         </div>
-        <button className="rounded-lg border border-red-400/25 px-3 py-2 text-xs font-semibold text-red-100 disabled:opacity-50" disabled={Boolean(busyAction)} onClick={() => onDelete({ scope: "title", provider: item.provider, titleKey: item.titleKey })} type="button">Delete title</button>
+        <div className="flex flex-wrap gap-2">
+          <button className="rounded-lg border border-brand-border px-3 py-2 text-xs font-semibold text-foreground disabled:opacity-50" onClick={() => setExpanded((value) => !value)} type="button">{expanded ? "Hide episodes" : "Show episodes"}</button>
+          <button className="rounded-lg border border-red-400/25 px-3 py-2 text-xs font-semibold text-red-100 disabled:opacity-50" disabled={Boolean(busyAction)} onClick={() => onDelete({ scope: "title", provider: item.provider, titleKey: item.titleKey })} type="button">Delete title</button>
+        </div>
       </div>
 
-      {item.seasons.length ? item.seasons.map((season) => (
-        <section className="border-b border-brand-border/50 last:border-b-0" key={season.seasonKey}>
-          <div className="bg-white/[0.025] px-4 py-3">
-            <h4 className="text-sm font-bold text-brand-orange">{season.seasonTitle}</h4>
-            <p className="mt-0.5 text-xs text-foreground/45">{season.aggregate.availableEpisodes === null ? `${season.episodes.length} observed ${season.episodes.length === 1 ? "episode" : "episodes"}` : `${season.aggregate.completedEpisodes}/${season.aggregate.availableEpisodes} episodes`}</p>
+      {expanded ? <>
+        {visibleItem.seasons.length ? visibleItem.seasons.map((season) => (
+          <section className="border-b border-brand-border/50 last:border-b-0" key={season.seasonKey}>
+            <div className="bg-white/[0.025] px-4 py-3">
+              <h4 className="text-sm font-bold text-brand-orange">{season.seasonTitle}</h4>
+              <p className="mt-0.5 text-xs text-foreground/45">{season.episodes.length} visible {season.episodes.length === 1 ? "episode" : "episodes"}</p>
+            </div>
+            <div className="divide-y divide-brand-border/50">
+              {season.episodes.map((episode) => <EpisodeRow busyAction={busyAction} episode={episode} item={visibleItem} key={episode.episodeKey} onCreateRoom={onCreateRoom} onDelete={onDelete} />)}
+            </div>
+          </section>
+        )) : <LatestActivityRow busyAction={busyAction} item={visibleItem} onCreateRoom={onCreateRoom} />}
+        {visibleItem.episodePage.nextCursor ? (
+          <div className="border-t border-brand-border/50 p-4">
+            <button className="inline-flex min-h-11 items-center rounded-lg border border-brand-border px-4 text-sm font-semibold text-foreground disabled:opacity-50" disabled={loadingEpisodes} onClick={() => void loadMoreEpisodes()} type="button">
+              {loadingEpisodes ? "Loading episodes..." : episodeLoadError ? "Retry loading episodes" : "Load more episodes"}
+            </button>
+            {episodeLoadError ? <p className="mt-2 text-sm text-red-100">Could not load more episodes. Your visible history is unchanged.</p> : null}
           </div>
-          <div className="divide-y divide-brand-border/50">
-            {season.episodes.map((episode) => <EpisodeRow busyAction={busyAction} episode={episode} item={item} key={episode.episodeKey} onCreateRoom={onCreateRoom} onDelete={onDelete} />)}
-          </div>
-        </section>
-      )) : <LatestActivityRow busyAction={busyAction} item={item} onCreateRoom={onCreateRoom} />}
+        ) : null}
+      </> : null}
     </section>
   );
 }
@@ -306,7 +364,7 @@ function Poster({ item }: { item: WatchHistoryItem }) {
 }
 
 export function getWatchHistoryAggregateLabel(item: WatchHistoryItem): string {
-  const observed = observedEpisodeCountForItem(item);
+  const observed = item.observedEpisodeCount;
   if (item.catalogState !== "complete" || item.aggregate.availableEpisodes === null) return `${observed} observed ${observed === 1 ? "episode" : "episodes"}`;
   return `${item.aggregate.completedEpisodes}/${item.aggregate.availableEpisodes} episodes`;
 }
@@ -318,6 +376,95 @@ export function mergeWatchHistoryPages(current: WatchHistoryResponse, page: Watc
   return { ...page, items: Array.from(items.values()) };
 }
 
+export async function loadWatchHistoryTitleEpisodePage(params: {
+  ownerUserId: string;
+  accountGeneration?: number;
+  item: WatchHistoryItem;
+  cursor: string;
+  request?: (path: string) => Promise<unknown>;
+}): Promise<WatchHistoryTitleEpisodesResponse> {
+  const query = new URLSearchParams({
+    provider: params.item.provider,
+    titleKey: params.item.titleKey,
+    limit: "50",
+    cursor: params.cursor,
+  });
+  const value = await (params.request ?? ((path) => api<unknown>(path)))(
+    `/api/watch-history/v2/title-episodes?${query.toString()}`,
+  );
+  const page = WatchHistoryTitleEpisodesResponseSchema.parse(value);
+  if (
+    page.meta.ownerUserId !== params.ownerUserId ||
+    (params.accountGeneration !== undefined &&
+      page.meta.accountGeneration !== params.accountGeneration) ||
+    page.provider !== params.item.provider ||
+    page.titleKey !== params.item.titleKey
+  ) {
+    throw new Error("Watch history owner or title changed");
+  }
+  return page;
+}
+
+export function mergeWatchHistoryTitleEpisodePage(
+  item: WatchHistoryItem,
+  page: WatchHistoryTitleEpisodesResponse,
+): WatchHistoryItem {
+  if (page.provider !== item.provider || page.titleKey !== item.titleKey) return item;
+  const seasons = item.seasons.map((season) => ({
+    ...season,
+    episodes: [...season.episodes],
+  }));
+  for (const episode of page.episodes) {
+    let replaced = false;
+    for (const season of seasons) {
+      const index = season.episodes.findIndex((current) => current.episodeKey === episode.episodeKey);
+      if (index >= 0) {
+        season.episodes[index] = episode;
+        replaced = true;
+        break;
+      }
+    }
+    if (replaced) continue;
+    const seasonKey = episode.seasonKey ?? "observed";
+    let season = seasons.find((current) => current.seasonKey === seasonKey);
+    if (!season) {
+      season = {
+        seasonKey,
+        seasonTitle: episode.seasonTitle ?? "Observed episodes",
+        seasonNumber: episode.seasonNumber,
+        order: seasons.length,
+        aggregate: { completedEpisodes: 0, availableEpisodes: null, progress: null },
+        episodes: [],
+        nextEpisode: null,
+      };
+      seasons.push(season);
+    }
+    season.episodes.push(episode);
+  }
+  for (const season of seasons) {
+    season.episodes.sort(
+      (a, b) =>
+        (a.episodeNumber ?? Number.MAX_SAFE_INTEGER) -
+          (b.episodeNumber ?? Number.MAX_SAFE_INTEGER) ||
+        b.lastWatchedAt.localeCompare(a.lastWatchedAt) ||
+        a.episodeKey.localeCompare(b.episodeKey),
+    );
+    season.aggregate = {
+      completedEpisodes: season.episodes.filter((episode) => episode.completedAt !== null).length,
+      availableEpisodes: null,
+      progress: null,
+    };
+  }
+  return {
+    ...item,
+    observedEpisodeCount: page.observedEpisodeCount,
+    completedEpisodeCount: page.completedEpisodeCount,
+    aggregate: { ...item.aggregate, completedEpisodes: page.completedEpisodeCount },
+    seasons,
+    episodePage: { complete: page.complete, nextCursor: page.nextCursor },
+  };
+}
+
 export function removeWatchHistoryTarget(history: WatchHistoryResponse, target: WatchHistoryDeleteScope, accountGeneration = history.meta.accountGeneration): WatchHistoryResponse {
   if (target.scope === "all") return { ...history, meta: { ...history.meta, accountGeneration }, items: [], totalTitleCount: 0, nextCursor: null };
   if (target.scope === "title") {
@@ -326,8 +473,26 @@ export function removeWatchHistoryTarget(history: WatchHistoryResponse, target: 
   }
   const items = history.items.flatMap((item) => {
     if (item.provider !== target.provider || item.titleKey !== target.titleKey) return [item];
+    const removedEpisode = item.seasons
+      .flatMap((season) => season.episodes)
+      .find((episode) => episode.episodeKey === target.episodeKey);
     const seasons = item.seasons.map((season) => ({ ...season, episodes: season.episodes.filter((episode) => episode.episodeKey !== target.episodeKey) })).filter((season) => season.episodes.length > 0);
-    return seasons.length > 0 ? [{ ...item, seasons }] : [];
+    const observedEpisodeCount = Math.max(
+      0,
+      item.observedEpisodeCount - (removedEpisode ? 1 : 0),
+    );
+    if (observedEpisodeCount === 0) return [];
+    const completedEpisodeCount = Math.max(
+      0,
+      item.completedEpisodeCount - (removedEpisode?.completedAt ? 1 : 0),
+    );
+    return [{
+      ...item,
+      observedEpisodeCount,
+      completedEpisodeCount,
+      aggregate: { ...item.aggregate, completedEpisodes: completedEpisodeCount },
+      seasons,
+    }];
   });
   return { ...history, meta: { ...history.meta, accountGeneration }, items, totalTitleCount: Math.max(0, history.totalTitleCount - (items.length === history.items.length ? 0 : 1)) };
 }
@@ -345,8 +510,7 @@ function parseOwnedPreferences(value: unknown, ownerUserId: string): WatchHistor
 }
 
 function observedEpisodeCountForItem(item: WatchHistoryItem): number {
-  const episodes = item.seasons.reduce((total, season) => total + season.episodes.length, 0);
-  return episodes || (item.itemKind === "movie" ? 1 : 0);
+  return item.observedEpisodeCount;
 }
 
 function deleteScopeKey(target: WatchHistoryDeleteScope): string {

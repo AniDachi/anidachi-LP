@@ -9,6 +9,8 @@ import { RoomCapabilitiesSchema, RoomHistoryAuthoritySchema } from "./types";
 
 export const WATCH_HISTORY_SCHEMA_VERSION = 2 as const;
 export const WATCH_CATALOG_MAX_BYTES = 512 * 1_024;
+export const WATCH_HISTORY_TITLE_EPISODE_SLICE_LIMIT = 8;
+export const WATCH_HISTORY_TITLE_EPISODE_PAGE_LIMIT = 50;
 
 const TimestampSchema = z.iso.datetime({ offset: true });
 const DurableIdSchema = z.uuid();
@@ -28,6 +30,13 @@ export const WatchHistoryOpaqueCursorSchema = z
   .trim()
   .min(1)
   .max(512)
+  .regex(/^[A-Za-z0-9_-]+$/);
+
+export const WatchHistoryEpisodeOpaqueCursorSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(2_048)
   .regex(/^[A-Za-z0-9_-]+$/);
 
 export const WatchHistoryResponseMetaSchema = AccountOwnedResponseMetaSchema.extend({
@@ -354,7 +363,7 @@ export const WatchHistorySeasonSchema = z.strictObject({
   seasonNumber: SeasonNumberSchema.nullable(),
   order: z.number().int().nonnegative(),
   aggregate: WatchHistoryAggregateSchema,
-  episodes: z.array(WatchHistoryEpisodeSchema),
+  episodes: z.array(WatchHistoryEpisodeSchema).max(WATCH_HISTORY_TITLE_EPISODE_SLICE_LIMIT),
   nextEpisode: WatchHistoryNextEpisodeSchema.nullable(),
 });
 
@@ -367,22 +376,94 @@ export const WatchHistoryLatestActivitySchema = z.strictObject({
   lastWatchedAt: TimestampSchema,
 });
 
+export const WatchHistoryEpisodePageSchema = z
+  .strictObject({
+    complete: z.boolean(),
+    nextCursor: WatchHistoryEpisodeOpaqueCursorSchema.nullable(),
+  })
+  .superRefine((page, context) => {
+    if (page.complete && page.nextCursor !== null) {
+      context.addIssue({
+        code: "custom",
+        message: "Complete episode slices cannot include a continuation cursor",
+        path: ["nextCursor"],
+      });
+    }
+    if (!page.complete && page.nextCursor === null) {
+      context.addIssue({
+        code: "custom",
+        message: "Incomplete episode slices require a continuation cursor",
+        path: ["nextCursor"],
+      });
+    }
+  });
+
 export const WatchHistoryItemSchema = z
   .strictObject({
     provider: WatchProviderSchema,
     titleKey: StableKeySchema,
+    observedEpisodeCount: z.number().int().nonnegative(),
+    completedEpisodeCount: z.number().int().nonnegative(),
+    episodePage: WatchHistoryEpisodePageSchema,
     itemKind: WatchItemKindSchema,
     title: DisplayTitleSchema,
     sourceUrl: HttpUrlSchema,
     artworkUrl: NullableHttpUrlSchema,
     catalogState: WatchCatalogStateSchema,
     aggregate: WatchHistoryAggregateSchema,
-    seasons: z.array(WatchHistorySeasonSchema),
+    seasons: z.array(WatchHistorySeasonSchema).max(WATCH_HISTORY_TITLE_EPISODE_SLICE_LIMIT),
     sessions: z.array(WatchHistorySessionSchema).max(20),
     latestActivity: WatchHistoryLatestActivitySchema,
     lastWatchedAt: TimestampSchema,
   })
   .superRefine((item, context) => {
+    const episodeKeys = new Set<string>();
+    let returnedEpisodeCount = 0;
+    item.seasons.forEach((season, seasonIndex) => {
+      season.episodes.forEach((episode, episodeIndex) => {
+        returnedEpisodeCount += 1;
+        if (episodeKeys.has(episode.episodeKey)) {
+          context.addIssue({
+            code: "custom",
+            message: "Episode slice identities must be unique across seasons",
+            path: ["seasons", seasonIndex, "episodes", episodeIndex, "episodeKey"],
+          });
+        }
+        episodeKeys.add(episode.episodeKey);
+      });
+    });
+    const representedEpisodeCount =
+      item.itemKind === "movie" && returnedEpisodeCount === 0
+        ? Math.min(1, item.observedEpisodeCount)
+        : returnedEpisodeCount;
+    if (returnedEpisodeCount > WATCH_HISTORY_TITLE_EPISODE_SLICE_LIMIT) {
+      context.addIssue({
+        code: "too_big",
+        maximum: WATCH_HISTORY_TITLE_EPISODE_SLICE_LIMIT,
+        origin: "array",
+        inclusive: true,
+        message: `Title snapshots may contain at most ${WATCH_HISTORY_TITLE_EPISODE_SLICE_LIMIT} episodes`,
+        path: ["seasons"],
+      });
+    }
+    if (
+      item.completedEpisodeCount > item.observedEpisodeCount ||
+      representedEpisodeCount > item.observedEpisodeCount ||
+      item.aggregate.completedEpisodes !== item.completedEpisodeCount
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Episode slice and exact title counts are inconsistent",
+        path: ["observedEpisodeCount"],
+      });
+    }
+    if (item.episodePage.complete && representedEpisodeCount !== item.observedEpisodeCount) {
+      context.addIssue({
+        code: "custom",
+        message: "A complete episode slice must represent every observed episode",
+        path: ["episodePage", "complete"],
+      });
+    }
     addAggregateIssues(item.aggregate, context, ["aggregate"]);
     const hasExactTitleTotals =
       item.aggregate.availableEpisodes !== null && item.aggregate.progress !== null;
@@ -440,6 +521,58 @@ export const WatchHistoryResponseSchema = z.strictObject({
   items: z.array(WatchHistoryItemSchema).max(100),
   nextCursor: WatchHistoryOpaqueCursorSchema.nullable(),
 });
+
+export const WatchHistoryTitleEpisodesResponseSchema = z
+  .strictObject({
+    meta: WatchHistoryResponseMetaSchema,
+    generatedAt: TimestampSchema,
+    provider: WatchProviderSchema,
+    titleKey: StableKeySchema,
+    observedEpisodeCount: z.number().int().nonnegative(),
+    completedEpisodeCount: z.number().int().nonnegative(),
+    episodes: z
+      .array(WatchHistoryEpisodeSchema)
+      .max(WATCH_HISTORY_TITLE_EPISODE_PAGE_LIMIT),
+    complete: z.boolean(),
+    nextCursor: WatchHistoryEpisodeOpaqueCursorSchema.nullable(),
+  })
+  .superRefine((page, context) => {
+    if (
+      page.completedEpisodeCount > page.observedEpisodeCount ||
+      page.episodes.length > page.observedEpisodeCount
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Episode page and exact title counts are inconsistent",
+        path: ["observedEpisodeCount"],
+      });
+    }
+    if (page.complete && page.nextCursor !== null) {
+      context.addIssue({
+        code: "custom",
+        message: "Complete episode pages cannot include a continuation cursor",
+        path: ["nextCursor"],
+      });
+    }
+    if (!page.complete && page.nextCursor === null) {
+      context.addIssue({
+        code: "custom",
+        message: "Incomplete episode pages require a continuation cursor",
+        path: ["nextCursor"],
+      });
+    }
+    const identities = new Set<string>();
+    page.episodes.forEach((episode, index) => {
+      if (identities.has(episode.episodeKey)) {
+        context.addIssue({
+          code: "custom",
+          message: "Episode page identities must be unique",
+          path: ["episodes", index, "episodeKey"],
+        });
+      }
+      identities.add(episode.episodeKey);
+    });
+  });
 
 export const WatchProgressAckSchema = z
   .strictObject({
@@ -542,6 +675,10 @@ export type WatchHistoryLatestActivity = z.infer<
 >;
 export type WatchHistoryItem = z.infer<typeof WatchHistoryItemSchema>;
 export type WatchHistoryResponse = z.infer<typeof WatchHistoryResponseSchema>;
+export type WatchHistoryEpisodePage = z.infer<typeof WatchHistoryEpisodePageSchema>;
+export type WatchHistoryTitleEpisodesResponse = z.infer<
+  typeof WatchHistoryTitleEpisodesResponseSchema
+>;
 export type WatchProgressAck = z.infer<typeof WatchProgressAckSchema>;
 export type WatchHistoryPreferences = z.infer<typeof WatchHistoryPreferencesSchema>;
 export type WatchHistoryPreferencesUpdate = z.infer<

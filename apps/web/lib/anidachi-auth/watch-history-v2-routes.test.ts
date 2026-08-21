@@ -60,6 +60,17 @@ function dependencies(overrides: Partial<WatchHistoryV2RouteDependencies> = {}) 
       items: [],
       nextCursor: null,
     }),
+    listTitleEpisodes: async () => ({
+      meta: { serverTime: NOW, schemaVersion: 2 as const, ownerUserId: USER_ID, accountGeneration: 1 },
+      generatedAt: NOW,
+      provider: "crunchyroll" as const,
+      titleKey: "series-one",
+      observedEpisodeCount: 0,
+      completedEpisodeCount: 0,
+      episodes: [],
+      complete: true,
+      nextCursor: null,
+    }),
     applyProgress: async () => ({
       meta: { serverTime: NOW, schemaVersion: 2 as const, ownerUserId: USER_ID, accountGeneration: 1 },
       schemaVersion: 2 as const,
@@ -123,6 +134,7 @@ test("every v2 route fails closed when cookie and bearer authentication are inva
   );
   const responses = await Promise.all([
     routes.getHistory(request("/api/watch-history/v2")),
+    routes.getTitleEpisodes(request("/api/watch-history/v2/title-episodes?provider=crunchyroll&titleKey=series-one")),
     routes.postProgress(request("/api/watch-history/v2/progress", { method: "POST", body: "{}" })),
     routes.getPreferences(request("/api/watch-history/v2/preferences")),
     routes.patchPreferences(request("/api/watch-history/v2/preferences", { method: "PATCH", body: "{}" })),
@@ -423,6 +435,73 @@ test("history rejects unknown and duplicate query parameters", async () => {
     assert.equal(response.status, 400);
     assert.equal((await response.json()).code, "INVALID_QUERY");
   }
+});
+
+test("title episode detail route authenticates ownership and parses an exact bounded query", async () => {
+  const received: unknown[] = [];
+  const routes = createWatchHistoryV2RouteHandlers(dependencies({
+    listTitleEpisodes: async (params) => {
+      received.push(params);
+      return {
+        meta: {
+          serverTime: NOW,
+          schemaVersion: 2,
+          ownerUserId: USER_ID,
+          accountGeneration: 1,
+        },
+        generatedAt: NOW,
+        provider: "crunchyroll",
+        titleKey: "series-one",
+        observedEpisodeCount: 1,
+        completedEpisodeCount: 0,
+        episodes: [],
+        complete: true,
+        nextCursor: null,
+      };
+    },
+  }));
+  const response = await routes.getTitleEpisodes(request(
+    "/api/watch-history/v2/title-episodes?provider=crunchyroll&titleKey=series-one&limit=50&cursor=episode_cursor",
+  ));
+  assert.equal(response.status, 200);
+  assert.deepEqual(received, [{
+    userId: USER_ID,
+    provider: "crunchyroll",
+    titleKey: "series-one",
+    limit: 50,
+    cursor: "episode_cursor",
+  }]);
+
+  for (const query of [
+    "provider=crunchyroll&titleKey=series-one&limit=51",
+    "provider=crunchyroll&titleKey=series-one&unknown=1",
+    "provider=crunchyroll&provider=youtube&titleKey=series-one",
+    "provider=netflix&titleKey=series-one",
+    "provider=crunchyroll&titleKey=",
+  ]) {
+    const invalidResponse: Response = await routes.getTitleEpisodes(request(
+      `/api/watch-history/v2/title-episodes?${query}`,
+    ));
+    assert.equal(invalidResponse.status, 400);
+    assert.equal((await invalidResponse.json()).code, "INVALID_QUERY");
+  }
+  assert.equal(received.length, 1);
+});
+
+test("title episode detail route fails closed before service work when unauthenticated", async () => {
+  let calls = 0;
+  const routes = createWatchHistoryV2RouteHandlers(dependencies({
+    getSession: async () => null,
+    listTitleEpisodes: async () => {
+      calls += 1;
+      throw new Error("must not run");
+    },
+  }));
+  const response = await routes.getTitleEpisodes(request(
+    "/api/watch-history/v2/title-episodes?provider=crunchyroll&titleKey=series-one",
+  ));
+  assert.equal(response.status, 401);
+  assert.equal(calls, 0);
 });
 
 test("preferences expose only the YouTube flag and reject unknown fields", async () => {
