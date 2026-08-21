@@ -4,6 +4,7 @@ import { getStoredAuthTokens } from "./auth-tokens";
 export const PRIVILEGED_OVERLAY_INTENT_MESSAGE_TYPE = "ANIDACHI_PRIVILEGED_OVERLAY_INTENT";
 
 const PRIVILEGED_ROOM_AUTHORITY_STORAGE_KEY_PREFIX = "anidachi:privileged-room-authority:v1:tab:";
+const authorityStorageMutationQueuesByTab = new Map<number, Promise<void>>();
 
 export type PrivilegedOverlayAction = "sign-out" | "end-room" | "quota-end-room";
 export type PrivilegedOverlayRole = "host" | "member" | null;
@@ -113,17 +114,20 @@ export async function issuePrivilegedRoomAuthority(
 
   const storage = dependencies.sessionStorage ?? getSessionStorage();
   const key = authorityStorageKey(tabId);
-  const existing = parsePrivilegedOverlayContext((await storage.get(key))[key]);
-  if (dependencies.isAuthorityRequestCurrent?.() === false) return null;
-  const authorityGeneration = (existing?.authorityGeneration ?? 0) + 1;
-  const authority: PrivilegedOverlayContext = {
-    accountUserId: claims.sub,
-    roomId: claims.roomId,
-    role: claims.role,
-    authorityGeneration,
-  };
-  await storage.set({ [key]: authority });
-  return authority;
+  return enqueueAuthorityStorageMutation(tabId, async () => {
+    if (dependencies.isAuthorityRequestCurrent?.() === false) return null;
+    const existing = parsePrivilegedOverlayContext((await storage.get(key))[key]);
+    if (dependencies.isAuthorityRequestCurrent?.() === false) return null;
+    const authorityGeneration = (existing?.authorityGeneration ?? 0) + 1;
+    const authority: PrivilegedOverlayContext = {
+      accountUserId: claims.sub,
+      roomId: claims.roomId,
+      role: claims.role,
+      authorityGeneration,
+    };
+    await storage.set({ [key]: authority });
+    return dependencies.isAuthorityRequestCurrent?.() === false ? null : authority;
+  });
 }
 
 export async function handlePrivilegedOverlayIntentMessage(
@@ -177,7 +181,23 @@ export async function clearPrivilegedOverlayContextForTab(
 ): Promise<void> {
   if (!Number.isInteger(tabId) || tabId < 0) return;
   const storage = dependencies.sessionStorage ?? getSessionStorage();
-  await storage.remove(authorityStorageKey(tabId));
+  await enqueueAuthorityStorageMutation(tabId, () => storage.remove(authorityStorageKey(tabId)));
+}
+
+function enqueueAuthorityStorageMutation<T>(tabId: number, mutation: () => Promise<T>): Promise<T> {
+  const previous = authorityStorageMutationQueuesByTab.get(tabId) ?? Promise.resolve();
+  const result = previous.catch(() => undefined).then(mutation);
+  const tail = result.then(
+    () => undefined,
+    () => undefined,
+  );
+  authorityStorageMutationQueuesByTab.set(tabId, tail);
+  void tail.then(() => {
+    if (authorityStorageMutationQueuesByTab.get(tabId) === tail) {
+      authorityStorageMutationQueuesByTab.delete(tabId);
+    }
+  });
+  return result;
 }
 
 function isPrivilegedOverlayContext(value: unknown): value is PrivilegedOverlayContext {

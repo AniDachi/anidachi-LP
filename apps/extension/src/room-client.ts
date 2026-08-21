@@ -12,6 +12,7 @@ import { API_WS_BASE, WEB_HTTP_BASE } from "./constants";
 import { logDebug, roomEventDebugSnapshot } from "./debug-log";
 import type { RoomSendDisposition, SignalingTransportReady } from "./media-types";
 import {
+  clearPrivilegedOverlayContextForTab,
   issuePrivilegedRoomAuthority,
   type IssuedRoomAuthorityInput,
   type PrivilegedOverlayIntentDependencies,
@@ -352,6 +353,11 @@ export async function handleRoomHttpMessage(
   dependencies: RoomHttpBackgroundDependencies = {},
 ): Promise<RoomHttpMessageResponse> {
   const authorityRequest = reserveRoomAuthorityRequest(sender, dependencies.authorityRequestSequences);
+  if (authorityRequest && dependencies.issueAuthority === undefined) {
+    void clearPrivilegedOverlayContextForTab(authorityRequest.tabId, {
+      sessionStorage: dependencies.authorityDependencies?.sessionStorage,
+    }).catch(() => undefined);
+  }
   const issueAuthority = dependencies.issueAuthority ?? issuePrivilegedRoomAuthority;
   const issueCurrentAuthority = (input: IssuedRoomAuthorityInput) => {
     if (!isCurrentRoomAuthorityRequest(authorityRequest, dependencies.authorityRequestSequences)) {

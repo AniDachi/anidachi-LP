@@ -192,6 +192,63 @@ describe("background privileged room route", () => {
     expect(endRoom).toHaveBeenNthCalledWith(1, "room-new-end-room", "access-token-user-a");
     expect(endRoom).toHaveBeenNthCalledWith(2, "room-new-quota-end-room", "access-token-user-a");
   });
+
+  it("linearizes a superseding reservation with an older pending authority write", async () => {
+    vi.stubGlobal("chrome", {});
+    const background = await import("../entrypoints/background");
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    for (const outcome of ["success", "failure"] as const) {
+      const tabId = outcome === "success" ? 71 : 72;
+      const storage = createPausedFirstWriteStorage();
+      const dependencies = {
+        roomDependencies: {
+          authorityDependencies: {
+            sessionStorage: storage,
+            getStoredSession: async () => sessionFor("user-a"),
+          },
+        },
+      };
+      fetchMock
+        .mockImplementationOnce(() => Promise.resolve(roomResponse(`room-old-${outcome}`)))
+        .mockImplementationOnce(() =>
+          Promise.resolve(
+            outcome === "success"
+              ? roomResponse(`room-new-${outcome}`)
+              : new Response(JSON.stringify({ error: "new request failed" }), { status: 500 }),
+          ),
+        );
+
+      const older = background.dispatchPrivilegedRoomRuntimeMessage(
+        connectRoomHttpMessage(`room-old-${outcome}`, "access-a"),
+        { tab: { id: tabId } },
+        dependencies,
+      );
+      await storage.firstWriteStarted;
+      const newer = background.dispatchPrivilegedRoomRuntimeMessage(
+        connectRoomHttpMessage(`room-new-${outcome}`, "access-a"),
+        { tab: { id: tabId } },
+        dependencies,
+      );
+      expect(fetchMock).toHaveBeenCalledTimes(outcome === "success" ? 2 : 4);
+
+      storage.releaseFirstWrite();
+      const [oldResult, newResult] = await Promise.all([older, newer]);
+
+      expect(oldResult).toMatchObject({ ok: true, connection: { privilegedRoomAuthority: null } });
+      if (outcome === "success") {
+        expect(newResult).toMatchObject({
+          ok: true,
+          connection: { privilegedRoomAuthority: { roomId: "room-new-success", role: "host" } },
+        });
+        expect(storage.value()).toMatchObject({ roomId: "room-new-success", role: "host" });
+      } else {
+        expect(newResult).toMatchObject({ ok: false, status: 500 });
+        expect(storage.value()).toBeUndefined();
+      }
+    }
+  });
 });
 
 function sessionFor(userId: string) {
@@ -234,6 +291,38 @@ function createSessionStorage() {
       return values.has(key) ? { [key]: values.get(key) } : {};
     },
     async set(items: Record<string, unknown>) {
+      for (const [key, value] of Object.entries(items)) values.set(key, value);
+    },
+    async remove(key: string) {
+      values.delete(key);
+    },
+  };
+}
+
+function createPausedFirstWriteStorage() {
+  const values = new Map<string, unknown>();
+  let releaseFirstWrite!: () => void;
+  let signalFirstWrite!: () => void;
+  let firstWrite = true;
+  const firstWriteStarted = new Promise<void>((resolve) => {
+    signalFirstWrite = resolve;
+  });
+  const firstWriteReleased = new Promise<void>((resolve) => {
+    releaseFirstWrite = resolve;
+  });
+  return {
+    firstWriteStarted,
+    releaseFirstWrite,
+    value: () => values.values().next().value,
+    async get(key: string) {
+      return values.has(key) ? { [key]: values.get(key) } : {};
+    },
+    async set(items: Record<string, unknown>) {
+      if (firstWrite) {
+        firstWrite = false;
+        signalFirstWrite();
+        await firstWriteReleased;
+      }
       for (const [key, value] of Object.entries(items)) values.set(key, value);
     },
     async remove(key: string) {
