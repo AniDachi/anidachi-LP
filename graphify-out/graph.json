@@ -100371,8 +100371,8 @@
       "norm_label": "task 10 staging acceptance passed"
     },
     {
-      "id": "docs_current_development_state_task_9_runtime_migration_on_staging_acceptance_pending",
-      "label": "Task 9 staging runtime and migration acceptance pending",
+      "id": "docs_current_development_state_task_9_integrated_expiry_replay_acceptance_pending",
+      "label": "Task 9 integrated expiry/replay acceptance pending",
       "file_type": "concept",
       "source_file": "docs/current-development-state.md",
       "source_location": null,
@@ -100383,7 +100383,7 @@
       "summary": "Task 9 runtime and migration are on staging, but integrated expiry/replay acceptance remains pending.",
       "community": 81,
       "community_name": "Task 10 reviewed admission amendment",
-      "norm_label": "task 9 staging runtime and migration acceptance pending"
+      "norm_label": "task 9 integrated expiry/replay acceptance pending"
     },
     {
       "id": "docs_current_development_state_task_11_integrated_wave_3_matrix_pending",
@@ -100416,8 +100416,8 @@
       "norm_label": "wave 3 stop open"
     },
     {
-      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_9_staging_runtime_migration_acceptance_pending",
-      "label": "Task 9 staging runtime and migration acceptance pending",
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_9_integrated_expiry_replay_acceptance_pending",
+      "label": "Task 9 integrated expiry/replay acceptance pending",
       "file_type": "concept",
       "source_file": "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md",
       "source_location": null,
@@ -100428,7 +100428,7 @@
       "summary": "Task 9 runtime and migration are on staging, but integrated expiry/replay acceptance remains pending.",
       "community": 81,
       "community_name": "Task 10 reviewed admission amendment",
-      "norm_label": "task 9 staging runtime and migration acceptance pending"
+      "norm_label": "task 9 integrated expiry/replay acceptance pending"
     },
     {
       "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_10_staging_acceptance_passed",
@@ -319574,7 +319574,7 @@
     },
     {
       "source": "docs_current_development_state_current_development_state",
-      "target": "docs_current_development_state_task_9_runtime_migration_on_staging_acceptance_pending",
+      "target": "docs_current_development_state_task_9_integrated_expiry_replay_acceptance_pending",
       "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1,
@@ -319604,7 +319604,7 @@
     },
     {
       "source": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_readiness_plan",
-      "target": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_9_staging_runtime_migration_acceptance_pending",
+      "target": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_9_integrated_expiry_replay_acceptance_pending",
       "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1,
