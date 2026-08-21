@@ -5,8 +5,10 @@ staging-accepted. Wave 2 Stop is closed, and Wave 3 may proceed from
 current staging. No security work from this wave is promoted to `main`;
 production promotion remains separate and out of scope.
 
-Wave 3 Tasks 9-10 are on staging, and Task 10's normal two-profile
-join/reconnect acceptance passed. Task 11 and the integrated Wave 3 matrix
+Wave 3 Tasks 9-11 implementation is current for staging, and Task 10's normal
+two-profile join/reconnect acceptance passed. Task 11's automated
+implementation and review are complete in this changeset, but its
+loaded-artifact Chrome/staging acceptance and the integrated Wave 3 matrix
 remain pending; the Wave 3 Stop is open.
 
 On 2026-08-20, real Google and real Discord consent/callback flows
@@ -364,8 +366,12 @@ diagnostics. Explicit support exports are short-lived and sanitized.
 The content-script overlay uses a closed shadow root as defense in depth.
 Privileged actions such as sign-out and end-room require a trusted native user
 event and a narrow background command that rechecks the current account, room,
-role, and generation before mutation. Synthetic page clicks cannot invoke the
-action. Normal player observation is not blocked by this check.
+role, and background-issued authority generation before mutation. This
+generation is established from authenticated create/connect; it is not
+caller-supplied or Worker playback state. There is no independent
+background-readable playback-generation source, and Worker playback generation
+is not end authorization. Synthetic page clicks cannot invoke the action.
+Normal player observation is not blocked by this check.
 
 ### 9. WebSocket Admission Before Allocation
 

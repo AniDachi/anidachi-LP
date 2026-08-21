@@ -11,8 +11,10 @@ staging-accepted. Wave 2 Stop is closed, and Wave 3 may proceed from
 current staging. No security work from this wave is promoted to `main`;
 production promotion remains separate and out of scope.
 
-Wave 3 Tasks 9-10 are on staging, and Task 10's normal two-profile
-join/reconnect acceptance passed. Task 11 and the integrated Wave 3 matrix
+Wave 3 Tasks 9-11 implementation is current for staging, and Task 10's normal
+two-profile join/reconnect acceptance passed. Task 11's automated
+implementation and review are complete in this changeset, but its
+loaded-artifact Chrome/staging acceptance and the integrated Wave 3 matrix
 remain pending; the Wave 3 Stop is open.
 
 On 2026-08-20, real Google and real Discord consent/callback flows
@@ -1152,6 +1154,17 @@ git commit -m "fix(api): bound room WebSocket admission"
 
 ## Task 11: Isolate Diagnostics And Privileged Overlay Actions
 
+**Status (2026-08-21): automated implementation and review complete.** Final
+local evidence: 97 files, 1,209/1,209 tests; extension check, staging build,
+staging validation, and `pnpm dev:check` passed, along with a clean task review.
+Loaded-artifact Chrome and staging acceptance remain pending.
+
+**Implementation note:** privileged-action `generation` is the background-issued
+authority generation established from authenticated create/connect. It is
+distinct from Worker playback generation: there is no independent
+background-readable playback-generation source, and playback generation is not
+end authorization. This is the approved minimal no-new-endpoint ruling.
+
 **Files:**
 
 - Modify: `apps/extension/src/debug-log.ts`
@@ -1195,12 +1208,13 @@ git commit -m "fix(extension): isolate diagnostics and privileged actions"
 
 ### Wave 3 Stop
 
-**Current stop status (2026-08-21): open.** Tasks 9-10 are on staging, and
-Task 10's normal two-profile acceptance passed. Task 11 and the integrated Wave
-3 matrix remain pending. The acceptance proves the normal two-profile
-join/reconnect path only; it does not claim two-network/TURN, production, or
-exhaustive adversarial staging traffic. Stop before history/database work if
-shared tracking regresses.
+**Current stop status (2026-08-21): open.** Tasks 9-11 implementation is
+current for staging, Task 10's normal two-profile acceptance passed, and Task
+11's automated implementation/review is complete. Task 11 loaded-artifact
+Chrome/staging acceptance and the integrated Wave 3 matrix remain pending. The
+acceptance proves the normal two-profile join/reconnect path only; it does not
+claim two-network/TURN, production, or exhaustive adversarial staging traffic.
+Stop before history/database work if shared tracking regresses.
 
 ---
 
