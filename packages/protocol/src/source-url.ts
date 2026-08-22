@@ -89,11 +89,7 @@ export function isLegacyRoomSourceFingerprintAlias(
 
   const url = new URL(value);
   if (url.hostname !== "youtu.be" || url.searchParams.get("v")) return false;
-  const videoId = canonical.source.videoFingerprint.slice("youtube|".length);
-  return (
-    url.pathname === `/${videoId}` &&
-    fingerprint === `youtube|/${videoId}`
-  );
+  return fingerprint === `youtube|${url.pathname}`;
 }
 
 export const RoomSourceDescriptorSchema = z
@@ -193,7 +189,7 @@ function youtubeVideoId(url: URL): string | null {
 
 function crunchyrollWatchPath(url: URL): string | null {
   const match = url.pathname.match(
-    /^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?watch\/([A-Za-z0-9_-]+)(?:\/([A-Za-z0-9][A-Za-z0-9-]*))?\/?$/i,
+    /^\/(?:[A-Za-z]{2}(?:-[A-Za-z]{2})?\/)?watch\/([A-Za-z0-9_-]+)(?:\/([A-Za-z0-9][A-Za-z0-9-]*))?\/?$/,
   );
   if (!match?.[1] || match[1].length > MAX_CRUNCHYROLL_EPISODE_ID_CHARS) return null;
   return `/watch/${match[1]}`;
