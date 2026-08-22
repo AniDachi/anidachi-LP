@@ -134,11 +134,13 @@ async function fetchAndReadJsonWithBoundedTimeout(
       ...init,
       signal: controller.signal,
     });
-    const body = response.ok
-      ? await readJsonResponseBody(response, (reader) => {
-        bodyReader = reader;
-      })
-      : null;
+    if (!response.ok) {
+      await response.body?.cancel().catch(() => undefined);
+      return { body: null, response };
+    }
+    const body = await readJsonResponseBody(response, (reader) => {
+      bodyReader = reader;
+    });
     return { body, response };
   })();
   try {

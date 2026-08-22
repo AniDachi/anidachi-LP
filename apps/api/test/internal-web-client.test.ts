@@ -274,6 +274,31 @@ describe("internal Web room source client", () => {
     expect(observedAbort()).toBe(true);
     expect(observedCancel()).toBe(true);
   });
+
+  it("cancels an unsuccessful response body before returning the status error", async () => {
+    let cancelled = false;
+    const fetchImplementation = vi.fn(() => Promise.resolve(new Response(
+      new ReadableStream({
+        cancel() {
+          cancelled = true;
+        },
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode('{"error":"temporary"'));
+        },
+      }),
+      { status: 503 },
+    ))) as typeof fetch;
+
+    await expect(
+      internalWebClient.notifyWebRoomSource(
+        env,
+        "room-1",
+        sourceCallback,
+        fetchImplementation,
+      ),
+    ).rejects.toThrow("503");
+    expect(cancelled).toBe(true);
+  });
 });
 
 function stallingJsonBodyFetch(): {
