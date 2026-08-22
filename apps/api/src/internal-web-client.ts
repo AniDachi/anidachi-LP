@@ -1,4 +1,9 @@
-import type { RoomUsageSummary } from "@anidachi/protocol";
+import {
+  RoomSourcePersistenceAcknowledgementSchema,
+  RoomSourcePersistenceCallbackSchema,
+  type RoomSourcePersistenceCallback,
+  type RoomUsageSummary,
+} from "@anidachi/protocol";
 import type { EndRoomCommand } from "./room-lifecycle";
 
 export interface InternalWebLifecycleEnv {
@@ -22,9 +27,6 @@ export async function notifyWebRoomEnded(
   timeoutMs = INTERNAL_WEB_CALLBACK_TIMEOUT_MS,
 ): Promise<void> {
   const config = internalWebCallbackConfig(env);
-  const boundedTimeoutMs = Number.isFinite(timeoutMs)
-    ? Math.max(1, Math.min(INTERNAL_WEB_CALLBACK_MAX_TIMEOUT_MS, Math.floor(timeoutMs)))
-    : INTERNAL_WEB_CALLBACK_TIMEOUT_MS;
   let response: Response;
   try {
     response = await fetchImplementation(
@@ -36,7 +38,7 @@ export async function notifyWebRoomEnded(
           "Content-Type": "application/json",
         },
         body: JSON.stringify(command),
-        signal: AbortSignal.timeout(boundedTimeoutMs),
+        signal: AbortSignal.timeout(boundedInternalWebCallbackTimeout(timeoutMs)),
       },
     );
   } catch {
@@ -54,6 +56,57 @@ export async function notifyWebRoomEnded(
   ) {
     throw new Error("Room lifecycle Web callback returned an invalid acknowledgement");
   }
+}
+
+export async function notifyWebRoomSource(
+  env: InternalWebLifecycleEnv,
+  roomId: string,
+  callback: RoomSourcePersistenceCallback,
+  fetchImplementation: typeof fetch = fetch,
+  timeoutMs = INTERNAL_WEB_CALLBACK_TIMEOUT_MS,
+): Promise<void> {
+  const config = internalWebCallbackConfig(env);
+  const parsedCallback = RoomSourcePersistenceCallbackSchema.safeParse(callback);
+  if (!parsedCallback.success || parsedCallback.data.roomId !== roomId) {
+    throw new Error("Room source Web callback received an invalid callback");
+  }
+
+  let response: Response;
+  try {
+    response = await fetchImplementation(
+      new URL(`/api/internal/rooms/${encodeURIComponent(roomId)}/source`, config.baseUrl),
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${config.secret}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(parsedCallback.data),
+        signal: AbortSignal.timeout(boundedInternalWebCallbackTimeout(timeoutMs)),
+      },
+    );
+  } catch {
+    throw new Error("Room source Web callback request failed");
+  }
+  if (!response.ok) {
+    throw new Error(`Room source Web callback failed (${response.status})`);
+  }
+
+  const acknowledgement = RoomSourcePersistenceAcknowledgementSchema.safeParse(
+    await response.json().catch(() => null),
+  );
+  if (
+    !acknowledgement.success ||
+    acknowledgement.data.sourceGeneration !== parsedCallback.data.sourceGeneration
+  ) {
+    throw new Error("Room source Web callback returned an invalid acknowledgement");
+  }
+}
+
+function boundedInternalWebCallbackTimeout(timeoutMs: number): number {
+  return Number.isFinite(timeoutMs)
+    ? Math.max(1, Math.min(INTERNAL_WEB_CALLBACK_MAX_TIMEOUT_MS, Math.floor(timeoutMs)))
+    : INTERNAL_WEB_CALLBACK_TIMEOUT_MS;
 }
 
 function internalWebCallbackConfig(env: InternalWebLifecycleEnv): {

@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import type { RoomSourcePersistenceCallback } from "@anidachi/protocol";
 import * as internalWebClient from "../src/internal-web-client";
 
 const clientApi = internalWebClient as typeof internalWebClient & {
@@ -24,6 +25,17 @@ const command = {
   eventId: `empty_timeout:${"a".repeat(64)}`,
   reason: "empty_timeout" as const,
   usage: { day: "2026-07-12", seconds: 125 },
+};
+
+const sourceCallback: RoomSourcePersistenceCallback = {
+  roomId: "room-1",
+  sourceGeneration: 2,
+  source: {
+    provider: "youtube",
+    sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    canonicalUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    videoFingerprint: "youtube|dQw4w9WgXcQ",
+  },
 };
 
 describe("internal Web room lifecycle client", () => {
@@ -127,5 +139,112 @@ describe("internal Web room lifecycle client", () => {
         async () => Response.json({ ok: true, usageFinalized: true }),
       ),
     ).resolves.toBeUndefined();
+  });
+});
+
+describe("internal Web room source client", () => {
+  const env = {
+    ANIDACHI_INTERNAL_API_SECRET: "secret",
+    ANIDACHI_WEB_INTERNAL_BASE_URL: "https://web.internal",
+  };
+
+  it("posts the exact shared callback with bearer auth to the encoded room source endpoint", async () => {
+    const fetchImplementation = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json({ ok: true, outcome: "persisted", sourceGeneration: 2 }),
+    );
+
+    await internalWebClient.notifyWebRoomSource(
+      env,
+      "room 1",
+      { ...sourceCallback, roomId: "room 1" },
+      fetchImplementation,
+    );
+
+    const [input, init] = fetchImplementation.mock.calls[0] ?? [];
+    expect(String(input)).toBe("https://web.internal/api/internal/rooms/room%201/source");
+    expect(init?.method).toBe("POST");
+    expect(new Headers(init?.headers)).toEqual(
+      new Headers({
+        Authorization: "Bearer secret",
+        "Content-Type": "application/json",
+      }),
+    );
+    expect(init?.body).toBe(JSON.stringify({ ...sourceCallback, roomId: "room 1" }));
+  });
+
+  it("validates the exact callback schema before external I/O", async () => {
+    const fetchImplementation = vi.fn<typeof fetch>();
+
+    await expect(
+      internalWebClient.notifyWebRoomSource(
+        env,
+        "room-1",
+        { ...sourceCallback, extra: true } as RoomSourcePersistenceCallback,
+        fetchImplementation,
+      ),
+    ).rejects.toThrow("invalid callback");
+    await expect(
+      internalWebClient.notifyWebRoomSource(
+        env,
+        "other-room",
+        sourceCallback,
+        fetchImplementation,
+      ),
+    ).rejects.toThrow("invalid callback");
+    expect(fetchImplementation).not.toHaveBeenCalled();
+  });
+
+  it("accepts only an exact shared acknowledgement for the attempted generation", async () => {
+    for (const acknowledgement of [
+      null,
+      { ok: true, outcome: "persisted" },
+      { ok: true, outcome: "persisted", sourceGeneration: 1 },
+      { ok: true, outcome: "persisted", sourceGeneration: 2, extra: true },
+      { ok: true, outcome: "conflict", sourceGeneration: 2 },
+    ]) {
+      await expect(
+        internalWebClient.notifyWebRoomSource(
+          env,
+          "room-1",
+          sourceCallback,
+          async () => Response.json(acknowledgement),
+        ),
+      ).rejects.toThrow("invalid acknowledgement");
+    }
+
+    await expect(
+      internalWebClient.notifyWebRoomSource(
+        env,
+        "room-1",
+        sourceCallback,
+        async () => Response.json({ ok: true, outcome: "stale", sourceGeneration: 2 }),
+      ),
+    ).resolves.toBeUndefined();
+  });
+
+  it("reuses safe configuration, bounded timeout, and stable transport failures", async () => {
+    const fetchImplementation = vi.fn<typeof fetch>();
+    await expect(
+      internalWebClient.notifyWebRoomSource({}, "room-1", sourceCallback, fetchImplementation),
+    ).rejects.toThrow("not configured");
+    expect(fetchImplementation).not.toHaveBeenCalled();
+
+    const failedFetch = vi.fn<typeof fetch>().mockResolvedValue(new Response(null, { status: 503 }));
+    await expect(
+      internalWebClient.notifyWebRoomSource(env, "room-1", sourceCallback, failedFetch),
+    ).rejects.toThrow("503");
+
+    let observedAbort = false;
+    const hangingFetch = vi.fn((_input: RequestInfo | URL, init?: RequestInit) =>
+      new Promise<Response>((_resolve, reject) => {
+        init?.signal?.addEventListener("abort", () => {
+          observedAbort = true;
+          reject(init.signal?.reason ?? new Error("aborted"));
+        }, { once: true });
+      }));
+    await expect(
+      internalWebClient.notifyWebRoomSource(env, "room-1", sourceCallback, hangingFetch, 5),
+    ).rejects.toThrow("request failed");
+    expect(observedAbort).toBe(true);
   });
 });
