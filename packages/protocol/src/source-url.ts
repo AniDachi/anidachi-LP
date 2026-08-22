@@ -80,6 +80,38 @@ export function canonicalizeRoomSourceUrl(
   return { ok: true, source };
 }
 
+export function isLegacyRoomSourceFingerprintAlias(
+  value: string,
+  fingerprint: string,
+): boolean {
+  const canonical = canonicalizeRoomSourceUrl(value);
+  if (!canonical.ok || canonical.source.provider !== "youtube") return false;
+
+  const url = new URL(value);
+  if (url.hostname !== "youtu.be" || url.searchParams.get("v")) return false;
+  return fingerprint === currentRuntimeYouTubeFingerprint(url.pathname);
+}
+
+function currentRuntimeYouTubeFingerprint(pathname: string): string {
+  const rawFingerprint = `youtube|${pathname}`;
+  return rawFingerprint.length <= MAX_VIDEO_FINGERPRINT_CHARS
+    ? rawFingerprint
+    : `youtube|hash:${stableFingerprintHash(rawFingerprint)}`;
+}
+
+function stableFingerprintHash(value: string): string {
+  let hash = BigInt("0xcbf29ce484222325");
+  const prime = BigInt("0x100000001b3");
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    hash ^= BigInt(code & 0xff);
+    hash = BigInt.asUintN(64, hash * prime);
+    hash ^= BigInt(code >>> 8);
+    hash = BigInt.asUintN(64, hash * prime);
+  }
+  return hash.toString(36);
+}
+
 export const RoomSourceDescriptorSchema = z
   .strictObject({
     provider: RoomSourceProviderSchema,
@@ -176,7 +208,9 @@ function youtubeVideoId(url: URL): string | null {
 }
 
 function crunchyrollWatchPath(url: URL): string | null {
-  const match = url.pathname.match(/^\/watch\/([A-Za-z0-9_-]+)(?:\/([A-Za-z0-9][A-Za-z0-9-]*))?\/?$/);
+  const match = url.pathname.match(
+    /^\/(?:[A-Za-z]{2}(?:-[A-Za-z]{2})?\/)?watch\/([A-Za-z0-9_-]+)(?:\/([A-Za-z0-9][A-Za-z0-9-]*))?\/?$/,
+  );
   if (!match?.[1] || match[1].length > MAX_CRUNCHYROLL_EPISODE_ID_CHARS) return null;
   return `/watch/${match[1]}`;
 }

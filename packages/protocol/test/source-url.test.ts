@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   canonicalizeRoomSourceUrl,
+  isLegacyRoomSourceFingerprintAlias,
   RoomSourceDescriptorSchema,
 } from "../src/source-url";
 import { MAX_URL_CHARS, MAX_VIDEO_FINGERPRINT_CHARS } from "../src/limits";
@@ -48,6 +49,22 @@ describe("canonical room source URLs", () => {
       "https://www.crunchyroll.com/watch/GOLD22222",
       "https://www.crunchyroll.com/watch/GOLD22222",
     ],
+    [
+      "https://www.crunchyroll.com/ru/watch/GOLD22222/episode-two",
+      "https://www.crunchyroll.com/watch/GOLD22222",
+    ],
+    [
+      "https://www.crunchyroll.com/en-US/watch/GOLD22222/episode-two",
+      "https://www.crunchyroll.com/watch/GOLD22222",
+    ],
+    [
+      "https://www.crunchyroll.com/en-gb/watch/GOLD22222/episode-two",
+      "https://www.crunchyroll.com/watch/GOLD22222",
+    ],
+    [
+      "https://www.crunchyroll.com/EN-us/watch/GOLD22222/episode-two",
+      "https://www.crunchyroll.com/watch/GOLD22222",
+    ],
   ])("canonicalizes the accepted Crunchyroll watch destination %s", (input, canonicalUrl) => {
     expect(canonicalizeRoomSourceUrl(input)).toEqual({
       ok: true,
@@ -93,6 +110,12 @@ describe("canonical room source URLs", () => {
     ["https://evil.crunchyroll.com/watch/GOLD22222/episode-two", "UNSUPPORTED_PROVIDER"],
     ["https://www.crunchyroll.com.evil.test/watch/GOLD22222/episode-two", "UNSUPPORTED_PROVIDER"],
     ["https://www.crunchyroll.com/browse/GOLD22222", "UNSUPPORTED_ROUTE"],
+    ["https://www.crunchyroll.com/rus/watch/GOLD22222", "UNSUPPORTED_ROUTE"],
+    ["https://www.crunchyroll.com/en_US/watch/GOLD22222", "UNSUPPORTED_ROUTE"],
+    ["https://www.crunchyroll.com/en-US.evil/watch/GOLD22222", "UNSUPPORTED_ROUTE"],
+    ["https://www.crunchyroll.com/ru/watch/GOLD22222/episode/extra", "UNSUPPORTED_ROUTE"],
+    ["https://www.crunchyroll.com/WATCH/GOLD22222", "UNSUPPORTED_ROUTE"],
+    ["https://www.crunchyroll.com/EN-us/WATCH/GOLD22222", "UNSUPPORTED_ROUTE"],
     ["https://user:pass@www.youtube.com/watch?v=dQw4w9WgXcQ", "CREDENTIALS_FORBIDDEN"],
     ["http://www.crunchyroll.com/watch/GOLD22222/episode-two", "INSECURE_URL"],
     [" https://www.youtube.com/watch?v=dQw4w9WgXcQ ", "INVALID_URL"],
@@ -203,5 +226,66 @@ describe("canonical room source URLs", () => {
       videoFingerprint: "youtube|another-video",
     })).toThrow();
     expect(() => RoomSourceDescriptorSchema.parse({ ...canonical, extra: true })).toThrow();
+  });
+});
+
+describe("current YouTube fingerprint compatibility", () => {
+  // Break caught: normalizing URL.pathname would reject fingerprints that the
+  // current adapter emits literally for accepted youtu.be watch URLs.
+  it.each([
+    ["https://youtu.be/dQw4w9WgXcQ", "youtube|/dQw4w9WgXcQ"],
+    ["https://youtu.be/dQw4w9WgXcQ/", "youtube|/dQw4w9WgXcQ/"],
+    ["https://youtu.be/dQw4w9WgXcQ/?v=", "youtube|/dQw4w9WgXcQ/"],
+    ["https://youtu.be//dQw4w9WgXcQ", "youtube|//dQw4w9WgXcQ"],
+    ["https://youtu.be/dQw4w9WgXcQ//", "youtube|/dQw4w9WgXcQ//"],
+    ["https://youtu.be//dQw4w9WgXcQ//", "youtube|//dQw4w9WgXcQ//"],
+  ])("accepts the exact current youtu.be pathname fingerprint for %s", (url, fingerprint) => {
+    expect(isLegacyRoomSourceFingerprintAlias(url, fingerprint)).toBe(true);
+  });
+
+  it("keeps the exact pathname at the fingerprint bound and hashes only above it", () => {
+    const videoId = "dQw4w9WgXcQ";
+    const atBoundPath = `/${videoId}${"/".repeat(380)}`;
+    const overBoundPath = `/${videoId}${"/".repeat(381)}`;
+
+    expect(`youtube|${atBoundPath}`).toHaveLength(MAX_VIDEO_FINGERPRINT_CHARS);
+    expect(
+      isLegacyRoomSourceFingerprintAlias(
+        `https://youtu.be${atBoundPath}`,
+        `youtube|${atBoundPath}`,
+      ),
+    ).toBe(true);
+    expect(
+      isLegacyRoomSourceFingerprintAlias(
+        `https://youtu.be${overBoundPath}`,
+        "youtube|hash:2dk5r5bxqvoxi",
+      ),
+    ).toBe(true);
+  });
+
+  it.each([
+    ["https://youtu.be/dQw4w9WgXcQ/?v=other-video", "youtube|/dQw4w9WgXcQ/"],
+    ["https://youtu.be/dQw4w9WgXcQ/", "youtube|/dQw4w9WgXcQ"],
+    ["https://youtu.be//dQw4w9WgXcQ", "youtube|/dQw4w9WgXcQ"],
+    ["https://www.youtube.com/watch?v=dQw4w9WgXcQ", "youtube|/watch"],
+  ])("rejects a non-runtime alias for %s", (url, fingerprint) => {
+    expect(isLegacyRoomSourceFingerprintAlias(url, fingerprint)).toBe(false);
+  });
+
+  it("rejects a wrong long-path hash and the right hash when a truthy v wins", () => {
+    const overBoundPath = `/dQw4w9WgXcQ${"/".repeat(381)}`;
+
+    expect(
+      isLegacyRoomSourceFingerprintAlias(
+        `https://youtu.be${overBoundPath}`,
+        "youtube|hash:wrong",
+      ),
+    ).toBe(false);
+    expect(
+      isLegacyRoomSourceFingerprintAlias(
+        `https://youtu.be${overBoundPath}?v=other-video`,
+        "youtube|hash:2dk5r5bxqvoxi",
+      ),
+    ).toBe(false);
   });
 });

@@ -184,6 +184,9 @@ function canBearerBypassStagingGate(pathname: string, method: string): boolean {
   if (/^\/api\/internal\/rooms\/[^/]+\/ended$/.test(pathname) && method === "POST") {
     return true;
   }
+  if (/^\/api\/internal\/rooms\/[^/]+\/source$/.test(pathname) && method === "POST") {
+    return true;
+  }
   return false;
 }
 

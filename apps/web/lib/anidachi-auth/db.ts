@@ -1,6 +1,17 @@
-import type { RoomUsageSummary } from "@anidachi/protocol";
+import type {
+  RoomSourcePersistenceAcknowledgement,
+  RoomSourcePersistenceCallback,
+  RoomSourceProvider,
+  RoomUsageSummary,
+} from "@anidachi/protocol";
 import { createClient } from "@supabase/supabase-js";
 import type { PlanCode, RoomCapabilities } from "./plan-entitlements";
+import {
+  parseRoomSourcePersistenceRpcResult,
+  roomSourceCreationColumns,
+  roomSourcePersistenceErrorFromDatabase,
+  roomSourcePersistenceRpcArguments,
+} from "./room-source";
 
 const UNIQUE_VIOLATION = "23505";
 
@@ -77,8 +88,10 @@ export type RoomRow = {
   host_user_id: string;
   show_id: string | null;
   episode_id: string | null;
+  source_provider: RoomSourceProvider | null;
   source_url: string | null;
   video_fingerprint: string | null;
+  source_generation: number | null;
   title: string | null;
   status: "lobby" | "live" | "ended";
   created_at: string;
@@ -497,19 +510,24 @@ export async function createRoom(params: {
   capabilities: RoomCapabilities;
   showId?: string;
   episodeId?: string;
-  sourceUrl?: string;
-  videoFingerprint?: string;
+  sourceProvider?: unknown;
+  sourceUrl?: unknown;
+  videoFingerprint?: unknown;
   title?: string;
   clientRequestId?: string;
 }): Promise<{ room: RoomRow; reused: boolean }> {
+  const sourceColumns = roomSourceCreationColumns({
+    sourceProvider: params.sourceProvider,
+    sourceUrl: params.sourceUrl,
+    videoFingerprint: params.videoFingerprint,
+  });
   const { data, error } = await db()
     .from("rooms")
     .insert({
       host_user_id: params.hostUserId,
       show_id: params.showId ?? null,
       episode_id: params.episodeId ?? null,
-      source_url: params.sourceUrl ?? null,
-      video_fingerprint: params.videoFingerprint ?? null,
+      ...sourceColumns,
       title: params.title ?? null,
       client_request_id: params.clientRequestId ?? null,
       host_connected_at: new Date().toISOString(),
@@ -533,6 +551,22 @@ export async function createRoom(params: {
   }
 
   throw new Error(`Failed to create room: ${error.message}`);
+}
+
+export async function persistRoomSource(
+  callback: RoomSourcePersistenceCallback,
+): Promise<RoomSourcePersistenceAcknowledgement> {
+  const result = await db().rpc(
+    "persist_room_source_v1",
+    roomSourcePersistenceRpcArguments(callback),
+  );
+  if (result.error) {
+    throw roomSourcePersistenceErrorFromDatabase(result.error);
+  }
+  return parseRoomSourcePersistenceRpcResult(
+    result.data,
+    callback.sourceGeneration,
+  );
 }
 
 export function roomCapabilitiesFromRoom(room: RoomRow): RoomCapabilities {
