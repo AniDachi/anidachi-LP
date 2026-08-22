@@ -3,8 +3,6 @@ begin;
 -- Task 4 caps video fingerprints at 400 characters. The canonical identity
 -- bounds below subtract the fixed `youtube|` and `crunchyroll|watch/` prefixes.
 -- SQL validates only those already-canonical forms; it does not normalize URLs.
--- Add the checks without scanning under the ALTER TABLE access-exclusive lock;
--- the explicit validation passes below use PostgreSQL's lighter validation lock.
 alter table public.rooms
   add column source_provider text,
   add column source_generation bigint,
@@ -26,7 +24,7 @@ alter table public.rooms
         and video_fingerprint = pg_catalog.btrim(video_fingerprint)
         and pg_catalog.char_length(video_fingerprint) between 1 and 400
       )
-    ) not valid,
+    ),
   add constraint rooms_source_url_canonical_check
     check (
       source_provider is null
@@ -60,13 +58,7 @@ alter table public.rooms
           '^https://www[.]crunchyroll[.]com/watch/([A-Za-z0-9_-]+)$'
         )
       )
-    ) not valid;
-
-alter table public.rooms
-  validate constraint rooms_source_tuple_check;
-
-alter table public.rooms
-  validate constraint rooms_source_url_canonical_check;
+    );
 
 create function public.persist_room_source_v1(
   p_room_id text,
