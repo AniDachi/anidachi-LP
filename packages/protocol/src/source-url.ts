@@ -80,6 +80,22 @@ export function canonicalizeRoomSourceUrl(
   return { ok: true, source };
 }
 
+export function isLegacyRoomSourceFingerprintAlias(
+  value: string,
+  fingerprint: string,
+): boolean {
+  const canonical = canonicalizeRoomSourceUrl(value);
+  if (!canonical.ok || canonical.source.provider !== "youtube") return false;
+
+  const url = new URL(value);
+  if (url.hostname !== "youtu.be" || url.searchParams.get("v")) return false;
+  const videoId = canonical.source.videoFingerprint.slice("youtube|".length);
+  return (
+    url.pathname === `/${videoId}` &&
+    fingerprint === `youtube|/${videoId}`
+  );
+}
+
 export const RoomSourceDescriptorSchema = z
   .strictObject({
     provider: RoomSourceProviderSchema,
@@ -176,7 +192,9 @@ function youtubeVideoId(url: URL): string | null {
 }
 
 function crunchyrollWatchPath(url: URL): string | null {
-  const match = url.pathname.match(/^\/watch\/([A-Za-z0-9_-]+)(?:\/([A-Za-z0-9][A-Za-z0-9-]*))?\/?$/);
+  const match = url.pathname.match(
+    /^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?watch\/([A-Za-z0-9_-]+)(?:\/([A-Za-z0-9][A-Za-z0-9-]*))?\/?$/i,
+  );
   if (!match?.[1] || match[1].length > MAX_CRUNCHYROLL_EPISODE_ID_CHARS) return null;
   return `/watch/${match[1]}`;
 }

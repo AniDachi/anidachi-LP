@@ -8,6 +8,7 @@ import {
 	parseRoomSourcePersistenceRpcResult,
 	RoomSourcePersistenceError,
 	roomSourceCreationColumns,
+	roomSourcePersistenceErrorFromDatabase,
 	roomSourcePersistenceRpcArguments,
 } from "./room-source";
 
@@ -56,6 +57,21 @@ test("creation derives the complete descriptor for existing URL-only Watch Histo
 	);
 });
 
+test("creation accepts only the current youtu.be slash-prefixed fingerprint alias", () => {
+	assert.deepEqual(
+		roomSourceCreationColumns({
+			sourceUrl: "https://youtu.be/dQw4w9WgXcQ?si=current-runtime",
+			videoFingerprint: "youtube|/dQw4w9WgXcQ",
+		}),
+		{
+			source_provider: "youtube",
+			source_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+			video_fingerprint: "youtube|dQw4w9WgXcQ",
+			source_generation: 1,
+		},
+	);
+});
+
 test("creation preserves an explicitly empty source as a null tuple", () => {
 	assert.deepEqual(roomSourceCreationColumns({}), {
 		source_provider: null,
@@ -80,6 +96,18 @@ test("creation rejects partial, unsupported, over-bound, and mismatched source i
 		{
 			sourceUrl: youtubeSource.sourceUrl,
 			videoFingerprint: "youtube|different",
+		},
+		{
+			sourceUrl: youtubeSource.sourceUrl,
+			videoFingerprint: "youtube|/dQw4w9WgXcQ",
+		},
+		{
+			sourceUrl: "https://youtu.be/dQw4w9WgXcQ",
+			videoFingerprint: "youtube|/different",
+		},
+		{
+			sourceUrl: "https://youtu.be/dQw4w9WgXcQ?v=another-video",
+			videoFingerprint: "youtube|/dQw4w9WgXcQ",
 		},
 		{ sourceUrl: null },
 	];
@@ -111,6 +139,18 @@ test("legacy supported rows canonicalize read-only without inventing a generatio
 			source_provider: null,
 			source_url: "https://youtu.be/dQw4w9WgXcQ?si=legacy",
 			video_fingerprint: null,
+			source_generation: null,
+		}),
+		{ source: youtubeSource, sourceGeneration: null, legacy: true },
+	);
+});
+
+test("legacy youtu.be rows accept the matching current-runtime fingerprint alias read-only", () => {
+	assert.deepEqual(
+		deriveDurableRoomSource({
+			source_provider: null,
+			source_url: "https://youtu.be/dQw4w9WgXcQ",
+			video_fingerprint: "youtube|/dQw4w9WgXcQ",
 			source_generation: null,
 		}),
 		{ source: youtubeSource, sourceGeneration: null, legacy: true },
@@ -231,6 +271,25 @@ test("RPC result parsing rejects extra rows, extra fields, and wrong generations
 				error instanceof RoomSourcePersistenceError &&
 				error.kind === "unexpected",
 		);
+	}
+});
+
+test("database SQLSTATEs map to the stable room-source failure kinds", () => {
+	const scenarios = [
+		["22023", "invalid"],
+		["P0002", "not-found"],
+		["55000", "ended"],
+		["23514", "conflict"],
+		["XX000", "unexpected"],
+	] as const;
+
+	for (const [code, kind] of scenarios) {
+		const error = roomSourcePersistenceErrorFromDatabase({
+			code,
+			message: "private database detail",
+		});
+		assert.equal(error.kind, kind);
+		assert.equal(error.message.includes("private database detail"), false);
 	}
 });
 

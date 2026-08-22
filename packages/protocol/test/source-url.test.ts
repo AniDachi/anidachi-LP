@@ -48,6 +48,22 @@ describe("canonical room source URLs", () => {
       "https://www.crunchyroll.com/watch/GOLD22222",
       "https://www.crunchyroll.com/watch/GOLD22222",
     ],
+    [
+      "https://www.crunchyroll.com/ru/watch/GOLD22222/episode-two",
+      "https://www.crunchyroll.com/watch/GOLD22222",
+    ],
+    [
+      "https://www.crunchyroll.com/en-US/watch/GOLD22222/episode-two",
+      "https://www.crunchyroll.com/watch/GOLD22222",
+    ],
+    [
+      "https://www.crunchyroll.com/en-gb/watch/GOLD22222/episode-two",
+      "https://www.crunchyroll.com/watch/GOLD22222",
+    ],
+    [
+      "https://www.crunchyroll.com/EN-us/watch/GOLD22222/episode-two",
+      "https://www.crunchyroll.com/watch/GOLD22222",
+    ],
   ])("canonicalizes the accepted Crunchyroll watch destination %s", (input, canonicalUrl) => {
     expect(canonicalizeRoomSourceUrl(input)).toEqual({
       ok: true,
@@ -93,6 +109,10 @@ describe("canonical room source URLs", () => {
     ["https://evil.crunchyroll.com/watch/GOLD22222/episode-two", "UNSUPPORTED_PROVIDER"],
     ["https://www.crunchyroll.com.evil.test/watch/GOLD22222/episode-two", "UNSUPPORTED_PROVIDER"],
     ["https://www.crunchyroll.com/browse/GOLD22222", "UNSUPPORTED_ROUTE"],
+    ["https://www.crunchyroll.com/rus/watch/GOLD22222", "UNSUPPORTED_ROUTE"],
+    ["https://www.crunchyroll.com/en_US/watch/GOLD22222", "UNSUPPORTED_ROUTE"],
+    ["https://www.crunchyroll.com/en-US.evil/watch/GOLD22222", "UNSUPPORTED_ROUTE"],
+    ["https://www.crunchyroll.com/ru/watch/GOLD22222/episode/extra", "UNSUPPORTED_ROUTE"],
     ["https://user:pass@www.youtube.com/watch?v=dQw4w9WgXcQ", "CREDENTIALS_FORBIDDEN"],
     ["http://www.crunchyroll.com/watch/GOLD22222/episode-two", "INSECURE_URL"],
     [" https://www.youtube.com/watch?v=dQw4w9WgXcQ ", "INVALID_URL"],

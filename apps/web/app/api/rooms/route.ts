@@ -4,6 +4,7 @@ import { createRoom, getUserById } from "@/lib/anidachi-auth/db";
 import { getExtensionSessionFromAuthorization } from "@/lib/anidachi-auth/extension-session";
 import { signRoomToken } from "@/lib/anidachi-auth/jwt";
 import { roomCapabilitiesForPlan } from "@/lib/anidachi-auth/plan-entitlements";
+import { handleRoomCreateRequestBody } from "@/lib/anidachi-auth/room-create";
 import {
   getHostQuotaView,
   quotaExhaustedResponseBody,
@@ -13,16 +14,8 @@ import {
   canStartHostSession,
   hostRoomTokenTtlSeconds,
 } from "@/lib/room-quota";
-import { RoomSourcePersistenceError } from "@/lib/anidachi-auth/room-source";
 
 export const dynamic = "force-dynamic";
-
-function cleanString(value: unknown, maxLength: number): string | undefined {
-  if (typeof value !== "string") return undefined;
-  const cleaned = value.trim();
-  if (!cleaned) return undefined;
-  return cleaned.slice(0, maxLength);
-}
 
 export async function POST(request: NextRequest) {
   const cookieSession = await getSession();
@@ -52,49 +45,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(quotaExhaustedResponseBody(quota), { status: 403 });
   }
 
-  let showId: string | undefined;
-  let episodeId: string | undefined;
-  let sourceProvider: unknown;
-  let sourceUrl: unknown;
-  let videoFingerprint: unknown;
-  let title: string | undefined;
-  let clientRequestId: string | undefined;
-  try {
-    const body = await request.json();
-    showId = cleanString(body.showId, 200);
-    episodeId = cleanString(body.episodeId, 200);
-    sourceProvider = body.sourceProvider;
-    sourceUrl = body.sourceUrl;
-    videoFingerprint = body.videoFingerprint;
-    title = cleanString(body.title, 300);
-    clientRequestId = cleanString(body.clientRequestId, 100);
-  } catch {
-    // body is optional
-  }
-
-  let created: Awaited<ReturnType<typeof createRoom>>;
-  try {
-    created = await createRoom({
+  const creation = await handleRoomCreateRequestBody({
+    readBody: () => request.text(),
+    create: (input) => createRoom({
       hostUserId: session.userId,
       capabilities,
-      showId,
-      episodeId,
-      sourceProvider,
-      sourceUrl,
-      videoFingerprint,
-      title,
-      clientRequestId,
-    });
-  } catch (error) {
-    if (error instanceof RoomSourcePersistenceError && error.kind === "invalid") {
-      return NextResponse.json(
-        { error: "Invalid room source", code: "INVALID_ROOM_SOURCE" },
-        { status: 400 },
-      );
-    }
-    throw error;
+      ...input,
+    }),
+  });
+  if (!creation.ok) {
+    return NextResponse.json(creation.body, { status: creation.status });
   }
-  const { room, reused } = created;
+  const { room, reused } = creation.value;
   const roomToken = await signRoomToken(
     {
       sub: session.userId,

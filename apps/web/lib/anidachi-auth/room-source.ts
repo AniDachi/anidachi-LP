@@ -1,5 +1,6 @@
 import {
 	canonicalizeRoomSourceUrl,
+	isLegacyRoomSourceFingerprintAlias,
 	MAX_ROOM_ID_CHARS,
 	type RoomSourceDescriptor,
 	RoomSourceDescriptorSchema,
@@ -74,7 +75,11 @@ export function roomSourceCreationColumns(input: {
 		(input.sourceProvider !== undefined &&
 			input.sourceProvider !== canonical.source.provider) ||
 		(input.videoFingerprint !== undefined &&
-			input.videoFingerprint !== canonical.source.videoFingerprint)
+			input.videoFingerprint !== canonical.source.videoFingerprint &&
+			!isLegacyRoomSourceFingerprintAlias(
+				input.sourceUrl,
+				input.videoFingerprint,
+			))
 	) {
 		throw new RoomSourcePersistenceError(
 			"invalid",
@@ -117,7 +122,12 @@ export function deriveDurableRoomSource(
 		if (!canonical.ok) return null;
 		if (
 			row.video_fingerprint !== null &&
-			row.video_fingerprint !== canonical.source.videoFingerprint
+			row.video_fingerprint !== canonical.source.videoFingerprint &&
+			(typeof row.video_fingerprint !== "string" ||
+				!isLegacyRoomSourceFingerprintAlias(
+					row.source_url,
+					row.video_fingerprint,
+				))
 		) {
 			return null;
 		}
