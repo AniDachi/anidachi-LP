@@ -1,4 +1,7 @@
-import type { WatchSourceDescriptor } from "@anidachi/protocol";
+import {
+	canonicalizeRoomSourceUrl,
+	type WatchSourceDescriptor,
+} from "@anidachi/protocol";
 import { describe, expect, it, vi } from "vitest";
 import { createYouTubeSourceNavigator } from "../../../src/source-adapters/youtube/navigation";
 
@@ -6,6 +9,22 @@ const VIDEO_ID = "dQw4w9WgXcQ";
 const OTHER_VIDEO_ID = "aqz-KE-bpKQ";
 
 describe("YouTube source navigation", () => {
+	it("keeps every currently accepted desktop and mobile navigation identity canonicalizable", () => {
+		for (const input of [
+			`https://www.youtube.com/watch?v=${VIDEO_ID}`,
+			`https://m.youtube.com/watch?v=${VIDEO_ID}`,
+			`https://youtu.be/${VIDEO_ID}`,
+		]) {
+			expect(canonicalizeRoomSourceUrl(input)).toMatchObject({
+				ok: true,
+				source: {
+					canonicalUrl: `https://www.youtube.com/watch?v=${VIDEO_ID}`,
+					provider: "youtube",
+				},
+			});
+		}
+	});
+
 	it("returns already-current for the same canonical YouTube video", async () => {
 		const assign = vi.fn();
 		const ensureSource = createYouTubeSourceNavigator({

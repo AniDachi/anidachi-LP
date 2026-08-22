@@ -1,8 +1,26 @@
-import type { WatchSourceDescriptor } from "@anidachi/protocol";
+import {
+	canonicalizeRoomSourceUrl,
+	type WatchSourceDescriptor,
+} from "@anidachi/protocol";
 import { describe, expect, it, vi } from "vitest";
 import { createCrunchyrollSourceNavigator } from "../../../src/source-adapters/crunchyroll/navigation";
 
 describe("Crunchyroll source navigation", () => {
+	it("keeps every currently accepted watch navigation identity canonicalizable", () => {
+		for (const input of [
+			"https://www.crunchyroll.com/watch/GOLD22222/episode-two",
+			"https://crunchyroll.com/watch/GOLD22222",
+		]) {
+			expect(canonicalizeRoomSourceUrl(input)).toMatchObject({
+				ok: true,
+				source: {
+					provider: "crunchyroll",
+					videoFingerprint: "crunchyroll|watch/GOLD22222",
+				},
+			});
+		}
+	});
+
 	it("uses the MAIN-world navigation command for a different episode", async () => {
 		const assign = vi.fn();
 		const navigate = vi.fn().mockResolvedValue({ ok: true });
