@@ -11,6 +11,7 @@ import {
   MAX_VIDEO_FINGERPRINT_CHARS,
   MAX_WATCH_TITLE_CHARS,
 } from "./limits";
+import { RoomSourceDescriptorSchema } from "./source-url";
 
 const RoomIdSchema = z.string().min(1).max(MAX_ROOM_ID_CHARS);
 const ParticipantIdSchema = z.string().min(1).max(MAX_PARTICIPANT_ID_CHARS);
@@ -116,6 +117,18 @@ export const WatchSourceDescriptorSchema = z.object({
   episodeNumber: z.number().int().nonnegative().optional(),
   duration: z.number().nonnegative().optional(),
   posterUrl: UrlSchema.optional(),
+});
+
+export const RoomSourcePersistenceCallbackSchema = z.strictObject({
+  roomId: RoomIdSchema,
+  sourceGeneration: z.number().int().positive(),
+  source: RoomSourceDescriptorSchema,
+});
+
+export const RoomSourcePersistenceAcknowledgementSchema = z.strictObject({
+  ok: z.literal(true),
+  outcome: z.enum(["persisted", "stale"]),
+  sourceGeneration: z.number().int().positive(),
 });
 
 export const ReactionEventSchema = z
@@ -380,6 +393,9 @@ export type Participant = z.infer<typeof ParticipantSchema>;
 export type RoomCapabilities = z.infer<typeof RoomCapabilitiesSchema>;
 export type PlaybackState = z.infer<typeof PlaybackStateSchema>;
 export type WatchSourceDescriptor = z.infer<typeof WatchSourceDescriptorSchema>;
+export type RoomSourceDescriptor = z.infer<typeof RoomSourceDescriptorSchema>;
+export type RoomSourcePersistenceCallback = z.infer<typeof RoomSourcePersistenceCallbackSchema>;
+export type RoomSourcePersistenceAcknowledgement = z.infer<typeof RoomSourcePersistenceAcknowledgementSchema>;
 export type ReactionEvent = z.infer<typeof ReactionEventSchema>;
 export type P2PSessionDescription = z.infer<typeof P2PSessionDescriptionSchema>;
 export type P2PIceCandidate = z.infer<typeof P2PIceCandidateSchema>;

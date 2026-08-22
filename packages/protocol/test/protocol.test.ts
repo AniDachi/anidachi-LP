@@ -19,6 +19,8 @@ import {
   ReactionEventSchema,
   RoomCapabilitiesSchema,
   RoomEndReasonSchema,
+  RoomSourcePersistenceAcknowledgementSchema,
+  RoomSourcePersistenceCallbackSchema,
   ServerEventSchema,
   WatchSourceDescriptorSchema,
   createEmptyRoomEndEventId,
@@ -28,6 +30,47 @@ import {
 } from "../src";
 
 describe("room protocol schemas", () => {
+  // Break caught: an internal callback without a positive generation or a
+  // canonical source could regress durable room state.
+  it("defines strict source persistence callback and acknowledgement envelopes", () => {
+    const callback = {
+      roomId: "room-1",
+      sourceGeneration: 2,
+      source: {
+        provider: "youtube",
+        sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        canonicalUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        videoFingerprint: "youtube|dQw4w9WgXcQ",
+      },
+    } as const;
+
+    expect(RoomSourcePersistenceCallbackSchema.parse(callback)).toEqual(callback);
+    expect(() => RoomSourcePersistenceCallbackSchema.parse({ ...callback, sourceGeneration: 0 })).toThrow();
+    expect(() => RoomSourcePersistenceCallbackSchema.parse({ ...callback, extra: true })).toThrow();
+
+    expect(RoomSourcePersistenceAcknowledgementSchema.parse({
+      ok: true,
+      outcome: "persisted",
+      sourceGeneration: 2,
+    })).toEqual({ ok: true, outcome: "persisted", sourceGeneration: 2 });
+    expect(RoomSourcePersistenceAcknowledgementSchema.parse({
+      ok: true,
+      outcome: "stale",
+      sourceGeneration: 1,
+    })).toEqual({ ok: true, outcome: "stale", sourceGeneration: 1 });
+    expect(() => RoomSourcePersistenceAcknowledgementSchema.parse({
+      ok: true,
+      outcome: "persisted",
+      sourceGeneration: 0,
+    })).toThrow();
+    expect(() => RoomSourcePersistenceAcknowledgementSchema.parse({
+      ok: true,
+      outcome: "persisted",
+      sourceGeneration: 2,
+      unexpected: true,
+    })).toThrow();
+  });
+
   it("derives one private empty-room callback identity across service planes", async () => {
     const roomId = "private-room-1";
     const emptySince = 1_000;
