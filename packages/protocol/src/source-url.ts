@@ -49,6 +49,9 @@ export function canonicalizeRoomSourceUrl(
   if (!value.startsWith("https://")) {
     return { ok: false, code: "INVALID_URL" };
   }
+  if (!/^https:\/\/[^/]+(?:\/|$)/.test(value)) {
+    return { ok: false, code: "INVALID_URL" };
+  }
 
   let url: URL;
   try {
