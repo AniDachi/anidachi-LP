@@ -59333,7 +59333,7 @@
       "_origin": "ast"
     },
     {
-      "id": "public_room_invite_recipients",
+      "id": "apps_web_supabase_migrations_20260809_room_invite_inbox_foundation_sql_public_room_invite_recipients",
       "label": "public.room_invite_recipients",
       "file_type": "code",
       "source_file": "",
@@ -60069,6 +60069,102 @@
       "_origin": "ast"
     },
     {
+      "id": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions",
+      "label": "20260822065227_room_invite_lifecycle_actions.sql",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/migrations/20260822065227_room_invite_lifecycle_actions.sql",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_public_prepare_room_invite_recipient_inbox_state",
+      "label": "public.prepare_room_invite_recipient_inbox_state()",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/migrations/20260822065227_room_invite_lifecycle_actions.sql",
+      "source_location": "L7",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_public_reconcile_account_inbox_v2",
+      "label": "public.reconcile_account_inbox_v2()",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/migrations/20260822065227_room_invite_lifecycle_actions.sql",
+      "source_location": "L31",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_sql_public_room_invites",
+      "label": "public.room_invites",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_sql_public_rooms",
+      "label": "public.rooms",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_public_get_account_inbox_page_v2",
+      "label": "public.get_account_inbox_page_v2()",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/migrations/20260822065227_room_invite_lifecycle_actions.sql",
+      "source_location": "L96",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_sql_public_room_invite_recipients",
+      "label": "public.room_invite_recipients",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_sql_public_users",
+      "label": "public.users",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_sql_public_profiles",
+      "label": "public.profiles",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_sql_public_friend_groups",
+      "label": "public.friend_groups",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_sql_public_friendships",
+      "label": "public.friendships",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_public_respond_room_invite_v2",
+      "label": "public.respond_room_invite_v2()",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/migrations/20260822065227_room_invite_lifecycle_actions.sql",
+      "source_location": "L330",
+      "_origin": "ast"
+    },
+    {
       "id": "apps_web_supabase_tests_auth_artifact_cleanup_test",
       "label": "auth_artifact_cleanup.test.sql",
       "file_type": "code",
@@ -60114,6 +60210,22 @@
       "file_type": "code",
       "source_file": "apps/web/supabase/tests/oauth_login_transactions.test.sql",
       "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_tests_room_invite_lifecycle_actions_test",
+      "label": "room_invite_lifecycle_actions.test.sql",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/tests/room_invite_lifecycle_actions.test.sql",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_tests_room_invite_lifecycle_actions_test_pg_temp_invite_response_waits_for_lock",
+      "label": "pg_temp.invite_response_waits_for_lock()",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/tests/room_invite_lifecycle_actions.test.sql",
+      "source_location": "L948",
       "_origin": "ast"
     },
     {
@@ -264224,7 +264336,7 @@
     },
     {
       "source": "apps_web_supabase_migrations_20260809_room_invite_inbox_foundation_public_get_account_inbox_page",
-      "target": "public_room_invite_recipients",
+      "target": "apps_web_supabase_migrations_20260809_room_invite_inbox_foundation_sql_public_room_invite_recipients",
       "relation": "reads_from",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/supabase/migrations/20260809_room_invite_inbox_foundation.sql",
@@ -265023,6 +265135,156 @@
       "_origin": "ast"
     },
     {
+      "source": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions",
+      "target": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_public_prepare_room_invite_recipient_inbox_state",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20260822065227_room_invite_lifecycle_actions.sql",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions",
+      "target": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_public_reconcile_account_inbox_v2",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20260822065227_room_invite_lifecycle_actions.sql",
+      "source_location": "L31",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_public_reconcile_account_inbox_v2",
+      "target": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_sql_public_room_invites",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20260822065227_room_invite_lifecycle_actions.sql",
+      "source_location": "L64",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_public_reconcile_account_inbox_v2",
+      "target": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_sql_public_rooms",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20260822065227_room_invite_lifecycle_actions.sql",
+      "source_location": "L65",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions",
+      "target": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_public_get_account_inbox_page_v2",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20260822065227_room_invite_lifecycle_actions.sql",
+      "source_location": "L96",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_public_get_account_inbox_page_v2",
+      "target": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_sql_public_room_invites",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20260822065227_room_invite_lifecycle_actions.sql",
+      "source_location": "L126",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_public_get_account_inbox_page_v2",
+      "target": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_sql_public_rooms",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20260822065227_room_invite_lifecycle_actions.sql",
+      "source_location": "L127",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_public_get_account_inbox_page_v2",
+      "target": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_sql_public_room_invite_recipients",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20260822065227_room_invite_lifecycle_actions.sql",
+      "source_location": "L186",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_public_get_account_inbox_page_v2",
+      "target": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_sql_public_users",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20260822065227_room_invite_lifecycle_actions.sql",
+      "source_location": "L189",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_public_get_account_inbox_page_v2",
+      "target": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_sql_public_profiles",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20260822065227_room_invite_lifecycle_actions.sql",
+      "source_location": "L190",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_public_get_account_inbox_page_v2",
+      "target": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_sql_public_friend_groups",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20260822065227_room_invite_lifecycle_actions.sql",
+      "source_location": "L191",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_public_get_account_inbox_page_v2",
+      "target": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_sql_public_friendships",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20260822065227_room_invite_lifecycle_actions.sql",
+      "source_location": "L233",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions",
+      "target": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_public_respond_room_invite_v2",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20260822065227_room_invite_lifecycle_actions.sql",
+      "source_location": "L330",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_public_respond_room_invite_v2",
+      "target": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_sql_public_room_invite_recipients",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20260822065227_room_invite_lifecycle_actions.sql",
+      "source_location": "L365",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_public_respond_room_invite_v2",
+      "target": "apps_web_supabase_migrations_20260822065227_room_invite_lifecycle_actions_sql_public_friendships",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20260822065227_room_invite_lifecycle_actions.sql",
+      "source_location": "L488",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "apps_web_supabase_tests_auth_artifact_cleanup_test",
       "target": "apps_web_supabase_tests_auth_artifact_cleanup_test_pg_temp_explain_json",
       "relation": "contains",
@@ -265039,6 +265301,16 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/web/supabase/tests/auth_artifact_cleanup.test.sql",
       "source_location": "L34",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_tests_room_invite_lifecycle_actions_test",
+      "target": "apps_web_supabase_tests_room_invite_lifecycle_actions_test_pg_temp_invite_response_waits_for_lock",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/tests/room_invite_lifecycle_actions.test.sql",
+      "source_location": "L948",
       "weight": 1.0,
       "_origin": "ast"
     },
