@@ -368,13 +368,14 @@ workflows and staging smokes are green. The accepted artifact is exactly
 byte-identical at that version, and the user accepted Watch History, room source,
 and invite host `Accepted` behavior in the two-profile staging flow.
 
-Graphify was refreshed from current source at `f5622c7c` before this final docs
-change: 9,943 nodes, 21,002 edges, 1,120 communities, and zero missing endpoints,
-dangling links, self-loops, or duplicate/collapsed edges. Query/explain found the
-handoff. The output still has 550 legacy/external-reference placeholder nodes
-without labels/source files, matching the prior graph's 1,100 field warnings.
-A final semantic refresh after this prose change is controller-owned maintenance;
-it does not reopen the accepted staging foundation.
+Graphify's pre-finish health pass at `f5622c7c` recorded 9,943 nodes, 21,002
+edges, 1,120 communities, and zero missing endpoints, dangling links, self-loops,
+or duplicate/collapsed edges; query/explain found the handoff. It retains 550
+legacy/external-reference placeholder nodes without labels/source files, matching
+the prior graph's 1,100 field warnings. The Graphify artifacts included in the
+final evidence PR are refreshed from these completed docs; their
+`built_at_commit` records the immediately preceding docs commit, while the PR
+diff is the full freshness boundary.
 
 ## Account Read Contracts And Popup Isolation
 

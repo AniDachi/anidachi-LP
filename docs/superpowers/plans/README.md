@@ -14,9 +14,7 @@ Core-foundation closeout record:
    and fully closed on `staging` through
    `3a442b7f76992a5e48b387740bf9cc31a565235e`. It hands off to normal UI/UX
    work, without establishing production, `main`, release, store, Bloü/OpenClaw,
-   legal, billing, public-form, or new-provider readiness. A final semantic
-   Graphify refresh after the closeout documentation remains controller-owned
-   graph-freshness maintenance, not an implementation gate.
+   legal, billing, public-form, or new-provider readiness.
 
 Parallel long-running room/P2P and product execution plans:
 

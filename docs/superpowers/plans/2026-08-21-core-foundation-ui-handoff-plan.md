@@ -513,15 +513,15 @@ established unpacked folders currently have that version and are byte-identical.
 The user accepted Watch History, room-source, and invite host `Accepted`
 behavior in the established two-profile staging flow.
 
-Graphify refresh/query/explain passed from current source at
-`f5622c7c` before this documentation finish: 9,943 nodes, 21,002 edges, and
-1,120 communities; query/explain found the handoff; topology diagnostics report
-0 missing endpoints, 0 dangling links, 0 self-loops, and 0 duplicate/collapsed
-edges. It retains 550 legacy/external-reference placeholder nodes without
-labels/source files (the same 1,100 field warnings reported by the prior graph).
-The final post-documentation semantic refresh remains controller-owned because
-this finish changes its input; it is a graph-freshness follow-up, not a blocker
-to the completed staging closeout.
+Graphify refresh/query/explain passed from current source at `f5622c7c` before
+this documentation finish: 9,943 nodes, 21,002 edges, and 1,120 communities;
+query/explain found the handoff; topology diagnostics report 0 missing endpoints,
+0 dangling links, 0 self-loops, and 0 duplicate/collapsed edges. It retains 550
+legacy/external-reference placeholder nodes without labels/source files (the same
+1,100 field warnings reported by the prior graph). The Graphify artifacts
+included in the final evidence PR are refreshed from these completed docs; their
+`built_at_commit` records the immediately preceding docs commit, while the PR
+diff is the full freshness boundary.
 
 **Files:**
 
