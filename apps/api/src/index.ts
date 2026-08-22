@@ -16,7 +16,7 @@ import {
 } from "./auth";
 import { createIceServersPayload } from "./ice-servers";
 import { hasValidInternalAuthorization } from "./internal-auth";
-import { notifyWebRoomEnded } from "./internal-web-client";
+import { notifyWebRoomEnded, notifyWebRoomSource } from "./internal-web-client";
 import {
   endedRoomTombstone,
   parseEndRoomCommand,
@@ -69,6 +69,12 @@ import {
 } from "./room-rate-limit";
 import { RoomAdmission } from "./room-admission";
 import { RoomState } from "./room-state";
+import {
+  acknowledgeStoredRoomSourceAttempt,
+  claimStoredRoomSourceAttempt,
+  enqueueStoredRoomSource,
+  readStoredRoomSourcePersistence,
+} from "./room-source-persistence";
 import {
   emitRoomTelemetry,
   type AnalyticsEngineDataset,
@@ -382,6 +388,7 @@ export class RoomDurableObject {
   private roomMeter: RoomMeterState;
   private roomEndQueue: Promise<void> = Promise.resolve();
   private roomEndInProgress = false;
+  private roomSourceDeliveryQueue: Promise<void> = Promise.resolve();
 
   constructor(
     private readonly state: DurableObjectState,
@@ -647,6 +654,45 @@ export class RoomDurableObject {
     }
   }
 
+  private runRoomSourceDeliveryExclusively(force: boolean): Promise<boolean> {
+    const delivery = this.roomSourceDeliveryQueue.then(
+      () => this.deliverPendingRoomSource(force),
+      () => this.deliverPendingRoomSource(force),
+    );
+    this.roomSourceDeliveryQueue = delivery.then(
+      () => undefined,
+      () => undefined,
+    );
+    return delivery;
+  }
+
+  private async deliverPendingRoomSource(force: boolean): Promise<boolean> {
+    try {
+      const attempt = await claimStoredRoomSourceAttempt(
+        this.state.storage,
+        Date.now(),
+        { force },
+      );
+      if (!attempt) {
+        return await readStoredRoomSourcePersistence(this.state.storage) === null;
+      }
+      await notifyWebRoomSource(
+        this.env,
+        this.room.roomId,
+        attempt.callback,
+      );
+      await acknowledgeStoredRoomSourceAttempt(
+        this.state.storage,
+        attempt.callback.sourceGeneration,
+      );
+      return await readStoredRoomSourcePersistence(this.state.storage) === null;
+    } catch {
+      // A completed claim already committed its retry deadline before I/O;
+      // storage failures remain fail-closed and cannot allow room finalization.
+      return false;
+    }
+  }
+
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
     if (request.method === "POST" && url.pathname === "/internal/end") {
@@ -781,9 +827,22 @@ export class RoomDurableObject {
       });
     }
 
+    this.roomEndInProgress = true;
     const meteredAt = Date.now();
     const usage = this.stopRoomUsage(meteredAt);
-    this.roomEndInProgress = true;
+    const sourceDurable = await this.runRoomSourceDeliveryExclusively(true);
+    if (!sourceDurable) {
+      this.reconcileRoomUsage(Date.now());
+      this.roomEndInProgress = false;
+      return Response.json(
+        {
+          error: "ROOM_END_CALLBACK_FAILED",
+          message: "Room finalization callback failed",
+          retryable: true,
+        },
+        { status: 502 },
+      );
+    }
     try {
       await notifyWebRoomEnded(this.env, this.room.roomId, {
         ...command,
@@ -891,6 +950,7 @@ export class RoomDurableObject {
   }
 
   async alarm(): Promise<void> {
+    await this.runRoomSourceDeliveryExclusively(false);
     await this.runRoomEndExclusively(() => this.runAlarmExclusive());
   }
 
@@ -1313,9 +1373,13 @@ export class RoomDurableObject {
     const userId = this.participantsBySocket.get(socket);
     const result = userId
       ? this.room.updateHostState(userId, event.state, event.source)
-      : { accepted: false, sourceChanged: false, code: "NOT_HOST" as const };
-    if (!userId || !result.accepted) {
-      const code = result.code ?? "NOT_HOST";
+      : {
+          accepted: false as const,
+          sourceChanged: false as const,
+          code: "NOT_HOST" as const,
+        };
+    if (!result.accepted) {
+      const code = result.code;
       this.send(socket, {
         type: "ERROR",
         code,
@@ -1328,9 +1392,19 @@ export class RoomDurableObject {
       });
       return;
     }
+    const normalizedState = result.state;
     this.persistRoomState();
 
-    if (result.sourceChanged && result.source) {
+    if (result.sourceChanged) {
+      await enqueueStoredRoomSource(
+        this.state.storage,
+        {
+          roomId: this.room.roomId,
+          sourceGeneration: this.room.sourceGeneration,
+          source: result.durableSource,
+        },
+        Date.now(),
+      );
       this.broadcast({
         type: "SOURCE_CHANGED",
         roomId: this.room.roomId,
@@ -1340,19 +1414,16 @@ export class RoomDurableObject {
         serverReceivedAt: Date.now(),
         source: result.source,
         ...(result.previousSource ? { previousSource: result.previousSource } : {}),
-        hostState: event.state,
+        hostState: normalizedState,
       });
-    } else if (result.sourceChanged) {
-      // If an old client sends a source-changing host state without a
-      // descriptor, still publish the generation bump so clients can fence P2P.
-      this.broadcast(this.currentRoomSnapshot());
+      this.state.waitUntil(this.runRoomSourceDeliveryExclusively(false));
     }
 
     if (result.sourceChanged) {
       await this.refreshRoomHistoryAuthorities();
     }
 
-    this.broadcast({ type: "HOST_STATE", state: event.state }, socket);
+    this.broadcast({ type: "HOST_STATE", state: normalizedState }, socket);
   }
 
   private async refreshRoomHistoryAuthorities(): Promise<void> {

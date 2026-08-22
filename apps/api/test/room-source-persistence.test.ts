@@ -71,6 +71,24 @@ describe("room source persistence outbox", () => {
     expect(storage.values.size).toBe(1);
   });
 
+  it("never replaces a pending callback with a callback for another room", async () => {
+    const storage = new MemoryStorage();
+    const durableStorage = storage.asDurableObjectStorage();
+    await enqueueStoredRoomSource(durableStorage, callback(2), 100);
+
+    await expect(
+      enqueueStoredRoomSource(
+        durableStorage,
+        { ...callback(3), roomId: "room-2", sourceGeneration: 99 },
+        200,
+      ),
+    ).rejects.toThrow("Conflicting room source persistence room");
+    expect(await readStoredRoomSourcePersistence(durableStorage)).toMatchObject({
+      callback: callback(2),
+      nextAttemptAt: 100,
+    });
+  });
+
   it("claims a due attempt by durably setting capped attempts and retry before I/O", async () => {
     const storage = new MemoryStorage();
     const durableStorage = storage.asDurableObjectStorage();
@@ -94,6 +112,22 @@ describe("room source persistence outbox", () => {
     expect(capped?.attempts).toBe(MAX_ROOM_SOURCE_PERSISTENCE_ATTEMPTS);
     expect(capped?.nextAttemptAt).toBeGreaterThan(2_000);
     expect(capped?.nextAttemptAt).toBeLessThanOrEqual(2_000 + 5 * 60_000);
+  });
+
+  it("can durably force-claim the latest source before its retry deadline", async () => {
+    const storage = new MemoryStorage();
+    const durableStorage = storage.asDurableObjectStorage();
+    await enqueueStoredRoomSource(durableStorage, callback(2), 1_000);
+    const first = await claimStoredRoomSourceAttempt(durableStorage, 1_000);
+
+    const forced = await claimStoredRoomSourceAttempt(durableStorage, 1_001, {
+      force: true,
+    });
+
+    expect(first?.attempts).toBe(1);
+    expect(forced).toMatchObject({ attempts: 2, callback: callback(2) });
+    expect(forced?.nextAttemptAt).toBeGreaterThan(1_001);
+    expect(storage.values.get(ROOM_SOURCE_PENDING_STORAGE_KEY)).toEqual(forced);
   });
 
   it("clears only the exact acknowledged generation", async () => {

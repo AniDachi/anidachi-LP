@@ -6,7 +6,12 @@ import type {
   WatchSourceDescriptor,
 } from "@anidachi/protocol";
 import { RoomDurableObject } from "../src/index";
-import { RoomState } from "../src/room-state";
+import { ROOM_SOURCE_PENDING_STORAGE_KEY } from "../src/room-source-persistence";
+import {
+  LEGACY_ROOM_CAPABILITIES,
+  RoomState,
+  type RoomStateSnapshot,
+} from "../src/room-state";
 
 function participant(id: string, role: Participant["role"] = "viewer"): Participant {
   return {
@@ -96,6 +101,9 @@ describe("RoomState", () => {
 
     expect(changedUpdate.accepted).toBe(true);
     expect(changedUpdate.sourceChanged).toBe(true);
+    if (!changedUpdate.accepted || !changedUpdate.sourceChanged) {
+      throw new Error("Expected accepted source change");
+    }
     expect(changedUpdate.previousSource?.videoFingerprint).toBe(firstState.videoFingerprint);
     expect(changedUpdate.source?.videoFingerprint).toBe(nextState.videoFingerprint);
     expect(room.sourceGeneration).toBe(3);
@@ -109,19 +117,206 @@ describe("RoomState", () => {
     expect(changedSnapshot.source?.title).toBe("Episode 2");
   });
 
+  it("normalizes a rich current-runtime youtu.be alias into one strict durable tuple", () => {
+    const room = new RoomState("room-1");
+    room.join(participant("host", "host"));
+    const legacyUrl = "https://youtu.be/dQw4w9WgXcQ?feature=share";
+    const legacyFingerprint = "youtube|/dQw4w9WgXcQ";
+    const source: WatchSourceDescriptor = {
+      provider: "youtube",
+      sourceUrl: legacyUrl,
+      canonicalUrl: legacyUrl,
+      videoFingerprint: legacyFingerprint,
+      title: "A useful video",
+      seriesTitle: "AniDachi picks",
+      episodeTitle: "Pilot",
+      seasonNumber: 1,
+      episodeNumber: 2,
+      duration: 213,
+      posterUrl: "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+    };
+
+    const result = room.updateHostState(
+      "host",
+      playbackState(legacyFingerprint, legacyUrl),
+      source,
+    );
+
+    const canonicalUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+    expect(result).toMatchObject({
+      accepted: true,
+      sourceChanged: true,
+      state: {
+        sourceUrl: canonicalUrl,
+        videoFingerprint: "youtube|dQw4w9WgXcQ",
+      },
+      source: {
+        ...source,
+        sourceUrl: canonicalUrl,
+        canonicalUrl,
+        videoFingerprint: "youtube|dQw4w9WgXcQ",
+      },
+      durableSource: {
+        provider: "youtube",
+        sourceUrl: canonicalUrl,
+        canonicalUrl,
+        videoFingerprint: "youtube|dQw4w9WgXcQ",
+      },
+    });
+    if (!result.accepted) throw new Error("Expected accepted source update");
+    expect(room.snapshot).toMatchObject({
+      hostState: result.state,
+      source: result.source,
+    });
+  });
+
+  it("normalizes a localized Crunchyroll route while preserving rich metadata", () => {
+    const room = new RoomState("room-1");
+    room.join(participant("host", "host"));
+    const localizedUrl =
+      "https://www.crunchyroll.com/EN-us/watch/G8WUNM123/episode-one";
+    const source = watchSource(
+      "crunchyroll",
+      "crunchyroll|watch/G8WUNM123",
+      localizedUrl,
+      "Episode one",
+    );
+    source.duration = 1_400;
+    source.episodeNumber = 1;
+
+    const result = room.updateHostState(
+      "host",
+      playbackState(source.videoFingerprint, localizedUrl),
+      source,
+    );
+
+    const canonicalUrl = "https://www.crunchyroll.com/watch/G8WUNM123";
+    expect(result).toMatchObject({
+      accepted: true,
+      state: { sourceUrl: canonicalUrl },
+      source: {
+        canonicalUrl,
+        sourceUrl: canonicalUrl,
+        duration: 1_400,
+        episodeNumber: 1,
+      },
+      durableSource: {
+        provider: "crunchyroll",
+        canonicalUrl,
+        sourceUrl: canonicalUrl,
+        videoFingerprint: "crunchyroll|watch/G8WUNM123",
+      },
+    });
+  });
+
+  it("normalizes a safely canonicalizable legacy-rich persisted snapshot", () => {
+    const legacyUrl = "https://youtu.be/dQw4w9WgXcQ/";
+    const snapshot: RoomStateSnapshot = {
+      schemaVersion: 1,
+      capabilities: { ...LEGACY_ROOM_CAPABILITIES },
+      hostId: "host",
+      hostState: playbackState("youtube|/dQw4w9WgXcQ/", legacyUrl),
+      participants: [participant("host", "host")],
+      roomGeneration: 1,
+      serverSeq: 7,
+      source: {
+        ...watchSource("youtube", "youtube|/dQw4w9WgXcQ/", legacyUrl, "Legacy title"),
+        duration: 213,
+      },
+      sourceGeneration: 4,
+      updatedAt: 1_234,
+    };
+
+    const restored = new RoomState("room-1", undefined, snapshot);
+    const restoredSnapshot = restored.snapshot;
+
+    expect(restoredSnapshot).toMatchObject({
+      sourceGeneration: 4,
+      hostState: {
+        sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        videoFingerprint: "youtube|dQw4w9WgXcQ",
+      },
+      source: {
+        title: "Legacy title",
+        duration: 213,
+        sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        canonicalUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        videoFingerprint: "youtube|dQw4w9WgXcQ",
+      },
+    });
+    expect(restored.currentSourceProvider).toBe("youtube");
+  });
+
+  it("rejects insecure, foreign, unsupported, and cross-identity sources before mutation", () => {
+    const invalidSources: WatchSourceDescriptor[] = [
+      watchSource(
+        "youtube",
+        "youtube|dQw4w9WgXcQ",
+        "http://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "Insecure",
+      ),
+      watchSource(
+        "generic",
+        "generic|episode-1",
+        "https://example.com/watch/episode-1",
+        "Unsupported",
+      ),
+      watchSource(
+        "youtube",
+        "youtube|dQw4w9WgXcQ",
+        "https://youtube.com.evil.example/watch?v=dQw4w9WgXcQ",
+        "Foreign host",
+      ),
+      {
+        ...watchSource(
+          "youtube",
+          "youtube|dQw4w9WgXcQ",
+          "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          "Cross identity",
+        ),
+        canonicalUrl: "https://www.youtube.com/watch?v=M7lc1UVf-VE",
+      },
+    ];
+
+    for (const source of invalidSources) {
+      const room = new RoomState("room-1");
+      room.join(participant("host", "host"));
+      const before = room.toSnapshot(1_234);
+      const result = room.updateHostState(
+        "host",
+        playbackState(source.videoFingerprint, source.sourceUrl),
+        source,
+      );
+
+      expect(result).toEqual({
+        accepted: false,
+        sourceChanged: false,
+        code: "INVALID_SOURCE",
+      });
+      expect(room.toSnapshot(1_234)).toEqual(before);
+    }
+  });
+
   it("publishes source initialization and refreshes private history authority", async () => {
     const room = new RoomState("room-1");
     room.join(participant("host", "host"));
     room.join(participant("viewer"));
     const hostSocket = {} as WebSocket;
     const broadcast = vi.fn();
+    const storage = new RoomSourceMemoryStorage();
+    const waitUntil = vi.fn();
     const fakeRoomObject = {
       broadcast,
       participantsBySocket: new Map([[hostSocket, "host"]]),
       persistRoomState: vi.fn(),
       refreshRoomHistoryAuthorities: vi.fn().mockResolvedValue(undefined),
       room,
+      runRoomSourceDeliveryExclusively: vi.fn().mockResolvedValue(true),
       send: vi.fn(),
+      state: {
+        storage: storage.asDurableObjectStorage(),
+        waitUntil,
+      },
     };
     Object.setPrototypeOf(fakeRoomObject, RoomDurableObject.prototype);
     const state = playbackState(
@@ -152,6 +347,19 @@ describe("RoomState", () => {
 
     expect(fakeRoomObject.persistRoomState).toHaveBeenCalledOnce();
     expect(fakeRoomObject.refreshRoomHistoryAuthorities).toHaveBeenCalledOnce();
+    expect(waitUntil).toHaveBeenCalledOnce();
+    expect(storage.values.get(ROOM_SOURCE_PENDING_STORAGE_KEY)).toMatchObject({
+      callback: {
+        roomId: "room-1",
+        sourceGeneration: 2,
+        source: {
+          provider: "youtube",
+          sourceUrl: state.sourceUrl,
+          canonicalUrl: state.sourceUrl,
+          videoFingerprint: state.videoFingerprint,
+        },
+      },
+    });
     expect(broadcast).toHaveBeenCalledWith(
       expect.objectContaining({
         type: "SOURCE_CHANGED",
@@ -659,4 +867,37 @@ function watchSource(
     videoFingerprint,
     title,
   };
+}
+
+class RoomSourceMemoryStorage {
+  readonly values = new Map<string, unknown>();
+  alarmAt: number | null = null;
+
+  asDurableObjectStorage(): DurableObjectStorage {
+    return this as unknown as DurableObjectStorage;
+  }
+
+  async get<T>(key: string): Promise<T | undefined> {
+    return this.values.get(key) as T | undefined;
+  }
+
+  async put(key: string, value: unknown): Promise<void> {
+    this.values.set(key, structuredClone(value));
+  }
+
+  async delete(key: string): Promise<boolean> {
+    return this.values.delete(key);
+  }
+
+  async setAlarm(scheduledTime: number): Promise<void> {
+    this.alarmAt = scheduledTime;
+  }
+
+  async deleteAlarm(): Promise<void> {
+    this.alarmAt = null;
+  }
+
+  async transaction<T>(closure: (transaction: DurableObjectTransaction) => Promise<T>): Promise<T> {
+    return closure(this as unknown as DurableObjectTransaction);
+  }
 }

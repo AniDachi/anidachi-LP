@@ -29,7 +29,8 @@ export async function notifyWebRoomEnded(
   const config = internalWebCallbackConfig(env);
   let response: Response;
   try {
-    response = await fetchImplementation(
+    response = await fetchWithBoundedTimeout(
+      fetchImplementation,
       new URL(`/api/internal/rooms/${encodeURIComponent(roomId)}/ended`, config.baseUrl),
       {
         method: "POST",
@@ -38,8 +39,8 @@ export async function notifyWebRoomEnded(
           "Content-Type": "application/json",
         },
         body: JSON.stringify(command),
-        signal: AbortSignal.timeout(boundedInternalWebCallbackTimeout(timeoutMs)),
       },
+      timeoutMs,
     );
   } catch {
     throw new Error("Room lifecycle Web callback request failed");
@@ -73,7 +74,8 @@ export async function notifyWebRoomSource(
 
   let response: Response;
   try {
-    response = await fetchImplementation(
+    response = await fetchWithBoundedTimeout(
+      fetchImplementation,
       new URL(`/api/internal/rooms/${encodeURIComponent(roomId)}/source`, config.baseUrl),
       {
         method: "POST",
@@ -82,8 +84,8 @@ export async function notifyWebRoomSource(
           "Content-Type": "application/json",
         },
         body: JSON.stringify(parsedCallback.data),
-        signal: AbortSignal.timeout(boundedInternalWebCallbackTimeout(timeoutMs)),
       },
+      timeoutMs,
     );
   } catch {
     throw new Error("Room source Web callback request failed");
@@ -107,6 +109,24 @@ function boundedInternalWebCallbackTimeout(timeoutMs: number): number {
   return Number.isFinite(timeoutMs)
     ? Math.max(1, Math.min(INTERNAL_WEB_CALLBACK_MAX_TIMEOUT_MS, Math.floor(timeoutMs)))
     : INTERNAL_WEB_CALLBACK_TIMEOUT_MS;
+}
+
+async function fetchWithBoundedTimeout(
+  fetchImplementation: typeof fetch,
+  input: URL,
+  init: RequestInit,
+  timeoutMs: number,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(
+    () => controller.abort(),
+    boundedInternalWebCallbackTimeout(timeoutMs),
+  );
+  try {
+    return await fetchImplementation(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function internalWebCallbackConfig(env: InternalWebLifecycleEnv): {

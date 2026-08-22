@@ -70,6 +70,9 @@ export async function enqueueStoredRoomSource(
       await transaction.delete(ROOM_SOURCE_PENDING_STORAGE_KEY);
     }
     if (current) {
+      if (current.callback.roomId !== parsedCallback.data.roomId) {
+        throw new Error("Conflicting room source persistence room");
+      }
       const currentGeneration = current.callback.sourceGeneration;
       const nextGeneration = parsedCallback.data.sourceGeneration;
       if (nextGeneration < currentGeneration) {
@@ -100,6 +103,7 @@ export async function enqueueStoredRoomSource(
 export async function claimStoredRoomSourceAttempt(
   storage: DurableObjectStorage,
   now: number,
+  options: { force?: boolean } = {},
 ): Promise<PendingRoomSourcePersistence | null> {
   if (!isTimestamp(now)) throw new Error("Invalid room source persistence claim time");
   return storage.transaction(async (transaction) => {
@@ -110,7 +114,7 @@ export async function claimStoredRoomSourceAttempt(
       await reconcileStoredRoomAlarm(transaction);
       return null;
     }
-    if (now < current.nextAttemptAt) {
+    if (!options.force && now < current.nextAttemptAt) {
       await reconcileStoredRoomAlarm(transaction);
       return null;
     }
