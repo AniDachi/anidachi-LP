@@ -10,6 +10,7 @@ describe("Crunchyroll source navigation", () => {
 		for (const input of [
 			"https://www.crunchyroll.com/watch/GOLD22222/episode-two",
 			"https://crunchyroll.com/watch/GOLD22222",
+			"https://www.crunchyroll.com/en-US/watch/GOLD22222/episode-two",
 		]) {
 			expect(canonicalizeRoomSourceUrl(input)).toMatchObject({
 				ok: true,
@@ -37,10 +38,10 @@ describe("Crunchyroll source navigation", () => {
 		expect(result).toEqual({
 			status: "navigation-started",
 			targetUrl:
-				"https://www.crunchyroll.com/watch/GOLD22222/episode-two#anidachiRoom=room-123",
+				"https://www.crunchyroll.com/watch/GOLD22222#anidachiRoom=room-123",
 		});
 		expect(navigate).toHaveBeenCalledWith(
-			"https://www.crunchyroll.com/watch/GOLD22222/episode-two#anidachiRoom=room-123",
+			"https://www.crunchyroll.com/watch/GOLD22222#anidachiRoom=room-123",
 		);
 		expect(assign).not.toHaveBeenCalled();
 	});
@@ -62,8 +63,31 @@ describe("Crunchyroll source navigation", () => {
 
 		expect(result.status).toBe("navigation-started");
 		expect(assign).toHaveBeenCalledWith(
-			"https://www.crunchyroll.com/watch/GOLD22222/episode-two#anidachiRoom=room-123",
+			"https://www.crunchyroll.com/watch/GOLD22222#anidachiRoom=room-123",
 		);
+	});
+
+	it.each([
+		"http://www.crunchyroll.com/watch/GOLD22222",
+		"https://user:secret@www.crunchyroll.com/watch/GOLD22222",
+		"https://beta.crunchyroll.com/watch/GOLD22222",
+		"https://crunchyroll.com.attacker.example/watch/GOLD22222",
+		"https://www.crunchyroll.com/series/GOLD22222/title",
+	])("rejects a non-canonical Crunchyroll trust boundary: %s", async (sourceUrl) => {
+		const assign = vi.fn();
+		const navigate = vi.fn().mockResolvedValue({ ok: true });
+		const ensureSource = createCrunchyrollSourceNavigator({
+			assign,
+			currentHref: () =>
+				"https://www.crunchyroll.com/watch/GOLD11111/episode-one",
+			navigate,
+		});
+
+		await expect(
+			ensureSource({ ...source(), canonicalUrl: sourceUrl, sourceUrl }, context()),
+		).resolves.toMatchObject({ status: "unsupported" });
+		expect(navigate).not.toHaveBeenCalled();
+		expect(assign).not.toHaveBeenCalled();
 	});
 
 	it("rejects a descriptor outside Crunchyroll", async () => {

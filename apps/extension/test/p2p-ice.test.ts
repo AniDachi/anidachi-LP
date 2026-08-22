@@ -32,6 +32,15 @@ describe("P2P ICE server prioritization", () => {
     ]);
   });
 
+  it("returns local unauthenticated ICE servers without a network request", async () => {
+    const fetcher = vi.fn<typeof fetch>();
+    vi.stubGlobal("fetch", fetcher);
+
+    await expect(loadP2PIceServers()).resolves.toEqual(getDefaultP2PIceServers());
+    await expect(refreshP2PIceServers()).resolves.toEqual(getDefaultP2PIceServers());
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
   it("keeps STUN-only servers before TURN fallback servers", () => {
     const servers = prioritizeDirectIceServers(
       [

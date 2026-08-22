@@ -2,6 +2,8 @@ import {
   ClientEventSchema,
   RoomCapabilitiesSchema,
   ServerEventSchema,
+  canonicalizeRoomSourceUrl,
+  isLegacyRoomSourceFingerprintAlias,
   type ClientEvent,
   type Participant,
   type RoomCapabilities,
@@ -237,15 +239,16 @@ export async function createWebsiteRoomFromApi(
   accessToken: string,
   input?: CreateRoomInput,
 ): Promise<CreatedRoom> {
+  const normalizedInput = normalizeCreateRoomInput(input);
   logDebug("room.http", "create website room request", {
     webHttpBase: WEB_HTTP_BASE,
-    hasSourceUrl: Boolean(input?.sourceUrl),
-    videoFingerprint: input?.videoFingerprint,
+    hasSourceUrl: Boolean(normalizedInput?.sourceUrl),
+    videoFingerprint: normalizedInput?.videoFingerprint,
   });
   const response = await fetch(new URL("/api/rooms", WEB_HTTP_BASE), {
     method: "POST",
     headers: createWebsiteRoomHeaders(accessToken),
-    body: JSON.stringify(input ?? {}),
+    body: JSON.stringify(normalizedInput ?? {}),
   });
 
   if (!response.ok) {
@@ -277,6 +280,35 @@ export async function createWebsiteRoomFromApi(
     capabilities: parseRoomCapabilities(payload.capabilities),
     quota: parseQuotaSummary(payload.quota),
   };
+}
+
+function normalizeCreateRoomInput(input?: CreateRoomInput): CreateRoomInput | undefined {
+  if (!input) return undefined;
+  const { sourceUrl, videoFingerprint } = input;
+  if (sourceUrl === undefined && videoFingerprint === undefined) return input;
+  if (sourceUrl === undefined || videoFingerprint === undefined) {
+    throw invalidCreateRoomSourceError();
+  }
+
+  const canonical = canonicalizeRoomSourceUrl(sourceUrl);
+  if (
+    !canonical.ok ||
+    (
+      videoFingerprint !== canonical.source.videoFingerprint &&
+      !isLegacyRoomSourceFingerprintAlias(sourceUrl, videoFingerprint)
+    )
+  ) {
+    throw invalidCreateRoomSourceError();
+  }
+  return {
+    ...input,
+    sourceUrl: canonical.source.sourceUrl,
+    videoFingerprint: canonical.source.videoFingerprint,
+  };
+}
+
+function invalidCreateRoomSourceError(): RoomApiError {
+  return new RoomApiError("Invalid room source", "INVALID_SOURCE");
 }
 
 export async function connectWebsiteRoomFromApi(

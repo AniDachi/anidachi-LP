@@ -103,7 +103,7 @@ describe("worker routes", () => {
     fetcher.mockRestore();
   });
 
-  it("keeps query-token ICE auth only on the legacy route and measures fallback use", async () => {
+  it("keeps ICE tokens out of HTTP query auth while preserving the bearer route", async () => {
     const roomToken = await signRoomTokenForTest(
       { sub: "user-1", roomId: "room-1", role: "member" },
       authEnv,
@@ -131,10 +131,9 @@ describe("worker routes", () => {
     );
 
     expect(primaryWithoutBearer.status).toBe(401);
-    expect(legacy.status).toBe(200);
-    expect(legacy.headers.get("Cache-Control")).toBe("no-store");
-    expect(legacy.headers.get("X-Anidachi-Auth-Fallback")).toBe("query");
-    expect(dataPoints.some((point) => point.blobs?.includes("ice_query_auth_fallback"))).toBe(true);
+    expect(legacy.status).toBe(404);
+    expect(legacy.headers.get("X-Anidachi-Auth-Fallback")).toBeNull();
+    expect(dataPoints).toEqual([]);
   });
 
   it("rejects missing and wrong internal room lifecycle secrets", async () => {

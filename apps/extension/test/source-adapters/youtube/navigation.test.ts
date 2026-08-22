@@ -85,6 +85,9 @@ describe("YouTube source navigation", () => {
 	it.each([
 		"javascript:alert(1)",
 		`https://example.com/watch?v=${OTHER_VIDEO_ID}`,
+		`http://www.youtube.com/watch?v=${OTHER_VIDEO_ID}`,
+		`https://user:secret@www.youtube.com/watch?v=${OTHER_VIDEO_ID}`,
+		`https://studio.youtube.com/watch?v=${OTHER_VIDEO_ID}`,
 	])("rejects javascript and foreign-host URLs: %s", async (sourceUrl) => {
 		const assign = vi.fn();
 		const ensureSource = createYouTubeSourceNavigator({
@@ -96,6 +99,26 @@ describe("YouTube source navigation", () => {
 			ensureSource(source(OTHER_VIDEO_ID, sourceUrl), context()),
 		).resolves.toMatchObject({ status: "unsupported" });
 		expect(assign).not.toHaveBeenCalled();
+	});
+
+	it("navigates an accepted youtu.be source only through its canonical destination", async () => {
+		const assign = vi.fn();
+		const ensureSource = createYouTubeSourceNavigator({
+			assign,
+			currentHref: () => `https://www.youtube.com/watch?v=${VIDEO_ID}`,
+		});
+		const shortUrl = `https://youtu.be/${OTHER_VIDEO_ID}/#ignored=value`;
+
+		await expect(
+			ensureSource(source(OTHER_VIDEO_ID, shortUrl), context("room-123")),
+		).resolves.toEqual({
+			status: "navigation-started",
+			targetUrl:
+				`https://www.youtube.com/watch?v=${OTHER_VIDEO_ID}#anidachiRoom=room-123`,
+		});
+		expect(assign).toHaveBeenCalledWith(
+			`https://www.youtube.com/watch?v=${OTHER_VIDEO_ID}#anidachiRoom=room-123`,
+		);
 	});
 
 	it.each([

@@ -6,7 +6,12 @@ import type {
   WatchSourceDescriptor,
 } from "@anidachi/protocol";
 import { RoomDurableObject } from "../src/index";
-import { RoomState } from "../src/room-state";
+import { ROOM_SOURCE_PENDING_STORAGE_KEY } from "../src/room-source-persistence";
+import {
+  LEGACY_ROOM_CAPABILITIES,
+  RoomState,
+  type RoomStateSnapshot,
+} from "../src/room-state";
 
 function participant(id: string, role: Participant["role"] = "viewer"): Participant {
   return {
@@ -96,6 +101,9 @@ describe("RoomState", () => {
 
     expect(changedUpdate.accepted).toBe(true);
     expect(changedUpdate.sourceChanged).toBe(true);
+    if (!changedUpdate.accepted || !changedUpdate.sourceChanged) {
+      throw new Error("Expected accepted source change");
+    }
     expect(changedUpdate.previousSource?.videoFingerprint).toBe(firstState.videoFingerprint);
     expect(changedUpdate.source?.videoFingerprint).toBe(nextState.videoFingerprint);
     expect(room.sourceGeneration).toBe(3);
@@ -109,19 +117,251 @@ describe("RoomState", () => {
     expect(changedSnapshot.source?.title).toBe("Episode 2");
   });
 
+  it("normalizes a rich current-runtime youtu.be alias into one strict durable tuple", () => {
+    const room = new RoomState("room-1");
+    room.join(participant("host", "host"));
+    const legacyUrl = "https://youtu.be/dQw4w9WgXcQ?feature=share";
+    const legacyFingerprint = "youtube|/dQw4w9WgXcQ";
+    const source: WatchSourceDescriptor = {
+      provider: "youtube",
+      sourceUrl: legacyUrl,
+      canonicalUrl: legacyUrl,
+      videoFingerprint: legacyFingerprint,
+      title: "A useful video",
+      seriesTitle: "AniDachi picks",
+      episodeTitle: "Pilot",
+      seasonNumber: 1,
+      episodeNumber: 2,
+      duration: 213,
+      posterUrl: "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+    };
+
+    const result = room.updateHostState(
+      "host",
+      playbackState(legacyFingerprint, legacyUrl),
+      source,
+    );
+
+    const canonicalUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+    expect(result).toMatchObject({
+      accepted: true,
+      sourceChanged: true,
+      state: {
+        sourceUrl: canonicalUrl,
+        videoFingerprint: "youtube|dQw4w9WgXcQ",
+      },
+      source: {
+        ...source,
+        sourceUrl: canonicalUrl,
+        canonicalUrl,
+        videoFingerprint: "youtube|dQw4w9WgXcQ",
+      },
+      durableSource: {
+        provider: "youtube",
+        sourceUrl: canonicalUrl,
+        canonicalUrl,
+        videoFingerprint: "youtube|dQw4w9WgXcQ",
+      },
+    });
+    if (!result.accepted) throw new Error("Expected accepted source update");
+    expect(room.snapshot).toMatchObject({
+      hostState: result.state,
+      source: result.source,
+    });
+  });
+
+  it("normalizes a localized Crunchyroll route while preserving rich metadata", () => {
+    const room = new RoomState("room-1");
+    room.join(participant("host", "host"));
+    const localizedUrl =
+      "https://www.crunchyroll.com/EN-us/watch/G8WUNM123/episode-one";
+    const source = watchSource(
+      "crunchyroll",
+      "crunchyroll|watch/G8WUNM123",
+      localizedUrl,
+      "Episode one",
+    );
+    source.duration = 1_400;
+    source.episodeNumber = 1;
+
+    const result = room.updateHostState(
+      "host",
+      playbackState(source.videoFingerprint, localizedUrl),
+      source,
+    );
+
+    const canonicalUrl = "https://www.crunchyroll.com/watch/G8WUNM123";
+    expect(result).toMatchObject({
+      accepted: true,
+      state: { sourceUrl: canonicalUrl },
+      source: {
+        canonicalUrl,
+        sourceUrl: canonicalUrl,
+        duration: 1_400,
+        episodeNumber: 1,
+      },
+      durableSource: {
+        provider: "crunchyroll",
+        canonicalUrl,
+        sourceUrl: canonicalUrl,
+        videoFingerprint: "crunchyroll|watch/G8WUNM123",
+      },
+    });
+  });
+
+  it("normalizes a safely canonicalizable legacy-rich persisted snapshot", () => {
+    const legacyUrl = "https://youtu.be/dQw4w9WgXcQ/";
+    const snapshot: RoomStateSnapshot = {
+      schemaVersion: 1,
+      capabilities: { ...LEGACY_ROOM_CAPABILITIES },
+      hostId: "host",
+      hostState: playbackState("youtube|/dQw4w9WgXcQ/", legacyUrl),
+      participants: [participant("host", "host")],
+      roomGeneration: 1,
+      serverSeq: 7,
+      source: {
+        ...watchSource("youtube", "youtube|/dQw4w9WgXcQ/", legacyUrl, "Legacy title"),
+        duration: 213,
+      },
+      sourceGeneration: 4,
+      updatedAt: 1_234,
+    };
+
+    const restored = new RoomState("room-1", undefined, snapshot);
+    const restoredSnapshot = restored.snapshot;
+
+    expect(restoredSnapshot).toMatchObject({
+      sourceGeneration: 4,
+      hostState: {
+        sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        videoFingerprint: "youtube|dQw4w9WgXcQ",
+      },
+      source: {
+        title: "Legacy title",
+        duration: 213,
+        sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        canonicalUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        videoFingerprint: "youtube|dQw4w9WgXcQ",
+      },
+    });
+    expect(restored.currentSourceProvider).toBe("youtube");
+  });
+
+  it("restores a canonical rich source and provider pin without persisted host playback", () => {
+    const room = new RoomState("room-1");
+    room.join(participant("host", "host"));
+    const state = playbackState(
+      "crunchyroll|watch/G8WUNM123",
+      "https://www.crunchyroll.com/ru/watch/G8WUNM123/episode-one",
+    );
+    room.updateHostState("host", state, {
+      ...sourceDescriptor(state, "Episode one"),
+      duration: 1_440,
+      posterUrl: "https://static.crunchyroll.com/posters/G8WUNM123.jpg",
+    });
+    room.leave("host");
+    const snapshot = room.toSnapshot(1_234);
+    expect(snapshot.hostState).toBeUndefined();
+
+    const restored = new RoomState("room-1", undefined, snapshot);
+
+    expect(restored.sourceGeneration).toBe(2);
+    expect(restored.currentSourceProvider).toBe("crunchyroll");
+    expect(restored.snapshot).toMatchObject({
+      sourceGeneration: 2,
+      source: {
+        provider: "crunchyroll",
+        sourceUrl: "https://www.crunchyroll.com/watch/G8WUNM123",
+        canonicalUrl: "https://www.crunchyroll.com/watch/G8WUNM123",
+        videoFingerprint: "crunchyroll|watch/G8WUNM123",
+        title: "Episode one",
+        duration: 1_440,
+        posterUrl: "https://static.crunchyroll.com/posters/G8WUNM123.jpg",
+      },
+    });
+
+    const invalid = new RoomState("room-1", undefined, {
+      ...snapshot,
+      source: {
+        ...snapshot.source!,
+        sourceUrl: "https://attacker.example/watch/G8WUNM123",
+      },
+    });
+    expect(invalid.sourceGeneration).toBe(2);
+    expect(invalid.currentSourceProvider).toBeUndefined();
+    expect(invalid.snapshot).not.toHaveProperty("source");
+  });
+
+  it("rejects insecure, foreign, unsupported, and cross-identity sources before mutation", () => {
+    const invalidSources: WatchSourceDescriptor[] = [
+      watchSource(
+        "youtube",
+        "youtube|dQw4w9WgXcQ",
+        "http://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "Insecure",
+      ),
+      watchSource(
+        "generic",
+        "generic|episode-1",
+        "https://example.com/watch/episode-1",
+        "Unsupported",
+      ),
+      watchSource(
+        "youtube",
+        "youtube|dQw4w9WgXcQ",
+        "https://youtube.com.evil.example/watch?v=dQw4w9WgXcQ",
+        "Foreign host",
+      ),
+      {
+        ...watchSource(
+          "youtube",
+          "youtube|dQw4w9WgXcQ",
+          "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          "Cross identity",
+        ),
+        canonicalUrl: "https://www.youtube.com/watch?v=M7lc1UVf-VE",
+      },
+    ];
+
+    for (const source of invalidSources) {
+      const room = new RoomState("room-1");
+      room.join(participant("host", "host"));
+      const before = room.toSnapshot(1_234);
+      const result = room.updateHostState(
+        "host",
+        playbackState(source.videoFingerprint, source.sourceUrl),
+        source,
+      );
+
+      expect(result).toEqual({
+        accepted: false,
+        sourceChanged: false,
+        code: "INVALID_SOURCE",
+      });
+      expect(room.toSnapshot(1_234)).toEqual(before);
+    }
+  });
+
   it("publishes source initialization and refreshes private history authority", async () => {
     const room = new RoomState("room-1");
     room.join(participant("host", "host"));
     room.join(participant("viewer"));
     const hostSocket = {} as WebSocket;
     const broadcast = vi.fn();
+    const storage = new RoomSourceMemoryStorage();
+    const waitUntil = vi.fn();
     const fakeRoomObject = {
       broadcast,
       participantsBySocket: new Map([[hostSocket, "host"]]),
       persistRoomState: vi.fn(),
       refreshRoomHistoryAuthorities: vi.fn().mockResolvedValue(undefined),
       room,
+      runRoomSourceDeliveryExclusively: vi.fn().mockResolvedValue(true),
       send: vi.fn(),
+      state: {
+        storage: storage.asDurableObjectStorage(),
+        waitUntil,
+      },
     };
     Object.setPrototypeOf(fakeRoomObject, RoomDurableObject.prototype);
     const state = playbackState(
@@ -152,6 +392,19 @@ describe("RoomState", () => {
 
     expect(fakeRoomObject.persistRoomState).toHaveBeenCalledOnce();
     expect(fakeRoomObject.refreshRoomHistoryAuthorities).toHaveBeenCalledOnce();
+    expect(waitUntil).toHaveBeenCalledOnce();
+    expect(storage.values.get(ROOM_SOURCE_PENDING_STORAGE_KEY)).toMatchObject({
+      callback: {
+        roomId: "room-1",
+        sourceGeneration: 2,
+        source: {
+          provider: "youtube",
+          sourceUrl: state.sourceUrl,
+          canonicalUrl: state.sourceUrl,
+          videoFingerprint: state.videoFingerprint,
+        },
+      },
+    });
     expect(broadcast).toHaveBeenCalledWith(
       expect.objectContaining({
         type: "SOURCE_CHANGED",
@@ -159,6 +412,104 @@ describe("RoomState", () => {
         source: event.source,
       }),
     );
+  });
+
+  it("keeps the live source broadcast and retries repair after an outbox storage failure", async () => {
+    const room = new RoomState("room-1");
+    room.join(participant("host", "host"));
+    const hostSocket = {} as WebSocket;
+    const storage = new RoomSourceMemoryStorage();
+    storage.failNextTransaction = true;
+    const waitUntil = vi.fn();
+    const fakeRoomObject = {
+      broadcast: vi.fn(),
+      participantsBySocket: new Map([[hostSocket, "host"]]),
+      persistRoomState: vi.fn(),
+      refreshRoomHistoryAuthorities: vi.fn().mockResolvedValue(undefined),
+      room,
+      roomSourceRepairNeeded: false,
+      runRoomSourceDeliveryExclusively: vi.fn().mockResolvedValue(true),
+      send: vi.fn(),
+      state: {
+        storage: storage.asDurableObjectStorage(),
+        waitUntil,
+      },
+    };
+    Object.setPrototypeOf(fakeRoomObject, RoomDurableObject.prototype);
+    const state = playbackState(
+      "youtube|dQw4w9WgXcQ",
+      "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    );
+    const event: Extract<ClientEvent, { type: "HOST_STATE" }> = {
+      type: "HOST_STATE",
+      roomId: "room-1",
+      state,
+      source: watchSource(
+        "youtube",
+        state.videoFingerprint,
+        state.sourceUrl!,
+        "YouTube video",
+      ),
+    };
+    const handleHostState = (
+      RoomDurableObject.prototype as unknown as {
+        handleHostState(
+          this: typeof fakeRoomObject,
+          socket: WebSocket,
+          value: Extract<ClientEvent, { type: "HOST_STATE" }>,
+        ): Promise<void>;
+      }
+    ).handleHostState;
+
+    await expect(
+      handleHostState.call(fakeRoomObject, hostSocket, event),
+    ).resolves.toBeUndefined();
+    expect(fakeRoomObject.broadcast).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "SOURCE_CHANGED", sourceGeneration: 2 }),
+    );
+    expect(fakeRoomObject.roomSourceRepairNeeded).toBe(true);
+    expect(waitUntil).toHaveBeenCalledOnce();
+
+    await handleHostState.call(fakeRoomObject, hostSocket, {
+      ...event,
+      state: { ...state, hostTime: 42 },
+    });
+    expect(waitUntil).toHaveBeenCalledTimes(2);
+  });
+
+  it("defers a blocked lifecycle alarm to the pending source retry", async () => {
+    const storage = new RoomSourceMemoryStorage();
+    storage.values.set(ROOM_SOURCE_PENDING_STORAGE_KEY, {
+      schemaVersion: 1,
+      callback: {
+        roomId: "room-1",
+        sourceGeneration: 2,
+        source: {
+          provider: "youtube",
+          sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          canonicalUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          videoFingerprint: "youtube|dQw4w9WgXcQ",
+        },
+      },
+      attempts: 1,
+      nextAttemptAt: 5_000,
+    });
+    const fakeRoomObject = {
+      room: { roomId: "room-1" },
+      runRoomEndExclusively: vi.fn(),
+      runRoomSourceDeliveryExclusively: vi.fn().mockResolvedValue(false),
+      state: { storage: storage.asDurableObjectStorage() },
+    };
+    Object.setPrototypeOf(fakeRoomObject, RoomDurableObject.prototype);
+
+    await (
+      RoomDurableObject.prototype as unknown as {
+        alarm(this: typeof fakeRoomObject): Promise<void>;
+      }
+    ).alarm.call(fakeRoomObject);
+
+    expect(storage.alarmAt).toBe(5_000);
+    expect(fakeRoomObject.runRoomEndExclusively).not.toHaveBeenCalled();
   });
 
   it("increments source generation on first valid source initialization", () => {
@@ -659,4 +1010,42 @@ function watchSource(
     videoFingerprint,
     title,
   };
+}
+
+class RoomSourceMemoryStorage {
+  readonly values = new Map<string, unknown>();
+  alarmAt: number | null = null;
+  failNextTransaction = false;
+
+  asDurableObjectStorage(): DurableObjectStorage {
+    return this as unknown as DurableObjectStorage;
+  }
+
+  async get<T>(key: string): Promise<T | undefined> {
+    return this.values.get(key) as T | undefined;
+  }
+
+  async put(key: string, value: unknown): Promise<void> {
+    this.values.set(key, structuredClone(value));
+  }
+
+  async delete(key: string): Promise<boolean> {
+    return this.values.delete(key);
+  }
+
+  async setAlarm(scheduledTime: number): Promise<void> {
+    this.alarmAt = scheduledTime;
+  }
+
+  async deleteAlarm(): Promise<void> {
+    this.alarmAt = null;
+  }
+
+  async transaction<T>(closure: (transaction: DurableObjectTransaction) => Promise<T>): Promise<T> {
+    if (this.failNextTransaction) {
+      this.failNextTransaction = false;
+      throw new Error("room source storage unavailable");
+    }
+    return closure(this as unknown as DurableObjectTransaction);
+  }
 }
