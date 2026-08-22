@@ -62,14 +62,13 @@ export class RoomState {
       this.roomGenerationValue = snapshot.roomGeneration;
       this.serverSeqValue = snapshot.serverSeq;
       this.sourceGenerationValue = snapshot.sourceGeneration;
-      if (snapshot.hostState && snapshot.source) {
-        const restored = normalizeRoomSourceUpdate(
-          snapshot.hostState,
+      if (snapshot.source) {
+        const restored = normalizeWatchSourceDescriptor(
           snapshot.source,
-          undefined,
+          snapshot.hostState,
         );
-        if (restored?.source) {
-          this.hostState = restored.state;
+        if (restored) {
+          if (restored.state) this.hostState = restored.state;
           this.source = restored.source;
           this.sourceProvider = restored.source.provider;
         }
@@ -121,6 +120,18 @@ export class RoomState {
 
   get currentSourceProvider(): WatchSourceDescriptor["provider"] | undefined {
     return this.sourceProvider;
+  }
+
+  get currentDurableSource(): RoomSourceDescriptor | undefined {
+    if (!this.source) return undefined;
+    const durableSource = {
+      provider: this.source.provider,
+      sourceUrl: this.source.sourceUrl,
+      canonicalUrl: this.source.canonicalUrl,
+      videoFingerprint: this.source.videoFingerprint,
+    };
+    const parsed = RoomSourceDescriptorSchema.safeParse(durableSource);
+    return parsed.success ? parsed.data : undefined;
   }
 
   setCapabilities(capabilities: RoomCapabilities): void {
@@ -511,6 +522,12 @@ interface NormalizedRoomSourceUpdate {
   state: PlaybackState;
 }
 
+interface NormalizedWatchSourceDescriptor {
+  durableSource: RoomSourceDescriptor;
+  source: WatchSourceDescriptor;
+  state?: PlaybackState;
+}
+
 function normalizeRoomSourceUpdate(
   state: PlaybackState,
   source: WatchSourceDescriptor | undefined,
@@ -534,6 +551,23 @@ function normalizeRoomSourceUpdate(
   if (!candidate) {
     return previousSource ? null : { state };
   }
+  if (candidate.provider !== "crunchyroll" && candidate.provider !== "youtube") {
+    return null;
+  }
+
+  const normalized = normalizeWatchSourceDescriptor(candidate, state);
+  if (!normalized) return null;
+  return {
+    durableSource: normalized.durableSource,
+    source: normalized.source,
+    state: normalized.state ?? state,
+  };
+}
+
+function normalizeWatchSourceDescriptor(
+  candidate: WatchSourceDescriptor,
+  state?: PlaybackState,
+): NormalizedWatchSourceDescriptor | null {
   if (candidate.provider !== "crunchyroll" && candidate.provider !== "youtube") {
     return null;
   }
@@ -562,7 +596,7 @@ function normalizeRoomSourceUpdate(
   )) {
     return null;
   }
-  if (state.sourceUrl) {
+  if (state?.sourceUrl) {
     const stateUrl = canonicalizeRoomSourceUrl(state.sourceUrl, candidate.provider);
     if (!stateUrl.ok || !sameCanonicalSource(sourceUrl.source, stateUrl.source)) {
       return null;
@@ -574,7 +608,7 @@ function normalizeRoomSourceUpdate(
     )) {
       return null;
     }
-  } else if (state.videoFingerprint !== expectedFingerprint) {
+  } else if (state && state.videoFingerprint !== expectedFingerprint) {
     return null;
   }
 
@@ -592,11 +626,15 @@ function normalizeRoomSourceUpdate(
       ...candidate,
       ...durableSource,
     },
-    state: {
-      ...state,
-      sourceUrl: durableSource.sourceUrl,
-      videoFingerprint: durableSource.videoFingerprint,
-    },
+    ...(state
+      ? {
+          state: {
+            ...state,
+            sourceUrl: durableSource.sourceUrl,
+            videoFingerprint: durableSource.videoFingerprint,
+          },
+        }
+      : {}),
   };
 }
 

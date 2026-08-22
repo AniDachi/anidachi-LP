@@ -82,6 +82,19 @@ describe("internal Web room lifecycle client", () => {
     expect(observedAbort).toBe(true);
   });
 
+  it("applies the lifecycle deadline while consuming a successful response body", async () => {
+    expect(typeof clientApi.notifyWebRoomEnded).toBe("function");
+    if (!clientApi.notifyWebRoomEnded) return;
+    const { fetchImplementation, observedAbort, observedCancel } = stallingJsonBodyFetch();
+
+    await expect(withTestDeadline(clientApi.notifyWebRoomEnded({
+      ANIDACHI_INTERNAL_API_SECRET: "secret",
+      ANIDACHI_WEB_INTERNAL_BASE_URL: "https://web.internal",
+    }, "room-1", command, fetchImplementation, 5))).rejects.toThrow("request failed");
+    expect(observedAbort()).toBe(true);
+    expect(observedCancel()).toBe(true);
+  });
+
   it("rejects non-2xx and sends only the bounded internal callback payload", async () => {
     expect(typeof clientApi.notifyWebRoomEnded).toBe("function");
     if (!clientApi.notifyWebRoomEnded) return;
@@ -247,4 +260,65 @@ describe("internal Web room source client", () => {
     ).rejects.toThrow("request failed");
     expect(observedAbort).toBe(true);
   });
+
+  it("applies the source deadline while consuming a successful response body", async () => {
+    const { fetchImplementation, observedAbort, observedCancel } = stallingJsonBodyFetch();
+
+    await expect(withTestDeadline(internalWebClient.notifyWebRoomSource(
+      env,
+      "room-1",
+      sourceCallback,
+      fetchImplementation,
+      5,
+    ))).rejects.toThrow("request failed");
+    expect(observedAbort()).toBe(true);
+    expect(observedCancel()).toBe(true);
+  });
 });
+
+function stallingJsonBodyFetch(): {
+  fetchImplementation: typeof fetch;
+  observedAbort: () => boolean;
+  observedCancel: () => boolean;
+} {
+  let aborted = false;
+  let cancelled = false;
+  const fetchImplementation = vi.fn((_input: RequestInfo | URL, init?: RequestInit) => {
+    init?.signal?.addEventListener("abort", () => {
+      aborted = true;
+    }, { once: true });
+    return Promise.resolve(new Response(new ReadableStream({
+      cancel() {
+        cancelled = true;
+      },
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode('{"ok":true'));
+      },
+    }), {
+      headers: { "Content-Type": "application/json" },
+      status: 200,
+    }));
+  }) as typeof fetch;
+  return {
+    fetchImplementation,
+    observedAbort: () => aborted,
+    observedCancel: () => cancelled,
+  };
+}
+
+async function withTestDeadline<T>(promise: Promise<T>): Promise<T> {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_resolve, reject) => {
+        timeout = setTimeout(
+          () => reject(new Error("callback body deadline was not enforced")),
+          100,
+        );
+      }),
+    ]);
+  } finally {
+    if (timeout !== undefined) clearTimeout(timeout);
+  }
+}

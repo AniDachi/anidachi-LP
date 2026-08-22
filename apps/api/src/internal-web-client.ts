@@ -28,8 +28,9 @@ export async function notifyWebRoomEnded(
 ): Promise<void> {
   const config = internalWebCallbackConfig(env);
   let response: Response;
+  let body: unknown;
   try {
-    response = await fetchWithBoundedTimeout(
+    ({ response, body } = await fetchAndReadJsonWithBoundedTimeout(
       fetchImplementation,
       new URL(`/api/internal/rooms/${encodeURIComponent(roomId)}/ended`, config.baseUrl),
       {
@@ -41,7 +42,7 @@ export async function notifyWebRoomEnded(
         body: JSON.stringify(command),
       },
       timeoutMs,
-    );
+    ));
   } catch {
     throw new Error("Room lifecycle Web callback request failed");
   }
@@ -49,11 +50,11 @@ export async function notifyWebRoomEnded(
     throw new Error(`Room lifecycle Web callback failed (${response.status})`);
   }
 
-  const body = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+  const acknowledgement = body as Record<string, unknown> | null;
   if (
-    body?.ok !== true ||
-    body.usageFinalized !== true ||
-    (command.eventId !== undefined && body.eventId !== command.eventId)
+    acknowledgement?.ok !== true ||
+    acknowledgement.usageFinalized !== true ||
+    (command.eventId !== undefined && acknowledgement.eventId !== command.eventId)
   ) {
     throw new Error("Room lifecycle Web callback returned an invalid acknowledgement");
   }
@@ -73,8 +74,9 @@ export async function notifyWebRoomSource(
   }
 
   let response: Response;
+  let body: unknown;
   try {
-    response = await fetchWithBoundedTimeout(
+    ({ response, body } = await fetchAndReadJsonWithBoundedTimeout(
       fetchImplementation,
       new URL(`/api/internal/rooms/${encodeURIComponent(roomId)}/source`, config.baseUrl),
       {
@@ -86,7 +88,7 @@ export async function notifyWebRoomSource(
         body: JSON.stringify(parsedCallback.data),
       },
       timeoutMs,
-    );
+    ));
   } catch {
     throw new Error("Room source Web callback request failed");
   }
@@ -95,7 +97,7 @@ export async function notifyWebRoomSource(
   }
 
   const acknowledgement = RoomSourcePersistenceAcknowledgementSchema.safeParse(
-    await response.json().catch(() => null),
+    body,
   );
   if (
     !acknowledgement.success ||
@@ -111,21 +113,66 @@ function boundedInternalWebCallbackTimeout(timeoutMs: number): number {
     : INTERNAL_WEB_CALLBACK_TIMEOUT_MS;
 }
 
-async function fetchWithBoundedTimeout(
+async function fetchAndReadJsonWithBoundedTimeout(
   fetchImplementation: typeof fetch,
   input: URL,
   init: RequestInit,
   timeoutMs: number,
-): Promise<Response> {
+): Promise<{ body: unknown; response: Response }> {
   const controller = new AbortController();
-  const timeout = setTimeout(
-    () => controller.abort(),
-    boundedInternalWebCallbackTimeout(timeoutMs),
-  );
+  let bodyReader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<never>((_resolve, reject) => {
+    timeout = setTimeout(() => {
+      controller.abort();
+      void bodyReader?.cancel().catch(() => undefined);
+      reject(new Error("Internal Web callback deadline exceeded"));
+    }, boundedInternalWebCallbackTimeout(timeoutMs));
+  });
+  const operation = (async () => {
+    const response = await fetchImplementation(input, {
+      ...init,
+      signal: controller.signal,
+    });
+    const body = response.ok
+      ? await readJsonResponseBody(response, (reader) => {
+        bodyReader = reader;
+      })
+      : null;
+    return { body, response };
+  })();
   try {
-    return await fetchImplementation(input, { ...init, signal: controller.signal });
+    return await Promise.race([operation, deadline]);
   } finally {
-    clearTimeout(timeout);
+    if (timeout !== undefined) clearTimeout(timeout);
+  }
+}
+
+async function readJsonResponseBody(
+  response: Response,
+  captureReader: (reader: ReadableStreamDefaultReader<Uint8Array>) => void,
+): Promise<unknown> {
+  if (!response.body) return null;
+
+  const reader = response.body.getReader();
+  captureReader(reader);
+  const decoder = new TextDecoder();
+  let text = "";
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      text += decoder.decode(value, { stream: true });
+    }
+    text += decoder.decode();
+  } finally {
+    reader.releaseLock();
+  }
+
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return null;
   }
 }
 

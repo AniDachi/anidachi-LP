@@ -20,6 +20,8 @@ import { signRoomTokenForTest } from "../../src/auth";
 const TEST_SECRET_ENV = { ANIDACHI_JWT_SECRET: "anidachi-runtime-test-secret" };
 const INTERNAL_SECRET = "anidachi-runtime-internal-secret";
 const ROOM_LIFECYCLE_META_KEY = "room_lifecycle";
+const ROOM_SOURCE_ACKNOWLEDGED_GENERATION_KEY =
+	"room_source_acknowledged_generation_v1";
 const ROOM_SOURCE_PENDING_KEY = "room_source_pending_v1";
 
 function stubSuccessfulWebFinalization() {
@@ -568,6 +570,148 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		expect(callbackOrder).toEqual(["source", "source", "source", "ended"]);
 		expect(await readRoomRuntime(stub)).toMatchObject({ pendingSource: null });
 		host.close();
+	});
+
+	it("repairs a live missing outbox before explicit room finalization", async () => {
+		const roomId = `runtime-source-live-repair-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const callbackOrder: string[] = [];
+		let sourceAttempt = 0;
+		const callbackFetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+			if (String(input).endsWith("/source")) {
+				sourceAttempt += 1;
+				callbackOrder.push(`source:${sourceAttempt}`);
+				if (sourceAttempt === 1) {
+					return Response.json({ error: "temporary" }, { status: 503 });
+				}
+				const body = JSON.parse(String(init?.body)) as { sourceGeneration: number };
+				return Response.json({
+					ok: true,
+					outcome: "persisted",
+					sourceGeneration: body.sourceGeneration,
+				});
+			}
+			callbackOrder.push("ended");
+			return Response.json({ ok: true, usageFinalized: true });
+		});
+		vi.stubGlobal("fetch", callbackFetch);
+		const host = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-live-repair", userId: "host-user",
+		});
+		const sourceUrl = "https://www.crunchyroll.com/watch/live-repair";
+		host.send({
+			type: "HOST_STATE",
+			roomId,
+			state: playbackState("crunchyroll|watch/live-repair", sourceUrl),
+			source: sourceDescriptor(
+				"crunchyroll|watch/live-repair",
+				"Live repair episode",
+				sourceUrl,
+			),
+		});
+		await waitForRoomRuntime(
+			stub,
+			(value) => value.pendingSource?.attempts === 1,
+			"failed live source callback",
+		);
+		await removeSourceDurabilityState(stub);
+
+		const completed = await endRoom(stub, { endedAt: 2_000, reason: "host_ended" });
+
+		expect(completed.status).toBe(200);
+		expect(callbackOrder).toEqual(["source:1", "source:2", "ended"]);
+		expect(await readRoomRuntime(stub)).toMatchObject({
+			acknowledgedSourceGeneration: 2,
+			pendingSource: null,
+			tombstone: { endedAt: 2_000, reason: "host_ended" },
+		});
+		host.close();
+	});
+
+	it("repairs a missing source outbox on hibernation wake without redelivery after ack", async () => {
+		const roomId = `runtime-source-wake-repair-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		let sourceAttempt = 0;
+		let releaseRepairCallback: () => void = () => {};
+		const repairCallbackGate = new Promise<void>((resolve) => {
+			releaseRepairCallback = resolve;
+		});
+		const callbackFetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+			if (!String(input).endsWith("/source")) {
+				return Response.json({ ok: true, usageFinalized: true });
+			}
+			sourceAttempt += 1;
+			if (sourceAttempt === 1) {
+				return Response.json({ error: "temporary" }, { status: 503 });
+			}
+			await repairCallbackGate;
+			const body = JSON.parse(String(init?.body)) as { sourceGeneration: number };
+			return Response.json({
+				ok: true,
+				outcome: "persisted",
+				sourceGeneration: body.sourceGeneration,
+			});
+		});
+		vi.stubGlobal("fetch", callbackFetch);
+		const host = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-wake-repair", userId: "host-user",
+		});
+		const guest = await connectRoomClient(stub, {
+			roomId, role: "member", sessionId: "guest-wake-repair", userId: "guest-user",
+		});
+		const sourceUrl = "https://www.crunchyroll.com/watch/wake-repair";
+		host.send({
+			type: "HOST_STATE",
+			roomId,
+			state: playbackState("crunchyroll|watch/wake-repair", sourceUrl),
+			source: sourceDescriptor(
+				"crunchyroll|watch/wake-repair",
+				"Wake repair episode",
+				sourceUrl,
+			),
+		});
+		await guest.waitFor(
+			(event) => event.type === "SOURCE_CHANGED" && event.sourceGeneration === 2,
+			"source before simulated outbox loss",
+		);
+		await waitForRoomRuntime(
+			stub,
+			(value) => value.pendingSource?.attempts === 1,
+			"failed source before hibernation",
+		);
+		await removeSourceDurabilityState(stub);
+		await evictDurableObject(stub, { webSockets: "hibernate" });
+
+		guest.send({ type: "PING", roomId, sentAt: 91 });
+		const callbackDeadline = Date.now() + 1_500;
+		while (sourceAttempt < 2 && Date.now() < callbackDeadline) await sleep(10);
+		expect(sourceAttempt).toBe(2);
+		await guest.waitFor(
+			(event) => event.type === "PONG" && event.sentAt === 91,
+			"live room while repaired callback is pending",
+		);
+		releaseRepairCallback();
+		await waitForRoomRuntime(
+			stub,
+			(value) =>
+				value.acknowledgedSourceGeneration === 2 &&
+				value.pendingSource === null,
+			"acknowledged repaired source",
+		);
+
+		await evictDurableObject(stub, { webSockets: "hibernate" });
+		guest.send({ type: "PING", roomId, sentAt: 92 });
+		await guest.waitFor(
+			(event) => event.type === "PONG" && event.sentAt === 92,
+			"acknowledged wake",
+		);
+		await sleep(50);
+		expect(sourceAttempt).toBe(2);
+
+		host.close();
+		guest.close();
 	});
 
 	it("never issues history authority without a participant session id", async () => {
@@ -1349,6 +1493,7 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 });
 
 interface RoomRuntimeSnapshot {
+	acknowledgedSourceGeneration: number | null;
 	alarm: number | null;
 	lifecycle: Record<string, unknown> | null;
 	pendingSource: Record<string, unknown> | null;
@@ -1364,6 +1509,8 @@ async function readRoomRuntime(stub: DurableObjectStub): Promise<RoomRuntimeSnap
 			return row ? JSON.parse(row.value_json) as Record<string, unknown> : null;
 		};
 		return {
+			acknowledgedSourceGeneration:
+				await state.storage.get<number>(ROOM_SOURCE_ACKNOWLEDGED_GENERATION_KEY) ?? null,
 			alarm: await state.storage.getAlarm(),
 			lifecycle: await state.storage.get<Record<string, unknown>>(ROOM_LIFECYCLE_META_KEY) ?? null,
 			pendingSource: await state.storage.get<Record<string, unknown>>(ROOM_SOURCE_PENDING_KEY) ?? null,
@@ -1425,6 +1572,16 @@ async function deferSourceRetry(stub: DurableObjectStub): Promise<void> {
 			const nextAttemptAt = Date.now() + 60_000;
 			await transaction.put(ROOM_SOURCE_PENDING_KEY, { ...pending, nextAttemptAt });
 			await transaction.setAlarm(nextAttemptAt);
+		});
+	});
+}
+
+async function removeSourceDurabilityState(stub: DurableObjectStub): Promise<void> {
+	await runInDurableObject(stub, async (_instance, state) => {
+		await state.storage.transaction(async (transaction) => {
+			await transaction.delete(ROOM_SOURCE_PENDING_KEY);
+			await transaction.delete(ROOM_SOURCE_ACKNOWLEDGED_GENERATION_KEY);
+			await transaction.deleteAlarm();
 		});
 	});
 }

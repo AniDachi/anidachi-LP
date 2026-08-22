@@ -1,5 +1,6 @@
 import type { RoomSourcePersistenceCallback } from "@anidachi/protocol";
 import { describe, expect, it } from "vitest";
+import * as roomSourcePersistence from "../src/room-source-persistence";
 import { ROOM_LIFECYCLE_STORAGE_KEY, emptyRoomLifecycle } from "../src/room-lifecycle";
 import {
   MAX_ROOM_SOURCE_PERSISTENCE_ATTEMPTS,
@@ -143,6 +144,54 @@ describe("room source persistence outbox", () => {
     });
     await expect(acknowledgeStoredRoomSourceAttempt(durableStorage, 3)).resolves.toBe(true);
     expect(await readStoredRoomSourcePersistence(durableStorage)).toBeNull();
+  });
+
+  it("atomically advances the durable acknowledged generation with an exact clear", async () => {
+    const storage = new MemoryStorage();
+    const durableStorage = storage.asDurableObjectStorage();
+    await enqueueStoredRoomSource(durableStorage, callback(2), 100);
+
+    await expect(acknowledgeStoredRoomSourceAttempt(durableStorage, 2)).resolves.toBe(true);
+    expect(await readStoredRoomSourcePersistence(durableStorage)).toBeNull();
+    expect(storage.values.get("room_source_acknowledged_generation_v1")).toBe(2);
+
+    await enqueueStoredRoomSource(durableStorage, callback(3), 200);
+    await expect(acknowledgeStoredRoomSourceAttempt(durableStorage, 2)).resolves.toBe(false);
+    expect(storage.values.get("room_source_acknowledged_generation_v1")).toBe(2);
+    expect(await readStoredRoomSourcePersistence(durableStorage)).toMatchObject({
+      callback: callback(3),
+    });
+
+    await expect(acknowledgeStoredRoomSourceAttempt(durableStorage, 3)).resolves.toBe(true);
+    expect(storage.values.get("room_source_acknowledged_generation_v1")).toBe(3);
+  });
+
+  it("materializes a missing current source only while its generation is unacknowledged", async () => {
+    const api = roomSourcePersistence as typeof roomSourcePersistence & {
+      ensureStoredRoomSourcePending?: (
+        storage: DurableObjectStorage,
+        current: RoomSourcePersistenceCallback,
+        now: number,
+      ) => Promise<unknown>;
+    };
+    expect(typeof api.ensureStoredRoomSourcePending).toBe("function");
+    if (!api.ensureStoredRoomSourcePending) return;
+    const storage = new MemoryStorage();
+    const durableStorage = storage.asDurableObjectStorage();
+
+    await expect(
+      api.ensureStoredRoomSourcePending(durableStorage, callback(2), 100),
+    ).resolves.toMatchObject({ callback: callback(2), nextAttemptAt: 100 });
+    await acknowledgeStoredRoomSourceAttempt(durableStorage, 2);
+
+    await expect(
+      api.ensureStoredRoomSourcePending(durableStorage, callback(2), 200),
+    ).resolves.toBeNull();
+    expect(await readStoredRoomSourcePersistence(durableStorage)).toBeNull();
+
+    await expect(
+      api.ensureStoredRoomSourcePending(durableStorage, callback(3), 300),
+    ).resolves.toMatchObject({ callback: callback(3), nextAttemptAt: 300 });
   });
 
   it("removes corrupt pending state without erasing a lifecycle deadline", async () => {

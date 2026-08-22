@@ -247,6 +247,51 @@ describe("RoomState", () => {
     expect(restored.currentSourceProvider).toBe("youtube");
   });
 
+  it("restores a canonical rich source and provider pin without persisted host playback", () => {
+    const room = new RoomState("room-1");
+    room.join(participant("host", "host"));
+    const state = playbackState(
+      "crunchyroll|watch/G8WUNM123",
+      "https://www.crunchyroll.com/ru/watch/G8WUNM123/episode-one",
+    );
+    room.updateHostState("host", state, {
+      ...sourceDescriptor(state, "Episode one"),
+      duration: 1_440,
+      posterUrl: "https://static.crunchyroll.com/posters/G8WUNM123.jpg",
+    });
+    room.leave("host");
+    const snapshot = room.toSnapshot(1_234);
+    expect(snapshot.hostState).toBeUndefined();
+
+    const restored = new RoomState("room-1", undefined, snapshot);
+
+    expect(restored.sourceGeneration).toBe(2);
+    expect(restored.currentSourceProvider).toBe("crunchyroll");
+    expect(restored.snapshot).toMatchObject({
+      sourceGeneration: 2,
+      source: {
+        provider: "crunchyroll",
+        sourceUrl: "https://www.crunchyroll.com/watch/G8WUNM123",
+        canonicalUrl: "https://www.crunchyroll.com/watch/G8WUNM123",
+        videoFingerprint: "crunchyroll|watch/G8WUNM123",
+        title: "Episode one",
+        duration: 1_440,
+        posterUrl: "https://static.crunchyroll.com/posters/G8WUNM123.jpg",
+      },
+    });
+
+    const invalid = new RoomState("room-1", undefined, {
+      ...snapshot,
+      source: {
+        ...snapshot.source!,
+        sourceUrl: "https://attacker.example/watch/G8WUNM123",
+      },
+    });
+    expect(invalid.sourceGeneration).toBe(2);
+    expect(invalid.currentSourceProvider).toBeUndefined();
+    expect(invalid.snapshot).not.toHaveProperty("source");
+  });
+
   it("rejects insecure, foreign, unsupported, and cross-identity sources before mutation", () => {
     const invalidSources: WatchSourceDescriptor[] = [
       watchSource(
@@ -367,6 +412,104 @@ describe("RoomState", () => {
         source: event.source,
       }),
     );
+  });
+
+  it("keeps the live source broadcast and retries repair after an outbox storage failure", async () => {
+    const room = new RoomState("room-1");
+    room.join(participant("host", "host"));
+    const hostSocket = {} as WebSocket;
+    const storage = new RoomSourceMemoryStorage();
+    storage.failNextTransaction = true;
+    const waitUntil = vi.fn();
+    const fakeRoomObject = {
+      broadcast: vi.fn(),
+      participantsBySocket: new Map([[hostSocket, "host"]]),
+      persistRoomState: vi.fn(),
+      refreshRoomHistoryAuthorities: vi.fn().mockResolvedValue(undefined),
+      room,
+      roomSourceRepairNeeded: false,
+      runRoomSourceDeliveryExclusively: vi.fn().mockResolvedValue(true),
+      send: vi.fn(),
+      state: {
+        storage: storage.asDurableObjectStorage(),
+        waitUntil,
+      },
+    };
+    Object.setPrototypeOf(fakeRoomObject, RoomDurableObject.prototype);
+    const state = playbackState(
+      "youtube|dQw4w9WgXcQ",
+      "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    );
+    const event: Extract<ClientEvent, { type: "HOST_STATE" }> = {
+      type: "HOST_STATE",
+      roomId: "room-1",
+      state,
+      source: watchSource(
+        "youtube",
+        state.videoFingerprint,
+        state.sourceUrl!,
+        "YouTube video",
+      ),
+    };
+    const handleHostState = (
+      RoomDurableObject.prototype as unknown as {
+        handleHostState(
+          this: typeof fakeRoomObject,
+          socket: WebSocket,
+          value: Extract<ClientEvent, { type: "HOST_STATE" }>,
+        ): Promise<void>;
+      }
+    ).handleHostState;
+
+    await expect(
+      handleHostState.call(fakeRoomObject, hostSocket, event),
+    ).resolves.toBeUndefined();
+    expect(fakeRoomObject.broadcast).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "SOURCE_CHANGED", sourceGeneration: 2 }),
+    );
+    expect(fakeRoomObject.roomSourceRepairNeeded).toBe(true);
+    expect(waitUntil).toHaveBeenCalledOnce();
+
+    await handleHostState.call(fakeRoomObject, hostSocket, {
+      ...event,
+      state: { ...state, hostTime: 42 },
+    });
+    expect(waitUntil).toHaveBeenCalledTimes(2);
+  });
+
+  it("defers a blocked lifecycle alarm to the pending source retry", async () => {
+    const storage = new RoomSourceMemoryStorage();
+    storage.values.set(ROOM_SOURCE_PENDING_STORAGE_KEY, {
+      schemaVersion: 1,
+      callback: {
+        roomId: "room-1",
+        sourceGeneration: 2,
+        source: {
+          provider: "youtube",
+          sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          canonicalUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          videoFingerprint: "youtube|dQw4w9WgXcQ",
+        },
+      },
+      attempts: 1,
+      nextAttemptAt: 5_000,
+    });
+    const fakeRoomObject = {
+      room: { roomId: "room-1" },
+      runRoomEndExclusively: vi.fn(),
+      runRoomSourceDeliveryExclusively: vi.fn().mockResolvedValue(false),
+      state: { storage: storage.asDurableObjectStorage() },
+    };
+    Object.setPrototypeOf(fakeRoomObject, RoomDurableObject.prototype);
+
+    await (
+      RoomDurableObject.prototype as unknown as {
+        alarm(this: typeof fakeRoomObject): Promise<void>;
+      }
+    ).alarm.call(fakeRoomObject);
+
+    expect(storage.alarmAt).toBe(5_000);
+    expect(fakeRoomObject.runRoomEndExclusively).not.toHaveBeenCalled();
   });
 
   it("increments source generation on first valid source initialization", () => {
@@ -872,6 +1015,7 @@ function watchSource(
 class RoomSourceMemoryStorage {
   readonly values = new Map<string, unknown>();
   alarmAt: number | null = null;
+  failNextTransaction = false;
 
   asDurableObjectStorage(): DurableObjectStorage {
     return this as unknown as DurableObjectStorage;
@@ -898,6 +1042,10 @@ class RoomSourceMemoryStorage {
   }
 
   async transaction<T>(closure: (transaction: DurableObjectTransaction) => Promise<T>): Promise<T> {
+    if (this.failNextTransaction) {
+      this.failNextTransaction = false;
+      throw new Error("room source storage unavailable");
+    }
     return closure(this as unknown as DurableObjectTransaction);
   }
 }

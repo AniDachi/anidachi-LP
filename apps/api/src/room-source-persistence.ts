@@ -9,6 +9,8 @@ import {
 } from "./room-lifecycle";
 
 export const ROOM_SOURCE_PENDING_STORAGE_KEY = "room_source_pending_v1";
+export const ROOM_SOURCE_ACKNOWLEDGED_GENERATION_STORAGE_KEY =
+  "room_source_acknowledged_generation_v1";
 export const MAX_ROOM_SOURCE_PERSISTENCE_ATTEMPTS = 32;
 export const ROOM_SOURCE_RETRY_BASE_MS = 5_000;
 export const ROOM_SOURCE_RETRY_MAX_MS = 5 * 60_000;
@@ -53,6 +55,14 @@ export async function readStoredRoomSourcePersistence(
   );
 }
 
+export async function readStoredRoomSourceAcknowledgedGeneration(
+  storage: DurableObjectStorage,
+): Promise<number> {
+  return parseAcknowledgedGeneration(
+    await storage.get<unknown>(ROOM_SOURCE_ACKNOWLEDGED_GENERATION_STORAGE_KEY),
+  );
+}
+
 export async function enqueueStoredRoomSource(
   storage: DurableObjectStorage,
   callback: RoomSourcePersistenceCallback,
@@ -63,40 +73,30 @@ export async function enqueueStoredRoomSource(
     throw new Error("Invalid room source persistence callback");
   }
 
-  return storage.transaction(async (transaction) => {
-    const raw = await transaction.get<unknown>(ROOM_SOURCE_PENDING_STORAGE_KEY);
-    const current = parsePendingRoomSourcePersistence(raw);
-    if (raw !== undefined && !current) {
-      await transaction.delete(ROOM_SOURCE_PENDING_STORAGE_KEY);
-    }
-    if (current) {
-      if (current.callback.roomId !== parsedCallback.data.roomId) {
-        throw new Error("Conflicting room source persistence room");
-      }
-      const currentGeneration = current.callback.sourceGeneration;
-      const nextGeneration = parsedCallback.data.sourceGeneration;
-      if (nextGeneration < currentGeneration) {
-        await reconcileStoredRoomAlarm(transaction);
-        return current;
-      }
-      if (nextGeneration === currentGeneration) {
-        if (!sameCallback(current.callback, parsedCallback.data)) {
-          throw new Error("Conflicting room source persistence generation");
-        }
-        await reconcileStoredRoomAlarm(transaction);
-        return current;
-      }
-    }
+  return storage.transaction((transaction) =>
+    putPendingRoomSource(transaction, parsedCallback.data, now));
+}
 
-    const pending: PendingRoomSourcePersistence = {
-      schemaVersion: 1,
-      callback: parsedCallback.data,
-      attempts: 0,
-      nextAttemptAt: now,
-    };
-    await transaction.put(ROOM_SOURCE_PENDING_STORAGE_KEY, pending);
-    await reconcileStoredRoomAlarm(transaction);
-    return pending;
+export async function ensureStoredRoomSourcePending(
+  storage: DurableObjectStorage,
+  current: RoomSourcePersistenceCallback,
+  now: number,
+): Promise<PendingRoomSourcePersistence | null> {
+  const parsedCallback = RoomSourcePersistenceCallbackSchema.safeParse(current);
+  if (!parsedCallback.success || !isTimestamp(now)) {
+    throw new Error("Invalid room source persistence callback");
+  }
+  return storage.transaction(async (transaction) => {
+    const acknowledgedGeneration = parseAcknowledgedGeneration(
+      await transaction.get<unknown>(
+        ROOM_SOURCE_ACKNOWLEDGED_GENERATION_STORAGE_KEY,
+      ),
+    );
+    if (acknowledgedGeneration >= parsedCallback.data.sourceGeneration) {
+      await reconcileStoredRoomAlarm(transaction);
+      return null;
+    }
+    return putPendingRoomSource(transaction, parsedCallback.data, now);
   });
 }
 
@@ -152,6 +152,15 @@ export async function acknowledgeStoredRoomSourceAttempt(
       return false;
     }
     await transaction.delete(ROOM_SOURCE_PENDING_STORAGE_KEY);
+    const acknowledgedGeneration = parseAcknowledgedGeneration(
+      await transaction.get<unknown>(
+        ROOM_SOURCE_ACKNOWLEDGED_GENERATION_STORAGE_KEY,
+      ),
+    );
+    await transaction.put(
+      ROOM_SOURCE_ACKNOWLEDGED_GENERATION_STORAGE_KEY,
+      Math.max(acknowledgedGeneration, sourceGeneration),
+    );
     await reconcileStoredRoomAlarm(transaction);
     return true;
   });
@@ -213,6 +222,46 @@ function sameCallback(
     left.source.videoFingerprint === right.source.videoFingerprint;
 }
 
+async function putPendingRoomSource(
+  transaction: DurableObjectTransaction,
+  callback: RoomSourcePersistenceCallback,
+  now: number,
+): Promise<PendingRoomSourcePersistence> {
+  const raw = await transaction.get<unknown>(ROOM_SOURCE_PENDING_STORAGE_KEY);
+  const current = parsePendingRoomSourcePersistence(raw);
+  if (raw !== undefined && !current) {
+    await transaction.delete(ROOM_SOURCE_PENDING_STORAGE_KEY);
+  }
+  if (current) {
+    if (current.callback.roomId !== callback.roomId) {
+      throw new Error("Conflicting room source persistence room");
+    }
+    const currentGeneration = current.callback.sourceGeneration;
+    const nextGeneration = callback.sourceGeneration;
+    if (nextGeneration < currentGeneration) {
+      await reconcileStoredRoomAlarm(transaction);
+      return current;
+    }
+    if (nextGeneration === currentGeneration) {
+      if (!sameCallback(current.callback, callback)) {
+        throw new Error("Conflicting room source persistence generation");
+      }
+      await reconcileStoredRoomAlarm(transaction);
+      return current;
+    }
+  }
+
+  const pending: PendingRoomSourcePersistence = {
+    schemaVersion: 1,
+    callback,
+    attempts: 0,
+    nextAttemptAt: now,
+  };
+  await transaction.put(ROOM_SOURCE_PENDING_STORAGE_KEY, pending);
+  await reconcileStoredRoomAlarm(transaction);
+  return pending;
+}
+
 function hasExactKeys(value: Record<string, unknown>, keys: string[]): boolean {
   const actual = Object.keys(value).sort();
   const expected = [...keys].sort();
@@ -225,4 +274,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isTimestamp(value: unknown): value is number {
   return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
+}
+
+function parseAcknowledgedGeneration(value: unknown): number {
+  return Number.isSafeInteger(value) && (value as number) >= 1
+    ? value as number
+    : 0;
 }

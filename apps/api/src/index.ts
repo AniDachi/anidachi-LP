@@ -4,6 +4,7 @@ import {
   MAX_ROOM_ID_CHARS,
   type ClientEvent,
   type Participant,
+  type RoomSourcePersistenceCallback,
   type RoomUsageSummary,
   type ServerEvent,
 } from "@anidachi/protocol";
@@ -70,9 +71,11 @@ import {
 import { RoomAdmission } from "./room-admission";
 import { RoomState } from "./room-state";
 import {
+  ROOM_SOURCE_RETRY_BASE_MS,
   acknowledgeStoredRoomSourceAttempt,
   claimStoredRoomSourceAttempt,
   enqueueStoredRoomSource,
+  ensureStoredRoomSourcePending,
   readStoredRoomSourcePersistence,
 } from "./room-source-persistence";
 import {
@@ -389,6 +392,7 @@ export class RoomDurableObject {
   private roomEndQueue: Promise<void> = Promise.resolve();
   private roomEndInProgress = false;
   private roomSourceDeliveryQueue: Promise<void> = Promise.resolve();
+  private roomSourceRepairNeeded = false;
 
   constructor(
     private readonly state: DurableObjectState,
@@ -418,6 +422,11 @@ export class RoomDurableObject {
     // signals that cannot be replayed.
     this.p2pSignalBuffer.markReplayGapThrough(this.nextP2PServerSeq - 1);
     if (!this.endedTombstone) {
+      state.blockConcurrencyWhile(async () => {
+        if (await this.ensureCurrentRoomSourcePending()) {
+          state.waitUntil(this.runRoomSourceDeliveryExclusively(false));
+        }
+      });
       state.setWebSocketAutoResponse(
         new WebSocketRequestResponsePair(HIBERNATION_KEEPALIVE_PING, HIBERNATION_KEEPALIVE_PONG),
       );
@@ -666,8 +675,40 @@ export class RoomDurableObject {
     return delivery;
   }
 
+  private currentRoomSourceCallback(): RoomSourcePersistenceCallback | null {
+    const source = this.room.currentDurableSource;
+    return source
+      ? {
+          roomId: this.room.roomId,
+          sourceGeneration: this.room.sourceGeneration,
+          source,
+        }
+      : null;
+  }
+
+  private async ensureCurrentRoomSourcePending(): Promise<boolean> {
+    const callback = this.currentRoomSourceCallback();
+    if (!callback) {
+      this.roomSourceRepairNeeded = false;
+      return true;
+    }
+    try {
+      await ensureStoredRoomSourcePending(
+        this.state.storage,
+        callback,
+        Date.now(),
+      );
+      this.roomSourceRepairNeeded = false;
+      return true;
+    } catch {
+      this.roomSourceRepairNeeded = true;
+      return false;
+    }
+  }
+
   private async deliverPendingRoomSource(force: boolean): Promise<boolean> {
     try {
+      if (!await this.ensureCurrentRoomSourcePending()) return false;
       const attempt = await claimStoredRoomSourceAttempt(
         this.state.storage,
         Date.now(),
@@ -950,7 +991,14 @@ export class RoomDurableObject {
   }
 
   async alarm(): Promise<void> {
-    await this.runRoomSourceDeliveryExclusively(false);
+    const sourceDurable = await this.runRoomSourceDeliveryExclusively(false);
+    if (!sourceDurable) {
+      const pending = await readStoredRoomSourcePersistence(this.state.storage);
+      await this.state.storage.setAlarm(
+        pending?.nextAttemptAt ?? Date.now() + ROOM_SOURCE_RETRY_BASE_MS,
+      );
+      return;
+    }
     await this.runRoomEndExclusively(() => this.runAlarmExclusive());
   }
 
@@ -1396,15 +1444,20 @@ export class RoomDurableObject {
     this.persistRoomState();
 
     if (result.sourceChanged) {
-      await enqueueStoredRoomSource(
-        this.state.storage,
-        {
-          roomId: this.room.roomId,
-          sourceGeneration: this.room.sourceGeneration,
-          source: result.durableSource,
-        },
-        Date.now(),
-      );
+      try {
+        await enqueueStoredRoomSource(
+          this.state.storage,
+          {
+            roomId: this.room.roomId,
+            sourceGeneration: this.room.sourceGeneration,
+            source: result.durableSource,
+          },
+          Date.now(),
+        );
+        this.roomSourceRepairNeeded = false;
+      } catch {
+        this.roomSourceRepairNeeded = true;
+      }
       this.broadcast({
         type: "SOURCE_CHANGED",
         roomId: this.room.roomId,
@@ -1416,6 +1469,8 @@ export class RoomDurableObject {
         ...(result.previousSource ? { previousSource: result.previousSource } : {}),
         hostState: normalizedState,
       });
+      this.state.waitUntil(this.runRoomSourceDeliveryExclusively(false));
+    } else if (this.roomSourceRepairNeeded) {
       this.state.waitUntil(this.runRoomSourceDeliveryExclusively(false));
     }
 
