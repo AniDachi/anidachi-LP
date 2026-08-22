@@ -649,7 +649,7 @@ function SentInviteRow({ invite }: { invite: RoomInvite }) {
             {invite.roomTitle ?? "Watch room invite"}
           </h3>
           <p className="mt-1 text-xs text-foreground/50">
-            Sent {formatDate(invite.createdAt)} · expires {formatDate(invite.expiresAt)}
+            Sent {formatDate(invite.createdAt)}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {invite.recipients.map((recipient) => (

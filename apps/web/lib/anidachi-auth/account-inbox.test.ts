@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import type { AccountInboxItem } from "@anidachi/protocol";
 import {
@@ -10,6 +11,13 @@ import {
 const OWNER_ID = "11111111-1111-4111-8111-111111111111";
 const SENDER_ID = "22222222-2222-4222-8222-222222222222";
 const NOW = new Date("2026-08-09T12:00:00.000Z");
+const ACCOUNT_INBOX_SOURCE_URL = new URL("./account-inbox.ts", import.meta.url);
+
+test("account inbox reads the lifecycle-consistent v2 database page", () => {
+	const source = readFileSync(ACCOUNT_INBOX_SOURCE_URL, "utf8");
+	assert.match(source, /\.rpc\("get_account_inbox_page_v2"/);
+	assert.doesNotMatch(source, /\.rpc\("get_account_inbox_page"/);
+});
 
 test("room invite lifecycle uses durable recipient state", () => {
 	assert.deepEqual(

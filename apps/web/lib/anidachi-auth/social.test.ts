@@ -12,12 +12,15 @@ import {
   isUuid,
   normalizeHandle,
   publicProfileFromRows,
+  roomInviteRecipientLifecycleStatus,
   resolveFriendGroupCreateOutcome,
   resolveFriendRequestTransitionReread,
   resolveRoomInviteCreateOutcome,
+  resolveRoomInviteResponseOutcome,
   roomInviteCreateError,
   SocialApiError,
   type FriendshipRow,
+  type RoomInviteResponseOutcomeRow,
 } from "./social";
 
 const VIEWER_ID = "00000000-0000-4000-8000-000000000001";
@@ -29,6 +32,12 @@ const WATCH_HISTORY_V2_MIGRATION_URL = new URL(
   "../../supabase/migrations/20260814010000_watch_history_v2_foundation.sql",
   import.meta.url,
 );
+const SOCIAL_SOURCE_URL = new URL("./social.ts", import.meta.url);
+const INVITES_CLIENT_SOURCE_URL = new URL(
+  "../../app/account/invites/invites-client.tsx",
+  import.meta.url,
+);
+const ACCOUNT_PAGE_SOURCE_URL = new URL("../../app/account/page.tsx", import.meta.url);
 
 test("friend invite tokens accept only URL-safe opaque values", () => {
   assert.equal(
@@ -204,6 +213,221 @@ test("atomic room invite errors preserve public authorization, conflict, and rat
   assert.equal(roomInviteCreateError("unrelated database error"), null);
 });
 
+test("atomic room invite responses accept only the requested completed action", () => {
+  assert.deepEqual(
+    resolveRoomInviteResponseOutcome(
+      atomicInviteResponseOutcome({ outcome: "accepted", recipient_status: "accepted" }),
+      "accept",
+      INVITE_ID,
+    ),
+    { recipientStatus: "accepted" },
+  );
+  assert.deepEqual(
+    resolveRoomInviteResponseOutcome(
+      atomicInviteResponseOutcome({ outcome: "declined", recipient_status: "declined" }),
+      "decline",
+      INVITE_ID,
+    ),
+    { recipientStatus: "declined" },
+  );
+  assert.throws(
+    () =>
+      resolveRoomInviteResponseOutcome(
+        atomicInviteResponseOutcome({ outcome: "accepted", recipient_status: "accepted" }),
+        "decline",
+        INVITE_ID,
+      ),
+    /invalid database response/,
+  );
+});
+
+test("atomic room invite responses preserve stable public lifecycle errors", () => {
+  const cases: Array<{
+    row: RoomInviteResponseOutcomeRow;
+    status: number;
+    message: string;
+  }> = [
+    {
+      row: atomicInviteResponseOutcome({
+        outcome: "already_resolved",
+        recipient_status: "declined",
+      }),
+      status: 409,
+      message: "Invite was already resolved",
+    },
+    {
+      row: atomicInviteResponseOutcome({
+        outcome: "room_ended",
+        recipient_status: "expired",
+        responded_at: null,
+        missed_at: "2026-08-22T08:00:00.000Z",
+      }),
+      status: 410,
+      message: "Room has ended",
+    },
+    {
+      row: atomicInviteResponseOutcome({
+        outcome: "friendship_required",
+        recipient_status: "pending",
+        responded_at: null,
+      }),
+      status: 403,
+      message: "This invite is no longer available",
+    },
+    {
+      row: atomicInviteResponseOutcome({
+        outcome: "not_found",
+        room_id: null,
+        recipient_status: null,
+        responded_at: null,
+      }),
+      status: 404,
+      message: "Invite not found",
+    },
+  ];
+
+  for (const { row, status, message } of cases) {
+    assert.throws(
+      () => resolveRoomInviteResponseOutcome(row, "accept", INVITE_ID),
+      (error) =>
+        error instanceof SocialApiError &&
+        error.status === status &&
+        error.message === message,
+    );
+  }
+  assert.throws(
+    () =>
+      resolveRoomInviteResponseOutcome(
+        atomicInviteResponseOutcome({
+          outcome: "already_resolved",
+          recipient_status: "accepted",
+        }),
+        "decline",
+        INVITE_ID,
+      ),
+    (error) => error instanceof SocialApiError && error.status === 409,
+  );
+});
+
+test("atomic room invite responses fail closed on malformed or mismatched database rows", () => {
+  const invalidRows: Array<RoomInviteResponseOutcomeRow | null> = [
+    null,
+    atomicInviteResponseOutcome({ invite_id: OTHER_ID }),
+    atomicInviteResponseOutcome({ outcome: "accepted", recipient_status: "pending" }),
+    atomicInviteResponseOutcome({ outcome: "friendship_required", recipient_status: "accepted" }),
+    atomicInviteResponseOutcome({ outcome: "room_ended", recipient_status: "expired", missed_at: null }),
+    atomicInviteResponseOutcome({ outcome: "not_found", room_id: "room-1" }),
+    atomicInviteResponseOutcome({ outcome: "already_resolved", recipient_status: "accepted" }),
+    atomicInviteResponseOutcome({
+      outcome: "already_resolved",
+      recipient_status: "declined",
+      responded_at: null,
+    }),
+    {
+      ...atomicInviteResponseOutcome(),
+      responded_at: 0,
+    } as unknown as RoomInviteResponseOutcomeRow,
+  ];
+
+  for (const row of invalidRows) {
+    assert.throws(
+      () => resolveRoomInviteResponseOutcome(row, "accept", INVITE_ID),
+      /invalid database response/,
+    );
+  }
+  assert.throws(
+    () =>
+      resolveRoomInviteResponseOutcome(
+        atomicInviteResponseOutcome({
+          outcome: "friendship_required",
+          recipient_status: "pending",
+          responded_at: null,
+        }),
+        "decline",
+        INVITE_ID,
+      ),
+    /invalid database response/,
+  );
+  assert.throws(
+    () =>
+      resolveRoomInviteResponseOutcome(
+        atomicInviteResponseOutcome({
+          outcome: "room_ended",
+          recipient_status: "expired",
+          missed_at: "2026-08-22T08:00:00.000Z",
+        }),
+        "accept",
+        INVITE_ID,
+      ),
+    /invalid database response/,
+  );
+});
+
+test("sent invite status projection follows room lifecycle without reviving terminal actions", () => {
+  assert.equal(
+    roomInviteRecipientLifecycleStatus({
+      recipientStatus: "expired",
+      respondedAt: null,
+      roomStatus: "live",
+    }),
+    "pending",
+  );
+  assert.equal(
+    roomInviteRecipientLifecycleStatus({
+      recipientStatus: "expired",
+      respondedAt: "2026-08-22T08:00:00.000Z",
+      roomStatus: "live",
+    }),
+    "declined",
+  );
+  assert.equal(
+    roomInviteRecipientLifecycleStatus({
+      recipientStatus: "pending",
+      respondedAt: null,
+      roomStatus: "ended",
+    }),
+    "expired",
+  );
+  assert.equal(
+    roomInviteRecipientLifecycleStatus({
+      recipientStatus: "accepted",
+      respondedAt: "2026-08-22T08:00:00.000Z",
+      roomStatus: "ended",
+    }),
+    "accepted",
+  );
+  assert.equal(
+    roomInviteRecipientLifecycleStatus({
+      recipientStatus: "declined",
+      respondedAt: "2026-08-22T08:00:00.000Z",
+      roomStatus: "ended",
+    }),
+    "declined",
+  );
+});
+
+test("invite actions use the atomic v2 response authority and do not reapply expiry locally", () => {
+  const source = readFileSync(SOCIAL_SOURCE_URL, "utf8");
+  assert.match(source, /\.rpc\("respond_room_invite_v2"/);
+  assert.doesNotMatch(source, /function inviteExpired\b|function assertInviteCanBeAccepted\b/);
+});
+
+test("legacy invite listing cannot become a second received-inbox authority", () => {
+  const socialSource = readFileSync(SOCIAL_SOURCE_URL, "utf8");
+  const accountPageSource = readFileSync(ACCOUNT_PAGE_SOURCE_URL, "utf8");
+  assert.match(socialSource, /inbox:\s*\[\]/);
+  assert.match(socialSource, /roomInviteRecipientLifecycleStatus\(/);
+  assert.match(socialSource, /room:rooms!inner\(room_id,status,ended_at\)/);
+  assert.match(socialSource, /recipients:room_invite_recipients\(\*\)/);
+  assert.match(accountPageSource, /listAccountInbox\(/);
+  assert.doesNotMatch(accountPageSource, /listRoomInvites\(/);
+});
+
+test("invite UI does not present the compatibility expiry field as a deadline", () => {
+  const source = readFileSync(INVITES_CLIENT_SOURCE_URL, "utf8");
+  assert.doesNotMatch(source, /invite\.expiresAt|\bexpires\b/i);
+});
+
 test("social APIs validate UUID-shaped ids before hitting Supabase", () => {
   assert.equal(isUuid("3f0f56ec-a97f-4f1f-a648-e0f1034d75d0"), true);
   assert.equal(isUuid("not-a-user-id"), false);
@@ -254,6 +478,20 @@ function atomicGroupOutcome(outcome: "created" | "existing" | "limit_reached") {
 
 function atomicInviteOutcome(outcome: "created" | "existing") {
   return { outcome, invite_id: INVITE_ID };
+}
+
+function atomicInviteResponseOutcome(
+  overrides: Partial<RoomInviteResponseOutcomeRow> = {},
+): RoomInviteResponseOutcomeRow {
+  return {
+    outcome: "accepted",
+    invite_id: INVITE_ID,
+    room_id: "room-1",
+    recipient_status: "accepted",
+    responded_at: "2026-08-22T08:00:00.000Z",
+    missed_at: null,
+    ...overrides,
+  };
 }
 
 function roomInviteErrorShape(code: string) {

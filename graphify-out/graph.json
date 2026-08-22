@@ -44409,7 +44409,15 @@
       "label": "NOW",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/account-inbox.test.ts",
-      "source_location": "L12",
+      "source_location": "L13",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_account_inbox_test_account_inbox_source_url",
+      "label": "ACCOUNT_INBOX_SOURCE_URL",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/account-inbox.test.ts",
+      "source_location": "L14",
       "_origin": "ast"
     },
     {
@@ -44417,7 +44425,7 @@
       "label": "sender()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/account-inbox.test.ts",
-      "source_location": "L227",
+      "source_location": "L235",
       "_callable": true,
       "_origin": "ast"
     },
@@ -44426,7 +44434,7 @@
       "label": "friendRequest()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/account-inbox.test.ts",
-      "source_location": "L236",
+      "source_location": "L244",
       "_callable": true,
       "_origin": "ast"
     },
@@ -44435,7 +44443,7 @@
       "label": "roomInvite()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/account-inbox.test.ts",
-      "source_location": "L251",
+      "source_location": "L259",
       "_callable": true,
       "_origin": "ast"
     },
@@ -44444,7 +44452,7 @@
       "label": "itemId()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/account-inbox.test.ts",
-      "source_location": "L280",
+      "source_location": "L288",
       "_callable": true,
       "_origin": "ast"
     },
@@ -44453,7 +44461,7 @@
       "label": "inboxDatabaseRow()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/account-inbox.test.ts",
-      "source_location": "L284",
+      "source_location": "L292",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47451,7 +47459,31 @@
       "label": "WATCH_HISTORY_V2_MIGRATION_URL",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.test.ts",
-      "source_location": "L28",
+      "source_location": "L31",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_social_test_social_source_url",
+      "label": "SOCIAL_SOURCE_URL",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/social.test.ts",
+      "source_location": "L35",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_social_test_invites_client_source_url",
+      "label": "INVITES_CLIENT_SOURCE_URL",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/social.test.ts",
+      "source_location": "L36",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_social_test_account_page_source_url",
+      "label": "ACCOUNT_PAGE_SOURCE_URL",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/social.test.ts",
+      "source_location": "L40",
       "_origin": "ast"
     },
     {
@@ -47459,7 +47491,7 @@
       "label": "friendship()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.test.ts",
-      "source_location": "L228",
+      "source_location": "L452",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47468,7 +47500,7 @@
       "label": "atomicGroupOutcome()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.test.ts",
-      "source_location": "L242",
+      "source_location": "L466",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47477,7 +47509,16 @@
       "label": "atomicInviteOutcome()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.test.ts",
-      "source_location": "L255",
+      "source_location": "L479",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_social_test_atomicinviteresponseoutcome",
+      "label": "atomicInviteResponseOutcome()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/social.test.ts",
+      "source_location": "L483",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47486,7 +47527,7 @@
       "label": "roomInviteErrorShape()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.test.ts",
-      "source_location": "L259",
+      "source_location": "L497",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47579,11 +47620,21 @@
       "_origin": "ast"
     },
     {
+      "id": "apps_web_lib_anidachi_auth_social_roominviteresponseoutcomerow",
+      "label": "RoomInviteResponseOutcomeRow",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/social.ts",
+      "source_location": "L77",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast"
+    },
+    {
       "id": "apps_web_lib_anidachi_auth_social_friendgroupmemberrow",
       "label": "FriendGroupMemberRow",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L77",
+      "source_location": "L92",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast"
@@ -47593,7 +47644,7 @@
       "label": "InviteTargetKind",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L83",
+      "source_location": "L98",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast"
@@ -47603,7 +47654,7 @@
       "label": "InviteRecipientStatus",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L84",
+      "source_location": "L99",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast"
@@ -47613,7 +47664,7 @@
       "label": "RoomInviteRow",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L86",
+      "source_location": "L101",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast"
@@ -47623,7 +47674,17 @@
       "label": "RoomInviteRecipientRow",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L100",
+      "source_location": "L115",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_social_sentroominvitelifecyclerow",
+      "label": "SentRoomInviteLifecycleRow",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/social.ts",
+      "source_location": "L124",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast"
@@ -47633,7 +47694,7 @@
       "label": "FriendInviteLinkRow",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L109",
+      "source_location": "L129",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast"
@@ -47643,7 +47704,7 @@
       "label": "PublicProfile",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L120",
+      "source_location": "L140",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast"
@@ -47653,7 +47714,7 @@
       "label": "FriendListItem",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L127",
+      "source_location": "L147",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast"
@@ -47663,7 +47724,7 @@
       "label": "FriendInviteLink",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L137",
+      "source_location": "L157",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast"
@@ -47673,7 +47734,7 @@
       "label": "FriendInvitePreview",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L143",
+      "source_location": "L163",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast"
@@ -47683,7 +47744,7 @@
       "label": "FriendGroup",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L150",
+      "source_location": "L170",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast"
@@ -47693,7 +47754,7 @@
       "label": "RoomInvite",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L162",
+      "source_location": "L182",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast"
@@ -47703,7 +47764,7 @@
       "label": "normalizeHandle()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L182",
+      "source_location": "L202",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47712,7 +47773,7 @@
       "label": "cleanDisplayName()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L189",
+      "source_location": "L209",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47721,7 +47782,7 @@
       "label": "cleanGroupName()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L196",
+      "source_location": "L216",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47730,7 +47791,7 @@
       "label": "cleanInviteMessage()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L203",
+      "source_location": "L223",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47739,7 +47800,7 @@
       "label": "friendshipPairKey()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L210",
+      "source_location": "L230",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47748,7 +47809,7 @@
       "label": "isRecentRelationshipEligible()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L214",
+      "source_location": "L234",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47757,7 +47818,7 @@
       "label": "isUuid()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L218",
+      "source_location": "L238",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47766,7 +47827,7 @@
       "label": "cleanFriendInviteToken()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L222",
+      "source_location": "L242",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47775,7 +47836,7 @@
       "label": "assertUuid()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L228",
+      "source_location": "L248",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47784,7 +47845,7 @@
       "label": "generateFriendInviteToken()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L232",
+      "source_location": "L252",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47793,7 +47854,7 @@
       "label": "hashFriendInviteToken()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L236",
+      "source_location": "L256",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47802,7 +47863,7 @@
       "label": "friendInviteExpired()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L240",
+      "source_location": "L260",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47811,7 +47872,7 @@
       "label": "publicProfileFromRows()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L244",
+      "source_location": "L264",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47820,7 +47881,7 @@
       "label": "otherUserId()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L257",
+      "source_location": "L277",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47829,7 +47890,7 @@
       "label": "directionFor()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L263",
+      "source_location": "L283",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47838,7 +47899,7 @@
       "label": "getProfilesByUserIds()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L271",
+      "source_location": "L291",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47847,7 +47908,7 @@
       "label": "getUsersByIds()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L281",
+      "source_location": "L301",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47856,7 +47917,7 @@
       "label": "ensureProfileForUser()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L291",
+      "source_location": "L311",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47865,7 +47926,7 @@
       "label": "updateOwnProfile()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L343",
+      "source_location": "L363",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47874,7 +47935,7 @@
       "label": "getFriendshipBetween()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L390",
+      "source_location": "L410",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47883,7 +47944,7 @@
       "label": "SocialApiError",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L405",
+      "source_location": "L425",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast"
@@ -47893,7 +47954,7 @@
       "label": ".constructor()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L406",
+      "source_location": "L426",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47902,7 +47963,7 @@
       "label": "friendRequestConflictResolution()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L414",
+      "source_location": "L434",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47911,7 +47972,7 @@
       "label": "resolveFriendRequestTransitionReread()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L434",
+      "source_location": "L454",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47920,7 +47981,7 @@
       "label": "resolveFriendGroupCreateOutcome()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L449",
+      "source_location": "L469",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47929,7 +47990,34 @@
       "label": "resolveRoomInviteCreateOutcome()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L477",
+      "source_location": "L497",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_social_resolveroominviteresponseoutcome",
+      "label": "resolveRoomInviteResponseOutcome()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/social.ts",
+      "source_location": "L514",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_social_validnullabletimestamp",
+      "label": "validNullableTimestamp()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/social.ts",
+      "source_location": "L604",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_social_roominviterecipientlifecyclestatus",
+      "label": "roomInviteRecipientLifecycleStatus()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/social.ts",
+      "source_location": "L608",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47938,7 +48026,7 @@
       "label": "roomInviteCreateError()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L494",
+      "source_location": "L622",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47947,7 +48035,7 @@
       "label": "listFriends()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L515",
+      "source_location": "L643",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47956,7 +48044,7 @@
       "label": "sendFriendRequest()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L562",
+      "source_location": "L690",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47965,7 +48053,7 @@
       "label": "createFriendInviteLink()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L662",
+      "source_location": "L790",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47974,7 +48062,7 @@
       "label": "assertActiveFriendInviteLinkLimit()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L696",
+      "source_location": "L824",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47983,7 +48071,7 @@
       "label": "getFriendInvitePreview()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L712",
+      "source_location": "L840",
       "_callable": true,
       "_origin": "ast"
     },
@@ -47992,7 +48080,7 @@
       "label": "acceptFriendInviteLink()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L735",
+      "source_location": "L863",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48001,7 +48089,7 @@
       "label": "getFriendInviteLinkByToken()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L794",
+      "source_location": "L922",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48010,7 +48098,7 @@
       "label": "acceptFriendshipFromInvite()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L804",
+      "source_location": "L932",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48019,7 +48107,7 @@
       "label": "acceptFriendRequest()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L836",
+      "source_location": "L964",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48028,7 +48116,7 @@
       "label": "declineFriendRequest()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L866",
+      "source_location": "L994",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48037,7 +48125,7 @@
       "label": "removeFriendship()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L896",
+      "source_location": "L1024",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48046,7 +48134,7 @@
       "label": "blockUser()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L926",
+      "source_location": "L1054",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48055,7 +48143,7 @@
       "label": "hideRecentPerson()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L960",
+      "source_location": "L1088",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48064,7 +48152,7 @@
       "label": "listRecentPeople()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L982",
+      "source_location": "L1110",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48073,7 +48161,7 @@
       "label": "listFriendGroups()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1034",
+      "source_location": "L1162",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48082,7 +48170,7 @@
       "label": "friendGroupViewFromRow()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1089",
+      "source_location": "L1217",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48091,7 +48179,7 @@
       "label": "createFriendGroup()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1122",
+      "source_location": "L1250",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48100,7 +48188,7 @@
       "label": "updateFriendGroup()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1160",
+      "source_location": "L1288",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48109,7 +48197,7 @@
       "label": "archiveFriendGroup()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1186",
+      "source_location": "L1314",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48118,7 +48206,7 @@
       "label": "addFriendGroupMember()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1203",
+      "source_location": "L1331",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48127,7 +48215,7 @@
       "label": "removeFriendGroupMember()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1242",
+      "source_location": "L1370",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48136,7 +48224,7 @@
       "label": "createRoomInvite()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1267",
+      "source_location": "L1395",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48145,7 +48233,7 @@
       "label": "listRoomInvites()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1318",
+      "source_location": "L1446",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48154,7 +48242,7 @@
       "label": "acceptRoomInvite()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1368",
+      "source_location": "L1505",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48163,25 +48251,16 @@
       "label": "declineRoomInvite()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1399",
+      "source_location": "L1514",
       "_callable": true,
       "_origin": "ast"
     },
     {
-      "id": "apps_web_lib_anidachi_auth_social_inviteexpired",
-      "label": "inviteExpired()",
+      "id": "apps_web_lib_anidachi_auth_social_respondtoroominvite",
+      "label": "respondToRoomInvite()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1430",
-      "_callable": true,
-      "_origin": "ast"
-    },
-    {
-      "id": "apps_web_lib_anidachi_auth_social_assertinvitecanbeaccepted",
-      "label": "assertInviteCanBeAccepted()",
-      "file_type": "code",
-      "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1434",
+      "source_location": "L1523",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48190,16 +48269,7 @@
       "label": "loadInviteForRecipient()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1457",
-      "_callable": true,
-      "_origin": "ast"
-    },
-    {
-      "id": "apps_web_lib_anidachi_auth_social_inviteviews",
-      "label": "inviteViews()",
-      "file_type": "code",
-      "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1484",
+      "source_location": "L1551",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48208,7 +48278,7 @@
       "label": "inviteView()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1500",
+      "source_location": "L1578",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48217,7 +48287,7 @@
       "label": "listHiddenRecentPeople()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1542",
+      "source_location": "L1620",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48226,7 +48296,7 @@
       "label": "getOwnedGroup()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1551",
+      "source_location": "L1629",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48235,7 +48305,7 @@
       "label": "touchFriendGroupUpdatedAt()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1565",
+      "source_location": "L1643",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48244,7 +48314,7 @@
       "label": "archiveGroupsOverLimit()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1580",
+      "source_location": "L1658",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48253,7 +48323,7 @@
       "label": "listFriendshipsForViewer()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1609",
+      "source_location": "L1687",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48262,7 +48332,7 @@
       "label": "getFriendshipById()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1618",
+      "source_location": "L1696",
       "_callable": true,
       "_origin": "ast"
     },
@@ -48271,7 +48341,7 @@
       "label": "itemForFriendship()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1628",
+      "source_location": "L1706",
       "_callable": true,
       "_origin": "ast"
     },
@@ -173401,12 +173471,34 @@
     },
     {
       "source": "apps_web_app_account_page",
-      "target": "apps_web_lib_anidachi_auth_session",
+      "target": "apps_web_lib_anidachi_auth_account_inbox",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/page.tsx",
       "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_page",
+      "target": "apps_web_lib_anidachi_auth_account_inbox_listaccountinbox",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_page",
+      "target": "apps_web_lib_anidachi_auth_session",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/page.tsx",
+      "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -173417,7 +173509,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/page.tsx",
-      "source_location": "L7",
+      "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -173428,7 +173520,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/page.tsx",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -173439,7 +173531,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/page.tsx",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -173450,7 +173542,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/page.tsx",
-      "source_location": "L9",
+      "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -173461,7 +173553,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/page.tsx",
-      "source_location": "L9",
+      "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -173472,18 +173564,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/page.tsx",
-      "source_location": "L9",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_app_account_page",
-      "target": "apps_web_lib_anidachi_auth_social_listroominvites",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/app/account/page.tsx",
-      "source_location": "L9",
+      "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226549,7 +226630,7 @@
     },
     {
       "source": "apps_web_lib_anidachi_auth_account_inbox_test",
-      "target": "ref_node_test",
+      "target": "ref_node_fs",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -226560,12 +226641,23 @@
     },
     {
       "source": "apps_web_lib_anidachi_auth_account_inbox_test",
-      "target": "packages_protocol_src_index",
+      "target": "ref_node_test",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/account-inbox.test.ts",
       "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_account_inbox_test",
+      "target": "packages_protocol_src_index",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/account-inbox.test.ts",
+      "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226576,7 +226668,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/account-inbox.test.ts",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226587,7 +226679,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/account-inbox.test.ts",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226598,7 +226690,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/account-inbox.test.ts",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226609,7 +226701,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/account-inbox.test.ts",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226620,7 +226712,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/account-inbox.test.ts",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226630,7 +226722,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/account-inbox.test.ts",
-      "source_location": "L12",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_account_inbox_test",
+      "target": "apps_web_lib_anidachi_auth_account_inbox_test_account_inbox_source_url",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/account-inbox.test.ts",
+      "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226640,7 +226742,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/account-inbox.test.ts",
-      "source_location": "L227",
+      "source_location": "L235",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226650,7 +226752,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/account-inbox.test.ts",
-      "source_location": "L236",
+      "source_location": "L244",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226660,7 +226762,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/account-inbox.test.ts",
-      "source_location": "L251",
+      "source_location": "L259",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226670,7 +226772,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/account-inbox.test.ts",
-      "source_location": "L280",
+      "source_location": "L288",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226680,7 +226782,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/account-inbox.test.ts",
-      "source_location": "L284",
+      "source_location": "L292",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226691,7 +226793,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/account-inbox.test.ts",
-      "source_location": "L243",
+      "source_location": "L251",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226702,7 +226804,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/account-inbox.test.ts",
-      "source_location": "L261",
+      "source_location": "L269",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235087,6 +235189,17 @@
     },
     {
       "source": "apps_web_lib_anidachi_auth_social_test",
+      "target": "apps_web_lib_anidachi_auth_social_roominviterecipientlifecyclestatus",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/social.test.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_social_test",
       "target": "apps_web_lib_anidachi_auth_social_resolvefriendgroupcreateoutcome",
       "relation": "imports",
       "context": "import",
@@ -235110,6 +235223,17 @@
     {
       "source": "apps_web_lib_anidachi_auth_social_test",
       "target": "apps_web_lib_anidachi_auth_social_resolveroominvitecreateoutcome",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/social.test.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_social_test",
+      "target": "apps_web_lib_anidachi_auth_social_resolveroominviteresponseoutcome",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -235153,11 +235277,52 @@
     },
     {
       "source": "apps_web_lib_anidachi_auth_social_test",
+      "target": "apps_web_lib_anidachi_auth_social_roominviteresponseoutcomerow",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/social.test.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_social_test",
       "target": "apps_web_lib_anidachi_auth_social_test_watch_history_v2_migration_url",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.test.ts",
-      "source_location": "L28",
+      "source_location": "L31",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_social_test",
+      "target": "apps_web_lib_anidachi_auth_social_test_social_source_url",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/social.test.ts",
+      "source_location": "L35",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_social_test",
+      "target": "apps_web_lib_anidachi_auth_social_test_invites_client_source_url",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/social.test.ts",
+      "source_location": "L36",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_social_test",
+      "target": "apps_web_lib_anidachi_auth_social_test_account_page_source_url",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/social.test.ts",
+      "source_location": "L40",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235167,7 +235332,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.test.ts",
-      "source_location": "L228",
+      "source_location": "L452",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235177,7 +235342,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.test.ts",
-      "source_location": "L242",
+      "source_location": "L466",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235187,7 +235352,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.test.ts",
-      "source_location": "L255",
+      "source_location": "L479",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_social_test",
+      "target": "apps_web_lib_anidachi_auth_social_test_atomicinviteresponseoutcome",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/social.test.ts",
+      "source_location": "L483",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235197,7 +235372,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.test.ts",
-      "source_location": "L259",
+      "source_location": "L497",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235259,6 +235434,17 @@
     {
       "source": "apps_web_lib_anidachi_auth_social",
       "target": "apps_web_lib_anidachi_auth_db_getuserbyid",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/social.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_social",
+      "target": "apps_web_lib_anidachi_auth_db_roomrow",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -235382,7 +235568,7 @@
     },
     {
       "source": "apps_web_lib_anidachi_auth_social",
-      "target": "apps_web_lib_anidachi_auth_social_friendgroupmemberrow",
+      "target": "apps_web_lib_anidachi_auth_social_roominviteresponseoutcomerow",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
@@ -235392,11 +235578,21 @@
     },
     {
       "source": "apps_web_lib_anidachi_auth_social",
+      "target": "apps_web_lib_anidachi_auth_social_friendgroupmemberrow",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/social.ts",
+      "source_location": "L92",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_social",
       "target": "apps_web_lib_anidachi_auth_social_invitetargetkind",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L83",
+      "source_location": "L98",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235406,7 +235602,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L84",
+      "source_location": "L99",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235416,7 +235612,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L86",
+      "source_location": "L101",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235426,7 +235622,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L100",
+      "source_location": "L115",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_social",
+      "target": "apps_web_lib_anidachi_auth_social_sentroominvitelifecyclerow",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/social.ts",
+      "source_location": "L124",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235436,7 +235642,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L109",
+      "source_location": "L129",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235446,7 +235652,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L120",
+      "source_location": "L140",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235456,7 +235662,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L127",
+      "source_location": "L147",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235466,7 +235672,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L137",
+      "source_location": "L157",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235476,7 +235682,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L143",
+      "source_location": "L163",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235486,7 +235692,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L150",
+      "source_location": "L170",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235496,7 +235702,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L162",
+      "source_location": "L182",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235506,7 +235712,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L182",
+      "source_location": "L202",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235516,7 +235722,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L189",
+      "source_location": "L209",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235526,7 +235732,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L196",
+      "source_location": "L216",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235536,7 +235742,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L203",
+      "source_location": "L223",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235546,7 +235752,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L210",
+      "source_location": "L230",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235556,7 +235762,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L214",
+      "source_location": "L234",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235566,7 +235772,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L218",
+      "source_location": "L238",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235576,7 +235782,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L222",
+      "source_location": "L242",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235586,7 +235792,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L228",
+      "source_location": "L248",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235596,7 +235802,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L232",
+      "source_location": "L252",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235606,7 +235812,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L236",
+      "source_location": "L256",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235616,7 +235822,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L240",
+      "source_location": "L260",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235626,7 +235832,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L244",
+      "source_location": "L264",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235636,7 +235842,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L257",
+      "source_location": "L277",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235646,7 +235852,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L263",
+      "source_location": "L283",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235656,7 +235862,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L271",
+      "source_location": "L291",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235666,7 +235872,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L281",
+      "source_location": "L301",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235676,7 +235882,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L291",
+      "source_location": "L311",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235686,7 +235892,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L343",
+      "source_location": "L363",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235696,7 +235902,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L390",
+      "source_location": "L410",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235706,7 +235912,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L405",
+      "source_location": "L425",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235716,7 +235922,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L406",
+      "source_location": "L426",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235726,7 +235932,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L414",
+      "source_location": "L434",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235736,7 +235942,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L434",
+      "source_location": "L454",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235746,7 +235952,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L449",
+      "source_location": "L469",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235756,7 +235962,37 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L477",
+      "source_location": "L497",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_social",
+      "target": "apps_web_lib_anidachi_auth_social_resolveroominviteresponseoutcome",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/social.ts",
+      "source_location": "L514",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_social",
+      "target": "apps_web_lib_anidachi_auth_social_validnullabletimestamp",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/social.ts",
+      "source_location": "L604",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_social",
+      "target": "apps_web_lib_anidachi_auth_social_roominviterecipientlifecyclestatus",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/social.ts",
+      "source_location": "L608",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235766,7 +236002,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L494",
+      "source_location": "L622",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235776,7 +236012,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L515",
+      "source_location": "L643",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235786,7 +236022,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L562",
+      "source_location": "L690",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235796,7 +236032,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L662",
+      "source_location": "L790",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235806,7 +236042,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L696",
+      "source_location": "L824",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235816,7 +236052,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L712",
+      "source_location": "L840",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235826,7 +236062,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L735",
+      "source_location": "L863",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235836,7 +236072,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L794",
+      "source_location": "L922",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235846,7 +236082,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L804",
+      "source_location": "L932",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235856,7 +236092,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L836",
+      "source_location": "L964",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235866,7 +236102,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L866",
+      "source_location": "L994",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235876,7 +236112,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L896",
+      "source_location": "L1024",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235886,7 +236122,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L926",
+      "source_location": "L1054",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235896,7 +236132,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L960",
+      "source_location": "L1088",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235906,7 +236142,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L982",
+      "source_location": "L1110",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235916,7 +236152,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1034",
+      "source_location": "L1162",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235926,7 +236162,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1089",
+      "source_location": "L1217",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235936,7 +236172,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1122",
+      "source_location": "L1250",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235946,7 +236182,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1160",
+      "source_location": "L1288",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235956,7 +236192,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1186",
+      "source_location": "L1314",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235966,7 +236202,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1203",
+      "source_location": "L1331",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235976,7 +236212,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1242",
+      "source_location": "L1370",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235986,7 +236222,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1267",
+      "source_location": "L1395",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -235996,7 +236232,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1318",
+      "source_location": "L1446",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236006,7 +236242,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1368",
+      "source_location": "L1505",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236016,27 +236252,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1399",
+      "source_location": "L1514",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
       "source": "apps_web_lib_anidachi_auth_social",
-      "target": "apps_web_lib_anidachi_auth_social_inviteexpired",
+      "target": "apps_web_lib_anidachi_auth_social_respondtoroominvite",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1430",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_social",
-      "target": "apps_web_lib_anidachi_auth_social_assertinvitecanbeaccepted",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1434",
+      "source_location": "L1523",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236046,17 +236272,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1457",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_social",
-      "target": "apps_web_lib_anidachi_auth_social_inviteviews",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1484",
+      "source_location": "L1551",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236066,7 +236282,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1500",
+      "source_location": "L1578",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236076,7 +236292,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1542",
+      "source_location": "L1620",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236086,7 +236302,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1551",
+      "source_location": "L1629",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236096,7 +236312,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1565",
+      "source_location": "L1643",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236106,7 +236322,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1580",
+      "source_location": "L1658",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236116,7 +236332,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1609",
+      "source_location": "L1687",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236126,7 +236342,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1618",
+      "source_location": "L1696",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236136,7 +236352,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1628",
+      "source_location": "L1706",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236147,7 +236363,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L229",
+      "source_location": "L249",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236158,7 +236374,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L349",
+      "source_location": "L369",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236169,7 +236385,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L387",
+      "source_location": "L407",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236180,7 +236396,29 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L484",
+      "source_location": "L504",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_social_resolveroominviteresponseoutcome",
+      "target": "apps_web_lib_anidachi_auth_social_isuuid",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/social.ts",
+      "source_location": "L525",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_social_resolveroominviteresponseoutcome",
+      "target": "apps_web_lib_anidachi_auth_social_validnullabletimestamp",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/social.ts",
+      "source_location": "L527",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236191,7 +236429,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L521",
+      "source_location": "L649",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236202,7 +236440,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L531",
+      "source_location": "L659",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236213,7 +236451,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L533",
+      "source_location": "L661",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236224,7 +236462,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L534",
+      "source_location": "L662",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236235,7 +236473,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L541",
+      "source_location": "L669",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236246,7 +236484,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L543",
+      "source_location": "L671",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236257,7 +236495,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L566",
+      "source_location": "L694",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236268,7 +236506,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L574",
+      "source_location": "L702",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236279,7 +236517,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L579",
+      "source_location": "L707",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236290,7 +236528,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L588",
+      "source_location": "L716",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236301,7 +236539,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L594",
+      "source_location": "L722",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236312,7 +236550,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L630",
+      "source_location": "L758",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236323,7 +236561,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L666",
+      "source_location": "L794",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236334,7 +236572,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L667",
+      "source_location": "L795",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236345,7 +236583,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L669",
+      "source_location": "L797",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236356,7 +236594,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L673",
+      "source_location": "L801",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236367,7 +236605,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L676",
+      "source_location": "L804",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236378,7 +236616,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L713",
+      "source_location": "L841",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236389,7 +236627,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L716",
+      "source_location": "L844",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236400,7 +236638,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L718",
+      "source_location": "L846",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236411,7 +236649,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L722",
+      "source_location": "L850",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236422,7 +236660,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L729",
+      "source_location": "L857",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236433,7 +236671,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L739",
+      "source_location": "L867",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236444,7 +236682,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L740",
+      "source_location": "L868",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236455,7 +236693,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L743",
+      "source_location": "L871",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236466,7 +236704,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L745",
+      "source_location": "L873",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236477,7 +236715,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L752",
+      "source_location": "L880",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236488,7 +236726,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L753",
+      "source_location": "L881",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236499,7 +236737,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L759",
+      "source_location": "L887",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236510,7 +236748,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L787",
+      "source_location": "L915",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236521,7 +236759,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L798",
+      "source_location": "L926",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236532,7 +236770,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L809",
+      "source_location": "L937",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236543,7 +236781,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L814",
+      "source_location": "L942",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236554,7 +236792,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L840",
+      "source_location": "L968",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236565,7 +236803,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L858",
+      "source_location": "L986",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236576,7 +236814,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L860",
+      "source_location": "L988",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236587,7 +236825,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L863",
+      "source_location": "L991",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236598,7 +236836,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L870",
+      "source_location": "L998",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236609,7 +236847,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L888",
+      "source_location": "L1016",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236620,7 +236858,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L890",
+      "source_location": "L1018",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236631,7 +236869,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L893",
+      "source_location": "L1021",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236642,7 +236880,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L900",
+      "source_location": "L1028",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236653,7 +236891,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L902",
+      "source_location": "L1030",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236664,7 +236902,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L930",
+      "source_location": "L1058",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236675,7 +236913,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L936",
+      "source_location": "L1064",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236686,7 +236924,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L941",
+      "source_location": "L1069",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236697,7 +236935,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L957",
+      "source_location": "L1085",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236708,7 +236946,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L964",
+      "source_location": "L1092",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236719,7 +236957,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L983",
+      "source_location": "L1111",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236730,7 +236968,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L989",
+      "source_location": "L1117",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236741,7 +236979,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L990",
+      "source_location": "L1118",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236752,7 +236990,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L998",
+      "source_location": "L1126",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236763,7 +237001,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1010",
+      "source_location": "L1138",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236774,7 +237012,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1016",
+      "source_location": "L1144",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236785,7 +237023,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1017",
+      "source_location": "L1145",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236796,7 +237034,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1023",
+      "source_location": "L1151",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236807,7 +237045,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1035",
+      "source_location": "L1163",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236818,7 +237056,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1036",
+      "source_location": "L1164",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236829,7 +237067,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1059",
+      "source_location": "L1187",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236840,7 +237078,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1060",
+      "source_location": "L1188",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236851,7 +237089,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1067",
+      "source_location": "L1195",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236862,7 +237100,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1099",
+      "source_location": "L1227",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236873,7 +237111,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1100",
+      "source_location": "L1228",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236884,7 +237122,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1111",
+      "source_location": "L1239",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236895,7 +237133,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1127",
+      "source_location": "L1255",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236906,7 +237144,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1148",
+      "source_location": "L1276",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236917,7 +237155,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1165",
+      "source_location": "L1293",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236928,7 +237166,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1168",
+      "source_location": "L1296",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236939,7 +237177,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1183",
+      "source_location": "L1311",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236950,7 +237188,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1190",
+      "source_location": "L1318",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236961,7 +237199,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1208",
+      "source_location": "L1336",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236972,7 +237210,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1216",
+      "source_location": "L1344",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236983,7 +237221,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1217",
+      "source_location": "L1345",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -236994,7 +237232,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1237",
+      "source_location": "L1365",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -237005,7 +237243,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1238",
+      "source_location": "L1366",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -237016,7 +237254,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1247",
+      "source_location": "L1375",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -237027,7 +237265,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1251",
+      "source_location": "L1379",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -237038,7 +237276,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1262",
+      "source_location": "L1390",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -237049,122 +237287,12 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1263",
+      "source_location": "L1391",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
       "source": "apps_web_lib_anidachi_auth_social_createroominvite",
-      "target": "apps_web_lib_anidachi_auth_social_assertuuid",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1275",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_social_createroominvite",
-      "target": "apps_web_lib_anidachi_auth_social_roominvitecreateerror",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1292",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_social_createroominvite",
-      "target": "apps_web_lib_anidachi_auth_social_resolveroominvitecreateoutcome",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1298",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_social_createroominvite",
-      "target": "apps_web_lib_anidachi_auth_social_inviteview",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1310",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_social_listroominvites",
-      "target": "apps_web_lib_anidachi_auth_social_assertuuid",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1322",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_social_listroominvites",
-      "target": "apps_web_lib_anidachi_auth_social_inviteviews",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1360",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_social_acceptroominvite",
-      "target": "apps_web_lib_anidachi_auth_social_assertuuid",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1372",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_social_acceptroominvite",
-      "target": "apps_web_lib_anidachi_auth_social_loadinviteforrecipient",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1375",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_social_acceptroominvite",
-      "target": "apps_web_lib_anidachi_auth_social_assertinvitecanbeaccepted",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1376",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_social_acceptroominvite",
-      "target": "apps_web_lib_anidachi_auth_social_inviteview",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1378",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_social_declineroominvite",
       "target": "apps_web_lib_anidachi_auth_social_assertuuid",
       "relation": "calls",
       "context": "call",
@@ -237175,41 +237303,30 @@
       "_origin": "ast"
     },
     {
-      "source": "apps_web_lib_anidachi_auth_social_declineroominvite",
-      "target": "apps_web_lib_anidachi_auth_social_loadinviteforrecipient",
+      "source": "apps_web_lib_anidachi_auth_social_createroominvite",
+      "target": "apps_web_lib_anidachi_auth_social_roominvitecreateerror",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1406",
+      "source_location": "L1420",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
-      "source": "apps_web_lib_anidachi_auth_social_declineroominvite",
+      "source": "apps_web_lib_anidachi_auth_social_createroominvite",
+      "target": "apps_web_lib_anidachi_auth_social_resolveroominvitecreateoutcome",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/social.ts",
+      "source_location": "L1426",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_social_createroominvite",
       "target": "apps_web_lib_anidachi_auth_social_inviteview",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1408",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_social_declineroominvite",
-      "target": "apps_web_lib_anidachi_auth_social_inviteexpired",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1414",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_social_assertinvitecanbeaccepted",
-      "target": "apps_web_lib_anidachi_auth_social_inviteexpired",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -237219,24 +237336,112 @@
       "_origin": "ast"
     },
     {
-      "source": "apps_web_lib_anidachi_auth_social_assertinvitecanbeaccepted",
-      "target": "apps_web_lib_anidachi_auth_social_getfriendshipbetween",
+      "source": "apps_web_lib_anidachi_auth_social_listroominvites",
+      "target": "apps_web_lib_anidachi_auth_social_assertuuid",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1451",
+      "source_location": "L1450",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
-      "source": "apps_web_lib_anidachi_auth_social_inviteviews",
+      "source": "apps_web_lib_anidachi_auth_social_listroominvites",
+      "target": "apps_web_lib_anidachi_auth_social_roominviterecipientlifecyclestatus",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/social.ts",
+      "source_location": "L1476",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_social_listroominvites",
       "target": "apps_web_lib_anidachi_auth_social_inviteview",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1496",
+      "source_location": "L1492",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_social_acceptroominvite",
+      "target": "apps_web_lib_anidachi_auth_social_assertuuid",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/social.ts",
+      "source_location": "L1509",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_social_acceptroominvite",
+      "target": "apps_web_lib_anidachi_auth_social_respondtoroominvite",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/social.ts",
+      "source_location": "L1511",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_social_declineroominvite",
+      "target": "apps_web_lib_anidachi_auth_social_assertuuid",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/social.ts",
+      "source_location": "L1518",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_social_declineroominvite",
+      "target": "apps_web_lib_anidachi_auth_social_respondtoroominvite",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/social.ts",
+      "source_location": "L1520",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_social_respondtoroominvite",
+      "target": "apps_web_lib_anidachi_auth_social_resolveroominviteresponseoutcome",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/social.ts",
+      "source_location": "L1543",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_social_respondtoroominvite",
+      "target": "apps_web_lib_anidachi_auth_social_loadinviteforrecipient",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/social.ts",
+      "source_location": "L1544",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_social_respondtoroominvite",
+      "target": "apps_web_lib_anidachi_auth_social_inviteview",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/social.ts",
+      "source_location": "L1548",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -237247,7 +237452,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1509",
+      "source_location": "L1587",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -237258,7 +237463,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1510",
+      "source_location": "L1588",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -237269,7 +237474,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1516",
+      "source_location": "L1594",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -237280,7 +237485,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1632",
+      "source_location": "L1710",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -237291,7 +237496,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1634",
+      "source_location": "L1712",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -237302,7 +237507,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1635",
+      "source_location": "L1713",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -237313,7 +237518,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1639",
+      "source_location": "L1717",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -237324,7 +237529,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1645",
+      "source_location": "L1723",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -287239,7 +287444,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/account-inbox.test.ts",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -290924,7 +291129,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.test.ts",
-      "source_location": "L260",
+      "source_location": "L498",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -290935,7 +291140,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L273",
+      "source_location": "L293",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -290946,7 +291151,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L283",
+      "source_location": "L303",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -290957,7 +291162,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L394",
+      "source_location": "L414",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -290968,7 +291173,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L697",
+      "source_location": "L825",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -290979,7 +291184,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L795",
+      "source_location": "L923",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -290990,7 +291195,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L828",
+      "source_location": "L956",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -291001,18 +291206,18 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1090",
+      "source_location": "L1218",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
-      "source": "apps_web_lib_anidachi_auth_social_assertinvitecanbeaccepted",
+      "source": "apps_web_lib_anidachi_auth_social_respondtoroominvite",
       "target": "apps_web_lib_anidachi_auth_db_db",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1439",
+      "source_location": "L1528",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -291023,7 +291228,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1461",
+      "source_location": "L1555",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -291034,7 +291239,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1543",
+      "source_location": "L1621",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -291045,7 +291250,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1555",
+      "source_location": "L1633",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -291056,7 +291261,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1569",
+      "source_location": "L1647",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -291067,7 +291272,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1581",
+      "source_location": "L1659",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -291078,7 +291283,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1583",
+      "source_location": "L1661",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -291089,7 +291294,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1585",
+      "source_location": "L1663",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -291100,7 +291305,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1610",
+      "source_location": "L1688",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -291111,7 +291316,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1619",
+      "source_location": "L1697",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -302340,7 +302545,7 @@
     },
     {
       "source": "apps_web_app_account_page_accountoverviewpage",
-      "target": "apps_web_lib_anidachi_auth_social_listroominvites",
+      "target": "apps_web_lib_anidachi_auth_account_inbox_listaccountinbox",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -310422,7 +310627,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L292",
+      "source_location": "L312",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310434,7 +310639,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L295",
+      "source_location": "L315",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310446,7 +310651,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L366",
+      "source_location": "L386",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310458,7 +310663,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L523",
+      "source_location": "L651",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310470,7 +310675,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L612",
+      "source_location": "L740",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310482,7 +310687,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L674",
+      "source_location": "L802",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310494,7 +310699,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L723",
+      "source_location": "L851",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310506,7 +310711,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L770",
+      "source_location": "L898",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310518,7 +310723,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L843",
+      "source_location": "L971",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310530,7 +310735,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L873",
+      "source_location": "L1001",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310542,7 +310747,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L914",
+      "source_location": "L1042",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310554,7 +310759,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L952",
+      "source_location": "L1080",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310566,7 +310771,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L969",
+      "source_location": "L1097",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310578,7 +310783,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L986",
+      "source_location": "L1114",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310590,7 +310795,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1038",
+      "source_location": "L1166",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310602,7 +310807,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1130",
+      "source_location": "L1258",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310614,7 +310819,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1133",
+      "source_location": "L1261",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310626,7 +310831,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1134",
+      "source_location": "L1262",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310638,7 +310843,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1172",
+      "source_location": "L1300",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310650,7 +310855,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1192",
+      "source_location": "L1320",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310662,7 +310867,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1225",
+      "source_location": "L1353",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310674,7 +310879,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1255",
+      "source_location": "L1383",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310686,7 +310891,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1283",
+      "source_location": "L1411",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310698,31 +310903,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1324",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_social_acceptroominvite",
-      "target": "apps_web_lib_anidachi_auth_db_db",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1384",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_social_declineroominvite",
-      "target": "apps_web_lib_anidachi_auth_db_db",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/lib/anidachi-auth/social.ts",
-      "source_location": "L1415",
+      "source_location": "L1452",
       "weight": 1.0,
       "_origin": "ast"
     },
