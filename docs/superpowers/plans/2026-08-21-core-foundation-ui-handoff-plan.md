@@ -6,13 +6,11 @@
 > `superpowers:verification-before-completion` before every completion claim.
 > Query Graphify first, then verify important claims against current source.
 
-**Status:** The three runtime foundation blocks are staging-accepted through
-`3a442b7f76992a5e48b387740bf9cc31a565235e` as of 2026-08-22. Task 8's
-documentation closeout is prepared from that observed evidence; final
-integrated verification and the semantic Graphify refresh are controller-owned
-remaining gates before this plan can be marked fully complete. This plan stops
-before final UI/UX work, `main`, production, public release, and Chrome Web
-Store work.
+**Status:** Complete on `staging` as of 2026-08-22, through runtime base
+`3a442b7f76992a5e48b387740bf9cc31a565235e`. The foundation now hands off to
+normal UI/UX work. This is not production, market, public-release, `main`, or
+Chrome Web Store readiness; the separately listed release, P2P/TURN, billing,
+legal, public-form, media, and provider work remains outside this plan.
 
 **Goal:** Close the smallest remaining cross-plane technical gaps needed for a
 stable UI/UX development base without rebuilding working systems, weakening the
@@ -501,12 +499,29 @@ migrations are `20260821162622_watch_history_v2_resource_bounds`,
 `20260822065227_room_invite_lifecycle_actions`, and
 `20260822091552_finalize_legacy_orphan_invite_rooms`.
 
-The controller must still run the full required-check set below after this prose
-is stable and perform the semantic `$graphify . --update` refresh. Those outputs
-are intentionally not changed by this documentation pass. The completed plan
-claim remains gated on those fresh controller results; previously accepted
-staging and two-profile evidence is recorded in the execution ledger, not
-recreated or inferred here.
+Task 8 controller verification passed at runtime base `3a442b7`: workspace
+check 6/6; forced workspace tests 6/6 (extension 98 files, 1,277/1,277); API
+runtime 24/24; clean database reset; pgTAP 8 files/419; database lint clean;
+linked dry-run remote up to date; rooms 39/39; isolated P2P 26/26; Worker
+staging smoke; staging extension build/validation; `pnpm dev:check`; and
+whitespace. The first P2P attempt encountered an environmental inspector-port
+`9229` collision; the isolated rerun passed 26/26, so it is not a product
+failure. All post-merge workflows and staging smokes are green.
+
+The exact attended artifact is `3a442b7-staging-20260822162838`. Both
+established unpacked folders currently have that version and are byte-identical.
+The user accepted Watch History, room-source, and invite host `Accepted`
+behavior in the established two-profile staging flow.
+
+Graphify refresh/query/explain passed from current source at
+`f5622c7c` before this documentation finish: 9,943 nodes, 21,002 edges, and
+1,120 communities; query/explain found the handoff; topology diagnostics report
+0 missing endpoints, 0 dangling links, 0 self-loops, and 0 duplicate/collapsed
+edges. It retains 550 legacy/external-reference placeholder nodes without
+labels/source files (the same 1,100 field warnings reported by the prior graph).
+The final post-documentation semantic refresh remains controller-owned because
+this finish changes its input; it is a graph-freshness follow-up, not a blocker
+to the completed staging closeout.
 
 **Files:**
 

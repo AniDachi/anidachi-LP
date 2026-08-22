@@ -356,6 +356,26 @@ For rollback, use reviewed forward rollback/redeploy procedures; do not delete
 canonical Watch History, room, or invite data or remove the additive compatibility
 database boundaries as part of this handoff.
 
+Task 8 controller verification at runtime base `3a442b7` passed workspace check
+6/6, forced workspace tests 6/6 (including 98 extension files and 1,277/1,277
+extension tests), API runtime 24/24, database reset, pgTAP 8 files/419, clean
+database lint, linked dry-run remote alignment, rooms 39/39, isolated P2P 26/26,
+Worker staging smoke, staging extension build/validation, `pnpm dev:check`, and
+whitespace. Its first P2P run met an environmental inspector port `9229`
+collision; the isolated 26/26 rerun is the recorded result. All post-merge
+workflows and staging smokes are green. The accepted artifact is exactly
+`3a442b7-staging-20260822162838`; both established unpacked folders are
+byte-identical at that version, and the user accepted Watch History, room source,
+and invite host `Accepted` behavior in the two-profile staging flow.
+
+Graphify was refreshed from current source at `f5622c7c` before this final docs
+change: 9,943 nodes, 21,002 edges, 1,120 communities, and zero missing endpoints,
+dangling links, self-loops, or duplicate/collapsed edges. Query/explain found the
+handoff. The output still has 550 legacy/external-reference placeholder nodes
+without labels/source files, matching the prior graph's 1,100 field warnings.
+A final semantic refresh after this prose change is controller-owned maintenance;
+it does not reopen the accepted staging foundation.
+
 ## Account Read Contracts And Popup Isolation
 
 Account read responses for friends, groups, invites, and watch-library data use

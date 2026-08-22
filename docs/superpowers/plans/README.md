@@ -11,11 +11,12 @@ Core-foundation closeout record:
 
 1. `2026-08-21-core-foundation-ui-handoff-plan.md` — its Watch History,
    canonical/durable room-source, and room-lifecycle-invite blocks are accepted
-   on `staging` through `3a442b7f76992a5e48b387740bf9cc31a565235e`. Its final
-   integrated verification and semantic Graphify refresh remain explicit
-   controller-owned closeout gates. It does not establish production, `main`,
-   release, store, Bloü/OpenClaw, legal, billing, public-form, or new-provider
-   readiness.
+   and fully closed on `staging` through
+   `3a442b7f76992a5e48b387740bf9cc31a565235e`. It hands off to normal UI/UX
+   work, without establishing production, `main`, release, store, Bloü/OpenClaw,
+   legal, billing, public-form, or new-provider readiness. A final semantic
+   Graphify refresh after the closeout documentation remains controller-owned
+   graph-freshness maintenance, not an implementation gate.
 
 Parallel long-running room/P2P and product execution plans:
 
