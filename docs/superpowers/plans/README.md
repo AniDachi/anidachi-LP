@@ -7,13 +7,15 @@ Most older files here are not current onboarding documentation. They may contain
 paths, old repository names, old endpoints, and decisions that were correct at
 the time but are no longer current.
 
-Primary active technical-foundation plan:
+Core-foundation closeout record:
 
-1. `2026-08-21-core-foundation-ui-handoff-plan.md` — closes only the remaining
-   bounded Watch History read, canonical/durable room source, and room-lifecycle
-   invite semantics before normal UI/UX work. It excludes production, `main`,
-   release, store, Bloü/OpenClaw, legal, billing, public-form, and new-provider
-   work.
+1. `2026-08-21-core-foundation-ui-handoff-plan.md` — its Watch History,
+   canonical/durable room-source, and room-lifecycle-invite blocks are accepted
+   on `staging` through `3a442b7f76992a5e48b387740bf9cc31a565235e`. Its final
+   integrated verification and semantic Graphify refresh remain explicit
+   controller-owned closeout gates. It does not establish production, `main`,
+   release, store, Bloü/OpenClaw, legal, billing, public-form, or new-provider
+   readiness.
 
 Parallel long-running room/P2P and product execution plans:
 

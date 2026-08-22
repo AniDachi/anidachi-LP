@@ -6,9 +6,13 @@
 > `superpowers:verification-before-completion` before every completion claim.
 > Query Graphify first, then verify important claims against current source.
 
-**Status:** Active planning authority as of 2026-08-21. Documentation scope is
-approved; runtime implementation has not started. This plan stops before final
-UI/UX work, `main`, production, public release, and Chrome Web Store work.
+**Status:** The three runtime foundation blocks are staging-accepted through
+`3a442b7f76992a5e48b387740bf9cc31a565235e` as of 2026-08-22. Task 8's
+documentation closeout is prepared from that observed evidence; final
+integrated verification and the semantic Graphify refresh are controller-owned
+remaining gates before this plan can be marked fully complete. This plan stops
+before final UI/UX work, `main`, production, public release, and Chrome Web
+Store work.
 
 **Goal:** Close the smallest remaining cross-plane technical gaps needed for a
 stable UI/UX development base without rebuilding working systems, weakening the
@@ -480,6 +484,29 @@ opens the current source; ICE query bearer is unreachable.
 accept an ended, foreign, non-friend, or already-resolved invite.
 
 ### Task 8: Integrated Foundation Verification And UI/UX Handoff
+
+**Closeout state:** Tasks 2-3 (bounded Watch History), Tasks 4-6
+(canonical/durable room source), and Tasks 7A-7B plus the accepted regression
+fix (room-lifecycle invites) are delivered to and accepted on staging. The
+staging commits are `7d2e3badb043c3d3adb4ef16ad9527dd3762259f`,
+`b652f8b8cfbdd8130a648702708dfcc13dc2cd8d`,
+`b494bf31de94c70e379f50f87f96a18356e9f1f7`,
+`ce88d9e9b2dbaef461c3558cb4ec8c53b7b88770`,
+`4a63997648bb754fd2ee6b3d95f9a960283acb01`,
+`d4262ffef6a78e4c275a95fb3e70d705ecc04759`,
+`b12c4850f034e69f2cfd24a0db90bfd3e045eb87`,
+`1bafc52`, and `3a442b7f76992a5e48b387740bf9cc31a565235e`. The recorded
+migrations are `20260821162622_watch_history_v2_resource_bounds`,
+`20260822033019_room_source_generation`,
+`20260822065227_room_invite_lifecycle_actions`, and
+`20260822091552_finalize_legacy_orphan_invite_rooms`.
+
+The controller must still run the full required-check set below after this prose
+is stable and perform the semantic `$graphify . --update` refresh. Those outputs
+are intentionally not changed by this documentation pass. The completed plan
+claim remains gated on those fresh controller results; previously accepted
+staging and two-profile evidence is recorded in the execution ledger, not
+recreated or inferred here.
 
 **Files:**
 
