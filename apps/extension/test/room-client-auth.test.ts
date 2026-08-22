@@ -192,9 +192,12 @@ describe("authenticated room client", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
     const input = {
-      sourceUrl: "https://www.youtube.com/watch?v=abc",
-      videoFingerprint: "youtube|abc",
-      title: "Video title",
+      sourceUrl: "https://www.crunchyroll.com/ru/watch/G8WUNM123/episode-one#ignored=value",
+      videoFingerprint: "crunchyroll|watch/G8WUNM123",
+      title: "Episode one",
+      showId: "show-1",
+      episodeId: "episode-1",
+      clientRequestId: "click-1",
     };
 
     await expect(createWebsiteRoomFromApi("access-1", input)).resolves.toEqual({
@@ -212,9 +215,89 @@ describe("authenticated room client", () => {
           Authorization: "Bearer access-1",
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(input),
+        body: JSON.stringify({
+          sourceUrl: "https://www.crunchyroll.com/watch/G8WUNM123",
+          videoFingerprint: "crunchyroll|watch/G8WUNM123",
+          title: "Episode one",
+          showId: "show-1",
+          episodeId: "episode-1",
+          clientRequestId: "click-1",
+        }),
       },
     );
+  });
+
+  it("canonicalizes the exact current youtu.be fingerprint alias before room creation", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      Response.json({
+        roomId: "room-1",
+        roomToken: "room-token-1",
+        shareableLink: "http://localhost:3003/room/room-1",
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await createWebsiteRoomFromApi("access-1", {
+      sourceUrl: "https://youtu.be/dQw4w9WgXcQ/",
+      videoFingerprint: "youtube|/dQw4w9WgXcQ/",
+      title: "Video title",
+      showId: "show-1",
+      episodeId: "episode-1",
+      clientRequestId: "click-1",
+    });
+
+    expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({
+      sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      videoFingerprint: "youtube|dQw4w9WgXcQ",
+      title: "Video title",
+      showId: "show-1",
+      episodeId: "episode-1",
+      clientRequestId: "click-1",
+    });
+  });
+
+  it.each([
+    [{ sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" }],
+    [{ videoFingerprint: "youtube|dQw4w9WgXcQ" }],
+    [{
+      sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      videoFingerprint: "youtube|wrong-video",
+    }],
+    [{
+      sourceUrl: "http://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      videoFingerprint: "youtube|dQw4w9WgXcQ",
+    }],
+    [{
+      sourceUrl: "https://user:secret@www.youtube.com/watch?v=dQw4w9WgXcQ",
+      videoFingerprint: "youtube|dQw4w9WgXcQ",
+    }],
+    [{
+      sourceUrl: "https://studio.youtube.com/watch?v=dQw4w9WgXcQ",
+      videoFingerprint: "youtube|dQw4w9WgXcQ",
+    }],
+    [{
+      sourceUrl: "https://www.youtube.com/shorts/dQw4w9WgXcQ",
+      videoFingerprint: "youtube|dQw4w9WgXcQ",
+    }],
+    [{
+      sourceUrl: "https://youtu.be/dQw4w9WgXcQ?v=other-video",
+      videoFingerprint: "youtube|/dQw4w9WgXcQ",
+    }],
+  ])("rejects invalid room source input before fetch: %j", async (input) => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      Response.json({
+        roomId: "room-1",
+        roomToken: "room-token-1",
+        shareableLink: "http://localhost:3003/room/room-1",
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(createWebsiteRoomFromApi("access-1", input)).rejects.toMatchObject({
+      code: "INVALID_SOURCE",
+      message: "Invalid room source",
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("gets a room token for existing website rooms from the background API helper", async () => {

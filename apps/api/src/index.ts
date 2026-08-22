@@ -187,48 +187,6 @@ app.get("/rooms/:roomId/ice-servers", async (c) => {
   }
 });
 
-app.get("/ice-servers", async (c) => {
-  c.header("Cache-Control", "no-store");
-  c.header("X-Anidachi-Auth-Fallback", "query");
-  const roomToken = c.req.query("roomToken");
-  const roomId = c.req.query("roomId");
-  if (!roomToken || !roomId) {
-    return c.json(
-      { error: "ROOM_TOKEN_REQUIRED", message: "roomToken and roomId are required" },
-      401,
-    );
-  }
-
-  const verified = await verifyRoomToken(roomToken, roomId, c.env);
-  if (!verified) {
-    return c.json({ error: "INVALID_ROOM_TOKEN", message: "Invalid or expired room token" }, 401);
-  }
-  emitRoomTelemetry(
-    c.env.ROOM_ANALYTICS,
-    { env: c.env.ANIDACHI_ENV ?? "local", roomId },
-    { name: "ice_query_auth_fallback" },
-  );
-
-  try {
-    return c.json(
-      await createIceServersPayload(c.env, {
-        now: Date.now(),
-        roomId,
-        userId: verified.sub,
-      }),
-    );
-  } catch (error) {
-    console.error("[Anidachi] ICE server generation failed", error);
-    return c.json(
-      {
-        error: "ICE_SERVER_GENERATION_FAILED",
-        message: error instanceof Error ? error.message : "Failed to generate ICE servers",
-      },
-      502,
-    );
-  }
-});
-
 app.get("/ws/:roomId", async (c) => {
   const roomId = c.req.param("roomId");
   if (roomId.length === 0 || roomId.length > MAX_ROOM_ID_CHARS) {
