@@ -14,7 +14,7 @@ explicit user approval immediately before it. This remains a technical
 `main` without a database/runtime race, without publishing an extension, and
 without claiming public or market readiness.
 
-**Architecture:** Use a two-phase production promotion. First merge only the 12
+**Architecture:** Use a two-phase production promotion. First merge only the 13
 already staging-tested Supabase migrations into `main`, wait for the production
 database workflow, and verify that the old production runtime remains healthy.
 Then create a fresh runtime promotion branch from the updated `main`, merge the
@@ -95,7 +95,7 @@ the release.
 | Accumulated diff | 272 files, 326,864 additions, 151,158 deletions |
 | Current promotion PR | `#174`, open, mergeable, clean, manual promotion |
 | PR `#174` checks | CI, migrations-to-staging, Rooms, P2P, Vercel, staging smoke green |
-| Pending production migrations | 12 ordered files listed below |
+| Pending production migrations | 13 ordered files listed below |
 | Production Vercel baseline | Ready deployment `dpl_A8fsBNDh7SJLthsKsfThCk6fpQ3x` |
 | Staging Vercel candidate | Ready deployment `dpl_6bvDCC5v5koztbQEHZ2kq2uYUwjD` |
 | `main` protection | Strict required `check-and-test`, merge PR required, force pushes blocked |
@@ -122,6 +122,18 @@ other repository files:
 10. `apps/web/supabase/migrations/20260822033019_room_source_generation.sql`
 11. `apps/web/supabase/migrations/20260822065227_room_invite_lifecycle_actions.sql`
 12. `apps/web/supabase/migrations/20260822091552_finalize_legacy_orphan_invite_rooms.sql`
+13. `apps/web/supabase/migrations/20260822173304_explicit_service_role_privileges.sql`
+
+Task 2's fresh local replay exposed one current-platform compatibility gap after
+the original planning snapshot: Supabase clean-project defaults no longer grant
+Data API table privileges implicitly. The existing staging project already had
+full `service_role` CRUD on all 33 application tables, while a clean replay
+lacked those privileges on 21 legacy tables and lacked execute permission on
+eight legacy server routines: one older RPC plus seven trigger and projection
+helpers. The thirteenth forward-only migration makes only that existing
+server-side authority explicit. It creates no object, changes no data, grants
+nothing to `anon` or `authenticated`, and is compatible with both the old and
+new runtime.
 
 These files were designed and staging-tested as structurally migration-first
 compatible: the old runtime can continue using its existing table shapes while
@@ -129,6 +141,21 @@ the additive v2/OAuth/auth-family/source/invite boundaries are present. The
 bounded-read migrations install active projection triggers, so they are
 compatible but not dormant. The final orphan-invite migration performs a
 bounded historical data update; it must not be reapplied or rewritten.
+
+### Execution correction after the fresh-database gate
+
+The first docs-only freeze produced staging SHA
+`65523a51c29133e627cf4d72b59abe46dca87688`. Task 2 then reproduced the current
+Supabase clean-project privilege defaults and failed before any production PR
+was prepared. The exact two-assertion regression test failed on the missing
+legacy-table CRUD and legacy-routine execute authority. A temporary local grant
+matching staging made all 419 prior assertions pass, and the final ACL
+comparison expanded the routine assertion to the complete set of eight,
+proving the root cause without broadening user-facing access. The committed
+migration and focused test must now pass through a normal feature PR into
+`staging`, after which Task 1's freeze and all of Task 2 are repeated on the new
+SHA. The `65523a51` candidate is therefore evidence, not the final promotion
+candidate.
 
 There is one intentional session-continuity exception. The auth-channel
 migration marks refresh-token rows that existed at cutover as revoked, and the
@@ -143,7 +170,7 @@ be accepted explicitly again for production under Decision 4.
 ```text
 frozen staging candidate
         |
-        | supplies only the 12 migration files
+        | supplies only the 13 migration files
         v
 codex/main-foundation-migrations-20260822
         |
@@ -313,10 +340,20 @@ git diff --name-only bb32e26adee6971709a35d2929c7ad7155ebd8d5..origin/staging
 ```
 
 Expected difference from `bb32e26` is only this plan, the plan index, and any
-three allowed team Graphify artifacts refreshed above. Record the resulting full
-SHA in the promotion PR bodies and progress log. Any runtime, workflow,
-migration, lockfile, configuration, or other generated-file change stops the
-plan for renewed review.
+three allowed team Graphify artifacts refreshed above for the initial
+`65523a51` freeze. Task 2's documented compatibility failure invalidated that
+freeze. After the explicit-privilege fix reaches `staging`, repeat this step
+against `65523a51` and require the additional diff to contain only:
+
+- `apps/web/supabase/migrations/20260822173304_explicit_service_role_privileges.sql`;
+- `apps/web/supabase/tests/service_role_explicit_privileges.test.sql`;
+- this corrected plan; and
+- only the three allowed team Graphify artifacts if its semantic refresh
+  changes them.
+
+Record the resulting full SHA in the promotion PR bodies and progress log. Any
+runtime, workflow, other migration, lockfile, configuration, or unrelated
+generated-file change stops the plan for renewed review.
 
 **Acceptance:** the plan is durable, the final candidate SHA is known, and its
 only change above the already accepted runtime is documentation.
@@ -543,7 +580,7 @@ ready.
 
 ### Task 4: Prepare Migration-Only PR A
 
-**Files:** exactly the 12 migration paths listed above.
+**Files:** exactly the 13 migration paths listed above.
 
 **Interfaces:**
 
@@ -588,7 +625,8 @@ git restore --source=origin/staging -- \
   apps/web/supabase/migrations/20260821162622_watch_history_v2_resource_bounds.sql \
   apps/web/supabase/migrations/20260822033019_room_source_generation.sql \
   apps/web/supabase/migrations/20260822065227_room_invite_lifecycle_actions.sql \
-  apps/web/supabase/migrations/20260822091552_finalize_legacy_orphan_invite_rooms.sql
+  apps/web/supabase/migrations/20260822091552_finalize_legacy_orphan_invite_rooms.sql \
+  apps/web/supabase/migrations/20260822173304_explicit_service_role_privileges.sql
 ```
 
 - [ ] **Step 3: Prove the branch contains no other change**
@@ -600,7 +638,7 @@ git diff --check
 git diff --name-only | wc -l
 ```
 
-Expected count is `12`, and every line must be one of the listed migration
+Expected count is `13`, and every line must be one of the listed migration
 paths. Any workflow, runtime, test, docs, lockfile, or generated file stops the
 task.
 
@@ -626,20 +664,20 @@ evidence.
 git add apps/web/supabase/migrations
 git commit -m "feat(db): promote tested foundation migrations"
 git diff --name-status origin/main...HEAD
-test "$(git diff --name-only origin/main...HEAD | wc -l | tr -d ' ')" = "12"
+test "$(git diff --name-only origin/main...HEAD | wc -l | tr -d ' ')" = "13"
 git push -u origin codex/main-foundation-migrations-20260822
 gh pr create \
   --repo AniDachi/anidachi-LP \
   --base main \
   --head codex/main-foundation-migrations-20260822 \
   --title "feat(db): promote tested foundation migrations" \
-  --body "Database-first production prerequisite for the tested staging foundation. The diff is restricted to the 12 ordered Supabase migrations recorded in the promotion plan. No runtime is included. Do not merge runtime until the production migration workflow and old production runtime are verified. Rollback uses the reviewed forward/redeploy procedures; migration history and canonical data must not be edited or deleted."
+  --body "Database-first production prerequisite for the tested staging foundation. The diff is restricted to the 13 ordered Supabase migrations recorded in the promotion plan. No runtime is included. Do not merge runtime until the production migration workflow and old production runtime are verified. Rollback uses the reviewed forward/redeploy procedures; migration history and canonical data must not be edited or deleted."
 ```
 
 - [ ] **Step 6: Enforce Gate A**
 
 Require PR A to be mergeable, up to date with `main`, green on
-`check-and-test`, and still exactly 12 migration files. Present the PR URL and
+`check-and-test`, and still exactly 13 migration files. Present the PR URL and
 evidence to the user, explain the automatic database/Vercel effects, and stop
 until the user explicitly approves this exact merge.
 
@@ -653,7 +691,7 @@ with no runtime deployment race.
 **Interfaces:**
 
 - Consumes: approved, green migration PR A.
-- Produces: production migration history containing all 12 files and a healthy
+- Produces: production migration history containing all 13 files and a healthy
   old production runtime.
 
 - [ ] **Step 1: Recheck `main`, `staging`, and PR A immediately before merge**
@@ -702,7 +740,7 @@ Require:
 
 - dry run detects only the intended pending migrations;
 - apply exits successfully;
-- all 12 migration timestamps appear in ordered workflow output;
+- all 13 migration timestamps appear in ordered workflow output;
 - no migration is partially repaired or marked manually.
 
 If the bounded-read or resource-bound migration hits its documented ten-second
@@ -735,7 +773,7 @@ runtime is healthy, and no new runtime has been promoted.
 
 ### Task 6: Prepare Fresh Runtime Promotion PR B
 
-**Files:** the remaining tested `staging` tree after the 12 migration files are
+**Files:** the remaining tested `staging` tree after the 13 migration files are
 already present in `main`.
 
 **Interfaces:**
@@ -1049,7 +1087,7 @@ Record:
 
 - migration PR and runtime PR URLs/numbers;
 - frozen staging SHA and final main SHA;
-- all 12 production migration results;
+- all 13 production migration results;
 - Vercel/Worker/CI/extension artifact results;
 - Chrome Web Store/public-launch non-action;
 - production extension auth still fail-closed;
@@ -1119,7 +1157,7 @@ baseline, and no untracked release branch/worktree/artifact remains.
 | --- | --- |
 | `staging` moves after freeze | Stop, review the new diff, rerun affected gates, and record a new candidate |
 | Unexpected `main` commit appears | Stop and inspect ancestry/tree impact before rebuilding either promotion branch |
-| Migration PR contains more than 12 files | Stop and recreate it from clean `origin/main` |
+| Migration PR contains more than 13 files | Stop and recreate it from clean `origin/main` |
 | Local reset, pgTAP, lint, or old-runtime checks fail | Do not open or merge migration PR A |
 | Private Blob appears in a core AniDachi MVP path | Stop; do not configure or bypass it without a new user decision |
 | Production migration lock timeout | Keep old runtime, let writers drain, rerun the same workflow |
@@ -1140,7 +1178,7 @@ The plan is complete only when all of these are true:
   intentional reauthentication boundary;
 - the exact staging candidate and current main were rechecked immediately before
   each production mutation;
-- the 12 migrations were promoted first and verified on production;
+- the 13 migrations were promoted first and verified on production;
 - the old production runtime stayed healthy after migration-only deployment;
 - runtime PR B contained zero migration diff and was tree-identical to frozen
   `staging`;

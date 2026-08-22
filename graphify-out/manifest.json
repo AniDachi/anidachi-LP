@@ -6054,9 +6054,21 @@
     "semantic_hash": "ab2711222c576cde0b6da45d7e445802"
   },
   "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md": {
-    "mtime": 1787417665.6074612,
-    "seen": 1787418227.835207,
-    "ast_hash": "9d9498d34fe6e78ee77d1e71c9bda07f",
-    "semantic_hash": "9d9498d34fe6e78ee77d1e71c9bda07f"
+    "mtime": 1787422988.7649202,
+    "seen": 1787423264.577426,
+    "ast_hash": "f8612378708f2e14bb3a022f732b0228",
+    "semantic_hash": "f8612378708f2e14bb3a022f732b0228"
+  },
+  "apps/web/supabase/migrations/20260822173304_explicit_service_role_privileges.sql": {
+    "mtime": 1787422955.1380303,
+    "seen": 1787423264.577406,
+    "ast_hash": "9c690bb76b7252d8f8002b85fbea9abc",
+    "semantic_hash": "9c690bb76b7252d8f8002b85fbea9abc"
+  },
+  "apps/web/supabase/tests/service_role_explicit_privileges.test.sql": {
+    "mtime": 1787422910.517668,
+    "seen": 1787423264.577409,
+    "ast_hash": "2c9fa383cd18a05061ac7d8951270d23",
+    "semantic_hash": "2c9fa383cd18a05061ac7d8951270d23"
   }
 }
