@@ -1,3 +1,4 @@
+import type { FriendListItem, RoomInvite } from "@anidachi/protocol";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -6,6 +7,7 @@ import * as overlayApp from "../src/overlay-app";
 import { AUTH_TOKENS_KEY } from "../src/auth-tokens";
 import type { PrivilegedOverlayContext } from "../src/privileged-overlay-intent";
 import { RoomClient } from "../src/room-client";
+import { listInviteTargets, listRoomInvites } from "../src/social-client";
 import type { VideoAdapter } from "../src/source-adapters/core/types";
 
 const extensionStorage = vi.hoisted(() => {
@@ -37,12 +39,20 @@ const extensionStorage = vi.hoisted(() => {
 
 vi.mock("wxt/utils/storage", () => ({ storage: extensionStorage.storage }));
 
+vi.mock("../src/social-client", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../src/social-client")>()),
+  listInviteTargets: vi.fn(),
+  listRoomInvites: vi.fn(),
+}));
+
 describe("privileged overlay wiring", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
     document.body.replaceChildren();
     extensionStorage.values.clear();
+    vi.mocked(listInviteTargets).mockReset();
+    vi.mocked(listRoomInvites).mockReset();
   });
 
   it("keeps the overlay tree closed to the hosting page", () => {
@@ -322,6 +332,81 @@ describe("privileged overlay wiring", () => {
     expect(primaryRoomAction(view.container).classList).not.toContain("room-exit");
     await unmount(view.root);
   });
+
+  it("refreshes an open invite panel when an invited participant joins", async () => {
+    const sendMessage = vi.fn(async (message: { type?: string; command?: string }) => {
+      if (message.type === "ANIDACHI_AUTH") return { ok: true, tokens: sessionFor("user-a") };
+      if (message.type === "ANIDACHI_ROOM_HTTP" && message.command === "create-room") {
+        return {
+          ok: true,
+          room: {
+            roomId: "room-a",
+            roomToken: "room-token-a",
+            shareableLink: "http://localhost:3003/room/room-a",
+            privilegedRoomAuthority: roomAuthority(),
+          },
+        };
+      }
+      if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE" && message.command === "load") {
+        return { ok: true, record: null };
+      }
+      if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE" && message.command === "persist") {
+        return {
+          ok: true,
+          record: {
+            version: 1,
+            revision: 1,
+            roomId: "room-a",
+            ownerUserId: "user-a",
+            participantSessionId: "participant-session-a",
+            voiceMode: "camera",
+          },
+        };
+      }
+      throw new Error(`Unexpected runtime message ${message.type}:${message.command}`);
+    });
+    installOverlayRuntime(sendMessage);
+    vi.mocked(listInviteTargets).mockResolvedValue({ friends: [inviteFriend()], groups: [] });
+    vi.mocked(listRoomInvites)
+      .mockResolvedValueOnce(invitesResponse("pending"))
+      .mockResolvedValueOnce(invitesResponse("accepted"));
+
+    let roomConnectionOptions: Parameters<RoomClient["connect"]>[0] | null = null;
+    vi.spyOn(RoomClient.prototype, "connect").mockImplementation((options) => {
+      roomConnectionOptions = options;
+      options.onStatus("connected");
+      options.onEvent({
+        type: "ROOM_SNAPSHOT",
+        roomId: "room-a",
+        roomGeneration: 1,
+        sourceGeneration: 1,
+        serverSeq: 1,
+        participants: [hostParticipant()],
+      });
+    });
+    const view = await renderOverlay();
+
+    await click(button(view.container, "Open Anidachi controls"));
+    await click(button(view.container, "Create room"));
+    await click(button(view.container, "Invite friends and groups"));
+    await flushMountedWork();
+
+    expect(button(view.container, "Pending")).toBeInstanceOf(HTMLButtonElement);
+    expect(listRoomInvites).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      roomConnectionOptions?.onEvent({
+        type: "PARTICIPANT_JOINED",
+        participant: guestParticipant(),
+      });
+      await Promise.resolve();
+    });
+    await flushMountedWork();
+
+    expect(listRoomInvites).toHaveBeenCalledTimes(2);
+    expect(button(view.container, "Accepted")).toBeInstanceOf(HTMLButtonElement);
+    await unmount(view.root);
+  });
 });
 
 function createAdapter(container: HTMLElement, video: HTMLVideoElement): VideoAdapter {
@@ -392,6 +477,69 @@ function hostParticipant() {
     mediaSeat: "none" as const,
     syncStatus: "unknown" as const,
     lastSeenAt: 0,
+  };
+}
+
+function guestParticipant() {
+  return {
+    id: "11111111-1111-4111-8111-111111111111",
+    displayName: "Ads Mag",
+    role: "viewer" as const,
+    cameraEnabled: false,
+    mediaSeat: "none" as const,
+    syncStatus: "unknown" as const,
+    lastSeenAt: 0,
+  };
+}
+
+function inviteFriend(): FriendListItem {
+  return {
+    friendshipId: "22222222-2222-4222-8222-222222222222",
+    user: {
+      userId: guestParticipant().id,
+      handle: null,
+      displayName: guestParticipant().displayName,
+      avatarUrl: null,
+    },
+    status: "accepted",
+    direction: "mutual",
+    requestedAt: "2026-08-22T08:00:00.000Z",
+    respondedAt: "2026-08-22T08:01:00.000Z",
+    updatedAt: "2026-08-22T08:01:00.000Z",
+  };
+}
+
+function invitesResponse(status: RoomInvite["recipients"][number]["status"]) {
+  const invite: RoomInvite = {
+    id: "33333333-3333-4333-8333-333333333333",
+    roomId: "room-a",
+    sender: {
+      userId: "44444444-4444-4444-8444-444444444444",
+      handle: null,
+      displayName: "Host",
+      avatarUrl: null,
+    },
+    targetKind: "direct",
+    targetGroupId: null,
+    message: null,
+    roomTitle: "Test video",
+    sourceUrl: "https://www.youtube.com/watch?v=test",
+    videoFingerprint: "youtube|test",
+    createdAt: "2026-08-22T08:00:00.000Z",
+    expiresAt: "2026-08-22T20:00:00.000Z",
+    recipients: [
+      {
+        user: inviteFriend().user,
+        status,
+        updatedAt: "2026-08-22T08:01:00.000Z",
+        respondedAt: status === "pending" ? null : "2026-08-22T08:01:00.000Z",
+      },
+    ],
+  };
+  return {
+    meta: { serverTime: "2026-08-22T08:01:00.000Z", schemaVersion: 1 as const },
+    inbox: [],
+    sent: [invite],
   };
 }
 

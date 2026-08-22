@@ -471,6 +471,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     ReadonlyMap<string, RoomInviteTargetStatus>
   >(() => new Map());
   const inviteActionIdsRef = useRef(new Map<string, string>());
+  const inviteStatusMembershipRef = useRef({ roomId: null as string | null, participantCount: 0 });
   const [messageComposerGuardActive, setMessageComposerGuardActive] = useState(false);
   const [messageComposerShieldActive, setMessageComposerShieldActive] = useState(false);
   const [messageComposerShieldReleasing, setMessageComposerShieldReleasing] = useState(false);
@@ -3757,6 +3758,26 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     }
   }, [getFreshAuthAccessToken]);
 
+  const refreshInviteStatusesForRoom = useCallback(async () => {
+    const activeRoomId = roomIdRef.current;
+    const accessToken = await getFreshAuthAccessToken("invite-status-membership-change");
+    if (!activeRoomId || !accessToken || roomIdRef.current !== activeRoomId) return;
+
+    try {
+      const invites = await listRoomInvites(accessToken);
+      if (roomIdRef.current !== activeRoomId) return;
+      setInviteTargetStatuses(roomInviteTargetStatuses(invites.sent, activeRoomId));
+      logDebug("overlay.invite", "status refreshed after participant joined", {
+        roomId: activeRoomId,
+      });
+    } catch (error) {
+      logDebug("overlay.invite", "participant-join status refresh failed", {
+        roomId: activeRoomId,
+        message: authErrorMessage(error, "Failed to refresh invite status"),
+      });
+    }
+  }, [getFreshAuthAccessToken]);
+
   const toggleInvitePanel = useCallback(async () => {
     if (invitePanelOpen) {
       setInvitePanelOpen(false);
@@ -3765,6 +3786,29 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
     await loadInviteTargetsForRoom();
   }, [invitePanelOpen, loadInviteTargetsForRoom]);
+
+  useEffect(() => {
+    const previous = inviteStatusMembershipRef.current;
+    const current = { roomId, participantCount };
+
+    if (previous.roomId !== roomId) {
+      inviteStatusMembershipRef.current = current;
+      return;
+    }
+
+    if (!invitePanelOpen) return;
+    inviteStatusMembershipRef.current = current;
+
+    if (
+      !isHost ||
+      !roomId ||
+      participantCount <= previous.participantCount
+    ) {
+      return;
+    }
+
+    void refreshInviteStatusesForRoom();
+  }, [invitePanelOpen, isHost, participantCount, refreshInviteStatusesForRoom, roomId]);
 
   const sendInviteToTarget = useCallback(
     async (
