@@ -342,10 +342,10 @@
     "semantic_hash": "46aa97bae6145c0f0a59e3c51cbf50c7"
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1787323597.9738557,
-    "seen": 1787380811.7419379,
-    "ast_hash": "b3c8c13c31c265f1302ed2874dc4e420",
-    "semantic_hash": "b3c8c13c31c265f1302ed2874dc4e420"
+    "mtime": 1787390491.488422,
+    "seen": 1787390523.1299882,
+    "ast_hash": "dcbce643947cf4bb7df069a5a232026b",
+    "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
     "mtime": 1786689011.2525907,
@@ -648,8 +648,8 @@
     "semantic_hash": "723c7ab00ee3acca397738405452e673"
   },
   "apps/web/app/account/invites/invites-client.tsx": {
-    "mtime": 1787383674.140669,
-    "seen": 1787383891.955776,
+    "mtime": 1787384828.203499,
+    "seen": 1787390368.76986,
     "ast_hash": "d2eb0d6f67a7e1f78806d83bb67977ea",
     "semantic_hash": ""
   },
@@ -666,8 +666,8 @@
     "semantic_hash": "109b8a6e90550f82bd581881c1871c42"
   },
   "apps/web/app/account/page.tsx": {
-    "mtime": 1787384150.178747,
-    "seen": 1787384506.767334,
+    "mtime": 1787384828.2037725,
+    "seen": 1787390368.7698612,
     "ast_hash": "2ea4d60d006d94c305df3c6011af9a2a",
     "semantic_hash": ""
   },
@@ -2466,14 +2466,14 @@
     "semantic_hash": "6a5f22280a954c5c38b1380d33d7cba2"
   },
   "apps/web/lib/anidachi-auth/social.test.ts": {
-    "mtime": 1787384311.0669997,
-    "seen": 1787384506.767522,
+    "mtime": 1787384828.2045043,
+    "seen": 1787390368.770048,
     "ast_hash": "8a8b62df21cfb3acfa2d0918d4ca4aef",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/social.ts": {
-    "mtime": 1787384344.8324134,
-    "seen": 1787384506.767522,
+    "mtime": 1787384828.2048008,
+    "seen": 1787390368.770048,
     "ast_hash": "1be291c36b14e335fb76ce3a0e79ba13",
     "semantic_hash": ""
   },
@@ -5064,14 +5064,14 @@
     "semantic_hash": "e46378099ae582240395f7b79da3bdf7"
   },
   "apps/web/lib/anidachi-auth/account-inbox.test.ts": {
-    "mtime": 1787383578.1191044,
-    "seen": 1787383891.955946,
+    "mtime": 1787384828.2040768,
+    "seen": 1787390368.770025,
     "ast_hash": "39b245a59a960e9179b933db9700d9ec",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/account-inbox.ts": {
-    "mtime": 1787383641.0019,
-    "seen": 1787383891.955946,
+    "mtime": 1787384828.204306,
+    "seen": 1787390368.770026,
     "ast_hash": "27f14d9637d62f863cf51ae157e45f55",
     "semantic_hash": ""
   },
@@ -5892,10 +5892,10 @@
     "semantic_hash": "e10eabda789cf1436be998f1322db8e4"
   },
   "apps/extension/test/privileged-overlay-wiring.test.tsx": {
-    "mtime": 1787323597.9761946,
-    "seen": 1787380811.742015,
-    "ast_hash": "36e9483b5db0308d55df02836dd87e02",
-    "semantic_hash": "36e9483b5db0308d55df02836dd87e02"
+    "mtime": 1787390319.540176,
+    "seen": 1787390368.769831,
+    "ast_hash": "9cb979c2af8fee7a2480c647c1440bbc",
+    "semantic_hash": ""
   },
   "graphify-out/memory/query_20260814_143612_\u043e\u0446\u0435\u043d\u0438\u0442\u044c_\u043e\u0442\u0437\u044b\u0432_\u043e_wave_2_watch_history_v2.md": {
     "mtime": 1786718172.9604821,
@@ -6045,6 +6045,12 @@
     "mtime": 1787383350.2985115,
     "seen": 1787383891.956057,
     "ast_hash": "fd7710ce6e779525d875a5e99bde98b2",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/migrations/20260822091552_finalize_legacy_orphan_invite_rooms.sql": {
+    "mtime": 1787390210.7875993,
+    "seen": 1787390368.770136,
+    "ast_hash": "ab2711222c576cde0b6da45d7e445802",
     "semantic_hash": ""
   }
 }
