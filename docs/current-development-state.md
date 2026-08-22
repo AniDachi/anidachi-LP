@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-08-21.
+Last updated: 2026-08-22.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -311,6 +311,72 @@ into an invalid-token response. Startup reconciliation and cookie-change events
 are coalesced by the background worker; strict cookie policies use the existing
 silent browser flow as a fallback.
 
+## Core Foundation UI/UX Handoff
+
+The three technical-foundation blocks in
+`docs/superpowers/plans/2026-08-21-core-foundation-ui-handoff-plan.md` are
+implemented and accepted on `staging` through
+`3a442b7f76992a5e48b387740bf9cc31a565235e`. This is a documented foundation
+for subsequent UI/UX work, not a production-readiness, market-readiness,
+public-release, `main`, or Chrome Web Store claim.
+
+- **Watch History resource boundary:** PR `#215` deployed
+  `20260821162622_watch_history_v2_resource_bounds.sql` as staging squash
+  `7d2e3badb043c3d3adb4ef16ad9527dd3762259f`; PR `#216` switched consumers at
+  `b652f8b8cfbdd8130a648702708dfcc13dc2cd8d`. Title pages expose at most eight
+  recent episode rows per title, while an owner-bound detail continuation is
+  capped at 50 rows. The recorded 501-title/13,200-episode local fixture was
+  275,920 serialized bytes with a +573,440-byte parser RSS delta. Receipt
+  cleanup remains global, hourly, bounded, and exact at the 14-day boundary.
+  The user accepted the two-profile loaded artifact for local-first Watch
+  History and website convergence on 2026-08-22.
+- **Durable room source:** PRs `#217`–`#220` landed the strict shared source
+  contract, additive `20260822033019_room_source_generation.sql`, Web
+  persistence boundary, and Worker/extension convergence; Task 6 reached
+  staging at `d4262ffef6a78e4c275a95fb3e70d705ecc04759`. A room is
+  provider-pinned, source generations are monotonic, and the Worker retains one
+  coalesced durable-persistence outbox without delaying live playback. ICE uses
+  Authorization; the browser WebSocket `roomToken` query remains a separate,
+  deliberate browser limitation.
+- **Room-invite lifecycle:** PR `#221` applied
+  `20260822065227_room_invite_lifecycle_actions.sql` at staging squash
+  `b12c4850f034e69f2cfd24a0db90bfd3e045eb87`; PR `#222` switched the runtime at
+  `1bafc52`; and PR `#223` applied
+  `20260822091552_finalize_legacy_orphan_invite_rooms.sql` at
+  `3a442b7f76992a5e48b387740bf9cc31a565235e`. The v2 inbox/action authority
+  follows room lifecycle, makes one accept/decline transition atomic and
+  idempotent, and preserves old functions and `expires_at` for rollback. The
+  user confirmed that the host projection changes to `Accepted` in the two
+  loaded staging profiles.
+
+Separate work remains required for UI/UX design, release and store decisions,
+production and `main`, two-network/TURN acceptance, broader P2P/media hardening,
+billing, public forms, legal/compliance, media intake, and additional providers.
+For rollback, use reviewed forward rollback/redeploy procedures; do not delete
+canonical Watch History, room, or invite data or remove the additive compatibility
+database boundaries as part of this handoff.
+
+Task 8 controller verification at runtime base `3a442b7` passed workspace check
+6/6, forced workspace tests 6/6 (including 98 extension files and 1,277/1,277
+extension tests), API runtime 24/24, database reset, pgTAP 8 files/419, clean
+database lint, linked dry-run remote alignment, rooms 39/39, isolated P2P 26/26,
+Worker staging smoke, staging extension build/validation, `pnpm dev:check`, and
+whitespace. Its first P2P run met an environmental inspector port `9229`
+collision; the isolated 26/26 rerun is the recorded result. All post-merge
+workflows and staging smokes are green. The accepted artifact is exactly
+`3a442b7-staging-20260822162838`; both established unpacked folders are
+byte-identical at that version, and the user accepted Watch History, room source,
+and invite host `Accepted` behavior in the two-profile staging flow.
+
+Graphify's pre-finish health pass at `f5622c7c` recorded 9,943 nodes, 21,002
+edges, 1,120 communities, and zero missing endpoints, dangling links, self-loops,
+or duplicate/collapsed edges; query/explain found the handoff. It retains 550
+legacy/external-reference placeholder nodes without labels/source files, matching
+the prior graph's 1,100 field warnings. The Graphify artifacts included in the
+final evidence PR are refreshed from these completed docs; their
+`built_at_commit` records the immediately preceding docs commit, while the PR
+diff is the full freshness boundary.
+
 ## Account Read Contracts And Popup Isolation
 
 Account read responses for friends, groups, invites, and watch-library data use
@@ -326,12 +392,11 @@ late requests, seen acknowledgements, poster hydration, social actions, and
 history operations from writing into a newer account session. Popup snapshot I/O
 does not claim ownership of the content script's active playback progress.
 
-The additive durable inbox migration is applied on staging. The current account
-inbox rollout moves both the Popup Inbox and `/account/invites` incoming surface
-to the same owner-bound `/api/account/inbox` response, including server counts,
-seen state, missed room invites, and cursor pagination in the full web surface.
-Application rollout is tracked in PR #160. Loaded two-account staging
-acceptance remains required before production promotion.
+The lifecycle v2 inbox migration is applied on staging. Both the Popup Inbox
+and `/account/invites` use the same owner-bound `/api/account/inbox` authority,
+including server counts, seen state, missed room invites, and cursor pagination
+in the full web surface. Task 7's two-profile loaded-artifact acceptance is
+recorded above; a production promotion is still a separate decision.
 
 ## Room Invite Notification Direction
 
@@ -382,11 +447,12 @@ target labeled `Pending`, `Accepted`, or `Invited`. The create response exposes
 whether a new recipient snapshot was created, allowing the UI to distinguish a
 real send from an idempotent or semantic duplicate.
 
-The invite schema still assigns `expires_at` with a 12-hour default, and the
-existing accept path enforces it. The staging inbox foundation preserves that
-field as a compatibility lifecycle signal. A later room-lifecycle slice must
-replace the independent expiry behavior additively and prove the new contract on
-staging before the compatibility field or check is removed.
+The schema still assigns `expires_at` with a 12-hour default, but the deployed
+v2 inbox and action RPCs do not use it as a product deadline. They retain the
+field and old functions for rollback compatibility: a pending invite remains
+actionable while its room is active, then reconciles once to non-actionable
+`Missed` for 24 hours after room end. Removing the compatibility column or old
+functions is separate future cleanup, not part of this handoff.
 
 ## Runtime Environments
 
@@ -728,10 +794,11 @@ These are intentionally not treated as solved:
   verification is still pending. A global lease preventing an adversarial Free
   host from running several rooms concurrently is deliberately deferred until
   product evidence justifies that extra coordination.
-- Source switching is not complete: live `SOURCE_CHANGED` and
-  `sourceGeneration` bumps are implemented, but durable Supabase source
-  persistence, room-create source descriptor plumbing, and explicit
-  source-switch UI/commands are still pending.
+- Room sources are now strict, provider-pinned, and durably convergent: Web
+  creation persists generation 1, the Worker accepts only same-provider
+  canonical changes, and its coalesced outbox persists the latest higher
+  generation without delaying playback. Reload and late join consume the
+  durable source; explicit source-switch UI/commands remain future UI/UX work.
 - Watch History v2 is the active staging runtime. Supabase/Postgres is the one
   durable account-history authority; the extension background owns the
   account-scoped cache/outbox, while Popup and website consume the same strict
@@ -785,11 +852,10 @@ These are intentionally not treated as solved:
   user's projection row and leaves another participant's row intact. Session-
   side checkpoint/identity maintenance updates current v2 member projections;
   hard room deletion removes derived rows for the resulting internal tombstone.
-  A 501-title/13,200-episode local probe returned 50 titles and 2,376 episode
-  rows plus 20 session IDs in a 1,455,993-byte payload, with about 21 MiB parser
-  RSS growth. This is evidence, not a universal resource bound, so public
-  release remains blocked pending an explicit episode-pagination contract or a
-  separately approved defensible bound.
+  The later additive resource-boundary migration and consumer rollout recorded
+  above supersede this old unbounded-row measurement: the active title response
+  returns at most eight rows per title with exact counts and continuation, and
+  the owner-bound detail response returns at most 50 rows.
 - The additive projection/RPC was deployed to staging in a migration-only
   prerequisite PR before the web consumer PR. The same dependency order remains
   mandatory if a separately approved production promotion happens later. A
@@ -801,13 +867,13 @@ These are intentionally not treated as solved:
   participant writes/deletes. If it must be undone, use the reviewed forward
   cleanup sequence in `docs/release-and-rollback-runbook.md`; never delete or
   rewrite canonical `watch_episode_progress` rows.
-- The primary active pre-UI technical plan is
-  `docs/superpowers/plans/2026-08-21-core-foundation-ui-handoff-plan.md`. It
-  carries only the remaining bounded episode-page/receipt lifecycle,
-  canonical/durable room source, and room-lifecycle invite semantics. The broad
-  2026-08-18 readiness program and the 2026-08-14 Watch History v2 foundation
-  plan are historical scope/evidence records; their deferred items are not
-  silently treated as complete.
+- The 2026-08-21 core-foundation-to-UI/UX handoff plan is the accepted staging
+  evidence record for the bounded episode-page/receipt lifecycle,
+  canonical/durable room source, and room-lifecycle invite semantics. It is not
+  authority for production or market readiness. The broad 2026-08-18 readiness
+  program and the 2026-08-14 Watch History v2 foundation plan are historical
+  scope/evidence records; their deferred items are not silently treated as
+  complete.
 - Custom API domain for hiding the Cloudflare account subdomain is deferred.
 - Stripe production webhook appears wired, but end-to-end subscription testing is
   still a separate follow-up.

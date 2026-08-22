@@ -1,6 +1,6 @@
 # Shared Watch Progress Tracker
 
-Last updated: 2026-08-16.
+Last updated: 2026-08-22.
 
 This document records the current Watch History v2 product and runtime boundary.
 The older local/demo tracker has been retired from active runtime.
@@ -49,50 +49,36 @@ work until the user explicitly confirms discard.
 
 ## Read Boundary
 
-The API contract is title-cursor-paginated. The initial implementation paginated
-after loading the full account, which was accepted only for pre-release test
-volume and blocked public release. The locally verified additive
-`20260816090000_watch_history_v2_bounded_read.sql` migration maintains one
-canonical summary row per observed v2 title and keyset-selects the requested
-title page before loading its episodes. Session enrichment is limited to the
-latest 20 title sessions plus each visible episode's canonical latest session.
-A compact v2-only row per `(user, session)` records the user's current account
-generation, title key, and canonical `watch_sessions.last_checkpoint_at`, the
-same value returned as the session DTO's `lastWatchedAt`. Participant heartbeat
-time does not affect candidate order. Its requester/title/order index avoids
-candidate scans across other users, and it does not compare a host-owned shared-
-session generation with the viewer's account generation. Sessions with neither
-`room_id` nor `client_session_key` are internal shared tombstones, are omitted
-from initialization/maintenance, and cannot consume the latest-20 bound.
-The exact title count remains server-computed and no business retention cap was
-invented. Normal heartbeat writes incrementally upsert the title timestamp;
-episode/title/all delete statements recompute each distinct affected title once.
-The migration's explicit transaction locks settings first, then session,
-participant, and progress sources, before installing maintenance and running either v2-only
-initializer. This matches writer order, lets in-flight writers drain, blocks
-later writers, and prevents concurrent deletes from being reinserted from a
-stale initializer snapshot. A ten-second lock timeout rolls the whole migration
-back for workflow retry. Title initialization preserves the newest observation;
-the locked session initialization converges exactly to canonical checkpoint and
-identity state. Deep cursors use an indexable timestamp bound plus the strict binary tie
-predicate. Recent
-session lookup is a requester-leading indexed per-visible-title lateral query
-capped at 20 before the visible episodes' latest-session IDs are unioned.
-Participant/full-clear deletion cascades only the requester's derived rows.
-Session-side checkpoint/identity writes update current member projections, and
-hard-room-delete tombstones remove their derived rows.
+The active staging contract remains title-cursor-paginated, but it no longer
+returns every episode for every visible title. Additive migration
+`20260821162622_watch_history_v2_resource_bounds.sql`, deployed by PR `#215`
+as staging squash `7d2e3badb043c3d3adb4ef16ad9527dd3762259f`, adds exact title
+counts, bounded title/detail RPCs, and receipt cleanup. PR `#216`, staging squash
+`b652f8b8cfbdd8130a648702708dfcc13dc2cd8d`, switched the Web and extension
+consumers without changing the local-first ownership model.
 
-All observed episodes for each visible title remain exact and untruncated. A
-local synthetic account with 501 titles and 13,200 episodes returned a 50-title
-page containing 2,376 episode rows and 20 session IDs in 1,455,993 bytes, with
-about 21 MiB parser RSS growth. That realistic measurement is not an absolute per-title bound.
-Public release therefore remains blocked pending explicit episode pagination or
-a separately approved defensible bound.
+The title RPC returns at most eight canonically recent episode rows per visible
+title, exact observed/completed counts, and an honest continuation. An
+authenticated owner-bound detail request returns at most 50 rows, one lookahead,
+and an opaque keyset cursor ordered by canonical observation time with a binary
+episode-identity tie-breaker. Detail pages are not a snapshot lease: a live
+change can require the client to refresh rather than silently merging stale
+pages. The Popup stays on the bounded canonical title snapshot plus its
+same-owner local observation; it does not eagerly fetch old detail pages.
 
-The migration is not live yet. It must merge/apply and pass migration-history
-verification before the separate web consumer PR on staging. Production requires
-the same migration-only promotion and successful independent production database
-workflow before the runtime promotion.
+All canonical episode rows remain durable and untruncated. The accepted local
+501-title/13,200-episode fixture measured 275,920 serialized bytes and a
++573,440-byte parser RSS delta for a 50-title bounded page. The exact title
+projection remains transactionally maintained across writes, deletes, and full
+clear. The existing title/session projections and rollback-safe legacy data are
+not a retention cap or a second durable store.
+
+Receipts expire exactly 14 days after acceptance. The service-role-only hourly
+cleanup selects and deletes a globally ordered, skip-locked batch of at most 100
+expired receipts; it never deletes progress, settings, summaries, deletion
+fences, or unexpired receipts. No creation-rate limiter was added because the
+recorded current behavior did not justify one without risking legitimate offline
+or terminal recovery.
 
 ## Providers
 
@@ -111,27 +97,26 @@ after consent has been withdrawn.
 
 ## Current Evidence And Remaining Gate
 
-Tasks 0-9 are on staging through `f82fdf6`; v1 HTTP paths now return
-`426 UPGRADE_REQUIRED`, while legacy tables remain inert for rollback. A user
-confirmed the repaired solo Crunchyroll -> Popup -> staging website path after
-PR #188. Task 10 local automation, room/P2P regression, artifact validation, and
-staging Worker smoke pass. The corrected local database contract passes 71
-pgTAP assertions plus migration-order and concurrency/rollback contracts, and
-actual local RPC output passes the production runtime parser.
+Watch History v2 is accepted on staging as part of the core-foundation-to-UI/UX
+handoff. Task 2 recorded focused pgTAP 69/69, full pgTAP 306/306, strict real
+RPC parsing 2/2, and the resource measurement above. Task 3's delivered
+consumer and staging evidence includes the bounded title/detail contract,
+local-first/offline/outbox regression coverage, staging artifact validation, and
+the user's 2026-08-22 two-profile loaded-artifact confirmation that the complete
+Crunchyroll/YouTube and website convergence flow works ideally.
 
-The full loaded-artifact acceptance matrix is not complete. Two authenticated
-profiles on two devices/networks must still verify self-only shared writes,
-reconnect/source boundaries, offline terminal replay, deletion fences, account
-switch/discard/late-response behavior, cross-device Popup/web equality, YouTube
-opt-in, and near-quota terminal preservation before production readiness can be
-claimed.
+This is a staging foundation acceptance only. It does not establish production
+or market readiness, a Chrome Web Store release, two-network/TURN media proof,
+new-provider support, a catalog, telemetry-based creation limits, or a
+production migration/promotion. Those decisions require their own scope,
+verification, and approval.
 
 ## Rollback
 
 Before destructive cleanup, application rollback is a redeploy of the prior web,
 Worker, and extension artifacts. Additive v2 tables/functions and inert v1 tables
-remain available; do not delete legacy storage as part of this release closeout.
-The bounded-read prerequisite is old-runtime-compatible but not dormant because
-its triggers/FK maintain both projections. Use the Watch History forward-cleanup
+remain available; do not delete legacy storage as part of this handoff. The
+bounded-read prerequisite is old-runtime-compatible but not dormant because its
+triggers and projections remain maintained. Use the Watch History forward-cleanup
 sequence in `docs/release-and-rollback-runbook.md` if that migration itself must
 be removed; canonical progress remains untouched.
