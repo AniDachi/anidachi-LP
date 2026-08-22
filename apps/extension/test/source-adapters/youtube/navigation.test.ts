@@ -11,6 +11,7 @@ const OTHER_VIDEO_ID = "aqz-KE-bpKQ";
 describe("YouTube source navigation", () => {
 	it("keeps every currently accepted desktop and mobile navigation identity canonicalizable", () => {
 		for (const input of [
+			`https://youtube.com/watch?v=${VIDEO_ID}`,
 			`https://www.youtube.com/watch?v=${VIDEO_ID}`,
 			`https://m.youtube.com/watch?v=${VIDEO_ID}`,
 			`https://youtu.be/${VIDEO_ID}`,

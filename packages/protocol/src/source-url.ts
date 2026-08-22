@@ -21,6 +21,10 @@ type CanonicalRoomSource = {
   videoFingerprint: string;
 };
 
+const MAX_YOUTUBE_VIDEO_ID_CHARS = MAX_VIDEO_FINGERPRINT_CHARS - "youtube|".length;
+const MAX_CRUNCHYROLL_EPISODE_ID_CHARS =
+  MAX_VIDEO_FINGERPRINT_CHARS - "crunchyroll|watch/".length;
+
 export type CanonicalRoomSourceUrlResult =
   | { ok: true; source: CanonicalRoomSource }
   | { code: RoomSourceUrlRejectionCode; ok: false };
@@ -32,7 +36,17 @@ export function canonicalizeRoomSourceUrl(
   if (value.length > MAX_URL_CHARS) {
     return { ok: false, code: "URL_TOO_LONG" };
   }
-  if (value.trim() !== value) {
+  if (
+    value.trim() !== value ||
+    /[\0-\x1F\x7F]/.test(value) ||
+    value.includes("\\")
+  ) {
+    return { ok: false, code: "INVALID_URL" };
+  }
+  if (value.startsWith("http://")) {
+    return { ok: false, code: "INSECURE_URL" };
+  }
+  if (!value.startsWith("https://")) {
     return { ok: false, code: "INVALID_URL" };
   }
 
@@ -48,6 +62,9 @@ export function canonicalizeRoomSourceUrl(
   }
   if (url.protocol !== "https:") {
     return { ok: false, code: "INSECURE_URL" };
+  }
+  if (url.port !== "") {
+    return { ok: false, code: "INVALID_URL" };
   }
 
   const source = canonicalizeProviderUrl(url);
@@ -106,12 +123,12 @@ function canonicalizeProviderUrl(url: URL): CanonicalRoomSource | null {
     const videoId = youtubeVideoId(url);
     if (!videoId) return null;
     const canonicalUrl = `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`;
-    return {
+    return boundedCanonicalRoomSource({
       provider,
       sourceUrl: canonicalUrl,
       canonicalUrl,
       videoFingerprint: `youtube|${videoId}`,
-    };
+    });
   }
   if (provider === "crunchyroll") {
     const pathname = crunchyrollWatchPath(url);
@@ -119,12 +136,12 @@ function canonicalizeProviderUrl(url: URL): CanonicalRoomSource | null {
     const canonicalUrl = `https://www.crunchyroll.com${pathname}`;
     const episodeId = pathname.split("/")[2];
     if (!episodeId) return null;
-    return {
+    return boundedCanonicalRoomSource({
       provider,
       sourceUrl: canonicalUrl,
       canonicalUrl,
       videoFingerprint: `crunchyroll|watch/${episodeId}`,
-    };
+    });
   }
   return null;
 }
@@ -157,10 +174,20 @@ function youtubeVideoId(url: URL): string | null {
 
 function crunchyrollWatchPath(url: URL): string | null {
   const match = url.pathname.match(/^\/watch\/([A-Za-z0-9_-]+)(?:\/([A-Za-z0-9][A-Za-z0-9-]*))?\/?$/);
-  if (!match?.[1]) return null;
-  return match[2] ? `/watch/${match[1]}/${match[2]}` : `/watch/${match[1]}`;
+  if (!match?.[1] || match[1].length > MAX_CRUNCHYROLL_EPISODE_ID_CHARS) return null;
+  return `/watch/${match[1]}`;
 }
 
 function isYouTubeVideoId(value: string | undefined): value is string {
-  return value !== undefined && /^[A-Za-z0-9_-]{6,}$/.test(value);
+  return value !== undefined &&
+    value.length <= MAX_YOUTUBE_VIDEO_ID_CHARS &&
+    /^[A-Za-z0-9_-]{6,}$/.test(value);
+}
+
+function boundedCanonicalRoomSource(source: CanonicalRoomSource): CanonicalRoomSource | null {
+  return source.sourceUrl.length <= MAX_URL_CHARS &&
+      source.canonicalUrl.length <= MAX_URL_CHARS &&
+      source.videoFingerprint.length <= MAX_VIDEO_FINGERPRINT_CHARS
+    ? source
+    : null;
 }

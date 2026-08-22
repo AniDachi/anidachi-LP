@@ -14,6 +14,7 @@ describe("Crunchyroll source navigation", () => {
 			expect(canonicalizeRoomSourceUrl(input)).toMatchObject({
 				ok: true,
 				source: {
+					canonicalUrl: "https://www.crunchyroll.com/watch/GOLD22222",
 					provider: "crunchyroll",
 					videoFingerprint: "crunchyroll|watch/GOLD22222",
 				},

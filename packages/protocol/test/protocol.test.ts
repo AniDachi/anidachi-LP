@@ -63,6 +63,12 @@ describe("room protocol schemas", () => {
       outcome: "persisted",
       sourceGeneration: 0,
     })).toThrow();
+    expect(() => RoomSourcePersistenceAcknowledgementSchema.parse({
+      ok: true,
+      outcome: "persisted",
+      sourceGeneration: 2,
+      unexpected: true,
+    })).toThrow();
   });
 
   it("derives one private empty-room callback identity across service planes", async () => {
