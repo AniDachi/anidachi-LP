@@ -289,6 +289,50 @@
         "confidence": "INFERRED",
         "confidence_score": 0.95,
         "source_file": "docs/current-development-state.md"
+      },
+      {
+        "id": "two_phase_thirteen_migration_runtime_promotion",
+        "label": "Database-First Thirteen-Migration Runtime-Second Promotion",
+        "nodes": [
+          "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_two_phase_production_promotion",
+          "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_exact_thirteen_migration_set",
+          "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_migration_only_pr_a",
+          "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_runtime_promotion_pr_b",
+          "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_production_database_workflow"
+        ],
+        "relation": "form",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0,
+        "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md"
+      },
+      {
+        "id": "fresh_database_privilege_correction_flow",
+        "label": "Fresh-Database Privilege Correction Flow",
+        "nodes": [
+          "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_current_supabase_clean_project_privilege_defaults",
+          "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_fresh_database_compatibility_gate",
+          "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_invalidated_initial_candidate_65523a51",
+          "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_explicit_service_role_privileges",
+          "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_renewed_staging_freeze"
+        ],
+        "relation": "form",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0,
+        "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md"
+      },
+      {
+        "id": "accepted_non_launch_boundaries",
+        "label": "Accepted Non-Launch Boundaries",
+        "nodes": [
+          "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_non_launch_scope",
+          "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_private_blob_deferral",
+          "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_room_network_evidence_deferral",
+          "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_private_extension_artifact"
+        ],
+        "relation": "form",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0,
+        "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md"
       }
     ]
   },
@@ -116546,15 +116590,15 @@
       "source_url": null
     },
     {
-      "id": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_exact_twelve_migration_set",
-      "label": "Exact Twelve-Migration Set",
+      "id": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_exact_thirteen_migration_set",
+      "label": "Exact Thirteen-Migration Set",
       "author": null,
       "captured_at": null,
       "community": 1127,
       "community_name": "Main Baseline Promotion",
       "contributor": null,
       "file_type": "concept",
-      "norm_label": "exact twelve-migration set",
+      "norm_label": "exact thirteen-migration set",
       "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
       "source_location": null,
       "source_url": null
@@ -116821,7 +116865,7 @@
       "contributor": null,
       "file_type": "rationale",
       "norm_label": "candidate freeze during production promotion",
-      "rationale": "Freezing the selected staging candidate prevents unreviewed branch drift between database and runtime phases.",
+      "rationale": "Freezing the newly corrected staging candidate prevents unreviewed branch drift between database and runtime phases; any staging movement requires a new review and affected gates.",
       "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
       "source_location": null,
       "source_url": null
@@ -116858,15 +116902,15 @@
     },
     {
       "id": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_migration_first_compatibility",
-      "label": "Migration-First Compatibility",
+      "label": "Thirteen-Migration-First Compatibility",
       "author": null,
       "captured_at": null,
       "community": 1127,
       "community_name": "Main Baseline Promotion",
       "contributor": null,
       "file_type": "rationale",
-      "norm_label": "migration-first compatibility",
-      "rationale": "The twelve staging-tested migrations preserve the old runtime's existing table shapes while installing additive prerequisites for the new runtime.",
+      "norm_label": "thirteen-migration-first compatibility",
+      "rationale": "The thirteen ordered migrations preserve the old runtime's existing table shapes while installing additive prerequisites and making existing server-side service-role authority explicit before the new runtime is promoted.",
       "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
       "source_location": null,
       "source_url": null
@@ -116881,7 +116925,7 @@
       "contributor": null,
       "file_type": "rationale",
       "norm_label": "zero migration diff proof",
-      "rationale": "The runtime PR must contain no pending migration files because production prerequisites are applied and verified separately.",
+      "rationale": "The runtime PR must contain no pending migration files because all thirteen production prerequisites are applied and verified separately.",
       "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
       "source_location": null,
       "source_url": null
@@ -116941,7 +116985,7 @@
       "contributor": null,
       "file_type": "rationale",
       "norm_label": "runtime tree identity proof",
-      "rationale": "Requiring the runtime branch tree to equal the frozen staging tree prevents a hand-edited production variant.",
+      "rationale": "Requiring the runtime branch tree to equal the corrected frozen staging tree prevents a hand-edited production variant.",
       "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
       "source_location": null,
       "source_url": null
@@ -116962,6 +117006,96 @@
       "source_url": null
     },
     {
+      "id": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_current_supabase_clean_project_privilege_defaults",
+      "label": "Current Supabase Clean-Project Privilege Defaults",
+      "author": null,
+      "captured_at": null,
+      "community": 1127,
+      "community_name": "Main Baseline Promotion",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "current supabase clean-project privilege defaults",
+      "rationale": "Current Supabase clean-project defaults no longer grant Data API table privileges implicitly; a clean replay lacked service_role CRUD on 21 legacy tables and EXECUTE on eight legacy server routines: one older RPC plus seven trigger and projection helpers, even though staging already had the corresponding authority.",
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_explicit_service_role_privileges",
+      "label": "Explicit Service Role Privileges",
+      "author": null,
+      "captured_at": null,
+      "community": 1127,
+      "community_name": "Main Baseline Promotion",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "explicit service role privileges",
+      "rationale": "The thirteenth forward-only migration matches existing staging authority by granting service_role CRUD on 21 legacy tables and EXECUTE on all eight legacy server routines: one older RPC plus seven trigger and projection helpers. It grants nothing to anon or authenticated, creates no object, changes no data, and remains compatible with both old and new runtimes.",
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_fresh_database_compatibility_gate",
+      "label": "Fresh Database Compatibility Gate",
+      "author": null,
+      "captured_at": null,
+      "community": 1127,
+      "community_name": "Main Baseline Promotion",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "fresh database compatibility gate",
+      "rationale": "A clean local database replay and focused privilege regression test must prove current-platform compatibility before any production PR is prepared.",
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_invalidated_initial_candidate_65523a51",
+      "label": "Invalidated Initial Candidate 65523a51",
+      "author": null,
+      "captured_at": null,
+      "community": 1127,
+      "community_name": "Main Baseline Promotion",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "invalidated initial candidate 65523a51",
+      "rationale": "Staging SHA 65523a51c29133e627cf4d72b59abe46dca87688 failed the fresh-database privilege gate and is retained only as evidence, not as the final promotion candidate.",
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_privilege_regression_evidence",
+      "label": "Privilege Regression Evidence",
+      "author": null,
+      "captured_at": null,
+      "community": 1127,
+      "community_name": "Main Baseline Promotion",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "privilege regression evidence",
+      "rationale": "Two focused assertions exposed missing legacy-table CRUD and legacy-routine EXECUTE authority; a temporary local grant matching staging allowed all 419 prior assertions to pass, and the final ACL comparison expanded the routine assertion to the complete set of eight, proving the root cause without broadening user-facing access.",
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_renewed_staging_freeze",
+      "label": "Renewed Staging Freeze After Privilege Fix",
+      "author": null,
+      "captured_at": null,
+      "community": 1127,
+      "community_name": "Main Baseline Promotion",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "renewed staging freeze after privilege fix",
+      "rationale": "The explicit-privilege migration and focused test must reach staging through a normal feature PR, after which Task 1's freeze and all of Task 2 must be repeated on a new SHA.",
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
       "id": "docs_superpowers_plans_readme_historical_execution_plans",
       "label": "Historical Execution Plans and Work Logs",
       "author": null,
@@ -116975,6 +117109,28 @@
       "source_file": "docs/superpowers/plans/README.md",
       "source_location": null,
       "source_url": null
+    },
+    {
+      "id": "apps_web_supabase_migrations_20260822173304_explicit_service_role_privileges",
+      "label": "20260822173304_explicit_service_role_privileges.sql",
+      "_origin": "ast",
+      "community": 1128,
+      "community_name": "Service Role Privilege Migration",
+      "file_type": "code",
+      "norm_label": "20260822173304 explicit service role privileges.sql",
+      "source_file": "apps/web/supabase/migrations/20260822173304_explicit_service_role_privileges.sql",
+      "source_location": null
+    },
+    {
+      "id": "apps_web_supabase_tests_service_role_explicit_privileges_test",
+      "label": "service_role_explicit_privileges.test.sql",
+      "_origin": "ast",
+      "community": 1129,
+      "community_name": "Service Role Privilege Test",
+      "file_type": "code",
+      "norm_label": "service role explicit privileges.test.sql",
+      "source_file": "apps/web/supabase/tests/service_role_explicit_privileges.test.sql",
+      "source_location": null
     }
   ],
   "links": [
@@ -360895,126 +361051,6 @@
       "weight": 1.0
     },
     {
-      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_exact_twelve_migration_set",
-      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_migration_first_compatibility",
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
-      "source_location": null,
-      "weight": 1.0
-    },
-    {
-      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_fresh_merge_approval_gate",
-      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_closeout_documentation",
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
-      "source_location": null,
-      "weight": 1.0
-    },
-    {
-      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_fresh_merge_approval_gate",
-      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_migration_only_pr_a",
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
-      "source_location": null,
-      "weight": 1.0
-    },
-    {
-      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_fresh_merge_approval_gate",
-      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_runtime_promotion_pr_b",
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
-      "source_location": null,
-      "weight": 1.0
-    },
-    {
-      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_intentional_production_reauthentication",
-      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_migration_only_pr_a",
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
-      "source_location": null,
-      "weight": 1.0
-    },
-    {
-      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_private_blob_deferral",
-      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_non_launch_scope",
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
-      "source_location": null,
-      "weight": 1.0
-    },
-    {
-      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_private_blob_deferral",
-      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_production_configuration_readiness",
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
-      "source_location": null,
-      "weight": 1.0
-    },
-    {
-      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_private_extension_artifact",
-      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_non_launch_scope",
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
-      "source_location": null,
-      "weight": 1.0
-    },
-    {
-      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_room_network_evidence_deferral",
-      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_non_launch_scope",
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
-      "source_location": null,
-      "weight": 1.0
-    },
-    {
-      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_stop_and_rollback_matrix",
-      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_two_phase_production_promotion",
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
-      "source_location": null,
-      "weight": 1.0
-    },
-    {
-      "source": "docs_superpowers_plans_readme_active_main_baseline_promotion_plan",
-      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_non_launch_scope",
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/README.md",
-      "source_location": null,
-      "weight": 1.0
-    },
-    {
-      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_production_runtime_workflows",
-      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_private_extension_artifact",
-      "relation": "implements",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
-      "source_location": null,
-      "weight": 1.0
-    },
-    {
       "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_safe_staging_main_foundation_promotion_plan",
       "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_two_phase_production_promotion",
       "relation": "implements",
@@ -361045,12 +361081,132 @@
       "weight": 1.0
     },
     {
-      "source": "docs_superpowers_plans_readme_plans_index",
-      "target": "docs_superpowers_plans_readme_historical_execution_plans",
-      "relation": "implements",
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_migration_only_pr_a",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_exact_thirteen_migration_set",
+      "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/README.md",
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_migration_first_compatibility",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_two_phase_production_promotion",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_exact_thirteen_migration_set",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_migration_first_compatibility",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_exact_thirteen_migration_set",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_explicit_service_role_privileges",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_current_supabase_clean_project_privilege_defaults",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_fresh_database_compatibility_gate",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_privilege_regression_evidence",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_current_supabase_clean_project_privilege_defaults",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_explicit_service_role_privileges",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_migration_first_compatibility",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_explicit_service_role_privileges",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_current_supabase_clean_project_privilege_defaults",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_fresh_database_compatibility_gate",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_invalidated_initial_candidate_65523a51",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_privilege_regression_evidence",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_invalidated_initial_candidate_65523a51",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_invalidated_initial_candidate_65523a51",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_renewed_staging_freeze",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_explicit_service_role_privileges",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_renewed_staging_freeze",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_renewed_staging_freeze",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_frozen_staging_candidate",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
       "source_location": null,
       "weight": 1.0
     },
@@ -361065,8 +361221,18 @@
       "weight": 1.0
     },
     {
-      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_migration_first_compatibility",
-      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_two_phase_production_promotion",
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_runtime_promotion_pr_b",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_frozen_staging_candidate",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_tree_identity_proof",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_runtime_promotion_pr_b",
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -361085,6 +361251,36 @@
       "weight": 1.0
     },
     {
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_fresh_merge_approval_gate",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_migration_only_pr_a",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_fresh_merge_approval_gate",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_runtime_promotion_pr_b",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_fresh_merge_approval_gate",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_closeout_documentation",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
       "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_non_launch_scope",
       "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_safe_staging_main_foundation_promotion_plan",
       "relation": "rationale_for",
@@ -361095,9 +361291,9 @@
       "weight": 1.0
     },
     {
-      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_tree_identity_proof",
-      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_runtime_promotion_pr_b",
-      "relation": "rationale_for",
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_private_blob_deferral",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_non_launch_scope",
+      "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
@@ -361105,9 +361301,9 @@
       "weight": 1.0
     },
     {
-      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_closeout_documentation",
-      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_post_deployment_verification",
-      "relation": "references",
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_room_network_evidence_deferral",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_non_launch_scope",
+      "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
@@ -361115,9 +361311,19 @@
       "weight": 1.0
     },
     {
-      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_migration_only_pr_a",
-      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_exact_twelve_migration_set",
-      "relation": "references",
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_private_blob_deferral",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_production_configuration_readiness",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_intentional_production_reauthentication",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_migration_only_pr_a",
+      "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
@@ -361127,6 +361333,56 @@
     {
       "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_migration_only_pr_a",
       "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_production_database_workflow",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_runtime_promotion_pr_b",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_production_runtime_workflows",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_production_runtime_workflows",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_private_extension_artifact",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_private_extension_artifact",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_non_launch_scope",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_post_deployment_verification",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_production_database_workflow",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_post_deployment_verification",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_production_runtime_workflows",
       "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -361145,36 +361401,6 @@
       "weight": 1.0
     },
     {
-      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_post_deployment_verification",
-      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_production_database_workflow",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
-      "source_location": null,
-      "weight": 1.0
-    },
-    {
-      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_post_deployment_verification",
-      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_production_runtime_workflows",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
-      "source_location": null,
-      "weight": 1.0
-    },
-    {
-      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_runtime_promotion_pr_b",
-      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_frozen_staging_candidate",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
-      "source_location": null,
-      "weight": 1.0
-    },
-    {
       "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_runtime_promotion_pr_b",
       "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_pr_174",
       "relation": "references",
@@ -361185,12 +361411,42 @@
       "weight": 1.0
     },
     {
-      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_runtime_promotion_pr_b",
-      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_production_runtime_workflows",
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_closeout_documentation",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_post_deployment_verification",
       "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_stop_and_rollback_matrix",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_two_phase_production_promotion",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_readme_active_main_baseline_promotion_plan",
+      "target": "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_non_launch_scope",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_readme_plans_index",
+      "target": "docs_superpowers_plans_readme_historical_execution_plans",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/README.md",
       "source_location": null,
       "weight": 1.0
     },
@@ -361554,6 +361810,36 @@
       "source_file": "docs/current-development-state.md"
     },
     {
+      "id": "two_phase_thirteen_migration_runtime_promotion",
+      "label": "Database-First Thirteen-Migration Runtime-Second Promotion",
+      "nodes": [
+        "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_two_phase_production_promotion",
+        "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_exact_thirteen_migration_set",
+        "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_migration_only_pr_a",
+        "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_runtime_promotion_pr_b",
+        "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_production_database_workflow"
+      ],
+      "relation": "form",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md"
+    },
+    {
+      "id": "fresh_database_privilege_correction_flow",
+      "label": "Fresh-Database Privilege Correction Flow",
+      "nodes": [
+        "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_current_supabase_clean_project_privilege_defaults",
+        "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_fresh_database_compatibility_gate",
+        "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_invalidated_initial_candidate_65523a51",
+        "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_explicit_service_role_privileges",
+        "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_renewed_staging_freeze"
+      ],
+      "relation": "form",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md"
+    },
+    {
       "id": "accepted_non_launch_boundaries",
       "label": "Accepted Non-Launch Boundaries",
       "nodes": [
@@ -361566,35 +361852,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md"
-    },
-    {
-      "id": "runtime_candidate_integrity_proofs",
-      "label": "Runtime Candidate Integrity Proofs",
-      "nodes": [
-        "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_frozen_staging_candidate",
-        "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_tree_identity_proof",
-        "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_migration_separation_proof",
-        "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_git_convergence"
-      ],
-      "relation": "participate_in",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md"
-    },
-    {
-      "id": "two_phase_database_runtime_promotion",
-      "label": "Database-First Runtime-Second Promotion",
-      "nodes": [
-        "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_two_phase_production_promotion",
-        "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_migration_only_pr_a",
-        "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_runtime_promotion_pr_b",
-        "docs_superpowers_plans_2026_08_22_safe_staging_main_foundation_promotion_production_database_workflow"
-      ],
-      "relation": "form",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md"
     }
   ],
-  "built_at_commit": "e472475b"
+  "built_at_commit": "65523a51c29133e627cf4d72b59abe46dca87688"
 }
