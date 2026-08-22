@@ -7,6 +7,14 @@ Most older files here are not current onboarding documentation. They may contain
 paths, old repository names, old endpoints, and decisions that were correct at
 the time but are no longer current.
 
+Active `main`-baseline promotion plan:
+
+1. `2026-08-22-safe-staging-main-foundation-promotion.md` — prepares a
+   database-first, runtime-second reconciliation of the accepted `staging`
+   foundation into `main`. It requires fresh user approval before every merge
+   and does not authorize public launch, Chrome Web Store publication, new
+   product work, or changes to deferred Private Blob/TURN surfaces.
+
 Core-foundation closeout record:
 
 1. `2026-08-21-core-foundation-ui-handoff-plan.md` — its Watch History,

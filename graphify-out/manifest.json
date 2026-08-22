@@ -3768,10 +3768,10 @@
     "semantic_hash": "6e650e1cecebb157686b6e1daa58f2a4"
   },
   "docs/superpowers/plans/README.md": {
-    "mtime": 1787393268.9582758,
-    "seen": 1787393524.011248,
-    "ast_hash": "79720353a643ca262406b07f21f0f494",
-    "semantic_hash": "79720353a643ca262406b07f21f0f494"
+    "mtime": 1787417665.607838,
+    "seen": 1787418227.835208,
+    "ast_hash": "1b405e344c454c24d5754c7f76c41ff2",
+    "semantic_hash": "1b405e344c454c24d5754c7f76c41ff2"
   },
   "packages/protocol/AGENTS.md": {
     "mtime": 1786689011.3759747,
@@ -6052,5 +6052,11 @@
     "seen": 1787393000.620769,
     "ast_hash": "ab2711222c576cde0b6da45d7e445802",
     "semantic_hash": "ab2711222c576cde0b6da45d7e445802"
+  },
+  "docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md": {
+    "mtime": 1787417665.6074612,
+    "seen": 1787418227.835207,
+    "ast_hash": "9d9498d34fe6e78ee77d1e71c9bda07f",
+    "semantic_hash": "9d9498d34fe6e78ee77d1e71c9bda07f"
   }
 }

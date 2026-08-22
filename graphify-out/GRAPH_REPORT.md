@@ -1,12 +1,12 @@
-# Graph Report - anidachi-LP-monorepo  (2026-08-22)
+# Graph Report - anidachi-LP-monorepo  (2026-08-23)
 
 ## Corpus Check
-- 1009 files · ~940,547 words
+- 1010 files · ~947,033 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 9952 nodes · 21021 edges · 1127 communities (386 shown, 741 thin omitted)
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 324 edges (avg confidence: 0.84)
+- 9979 nodes · 21052 edges · 1128 communities (387 shown, 741 thin omitted)
+- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 325 edges (avg confidence: 0.84)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
