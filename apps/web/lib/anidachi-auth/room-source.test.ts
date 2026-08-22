@@ -19,6 +19,9 @@ const youtubeSource = {
 	videoFingerprint: "youtube|dQw4w9WgXcQ",
 } as const;
 
+const overlongYoutuBeAliasUrl = `https://youtu.be/dQw4w9WgXcQ${"/".repeat(381)}`;
+const overlongYoutuBeAliasFingerprint = "youtube|hash:2dk5r5bxqvoxi";
+
 const callback: RoomSourcePersistenceCallback = {
 	roomId: "room-1",
 	sourceGeneration: 2,
@@ -86,6 +89,18 @@ test("creation accepts only the current youtu.be slash-prefixed fingerprint alia
 		roomSourceCreationColumns({
 			sourceUrl: "https://youtu.be//dQw4w9WgXcQ",
 			videoFingerprint: "youtube|//dQw4w9WgXcQ",
+		}),
+		{
+			source_provider: "youtube",
+			source_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+			video_fingerprint: "youtube|dQw4w9WgXcQ",
+			source_generation: 1,
+		},
+	);
+	assert.deepEqual(
+		roomSourceCreationColumns({
+			sourceUrl: overlongYoutuBeAliasUrl,
+			videoFingerprint: overlongYoutuBeAliasFingerprint,
 		}),
 		{
 			source_provider: "youtube",
@@ -193,6 +208,15 @@ test("legacy youtu.be rows accept the matching current-runtime fingerprint alias
 			source_provider: null,
 			source_url: "https://youtu.be/dQw4w9WgXcQ//",
 			video_fingerprint: "youtube|/dQw4w9WgXcQ//",
+			source_generation: null,
+		}),
+		{ source: youtubeSource, sourceGeneration: null, legacy: true },
+	);
+	assert.deepEqual(
+		deriveDurableRoomSource({
+			source_provider: null,
+			source_url: overlongYoutuBeAliasUrl,
+			video_fingerprint: overlongYoutuBeAliasFingerprint,
 			source_generation: null,
 		}),
 		{ source: youtubeSource, sourceGeneration: null, legacy: true },

@@ -89,7 +89,27 @@ export function isLegacyRoomSourceFingerprintAlias(
 
   const url = new URL(value);
   if (url.hostname !== "youtu.be" || url.searchParams.get("v")) return false;
-  return fingerprint === `youtube|${url.pathname}`;
+  return fingerprint === currentRuntimeYouTubeFingerprint(url.pathname);
+}
+
+function currentRuntimeYouTubeFingerprint(pathname: string): string {
+  const rawFingerprint = `youtube|${pathname}`;
+  return rawFingerprint.length <= MAX_VIDEO_FINGERPRINT_CHARS
+    ? rawFingerprint
+    : `youtube|hash:${stableFingerprintHash(rawFingerprint)}`;
+}
+
+function stableFingerprintHash(value: string): string {
+  let hash = BigInt("0xcbf29ce484222325");
+  const prime = BigInt("0x100000001b3");
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    hash ^= BigInt(code & 0xff);
+    hash = BigInt.asUintN(64, hash * prime);
+    hash ^= BigInt(code >>> 8);
+    hash = BigInt.asUintN(64, hash * prime);
+  }
+  return hash.toString(36);
 }
 
 export const RoomSourceDescriptorSchema = z

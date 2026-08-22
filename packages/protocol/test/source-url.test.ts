@@ -243,6 +243,26 @@ describe("current YouTube fingerprint compatibility", () => {
     expect(isLegacyRoomSourceFingerprintAlias(url, fingerprint)).toBe(true);
   });
 
+  it("keeps the exact pathname at the fingerprint bound and hashes only above it", () => {
+    const videoId = "dQw4w9WgXcQ";
+    const atBoundPath = `/${videoId}${"/".repeat(380)}`;
+    const overBoundPath = `/${videoId}${"/".repeat(381)}`;
+
+    expect(`youtube|${atBoundPath}`).toHaveLength(MAX_VIDEO_FINGERPRINT_CHARS);
+    expect(
+      isLegacyRoomSourceFingerprintAlias(
+        `https://youtu.be${atBoundPath}`,
+        `youtube|${atBoundPath}`,
+      ),
+    ).toBe(true);
+    expect(
+      isLegacyRoomSourceFingerprintAlias(
+        `https://youtu.be${overBoundPath}`,
+        "youtube|hash:2dk5r5bxqvoxi",
+      ),
+    ).toBe(true);
+  });
+
   it.each([
     ["https://youtu.be/dQw4w9WgXcQ/?v=other-video", "youtube|/dQw4w9WgXcQ/"],
     ["https://youtu.be/dQw4w9WgXcQ/", "youtube|/dQw4w9WgXcQ"],
@@ -250,5 +270,22 @@ describe("current YouTube fingerprint compatibility", () => {
     ["https://www.youtube.com/watch?v=dQw4w9WgXcQ", "youtube|/watch"],
   ])("rejects a non-runtime alias for %s", (url, fingerprint) => {
     expect(isLegacyRoomSourceFingerprintAlias(url, fingerprint)).toBe(false);
+  });
+
+  it("rejects a wrong long-path hash and the right hash when a truthy v wins", () => {
+    const overBoundPath = `/dQw4w9WgXcQ${"/".repeat(381)}`;
+
+    expect(
+      isLegacyRoomSourceFingerprintAlias(
+        `https://youtu.be${overBoundPath}`,
+        "youtube|hash:wrong",
+      ),
+    ).toBe(false);
+    expect(
+      isLegacyRoomSourceFingerprintAlias(
+        `https://youtu.be${overBoundPath}?v=other-video`,
+        "youtube|hash:2dk5r5bxqvoxi",
+      ),
+    ).toBe(false);
   });
 });
