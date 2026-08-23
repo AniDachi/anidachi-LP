@@ -937,7 +937,7 @@ The review found and fixed four bounded integration gaps before any PR:
 No new service, lease, heartbeat, queue, env variable, secret, TURN, Blob,
 Stripe, release, `main`, production, or Chrome Web Store change was introduced.
 
-- [ ] **Step 2: Open the feature PR to staging**
+- [x] **Step 2: Open the feature PR to staging**
 
 The PR must include:
 
@@ -951,6 +951,13 @@ The PR must include:
   out of scope.
 
 Wait for CI and review. Do not merge yet.
+
+Draft PR #231 was opened to `staging` on 2026-08-23 from
+`codex/single-active-room-session`. Its description records the required
+migration-first order, local verification evidence, rollback path, staging
+acceptance matrix, and explicit release exclusions. CI and review remain
+pending; no merge, migration, deployment, or external test-folder update has
+occurred.
 
 - [ ] **Step 3: Stop for explicit user approval before staging mutation/merge**
 
