@@ -29,6 +29,8 @@ Project: Anidachi web app.
 | `ANIDACHI_INTERNAL_API_SECRET` | Production / Preview `staging` | Authenticates Web/Worker room lifecycle calls; use a distinct matching value in both runtimes per environment | Host room end completes without `ROOM_END_SYNC_FAILED`; unauthenticated internal requests return `401` |
 | `KREATLI_CRM_PASSWORD` | Production / Preview as needed | Internal CRM access | CRM login works only for authorized users |
 | `KREATLI_CRM_SESSION_SECRET` | Production / Preview as needed | Internal CRM session signing | CRM session survives refresh |
+| `KREATLI_CRM_BLOB_READ_WRITE_TOKEN` | Production / Preview `staging` | Server-only authority for the existing private `kreatli-crm/*` data objects used by the waitlist and public forms | `/api/waitlist-stats` returns the durable nonzero count; a controlled form submission persists across a fresh deployment |
+| `KREATLI_CRM_BLOB_STORE_ID` + `VERCEL_OIDC_TOKEN` | Production / Preview `staging` (optional alternative) | OIDC form of the same CRM-only private Blob authority; do not configure it together with an unrelated store | Origin-fresh read and conditional ETag write succeed against the intended private store |
 | `STRIPE_SECRET_KEY_TEST` | Preview / `staging`, Development | Server-only Stripe sandbox key. Must start with `sk_test_` | Staging checkout creates a test Checkout Session |
 | `STRIPE_SECRET_KEY_LIVE` | Production | Server-only Stripe live key. Must start with `sk_live_` | Production checkout creates a live Checkout Session |
 | `STRIPE_WEBHOOK_SECRET_TEST` | Preview / `staging`, Development | Stripe test webhook signing secret for `https://staging.anidachi.app/api/stripe/webhook` | Unsigned POST returns `400 Missing stripe-signature`; signed test event returns 2xx |
@@ -37,6 +39,17 @@ Project: Anidachi web app.
 | `STRIPE_PRICE_ID_PLUS_LIVE` / `STRIPE_PRICE_ID_PRO_LIVE` | Production | Stripe live prices for AniDachi Plus/Pro | Live checkout writes `plus`/`pro` subscription state |
 | OAuth client vars | Production / Preview | Google/Discord web auth | Login smoke on matching environment |
 | Supabase public vars | Production / Preview | Browser-safe Supabase project config | `/api/me` and room APIs work |
+
+`PRIVATE_INTEGRATION_BLOB_*` is a separate shared integration boundary. It must
+not be added to production merely to enable the waitlist because doing so would
+also activate unrelated deferred integration owners. The CRM-specific variable
+above is the narrow public-product dependency.
+
+The one-off recovery CLI uses
+`KREATLI_CRM_LEGACY_PUBLIC_BLOB_READ_WRITE_TOKEN` for read-only source access and
+`KREATLI_CRM_BLOB_READ_WRITE_TOKEN` for the private destination. These values
+belong only in the operator process environment. They must not be committed,
+printed, or added to browser/extension configuration.
 
 ## GitHub Actions
 

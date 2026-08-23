@@ -189,9 +189,12 @@ Chrome Web Store publication, UI/UX-completion, or market-readiness decision.
   `2927c30bb89531eb7e44ee7dcde62d784fcee962`. Old aggregate PR `#174` was
   closed without merge as superseded by PRs `#227` and `#228`.
 
-Deferred boundaries remain explicit. Private integration Blob configuration
-and data were not changed; those non-core paths remain fail-closed. TURN was
-already configured and was not modified. Automated room and real-WebRTC gates
+Deferred boundaries remain explicit. The shared `PRIVATE_INTEGRATION_BLOB_*`
+configuration and unrelated integration data were not changed; those non-core
+paths remain fail-closed. The waitlist/Kreatli CRM is not one of those non-core
+paths: the homepage counter and public survey, contact, and feature-request
+forms depend on its durable data. TURN was already configured and was not
+modified. Automated room and real-WebRTC gates
 passed, but a manual relay proof across two separate networks remains deferred
 until public extension-release preparation. The previous rollback anchors are
 web deployment `dpl_Ch1aPbRhbiKZYye4hViMGxo7Fc5m`, Worker deployment
@@ -199,14 +202,38 @@ web deployment `dpl_Ch1aPbRhbiKZYye4hViMGxo7Fc5m`, Worker deployment
 `471fa2a3-0e08-41f1-b2bd-fd55042e431f`, and post-migration Git SHA
 `2d12b67bc53ac516066661013ab3714836a3047c`.
 
+## Waitlist And Public-Form CRM Recovery
+
+The 2026-08-23 production inspection found a promotion regression, not deleted
+data. The retained legacy public CRM object contains 683 contacts, including
+682 survey leads. The existing private snapshot contains 644 contacts,
+including 643 survey leads, and was verified as a conflict-free older subset at
+inspection time. Production `/api/waitlist-stats` returned zero because the web
+runtime had no private CRM authority and silently fell back to an empty,
+read-only deployment filesystem. Two later survey requests returned optimistic
+HTTP success but logged failed filesystem persistence.
+
+The active repair is
+`docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md`.
+Its feature branch introduces a CRM-specific private Blob authority without
+enabling the shared deferred integration boundary, fails closed on Vercel when
+that authority is absent, conditionally updates Blob objects by ETag, reports
+public-form success only after durable storage, and provides a five-object
+dry-run-first reconciliation tool. The legacy public objects remain untouched
+as rollback evidence; `kreatli-crm/gmail-tokens.json` is outside the recovery
+inventory. No staging data write, production environment change, or `main`
+promotion is claimed until the plan records that live evidence.
+
 ## Pre-release Security Readiness
 
 Waves 1-3 of the now-historical pre-release security plan retain their staging
 evidence. Wave 1 completed at merge
 `07dfaf4a8bd0c192e21fd381f4350ab88cdab322` (PRs `#192`-`#195`). The web runtime
 uses Next.js `15.5.23`, the public media route accepts only exact public media
-identifiers, and sensitive integration/CRM Blob paths now read, write, and
-delete through the private store only. The temporary staging compatibility flag
+identifiers, and sensitive integration/CRM Blob paths are excluded from public
+media access. The CRM recovery above adds its own narrow private-store runtime
+authority; unrelated integration credentials keep the shared private boundary.
+The temporary staging compatibility flag
 has been removed; the retained public legacy objects are not a runtime fallback
 and were not deleted or changed during cutover. On 2026-08-21 the broad program
 was closed by explicit scope disposition, not by claiming that all original
@@ -1029,6 +1056,8 @@ These are intentionally not treated as solved:
   `docs/superpowers/plans/2026-06-17-development-flow-quality-system-plan.md`
 - Active core-foundation-to-UI/UX handoff plan:
   `docs/superpowers/plans/2026-08-21-core-foundation-ui-handoff-plan.md`
+- Active waitlist/CRM durable-storage recovery plan:
+  `docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md`
 - Environment and secrets matrix: `docs/environment-and-secrets-matrix.md`
 - Staging acceptance checklist: `docs/staging-acceptance-checklist.md`
 - Release and rollback runbook: `docs/release-and-rollback-runbook.md`
