@@ -1,4 +1,5 @@
 import {
+  MAX_SESSION_ID_CHARS,
   ParticipantSchema,
   RoomCapabilitiesSchema,
   type Participant,
@@ -7,13 +8,13 @@ import {
 import type { VerifiedRoomToken } from "./auth";
 import { ROOM_ADMISSION_JOIN_DEADLINE_MS } from "./room-admission";
 
-export const ROOM_SOCKET_ATTACHMENT_VERSION = 2;
-const LEGACY_ROOM_SOCKET_ATTACHMENT_VERSION = 1;
+export const ROOM_SOCKET_ATTACHMENT_VERSION = 3;
 
 export interface RoomSocketVerifiedIdentity {
   avatarUrl?: string | null;
   capabilities?: RoomCapabilities;
   displayName?: string;
+  participantSessionId: string;
   role: "host" | "member";
   roomId: string;
   sub: string;
@@ -61,10 +62,7 @@ export function parseRoomSocketAttachment(
   if (!isRecord(value)) {
     return null;
   }
-  if (
-    value.schemaVersion !== ROOM_SOCKET_ATTACHMENT_VERSION &&
-    value.schemaVersion !== LEGACY_ROOM_SOCKET_ATTACHMENT_VERSION
-  ) {
+  if (value.schemaVersion !== ROOM_SOCKET_ATTACHMENT_VERSION) {
     return null;
   }
   if (value.roomId !== expectedRoomId) {
@@ -86,11 +84,7 @@ export function parseRoomSocketAttachment(
     return null;
   }
 
-  const admission = value.schemaVersion === LEGACY_ROOM_SOCKET_ATTACHMENT_VERSION
-    ? participant?.success
-      ? { deadlineAt: 0, joined: true }
-      : null
-    : parseAdmission(value.admission);
+  const admission = parseAdmission(value.admission);
   if (!admission || (admission.joined && !participant?.success)) {
     return null;
   }
@@ -108,6 +102,13 @@ export function parseRoomSocketAttachment(
     attachment.participantSessionId = value.participantSessionId;
   }
 
+  if (
+    admission.joined &&
+    attachment.participantSessionId !== verified.participantSessionId
+  ) {
+    return null;
+  }
+
   if (participant?.success) {
     attachment.participant = participant.data;
   }
@@ -121,6 +122,7 @@ export function attachmentToVerifiedRoomToken(
   const verified: VerifiedRoomToken = {
     avatarUrl: attachment.verified.avatarUrl ?? null,
     role: attachment.verified.role,
+    participantSessionId: attachment.verified.participantSessionId,
     roomId: attachment.verified.roomId,
     sub: attachment.verified.sub,
   };
@@ -168,6 +170,7 @@ function serializeVerifiedRoomToken(verified: VerifiedRoomToken): RoomSocketVeri
   const identity: RoomSocketVerifiedIdentity = {
     avatarUrl: verified.avatarUrl ?? null,
     role: verified.role,
+    participantSessionId: verified.participantSessionId,
     roomId: verified.roomId,
     sub: verified.sub,
   };
@@ -197,6 +200,13 @@ function parseVerifiedIdentity(
     return null;
   }
   if (
+    typeof value.participantSessionId !== "string" ||
+    value.participantSessionId.length === 0 ||
+    value.participantSessionId.length > MAX_SESSION_ID_CHARS
+  ) {
+    return null;
+  }
+  if (
     value.avatarUrl !== undefined &&
     value.avatarUrl !== null &&
     typeof value.avatarUrl !== "string"
@@ -209,6 +219,7 @@ function parseVerifiedIdentity(
 
   const identity: RoomSocketVerifiedIdentity = {
     role: value.role,
+    participantSessionId: value.participantSessionId,
     roomId: expectedRoomId,
     sub: value.sub,
   };

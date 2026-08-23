@@ -476,11 +476,14 @@ folder, deployment, or remote branch was mutated.
 - Modify: `apps/api/test/room-lifecycle.test.ts`
 - Modify: `apps/api/src/room-persistence.ts`
 - Modify: `apps/api/test/room-persistence.test.ts`
+- Modify: `apps/api/src/room-source-persistence.ts`
+- Modify: `apps/api/test/room-source-persistence.test.ts`
 - Modify: `apps/api/src/index.ts`
 - Modify: `apps/api/test/routes.test.ts`
 - Modify: `apps/api/test/runtime/room-hibernation-runtime.ts`
+- Modify: `scripts/room-signaling-harness.mjs`
 
-- [ ] **Step 1: Write failing pure state-machine tests**
+- [x] **Step 1: Write failing pure state-machine tests**
 
 Cover:
 
@@ -501,14 +504,14 @@ pnpm --filter @anidachi/api test
 
 Expected: new state-machine tests fail before the module exists.
 
-- [ ] **Step 2: Require token-bound session IDs at Worker admission**
+- [x] **Step 2: Require token-bound session IDs at Worker admission**
 
 Extend `VerifiedRoomToken` and token tests. The JOIN handler must reject a
 missing/mismatched session ID before mutating participant state. Persist the
 verified ID in the socket attachment so hibernation restore has the same
 authority.
 
-- [ ] **Step 3: Persist pending disconnects**
+- [x] **Step 3: Persist pending disconnects**
 
 On WebSocket close:
 
@@ -521,7 +524,7 @@ On same-session JOIN, cancel the record before accepting presence. On
 same-room different-session JOIN, keep existing last-wins takeover behavior and
 make any later old-session close stale.
 
-- [ ] **Step 4: Add the internal explicit-departure command**
+- [x] **Step 4: Add the internal explicit-departure command**
 
 Add the authenticated Worker route and per-DO internal handler. It must handle
 both event orderings:
@@ -533,7 +536,7 @@ For a current host, trigger the existing durable room-end/source-finalization
 flow with `host_disconnected`. For a guest, call the exact Web release callback.
 Return `stale` for superseded sessions.
 
-- [ ] **Step 5: Extend the one-alarm scheduler**
+- [x] **Step 5: Extend the one-alarm scheduler**
 
 Refactor alarm reconciliation to choose the earliest deadline across room source
 retry, participant disconnects, and room lifecycle. Do not call a competing
@@ -548,7 +551,7 @@ The alarm handler must:
 5. re-read/reconcile storage before scheduling the next earliest alarm;
 6. preserve the existing four-hour empty-room emergency behavior.
 
-- [ ] **Step 6: Prove hibernation and at-least-once behavior**
+- [x] **Step 6: Prove hibernation and at-least-once behavior**
 
 ```bash
 pnpm --filter @anidachi/api test
@@ -561,12 +564,28 @@ git diff --check
 Expected: hibernation tests reconstruct socket/session authority and pending
 deadlines; duplicate alarms/callbacks do not duplicate finalization or release.
 
-- [ ] **Step 7: Commit Worker lifecycle changes**
+- [x] **Step 7: Commit Worker lifecycle changes**
 
 ```bash
-git add apps/api
+git add apps/api scripts/room-signaling-harness.mjs \
+  docs/superpowers/plans/2026-08-23-single-active-room-session-implementation-plan.md
 git commit -m "feat(api): finalize rooms from authoritative tab departure"
 ```
+
+Implementation note: the Worker now binds every joined socket to the exact
+session from the Web-issued token, persists a bounded 60-second disconnect
+deadline, and serializes JOIN, close, explicit departure, and alarm handling
+through the existing room operation queue. Same-session reconnect and
+different-session same-room takeover cancel the pending deadline atomically.
+Guest expiry calls the exact-session Web release callback; host expiry reuses
+the existing durable `host_disconnected` finalization path. Source retry, room
+lifecycle, and participant disconnect work share one Durable Object alarm, and
+the four-hour empty-room fallback remains intact. API unit tests passed 159/159,
+runtime hibernation tests passed 27/27, API type-check passed, the real Worker
+room harness passed 39/39, and `git diff --check` passed. The harness token
+fixture was updated to the production issuer/session contract after its old
+sessionless token correctly failed with `401`. No linked database, staging
+environment, extension test folder, deployment, or remote branch was mutated.
 
 ---
 

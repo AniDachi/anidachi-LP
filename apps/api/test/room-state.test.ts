@@ -495,8 +495,10 @@ describe("RoomState", () => {
       nextAttemptAt: 5_000,
     });
     const fakeRoomObject = {
+      endedTombstone: null,
       room: { roomId: "room-1" },
-      runRoomEndExclusively: vi.fn(),
+      runRoomEndExclusively: vi.fn(async (operation: () => Promise<void>) =>
+        operation()),
       runRoomSourceDeliveryExclusively: vi.fn().mockResolvedValue(false),
       state: { storage: storage.asDurableObjectStorage() },
     };
@@ -509,7 +511,7 @@ describe("RoomState", () => {
     ).alarm.call(fakeRoomObject);
 
     expect(storage.alarmAt).toBe(5_000);
-    expect(fakeRoomObject.runRoomEndExclusively).not.toHaveBeenCalled();
+    expect(fakeRoomObject.runRoomEndExclusively).toHaveBeenCalledOnce();
   });
 
   it("increments source generation on first valid source initialization", () => {

@@ -23,6 +23,7 @@ const ROOM_LIFECYCLE_META_KEY = "room_lifecycle";
 const ROOM_SOURCE_ACKNOWLEDGED_GENERATION_KEY =
 	"room_source_acknowledged_generation_v1";
 const ROOM_SOURCE_PENDING_KEY = "room_source_pending_v1";
+const PARTICIPANT_DISCONNECT_KEY = "participant_disconnects_v1";
 
 function stubSuccessfulWebFinalization() {
 	const callbackFetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -714,7 +715,7 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		guest.close();
 	});
 
-	it("never issues history authority without a participant session id", async () => {
+	it("rejects JOIN without the token-bound participant session id", async () => {
 		const roomId = `runtime-history-no-session-${crypto.randomUUID()}`;
 		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
 		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
@@ -727,8 +728,12 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 			participant: participant("host-user", "host"),
 			videoFingerprint: "runtime-initial",
 		});
-		await host.waitFor((event) => event.type === "ROOM_SNAPSHOT", "sessionless snapshot");
-		await sleep(50);
+		await host.waitFor(
+			(event) =>
+				event.type === "ERROR" &&
+				event.code === "PARTICIPANT_SESSION_MISMATCH",
+			"sessionless JOIN rejection",
+		);
 		expect(host.hasEvent((event) => event.type === "ROOM_HISTORY_AUTHORITY")).toBe(false);
 		host.close();
 	});
@@ -775,7 +780,7 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		host.close();
 	});
 
-	it("persists one four-hour alarm when the last joined participant leaves, even with a pre-JOIN socket", async () => {
+	it("uses the 60-second host deadline before the four-hour empty fallback", async () => {
 		const roomId = `runtime-empty-${crypto.randomUUID()}`;
 		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
 		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
@@ -798,14 +803,23 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		expect(typeof emptySince).toBe("number");
 		if (typeof emptySince !== "number") throw new Error("Expected emptySince");
 		expect(empty.lifecycle?.alarmAt).toBe(emptySince + EMPTY_ROOM_TIMEOUT_MS);
-		expect(empty.alarm).toBe(emptySince + EMPTY_ROOM_TIMEOUT_MS);
+		const pendingDisconnect = empty.pendingDisconnect?.records;
+		expect(Array.isArray(pendingDisconnect)).toBe(true);
+		expect(pendingDisconnect).toHaveLength(1);
+		expect(pendingDisconnect?.[0]).toMatchObject({
+			role: "host",
+			participantSessionId: "host-session",
+			userId: "host-user",
+		});
+		expect(empty.alarm).toBe(pendingDisconnect?.[0]?.nextAttemptAt);
+		expect(empty.alarm).toBeLessThan(emptySince + EMPTY_ROOM_TIMEOUT_MS);
 
 		preJoin.close();
 		await sleep(50);
 		expect(await readRoomRuntime(stub)).toEqual(empty);
 	});
 
-	it("activates synchronously on authenticated rejoin and ignores a stale alarm", async () => {
+	it("same-session host reconnect cancels its deadline and stale empty alarm", async () => {
 		const roomId = `runtime-empty-rejoin-${crypto.randomUUID()}`;
 		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
 		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
@@ -820,10 +834,13 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 			"empty lifecycle",
 		);
 
-		const guest = await connectRoomClient(stub, {
-			roomId, role: "member", sessionId: "guest-session", userId: "guest-user",
+		const hostReconnect = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-session", userId: "host-user",
 		});
-		await guest.waitFor((event) => event.type === "ROOM_SNAPSHOT", "rejoin snapshot");
+		await hostReconnect.waitFor(
+			(event) => event.type === "ROOM_SNAPSHOT",
+			"rejoin snapshot",
+		);
 		const active = await waitForRoomRuntime(
 			stub,
 			(value) => value.lifecycle?.status === "active" && value.alarm === null,
@@ -845,7 +862,175 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 			lifecycle: { schemaVersion: 1, status: "active" },
 			tombstone: null,
 		});
+		hostReconnect.close();
+	});
+
+	it("restores a host deadline after hibernation and ends the room while guests remain", async () => {
+		const roomId = `runtime-host-disconnect-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const host = await connectRoomClient(stub, {
+			roomId,
+			role: "host",
+			sessionId: "host-session",
+			userId: "host-user",
+		});
+		const guest = await connectRoomClient(stub, {
+			roomId,
+			role: "member",
+			sessionId: "guest-session",
+			userId: "guest-user",
+		});
+		await guest.waitFor((event) => event.type === "ROOM_SNAPSHOT", "guest snapshot");
+
+		host.close();
+		await waitForRoomRuntime(
+			stub,
+			(value) => value.pendingDisconnect?.records?.[0]?.userId === "host-user",
+			"stored host disconnect",
+		);
+		await evictDurableObject(stub, { webSockets: "hibernate" });
+		await makeParticipantDisconnectDue(stub, "host-user", "host-session");
+		stubSuccessfulWebFinalization();
+		expect(await runDurableObjectAlarm(stub)).toBe(true);
+
+		await expect(guest.waitFor(
+			(event) =>
+				event.type === "ROOM_ENDED" &&
+				event.reason === "host_disconnected",
+			"host disconnect room end",
+		)).resolves.toMatchObject({ roomId, reason: "host_disconnected" });
+		expect(await readRoomRuntime(stub)).toMatchObject({
+			pendingDisconnect: null,
+			tombstone: { reason: "host_disconnected" },
+		});
+	});
+
+	it("retries a guest release after hibernation without ending the host room", async () => {
+		const roomId = `runtime-guest-disconnect-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const host = await connectRoomClient(stub, {
+			roomId,
+			role: "host",
+			sessionId: "host-session",
+			userId: "host-user",
+		});
+		const guest = await connectRoomClient(stub, {
+			roomId,
+			role: "member",
+			sessionId: "guest-session",
+			userId: "guest-user",
+		});
+		await guest.waitFor((event) => event.type === "ROOM_SNAPSHOT", "guest snapshot");
+
 		guest.close();
+		await waitForRoomRuntime(
+			stub,
+			(value) => value.pendingDisconnect?.records?.[0]?.userId === "guest-user",
+			"stored guest disconnect",
+		);
+		await evictDurableObject(stub, { webSockets: "hibernate" });
+
+		let departureAttempts = 0;
+		const callbackFetch = vi.fn(async (input: RequestInfo | URL) => {
+			if (String(input).endsWith("/departed")) {
+				departureAttempts += 1;
+				return departureAttempts === 1
+					? new Response(null, { status: 503 })
+					: Response.json({ ok: true, outcome: "departed" });
+			}
+			return Response.json({ ok: true, usageFinalized: true });
+		});
+		vi.stubGlobal("fetch", callbackFetch);
+		await makeParticipantDisconnectDue(stub, "guest-user", "guest-session");
+		expect(await runDurableObjectAlarm(stub)).toBe(true);
+		expect(departureAttempts).toBe(1);
+		expect((await readRoomRuntime(stub)).pendingDisconnect).not.toBeNull();
+
+		await makeParticipantDisconnectDue(stub, "guest-user", "guest-session");
+		expect(await runDurableObjectAlarm(stub)).toBe(true);
+		expect(departureAttempts).toBe(2);
+		expect(await readRoomRuntime(stub)).toMatchObject({
+			lifecycle: { status: "active" },
+			pendingDisconnect: null,
+			tombstone: null,
+		});
+		host.send({ type: "PING", roomId, sentAt: 404 });
+		await host.waitFor(
+			(event) => event.type === "PONG" && event.sentAt === 404,
+			"host remains connected",
+		);
+		host.close();
+	});
+
+	it("handles exact explicit guest departure before or after socket close", async () => {
+		const roomId = `runtime-explicit-departure-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const callbackFetch = vi.fn(async (input: RequestInfo | URL) =>
+			String(input).endsWith("/departed")
+				? Response.json({ ok: true, outcome: "departed" })
+				: Response.json({ ok: true, usageFinalized: true }));
+		vi.stubGlobal("fetch", callbackFetch);
+		const host = await connectRoomClient(stub, {
+			roomId,
+			role: "host",
+			sessionId: "host-session",
+			userId: "host-user",
+		});
+		const firstGuest = await connectRoomClient(stub, {
+			roomId,
+			role: "member",
+			sessionId: "guest-one-session",
+			userId: "guest-one",
+		});
+		await expect(departParticipant(stub, {
+			roomId,
+			userId: "guest-one",
+			participantSessionId: "guest-one-session",
+			requestedAt: Date.now(),
+		})).resolves.toMatchObject({ ok: true, outcome: "departed" });
+		await expect(departParticipant(stub, {
+			roomId,
+			userId: "guest-one",
+			participantSessionId: "guest-one-session",
+			requestedAt: Date.now(),
+		})).resolves.toMatchObject({ ok: true, outcome: "stale" });
+
+		const secondGuest = await connectRoomClient(stub, {
+			roomId,
+			role: "member",
+			sessionId: "guest-two-session",
+			userId: "guest-two",
+		});
+		secondGuest.close();
+		await waitForRoomRuntime(
+			stub,
+			(value) => value.pendingDisconnect?.records?.[0]?.userId === "guest-two",
+			"second guest pending close",
+		);
+		await expect(departParticipant(stub, {
+			roomId,
+			userId: "guest-two",
+			participantSessionId: "guest-two-session",
+			requestedAt: Date.now(),
+		})).resolves.toMatchObject({ ok: true, outcome: "departed" });
+		expect((await readRoomRuntime(stub)).pendingDisconnect).toBeNull();
+		expect(
+			callbackFetch.mock.calls.filter(([input]) => String(input).endsWith("/departed")),
+		).toHaveLength(2);
+		await expect(departParticipant(stub, {
+			roomId,
+			userId: "host-user",
+			participantSessionId: "host-session",
+			requestedAt: Date.now(),
+		})).resolves.toMatchObject({ ok: true, outcome: "room_ended" });
+		expect(await readRoomRuntime(stub)).toMatchObject({
+			pendingDisconnect: null,
+			tombstone: { reason: "host_disconnected" },
+		});
+		firstGuest.close();
 	});
 
 	it("cancels a stale empty alarm when a joined participant is still present", async () => {
@@ -1497,6 +1682,9 @@ interface RoomRuntimeSnapshot {
 	alarm: number | null;
 	lifecycle: Record<string, unknown> | null;
 	pendingSource: Record<string, unknown> | null;
+	pendingDisconnect: {
+		records?: Array<Record<string, unknown>>;
+	} | null;
 	tombstone: Record<string, unknown> | null;
 }
 
@@ -1514,6 +1702,10 @@ async function readRoomRuntime(stub: DurableObjectStub): Promise<RoomRuntimeSnap
 			alarm: await state.storage.getAlarm(),
 			lifecycle: await state.storage.get<Record<string, unknown>>(ROOM_LIFECYCLE_META_KEY) ?? null,
 			pendingSource: await state.storage.get<Record<string, unknown>>(ROOM_SOURCE_PENDING_KEY) ?? null,
+			pendingDisconnect:
+				await state.storage.get<{ records?: Array<Record<string, unknown>> }>(
+					PARTICIPANT_DISCONNECT_KEY,
+				) ?? null,
 			tombstone: readMeta("room_ended"),
 		};
 	});
@@ -1545,6 +1737,45 @@ async function makeRetryAlarmDue(stub: DurableObjectStub): Promise<void> {
 			}
 			const nextAttemptAt = Date.now() - 1;
 			await transaction.put(ROOM_LIFECYCLE_META_KEY, { ...lifecycle, nextAttemptAt });
+			await transaction.setAlarm(Date.now() + 60_000);
+		});
+	});
+}
+
+async function makeParticipantDisconnectDue(
+	stub: DurableObjectStub,
+	userId: string,
+	participantSessionId: string,
+): Promise<void> {
+	await runInDurableObject(stub, async (_instance, state) => {
+		await state.storage.transaction(async (transaction) => {
+			const stored = await transaction.get<{
+				schemaVersion: 1;
+				records: Array<Record<string, unknown>>;
+			}>(PARTICIPANT_DISCONNECT_KEY);
+			if (!stored) throw new Error("Expected participant disconnect state");
+			const dueAt = Date.now() - 1;
+			let found = false;
+			const records = stored.records.map((record) => {
+				if (
+					record.userId !== userId ||
+					record.participantSessionId !== participantSessionId
+				) return record;
+				found = true;
+				const disconnectedAt = dueAt - 60_000;
+				return {
+					...record,
+					disconnectedAt,
+					deadlineAt: dueAt,
+					departureAt: dueAt,
+					nextAttemptAt: dueAt,
+				};
+			});
+			if (!found) throw new Error("Expected exact participant disconnect");
+			await transaction.put(PARTICIPANT_DISCONNECT_KEY, {
+				schemaVersion: 1,
+				records,
+			});
 			await transaction.setAlarm(Date.now() + 60_000);
 		});
 	});
@@ -1613,6 +1844,24 @@ async function endRoom(
 	});
 }
 
+async function departParticipant(
+	stub: DurableObjectStub,
+	command: {
+		roomId: string;
+		userId: string;
+		participantSessionId: string;
+		requestedAt: number;
+	},
+): Promise<Record<string, unknown>> {
+	const response = await stub.fetch("https://room.test/internal/depart", {
+		method: "POST",
+		headers: { Authorization: `Bearer ${INTERNAL_SECRET}` },
+		body: JSON.stringify(command),
+	});
+	expect(response.status).toBe(200);
+	return response.json<Record<string, unknown>>();
+}
+
 interface ConnectParams {
 	lastSeenP2PServerSeq?: number;
 	role: "host" | "member";
@@ -1639,17 +1888,33 @@ async function connectRoomClient(
 	return client;
 }
 
-async function roomToken(roomId: string, role: "host" | "member", userId: string): Promise<string> {
+async function roomToken(
+	roomId: string,
+	role: "host" | "member",
+	userId: string,
+	participantSessionId = `${userId}-session`,
+): Promise<string> {
 	return signRoomTokenForTest({
-		avatarUrl: null, displayName: userId, role, roomId, sub: userId,
+		avatarUrl: null,
+		displayName: userId,
+		participantSessionId,
+		role,
+		roomId,
+		sub: userId,
 	}, TEST_SECRET_ENV);
 }
 
 async function openRoomSocket(
 	stub: DurableObjectStub,
-	params: Pick<ConnectParams, "role" | "roomId" | "userId">,
+	params: Pick<ConnectParams, "role" | "roomId" | "userId"> &
+		Partial<Pick<ConnectParams, "sessionId">>,
 ): Promise<RuntimeRoomClient> {
-	const token = await roomToken(params.roomId, params.role, params.userId);
+	const token = await roomToken(
+		params.roomId,
+		params.role,
+		params.userId,
+		params.sessionId,
+	);
 	const response = await stub.fetch(
 		`https://room.test/?roomToken=${encodeURIComponent(token)}`,
 		{ headers: { Upgrade: "websocket" } },

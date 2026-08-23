@@ -1,7 +1,10 @@
 import {
+  RoomDepartureAcknowledgementSchema,
+  RoomDepartureCallbackSchema,
   RoomSourcePersistenceAcknowledgementSchema,
   RoomSourcePersistenceCallbackSchema,
   type RoomSourcePersistenceCallback,
+  type RoomDepartureCallback,
   type RoomUsageSummary,
 } from "@anidachi/protocol";
 import type { EndRoomCommand } from "./room-lifecycle";
@@ -105,6 +108,62 @@ export async function notifyWebRoomSource(
   ) {
     throw new Error("Room source Web callback returned an invalid acknowledgement");
   }
+}
+
+export async function notifyWebParticipantDeparted(
+  env: InternalWebLifecycleEnv,
+  roomId: string,
+  userId: string,
+  callback: RoomDepartureCallback,
+  fetchImplementation: typeof fetch = fetch,
+  timeoutMs = INTERNAL_WEB_CALLBACK_TIMEOUT_MS,
+): Promise<"departed" | "stale"> {
+  const config = internalWebCallbackConfig(env);
+  const parsedCallback = RoomDepartureCallbackSchema.safeParse(callback);
+  if (
+    !parsedCallback.success ||
+    parsedCallback.data.roomId !== roomId ||
+    parsedCallback.data.userId !== userId
+  ) {
+    throw new Error("Participant departure Web callback received an invalid callback");
+  }
+
+  let response: Response;
+  let body: unknown;
+  try {
+    ({ response, body } = await fetchAndReadJsonWithBoundedTimeout(
+      fetchImplementation,
+      new URL(
+        `/api/internal/rooms/${encodeURIComponent(roomId)}/participants/${encodeURIComponent(userId)}/departed`,
+        config.baseUrl,
+      ),
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${config.secret}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(parsedCallback.data),
+      },
+      timeoutMs,
+    ));
+  } catch {
+    throw new Error("Participant departure Web callback request failed");
+  }
+  if (!response.ok) {
+    throw new Error(`Participant departure Web callback failed (${response.status})`);
+  }
+
+  const acknowledgement = RoomDepartureAcknowledgementSchema.safeParse(body);
+  if (
+    !acknowledgement.success ||
+    acknowledgement.data.outcome === "room_ended"
+  ) {
+    throw new Error(
+      "Participant departure Web callback returned an invalid acknowledgement",
+    );
+  }
+  return acknowledgement.data.outcome;
 }
 
 function boundedInternalWebCallbackTimeout(timeoutMs: number): number {

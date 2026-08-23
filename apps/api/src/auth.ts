@@ -19,6 +19,7 @@ export interface VerifiedRoomToken {
   sub: string;
   roomId: string;
   role: "host" | "member";
+  participantSessionId: string;
   capabilities?: RoomCapabilities;
   displayName?: string;
   avatarUrl?: string | null;
@@ -47,7 +48,9 @@ export async function verifyRoomToken(
     if (!isBoundedId(expectedRoomId, MAX_ROOM_ID_CHARS)) return null;
     const { payload } = await jwtVerify(token, getSecret(env), {
       algorithms: ["HS256"],
+      issuer: "anidachi-web",
       audience: "anidachi-worker",
+      requiredClaims: ["sub", "iat", "exp"],
     });
     if (payload.typ !== "room") return null;
     if (!isBoundedId(payload.sub, MAX_PARTICIPANT_ID_CHARS)) return null;
@@ -55,6 +58,7 @@ export async function verifyRoomToken(
       return null;
     }
     if (payload.role !== "host" && payload.role !== "member") return null;
+    if (!isBoundedId(payload.participantSessionId, MAX_SESSION_ID_CHARS)) return null;
     const capabilities =
       payload.capabilities === undefined
         ? undefined
@@ -78,6 +82,7 @@ export async function verifyRoomToken(
       sub: payload.sub,
       roomId: payload.roomId,
       role: payload.role,
+      participantSessionId: payload.participantSessionId,
       avatarUrl: payload.avatarUrl ?? null,
     };
     if (capabilities?.data) {
@@ -162,6 +167,7 @@ export async function signRoomTokenForTest(
   const claims: Record<string, unknown> = {
     roomId: params.roomId,
     role: params.role,
+    participantSessionId: params.participantSessionId,
     avatarUrl: params.avatarUrl ?? null,
     typ: "room",
   };
@@ -175,6 +181,7 @@ export async function signRoomTokenForTest(
   return new SignJWT(claims)
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(params.sub)
+    .setIssuer("anidachi-web")
     .setAudience("anidachi-worker")
     .setIssuedAt()
     .setExpirationTime("30m")
