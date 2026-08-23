@@ -11,9 +11,10 @@ Active public-product recovery plan:
 
 1. `2026-08-23-waitlist-crm-durable-storage-recovery.md` — restores the durable
    waitlist counter and survey/contact/feature-request persistence through the
-   existing private CRM store. Code and the lossless dry-run reconciliation
-   tool are prepared on a feature branch; live data reconciliation, staging
-   acceptance, and any production/main action remain explicit later gates.
+   existing private CRM store. Code, lossless data reconciliation, recovery of
+   three failed leads, and fresh-deployment acceptance are complete on
+   `staging`; Production configuration and any `main` promotion remain an
+   explicit later gate.
 
 Completed technical `main`-baseline promotion record:
 

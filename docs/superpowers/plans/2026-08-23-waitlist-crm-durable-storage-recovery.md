@@ -20,10 +20,11 @@ Node test runner, Vercel CLI, pnpm 11.2.2, Node 22.23.1.
 **Spec:**
 `docs/superpowers/specs/2026-08-23-waitlist-crm-durable-storage-design.md`
 
-**Status (2026-08-23):** Tasks 1-4 are implemented and locally verified on
-`codex/waitlist-crm-durable-storage`. Task 5 documentation/Graphify closeout is
-in progress. Tasks 6-7 remain blocked on their explicit staging and production
-gates; no live data or environment mutation is claimed here.
+**Status (2026-08-24):** Tasks 1-6 are implemented and verified through
+`staging` merge `d74fa6f3826a61f428147e5bbc472cc6220c4983` and fresh
+deployment `dpl_AnAzpf8XTHUcCrYMz19TDkQ2y3rq`. Task 7 remains behind its
+explicit Production and `main` approval gates; no Production environment or
+runtime change is claimed here.
 
 ## Global Constraints
 
@@ -220,15 +221,15 @@ gates; no live data or environment mutation is claimed here.
 - [x] Run `crm:reconcile-blobs` in dry-run and require zero conflicts.
 - [x] Run `--apply`, then independently reread and verify all five objects,
   contacts, survey leads, IDs, and SHA-256. Keep public objects unchanged.
-- [ ] Run `pnpm dev:check`, web check/test/build, secret/path grep, and Git diff
+- [x] Run `pnpm dev:check`, web check/test/build, secret/path grep, and Git diff
   review. Open a PR to `staging`; do not enable auto-promotion to `main`.
-- [ ] After merge/deploy, verify `/api/waitlist-stats`, a unique controlled
+- [x] After merge/deploy, verify `/api/waitlist-stats`, a unique controlled
   survey submission, a repeated same-email submission, contact form, feature
   request, and persistence after a fresh deployment.
-- [ ] Recover the two known failed survey submissions directly from bounded
+- [x] Recover the three observed failed survey submissions directly from bounded
   Vercel logs if still retained. Keep payloads in process memory, deduplicate by
   normalized email, and verify count delta without printing user content.
-- [ ] Record staging deployment, counts, checks, and rollback ETags in this plan.
+- [x] Record staging deployment, counts, checks, and rollback ETags in this plan.
 
 Interim data acceptance on 2026-08-23:
 
@@ -246,6 +247,42 @@ Interim data acceptance on 2026-08-23:
   without printing it; no Production CRM variable was added.
 - The old public objects were retained as the rollback source and were neither
   overwritten nor deleted. Runtime/deployment acceptance remains open below.
+
+Final staging runtime acceptance on 2026-08-24:
+
+- PR `#239` merged to `staging` as
+  `d74fa6f3826a61f428147e5bbc472cc6220c4983`; its CI, Preview migration,
+  deployment, and smoke checks passed. Only Preview received
+  `KREATLI_CRM_BLOB_READ_WRITE_TOKEN`; Production remained unchanged.
+- Authenticated `staging.anidachi.app` initially returned 682 from
+  `/api/waitlist-stats`. Bounded Production logs retained three unique failed
+  survey payloads, not the two originally observed. They were parsed and
+  validated only in process memory, recovered without printing PII, and moved
+  the count to 685. Repeating the first recovered email returned its original
+  position and left the count at 685, proving idempotency.
+- One controlled `@example.com` identity submitted the contact and feature-
+  request forms. Both returned HTTP 200 and did not change the survey-lead
+  count. The acceptance identity remains as one clearly synthetic non-waitlist
+  CRM contact; it is not silently deleted from the append-only evidence.
+- Fresh Preview deployment `dpl_AnAzpf8XTHUcCrYMz19TDkQ2y3rq` became Ready
+  and received the `staging.anidachi.app` alias. After deployment, the Hero
+  rendered `Launching soon — 685 on the waitlist`, the stats API returned HTTP
+  200 with count 685, and fresh runtime logs contained no EROFS, Blob-auth, or
+  CRM-persistence failure.
+- The post-acceptance private authority contains 687 contacts, including 685
+  survey leads. Current conditional rollback anchors are:
+
+  | Object | ETag | SHA-256 |
+  | --- | --- | --- |
+  | `kreatli-crm/contacts.json` | `"01789dda616adfcf9487b2a7c658ef05"` | `f95908ecfd8f44f68a8c829883d3cf04fb419f13daaf0ea7282adcc997dc6100` |
+  | `kreatli-crm/touches.jsonl` | `"bbe8c5183ac5a62d7962ab3e50696397"` | `6d7a3e2d924f7d4d791dfd86dbb5c234fb803141e34807969a06f9841c5740f0` |
+  | `kreatli-crm/meta.json` | `"8d9bffe37a842519a81dd8c9735e1484"` | `7a50b84d7e2124be8ecaa9b8426e39089c2fe1bbbc9ae657d5cdec22b7ac63fd` |
+  | `kreatli-crm/contact-messages.jsonl` | `"2866e9ccda23021684a30d287c6b70c9"` | `332d92ddf1a717ae83c53b2645d58410b49e42c89d265e829734106e2a6df668` |
+  | `kreatli-crm/feature-requests.jsonl` | `"b709863097b47e72b9c911dcfda8a985"` | `80533cfaf369bc7d3a2c3e1d85bd08b78dcb20c9e415f5d2561691acb0b0bbdd` |
+
+- The retained public rollback objects are still untouched. `origin/main`
+  remains `c67fb79d0bd98c4da57d966040c6bda16f918ee8`, and promotion PR `#240`
+  remains open; Task 7 has not started.
 
 ### Task 7: Production cutover and closeout
 

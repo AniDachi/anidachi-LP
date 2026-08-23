@@ -3606,10 +3606,10 @@
     "semantic_hash": "7222da43b1fe21764ac60a152d060d29"
   },
   "docs/current-development-state.md": {
-    "mtime": 1787500537.297263,
-    "seen": 1787501190.644935,
-    "ast_hash": "10e9f588366e04344c73f2b02d8ae9a9",
-    "semantic_hash": "10e9f588366e04344c73f2b02d8ae9a9"
+    "mtime": 1787506103.8000276,
+    "seen": 1787506521.393636,
+    "ast_hash": "8872d7d4ceb2dacf357d5463020460a2",
+    "semantic_hash": "8872d7d4ceb2dacf357d5463020460a2"
   },
   "docs/development-environments.md": {
     "mtime": 1786689011.3582418,
@@ -3768,10 +3768,10 @@
     "semantic_hash": "6e650e1cecebb157686b6e1daa58f2a4"
   },
   "docs/superpowers/plans/README.md": {
-    "mtime": 1787500537.2976615,
-    "seen": 1787501190.6449358,
-    "ast_hash": "5cf14bb07db2062c6f7d88c30f1e02b2",
-    "semantic_hash": "5cf14bb07db2062c6f7d88c30f1e02b2"
+    "mtime": 1787506103.800308,
+    "seen": 1787506521.3936388,
+    "ast_hash": "76f2a4f77859f56ddf66cb35e85c509c",
+    "semantic_hash": "76f2a4f77859f56ddf66cb35e85c509c"
   },
   "packages/protocol/AGENTS.md": {
     "mtime": 1786689011.3759747,
@@ -6222,10 +6222,10 @@
     "semantic_hash": "596eafa5cb55f22e388530dff7070b28"
   },
   "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md": {
-    "mtime": 1787503416.4846976,
-    "seen": 1787503627.8348649,
-    "ast_hash": "ee7f64ae31f888dba465a6cf3aeff678",
-    "semantic_hash": "ee7f64ae31f888dba465a6cf3aeff678"
+    "mtime": 1787506103.7993033,
+    "seen": 1787506521.393638,
+    "ast_hash": "48a9d4b3e082677110269ec9f989bdee",
+    "semantic_hash": "48a9d4b3e082677110269ec9f989bdee"
   },
   "docs/superpowers/specs/2026-08-23-waitlist-crm-durable-storage-design.md": {
     "mtime": 1787501660.6908445,

@@ -1,13 +1,18 @@
-# Graph Report - anidachi-LP-monorepo  (2026-08-23)
+# Graph Report - anidachi-LP-monorepo  (2026-08-24)
 
 ## Corpus Check
-- 5 files · ~984,552 words
+- 3 files · ~10,440 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 10268 nodes · 21442 edges · 1104 communities (383 shown, 721 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 316 edges (avg confidence: 0.84)
+- 10301 nodes · 21503 edges · 1104 communities (384 shown, 720 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 309 edges (avg confidence: 0.84)
 - Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `d74fa6f3`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - seo-guide-blocks.tsx
@@ -349,7 +354,6 @@
 - postcss.config.mjs
 - web/README.md
 - extraction-spec.md
-- plans/README.md
 - Room Invites
 - build-extension-public.sh
 - build-extension-staging.sh
@@ -1081,6 +1085,7 @@
 - Current Development State
 - Task 1 Shared Session and
 - CRM Blob Runtime Authority
+- plans/README.md
 - Waitlist And Public-Form CRM Recovery
 - Current Development State
 - Historical Execution Context
@@ -1111,6 +1116,7 @@
 
 ## Import Cycles
 - 1-file cycle: `apps/web/scripts/export-anidachi-logo.py -> apps/web/scripts/export-anidachi-logo.py`
+- 1-file cycle: `apps/web/lib/kreatli-crm/blob-reconciliation.ts -> apps/web/lib/kreatli-crm/blob-reconciliation.ts`
 
 ## Hyperedges (group relationships)
 - **Wave 1 High-severity Boundaries** — docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_wave_1_immediate_high_severity_boundaries, docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_nextjs_15_5_23_security_patch, docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_public_and_private_blob_isolation [EXTRACTED 1.00]
@@ -1133,10 +1139,12 @@
 - **Risk-Gated Staging Release System** — agents_git_release_flow, readme_development_workflow, docs_development_quality_gates_gate_matrix, docs_new_chat_project_context_git_and_release_flow [INFERRED 0.95]
 - **Single Active Room Cross-plane Authority** — docs_superpowers_specs_2026_08_23_single_active_room_session_design_durable_cross_room_assignment, docs_superpowers_specs_2026_08_23_single_active_room_session_design_live_room_state, docs_superpowers_specs_2026_08_23_single_active_room_session_design_session_binding [INFERRED 0.95]
 - **Repaired Waitlist Read Path** — graphify_out_memory_query_20260823_160857_trace_the_repaired_hero_waitlist_stats_crm_hero, graphify_out_memory_query_20260823_160857_trace_the_repaired_hero_waitlist_stats_crm_waitlist_stats_route, graphify_out_memory_query_20260823_160857_trace_the_repaired_hero_waitlist_stats_crm_store, graphify_out_memory_query_20260823_160857_trace_the_repaired_hero_waitlist_stats_crm_read_blob_text [EXTRACTED 1.00]
-- **Durable CRM Recovery Pipeline** — docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_crm_runtime_authority, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_optimistic_blob_mutation, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_conflict_safe_crm_mutations, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_truthful_public_submission_responses, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_lossless_reconciliation_tool [EXTRACTED 1.00]
 - **Safe CRM Cutover** — docs_superpowers_specs_2026_08_23_waitlist_crm_durable_storage_design_five_object_reconciliation, docs_superpowers_specs_2026_08_23_waitlist_crm_durable_storage_design_deployment_order, docs_superpowers_specs_2026_08_23_waitlist_crm_durable_storage_design_rollback_strategy, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_staging_acceptance, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_production_cutover [INFERRED 0.95]
+- **Waitlist CRM Final Staging Acceptance** — docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_final_staging_runtime_acceptance, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_three_observed_failed_survey_submissions_recovered, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_staging_survey_lead_count_685, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_fresh_preview_deployment_dpl_anazpf8xthuccrymz19tdkq2y3rq, docs_current_development_state_crm_runtime_logs_clean [EXTRACTED 1.00]
+- **Waitlist CRM Production And Main Gate** — docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_final_staging_runtime_acceptance, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_production_cutover, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_promotion_pr_240_open, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_explicit_production_approval_gate [EXTRACTED 1.00]
+- **Waitlist CRM Runtime Durability Chain** — docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_crm_runtime_authority, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_optimistic_blob_mutation, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_conflict_safe_crm_mutations, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_truthful_public_submission_responses [EXTRACTED 1.00]
 
-## Communities (1104 total, 721 thin omitted)
+## Communities (1104 total, 720 thin omitted)
 
 ### Community 0 - "seo-guide-blocks.tsx"
 Cohesion: 0.03
@@ -1164,11 +1172,11 @@ Nodes (16): OverlayInteractionBoundaryProps, ParticipantVolumePointerInput, isWi
 
 ### Community 103 - "contact-messages.ts"
 Cohesion: 0.12
-Nodes (22): ContactCategory, ContactMessageRecord, ContactForm(), isContactCategory(), appendContactMessage(), appendLocal(), buildNote(), listContactMessages() (+14 more)
+Nodes (21): ContactCategory, ContactMessageRecord, ContactForm(), isContactCategory(), appendContactMessage(), appendLocal(), buildNote(), listContactMessages() (+13 more)
 
 ### Community 104 - "migrate-private-integration-blobs.ts"
-Cohesion: 0.10
-Nodes (26): BlobAuth, BlobHeadResult, BlobListRow, BlobReadResult, Digest, MigrationLogEntry, PrivateIntegrationBlobMigrationSdk, PrivatePutOptions (+18 more)
+Cohesion: 0.11
+Nodes (24): BlobAuth, BlobHeadResult, BlobListRow, BlobReadResult, Digest, MigrationLogEntry, PrivateIntegrationBlobMigrationSdk, PrivatePutOptions (+16 more)
 
 ### Community 105 - "overlay-layout-model.ts"
 Cohesion: 0.12
@@ -1588,7 +1596,7 @@ Nodes (32): DevicePushApiError, DevicePushIdentityRow, DevicePushRegistration, D
 
 ### Community 59 - "crm-client.tsx"
 Cohesion: 0.12
-Nodes (46): CrmMeta, Contact, GET(), isContactDue(), appendTouch(), blobReadText(), contactsFilePath(), crmDataDir() (+38 more)
+Nodes (44): CrmMeta, Contact, GET(), isContactDue(), appendTouch(), blobReadText(), contactsFilePath(), crmDataDir() (+36 more)
 
 ### Community 6 - "getResolvedSiteOrigin"
 Cohesion: 0.02
@@ -1623,8 +1631,8 @@ Cohesion: 0.12
 Nodes (34): QuotaView, AccountFriendsPage(), AccountLayout(), POST(), POST(), activeRoomConflictResponse(), claimActiveRoomSession(), createRoomWithActiveSession() (+26 more)
 
 ### Community 67 - "gmail.ts"
-Cohesion: 0.10
-Nodes (43): SendPlaintextEmailResult, GmailStoredTokens, SubscriptionAlertPayload, clientIp(), POST(), rateLimited(), errorToShortString(), failRedirect() (+35 more)
+Cohesion: 0.13
+Nodes (32): SendPlaintextEmailResult, GmailStoredTokens, SubscriptionAlertPayload, errorToShortString(), failRedirect(), GET(), GET(), createGmailOAuth2() (+24 more)
 
 ### Community 68 - "middleware.ts"
 Cohesion: 0.11
@@ -1667,8 +1675,8 @@ Cohesion: 0.09
 Nodes (32): Props, Window, LayoutShift, MetricName, PerformanceEventTiming, AccountWaitlistCard(), AnalyticsEvents(), onScroll() (+24 more)
 
 ### Community 77 - "feature-requests.ts"
-Cohesion: 0.09
-Nodes (24): FeatureRequestCategory, FeatureRequestRecord, buildEmail(), clientIp(), POST(), rateLimited(), KreatliCrmPage(), FeatureRequestForm() (+16 more)
+Cohesion: 0.11
+Nodes (17): FeatureRequestCategory, FeatureRequestRecord, KreatliCrmPage(), FeatureRequestForm(), isFeatureRequestCategory(), appendFeatureRequest(), appendLocal(), buildNote() (+9 more)
 
 ### Community 78 - "db.ts"
 Cohesion: 0.10
@@ -1679,8 +1687,8 @@ Cohesion: 0.04
 Nodes (85): DebugEntry, DiagnosticEntry, DiagnosticMessage, DiagnosticMessageResponse, DiagnosticMode, DiagnosticPageSnapshot, DiagnosticSeverity, compactDebugData() (+77 more)
 
 ### Community 80 - "plan-entitlements.ts"
-Cohesion: 0.09
-Nodes (31): ExtensionAccessTokenPayload, AccessTokenPayload, RoomTokenPayload, RoomCapabilities, signLegacyRoomTokenForTest(), testSecret(), GET(), GET() (+23 more)
+Cohesion: 0.11
+Nodes (28): ExtensionAccessTokenPayload, AccessTokenPayload, RoomTokenPayload, RoomCapabilities, signLegacyRoomTokenForTest(), testSecret(), GET(), GET() (+20 more)
 
 ### Community 84 - "overlay-layout-engine.ts"
 Cohesion: 0.13
@@ -1691,8 +1699,8 @@ Cohesion: 0.09
 Nodes (23): AnidachiLogoLinkProps, AnidachiLogoProps, MinimalChromeConfig, AnidachiLogoLink(), AuthMinimalNav(), ConditionalFooter(), ConditionalNav(), minimalChromeForPath() (+15 more)
 
 ### Community 86 - "post/status/route.ts"
-Cohesion: 0.16
-Nodes (29): AccountProgress, PublishStatus, TikTokCredentials, publishToTtAccount(), publishToTtAccount(), GET(), safeRefreshTiktok(), GET() (+21 more)
+Cohesion: 0.17
+Nodes (28): AccountProgress, PublishStatus, TikTokCredentials, publishToTtAccount(), publishToTtAccount(), GET(), safeRefreshTiktok(), GET() (+20 more)
 
 ### Community 87 - "public-media-blob.ts"
 Cohesion: 0.10
@@ -1708,7 +1716,7 @@ Nodes (26): Props, AccountInvitesPage(), POST(), POST(), wantsJson(), GET(), Roo
 
 ### Community 9 - ".next/**"
 Cohesion: 0.02
-Nodes (102): FAQItem, SeoPageLayoutProps, formatIsoDate(), SeoPageLayout(), SocialProof(), faq, itemList, metadata (+94 more)
+Nodes (69): FAQItem, SeoPageLayoutProps, formatIsoDate(), SeoPageLayout(), SocialProof(), faq, itemList, metadata (+61 more)
 
 ### Community 90 - "portfolio-audit.ts"
 Cohesion: 0.13
@@ -1739,8 +1747,8 @@ Cohesion: 0.12
 Nodes (24): EndDependencies, EndRoomCommand, InternalRoomEndCommand, RoomEndSyncResult, RoomLifecycleSyncError, POST(), POST(), POST() (+16 more)
 
 ### Community 99 - "private-integration-blob.ts"
-Cohesion: 0.09
-Nodes (23): CarouselJob, BlobReadResult, PrivateAuth, PrivateGetOptions, PrivateIntegrationBlobSdk, PrivateWriteOptions, WriteOptions, blobPath() (+15 more)
+Cohesion: 0.39
+Nodes (8): CarouselJob, blobPath(), getJob(), localPath(), readFromBlob(), readFromFile(), writeToBlob(), writeToFile()
 
 ### Community 110 - "getGuideLinks"
 Cohesion: 0.08
@@ -1751,8 +1759,8 @@ Cohesion: 0.08
 Nodes (18): providerDirectories, sharedOverlayRuntimeFiles, sourceAdaptersDirectory, sourceDirectory, alt, contentType, runtime, size (+10 more)
 
 ### Community 132 - "tiktok/storage.ts"
-Cohesion: 0.14
-Nodes (24): clearCookies(), GET(), getOrigin(), clearBlob(), clearCredentials(), credentialsPath(), getAllCredentials(), getAllFromBlob() (+16 more)
+Cohesion: 0.15
+Nodes (21): clearCookies(), GET(), getOrigin(), clearBlob(), clearCredentials(), credentialsPath(), getAllCredentials(), getAllFromBlob() (+13 more)
 
 ### Community 133 - "how-to-host-a-crunchyroll-watch-party/page.tsx"
 Cohesion: 0.08
@@ -2184,7 +2192,7 @@ Nodes (9): Additional batch (10 more watch pages — 2026-05-12), Additional bat
 
 ### Community 267 - "Environment And Secrets Matrix"
 Cohesion: 0.05
-Nodes (33): Change Checklist, Cloudflare, Environment And Secrets Matrix, GitHub Actions, OAuth Redirect Allowlists, Principles, Supabase, Vercel (+25 more)
+Nodes (47): Change Checklist, Cloudflare, Environment And Secrets Matrix, GitHub Actions, OAuth Redirect Allowlists, Principles, Supabase, Vercel (+39 more)
 
 ### Community 268 - "Shared Watch Progress Tracker"
 Cohesion: 0.22
@@ -2542,30 +2550,34 @@ Nodes (7): Active Room Sessions Table, Atomic Active-room RPCs, Room Departure C
 Cohesion: 0.33
 Nodes (6): CRM Blob Runtime Authority, KREATLI_CRM_BLOB_STORE_ID And VERCEL_OIDC_TOKEN, KREATLI_CRM_BLOB_READ_WRITE_TOKEN, Operator-Only Recovery Credentials, Fresh Deployment Verification, Separate Shared Private Integration Boundary
 
+### Community 386 - "plans/README.md"
+Cohesion: 0.29
+Nodes (6): Plans, Active Public-Product Recovery Plan, Fresh-Deployment Acceptance, Staging Waitlist CRM Recovery Complete, Three Failed Leads Recovered, Production And Main Explicit Later Gate
+
 ### Community 1108 - "Waitlist And Public-Form CRM Recovery"
-Cohesion: 0.50
-Nodes (4): CRM-Specific Private Blob Authority, Fail-Closed Vercel CRM Runtime, Waitlist And Public-Form CRM Recovery, Production Promotion Regression
+Cohesion: 0.14
+Nodes (13): Controlled Contact And Feature-Request Acceptance, CRM Runtime Logs Free Of Persistence Failures, Fresh Deployment dpl_AnAzpf8XTHUcCrYMz19TDkQ2y3rq, Post-Acceptance Private Authority: 687 Contacts, Recovered Lead Same-Email Idempotency, Staging Merge d74fa6f3826a61f428147e5bbc472cc6220c4983, Staging Acceptance: 685 Survey Leads, Three Failed Survey Leads Recovered (+5 more)
 
 ### Community 384 - "Current Development State"
 Cohesion: 0.33
 Nodes (3): Five-Object Dry-Run-First Reconciliation, Private CRM Snapshot, Retained Legacy Public CRM Object
 
 ## Knowledge Gaps
-- **3228 isolated node(s):** `SeoGuideOption`, `SeoGuideRelatedLink`, `SeoGuideStep`, `CompareCellValue`, `CompareColumn` (+3223 more)
+- **3236 isolated node(s):** `SeoGuideOption`, `SeoGuideRelatedLink`, `SeoGuideStep`, `CompareCellValue`, `CompareColumn` (+3231 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **721 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **720 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `.next/**` connect `seo-page-layout.tsx` to `seo-guide-blocks.tsx`, `getGuideLinks`, `google-ads/tokens.ts`, `SeoPageLayout`, `getResolvedSiteOrigin`, `getResolvedSiteOrigin`, `how-to-host-a-crunchyroll-watch-party/page.tsx`, `.next/**`, `primary-checkout-cta.tsx`, `watch-history-v2.test.ts`, `connect/page.tsx`, `social.ts`, `[slug]/page.tsx`, `getResolvedSiteOrigin`, `ref_react`, `ref_lucide_react`, `sitemap-discovery.ts`, `watch-history-v2-routes.ts`, `anidachi-logo.tsx`, `pseo-new-guides.tsx`, `feature-requests.ts`, `best-anime-to-watch-with-friends/page.tsx`, `app/layout.tsx`, `plan-entitlements.ts`, `contact-messages.ts`, `anidachi-logo.tsx`, `getGuideLinks`, `tasks`?**
-  _High betweenness centrality (0.033) - this node is a cross-community bridge._
+  _High betweenness centrality (0.057) - this node is a cross-community bridge._
 - **Why does `devDependencies` connect `devDependencies` to `extension/package.json`, `api/package.json`?**
-  _High betweenness centrality (0.016) - this node is a cross-community bridge._
-- **Why does `typescript` connect `api/package.json` to `package.json`, `demo/package.json`?**
-  _High betweenness centrality (0.015) - this node is a cross-community bridge._
+  _High betweenness centrality (0.013) - this node is a cross-community bridge._
+- **Why does `typescript` connect `api/package.json` to `devDependencies`?**
+  _High betweenness centrality (0.013) - this node is a cross-community bridge._
 - **What connects `SeoGuideOption`, `SeoGuideRelatedLink`, `SeoGuideStep` to the rest of the system?**
-  _3228 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _3236 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `seo-guide-blocks.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.026482858697623797 - nodes in this community are weakly interconnected._
 - **Should `getGuideLinks` be split into smaller, more focused modules?**
