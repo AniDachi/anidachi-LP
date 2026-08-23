@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { BlobPreconditionFailedError } from "@vercel/blob";
 import {
   createPrivateIntegrationBlobClient,
   isPrivateIntegrationBlobPath,
@@ -184,5 +185,69 @@ describe("private integration Blob boundary", () => {
       /not an allowed private integration Blob path/,
     );
     assert.equal(calls, 0);
+  });
+
+  it("reloads and reapplies an optimistic text mutation after an ETag conflict", async () => {
+    const pathname = "kreatli-crm/contacts.json";
+    const reads = [
+      textResult(pathname, '[{"id":"first"}]'),
+      {
+        ...textResult(pathname, '[{"id":"first"},{"id":"second"}]'),
+        blob: {
+          ...textResult(pathname, "unused").blob,
+          pathname,
+          etag: '"v2"',
+        },
+      },
+    ];
+    reads[0].blob.etag = '"v1"';
+    const putCalls: Array<{ body: string; options: unknown }> = [];
+    const sdk: PrivateIntegrationBlobSdk = {
+      get: async () => reads.shift() ?? null,
+      put: async (_target, body, options) => {
+        assert.equal(typeof body, "string");
+        putCalls.push({ body: body as string, options });
+        if (putCalls.length === 1) {
+          throw new BlobPreconditionFailedError();
+        }
+        return { pathname };
+      },
+      del: async () => undefined,
+    };
+    const client = createPrivateIntegrationBlobClient({
+      privateAuth: { token: "private-token" },
+      sdk,
+    }) as ReturnType<typeof createPrivateIntegrationBlobClient> & {
+      updateText(
+        pathname: string,
+        mutate: (current: string | null) => string,
+      ): Promise<string>;
+    };
+
+    const committed = await client.updateText(pathname, (current) => {
+      const rows = JSON.parse(current ?? "[]") as Array<{ id: string }>;
+      if (!rows.some((row) => row.id === "third")) {
+        rows.push({ id: "third" });
+      }
+      return JSON.stringify(rows);
+    });
+
+    assert.deepEqual(JSON.parse(committed), [
+      { id: "first" },
+      { id: "second" },
+      { id: "third" },
+    ]);
+    assert.equal(putCalls.length, 2);
+    assert.deepEqual(
+      putCalls.map(({ options }) =>
+        (options as { ifMatch?: string }).ifMatch,
+      ),
+      ['"v1"', '"v2"'],
+    );
+    assert.deepEqual(JSON.parse(putCalls[1].body), [
+      { id: "first" },
+      { id: "second" },
+      { id: "third" },
+    ]);
   });
 });

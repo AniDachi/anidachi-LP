@@ -2,9 +2,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import type { Contact, Touch } from "./types";
 import {
-  hasPrivateIntegrationBlobConfiguration,
-  readPrivateIntegrationBlobText,
-  writePrivateIntegrationBlobText,
+  hasKreatliCrmBlobConfiguration,
+  readKreatliCrmBlobText,
+  updateKreatliCrmBlobText,
 } from "@/lib/private-integration-blob";
 
 export function getCrmDataDir(): string {
@@ -22,11 +22,20 @@ const TOUCHES_BLOB_PATH = KREATLI_CRM_TOUCHES_BLOB_PATH;
 const META_BLOB_PATH = KREATLI_CRM_META_BLOB_PATH;
 
 async function blobReadText(blobPath: string): Promise<string | null> {
-  return readPrivateIntegrationBlobText(blobPath);
+  return readKreatliCrmBlobText(blobPath);
 }
 
-async function blobWriteText(blobPath: string, text: string): Promise<void> {
-  await writePrivateIntegrationBlobText(blobPath, text);
+async function blobUpdateText(
+  blobPath: string,
+  mutate: (current: string | null) => string | Promise<string>,
+): Promise<string> {
+  return updateKreatliCrmBlobText(blobPath, mutate);
+}
+
+function assertLocalCrmRuntime(): void {
+  if (process.env.VERCEL === "1") {
+    throw new Error("CRM durable storage is not configured on Vercel");
+  }
 }
 
 function parseContacts(raw: string, source: string): Contact[] {
@@ -69,7 +78,7 @@ async function ensureDir() {
 }
 
 export async function readMeta(): Promise<CrmMeta> {
-  if (hasPrivateIntegrationBlobConfiguration()) {
+  if (hasKreatliCrmBlobConfiguration()) {
     const blobText = await blobReadText(META_BLOB_PATH);
     if (!blobText) return { schema_version: 1, updated_at: null };
     try {
@@ -84,6 +93,7 @@ export async function readMeta(): Promise<CrmMeta> {
     }
   }
 
+  assertLocalCrmRuntime();
   await ensureDir();
   const { meta } = paths();
   try {
@@ -99,16 +109,33 @@ export async function readMeta(): Promise<CrmMeta> {
 }
 
 export async function writeMeta(partial: Partial<CrmMeta>): Promise<void> {
-  if (hasPrivateIntegrationBlobConfiguration()) {
-    const cur = await readMeta();
-    const next: CrmMeta = {
-      schema_version: partial.schema_version ?? cur.schema_version,
-      updated_at: partial.updated_at ?? cur.updated_at,
-    };
-    await blobWriteText(META_BLOB_PATH, JSON.stringify(next, null, 2));
+  if (hasKreatliCrmBlobConfiguration()) {
+    await blobUpdateText(META_BLOB_PATH, (current) => {
+      let cur: CrmMeta = { schema_version: 1, updated_at: null };
+      if (current) {
+        try {
+          const parsed = JSON.parse(current) as CrmMeta;
+          cur = {
+            schema_version:
+              typeof parsed.schema_version === "number"
+                ? parsed.schema_version
+                : 1,
+            updated_at: parsed.updated_at ?? null,
+          };
+        } catch {
+          cur = { schema_version: 1, updated_at: null };
+        }
+      }
+      const next: CrmMeta = {
+        schema_version: partial.schema_version ?? cur.schema_version,
+        updated_at: partial.updated_at ?? cur.updated_at,
+      };
+      return JSON.stringify(next, null, 2);
+    });
     return;
   }
 
+  assertLocalCrmRuntime();
   await ensureDir();
   const cur = await readMeta();
   const next: CrmMeta = {
@@ -119,11 +146,15 @@ export async function writeMeta(partial: Partial<CrmMeta>): Promise<void> {
 }
 
 export async function readContacts(): Promise<Contact[]> {
-  if (hasPrivateIntegrationBlobConfiguration()) {
+  if (hasKreatliCrmBlobConfiguration()) {
     const blobText = await blobReadText(CONTACTS_BLOB_PATH);
-    return blobText === null ? [] : parseContacts(blobText, "Vercel Blob");
+    if (blobText === null) {
+      throw new Error("CRM contacts object is missing from durable storage");
+    }
+    return parseContacts(blobText, "Vercel Blob");
   }
 
+  assertLocalCrmRuntime();
   await ensureDir();
   const { contacts } = paths();
   try {
@@ -136,19 +167,27 @@ export async function readContacts(): Promise<Contact[]> {
 }
 
 export async function writeContacts(contacts: Contact[]): Promise<void> {
-  if (hasPrivateIntegrationBlobConfiguration()) {
-    await blobWriteText(CONTACTS_BLOB_PATH, JSON.stringify(contacts, null, 2));
-    await writeMeta({ updated_at: new Date().toISOString() });
+  if (hasKreatliCrmBlobConfiguration()) {
+    await blobUpdateText(CONTACTS_BLOB_PATH, (current) => {
+      if (current === null) {
+        throw new Error("CRM contacts object is missing from durable storage");
+      }
+      return JSON.stringify(contacts, null, 2);
+    });
+    await writeMeta({ updated_at: new Date().toISOString() }).catch((error) => {
+      console.error("[kreatli-crm] Failed to update CRM metadata", error);
+    });
     return;
   }
 
+  assertLocalCrmRuntime();
   await ensureDir();
   await fs.writeFile(paths().contacts, JSON.stringify(contacts, null, 2), "utf8");
   await writeMeta({ updated_at: new Date().toISOString() });
 }
 
 export async function readTouches(): Promise<Touch[]> {
-  if (hasPrivateIntegrationBlobConfiguration()) {
+  if (hasKreatliCrmBlobConfiguration()) {
     const blobText = await blobReadText(TOUCHES_BLOB_PATH);
     if (!blobText) return [];
     try {
@@ -159,6 +198,7 @@ export async function readTouches(): Promise<Touch[]> {
     }
   }
 
+  assertLocalCrmRuntime();
   await ensureDir();
   const { touches } = paths();
   try {
@@ -171,13 +211,15 @@ export async function readTouches(): Promise<Touch[]> {
 }
 
 export async function appendTouch(touch: Touch): Promise<void> {
-  if (hasPrivateIntegrationBlobConfiguration()) {
-    const cur = (await blobReadText(TOUCHES_BLOB_PATH)) ?? "";
-    const next = `${cur}${cur && !cur.endsWith("\n") ? "\n" : ""}${JSON.stringify(touch)}\n`;
-    await blobWriteText(TOUCHES_BLOB_PATH, next);
+  if (hasKreatliCrmBlobConfiguration()) {
+    await blobUpdateText(TOUCHES_BLOB_PATH, (current) => {
+      const cur = current ?? "";
+      return `${cur}${cur && !cur.endsWith("\n") ? "\n" : ""}${JSON.stringify(touch)}\n`;
+    });
     return;
   }
 
+  assertLocalCrmRuntime();
   await ensureDir();
   const line = `${JSON.stringify(touch)}\n`;
   await fs.appendFile(paths().touches, line, "utf8");

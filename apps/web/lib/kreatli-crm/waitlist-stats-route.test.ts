@@ -10,24 +10,24 @@ async function withCrmEnvironment(
   token: string | null,
   run: () => Promise<void>,
 ): Promise<void> {
-  const previousToken = process.env.PRIVATE_INTEGRATION_BLOB_READ_WRITE_TOKEN;
+  const previousToken = process.env.KREATLI_CRM_BLOB_READ_WRITE_TOKEN;
   const previousDataDir = process.env.CRM_DATA_DIR;
   const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), "anidachi-crm-test-"));
 
   process.env.CRM_DATA_DIR = dataDir;
   if (token === null) {
-    delete process.env.PRIVATE_INTEGRATION_BLOB_READ_WRITE_TOKEN;
+    delete process.env.KREATLI_CRM_BLOB_READ_WRITE_TOKEN;
   } else {
-    process.env.PRIVATE_INTEGRATION_BLOB_READ_WRITE_TOKEN = token;
+    process.env.KREATLI_CRM_BLOB_READ_WRITE_TOKEN = token;
   }
 
   try {
     await run();
   } finally {
     if (previousToken === undefined) {
-      delete process.env.PRIVATE_INTEGRATION_BLOB_READ_WRITE_TOKEN;
+      delete process.env.KREATLI_CRM_BLOB_READ_WRITE_TOKEN;
     } else {
-      process.env.PRIVATE_INTEGRATION_BLOB_READ_WRITE_TOKEN = previousToken;
+      process.env.KREATLI_CRM_BLOB_READ_WRITE_TOKEN = previousToken;
     }
     if (previousDataDir === undefined) {
       delete process.env.CRM_DATA_DIR;
@@ -79,4 +79,50 @@ test("waitlist stats failures return a non-cacheable service error", async (t) =
     assert.match(response.headers.get("cache-control") ?? "", /no-store/);
     assert.equal(errorLog.mock.callCount(), 1);
   });
+});
+
+test("Vercel without CRM-specific durable storage fails closed", async (t) => {
+  const previousVercel = process.env.VERCEL;
+  const previousCrmToken = process.env.KREATLI_CRM_BLOB_READ_WRITE_TOKEN;
+  const previousCrmStoreId = process.env.KREATLI_CRM_BLOB_STORE_ID;
+  const previousPrivateToken =
+    process.env.PRIVATE_INTEGRATION_BLOB_READ_WRITE_TOKEN;
+  const errorLog = t.mock.method(console, "error", () => {});
+
+  process.env.VERCEL = "1";
+  delete process.env.KREATLI_CRM_BLOB_READ_WRITE_TOKEN;
+  delete process.env.KREATLI_CRM_BLOB_STORE_ID;
+  delete process.env.PRIVATE_INTEGRATION_BLOB_READ_WRITE_TOKEN;
+
+  try {
+    await assert.rejects(
+      readContacts(),
+      /CRM durable storage is not configured on Vercel/,
+    );
+
+    const response = await GET();
+    assert.equal(response.status, 503);
+    assert.deepEqual(await response.json(), { count: null });
+    assert.match(response.headers.get("cache-control") ?? "", /no-store/);
+    assert.equal(errorLog.mock.callCount(), 1);
+  } finally {
+    if (previousVercel === undefined) delete process.env.VERCEL;
+    else process.env.VERCEL = previousVercel;
+    if (previousCrmToken === undefined) {
+      delete process.env.KREATLI_CRM_BLOB_READ_WRITE_TOKEN;
+    } else {
+      process.env.KREATLI_CRM_BLOB_READ_WRITE_TOKEN = previousCrmToken;
+    }
+    if (previousCrmStoreId === undefined) {
+      delete process.env.KREATLI_CRM_BLOB_STORE_ID;
+    } else {
+      process.env.KREATLI_CRM_BLOB_STORE_ID = previousCrmStoreId;
+    }
+    if (previousPrivateToken === undefined) {
+      delete process.env.PRIVATE_INTEGRATION_BLOB_READ_WRITE_TOKEN;
+    } else {
+      process.env.PRIVATE_INTEGRATION_BLOB_READ_WRITE_TOKEN =
+        previousPrivateToken;
+    }
+  }
 });
