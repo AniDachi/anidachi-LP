@@ -2,6 +2,7 @@ export * from "./account";
 export * from "./auth";
 export * from "./limits";
 export * from "./room-lifecycle";
+export * from "./room-session";
 export * from "./source-url";
 export * from "./sync";
 export * from "./types";

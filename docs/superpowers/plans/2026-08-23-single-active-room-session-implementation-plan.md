@@ -158,7 +158,7 @@ Expected: one docs-only commit, no runtime/generated/test-profile files.
 - Create: `packages/protocol/test/room-session.test.ts`
 - Modify: `packages/protocol/test/protocol.test.ts`
 
-- [ ] **Step 1: Write failing protocol tests**
+- [x] **Step 1: Write failing protocol tests**
 
 Cover:
 
@@ -167,8 +167,8 @@ Cover:
 - authenticated departure command and acknowledgement outcomes;
 - Worker-to-Web guest release callback;
 - `host_disconnected` as a valid room end reason;
-- JOIN requiring, not merely optionally accepting,
-  `participantSessionId`;
+- admission requiring a bounded `participantSessionId`, while the legacy JOIN
+  field remains compatible until the consumer cutover in Task 5;
 - strict-object rejection of extra/unbounded fields.
 
 ```bash
@@ -178,7 +178,7 @@ pnpm --filter @anidachi/protocol test
 Expected: new tests fail because the schemas and required JOIN field do not yet
 exist.
 
-- [ ] **Step 2: Add the minimal shared schemas**
+- [x] **Step 2: Add the minimal shared schemas**
 
 Implement and export:
 
@@ -191,11 +191,12 @@ Implement and export:
 - `RoomDepartureAcknowledgementSchema`;
 - `ROOM_DISCONNECT_GRACE_MS = 60_000`.
 
-Add `host_disconnected` to `RoomEndReasonSchema`. Make JOIN
-`participantSessionId` required and bounded by the existing session-ID limit.
-Do not add a second identifier or provider-specific contract.
+Add `host_disconnected` to `RoomEndReasonSchema`. Keep the existing JOIN field
+bounded but optional only for this additive contract task; Task 5 makes it
+required in the same TDD change that updates every producer and consumer. Do
+not add a second identifier or provider-specific contract.
 
-- [ ] **Step 3: Run focused and protocol plane gates**
+- [x] **Step 3: Run focused and protocol plane gates**
 
 ```bash
 pnpm --filter @anidachi/protocol test
@@ -206,7 +207,7 @@ git diff --check
 Expected: all protocol tests/checks pass and the generated public API exposes
 only the intended schemas/types.
 
-- [ ] **Step 4: Commit the protocol contract**
+- [x] **Step 4: Commit the protocol contract**
 
 ```bash
 git add packages/protocol
@@ -571,6 +572,8 @@ Cover:
 - stale in-flight create/connect cannot overwrite the winning record;
 - create/connect bridge messages include the candidate;
 - room token/JOIN uses that same candidate.
+- the shared JOIN schema rejects a missing session only after every current
+  producer and consumer has moved to the bound candidate;
 
 ```bash
 pnpm --filter @anidachi/extension test -- room-session-storage room-client-auth room-reconnect

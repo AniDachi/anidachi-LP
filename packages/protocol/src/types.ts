@@ -152,6 +152,7 @@ const RoomScopedSchema = z.object({
 
 export const RoomEndReasonSchema = z.enum([
   "host_ended",
+  "host_disconnected",
   "empty_timeout",
   "quota_exhausted",
 ]);

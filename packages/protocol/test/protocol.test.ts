@@ -86,6 +86,7 @@ describe("room protocol schemas", () => {
   it("accepts one terminal room-ended event with a bounded reason", () => {
     expect(RoomEndReasonSchema.options).toEqual([
       "host_ended",
+      "host_disconnected",
       "empty_timeout",
       "quota_exhausted",
     ]);
@@ -188,6 +189,7 @@ describe("room protocol schemas", () => {
     const event = {
       type: "JOIN",
       roomId: "room-1",
+      participantSessionId: "session-1",
       participant: {
         id: "user-1",
         displayName: "Max",
@@ -475,6 +477,7 @@ describe("room protocol schemas", () => {
       type: "JOIN",
       roomId: "room-1",
       lastSeenP2PServerSeq: 24,
+      participantSessionId: "session-1",
       videoFingerprint: "video-1",
       participant: {
         id: "user-1",
