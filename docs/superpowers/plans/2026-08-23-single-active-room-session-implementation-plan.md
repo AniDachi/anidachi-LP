@@ -955,11 +955,12 @@ Wait for CI and review. Do not merge yet.
 Draft PR #231 was opened to `staging` on 2026-08-23 from
 `codex/single-active-room-session`. Its description records the required
 migration-first order, local verification evidence, rollback path, staging
-acceptance matrix, and explicit release exclusions. CI and review remain
-pending; no merge, migration, deployment, or external test-folder update has
-occurred.
+acceptance matrix, and explicit release exclusions. It later passed review and
+CI and merged to `staging` as
+`f511b4dcb805e8959412213e00a2499f12f2b8be` after the staging migration was
+applied. No `main`, production, or Chrome Web Store mutation was authorized.
 
-- [ ] **Step 3: Stop for explicit user approval before staging mutation/merge**
+- [x] **Step 3: Stop for explicit user approval before staging mutation/merge**
 
 Ask permission to:
 
@@ -971,7 +972,12 @@ Ask permission to:
 
 No linked database write or staging merge occurs before this approval.
 
-- [ ] **Step 4: Apply migration first and verify deployment health**
+The user explicitly authorized the one-time staging test and then authorized
+the reviewed merge work before PR #231 was merged. That approval covered only
+the staging migration, staging runtime, and the two established test folders;
+it did not cover `main`, production, or release.
+
+- [x] **Step 4: Apply migration first and verify deployment health**
 
 After approval, use the established staging Supabase/Vercel/Cloudflare workflow.
 Never print secrets. Verify migration history and a read-only RPC/table shape
@@ -980,7 +986,16 @@ check before the new runtime is exercised.
 Expected: database prerequisite is present, Web and Worker health/smoke checks
 pass, and old artifacts fail explicitly rather than bypassing enforcement.
 
-- [ ] **Step 5: Build, validate, and synchronize the exact artifact**
+Migration run `32637163596` applied
+`20260823090624_single_active_room_sessions.sql` to staging before the runtime
+merge; post-merge run `32637269784` confirmed alignment. Read-only inspection
+confirmed the RLS-enabled server-only table, revoked anon/authenticated access,
+service-role-only RPC execution, and zero initial assignments. CI
+`32637269772`, API deployment `32637269793`, Vercel deployment
+`dpl_D9iXtfYyux52dRp46wucA8VKcM86`, staging Web smoke, and a fresh Worker smoke
+passed for merge `f511b4d`.
+
+- [x] **Step 5: Build, validate, and synchronize the exact artifact**
 
 ```bash
 pnpm build:extension:staging
@@ -998,7 +1013,14 @@ diff -qr anidachi-extension-staging \
 Expected: both folders are byte-identical to the validated staging output. Do
 not change Chrome flags or replace browser profiles.
 
-- [ ] **Step 6: Run the manual two-profile acceptance matrix**
+CI extension artifact `anidachi-extension-staging` from run `32637269796` was
+validated with `version_name`
+`f511b4dcb805e8959412213e00a2499f12f2b8be-staging-125` and SHA-256
+`58a5b07f08bbef7031205244959f536087791a2245887bcd8f63d2dd7442fb8b`.
+Both established folders were synchronized from that exact output, revalidated,
+and compared byte-for-byte before the user reloaded both profiles.
+
+- [x] **Step 6: Run the manual two-profile acceptance matrix**
 
 With two authenticated staging profiles, verify:
 
@@ -1018,7 +1040,14 @@ With two authenticated staging profiles, verify:
 
 Record only observed outcomes.
 
-- [ ] **Step 7: Update canonical docs after acceptance**
+Two authenticated loaded-extension profiles confirmed different-room conflict
+for host and guest, pause/seek/rate sync, reload, brief offline recovery,
+guest-only departure, host room end, same-room takeover, stale old-tab safety,
+fresh-tab non-restoration, old-link non-revival, and clean popup active-room
+state. Crunchyroll Watch History continued to track. YouTube Watch History was
+disabled during the final history observation and is not claimed here.
+
+- [x] **Step 7: Update canonical docs after acceptance**
 
 Only after the evidence passes:
 
@@ -1027,13 +1056,25 @@ Only after the evidence passes:
 - record any residual limitation honestly;
 - keep the plan open if any required scenario is unproven.
 
-- [ ] **Step 8: Refresh Graphify using the project-required semantic update**
+The accepted staging boundary and exact evidence are now recorded in the
+current-state document, this design/implementation pair, and both canonical
+room/P2P plans. Unrelated Free quota, TURN/two-network media, UI/UX, `main`, and
+production boundaries remain open and explicit.
+
+- [x] **Step 8: Refresh Graphify using the project-required semantic update**
 
 Because code and docs changed, use the installed Graphify skill for
 `$graphify . --update`, then review only approved team artifacts. Exclude
 `cost.json`, HTML/wiki/cache/scoped scratch output.
 
-- [ ] **Step 9: Run final verification and close the staging task**
+The incremental semantic update processed 57 changed code files and seven
+documents, then merged them into a 10,183-node/21,403-edge graph. The integrity
+gate reported zero missing or dangling endpoints, self-loops, duplicate edges,
+or directed/undirected endpoint collapse. Only `graph.json`, `GRAPH_REPORT.md`,
+and `manifest.json` remain in the closeout diff; local cost, HTML, cache, and
+temporary extraction outputs are excluded.
+
+- [x] **Step 9: Run final verification and close the staging task**
 
 ```bash
 pnpm dev:check
@@ -1049,7 +1090,14 @@ Expected: local/CI/staging/loaded-artifact evidence is green, branch/worktree
 state is understood, and no claim is made about `main`, production, public
 launch, TURN, or Chrome Web Store.
 
-- [ ] **Step 10: Commit only the verified closeout and stop**
+Fresh closeout verification on 2026-08-23 passed: `pnpm dev:check` selected the
+docs profile for the eight-file closeout diff, `pnpm harness:rooms` passed
+39/39, `pnpm smoke:worker:staging` passed against the staging Worker, and a new
+staging extension build passed artifact validation. `git diff --check` was
+clean. Existing non-fatal Vite notices about dynamically imported modules that
+also have static consumers remain unrelated to this room-session change.
+
+- [x] **Step 10: Commit only the verified closeout and stop**
 
 ```bash
 git add docs/current-development-state.md \
@@ -1065,3 +1113,9 @@ git commit -m "docs(rooms): record single active session acceptance"
 If Graphify produced no intentional approved artifact change, omit its files.
 Stop after the staging closeout. A later promotion to `main` requires a
 separate reviewed decision and explicit user approval.
+
+The closeout commit is limited to the five canonical documents above and the
+three approved Graphify team artifacts. It contains no runtime, migration,
+generated extension, secret, environment, deployment, `main`, production, or
+release mutation. Its PR targets `staging` and must not be merged without a new
+explicit user decision.

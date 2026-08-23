@@ -157,6 +157,7 @@ Implements the roadmap contract exactly; protocol shapes follow the roadmap's Ta
 - [~] 4.2 `ROOM_SNAPSHOT` carries `roomGeneration`, `sourceGeneration`, `serverSeq`, and the current live source descriptor when known; client drops stale P2P/media events by generation; P2P controller starts only after snapshot. Implemented across `codex/p2p-production-hardening` and `codex/p2p-source-generation`, verified locally. Remaining: broaden generation fencing to source/playback commands beyond P2P media.
 - [x] 4.3 Multi-tab guard: `apps/extension/src/room-tab-lock.ts` holds an exclusive Web Lock (`anidachi-room-session`) for the room session. The first tab owns it; a second tab in the same profile is blocked before connecting and shown "already open in another tab" (first-wins locally). A reconnect of the owning tab re-acquires instantly; the lock releases on End room, sign-out, terminal ROOM_FULL/SESSION_TAKEN_OVER, and unmount. Degrades to allowing when Web Locks are unavailable. The 4.1 server takeover still covers cross-device (last-wins) where Web Locks can't reach. Verified: 4 unit tests (mock LockManager) + extension typecheck.
 - [x] 4.4 Page lifecycle: `pagehide` closes the room socket so the Worker drops the participant promptly (deterministic leave — no ghost until keepalive timeout); `pageshow` with `event.persisted` reconnects after a back/forward-cache restore (the stable `participantSessionId` makes it a same-session resume). The protocol has no separate LEAVE event — the WS close is the leave signal, so closing the socket is the polite bye. Verified: harness asserts a clean close broadcasts `PARTICIPANT_LEFT` and removes the participant from the snapshot (19/19); the DOM lifecycle wiring itself is browser-only (covered by typecheck + the Playwright slice). SPA/full-nav teardown already handled by content-script remount; not separately needed here.
+- [x] 4.4a Global active-session authority and tab-close completion: PR #231 (`f511b4d`) binds Web admission, Worker presence, and extension tab lifecycle to one exact participant session per user. Different-room create/connect is rejected across providers and clients; same-room takeover makes the old close stale; host tab close ends the room; guest tab close removes only that guest; reload/brief offline recovery uses the 60-second grace. Verified on staging with two loaded authenticated profiles on 2026-08-23, including old-link non-revival, popup cleanup, playback synchronization, and Crunchyroll Watch History continuity.
 - [ ] 4.5 Tests: reload either side without ghosts (S8), duplicate-socket replacement, resume replays only missed signals, two tabs same room, token-expiry reconnect (>30 min session). — signaling-level coverage now lives in the harness (S5/S8, takeover, clean leave); the browser-level reload/two-tab/token-expiry checks ride with the Playwright slice (1.5).
 
 **Acceptance:** roadmap Task 3/4 acceptance criteria + S5/S8 green in harness.
@@ -200,8 +201,10 @@ Follow the roadmap's task lists verbatim; additions:
   service-role finalization RPC before persisting the terminal tombstone; the
   extension keeps the existing graceful zero-minute end. Remaining: apply the
   migration, deploy Web before Worker, run the real
-  create/join/leave/reconnect/end acceptance, and decide later whether observed
-  abuse warrants a global cross-room lease.
+  create/join/leave/reconnect/end acceptance. The earlier cross-room lease
+  deferral is superseded by PR #231: server-only `active_room_sessions` now
+  enforces one active room per authenticated user across every plan and
+  provider. This does not complete the separate persisted Free-usage check.
 
 **Acceptance:** roadmap Task 5/6 acceptance + idle rooms hibernate without disconnecting clients (S9) + empty rooms end themselves (closes defect 3 with PD1) + quota metering accurate to <=1 minute drift in harness.
 
