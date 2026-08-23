@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-08-22.
+Last updated: 2026-08-23.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -31,16 +31,20 @@ development.
 
 `staging` is the fast integration branch for tester builds.
 
-- Required status check: `check-and-test`
+- Required status checks enforced by GitHub: none currently
 - Additional non-required release workflow: `build-extension`
 - Additional non-required deploy workflow: `deploy-api`
-- Required approvals: `0`
-- Strict up-to-date branch requirement: off
-- Conversation resolution requirement: off
+- Required PR reviews enforced by GitHub: none currently
 - CODEOWNERS review requirement: off; CODEOWNERS is advisory on this branch
 - Force pushes: blocked
 - Branch deletion: blocked
 - Admin enforcement: on
+
+The project workflow still requires feature PRs, `check-and-test`, and the
+change-specific quality gates before merging to `staging`; GitHub does not yet
+enforce those checks on this branch. Aligning the live protection with the
+documented workflow is a separate process follow-up, not part of a product or
+release PR.
 
 `main` is the production branch.
 
@@ -50,7 +54,7 @@ development.
 - Required approvals: `0`
 - Dismiss stale approvals: on
 - Strict up-to-date branch requirement: on
-- Conversation resolution requirement: on
+- Conversation resolution requirement: off
 - CODEOWNERS review requirement: off; CODEOWNERS is advisory on this branch
 - Repository auto-merge: enabled
 - Force pushes: blocked
@@ -133,6 +137,67 @@ separate provider API key.
 Use it before cross-plane work, especially room/P2P/auth/Worker/CI changes. Do
 not promote Graphify to a required CI check unless the team explicitly accepts
 the runtime and backend requirements.
+
+## Main Technical Baseline Promotion
+
+The accepted foundation was promoted to `main` on 2026-08-23 through the
+database-first, runtime-second procedure in
+`docs/superpowers/plans/2026-08-22-safe-staging-main-foundation-promotion.md`.
+This established a clean technical baseline; it was not a public launch,
+Chrome Web Store publication, UI/UX-completion, or market-readiness decision.
+
+- Frozen `staging` candidate:
+  `4104d4bd2fe33d3d7700fafd6c45a4fed20215d8`.
+- Migration-only PR `#227` merged as
+  `2d12b67bc53ac516066661013ab3714836a3047c`. Production workflow
+  `32616586863` applied all 13 ordered migrations successfully while the old
+  web runtime stayed healthy. Its rollback-point web deployment was
+  `dpl_Ch1aPbRhbiKZYye4hViMGxo7Fc5m`.
+- Runtime PR `#228` contained no migration diff, and its tree was byte-identical
+  to the frozen candidate. It merged as final `main` SHA
+  `20c37893b7bdd52d9f10cff254fb541580ce99de`.
+- Runtime workflows succeeded: CI `32617261509`, production migration no-op
+  `32617261512`, Worker deploy `32617261521`, and extension artifact build
+  `32617261508`. The no-op migration dry run and apply both reported the remote
+  database up to date.
+- Vercel production deployment `dpl_DcH4fdkGWLb5zdvbWWZ3GCeHzyHn` is Ready;
+  `/` and `/login` returned HTTP 200. The production Worker smoke passed after
+  deployment `31286574-55be-4769-8bf9-0107602a400f`, version
+  `93fa62a0-4dad-4321-977e-5a67e7a3281f`.
+- Production retains all 13 migration records. The service role has full CRUD
+  on 33/33 public tables and execute on 37/37 public routines, with public
+  schema usage but no schema-create privilege. Control counts for rooms,
+  Watch History sessions, and legacy checkpoints remained unchanged through
+  the promotion.
+- The hourly bounded auth-artifact cleanup first ran successfully at
+  `2026-08-23 04:00 UTC`. Legacy refresh rows decreased from 293 to 200; every
+  remaining row was already expired or revoked and the active legacy count was
+  zero. This is the designed cleanup of unusable artifacts, not deletion of an
+  active session. The clean auth-channel cutover may still require one new
+  sign-in; no authenticated production acceptance is claimed here.
+- The private production extension artifact is named `Anidachi`, version
+  `0.1.0`, `version_name`
+  `20c37893b7bdd52d9f10cff254fb541580ce99de-production-124`, with ZIP SHA-256
+  `294927fb301b1533401f621597fa6612641f35f890c84d303467eaad190edeae`.
+  Its host permissions are limited to YouTube, Crunchyroll, the production web
+  origin, and the production Worker. It was validated but was not loaded,
+  uploaded, or published to Chrome Web Store. Production extension connection
+  remains intentionally fail-closed until a public extension identity is
+  approved.
+- Immediately after the runtime promotion, `origin/staging` was an ancestor of
+  `origin/main`, and their trees matched at
+  `2927c30bb89531eb7e44ee7dcde62d784fcee962`. Old aggregate PR `#174` was
+  closed without merge as superseded by PRs `#227` and `#228`.
+
+Deferred boundaries remain explicit. Private integration Blob configuration
+and data were not changed; those non-core paths remain fail-closed. TURN was
+already configured and was not modified. Automated room and real-WebRTC gates
+passed, but a manual relay proof across two separate networks remains deferred
+until public extension-release preparation. The previous rollback anchors are
+web deployment `dpl_Ch1aPbRhbiKZYye4hViMGxo7Fc5m`, Worker deployment
+`5da7e90e-dcb1-42c3-8ea3-92bb5f121e2b` / version
+`471fa2a3-0e08-41f1-b2bd-fd55042e431f`, and post-migration Git SHA
+`2d12b67bc53ac516066661013ab3714836a3047c`.
 
 ## Pre-release Security Readiness
 
@@ -247,8 +312,9 @@ the active-family count remained 7.
 
 Wave 2 is complete and staging-accepted: Tasks 5-8 satisfy their staging
 acceptance boundaries, and the Wave 2 Stop is closed. Wave 3 may proceed from
-current `staging`. No security work from this wave has been promoted to `main`;
-production promotion remains a separate decision and is out of this closeout.
+current `staging`. These changes are now also contained in the technical `main`
+baseline recorded above. That Git promotion does not turn the historical
+staging evidence into authenticated production or public-release acceptance.
 
 Wave 3 is green and the Wave 3 Stop is closed for staging readiness. Task 10's
 WebSocket-admission change merged in PR `#208` at
@@ -274,8 +340,9 @@ two-network/TURN, production, exhaustive adversarial traffic, or Chrome Web
 Store. The integrated Wave 3 matrix is green from final automated Task 9
 expiry/replay and privileged-action evidence, post-merge CI/Rooms/P2P/staging
 smoke, prior Task 10 acceptance, and this Task 11 acceptance. No security work
-from this wave has been promoted to `main`; production promotion remains a
-separate decision and is out of this closeout.
+from this wave was separately reimplemented for production; the exact tested
+tree is now contained in `main` through PR `#228`. Two-network/TURN and
+authenticated production acceptance remain explicitly unclaimed.
 
 ## Subscription Plan Codes
 
@@ -316,9 +383,11 @@ silent browser flow as a fallback.
 The three technical-foundation blocks in
 `docs/superpowers/plans/2026-08-21-core-foundation-ui-handoff-plan.md` are
 implemented and accepted on `staging` through
-`3a442b7f76992a5e48b387740bf9cc31a565235e`. This is a documented foundation
-for subsequent UI/UX work, not a production-readiness, market-readiness,
-public-release, `main`, or Chrome Web Store claim.
+`3a442b7f76992a5e48b387740bf9cc31a565235e`, and their final frozen staging
+tree is now included in `main` through the baseline promotion recorded above.
+This is a documented foundation for subsequent UI/UX work, not a
+production-readiness, market-readiness, public-release, or Chrome Web Store
+claim.
 
 - **Watch History resource boundary:** PR `#215` deployed
   `20260821162622_watch_history_v2_resource_bounds.sql` as staging squash
@@ -350,8 +419,9 @@ public-release, `main`, or Chrome Web Store claim.
   loaded staging profiles.
 
 Separate work remains required for UI/UX design, release and store decisions,
-production and `main`, two-network/TURN acceptance, broader P2P/media hardening,
-billing, public forms, legal/compliance, media intake, and additional providers.
+authenticated production acceptance, two-network/TURN acceptance, broader
+P2P/media hardening, billing, public forms, legal/compliance, media intake, and
+additional providers.
 For rollback, use reviewed forward rollback/redeploy procedures; do not delete
 canonical Watch History, room, or invite data or remove the additive compatibility
 database boundaries as part of this handoff.
@@ -392,11 +462,12 @@ late requests, seen acknowledgements, poster hydration, social actions, and
 history operations from writing into a newer account session. Popup snapshot I/O
 does not claim ownership of the content script's active playback progress.
 
-The lifecycle v2 inbox migration is applied on staging. Both the Popup Inbox
-and `/account/invites` use the same owner-bound `/api/account/inbox` authority,
-including server counts, seen state, missed room invites, and cursor pagination
-in the full web surface. Task 7's two-profile loaded-artifact acceptance is
-recorded above; a production promotion is still a separate decision.
+The lifecycle v2 inbox migration is applied on staging and in the technical
+production baseline. Both the Popup Inbox and `/account/invites` use the same
+owner-bound `/api/account/inbox` authority, including server counts, seen state,
+missed room invites, and cursor pagination in the full web surface. Task 7's
+two-profile loaded-artifact acceptance is recorded above; authenticated
+production acceptance is not claimed.
 
 ## Room Invite Notification Direction
 
@@ -409,7 +480,9 @@ notification permission up front so the default-on local preference can
 register a push device automatically after sign-in; the existing local toggle
 still disables and revokes that browser's subscription. The
 additive `devices` Web Push migration is already applied and verified on the
-staging Supabase project; production remains unchanged until staging acceptance.
+staging Supabase project and is present in the technical production baseline.
+Loaded-artifact, two-account notification delivery acceptance is still pending,
+and no public extension is distributed.
 Web Push sends only an `inbox_changed` invalidation so the extension runs the
 same inbox sync and displays minimal English room-invite notifications. There
 is no frequent background inbox polling, Chrome GCM, Supabase Realtime
@@ -799,11 +872,12 @@ These are intentionally not treated as solved:
   canonical changes, and its coalesced outbox persists the latest higher
   generation without delaying playback. Reload and late join consume the
   durable source; explicit source-switch UI/commands remain future UI/UX work.
-- Watch History v2 is the active staging runtime. Supabase/Postgres is the one
-  durable account-history authority; the extension background owns the
-  account-scoped cache/outbox, while Popup and website consume the same strict
-  v2 response. The v1 HTTP paths return `426 UPGRADE_REQUIRED`, and the legacy
-  tables remain inert for rollback rather than being deleted.
+- Watch History v2 is the active `staging` and technical `main` runtime.
+  Supabase/Postgres is the one durable account-history authority; the extension
+  background owns the account-scoped cache/outbox, while Popup and website
+  consume the same strict v2 response. The v1 HTTP paths return
+  `426 UPGRADE_REQUIRED`, and the legacy tables remain inert for rollback rather
+  than being deleted.
 - `ROOM_HISTORY_GRACE_AMENDMENT_REQUIRED` is the reviewed Task 9 decision after
   the Task 0 report proved unavailable: Worker-issued shared-history authority
   has mandatory exact scalar claims, a unique `jti`, and `exp = iat + 86,400`
@@ -813,10 +887,11 @@ These are intentionally not treated as solved:
   bounded outbox as `invalid-room-authority` and is never reclassified as solo.
 - The additive foundation and Recent People v2 migrations are applied on
   staging through `20260814020000`. A user confirmed the repaired solo
-  Crunchyroll -> Popup -> staging website path. This closeout does not claim
-  full two-profile/two-network acceptance or two-network/TURN evidence, and
-  production promotion remains out of scope; this is not a
-  production-readiness claim.
+  Crunchyroll -> Popup -> staging website path. The same migrations and exact
+  runtime tree are now in the technical production baseline, but this closeout
+  does not claim authenticated production, full two-profile/two-network
+  acceptance, or two-network/TURN evidence; it is not a production-readiness
+  claim.
 - The `20260816090000_watch_history_v2_bounded_read.sql` migration was merged
   and applied to staging in ordered prerequisite PR #189 (`6c7e1b1b`); the web
   consumer followed in PR #190 (`847d5e32`). It removes the full-account episode
@@ -857,11 +932,11 @@ These are intentionally not treated as solved:
   returns at most eight rows per title with exact counts and continuation, and
   the owner-bound detail response returns at most 50 rows.
 - The additive projection/RPC was deployed to staging in a migration-only
-  prerequisite PR before the web consumer PR. The same dependency order remains
-  mandatory if a separately approved production promotion happens later. A
-  direct combined staging-to-main promotion is unsafe because database and
-  application deploys trigger independently and can expose runtime before its
-  RPC.
+  prerequisite PR before the web consumer PR. Production preserved the same
+  dependency order through migration-only PR `#227` and runtime PR `#228`.
+  Future database/runtime promotions must keep this ordering because database
+  and application deploys trigger independently and can expose runtime before
+  its RPC.
 - The migration-only prerequisite is compatible with the old web runtime, but
   it is not dormant: projection maintenance runs on v2 progress, session, and
   participant writes/deletes. If it must be undone, use the reviewed forward
@@ -870,10 +945,11 @@ These are intentionally not treated as solved:
 - The 2026-08-21 core-foundation-to-UI/UX handoff plan is the accepted staging
   evidence record for the bounded episode-page/receipt lifecycle,
   canonical/durable room source, and room-lifecycle invite semantics. It is not
-  authority for production or market readiness. The broad 2026-08-18 readiness
-  program and the 2026-08-14 Watch History v2 foundation plan are historical
-  scope/evidence records; their deferred items are not silently treated as
-  complete.
+  authority for authenticated production or market readiness; the separate
+  2026-08-22 promotion plan records only the technical `main` baseline. The
+  broad 2026-08-18 readiness program and the 2026-08-14 Watch History v2
+  foundation plan are historical scope/evidence records; their deferred items
+  are not silently treated as complete.
 - Custom API domain for hiding the Cloudflare account subdomain is deferred.
 - Stripe production webhook appears wired, but end-to-end subscription testing is
   still a separate follow-up.
