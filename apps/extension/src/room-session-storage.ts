@@ -298,6 +298,54 @@ export async function removeRoomSessionForTab(
   await enqueueRoomSessionOperation(tabId, () => removeRoomSessionForTabNow(tabId, storage));
 }
 
+/** Reads the background-owned confirmed session without trusting page identity. */
+export async function loadRoomSessionForTab(
+  tabId: number,
+  dependencies: RoomSessionBackgroundDependencies = {},
+): Promise<RoomSessionRecord | null> {
+  assertTabId(tabId);
+  return enqueueRoomSessionOperation(tabId, async () => {
+    const storage = dependencies.sessionStorage ??
+      (chrome.storage.session as StorageAreaLike);
+    const key = roomSessionStorageKey(tabId);
+    const stored = await storage.get(key);
+    const record = parseRoomSessionRecord(stored[key]);
+    if (!record && stored[key] !== undefined) {
+      await storage.remove(key);
+    }
+    return record;
+  });
+}
+
+/**
+ * Cleans a closed tab only if its confirmed session is still the snapshot that
+ * initiated departure. A recycled tab id or newer exact session wins.
+ */
+export async function clearRoomSessionForClosedTab(
+  tabId: number,
+  expected: RoomSessionRecord | null,
+  dependencies: RoomSessionBackgroundDependencies = {},
+): Promise<boolean> {
+  assertTabId(tabId);
+  return enqueueRoomSessionOperation(tabId, async () => {
+    const storage = dependencies.sessionStorage ??
+      (chrome.storage.session as StorageAreaLike);
+    if (!expected) {
+      await removeRoomSessionForTabNow(tabId, storage);
+      return true;
+    }
+
+    const key = roomSessionStorageKey(tabId);
+    const stored = await storage.get(key);
+    const current = parseRoomSessionRecord(stored[key]);
+    if (!current || !roomSessionIdentityMatches(current, expected)) {
+      return false;
+    }
+    await removeRoomSessionForTabNow(tabId, storage);
+    return true;
+  });
+}
+
 async function removeRoomSessionForTabNow(tabId: number, storage: StorageAreaLike): Promise<void> {
   await Promise.all([
     storage.remove(roomSessionStorageKey(tabId)),
@@ -862,6 +910,16 @@ function roomSessionRecordsMatch(
     current.participantSessionId === expected.participantSessionId &&
     current.voiceMode === expected.voiceMode
   );
+}
+
+function roomSessionIdentityMatches(
+  current: RoomSessionRecord,
+  expected: RoomSessionRecord,
+): boolean {
+  return current.version === expected.version &&
+    current.roomId === expected.roomId &&
+    current.ownerUserId === expected.ownerUserId &&
+    current.participantSessionId === expected.participantSessionId;
 }
 
 function isVoiceMode(value: unknown): value is VoiceMode {

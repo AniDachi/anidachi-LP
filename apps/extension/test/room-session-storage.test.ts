@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  clearRoomSessionForClosedTab,
   confirmRoomSessionForTab,
   discardPreparedRoomSessionIfMatch,
   handleRoomSessionStorageRuntimeMessage,
   handleRoomSessionStorageMessage,
+  loadRoomSessionForTab,
   prepareRoomSessionForTab,
   ROOM_SESSION_INSTALL_ID_STORAGE_KEY as INSTALL_ID_STORAGE_KEY,
   migrateLegacyRoomSession,
@@ -114,6 +116,64 @@ function expectRecord(response: RoomSessionResponse): RoomSessionRecord {
 }
 
 describe("background-owned room session storage", () => {
+  it("loads the trusted confirmed record before closed-tab cleanup", async () => {
+    const dependencies = backgroundDependencies();
+    const record = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-close", ownerUserId: "user-a" }),
+        sender(2),
+        dependencies,
+      ),
+    );
+
+    await expect(loadRoomSessionForTab(2, dependencies)).resolves.toEqual(record);
+    await expect(clearRoomSessionForClosedTab(2, record, dependencies)).resolves.toBe(true);
+    await expect(loadRoomSessionForTab(2, dependencies)).resolves.toBeNull();
+  });
+
+  it("does not let an old tab-close cleanup erase a same-room takeover session", async () => {
+    const dependencies = backgroundDependencies();
+    const oldRecord = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-old", ownerUserId: "user-a" }),
+        sender(7),
+        dependencies,
+      ),
+    );
+    const takeover = await prepareRoomSessionForTab(
+      7,
+      { ownerUserId: "user-a", roomId: "room-old", forceNew: true },
+      dependencies,
+    );
+    const replacement = await confirmRoomSessionForTab(7, takeover, "room-old", dependencies);
+
+    await expect(clearRoomSessionForClosedTab(7, oldRecord, dependencies)).resolves.toBe(false);
+    await expect(loadRoomSessionForTab(7, dependencies)).resolves.toEqual(replacement);
+  });
+
+  it("clears the same exact session after a mutable local update", async () => {
+    const dependencies = backgroundDependencies();
+    const snapshot = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-same", ownerUserId: "user-a" }),
+        sender(10),
+        dependencies,
+      ),
+    );
+    const updated = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-same", ownerUserId: "user-a" }),
+        sender(10),
+        dependencies,
+      ),
+    );
+    expect(updated.revision).toBeGreaterThan(snapshot.revision);
+    expect(updated.participantSessionId).toBe(snapshot.participantSessionId);
+
+    await expect(clearRoomSessionForClosedTab(10, snapshot, dependencies)).resolves.toBe(true);
+    await expect(loadRoomSessionForTab(10, dependencies)).resolves.toBeNull();
+  });
+
   it("prepares a bounded candidate before admission and confirms that exact candidate", async () => {
     const dependencies = backgroundDependencies();
     const prepared = await prepareRoomSessionForTab(

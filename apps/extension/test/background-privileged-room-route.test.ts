@@ -29,6 +29,25 @@ const roomSessionRouteDependencies = {
 };
 
 describe("background privileged room route", () => {
+  it("routes a real tab removal through exact departure and authority cleanup", async () => {
+    vi.stubGlobal("chrome", {});
+    const background = await import("../entrypoints/background");
+    const calls: string[] = [];
+
+    await background.handleRemovedRoomTab(60, {
+      clearRoomAuthorityRequest: (tabId) => calls.push(`request:${tabId}`),
+      departRoom: async (tabId) => {
+        calls.push(`depart:${tabId}`);
+        return "departed";
+      },
+      removePrivilegedAuthority: async (tabId) => {
+        calls.push(`authority:${tabId}`);
+      },
+    });
+
+    expect(calls).toEqual(["request:60", "depart:60", "authority:60"]);
+  });
+
   it("routes a background-issued authority through connect, rejects a forgery, ends once, and rejects replay", async () => {
     vi.stubGlobal("chrome", {});
     const background = await import("../entrypoints/background");

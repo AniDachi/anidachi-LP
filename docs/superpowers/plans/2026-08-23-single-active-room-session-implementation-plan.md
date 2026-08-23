@@ -714,7 +714,7 @@ extension test folder, deployment, or remote branch was mutated.
 - Modify: `apps/extension/src/overlay-app.tsx`
 - Modify: `apps/extension/test/room-reconnect.test.ts`
 
-- [ ] **Step 1: Write failing background-close tests**
+- [x] **Step 1: Write failing background-close tests**
 
 Cover:
 
@@ -735,7 +735,7 @@ pnpm --filter @anidachi/extension test -- room-departure background-privileged-r
 Expected: tests fail because `tabs.onRemoved` currently deletes local state
 without a server notification.
 
-- [ ] **Step 2: Implement a bounded best-effort departure accelerator**
+- [x] **Step 2: Implement a bounded best-effort departure accelerator**
 
 The background handler must:
 
@@ -749,13 +749,13 @@ Do not add a keepalive hack or heartbeat. The Durable Object 60-second deadline
 is the reliable fallback when MV3 terminates the background worker or the
 network is unavailable.
 
-- [ ] **Step 3: Preserve reload and BFCache behavior**
+- [x] **Step 3: Preserve reload and BFCache behavior**
 
 Keep `pagehide` as socket cleanup only. Keep `pageshow`, visibility, and online
 reconnect paths. Confirm that only real `tabs.onRemoved` requests immediate
 departure.
 
-- [ ] **Step 4: Run full extension gates and commit**
+- [x] **Step 4: Run full extension gates and commit**
 
 ```bash
 pnpm --filter @anidachi/extension test
@@ -764,6 +764,25 @@ git diff --check
 git add apps/extension
 git commit -m "feat(extension): depart rooms when the active tab closes"
 ```
+
+Implementation note: only `chrome.tabs.onRemoved` invokes immediate departure.
+The background reads the confirmed tab-owned session before cleanup, derives
+identity and access only from extension auth storage, sends only the exact
+`participantSessionId` to the authenticated Web route, refreshes once only
+after `401`, and bounds the whole best-effort attempt to four seconds. Missing
+auth, another account, network failure, timeout, or MV3 termination cannot turn
+page data into authority; the Worker's persisted 60-second deadline remains the
+reliable fallback. Closed-tab cleanup matches room, user, and participant
+session, so a stale old close cannot erase a same-room takeover, while revision
+or voice-mode changes inside the same exact session do not leave a ghost local
+record. Existing `pagehide`, `pageshow`, visibility, online, and BFCache paths
+were left unchanged and continue to mean reconnect, not departure.
+
+Verification: the failing close/session/background tests were observed before
+implementation; focused tests passed 36/36; the full extension suite passed
+1297/1297 across 99 files; extension type-check and `git diff --check` passed.
+No linked database, staging environment, extension test folder, deployment, or
+remote branch was mutated.
 
 ---
 
