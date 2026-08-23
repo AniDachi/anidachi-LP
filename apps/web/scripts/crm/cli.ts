@@ -18,10 +18,10 @@ import {
   appendTouch,
   contactsFilePath,
   crmDataDir,
+  mutateContacts,
   readContacts,
   readMeta,
   readTouches,
-  writeContacts,
 } from "../../lib/kreatli-crm/store";
 import { renderTemplate } from "../../lib/kreatli-crm/template-render";
 import type { Contact } from "../../lib/kreatli-crm/types";
@@ -86,31 +86,34 @@ async function cmdAddContact(args: string[]) {
     console.error("Need --email");
     process.exit(1);
   }
-  const contacts = await readContacts();
-  if (contacts.some((c) => c.email === email)) {
+  const t = nowIso();
+  const result = await mutateContacts((contacts) => {
+    if (contacts.some((contact) => contact.email === email)) {
+      return { changed: false, value: null as string | null };
+    }
+    const id = randomUUID();
+    contacts.push({
+      id,
+      email,
+      company: opts.company ?? "",
+      first_name: opts.first_name ?? "",
+      segments: (opts.segments ?? "")
+        .split(",")
+        .map((segment) => segment.trim())
+        .filter(Boolean),
+      notes: opts.notes ?? "",
+      status: "active",
+      next_action_date: opts.next ?? null,
+      created_at: t,
+      updated_at: t,
+    });
+    return { changed: true, value: id };
+  });
+  if (!result.value) {
     console.error("Email exists");
     process.exit(1);
   }
-  const t = nowIso();
-  const segments = (opts.segments ?? "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const contact: Contact = {
-    id: randomUUID(),
-    email,
-    company: opts.company ?? "",
-    first_name: opts.first_name ?? "",
-    segments,
-    notes: opts.notes ?? "",
-    status: "active",
-    next_action_date: opts.next ?? null,
-    created_at: t,
-    updated_at: t,
-  };
-  contacts.push(contact);
-  await writeContacts(contacts);
-  console.log(contact.id);
+  console.log(result.value);
 }
 
 async function cmdLogTouch(q: string, summary: string) {
@@ -131,33 +134,35 @@ async function cmdLogTouch(q: string, summary: string) {
 
 async function cmdSet(args: string[]) {
   const opts = parseOpts(args);
-  const contacts = await readContacts();
-  let c: Contact | undefined;
-  if (opts.id) c = contacts.find((x) => x.id === opts.id);
-  if (!c && opts.email) c = findContact(contacts, opts.email);
-  if (!c) {
-    console.error("Need --id or --email");
-    process.exit(1);
-  }
-  const idx = contacts.indexOf(c);
-  let u = { ...contacts[idx]! };
+  const parsedStatus = opts.status ? parseStatus(opts.status) : undefined;
   if (opts.status) {
-    const st = parseStatus(opts.status);
-    if (!st) {
+    if (!parsedStatus) {
       console.error("Bad status");
       process.exit(1);
     }
-    u = { ...u, status: st };
   }
-  if (opts.next !== undefined) {
-    u = { ...u, next_action_date: opts.next || null };
+
+  const result = await mutateContacts((contacts) => {
+    let contact: Contact | undefined;
+    if (opts.id) contact = contacts.find(({ id }) => id === opts.id);
+    if (!contact && opts.email) contact = findContact(contacts, opts.email);
+    if (!contact) return { changed: false, value: false };
+    const idx = contacts.indexOf(contact);
+    contacts[idx] = {
+      ...contact,
+      ...(parsedStatus ? { status: parsedStatus } : {}),
+      ...(opts.next !== undefined
+        ? { next_action_date: opts.next || null }
+        : {}),
+      ...(opts.notes !== undefined ? { notes: opts.notes } : {}),
+      updated_at: nowIso(),
+    };
+    return { changed: true, value: true };
+  });
+  if (!result.value) {
+    console.error("Need --id or --email");
+    process.exit(1);
   }
-  if (opts.notes !== undefined) {
-    u = { ...u, notes: opts.notes };
-  }
-  u = { ...u, updated_at: nowIso() };
-  contacts[idx] = u;
-  await writeContacts(contacts);
   console.log("ok");
 }
 
@@ -202,7 +207,7 @@ async function runImport(
 ) {
   const parsed = parseImportText(raw);
   const existing = await readContacts();
-  const { preview, nextContacts } = buildImportPreview(existing, parsed, mode);
+  const { preview } = buildImportPreview(existing, parsed, mode);
   for (const line of preview) {
     console.log(`${line.action}\t${line.email}\t${line.detail}`);
   }
@@ -216,7 +221,11 @@ async function runImport(
     `# summary: +${counts.create} skip ${counts.skip} update ${counts.update}`
   );
   if (apply) {
-    await writeContacts(nextContacts);
+    await mutateContacts((contacts) => {
+      const current = buildImportPreview(contacts, parsed, mode).nextContacts;
+      contacts.splice(0, contacts.length, ...current);
+      return { changed: true, value: undefined };
+    });
     console.error("Applied.");
   }
 }

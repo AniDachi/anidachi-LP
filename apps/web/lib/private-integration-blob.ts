@@ -189,6 +189,7 @@ export function createPrivateIntegrationBlobClient(input: {
           privateOptions(input.privateAuth),
         );
         const next = await mutate(snapshot?.text ?? null);
+        if (snapshot && next === snapshot.text) return next;
         const commonOptions: WriteOptions = {
           addRandomSuffix: false,
           allowOverwrite: snapshot !== null,

@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { randomUUID } from "node:crypto";
 import type { Contact, Touch } from "./types";
 import {
   hasKreatliCrmBlobConfiguration,
@@ -75,6 +76,40 @@ export type CrmMeta = {
 
 async function ensureDir() {
   await fs.mkdir(paths().dir, { recursive: true });
+}
+
+let localContactsMutationTail: Promise<void> = Promise.resolve();
+
+async function serializeLocalContactsMutation<T>(
+  operation: () => Promise<T>,
+): Promise<T> {
+  const previous = localContactsMutationTail;
+  let release!: () => void;
+  localContactsMutationTail = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await previous;
+  try {
+    return await operation();
+  } finally {
+    release();
+  }
+}
+
+async function writeContactsFileAtomically(contacts: Contact[]): Promise<void> {
+  await ensureDir();
+  const target = paths().contacts;
+  const temporary = path.join(
+    paths().dir,
+    `.contacts-${process.pid}-${randomUUID()}.tmp`,
+  );
+  try {
+    await fs.writeFile(temporary, JSON.stringify(contacts, null, 2), "utf8");
+    await fs.rename(temporary, target);
+  } catch (error) {
+    await fs.rm(temporary, { force: true }).catch(() => undefined);
+    throw error;
+  }
 }
 
 export async function readMeta(): Promise<CrmMeta> {
@@ -181,9 +216,55 @@ export async function writeContacts(contacts: Contact[]): Promise<void> {
   }
 
   assertLocalCrmRuntime();
-  await ensureDir();
-  await fs.writeFile(paths().contacts, JSON.stringify(contacts, null, 2), "utf8");
+  await writeContactsFileAtomically(contacts);
   await writeMeta({ updated_at: new Date().toISOString() });
+}
+
+export type ContactMutation<T> = (
+  contacts: Contact[],
+) => { changed: boolean; value: T };
+
+export type ContactMutationResult<T> = {
+  changed: boolean;
+  contacts: Contact[];
+  value: T;
+};
+
+export async function mutateContacts<T>(
+  mutation: ContactMutation<T>,
+): Promise<ContactMutationResult<T>> {
+  if (hasKreatliCrmBlobConfiguration()) {
+    let outcome: { changed: boolean; value: T } | undefined;
+    const committedText = await blobUpdateText(CONTACTS_BLOB_PATH, (current) => {
+      if (current === null) {
+        throw new Error("CRM contacts object is missing from durable storage");
+      }
+      const contacts = parseContacts(current, "Vercel Blob");
+      outcome = mutation(contacts);
+      return outcome.changed ? JSON.stringify(contacts, null, 2) : current;
+    });
+    if (!outcome) throw new Error("CRM contact mutation did not run");
+    const committed = parseContacts(committedText, "Vercel Blob");
+    if (outcome.changed) {
+      await writeMeta({ updated_at: new Date().toISOString() }).catch(
+        (error) => {
+          console.error("[kreatli-crm] Failed to update CRM metadata", error);
+        },
+      );
+    }
+    return { ...outcome, contacts: committed };
+  }
+
+  assertLocalCrmRuntime();
+  return serializeLocalContactsMutation(async () => {
+    const contacts = await readContacts();
+    const outcome = mutation(contacts);
+    if (outcome.changed) {
+      await writeContactsFileAtomically(contacts);
+      await writeMeta({ updated_at: new Date().toISOString() });
+    }
+    return { ...outcome, contacts };
+  });
 }
 
 export async function readTouches(): Promise<Touch[]> {
