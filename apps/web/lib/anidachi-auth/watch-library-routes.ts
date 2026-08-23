@@ -1,10 +1,27 @@
-import { NextResponse } from "next/server";
-import { WatchLibraryApiError } from "./watch-library";
+import { type NextRequest, NextResponse } from "next/server";
+import { getApiSession, type ApiSession } from "./api-session";
 
-export function watchLibraryErrorResponse(error: unknown): NextResponse {
-  if (error instanceof WatchLibraryApiError) {
-    return NextResponse.json({ error: error.message }, { status: error.status });
-  }
-  console.error("[anidachi/watch-library] Unexpected API error:", error);
-  return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+type DisabledWatchLibraryRouteDependencies = {
+  getSession(request: NextRequest): Promise<ApiSession | null>;
+};
+
+export function createDisabledWatchLibraryRoute(
+  dependencies: DisabledWatchLibraryRouteDependencies = { getSession: getApiSession },
+) {
+  return async function disabledWatchLibraryRoute(request: NextRequest): Promise<NextResponse> {
+    const session = await dependencies.getSession(request);
+    if (!session) {
+      return NextResponse.json(
+        { error: "Authentication required", code: "UNAUTHORIZED" },
+        { status: 401 },
+      );
+    }
+
+    return NextResponse.json(
+      { error: "Watch History v2 is required", code: "UPGRADE_REQUIRED" },
+      { status: 426 },
+    );
+  };
 }
+
+export const disabledWatchLibraryRoute = createDisabledWatchLibraryRoute();

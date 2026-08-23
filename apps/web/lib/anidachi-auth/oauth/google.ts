@@ -26,7 +26,11 @@ function getRedirectUri(origin: string): string {
   );
 }
 
-export function buildGoogleAuthUrl(state: string, origin: string): string {
+export function buildGoogleAuthUrl(
+  state: string,
+  origin: string,
+  codeChallenge: string,
+): string {
   const { clientId } = getCredentials();
   const params = new URLSearchParams({
     client_id: clientId,
@@ -34,6 +38,8 @@ export function buildGoogleAuthUrl(state: string, origin: string): string {
     response_type: "code",
     scope: GOOGLE_SCOPES,
     state,
+    code_challenge: codeChallenge,
+    code_challenge_method: "S256",
     access_type: "online",
     prompt: "select_account",
   });
@@ -49,7 +55,8 @@ export type OAuthProfile = {
 
 export async function exchangeGoogleCode(
   code: string,
-  origin: string
+  origin: string,
+  codeVerifier: string,
 ): Promise<OAuthProfile> {
   const { clientId, clientSecret } = getCredentials();
   const redirectUri = getRedirectUri(origin);
@@ -62,6 +69,7 @@ export async function exchangeGoogleCode(
       client_secret: clientSecret,
       grant_type: "authorization_code",
       code,
+      code_verifier: codeVerifier,
       redirect_uri: redirectUri,
     }),
   });

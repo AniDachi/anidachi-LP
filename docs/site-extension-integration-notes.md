@@ -1,13 +1,55 @@
 # Site, Extension, Auth, and Database Integration Notes
 
-This document records the current research on connecting the `George-Kreatli/anidachi-LP`
-website repository with the Anidachi extension project.
+The June 2026 research below is retained as historical architecture context. It
+is not a statement of the current implementation or remaining work; the
+current operational authority is `docs/current-development-state.md`.
 
 Research date: 2026-06-02
 Website repo inspected: `https://github.com/George-Kreatli/anidachi-LP`
 Inspected website commit: `942a8de Add new anime guides for group viewing in 2026`
 
-## Current Website State
+## Current Integration Foundation — Staging Accepted 2026-08-22
+
+The website, extension, Worker, and Supabase implementation now live in the
+AniDachi monorepo. The core-foundation-to-UI/UX handoff is accepted on `staging`
+through `3a442b7f76992a5e48b387740bf9cc31a565235e`. This means subsequent UI/UX
+work can rely on the documented contracts below; it does not claim production
+readiness, market readiness, `main` promotion, public release, or Chrome Web
+Store readiness.
+
+- Supabase/Postgres remains the only durable authority for accounts, Watch
+  History, rooms, and invite metadata. The Worker Durable Object remains the
+  live authority for room state, playback, and source generations; the
+  extension owns browser-local observation, media, cache, and bounded outbox.
+- Watch History title responses return no more than eight recent episode rows
+  per title with exact counts and a continuation. The authenticated detail
+  boundary returns at most 50 rows. The Popup remains local-first and does not
+  eagerly download detail history. Migration
+  `20260821162622_watch_history_v2_resource_bounds.sql` is applied on staging.
+- YouTube and Crunchyroll room sources are canonical, provider-pinned, and
+  monotonic. Generation 1 is persisted at creation; the Worker persists the
+  newest accepted same-provider source asynchronously through the authenticated
+  Web callback. Reload and late join use the durable descriptor. Migration
+  `20260822033019_room_source_generation.sql` is applied on staging.
+- Room-invite actionability derives from room lifecycle in the versioned v2
+  inbox/action RPCs. Accept/decline has one atomic, idempotent transition;
+  active-room invites do not expire solely because legacy `expires_at` passed,
+  and an ended room reconciles once to `Missed` for 24 hours. The legacy field
+  and functions remain for rollback. Migrations
+  `20260822065227_room_invite_lifecycle_actions.sql` and
+  `20260822091552_finalize_legacy_orphan_invite_rooms.sql` are applied on
+  staging.
+- Room-scoped ICE credentials require an `Authorization: Bearer` token. The
+  browser WebSocket `roomToken` query is retained as a separate browser API
+  exception; it is not an ICE-query fallback.
+
+The accepted two-profile staging artifact evidence covers Watch History
+convergence, canonical room source create/join/change/reload/late-join behavior,
+and the invite host projection changing to `Accepted`. Two-network/TURN and
+broader P2P/media acceptance, UI/UX design, billing, public forms, legal,
+release/store, production, and new-provider work remain separate.
+
+## Historical Research Snapshot: Website State
 
 The website is not only a landing page. It already contains the beginning of a real
 Anidachi account and room system.
@@ -43,7 +85,7 @@ Important website files:
 - `app/room/[roomId]/page.tsx`
 - `supabase/migrations/20260525_anidachi_auth.sql`
 
-## Current Website Auth Model
+## Historical Research Snapshot: Website Auth Model
 
 The website uses custom auth, not Supabase Auth.
 
@@ -73,7 +115,7 @@ The website also already has a room token concept:
 
 This is a good foundation for connecting the extension to real users.
 
-## Current Website Database
+## Historical Research Snapshot: Website Database
 
 Existing migration creates:
 
@@ -100,7 +142,7 @@ Needed future tables or schema extensions:
 Important rule: live playback state must not be written to Postgres every second.
 Live state belongs in Durable Objects. Postgres should store durable business data.
 
-## Current Extension/API State
+## Historical Research Snapshot: Extension/API State
 
 The commercial implementation is auth-only.
 
@@ -136,7 +178,7 @@ Current room flow:
 The Worker no longer trusts client-provided `participant.id`, `displayName`,
 `avatarUrl`, or role for authenticated rooms.
 
-## Main Integration Problem
+## Historical Research Snapshot: Main Integration Problem
 
 The integration removes the previous split between website rooms and Worker-only
 guest rooms.
@@ -158,7 +200,7 @@ The Worker should remain the source of truth for:
 - reactions;
 - transient camera/speaker state.
 
-## Recommended Target Architecture
+## Historical Research Snapshot: Recommended Target Architecture
 
 ```txt
 apps/web
@@ -186,23 +228,32 @@ Recommended repo direction:
 
 This avoids duplicate types, duplicate room logic, and duplicate user models.
 
-## Recommended Extension Login Flow
+## Historical Research Snapshot: Recommended Extension Login Flow
 
 Do not try to read website HttpOnly cookies from the content script.
 
 Preferred Chrome extension login:
 
 1. Extension user clicks `Sign in`.
-2. Extension uses `chrome.identity.launchWebAuthFlow`.
-3. Website opens `/extension/connect`.
-4. Website signs user in with Discord/Google if needed.
-5. Website creates a short-lived one-time extension auth code.
-6. Website redirects to `chrome.identity.getRedirectURL(...)`.
-7. Extension receives the final redirect URL.
-8. Extension extracts `code` and `state`.
-9. Extension calls `/api/extension/auth/exchange`.
-10. Website returns extension-specific access and refresh tokens.
-11. Extension stores tokens in `chrome.storage.local`.
+2. Extension generates a one-time state value and PKCE verifier, retains the
+   verifier only for the active flow, and sends the S256 challenge.
+3. Extension uses `chrome.identity.launchWebAuthFlow` to open
+   `/extension/connect` with its exact ID and `/auth` redirect URI.
+4. If website sign-in is needed, the server replaces the validated raw extension
+   request with a ten-minute authenticated-encryption envelope derived from the
+   existing server JWT secret. Browser OAuth persists and returns only the
+   opaque envelope; tampered, expired, or wrong-purpose envelopes fail closed.
+5. Website signs user in with Discord/Google if needed.
+6. Website creates a short-lived one-time code bound to the exact client ID,
+   redirect URI, state, authenticated user, and PKCE challenge.
+7. Website redirects to the approved exact `chrome.identity.getRedirectURL("auth")`.
+8. Extension receives the final redirect URL.
+9. Extension validates the exact callback origin/path and state, then extracts
+   the code.
+10. Extension calls `/api/extension/auth/exchange` with the matching verifier;
+   the server consumes the code atomically once.
+11. Website returns extension-specific access and refresh tokens.
+12. Extension stores tokens in `chrome.storage.local`.
 
 Required website additions:
 
@@ -216,7 +267,7 @@ Alternative: use `externally_connectable` so the site can message the extension.
 This is useful for install detection and room handoff, but `launchWebAuthFlow` is
 cleaner for auth.
 
-## Worker Changes Needed
+## Historical Research Snapshot: Worker Changes Needed
 
 The Worker must stop trusting client-provided identities.
 
@@ -241,7 +292,7 @@ Better production path:
 - Worker verifies with a public key or JWKS.
 - This avoids sharing the signing secret with multiple services.
 
-## Website Changes Needed
+## Historical Research Snapshot: Website Changes Needed
 
 Needed for product integration:
 
@@ -261,7 +312,7 @@ The existing `/room/[roomId]` page is a useful start, but it should eventually:
 - hand off the room token to the extension;
 - explain install/open-extension steps if the extension is missing.
 
-## Database Changes Needed
+## Historical Research Snapshot: Database Changes Needed
 
 Recommended next migration:
 
@@ -295,8 +346,14 @@ Important:
 - The extension must never contain Supabase service-role credentials.
 - The extension must never contain TURN provider secrets, service-role
   credentials, or server-side signing secrets.
+- Local and staging use separate repository-controlled public manifest keys and
+  exact IDs. Only public key material is committed; production has no approved
+  identity and web connection stays fail-closed until an explicit cutover.
+- Never accept an arbitrary `*.chromiumapp.org` host. Each web environment
+  accepts one exact ID and only its `/auth` and `/logout` callback paths.
 - Room WebSocket joins must verify room membership.
-- Extension auth codes must be one-time and short-lived.
+- Extension auth codes must be one-time, short-lived, hashed at rest, and bound
+  to client, redirect, state, and S256 PKCE challenge.
 - Access tokens should stay short-lived.
 - Refresh tokens should be rotatable and revocable per device.
 - Session refresh should be transparent to the user. Access tokens stay
@@ -305,7 +362,7 @@ Important:
 - OAuth account linking by email is acceptable for MVP, but verified email checks
   must stay in place.
 
-## Phased Implementation Plan
+## Historical Research Snapshot: Phased Implementation Plan
 
 Phase 1: make website auth real
 

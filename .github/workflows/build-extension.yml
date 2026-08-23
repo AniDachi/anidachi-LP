@@ -92,6 +92,7 @@ jobs:
 
       - name: Package extension zip
         run: |
+          rm -f "$GITHUB_WORKSPACE/anidachi-extension-${EXTENSION_CHANNEL}.zip"
           cd apps/extension/.output/chrome-mv3
           zip -qr "$GITHUB_WORKSPACE/anidachi-extension-${EXTENSION_CHANNEL}.zip" .
 

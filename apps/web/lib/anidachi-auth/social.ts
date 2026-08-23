@@ -1,6 +1,6 @@
 import { createHash, randomBytes, randomUUID } from "crypto";
 import type { RecentPerson } from "@anidachi/protocol";
-import { db, getUserById, type UserRow } from "./db";
+import { db, getUserById, type RoomRow, type UserRow } from "./db";
 import { getPlanEntitlements } from "./plan-entitlements";
 
 const UNIQUE_VIOLATION = "23505";
@@ -44,23 +44,10 @@ export type RecentPeopleHiddenRow = {
   hidden_at: string;
 };
 
-export type RecentPeopleCheckpointEvidenceRow = {
-  session_id: string;
-  user_id: string;
-  room_id: string;
-  observed_at: string;
-};
-
-export type RecentPeopleEvidence = {
-  userId: string;
-  lastWatchedAt: string;
-  sharedRoomCount: number;
-};
-
-type RecentPeopleAggregateRow = {
-  user_id: string;
+type RecentPeopleEvidenceRow = {
+  other_user_id: string;
+  last_room_id: string;
   last_watched_at: string;
-  shared_room_count: number;
 };
 
 export type FriendGroupRow = {
@@ -85,6 +72,21 @@ export type FriendGroupCreateOutcomeRow = {
 export type RoomInviteCreateOutcomeRow = {
   outcome: "created" | "existing";
   invite_id: string | null;
+};
+
+export type RoomInviteResponseOutcomeRow = {
+  outcome:
+    | "accepted"
+    | "declined"
+    | "already_resolved"
+    | "room_ended"
+    | "friendship_required"
+    | "not_found";
+  invite_id: string;
+  room_id: string | null;
+  recipient_status: InviteRecipientStatus | null;
+  responded_at: string | null;
+  missed_at: string | null;
 };
 
 export type FriendGroupMemberRow = {
@@ -117,6 +119,11 @@ export type RoomInviteRecipientRow = {
   created_at: string;
   updated_at: string;
   responded_at: string | null;
+};
+
+type SentRoomInviteLifecycleRow = RoomInviteRow & {
+  room: Pick<RoomRow, "room_id" | "status" | "ended_at">;
+  recipients: RoomInviteRecipientRow[];
 };
 
 export type FriendInviteLinkRow = {
@@ -226,49 +233,6 @@ export function friendshipPairKey(userA: string, userB: string): [string, string
 
 export function isRecentRelationshipEligible(status: FriendshipStatus | undefined): boolean {
   return status === undefined || status === "declined" || status === "removed";
-}
-
-export function deriveRecentPeopleEvidence(
-  viewerUserId: string,
-  checkpoints: readonly RecentPeopleCheckpointEvidenceRow[],
-): RecentPeopleEvidence[] {
-  const viewerEvidenceBySessionRoom = new Map<string, string>();
-  for (const checkpoint of checkpoints) {
-    if (checkpoint.user_id !== viewerUserId || !checkpoint.room_id) continue;
-    const key = `${checkpoint.session_id}\u0000${checkpoint.room_id}`;
-    const current = viewerEvidenceBySessionRoom.get(key);
-    if (!current || checkpoint.observed_at > current) {
-      viewerEvidenceBySessionRoom.set(key, checkpoint.observed_at);
-    }
-  }
-
-  const aggregate = new Map<string, { lastWatchedAt: string; roomIds: Set<string> }>();
-  for (const checkpoint of checkpoints) {
-    if (checkpoint.user_id === viewerUserId || !checkpoint.room_id) continue;
-    const key = `${checkpoint.session_id}\u0000${checkpoint.room_id}`;
-    const viewerObservedAt = viewerEvidenceBySessionRoom.get(key);
-    if (!viewerObservedAt) continue;
-
-    const sharedObservedAt = checkpoint.observed_at > viewerObservedAt
-      ? checkpoint.observed_at
-      : viewerObservedAt;
-    const current = aggregate.get(checkpoint.user_id);
-    if (!current) {
-      aggregate.set(checkpoint.user_id, {
-        lastWatchedAt: sharedObservedAt,
-        roomIds: new Set([checkpoint.room_id]),
-      });
-      continue;
-    }
-    current.roomIds.add(checkpoint.room_id);
-    if (sharedObservedAt > current.lastWatchedAt) current.lastWatchedAt = sharedObservedAt;
-  }
-
-  return Array.from(aggregate, ([userId, evidence]) => ({
-    userId,
-    lastWatchedAt: evidence.lastWatchedAt,
-    sharedRoomCount: evidence.roomIds.size,
-  })).sort((a, b) => b.lastWatchedAt.localeCompare(a.lastWatchedAt));
 }
 
 export function isUuid(value: string): boolean {
@@ -545,6 +509,114 @@ export function resolveRoomInviteCreateOutcome(
     inviteId: result.invite_id,
     created: result.outcome === "created",
   };
+}
+
+export function resolveRoomInviteResponseOutcome(
+  result: RoomInviteResponseOutcomeRow | null,
+  action: "accept" | "decline",
+  expectedInviteId: string,
+): { recipientStatus: "accepted" | "declined" } {
+  const invalidResponse = () => {
+    throw new Error("Failed to respond to invite: invalid database response");
+  };
+  if (
+    !result ||
+    typeof result.invite_id !== "string" ||
+    !isUuid(result.invite_id) ||
+    result.invite_id !== expectedInviteId ||
+    !validNullableTimestamp(result.responded_at) ||
+    !validNullableTimestamp(result.missed_at)
+  ) {
+    return invalidResponse();
+  }
+
+  if (result.outcome === "not_found") {
+    if (
+      result.room_id !== null ||
+      result.recipient_status !== null ||
+      result.responded_at !== null ||
+      result.missed_at !== null
+    ) {
+      return invalidResponse();
+    }
+    throw new SocialApiError(404, "Invite not found");
+  }
+  if (typeof result.room_id !== "string" || result.room_id.trim().length === 0) {
+    return invalidResponse();
+  }
+
+  if (result.outcome === "accepted") {
+    if (
+      action !== "accept" ||
+      result.recipient_status !== "accepted" ||
+      result.responded_at === null ||
+      result.missed_at !== null
+    ) {
+      return invalidResponse();
+    }
+    return { recipientStatus: "accepted" };
+  }
+  if (result.outcome === "declined") {
+    if (
+      action !== "decline" ||
+      result.recipient_status !== "declined" ||
+      result.responded_at === null ||
+      result.missed_at !== null
+    ) {
+      return invalidResponse();
+    }
+    return { recipientStatus: "declined" };
+  }
+  if (result.outcome === "already_resolved") {
+    if (
+      result.recipient_status !== (action === "accept" ? "declined" : "accepted") ||
+      result.responded_at === null ||
+      result.missed_at !== null
+    ) {
+      return invalidResponse();
+    }
+    throw new SocialApiError(409, "Invite was already resolved");
+  }
+  if (result.outcome === "room_ended") {
+    if (
+      result.recipient_status !== "expired" ||
+      result.responded_at !== null ||
+      result.missed_at === null
+    ) {
+      return invalidResponse();
+    }
+    throw new SocialApiError(410, "Room has ended");
+  }
+  if (result.outcome === "friendship_required") {
+    if (
+      action !== "accept" ||
+      result.recipient_status !== "pending" ||
+      result.responded_at !== null ||
+      result.missed_at !== null
+    ) {
+      return invalidResponse();
+    }
+    throw new SocialApiError(403, "This invite is no longer available");
+  }
+  return invalidResponse();
+}
+
+function validNullableTimestamp(value: unknown): value is string | null {
+  return value === null || (typeof value === "string" && Number.isFinite(Date.parse(value)));
+}
+
+export function roomInviteRecipientLifecycleStatus(input: {
+  recipientStatus: InviteRecipientStatus;
+  respondedAt: string | null;
+  roomStatus: RoomRow["status"];
+}): InviteRecipientStatus {
+  if (input.recipientStatus === "accepted" || input.recipientStatus === "declined") {
+    return input.recipientStatus;
+  }
+  if (input.recipientStatus === "expired" && input.respondedAt !== null) {
+    return "declined";
+  }
+  return input.roomStatus === "ended" ? "expired" : "pending";
 }
 
 export function roomInviteCreateError(message: string): SocialApiError | null {
@@ -1039,7 +1111,7 @@ export async function listRecentPeople(viewerUserId: string): Promise<RecentPers
   assertUuid(viewerUserId, "viewerUserId");
   const [{ data: evidenceRows, error: evidenceError }, hiddenRows, relationships] =
     await Promise.all([
-      db().rpc("list_recent_people_evidence", {
+      db().rpc("list_recent_people_evidence_v2", {
         p_viewer_user_id: viewerUserId,
       }),
       listHiddenRecentPeople(viewerUserId),
@@ -1054,11 +1126,11 @@ export async function listRecentPeople(viewerUserId: string): Promise<RecentPers
     relationships.map((relationship) => [otherUserId(viewerUserId, relationship), relationship])
   );
 
-  const evidence = ((evidenceRows as RecentPeopleAggregateRow[] | null) ?? [])
+  const evidence = ((evidenceRows as RecentPeopleEvidenceRow[] | null) ?? [])
     .map((row) => ({
-      userId: row.user_id,
+      userId: row.other_user_id,
+      lastRoomId: row.last_room_id,
       lastWatchedAt: row.last_watched_at,
-      sharedRoomCount: row.shared_room_count,
     }))
     .filter((person) => {
       if (hidden.has(person.userId)) return false;
@@ -1082,7 +1154,6 @@ export async function listRecentPeople(viewerUserId: string): Promise<RecentPers
           users.get(recent.userId),
         ),
         lastWatchedAt: recent.lastWatchedAt,
-        sharedRoomCount: recent.sharedRoomCount,
       } satisfies RecentPerson;
     })
     .slice(0, 50);
@@ -1378,47 +1449,56 @@ export async function listRoomInvites(viewerUserId: string): Promise<{
 }> {
   assertUuid(viewerUserId, "viewerUserId");
 
-  const { data: inboxRecipientsData, error: inboxError } = await db()
-    .from("room_invite_recipients")
-    .select("*")
-    .eq("recipient_user_id", viewerUserId)
-    .order("updated_at", { ascending: false })
-    .limit(50);
-  if (inboxError) throw new Error(`Failed to list invite inbox: ${inboxError.message}`);
-
-  const inboxRecipients = (inboxRecipientsData as RoomInviteRecipientRow[] | null) ?? [];
-  const inboxInviteIds = Array.from(new Set(inboxRecipients.map((row) => row.invite_id)));
-
-  const { data: inboxInvitesData, error: inboxInvitesError } = inboxInviteIds.length
-    ? await db().from("room_invites").select("*").in("id", inboxInviteIds)
-    : { data: [], error: null };
-  if (inboxInvitesError) {
-    throw new Error(`Failed to list inbox invite details: ${inboxInvitesError.message}`);
-  }
-
   const { data: sentInvitesData, error: sentError } = await db()
     .from("room_invites")
-    .select("*")
+    .select(
+      "*,room:rooms!inner(room_id,status,ended_at),recipients:room_invite_recipients(*)",
+    )
     .eq("sender_user_id", viewerUserId)
     .order("created_at", { ascending: false })
     .limit(50);
   if (sentError) throw new Error(`Failed to list sent invites: ${sentError.message}`);
 
-  const sentInvites = (sentInvitesData as RoomInviteRow[] | null) ?? [];
-  const sentInviteIds = sentInvites.map((row) => row.id);
-  const { data: sentRecipientsData, error: sentRecipientsError } = sentInviteIds.length
-    ? await db().from("room_invite_recipients").select("*").in("invite_id", sentInviteIds)
-    : { data: [], error: null };
-  if (sentRecipientsError) {
-    throw new Error(`Failed to list sent invite recipients: ${sentRecipientsError.message}`);
-  }
+  const sent = await Promise.all(
+    ((sentInvitesData as SentRoomInviteLifecycleRow[] | null) ?? []).map(
+      async ({ room, recipients, ...invite }) => {
+        if (
+          !room ||
+          Array.isArray(room) ||
+          room.room_id !== invite.room_id ||
+          !["lobby", "live", "ended"].includes(room.status) ||
+          !Array.isArray(recipients) ||
+          recipients.some((recipient) => recipient.invite_id !== invite.id)
+        ) {
+          throw new Error("Failed to load sent invite lifecycle");
+        }
+        const projectedRecipients = recipients.map((recipient) => {
+          const status = roomInviteRecipientLifecycleStatus({
+            recipientStatus: recipient.status,
+            respondedAt: recipient.responded_at,
+            roomStatus: room.status,
+          });
+          return status === recipient.status
+            ? recipient
+            : {
+                ...recipient,
+                status,
+                updated_at:
+                  status === "expired"
+                    ? (room.ended_at ?? recipient.updated_at)
+                    : recipient.updated_at,
+              };
+        });
+        return inviteView(invite, projectedRecipients);
+      },
+    ),
+  );
 
   return {
-    inbox: await inviteViews(
-      (inboxInvitesData as RoomInviteRow[] | null) ?? [],
-      inboxRecipients
-    ),
-    sent: await inviteViews(sentInvites, (sentRecipientsData as RoomInviteRecipientRow[] | null) ?? []),
+    // Received invitations now live exclusively in the lifecycle-aware account inbox.
+    // Keep the empty field until all released clients can drop the legacy response shape.
+    inbox: [],
+    sent,
   };
 }
 
@@ -1428,29 +1508,7 @@ export async function acceptRoomInvite(
 ): Promise<RoomInvite> {
   assertUuid(viewerUserId, "viewerUserId");
   assertUuid(inviteId, "inviteId");
-
-  const { invite, recipient } = await loadInviteForRecipient(viewerUserId, inviteId);
-  await assertInviteCanBeAccepted(viewerUserId, invite);
-  if (recipient.status === "accepted") {
-    return inviteView(invite, [recipient]);
-  }
-  if (recipient.status !== "pending") {
-    throw new SocialApiError(409, "Invite is not pending");
-  }
-
-  const { data, error } = await db()
-    .from("room_invite_recipients")
-    .update({
-      status: "accepted",
-      responded_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("invite_id", inviteId)
-    .eq("recipient_user_id", viewerUserId)
-    .select()
-    .single();
-  if (error) throw new Error(`Failed to accept invite: ${error.message}`);
-  return inviteView(invite, [data as RoomInviteRecipientRow]);
+  return respondToRoomInvite(viewerUserId, inviteId, "accept");
 }
 
 export async function declineRoomInvite(
@@ -1459,56 +1517,35 @@ export async function declineRoomInvite(
 ): Promise<RoomInvite> {
   assertUuid(viewerUserId, "viewerUserId");
   assertUuid(inviteId, "inviteId");
-
-  const { invite, recipient } = await loadInviteForRecipient(viewerUserId, inviteId);
-  if (recipient.status === "declined" || recipient.status === "expired") {
-    return inviteView(invite, [recipient]);
-  }
-  if (recipient.status === "accepted") {
-    throw new SocialApiError(409, "Accepted invites cannot be declined");
-  }
-
-  const status: InviteRecipientStatus = inviteExpired(invite) ? "expired" : "declined";
-  const { data, error } = await db()
-    .from("room_invite_recipients")
-    .update({
-      status,
-      responded_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("invite_id", inviteId)
-    .eq("recipient_user_id", viewerUserId)
-    .select()
-    .single();
-  if (error) throw new Error(`Failed to decline invite: ${error.message}`);
-  return inviteView(invite, [data as RoomInviteRecipientRow]);
+  return respondToRoomInvite(viewerUserId, inviteId, "decline");
 }
 
-function inviteExpired(invite: RoomInviteRow): boolean {
-  return new Date(invite.expires_at).getTime() <= Date.now();
-}
-
-async function assertInviteCanBeAccepted(
+async function respondToRoomInvite(
   viewerUserId: string,
-  invite: RoomInviteRow
-): Promise<void> {
-  if (inviteExpired(invite)) {
-    await db()
-      .from("room_invite_recipients")
-      .update({
-        status: "expired",
-        updated_at: new Date().toISOString(),
-      })
-      .eq("invite_id", invite.id)
-      .eq("recipient_user_id", viewerUserId)
-      .eq("status", "pending");
-    throw new SocialApiError(410, "Invite has expired");
+  inviteId: string,
+  action: "accept" | "decline",
+): Promise<RoomInvite> {
+  const { data, error } = await db().rpc("respond_room_invite_v2", {
+    p_user_id: viewerUserId,
+    p_invite_id: inviteId,
+    p_action: action,
+    p_now: new Date().toISOString(),
+  });
+  if (error) {
+    throw new Error(`Failed to ${action} invite: ${error.message}`);
   }
 
-  const friendship = await getFriendshipBetween(viewerUserId, invite.sender_user_id);
-  if (friendship?.status !== "accepted") {
-    throw new SocialApiError(403, "This invite is no longer available");
+  const rows = Array.isArray(data) ? data : [data];
+  const row =
+    rows.length === 1 && rows[0] && typeof rows[0] === "object"
+      ? (rows[0] as RoomInviteResponseOutcomeRow)
+      : null;
+  const outcome = resolveRoomInviteResponseOutcome(row, action, inviteId);
+  const { invite, recipient } = await loadInviteForRecipient(viewerUserId, inviteId);
+  if (recipient.status !== outcome.recipientStatus) {
+    throw new Error("Failed to respond to invite: inconsistent database state");
   }
+  return inviteView(invite, [recipient]);
 }
 
 async function loadInviteForRecipient(
@@ -1536,22 +1573,6 @@ async function loadInviteForRecipient(
     invite: inviteData as RoomInviteRow,
     recipient: recipientData as RoomInviteRecipientRow,
   };
-}
-
-async function inviteViews(
-  invites: RoomInviteRow[],
-  recipients: RoomInviteRecipientRow[]
-): Promise<RoomInvite[]> {
-  const recipientsByInviteId = new Map<string, RoomInviteRecipientRow[]>();
-  for (const recipient of recipients) {
-    const list = recipientsByInviteId.get(recipient.invite_id) ?? [];
-    list.push(recipient);
-    recipientsByInviteId.set(recipient.invite_id, list);
-  }
-
-  return Promise.all(
-    invites.map((invite) => inviteView(invite, recipientsByInviteId.get(invite.id) ?? []))
-  );
 }
 
 async function inviteView(

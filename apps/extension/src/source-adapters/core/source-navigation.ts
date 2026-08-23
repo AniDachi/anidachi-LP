@@ -1,4 +1,9 @@
-import type { WatchSourceDescriptor } from "@anidachi/protocol";
+import {
+	canonicalizeRoomSourceUrl,
+	isLegacyRoomSourceFingerprintAlias,
+	type RoomSourceProvider,
+	type WatchSourceDescriptor,
+} from "@anidachi/protocol";
 import type {
 	EnsureSourceResult,
 	SourceAdapterDefinition,
@@ -9,6 +14,58 @@ import type {
 type DefinitionLookup = (
 	provider: SourceProvider,
 ) => SourceAdapterDefinition | null;
+
+type CanonicalSourceNavigationResult =
+	| { ok: true; alreadyCurrent: boolean; target: URL }
+	| {
+			ok: false;
+			reason: "provider-mismatch" | "invalid-source" | "unsupported-route";
+	  };
+
+export function resolveCanonicalSourceNavigation(
+	source: WatchSourceDescriptor,
+	currentHref: string,
+	provider: RoomSourceProvider,
+): CanonicalSourceNavigationResult {
+	if (source.provider !== provider) {
+		return { ok: false, reason: "provider-mismatch" };
+	}
+
+	const sourceUrl = canonicalizeRoomSourceUrl(source.sourceUrl, provider);
+	const canonicalUrl = canonicalizeRoomSourceUrl(source.canonicalUrl, provider);
+	if (!sourceUrl.ok) return navigationRejection(sourceUrl.code);
+	if (!canonicalUrl.ok) return navigationRejection(canonicalUrl.code);
+	if (
+		sourceUrl.source.canonicalUrl !== canonicalUrl.source.canonicalUrl ||
+		sourceUrl.source.videoFingerprint !== canonicalUrl.source.videoFingerprint ||
+		(
+			source.videoFingerprint !== sourceUrl.source.videoFingerprint &&
+			!isLegacyRoomSourceFingerprintAlias(source.sourceUrl, source.videoFingerprint)
+		)
+	) {
+		return { ok: false, reason: "invalid-source" };
+	}
+
+	const current = canonicalizeRoomSourceUrl(currentHref, provider);
+	return {
+		ok: true,
+		alreadyCurrent:
+			current.ok && current.source.canonicalUrl === sourceUrl.source.canonicalUrl,
+		target: new URL(sourceUrl.source.canonicalUrl),
+	};
+}
+
+function navigationRejection(
+	code: Exclude<ReturnType<typeof canonicalizeRoomSourceUrl>, { ok: true }>["code"],
+): Extract<CanonicalSourceNavigationResult, { ok: false }> {
+	if (code === "PROVIDER_MISMATCH" || code === "UNSUPPORTED_PROVIDER") {
+		return { ok: false, reason: "provider-mismatch" };
+	}
+	if (code === "UNSUPPORTED_ROUTE") {
+		return { ok: false, reason: "unsupported-route" };
+	}
+	return { ok: false, reason: "invalid-source" };
+}
 
 export async function ensureSourceForProvider(
 	source: WatchSourceDescriptor,

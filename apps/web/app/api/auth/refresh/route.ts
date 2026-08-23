@@ -12,7 +12,7 @@ async function refreshSessionFromCookie(request: NextRequest) {
     return null;
   }
 
-  return refreshTokenPair(refreshToken);
+  return refreshTokenPair(refreshToken, "website");
 }
 
 function loginRedirectUrl(request: NextRequest, nextPath: string): URL {

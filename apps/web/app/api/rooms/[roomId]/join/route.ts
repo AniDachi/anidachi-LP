@@ -8,6 +8,10 @@ import {
   updateRoom,
 } from "@/lib/anidachi-auth/db";
 import { signRoomToken } from "@/lib/anidachi-auth/jwt";
+import {
+  buildRoomSourceLaunchUrl,
+  deriveDurableRoomSource,
+} from "@/lib/anidachi-auth/room-source";
 
 export const dynamic = "force-dynamic";
 
@@ -16,20 +20,6 @@ function wantsJson(request: NextRequest): boolean {
     request.nextUrl.searchParams.get("format") === "json" ||
     request.headers.get("accept")?.includes("application/json") === true
   );
-}
-
-function buildLaunchUrl(sourceUrl: string, roomId: string): string | null {
-  try {
-    const url = new URL(sourceUrl);
-    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
-
-    const params = new URLSearchParams(url.hash.replace(/^#/, ""));
-    params.set("anidachiRoom", roomId);
-    url.hash = params.toString();
-    return url.toString();
-  } catch {
-    return null;
-  }
 }
 
 export async function POST(
@@ -74,7 +64,10 @@ export async function POST(
     return NextResponse.json({ roomToken, capabilities });
   }
 
-  const launchUrl = room.source_url ? buildLaunchUrl(room.source_url, roomId) : null;
+  const source = deriveDurableRoomSource(room);
+  const launchUrl = source
+    ? buildRoomSourceLaunchUrl(source.source, roomId)
+    : null;
   return NextResponse.redirect(
     launchUrl ?? new URL(`/room/${encodeURIComponent(roomId)}?joined=1`, request.url),
     303

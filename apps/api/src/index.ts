@@ -4,15 +4,20 @@ import {
   MAX_ROOM_ID_CHARS,
   type ClientEvent,
   type Participant,
+  type RoomSourcePersistenceCallback,
   type RoomUsageSummary,
   type ServerEvent,
 } from "@anidachi/protocol";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { verifyRoomToken, type VerifiedRoomToken } from "./auth";
+import {
+  signRoomHistoryAttestation,
+  verifyRoomToken,
+  type VerifiedRoomToken,
+} from "./auth";
 import { createIceServersPayload } from "./ice-servers";
 import { hasValidInternalAuthorization } from "./internal-auth";
-import { notifyWebRoomEnded } from "./internal-web-client";
+import { notifyWebRoomEnded, notifyWebRoomSource } from "./internal-web-client";
 import {
   endedRoomTombstone,
   parseEndRoomCommand,
@@ -59,10 +64,20 @@ import {
 } from "./room-socket-attachment";
 import {
   RoomRateLimiter,
+  RoomSubjectRateLimiters,
   type RoomEventClass,
   type RoomRateLimitDecision,
 } from "./room-rate-limit";
+import { RoomAdmission } from "./room-admission";
 import { RoomState } from "./room-state";
+import {
+  ROOM_SOURCE_RETRY_BASE_MS,
+  acknowledgeStoredRoomSourceAttempt,
+  claimStoredRoomSourceAttempt,
+  enqueueStoredRoomSource,
+  ensureStoredRoomSourcePending,
+  readStoredRoomSourcePersistence,
+} from "./room-source-persistence";
 import {
   emitRoomTelemetry,
   type AnalyticsEngineDataset,
@@ -151,48 +166,6 @@ app.get("/rooms/:roomId/ice-servers", async (c) => {
   if (!verified) {
     return c.json({ error: "INVALID_ROOM_TOKEN", message: "Invalid or expired room token" }, 401);
   }
-
-  try {
-    return c.json(
-      await createIceServersPayload(c.env, {
-        now: Date.now(),
-        roomId,
-        userId: verified.sub,
-      }),
-    );
-  } catch (error) {
-    console.error("[Anidachi] ICE server generation failed", error);
-    return c.json(
-      {
-        error: "ICE_SERVER_GENERATION_FAILED",
-        message: error instanceof Error ? error.message : "Failed to generate ICE servers",
-      },
-      502,
-    );
-  }
-});
-
-app.get("/ice-servers", async (c) => {
-  c.header("Cache-Control", "no-store");
-  c.header("X-Anidachi-Auth-Fallback", "query");
-  const roomToken = c.req.query("roomToken");
-  const roomId = c.req.query("roomId");
-  if (!roomToken || !roomId) {
-    return c.json(
-      { error: "ROOM_TOKEN_REQUIRED", message: "roomToken and roomId are required" },
-      401,
-    );
-  }
-
-  const verified = await verifyRoomToken(roomToken, roomId, c.env);
-  if (!verified) {
-    return c.json({ error: "INVALID_ROOM_TOKEN", message: "Invalid or expired room token" }, 401);
-  }
-  emitRoomTelemetry(
-    c.env.ROOM_ANALYTICS,
-    { env: c.env.ANIDACHI_ENV ?? "local", roomId },
-    { name: "ice_query_auth_fallback" },
-  );
 
   try {
     return c.json(
@@ -367,12 +340,17 @@ export class RoomDurableObject {
   private readonly socketsByParticipant = new Map<string, WebSocket>();
   private readonly verifiedBySocket = new Map<WebSocket, VerifiedRoomToken>();
   private readonly sessionIdBySocket = new Map<WebSocket, string | undefined>();
-  private readonly rateLimiterBySocket = new Map<WebSocket, RoomRateLimiter>();
+  private readonly admissionIdBySocket = new Map<WebSocket, string>();
+  private readonly admissionTimeoutBySocket = new Map<WebSocket, ReturnType<typeof setTimeout>>();
+  private admission: RoomAdmission;
+  private readonly rateLimitersBySubject = new RoomSubjectRateLimiters();
   private nextP2PServerSeq = 1;
   private endedTombstone: ReturnType<typeof endedRoomTombstone> | null;
   private roomMeter: RoomMeterState;
   private roomEndQueue: Promise<void> = Promise.resolve();
   private roomEndInProgress = false;
+  private roomSourceDeliveryQueue: Promise<void> = Promise.resolve();
+  private roomSourceRepairNeeded = false;
 
   constructor(
     private readonly state: DurableObjectState,
@@ -384,6 +362,9 @@ export class RoomDurableObject {
     this.endedTombstone = readEndedRoomTombstone(state.storage);
     this.roomMeter = readStoredRoomMeter(state.storage) ?? createRoomMeterState();
     this.room = new RoomState(roomId, undefined, readStoredRoomState(state.storage) ?? undefined);
+    this.admission = new RoomAdmission({
+      maxParticipants: this.room.roomCapabilities.maxParticipants,
+    });
     const replayMetadata = this.endedTombstone ? [] : readStoredP2PReplayMetadata(state.storage);
     const latestStoredSeq = replayMetadata.at(-1)?.serverSeq ?? 0;
     for (const item of replayMetadata) {
@@ -399,6 +380,11 @@ export class RoomDurableObject {
     // signals that cannot be replayed.
     this.p2pSignalBuffer.markReplayGapThrough(this.nextP2PServerSeq - 1);
     if (!this.endedTombstone) {
+      state.blockConcurrencyWhile(async () => {
+        if (await this.ensureCurrentRoomSourcePending()) {
+          state.waitUntil(this.runRoomSourceDeliveryExclusively(false));
+        }
+      });
       state.setWebSocketAutoResponse(
         new WebSocketRequestResponsePair(HIBERNATION_KEEPALIVE_PING, HIBERNATION_KEEPALIVE_PONG),
       );
@@ -424,6 +410,7 @@ export class RoomDurableObject {
   }
 
   private restoreWebSocketsFromAttachments(): void {
+    const now = Date.now();
     for (const socket of this.state.getWebSockets()) {
       const attachment = parseRoomSocketAttachment(
         socket.deserializeAttachment(),
@@ -437,6 +424,33 @@ export class RoomDurableObject {
       this.verifiedBySocket.set(socket, attachmentToVerifiedRoomToken(attachment));
       if (attachment.verified.capabilities) {
         this.room.setCapabilities(attachment.verified.capabilities);
+        this.admission.setMaxParticipants(attachment.verified.capabilities.maxParticipants);
+        this.rateLimitersBySubject.setMaxParticipants(
+          attachment.verified.capabilities.maxParticipants,
+        );
+      }
+      const admissionId = crypto.randomUUID();
+      this.admissionIdBySocket.set(socket, admissionId);
+      if (!attachment.admission.joined) {
+        if (now >= attachment.admission.deadlineAt || !this.admission.restore({
+          deadlineAt: attachment.admission.deadlineAt,
+          joined: false,
+          socketId: admissionId,
+          subject: attachment.verified.sub,
+        })) {
+          this.admissionIdBySocket.delete(socket);
+          this.verifiedBySocket.delete(socket);
+          socket.close(4001, "Room JOIN admission expired");
+          continue;
+        }
+        this.scheduleAdmissionTimeout(socket, attachment.admission.deadlineAt);
+      } else {
+        this.admission.restore({
+          deadlineAt: attachment.admission.deadlineAt,
+          joined: true,
+          socketId: admissionId,
+          subject: attachment.verified.sub,
+        });
       }
       if (!attachment.participant) {
         continue;
@@ -482,6 +496,59 @@ export class RoomDurableObject {
       return;
     }
     this.writeSocketAttachment(socket, updateRoomSocketAttachment(attachment, { lastSeenAt: Date.now() }));
+  }
+
+  private scheduleAdmissionTimeout(socket: WebSocket, deadlineAt: number): void {
+    const timeout = setTimeout(() => {
+      this.expirePendingAdmission(socket, deadlineAt);
+    }, Math.max(0, deadlineAt - Date.now()));
+    this.admissionTimeoutBySocket.set(socket, timeout);
+  }
+
+  private clearAdmissionTimeout(socket: WebSocket): void {
+    const timeout = this.admissionTimeoutBySocket.get(socket);
+    if (timeout !== undefined) clearTimeout(timeout);
+    this.admissionTimeoutBySocket.delete(socket);
+  }
+
+  private releaseAdmission(socket: WebSocket): boolean {
+    this.clearAdmissionTimeout(socket);
+    const admissionId = this.admissionIdBySocket.get(socket);
+    this.admissionIdBySocket.delete(socket);
+    return admissionId ? this.admission.release(admissionId) : false;
+  }
+
+  private expirePendingAdmission(socket: WebSocket, deadlineAt: number): void {
+    const attachment = this.getSocketAttachment(socket);
+    if (!attachment || attachment.admission.joined || attachment.admission.deadlineAt !== deadlineAt) {
+      return;
+    }
+    this.send(socket, {
+      type: "ERROR",
+      code: "JOIN_DEADLINE_EXCEEDED",
+      message: "Join the room within 10 seconds of connecting.",
+    });
+    this.releaseAdmission(socket);
+    try {
+      socket.close(4001, "Room JOIN admission expired");
+    } catch {
+      /* stale socket */
+    }
+  }
+
+  private hasJoinDeadlineElapsed(socket: WebSocket, now = Date.now()): boolean {
+    const attachment = this.getSocketAttachment(socket);
+    if (!attachment || attachment.admission.joined) return false;
+    if (now < attachment.admission.deadlineAt) return false;
+    this.expirePendingAdmission(socket, attachment.admission.deadlineAt);
+    return true;
+  }
+
+  private hasSocketForSubject(subject: string): boolean {
+    for (const verified of this.verifiedBySocket.values()) {
+      if (verified.sub === subject) return true;
+    }
+    return false;
   }
 
   private persistRoomState(): void {
@@ -554,6 +621,77 @@ export class RoomDurableObject {
     }
   }
 
+  private runRoomSourceDeliveryExclusively(force: boolean): Promise<boolean> {
+    const delivery = this.roomSourceDeliveryQueue.then(
+      () => this.deliverPendingRoomSource(force),
+      () => this.deliverPendingRoomSource(force),
+    );
+    this.roomSourceDeliveryQueue = delivery.then(
+      () => undefined,
+      () => undefined,
+    );
+    return delivery;
+  }
+
+  private currentRoomSourceCallback(): RoomSourcePersistenceCallback | null {
+    const source = this.room.currentDurableSource;
+    return source
+      ? {
+          roomId: this.room.roomId,
+          sourceGeneration: this.room.sourceGeneration,
+          source,
+        }
+      : null;
+  }
+
+  private async ensureCurrentRoomSourcePending(): Promise<boolean> {
+    const callback = this.currentRoomSourceCallback();
+    if (!callback) {
+      this.roomSourceRepairNeeded = false;
+      return true;
+    }
+    try {
+      await ensureStoredRoomSourcePending(
+        this.state.storage,
+        callback,
+        Date.now(),
+      );
+      this.roomSourceRepairNeeded = false;
+      return true;
+    } catch {
+      this.roomSourceRepairNeeded = true;
+      return false;
+    }
+  }
+
+  private async deliverPendingRoomSource(force: boolean): Promise<boolean> {
+    try {
+      if (!await this.ensureCurrentRoomSourcePending()) return false;
+      const attempt = await claimStoredRoomSourceAttempt(
+        this.state.storage,
+        Date.now(),
+        { force },
+      );
+      if (!attempt) {
+        return await readStoredRoomSourcePersistence(this.state.storage) === null;
+      }
+      await notifyWebRoomSource(
+        this.env,
+        this.room.roomId,
+        attempt.callback,
+      );
+      await acknowledgeStoredRoomSourceAttempt(
+        this.state.storage,
+        attempt.callback.sourceGeneration,
+      );
+      return await readStoredRoomSourcePersistence(this.state.storage) === null;
+    } catch {
+      // A completed claim already committed its retry deadline before I/O;
+      // storage failures remain fail-closed and cannot allow room finalization.
+      return false;
+    }
+  }
+
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
     if (request.method === "POST" && url.pathname === "/internal/end") {
@@ -599,6 +737,8 @@ export class RoomDurableObject {
     }
     if (verified.capabilities) {
       this.room.setCapabilities(verified.capabilities);
+      this.admission.setMaxParticipants(verified.capabilities.maxParticipants);
+      this.rateLimitersBySubject.setMaxParticipants(verified.capabilities.maxParticipants);
     }
     const tombstoneAfterVerification = readEndedRoomTombstone(this.state.storage);
     if (tombstoneAfterVerification) {
@@ -625,18 +765,50 @@ export class RoomDurableObject {
       return Response.json({ error: "ROOM_ENDING" }, { status: 409 });
     }
 
-    const pair = new WebSocketPair();
-    const client = pair[0];
-    const server = pair[1];
-    this.state.acceptWebSocket(server);
-    this.writeSocketAttachment(
-      server,
-      createRoomSocketAttachment(this.room.roomId, verified),
-    );
-    this.verifiedBySocket.set(server, verified);
-    this.track("ws_open", { role: verified.role });
+    const admissionId = crypto.randomUUID();
+    const admittedAt = Date.now();
+    const reservation = this.admission.reserve(verified.sub, admissionId, admittedAt);
+    if (!reservation.allowed) {
+      return Response.json({ error: "ROOM_ADMISSION_LIMIT" }, { status: 429 });
+    }
 
-    return new Response(null, { status: 101, webSocket: client });
+    let server: WebSocket | undefined;
+    let accepted = false;
+    try {
+      const pair = new WebSocketPair();
+      const client = pair[0];
+      server = pair[1];
+      this.state.acceptWebSocket(server);
+      accepted = true;
+      this.writeSocketAttachment(
+        server,
+        createRoomSocketAttachment(this.room.roomId, verified, admittedAt, {
+          deadlineAt: reservation.deadlineAt,
+          joined: false,
+        }),
+      );
+      this.admissionIdBySocket.set(server, admissionId);
+      this.scheduleAdmissionTimeout(server, reservation.deadlineAt);
+      this.verifiedBySocket.set(server, verified);
+      this.track("ws_open", { role: verified.role });
+
+      return new Response(null, { status: 101, webSocket: client });
+    } catch {
+      if (server && this.admissionIdBySocket.has(server)) {
+        this.releaseAdmission(server);
+        this.verifiedBySocket.delete(server);
+      } else {
+        this.admission.release(admissionId);
+      }
+      if (accepted && server) {
+        try {
+          server.close(1011, "Room admission setup failed");
+        } catch {
+          /* stale socket */
+        }
+      }
+      return Response.json({ error: "ROOM_ADMISSION_SETUP_FAILED" }, { status: 503 });
+    }
   }
 
   private endRoom(command: EndRoomCommand): Promise<Response> {
@@ -654,9 +826,22 @@ export class RoomDurableObject {
       });
     }
 
+    this.roomEndInProgress = true;
     const meteredAt = Date.now();
     const usage = this.stopRoomUsage(meteredAt);
-    this.roomEndInProgress = true;
+    const sourceDurable = await this.runRoomSourceDeliveryExclusively(true);
+    if (!sourceDurable) {
+      this.reconcileRoomUsage(Date.now());
+      this.roomEndInProgress = false;
+      return Response.json(
+        {
+          error: "ROOM_END_CALLBACK_FAILED",
+          message: "Room finalization callback failed",
+          retryable: true,
+        },
+        { status: 502 },
+      );
+    }
     try {
       await notifyWebRoomEnded(this.env, this.room.roomId, {
         ...command,
@@ -716,7 +901,13 @@ export class RoomDurableObject {
     this.socketsByParticipant.clear();
     this.verifiedBySocket.clear();
     this.sessionIdBySocket.clear();
-    this.rateLimiterBySocket.clear();
+    for (const timeout of this.admissionTimeoutBySocket.values()) clearTimeout(timeout);
+    this.admissionTimeoutBySocket.clear();
+    this.admissionIdBySocket.clear();
+    this.admission = new RoomAdmission({
+      maxParticipants: this.room.roomCapabilities.maxParticipants,
+    });
+    this.rateLimitersBySubject.clear();
   }
 
   async webSocketMessage(socket: WebSocket, raw: string | ArrayBuffer): Promise<void> {
@@ -750,9 +941,22 @@ export class RoomDurableObject {
       name: error instanceof Error ? error.name : "WebSocketError",
     });
     await this.handleClose(socket);
+    try {
+      socket.close(1011, "Room WebSocket error");
+    } catch {
+      /* already closed */
+    }
   }
 
   async alarm(): Promise<void> {
+    const sourceDurable = await this.runRoomSourceDeliveryExclusively(false);
+    if (!sourceDurable) {
+      const pending = await readStoredRoomSourcePersistence(this.state.storage);
+      await this.state.storage.setAlarm(
+        pending?.nextAttemptAt ?? Date.now() + ROOM_SOURCE_RETRY_BASE_MS,
+      );
+      return;
+    }
     await this.runRoomEndExclusively(() => this.runAlarmExclusive());
   }
 
@@ -817,8 +1021,17 @@ export class RoomDurableObject {
   }
 
   private async handleMessage(socket: WebSocket, raw: string | ArrayBuffer): Promise<void> {
-    const limiter = this.rateLimiterBySocket.get(socket) ?? new RoomRateLimiter();
-    this.rateLimiterBySocket.set(socket, limiter);
+    if (this.hasJoinDeadlineElapsed(socket)) return;
+    const verified = this.verifiedBySocket.get(socket);
+    if (!verified) {
+      socket.close(4000, "Invalid Anidachi socket state");
+      return;
+    }
+    const limiter = this.rateLimitersBySubject.forSubject(verified.sub);
+    if (!limiter) {
+      socket.close(1008, "Room event rate capacity exceeded");
+      return;
+    }
     const frameRateLimit = consumeRoomFrameBoundary(socket, limiter, raw);
     if (!frameRateLimit) {
       return;
@@ -862,7 +1075,7 @@ export class RoomDurableObject {
         await this.handleJoin(socket, event);
         return;
       case "HOST_STATE":
-        this.handleHostState(socket, event);
+        await this.handleHostState(socket, event);
         return;
       case "REACTION":
         this.handleReaction(socket, event);
@@ -915,6 +1128,7 @@ export class RoomDurableObject {
     socket: WebSocket,
     event: Extract<ClientEvent, { type: "JOIN" }>,
   ): Promise<void> {
+    if (this.hasJoinDeadlineElapsed(socket)) return;
     const verified = this.verifiedBySocket.get(socket);
     if (!verified) {
       this.send(socket, {
@@ -922,6 +1136,13 @@ export class RoomDurableObject {
         code: "AUTH_REQUIRED",
         message: "Room token is required before joining",
       });
+      return;
+    }
+
+    const admissionId = this.admissionIdBySocket.get(socket);
+    const admission = admissionId ? this.admission.canJoin(admissionId, Date.now()) : null;
+    if (!admission?.allowed) {
+      this.expirePendingAdmission(socket, this.getSocketAttachment(socket)?.admission.deadlineAt ?? 0);
       return;
     }
 
@@ -986,49 +1207,137 @@ export class RoomDurableObject {
     }
 
     const existingSocket = this.socketsByParticipant.get(serverParticipant.id);
+    const attachment = this.getSocketAttachment(socket);
+    if (!attachment) {
+      this.send(socket, {
+        type: "ERROR",
+        code: "JOIN_COMMIT_FAILED",
+        message: "Unable to commit this room join. Please reconnect and try again.",
+      });
+      this.releaseAdmission(socket);
+      try {
+        socket.close(1011, "Room admission attachment is unavailable");
+      } catch {
+        /* stale socket */
+      }
+      return;
+    }
+
+    // Keep the existing participant socket and the pending admission intact
+    // until both durable writes have succeeded. A failed attachment or room
+    // persistence write must leave this socket eligible to retry before its
+    // original absolute deadline.
+    const roomBeforeJoin = this.room.toSnapshot();
+    const joined = this.room.join(serverParticipant);
+    const commitAt = Date.now();
+    const commitAdmission = admissionId ? this.admission.canJoin(admissionId, commitAt) : null;
+    if (!commitAdmission?.allowed) {
+      this.room = new RoomState(this.room.roomId, undefined, roomBeforeJoin);
+      this.expirePendingAdmission(socket, attachment.admission.deadlineAt);
+      return;
+    }
+
+    const patch: Parameters<typeof updateRoomSocketAttachment>[1] = {
+      admission: { ...attachment.admission, joined: true },
+      lastSeenAt: commitAt,
+      participant: joined,
+    };
+    if (event.participantSessionId !== undefined) {
+      patch.participantSessionId = event.participantSessionId;
+    }
+    const joinedAttachment = updateRoomSocketAttachment(attachment, patch);
+
+    try {
+      this.writeSocketAttachment(socket, joinedAttachment);
+      this.persistRoomState();
+    } catch {
+      this.room = new RoomState(this.room.roomId, undefined, roomBeforeJoin);
+      try {
+        this.writeSocketAttachment(socket, attachment);
+        this.persistRoomState();
+      } catch {
+        this.releaseAdmission(socket);
+        try {
+          socket.close(1011, "Room join rollback failed");
+        } catch {
+          /* stale socket */
+        }
+        return;
+      }
+      this.send(socket, {
+        type: "ERROR",
+        code: "JOIN_COMMIT_FAILED",
+        message: "Unable to commit this room join. Please retry before the join deadline.",
+      });
+      return;
+    }
+
+    const joinedAdmission = admissionId ? this.admission.join(admissionId, commitAt) : null;
+    if (!joinedAdmission?.allowed) {
+      // `canJoin` above and this call share the same timestamp, so this is only
+      // defensive against an unexpected in-memory admission inconsistency.
+      this.room = new RoomState(this.room.roomId, undefined, roomBeforeJoin);
+      try {
+        this.writeSocketAttachment(socket, attachment);
+        this.persistRoomState();
+      } catch {
+        this.releaseAdmission(socket);
+        try {
+          socket.close(1011, "Room join rollback failed");
+        } catch {
+          /* stale socket */
+        }
+        return;
+      }
+      this.expirePendingAdmission(socket, attachment.admission.deadlineAt);
+      return;
+    }
+    this.clearAdmissionTimeout(socket);
+
+    const existingSessionId = existingSocket && existingSocket !== socket
+      ? this.sessionIdBySocket.get(existingSocket)
+      : undefined;
     if (existingSocket && existingSocket !== socket) {
-      const existingSessionId = this.sessionIdBySocket.get(existingSocket);
+      this.participantsBySocket.delete(existingSocket);
+      this.verifiedBySocket.delete(existingSocket);
+      this.sessionIdBySocket.delete(existingSocket);
+    }
+
+    // Install the replacement before attempting best-effort retirement of the
+    // incumbent. A stale socket can throw from send/close, but it must never
+    // prevent the already durable replacement from becoming authoritative.
+    this.participantsBySocket.set(socket, joined.id);
+    this.socketsByParticipant.set(joined.id, socket);
+    this.sessionIdBySocket.set(socket, event.participantSessionId);
+
+    if (existingSocket && existingSocket !== socket) {
       const sameSession =
         event.participantSessionId !== undefined &&
         existingSessionId === event.participantSessionId;
 
-      this.participantsBySocket.delete(existingSocket);
-      this.verifiedBySocket.delete(existingSocket);
-      this.sessionIdBySocket.delete(existingSocket);
-
-      if (sameSession) {
-        // Same tab reconnecting: silently retire the stale socket.
-        existingSocket.close(4000, "Replaced by a newer Anidachi session");
-      } else {
-        // A different tab/device took the session over. Tell the displaced
-        // socket terminally so it stops instead of reconnect-fighting (one
-        // active session). The displaced client suppresses reconnect on this.
-        this.track("session_taken_over");
-        this.send(existingSocket, {
-          type: "ERROR",
-          code: "SESSION_TAKEN_OVER",
-          message: "This room was opened in another tab or device.",
-        });
-        existingSocket.close(4002, "Session taken over");
+      try {
+        if (sameSession) {
+          // Same tab reconnecting: silently retire the stale socket.
+          existingSocket.close(4000, "Replaced by a newer Anidachi session");
+        } else {
+          // A different tab/device took the session over. Tell the displaced
+          // socket terminally so it stops instead of reconnect-fighting (one
+          // active session). The displaced client suppresses reconnect on this.
+          this.track("session_taken_over");
+          this.send(existingSocket, {
+            type: "ERROR",
+            code: "SESSION_TAKEN_OVER",
+            message: "This room was opened in another tab or device.",
+          });
+          existingSocket.close(4002, "Session taken over");
+        }
+      } catch {
+        // The incumbent is no longer authoritative; continue the committed
+        // replacement's snapshot/history path even if stale-socket cleanup
+        // cannot be observed by the platform.
       }
     }
 
-    const joined = this.room.join(serverParticipant);
-    this.participantsBySocket.set(socket, joined.id);
-    this.socketsByParticipant.set(joined.id, socket);
-    this.sessionIdBySocket.set(socket, event.participantSessionId);
-    const attachment = this.getSocketAttachment(socket);
-    if (attachment) {
-      const patch: Parameters<typeof updateRoomSocketAttachment>[1] = {
-        lastSeenAt: Date.now(),
-        participant: joined,
-      };
-      if (event.participantSessionId !== undefined) {
-        patch.participantSessionId = event.participantSessionId;
-      }
-      this.writeSocketAttachment(socket, updateRoomSocketAttachment(attachment, patch));
-    }
-    this.persistRoomState();
     this.reconcileRoomUsage(Date.now());
     const lastSeenP2PServerSeq = event.lastSeenP2PServerSeq ?? 0;
     const replayAt = Date.now();
@@ -1040,6 +1349,7 @@ export class RoomDurableObject {
       ...this.currentRoomSnapshot(replayAt),
       ...(p2pResyncRequired ? { p2pResyncRequired: true } : {}),
     });
+    await this.sendRoomHistoryAuthority(socket);
     this.replayP2PSignals(socket, joined.id, lastSeenP2PServerSeq, replayAt);
     this.broadcast({ type: "PARTICIPANT_JOINED", participant: joined }, socket);
     this.track("join", { role: joined.role, value: this.room.participants.length });
@@ -1062,16 +1372,20 @@ export class RoomDurableObject {
     this.broadcast({ type: "REACTION", reaction: event.reaction });
   }
 
-  private handleHostState(
+  private async handleHostState(
     socket: WebSocket,
     event: Extract<ClientEvent, { type: "HOST_STATE" }>,
-  ): void {
+  ): Promise<void> {
     const userId = this.participantsBySocket.get(socket);
     const result = userId
       ? this.room.updateHostState(userId, event.state, event.source)
-      : { accepted: false, sourceChanged: false, code: "NOT_HOST" as const };
-    if (!userId || !result.accepted) {
-      const code = result.code ?? "NOT_HOST";
+      : {
+          accepted: false as const,
+          sourceChanged: false as const,
+          code: "NOT_HOST" as const,
+        };
+    if (!result.accepted) {
+      const code = result.code;
       this.send(socket, {
         type: "ERROR",
         code,
@@ -1084,9 +1398,24 @@ export class RoomDurableObject {
       });
       return;
     }
+    const normalizedState = result.state;
     this.persistRoomState();
 
-    if (result.sourceChanged && result.source) {
+    if (result.sourceChanged) {
+      try {
+        await enqueueStoredRoomSource(
+          this.state.storage,
+          {
+            roomId: this.room.roomId,
+            sourceGeneration: this.room.sourceGeneration,
+            source: result.durableSource,
+          },
+          Date.now(),
+        );
+        this.roomSourceRepairNeeded = false;
+      } catch {
+        this.roomSourceRepairNeeded = true;
+      }
       this.broadcast({
         type: "SOURCE_CHANGED",
         roomId: this.room.roomId,
@@ -1096,15 +1425,101 @@ export class RoomDurableObject {
         serverReceivedAt: Date.now(),
         source: result.source,
         ...(result.previousSource ? { previousSource: result.previousSource } : {}),
-        hostState: event.state,
+        hostState: normalizedState,
       });
-    } else if (result.sourceChanged) {
-      // If an old client sends a source-changing host state without a
-      // descriptor, still publish the generation bump so clients can fence P2P.
-      this.broadcast(this.currentRoomSnapshot());
+      this.state.waitUntil(this.runRoomSourceDeliveryExclusively(false));
+    } else if (this.roomSourceRepairNeeded) {
+      this.state.waitUntil(this.runRoomSourceDeliveryExclusively(false));
     }
 
-    this.broadcast({ type: "HOST_STATE", state: event.state }, socket);
+    if (result.sourceChanged) {
+      await this.refreshRoomHistoryAuthorities();
+    }
+
+    this.broadcast({ type: "HOST_STATE", state: normalizedState }, socket);
+  }
+
+  private async refreshRoomHistoryAuthorities(): Promise<void> {
+    for (const socket of this.socketsByParticipant.values()) {
+      await this.sendRoomHistoryAuthority(socket);
+    }
+  }
+
+  private async sendRoomHistoryAuthority(socket: WebSocket): Promise<void> {
+    if (this.endedTombstone || this.roomEndInProgress) {
+      return;
+    }
+
+    const lifecycleBeforeSigning = await readStoredRoomLifecycle(this.state.storage);
+    if (
+      lifecycleBeforeSigning?.status === "ending" ||
+      lifecycleBeforeSigning?.status === "ended" ||
+      this.endedTombstone ||
+      this.roomEndInProgress
+    ) {
+      return;
+    }
+
+    const verified = this.verifiedBySocket.get(socket);
+    const participantId = this.participantsBySocket.get(socket);
+    const participantSessionId = this.sessionIdBySocket.get(socket);
+    const attachment = this.getSocketAttachment(socket);
+    if (
+      !verified ||
+      !participantId ||
+      !participantSessionId ||
+      participantId !== verified.sub ||
+      this.socketsByParticipant.get(participantId) !== socket ||
+      !this.room.hasParticipant(participantId) ||
+      attachment?.participant?.id !== participantId ||
+      attachment.participantSessionId !== participantSessionId ||
+      attachment.verified.sub !== verified.sub
+    ) {
+      return;
+    }
+
+    const roomGeneration = this.room.roomGeneration;
+    const sourceGeneration = this.room.sourceGeneration;
+    let attestation: string;
+    try {
+      attestation = await signRoomHistoryAttestation(
+        {
+          sub: verified.sub,
+          roomId: this.room.roomId,
+          participantSessionId,
+          roomGeneration,
+          sourceGeneration,
+        },
+        this.env,
+      );
+    } catch {
+      return;
+    }
+
+    const lifecycleAfterSigning = await readStoredRoomLifecycle(this.state.storage);
+    if (
+      lifecycleAfterSigning?.status === "ending" ||
+      lifecycleAfterSigning?.status === "ended" ||
+      this.endedTombstone ||
+      this.roomEndInProgress ||
+      this.room.roomGeneration !== roomGeneration ||
+      this.room.sourceGeneration !== sourceGeneration ||
+      this.verifiedBySocket.get(socket)?.sub !== verified.sub ||
+      this.participantsBySocket.get(socket) !== participantId ||
+      this.sessionIdBySocket.get(socket) !== participantSessionId ||
+      this.socketsByParticipant.get(participantId) !== socket
+    ) {
+      return;
+    }
+
+    this.send(socket, {
+      type: "ROOM_HISTORY_AUTHORITY",
+      roomId: this.room.roomId,
+      participantSessionId,
+      roomGeneration,
+      sourceGeneration,
+      attestation,
+    });
   }
 
   private handlePlaybackCommand(
@@ -1398,9 +1813,13 @@ export class RoomDurableObject {
 
   private async handleClose(socket: WebSocket): Promise<void> {
     const participantId = this.participantsBySocket.get(socket);
+    const verified = this.verifiedBySocket.get(socket);
+    this.releaseAdmission(socket);
     this.verifiedBySocket.delete(socket);
     this.sessionIdBySocket.delete(socket);
-    this.rateLimiterBySocket.delete(socket);
+    if (verified && !this.hasSocketForSubject(verified.sub)) {
+      this.rateLimitersBySubject.releaseSubject(verified.sub);
+    }
     if (!participantId) {
       return;
     }

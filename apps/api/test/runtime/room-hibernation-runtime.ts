@@ -7,22 +7,35 @@ import {
 import { env } from "cloudflare:workers";
 import {
 	EMPTY_ROOM_TIMEOUT_MS,
+	ROOM_HISTORY_OFFLINE_GRACE_SECONDS,
 	type Participant,
 	type ServerEvent,
 	ServerEventSchema,
 	createEmptyRoomEndEventId,
 } from "@anidachi/protocol";
+import { jwtVerify } from "jose";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { signRoomTokenForTest } from "../../src/auth";
 
 const TEST_SECRET_ENV = { ANIDACHI_JWT_SECRET: "anidachi-runtime-test-secret" };
 const INTERNAL_SECRET = "anidachi-runtime-internal-secret";
 const ROOM_LIFECYCLE_META_KEY = "room_lifecycle";
+const ROOM_SOURCE_ACKNOWLEDGED_GENERATION_KEY =
+	"room_source_acknowledged_generation_v1";
+const ROOM_SOURCE_PENDING_KEY = "room_source_pending_v1";
 
 function stubSuccessfulWebFinalization() {
-	const callbackFetch = vi.fn(async () =>
-		Response.json({ ok: true, usageFinalized: true }),
-	);
+	const callbackFetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+		if (String(input).endsWith("/source")) {
+			const body = JSON.parse(String(init?.body)) as { sourceGeneration: number };
+			return Response.json({
+				ok: true,
+				outcome: "persisted",
+				sourceGeneration: body.sourceGeneration,
+			});
+		}
+		return Response.json({ ok: true, usageFinalized: true });
+	});
 	vi.stubGlobal("fetch", callbackFetch);
 	return callbackFetch;
 }
@@ -33,6 +46,735 @@ afterEach(async () => {
 });
 
 describe("RoomDurableObject WebSocket hibernation", () => {
+	it("rejects subject admission capacity before retaining a third pre-JOIN socket", async () => {
+		const roomId = `runtime-admission-capacity-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const first = await openRoomSocket(stub, { roomId, role: "member", userId: "member-1" });
+		const second = await openRoomSocket(stub, { roomId, role: "member", userId: "member-1" });
+		const token = await roomToken(roomId, "member", "member-1");
+
+		const rejected = await stub.fetch(
+			`https://room.test/?roomToken=${encodeURIComponent(token)}`,
+			{ headers: { Upgrade: "websocket" } },
+		);
+		expect(rejected.status).toBe(429);
+		expect(await runInDurableObject(stub, (_instance, state) => state.getWebSockets().length)).toBe(2);
+
+		first.close();
+		second.close();
+	});
+
+	it("releases pending admission after a socket error", async () => {
+		const roomId = `runtime-admission-rehydrate-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const first = await openRoomSocket(stub, { roomId, role: "member", userId: "member-1" });
+		const second = await openRoomSocket(stub, { roomId, role: "member", userId: "member-1" });
+
+		await runInDurableObject(stub, async (instance, state) => {
+			const socket = state.getWebSockets()[0];
+			if (!socket) throw new Error("expected pending socket");
+			await (instance as { webSocketError(socket: WebSocket, error: unknown): Promise<void> })
+				.webSocketError(socket, new Error("test socket error"));
+		});
+		const replacement = await openRoomSocket(stub, { roomId, role: "member", userId: "member-1" });
+
+		first.close();
+		second.close();
+		replacement.close();
+	});
+
+	it("releases pending admission after a socket close", async () => {
+		const roomId = `runtime-admission-close-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const first = await openRoomSocket(stub, { roomId, role: "member", userId: "member-1" });
+		const second = await openRoomSocket(stub, { roomId, role: "member", userId: "member-1" });
+
+		first.close();
+		await sleep(50);
+		const replacement = await openRoomSocket(stub, { roomId, role: "member", userId: "member-1" });
+
+		second.close();
+		replacement.close();
+	});
+
+	it("keeps a subject control budget across a close-gap replacement", async () => {
+		const roomId = `runtime-admission-rate-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const original = await openRoomSocket(stub, { roomId, role: "member", userId: "member-1" });
+		for (let index = 0; index < 39; index += 1) {
+			original.send({ type: "PING", roomId, sentAt: index });
+		}
+		await sleep(50);
+		original.close();
+		await sleep(900);
+		const replacement = await connectRoomClient(stub, {
+			roomId, role: "member", sessionId: "replacement-session", userId: "member-1",
+		});
+		replacement.send({ type: "PING", roomId, sentAt: 99 });
+		await replacement.waitFor(
+			(event) => event.type === "ERROR" && event.code === "RATE_LIMITED",
+			"replacement shares subject control budget",
+		);
+		replacement.close();
+	});
+
+	it("issues private history authority after durable join and refreshes it after hibernation", async () => {
+		stubSuccessfulWebFinalization();
+		const roomId = `runtime-history-authority-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const host = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-history-session", userId: "host-user",
+		});
+		const guest = await connectRoomClient(stub, {
+			roomId, role: "member", sessionId: "guest-history-session", userId: "guest-user",
+		});
+
+		const hostInitial = await host.waitFor(
+			(event) =>
+				event.type === "ROOM_HISTORY_AUTHORITY" &&
+				event.participantSessionId === "host-history-session",
+			"host initial history authority",
+		);
+		const guestInitial = await guest.waitFor(
+			(event) =>
+				event.type === "ROOM_HISTORY_AUTHORITY" &&
+				event.participantSessionId === "guest-history-session",
+			"guest initial history authority",
+		);
+		expect(hostInitial).toMatchObject({
+			type: "ROOM_HISTORY_AUTHORITY",
+			roomId,
+			participantSessionId: "host-history-session",
+			roomGeneration: 1,
+			sourceGeneration: 1,
+		});
+		expect(guestInitial).toMatchObject({
+			type: "ROOM_HISTORY_AUTHORITY",
+			roomId,
+			participantSessionId: "guest-history-session",
+			roomGeneration: 1,
+			sourceGeneration: 1,
+		});
+		if (hostInitial.type !== "ROOM_HISTORY_AUTHORITY") {
+			throw new Error("Expected host history authority");
+		}
+		const { payload, protectedHeader } = await jwtVerify(
+			hostInitial.attestation,
+			new TextEncoder().encode(TEST_SECRET_ENV.ANIDACHI_JWT_SECRET),
+			{
+				algorithms: ["HS256"],
+				issuer: "anidachi-worker",
+				audience: "anidachi-web-history",
+				requiredClaims: ["exp", "iat", "jti"],
+			},
+		);
+		expect(protectedHeader).toEqual({ alg: "HS256" });
+		expect(payload.exp).toBe(payload.iat! + ROOM_HISTORY_OFFLINE_GRACE_SECONDS);
+		expect(payload.jti).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+		expect(host.hasEvent(
+			(event) =>
+				event.type === "ROOM_HISTORY_AUTHORITY" &&
+				event.participantSessionId === "guest-history-session",
+		)).toBe(false);
+
+		await evictDurableObject(stub, { webSockets: "hibernate" });
+		host.send({
+			type: "HOST_STATE",
+			roomId,
+			state: playbackState(
+				"crunchyroll|watch/history-authority",
+				"https://www.crunchyroll.com/watch/history-authority",
+			),
+			source: sourceDescriptor(
+				"crunchyroll|watch/history-authority",
+				"History Authority Episode",
+				"https://www.crunchyroll.com/watch/history-authority",
+			),
+		});
+
+		await guest.waitFor(
+			(event) => event.type === "SOURCE_CHANGED" && event.sourceGeneration === 2,
+			"restored source change",
+		);
+		const hostNext = await host.waitFor(
+			(event) =>
+				event.type === "ROOM_HISTORY_AUTHORITY" &&
+				event.participantSessionId === "host-history-session" &&
+				event.sourceGeneration === 2,
+			"host refreshed history authority",
+		);
+		const guestNext = await guest.waitFor(
+			(event) =>
+				event.type === "ROOM_HISTORY_AUTHORITY" &&
+				event.participantSessionId === "guest-history-session" &&
+				event.sourceGeneration === 2,
+			"guest refreshed history authority",
+		);
+		expect(hostNext).toMatchObject({ roomGeneration: 1, sourceGeneration: 2 });
+		expect(guestNext).toMatchObject({ roomGeneration: 1, sourceGeneration: 2 });
+
+		const hostReconnect = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-history-session", userId: "host-user",
+		});
+		await expect(
+			hostReconnect.waitFor(
+				(event) =>
+					event.type === "ROOM_HISTORY_AUTHORITY" &&
+					event.participantSessionId === "host-history-session" &&
+					event.sourceGeneration === 2,
+				"same-session reconnect history authority",
+			),
+		).resolves.toMatchObject({ roomGeneration: 1, sourceGeneration: 2 });
+
+		host.close();
+		hostReconnect.close();
+		guest.close();
+	});
+
+	it("broadcasts canonical source state without waiting for serialized Web delivery", async () => {
+		const roomId = `runtime-source-queue-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		let releaseFirstSource: () => void = () => {};
+		const firstSourceGate = new Promise<void>((resolve) => {
+			releaseFirstSource = resolve;
+		});
+		const sourceBodies: Array<{ sourceGeneration: number }> = [];
+		const callbackFetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+			if (!String(input).endsWith("/source")) {
+				return Response.json({ ok: true, usageFinalized: true });
+			}
+			const body = JSON.parse(String(init?.body)) as { sourceGeneration: number };
+			sourceBodies.push(body);
+			if (sourceBodies.length === 1) await firstSourceGate;
+			return Response.json({
+				ok: true,
+				outcome: "persisted",
+				sourceGeneration: body.sourceGeneration,
+			});
+		});
+		vi.stubGlobal("fetch", callbackFetch);
+		const host = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-source-session", userId: "host-user",
+		});
+		const guest = await connectRoomClient(stub, {
+			roomId, role: "member", sessionId: "guest-source-session", userId: "guest-user",
+		});
+
+		const firstUrl = "https://youtu.be/dQw4w9WgXcQ?feature=share";
+		host.send({
+			type: "HOST_STATE",
+			roomId,
+			state: playbackState("youtube|/dQw4w9WgXcQ", firstUrl),
+			source: youtubeSourceDescriptor("youtube|/dQw4w9WgXcQ", "First video", firstUrl),
+		});
+		const changed = await guest.waitFor(
+			(event) => event.type === "SOURCE_CHANGED" && event.sourceGeneration === 2,
+			"canonical source broadcast before callback",
+		);
+		expect(changed).toMatchObject({
+			type: "SOURCE_CHANGED",
+			hostState: {
+				sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+				videoFingerprint: "youtube|dQw4w9WgXcQ",
+			},
+			source: {
+				sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+				videoFingerprint: "youtube|dQw4w9WgXcQ",
+				title: "First video",
+			},
+		});
+
+		host.send({
+			type: "HOST_STATE",
+			roomId,
+			state: { ...playbackState("youtube|/dQw4w9WgXcQ", firstUrl), hostTime: 84 },
+			source: youtubeSourceDescriptor("youtube|/dQw4w9WgXcQ", "First video", firstUrl),
+		});
+		await guest.waitFor(
+			(event) => event.type === "HOST_STATE" && event.state.hostTime === 84,
+			"same-source playback during slow callback",
+		);
+		expect(sourceBodies).toHaveLength(1);
+
+		const nextUrl = "https://youtu.be/M7lc1UVf-VE";
+		host.send({
+			type: "HOST_STATE",
+			roomId,
+			state: playbackState("youtube|/M7lc1UVf-VE", nextUrl),
+			source: youtubeSourceDescriptor("youtube|/M7lc1UVf-VE", "Next video", nextUrl),
+		});
+		await guest.waitFor(
+			(event) => event.type === "SOURCE_CHANGED" && event.sourceGeneration === 3,
+			"coalesced newer source broadcast",
+		);
+		expect(sourceBodies).toHaveLength(1);
+
+		releaseFirstSource();
+		await waitForRoomRuntime(
+			stub,
+			(value) => value.pendingSource === null && sourceBodies.length === 2,
+			"serialized latest source acknowledgement",
+			3_000,
+		);
+		expect(sourceBodies.map((body) => body.sourceGeneration)).toEqual([2, 3]);
+
+		host.close();
+		guest.close();
+	});
+
+	it("rejects malicious and cross-provider source changes before runtime mutation", async () => {
+		const roomId = `runtime-source-reject-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const callbackFetch = stubSuccessfulWebFinalization();
+		const host = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-reject-session", userId: "host-user",
+		});
+		const guest = await connectRoomClient(stub, {
+			roomId, role: "member", sessionId: "guest-reject-session", userId: "guest-user",
+		});
+		const maliciousUrl = "https://youtube.com.evil.example/watch?v=dQw4w9WgXcQ";
+
+		host.send({
+			type: "HOST_STATE",
+			roomId,
+			state: playbackState("youtube|dQw4w9WgXcQ", maliciousUrl),
+			source: youtubeSourceDescriptor(
+				"youtube|dQw4w9WgXcQ",
+				"Malicious source",
+				maliciousUrl,
+			),
+		});
+		await host.waitFor(
+			(event) => event.type === "ERROR" && event.code === "INVALID_SOURCE",
+			"malicious source rejection",
+		);
+		expect(await readRoomRuntime(stub)).toMatchObject({ pendingSource: null });
+		expect(callbackFetch).not.toHaveBeenCalled();
+		expect(guest.hasEvent((event) => event.type === "SOURCE_CHANGED")).toBe(false);
+
+		const youtubeUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+		host.send({
+			type: "HOST_STATE",
+			roomId,
+			state: playbackState("youtube|dQw4w9WgXcQ", youtubeUrl),
+			source: youtubeSourceDescriptor(
+				"youtube|dQw4w9WgXcQ",
+				"Valid source",
+				youtubeUrl,
+			),
+		});
+		await guest.waitFor(
+			(event) => event.type === "SOURCE_CHANGED" && event.sourceGeneration === 2,
+			"valid provider initialization",
+		);
+		await waitForRoomRuntime(
+			stub,
+			(value) => value.pendingSource === null && callbackFetch.mock.calls.length === 1,
+			"valid source delivery",
+		);
+
+		const crunchyrollUrl = "https://www.crunchyroll.com/watch/G8WUNM123";
+		host.send({
+			type: "HOST_STATE",
+			roomId,
+			state: playbackState("crunchyroll|watch/G8WUNM123", crunchyrollUrl),
+			source: sourceDescriptor(
+				"crunchyroll|watch/G8WUNM123",
+				"Cross-provider source",
+				crunchyrollUrl,
+			),
+		});
+		await host.waitFor(
+			(event) => event.type === "ERROR" && event.code === "SOURCE_PROVIDER_MISMATCH",
+			"cross-provider source rejection",
+		);
+		expect(callbackFetch).toHaveBeenCalledTimes(1);
+		expect(await readRoomRuntime(stub)).toMatchObject({ pendingSource: null });
+
+		host.close();
+		guest.close();
+	});
+
+	it("retries a transient source failure after hibernation and restores it to late joiners", async () => {
+		const roomId = `runtime-source-retry-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const callbackOrder: string[] = [];
+		let sourceAttempt = 0;
+		let releaseAlarmSource: () => void = () => {};
+		const alarmSourceGate = new Promise<void>((resolve) => {
+			releaseAlarmSource = resolve;
+		});
+		const callbackFetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+			if (String(input).endsWith("/source")) {
+				sourceAttempt += 1;
+				callbackOrder.push(`source:${sourceAttempt}`);
+				const body = JSON.parse(String(init?.body)) as { sourceGeneration: number };
+				if (sourceAttempt === 1) {
+					return Response.json({ error: "temporary" }, { status: 503 });
+				}
+				if (sourceAttempt === 2) await alarmSourceGate;
+				return Response.json({
+					ok: true,
+					outcome: "persisted",
+					sourceGeneration: body.sourceGeneration,
+				});
+			}
+			callbackOrder.push("ended");
+			return Response.json({ ok: true, usageFinalized: true });
+		});
+		vi.stubGlobal("fetch", callbackFetch);
+		const host = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-retry-session", userId: "host-user",
+		});
+		const guest = await connectRoomClient(stub, {
+			roomId, role: "member", sessionId: "guest-retry-session", userId: "guest-user",
+		});
+		const sourceUrl = "https://www.crunchyroll.com/ru/watch/G8WUNM123/episode-one";
+		host.send({
+			type: "HOST_STATE",
+			roomId,
+			state: playbackState("crunchyroll|watch/G8WUNM123", sourceUrl),
+			source: sourceDescriptor(
+				"crunchyroll|watch/G8WUNM123",
+				"Retry episode",
+				sourceUrl,
+			),
+		});
+		await host.waitFor(
+			(event) => event.type === "SOURCE_CHANGED" && event.sourceGeneration === 2,
+			"source initialization",
+		);
+		await waitForRoomRuntime(
+			stub,
+			(value) => value.pendingSource?.attempts === 1,
+			"first failed source attempt",
+		);
+
+		await deferSourceRetry(stub);
+		await evictDurableObject(stub, { webSockets: "hibernate" });
+		await makeSourceRetryDue(stub);
+		const alarm = runDurableObjectAlarm(stub);
+		const callbackDeadline = Date.now() + 1_500;
+		while (sourceAttempt < 2 && Date.now() < callbackDeadline) await sleep(10);
+		expect(sourceAttempt).toBe(2);
+		host.send({
+			type: "HOST_STATE",
+			roomId,
+			state: {
+				...playbackState("crunchyroll|watch/G8WUNM123", sourceUrl),
+				hostTime: 84,
+			},
+			source: sourceDescriptor(
+				"crunchyroll|watch/G8WUNM123",
+				"Retry episode",
+				sourceUrl,
+			),
+		});
+		await guest.waitFor(
+			(event) => event.type === "HOST_STATE" && event.state.hostTime === 84,
+			"playback while alarm source callback is pending",
+		);
+		releaseAlarmSource();
+		expect(await alarm).toBe(true);
+		await waitForRoomRuntime(
+			stub,
+			(value) => value.pendingSource === null,
+			"successful source alarm retry",
+		);
+		expect(callbackOrder).toEqual(["source:1", "source:2"]);
+
+		const lateJoiner = await connectRoomClient(stub, {
+			roomId, role: "member", sessionId: "late-source-session", userId: "late-user",
+		});
+		const snapshot = await lateJoiner.waitFor(
+			(event) => event.type === "ROOM_SNAPSHOT" && event.sourceGeneration === 2,
+			"late joiner restored source snapshot",
+		);
+		expect(snapshot).toMatchObject({
+			hostState: {
+				sourceUrl: "https://www.crunchyroll.com/watch/G8WUNM123",
+				videoFingerprint: "crunchyroll|watch/G8WUNM123",
+			},
+			source: {
+				sourceUrl: "https://www.crunchyroll.com/watch/G8WUNM123",
+				title: "Retry episode",
+			},
+		});
+		host.close();
+		guest.close();
+		lateJoiner.close();
+	});
+
+	it("force-attempts the latest source before explicit room end", async () => {
+		const roomId = `runtime-source-end-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const callbackOrder: string[] = [];
+		let allowSourceSuccess = false;
+		const callbackFetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+			if (String(input).endsWith("/source")) {
+				callbackOrder.push("source");
+				if (!allowSourceSuccess) {
+					return Response.json({ error: "temporary" }, { status: 503 });
+				}
+				const body = JSON.parse(String(init?.body)) as { sourceGeneration: number };
+				return Response.json({
+					ok: true,
+					outcome: "persisted",
+					sourceGeneration: body.sourceGeneration,
+				});
+			}
+			callbackOrder.push("ended");
+			return Response.json({ ok: true, usageFinalized: true });
+		});
+		vi.stubGlobal("fetch", callbackFetch);
+		const host = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-end-source-session", userId: "host-user",
+		});
+		const sourceUrl = "https://www.crunchyroll.com/watch/end-source";
+		host.send({
+			type: "HOST_STATE",
+			roomId,
+			state: playbackState("crunchyroll|watch/end-source", sourceUrl),
+			source: sourceDescriptor(
+				"crunchyroll|watch/end-source",
+				"End source episode",
+				sourceUrl,
+			),
+		});
+		await waitForRoomRuntime(
+			stub,
+			(value) => value.pendingSource?.attempts === 1,
+			"initial source delivery failure",
+		);
+
+		const failed = await endRoom(stub, { endedAt: 2_000, reason: "host_ended" });
+		expect(failed.status).toBe(502);
+		expect(callbackOrder).toEqual(["source", "source"]);
+		expect(await readRoomRuntime(stub)).toMatchObject({
+			pendingSource: { attempts: 2 },
+			tombstone: null,
+		});
+
+		allowSourceSuccess = true;
+		const completed = await endRoom(stub, { endedAt: 2_000, reason: "host_ended" });
+		expect(completed.status).toBe(200);
+		expect(callbackOrder).toEqual(["source", "source", "source", "ended"]);
+		expect(await readRoomRuntime(stub)).toMatchObject({ pendingSource: null });
+		host.close();
+	});
+
+	it("repairs a live missing outbox before explicit room finalization", async () => {
+		const roomId = `runtime-source-live-repair-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const callbackOrder: string[] = [];
+		let sourceAttempt = 0;
+		const callbackFetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+			if (String(input).endsWith("/source")) {
+				sourceAttempt += 1;
+				callbackOrder.push(`source:${sourceAttempt}`);
+				if (sourceAttempt === 1) {
+					return Response.json({ error: "temporary" }, { status: 503 });
+				}
+				const body = JSON.parse(String(init?.body)) as { sourceGeneration: number };
+				return Response.json({
+					ok: true,
+					outcome: "persisted",
+					sourceGeneration: body.sourceGeneration,
+				});
+			}
+			callbackOrder.push("ended");
+			return Response.json({ ok: true, usageFinalized: true });
+		});
+		vi.stubGlobal("fetch", callbackFetch);
+		const host = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-live-repair", userId: "host-user",
+		});
+		const sourceUrl = "https://www.crunchyroll.com/watch/live-repair";
+		host.send({
+			type: "HOST_STATE",
+			roomId,
+			state: playbackState("crunchyroll|watch/live-repair", sourceUrl),
+			source: sourceDescriptor(
+				"crunchyroll|watch/live-repair",
+				"Live repair episode",
+				sourceUrl,
+			),
+		});
+		await waitForRoomRuntime(
+			stub,
+			(value) => value.pendingSource?.attempts === 1,
+			"failed live source callback",
+		);
+		await removeSourceDurabilityState(stub);
+
+		const completed = await endRoom(stub, { endedAt: 2_000, reason: "host_ended" });
+
+		expect(completed.status).toBe(200);
+		expect(callbackOrder).toEqual(["source:1", "source:2", "ended"]);
+		expect(await readRoomRuntime(stub)).toMatchObject({
+			acknowledgedSourceGeneration: 2,
+			pendingSource: null,
+			tombstone: { endedAt: 2_000, reason: "host_ended" },
+		});
+		host.close();
+	});
+
+	it("repairs a missing source outbox on hibernation wake without redelivery after ack", async () => {
+		const roomId = `runtime-source-wake-repair-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		let sourceAttempt = 0;
+		let releaseRepairCallback: () => void = () => {};
+		const repairCallbackGate = new Promise<void>((resolve) => {
+			releaseRepairCallback = resolve;
+		});
+		const callbackFetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+			if (!String(input).endsWith("/source")) {
+				return Response.json({ ok: true, usageFinalized: true });
+			}
+			sourceAttempt += 1;
+			if (sourceAttempt === 1) {
+				return Response.json({ error: "temporary" }, { status: 503 });
+			}
+			await repairCallbackGate;
+			const body = JSON.parse(String(init?.body)) as { sourceGeneration: number };
+			return Response.json({
+				ok: true,
+				outcome: "persisted",
+				sourceGeneration: body.sourceGeneration,
+			});
+		});
+		vi.stubGlobal("fetch", callbackFetch);
+		const host = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-wake-repair", userId: "host-user",
+		});
+		const guest = await connectRoomClient(stub, {
+			roomId, role: "member", sessionId: "guest-wake-repair", userId: "guest-user",
+		});
+		const sourceUrl = "https://www.crunchyroll.com/watch/wake-repair";
+		host.send({
+			type: "HOST_STATE",
+			roomId,
+			state: playbackState("crunchyroll|watch/wake-repair", sourceUrl),
+			source: sourceDescriptor(
+				"crunchyroll|watch/wake-repair",
+				"Wake repair episode",
+				sourceUrl,
+			),
+		});
+		await guest.waitFor(
+			(event) => event.type === "SOURCE_CHANGED" && event.sourceGeneration === 2,
+			"source before simulated outbox loss",
+		);
+		await waitForRoomRuntime(
+			stub,
+			(value) => value.pendingSource?.attempts === 1,
+			"failed source before hibernation",
+		);
+		await removeSourceDurabilityState(stub);
+		await evictDurableObject(stub, { webSockets: "hibernate" });
+
+		guest.send({ type: "PING", roomId, sentAt: 91 });
+		const callbackDeadline = Date.now() + 1_500;
+		while (sourceAttempt < 2 && Date.now() < callbackDeadline) await sleep(10);
+		expect(sourceAttempt).toBe(2);
+		await guest.waitFor(
+			(event) => event.type === "PONG" && event.sentAt === 91,
+			"live room while repaired callback is pending",
+		);
+		releaseRepairCallback();
+		await waitForRoomRuntime(
+			stub,
+			(value) =>
+				value.acknowledgedSourceGeneration === 2 &&
+				value.pendingSource === null,
+			"acknowledged repaired source",
+		);
+
+		await evictDurableObject(stub, { webSockets: "hibernate" });
+		guest.send({ type: "PING", roomId, sentAt: 92 });
+		await guest.waitFor(
+			(event) => event.type === "PONG" && event.sentAt === 92,
+			"acknowledged wake",
+		);
+		await sleep(50);
+		expect(sourceAttempt).toBe(2);
+
+		host.close();
+		guest.close();
+	});
+
+	it("never issues history authority without a participant session id", async () => {
+		const roomId = `runtime-history-no-session-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const host = await openRoomSocket(stub, {
+			roomId, role: "host", userId: "host-user",
+		});
+		host.send({
+			type: "JOIN",
+			roomId,
+			participant: participant("host-user", "host"),
+			videoFingerprint: "runtime-initial",
+		});
+		await host.waitFor((event) => event.type === "ROOM_SNAPSHOT", "sessionless snapshot");
+		await sleep(50);
+		expect(host.hasEvent((event) => event.type === "ROOM_HISTORY_AUTHORITY")).toBe(false);
+		host.close();
+	});
+
+	it("does not issue or refresh history authority after room ending begins", async () => {
+		stubSuccessfulWebFinalization();
+		const roomId = `runtime-history-ending-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const host = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-ending-session", userId: "host-user",
+		});
+		await host.waitFor(
+			(event) => event.type === "ROOM_HISTORY_AUTHORITY" && event.sourceGeneration === 1,
+			"initial history authority",
+		);
+
+		await runInDurableObject(stub, async (_instance, state) => {
+			await state.storage.put(ROOM_LIFECYCLE_META_KEY, {
+				schemaVersion: 1,
+				status: "ended",
+				endedAt: 1_000,
+				reason: "host_ended",
+			});
+		});
+
+		host.send({
+			type: "HOST_STATE",
+			roomId,
+			state: playbackState(
+				"crunchyroll|watch/ending-history",
+				"https://www.crunchyroll.com/watch/ending-history",
+			),
+			source: sourceDescriptor(
+				"crunchyroll|watch/ending-history",
+				"Ending History Episode",
+				"https://www.crunchyroll.com/watch/ending-history",
+			),
+		});
+		await sleep(75);
+		expect(host.hasEvent(
+			(event) => event.type === "ROOM_HISTORY_AUTHORITY" && event.sourceGeneration === 2,
+		)).toBe(false);
+		host.close();
+	});
+
 	it("persists one four-hour alarm when the last joined participant leaves, even with a pre-JOIN socket", async () => {
 		const roomId = `runtime-empty-${crypto.randomUUID()}`;
 		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
@@ -57,17 +799,6 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		if (typeof emptySince !== "number") throw new Error("Expected emptySince");
 		expect(empty.lifecycle?.alarmAt).toBe(emptySince + EMPTY_ROOM_TIMEOUT_MS);
 		expect(empty.alarm).toBe(emptySince + EMPTY_ROOM_TIMEOUT_MS);
-
-		await evictDurableObject(stub, { webSockets: "hibernate" });
-		const restored = await readRoomRuntime(stub);
-		expect(restored).toEqual(empty);
-		const callbackFetch = vi.fn(async () =>
-			Response.json({ ok: true, usageFinalized: true }),
-		);
-		vi.stubGlobal("fetch", callbackFetch);
-		expect(await runDurableObjectAlarm(stub)).toBe(true);
-		expect(callbackFetch).not.toHaveBeenCalled();
-		expect(await readRoomRuntime(stub)).toEqual(empty);
 
 		preJoin.close();
 		await sleep(50);
@@ -508,6 +1239,7 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 	});
 
 	it("wakes with durable room state and requests fresh P2P negotiation instead of persisting media", async () => {
+		stubSuccessfulWebFinalization();
 		const roomId = `runtime-hibernation-${crypto.randomUUID()}`;
 		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace })
 			.ROOMS;
@@ -761,8 +1493,10 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 });
 
 interface RoomRuntimeSnapshot {
+	acknowledgedSourceGeneration: number | null;
 	alarm: number | null;
 	lifecycle: Record<string, unknown> | null;
+	pendingSource: Record<string, unknown> | null;
 	tombstone: Record<string, unknown> | null;
 }
 
@@ -775,8 +1509,11 @@ async function readRoomRuntime(stub: DurableObjectStub): Promise<RoomRuntimeSnap
 			return row ? JSON.parse(row.value_json) as Record<string, unknown> : null;
 		};
 		return {
+			acknowledgedSourceGeneration:
+				await state.storage.get<number>(ROOM_SOURCE_ACKNOWLEDGED_GENERATION_KEY) ?? null,
 			alarm: await state.storage.getAlarm(),
 			lifecycle: await state.storage.get<Record<string, unknown>>(ROOM_LIFECYCLE_META_KEY) ?? null,
+			pendingSource: await state.storage.get<Record<string, unknown>>(ROOM_SOURCE_PENDING_KEY) ?? null,
 			tombstone: readMeta("room_ended"),
 		};
 	});
@@ -809,6 +1546,42 @@ async function makeRetryAlarmDue(stub: DurableObjectStub): Promise<void> {
 			const nextAttemptAt = Date.now() - 1;
 			await transaction.put(ROOM_LIFECYCLE_META_KEY, { ...lifecycle, nextAttemptAt });
 			await transaction.setAlarm(Date.now() + 60_000);
+		});
+	});
+}
+
+async function makeSourceRetryDue(stub: DurableObjectStub): Promise<void> {
+	await runInDurableObject(stub, async (_instance, state) => {
+		await state.storage.transaction(async (transaction) => {
+			const pending = await transaction.get<Record<string, unknown>>(ROOM_SOURCE_PENDING_KEY);
+			if (!pending) throw new Error("Expected pending room source");
+			await transaction.put(ROOM_SOURCE_PENDING_KEY, {
+				...pending,
+				nextAttemptAt: Date.now() - 1,
+			});
+			await transaction.setAlarm(Date.now() + 60_000);
+		});
+	});
+}
+
+async function deferSourceRetry(stub: DurableObjectStub): Promise<void> {
+	await runInDurableObject(stub, async (_instance, state) => {
+		await state.storage.transaction(async (transaction) => {
+			const pending = await transaction.get<Record<string, unknown>>(ROOM_SOURCE_PENDING_KEY);
+			if (!pending) throw new Error("Expected pending room source");
+			const nextAttemptAt = Date.now() + 60_000;
+			await transaction.put(ROOM_SOURCE_PENDING_KEY, { ...pending, nextAttemptAt });
+			await transaction.setAlarm(nextAttemptAt);
+		});
+	});
+}
+
+async function removeSourceDurabilityState(stub: DurableObjectStub): Promise<void> {
+	await runInDurableObject(stub, async (_instance, state) => {
+		await state.storage.transaction(async (transaction) => {
+			await transaction.delete(ROOM_SOURCE_PENDING_KEY);
+			await transaction.delete(ROOM_SOURCE_ACKNOWLEDGED_GENERATION_KEY);
+			await transaction.deleteAlarm();
 		});
 	});
 }
@@ -1020,6 +1793,21 @@ function sourceDescriptor(
 		provider: "crunchyroll" as const,
 		seasonNumber: 1,
 		seriesTitle: "Runtime Series",
+		sourceUrl,
+		title,
+		videoFingerprint,
+	};
+}
+
+function youtubeSourceDescriptor(
+	videoFingerprint: string,
+	title: string,
+	sourceUrl: string,
+) {
+	return {
+		canonicalUrl: sourceUrl,
+		duration: 213,
+		provider: "youtube" as const,
 		sourceUrl,
 		title,
 		videoFingerprint,

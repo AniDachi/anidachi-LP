@@ -19,6 +19,43 @@ export interface ExtensionAuthTokens {
   user: AuthenticatedUser;
 }
 
+export interface AuthSessionStorageAdapter {
+  get: () => Promise<ExtensionAuthTokens | null>;
+  set: (tokens: ExtensionAuthTokens) => Promise<void>;
+  remove: () => Promise<void>;
+}
+
+export type AuthSessionMutationResult = {
+  committed: boolean;
+  current: ExtensionAuthTokens | null;
+  previous: ExtensionAuthTokens | null;
+};
+
+export interface AuthSessionStorageAuthority {
+  replace: (tokens: ExtensionAuthTokens) => Promise<void>;
+  clear: () => Promise<void>;
+  commitIfCurrent: (
+    expected: ExtensionAuthTokens,
+    replacement: ExtensionAuthTokens | null,
+  ) => Promise<AuthSessionMutationResult>;
+  clearIfCurrentAfter: (
+    expected: ExtensionAuthTokens,
+    beforeClear: (current: ExtensionAuthTokens) => Promise<void>,
+  ) => Promise<AuthSessionMutationResult>;
+  clearIfRefreshToken: (expectedRefreshToken: string) => Promise<AuthSessionMutationResult>;
+}
+
+export function isSameExtensionAuthSession(
+  expected: ExtensionAuthTokens,
+  current: ExtensionAuthTokens | null,
+): boolean {
+  return Boolean(
+    current &&
+      current.refreshToken === expected.refreshToken &&
+      current.user.id === expected.user.id,
+  );
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
@@ -71,15 +108,113 @@ export function normalizeExtensionAuthTokens(value: unknown): ExtensionAuthToken
   };
 }
 
+export function createAuthSessionStorageAuthority(
+  adapter: AuthSessionStorageAdapter,
+): AuthSessionStorageAuthority {
+  let mutationQueue: Promise<void> = Promise.resolve();
+
+  function runSerialized<T>(operation: () => Promise<T>): Promise<T> {
+    const result = mutationQueue.then(operation, operation);
+    mutationQueue = result.then(
+      () => undefined,
+      () => undefined,
+    );
+    return result;
+  }
+
+  return {
+    replace(tokens) {
+      return runSerialized(() => adapter.set(tokens));
+    },
+    clear() {
+      return runSerialized(() => adapter.remove());
+    },
+    commitIfCurrent(expected, replacement) {
+      return runSerialized(async () => {
+        const current = await adapter.get();
+        if (!isSameExtensionAuthSession(expected, current)) {
+          return { committed: false, current, previous: current };
+        }
+
+        if (replacement) await adapter.set(replacement);
+        else await adapter.remove();
+        return { committed: true, current: replacement, previous: current };
+      });
+    },
+    clearIfCurrentAfter(expected, beforeClear) {
+      return runSerialized(async () => {
+        const current = await adapter.get();
+        if (!current || !isSameExtensionAuthSession(expected, current)) {
+          return { committed: false, current, previous: current };
+        }
+
+        try {
+          await beforeClear(current);
+        } finally {
+          await adapter.remove();
+        }
+        return { committed: true, current: null, previous: current };
+      });
+    },
+    clearIfRefreshToken(expectedRefreshToken) {
+      return runSerialized(async () => {
+        const current = await adapter.get();
+        if (!current || current.refreshToken !== expectedRefreshToken) {
+          return { committed: false, current, previous: current };
+        }
+
+        await adapter.remove();
+        return { committed: true, current: null, previous: current };
+      });
+    },
+  };
+}
+
+const authSessionStorageAdapter: AuthSessionStorageAdapter = {
+  async get() {
+    const stored = await storage.getItem<unknown>(AUTH_TOKENS_KEY);
+    return normalizeExtensionAuthTokens(stored);
+  },
+  async set(tokens) {
+    await storage.setItem(AUTH_TOKENS_KEY, tokens);
+  },
+  async remove() {
+    await storage.removeItem(AUTH_TOKENS_KEY);
+  },
+};
+
+const authSessionStorageAuthority = createAuthSessionStorageAuthority(
+  authSessionStorageAdapter,
+);
+
 export async function getStoredAuthTokens(): Promise<ExtensionAuthTokens | null> {
-  const stored = await storage.getItem<unknown>(AUTH_TOKENS_KEY);
-  return normalizeExtensionAuthTokens(stored);
+  return authSessionStorageAdapter.get();
 }
 
 export async function setStoredAuthTokens(tokens: ExtensionAuthTokens): Promise<void> {
-  await storage.setItem(AUTH_TOKENS_KEY, tokens);
+  await authSessionStorageAuthority.replace(tokens);
 }
 
 export async function clearStoredAuthTokens(): Promise<void> {
-  await storage.removeItem(AUTH_TOKENS_KEY);
+  await authSessionStorageAuthority.clear();
+}
+
+export async function commitStoredAuthTokensIfCurrent(
+  expected: ExtensionAuthTokens,
+  replacement: ExtensionAuthTokens | null,
+): Promise<AuthSessionMutationResult> {
+  return authSessionStorageAuthority.commitIfCurrent(expected, replacement);
+}
+
+export async function clearStoredAuthTokensIfCurrentAfter(
+  expected: ExtensionAuthTokens,
+  beforeClear: (current: ExtensionAuthTokens) => Promise<void>,
+): Promise<AuthSessionMutationResult> {
+  return authSessionStorageAuthority.clearIfCurrentAfter(expected, beforeClear);
+}
+
+export async function clearStoredAuthTokensIfRefreshToken(
+  expectedRefreshToken: string,
+): Promise<AuthSessionMutationResult> {
+  return authSessionStorageAuthority.clearIfRefreshToken(expectedRefreshToken);
 }

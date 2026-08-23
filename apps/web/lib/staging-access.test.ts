@@ -350,6 +350,37 @@ test("staging gate bypasses extension token endpoints and allowed bearer API cal
   );
   assert.equal(
     canBypassStagingGate({
+      pathname: "/api/internal/rooms/room_123/source",
+      method: "POST",
+      authorization: "Bearer internal-secret",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/internal/rooms/room_123/source",
+      method: "GET",
+      authorization: "Bearer internal-secret",
+    }),
+    false,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/internal/rooms/room_123/source",
+      method: "POST",
+    }),
+    false,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/internal/rooms/room_123/source/extra",
+      method: "POST",
+      authorization: "Bearer internal-secret",
+    }),
+    false,
+  );
+  assert.equal(
+    canBypassStagingGate({
       pathname: "/api/internal/rooms/room_123/ended",
       method: "POST",
     }),
@@ -377,6 +408,52 @@ test("staging gate bypasses extension token endpoints and allowed bearer API cal
     }),
     false,
   );
+});
+
+test("staging gate lets an extension bearer reach only the supported Watch History v2 methods", () => {
+  const allowedRequests = [
+    ["/api/watch-history/v2", "GET"],
+    ["/api/watch-history/v2/progress", "POST"],
+    ["/api/watch-history/v2/preferences", "GET"],
+    ["/api/watch-history/v2/preferences", "PATCH"],
+    ["/api/watch-history/v2/delete", "POST"],
+    ["/api/watch-history/v2/rooms", "POST"],
+  ] as const;
+
+  for (const [pathname, method] of allowedRequests) {
+    assert.equal(
+      canBypassStagingGate({
+        pathname,
+        method,
+        authorization: "Bearer token",
+      }),
+      true,
+      `${method} ${pathname} must reach the route bearer verifier`,
+    );
+    assert.equal(
+      canBypassStagingGate({ pathname, method }),
+      false,
+      `${method} ${pathname} must remain password-gated without a bearer`,
+    );
+  }
+
+  for (const [pathname, method] of [
+    ["/api/watch-history/v2", "POST"],
+    ["/api/watch-history/v2/progress", "GET"],
+    ["/api/watch-history/v2/preferences", "POST"],
+    ["/api/watch-history/v2/delete", "DELETE"],
+    ["/api/watch-history/v2/rooms", "GET"],
+  ] as const) {
+    assert.equal(
+      canBypassStagingGate({
+        pathname,
+        method,
+        authorization: "Bearer token",
+      }),
+      false,
+      `${method} ${pathname} is not a supported Watch History v2 route`,
+    );
+  }
 });
 
 test("staging gate keeps extension auth return targets inside the app", () => {

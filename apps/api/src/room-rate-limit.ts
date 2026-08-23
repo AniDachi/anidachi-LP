@@ -45,6 +45,10 @@ export class RoomRateLimiter {
 		return { allowed: true, close: false, retryAfterMs: 0 };
 	}
 
+	isWindowExpired(now = Date.now()): boolean {
+		return this.windowStartedAt === null || now - this.windowStartedAt >= WINDOW_MS;
+	}
+
 	private ensureWindow(now: number): void {
 		if (this.windowStartedAt === null || now - this.windowStartedAt >= WINDOW_MS) {
 			this.reset(now);
@@ -64,5 +68,55 @@ export class RoomRateLimiter {
 		this.classes.ice = 0;
 		this.classes.sdp = 0;
 		this.classes.control = 0;
+	}
+}
+
+/**
+ * Keeps the existing ten-second budget with a verified subject while a socket
+ * is replaced, including a normal close -> reconnect gap. Entries are local to
+ * one Room Durable Object and expire lazily once no socket still uses them.
+ */
+export class RoomSubjectRateLimiters {
+	private readonly limiters = new Map<string, { limiter: RoomRateLimiter; releasedAt?: number }>();
+	private maxEntries: number;
+
+	constructor(options: { maxParticipants?: number } = {}) {
+		this.maxEntries = 3 * (options.maxParticipants ?? 4);
+	}
+
+	setMaxParticipants(maxParticipants: number): void {
+		this.maxEntries = 3 * maxParticipants;
+	}
+
+	forSubject(subject: string, now = Date.now()): RoomRateLimiter | undefined {
+		this.prune(now);
+		const existing = this.limiters.get(subject);
+		if (existing) {
+			delete existing.releasedAt;
+			return existing.limiter;
+		}
+		if (this.limiters.size >= this.maxEntries) return undefined;
+		const limiter = new RoomRateLimiter();
+		this.limiters.set(subject, { limiter });
+		return limiter;
+	}
+
+	releaseSubject(subject: string, now = Date.now()): void {
+		const entry = this.limiters.get(subject);
+		if (!entry) return;
+		entry.releasedAt = now;
+		this.prune(now);
+	}
+
+	clear(): void {
+		this.limiters.clear();
+	}
+
+	private prune(now: number): void {
+		for (const [subject, entry] of this.limiters) {
+			if (entry.releasedAt !== undefined && entry.limiter.isWindowExpired(now)) {
+				this.limiters.delete(subject);
+			}
+		}
 	}
 }

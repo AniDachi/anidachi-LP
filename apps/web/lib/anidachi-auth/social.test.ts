@@ -1,30 +1,43 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   cleanFriendInviteToken,
   cleanDisplayName,
   cleanGroupName,
   cleanInviteMessage,
-  deriveRecentPeopleEvidence,
   friendRequestConflictResolution,
   friendshipPairKey,
   isRecentRelationshipEligible,
   isUuid,
   normalizeHandle,
   publicProfileFromRows,
+  roomInviteRecipientLifecycleStatus,
   resolveFriendGroupCreateOutcome,
   resolveFriendRequestTransitionReread,
   resolveRoomInviteCreateOutcome,
+  resolveRoomInviteResponseOutcome,
   roomInviteCreateError,
   SocialApiError,
   type FriendshipRow,
+  type RoomInviteResponseOutcomeRow,
 } from "./social";
 
 const VIEWER_ID = "00000000-0000-4000-8000-000000000001";
 const OTHER_ID = "00000000-0000-4000-8000-000000000002";
-const LOBBY_ONLY_ID = "00000000-0000-4000-8000-000000000003";
 const FRIENDSHIP_ID = "00000000-0000-4000-8000-000000000004";
 const INVITE_ID = "00000000-0000-4000-8000-000000000005";
+
+const WATCH_HISTORY_V2_MIGRATION_URL = new URL(
+  "../../supabase/migrations/20260814010000_watch_history_v2_foundation.sql",
+  import.meta.url,
+);
+const SOCIAL_SOURCE_URL = new URL("./social.ts", import.meta.url);
+const INVITES_CLIENT_SOURCE_URL = new URL(
+  "../../app/account/invites/invites-client.tsx",
+  import.meta.url,
+);
+const ACCOUNT_PAGE_SOURCE_URL = new URL("../../app/account/page.tsx", import.meta.url);
 
 test("friend invite tokens accept only URL-safe opaque values", () => {
   assert.equal(
@@ -74,40 +87,37 @@ test("recent people include only relationships eligible for discovery", () => {
   assert.equal(isRecentRelationshipEligible("blocked"), false);
 });
 
-test("recent people require matching room-backed checkpoints and exclude lobby-only membership", () => {
-  const evidence = deriveRecentPeopleEvidence(VIEWER_ID, [
-    checkpoint("session-a", VIEWER_ID, "room-a", "2026-08-08T10:00:00.000Z"),
-    checkpoint("session-a", OTHER_ID, "room-a", "2026-08-08T10:02:00.000Z"),
-    checkpoint("session-b", VIEWER_ID, "room-b", "2026-08-08T11:00:00.000Z"),
-    checkpoint("session-b", OTHER_ID, "room-b", "2026-08-08T11:01:00.000Z"),
-    checkpoint("session-c", OTHER_ID, "room-c", "2026-08-08T12:00:00.000Z"),
-    checkpoint("session-lobby", LOBBY_ONLY_ID, "room-lobby", "2026-08-08T13:00:00.000Z"),
-  ]);
+test("watch history v2 recent-person evidence is pair-owned and requires two participant writes", () => {
+  let sql = "";
+  try {
+    sql = readFileSync(WATCH_HISTORY_V2_MIGRATION_URL, "utf8")
+      .replace(/--.*$/gm, " ")
+      .replace(/\s+/g, " ")
+      .toLowerCase();
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
 
-  assert.deepEqual(evidence, [
-    {
-      userId: OTHER_ID,
-      lastWatchedAt: "2026-08-08T11:01:00.000Z",
-      sharedRoomCount: 2,
-    },
-  ]);
-});
+  const evidenceTable = sql.match(
+    /create table public\.recent_people_evidence \([\s\S]*?\);/,
+  )?.[0];
+  assert.ok(evidenceTable);
+  assert.match(evidenceTable, /primary key \(user_id, other_user_id\)/);
+  assert.doesNotMatch(evidenceTable, /shared_room_count|room_generation|source_generation/);
 
-test("recent people count a shared room once across repeated watch sessions", () => {
-  const evidence = deriveRecentPeopleEvidence(VIEWER_ID, [
-    checkpoint("session-a", VIEWER_ID, "room-a", "2026-08-08T10:00:00.000Z"),
-    checkpoint("session-a", OTHER_ID, "room-a", "2026-08-08T10:01:00.000Z"),
-    checkpoint("session-b", VIEWER_ID, "room-a", "2026-08-08T12:00:00.000Z"),
-    checkpoint("session-b", OTHER_ID, "room-a", "2026-08-08T12:01:00.000Z"),
-  ]);
-
-  assert.deepEqual(evidence, [
-    {
-      userId: OTHER_ID,
-      lastWatchedAt: "2026-08-08T12:01:00.000Z",
-      sharedRoomCount: 1,
-    },
-  ]);
+  const applyFunction = sql.match(
+    /create or replace function public\.apply_watch_progress_v2\b[\s\S]*?\$\$[\s\S]*?\$\$\s*;/,
+  )?.[0];
+  assert.ok(applyFunction);
+  assert.match(applyFunction, /other_participant\.user_id <> p_user_id/);
+  assert.match(
+    applyFunction,
+    /values \(p_user_id, other_user_id_value\), \(other_user_id_value, p_user_id\)/,
+  );
+  assert.match(
+    applyFunction,
+    /order by directional_pair\.user_id, directional_pair\.other_user_id/,
+  );
 });
 
 test("friend request conflict resolution returns canonical duplicate state and accepts reciprocal pending", () => {
@@ -203,6 +213,221 @@ test("atomic room invite errors preserve public authorization, conflict, and rat
   assert.equal(roomInviteCreateError("unrelated database error"), null);
 });
 
+test("atomic room invite responses accept only the requested completed action", () => {
+  assert.deepEqual(
+    resolveRoomInviteResponseOutcome(
+      atomicInviteResponseOutcome({ outcome: "accepted", recipient_status: "accepted" }),
+      "accept",
+      INVITE_ID,
+    ),
+    { recipientStatus: "accepted" },
+  );
+  assert.deepEqual(
+    resolveRoomInviteResponseOutcome(
+      atomicInviteResponseOutcome({ outcome: "declined", recipient_status: "declined" }),
+      "decline",
+      INVITE_ID,
+    ),
+    { recipientStatus: "declined" },
+  );
+  assert.throws(
+    () =>
+      resolveRoomInviteResponseOutcome(
+        atomicInviteResponseOutcome({ outcome: "accepted", recipient_status: "accepted" }),
+        "decline",
+        INVITE_ID,
+      ),
+    /invalid database response/,
+  );
+});
+
+test("atomic room invite responses preserve stable public lifecycle errors", () => {
+  const cases: Array<{
+    row: RoomInviteResponseOutcomeRow;
+    status: number;
+    message: string;
+  }> = [
+    {
+      row: atomicInviteResponseOutcome({
+        outcome: "already_resolved",
+        recipient_status: "declined",
+      }),
+      status: 409,
+      message: "Invite was already resolved",
+    },
+    {
+      row: atomicInviteResponseOutcome({
+        outcome: "room_ended",
+        recipient_status: "expired",
+        responded_at: null,
+        missed_at: "2026-08-22T08:00:00.000Z",
+      }),
+      status: 410,
+      message: "Room has ended",
+    },
+    {
+      row: atomicInviteResponseOutcome({
+        outcome: "friendship_required",
+        recipient_status: "pending",
+        responded_at: null,
+      }),
+      status: 403,
+      message: "This invite is no longer available",
+    },
+    {
+      row: atomicInviteResponseOutcome({
+        outcome: "not_found",
+        room_id: null,
+        recipient_status: null,
+        responded_at: null,
+      }),
+      status: 404,
+      message: "Invite not found",
+    },
+  ];
+
+  for (const { row, status, message } of cases) {
+    assert.throws(
+      () => resolveRoomInviteResponseOutcome(row, "accept", INVITE_ID),
+      (error) =>
+        error instanceof SocialApiError &&
+        error.status === status &&
+        error.message === message,
+    );
+  }
+  assert.throws(
+    () =>
+      resolveRoomInviteResponseOutcome(
+        atomicInviteResponseOutcome({
+          outcome: "already_resolved",
+          recipient_status: "accepted",
+        }),
+        "decline",
+        INVITE_ID,
+      ),
+    (error) => error instanceof SocialApiError && error.status === 409,
+  );
+});
+
+test("atomic room invite responses fail closed on malformed or mismatched database rows", () => {
+  const invalidRows: Array<RoomInviteResponseOutcomeRow | null> = [
+    null,
+    atomicInviteResponseOutcome({ invite_id: OTHER_ID }),
+    atomicInviteResponseOutcome({ outcome: "accepted", recipient_status: "pending" }),
+    atomicInviteResponseOutcome({ outcome: "friendship_required", recipient_status: "accepted" }),
+    atomicInviteResponseOutcome({ outcome: "room_ended", recipient_status: "expired", missed_at: null }),
+    atomicInviteResponseOutcome({ outcome: "not_found", room_id: "room-1" }),
+    atomicInviteResponseOutcome({ outcome: "already_resolved", recipient_status: "accepted" }),
+    atomicInviteResponseOutcome({
+      outcome: "already_resolved",
+      recipient_status: "declined",
+      responded_at: null,
+    }),
+    {
+      ...atomicInviteResponseOutcome(),
+      responded_at: 0,
+    } as unknown as RoomInviteResponseOutcomeRow,
+  ];
+
+  for (const row of invalidRows) {
+    assert.throws(
+      () => resolveRoomInviteResponseOutcome(row, "accept", INVITE_ID),
+      /invalid database response/,
+    );
+  }
+  assert.throws(
+    () =>
+      resolveRoomInviteResponseOutcome(
+        atomicInviteResponseOutcome({
+          outcome: "friendship_required",
+          recipient_status: "pending",
+          responded_at: null,
+        }),
+        "decline",
+        INVITE_ID,
+      ),
+    /invalid database response/,
+  );
+  assert.throws(
+    () =>
+      resolveRoomInviteResponseOutcome(
+        atomicInviteResponseOutcome({
+          outcome: "room_ended",
+          recipient_status: "expired",
+          missed_at: "2026-08-22T08:00:00.000Z",
+        }),
+        "accept",
+        INVITE_ID,
+      ),
+    /invalid database response/,
+  );
+});
+
+test("sent invite status projection follows room lifecycle without reviving terminal actions", () => {
+  assert.equal(
+    roomInviteRecipientLifecycleStatus({
+      recipientStatus: "expired",
+      respondedAt: null,
+      roomStatus: "live",
+    }),
+    "pending",
+  );
+  assert.equal(
+    roomInviteRecipientLifecycleStatus({
+      recipientStatus: "expired",
+      respondedAt: "2026-08-22T08:00:00.000Z",
+      roomStatus: "live",
+    }),
+    "declined",
+  );
+  assert.equal(
+    roomInviteRecipientLifecycleStatus({
+      recipientStatus: "pending",
+      respondedAt: null,
+      roomStatus: "ended",
+    }),
+    "expired",
+  );
+  assert.equal(
+    roomInviteRecipientLifecycleStatus({
+      recipientStatus: "accepted",
+      respondedAt: "2026-08-22T08:00:00.000Z",
+      roomStatus: "ended",
+    }),
+    "accepted",
+  );
+  assert.equal(
+    roomInviteRecipientLifecycleStatus({
+      recipientStatus: "declined",
+      respondedAt: "2026-08-22T08:00:00.000Z",
+      roomStatus: "ended",
+    }),
+    "declined",
+  );
+});
+
+test("invite actions use the atomic v2 response authority and do not reapply expiry locally", () => {
+  const source = readFileSync(SOCIAL_SOURCE_URL, "utf8");
+  assert.match(source, /\.rpc\("respond_room_invite_v2"/);
+  assert.doesNotMatch(source, /function inviteExpired\b|function assertInviteCanBeAccepted\b/);
+});
+
+test("legacy invite listing cannot become a second received-inbox authority", () => {
+  const socialSource = readFileSync(SOCIAL_SOURCE_URL, "utf8");
+  const accountPageSource = readFileSync(ACCOUNT_PAGE_SOURCE_URL, "utf8");
+  assert.match(socialSource, /inbox:\s*\[\]/);
+  assert.match(socialSource, /roomInviteRecipientLifecycleStatus\(/);
+  assert.match(socialSource, /room:rooms!inner\(room_id,status,ended_at\)/);
+  assert.match(socialSource, /recipients:room_invite_recipients\(\*\)/);
+  assert.match(accountPageSource, /listAccountInbox\(/);
+  assert.doesNotMatch(accountPageSource, /listRoomInvites\(/);
+});
+
+test("invite UI does not present the compatibility expiry field as a deadline", () => {
+  const source = readFileSync(INVITES_CLIENT_SOURCE_URL, "utf8");
+  assert.doesNotMatch(source, /invite\.expiresAt|\bexpires\b/i);
+});
+
 test("social APIs validate UUID-shaped ids before hitting Supabase", () => {
   assert.equal(isUuid("3f0f56ec-a97f-4f1f-a648-e0f1034d75d0"), true);
   assert.equal(isUuid("not-a-user-id"), false);
@@ -223,20 +448,6 @@ test("public profiles never expose email and fall back to user display fields", 
     }
   );
 });
-
-function checkpoint(
-  sessionId: string,
-  userId: string,
-  roomId: string,
-  observedAt: string,
-) {
-  return {
-    session_id: sessionId,
-    user_id: userId,
-    room_id: roomId,
-    observed_at: observedAt,
-  };
-}
 
 function friendship(overrides: Partial<FriendshipRow> = {}): FriendshipRow {
   return {
@@ -267,6 +478,20 @@ function atomicGroupOutcome(outcome: "created" | "existing" | "limit_reached") {
 
 function atomicInviteOutcome(outcome: "created" | "existing") {
   return { outcome, invite_id: INVITE_ID };
+}
+
+function atomicInviteResponseOutcome(
+  overrides: Partial<RoomInviteResponseOutcomeRow> = {},
+): RoomInviteResponseOutcomeRow {
+  return {
+    outcome: "accepted",
+    invite_id: INVITE_ID,
+    room_id: "room-1",
+    recipient_status: "accepted",
+    responded_at: "2026-08-22T08:00:00.000Z",
+    missed_at: null,
+    ...overrides,
+  };
 }
 
 function roomInviteErrorShape(code: string) {

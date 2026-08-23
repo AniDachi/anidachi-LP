@@ -8,8 +8,6 @@ import {
   createRoom,
   createWebsiteRoomFromApi,
   createWebsiteRoomHeaders,
-  endRoom,
-  endRoomHttpMessage,
   endWebsiteRoomFromApi,
   handleRoomHttpMessage,
   isQuotaExhaustedError,
@@ -87,6 +85,52 @@ function roomSnapshot(roomId = "room-1") {
   };
 }
 
+function roomHistoryAuthority(sourceGeneration = 1, attestation = `proof-${sourceGeneration}`) {
+  return {
+    type: "ROOM_HISTORY_AUTHORITY" as const,
+    roomId: "room-1",
+    participantSessionId: "participant-session-1",
+    roomGeneration: 1,
+    sourceGeneration,
+    attestation,
+  };
+}
+
+function roomHistoryAuthorityPayload(
+  sourceGeneration = 1,
+  attestation = `proof-${sourceGeneration}`,
+) {
+  const { type: _type, ...authority } = roomHistoryAuthority(sourceGeneration, attestation);
+  return authority;
+}
+
+function sourceChanged(sourceGeneration: number) {
+  const source = {
+    provider: "crunchyroll" as const,
+    sourceUrl: `https://www.crunchyroll.com/watch/episode-${sourceGeneration}`,
+    canonicalUrl: `https://www.crunchyroll.com/watch/episode-${sourceGeneration}`,
+    videoFingerprint: `crunchyroll|series-a|s1|e${sourceGeneration}`,
+    title: `Episode ${sourceGeneration}`,
+  };
+  return {
+    type: "SOURCE_CHANGED" as const,
+    roomId: "room-1",
+    roomGeneration: 1,
+    sourceGeneration,
+    serverSeq: sourceGeneration,
+    serverReceivedAt: 1_000,
+    source,
+    hostState: {
+      videoFingerprint: source.videoFingerprint,
+      sourceUrl: source.sourceUrl,
+      playing: true,
+      hostTime: 10,
+      updatedAt: 1_000,
+      playbackRate: 1,
+    },
+  };
+}
+
 function installControlledWebSocket(): void {
   ControlledWebSocket.instances = [];
   vi.stubGlobal("WebSocket", ControlledWebSocket);
@@ -148,9 +192,12 @@ describe("authenticated room client", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
     const input = {
-      sourceUrl: "https://www.youtube.com/watch?v=abc",
-      videoFingerprint: "youtube|abc",
-      title: "Video title",
+      sourceUrl: "https://www.crunchyroll.com/ru/watch/G8WUNM123/episode-one#ignored=value",
+      videoFingerprint: "crunchyroll|watch/G8WUNM123",
+      title: "Episode one",
+      showId: "show-1",
+      episodeId: "episode-1",
+      clientRequestId: "click-1",
     };
 
     await expect(createWebsiteRoomFromApi("access-1", input)).resolves.toEqual({
@@ -168,9 +215,89 @@ describe("authenticated room client", () => {
           Authorization: "Bearer access-1",
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(input),
+        body: JSON.stringify({
+          sourceUrl: "https://www.crunchyroll.com/watch/G8WUNM123",
+          videoFingerprint: "crunchyroll|watch/G8WUNM123",
+          title: "Episode one",
+          showId: "show-1",
+          episodeId: "episode-1",
+          clientRequestId: "click-1",
+        }),
       },
     );
+  });
+
+  it("canonicalizes the exact current youtu.be fingerprint alias before room creation", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      Response.json({
+        roomId: "room-1",
+        roomToken: "room-token-1",
+        shareableLink: "http://localhost:3003/room/room-1",
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await createWebsiteRoomFromApi("access-1", {
+      sourceUrl: "https://youtu.be/dQw4w9WgXcQ/",
+      videoFingerprint: "youtube|/dQw4w9WgXcQ/",
+      title: "Video title",
+      showId: "show-1",
+      episodeId: "episode-1",
+      clientRequestId: "click-1",
+    });
+
+    expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({
+      sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      videoFingerprint: "youtube|dQw4w9WgXcQ",
+      title: "Video title",
+      showId: "show-1",
+      episodeId: "episode-1",
+      clientRequestId: "click-1",
+    });
+  });
+
+  it.each([
+    [{ sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" }],
+    [{ videoFingerprint: "youtube|dQw4w9WgXcQ" }],
+    [{
+      sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      videoFingerprint: "youtube|wrong-video",
+    }],
+    [{
+      sourceUrl: "http://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      videoFingerprint: "youtube|dQw4w9WgXcQ",
+    }],
+    [{
+      sourceUrl: "https://user:secret@www.youtube.com/watch?v=dQw4w9WgXcQ",
+      videoFingerprint: "youtube|dQw4w9WgXcQ",
+    }],
+    [{
+      sourceUrl: "https://studio.youtube.com/watch?v=dQw4w9WgXcQ",
+      videoFingerprint: "youtube|dQw4w9WgXcQ",
+    }],
+    [{
+      sourceUrl: "https://www.youtube.com/shorts/dQw4w9WgXcQ",
+      videoFingerprint: "youtube|dQw4w9WgXcQ",
+    }],
+    [{
+      sourceUrl: "https://youtu.be/dQw4w9WgXcQ?v=other-video",
+      videoFingerprint: "youtube|/dQw4w9WgXcQ",
+    }],
+  ])("rejects invalid room source input before fetch: %j", async (input) => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      Response.json({
+        roomId: "room-1",
+        roomToken: "room-token-1",
+        shareableLink: "http://localhost:3003/room/room-1",
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(createWebsiteRoomFromApi("access-1", input)).rejects.toMatchObject({
+      code: "INVALID_SOURCE",
+      message: "Invalid room source",
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("gets a room token for existing website rooms from the background API helper", async () => {
@@ -306,16 +433,6 @@ describe("authenticated room client", () => {
       },
     });
 
-    expect(isRoomHttpMessage(endRoomHttpMessage("room-3", "access-1"))).toBe(true);
-    const sendMessage = vi.fn().mockResolvedValue({
-      ok: true,
-      ended: { endedAt: "2026-06-13T12:00:00.000Z" },
-    });
-    vi.stubGlobal("chrome", { runtime: { sendMessage } });
-    await expect(endRoom("room-3", "access-1")).resolves.toEqual({
-      endedAt: "2026-06-13T12:00:00.000Z",
-    });
-    expect(sendMessage).toHaveBeenCalledWith(endRoomHttpMessage("room-3", "access-1"));
   });
 
   it("creates rooms through the extension runtime bridge", async () => {
@@ -340,6 +457,90 @@ describe("authenticated room client", () => {
       shareableLink: "http://localhost:3003/room/room-1",
     });
     expect(sendMessage).toHaveBeenCalledWith(createRoomHttpMessage("access-1", input));
+  });
+
+  it("returns background-issued host authority only from a successful room response", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          roomId: "room-privileged",
+          roomToken: trustedRoomToken({
+            sub: "user-a",
+            roomId: "room-privileged",
+            role: "host",
+          }),
+          shareableLink: "http://localhost:3003/room/room-privileged",
+        }),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const issueAuthority = vi.fn().mockResolvedValue({
+      accountUserId: "user-a",
+      roomId: "room-privileged",
+      role: "host",
+      authorityGeneration: 7,
+    });
+
+    const response = await (
+      handleRoomHttpMessage as unknown as (
+        message: ReturnType<typeof createRoomHttpMessage>,
+        sender: { tab: { id: number } },
+        dependencies: { issueAuthority: typeof issueAuthority },
+      ) => Promise<unknown>
+    )(
+      createRoomHttpMessage("access-1"),
+      { tab: { id: 41 } },
+      { issueAuthority },
+    );
+
+    expect(response).toMatchObject({
+      ok: true,
+      room: {
+        roomId: "room-privileged",
+        privilegedRoomAuthority: {
+          accountUserId: "user-a",
+          roomId: "room-privileged",
+          role: "host",
+          authorityGeneration: 7,
+        },
+      },
+    });
+  });
+
+  it("does not let a late room bridge response issue authority over a newer join", async () => {
+    const firstResponse = deferred<Response>();
+    const secondResponse = deferred<Response>();
+    vi.stubGlobal("fetch", vi.fn().mockReturnValueOnce(firstResponse.promise).mockReturnValueOnce(secondResponse.promise));
+    const issueAuthority = vi.fn(async ({ roomId }: { roomId: string }) => ({
+      accountUserId: "user-a",
+      roomId,
+      role: "host" as const,
+      authorityGeneration: roomId === "room-new" ? 2 : 1,
+    }));
+    const sender = { tab: { id: 42 } };
+    const first = handleRoomHttpMessage(
+      connectRoomHttpMessage("room-old", "access-1"),
+      sender,
+      { issueAuthority },
+    );
+    const second = handleRoomHttpMessage(
+      connectRoomHttpMessage("room-new", "access-1"),
+      sender,
+      { issueAuthority },
+    );
+
+    secondResponse.resolve(roomConnectionResponse("room-new"));
+    await expect(second).resolves.toMatchObject({
+      ok: true,
+      connection: { privilegedRoomAuthority: { roomId: "room-new", authorityGeneration: 2 } },
+    });
+    firstResponse.resolve(roomConnectionResponse("room-old"));
+    await expect(first).resolves.toMatchObject({
+      ok: true,
+      connection: { privilegedRoomAuthority: null },
+    });
+    expect(issueAuthority).toHaveBeenCalledTimes(1);
   });
 
   it("connects rooms through the extension runtime bridge", async () => {
@@ -444,6 +645,95 @@ describe("authenticated room client", () => {
     expect(warn).not.toHaveBeenCalled();
 
     client.close();
+  });
+
+  it("retains only private history authority matching the current room session and generations", () => {
+    installControlledWebSocket();
+    const authorities: Array<ReturnType<typeof roomHistoryAuthorityPayload> | null> = [];
+    const client = new RoomClient();
+
+    client.connect({
+      roomId: "room-1",
+      roomToken: "room-token-1",
+      participant: roomParticipant,
+      participantSessionId: "participant-session-1",
+      videoFingerprint: "video-1",
+      onEvent: vi.fn(),
+      onStatus: vi.fn(),
+      onHistoryAuthority: (authority) => authorities.push(authority),
+    });
+    const socket = ControlledWebSocket.instances[0];
+    socket?.open();
+
+    socket?.message(roomHistoryAuthority());
+    expect(authorities).toEqual([]);
+
+    socket?.message(roomSnapshot());
+    expect(authorities).toEqual([null]);
+
+    socket?.message({
+      ...roomHistoryAuthority(),
+      participantSessionId: "other-session",
+      attestation: "wrong-session-proof",
+    });
+    socket?.message({
+      ...roomHistoryAuthority(),
+      sourceGeneration: 2,
+      attestation: "future-proof",
+    });
+    expect(authorities).toEqual([null]);
+
+    socket?.message(roomHistoryAuthority());
+    expect(authorities).toEqual([null, roomHistoryAuthorityPayload()]);
+
+    socket?.message(sourceChanged(2));
+    expect(authorities).toEqual([null, roomHistoryAuthorityPayload(), null]);
+
+    socket?.message(roomHistoryAuthority(1, "stale-proof"));
+    expect(authorities).toEqual([null, roomHistoryAuthorityPayload(), null]);
+
+    socket?.message(roomHistoryAuthority(2));
+    expect(authorities).toEqual([
+      null,
+      roomHistoryAuthorityPayload(),
+      null,
+      roomHistoryAuthorityPayload(2),
+    ]);
+    expect(client.historyAuthority).toEqual(roomHistoryAuthorityPayload(2));
+  });
+
+  it("keeps same-tuple authority through reconnect until the replacement proof arrives", () => {
+    installControlledWebSocket();
+    const authorities: Array<ReturnType<typeof roomHistoryAuthorityPayload> | null> = [];
+    const client = new RoomClient();
+    const options = (roomToken: string) => ({
+      roomId: "room-1",
+      roomToken,
+      participant: roomParticipant,
+      participantSessionId: "participant-session-1",
+      videoFingerprint: "video-1",
+      onEvent: vi.fn(),
+      onStatus: vi.fn(),
+      onHistoryAuthority: (authority: ReturnType<typeof roomHistoryAuthorityPayload> | null) =>
+        authorities.push(authority),
+    });
+
+    client.connect(options("room-token-1"));
+    ControlledWebSocket.instances[0]?.open();
+    ControlledWebSocket.instances[0]?.message(roomSnapshot());
+    ControlledWebSocket.instances[0]?.message(roomHistoryAuthority());
+    expect(client.historyAuthority).toEqual(roomHistoryAuthorityPayload());
+
+    client.connect(options("room-token-2"));
+    ControlledWebSocket.instances[1]?.open();
+    ControlledWebSocket.instances[1]?.message(roomSnapshot());
+
+    expect(client.historyAuthority).toEqual(roomHistoryAuthorityPayload());
+    expect(authorities).toEqual([null, roomHistoryAuthorityPayload()]);
+
+    ControlledWebSocket.instances[1]?.message(roomHistoryAuthority(1, "replacement-proof"));
+    expect(client.historyAuthority).toEqual(roomHistoryAuthorityPayload(1, "replacement-proof"));
+    expect(authorities.at(-1)).toEqual(roomHistoryAuthorityPayload(1, "replacement-proof"));
   });
 
   it("does not publish transport readiness for stale or already-closed sockets", () => {
@@ -804,3 +1094,21 @@ describe("authenticated room client", () => {
     expect(onTerminalClose).toHaveBeenCalledOnce();
   });
 });
+
+function trustedRoomToken(payload: Record<string, unknown>): string {
+  return `eyJhbGciOiJIUzI1NiJ9.${btoa(JSON.stringify({ typ: "room", ...payload }))}.signature`;
+}
+
+function roomConnectionResponse(roomId: string): Response {
+  return new Response(JSON.stringify({ roomToken: trustedRoomToken({ sub: "user-a", roomId, role: "host" }) }), {
+    status: 200,
+  });
+}
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((nextResolve) => {
+    resolve = nextResolve;
+  });
+  return { promise, resolve };
+}

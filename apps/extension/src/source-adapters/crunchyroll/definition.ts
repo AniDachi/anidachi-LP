@@ -2,11 +2,13 @@ import type { SourceAdapterDefinition } from "../core/types";
 import { findPlayerContainer } from "../core/video-discovery";
 import { CrunchyrollVideoAdapter } from "./adapter";
 import { ensureCrunchyrollSource } from "./navigation";
+import { crunchyrollHistoryPolicy } from "./progress";
 
 export const crunchyrollDefinition: SourceAdapterDefinition = {
 	id: "crunchyroll",
 	provider: "crunchyroll",
 	priority: 200,
+	historyPolicy: crunchyrollHistoryPolicy,
 	ensureSource: ensureCrunchyrollSource,
 	detect(video) {
 		const container = findCrunchyrollPlayerContainer(video);

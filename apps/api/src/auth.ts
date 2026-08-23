@@ -3,7 +3,10 @@ import {
   MAX_DISPLAY_NAME_CHARS,
   MAX_PARTICIPANT_ID_CHARS,
   MAX_ROOM_ID_CHARS,
+  MAX_SESSION_ID_CHARS,
   MAX_URL_CHARS,
+  ROOM_HISTORY_OFFLINE_GRACE_SECONDS,
+  RoomHistoryAttestationClaimsSchema,
   RoomCapabilitiesSchema,
   type RoomCapabilities,
 } from "@anidachi/protocol";
@@ -19,6 +22,14 @@ export interface VerifiedRoomToken {
   capabilities?: RoomCapabilities;
   displayName?: string;
   avatarUrl?: string | null;
+}
+
+export interface RoomHistoryAttestationClaims {
+  sub: string;
+  roomId: string;
+  participantSessionId: string;
+  roomGeneration: number;
+  sourceGeneration: number;
 }
 
 function getSecret(env: WorkerAuthEnv): Uint8Array {
@@ -82,6 +93,52 @@ export async function verifyRoomToken(
   }
 }
 
+export async function signRoomHistoryAttestation(
+  claims: RoomHistoryAttestationClaims,
+  env: WorkerAuthEnv,
+): Promise<string> {
+  if (
+    !isBoundedId(claims.sub, MAX_PARTICIPANT_ID_CHARS) ||
+    !isBoundedId(claims.roomId, MAX_ROOM_ID_CHARS) ||
+    !isBoundedId(claims.participantSessionId, MAX_SESSION_ID_CHARS) ||
+    !isPositiveInteger(claims.roomGeneration) ||
+    !isPositiveInteger(claims.sourceGeneration)
+  ) {
+    throw new Error("Invalid room history authority claims");
+  }
+
+  const issuedAt = Math.floor(Date.now() / 1_000);
+  const signedClaims = RoomHistoryAttestationClaimsSchema.parse({
+    typ: "room_history",
+    iss: "anidachi-worker",
+    aud: "anidachi-web-history",
+    sub: claims.sub,
+    roomId: claims.roomId,
+    participantSessionId: claims.participantSessionId,
+    roomGeneration: claims.roomGeneration,
+    sourceGeneration: claims.sourceGeneration,
+    iat: issuedAt,
+    exp: issuedAt + ROOM_HISTORY_OFFLINE_GRACE_SECONDS,
+    jti: crypto.randomUUID(),
+  });
+
+  return new SignJWT({
+    typ: signedClaims.typ,
+    roomId: signedClaims.roomId,
+    participantSessionId: signedClaims.participantSessionId,
+    roomGeneration: signedClaims.roomGeneration,
+    sourceGeneration: signedClaims.sourceGeneration,
+  })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuer(signedClaims.iss)
+    .setAudience(signedClaims.aud)
+    .setSubject(signedClaims.sub)
+    .setIssuedAt(signedClaims.iat)
+    .setExpirationTime(signedClaims.exp)
+    .setJti(signedClaims.jti)
+    .sign(getSecret(env));
+}
+
 function isBoundedId(value: unknown, maxChars: number): value is string {
   return typeof value === "string" && value.length > 0 && value.length <= maxChars;
 }
@@ -92,6 +149,10 @@ function isBoundedUrl(value: unknown): value is string {
     value.length <= MAX_URL_CHARS &&
     URL.canParse(value)
   );
+}
+
+function isPositiveInteger(value: unknown): value is number {
+  return Number.isInteger(value) && (value as number) > 0;
 }
 
 export async function signRoomTokenForTest(

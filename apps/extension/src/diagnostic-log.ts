@@ -240,7 +240,6 @@ async function readSafeStorageSnapshot(): Promise<Record<string, unknown>> {
     | {
         user?: {
           id?: unknown;
-          displayName?: unknown;
           plan?: unknown;
           avatarUrl?: unknown;
         };
@@ -261,10 +260,6 @@ async function readSafeStorageSnapshot(): Promise<Record<string, unknown>> {
                   typeof authTokens.user.id === "string"
                     ? hashPrivacySafeId(authTokens.user.id)
                     : null,
-                displayName:
-                  typeof authTokens.user.displayName === "string"
-                    ? authTokens.user.displayName
-                    : null,
                 plan: typeof authTokens.user.plan === "string" ? authTokens.user.plan : null,
                 hasAvatar: typeof authTokens.user.avatarUrl === "string",
               }
@@ -275,8 +270,21 @@ async function readSafeStorageSnapshot(): Promise<Record<string, unknown>> {
 }
 
 function sanitizeDiagnosticStorageKey(key: string): string {
+  const voicePreferenceKey = key.match(
+    /^(local:)?voiceAudioPreferencesV1\.user%3A(.+)$/i,
+  );
+  if (voicePreferenceKey?.[2]) {
+    let accountId = voicePreferenceKey[2];
+    try {
+      accountId = decodeURIComponent(accountId);
+    } catch {
+      // Hash malformed legacy suffixes as-is rather than returning them.
+    }
+    return `${voicePreferenceKey[1] ?? ""}voiceAudioPreferencesV1.user%3A${hashPrivacySafeId(accountId)}`;
+  }
+
   const accountScopedKey = key.match(
-    /^(.*(?:watchProgress|watchLibraryCache|watchLibrarySyncLedger)\.v\d+)\..+$/i,
+    /^(.*(?:(?:watchProgress|watchLibraryCache|watchLibrarySyncLedger|accountInbox|socialSnapshot)\.v\d+|roomInviteNotifications\.notified))\..+$/i,
   );
   return accountScopedKey ? `${accountScopedKey[1]}.<redacted-id>` : key;
 }

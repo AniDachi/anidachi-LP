@@ -174,9 +174,12 @@ Daily use:
 
 ```bash
 graphify query "Trace room token flow from web to Worker WebSocket join."
-pnpm graph:update
+pnpm graph:update:code
 pnpm graph:query "Trace room token flow from web to Worker WebSocket join."
 ```
+
+For changed docs, plans, images, PDFs, or other semantic inputs, invoke
+`$graphify . --update` inside Codex instead of the code-only CLI command.
 
 Rules:
 
@@ -187,14 +190,17 @@ Rules:
 - Do not commit `graphify-out/cost.json`, HTML exports, scoped scratch graphs,
   cache files, Obsidian/wiki exports, or other local generated files.
 - Git hooks are not installed by default because they dirty `graphify-out/`
-  during normal checkout/commit work. Use `pnpm graph:update` manually after
-  meaningful code or architecture changes. `pnpm graph:watch` and
+  during normal checkout/commit work. Use `pnpm graph:update:code` manually after
+  meaningful code-only changes. `pnpm graph:watch` and
   `pnpm graph:hook:install` are local opt-ins only.
 - `.gitattributes` marks `graphify-out/graph.json` for Graphify's merge
   driver. Run `pnpm graph:merge-driver:install` once per clone.
 - `$graphify .` in Codex uses the active Codex session and does not require a
   separate LLM backend key. Headless `pnpm graph:extract` is different: it needs
   a configured backend when docs, PDFs, or images are present.
+- In Codex, semantic extraction must use the Graphify skill and Codex subagents.
+  Do not suggest or request Gemini or other provider keys unless the user
+  explicitly asks for a headless or CI extraction backend.
 - Record useful Graphify queries in PRs for room/P2P/auth/Worker/CI changes.
 - Treat Graphify as navigation help. Verify important claims against source.
 
@@ -256,16 +262,13 @@ Release/deploy:
 This project has a knowledge graph at `graphify-out/` with god nodes, community
 structure, and cross-file relationships.
 
-When the user types `$graphify` in Codex, use the Graphify skill before doing
-anything else. `/graphify` is the equivalent command in assistants that support
-slash commands.
+When the user types `$graphify` in Codex (or `/graphify` on another supported
+assistant), use the installed Graphify skill before doing anything else.
 
 Rules:
 - For codebase questions, first run `graphify query "<question>"` when
   `graphify-out/graph.json` exists. Use `graphify path "<A>" "<B>"` for
-  relationships and `graphify explain "<concept>"` for focused concepts. These
-  return a scoped subgraph, usually much smaller than `GRAPH_REPORT.md` or raw
-  grep output.
+  relationships and `graphify explain "<concept>"` for focused concepts.
 - Dirty graph files are not a reason to skip Graphify, but do not include
   `graphify-out/` in ordinary feature PRs unless the graph was intentionally
   refreshed.
@@ -273,7 +276,13 @@ Rules:
   of raw source browsing.
 - Read `graphify-out/GRAPH_REPORT.md` only for broad architecture review or
   when query/path/explain do not surface enough context.
-- After modifying code, run `graphify update .` or `pnpm graph:update` to keep
-  the graph current. This is AST-only for code changes and has no API cost.
-- For docs, images, PDFs, video, or semantic corpus changes, use the Graphify
-  skill's full update flow so semantic extraction rules are followed.
+- After code-only changes, run `pnpm graph:update:code` (AST-only, no LLM or
+  provider key).
+- After docs, plans, images, PDFs, video, or other semantic corpus changes, run
+  `$graphify . --update` inside Codex. Do not substitute `graphify update .` or
+  `pnpm graph:update:code`, because those commands intentionally update only
+  the code graph.
+- Codex-hosted semantic extraction uses the active Codex session and subagents.
+  It requires `multi_agent = true`, not a Gemini/OpenAI/Anthropic API key. Do
+  not suggest provider keys unless headless or CI extraction was explicitly
+  requested.

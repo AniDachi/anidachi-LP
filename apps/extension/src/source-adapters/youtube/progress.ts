@@ -1,4 +1,11 @@
-import type { WatchProgressEntry } from "../../watch-progress";
+import {
+  isValidHistoryMedia,
+  normalizeHistoryUrl,
+  type HistoryObservation,
+  type ProviderPlaybackMetadata,
+  type SourceAdapterHistoryPolicy,
+} from "../core/history-policy";
+import type { VideoAdapter } from "../core/types";
 
 export interface YouTubeProgressInput {
   title: string | null;
@@ -7,7 +14,7 @@ export interface YouTubeProgressInput {
   watchedWithCount: number;
 }
 
-export function getYouTubeProgressEntry(input: YouTubeProgressInput): WatchProgressEntry | null {
+export function getYouTubeProgressEntry(input: YouTubeProgressInput): ProviderPlaybackMetadata | null {
   if (!location.hostname.endsWith("youtube.com") && location.hostname !== "youtu.be") {
     return null;
   }
@@ -32,6 +39,46 @@ export function getYouTubeProgressEntry(input: YouTubeProgressInput): WatchProgr
     duration,
     roomId: input.roomId,
     watchedWithCount: input.watchedWithCount,
+  };
+}
+
+export const youtubeHistoryPolicy: SourceAdapterHistoryPolicy = {
+  observe: getYouTubeHistoryObservation,
+};
+
+export function getYouTubeHistoryObservation(input: {
+  adapter: VideoAdapter;
+  preferences: { youtubeHistoryEnabled: boolean } | null;
+}): HistoryObservation | null {
+  const { adapter, preferences } = input;
+  if (!preferences?.youtubeHistoryEnabled || adapter.id !== "youtube" || adapter.provider !== "youtube") {
+    return null;
+  }
+  if (!isValidHistoryMedia(adapter.video)) return null;
+  const sourceUrl = canonicalYouTubeHistoryUrl(location.href);
+  if (!sourceUrl) return null;
+  const videoId = new URL(sourceUrl).searchParams.get("v");
+  if (!videoId || !cleanYouTubeProgressVideoId(videoId)) return null;
+  const title = adapter.getTitle()?.trim();
+  if (!title) return null;
+  const key = `youtube:${videoId}`;
+  return {
+    provider: "youtube",
+    providerLabel: "YouTube",
+    titleKey: key,
+    itemKind: "movie",
+    title,
+    artworkUrl: null,
+    episodeKey: key,
+    episodeTitle: title,
+    seasonKey: null,
+    seasonTitle: null,
+    seasonNumber: null,
+    episodeNumber: null,
+    sourceUrl,
+    currentTime: adapter.video.currentTime,
+    duration: adapter.video.duration,
+    progress: adapter.video.currentTime / adapter.video.duration,
   };
 }
 
@@ -65,4 +112,21 @@ function canonicalSourceUrl(): string | null {
   } catch {
     return null;
   }
+}
+
+function canonicalYouTubeHistoryUrl(value: string): string | null {
+  const normalized = normalizeHistoryUrl(value);
+  if (!normalized) return null;
+  const url = new URL(normalized);
+  if (!isSupportedYouTubeHost(url.hostname) || url.pathname !== "/watch") return null;
+  const videoId = cleanYouTubeProgressVideoId(url.searchParams.get("v"));
+  if (!videoId) return null;
+  const origin = url.hostname === "m.youtube.com"
+    ? "https://www.youtube.com"
+    : url.origin;
+  return `${origin}/watch?v=${encodeURIComponent(videoId)}`;
+}
+
+function isSupportedYouTubeHost(hostname: string): boolean {
+  return hostname === "youtube.com" || hostname === "www.youtube.com" || hostname === "m.youtube.com";
 }

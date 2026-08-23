@@ -5,6 +5,9 @@ import {
   MAX_DISPLAY_NAME_CHARS,
   MAX_ICE_CANDIDATE_BYTES,
   MAX_PARTICIPANT_ID_CHARS,
+  MAX_ROOM_HISTORY_ATTESTATION_CHARS,
+  ROOM_HISTORY_OFFLINE_GRACE_SECONDS,
+  RoomHistoryAttestationClaimsSchema,
   MAX_ROOM_ID_CHARS,
   MAX_SDP_BYTES,
   MAX_SESSION_ID_CHARS,
@@ -16,6 +19,8 @@ import {
   ReactionEventSchema,
   RoomCapabilitiesSchema,
   RoomEndReasonSchema,
+  RoomSourcePersistenceAcknowledgementSchema,
+  RoomSourcePersistenceCallbackSchema,
   ServerEventSchema,
   WatchSourceDescriptorSchema,
   createEmptyRoomEndEventId,
@@ -25,6 +30,47 @@ import {
 } from "../src";
 
 describe("room protocol schemas", () => {
+  // Break caught: an internal callback without a positive generation or a
+  // canonical source could regress durable room state.
+  it("defines strict source persistence callback and acknowledgement envelopes", () => {
+    const callback = {
+      roomId: "room-1",
+      sourceGeneration: 2,
+      source: {
+        provider: "youtube",
+        sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        canonicalUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        videoFingerprint: "youtube|dQw4w9WgXcQ",
+      },
+    } as const;
+
+    expect(RoomSourcePersistenceCallbackSchema.parse(callback)).toEqual(callback);
+    expect(() => RoomSourcePersistenceCallbackSchema.parse({ ...callback, sourceGeneration: 0 })).toThrow();
+    expect(() => RoomSourcePersistenceCallbackSchema.parse({ ...callback, extra: true })).toThrow();
+
+    expect(RoomSourcePersistenceAcknowledgementSchema.parse({
+      ok: true,
+      outcome: "persisted",
+      sourceGeneration: 2,
+    })).toEqual({ ok: true, outcome: "persisted", sourceGeneration: 2 });
+    expect(RoomSourcePersistenceAcknowledgementSchema.parse({
+      ok: true,
+      outcome: "stale",
+      sourceGeneration: 1,
+    })).toEqual({ ok: true, outcome: "stale", sourceGeneration: 1 });
+    expect(() => RoomSourcePersistenceAcknowledgementSchema.parse({
+      ok: true,
+      outcome: "persisted",
+      sourceGeneration: 0,
+    })).toThrow();
+    expect(() => RoomSourcePersistenceAcknowledgementSchema.parse({
+      ok: true,
+      outcome: "persisted",
+      sourceGeneration: 2,
+      unexpected: true,
+    })).toThrow();
+  });
+
   it("derives one private empty-room callback identity across service planes", async () => {
     const roomId = "private-room-1";
     const emptySince = 1_000;
@@ -593,6 +639,10 @@ describe("room protocol schemas", () => {
 
     expect(source.provider).toBe("crunchyroll");
     expect(source.episodeNumber).toBe(2);
+    expect(WatchSourceDescriptorSchema.parse({ ...source, seasonNumber: 0 }).seasonNumber).toBe(0);
+    expect(() =>
+      WatchSourceDescriptorSchema.parse({ ...source, seasonNumber: 1001 }),
+    ).toThrow();
 
     const event = ServerEventSchema.parse({
       type: "SOURCE_CHANGED",
@@ -627,6 +677,60 @@ describe("room protocol schemas", () => {
     }
     expect(event.sourceGeneration).toBe(2);
     expect(event.previousSource?.episodeNumber).toBe(1);
+  });
+
+  it("accepts one strict private room history authority server event", () => {
+    const authority = {
+      type: "ROOM_HISTORY_AUTHORITY" as const,
+      roomId: "room-1",
+      participantSessionId: "participant-session-1",
+      roomGeneration: 2,
+      sourceGeneration: 3,
+      attestation: "opaque.signed.attestation",
+    };
+
+    expect(ServerEventSchema.parse(authority)).toEqual(authority);
+    expect(() => ClientEventSchema.parse(authority)).toThrow();
+    expect(() =>
+      ServerEventSchema.parse({ ...authority, participantSessionId: undefined }),
+    ).toThrow();
+    expect(() =>
+      ServerEventSchema.parse({ ...authority, purpose: "room" }),
+    ).toThrow();
+    expect(() =>
+      ServerEventSchema.parse({ ...authority, audience: "anidachi-worker" }),
+    ).toThrow();
+    expect(() =>
+      ServerEventSchema.parse({
+        ...authority,
+        attestation: "a".repeat(MAX_ROOM_HISTORY_ATTESTATION_CHARS + 1),
+      }),
+    ).toThrow();
+  });
+
+  it("defines one exact 24-hour room history attestation contract", () => {
+    expect(ROOM_HISTORY_OFFLINE_GRACE_SECONDS).toBe(86_400);
+    const claims = {
+      typ: "room_history",
+      iss: "anidachi-worker",
+      aud: "anidachi-web-history",
+      sub: "user-1",
+      roomId: "room-1",
+      participantSessionId: "participant-session-1",
+      roomGeneration: 2,
+      sourceGeneration: 3,
+      iat: 1_786_680_000,
+      exp: 1_786_766_400,
+      jti: "11111111-1111-4111-8111-111111111111",
+    };
+
+    expect(RoomHistoryAttestationClaimsSchema.parse(claims)).toEqual(claims);
+    expect(() => RoomHistoryAttestationClaimsSchema.parse({ ...claims, exp: undefined })).toThrow();
+    expect(() => RoomHistoryAttestationClaimsSchema.parse({ ...claims, jti: undefined })).toThrow();
+    expect(() => RoomHistoryAttestationClaimsSchema.parse({ ...claims, exp: claims.exp - 1 })).toThrow();
+    expect(() => RoomHistoryAttestationClaimsSchema.parse({ ...claims, exp: claims.exp + 1 })).toThrow();
+    expect(() => RoomHistoryAttestationClaimsSchema.parse({ ...claims, aud: [claims.aud] })).toThrow();
+    expect(() => RoomHistoryAttestationClaimsSchema.parse({ ...claims, email: "private@example.com" })).toThrow();
   });
 
   it("accepts explicit playback command server events", () => {

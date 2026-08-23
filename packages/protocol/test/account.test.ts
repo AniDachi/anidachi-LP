@@ -56,7 +56,6 @@ const group = {
 const recentPerson = {
   user: userB,
   lastWatchedAt: NOW,
-  sharedRoomCount: 3,
 };
 const invite = {
   id: INVITE_ID,
@@ -146,10 +145,10 @@ function watchLibraryFixture() {
 }
 
 describe("account response contracts", () => {
-  it("accepts a recent person with public profile and positive shared room count", () => {
+  it("accepts recent people without an unsupported shared-room count", () => {
     expect(RecentPersonSchema.parse(recentPerson)).toEqual(recentPerson);
     expect(() =>
-      RecentPersonSchema.parse({ ...recentPerson, sharedRoomCount: 0 }),
+      RecentPersonSchema.parse({ ...recentPerson, sharedRoomCount: 1 }),
     ).toThrow();
   });
 
@@ -408,6 +407,26 @@ describe("account response contracts", () => {
     expect(() =>
       WatchLibraryResponseSchema.parse(watchLibraryFixture()),
     ).not.toThrow();
+  });
+
+  it("keeps legacy watch-library seasons in the nullable 0 through 1000 domain", () => {
+    const fixture = watchLibraryFixture();
+    const item = fixture.items[0];
+    const episode = item?.episodes[0];
+    if (!item || !episode) throw new Error("Watch library fixture must include an episode");
+
+    expect(
+      WatchLibraryResponseSchema.parse({
+        ...fixture,
+        items: [{ ...item, episodes: [{ ...episode, seasonNumber: 0 }] }],
+      }).items[0]?.episodes[0]?.seasonNumber,
+    ).toBe(0);
+    expect(() =>
+      WatchLibraryResponseSchema.parse({
+        ...fixture,
+        items: [{ ...item, episodes: [{ ...episode, seasonNumber: 1001 }] }],
+      }),
+    ).toThrow();
   });
 
   it("accepts one bounded room invite target and an optional idempotency key", () => {

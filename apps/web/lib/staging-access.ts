@@ -157,6 +157,22 @@ function canBearerBypassStagingGate(pathname: string, method: string): boolean {
   if (pathname === "/api/watch-library/rooms" && method === "POST") {
     return true;
   }
+  if (pathname === "/api/watch-history/v2" && method === "GET") return true;
+  if (pathname === "/api/watch-history/v2/progress" && method === "POST") {
+    return true;
+  }
+  if (
+    pathname === "/api/watch-history/v2/preferences" &&
+    (method === "GET" || method === "PATCH")
+  ) {
+    return true;
+  }
+  if (pathname === "/api/watch-history/v2/delete" && method === "POST") {
+    return true;
+  }
+  if (pathname === "/api/watch-history/v2/rooms" && method === "POST") {
+    return true;
+  }
   if (pathname === "/api/rooms" && method === "POST") return true;
   if (/^\/api\/rooms\/[^/]+$/.test(pathname) && method === "GET") return true;
   if (/^\/api\/rooms\/[^/]+\/connect$/.test(pathname) && method === "POST") {
@@ -166,6 +182,9 @@ function canBearerBypassStagingGate(pathname: string, method: string): boolean {
     return true;
   }
   if (/^\/api\/internal\/rooms\/[^/]+\/ended$/.test(pathname) && method === "POST") {
+    return true;
+  }
+  if (/^\/api\/internal\/rooms\/[^/]+\/source$/.test(pathname) && method === "POST") {
     return true;
   }
   return false;

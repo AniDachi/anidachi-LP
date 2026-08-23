@@ -11,6 +11,10 @@ import { AnidachiLogo } from "@/components/anidachi-logo";
 import { ExtensionCheck } from "./extension-check";
 import { RoomMobileHandoff } from "./room-mobile-handoff";
 import { WaitingRefresh } from "./waiting-refresh";
+import {
+  buildRoomSourceLaunchUrl,
+  deriveDurableRoomSource,
+} from "@/lib/anidachi-auth/room-source";
 
 export const dynamic = "force-dynamic";
 
@@ -25,19 +29,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `Watchroom ${roomId} — AniDachi`,
     robots: { index: false, follow: false },
   };
-}
-
-function buildLaunchUrl(sourceUrl: string, roomId: string): string | null {
-  try {
-    const url = new URL(sourceUrl);
-    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
-    const params = new URLSearchParams(url.hash.replace(/^#/, ""));
-    params.set("anidachiRoom", roomId);
-    url.hash = params.toString();
-    return url.toString();
-  } catch {
-    return null;
-  }
 }
 
 function Shell({ children }: { children: React.ReactNode }) {
@@ -95,7 +86,10 @@ export default async function RoomPage({ params, searchParams }: Props) {
 
   const isHost = session?.userId === room.host_user_id;
   const isParticipant = isHost || alreadyMember;
-  const launchUrl = room.source_url ? buildLaunchUrl(room.source_url, roomId) : null;
+  const source = deriveDurableRoomSource(room);
+  const launchUrl = source
+    ? buildRoomSourceLaunchUrl(source.source, roomId)
+    : null;
   const roomTitle = room.title ?? room.show_id ?? "Anime Watchroom";
   const justJoined = joined === "1";
 

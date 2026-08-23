@@ -44,10 +44,12 @@ For Cloudflare Worker regressions:
 
 For extension regressions:
 
-1. Identify affected channel: staging tester item or public item.
+1. Identify affected channel and exact artifact: unpacked staging tester build
+   or a future published production build.
 2. Locate previous known-good artifact and `version_name`.
-3. Re-upload the previous artifact to the matching Chrome Web Store listing if
-   the store release must be rolled back.
+3. Reload the previous unpacked artifact for current staging testers. If a
+   future production store release exists, use that channel's approved rollback
+   mechanism separately.
 4. Verify manifest channel:
    - staging name: `Anidachi Staging`;
    - production name: `Anidachi`;
@@ -89,6 +91,49 @@ For schema/data issues:
 3. Prefer a forward fix migration over destructive rollback.
 4. Never expose service-role keys to client code while debugging.
 5. Verify with read-only queries first, then repair.
+
+### Watch History v2 bounded-read prerequisite
+
+`20260816090000_watch_history_v2_bounded_read.sql` is compatible with the old
+web runtime, but it is not dormant: its triggers maintain the derived
+`watch_history_title_summaries` and
+`watch_history_user_session_summaries` projections on v2 progress and
+session/participant writes/deletes.
+
+The migration uses an explicit transaction and acquires a write-conflicting
+lock on `user_watch_settings` before session, participant, and progress sources, matching
+the writer RPC lock order. If the ten-second lock timeout fires, the migration
+rolls back completely: do not repair migration history or partially apply SQL;
+let in-flight playback writes drain and rerun the database workflow.
+
+If only the web consumer is bad, redeploy the prior web commit first. The
+projection/RPC can remain installed while the previous web runtime ignores it.
+
+If the migration itself must be removed, prepare and review a new forward
+migration; do not edit migration history or run destructive SQL manually. The
+forward migration must, in this order:
+
+1. confirm the bounded-read web consumer is absent or already rolled back;
+2. drop `sync_watch_history_session_summaries_v2` from
+   `public.watch_sessions`, drop `sync_watch_history_user_session_summary_v2`
+   from `public.watch_session_participants`, then drop
+   `sync_watch_history_title_summary_v2` and
+   `sync_watch_history_title_summary_delete_v2` from
+   `public.watch_episode_progress`;
+3. drop `public.list_watch_history_v2_page(uuid,bigint,integer,timestamptz,text)`;
+4. drop the four trigger functions and
+   `public.refresh_watch_history_title_summary_v2(uuid,bigint,text,text)`;
+5. drop `public.watch_history_user_session_summaries`, then
+   `public.watch_history_title_summaries`; their supporting indexes drop with
+   the tables;
+6. leave `public.watch_episode_progress`, sessions, participants, receipts,
+   deletions, settings, generations, and every legacy table unchanged;
+7. run migration-history, pgTAP, schema-lint, and old-web read/write smoke checks.
+
+For a migration-only incident before the consumer deploy, no web rollback is
+needed; apply the reviewed forward cleanup and verify old-runtime writes. After
+the consumer deploy, web rollback comes first and database cleanup is optional.
+Do not create the cleanup migration speculatively during a healthy release.
 
 ## Incident Note Template
 

@@ -1,4 +1,7 @@
-import type { WatchSourceDescriptor } from "@anidachi/protocol";
+import {
+	canonicalizeRoomSourceUrl,
+	type WatchSourceDescriptor,
+} from "@anidachi/protocol";
 import { describe, expect, it, vi } from "vitest";
 import { createYouTubeSourceNavigator } from "../../../src/source-adapters/youtube/navigation";
 
@@ -6,6 +9,23 @@ const VIDEO_ID = "dQw4w9WgXcQ";
 const OTHER_VIDEO_ID = "aqz-KE-bpKQ";
 
 describe("YouTube source navigation", () => {
+	it("keeps every currently accepted desktop and mobile navigation identity canonicalizable", () => {
+		for (const input of [
+			`https://youtube.com/watch?v=${VIDEO_ID}`,
+			`https://www.youtube.com/watch?v=${VIDEO_ID}`,
+			`https://m.youtube.com/watch?v=${VIDEO_ID}`,
+			`https://youtu.be/${VIDEO_ID}`,
+		]) {
+			expect(canonicalizeRoomSourceUrl(input)).toMatchObject({
+				ok: true,
+				source: {
+					canonicalUrl: `https://www.youtube.com/watch?v=${VIDEO_ID}`,
+					provider: "youtube",
+				},
+			});
+		}
+	});
+
 	it("returns already-current for the same canonical YouTube video", async () => {
 		const assign = vi.fn();
 		const ensureSource = createYouTubeSourceNavigator({
@@ -65,6 +85,9 @@ describe("YouTube source navigation", () => {
 	it.each([
 		"javascript:alert(1)",
 		`https://example.com/watch?v=${OTHER_VIDEO_ID}`,
+		`http://www.youtube.com/watch?v=${OTHER_VIDEO_ID}`,
+		`https://user:secret@www.youtube.com/watch?v=${OTHER_VIDEO_ID}`,
+		`https://studio.youtube.com/watch?v=${OTHER_VIDEO_ID}`,
 	])("rejects javascript and foreign-host URLs: %s", async (sourceUrl) => {
 		const assign = vi.fn();
 		const ensureSource = createYouTubeSourceNavigator({
@@ -76,6 +99,26 @@ describe("YouTube source navigation", () => {
 			ensureSource(source(OTHER_VIDEO_ID, sourceUrl), context()),
 		).resolves.toMatchObject({ status: "unsupported" });
 		expect(assign).not.toHaveBeenCalled();
+	});
+
+	it("navigates an accepted youtu.be source only through its canonical destination", async () => {
+		const assign = vi.fn();
+		const ensureSource = createYouTubeSourceNavigator({
+			assign,
+			currentHref: () => `https://www.youtube.com/watch?v=${VIDEO_ID}`,
+		});
+		const shortUrl = `https://youtu.be/${OTHER_VIDEO_ID}/#ignored=value`;
+
+		await expect(
+			ensureSource(source(OTHER_VIDEO_ID, shortUrl), context("room-123")),
+		).resolves.toEqual({
+			status: "navigation-started",
+			targetUrl:
+				`https://www.youtube.com/watch?v=${OTHER_VIDEO_ID}#anidachiRoom=room-123`,
+		});
+		expect(assign).toHaveBeenCalledWith(
+			`https://www.youtube.com/watch?v=${OTHER_VIDEO_ID}#anidachiRoom=room-123`,
+		);
 	});
 
 	it.each([

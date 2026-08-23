@@ -1,4 +1,11 @@
-import type { WatchProgressEntry } from "../../watch-progress";
+import {
+  isValidHistoryMedia,
+  normalizeHistoryUrl,
+  type HistoryObservation,
+  type ProviderPlaybackMetadata,
+  type SourceAdapterHistoryPolicy,
+} from "../core/history-policy";
+import type { VideoAdapter } from "../core/types";
 import {
 	inferCrunchyrollSeasonFromSourceUrl,
 	inferCrunchyrollSeasonFromTitle,
@@ -15,7 +22,7 @@ interface CrunchyrollProgressInput {
 
 export function getCrunchyrollProgressEntry(
 	input: CrunchyrollProgressInput,
-): WatchProgressEntry | null {
+): ProviderPlaybackMetadata | null {
 	if (!location.hostname.endsWith("crunchyroll.com")) {
 		return null;
 	}
@@ -81,6 +88,70 @@ export function getCrunchyrollProgressEntry(
 		roomId: input.roomId,
 		watchedWithCount: input.watchedWithCount,
 	};
+}
+
+export const crunchyrollHistoryPolicy: SourceAdapterHistoryPolicy = {
+  observe: getCrunchyrollHistoryObservation,
+};
+
+export function getCrunchyrollHistoryObservation(input: {
+  adapter: VideoAdapter;
+}): HistoryObservation | null {
+  const { adapter } = input;
+  if (
+    adapter.id !== "crunchyroll" ||
+    adapter.provider !== "crunchyroll" ||
+    !isValidHistoryMedia(adapter.video)
+  ) {
+    return null;
+  }
+  const url = getCanonicalCrunchyrollWatchUrl(location.href);
+  if (!url) return null;
+  const entry = getCrunchyrollProgressEntry({
+    title: adapter.getTitle(),
+    video: adapter.video,
+    watchedWithCount: 1,
+  });
+  if (!entry) return null;
+  const titleKey = entry.itemId.trim();
+  const episodeKey = (entry.episodeId ?? entry.contentId ?? "").trim();
+  const title = entry.itemTitle.trim();
+  const episodeTitle = (entry.episodeTitle ?? title).trim();
+  if (!titleKey || !episodeKey || !title || !episodeTitle) return null;
+  return {
+    provider: "crunchyroll",
+    providerLabel: "Crunchyroll",
+    titleKey,
+    itemKind: entry.kind === "episode" ? "series" : "movie",
+    title,
+    artworkUrl: entry.artworkUrl ?? null,
+    episodeKey,
+    episodeTitle,
+    seasonKey: entry.seasonId ?? null,
+    seasonTitle: entry.seasonTitle ?? null,
+    seasonNumber: entry.seasonNumber ?? null,
+    episodeNumber: null,
+    sourceUrl: url,
+    currentTime: adapter.video.currentTime,
+    duration: adapter.video.duration,
+    progress: adapter.video.currentTime / adapter.video.duration,
+    catalogState: "unavailable",
+  };
+}
+
+function getCanonicalCrunchyrollWatchUrl(value: string): string | null {
+  const normalized = normalizeHistoryUrl(value);
+  if (!normalized) return null;
+  const url = new URL(normalized);
+  if (
+    url.hostname !== "crunchyroll.com" &&
+    !url.hostname.endsWith(".crunchyroll.com")
+  ) return null;
+  const match = url.pathname.match(
+    /^\/(?:(?<locale>[a-z]{2}(?:-[a-z]{2})?)\/)?watch\/(?<id>[A-Za-z0-9_-]+)(?:\/(?<slug>[A-Za-z0-9][A-Za-z0-9-]*))?\/?$/,
+  );
+  if (!match?.groups?.id) return null;
+  return `${url.origin}${url.pathname}`;
 }
 
 interface CrunchyrollSeriesInfo {

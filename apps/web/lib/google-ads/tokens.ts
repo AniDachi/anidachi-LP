@@ -1,12 +1,12 @@
 import fs from "fs/promises";
 import path from "path";
-import {
-  del as blobDel,
-  get as blobGet,
-  list as blobList,
-  put as blobPut,
-} from "@vercel/blob";
 import { getCrmDataDir } from "@/lib/kreatli-crm/store";
+import {
+  deletePrivateIntegrationBlob,
+  hasPrivateIntegrationBlobConfiguration,
+  readPrivateIntegrationBlobText,
+  writePrivateIntegrationBlobText,
+} from "@/lib/private-integration-blob";
 
 export type GoogleAdsStoredTokens = {
   refresh_token?: string;
@@ -15,30 +15,17 @@ export type GoogleAdsStoredTokens = {
   email?: string;
 };
 
-const BLOB_PATH = "google-ads/tokens.json";
-const BLOB_ACCESS = (process.env.BLOB_ACCESS ?? "private") as "public" | "private";
+export const GOOGLE_ADS_TOKENS_BLOB_PATH = "google-ads/tokens.json";
+const BLOB_PATH = GOOGLE_ADS_TOKENS_BLOB_PATH;
 
 function tokenPath() {
   return path.join(getCrmDataDir(), "google-ads-tokens.json");
 }
 
 export async function readGoogleAdsTokens(): Promise<GoogleAdsStoredTokens | null> {
-  const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
-  if (blobToken) {
-    try {
-      const result = await blobGet(BLOB_PATH, {
-        access: BLOB_ACCESS,
-        token: blobToken,
-      });
-      if (result && result.statusCode === 200) {
-        const text = await new Response(result.stream).text();
-        return JSON.parse(text) as GoogleAdsStoredTokens;
-      }
-      // Missing blob object — fall back to local crm-data below.
-    } catch {
-      // Blob lookup can fail in local dev (or before we ever uploaded tokens).
-      // Fall back to the local crm-data file below.
-    }
+  if (hasPrivateIntegrationBlobConfiguration()) {
+    const text = await readPrivateIntegrationBlobText(BLOB_PATH);
+    return text ? (JSON.parse(text) as GoogleAdsStoredTokens) : null;
   }
 
   try {
@@ -52,14 +39,11 @@ export async function readGoogleAdsTokens(): Promise<GoogleAdsStoredTokens | nul
 export async function writeGoogleAdsTokens(
   data: GoogleAdsStoredTokens
 ): Promise<void> {
-  const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
-  if (blobToken) {
-    await blobPut(BLOB_PATH, JSON.stringify(data, null, 2), {
-      access: BLOB_ACCESS,
-      token: blobToken,
-      addRandomSuffix: false,
-      allowOverwrite: true,
-    });
+  if (hasPrivateIntegrationBlobConfiguration()) {
+    await writePrivateIntegrationBlobText(
+      BLOB_PATH,
+      JSON.stringify(data, null, 2),
+    );
     return;
   }
 
@@ -82,18 +66,8 @@ export async function mergeGoogleAdsTokens(
 }
 
 export async function clearGoogleAdsTokens(): Promise<void> {
-  const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
-  if (blobToken) {
-    try {
-      const { blobs } = await blobList({ prefix: BLOB_PATH, token: blobToken });
-      if (!blobs.length) return;
-      await blobDel(
-        blobs.map((b) => b.url),
-        { token: blobToken }
-      );
-    } catch {
-      // ignore
-    }
+  if (hasPrivateIntegrationBlobConfiguration()) {
+    await deletePrivateIntegrationBlob(BLOB_PATH);
     return;
   }
 
