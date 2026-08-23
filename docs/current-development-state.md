@@ -213,10 +213,11 @@ runtime had no private CRM authority and silently fell back to an empty,
 read-only deployment filesystem. Three later survey requests returned optimistic
 HTTP success but logged failed filesystem persistence.
 
-The active repair is
+The completed repair record is
 `docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md`.
-Its CRM-specific private Blob authority is merged to `staging` at
-`d74fa6f3826a61f428147e5bbc472cc6220c4983`. It does not enable the shared
+Its CRM-specific private Blob authority was first accepted on `staging` and then
+promoted through PR `#240` to `main` as
+`8cc5e4e6641ca55f0b62a320e8726de67900ce34`. It does not enable the shared
 deferred integration boundary, fails closed on Vercel when its narrow authority
 is absent, conditionally updates Blob objects by ETag, reports public-form
 success only after durable storage, and provides a five-object dry-run-first
@@ -230,13 +231,24 @@ submissions returned HTTP 200 without changing the waitlist count, and fresh
 deployment `dpl_AnAzpf8XTHUcCrYMz19TDkQ2y3rq` still rendered and returned 685.
 The private authority now contains 687 contacts in total because the controlled
 `@example.com` acceptance identity is retained as a non-waitlist test record.
-Fresh runtime logs contain no EROFS, Blob-auth, or CRM-persistence failure.
+Fresh staging runtime logs contain no EROFS, Blob-auth, or CRM-persistence
+failure.
 
 The legacy public objects remain untouched as rollback evidence;
 `kreatli-crm/gmail-tokens.json` is outside the recovery inventory. Production
-environment and runtime remain unchanged, `main` remains at
-`c67fb79d0bd98c4da57d966040c6bda16f918ee8`, and the separate Task 7
-Production/main gate still requires explicit approval.
+received only the narrow `KREATLI_CRM_BLOB_READ_WRITE_TOKEN`; the shared
+`PRIVATE_INTEGRATION_BLOB_*` authority and unrelated integrations were not
+enabled. Production migration workflow `32656249908` and main CI workflow
+`32656249981` succeeded. Deployment `dpl_3v2H5pk4v5muknJvpyKjXZpJHEXX`
+returned and rendered 685; an idempotent replay kept the existing position 683,
+and controlled contact/feature submissions returned HTTP 200 without changing
+the count. Fresh redeploy `dpl_DCt6ocJBbEJ848rfaC38W5bhbdyg` again returned
+and rendered 685, proving persistence across instances. Production logs contain
+no EROFS, Blob-auth, CRM-persistence, fake-success, or PII-log failure; optional
+Gmail-not-configured warnings do not affect durable writes. The private store
+contains 687 contacts total and 685 survey leads. Pre-cutover deployment
+`dpl_AX8MKEAcgjAXJpPnVUXZgqfNN14D` remains the deployment rollback anchor, and
+the recovery plan records exact final ETags and SHA-256 data anchors.
 
 ## Pre-release Security Readiness
 
@@ -1070,7 +1082,7 @@ These are intentionally not treated as solved:
   `docs/superpowers/plans/2026-06-17-development-flow-quality-system-plan.md`
 - Active core-foundation-to-UI/UX handoff plan:
   `docs/superpowers/plans/2026-08-21-core-foundation-ui-handoff-plan.md`
-- Active waitlist/CRM durable-storage recovery plan:
+- Completed waitlist/CRM durable-storage recovery record:
   `docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md`
 - Environment and secrets matrix: `docs/environment-and-secrets-matrix.md`
 - Staging acceptance checklist: `docs/staging-acceptance-checklist.md`
