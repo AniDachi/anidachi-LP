@@ -191,9 +191,12 @@ deadlineAt
 delivery state for an idempotent Web callback
 ```
 
-The room cap already bounds the number of records. The record is stored in
-Durable Object storage, not only in constructor memory, so WebSocket
-Hibernation or Worker eviction cannot lose the deadline.
+A fixed internal safety cap bounds the number of records independently from
+the simultaneous room seat cap. Disconnected users leave live occupancy
+immediately, so short guest turnover may legitimately produce more pending
+deadlines than live seats. The record is stored in Durable Object storage, not
+only in constructor memory, so WebSocket Hibernation or Worker eviction cannot
+lose the deadline.
 
 The existing single Durable Object alarm remains the only alarm. Its scheduler
 chooses the earliest due item across:
@@ -219,7 +222,8 @@ create/connect. The identifier is included in:
 
 The Worker accepts JOIN only when the token subject, room, role, and
 `participantSessionId` match the event. The Worker never trusts the participant
-identity sent by page code.
+identity sent by page code. Web and Worker share the canonical room-token
+contract: issuer `anidachi-auth`, audience `anidachi-worker`.
 
 For a same-tab retry or reload, the stored identifier is reused. A deliberate
 same-room takeover prepares a new identifier and atomically replaces the same
@@ -249,8 +253,11 @@ Room create/connect returns HTTP `409`:
 Only already-visible room metadata is returned. No raw access token, source
 credential, internal identifier, or unvalidated redirect is exposed. The
 extension shows one stable state without a loading loop or repeated refresh.
-The minimal recovery actions are “Open active room” and, according to role,
-“End room” or “Leave room.” Visual redesign is outside this plan.
+“Open active room” is offered only when the active room belongs to the current
+provider (or has no provider yet). A conflict from another provider tells the
+user to return to that existing tab; it must not connect the wrong provider tab
+and take over the correct live session. Role-appropriate “End room” or “Leave
+room” recovery remains available. Visual redesign is outside this plan.
 
 ### Departure
 
@@ -301,7 +308,9 @@ existing Worker-to-Web room-finalization path with the new
 - Closing the tab removes its tab-scoped record after the departure attempt. A
   fresh normal tab has nothing to restore.
 - Duplicating an explicit same-room URL is a deliberate same-room takeover. The
-  new session wins; the old session becomes stale.
+  new tab receives a newly minted background-owned session identifier, wins,
+  and makes the old session stale. A cloned legacy page `sessionStorage`
+  identifier is never reused as authority for two tabs.
 - Browser crash or extended offline state cannot deliver reliable
   `tabs.onRemoved`; the stored Durable Object deadline is the fallback.
 - The existing four-hour empty-room timeout remains only a last-resort cleanup

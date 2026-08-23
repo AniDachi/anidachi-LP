@@ -899,7 +899,7 @@ obtain approval instead of patching around it.
 - Modify intentionally only if refreshed:
   `graphify-out/manifest.json`
 
-- [ ] **Step 1: Perform source review before opening a PR**
+- [x] **Step 1: Perform source review before opening a PR**
 
 Review:
 
@@ -914,6 +914,28 @@ Review:
 - absence of unrelated provider/release/infrastructure changes.
 
 Run a current Graphify path/query only as a cross-check, then verify in source.
+
+Source review completed locally on 2026-08-23. Database lock/privilege paths,
+exact session comparisons, JOIN/end/departure producers and consumers, the
+single reconciled alarm, hibernation restore, callback idempotency, tab/auth
+lifecycle, and Watch History authority continuity were verified in source.
+The review found and fixed four bounded integration gaps before any PR:
+
+1. Web's real room-token issuer differed from the Worker and local harness
+   expectation (`3a4814b`); protocol, Web, Worker, and harnesses now share the
+   production contract.
+2. Pending disconnect storage incorrectly reused the simultaneous live seat
+   cap during rapid turnover (`e482eb4`); it now uses the existing fixed safety
+   bound while retaining one alarm.
+3. A duplicated legacy page could reuse one participant session in two tabs,
+   malformed stored authority was under-bounded, and lost terminal ERROR frames
+   could reconnect after takeover (`c7e4c7b`).
+4. “Open active room” could take over a correct tab from a different provider;
+   cross-provider conflicts now keep the current tab disconnected and direct
+   the user back to the already active provider (`c7e4c7b`).
+
+No new service, lease, heartbeat, queue, env variable, secret, TURN, Blob,
+Stripe, release, `main`, production, or Chrome Web Store change was introduced.
 
 - [ ] **Step 2: Open the feature PR to staging**
 
