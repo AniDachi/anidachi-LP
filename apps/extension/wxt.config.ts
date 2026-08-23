@@ -1,7 +1,9 @@
 import { defineConfig } from "wxt";
+import {
+  getExtensionManifestKey,
+  resolveExtensionChannel,
+} from "./src/extension-channel-identity";
 import extensionPackage from "./package.json";
-
-type ExtensionChannel = "local" | "staging" | "production";
 
 const LOCAL_HOST_PERMISSIONS = [
   "http://127.0.0.1/*",
@@ -20,12 +22,6 @@ const STORE_VIDEO_HOST_PERMISSIONS = [
   "https://crunchyroll.com/*",
   "https://*.crunchyroll.com/*",
 ];
-
-function getExtensionChannel(): ExtensionChannel {
-  const channel = process.env.WXT_EXTENSION_CHANNEL;
-  if (channel === "staging" || channel === "production") return channel;
-  return "local";
-}
 
 function getHttpHostPermission(value: string | undefined): string | null {
   if (!value) return null;
@@ -50,7 +46,8 @@ function unique(values: Array<string | null>): string[] {
   return [...new Set(values.filter((value): value is string => Boolean(value)))];
 }
 
-const extensionChannel = getExtensionChannel();
+const extensionChannel = resolveExtensionChannel(process.env.WXT_EXTENSION_CHANNEL);
+const extensionManifestKey = getExtensionManifestKey(extensionChannel);
 const extensionName =
   extensionChannel === "production"
     ? "Anidachi"
@@ -113,6 +110,7 @@ export default defineConfig({
     short_name: extensionShortName,
     description: extensionDescription,
     version: extensionVersion,
+    ...(extensionManifestKey ? { key: extensionManifestKey } : {}),
     minimum_chrome_version: "121",
     ...(buildId ? { version_name: buildId } : {}),
     permissions: unique([

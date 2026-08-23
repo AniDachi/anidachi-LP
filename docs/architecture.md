@@ -184,18 +184,18 @@ pnpm --filter @anidachi/web dev
 
 For auth-only local testing, configure `apps/web/.env.local` with Supabase, OAuth, and `ANIDACHI_JWT_SECRET`. The same JWT secret must be set for the Worker.
 
-## Store Builds
+## Extension Builds
 
-Build the staging Chrome Web Store artifact:
+Build the narrow staging tester artifact:
 
 ```bash
 pnpm build:extension:staging
 ```
 
-Build the production Chrome Web Store artifact:
+Build the future production artifact with its required public VAPID key:
 
 ```bash
-pnpm build:extension:public
+WXT_VAPID_PUBLIC_KEY="<production-public-key>" pnpm build:extension:public
 ```
 
 Current generated output folders:

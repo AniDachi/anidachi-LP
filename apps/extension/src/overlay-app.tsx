@@ -22,6 +22,7 @@ import type {
   CSSProperties,
   FormEvent,
   PointerEvent,
+  MouseEvent as ReactMouseEvent,
   KeyboardEvent as ReactKeyboardEvent,
   WheelEvent as ReactWheelEvent,
   SyntheticEvent,
@@ -124,7 +125,6 @@ import { PlaybackSyncController } from "./playback-sync-controller";
 import {
   connectWebsiteRoom,
   createRoom,
-  endRoom,
   isQuotaExhaustedError,
   isTerminalRoomJoinError,
   RoomClient,
@@ -134,6 +134,12 @@ import {
 import { applyRoomUsageSnapshot, roomQuotaRemainingSeconds } from "./room-quota-display";
 import { selectVoiceRailParticipants, shouldRenderRoomRail } from "./room-rail-intent";
 import { getRoomReconnectDelayMs } from "./room-reconnect";
+import {
+  isTrustedOverlayActionEvent,
+  requestPrivilegedOverlayAction,
+  requestQuotaRoomEnd,
+  type PrivilegedOverlayContext,
+} from "./privileged-overlay-intent";
 import {
   clearRoomSession,
   clearRoomSessionIfMatch,
@@ -170,9 +176,9 @@ import {
   normalizePlayerOverlayGeometry,
   type PlayerOverlayGeometry,
 } from "./source-adapters/core/overlay-geometry";
+import type { HistoryObservation } from "./source-adapters/core/history-policy";
 import { ensureSourceForProvider } from "./source-adapters/core/source-navigation";
 import type { SourceProvider, VideoAdapter } from "./source-adapters/core/types";
-import { loadCrunchyrollPosterArtwork } from "./source-adapters/crunchyroll/artwork";
 import { getDefinitionForProvider } from "./source-adapters/registry";
 import { overlayStyles } from "./styles";
 import { useTopBubbleReveal } from "./top-bubble-reveal";
@@ -184,7 +190,6 @@ import {
   EXTENSION_CONTEXT_INVALIDATED_MESSAGE,
   isExtensionContextInvalidatedError,
   signInAndCreateParticipant,
-  signOutAndClearParticipant,
   trySilentSignIn,
 } from "./user-identity";
 import {
@@ -197,20 +202,22 @@ import {
   type VoiceAudioPreferences,
   voiceAudioPreferencesStorageKeyForUser,
 } from "./voice-audio-preferences";
-import { resolveWatchLibraryReconcileAuth } from "./watch-library-auth";
 import {
-  markWatchLibraryEntriesSynced,
-  reconcileWatchProgress,
-  type WatchCheckpointKind,
-} from "./watch-library-client";
+  createWatchHistoryContentReconnectMessage,
+  parseWatchHistoryBootstrapData,
+  requestWatchHistory,
+  type WatchHistoryCaptureResult,
+} from "./watch-history-client";
 import {
-  createEmptyWatchProgressStore,
-  loadWatchProgressStoreForUser,
-  recordWatchProgressForUser,
-  type WatchProgressEntry,
-  type WatchProgressStore,
-} from "./watch-progress";
-import { getWatchProgressEntryForAdapter } from "./watch-progress-entry";
+  createWatchHistoryController,
+  type WatchHistoryController,
+} from "./watch-history-controller";
+import { bindWatchHistoryPlaybackListeners } from "./watch-history-listeners";
+import { bindWatchHistoryPreferenceListener } from "./watch-history-preference-listener";
+import {
+  resolveWatchHistoryRuntimeGate,
+  shouldRefreshWatchHistoryAuthority,
+} from "./watch-history-runtime-policy";
 
 interface OverlayAppProps {
   adapter: VideoAdapter;
@@ -272,7 +279,6 @@ const CHAT_HISTORY_MAX_MESSAGES = 80;
 const SETTINGS_RAIL_DRAG_THRESHOLD_PX = 9;
 const SETTINGS_RAIL_HORIZONTAL_INTENT_RATIO = 1.2;
 const MESSAGE_COMPOSER_SHIELD_RELEASE_BUFFER_MS = 180;
-const WATCH_LIBRARY_REMOTE_RECONCILE_INTERVAL_MS = 60_000;
 const SILENT_SIGN_IN_SUPPRESSION_AFTER_SIGN_OUT_MS = 15_000;
 const LIVE_CHAT_NAME_COLORS = [
   "#c4a7ff",
@@ -348,6 +354,16 @@ export function usePlayerOverlayGeometry(
   return geometry;
 }
 
+export async function runOverlayPrivilegedAction(
+  event: { nativeEvent?: { isTrusted?: unknown } },
+  action: "sign-out" | "end-room",
+  context: PrivilegedOverlayContext,
+  afterApproval: () => Promise<void> | void,
+): Promise<void> {
+  await requestPrivilegedOverlayAction(event, action, context);
+  await afterApproval();
+}
+
 export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const clientRef = useRef(new RoomClient());
   const adapterActiveRef = useRef(adapterActive);
@@ -405,6 +421,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     string | null | undefined
   >(undefined);
   const [roomId, setRoomId] = useState<string | null>(null);
+  const [privilegedRoomAuthority, setPrivilegedRoomAuthority] =
+    useState<PrivilegedOverlayContext | null>(null);
   const [roomToken, setRoomToken] = useState<string | null>(null);
   const [roomShareableLink, setRoomShareableLink] = useState<string | null>(null);
   const [roomQuota, setRoomQuota] = useState<RoomQuotaSummary | null>(null);
@@ -453,6 +471,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     ReadonlyMap<string, RoomInviteTargetStatus>
   >(() => new Map());
   const inviteActionIdsRef = useRef(new Map<string, string>());
+  const inviteStatusMembershipRef = useRef({ roomId: null as string | null, participantCount: 0 });
   const [messageComposerGuardActive, setMessageComposerGuardActive] = useState(false);
   const [messageComposerShieldActive, setMessageComposerShieldActive] = useState(false);
   const [messageComposerShieldReleasing, setMessageComposerShieldReleasing] = useState(false);
@@ -541,13 +560,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   });
   const [debugEntriesCount, setDebugEntriesCount] = useState(() => getDebugEntries().length);
   const [diagnosticStatus, setDiagnosticStatus] = useState<string | null>(null);
-  const [watchProgressStore, setWatchProgressStore] = useState<WatchProgressStore>(() =>
-    createEmptyWatchProgressStore(),
-  );
-  const [currentResourceEntry, setCurrentResourceEntry] = useState<WatchProgressEntry | null>(null);
-  const crunchyrollPosterRequestsRef = useRef<Record<string, Promise<string | null> | undefined>>(
-    {},
-  );
+  const [currentResourceEntry, setCurrentResourceEntry] = useState<HistoryObservation | null>(null);
+  const watchHistoryControllerRef = useRef<WatchHistoryController | null>(null);
+  const watchHistoryRoomSuppressedRef = useRef(true);
+  const watchHistoryAuthContextRef = useRef<{
+    ownerUserId: string | null;
+    accessToken: string | null;
+  } | null>(null);
 
   const participantRef = useRef<Participant | null>(null);
   const settingsCategoryScrollRef = useRef<HTMLDivElement | null>(null);
@@ -910,6 +929,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     roomIdRef.current = roomId;
     inviteActionIdsRef.current.clear();
     if (!roomId) {
+      setPrivilegedRoomAuthority(null);
       setRoomCapabilities(null);
       setInvitePanelOpen(false);
       setInviteTargets(null);
@@ -1184,8 +1204,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       }
 
       authUserIdRef.current = nextAuthUserId;
-      void loadWatchProgressStoreForUser(nextAuthUserId).then(setWatchProgressStore);
-
       if (!wasInitialized || previousAuthUserId === null) {
         return;
       }
@@ -1242,29 +1260,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       return refreshed.accessToken;
     },
     [refreshRoomActionIdentity],
-  );
-
-  const getWatchLibraryReconcileAccessToken = useCallback(
-    async (reason: string, currentUserId: string | null): Promise<string | null> => {
-      const result = await createCurrentParticipant({ fast: true });
-      const decision = resolveWatchLibraryReconcileAuth(currentUserId, result);
-
-      if (decision.reason !== "ok") {
-        logDebug("watch-library.reconcile", "background auth unavailable; keeping room session", {
-          reason,
-          decision: decision.reason,
-          currentUserId: decision.currentUserId,
-          tokenUserId: decision.tokenUserId,
-          activeRoomId: roomIdRef.current,
-        });
-        return null;
-      }
-
-      authAccessTokenRef.current = decision.accessToken;
-      setAuthAccessToken(decision.accessToken);
-      return decision.accessToken;
-    },
-    [],
   );
 
   const setMessageComposerDomGuard = useCallback(
@@ -1371,6 +1366,17 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       : "No media seats";
   const roomPeopleCountText = `${participantCount}/${roomParticipantLimit} in room`;
   const isHost = currentParticipant?.role === "host";
+  const signOutPrivilegedContext = useMemo<PrivilegedOverlayContext>(() => {
+    const accountUserId = accountUser?.id ?? "";
+    return {
+      accountUserId,
+      roomId: null,
+      role: null,
+      authorityGeneration: null,
+    };
+  }, [accountUser?.id]);
+
+  const privilegedRoomContext = privilegedRoomAuthority ?? signOutPrivilegedContext;
 
   useEffect(() => {
     if (!roomId || !isHost) {
@@ -1621,20 +1627,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   useEffect(() => {
     let cancelled = false;
 
-    void loadWatchProgressStoreForUser(authUserIdRef.current).then((store) => {
-      if (!cancelled) {
-        setWatchProgressStore(store);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-
     void storage
       .getItem<unknown>(OVERLAY_LAYOUT_STORAGE_KEY_V2)
       .then((storedPreferences) => {
@@ -1823,175 +1815,154 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     }
   }, [roomId]);
 
-  const loadPosterArtwork = useCallback(
-    (
-      entry: WatchProgressEntry | null,
-      getLatestEntry: () => WatchProgressEntry | null,
-      isDisposed: () => boolean,
-    ) => {
-      if (
-        entry?.provider !== "crunchyroll" ||
-        (!entry.contentId && !entry.seriesId) ||
-        entry.artworkUrl
-      ) {
-        return;
-      }
-
-      const requestId = entry.seriesId ?? entry.contentId;
-      if (!requestId) {
-        return;
-      }
-
-      const existingRequest = crunchyrollPosterRequestsRef.current[requestId];
-      if (existingRequest) {
-        return;
-      }
-
-      const request = loadCrunchyrollPosterArtwork({
-        contentId: entry.contentId,
-        seriesId: entry.seriesId,
-      }).catch((error: unknown) => {
-        logDebug("crunchyroll.artwork", "poster load failed", {
-          contentId: entry.contentId,
-          seriesId: entry.seriesId,
-          error: error instanceof Error ? error.message : String(error),
-        });
-        return null;
-      });
-      crunchyrollPosterRequestsRef.current[requestId] = request;
-
-      void request.then((posterUrl) => {
-        if (!posterUrl) {
-          delete crunchyrollPosterRequestsRef.current[requestId];
-          return;
-        }
-
-        if (isDisposed()) {
-          return;
-        }
-
-        const latestEntry = getLatestEntry();
-        if (!latestEntry || latestEntry.itemId !== entry.itemId) {
-          return;
-        }
-
-        const enrichedEntry = { ...latestEntry, artworkUrl: posterUrl };
-        setCurrentResourceEntry(enrichedEntry);
-        void recordWatchProgressForUser(authUserIdRef.current, enrichedEntry).then(
-          setWatchProgressStore,
-        );
-      });
-    },
-    [],
-  );
-
   useEffect(() => {
-    if (!adapterActive) {
-      return;
+    function refreshWatchHistoryOnFocus(): void {
+      void watchHistoryControllerRef.current?.refreshAuthority().catch(() => undefined);
     }
 
-    let disposed = false;
-    let lastPersistedAt = 0;
-    let lastRemoteReconcileAt = 0;
-    const getEntry = () =>
-      getWatchProgressEntryForAdapter({
-        adapter,
-        roomId: roomId ?? undefined,
-        watchedWithCount: Math.max(1, participantCount),
-      });
-    const reconcileRemote = (
-      entry: WatchProgressEntry,
-      checkpointKind: WatchCheckpointKind,
-      force: boolean,
-    ) => {
-      if (!authAccessTokenRef.current || entry.duration <= 0 || entry.currentTime <= 0) {
-        return;
-      }
+    window.addEventListener("focus", refreshWatchHistoryOnFocus);
+    return () => window.removeEventListener("focus", refreshWatchHistoryOnFocus);
+  }, []);
 
-      const now = Date.now();
-      if (!force && now - lastRemoteReconcileAt < WATCH_LIBRARY_REMOTE_RECONCILE_INTERVAL_MS) {
-        return;
-      }
+  const watchHistoryRuntimeGate = resolveWatchHistoryRuntimeGate({
+    identityLoaded,
+    ownerUserId: participant?.id ?? null,
+    roomSessionLoadedForUserId,
+    storedRoomSessionOwnerUserId: storedRoomSession?.ownerUserId ?? null,
+    roomActive: Boolean(roomId),
+  });
+  watchHistoryRoomSuppressedRef.current = watchHistoryRuntimeGate.roomSuppressed;
 
-      lastRemoteReconcileAt = now;
-      void (async () => {
-        const userId = authUserIdRef.current;
-        const accessToken = await getWatchLibraryReconcileAccessToken(
-          `watch-library:${checkpointKind}`,
-          userId,
-        );
-        if (!accessToken || !userId) {
-          return;
-        }
-
-        const reconcileEntry = {
-          ...entry,
-          checkpointKind,
-          observedAt: now,
-        };
-        await reconcileWatchProgress(accessToken, [reconcileEntry]);
-        await markWatchLibraryEntriesSynced(userId, [reconcileEntry]);
-      })().catch((error: unknown) => {
-        logDebug("watch-library.reconcile", "remote reconcile failed", {
-          checkpointKind,
-          error: error instanceof Error ? error.message : String(error),
+  useEffect(() => {
+    if (!adapterActive || !watchHistoryRuntimeGate.ready) return;
+    const expectedOwnerUserId = participant?.id;
+    if (!expectedOwnerUserId) return;
+    const definition = getDefinitionForProvider(adapter.provider);
+    if (!definition?.historyPolicy) return;
+    const controller = createWatchHistoryController({
+      getObservation: (preferences) =>
+        definition.historyPolicy?.observe({ adapter, preferences }) ?? null,
+      getRoomActive: () => watchHistoryRoomSuppressedRef.current || Boolean(roomIdRef.current),
+      loadCachedPreferences: async () => {
+        const response = await requestWatchHistory({
+          type: "ANIDACHI_WATCH_HISTORY_V2",
+          command: "bootstrap-cache",
+          expectedOwnerUserId,
         });
-      });
-    };
-    const update = (
-      persist: boolean,
-      checkpointKind: WatchCheckpointKind = "local",
-      forceRemote = false,
-    ) => {
-      const entry = getEntry();
-      setCurrentResourceEntry(entry);
-      loadPosterArtwork(entry, getEntry, () => disposed);
-
-      if (!persist || !entry || entry.duration <= 0 || entry.currentTime <= 0) {
-        return;
+        if (!response?.ok) return null;
+        const loaded = parseWatchHistoryBootstrapData(response.data);
+        return loaded?.ownerUserId === expectedOwnerUserId ? loaded : null;
+      },
+      loadPreferences: async () => {
+        const response = await requestWatchHistory({
+          type: "ANIDACHI_WATCH_HISTORY_V2",
+          command: "bootstrap",
+          expectedOwnerUserId,
+        });
+        if (!response?.ok) return null;
+        const loaded = parseWatchHistoryBootstrapData(response.data);
+        return loaded?.ownerUserId === expectedOwnerUserId ? loaded : null;
+      },
+      recoverCapture: async () => {
+        const recovered = await requestWatchHistory({
+          type: "ANIDACHI_WATCH_HISTORY_V2",
+          command: "recover-storage",
+        });
+        if (!recovered.ok) return null;
+        const bootstrapped = await requestWatchHistory({
+          type: "ANIDACHI_WATCH_HISTORY_V2",
+          command: "bootstrap",
+          expectedOwnerUserId,
+        });
+        if (!bootstrapped.ok) return null;
+        const loaded = parseWatchHistoryBootstrapData(bootstrapped.data);
+        return loaded?.ownerUserId === expectedOwnerUserId ? loaded : null;
+      },
+      observeLocally: async (
+        event,
+        expectedOwnerUserId,
+        meaningfulSolo,
+        displayMode,
+        queueForSync,
+        flushNow,
+      ) => {
+        const response = await requestWatchHistory({
+          type: "ANIDACHI_WATCH_HISTORY_V2",
+          command: "observe-progress",
+          expectedOwnerUserId,
+          event,
+          meaningfulSolo,
+          displayMode,
+          queueForSync,
+          flushNow,
+        });
+        return response.ok ? ({ ok: true } as const) : response as WatchHistoryCaptureResult;
+      },
+      onObservation: setCurrentResourceEntry,
+      onRoomHistoryAuthorityState: (state) => {
+        logDebug("watch.history", "room authority state", {
+          roomId: roomIdRef.current,
+          state,
+        });
+      },
+      isPlaying: () => !adapter.video.paused && !adapter.video.ended,
+      isSeeking: () => adapter.video.seeking,
+    });
+    watchHistoryControllerRef.current = controller;
+    void controller.start().then(async () => {
+      await controller.setRoomActive(watchHistoryRoomSuppressedRef.current);
+      const retainedRoomAuthority = clientRef.current.historyAuthority;
+      if (retainedRoomAuthority?.roomId === roomIdRef.current) {
+        await controller.setRoomHistoryAuthority(retainedRoomAuthority);
       }
-
-      const now = Date.now();
-      if (!forceRemote && now - lastPersistedAt < 2500) {
-        return;
-      }
-
-      lastPersistedAt = now;
-      void recordWatchProgressForUser(authUserIdRef.current, entry).then(setWatchProgressStore);
-      reconcileRemote(entry, checkpointKind, forceRemote);
-    };
-    const updateDisplay = () => update(false);
-    const persist = () => update(true, "local", false);
-    const persistPause = () => update(true, "pause", true);
-    const persistSeeked = () => update(true, "seeked", true);
-    const persistEnded = () => update(true, "ended", true);
-    const persistPagehide = () => update(true, "pagehide", true);
-
-    update(true);
-    const displayInterval = window.setInterval(updateDisplay, 1000);
-    const persistInterval = window.setInterval(persist, 5000);
-    adapter.video.addEventListener("pause", persistPause);
-    adapter.video.addEventListener("seeked", persistSeeked);
-    adapter.video.addEventListener("ended", persistEnded);
-    window.addEventListener("pagehide", persistPagehide);
-
+      await controller.recover();
+      await requestWatchHistory(createWatchHistoryContentReconnectMessage());
+    }).catch(() => undefined);
+    const removeHistoryListeners = bindWatchHistoryPlaybackListeners({
+      video: adapter.video,
+      controller,
+    });
+    const removeHistoryPreferenceListener = bindWatchHistoryPreferenceListener({
+      ownerUserId: expectedOwnerUserId,
+      controller,
+    });
     return () => {
-      disposed = true;
-      window.clearInterval(displayInterval);
-      window.clearInterval(persistInterval);
-      adapter.video.removeEventListener("pause", persistPause);
-      adapter.video.removeEventListener("seeked", persistSeeked);
-      adapter.video.removeEventListener("ended", persistEnded);
-      window.removeEventListener("pagehide", persistPagehide);
+      removeHistoryPreferenceListener();
+      removeHistoryListeners();
+      if (watchHistoryControllerRef.current === controller) {
+        watchHistoryControllerRef.current = null;
+      }
     };
   }, [
     adapter,
     adapterActive,
-    getWatchLibraryReconcileAccessToken,
-    roomId,
-    participantCount,
-    loadPosterArtwork,
+    participant?.id,
+    watchHistoryRuntimeGate.ready,
   ]);
+
+  useEffect(() => {
+    const next = {
+      ownerUserId: participant?.id ?? null,
+      accessToken: authAccessToken,
+    };
+    const previous = watchHistoryAuthContextRef.current;
+    watchHistoryAuthContextRef.current = next;
+    if (!shouldRefreshWatchHistoryAuthority({
+      previous,
+      next,
+      controllerAvailable: watchHistoryControllerRef.current !== null,
+    })) {
+      return;
+    }
+    void watchHistoryControllerRef.current?.refreshAuthority().catch(() => undefined);
+  }, [authAccessToken, participant?.id]);
+
+  useEffect(() => {
+    if (!watchHistoryRuntimeGate.ready) return;
+    void watchHistoryControllerRef.current
+      ?.setRoomActive(watchHistoryRuntimeGate.roomSuppressed)
+      .catch(() => undefined);
+  }, [watchHistoryRuntimeGate.ready, watchHistoryRuntimeGate.roomSuppressed]);
 
   const sendCameraStatus = useCallback((enabled: boolean) => {
     const activeRoomId = roomIdRef.current;
@@ -2755,6 +2726,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         videoFingerprint: adapter.getFingerprint(),
         onEvent: (event) => handleServerEventRef.current(event),
         onStatus: setRoomStatus,
+        onHistoryAuthority: (authority) => {
+          void watchHistoryControllerRef.current
+            ?.setRoomHistoryAuthority(authority)
+            .catch(() => undefined);
+        },
         onTerminalClose: () => terminateRoomSession("Watch room ended."),
         onTransportReady: setSignalingTransportReady,
       });
@@ -2873,6 +2849,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
         roomTokenRef.current = connected.roomToken;
         setRoomToken(connected.roomToken);
+        setPrivilegedRoomAuthority(connected.privilegedRoomAuthority ?? null);
         setRoomCapabilities(connected.capabilities ?? null);
         updateRoomQuota(connected.quota ?? null);
         const shareableLink = buildRoomShareableUrl(nextRoomId);
@@ -3125,23 +3102,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
     quotaEndTriggeredRef.current = true;
     const exhaustedRoomId = roomIdRef.current;
-    const cachedAccessToken = authAccessTokenRef.current;
     logDebug("overlay.room", "free host quota exhausted; ending session", {
       resetAt: roomQuota?.resetAt ?? null,
       roomId: exhaustedRoomId,
     });
     if (exhaustedRoomId) {
       void (async () => {
-        const accessToken = (await getFreshAuthAccessToken("quota-exhausted")) ?? cachedAccessToken;
-        if (!accessToken) {
-          logDebug("overlay.room", "quota exhausted end skipped without access token", {
-            roomId: exhaustedRoomId,
-          });
-          return;
-        }
-
         try {
-          await endRoom(exhaustedRoomId, accessToken);
+          await requestQuotaRoomEnd(privilegedRoomContext);
           logDebug("overlay.room", "quota exhausted room ended on server", {
             roomId: exhaustedRoomId,
           });
@@ -3155,9 +3123,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     }
     terminateRoomSession(quotaExhaustedMessage(roomQuota?.resetAt));
   }, [
-    getFreshAuthAccessToken,
     quotaMeteringActive,
     quotaRemainingSeconds,
+    privilegedRoomContext,
     roomQuota,
     terminateRoomSession,
   ]);
@@ -3214,30 +3182,40 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     }
   }, [applyParticipantIdentity]);
 
-  const handleSignOut = useCallback(async () => {
+  const handleSignOut = useCallback(async (event: ReactMouseEvent<HTMLButtonElement>) => {
+    if (!isTrustedOverlayActionEvent(event)) {
+      return;
+    }
     setAuthBusy(true);
     setAuthMessage(null);
-    suppressSilentSignInUntilRef.current =
-      Date.now() + SILENT_SIGN_IN_SUPPRESSION_AFTER_SIGN_OUT_MS;
     try {
-      roomReconnectSuppressedRef.current = true;
-      clearRoomReconnectTimer();
-      applyParticipantIdentity(await signOutAndClearParticipant(), "sign-out", false);
-      clientRef.current.close();
-      releaseRoomTabLock();
-      roomIdRef.current = null;
-      setRoomId(null);
-      setParticipants([]);
-      setCamsEnabled(DEFAULT_LOCAL_CAMERA_ENABLED);
-      clearRoomQuotaDisplay();
-      setRoomCapabilities(null);
+      await runOverlayPrivilegedAction(event, "sign-out", signOutPrivilegedContext, async () => {
+        suppressSilentSignInUntilRef.current =
+          Date.now() + SILENT_SIGN_IN_SUPPRESSION_AFTER_SIGN_OUT_MS;
+        roomReconnectSuppressedRef.current = true;
+        clearRoomReconnectTimer();
+        applyParticipantIdentity(await createCurrentParticipant(), "sign-out", false);
+        clientRef.current.close();
+        releaseRoomTabLock();
+        roomIdRef.current = null;
+        setRoomId(null);
+        setParticipants([]);
+        setCamsEnabled(DEFAULT_LOCAL_CAMERA_ENABLED);
+        clearRoomQuotaDisplay();
+        setRoomCapabilities(null);
+      });
     } catch (error) {
       setExtensionContextInvalidated(isExtensionContextInvalidatedError(error));
       setAuthMessage(authErrorMessage(error, "Sign out failed"));
     } finally {
       setAuthBusy(false);
     }
-  }, [applyParticipantIdentity, clearRoomQuotaDisplay, clearRoomReconnectTimer]);
+  }, [
+    applyParticipantIdentity,
+    clearRoomQuotaDisplay,
+    clearRoomReconnectTimer,
+    signOutPrivilegedContext,
+  ]);
 
   useEffect(() => {
     applyParticipantIdentityRef.current = applyParticipantIdentity;
@@ -3392,6 +3370,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       roomShareableLinkRef.current = nextShareableLink;
       setRoomToken(nextRoomToken);
       setRoomShareableLink(nextShareableLink);
+      setPrivilegedRoomAuthority(created.privilegedRoomAuthority ?? null);
       logDebug("overlay.room", "created", {
         reason,
         roomId: created.roomId,
@@ -3600,7 +3579,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     }
   };
 
-  const handleEndRoom = async () => {
+  const handleEndRoom = async (event: ReactMouseEvent<HTMLButtonElement>) => {
+    if (!isTrustedOverlayActionEvent(event)) {
+      return;
+    }
     if (roomEndPending) {
       return;
     }
@@ -3610,33 +3592,33 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     setRoomEndPending(true);
     try {
       const activeRoomId = roomIdRef.current;
-      const accessToken = await getFreshAuthAccessToken("end-room");
-      if (!activeRoomId || !isHost || !accessToken) {
+      if (!activeRoomId || !isHost) {
         return;
       }
 
-      roomReconnectSuppressedRef.current = true;
-      clearRoomReconnectTimer();
-      await endRoom(activeRoomId, accessToken);
-      clientRef.current.close();
-      releaseRoomTabLock();
-      roomIdRef.current = null;
-      setRoomId(null);
-      setParticipants([]);
-      setCamsEnabled(DEFAULT_LOCAL_CAMERA_ENABLED);
-      clearRoomQuotaDisplay();
-      setRoomCapabilities(null);
-      roomTokenRef.current = null;
-      roomShareableLinkRef.current = null;
-      setRoomToken(null);
-      setRoomShareableLink(null);
-      clearStoredRoomSession();
-      clearRoomHash();
-      setAuthMessage(null);
-      showRoomActionFeedback("room-closed");
-      logDebug("overlay.room", "ended by host", { roomId: activeRoomId });
+      await runOverlayPrivilegedAction(event, "end-room", privilegedRoomContext, () => {
+        roomReconnectSuppressedRef.current = true;
+        clearRoomReconnectTimer();
+        clientRef.current.close();
+        releaseRoomTabLock();
+        roomIdRef.current = null;
+        setRoomId(null);
+        setPrivilegedRoomAuthority(null);
+        setParticipants([]);
+        setCamsEnabled(DEFAULT_LOCAL_CAMERA_ENABLED);
+        clearRoomQuotaDisplay();
+        setRoomCapabilities(null);
+        roomTokenRef.current = null;
+        roomShareableLinkRef.current = null;
+        setRoomToken(null);
+        setRoomShareableLink(null);
+        clearStoredRoomSession();
+        clearRoomHash();
+        setAuthMessage(null);
+        showRoomActionFeedback("room-closed");
+        logDebug("overlay.room", "ended by host", { roomId: activeRoomId });
+      });
     } catch (error) {
-      roomReconnectSuppressedRef.current = false;
       const message = error instanceof Error ? error.message : "Failed to end room";
       logDebug("overlay.room", "end failed", {
         roomId: roomIdRef.current,
@@ -3648,7 +3630,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     }
   };
 
-  const handleRequestEndRoom = async () => {
+  const handleRequestEndRoom = async (event: ReactMouseEvent<HTMLButtonElement>) => {
+    if (!isTrustedOverlayActionEvent(event)) {
+      return;
+    }
     if (roomEndPending || !roomId || !isHost) {
       return;
     }
@@ -3665,7 +3650,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       return;
     }
 
-    await handleEndRoom();
+    await handleEndRoom(event);
   };
 
   const handleLeaveRoom = async () => {
@@ -3773,6 +3758,26 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     }
   }, [getFreshAuthAccessToken]);
 
+  const refreshInviteStatusesForRoom = useCallback(async () => {
+    const activeRoomId = roomIdRef.current;
+    const accessToken = await getFreshAuthAccessToken("invite-status-membership-change");
+    if (!activeRoomId || !accessToken || roomIdRef.current !== activeRoomId) return;
+
+    try {
+      const invites = await listRoomInvites(accessToken);
+      if (roomIdRef.current !== activeRoomId) return;
+      setInviteTargetStatuses(roomInviteTargetStatuses(invites.sent, activeRoomId));
+      logDebug("overlay.invite", "status refreshed after participant joined", {
+        roomId: activeRoomId,
+      });
+    } catch (error) {
+      logDebug("overlay.invite", "participant-join status refresh failed", {
+        roomId: activeRoomId,
+        message: authErrorMessage(error, "Failed to refresh invite status"),
+      });
+    }
+  }, [getFreshAuthAccessToken]);
+
   const toggleInvitePanel = useCallback(async () => {
     if (invitePanelOpen) {
       setInvitePanelOpen(false);
@@ -3781,6 +3786,29 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
     await loadInviteTargetsForRoom();
   }, [invitePanelOpen, loadInviteTargetsForRoom]);
+
+  useEffect(() => {
+    const previous = inviteStatusMembershipRef.current;
+    const current = { roomId, participantCount };
+
+    if (previous.roomId !== roomId) {
+      inviteStatusMembershipRef.current = current;
+      return;
+    }
+
+    if (!invitePanelOpen) return;
+    inviteStatusMembershipRef.current = current;
+
+    if (
+      !isHost ||
+      !roomId ||
+      participantCount <= previous.participantCount
+    ) {
+      return;
+    }
+
+    void refreshInviteStatusesForRoom();
+  }, [invitePanelOpen, isHost, participantCount, refreshInviteStatusesForRoom, roomId]);
 
   const sendInviteToTarget = useCallback(
     async (
@@ -3885,7 +3913,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       const response = await saveDiagnosticsFromPage(mode, {
         mode,
         url: location.href,
-        title: document.title,
         visibilityState: document.visibilityState,
         adapterId: adapter.id,
         roomId,
@@ -4778,7 +4805,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
           {currentResourceEntry ? (
             <div className="panel-sync-card">
-              <CurrentResourcePanel entry={currentResourceEntry} store={watchProgressStore} />
+              <CurrentResourcePanel entry={currentResourceEntry} />
             </div>
           ) : null}
           {playbackSyncNotice ? (

@@ -22,10 +22,10 @@ Current policy:
 If `graphify-out/graph.json` exists, agents should query it before broad
 architecture reads.
 
-Observed local status on 2026-06-23:
+Observed local status on 2026-08-21:
 
 - Graphify CLI is installed via `uv tool` in the current development
-  environment and upgraded to `0.8.44`.
+  environment and upgraded to `0.9.48`.
 - Codex project integration is installed under `.codex/`.
 - Codex `multi_agent = true` is enabled in the local `~/.codex/config.toml`.
 - Code graph baseline is maintained with `graphify update . --no-cluster`.
@@ -62,8 +62,10 @@ Keep local:
 - `graphify-out/obsidian/`
 - `graphify-out/wiki/`
 - `graphify-out/converted/`
-- full AST/semantic cache files unless the team intentionally decides to commit
-  them for speed after confirming they do not expose local absolute paths.
+- full AST/semantic cache files.
+
+Any future exception must first update this explicit allowlist and the matching
+repository rules; a one-off generated cache must never be committed implicitly.
 
 If a generated report uncovers a real architecture insight, summarize it in the
 relevant plan or architecture doc instead of relying only on generated output.
@@ -123,6 +125,10 @@ $graphify .
 Use this inside Codex when docs, plans, diagrams, or images need to be part of
 the graph. Codex uses the active model session and subagents.
 
+The normal Codex path must not ask for or recommend Gemini, OpenAI, or Anthropic
+keys. Those keys are relevant only when a developer explicitly chooses a
+headless Graphify backend outside the Codex-hosted skill flow.
+
 Headless semantic graph for CLI/CI:
 
 ```bash
@@ -157,10 +163,10 @@ Use manual updates as the default:
 pnpm graph:query "Trace room token flow from web to Worker WebSocket join."
 ```
 
-2. After meaningful code or architecture changes, refresh the code graph:
+2. After meaningful code-only changes, refresh the code graph:
 
 ```bash
-pnpm graph:update
+pnpm graph:update:code
 ```
 
 3. For docs/semantic changes in Codex, use the Codex-hosted extraction path:
@@ -169,8 +175,10 @@ pnpm graph:update
 $graphify . --update
 ```
 
-`pnpm graph:update` uses `graphify update . --no-cluster`, so it is fast and
-does not require an LLM backend for code changes.
+`pnpm graph:update:code` uses `graphify update . --no-cluster`, so it is fast,
+AST-only, and does not require an LLM backend. `pnpm graph:update` remains a
+compatibility alias for this code-only command; neither command performs
+semantic document extraction.
 
 Watcher and git hooks are local opt-ins only:
 
@@ -223,7 +231,7 @@ against source files before editing.
 Before implementing the next room/P2P block, run:
 
 ```bash
-pnpm graph:update
+pnpm graph:update:code
 pnpm graph:query "Trace P2P signaling from extension to Durable Object and back."
 pnpm graph:query "Which files affect sourceGeneration, roomGeneration, and stale event drops?"
 pnpm graph:query "Which files affect Durable Object WebSocket hibernation and room alarms?"

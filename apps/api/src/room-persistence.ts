@@ -21,6 +21,11 @@ import {
   type EndingRoomLifecycle,
   type RoomLifecycleState,
 } from "./room-lifecycle";
+import {
+  ROOM_SOURCE_PENDING_STORAGE_KEY,
+  parsePendingRoomSourcePersistence,
+  reconcileStoredRoomAlarm,
+} from "./room-source-persistence";
 
 export const ROOM_STATE_META_KEY = "room_state";
 export const NEXT_P2P_SERVER_SEQ_META_KEY = "next_p2p_server_seq";
@@ -218,12 +223,13 @@ export async function activateStoredRoomLifecycle(
       return { accepted: false, lifecycle: null };
     }
     if (current?.status === "ending" || current?.status === "ended") {
+      await reconcileStoredRoomAlarm(transaction);
       return { accepted: false, lifecycle: current };
     }
 
     const active = activeRoomLifecycle(updatedAt);
     await transaction.put(ROOM_LIFECYCLE_STORAGE_KEY, active);
-    await transaction.deleteAlarm();
+    await reconcileStoredRoomAlarm(transaction);
     return { accepted: true, lifecycle: active };
   });
 }
@@ -239,16 +245,17 @@ export async function markStoredRoomEmpty(
       throw new Error("Invalid persisted room lifecycle state");
     }
     if (current?.status === "ending" || current?.status === "ended") {
+      await reconcileStoredRoomAlarm(transaction);
       return current;
     }
     if (current?.status === "empty") {
-      await transaction.setAlarm(current.alarmAt);
+      await reconcileStoredRoomAlarm(transaction);
       return current;
     }
 
     const empty = emptyRoomLifecycle(emptySince);
     await transaction.put(ROOM_LIFECYCLE_STORAGE_KEY, empty);
-    await transaction.setAlarm(empty.alarmAt);
+    await reconcileStoredRoomAlarm(transaction);
     return empty;
   });
 }
@@ -263,6 +270,19 @@ export async function claimStoredRoomEndAttempt(
   now: number,
 ): Promise<EndingRoomLifecycle | null> {
   return storage.transaction(async (transaction) => {
+    const rawPendingSource = await transaction.get<unknown>(ROOM_SOURCE_PENDING_STORAGE_KEY);
+    const pendingSource = parsePendingRoomSourcePersistence(rawPendingSource);
+    if (rawPendingSource !== undefined && !pendingSource) {
+      await transaction.delete(ROOM_SOURCE_PENDING_STORAGE_KEY);
+    }
+    if (pendingSource) {
+      // A due room end cannot make progress until the latest source is durable.
+      // Schedule the source retry directly instead of repeatedly re-firing an
+      // already-due lifecycle deadline.
+      await transaction.setAlarm(pendingSource.nextAttemptAt);
+      return null;
+    }
+
     const raw = await transaction.get<unknown>(ROOM_LIFECYCLE_STORAGE_KEY);
     const current = parseStoredLifecycle(raw);
     if (current === "invalid") {
@@ -270,13 +290,13 @@ export async function claimStoredRoomEndAttempt(
       return null;
     }
     if (!current || current.status === "active" || current.status === "ended") {
-      await transaction.deleteAlarm();
+      await reconcileStoredRoomAlarm(transaction);
       return null;
     }
 
     if (current.status === "empty") {
       if (now < current.alarmAt) {
-        await transaction.setAlarm(current.alarmAt);
+        await reconcileStoredRoomAlarm(transaction);
         return null;
       }
       const attempts = 1;
@@ -290,12 +310,12 @@ export async function claimStoredRoomEndAttempt(
         nextAttemptAt: emptyRoomRetryAt(attempts, now),
       };
       await transaction.put(ROOM_LIFECYCLE_STORAGE_KEY, ending);
-      await transaction.setAlarm(ending.nextAttemptAt);
+      await reconcileStoredRoomAlarm(transaction);
       return ending;
     }
 
     if (now < current.nextAttemptAt) {
-      await transaction.setAlarm(current.nextAttemptAt);
+      await reconcileStoredRoomAlarm(transaction);
       return null;
     }
     const attempts = Math.min(Number.MAX_SAFE_INTEGER, current.attempts + 1);
@@ -305,7 +325,7 @@ export async function claimStoredRoomEndAttempt(
       nextAttemptAt: emptyRoomRetryAt(attempts, now),
     };
     await transaction.put(ROOM_LIFECYCLE_STORAGE_KEY, ending);
-    await transaction.setAlarm(ending.nextAttemptAt);
+    await reconcileStoredRoomAlarm(transaction);
     return ending;
   });
 }
@@ -315,7 +335,7 @@ export async function clearStoredRoomLifecycleAndAlarm(
 ): Promise<void> {
   await storage.transaction(async (transaction) => {
     await transaction.delete(ROOM_LIFECYCLE_STORAGE_KEY);
-    await transaction.deleteAlarm();
+    await reconcileStoredRoomAlarm(transaction);
   });
 }
 

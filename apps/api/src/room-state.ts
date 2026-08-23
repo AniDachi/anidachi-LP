@@ -2,8 +2,14 @@ import type {
   Participant,
   PlaybackState,
   RoomCapabilities,
+  RoomSourceDescriptor,
   ServerEvent,
   WatchSourceDescriptor,
+} from "@anidachi/protocol";
+import {
+  RoomSourceDescriptorSchema,
+  canonicalizeRoomSourceUrl,
+  isLegacyRoomSourceFingerprintAlias,
 } from "@anidachi/protocol";
 
 export const LEGACY_ROOM_CAPABILITIES: RoomCapabilities = {
@@ -56,15 +62,18 @@ export class RoomState {
       this.roomGenerationValue = snapshot.roomGeneration;
       this.serverSeqValue = snapshot.serverSeq;
       this.sourceGenerationValue = snapshot.sourceGeneration;
-      if (snapshot.hostState) {
+      if (snapshot.source) {
+        const restored = normalizeWatchSourceDescriptor(
+          snapshot.source,
+          snapshot.hostState,
+        );
+        if (restored) {
+          if (restored.state) this.hostState = restored.state;
+          this.source = restored.source;
+          this.sourceProvider = restored.source.provider;
+        }
+      } else if (snapshot.hostState) {
         this.hostState = snapshot.hostState;
-      }
-      if (
-        snapshot.source &&
-        validateWatchSourceDescriptor(snapshot.source, snapshot.hostState)
-      ) {
-        this.source = snapshot.source;
-        this.sourceProvider = snapshot.source.provider;
       }
     }
   }
@@ -111,6 +120,18 @@ export class RoomState {
 
   get currentSourceProvider(): WatchSourceDescriptor["provider"] | undefined {
     return this.sourceProvider;
+  }
+
+  get currentDurableSource(): RoomSourceDescriptor | undefined {
+    if (!this.source) return undefined;
+    const durableSource = {
+      provider: this.source.provider,
+      sourceUrl: this.source.sourceUrl,
+      canonicalUrl: this.source.canonicalUrl,
+      videoFingerprint: this.source.videoFingerprint,
+    };
+    const parsed = RoomSourceDescriptorSchema.safeParse(durableSource);
+    return parsed.success ? parsed.data : undefined;
   }
 
   setCapabilities(capabilities: RoomCapabilities): void {
@@ -207,13 +228,11 @@ export class RoomState {
     }
 
     const previousSource = this.source;
-    const nextSource = resolveWatchSourceDescriptor(state, source, previousSource);
-    if (!nextSource && previousSource) {
+    const normalized = normalizeRoomSourceUpdate(state, source, previousSource);
+    if (!normalized) {
       return { accepted: false, sourceChanged: false, code: "INVALID_SOURCE" };
     }
-    if (nextSource && !validateWatchSourceDescriptor(nextSource, state)) {
-      return { accepted: false, sourceChanged: false, code: "INVALID_SOURCE" };
-    }
+    const nextSource = normalized.source;
     if (
       nextSource &&
       this.sourceProvider !== undefined &&
@@ -231,7 +250,7 @@ export class RoomState {
       (previousSource === undefined ||
         previousSource.videoFingerprint !== nextSource.videoFingerprint);
 
-    this.hostState = state;
+    this.hostState = normalized.state;
     this.source = nextSource;
     if (nextSource && this.sourceProvider === undefined) {
       this.sourceProvider = nextSource.provider;
@@ -240,10 +259,24 @@ export class RoomState {
       this.sourceGenerationValue += 1;
     }
     this.bumpServerSeq();
+    if (sourceChanged && nextSource && normalized.durableSource) {
+      return {
+        accepted: true,
+        sourceChanged: true,
+        state: normalized.state,
+        source: nextSource,
+        durableSource: normalized.durableSource,
+        ...(previousSource ? { previousSource } : {}),
+      };
+    }
     return {
       accepted: true,
-      sourceChanged,
+      sourceChanged: false,
+      state: normalized.state,
       ...(nextSource ? { source: nextSource } : {}),
+      ...(normalized.durableSource
+        ? { durableSource: normalized.durableSource }
+        : {}),
       ...(previousSource ? { previousSource } : {}),
     };
   }
@@ -449,13 +482,28 @@ export class RoomState {
   }
 }
 
-export interface HostStateUpdateResult {
-  accepted: boolean;
-  sourceChanged: boolean;
-  code?: HostStateUpdateErrorCode;
-  source?: WatchSourceDescriptor;
-  previousSource?: WatchSourceDescriptor;
-}
+export type HostStateUpdateResult =
+  | {
+      accepted: false;
+      sourceChanged: false;
+      code: HostStateUpdateErrorCode;
+    }
+  | {
+      accepted: true;
+      sourceChanged: false;
+      durableSource?: RoomSourceDescriptor;
+      state: PlaybackState;
+      source?: WatchSourceDescriptor;
+      previousSource?: WatchSourceDescriptor;
+    }
+  | {
+      accepted: true;
+      sourceChanged: true;
+      durableSource: RoomSourceDescriptor;
+      state: PlaybackState;
+      source: WatchSourceDescriptor;
+      previousSource?: WatchSourceDescriptor;
+    };
 
 export type HostStateUpdateErrorCode =
   | "INVALID_SOURCE"
@@ -468,185 +516,143 @@ export type MediaSeatChangeResult =
   | { accepted: true; participant: Participant }
   | { accepted: false; code: MediaSeatChangeCode };
 
-function resolveWatchSourceDescriptor(
+interface NormalizedRoomSourceUpdate {
+  durableSource?: RoomSourceDescriptor;
+  source?: WatchSourceDescriptor;
+  state: PlaybackState;
+}
+
+interface NormalizedWatchSourceDescriptor {
+  durableSource: RoomSourceDescriptor;
+  source: WatchSourceDescriptor;
+  state?: PlaybackState;
+}
+
+function normalizeRoomSourceUpdate(
   state: PlaybackState,
   source: WatchSourceDescriptor | undefined,
   previousSource: WatchSourceDescriptor | undefined,
-): WatchSourceDescriptor | undefined {
-  if (source) {
-    return source;
-  }
-
-  if (
-    previousSource &&
-    previousSource.videoFingerprint === state.videoFingerprint
-  ) {
-    return state.sourceUrl
+): NormalizedRoomSourceUpdate | null {
+  let candidate = source;
+  if (!candidate && previousSource) {
+    candidate = state.sourceUrl
       ? { ...previousSource, sourceUrl: state.sourceUrl }
       : previousSource;
   }
-
-  const sourceUrl = state.sourceUrl;
-  if (!sourceUrl) {
-    return undefined;
+  if (!candidate && state.sourceUrl) {
+    const canonical = canonicalizeRoomSourceUrl(state.sourceUrl);
+    if (!canonical.ok) return null;
+    candidate = {
+      ...canonical.source,
+      videoFingerprint: state.videoFingerprint,
+      title: "Untitled source",
+    };
+  }
+  if (!candidate) {
+    return previousSource ? null : { state };
+  }
+  if (candidate.provider !== "crunchyroll" && candidate.provider !== "youtube") {
+    return null;
   }
 
+  const normalized = normalizeWatchSourceDescriptor(candidate, state);
+  if (!normalized) return null;
   return {
-    provider: providerFromFingerprint(state.videoFingerprint),
-    sourceUrl,
-    canonicalUrl: sourceUrl,
-    videoFingerprint: state.videoFingerprint,
-    title: "Untitled source",
+    durableSource: normalized.durableSource,
+    source: normalized.source,
+    state: normalized.state ?? state,
   };
 }
 
-function providerFromFingerprint(fingerprint: string): WatchSourceDescriptor["provider"] {
-  if (fingerprint.startsWith("crunchyroll|")) {
-    return "crunchyroll";
-  }
-  if (fingerprint.startsWith("youtube|")) {
-    return "youtube";
-  }
-  return "generic";
-}
-
-function validateWatchSourceDescriptor(
-  source: WatchSourceDescriptor,
+function normalizeWatchSourceDescriptor(
+  candidate: WatchSourceDescriptor,
   state?: PlaybackState,
-): boolean {
+): NormalizedWatchSourceDescriptor | null {
+  if (candidate.provider !== "crunchyroll" && candidate.provider !== "youtube") {
+    return null;
+  }
+
+  const sourceUrl = canonicalizeRoomSourceUrl(
+    candidate.sourceUrl,
+    candidate.provider,
+  );
+  const canonicalUrl = canonicalizeRoomSourceUrl(
+    candidate.canonicalUrl,
+    candidate.provider,
+  );
   if (
-    (state && source.videoFingerprint !== state.videoFingerprint) ||
-    providerFromFingerprint(source.videoFingerprint) !== source.provider
+    !sourceUrl.ok ||
+    !canonicalUrl.ok ||
+    !sameCanonicalSource(sourceUrl.source, canonicalUrl.source)
   ) {
-    return false;
+    return null;
   }
 
-  const sourceIdentity = sourceIdentityFromUrl(source.provider, source.sourceUrl);
-  const canonicalIdentity = sourceIdentityFromUrl(
-    source.provider,
-    source.canonicalUrl,
-  );
-  if (!sourceIdentity || !canonicalIdentity || sourceIdentity !== canonicalIdentity) {
-    return false;
+  const expectedFingerprint = sourceUrl.source.videoFingerprint;
+  if (!matchesCanonicalFingerprint(
+    candidate.sourceUrl,
+    candidate.videoFingerprint,
+    expectedFingerprint,
+  )) {
+    return null;
   }
-
-  const expectedIdentity = sourceIdentityFromFingerprint(
-    source.provider,
-    source.videoFingerprint,
-  );
-  if (source.provider !== "generic" && expectedIdentity === null) {
-    return false;
-  }
-  if (expectedIdentity !== null && sourceIdentity !== expectedIdentity) {
-    return false;
-  }
-
   if (state?.sourceUrl) {
-    const stateIdentity = sourceIdentityFromUrl(source.provider, state.sourceUrl);
-    if (!stateIdentity || stateIdentity !== sourceIdentity) {
-      return false;
+    const stateUrl = canonicalizeRoomSourceUrl(state.sourceUrl, candidate.provider);
+    if (!stateUrl.ok || !sameCanonicalSource(sourceUrl.source, stateUrl.source)) {
+      return null;
     }
+    if (!matchesCanonicalFingerprint(
+      state.sourceUrl,
+      state.videoFingerprint,
+      expectedFingerprint,
+    )) {
+      return null;
+    }
+  } else if (state && state.videoFingerprint !== expectedFingerprint) {
+    return null;
   }
 
-  return true;
+  const durableSource: RoomSourceDescriptor = {
+    provider: sourceUrl.source.provider,
+    sourceUrl: sourceUrl.source.sourceUrl,
+    canonicalUrl: sourceUrl.source.canonicalUrl,
+    videoFingerprint: expectedFingerprint,
+  };
+  if (!RoomSourceDescriptorSchema.safeParse(durableSource).success) return null;
+
+  return {
+    durableSource,
+    source: {
+      ...candidate,
+      ...durableSource,
+    },
+    ...(state
+      ? {
+          state: {
+            ...state,
+            sourceUrl: durableSource.sourceUrl,
+            videoFingerprint: durableSource.videoFingerprint,
+          },
+        }
+      : {}),
+  };
 }
 
-function sourceIdentityFromFingerprint(
-  provider: WatchSourceDescriptor["provider"],
+function matchesCanonicalFingerprint(
+  sourceUrl: string,
   fingerprint: string,
-): string | null {
-  if (provider === "youtube") {
-    const videoId = fingerprint.slice("youtube|".length);
-    return isValidYouTubeVideoId(videoId) ? videoId : null;
-  }
-  if (provider === "crunchyroll") {
-    const videoKey = fingerprint.slice("crunchyroll|".length);
-    return /^watch\/[^/]+$/.test(videoKey) ? videoKey : null;
-  }
-  return null;
+  expectedFingerprint: string,
+): boolean {
+  return fingerprint === expectedFingerprint ||
+    isLegacyRoomSourceFingerprintAlias(sourceUrl, fingerprint);
 }
 
-function sourceIdentityFromUrl(
-  provider: WatchSourceDescriptor["provider"],
-  value: string,
-): string | null {
-  const url = parseHttpUrl(value);
-  if (!url || providerFromUrl(url) !== provider) {
-    return null;
-  }
-
-  if (provider === "youtube") {
-    return youtubeVideoIdFromUrl(url);
-  }
-  if (provider === "crunchyroll") {
-    const match = url.pathname.match(
-      /(?:^|\/)watch\/([^/]+)(?:\/[^/]+)?\/?$/,
-    );
-    return match?.[1] ? `watch/${match[1]}` : null;
-  }
-
-  return `${url.origin}${url.pathname}${url.search}`;
-}
-
-function parseHttpUrl(value: string): URL | null {
-  try {
-    const url = new URL(value);
-    return (url.protocol === "https:" || url.protocol === "http:") &&
-      !url.username &&
-      !url.password
-      ? url
-      : null;
-  } catch {
-    return null;
-  }
-}
-
-function providerFromUrl(url: URL): WatchSourceDescriptor["provider"] {
-  const hostname = url.hostname.toLowerCase();
-  if (
-    hostname === "youtube.com" ||
-    hostname.endsWith(".youtube.com") ||
-    hostname === "youtube-nocookie.com" ||
-    hostname.endsWith(".youtube-nocookie.com") ||
-    hostname === "youtu.be"
-  ) {
-    return "youtube";
-  }
-  if (
-    hostname === "crunchyroll.com" ||
-    hostname.endsWith(".crunchyroll.com")
-  ) {
-    return "crunchyroll";
-  }
-  return "generic";
-}
-
-function youtubeVideoIdFromUrl(url: URL): string | null {
-  const hostname = url.hostname.toLowerCase();
-  if (hostname === "youtu.be") {
-    const segments = url.pathname.split("/").filter(Boolean);
-    const videoId = segments[0];
-    return segments.length === 1 &&
-      videoId !== undefined &&
-      isValidYouTubeVideoId(videoId)
-      ? videoId
-      : null;
-  }
-
-  const segments = url.pathname.split("/").filter(Boolean);
-  let videoId: string | null = null;
-  const isYouTubeHost =
-    hostname === "youtube.com" || hostname.endsWith(".youtube.com");
-  if (
-    isYouTubeHost &&
-    segments.length === 1 &&
-    segments[0] === "watch"
-  ) {
-    videoId = url.searchParams.get("v");
-  }
-  return videoId && isValidYouTubeVideoId(videoId) ? videoId : null;
-}
-
-function isValidYouTubeVideoId(value: string): boolean {
-  return /^[A-Za-z0-9_-]{6,}$/.test(value);
+function sameCanonicalSource(
+  left: RoomSourceDescriptor,
+  right: RoomSourceDescriptor,
+): boolean {
+  return left.provider === right.provider &&
+    left.sourceUrl === right.sourceUrl &&
+    left.canonicalUrl === right.canonicalUrl &&
+    left.videoFingerprint === right.videoFingerprint;
 }

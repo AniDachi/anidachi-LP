@@ -1,6 +1,17 @@
-import type { RoomUsageSummary } from "@anidachi/protocol";
+import type {
+  RoomSourcePersistenceAcknowledgement,
+  RoomSourcePersistenceCallback,
+  RoomSourceProvider,
+  RoomUsageSummary,
+} from "@anidachi/protocol";
 import { createClient } from "@supabase/supabase-js";
 import type { PlanCode, RoomCapabilities } from "./plan-entitlements";
+import {
+  parseRoomSourcePersistenceRpcResult,
+  roomSourceCreationColumns,
+  roomSourcePersistenceErrorFromDatabase,
+  roomSourcePersistenceRpcArguments,
+} from "./room-source";
 
 const UNIQUE_VIOLATION = "23505";
 
@@ -77,8 +88,10 @@ export type RoomRow = {
   host_user_id: string;
   show_id: string | null;
   episode_id: string | null;
+  source_provider: RoomSourceProvider | null;
   source_url: string | null;
   video_fingerprint: string | null;
+  source_generation: number | null;
   title: string | null;
   status: "lobby" | "live" | "ended";
   created_at: string;
@@ -208,58 +221,146 @@ export function generateRefreshToken(): string {
   return randomBytes(48).toString("hex");
 }
 
-export async function storeRefreshToken(
+export type RefreshChannel = "website" | "extension";
+
+export type RefreshRotationOutcome = "rotated" | "reused" | "replayed" | "invalid";
+
+export type RefreshRotationRow = {
+  rotation_outcome: RefreshRotationOutcome;
+  user_id: string | null;
+  family_id: string | null;
+};
+
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
+
+function isUuid(value: unknown): value is string {
+  return typeof value === "string" && UUID_PATTERN.test(value);
+}
+
+function isNullableUuid(value: unknown): value is string | null {
+  return value === null || isUuid(value);
+}
+
+function isRefreshRotationOutcome(value: unknown): value is RefreshRotationOutcome {
+  return value === "rotated" || value === "reused" || value === "replayed" || value === "invalid";
+}
+
+export function parseRefreshTokenResolutionResult(value: unknown): string | null {
+  if (value === null) return null;
+  if (!isUuid(value)) {
+    throw new Error("Malformed refresh token resolution response");
+  }
+  return value;
+}
+
+export function parseRefreshTokenRotationResult(value: unknown): RefreshRotationRow {
+  if (!Array.isArray(value) || value.length !== 1) {
+    throw new Error("Malformed refresh token rotation response");
+  }
+
+  const row = value[0];
+  if (
+    typeof row !== "object" ||
+    row === null ||
+    Array.isArray(row) ||
+    Object.keys(row).sort().join(",") !== "family_id,rotation_outcome,user_id"
+  ) {
+    throw new Error("Malformed refresh token rotation response");
+  }
+
+  const { rotation_outcome: outcome, user_id: userId, family_id: familyId } = row as Record<
+    string,
+    unknown
+  >;
+  if (
+    !isRefreshRotationOutcome(outcome) ||
+    !isNullableUuid(userId) ||
+    !isNullableUuid(familyId)
+  ) {
+    throw new Error("Malformed refresh token rotation response");
+  }
+
+  const coherent =
+    ((outcome === "rotated" || outcome === "reused") && userId !== null && familyId !== null) ||
+    (outcome === "replayed" && userId === null && familyId !== null) ||
+    (outcome === "invalid" && userId === null);
+  if (!coherent) {
+    throw new Error("Malformed refresh token rotation response");
+  }
+
+  return {
+    rotation_outcome: outcome,
+    user_id: userId,
+    family_id: familyId,
+  };
+}
+
+export async function createRefreshTokenFamily(
   userId: string,
   token: string,
-  expiresAt: Date
+  channel: RefreshChannel,
+  deviceId: string | null = null,
 ): Promise<void> {
-  const { error } = await db().from("refresh_tokens").insert({
-    user_id: userId,
-    token_hash: hashToken(token),
-    expires_at: expiresAt.toISOString(),
+  const result = await db().rpc("create_refresh_token_family_v1", {
+    p_user_id: userId,
+    p_channel: channel,
+    p_token_hash: hashToken(token),
+    p_device_id: deviceId,
   });
-  if (error) throw new Error(`Failed to store refresh token: ${error.message}`);
+  databaseResultOrThrow("create refresh token family", result);
 }
 
-export async function validateRefreshToken(
-  token: string
-): Promise<string | null> {
-  const hash = hashToken(token);
-  const result = await db()
-    .from("refresh_tokens")
-    .select("user_id, expires_at")
-    .eq("token_hash", hash)
-    .maybeSingle();
-  const data = databaseResultOrThrow("validate refresh token", result);
-  if (!data) return null;
-  if (new Date(data.expires_at) < new Date()) return null;
-  return data.user_id as string;
-}
-
-export async function extendRefreshToken(
+export async function resolveRefreshTokenFamily(
   token: string,
-  expiresAt: Date
+  channel: RefreshChannel,
+): Promise<string | null> {
+  const result = await db().rpc("resolve_refresh_token_family_v1", {
+    p_token_hash: hashToken(token),
+    p_channel: channel,
+  });
+  const resolved = databaseResultOrThrow(
+    "resolve refresh token family",
+    result as { data: unknown; error: { message: string } | null },
+  );
+  return parseRefreshTokenResolutionResult(resolved);
+}
+
+export async function rotateRefreshTokenFamily(
+  token: string,
+  successorToken: string,
+  channel: RefreshChannel,
+): Promise<RefreshRotationRow> {
+  const result = await db().rpc("rotate_refresh_token_family_v1", {
+    p_token_hash: hashToken(token),
+    p_successor_token_hash: hashToken(successorToken),
+    p_channel: channel,
+  });
+  const rows = databaseResultOrThrow(
+    "rotate refresh token family",
+    result as { data: unknown; error: { message: string } | null },
+  );
+  return parseRefreshTokenRotationResult(rows);
+}
+
+export async function revokeRefreshTokenFamily(
+  token: string,
+  channel: RefreshChannel,
 ): Promise<void> {
-  const { error } = await db()
-    .from("refresh_tokens")
-    .update({ expires_at: expiresAt.toISOString() })
-    .eq("token_hash", hashToken(token));
-  if (error) throw new Error(`Failed to extend refresh token: ${error.message}`);
+  const result = await db().rpc("revoke_refresh_token_family_v1", {
+    p_token_hash: hashToken(token),
+    p_channel: channel,
+  });
+  databaseResultOrThrow("revoke refresh token family", result);
 }
 
-export async function deleteRefreshToken(token: string): Promise<void> {
-  const { error } = await db()
-    .from("refresh_tokens")
-    .delete()
-    .eq("token_hash", hashToken(token));
-  if (error) throw new Error(`Failed to delete refresh token: ${error.message}`);
-}
-
-export async function deleteAllRefreshTokensForUser(
+export async function revokeAllRefreshTokenFamiliesForUser(
   userId: string
 ): Promise<void> {
-  const { error } = await db().from("refresh_tokens").delete().eq("user_id", userId);
-  if (error) throw new Error(`Failed to delete user refresh tokens: ${error.message}`);
+  const result = await db().rpc("revoke_refresh_token_families_for_user_v1", {
+    p_user_id: userId,
+  });
+  databaseResultOrThrow("revoke user refresh token families", result);
 }
 
 // ---------- Billing helpers ----------
@@ -409,19 +510,24 @@ export async function createRoom(params: {
   capabilities: RoomCapabilities;
   showId?: string;
   episodeId?: string;
-  sourceUrl?: string;
-  videoFingerprint?: string;
+  sourceProvider?: unknown;
+  sourceUrl?: unknown;
+  videoFingerprint?: unknown;
   title?: string;
   clientRequestId?: string;
 }): Promise<{ room: RoomRow; reused: boolean }> {
+  const sourceColumns = roomSourceCreationColumns({
+    sourceProvider: params.sourceProvider,
+    sourceUrl: params.sourceUrl,
+    videoFingerprint: params.videoFingerprint,
+  });
   const { data, error } = await db()
     .from("rooms")
     .insert({
       host_user_id: params.hostUserId,
       show_id: params.showId ?? null,
       episode_id: params.episodeId ?? null,
-      source_url: params.sourceUrl ?? null,
-      video_fingerprint: params.videoFingerprint ?? null,
+      ...sourceColumns,
       title: params.title ?? null,
       client_request_id: params.clientRequestId ?? null,
       host_connected_at: new Date().toISOString(),
@@ -445,6 +551,22 @@ export async function createRoom(params: {
   }
 
   throw new Error(`Failed to create room: ${error.message}`);
+}
+
+export async function persistRoomSource(
+  callback: RoomSourcePersistenceCallback,
+): Promise<RoomSourcePersistenceAcknowledgement> {
+  const result = await db().rpc(
+    "persist_room_source_v1",
+    roomSourcePersistenceRpcArguments(callback),
+  );
+  if (result.error) {
+    throw roomSourcePersistenceErrorFromDatabase(result.error);
+  }
+  return parseRoomSourcePersistenceRpcResult(
+    result.data,
+    callback.sourceGeneration,
+  );
 }
 
 export function roomCapabilitiesFromRoom(room: RoomRow): RoomCapabilities {

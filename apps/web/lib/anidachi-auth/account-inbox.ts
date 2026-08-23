@@ -160,7 +160,7 @@ export async function listAccountInbox(params: {
 		throw error;
 	}
 
-	const pageResult = await db().rpc("get_account_inbox_page", {
+	const pageResult = await db().rpc("get_account_inbox_page_v2", {
 		p_user_id: params.ownerUserId,
 		p_now: nowIso,
 		p_cursor_activity_at: cursor?.activityAt ?? null,

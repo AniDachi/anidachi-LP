@@ -1,0 +1,21 @@
+export const extensionThemeTokens = `
+    --ad-canvas: #09090b;
+    --ad-canvas-raised: #111114;
+    --ad-accent: #ff8a3d;
+    --ad-accent-strong: #f97316;
+    --ad-accent-soft: rgba(249, 115, 22, 0.16);
+    --ad-panel: rgba(10, 10, 12, 0.82);
+    --ad-panel-strong: rgba(18, 17, 20, 0.92);
+    --ad-surface-inset: rgba(0, 0, 0, 0.2);
+    --ad-surface: rgba(255, 255, 255, 0.065);
+    --ad-surface-strong: rgba(255, 255, 255, 0.1);
+    --ad-border: rgba(255, 255, 255, 0.12);
+    --ad-border-strong: rgba(255, 255, 255, 0.18);
+    --ad-text: rgba(255, 255, 255, 0.93);
+    --ad-muted: rgba(255, 255, 255, 0.56);
+    --ad-success: #7dd3a7;
+    --ad-warning: #fbbf24;
+    --ad-danger: #f87171;
+    --ad-focus: rgba(147, 197, 253, 0.9);
+    --ad-shadow-panel: 0 24px 70px rgba(0, 0, 0, 0.48);
+`;

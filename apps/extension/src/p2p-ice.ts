@@ -42,17 +42,10 @@ export async function refreshP2PIceServers(auth?: IceServersAuth): Promise<RTCIc
   return loadP2PIceServersWithCache(true, auth);
 }
 
-function buildIceServersRequest(auth?: IceServersAuth): {
+function buildIceServersRequest(auth: IceServersAuth): {
   headers: Record<string, string>;
   url: string;
 } {
-  if (!auth) {
-    return {
-      headers: { Accept: "application/json" },
-      url: new URL(`${API_HTTP_BASE}/ice-servers`).toString(),
-    };
-  }
-
   return {
     headers: {
       Accept: "application/json",
@@ -66,6 +59,8 @@ async function loadP2PIceServersWithCache(
   forceRefresh: boolean,
   auth?: IceServersAuth,
 ): Promise<RTCIceServer[]> {
+  if (!auth) return getDefaultP2PIceServers();
+
   const now = Date.now();
   const scopeKey = await iceServerCacheScopeKey(auth);
   const freshCache = readCachedIceServers(scopeKey, now, "fresh");

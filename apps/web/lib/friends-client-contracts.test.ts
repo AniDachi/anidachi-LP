@@ -17,7 +17,6 @@ test("recent people success responses are runtime validated", () => {
           avatarUrl: null,
         },
         lastWatchedAt: NOW,
-        sharedRoomCount: 2,
       },
     ],
   });

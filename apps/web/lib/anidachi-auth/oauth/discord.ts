@@ -20,7 +20,11 @@ function getRedirectUri(origin: string): string {
   );
 }
 
-export function buildDiscordAuthUrl(state: string, origin: string): string {
+export function buildDiscordAuthUrl(
+  state: string,
+  origin: string,
+  codeChallenge: string,
+): string {
   const { clientId } = getCredentials();
   const params = new URLSearchParams({
     client_id: clientId,
@@ -28,6 +32,8 @@ export function buildDiscordAuthUrl(state: string, origin: string): string {
     response_type: "code",
     scope: DISCORD_SCOPES,
     state,
+    code_challenge: codeChallenge,
+    code_challenge_method: "S256",
     prompt: "none",
   });
   return `${DISCORD_OAUTH_URL}?${params.toString()}`;
@@ -42,7 +48,8 @@ export type OAuthProfile = {
 
 export async function exchangeDiscordCode(
   code: string,
-  origin: string
+  origin: string,
+  codeVerifier: string,
 ): Promise<OAuthProfile> {
   const { clientId, clientSecret } = getCredentials();
   const redirectUri = getRedirectUri(origin);
@@ -55,6 +62,7 @@ export async function exchangeDiscordCode(
       client_secret: clientSecret,
       grant_type: "authorization_code",
       code,
+      code_verifier: codeVerifier,
       redirect_uri: redirectUri,
     }),
   });

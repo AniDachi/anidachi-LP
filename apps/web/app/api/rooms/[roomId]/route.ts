@@ -5,6 +5,7 @@ import {
   getUserById,
   getRoomMemberCount,
 } from "@/lib/anidachi-auth/db";
+import { deriveDurableRoomSource } from "@/lib/anidachi-auth/room-source";
 
 export const dynamic = "force-dynamic";
 
@@ -28,14 +29,17 @@ export async function GET(
     getUserById(room.host_user_id),
     getRoomMemberCount(roomId),
   ]);
+  const source = deriveDurableRoomSource(room);
 
   return NextResponse.json({
     roomId: room.room_id,
     status: room.status,
     showId: room.show_id,
     episodeId: room.episode_id,
-    sourceUrl: room.source_url,
-    videoFingerprint: room.video_fingerprint,
+    sourceUrl: source?.source.sourceUrl ?? null,
+    videoFingerprint: source?.source.videoFingerprint ?? null,
+    sourceProvider: source?.source.provider ?? null,
+    sourceGeneration: source?.sourceGeneration ?? null,
     title: room.title,
     hostDisplayName: host?.display_name ?? "Unknown",
     memberCount,

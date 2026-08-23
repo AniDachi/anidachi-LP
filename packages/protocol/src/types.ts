@@ -11,6 +11,7 @@ import {
   MAX_VIDEO_FINGERPRINT_CHARS,
   MAX_WATCH_TITLE_CHARS,
 } from "./limits";
+import { RoomSourceDescriptorSchema } from "./source-url";
 
 const RoomIdSchema = z.string().min(1).max(MAX_ROOM_ID_CHARS);
 const ParticipantIdSchema = z.string().min(1).max(MAX_PARTICIPANT_ID_CHARS);
@@ -18,6 +19,40 @@ const SessionIdSchema = z.string().min(1).max(MAX_SESSION_ID_CHARS);
 const VideoFingerprintSchema = z.string().min(1).max(MAX_VIDEO_FINGERPRINT_CHARS);
 const UrlSchema = z.string().max(MAX_URL_CHARS).url();
 const textEncoder = new TextEncoder();
+
+export const MAX_ROOM_HISTORY_ATTESTATION_CHARS = 4_096;
+export const ROOM_HISTORY_OFFLINE_GRACE_SECONDS = 86_400;
+
+export const RoomHistoryAttestationClaimsSchema = z
+  .strictObject({
+    typ: z.literal("room_history"),
+    iss: z.literal("anidachi-worker"),
+    aud: z.literal("anidachi-web-history"),
+    sub: ParticipantIdSchema,
+    roomId: RoomIdSchema,
+    participantSessionId: SessionIdSchema,
+    roomGeneration: z.number().int().positive(),
+    sourceGeneration: z.number().int().positive(),
+    iat: z.number().int().nonnegative(),
+    exp: z.number().int().positive(),
+    jti: z.string().uuid(),
+  })
+  .refine(
+    (claims) => claims.exp === claims.iat + ROOM_HISTORY_OFFLINE_GRACE_SECONDS,
+    { path: ["exp"], message: "Room history authority must use the canonical grace window" },
+  );
+
+export const RoomHistoryAuthoritySchema = z.strictObject({
+  roomId: RoomIdSchema,
+  participantSessionId: SessionIdSchema,
+  roomGeneration: z.number().int().positive(),
+  sourceGeneration: z.number().int().positive(),
+  attestation: z
+    .string()
+    .min(1)
+    .max(MAX_ROOM_HISTORY_ATTESTATION_CHARS)
+    .regex(/^\S+$/, "Room history authority cannot contain whitespace"),
+});
 
 export const VoiceModeSchema = z.enum(["push-to-talk", "open-mic"]);
 
@@ -78,10 +113,22 @@ export const WatchSourceDescriptorSchema = z.object({
   title: z.string().min(1).max(MAX_WATCH_TITLE_CHARS),
   seriesTitle: z.string().min(1).max(MAX_WATCH_TITLE_CHARS).optional(),
   episodeTitle: z.string().min(1).max(MAX_WATCH_TITLE_CHARS).optional(),
-  seasonNumber: z.number().int().positive().optional(),
+  seasonNumber: z.number().int().min(0).max(1000).optional(),
   episodeNumber: z.number().int().nonnegative().optional(),
   duration: z.number().nonnegative().optional(),
   posterUrl: UrlSchema.optional(),
+});
+
+export const RoomSourcePersistenceCallbackSchema = z.strictObject({
+  roomId: RoomIdSchema,
+  sourceGeneration: z.number().int().positive(),
+  source: RoomSourceDescriptorSchema,
+});
+
+export const RoomSourcePersistenceAcknowledgementSchema = z.strictObject({
+  ok: z.literal(true),
+  outcome: z.enum(["persisted", "stale"]),
+  sourceGeneration: z.number().int().positive(),
 });
 
 export const ReactionEventSchema = z
@@ -300,6 +347,9 @@ export const ServerEventSchema = z.discriminatedUnion("type", [
     previousSource: WatchSourceDescriptorSchema.optional(),
     hostState: PlaybackStateSchema,
   }),
+  RoomHistoryAuthoritySchema.extend({
+    type: z.literal("ROOM_HISTORY_AUTHORITY"),
+  }),
   z.object({
     type: z.literal("PARTICIPANT_JOINED"),
     participant: ParticipantSchema,
@@ -343,11 +393,16 @@ export type Participant = z.infer<typeof ParticipantSchema>;
 export type RoomCapabilities = z.infer<typeof RoomCapabilitiesSchema>;
 export type PlaybackState = z.infer<typeof PlaybackStateSchema>;
 export type WatchSourceDescriptor = z.infer<typeof WatchSourceDescriptorSchema>;
+export type RoomSourceDescriptor = z.infer<typeof RoomSourceDescriptorSchema>;
+export type RoomSourcePersistenceCallback = z.infer<typeof RoomSourcePersistenceCallbackSchema>;
+export type RoomSourcePersistenceAcknowledgement = z.infer<typeof RoomSourcePersistenceAcknowledgementSchema>;
 export type ReactionEvent = z.infer<typeof ReactionEventSchema>;
 export type P2PSessionDescription = z.infer<typeof P2PSessionDescriptionSchema>;
 export type P2PIceCandidate = z.infer<typeof P2PIceCandidateSchema>;
 export type P2PSignal = z.infer<typeof P2PSignalSchema>;
 export type VoiceMode = z.infer<typeof VoiceModeSchema>;
+export type RoomHistoryAuthority = z.infer<typeof RoomHistoryAuthoritySchema>;
+export type RoomHistoryAttestationClaims = z.infer<typeof RoomHistoryAttestationClaimsSchema>;
 export type ClientEvent = z.infer<typeof ClientEventSchema>;
 export type ServerEvent = z.infer<typeof ServerEventSchema>;
 export type RoomEndReason = z.infer<typeof RoomEndReasonSchema>;

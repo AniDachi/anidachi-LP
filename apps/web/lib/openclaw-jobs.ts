@@ -1,9 +1,10 @@
 import { readFile, writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import {
-  get as blobGet,
-  put as blobPut,
-} from "@vercel/blob";
+  hasPrivateIntegrationBlobConfiguration,
+  readPrivateIntegrationBlobText,
+  writePrivateIntegrationBlobText,
+} from "@/lib/private-integration-blob";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -59,9 +60,9 @@ export interface CarouselJob {
 // ---------------------------------------------------------------------------
 
 const JOB_TTL_MS = 30 * 60 * 1000;
-const BLOB_PREFIX = "openclaw/jobs";
+export const OPENCLAW_JOB_BLOB_PREFIX = "openclaw/jobs";
+const BLOB_PREFIX = OPENCLAW_JOB_BLOB_PREFIX;
 const LOCAL_DIR = ".data/openclaw-jobs";
-const BLOB_ACCESS = (process.env.BLOB_ACCESS ?? "private") as "public" | "private";
 
 function blobPath(jobId: string): string {
   return `${BLOB_PREFIX}/${jobId}.json`;
@@ -76,31 +77,16 @@ function localPath(jobId: string): string {
 // ---------------------------------------------------------------------------
 
 async function readFromBlob(jobId: string): Promise<CarouselJob | undefined> {
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
-  if (!token) return undefined;
-
   try {
-    const result = await blobGet(blobPath(jobId), { access: BLOB_ACCESS, token });
-    if (!result || result.statusCode !== 200) return undefined;
-    const text = await new Response(result.stream).text();
-    return JSON.parse(text) as CarouselJob;
+    const text = await readPrivateIntegrationBlobText(blobPath(jobId));
+    return text ? (JSON.parse(text) as CarouselJob) : undefined;
   } catch {
     return undefined;
   }
 }
 
 async function writeToBlob(job: CarouselJob): Promise<void> {
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
-  if (!token) return;
-
-  await blobPut(blobPath(job.id), JSON.stringify(job), {
-    access: BLOB_ACCESS,
-    token,
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    contentType: "application/json",
-    cacheControlMaxAge: 0,
-  });
+  await writePrivateIntegrationBlobText(blobPath(job.id), JSON.stringify(job));
 }
 
 // ---------------------------------------------------------------------------
@@ -170,7 +156,7 @@ export async function createJob(
 
 /** Load a job by ID. Returns undefined if not found or expired. */
 export async function getJob(id: string): Promise<CarouselJob | undefined> {
-  const useBlob = !!process.env.BLOB_READ_WRITE_TOKEN;
+  const useBlob = hasPrivateIntegrationBlobConfiguration();
   const job = useBlob ? await readFromBlob(id) : await readFromFile(id);
   if (!job) return undefined;
 
@@ -181,7 +167,7 @@ export async function getJob(id: string): Promise<CarouselJob | undefined> {
 /** Persist the full job object (call once at end of request). */
 export async function saveJob(job: CarouselJob): Promise<void> {
   job.updatedAt = Date.now();
-  if (process.env.BLOB_READ_WRITE_TOKEN) {
+  if (hasPrivateIntegrationBlobConfiguration()) {
     await writeToBlob(job);
   } else {
     await writeToFile(job);

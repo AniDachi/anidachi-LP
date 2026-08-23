@@ -1,3 +1,5 @@
+import { extensionThemeTokens } from "./extension-theme";
+
 export const overlayStyles = `
   :host {
     color-scheme: dark;
@@ -14,18 +16,7 @@ export const overlayStyles = `
     pointer-events: none;
     font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     color: rgba(255, 255, 255, 0.92);
-    --ad-accent: #ff8a3d;
-    --ad-accent-strong: #f97316;
-    --ad-accent-soft: rgba(249, 115, 22, 0.16);
-    --ad-panel: rgba(10, 10, 12, 0.82);
-    --ad-panel-strong: rgba(18, 17, 20, 0.92);
-    --ad-surface-inset: rgba(0, 0, 0, 0.2);
-    --ad-surface: rgba(255, 255, 255, 0.065);
-    --ad-surface-strong: rgba(255, 255, 255, 0.1);
-    --ad-border: rgba(255, 255, 255, 0.12);
-    --ad-border-strong: rgba(255, 255, 255, 0.18);
-    --ad-text: rgba(255, 255, 255, 0.93);
-    --ad-muted: rgba(255, 255, 255, 0.56);
+${extensionThemeTokens}
   }
 
   .anidachi-hidden {

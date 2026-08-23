@@ -87,6 +87,7 @@ async function uploadFiles(files: File[]) {
     try {
       const blob = await put(pathname, file, {
         access: "public",
+        token: process.env.BLOB_READ_WRITE_TOKEN,
         addRandomSuffix: false,
         contentType: mime,
       });

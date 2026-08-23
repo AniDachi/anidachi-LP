@@ -4,6 +4,7 @@ import {
   recordDiagnosticEvent,
   type DiagnosticMessage,
 } from "../src/diagnostic-log";
+import { videoDebugSnapshot } from "../src/debug-log";
 
 const DIAGNOSTIC_STORAGE_KEY = "anidachi:diagnostic-log:v1";
 
@@ -83,6 +84,12 @@ describe("diagnostic log", () => {
         reason: "join:hash",
         userId: "user-secret-id",
         refreshToken: "refresh-secret",
+        roomHistoryAttestation: "opaque-room-authority",
+        displayName: "Unique Routine Display Name 0bd3",
+        label: "Unique Routine Invite Label c912",
+        targetKey: "friend:unique-routine-target-77af",
+        reaction: "Unique Routine Reaction 349e",
+        sourceTitle: "Unique Routine Source Title a881",
         url: "https://staging.anidachi.app/room?token=secret",
       },
       "warn",
@@ -107,14 +114,20 @@ describe("diagnostic log", () => {
             reason: "join:hash",
             userId: expect.stringMatching(/^id_[a-z0-9]+$/),
             refreshToken: "<redacted>",
-            url: "https://staging.anidachi.app/room?<redacted>",
+            roomHistoryAttestation: "<redacted>",
+            targetKey: expect.stringMatching(/^id_[a-z0-9]+$/),
+            url: "https://staging.anidachi.app/room",
           },
         }),
       ]);
     });
     expect(JSON.stringify(storage.get(DIAGNOSTIC_STORAGE_KEY))).not.toContain("session-secret-id");
+    expect(JSON.stringify(storage.get(DIAGNOSTIC_STORAGE_KEY))).not.toContain("opaque-room-authority");
     expect(JSON.stringify(storage.get(DIAGNOSTIC_STORAGE_KEY))).not.toMatch(
       /stored-user-secret|probe-user-secret|current-user-secret|voice-user-(?:one|two)/,
+    );
+    expect(JSON.stringify(storage.get(DIAGNOSTIC_STORAGE_KEY))).not.toMatch(
+      /Unique Routine Display Name 0bd3|Unique Routine Invite Label c912|friend:unique-routine-target-77af|Unique Routine Reaction 349e|Unique Routine Source Title a881/,
     );
   });
 
@@ -125,18 +138,35 @@ describe("diagnostic log", () => {
       refreshToken: "refresh-secret",
       user: {
         id: "user-1",
-        displayName: "Alina",
+        displayName: "Unique Support Display Name b06e",
         plan: "plus",
         avatarUrl: "https://example.com/avatar.png",
       },
     });
     storage.set("anidachi.watchLibraryCache.v1.user-1", { entries: [] });
+    const rawVoiceUserId = "voice/account+unique@example.com";
+    const encodedVoiceUserId = encodeURIComponent(rawVoiceUserId);
+    storage.set(
+      `voiceAudioPreferencesV1.${encodeURIComponent(`user:${rawVoiceUserId}`)}`,
+      { mode: "open-mic" },
+    );
 
     const pageDebug = {
       entries: Array.from({ length: 620 }, (_, index) => ({
         id: index + 1,
         scope: "identity",
         message: `entry-${index + 1}`,
+        ...(index === 619
+          ? {
+              data: {
+                displayName: "Unique Page Display Name c44a",
+                label: "Unique Support Invite Label 9df1",
+                targetKey: "group:unique-support-target-2a18",
+                reaction: "Unique Support Reaction 88e4",
+                sourceTitle: "Unique Support Source Title 645b",
+              },
+            }
+          : {}),
       })),
     };
     const message: DiagnosticMessage = {
@@ -209,14 +239,14 @@ describe("diagnostic log", () => {
         auth: {
           hasAccessToken: boolean;
           hasRefreshToken: boolean;
-          user: { id: string; displayName: string; plan: string };
+          user: { id: string; plan: string };
         };
       };
     };
     const bundleText = JSON.stringify(bundle);
     expect(bundle.format).toBe("diagnostics");
     expect(bundle.mode).toBe("full");
-    expect(bundle.page.url).toBe("https://www.crunchyroll.com/watch?<redacted>");
+    expect(bundle.page.url).toBe("https://www.crunchyroll.com/watch");
     expect(bundle.page.participantId).toMatch(/^id_[a-z0-9]+$/);
     expect(bundle.page.voice).toEqual({
       mode: "open-mic",
@@ -241,9 +271,15 @@ describe("diagnostic log", () => {
     expect(bundle.storage.keys).toContain(
       "anidachi.watchLibraryCache.v1.<redacted-id>",
     );
+    expect(bundle.storage.keys).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(
+          /^voiceAudioPreferencesV1\.user%3Aid_[a-z0-9]+$/,
+        ),
+      ]),
+    );
     expect(bundle.storage.auth.user).toEqual({
       id: expect.stringMatching(/^id_[a-z0-9]+$/),
-      displayName: "Alina",
       hasAvatar: true,
       plan: "plus",
     });
@@ -252,6 +288,162 @@ describe("diagnostic log", () => {
     expect(bundleText).not.toContain("user-1");
     expect(bundleText).not.toContain("remote-user-1");
     expect(bundleText).not.toContain("token=secret");
+    expect(bundleText).not.toContain(rawVoiceUserId);
+    expect(bundleText).not.toContain(encodedVoiceUserId);
+    expect(bundleText).not.toMatch(
+      /Unique Support Display Name b06e|Unique Page Display Name c44a|Unique Support Invite Label 9df1|group:unique-support-target-2a18|Unique Support Reaction 88e4|Unique Support Source Title 645b/,
+    );
+  });
+
+  it.each(["light", "full"] as const)(
+    "removes current provider content identifiers from serialized %s support bundles",
+    async (mode) => {
+      const { download } = installChromeMock();
+      const privateLiterals = [
+        "G14SUPPORT1",
+        "unique-support-episode-slug-4a2c",
+        "YtSupportWatch1",
+        "YtSupportShort2",
+        "YtSupportShorts3",
+        "YtSupportEmbed4",
+        "YtSupportNoCookie5",
+        "unique-support-query-6f3a",
+        "unique-support-hash-7d9e",
+      ];
+
+      const response = await handleDiagnosticMessage({
+        type: "ANIDACHI_DIAGNOSTICS",
+        command: "save",
+        mode,
+        page: {
+          mode,
+          url: "https://www.crunchyroll.com/watch/G14SUPPORT1/unique-support-episode-slug-4a2c?from=unique-support-query-6f3a#unique-support-hash-7d9e",
+          video: {
+            youtubeWatchUrl:
+              "https://www.youtube.com/watch?v=YtSupportWatch1&list=unique-support-query-6f3a#unique-support-hash-7d9e",
+            youtubeShortUrl:
+              "https://youtu.be/YtSupportShort2?si=unique-support-query-6f3a",
+            youtubeShortsUrl:
+              "https://www.youtube.com/shorts/YtSupportShorts3?feature=unique-support-query-6f3a",
+            youtubeEmbedUrl:
+              "https://www.youtube.com/embed/YtSupportEmbed4?start=unique-support-query-6f3a",
+            youtubePrivacyEmbedUrl:
+              "https://www.youtube-nocookie.com/embed/YtSupportNoCookie5#unique-support-hash-7d9e",
+          },
+        },
+      });
+
+      expect(response).toEqual(expect.objectContaining({ ok: true, action: "downloaded" }));
+      const bundleText = JSON.stringify(parseDownloadedBundle(download));
+      for (const literal of privateLiterals) {
+        expect(bundleText).not.toContain(literal);
+      }
+      expect(bundleText).toContain("https://www.crunchyroll.com/watch/<redacted-id>");
+      expect(bundleText).toContain("https://www.youtube.com/watch");
+      expect(bundleText).toContain("https://youtu.be/<redacted-id>");
+      expect(bundleText).toContain("https://www.youtube.com/shorts/<redacted-id>");
+      expect(bundleText).toContain("https://www.youtube.com/embed/<redacted-id>");
+      expect(bundleText).toContain("https://www.youtube-nocookie.com/embed/<redacted-id>");
+      expect(bundleText).not.toContain("?<redacted>");
+      expect(bundleText).not.toContain("#<redacted>");
+    },
+  );
+
+  it.each(["light", "full"] as const)(
+    "removes transient CDN and blob media identifiers from serialized %s support bundles",
+    async (mode) => {
+      const { download } = installChromeMock();
+      const cdnLiteral = "token-host/master.m3u8";
+      const blobLiteral = "youtube-private-blob-support-4a9d";
+      const cdnVideo = document.createElement("video");
+      const blobVideo = document.createElement("video");
+      Object.defineProperty(cdnVideo, "currentSrc", {
+        configurable: true,
+        value: `https://cdn-user:cdn-password@v.vrv.co/evs1/${cdnLiteral}?Policy=support-query#support-fragment`,
+      });
+      Object.defineProperty(blobVideo, "currentSrc", {
+        configurable: true,
+        value: `blob:https://www.youtube.com/${blobLiteral}`,
+      });
+      const cdnSnapshot = videoDebugSnapshot(cdnVideo);
+      const blobSnapshot = videoDebugSnapshot(blobVideo);
+
+      const response = await handleDiagnosticMessage({
+        type: "ANIDACHI_DIAGNOSTICS",
+        command: "save",
+        mode,
+        page: {
+          mode,
+          video: { cdn: cdnSnapshot, blob: blobSnapshot },
+          pageDebug: {
+            entries: [
+              {
+                at: new Date().toISOString(),
+                elapsedMs: 1,
+                scope: "video.event",
+                message: "media snapshot",
+                data: { video: cdnSnapshot, after: blobSnapshot },
+              },
+            ],
+          },
+        },
+      });
+
+      expect(response).toEqual(expect.objectContaining({ ok: true, action: "downloaded" }));
+      const bundleText = JSON.stringify(parseDownloadedBundle(download));
+      for (const literal of [
+        cdnLiteral,
+        blobLiteral,
+        "cdn-user",
+        "cdn-password",
+        "support-query",
+        "support-fragment",
+      ]) {
+        expect(bundleText).not.toContain(literal);
+      }
+      expect(bundleText).toContain("https://v.vrv.co/<redacted-media-source>");
+      expect(bundleText).toContain(
+        "blob:https://www.youtube.com/<redacted-media-source>",
+      );
+    },
+  );
+
+  it("pseudonymizes real raw and malformed account ids in serialized voice preference storage keys", async () => {
+    const { storage, download } = installChromeMock();
+    const rawVoiceUserId = "voice/storage+private@example.com";
+    const encodedVoiceUserId = encodeURIComponent(rawVoiceUserId);
+    const malformedEncodedVoiceUserId = "voice%2Fmalformed%ZZprivate%40example.com";
+    storage.set(
+      `voiceAudioPreferencesV1.${encodeURIComponent(`user:${rawVoiceUserId}`)}`,
+      { mode: "open-mic" },
+    );
+    storage.set(
+      `voiceAudioPreferencesV1.user%3A${malformedEncodedVoiceUserId}`,
+      { mode: "push-to-talk" },
+    );
+
+    const response = await handleDiagnosticMessage({
+      type: "ANIDACHI_DIAGNOSTICS",
+      command: "save",
+      mode: "full",
+      page: { mode: "full" },
+    });
+
+    expect(response).toEqual(expect.objectContaining({ ok: true, action: "downloaded" }));
+    const bundle = parseDownloadedBundle(download) as { storage: { keys: string[] } };
+    const bundleText = JSON.stringify(bundle);
+    const voicePreferenceKeys = bundle.storage.keys.filter((key) =>
+      key.startsWith("voiceAudioPreferencesV1.user%3A"),
+    );
+    expect(voicePreferenceKeys).toHaveLength(2);
+    expect(voicePreferenceKeys).toEqual([
+      expect.stringMatching(/^voiceAudioPreferencesV1\.user%3Aid_[a-z0-9]+$/),
+      expect.stringMatching(/^voiceAudioPreferencesV1\.user%3Aid_[a-z0-9]+$/),
+    ]);
+    expect(new Set(voicePreferenceKeys).size).toBe(2);
+    expect(bundleText).not.toContain(rawVoiceUserId);
+    expect(bundleText).not.toContain(encodedVoiceUserId);
+    expect(bundleText).not.toContain(malformedEncodedVoiceUserId);
   });
 
   it("returns an error when downloads permission is unavailable", async () => {

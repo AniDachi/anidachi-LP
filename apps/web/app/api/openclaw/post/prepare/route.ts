@@ -38,6 +38,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
 import { put } from "@vercel/blob";
+import { requirePublicMediaBlobToken } from "@/lib/public-media-blob";
 import {
   validateOpenClawSecret,
   unauthorizedResponse,
@@ -258,6 +259,7 @@ export async function POST(request: NextRequest) {
 
     // Upload to Vercel Blob (shared across all platforms)
     const date = new Date().toISOString().slice(0, 10);
+    const publicBlobToken = requirePublicMediaBlobToken();
     const blobUrls: string[] = [];
     const blobPaths: string[] = [];
 
@@ -266,6 +268,7 @@ export async function POST(request: NextRequest) {
       const pathname = `openclaw/${date}/${crypto.randomUUID()}.${ext}`;
       const blob = await put(pathname, photo, {
         access: "public",
+        token: publicBlobToken,
         addRandomSuffix: false,
         contentType: photo.type,
       });
@@ -297,6 +300,7 @@ export async function POST(request: NextRequest) {
         const jpegPath = `openclaw/tiktok-916/${date}/${crypto.randomUUID()}.jpg`;
         await put(jpegPath, jpegBuffer, {
           access: "public",
+          token: publicBlobToken,
           addRandomSuffix: false,
           contentType: "image/jpeg",
         });

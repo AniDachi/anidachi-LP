@@ -125,6 +125,7 @@ type WatchSessionRow = {
   ended_at: string | null;
   last_checkpoint_at: string;
   updated_at: string;
+  schema_version: 1 | 2;
 };
 
 type WatchSessionParticipantRow = {
@@ -136,6 +137,7 @@ type WatchSessionParticipantRow = {
   current_time_seconds: number;
   progress: number;
   updated_at: string;
+  schema_version: 1 | 2;
 };
 
 type UserTrackedTitleRow = {
@@ -152,6 +154,7 @@ type UserTrackedTitleRow = {
   last_watched_at: string;
   created_at: string;
   updated_at: string;
+  schema_version: 1 | 2;
 };
 
 export type WatchSessionRoomSource = {
@@ -229,13 +232,17 @@ export function cleanWatchProgressEntry(value: unknown): CleanWatchProgressEntry
     progressKind === "episode"
       ? (shouldPreferInferredSeason ? inferredSeason?.seasonTitle : rawSeasonTitle) ??
         (rawSeasonIsInvalid ? null : inferredSeason?.seasonTitle) ??
-        (seasonNumber ? `Season ${seasonNumber}` : null)
+        (seasonNumber !== null ? `Season ${seasonNumber}` : null)
       : null;
   const seasonKey =
     progressKind === "episode"
       ? (shouldPreferInferredSeason ? inferredSeason?.seasonId : cleanString(input.seasonId, 220)) ??
         (rawSeasonIsInvalid ? null : inferredSeason?.seasonId) ??
-        (seasonNumber ? `season-${seasonNumber}` : seasonTitle ? keyFromTitle(seasonTitle) : null)
+        (seasonNumber !== null
+          ? `season-${seasonNumber}`
+          : seasonTitle
+            ? keyFromTitle(seasonTitle)
+            : null)
       : null;
 
   return {
@@ -361,6 +368,7 @@ export async function listWatchLibrary(userId: string): Promise<WatchLibraryResp
       .from("user_tracked_titles")
       .select("*")
       .eq("user_id", userId)
+      .eq("schema_version", 1)
       .eq("active", true)
       .order("last_watched_at", { ascending: false })
       .limit(entitlements.account.maxActiveTrackedTitles),
@@ -418,7 +426,8 @@ export async function clearWatchLibrary(userId: string): Promise<WatchLibraryRes
   const participantDelete = await db()
     .from("watch_session_participants")
     .delete()
-    .eq("user_id", userId);
+    .eq("user_id", userId)
+    .eq("schema_version", 1);
   if (participantDelete.error) {
     throw new Error(`Failed to clear watch session participants: ${participantDelete.error.message}`);
   }
@@ -426,7 +435,8 @@ export async function clearWatchLibrary(userId: string): Promise<WatchLibraryRes
   const trackedDelete = await db()
     .from("user_tracked_titles")
     .delete()
-    .eq("user_id", userId);
+    .eq("user_id", userId)
+    .eq("schema_version", 1);
   if (trackedDelete.error) {
     throw new Error(`Failed to clear tracked titles: ${trackedDelete.error.message}`);
   }
@@ -447,6 +457,7 @@ export async function getWatchSessionRoomSourceForViewer(params: {
     .select("*")
     .eq("session_id", params.sessionId)
     .eq("user_id", params.userId)
+    .eq("schema_version", 1)
     .maybeSingle();
   if (participantError) {
     throw new Error(`Failed to load watch session participant: ${participantError.message}`);
@@ -457,6 +468,7 @@ export async function getWatchSessionRoomSourceForViewer(params: {
     .from("watch_sessions")
     .select("*")
     .eq("id", params.sessionId)
+    .eq("schema_version", 1)
     .maybeSingle();
   if (error) throw new Error(`Failed to load watch session: ${error.message}`);
   if (!data) throw new WatchLibraryApiError(404, "Watch session not found");
@@ -598,6 +610,7 @@ async function upsertWatchSession(params: {
     progress: params.entry.progress,
     last_checkpoint_at: params.entry.observedAt,
     updated_at: params.now,
+    schema_version: 1,
     ...(params.entry.checkpointKind === "ended" ? { ended_at: params.now } : {}),
   };
 
@@ -606,6 +619,7 @@ async function upsertWatchSession(params: {
       .from("watch_sessions")
       .update(payload)
       .eq("id", existing.id)
+      .eq("schema_version", 1)
       .select("*")
       .single();
     if (error) throw new Error(`Failed to update watch session: ${error.message}`);
@@ -629,6 +643,7 @@ async function getLatestRoomWatchSession(
     .from("watch_sessions")
     .select("*")
     .eq("room_id", roomId)
+    .eq("schema_version", 1)
     .eq("provider", entry.provider)
     .eq("item_key", entry.itemKey)
     .eq("episode_key", entry.episodeKey)
@@ -647,6 +662,7 @@ async function getReusableSoloWatchSession(
     .from("watch_sessions")
     .select("*")
     .eq("host_user_id", userId)
+    .eq("schema_version", 1)
     .is("room_id", null)
     .eq("provider", entry.provider)
     .eq("item_key", entry.itemKey)
@@ -681,6 +697,7 @@ async function upsertWatchSessionParticipant(params: {
         current_time_seconds: params.entry.currentTimeSeconds,
         progress: params.entry.progress,
         updated_at: params.entry.observedAt,
+        schema_version: 1,
       },
       { onConflict: "session_id,user_id" }
     );
@@ -739,6 +756,7 @@ async function upsertTrackedTitle(params: {
         latest_session_id: params.sessionId,
         last_watched_at: params.entry.observedAt,
         updated_at: params.now,
+        schema_version: 1,
       },
       { onConflict: "user_id,provider,title_key" }
     );
@@ -760,6 +778,7 @@ async function getTrackedTitle(
     .from("user_tracked_titles")
     .select("*")
     .eq("user_id", userId)
+    .eq("schema_version", 1)
     .eq("provider", entry.provider)
     .eq("title_key", entry.itemKey)
     .maybeSingle();
@@ -777,6 +796,7 @@ async function archiveOldestTrackedTitlesOverLimit(
     .from("user_tracked_titles")
     .select("provider,title_key")
     .eq("user_id", userId)
+    .eq("schema_version", 1)
     .eq("active", true)
     .order("last_watched_at", { ascending: true });
   if (error) throw new Error(`Failed to count tracked titles: ${error.message}`);
@@ -796,6 +816,7 @@ async function archiveOldestTrackedTitlesOverLimit(
         updated_at: new Date().toISOString(),
       })
       .eq("user_id", userId)
+      .eq("schema_version", 1)
       .eq("provider", row.provider)
       .eq("title_key", row.title_key);
     if (archiveError) {
@@ -809,6 +830,7 @@ async function countActiveTrackedTitles(userId: string): Promise<number> {
     .from("user_tracked_titles")
     .select("title_key", { count: "exact", head: true })
     .eq("user_id", userId)
+    .eq("schema_version", 1)
     .eq("active", true);
   if (error) throw new Error(`Failed to count active tracked titles: ${error.message}`);
   return count ?? 0;
@@ -822,6 +844,7 @@ async function listViewerSessionParticipants(
     .from("watch_session_participants")
     .select("*")
     .eq("user_id", userId)
+    .eq("schema_version", 1)
     .gte("updated_at", retainedSince)
     .order("updated_at", { ascending: false })
     .limit(250);
@@ -835,7 +858,8 @@ async function listWatchSessionsByIds(sessionIds: string[]): Promise<WatchSessio
   const { data, error } = await db()
     .from("watch_sessions")
     .select("*")
-    .in("id", uniqueIds);
+    .in("id", uniqueIds)
+    .eq("schema_version", 1);
   if (error) throw new Error(`Failed to load watch sessions: ${error.message}`);
   return (data as WatchSessionRow[] | null) ?? [];
 }
@@ -849,6 +873,7 @@ async function listParticipantsForSessions(
     .from("watch_session_participants")
     .select("*")
     .in("session_id", uniqueIds)
+    .eq("schema_version", 1)
     .order("updated_at", { ascending: false });
   if (error) throw new Error(`Failed to load watch session participants: ${error.message}`);
   return (data as WatchSessionParticipantRow[] | null) ?? [];
@@ -1040,11 +1065,11 @@ function sessionSeasonMetadata(session: WatchSessionRow): {
     seasonId:
       (shouldPreferInferredSeason ? inferred?.seasonId : session.season_key) ??
       (storedSeasonIsInvalid ? null : inferred?.seasonId) ??
-      (seasonNumber ? `season-${seasonNumber}` : null),
+      (seasonNumber !== null ? `season-${seasonNumber}` : null),
     seasonTitle:
       (shouldPreferInferredSeason ? inferred?.seasonTitle : storedSeasonTitle) ??
       (storedSeasonIsInvalid ? null : inferred?.seasonTitle) ??
-      (seasonNumber ? `Season ${seasonNumber}` : null),
+      (seasonNumber !== null ? `Season ${seasonNumber}` : null),
     seasonNumber,
   };
 }
@@ -1141,7 +1166,7 @@ function normalizeSeasonNumber(value: unknown): number | null {
   const count = typeof value === "number" ? value : Number.parseInt(String(value ?? ""), 10);
   if (!Number.isFinite(count)) return null;
   const normalized = Math.floor(count);
-  return normalized > 0 && normalized <= 1000 ? normalized : null;
+  return normalized >= 0 && normalized <= 1000 ? normalized : null;
 }
 
 function keyFromTitle(value: string): string {

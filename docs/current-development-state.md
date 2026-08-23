@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-08-09.
+Last updated: 2026-08-22.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -119,15 +119,163 @@ Graphify is now available through repo scripts:
 
 ```bash
 pnpm graph:baseline
-pnpm graph:update
+pnpm graph:update:code
 pnpm graph:watch
 pnpm graph:hook:install
 pnpm graph:query "Trace room token flow from web to Worker WebSocket join."
 ```
 
+`pnpm graph:update` remains a compatibility alias for the code-only command.
+After changing docs, plans, images, PDFs, or other semantic inputs, use
+`$graphify . --update` inside Codex; it uses Codex subagents and does not need a
+separate provider API key.
+
 Use it before cross-plane work, especially room/P2P/auth/Worker/CI changes. Do
 not promote Graphify to a required CI check unless the team explicitly accepts
 the runtime and backend requirements.
+
+## Pre-release Security Readiness
+
+Waves 1-3 of the now-historical pre-release security plan retain their staging
+evidence. Wave 1 completed at merge
+`07dfaf4a8bd0c192e21fd381f4350ab88cdab322` (PRs `#192`-`#195`). The web runtime
+uses Next.js `15.5.23`, the public media route accepts only exact public media
+identifiers, and sensitive integration/CRM Blob paths now read, write, and
+delete through the private store only. The temporary staging compatibility flag
+has been removed; the retained public legacy objects are not a runtime fallback
+and were not deleted or changed during cutover. On 2026-08-21 the broad program
+was closed by explicit scope disposition, not by claiming that all original
+tasks were implemented; the focused successor is named below.
+
+The live staging deployment is `dpl_B6dD3YJdGJrkBfkppQGsXH9PdaBL`. Both staging
+aliases, CI, deployment smoke, noindex/no-store behavior, the bounded private
+snapshot manifest, and the affected TikTok test-account health checks passed.
+An unrelated internal YouTube publishing test credential requires manual
+reconnection later; it does not affect product auth, rooms, Watch History, or
+the extension.
+
+Wave 2 Task 5 is deployed on `staging` at merge
+`d330be47cb23ee58eeba3e0db18ec1f2f2e86e21` (PR `#197`). Browser Google and
+Discord login now use random one-time state, an independent browser-correlation
+secret, S256 PKCE, provider-bound atomic consumption, and transaction-scoped
+cookie cleanup. Migration `20260818131602_oauth_login_transactions.sql` is
+applied; the linked migration dry run is empty. Local web/pgTAP gates,
+independent and CodeRabbit review, GitHub CI, migration deployment, rooms/P2P
+E2E, Vercel deployment, and staging smoke passed.
+
+Task 5's attended provider gate is accepted.
+On 2026-08-20, real Google and real Discord consent/callback flows
+succeeded on staging inside the enforced initial ten-minute OAuth transaction
+window. Exact elapsed times and screenshots are not claimed. Task 6 now has
+stable,
+repository-controlled unpacked local and staging identities, exact per-channel
+callback binding, S256 PKCE, atomic one-time exchange, and fail-closed
+production. When extension connection needs website login, the validated
+request crosses browser OAuth only inside a ten-minute authenticated-encryption
+envelope derived from the existing server JWT secret; the durable OAuth row and
+browser-visible login return path contain only that opaque envelope. The
+approved local ID is `nkinhhgigcflmfhilmcakbkongcpkfnl`; the
+approved staging ID is `ndkfphbchhfephdodcpehdcoclojagje`. This source work is
+locally verified in PR `#199`. Its additive migration is already applied on
+staging, the linked dry run is empty, and Vercel Preview branch `staging` has
+the exact staging client ID. Task 6 is merged to `staging`; the exact merged
+narrow artifact has now been loaded in both established staging test profiles;
+the user confirmed both profiles successfully authorized and loaded it. That
+two-profile confirmation is distinct from the one first-profile MV3-worker
+proof: its exact `/auth` callback was state-matched, wrong verifier -> 401
+`invalid_grant`, the same still-usable code with its correct verifier -> 200,
+and consumed-code replay -> 401 `invalid_grant`. That worker also completed the
+real `/extension/logout` flow: its exact callback had the approved Chromium
+host, `/logout` path, matching state, `signed_out=1`, and exactly the expected
+parameters. Separately, the issued test refresh token from the PKCE/replay proof
+was revoked through the supported extension logout endpoint (200), and an
+immediate refresh attempt was rejected (401 `Invalid refresh token`). All
+code/state/verifier/access/refresh values stayed in process memory and were
+cleared without being printed or persisted. This closes the Task 6 staging
+connection, verifier, replay, browser-logout-callback, and issued-session-
+revocation evidence. The rollout order remains additive migration first,
+application second, then exact unpacked staging acceptance. Legacy rows survive
+with null binding columns, but the new RPCs cannot consume them. If the new app
+must be rolled back after bound issuance, stop issuance and drain for more than
+five minutes (or remove only unconsumed bound rows) before restoring the old
+exchange, which cannot enforce PKCE. Staging/public release scripts force their
+canonical web/API/WS endpoints and narrow mode, and artifact validation rejects
+any extra host permission or content-script match. Broad staging remains a
+separate explicit local testing command and output path.
+
+Task 7 reached staging through PR #201 and merge commit `13a30fa`. The additive
+migration `20260819133849_auth_channel_rotation.sql` is applied to staging and
+creates service-role-only website/extension refresh families and hash-only
+consumed-token lineage; raw or encrypted refresh tokens are not stored. Access tokens require
+exact scalar issuer/audience/type channel claims. Refresh rotation is atomic,
+uses a ten-second concurrency-reuse interval, expires after 90 consecutive days
+without refresh and after an immutable 365-day maximum, and revokes the active
+family on any other known replay. The extension serializes sign-in, refresh
+persistence, and invalid-session clearing so an old response cannot overwrite a
+new account. Local database reset, 180 pgTAP assertions, web/extension suites and
+checks, staging artifact build/validation, independent task review, scoped fix
+re-reviews, and the final CodeRabbit review with zero findings passed. The
+migration-first staging deployment, post-merge CI, Rooms/P2P, extension build,
+Vercel status, and staging smoke passed. Both established test profiles completed
+the forced reauthentication; the user confirmed correct website/Popup accounts,
+single-profile extension logout isolation, and successful reconnect. Task 7 is
+staging-accepted.
+
+Task 8 reached staging through PR #203 and merge commit `e8c5519`. Migration
+`20260820040229_auth_artifact_cleanup.sql` is applied and installs one active
+hourly Supabase Cron job, `anidachi-auth-artifact-cleanup-hourly`, which invokes
+the service-role-only bounded cleanup function. Each call deletes at most 100
+physical expired, revoked, consumed, or otherwise unusable auth-artifact rows;
+active refresh families, live OAuth transactions, and unexpired extension codes
+are not eligible. Successful extension-code exchange now deletes its exact code
+atomically instead of retaining a consumed row. There is no Vercel cleanup
+route, new secret, queue, worker, dashboard, polling loop, or user-visible
+setting.
+
+Local verification includes a fresh database reset, 226/226 pgTAP assertions,
+the exact production-statement normal-planner contract, full web/extension/
+protocol tests and checks, database lint/advisors, repeatability, concurrent
+lock-progress coverage, independent review, and CodeRabbit review. Post-merge
+database deployment, CI, Rooms/P2P, Vercel, and staging smoke passed. One
+attended bounded staging invocation removed exactly 100 eligible rows (47
+expired extension codes, 5 expired OAuth transactions, 46 expired/revoked
+legacy refresh rows, and 2 unusable refresh families) while all 7 active refresh
+families remained. Task 8 is staging-accepted; the hourly job will drain the
+remaining eligible backlog in bounded calls. Its first scheduled execution at
+`2026-08-20 07:00 UTC` succeeded and removed another 100 eligible rows while
+the active-family count remained 7.
+
+Wave 2 is complete and staging-accepted: Tasks 5-8 satisfy their staging
+acceptance boundaries, and the Wave 2 Stop is closed. Wave 3 may proceed from
+current `staging`. No security work from this wave has been promoted to `main`;
+production promotion remains a separate decision and is out of this closeout.
+
+Wave 3 is green and the Wave 3 Stop is closed for staging readiness. Task 10's
+WebSocket-admission change merged in PR `#208` at
+`1707703efb6ec5e85b6a3c40fc9192134f23be3a` on 2026-08-21. Post-merge CI, API
+deploy, migration workflow, Rooms E2E, P2P E2E, Vercel, and staging smoke
+passed. Manual staging acceptance with two authenticated browser profiles passed
+host room creation, guest join, synchronized play/pause/seek, and guest
+reload/reconnect without duplicate or ghost participants. This proves the normal
+two-profile join/reconnect path only; it is not a two-network/TURN, production,
+or exhaustive adversarial-traffic result. Task 11 PR `#210` merged to staging
+at `ae9022b1a5667654e69e1348633721037dcb63dc`; final local evidence was 98 files
+and 1,250/1,250 extension tests plus extension check, changed-path lint,
+staging build/validation, and `pnpm dev:check`. Post-merge CI, Rooms/P2P,
+Vercel, and staging smoke passed. Packaging hygiene PR `#211` merged at
+`b2d209504ed991bc7df0d334c2bc263ccc03e447`; authoritative artifact
+`b2d209504ed991bc7df0d334c2bc263ccc03e447-staging-118` has ZIP SHA-256
+`76bcd133fabc82e10f9c1881b5dc99405150ac5b85f7409aa182a814d14e9e61`, exactly
+one referenced popup chunk, narrow permissions, and byte-for-byte
+synchronization to the two established test folders. The user loaded the exact
+artifact in the habitual Chrome staging profile and reported that it works.
+This is normal visible-flow loaded-artifact acceptance only; it does not claim
+two-network/TURN, production, exhaustive adversarial traffic, or Chrome Web
+Store. The integrated Wave 3 matrix is green from final automated Task 9
+expiry/replay and privileged-action evidence, post-merge CI/Rooms/P2P/staging
+smoke, prior Task 10 acceptance, and this Task 11 acceptance. No security work
+from this wave has been promoted to `main`; production promotion remains a
+separate decision and is out of this closeout.
 
 ## Subscription Plan Codes
 
@@ -163,6 +311,72 @@ into an invalid-token response. Startup reconciliation and cookie-change events
 are coalesced by the background worker; strict cookie policies use the existing
 silent browser flow as a fallback.
 
+## Core Foundation UI/UX Handoff
+
+The three technical-foundation blocks in
+`docs/superpowers/plans/2026-08-21-core-foundation-ui-handoff-plan.md` are
+implemented and accepted on `staging` through
+`3a442b7f76992a5e48b387740bf9cc31a565235e`. This is a documented foundation
+for subsequent UI/UX work, not a production-readiness, market-readiness,
+public-release, `main`, or Chrome Web Store claim.
+
+- **Watch History resource boundary:** PR `#215` deployed
+  `20260821162622_watch_history_v2_resource_bounds.sql` as staging squash
+  `7d2e3badb043c3d3adb4ef16ad9527dd3762259f`; PR `#216` switched consumers at
+  `b652f8b8cfbdd8130a648702708dfcc13dc2cd8d`. Title pages expose at most eight
+  recent episode rows per title, while an owner-bound detail continuation is
+  capped at 50 rows. The recorded 501-title/13,200-episode local fixture was
+  275,920 serialized bytes with a +573,440-byte parser RSS delta. Receipt
+  cleanup remains global, hourly, bounded, and exact at the 14-day boundary.
+  The user accepted the two-profile loaded artifact for local-first Watch
+  History and website convergence on 2026-08-22.
+- **Durable room source:** PRs `#217`–`#220` landed the strict shared source
+  contract, additive `20260822033019_room_source_generation.sql`, Web
+  persistence boundary, and Worker/extension convergence; Task 6 reached
+  staging at `d4262ffef6a78e4c275a95fb3e70d705ecc04759`. A room is
+  provider-pinned, source generations are monotonic, and the Worker retains one
+  coalesced durable-persistence outbox without delaying live playback. ICE uses
+  Authorization; the browser WebSocket `roomToken` query remains a separate,
+  deliberate browser limitation.
+- **Room-invite lifecycle:** PR `#221` applied
+  `20260822065227_room_invite_lifecycle_actions.sql` at staging squash
+  `b12c4850f034e69f2cfd24a0db90bfd3e045eb87`; PR `#222` switched the runtime at
+  `1bafc52`; and PR `#223` applied
+  `20260822091552_finalize_legacy_orphan_invite_rooms.sql` at
+  `3a442b7f76992a5e48b387740bf9cc31a565235e`. The v2 inbox/action authority
+  follows room lifecycle, makes one accept/decline transition atomic and
+  idempotent, and preserves old functions and `expires_at` for rollback. The
+  user confirmed that the host projection changes to `Accepted` in the two
+  loaded staging profiles.
+
+Separate work remains required for UI/UX design, release and store decisions,
+production and `main`, two-network/TURN acceptance, broader P2P/media hardening,
+billing, public forms, legal/compliance, media intake, and additional providers.
+For rollback, use reviewed forward rollback/redeploy procedures; do not delete
+canonical Watch History, room, or invite data or remove the additive compatibility
+database boundaries as part of this handoff.
+
+Task 8 controller verification at runtime base `3a442b7` passed workspace check
+6/6, forced workspace tests 6/6 (including 98 extension files and 1,277/1,277
+extension tests), API runtime 24/24, database reset, pgTAP 8 files/419, clean
+database lint, linked dry-run remote alignment, rooms 39/39, isolated P2P 26/26,
+Worker staging smoke, staging extension build/validation, `pnpm dev:check`, and
+whitespace. Its first P2P run met an environmental inspector port `9229`
+collision; the isolated 26/26 rerun is the recorded result. All post-merge
+workflows and staging smokes are green. The accepted artifact is exactly
+`3a442b7-staging-20260822162838`; both established unpacked folders are
+byte-identical at that version, and the user accepted Watch History, room source,
+and invite host `Accepted` behavior in the two-profile staging flow.
+
+Graphify's pre-finish health pass at `f5622c7c` recorded 9,943 nodes, 21,002
+edges, 1,120 communities, and zero missing endpoints, dangling links, self-loops,
+or duplicate/collapsed edges; query/explain found the handoff. It retains 550
+legacy/external-reference placeholder nodes without labels/source files, matching
+the prior graph's 1,100 field warnings. The Graphify artifacts included in the
+final evidence PR are refreshed from these completed docs; their
+`built_at_commit` records the immediately preceding docs commit, while the PR
+diff is the full freshness boundary.
+
 ## Account Read Contracts And Popup Isolation
 
 Account read responses for friends, groups, invites, and watch-library data use
@@ -178,12 +392,11 @@ late requests, seen acknowledgements, poster hydration, social actions, and
 history operations from writing into a newer account session. Popup snapshot I/O
 does not claim ownership of the content script's active playback progress.
 
-The additive durable inbox migration is applied on staging. The current account
-inbox rollout moves both the Popup Inbox and `/account/invites` incoming surface
-to the same owner-bound `/api/account/inbox` response, including server counts,
-seen state, missed room invites, and cursor pagination in the full web surface.
-Application rollout is tracked in PR #160. Loaded two-account staging
-acceptance remains required before production promotion.
+The lifecycle v2 inbox migration is applied on staging. Both the Popup Inbox
+and `/account/invites` use the same owner-bound `/api/account/inbox` authority,
+including server counts, seen state, missed room invites, and cursor pagination
+in the full web surface. Task 7's two-profile loaded-artifact acceptance is
+recorded above; a production promotion is still a separate decision.
 
 ## Room Invite Notification Direction
 
@@ -234,11 +447,12 @@ target labeled `Pending`, `Accepted`, or `Invited`. The create response exposes
 whether a new recipient snapshot was created, allowing the UI to distinguish a
 real send from an idempotent or semantic duplicate.
 
-The invite schema still assigns `expires_at` with a 12-hour default, and the
-existing accept path enforces it. The staging inbox foundation preserves that
-field as a compatibility lifecycle signal. A later room-lifecycle slice must
-replace the independent expiry behavior additively and prove the new contract on
-staging before the compatibility field or check is removed.
+The schema still assigns `expires_at` with a 12-hour default, but the deployed
+v2 inbox and action RPCs do not use it as a product deadline. They retain the
+field and old functions for rollback compatibility: a pending invite remains
+actionable while its room is active, then reconciles once to non-actionable
+`Missed` for 24 hours after room end. Removing the compatibility column or old
+functions is separate future cleanup, not part of this handoff.
 
 ## Runtime Environments
 
@@ -291,41 +505,46 @@ branches.
 `local`:
 
 - Extension name: `Anidachi Local MVP`
+- Stable unpacked ID: `nkinhhgigcflmfhilmcakbkongcpkfnl`
 - Built for local development and broad site experiments
 - May use broad permissions locally
 
 `staging`:
 
 - Extension name: `Anidachi Staging`
-- Built for the Chrome Web Store tester item
+- Stable unpacked ID: `ndkfphbchhfephdodcpehdcoclojagje`
+- Built as a repository-controlled tester artifact; no store item is required
 - Uses staging web/API endpoints
-- Uses narrow store permissions for YouTube, Crunchyroll, Anidachi web, and
+- Uses narrow release permissions for YouTube, Crunchyroll, Anidachi web, and
   staging Worker hosts
 
 `production`:
 
 - Extension name: `Anidachi`
-- Built for the public Chrome Web Store item
+- Has no approved identity or manifest key in the current pre-release phase
+- Web connection therefore fails closed until an explicit production cutover
 - Uses production web/API endpoints
-- Uses narrow store permissions for YouTube, Crunchyroll, Anidachi web, and
+- Uses narrow release permissions for YouTube, Crunchyroll, Anidachi web, and
   production Worker hosts
 
 Build commands:
 
 ```bash
 pnpm build:extension:staging
-pnpm build:extension:staging:broad
-pnpm build:extension:public
 pnpm validate:extension:staging
+pnpm build:extension:staging:local-broad
+WXT_VAPID_PUBLIC_KEY="<production-public-key>" pnpm build:extension:public
 pnpm validate:extension:production
 ```
 
-The default staging build is store-safe and uses narrow permissions. The broad
-staging build is an explicit local-only command for development experiments. The
-same source code produces both store builds. The channel-specific behavior is
-selected through build environment variables in the build scripts.
+The default staging build is release-safe and uses narrow permissions. The broad
+staging build is an explicit local-only command for development experiments and
+writes to `anidachi-extension-staging-local-broad`, never to the narrow staging
+candidate. The same source code produces every channel build. The
+channel-specific behavior is selected through build environment variables in
+the build scripts.
 
-## Last Recorded Staging Store Artifact
+## Last Recorded Legacy Staging Artifact
 
 The last staging artifact explicitly recorded in this document was generated
 from commit `50c80a0`:
@@ -341,9 +560,6 @@ Manifest checks:
 name: Anidachi Staging
 version_name: 50c80a0-staging-20260730171210
 ```
-
-The staging Chrome Web Store reviewer/tester access code is stored in the Chrome
-Web Store testing instructions, not in git.
 
 For new testing, prefer the latest `Build Extension` artifact from the
 `staging` branch unless a PR records a more specific artifact.
@@ -515,10 +731,17 @@ The extension currently supports:
   missing Vercel `ANIDACHI_API_INTERNAL_BASE_URL` and correctly failed closed
   with `502`; the staging URL was configured, Web was redeployed, and a real
   staging room then transitioned from `live` to persisted `ended` state;
-- debug export from the extension panel. Current diagnostic bundles include a
-  unified top-level timeline that merges background diagnostics with page debug
-  entries, while still keeping the split `diagnosticEntries` and
-  `pageDebugEntries` for deeper inspection.
+- debug export from the extension panel. Routine page/content diagnostics are
+  bounded in memory and sanitized: titles, user text, identifiers, tokens, and
+  attestations are absent, while the explicit support export remains available.
+  The overlay uses a closed shadow root. Account-only sign-out requires a trusted
+  UI event and is bound to the exact validated extension account and refresh-token
+  family; it does not use room authority. Manual room end requires a trusted UI
+  event, while manual and quota room end use per-tab authority issued by the
+  background from authenticated create/connect, with a persistent, non-reused
+  session generation and exact current account, room, host role, and generation
+  checks before the server's final authorization. Playback and Watch History
+  behavior are unaffected.
 
 The extension still does not host, proxy, record, or distribute source video.
 
@@ -571,13 +794,86 @@ These are intentionally not treated as solved:
   verification is still pending. A global lease preventing an adversarial Free
   host from running several rooms concurrently is deliberately deferred until
   product evidence justifies that extra coordination.
-- Source switching is not complete: live `SOURCE_CHANGED` and
-  `sourceGeneration` bumps are implemented, but durable Supabase source
-  persistence, room-create source descriptor plumbing, and explicit
-  source-switch UI/commands are still pending.
-- Watch progress persistence has a backend-backed watch-library foundation and
-  account-scoped Popup snapshots, but staging acceptance across real browser
-  profiles is still required before treating it as finished product behavior.
+- Room sources are now strict, provider-pinned, and durably convergent: Web
+  creation persists generation 1, the Worker accepts only same-provider
+  canonical changes, and its coalesced outbox persists the latest higher
+  generation without delaying playback. Reload and late join consume the
+  durable source; explicit source-switch UI/commands remain future UI/UX work.
+- Watch History v2 is the active staging runtime. Supabase/Postgres is the one
+  durable account-history authority; the extension background owns the
+  account-scoped cache/outbox, while Popup and website consume the same strict
+  v2 response. The v1 HTTP paths return `426 UPGRADE_REQUIRED`, and the legacy
+  tables remain inert for rollback rather than being deleted.
+- `ROOM_HISTORY_GRACE_AMENDMENT_REQUIRED` is the reviewed Task 9 decision after
+  the Task 0 report proved unavailable: Worker-issued shared-history authority
+  has mandatory exact scalar claims, a unique `jti`, and `exp = iat + 86,400`
+  seconds. New expired authority fails before history/session/participant/Recent
+  People mutation, while an exact unexpired 14-day receipt remains idempotent
+  after authority expiry. Rejected delayed shared work stays in the extension's
+  bounded outbox as `invalid-room-authority` and is never reclassified as solo.
+- The additive foundation and Recent People v2 migrations are applied on
+  staging through `20260814020000`. A user confirmed the repaired solo
+  Crunchyroll -> Popup -> staging website path. This closeout does not claim
+  full two-profile/two-network acceptance or two-network/TURN evidence, and
+  production promotion remains out of scope; this is not a
+  production-readiness claim.
+- The `20260816090000_watch_history_v2_bounded_read.sql` migration was merged
+  and applied to staging in ordered prerequisite PR #189 (`6c7e1b1b`); the web
+  consumer followed in PR #190 (`847d5e32`). It removes the full-account episode
+  aggregation from title pagination with a
+  transactionally maintained one-row-per-title v2 projection. A second compact
+  projection stores one row per v2 `(user, session)` membership with that
+  user's current generation and title key. Its ordering timestamp is canonical
+  `watch_sessions.last_checkpoint_at`, the same value returned in the session
+  DTO, never participant heartbeat time. Session enrichment reads the latest 20
+  through the requester-leading title/order index, then unions each visible
+  episode's canonical latest session. Roomless shared tombstones with neither
+  `room_id` nor `client_session_key` are excluded and cannot consume a candidate
+  slot. Shared session generation stays
+  host-owned and is never compared to the viewer's generation. It does not
+  truncate observed episode DTO data: a single visible title can still return
+  arbitrarily many episode rows.
+  Keyset selection uses the projection index before `LIMIT`; normal heartbeat
+  writes incrementally advance one summary row, while a delete statement
+  recomputes each distinct affected title once.
+  An explicit migration transaction first takes a write-conflicting lock on
+  settings, then session, participant, and progress sources. This follows both writers'
+  settings-first lock order, lets an in-flight writer drain, blocks later
+  writers through both v2-only initializers, and prevents a concurrent delete
+  from being reinserted by a stale initializer snapshot. A ten-second lock
+  timeout rolls the migration back for a safe workflow retry. Maintenance is
+  installed before both initial fills. The title fill preserves the maximum
+  observation; the locked session fill converges exactly to canonical checkpoint
+  and identity state.
+  Deep cursors add an indexable timestamp upper bound while retaining the strict
+  timestamp/binary-ID predicate. Session enrichment uses the v2 recent-title
+  requester/session projection index through a per-visible-title `LATERAL ...
+  LIMIT 20`. Participant deletion, including full clear, cascades only that
+  user's projection row and leaves another participant's row intact. Session-
+  side checkpoint/identity maintenance updates current v2 member projections;
+  hard room deletion removes derived rows for the resulting internal tombstone.
+  The later additive resource-boundary migration and consumer rollout recorded
+  above supersede this old unbounded-row measurement: the active title response
+  returns at most eight rows per title with exact counts and continuation, and
+  the owner-bound detail response returns at most 50 rows.
+- The additive projection/RPC was deployed to staging in a migration-only
+  prerequisite PR before the web consumer PR. The same dependency order remains
+  mandatory if a separately approved production promotion happens later. A
+  direct combined staging-to-main promotion is unsafe because database and
+  application deploys trigger independently and can expose runtime before its
+  RPC.
+- The migration-only prerequisite is compatible with the old web runtime, but
+  it is not dormant: projection maintenance runs on v2 progress, session, and
+  participant writes/deletes. If it must be undone, use the reviewed forward
+  cleanup sequence in `docs/release-and-rollback-runbook.md`; never delete or
+  rewrite canonical `watch_episode_progress` rows.
+- The 2026-08-21 core-foundation-to-UI/UX handoff plan is the accepted staging
+  evidence record for the bounded episode-page/receipt lifecycle,
+  canonical/durable room source, and room-lifecycle invite semantics. It is not
+  authority for production or market readiness. The broad 2026-08-18 readiness
+  program and the 2026-08-14 Watch History v2 foundation plan are historical
+  scope/evidence records; their deferred items are not silently treated as
+  complete.
 - Custom API domain for hiding the Cloudflare account subdomain is deferred.
 - Stripe production webhook appears wired, but end-to-end subscription testing is
   still a separate follow-up.
@@ -591,6 +887,8 @@ These are intentionally not treated as solved:
 - Agent/contributor startup contract: `AGENTS.md`
 - Development flow quality plan:
   `docs/superpowers/plans/2026-06-17-development-flow-quality-system-plan.md`
+- Active core-foundation-to-UI/UX handoff plan:
+  `docs/superpowers/plans/2026-08-21-core-foundation-ui-handoff-plan.md`
 - Environment and secrets matrix: `docs/environment-and-secrets-matrix.md`
 - Staging acceptance checklist: `docs/staging-acceptance-checklist.md`
 - Release and rollback runbook: `docs/release-and-rollback-runbook.md`

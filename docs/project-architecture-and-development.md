@@ -239,8 +239,8 @@ environment variables and build scripts.
 
 ```txt
 local      -> local development build
-staging    -> Anidachi Staging Chrome Web Store item
-production -> public Anidachi Chrome Web Store item
+staging    -> stable unpacked Anidachi Staging tester artifact
+production -> future public Anidachi artifact
 ```
 
 Build commands:
@@ -252,20 +252,19 @@ pnpm build:extension:public
 
 Channel rules:
 
-- Staging and production are separate Chrome Web Store listings.
+- Staging and production are separate identities and artifacts.
 - Staging must point to staging web/API/WS endpoints.
 - Production must point to production web/API/WS endpoints.
 - Staging tester updates should never affect public users.
 - Production users should never receive staging endpoints or debug-only
   behavior by accident.
 
-Before uploading a store artifact, inspect the generated `manifest.json` and the
-extension debug panel:
+Before loading or distributing an artifact, inspect the generated
+`manifest.json` and the extension debug panel:
 
 - staging should show `Anidachi Staging` and a `*-staging-*` build id;
 - production should show `Anidachi` and a `*-production-*` build id;
-- store builds should not include broad `<all_urls>` permissions unless that is
-  an explicit product/review decision.
+- staging/production builds must not include broad `<all_urls>` permissions.
 
 ## Website, Auth, And Rooms
 
@@ -556,7 +555,7 @@ Example: adding an extension feature.
 6. Build the staging extension with `pnpm build:extension:staging`.
 7. Test the staging build in Chrome.
 8. Open/merge PR into `staging`.
-9. Upload the staging Chrome Web Store item if testers need automatic updates.
+9. Reload the reviewed unpacked staging artifact when testers need the change.
 10. Promote to production only after staging is verified.
 
 Example: changing room or P2P behavior.

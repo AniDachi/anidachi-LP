@@ -7,7 +7,6 @@ import type {
   RoomInvitesResponse,
   SocialDirectory,
   SocialSnapshot,
-  WatchLibraryResponse,
 } from "@anidachi/protocol";
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -50,18 +49,6 @@ import {
   getCachedSocialSnapshotForUser,
   setCachedSocialSnapshotForUser,
 } from "../src/social-snapshot-cache";
-import {
-  getCachedWatchLibraryForUser,
-  getWatchLibrarySyncLedger,
-  listWatchLibrary,
-  markWatchLibraryEntriesSynced,
-  setCachedWatchLibraryForUser,
-} from "../src/watch-library-client";
-import {
-  createEmptyWatchProgressStore,
-  loadWatchProgressStoreForUser,
-  saveWatchProgressStoreForUser,
-} from "../src/watch-progress";
 
 vi.mock("../src/auth-client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../src/auth-client")>()),
@@ -99,19 +86,10 @@ vi.mock("../src/social-snapshot-cache", async (importOriginal) => ({
   setCachedSocialSnapshotForUser: vi.fn(),
 }));
 
-vi.mock("../src/watch-progress", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("../src/watch-progress")>()),
-  loadWatchProgressStoreForUser: vi.fn(),
-  saveWatchProgressStoreForUser: vi.fn(),
-}));
-
-vi.mock("../src/watch-library-client", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("../src/watch-library-client")>()),
-  getCachedWatchLibraryForUser: vi.fn(),
-  getWatchLibrarySyncLedger: vi.fn(),
-  listWatchLibrary: vi.fn(),
-  markWatchLibraryEntriesSynced: vi.fn(),
-  setCachedWatchLibraryForUser: vi.fn(),
+vi.mock("../src/popup-watch-history", () => ({
+  PopupWatchHistoryPanel: ({ refreshSignal = 0 }: { refreshSignal?: number }) => (
+    <div aria-label="Watch History" data-refresh-signal={refreshSignal} />
+  ),
 }));
 
 const NOW = "2026-08-07T12:00:00.000Z";
@@ -182,7 +160,13 @@ describe("PopupPeoplePanel", () => {
     const addButtons = [...view.container.querySelectorAll<HTMLButtonElement>("button")].filter(
       (button) => button.textContent?.trim() === "Add friend",
     );
+    const expectedDate = new Date("2026-08-07T12:00:00.000Z").toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+    });
     expect(addButtons).toHaveLength(2);
+    expect(view.container.textContent).toContain(`Watched ${expectedDate}`);
+    expect(view.container.textContent).not.toContain("shared room");
     await click(addButtons[0]!);
     expect(onAddFriend).toHaveBeenCalledWith("recent-a");
 
@@ -442,29 +426,9 @@ describe("Popup People integration boundaries", () => {
     }
   });
 
-  it("renders Watch, People, and Inbox with only the unseen Inbox count", async () => {
+  it("renders clean Watch, People, and Inbox navigation without counters", async () => {
     const onSelect = vi.fn();
-    const inbox = accountInbox(
-      [
-        inboxFriendRequest(INCOMING_FRIENDSHIP_ID, INCOMING_USER_ID, "Incoming", null),
-        inboxRoomInvite(INBOX_INVITE_ID, "active", null),
-        inboxRoomInvite(MISSED_INVITE_ID, "missed", NOW),
-      ],
-      {
-        actionable: 2,
-        unseen: 2,
-        activeRoomInvites: 1,
-        pendingFriendRequests: 1,
-      },
-    );
-    const view = await renderElement(
-      <PopupNavigation
-        activeTab="resources"
-        inboxCount={popupInboxBadgeCount(buildPopupInboxModel(inbox))}
-        onSelect={onSelect}
-        watchCount={7}
-      />,
-    );
+    const view = await renderElement(<PopupNavigation activeTab="resources" onSelect={onSelect} />);
 
     const tabs = [...view.container.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
     expect(tabs.map((tab) => tab.querySelector(".popup-tab-label")?.textContent)).toEqual([
@@ -472,9 +436,8 @@ describe("Popup People integration boundaries", () => {
       "People",
       "Inbox",
     ]);
-    expect(tabs[0]?.querySelector(".popup-tab-count")?.textContent).toBe("7");
-    expect(tabs[1]?.querySelector(".popup-tab-count")).toBeNull();
-    expect(tabs[2]?.querySelector(".popup-tab-count")?.textContent).toBe("2");
+    expect(view.container.querySelector(".popup-tab-count")).toBeNull();
+    expect(view.container.querySelector(".popup-tabs svg")).toBeNull();
 
     await click(tabs[2]!);
     expect(onSelect).toHaveBeenCalledWith("inbox");
@@ -635,13 +598,6 @@ describe("PopupApp social mutations", () => {
     );
     vi.mocked(getCachedSocialSnapshotForUser).mockResolvedValue(null);
     vi.mocked(setCachedSocialSnapshotForUser).mockResolvedValue(undefined);
-    vi.mocked(loadWatchProgressStoreForUser).mockResolvedValue(createEmptyWatchProgressStore());
-    vi.mocked(saveWatchProgressStoreForUser).mockResolvedValue(undefined);
-    vi.mocked(getCachedWatchLibraryForUser).mockResolvedValue(null);
-    vi.mocked(getWatchLibrarySyncLedger).mockResolvedValue({});
-    vi.mocked(listWatchLibrary).mockResolvedValue(emptyWatchLibrary());
-    vi.mocked(markWatchLibraryEntriesSynced).mockResolvedValue({});
-    vi.mocked(setCachedWatchLibraryForUser).mockResolvedValue(undefined);
     vi.mocked(listRoomInvites).mockResolvedValue(roomInvites([]));
     vi.mocked(sendFriendRequest).mockResolvedValue(
       friend(RECENT_USER_ID, "00000000-0000-4000-8000-000000000005", "Recent Person", "pending"),
@@ -660,6 +616,48 @@ describe("PopupApp social mutations", () => {
     root = null;
     document.body.replaceChildren();
     vi.unstubAllGlobals();
+  });
+
+  it("shows the active account identity in the compact Popup header", async () => {
+    vi.mocked(listSocialDirectory).mockResolvedValue(directory());
+    const view = await renderPopupApp();
+    root = view.root;
+
+    const profileCopy = view.container.querySelector(".popup-profile-copy");
+    expect(profileCopy?.textContent).toContain("Viewer");
+    expect(profileCopy?.textContent).toContain("Plus");
+    expect(profileCopy?.textContent).not.toContain("AniDachi");
+    expect(view.container.querySelectorAll(".popup-header-actions button")).toHaveLength(1);
+    expect(
+      view.container.querySelector(".popup-header-actions button")?.getAttribute("aria-label"),
+    ).toBe("Open settings");
+  });
+
+  it("refreshes same-owner Watch History without remounting the visible panel", async () => {
+    let resolveDirectory: ((value: SocialDirectory) => void) | null = null;
+    vi.mocked(listSocialDirectory).mockImplementation(() =>
+      new Promise<SocialDirectory>((resolve) => {
+        resolveDirectory = resolve;
+      })
+    );
+    const view = await renderPopupApp();
+    root = view.root;
+    const visiblePanel = view.container.querySelector('[aria-label="Watch History"]');
+    expect(visiblePanel?.getAttribute("data-refresh-signal")).toBe("0");
+
+    await act(async () => {
+      resolveDirectory?.(directory());
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(
+        view.container.querySelector('[aria-label="Watch History"]')?.getAttribute(
+          "data-refresh-signal",
+        ),
+      ).toBe("1");
+    });
+    expect(view.container.querySelector('[aria-label="Watch History"]')).toBe(visiblePanel);
   });
 
   it("sends one recent-person request and refreshes the canonical social snapshot", async () => {
@@ -868,7 +866,7 @@ describe("PopupApp social mutations", () => {
 
     await click(await findButton(view.container, "Inbox"));
     await waitFor(() => expect(markAccountInboxItemsSeen).toHaveBeenCalledTimes(1));
-    await click(await findButton(view.container, "Sync popup data"));
+    await click(await findButton(view.container, "Refresh inbox"));
     await waitFor(() => expect(listAccountInbox).toHaveBeenCalledTimes(2));
     await waitFor(() => expect(view.container.textContent).toContain("Refreshed person"));
     await waitFor(() =>
@@ -1045,21 +1043,6 @@ function inboxFriendRequest(
   };
 }
 
-function emptyWatchLibrary(): WatchLibraryResponse {
-  return {
-    meta: { serverTime: NOW, schemaVersion: 1 },
-    generatedAt: NOW,
-    limits: {
-      planCode: "plus",
-      maxActiveTrackedTitles: 15,
-      activeTrackedTitleCount: 0,
-      historyRetentionDays: 92,
-      retainedSince: "2026-05-07T12:00:00.000Z",
-    },
-    items: [],
-  };
-}
-
 function friend(
   userId: string,
   friendshipId: string,
@@ -1105,7 +1088,6 @@ function recent(userId: string, displayName = userId): RecentPerson {
   return {
     user: { userId, handle: null, displayName, avatarUrl: null },
     lastWatchedAt: NOW,
-    sharedRoomCount: 1,
   };
 }
 

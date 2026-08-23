@@ -4,12 +4,12 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { ArrowRight, Bell, UserRoundPlus, Users } from "lucide-react";
 import { AccountWaitlistCard } from "@/components/account/account-waitlist-card";
+import { listAccountInbox } from "@/lib/anidachi-auth/account-inbox";
 import { getSession } from "@/lib/anidachi-auth/session";
 import { getAccountWaitlistStatus } from "@/lib/kreatli-crm/survey-lead";
 import {
   listFriendGroups,
   listFriends,
-  listRoomInvites,
 } from "@/lib/anidachi-auth/social";
 
 export const dynamic = "force-dynamic";
@@ -49,20 +49,13 @@ export default async function AccountOverviewPage() {
   const session = await getSession();
   if (!session) redirect("/login?next=%2Faccount");
 
-  const [friends, groups, invites, waitlist] = await Promise.all([
+  const [friends, groups, inbox, waitlist] = await Promise.all([
     listFriends(session.userId),
     listFriendGroups(session.userId),
-    listRoomInvites(session.userId),
+    listAccountInbox({ ownerUserId: session.userId, limit: 1 }),
     getAccountWaitlistStatus(session.email),
   ]);
   const activeGroups = groups.filter((group) => !group.archivedAt);
-  const pendingInvites = invites.inbox.filter((invite) =>
-    invite.recipients.some(
-      (recipient) =>
-        recipient.user.userId === session.userId &&
-        recipient.status === "pending",
-    ),
-  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -107,7 +100,7 @@ export default async function AccountOverviewPage() {
         <StatPanel
           icon={<Bell className="h-5 w-5" aria-hidden />}
           label="Pending invites"
-          value={pendingInvites.length}
+          value={inbox.counts.activeRoomInvites}
         />
       </section>
 

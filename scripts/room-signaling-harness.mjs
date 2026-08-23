@@ -195,15 +195,16 @@ async function runScenarios() {
   const badToken = await rawConnect("reject-room", "not-a-jwt");
   record("invalid token rejected", badToken.opened === false);
 
-  // 1b. The room-scoped ICE route requires bearer auth. The query route is a
-  // measured one-release compatibility fallback for older extension builds.
-  const iceNoAuth = await fetch(`${HTTP_BASE}/rooms/ice-room/ice-servers`);
+  // 1b. ICE credentials require bearer auth; query tokens are not accepted.
+  const iceToken = signRoomToken({ sub: "ice-user", roomId: "ice-room", role: "member" });
+  const iceNoAuth = await fetch(
+    `${HTTP_BASE}/rooms/ice-room/ice-servers?roomToken=${encodeURIComponent(iceToken)}`,
+  );
   record(
-    "ice-servers without token rejected (401)",
+    "ice-servers query token rejected (401)",
     iceNoAuth.status === 401,
     `status=${iceNoAuth.status}`,
   );
-  const iceToken = signRoomToken({ sub: "ice-user", roomId: "ice-room", role: "member" });
   const iceAuthed = await fetch(`${HTTP_BASE}/rooms/ice-room/ice-servers`, {
     headers: { Authorization: `Bearer ${iceToken}` },
   });
@@ -225,8 +226,8 @@ async function runScenarios() {
     `${HTTP_BASE}/ice-servers?roomId=ice-room&roomToken=${encodeURIComponent(iceToken)}`,
   );
   record(
-    "legacy ICE query fallback remains measurable for one release",
-    legacyIce.status === 200 && legacyIce.headers.get("x-anidachi-auth-fallback") === "query",
+    "legacy ICE query route is unreachable (404)",
+    legacyIce.status === 404 && legacyIce.headers.get("x-anidachi-auth-fallback") === null,
     `status=${legacyIce.status}`,
   );
 

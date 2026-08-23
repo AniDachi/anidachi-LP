@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { upsertUser } from "./db";
-import { issueTokenPair } from "./tokens";
-import { setAuthCookies } from "./session";
+import { upsertUser as defaultUpsertUser } from "./db";
+import {
+  consumeOAuthLoginTransaction,
+  oauthCorrelationCookieName,
+  oauthCorrelationCookiePath,
+  type OAuthLoginProvider,
+} from "./oauth-transaction";
 import { sanitizeAuthReturnTo } from "./return-to";
+import { setAuthCookies as defaultSetAuthCookies } from "./session";
+import { issueTokenPair as defaultIssueTokenPair } from "./tokens";
 
 type OAuthProfile = {
   providerId: string;
@@ -11,54 +17,99 @@ type OAuthProfile = {
   avatarUrl: string | null;
 };
 
+type HandleOAuthCallbackDependencies = {
+  consumeTransaction?: typeof consumeOAuthLoginTransaction;
+  upsertUser?: typeof defaultUpsertUser;
+  issueTokenPair?: typeof defaultIssueTokenPair;
+  setAuthCookies?: typeof defaultSetAuthCookies;
+};
+
 type HandleOAuthCallbackOptions = {
-  provider: "discord" | "google";
+  provider: OAuthLoginProvider;
   request: NextRequest;
-  exchangeFn: (code: string, origin: string) => Promise<OAuthProfile>;
+  exchangeFn: (
+    code: string,
+    origin: string,
+    codeVerifier: string,
+  ) => Promise<OAuthProfile>;
+  dependencies?: HandleOAuthCallbackDependencies;
 };
-
-type StatePayload = {
-  provider: string;
-  returnTo: string;
-};
-
-function parseState(raw: string): StatePayload | null {
-  try {
-    return JSON.parse(Buffer.from(raw, "base64url").toString("utf-8"));
-  } catch {
-    return null;
-  }
-}
 
 export async function handleOAuthCallback({
   provider,
   request,
   exchangeFn,
+  dependencies = {},
 }: HandleOAuthCallbackOptions): Promise<NextResponse> {
   const { searchParams, origin } = request.nextUrl;
-  const code = searchParams.get("code");
-  const stateParam = searchParams.get("state");
-
-  if (!code || !stateParam) {
+  const state = searchParams.get("state");
+  if (!state) {
     return NextResponse.redirect(`${origin}/login?error=missing_params`);
   }
 
-  // Validate state cookie to prevent CSRF
-  const stateCookie = request.cookies.get("anidachi_oauth_state")?.value;
-  if (!stateCookie || stateCookie !== stateParam) {
+  let correlationCookieName: string;
+  try {
+    correlationCookieName = oauthCorrelationCookieName(state);
+  } catch {
     return NextResponse.redirect(`${origin}/login?error=invalid_state`);
   }
 
-  const statePayload = parseState(stateParam);
-  if (!statePayload || statePayload.provider !== provider) {
+  const correlationSecret = request.cookies.get(correlationCookieName)?.value;
+  if (!correlationSecret) {
     return NextResponse.redirect(`${origin}/login?error=invalid_state`);
+  }
+
+  const consumeTransaction =
+    dependencies.consumeTransaction ?? consumeOAuthLoginTransaction;
+  let transaction: Awaited<ReturnType<typeof consumeOAuthLoginTransaction>>;
+  try {
+    transaction = await consumeTransaction({
+      provider,
+      state,
+      correlationSecret,
+    });
+  } catch {
+    return redirectAndClearTransaction(
+      `${origin}/login?error=oauth_failed`,
+      provider,
+      correlationCookieName,
+    );
+  }
+
+  if (!transaction) {
+    return redirectAndClearTransaction(
+      `${origin}/login?error=invalid_state`,
+      provider,
+      correlationCookieName,
+    );
+  }
+
+  if (searchParams.has("error")) {
+    return redirectAndClearTransaction(
+      `${origin}/login?error=oauth_failed`,
+      provider,
+      correlationCookieName,
+    );
+  }
+
+  const code = searchParams.get("code");
+  if (!code) {
+    return redirectAndClearTransaction(
+      `${origin}/login?error=missing_params`,
+      provider,
+      correlationCookieName,
+    );
   }
 
   let profile: OAuthProfile;
   try {
-    profile = await exchangeFn(code, origin);
+    profile = await exchangeFn(code, origin, transaction.codeVerifier);
   } catch {
-    return NextResponse.redirect(`${origin}/login?error=oauth_failed`);
+    return redirectAndClearTransaction(
+      `${origin}/login?error=oauth_failed`,
+      provider,
+      correlationCookieName,
+    );
   }
 
   const userFields =
@@ -66,6 +117,7 @@ export async function handleOAuthCallback({
       ? { discord_id: profile.providerId, google_id: null }
       : { google_id: profile.providerId, discord_id: null };
 
+  const upsertUser = dependencies.upsertUser ?? defaultUpsertUser;
   let user;
   try {
     user = await upsertUser({
@@ -75,28 +127,48 @@ export async function handleOAuthCallback({
       ...userFields,
     });
   } catch {
-    return NextResponse.redirect(`${origin}/login?error=db_error`);
+    return redirectAndClearTransaction(
+      `${origin}/login?error=db_error`,
+      provider,
+      correlationCookieName,
+    );
   }
 
+  const issueTokenPair = dependencies.issueTokenPair ?? defaultIssueTokenPair;
   let tokens;
   try {
     tokens = await issueTokenPair(user.id);
   } catch {
-    return NextResponse.redirect(`${origin}/login?error=token_error`);
+    return redirectAndClearTransaction(
+      `${origin}/login?error=token_error`,
+      provider,
+      correlationCookieName,
+    );
   }
 
-  const safeReturnTo = sanitizeAuthReturnTo(statePayload.returnTo);
-  const redirectTo = safeReturnTo ? `${origin}${safeReturnTo}` : `${origin}/account`;
+  const safeReturnTo = sanitizeAuthReturnTo(transaction.returnTo);
+  const response = redirectAndClearTransaction(
+    safeReturnTo ? `${origin}${safeReturnTo}` : `${origin}/account`,
+    provider,
+    correlationCookieName,
+  );
+  const setAuthCookies = dependencies.setAuthCookies ?? defaultSetAuthCookies;
+  setAuthCookies(response, tokens.accessToken, tokens.refreshToken);
+  return response;
+}
 
-  const response = NextResponse.redirect(redirectTo);
-  // Clear the state cookie
-  response.cookies.set("anidachi_oauth_state", "", {
+function redirectAndClearTransaction(
+  location: string,
+  provider: OAuthLoginProvider,
+  correlationCookieName: string,
+): NextResponse {
+  const response = NextResponse.redirect(location);
+  response.cookies.set(correlationCookieName, "", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    path: "/",
+    path: oauthCorrelationCookiePath(provider),
     maxAge: 0,
   });
-  setAuthCookies(response, tokens.accessToken, tokens.refreshToken);
   return response;
 }

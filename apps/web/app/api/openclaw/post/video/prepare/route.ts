@@ -44,6 +44,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { put } from "@vercel/blob";
+import { requirePublicMediaBlobToken } from "@/lib/public-media-blob";
 import {
   validateOpenClawSecret,
   unauthorizedResponse,
@@ -240,8 +241,10 @@ export async function POST(request: NextRequest) {
     // Upload video to Vercel Blob
     const date = new Date().toISOString().slice(0, 10);
     const pathname = `openclaw/video/${date}/${crypto.randomUUID()}.mp4`;
+    const publicBlobToken = requirePublicMediaBlobToken();
     const blob = await put(pathname, video, {
       access: "public",
+      token: publicBlobToken,
       addRandomSuffix: false,
       contentType: video.type || "video/mp4",
     });
