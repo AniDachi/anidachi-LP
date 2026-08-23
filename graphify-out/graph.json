@@ -286,21 +286,6 @@
         "source_file": "graphify-out/memory/query_20260823_160857_trace_the_repaired_hero____waitlist_stats____crm.md"
       },
       {
-        "id": "durable_crm_recovery_pipeline",
-        "label": "Durable CRM Recovery Pipeline",
-        "nodes": [
-          "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_crm_runtime_authority",
-          "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_optimistic_blob_mutation",
-          "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_conflict_safe_crm_mutations",
-          "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_truthful_public_submission_responses",
-          "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_lossless_reconciliation_tool"
-        ],
-        "relation": "implement",
-        "confidence": "EXTRACTED",
-        "confidence_score": 1.0,
-        "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md"
-      },
-      {
         "id": "safe_crm_cutover",
         "label": "Safe CRM Cutover",
         "nodes": [
@@ -314,6 +299,49 @@
         "confidence": "INFERRED",
         "confidence_score": 0.95,
         "source_file": "docs/superpowers/specs/2026-08-23-waitlist-crm-durable-storage-design.md"
+      },
+      {
+        "id": "waitlist_crm_runtime_durability_chain",
+        "label": "Waitlist CRM Runtime Durability Chain",
+        "nodes": [
+          "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_crm_runtime_authority",
+          "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_optimistic_blob_mutation",
+          "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_conflict_safe_crm_mutations",
+          "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_truthful_public_submission_responses"
+        ],
+        "relation": "implement",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1,
+        "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md"
+      },
+      {
+        "id": "waitlist_crm_interim_data_acceptance",
+        "label": "Waitlist CRM Interim Data Acceptance",
+        "nodes": [
+          "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_lossless_reconciliation_tool",
+          "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_interim_staging_data_acceptance",
+          "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_private_crm_reconciled_baseline",
+          "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_preview_crm_credential_configuration",
+          "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_legacy_public_crm_rollback_source"
+        ],
+        "relation": "participate_in",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1,
+        "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md"
+      },
+      {
+        "id": "waitlist_crm_gated_rollout",
+        "label": "Waitlist CRM Gated Rollout",
+        "nodes": [
+          "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_staging_acceptance",
+          "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_runtime_deployment_acceptance_gate",
+          "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_production_cutover",
+          "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_explicit_production_approval_gate"
+        ],
+        "relation": "form",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1,
+        "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md"
       }
     ]
   },
@@ -119019,128 +119047,6 @@
       "source_url": null
     },
     {
-      "id": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_implementation_plan",
-      "label": "Waitlist And CRM Durable Storage Recovery Implementation Plan",
-      "file_type": "document",
-      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "community": 267,
-      "community_name": "Environment And Secrets Matrix"
-    },
-    {
-      "id": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_crm_runtime_authority",
-      "label": "CRM-Specific Blob Runtime Authority",
-      "file_type": "concept",
-      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "A narrowly named CRM authority restores durable behavior without activating unrelated private integrations.",
-      "community": 267,
-      "community_name": "Environment And Secrets Matrix"
-    },
-    {
-      "id": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_optimistic_blob_mutation",
-      "label": "Optimistic ETag Blob Mutation",
-      "file_type": "concept",
-      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "Conditional writes and bounded retry prevent concurrent CRM updates from overwriting one another.",
-      "community": 267,
-      "community_name": "Environment And Secrets Matrix"
-    },
-    {
-      "id": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_conflict_safe_crm_mutations",
-      "label": "Conflict-Safe CRM Mutations",
-      "file_type": "concept",
-      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "community": 267,
-      "community_name": "Environment And Secrets Matrix"
-    },
-    {
-      "id": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_truthful_public_submission_responses",
-      "label": "Truthful Public Submission Responses",
-      "file_type": "concept",
-      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "Public forms must acknowledge success only after durable persistence and must treat optional notification failures independently.",
-      "community": 267,
-      "community_name": "Environment And Secrets Matrix"
-    },
-    {
-      "id": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_lossless_reconciliation_tool",
-      "label": "Lossless CRM Reconciliation Tool",
-      "file_type": "concept",
-      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "Dry-run-first deterministic union preserves legacy and private CRM records while aborting on malformed or divergent identities.",
-      "community": 267,
-      "community_name": "Environment And Secrets Matrix"
-    },
-    {
-      "id": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_staging_acceptance",
-      "label": "Staging Data And Runtime Acceptance",
-      "file_type": "concept",
-      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "community": 267,
-      "community_name": "Environment And Secrets Matrix"
-    },
-    {
-      "id": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_production_cutover",
-      "label": "Production Cutover And Closeout",
-      "file_type": "concept",
-      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "community": 267,
-      "community_name": "Environment And Secrets Matrix"
-    },
-    {
-      "id": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_global_constraints",
-      "label": "Recovery Global Constraints",
-      "file_type": "rationale",
-      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "rationale": "The repair must preserve legacy objects, avoid PII exposure, leave unrelated integrations disabled, and follow feature-to-staging-to-main promotion.",
-      "community": 267,
-      "community_name": "Environment And Secrets Matrix"
-    },
-    {
       "id": "docs_superpowers_specs_2026_08_23_waitlist_crm_durable_storage_design_design",
       "label": "Waitlist And CRM Durable Storage Recovery Design",
       "file_type": "document",
@@ -120267,6 +120173,194 @@
       "norm_label": "node:util",
       "source_file": "apps/web/lib/kreatli-crm/blob-reconciliation.ts",
       "source_location": "L2"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_implementation_plan",
+      "label": "Waitlist And CRM Durable Storage Recovery Implementation Plan",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_crm_runtime_authority",
+      "label": "CRM-Specific Blob Runtime Authority",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "A narrow CRM-only private Blob authority restores the public-product dependency without activating unrelated deferred integrations."
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_optimistic_blob_mutation",
+      "label": "Optimistic ETag Blob Mutation",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Origin-fresh reads and conditional writes prevent last-write-wins data loss while bounded retries preserve availability under contention."
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_conflict_safe_crm_mutations",
+      "label": "Conflict-Safe CRM Mutations",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "All contact and JSONL mutations must reapply against the latest durable snapshot so concurrent submissions survive."
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_truthful_public_submission_responses",
+      "label": "Truthful Public Submission Responses",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Public routes acknowledge success only after the primary CRM archive is durable; optional Gmail notification is secondary."
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_lossless_reconciliation_tool",
+      "label": "Lossless CRM Reconciliation Tool",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Dry-run-first deterministic union, conflict aborts, conditional destination writes, and post-write verification preserve both retained snapshots."
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_docs_env_graphify_closeout",
+      "label": "Canonical Docs Environment Contract And Graphify Closeout",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_staging_acceptance",
+      "label": "Staging Data And Runtime Acceptance",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_interim_staging_data_acceptance",
+      "label": "Interim Staging Data Acceptance",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The 2026-08-23 data phase reconciled the private store to 683 contacts and 682 survey leads with zero conflicts while runtime deployment acceptance remained open."
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_private_crm_reconciled_baseline",
+      "label": "Private CRM Reconciled Baseline",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Conditional apply changed only contacts.json and meta.json, then an independent origin-fresh dry run verified five unchanged objects and the recorded contacts digest."
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_preview_crm_credential_configuration",
+      "label": "Preview CRM Credential Configuration",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Preview staging received the CRM-specific private-store credential, equality-checked without disclosure; Production remained unchanged."
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_legacy_public_crm_rollback_source",
+      "label": "Legacy Public CRM Rollback Source",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The public CRM objects remain unmodified and undeleted as rollback evidence and reconciliation source."
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_runtime_deployment_acceptance_gate",
+      "label": "Runtime Deployment Acceptance Gate",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Data reconciliation and Preview credential configuration do not establish runtime acceptance; checks, PR merge, deployment, form verification, redeploy persistence, and bounded recovery remain required."
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_production_cutover",
+      "label": "Production Cutover And Closeout",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_global_constraints",
+      "label": "Recovery Global Constraints",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The recovery preserves legacy CRM objects, excludes PII from logs and repositories, avoids new infrastructure, leaves unrelated integrations disabled, and follows feature-to-staging-to-main promotion."
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_explicit_production_approval_gate",
+      "label": "Explicit Production Approval Gate",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Production environment mutation and main promotion require a separately announced action, explicit approval, accepted staging evidence, and passing checks."
     }
   ],
   "links": [
@@ -366248,16 +366342,6 @@
       "target": "docs_superpowers_specs_2026_08_23_waitlist_crm_durable_storage_design_fail_closed_runtime"
     },
     {
-      "relation": "semantically_similar_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.95,
-      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_crm_runtime_authority",
-      "target": "docs_current_development_state_crm_specific_private_blob_authority"
-    },
-    {
       "relation": "implements",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -366286,116 +366370,6 @@
       "weight": 1.0,
       "source": "graphify_out_memory_query_20260823_160857_trace_the_repaired_hero_waitlist_stats_crm_read_blob_text",
       "target": "docs_current_development_state_crm_specific_private_blob_authority"
-    },
-    {
-      "relation": "rationale_for",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_global_constraints",
-      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_implementation_plan"
-    },
-    {
-      "relation": "implements",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_implementation_plan",
-      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_crm_runtime_authority"
-    },
-    {
-      "relation": "implements",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_implementation_plan",
-      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_lossless_reconciliation_tool"
-    },
-    {
-      "relation": "implements",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_implementation_plan",
-      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_optimistic_blob_mutation"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_implementation_plan",
-      "target": "docs_superpowers_specs_2026_08_23_waitlist_crm_durable_storage_design_design"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_conflict_safe_crm_mutations",
-      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_optimistic_blob_mutation"
-    },
-    {
-      "relation": "semantically_similar_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.95,
-      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_optimistic_blob_mutation",
-      "target": "docs_superpowers_specs_2026_08_23_waitlist_crm_durable_storage_design_etag_concurrency_control"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_truthful_public_submission_responses",
-      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_conflict_safe_crm_mutations"
-    },
-    {
-      "relation": "semantically_similar_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.95,
-      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_lossless_reconciliation_tool",
-      "target": "docs_superpowers_specs_2026_08_23_waitlist_crm_durable_storage_design_five_object_reconciliation"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_staging_acceptance",
-      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_lossless_reconciliation_tool"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_production_cutover",
-      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_staging_acceptance"
     },
     {
       "relation": "conceptually_related_to",
@@ -369074,6 +369048,326 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_implementation_plan",
+      "target": "docs_superpowers_specs_2026_08_23_waitlist_crm_durable_storage_design_design",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_global_constraints",
+      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_implementation_plan",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_implementation_plan",
+      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_crm_runtime_authority",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_implementation_plan",
+      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_optimistic_blob_mutation",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_implementation_plan",
+      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_conflict_safe_crm_mutations",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_implementation_plan",
+      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_truthful_public_submission_responses",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_implementation_plan",
+      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_lossless_reconciliation_tool",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_implementation_plan",
+      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_docs_env_graphify_closeout",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_implementation_plan",
+      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_staging_acceptance",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_implementation_plan",
+      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_production_cutover",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_optimistic_blob_mutation",
+      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_crm_runtime_authority",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_conflict_safe_crm_mutations",
+      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_optimistic_blob_mutation",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_truthful_public_submission_responses",
+      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_conflict_safe_crm_mutations",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_lossless_reconciliation_tool",
+      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_crm_runtime_authority",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_lossless_reconciliation_tool",
+      "target": "docs_superpowers_specs_2026_08_23_waitlist_crm_durable_storage_design_five_object_reconciliation",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_staging_acceptance",
+      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_lossless_reconciliation_tool",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_interim_staging_data_acceptance",
+      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_staging_acceptance",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_interim_staging_data_acceptance",
+      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_private_crm_reconciled_baseline",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_interim_staging_data_acceptance",
+      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_preview_crm_credential_configuration",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_private_crm_reconciled_baseline",
+      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_lossless_reconciliation_tool",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_private_crm_reconciled_baseline",
+      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_legacy_public_crm_rollback_source",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_preview_crm_credential_configuration",
+      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_crm_runtime_authority",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_legacy_public_crm_rollback_source",
+      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_lossless_reconciliation_tool",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_runtime_deployment_acceptance_gate",
+      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_staging_acceptance",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_production_cutover",
+      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_staging_acceptance",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_explicit_production_approval_gate",
+      "target": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_production_cutover",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_production_cutover",
+      "target": "docs_superpowers_specs_2026_08_23_waitlist_crm_durable_storage_design_rollback_strategy",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_crm_runtime_authority",
+      "target": "docs_current_development_state_crm_specific_private_blob_authority",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_optimistic_blob_mutation",
+      "target": "docs_superpowers_specs_2026_08_23_waitlist_crm_durable_storage_design_etag_concurrency_control",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_truthful_public_submission_responses",
+      "target": "docs_superpowers_specs_2026_08_23_waitlist_crm_durable_storage_design_product_contract",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_staging_acceptance",
+      "target": "docs_current_development_state_live_staging_production_gates",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_legacy_public_crm_rollback_source",
+      "target": "docs_superpowers_specs_2026_08_23_waitlist_crm_durable_storage_design_rollback_strategy",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md",
+      "source_location": null,
+      "weight": 1
     }
   ],
   "hyperedges": [
@@ -369360,21 +369654,6 @@
       "source_file": "graphify-out/memory/query_20260823_160857_trace_the_repaired_hero____waitlist_stats____crm.md"
     },
     {
-      "id": "durable_crm_recovery_pipeline",
-      "label": "Durable CRM Recovery Pipeline",
-      "nodes": [
-        "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_crm_runtime_authority",
-        "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_optimistic_blob_mutation",
-        "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_conflict_safe_crm_mutations",
-        "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_truthful_public_submission_responses",
-        "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_lossless_reconciliation_tool"
-      ],
-      "relation": "implement",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md"
-    },
-    {
       "id": "safe_crm_cutover",
       "label": "Safe CRM Cutover",
       "nodes": [
@@ -369388,7 +369667,50 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "docs/superpowers/specs/2026-08-23-waitlist-crm-durable-storage-design.md"
+    },
+    {
+      "id": "waitlist_crm_runtime_durability_chain",
+      "label": "Waitlist CRM Runtime Durability Chain",
+      "nodes": [
+        "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_crm_runtime_authority",
+        "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_optimistic_blob_mutation",
+        "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_conflict_safe_crm_mutations",
+        "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_truthful_public_submission_responses"
+      ],
+      "relation": "implement",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md"
+    },
+    {
+      "id": "waitlist_crm_interim_data_acceptance",
+      "label": "Waitlist CRM Interim Data Acceptance",
+      "nodes": [
+        "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_lossless_reconciliation_tool",
+        "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_interim_staging_data_acceptance",
+        "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_private_crm_reconciled_baseline",
+        "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_preview_crm_credential_configuration",
+        "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_legacy_public_crm_rollback_source"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md"
+    },
+    {
+      "id": "waitlist_crm_gated_rollout",
+      "label": "Waitlist CRM Gated Rollout",
+      "nodes": [
+        "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_staging_acceptance",
+        "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_runtime_deployment_acceptance_gate",
+        "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_production_cutover",
+        "docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_explicit_production_approval_gate"
+      ],
+      "relation": "form",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md"
     }
   ],
-  "built_at_commit": "6827957001484cf5640b9308830295e4a44cec18"
+  "built_at_commit": "03510ea60efebc110e8b5b8db08efa866ee02b5e"
 }

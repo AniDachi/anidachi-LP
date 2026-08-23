@@ -211,14 +211,14 @@ gates; no live data or environment mutation is claimed here.
 
 **External state:** Vercel Preview env and the existing private Blob store.
 
-- [ ] Re-inventory both stores without printing record bodies. Confirm object
+- [x] Re-inventory both stores without printing record bodies. Confirm object
   paths, counts, unique IDs/emails, and whether the private side remains a
   conflict-free subset/union.
-- [ ] Add `KREATLI_CRM_BLOB_READ_WRITE_TOKEN` to Preview from the existing
+- [x] Add `KREATLI_CRM_BLOB_READ_WRITE_TOKEN` to Preview from the existing
   private-store credential without exposing its value. Do not add the shared
   production private-integration variable.
-- [ ] Run `crm:reconcile-blobs` in dry-run and require zero conflicts.
-- [ ] Run `--apply`, then independently reread and verify all five objects,
+- [x] Run `crm:reconcile-blobs` in dry-run and require zero conflicts.
+- [x] Run `--apply`, then independently reread and verify all five objects,
   contacts, survey leads, IDs, and SHA-256. Keep public objects unchanged.
 - [ ] Run `pnpm dev:check`, web check/test/build, secret/path grep, and Git diff
   review. Open a PR to `staging`; do not enable auto-promotion to `main`.
@@ -229,6 +229,23 @@ gates; no live data or environment mutation is claimed here.
   Vercel logs if still retained. Keep payloads in process memory, deduplicate by
   normalized email, and verify count delta without printing user content.
 - [ ] Record staging deployment, counts, checks, and rollback ETags in this plan.
+
+Interim data acceptance on 2026-08-23:
+
+- The existing public authority contained 683 contacts and 682 survey leads;
+  the existing private store was a conflict-free strict subset with 39 contacts
+  missing and no divergent common identity.
+- The dry-run planned changes only for `contacts.json` and `meta.json`, with
+  zero conflicts. Conditional apply wrote those two objects and verified all
+  five CRM objects immediately afterward.
+- An independent origin-fresh dry-run then reported five unchanged objects,
+  zero conflicts, 683 contacts, and 682 survey leads. `contacts.json` matched
+  SHA-256 `32479f2f47a542989e1039297bec644a94c8eb1790f86f268049501a06c43b8f`.
+- Preview branch `staging` now has the sensitive CRM-specific variable sourced
+  from the existing private-store credential. Its value was equality-checked
+  without printing it; no Production CRM variable was added.
+- The old public objects were retained as the rollback source and were neither
+  overwritten nor deleted. Runtime/deployment acceptance remains open below.
 
 ### Task 7: Production cutover and closeout
 
