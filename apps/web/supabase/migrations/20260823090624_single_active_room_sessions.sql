@@ -73,18 +73,18 @@ begin
         or pg_catalog.char_length(p_client_request_id) not between 1 and 100
       )
     )
+    or p_host_plan_code is null
     or p_host_plan_code not in ('free', 'plus', 'pro', 'watcher', 'nakama', 'junkie')
+    or p_max_participants is null
     or p_max_participants not between 1 and 50
+    or p_max_media_seats is null
     or p_max_media_seats not between 0 and 16
     or p_can_name_room is null
     or p_can_send_push_invites is null
     or (
-      (p_source_provider is null)
-      <> (
-        p_source_url is null
-        or p_video_fingerprint is null
-        or p_source_generation is null
-      )
+      (p_source_provider is null) <> (p_source_url is null)
+      or (p_source_provider is null) <> (p_video_fingerprint is null)
+      or (p_source_provider is null) <> (p_source_generation is null)
     )
     or (
       p_source_provider is not null
@@ -277,6 +277,7 @@ begin
   if p_user_id is null
     or p_room_id is null
     or pg_catalog.char_length(p_room_id) not between 1 and 128
+    or p_role is null
     or p_role not in ('host', 'member')
     or p_participant_session_id is null
     or pg_catalog.char_length(p_participant_session_id) not between 1 and 128
