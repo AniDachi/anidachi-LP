@@ -1,4 +1,5 @@
 import {
+  RoomSessionAdmissionInputSchema,
   WatchHistoryDeletionRequestSchema,
   WatchHistoryPreferencesUpdateSchema,
   WatchHistoryRoomRecreationResponseSchema,
@@ -8,14 +9,16 @@ import {
   type WatchHistoryResponse,
   type WatchHistoryTitleEpisodesResponse,
   type WatchProgressAck,
+  type ActiveRoomConflictResponse,
 } from "@anidachi/protocol";
 import { type NextRequest, NextResponse } from "next/server";
 import { getApiSession, type ApiSession } from "./api-session";
 import {
-  createRoom,
+  createRoomWithActiveSession,
   getUserById,
   roomCapabilitiesFromRoom,
 } from "./db";
+import { activeRoomConflictResponse } from "./active-room-session";
 import { signRoomToken } from "./jwt";
 import { roomCapabilitiesForPlan } from "./plan-entitlements";
 import {
@@ -72,9 +75,16 @@ export type WatchHistoryV2RouteDependencies = {
   createRoomFromSession(params: {
     session: ApiSession;
     sessionId: string;
+    participantSessionId: string;
     clientRequestId?: string;
     origin: string;
-  }): Promise<WatchHistoryRoomRecreationResponse>;
+  }): Promise<
+    | WatchHistoryRoomRecreationResponse
+    | {
+        outcome: "conflict";
+        activeRoom: ActiveRoomConflictResponse["activeRoom"];
+      }
+  >;
 };
 
 const productionDependencies: WatchHistoryV2RouteDependencies = {
@@ -202,15 +212,21 @@ export function createWatchHistoryV2RouteHandlers(
             "Invalid watch session request",
           );
         }
-        return NextResponse.json(
-          WatchHistoryRoomRecreationResponseSchema.parse(
-            await dependencies.createRoomFromSession({
+        const creation = await dependencies.createRoomFromSession({
             session,
             sessionId: input.sessionId,
+            participantSessionId: input.participantSessionId,
             clientRequestId: input.clientRequestId,
             origin: request.nextUrl.origin,
-            }),
-          ),
+        });
+        if ("outcome" in creation && creation.outcome === "conflict") {
+          return NextResponse.json(
+            activeRoomConflictResponse(creation.activeRoom),
+            { status: 409 },
+          );
+        }
+        return NextResponse.json(
+          WatchHistoryRoomRecreationResponseSchema.parse(creation),
         );
       } catch (error) {
         return watchHistoryErrorResponse(error);
@@ -221,12 +237,21 @@ export function createWatchHistoryV2RouteHandlers(
 
 function parseRoomRecreationRequest(
   value: unknown,
-): { sessionId: string; clientRequestId?: string } | null {
+): {
+  sessionId: string;
+  participantSessionId: string;
+  clientRequestId?: string;
+} | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const record = value as Record<string, unknown>;
   const keys = Object.keys(record);
   if (
-    keys.some((key) => key !== "sessionId" && key !== "clientRequestId") ||
+    keys.some(
+      (key) =>
+        key !== "sessionId" &&
+        key !== "participantSessionId" &&
+        key !== "clientRequestId",
+    ) ||
     typeof record.sessionId !== "string" ||
     !UUID_PATTERN.test(record.sessionId) ||
     (record.clientRequestId !== undefined &&
@@ -235,9 +260,20 @@ function parseRoomRecreationRequest(
   ) {
     return null;
   }
+  const admission = RoomSessionAdmissionInputSchema.safeParse({
+    participantSessionId: record.participantSessionId,
+  });
+  if (!admission.success) return null;
   return record.clientRequestId === undefined
-    ? { sessionId: record.sessionId }
-    : { sessionId: record.sessionId, clientRequestId: record.clientRequestId as string };
+    ? {
+        sessionId: record.sessionId,
+        participantSessionId: admission.data.participantSessionId,
+      }
+    : {
+        sessionId: record.sessionId,
+        participantSessionId: admission.data.participantSessionId,
+        clientRequestId: record.clientRequestId as string,
+      };
 }
 
 const productionRoutes = createWatchHistoryV2RouteHandlers();
@@ -253,9 +289,16 @@ export const handleWatchHistoryV2RoomPost = productionRoutes.postRoom;
 async function createRoomFromV2Session(params: {
   session: ApiSession;
   sessionId: string;
+  participantSessionId: string;
   clientRequestId?: string;
   origin: string;
-}): Promise<WatchHistoryRoomRecreationResponse> {
+}): Promise<
+  | WatchHistoryRoomRecreationResponse
+  | {
+      outcome: "conflict";
+      activeRoom: ActiveRoomConflictResponse["activeRoom"];
+    }
+> {
   const source = await supabaseWatchHistoryV2Store.getRoomSource(
     params.session.userId,
     params.sessionId,
@@ -271,8 +314,9 @@ async function createRoomFromV2Session(params: {
     const body = quotaExhaustedResponseBody(quota);
     throw new WatchHistoryV2ApiError(403, body.code, body.error);
   }
-  const { room, reused } = await createRoom({
+  const admission = await createRoomWithActiveSession({
     hostUserId: params.session.userId,
+    participantSessionId: params.participantSessionId,
     capabilities: roomCapabilitiesForPlan(hostPlan),
     showId: source.showId,
     episodeId: source.episodeId,
@@ -280,12 +324,16 @@ async function createRoomFromV2Session(params: {
     title: source.title,
     clientRequestId: params.clientRequestId,
   });
+  if (admission.outcome === "conflict") return admission;
+  const { room } = admission;
+  const reused = admission.outcome === "reused";
   const capabilities = roomCapabilitiesFromRoom(room);
   const roomToken = await signRoomToken(
     {
       sub: params.session.userId,
       roomId: room.room_id,
       role: "host",
+      participantSessionId: params.participantSessionId,
       capabilities,
       displayName: user.display_name,
       avatarUrl: user.avatar_url,

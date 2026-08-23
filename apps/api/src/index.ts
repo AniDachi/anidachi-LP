@@ -1,8 +1,10 @@
 import {
   ClientEventSchema,
+  InternalRoomDepartureCommandSchema,
   MAX_ROOM_FRAME_BYTES,
   MAX_ROOM_ID_CHARS,
   type ClientEvent,
+  type InternalRoomDepartureCommand,
   type Participant,
   type RoomSourcePersistenceCallback,
   type RoomUsageSummary,
@@ -17,13 +19,29 @@ import {
 } from "./auth";
 import { createIceServersPayload } from "./ice-servers";
 import { hasValidInternalAuthorization } from "./internal-auth";
-import { notifyWebRoomEnded, notifyWebRoomSource } from "./internal-web-client";
+import {
+  notifyWebParticipantDeparted,
+  notifyWebRoomEnded,
+  notifyWebRoomSource,
+} from "./internal-web-client";
 import {
   endedRoomTombstone,
   parseEndRoomCommand,
   type EndedRoomTombstone,
   type EndRoomCommand,
 } from "./room-lifecycle";
+import {
+  acknowledgeStoredParticipantDisconnect,
+  cancelStoredParticipantDisconnectForJoin,
+  claimDueStoredParticipantDisconnects,
+  claimStoredParticipantDisconnect,
+  createParticipantDisconnect,
+  expediteStoredParticipantDisconnect,
+  MAX_PERSISTED_PARTICIPANT_DISCONNECTS,
+  readStoredParticipantDisconnects,
+  storeParticipantDisconnect,
+  type PendingParticipantDisconnect,
+} from "./participant-disconnect";
 import {
   getP2PSignalDedupeKey,
   RecentP2PSignalBuffer,
@@ -77,6 +95,7 @@ import {
   enqueueStoredRoomSource,
   ensureStoredRoomSourcePending,
   readStoredRoomSourcePersistence,
+  reconcileStoredRoomAlarm,
 } from "./room-source-persistence";
 import {
   emitRoomTelemetry,
@@ -135,6 +154,47 @@ app.post("/internal/rooms/:roomId/end", async (c) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(command),
+  }));
+});
+
+app.post("/internal/rooms/:roomId/participants/:userId/depart", async (c) => {
+  const authorization = c.req.header("authorization") ?? null;
+  if (!hasValidInternalAuthorization(
+    authorization,
+    c.env.ANIDACHI_INTERNAL_API_SECRET,
+  )) {
+    return c.json(
+      { error: "UNAUTHORIZED", message: "Invalid internal authorization" },
+      401,
+    );
+  }
+  const roomId = c.req.param("roomId");
+  const userId = c.req.param("userId");
+  if (roomId.length === 0 || roomId.length > MAX_ROOM_ID_CHARS) {
+    return c.json({ error: "INVALID_ROOM_ID", message: "Invalid room id" }, 400);
+  }
+  const command = InternalRoomDepartureCommandSchema.safeParse(
+    await c.req.json().catch(() => null),
+  );
+  if (
+    !command.success ||
+    command.data.roomId !== roomId ||
+    command.data.userId !== userId
+  ) {
+    return c.json(
+      { error: "INVALID_DEPARTURE_COMMAND", message: "Invalid departure command" },
+      400,
+    );
+  }
+  const id = c.env.ROOMS.idFromName(roomId);
+  const stub = c.env.ROOMS.get(id);
+  return stub.fetch(new Request("https://room.internal/internal/depart", {
+    method: "POST",
+    headers: {
+      Authorization: authorization!,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(command.data),
   }));
 });
 
@@ -705,6 +765,26 @@ export class RoomDurableObject {
       if (!command) return Response.json({ error: "INVALID_END_COMMAND" }, { status: 400 });
       return this.endRoom(command);
     }
+    if (request.method === "POST" && url.pathname === "/internal/depart") {
+      if (!hasValidInternalAuthorization(
+        request.headers.get("authorization"),
+        this.env.ANIDACHI_INTERNAL_API_SECRET,
+      )) {
+        return Response.json({ error: "UNAUTHORIZED" }, { status: 401 });
+      }
+      const command = InternalRoomDepartureCommandSchema.safeParse(
+        await request.json().catch(() => null),
+      );
+      if (!command.success || command.data.roomId !== this.room.roomId) {
+        return Response.json(
+          { error: "INVALID_DEPARTURE_COMMAND" },
+          { status: 400 },
+        );
+      }
+      return this.runRoomEndExclusively(
+        () => this.handleParticipantDeparture(command.data),
+      );
+    }
     if (this.endedTombstone) {
       this.clearTerminalRuntimeState();
       sendAndCloseEndedRoomSockets(
@@ -949,24 +1029,48 @@ export class RoomDurableObject {
   }
 
   async alarm(): Promise<void> {
-    const sourceDurable = await this.runRoomSourceDeliveryExclusively(false);
-    if (!sourceDurable) {
-      const pending = await readStoredRoomSourcePersistence(this.state.storage);
-      await this.state.storage.setAlarm(
-        pending?.nextAttemptAt ?? Date.now() + ROOM_SOURCE_RETRY_BASE_MS,
-      );
-      return;
-    }
     await this.runRoomEndExclusively(() => this.runAlarmExclusive());
   }
 
   private async runAlarmExclusive(): Promise<void> {
+    if (this.endedTombstone) {
+      await clearStoredRoomLifecycleAndAlarm(this.state.storage);
+      return;
+    }
+
+    const disconnects = await claimDueStoredParticipantDisconnects(
+      this.state.storage,
+      Date.now(),
+      reconcileStoredRoomAlarm,
+    );
+    const hostDisconnect = disconnects.find((record) => record.role === "host");
+    if (hostDisconnect) {
+      await this.endRoomExclusive({
+        endedAt: hostDisconnect.departureAt,
+        reason: "host_disconnected",
+      });
+      return;
+    }
+    for (const disconnect of disconnects) {
+      try {
+        await this.deliverGuestParticipantDeparture(disconnect);
+      } catch {
+        // The claim committed its bounded retry deadline before external I/O.
+      }
+    }
+
+    const sourceDurable = await this.runRoomSourceDeliveryExclusively(false);
+    if (!sourceDurable) {
+      await this.state.storage.transaction((transaction) =>
+        reconcileStoredRoomAlarm(
+          transaction,
+          Date.now() + ROOM_SOURCE_RETRY_BASE_MS,
+        ));
+      return;
+    }
+
     this.roomEndInProgress = true;
     try {
-      if (this.endedTombstone) {
-        await clearStoredRoomLifecycleAndAlarm(this.state.storage);
-        return;
-      }
       if (this.participantsBySocket.size > 0) {
         const activation = await activateStoredRoomLifecycle(
           this.state.storage,
@@ -1072,7 +1176,7 @@ export class RoomDurableObject {
         this.handlePing(socket, event);
         return;
       case "JOIN":
-        await this.handleJoin(socket, event);
+        await this.runRoomEndExclusively(() => this.handleJoin(socket, event));
         return;
       case "HOST_STATE":
         await this.handleHostState(socket, event);
@@ -1136,6 +1240,23 @@ export class RoomDurableObject {
         code: "AUTH_REQUIRED",
         message: "Room token is required before joining",
       });
+      return;
+    }
+    if (
+      !event.participantSessionId ||
+      event.participantSessionId !== verified.participantSessionId
+    ) {
+      this.send(socket, {
+        type: "ERROR",
+        code: "PARTICIPANT_SESSION_MISMATCH",
+        message: "Reconnect with the room session issued for this tab.",
+      });
+      this.releaseAdmission(socket);
+      try {
+        socket.close(4001, "Room participant session mismatch");
+      } catch {
+        /* stale socket */
+      }
       return;
     }
 
@@ -1241,15 +1362,19 @@ export class RoomDurableObject {
       admission: { ...attachment.admission, joined: true },
       lastSeenAt: commitAt,
       participant: joined,
+      participantSessionId: event.participantSessionId,
     };
-    if (event.participantSessionId !== undefined) {
-      patch.participantSessionId = event.participantSessionId;
-    }
     const joinedAttachment = updateRoomSocketAttachment(attachment, patch);
 
     try {
       this.writeSocketAttachment(socket, joinedAttachment);
       this.persistRoomState();
+      await cancelStoredParticipantDisconnectForJoin(
+        this.state.storage,
+        verified.sub,
+        event.participantSessionId,
+        reconcileStoredRoomAlarm,
+      );
     } catch {
       this.room = new RoomState(this.room.roomId, undefined, roomBeforeJoin);
       try {
@@ -1312,7 +1437,6 @@ export class RoomDurableObject {
 
     if (existingSocket && existingSocket !== socket) {
       const sameSession =
-        event.participantSessionId !== undefined &&
         existingSessionId === event.participantSessionId;
 
       try {
@@ -1811,23 +1935,161 @@ export class RoomDurableObject {
     }
   }
 
-  private async handleClose(socket: WebSocket): Promise<void> {
+  private async handleParticipantDeparture(
+    command: InternalRoomDepartureCommand,
+  ): Promise<Response> {
+    if (this.endedTombstone) {
+      return departureResponse("room_ended");
+    }
+
+    const currentSocket = this.socketsByParticipant.get(command.userId);
+    const currentSessionId = currentSocket
+      ? this.sessionIdBySocket.get(currentSocket)
+      : undefined;
+    let pending: PendingParticipantDisconnect | undefined;
+    if (currentSocket) {
+      if (currentSessionId !== command.participantSessionId) {
+        return departureResponse("stale");
+      }
+      pending = await this.beginParticipantDisconnect(
+        currentSocket,
+        command.requestedAt,
+      ) ?? undefined;
+      try {
+        currentSocket.close(1000, "Participant left the room");
+      } catch {
+        /* the exact session is already detached */
+      }
+    } else {
+      const stored = await readStoredParticipantDisconnects(this.state.storage);
+      pending = stored?.records.find(
+        (record) =>
+          record.userId === command.userId &&
+          record.participantSessionId === command.participantSessionId,
+      );
+    }
+    if (!pending) return departureResponse("stale");
+
+    const expedited = await expediteStoredParticipantDisconnect(
+      this.state.storage,
+      command.userId,
+      command.participantSessionId,
+      command.requestedAt,
+      reconcileStoredRoomAlarm,
+    );
+    if (expedited === "stale") return departureResponse("stale");
+    const attempt = await claimStoredParticipantDisconnect(
+      this.state.storage,
+      command.userId,
+      command.participantSessionId,
+      command.requestedAt,
+      reconcileStoredRoomAlarm,
+      true,
+    );
+    if (!attempt) return departureResponse("stale");
+
+    if (attempt.role === "host") {
+      const response = await this.endRoomExclusive({
+        endedAt: attempt.departureAt,
+        reason: "host_disconnected",
+      });
+      return response.ok ? departureResponse("room_ended") : response;
+    }
+
+    try {
+      const outcome = await this.deliverGuestParticipantDeparture(attempt);
+      return departureResponse(outcome);
+    } catch {
+      return Response.json(
+        {
+          error: "PARTICIPANT_DEPARTURE_CALLBACK_FAILED",
+          message: "Participant departure callback failed",
+          retryable: true,
+        },
+        { status: 502 },
+      );
+    }
+  }
+
+  private async deliverGuestParticipantDeparture(
+    record: PendingParticipantDisconnect,
+  ): Promise<"departed" | "stale"> {
+    const outcome = await notifyWebParticipantDeparted(
+      this.env,
+      this.room.roomId,
+      record.userId,
+      {
+        roomId: this.room.roomId,
+        userId: record.userId,
+        participantSessionId: record.participantSessionId,
+        departedAt: record.departureAt,
+      },
+    );
+    await acknowledgeStoredParticipantDisconnect(
+      this.state.storage,
+      record.userId,
+      record.participantSessionId,
+      reconcileStoredRoomAlarm,
+    );
+    return outcome;
+  }
+
+  private handleClose(socket: WebSocket): Promise<void> {
+    return this.runRoomEndExclusively(
+      () => this.handleCloseExclusive(socket),
+    );
+  }
+
+  private async handleCloseExclusive(socket: WebSocket): Promise<void> {
+    await this.beginParticipantDisconnect(socket, Date.now());
+  }
+
+  private async beginParticipantDisconnect(
+    socket: WebSocket,
+    disconnectedAt: number,
+  ): Promise<PendingParticipantDisconnect | null> {
     const participantId = this.participantsBySocket.get(socket);
     const verified = this.verifiedBySocket.get(socket);
+    const participantSessionId = this.sessionIdBySocket.get(socket);
+    const isCurrent = Boolean(
+      participantId && this.socketsByParticipant.get(participantId) === socket,
+    );
     this.releaseAdmission(socket);
     this.verifiedBySocket.delete(socket);
     this.sessionIdBySocket.delete(socket);
     if (verified && !this.hasSocketForSubject(verified.sub)) {
       this.rateLimitersBySubject.releaseSubject(verified.sub);
     }
-    if (!participantId) {
-      return;
+    if (!participantId || !isCurrent) {
+      this.participantsBySocket.delete(socket);
+      return null;
+    }
+    if (
+      !verified ||
+      verified.sub !== participantId ||
+      !participantSessionId ||
+      participantSessionId !== verified.participantSessionId
+    ) {
+      throw new Error("Joined socket is missing participant session authority");
     }
 
+    const pending = createParticipantDisconnect({
+      userId: participantId,
+      role: verified.role,
+      participantSessionId,
+      disconnectedAt,
+    });
+    await storeParticipantDisconnect(
+      this.state.storage,
+      pending,
+      // Disconnected users leave live occupancy immediately, so rapid guest
+      // turnover can legitimately exceed the simultaneous seat cap.
+      MAX_PERSISTED_PARTICIPANT_DISCONNECTS,
+      reconcileStoredRoomAlarm,
+    );
+
     this.participantsBySocket.delete(socket);
-    if (this.socketsByParticipant.get(participantId) === socket) {
-      this.socketsByParticipant.delete(participantId);
-    }
+    this.socketsByParticipant.delete(participantId);
     const participant = this.room.leave(participantId);
     this.persistRoomState();
     this.reconcileRoomUsage(Date.now());
@@ -1843,6 +2105,7 @@ export class RoomDurableObject {
         await activateStoredRoomLifecycle(this.state.storage, Date.now());
       }
     }
+    return pending;
   }
 
   private send(socket: WebSocket, event: ServerEvent): void {
@@ -1877,6 +2140,12 @@ export class RoomDurableObject {
       }),
     );
   }
+}
+
+function departureResponse(
+  outcome: "departed" | "room_ended" | "stale",
+): Response {
+  return Response.json({ ok: true, outcome });
 }
 
 function mediaSeatError(

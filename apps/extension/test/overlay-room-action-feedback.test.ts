@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  ACTIVE_ROOM_CONFLICT_MESSAGE,
   copyRoomInviteText,
   getPrimaryRoomActionKind,
   getPrimaryRoomActionLabel,
@@ -8,6 +9,10 @@ import {
 } from "../src/overlay-room-action-feedback";
 
 describe("overlay room action feedback", () => {
+  it("uses one stable message for an active-room conflict", () => {
+    expect(ACTIVE_ROOM_CONFLICT_MESSAGE).toBe("You already have an active watch room.");
+  });
+
   it("prioritizes the room creation progress label", () => {
     expect(
       getPrimaryRoomActionLabel({

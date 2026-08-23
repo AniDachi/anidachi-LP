@@ -1,3 +1,8 @@
+import {
+  MAX_PARTICIPANT_ID_CHARS,
+  MAX_ROOM_ID_CHARS,
+  MAX_SESSION_ID_CHARS,
+} from "@anidachi/protocol";
 import type { VoiceMode } from "./media-types";
 
 export const ROOM_SESSION_INSTALL_ID_STORAGE_KEY = "anidachi:extension-install-id:v1";
@@ -5,6 +10,8 @@ export const ROOM_SESSION_STORAGE_MESSAGE_TYPE = "ANIDACHI_ROOM_SESSION_STORAGE"
 
 const ROOM_SESSION_RECORD_VERSION = 1 as const;
 const ROOM_SESSION_RECORD_KEY_PREFIX = "anidachi:room-session:v1:tab:";
+const PREPARED_ROOM_SESSION_RECORD_KEY_PREFIX =
+  "anidachi:prepared-room-session:v1:tab:";
 const LEGACY_ROOM_SESSION_STORAGE_KEY = "anidachi:room-id";
 const LEGACY_ROOM_SESSION_OWNER_STORAGE_KEY = "anidachi:room-owner-id";
 const LEGACY_PARTICIPANT_SESSION_STORAGE_KEY = "anidachi:participant-session-id";
@@ -16,6 +23,24 @@ export interface RoomSessionRecord {
   ownerUserId: string;
   participantSessionId: string;
   voiceMode: VoiceMode;
+}
+
+export interface PreparedRoomSession {
+  version: typeof ROOM_SESSION_RECORD_VERSION;
+  preparationId: string;
+  roomId: string | null;
+  ownerUserId: string;
+  participantSessionId: string;
+}
+
+export interface PrepareRoomSessionInput {
+  ownerUserId: string;
+  roomId: string | null;
+  forceNew?: boolean;
+}
+
+export function isPreparedRoomSession(value: unknown): value is PreparedRoomSession {
+  return parsePreparedRoomSession(value) !== null;
 }
 
 interface LegacyRoomSessionRecord {
@@ -36,6 +61,18 @@ export type RoomSessionStorageMessage =
       command: "persist";
       roomId: string | null;
       ownerUserId: string | null;
+    }
+  | {
+      type: typeof ROOM_SESSION_STORAGE_MESSAGE_TYPE;
+      command: "prepare";
+      ownerUserId: string;
+      roomId: string | null;
+      forceNew?: boolean;
+    }
+  | {
+      type: typeof ROOM_SESSION_STORAGE_MESSAGE_TYPE;
+      command: "discard-prepared";
+      prepared: PreparedRoomSession;
     }
   | {
       type: typeof ROOM_SESSION_STORAGE_MESSAGE_TYPE;
@@ -60,6 +97,7 @@ export type RoomSessionStorageResponse =
   | {
       ok: true;
       record: RoomSessionRecord | null;
+      prepared?: PreparedRoomSession | null;
       legacyPrefix?: string | null;
     }
   | { ok: false; error: string };
@@ -102,6 +140,12 @@ export function isRoomSessionStorageMessage(value: unknown): value is RoomSessio
       return isNullableString(value.currentUserId);
     case "persist":
       return isNullableString(value.roomId) && isNullableString(value.ownerUserId);
+    case "prepare":
+      return isBoundedString(value.ownerUserId, MAX_PARTICIPANT_ID_CHARS) &&
+        isNullableBoundedString(value.roomId, MAX_ROOM_ID_CHARS) &&
+        (value.forceNew === undefined || typeof value.forceNew === "boolean");
+    case "discard-prepared":
+      return isPreparedRoomSession(value.prepared);
     case "migrate":
       return (
         isNullableString(value.currentUserId) &&
@@ -186,6 +230,24 @@ export async function handleRoomSessionStorageMessage(
               randomUUID,
             ),
           };
+        case "prepare":
+          return {
+            ok: true,
+            record: null,
+            prepared: await prepareRoomSessionForTabNow(
+              sessionStorage,
+              resolvedTabId,
+              message,
+              randomUUID,
+            ),
+          };
+        case "discard-prepared":
+          await discardPreparedRoomSessionIfMatchNow(
+            sessionStorage,
+            resolvedTabId,
+            message.prepared,
+          );
+          return { ok: true, record: null, prepared: null };
         case "migrate":
           return {
             ok: true,
@@ -236,8 +298,119 @@ export async function removeRoomSessionForTab(
   await enqueueRoomSessionOperation(tabId, () => removeRoomSessionForTabNow(tabId, storage));
 }
 
+/** Reads the background-owned confirmed session without trusting page identity. */
+export async function loadRoomSessionForTab(
+  tabId: number,
+  dependencies: RoomSessionBackgroundDependencies = {},
+): Promise<RoomSessionRecord | null> {
+  assertTabId(tabId);
+  return enqueueRoomSessionOperation(tabId, async () => {
+    const storage = dependencies.sessionStorage ??
+      (chrome.storage.session as StorageAreaLike);
+    const key = roomSessionStorageKey(tabId);
+    const stored = await storage.get(key);
+    const record = parseRoomSessionRecord(stored[key]);
+    if (!record && stored[key] !== undefined) {
+      await storage.remove(key);
+    }
+    return record;
+  });
+}
+
+/**
+ * Cleans a closed tab only if its confirmed session is still the snapshot that
+ * initiated departure. A recycled tab id or newer exact session wins.
+ */
+export async function clearRoomSessionForClosedTab(
+  tabId: number,
+  expected: RoomSessionRecord | null,
+  dependencies: RoomSessionBackgroundDependencies = {},
+): Promise<boolean> {
+  assertTabId(tabId);
+  return enqueueRoomSessionOperation(tabId, async () => {
+    const storage = dependencies.sessionStorage ??
+      (chrome.storage.session as StorageAreaLike);
+    if (!expected) {
+      await removeRoomSessionForTabNow(tabId, storage);
+      return true;
+    }
+
+    const key = roomSessionStorageKey(tabId);
+    const stored = await storage.get(key);
+    const current = parseRoomSessionRecord(stored[key]);
+    if (!current || !roomSessionIdentityMatches(current, expected)) {
+      return false;
+    }
+    await removeRoomSessionForTabNow(tabId, storage);
+    return true;
+  });
+}
+
 async function removeRoomSessionForTabNow(tabId: number, storage: StorageAreaLike): Promise<void> {
-  await storage.remove(roomSessionStorageKey(tabId));
+  await Promise.all([
+    storage.remove(roomSessionStorageKey(tabId)),
+    storage.remove(preparedRoomSessionStorageKey(tabId)),
+  ]);
+}
+
+export async function prepareRoomSessionForTab(
+  tabId: number,
+  input: PrepareRoomSessionInput,
+  dependencies: RoomSessionBackgroundDependencies = {},
+): Promise<PreparedRoomSession> {
+  assertTabId(tabId);
+  return enqueueRoomSessionOperation(tabId, async () => {
+    const storage = dependencies.sessionStorage ??
+      (chrome.storage.session as StorageAreaLike);
+    const randomUUID = dependencies.randomUUID ?? (() => crypto.randomUUID());
+    return prepareRoomSessionForTabNow(storage, tabId, input, randomUUID);
+  });
+}
+
+export async function confirmRoomSessionForTab(
+  tabId: number,
+  prepared: PreparedRoomSession,
+  roomId: string,
+  dependencies: RoomSessionBackgroundDependencies = {},
+): Promise<RoomSessionRecord | null> {
+  assertTabId(tabId);
+  return enqueueRoomSessionOperation(tabId, async () => {
+    const storage = dependencies.sessionStorage ??
+      (chrome.storage.session as StorageAreaLike);
+    return confirmRoomSessionForTabNow(storage, tabId, prepared, roomId);
+  });
+}
+
+export async function discardPreparedRoomSessionIfMatch(
+  tabId: number,
+  prepared: PreparedRoomSession,
+  dependencies: RoomSessionBackgroundDependencies = {},
+): Promise<boolean> {
+  assertTabId(tabId);
+  return enqueueRoomSessionOperation(tabId, async () => {
+    const storage = dependencies.sessionStorage ??
+      (chrome.storage.session as StorageAreaLike);
+    return discardPreparedRoomSessionIfMatchNow(storage, tabId, prepared);
+  });
+}
+
+async function discardPreparedRoomSessionIfMatchNow(
+  storage: StorageAreaLike,
+  tabId: number,
+  prepared: PreparedRoomSession,
+): Promise<boolean> {
+  const parsed = parsePreparedRoomSession(prepared);
+  if (!parsed) {
+    throw new Error("Invalid prepared room session");
+  }
+  const key = preparedRoomSessionStorageKey(tabId);
+  const stored = await storage.get(key);
+  const current = parsePreparedRoomSession(stored[key]);
+  if (!current || !preparedRoomSessionsMatch(current, parsed)) {
+    return false;
+  }
+  await storage.remove(key);
+  return true;
 }
 
 function enqueueRoomSessionOperation<T>(tabId: number, operation: () => Promise<T>): Promise<T> {
@@ -285,6 +458,44 @@ export async function persistRoomSession(
     throw new Error("Room session storage rejected the current account");
   }
   return response.record;
+}
+
+export async function prepareRoomSession(
+  ownerUserId: string,
+  roomId: string | null,
+  options: {
+    forceNew?: boolean;
+    dependencies?: RoomSessionClientDependencies;
+  } = {},
+): Promise<PreparedRoomSession> {
+  const response = await sendRoomSessionMessage(
+    {
+      type: ROOM_SESSION_STORAGE_MESSAGE_TYPE,
+      command: "prepare",
+      ownerUserId,
+      roomId,
+      ...(options.forceNew === undefined ? {} : { forceNew: options.forceNew }),
+    },
+    options.dependencies?.sendMessage,
+  );
+  if (!response.prepared) {
+    throw new Error("Room session storage did not prepare a candidate");
+  }
+  return response.prepared;
+}
+
+export async function discardPreparedRoomSession(
+  prepared: PreparedRoomSession,
+  dependencies: RoomSessionClientDependencies = {},
+): Promise<void> {
+  await sendRoomSessionMessage(
+    {
+      type: ROOM_SESSION_STORAGE_MESSAGE_TYPE,
+      command: "discard-prepared",
+      prepared,
+    },
+    dependencies.sendMessage,
+  );
 }
 
 export async function clearRoomSession(
@@ -410,6 +621,109 @@ async function persistRecord(
   return record;
 }
 
+async function prepareRoomSessionForTabNow(
+  storage: StorageAreaLike,
+  tabId: number,
+  input: PrepareRoomSessionInput,
+  randomUUID: () => string,
+): Promise<PreparedRoomSession> {
+  if (
+    !isBoundedString(input.ownerUserId, MAX_PARTICIPANT_ID_CHARS) ||
+    (input.roomId !== null && !isBoundedString(input.roomId, MAX_ROOM_ID_CHARS)) ||
+    (input.forceNew !== undefined && typeof input.forceNew !== "boolean")
+  ) {
+    throw new Error("Invalid room session preparation");
+  }
+
+  const confirmedKey = roomSessionStorageKey(tabId);
+  const preparedKey = preparedRoomSessionStorageKey(tabId);
+  const [storedConfirmed, storedPrepared] = await Promise.all([
+    storage.get(confirmedKey),
+    storage.get(preparedKey),
+  ]);
+  const confirmed = parseRoomSessionRecord(storedConfirmed[confirmedKey]);
+  const currentPrepared = parsePreparedRoomSession(storedPrepared[preparedKey]);
+
+  if (storedConfirmed[confirmedKey] !== undefined && !confirmed) {
+    await storage.remove(confirmedKey);
+  }
+  if (storedPrepared[preparedKey] !== undefined && !currentPrepared) {
+    await storage.remove(preparedKey);
+  }
+  if (confirmed && confirmed.ownerUserId !== input.ownerUserId) {
+    await removeRoomSessionForTabNow(tabId, storage);
+    throw new Error("Room session belongs to another account");
+  }
+  const reuseParticipantSessionId =
+    input.forceNew !== true && confirmed?.roomId === input.roomId
+      ? confirmed.participantSessionId
+      : input.forceNew !== true &&
+          currentPrepared?.ownerUserId === input.ownerUserId &&
+          currentPrepared.roomId === input.roomId
+        ? currentPrepared.participantSessionId
+        : null;
+  const prepared: PreparedRoomSession = {
+    version: ROOM_SESSION_RECORD_VERSION,
+    preparationId: createBoundedSessionValue("preparation", randomUUID),
+    roomId: input.roomId,
+    ownerUserId: input.ownerUserId,
+    participantSessionId:
+      reuseParticipantSessionId ?? createParticipantSessionId(randomUUID),
+  };
+  await storage.set({ [preparedKey]: prepared });
+  return prepared;
+}
+
+async function confirmRoomSessionForTabNow(
+  storage: StorageAreaLike,
+  tabId: number,
+  prepared: PreparedRoomSession,
+  roomId: string,
+): Promise<RoomSessionRecord | null> {
+  const parsedPrepared = parsePreparedRoomSession(prepared);
+  if (
+    !parsedPrepared ||
+    !isBoundedString(roomId, MAX_ROOM_ID_CHARS) ||
+    (parsedPrepared.roomId !== null && parsedPrepared.roomId !== roomId)
+  ) {
+    throw new Error("Invalid room session confirmation");
+  }
+
+  const confirmedKey = roomSessionStorageKey(tabId);
+  const preparedKey = preparedRoomSessionStorageKey(tabId);
+  const [storedConfirmed, storedPrepared] = await Promise.all([
+    storage.get(confirmedKey),
+    storage.get(preparedKey),
+  ]);
+  const confirmed = parseRoomSessionRecord(storedConfirmed[confirmedKey]);
+  const currentPrepared = parsePreparedRoomSession(storedPrepared[preparedKey]);
+  if (
+    !currentPrepared ||
+    !preparedRoomSessionsMatch(currentPrepared, parsedPrepared)
+  ) {
+    return confirmed &&
+        confirmed.roomId === roomId &&
+        confirmed.ownerUserId === parsedPrepared.ownerUserId &&
+        confirmed.participantSessionId === parsedPrepared.participantSessionId
+      ? confirmed
+      : null;
+  }
+  const record: RoomSessionRecord = {
+    version: ROOM_SESSION_RECORD_VERSION,
+    revision: nextRoomSessionRevision(confirmed),
+    roomId,
+    ownerUserId: parsedPrepared.ownerUserId,
+    participantSessionId: parsedPrepared.participantSessionId,
+    voiceMode:
+      confirmed?.ownerUserId === parsedPrepared.ownerUserId && confirmed.roomId === roomId
+        ? confirmed.voiceMode
+        : "push-to-talk",
+  };
+  await storage.set({ [confirmedKey]: record });
+  await storage.remove(preparedKey);
+  return record;
+}
+
 async function migrateRecord(
   storage: StorageAreaLike,
   tabId: number,
@@ -422,29 +736,30 @@ async function migrateRecord(
   }
 
   const key = roomSessionStorageKey(tabId);
+  const stored = await storage.get(key);
+  const existing = parseRoomSessionRecord(stored[key]);
+  if (existing?.ownerUserId === currentUserId) {
+    return existing;
+  }
   if (
-    !isNonEmptyString(currentUserId) ||
-    !isNonEmptyString(legacyRecord.roomId) ||
-    !isNonEmptyString(legacyRecord.ownerUserId) ||
+    !isBoundedString(currentUserId, MAX_PARTICIPANT_ID_CHARS) ||
+    !isBoundedString(legacyRecord.roomId, MAX_ROOM_ID_CHARS) ||
+    !isBoundedString(legacyRecord.ownerUserId, MAX_PARTICIPANT_ID_CHARS) ||
     legacyRecord.ownerUserId !== currentUserId
   ) {
     await storage.remove(key);
     return null;
   }
 
-  const stored = await storage.get(key);
-  const existing = parseRoomSessionRecord(stored[key]);
   const record: RoomSessionRecord = {
     version: ROOM_SESSION_RECORD_VERSION,
     revision: nextRoomSessionRevision(existing),
     roomId: legacyRecord.roomId,
     ownerUserId: legacyRecord.ownerUserId,
-    participantSessionId: isNonEmptyString(legacyRecord.participantSessionId)
-      ? legacyRecord.participantSessionId
-      : existing?.roomId === legacyRecord.roomId &&
-          existing.ownerUserId === legacyRecord.ownerUserId
-        ? existing.participantSessionId
-        : createParticipantSessionId(randomUUID),
+    // Page sessionStorage can be cloned when a tab is duplicated. Preserve
+    // legacy room/account context, but mint identity in trusted tab-scoped
+    // background storage so two tabs never inherit one exact session.
+    participantSessionId: createParticipantSessionId(randomUUID),
     voiceMode:
       existing?.roomId === legacyRecord.roomId &&
       existing.ownerUserId === legacyRecord.ownerUserId
@@ -539,9 +854,9 @@ function parseRoomSessionRecord(value: unknown): RoomSessionRecord | null {
     !isObject(value) ||
     revision === null ||
     value.version !== ROOM_SESSION_RECORD_VERSION ||
-    !isNonEmptyString(value.roomId) ||
-    !isNonEmptyString(value.ownerUserId) ||
-    !isNonEmptyString(value.participantSessionId)
+    !isBoundedString(value.roomId, MAX_ROOM_ID_CHARS) ||
+    !isBoundedString(value.ownerUserId, MAX_PARTICIPANT_ID_CHARS) ||
+    !isBoundedString(value.participantSessionId, MAX_SESSION_ID_CHARS)
   ) {
     return null;
   }
@@ -553,6 +868,26 @@ function parseRoomSessionRecord(value: unknown): RoomSessionRecord | null {
     ownerUserId: value.ownerUserId,
     participantSessionId: value.participantSessionId,
     voiceMode: isVoiceMode(value.voiceMode) ? value.voiceMode : "push-to-talk",
+  };
+}
+
+function parsePreparedRoomSession(value: unknown): PreparedRoomSession | null {
+  if (
+    !isObject(value) ||
+    value.version !== ROOM_SESSION_RECORD_VERSION ||
+    !isBoundedString(value.preparationId, MAX_SESSION_ID_CHARS) ||
+    !isNullableBoundedString(value.roomId, MAX_ROOM_ID_CHARS) ||
+    !isBoundedString(value.ownerUserId, MAX_PARTICIPANT_ID_CHARS) ||
+    !isBoundedString(value.participantSessionId, MAX_SESSION_ID_CHARS)
+  ) {
+    return null;
+  }
+  return {
+    version: ROOM_SESSION_RECORD_VERSION,
+    preparationId: value.preparationId,
+    roomId: value.roomId,
+    ownerUserId: value.ownerUserId,
+    participantSessionId: value.participantSessionId,
   };
 }
 
@@ -576,6 +911,16 @@ function roomSessionRecordsMatch(
     current.participantSessionId === expected.participantSessionId &&
     current.voiceMode === expected.voiceMode
   );
+}
+
+function roomSessionIdentityMatches(
+  current: RoomSessionRecord,
+  expected: RoomSessionRecord,
+): boolean {
+  return current.version === expected.version &&
+    current.roomId === expected.roomId &&
+    current.ownerUserId === expected.ownerUserId &&
+    current.participantSessionId === expected.participantSessionId;
 }
 
 function isVoiceMode(value: unknown): value is VoiceMode {
@@ -638,8 +983,37 @@ function roomSessionStorageKey(tabId: number): string {
   return `${ROOM_SESSION_RECORD_KEY_PREFIX}${tabId}`;
 }
 
+function preparedRoomSessionStorageKey(tabId: number): string {
+  return `${PREPARED_ROOM_SESSION_RECORD_KEY_PREFIX}${tabId}`;
+}
+
 function createParticipantSessionId(randomUUID: () => string): string {
-  return `session-${randomUUID()}`;
+  return createBoundedSessionValue("session", randomUUID);
+}
+
+function createBoundedSessionValue(prefix: string, randomUUID: () => string): string {
+  const value = `${prefix}-${randomUUID()}`;
+  if (!isBoundedString(value, MAX_SESSION_ID_CHARS)) {
+    throw new Error("Generated room session identifier is invalid");
+  }
+  return value;
+}
+
+function preparedRoomSessionsMatch(
+  current: PreparedRoomSession,
+  expected: PreparedRoomSession,
+): boolean {
+  return current.version === expected.version &&
+    current.preparationId === expected.preparationId &&
+    current.roomId === expected.roomId &&
+    current.ownerUserId === expected.ownerUserId &&
+    current.participantSessionId === expected.participantSessionId;
+}
+
+function assertTabId(tabId: number): void {
+  if (!Number.isInteger(tabId) || tabId < 0) {
+    throw new Error("Invalid room session tab");
+  }
 }
 
 function isLegacyRoomSessionRecord(value: unknown): value is LegacyRoomSessionRecord {
@@ -672,4 +1046,12 @@ function isNullableString(value: unknown): value is string | null {
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
+}
+
+function isBoundedString(value: unknown, maxChars: number): value is string {
+  return isNonEmptyString(value) && value.length <= maxChars;
+}
+
+function isNullableBoundedString(value: unknown, maxChars: number): value is string | null {
+  return value === null || isBoundedString(value, maxChars);
 }

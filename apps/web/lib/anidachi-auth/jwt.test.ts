@@ -1,11 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { decodeJwt, decodeProtectedHeader, SignJWT } from "jose";
+import { ROOM_TOKEN_AUDIENCE, ROOM_TOKEN_ISSUER } from "@anidachi/protocol";
 import {
   signExtensionAccessToken,
   verifyExtensionAccessToken,
 } from "./extension-session";
-import { signAccessToken, verifyAccessToken } from "./jwt";
+import {
+  signAccessToken,
+  signRoomToken,
+  verifyAccessToken,
+  verifyRoomToken,
+} from "./jwt";
 
 const TEST_SECRET = "test-secret-for-anidachi-jwt-bridge";
 
@@ -169,5 +175,58 @@ test("access tokens normalize legacy plan codes during bridge window", async () 
 
     const payload = await verifyAccessToken(token);
     assert.equal(payload?.plan, "plus");
+  });
+});
+
+test("room tokens bind the exact participant tab session", async () => {
+  await withJwtSecret(async () => {
+    const token = await signRoomToken({
+      sub: "user-1",
+      roomId: "room-1",
+      role: "member",
+      participantSessionId: "participant-session-1",
+    });
+
+    const claims = decodeJwt(token);
+    assert.equal(claims.iss, ROOM_TOKEN_ISSUER);
+    assert.equal(claims.aud, ROOM_TOKEN_AUDIENCE);
+    assert.equal(claims.participantSessionId, "participant-session-1");
+    assert.deepEqual(await verifyRoomToken(token), {
+      sub: "user-1",
+      roomId: "room-1",
+      role: "member",
+      participantSessionId: "participant-session-1",
+      capabilities: undefined,
+      displayName: undefined,
+      avatarUrl: null,
+    });
+  });
+});
+
+test("room-token verification fails closed without one bounded session binding", async () => {
+  await withJwtSecret(async () => {
+    const now = Math.floor(Date.now() / 1000);
+    const validClaims = {
+      iss: ROOM_TOKEN_ISSUER,
+      aud: ROOM_TOKEN_AUDIENCE,
+      typ: "room",
+      sub: "user-1",
+      iat: now,
+      exp: now + 300,
+      roomId: "room-1",
+      role: "member",
+      participantSessionId: "participant-session-1",
+    };
+    for (const claims of [
+      { ...validClaims, participantSessionId: undefined },
+      { ...validClaims, participantSessionId: "" },
+      { ...validClaims, participantSessionId: "x".repeat(129) },
+      { ...validClaims, participantSessionId: 42 },
+    ]) {
+      const token = await new SignJWT(claims)
+        .setProtectedHeader({ alg: "HS256" })
+        .sign(testSecret());
+      assert.equal(await verifyRoomToken(token), null);
+    }
   });
 });

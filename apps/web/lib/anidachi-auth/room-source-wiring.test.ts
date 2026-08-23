@@ -20,22 +20,27 @@ const files = {
 	),
 };
 
-test("production createRoom keeps canonical columns in its atomic idempotent insert", async () => {
+test("production active-room create keeps canonical source columns in its atomic RPC", async () => {
 	const source = await readFile(files.db, "utf8");
-	const createRoom = section(
+	const createRoomWithActiveSession = section(
 		source,
-		"export async function createRoom",
-		"export async function persistRoomSource",
+		"export async function createRoomWithActiveSession",
+		"export async function claimActiveRoomSession",
 	);
 
 	assert.ok(
-		createRoom.indexOf("roomSourceCreationColumns") <
-			createRoom.indexOf('.from("rooms")'),
+		createRoomWithActiveSession.indexOf("roomSourceCreationColumns") <
+			createRoomWithActiveSession.indexOf(
+				'.rpc("create_room_with_active_session_v1"',
+			),
 	);
-	assert.match(createRoom, /\.insert\(\{[\s\S]*\.\.\.sourceColumns/);
 	assert.match(
-		createRoom,
-		/error\.code === UNIQUE_VIOLATION[\s\S]*getActiveRoomByClientRequestId/,
+		createRoomWithActiveSession,
+		/p_source_provider: sourceColumns\.source_provider/,
+	);
+	assert.match(
+		createRoomWithActiveSession,
+		/p_source_generation: sourceColumns\.source_generation/,
 	);
 });
 
@@ -59,12 +64,15 @@ test("production persistence calls the exact RPC and shared argument/error/resul
 	);
 });
 
-test("main room route uses the empty-aware parser before the createRoom dependency", async () => {
+test("main room route uses the empty-aware parser before atomic active-room creation", async () => {
 	const source = await readFile(files.mainRoute, "utf8");
 
 	assert.match(source, /handleRoomCreateRequestBody\(\{/);
 	assert.match(source, /readBody: \(\) => request\.text\(\)/);
-	assert.match(source, /create: \(input\) => createRoom\(\{/);
+	assert.match(source, /create: async \(input\) => \{/);
+	assert.match(source, /createRoomWithActiveSession\(\{/);
+	assert.match(source, /participantSessionId,/);
+	assert.doesNotMatch(source, /createRoom\(\{/);
 	assert.match(source, /if \(!creation\.ok\)[\s\S]*creation\.body/);
 	assert.doesNotMatch(source, /await request\.json\(\)/);
 });

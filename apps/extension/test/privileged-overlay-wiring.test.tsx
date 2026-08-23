@@ -172,24 +172,13 @@ describe("privileged overlay wiring", () => {
               roomToken: "room-token-a",
               shareableLink: "http://localhost:3003/room/room-a",
               privilegedRoomAuthority: roomAuthority(),
+              roomSession: confirmedRoomSession(),
             },
           };
         }
-        if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE" && message.command === "load") {
-          return { ok: true, record: null };
-        }
-        if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE" && message.command === "persist") {
-          return {
-            ok: true,
-            record: {
-              version: 1,
-              revision: 1,
-              roomId: "room-a",
-              ownerUserId: "user-a",
-              participantSessionId: "participant-session-a",
-              voiceMode: "camera",
-            },
-          };
+        if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE") {
+          const response = roomSessionStorageResponse(message.command);
+          if (response) return response;
         }
         if (message.type === "ANIDACHI_PRIVILEGED_OVERLAY_INTENT") {
           return { ok: false, error: `Privileged ${action} rejected` };
@@ -273,24 +262,13 @@ describe("privileged overlay wiring", () => {
             roomToken: "room-token-a",
             shareableLink: "http://localhost:3003/room/room-a",
             privilegedRoomAuthority: roomAuthority(),
+            roomSession: confirmedRoomSession(),
           },
         };
       }
-      if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE" && message.command === "load") {
-        return { ok: true, record: null };
-      }
-      if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE" && message.command === "persist") {
-        return {
-          ok: true,
-          record: {
-            version: 1,
-            revision: 1,
-            roomId: "room-a",
-            ownerUserId: "user-a",
-            participantSessionId: "participant-session-a",
-            voiceMode: "camera",
-          },
-        };
+      if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE") {
+        const response = roomSessionStorageResponse(message.command);
+        if (response) return response;
       }
       if (message.type === "ANIDACHI_PRIVILEGED_OVERLAY_INTENT" && message.command === "invoke") {
         return { ok: true, endedAt: "2026-08-21T00:00:00.000Z" };
@@ -344,24 +322,13 @@ describe("privileged overlay wiring", () => {
             roomToken: "room-token-a",
             shareableLink: "http://localhost:3003/room/room-a",
             privilegedRoomAuthority: roomAuthority(),
+            roomSession: confirmedRoomSession(),
           },
         };
       }
-      if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE" && message.command === "load") {
-        return { ok: true, record: null };
-      }
-      if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE" && message.command === "persist") {
-        return {
-          ok: true,
-          record: {
-            version: 1,
-            revision: 1,
-            roomId: "room-a",
-            ownerUserId: "user-a",
-            participantSessionId: "participant-session-a",
-            voiceMode: "camera",
-          },
-        };
+      if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE") {
+        const response = roomSessionStorageResponse(message.command);
+        if (response) return response;
       }
       throw new Error(`Unexpected runtime message ${message.type}:${message.command}`);
     });
@@ -405,6 +372,135 @@ describe("privileged overlay wiring", () => {
 
     expect(listRoomInvites).toHaveBeenCalledTimes(2);
     expect(button(view.container, "Accepted")).toBeInstanceOf(HTMLButtonElement);
+    await unmount(view.root);
+  });
+
+  it("shows one active-room conflict and opens the authoritative room", async () => {
+    const sendMessage = vi.fn(async (message: {
+      type?: string;
+      command?: string;
+      roomId?: string | null;
+    }) => {
+      if (message.type === "ANIDACHI_AUTH") return { ok: true, tokens: sessionFor("user-a") };
+      if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE") {
+        if (message.command === "load") return { ok: true, record: null };
+        if (message.command === "prepare") {
+          return {
+            ok: true,
+            record: null,
+            prepared: {
+              ...preparedRoomSession(),
+              roomId: message.roomId ?? null,
+            },
+          };
+        }
+        if (message.command === "discard-prepared") {
+          return { ok: true, record: null, prepared: null };
+        }
+      }
+      if (message.type === "ANIDACHI_ROOM_HTTP" && message.command === "create-room") {
+        return {
+          ok: false,
+          error: "An active room already exists",
+          code: "ACTIVE_ROOM_CONFLICT",
+          status: 409,
+          activeRoom: {
+            roomId: "room-active",
+            role: "member",
+            provider: "youtube",
+            title: "Active video",
+          },
+        };
+      }
+      if (
+        message.type === "ANIDACHI_ROOM_HTTP" &&
+        message.command === "connect-room" &&
+        message.roomId === "room-active"
+      ) {
+        return {
+          ok: true,
+          connection: {
+            roomToken: "room-token-active",
+            roomSession: {
+              ...confirmedRoomSession(),
+              roomId: "room-active",
+            },
+          },
+        };
+      }
+      throw new Error(`Unexpected runtime message ${message.type}:${message.command}`);
+    });
+    installOverlayRuntime(sendMessage);
+    const connect = vi.spyOn(RoomClient.prototype, "connect").mockImplementation((options) => {
+      options.onStatus("connected");
+    });
+    const view = await renderOverlay();
+
+    await click(button(view.container, "Open Anidachi controls"));
+    await click(button(view.container, "Create room"));
+    await flushMountedWork();
+
+    expect(view.container.textContent).toContain("You already have an active watch room.");
+    await click(button(view.container, "Open active room"));
+    await flushMountedWork();
+
+    expect(connect).toHaveBeenCalledWith(
+      expect.objectContaining({
+        roomId: "room-active",
+        participantSessionId: "participant-session-a",
+      }),
+    );
+    expect(view.container.textContent).not.toContain("You already have an active watch room.");
+    await unmount(view.root);
+  });
+
+  it("does not take over an active room from a different provider tab", async () => {
+    const sendMessage = vi.fn(async (message: { type?: string; command?: string }) => {
+      if (message.type === "ANIDACHI_AUTH") {
+        return { ok: true, tokens: sessionFor("user-a") };
+      }
+      if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE") {
+        if (message.command === "load") return { ok: true, record: null };
+        if (message.command === "prepare") {
+          return {
+            ok: true,
+            record: null,
+            prepared: preparedRoomSession(),
+          };
+        }
+        if (message.command === "discard-prepared") {
+          return { ok: true, record: null, prepared: null };
+        }
+      }
+      if (message.type === "ANIDACHI_ROOM_HTTP" && message.command === "create-room") {
+        return {
+          ok: false,
+          error: "An active room already exists",
+          code: "ACTIVE_ROOM_CONFLICT",
+          status: 409,
+          activeRoom: {
+            roomId: "room-active",
+            role: "member",
+            provider: "crunchyroll",
+            title: "Active episode",
+          },
+        };
+      }
+      throw new Error(`Unexpected runtime message ${message.type}:${message.command}`);
+    });
+    installOverlayRuntime(sendMessage);
+    const connect = vi.spyOn(RoomClient.prototype, "connect");
+    const view = await renderOverlay();
+
+    await click(button(view.container, "Open Anidachi controls"));
+    await click(button(view.container, "Create room"));
+    await flushMountedWork();
+
+    expect(view.container.textContent).toContain(
+      "You already have an active watch room on Crunchyroll. Open that tab to continue.",
+    );
+    expect(view.container.textContent).not.toContain("Open active room");
+    expect(connect).not.toHaveBeenCalled();
     await unmount(view.root);
   });
 });
@@ -466,6 +562,38 @@ function roomAuthority(): PrivilegedOverlayContext {
     role: "host",
     authorityGeneration: 1,
   };
+}
+
+function preparedRoomSession() {
+  return {
+    version: 1 as const,
+    preparationId: "preparation-room-a",
+    roomId: null,
+    ownerUserId: "user-a",
+    participantSessionId: "participant-session-a",
+  };
+}
+
+function confirmedRoomSession() {
+  return {
+    version: 1 as const,
+    revision: 1,
+    roomId: "room-a",
+    ownerUserId: "user-a",
+    participantSessionId: "participant-session-a",
+    voiceMode: "push-to-talk" as const,
+  };
+}
+
+function roomSessionStorageResponse(command: string | undefined) {
+  if (command === "load") return { ok: true, record: null };
+  if (command === "prepare") {
+    return { ok: true, record: null, prepared: preparedRoomSession() };
+  }
+  if (command === "discard-prepared") {
+    return { ok: true, record: null, prepared: null };
+  }
+  return null;
 }
 
 function hostParticipant() {

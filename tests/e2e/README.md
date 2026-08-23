@@ -17,6 +17,12 @@ node p2p-media-harness.mjs
 
 Set `HARNESS_DEBUG=1` to stream per-page browser console output.
 
+The local harness token fixture follows the production room-token boundary: it
+uses issuer `anidachi-web`, audience `anidachi-worker`, and binds the exact
+`participantSessionId` that `RoomClient` sends in JOIN. If that contract
+changes, update both sides of the fixture; never relax Worker verification just
+to make the harness connect.
+
 ## Relay/TURN Mode
 
 The default run is direct-first and often selects `host/host` candidate pairs on

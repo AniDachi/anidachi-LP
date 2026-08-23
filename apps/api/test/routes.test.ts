@@ -43,7 +43,12 @@ function trackingRooms() {
 describe("worker routes", () => {
   it("serves room-scoped ICE credentials through bearer auth with no-store CORS", async () => {
     const roomToken = await signRoomTokenForTest(
-      { sub: "user-1", roomId: "room-1", role: "member" },
+      {
+        sub: "user-1",
+        roomId: "room-1",
+        role: "member",
+        participantSessionId: "participant-session-1",
+      },
       authEnv,
     );
     const fetcher = vi.spyOn(globalThis, "fetch").mockResolvedValue(
@@ -105,7 +110,12 @@ describe("worker routes", () => {
 
   it("keeps ICE tokens out of HTTP query auth while preserving the bearer route", async () => {
     const roomToken = await signRoomTokenForTest(
-      { sub: "user-1", roomId: "room-1", role: "member" },
+      {
+        sub: "user-1",
+        roomId: "room-1",
+        role: "member",
+        participantSessionId: "participant-session-1",
+      },
       authEnv,
     );
     const dataPoints: Array<{ blobs?: string[] }> = [];
@@ -196,6 +206,75 @@ describe("worker routes", () => {
     expect(requests).toHaveLength(1);
     expect(requests[0]?.headers.get("Authorization")).toBe("Bearer internal-secret");
     expect(await requests[0]?.json()).toEqual({ endedAt: 1_000, reason: "host_ended" });
+  });
+
+  it("rejects unauthorized or malformed participant departure before DO lookup", async () => {
+    const rooms = trackingRooms();
+    const command = {
+      roomId: "room-1",
+      userId: "user-1",
+      participantSessionId: "participant-session-1",
+      requestedAt: 1_000,
+    };
+    const unauthorized = await app.request(
+      "/internal/rooms/room-1/participants/user-1/depart",
+      { method: "POST", body: JSON.stringify(command) },
+      { ...internalEnv, ROOMS: rooms.namespace },
+    );
+    const malformed = await app.request(
+      "/internal/rooms/room-1/participants/user-1/depart",
+      {
+        method: "POST",
+        headers: { Authorization: "Bearer internal-secret" },
+        body: JSON.stringify({ ...command, roomId: "other-room" }),
+      },
+      { ...internalEnv, ROOMS: rooms.namespace },
+    );
+
+    expect(unauthorized.status).toBe(401);
+    expect(malformed.status).toBe(400);
+    expect(rooms.calls).toEqual([]);
+  });
+
+  it("forwards one authenticated exact-session departure to the named DO", async () => {
+    const requests: Request[] = [];
+    const command = {
+      roomId: "room-1",
+      userId: "user-1",
+      participantSessionId: "participant-session-1",
+      requestedAt: 1_000,
+    };
+    const response = await app.request(
+      "/internal/rooms/room-1/participants/user-1/depart",
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer internal-secret",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(command),
+      },
+      {
+        ...internalEnv,
+        ROOMS: {
+          idFromName: (roomId: string) => roomId,
+          get: () => ({
+            fetch: async (request: Request) => {
+              requests.push(request);
+              return Response.json({ ok: true, outcome: "departed" });
+            },
+          }),
+        },
+      },
+    );
+
+    expect(response.status).toBe(200);
+    expect(requests).toHaveLength(1);
+    expect(new URL(requests[0]!.url).pathname).toBe("/internal/depart");
+    expect(requests[0]?.headers.get("Authorization")).toBe(
+      "Bearer internal-secret",
+    );
+    expect(await requests[0]?.json()).toEqual(command);
   });
 
   it("continues terminal delivery and closure when one socket throws", () => {
@@ -430,7 +509,13 @@ describe("worker routes", () => {
       close: vi.fn(),
       deserializeAttachment: () => createRoomSocketAttachment(
         "room-1",
-        { avatarUrl: null, role: "member", roomId: "room-1", sub: "member-1" },
+        {
+          avatarUrl: null,
+          role: "member",
+          roomId: "room-1",
+          sub: "member-1",
+          participantSessionId: "pending-session",
+        },
         Date.now(),
         { deadlineAt, joined: false },
       ),
@@ -466,6 +551,7 @@ describe("worker routes", () => {
       role: "member" as const,
       roomId: "room-1",
       sub: "member-1",
+      participantSessionId: "missing-attachment-session",
     };
     const admission = new RoomAdmission({ maxParticipants: 4 });
     const admissionId = "missing-attachment-admission";
@@ -518,6 +604,7 @@ describe("worker routes", () => {
               lastSeenAt: number;
             };
             videoFingerprint: string;
+            participantSessionId: string;
           },
         ): Promise<void>;
       }
@@ -534,6 +621,7 @@ describe("worker routes", () => {
         lastSeenAt: now,
       },
       videoFingerprint: "video-1",
+      participantSessionId: "missing-attachment-session",
     });
 
     expect(send).toHaveBeenCalledWith(socket, {
@@ -554,7 +642,13 @@ describe("worker routes", () => {
       close: vi.fn(() => { throw new Error("incumbent close failed"); }),
     } as unknown as WebSocket;
     const replacementSocket = { close: vi.fn() } as unknown as WebSocket;
-    const verified = { avatarUrl: null, role: "member" as const, roomId: "room-1", sub: "member-1" };
+    const verified = {
+      avatarUrl: null,
+      role: "member" as const,
+      roomId: "room-1",
+      sub: "member-1",
+      participantSessionId: "shared-session",
+    };
     const oldParticipant = room.join({
       cameraEnabled: false,
       displayName: "Member",
@@ -659,7 +753,13 @@ describe("worker routes", () => {
     const room = new RoomState("room-1");
     const oldSocket = { close: vi.fn() } as unknown as WebSocket;
     const replacementSocket = { close: vi.fn() } as unknown as WebSocket;
-    const verified = { avatarUrl: null, role: "member" as const, roomId: "room-1", sub: "member-1" };
+    const verified = {
+      avatarUrl: null,
+      role: "member" as const,
+      roomId: "room-1",
+      sub: "member-1",
+      participantSessionId: "replacement-session",
+    };
     const oldParticipant = room.join({
       cameraEnabled: false,
       displayName: "Member",
@@ -791,12 +891,16 @@ describe("worker routes", () => {
     const persistenceAdmissionId = "persistence-admission";
     const persistenceReservation = admission.reserve("member-1", persistenceAdmissionId, Date.now());
     if (!persistenceReservation.allowed) throw new Error("expected persistence reservation");
-    const pendingPersistenceAttachment = createRoomSocketAttachment("room-1", verified, Date.now(), {
+    const persistenceVerified = {
+      ...verified,
+      participantSessionId: "persistence-session",
+    };
+    const pendingPersistenceAttachment = createRoomSocketAttachment("room-1", persistenceVerified, Date.now(), {
       deadlineAt: persistenceReservation.deadlineAt,
       joined: false,
     });
     attachmentsBySocket.set(persistenceSocket, pendingPersistenceAttachment);
-    verifiedBySocket.set(persistenceSocket, verified);
+    verifiedBySocket.set(persistenceSocket, persistenceVerified);
     roomObject.admissionIdBySocket.set(persistenceSocket, persistenceAdmissionId);
     const { updatedAt: _roomBeforePersistenceUpdatedAt, ...roomBeforePersistenceFailure } =
       roomObject.room.toSnapshot();
@@ -825,11 +929,15 @@ describe("worker routes", () => {
       Date.now(),
     );
     if (!rollbackFailureReservation.allowed) throw new Error("expected rollback-failure reservation");
-    attachmentsBySocket.set(rollbackFailureSocket, createRoomSocketAttachment("room-1", verified, Date.now(), {
+    const rollbackFailureVerified = {
+      ...verified,
+      participantSessionId: "rollback-failure-session",
+    };
+    attachmentsBySocket.set(rollbackFailureSocket, createRoomSocketAttachment("room-1", rollbackFailureVerified, Date.now(), {
       deadlineAt: rollbackFailureReservation.deadlineAt,
       joined: false,
     }));
-    verifiedBySocket.set(rollbackFailureSocket, verified);
+    verifiedBySocket.set(rollbackFailureSocket, rollbackFailureVerified);
     roomObject.admissionIdBySocket.set(rollbackFailureSocket, rollbackFailureAdmissionId);
     failJoinedAttachmentWrite = true;
     failPendingAttachmentWrite = true;
@@ -852,12 +960,18 @@ describe("worker routes", () => {
     }
     attachmentsBySocket.set(
       persistenceRollbackFailureSocket,
-      createRoomSocketAttachment("room-1", verified, Date.now(), {
+      createRoomSocketAttachment("room-1", {
+        ...verified,
+        participantSessionId: "persistence-rollback-failure-session",
+      }, Date.now(), {
         deadlineAt: persistenceRollbackFailureReservation.deadlineAt,
         joined: false,
       }),
     );
-    verifiedBySocket.set(persistenceRollbackFailureSocket, verified);
+    verifiedBySocket.set(persistenceRollbackFailureSocket, {
+      ...verified,
+      participantSessionId: "persistence-rollback-failure-session",
+    });
     roomObject.admissionIdBySocket.set(
       persistenceRollbackFailureSocket,
       persistenceRollbackFailureAdmissionId,
@@ -904,7 +1018,12 @@ describe("worker routes", () => {
   it("rejects malformed room ids before Durable Object lookup", async () => {
     const rooms = trackingRooms();
     const roomId = "r".repeat(MAX_ROOM_ID_CHARS + 1);
-    const token = await signRoomTokenForTest({ sub: "user-1", roomId, role: "member" }, authEnv);
+    const token = await signRoomTokenForTest({
+      sub: "user-1",
+      roomId,
+      role: "member",
+      participantSessionId: "participant-session-1",
+    }, authEnv);
     const response = await app.request(
       `/ws/${roomId}?roomToken=${encodeURIComponent(token)}`,
       { headers: { Upgrade: "websocket" } },

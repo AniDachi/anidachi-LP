@@ -4,8 +4,11 @@ import {
   MAX_DISPLAY_NAME_CHARS,
   MAX_PARTICIPANT_ID_CHARS,
   MAX_ROOM_ID_CHARS,
+  MAX_SESSION_ID_CHARS,
   ROOM_HISTORY_OFFLINE_GRACE_SECONDS,
   MAX_URL_CHARS,
+  ROOM_TOKEN_AUDIENCE,
+  ROOM_TOKEN_ISSUER,
 } from "@anidachi/protocol";
 import {
   signRoomHistoryAttestation,
@@ -25,6 +28,7 @@ async function signLegacyRoomTokenForTest(): Promise<string> {
   return new SignJWT({
     roomId: "room-1",
     role: "host",
+    participantSessionId: "participant-session-1",
     typ: "room",
     capabilities: {
       hostPlanCode: "junkie",
@@ -36,7 +40,8 @@ async function signLegacyRoomTokenForTest(): Promise<string> {
   })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject("user-1")
-    .setAudience("anidachi-worker")
+    .setIssuer(ROOM_TOKEN_ISSUER)
+    .setAudience(ROOM_TOKEN_AUDIENCE)
     .setIssuedAt()
     .setExpirationTime("30m")
     .sign(testSecret());
@@ -49,6 +54,7 @@ describe("worker room auth", () => {
         sub: "user-1",
         roomId: "room-1",
         role: "host",
+        participantSessionId: "participant-session-1",
         displayName: "Alina",
         avatarUrl: "https://example.com/avatar.png",
       },
@@ -59,8 +65,30 @@ describe("worker room auth", () => {
       sub: "user-1",
       roomId: "room-1",
       role: "host",
+      participantSessionId: "participant-session-1",
       displayName: "Alina",
       avatarUrl: "https://example.com/avatar.png",
+    });
+  });
+
+  it("accepts the canonical Web-issued room token contract", async () => {
+    const token = await new SignJWT({
+      roomId: "room-1",
+      role: "member",
+      participantSessionId: "participant-session-1",
+      typ: "room",
+    })
+      .setProtectedHeader({ alg: "HS256" })
+      .setSubject("user-1")
+      .setIssuer("anidachi-auth")
+      .setAudience("anidachi-worker")
+      .setIssuedAt()
+      .setExpirationTime("30m")
+      .sign(testSecret());
+
+    await expect(verifyRoomToken(token, "room-1", env)).resolves.toMatchObject({
+      sub: "user-1",
+      participantSessionId: "participant-session-1",
     });
   });
 
@@ -70,6 +98,7 @@ describe("worker room auth", () => {
         sub: "user-1",
         roomId: "room-1",
         role: "host",
+        participantSessionId: "participant-session-1",
         capabilities: {
           hostPlanCode: "pro",
           maxParticipants: 15,
@@ -108,6 +137,7 @@ describe("worker room auth", () => {
         sub: "user-1",
         roomId: "room-1",
         role: "host",
+        participantSessionId: "participant-session-1",
       },
       env,
     );
@@ -122,11 +152,21 @@ describe("worker room auth", () => {
   it("rejects bounded room token claims before they reach room state", async () => {
     const oversizedRoomId = "r".repeat(MAX_ROOM_ID_CHARS + 1);
     const oversizedRoomToken = await signRoomTokenForTest(
-      { sub: "user-1", roomId: oversizedRoomId, role: "member" },
+      {
+        sub: "user-1",
+        roomId: oversizedRoomId,
+        role: "member",
+        participantSessionId: "participant-session-1",
+      },
       env,
     );
     const oversizedParticipantToken = await signRoomTokenForTest(
-      { sub: "u".repeat(MAX_PARTICIPANT_ID_CHARS + 1), roomId: "room-1", role: "member" },
+      {
+        sub: "u".repeat(MAX_PARTICIPANT_ID_CHARS + 1),
+        roomId: "room-1",
+        role: "member",
+        participantSessionId: "participant-session-1",
+      },
       env,
     );
 
@@ -140,6 +180,7 @@ describe("worker room auth", () => {
         sub: "user-1",
         roomId: "room-1",
         role: "member",
+        participantSessionId: "participant-session-1",
         displayName: "D".repeat(MAX_DISPLAY_NAME_CHARS + 1),
       },
       env,
@@ -149,6 +190,7 @@ describe("worker room auth", () => {
         sub: "user-1",
         roomId: "room-1",
         role: "member",
+        participantSessionId: "participant-session-1",
         avatarUrl: `https://example.com/${"x".repeat(MAX_URL_CHARS)}`,
       },
       env,
@@ -159,15 +201,59 @@ describe("worker room auth", () => {
   });
 
   it("rejects otherwise valid room tokens signed with non-HS256 algorithms", async () => {
-    const token = await new SignJWT({ roomId: "room-1", role: "member", typ: "room" })
+    const token = await new SignJWT({
+      roomId: "room-1",
+      role: "member",
+      participantSessionId: "participant-session-1",
+      typ: "room",
+    })
       .setProtectedHeader({ alg: "HS384" })
       .setSubject("user-1")
-      .setAudience("anidachi-worker")
+      .setIssuer(ROOM_TOKEN_ISSUER)
+      .setAudience(ROOM_TOKEN_AUDIENCE)
       .setIssuedAt()
       .setExpirationTime("30m")
       .sign(testSecret());
 
     await expect(verifyRoomToken(token, "room-1", env)).resolves.toBeNull();
+  });
+
+  it("rejects room tokens without one bounded Web-issued participant session", async () => {
+    for (const participantSessionId of [
+      undefined,
+      "",
+      "x".repeat(MAX_SESSION_ID_CHARS + 1),
+    ]) {
+      const token = await new SignJWT({
+        roomId: "room-1",
+        role: "member",
+        participantSessionId,
+        typ: "room",
+      })
+        .setProtectedHeader({ alg: "HS256" })
+        .setSubject("user-1")
+        .setIssuer(ROOM_TOKEN_ISSUER)
+        .setAudience(ROOM_TOKEN_AUDIENCE)
+        .setIssuedAt()
+        .setExpirationTime("30m")
+        .sign(testSecret());
+      await expect(verifyRoomToken(token, "room-1", env)).resolves.toBeNull();
+    }
+
+    const wrongIssuer = await new SignJWT({
+      roomId: "room-1",
+      role: "member",
+      participantSessionId: "participant-session-1",
+      typ: "room",
+    })
+      .setProtectedHeader({ alg: "HS256" })
+      .setSubject("user-1")
+      .setIssuer("attacker")
+      .setAudience(ROOM_TOKEN_AUDIENCE)
+      .setIssuedAt()
+      .setExpirationTime("30m")
+      .sign(testSecret());
+    await expect(verifyRoomToken(wrongIssuer, "room-1", env)).resolves.toBeNull();
   });
 
   it("signs one purpose-bound room history authority with exact expiry and a unique id", async () => {
@@ -245,7 +331,12 @@ describe("worker room auth", () => {
       env,
     );
     const roomToken = await signRoomTokenForTest(
-      { sub: "user-1", roomId: "room-1", role: "host" },
+      {
+        sub: "user-1",
+        roomId: "room-1",
+        role: "host",
+        participantSessionId: "participant-session-1",
+      },
       env,
     );
 

@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  clearRoomSessionForClosedTab,
+  confirmRoomSessionForTab,
+  discardPreparedRoomSessionIfMatch,
   handleRoomSessionStorageRuntimeMessage,
   handleRoomSessionStorageMessage,
+  loadRoomSessionForTab,
+  prepareRoomSessionForTab,
   ROOM_SESSION_INSTALL_ID_STORAGE_KEY as INSTALL_ID_STORAGE_KEY,
   migrateLegacyRoomSession,
   ROOM_SESSION_STORAGE_MESSAGE_TYPE as ROOM_SESSION_MESSAGE_TYPE,
@@ -111,6 +116,219 @@ function expectRecord(response: RoomSessionResponse): RoomSessionRecord {
 }
 
 describe("background-owned room session storage", () => {
+  it("loads the trusted confirmed record before closed-tab cleanup", async () => {
+    const dependencies = backgroundDependencies();
+    const record = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-close", ownerUserId: "user-a" }),
+        sender(2),
+        dependencies,
+      ),
+    );
+
+    await expect(loadRoomSessionForTab(2, dependencies)).resolves.toEqual(record);
+    await expect(clearRoomSessionForClosedTab(2, record, dependencies)).resolves.toBe(true);
+    await expect(loadRoomSessionForTab(2, dependencies)).resolves.toBeNull();
+  });
+
+  it("drops an oversized confirmed record instead of restoring corrupt authority", async () => {
+    const dependencies = backgroundDependencies();
+    await handleRoomSessionStorageMessage(
+      message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+      sender(1),
+      dependencies,
+    );
+    const [key] = dependencies.sessionStorage.values.keys();
+    const record = dependencies.sessionStorage.values.get(key ?? "") as RoomSessionRecord;
+    dependencies.sessionStorage.values.set(key ?? "", {
+      ...record,
+      participantSessionId: "x".repeat(129),
+    });
+
+    await expect(loadRoomSessionForTab(1, dependencies)).resolves.toBeNull();
+    expect(dependencies.sessionStorage.values.size).toBe(0);
+  });
+
+  it("does not let an old tab-close cleanup erase a same-room takeover session", async () => {
+    const dependencies = backgroundDependencies();
+    const oldRecord = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-old", ownerUserId: "user-a" }),
+        sender(7),
+        dependencies,
+      ),
+    );
+    const takeover = await prepareRoomSessionForTab(
+      7,
+      { ownerUserId: "user-a", roomId: "room-old", forceNew: true },
+      dependencies,
+    );
+    const replacement = await confirmRoomSessionForTab(7, takeover, "room-old", dependencies);
+
+    await expect(clearRoomSessionForClosedTab(7, oldRecord, dependencies)).resolves.toBe(false);
+    await expect(loadRoomSessionForTab(7, dependencies)).resolves.toEqual(replacement);
+  });
+
+  it("clears the same exact session after a mutable local update", async () => {
+    const dependencies = backgroundDependencies();
+    const snapshot = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-same", ownerUserId: "user-a" }),
+        sender(10),
+        dependencies,
+      ),
+    );
+    const updated = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-same", ownerUserId: "user-a" }),
+        sender(10),
+        dependencies,
+      ),
+    );
+    expect(updated.revision).toBeGreaterThan(snapshot.revision);
+    expect(updated.participantSessionId).toBe(snapshot.participantSessionId);
+
+    await expect(clearRoomSessionForClosedTab(10, snapshot, dependencies)).resolves.toBe(true);
+    await expect(loadRoomSessionForTab(10, dependencies)).resolves.toBeNull();
+  });
+
+  it("prepares a bounded candidate before admission and confirms that exact candidate", async () => {
+    const dependencies = backgroundDependencies();
+    const prepared = await prepareRoomSessionForTab(
+      3,
+      { ownerUserId: "user-a", roomId: "room-a" },
+      dependencies,
+    );
+
+    expect(prepared).toMatchObject({
+      version: 1,
+      ownerUserId: "user-a",
+      roomId: "room-a",
+    });
+    expect(prepared.participantSessionId).toMatch(/^session-/);
+    expect(prepared.participantSessionId.length).toBeLessThanOrEqual(128);
+
+    await expect(
+      confirmRoomSessionForTab(3, prepared, "room-a", dependencies),
+    ).resolves.toMatchObject({
+      roomId: "room-a",
+      ownerUserId: "user-a",
+      participantSessionId: prepared.participantSessionId,
+    });
+  });
+
+  it("reuses the confirmed same-tab session and creates a new deliberate takeover candidate", async () => {
+    const dependencies = backgroundDependencies();
+    const first = await prepareRoomSessionForTab(
+      4,
+      { ownerUserId: "user-a", roomId: "room-a" },
+      dependencies,
+    );
+    const confirmed = await confirmRoomSessionForTab(4, first, "room-a", dependencies);
+    const retry = await prepareRoomSessionForTab(
+      4,
+      { ownerUserId: "user-a", roomId: "room-a" },
+      dependencies,
+    );
+    const takeover = await prepareRoomSessionForTab(
+      4,
+      { ownerUserId: "user-a", roomId: "room-a", forceNew: true },
+      dependencies,
+    );
+
+    expect(retry.participantSessionId).toBe(confirmed?.participantSessionId);
+    expect(takeover.participantSessionId).not.toBe(confirmed?.participantSessionId);
+  });
+
+  it("keeps a confirmed room until exact admission confirms its replacement", async () => {
+    const dependencies = backgroundDependencies();
+    const prepared = await prepareRoomSessionForTab(
+      6,
+      { ownerUserId: "user-a", roomId: "room-a" },
+      dependencies,
+    );
+    const confirmed = await confirmRoomSessionForTab(6, prepared, "room-a", dependencies);
+
+    const replacement = await prepareRoomSessionForTab(
+      6,
+      { ownerUserId: "user-a", roomId: "room-b" },
+      dependencies,
+    );
+    const loaded = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "load", currentUserId: "user-a" }),
+        sender(6),
+        dependencies,
+      ),
+    );
+    expect(loaded).toEqual(confirmed);
+
+    await expect(
+      confirmRoomSessionForTab(6, replacement, "room-b", dependencies),
+    ).resolves.toMatchObject({
+      roomId: "room-b",
+      ownerUserId: "user-a",
+      participantSessionId: replacement.participantSessionId,
+      voiceMode: "push-to-talk",
+    });
+  });
+
+  it("discards only the matching unconfirmed candidate and ignores stale confirmation", async () => {
+    const dependencies = backgroundDependencies();
+    const stale = await prepareRoomSessionForTab(
+      8,
+      { ownerUserId: "user-a", roomId: null },
+      dependencies,
+    );
+    const winner = await prepareRoomSessionForTab(
+      8,
+      { ownerUserId: "user-a", roomId: null },
+      dependencies,
+    );
+
+    expect(winner.participantSessionId).toBe(stale.participantSessionId);
+    expect(winner.preparationId).not.toBe(stale.preparationId);
+    await expect(
+      discardPreparedRoomSessionIfMatch(8, stale, dependencies),
+    ).resolves.toBe(false);
+    await expect(
+      confirmRoomSessionForTab(8, stale, "room-stale", dependencies),
+    ).resolves.toBeNull();
+    await expect(
+      confirmRoomSessionForTab(8, winner, "room-winner", dependencies),
+    ).resolves.toMatchObject({
+      roomId: "room-winner",
+      participantSessionId: winner.participantSessionId,
+    });
+  });
+
+  it("failed admission removes its candidate without clearing the confirmed room", async () => {
+    const dependencies = backgroundDependencies();
+    const first = await prepareRoomSessionForTab(
+      9,
+      { ownerUserId: "user-a", roomId: "room-a" },
+      dependencies,
+    );
+    const confirmed = await confirmRoomSessionForTab(9, first, "room-a", dependencies);
+    const retry = await prepareRoomSessionForTab(
+      9,
+      { ownerUserId: "user-a", roomId: "room-a" },
+      dependencies,
+    );
+
+    await expect(
+      discardPreparedRoomSessionIfMatch(9, retry, dependencies),
+    ).resolves.toBe(true);
+    const loaded = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "load", currentUserId: "user-a" }),
+        sender(9),
+        dependencies,
+      ),
+    );
+    expect(loaded).toEqual(confirmed);
+  });
+
   it("keeps the runtime message channel open until background persistence responds", async () => {
     const dependencies = backgroundDependencies();
     let resolveResponse: (response: RoomSessionResponse) => void = () => {};
@@ -480,7 +698,7 @@ describe("legacy page room session migration", () => {
       revision: 1,
       roomId: "room-a",
       ownerUserId: "user-a",
-      participantSessionId: "session-stable-a",
+      participantSessionId: "session-uuid-1",
       voiceMode: "push-to-talk",
     });
     expect(pageSessionStorage.values.size).toBe(0);
@@ -505,7 +723,7 @@ describe("legacy page room session migration", () => {
       revision: 1,
       roomId: "legacy-room",
       ownerUserId: "user-a",
-      participantSessionId: "legacy-session",
+      participantSessionId: "session-uuid-1",
       voiceMode: "push-to-talk",
     });
     expect(pageSessionStorage.values.size).toBe(0);
@@ -532,7 +750,7 @@ describe("legacy page room session migration", () => {
     expect(record).toMatchObject({
       roomId: "legacy-room",
       ownerUserId: "user-a",
-      participantSessionId: "complete-session",
+      participantSessionId: "session-uuid-1",
     });
     expect(pageSessionStorage.values.size).toBe(0);
   });
@@ -560,5 +778,55 @@ describe("legacy page room session migration", () => {
         ["anidachi:participant-session-id", "legacy-session"],
       ]),
     );
+  });
+
+  it("keeps a trusted current record instead of overwriting it from stale page state", async () => {
+    const dependencies = backgroundDependencies();
+    const existing = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-current", ownerUserId: "user-a" }),
+        sender(48),
+        dependencies,
+      ),
+    );
+    const pageSessionStorage = new PageSessionStorage();
+    pageSessionStorage.setItem("anidachi:room-id", "room-stale");
+    pageSessionStorage.setItem("anidachi:room-owner-id", "user-a");
+    pageSessionStorage.setItem("anidachi:participant-session-id", "stale-session");
+
+    const migrated = await migrateLegacyRoomSession("user-a", {
+      pageSessionStorage,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(48), dependencies),
+    });
+
+    expect(migrated).toEqual(existing);
+    expect(pageSessionStorage.values.size).toBe(0);
+  });
+
+  it("does not trust one cloned legacy session id as two tab identities", async () => {
+    const dependencies = backgroundDependencies();
+    const firstPage = new PageSessionStorage();
+    const duplicatedPage = new PageSessionStorage();
+    for (const page of [firstPage, duplicatedPage]) {
+      page.setItem("anidachi:room-id", "legacy-room");
+      page.setItem("anidachi:room-owner-id", "user-a");
+      page.setItem("anidachi:participant-session-id", "cloned-session");
+    }
+
+    const first = await migrateLegacyRoomSession("user-a", {
+      pageSessionStorage: firstPage,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(49), dependencies),
+    });
+    const duplicate = await migrateLegacyRoomSession("user-a", {
+      pageSessionStorage: duplicatedPage,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(50), dependencies),
+    });
+
+    expect(first?.participantSessionId).toMatch(/^session-/);
+    expect(duplicate?.participantSessionId).toMatch(/^session-/);
+    expect(duplicate?.participantSessionId).not.toBe(first?.participantSessionId);
   });
 });
