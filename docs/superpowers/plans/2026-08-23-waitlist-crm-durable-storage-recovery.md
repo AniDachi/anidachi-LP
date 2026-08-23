@@ -23,8 +23,9 @@ Node test runner, Vercel CLI, pnpm 11.2.2, Node 22.23.1.
 **Status (2026-08-24):** Complete. Tasks 1-7 are implemented and verified from
 lossless reconciliation through Production. Promotion PR `#240` merged to
 `main` as `8cc5e4e6641ca55f0b62a320e8726de67900ce34`; fresh Production
-deployment `dpl_DCt6ocJBbEJ848rfaC38W5bhbdyg` still returns and renders 685
-waitlist leads after a full redeploy.
+deployment `dpl_DCt6ocJBbEJ848rfaC38W5bhbdyg` still returned and rendered the
+accepted 685-lead snapshot after a full redeploy. A later distinct live signup
+then advanced the public count to 686, confirming ongoing durable writes.
 
 ## Global Constraints
 
@@ -335,8 +336,9 @@ Final Production acceptance on 2026-08-24:
   `dpl_AX8MKEAcgjAXJpPnVUXZgqfNN14D` remains the pre-cutover deployment rollback
   anchor. The legacy public CRM objects remain untouched as independent data
   rollback evidence.
-- The post-Production-write private authority remains at 687 contacts and 685
-  survey leads. Its final conditional rollback anchors are:
+- At the controlled Production acceptance checkpoint, the private authority
+  contained 687 contacts and 685 survey leads. Its acceptance-time conditional
+  data anchors were:
 
   | Object | ETag | SHA-256 |
   | --- | --- | --- |
@@ -345,3 +347,16 @@ Final Production acceptance on 2026-08-24:
   | `kreatli-crm/meta.json` | `"6059193a09507919c77f1195f7137bbb"` | `e43400fdcb05e1f1b40054b8b4c46aa68d0e9368df8bc4dc5bb16b2afb7cf13a` |
   | `kreatli-crm/contact-messages.jsonl` | `"b642d14e94b09705c1e74b622f53fd70"` | `e82a7837f2d6877db29db654524bdba4882cd650637e2b448cb22c373ca5d133` |
   | `kreatli-crm/feature-requests.jsonl` | `"b488331bf438724d3087d53877d27989"` | `d58b87cc814ecd0895e16ef6575f93c12f749659ca40415923fe209e9eea3053` |
+
+- During the docs closeout, a public `POST /api/subscribe-interest` returned
+  HTTP 200 and created lead position 686 at `2026-08-23T18:13:49.881Z`. Its
+  one-way email hash differed from all three recovered leads and the controlled
+  synthetic identity; no PII was printed or persisted outside the CRM. The
+  private authority then contained 688 contacts and 686 survey leads, with
+  `contacts.json` ETag `"da6d142cfaed2755d5347d769f31878e"` and SHA-256
+  `609f3eec1b42636b5c03cd0793dbdaed89d49166909a93f0c7396a74cdba0876`.
+  Final docs-triggered Production deployment
+  `dpl_HcqvVAnF9V4EnSHjYekrpmKfQEUY` returned HTTP 200 with 686 and rendered
+  686 in the Hero. These counts are live product data, not fixed constants; the
+  acceptance checkpoints above explain the transition without freezing future
+  growth.
