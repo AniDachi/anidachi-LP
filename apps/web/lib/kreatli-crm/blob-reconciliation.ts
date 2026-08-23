@@ -257,6 +257,14 @@ function mergeJsonl(
     byId.set(copy.id as string, copy);
   }
 
+  if (destinationText !== null && isDeepStrictEqual(merged, destination)) {
+    return {
+      text: destinationText,
+      records: merged.length,
+      surveyLeads: null,
+    };
+  }
+
   return {
     text: merged.length
       ? `${merged.map((record) => JSON.stringify(record)).join("\n")}\n`

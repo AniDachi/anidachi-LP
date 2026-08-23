@@ -147,6 +147,17 @@ describe("Kreatli CRM object reconciliation", () => {
     );
   });
 
+  it("preserves destination JSONL bytes when the logical records are unchanged", () => {
+    const first = { id: "first", value: 1 };
+    const second = { id: "second", value: 2 };
+    const existing = `${JSON.stringify(first)}\r\n${JSON.stringify(second)}\r\n`;
+
+    const merged = mergeKreatliCrmObject(MESSAGES, existing, existing);
+
+    assert.equal(merged.text, existing);
+    assert.equal(merged.records, 2);
+  });
+
   it("merges metadata without moving the durable timestamp backwards", () => {
     const merged = mergeKreatliCrmObject(
       "kreatli-crm/meta.json",
