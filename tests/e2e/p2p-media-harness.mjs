@@ -48,7 +48,7 @@ const HARNESS_DEBUG_FILTERS = (process.env.HARNESS_DEBUG_FILTER ?? "")
 function b64url(input) {
 	return Buffer.from(input).toString("base64url");
 }
-function signRoomToken(sub, role) {
+function signRoomToken(sub, role, participantSessionId) {
 	const header = b64url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
 	const now = Math.floor(Date.now() / 1000);
 	const payload = b64url(
@@ -56,9 +56,11 @@ function signRoomToken(sub, role) {
 			sub,
 			roomId: ROOM_ID,
 			role,
+			participantSessionId,
 			displayName: sub,
 			avatarUrl: null,
 			typ: "room",
+			iss: "anidachi-web",
 			aud: "anidachi-worker",
 			iat: now,
 			exp: now + 1800,
@@ -294,7 +296,11 @@ async function startPeer(
 	{ sub, role, sessionId, iceServers, cameraEnabled = true },
 ) {
 	// Token role is the auth role (host|member); the participant role is host|viewer.
-	const token = signRoomToken(sub, role === "host" ? "host" : "member");
+	const token = signRoomToken(
+		sub,
+		role === "host" ? "host" : "member",
+		sessionId,
+	);
 	await page.evaluate(
 		async ({ roomId, token, sub, role, sessionId, iceServers, cameraEnabled }) => {
 			await window.AnidachiHarness.start({
@@ -573,7 +579,7 @@ async function main() {
 		let activeIceServers = HARNESS_ICE_SERVERS_FROM_ENV;
 		if (HARNESS_USE_WORKER_ICE_SERVERS) {
 			activeIceServers = await loadIceServersFromWorker(
-				signRoomToken("host", "host"),
+				signRoomToken("host", "host", "host-sess"),
 			);
 		}
 		if (HARNESS_FORCE_RELAY && !hasTurnServer(activeIceServers)) {

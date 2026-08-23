@@ -797,7 +797,7 @@ remote branch was mutated.
 - Create:
   `.superpowers/sdd/2026-08-23-single-active-room-session/task-7-local-evidence.md`
 
-- [ ] **Step 1: Extend the deterministic room harness**
+- [x] **Step 1: Extend the deterministic room harness**
 
 Add scenarios for:
 
@@ -816,7 +816,14 @@ Add scenarios for:
 
 Use injected clocks where possible; do not make unit tests sleep for 60 seconds.
 
-- [ ] **Step 2: Run the focused matrix**
+Implementation note: the required matrix was traced to its authoritative
+deterministic layers instead of duplicating PostgreSQL concurrency inside a
+Worker-only harness. Existing pgTAP, Web, Worker unit/runtime, extension, and
+live WebSocket scenarios already cover the twelve cases. The real P2P harness
+fixture was updated to carry the production issuer and the exact session bound
+to JOIN; Worker verification stayed strict.
+
+- [x] **Step 2: Run the focused matrix**
 
 ```bash
 pnpm --filter @anidachi/protocol test
@@ -829,7 +836,7 @@ pnpm harness:rooms
 
 Expected: every lifecycle/race case is deterministic and green.
 
-- [ ] **Step 3: Run repository quality gates**
+- [x] **Step 3: Run repository quality gates**
 
 ```bash
 pnpm check
@@ -844,7 +851,7 @@ git status --short
 Expected: all gates pass; only intentional source/docs/team Graphify artifacts
 are changed. The build retains narrow staging permissions and no secrets.
 
-- [ ] **Step 4: Run the real WebRTC regression harness**
+- [x] **Step 4: Run the real WebRTC regression harness**
 
 ```bash
 npm --prefix tests/e2e install
@@ -856,7 +863,7 @@ Expected: existing direct-first media/signaling flows stay green. Forced TURN is
 not required because ICE/TURN behavior is unchanged; any P2P regression blocks
 the task.
 
-- [ ] **Step 5: Review the exact diff and commit harness/evidence**
+- [x] **Step 5: Review the exact diff and commit harness/evidence**
 
 ```bash
 git diff --stat origin/staging...HEAD
