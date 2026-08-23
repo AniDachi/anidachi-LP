@@ -60,7 +60,7 @@ function signRoomToken(sub, role, participantSessionId) {
 			displayName: sub,
 			avatarUrl: null,
 			typ: "room",
-			iss: "anidachi-web",
+			iss: "anidachi-auth",
 			aud: "anidachi-worker",
 			iat: now,
 			exp: now + 1800,

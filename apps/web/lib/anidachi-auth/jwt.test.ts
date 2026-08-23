@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { decodeJwt, decodeProtectedHeader, SignJWT } from "jose";
+import { ROOM_TOKEN_AUDIENCE, ROOM_TOKEN_ISSUER } from "@anidachi/protocol";
 import {
   signExtensionAccessToken,
   verifyExtensionAccessToken,
@@ -186,7 +187,10 @@ test("room tokens bind the exact participant tab session", async () => {
       participantSessionId: "participant-session-1",
     });
 
-    assert.equal(decodeJwt(token).participantSessionId, "participant-session-1");
+    const claims = decodeJwt(token);
+    assert.equal(claims.iss, ROOM_TOKEN_ISSUER);
+    assert.equal(claims.aud, ROOM_TOKEN_AUDIENCE);
+    assert.equal(claims.participantSessionId, "participant-session-1");
     assert.deepEqual(await verifyRoomToken(token), {
       sub: "user-1",
       roomId: "room-1",
@@ -203,8 +207,8 @@ test("room-token verification fails closed without one bounded session binding",
   await withJwtSecret(async () => {
     const now = Math.floor(Date.now() / 1000);
     const validClaims = {
-      iss: "anidachi-auth",
-      aud: "anidachi-worker",
+      iss: ROOM_TOKEN_ISSUER,
+      aud: ROOM_TOKEN_AUDIENCE,
       typ: "room",
       sub: "user-1",
       iat: now,

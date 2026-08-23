@@ -6,6 +6,8 @@ import {
   MAX_SESSION_ID_CHARS,
   MAX_URL_CHARS,
   ROOM_HISTORY_OFFLINE_GRACE_SECONDS,
+  ROOM_TOKEN_AUDIENCE,
+  ROOM_TOKEN_ISSUER,
   RoomHistoryAttestationClaimsSchema,
   RoomCapabilitiesSchema,
   type RoomCapabilities,
@@ -48,8 +50,8 @@ export async function verifyRoomToken(
     if (!isBoundedId(expectedRoomId, MAX_ROOM_ID_CHARS)) return null;
     const { payload } = await jwtVerify(token, getSecret(env), {
       algorithms: ["HS256"],
-      issuer: "anidachi-web",
-      audience: "anidachi-worker",
+      issuer: ROOM_TOKEN_ISSUER,
+      audience: ROOM_TOKEN_AUDIENCE,
       requiredClaims: ["sub", "iat", "exp"],
     });
     if (payload.typ !== "room") return null;
@@ -181,8 +183,8 @@ export async function signRoomTokenForTest(
   return new SignJWT(claims)
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(params.sub)
-    .setIssuer("anidachi-web")
-    .setAudience("anidachi-worker")
+    .setIssuer(ROOM_TOKEN_ISSUER)
+    .setAudience(ROOM_TOKEN_AUDIENCE)
     .setIssuedAt()
     .setExpirationTime("30m")
     .sign(getSecret(env));

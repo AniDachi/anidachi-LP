@@ -1,5 +1,9 @@
 import { SignJWT, jwtVerify, type JWTPayload } from "jose";
-import { RoomSessionAdmissionInputSchema } from "@anidachi/protocol";
+import {
+  ROOM_TOKEN_AUDIENCE,
+  ROOM_TOKEN_ISSUER,
+  RoomSessionAdmissionInputSchema,
+} from "@anidachi/protocol";
 import {
   isRoomCapabilities,
   normalizePlanCode,
@@ -113,9 +117,9 @@ export async function signRoomToken(
     typ: "room",
   })
     .setProtectedHeader({ alg: "HS256" })
-    .setIssuer(ANIDACHI_AUTH_ISSUER)
+    .setIssuer(ROOM_TOKEN_ISSUER)
     .setSubject(payload.sub)
-    .setAudience("anidachi-worker")
+    .setAudience(ROOM_TOKEN_AUDIENCE)
     .setIssuedAt()
     .setExpirationTime(`${ttl}s`)
     .sign(getJwtSecret());
@@ -127,11 +131,11 @@ export async function verifyRoomToken(
   try {
     const { payload } = await jwtVerify(token, getJwtSecret(), {
       algorithms: ["HS256"],
-      issuer: ANIDACHI_AUTH_ISSUER,
-      audience: "anidachi-worker",
+      issuer: ROOM_TOKEN_ISSUER,
+      audience: ROOM_TOKEN_AUDIENCE,
       requiredClaims: ["iss", "aud", "sub", "iat", "exp"],
     });
-    if (payload.aud !== "anidachi-worker") return null;
+    if (payload.aud !== ROOM_TOKEN_AUDIENCE) return null;
     if (payload.typ !== "room") return null;
     if (
       typeof payload.sub !== "string" ||

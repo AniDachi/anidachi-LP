@@ -7,6 +7,8 @@ import {
   MAX_SESSION_ID_CHARS,
   ROOM_HISTORY_OFFLINE_GRACE_SECONDS,
   MAX_URL_CHARS,
+  ROOM_TOKEN_AUDIENCE,
+  ROOM_TOKEN_ISSUER,
 } from "@anidachi/protocol";
 import {
   signRoomHistoryAttestation,
@@ -38,8 +40,8 @@ async function signLegacyRoomTokenForTest(): Promise<string> {
   })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject("user-1")
-    .setIssuer("anidachi-web")
-    .setAudience("anidachi-worker")
+    .setIssuer(ROOM_TOKEN_ISSUER)
+    .setAudience(ROOM_TOKEN_AUDIENCE)
     .setIssuedAt()
     .setExpirationTime("30m")
     .sign(testSecret());
@@ -66,6 +68,27 @@ describe("worker room auth", () => {
       participantSessionId: "participant-session-1",
       displayName: "Alina",
       avatarUrl: "https://example.com/avatar.png",
+    });
+  });
+
+  it("accepts the canonical Web-issued room token contract", async () => {
+    const token = await new SignJWT({
+      roomId: "room-1",
+      role: "member",
+      participantSessionId: "participant-session-1",
+      typ: "room",
+    })
+      .setProtectedHeader({ alg: "HS256" })
+      .setSubject("user-1")
+      .setIssuer("anidachi-auth")
+      .setAudience("anidachi-worker")
+      .setIssuedAt()
+      .setExpirationTime("30m")
+      .sign(testSecret());
+
+    await expect(verifyRoomToken(token, "room-1", env)).resolves.toMatchObject({
+      sub: "user-1",
+      participantSessionId: "participant-session-1",
     });
   });
 
@@ -186,8 +209,8 @@ describe("worker room auth", () => {
     })
       .setProtectedHeader({ alg: "HS384" })
       .setSubject("user-1")
-      .setIssuer("anidachi-web")
-      .setAudience("anidachi-worker")
+      .setIssuer(ROOM_TOKEN_ISSUER)
+      .setAudience(ROOM_TOKEN_AUDIENCE)
       .setIssuedAt()
       .setExpirationTime("30m")
       .sign(testSecret());
@@ -209,8 +232,8 @@ describe("worker room auth", () => {
       })
         .setProtectedHeader({ alg: "HS256" })
         .setSubject("user-1")
-        .setIssuer("anidachi-web")
-        .setAudience("anidachi-worker")
+        .setIssuer(ROOM_TOKEN_ISSUER)
+        .setAudience(ROOM_TOKEN_AUDIENCE)
         .setIssuedAt()
         .setExpirationTime("30m")
         .sign(testSecret());
@@ -226,7 +249,7 @@ describe("worker room auth", () => {
       .setProtectedHeader({ alg: "HS256" })
       .setSubject("user-1")
       .setIssuer("attacker")
-      .setAudience("anidachi-worker")
+      .setAudience(ROOM_TOKEN_AUDIENCE)
       .setIssuedAt()
       .setExpirationTime("30m")
       .sign(testSecret());
