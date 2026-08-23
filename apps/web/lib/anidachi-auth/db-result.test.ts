@@ -19,3 +19,11 @@ test("database result does not turn a Supabase failure into a missing row", () =
     /Failed to validate refresh token: connection unavailable/,
   );
 });
+
+test("database result keeps structured RPC payloads opaque for a domain parser", () => {
+  const rows = [{ outcome: "conflict", active_room: { roomId: "room-one" } }];
+  assert.equal(
+    databaseResultOrThrow("claim active room", { data: rows, error: null }),
+    rows,
+  );
+});

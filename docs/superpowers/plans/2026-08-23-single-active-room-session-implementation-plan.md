@@ -221,7 +221,7 @@ git commit -m "feat(protocol): define active room session contracts"
 **Files:**
 
 - Create:
-  `apps/web/supabase/migrations/20260823010000_single_active_room_sessions.sql`
+  `apps/web/supabase/migrations/20260823090624_single_active_room_sessions.sql`
 - Create:
   `apps/web/supabase/tests/single_active_room_sessions.test.sql`
 - Modify:
@@ -231,7 +231,7 @@ git commit -m "feat(protocol): define active room session contracts"
 - Create: `apps/web/lib/anidachi-auth/active-room-session.test.ts`
 - Modify: `apps/web/lib/anidachi-auth/db-result.test.ts`
 
-- [ ] **Step 1: Write pgTAP tests before the migration implementation**
+- [x] **Step 1: Write pgTAP tests before the migration implementation**
 
 The SQL tests must prove:
 
@@ -258,7 +258,7 @@ supabase test db --local --workdir apps/web \
 
 Expected: the new test fails because the table/functions do not exist.
 
-- [ ] **Step 2: Implement the additive migration**
+- [x] **Step 2: Implement the additive migration**
 
 Create `public.active_room_sessions` exactly as specified, plus a
 `room_id` index. Enable RLS, add no public policies, revoke table/function
@@ -285,7 +285,7 @@ Every function must:
 Do not expose the table through a client policy and do not use application-side
 “check then insert” as enforcement.
 
-- [ ] **Step 3: Add typed Web database parsers and helpers**
+- [x] **Step 3: Add typed Web database parsers and helpers**
 
 Keep raw Supabase result parsing in a narrow module. Represent outcomes as:
 
@@ -296,7 +296,7 @@ claimed | reused | conflict | released | stale
 A conflict parser returns only room ID, role, safe provider, and title. Treat an
 unexpected RPC shape as a server error, never as permission to continue.
 
-- [ ] **Step 4: Run all local database and Web helper tests**
+- [x] **Step 4: Run all local database and Web helper tests**
 
 ```bash
 supabase db reset --workdir apps/web
@@ -309,7 +309,7 @@ git diff --check
 Expected: migrations apply from zero, every pgTAP test passes, and Web helpers
 pass without a linked/staging mutation.
 
-- [ ] **Step 5: Review migration safety and commit**
+- [x] **Step 5: Review migration safety and commit**
 
 Record:
 
@@ -322,6 +322,17 @@ Record:
 git add apps/web/supabase apps/web/lib/anidachi-auth
 git commit -m "feat(web): add atomic active room authority"
 ```
+
+Implementation note: Supabase CLI generated the migration timestamp above. The
+migration is additive for the old runtime: it creates a server-only assignment
+table and versioned RPCs while leaving the existing direct room create/connect
+paths intact until Task 3 cuts consumers over. A runtime rollback therefore
+switches consumers back without destroying the table or room data; no
+destructive down-migration is used. The same migration also includes the narrow
+exact-session host-lobby fallback required when a tab closes after claiming but
+before its first Worker JOIN; it cannot end a live or superseded session. Local
+replay, all 461 pgTAP assertions,
+the database linter, all 336 Web tests, and Web type-check passed before commit.
 
 ---
 
