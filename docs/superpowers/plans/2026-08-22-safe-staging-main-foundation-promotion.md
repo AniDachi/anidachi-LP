@@ -5,10 +5,12 @@
 > subagents for this release unless the user explicitly authorizes delegation.
 > Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Status:** Approved for careful preparation on 2026-08-22. No PR merge is
-authorized in advance: every merge into `staging` or `main` requires a fresh
-explicit user approval immediately before it. This remains a technical
-`main`-baseline operation, not a public launch or extension publication.
+**Status:** Tasks 1-8 completed successfully on 2026-08-23. The technical
+`main` baseline is deployed and verified; Task 9 closeout documentation is
+moving through the normal docs-only workflow. No public launch or extension
+publication occurred. Every completed merge received a fresh explicit user
+approval immediately beforehand, and the same rule still applies to the
+remaining closeout-doc merges.
 
 **Goal:** Move the tested AniDachi technical foundation from `staging` to
 `main` without a database/runtime race, without publishing an extension, and
@@ -25,6 +27,60 @@ pending migration files, and promote that tested tree through a second PR.
 2.111.0, PostgreSQL 17, Vercel Git deployments, Cloudflare Workers/Wrangler,
 Node 22.23.1, pnpm 11.2.2, WXT, Vitest, pgTAP, and the existing room/P2P
 harnesses.
+
+## Observed Execution Record
+
+The final frozen candidate was
+`4104d4bd2fe33d3d7700fafd6c45a4fed20215d8`. Migration-only PR `#227`
+contained exactly the 13 approved migration files and merged to `main` as
+`2d12b67bc53ac516066661013ab3714836a3047c`. Production migration run
+`32616586863` applied them successfully; the old runtime remained healthy at
+Vercel rollback point `dpl_Ch1aPbRhbiKZYye4hViMGxo7Fc5m`, and no Worker or
+extension workflow was triggered by that PR.
+
+Fresh runtime PR `#228` was based on the post-migration `main`, had an empty
+migration diff, and had the same tree
+`2927c30bb89531eb7e44ee7dcde62d784fcee962` as the frozen candidate. It
+merged as final `main` SHA `20c37893b7bdd52d9f10cff254fb541580ce99de`.
+The production results were:
+
+- CI run `32617261509`: success;
+- database run `32617261512`: success, with both dry run and apply reporting
+  `Remote database is up to date`;
+- Worker run `32617261521`: success, deployment
+  `31286574-55be-4769-8bf9-0107602a400f`, version
+  `93fa62a0-4dad-4321-977e-5a67e7a3281f`, followed by a passing production
+  smoke;
+- extension run `32617261508`: success; the downloaded GitHub Actions artifact
+  validated as `Anidachi` `0.1.0`, `version_name`
+  `20c37893b7bdd52d9f10cff254fb541580ce99de-production-124`, ZIP SHA-256
+  `294927fb301b1533401f621597fa6612641f35f890c84d303467eaad190edeae`;
+- Vercel deployment `dpl_DcH4fdkGWLb5zdvbWWZ3GCeHzyHn`: Ready; production
+  `/` and `/login` returned HTTP 200;
+- production and staging Worker smokes: success; staging remained at Ready
+  deployment `dpl_26CaFCwDaUwJz9WAF4YymJoyL8Ep`;
+- Git convergence: `staging` is an ancestor of `main`, both trees match, and
+  the divergence immediately after promotion was 7 commits on `main` and zero
+  on `staging`.
+
+Production retained all 13 migration records, 33/33 public tables had full
+service-role CRUD, and 37/37 public routines had service-role execute. The
+hourly auth-artifact cleanup ran successfully at `2026-08-23 04:00 UTC` and
+removed only eligible expired/revoked artifacts in its bounded batch. Legacy
+refresh rows moved from 293 to 200; all 200 remaining rows were already cleanup
+eligible and the active legacy count was zero. No application data incident or
+rollback occurred.
+
+PR `#174` was closed without merge as superseded. Chrome Web Store was not
+accessed, and the production extension artifact was not loaded or published.
+Production extension authentication remains fail-closed until a public
+identity is approved. Private integration Blob configuration/data and TURN
+configuration were not changed. Manual two-network relay evidence remains the
+approved non-launch deferral. The prior rollback anchors remain Vercel
+`dpl_Ch1aPbRhbiKZYye4hViMGxo7Fc5m`, Worker deployment
+`5da7e90e-dcb1-42c3-8ea3-92bb5f121e2b` / version
+`471fa2a3-0e08-41f1-b2bd-fd55042e431f`, and Git SHA
+`2d12b67bc53ac516066661013ab3714836a3047c`.
 
 **Spec and operational authorities:**
 
@@ -277,13 +333,13 @@ runtime's temporary health as refresh-session continuity.
 - Produces: one durable execution authority on `staging` and one exact frozen
   candidate SHA recorded in the release evidence.
 
-- [ ] **Step 1: Incorporate the user's approved choices**
+- [x] **Step 1: Incorporate the user's approved choices**
 
 Update only the Decisions section and any directly affected stop/acceptance
 conditions. Do not broaden the promotion into UI/UX, store, legal, billing, or
 new product work.
 
-- [ ] **Step 2: Put the approved plan on a docs-only feature branch**
+- [x] **Step 2: Put the approved plan on a docs-only feature branch**
 
 From the clean current worktree:
 
@@ -308,7 +364,7 @@ Expected changed paths are exactly this plan and
 listed above if the semantic refresh actually changes them. Any Graphify cache,
 cost, HTML, wiki, scratch, or provider file is excluded.
 
-- [ ] **Step 3: Commit and merge the docs-only plan through `staging`**
+- [x] **Step 3: Commit and merge the docs-only plan through `staging`**
 
 ```bash
 git add \
@@ -331,7 +387,7 @@ Wait until the docs PR is green, report its exact two documentation paths plus
 any allowed Graphify artifacts, and request explicit user approval. Merge only
 after that approval. Do not push its commit directly to `staging`.
 
-- [ ] **Step 4: Capture and freeze the resulting `staging` head**
+- [x] **Step 4: Capture and freeze the resulting `staging` head**
 
 ```bash
 git fetch origin main staging
@@ -368,7 +424,7 @@ only change above the already accepted runtime is documentation.
 - Produces: fresh local, CI, staging, database, artifact, and harness evidence
   for the exact tree that will be promoted.
 
-- [ ] **Step 1: Verify Git and GitHub drift**
+- [x] **Step 1: Verify Git and GitHub drift**
 
 ```bash
 git fetch origin main staging
@@ -394,7 +450,7 @@ git switch --detach origin/staging
 test "$(git rev-parse HEAD)" = "$(git rev-parse origin/staging)"
 ```
 
-- [ ] **Step 2: Pin the repository runtime**
+- [x] **Step 2: Pin the repository runtime**
 
 ```bash
 fnm exec --using="$(cat .node-version)" node --version
@@ -404,7 +460,7 @@ fnm exec --using="$(cat .node-version)" pnpm install --frozen-lockfile
 
 Expected versions are Node `v22.23.1` and pnpm `11.2.2`.
 
-- [ ] **Step 3: Run the complete application gates**
+- [x] **Step 3: Run the complete application gates**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/protocol check
@@ -425,7 +481,7 @@ git diff --check
 `pnpm dev:check` prints the expected gate profile; it does not replace the
 commands above.
 
-- [ ] **Step 4: Run the pinned local database gates**
+- [x] **Step 4: Run the pinned local database gates**
 
 Use the same Supabase CLI release as GitHub Actions:
 
@@ -447,7 +503,7 @@ fnm exec --using="$(cat .node-version)" pnpm dlx supabase@2.111.0 --workdir apps
 Expected result is no pending staging migration. Never relink this local
 worktree to production.
 
-- [ ] **Step 5: Run room, WebRTC, Worker, and artifact gates**
+- [x] **Step 5: Run room, WebRTC, Worker, and artifact gates**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm harness:rooms
@@ -464,7 +520,7 @@ runtime is still `bb32e26` plus plan/index/knowledge-graph metadata. If Task 1
 reveals any runtime change, rebuild, reload, and repeat the affected two-profile
 acceptance.
 
-- [ ] **Step 6: Recheck the live staging deployment**
+- [x] **Step 6: Recheck the live staging deployment**
 
 ```bash
 gh run list --repo AniDachi/anidachi-LP --branch staging --limit 20
@@ -489,7 +545,7 @@ pass.
 - Produces: a names-only configuration matrix and a go/stop decision before any
   production merge.
 
-- [ ] **Step 1: List Vercel Production variable names without values**
+- [x] **Step 1: List Vercel Production variable names without values**
 
 ```bash
 vercel env ls production --scope georges-projects-8c4bc43a
@@ -502,7 +558,7 @@ Require the presence of core AniDachi names including
 `ANIDACHI_VAPID_*` variables. `ANIDACHI_EXTENSION_CLIENT_ID` must remain absent
 because production extension identity/auth is deliberately fail-closed.
 
-- [ ] **Step 2: List Worker and GitHub Production configuration names**
+- [x] **Step 2: List Worker and GitHub Production configuration names**
 
 ```bash
 cd apps/api
@@ -523,7 +579,7 @@ Require Worker secret names `ANIDACHI_INTERNAL_API_SECRET`,
 `WXT_VAPID_PUBLIC_KEY`, plus the existing production database and Cloudflare
 deployment secret names.
 
-- [ ] **Step 3: Enforce the deferred Private Blob boundary**
+- [x] **Step 3: Enforce the deferred Private Blob boundary**
 
 Record that `PRIVATE_INTEGRATION_BLOB_STORE_ID` and
 `PRIVATE_INTEGRATION_BLOB_READ_WRITE_TOKEN` are absent. Do not add either
@@ -544,7 +600,7 @@ Worker, protocol, or extension imports this boundary. Record the deferred
 fail-closed state in PR B and final closeout rather than calling these internal
 integrations healthy.
 
-- [ ] **Step 4: Validate production build inputs without deploying**
+- [x] **Step 4: Validate production build inputs without deploying**
 
 Run a production Worker dry run:
 
@@ -589,7 +645,7 @@ ready.
 - Produces: branch `codex/main-foundation-migrations-20260822` and a PR to
   `main` containing no runtime or documentation change.
 
-- [ ] **Step 1: Reuse the current isolated Codex worktree and branch from `main`**
+- [x] **Step 1: Reuse the current isolated Codex worktree and branch from `main`**
 
 At execution time use `superpowers:using-git-worktrees`. This task already runs
 inside a linked Codex worktree, so first prove that fact and do not create a
@@ -610,7 +666,7 @@ The branch must be created from freshly fetched `origin/main`, not from local
 `staging`. If the isolation or clean-worktree assertions fail, stop rather than
 creating or switching a branch by guesswork.
 
-- [ ] **Step 2: Restore only the exact migration set from the frozen candidate**
+- [x] **Step 2: Restore only the exact migration set from the frozen candidate**
 
 ```bash
 git restore --source=origin/staging -- \
@@ -629,7 +685,7 @@ git restore --source=origin/staging -- \
   apps/web/supabase/migrations/20260822173304_explicit_service_role_privileges.sql
 ```
 
-- [ ] **Step 3: Prove the branch contains no other change**
+- [x] **Step 3: Prove the branch contains no other change**
 
 ```bash
 git status --short
@@ -642,7 +698,7 @@ Expected count is `13`, and every line must be one of the listed migration
 paths. Any workflow, runtime, test, docs, lockfile, or generated file stops the
 task.
 
-- [ ] **Step 4: Apply the migration branch to a fresh local database**
+- [x] **Step 4: Apply the migration branch to a fresh local database**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm install --frozen-lockfile
@@ -658,7 +714,7 @@ This proves the new schema applies while the branch still contains the old
 `main` web runtime. Task 2 carries the stronger new-runtime/pgTAP/contracts
 evidence.
 
-- [ ] **Step 5: Commit, push, and open PR A**
+- [x] **Step 5: Commit, push, and open PR A**
 
 ```bash
 git add apps/web/supabase/migrations
@@ -674,7 +730,7 @@ gh pr create \
   --body "Database-first production prerequisite for the tested staging foundation. The diff is restricted to the 13 ordered Supabase migrations recorded in the promotion plan. No runtime is included. Do not merge runtime until the production migration workflow and old production runtime are verified. Rollback uses the reviewed forward/redeploy procedures; migration history and canonical data must not be edited or deleted."
 ```
 
-- [ ] **Step 6: Enforce Gate A**
+- [x] **Step 6: Enforce Gate A**
 
 Require PR A to be mergeable, up to date with `main`, green on
 `check-and-test`, and still exactly 13 migration files. Present the PR URL and
@@ -694,7 +750,7 @@ with no runtime deployment race.
 - Produces: production migration history containing all 13 files and a healthy
   old production runtime.
 
-- [ ] **Step 1: Recheck `main`, `staging`, and PR A immediately before merge**
+- [x] **Step 1: Recheck `main`, `staging`, and PR A immediately before merge**
 
 ```bash
 git fetch origin main staging
@@ -704,9 +760,9 @@ gh pr view codex/main-foundation-migrations-20260822 \
 ```
 
 Stop if either branch moved outside the approved plan-only path, the file count
-is not 12, or a required check is not successful.
+is not 13, or a required check is not successful.
 
-- [ ] **Step 2: Merge PR A with a merge commit**
+- [x] **Step 2: Merge PR A with a merge commit**
 
 ```bash
 gh pr merge codex/main-foundation-migrations-20260822 \
@@ -714,7 +770,7 @@ gh pr merge codex/main-foundation-migrations-20260822 \
   --merge
 ```
 
-- [ ] **Step 3: Watch the production database workflow to completion**
+- [x] **Step 3: Watch the production database workflow to completion**
 
 ```bash
 gh run list --repo AniDachi/anidachi-LP --branch main --limit 20
@@ -747,7 +803,7 @@ If the bounded-read or resource-bound migration hits its documented ten-second
 lock timeout, leave runtime stopped, allow active writers to drain, and rerun
 the same workflow. Any other failure stops the plan for diagnosis.
 
-- [ ] **Step 4: Verify the migration-only production web deployment**
+- [x] **Step 4: Verify the migration-only production web deployment**
 
 Vercel will rebuild `main`, but the application source remains the old runtime.
 
@@ -762,7 +818,7 @@ login page renders and that a new website login can be initiated, but do not
 require a pre-cutover refresh session to survive: Decision 4 intentionally
 allows one reauthentication.
 
-- [ ] **Step 5: Confirm no API or extension release was triggered by PR A**
+- [x] **Step 5: Confirm no API or extension release was triggered by PR A**
 
 The PR changes only migration paths, so `Deploy API` and `Build Extension`
 should not run. If either runs, stop and explain the path-filter mismatch before
@@ -784,7 +840,7 @@ already present in `main`.
   identical to frozen `staging` and whose diff against updated `main` contains
   no migration files.
 
-- [ ] **Step 1: Re-fetch and prove the candidate stayed frozen**
+- [x] **Step 1: Re-fetch and prove the candidate stayed frozen**
 
 ```bash
 git fetch origin main staging
@@ -794,7 +850,7 @@ git rev-parse origin/main origin/staging
 Compare the `origin/staging` SHA with the Task 1 record. Any drift stops this
 task. Do not merge a moving branch into the release.
 
-- [ ] **Step 2: Create the runtime branch in the existing isolated worktree**
+- [x] **Step 2: Create the runtime branch in the existing isolated worktree**
 
 The migration branch is already pushed, merged, and verified by this point.
 Keep it as recovery evidence, but switch the same clean linked worktree onto a
@@ -807,7 +863,7 @@ git switch -c codex/main-foundation-runtime-20260822 origin/main
 
 Do not create a nested worktree and do not delete the migration branch yet.
 
-- [ ] **Step 3: Merge the exact frozen `staging` candidate into the branch**
+- [x] **Step 3: Merge the exact frozen `staging` candidate into the branch**
 
 ```bash
 git merge --no-ff origin/staging -m "merge: prepare tested staging runtime for main"
@@ -816,7 +872,7 @@ git merge --no-ff origin/staging -m "merge: prepare tested staging runtime for m
 No conflict resolution by judgment is allowed. Any conflict means the planned
 base changed and requires renewed review.
 
-- [ ] **Step 4: Prove tree identity and migration separation**
+- [x] **Step 4: Prove tree identity and migration separation**
 
 ```bash
 test "$(git rev-parse HEAD^{tree})" = "$(git rev-parse origin/staging^{tree})"
@@ -828,7 +884,7 @@ git status --short
 All commands must succeed. Tree identity is the proof that PR B adds no
 hand-edited production variant.
 
-- [ ] **Step 5: Run the final merged-tree gates**
+- [x] **Step 5: Run the final merged-tree gates**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm install --frozen-lockfile
@@ -849,7 +905,7 @@ cd ../..
 git diff --check origin/main...HEAD
 ```
 
-- [ ] **Step 6: Push and open PR B**
+- [x] **Step 6: Push and open PR B**
 
 ```bash
 git push -u origin codex/main-foundation-runtime-20260822
@@ -858,10 +914,10 @@ gh pr create \
   --base main \
   --head codex/main-foundation-runtime-20260822 \
   --title "feat: promote tested foundation runtime to main" \
-  --body "Runtime phase of the approved two-step production promotion. The 12 Supabase migrations were applied and verified first. This branch was created from the updated main and merged the exact frozen staging candidate; its tree must equal staging and its main diff must contain zero migration files. This is a pre-release technical baseline, not public launch or Chrome Web Store publication."
+  --body "Runtime phase of the approved two-step production promotion. The 13 Supabase migrations were applied and verified first. This branch was created from the updated main and merged the exact frozen staging candidate; its tree must equal staging and its main diff must contain zero migration files. This is a pre-release technical baseline, not public launch or Chrome Web Store publication."
 ```
 
-- [ ] **Step 7: Review the synthesized PR result**
+- [x] **Step 7: Review the synthesized PR result**
 
 Require:
 
@@ -874,7 +930,7 @@ Require:
 - the Decision 1 fail-closed boundary and Decision 2 deferral are recorded;
 - rollback IDs for Vercel and Worker are recorded.
 
-- [ ] **Step 8: Close PR `#174` only after PR B is green**
+- [x] **Step 8: Close PR `#174` only after PR B is green**
 
 Close `#174` with a comment naming PR A and PR B as the database-first
 replacement. Do not merge it and do not close it earlier, because it remains the
@@ -886,7 +942,7 @@ gh pr close 174 \
   --comment "Superseded by the approved two-phase promotion: migration-only PR A followed by the fresh runtime PR B. PR #174 was not merged because its combined database/runtime deployment could race production migrations."
 ```
 
-- [ ] **Step 9: Enforce Gate B**
+- [x] **Step 9: Enforce Gate B**
 
 Present PR B, production database evidence, configuration result, residual
 exceptions, automatic deployment effects, and rollback points to the user, then
@@ -905,7 +961,7 @@ the exact tested candidate.
 - Produces: `main` containing the frozen `staging` ancestry and a complete set
   of deployment results.
 
-- [ ] **Step 1: Perform the final no-drift check**
+- [x] **Step 1: Perform the final no-drift check**
 
 ```bash
 git fetch origin main staging
@@ -917,7 +973,7 @@ gh pr view codex/main-foundation-runtime-20260822 \
 Repeat the tree-identity and empty-migration-diff checks locally. Stop on any
 change after Gate B.
 
-- [ ] **Step 2: Merge PR B with a merge commit**
+- [x] **Step 2: Merge PR B with a merge commit**
 
 ```bash
 gh pr merge codex/main-foundation-runtime-20260822 \
@@ -925,7 +981,7 @@ gh pr merge codex/main-foundation-runtime-20260822 \
   --merge
 ```
 
-- [ ] **Step 3: Monitor every triggered production workflow separately**
+- [x] **Step 3: Monitor every triggered production workflow separately**
 
 Track exact run IDs for:
 
@@ -939,7 +995,7 @@ Use `gh run list`, `gh run watch`, `gh run view --log`, and `vercel inspect`.
 Do not call the release complete while any required surface is queued,
 in-progress, cancelled, skipped unexpectedly, or failed.
 
-- [ ] **Step 4: Apply cross-plane failure rules**
+- [x] **Step 4: Apply cross-plane failure rules**
 
 - If production DB reports a pending migration during runtime PR B, stop: the
   phase split failed. Do not accept runtime deployment.
@@ -955,7 +1011,7 @@ in-progress, cancelled, skipped unexpectedly, or failed.
 - Never delete or rewrite production database data as a response to an
   application deployment failure.
 
-- [ ] **Step 5: Validate the production extension artifact without publishing**
+- [x] **Step 5: Validate the production extension artifact without publishing**
 
 Resolve the exact successful Build Extension run for the merged `main` SHA,
 download its `anidachi-extension-production` artifact into a fresh temporary
@@ -1008,7 +1064,7 @@ rollback is active; no store/public-release action occurred.
 - Consumes: successful Task 7 deployment IDs and `main` SHA.
 - Produces: automated production smoke evidence and Git ancestry proof.
 
-- [ ] **Step 1: Verify production web and unauthenticated boundaries**
+- [x] **Step 1: Verify production web and unauthenticated boundaries**
 
 ```bash
 vercel inspect https://www.anidachi.app --scope georges-projects-8c4bc43a
@@ -1022,7 +1078,7 @@ An authenticated production extension/room smoke is intentionally impossible
 at this stage because production extension identity remains fail-closed. Do not
 convert staging acceptance into a claim of authenticated production readiness.
 
-- [ ] **Step 2: Verify the production Worker**
+- [x] **Step 2: Verify the production Worker**
 
 ```bash
 WORKER_HTTP_BASE=https://anidachi-api-production.vladislav-gul7.workers.dev \
@@ -1033,13 +1089,13 @@ WORKER_EXPECTED_ENV=production \
 Require Worker health JSON and the authenticated ICE endpoint's expected 401
 without a token.
 
-- [ ] **Step 3: Verify migration idempotency from the runtime push**
+- [x] **Step 3: Verify migration idempotency from the runtime push**
 
 The `Deploy migrations to production` run triggered by PR B must show an empty
 dry run and a successful no-op apply. Any pending file means Task 5 evidence was
 incomplete and the release remains failed.
 
-- [ ] **Step 4: Prove Git convergence**
+- [x] **Step 4: Prove Git convergence**
 
 ```bash
 git fetch origin main staging
@@ -1052,7 +1108,7 @@ Immediately after PR B, `staging` must be an ancestor of `main` and both trees
 must match. `main` may be ahead only by the planned migration and promotion
 merge commits.
 
-- [ ] **Step 5: Confirm staging remains healthy**
+- [x] **Step 5: Confirm staging remains healthy**
 
 ```bash
 vercel inspect https://staging.anidachi.app --scope georges-projects-8c4bc43a
@@ -1081,7 +1137,7 @@ idempotent, Git ancestry is clean, and staging is unchanged.
 - Produces: an honest durable production baseline and an ordinary small future
   `staging -> main` diff.
 
-- [ ] **Step 1: Write only observed facts**
+- [x] **Step 1: Write only observed facts**
 
 Record:
 
