@@ -20,11 +20,11 @@ Node test runner, Vercel CLI, pnpm 11.2.2, Node 22.23.1.
 **Spec:**
 `docs/superpowers/specs/2026-08-23-waitlist-crm-durable-storage-design.md`
 
-**Status (2026-08-24):** Tasks 1-6 are implemented and verified through
-`staging` merge `d74fa6f3826a61f428147e5bbc472cc6220c4983` and fresh
-deployment `dpl_AnAzpf8XTHUcCrYMz19TDkQ2y3rq`. Task 7 remains behind its
-explicit Production and `main` approval gates; no Production environment or
-runtime change is claimed here.
+**Status (2026-08-24):** Complete. Tasks 1-7 are implemented and verified from
+lossless reconciliation through Production. Promotion PR `#240` merged to
+`main` as `8cc5e4e6641ca55f0b62a320e8726de67900ce34`; fresh Production
+deployment `dpl_DCt6ocJBbEJ848rfaC38W5bhbdyg` still returns and renders 685
+waitlist leads after a full redeploy.
 
 ## Global Constraints
 
@@ -280,26 +280,68 @@ Final staging runtime acceptance on 2026-08-24:
   | `kreatli-crm/contact-messages.jsonl` | `"2866e9ccda23021684a30d287c6b70c9"` | `332d92ddf1a717ae83c53b2645d58410b49e42c89d265e829734106e2a6df668` |
   | `kreatli-crm/feature-requests.jsonl` | `"b709863097b47e72b9c911dcfda8a985"` | `80533cfaf369bc7d3a2c3e1d85bd08b78dcb20c9e415f5d2561691acb0b0bbdd` |
 
-- The retained public rollback objects are still untouched. `origin/main`
-  remains `c67fb79d0bd98c4da57d966040c6bda16f918ee8`, and promotion PR `#240`
-  remains open; Task 7 has not started.
+- The retained public rollback objects are still untouched. This staging
+  evidence was promoted through PR `#240`; the Production evidence follows.
 
 ### Task 7: Production cutover and closeout
 
 **External state:** Vercel Production env, production web deployment, GitHub
 promotion PR.
 
-- [ ] Announce the exact production env/data action and require the already
+- [x] Announce the exact production env/data action and require the already
   requested explicit approval before proceeding.
-- [ ] Add the same CRM-specific private-store credential to Production. The old
+- [x] Add the same CRM-specific private-store credential to Production. The old
   runtime must remain unchanged until promotion.
-- [ ] Re-run destination inventory and require it matches accepted staging.
-- [ ] Open the tested `staging -> main` promotion PR. Merge only after explicit
+- [x] Re-run destination inventory and require it matches accepted staging.
+- [x] Open the tested `staging -> main` promotion PR. Merge only after explicit
   approval and passing required checks.
-- [ ] Verify production `/api/waitlist-stats` returns the durable nonzero count,
+- [x] Verify production `/api/waitlist-stats` returns the durable nonzero count,
   one idempotent controlled signup persists across redeploy, and contact/feature
   submissions acknowledge only durable archives.
-- [ ] Verify no `EROFS`, fake-success, Blob-auth, PII-log, or unrelated private-
+- [x] Verify no `EROFS`, fake-success, Blob-auth, PII-log, or unrelated private-
   integration activation appears in production logs.
-- [ ] Update this plan and `docs/current-development-state.md` with observed
+- [x] Update this plan and `docs/current-development-state.md` with observed
   evidence, refresh Graphify, and close through the normal docs PR flow.
+
+Final Production acceptance on 2026-08-24:
+
+- The user explicitly approved completing the repair. Production received only
+  `KREATLI_CRM_BLOB_READ_WRITE_TOKEN`, sourced from the already accepted
+  private CRM store without printing its value. The shared
+  `PRIVATE_INTEGRATION_BLOB_*` boundary and unrelated integrations remained
+  unchanged and fail-closed.
+- Before promotion, the five-object destination inventory still matched the
+  accepted staging authority with 687 contacts and 685 survey leads. Promotion
+  PR `#240` passed its required checks and merged to `main` as
+  `8cc5e4e6641ca55f0b62a320e8726de67900ce34`. Production migration workflow
+  `32656249908` and main CI workflow `32656249981` both succeeded.
+- Production deployment `dpl_3v2H5pk4v5muknJvpyKjXZpJHEXX` became Ready and
+  received both public aliases. The stats API returned HTTP 200 with count 685,
+  and the Hero rendered `Launching soon — 685 on the waitlist`.
+- Replaying one already recovered real lead returned its existing position 683
+  and left the count at 685. Contact and feature-request submissions using the
+  existing controlled `@example.com` acceptance identity both returned HTTP
+  200 and did not create a waitlist lead.
+- A full Production redeploy produced
+  `dpl_DCt6ocJBbEJ848rfaC38W5bhbdyg`. After the new instance became Ready and
+  received `www.anidachi.app` and `anidachi.app`, the same-origin stats request
+  again returned HTTP 200 with 685 and the Hero again rendered 685. This proves
+  the accepted state is durable rather than deployment-filesystem state.
+- Fresh Production logs contained no `EROFS`, Blob-auth, CRM-persistence,
+  fake-success, or PII-log failure. The only notification warnings were the
+  expected optional Gmail-not-configured messages; durable storage had already
+  acknowledged the affected form submissions.
+- The previous healthy deployment
+  `dpl_AX8MKEAcgjAXJpPnVUXZgqfNN14D` remains the pre-cutover deployment rollback
+  anchor. The legacy public CRM objects remain untouched as independent data
+  rollback evidence.
+- The post-Production-write private authority remains at 687 contacts and 685
+  survey leads. Its final conditional rollback anchors are:
+
+  | Object | ETag | SHA-256 |
+  | --- | --- | --- |
+  | `kreatli-crm/contacts.json` | `"b2fb74db68e8da83618d7cfff1d64508"` | `7aea59fca3b2e04739a4e40570b7702731868e60be653c1f142392b2ac245738` |
+  | `kreatli-crm/touches.jsonl` | `"bbe8c5183ac5a62d7962ab3e50696397"` | `6d7a3e2d924f7d4d791dfd86dbb5c234fb803141e34807969a06f9841c5740f0` |
+  | `kreatli-crm/meta.json` | `"6059193a09507919c77f1195f7137bbb"` | `e43400fdcb05e1f1b40054b8b4c46aa68d0e9368df8bc4dc5bb16b2afb7cf13a` |
+  | `kreatli-crm/contact-messages.jsonl` | `"b642d14e94b09705c1e74b622f53fd70"` | `e82a7837f2d6877db29db654524bdba4882cd650637e2b448cb22c373ca5d133` |
+  | `kreatli-crm/feature-requests.jsonl` | `"b488331bf438724d3087d53877d27989"` | `d58b87cc814ecd0895e16ef6575f93c12f749659ca40415923fe209e9eea3053` |
