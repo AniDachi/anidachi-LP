@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import * as contactRoute from "../../app/api/contact/route";
-import * as featureRoute from "../../app/api/feature-requests/route";
+import * as contactRoute from "./contact-route";
+import * as featureRoute from "./feature-request-route";
 
 test("contact form remains successful when optional Gmail token lookup fails", async () => {
   let stored = 0;

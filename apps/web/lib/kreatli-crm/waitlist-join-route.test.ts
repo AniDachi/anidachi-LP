@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import * as route from "../../app/api/waitlist/join/route";
+import * as route from "./waitlist-join-route";
 
 test("authenticated waitlist join returns 503 when durable storage fails", async () => {
   const handler = (

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import * as route from "../../app/api/subscribe-interest/route";
+import * as route from "./subscribe-interest-route";
 
 test("subscribe interest returns 503 when the CRM did not persist the lead", async (t) => {
   const warn = t.mock.method(console, "warn", () => {});
