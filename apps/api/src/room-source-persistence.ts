@@ -7,6 +7,12 @@ import {
   parseRoomLifecycleState,
   type RoomLifecycleState,
 } from "./room-lifecycle";
+import {
+  PARTICIPANT_DISCONNECT_STORAGE_KEY,
+  nextParticipantDisconnectAlarmAt,
+  parseParticipantDisconnectState,
+  type ParticipantDisconnectState,
+} from "./participant-disconnect";
 
 export const ROOM_SOURCE_PENDING_STORAGE_KEY = "room_source_pending_v1";
 export const ROOM_SOURCE_ACKNOWLEDGED_GENERATION_STORAGE_KEY =
@@ -178,30 +184,52 @@ export function roomSourceRetryAt(attempts: number, now: number): number {
 export function nextRoomAlarmAt(
   lifecycle: RoomLifecycleState | null,
   pendingSource: PendingRoomSourcePersistence | null,
+  participantDisconnects: ParticipantDisconnectState | null = null,
 ): number | null {
   const lifecycleAt = lifecycle?.status === "empty"
     ? lifecycle.alarmAt
     : lifecycle?.status === "ending"
       ? lifecycle.nextAttemptAt
       : null;
-  if (lifecycleAt === null) return pendingSource?.nextAttemptAt ?? null;
-  if (!pendingSource) return lifecycleAt;
-  return Math.min(lifecycleAt, pendingSource.nextAttemptAt);
+  const candidates = [
+    lifecycleAt,
+    pendingSource?.nextAttemptAt ?? null,
+    nextParticipantDisconnectAlarmAt(participantDisconnects),
+  ].filter((value): value is number => value !== null);
+  return candidates.length > 0 ? Math.min(...candidates) : null;
 }
 
 export async function reconcileStoredRoomAlarm(
   transaction: DurableObjectTransaction,
+  fallbackAt: number | null = null,
+  options: { ignoreLifecycle?: boolean } = {},
 ): Promise<number | null> {
-  const [rawLifecycle, rawPendingSource] = await Promise.all([
+  const [rawLifecycle, rawPendingSource, rawParticipantDisconnects] = await Promise.all([
     transaction.get<unknown>(ROOM_LIFECYCLE_STORAGE_KEY),
     transaction.get<unknown>(ROOM_SOURCE_PENDING_STORAGE_KEY),
+    transaction.get<unknown>(PARTICIPANT_DISCONNECT_STORAGE_KEY),
   ]);
   const lifecycle = parseRoomLifecycleState(rawLifecycle);
   const pendingSource = parsePendingRoomSourcePersistence(rawPendingSource);
   if (rawPendingSource !== undefined && !pendingSource) {
     await transaction.delete(ROOM_SOURCE_PENDING_STORAGE_KEY);
   }
-  const alarmAt = nextRoomAlarmAt(lifecycle, pendingSource);
+  const participantDisconnects = rawParticipantDisconnects === undefined
+    ? null
+    : parseParticipantDisconnectState(rawParticipantDisconnects);
+  if (rawParticipantDisconnects !== undefined && !participantDisconnects) {
+    throw new Error("Invalid persisted participant disconnect state");
+  }
+  const logicalAlarmAt = nextRoomAlarmAt(
+    options.ignoreLifecycle ? null : lifecycle,
+    pendingSource,
+    participantDisconnects,
+  );
+  const alarmAt = logicalAlarmAt === null
+    ? fallbackAt
+    : fallbackAt === null
+      ? logicalAlarmAt
+      : Math.min(logicalAlarmAt, fallbackAt);
   if (alarmAt === null) {
     await transaction.deleteAlarm();
   } else {

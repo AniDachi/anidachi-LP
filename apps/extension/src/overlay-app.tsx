@@ -1,4 +1,5 @@
 import type {
+  ActiveRoomConflictResponse,
   ClientEvent,
   P2PSignal,
   Participant,
@@ -95,11 +96,11 @@ import {
   DEFAULT_LOCAL_CAMERA_ENABLED,
   getCameraEnabledForRoomConnection,
   getP2PMediaSessionState,
-  persistRoomSessionForCurrentJoin,
 } from "./overlay-media-session";
 import { shouldDismissOverlayPanel, waitForOverlayPaint } from "./overlay-panel-interaction";
 import { InterfaceSettingsPanel } from "./overlay-interface-settings";
 import {
+  ACTIVE_ROOM_CONFLICT_MESSAGE,
   copyRoomInviteText,
   getPrimaryRoomActionKind,
   getPrimaryRoomActionLabel,
@@ -125,8 +126,11 @@ import { PlaybackSyncController } from "./playback-sync-controller";
 import {
   connectWebsiteRoom,
   createRoom,
+  isActiveRoomConflictError,
   isQuotaExhaustedError,
   isTerminalRoomJoinError,
+  ROOM_FULL_CLOSE_CODE,
+  ROOM_SESSION_TAKEN_OVER_CLOSE_CODE,
   RoomClient,
   type RoomConnectionStatus,
   type RoomQuotaSummary,
@@ -143,8 +147,9 @@ import {
 import {
   clearRoomSession,
   clearRoomSessionIfMatch,
+  discardPreparedRoomSession,
   migrateLegacyRoomSession,
-  persistRoomSession,
+  prepareRoomSession,
   type RoomSessionRecord,
   updateRoomSessionVoiceMode,
 } from "./room-session-storage";
@@ -415,6 +420,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const voiceAudioPreferencesWriteTimerRef = useRef<number | null>(null);
   const [authBusy, setAuthBusy] = useState(false);
   const [authMessage, setAuthMessage] = useState<string | null>(null);
+  const [activeRoomConflict, setActiveRoomConflict] = useState<
+    ActiveRoomConflictResponse["activeRoom"] | null
+  >(null);
   const [extensionContextInvalidated, setExtensionContextInvalidated] = useState(false);
   const [storedRoomSession, setStoredRoomSession] = useState<RoomSessionRecord | null>(null);
   const [roomSessionLoadedForUserId, setRoomSessionLoadedForUserId] = useState<
@@ -2649,6 +2657,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       nextRoomId: string,
       activeParticipant: Participant,
       nextRoomToken: string,
+      nextStoredRoomSession: RoomSessionRecord,
       isCurrentJoin: () => boolean,
       createdRoomProvider: SourceProvider | null = null,
     ): Promise<boolean> => {
@@ -2674,23 +2683,15 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
       setRoomSnapshotReady(false);
       setSignalingTransportReady(null);
-      let nextStoredRoomSession: RoomSessionRecord | null;
-      try {
-        nextStoredRoomSession = await persistRoomSessionForCurrentJoin({
-          discard: (record) => clearRoomSessionIfMatch(record),
-          isCurrentJoin,
-          persist: () => persistRoomSession(nextRoomId, activeParticipant.id),
-        });
-      } catch (error) {
-        if (!isCurrentJoin()) {
-          return false;
-        }
+      if (
+        nextStoredRoomSession.roomId !== nextRoomId ||
+        nextStoredRoomSession.ownerUserId !== activeParticipant.id
+      ) {
         releaseRoomTabLock();
-        throw error;
+        throw new Error("Room admission returned a mismatched tab session");
       }
-
-      if (!nextStoredRoomSession) {
-        logDebug("overlay.room", "persisted session ignored for stale join", {
+      if (!isCurrentJoin()) {
+        logDebug("overlay.room", "confirmed session ignored for stale join", {
           roomId: nextRoomId,
           participantId: activeParticipant.id,
         });
@@ -2706,6 +2707,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       storedRoomSessionRef.current = nextStoredRoomSession;
       setStoredRoomSession(nextStoredRoomSession);
       setRoomSessionLoadedForUserId(activeParticipant.id);
+      roomReconnectSuppressedRef.current = false;
+      setActiveRoomConflict(null);
       roomIdRef.current = nextRoomId;
       setRoomId(nextRoomId);
       ensureRoomHash(nextRoomId);
@@ -2731,7 +2734,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
             ?.setRoomHistoryAuthority(authority)
             .catch(() => undefined);
         },
-        onTerminalClose: () => terminateRoomSession("Watch room ended."),
+        onTerminalClose: (code) => terminateRoomSession(roomTerminalCloseMessage(code)),
         onTransportReady: setSignalingTransportReady,
       });
       return true;
@@ -2817,28 +2820,25 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           return;
         }
 
-        // One active tab per browser (Block 4.3): a second tab can't take the
-        // room; a reconnect of the owning tab re-acquires instantly.
-        if (!(await acquireRoomTabLock())) {
-          setPanelOpen(true);
-          setAuthMessage("This room is already open in another tab.");
-          logDebug("overlay.room", "join blocked by tab lock", {
-            roomId: nextRoomId,
-            reason,
-          });
-          return;
-        }
-
-        if (skipStaleJoin("tab-lock") || skipActiveConnection()) {
-          return;
-        }
-
+        let preparedRoomSession: Awaited<ReturnType<typeof prepareRoomSession>> | null = null;
         let connected: Awaited<ReturnType<typeof connectWebsiteRoom>>;
         try {
-          connected = await connectWebsiteRoom(nextRoomId, activeAccessToken);
+          preparedRoomSession = await prepareRoomSession(
+            activeParticipant.id,
+            nextRoomId,
+          );
+          if (skipStaleJoin("session-prepared") || skipActiveConnection()) {
+            await discardPreparedRoomSession(preparedRoomSession);
+            return;
+          }
+          connected = await connectWebsiteRoom(
+            nextRoomId,
+            activeAccessToken,
+            preparedRoomSession,
+          );
         } catch (error) {
-          if (isCurrentJoin()) {
-            releaseRoomTabLock();
+          if (preparedRoomSession) {
+            await discardPreparedRoomSession(preparedRoomSession).catch(() => undefined);
           }
           throw error;
         }
@@ -2859,6 +2859,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           nextRoomId,
           activeParticipant,
           connected.roomToken,
+          connected.roomSession,
           () => isCurrentJoin() && participantRef.current?.id === activeParticipant.id,
         );
       })();
@@ -2897,6 +2898,22 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     window.clearTimeout(roomReconnectTimerRef.current);
     roomReconnectTimerRef.current = null;
   }, []);
+
+  const showActiveRoomConflict = useCallback(
+    (error: unknown): boolean => {
+      if (!isActiveRoomConflictError(error)) {
+        return false;
+      }
+
+      roomReconnectSuppressedRef.current = true;
+      clearRoomReconnectTimer();
+      setActiveRoomConflict(error.activeRoom);
+      setAuthMessage(activeRoomConflictMessage(error.activeRoom.provider, adapter.provider));
+      setPanelOpen(true);
+      return true;
+    },
+    [adapter.provider, clearRoomReconnectTimer],
+  );
 
   const scheduleRoomReconnect = useCallback(
     (reason: string) => {
@@ -2957,6 +2974,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
             roomReconnectAttemptRef.current = 0;
           })
           .catch((error) => {
+            if (showActiveRoomConflict(error)) {
+              logDebug("overlay.room", "auto reconnect found another active room", {
+                attemptedRoomId: reconnectRoomId,
+              });
+              return;
+            }
+
             // Free quota ran out — the server will keep rejecting reconnects, so
             // end gracefully instead of looping (which made the panel jitter).
             if (isQuotaExhaustedError(error)) {
@@ -2999,7 +3023,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           });
       }, delayMs);
     },
-    [connectToExistingWebsiteRoom, terminateRoomSession],
+    [connectToExistingWebsiteRoom, showActiveRoomConflict, terminateRoomSession],
   );
 
   useEffect(() => {
@@ -3133,6 +3157,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const applyParticipantIdentity = useCallback(
     (result: CurrentParticipantResult, reason: string, reconnectActiveRoom: boolean) => {
       const activeRoomId = roomIdRef.current;
+      const previousUserId = participantRef.current?.id ?? null;
+      const nextUserId = result.participant?.id ?? null;
+      if (previousUserId !== nextUserId) {
+        setActiveRoomConflict(null);
+      }
       syncAuthUserScopedState(result.tokens?.user.id ?? null, reason);
       authAccessTokenRef.current = result.tokens?.accessToken ?? null;
       participantRef.current = result.participant;
@@ -3339,15 +3368,28 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       // Idempotency key survives retries of the same create attempt and is
       // cleared only on success, so a network retry reuses the same room.
       createRequestIdRef.current ??= crypto.randomUUID();
+      let preparedRoomSession: Awaited<ReturnType<typeof prepareRoomSession>> | null = null;
       let created: Awaited<ReturnType<typeof createRoom>>;
       try {
-        created = await createRoom(activeAccessToken, {
-          sourceUrl: buildCurrentSourceUrlForInvite(),
-          videoFingerprint: adapter.getFingerprint(),
-          title: adapter.getTitle() ?? document.title,
-          clientRequestId: createRequestIdRef.current,
-        });
+        preparedRoomSession = await prepareRoomSession(activeParticipant.id, null);
+        if (!isCurrentCreate()) {
+          await discardPreparedRoomSession(preparedRoomSession);
+          return null;
+        }
+        created = await createRoom(
+          activeAccessToken,
+          preparedRoomSession,
+          {
+            sourceUrl: buildCurrentSourceUrlForInvite(),
+            videoFingerprint: adapter.getFingerprint(),
+            title: adapter.getTitle() ?? document.title,
+            clientRequestId: createRequestIdRef.current,
+          },
+        );
       } catch (error) {
+        if (preparedRoomSession) {
+          await discardPreparedRoomSession(preparedRoomSession).catch(() => undefined);
+        }
         if (isCurrentCreate()) {
           releaseRoomTabLock();
         }
@@ -3383,6 +3425,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         created.roomId,
         activeParticipant,
         nextRoomToken,
+        created.roomSession,
         () => isCurrentCreate() && participantRef.current?.id === activeParticipant.id,
         adapter.provider,
       );
@@ -3481,6 +3524,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
       void connectToExistingWebsiteRoom(initialRoomId, hashRoomId ? "hash" : "persisted").catch(
         (error) => {
+          if (showActiveRoomConflict(error)) {
+            logDebug("overlay.room", "initial join found another active room", {
+              attemptedRoomId: initialRoomId,
+            });
+            return;
+          }
+
           // Quota is exhausted — drop the stale room pointer so reloads stop
           // re-attempting a join that can only fail, and show why.
           if (isQuotaExhaustedError(error)) {
@@ -3527,6 +3577,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     participant,
     roomId,
     roomSessionLoadedForUserId,
+    showActiveRoomConflict,
     storedRoomSession,
   ]);
 
@@ -3562,6 +3613,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         showRoomActionFeedback("room-created");
       }
     } catch (error) {
+      if (showActiveRoomConflict(error)) {
+        logDebug("overlay.room", "create found another active room");
+        return;
+      }
+
       if (isQuotaExhaustedError(error)) {
         logDebug("overlay.room", "create blocked by quota", {
           resetAt: error.resetAt,
@@ -3573,6 +3629,36 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       const message = authErrorMessage(error, "Failed to create room");
       logDebug("overlay.room", "manual create failed", { message });
       setExtensionContextInvalidated(isExtensionContextInvalidatedError(error));
+      setAuthMessage(message);
+    } finally {
+      setRoomCreatePending(false);
+    }
+  };
+
+  const handleOpenActiveRoom = async () => {
+    const conflict = activeRoomConflict;
+    if (!conflict || roomCreatePending) {
+      return;
+    }
+    if (conflict.provider && conflict.provider !== adapter.provider) {
+      setAuthMessage(activeRoomConflictMessage(conflict.provider, adapter.provider));
+      return;
+    }
+
+    setRoomCreatePending(true);
+    try {
+      await connectToExistingWebsiteRoom(conflict.roomId, "active-room-conflict");
+      setActiveRoomConflict(null);
+      setAuthMessage(null);
+    } catch (error) {
+      if (showActiveRoomConflict(error)) {
+        return;
+      }
+      const message = authErrorMessage(error, "Failed to open active room");
+      logDebug("overlay.room", "active room open failed", {
+        roomId: conflict.roomId,
+        message,
+      });
       setAuthMessage(message);
     } finally {
       setRoomCreatePending(false);
@@ -4707,6 +4793,17 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
                   Reload page
                 </button>
               ) : null}
+              {activeRoomConflict &&
+              (!activeRoomConflict.provider || activeRoomConflict.provider === adapter.provider) ? (
+                <button
+                  className="button compact"
+                  type="button"
+                  onClick={handleOpenActiveRoom}
+                  disabled={roomCreatePending}
+                >
+                  Open active room
+                </button>
+              ) : null}
             </div>
           ) : null}
           {roomQuota ? (
@@ -5569,6 +5666,32 @@ function roomJoinUnavailableMessage(error: { status?: number }): string {
   }
 
   return "This watch room is not available for this account.";
+}
+
+function roomTerminalCloseMessage(code: number): string {
+  if (code === ROOM_SESSION_TAKEN_OVER_CLOSE_CODE) {
+    return "This room was opened in another tab or device.";
+  }
+  if (code === ROOM_FULL_CLOSE_CODE) {
+    return "This watch room is full.";
+  }
+  return "Watch room ended.";
+}
+
+function activeRoomConflictMessage(
+  provider: ActiveRoomConflictResponse["activeRoom"]["provider"],
+  currentProvider: VideoAdapter["provider"],
+): string {
+  if (!provider || provider === currentProvider) {
+    return ACTIVE_ROOM_CONFLICT_MESSAGE;
+  }
+  if (provider === "youtube") {
+    return "You already have an active watch room on YouTube. Open that tab to continue.";
+  }
+  if (provider === "crunchyroll") {
+    return "You already have an active watch room on Crunchyroll. Open that tab to continue.";
+  }
+  return "You already have an active watch room on another supported site. Open that tab to continue.";
 }
 
 function formatQuotaCountdown(remainingSeconds: number | null): string {

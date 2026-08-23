@@ -10,6 +10,7 @@ import {
 import type { BufferedP2PSignalEvent } from "./p2p-signal-buffer";
 import { parseRoomMeterState, type RoomMeterState } from "./room-metering";
 import type { RoomStateSnapshot } from "./room-state";
+import { PARTICIPANT_DISCONNECT_STORAGE_KEY } from "./participant-disconnect";
 import {
   ROOM_LIFECYCLE_STORAGE_KEY,
   activeRoomLifecycle,
@@ -277,16 +278,17 @@ export async function claimStoredRoomEndAttempt(
     }
     if (pendingSource) {
       // A due room end cannot make progress until the latest source is durable.
-      // Schedule the source retry directly instead of repeatedly re-firing an
-      // already-due lifecycle deadline.
-      await transaction.setAlarm(pendingSource.nextAttemptAt);
+      // The shared scheduler retains source, participant, and lifecycle work.
+      await reconcileStoredRoomAlarm(transaction, null, {
+        ignoreLifecycle: true,
+      });
       return null;
     }
 
     const raw = await transaction.get<unknown>(ROOM_LIFECYCLE_STORAGE_KEY);
     const current = parseStoredLifecycle(raw);
     if (current === "invalid") {
-      await transaction.setAlarm(emptyRoomRetryAt(1, now));
+      await reconcileStoredRoomAlarm(transaction, emptyRoomRetryAt(1, now));
       return null;
     }
     if (!current || current.status === "active" || current.status === "ended") {
@@ -334,7 +336,10 @@ export async function clearStoredRoomLifecycleAndAlarm(
   storage: DurableObjectStorage,
 ): Promise<void> {
   await storage.transaction(async (transaction) => {
-    await transaction.delete(ROOM_LIFECYCLE_STORAGE_KEY);
+    await Promise.all([
+      transaction.delete(ROOM_LIFECYCLE_STORAGE_KEY),
+      transaction.delete(PARTICIPANT_DISCONNECT_STORAGE_KEY),
+    ]);
     await reconcileStoredRoomAlarm(transaction);
   });
 }

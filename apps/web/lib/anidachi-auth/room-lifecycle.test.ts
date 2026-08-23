@@ -29,6 +29,15 @@ const lifecycleApi = roomLifecycle as typeof roomLifecycle & {
     reason: string;
     usage?: { day: string; seconds: number };
   } | null>;
+  syncParticipantDepartureToWorker?: (
+    command: {
+      roomId: string;
+      userId: string;
+      participantSessionId: string;
+      requestedAt: number;
+    },
+    options?: { baseUrl?: string; secret?: string; fetch?: typeof fetch },
+  ) => Promise<{ ok: true; outcome: "departed" | "room_ended" | "stale" }>;
 };
 
 test("trusts a new Worker's confirmed Web finalization without writing twice", async () => {
@@ -172,6 +181,65 @@ test("validates a privacy-safe deterministic event identity for empty-timeout ca
       reason: "host_ended",
     }),
     { endedAt: 1_000, reason: "host_ended" },
+  );
+  assert.deepEqual(
+    await lifecycleApi.parseInternalRoomEndCommand(roomId, {
+      endedAt: 1_000,
+      reason: "host_disconnected",
+    }),
+    { endedAt: 1_000, reason: "host_disconnected" },
+  );
+});
+
+test("sends an exact signed participant departure command to the Worker", async () => {
+  assert.equal(typeof lifecycleApi.syncParticipantDepartureToWorker, "function");
+  if (!lifecycleApi.syncParticipantDepartureToWorker) return;
+  const calls: Array<{ input: string; init?: RequestInit }> = [];
+  const command = {
+    roomId: "room 1",
+    userId: "user/one",
+    participantSessionId: "participant-session-one",
+    requestedAt: 1_000,
+  };
+  const result = await lifecycleApi.syncParticipantDepartureToWorker(command, {
+    baseUrl: "https://api.example.com",
+    secret: "internal-secret",
+    fetch: async (input, init) => {
+      calls.push({ input: String(input), init });
+      return Response.json({ ok: true, outcome: "departed" });
+    },
+  });
+
+  assert.equal(
+    calls[0]?.input,
+    "https://api.example.com/internal/rooms/room%201/participants/user%2Fone/depart",
+  );
+  assert.equal(
+    new Headers(calls[0]?.init?.headers).get("Authorization"),
+    "Bearer internal-secret",
+  );
+  assert.equal(calls[0]?.init?.body, JSON.stringify(command));
+  assert.deepEqual(result, { ok: true, outcome: "departed" });
+});
+
+test("participant departure sync fails closed on a malformed Worker acknowledgement", async () => {
+  assert.equal(typeof lifecycleApi.syncParticipantDepartureToWorker, "function");
+  if (!lifecycleApi.syncParticipantDepartureToWorker) return;
+  await assert.rejects(
+    lifecycleApi.syncParticipantDepartureToWorker(
+      {
+        roomId: "room-one",
+        userId: "user-one",
+        participantSessionId: "participant-session-one",
+        requestedAt: 1_000,
+      },
+      {
+        baseUrl: "https://api.example.com",
+        secret: "internal-secret",
+        fetch: async () => Response.json({ ok: true, outcome: "unknown" }),
+      },
+    ),
+    /invalid response/,
   );
 });
 

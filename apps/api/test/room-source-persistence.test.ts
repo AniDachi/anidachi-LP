@@ -1,6 +1,10 @@
 import type { RoomSourcePersistenceCallback } from "@anidachi/protocol";
 import { describe, expect, it } from "vitest";
 import * as roomSourcePersistence from "../src/room-source-persistence";
+import {
+  createParticipantDisconnect,
+  upsertParticipantDisconnect,
+} from "../src/participant-disconnect";
 import { ROOM_LIFECYCLE_STORAGE_KEY, emptyRoomLifecycle } from "../src/room-lifecycle";
 import {
   MAX_ROOM_SOURCE_PERSISTENCE_ATTEMPTS,
@@ -219,9 +223,27 @@ describe("room source persistence outbox", () => {
       attempts: 0,
       nextAttemptAt: 500,
     });
+    const disconnect = upsertParticipantDisconnect(
+      null,
+      createParticipantDisconnect({
+        userId: "user-1",
+        role: "member",
+        participantSessionId: "session-1",
+        disconnectedAt: 100,
+      }),
+      6,
+    );
     expect(pending).not.toBeNull();
-    expect(nextRoomAlarmAt({ schemaVersion: 1, status: "active", updatedAt: 1 }, pending)).toBe(500);
-    expect(nextRoomAlarmAt({ schemaVersion: 1, status: "empty", emptySince: 1, alarmAt: 900 }, pending)).toBe(500);
+    expect(nextRoomAlarmAt(
+      { schemaVersion: 1, status: "active", updatedAt: 1 },
+      pending,
+      disconnect,
+    )).toBe(500);
+    expect(nextRoomAlarmAt(
+      { schemaVersion: 1, status: "empty", emptySince: 1, alarmAt: 900 },
+      pending,
+      disconnect,
+    )).toBe(500);
     expect(nextRoomAlarmAt({
       schemaVersion: 1,
       status: "ending",
@@ -230,8 +252,17 @@ describe("room source persistence outbox", () => {
       eventId: `empty_timeout:${"a".repeat(64)}`,
       attempts: 1,
       nextAttemptAt: 300,
-    }, pending)).toBe(300);
-    expect(nextRoomAlarmAt({ schemaVersion: 1, status: "ended", endedAt: 2, reason: "empty_timeout" }, null)).toBeNull();
+    }, pending, disconnect)).toBe(300);
+    expect(nextRoomAlarmAt(
+      { schemaVersion: 1, status: "active", updatedAt: 1 },
+      null,
+      disconnect,
+    )).toBe(60_100);
+    expect(nextRoomAlarmAt(
+      { schemaVersion: 1, status: "ended", endedAt: 2, reason: "empty_timeout" },
+      null,
+      null,
+    )).toBeNull();
   });
 });
 

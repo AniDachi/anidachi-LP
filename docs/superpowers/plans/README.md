@@ -29,11 +29,15 @@ Core-foundation closeout record:
 
 Parallel long-running room/P2P and product execution plans:
 
-1. `2026-06-07-production-room-p2p-hardening-roadmap.md`
-2. `2026-06-12-room-flow-p2p-flawless-execution-plan.md`
-3. `2026-06-20-social-rooms-subscriptions-execution-plan.md`
-4. `2026-07-22-source-adapters-architecture.md`
-5. `2026-07-22-provider-player-overlay-geometry.md`
+1. `2026-08-23-single-active-room-session-implementation-plan.md` — proposed
+   focused plan for one server-enforced active room per user, exact host/guest
+   tab-close behavior, and reload/network reconnect grace. It is not yet an
+   implementation or staging acceptance record.
+2. `2026-06-07-production-room-p2p-hardening-roadmap.md`
+3. `2026-06-12-room-flow-p2p-flawless-execution-plan.md`
+4. `2026-06-20-social-rooms-subscriptions-execution-plan.md`
+5. `2026-07-22-source-adapters-architecture.md`
+6. `2026-07-22-provider-player-overlay-geometry.md`
 
 Recently closed/superseded execution programs:
 
