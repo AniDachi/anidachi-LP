@@ -1,7 +1,8 @@
 # Single Active Room Session Design
 
-Status: Proposed for implementation review. No runtime, migration, deployment,
-or release work is authorized by this document.
+Status: Accepted on `staging` on 2026-08-23 through PR #231 and merge
+`f511b4dcb805e8959412213e00a2499f12f2b8be`. `main`, production, public release,
+and Chrome Web Store distribution remain outside this acceptance.
 
 Date: 2026-08-23
 
@@ -399,6 +400,34 @@ The feature is accepted only when all of these are proven:
 9. Durable Object hibernation does not lose pending departure deadlines.
 10. Existing playback sync, pause/seek, Watch History v2, room source,
     invitations, P2P signaling, and room quota checks remain green.
+
+## Staging Acceptance Evidence
+
+The additive migration `20260823090624_single_active_room_sessions.sql` was
+applied before the runtime merge. Staging migration runs `32637163596` and
+`32637269784`, CI `32637269772`, API deployment `32637269793`, extension build
+`32637269796`, Vercel deployment `dpl_D9iXtfYyux52dRp46wucA8VKcM86`, and the
+fresh Worker smoke all passed. The database inspection confirmed the
+server-only table, RLS boundary, service-role-only RPC execution, and empty
+initial assignment state.
+
+The exact validated extension artifact had `version_name`
+`f511b4dcb805e8959412213e00a2499f12f2b8be-staging-125` and SHA-256
+`58a5b07f08bbef7031205244959f536087791a2245887bcd8f63d2dd7442fb8b`. Both
+established test folders were byte-identical to that artifact before the two
+profiles were reloaded.
+
+Manual two-profile observation confirmed the host and guest cross-room blocks,
+pause/seek/rate sync, host and guest reload, brief offline recovery, guest-only
+departure, host room end, same-room takeover, stale old-tab safety, no silent
+fresh-tab restore, old-link non-revival, and no false active room in the popup.
+Crunchyroll Watch History continued to track. YouTube Watch History was disabled
+during the final history observation, so no YouTube-history result is inferred.
+
+Residual boundaries are explicit: this is staging evidence, not `main` or
+production; Chrome-crash cleanup relies on the 60-second fallback; TURN-relay
+and two-network media proof remain separate; conflict-copy and visual polish
+remain UI/UX work.
 
 ## Current Primary References
 
