@@ -6,6 +6,7 @@ import {
   parseActiveRoomClaimRpcResult,
   parseActiveRoomCreateRpcResult,
   parseActiveRoomReleaseRpcResult,
+  parseHostLobbyEndRpcResult,
 } from "./active-room-session";
 
 const activeRoom = {
@@ -76,6 +77,14 @@ test("claim and release parsers preserve only the documented outcomes", () => {
     parseActiveRoomReleaseRpcResult([{ outcome: "stale" }]),
     { outcome: "stale" },
   );
+  assert.deepEqual(
+    parseHostLobbyEndRpcResult([{ outcome: "room_ended" }]),
+    { outcome: "room_ended" },
+  );
+  assert.deepEqual(
+    parseHostLobbyEndRpcResult([{ outcome: "stale" }]),
+    { outcome: "stale" },
+  );
 });
 
 test("malformed RPC rows fail closed instead of allowing room admission", () => {
@@ -122,6 +131,10 @@ test("malformed RPC rows fail closed instead of allowing room admission", () => 
     () => parseActiveRoomReleaseRpcResult([{ outcome: "claimed" }]),
     ActiveRoomSessionDatabaseError,
   );
+  assert.throws(
+    () => parseHostLobbyEndRpcResult([{ outcome: "released" }]),
+    ActiveRoomSessionDatabaseError,
+  );
 });
 
 test("database helpers use only the atomic server RPCs for assignment changes", () => {
@@ -135,6 +148,9 @@ test("database helpers use only the atomic server RPCs for assignment changes", 
   assert.match(source, /export async function releaseActiveRoomSession/);
   assert.match(source, /\.rpc\("release_active_room_session_v1"/);
   assert.match(source, /parseActiveRoomReleaseRpcResult\(result\.data\)/);
+  assert.match(source, /export async function endHostLobbyForActiveSession/);
+  assert.match(source, /\.rpc\("end_host_lobby_for_active_session_v1"/);
+  assert.match(source, /parseHostLobbyEndRpcResult\(result\.data\)/);
   assert.doesNotMatch(
     source,
     /\.from\("active_room_sessions"\)[\s\S]{0,300}\.(insert|update|delete)\(/,

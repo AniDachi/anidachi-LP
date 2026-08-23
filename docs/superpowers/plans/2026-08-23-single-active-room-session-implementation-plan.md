@@ -354,7 +354,7 @@ the database linter, all 336 Web tests, and Web type-check passed before commit.
 - Create:
   `apps/web/lib/anidachi-auth/active-room-session-routes.test.ts`
 
-- [ ] **Step 1: Write failing route and JWT tests**
+- [x] **Step 1: Write failing route and JWT tests**
 
 Cover:
 
@@ -378,13 +378,13 @@ pnpm --filter @anidachi/web test
 
 Expected: focused tests fail before route/token implementation.
 
-- [ ] **Step 2: Bind the session ID into room tokens**
+- [x] **Step 2: Bind the session ID into room tokens**
 
 Extend `RoomTokenPayload`, signing, verification, and tests. Apply the existing
 room-token algorithm/audience/TTL constraints. Do not place access tokens or
 extension auth artifacts inside room tokens.
 
-- [ ] **Step 3: Switch create/connect to atomic admission**
+- [x] **Step 3: Switch create/connect to atomic admission**
 
 Create:
 
@@ -404,7 +404,7 @@ Connect:
 Keep invite acceptance and `room_members` durable membership separate from
 live admission. Never use a UI preflight as authority.
 
-- [ ] **Step 4: Add exact public/internal departure paths**
+- [x] **Step 4: Add exact public/internal departure paths**
 
 The authenticated public endpoint forwards an internal command to the current
 room Durable Object using the existing internal service authorization. It must
@@ -420,13 +420,13 @@ that no matching socket/pending session ever existed, release a guest only by
 exact database match; end a host lobby only through an atomic exact-session
 fallback. Do not end a live room based only on a stale client request.
 
-- [ ] **Step 5: Make finalization repair active assignments**
+- [x] **Step 5: Make finalization repair active assignments**
 
 Update Web lifecycle parsing and tests for `host_disconnected`. Confirm every
 end path reaches the updated database finalization, and the already-ended path
 still clears leaked assignments.
 
-- [ ] **Step 6: Run Web and protocol gates**
+- [x] **Step 6: Run Web and protocol gates**
 
 ```bash
 pnpm --filter @anidachi/protocol test
@@ -438,12 +438,25 @@ git diff --check
 Expected: new route/JWT tests and all existing auth, invite, room-source, quota,
 and Watch History tests pass.
 
-- [ ] **Step 7: Commit the Web admission plane**
+- [x] **Step 7: Commit the Web admission plane**
 
 ```bash
 git add apps/web packages/protocol
 git commit -m "feat(web): enforce one active room per user"
 ```
+
+Implementation note: production room creation, direct connection, and Watch
+History v2 room recreation now use the atomic assignment RPCs. Invite
+acceptance remains durable membership only and issues no live room token; the
+extension must pass through the same connect admission path. Room tokens bind
+the exact participant session, and public/internal departure endpoints preserve
+Worker-first ordering with exact-session-only database fallbacks. Direct source
+search found the older `createRoomFromWatchSession` helper to be unreferenced by
+any live route; it remains only as additive rollback-era code and cannot bypass
+the production endpoints. Protocol tests passed 138/138, Web tests passed
+347/347 with 3 existing skips, Web type-check passed, and `git diff --check`
+passed before commit. No linked database, staging environment, extension test
+folder, deployment, or remote branch was mutated.
 
 ---
 

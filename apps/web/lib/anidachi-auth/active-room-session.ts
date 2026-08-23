@@ -4,7 +4,7 @@ import {
 } from "@anidachi/protocol";
 
 export const ACTIVE_ROOM_CONFLICT_MESSAGE =
-  "You already have an active room.";
+  "You already have an active watch room.";
 
 type ActiveRoomSummary = ActiveRoomConflictResponse["activeRoom"];
 
@@ -28,6 +28,16 @@ export class ActiveRoomSessionDatabaseError extends Error {
     super(message);
     this.name = "ActiveRoomSessionDatabaseError";
   }
+}
+
+export function activeRoomConflictResponse(
+  activeRoom: ActiveRoomSummary,
+): ActiveRoomConflictResponse {
+  return ActiveRoomConflictResponseSchema.parse({
+    code: "ACTIVE_ROOM_CONFLICT",
+    message: ACTIVE_ROOM_CONFLICT_MESSAGE,
+    activeRoom,
+  });
 }
 
 export function parseActiveRoomCreateRpcResult(
@@ -81,14 +91,30 @@ export function parseActiveRoomReleaseRpcResult(
   return { outcome: row.outcome };
 }
 
+export function parseHostLobbyEndRpcResult(
+  value: unknown,
+): { outcome: "room_ended" | "stale" } {
+  const row = singleStrictRow(value, ["outcome"]);
+  if (row.outcome !== "room_ended" && row.outcome !== "stale") {
+    throw malformed();
+  }
+  return { outcome: row.outcome };
+}
+
 function parseActiveRoom(value: unknown): ActiveRoomSummary {
-  const parsed = ActiveRoomConflictResponseSchema.safeParse({
-    code: "ACTIVE_ROOM_CONFLICT",
-    message: ACTIVE_ROOM_CONFLICT_MESSAGE,
-    activeRoom: value,
-  });
+  const parsed = ActiveRoomConflictResponseSchema.safeParse(
+    activeRoomConflictResponseInput(value),
+  );
   if (!parsed.success) throw malformed();
   return parsed.data.activeRoom;
+}
+
+function activeRoomConflictResponseInput(activeRoom: unknown) {
+  return {
+    code: "ACTIVE_ROOM_CONFLICT" as const,
+    message: ACTIVE_ROOM_CONFLICT_MESSAGE,
+    activeRoom,
+  };
 }
 
 function singleStrictRow(

@@ -1,4 +1,5 @@
 import { SignJWT, jwtVerify, type JWTPayload } from "jose";
+import { RoomSessionAdmissionInputSchema } from "@anidachi/protocol";
 import {
   isRoomCapabilities,
   normalizePlanCode,
@@ -81,6 +82,7 @@ export type RoomTokenPayload = {
   sub: string; // userId
   roomId: string;
   role: "host" | "member";
+  participantSessionId: string;
   capabilities?: RoomCapabilities;
   displayName?: string;
   avatarUrl?: string | null;
@@ -92,6 +94,9 @@ export async function signRoomToken(
   payload: RoomTokenPayload,
   expiresInSeconds: number = ROOM_TOKEN_DEFAULT_TTL_SECONDS
 ): Promise<string> {
+  const admission = RoomSessionAdmissionInputSchema.parse({
+    participantSessionId: payload.participantSessionId,
+  });
   // Free-plan hosts get tokens capped to their remaining daily quota (PD2);
   // the TTL can shrink but never exceed the standard room token life.
   const ttl = Math.max(
@@ -101,12 +106,14 @@ export async function signRoomToken(
   return new SignJWT({
     roomId: payload.roomId,
     role: payload.role,
+    participantSessionId: admission.participantSessionId,
     capabilities: payload.capabilities,
     displayName: payload.displayName,
     avatarUrl: payload.avatarUrl ?? null,
     typ: "room",
   })
     .setProtectedHeader({ alg: "HS256" })
+    .setIssuer(ANIDACHI_AUTH_ISSUER)
     .setSubject(payload.sub)
     .setAudience("anidachi-worker")
     .setIssuedAt()
@@ -119,11 +126,28 @@ export async function verifyRoomToken(
 ): Promise<RoomTokenPayload | null> {
   try {
     const { payload } = await jwtVerify(token, getJwtSecret(), {
+      algorithms: ["HS256"],
+      issuer: ANIDACHI_AUTH_ISSUER,
       audience: "anidachi-worker",
+      requiredClaims: ["iss", "aud", "sub", "iat", "exp"],
     });
+    if (payload.aud !== "anidachi-worker") return null;
     if (payload.typ !== "room") return null;
-    if (!payload.sub || !payload.roomId || !payload.role) return null;
+    if (
+      typeof payload.sub !== "string" ||
+      !payload.sub ||
+      typeof payload.roomId !== "string" ||
+      !payload.roomId ||
+      payload.roomId.length > 128 ||
+      !payload.role
+    ) {
+      return null;
+    }
     if (payload.role !== "host" && payload.role !== "member") return null;
+    const admission = RoomSessionAdmissionInputSchema.safeParse({
+      participantSessionId: payload.participantSessionId,
+    });
+    if (!admission.success) return null;
     if (payload.capabilities !== undefined && !isRoomCapabilities(payload.capabilities)) {
       return null;
     }
@@ -140,6 +164,7 @@ export async function verifyRoomToken(
       sub: payload.sub,
       roomId: payload.roomId as string,
       role: payload.role,
+      participantSessionId: admission.data.participantSessionId,
       capabilities: payload.capabilities,
       displayName: payload.displayName,
       avatarUrl: payload.avatarUrl ?? null,

@@ -554,4 +554,70 @@ test("delete and room recreation require strict bodies and return only service r
   );
   assert.equal(badRoom.status, 400);
   assert.equal((await badRoom.json()).code, "INVALID_REQUEST");
+
+  const missingSessionBinding = await routes.postRoom(
+    request("/api/watch-history/v2/rooms", {
+      method: "POST",
+      body: JSON.stringify({ sessionId: EVENT_ID }),
+    }),
+  );
+  assert.equal(missingSessionBinding.status, 400);
+  assert.equal((await missingSessionBinding.json()).code, "INVALID_REQUEST");
+});
+
+test("room recreation forwards the exact tab session and returns the shared conflict", async () => {
+  let participantSessionId = "";
+  const success = createWatchHistoryV2RouteHandlers(
+    dependencies({
+      createRoomFromSession: async (params) => {
+        participantSessionId = params.participantSessionId;
+        return dependencies().createRoomFromSession(params);
+      },
+    }),
+  );
+  const response = await success.postRoom(
+    request("/api/watch-history/v2/rooms", {
+      method: "POST",
+      body: JSON.stringify({
+        sessionId: EVENT_ID,
+        participantSessionId: "participant-session-one",
+      }),
+    }),
+  );
+  assert.equal(response.status, 200);
+  assert.equal(participantSessionId, "participant-session-one");
+
+  const conflict = createWatchHistoryV2RouteHandlers(
+    dependencies({
+      createRoomFromSession: async () => ({
+        outcome: "conflict",
+        activeRoom: {
+          roomId: "active-youtube-room",
+          role: "member",
+          provider: "youtube",
+          title: "Another video",
+        },
+      }),
+    }),
+  );
+  const conflictResponse = await conflict.postRoom(
+    request("/api/watch-history/v2/rooms", {
+      method: "POST",
+      body: JSON.stringify({
+        sessionId: EVENT_ID,
+        participantSessionId: "participant-session-two",
+      }),
+    }),
+  );
+  assert.equal(conflictResponse.status, 409);
+  assert.deepEqual(await conflictResponse.json(), {
+    code: "ACTIVE_ROOM_CONFLICT",
+    message: "You already have an active watch room.",
+    activeRoom: {
+      roomId: "active-youtube-room",
+      role: "member",
+      provider: "youtube",
+      title: "Another video",
+    },
+  });
 });

@@ -11,6 +11,7 @@ import {
   parseActiveRoomClaimRpcResult,
   parseActiveRoomCreateRpcResult,
   parseActiveRoomReleaseRpcResult,
+  parseHostLobbyEndRpcResult,
 } from "./active-room-session";
 import type { PlanCode, RoomCapabilities } from "./plan-entitlements";
 import {
@@ -596,6 +597,24 @@ export async function releaseActiveRoomSession(params: {
     throw new Error(`Failed to release active room: ${result.error.message}`);
   }
   return parseActiveRoomReleaseRpcResult(result.data);
+}
+
+export async function endHostLobbyForActiveSession(params: {
+  userId: string;
+  roomId: string;
+  participantSessionId: string;
+  endedAt: string;
+}): Promise<{ outcome: "room_ended" | "stale" }> {
+  const result = await db().rpc("end_host_lobby_for_active_session_v1", {
+    p_user_id: params.userId,
+    p_room_id: params.roomId,
+    p_participant_session_id: params.participantSessionId,
+    p_ended_at: params.endedAt,
+  });
+  if (result.error) {
+    throw new Error(`Failed to end active host lobby: ${result.error.message}`);
+  }
+  return parseHostLobbyEndRpcResult(result.data);
 }
 
 /**
