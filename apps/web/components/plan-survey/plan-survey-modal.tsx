@@ -393,7 +393,7 @@ export function PlanSurveyModal({
         referralLink?: string | null;
         referralCount?: number;
       };
-      if (!res.ok) {
+      if (!res.ok || data.ok !== true) {
         setEmailError(data.error ?? "Could not save — please try again.");
         return;
       }

@@ -12,7 +12,7 @@ import {
   waitlistLeadSummary,
   withRefCodeSegment,
 } from "./survey-lead-shared";
-import { readContacts, writeContacts } from "./store";
+import { mutateContacts, readContacts } from "./store";
 import type { Contact } from "./types";
 import { isValidEmail, normalizeEmail } from "./validation";
 
@@ -61,6 +61,10 @@ function buildSurveyNote(
     `Discovery: ${survey.discovery ?? "—"}`,
     `Captured: ${new Date().toISOString()}`,
   ].join("\n");
+}
+
+function surveyNoteIdentity(note: string): string {
+  return note.replace(/\nCaptured: .*$/, "");
 }
 
 function creditReferrer(
@@ -146,63 +150,73 @@ export async function upsertSurveyLead(
     });
   }
 
-  const contacts = await readContacts();
-  const idx = contacts.findIndex(
-    (c) => normalizeEmail(c.email) === normalized,
-  );
   const now = new Date().toISOString();
   const trimmedName = name?.trim() ?? "";
   const referredBy = opts?.referredBy?.trim() ?? "";
-  const isNewLead = idx === -1;
-
-  let segments = buildSurveySegments(survey, opts?.signupSource);
   const surveyNote = buildSurveyNote(survey, trimmedName, {
     referredBy: referredBy || undefined,
     viaReferralLink: opts?.viaReferralLink,
   });
 
-  if (isNewLead) {
-    const id = randomUUID();
-    if (referredBy) segments.push(`referred_by:${referredBy}`);
-    segments = withRefCodeSegment(segments, id);
-    const contact: Contact = {
-      id,
-      email: normalized,
-      company: "",
-      first_name: trimmedName,
-      segments,
-      notes: surveyNote,
-      status: "active",
-      next_action_date: null,
-      created_at: now,
-      updated_at: now,
-    };
-    contacts.push(contact);
-
-    if (opts?.creditReferral && referredBy) {
-      creditReferrer(contacts, referredBy, normalized);
-    }
-  } else {
-    const cur = contacts[idx]!;
-    const mergedNotes = cur.notes.trim()
-      ? `${cur.notes.trim()}\n\n---\n${surveyNote}`
-      : surveyNote;
-    segments = mergeSegments(cur.segments, segments);
-    segments = withRefCodeSegment(segments, cur.id);
-    contacts[idx] = {
-      ...cur,
-      first_name: trimmedName || cur.first_name,
-      segments,
-      notes: mergedNotes,
-      updated_at: now,
-    };
-  }
-
   try {
-    await writeContacts(contacts);
+    const committed = await mutateContacts((contacts) => {
+      const idx = contacts.findIndex(
+        (contact) => normalizeEmail(contact.email) === normalized,
+      );
+      const isNewLead = idx === -1;
+      let segments = buildSurveySegments(survey, opts?.signupSource);
+
+      if (isNewLead) {
+        const id = randomUUID();
+        if (referredBy) segments.push(`referred_by:${referredBy}`);
+        segments = withRefCodeSegment(segments, id);
+        contacts.push({
+          id,
+          email: normalized,
+          company: "",
+          first_name: trimmedName,
+          segments,
+          notes: surveyNote,
+          status: "active",
+          next_action_date: null,
+          created_at: now,
+          updated_at: now,
+        });
+
+        if (opts?.creditReferral && referredBy) {
+          creditReferrer(contacts, referredBy, normalized);
+        }
+      } else {
+        const cur = contacts[idx]!;
+        const noteIdentity = surveyNoteIdentity(surveyNote);
+        const alreadyRecorded = cur.notes.includes(noteIdentity);
+        const mergedNotes = alreadyRecorded
+          ? cur.notes
+          : cur.notes.trim()
+            ? `${cur.notes.trim()}\n\n---\n${surveyNote}`
+            : surveyNote;
+        segments = mergeSegments(cur.segments, segments);
+        segments = withRefCodeSegment(segments, cur.id);
+        contacts[idx] = {
+          ...cur,
+          first_name: trimmedName || cur.first_name,
+          segments,
+          notes: mergedNotes,
+          updated_at: now,
+        };
+      }
+
+      return { changed: true, value: { isNewLead } };
+    });
+    return buildResult(
+      committed.contacts,
+      normalized,
+      true,
+      committed.value.isNewLead,
+    );
   } catch (error) {
-    console.error("[survey-lead] Failed to write contacts:", error);
-    const persisted = await readContacts();
+    console.error("[survey-lead] Failed to persist CRM contact", error);
+    const persisted = await readContacts().catch(() => [] as Contact[]);
     const persistedLead = persisted.find(
       (c) => normalizeEmail(c.email) === normalized,
     );
@@ -227,7 +241,6 @@ export async function upsertSurveyLead(
     };
   }
 
-  return buildResult(contacts, normalized, true, isNewLead);
 }
 
 export type AccountWaitlistStatus = {
@@ -248,16 +261,17 @@ export async function getAccountWaitlistStatus(
   if (!lead) return null;
 
   if (!parseRefCode(lead.segments)) {
-    const idx = contacts.findIndex((c) => c.id === lead.id);
-    if (idx !== -1) {
-      contacts[idx] = {
-        ...contacts[idx]!,
-        segments: withRefCodeSegment(contacts[idx]!.segments, contacts[idx]!.id),
+    const committed = await mutateContacts((current) => {
+      const idx = current.findIndex((contact) => contact.id === lead.id);
+      if (idx === -1) return { changed: false, value: undefined };
+      current[idx] = {
+        ...current[idx]!,
+        segments: withRefCodeSegment(current[idx]!.segments, current[idx]!.id),
         updated_at: new Date().toISOString(),
       };
-      await writeContacts(contacts);
-      contacts = await readContacts();
-    }
+      return { changed: true, value: undefined };
+    });
+    contacts = committed.contacts;
   }
 
   const summary = waitlistLeadSummary(

@@ -1,4 +1,5 @@
 import {
+  BlobPreconditionFailedError,
   del as vercelBlobDel,
   get as vercelBlobGet,
   put as vercelBlobPut,
@@ -27,11 +28,14 @@ type PrivateAuth =
 type PrivateGetOptions = { access: "private"; useCache: false } & PrivateAuth;
 type WriteOptions = {
   addRandomSuffix: false;
-  allowOverwrite: true;
+  allowOverwrite: boolean;
   cacheControlMaxAge: 60;
   contentType: "application/json" | "application/x-ndjson";
 };
-type PrivateWriteOptions = PrivateAuth & WriteOptions & { access: "private" };
+type PrivateWriteOptions = PrivateAuth & WriteOptions & {
+  access: "private";
+  ifMatch?: string;
+};
 
 type BlobReadResult = {
   statusCode: number;
@@ -58,6 +62,12 @@ export type PrivateIntegrationBlobSdk = {
   del: (pathname: string, options: PrivateAuth) => Promise<unknown>;
 };
 
+export type PrivateBlobSnapshot = {
+  pathname: string;
+  text: string;
+  etag: string;
+};
+
 const DEFAULT_SDK: PrivateIntegrationBlobSdk = {
   get: vercelBlobGet as PrivateIntegrationBlobSdk["get"],
   put: vercelBlobPut as PrivateIntegrationBlobSdk["put"],
@@ -68,6 +78,17 @@ export function isPrivateIntegrationBlobPath(pathname: string): boolean {
   return (
     EXACT_PRIVATE_PATHS.has(pathname) || OPENCLAW_JOB_PATH.test(pathname)
   );
+}
+
+export function vercelBlobEtagForIfMatch(
+  value: string | null | undefined,
+): string | null {
+  const observed = value?.trim();
+  if (!observed) return null;
+  const strong = observed.startsWith("W/")
+    ? observed.slice(2).trimStart()
+    : observed;
+  return strong.startsWith('"') && strong.endsWith('"') ? strong : null;
 }
 
 function assertPrivatePath(pathname: string): void {
@@ -95,7 +116,7 @@ export function createPrivateIntegrationBlobClient(input: {
   async function readResult(
     pathname: string,
     options: PrivateGetOptions,
-  ): Promise<string | null> {
+  ): Promise<PrivateBlobSnapshot | null> {
     const result = await sdk.get(pathname, options);
     if (!result || result.statusCode !== 200 || !result.stream) return null;
     if (result.blob.pathname !== pathname) {
@@ -104,7 +125,16 @@ export function createPrivateIntegrationBlobClient(input: {
         `Private Blob returned an unexpected pathname for ${pathname}`,
       );
     }
-    return new Response(result.stream).text();
+    const etag = vercelBlobEtagForIfMatch(result.blob.etag);
+    if (!etag) {
+      await result.stream.cancel().catch(() => undefined);
+      throw new Error(`Private Blob returned no ETag for ${pathname}`);
+    }
+    return {
+      pathname,
+      text: await new Response(result.stream).text(),
+      etag,
+    };
   }
 
   async function writeResult(
@@ -121,9 +151,20 @@ export function createPrivateIntegrationBlobClient(input: {
   }
 
   return {
-    async readText(pathname: string): Promise<string | null> {
+    async readSnapshot(
+      pathname: string,
+    ): Promise<PrivateBlobSnapshot | null> {
       assertPrivatePath(pathname);
       return readResult(pathname, privateOptions(input.privateAuth));
+    },
+
+    async readText(pathname: string): Promise<string | null> {
+      assertPrivatePath(pathname);
+      const snapshot = await readResult(
+        pathname,
+        privateOptions(input.privateAuth),
+      );
+      return snapshot?.text ?? null;
     },
 
     async writeText(pathname: string, text: string): Promise<void> {
@@ -146,6 +187,48 @@ export function createPrivateIntegrationBlobClient(input: {
       );
     },
 
+    async updateText(
+      pathname: string,
+      mutate: (current: string | null) => string | Promise<string>,
+    ): Promise<string> {
+      assertPrivatePath(pathname);
+      const maxAttempts = 4;
+
+      for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+        const snapshot = await readResult(
+          pathname,
+          privateOptions(input.privateAuth),
+        );
+        const next = await mutate(snapshot?.text ?? null);
+        if (snapshot && next === snapshot.text) return next;
+        const commonOptions: WriteOptions = {
+          addRandomSuffix: false,
+          allowOverwrite: snapshot !== null,
+          cacheControlMaxAge: 60,
+          contentType: contentTypeFor(pathname),
+        };
+
+        try {
+          await writeResult(pathname, next, {
+            access: "private",
+            ...input.privateAuth,
+            ...commonOptions,
+            ...(snapshot ? { ifMatch: snapshot.etag } : {}),
+          });
+          return next;
+        } catch (error) {
+          if (
+            !(error instanceof BlobPreconditionFailedError) ||
+            attempt === maxAttempts
+          ) {
+            throw error;
+          }
+        }
+      }
+
+      throw new Error(`Private Blob update attempts exhausted for ${pathname}`);
+    },
+
     async delete(pathname: string): Promise<void> {
       assertPrivatePath(pathname);
       await sdk.del(pathname, input.privateAuth);
@@ -163,6 +246,16 @@ function runtimePrivateAuth(): PrivateAuth | null {
   return oidcToken ? { storeId, oidcToken } : { storeId };
 }
 
+function runtimeKreatliCrmAuth(): PrivateAuth | null {
+  const token = process.env.KREATLI_CRM_BLOB_READ_WRITE_TOKEN?.trim();
+  if (token) return { token };
+
+  const storeId = process.env.KREATLI_CRM_BLOB_STORE_ID?.trim();
+  if (!storeId) return null;
+  const oidcToken = process.env.VERCEL_OIDC_TOKEN?.trim();
+  return oidcToken ? { storeId, oidcToken } : { storeId };
+}
+
 function runtimeClient() {
   const privateAuth = runtimePrivateAuth();
   if (!privateAuth) {
@@ -173,8 +266,40 @@ function runtimeClient() {
   });
 }
 
+function runtimeKreatliCrmClient() {
+  const privateAuth = runtimeKreatliCrmAuth();
+  if (!privateAuth) {
+    throw new Error("Kreatli CRM Blob storage is not configured");
+  }
+  return createPrivateIntegrationBlobClient({ privateAuth });
+}
+
 export function hasPrivateIntegrationBlobConfiguration(): boolean {
   return runtimePrivateAuth() !== null;
+}
+
+export function hasKreatliCrmBlobConfiguration(): boolean {
+  return runtimeKreatliCrmAuth() !== null;
+}
+
+export async function readKreatliCrmBlobText(
+  pathname: string,
+): Promise<string | null> {
+  return runtimeKreatliCrmClient().readText(pathname);
+}
+
+export async function writeKreatliCrmBlobText(
+  pathname: string,
+  text: string,
+): Promise<void> {
+  await runtimeKreatliCrmClient().writeText(pathname, text);
+}
+
+export async function updateKreatliCrmBlobText(
+  pathname: string,
+  mutate: (current: string | null) => string | Promise<string>,
+): Promise<string> {
+  return runtimeKreatliCrmClient().updateText(pathname, mutate);
 }
 
 export async function readPrivateIntegrationBlobText(

@@ -7,6 +7,15 @@ Most older files here are not current onboarding documentation. They may contain
 paths, old repository names, old endpoints, and decisions that were correct at
 the time but are no longer current.
 
+Active public-product recovery plan:
+
+1. `2026-08-23-waitlist-crm-durable-storage-recovery.md` — restores the durable
+   waitlist counter and survey/contact/feature-request persistence through the
+   existing private CRM store. Code, lossless data reconciliation, recovery of
+   three failed leads, and fresh-deployment acceptance are complete on
+   `staging`; Production configuration and any `main` promotion remain an
+   explicit later gate.
+
 Completed technical `main`-baseline promotion record:
 
 1. `2026-08-22-safe-staging-main-foundation-promotion.md` — records the
