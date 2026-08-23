@@ -247,10 +247,9 @@ export const ClientEventSchema = z.discriminatedUnion("type", [
     participant: ParticipantSchema,
     videoFingerprint: VideoFingerprintSchema,
     lastSeenP2PServerSeq: z.number().int().nonnegative().optional(),
-    // Stable id for one overlay/tab room session. Lets the Worker tell a
-    // reconnect of the same session apart from a takeover by a different
-    // tab/device (one active session, owner decision 2026-06-13).
-    participantSessionId: SessionIdSchema.optional(),
+    // Bound into the Web-issued token before admission. The Worker requires
+    // this exact tab session on every initial JOIN and reconnect.
+    participantSessionId: SessionIdSchema,
   }),
   RoomScopedSchema.extend({
     type: z.literal("HOST_STATE"),

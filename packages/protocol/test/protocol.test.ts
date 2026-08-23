@@ -149,6 +149,9 @@ describe("room protocol schemas", () => {
         participantSessionId: "s".repeat(MAX_SESSION_ID_CHARS + 1),
       }),
     ).toThrow();
+    expect(() =>
+      ClientEventSchema.parse({ ...baseJoin, participantSessionId: undefined }),
+    ).toThrow();
   });
 
   it("rejects oversized SDP and ICE candidates", () => {

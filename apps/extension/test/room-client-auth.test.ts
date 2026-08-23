@@ -16,6 +16,7 @@ import {
   RoomApiError,
   RoomClient,
 } from "../src/room-client";
+import type { PreparedRoomSession } from "../src/room-session-storage";
 
 class ControlledWebSocket {
   static CONNECTING = 0;
@@ -73,6 +74,42 @@ const roomParticipant = {
   syncStatus: "unknown" as const,
   lastSeenAt: 0,
 };
+
+const preparedRoomSession: PreparedRoomSession = {
+  version: 1 as const,
+  preparationId: "preparation-1",
+  roomId: null,
+  ownerUserId: "user-1",
+  participantSessionId: "participant-session-1",
+};
+
+function preparedRoomSessionFor(roomId: string): PreparedRoomSession {
+  return {
+    ...preparedRoomSession,
+    preparationId: `preparation-${roomId}`,
+    roomId,
+  };
+}
+
+function confirmedRoomSession(
+  roomId: string,
+  prepared: PreparedRoomSession = preparedRoomSessionFor(roomId),
+) {
+  return {
+    version: 1 as const,
+    revision: 1,
+    roomId,
+    ownerUserId: prepared.ownerUserId,
+    participantSessionId: prepared.participantSessionId,
+    voiceMode: "push-to-talk" as const,
+  };
+}
+
+const confirmRoomSession = vi.fn(async (
+  _tabId: number,
+  prepared: PreparedRoomSession,
+  roomId: string,
+) => confirmedRoomSession(roomId, prepared));
 
 function roomSnapshot(roomId = "room-1") {
   return {
@@ -156,17 +193,26 @@ describe("authenticated room client", () => {
   });
 
   it("validates room bridge runtime messages", () => {
-    expect(isRoomHttpMessage(createRoomHttpMessage("access-1"))).toBe(true);
+    expect(isRoomHttpMessage(createRoomHttpMessage("access-1", preparedRoomSession))).toBe(true);
     expect(
       isRoomHttpMessage(
-        createRoomHttpMessage("access-1", {
+        createRoomHttpMessage("access-1", preparedRoomSession, {
           sourceUrl: "https://www.youtube.com/watch?v=abc",
           videoFingerprint: "youtube|abc",
           title: "Video title",
         }),
       ),
     ).toBe(true);
-    expect(isRoomHttpMessage(connectRoomHttpMessage("room-1", "access-1"))).toBe(true);
+    expect(
+      isRoomHttpMessage(
+        connectRoomHttpMessage("room-1", "access-1", preparedRoomSessionFor("room-1")),
+      ),
+    ).toBe(true);
+    expect(isRoomHttpMessage({
+      type: "ANIDACHI_ROOM_HTTP",
+      command: "create-room",
+      accessToken: "access-1",
+    })).toBe(false);
     expect(isRoomHttpMessage({ type: "ANIDACHI_ROOM_HTTP", command: "unknown" })).toBe(false);
     expect(isRoomHttpMessage({ type: "ANIDACHI_ROOM_HTTP", command: "create-room" })).toBe(false);
     expect(
@@ -200,7 +246,11 @@ describe("authenticated room client", () => {
       clientRequestId: "click-1",
     };
 
-    await expect(createWebsiteRoomFromApi("access-1", input)).resolves.toEqual({
+    await expect(createWebsiteRoomFromApi(
+      "access-1",
+      "participant-session-1",
+      input,
+    )).resolves.toEqual({
       roomId: "room-1",
       roomToken: "room-token-1",
       shareableLink: "http://localhost:3003/room/room-1",
@@ -222,6 +272,7 @@ describe("authenticated room client", () => {
           showId: "show-1",
           episodeId: "episode-1",
           clientRequestId: "click-1",
+          participantSessionId: "participant-session-1",
         }),
       },
     );
@@ -237,7 +288,7 @@ describe("authenticated room client", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await createWebsiteRoomFromApi("access-1", {
+    await createWebsiteRoomFromApi("access-1", "participant-session-1", {
       sourceUrl: "https://youtu.be/dQw4w9WgXcQ/",
       videoFingerprint: "youtube|/dQw4w9WgXcQ/",
       title: "Video title",
@@ -253,6 +304,7 @@ describe("authenticated room client", () => {
       showId: "show-1",
       episodeId: "episode-1",
       clientRequestId: "click-1",
+      participantSessionId: "participant-session-1",
     });
   });
 
@@ -293,7 +345,9 @@ describe("authenticated room client", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(createWebsiteRoomFromApi("access-1", input)).rejects.toMatchObject({
+    await expect(
+      createWebsiteRoomFromApi("access-1", "participant-session-1", input),
+    ).rejects.toMatchObject({
       code: "INVALID_SOURCE",
       message: "Invalid room source",
     });
@@ -309,7 +363,7 @@ describe("authenticated room client", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(
-      connectWebsiteRoomFromApi("room-2", "access-1"),
+      connectWebsiteRoomFromApi("room-2", "access-1", "participant-session-1"),
     ).resolves.toEqual({
       roomToken: "room-token-2",
       quota: null,
@@ -322,8 +376,71 @@ describe("authenticated room client", () => {
           Authorization: "Bearer access-1",
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({ participantSessionId: "participant-session-1" }),
       },
     );
+  });
+
+  it("binds the prepared participant session into create and connect HTTP bodies", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(Response.json({
+        roomId: "room-1",
+        roomToken: "room-token-1",
+        shareableLink: "http://localhost:3003/room/room-1",
+      }))
+      .mockResolvedValueOnce(Response.json({ roomToken: "room-token-2" }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await createWebsiteRoomFromApi(
+      "access-1",
+      preparedRoomSession.participantSessionId,
+      { clientRequestId: "click-1" },
+    );
+    await connectWebsiteRoomFromApi(
+      "room-2",
+      "access-1",
+      preparedRoomSession.participantSessionId,
+    );
+
+    expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({
+      clientRequestId: "click-1",
+      participantSessionId: "participant-session-1",
+    });
+    expect(JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body))).toEqual({
+      participantSessionId: "participant-session-1",
+    });
+  });
+
+  it("keeps a structured active-room conflict across the background bridge", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      code: "ACTIVE_ROOM_CONFLICT",
+      message: "You already have an active watch room.",
+      activeRoom: {
+        roomId: "room-active",
+        role: "host",
+        provider: "youtube",
+        title: "Current video",
+      },
+    }), { status: 409 })));
+
+    const response = await handleRoomHttpMessage(
+      createRoomHttpMessage("access-1", preparedRoomSession),
+      { tab: { id: 5 } },
+      { issueAuthority: vi.fn().mockResolvedValue(null) },
+    );
+
+    expect(response).toEqual({
+      ok: false,
+      error: "You already have an active watch room. (409)",
+      code: "ACTIVE_ROOM_CONFLICT",
+      status: 409,
+      activeRoom: {
+        roomId: "room-active",
+        role: "host",
+        provider: "youtube",
+        title: "Current video",
+      },
+    });
   });
 
   it("parses quota, reused, and clientRequestId on create", async () => {
@@ -342,14 +459,18 @@ describe("authenticated room client", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const input = { clientRequestId: "click-1" };
-    await expect(createWebsiteRoomFromApi("access-1", input)).resolves.toEqual({
+    await expect(
+      createWebsiteRoomFromApi("access-1", "participant-session-1", input),
+    ).resolves.toEqual({
       roomId: "room-1",
       roomToken: "room-token-1",
       shareableLink: "http://localhost:3003/room/room-1",
       reused: true,
       quota: { remainingSeconds: 900, resetAt: "2026-06-14T00:00:00.000Z" },
     });
-    expect(isRoomHttpMessage(createRoomHttpMessage("access-1", input))).toBe(true);
+    expect(
+      isRoomHttpMessage(createRoomHttpMessage("access-1", preparedRoomSession, input)),
+    ).toBe(true);
   });
 
   it("surfaces quota exhaustion as a structured room api error", async () => {
@@ -366,7 +487,9 @@ describe("authenticated room client", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    const response = await handleRoomHttpMessage(createRoomHttpMessage("access-1"));
+    const response = await handleRoomHttpMessage(
+      createRoomHttpMessage("access-1", preparedRoomSession),
+    );
     expect(response).toEqual({
       ok: false,
       error: "Daily free watch-party time is used up (403)",
@@ -386,7 +509,7 @@ describe("authenticated room client", () => {
     });
     vi.stubGlobal("chrome", { runtime: { sendMessage } });
 
-    const error = await createRoom("access-1").catch((caught) => caught);
+    const error = await createRoom("access-1", preparedRoomSession).catch((caught) => caught);
     expect(isQuotaExhaustedError(error)).toBe(true);
     expect(error.resetAt).toBe("2026-06-14T00:00:00.000Z");
     expect(error.status).toBe(403);
@@ -442,6 +565,7 @@ describe("authenticated room client", () => {
         roomId: "room-1",
         roomToken: "room-token-1",
         shareableLink: "http://localhost:3003/room/room-1",
+        roomSession: confirmedRoomSession("room-1", preparedRoomSession),
       },
     });
     vi.stubGlobal("chrome", { runtime: { sendMessage } });
@@ -451,12 +575,15 @@ describe("authenticated room client", () => {
       title: "Video title",
     };
 
-    await expect(createRoom("access-1", input)).resolves.toEqual({
+    await expect(createRoom("access-1", preparedRoomSession, input)).resolves.toEqual({
       roomId: "room-1",
       roomToken: "room-token-1",
       shareableLink: "http://localhost:3003/room/room-1",
+      roomSession: confirmedRoomSession("room-1", preparedRoomSession),
     });
-    expect(sendMessage).toHaveBeenCalledWith(createRoomHttpMessage("access-1", input));
+    expect(sendMessage).toHaveBeenCalledWith(
+      createRoomHttpMessage("access-1", preparedRoomSession, input),
+    );
   });
 
   it("returns background-issued host authority only from a successful room response", async () => {
@@ -486,12 +613,15 @@ describe("authenticated room client", () => {
       handleRoomHttpMessage as unknown as (
         message: ReturnType<typeof createRoomHttpMessage>,
         sender: { tab: { id: number } },
-        dependencies: { issueAuthority: typeof issueAuthority },
+        dependencies: {
+          confirmRoomSession: typeof confirmRoomSession;
+          issueAuthority: typeof issueAuthority;
+        },
       ) => Promise<unknown>
     )(
-      createRoomHttpMessage("access-1"),
+      createRoomHttpMessage("access-1", preparedRoomSession),
       { tab: { id: 41 } },
-      { issueAuthority },
+      { confirmRoomSession, issueAuthority },
     );
 
     expect(response).toMatchObject({
@@ -519,15 +649,17 @@ describe("authenticated room client", () => {
       authorityGeneration: roomId === "room-new" ? 2 : 1,
     }));
     const sender = { tab: { id: 42 } };
+    const firstPrepared = preparedRoomSessionFor("room-old");
+    const secondPrepared = preparedRoomSessionFor("room-new");
     const first = handleRoomHttpMessage(
-      connectRoomHttpMessage("room-old", "access-1"),
+      connectRoomHttpMessage("room-old", "access-1", firstPrepared),
       sender,
-      { issueAuthority },
+      { confirmRoomSession, issueAuthority },
     );
     const second = handleRoomHttpMessage(
-      connectRoomHttpMessage("room-new", "access-1"),
+      connectRoomHttpMessage("room-new", "access-1", secondPrepared),
       sender,
-      { issueAuthority },
+      { confirmRoomSession, issueAuthority },
     );
 
     secondResponse.resolve(roomConnectionResponse("room-new"));
@@ -546,14 +678,21 @@ describe("authenticated room client", () => {
   it("connects rooms through the extension runtime bridge", async () => {
     const sendMessage = vi.fn().mockResolvedValue({
       ok: true,
-      connection: { roomToken: "room-token-2" },
+      connection: {
+        roomToken: "room-token-2",
+        roomSession: confirmedRoomSession("room-2", preparedRoomSessionFor("room-2")),
+      },
     });
     vi.stubGlobal("chrome", { runtime: { sendMessage } });
 
-    await expect(connectWebsiteRoom("room-2", "access-1")).resolves.toEqual({
+    const prepared = preparedRoomSessionFor("room-2");
+    await expect(connectWebsiteRoom("room-2", "access-1", prepared)).resolves.toEqual({
       roomToken: "room-token-2",
+      roomSession: confirmedRoomSession("room-2", prepared),
     });
-    expect(sendMessage).toHaveBeenCalledWith(connectRoomHttpMessage("room-2", "access-1"));
+    expect(sendMessage).toHaveBeenCalledWith(
+      connectRoomHttpMessage("room-2", "access-1", prepared),
+    );
   });
 
   it("returns whether each valid room event was sent, queued, or dropped", () => {
@@ -571,6 +710,7 @@ describe("authenticated room client", () => {
       roomId: "room-1",
       roomToken: "room-token-1",
       participant: roomParticipant,
+      participantSessionId: "participant-session-1",
       videoFingerprint: "video-1",
       onEvent: vi.fn(),
       onStatus: vi.fn(),
@@ -607,6 +747,7 @@ describe("authenticated room client", () => {
       roomId: "room-1",
       roomToken: "room-token-1",
       participant: roomParticipant,
+      participantSessionId: "participant-session-1",
       videoFingerprint: "video-1",
       reconnect: true,
       onEvent: (event) => timeline.push(`event:${event.type}`),
@@ -746,6 +887,7 @@ describe("authenticated room client", () => {
       roomId: "room-1",
       roomToken: "room-token-1",
       participant: roomParticipant,
+      participantSessionId: "participant-session-1",
       videoFingerprint: "video-1",
       reconnect: false,
       onEvent: vi.fn(),
@@ -760,6 +902,7 @@ describe("authenticated room client", () => {
       roomId: "room-1",
       roomToken: "room-token-2",
       participant: roomParticipant,
+      participantSessionId: "participant-session-1",
       videoFingerprint: "video-1",
       reconnect: true,
       onEvent: vi.fn(),
@@ -789,6 +932,7 @@ describe("authenticated room client", () => {
       roomId: "room-1",
       roomToken: "room-token-1",
       participant: roomParticipant,
+      participantSessionId: "participant-session-1",
       videoFingerprint: "video-1",
       onEvent: (event) => {
         if (event.type === "ROOM_SNAPSHOT") client.close();
@@ -812,6 +956,7 @@ describe("authenticated room client", () => {
       roomId: "room-1",
       roomToken: "room-token-1",
       participant: roomParticipant,
+      participantSessionId: "participant-session-1",
       videoFingerprint: "video-1",
       onEvent: vi.fn(),
       onStatus: (status) => statuses.push(status),
@@ -879,6 +1024,7 @@ describe("authenticated room client", () => {
         syncStatus: "unknown" as const,
         lastSeenAt: 0,
       },
+      participantSessionId: "participant-session-1",
       videoFingerprint: "video-1",
       onEvent: vi.fn(),
       onStatus: (status: string) => statuses.push(status),
@@ -957,6 +1103,7 @@ describe("authenticated room client", () => {
         syncStatus: "unknown",
         lastSeenAt: 0,
       },
+      participantSessionId: "participant-session-1",
       videoFingerprint: "video-1",
       onEvent,
       onStatus: vi.fn(),
@@ -1040,6 +1187,7 @@ describe("authenticated room client", () => {
         syncStatus: "unknown",
         lastSeenAt: 0,
       },
+      participantSessionId: "participant-session-1",
       videoFingerprint: "video-1",
       onEvent: vi.fn(),
       onStatus: (status) => statuses.push(status),
@@ -1084,6 +1232,7 @@ describe("authenticated room client", () => {
         id: "user-1", displayName: "User", role: "viewer", cameraEnabled: false,
         mediaSeat: "none", syncStatus: "unknown", lastSeenAt: 0,
       },
+      participantSessionId: "participant-session-1",
       videoFingerprint: "video-1",
       onEvent: vi.fn(),
       onStatus: vi.fn(),

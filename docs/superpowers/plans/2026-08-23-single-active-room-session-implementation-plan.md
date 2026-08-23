@@ -603,7 +603,7 @@ environment, extension test folder, deployment, or remote branch was mutated.
 - Modify: `apps/extension/src/room-tab-lock.ts`
 - Modify: `apps/extension/test/room-tab-lock.test.ts`
 
-- [ ] **Step 1: Write failing session-preparation tests**
+- [x] **Step 1: Write failing session-preparation tests**
 
 Cover:
 
@@ -625,7 +625,7 @@ pnpm --filter @anidachi/extension test -- room-session-storage room-client-auth 
 Expected: focused tests fail because the current ID is persisted only after Web
 admission.
 
-- [ ] **Step 2: Split session preparation from confirmation**
+- [x] **Step 2: Split session preparation from confirmation**
 
 Add narrow storage operations:
 
@@ -638,7 +638,7 @@ discardPreparedRoomSessionIfMatch
 Use `chrome.storage.session` and existing tab ownership. Do not introduce
 localStorage, a second durable account authority, or a recurring cleanup timer.
 
-- [ ] **Step 3: Send the session ID through create/connect**
+- [x] **Step 3: Send the session ID through create/connect**
 
 Update the privileged room-client messages and HTTP bodies. After a successful
 Web response, confirm exactly the candidate that received the token, then open
@@ -647,7 +647,7 @@ the WebSocket and send the required JOIN field.
 Treat missing-ID/old-client responses as terminal and readable. Do not retry
 them indefinitely.
 
-- [ ] **Step 4: Surface one stable active-room conflict**
+- [x] **Step 4: Surface one stable active-room conflict**
 
 Parse the shared HTTP `409` response in one place. The overlay must:
 
@@ -660,7 +660,7 @@ Parse the shared HTTP `409` response in one place. The overlay must:
 The local Web Lock remains an immediate same-browser guard but the Web response
 is authoritative.
 
-- [ ] **Step 5: Run focused and full extension gates**
+- [x] **Step 5: Run focused and full extension gates**
 
 ```bash
 pnpm --filter @anidachi/extension test
@@ -671,12 +671,33 @@ git diff --check
 Expected: all extension tests pass, including invite, room-source, history,
 voice/media, and provider behavior.
 
-- [ ] **Step 6: Commit extension admission changes**
+- [x] **Step 6: Commit extension admission changes**
 
 ```bash
-git add apps/extension
+git add apps/extension apps/api/test/runtime/room-hibernation-runtime.ts \
+  packages/protocol/src/types.ts packages/protocol/test/protocol.test.ts \
+  docs/superpowers/plans/2026-08-23-single-active-room-session-implementation-plan.md
 git commit -m "feat(extension): bind room admission to tab sessions"
 ```
+
+Implementation note: the background now prepares a bounded tab candidate before
+either Web admission request, confirms only the latest exact candidate after the
+Web response, and opens the Worker socket with that same required session ID.
+A different-room candidate does not alter the confirmed local record before
+admission; exact successful admission is the only point allowed to replace it.
+The shared JOIN contract now rejects a missing session ID. The extension parses
+the structured Web `409` once, stops reconnect loops, keeps playback untouched,
+and shows one stable message with one safe `Open active room` action. The Web
+Lock remains the immediate local guard for competing creates; connect requests
+go to the authoritative Web admission path so a deliberate same-room tab
+takeover remains possible while a different room is rejected consistently
+across providers, profiles, and devices.
+
+Verification: protocol tests passed 138/138 and type-check passed; extension
+tests passed 1286/1286 and type-check passed; API tests passed 159/159, Worker
+runtime tests passed 27/27, API type-check passed, the room harness passed 39/39,
+and `git diff --check` passed. No linked database, staging environment,
+extension test folder, deployment, or remote branch was mutated.
 
 ---
 

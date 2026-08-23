@@ -715,7 +715,7 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		guest.close();
 	});
 
-	it("rejects JOIN without the token-bound participant session id", async () => {
+	it("rejects JOIN without the required participant session id", async () => {
 		const roomId = `runtime-history-no-session-${crypto.randomUUID()}`;
 		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
 		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
@@ -731,7 +731,7 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		await host.waitFor(
 			(event) =>
 				event.type === "ERROR" &&
-				event.code === "PARTICIPANT_SESSION_MISMATCH",
+				event.code === "INVALID_EVENT",
 			"sessionless JOIN rejection",
 		);
 		expect(host.hasEvent((event) => event.type === "ROOM_HISTORY_AUTHORITY")).toBe(false);

@@ -1,5 +1,32 @@
 import { describe, expect, it, vi } from "vitest";
 import { connectRoomHttpMessage } from "../src/room-client";
+import type { PreparedRoomSession } from "../src/room-session-storage";
+
+function preparedRoomSession(roomId: string): PreparedRoomSession {
+  return {
+    version: 1 as const,
+    preparationId: `preparation-${roomId}`,
+    roomId,
+    ownerUserId: "user-a",
+    participantSessionId: `session-${roomId}`,
+  };
+}
+
+const roomSessionRouteDependencies = {
+  confirmRoomSession: async (
+    _tabId: number,
+    prepared: PreparedRoomSession,
+    roomId: string,
+  ) => ({
+    version: 1 as const,
+    revision: 1,
+    roomId,
+    ownerUserId: prepared.ownerUserId,
+    participantSessionId: prepared.participantSessionId,
+    voiceMode: "push-to-talk" as const,
+  }),
+  discardPreparedRoomSession: async () => false,
+};
 
 describe("background privileged room route", () => {
   it("routes a background-issued authority through connect, rejects a forgery, ends once, and rejects replay", async () => {
@@ -26,6 +53,7 @@ describe("background privileged room route", () => {
         getCurrentSession: async () => sessionFor("user-a"),
       },
       roomDependencies: {
+        ...roomSessionRouteDependencies,
         authorityDependencies: {
           sessionStorage: storage,
           getStoredSession: async () => sessionFor("user-a"),
@@ -34,7 +62,7 @@ describe("background privileged room route", () => {
     };
 
     const connected = await background.dispatchPrivilegedRoomRuntimeMessage(
-      connectRoomHttpMessage("room-a", "access-a"),
+      connectRoomHttpMessage("room-a", "access-a", preparedRoomSession("room-a")),
       sender,
       dependencies,
     );
@@ -115,6 +143,7 @@ describe("background privileged room route", () => {
           getCurrentSession: async () => sessionFor("user-a"),
         },
         roomDependencies: {
+          ...roomSessionRouteDependencies,
           authorityRequestSequences: requestSequences,
           authorityDependencies: {
             sessionStorage: storage,
@@ -123,12 +152,20 @@ describe("background privileged room route", () => {
         },
       };
       const older = background.dispatchPrivilegedRoomRuntimeMessage(
-        connectRoomHttpMessage(`room-old-${action}`, "access-a"),
+        connectRoomHttpMessage(
+          `room-old-${action}`,
+          "access-a",
+          preparedRoomSession(`room-old-${action}`),
+        ),
         sender,
         dependencies,
       );
       const newer = background.dispatchPrivilegedRoomRuntimeMessage(
-        connectRoomHttpMessage(`room-new-${action}`, "access-a"),
+        connectRoomHttpMessage(
+          `room-new-${action}`,
+          "access-a",
+          preparedRoomSession(`room-new-${action}`),
+        ),
         sender,
         dependencies,
       );
@@ -204,6 +241,7 @@ describe("background privileged room route", () => {
       const storage = createPausedFirstWriteStorage();
       const dependencies = {
         roomDependencies: {
+          ...roomSessionRouteDependencies,
           authorityDependencies: {
             sessionStorage: storage,
             getStoredSession: async () => sessionFor("user-a"),
@@ -221,13 +259,21 @@ describe("background privileged room route", () => {
         );
 
       const older = background.dispatchPrivilegedRoomRuntimeMessage(
-        connectRoomHttpMessage(`room-old-${outcome}`, "access-a"),
+        connectRoomHttpMessage(
+          `room-old-${outcome}`,
+          "access-a",
+          preparedRoomSession(`room-old-${outcome}`),
+        ),
         { tab: { id: tabId } },
         dependencies,
       );
       await storage.firstWriteStarted;
       const newer = background.dispatchPrivilegedRoomRuntimeMessage(
-        connectRoomHttpMessage(`room-new-${outcome}`, "access-a"),
+        connectRoomHttpMessage(
+          `room-new-${outcome}`,
+          "access-a",
+          preparedRoomSession(`room-new-${outcome}`),
+        ),
         { tab: { id: tabId } },
         dependencies,
       );
@@ -272,6 +318,7 @@ describe("background privileged room route", () => {
         getCurrentSession: async () => sessionFor("user-a"),
       },
       roomDependencies: {
+        ...roomSessionRouteDependencies,
         authorityDependencies: {
           sessionStorage: storage,
           getStoredSession: async () => sessionFor("user-a"),
@@ -280,7 +327,11 @@ describe("background privileged room route", () => {
     };
 
     const connected = await background.dispatchPrivilegedRoomRuntimeMessage(
-      connectRoomHttpMessage("room-active", "access-a"),
+      connectRoomHttpMessage(
+        "room-active",
+        "access-a",
+        preparedRoomSession("room-active"),
+      ),
       sender,
       dependencies,
     );
@@ -290,14 +341,22 @@ describe("background privileged room route", () => {
 
     const pausedMutation = storage.pauseNextMutation();
     const older = background.dispatchPrivilegedRoomRuntimeMessage(
-      connectRoomHttpMessage("room-old-pending", "access-a"),
+      connectRoomHttpMessage(
+        "room-old-pending",
+        "access-a",
+        preparedRoomSession("room-old-pending"),
+      ),
       sender,
       dependencies,
     );
     await pausedMutation.started;
 
     const newer = background.dispatchPrivilegedRoomRuntimeMessage(
-      connectRoomHttpMessage("room-new-failed", "access-a"),
+      connectRoomHttpMessage(
+        "room-new-failed",
+        "access-a",
+        preparedRoomSession("room-new-failed"),
+      ),
       sender,
       dependencies,
     );
@@ -346,7 +405,11 @@ describe("background privileged room route", () => {
 
     await expect(
       background.dispatchPrivilegedRoomRuntimeMessage(
-        connectRoomHttpMessage("room-after-failure", "access-a"),
+        connectRoomHttpMessage(
+          "room-after-failure",
+          "access-a",
+          preparedRoomSession("room-after-failure"),
+        ),
         sender,
         dependencies,
       ),
@@ -375,6 +438,7 @@ describe("background privileged room route", () => {
     );
     const dependencies = {
       roomDependencies: {
+        ...roomSessionRouteDependencies,
         authorityDependencies: {
           sessionStorage: storage,
           getStoredSession: async () => sessionFor("user-a"),
@@ -383,12 +447,12 @@ describe("background privileged room route", () => {
     };
 
     const first = await background.dispatchPrivilegedRoomRuntimeMessage(
-      connectRoomHttpMessage("room-same", "access-a"),
+      connectRoomHttpMessage("room-same", "access-a", preparedRoomSession("room-same")),
       sender,
       dependencies,
     );
     const second = await background.dispatchPrivilegedRoomRuntimeMessage(
-      connectRoomHttpMessage("room-same", "access-a"),
+      connectRoomHttpMessage("room-same", "access-a", preparedRoomSession("room-same")),
       sender,
       dependencies,
     );
