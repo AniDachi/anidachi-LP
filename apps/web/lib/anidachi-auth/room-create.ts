@@ -1,6 +1,8 @@
+import { RoomSessionAdmissionInputSchema } from "@anidachi/protocol";
 import { RoomSourcePersistenceError } from "./room-source";
 
 export type RoomCreateRequestInput = {
+	participantSessionId: string;
 	showId?: string;
 	episodeId?: string;
 	sourceProvider?: unknown;
@@ -52,20 +54,28 @@ export async function handleRoomCreateRequestBody<T>(params: {
 function parseRoomCreateRequestBody(
 	rawBody: string,
 ): { ok: true; input: RoomCreateRequestInput } | RoomCreateFailure {
-	if (rawBody === "") return { ok: true, input: {} };
-
 	let value: unknown;
-	try {
-		value = JSON.parse(rawBody);
-	} catch {
-		return invalidRequest();
+	if (rawBody === "") {
+		value = {};
+	} else {
+		try {
+			value = JSON.parse(rawBody);
+		} catch {
+			return invalidRequest();
+		}
 	}
 	if (typeof value !== "object" || value === null || Array.isArray(value)) {
 		return invalidRequest();
 	}
 
 	const record = value as Record<string, unknown>;
-	const input: RoomCreateRequestInput = {};
+	const admission = RoomSessionAdmissionInputSchema.safeParse({
+		participantSessionId: record.participantSessionId,
+	});
+	if (!admission.success) return invalidRequest();
+	const input: RoomCreateRequestInput = {
+		participantSessionId: admission.data.participantSessionId,
+	};
 	assignCleanString(input, "showId", record.showId, 200);
 	assignCleanString(input, "episodeId", record.episodeId, 200);
 	assignCleanString(input, "title", record.title, 300);

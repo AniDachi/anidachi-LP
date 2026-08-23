@@ -33,17 +33,25 @@ function b64url(input) {
   return Buffer.from(input).toString("base64url");
 }
 
-function signRoomToken({ sub, roomId, role, capabilities }) {
+function signRoomToken({
+  sub,
+  roomId,
+  role,
+  capabilities,
+  participantSessionId = `${sub}-session`,
+}) {
   const header = b64url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
   const now = Math.floor(Date.now() / 1000);
   const claims = {
       sub,
       roomId,
       role,
+      participantSessionId,
       capabilities,
       displayName: sub,
       avatarUrl: null,
       typ: "room",
+      iss: "anidachi-auth",
       aud: "anidachi-worker",
       iat: now,
       exp: now + 1800,
@@ -67,11 +75,13 @@ class Client {
   }
 
   async connect(lastSeenP2PServerSeq, participantSessionId) {
+    const sessionId = participantSessionId ?? `${this.sub}-session`;
     const token = signRoomToken({
       sub: this.sub,
       roomId: this.roomId,
       role: this.role,
       capabilities: this.capabilities,
+      participantSessionId: sessionId,
     });
     const url = `${WS_BASE}/ws/${this.roomId}?roomToken=${encodeURIComponent(token)}`;
     this.ws = new WebSocket(url);
@@ -104,9 +114,9 @@ class Client {
         lastSeenAt: 0,
       },
       videoFingerprint: "fp",
+      participantSessionId: sessionId,
     };
     if (typeof lastSeenP2PServerSeq === "number") join.lastSeenP2PServerSeq = lastSeenP2PServerSeq;
-    if (typeof participantSessionId === "string") join.participantSessionId = participantSessionId;
     this.ws.send(JSON.stringify(join));
   }
 

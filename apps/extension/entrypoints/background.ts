@@ -28,6 +28,10 @@ import {
   type RoomHttpBackgroundDependencies,
 } from "../src/room-client";
 import {
+  handleRoomTabDeparture,
+  type RoomTabDepartureOutcome,
+} from "../src/room-departure";
+import {
   createRoomInviteNotificationMaintenanceAlarm,
   handleAuthSessionChanged,
   handleRoomInviteNotificationPermissionRemoved,
@@ -40,7 +44,6 @@ import {
 } from "../src/room-invite-notifications";
 import {
   handleRoomSessionStorageRuntimeMessage,
-  removeRoomSessionForTab,
 } from "../src/room-session-storage";
 import { handleSocialHttpMessage, isSocialHttpMessage } from "../src/social-client";
 import {
@@ -55,6 +58,26 @@ export interface PrivilegedRoomRuntimeDependencies {
   endRoom?: PrivilegedOverlayIntentDependencies["endRoom"];
   intentDependencies?: Omit<PrivilegedOverlayIntentDependencies, "endRoom">;
   roomDependencies?: RoomHttpBackgroundDependencies;
+}
+
+export interface RemovedRoomTabDependencies {
+  clearRoomAuthorityRequest?: (tabId: number) => void;
+  departRoom?: (tabId: number) => Promise<RoomTabDepartureOutcome>;
+  removePrivilegedAuthority?: (tabId: number) => Promise<void>;
+}
+
+export async function handleRemovedRoomTab(
+  tabId: number,
+  dependencies: RemovedRoomTabDependencies = {},
+): Promise<void> {
+  (dependencies.clearRoomAuthorityRequest ?? clearRoomAuthorityRequestForTab)(tabId);
+  try {
+    await (dependencies.departRoom ?? handleRoomTabDeparture)(tabId);
+  } finally {
+    await (
+      dependencies.removePrivilegedAuthority ?? removePrivilegedRoomAuthorityStateForTab
+    )(tabId);
+  }
 }
 
 /** Narrow runtime route for room authority issuance and privileged room actions. */
@@ -179,9 +202,7 @@ export default defineBackground(() => {
   void createRoomInviteNotificationMaintenanceAlarm().catch(() => undefined);
 
   chrome.tabs.onRemoved.addListener((tabId) => {
-    clearRoomAuthorityRequestForTab(tabId);
-    void removePrivilegedRoomAuthorityStateForTab(tabId).catch(() => undefined);
-    void removeRoomSessionForTab(tabId).catch(() => undefined);
+    void handleRemovedRoomTab(tabId).catch(() => undefined);
   });
 });
 

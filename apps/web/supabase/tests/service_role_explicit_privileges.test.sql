@@ -4,8 +4,9 @@ begin;
 
 select plan(2);
 
-with legacy_tables(relation_name) as (
+with server_tables(relation_name) as (
   select unnest(array[
+    'active_room_sessions',
     'billing_customers',
     'devices',
     'friend_group_members',
@@ -53,13 +54,16 @@ select ok(
         'DELETE'
       )
     )
-    from legacy_tables
+    from server_tables
   ),
-  'a fresh migration replay grants service_role CRUD on every legacy application table'
+  'a fresh migration replay grants service_role CRUD on every server application table'
 );
 
-with legacy_routines(signature) as (
+with server_routines(signature) as (
   select unnest(array[
+    'public.claim_active_room_session_v1(uuid,text,text,text)',
+    'public.create_room_with_active_session_v1(uuid,text,text,text,text,text,text,bigint,text,text,text,integer,integer,boolean,boolean)',
+    'public.end_host_lobby_for_active_session_v1(uuid,text,text,timestamptz)',
     'public.increment_host_usage(uuid,date,integer)',
     'public.prepare_friendship_inbox_state()',
     'public.prepare_room_invite_recipient_inbox_state()',
@@ -67,7 +71,8 @@ with legacy_routines(signature) as (
     'public.sync_watch_history_session_summaries_v2()',
     'public.sync_watch_history_title_summary_delete_v2()',
     'public.sync_watch_history_title_summary_v2()',
-    'public.sync_watch_history_user_session_summary_v2()'
+    'public.sync_watch_history_user_session_summary_v2()',
+    'public.release_active_room_session_v1(uuid,text,text)'
   ]::text[])
 )
 select ok(
@@ -79,9 +84,9 @@ select ok(
         'EXECUTE'
       )
     )
-    from legacy_routines
+    from server_routines
   ),
-  'a fresh migration replay grants service_role execute on every legacy server routine'
+  'a fresh migration replay grants service_role execute on every required server routine'
 );
 
 select * from finish();

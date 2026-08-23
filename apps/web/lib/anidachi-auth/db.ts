@@ -1,10 +1,18 @@
 import type {
+  ActiveRoomConflictResponse,
+  ActiveRoomRole,
   RoomSourcePersistenceAcknowledgement,
   RoomSourcePersistenceCallback,
   RoomSourceProvider,
   RoomUsageSummary,
 } from "@anidachi/protocol";
 import { createClient } from "@supabase/supabase-js";
+import {
+  parseActiveRoomClaimRpcResult,
+  parseActiveRoomCreateRpcResult,
+  parseActiveRoomReleaseRpcResult,
+  parseHostLobbyEndRpcResult,
+} from "./active-room-session";
 import type { PlanCode, RoomCapabilities } from "./plan-entitlements";
 import {
   parseRoomSourcePersistenceRpcResult,
@@ -498,6 +506,116 @@ export async function updateUserPlan(
 }
 
 // ---------- Room helpers ----------
+
+type ActiveRoomSummary = ActiveRoomConflictResponse["activeRoom"];
+
+export type ActiveRoomCreateResult =
+  | {
+      outcome: "claimed" | "reused";
+      room: RoomRow;
+    }
+  | { outcome: "conflict"; activeRoom: ActiveRoomSummary };
+
+export type ActiveRoomClaimResult =
+  | { outcome: "claimed" | "reused" }
+  | { outcome: "conflict"; activeRoom: ActiveRoomSummary };
+
+export async function createRoomWithActiveSession(params: {
+  hostUserId: string;
+  participantSessionId: string;
+  capabilities: RoomCapabilities;
+  showId?: string;
+  episodeId?: string;
+  sourceProvider?: unknown;
+  sourceUrl?: unknown;
+  videoFingerprint?: unknown;
+  title?: string;
+  clientRequestId?: string;
+}): Promise<ActiveRoomCreateResult> {
+  const sourceColumns = roomSourceCreationColumns({
+    sourceProvider: params.sourceProvider,
+    sourceUrl: params.sourceUrl,
+    videoFingerprint: params.videoFingerprint,
+  });
+  const result = await db().rpc("create_room_with_active_session_v1", {
+    p_host_user_id: params.hostUserId,
+    p_participant_session_id: params.participantSessionId,
+    p_show_id: params.showId ?? null,
+    p_episode_id: params.episodeId ?? null,
+    p_source_provider: sourceColumns.source_provider,
+    p_source_url: sourceColumns.source_url,
+    p_video_fingerprint: sourceColumns.video_fingerprint,
+    p_source_generation: sourceColumns.source_generation,
+    p_title: params.title ?? null,
+    p_client_request_id: params.clientRequestId ?? null,
+    p_host_plan_code: params.capabilities.hostPlanCode,
+    p_max_participants: params.capabilities.maxParticipants,
+    p_max_media_seats: params.capabilities.maxMediaSeats,
+    p_can_name_room: params.capabilities.canNameRoom,
+    p_can_send_push_invites: params.capabilities.canSendPushInvites,
+  });
+  if (result.error) {
+    throw new Error(`Failed to create active room: ${result.error.message}`);
+  }
+  const parsed = parseActiveRoomCreateRpcResult(result.data);
+  if (parsed.outcome === "conflict") return parsed;
+  return {
+    outcome: parsed.outcome,
+    room: parsed.roomRecord as RoomRow,
+  };
+}
+
+export async function claimActiveRoomSession(params: {
+  userId: string;
+  roomId: string;
+  role: ActiveRoomRole;
+  participantSessionId: string;
+}): Promise<ActiveRoomClaimResult> {
+  const result = await db().rpc("claim_active_room_session_v1", {
+    p_user_id: params.userId,
+    p_room_id: params.roomId,
+    p_role: params.role,
+    p_participant_session_id: params.participantSessionId,
+  });
+  if (result.error) {
+    throw new Error(`Failed to claim active room: ${result.error.message}`);
+  }
+  return parseActiveRoomClaimRpcResult(result.data);
+}
+
+export async function releaseActiveRoomSession(params: {
+  userId: string;
+  roomId: string;
+  participantSessionId: string;
+}): Promise<{ outcome: "released" | "stale" }> {
+  const result = await db().rpc("release_active_room_session_v1", {
+    p_user_id: params.userId,
+    p_room_id: params.roomId,
+    p_participant_session_id: params.participantSessionId,
+  });
+  if (result.error) {
+    throw new Error(`Failed to release active room: ${result.error.message}`);
+  }
+  return parseActiveRoomReleaseRpcResult(result.data);
+}
+
+export async function endHostLobbyForActiveSession(params: {
+  userId: string;
+  roomId: string;
+  participantSessionId: string;
+  endedAt: string;
+}): Promise<{ outcome: "room_ended" | "stale" }> {
+  const result = await db().rpc("end_host_lobby_for_active_session_v1", {
+    p_user_id: params.userId,
+    p_room_id: params.roomId,
+    p_participant_session_id: params.participantSessionId,
+    p_ended_at: params.endedAt,
+  });
+  if (result.error) {
+    throw new Error(`Failed to end active host lobby: ${result.error.message}`);
+  }
+  return parseHostLobbyEndRpcResult(result.data);
+}
 
 /**
  * Creates a room. When `clientRequestId` is provided the create is idempotent:

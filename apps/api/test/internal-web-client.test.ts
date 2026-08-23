@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
-import type { RoomSourcePersistenceCallback } from "@anidachi/protocol";
+import type {
+  RoomDepartureCallback,
+  RoomSourcePersistenceCallback,
+} from "@anidachi/protocol";
 import * as internalWebClient from "../src/internal-web-client";
 
 const clientApi = internalWebClient as typeof internalWebClient & {
@@ -298,6 +301,78 @@ describe("internal Web room source client", () => {
       ),
     ).rejects.toThrow("503");
     expect(cancelled).toBe(true);
+  });
+});
+
+describe("internal Web participant departure client", () => {
+  const env = {
+    ANIDACHI_INTERNAL_API_SECRET: "secret",
+    ANIDACHI_WEB_INTERNAL_BASE_URL: "https://web.internal",
+  };
+  const callback: RoomDepartureCallback = {
+    roomId: "room-1",
+    userId: "user-1",
+    participantSessionId: "participant-session-1",
+    departedAt: 61_000,
+  };
+
+  it("posts only the exact shared callback to the encoded participant endpoint", async () => {
+    const fetchImplementation = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json({ ok: true, outcome: "departed" }),
+    );
+
+    await expect(internalWebClient.notifyWebParticipantDeparted(
+      env,
+      "room 1",
+      "user 1",
+      { ...callback, roomId: "room 1", userId: "user 1" },
+      fetchImplementation,
+    )).resolves.toBe("departed");
+
+    const [input, init] = fetchImplementation.mock.calls[0] ?? [];
+    expect(String(input)).toBe(
+      "https://web.internal/api/internal/rooms/room%201/participants/user%201/departed",
+    );
+    expect(new Headers(init?.headers).get("Authorization")).toBe("Bearer secret");
+    expect(init?.body).toBe(JSON.stringify({
+      ...callback,
+      roomId: "room 1",
+      userId: "user 1",
+    }));
+  });
+
+  it("rejects mismatched identity and non-guest acknowledgements", async () => {
+    const fetchImplementation = vi.fn<typeof fetch>();
+    await expect(internalWebClient.notifyWebParticipantDeparted(
+      env,
+      "other-room",
+      callback.userId,
+      callback,
+      fetchImplementation,
+    )).rejects.toThrow("invalid callback");
+    expect(fetchImplementation).not.toHaveBeenCalled();
+
+    for (const acknowledgement of [
+      null,
+      { ok: true, outcome: "room_ended" },
+      { ok: true, outcome: "departed", extra: true },
+      { ok: false, outcome: "departed" },
+    ]) {
+      await expect(internalWebClient.notifyWebParticipantDeparted(
+        env,
+        callback.roomId,
+        callback.userId,
+        callback,
+        async () => Response.json(acknowledgement),
+      )).rejects.toThrow("invalid acknowledgement");
+    }
+    await expect(internalWebClient.notifyWebParticipantDeparted(
+      env,
+      callback.roomId,
+      callback.userId,
+      callback,
+      async () => Response.json({ ok: true, outcome: "stale" }),
+    )).resolves.toBe("stale");
   });
 });
 

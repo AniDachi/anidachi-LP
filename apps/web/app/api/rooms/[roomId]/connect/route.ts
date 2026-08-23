@@ -1,6 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { RoomSessionAdmissionInputSchema } from "@anidachi/protocol";
+import { activeRoomConflictResponse } from "@/lib/anidachi-auth/active-room-session";
 import { getSession } from "@/lib/anidachi-auth/session";
 import {
+  claimActiveRoomSession,
   getRoomById,
   getUserById,
   isRoomMember,
@@ -53,6 +56,13 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const admissionInput = RoomSessionAdmissionInputSchema.safeParse(
+    await request.json().catch(() => null),
+  );
+  if (!admissionInput.success) {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+
   const { roomId } = await params;
   const room = await getRoomById(roomId);
 
@@ -89,6 +99,22 @@ export async function POST(
       quotaSummary = quotaSummaryForResponse(userPlan, quota);
     }
 
+  }
+
+  const role = isHost ? "host" : "member";
+  const admission = await claimActiveRoomSession({
+    userId: session.userId,
+    roomId,
+    role,
+    participantSessionId: admissionInput.data.participantSessionId,
+  });
+  if (admission.outcome === "conflict") {
+    return NextResponse.json(
+      activeRoomConflictResponse(admission.activeRoom),
+      { status: 409 },
+    );
+  }
+  if (isHost) {
     await updateRoom(roomId, {
       host_connected_at: now.toISOString(),
       last_active_at: now.toISOString(),
@@ -97,13 +123,12 @@ export async function POST(
   } else {
     await updateRoom(roomId, { last_active_at: now.toISOString() });
   }
-
-  const role = isHost ? "host" : "member";
   const roomToken = await signRoomToken(
     {
       sub: session.userId,
       roomId,
       role,
+      participantSessionId: admissionInput.data.participantSessionId,
       capabilities,
       displayName: user?.display_name ?? session.email,
       avatarUrl: user?.avatar_url ?? null,

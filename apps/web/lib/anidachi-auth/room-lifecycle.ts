@@ -1,9 +1,13 @@
 import { internalServiceAuthorization } from "@/lib/internal-service-auth";
 import {
   EMPTY_ROOM_TIMEOUT_MS,
+  InternalRoomDepartureCommandSchema,
+  RoomDepartureAcknowledgementSchema,
   RoomUsageSummarySchema,
   createEmptyRoomEndEventId,
   type RoomEndReason,
+  type InternalRoomDepartureCommand,
+  type RoomDepartureAcknowledgement,
   type RoomUsageSummary,
 } from "@anidachi/protocol";
 
@@ -134,6 +138,46 @@ export async function syncRoomEndToWorker(
   };
 }
 
+export async function syncParticipantDepartureToWorker(
+  command: InternalRoomDepartureCommand,
+  options: {
+    baseUrl?: string;
+    secret?: string;
+    fetch?: typeof fetch;
+  } = {},
+): Promise<RoomDepartureAcknowledgement> {
+  const parsed = InternalRoomDepartureCommandSchema.parse(command);
+  const baseUrl = options.baseUrl ?? process.env.ANIDACHI_API_INTERNAL_BASE_URL;
+  const secret = options.secret ?? process.env.ANIDACHI_INTERNAL_API_SECRET;
+  if (!baseUrl || !secret) {
+    throw new Error("Participant departure Worker synchronization is not configured");
+  }
+  const response = await (options.fetch ?? fetch)(
+    new URL(
+      `/internal/rooms/${encodeURIComponent(parsed.roomId)}` +
+        `/participants/${encodeURIComponent(parsed.userId)}/depart`,
+      baseUrl,
+    ),
+    {
+      method: "POST",
+      headers: {
+        Authorization: internalServiceAuthorization(secret),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(parsed),
+    },
+  );
+  if (!response.ok) {
+    throw new Error(`Worker participant departure failed (${response.status})`);
+  }
+  const body = await response.json().catch(() => null);
+  const acknowledgement = RoomDepartureAcknowledgementSchema.safeParse(body);
+  if (!acknowledgement.success) {
+    throw new Error("Worker participant departure returned an invalid response");
+  }
+  return acknowledgement.data;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -143,5 +187,8 @@ function isTimestamp(value: unknown): value is number {
 }
 
 function isRoomEndReason(value: unknown): value is RoomEndReason {
-  return value === "host_ended" || value === "empty_timeout" || value === "quota_exhausted";
+  return value === "host_ended" ||
+    value === "host_disconnected" ||
+    value === "empty_timeout" ||
+    value === "quota_exhausted";
 }

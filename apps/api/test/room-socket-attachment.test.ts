@@ -17,6 +17,7 @@ const verified: VerifiedRoomToken = {
     canSendPushInvites: true,
   },
   displayName: "Host",
+  participantSessionId: "participant-session-1",
   role: "host",
   roomId: "room-1",
   sub: "host-user",
@@ -28,6 +29,7 @@ describe("room socket attachments", () => {
     const parsed = parseRoomSocketAttachment(attachment, "room-1");
 
     expect(parsed?.verified.sub).toBe("host-user");
+    expect(parsed?.verified.participantSessionId).toBe("participant-session-1");
     expect(parsed?.verified.capabilities?.hostPlanCode).toBe("plus");
     expect(attachmentToVerifiedRoomToken(parsed ?? attachment)).toEqual(verified);
   });
@@ -43,7 +45,7 @@ describe("room socket attachments", () => {
     const attachment = createRoomSocketAttachment("room-1", verified, 1_000);
     const updated = updateRoomSocketAttachment(attachment, {
       lastSeenAt: 2_000,
-      participantSessionId: "session-1",
+      participantSessionId: "participant-session-1",
       participant: {
         id: "host-user",
         displayName: "Host",
@@ -57,7 +59,7 @@ describe("room socket attachments", () => {
     });
 
     expect(updated.lastSeenAt).toBe(2_000);
-    expect(updated.participantSessionId).toBe("session-1");
+    expect(updated.participantSessionId).toBe("participant-session-1");
     expect(updated.participant?.cameraEnabled).toBe(true);
   });
 
@@ -90,7 +92,7 @@ describe("room socket attachments", () => {
     expect(parseRoomSocketAttachment(legacy, "room-1")).toBeNull();
   });
 
-  it("rehydrates a legacy joined attachment as joined without a pending reservation", () => {
+  it("rejects a legacy joined attachment without token-bound session authority", () => {
     const current = createRoomSocketAttachment("room-1", verified, 1_000);
     const legacyJoined = {
       ...current,
@@ -106,9 +108,6 @@ describe("room socket attachments", () => {
       schemaVersion: 1,
     };
 
-    expect(parseRoomSocketAttachment(legacyJoined, "room-1")?.admission).toEqual({
-      deadlineAt: 0,
-      joined: true,
-    });
+    expect(parseRoomSocketAttachment(legacyJoined, "room-1")).toBeNull();
   });
 });

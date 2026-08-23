@@ -1,6 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/anidachi-auth/session";
-import { createRoom, getUserById } from "@/lib/anidachi-auth/db";
+import {
+  createRoomWithActiveSession,
+  getUserById,
+} from "@/lib/anidachi-auth/db";
+import { activeRoomConflictResponse } from "@/lib/anidachi-auth/active-room-session";
 import { getExtensionSessionFromAuthorization } from "@/lib/anidachi-auth/extension-session";
 import { signRoomToken } from "@/lib/anidachi-auth/jwt";
 import { roomCapabilitiesForPlan } from "@/lib/anidachi-auth/plan-entitlements";
@@ -47,21 +51,37 @@ export async function POST(request: NextRequest) {
 
   const creation = await handleRoomCreateRequestBody({
     readBody: () => request.text(),
-    create: (input) => createRoom({
-      hostUserId: session.userId,
-      capabilities,
-      ...input,
-    }),
+    create: async (input) => {
+      const { participantSessionId, ...roomInput } = input;
+      return {
+        admission: await createRoomWithActiveSession({
+          hostUserId: session.userId,
+          participantSessionId,
+          capabilities,
+          ...roomInput,
+        }),
+        participantSessionId,
+      };
+    },
   });
   if (!creation.ok) {
     return NextResponse.json(creation.body, { status: creation.status });
   }
-  const { room, reused } = creation.value;
+  const { admission, participantSessionId } = creation.value;
+  if (admission.outcome === "conflict") {
+    return NextResponse.json(
+      activeRoomConflictResponse(admission.activeRoom),
+      { status: 409 },
+    );
+  }
+  const { room } = admission;
+  const reused = admission.outcome === "reused";
   const roomToken = await signRoomToken(
     {
       sub: session.userId,
       roomId: room.room_id,
       role: "host",
+      participantSessionId,
       capabilities,
       displayName: user?.display_name ?? session.email,
       avatarUrl: user?.avatar_url ?? null,

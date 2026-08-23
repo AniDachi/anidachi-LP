@@ -8,6 +8,7 @@ export type PrimaryRoomActionKind = "create" | "end" | "leave";
 
 export const ROOM_ACTION_FEEDBACK_DURATION_MS = 2000;
 export const ROOM_END_CONFIRMATION_DURATION_MS = 4000;
+export const ACTIVE_ROOM_CONFLICT_MESSAGE = "You already have an active watch room.";
 
 interface PrimaryRoomActionLabelInput {
   feedback: RoomActionFeedback | null;

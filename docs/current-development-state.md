@@ -818,6 +818,50 @@ The extension currently supports:
 
 The extension still does not host, proxy, record, or distribute source video.
 
+## Single Active Room Session Foundation
+
+The single-active-room invariant is accepted on `staging` as of 2026-08-23.
+PR #231 merged as `f511b4dcb805e8959412213e00a2499f12f2b8be` after the additive staging
+migration `20260823090624_single_active_room_sessions.sql` was applied. Supabase
+now owns one server-only active-room assignment per authenticated user, while
+the existing room Durable Object remains responsible for live presence,
+same-room takeover, disconnect grace, and room termination. No new service,
+heartbeat, queue, env variable, secret, TURN, Blob, Stripe, or release path was
+added.
+
+The accepted product behavior is:
+
+- one authenticated user can have only one live room across YouTube,
+  Crunchyroll, tabs, browser profiles, and devices;
+- a second different room fails with `ACTIVE_ROOM_CONFLICT`, while an explicit
+  same-room open may take over from the older session;
+- closing the active host tab ends the room, while closing a guest tab removes
+  only that guest;
+- reload, Back/Forward Cache restore, and a brief offline interval preserve the
+  same tab session within the 60-second grace period;
+- a stale superseded tab cannot release the winner, and a fresh normal provider
+  tab does not silently restore a closed room;
+- room finalization releases matching durable assignments idempotently.
+
+Staging evidence includes successful migration runs `32637163596` and
+`32637269784`, CI `32637269772`, API deployment `32637269793`, extension build
+`32637269796`, Vercel deployment `dpl_D9iXtfYyux52dRp46wucA8VKcM86`, Worker
+smoke, and exact artifact
+`f511b4dcb805e8959412213e00a2499f12f2b8be-staging-125` with SHA-256
+`58a5b07f08bbef7031205244959f536087791a2245887bcd8f63d2dd7442fb8b` loaded
+in both established test profiles. Manual two-profile acceptance confirmed the
+host/guest conflict paths, pause/seek/rate sync, reload, brief offline recovery,
+guest and host tab-close semantics, same-room takeover, stale-close safety,
+old-link behavior, popup cleanup, and Crunchyroll Watch History continuity.
+YouTube Watch History was intentionally disabled during that last history check
+and is not claimed by this observation.
+
+This acceptance is limited to `staging`. It does not promote the change to
+`main` or production, publish a Chrome Web Store build, or replace the still
+required real TURN-relay and two-network P2P evidence. Explicit tab close is
+immediate; a browser crash or long offline interval relies on the 60-second
+fallback. Conflict wording and other visual polish remain normal UI/UX work.
+
 ## Known Fragile Areas
 
 These are intentionally not treated as solved:
@@ -864,9 +908,11 @@ These are intentionally not treated as solved:
   hibernation, repeated end, and atomic rollback-tested Supabase finalization.
   The exact staging migration/Web/Worker rollout and automated smokes passed;
   one normal Free-room lifecycle with two real clients and persisted usage
-  verification is still pending. A global lease preventing an adversarial Free
-  host from running several rooms concurrently is deliberately deferred until
-  product evidence justifies that extra coordination.
+  verification is still pending. The former global cross-room lease deferral is
+  superseded by the accepted server-enforced `active_room_sessions` invariant,
+  which limits every authenticated user to one active room independently of
+  plan or provider. That invariant does not by itself complete the separate
+  persisted Free-usage acceptance.
 - Room sources are now strict, provider-pinned, and durably convergent: Web
   creation persists generation 1, the Worker accepts only same-provider
   canonical changes, and its coalesced outbox persists the latest higher
