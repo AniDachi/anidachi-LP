@@ -8,6 +8,7 @@
     "cache:jikan": "tsx scripts/cache-jikan-posters.ts",
     "build": "pnpm cache:jikan && next build",
     "blob:migrate:private": "tsx scripts/migrate-private-integration-blobs.ts",
+    "crm:reconcile-blobs": "tsx scripts/reconcile-kreatli-crm-blobs.ts",
     "start": "next start",
     "lint": "next lint",
     "crm": "tsx scripts/crm/cli.ts",

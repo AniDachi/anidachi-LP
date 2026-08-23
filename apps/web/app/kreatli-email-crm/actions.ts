@@ -13,9 +13,14 @@ import {
   type ImportPreviewLine,
 } from "@/lib/kreatli-crm/import-merge";
 import { surveyLeadsToDelimited } from "@/lib/kreatli-crm/survey-lead-shared";
-import { appendTouch, crmDataDir, readContacts, writeContacts } from "@/lib/kreatli-crm/store";
+import {
+  appendTouch,
+  crmDataDir,
+  mutateContacts,
+  readContacts,
+} from "@/lib/kreatli-crm/store";
 import { renderTemplate } from "@/lib/kreatli-crm/template-render";
-import type { Contact, ContactStatus } from "@/lib/kreatli-crm/types";
+import type { ContactStatus } from "@/lib/kreatli-crm/types";
 
 export type CrmActionState = { error?: string } | null;
 
@@ -56,26 +61,29 @@ export async function addContactAction(
     ? segmentsRaw.split(",").map((s) => s.trim()).filter(Boolean)
     : [];
 
-  const contacts = await readContacts();
-  if (contacts.some((c) => c.email === email)) {
+  const t = nowIso();
+  const result = await mutateContacts((contacts) => {
+    if (contacts.some((contact) => contact.email === email)) {
+      return { changed: false, value: false };
+    }
+
+    contacts.push({
+      id: randomUUID(),
+      email,
+      company,
+      first_name,
+      segments,
+      notes,
+      status: "active",
+      next_action_date,
+      created_at: t,
+      updated_at: t,
+    });
+    return { changed: true, value: true };
+  });
+  if (!result.value) {
     return { error: "A contact with this email already exists" };
   }
-
-  const t = nowIso();
-  const contact: Contact = {
-    id: randomUUID(),
-    email,
-    company,
-    first_name,
-    segments,
-    notes,
-    status: "active",
-    next_action_date,
-    created_at: t,
-    updated_at: t,
-  };
-  contacts.push(contact);
-  await writeContacts(contacts);
   revalidatePath("/kreatli-email-crm");
   return null;
 }
@@ -108,18 +116,19 @@ export async function updateContactAction(
     return { error: "Invalid status" };
   }
 
-  const contacts = await readContacts();
-  const idx = contacts.findIndex((c) => c.id === id);
-  if (idx === -1) return { error: "Contact not found" };
-
-  contacts[idx] = {
-    ...contacts[idx],
-    status,
-    next_action_date: nextRaw || null,
-    notes,
-    updated_at: nowIso(),
-  };
-  await writeContacts(contacts);
+  const result = await mutateContacts((contacts) => {
+    const idx = contacts.findIndex((contact) => contact.id === id);
+    if (idx === -1) return { changed: false, value: false };
+    contacts[idx] = {
+      ...contacts[idx]!,
+      status,
+      next_action_date: nextRaw || null,
+      notes,
+      updated_at: nowIso(),
+    };
+    return { changed: true, value: true };
+  });
+  if (!result.value) return { error: "Contact not found" };
   revalidatePath("/kreatli-email-crm");
   return null;
 }
@@ -162,10 +171,13 @@ export async function deleteContactAction(
   const id = String(formData.get("id") ?? "").trim();
   if (!id) return { error: "Missing id" };
 
-  const contacts = await readContacts();
-  const next = contacts.filter((c) => c.id !== id);
-  if (next.length === contacts.length) return { error: "Contact not found" };
-  await writeContacts(next);
+  const result = await mutateContacts((contacts) => {
+    const idx = contacts.findIndex((contact) => contact.id === id);
+    if (idx === -1) return { changed: false, value: false };
+    contacts.splice(idx, 1);
+    return { changed: true, value: true };
+  });
+  if (!result.value) return { error: "Contact not found" };
   revalidatePath("/kreatli-email-crm");
   return null;
 }
@@ -228,9 +240,11 @@ export async function applyImportAction(
     return { error: "Invalid mode" };
   }
   const parsed = parseImportText(text);
-  const existing = await readContacts();
-  const { nextContacts } = buildImportPreview(existing, parsed, mode);
-  await writeContacts(nextContacts);
+  await mutateContacts((contacts) => {
+    const { nextContacts } = buildImportPreview(contacts, parsed, mode);
+    contacts.splice(0, contacts.length, ...nextContacts);
+    return { changed: true, value: undefined };
+  });
   revalidatePath("/kreatli-email-crm");
   return null;
 }

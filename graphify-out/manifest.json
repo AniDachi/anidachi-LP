@@ -1110,10 +1110,10 @@
     "semantic_hash": "ef38d3106bb42c9c5de4ddfa93917e92"
   },
   "apps/web/app/api/subscribe-interest/route.ts": {
-    "mtime": 1786689011.2786143,
-    "seen": 1787168236.384469,
-    "ast_hash": "6c8593c6315ca64b117e9cad1b943f1c",
-    "semantic_hash": "6c8593c6315ca64b117e9cad1b943f1c"
+    "mtime": 1787502939.9456828,
+    "seen": 1787503342.603979,
+    "ast_hash": "cd5529380169d41401096182260584b9",
+    "semantic_hash": ""
   },
   "apps/web/app/api/users/[userId]/block/route.ts": {
     "mtime": 1786689011.278746,
@@ -1134,10 +1134,10 @@
     "semantic_hash": "e7e2094312345482f6a5cb699c52d346"
   },
   "apps/web/app/api/waitlist/join/route.ts": {
-    "mtime": 1786689011.2789981,
-    "seen": 1787168236.38447,
-    "ast_hash": "578c8c525213b56c5a3e343243a08aec",
-    "semantic_hash": "578c8c525213b56c5a3e343243a08aec"
+    "mtime": 1787502939.945906,
+    "seen": 1787503342.603979,
+    "ast_hash": "80c739c74dc7d0c65b9272d0a5334247",
+    "semantic_hash": ""
   },
   "apps/web/app/api/watch-library/rooms/route.ts": {
     "mtime": 1787457610.6221933,
@@ -1734,10 +1734,10 @@
     "semantic_hash": "f63f11aa333127a19db864916074dcdc"
   },
   "apps/web/app/kreatli-email-crm/actions.ts": {
-    "mtime": 1786689011.2986987,
-    "seen": 1787168236.384521,
-    "ast_hash": "9e4ff7278f18e50bd0a4ab07fccf750b",
-    "semantic_hash": "9e4ff7278f18e50bd0a4ab07fccf750b"
+    "mtime": 1787499773.3024747,
+    "seen": 1787501190.64474,
+    "ast_hash": "11159c82932312def90d38ee7f5baa02",
+    "semantic_hash": "11159c82932312def90d38ee7f5baa02"
   },
   "apps/web/app/kreatli-email-crm/crm-client.tsx": {
     "mtime": 1786689011.298822,
@@ -2202,10 +2202,10 @@
     "semantic_hash": "d3c95cdc385d779a647820f7eb0d6d1f"
   },
   "apps/web/components/plan-survey/plan-survey-modal.tsx": {
-    "mtime": 1786689011.307903,
-    "seen": 1787168236.3845482,
-    "ast_hash": "7f14f1a833b3cb04e52e177e79336a2f",
-    "semantic_hash": "7f14f1a833b3cb04e52e177e79336a2f"
+    "mtime": 1787500095.3612902,
+    "seen": 1787501190.644778,
+    "ast_hash": "74874059b09a248987a4e6f8d0d40be1",
+    "semantic_hash": "74874059b09a248987a4e6f8d0d40be1"
   },
   "apps/web/components/plan-survey/plan-survey-provider.tsx": {
     "mtime": 1786689011.3079693,
@@ -2760,10 +2760,10 @@
     "semantic_hash": "e1515f4a09b3cf06bfb3b2ea1499b103"
   },
   "apps/web/lib/kreatli-crm/store.ts": {
-    "mtime": 1787457610.636239,
-    "seen": 1787460549.552078,
-    "ast_hash": "4f874cae5aa8600660066fbb3909d239",
-    "semantic_hash": "4f874cae5aa8600660066fbb3909d239"
+    "mtime": 1787499688.6665857,
+    "seen": 1787501190.6448488,
+    "ast_hash": "2d23d140ec2d73d4b86599e6750cee02",
+    "semantic_hash": "2d23d140ec2d73d4b86599e6750cee02"
   },
   "apps/web/lib/kreatli-crm/survey-lead-shared.test.ts": {
     "mtime": 1786689011.3247764,
@@ -2778,10 +2778,10 @@
     "semantic_hash": "bc10a7cf1f4d9a7122ee7f24ad1d95ab"
   },
   "apps/web/lib/kreatli-crm/survey-lead.ts": {
-    "mtime": 1786689011.3254,
-    "seen": 1787168236.3845959,
-    "ast_hash": "a77badbac241bf67cabf77a0da71ae5e",
-    "semantic_hash": "a77badbac241bf67cabf77a0da71ae5e"
+    "mtime": 1787499688.667251,
+    "seen": 1787501190.644851,
+    "ast_hash": "a9ccf9b5650794eec7b511126320e2fe",
+    "semantic_hash": "a9ccf9b5650794eec7b511126320e2fe"
   },
   "apps/web/lib/kreatli-crm/template-render.ts": {
     "mtime": 1786689011.3256066,
@@ -3036,10 +3036,10 @@
     "semantic_hash": "a7d5c67a2b4bfce566561801c4100527"
   },
   "apps/web/package.json": {
-    "mtime": 1787457610.6390405,
-    "seen": 1787460549.5521011,
-    "ast_hash": "4628e22d7fe6e0ea6698ed6efa9239cf",
-    "semantic_hash": "4628e22d7fe6e0ea6698ed6efa9239cf"
+    "mtime": 1787500423.1816096,
+    "seen": 1787501190.644879,
+    "ast_hash": "3776e23a9797f19dc7fd49fcf858c447",
+    "semantic_hash": "3776e23a9797f19dc7fd49fcf858c447"
   },
   "apps/web/postcss.config.mjs": {
     "mtime": 1786689011.346787,
@@ -3054,10 +3054,10 @@
     "semantic_hash": "1a72d2a0d5a73e335117f2dcd1721f66"
   },
   "apps/web/scripts/crm/cli.ts": {
-    "mtime": 1786689011.3536315,
-    "seen": 1787168236.384615,
-    "ast_hash": "ad96676f47fa4269c91b9bf8a5a804c0",
-    "semantic_hash": "ad96676f47fa4269c91b9bf8a5a804c0"
+    "mtime": 1787499808.691608,
+    "seen": 1787501190.6448798,
+    "ast_hash": "12e8a13663b2ff18d154cdce947c0cb0",
+    "semantic_hash": "12e8a13663b2ff18d154cdce947c0cb0"
   },
   "apps/web/scripts/export-anidachi-logo.py": {
     "mtime": 1786689011.3537037,
@@ -3606,10 +3606,10 @@
     "semantic_hash": "7222da43b1fe21764ac60a152d060d29"
   },
   "docs/current-development-state.md": {
-    "mtime": 1787494134.836342,
-    "seen": 1787494781.350913,
-    "ast_hash": "817ec38fa19f683520764cded10e95a8",
-    "semantic_hash": "817ec38fa19f683520764cded10e95a8"
+    "mtime": 1787500537.297263,
+    "seen": 1787501190.644935,
+    "ast_hash": "10e9f588366e04344c73f2b02d8ae9a9",
+    "semantic_hash": "10e9f588366e04344c73f2b02d8ae9a9"
   },
   "docs/development-environments.md": {
     "mtime": 1786689011.3582418,
@@ -3624,10 +3624,10 @@
     "semantic_hash": "b0979d5c3588dbbfd34ff46d5274f5d2"
   },
   "docs/environment-and-secrets-matrix.md": {
-    "mtime": 1786689011.3583667,
-    "seen": 1787168236.384659,
-    "ast_hash": "538c6a79dd2ffa86306bcc0a5cad7e3a",
-    "semantic_hash": "538c6a79dd2ffa86306bcc0a5cad7e3a"
+    "mtime": 1787500537.2961152,
+    "seen": 1787501190.644935,
+    "ast_hash": "3669db2e52fa53169772033dc8f948b7",
+    "semantic_hash": "3669db2e52fa53169772033dc8f948b7"
   },
   "docs/experimental-features.md": {
     "mtime": 1786689011.3584309,
@@ -3768,10 +3768,10 @@
     "semantic_hash": "6e650e1cecebb157686b6e1daa58f2a4"
   },
   "docs/superpowers/plans/README.md": {
-    "mtime": 1787494134.8374078,
-    "seen": 1787494781.350915,
-    "ast_hash": "c128716cfa190248ad70904b211f6bea",
-    "semantic_hash": "c128716cfa190248ad70904b211f6bea"
+    "mtime": 1787500537.2976615,
+    "seen": 1787501190.6449358,
+    "ast_hash": "5cf14bb07db2062c6f7d88c30f1e02b2",
+    "semantic_hash": "5cf14bb07db2062c6f7d88c30f1e02b2"
   },
   "packages/protocol/AGENTS.md": {
     "mtime": 1786689011.3759747,
@@ -3918,10 +3918,10 @@
     "semantic_hash": "a8911b34a1088fbb337d42e693057aaf"
   },
   "apps/web/lib/kreatli-crm/waitlist-stats-route.test.ts": {
-    "mtime": 1787457610.6366282,
-    "seen": 1787460549.5520809,
-    "ast_hash": "75a6376b2d23dd615f6aa10142e94121",
-    "semantic_hash": "75a6376b2d23dd615f6aa10142e94121"
+    "mtime": 1787499442.8636777,
+    "seen": 1787501190.644854,
+    "ast_hash": "62339e1dc68c64c3fe1e454f933fbe2a",
+    "semantic_hash": "62339e1dc68c64c3fe1e454f933fbe2a"
   },
   "apps/extension/src/overlay-layout-engine.ts": {
     "mtime": 1786689011.252269,
@@ -5202,16 +5202,16 @@
     "semantic_hash": "dd0c3e38ad9b66f54f3fa34b75dfde40"
   },
   "apps/web/app/api/contact/route.ts": {
-    "mtime": 1786689011.2697957,
-    "seen": 1787168236.384452,
-    "ast_hash": "6fb2609853008a7140b2c2afc1b608dd",
-    "semantic_hash": "6fb2609853008a7140b2c2afc1b608dd"
+    "mtime": 1787502939.945,
+    "seen": 1787503342.603979,
+    "ast_hash": "121da7d9e6a256f05c57e6fd97a9fc03",
+    "semantic_hash": ""
   },
   "apps/web/app/api/feature-requests/route.ts": {
-    "mtime": 1786689011.2705097,
-    "seen": 1787168236.384455,
-    "ast_hash": "509782525e70df1eb49dd7ab52f2f6a9",
-    "semantic_hash": "509782525e70df1eb49dd7ab52f2f6a9"
+    "mtime": 1787502939.9453955,
+    "seen": 1787503342.603979,
+    "ast_hash": "18c7a4eaf9f38fa3ba229fb4231b5995",
+    "semantic_hash": ""
   },
   "apps/web/app/feature-requests/page.tsx": {
     "mtime": 1786728374.6871989,
@@ -5280,10 +5280,10 @@
     "semantic_hash": "99b0fba7723cd63c8abae730dcbbebdb"
   },
   "apps/web/lib/kreatli-crm/contact-messages.ts": {
-    "mtime": 1787457610.6350317,
-    "seen": 1787460549.552074,
-    "ast_hash": "bef988d132f109f00b7863c29546f7fd",
-    "semantic_hash": "bef988d132f109f00b7863c29546f7fd"
+    "mtime": 1787499688.66802,
+    "seen": 1787501190.644843,
+    "ast_hash": "b11a67353da7b510c7c8c1fbb1c0ea51",
+    "semantic_hash": "b11a67353da7b510c7c8c1fbb1c0ea51"
   },
   "apps/web/lib/kreatli-crm/feature-request-shared.ts": {
     "mtime": 1786689011.3237436,
@@ -5292,10 +5292,10 @@
     "semantic_hash": "957c538936cd75f1933b1cc51cb422a1"
   },
   "apps/web/lib/kreatli-crm/feature-requests.ts": {
-    "mtime": 1787457610.635416,
-    "seen": 1787460549.552075,
-    "ast_hash": "77f1f9ef0bf69b582c67d2b46e284487",
-    "semantic_hash": "77f1f9ef0bf69b582c67d2b46e284487"
+    "mtime": 1787499688.668388,
+    "seen": 1787501190.644844,
+    "ast_hash": "b6096192c365b43218b6ef8944df11d4",
+    "semantic_hash": "b6096192c365b43218b6ef8944df11d4"
   },
   "packages/protocol/src/watch-history.ts": {
     "mtime": 1787457610.678882,
@@ -5616,10 +5616,10 @@
     "semantic_hash": "63c688841a7a561a4d8599bf9ad16465"
   },
   "apps/web/lib/kreatli-crm/private-integration-blob-jsonl.ts": {
-    "mtime": 1787457610.6358654,
-    "seen": 1787460549.552077,
-    "ast_hash": "a759a470b25398670234655ff5217a42",
-    "semantic_hash": "a759a470b25398670234655ff5217a42"
+    "mtime": 1787499688.6677654,
+    "seen": 1787501190.6448472,
+    "ast_hash": "c33039bfebcb9ea87d40e904890c70b3",
+    "semantic_hash": "c33039bfebcb9ea87d40e904890c70b3"
   },
   "apps/web/lib/pre-release-security-boundaries.test.ts": {
     "mtime": 1787457610.637241,
@@ -5634,16 +5634,16 @@
     "semantic_hash": "235b6fc03370d30ce471394d09d9d605"
   },
   "apps/web/lib/private-integration-blob.test.ts": {
-    "mtime": 1787457610.6376479,
-    "seen": 1787460549.552086,
-    "ast_hash": "103fad33dc35e4b169f202de04e2a6cd",
-    "semantic_hash": "103fad33dc35e4b169f202de04e2a6cd"
+    "mtime": 1787502515.7899609,
+    "seen": 1787503342.603979,
+    "ast_hash": "2f9f8d5d85a98a1eb1e5313f2738ed92",
+    "semantic_hash": ""
   },
   "apps/web/lib/private-integration-blob.ts": {
-    "mtime": 1787457610.63776,
-    "seen": 1787460549.552086,
-    "ast_hash": "b01caa5cb9faab39972895f1c81fb87f",
-    "semantic_hash": "b01caa5cb9faab39972895f1c81fb87f"
+    "mtime": 1787502623.6954896,
+    "seen": 1787503342.603979,
+    "ast_hash": "823ce1c3598b2ea6a234ef159665b77a",
+    "semantic_hash": ""
   },
   "apps/web/lib/public-media-blob.test.ts": {
     "mtime": 1787457610.6378589,
@@ -6172,5 +6172,95 @@
     "seen": 1787494781.350889,
     "ast_hash": "16c9537bbeaa2249a2d9c3adbbabf01a",
     "semantic_hash": "16c9537bbeaa2249a2d9c3adbbabf01a"
+  },
+  "apps/web/lib/kreatli-crm/blob-reconciliation.test.ts": {
+    "mtime": 1787502515.790592,
+    "seen": 1787503342.603979,
+    "ast_hash": "58fe88ad23fc96d7c0555d32903854c4",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/kreatli-crm/blob-reconciliation.ts": {
+    "mtime": 1787502623.696777,
+    "seen": 1787503342.603979,
+    "ast_hash": "a7e72edc84f96bd716254e440f261a73",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/kreatli-crm/public-form-notification-route.test.ts": {
+    "mtime": 1787502959.6968467,
+    "seen": 1787503342.603979,
+    "ast_hash": "e10398baf285046cec83999785f088b2",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/kreatli-crm/store.test.ts": {
+    "mtime": 1787499572.3118124,
+    "seen": 1787501190.644848,
+    "ast_hash": "eb0ed0d7f270dfa2b7eec190837e4b00",
+    "semantic_hash": "eb0ed0d7f270dfa2b7eec190837e4b00"
+  },
+  "apps/web/lib/kreatli-crm/subscribe-interest-route.test.ts": {
+    "mtime": 1787502959.6971912,
+    "seen": 1787503342.603979,
+    "ast_hash": "bb362ea6a889d70a95f33f4ea36c6eff",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/kreatli-crm/survey-lead.test.ts": {
+    "mtime": 1787499572.31216,
+    "seen": 1787501190.644851,
+    "ast_hash": "dbfae865d66f3322353a722920999b2a",
+    "semantic_hash": "dbfae865d66f3322353a722920999b2a"
+  },
+  "apps/web/lib/kreatli-crm/waitlist-join-route.test.ts": {
+    "mtime": 1787502959.6976204,
+    "seen": 1787503342.603979,
+    "ast_hash": "6ddb12f9d4b5a045cfa728cc55c8b4aa",
+    "semantic_hash": ""
+  },
+  "apps/web/scripts/reconcile-kreatli-crm-blobs.ts": {
+    "mtime": 1787500423.180048,
+    "seen": 1787501190.644883,
+    "ast_hash": "596eafa5cb55f22e388530dff7070b28",
+    "semantic_hash": "596eafa5cb55f22e388530dff7070b28"
+  },
+  "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md": {
+    "mtime": 1787503416.4846976,
+    "seen": 1787503627.8348649,
+    "ast_hash": "ee7f64ae31f888dba465a6cf3aeff678",
+    "semantic_hash": "ee7f64ae31f888dba465a6cf3aeff678"
+  },
+  "docs/superpowers/specs/2026-08-23-waitlist-crm-durable-storage-design.md": {
+    "mtime": 1787501660.6908445,
+    "seen": 1787502298.867599,
+    "ast_hash": "199ef8ee8f897fe106c4d253afb27372",
+    "semantic_hash": "199ef8ee8f897fe106c4d253afb27372"
+  },
+  "graphify-out/memory/query_20260823_160857_trace_the_repaired_hero____waitlist_stats____crm.md": {
+    "mtime": 1787501337.3308482,
+    "seen": 1787502298.867599,
+    "ast_hash": "3cd83e08a7f7aecf315696efb26d4fc4",
+    "semantic_hash": "3cd83e08a7f7aecf315696efb26d4fc4"
+  },
+  "apps/web/lib/kreatli-crm/contact-route.ts": {
+    "mtime": 1787502928.149155,
+    "seen": 1787503342.603979,
+    "ast_hash": "a15da10a8c0d203c1dd5726afc3a50ba",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/kreatli-crm/feature-request-route.ts": {
+    "mtime": 1787502928.1503944,
+    "seen": 1787503342.603979,
+    "ast_hash": "cf634e689034c6308e4a4cd26e65355c",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/kreatli-crm/subscribe-interest-route.ts": {
+    "mtime": 1787502974.6374347,
+    "seen": 1787503342.603979,
+    "ast_hash": "3e8f6056730e01dc602e63f82be52abd",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/kreatli-crm/waitlist-join-route.ts": {
+    "mtime": 1787502974.6381156,
+    "seen": 1787503342.603979,
+    "ast_hash": "2e8176fbc405dcf5989a060d3bfa16fc",
+    "semantic_hash": ""
   }
 }
