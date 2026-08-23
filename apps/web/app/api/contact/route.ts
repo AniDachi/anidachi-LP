@@ -21,7 +21,7 @@ const RATE_MAX = 5;
 
 const rateBucket = new Map<string, { count: number; resetAt: number }>();
 
-function clientIp(request: NextRequest): string {
+function clientIp(request: Pick<Request, "headers">): string {
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) return forwarded.split(",")[0]?.trim() || "unknown";
   return request.headers.get("x-real-ip")?.trim() || "unknown";
@@ -39,6 +39,32 @@ function rateLimited(ip: string): boolean {
 }
 
 export async function POST(request: NextRequest) {
+  return handleContactPost(request);
+}
+
+export type ContactPostDependencies = {
+  appendContactMessage: typeof appendContactMessage;
+  isGmailConfigured: typeof isGmailConfigured;
+  readGmailTokens: typeof readGmailTokens;
+  sendPlaintextEmail: typeof sendPlaintextEmail;
+  getGmailRedirectUri: typeof getGmailRedirectUri;
+  getSiteOrigin: typeof getResolvedSiteOrigin;
+  notifyEmails?: string;
+};
+
+const contactPostDependencies: ContactPostDependencies = {
+  appendContactMessage,
+  isGmailConfigured,
+  readGmailTokens,
+  sendPlaintextEmail,
+  getGmailRedirectUri,
+  getSiteOrigin: getResolvedSiteOrigin,
+};
+
+export async function handleContactPost(
+  request: NextRequest | Request,
+  dependencies: ContactPostDependencies = contactPostDependencies,
+) {
   if (rateLimited(clientIp(request))) {
     return NextResponse.json(
       { error: "Too many requests. Try again in a minute." },
@@ -102,7 +128,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    await appendContactMessage({
+    await dependencies.appendContactMessage({
       name,
       email,
       subject,
@@ -113,45 +139,51 @@ export async function POST(request: NextRequest) {
     console.error("[contact] Failed to store message", error);
     return NextResponse.json(
       { error: "Could not send your message. Please try again." },
-      { status: 500 },
+      { status: 503 },
     );
   }
 
   const responsePayload = { ok: true as const };
-  const toRaw = process.env.SUBSCRIPTION_NOTIFY_EMAILS;
-  if (!toRaw?.trim() || !isGmailConfigured()) {
+  const toRaw = dependencies.notifyEmails ?? process.env.SUBSCRIPTION_NOTIFY_EMAILS;
+  if (!toRaw?.trim() || !dependencies.isGmailConfigured()) {
     console.warn("[contact] Email not sent — Gmail not configured");
     return NextResponse.json(responsePayload);
   }
 
-  const tokens = await readGmailTokens();
-  if (!tokens?.refresh_token) {
-    console.warn("[contact] Gmail not connected; skipping alert");
-    return NextResponse.json(responsePayload);
-  }
-
-  const redirectUri = getGmailRedirectUri(getResolvedSiteOrigin());
-  const emailBody = [
-    "New contact form message from /contact",
-    "",
-    `Name: ${name}`,
-    `Email: ${email}`,
-    `Category: ${category}`,
-    `Subject: ${subject}`,
-    "",
-    message,
-  ].join("\n");
-
-  for (const address of toRaw.split(",").map((s) => s.trim()).filter(Boolean)) {
-    try {
-      await sendPlaintextEmail(redirectUri, {
-        to: address,
-        subject: `AniDachi contact (${category}): ${subject}`,
-        body: emailBody,
-      });
-    } catch (error) {
-      console.error("[contact] Failed to email", address, error);
+  try {
+    const tokens = await dependencies.readGmailTokens();
+    if (!tokens?.refresh_token) {
+      console.warn("[contact] Gmail not connected; skipping alert");
+      return NextResponse.json(responsePayload);
     }
+
+    const redirectUri = dependencies.getGmailRedirectUri(
+      dependencies.getSiteOrigin(),
+    );
+    const emailBody = [
+      "New contact form message from /contact",
+      "",
+      `Name: ${name}`,
+      `Email: ${email}`,
+      `Category: ${category}`,
+      `Subject: ${subject}`,
+      "",
+      message,
+    ].join("\n");
+
+    for (const address of toRaw.split(",").map((s) => s.trim()).filter(Boolean)) {
+      try {
+        await dependencies.sendPlaintextEmail(redirectUri, {
+          to: address,
+          subject: `AniDachi contact (${category}): ${subject}`,
+          body: emailBody,
+        });
+      } catch (error) {
+        console.error("[contact] Gmail alert failed", error);
+      }
+    }
+  } catch (error) {
+    console.error("[contact] Gmail notification unavailable", error);
   }
 
   return NextResponse.json(responsePayload);

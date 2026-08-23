@@ -21,7 +21,7 @@ const RATE_MAX = 5;
 
 const rateBucket = new Map<string, { count: number; resetAt: number }>();
 
-function clientIp(request: NextRequest): string {
+function clientIp(request: Pick<Request, "headers">): string {
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) return forwarded.split(",")[0]?.trim() || "unknown";
   return request.headers.get("x-real-ip")?.trim() || "unknown";
@@ -61,6 +61,32 @@ function buildEmail(input: {
 }
 
 export async function POST(request: NextRequest) {
+  return handleFeatureRequestPost(request);
+}
+
+export type FeatureRequestPostDependencies = {
+  appendFeatureRequest: typeof appendFeatureRequest;
+  isGmailConfigured: typeof isGmailConfigured;
+  readGmailTokens: typeof readGmailTokens;
+  sendPlaintextEmail: typeof sendPlaintextEmail;
+  getGmailRedirectUri: typeof getGmailRedirectUri;
+  getSiteOrigin: typeof getResolvedSiteOrigin;
+  notifyEmails?: string;
+};
+
+const featureRequestPostDependencies: FeatureRequestPostDependencies = {
+  appendFeatureRequest,
+  isGmailConfigured,
+  readGmailTokens,
+  sendPlaintextEmail,
+  getGmailRedirectUri,
+  getSiteOrigin: getResolvedSiteOrigin,
+};
+
+export async function handleFeatureRequestPost(
+  request: NextRequest | Request,
+  dependencies: FeatureRequestPostDependencies = featureRequestPostDependencies,
+) {
   if (rateLimited(clientIp(request))) {
     return NextResponse.json(
       { error: "Too many requests. Try again in a minute." },
@@ -122,7 +148,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    await appendFeatureRequest({
+    await dependencies.appendFeatureRequest({
       name,
       email,
       title,
@@ -133,45 +159,51 @@ export async function POST(request: NextRequest) {
     console.error("[feature-requests] Failed to store request", error);
     return NextResponse.json(
       { error: "Could not save your request. Please try again." },
-      { status: 500 },
+      { status: 503 },
     );
   }
 
   const responsePayload = { ok: true as const };
 
-  const toRaw = process.env.SUBSCRIPTION_NOTIFY_EMAILS;
-  if (!toRaw?.trim() || !isGmailConfigured()) {
+  const toRaw = dependencies.notifyEmails ?? process.env.SUBSCRIPTION_NOTIFY_EMAILS;
+  if (!toRaw?.trim() || !dependencies.isGmailConfigured()) {
     console.warn(
       "[feature-requests] Email not sent — Gmail not configured or no notify address",
     );
     return NextResponse.json(responsePayload);
   }
 
-  const tokens = await readGmailTokens();
-  if (!tokens?.refresh_token) {
-    console.warn("[feature-requests] Gmail not connected; skipping alert");
-    return NextResponse.json(responsePayload);
-  }
-
-  const redirectUri = getGmailRedirectUri(getResolvedSiteOrigin());
-  const { subject, body: emailBody } = buildEmail({
-    name,
-    email,
-    title,
-    description,
-    category,
-  });
-
-  for (const address of toRaw.split(",").map((s) => s.trim()).filter(Boolean)) {
-    try {
-      await sendPlaintextEmail(redirectUri, {
-        to: address,
-        subject,
-        body: emailBody,
-      });
-    } catch (error) {
-      console.error("[feature-requests] Failed to email", address, error);
+  try {
+    const tokens = await dependencies.readGmailTokens();
+    if (!tokens?.refresh_token) {
+      console.warn("[feature-requests] Gmail not connected; skipping alert");
+      return NextResponse.json(responsePayload);
     }
+
+    const redirectUri = dependencies.getGmailRedirectUri(
+      dependencies.getSiteOrigin(),
+    );
+    const { subject, body: emailBody } = buildEmail({
+      name,
+      email,
+      title,
+      description,
+      category,
+    });
+
+    for (const address of toRaw.split(",").map((s) => s.trim()).filter(Boolean)) {
+      try {
+        await dependencies.sendPlaintextEmail(redirectUri, {
+          to: address,
+          subject,
+          body: emailBody,
+        });
+      } catch (error) {
+        console.error("[feature-requests] Gmail alert failed", error);
+      }
+    }
+  } catch (error) {
+    console.error("[feature-requests] Gmail notification unavailable", error);
   }
 
   return NextResponse.json(responsePayload);
