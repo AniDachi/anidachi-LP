@@ -129,6 +129,8 @@ import {
   isActiveRoomConflictError,
   isQuotaExhaustedError,
   isTerminalRoomJoinError,
+  ROOM_FULL_CLOSE_CODE,
+  ROOM_SESSION_TAKEN_OVER_CLOSE_CODE,
   RoomClient,
   type RoomConnectionStatus,
   type RoomQuotaSummary,
@@ -2732,7 +2734,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
             ?.setRoomHistoryAuthority(authority)
             .catch(() => undefined);
         },
-        onTerminalClose: () => terminateRoomSession("Watch room ended."),
+        onTerminalClose: (code) => terminateRoomSession(roomTerminalCloseMessage(code)),
         onTransportReady: setSignalingTransportReady,
       });
       return true;
@@ -2906,11 +2908,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       roomReconnectSuppressedRef.current = true;
       clearRoomReconnectTimer();
       setActiveRoomConflict(error.activeRoom);
-      setAuthMessage(ACTIVE_ROOM_CONFLICT_MESSAGE);
+      setAuthMessage(activeRoomConflictMessage(error.activeRoom.provider, adapter.provider));
       setPanelOpen(true);
       return true;
     },
-    [clearRoomReconnectTimer],
+    [adapter.provider, clearRoomReconnectTimer],
   );
 
   const scheduleRoomReconnect = useCallback(
@@ -3636,6 +3638,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const handleOpenActiveRoom = async () => {
     const conflict = activeRoomConflict;
     if (!conflict || roomCreatePending) {
+      return;
+    }
+    if (conflict.provider && conflict.provider !== adapter.provider) {
+      setAuthMessage(activeRoomConflictMessage(conflict.provider, adapter.provider));
       return;
     }
 
@@ -4787,7 +4793,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
                   Reload page
                 </button>
               ) : null}
-              {activeRoomConflict ? (
+              {activeRoomConflict &&
+              (!activeRoomConflict.provider || activeRoomConflict.provider === adapter.provider) ? (
                 <button
                   className="button compact"
                   type="button"
@@ -5659,6 +5666,32 @@ function roomJoinUnavailableMessage(error: { status?: number }): string {
   }
 
   return "This watch room is not available for this account.";
+}
+
+function roomTerminalCloseMessage(code: number): string {
+  if (code === ROOM_SESSION_TAKEN_OVER_CLOSE_CODE) {
+    return "This room was opened in another tab or device.";
+  }
+  if (code === ROOM_FULL_CLOSE_CODE) {
+    return "This watch room is full.";
+  }
+  return "Watch room ended.";
+}
+
+function activeRoomConflictMessage(
+  provider: ActiveRoomConflictResponse["activeRoom"]["provider"],
+  currentProvider: VideoAdapter["provider"],
+): string {
+  if (!provider || provider === currentProvider) {
+    return ACTIVE_ROOM_CONFLICT_MESSAGE;
+  }
+  if (provider === "youtube") {
+    return "You already have an active watch room on YouTube. Open that tab to continue.";
+  }
+  if (provider === "crunchyroll") {
+    return "You already have an active watch room on Crunchyroll. Open that tab to continue.";
+  }
+  return "You already have an active watch room on another supported site. Open that tab to continue.";
 }
 
 function formatQuotaCountdown(remainingSeconds: number | null): string {

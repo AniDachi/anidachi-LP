@@ -453,6 +453,56 @@ describe("privileged overlay wiring", () => {
     expect(view.container.textContent).not.toContain("You already have an active watch room.");
     await unmount(view.root);
   });
+
+  it("does not take over an active room from a different provider tab", async () => {
+    const sendMessage = vi.fn(async (message: { type?: string; command?: string }) => {
+      if (message.type === "ANIDACHI_AUTH") {
+        return { ok: true, tokens: sessionFor("user-a") };
+      }
+      if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE") {
+        if (message.command === "load") return { ok: true, record: null };
+        if (message.command === "prepare") {
+          return {
+            ok: true,
+            record: null,
+            prepared: preparedRoomSession(),
+          };
+        }
+        if (message.command === "discard-prepared") {
+          return { ok: true, record: null, prepared: null };
+        }
+      }
+      if (message.type === "ANIDACHI_ROOM_HTTP" && message.command === "create-room") {
+        return {
+          ok: false,
+          error: "An active room already exists",
+          code: "ACTIVE_ROOM_CONFLICT",
+          status: 409,
+          activeRoom: {
+            roomId: "room-active",
+            role: "member",
+            provider: "crunchyroll",
+            title: "Active episode",
+          },
+        };
+      }
+      throw new Error(`Unexpected runtime message ${message.type}:${message.command}`);
+    });
+    installOverlayRuntime(sendMessage);
+    const connect = vi.spyOn(RoomClient.prototype, "connect");
+    const view = await renderOverlay();
+
+    await click(button(view.container, "Open Anidachi controls"));
+    await click(button(view.container, "Create room"));
+    await flushMountedWork();
+
+    expect(view.container.textContent).toContain(
+      "You already have an active watch room on Crunchyroll. Open that tab to continue.",
+    );
+    expect(view.container.textContent).not.toContain("Open active room");
+    expect(connect).not.toHaveBeenCalled();
+    await unmount(view.root);
+  });
 });
 
 function createAdapter(container: HTMLElement, video: HTMLVideoElement): VideoAdapter {

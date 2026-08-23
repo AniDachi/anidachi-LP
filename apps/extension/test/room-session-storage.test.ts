@@ -131,6 +131,24 @@ describe("background-owned room session storage", () => {
     await expect(loadRoomSessionForTab(2, dependencies)).resolves.toBeNull();
   });
 
+  it("drops an oversized confirmed record instead of restoring corrupt authority", async () => {
+    const dependencies = backgroundDependencies();
+    await handleRoomSessionStorageMessage(
+      message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+      sender(1),
+      dependencies,
+    );
+    const [key] = dependencies.sessionStorage.values.keys();
+    const record = dependencies.sessionStorage.values.get(key ?? "") as RoomSessionRecord;
+    dependencies.sessionStorage.values.set(key ?? "", {
+      ...record,
+      participantSessionId: "x".repeat(129),
+    });
+
+    await expect(loadRoomSessionForTab(1, dependencies)).resolves.toBeNull();
+    expect(dependencies.sessionStorage.values.size).toBe(0);
+  });
+
   it("does not let an old tab-close cleanup erase a same-room takeover session", async () => {
     const dependencies = backgroundDependencies();
     const oldRecord = expectRecord(
@@ -680,7 +698,7 @@ describe("legacy page room session migration", () => {
       revision: 1,
       roomId: "room-a",
       ownerUserId: "user-a",
-      participantSessionId: "session-stable-a",
+      participantSessionId: "session-uuid-1",
       voiceMode: "push-to-talk",
     });
     expect(pageSessionStorage.values.size).toBe(0);
@@ -705,7 +723,7 @@ describe("legacy page room session migration", () => {
       revision: 1,
       roomId: "legacy-room",
       ownerUserId: "user-a",
-      participantSessionId: "legacy-session",
+      participantSessionId: "session-uuid-1",
       voiceMode: "push-to-talk",
     });
     expect(pageSessionStorage.values.size).toBe(0);
@@ -732,7 +750,7 @@ describe("legacy page room session migration", () => {
     expect(record).toMatchObject({
       roomId: "legacy-room",
       ownerUserId: "user-a",
-      participantSessionId: "complete-session",
+      participantSessionId: "session-uuid-1",
     });
     expect(pageSessionStorage.values.size).toBe(0);
   });
@@ -760,5 +778,55 @@ describe("legacy page room session migration", () => {
         ["anidachi:participant-session-id", "legacy-session"],
       ]),
     );
+  });
+
+  it("keeps a trusted current record instead of overwriting it from stale page state", async () => {
+    const dependencies = backgroundDependencies();
+    const existing = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-current", ownerUserId: "user-a" }),
+        sender(48),
+        dependencies,
+      ),
+    );
+    const pageSessionStorage = new PageSessionStorage();
+    pageSessionStorage.setItem("anidachi:room-id", "room-stale");
+    pageSessionStorage.setItem("anidachi:room-owner-id", "user-a");
+    pageSessionStorage.setItem("anidachi:participant-session-id", "stale-session");
+
+    const migrated = await migrateLegacyRoomSession("user-a", {
+      pageSessionStorage,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(48), dependencies),
+    });
+
+    expect(migrated).toEqual(existing);
+    expect(pageSessionStorage.values.size).toBe(0);
+  });
+
+  it("does not trust one cloned legacy session id as two tab identities", async () => {
+    const dependencies = backgroundDependencies();
+    const firstPage = new PageSessionStorage();
+    const duplicatedPage = new PageSessionStorage();
+    for (const page of [firstPage, duplicatedPage]) {
+      page.setItem("anidachi:room-id", "legacy-room");
+      page.setItem("anidachi:room-owner-id", "user-a");
+      page.setItem("anidachi:participant-session-id", "cloned-session");
+    }
+
+    const first = await migrateLegacyRoomSession("user-a", {
+      pageSessionStorage: firstPage,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(49), dependencies),
+    });
+    const duplicate = await migrateLegacyRoomSession("user-a", {
+      pageSessionStorage: duplicatedPage,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(50), dependencies),
+    });
+
+    expect(first?.participantSessionId).toMatch(/^session-/);
+    expect(duplicate?.participantSessionId).toMatch(/^session-/);
+    expect(duplicate?.participantSessionId).not.toBe(first?.participantSessionId);
   });
 });

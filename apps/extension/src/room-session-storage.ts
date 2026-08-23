@@ -736,29 +736,30 @@ async function migrateRecord(
   }
 
   const key = roomSessionStorageKey(tabId);
+  const stored = await storage.get(key);
+  const existing = parseRoomSessionRecord(stored[key]);
+  if (existing?.ownerUserId === currentUserId) {
+    return existing;
+  }
   if (
-    !isNonEmptyString(currentUserId) ||
-    !isNonEmptyString(legacyRecord.roomId) ||
-    !isNonEmptyString(legacyRecord.ownerUserId) ||
+    !isBoundedString(currentUserId, MAX_PARTICIPANT_ID_CHARS) ||
+    !isBoundedString(legacyRecord.roomId, MAX_ROOM_ID_CHARS) ||
+    !isBoundedString(legacyRecord.ownerUserId, MAX_PARTICIPANT_ID_CHARS) ||
     legacyRecord.ownerUserId !== currentUserId
   ) {
     await storage.remove(key);
     return null;
   }
 
-  const stored = await storage.get(key);
-  const existing = parseRoomSessionRecord(stored[key]);
   const record: RoomSessionRecord = {
     version: ROOM_SESSION_RECORD_VERSION,
     revision: nextRoomSessionRevision(existing),
     roomId: legacyRecord.roomId,
     ownerUserId: legacyRecord.ownerUserId,
-    participantSessionId: isNonEmptyString(legacyRecord.participantSessionId)
-      ? legacyRecord.participantSessionId
-      : existing?.roomId === legacyRecord.roomId &&
-          existing.ownerUserId === legacyRecord.ownerUserId
-        ? existing.participantSessionId
-        : createParticipantSessionId(randomUUID),
+    // Page sessionStorage can be cloned when a tab is duplicated. Preserve
+    // legacy room/account context, but mint identity in trusted tab-scoped
+    // background storage so two tabs never inherit one exact session.
+    participantSessionId: createParticipantSessionId(randomUUID),
     voiceMode:
       existing?.roomId === legacyRecord.roomId &&
       existing.ownerUserId === legacyRecord.ownerUserId
@@ -853,9 +854,9 @@ function parseRoomSessionRecord(value: unknown): RoomSessionRecord | null {
     !isObject(value) ||
     revision === null ||
     value.version !== ROOM_SESSION_RECORD_VERSION ||
-    !isNonEmptyString(value.roomId) ||
-    !isNonEmptyString(value.ownerUserId) ||
-    !isNonEmptyString(value.participantSessionId)
+    !isBoundedString(value.roomId, MAX_ROOM_ID_CHARS) ||
+    !isBoundedString(value.ownerUserId, MAX_PARTICIPANT_ID_CHARS) ||
+    !isBoundedString(value.participantSessionId, MAX_SESSION_ID_CHARS)
   ) {
     return null;
   }

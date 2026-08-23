@@ -1203,45 +1203,52 @@ describe("authenticated room client", () => {
     vi.useRealTimers();
   });
 
-  it("reports terminal close code 4004 when ROOM_ENDED is lost", () => {
-    const sockets: FakeWebSocket[] = [];
-    class FakeWebSocket {
-      static CONNECTING = 0;
-      static OPEN = 1;
-      static CLOSING = 2;
-      static CLOSED = 3;
-      readonly listeners = new Map<string, Array<(event: unknown) => void>>();
-      readyState = FakeWebSocket.CONNECTING;
-      constructor(readonly url: string) { sockets.push(this); }
-      addEventListener(type: string, listener: (event: unknown) => void): void {
-        this.listeners.set(type, [...(this.listeners.get(type) ?? []), listener]);
+  it.each([4002, 4003, 4004])(
+    "reports terminal close code %s when its ERROR frame is lost",
+    (closeCode) => {
+      const sockets: FakeWebSocket[] = [];
+      class FakeWebSocket {
+        static CONNECTING = 0;
+        static OPEN = 1;
+        static CLOSING = 2;
+        static CLOSED = 3;
+        readonly listeners = new Map<string, Array<(event: unknown) => void>>();
+        readyState = FakeWebSocket.CONNECTING;
+        constructor(readonly url: string) { sockets.push(this); }
+        addEventListener(type: string, listener: (event: unknown) => void): void {
+          this.listeners.set(type, [...(this.listeners.get(type) ?? []), listener]);
+        }
+        close(): void { this.readyState = FakeWebSocket.CLOSED; }
+        send(): void {}
+        dispatch(type: string, event: unknown): void {
+          for (const listener of this.listeners.get(type) ?? []) listener(event);
+        }
       }
-      close(): void { this.readyState = FakeWebSocket.CLOSED; }
-      send(): void {}
-      dispatch(type: string, event: unknown): void {
-        for (const listener of this.listeners.get(type) ?? []) listener(event);
-      }
-    }
-    vi.stubGlobal("WebSocket", FakeWebSocket);
-    const onTerminalClose = vi.fn();
-    const client = new RoomClient();
-    client.connect({
-      roomId: "room-1",
-      roomToken: "token",
-      participant: {
-        id: "user-1", displayName: "User", role: "viewer", cameraEnabled: false,
-        mediaSeat: "none", syncStatus: "unknown", lastSeenAt: 0,
-      },
-      participantSessionId: "participant-session-1",
-      videoFingerprint: "video-1",
-      onEvent: vi.fn(),
-      onStatus: vi.fn(),
-      onTerminalClose,
-    });
+      vi.stubGlobal("WebSocket", FakeWebSocket);
+      const onTerminalClose = vi.fn();
+      const client = new RoomClient();
+      client.connect({
+        roomId: "room-1",
+        roomToken: "token",
+        participant: {
+          id: "user-1", displayName: "User", role: "viewer", cameraEnabled: false,
+          mediaSeat: "none", syncStatus: "unknown", lastSeenAt: 0,
+        },
+        participantSessionId: "participant-session-1",
+        videoFingerprint: "video-1",
+        onEvent: vi.fn(),
+        onStatus: vi.fn(),
+        onTerminalClose,
+      });
 
-    sockets[0]?.dispatch("close", { code: 4004, reason: "Room ended", wasClean: true });
-    expect(onTerminalClose).toHaveBeenCalledOnce();
-  });
+      sockets[0]?.dispatch("close", {
+        code: closeCode,
+        reason: "Terminal room close",
+        wasClean: true,
+      });
+      expect(onTerminalClose).toHaveBeenCalledWith(closeCode);
+    },
+  );
 });
 
 function trustedRoomToken(payload: Record<string, unknown>): string {

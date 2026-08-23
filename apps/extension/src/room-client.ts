@@ -45,7 +45,7 @@ export interface RoomClientOptions {
   onEvent: (event: ServerEvent) => void;
   onStatus: (status: RoomConnectionStatus) => void;
   onHistoryAuthority?: (authority: RoomHistoryAuthority | null) => void;
-  onTerminalClose?: () => void;
+  onTerminalClose?: (code: number) => void;
   onTransportReady?: (ready: SignalingTransportReady) => void;
 }
 
@@ -130,13 +130,19 @@ const ROOM_KEEPALIVE_INTERVAL_MS = 20_000;
 const ROOM_KEEPALIVE_TIMEOUT_MS = 45_000;
 const HIBERNATION_KEEPALIVE_PING = "ping";
 const HIBERNATION_KEEPALIVE_PONG = "pong";
+export const ROOM_SESSION_TAKEN_OVER_CLOSE_CODE = 4002;
+export const ROOM_FULL_CLOSE_CODE = 4003;
 export const ROOM_ENDED_CLOSE_CODE = 4004;
 
 const roomAuthorityRequestSequenceByTab = new Map<number, number>();
 let nextRoomAuthorityRequestSequence = 0;
 
 export function isTerminalRoomCloseCode(code: number): boolean {
-  return code === ROOM_ENDED_CLOSE_CODE;
+  return (
+    code === ROOM_SESSION_TAKEN_OVER_CLOSE_CODE ||
+    code === ROOM_FULL_CLOSE_CODE ||
+    code === ROOM_ENDED_CLOSE_CODE
+  );
 }
 
 export type RoomHttpCommand = "create-room" | "connect-room";
@@ -861,7 +867,7 @@ export class RoomClient {
       }
       this.stopKeepalive();
       if (isTerminalRoomCloseCode(event.code)) {
-        options.onTerminalClose?.();
+        options.onTerminalClose?.(event.code);
       }
       publishStatus("closed");
     });
