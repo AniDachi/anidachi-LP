@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-08-23.
+Last updated: 2026-08-24.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -210,19 +210,33 @@ data. The retained legacy public CRM object contains 683 contacts, including
 including 643 survey leads, and was verified as a conflict-free older subset at
 inspection time. Production `/api/waitlist-stats` returned zero because the web
 runtime had no private CRM authority and silently fell back to an empty,
-read-only deployment filesystem. Two later survey requests returned optimistic
+read-only deployment filesystem. Three later survey requests returned optimistic
 HTTP success but logged failed filesystem persistence.
 
 The active repair is
 `docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md`.
-Its feature branch introduces a CRM-specific private Blob authority without
-enabling the shared deferred integration boundary, fails closed on Vercel when
-that authority is absent, conditionally updates Blob objects by ETag, reports
-public-form success only after durable storage, and provides a five-object
-dry-run-first reconciliation tool. The legacy public objects remain untouched
-as rollback evidence; `kreatli-crm/gmail-tokens.json` is outside the recovery
-inventory. No staging data write, production environment change, or `main`
-promotion is claimed until the plan records that live evidence.
+Its CRM-specific private Blob authority is merged to `staging` at
+`d74fa6f3826a61f428147e5bbc472cc6220c4983`. It does not enable the shared
+deferred integration boundary, fails closed on Vercel when its narrow authority
+is absent, conditionally updates Blob objects by ETag, reports public-form
+success only after durable storage, and provides a five-object dry-run-first
+reconciliation tool.
+
+Staging acceptance completed on 2026-08-24. The lossless reconciliation started
+from 683 contacts and 682 survey leads; all three retained failed submissions
+were recovered without printing PII, producing 685 survey leads. A repeated
+same-email submission was idempotent, controlled contact and feature-request
+submissions returned HTTP 200 without changing the waitlist count, and fresh
+deployment `dpl_AnAzpf8XTHUcCrYMz19TDkQ2y3rq` still rendered and returned 685.
+The private authority now contains 687 contacts in total because the controlled
+`@example.com` acceptance identity is retained as a non-waitlist test record.
+Fresh runtime logs contain no EROFS, Blob-auth, or CRM-persistence failure.
+
+The legacy public objects remain untouched as rollback evidence;
+`kreatli-crm/gmail-tokens.json` is outside the recovery inventory. Production
+environment and runtime remain unchanged, `main` remains at
+`c67fb79d0bd98c4da57d966040c6bda16f918ee8`, and the separate Task 7
+Production/main gate still requires explicit approval.
 
 ## Pre-release Security Readiness
 
