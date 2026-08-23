@@ -196,11 +196,11 @@ describe("private integration Blob boundary", () => {
         blob: {
           ...textResult(pathname, "unused").blob,
           pathname,
-          etag: '"v2"',
+          etag: 'W/"v2"',
         },
       },
     ];
-    reads[0].blob.etag = '"v1"';
+    reads[0].blob.etag = 'W/"v1"';
     const putCalls: Array<{ body: string; options: unknown }> = [];
     const sdk: PrivateIntegrationBlobSdk = {
       get: async () => reads.shift() ?? null,

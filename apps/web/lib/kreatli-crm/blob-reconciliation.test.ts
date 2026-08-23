@@ -260,7 +260,7 @@ describe("Kreatli CRM Blob reconciliation runner", () => {
         return readResult(
           pathname,
           value,
-          options.access === "public" ? '"source"' : '"destination"',
+          options.access === "public" ? '"source"' : 'W/"destination"',
         );
       },
       put: async (pathname, body, options) => {

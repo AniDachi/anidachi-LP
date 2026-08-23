@@ -80,6 +80,17 @@ export function isPrivateIntegrationBlobPath(pathname: string): boolean {
   );
 }
 
+export function vercelBlobEtagForIfMatch(
+  value: string | null | undefined,
+): string | null {
+  const observed = value?.trim();
+  if (!observed) return null;
+  const strong = observed.startsWith("W/")
+    ? observed.slice(2).trimStart()
+    : observed;
+  return strong.startsWith('"') && strong.endsWith('"') ? strong : null;
+}
+
 function assertPrivatePath(pathname: string): void {
   if (!isPrivateIntegrationBlobPath(pathname)) {
     throw new Error(`${pathname} is not an allowed private integration Blob path`);
@@ -114,7 +125,7 @@ export function createPrivateIntegrationBlobClient(input: {
         `Private Blob returned an unexpected pathname for ${pathname}`,
       );
     }
-    const etag = result.blob.etag?.trim();
+    const etag = vercelBlobEtagForIfMatch(result.blob.etag);
     if (!etag) {
       await result.stream.cancel().catch(() => undefined);
       throw new Error(`Private Blob returned no ETag for ${pathname}`);

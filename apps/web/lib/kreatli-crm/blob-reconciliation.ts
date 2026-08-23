@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
+import { vercelBlobEtagForIfMatch } from "../private-integration-blob";
 import type { ContactStatus } from "./types";
 
 export const KREATLI_CRM_RECONCILIATION_PATHS = [
@@ -408,7 +409,7 @@ async function readFreshPrivate(
   ) {
     throw new Error(`Unable to read destination object ${pathname}`);
   }
-  const etag = result.blob.etag?.trim();
+  const etag = vercelBlobEtagForIfMatch(result.blob.etag);
   if (!etag) {
     await result.stream.cancel().catch(() => undefined);
     throw new Error(`Destination Blob returned no ETag for ${pathname}`);
