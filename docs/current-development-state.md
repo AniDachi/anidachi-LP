@@ -820,14 +820,14 @@ The extension still does not host, proxy, record, or distribute source video.
 
 ## Single Active Room Session Foundation
 
-The single-active-room invariant is accepted on `staging` as of 2026-08-23.
-PR #231 merged as `f511b4dcb805e8959412213e00a2499f12f2b8be` after the additive staging
-migration `20260823090624_single_active_room_sessions.sql` was applied. Supabase
-now owns one server-only active-room assignment per authenticated user, while
-the existing room Durable Object remains responsible for live presence,
-same-room takeover, disconnect grace, and room termination. No new service,
-heartbeat, queue, env variable, secret, TURN, Blob, Stripe, or release path was
-added.
+The single-active-room invariant was accepted on `staging` and promoted to the
+technical `main`/production baseline on 2026-08-23. PR #231 merged to `staging`
+as `f511b4dcb805e8959412213e00a2499f12f2b8be` after the additive migration
+`20260823090624_single_active_room_sessions.sql` was applied there. Supabase now
+owns one server-only active-room assignment per authenticated user, while the
+existing room Durable Object remains responsible for live presence, same-room
+takeover, disconnect grace, and room termination. No new service, heartbeat,
+queue, env variable, secret, TURN, Blob, Stripe, or release path was added.
 
 The accepted product behavior is:
 
@@ -856,11 +856,29 @@ old-link behavior, popup cleanup, and Crunchyroll Watch History continuity.
 YouTube Watch History was intentionally disabled during that last history check
 and is not claimed by this observation.
 
-This acceptance is limited to `staging`. It does not promote the change to
-`main` or production, publish a Chrome Web Store build, or replace the still
-required real TURN-relay and two-network P2P evidence. Explicit tab close is
-immediate; a browser crash or long offline interval relies on the 60-second
-fallback. Conflict wording and other visual polish remain normal UI/UX work.
+Production promotion preserved the database-first boundary. Migration PR #234
+merged as `d971f17e15bccfb02c13849cb9d5ed745d86d974` and applied
+`20260823090624_single_active_room_sessions.sql` plus the forward-only input
+validation migration `20260823132355_single_active_room_input_validation.sql`.
+Fresh runtime PR #236 then merged the exact frozen `staging` tree
+`c935cc2a8e5f99a3260b66d855f6279e9a7cfde3` as final `main` SHA
+`6f8b90256a06b73cc2cf912f151cbbf9ebafd0a7`, with an empty migration diff.
+Production CI `32644176866`, migration no-op `32644176860`, Worker deployment
+`32644176861`, and private extension build `32644176856` succeeded. Vercel
+deployment `dpl_DmwVzrNwX2pfSFRo9x7dXT4RQY8V` is Ready on that exact SHA, the
+production Worker smoke passed on version
+`c2cc7ccb-041b-4e51-be2f-0a2593796f67`, and the production extension artifact
+validated as `6f8b90256a06b73cc2cf912f151cbbf9ebafd0a7-production-126` with ZIP SHA-256
+`cd23fdc295fbab396e94c262e56d7e06a14b0e4365b2cec31d74ba540ebf3972`.
+
+This is a technical production baseline, not a public launch or authenticated
+production acceptance claim. The Chrome Web Store was not accessed, the
+production extension artifact remains private and unpublished, and production
+extension authentication remains fail-closed until a public identity is
+approved. The promotion does not replace the still required real TURN-relay
+and two-network P2P evidence. Explicit tab close is immediate; a browser crash
+or long offline interval relies on the 60-second fallback. Conflict wording and
+other visual polish remain normal UI/UX work.
 
 ## Known Fragile Areas
 

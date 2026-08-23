@@ -27,17 +27,23 @@ Core-foundation closeout record:
    `main`, without establishing authenticated production, release, store,
    Bloü/OpenClaw, legal, billing, public-form, or new-provider readiness.
 
+Single-active-room follow-up closeout record:
+
+1. `2026-08-23-single-active-room-session-implementation-plan.md` — records the
+   server-enforced one-active-room invariant, exact host/guest tab-close
+   behavior, reconnect grace, staging acceptance, and the later database-first
+   production promotion through migration PR `#234` and runtime PR `#236`.
+   The technical `main` baseline is deployed; Chrome Web Store publication,
+   authenticated production extension acceptance, two-network/TURN proof, and
+   UI/UX polish remain explicitly outside that claim.
+
 Parallel long-running room/P2P and product execution plans:
 
-1. `2026-08-23-single-active-room-session-implementation-plan.md` — proposed
-   focused plan for one server-enforced active room per user, exact host/guest
-   tab-close behavior, and reload/network reconnect grace. It is not yet an
-   implementation or staging acceptance record.
-2. `2026-06-07-production-room-p2p-hardening-roadmap.md`
-3. `2026-06-12-room-flow-p2p-flawless-execution-plan.md`
-4. `2026-06-20-social-rooms-subscriptions-execution-plan.md`
-5. `2026-07-22-source-adapters-architecture.md`
-6. `2026-07-22-provider-player-overlay-geometry.md`
+1. `2026-06-07-production-room-p2p-hardening-roadmap.md`
+2. `2026-06-12-room-flow-p2p-flawless-execution-plan.md`
+3. `2026-06-20-social-rooms-subscriptions-execution-plan.md`
+4. `2026-07-22-source-adapters-architecture.md`
+5. `2026-07-22-provider-player-overlay-geometry.md`
 
 Recently closed/superseded execution programs:
 

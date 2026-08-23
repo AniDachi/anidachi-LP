@@ -82,6 +82,54 @@ approved non-launch deferral. The prior rollback anchors remain Vercel
 `471fa2a3-0e08-41f1-b2bd-fd55042e431f`, and Git SHA
 `2d12b67bc53ac516066661013ab3714836a3047c`.
 
+### Single-active-room follow-up promotion
+
+The same database-first/runtime-second procedure was reused for the accepted
+single-active-room follow-up on 2026-08-23. Frozen `staging` candidate
+`c935cc2a8e5f99a3260b66d855f6279e9a7cfde3` included the manually accepted
+host/guest, cross-provider, duplicate-tab, reconnect, playback-sync, tracking,
+and tab-close behavior.
+
+Migration-only PR `#234` contained only
+`20260823090624_single_active_room_sessions.sql` and the forward-only
+`20260823132355_single_active_room_input_validation.sql`. It merged as
+`d971f17e15bccfb02c13849cb9d5ed745d86d974`; production migration run
+`32643395532` applied both files, and the old runtime remained healthy. Fresh
+runtime PR `#236` was based on that post-migration `main`, had an empty migration
+diff, and was tree-identical to the frozen candidate. It merged as final `main`
+SHA `6f8b90256a06b73cc2cf912f151cbbf9ebafd0a7`. Superseded combined PR `#232`
+was closed without merge.
+
+The follow-up production results were:
+
+- CI run `32644176866`: success;
+- database run `32644176860`: success, with the dry run reporting
+  `Remote database is up to date`;
+- Worker run `32644176861`: success, version
+  `c2cc7ccb-041b-4e51-be2f-0a2593796f67`, followed by a passing production
+  smoke;
+- extension run `32644176856`: success; the downloaded private artifact
+  validated as `Anidachi` `0.1.0`, `version_name`
+  `6f8b90256a06b73cc2cf912f151cbbf9ebafd0a7-production-126`, ZIP SHA-256
+  `cd23fdc295fbab396e94c262e56d7e06a14b0e4365b2cec31d74ba540ebf3972`;
+- Vercel production deployment `dpl_DmwVzrNwX2pfSFRo9x7dXT4RQY8V`: Ready on
+  the exact final SHA; `/` returned HTTP 200 and no runtime errors were reported
+  in the post-deployment observation window;
+- both production migrations remained present, the three corrected input
+  guards were active, RLS stayed enabled, `service_role` retained the intended
+  table access, and `authenticated` retained none;
+- `staging` remained Ready at `dpl_9Wmk2kG53XnFUR748WfrUBekwjme`, its Worker
+  smoke passed, it remained an ancestor of `main`, and both branch trees
+  matched after promotion.
+
+No incident or rollback occurred. The prior production rollback anchors were
+Vercel `dpl_8SwhdseZPyPhXsY5xTbQVAnwTt5X`, Worker version
+`93fa62a0-4dad-4321-977e-5a67e7a3281f`, and Git SHA
+`d971f17e15bccfb02c13849cb9d5ed745d86d974`. Chrome Web Store was not accessed,
+the artifact was not published or loaded as a public release, and authenticated
+production extension acceptance plus two-network/TURN proof remain explicitly
+deferred.
+
 **Spec and operational authorities:**
 
 - `docs/current-development-state.md`
