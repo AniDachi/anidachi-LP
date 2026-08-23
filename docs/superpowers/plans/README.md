@@ -15,7 +15,8 @@ Completed public-product recovery record:
    three failed leads, and fresh-deployment acceptance are complete. PR `#240`
    promoted the repair to `main` as
    `8cc5e4e6641ca55f0b62a320e8726de67900ce34`; Production remained at 685
-   survey leads after a full redeploy.
+   survey leads after a full redeploy, then durably accepted a distinct live
+   signup and advanced to 686 during docs closeout.
 
 Completed technical `main`-baseline promotion record:
 

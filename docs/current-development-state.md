@@ -246,9 +246,14 @@ the count. Fresh redeploy `dpl_DCt6ocJBbEJ848rfaC38W5bhbdyg` again returned
 and rendered 685, proving persistence across instances. Production logs contain
 no EROFS, Blob-auth, CRM-persistence, fake-success, or PII-log failure; optional
 Gmail-not-configured warnings do not affect durable writes. The private store
-contains 687 contacts total and 685 survey leads. Pre-cutover deployment
-`dpl_AX8MKEAcgjAXJpPnVUXZgqfNN14D` remains the deployment rollback anchor, and
-the recovery plan records exact final ETags and SHA-256 data anchors.
+contained 687 contacts total and 685 survey leads at the controlled acceptance
+checkpoint. A later distinct public signup returned HTTP 200, created position
+686, and moved the observed live store to 688 contacts / 686 survey leads;
+docs-triggered Production deployment `dpl_HcqvVAnF9V4EnSHjYekrpmKfQEUY`
+immediately returned and rendered 686. Pre-cutover deployment
+`dpl_AX8MKEAcgjAXJpPnVUXZgqfNN14D` remains the deployment rollback anchor. The
+recovery plan records exact acceptance-time and post-signup data anchors; live
+counts are expected to continue growing.
 
 ## Pre-release Security Readiness
 

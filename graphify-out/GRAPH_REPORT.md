@@ -1,11 +1,11 @@
 # Graph Report - anidachi-LP-monorepo  (2026-08-24)
 
 ## Corpus Check
-- 3 files · ~10,865 words
+- 3 files · ~11,040 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 10331 nodes · 21535 edges · 1104 communities (384 shown, 720 thin omitted)
+- 10341 nodes · 21553 edges · 1104 communities (384 shown, 720 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 309 edges (avg confidence: 0.84)
 - Token cost: 0 input · 0 output
 
@@ -1141,7 +1141,7 @@
 - **Repaired Waitlist Read Path** — graphify_out_memory_query_20260823_160857_trace_the_repaired_hero_waitlist_stats_crm_hero, graphify_out_memory_query_20260823_160857_trace_the_repaired_hero_waitlist_stats_crm_waitlist_stats_route, graphify_out_memory_query_20260823_160857_trace_the_repaired_hero_waitlist_stats_crm_store, graphify_out_memory_query_20260823_160857_trace_the_repaired_hero_waitlist_stats_crm_read_blob_text [EXTRACTED 1.00]
 - **Safe CRM Cutover** — docs_superpowers_specs_2026_08_23_waitlist_crm_durable_storage_design_five_object_reconciliation, docs_superpowers_specs_2026_08_23_waitlist_crm_durable_storage_design_deployment_order, docs_superpowers_specs_2026_08_23_waitlist_crm_durable_storage_design_rollback_strategy, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_staging_acceptance, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_production_cutover [INFERRED 0.95]
 - **Waitlist CRM Final Staging Acceptance** — docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_final_staging_runtime_acceptance, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_three_observed_failed_survey_submissions_recovered, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_staging_survey_lead_count_685, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_fresh_preview_deployment_dpl_anazpf8xthuccrymz19tdkq2y3rq, docs_current_development_state_crm_runtime_logs_clean [EXTRACTED 1.00]
-- **Waitlist CRM Production Closeout** — docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_task_7_complete, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_production_main_promotion_pr_240, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_main_sha_8cc5e4e6641ca55f0b62a320e8726de67900ce34, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_fresh_production_redeploy_dpl_dct6ocjbbej848rfac38w5bhbdyg, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_production_survey_lead_count_685, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_production_crm_runtime_logs_clean [EXTRACTED 1.00]
+- **Waitlist CRM Production Closeout** — docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_task_7_complete, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_production_main_promotion_pr_240, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_main_sha_8cc5e4e6641ca55f0b62a320e8726de67900ce34, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_fresh_production_redeploy_dpl_dct6ocjbbej848rfac38w5bhbdyg, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_production_survey_lead_count_685, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_production_crm_runtime_logs_clean, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_distinct_live_signup_2026_08_23t18_13_49_881z, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_post_signup_private_authority_688_contacts_686_survey_leads, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_final_docs_triggered_production_deployment_dpl_hcqvvanf9v4enshjyekrpmkfqeuy, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_live_product_counts_are_dynamic [EXTRACTED 1.00]
 - **Waitlist CRM Runtime Durability Chain** — docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_crm_runtime_authority, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_optimistic_blob_mutation, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_conflict_safe_crm_mutations, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_truthful_public_submission_responses [EXTRACTED 1.00]
 
 ## Communities (1104 total, 720 thin omitted)
@@ -2191,8 +2191,8 @@ Cohesion: 0.22
 Nodes (9): Additional batch (10 more watch pages — 2026-05-12), Additional batch (10 more watch pages — 2026-05-14), Additional batch (10 more watch pages — 2026-05-15), Additional batch (10 more watch pages — 2026-05-19), Additional batch slugs (implemented 2026-05-12), Additional batch slugs (implemented 2026-05-14), Executor's Feedback or Assistance Requests, Proposed next 10 `/watch/[slug]-with-friends` pages (+1 more)
 
 ### Community 267 - "Environment And Secrets Matrix"
-Cohesion: 0.04
-Nodes (62): Change Checklist, Cloudflare, Environment And Secrets Matrix, GitHub Actions, OAuth Redirect Allowlists, Principles, Supabase, Vercel (+54 more)
+Cohesion: 0.03
+Nodes (66): Change Checklist, Cloudflare, Environment And Secrets Matrix, GitHub Actions, OAuth Redirect Allowlists, Principles, Supabase, Vercel (+58 more)
 
 ### Community 268 - "Shared Watch Progress Tracker"
 Cohesion: 0.22
@@ -2551,12 +2551,12 @@ Cohesion: 0.33
 Nodes (6): CRM Blob Runtime Authority, KREATLI_CRM_BLOB_STORE_ID And VERCEL_OIDC_TOKEN, KREATLI_CRM_BLOB_READ_WRITE_TOKEN, Operator-Only Recovery Credentials, Fresh Deployment Verification, Separate Shared Private Integration Boundary
 
 ### Community 386 - "plans/README.md"
-Cohesion: 0.18
-Nodes (10): Plans, Completed Public-Product Recovery Record, Fresh-Deployment Acceptance, Staging And Production CRM Recovery Complete, Three Failed Leads Recovered, Production And Main Promotion Complete, Production Closeout Complete, Main SHA 8cc5e4e6641ca55f0b62a320e8726de67900ce34 (+2 more)
+Cohesion: 0.15
+Nodes (12): Plans, Completed Public-Product Recovery Record, Fresh-Deployment Acceptance, Staging And Production CRM Recovery Complete, Three Failed Leads Recovered, Production And Main Promotion Complete, Production Closeout Complete, Main SHA 8cc5e4e6641ca55f0b62a320e8726de67900ce34 (+4 more)
 
 ### Community 1108 - "Waitlist And Public-Form CRM Recovery"
 Cohesion: 0.08
-Nodes (24): Controlled Contact And Feature-Request Acceptance, CRM Runtime Logs Free Of Persistence Failures, Fresh Deployment dpl_AnAzpf8XTHUcCrYMz19TDkQ2y3rq, Final Private CRM Authority: 687 Contacts, Recovered Lead Same-Email Idempotency, Staging Merge d74fa6f3826a61f428147e5bbc472cc6220c4983, Staging Acceptance: 685 Survey Leads, Three Failed Survey Leads Recovered (+16 more)
+Nodes (28): Controlled Contact And Feature-Request Acceptance, CRM Runtime Logs Free Of Persistence Failures, Fresh Deployment dpl_AnAzpf8XTHUcCrYMz19TDkQ2y3rq, Final Private CRM Authority: 687 Contacts, Recovered Lead Same-Email Idempotency, Staging Merge d74fa6f3826a61f428147e5bbc472cc6220c4983, Staging Acceptance: 685 Survey Leads, Three Failed Survey Leads Recovered (+20 more)
 
 ### Community 384 - "Current Development State"
 Cohesion: 0.33
