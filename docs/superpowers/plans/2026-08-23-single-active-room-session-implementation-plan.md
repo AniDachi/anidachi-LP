@@ -77,7 +77,7 @@ Hibernation, WXT Manifest V3 extension, Node test runner, pgTAP, Playwright.
 - Create during execution:
   `.superpowers/sdd/2026-08-23-single-active-room-session/task-0-baseline.md`
 
-- [ ] **Step 1: Verify the planning tree and upstream state without changing it**
+- [x] **Step 1: Verify the planning tree and upstream state without changing it**
 
 ```bash
 git status --short --branch
@@ -92,7 +92,7 @@ Expected: the user-approved design and plan are present, unrelated user WIP is
 identified, and the branch point is the current `origin/staging`. If staging
 advanced after approval, inspect the diff and amend the plan before continuing.
 
-- [ ] **Step 2: Re-run focused Graphify navigation and direct source checks**
+- [x] **Step 2: Re-run focused Graphify navigation and direct source checks**
 
 ```bash
 graphify query "Trace room create and connect admission, room token issuance, participantSessionId, WebSocket close, Durable Object alarms, room finalization, and extension tabs.onRemoved."
@@ -103,7 +103,7 @@ rg -n "participantSessionId|tabs\.onRemoved|handleClose|alarm\(|finalize_room_us
 Expected: the baseline report records actual producers/consumers and any drift
 from the approved spec. Graphify findings are confirmed against source.
 
-- [ ] **Step 3: Create the feature branch only from accepted current staging**
+- [x] **Step 3: Create the feature branch only from accepted current staging**
 
 ```bash
 git switch staging
@@ -116,7 +116,7 @@ fnm exec --using="$(cat .node-version)" pnpm --version
 Expected: Node `22.23.1`, pnpm `11.2.2`, and a clean feature branch containing
 the approved docs. Stop rather than moving unrelated dirt.
 
-- [ ] **Step 4: Run the unmodified baseline gates**
+- [x] **Step 4: Run the unmodified baseline gates**
 
 ```bash
 pnpm --filter @anidachi/protocol check
@@ -134,7 +134,7 @@ pnpm harness:rooms
 Expected: all baseline gates pass. Record any pre-existing failure verbatim and
 stop for a scope decision; do not repair unrelated code inside this task.
 
-- [ ] **Step 5: Commit only the approved planning baseline if it is not already committed**
+- [x] **Step 5: Commit only the approved planning baseline if it is not already committed**
 
 ```bash
 git add docs/superpowers/specs/2026-08-23-single-active-room-session-design.md \
