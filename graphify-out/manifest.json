@@ -6174,16 +6174,16 @@
     "semantic_hash": "16c9537bbeaa2249a2d9c3adbbabf01a"
   },
   "apps/web/lib/kreatli-crm/blob-reconciliation.test.ts": {
-    "mtime": 1787500460.2432823,
-    "seen": 1787501190.644842,
-    "ast_hash": "b90a115362b0bd25a1abc19dd643fd4b",
-    "semantic_hash": "b90a115362b0bd25a1abc19dd643fd4b"
+    "mtime": 1787501841.7265644,
+    "seen": 1787502298.867507,
+    "ast_hash": "e0b97d5b05160b610e8468e79994af08",
+    "semantic_hash": "e0b97d5b05160b610e8468e79994af08"
   },
   "apps/web/lib/kreatli-crm/blob-reconciliation.ts": {
-    "mtime": 1787500363.7700953,
-    "seen": 1787501190.644842,
-    "ast_hash": "f6c378dd23a47a8369b5398a3dd5ab5f",
-    "semantic_hash": "f6c378dd23a47a8369b5398a3dd5ab5f"
+    "mtime": 1787501856.436943,
+    "seen": 1787502298.867507,
+    "ast_hash": "8ff4f40a8beeb5bd38672c3a6ae403a8",
+    "semantic_hash": "8ff4f40a8beeb5bd38672c3a6ae403a8"
   },
   "apps/web/lib/kreatli-crm/public-form-notification-route.test.ts": {
     "mtime": 1787499943.0442567,
@@ -6222,15 +6222,21 @@
     "semantic_hash": "596eafa5cb55f22e388530dff7070b28"
   },
   "docs/superpowers/plans/2026-08-23-waitlist-crm-durable-storage-recovery.md": {
-    "mtime": 1787500706.9391189,
-    "seen": 1787501190.6449358,
-    "ast_hash": "0a2636dc0018b3bf1730ed3a8b26b15c",
-    "semantic_hash": "0a2636dc0018b3bf1730ed3a8b26b15c"
+    "mtime": 1787501644.1546104,
+    "seen": 1787502298.867598,
+    "ast_hash": "ba0037eab3902ed65e631607de7f07e2",
+    "semantic_hash": "ba0037eab3902ed65e631607de7f07e2"
   },
   "docs/superpowers/specs/2026-08-23-waitlist-crm-durable-storage-design.md": {
-    "mtime": 1787498872.0559502,
-    "seen": 1787501190.644937,
-    "ast_hash": "1df86fb27b3be6954c578e575e03b8e7",
-    "semantic_hash": "1df86fb27b3be6954c578e575e03b8e7"
+    "mtime": 1787501660.6908445,
+    "seen": 1787502298.867599,
+    "ast_hash": "199ef8ee8f897fe106c4d253afb27372",
+    "semantic_hash": "199ef8ee8f897fe106c4d253afb27372"
+  },
+  "graphify-out/memory/query_20260823_160857_trace_the_repaired_hero____waitlist_stats____crm.md": {
+    "mtime": 1787501337.3308482,
+    "seen": 1787502298.867599,
+    "ast_hash": "3cd83e08a7f7aecf315696efb26d4fc4",
+    "semantic_hash": "3cd83e08a7f7aecf315696efb26d4fc4"
   }
 }

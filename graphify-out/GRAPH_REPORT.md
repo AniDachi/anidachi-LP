@@ -1,12 +1,12 @@
 # Graph Report - anidachi-LP-monorepo  (2026-08-23)
 
 ## Corpus Check
-- 27 files · ~984,489 words
+- 5 files · ~984,552 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 10244 nodes · 21415 edges · 1104 communities (383 shown, 721 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 311 edges (avg confidence: 0.84)
+- 10268 nodes · 21442 edges · 1104 communities (383 shown, 721 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 316 edges (avg confidence: 0.84)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
@@ -1132,6 +1132,9 @@
 - **Human-gated Outreach Flow** — apps_web_crm_data_agents_human_controlled_sending, apps_web_crm_data_workflow_gmail_send_step, apps_web_crm_data_workflow_touch_logging_step, apps_web_crm_data_workflow_next_action_scheduling [INFERRED 0.95]
 - **Risk-Gated Staging Release System** — agents_git_release_flow, readme_development_workflow, docs_development_quality_gates_gate_matrix, docs_new_chat_project_context_git_and_release_flow [INFERRED 0.95]
 - **Single Active Room Cross-plane Authority** — docs_superpowers_specs_2026_08_23_single_active_room_session_design_durable_cross_room_assignment, docs_superpowers_specs_2026_08_23_single_active_room_session_design_live_room_state, docs_superpowers_specs_2026_08_23_single_active_room_session_design_session_binding [INFERRED 0.95]
+- **Repaired Waitlist Read Path** — graphify_out_memory_query_20260823_160857_trace_the_repaired_hero_waitlist_stats_crm_hero, graphify_out_memory_query_20260823_160857_trace_the_repaired_hero_waitlist_stats_crm_waitlist_stats_route, graphify_out_memory_query_20260823_160857_trace_the_repaired_hero_waitlist_stats_crm_store, graphify_out_memory_query_20260823_160857_trace_the_repaired_hero_waitlist_stats_crm_read_blob_text [EXTRACTED 1.00]
+- **Durable CRM Recovery Pipeline** — docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_crm_runtime_authority, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_optimistic_blob_mutation, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_conflict_safe_crm_mutations, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_truthful_public_submission_responses, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_lossless_reconciliation_tool [EXTRACTED 1.00]
+- **Safe CRM Cutover** — docs_superpowers_specs_2026_08_23_waitlist_crm_durable_storage_design_five_object_reconciliation, docs_superpowers_specs_2026_08_23_waitlist_crm_durable_storage_design_deployment_order, docs_superpowers_specs_2026_08_23_waitlist_crm_durable_storage_design_rollback_strategy, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_staging_acceptance, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_production_cutover [INFERRED 0.95]
 
 ## Communities (1104 total, 721 thin omitted)
 
@@ -2180,8 +2183,8 @@ Cohesion: 0.22
 Nodes (9): Additional batch (10 more watch pages — 2026-05-12), Additional batch (10 more watch pages — 2026-05-14), Additional batch (10 more watch pages — 2026-05-15), Additional batch (10 more watch pages — 2026-05-19), Additional batch slugs (implemented 2026-05-12), Additional batch slugs (implemented 2026-05-14), Executor's Feedback or Assistance Requests, Proposed next 10 `/watch/[slug]-with-friends` pages (+1 more)
 
 ### Community 267 - "Environment And Secrets Matrix"
-Cohesion: 0.18
-Nodes (10): Change Checklist, Cloudflare, Environment And Secrets Matrix, GitHub Actions, OAuth Redirect Allowlists, Principles, Supabase, Vercel (+2 more)
+Cohesion: 0.05
+Nodes (33): Change Checklist, Cloudflare, Environment And Secrets Matrix, GitHub Actions, OAuth Redirect Allowlists, Principles, Supabase, Vercel (+25 more)
 
 ### Community 268 - "Shared Watch Progress Tracker"
 Cohesion: 0.22
@@ -2548,7 +2551,7 @@ Cohesion: 0.33
 Nodes (3): Five-Object Dry-Run-First Reconciliation, Private CRM Snapshot, Retained Legacy Public CRM Object
 
 ## Knowledge Gaps
-- **3225 isolated node(s):** `SeoGuideOption`, `SeoGuideRelatedLink`, `SeoGuideStep`, `CompareCellValue`, `CompareColumn` (+3220 more)
+- **3228 isolated node(s):** `SeoGuideOption`, `SeoGuideRelatedLink`, `SeoGuideStep`, `CompareCellValue`, `CompareColumn` (+3223 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **721 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -2562,7 +2565,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **Why does `typescript` connect `api/package.json` to `package.json`, `demo/package.json`?**
   _High betweenness centrality (0.015) - this node is a cross-community bridge._
 - **What connects `SeoGuideOption`, `SeoGuideRelatedLink`, `SeoGuideStep` to the rest of the system?**
-  _3225 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _3228 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `seo-guide-blocks.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.026482858697623797 - nodes in this community are weakly interconnected._
 - **Should `getGuideLinks` be split into smaller, more focused modules?**
