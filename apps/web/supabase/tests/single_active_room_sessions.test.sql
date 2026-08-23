@@ -224,6 +224,120 @@ select throws_like(
   'admission rejects an unknown room role'
 );
 
+select throws_like(
+  $$
+    select *
+    from public.create_room_with_active_session_v1(
+      'a1000000-0000-4000-8000-000000000001',
+      'null-plan-session',
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      'null-plan-request',
+      null,
+      4,
+      4,
+      false,
+      false
+    )
+  $$,
+  '%active_room_session_invalid_input%',
+  'room creation rejects a null host plan with the stable input error'
+);
+
+select throws_like(
+  $$
+    select *
+    from public.create_room_with_active_session_v1(
+      'a1000000-0000-4000-8000-000000000001',
+      'null-participant-cap-session',
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      'null-participant-cap-request',
+      'free',
+      null,
+      4,
+      false,
+      false
+    )
+  $$,
+  '%active_room_session_invalid_input%',
+  'room creation rejects a null participant cap with the stable input error'
+);
+
+select throws_like(
+  $$
+    select *
+    from public.create_room_with_active_session_v1(
+      'a1000000-0000-4000-8000-000000000001',
+      'null-media-cap-session',
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      'null-media-cap-request',
+      'free',
+      4,
+      null,
+      false,
+      false
+    )
+  $$,
+  '%active_room_session_invalid_input%',
+  'room creation rejects a null media cap with the stable input error'
+);
+
+select throws_like(
+  $$
+    select *
+    from public.claim_active_room_session_v1(
+      'a1000000-0000-4000-8000-000000000003',
+      'active-room-one',
+      null,
+      'null-role-session'
+    )
+  $$,
+  '%active_room_session_invalid_input%',
+  'admission rejects a null role before authorization or writes'
+);
+
+select throws_like(
+  $$
+    select *
+    from public.create_room_with_active_session_v1(
+      'a1000000-0000-4000-8000-000000000001',
+      'partial-source-session',
+      null,
+      null,
+      null,
+      'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      null,
+      null,
+      null,
+      'partial-source-request',
+      'free',
+      4,
+      4,
+      false,
+      false
+    )
+  $$,
+  '%active_room_session_invalid_input%',
+  'room creation rejects every partial source tuple'
+);
+
 delete from public.active_room_sessions
 where user_id::text like 'a1000000-0000-4000-8000-%';
 delete from public.room_members
