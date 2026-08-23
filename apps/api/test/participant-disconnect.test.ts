@@ -9,6 +9,7 @@ import {
   claimDueStoredParticipantDisconnects,
   createParticipantDisconnect,
   expediteParticipantDisconnect,
+  MAX_PERSISTED_PARTICIPANT_DISCONNECTS,
   nextParticipantDisconnectAlarmAt,
   parseParticipantDisconnectState,
   readStoredParticipantDisconnects,
@@ -137,7 +138,7 @@ describe("participant disconnect state", () => {
     expect(expedited.state?.records[0]?.departureAt).toBe(2_000);
   });
 
-  it("bounds persisted records by the room participant cap", () => {
+  it("honors an explicit persisted-record bound", () => {
     const first = upsertParticipantDisconnect(null, createParticipantDisconnect({
       userId: HOST_ID,
       role: "host",
@@ -215,6 +216,43 @@ describe("participant disconnect state", () => {
       reconcileStoredRoomAlarm,
     )).resolves.toBe("acknowledged");
     expect(storage.alarmAt).toBeNull();
+  });
+
+  it("retains disconnect deadlines independently from the live room seat cap", async () => {
+    const storage = new MemoryStorage();
+    const durable = storage.asDurableObjectStorage();
+    const host = createParticipantDisconnect({
+      userId: HOST_ID,
+      role: "host",
+      participantSessionId: "host-session",
+      disconnectedAt: 1_000,
+    });
+    const guest = createParticipantDisconnect({
+      userId: GUEST_ID,
+      role: "member",
+      participantSessionId: "guest-session",
+      disconnectedAt: 2_000,
+    });
+
+    await storeParticipantDisconnect(
+      durable,
+      host,
+      MAX_PERSISTED_PARTICIPANT_DISCONNECTS,
+      reconcileStoredRoomAlarm,
+    );
+    await storeParticipantDisconnect(
+      durable,
+      guest,
+      MAX_PERSISTED_PARTICIPANT_DISCONNECTS,
+      reconcileStoredRoomAlarm,
+    );
+
+    await expect(readStoredParticipantDisconnects(durable)).resolves.toMatchObject({
+      records: [
+        { userId: HOST_ID, participantSessionId: "host-session" },
+        { userId: GUEST_ID, participantSessionId: "guest-session" },
+      ],
+    });
   });
 
   it("atomically cancels a stored old session when a newer same-room join wins", async () => {

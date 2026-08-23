@@ -37,6 +37,7 @@ import {
   claimStoredParticipantDisconnect,
   createParticipantDisconnect,
   expediteStoredParticipantDisconnect,
+  MAX_PERSISTED_PARTICIPANT_DISCONNECTS,
   readStoredParticipantDisconnects,
   storeParticipantDisconnect,
   type PendingParticipantDisconnect,
@@ -2081,7 +2082,9 @@ export class RoomDurableObject {
     await storeParticipantDisconnect(
       this.state.storage,
       pending,
-      this.room.roomCapabilities.maxParticipants,
+      // Disconnected users leave live occupancy immediately, so rapid guest
+      // turnover can legitimately exceed the simultaneous seat cap.
+      MAX_PERSISTED_PARTICIPANT_DISCONNECTS,
       reconcileStoredRoomAlarm,
     );
 
