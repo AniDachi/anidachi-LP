@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import {
   mkdtempSync,
+  mkdirSync,
   readFileSync,
   readdirSync,
   rmSync,
@@ -38,6 +39,7 @@ const productionHostPermissions = [
   "https://anidachi-api-production.vladislav-gul7.workers.dev/*",
 ];
 const hostileEnvironment = {
+  NODE_ENV: "test",
   WXT_WEB_HTTP_BASE: "https://evil-web.example",
   WXT_API_HTTP_BASE: "https://evil-api.example",
   WXT_API_WS_BASE: "wss://evil-ws.example",
@@ -126,11 +128,17 @@ function expectCanonicalRuntime(
   expect(text).not.toContain("evil-web.example");
   expect(text).not.toContain("evil-api.example");
   expect(text).not.toContain("evil-ws.example");
+  expect(text).not.toContain("Static children should always be an array");
 }
 
-function validateFixture(manifest: Manifest) {
+function validateFixture(manifest: Manifest, javascript?: string) {
   const fixture = mkdtempSync(join(tmpdir(), "anidachi-extension-validator-"));
   writeFileSync(join(fixture, "manifest.json"), JSON.stringify(manifest));
+  if (javascript) {
+    const contentScriptsDir = join(fixture, "content-scripts");
+    mkdirSync(contentScriptsDir, { recursive: true });
+    writeFileSync(join(contentScriptsDir, "content.js"), javascript);
+  }
   try {
     return run(
       "node",
@@ -286,6 +294,32 @@ describe.sequential("extension release channel builds", () => {
     expect(result.status).not.toBe(0);
     expect(`${result.stdout}\n${result.stderr}`).toContain(
       "Unexpected content-script match: https://evil-extra.example/*",
+    );
+  });
+
+  it("rejects an artifact that calls the unavailable production jsxDEV runtime", () => {
+    const manifest = manifestAt("anidachi-extension-public/manifest.json");
+    const result = validateFixture(
+      manifest,
+      "var runtime={jsxDEV:void 0};(0,runtime.jsxDEV)(Component,{});",
+    );
+
+    expect(result.status).not.toBe(0);
+    expect(`${result.stdout}\n${result.stderr}`).toContain(
+      "production artifact calls jsxDEV",
+    );
+  });
+
+  it("rejects an artifact that bundles the React development runtime", () => {
+    const manifest = manifestAt("anidachi-extension-public/manifest.json");
+    const result = validateFixture(
+      manifest,
+      'console.error("React.jsx: Static children should always be an array.");',
+    );
+
+    expect(result.status).not.toBe(0);
+    expect(`${result.stdout}\n${result.stderr}`).toContain(
+      "artifact contains the React development runtime",
     );
   });
 });

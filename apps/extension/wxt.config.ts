@@ -97,6 +97,13 @@ const extensionIcons = {
 };
 
 export default defineConfig({
+  vite: () => ({
+    // WXT production artifacts resolve React's production JSX runtime, so the
+    // transform must never emit jsxDEV calls that runtime cannot provide.
+    esbuild: {
+      jsxDev: false,
+    },
+  }),
   webExt: {
     disabled: disableAutoBrowser,
     chromiumArgs: [
