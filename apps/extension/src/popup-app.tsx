@@ -819,7 +819,7 @@ export function PopupApp() {
               {notificationStatus?.enabled ? <Bell size={17} /> : <BellOff size={17} />}
             </span>
             <span className="popup-notification-setting-copy">
-              <strong>Room invite notifications</strong>
+              <strong>Invitation notifications</strong>
               <span>
                 {!notificationStatus
                   ? "Checking this browser..."
@@ -827,7 +827,7 @@ export function PopupApp() {
                     ? "Unavailable in this build"
                     : notificationStatus.enabled
                       ? "Chrome alerts are on"
-                      : "Get notified when someone invites you"}
+                      : "Get room invites and friend requests"}
               </span>
             </span>
             <span className="popup-notification-switch" aria-hidden="true">

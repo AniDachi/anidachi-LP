@@ -1,5 +1,6 @@
-import { type NextRequest, NextResponse } from "next/server";
+import { after, type NextRequest, NextResponse } from "next/server";
 import { getApiSession } from "@/lib/anidachi-auth/api-session";
+import { deferInboxChangedPushToUsers } from "@/lib/anidachi-auth/device-push";
 import { sendFriendRequest } from "@/lib/anidachi-auth/social";
 import { readJsonBody, socialErrorResponse } from "@/lib/anidachi-auth/social-routes";
 
@@ -19,10 +20,13 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const requestItem = await sendFriendRequest({
+    const { request: requestItem, created } = await sendFriendRequest({
       requesterUserId: session.userId,
       addresseeUserId: userId.trim(),
     });
+    if (created) {
+      deferInboxChangedPushToUsers([userId.trim()], after);
+    }
     return NextResponse.json({ request: requestItem });
   } catch (error) {
     return socialErrorResponse(error);

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { ExtensionPushSubscriptionRequest } from "@anidachi/protocol";
 import {
+  deferInboxChangedPushToUsers,
   deliverInboxChangedPush,
   DevicePushApiError,
   readVapidConfiguration,
@@ -157,6 +158,44 @@ test("inbox invalidation delivery handles every device without exposing invite d
       privateKey: "private-key",
     });
   }
+});
+
+test("deferred inbox invalidation sends once to unique recipients", async () => {
+  const jobs: Array<() => Promise<void>> = [];
+  const deliveries: string[][] = [];
+
+  const scheduled = deferInboxChangedPushToUsers(
+    [USER_ID, USER_ID],
+    (job) => jobs.push(job),
+    {
+      deliver: async (recipientUserIds) => {
+        deliveries.push([...recipientUserIds]);
+        return { attempted: 1, delivered: 1, pruned: 0, failed: 0 };
+      },
+    },
+  );
+
+  assert.equal(scheduled, true);
+  assert.equal(jobs.length, 1);
+  assert.deepEqual(deliveries, []);
+
+  await jobs[0]?.();
+  assert.deepEqual(deliveries, [[USER_ID]]);
+});
+
+test("deferred inbox invalidation contains delivery failures after the durable write", async () => {
+  const jobs: Array<() => Promise<void>> = [];
+  const errors: string[] = [];
+
+  deferInboxChangedPushToUsers([USER_ID], (job) => jobs.push(job), {
+    deliver: async () => {
+      throw new Error("provider returned private details");
+    },
+    reportError: (message) => errors.push(message),
+  });
+
+  await assert.doesNotReject(jobs[0]?.());
+  assert.deepEqual(errors, ["Failed to deliver inbox invalidation"]);
 });
 
 test("delivery prunes an invalid stored endpoint without making a network request", async () => {

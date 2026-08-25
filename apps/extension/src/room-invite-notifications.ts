@@ -24,7 +24,8 @@ const ROUTE_INTENT_KEY = "local:anidachi.popupRouteIntent" as const;
 let reconciliationQueue: Promise<void> = Promise.resolve();
 let authSessionEpoch = 0;
 
-type RememberedInvites = { userId: string; inviteIds: string[] };
+type RememberedInboxItems = { userId: string; itemKeys: string[] };
+type LegacyRememberedInvites = { userId: string; inviteIds: string[] };
 type StoredRegistration = {
   userId: string;
   deviceId: string;
@@ -37,10 +38,10 @@ export type PopupRouteIntent = {
   createdAt: string;
 };
 
-export type RoomInviteNotificationPlan = {
+export type InboxNotificationPlan = {
   title: string;
   message: string;
-  inviteIds: string[];
+  itemKeys: string[];
 };
 
 export type RoomInviteNotificationStatus = {
@@ -70,42 +71,60 @@ type AccountInboxRoomInvite = Extract<
   AccountInboxResponse["items"][number],
   { kind: "room-invite" }
 >;
+type AccountInboxFriendRequest = Extract<
+  AccountInboxResponse["items"][number],
+  { kind: "friend-request" }
+>;
+type AccountInboxNotificationItem =
+  | AccountInboxRoomInvite
+  | AccountInboxFriendRequest;
 
 type ExtensionPushEvent = {
   data?: { text: () => string } | null;
 };
 
-export function buildRoomInviteNotificationPlan(
+export function buildInboxNotificationPlan(
   inbox: AccountInboxResponse,
-  rememberedInviteIds: readonly string[] = [],
-): RoomInviteNotificationPlan | null {
-  const remembered = new Set(rememberedInviteIds);
-  const invitations = inbox.items.filter(
-    (item): item is AccountInboxRoomInvite =>
-      item.kind === "room-invite" && item.seenAt === null,
-  );
+  rememberedItemKeys: readonly string[] = [],
+): InboxNotificationPlan | null {
+  const remembered = new Set(rememberedItemKeys);
+  const invitations = notificationItems(inbox);
   if (
     invitations.length === 0 ||
-    !invitations.some((invitation) => !remembered.has(invitation.inviteId))
+    !invitations.some((item) => !remembered.has(itemKey(item)))
   ) {
     return null;
   }
 
   if (invitations.length > 1) {
+    const roomInvites = invitations.filter((item) => item.kind === "room-invite").length;
+    const friendRequests = invitations.length - roomInvites;
     return {
-      title: `${invitations.length} watch invitations`,
+      title:
+        roomInvites === invitations.length
+          ? `${invitations.length} watch invitations`
+          : friendRequests === invitations.length
+            ? `${invitations.length} friend requests`
+            : `${invitations.length} new invitations`,
       message: "Open AniDachi to view them.",
-      inviteIds: invitations.map((item) => item.inviteId),
+      itemKeys: invitations.map(itemKey),
     };
   }
 
   const invitation = invitations[0];
   if (!invitation) return null;
+  if (invitation.kind === "friend-request") {
+    return {
+      title: `${invitation.sender.displayName} sent you a friend request`,
+      message: "Open AniDachi to respond.",
+      itemKeys: [itemKey(invitation)],
+    };
+  }
   if (invitation.state === "missed") {
     return {
       title: `You missed a watch invitation from ${invitation.sender.displayName}`,
       message: "Open AniDachi to view it.",
-      inviteIds: [invitation.inviteId],
+      itemKeys: [itemKey(invitation)],
     };
   }
   return {
@@ -114,23 +133,30 @@ export function buildRoomInviteNotificationPlan(
         ? `${invitation.sender.displayName} invited you to watch with a group`
         : `${invitation.sender.displayName} invited you to watch together`,
     message: "Open AniDachi to view the invitation.",
-    inviteIds: [invitation.inviteId],
+    itemKeys: [itemKey(invitation)],
   };
 }
 
-export function pruneRememberedRoomInviteIds(
+export function pruneRememberedInboxItemKeys(
   inbox: AccountInboxResponse,
-  rememberedInviteIds: readonly string[],
+  rememberedItemKeys: readonly string[],
 ): string[] {
-  const currentIds = new Set(
-    inbox.items
-      .filter(
-        (item): item is AccountInboxRoomInvite =>
-          item.kind === "room-invite" && item.seenAt === null,
-      )
-      .map((item) => item.inviteId),
+  const currentKeys = new Set(notificationItems(inbox).map(itemKey));
+  return rememberedItemKeys.filter((key) => currentKeys.has(key));
+}
+
+function notificationItems(inbox: AccountInboxResponse): AccountInboxNotificationItem[] {
+  return inbox.items.filter(
+    (item): item is AccountInboxNotificationItem =>
+      (item.kind === "room-invite" || item.kind === "friend-request") &&
+      item.seenAt === null,
   );
-  return rememberedInviteIds.filter((inviteId) => currentIds.has(inviteId));
+}
+
+function itemKey(item: AccountInboxNotificationItem): string {
+  return item.kind === "room-invite"
+    ? `room-invite:${item.inviteId}`
+    : `friend-request:${item.friendshipId}`;
 }
 
 export function parseInboxChangedPushPayload(value: string | null): { type: "inbox_changed" } | null {
@@ -273,15 +299,15 @@ async function reconcileRoomInviteNotificationsNow(
   await setInboxBadge(inbox.counts.unseen);
   if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return;
 
-  const remembered = await getRememberedInvites(tokens.user.id);
-  const pruned = pruneRememberedRoomInviteIds(inbox, remembered.inviteIds);
+  const remembered = await getRememberedInboxItems(tokens.user.id);
+  const pruned = pruneRememberedInboxItemKeys(inbox, remembered.itemKeys);
   const canDisplayNotification =
     options.notify &&
     preference &&
     permissionGranted &&
     Boolean(chrome.notifications);
   if (canDisplayNotification) {
-    const plan = buildRoomInviteNotificationPlan(inbox, pruned);
+    const plan = buildInboxNotificationPlan(inbox, pruned);
     if (plan) {
       if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return;
       await chrome.notifications.create(NOTIFICATION_ID, {
@@ -291,11 +317,11 @@ async function reconcileRoomInviteNotificationsNow(
         message: plan.message,
         priority: 1,
       });
-      pruned.push(...plan.inviteIds);
+      pruned.push(...plan.itemKeys);
     }
   }
   if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return;
-  await setRememberedInvites(tokens.user.id, [...new Set(pruned)]);
+  await setRememberedInboxItems(tokens.user.id, [...new Set(pruned)]);
 }
 
 export async function handleRoomInvitePush(event: ExtensionPushEvent): Promise<void> {
@@ -322,7 +348,7 @@ export async function disableRoomInviteNotifications(
   await chrome.notifications?.clear?.(NOTIFICATION_ID).catch(() => undefined);
   if (options.clearAccountState) {
     const accountId = session?.user.id ?? registration?.userId;
-    if (accountId) await clearRememberedInvites(accountId);
+    if (accountId) await clearRememberedInboxItems(accountId);
     await chrome.action.setBadgeText({ text: "" }).catch(() => undefined);
   }
 }
@@ -532,29 +558,44 @@ export async function updateInboxBadge(unseenCount: number): Promise<void> {
   await setInboxBadge(unseenCount);
 }
 
-function rememberedInvitesKey(userId: string): `local:${string}` {
+function rememberedInboxItemsKey(userId: string): `local:${string}` {
   return `local:anidachi.roomInviteNotifications.notified.${encodeURIComponent(userId)}`;
 }
 
-async function getRememberedInvites(userId: string): Promise<RememberedInvites> {
-  const value = await storage.getItem<unknown>(rememberedInvitesKey(userId));
-  if (!value || typeof value !== "object") return { userId, inviteIds: [] };
-  const stored = value as Partial<RememberedInvites>;
-  if (stored.userId !== userId || !Array.isArray(stored.inviteIds)) {
-    return { userId, inviteIds: [] };
+async function getRememberedInboxItems(userId: string): Promise<RememberedInboxItems> {
+  const value = await storage.getItem<unknown>(rememberedInboxItemsKey(userId));
+  return normalizeRememberedInboxItems(value, userId);
+}
+
+export function normalizeRememberedInboxItems(
+  value: unknown,
+  userId: string,
+): RememberedInboxItems {
+  if (!value || typeof value !== "object") return { userId, itemKeys: [] };
+  const stored = value as Partial<RememberedInboxItems & LegacyRememberedInvites>;
+  if (stored.userId !== userId) return { userId, itemKeys: [] };
+  if (Array.isArray(stored.itemKeys)) {
+    return {
+      userId,
+      itemKeys: stored.itemKeys.filter((item): item is string => typeof item === "string"),
+    };
   }
   return {
     userId,
-    inviteIds: stored.inviteIds.filter((item): item is string => typeof item === "string"),
+    itemKeys: Array.isArray(stored.inviteIds)
+      ? stored.inviteIds
+          .filter((item): item is string => typeof item === "string")
+          .map((inviteId) => `room-invite:${inviteId}`)
+      : [],
   };
 }
 
-async function setRememberedInvites(userId: string, inviteIds: string[]): Promise<void> {
-  await storage.setItem(rememberedInvitesKey(userId), { userId, inviteIds });
+async function setRememberedInboxItems(userId: string, itemKeys: string[]): Promise<void> {
+  await storage.setItem(rememberedInboxItemsKey(userId), { userId, itemKeys });
 }
 
-async function clearRememberedInvites(userId: string): Promise<void> {
-  await storage.removeItem(rememberedInvitesKey(userId));
+async function clearRememberedInboxItems(userId: string): Promise<void> {
+  await storage.removeItem(rememberedInboxItemsKey(userId));
 }
 
 function normalizeStoredRegistration(value: unknown): StoredRegistration | null {

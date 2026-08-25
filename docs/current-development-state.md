@@ -527,12 +527,13 @@ missed room invites, and cursor pagination in the full web surface. Task 7's
 two-profile loaded-artifact acceptance is recorded above; authenticated
 production acceptance is not claimed.
 
-## Room Invite Notification Direction
+## Invitation Notification Direction
 
 Durable room-invite and inbox rows remain authoritative. The authenticated HTTP
 inbox, account-scoped Popup cache, unseen badge, seen acknowledgement, and
 shared web incoming surface are deployed. Standards-based Web Push delivery and
-OS notifications are implemented and remain pending loaded-artifact,
+OS notifications for room invites and incoming friend requests are implemented
+and remain pending loaded-artifact,
 two-account staging acceptance. The extension release manifest grants the
 notification permission up front so the default-on local preference can
 register a push device automatically after sign-in; the existing local toggle
@@ -542,7 +543,8 @@ staging Supabase project and is present in the technical production baseline.
 Loaded-artifact, two-account notification delivery acceptance is still pending,
 and no public extension is distributed.
 Web Push sends only an `inbox_changed` invalidation so the extension runs the
-same inbox sync and displays minimal English room-invite notifications. There
+same inbox sync and displays minimal English invitation notifications derived
+locally from validated room-invite and friend-request items. There
 is no frequent background inbox polling, Chrome GCM, Supabase Realtime
 subscription, persistent notification WebSocket, or separate notification
 event platform.
