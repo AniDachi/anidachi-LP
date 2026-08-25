@@ -6,6 +6,7 @@ import { mountOverlay, type OverlayRenderer } from "../entrypoints/content";
 import * as overlayApp from "../src/overlay-app";
 import { AUTH_TOKENS_KEY } from "../src/auth-tokens";
 import type { PrivilegedOverlayContext } from "../src/privileged-overlay-intent";
+import { REACTION_SHORTCUTS_STORAGE_KEY } from "../src/reaction-shortcuts";
 import { RoomClient } from "../src/room-client";
 import { listInviteTargets, listRoomInvites } from "../src/social-client";
 import type { VideoAdapter } from "../src/source-adapters/core/types";
@@ -402,6 +403,73 @@ describe("privileged overlay wiring", () => {
     expect(
       view.container.querySelector<HTMLInputElement>('input[aria-label="Anidachi message"]'),
     ).toBeNull();
+    await unmount(view.root);
+  });
+
+  it("sends the locally assigned quick reaction through the existing room client", async () => {
+    await extensionStorage.storage.setItem(REACTION_SHORTCUTS_STORAGE_KEY, {
+      version: 1,
+      emojis: ["🥳", "😱", "❤️", "🔥", "😭", "👀", "👏", "🤯", "😮‍💨", "💯"],
+    });
+    const sendMessage = vi.fn(async (message: { type?: string; command?: string }) => {
+      if (message.type === "ANIDACHI_AUTH") return { ok: true, tokens: sessionFor("user-a") };
+      if (message.type === "ANIDACHI_ROOM_HTTP" && message.command === "create-room") {
+        return {
+          ok: true,
+          room: {
+            roomId: "room-a",
+            roomToken: "room-token-a",
+            shareableLink: "http://localhost:3003/room/room-a",
+            privilegedRoomAuthority: roomAuthority(),
+            roomSession: confirmedRoomSession(),
+          },
+        };
+      }
+      if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE") {
+        const response = roomSessionStorageResponse(message.command);
+        if (response) return response;
+      }
+      throw new Error(`Unexpected runtime message ${message.type}:${message.command}`);
+    });
+    installOverlayRuntime(sendMessage);
+    vi.spyOn(RoomClient.prototype, "connect").mockImplementation((options) => {
+      options.onStatus("connected");
+      options.onEvent({
+        type: "ROOM_SNAPSHOT",
+        roomId: "room-a",
+        roomGeneration: 1,
+        sourceGeneration: 1,
+        serverSeq: 1,
+        participants: [hostParticipant()],
+      });
+    });
+    const send = vi.spyOn(RoomClient.prototype, "send").mockReturnValue("sent");
+    const view = await renderOverlay();
+
+    await click(button(view.container, "Open Anidachi controls"));
+    await click(button(view.container, "Create room"));
+    await flushMountedWork();
+    send.mockClear();
+
+    await act(async () => {
+      window.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          bubbles: true,
+          cancelable: true,
+          code: "Digit1",
+          composed: true,
+          key: "1",
+        }),
+      );
+      await Promise.resolve();
+    });
+
+    expect(send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "REACTION",
+        reaction: expect.objectContaining({ emoji: "🥳" }),
+      }),
+    );
     await unmount(view.root);
   });
 

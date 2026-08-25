@@ -33,7 +33,7 @@ import { storage } from "wxt/utils/storage";
 import { useActiveAdapterPlayback } from "./active-adapter-playback";
 import { AnidachiLogoMark } from "./anidachi-logo-mark";
 import { AUTH_TOKENS_KEY, type AuthenticatedUser } from "./auth-tokens";
-import { ANIDACHI_BUILD_ID, COMPOSER_EMOJI_PACK, EMOJI_PALETTE } from "./constants";
+import { ANIDACHI_BUILD_ID, COMPOSER_EMOJI_PACK } from "./constants";
 import { CurrentResourcePanel } from "./current-resource-panel";
 import {
   clearDebugLog,
@@ -123,6 +123,7 @@ import {
 import { PanelAccountTitle } from "./panel-account-title";
 import { ParticipantAudioContourControl } from "./participant-audio-controls";
 import { PlaybackSyncController } from "./playback-sync-controller";
+import { ReactionShortcutEditor } from "./reaction-shortcut-editor";
 import {
   connectWebsiteRoom,
   createRoom,
@@ -188,6 +189,7 @@ import { getDefinitionForProvider } from "./source-adapters/registry";
 import { overlayStyles } from "./styles";
 import { useTopBubbleReveal } from "./top-bubble-reveal";
 import { useInterfacePreferences } from "./use-interface-preferences";
+import { useReactionShortcuts } from "./use-reaction-shortcuts";
 import {
   authErrorMessage,
   type CurrentParticipantResult,
@@ -557,6 +559,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     }),
   );
   const interfacePreferences = useInterfacePreferences();
+  const reactionShortcuts = useReactionShortcuts();
   const openMicLauncherVisible =
     voiceSession.mode === "open-mic" && isVoiceSessionPublishing(voiceSession);
   const topBubbleReveal = useTopBubbleReveal({
@@ -4202,35 +4205,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     [cancelFireHold, experimentalSuperReactionsEnabled, participant, roomId],
   );
 
-  const startFireHold = useCallback(
-    (event: PointerEvent<HTMLButtonElement>) => {
-      if (!event.isPrimary || event.button !== 0) {
-        return;
-      }
-
-      event.preventDefault();
-      event.stopPropagation();
-      const finish = () => finishFireHold("pointer-up");
-      const cancel = () => cancelFireHold("pointer-cancel");
-      const cancelBlur = () => cancelFireHold("window-blur");
-      const cleanup = () => {
-        window.removeEventListener("pointerup", finish, true);
-        window.removeEventListener("pointercancel", cancel, true);
-        window.removeEventListener("blur", cancelBlur);
-      };
-
-      const started = beginFireHold("pointer", cleanup);
-      if (!started) {
-        return;
-      }
-
-      window.addEventListener("pointerup", finish, true);
-      window.addEventListener("pointercancel", cancel, true);
-      window.addEventListener("blur", cancelBlur);
-    },
-    [beginFireHold, cancelFireHold, finishFireHold],
-  );
-
   const startPushToTalk = useCallback(() => {
     if (voiceSession.mode !== "push-to-talk" || !roomId) {
       return;
@@ -4465,6 +4439,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       experimentalSuperReactionsEnabled,
       panelOpen,
       reactionsEnabled,
+      reactionShortcuts: reactionShortcuts.assignments,
       roomActive: Boolean(roomId),
       voiceMode: voiceSession.mode,
     });
@@ -4585,6 +4560,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     openMessageComposer,
     panelOpen,
     reactionsEnabled,
+    reactionShortcuts.assignments,
     roomId,
     sendReaction,
     startPushToTalk,
@@ -5031,38 +5007,15 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
                     <span>On-screen reactions</span>
                     <span>{reactionsEnabled ? "On" : "Off"}</span>
                   </button>
-                  <div
-                    className="reaction-shortcut-grid"
-                    aria-label="Reaction shortcuts"
-                    role="group"
-                  >
-                    {EMOJI_PALETTE.map((emoji, index) => (
-                      <button
-                        aria-label={`Reaction ${index + 1}`}
-                        className="reaction-shortcut"
-                        disabled={!roomId || !reactionsEnabled}
-                        key={emoji}
-                        onClick={(event) => {
-                          if (emoji === FIRE_REACTION_EMOJI && experimentalSuperReactionsEnabled) {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            return;
-                          }
-
-                          sendReaction(emoji);
-                        }}
-                        onPointerDown={
-                          emoji === FIRE_REACTION_EMOJI && experimentalSuperReactionsEnabled
-                            ? (event) => startFireHold(event)
-                            : undefined
-                        }
-                        type="button"
-                      >
-                        <span className="reaction-shortcut-key">{index + 1}</span>
-                        <span className="reaction-shortcut-emoji">{emoji}</span>
-                      </button>
-                    ))}
-                  </div>
+                  <ReactionShortcutEditor
+                    assignments={reactionShortcuts.assignments}
+                    onAssign={reactionShortcuts.assign}
+                  />
+                  {reactionShortcuts.error ? (
+                    <p className="reaction-shortcut-status" role="status">
+                      {reactionShortcuts.error}
+                    </p>
+                  ) : null}
                 </div>
               ) : null}
 

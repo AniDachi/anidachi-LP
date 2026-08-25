@@ -1137,64 +1137,86 @@ ${extensionThemeTokens}
     line-height: 1.35;
   }
 
-  .reaction-shortcut-grid {
-    width: 100%;
+  .reaction-shortcut-editor {
+    min-width: 0;
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 6px;
-    padding: 7px;
-    border-radius: 12px;
+    gap: 7px;
+  }
+
+  .reaction-shortcut-grid {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 62px;
+    padding: 13px 7px 8px;
     border: 1px solid rgba(255, 255, 255, 0.105);
+    border-radius: 12px;
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.028)),
       rgba(255, 255, 255, 0.035);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 2px;
+    overflow: visible;
   }
 
   .reaction-shortcut {
-    min-width: 0;
-    height: 46px;
-    padding: 5px 3px 6px;
+    --reaction-dock-scale: 1;
+    position: relative;
+    z-index: 1;
+    box-sizing: border-box;
+    width: 26px;
+    min-width: 26px;
+    height: 40px;
+    flex: 0 0 26px;
+    padding: 4px 1px 5px;
     border: 1px solid transparent;
-    border-radius: 9px;
+    border-radius: 8px;
     background: rgba(255, 255, 255, 0.035);
     color: var(--ad-text);
     cursor: pointer;
-    display: grid;
-    justify-items: center;
-    align-content: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     gap: 4px;
     font: inherit;
+    transform: scale(var(--reaction-dock-scale));
+    transform-origin: center bottom;
+    will-change: transform;
     transition:
-      background 160ms ease,
-      border-color 160ms ease,
-      transform 160ms ease;
+      background 150ms ease,
+      border-color 150ms ease,
+      box-shadow 150ms ease,
+      transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  .reaction-shortcut:not(:disabled):hover {
-    border-color: rgba(255, 138, 61, 0.24);
-    background: rgba(255, 255, 255, 0.075);
+  .reaction-shortcut:hover,
+  .reaction-shortcut:focus-visible {
+    z-index: 3;
+    border-color: rgba(255, 166, 92, 0.32);
+    background: rgba(255, 255, 255, 0.085);
   }
 
-  .reaction-shortcut:not(:disabled):active {
-    transform: translateY(1px);
+  .reaction-shortcut.active {
+    z-index: 2;
+    border-color: rgba(255, 138, 61, 0.72);
+    background: rgba(249, 115, 22, 0.14);
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.1);
   }
 
-  .reaction-shortcut:disabled {
-    opacity: 0.42;
-    cursor: not-allowed;
+  .reaction-shortcut:active {
+    filter: brightness(1.12);
+  }
+
+  .reaction-shortcut:focus-visible {
+    outline: 2px solid rgba(255, 190, 134, 0.82);
+    outline-offset: 2px;
   }
 
   .reaction-shortcut-key {
-    min-width: 18px;
-    height: 18px;
-    padding: 0 5px;
-    border-radius: 999px;
-    background: rgba(0, 0, 0, 0.2);
-    color: rgba(255, 255, 255, 0.5);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 9px;
+    color: rgba(255, 255, 255, 0.42);
+    font-size: 8px;
     font-weight: 760;
     line-height: 1;
   }
@@ -1202,6 +1224,112 @@ ${extensionThemeTokens}
   .reaction-shortcut-emoji {
     font-size: 17px;
     line-height: 1;
+  }
+
+  .reaction-emoji-picker {
+    min-width: 0;
+    padding: 8px;
+    border: 1px solid rgba(255, 138, 61, 0.24);
+    border-radius: 12px;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02)),
+      rgba(8, 8, 10, 0.96);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+  }
+
+  .reaction-emoji-picker-header {
+    min-height: 24px;
+    padding: 0 2px 6px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 7px;
+    color: rgba(255, 255, 255, 0.48);
+    font-size: 9px;
+    font-weight: 680;
+  }
+
+  .reaction-emoji-picker-header > span:first-child {
+    color: rgba(255, 185, 126, 0.92);
+  }
+
+  .reaction-emoji-picker-header button {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    font: inherit;
+    font-size: 17px;
+    line-height: 1;
+  }
+
+  .reaction-emoji-picker-header button:hover,
+  .reaction-emoji-picker-header button:focus-visible {
+    background: rgba(255, 255, 255, 0.07);
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .reaction-emoji-picker-grid {
+    max-height: 174px;
+    padding: 2px;
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: 3px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-color: rgba(255, 138, 61, 0.28) rgba(255, 255, 255, 0.035);
+    scrollbar-width: thin;
+  }
+
+  .reaction-emoji-option {
+    aspect-ratio: 1;
+    min-width: 0;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    font: inherit;
+    font-size: 18px;
+    line-height: 1;
+    transition:
+      background 130ms ease,
+      border-color 130ms ease,
+      transform 130ms ease;
+  }
+
+  .reaction-emoji-option:hover,
+  .reaction-emoji-option:focus-visible {
+    border-color: rgba(255, 255, 255, 0.11);
+    background: rgba(255, 255, 255, 0.075);
+    transform: scale(1.08);
+    outline: none;
+  }
+
+  .reaction-emoji-option[aria-pressed="true"] {
+    border-color: rgba(255, 138, 61, 0.68);
+    background: rgba(249, 115, 22, 0.16);
+  }
+
+  .reaction-shortcut-status {
+    margin: 0;
+    color: rgba(255, 170, 132, 0.9);
+    font-size: 9px;
+    line-height: 1.35;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reaction-shortcut,
+    .reaction-emoji-option {
+      transition: none;
+    }
   }
 
   .message-composer-shield {
