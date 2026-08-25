@@ -6,6 +6,17 @@ describe("overlay layout pointer surfaces", () => {
 		expect(getRule(".mini-panel")).toContain("cursor: default");
 	});
 
+	it("keeps the cursor visible while crossing the message composer and emoji grid", () => {
+		expect(getRule(".message-composer")).toContain("cursor: default");
+		expect(getRule(".message-composer-emoji-popover")).toContain(
+			"cursor: default",
+		);
+		expect(getRule(".message-composer input")).toContain("cursor: text");
+		expect(getRule(".message-composer-emoji-popover button")).toContain(
+			"cursor: pointer",
+		);
+	});
+
 	it("separates personal camera controls from the participant hierarchy", () => {
 		const cameraControl = getRule(".icon-button.panel-camera-control");
 		expect(cameraControl).toContain("position: relative");

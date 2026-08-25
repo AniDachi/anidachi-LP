@@ -1238,6 +1238,7 @@ ${extensionThemeTokens}
     display: flex;
     align-items: center;
     gap: 7px;
+    cursor: default;
     pointer-events: auto;
     animation: anidachi-composer-in 120ms ease-out both;
   }
@@ -1291,6 +1292,7 @@ ${extensionThemeTokens}
     display: grid;
     grid-template-columns: repeat(8, 31px);
     gap: 5px;
+    cursor: default;
     animation: anidachi-composer-in 100ms ease-out both;
   }
 
@@ -1325,6 +1327,7 @@ ${extensionThemeTokens}
     font-size: 13px;
     font-weight: 620;
     letter-spacing: 0;
+    cursor: text;
   }
 
   .message-composer input::placeholder {

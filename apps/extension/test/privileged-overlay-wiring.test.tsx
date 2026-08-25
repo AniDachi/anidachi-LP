@@ -311,6 +311,100 @@ describe("privileged overlay wiring", () => {
     await unmount(view.root);
   });
 
+  it("opens the emoji picker and inserts an emoji inside a closed overlay", async () => {
+    const sendMessage = vi.fn(async (message: { type?: string; command?: string }) => {
+      if (message.type === "ANIDACHI_AUTH") return { ok: true, tokens: sessionFor("user-a") };
+      if (message.type === "ANIDACHI_ROOM_HTTP" && message.command === "create-room") {
+        return {
+          ok: true,
+          room: {
+            roomId: "room-a",
+            roomToken: "room-token-a",
+            shareableLink: "http://localhost:3003/room/room-a",
+            privilegedRoomAuthority: roomAuthority(),
+            roomSession: confirmedRoomSession(),
+          },
+        };
+      }
+      if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE") {
+        const response = roomSessionStorageResponse(message.command);
+        if (response) return response;
+      }
+      throw new Error(`Unexpected runtime message ${message.type}:${message.command}`);
+    });
+    installOverlayRuntime(sendMessage);
+    vi.spyOn(RoomClient.prototype, "connect").mockImplementation((options) => {
+      options.onStatus("connected");
+      options.onEvent({
+        type: "ROOM_SNAPSHOT",
+        roomId: "room-a",
+        roomGeneration: 1,
+        sourceGeneration: 1,
+        serverSeq: 1,
+        participants: [hostParticipant()],
+      });
+    });
+    const view = await renderOverlayInClosedShadow();
+
+    await click(button(view.container, "Open Anidachi controls"));
+    await click(button(view.container, "Create room"));
+    await act(async () => {
+      window.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          bubbles: true,
+          cancelable: true,
+          code: "Enter",
+          composed: true,
+          key: "Enter",
+        }),
+      );
+      await Promise.resolve();
+    });
+
+    const emojiPicker = button(view.container, "Choose emoji");
+    await act(async () => {
+      emojiPicker.dispatchEvent(
+        new PointerEvent("pointerdown", { bubbles: true, cancelable: true, composed: true }),
+      );
+      await Promise.resolve();
+    });
+    expect(button(view.container, "Choose emoji")).toBe(emojiPicker);
+    await act(async () => {
+      emojiPicker.click();
+      await Promise.resolve();
+    });
+
+    expect(button(view.container, "Choose emoji").getAttribute("aria-expanded")).toBe("true");
+    const emojiPopover = view.container.querySelector(".message-composer-emoji-popover");
+    const emoji = emojiPopover?.querySelector<HTMLButtonElement>("button");
+    if (!(emoji instanceof HTMLButtonElement)) throw new Error("Missing composer emoji option");
+    await act(async () => {
+      emoji.dispatchEvent(
+        new PointerEvent("pointerdown", { bubbles: true, cancelable: true, composed: true }),
+      );
+      emoji.click();
+      await Promise.resolve();
+    });
+
+    const input = view.container.querySelector<HTMLInputElement>(
+      'input[aria-label="Anidachi message"]',
+    );
+    expect(input?.value).toContain(emoji.textContent);
+
+    const shield = view.container.querySelector(".message-composer-shield");
+    if (!(shield instanceof HTMLDivElement)) throw new Error("Missing composer shield");
+    await act(async () => {
+      shield.dispatchEvent(
+        new PointerEvent("pointerdown", { bubbles: true, cancelable: true, composed: true }),
+      );
+      await Promise.resolve();
+    });
+    expect(
+      view.container.querySelector<HTMLInputElement>('input[aria-label="Anidachi message"]'),
+    ).toBeNull();
+    await unmount(view.root);
+  });
+
   it("refreshes an open invite panel when an invited participant joins", async () => {
     const sendMessage = vi.fn(async (message: { type?: string; command?: string }) => {
       if (message.type === "ANIDACHI_AUTH") return { ok: true, tokens: sessionFor("user-a") };
@@ -681,6 +775,26 @@ async function renderOverlay(): Promise<{ container: HTMLDivElement; root: Root 
   const root = createRoot(container);
   await act(async () => {
     root.render(<overlayApp.OverlayApp adapter={createAdapter(container, video)} />);
+    await Promise.resolve();
+    await Promise.resolve();
+  });
+  return { container, root };
+}
+
+async function renderOverlayInClosedShadow(): Promise<{ container: HTMLDivElement; root: Root }> {
+  (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+  Object.defineProperty(navigator, "locks", { configurable: true, value: undefined });
+  const adapterContainer = document.createElement("div");
+  const video = document.createElement("video");
+  const overlayHost = document.createElement("anidachi-overlay-root");
+  const shadowRoot = overlayHost.attachShadow({ mode: "closed" });
+  const container = document.createElement("div");
+  shadowRoot.append(container);
+  adapterContainer.append(video, overlayHost);
+  document.body.append(adapterContainer);
+  const root = createRoot(container);
+  await act(async () => {
+    root.render(<overlayApp.OverlayApp adapter={createAdapter(adapterContainer, video)} />);
     await Promise.resolve();
     await Promise.resolve();
   });

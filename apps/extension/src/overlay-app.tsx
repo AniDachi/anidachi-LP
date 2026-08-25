@@ -1793,25 +1793,52 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       return;
     }
 
-    const handlePointerDown = (event: globalThis.PointerEvent) => {
-      const form = messageComposerFormRef.current;
-      if (!form) {
-        return;
-      }
+    const form = messageComposerFormRef.current;
+    if (!form) {
+      return;
+    }
 
-      if (event.composedPath().includes(form)) {
-        return;
-      }
-
+    const closeComposer = () => {
       setMessageComposerOpen(false);
       setMessageComposerEmojiOpen(false);
       setMessageComposerText("");
     };
+    const handleRootPointerDown = (event: Event) => {
+      const insideComposer = event.composedPath().some(
+        (target) =>
+          target === form ||
+          (target instanceof Element && target.matches("form.message-composer")),
+      );
+      if (insideComposer) {
+        return;
+      }
 
-    window.addEventListener("pointerdown", handlePointerDown, true);
+      closeComposer();
+    };
+    const root = form.getRootNode();
+
+    if (root instanceof ShadowRoot) {
+      const handleWindowPointerDown = (event: globalThis.PointerEvent) => {
+        if (event.composedPath().includes(root.host)) {
+          return;
+        }
+
+        closeComposer();
+      };
+
+      root.addEventListener("pointerdown", handleRootPointerDown, true);
+      window.addEventListener("pointerdown", handleWindowPointerDown, true);
+
+      return () => {
+        root.removeEventListener("pointerdown", handleRootPointerDown, true);
+        window.removeEventListener("pointerdown", handleWindowPointerDown, true);
+      };
+    }
+
+    window.addEventListener("pointerdown", handleRootPointerDown, true);
 
     return () => {
-      window.removeEventListener("pointerdown", handlePointerDown, true);
+      window.removeEventListener("pointerdown", handleRootPointerDown, true);
     };
   }, [messageComposerOpen]);
 
