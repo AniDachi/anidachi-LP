@@ -690,7 +690,7 @@ export async function listFriends(viewerUserId: string): Promise<{
 export async function sendFriendRequest(params: {
   requesterUserId: string;
   addresseeUserId: string;
-}): Promise<FriendListItem> {
+}): Promise<{ request: FriendListItem; created: boolean }> {
   assertUuid(params.requesterUserId, "requesterUserId");
   assertUuid(params.addresseeUserId, "addresseeUserId");
 
@@ -713,16 +713,25 @@ export async function sendFriendRequest(params: {
     throw new SocialApiError(403, "This relationship is blocked");
   }
   if (existing?.status === "accepted") {
-    return itemForFriendship(params.requesterUserId, existing);
+    return {
+      request: await itemForFriendship(params.requesterUserId, existing),
+      created: false,
+    };
   }
   if (
     existing?.status === "pending" &&
     existing.addressee_user_id === params.requesterUserId
   ) {
-    return acceptFriendRequest(params.requesterUserId, existing.id);
+    return {
+      request: await acceptFriendRequest(params.requesterUserId, existing.id),
+      created: false,
+    };
   }
   if (existing?.status === "pending") {
-    return itemForFriendship(params.requesterUserId, existing);
+    return {
+      request: await itemForFriendship(params.requesterUserId, existing),
+      created: false,
+    };
   }
 
   const now = new Date().toISOString();
@@ -763,9 +772,15 @@ export async function sendFriendRequest(params: {
         throw new SocialApiError(403, "This relationship is blocked");
       }
       if (resolution === "accept-reciprocal") {
-        return acceptFriendRequest(params.requesterUserId, canonical.id);
+        return {
+          request: await acceptFriendRequest(params.requesterUserId, canonical.id),
+          created: false,
+        };
       }
-      return itemForFriendship(params.requesterUserId, canonical);
+      return {
+        request: await itemForFriendship(params.requesterUserId, canonical),
+        created: false,
+      };
     }
     throw new Error(`Failed to send friend request: ${error.message}`);
   }
@@ -780,11 +795,20 @@ export async function sendFriendRequest(params: {
       throw new SocialApiError(403, "This relationship is blocked");
     }
     if (resolution === "accept-reciprocal") {
-      return acceptFriendRequest(params.requesterUserId, canonical.id);
+      return {
+        request: await acceptFriendRequest(params.requesterUserId, canonical.id),
+        created: false,
+      };
     }
-    return itemForFriendship(params.requesterUserId, canonical);
+    return {
+      request: await itemForFriendship(params.requesterUserId, canonical),
+      created: false,
+    };
   }
-  return itemForFriendship(params.requesterUserId, data as FriendshipRow);
+  return {
+    request: await itemForFriendship(params.requesterUserId, data as FriendshipRow),
+    created: true,
+  };
 }
 
 export async function createFriendInviteLink(params: {

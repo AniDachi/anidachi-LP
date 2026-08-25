@@ -1,10 +1,10 @@
 # Account Data, Watch History, Social, And Inbox Foundation Design
 
-Status: Durable inbox deployed; Web Push implementation pending staging acceptance
+Status: Durable inbox and Web Push implemented; invitation notifications pending staging acceptance
 
 Date: 2026-08-06
 
-Last updated: 2026-08-09
+Last updated: 2026-08-25
 
 ## Summary
 
@@ -507,8 +507,8 @@ independent unread counter.
 ### MVP Channel
 
 The extension uses the standards-based Push API as an immediate invalidation
-channel. After a durable invite transaction commits, the server sends each
-enabled extension installation a minimal `inbox_changed` Web Push. A suspended
+channel. After a new durable room invite or friend request commits, the server
+sends each enabled extension installation a minimal `inbox_changed` Web Push. A suspended
 Manifest V3 service worker wakes, runs the same authenticated `syncInbox()` used
 by the popup, and derives the badge and notification from the validated server
 response. Push data never becomes authoritative account state.
@@ -550,19 +550,17 @@ validated again before delivery; invalid or permanently failed subscriptions
 are disabled without making an outbound request. Another browser provider is
 added only through an explicit allowlist change with its own staging evidence.
 
-Current-state compatibility note: the deployed invite writer predates the
-transactional RPC defined in this specification and still writes the invite and
-recipient snapshot separately. The notification hook runs only after both
-writes succeed, but atomic, idempotent invite creation remains a required
-follow-up server slice rather than a completed guarantee of this rollout.
+The room-invite writer uses the deployed atomic, idempotent RPC. Notification
+delivery is queued only for a newly created durable invite, after the canonical
+transaction succeeds. Repeated room-invite or friend-request mutations return
+their existing durable state and do not queue duplicate notifications.
 
 ### Browser Notifications
 
-The MVP displays system notifications only for explicit room invitations sent
-by a host to accepted friends or a personal group snapshot. Room creation,
-friend activity, presence, and ordinary friend requests do not produce system
-notifications. Incoming friend requests update the action badge and popup inbox
-only.
+The MVP displays system notifications for explicit room invitations and new
+incoming friend requests. Room creation, general friend activity, and presence
+do not produce system notifications. Both supported invitation types remain
+durable Inbox items even if push delivery is delayed or unavailable.
 
 Notification rules:
 
@@ -570,6 +568,7 @@ Notification rules:
 - a direct invite uses copy such as `Vladislav invited you to watch together`;
 - a group invite uses `Vladislav invited you to watch with a group`; the exact
   private group name appears only inside the authenticated inbox;
+- a friend request uses copy such as `Vladislav sent you a friend request`;
 - one unseen active invite may identify the inviter, while multiple unseen or
   offline invites produce one count-based summary instead of an OS notification
   burst;
@@ -592,7 +591,7 @@ Notification rules:
   acknowledges the mutation;
 - disabled permission or preference leaves the durable inbox and badge
   functional;
-- MVP exposes one `Room invite notifications` toggle, enabled by default, with
+- MVP exposes one `Invitation notifications` toggle, enabled by default, with
   no per-group mute, schedule, custom sound, or additional notification modes.
 
 The local notification preference is per browser profile. Push subscription

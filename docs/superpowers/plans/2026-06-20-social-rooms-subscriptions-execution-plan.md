@@ -1562,6 +1562,17 @@ Acceptance:
 
 ## Progress Log
 
+- [~] 2026-08-25: Extended the existing durable Inbox/Web Push channel to new
+  incoming friend requests without adding polling, Realtime, or another event
+  store. New friend requests now queue the same minimal `inbox_changed` signal
+  used by room invites; the extension derives either notification from the
+  authenticated Inbox, deduplicates both item kinds per account and browser
+  profile, and migrates existing room-invite dedupe state in place. Room and
+  friend delivery share one deferred best-effort coordinator so durable writes
+  remain successful when a push provider fails, while non-private delivery
+  failures become observable. Focused web and extension tests and type checks
+  pass; loaded-artifact two-account staging acceptance remains open.
+
 - [~] 2026-08-10: Implemented the Chrome room-invite notification slice on
   `codex/room-invite-web-push`. The server registers owner-bound Web Push
   subscriptions in the existing `devices` model, permits only Chrome FCM

@@ -143,6 +143,39 @@ export type InboxPushDeliverySummary = {
   failed: number;
 };
 
+type DeferredTaskScheduler = (task: () => Promise<void>) => void;
+type InboxPushDeliverer = (
+  recipientUserIds: readonly string[],
+) => Promise<InboxPushDeliverySummary>;
+
+export function deferInboxChangedPushToUsers(
+  recipientUserIds: readonly string[],
+  defer: DeferredTaskScheduler,
+  options: {
+    deliver?: InboxPushDeliverer;
+    reportError?: (message: string) => void;
+  } = {},
+): boolean {
+  const uniqueRecipientUserIds = [...new Set(recipientUserIds)];
+  if (uniqueRecipientUserIds.length === 0) return false;
+
+  const deliver = options.deliver ?? sendInboxChangedPushToUsers;
+  const reportError =
+    options.reportError ??
+    ((message: string) => console.error(`[anidachi/device-push] ${message}`));
+  defer(async () => {
+    try {
+      const summary = await deliver(uniqueRecipientUserIds);
+      if (summary.failed > 0) {
+        reportError(`Inbox invalidation failed for ${summary.failed} device(s)`);
+      }
+    } catch {
+      reportError("Failed to deliver inbox invalidation");
+    }
+  });
+  return true;
+}
+
 export async function deliverInboxChangedPush(params: {
   subscriptions: readonly EnabledDevicePushSubscription[];
   vapid: VapidConfiguration;
