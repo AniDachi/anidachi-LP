@@ -4,7 +4,9 @@ import {
 	DEFAULT_REACTION_SHORTCUTS,
 	getDefaultReactionShortcutPreferences,
 	parseReactionShortcutPreferences,
+	parseReactionsEnabled,
 	REACTION_EMOJI_CATALOG,
+	REACTIONS_ENABLED_STORAGE_KEY,
 	REACTION_SHORTCUT_KEYS,
 } from "../src/reaction-shortcuts";
 
@@ -81,5 +83,13 @@ describe("reaction shortcut preferences", () => {
 				REACTION_EMOJI_CATALOG.includes(emoji),
 			),
 		).toBe(true);
+	});
+
+	it("keeps the quick-reactions switch as a durable boolean preference", () => {
+		expect(REACTIONS_ENABLED_STORAGE_KEY).toBe("local:reactionsEnabledV1");
+		expect(parseReactionsEnabled(false)).toBe(false);
+		expect(parseReactionsEnabled(true)).toBe(true);
+		expect(parseReactionsEnabled(null)).toBe(true);
+		expect(parseReactionsEnabled("false")).toBe(true);
 	});
 });

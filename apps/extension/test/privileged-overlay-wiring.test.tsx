@@ -6,9 +6,16 @@ import { mountOverlay, type OverlayRenderer } from "../entrypoints/content";
 import { AUTH_TOKENS_KEY } from "../src/auth-tokens";
 import * as overlayApp from "../src/overlay-app";
 import type { PrivilegedOverlayContext } from "../src/privileged-overlay-intent";
-import { REACTION_SHORTCUTS_STORAGE_KEY } from "../src/reaction-shortcuts";
+import {
+	REACTIONS_ENABLED_STORAGE_KEY,
+	REACTION_SHORTCUTS_STORAGE_KEY,
+} from "../src/reaction-shortcuts";
 import { RoomClient } from "../src/room-client";
-import { listInviteTargets, listRoomInvites } from "../src/social-client";
+import {
+	createRoomInvite,
+	listInviteTargets,
+	listRoomInvites,
+} from "../src/social-client";
 import type { VideoAdapter } from "../src/source-adapters/core/types";
 
 const extensionStorage = vi.hoisted(() => {
@@ -50,6 +57,7 @@ vi.mock("wxt/utils/storage", () => ({ storage: extensionStorage.storage }));
 
 vi.mock("../src/social-client", async (importOriginal) => ({
 	...(await importOriginal<typeof import("../src/social-client")>()),
+	createRoomInvite: vi.fn(),
 	listInviteTargets: vi.fn(),
 	listRoomInvites: vi.fn(),
 }));
@@ -62,6 +70,7 @@ describe("privileged overlay wiring", () => {
 		extensionStorage.values.clear();
 		vi.mocked(listInviteTargets).mockReset();
 		vi.mocked(listRoomInvites).mockReset();
+		vi.mocked(createRoomInvite).mockReset();
 	});
 
 	it("keeps the overlay tree closed to the hosting page", () => {
@@ -521,6 +530,46 @@ describe("privileged overlay wiring", () => {
 		await unmount(view.root);
 	});
 
+	it("keeps a quick-reaction toggle made before stored preferences finish loading", async () => {
+		const storedReactionsEnabled = deferred<unknown>();
+		const readStoredValue = extensionStorage.storage.getItem.bind(
+			extensionStorage.storage,
+		);
+		vi.spyOn(extensionStorage.storage, "getItem").mockImplementation(
+			async <T,>(key: string): Promise<T | null> => {
+				if (key === REACTIONS_ENABLED_STORAGE_KEY) {
+					return (await storedReactionsEnabled.promise) as T;
+				}
+				return readStoredValue<T>(key);
+			},
+		);
+		const sendMessage = vi.fn(
+			async (message: { type?: string; command?: string }) => {
+				if (message.type === "ANIDACHI_AUTH")
+					return { ok: true, tokens: sessionFor("user-a") };
+				throw new Error(
+					`Unexpected runtime message ${message.type}:${message.command}`,
+				);
+			},
+		);
+		installOverlayRuntime(sendMessage);
+		const view = await renderOverlay();
+
+		await click(button(view.container, "Open Anidachi controls"));
+		const reactionsSwitch = button(view.container, "Quick reactions");
+		await click(reactionsSwitch);
+		expect(reactionsSwitch.getAttribute("aria-checked")).toBe("false");
+
+		await act(async () => {
+			storedReactionsEnabled.resolve(true);
+			await storedReactionsEnabled.promise;
+			await Promise.resolve();
+		});
+
+		expect(reactionsSwitch.getAttribute("aria-checked")).toBe("false");
+		await unmount(view.root);
+	});
+
 	it("explains quick reactions from a keyboard-accessible help control", async () => {
 		const sendMessage = vi.fn(
 			async (message: { type?: string; command?: string }) => {
@@ -786,7 +835,9 @@ describe("privileged overlay wiring", () => {
 			),
 		).toBeNull();
 		expect(view.container.querySelector(".message-composer-shield")).toBeNull();
-		expect(document.documentElement.dataset.anidachiComposerOpen).toBeUndefined();
+		expect(
+			document.documentElement.dataset.anidachiComposerOpen,
+		).toBeUndefined();
 		expect(
 			view.container.parentElement?.dataset.anidachiComposerOpen,
 		).toBeUndefined();
@@ -975,6 +1026,7 @@ describe("privileged overlay wiring", () => {
 
 		await click(button(view.container, "Open Anidachi controls"));
 		await click(button(view.container, "Quick reactions"));
+		expect(extensionStorage.values.get(REACTIONS_ENABLED_STORAGE_KEY)).toBe(false);
 		send.mockClear();
 		const disabledDigit = new KeyboardEvent("keydown", {
 			bubbles: true,
@@ -1198,7 +1250,9 @@ describe("privileged overlay wiring", () => {
 
 		await click(button(view.container, "Open Anidachi controls"));
 		await click(button(view.container, "Create room"));
-		await click(button(view.container, "Invite friends and groups"));
+		await click(
+			await waitForButton(view.container, "Invite friends and groups"),
+		);
 		await flushMountedWork();
 
 		expect(button(view.container, "Pending")).toBeInstanceOf(HTMLButtonElement);
@@ -1218,6 +1272,223 @@ describe("privileged overlay wiring", () => {
 			HTMLButtonElement,
 		);
 		await unmount(view.root);
+	});
+
+	it("opens the invite panel before its first network load finishes", async () => {
+		installActiveHostRoomRuntime();
+		const targets = deferred<Awaited<ReturnType<typeof listInviteTargets>>>();
+		const invites = deferred<Awaited<ReturnType<typeof listRoomInvites>>>();
+		vi.mocked(listInviteTargets).mockReturnValue(targets.promise);
+		vi.mocked(listRoomInvites).mockReturnValue(invites.promise);
+		const view = await renderOverlay();
+
+		await click(button(view.container, "Open Anidachi controls"));
+		await click(button(view.container, "Create room"));
+		await click(
+			await waitForButton(view.container, "Invite friends and groups"),
+		);
+
+		const panelOpenedBeforeLoad =
+			view.container.querySelector(".invite-panel") instanceof HTMLDivElement;
+		const loadingVisibleBeforeLoad =
+			view.container.querySelector(".invite-panel-loading") !== null;
+		const closeButtonBeforeLoad = [
+			...view.container.querySelectorAll("button"),
+		].find(
+			(candidate) =>
+				candidate.getAttribute("aria-label") === "Close friends and groups",
+		);
+
+		targets.resolve({ friends: [], groups: [] });
+		invites.resolve(invitesResponse("pending"));
+		await flushMountedWork();
+		await unmount(view.root);
+
+		expect(panelOpenedBeforeLoad).toBe(true);
+		expect(loadingVisibleBeforeLoad).toBe(true);
+		expect(closeButtonBeforeLoad).toBeInstanceOf(HTMLButtonElement);
+		expect((closeButtonBeforeLoad as HTMLButtonElement).disabled).toBe(false);
+	});
+
+	it("ignores an older invite-status response after a newer panel refresh", async () => {
+		installActiveHostRoomRuntime();
+		const olderInvites = deferred<Awaited<ReturnType<typeof listRoomInvites>>>();
+		vi.mocked(listInviteTargets).mockResolvedValue({
+			friends: [inviteFriend()],
+			groups: [],
+		});
+		vi.mocked(listRoomInvites)
+			.mockReturnValueOnce(olderInvites.promise)
+			.mockResolvedValueOnce(invitesResponse("accepted"));
+		const view = await renderOverlay();
+
+		await click(button(view.container, "Open Anidachi controls"));
+		await click(button(view.container, "Create room"));
+		await click(
+			await waitForButton(view.container, "Invite friends and groups"),
+		);
+		await click(button(view.container, "Close friends and groups"));
+		await click(button(view.container, "Invite friends and groups"));
+		await flushMountedWork();
+
+		expect(button(view.container, "Accepted")).toBeInstanceOf(
+			HTMLButtonElement,
+		);
+
+		olderInvites.resolve(invitesResponse("pending"));
+		await flushMountedWork();
+
+		expect(button(view.container, "Accepted")).toBeInstanceOf(
+			HTMLButtonElement,
+		);
+		await unmount(view.root);
+	});
+
+	it("keeps a created invite status when an older refresh resolves afterward", async () => {
+		installActiveHostRoomRuntime();
+		const olderInvites = deferred<Awaited<ReturnType<typeof listRoomInvites>>>();
+		vi.mocked(listInviteTargets).mockResolvedValue({
+			friends: [inviteFriend()],
+			groups: [],
+		});
+		vi.mocked(listRoomInvites)
+			.mockResolvedValueOnce({
+				meta: { serverTime: "2026-08-22T08:01:00.000Z", schemaVersion: 1 },
+				inbox: [],
+				sent: [],
+			})
+			.mockReturnValueOnce(olderInvites.promise);
+		const createdInvite = invitesResponse("pending").sent[0];
+		if (!createdInvite) throw new Error("Missing invite fixture");
+		vi.mocked(createRoomInvite).mockResolvedValue({
+			created: true,
+			invite: createdInvite,
+		});
+		const view = await renderOverlay();
+
+		await click(button(view.container, "Open Anidachi controls"));
+		await click(button(view.container, "Create room"));
+		await click(
+			await waitForButton(view.container, "Invite friends and groups"),
+		);
+		await flushMountedWork();
+		await click(button(view.container, "Close friends and groups"));
+		await click(button(view.container, "Invite friends and groups"));
+		await click(button(view.container, "Invite"));
+		await flushMountedWork();
+
+		expect(button(view.container, "Pending")).toBeInstanceOf(
+			HTMLButtonElement,
+		);
+
+		olderInvites.resolve({
+			meta: { serverTime: "2026-08-22T08:01:00.000Z", schemaVersion: 1 },
+			inbox: [],
+			sent: [],
+		});
+		await flushMountedWork();
+
+		expect(button(view.container, "Pending")).toBeInstanceOf(
+			HTMLButtonElement,
+		);
+		await unmount(view.root);
+	});
+
+	it("keeps the last known invite status when a background refresh fails", async () => {
+		installActiveHostRoomRuntime();
+		vi.mocked(listInviteTargets).mockResolvedValue({
+			friends: [inviteFriend()],
+			groups: [],
+		});
+		vi.mocked(listRoomInvites)
+			.mockResolvedValueOnce(invitesResponse("accepted"))
+			.mockRejectedValueOnce(new Error("temporary status outage"));
+		const view = await renderOverlay();
+
+		await click(button(view.container, "Open Anidachi controls"));
+		await click(button(view.container, "Create room"));
+		await click(
+			await waitForButton(view.container, "Invite friends and groups"),
+		);
+		await flushMountedWork();
+		expect(button(view.container, "Accepted")).toBeInstanceOf(
+			HTMLButtonElement,
+		);
+
+		const openPanelToggle = [...view.container.querySelectorAll("button")].find(
+			(candidate) =>
+				candidate.getAttribute("aria-label") === "Close friends and groups" ||
+				candidate.getAttribute("aria-label") === "Invite friends and groups",
+		);
+		if (!(openPanelToggle instanceof HTMLButtonElement)) {
+			throw new Error("Missing invite panel toggle");
+		}
+		await click(openPanelToggle);
+		await click(button(view.container, "Invite friends and groups"));
+		await flushMountedWork();
+
+		const keptAcceptedStatus = [
+			...view.container.querySelectorAll("button"),
+		].some((candidate) => candidate.textContent?.trim() === "Accepted");
+		const message = view.container.textContent;
+		await unmount(view.root);
+
+		expect(keptAcceptedStatus).toBe(true);
+		expect(message).toContain(
+			"Could not refresh invite status. Showing the latest available status.",
+		);
+	});
+
+	it("dismisses a successful invite notice after a short delay", async () => {
+		installActiveHostRoomRuntime();
+		vi.mocked(listInviteTargets).mockResolvedValue({
+			friends: [inviteFriend()],
+			groups: [],
+		});
+		vi.mocked(listRoomInvites).mockResolvedValue({
+			meta: { serverTime: "2026-08-22T08:01:00.000Z", schemaVersion: 1 },
+			inbox: [],
+			sent: [],
+		});
+		const createdInvite = invitesResponse("pending").sent[0];
+		if (!createdInvite) throw new Error("Missing invite fixture");
+		vi.mocked(createRoomInvite).mockResolvedValue({
+			created: true,
+			invite: createdInvite,
+		});
+		const setTimeoutSpy = vi.spyOn(window, "setTimeout");
+		const view = await renderOverlay();
+
+		await click(button(view.container, "Open Anidachi controls"));
+		await click(button(view.container, "Create room"));
+		await click(
+			await waitForButton(view.container, "Invite friends and groups"),
+		);
+		await flushMountedWork();
+		const timersBeforeInvite = setTimeoutSpy.mock.calls.length;
+		await click(button(view.container, "Invite"));
+		await flushMountedWork();
+
+		const noticeVisible = view.container.textContent?.includes(
+			"Invite sent to Ads Mag. Waiting for a response.",
+		);
+		const noticeTimer = setTimeoutSpy.mock.calls
+			.slice(timersBeforeInvite)
+			.at(-1)?.[0];
+		if (typeof noticeTimer === "function") {
+			await act(async () => {
+				noticeTimer();
+				await Promise.resolve();
+			});
+		}
+		const noticeDismissed = !view.container.textContent?.includes(
+			"Invite sent to Ads Mag. Waiting for a response.",
+		);
+		await unmount(view.root);
+
+		expect(noticeVisible).toBe(true);
+		expect(typeof noticeTimer).toBe("function");
+		expect(noticeDismissed).toBe(true);
 	});
 
 	it("shows one active-room conflict and opens the authoritative room", async () => {
@@ -1293,7 +1564,7 @@ describe("privileged overlay wiring", () => {
 
 		await click(button(view.container, "Open Anidachi controls"));
 		await click(button(view.container, "Create room"));
-		await flushMountedWork();
+		await waitForText(view.container, "You already have an active watch room.");
 
 		expect(view.container.textContent).toContain(
 			"You already have an active watch room.",
@@ -1360,7 +1631,10 @@ describe("privileged overlay wiring", () => {
 
 		await click(button(view.container, "Open Anidachi controls"));
 		await click(button(view.container, "Create room"));
-		await flushMountedWork();
+		await waitForText(
+			view.container,
+			"You already have an active watch room on Crunchyroll.",
+		);
 
 		expect(view.container.textContent).toContain(
 			"You already have an active watch room on Crunchyroll. Open that tab to continue.",
@@ -1472,6 +1746,7 @@ function confirmedRoomSession() {
 		roomId: "room-a",
 		ownerUserId: "user-a",
 		participantSessionId: "participant-session-a",
+		cameraEnabled: false,
 		voiceMode: "push-to-talk" as const,
 	};
 }
@@ -1560,6 +1835,61 @@ function invitesResponse(status: RoomInvite["recipients"][number]["status"]) {
 		inbox: [],
 		sent: [invite],
 	};
+}
+
+function installActiveHostRoomRuntime(): void {
+	const sendMessage = vi.fn(
+		async (message: { type?: string; command?: string }) => {
+			if (message.type === "ANIDACHI_AUTH") {
+				return { ok: true, tokens: sessionFor("user-a") };
+			}
+			if (
+				message.type === "ANIDACHI_ROOM_HTTP" &&
+				message.command === "create-room"
+			) {
+				return {
+					ok: true,
+					room: {
+						roomId: "room-a",
+						roomToken: "room-token-a",
+						shareableLink: "http://localhost:3003/room/room-a",
+						privilegedRoomAuthority: roomAuthority(),
+						roomSession: confirmedRoomSession(),
+					},
+				};
+			}
+			if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE") {
+				const response = roomSessionStorageResponse(message.command);
+				if (response) return response;
+			}
+			throw new Error(
+				`Unexpected runtime message ${message.type}:${message.command}`,
+			);
+		},
+	);
+	installOverlayRuntime(sendMessage);
+	vi.spyOn(RoomClient.prototype, "connect").mockImplementation((options) => {
+		options.onStatus("connected");
+		options.onEvent({
+			type: "ROOM_SNAPSHOT",
+			roomId: "room-a",
+			roomGeneration: 1,
+			sourceGeneration: 1,
+			serverSeq: 1,
+			participants: [hostParticipant()],
+		});
+	});
+}
+
+function deferred<T>(): {
+	readonly promise: Promise<T>;
+	readonly resolve: (value: T) => void;
+} {
+	let resolve!: (value: T) => void;
+	const promise = new Promise<T>((next) => {
+		resolve = next;
+	});
+	return { promise, resolve };
 }
 
 async function renderOverlay(): Promise<{
@@ -1662,6 +1992,37 @@ function button(container: HTMLElement, name: string): HTMLButtonElement {
 	if (!(found instanceof HTMLButtonElement))
 		throw new Error(`Missing button ${name}`);
 	return found;
+}
+
+async function waitForButton(
+	container: HTMLElement,
+	name: string,
+): Promise<HTMLButtonElement> {
+	for (let attempt = 0; attempt < 24; attempt += 1) {
+		const found = [...container.querySelectorAll("button")].find(
+			(candidate) =>
+				candidate.getAttribute("aria-label") === name ||
+				candidate.textContent?.trim() === name,
+		);
+		if (found instanceof HTMLButtonElement) return found;
+		await act(async () => {
+			await Promise.resolve();
+		});
+	}
+	throw new Error(`Missing button ${name}`);
+}
+
+async function waitForText(
+	container: HTMLElement,
+	text: string,
+): Promise<void> {
+	for (let attempt = 0; attempt < 24; attempt += 1) {
+		if (container.textContent?.includes(text)) return;
+		await act(async () => {
+			await Promise.resolve();
+		});
+	}
+	throw new Error(`Missing text ${text}`);
 }
 
 function primaryRoomAction(container: HTMLElement): HTMLButtonElement {

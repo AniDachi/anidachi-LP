@@ -198,8 +198,8 @@ describe("InterfaceSettingsPanel", () => {
 		expect(preview.getAttribute("data-cursor-target")).toBe("rail-edge");
 		expect(getParticipantPresentations(preview)).toEqual([
 			"expanded",
-			"expanded",
-			"expanded",
+			"peek",
+			"peek",
 		]);
 
 		await unmount(view.root);
@@ -241,8 +241,8 @@ describe("InterfaceSettingsPanel", () => {
 		expect(preview.getAttribute("data-cursor-target")).toBe("participant-pill");
 		expect(getParticipantPresentations(preview)).toEqual([
 			"expanded",
-			"compact",
-			"compact",
+			"peek",
+			"peek",
 		]);
 
 		await unmount(view.root);

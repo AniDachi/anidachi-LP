@@ -16,6 +16,7 @@ interface P2PMediaSessionState {
 
 interface CameraEnabledForRoomConnectionInput {
   currentCameraEnabled: boolean;
+  persistedCameraEnabled: boolean;
   sameRoomReconnect: boolean;
 }
 
@@ -23,9 +24,10 @@ export const DEFAULT_LOCAL_CAMERA_ENABLED = false;
 
 export function getCameraEnabledForRoomConnection({
   currentCameraEnabled,
+  persistedCameraEnabled,
   sameRoomReconnect,
 }: CameraEnabledForRoomConnectionInput): boolean {
-  return sameRoomReconnect ? currentCameraEnabled : DEFAULT_LOCAL_CAMERA_ENABLED;
+  return sameRoomReconnect ? currentCameraEnabled : persistedCameraEnabled;
 }
 
 interface PersistRoomSessionForCurrentJoinInput<T> {

@@ -14,12 +14,13 @@ import {
 } from "./interface-visibility";
 import { ParticipantAudioInlineControl } from "./participant-audio-controls";
 import {
+	isRoomRailEdgeProximity,
 	isRoomRailEdgeIntent,
 	ROOM_RAIL_OPEN_DELAY_MS,
 } from "./room-rail-intent";
 import type { ParticipantAudioPreference } from "./voice-audio-preferences";
 
-export const ROOM_RAIL_CLOSE_DELAY_MS = 340;
+export const ROOM_RAIL_CLOSE_DELAY_MS = 160;
 const EMPTY_REACTION_CUE_PARTICIPANT_IDS: ReadonlySet<string> = new Set();
 
 export interface RoomRailProps {
@@ -47,6 +48,7 @@ export function RoomRail({
 	visibilityMode,
 }: RoomRailProps) {
 	const [edgeExpanded, setEdgeExpanded] = useState(false);
+	const [edgeNear, setEdgeNear] = useState(false);
 	const [interactedParticipantId, setInteractedParticipantId] = useState<
 		string | null
 	>(null);
@@ -55,11 +57,13 @@ export function RoomRail({
 	>(null);
 	const openTimerRef = useRef<number | undefined>(undefined);
 	const closeTimerRef = useRef<number | undefined>(undefined);
+	const railRef = useRef<HTMLElement | null>(null);
 	const adjustingParticipantIdRef = useRef<string | null>(null);
 	const focusedParticipantIdRef = useRef<string | null>(null);
 	const pointerParticipantIdRef = useRef<string | null>(null);
 	const panelPointerInsideRef = useRef(false);
 	const panelFocusInsideRef = useRef(false);
+	const interactionModalityRef = useRef<"keyboard" | "pointer">("keyboard");
 	const visibleParticipants = participants.slice(0, 8);
 	const hiddenCount = Math.max(
 		0,
@@ -69,6 +73,10 @@ export function RoomRail({
 		edgeExpanded,
 		mode: visibilityMode,
 	});
+	const railEngaged =
+		railPresentation.fullListExpanded ||
+		interactedParticipantId !== null ||
+		adjustingParticipantId !== null;
 
 	const clearOpenTimer = useCallback(() => {
 		if (openTimerRef.current !== undefined) {
@@ -95,6 +103,7 @@ export function RoomRail({
 		}
 		openTimerRef.current = window.setTimeout(() => {
 			openTimerRef.current = undefined;
+			setEdgeNear(false);
 			setEdgeExpanded(true);
 		}, ROOM_RAIL_OPEN_DELAY_MS);
 	}, [clearCloseTimer, edgeExpanded, railPresentation.edgeIntentEnabled]);
@@ -107,6 +116,14 @@ export function RoomRail({
 		clearCloseTimer();
 		closeTimerRef.current = window.setTimeout(() => {
 			closeTimerRef.current = undefined;
+			const activeElement = document.activeElement;
+			if (
+				interactionModalityRef.current === "pointer" &&
+				activeElement instanceof HTMLElement &&
+				railRef.current?.contains(activeElement)
+			) {
+				activeElement.blur();
+			}
 			setEdgeExpanded(false);
 			setInteractedParticipantId(
 				focusedParticipantIdRef.current ?? pointerParticipantIdRef.current,
@@ -119,7 +136,25 @@ export function RoomRail({
 			if (!railPresentation.edgeIntentEnabled) {
 				return;
 			}
-			const edgeRight = event.currentTarget.getBoundingClientRect().right;
+			const edgeBounds = event.currentTarget.getBoundingClientRect();
+			const edgeY = Math.min(
+				edgeBounds.height,
+				Math.max(0, event.clientY - edgeBounds.top),
+			);
+			event.currentTarget.style.setProperty(
+				"--room-rail-edge-y",
+				`${edgeY}px`,
+			);
+			const edgeRight = edgeBounds.right;
+			const nearEdge = isRoomRailEdgeProximity({
+				clientX: event.clientX,
+				edgeRight,
+			});
+			setEdgeNear(nearEdge);
+			if (!nearEdge) {
+				clearOpenTimer();
+				return;
+			}
 			if (!isRoomRailEdgeIntent({ clientX: event.clientX, edgeRight })) {
 				clearOpenTimer();
 				return;
@@ -133,6 +168,7 @@ export function RoomRail({
 		if (!railPresentation.edgeIntentEnabled) {
 			return;
 		}
+		setEdgeNear(false);
 		if (adjustingParticipantIdRef.current !== null) {
 			return;
 		}
@@ -186,9 +222,20 @@ export function RoomRail({
 	}, [visibleParticipants]);
 
 	useEffect(() => {
+		const handleKeyboardIntent = () => {
+			interactionModalityRef.current = "keyboard";
+		};
+		window.addEventListener("keydown", handleKeyboardIntent, true);
+		return () => {
+			window.removeEventListener("keydown", handleKeyboardIntent, true);
+		};
+	}, []);
+
+	useEffect(() => {
 		clearOpenTimer();
 		clearCloseTimer();
 		setEdgeExpanded(false);
+		setEdgeNear(false);
 		if (visibilityMode === "smart") {
 			pointerParticipantIdRef.current = null;
 			focusedParticipantIdRef.current = null;
@@ -212,8 +259,17 @@ export function RoomRail({
 			aria-label="Room participants"
 			className={`room-rail ${railPresentation.fullListExpanded ? "open" : ""} ${
 				railPresentation.persistentCompact ? "persistent" : ""
-			}`}
+			} ${edgeNear && !railPresentation.fullListExpanded ? "edge-near" : ""}`}
 			data-visibility-mode={visibilityMode}
+			ref={railRef}
+			onKeyDownCapture={() => {
+				interactionModalityRef.current = "keyboard";
+			}}
+			onPointerDownCapture={() => {
+				interactionModalityRef.current = "pointer";
+				focusedParticipantIdRef.current = null;
+				panelFocusInsideRef.current = false;
+			}}
 		>
 			<div
 				className="room-rail-edge"
@@ -234,10 +290,12 @@ export function RoomRail({
 					scheduleClose();
 				}}
 				onFocusCapture={() => {
-					panelFocusInsideRef.current = true;
-					clearCloseTimer();
-					if (railPresentation.edgeIntentEnabled) {
-						setEdgeExpanded(true);
+					if (interactionModalityRef.current === "keyboard") {
+						panelFocusInsideRef.current = true;
+						clearCloseTimer();
+						if (railPresentation.edgeIntentEnabled) {
+							setEdgeExpanded(true);
+						}
 					}
 				}}
 				onPointerEnter={() => {
@@ -277,7 +335,7 @@ export function RoomRail({
 								adjustingParticipantId === item.id,
 							mode: visibilityMode,
 							reacting,
-							railExpanded: railPresentation.fullListExpanded,
+							railExpanded: railEngaged,
 							speaking,
 						});
 						const localMuteLabel = participantAudioPreference?.muted
@@ -309,9 +367,11 @@ export function RoomRail({
 									}
 								}}
 								onFocusCapture={() => {
-									focusedParticipantIdRef.current = item.id;
-									clearCloseTimer();
-									setInteractedParticipantId(item.id);
+									if (interactionModalityRef.current === "keyboard") {
+										focusedParticipantIdRef.current = item.id;
+										clearCloseTimer();
+										setInteractedParticipantId(item.id);
+									}
 								}}
 								onPointerEnter={() => {
 									pointerParticipantIdRef.current = item.id;
@@ -333,36 +393,43 @@ export function RoomRail({
 									role="group"
 									tabIndex={presentation === "hidden" ? -1 : 0}
 								>
-									<span className="room-rail-avatar">
-										{participantInitials(item.displayName)}
-									</span>
-									<span className="room-rail-voice-bars" aria-hidden="true">
-										<i />
-										<i />
-										<i />
-									</span>
-									<span className="room-rail-copy">
-										<span className="room-rail-name">{item.displayName}</span>
-										<span className="room-rail-status">{statusLabel}</span>
-									</span>
+									<RoomRailAvatar
+										avatarUrl={item.avatarUrl}
+										displayName={item.displayName}
+										speaking={speaking}
+									/>
+									<div className="room-rail-copy room-rail-content">
+										<div className="room-rail-identity">
+											<span className="room-rail-name" title={item.displayName}>
+												{item.displayName}
+											</span>
+											<span className="room-rail-role">
+												{roleLabel.toUpperCase()}
+											</span>
+										</div>
+										{participantAudioPreference ? (
+											<ParticipantAudioInlineControl
+												displayName={item.displayName}
+												onAdjustmentEnd={finishParticipantAudioAdjustment}
+												onAdjustmentStart={() =>
+													startParticipantAudioAdjustment(item.id)
+												}
+												onChange={(preference) =>
+													onParticipantAudioChange(item.id, preference)
+												}
+												preference={participantAudioPreference}
+											/>
+										) : (
+											<span className="room-rail-status room-rail-self-status">
+												{speaking ? "You · speaking" : `You · ${roleLabel}`}
+											</span>
+										)}
+									</div>
 									{participantAudioPreference?.muted ? (
 										<VolumeX
 											aria-hidden="true"
 											className="room-rail-compact-mute"
 											size={12}
-										/>
-									) : null}
-									{participantAudioPreference ? (
-										<ParticipantAudioInlineControl
-											displayName={item.displayName}
-											onAdjustmentEnd={finishParticipantAudioAdjustment}
-											onAdjustmentStart={() =>
-												startParticipantAudioAdjustment(item.id)
-											}
-											onChange={(preference) =>
-												onParticipantAudioChange(item.id, preference)
-											}
-											preference={participantAudioPreference}
 										/>
 									) : null}
 								</div>
@@ -375,6 +442,44 @@ export function RoomRail({
 				</div>
 			</div>
 		</aside>
+	);
+}
+
+function RoomRailAvatar({
+	avatarUrl,
+	displayName,
+	speaking,
+}: {
+	avatarUrl?: string;
+	displayName: string;
+	speaking: boolean;
+}) {
+	const [failedAvatarUrl, setFailedAvatarUrl] = useState<string | null>(null);
+	const showProfileImage = Boolean(avatarUrl && failedAvatarUrl !== avatarUrl);
+
+	return (
+		<span className="room-rail-avatar" aria-hidden="true">
+			{showProfileImage ? (
+				<img
+					alt=""
+					className="room-rail-avatar-image"
+					onError={() => setFailedAvatarUrl(avatarUrl ?? null)}
+					src={avatarUrl}
+				/>
+			) : (
+				<span className="room-rail-avatar-fallback">
+					{participantInitials(displayName)}
+				</span>
+			)}
+			<span
+				className="room-rail-voice-bars"
+				data-speaking={speaking ? "true" : undefined}
+			>
+				<i />
+				<i />
+				<i />
+			</span>
+		</span>
 	);
 }
 

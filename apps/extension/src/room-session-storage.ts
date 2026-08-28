@@ -22,6 +22,7 @@ export interface RoomSessionRecord {
   roomId: string;
   ownerUserId: string;
   participantSessionId: string;
+  cameraEnabled: boolean;
   voiceMode: VoiceMode;
 }
 
@@ -91,6 +92,12 @@ export type RoomSessionStorageMessage =
       mode: VoiceMode;
       record: RoomSessionRecord;
     }
+  | {
+      type: typeof ROOM_SESSION_STORAGE_MESSAGE_TYPE;
+      command: "set-camera-enabled";
+      enabled: boolean;
+      record: RoomSessionRecord;
+    }
   | { type: typeof ROOM_SESSION_STORAGE_MESSAGE_TYPE; command: "clear" };
 
 export type RoomSessionStorageResponse =
@@ -155,6 +162,9 @@ export function isRoomSessionStorageMessage(value: unknown): value is RoomSessio
       return parseRoomSessionRecord(value.record) !== null;
     case "set-voice-mode":
       return isVoiceMode(value.mode) && parseRoomSessionRecord(value.record) !== null;
+    case "set-camera-enabled":
+      return typeof value.enabled === "boolean" &&
+        parseRoomSessionRecord(value.record) !== null;
     default:
       return false;
   }
@@ -276,6 +286,16 @@ export async function handleRoomSessionStorageMessage(
               resolvedTabId,
               message.record,
               message.mode,
+            ),
+          };
+        case "set-camera-enabled":
+          return {
+            ok: true,
+            record: await setRoomSessionCameraEnabledForTab(
+              sessionStorage,
+              resolvedTabId,
+              message.record,
+              message.enabled,
             ),
           };
         case "clear":
@@ -534,6 +554,23 @@ export async function updateRoomSessionVoiceMode(
   return response.record;
 }
 
+export async function updateRoomSessionCameraEnabled(
+  record: RoomSessionRecord,
+  enabled: boolean,
+  dependencies: RoomSessionClientDependencies = {},
+): Promise<RoomSessionRecord | null> {
+  const response = await sendRoomSessionMessage(
+    {
+      type: ROOM_SESSION_STORAGE_MESSAGE_TYPE,
+      command: "set-camera-enabled",
+      enabled,
+      record,
+    },
+    dependencies.sendMessage,
+  );
+  return response.record;
+}
+
 export async function migrateLegacyRoomSession(
   currentUserId: string | null,
   dependencies: RoomSessionClientDependencies = {},
@@ -612,6 +649,10 @@ async function persistRecord(
       existing?.roomId === roomId && existing.ownerUserId === ownerUserId
         ? existing.participantSessionId
         : createParticipantSessionId(randomUUID),
+    cameraEnabled:
+      existing?.roomId === roomId && existing.ownerUserId === ownerUserId
+        ? existing.cameraEnabled
+        : false,
     voiceMode:
       existing?.roomId === roomId && existing.ownerUserId === ownerUserId
         ? existing.voiceMode
@@ -714,6 +755,10 @@ async function confirmRoomSessionForTabNow(
     roomId,
     ownerUserId: parsedPrepared.ownerUserId,
     participantSessionId: parsedPrepared.participantSessionId,
+    cameraEnabled:
+      confirmed?.ownerUserId === parsedPrepared.ownerUserId && confirmed.roomId === roomId
+        ? confirmed.cameraEnabled
+        : false,
     voiceMode:
       confirmed?.ownerUserId === parsedPrepared.ownerUserId && confirmed.roomId === roomId
         ? confirmed.voiceMode
@@ -760,6 +805,11 @@ async function migrateRecord(
     // legacy room/account context, but mint identity in trusted tab-scoped
     // background storage so two tabs never inherit one exact session.
     participantSessionId: createParticipantSessionId(randomUUID),
+    cameraEnabled:
+      existing?.roomId === legacyRecord.roomId &&
+      existing.ownerUserId === legacyRecord.ownerUserId
+        ? existing.cameraEnabled
+        : false,
     voiceMode:
       existing?.roomId === legacyRecord.roomId &&
       existing.ownerUserId === legacyRecord.ownerUserId
@@ -840,6 +890,37 @@ async function setRoomSessionVoiceModeForTab(
   return next;
 }
 
+async function setRoomSessionCameraEnabledForTab(
+  storage: StorageAreaLike,
+  tabId: number,
+  expected: RoomSessionRecord,
+  enabled: boolean,
+): Promise<RoomSessionRecord | null> {
+  const key = roomSessionStorageKey(tabId);
+  const stored = await storage.get(key);
+  const current = parseRoomSessionRecord(stored[key]);
+  if (!current) {
+    if (stored[key] !== undefined) {
+      await storage.remove(key);
+    }
+    return null;
+  }
+  if (!roomSessionRecordsMatch(current, expected)) {
+    return current;
+  }
+  if (current.cameraEnabled === enabled) {
+    return current;
+  }
+
+  const next: RoomSessionRecord = {
+    ...current,
+    revision: nextRoomSessionRevision(current),
+    cameraEnabled: enabled,
+  };
+  await storage.set({ [key]: next });
+  return next;
+}
+
 function parseRoomSessionRecord(value: unknown): RoomSessionRecord | null {
   const revision =
     isObject(value) && value.revision === undefined
@@ -867,6 +948,7 @@ function parseRoomSessionRecord(value: unknown): RoomSessionRecord | null {
     roomId: value.roomId,
     ownerUserId: value.ownerUserId,
     participantSessionId: value.participantSessionId,
+    cameraEnabled: value.cameraEnabled === true,
     voiceMode: isVoiceMode(value.voiceMode) ? value.voiceMode : "push-to-talk",
   };
 }
@@ -909,6 +991,7 @@ function roomSessionRecordsMatch(
     current.roomId === expected.roomId &&
     current.ownerUserId === expected.ownerUserId &&
     current.participantSessionId === expected.participantSessionId &&
+    current.cameraEnabled === expected.cameraEnabled &&
     current.voiceMode === expected.voiceMode
   );
 }

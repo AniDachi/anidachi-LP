@@ -1,5 +1,7 @@
 export const REACTION_SHORTCUTS_STORAGE_KEY =
 	"local:reactionShortcutsV1" as const;
+export const REACTIONS_ENABLED_STORAGE_KEY =
+	"local:reactionsEnabledV1" as const;
 export const REACTION_SHORTCUTS_VERSION = 1 as const;
 
 export const REACTION_SHORTCUT_KEYS = [
@@ -198,6 +200,10 @@ export function reactionShortcutIndexFromCode(code: string): number | null {
 
 	const digit = Number(match[1]);
 	return digit === 0 ? 9 : digit - 1;
+}
+
+export function parseReactionsEnabled(value: unknown): boolean {
+	return typeof value === "boolean" ? value : true;
 }
 
 function isReactionEmoji(value: string): boolean {

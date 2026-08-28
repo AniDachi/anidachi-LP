@@ -37,6 +37,11 @@ describe("participant audio controls", () => {
 				.querySelector(".participant-audio-inline-control")
 				?.getAttribute(OVERLAY_HOTKEY_BOUNDARY_ATTRIBUTE),
 		).toBe("true");
+		expect(
+			view.container
+				.querySelector<HTMLElement>(".participant-audio-inline-control")
+				?.style.getPropertyValue("--participant-volume-progress"),
+		).toBe("0%");
 
 		await setRangeValue(slider, "55");
 		expect(onChange).toHaveBeenLastCalledWith({
@@ -80,7 +85,7 @@ describe("participant audio controls", () => {
 		await unmount(restored.root);
 	});
 
-	it("exposes the video contour as an accessible keyboard slider", async () => {
+	it("exposes the video volume as an accessible horizontal range", async () => {
 		const onChange = vi.fn();
 		const view = await render(
 			<ParticipantAudioContourControl
@@ -90,19 +95,22 @@ describe("participant audio controls", () => {
 			/>,
 		);
 
-		const slider = view.container.querySelector<HTMLElement>('[role="slider"]');
+		const slider = view.container.querySelector<HTMLInputElement>(
+			"input.participant-audio-video-slider",
+		);
+		expect(slider?.type).toBe("range");
 		expect(slider?.getAttribute("aria-valuemin")).toBe("0");
 		expect(slider?.getAttribute("aria-valuemax")).toBe("100");
 		expect(slider?.getAttribute("aria-valuenow")).toBe("50");
 		expect(slider?.getAttribute("aria-label")).toBe("Remote User volume");
 
-		await keyDown(slider, "ArrowRight");
+		await setRangeValue(slider, "55");
 		expect(onChange).toHaveBeenLastCalledWith({
 			muted: false,
 			volume: 0.55,
 		});
 
-		await keyDown(slider, "Home");
+		await setRangeValue(slider, "0");
 		expect(onChange).toHaveBeenLastCalledWith({
 			muted: true,
 			volume: 0.5,
@@ -111,7 +119,7 @@ describe("participant audio controls", () => {
 		await unmount(view.root);
 	});
 
-	it("starts and always ends a captured contour adjustment", async () => {
+	it("clears the transient video adjustment state on cancel or lost capture", async () => {
 		const onAdjustmentStart = vi.fn();
 		const onAdjustmentEnd = vi.fn();
 		const onChange = vi.fn();
@@ -124,42 +132,66 @@ describe("participant audio controls", () => {
 				preference={{ muted: false, volume: 0.5 }}
 			/>,
 		);
-		const slider = view.container.querySelector<HTMLElement>('[role="slider"]');
+		const control = view.container.querySelector<HTMLElement>(
+			".participant-audio-video-control",
+		);
+		const slider = view.container.querySelector<HTMLInputElement>(
+			"input.participant-audio-video-slider",
+		);
 		if (!slider) {
-			throw new Error("Contour slider missing");
+			throw new Error("Video volume slider missing");
 		}
-		vi.spyOn(slider, "getBoundingClientRect").mockReturnValue({
-			bottom: 100,
-			height: 100,
-			left: 0,
-			right: 100,
-			top: 0,
-			width: 100,
-			x: 0,
-			y: 0,
-			toJSON: () => ({}),
-		});
 		Object.defineProperty(slider, "setPointerCapture", {
 			configurable: true,
 			value: vi.fn(),
 		});
-		Object.defineProperty(slider, "releasePointerCapture", {
-			configurable: true,
-			value: vi.fn(),
-		});
+
+		expect(control?.dataset.adjusting).toBe("false");
 
 		await pointer(slider, "pointerdown", {
-			clientX: 50,
-			clientY: 2,
+			button: 0,
 			isPrimary: true,
 			pointerId: 7,
 		});
 		expect(onAdjustmentStart).toHaveBeenCalledOnce();
-		expect(onChange).toHaveBeenCalled();
+		expect(control?.dataset.adjusting).toBe("true");
 
 		await pointer(slider, "pointercancel", { pointerId: 7 });
 		expect(onAdjustmentEnd).toHaveBeenCalledOnce();
+		expect(control?.dataset.adjusting).toBe("false");
 
+		await pointer(slider, "pointerdown", {
+			button: 0,
+			isPrimary: true,
+			pointerId: 8,
+		});
+		expect(control?.dataset.adjusting).toBe("true");
+		await pointer(slider, "lostpointercapture", { pointerId: 8 });
+		expect(onAdjustmentEnd).toHaveBeenCalledTimes(2);
+		expect(control?.dataset.adjusting).toBe("false");
+		await unmount(view.root);
+	});
+
+	it("keeps a dedicated bottom mute indicator on muted video", async () => {
+		const view = await render(
+			<ParticipantAudioContourControl
+				displayName="Remote User"
+				onChange={vi.fn()}
+				preference={{ muted: true, volume: 0.5 }}
+			/>,
+		);
+
+		expect(
+			view.container.querySelector(".participant-audio-video-control.muted"),
+		).toBeInstanceOf(HTMLElement);
+		expect(
+			getButton(view.container, "Unmute Remote User").classList.contains(
+				"participant-audio-video-mute",
+			),
+		).toBe(true);
+		expect(
+			view.container.querySelector(".participant-audio-contour-arc"),
+		).toBeNull();
 		await unmount(view.root);
 	});
 
@@ -238,15 +270,6 @@ async function setRangeValue(input: HTMLInputElement | null, value: string) {
 		valueSetter?.call(input, value);
 		input.dispatchEvent(new Event("input", { bubbles: true }));
 		input.dispatchEvent(new Event("change", { bubbles: true }));
-	});
-}
-
-async function keyDown(element: HTMLElement | null, key: string) {
-	if (!element) {
-		throw new Error("Keyboard target missing");
-	}
-	await act(async () => {
-		element.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key }));
 	});
 }
 

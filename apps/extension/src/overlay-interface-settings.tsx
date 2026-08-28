@@ -168,7 +168,8 @@ function InterfacePreview({
 		resolveParticipantPillPresentation({
 			interacted: index === 0 && moment === "interaction",
 			mode: preferences.participantPillVisibility,
-			railExpanded: railPresentation.fullListExpanded,
+			railExpanded:
+				railPresentation.fullListExpanded || moment === "interaction",
 			speaking: index === 0 && moment === "speaking",
 		}),
 	);

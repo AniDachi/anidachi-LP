@@ -308,3 +308,14 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
   real-WebRTC 17/17, and staging extension build validation.
   Remaining: apply the migration, deploy matching Web/Worker code to staging,
   and run the real Free-room lifecycle acceptance before promotion.
+- [~] 2026-08-28: Preserved the active room media/UI session across same-room
+  YouTube video and Crunchyroll episode changes. A source-generation change now
+  keeps the existing P2P controller and its camera/microphone publication,
+  while stale source-scoped signaling remains fenced. Same-tab page remounts
+  restore room-scoped camera intent; quick-reactions enabled state is a local
+  preference; existing layout, interface, chat, voice, and listener-volume
+  preferences keep their prior ownership. New rooms still start camera-off.
+  Verified: full extension tests 1381/1381, extension check, root room harness
+  39/39, real-WebRTC harness 26/26, staging build, and artifact validation.
+  Remaining before promotion to `main`: loaded two-profile acceptance on both
+  providers.
