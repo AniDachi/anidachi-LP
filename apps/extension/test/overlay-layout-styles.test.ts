@@ -12,8 +12,32 @@ describe("overlay layout pointer surfaces", () => {
 			"cursor: default",
 		);
 		expect(getRule(".message-composer input")).toContain("cursor: text");
-		expect(getRule(".message-composer-emoji-popover button")).toContain(
+			expect(getRule(".message-composer-emoji-popover button")).toContain(
 			"cursor: pointer",
+		);
+	});
+
+	it("keeps the composer interaction layer above every room overlay surface", () => {
+		const panelLayer = getNumericProperty(".mini-panel", "z-index");
+		const shieldLayer = getNumericProperty(
+			".message-composer-shield",
+			"z-index",
+		);
+		const composerLayer = getNumericProperty(".message-composer", "z-index");
+
+		expect(shieldLayer).toBeGreaterThan(panelLayer);
+		expect(composerLayer).toBeGreaterThan(shieldLayer);
+	});
+
+	it("moves the smart participant preview cursor all the way to the rail edge", () => {
+		expect(overlayStyles.replace(/\s+/g, " ")).toContain(
+			'.interface-settings-preview[data-cursor-target="rail-edge"] .interface-settings-demo-cursor { top: 57px; left: calc(100% - 4px);',
+		);
+	});
+
+	it("lands the persistent participant preview cursor over the compact pill", () => {
+		expect(overlayStyles.replace(/\s+/g, " ")).toContain(
+			'.interface-settings-preview[data-cursor-target="participant-pill"] .interface-settings-demo-cursor { top: 57px; left: calc(100% - 34px);',
 		);
 	});
 
@@ -147,7 +171,7 @@ describe("overlay layout pointer surfaces", () => {
 		expect(activePrimaryAction).toContain("max-width: none");
 	});
 
-	it("renders room exit as a restrained destructive primary action", () => {
+	it("renders room exit as a clearly destructive primary action", () => {
 		const primaryAction = getRule(".button.panel-primary-action");
 		expect(primaryAction).toContain("height: 36px");
 		expect(primaryAction).toContain("min-height: 36px");
@@ -155,32 +179,169 @@ describe("overlay layout pointer surfaces", () => {
 		const exitAction = getRule(
 			".button.primary.panel-primary-action.room-exit",
 		);
-		expect(exitAction).toContain("border-color: rgba(248, 113, 113, 0.24)");
-		expect(exitAction).toContain("background: rgba(51, 35, 37, 0.88)");
-		expect(exitAction).toContain("color: rgba(255, 255, 255, 0.9)");
+		expect(exitAction).toContain("border-color: #842029");
+		expect(exitAction).toContain("background: #58151c");
+		expect(exitAction).toContain("color: rgba(255, 255, 255, 0.98)");
 		expect(exitAction).toContain(
-			"box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025)",
+			"box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08)",
 		);
 		expect(exitAction).not.toContain("linear-gradient");
-		expect(
-			getRule(".button.primary.panel-primary-action.room-exit.confirming"),
-		).toContain("background: rgba(88, 38, 42, 0.96)");
+		const exitActionHover = getRule(
+			".button.primary.panel-primary-action.room-exit:not(:disabled):hover",
+		);
+		expect(exitActionHover).toContain("border-color: #b02a37");
+		expect(exitActionHover).toContain("background: #842029");
+		const exitActionConfirming = getRule(
+			".button.primary.panel-primary-action.room-exit.confirming",
+		);
+		expect(exitActionConfirming).toContain("border-color: #dc3545");
+		expect(exitActionConfirming).toContain("background: #b02a37");
 	});
 
-	it("uses restrained text tabs for settings navigation", () => {
+	it("aligns the first settings tab with the heading label and keeps even gaps", () => {
+		const rail = getRule(".settings-category-scroll");
+		expect(rail).toContain("display: flex");
+		expect(rail).toContain("justify-content: space-between");
+		expect(rail).toContain("align-items: stretch");
+		expect(rail).toContain("overflow-x: visible");
+		expect(rail).toContain("position: relative");
+		expect(rail).toContain("box-sizing: border-box");
+		expect(rail).toContain("padding: 0 22px");
+		expect(rail).toContain("border-bottom: 0");
+
+		const track = getRule(".settings-category-scroll::after");
+		expect(track).toContain("left: 0");
+		expect(track).toContain("right: 0");
+		expect(track).toContain("bottom: 0");
+		expect(track).toContain("height: 1px");
+		expect(track).toContain("z-index: 0");
+
 		const tab = getRule(".settings-category-tab");
 		expect(tab).toContain("position: relative");
+		expect(tab).toContain("width: auto");
+		expect(tab).toContain("height: 40px");
+		expect(tab).toContain("padding: 0");
+		expect(tab).toContain("font-size: 12px");
+		expect(tab).toContain("font-weight: 680");
+		expect(tab).toContain("letter-spacing: -0.1px");
 		expect(tab).toContain("border: 0");
 		expect(tab).toContain("border-radius: 0");
 		expect(tab).toContain("background: transparent");
 
-		const indicator = getRule(".settings-category-tab::after");
-		expect(indicator).toContain("width: 22px");
+		const indicator = getRule(".settings-category-scroll::before");
+		expect(indicator).toContain("left: var(--settings-indicator-left, 22px)");
+		expect(indicator).toContain("width: var(--settings-indicator-width, 58px)");
 		expect(indicator).toContain("height: 2px");
-		expect(indicator).toContain("scaleX(0)");
-		expect(getRule(".settings-category-tab.active::after")).toContain(
-			"scaleX(1)",
+		expect(indicator).toContain("bottom: -0.5px");
+		expect(indicator).toContain("z-index: 2");
+		expect(indicator).toContain("transition:");
+		expect(indicator).toContain("left 180ms");
+		expect(indicator).toContain("width 180ms");
+		expect(overlayStyles).not.toContain(
+			'.settings-category-scroll[data-active-category="layout"]::before',
 		);
+		expect(overlayStyles).not.toContain(".settings-category-tab.active::after");
+	});
+
+	it("keeps the emoji shortcut row free of a redundant bottom divider", () => {
+		const shortcutGrid = getRule(".reaction-shortcut-grid");
+		expect(shortcutGrid).toContain("box-shadow: none");
+		expect(shortcutGrid).not.toContain("inset 0 -1px");
+	});
+
+	it("keeps Layout controls open and aligns both actions evenly", () => {
+		const selector = getRule(".layout-object-selector-v2");
+		expect(selector).toContain("padding: 0");
+		expect(selector).toContain("border: 0");
+		expect(selector).toContain("border-radius: 0");
+		expect(selector).toContain("background: transparent");
+
+		const selectorButton = getRule(".layout-object-selector-v2 button");
+		expect(selectorButton).toContain("border: 0");
+		expect(selectorButton).toContain("border-radius: 0");
+		expect(selectorButton).toContain("background: transparent");
+		expect(selectorButton).toContain("display: inline-flex");
+
+		const activeSelector = getRule(
+			'.layout-object-selector-v2 button[aria-pressed="true"]',
+		);
+		expect(activeSelector).toContain("background: transparent");
+
+		const slider = getRule(".stepped-setting-slider-v2");
+		expect(slider).toContain("padding: 8px 2px 7px");
+		expect(slider).toContain("border: 0");
+		expect(slider).toContain("border-radius: 0");
+		expect(slider).toContain("background: transparent");
+
+		const actions = getRule(".layout-editor-actions-v2");
+		expect(actions).toContain(
+			"grid-template-columns: repeat(2, minmax(0, 1fr))",
+		);
+	});
+
+	it("uses a full-width low-contrast Chat content switcher", () => {
+		const segmented = getRule(".layout-chat-mode-segmented-v2");
+		expect(segmented).toContain("position: relative");
+		expect(segmented).toContain("width: 100%");
+		expect(segmented).toContain("height: 32px");
+		expect(segmented).toContain("padding: 2px");
+		expect(segmented).toContain("border-radius: 8px");
+		expect(segmented).toContain("background: rgba(255, 255, 255, 0.025)");
+		expect(segmented).toContain(
+			"grid-template-columns: repeat(2, minmax(0, 1fr))",
+		);
+
+		const activePill = getRule(".layout-chat-mode-segmented-v2::before");
+		expect(activePill).toContain("border-radius: 6px");
+		expect(activePill).toContain("background: rgba(255, 255, 255, 0.075)");
+		expect(activePill).not.toContain("171, 73, 28");
+
+		const historyPill = getRule(
+			'.layout-chat-mode-segmented-v2[data-state="history"]::before',
+		);
+		expect(historyPill).toContain("transform: translateX(calc(100% + 2px))");
+
+		const option = getRule(".layout-chat-mode-segmented-v2 button");
+		expect(option).toContain("background: transparent");
+		expect(option).toContain("z-index: 1");
+	});
+
+	it("uses the same low-contrast segmented pattern for Interface modes", () => {
+		const segmented = getRule(".interface-settings-segmented");
+		expect(segmented).toContain("position: relative");
+		expect(segmented).toContain("height: 32px");
+		expect(segmented).toContain("padding: 2px");
+		expect(segmented).toContain("border-radius: 8px");
+		expect(segmented).toContain("background: rgba(255, 255, 255, 0.025)");
+
+		const activePill = getRule(".interface-settings-segmented::before");
+		expect(activePill).toContain("border-radius: 6px");
+		expect(activePill).toContain("background: rgba(255, 255, 255, 0.075)");
+		expect(
+			getRule('.interface-settings-segmented[data-state="second"]::before'),
+		).toContain("transform: translateX(calc(100% + 2px))");
+
+		const selected = getRule(".interface-settings-segmented button.selected");
+		expect(selected).toContain("background: transparent");
+	});
+
+	it("uses the same low-contrast segmented pattern for Voice modes", () => {
+		const segmented = getRule(".voice-mode-control");
+		expect(segmented).toContain("position: relative");
+		expect(segmented).toContain("height: 32px");
+		expect(segmented).toContain("padding: 2px");
+		expect(segmented).toContain("border-radius: 8px");
+		expect(segmented).toContain("background: rgba(255, 255, 255, 0.025)");
+
+		const activePill = getRule(".voice-mode-control::before");
+		expect(activePill).toContain("border-radius: 6px");
+		expect(activePill).toContain("background: rgba(255, 255, 255, 0.075)");
+		expect(
+			getRule('.voice-mode-control[data-state="second"]::before'),
+		).toContain("transform: translateX(calc(100% + 2px))");
+
+		const selected = getRule(".voice-mode-control button.selected");
+		expect(selected).toContain("background: transparent");
 	});
 
 	it("separates structural headings from interactive accents", () => {
@@ -195,9 +356,32 @@ describe("overlay layout pointer surfaces", () => {
 		expect(settingsTitle).toContain("padding-top: 14px");
 		expect(settingsTitle).toContain("margin: 18px 0 2px");
 
-		expect(getRule(".room-people-heading")).toContain("align-items: baseline");
+		expect(settingsTitle).toContain("display: flex");
+		expect(settingsTitle).toContain("align-items: center");
+		expect(getRule(".section-title-icon")).toContain(
+			"color: rgba(255, 181, 116, 0.82)",
+		);
+		expect(getRule(".room-people-heading")).toContain("align-items: center");
 		expect(getRule(".settings-category-tab")).toContain(
 			"color: rgba(255, 255, 255, 0.58)",
+		);
+		const footer = getRule(".account-footer");
+		expect(footer).toContain("display: flex");
+		expect(footer).toContain("border-top: 1px solid rgba(255, 255, 255, 0.07)");
+		const footerAction = getRule(".account-footer-action");
+		expect(footerAction).toContain("width: auto");
+		expect(footerAction).toContain("background: transparent");
+		expect(footerAction).toContain("color: #58151c");
+		const footerActionHover = getRule(
+			".account-footer-action:not(:disabled):hover",
+		);
+		expect(footerActionHover).toContain("background: transparent");
+		expect(footerActionHover).toContain("color: #842029");
+		const footerActionConfirming = getRule(".account-footer-action.confirming");
+		expect(footerActionConfirming).toContain("background: transparent");
+		expect(footerActionConfirming).toContain("color: #b02a37");
+		expect(getRule(".account-footer-action:focus-visible")).toContain(
+			"outline: 2px solid rgba(220, 53, 69, 0.62)",
 		);
 	});
 
@@ -390,6 +574,18 @@ describe("overlay layout pointer surfaces", () => {
 		expect(
 			getRule(".live-chat-column.layout-chat-preview-shell .live-chat-text"),
 		).not.toContain("-webkit-line-clamp: 1");
+
+		const editorPreview = getRule(".layout-chat-preview-v2");
+		expect(editorPreview).toContain("gap: var(--layout-preview-chat-gap, 5px)");
+		expect(editorPreview).toContain(
+			"padding: var(--layout-preview-chat-padding-y, 8px)",
+		);
+		expect(editorPreview).toContain(
+			"var(--layout-preview-chat-padding-x, 10px)",
+		);
+		expect(getRule(".layout-chat-preview-v2 .live-chat-name")).toContain(
+			"font-size: var(--layout-preview-chat-name-font-size, 10px)",
+		);
 	});
 
 	it("wraps complete live messages with the same text flow as history", () => {

@@ -5,13 +5,12 @@ import {
 } from "../src/settings-panel-navigation";
 
 describe("settings panel navigation", () => {
-  it("places interface controls between layout and voice", () => {
+  it("keeps the user-facing settings menu focused on four product sections", () => {
     expect(SETTINGS_PANEL_CATEGORIES.map((category) => category.id)).toEqual([
       "reactions",
       "layout",
       "interface",
       "voice",
-      "debug",
     ]);
   });
 

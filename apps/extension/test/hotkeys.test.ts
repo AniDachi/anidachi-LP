@@ -85,6 +85,15 @@ describe("Anidachi hotkeys", () => {
     ).toEqual({ type: "reaction", emoji: "🥳" });
   });
 
+  it("releases digit keys when quick reactions are disabled", () => {
+    expect(
+      getHotkeyAction(keyEvent({ code: "Digit2", key: "2", type: "keydown" }), {
+        ...activeState,
+        reactionsEnabled: false,
+      }),
+    ).toBeNull();
+  });
+
   it("starts a charged fire reaction on 4 keydown", () => {
     expect(
       getHotkeyAction(keyEvent({ code: "Digit4", key: "4", type: "keydown" }), activeState),

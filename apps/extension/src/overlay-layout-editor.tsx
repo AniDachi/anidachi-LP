@@ -1,3 +1,4 @@
+import { Check, MessageCircle, RotateCcw, Video } from "lucide-react";
 import {
 	type CSSProperties,
 	type KeyboardEvent,
@@ -87,9 +88,10 @@ const CHAT_TEXT_SCALE_OPTIONS: ReadonlyArray<{
 	label: string;
 	value: OverlayLayoutTextScale;
 }> = [
-	{ label: "Compact", value: "compact" },
-	{ label: "Normal", value: "normal" },
+	{ label: "Small", value: "compact" },
+	{ label: "Medium", value: "normal" },
 	{ label: "Large", value: "large" },
+	{ label: "XL", value: "xlarge" },
 ];
 
 function formatChatWidth(width: number): string {
@@ -494,17 +496,18 @@ export function OverlayLayoutEditor({
 	const handleTextScaleChange = (index: number) => {
 		const textScale =
 			CHAT_TEXT_SCALE_OPTIONS[index]?.value ??
-			CHAT_TEXT_SCALE_OPTIONS[1]!.value;
+			CHAT_TEXT_SCALE_OPTIONS[1]?.value ??
+			"normal";
 		updateDraft((current) => ({
 			...current,
 			chat: { ...current.chat, textScale },
 		}));
 	};
 
-	const handleChatTransparencyChange = (messageTransparency: number) => {
+	const handleTextOpacityChange = (textOpacity: number) => {
 		updateDraft((current) => ({
 			...current,
-			chat: { ...current.chat, messageTransparency },
+			chat: { ...current.chat, messageTransparency: 100 - textOpacity },
 		}));
 	};
 
@@ -637,6 +640,10 @@ export function OverlayLayoutEditor({
 							),
 							fontSize: `${(resolvedLayout.chat.fontSizePx / previewWidth) * 100}cqw`,
 							lineHeight: `${(resolvedLayout.chat.lineHeightPx / previewWidth) * 100}cqw`,
+							"--layout-preview-chat-gap": `${(5 / previewWidth) * 100}cqw`,
+							"--layout-preview-chat-name-font-size": `${(10 / previewWidth) * 100}cqw`,
+							"--layout-preview-chat-padding-x": `${(10 / previewWidth) * 100}cqw`,
+							"--layout-preview-chat-padding-y": `${(8 / previewWidth) * 100}cqw`,
 							"--live-chat-message-opacity": `${1 - resolvedLayout.chat.messageTransparency / 100}`,
 							overflow: "hidden",
 							position: "absolute",
@@ -662,6 +669,7 @@ export function OverlayLayoutEditor({
 					disabled={saving}
 					onClick={() => setSelectedObject("video")}
 				>
+					<Video aria-hidden="true" size={15} strokeWidth={2.2} />
 					Video
 				</button>
 				<button
@@ -670,6 +678,7 @@ export function OverlayLayoutEditor({
 					disabled={saving}
 					onClick={() => setSelectedObject("chat")}
 				>
+					<MessageCircle aria-hidden="true" size={15} strokeWidth={2.2} />
 					Chat
 				</button>
 			</div>
@@ -686,38 +695,34 @@ export function OverlayLayoutEditor({
 						startLabel={GHOST_CAM_SIZE_STEPS[0]?.label ?? "Small"}
 						value={draft.video.sizeStep}
 						valueLabel={
-							GHOST_CAM_SIZE_STEPS[draft.video.sizeStep]?.label ?? "Normal"
+							GHOST_CAM_SIZE_STEPS[draft.video.sizeStep]?.label ?? "Medium"
 						}
 					/>
 				</div>
 			) : (
 				<div className="layout-controls-v2" data-layout-controls="chat">
-					<div className="mode-control layout-chat-mode-control-v2">
-						<span>Chat mode</span>
-						<fieldset
-							aria-label="Chat display mode"
-							className="segmented-control"
+					<div
+						aria-label="Chat display mode"
+						className="layout-chat-mode-segmented-v2"
+						data-state={chatDisplayMode}
+						role="group"
+					>
+						<button
+							aria-pressed={chatDisplayMode === "live"}
+							disabled={saving}
+							onClick={() => onChatDisplayModeChange("live")}
+							type="button"
 						>
-							<legend className="sr-only">Chat display mode</legend>
-							<button
-								aria-pressed={chatDisplayMode === "live"}
-								className={chatDisplayMode === "live" ? "selected" : ""}
-								disabled={saving}
-								onClick={() => onChatDisplayModeChange("live")}
-								type="button"
-							>
-								Live
-							</button>
-							<button
-								aria-pressed={chatDisplayMode === "history"}
-								className={chatDisplayMode === "history" ? "selected" : ""}
-								disabled={saving}
-								onClick={() => onChatDisplayModeChange("history")}
-								type="button"
-							>
-								History
-							</button>
-						</fieldset>
+							Live
+						</button>
+						<button
+							aria-pressed={chatDisplayMode === "history"}
+							disabled={saving}
+							onClick={() => onChatDisplayModeChange("history")}
+							type="button"
+						>
+							History
+						</button>
 					</div>
 					<SteppedSettingSlider
 						disabled={saving}
@@ -732,15 +737,15 @@ export function OverlayLayoutEditor({
 					/>
 					<SteppedSettingSlider
 						disabled={saving}
-						endLabel={CHAT_TEXT_SCALE_OPTIONS.at(-1)?.label ?? "Large"}
+						endLabel={CHAT_TEXT_SCALE_OPTIONS.at(-1)?.label ?? "XL"}
 						label="Text scale"
 						max={CHAT_TEXT_SCALE_OPTIONS.length - 1}
 						min={0}
 						onValueChange={handleTextScaleChange}
-						startLabel={CHAT_TEXT_SCALE_OPTIONS[0]?.label ?? "Compact"}
+						startLabel={CHAT_TEXT_SCALE_OPTIONS[0]?.label ?? "Small"}
 						value={Math.max(0, textScaleIndex)}
 						valueLabel={
-							CHAT_TEXT_SCALE_OPTIONS[textScaleIndex]?.label ?? "Normal"
+							CHAT_TEXT_SCALE_OPTIONS[textScaleIndex]?.label ?? "Medium"
 						}
 					/>
 					<SteppedSettingSlider
@@ -765,21 +770,22 @@ export function OverlayLayoutEditor({
 					/>
 					<SteppedSettingSlider
 						disabled={saving}
-						endLabel="95%"
-						label="Chat transparency"
-						max={OVERLAY_LAYOUT_MAX_CHAT_TRANSPARENCY}
-						min={OVERLAY_LAYOUT_MIN_CHAT_TRANSPARENCY}
-						onValueChange={handleChatTransparencyChange}
-						startLabel="0%"
+						endLabel="100%"
+						label="Text opacity"
+						max={100 - OVERLAY_LAYOUT_MIN_CHAT_TRANSPARENCY}
+						min={100 - OVERLAY_LAYOUT_MAX_CHAT_TRANSPARENCY}
+						onValueChange={handleTextOpacityChange}
+						startLabel="5%"
 						step={5}
-						value={draft.chat.messageTransparency}
-						valueLabel={`${draft.chat.messageTransparency}%`}
+						value={100 - draft.chat.messageTransparency}
+						valueLabel={`${100 - draft.chat.messageTransparency}%`}
 					/>
 				</div>
 			)}
 
 			<div className="layout-editor-actions-v2">
 				<button type="button" disabled={saving || clean} onClick={handleRevert}>
+					<RotateCcw aria-hidden="true" size={15} strokeWidth={2.2} />
 					Revert
 				</button>
 				<button
@@ -787,6 +793,7 @@ export function OverlayLayoutEditor({
 					disabled={saving || clean}
 					onClick={() => void handleApply()}
 				>
+					<Check aria-hidden="true" size={16} strokeWidth={2.4} />
 					{saving ? "Applying" : "Apply"}
 				</button>
 			</div>

@@ -80,6 +80,19 @@ export function getHotkeyAction(event: HotkeyEventLike, state: HotkeyState): Hot
   return null;
 }
 
+export function shouldCaptureReactionShortcutEvent(
+  event: HotkeyEventLike,
+  state: HotkeyState,
+): boolean {
+  return (
+    state.roomActive &&
+    state.reactionsEnabled &&
+    !hasBlockedModifier(event) &&
+    !isEditableEventTarget(event) &&
+    reactionShortcutIndexFromCode(event.code) !== null
+  );
+}
+
 export function shouldStopVoiceTalkOnWindowBlur(voiceMode: VoiceMode): boolean {
   return voiceMode === "push-to-talk";
 }

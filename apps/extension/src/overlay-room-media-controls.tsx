@@ -4,6 +4,7 @@ import {
 	CircleMinus,
 	CirclePlus,
 	Radio,
+	UsersRound,
 	Video,
 	VideoOff,
 	X,
@@ -91,8 +92,16 @@ export function RoomPeopleSection({
 	return (
 		<section className="room-people-section" aria-label="Room participants">
 			<div className="section-title room-people-heading">
-				<span>People</span>
-				<span>{roomPeopleCountText}</span>
+				<span className="room-people-heading-label">
+					<UsersRound
+						aria-hidden="true"
+						className="section-title-icon room-people-heading-icon"
+						size={15}
+						strokeWidth={1.8}
+					/>
+					<span>People</span>
+				</span>
+				<span className="room-people-count">{roomPeopleCountText}</span>
 			</div>
 			<div className="room-people-list">
 				{orderedParticipants.map((item) => {

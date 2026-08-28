@@ -15,5 +15,4 @@ export const SETTINGS_PANEL_CATEGORIES: ReadonlyArray<{
   { id: "layout", label: "Layout" },
   { id: "interface", label: "Interface" },
   { id: "voice", label: "Voice" },
-  { id: "debug", label: "Debug" },
 ];
