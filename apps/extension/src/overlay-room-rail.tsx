@@ -20,6 +20,7 @@ import {
 import type { ParticipantAudioPreference } from "./voice-audio-preferences";
 
 export const ROOM_RAIL_CLOSE_DELAY_MS = 340;
+const EMPTY_REACTION_CUE_PARTICIPANT_IDS: ReadonlySet<string> = new Set();
 
 export interface RoomRailProps {
 	activeParticipantId?: string;
@@ -31,6 +32,7 @@ export interface RoomRailProps {
 		preference: ParticipantAudioPreference,
 	): void;
 	participants: Participant[];
+	reactionCueParticipantIds?: ReadonlySet<string>;
 	speakingParticipantIds: string[];
 	visibilityMode: ParticipantPillVisibility;
 }
@@ -40,6 +42,7 @@ export function RoomRail({
 	getParticipantAudioPreference,
 	onParticipantAudioChange,
 	participants,
+	reactionCueParticipantIds = EMPTY_REACTION_CUE_PARTICIPANT_IDS,
 	speakingParticipantIds,
 	visibilityMode,
 }: RoomRailProps) {
@@ -257,6 +260,7 @@ export function RoomRail({
 				<div className="room-rail-list">
 					{visibleParticipants.map((item) => {
 						const speaking = speakingParticipantIds.includes(item.id);
+						const reacting = reactionCueParticipantIds.has(item.id);
 						const active = item.id === activeParticipantId;
 						const hasParticipantAudioControl =
 							!active && item.mediaSeat === "joined";
@@ -272,6 +276,7 @@ export function RoomRail({
 								interactedParticipantId === item.id ||
 								adjustingParticipantId === item.id,
 							mode: visibilityMode,
+							reacting,
 							railExpanded: railPresentation.fullListExpanded,
 							speaking,
 						});
@@ -287,6 +292,7 @@ export function RoomRail({
 								}
 								data-participant-id={item.id}
 								data-presentation={presentation}
+								data-reaction-cue={reacting ? "true" : undefined}
 								key={item.id}
 								onBlurCapture={(event) => {
 									if (

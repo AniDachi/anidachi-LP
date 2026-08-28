@@ -6,6 +6,7 @@ import {
 	useMemo,
 	useState,
 } from "react";
+import { AnidachiLogoMark } from "./anidachi-logo-mark";
 import type {
 	InterfacePreferencesPatch,
 	InterfacePreferencesV1,
@@ -19,16 +20,40 @@ import {
 } from "./interface-visibility";
 import { overlayHotkeyBoundaryProps } from "./overlay-interaction-boundary";
 
-export const INTERFACE_PREVIEW_STEP_MS = 720;
+type PreviewMoment =
+	| "idle"
+	| "proximity"
+	| "main-visible"
+	| "speaking"
+	| "interaction";
 
-type PreviewMoment = "idle" | "proximity" | "speaking" | "interaction";
+type PreviewCursorTarget =
+	| "rest"
+	| "main-edge"
+	| "rail-edge"
+	| "participant-pill";
 
-const PREVIEW_MOMENTS: readonly PreviewMoment[] = [
-	"idle",
-	"proximity",
-	"speaking",
-	"interaction",
-];
+interface PreviewFrame {
+	cursorTarget: PreviewCursorTarget;
+	cursorVisible: boolean;
+	durationMs: number;
+	moment: PreviewMoment;
+}
+
+const PREVIEW_PAUSE_MS = 480;
+const PREVIEW_CURSOR_TRAVEL_MS = 820;
+const PREVIEW_CUE_MS = 320;
+const PREVIEW_REVEAL_MS = 420;
+const PREVIEW_HOLD_MS = 980;
+const PREVIEW_CURSOR_FADE_MS = 200;
+const PREVIEW_RESET_MS = 460;
+
+const REDUCED_MOTION_PREVIEW_FRAME: PreviewFrame = {
+	cursorTarget: "rest",
+	cursorVisible: false,
+	durationMs: 0,
+	moment: "interaction",
+};
 
 const MAIN_CONTROL_OPTIONS: ReadonlyArray<{
 	label: string;
@@ -62,7 +87,7 @@ export function InterfaceSettingsPanel({
 	saving,
 }: InterfaceSettingsPanelProps) {
 	const reducedMotion = usePrefersReducedMotion();
-	const moment = useLoopingPreviewMoment({
+	const previewFrame = useLoopingPreviewFrame({
 		preferences,
 		reducedMotion,
 	});
@@ -74,7 +99,7 @@ export function InterfaceSettingsPanel({
 			className="settings-panel-stack interface-settings-panel"
 		>
 			<InterfacePreview
-				moment={moment}
+				frame={previewFrame}
 				preferences={preferences}
 				reducedMotion={reducedMotion}
 			/>
@@ -114,14 +139,15 @@ export function InterfaceSettingsPanel({
 }
 
 function InterfacePreview({
-	moment,
+	frame,
 	preferences,
 	reducedMotion,
 }: {
-	moment: PreviewMoment;
+	frame: PreviewFrame;
 	preferences: InterfacePreferencesV1;
 	reducedMotion: boolean;
 }) {
+	const { cursorTarget, cursorVisible, moment } = frame;
 	const mainPresentation = resolveMainControlPresentation({
 		focused: false,
 		forceVisible: false,
@@ -130,7 +156,7 @@ function InterfacePreview({
 		phase:
 			moment === "proximity"
 				? "glow"
-				: moment === "interaction"
+				: moment === "main-visible"
 					? "visible"
 					: "hidden",
 	});
@@ -154,10 +180,14 @@ function InterfacePreview({
 			className="interface-settings-preview"
 			data-main-glow={String(mainPresentation.edgeGlowVisible)}
 			data-main-visible={String(mainPresentation.visible)}
+			data-cursor-target={cursorTarget}
+			data-cursor-visible={String(cursorVisible)}
 			data-pill-visibility={pillPresentations[0]}
 			data-preview-moment={moment}
 			data-reduced-motion={String(reducedMotion)}
 		>
+			<div aria-hidden="true" className="interface-settings-preview-scene" />
+
 			<div
 				aria-hidden="true"
 				className={[
@@ -169,7 +199,7 @@ function InterfacePreview({
 					.filter(Boolean)
 					.join(" ")}
 			>
-				<span className="interface-settings-main-avatar">A</span>
+				<AnidachiLogoMark className="interface-settings-main-logo" size={18} />
 				<span className="interface-settings-main-status" />
 				<span className="interface-settings-main-count">3</span>
 			</div>
@@ -189,6 +219,7 @@ function InterfacePreview({
 						]
 							.filter(Boolean)
 							.join(" ")}
+						data-presentation={presentation}
 						key={index}
 					>
 						<span className="interface-settings-participant-avatar">
@@ -274,6 +305,7 @@ function InterfaceSegmentedControl<T extends string>({
 			<div
 				aria-label={label}
 				className="segmented-control interface-settings-segmented"
+				data-state={value === options[1]?.value ? "second" : "first"}
 				onKeyDown={handleKeyDown}
 				role="radiogroup"
 			>
@@ -325,35 +357,144 @@ function resolveSegmentedControlIndex(
 	return null;
 }
 
-function useLoopingPreviewMoment({
+function useLoopingPreviewFrame({
 	preferences,
 	reducedMotion,
 }: {
 	preferences: InterfacePreferencesV1;
 	reducedMotion: boolean;
-}): PreviewMoment {
-	const [momentIndex, setMomentIndex] = useState(
-		reducedMotion ? PREVIEW_MOMENTS.length - 1 : 0,
+}): PreviewFrame {
+	const previewFrames = useMemo(
+		() => resolvePreviewFrames(preferences),
+		[preferences.mainControlVisibility, preferences.participantPillVisibility],
 	);
+	const [frameIndex, setFrameIndex] = useState(0);
 	const preferenceSignature = `${preferences.mainControlVisibility}:${preferences.participantPillVisibility}`;
+	const currentFrame =
+		previewFrames[frameIndex] ??
+		previewFrames[0] ??
+		REDUCED_MOTION_PREVIEW_FRAME;
+
+	useEffect(() => {
+		setFrameIndex(0);
+	}, [preferenceSignature]);
 
 	useEffect(() => {
 		if (reducedMotion) {
-			setMomentIndex(PREVIEW_MOMENTS.length - 1);
 			return;
 		}
 
-		setMomentIndex(0);
-		const interval = window.setInterval(() => {
-			setMomentIndex(
-				(currentIndex) => (currentIndex + 1) % PREVIEW_MOMENTS.length,
+		const timeout = window.setTimeout(() => {
+			setFrameIndex(
+				(currentIndex) => (currentIndex + 1) % previewFrames.length,
 			);
-		}, INTERFACE_PREVIEW_STEP_MS);
+		}, currentFrame.durationMs);
 
-		return () => window.clearInterval(interval);
-	}, [preferenceSignature, reducedMotion]);
+		return () => window.clearTimeout(timeout);
+	}, [
+		currentFrame.durationMs,
+		frameIndex,
+		previewFrames.length,
+		reducedMotion,
+	]);
 
-	return PREVIEW_MOMENTS[momentIndex] ?? "idle";
+	return reducedMotion ? REDUCED_MOTION_PREVIEW_FRAME : currentFrame;
+}
+
+function resolvePreviewFrames(
+	preferences: InterfacePreferencesV1,
+): readonly PreviewFrame[] {
+	const frames: PreviewFrame[] = [
+		{
+			cursorTarget: "rest",
+			cursorVisible: false,
+			durationMs: PREVIEW_PAUSE_MS,
+			moment: "idle",
+		},
+	];
+
+	if (preferences.mainControlVisibility === "auto-hide") {
+		frames.push(
+			{
+				cursorTarget: "main-edge",
+				cursorVisible: true,
+				durationMs: PREVIEW_CURSOR_TRAVEL_MS,
+				moment: "idle",
+			},
+			{
+				cursorTarget: "main-edge",
+				cursorVisible: true,
+				durationMs: PREVIEW_CUE_MS,
+				moment: "proximity",
+			},
+			{
+				cursorTarget: "main-edge",
+				cursorVisible: true,
+				durationMs: PREVIEW_REVEAL_MS + PREVIEW_HOLD_MS,
+				moment: "main-visible",
+			},
+			{
+				cursorTarget: "main-edge",
+				cursorVisible: false,
+				durationMs: PREVIEW_CURSOR_FADE_MS,
+				moment: "main-visible",
+			},
+			{
+				cursorTarget: "rest",
+				cursorVisible: false,
+				durationMs: PREVIEW_RESET_MS,
+				moment: "idle",
+			},
+		);
+	}
+
+	frames.push(
+		{
+			cursorTarget: "rest",
+			cursorVisible: false,
+			durationMs: PREVIEW_HOLD_MS,
+			moment: "speaking",
+		},
+		{
+			cursorTarget: "rest",
+			cursorVisible: false,
+			durationMs: PREVIEW_RESET_MS,
+			moment: "idle",
+		},
+	);
+
+	const participantTarget =
+		preferences.participantPillVisibility === "smart"
+			? "rail-edge"
+			: "participant-pill";
+	frames.push(
+		{
+			cursorTarget: participantTarget,
+			cursorVisible: true,
+			durationMs: PREVIEW_CURSOR_TRAVEL_MS,
+			moment: "idle",
+		},
+		{
+			cursorTarget: participantTarget,
+			cursorVisible: true,
+			durationMs: PREVIEW_HOLD_MS,
+			moment: "interaction",
+		},
+		{
+			cursorTarget: participantTarget,
+			cursorVisible: false,
+			durationMs: PREVIEW_CURSOR_FADE_MS,
+			moment: "interaction",
+		},
+		{
+			cursorTarget: "rest",
+			cursorVisible: false,
+			durationMs: PREVIEW_RESET_MS,
+			moment: "idle",
+		},
+	);
+
+	return frames;
 }
 
 function usePrefersReducedMotion(): boolean {

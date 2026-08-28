@@ -6,10 +6,7 @@ import type {
 	InterfacePreferencesV1,
 } from "../src/interface-preferences";
 import { OVERLAY_HOTKEY_BOUNDARY_ATTRIBUTE } from "../src/overlay-interaction-boundary";
-import {
-	INTERFACE_PREVIEW_STEP_MS,
-	InterfaceSettingsPanel,
-} from "../src/overlay-interface-settings";
+import { InterfaceSettingsPanel } from "../src/overlay-interface-settings";
 
 (
 	globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
@@ -107,9 +104,13 @@ describe("InterfaceSettingsPanel", () => {
 	it("updates the preview from the same resolved preference state", async () => {
 		const view = await renderPanel();
 		const preview = getPreview(view.container);
+		const mainControl = getRadioGroup(view.container, "Main control");
+		const participantPills = getRadioGroup(view.container, "Participant pills");
 
 		expect(preview.getAttribute("data-main-visible")).toBe("false");
 		expect(preview.getAttribute("data-pill-visibility")).toBe("hidden");
+		expect(mainControl?.getAttribute("data-state")).toBe("first");
+		expect(participantPills?.getAttribute("data-state")).toBe("first");
 
 		await view.rerender({
 			...DEFAULT_PREFERENCES,
@@ -119,11 +120,13 @@ describe("InterfaceSettingsPanel", () => {
 
 		expect(preview.getAttribute("data-main-visible")).toBe("true");
 		expect(preview.getAttribute("data-pill-visibility")).toBe("compact");
+		expect(mainControl?.getAttribute("data-state")).toBe("second");
+		expect(participantPills?.getAttribute("data-state")).toBe("second");
 
 		await unmount(view.root);
 	});
 
-	it("loops the preview without exposing playback controls", async () => {
+	it("demonstrates the real visibility sequence without playback controls", async () => {
 		vi.useFakeTimers();
 		const view = await renderPanel();
 		const preview = getPreview(view.container);
@@ -131,13 +134,116 @@ describe("InterfaceSettingsPanel", () => {
 		expect(
 			view.container.querySelector(".interface-settings-replay"),
 		).toBeNull();
+		expect(
+			view.container.querySelector(".interface-settings-preview-state"),
+		).toBeNull();
+		expect(
+			view.container.querySelector(".interface-settings-player-progress"),
+		).toBeNull();
 		expect(preview.getAttribute("data-preview-moment")).toBe("idle");
-		await advance(INTERFACE_PREVIEW_STEP_MS);
+		expect(preview.getAttribute("data-cursor-target")).toBe("rest");
+		expect(preview.getAttribute("data-cursor-visible")).toBe("false");
+
+		await advancePreviewFrame();
+		expect(preview.getAttribute("data-preview-moment")).toBe("idle");
+		expect(preview.getAttribute("data-main-glow")).toBe("false");
+		expect(preview.getAttribute("data-main-visible")).toBe("false");
+		expect(preview.getAttribute("data-cursor-target")).toBe("main-edge");
+		expect(preview.getAttribute("data-cursor-visible")).toBe("true");
+
+		await advancePreviewFrame();
 		expect(preview.getAttribute("data-preview-moment")).toBe("proximity");
-		await advance(INTERFACE_PREVIEW_STEP_MS * 2);
-		expect(preview.getAttribute("data-preview-moment")).toBe("interaction");
-		await advance(INTERFACE_PREVIEW_STEP_MS);
+		expect(preview.getAttribute("data-main-glow")).toBe("true");
+		expect(preview.getAttribute("data-cursor-target")).toBe("main-edge");
+
+		await advancePreviewFrame();
+		expect(preview.getAttribute("data-preview-moment")).toBe("main-visible");
+		expect(preview.getAttribute("data-main-visible")).toBe("true");
+		expect(preview.getAttribute("data-cursor-target")).toBe("main-edge");
+
+		await advancePreviewFrame();
+		expect(preview.getAttribute("data-preview-moment")).toBe("main-visible");
+		expect(preview.getAttribute("data-cursor-target")).toBe("main-edge");
+		expect(preview.getAttribute("data-main-visible")).toBe("true");
+		expect(preview.getAttribute("data-cursor-visible")).toBe("false");
+
+		await advancePreviewFrame();
 		expect(preview.getAttribute("data-preview-moment")).toBe("idle");
+		expect(preview.getAttribute("data-main-visible")).toBe("false");
+
+		await advancePreviewFrame();
+		expect(preview.getAttribute("data-preview-moment")).toBe("speaking");
+		expect(preview.getAttribute("data-cursor-visible")).toBe("false");
+		expect(getParticipantPresentations(preview)).toEqual([
+			"compact",
+			"hidden",
+			"hidden",
+		]);
+
+		await advancePreviewFrame();
+		expect(preview.getAttribute("data-preview-moment")).toBe("idle");
+
+		await advancePreviewFrame();
+		expect(preview.getAttribute("data-preview-moment")).toBe("idle");
+		expect(preview.getAttribute("data-cursor-target")).toBe("rail-edge");
+		expect(preview.getAttribute("data-cursor-visible")).toBe("true");
+		expect(getParticipantPresentations(preview)).toEqual([
+			"hidden",
+			"hidden",
+			"hidden",
+		]);
+
+		await advancePreviewFrame();
+		expect(preview.getAttribute("data-preview-moment")).toBe("interaction");
+		expect(preview.getAttribute("data-cursor-target")).toBe("rail-edge");
+		expect(getParticipantPresentations(preview)).toEqual([
+			"expanded",
+			"expanded",
+			"expanded",
+		]);
+
+		await unmount(view.root);
+	});
+
+	it("skips irrelevant cursor travel and targets one persistent participant", async () => {
+		vi.useFakeTimers();
+		const view = await renderPanel({
+			preferences: {
+				...DEFAULT_PREFERENCES,
+				mainControlVisibility: "always-visible",
+				participantPillVisibility: "always-visible",
+			},
+		});
+		const preview = getPreview(view.container);
+
+		expect(preview.getAttribute("data-preview-moment")).toBe("idle");
+		expect(preview.getAttribute("data-main-visible")).toBe("true");
+
+		await advancePreviewFrame();
+		expect(preview.getAttribute("data-preview-moment")).toBe("speaking");
+		expect(preview.getAttribute("data-cursor-visible")).toBe("false");
+
+		await advancePreviewFrame();
+		expect(preview.getAttribute("data-preview-moment")).toBe("idle");
+
+		await advancePreviewFrame();
+		expect(preview.getAttribute("data-preview-moment")).toBe("idle");
+		expect(preview.getAttribute("data-cursor-target")).toBe("participant-pill");
+		expect(preview.getAttribute("data-cursor-visible")).toBe("true");
+		expect(getParticipantPresentations(preview)).toEqual([
+			"compact",
+			"compact",
+			"compact",
+		]);
+
+		await advancePreviewFrame();
+		expect(preview.getAttribute("data-preview-moment")).toBe("interaction");
+		expect(preview.getAttribute("data-cursor-target")).toBe("participant-pill");
+		expect(getParticipantPresentations(preview)).toEqual([
+			"expanded",
+			"compact",
+			"compact",
+		]);
 
 		await unmount(view.root);
 	});
@@ -158,7 +264,7 @@ describe("InterfaceSettingsPanel", () => {
 		expect(preview.getAttribute("data-preview-moment")).toBe("interaction");
 		expect(preview.getAttribute("data-main-visible")).toBe("true");
 		expect(preview.getAttribute("data-pill-visibility")).toBe("expanded");
-		await advance(INTERFACE_PREVIEW_STEP_MS * 4);
+		await advance(10_000);
 		expect(preview.getAttribute("data-preview-moment")).toBe("interaction");
 
 		await unmount(view.root);
@@ -195,7 +301,7 @@ describe("InterfaceSettingsPanel", () => {
 		await unmount(view.root);
 	});
 
-	it("renders recognizable preview thumbnails and a demonstration cursor", async () => {
+	it("renders recognizable real overlay elements and a demonstration cursor", async () => {
 		const view = await renderPanel({
 			preferences: {
 				...DEFAULT_PREFERENCES,
@@ -208,9 +314,10 @@ describe("InterfaceSettingsPanel", () => {
 		expect(
 			preview.querySelector(".interface-settings-demo-cursor"),
 		).not.toBeNull();
-		expect(
-			preview.querySelector(".interface-settings-main-avatar")?.textContent,
-		).toBe("A");
+		const logo = preview.querySelector(".interface-settings-main-logo");
+		expect(logo).toBeInstanceOf(HTMLImageElement);
+		expect((logo as HTMLImageElement).src).toContain("Anidachi_logo.png");
+		expect((logo as HTMLImageElement).width).toBeLessThan(24);
 		expect(
 			preview.querySelector(".interface-settings-main-count")?.textContent,
 		).toBe("3");
@@ -296,6 +403,12 @@ async function advance(milliseconds: number): Promise<void> {
 	});
 }
 
+async function advancePreviewFrame(): Promise<void> {
+	await act(async () => {
+		await vi.advanceTimersToNextTimerAsync();
+	});
+}
+
 async function unmount(root: Root): Promise<void> {
 	await act(async () => {
 		root.unmount();
@@ -332,6 +445,14 @@ function getPreview(container: HTMLElement): HTMLElement {
 		throw new Error("Interface preview not found.");
 	}
 	return preview;
+}
+
+function getParticipantPresentations(
+	preview: HTMLElement,
+): Array<string | null> {
+	return [
+		...preview.querySelectorAll(".interface-settings-participant-pill"),
+	].map((element) => element.getAttribute("data-presentation"));
 }
 
 function isDisabled(element: Element): boolean {

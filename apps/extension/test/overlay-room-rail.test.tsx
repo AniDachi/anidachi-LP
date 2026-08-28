@@ -38,6 +38,23 @@ describe("RoomRail", () => {
 		await unmount(view.root);
 	});
 
+	it("marks and exposes the reacting participant without expanding the Smart rail", async () => {
+		const view = await renderRail({
+			reactionCueParticipantIds: new Set(["remote"]),
+			visibilityMode: "smart",
+		});
+		const [localSlot, remoteSlot] = getSlots(view.container);
+
+		expect(localSlot?.getAttribute("data-presentation")).toBe("hidden");
+		expect(remoteSlot?.getAttribute("data-presentation")).toBe("compact");
+		expect(remoteSlot?.getAttribute("data-reaction-cue")).toBe("true");
+		expect(
+			getElement(view.container, ".room-rail").classList.contains("open"),
+		).toBe(false);
+
+		await unmount(view.root);
+	});
+
 	it("expands the full Smart list only after deliberate edge dwell", async () => {
 		const view = await renderRail({ visibilityMode: "smart" });
 		const edge = getElement(view.container, ".room-rail-edge");
@@ -175,6 +192,7 @@ interface RenderRailOverrides {
 		participantId: string,
 	): ParticipantAudioPreference;
 	participants?: Participant[];
+	reactionCueParticipantIds?: ReadonlySet<string>;
 	speakingParticipantIds?: string[];
 	visibilityMode: ParticipantPillVisibility;
 }
@@ -201,6 +219,7 @@ async function renderRail(overrides: RenderRailOverrides): Promise<{
 				}
 				onParticipantAudioChange={vi.fn()}
 				participants={participants}
+				reactionCueParticipantIds={overrides.reactionCueParticipantIds}
 				speakingParticipantIds={overrides.speakingParticipantIds ?? []}
 				visibilityMode={overrides.visibilityMode}
 			/>,
