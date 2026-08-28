@@ -86,6 +86,7 @@ import {
 } from "./message-composer-events";
 import {
 	isWithinOverlayHotkeyBoundary,
+	overlayHotkeyBoundaryProps,
 	overlayInteractionBoundaryProps,
 } from "./overlay-interaction-boundary";
 import { InterfaceSettingsPanel } from "./overlay-interface-settings";
@@ -110,8 +111,12 @@ import {
 } from "./overlay-layout-model";
 import {
 	createOverlayLayoutRuntimeContext,
+	getCameraInteractionCorridor,
 	getOverlayLayoutCameraSlotCount,
 	getOverlayLayoutRuntimeStyles,
+	getRoomRailBottomInsetPx,
+	getRoomRailRuntimeStyles,
+	mergeMaximumPlayerOverlayInsets,
 } from "./overlay-layout-runtime";
 import {
 	DEFAULT_LOCAL_CAMERA_ENABLED,
@@ -162,6 +167,10 @@ import {
 } from "./reaction-pop";
 import { ReactionShortcutEditor } from "./reaction-shortcut-editor";
 import {
+	parseReactionsEnabled,
+	REACTIONS_ENABLED_STORAGE_KEY,
+} from "./reaction-shortcuts";
+import {
 	connectWebsiteRoom,
 	createRoom,
 	isActiveRoomConflictError,
@@ -176,6 +185,7 @@ import {
 import {
 	mergeRoomInviteTargetStatus,
 	type RoomInviteTargetStatus,
+	roomInviteGroupStatus,
 	roomInviteTargetStatuses,
 	roomInviteTargetStatusLabel,
 } from "./room-invite-target-status";
@@ -194,6 +204,7 @@ import {
 	migrateLegacyRoomSession,
 	prepareRoomSession,
 	type RoomSessionRecord,
+	updateRoomSessionCameraEnabled,
 	updateRoomSessionVoiceMode,
 } from "./room-session-storage";
 import { acquireRoomTabLock, releaseRoomTabLock } from "./room-tab-lock";
@@ -218,6 +229,7 @@ import {
 	arePlayerOverlayGeometriesEqual,
 	normalizePlayerOverlayGeometry,
 	type PlayerOverlayGeometry,
+	type PlayerOverlayInsets,
 } from "./source-adapters/core/overlay-geometry";
 import { ensureSourceForProvider } from "./source-adapters/core/source-navigation";
 import type {
@@ -322,6 +334,13 @@ interface OverlayViewportSize {
 	height: number;
 }
 
+type InviteNoticeTone = "error" | "info" | "success";
+
+interface InvitePanelNotice {
+	readonly message: string;
+	readonly tone: InviteNoticeTone;
+}
+
 const CHAT_DISPLAY_MODE_STORAGE_KEY = "local:chatDisplayMode";
 const DEFAULT_CHAT_DISPLAY_MODE: ChatDisplayMode = "live";
 const LIVE_CHAT_MESSAGE_TTL_MS = 9000;
@@ -333,6 +352,11 @@ const MESSAGE_COMPOSER_SHIELD_RELEASE_BUFFER_MS = 180;
 const SILENT_SIGN_IN_SUPPRESSION_AFTER_SIGN_OUT_MS = 15_000;
 const SIGN_OUT_CONFIRMATION_DURATION_MS = ROOM_END_CONFIRMATION_DURATION_MS;
 export const TRANSIENT_PANEL_NOTICE_DURATION_MS = 3000;
+const INVITE_NOTICE_DURATION_MS: Readonly<Record<InviteNoticeTone, number>> = {
+	error: 4500,
+	info: 3000,
+	success: 3000,
+};
 const LIVE_CHAT_NAME_COLORS = [
 	"#c4a7ff",
 	"#7dd3fc",
@@ -451,6 +475,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const topBubbleRef = useRef<HTMLButtonElement | null>(null);
 	const roomActionFeedbackTimerRef = useRef<number | null>(null);
 	const transientPanelNoticeTimerRef = useRef<number | null>(null);
+	const inviteNoticeTimerRef = useRef<number | null>(null);
 	const roomEndConfirmationTimerRef = useRef<number | null>(null);
 	const signOutConfirmationTimerRef = useRef<number | null>(null);
 	const messageComposerShieldReleaseTimerRef = useRef<number | null>(null);
@@ -552,13 +577,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const [inviteSendingTarget, setInviteSendingTarget] = useState<string | null>(
 		null,
 	);
-	const [inviteStatusMessage, setInviteStatusMessage] = useState<string | null>(
+	const [inviteNotice, setInviteNotice] = useState<InvitePanelNotice | null>(
 		null,
 	);
 	const [inviteTargetStatuses, setInviteTargetStatuses] = useState<
 		ReadonlyMap<string, RoomInviteTargetStatus>
 	>(() => new Map());
 	const inviteActionIdsRef = useRef(new Map<string, string>());
+	const inviteStatusRequestEpochRef = useRef(0);
 	const inviteStatusMembershipRef = useRef({
 		roomId: null as string | null,
 		participantCount: 0,
@@ -574,6 +600,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const [messageComposerText, setMessageComposerText] = useState("");
 	const [camsEnabled, setCamsEnabled] = useState(DEFAULT_LOCAL_CAMERA_ENABLED);
 	const [reactionsEnabled, setReactionsEnabled] = useState(true);
+	const reactionsPreferenceRevisionRef = useRef(0);
 	const [
 		experimentalSuperReactionsEnabled,
 		setExperimentalSuperReactionsEnabled,
@@ -586,6 +613,44 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		adapter,
 		adapterActive,
 	);
+	const [maximumObservedPlayerSafeInsets, setMaximumObservedPlayerSafeInsets] =
+		useState<PlayerOverlayInsets>(() => ({
+			bottomPx: 0,
+			leftPx: 0,
+			rightPx: 0,
+			topPx: 0,
+		}));
+	const cameraInteractionPlayerSafeInsets =
+		playerOverlayGeometry.controlsVisible
+			? mergeMaximumPlayerOverlayInsets(
+					maximumObservedPlayerSafeInsets,
+					playerOverlayGeometry.safeInsets,
+				)
+			: maximumObservedPlayerSafeInsets;
+	useEffect(() => {
+		if (!playerOverlayGeometry.controlsVisible) {
+			return;
+		}
+
+		setMaximumObservedPlayerSafeInsets((current) => {
+			const next = mergeMaximumPlayerOverlayInsets(
+				current,
+				playerOverlayGeometry.safeInsets,
+			);
+			return next.bottomPx === current.bottomPx &&
+				next.leftPx === current.leftPx &&
+				next.rightPx === current.rightPx &&
+				next.topPx === current.topPx
+				? current
+				: next;
+		});
+	}, [
+		playerOverlayGeometry.controlsVisible,
+		playerOverlayGeometry.safeInsets.bottomPx,
+		playerOverlayGeometry.safeInsets.leftPx,
+		playerOverlayGeometry.safeInsets.rightPx,
+		playerOverlayGeometry.safeInsets.topPx,
+	]);
 	const [reactions, setReactions] = useState<VisibleReaction[]>([]);
 	const [reactionCueParticipantIds, setReactionCueParticipantIds] = useState<
 		ReadonlySet<string>
@@ -700,6 +765,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		null,
 	);
 	const voiceModePersistenceQueueRef = useRef<Promise<void>>(Promise.resolve());
+	const cameraEnabledPersistenceQueueRef = useRef<Promise<void>>(
+		Promise.resolve(),
+	);
 	const roomIdRef = useRef<string | null>(null);
 	const roomJoinSequenceRef = useRef(0);
 	const roomJoinInFlightRef = useRef<{
@@ -762,6 +830,28 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		}, TRANSIENT_PANEL_NOTICE_DURATION_MS);
 	}, []);
 
+	const clearInviteNotice = useCallback(() => {
+		if (inviteNoticeTimerRef.current !== null) {
+			window.clearTimeout(inviteNoticeTimerRef.current);
+			inviteNoticeTimerRef.current = null;
+		}
+		setInviteNotice(null);
+	}, []);
+
+	const showInviteNotice = useCallback(
+		(message: string, tone: InviteNoticeTone) => {
+			if (inviteNoticeTimerRef.current !== null) {
+				window.clearTimeout(inviteNoticeTimerRef.current);
+			}
+			setInviteNotice({ message, tone });
+			inviteNoticeTimerRef.current = window.setTimeout(() => {
+				inviteNoticeTimerRef.current = null;
+				setInviteNotice(null);
+			}, INVITE_NOTICE_DURATION_MS[tone]);
+		},
+		[],
+	);
+
 	const clearRoomEndConfirmation = useCallback(() => {
 		if (roomEndConfirmationTimerRef.current !== null) {
 			window.clearTimeout(roomEndConfirmationTimerRef.current);
@@ -785,6 +875,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			}
 			if (transientPanelNoticeTimerRef.current !== null) {
 				window.clearTimeout(transientPanelNoticeTimerRef.current);
+			}
+			if (inviteNoticeTimerRef.current !== null) {
+				window.clearTimeout(inviteNoticeTimerRef.current);
 			}
 			if (roomEndConfirmationTimerRef.current !== null) {
 				window.clearTimeout(roomEndConfirmationTimerRef.current);
@@ -1176,6 +1269,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	useEffect(() => {
 		roomIdRef.current = roomId;
 		inviteActionIdsRef.current.clear();
+		inviteStatusRequestEpochRef.current += 1;
 		if (!roomId) {
 			setPrivilegedRoomAuthority(null);
 			setRoomCapabilities(null);
@@ -1183,7 +1277,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			setInviteTargets(null);
 			setInviteTargetsLoading(false);
 			setInviteSendingTarget(null);
-			setInviteStatusMessage(null);
+			clearInviteNotice();
 			setInviteTargetStatuses(new Map());
 		}
 		handledP2PSignalIdsRef.current.clear();
@@ -1202,7 +1296,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		setRoomSnapshotReady(false);
 		setSignalingTransportReady(null);
 		setIncomingP2PSignals([]);
-	}, [roomId]);
+	}, [clearInviteNotice, roomId]);
 
 	useEffect(() => {
 		roomTokenRef.current = roomToken;
@@ -1779,6 +1873,64 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		},
 		[],
 	);
+	const enqueueRoomCameraEnabledPersistence = useCallback(
+		(enabled: boolean) => {
+			cameraEnabledPersistenceQueueRef.current =
+				cameraEnabledPersistenceQueueRef.current
+					.catch(() => undefined)
+					.then(async () => {
+						for (let attempt = 0; attempt < 3; attempt += 1) {
+							const expected = storedRoomSessionRef.current;
+							const activeParticipantId = participantRef.current?.id ?? null;
+							if (
+								!expected ||
+								roomIdRef.current !== expected.roomId ||
+								activeParticipantId !== expected.ownerUserId
+							) {
+								return;
+							}
+							if (expected.cameraEnabled === enabled) {
+								return;
+							}
+
+							const next = await updateRoomSessionCameraEnabled(
+								expected,
+								enabled,
+							);
+							if (!next) {
+								return;
+							}
+
+							const stillActive =
+								roomIdRef.current === next.roomId &&
+								participantRef.current?.id === next.ownerUserId &&
+								next.participantSessionId === expected.participantSessionId;
+							if (!stillActive) {
+								return;
+							}
+
+							storedRoomSessionRef.current = next;
+							setStoredRoomSession(next);
+							if (next.cameraEnabled === enabled) {
+								return;
+							}
+						}
+
+						logDebug(
+							"overlay.camera",
+							"room-scoped camera intent did not converge",
+							{ enabled, roomId: roomIdRef.current },
+						);
+					})
+					.catch((error) => {
+						logDebug("overlay.camera", "failed to persist camera intent", {
+							enabled,
+							error: error instanceof Error ? error.message : String(error),
+						});
+					});
+		},
+		[],
+	);
 	useEffect(() => {
 		if (
 			!activeVoiceRoomSession ||
@@ -1844,14 +1996,17 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 		if (roomMediaSeatLimit <= 0) {
 			setCamsEnabled(false);
+			enqueueRoomCameraEnabledPersistence(false);
 			return;
 		}
 
 		if (!localHasMediaSeat) {
 			setCamsEnabled(false);
+			enqueueRoomCameraEnabledPersistence(false);
 		}
 	}, [
 		camsEnabled,
+		enqueueRoomCameraEnabledPersistence,
 		localHasMediaSeat,
 		roomId,
 		roomMediaSeatLimit,
@@ -1933,6 +2088,31 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						error: error instanceof Error ? error.message : String(error),
 					});
 				}
+			});
+
+		return () => {
+			cancelled = true;
+		};
+	}, []);
+
+	useEffect(() => {
+		let cancelled = false;
+		const preferenceRevision = reactionsPreferenceRevisionRef.current;
+
+		void storage
+			.getItem<unknown>(REACTIONS_ENABLED_STORAGE_KEY)
+			.then((storedValue) => {
+				if (
+					!cancelled &&
+					reactionsPreferenceRevisionRef.current === preferenceRevision
+				) {
+					setReactionsEnabled(parseReactionsEnabled(storedValue));
+				}
+			})
+			.catch((error) => {
+				logDebug("overlay.reactions", "failed to load enabled preference", {
+					error: error instanceof Error ? error.message : String(error),
+				});
 			});
 
 		return () => {
@@ -2050,6 +2230,19 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		},
 		[],
 	);
+
+	const handleReactionsEnabledToggle = useCallback(() => {
+		const nextEnabled = !reactionsEnabled;
+		reactionsPreferenceRevisionRef.current += 1;
+		setReactionsEnabled(nextEnabled);
+		void storage
+			.setItem(REACTIONS_ENABLED_STORAGE_KEY, nextEnabled)
+			.catch((error) => {
+				logDebug("overlay.reactions", "failed to save enabled preference", {
+					error: error instanceof Error ? error.message : String(error),
+				});
+			});
+	}, [reactionsEnabled]);
 
 	useEffect(() => {
 		setMessageComposerDomGuard(
@@ -2410,33 +2603,30 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	);
 
 	const handleGhostCamToggle = useCallback(() => {
-		setCamsEnabled((current) => {
-			const next = !current;
-			if (!next) {
-				return false;
-			}
+		const nextEnabled = !camsEnabled;
+		if (nextEnabled && roomIdRef.current && roomMediaSeatLimit <= 0) {
+			showTransientPanelNotice("Live media is not available in this room.");
+			setPanelOpen(true);
+			return;
+		}
 
-			if (roomIdRef.current && roomMediaSeatLimit <= 0) {
-				showTransientPanelNotice("Live media is not available in this room.");
-				setPanelOpen(true);
-				return false;
-			}
+		if (nextEnabled && roomIdRef.current && !localHasMediaSeat) {
+			showTransientPanelNotice(
+				localMediaSeatState === "requested"
+					? "Waiting for the host to approve live media."
+					: "Ask the host for a live media seat before turning on camera.",
+			);
+			setPanelOpen(true);
+			return;
+		}
 
-			if (roomIdRef.current && !localHasMediaSeat) {
-				showTransientPanelNotice(
-					localMediaSeatState === "requested"
-						? "Waiting for the host to approve live media."
-						: "Ask the host for a live media seat before turning on camera.",
-				);
-				setPanelOpen(true);
-				return false;
-			}
-
-			clearTransientPanelNotice();
-			return true;
-		});
+		clearTransientPanelNotice();
+		setCamsEnabled(nextEnabled);
+		enqueueRoomCameraEnabledPersistence(nextEnabled);
 	}, [
+		camsEnabled,
 		clearTransientPanelNotice,
+		enqueueRoomCameraEnabledPersistence,
 		localHasMediaSeat,
 		localMediaSeatState,
 		roomMediaSeatLimit,
@@ -2548,32 +2738,37 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		roomActive: Boolean(roomId),
 	});
 	const playerBottomInsetPx = playerOverlayGeometry.safeInsets.bottomPx;
-	const roomRailBottomPx = Math.max(92, playerBottomInsetPx + 12);
 	const overlayChromePlacement = getOverlayChromePlacement(
 		playerOverlayGeometry,
 	);
 	const overlayLayoutPreviewActive = previewOverlayLayout !== null;
+	const overlayLayoutCameraCount = overlayLayoutPreviewActive
+		? 4
+		: getOverlayLayoutCameraSlotCount(
+				cameraStackVisible ? renderableCameraParticipants.length : 0,
+			);
+	const overlayLayoutViewportHeight =
+		overlayViewportSize.height || playerOverlayGeometry.viewport.heightPx;
+	const overlayLayoutViewportWidth =
+		overlayViewportSize.width || playerOverlayGeometry.viewport.widthPx;
+	const roomRailBottomPx = getRoomRailBottomInsetPx({
+		playerBottomInsetPx,
+		viewportHeight: overlayLayoutViewportHeight,
+	});
 	const overlayLayoutRuntimeContext = useMemo<OverlayLayoutContext>(
 		() =>
 			createOverlayLayoutRuntimeContext({
-				cameraCount: overlayLayoutPreviewActive
-					? 4
-					: getOverlayLayoutCameraSlotCount(
-							cameraStackVisible ? renderableCameraParticipants.length : 0,
-						),
-				height:
-					overlayViewportSize.height || playerOverlayGeometry.viewport.heightPx,
+				cameraCount: overlayLayoutCameraCount,
+				height: overlayLayoutViewportHeight,
 				playerSafeInsets: playerOverlayGeometry.safeInsets,
 				safePaddingPx: 12,
-				width:
-					overlayViewportSize.width || playerOverlayGeometry.viewport.widthPx,
+				width: overlayLayoutViewportWidth,
 			}),
 		[
-			cameraStackVisible,
-			overlayLayoutPreviewActive,
-			overlayViewportSize,
-			playerOverlayGeometry,
-			renderableCameraParticipants.length,
+			overlayLayoutCameraCount,
+			overlayLayoutViewportHeight,
+			overlayLayoutViewportWidth,
+			playerOverlayGeometry.safeInsets,
 		],
 	);
 	const resolvedOverlayLayout = useMemo(
@@ -2584,6 +2779,48 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			),
 		[appliedOverlayLayout, overlayLayoutRuntimeContext, previewOverlayLayout],
 	);
+	const cameraInteractionCorridor = useMemo(() => {
+		const definition = previewOverlayLayout ?? appliedOverlayLayout;
+		const controlsHiddenLayout = resolveOverlayLayout(
+			definition,
+			createOverlayLayoutRuntimeContext({
+				cameraCount: overlayLayoutCameraCount,
+				height: overlayLayoutViewportHeight,
+				safePaddingPx: 12,
+				width: overlayLayoutViewportWidth,
+			}),
+		);
+		const maximumControlsLayout = resolveOverlayLayout(
+			definition,
+			createOverlayLayoutRuntimeContext({
+				cameraCount: overlayLayoutCameraCount,
+				height: overlayLayoutViewportHeight,
+				playerSafeInsets: cameraInteractionPlayerSafeInsets,
+				safePaddingPx: 12,
+				width: overlayLayoutViewportWidth,
+			}),
+		);
+
+		return getCameraInteractionCorridor(
+			[
+				resolvedOverlayLayout.video.bounds,
+				controlsHiddenLayout.video.bounds,
+				maximumControlsLayout.video.bounds,
+			],
+			{
+				height: overlayLayoutViewportHeight,
+				width: overlayLayoutViewportWidth,
+			},
+		);
+	}, [
+		appliedOverlayLayout,
+		cameraInteractionPlayerSafeInsets,
+		overlayLayoutCameraCount,
+		overlayLayoutViewportHeight,
+		overlayLayoutViewportWidth,
+		previewOverlayLayout,
+		resolvedOverlayLayout.video.bounds,
+	]);
 	const cameraControlDisabledReason =
 		roomMediaSeatLimit <= 0
 			? "Live media is not available in this room"
@@ -2592,8 +2829,16 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				: "Media seat required";
 	const overlayCssVariables = {
 		...getOverlayLayoutRuntimeStyles(resolvedOverlayLayout),
+		...getRoomRailRuntimeStyles({
+			height: overlayLayoutViewportHeight,
+			width: overlayLayoutViewportWidth,
+		}),
 		"--cam-stack-height": `${resolvedOverlayLayout.video.bounds.height}px`,
 		"--cam-stack-width": `${resolvedOverlayLayout.video.bounds.width}px`,
+		"--cam-interaction-corridor-height": `${cameraInteractionCorridor.height}px`,
+		"--cam-interaction-corridor-left": `${cameraInteractionCorridor.x}px`,
+		"--cam-interaction-corridor-top": `${cameraInteractionCorridor.y}px`,
+		"--cam-interaction-corridor-width": `${cameraInteractionCorridor.width}px`,
 		"--mini-panel-bottom-reserve": `${overlayChromePlacement.miniPanelBottomReservePx}px`,
 		"--mini-panel-right": `${overlayChromePlacement.miniPanelRightPx}px`,
 		"--mini-panel-top": `${overlayChromePlacement.miniPanelTopPx}px`,
@@ -3023,6 +3268,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						event.code === "MEDIA_UNAVAILABLE"
 					) {
 						setCamsEnabled(false);
+						enqueueRoomCameraEnabledPersistence(false);
 						setAuthMessage(
 							event.message ||
 								"No live media seats are available in this room.",
@@ -3055,6 +3301,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			isCurrentHost,
 			chatDisplayMode,
 			enqueueLiveChatMessage,
+			enqueueRoomCameraEnabledPersistence,
 			experimentalSuperReactionsEnabled,
 			playbackSyncController,
 			recordChatHistoryMessage,
@@ -3118,6 +3365,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			setCamsEnabled((currentCameraEnabled) =>
 				getCameraEnabledForRoomConnection({
 					currentCameraEnabled,
+					persistedCameraEnabled: nextStoredRoomSession.cameraEnabled,
 					sameRoomReconnect,
 				}),
 			);
@@ -4331,21 +4579,24 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 	const loadInviteTargetsForRoom = useCallback(async () => {
 		const activeRoomId = roomIdRef.current;
-		const accessToken = await getFreshAuthAccessToken("invite-targets");
-		if (!activeRoomId || !accessToken) {
+		setInviteTargetsLoading(true);
+		clearInviteNotice();
+		if (!activeRoomId) {
 			setPanelOpen(true);
-			setInviteStatusMessage(
-				activeRoomId
-					? "Sign in to invite friends."
-					: "Create a room before inviting friends.",
-			);
+			showInviteNotice("Create a room before inviting friends.", "error");
+			setInviteTargetsLoading(false);
 			return;
 		}
-		if (roomIdRef.current !== activeRoomId) return;
+		const statusRequestEpoch = ++inviteStatusRequestEpochRef.current;
 
-		setInviteTargetsLoading(true);
-		setInviteStatusMessage(null);
 		try {
+			const accessToken = await getFreshAuthAccessToken("invite-targets");
+			if (!accessToken) {
+				showInviteNotice("Sign in to invite friends.", "error");
+				return;
+			}
+			if (roomIdRef.current !== activeRoomId) return;
+
 			const [targets, inviteResult] = await Promise.all([
 				listInviteTargets(accessToken),
 				listRoomInvites(accessToken)
@@ -4354,14 +4605,20 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			]);
 			if (roomIdRef.current !== activeRoomId) return;
 			setInviteTargets(targets);
-			if (inviteResult.ok) {
+			if (
+				inviteResult.ok &&
+				inviteStatusRequestEpochRef.current === statusRequestEpoch
+			) {
 				setInviteTargetStatuses(
 					roomInviteTargetStatuses(inviteResult.invites.sent, activeRoomId),
 				);
-			} else {
-				setInviteTargetStatuses(new Map());
-				setInviteStatusMessage(
-					"Invite status could not be refreshed. Sending remains safe.",
+			} else if (
+				!inviteResult.ok &&
+				inviteStatusRequestEpochRef.current === statusRequestEpoch
+			) {
+				showInviteNotice(
+					"Could not refresh invite status. Showing the latest available status.",
+					"error",
 				);
 				logDebug("overlay.invite", "status refresh failed", {
 					roomId: activeRoomId,
@@ -4371,7 +4628,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					),
 				});
 			}
-			setInvitePanelOpen(true);
 			logDebug("overlay.invite", "targets loaded", {
 				friendCount: targets.friends.length,
 				groupCount: targets.groups.length,
@@ -4379,26 +4635,32 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		} catch (error) {
 			if (roomIdRef.current !== activeRoomId) return;
 			const message = authErrorMessage(error, "Failed to load invite targets");
-			setInviteStatusMessage(message);
+			showInviteNotice(message, "error");
 			logDebug("overlay.invite", "targets failed", { message });
 		} finally {
 			if (roomIdRef.current === activeRoomId) {
 				setInviteTargetsLoading(false);
 			}
 		}
-	}, [getFreshAuthAccessToken]);
+	}, [clearInviteNotice, getFreshAuthAccessToken, showInviteNotice]);
 
 	const refreshInviteStatusesForRoom = useCallback(async () => {
 		const activeRoomId = roomIdRef.current;
+		if (!activeRoomId) return;
+		const statusRequestEpoch = ++inviteStatusRequestEpochRef.current;
 		const accessToken = await getFreshAuthAccessToken(
 			"invite-status-membership-change",
 		);
-		if (!activeRoomId || !accessToken || roomIdRef.current !== activeRoomId)
+		if (!accessToken || roomIdRef.current !== activeRoomId)
 			return;
 
 		try {
 			const invites = await listRoomInvites(accessToken);
-			if (roomIdRef.current !== activeRoomId) return;
+			if (
+				roomIdRef.current !== activeRoomId ||
+				inviteStatusRequestEpochRef.current !== statusRequestEpoch
+			)
+				return;
 			setInviteTargetStatuses(
 				roomInviteTargetStatuses(invites.sent, activeRoomId),
 			);
@@ -4413,13 +4675,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		}
 	}, [getFreshAuthAccessToken]);
 
-	const toggleInvitePanel = useCallback(async () => {
+	const toggleInvitePanel = useCallback(() => {
 		if (invitePanelOpen) {
 			setInvitePanelOpen(false);
 			return;
 		}
 
-		await loadInviteTargetsForRoom();
+		setInvitePanelOpen(true);
+		void loadInviteTargetsForRoom();
 	}, [invitePanelOpen, loadInviteTargetsForRoom]);
 
 	useEffect(() => {
@@ -4456,15 +4719,16 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			const activeRoomId = roomIdRef.current;
 			const accessToken = await getFreshAuthAccessToken("send-invite");
 			if (!activeRoomId || !accessToken) {
-				setInviteStatusMessage(
+				showInviteNotice(
 					"Create a room and sign in before inviting friends.",
+					"error",
 				);
 				return;
 			}
 			if (roomIdRef.current !== activeRoomId) return;
 
 			setInviteSendingTarget(targetKey);
-			setInviteStatusMessage(null);
+			clearInviteNotice();
 			const requestKey = `${activeRoomId}:${targetKey}`;
 			const clientActionId =
 				inviteActionIdsRef.current.get(requestKey) ?? crypto.randomUUID();
@@ -4479,13 +4743,15 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				if (inviteActionIdsRef.current.get(requestKey) === clientActionId) {
 					inviteActionIdsRef.current.delete(requestKey);
 				}
+				inviteStatusRequestEpochRef.current += 1;
 				setInviteTargetStatuses((current) =>
 					mergeRoomInviteTargetStatus(current, targetKey, result.invite),
 				);
-				setInviteStatusMessage(
+				showInviteNotice(
 					result.created
 						? `Invite sent to ${label}. Waiting for a response.`
 						: `An invite for ${label} already exists in this room.`,
+					result.created ? "success" : "info",
 				);
 				logDebug("overlay.invite", "sent", {
 					roomId: activeRoomId,
@@ -4495,7 +4761,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				});
 			} catch (error) {
 				const message = authErrorMessage(error, "Failed to send invite");
-				setInviteStatusMessage(message);
+				showInviteNotice(message, "error");
 				logDebug("overlay.invite", "send failed", {
 					roomId: activeRoomId,
 					targetKey,
@@ -4507,7 +4773,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				}
 			}
 		},
-		[getFreshAuthAccessToken],
+		[clearInviteNotice, getFreshAuthAccessToken, showInviteNotice],
 	);
 
 	const sendDirectInvite = useCallback(
@@ -5373,18 +5639,21 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 									) : null}
 								</button>
 								<button
-									aria-label="Invite friends and groups"
+									aria-label={
+										invitePanelOpen
+											? "Close friends and groups"
+											: "Invite friends and groups"
+									}
 									className="panel-icon-action reveal-action"
 									title={
-										inviteTargetsLoading
-											? "Loading invite targets"
+										invitePanelOpen
+											? "Close friends and groups"
 											: "Invite friends and groups"
 									}
 									type="button"
 									onClick={toggleInvitePanel}
 									disabled={
 										!authAuthenticated ||
-										inviteTargetsLoading ||
 										roomCreatePending ||
 										roomEndPending ||
 										roomLeavePending
@@ -5456,81 +5725,153 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						</div>
 					) : null}
 					{invitePanelOpen ? (
-						<div className="invite-panel">
+						<div className="invite-panel" aria-busy={inviteTargetsLoading}>
 							<div className="invite-panel-header">
-								<strong>Friends & groups</strong>
+								<div className="invite-panel-heading">
+									<strong>Friends & groups</strong>
+									<span>
+										{inviteTargets
+											? `${inviteTargets.groups.length + inviteTargets.friends.length} available`
+											: "Choose who to invite"}
+									</span>
+								</div>
 								<button
-									className="button compact"
+									aria-label="Refresh friends and groups"
+									className="invite-panel-refresh"
+									disabled={inviteTargetsLoading}
 									type="button"
 									onClick={loadInviteTargetsForRoom}
+									title="Refresh friends and groups"
 								>
-									Refresh
+									<RefreshCw size={14} />
 								</button>
 							</div>
-							{inviteStatusMessage ? (
+							{inviteNotice ? (
 								<div
 									className="invite-status-message"
-									role="status"
+									data-tone={inviteNotice.tone}
+									role={inviteNotice.tone === "error" ? "alert" : "status"}
 									aria-live="polite"
 								>
-									{inviteStatusMessage}
+									<span className="invite-status-mark" aria-hidden="true">
+										{inviteNotice.tone === "success" ? "✓" : "!"}
+									</span>
+									<span>{inviteNotice.message}</span>
 								</div>
 							) : null}
-							{inviteTargets && inviteTargets.groups.length ? (
-								<>
-									<div className="section-title compact">Groups</div>
+							{inviteTargetsLoading && !inviteTargets ? (
+								<div
+									className="invite-panel-loading"
+									role="status"
+									aria-label="Loading friends and groups"
+								>
+									{[0, 1, 2].map((index) => (
+										<div className="invite-target-skeleton" key={index}>
+											<span />
+											<div>
+												<i />
+												<i />
+											</div>
+											<b />
+										</div>
+									))}
+								</div>
+							) : null}
+							{inviteTargets?.groups.length ? (
+								<section className="invite-target-section">
+									<div className="invite-target-section-title">
+										<span>Groups</span>
+										<b>{inviteTargets.groups.length}</b>
+									</div>
 									{inviteTargets.groups.map((group) => {
 										const targetKey = `group:${group.id}`;
-										const targetStatus = inviteTargetStatuses.get(targetKey);
+										const targetStatus = roomInviteGroupStatus(
+											inviteTargetStatuses,
+											group.members.map((member) => member.user.userId),
+										);
+										const invitedMemberCount =
+											targetStatus?.recipientStatuses.size ?? 0;
+										const uninvitedMemberCount = Math.max(
+											0,
+											group.members.length - invitedMemberCount,
+										);
+										const statusLabel = targetStatus
+											? roomInviteTargetStatusLabel(targetStatus)
+											: null;
 										return (
-											<div className="participant-row" key={group.id}>
+											<div className="invite-target-row" key={group.id}>
 												<div className="participant-main">
 													<span className="mini-avatar">
 														{initials(group.name)}
 													</span>
-													<span className="participant-name">{group.name}</span>
+													<span className="invite-target-copy">
+														<strong>{group.name}</strong>
+														<small>
+															{group.members.length === 0
+																? "No members"
+																: `${group.members.length} ${group.members.length === 1 ? "member" : "members"}${statusLabel ? ` · ${statusLabel.toLowerCase()}` : ""}`}
+														</small>
+													</span>
 												</div>
 												<button
 													className="button compact invite-target-action"
-													data-state={targetStatus ?? "idle"}
+													data-state={
+														targetStatus?.state ??
+														(group.members.length === 0 ? "empty" : "idle")
+													}
 													disabled={
 														inviteSendingTarget !== null ||
 														group.members.length === 0 ||
-														Boolean(targetStatus)
+														uninvitedMemberCount === 0
 													}
 													onClick={() => sendGroupInvite(group)}
 													type="button"
 												>
 													{inviteSendingTarget === targetKey
-														? "Sending"
-														: targetStatus
-															? roomInviteTargetStatusLabel(targetStatus)
-															: "Invite"}
+														? "Sending…"
+														: group.members.length === 0
+															? "No members"
+															: targetStatus && uninvitedMemberCount === 0
+																? roomInviteTargetStatusLabel(targetStatus)
+																: targetStatus
+																	? `Invite ${uninvitedMemberCount} new`
+																	: "Invite"}
 												</button>
 											</div>
 										);
 									})}
-								</>
+								</section>
 							) : null}
-							{inviteTargets && inviteTargets.friends.length ? (
-								<>
-									<div className="section-title compact">Friends</div>
+							{inviteTargets?.friends.length ? (
+								<section className="invite-target-section">
+									<div className="invite-target-section-title">
+										<span>Friends</span>
+										<b>{inviteTargets.friends.length}</b>
+									</div>
 									{inviteTargets.friends.map((friend) => {
 										const targetKey = `friend:${friend.user.userId}`;
 										const targetStatus = inviteTargetStatuses.get(targetKey);
 										return (
-											<div className="participant-row" key={friend.user.userId}>
+											<div
+												className="invite-target-row"
+												key={friend.user.userId}
+											>
 												<div className="participant-main">
 													<span className="mini-avatar">
 														{initials(friend.user.displayName)}
 													</span>
-													<span className="participant-name">
-														{friend.user.displayName}
+													<span className="invite-target-copy">
+														<strong>{friend.user.displayName}</strong>
+														<small>
+															{friend.user.handle
+																? `@${friend.user.handle}`
+																: "Friend"}
+														</small>
 													</span>
 												</div>
 												<button
 													className="button compact invite-target-action"
-													data-state={targetStatus ?? "idle"}
+													data-state={targetStatus?.state ?? "idle"}
 													disabled={
 														inviteSendingTarget !== null ||
 														Boolean(targetStatus)
@@ -5539,7 +5880,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 													type="button"
 												>
 													{inviteSendingTarget === targetKey
-														? "Sending"
+														? "Sending…"
 														: targetStatus
 															? roomInviteTargetStatusLabel(targetStatus)
 															: "Invite"}
@@ -5547,7 +5888,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 											</div>
 										);
 									})}
-								</>
+								</section>
 							) : null}
 							{inviteTargets &&
 							!inviteTargets.friends.length &&
@@ -5698,7 +6039,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 											aria-label="Quick reactions"
 											className="settings-toggle-switch"
 											data-state={reactionsEnabled ? "on" : "off"}
-											onClick={() => setReactionsEnabled((value) => !value)}
+										onClick={handleReactionsEnabledToggle}
 											role="switch"
 											type="button"
 										>
@@ -5925,38 +6266,44 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			{socialVisible ? (
 				<>
 					{cameraStackVisible && renderableCameraParticipants.length ? (
-						<div className="cam-stack">
-							{renderableCameraParticipants.map((item) => {
-								const video = cameraVideoByParticipantId.get(item.id);
-								if (!video) {
-									return null;
-								}
+						<>
+							<div
+								aria-hidden="true"
+								className="cam-stack-interaction-corridor"
+								{...overlayInteractionBoundaryProps}
+							/>
+							<div className="cam-stack">
+								{renderableCameraParticipants.map((item) => {
+									const video = cameraVideoByParticipantId.get(item.id);
+									if (!video) {
+										return null;
+									}
 
-								return (
-									<CameraBubble
-										key={item.id}
-										participant={item}
-										video={video}
-										active={item.id === participant?.id}
-										audioPreference={
-											item.id === participant?.id
-												? null
-												: getParticipantAudioPreference(item.id)
-										}
-										fireChargePhase={
-											fireCharge?.participantId === item.id
-												? fireCharge.phase
-												: null
-										}
-										flaming={flamingParticipantIds.includes(item.id)}
-										onAudioPreferenceChange={(preference) =>
-											handleParticipantAudioChange(item.id, preference)
-										}
-										speaking={voiceIndicatorParticipantIds.includes(item.id)}
-									/>
-								);
-							})}
-						</div>
+									return (
+										<CameraBubble
+											key={item.id}
+											participant={item}
+											video={video}
+											audioPreference={
+												item.id === participant?.id
+													? null
+													: getParticipantAudioPreference(item.id)
+											}
+											fireChargePhase={
+												fireCharge?.participantId === item.id
+													? fireCharge.phase
+													: null
+											}
+											flaming={flamingParticipantIds.includes(item.id)}
+											onAudioPreferenceChange={(preference) =>
+												handleParticipantAudioChange(item.id, preference)
+											}
+											speaking={voiceIndicatorParticipantIds.includes(item.id)}
+										/>
+									);
+								})}
+							</div>
+						</>
 					) : null}
 
 					{roomRailVisible ? (
@@ -6027,7 +6374,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 function CameraBubble({
 	participant,
 	video,
-	active,
 	audioPreference,
 	fireChargePhase,
 	flaming,
@@ -6036,7 +6382,6 @@ function CameraBubble({
 }: {
 	participant: Participant;
 	video: GhostVideo;
-	active: boolean;
 	audioPreference: ParticipantAudioPreference | null;
 	fireChargePhase: FireChargePhase | null;
 	flaming: boolean;
@@ -6064,11 +6409,13 @@ function CameraBubble({
 
 	return (
 		<div
-			className={`cam-bubble ${active ? "active" : ""} ${flaming ? "flame-active" : ""} ${
+			className={`cam-bubble ${flaming ? "flame-active" : ""} ${
 				speaking ? "speaking" : ""
 			}`}
 			data-participant-id={participant.id}
 			title={participant.displayName}
+			{...overlayHotkeyBoundaryProps}
+			{...overlayInteractionBoundaryProps}
 		>
 			<div className="cam-media" ref={ref} />
 			{flaming ? (

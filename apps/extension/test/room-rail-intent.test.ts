@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
-  isRoomRailEdgeIntent,
-  ROOM_RAIL_OPEN_DELAY_MS,
+	isRoomRailEdgeProximity,
+	isRoomRailEdgeIntent,
+	ROOM_RAIL_OPEN_DELAY_MS,
   selectVoiceRailParticipants,
   shouldRenderRoomRail,
 } from "../src/room-rail-intent";
@@ -41,11 +42,14 @@ describe("room rail intent", () => {
     ).toBe(false);
   });
 
-  it("requires the cursor to press within three pixels of the player edge", () => {
-    expect(isRoomRailEdgeIntent({ clientX: 997, edgeRight: 1000 })).toBe(true);
-    expect(isRoomRailEdgeIntent({ clientX: 996, edgeRight: 1000 })).toBe(false);
-    expect(ROOM_RAIL_OPEN_DELAY_MS).toBeGreaterThanOrEqual(400);
-  });
+	it("previews an approaching cursor before deliberate edge intent opens the rail", () => {
+		expect(isRoomRailEdgeProximity({ clientX: 980, edgeRight: 1000 })).toBe(true);
+		expect(isRoomRailEdgeProximity({ clientX: 979, edgeRight: 1000 })).toBe(false);
+		expect(isRoomRailEdgeIntent({ clientX: 994, edgeRight: 1000 })).toBe(true);
+		expect(isRoomRailEdgeIntent({ clientX: 993, edgeRight: 1000 })).toBe(false);
+		expect(ROOM_RAIL_OPEN_DELAY_MS).toBeGreaterThanOrEqual(200);
+		expect(ROOM_RAIL_OPEN_DELAY_MS).toBeLessThanOrEqual(300);
+	});
 
   it("hands a participant to video controls only while the video bubble is mounted", () => {
     const participants = [

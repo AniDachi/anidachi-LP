@@ -165,6 +165,7 @@ function roomSession(): RoomSessionRecord {
     roomId: "room-a",
     ownerUserId: "user-a",
     participantSessionId: "participant-session-a",
+    cameraEnabled: false,
     voiceMode: "push-to-talk",
   };
 }

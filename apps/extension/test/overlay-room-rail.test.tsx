@@ -55,17 +55,42 @@ describe("RoomRail", () => {
 		await unmount(view.root);
 	});
 
-	it("expands the full Smart list only after deliberate edge dwell", async () => {
+	it("reveals the Smart list at peek width only after deliberate edge dwell", async () => {
 		const view = await renderRail({ visibilityMode: "smart" });
 		const edge = getElement(view.container, ".room-rail-edge");
-		edge.getBoundingClientRect = () => rect(994, 0, 6, 400);
+		edge.getBoundingClientRect = () => rect(986, 0, 14, 400);
 
-		await pointer(edge, "pointerover", { clientX: 999 });
+		await pointer(edge, "pointerover", { clientX: 992 });
+		expect(
+			getElement(view.container, ".room-rail").classList.contains("edge-near"),
+		).toBe(true);
+		await advance(ROOM_RAIL_OPEN_DELAY_MS * 2);
+		expect(getPresentations(view.container)).toEqual(["hidden", "hidden"]);
+
+		await pointer(edge, "pointermove", { clientX: 996 });
 		await advance(ROOM_RAIL_OPEN_DELAY_MS - 1);
 		expect(getPresentations(view.container)).toEqual(["hidden", "hidden"]);
 
 		await advance(1);
-		expect(getPresentations(view.container)).toEqual(["expanded", "expanded"]);
+		expect(getPresentations(view.container)).toEqual(["peek", "peek"]);
+
+		await unmount(view.root);
+	});
+
+	it("positions the Smart edge glow at the approaching cursor height", async () => {
+		const view = await renderRail({ visibilityMode: "smart" });
+		const rail = getElement(view.container, ".room-rail");
+		const edge = getElement(view.container, ".room-rail-edge");
+		edge.getBoundingClientRect = () => rect(986, 40, 14, 320);
+
+		await pointer(edge, "pointerover", { clientX: 992, clientY: 112 });
+
+		expect(rail.classList.contains("edge-near")).toBe(true);
+		expect(edge.style.getPropertyValue("--room-rail-edge-y")).toBe("72px");
+		expect(getPresentations(view.container)).toEqual(["hidden", "hidden"]);
+
+		await pointer(edge, "pointermove", { clientX: 992, clientY: 286 });
+		expect(edge.style.getPropertyValue("--room-rail-edge-y")).toBe("246px");
 
 		await unmount(view.root);
 	});
@@ -99,12 +124,29 @@ describe("RoomRail", () => {
 		const [localSlot, remoteSlot] = getSlots(view.container);
 
 		await pointer(remoteSlot, "pointerover");
-		expect(getPresentations(view.container)).toEqual(["compact", "expanded"]);
+		expect(getPresentations(view.container)).toEqual(["peek", "expanded"]);
 
 		await pointer(remoteSlot, "pointerout", { relatedTarget: document.body });
 		await advance(ROOM_RAIL_CLOSE_DELAY_MS);
 		expect(getPresentations(view.container)).toEqual(["compact", "compact"]);
 		expect(localSlot?.getAttribute("data-presentation")).toBe("compact");
+
+		await unmount(view.root);
+	});
+
+	it("keeps a short pointer grace period then restores pills promptly", async () => {
+		const view = await renderRail({ visibilityMode: "always-visible" });
+		const remoteSlot = getSlots(view.container)[1];
+
+		await pointer(remoteSlot, "pointerover");
+		expect(remoteSlot?.getAttribute("data-presentation")).toBe("expanded");
+
+		await pointer(remoteSlot, "pointerout", { relatedTarget: document.body });
+		await advance(120);
+		expect(remoteSlot?.getAttribute("data-presentation")).toBe("expanded");
+
+		await advance(40);
+		expect(remoteSlot?.getAttribute("data-presentation")).toBe("compact");
 
 		await unmount(view.root);
 	});
@@ -119,7 +161,7 @@ describe("RoomRail", () => {
 		}
 
 		await act(async () => remotePill.focus());
-		expect(getPresentations(view.container)).toEqual(["compact", "expanded"]);
+		expect(getPresentations(view.container)).toEqual(["peek", "expanded"]);
 
 		await act(async () => remotePill.blur());
 		await advance(ROOM_RAIL_CLOSE_DELAY_MS);
@@ -141,6 +183,7 @@ describe("RoomRail", () => {
 		slider.releasePointerCapture = vi.fn();
 
 		await pointer(slider, "pointerdown", { pointerId: 7 });
+		await act(async () => slider.focus());
 		await pointer(remoteSlot, "pointerout", { relatedTarget: document.body });
 		await advance(ROOM_RAIL_CLOSE_DELAY_MS * 2);
 		expect(remoteSlot?.getAttribute("data-presentation")).toBe("expanded");
@@ -149,6 +192,51 @@ describe("RoomRail", () => {
 		expect(remoteSlot?.getAttribute("data-presentation")).toBe("expanded");
 		await advance(ROOM_RAIL_CLOSE_DELAY_MS);
 		expect(remoteSlot?.getAttribute("data-presentation")).toBe("compact");
+
+		await unmount(view.root);
+	});
+
+	it("does not let pointer-originated focus pin a pill after the cursor leaves", async () => {
+		const view = await renderRail({ visibilityMode: "always-visible" });
+		const remoteSlot = getSlots(view.container)[1];
+		const remotePill = remoteSlot?.querySelector<HTMLElement>(
+			".room-rail-pill",
+		);
+		if (!remoteSlot || !remotePill) {
+			throw new Error("Remote participant pill not found.");
+		}
+
+		await pointer(remoteSlot, "pointerover");
+		await pointer(remotePill, "pointerdown");
+		await act(async () => remotePill.focus());
+		await pointer(remoteSlot, "pointerout", { relatedTarget: document.body });
+		await advance(ROOM_RAIL_CLOSE_DELAY_MS);
+
+		expect(remoteSlot.getAttribute("data-presentation")).toBe("compact");
+		expect(document.activeElement).not.toBe(remotePill);
+
+		await unmount(view.root);
+	});
+
+	it("restores keyboard expansion when focus arrives after an outside Tab", async () => {
+		const view = await renderRail({ visibilityMode: "always-visible" });
+		const remoteSlot = getSlots(view.container)[1];
+		const remotePill = remoteSlot?.querySelector<HTMLElement>(
+			".room-rail-pill",
+		);
+		if (!remoteSlot || !remotePill) {
+			throw new Error("Remote participant pill not found.");
+		}
+
+		await pointer(remotePill, "pointerdown");
+		await act(async () => {
+			document.body.dispatchEvent(
+				new KeyboardEvent("keydown", { bubbles: true, key: "Tab" }),
+			);
+			remotePill.focus();
+		});
+
+		expect(getPresentations(view.container)).toEqual(["peek", "expanded"]);
 
 		await unmount(view.root);
 	});
@@ -171,6 +259,91 @@ describe("RoomRail", () => {
 		await unmount(view.root);
 	});
 
+	it("shows the profile avatar and preserves the complete display name", async () => {
+		const displayName = "Alexandria Very Long Participant Name";
+		const view = await renderRail({
+			participants: [
+				participant("local", "Local User", "host"),
+				{
+					...participant("remote", displayName, "viewer"),
+					avatarUrl: "https://cdn.example.com/avatar.png",
+				},
+			],
+			visibilityMode: "always-visible",
+		});
+		const remoteSlot = getSlots(view.container)[1];
+		const avatar = remoteSlot?.querySelector<HTMLImageElement>(
+			"img.room-rail-avatar-image",
+		);
+		const name = remoteSlot?.querySelector<HTMLElement>(".room-rail-name");
+
+		expect(avatar?.src).toBe("https://cdn.example.com/avatar.png");
+		expect(avatar?.alt).toBe("");
+		expect(name?.textContent).toBe(displayName);
+		expect(name?.title).toBe(displayName);
+
+		await unmount(view.root);
+	});
+
+	it("keeps remote identity and volume controls in the same expanded pill", async () => {
+		const view = await renderRail({ visibilityMode: "always-visible" });
+		const remoteSlot = getSlots(view.container)[1];
+		await pointer(remoteSlot, "pointerover");
+		const content = remoteSlot?.querySelector(".room-rail-content");
+
+		expect(remoteSlot?.getAttribute("data-presentation")).toBe("expanded");
+		expect(content?.querySelector(".room-rail-name")?.textContent).toBe(
+			"Remote User",
+		);
+		expect(content?.querySelector(".room-rail-role")?.textContent).toBe(
+			"GUEST",
+		);
+		expect(
+			content?.querySelector(".participant-audio-inline-control"),
+		).toBeInstanceOf(HTMLElement);
+
+		await unmount(view.root);
+	});
+
+	it("uses initials when a participant has no profile avatar", async () => {
+		const view = await renderRail({ visibilityMode: "always-visible" });
+		const remoteAvatar = getSlots(view.container)[1]?.querySelector(
+			".room-rail-avatar-fallback",
+		);
+
+		expect(remoteAvatar?.textContent).toBe("RU");
+
+		await unmount(view.root);
+	});
+
+	it("falls back to initials when the profile avatar cannot load", async () => {
+		const view = await renderRail({
+			participants: [
+				participant("local", "Local User", "host"),
+				{
+					...participant("remote", "Remote User", "viewer"),
+					avatarUrl: "https://cdn.example.com/missing.png",
+				},
+			],
+			visibilityMode: "always-visible",
+		});
+		const remoteSlot = getSlots(view.container)[1];
+		const avatar = remoteSlot?.querySelector<HTMLImageElement>(
+			"img.room-rail-avatar-image",
+		);
+		if (!avatar) {
+			throw new Error("Remote profile avatar not found.");
+		}
+
+		await act(async () => avatar.dispatchEvent(new Event("error")));
+		expect(remoteSlot?.querySelector("img.room-rail-avatar-image")).toBeNull();
+		expect(
+			remoteSlot?.querySelector(".room-rail-avatar-fallback")?.textContent,
+		).toBe("RU");
+
+		await unmount(view.root);
+	});
+
 	it("never exposes listener volume or mute controls for the current participant", async () => {
 		const view = await renderRail({
 			participants: [participant("local", "Local User", "host")],
@@ -182,6 +355,9 @@ describe("RoomRail", () => {
 			view.container.querySelector('button[aria-label^="Mute"]'),
 		).toBeNull();
 		expect(view.container.querySelector(".room-rail-compact-mute")).toBeNull();
+		expect(
+			view.container.querySelector(".room-rail-self-status")?.textContent,
+		).toMatch(/you · host/i);
 
 		await unmount(view.root);
 	});

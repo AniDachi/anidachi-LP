@@ -14,6 +14,7 @@ import {
   type RoomSessionRecord,
   type RoomSessionStorageResponse as RoomSessionResponse,
   removeRoomSessionForTab,
+  updateRoomSessionCameraEnabled,
   updateRoomSessionVoiceMode,
 } from "../src/room-session-storage";
 
@@ -129,6 +130,51 @@ describe("background-owned room session storage", () => {
     await expect(loadRoomSessionForTab(2, dependencies)).resolves.toEqual(record);
     await expect(clearRoomSessionForClosedTab(2, record, dependencies)).resolves.toBe(true);
     await expect(loadRoomSessionForTab(2, dependencies)).resolves.toBeNull();
+  });
+
+  it("persists camera intent for the same room session and resets it for a new room", async () => {
+    const dependencies = backgroundDependencies();
+    const initial = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(12),
+        dependencies,
+      ),
+    );
+    expect(initial.cameraEnabled).toBe(false);
+
+    const enabled = await updateRoomSessionCameraEnabled(initial, true, {
+      sendMessage: (value) =>
+        handleRoomSessionStorageMessage(
+          value,
+          sender(12),
+          dependencies,
+        ),
+    });
+    expect(enabled?.cameraEnabled).toBe(true);
+    await expect(loadRoomSessionForTab(12, dependencies)).resolves.toEqual(enabled);
+
+    const sameRoomCandidate = await prepareRoomSessionForTab(
+      12,
+      { ownerUserId: "user-a", roomId: "room-a" },
+      dependencies,
+    );
+    const sameRoom = await confirmRoomSessionForTab(
+      12,
+      sameRoomCandidate,
+      "room-a",
+      dependencies,
+    );
+    expect(sameRoom?.cameraEnabled).toBe(true);
+
+    const nextRoom = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-b", ownerUserId: "user-a" }),
+        sender(12),
+        dependencies,
+      ),
+    );
+    expect(nextRoom.cameraEnabled).toBe(false);
   });
 
   it("drops an oversized confirmed record instead of restoring corrupt authority", async () => {
@@ -389,6 +435,7 @@ describe("background-owned room session storage", () => {
       roomId: "room-a",
       ownerUserId: "user-a",
       participantSessionId: "session-uuid-1",
+      cameraEnabled: false,
       voiceMode: "push-to-talk",
     });
 
@@ -699,6 +746,7 @@ describe("legacy page room session migration", () => {
       roomId: "room-a",
       ownerUserId: "user-a",
       participantSessionId: "session-uuid-1",
+      cameraEnabled: false,
       voiceMode: "push-to-talk",
     });
     expect(pageSessionStorage.values.size).toBe(0);
@@ -724,6 +772,7 @@ describe("legacy page room session migration", () => {
       roomId: "legacy-room",
       ownerUserId: "user-a",
       participantSessionId: "session-uuid-1",
+      cameraEnabled: false,
       voiceMode: "push-to-talk",
     });
     expect(pageSessionStorage.values.size).toBe(0);

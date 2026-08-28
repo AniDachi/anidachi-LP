@@ -12,21 +12,31 @@ describe("overlay P2P media session state", () => {
     expect(
       getCameraEnabledForRoomConnection({
         currentCameraEnabled: true,
+        persistedCameraEnabled: false,
         sameRoomReconnect: false,
       }),
     ).toBe(false);
     expect(
       getCameraEnabledForRoomConnection({
         currentCameraEnabled: true,
+        persistedCameraEnabled: false,
         sameRoomReconnect: true,
       }),
     ).toBe(true);
     expect(
       getCameraEnabledForRoomConnection({
         currentCameraEnabled: false,
+        persistedCameraEnabled: true,
         sameRoomReconnect: true,
       }),
     ).toBe(false);
+    expect(
+      getCameraEnabledForRoomConnection({
+        currentCameraEnabled: false,
+        persistedCameraEnabled: true,
+        sameRoomReconnect: false,
+      }),
+    ).toBe(true);
   });
 
   it("rejects a persisted room session when its join becomes stale while storage resolves", async () => {

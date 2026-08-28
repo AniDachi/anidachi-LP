@@ -4,7 +4,11 @@ import type {
 } from "./interface-preferences";
 
 export type MainControlRevealPhase = "hidden" | "glow" | "visible";
-export type ParticipantPillPresentation = "hidden" | "compact" | "expanded";
+export type ParticipantPillPresentation =
+	| "hidden"
+	| "compact"
+	| "peek"
+	| "expanded";
 
 export interface MainControlPresentation {
 	edgeGlowVisible: boolean;
@@ -60,12 +64,16 @@ export function resolveParticipantPillPresentation(input: {
 	railExpanded: boolean;
 	speaking: boolean;
 }): ParticipantPillPresentation {
-	if (input.mode === "always-visible") {
-		return input.interacted ? "expanded" : "compact";
+	if (input.interacted) {
+		return "expanded";
 	}
 
 	if (input.railExpanded) {
-		return "expanded";
+		return "peek";
+	}
+
+	if (input.mode === "always-visible") {
+		return "compact";
 	}
 
 	return input.speaking || input.reacting ? "compact" : "hidden";

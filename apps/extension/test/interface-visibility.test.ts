@@ -137,7 +137,7 @@ describe("participant pill visibility", () => {
 		).toBe("compact");
 	});
 
-	it("expands every Smart pill while edge intent has opened the rail", () => {
+	it("reveals quiet Smart pills at peek width until one is interacted with", () => {
 		expect(
 			resolveParticipantPillPresentation({
 				interacted: false,
@@ -145,23 +145,39 @@ describe("participant pill visibility", () => {
 				railExpanded: true,
 				speaking: false,
 			}),
+		).toBe("peek");
+		expect(
+			resolveParticipantPillPresentation({
+				interacted: true,
+				mode: "smart",
+				railExpanded: true,
+				speaking: false,
+			}),
 		).toBe("expanded");
 	});
 
-	it("keeps persistent pills compact and expands only interaction", () => {
+	it("keeps persistent pills compact until interaction reveals dock peers", () => {
 		expect(
 			resolveParticipantPillPresentation({
 				interacted: false,
 				mode: "always-visible",
-				railExpanded: true,
+				railExpanded: false,
 				speaking: true,
 			}),
 		).toBe("compact");
 		expect(
 			resolveParticipantPillPresentation({
+				interacted: false,
+				mode: "always-visible",
+				railExpanded: true,
+				speaking: false,
+			}),
+		).toBe("peek");
+		expect(
+			resolveParticipantPillPresentation({
 				interacted: true,
 				mode: "always-visible",
-				railExpanded: false,
+				railExpanded: true,
 				speaking: false,
 			}),
 		).toBe("expanded");

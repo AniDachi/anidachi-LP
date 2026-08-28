@@ -101,6 +101,7 @@ function confirmedRoomSession(
     roomId,
     ownerUserId: prepared.ownerUserId,
     participantSessionId: prepared.participantSessionId,
+    cameraEnabled: false,
     voiceMode: "push-to-talk" as const,
   };
 }

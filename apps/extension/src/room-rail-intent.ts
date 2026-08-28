@@ -1,6 +1,7 @@
-export const ROOM_RAIL_OPEN_DELAY_MS = 420;
+export const ROOM_RAIL_OPEN_DELAY_MS = 240;
 
-const ROOM_RAIL_EDGE_INTENT_PX = 3;
+const ROOM_RAIL_EDGE_PROXIMITY_PX = 20;
+const ROOM_RAIL_EDGE_INTENT_PX = 6;
 
 interface RoomRailVisibilityInput {
   participantCount: number;
@@ -24,7 +25,18 @@ export function isRoomRailEdgeIntent({
   edgeRight: number;
 }): boolean {
   const distanceToEdge = Math.max(0, edgeRight - clientX);
-  return distanceToEdge <= ROOM_RAIL_EDGE_INTENT_PX;
+	return distanceToEdge <= ROOM_RAIL_EDGE_INTENT_PX;
+}
+
+export function isRoomRailEdgeProximity({
+	clientX,
+	edgeRight,
+}: {
+	clientX: number;
+	edgeRight: number;
+}): boolean {
+	const distanceToEdge = Math.max(0, edgeRight - clientX);
+	return distanceToEdge <= ROOM_RAIL_EDGE_PROXIMITY_PX;
 }
 
 export function selectVoiceRailParticipants<T extends { id: string }>(
