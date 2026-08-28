@@ -710,6 +710,7 @@ describe("privileged overlay wiring", () => {
 
 		await click(button(view.container, "Open Anidachi controls"));
 		await click(button(view.container, "Create room"));
+		await flushMountedWork();
 		await act(async () => {
 			window.dispatchEvent(
 				new KeyboardEvent("keydown", {
