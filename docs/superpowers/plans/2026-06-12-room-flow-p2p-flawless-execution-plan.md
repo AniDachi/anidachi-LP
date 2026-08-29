@@ -332,3 +332,19 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
   1386/1386, room harness 39/39, and real-WebRTC harness 26/26. Remaining:
   build/validate the final staging artifact and loaded two-profile YouTube
   acceptance for host and guest before staging promotion.
+- [~] 2026-08-29: Added the approved account-local last Voice-mode preference
+  without changing room protocol, Worker, API, database, or P2P signaling.
+  Explicit Open mic / Push to talk selection updates a versioned
+  authenticated-user key in extension local storage; each genuinely new
+  confirmed room seeds its tab-scoped active mode from that preference. Room
+  leave/end, tab close, sign-out, browser restart, media-seat revoke, and
+  terminal capture failure still stop current publication. Automatic safety
+  resets do not silently overwrite the user's explicit preference, and all
+  Open mic restore paths remain gated by exact room identity, authoritative
+  media seat, snapshot readiness, and a live P2P controller. Focused storage
+  and overlay wiring tests cover production prepare/confirm, account isolation,
+  worker restart, explicit UI intent, and safety reset behavior. Verified:
+  extension check and 1392/1392 tests, API check and 161/161 plus 27/27 runtime
+  tests, room harness 39/39, real-WebRTC harness 26/26, staging artifact build
+  and validation, and exact synchronization of both approved test folders.
+  Remaining: loaded two-profile host/guest acceptance before any push or merge.

@@ -11,6 +11,7 @@ import {
 	REACTION_SHORTCUTS_STORAGE_KEY,
 } from "../src/reaction-shortcuts";
 import { RoomClient } from "../src/room-client";
+import type { RoomSessionRecord } from "../src/room-session-storage";
 import {
 	createRoomInvite,
 	listInviteTargets,
@@ -54,6 +55,12 @@ const extensionStorage = vi.hoisted(() => {
 });
 
 vi.mock("wxt/utils/storage", () => ({ storage: extensionStorage.storage }));
+
+vi.mock("../src/p2p-ice", async (importOriginal) => ({
+	...(await importOriginal<typeof import("../src/p2p-ice")>()),
+	loadP2PIceServers: vi.fn().mockResolvedValue([]),
+	refreshP2PIceServers: vi.fn().mockResolvedValue([]),
+}));
 
 vi.mock("../src/social-client", async (importOriginal) => ({
 	...(await importOriginal<typeof import("../src/social-client")>()),
@@ -1308,6 +1315,82 @@ describe("privileged overlay wiring", () => {
 		expect(loadingVisibleBeforeLoad).toBe(true);
 		expect(closeButtonBeforeLoad).toBeInstanceOf(HTMLButtonElement);
 		expect((closeButtonBeforeLoad as HTMLButtonElement).disabled).toBe(false);
+	});
+
+	it("marks a user-selected Voice mode as the preference for future rooms", async () => {
+		let storedRoomSession: RoomSessionRecord = confirmedRoomSession();
+		const sendMessage = vi.fn(
+			async (message: {
+				type?: string;
+				command?: string;
+				mode?: "open-mic" | "push-to-talk";
+				rememberPreference?: boolean;
+			}) => {
+				if (message.type === "ANIDACHI_AUTH") {
+					return { ok: true, tokens: sessionFor("user-a") };
+				}
+				if (
+					message.type === "ANIDACHI_ROOM_HTTP" &&
+					message.command === "create-room"
+				) {
+					return {
+						ok: true,
+						room: {
+							roomId: "room-a",
+							roomToken: "room-token-a",
+							shareableLink: "http://localhost:3003/room/room-a",
+							privilegedRoomAuthority: roomAuthority(),
+							roomSession: storedRoomSession,
+						},
+					};
+				}
+				if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE") {
+					const response = roomSessionStorageResponse(message.command);
+					if (response) return response;
+					if (message.command === "set-voice-mode" && message.mode) {
+						storedRoomSession = {
+							...storedRoomSession,
+							revision: storedRoomSession.revision + 1,
+							voiceMode: message.mode,
+						};
+						return { ok: true, record: storedRoomSession };
+					}
+				}
+				throw new Error(
+					`Unexpected runtime message ${message.type}:${message.command}`,
+				);
+			},
+		);
+		installOverlayRuntime(sendMessage);
+		vi.spyOn(RoomClient.prototype, "connect").mockImplementation((options) => {
+			options.onStatus("connected");
+			options.onEvent({
+				type: "ROOM_SNAPSHOT",
+				roomId: "room-a",
+				roomGeneration: 1,
+				sourceGeneration: 1,
+				serverSeq: 1,
+				participants: [{ ...hostParticipant(), mediaSeat: "joined" }],
+			});
+		});
+		const view = await renderOverlay();
+
+		await click(button(view.container, "Open Anidachi controls"));
+		await click(button(view.container, "Create room"));
+		await flushMountedWork();
+		await click(button(view.container, "Voice"));
+		await click(button(view.container, "Open mic"));
+		await flushMountedWork();
+
+		const preferenceWrite = sendMessage.mock.calls.find(
+			([message]) =>
+				(message as { type?: string }).type ===
+					"ANIDACHI_ROOM_SESSION_STORAGE" &&
+				(message as { command?: string }).command === "set-voice-mode" &&
+				(message as { rememberPreference?: boolean }).rememberPreference === true,
+		);
+		expect(preferenceWrite).toBeDefined();
+		await unmount(view.root);
 	});
 
 	it("ignores an older invite-status response after a newer panel refresh", async () => {

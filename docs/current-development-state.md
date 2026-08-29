@@ -762,12 +762,17 @@ The extension currently supports:
 - one microphone publication lifecycle shared by `V`-only Push to talk and
   explicit Open mic. Selecting Open mic starts continuous publication only
   after the exact room session, listener, media seat, snapshot, and P2P
-  controller are ready. The selected mode is stored per sender tab in
-  extension-owned session storage, survives same-room source changes and a tab
-  reload. A pre-snapshot media-seat gap pauses publication without erasing the
-  user's choice; an authoritative seat revoke also normalizes the stored mode
-  back to Push to talk. New room, leave/end, sign-out, account change, terminal
-  microphone failure, and full browser restart remain reset boundaries;
+  controller are ready. The active mode is stored per sender tab in
+  extension-owned session storage and survives same-room source changes and a
+  tab reload. The last mode explicitly selected by the user is also stored as a
+  separate account-scoped local preference and seeds each newly confirmed room;
+  missing, malformed, or another account's data falls back to Push to talk. A
+  pre-snapshot media-seat gap pauses publication without erasing current intent;
+  an authoritative seat revoke or terminal microphone failure stops capture and
+  normalizes only the current room back to Push to talk without overwriting the
+  user's preference. Leave/end, sign-out, account change, tab close, and browser
+  restart stop current capture; a later explicit create/join applies the saved
+  preference only after all room and media-readiness gates pass;
 - local and remote speaking indicators are measured independently from
   transport flow: quiet Open mic remains published without appearing to speak
   or triggering audio-stall recovery, while sender/receiver audio levels drive

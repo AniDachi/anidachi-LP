@@ -1817,7 +1817,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const enqueueRoomVoiceModePersistence = useCallback(
 		(
 			mode: "open-mic" | "push-to-talk",
-			{ requireHydratedSession = true } = {},
+			{
+				rememberPreference = false,
+				requireHydratedSession = true,
+			} = {},
 		) => {
 			voiceModePersistenceQueueRef.current =
 				voiceModePersistenceQueueRef.current
@@ -1836,11 +1839,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							) {
 								return;
 							}
-							if (expected.voiceMode === mode) {
+							if (expected.voiceMode === mode && !rememberPreference) {
 								return;
 							}
 
-							const next = await updateRoomSessionVoiceMode(expected, mode);
+							const next = await updateRoomSessionVoiceMode(expected, mode, {
+								rememberPreference,
+							});
 							if (!next) {
 								hydratedVoiceParticipantSessionRef.current = null;
 								return;
@@ -2710,9 +2715,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			clearTransientPanelNotice();
 			pushToTalkHeldRef.current = false;
 			dispatchVoiceSession({ type: "mode", mode });
+			enqueueRoomVoiceModePersistence(mode, {
+				rememberPreference: true,
+			});
 		},
 		[
 			clearTransientPanelNotice,
+			enqueueRoomVoiceModePersistence,
 			localHasMediaSeat,
 			localMediaSeatState,
 			p2pSessionActive,

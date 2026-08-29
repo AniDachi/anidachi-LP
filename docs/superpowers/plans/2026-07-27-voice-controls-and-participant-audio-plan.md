@@ -12,7 +12,8 @@ two-network, and forced-relay staging acceptance remain.
 
 **Goal:** Keep privacy-safe Open mic and local per-participant audio controls
 while simplifying microphone UX to two room-scoped modes, making Push to talk
-`V`-only, and removing Dictate reactions and its player-ducking runtime.
+`V`-only, remembering the authenticated user's last explicit mode for their
+next room, and removing Dictate reactions and its player-ducking runtime.
 
 **Architecture:** Keep voice transport in the existing extension-side WebRTC
 mesh. The local UI owns voice mode and listener preferences.
@@ -78,11 +79,14 @@ already implemented runtime foundation.
 2. Push to talk is activated only by holding `V`. No panel button, voice pill,
    video bubble, pointer gesture, `Space`, or `Enter` starts Push to talk.
 3. Selecting Open mic is the explicit user action that starts persistent
-   microphone publication. Selecting Push to talk stops Open mic immediately
-   and releases capture.
-4. Room creation and room join start in Push to talk unless an eligible
-   room-scoped Voice state is restored for that exact room, listener, and tab
-   session.
+   microphone publication in the current eligible room and remembers Open mic
+   for that authenticated user's next explicitly created or joined room.
+   Selecting Push to talk stops Open mic immediately, releases capture, and
+   remembers Push to talk instead.
+4. Room creation and room join seed the active room mode from the authenticated
+   user's last explicit Voice choice. Missing, invalid, unreadable, or another
+   account's preference falls back to Push to talk. Same-room restore continues
+   to use the exact room/listener/tab session state.
 5. The panel header has no microphone control. The camera control remains
    independent and unchanged.
 6. Voice pills and video-bubble rings remain activity and remote-listener
@@ -97,23 +101,33 @@ already implemented runtime foundation.
 
 ### Room-Scoped Voice State
 
-1. The selected mode is stored in extension-owned
+1. The active room mode is stored in extension-owned
    `chrome.storage.session`, scoped to the exact room, authenticated listener,
    and sender tab.
-2. Same-room source transitions, provider advertisements, ordinary signaling
+2. The last mode explicitly selected through the Voice control is stored
+   separately in extension-owned `chrome.storage.local`, versioned and scoped
+   to the authenticated user. It is a local input preference, not proof that a
+   microphone is currently captured or published.
+3. Same-room source transitions, provider advertisements, ordinary signaling
    reconnects, P2P-controller replacement, and a tab reload preserve the mode.
-3. Restored Open mic may publish only after the room session has been
-   revalidated, the listener identity matches, the local participant has a
-   media seat, and the replacement P2P controller is ready.
-4. A new room ID, room leave/end, sign-out, account change, media-seat loss,
-   terminal microphone failure, stale room restore, or explicit switch to Push
-   to talk clears Open mic intent and releases capture immediately.
-5. Full browser restart does not restore Open mic. The safe default is Push to
-   talk.
-6. Restore is idempotent. A stale overlay or controller may not acquire or keep
+4. A genuinely new, successfully confirmed room seeds its active mode from the
+   account-local preference. Failed/stale room preparation cannot consume or
+   alter that preference.
+5. Restored or newly seeded Open mic may publish only after the room session
+   has been revalidated, the listener identity matches, the local participant
+   has a media seat, and the replacement P2P controller is ready.
+6. Room leave/end, sign-out, account change, tab close, browser restart,
+   media-seat loss, terminal microphone failure, stale room restore, or an
+   explicit switch to Push to talk clears current Open mic intent and releases
+   capture immediately. Automatic safety resets do not overwrite the last
+   explicit account preference; an explicit Push to talk selection does.
+7. A full browser restart cannot preserve capture. A later explicit create/join
+   reads the account preference again and still waits for every room and media
+   readiness gate before publishing.
+8. Restore is idempotent. A stale overlay or controller may not acquire or keep
    a second microphone track.
-7. The persisted mode is not a global account preference and is not written to
-   the room protocol, API, Worker, database, or durable room state.
+9. Neither active mode nor the account-local preference is written to the room
+   protocol, API, Worker, database, or durable room state.
 
 ### Runtime Contract
 
@@ -176,6 +190,20 @@ already implemented runtime foundation.
 5. Refresh Graphify and active development documentation after code settles.
 6. Update approved unpacked test folders only after automated gates pass.
 
+#### Task 13: Remember the Last Explicit Voice Mode for New Rooms (Automated Complete, Manual Pending)
+
+1. Store one small versioned Voice preference under an authenticated-user key
+   in `chrome.storage.local`, separate from room-session and participant-output
+   state.
+2. Write the preference only for a current exact room session and only after an
+   explicit Voice control selection; automatic media-seat and terminal-failure
+   safety resets update the current session without changing the preference.
+3. Seed both legacy persist and production prepare/confirm room paths from the
+   preference, with Push to talk as the fail-safe fallback.
+4. Cover new-room restore, account isolation, browser-worker restart, UI intent,
+   stale identity fencing, and safety reset behavior with automated tests.
+5. Keep protocol, Worker, API, database, and room snapshot contracts unchanged.
+
 **Automated verification (2026-07-29):**
 
 - repository `check`: 6/6 tasks;
@@ -184,6 +212,17 @@ already implemented runtime foundation.
 - room signaling harness: 39/39;
 - real Chromium WebRTC harness: 26/26;
 - staging extension build and artifact validation: passed.
+
+**Task 13 automated verification (2026-08-29):**
+
+- extension check and 1392/1392 tests: passed;
+- API check, 161/161 unit tests, and 27/27 runtime tests: passed;
+- room signaling harness: 39/39;
+- real Chromium WebRTC harness: 26/26;
+- staging extension build and artifact validation: passed;
+- both approved unpacked test folders match the validated artifact exactly.
+- remaining: loaded two-profile host/guest acceptance for remembered Open mic,
+  remembered Push to talk, account isolation, and safety-stop behavior.
 
 ---
 
@@ -1240,7 +1279,11 @@ test over a different network or relay-backed path before production promotion.
 
 ### Mode and Privacy
 
-- [ ] A newly created or joined room starts in Push to talk.
+- [ ] With no saved preference, a newly created or joined room starts in Push
+  to talk.
+- [ ] Selecting Open mic once makes the next explicitly created or joined room
+  select Open mic only after room, identity, media-seat, and P2P readiness.
+- [ ] Selecting Push to talk becomes the preference for subsequent rooms.
 - [ ] Holding and releasing `V` is the only Push to talk activation path.
 - [ ] Blur, visibility loss, room leave/end, and sign-out cannot leave Push to
   talk publishing.
@@ -1262,9 +1305,12 @@ test over a different network or relay-backed path before production promotion.
   is validated and the local media seat is confirmed.
 - [ ] A stale session, another room ID, another account, another tab owner, or
   another participant session cannot restore Open mic.
-- [ ] Leave, end room, sign-out, media-seat revoke, and terminal microphone
-  failure clear the stored mode.
-- [ ] Full browser restart returns to Push to talk.
+- [ ] Leave, end room, sign-out, tab close, browser restart, media-seat revoke,
+  and terminal microphone failure stop current capture immediately.
+- [ ] Media-seat revoke and terminal microphone failure reset the current room
+  without silently replacing the user's last explicit preference.
+- [ ] Full browser restart cannot preserve capture; after an explicit room
+  create/join, the same account restores only its own saved preference.
 
 ### UI and Indicators
 
@@ -1407,7 +1453,10 @@ test over a different network or relay-backed path before production promotion.
 - Push to talk is activated only by holding `V`.
 - Open mic is explicit, room-scoped, privacy-safe, and stable across same-room
   source transitions and tab reload.
-- A new room or full browser restart returns to Push to talk.
+- A new room applies the authenticated user's last explicit Voice preference;
+  absent or invalid preference falls back to Push to talk.
+- Leaving, closing, ending, signing out, or restarting always stops current
+  capture; a saved preference alone never represents a live microphone.
 - The panel header contains no microphone control.
 - Microphone and camera operate independently without cross-triggering or
   cross-failure cleanup.
