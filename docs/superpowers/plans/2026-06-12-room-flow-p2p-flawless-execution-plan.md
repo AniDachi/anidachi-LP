@@ -319,3 +319,16 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
   39/39, real-WebRTC harness 26/26, staging build, and artifact validation.
   Remaining before promotion to `main`: loaded two-profile acceptance on both
   providers.
+- [~] 2026-08-29: Hardened the YouTube same-room media-intent transition after
+  tester feedback on the 2026-08-28 staging ZIP. An already-mounted reconnect
+  keeps the newest local camera choice, while a full same-tab document remount
+  restores camera intent from the confirmed background session. Open mic now
+  treats the pre-snapshot missing-seat interval as unknown: publication pauses
+  without discarding intent, resumes only after an authoritative joined seat,
+  and resets both runtime and stored intent when the authoritative snapshot
+  confirms the seat was revoked. New-room, leave/end, sign-out, account-change,
+  and terminal-failure reset boundaries remain unchanged. Verified locally:
+  extension check, focused media-state tests 24/24, full extension tests
+  1386/1386, room harness 39/39, and real-WebRTC harness 26/26. Remaining:
+  build/validate the final staging artifact and loaded two-profile YouTube
+  acceptance for host and guest before staging promotion.

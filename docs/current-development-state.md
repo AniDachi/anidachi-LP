@@ -764,9 +764,10 @@ The extension currently supports:
   after the exact room session, listener, media seat, snapshot, and P2P
   controller are ready. The selected mode is stored per sender tab in
   extension-owned session storage, survives same-room source changes and a tab
-  reload, and resets to Push to talk for a new room, leave/end, sign-out,
-  account change, media-seat loss, terminal microphone failure, or full browser
-  restart;
+  reload. A pre-snapshot media-seat gap pauses publication without erasing the
+  user's choice; an authoritative seat revoke also normalizes the stored mode
+  back to Push to talk. New room, leave/end, sign-out, account change, terminal
+  microphone failure, and full browser restart remain reset boundaries;
 - local and remote speaking indicators are measured independently from
   transport flow: quiet Open mic remains published without appearing to speak
   or triggering audio-stall recovery, while sender/receiver audio levels drive

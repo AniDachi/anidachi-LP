@@ -150,6 +150,7 @@ import {
 	getVoiceIndicatorParticipantIds,
 	isVoiceSessionPublishing,
 	reduceVoiceSession,
+	shouldResetPersistedOpenMicAfterMediaSeatLoss,
 } from "./overlay-voice-session";
 import { PanelAccountTitle } from "./panel-account-title";
 import { ParticipantAudioContourControl } from "./participant-audio-controls";
@@ -1757,9 +1758,15 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			type: "context",
 			listenerScope: participantAudioPreferenceScope,
 			localHasMediaSeat,
+			localMediaSeatAuthoritative: !roomId || roomSnapshotReady,
 			roomId,
 		});
-	}, [localHasMediaSeat, participantAudioPreferenceScope, roomId]);
+	}, [
+		localHasMediaSeat,
+		participantAudioPreferenceScope,
+		roomId,
+		roomSnapshotReady,
+	]);
 	useEffect(() => {
 		pushToTalkHeldRef.current = voiceSession.pushToTalkHeld;
 	}, [voiceSession.pushToTalkHeld]);
@@ -1808,7 +1815,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	}, [activeVoiceRoomSession, p2pSessionActive]);
 
 	const enqueueRoomVoiceModePersistence = useCallback(
-		(mode: "open-mic" | "push-to-talk") => {
+		(
+			mode: "open-mic" | "push-to-talk",
+			{ requireHydratedSession = true } = {},
+		) => {
 			voiceModePersistenceQueueRef.current =
 				voiceModePersistenceQueueRef.current
 					.catch(() => undefined)
@@ -1818,8 +1828,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							const activeParticipantId = participantRef.current?.id ?? null;
 							if (
 								!expected ||
-								hydratedVoiceParticipantSessionRef.current !==
-									expected.participantSessionId ||
+								(requireHydratedSession &&
+									hydratedVoiceParticipantSessionRef.current !==
+										expected.participantSessionId) ||
 								roomIdRef.current !== expected.roomId ||
 								activeParticipantId !== expected.ownerUserId
 							) {
@@ -1953,6 +1964,35 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		activeVoiceRoomSession,
 		enqueueRoomVoiceModePersistence,
 		voiceSession.mode,
+	]);
+	useEffect(() => {
+		if (
+			!activeVoiceRoomSession ||
+			!shouldResetPersistedOpenMicAfterMediaSeatLoss({
+				localHasMediaSeat,
+				persistedVoiceMode: activeVoiceRoomSession.voiceMode,
+				roomId,
+				roomSnapshotReady,
+			})
+		) {
+			return;
+		}
+
+		// A confirmed seat revoke is privacy-terminal even when this document
+		// remounted before it could hydrate the persisted Open mic preference.
+		hydratedVoiceParticipantSessionRef.current =
+			activeVoiceRoomSession.participantSessionId;
+		hydratingVoiceModeRef.current = null;
+		dispatchVoiceSession({ type: "mode", mode: "push-to-talk" });
+		enqueueRoomVoiceModePersistence("push-to-talk", {
+			requireHydratedSession: false,
+		});
+	}, [
+		activeVoiceRoomSession,
+		enqueueRoomVoiceModePersistence,
+		localHasMediaSeat,
+		roomId,
+		roomSnapshotReady,
 	]);
 	const messageComposerShieldVisible =
 		messageComposerOpen || messageComposerShieldActive;
