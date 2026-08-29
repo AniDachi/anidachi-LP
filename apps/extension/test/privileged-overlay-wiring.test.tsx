@@ -6,6 +6,7 @@ import { mountOverlay, type OverlayRenderer } from "../entrypoints/content";
 import { AUTH_TOKENS_KEY } from "../src/auth-tokens";
 import * as overlayApp from "../src/overlay-app";
 import type { PrivilegedOverlayContext } from "../src/privileged-overlay-intent";
+import { roomJoinDefaultsStorageKeyForUser } from "../src/room-media-defaults";
 import {
 	REACTIONS_ENABLED_STORAGE_KEY,
 	REACTION_SHORTCUTS_STORAGE_KEY,
@@ -319,6 +320,44 @@ describe("privileged overlay wiring", () => {
 		expect(signOut.querySelector(".account-footer-action-icon")).toBeInstanceOf(
 			SVGElement,
 		);
+
+		await unmount(view.root);
+	});
+
+	it("saves Room defaults locally without changing the current room", async () => {
+		const sendMessage = vi.fn(
+			async (message: { type?: string; command?: string }) => {
+				if (message.type === "ANIDACHI_AUTH") {
+					return { ok: true, tokens: sessionFor("user-a") };
+				}
+				throw new Error(
+					`Unexpected runtime message ${message.type}:${message.command}`,
+				);
+			},
+		);
+		installOverlayRuntime(sendMessage);
+		const view = await renderOverlay();
+
+		await click(button(view.container, "Open Anidachi controls"));
+		await flushMountedWork();
+		await click(button(view.container, "Room"));
+		await click(button(view.container, "Open mic"));
+		await click(button(view.container, "On"));
+		await flushMountedWork();
+
+		const key = `local:${roomJoinDefaultsStorageKeyForUser("user-a")}`;
+		expect(extensionStorage.values.get(key)).toEqual({
+			version: 1,
+			microphoneOnJoin: "open-mic",
+			cameraOnJoin: "on",
+		});
+		expect(
+			sendMessage.mock.calls.some(
+				([message]) =>
+					(message as { command?: string }).command === "set-camera-enabled" ||
+					(message as { command?: string }).command === "set-voice-mode",
+			),
+		).toBe(false);
 
 		await unmount(view.root);
 	});
@@ -803,9 +842,13 @@ describe("privileged overlay wiring", () => {
 		const emojiPopover = view.container.querySelector(
 			".message-composer-emoji-popover",
 		);
-		const emoji = emojiPopover?.querySelector<HTMLButtonElement>("button");
-		if (!(emoji instanceof HTMLButtonElement))
-			throw new Error("Missing composer emoji option");
+		const emoji = [
+			...(emojiPopover?.querySelectorAll<HTMLButtonElement>("button") ?? []),
+		].find((option) => option.textContent === "🎬");
+		expect(emoji).toBeInstanceOf(HTMLButtonElement);
+		if (!(emoji instanceof HTMLButtonElement)) {
+			throw new Error("Missing expanded composer emoji option");
+		}
 		await act(async () => {
 			emoji.dispatchEvent(
 				new PointerEvent("pointerdown", {
@@ -927,6 +970,104 @@ describe("privileged overlay wiring", () => {
 		expect(windowComposerListeners.get("pointerdown")).toHaveLength(0);
 		expect(windowComposerListeners.get("pointermove")).toHaveLength(0);
 		expect(windowComposerListeners.get("mousemove")).toHaveLength(0);
+
+		await unmount(view.root);
+	});
+
+	it("does not turn message digits into quick reactions when the composer lives in a closed overlay", async () => {
+		const sendMessage = vi.fn(
+			async (message: { type?: string; command?: string }) => {
+				if (message.type === "ANIDACHI_AUTH")
+					return { ok: true, tokens: sessionFor("user-a") };
+				if (
+					message.type === "ANIDACHI_ROOM_HTTP" &&
+					message.command === "create-room"
+				) {
+					return {
+						ok: true,
+						room: {
+							roomId: "room-a",
+							roomToken: "room-token-a",
+							shareableLink: "http://localhost:3003/room/room-a",
+							privilegedRoomAuthority: roomAuthority(),
+							roomSession: confirmedRoomSession(),
+						},
+					};
+				}
+				if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE") {
+					const response = roomSessionStorageResponse(message.command);
+					if (response) return response;
+				}
+				throw new Error(
+					`Unexpected runtime message ${message.type}:${message.command}`,
+				);
+			},
+		);
+		installOverlayRuntime(sendMessage);
+		vi.spyOn(RoomClient.prototype, "connect").mockImplementation((options) => {
+			options.onStatus("connected");
+			options.onEvent({
+				type: "ROOM_SNAPSHOT",
+				roomId: "room-a",
+				roomGeneration: 1,
+				sourceGeneration: 1,
+				serverSeq: 1,
+				participants: [hostParticipant()],
+			});
+		});
+		const send = vi.spyOn(RoomClient.prototype, "send").mockReturnValue("sent");
+		const view = await renderOverlayInClosedShadow();
+
+		await click(button(view.container, "Open Anidachi controls"));
+		await click(button(view.container, "Create room"));
+		await flushMountedWork();
+		await act(async () => {
+			window.dispatchEvent(
+				new KeyboardEvent("keydown", {
+					bubbles: true,
+					cancelable: true,
+					code: "Enter",
+					composed: true,
+					key: "Enter",
+				}),
+			);
+			await Promise.resolve();
+		});
+
+		const input = view.container.querySelector<HTMLInputElement>(
+			'input[aria-label="Anidachi message"]',
+		);
+		if (!(input instanceof HTMLInputElement)) {
+			throw new Error("Missing message composer input");
+		}
+		input.focus();
+		send.mockClear();
+		const digit = new KeyboardEvent("keydown", {
+			bubbles: true,
+			cancelable: true,
+			code: "Digit2",
+			composed: true,
+			key: "2",
+		});
+		const closedRoot = input.getRootNode();
+		if (!(closedRoot instanceof ShadowRoot)) {
+			throw new Error("Expected the composer inside a shadow root");
+		}
+		Object.defineProperty(digit, "composedPath", {
+			configurable: true,
+			value: () => [closedRoot.host, document.body, document, window],
+		});
+
+		await act(async () => {
+			input.dispatchEvent(digit);
+			await Promise.resolve();
+		});
+
+		expect(digit.defaultPrevented).toBe(false);
+		expect(send).not.toHaveBeenCalledWith(
+			expect.objectContaining({ type: "REACTION" }),
+		);
+		expect(view.container.contains(input)).toBe(true);
 
 		await unmount(view.root);
 	});
@@ -1387,6 +1528,81 @@ describe("privileged overlay wiring", () => {
 				(message as { type?: string }).type ===
 					"ANIDACHI_ROOM_SESSION_STORAGE" &&
 				(message as { command?: string }).command === "set-voice-mode" &&
+				(message as { rememberPreference?: boolean }).rememberPreference === true,
+		);
+		expect(preferenceWrite).toBeDefined();
+		await unmount(view.root);
+	});
+
+	it("marks a user-selected camera state as the preference for future rooms", async () => {
+		let storedRoomSession: RoomSessionRecord = confirmedRoomSession();
+		const sendMessage = vi.fn(
+			async (message: {
+				type?: string;
+				command?: string;
+				enabled?: boolean;
+				rememberPreference?: boolean;
+			}) => {
+				if (message.type === "ANIDACHI_AUTH") {
+					return { ok: true, tokens: sessionFor("user-a") };
+				}
+				if (
+					message.type === "ANIDACHI_ROOM_HTTP" &&
+					message.command === "create-room"
+				) {
+					return {
+						ok: true,
+						room: {
+							roomId: "room-a",
+							roomToken: "room-token-a",
+							shareableLink: "http://localhost:3003/room/room-a",
+							privilegedRoomAuthority: roomAuthority(),
+							roomSession: storedRoomSession,
+						},
+					};
+				}
+				if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE") {
+					const response = roomSessionStorageResponse(message.command);
+					if (response) return response;
+					if (message.command === "set-camera-enabled") {
+						storedRoomSession = {
+							...storedRoomSession,
+							revision: storedRoomSession.revision + 1,
+							cameraEnabled: message.enabled === true,
+						};
+						return { ok: true, record: storedRoomSession };
+					}
+				}
+				throw new Error(
+					`Unexpected runtime message ${message.type}:${message.command}`,
+				);
+			},
+		);
+		installOverlayRuntime(sendMessage);
+		vi.spyOn(RoomClient.prototype, "connect").mockImplementation((options) => {
+			options.onStatus("connected");
+			options.onEvent({
+				type: "ROOM_SNAPSHOT",
+				roomId: "room-a",
+				roomGeneration: 1,
+				sourceGeneration: 1,
+				serverSeq: 1,
+				participants: [{ ...hostParticipant(), mediaSeat: "joined" }],
+			});
+		});
+		const view = await renderOverlay();
+
+		await click(button(view.container, "Open Anidachi controls"));
+		await click(button(view.container, "Create room"));
+		await flushMountedWork();
+		await click(await waitForButton(view.container, "Turn camera on"));
+		await flushMountedWork();
+
+		const preferenceWrite = sendMessage.mock.calls.find(
+			([message]) =>
+				(message as { type?: string }).type ===
+					"ANIDACHI_ROOM_SESSION_STORAGE" &&
+				(message as { command?: string }).command === "set-camera-enabled" &&
 				(message as { rememberPreference?: boolean }).rememberPreference === true,
 		);
 		expect(preferenceWrite).toBeDefined();

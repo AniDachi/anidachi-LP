@@ -70,6 +70,19 @@ describe("top bubble edge reveal", () => {
     await unmount(view.root);
   });
 
+  it("keeps revealing when YouTube emits a null-related pointerout inside the viewport", async () => {
+    const view = await renderHarness(false);
+
+    await movePointer(995, 5);
+    expect(readPhase(view.container)).toBe("glow");
+
+    await pointerOutInsideViewport(995, 5);
+    await advance(TOP_BUBBLE_REVEAL_DELAY_MS);
+
+    expect(readPhase(view.container)).toBe("visible");
+    await unmount(view.root);
+  });
+
   it("keeps the revealed bubble while the pointer moves from the edge onto it", async () => {
     const view = await renderHarness(false);
 
@@ -128,7 +141,9 @@ describe("top bubble edge reveal", () => {
 
     await movePointer(995, 5);
     expect(readPhase(view.container)).toBe("glow");
-    window.dispatchEvent(new Event("blur"));
+    await act(async () => {
+      window.dispatchEvent(new Event("blur"));
+    });
     await advance(TOP_BUBBLE_REVEAL_DELAY_MS);
 
     expect(readPhase(view.container)).toBe("hidden");
@@ -324,6 +339,18 @@ async function movePointer(clientX: number, clientY: number, pointerType?: strin
 async function leaveWindow(): Promise<void> {
   await act(async () => {
     window.dispatchEvent(new PointerEvent("pointerout", { relatedTarget: null }));
+  });
+}
+
+async function pointerOutInsideViewport(clientX: number, clientY: number): Promise<void> {
+  await act(async () => {
+    window.dispatchEvent(
+      new PointerEvent("pointerout", {
+        clientX,
+        clientY,
+        relatedTarget: null,
+      }),
+    );
   });
 }
 

@@ -687,7 +687,7 @@ ${extensionThemeTokens}
     position: relative;
     width: 100%;
     margin: 0;
-    padding: 0 22px;
+    padding: 0;
     border: 0;
     border-bottom: 0;
     border-radius: 0;
@@ -709,7 +709,7 @@ ${extensionThemeTokens}
   .settings-category-scroll::before {
     content: "";
     position: absolute;
-    left: var(--settings-indicator-left, 22px);
+    left: var(--settings-indicator-left, 0px);
     bottom: -0.5px;
     z-index: 2;
     width: var(--settings-indicator-width, 58px);
@@ -759,6 +759,7 @@ ${extensionThemeTokens}
     position: relative;
     z-index: 1;
     width: auto;
+    flex: 0 0 auto;
     height: 40px;
     min-width: 0;
     padding: 0;
@@ -1765,7 +1766,13 @@ ${extensionThemeTokens}
     box-shadow: 0 18px 46px rgba(0, 0, 0, 0.34);
     display: grid;
     grid-template-columns: repeat(8, 31px);
+    max-height: min(224px, calc(100vh - 96px));
     gap: 5px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-color: rgba(255, 138, 61, 0.3) rgba(255, 255, 255, 0.035);
+    scrollbar-width: thin;
     cursor: default;
     animation: anidachi-composer-in 100ms ease-out both;
   }
@@ -2766,6 +2773,158 @@ ${extensionThemeTokens}
     line-height: 1.35;
   }
 
+  .room-defaults-settings-panel {
+    min-width: 0;
+    gap: 10px;
+  }
+
+  .room-defaults-intro {
+    min-width: 0;
+    padding: 6px 0 2px;
+    display: grid;
+    gap: 3px;
+  }
+
+  .room-defaults-title,
+  .room-defaults-description {
+    margin: 0;
+  }
+
+  .room-defaults-title {
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 11px;
+    font-weight: 760;
+    line-height: 1.2;
+  }
+
+  .room-defaults-description {
+    max-width: 34ch;
+    color: rgba(255, 255, 255, 0.44);
+    font-size: 9.5px;
+    line-height: 1.35;
+  }
+
+  .room-defaults-controls {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    display: grid;
+    gap: 4px;
+  }
+
+  .room-defaults-control {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 40px;
+    padding: 2px 0;
+    display: grid;
+    grid-template-columns: 82px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+  }
+
+  .room-defaults-control-label {
+    min-width: 0;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 11px;
+    font-weight: 730;
+    line-height: 1.2;
+  }
+
+  .room-defaults-segmented {
+    position: relative;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    height: 32px;
+    padding: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.075);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.025);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: center;
+    gap: 2px;
+  }
+
+  .room-defaults-segmented::before {
+    content: "";
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    left: 2px;
+    box-sizing: border-box;
+    width: calc((100% - 8px) / 3);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.075);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.035),
+      0 1px 3px rgba(0, 0, 0, 0.16);
+    pointer-events: none;
+    transform: translateX(0);
+    transition:
+      background 160ms ease,
+      border-color 160ms ease,
+      transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .room-defaults-segmented[data-state="second"]::before {
+    transform: translateX(calc(100% + 2px));
+  }
+
+  .room-defaults-segmented[data-state="third"]::before {
+    transform: translateX(calc(200% + 4px));
+  }
+
+  .room-defaults-segmented button {
+    position: relative;
+    z-index: 1;
+    min-width: 0;
+    height: 26px;
+    padding: 0 5px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.44);
+    font-size: 9.5px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    transition: color 150ms ease;
+  }
+
+  .room-defaults-segmented button:hover {
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .room-defaults-segmented button.selected {
+    background: transparent;
+    color: rgba(255, 247, 241, 0.92);
+  }
+
+  .room-defaults-segmented button:disabled {
+    cursor: default;
+    opacity: 0.48;
+  }
+
+  .room-defaults-segmented button:focus-visible {
+    outline: 2px solid rgba(255, 184, 122, 0.66);
+    outline-offset: -2px;
+  }
+
+  .room-defaults-feedback {
+    margin: 0;
+    font-size: 10px;
+    line-height: 1.35;
+  }
+
+  .room-defaults-feedback {
+    color: rgba(248, 180, 180, 0.9);
+  }
+
   .interface-settings-panel {
     gap: 10px;
   }
@@ -3432,18 +3591,6 @@ ${extensionThemeTokens}
       top 220ms ease,
       opacity 180ms ease,
       transform 180ms ease;
-  }
-
-  .cam-stack-interaction-corridor {
-    position: absolute;
-    top: var(--cam-interaction-corridor-top, 0);
-    left: var(--cam-interaction-corridor-left, 0);
-    width: var(--cam-interaction-corridor-width, 0);
-    height: var(--cam-interaction-corridor-height, 0);
-    z-index: 9;
-    background: transparent;
-    pointer-events: auto;
-    cursor: default;
   }
 
   .anidachi-overlay.player-controls-visible .cam-stack {
@@ -5012,6 +5159,8 @@ ${extensionThemeTokens}
     .interface-settings-participant-pill,
     .interface-settings-demo-cursor,
     .interface-settings-segmented button,
+    .room-defaults-segmented::before,
+    .room-defaults-segmented button,
     .room-rail-edge::before,
     .room-rail-edge::after,
     .room-rail-slot,

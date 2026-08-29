@@ -5,12 +5,13 @@ import {
 } from "../src/settings-panel-navigation";
 
 describe("settings panel navigation", () => {
-  it("keeps the user-facing settings menu focused on four product sections", () => {
+  it("keeps the user-facing settings menu focused on five product sections", () => {
     expect(SETTINGS_PANEL_CATEGORIES.map((category) => category.id)).toEqual([
       "reactions",
       "layout",
       "interface",
       "voice",
+      "room",
     ]);
   });
 

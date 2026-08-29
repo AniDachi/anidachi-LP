@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   getHotkeyAction,
   isPushToTalkReleaseEvent,
+  shouldCaptureReactionShortcutEvent,
   shouldStopVoiceTalkOnWindowBlur,
 } from "../src/hotkeys";
 import { DEFAULT_REACTION_SHORTCUTS } from "../src/reaction-shortcuts";
@@ -12,6 +13,7 @@ const activeState = {
   reactionsEnabled: true,
   reactionShortcuts: DEFAULT_REACTION_SHORTCUTS,
   experimentalSuperReactionsEnabled: true,
+  messageComposerOpen: false,
   voiceMode: "push-to-talk" as const,
 };
 
@@ -92,6 +94,24 @@ describe("Anidachi hotkeys", () => {
         reactionsEnabled: false,
       }),
     ).toBeNull();
+  });
+
+  it("leaves digit keys to an open message composer when a closed shadow root hides the input target", () => {
+    const retargetedDigit = keyEvent({
+      code: "Digit2",
+      key: "2",
+      target: document.createElement("anidachi-overlay-root"),
+      type: "keydown",
+    });
+    const composerState = {
+      ...activeState,
+      messageComposerOpen: true,
+    };
+
+    expect(getHotkeyAction(retargetedDigit, composerState)).toBeNull();
+    expect(
+      shouldCaptureReactionShortcutEvent(retargetedDigit, composerState),
+    ).toBe(false);
   });
 
   it("starts a charged fire reaction on 4 keydown", () => {

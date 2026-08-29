@@ -15,6 +15,7 @@ export type HotkeyAction =
 export interface HotkeyState {
   roomActive: boolean;
   panelOpen: boolean;
+  messageComposerOpen: boolean;
   reactionsEnabled: boolean;
   reactionShortcuts?: readonly string[];
   experimentalSuperReactionsEnabled?: boolean;
@@ -38,7 +39,12 @@ export type HotkeyEventLike = Pick<
 };
 
 export function getHotkeyAction(event: HotkeyEventLike, state: HotkeyState): HotkeyAction | null {
-  if (!state.roomActive || hasBlockedModifier(event) || isEditableEventTarget(event)) {
+  if (
+    !state.roomActive ||
+    state.messageComposerOpen ||
+    hasBlockedModifier(event) ||
+    isEditableEventTarget(event)
+  ) {
     return null;
   }
 
@@ -86,6 +92,7 @@ export function shouldCaptureReactionShortcutEvent(
 ): boolean {
   return (
     state.roomActive &&
+    !state.messageComposerOpen &&
     state.reactionsEnabled &&
     !hasBlockedModifier(event) &&
     !isEditableEventTarget(event) &&

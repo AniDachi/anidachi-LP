@@ -347,4 +347,31 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
   extension check and 1392/1392 tests, API check and 161/161 plus 27/27 runtime
   tests, room harness 39/39, real-WebRTC harness 26/26, staging artifact build
   and validation, and exact synchronization of both approved test folders.
-  Remaining: loaded two-profile host/guest acceptance before any push or merge.
+  Remaining: loaded two-profile host/guest acceptance of the merged staging
+  artifact before promotion to `main`.
+- [~] 2026-08-29: Added the account-local `Room` defaults surface without
+  changing the room protocol, Worker, API, database, permissions, or provider
+  adapters. Microphone on join now supports Last used, Push to talk, and Open
+  mic; camera on join supports Last used, Off, and On, with privacy-safe defaults
+  of Last used -> Push to talk and camera Off. The setting affects only a later
+  newly confirmed room. Exact same-room state still wins, device publication
+  remains gated by authoritative media-seat and P2P readiness, and automatic
+  safety cleanup does not overwrite last explicit camera or microphone choices.
+  Verified locally: focused preference, storage, component, wiring, and session
+  tests 116/116; extension check and 1410/1410 tests; repository check/test 6/6
+  tasks each; API runtime tests 27/27; room harness 39/39; real-WebRTC harness
+  26/26; staging artifact build/validation; and exact synchronization of both
+  approved unpacked test folders. Remaining: loaded two-profile acceptance of
+  the merged staging artifact before promotion to `main`.
+- [~] 2026-08-29: Finalized the staging checkpoint with provider-safe overlay
+  interaction fixes. The camera travel corridor is now pointer-transparent and
+  temporarily pins adaptive safe insets only while the user approaches or
+  interacts with a visible camera bubble, so YouTube controls remain clickable.
+  Closed-Shadow-DOM message composition suspends quick-reaction hotkeys so
+  digits stay available for chat, and the composer plus shortcut editor share
+  one expanded 158-item unique Unicode emoji catalog. The main auto-hide
+  launcher also ignores provider-generated in-viewport `pointerout` noise.
+  Automated verification: repository check/test 6/6 tasks, extension tests
+  1422/1422, API runtime tests 27/27, room harness 39/39, and real-WebRTC
+  harness 26/26. Remaining: final staging artifact build/validation, CI, and
+  loaded two-profile acceptance before promotion to `main`.

@@ -12,8 +12,9 @@ two-network, and forced-relay staging acceptance remain.
 
 **Goal:** Keep privacy-safe Open mic and local per-participant audio controls
 while simplifying microphone UX to two room-scoped modes, making Push to talk
-`V`-only, remembering the authenticated user's last explicit mode for their
-next room, and removing Dictate reactions and its player-ducking runtime.
+`V`-only, remembering the authenticated user's last explicit mode, letting the
+user choose how a later room starts, and removing Dictate reactions and its
+player-ducking runtime.
 
 **Architecture:** Keep voice transport in the existing extension-side WebRTC
 mesh. The local UI owns voice mode and listener preferences.
@@ -84,9 +85,11 @@ already implemented runtime foundation.
    Selecting Push to talk stops Open mic immediately, releases capture, and
    remembers Push to talk instead.
 4. Room creation and room join seed the active room mode from the authenticated
-   user's last explicit Voice choice. Missing, invalid, unreadable, or another
-   account's preference falls back to Push to talk. Same-room restore continues
-   to use the exact room/listener/tab session state.
+   user's `Room` default: Last used, Push to talk, or Open mic. Last used resolves
+   from the separate last explicit Voice choice. Missing, invalid, unreadable,
+   or another account's preference falls back to Last used and then Push to
+   talk. Same-room restore continues to use the exact room/listener/tab session
+   state.
 5. The panel header has no microphone control. The camera control remains
    independent and unchanged.
 6. Voice pills and video-bubble rings remain activity and remote-listener
@@ -111,8 +114,8 @@ already implemented runtime foundation.
 3. Same-room source transitions, provider advertisements, ordinary signaling
    reconnects, P2P-controller replacement, and a tab reload preserve the mode.
 4. A genuinely new, successfully confirmed room seeds its active mode from the
-   account-local preference. Failed/stale room preparation cannot consume or
-   alter that preference.
+   account-local `Room` default and, when selected, the separate last-used
+   preference. Failed/stale room preparation cannot consume or alter either.
 5. Restored or newly seeded Open mic may publish only after the room session
    has been revalidated, the listener identity matches, the local participant
    has a media seat, and the replacement P2P controller is ready.
@@ -221,8 +224,45 @@ already implemented runtime foundation.
 - real Chromium WebRTC harness: 26/26;
 - staging extension build and artifact validation: passed;
 - both approved unpacked test folders match the validated artifact exactly.
-- remaining: loaded two-profile host/guest acceptance for remembered Open mic,
-  remembered Push to talk, account isolation, and safety-stop behavior.
+- remaining: loaded two-profile host/guest acceptance of the merged staging
+  artifact for remembered Open mic, remembered Push to talk, account isolation,
+  and safety-stop behavior before promotion to `main`.
+
+#### Task 14: Add Account-Scoped Room Media Defaults (Automated Complete, Manual Pending)
+
+1. Add one compact `Room` settings tab with two immediately persisted controls:
+   Microphone on join (`Last used` / `Push to talk` / `Open mic`) and Camera on
+   join (`Last used` / `Off` / `On`). The controls affect only the next newly
+   confirmed room and never mutate the active room.
+2. Keep the versioned startup strategy and last explicit camera choice in
+   separate authenticated-user local-storage records. Continue using the
+   existing separate last explicit Voice record; do not duplicate it.
+3. Resolve both production prepare/confirm and legacy persist paths from those
+   local records. Preserve exact same-room tab state ahead of account defaults.
+4. Persist last-used camera state only after an explicit camera switch. Media
+   seat loss, terminal errors, leave/end, tab close, sign-out, and other safety
+   cleanup stop or normalize the active session without silently rewriting the
+   user's last explicit choice.
+5. Keep camera and restored Open mic gated by the existing exact room/account,
+   authoritative media-seat, snapshot, and P2P readiness checks. Add no server,
+   Worker, protocol, database, permission, or provider-adapter state.
+6. Verify codec/default parsing, account isolation, UI keyboard behavior,
+   current-room non-mutation, same-room precedence, explicit camera memory,
+   safety reset behavior, and full room/media regression gates before handing
+   the staging build to two test profiles.
+
+**Task 14 automated verification (2026-08-29):**
+
+- focused Room-default, storage, component, wiring, and session tests: 116/116;
+- extension check and 1410/1410 tests: passed;
+- repository `check` and `test`: 6/6 tasks each;
+- API runtime tests: 27/27;
+- room signaling harness: 39/39;
+- real Chromium WebRTC harness: 26/26;
+- staging extension build and artifact validation: passed;
+- both approved unpacked test folders match the validated artifact exactly;
+- remaining: loaded two-profile host/guest acceptance of the merged staging
+  artifact before promotion to `main`.
 
 ---
 
@@ -1453,8 +1493,9 @@ test over a different network or relay-backed path before production promotion.
 - Push to talk is activated only by holding `V`.
 - Open mic is explicit, room-scoped, privacy-safe, and stable across same-room
   source transitions and tab reload.
-- A new room applies the authenticated user's last explicit Voice preference;
-  absent or invalid preference falls back to Push to talk.
+- A new room applies the authenticated user's account-scoped `Room` default;
+  Last used resolves from the separate last explicit Voice/camera choice, while
+  absent or invalid preferences fall back to Push to talk and camera off.
 - Leaving, closing, ending, signing out, or restarting always stops current
   capture; a saved preference alone never represents a live microphone.
 - The panel header contains no microphone control.

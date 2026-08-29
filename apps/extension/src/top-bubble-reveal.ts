@@ -218,7 +218,10 @@ export function useTopBubbleReveal({
       evaluatePointer(event.clientX, event.clientY);
     };
     const handlePointerOut = (event: PointerEvent) => {
-      if (event.relatedTarget === null) {
+      if (
+        event.relatedTarget === null &&
+        !pointInsideViewport(event.clientX, event.clientY)
+      ) {
         handlePointerExit();
       }
     };
@@ -324,5 +327,14 @@ function clearTimer(timerRef: { current: number | null }): void {
 function pointInsideRect(clientX: number, clientY: number, rect: DOMRect): boolean {
   return (
     clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom
+  );
+}
+
+function pointInsideViewport(clientX: number, clientY: number): boolean {
+  return (
+    clientX > 0 &&
+    clientX < window.innerWidth &&
+    clientY > 0 &&
+    clientY < window.innerHeight
   );
 }

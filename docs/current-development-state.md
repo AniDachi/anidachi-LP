@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-08-24.
+Last updated: 2026-08-29.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -738,14 +738,29 @@ The extension currently supports:
 - sign-in through the web app with Google/Discord;
 - room creation and invite copying through the website/API/Worker flow;
 - WebSocket room join and playback sync;
-- reactions and live chat input. The quick-reactions enabled state and shortcut
-  assignments are local preferences and survive supported-site navigation;
-- Ghost Cam camera bubbles;
-- local camera publishing is opt-in for every newly created or joined room
-  session. A same-room network reconnect and same-tab YouTube/Crunchyroll page
-  navigation preserve the user's explicit camera choice, while leaving or
-  ending the room, signing out, switching account, or joining a different room
-  resets camera intent to off;
+- reactions and live chat input backed by one dependency-free Unicode emoji
+  catalog. The composer picker is scrollable, and while the composer is open
+  global quick-reaction shortcuts are suspended so digits remain normal message
+  input even inside the extension's closed Shadow DOM. The quick-reactions
+  enabled state and shortcut assignments are local preferences and survive
+  supported-site navigation;
+- Ghost Cam camera bubbles. They continue to adapt to provider player controls,
+  but pointer approach temporarily pins the active safe insets so a bubble does
+  not move away during volume interaction. The travel corridor is observed
+  passively rather than rendered as a pointer-catching layer, leaving native
+  player controls outside the visible bubbles clickable;
+- an account-scoped `Room` settings section controls only the next newly
+  confirmed room. Microphone startup can use the last explicit mode, Push to
+  talk, or Open mic; camera startup can use the last explicit choice, Off, or
+  On. The defaults apply immediately to later create/join operations without an
+  Apply button, but never mutate an already active room. Camera remains Off by
+  default. Same-room network reconnect and same-tab YouTube/Crunchyroll page
+  navigation preserve the active room's explicit media intent. Leaving or
+  ending the room, signing out, switching account, tab close, and browser
+  restart still stop current capture. Restored Open mic or camera-on intent can
+  start publication only after exact room/account validation, an authoritative
+  media seat, and P2P readiness. Automatic safety resets do not overwrite the
+  account's last explicit camera or microphone choice;
 - one extension-local Overlay Layout Engine V2 now drives both the live camera/chat
   geometry and the Layout editor. It stores only grid intent under
   `local:overlayLayoutPreferencesV2`, previews one camera leader plus three
@@ -765,8 +780,9 @@ The extension currently supports:
   controller are ready. The active mode is stored per sender tab in
   extension-owned session storage and survives same-room source changes and a
   tab reload. The last mode explicitly selected by the user is also stored as a
-  separate account-scoped local preference and seeds each newly confirmed room;
-  missing, malformed, or another account's data falls back to Push to talk. A
+  separate account-scoped local preference. A new room resolves the `Room`
+  startup setting against that last explicit choice; missing, malformed, or
+  another account's data falls back to Last used and then Push to talk. A
   pre-snapshot media-seat gap pauses publication without erasing current intent;
   an authoritative seat revoke or terminal microphone failure stops capture and
   normalizes only the current room back to Push to talk without overwriting the

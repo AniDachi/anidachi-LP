@@ -17,6 +17,7 @@ import {
   updateRoomSessionCameraEnabled,
   updateRoomSessionVoiceMode,
 } from "../src/room-session-storage";
+import { persistRoomJoinDefaults } from "../src/room-media-defaults";
 
 interface StorageAreaLike {
   get(key: string): Promise<Record<string, unknown>>;
@@ -175,6 +176,107 @@ describe("background-owned room session storage", () => {
       ),
     );
     expect(nextRoom.cameraEnabled).toBe(false);
+  });
+
+  it("starts a new room from explicit microphone and camera join defaults", async () => {
+    const dependencies = backgroundDependencies();
+    await persistRoomJoinDefaults(dependencies.localStorage, "user-a", {
+      version: 1,
+      microphoneOnJoin: "open-mic",
+      cameraOnJoin: "on",
+    });
+
+    const nextRoom = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-defaults", ownerUserId: "user-a" }),
+        sender(13),
+        dependencies,
+      ),
+    );
+
+    expect(nextRoom).toMatchObject({
+      cameraEnabled: true,
+      voiceMode: "open-mic",
+    });
+  });
+
+  it("uses the last explicit camera choice only when Camera on join is Last used", async () => {
+    const dependencies = backgroundDependencies();
+    await persistRoomJoinDefaults(dependencies.localStorage, "user-a", {
+      version: 1,
+      microphoneOnJoin: "last-used",
+      cameraOnJoin: "last-used",
+    });
+    const first = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(14),
+        dependencies,
+      ),
+    );
+    await updateRoomSessionCameraEnabled(first, true, {
+      rememberPreference: true,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(14), dependencies),
+    });
+
+    const nextRoom = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-b", ownerUserId: "user-a" }),
+        sender(14),
+        dependencies,
+      ),
+    );
+    expect(nextRoom.cameraEnabled).toBe(true);
+
+    await persistRoomJoinDefaults(dependencies.localStorage, "user-a", {
+      version: 1,
+      microphoneOnJoin: "last-used",
+      cameraOnJoin: "off",
+    });
+    const forcedOff = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-c", ownerUserId: "user-a" }),
+        sender(14),
+        dependencies,
+      ),
+    );
+    expect(forcedOff.cameraEnabled).toBe(false);
+  });
+
+  it("does not replace the last explicit camera choice during an automatic safety reset", async () => {
+    const dependencies = backgroundDependencies();
+    await persistRoomJoinDefaults(dependencies.localStorage, "user-a", {
+      version: 1,
+      microphoneOnJoin: "last-used",
+      cameraOnJoin: "last-used",
+    });
+    const first = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(15),
+        dependencies,
+      ),
+    );
+    const explicitlyEnabled = await updateRoomSessionCameraEnabled(first, true, {
+      rememberPreference: true,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(15), dependencies),
+    });
+    if (!explicitlyEnabled) throw new Error("Expected enabled camera session");
+    await updateRoomSessionCameraEnabled(explicitlyEnabled, false, {
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(15), dependencies),
+    });
+
+    const nextRoom = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-b", ownerUserId: "user-a" }),
+        sender(15),
+        dependencies,
+      ),
+    );
+    expect(nextRoom.cameraEnabled).toBe(true);
   });
 
   it("drops an oversized confirmed record instead of restoring corrupt authority", async () => {
