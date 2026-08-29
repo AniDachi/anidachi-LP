@@ -36,6 +36,34 @@ export interface RoomSessionRecord {
   voiceMode: VoiceMode;
 }
 
+export type RoomSessionIdentity = Pick<
+  RoomSessionRecord,
+  "ownerUserId" | "participantSessionId" | "roomId" | "version"
+>;
+
+export function captureRoomSessionIdentity(
+  record: RoomSessionRecord | null,
+): RoomSessionIdentity | null {
+  return record
+    ? {
+        ownerUserId: record.ownerUserId,
+        participantSessionId: record.participantSessionId,
+        roomId: record.roomId,
+        version: record.version,
+      }
+    : null;
+}
+
+export function roomSessionIdentityMatches(
+  record: RoomSessionRecord,
+  identity: RoomSessionIdentity,
+): boolean {
+  return record.version === identity.version &&
+    record.roomId === identity.roomId &&
+    record.ownerUserId === identity.ownerUserId &&
+    record.participantSessionId === identity.participantSessionId;
+}
+
 export interface PreparedRoomSession {
   version: typeof ROOM_SESSION_RECORD_VERSION;
   preparationId: string;
@@ -1059,16 +1087,6 @@ function roomSessionRecordsMatch(
     current.cameraEnabled === expected.cameraEnabled &&
     current.voiceMode === expected.voiceMode
   );
-}
-
-function roomSessionIdentityMatches(
-  current: RoomSessionRecord,
-  expected: RoomSessionRecord,
-): boolean {
-  return current.version === expected.version &&
-    current.roomId === expected.roomId &&
-    current.ownerUserId === expected.ownerUserId &&
-    current.participantSessionId === expected.participantSessionId;
 }
 
 function isVoiceMode(value: unknown): value is VoiceMode {

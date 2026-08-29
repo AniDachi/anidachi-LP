@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  captureRoomSessionIdentity,
   clearRoomSessionForClosedTab,
   confirmRoomSessionForTab,
   discardPreparedRoomSessionIfMatch,
@@ -7,6 +8,7 @@ import {
   handleRoomSessionStorageMessage,
   loadRoomSessionForTab,
   prepareRoomSessionForTab,
+  roomSessionIdentityMatches,
   ROOM_SESSION_INSTALL_ID_STORAGE_KEY as INSTALL_ID_STORAGE_KEY,
   migrateLegacyRoomSession,
   ROOM_SESSION_STORAGE_MESSAGE_TYPE as ROOM_SESSION_MESSAGE_TYPE,
@@ -118,6 +120,37 @@ function expectRecord(response: RoomSessionResponse): RoomSessionRecord {
 }
 
 describe("background-owned room session storage", () => {
+  it("matches the exact room, account, and participant session identity", () => {
+    const record: RoomSessionRecord = {
+      version: 1,
+      revision: 1,
+      roomId: "room-a",
+      ownerUserId: "user-a",
+      participantSessionId: "participant-session-a",
+      cameraEnabled: false,
+      voiceMode: "push-to-talk",
+    };
+    const identity = captureRoomSessionIdentity(record);
+    expect(identity).not.toBeNull();
+    if (!identity) {
+      throw new Error("Expected a captured room session identity");
+    }
+
+    expect(roomSessionIdentityMatches(record, identity)).toBe(true);
+    expect(
+      roomSessionIdentityMatches(
+        { ...record, participantSessionId: "participant-session-b" },
+        identity,
+      ),
+    ).toBe(false);
+    expect(
+      roomSessionIdentityMatches({ ...record, ownerUserId: "user-b" }, identity),
+    ).toBe(false);
+    expect(
+      roomSessionIdentityMatches({ ...record, roomId: "room-b" }, identity),
+    ).toBe(false);
+  });
+
   it("loads the trusted confirmed record before closed-tab cleanup", async () => {
     const dependencies = backgroundDependencies();
     const record = expectRecord(

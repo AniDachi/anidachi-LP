@@ -974,7 +974,7 @@ describe("privileged overlay wiring", () => {
 		await unmount(view.root);
 	});
 
-	it("does not turn message digits into quick reactions when the composer lives in a closed overlay", async () => {
+	it("releases a held fire reaction and leaves message digits to a closed-shadow composer", async () => {
 		const sendMessage = vi.fn(
 			async (message: { type?: string; command?: string }) => {
 				if (message.type === "ANIDACHI_AUTH")
@@ -1021,6 +1021,19 @@ describe("privileged overlay wiring", () => {
 		await click(button(view.container, "Open Anidachi controls"));
 		await click(button(view.container, "Create room"));
 		await flushMountedWork();
+		send.mockClear();
+		await act(async () => {
+			window.dispatchEvent(
+				new KeyboardEvent("keydown", {
+					bubbles: true,
+					cancelable: true,
+					code: "Digit4",
+					composed: true,
+					key: "4",
+				}),
+			);
+			await Promise.resolve();
+		});
 		await act(async () => {
 			window.dispatchEvent(
 				new KeyboardEvent("keydown", {
@@ -1057,6 +1070,31 @@ describe("privileged overlay wiring", () => {
 			configurable: true,
 			value: () => [closedRoot.host, document.body, document, window],
 		});
+		const fireRelease = new KeyboardEvent("keyup", {
+			bubbles: true,
+			cancelable: true,
+			code: "Digit4",
+			composed: true,
+			key: "4",
+		});
+		Object.defineProperty(fireRelease, "composedPath", {
+			configurable: true,
+			value: () => [closedRoot.host, document.body, document, window],
+		});
+
+		await act(async () => {
+			input.dispatchEvent(fireRelease);
+			await Promise.resolve();
+		});
+
+		expect(fireRelease.defaultPrevented).toBe(true);
+		expect(send).toHaveBeenCalledWith(
+			expect.objectContaining({
+				type: "REACTION",
+				reaction: expect.objectContaining({ emoji: "🔥" }),
+			}),
+		);
+		send.mockClear();
 
 		await act(async () => {
 			input.dispatchEvent(digit);
@@ -1606,6 +1644,312 @@ describe("privileged overlay wiring", () => {
 				(message as { rememberPreference?: boolean }).rememberPreference === true,
 		);
 		expect(preferenceWrite).toBeDefined();
+		await unmount(view.root);
+	});
+
+	it("does not replay a queued camera choice into a later room session", async () => {
+		const firstCameraWrite = deferred<{
+			ok: true;
+			record: RoomSessionRecord;
+		}>();
+		const roomA = confirmedRoomSession();
+		const roomB: RoomSessionRecord = {
+			...confirmedRoomSession(),
+			roomId: "room-b",
+			participantSessionId: "participant-session-b",
+			cameraEnabled: true,
+			voiceMode: "open-mic",
+		};
+		let roomCreateCount = 0;
+		let roomConnectCount = 0;
+		let roomPrepareCount = 0;
+		const cameraWrites: Array<{
+			enabled: boolean;
+			record: RoomSessionRecord;
+		}> = [];
+		const sendMessage = vi.fn(
+			async (message: {
+				type?: string;
+				command?: string;
+				enabled?: boolean;
+				record?: RoomSessionRecord;
+			}) => {
+				if (message.type === "ANIDACHI_AUTH") {
+					return { ok: true, tokens: sessionFor("user-a") };
+				}
+				if (
+					message.type === "ANIDACHI_ROOM_HTTP" &&
+					message.command === "create-room"
+				) {
+					const session = roomCreateCount++ === 0 ? roomA : roomB;
+					return {
+						ok: true,
+						room: {
+							roomId: session.roomId,
+							roomToken: `room-token-${session.roomId}`,
+							shareableLink: `http://localhost:3003/room/${session.roomId}`,
+							privilegedRoomAuthority: {
+								...roomAuthority(),
+								roomId: session.roomId,
+							},
+							roomSession: session,
+						},
+					};
+				}
+				if (message.type === "ANIDACHI_PRIVILEGED_OVERLAY_INTENT") {
+					return { ok: true };
+				}
+				if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE") {
+					if (message.command === "load") {
+						return { ok: true, record: null };
+					}
+					if (message.command === "prepare") {
+						roomPrepareCount += 1;
+						return {
+							ok: true,
+							record: null,
+							prepared: {
+								...preparedRoomSession(),
+								preparationId: `preparation-${roomPrepareCount}`,
+								participantSessionId: `prepared-participant-${roomPrepareCount}`,
+							},
+						};
+					}
+					if (
+						message.command === "clear" ||
+						message.command === "clear-if-match" ||
+						message.command === "discard-prepared"
+					) {
+						return { ok: true, record: null, prepared: null };
+					}
+					if (
+						message.command === "set-camera-enabled" &&
+						typeof message.enabled === "boolean" &&
+						message.record
+					) {
+						cameraWrites.push({
+							enabled: message.enabled,
+							record: message.record,
+						});
+						if (cameraWrites.length === 1) {
+							return firstCameraWrite.promise;
+						}
+						return {
+							ok: true,
+							record: {
+								...message.record,
+								revision: message.record.revision + 1,
+								cameraEnabled: message.enabled,
+							},
+						};
+					}
+				}
+				throw new Error(
+					`Unexpected runtime message ${message.type}:${message.command}`,
+				);
+			},
+		);
+		installOverlayRuntime(sendMessage);
+		vi.spyOn(RoomClient.prototype, "connect").mockImplementation((options) => {
+			const session = roomConnectCount++ === 0 ? roomA : roomB;
+			options.onStatus("connected");
+			options.onEvent({
+				type: "ROOM_SNAPSHOT",
+				roomId: session.roomId,
+				roomGeneration: roomConnectCount,
+				sourceGeneration: 1,
+				serverSeq: roomConnectCount,
+				participants: [
+					{
+						...hostParticipant(),
+						cameraEnabled: session.cameraEnabled,
+						mediaSeat: "joined",
+					},
+				],
+			});
+		});
+		const view = await renderOverlay();
+
+		await click(button(view.container, "Open Anidachi controls"));
+		await click(button(view.container, "Create room"));
+		await click(await waitForButton(view.container, "Turn camera on"));
+		await click(await waitForButton(view.container, "Turn camera off"));
+		await trustedClick(primaryRoomAction(view.container));
+		await flushMountedWork();
+		await click(primaryRoomAction(view.container));
+		await flushMountedWork();
+		expect(roomCreateCount).toBe(2);
+		expect(roomConnectCount).toBe(2);
+		expect(cameraWrites).toHaveLength(1);
+
+		firstCameraWrite.resolve({
+			ok: true,
+			record: { ...roomA, revision: 2, cameraEnabled: true },
+		});
+		await flushMountedWork();
+
+		expect(
+			cameraWrites.filter(({ record }) => record.roomId === "room-b"),
+		).toHaveLength(0);
+		await unmount(view.root);
+	});
+
+	it("keeps a later room voice session hydrated after an older queued write resolves", async () => {
+		const firstVoiceWrite = deferred<{
+			ok: true;
+			record: RoomSessionRecord;
+		}>();
+		const roomA: RoomSessionRecord = {
+			...confirmedRoomSession(),
+			voiceMode: "open-mic",
+		};
+		const roomB: RoomSessionRecord = {
+			...confirmedRoomSession(),
+			roomId: "room-b",
+			participantSessionId: "participant-session-b",
+		};
+		let roomCreateCount = 0;
+		let roomConnectCount = 0;
+		let roomPrepareCount = 0;
+		const voiceWrites: Array<{
+			mode: "open-mic" | "push-to-talk";
+			record: RoomSessionRecord;
+		}> = [];
+		const sendMessage = vi.fn(
+			async (message: {
+				type?: string;
+				command?: string;
+				mode?: "open-mic" | "push-to-talk";
+				record?: RoomSessionRecord;
+			}) => {
+				if (message.type === "ANIDACHI_AUTH") {
+					return { ok: true, tokens: sessionFor("user-a") };
+				}
+				if (
+					message.type === "ANIDACHI_ROOM_HTTP" &&
+					message.command === "create-room"
+				) {
+					const session = roomCreateCount++ === 0 ? roomA : roomB;
+					return {
+						ok: true,
+						room: {
+							roomId: session.roomId,
+							roomToken: `room-token-${session.participantSessionId}`,
+							shareableLink: `http://localhost:3003/room/${session.roomId}`,
+							privilegedRoomAuthority: {
+								...roomAuthority(),
+								roomId: session.roomId,
+							},
+							roomSession: session,
+						},
+					};
+				}
+				if (message.type === "ANIDACHI_PRIVILEGED_OVERLAY_INTENT") {
+					return { ok: true };
+				}
+				if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE") {
+					if (message.command === "load") {
+						return { ok: true, record: null };
+					}
+					if (message.command === "prepare") {
+						roomPrepareCount += 1;
+						return {
+							ok: true,
+							record: null,
+							prepared: {
+								...preparedRoomSession(),
+								preparationId: `preparation-${roomPrepareCount}`,
+								participantSessionId: `prepared-participant-${roomPrepareCount}`,
+							},
+						};
+					}
+					if (
+						message.command === "clear" ||
+						message.command === "clear-if-match" ||
+						message.command === "discard-prepared"
+					) {
+						return { ok: true, record: null, prepared: null };
+					}
+					if (message.command === "set-voice-mode" && message.mode && message.record) {
+						voiceWrites.push({ mode: message.mode, record: message.record });
+						if (voiceWrites.length === 1) {
+							return firstVoiceWrite.promise;
+						}
+						return {
+							ok: true,
+							record: {
+								...message.record,
+								revision: message.record.revision + 1,
+								voiceMode: message.mode,
+							},
+						};
+					}
+				}
+				throw new Error(
+					`Unexpected runtime message ${message.type}:${message.command}`,
+				);
+			},
+		);
+		installOverlayRuntime(sendMessage);
+		vi.spyOn(RoomClient.prototype, "connect").mockImplementation((options) => {
+			const session = roomConnectCount++ === 0 ? roomA : roomB;
+			options.onStatus("connected");
+			options.onEvent({
+				type: "ROOM_SNAPSHOT",
+				roomId: session.roomId,
+				roomGeneration: roomConnectCount,
+				sourceGeneration: 1,
+				serverSeq: roomConnectCount,
+				participants: [
+					{
+						...hostParticipant(),
+						mediaSeat: "joined",
+					},
+				],
+			});
+		});
+		const view = await renderOverlay();
+
+		await click(button(view.container, "Open Anidachi controls"));
+		await click(button(view.container, "Create room"));
+		await click(button(view.container, "Voice"));
+		await click(button(view.container, "Push to talk"));
+		await click(button(view.container, "Open mic"));
+		await trustedClick(primaryRoomAction(view.container));
+		await flushMountedWork();
+		await click(primaryRoomAction(view.container));
+		await flushMountedWork();
+		expect(roomCreateCount).toBe(2);
+		expect(roomConnectCount).toBe(2);
+		expect(voiceWrites).toHaveLength(1);
+
+		firstVoiceWrite.resolve({
+			ok: true,
+			record: { ...roomA, revision: 2, voiceMode: "push-to-talk" },
+		});
+		await flushMountedWork();
+
+		expect(
+			voiceWrites.filter(
+				({ record }) =>
+					record.participantSessionId === roomB.participantSessionId,
+			),
+		).toHaveLength(0);
+
+		await click(button(view.container, "Voice"));
+		expect(button(view.container, "Push to talk").getAttribute("aria-checked")).toBe(
+			"true",
+		);
+		await click(button(view.container, "Open mic"));
+		await flushMountedWork();
+
+		expect(
+			voiceWrites.some(
+				({ mode, record }) =>
+					mode === "open-mic" &&
+					record.participantSessionId === roomB.participantSessionId,
+			),
+		).toBe(true);
 		await unmount(view.root);
 	});
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   getHotkeyAction,
+  isFireReactionReleaseEvent,
   isPushToTalkReleaseEvent,
   shouldCaptureReactionShortcutEvent,
   shouldStopVoiceTalkOnWindowBlur,
@@ -302,6 +303,31 @@ describe("Anidachi hotkeys", () => {
       isPushToTalkReleaseEvent(keyEvent({ code: "KeyV", key: "v", type: "keyup" }), {
         held: false,
         voiceMode: "push-to-talk",
+      }),
+    ).toBe(false);
+  });
+
+  it("recognizes an already-held fire release after chat takes keyboard focus", () => {
+    const composerInput = document.createElement("input");
+
+    expect(
+      isFireReactionReleaseEvent(
+        keyEvent({
+          code: "Digit4",
+          key: "4",
+          target: composerInput,
+          type: "keyup",
+        }),
+        {
+          held: true,
+          reactionShortcuts: DEFAULT_REACTION_SHORTCUTS,
+        },
+      ),
+    ).toBe(true);
+    expect(
+      isFireReactionReleaseEvent(keyEvent({ code: "Digit4", key: "4", type: "keyup" }), {
+        held: false,
+        reactionShortcuts: DEFAULT_REACTION_SHORTCUTS,
       }),
     ).toBe(false);
   });

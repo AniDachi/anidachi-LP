@@ -116,6 +116,20 @@ export function isPushToTalkReleaseEvent(
   );
 }
 
+export function isFireReactionReleaseEvent(
+  event: Pick<HotkeyEventLike, "code" | "key" | "repeat" | "type">,
+  state: {
+    held: boolean;
+    reactionShortcuts?: readonly string[];
+  },
+): boolean {
+  return (
+    state.held &&
+    event.type === "keyup" &&
+    getEmojiHotkey(event, state.reactionShortcuts) === "🔥"
+  );
+}
+
 function hasBlockedModifier(event: HotkeyEventLike): boolean {
   return event.altKey || event.ctrlKey || event.metaKey;
 }
@@ -135,7 +149,7 @@ function isMessageComposerOpenKey(event: HotkeyEventLike): boolean {
 }
 
 function getEmojiHotkey(
-  event: HotkeyEventLike,
+  event: Pick<HotkeyEventLike, "code" | "repeat">,
   reactionShortcuts: readonly string[] = DEFAULT_REACTION_SHORTCUTS,
 ): string | null {
   if (event.repeat) {

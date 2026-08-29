@@ -371,7 +371,14 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
   digits stay available for chat, and the composer plus shortcut editor share
   one expanded 158-item unique Unicode emoji catalog. The main auto-hide
   launcher also ignores provider-generated in-viewport `pointerout` noise.
+  Queued camera and microphone persistence writes are fenced to the exact room,
+  account, and participant session that enqueued them, so a delayed write cannot
+  leak into a later room. Late responses clear Voice hydration state only when it
+  still belongs to their own participant session, so the next room remains
+  writable. An already-held charged fire reaction is also released before
+  composer-focus guards, preventing it from remaining stuck if chat opens before
+  keyup.
   Automated verification: repository check/test 6/6 tasks, extension tests
-  1422/1422, API runtime tests 27/27, room harness 39/39, and real-WebRTC
+  1426/1426, API runtime tests 27/27, room harness 39/39, and real-WebRTC
   harness 26/26. Remaining: final staging artifact build/validation, CI, and
   loaded two-profile acceptance before promotion to `main`.

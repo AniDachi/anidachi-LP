@@ -69,6 +69,7 @@ import {
 import { type GhostVideo, useGhostCam } from "./ghost-cam";
 import {
 	getHotkeyAction,
+	isFireReactionReleaseEvent,
 	isPushToTalkReleaseEvent,
 	shouldCaptureReactionShortcutEvent,
 	shouldStopVoiceTalkOnWindowBlur,
@@ -202,10 +203,12 @@ import {
 } from "./room-rail-intent";
 import { getRoomReconnectDelayMs } from "./room-reconnect";
 import {
+	captureRoomSessionIdentity,
 	clearRoomSession,
 	discardPreparedRoomSession,
 	migrateLegacyRoomSession,
 	prepareRoomSession,
+	roomSessionIdentityMatches,
 	type RoomSessionRecord,
 	updateRoomSessionCameraEnabled,
 	updateRoomSessionVoiceMode,
@@ -1825,6 +1828,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			mode: "open-mic" | "push-to-talk",
 			{ rememberPreference = false, requireHydratedSession = true } = {},
 		) => {
+			const queuedSessionIdentity = captureRoomSessionIdentity(
+				storedRoomSessionRef.current,
+			);
+			if (!queuedSessionIdentity) {
+				return;
+			}
 			voiceModePersistenceQueueRef.current =
 				voiceModePersistenceQueueRef.current
 					.catch(() => undefined)
@@ -1834,6 +1843,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							const activeParticipantId = participantRef.current?.id ?? null;
 							if (
 								!expected ||
+								!roomSessionIdentityMatches(expected, queuedSessionIdentity) ||
 								(requireHydratedSession &&
 									hydratedVoiceParticipantSessionRef.current !==
 										expected.participantSessionId) ||
@@ -1850,7 +1860,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 								rememberPreference,
 							});
 							if (!next) {
-								hydratedVoiceParticipantSessionRef.current = null;
+								if (
+									hydratedVoiceParticipantSessionRef.current ===
+									expected.participantSessionId
+								) {
+									hydratedVoiceParticipantSessionRef.current = null;
+								}
 								return;
 							}
 
@@ -1859,7 +1874,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 								participantRef.current?.id === next.ownerUserId &&
 								next.participantSessionId === expected.participantSessionId;
 							if (!stillActive) {
-								hydratedVoiceParticipantSessionRef.current = null;
+								if (
+									hydratedVoiceParticipantSessionRef.current ===
+									expected.participantSessionId
+								) {
+									hydratedVoiceParticipantSessionRef.current = null;
+								}
 								return;
 							}
 
@@ -1894,6 +1914,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	);
 	const enqueueRoomCameraEnabledPersistence = useCallback(
 		(enabled: boolean, { rememberPreference = false } = {}) => {
+			const queuedSessionIdentity = captureRoomSessionIdentity(
+				storedRoomSessionRef.current,
+			);
+			if (!queuedSessionIdentity) {
+				return;
+			}
 			cameraEnabledPersistenceQueueRef.current =
 				cameraEnabledPersistenceQueueRef.current
 					.catch(() => undefined)
@@ -1903,6 +1929,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							const activeParticipantId = participantRef.current?.id ?? null;
 							if (
 								!expected ||
+								!roomSessionIdentityMatches(expected, queuedSessionIdentity) ||
 								roomIdRef.current !== expected.roomId ||
 								activeParticipantId !== expected.ownerUserId
 							) {
@@ -5439,6 +5466,18 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				event.preventDefault();
 				event.stopImmediatePropagation();
 				stopPushToTalk();
+				return;
+			}
+
+			if (
+				isFireReactionReleaseEvent(event, {
+					held: fireHoldRef.current !== null,
+					reactionShortcuts: reactionShortcuts.assignments,
+				})
+			) {
+				event.preventDefault();
+				event.stopImmediatePropagation();
+				finishFireHold("hotkey-up");
 				return;
 			}
 
