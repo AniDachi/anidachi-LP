@@ -17,6 +17,14 @@ describe("overlay layout pointer surfaces", () => {
 		);
 	});
 
+	it("keeps an expanded composer emoji catalog inside a scrollable compact popover", () => {
+		const popover = getRule(".message-composer-emoji-popover");
+
+		expect(popover).toContain("max-height:");
+		expect(popover).toContain("overflow-y: auto");
+		expect(popover).toContain("overscroll-behavior: contain");
+	});
+
 	it("keeps the composer interaction layer above every room overlay surface", () => {
 		const panelLayer = getNumericProperty(".mini-panel", "z-index");
 		const shieldLayer = getNumericProperty(
@@ -206,7 +214,8 @@ describe("overlay layout pointer surfaces", () => {
 		expect(rail).toContain("overflow-x: visible");
 		expect(rail).toContain("position: relative");
 		expect(rail).toContain("box-sizing: border-box");
-		expect(rail).toContain("padding: 0 22px");
+		expect(rail).toContain("padding: 0");
+		expect(rail).not.toContain("padding: 0 22px");
 		expect(rail).toContain("border-bottom: 0");
 
 		const track = getRule(".settings-category-scroll::after");
@@ -219,6 +228,7 @@ describe("overlay layout pointer surfaces", () => {
 		const tab = getRule(".settings-category-tab");
 		expect(tab).toContain("position: relative");
 		expect(tab).toContain("width: auto");
+		expect(tab).toContain("flex: 0 0 auto");
 		expect(tab).toContain("height: 40px");
 		expect(tab).toContain("padding: 0");
 		expect(tab).toContain("font-size: 12px");
@@ -229,7 +239,7 @@ describe("overlay layout pointer surfaces", () => {
 		expect(tab).toContain("background: transparent");
 
 		const indicator = getRule(".settings-category-scroll::before");
-		expect(indicator).toContain("left: var(--settings-indicator-left, 22px)");
+		expect(indicator).toContain("left: var(--settings-indicator-left, 0px)");
 		expect(indicator).toContain("width: var(--settings-indicator-width, 58px)");
 		expect(indicator).toContain("height: 2px");
 		expect(indicator).toContain("bottom: -0.5px");
@@ -247,6 +257,35 @@ describe("overlay layout pointer surfaces", () => {
 		const shortcutGrid = getRule(".reaction-shortcut-grid");
 		expect(shortcutGrid).toContain("box-shadow: none");
 		expect(shortcutGrid).not.toContain("inset 0 -1px");
+	});
+
+	it("keeps Room defaults aligned with the existing restrained settings style", () => {
+		const intro = getRule(".room-defaults-intro");
+		expect(intro).toContain("display: grid");
+		expect(intro).not.toContain("border");
+
+		const controls = getRule(".room-defaults-controls");
+		expect(controls).toContain("display: grid");
+		expect(controls).toContain("gap: 4px");
+		expect(controls).not.toContain("border-top");
+		expect(controls).not.toContain("border-radius");
+		expect(controls).not.toContain("background:");
+
+		const row = getRule(".room-defaults-control");
+		expect(row).toContain("box-sizing: border-box");
+		expect(row).toContain("width: 100%");
+		expect(row).toContain("grid-template-columns: 82px minmax(0, 1fr)");
+		expect(row).toContain("gap: 8px");
+		expect(row).not.toContain("minmax(210px");
+		expect(row).not.toContain("border-bottom");
+
+		const segmented = getRule(".room-defaults-segmented");
+		expect(segmented).toContain(
+			"grid-template-columns: repeat(3, minmax(0, 1fr))",
+		);
+		expect(
+			getRule('.room-defaults-segmented[data-state="third"]::before'),
+		).toContain("transform: translateX(calc(200% + 4px))");
 	});
 
 	it("keeps Layout controls open and aligns both actions evenly", () => {
@@ -583,9 +622,7 @@ describe("overlay layout pointer surfaces", () => {
 		expect(inlineControl).toContain(
 			"height: var(--room-rail-audio-height, 20px)",
 		);
-		expect(inlineControl).toContain(
-			"gap: var(--room-rail-audio-gap, 6px)",
-		);
+		expect(inlineControl).toContain("gap: var(--room-rail-audio-gap, 6px)");
 		expect(getRule(".participant-audio-mute")).toContain(
 			"width: var(--room-rail-audio-button-size, 22px)",
 		);
@@ -664,26 +701,10 @@ describe("overlay layout pointer surfaces", () => {
 		expect(overlayStyles).not.toContain(".cam-bubble.active {");
 	});
 
-	it("isolates the complete camera travel path from player interactions", () => {
-		const interactionCorridor = getRule(".cam-stack-interaction-corridor");
-		expect(interactionCorridor).toContain("position: absolute");
-		expect(interactionCorridor).toContain(
-			"left: var(--cam-interaction-corridor-left, 0)",
-		);
-		expect(interactionCorridor).toContain(
-			"top: var(--cam-interaction-corridor-top, 0)",
-		);
-		expect(interactionCorridor).toContain(
-			"width: var(--cam-interaction-corridor-width, 0)",
-		);
-		expect(interactionCorridor).toContain(
-			"height: var(--cam-interaction-corridor-height, 0)",
-		);
-		expect(interactionCorridor).toContain("background: transparent");
-		expect(interactionCorridor).toContain("pointer-events: auto");
-		expect(
-			getNumericProperty(".cam-stack-interaction-corridor", "z-index"),
-		).toBeLessThan(getNumericProperty(".cam-stack", "z-index"));
+	it("leaves the camera travel path transparent to native player controls", () => {
+		expect(overlayStyles).not.toContain(".cam-stack-interaction-corridor");
+		expect(getRule(".cam-stack")).toContain("pointer-events: none");
+		expect(getRule(".cam-bubble")).toContain("pointer-events: auto");
 	});
 
 	it("keeps ghost objects legible over changing video frames", () => {

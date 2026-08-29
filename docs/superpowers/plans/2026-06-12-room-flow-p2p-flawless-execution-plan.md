@@ -319,3 +319,66 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
   39/39, real-WebRTC harness 26/26, staging build, and artifact validation.
   Remaining before promotion to `main`: loaded two-profile acceptance on both
   providers.
+- [~] 2026-08-29: Hardened the YouTube same-room media-intent transition after
+  tester feedback on the 2026-08-28 staging ZIP. An already-mounted reconnect
+  keeps the newest local camera choice, while a full same-tab document remount
+  restores camera intent from the confirmed background session. Open mic now
+  treats the pre-snapshot missing-seat interval as unknown: publication pauses
+  without discarding intent, resumes only after an authoritative joined seat,
+  and resets both runtime and stored intent when the authoritative snapshot
+  confirms the seat was revoked. New-room, leave/end, sign-out, account-change,
+  and terminal-failure reset boundaries remain unchanged. Verified locally:
+  extension check, focused media-state tests 24/24, full extension tests
+  1386/1386, room harness 39/39, and real-WebRTC harness 26/26. Remaining:
+  build/validate the final staging artifact and loaded two-profile YouTube
+  acceptance for host and guest before staging promotion.
+- [~] 2026-08-29: Added the approved account-local last Voice-mode preference
+  without changing room protocol, Worker, API, database, or P2P signaling.
+  Explicit Open mic / Push to talk selection updates a versioned
+  authenticated-user key in extension local storage; each genuinely new
+  confirmed room seeds its tab-scoped active mode from that preference. Room
+  leave/end, tab close, sign-out, browser restart, media-seat revoke, and
+  terminal capture failure still stop current publication. Automatic safety
+  resets do not silently overwrite the user's explicit preference, and all
+  Open mic restore paths remain gated by exact room identity, authoritative
+  media seat, snapshot readiness, and a live P2P controller. Focused storage
+  and overlay wiring tests cover production prepare/confirm, account isolation,
+  worker restart, explicit UI intent, and safety reset behavior. Verified:
+  extension check and 1392/1392 tests, API check and 161/161 plus 27/27 runtime
+  tests, room harness 39/39, real-WebRTC harness 26/26, staging artifact build
+  and validation, and exact synchronization of both approved test folders.
+  Remaining: loaded two-profile host/guest acceptance of the merged staging
+  artifact before promotion to `main`.
+- [~] 2026-08-29: Added the account-local `Room` defaults surface without
+  changing the room protocol, Worker, API, database, permissions, or provider
+  adapters. Microphone on join now supports Last used, Push to talk, and Open
+  mic; camera on join supports Last used, Off, and On, with privacy-safe defaults
+  of Last used -> Push to talk and camera Off. The setting affects only a later
+  newly confirmed room. Exact same-room state still wins, device publication
+  remains gated by authoritative media-seat and P2P readiness, and automatic
+  safety cleanup does not overwrite last explicit camera or microphone choices.
+  Verified locally: focused preference, storage, component, wiring, and session
+  tests 116/116; extension check and 1410/1410 tests; repository check/test 6/6
+  tasks each; API runtime tests 27/27; room harness 39/39; real-WebRTC harness
+  26/26; staging artifact build/validation; and exact synchronization of both
+  approved unpacked test folders. Remaining: loaded two-profile acceptance of
+  the merged staging artifact before promotion to `main`.
+- [~] 2026-08-29: Finalized the staging checkpoint with provider-safe overlay
+  interaction fixes. The camera travel corridor is now pointer-transparent and
+  temporarily pins adaptive safe insets only while the user approaches or
+  interacts with a visible camera bubble, so YouTube controls remain clickable.
+  Closed-Shadow-DOM message composition suspends quick-reaction hotkeys so
+  digits stay available for chat, and the composer plus shortcut editor share
+  one expanded 158-item unique Unicode emoji catalog. The main auto-hide
+  launcher also ignores provider-generated in-viewport `pointerout` noise.
+  Queued camera and microphone persistence writes are fenced to the exact room,
+  account, and participant session that enqueued them, so a delayed write cannot
+  leak into a later room. Late responses clear Voice hydration state only when it
+  still belongs to their own participant session, so the next room remains
+  writable. An already-held charged fire reaction is also released before
+  composer-focus guards, preventing it from remaining stuck if chat opens before
+  keyup.
+  Automated verification: repository check/test 6/6 tasks, extension tests
+  1426/1426, API runtime tests 27/27, room harness 39/39, and real-WebRTC
+  harness 26/26. Remaining: final staging artifact build/validation, CI, and
+  loaded two-profile acceptance before promotion to `main`.

@@ -4,6 +4,16 @@ import {
   MAX_SESSION_ID_CHARS,
 } from "@anidachi/protocol";
 import type { VoiceMode } from "./media-types";
+import {
+  loadCameraEnabledPreference,
+  loadRoomJoinDefaults,
+  persistCameraEnabledPreference,
+  resolveRoomMediaDefaults,
+} from "./room-media-defaults";
+import {
+  loadVoiceModePreference,
+  persistVoiceModePreference,
+} from "./voice-mode-preference";
 
 export const ROOM_SESSION_INSTALL_ID_STORAGE_KEY = "anidachi:extension-install-id:v1";
 export const ROOM_SESSION_STORAGE_MESSAGE_TYPE = "ANIDACHI_ROOM_SESSION_STORAGE";
@@ -24,6 +34,34 @@ export interface RoomSessionRecord {
   participantSessionId: string;
   cameraEnabled: boolean;
   voiceMode: VoiceMode;
+}
+
+export type RoomSessionIdentity = Pick<
+  RoomSessionRecord,
+  "ownerUserId" | "participantSessionId" | "roomId" | "version"
+>;
+
+export function captureRoomSessionIdentity(
+  record: RoomSessionRecord | null,
+): RoomSessionIdentity | null {
+  return record
+    ? {
+        ownerUserId: record.ownerUserId,
+        participantSessionId: record.participantSessionId,
+        roomId: record.roomId,
+        version: record.version,
+      }
+    : null;
+}
+
+export function roomSessionIdentityMatches(
+  record: RoomSessionRecord,
+  identity: RoomSessionIdentity,
+): boolean {
+  return record.version === identity.version &&
+    record.roomId === identity.roomId &&
+    record.ownerUserId === identity.ownerUserId &&
+    record.participantSessionId === identity.participantSessionId;
 }
 
 export interface PreparedRoomSession {
@@ -91,12 +129,14 @@ export type RoomSessionStorageMessage =
       command: "set-voice-mode";
       mode: VoiceMode;
       record: RoomSessionRecord;
+      rememberPreference?: boolean;
     }
   | {
       type: typeof ROOM_SESSION_STORAGE_MESSAGE_TYPE;
       command: "set-camera-enabled";
       enabled: boolean;
       record: RoomSessionRecord;
+      rememberPreference?: boolean;
     }
   | { type: typeof ROOM_SESSION_STORAGE_MESSAGE_TYPE; command: "clear" };
 
@@ -161,10 +201,15 @@ export function isRoomSessionStorageMessage(value: unknown): value is RoomSessio
     case "clear-if-match":
       return parseRoomSessionRecord(value.record) !== null;
     case "set-voice-mode":
-      return isVoiceMode(value.mode) && parseRoomSessionRecord(value.record) !== null;
+      return isVoiceMode(value.mode) &&
+        parseRoomSessionRecord(value.record) !== null &&
+        (value.rememberPreference === undefined ||
+          typeof value.rememberPreference === "boolean");
     case "set-camera-enabled":
       return typeof value.enabled === "boolean" &&
-        parseRoomSessionRecord(value.record) !== null;
+        parseRoomSessionRecord(value.record) !== null &&
+        (value.rememberPreference === undefined ||
+          typeof value.rememberPreference === "boolean");
     default:
       return false;
   }
@@ -234,6 +279,7 @@ export async function handleRoomSessionStorageMessage(
             ok: true,
             record: await persistRecord(
               sessionStorage,
+              localStorage,
               resolvedTabId,
               message.roomId,
               message.ownerUserId,
@@ -278,26 +324,54 @@ export async function handleRoomSessionStorageMessage(
               message.record,
             ),
           };
-        case "set-voice-mode":
-          return {
-            ok: true,
-            record: await setRoomSessionVoiceModeForTab(
-              sessionStorage,
-              resolvedTabId,
-              message.record,
+        case "set-voice-mode": {
+          const record = await setRoomSessionVoiceModeForTab(
+            sessionStorage,
+            resolvedTabId,
+            message.record,
+            message.mode,
+          );
+          if (
+            message.rememberPreference === true &&
+            record &&
+            roomSessionIdentityMatches(record, message.record) &&
+            record.voiceMode === message.mode
+          ) {
+            await persistVoiceModePreference(
+              localStorage,
+              record.ownerUserId,
               message.mode,
-            ),
-          };
-        case "set-camera-enabled":
+            ).catch(() => undefined);
+          }
           return {
             ok: true,
-            record: await setRoomSessionCameraEnabledForTab(
-              sessionStorage,
-              resolvedTabId,
-              message.record,
-              message.enabled,
-            ),
+            record,
           };
+        }
+        case "set-camera-enabled": {
+          const record = await setRoomSessionCameraEnabledForTab(
+            sessionStorage,
+            resolvedTabId,
+            message.record,
+            message.enabled,
+          );
+          if (
+            message.rememberPreference === true &&
+            record &&
+            roomSessionIdentityMatches(record, message.record) &&
+            record.cameraEnabled === message.enabled
+          ) {
+            await persistCameraEnabledPreference(
+              localStorage,
+              record.ownerUserId,
+              message.enabled,
+            ).catch(() => undefined);
+          }
+          return {
+            ok: true,
+            record,
+          };
+        }
         case "clear":
           await removeRoomSessionForTabNow(resolvedTabId, sessionStorage);
           return { ok: true, record: null };
@@ -395,9 +469,17 @@ export async function confirmRoomSessionForTab(
 ): Promise<RoomSessionRecord | null> {
   assertTabId(tabId);
   return enqueueRoomSessionOperation(tabId, async () => {
-    const storage = dependencies.sessionStorage ??
+    const sessionStorage = dependencies.sessionStorage ??
       (chrome.storage.session as StorageAreaLike);
-    return confirmRoomSessionForTabNow(storage, tabId, prepared, roomId);
+    const localStorage = dependencies.localStorage ??
+      (chrome.storage.local as StorageAreaLike);
+    return confirmRoomSessionForTabNow(
+      sessionStorage,
+      localStorage,
+      tabId,
+      prepared,
+      roomId,
+    );
   });
 }
 
@@ -540,7 +622,9 @@ export async function clearRoomSessionIfMatch(
 export async function updateRoomSessionVoiceMode(
   record: RoomSessionRecord,
   mode: VoiceMode,
-  dependencies: RoomSessionClientDependencies = {},
+  options: RoomSessionClientDependencies & {
+    rememberPreference?: boolean;
+  } = {},
 ): Promise<RoomSessionRecord | null> {
   const response = await sendRoomSessionMessage(
     {
@@ -548,8 +632,11 @@ export async function updateRoomSessionVoiceMode(
       command: "set-voice-mode",
       mode,
       record,
+      ...(options.rememberPreference === true
+        ? { rememberPreference: true }
+        : {}),
     },
-    dependencies.sendMessage,
+    options.sendMessage,
   );
   return response.record;
 }
@@ -557,7 +644,9 @@ export async function updateRoomSessionVoiceMode(
 export async function updateRoomSessionCameraEnabled(
   record: RoomSessionRecord,
   enabled: boolean,
-  dependencies: RoomSessionClientDependencies = {},
+  options: RoomSessionClientDependencies & {
+    rememberPreference?: boolean;
+  } = {},
 ): Promise<RoomSessionRecord | null> {
   const response = await sendRoomSessionMessage(
     {
@@ -565,8 +654,11 @@ export async function updateRoomSessionCameraEnabled(
       command: "set-camera-enabled",
       enabled,
       record,
+      ...(options.rememberPreference === true
+        ? { rememberPreference: true }
+        : {}),
     },
-    dependencies.sendMessage,
+    options.sendMessage,
   );
   return response.record;
 }
@@ -626,7 +718,8 @@ async function loadRecordForUser(
 }
 
 async function persistRecord(
-  storage: StorageAreaLike,
+  sessionStorage: StorageAreaLike,
+  localStorage: StorageAreaLike,
   tabId: number,
   roomId: string | null,
   ownerUserId: string | null,
@@ -634,31 +727,30 @@ async function persistRecord(
 ): Promise<RoomSessionRecord | null> {
   const key = roomSessionStorageKey(tabId);
   if (!isNonEmptyString(roomId) || !isNonEmptyString(ownerUserId)) {
-    await storage.remove(key);
+    await sessionStorage.remove(key);
     return null;
   }
 
-  const stored = await storage.get(key);
+  const stored = await sessionStorage.get(key);
   const existing = parseRoomSessionRecord(stored[key]);
+  const sameRoom =
+    existing?.roomId === roomId && existing.ownerUserId === ownerUserId;
+  const preferredMedia = sameRoom
+    ? { cameraEnabled: existing.cameraEnabled, voiceMode: existing.voiceMode }
+    : await loadRoomMediaDefaults(localStorage, ownerUserId);
   const record: RoomSessionRecord = {
     version: ROOM_SESSION_RECORD_VERSION,
     revision: nextRoomSessionRevision(existing),
     roomId,
     ownerUserId,
     participantSessionId:
-      existing?.roomId === roomId && existing.ownerUserId === ownerUserId
+      sameRoom
         ? existing.participantSessionId
         : createParticipantSessionId(randomUUID),
-    cameraEnabled:
-      existing?.roomId === roomId && existing.ownerUserId === ownerUserId
-        ? existing.cameraEnabled
-        : false,
-    voiceMode:
-      existing?.roomId === roomId && existing.ownerUserId === ownerUserId
-        ? existing.voiceMode
-        : "push-to-talk",
+    cameraEnabled: preferredMedia.cameraEnabled,
+    voiceMode: preferredMedia.voiceMode,
   };
-  await storage.set({ [key]: record });
+  await sessionStorage.set({ [key]: record });
   return record;
 }
 
@@ -716,7 +808,8 @@ async function prepareRoomSessionForTabNow(
 }
 
 async function confirmRoomSessionForTabNow(
-  storage: StorageAreaLike,
+  sessionStorage: StorageAreaLike,
+  localStorage: StorageAreaLike,
   tabId: number,
   prepared: PreparedRoomSession,
   roomId: string,
@@ -733,8 +826,8 @@ async function confirmRoomSessionForTabNow(
   const confirmedKey = roomSessionStorageKey(tabId);
   const preparedKey = preparedRoomSessionStorageKey(tabId);
   const [storedConfirmed, storedPrepared] = await Promise.all([
-    storage.get(confirmedKey),
-    storage.get(preparedKey),
+    sessionStorage.get(confirmedKey),
+    sessionStorage.get(preparedKey),
   ]);
   const confirmed = parseRoomSessionRecord(storedConfirmed[confirmedKey]);
   const currentPrepared = parsePreparedRoomSession(storedPrepared[preparedKey]);
@@ -749,23 +842,23 @@ async function confirmRoomSessionForTabNow(
       ? confirmed
       : null;
   }
+  const sameRoom =
+    confirmed?.ownerUserId === parsedPrepared.ownerUserId &&
+    confirmed.roomId === roomId;
+  const preferredMedia = sameRoom
+    ? { cameraEnabled: confirmed.cameraEnabled, voiceMode: confirmed.voiceMode }
+    : await loadRoomMediaDefaults(localStorage, parsedPrepared.ownerUserId);
   const record: RoomSessionRecord = {
     version: ROOM_SESSION_RECORD_VERSION,
     revision: nextRoomSessionRevision(confirmed),
     roomId,
     ownerUserId: parsedPrepared.ownerUserId,
     participantSessionId: parsedPrepared.participantSessionId,
-    cameraEnabled:
-      confirmed?.ownerUserId === parsedPrepared.ownerUserId && confirmed.roomId === roomId
-        ? confirmed.cameraEnabled
-        : false,
-    voiceMode:
-      confirmed?.ownerUserId === parsedPrepared.ownerUserId && confirmed.roomId === roomId
-        ? confirmed.voiceMode
-        : "push-to-talk",
+    cameraEnabled: preferredMedia.cameraEnabled,
+    voiceMode: preferredMedia.voiceMode,
   };
-  await storage.set({ [confirmedKey]: record });
-  await storage.remove(preparedKey);
+  await sessionStorage.set({ [confirmedKey]: record });
+  await sessionStorage.remove(preparedKey);
   return record;
 }
 
@@ -996,18 +1089,24 @@ function roomSessionRecordsMatch(
   );
 }
 
-function roomSessionIdentityMatches(
-  current: RoomSessionRecord,
-  expected: RoomSessionRecord,
-): boolean {
-  return current.version === expected.version &&
-    current.roomId === expected.roomId &&
-    current.ownerUserId === expected.ownerUserId &&
-    current.participantSessionId === expected.participantSessionId;
-}
-
 function isVoiceMode(value: unknown): value is VoiceMode {
   return value === "push-to-talk" || value === "open-mic";
+}
+
+async function loadRoomMediaDefaults(
+  localStorage: StorageAreaLike,
+  ownerUserId: string,
+): Promise<{ cameraEnabled: boolean; voiceMode: VoiceMode }> {
+  const [preferences, lastVoiceMode, lastCameraEnabled] = await Promise.all([
+    loadRoomJoinDefaults(localStorage, ownerUserId),
+    loadVoiceModePreference(localStorage, ownerUserId),
+    loadCameraEnabledPreference(localStorage, ownerUserId),
+  ]);
+  return resolveRoomMediaDefaults({
+    lastCameraEnabled,
+    lastVoiceMode,
+    preferences,
+  });
 }
 
 function legacyStorageGroups(prefix: string | null): Array<{

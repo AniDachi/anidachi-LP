@@ -15,6 +15,7 @@ export type HotkeyAction =
 export interface HotkeyState {
   roomActive: boolean;
   panelOpen: boolean;
+  messageComposerOpen: boolean;
   reactionsEnabled: boolean;
   reactionShortcuts?: readonly string[];
   experimentalSuperReactionsEnabled?: boolean;
@@ -38,7 +39,12 @@ export type HotkeyEventLike = Pick<
 };
 
 export function getHotkeyAction(event: HotkeyEventLike, state: HotkeyState): HotkeyAction | null {
-  if (!state.roomActive || hasBlockedModifier(event) || isEditableEventTarget(event)) {
+  if (
+    !state.roomActive ||
+    state.messageComposerOpen ||
+    hasBlockedModifier(event) ||
+    isEditableEventTarget(event)
+  ) {
     return null;
   }
 
@@ -86,6 +92,7 @@ export function shouldCaptureReactionShortcutEvent(
 ): boolean {
   return (
     state.roomActive &&
+    !state.messageComposerOpen &&
     state.reactionsEnabled &&
     !hasBlockedModifier(event) &&
     !isEditableEventTarget(event) &&
@@ -109,6 +116,20 @@ export function isPushToTalkReleaseEvent(
   );
 }
 
+export function isFireReactionReleaseEvent(
+  event: Pick<HotkeyEventLike, "code" | "key" | "repeat" | "type">,
+  state: {
+    held: boolean;
+    reactionShortcuts?: readonly string[];
+  },
+): boolean {
+  return (
+    state.held &&
+    event.type === "keyup" &&
+    getEmojiHotkey(event, state.reactionShortcuts) === "🔥"
+  );
+}
+
 function hasBlockedModifier(event: HotkeyEventLike): boolean {
   return event.altKey || event.ctrlKey || event.metaKey;
 }
@@ -128,7 +149,7 @@ function isMessageComposerOpenKey(event: HotkeyEventLike): boolean {
 }
 
 function getEmojiHotkey(
-  event: HotkeyEventLike,
+  event: Pick<HotkeyEventLike, "code" | "repeat">,
   reactionShortcuts: readonly string[] = DEFAULT_REACTION_SHORTCUTS,
 ): string | null {
   if (event.repeat) {

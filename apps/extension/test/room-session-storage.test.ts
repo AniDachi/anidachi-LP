@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  captureRoomSessionIdentity,
   clearRoomSessionForClosedTab,
   confirmRoomSessionForTab,
   discardPreparedRoomSessionIfMatch,
@@ -7,6 +8,7 @@ import {
   handleRoomSessionStorageMessage,
   loadRoomSessionForTab,
   prepareRoomSessionForTab,
+  roomSessionIdentityMatches,
   ROOM_SESSION_INSTALL_ID_STORAGE_KEY as INSTALL_ID_STORAGE_KEY,
   migrateLegacyRoomSession,
   ROOM_SESSION_STORAGE_MESSAGE_TYPE as ROOM_SESSION_MESSAGE_TYPE,
@@ -17,6 +19,7 @@ import {
   updateRoomSessionCameraEnabled,
   updateRoomSessionVoiceMode,
 } from "../src/room-session-storage";
+import { persistRoomJoinDefaults } from "../src/room-media-defaults";
 
 interface StorageAreaLike {
   get(key: string): Promise<Record<string, unknown>>;
@@ -117,6 +120,37 @@ function expectRecord(response: RoomSessionResponse): RoomSessionRecord {
 }
 
 describe("background-owned room session storage", () => {
+  it("matches the exact room, account, and participant session identity", () => {
+    const record: RoomSessionRecord = {
+      version: 1,
+      revision: 1,
+      roomId: "room-a",
+      ownerUserId: "user-a",
+      participantSessionId: "participant-session-a",
+      cameraEnabled: false,
+      voiceMode: "push-to-talk",
+    };
+    const identity = captureRoomSessionIdentity(record);
+    expect(identity).not.toBeNull();
+    if (!identity) {
+      throw new Error("Expected a captured room session identity");
+    }
+
+    expect(roomSessionIdentityMatches(record, identity)).toBe(true);
+    expect(
+      roomSessionIdentityMatches(
+        { ...record, participantSessionId: "participant-session-b" },
+        identity,
+      ),
+    ).toBe(false);
+    expect(
+      roomSessionIdentityMatches({ ...record, ownerUserId: "user-b" }, identity),
+    ).toBe(false);
+    expect(
+      roomSessionIdentityMatches({ ...record, roomId: "room-b" }, identity),
+    ).toBe(false);
+  });
+
   it("loads the trusted confirmed record before closed-tab cleanup", async () => {
     const dependencies = backgroundDependencies();
     const record = expectRecord(
@@ -175,6 +209,107 @@ describe("background-owned room session storage", () => {
       ),
     );
     expect(nextRoom.cameraEnabled).toBe(false);
+  });
+
+  it("starts a new room from explicit microphone and camera join defaults", async () => {
+    const dependencies = backgroundDependencies();
+    await persistRoomJoinDefaults(dependencies.localStorage, "user-a", {
+      version: 1,
+      microphoneOnJoin: "open-mic",
+      cameraOnJoin: "on",
+    });
+
+    const nextRoom = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-defaults", ownerUserId: "user-a" }),
+        sender(13),
+        dependencies,
+      ),
+    );
+
+    expect(nextRoom).toMatchObject({
+      cameraEnabled: true,
+      voiceMode: "open-mic",
+    });
+  });
+
+  it("uses the last explicit camera choice only when Camera on join is Last used", async () => {
+    const dependencies = backgroundDependencies();
+    await persistRoomJoinDefaults(dependencies.localStorage, "user-a", {
+      version: 1,
+      microphoneOnJoin: "last-used",
+      cameraOnJoin: "last-used",
+    });
+    const first = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(14),
+        dependencies,
+      ),
+    );
+    await updateRoomSessionCameraEnabled(first, true, {
+      rememberPreference: true,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(14), dependencies),
+    });
+
+    const nextRoom = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-b", ownerUserId: "user-a" }),
+        sender(14),
+        dependencies,
+      ),
+    );
+    expect(nextRoom.cameraEnabled).toBe(true);
+
+    await persistRoomJoinDefaults(dependencies.localStorage, "user-a", {
+      version: 1,
+      microphoneOnJoin: "last-used",
+      cameraOnJoin: "off",
+    });
+    const forcedOff = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-c", ownerUserId: "user-a" }),
+        sender(14),
+        dependencies,
+      ),
+    );
+    expect(forcedOff.cameraEnabled).toBe(false);
+  });
+
+  it("does not replace the last explicit camera choice during an automatic safety reset", async () => {
+    const dependencies = backgroundDependencies();
+    await persistRoomJoinDefaults(dependencies.localStorage, "user-a", {
+      version: 1,
+      microphoneOnJoin: "last-used",
+      cameraOnJoin: "last-used",
+    });
+    const first = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(15),
+        dependencies,
+      ),
+    );
+    const explicitlyEnabled = await updateRoomSessionCameraEnabled(first, true, {
+      rememberPreference: true,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(15), dependencies),
+    });
+    if (!explicitlyEnabled) throw new Error("Expected enabled camera session");
+    await updateRoomSessionCameraEnabled(explicitlyEnabled, false, {
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(15), dependencies),
+    });
+
+    const nextRoom = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-b", ownerUserId: "user-a" }),
+        sender(15),
+        dependencies,
+      ),
+    );
+    expect(nextRoom.cameraEnabled).toBe(true);
   });
 
   it("drops an oversized confirmed record instead of restoring corrupt authority", async () => {
@@ -569,6 +704,190 @@ describe("background-owned room session storage", () => {
       ),
     );
     expect(newRoom.voiceMode).toBe("push-to-talk");
+  });
+
+  it("starts a new room with the last Voice mode explicitly chosen by the account", async () => {
+    const dependencies = backgroundDependencies();
+    const first = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(20),
+        dependencies,
+      ),
+    );
+    const open = await updateRoomSessionVoiceMode(first, "open-mic", {
+      rememberPreference: true,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(20), dependencies),
+    });
+    expect(open?.voiceMode).toBe("open-mic");
+
+    const nextRoomCandidate = await prepareRoomSessionForTab(
+      20,
+      { ownerUserId: "user-a", roomId: null, forceNew: true },
+      dependencies,
+    );
+    const nextRoom = await confirmRoomSessionForTab(
+      20,
+      nextRoomCandidate,
+      "room-b",
+      dependencies,
+    );
+    expect(nextRoom?.voiceMode).toBe("open-mic");
+  });
+
+  it("does not replace the remembered preference during an automatic room safety reset", async () => {
+    const dependencies = backgroundDependencies();
+    const first = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(21),
+        dependencies,
+      ),
+    );
+    const open = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({
+          command: "set-voice-mode",
+          mode: "open-mic",
+          record: first,
+          rememberPreference: true,
+        }),
+        sender(21),
+        dependencies,
+      ),
+    );
+    const safelyStopped = await updateRoomSessionVoiceMode(open, "push-to-talk", {
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(21), dependencies),
+    });
+    expect(safelyStopped?.voiceMode).toBe("push-to-talk");
+
+    const nextRoom = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-b", ownerUserId: "user-a" }),
+        sender(21),
+        dependencies,
+      ),
+    );
+    expect(nextRoom.voiceMode).toBe("open-mic");
+  });
+
+  it("replaces the remembered preference after an explicit Push to talk choice", async () => {
+    const dependencies = backgroundDependencies();
+    const first = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(25),
+        dependencies,
+      ),
+    );
+    const open = await updateRoomSessionVoiceMode(first, "open-mic", {
+      rememberPreference: true,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(25), dependencies),
+    });
+    if (!open) throw new Error("Expected Open mic room session");
+    await updateRoomSessionVoiceMode(open, "push-to-talk", {
+      rememberPreference: true,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(25), dependencies),
+    });
+
+    const nextRoom = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-b", ownerUserId: "user-a" }),
+        sender(25),
+        dependencies,
+      ),
+    );
+    expect(nextRoom.voiceMode).toBe("push-to-talk");
+  });
+
+  it("does not let a stale room session replace the current account preference", async () => {
+    const dependencies = backgroundDependencies();
+    const first = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(24),
+        dependencies,
+      ),
+    );
+    await updateRoomSessionVoiceMode(first, "open-mic", {
+      rememberPreference: true,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(24), dependencies),
+    });
+    const current = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-b", ownerUserId: "user-a" }),
+        sender(24),
+        dependencies,
+      ),
+    );
+    expect(current.voiceMode).toBe("open-mic");
+
+    const staleResult = await updateRoomSessionVoiceMode(first, "push-to-talk", {
+      rememberPreference: true,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(24), dependencies),
+    });
+    expect(staleResult).toEqual(current);
+
+    const nextRoom = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-c", ownerUserId: "user-a" }),
+        sender(24),
+        dependencies,
+      ),
+    );
+    expect(nextRoom.voiceMode).toBe("open-mic");
+  });
+
+  it("keeps remembered Voice modes isolated by account across a browser restart", async () => {
+    const firstWorker = backgroundDependencies();
+    const first = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(22),
+        firstWorker,
+      ),
+    );
+    await updateRoomSessionVoiceMode(first, "open-mic", {
+      rememberPreference: true,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(22), firstWorker),
+    });
+
+    const restartedWorker = {
+      ...backgroundDependencies(),
+      localStorage: firstWorker.localStorage,
+    };
+    const accountACandidate = await prepareRoomSessionForTab(
+      22,
+      { ownerUserId: "user-a", roomId: null, forceNew: true },
+      restartedWorker,
+    );
+    const accountA = await confirmRoomSessionForTab(
+      22,
+      accountACandidate,
+      "room-b",
+      restartedWorker,
+    );
+    const accountBCandidate = await prepareRoomSessionForTab(
+      23,
+      { ownerUserId: "user-b", roomId: null, forceNew: true },
+      restartedWorker,
+    );
+    const accountB = await confirmRoomSessionForTab(
+      23,
+      accountBCandidate,
+      "room-c",
+      restartedWorker,
+    );
+
+    expect(accountA?.voiceMode).toBe("open-mic");
+    expect(accountB?.voiceMode).toBe("push-to-talk");
   });
 
   it("fails closed and clears a record when the current user is missing", async () => {

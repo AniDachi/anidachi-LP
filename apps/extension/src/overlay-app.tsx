@@ -44,8 +44,9 @@ import { storage } from "wxt/utils/storage";
 import { useActiveAdapterPlayback } from "./active-adapter-playback";
 import { AnidachiLogoMark } from "./anidachi-logo-mark";
 import { AUTH_TOKENS_KEY, type AuthenticatedUser } from "./auth-tokens";
-import { ANIDACHI_BUILD_ID, COMPOSER_EMOJI_PACK } from "./constants";
+import { ANIDACHI_BUILD_ID } from "./constants";
 import { CurrentResourcePanel } from "./current-resource-panel";
+import { ANIDACHI_EMOJI_CATALOG } from "./emoji-catalog";
 import {
 	clearDebugLog,
 	getCompactDebugLogText,
@@ -68,6 +69,7 @@ import {
 import { type GhostVideo, useGhostCam } from "./ghost-cam";
 import {
 	getHotkeyAction,
+	isFireReactionReleaseEvent,
 	isPushToTalkReleaseEvent,
 	shouldCaptureReactionShortcutEvent,
 	shouldStopVoiceTalkOnWindowBlur,
@@ -138,6 +140,7 @@ import {
 	type RoomActionFeedback,
 	shouldConfirmRoomEnd,
 } from "./overlay-room-action-feedback";
+import { RoomDefaultsSettingsPanel } from "./overlay-room-defaults";
 import {
 	PanelCameraControl,
 	RoomPeopleSection,
@@ -150,6 +153,7 @@ import {
 	getVoiceIndicatorParticipantIds,
 	isVoiceSessionPublishing,
 	reduceVoiceSession,
+	shouldResetPersistedOpenMicAfterMediaSeatLoss,
 } from "./overlay-voice-session";
 import { PanelAccountTitle } from "./panel-account-title";
 import { ParticipantAudioContourControl } from "./participant-audio-controls";
@@ -199,10 +203,12 @@ import {
 } from "./room-rail-intent";
 import { getRoomReconnectDelayMs } from "./room-reconnect";
 import {
+	captureRoomSessionIdentity,
 	clearRoomSession,
 	discardPreparedRoomSession,
 	migrateLegacyRoomSession,
 	prepareRoomSession,
+	roomSessionIdentityMatches,
 	type RoomSessionRecord,
 	updateRoomSessionCameraEnabled,
 	updateRoomSessionVoiceMode,
@@ -239,8 +245,10 @@ import type {
 import { getDefinitionForProvider } from "./source-adapters/registry";
 import { overlayStyles } from "./styles";
 import { useTopBubbleReveal } from "./top-bubble-reveal";
+import { useCameraInteractionLock } from "./use-camera-interaction-lock";
 import { useInterfacePreferences } from "./use-interface-preferences";
 import { useReactionShortcuts } from "./use-reaction-shortcuts";
+import { useRoomJoinDefaults } from "./use-room-join-defaults";
 import {
 	authErrorMessage,
 	type CurrentParticipantResult,
@@ -472,6 +480,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const messageComposerShieldRef = useRef<HTMLDivElement | null>(null);
 	const miniPanelRef = useRef<HTMLElement | null>(null);
 	const overlayRootRef = useRef<HTMLDivElement | null>(null);
+	const cameraStackRef = useRef<HTMLDivElement | null>(null);
 	const topBubbleRef = useRef<HTMLButtonElement | null>(null);
 	const roomActionFeedbackTimerRef = useRef<number | null>(null);
 	const transientPanelNoticeTimerRef = useRef<number | null>(null);
@@ -728,6 +737,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		}),
 	);
 	const interfacePreferences = useInterfacePreferences();
+	const roomJoinDefaults = useRoomJoinDefaults(accountUser?.id ?? null);
 	const reactionShortcuts = useReactionShortcuts();
 	const openMicLauncherVisible =
 		voiceSession.mode === "open-mic" && isVoiceSessionPublishing(voiceSession);
@@ -1757,9 +1767,15 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			type: "context",
 			listenerScope: participantAudioPreferenceScope,
 			localHasMediaSeat,
+			localMediaSeatAuthoritative: !roomId || roomSnapshotReady,
 			roomId,
 		});
-	}, [localHasMediaSeat, participantAudioPreferenceScope, roomId]);
+	}, [
+		localHasMediaSeat,
+		participantAudioPreferenceScope,
+		roomId,
+		roomSnapshotReady,
+	]);
 	useEffect(() => {
 		pushToTalkHeldRef.current = voiceSession.pushToTalkHeld;
 	}, [voiceSession.pushToTalkHeld]);
@@ -1808,7 +1824,16 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	}, [activeVoiceRoomSession, p2pSessionActive]);
 
 	const enqueueRoomVoiceModePersistence = useCallback(
-		(mode: "open-mic" | "push-to-talk") => {
+		(
+			mode: "open-mic" | "push-to-talk",
+			{ rememberPreference = false, requireHydratedSession = true } = {},
+		) => {
+			const queuedSessionIdentity = captureRoomSessionIdentity(
+				storedRoomSessionRef.current,
+			);
+			if (!queuedSessionIdentity) {
+				return;
+			}
 			voiceModePersistenceQueueRef.current =
 				voiceModePersistenceQueueRef.current
 					.catch(() => undefined)
@@ -1818,20 +1843,29 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							const activeParticipantId = participantRef.current?.id ?? null;
 							if (
 								!expected ||
-								hydratedVoiceParticipantSessionRef.current !==
-									expected.participantSessionId ||
+								!roomSessionIdentityMatches(expected, queuedSessionIdentity) ||
+								(requireHydratedSession &&
+									hydratedVoiceParticipantSessionRef.current !==
+										expected.participantSessionId) ||
 								roomIdRef.current !== expected.roomId ||
 								activeParticipantId !== expected.ownerUserId
 							) {
 								return;
 							}
-							if (expected.voiceMode === mode) {
+							if (expected.voiceMode === mode && !rememberPreference) {
 								return;
 							}
 
-							const next = await updateRoomSessionVoiceMode(expected, mode);
+							const next = await updateRoomSessionVoiceMode(expected, mode, {
+								rememberPreference,
+							});
 							if (!next) {
-								hydratedVoiceParticipantSessionRef.current = null;
+								if (
+									hydratedVoiceParticipantSessionRef.current ===
+									expected.participantSessionId
+								) {
+									hydratedVoiceParticipantSessionRef.current = null;
+								}
 								return;
 							}
 
@@ -1840,7 +1874,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 								participantRef.current?.id === next.ownerUserId &&
 								next.participantSessionId === expected.participantSessionId;
 							if (!stillActive) {
-								hydratedVoiceParticipantSessionRef.current = null;
+								if (
+									hydratedVoiceParticipantSessionRef.current ===
+									expected.participantSessionId
+								) {
+									hydratedVoiceParticipantSessionRef.current = null;
+								}
 								return;
 							}
 
@@ -1874,7 +1913,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		[],
 	);
 	const enqueueRoomCameraEnabledPersistence = useCallback(
-		(enabled: boolean) => {
+		(enabled: boolean, { rememberPreference = false } = {}) => {
+			const queuedSessionIdentity = captureRoomSessionIdentity(
+				storedRoomSessionRef.current,
+			);
+			if (!queuedSessionIdentity) {
+				return;
+			}
 			cameraEnabledPersistenceQueueRef.current =
 				cameraEnabledPersistenceQueueRef.current
 					.catch(() => undefined)
@@ -1884,18 +1929,20 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							const activeParticipantId = participantRef.current?.id ?? null;
 							if (
 								!expected ||
+								!roomSessionIdentityMatches(expected, queuedSessionIdentity) ||
 								roomIdRef.current !== expected.roomId ||
 								activeParticipantId !== expected.ownerUserId
 							) {
 								return;
 							}
-							if (expected.cameraEnabled === enabled) {
+							if (expected.cameraEnabled === enabled && !rememberPreference) {
 								return;
 							}
 
 							const next = await updateRoomSessionCameraEnabled(
 								expected,
 								enabled,
+								{ rememberPreference },
 							);
 							if (!next) {
 								return;
@@ -1953,6 +2000,35 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		activeVoiceRoomSession,
 		enqueueRoomVoiceModePersistence,
 		voiceSession.mode,
+	]);
+	useEffect(() => {
+		if (
+			!activeVoiceRoomSession ||
+			!shouldResetPersistedOpenMicAfterMediaSeatLoss({
+				localHasMediaSeat,
+				persistedVoiceMode: activeVoiceRoomSession.voiceMode,
+				roomId,
+				roomSnapshotReady,
+			})
+		) {
+			return;
+		}
+
+		// A confirmed seat revoke is privacy-terminal even when this document
+		// remounted before it could hydrate the persisted Open mic preference.
+		hydratedVoiceParticipantSessionRef.current =
+			activeVoiceRoomSession.participantSessionId;
+		hydratingVoiceModeRef.current = null;
+		dispatchVoiceSession({ type: "mode", mode: "push-to-talk" });
+		enqueueRoomVoiceModePersistence("push-to-talk", {
+			requireHydratedSession: false,
+		});
+	}, [
+		activeVoiceRoomSession,
+		enqueueRoomVoiceModePersistence,
+		localHasMediaSeat,
+		roomId,
+		roomSnapshotReady,
 	]);
 	const messageComposerShieldVisible =
 		messageComposerOpen || messageComposerShieldActive;
@@ -2622,7 +2698,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 		clearTransientPanelNotice();
 		setCamsEnabled(nextEnabled);
-		enqueueRoomCameraEnabledPersistence(nextEnabled);
+		enqueueRoomCameraEnabledPersistence(nextEnabled, {
+			rememberPreference: true,
+		});
 	}, [
 		camsEnabled,
 		clearTransientPanelNotice,
@@ -2670,9 +2748,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			clearTransientPanelNotice();
 			pushToTalkHeldRef.current = false;
 			dispatchVoiceSession({ type: "mode", mode });
+			enqueueRoomVoiceModePersistence(mode, {
+				rememberPreference: true,
+			});
 		},
 		[
 			clearTransientPanelNotice,
+			enqueueRoomVoiceModePersistence,
 			localHasMediaSeat,
 			localMediaSeatState,
 			p2pSessionActive,
@@ -2755,7 +2837,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		playerBottomInsetPx,
 		viewportHeight: overlayLayoutViewportHeight,
 	});
-	const overlayLayoutRuntimeContext = useMemo<OverlayLayoutContext>(
+	const adaptiveOverlayLayoutRuntimeContext = useMemo<OverlayLayoutContext>(
 		() =>
 			createOverlayLayoutRuntimeContext({
 				cameraCount: overlayLayoutCameraCount,
@@ -2771,13 +2853,17 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			playerOverlayGeometry.safeInsets,
 		],
 	);
-	const resolvedOverlayLayout = useMemo(
+	const adaptiveOverlayLayout = useMemo(
 		() =>
 			resolveOverlayLayout(
 				previewOverlayLayout ?? appliedOverlayLayout,
-				overlayLayoutRuntimeContext,
+				adaptiveOverlayLayoutRuntimeContext,
 			),
-		[appliedOverlayLayout, overlayLayoutRuntimeContext, previewOverlayLayout],
+		[
+			adaptiveOverlayLayoutRuntimeContext,
+			appliedOverlayLayout,
+			previewOverlayLayout,
+		],
 	);
 	const cameraInteractionCorridor = useMemo(() => {
 		const definition = previewOverlayLayout ?? appliedOverlayLayout;
@@ -2803,7 +2889,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 		return getCameraInteractionCorridor(
 			[
-				resolvedOverlayLayout.video.bounds,
+				adaptiveOverlayLayout.video.bounds,
 				controlsHiddenLayout.video.bounds,
 				maximumControlsLayout.video.bounds,
 			],
@@ -2813,14 +2899,51 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			},
 		);
 	}, [
+		adaptiveOverlayLayout.video.bounds,
 		appliedOverlayLayout,
 		cameraInteractionPlayerSafeInsets,
 		overlayLayoutCameraCount,
 		overlayLayoutViewportHeight,
 		overlayLayoutViewportWidth,
 		previewOverlayLayout,
-		resolvedOverlayLayout.video.bounds,
 	]);
+	const cameraInteraction = useCameraInteractionLock({
+		cameraRef: cameraStackRef,
+		enabled:
+			!overlayLayoutPreviewActive &&
+			cameraStackVisible &&
+			renderableCameraParticipants.length > 0,
+		interactionRect: cameraInteractionCorridor,
+		overlayRef: overlayRootRef,
+		playerGeometry: playerOverlayGeometry,
+	});
+	const overlayLayoutRuntimeContext = useMemo<OverlayLayoutContext>(
+		() =>
+			createOverlayLayoutRuntimeContext({
+				cameraCount: overlayLayoutCameraCount,
+				height: overlayLayoutViewportHeight,
+				playerSafeInsets:
+					cameraInteraction.pinnedPlayerSafeInsets ??
+					playerOverlayGeometry.safeInsets,
+				safePaddingPx: 12,
+				width: overlayLayoutViewportWidth,
+			}),
+		[
+			cameraInteraction.pinnedPlayerSafeInsets,
+			overlayLayoutCameraCount,
+			overlayLayoutViewportHeight,
+			overlayLayoutViewportWidth,
+			playerOverlayGeometry.safeInsets,
+		],
+	);
+	const resolvedOverlayLayout = useMemo(
+		() =>
+			resolveOverlayLayout(
+				previewOverlayLayout ?? appliedOverlayLayout,
+				overlayLayoutRuntimeContext,
+			),
+		[appliedOverlayLayout, overlayLayoutRuntimeContext, previewOverlayLayout],
+	);
 	const cameraControlDisabledReason =
 		roomMediaSeatLimit <= 0
 			? "Live media is not available in this room"
@@ -2835,10 +2958,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		}),
 		"--cam-stack-height": `${resolvedOverlayLayout.video.bounds.height}px`,
 		"--cam-stack-width": `${resolvedOverlayLayout.video.bounds.width}px`,
-		"--cam-interaction-corridor-height": `${cameraInteractionCorridor.height}px`,
-		"--cam-interaction-corridor-left": `${cameraInteractionCorridor.x}px`,
-		"--cam-interaction-corridor-top": `${cameraInteractionCorridor.y}px`,
-		"--cam-interaction-corridor-width": `${cameraInteractionCorridor.width}px`,
 		"--mini-panel-bottom-reserve": `${overlayChromePlacement.miniPanelBottomReservePx}px`,
 		"--mini-panel-right": `${overlayChromePlacement.miniPanelRightPx}px`,
 		"--mini-panel-top": `${overlayChromePlacement.miniPanelTopPx}px`,
@@ -4651,8 +4770,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		const accessToken = await getFreshAuthAccessToken(
 			"invite-status-membership-change",
 		);
-		if (!accessToken || roomIdRef.current !== activeRoomId)
-			return;
+		if (!accessToken || roomIdRef.current !== activeRoomId) return;
 
 		try {
 			const invites = await listRoomInvites(accessToken);
@@ -5273,6 +5391,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	useEffect(() => {
 		const state = () => ({
 			experimentalSuperReactionsEnabled,
+			messageComposerOpen,
 			panelOpen,
 			reactionsEnabled,
 			reactionShortcuts: reactionShortcuts.assignments,
@@ -5347,6 +5466,18 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				event.preventDefault();
 				event.stopImmediatePropagation();
 				stopPushToTalk();
+				return;
+			}
+
+			if (
+				isFireReactionReleaseEvent(event, {
+					held: fireHoldRef.current !== null,
+					reactionShortcuts: reactionShortcuts.assignments,
+				})
+			) {
+				event.preventDefault();
+				event.stopImmediatePropagation();
+				finishFireHold("hotkey-up");
 				return;
 			}
 
@@ -6039,7 +6170,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 											aria-label="Quick reactions"
 											className="settings-toggle-switch"
 											data-state={reactionsEnabled ? "on" : "off"}
-										onClick={handleReactionsEnabledToggle}
+											onClick={handleReactionsEnabledToggle}
 											role="switch"
 											type="button"
 										>
@@ -6084,6 +6215,16 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 									feedback={ghostCamSession.voiceMessage}
 									mode={voiceSession.mode}
 									onModeChange={handleVoiceModeChange}
+								/>
+							) : null}
+
+							{settingsPanelCategory === "room" ? (
+								<RoomDefaultsSettingsPanel
+									error={roomJoinDefaults.error}
+									onChange={roomJoinDefaults.update}
+									preferences={roomJoinDefaults.preferences}
+									ready={roomJoinDefaults.ready}
+									saving={roomJoinDefaults.saving}
 								/>
 							) : null}
 
@@ -6227,7 +6368,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						</button>
 						{messageComposerEmojiOpen ? (
 							<div className="message-composer-emoji-popover">
-								{COMPOSER_EMOJI_PACK.map((emoji) => (
+								{ANIDACHI_EMOJI_CATALOG.map((emoji) => (
 									<button
 										key={emoji}
 										onClick={() => insertComposerEmoji(emoji)}
@@ -6266,44 +6407,37 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			{socialVisible ? (
 				<>
 					{cameraStackVisible && renderableCameraParticipants.length ? (
-						<>
-							<div
-								aria-hidden="true"
-								className="cam-stack-interaction-corridor"
-								{...overlayInteractionBoundaryProps}
-							/>
-							<div className="cam-stack">
-								{renderableCameraParticipants.map((item) => {
-									const video = cameraVideoByParticipantId.get(item.id);
-									if (!video) {
-										return null;
-									}
+						<div className="cam-stack" ref={cameraStackRef}>
+							{renderableCameraParticipants.map((item) => {
+								const video = cameraVideoByParticipantId.get(item.id);
+								if (!video) {
+									return null;
+								}
 
-									return (
-										<CameraBubble
-											key={item.id}
-											participant={item}
-											video={video}
-											audioPreference={
-												item.id === participant?.id
-													? null
-													: getParticipantAudioPreference(item.id)
-											}
-											fireChargePhase={
-												fireCharge?.participantId === item.id
-													? fireCharge.phase
-													: null
-											}
-											flaming={flamingParticipantIds.includes(item.id)}
-											onAudioPreferenceChange={(preference) =>
-												handleParticipantAudioChange(item.id, preference)
-											}
-											speaking={voiceIndicatorParticipantIds.includes(item.id)}
-										/>
-									);
-								})}
-							</div>
-						</>
+								return (
+									<CameraBubble
+										key={item.id}
+										participant={item}
+										video={video}
+										audioPreference={
+											item.id === participant?.id
+												? null
+												: getParticipantAudioPreference(item.id)
+										}
+										fireChargePhase={
+											fireCharge?.participantId === item.id
+												? fireCharge.phase
+												: null
+										}
+										flaming={flamingParticipantIds.includes(item.id)}
+										onAudioPreferenceChange={(preference) =>
+											handleParticipantAudioChange(item.id, preference)
+										}
+										speaking={voiceIndicatorParticipantIds.includes(item.id)}
+									/>
+								);
+							})}
+						</div>
 					) : null}
 
 					{roomRailVisible ? (

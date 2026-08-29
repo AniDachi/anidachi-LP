@@ -27,6 +27,9 @@ export function getCameraEnabledForRoomConnection({
   persistedCameraEnabled,
   sameRoomReconnect,
 }: CameraEnabledForRoomConnectionInput): boolean {
+  // The mounted overlay owns the freshest user intent during an in-document
+  // reconnect. A new document has no such local authority and restores from
+  // the background-owned room session instead.
   return sameRoomReconnect ? currentCameraEnabled : persistedCameraEnabled;
 }
 

@@ -15,10 +15,32 @@ export interface VoiceSessionState extends VoiceSessionContext {
 }
 
 export type VoiceSessionAction =
-  | ({ type: "context" } & VoiceSessionContext)
+  | ({
+      type: "context";
+      localMediaSeatAuthoritative?: boolean;
+    } & VoiceSessionContext)
   | { type: "mode"; mode: VoiceMode }
   | { type: "push-to-talk"; held: boolean }
   | { type: "terminal-failure" };
+
+export function shouldResetPersistedOpenMicAfterMediaSeatLoss({
+  localHasMediaSeat,
+  persistedVoiceMode,
+  roomId,
+  roomSnapshotReady,
+}: {
+  localHasMediaSeat: boolean;
+  persistedVoiceMode: VoiceMode;
+  roomId: string | null;
+  roomSnapshotReady: boolean;
+}): boolean {
+  return Boolean(
+    roomId &&
+      roomSnapshotReady &&
+      !localHasMediaSeat &&
+      persistedVoiceMode === "open-mic",
+  );
+}
 
 export function createVoiceSessionState({
   listenerScope,
@@ -42,10 +64,22 @@ export function reduceVoiceSession(
 ): VoiceSessionState {
   if (action.type === "context") {
     const listenerScopeChanged = action.listenerScope !== state.listenerScope;
+    // A same-room source transition temporarily has no local participant
+    // snapshot. Stop publication during that gap, but do not reinterpret the
+    // unknown seat as an authoritative revoke of the user's microphone mode.
+    const hasVoiceIntentToReset =
+      state.localHasMediaSeat ||
+      state.mode !== "push-to-talk" ||
+      state.pushToTalkHeld ||
+      state.release !== "immediate";
+    const authoritativeMediaSeatLoss =
+      action.localMediaSeatAuthoritative !== false &&
+      !action.localHasMediaSeat &&
+      hasVoiceIntentToReset;
     const terminalContextChange =
       listenerScopeChanged ||
       action.roomId !== state.roomId ||
-      (state.localHasMediaSeat && !action.localHasMediaSeat);
+      authoritativeMediaSeatLoss;
     if (terminalContextChange) {
       return {
         ...state,

@@ -73,6 +73,15 @@ describe("reaction shortcut preferences", () => {
 		expect(assignReactionShortcut(updated, 10, "😂")).toBe(updated);
 	});
 
+	it("accepts diverse entertainment, food, animal, and symbol emoji as quick reactions", () => {
+		for (const emoji of ["🎬", "🎮", "🍕", "🐉", "🚀", "🏆"]) {
+			const current = getDefaultReactionShortcutPreferences();
+			const updated = assignReactionShortcut(current, 0, emoji);
+
+			expect(updated.emojis[0]).toBe(emoji);
+		}
+	});
+
 	it("ships a compact unique catalog that contains every default", () => {
 		expect(REACTION_EMOJI_CATALOG.length).toBeGreaterThanOrEqual(80);
 		expect(new Set(REACTION_EMOJI_CATALOG).size).toBe(
