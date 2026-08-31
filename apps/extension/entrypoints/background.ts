@@ -27,6 +27,7 @@ import {
   endWebsiteRoomFromApi,
   handleRoomHttpMessage,
   isRoomHttpMessage,
+  type RoomAdmissionCompletion,
   type RoomHttpBackgroundDependencies,
 } from "../src/room-client";
 import {
@@ -34,6 +35,7 @@ import {
   handleRoomDepartureRuntimeMessage,
   handleRoomTabDeparture,
   isRoomDepartureRuntimeMessage,
+  roomDepartureRuntimeResponse,
   type RoomTabDepartureDependencies,
   type RoomTabDepartureOutcome,
 } from "../src/room-departure";
@@ -49,6 +51,7 @@ import {
   reconcileRoomInviteNotifications,
 } from "../src/room-invite-notifications";
 import {
+  clearRoomSessionForDepartureIfMatch,
   handleRoomSessionStorageRuntimeMessage,
 } from "../src/room-session-storage";
 import { handleSocialHttpMessage, isSocialHttpMessage } from "../src/social-client";
@@ -61,11 +64,15 @@ import {
 } from "../src/watch-history-client";
 
 export interface PrivilegedRoomRuntimeDependencies {
+  admissionDepartureTimeoutMs?: number;
   endRoom?: PrivilegedOverlayIntentDependencies["endRoom"];
   intentDependencies?: Omit<PrivilegedOverlayIntentDependencies, "endRoom">;
   roomDependencies?: RoomHttpBackgroundDependencies;
   departureDependencies?: RoomTabDepartureDependencies;
 }
+
+/** Keeps explicit leave responsive while a canceled Web admission settles. */
+export const ROOM_ADMISSION_DEPARTURE_SETTLE_TIMEOUT_MS = 2_000;
 
 export interface RemovedRoomTabDependencies {
   cancelRoomAdmission?: (tabId: number) => void;
@@ -149,18 +156,56 @@ async function dispatchRoomDepartureRuntimeMessage(
     tabId as number,
     dependencies.roomDependencies?.authorityRequestSequences,
   );
-  return handleExactRoomSessionDepartureRuntime(
-    {
-      version: 1,
-      revision: 1,
-      roomId: message.roomId,
-      ownerUserId: message.expectedUserId,
-      participantSessionId: message.participantSessionId,
-      cameraEnabled: false,
-      voiceMode: "push-to-talk",
-    },
+  const record = {
+    version: 1 as const,
+    revision: 1,
+    roomId: message.roomId,
+    ownerUserId: message.expectedUserId,
+    participantSessionId: message.participantSessionId,
+    cameraEnabled: false,
+    voiceMode: "push-to-talk" as const,
+  };
+  const departure = await handleExactRoomSessionDepartureRuntime(
+    record,
     dependencies.departureDependencies,
   );
+  if (!departure.ok) return departure;
+
+  const completion = await waitForAdmissionCompletion(
+    cancelledAdmission,
+    dependencies.admissionDepartureTimeoutMs,
+  );
+  if (completion?.kind !== "cleanup-confirmed") {
+    return roomDepartureRuntimeResponse("retryable");
+  }
+  try {
+    await clearRoomSessionForDepartureIfMatch(
+      tabId as number,
+      record,
+      dependencies.roomDependencies?.roomSessionDependencies,
+    );
+  } catch {
+    return roomDepartureRuntimeResponse("retryable");
+  }
+  return departure;
+}
+
+async function waitForAdmissionCompletion(
+  completion: Promise<RoomAdmissionCompletion>,
+  timeoutMs: number | undefined,
+): Promise<RoomAdmissionCompletion | null> {
+  const boundedTimeoutMs = Number.isFinite(timeoutMs)
+    ? Math.max(0, Math.floor(timeoutMs as number))
+    : ROOM_ADMISSION_DEPARTURE_SETTLE_TIMEOUT_MS;
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  const timedOut = new Promise<null>((resolve) => {
+    timeoutId = setTimeout(() => resolve(null), boundedTimeoutMs);
+  });
+  try {
+    return await Promise.race([completion, timedOut]);
+  } finally {
+    if (timeoutId !== null) clearTimeout(timeoutId);
+  }
 }
 
 export default defineBackground(() => {

@@ -45,7 +45,8 @@ type ConfirmedAdmissionDepartureOutcome = Extract<
 
 export type RoomAdmissionCompletion =
   | { kind: "cleanup-confirmed"; outcome: ConfirmedAdmissionDepartureOutcome }
-  | { kind: "finished" };
+  | { kind: "cleanup-failed"; outcome: RoomTabDepartureOutcome }
+  | { kind: "not-cancelled" };
 
 interface RoomAdmissionReservation {
   readonly completion: Promise<RoomAdmissionCompletion>;
@@ -53,6 +54,7 @@ interface RoomAdmissionReservation {
   readonly sequence: number;
   readonly tabId: number;
   cancelled: boolean;
+  explicitDepartureObserver: boolean;
   settled: boolean;
   resolve(result: RoomAdmissionCompletion): void;
 }
@@ -76,6 +78,7 @@ export class RoomAdmissionFence {
     const reservation: RoomAdmissionReservation = {
       cancelled: false,
       completion,
+      explicitDepartureObserver: false,
       participantSessionId,
       resolve,
       sequence: ++this.nextSequence,
@@ -99,6 +102,7 @@ export class RoomAdmissionFence {
       return null;
     }
     current.cancelled = true;
+    current.explicitDepartureObserver = true;
     return current.completion;
   }
 
@@ -597,6 +601,10 @@ export async function handleRoomHttpMessage(
           message.roomSession.participantSessionId,
         )
       : null;
+  const admissionRecord =
+    message.command === "connect-room"
+      ? roomSessionRecordForAdmission(message.roomSession, message.roomId)
+      : null;
   let admissionFinished = false;
   const authorityRequest = reserveRoomAuthorityRequest(sender, dependencies.authorityRequestSequences);
   const usesPersistentAuthority = dependencies.issueAuthority === undefined;
@@ -689,6 +697,13 @@ export async function handleRoomHttpMessage(
       );
       if (admissionReservation) {
         admissionFence.finish(admissionReservation, cleanup);
+        await clearUnobservedCancelledAdmission(
+          senderTabId as number,
+          roomSession ?? roomSessionRecordForAdmission(message.roomSession, message.roomId),
+          admissionReservation,
+          cleanup,
+          dependencies,
+        );
         admissionFinished = true;
       }
       throw new RoomApiError(
@@ -709,6 +724,13 @@ export async function handleRoomHttpMessage(
         dependencies,
       );
       admissionFence.finish(admissionReservation, cleanup);
+      await clearUnobservedCancelledAdmission(
+        senderTabId as number,
+        roomSession,
+        admissionReservation,
+        cleanup,
+        dependencies,
+      );
       admissionFinished = true;
       throw new RoomApiError(
         "This room action was replaced by a newer tab action.",
@@ -718,7 +740,7 @@ export async function handleRoomHttpMessage(
       );
     }
     if (admissionReservation) {
-      admissionFence.finish(admissionReservation, { kind: "finished" });
+      admissionFence.finish(admissionReservation, { kind: "not-cancelled" });
       admissionFinished = true;
     }
     return {
@@ -726,8 +748,22 @@ export async function handleRoomHttpMessage(
       connection: { ...connection, privilegedRoomAuthority, roomSession },
     };
   } catch (error) {
-    if (admissionReservation && !admissionFinished) {
-      admissionFence.finish(admissionReservation, { kind: "finished" });
+    if (admissionReservation && admissionRecord && !admissionFinished) {
+      const completion = admissionFence.isCurrent(admissionReservation)
+        ? { kind: "not-cancelled" as const }
+        : await cleanupCancelledRoomAdmission(
+            senderTabId as number,
+            admissionRecord,
+            dependencies,
+          );
+      admissionFence.finish(admissionReservation, completion);
+      await clearUnobservedCancelledAdmission(
+        senderTabId as number,
+        admissionRecord,
+        admissionReservation,
+        completion,
+        dependencies,
+      );
       admissionFinished = true;
     }
     await discardPreparedRoomSessionForSender(
@@ -765,14 +801,29 @@ async function cleanupCancelledRoomAdmission(
     dependencies.cancelledAdmissionDepartureDependencies,
   );
   if (!isConfirmedAdmissionDepartureOutcome(outcome)) {
-    return { kind: "finished" };
+    return { kind: "cleanup-failed", outcome };
+  }
+  return { kind: "cleanup-confirmed", outcome };
+}
+
+async function clearUnobservedCancelledAdmission(
+  tabId: number,
+  record: RoomSessionRecord,
+  reservation: RoomAdmissionReservation,
+  completion: RoomAdmissionCompletion,
+  dependencies: RoomHttpBackgroundDependencies,
+): Promise<void> {
+  if (
+    reservation.explicitDepartureObserver ||
+    completion.kind !== "cleanup-confirmed"
+  ) {
+    return;
   }
   await clearRoomSessionForDepartureIfMatch(
     tabId,
     record,
     dependencies.roomSessionDependencies,
   ).catch(() => false);
-  return { kind: "cleanup-confirmed", outcome };
 }
 
 function roomSessionRecordForAdmission(

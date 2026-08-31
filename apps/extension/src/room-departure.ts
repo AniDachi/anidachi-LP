@@ -273,6 +273,12 @@ export async function handleExactRoomSessionDepartureRuntime(
 	dependencies: RoomTabDepartureDependencies = {},
 ): Promise<RoomDepartureRuntimeResponse> {
 	const outcome = await departExactRoomSession(record, dependencies);
+	return roomDepartureRuntimeResponse(outcome);
+}
+
+export function roomDepartureRuntimeResponse(
+	outcome: RoomTabDepartureOutcome,
+): RoomDepartureRuntimeResponse {
 	if (isConfirmedRoomDepartureOutcome(outcome)) {
 		return { ok: true, outcome };
 	}
