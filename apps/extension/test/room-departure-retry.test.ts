@@ -13,6 +13,123 @@ const OLD_SESSION: RoomDepartureRetryIdentity = {
 };
 
 describe("room departure retry coordinator", () => {
+  it.each(["alarm", "startup", "online", "initialize"] as const)(
+    "pre-arms an alarm before deferred auth from %s and safely resumes",
+    async (trigger) => {
+      const storage = createPersistentStorage();
+      const scheduler = createScheduler();
+      const auth = deferred<string | null>();
+      let now = 500;
+      const getCurrentUserId = vi.fn(() => auth.promise);
+      const departExact = vi
+        .fn<() => Promise<"retryable" | "departed">>()
+        .mockResolvedValueOnce("retryable")
+        .mockResolvedValueOnce("departed");
+      const coordinator = createRoomDepartureRetryCoordinator({
+        storage,
+        scheduler,
+        getCurrentUserId,
+        departExact,
+        now: () => now,
+      });
+
+      await coordinator.renewAdmissionIntent(OLD_SESSION);
+      now = scheduler.when() as number;
+      scheduler.consume();
+      const draining = trigger === "alarm"
+        ? coordinator.handleAlarm(ROOM_DEPARTURE_RETRY_ALARM)
+        : coordinator.drain({ force: trigger !== "initialize" });
+      await waitUntil(() => getCurrentUserId.mock.calls.length === 1);
+
+      expect(scheduler.when()).not.toBeNull();
+      auth.resolve("user-a");
+      await draining;
+
+      now = 500 + ROOM_ADMISSION_SETTLEMENT_HORIZON_MS;
+      await coordinator.drain({ force: true });
+      expect(storage.value()).toBeNull();
+    },
+  );
+
+  it("pre-arms an alarm before deferred departure from an alarm drain", async () => {
+    const storage = createPersistentStorage();
+    const scheduler = createScheduler();
+    const firstDeparture = deferred<"retryable">();
+    let now = 800;
+    const departExact = vi
+      .fn<() => Promise<"retryable" | "departed">>()
+      .mockImplementationOnce(() => firstDeparture.promise)
+      .mockResolvedValueOnce("departed");
+    const coordinator = createRoomDepartureRetryCoordinator({
+      storage,
+      scheduler,
+      getCurrentUserId: async () => "user-a",
+      departExact,
+      now: () => now,
+    });
+
+    await coordinator.renewAdmissionIntent(OLD_SESSION);
+    now = scheduler.when() as number;
+    scheduler.consume();
+    const draining = coordinator.handleAlarm(ROOM_DEPARTURE_RETRY_ALARM);
+    await waitUntil(() => departExact.mock.calls.length === 1);
+
+    expect(scheduler.when()).not.toBeNull();
+    firstDeparture.resolve("retryable");
+    await draining;
+
+    now = 800 + ROOM_ADMISSION_SETTLEMENT_HORIZON_MS;
+    await coordinator.drain({ force: true });
+    expect(storage.value()).toBeNull();
+  });
+
+  it("renews a settled same-identity job before a later canceled admission", async () => {
+    const storage = createPersistentStorage();
+    const scheduler = createScheduler();
+    let now = 2_000;
+    let lateAssignmentActive = false;
+    const departExact = vi
+      .fn<() => Promise<"stale" | "departed" | "retryable">>(async () => {
+        if (!lateAssignmentActive) return "stale" as const;
+        lateAssignmentActive = false;
+        return "departed" as const;
+      })
+      .mockResolvedValueOnce("retryable");
+    const coordinator = createRoomDepartureRetryCoordinator({
+      storage,
+      scheduler,
+      getCurrentUserId: async () => "user-a",
+      departExact,
+      now: () => now,
+    });
+
+    const first = await coordinator.renewAdmissionIntent(OLD_SESSION);
+    await expect(coordinator.settleAdmission(first)).resolves.toBe("retryable");
+    expect(storage.value()?.jobs[0]?.admissionState).toBe("settled");
+
+    now += 1_000;
+    const second = await coordinator.renewAdmissionIntent(OLD_SESSION);
+    expect(second.generation).toBe(first.generation + 1);
+    expect(storage.value()?.jobs[0]).toMatchObject({
+      admissionState: "may-commit",
+      generation: second.generation,
+      settleAfter: now + ROOM_ADMISSION_SETTLEMENT_HORIZON_MS,
+    });
+
+    await expect(coordinator.settleAdmission(first)).resolves.toBe(
+      "active-room-changed",
+    );
+    await expect(coordinator.retryAdmission(second)).resolves.toBe("stale");
+    expect(storage.value()?.jobs[0]).toMatchObject({
+      admissionState: "may-commit",
+      generation: second.generation,
+    });
+
+    lateAssignmentActive = true;
+    await expect(coordinator.settleAdmission(second)).resolves.toBe("departed");
+    expect(lateAssignmentActive).toBe(false);
+    expect(storage.value()).toBeNull();
+  });
   it("survives worker recreation before admission settlement and exact-cleans a late commit", async () => {
     const storage = createPersistentStorage();
     const firstScheduler = createScheduler();
@@ -25,14 +142,15 @@ describe("room departure retry coordinator", () => {
       now: () => now,
     });
 
-    await firstWorker.persistAdmissionIntent(OLD_SESSION);
+    await firstWorker.renewAdmissionIntent(OLD_SESSION);
     expect(ROOM_ADMISSION_SETTLEMENT_HORIZON_MS).toBe(135_000);
     expect(storage.value()).toMatchObject({
-      version: 2,
+      version: 3,
       jobs: [
         {
           ...OLD_SESSION,
           admissionState: "may-commit",
+          generation: 1,
           settleAfter: now + ROOM_ADMISSION_SETTLEMENT_HORIZON_MS,
         },
       ],
@@ -84,13 +202,13 @@ describe("room departure retry coordinator", () => {
       now: () => 10_000,
     });
 
-    await coordinator.persistAdmissionIntent(OLD_SESSION);
+    const operation = await coordinator.renewAdmissionIntent(OLD_SESSION);
     await coordinator.drain({ force: true });
     expect(departExact).toHaveBeenCalledTimes(1);
     expect(storage.value()?.jobs).toHaveLength(1);
 
     oldAssignmentActive = true;
-    await expect(coordinator.settleAdmission(OLD_SESSION)).resolves.toBe("departed");
+    await expect(coordinator.settleAdmission(operation)).resolves.toBe("departed");
 
     expect(departExact).toHaveBeenCalledTimes(2);
     expect(oldAssignmentActive).toBe(false);
@@ -109,8 +227,8 @@ describe("room departure retry coordinator", () => {
       now: () => 25_000,
     });
 
-    await coordinator.persistAdmissionIntent(OLD_SESSION);
-    const settling = coordinator.settleAdmission(OLD_SESSION);
+    const operation = await coordinator.renewAdmissionIntent(OLD_SESSION);
+    const settling = coordinator.settleAdmission(operation);
     await waitUntil(() => scheduler.when() === 25_000);
 
     expect(storage.value()?.jobs[0]?.admissionState).toBe("settled");
@@ -131,8 +249,8 @@ describe("room departure retry coordinator", () => {
       now: () => 26_000,
     });
 
-    await coordinator.persistAdmissionIntent(OLD_SESSION);
-    const retrying = coordinator.retryAdmission(OLD_SESSION);
+    const operation = await coordinator.renewAdmissionIntent(OLD_SESSION);
+    const retrying = coordinator.retryAdmission(operation);
     await waitUntil(() => scheduler.when() === 26_000);
 
     expect(storage.value()?.jobs[0]?.admissionState).toBe("may-commit");
@@ -154,7 +272,7 @@ describe("room departure retry coordinator", () => {
       now: () => 50_000,
     });
 
-    await coordinator.persistAdmissionIntent(OLD_SESSION);
+    const operation = await coordinator.renewAdmissionIntent(OLD_SESSION);
     await coordinator.drain({ force: true });
 
     expect(storage.value()?.jobs).toHaveLength(1);
@@ -162,7 +280,7 @@ describe("room departure retry coordinator", () => {
     expect(departExact).not.toHaveBeenCalled();
 
     currentUserId = "user-a";
-    await expect(coordinator.settleAdmission(OLD_SESSION)).resolves.toBe("stale");
+    await expect(coordinator.settleAdmission(operation)).resolves.toBe("stale");
     expect(departExact).toHaveBeenCalledOnce();
     expect(storage.value()).toBeNull();
   });
@@ -187,8 +305,8 @@ describe("room departure retry coordinator", () => {
       now: () => 100_000,
     });
 
-    await coordinator.persistAdmissionIntent(OLD_SESSION);
-    await coordinator.settleAdmission(OLD_SESSION);
+    const operation = await coordinator.renewAdmissionIntent(OLD_SESSION);
+    await coordinator.settleAdmission(operation);
 
     expect(departExact).toHaveBeenCalledWith(OLD_SESSION);
     expect(replacement).toEqual({
@@ -200,7 +318,7 @@ describe("room departure retry coordinator", () => {
     expect(storage.value()).toBeNull();
   });
 
-  it("coalesces duplicate cancellation intents and caps retry backoff", async () => {
+  it("renews repeated same-identity intents and caps retry backoff", async () => {
     const storage = createPersistentStorage();
     const scheduler = createScheduler();
     let now = 150_000;
@@ -212,11 +330,12 @@ describe("room departure retry coordinator", () => {
       now: () => now,
     });
 
-    await coordinator.persistAdmissionIntent(OLD_SESSION);
-    await coordinator.persistAdmissionIntent(OLD_SESSION);
+    const first = await coordinator.renewAdmissionIntent(OLD_SESSION);
+    const second = await coordinator.renewAdmissionIntent(OLD_SESSION);
+    expect(second.generation).toBe(first.generation + 1);
     expect(storage.value()?.jobs).toHaveLength(1);
 
-    await coordinator.settleAdmission(OLD_SESSION);
+    await coordinator.settleAdmission(second);
     for (let attempt = 1; attempt < 12; attempt += 1) {
       const nextAttemptAt = storage.value()?.jobs[0]?.nextAttemptAt;
       expect(typeof nextAttemptAt).toBe("number");
@@ -244,8 +363,8 @@ describe("room departure retry coordinator", () => {
       now: () => 200_000,
     });
 
-    await coordinator.persistAdmissionIntent(OLD_SESSION);
-    await coordinator.settleAdmission(OLD_SESSION);
+    const operation = await coordinator.renewAdmissionIntent(OLD_SESSION);
+    await coordinator.settleAdmission(operation);
 
     expect(storage.value()).toBeNull();
   });
@@ -277,6 +396,9 @@ function createScheduler() {
     },
     when() {
       return scheduledAt;
+    },
+    consume() {
+      scheduledAt = null;
     },
   };
 }

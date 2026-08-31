@@ -410,6 +410,57 @@ describe("authenticated room client", () => {
     }
   });
 
+  it.each([
+    { label: "success", ok: true, status: 200 },
+    { label: "error", ok: false, status: 503 },
+  ])("keeps the connect abort active through a stalled $label response body", async ({ ok, status }) => {
+    vi.useFakeTimers();
+    try {
+      let requestSignal: AbortSignal | undefined;
+      let resolveBody!: (value: unknown) => void;
+      const body = new Promise<unknown>((resolve, reject) => {
+        resolveBody = resolve;
+        const attachAbort = () => {
+          requestSignal?.addEventListener("abort", () => reject(new Error("body aborted")));
+        };
+        queueMicrotask(attachAbort);
+      });
+      vi.stubGlobal("fetch", vi.fn((_url: URL, init?: RequestInit) => {
+        requestSignal = init?.signal ?? undefined;
+        return Promise.resolve({
+          ok,
+          status,
+          json: () => body,
+        } as Response);
+      }));
+
+      const connecting = connectWebsiteRoomFromApi(
+        `room-body-${status}`,
+        "access-1",
+        "participant-session-1",
+      );
+      const completed = connecting.then(
+        () => "resolved" as const,
+        () => "rejected" as const,
+      );
+      await Promise.resolve();
+      await vi.advanceTimersByTimeAsync(ROOM_CONNECT_REQUEST_TIMEOUT_MS);
+      const abortedBeforeManualBodyResolution = requestSignal?.aborted;
+      if (!abortedBeforeManualBodyResolution) {
+        resolveBody(
+          ok
+            ? { roomToken: "room-token-after-body" }
+            : { code: "ROOM_DEPARTURE_UNAVAILABLE", message: "Unavailable" },
+        );
+      }
+
+      await completed;
+      expect(abortedBeforeManualBodyResolution).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("binds the prepared participant session into create and connect HTTP bodies", async () => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(Response.json({

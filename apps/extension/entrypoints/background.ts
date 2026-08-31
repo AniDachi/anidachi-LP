@@ -80,7 +80,7 @@ export interface PrivilegedRoomRuntimeDependencies {
 export const ROOM_ADMISSION_DEPARTURE_SETTLE_TIMEOUT_MS = 2_000;
 
 export interface RemovedRoomTabDependencies {
-  cancelRoomAdmission?: (tabId: number) => Promise<void> | null | void;
+  cancelRoomAdmission?: (tabId: number) => Promise<unknown> | null | void;
   clearRoomAuthorityRequest?: (tabId: number) => void;
   departRoom?: (tabId: number) => Promise<RoomTabDepartureOutcome>;
   removePrivilegedAuthority?: (tabId: number) => Promise<void>;

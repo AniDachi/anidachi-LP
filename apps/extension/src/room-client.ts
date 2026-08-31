@@ -23,10 +23,11 @@ import {
   type RoomTabDepartureOutcome,
 } from "./room-departure";
 import {
-  persistRoomDepartureAdmissionIntent,
+  renewRoomDepartureAdmissionIntent,
   retryRoomDepartureAdmission,
   settleRoomDepartureAdmission,
   type RoomDepartureRetryIdentity,
+  type RoomDepartureRetryOperation,
 } from "./room-departure-retry";
 import {
   issuePrivilegedRoomAuthority,
@@ -61,23 +62,23 @@ export type RoomAdmissionCompletion =
 interface RoomAdmissionReservation {
   readonly completion: Promise<RoomAdmissionCompletion>;
   readonly identity: RoomDepartureRetryIdentity;
-  readonly persistIntent: (
+  readonly renewIntent: (
     identity: RoomDepartureRetryIdentity,
-  ) => Promise<void>;
+  ) => Promise<RoomDepartureRetryOperation>;
   readonly participantSessionId: string;
   readonly sequence: number;
   readonly tabId: number;
   cancelled: boolean;
   explicitDepartureObserver: boolean;
   intentPersistenceConfirmed: boolean;
-  intentPersisted: Promise<void> | null;
+  intentPersisted: Promise<RoomDepartureRetryOperation> | null;
   settled: boolean;
   resolve(result: RoomAdmissionCompletion): void;
 }
 
 export interface RoomAdmissionCancellation {
   completion: Promise<RoomAdmissionCompletion>;
-  intentPersisted: Promise<void>;
+  intentPersisted: Promise<RoomDepartureRetryOperation>;
 }
 
 export class RoomAdmissionFence {
@@ -87,9 +88,9 @@ export class RoomAdmissionFence {
   begin(
     tabId: number,
     identity: RoomDepartureRetryIdentity,
-    persistIntent: (
+    renewIntent: (
       identity: RoomDepartureRetryIdentity,
-    ) => Promise<void> = persistRoomDepartureAdmissionIntent,
+    ) => Promise<RoomDepartureRetryOperation> = renewRoomDepartureAdmissionIntent,
   ): RoomAdmissionReservation {
     const previous = this.currentByTab.get(tabId);
     if (previous && !previous.settled) {
@@ -110,7 +111,7 @@ export class RoomAdmissionFence {
       intentPersistenceConfirmed: false,
       intentPersisted: null,
       participantSessionId: identity.participantSessionId,
-      persistIntent,
+      renewIntent,
       resolve,
       sequence: ++this.nextSequence,
       settled: false,
@@ -135,7 +136,7 @@ export class RoomAdmissionFence {
     return this.cancelReservation(current, true);
   }
 
-  cancelAny(tabId: number): Promise<void> | null {
+  cancelAny(tabId: number): Promise<RoomDepartureRetryOperation> | null {
     const current = this.currentByTab.get(tabId);
     if (current && !current.settled) {
       return this.cancelReservation(current, false).intentPersisted;
@@ -170,9 +171,10 @@ export class RoomAdmissionFence {
     reservation.cancelled = true;
     if (explicitDepartureObserver) reservation.explicitDepartureObserver = true;
     reservation.intentPersisted ??= reservation
-      .persistIntent(reservation.identity)
-      .then(() => {
+      .renewIntent(reservation.identity)
+      .then((operation) => {
         reservation.intentPersistenceConfirmed = true;
+        return operation;
       });
     return {
       completion: reservation.completion,
@@ -194,7 +196,7 @@ export function cancelRoomAdmissionForDeparture(
 export function cancelRoomAdmissionForTab(
   tabId: number,
   fence: RoomAdmissionFence = defaultRoomAdmissionFence,
-): Promise<void> | null {
+): Promise<RoomDepartureRetryOperation> | null {
   return fence.cancelAny(tabId);
 }
 
@@ -573,28 +575,28 @@ export async function connectWebsiteRoomFromApi(
         signal: abortController.signal,
       },
     );
+
+    if (!response.ok) {
+      logDebug("room.http", "connect website room failed", { roomId, status: response.status });
+      throw await websiteRoomHttpError(response, "Failed to connect website room");
+    }
+
+    const payload = (await response.json()) as {
+      roomToken?: unknown;
+      capabilities?: unknown;
+      quota?: unknown;
+    };
+    if (typeof payload.roomToken !== "string") {
+      throw new Error("Website room connect response is missing roomToken");
+    }
+    return {
+      roomToken: payload.roomToken,
+      capabilities: parseRoomCapabilities(payload.capabilities),
+      quota: parseQuotaSummary(payload.quota),
+    };
   } finally {
     clearTimeout(timeoutId);
   }
-
-  if (!response.ok) {
-    logDebug("room.http", "connect website room failed", { roomId, status: response.status });
-    throw await websiteRoomHttpError(response, "Failed to connect website room");
-  }
-
-  const payload = (await response.json()) as {
-    roomToken?: unknown;
-    capabilities?: unknown;
-    quota?: unknown;
-  };
-  if (typeof payload.roomToken !== "string") {
-    throw new Error("Website room connect response is missing roomToken");
-  }
-  return {
-    roomToken: payload.roomToken,
-    capabilities: parseRoomCapabilities(payload.capabilities),
-    quota: parseQuotaSummary(payload.quota),
-  };
 }
 
 export async function endWebsiteRoomFromApi(
@@ -641,14 +643,14 @@ export interface RoomHttpBackgroundDependencies {
     prepared: PreparedRoomSession,
     dependencies?: RoomSessionBackgroundDependencies,
   ) => Promise<boolean>;
-  persistCancelledAdmissionDepartureIntent?: (
+  renewCancelledAdmissionDepartureIntent?: (
     identity: RoomDepartureRetryIdentity,
-  ) => Promise<void>;
+  ) => Promise<RoomDepartureRetryOperation>;
   settleCancelledAdmissionDeparture?: (
-    identity: RoomDepartureRetryIdentity,
+    operation: RoomDepartureRetryOperation,
   ) => Promise<RoomTabDepartureOutcome>;
   retryCancelledAdmissionDeparture?: (
-    identity: RoomDepartureRetryIdentity,
+    operation: RoomDepartureRetryOperation,
   ) => Promise<RoomTabDepartureOutcome>;
 }
 
@@ -670,10 +672,10 @@ export async function handleRoomHttpMessage(
             ownerUserId: message.roomSession.ownerUserId,
             participantSessionId: message.roomSession.participantSessionId,
           },
-          dependencies.persistCancelledAdmissionDepartureIntent ??
+          dependencies.renewCancelledAdmissionDepartureIntent ??
             (dependencies.cancelledAdmissionDepartureDependencies
-              ? async () => undefined
-              : persistRoomDepartureAdmissionIntent),
+              ? async (identity) => ({ ...identity, generation: 1 })
+              : renewRoomDepartureAdmissionIntent),
         )
       : null;
   const admissionRecord =
@@ -949,25 +951,22 @@ async function cleanupCancelledRoomAdmission(
   reservation: RoomAdmissionReservation,
   dependencies: RoomHttpBackgroundDependencies,
 ): Promise<RoomAdmissionCompletion> {
+  let operation: RoomDepartureRetryOperation | null;
   try {
-    await reservation.intentPersisted;
+    operation = await reservation.intentPersisted;
   } catch {
     return { kind: "cleanup-failed", outcome: "failed" };
   }
-  const identity = {
-    roomId: record.roomId,
-    ownerUserId: record.ownerUserId,
-    participantSessionId: record.participantSessionId,
-  };
+  if (!operation) return { kind: "cleanup-failed", outcome: "failed" };
   const outcome = await (
     dependencies.settleCancelledAdmissionDeparture
-      ? dependencies.settleCancelledAdmissionDeparture(identity)
+      ? dependencies.settleCancelledAdmissionDeparture(operation)
       : dependencies.cancelledAdmissionDepartureDependencies
         ? departExactRoomSession(
             record,
             dependencies.cancelledAdmissionDepartureDependencies,
           )
-        : settleRoomDepartureAdmission(identity)
+        : settleRoomDepartureAdmission(operation)
   ).catch(() => "failed" as const);
   if (!isConfirmedAdmissionDepartureOutcome(outcome)) {
     return { kind: "cleanup-failed", outcome };
@@ -980,25 +979,22 @@ async function retryAmbiguousCancelledRoomAdmission(
   reservation: RoomAdmissionReservation,
   dependencies: RoomHttpBackgroundDependencies,
 ): Promise<RoomAdmissionCompletion> {
+  let operation: RoomDepartureRetryOperation | null;
   try {
-    await reservation.intentPersisted;
+    operation = await reservation.intentPersisted;
   } catch {
     return { kind: "cleanup-failed", outcome: "failed" };
   }
-  const identity = {
-    roomId: record.roomId,
-    ownerUserId: record.ownerUserId,
-    participantSessionId: record.participantSessionId,
-  };
+  if (!operation) return { kind: "cleanup-failed", outcome: "failed" };
   const outcome = await (
     dependencies.retryCancelledAdmissionDeparture
-      ? dependencies.retryCancelledAdmissionDeparture(identity)
+      ? dependencies.retryCancelledAdmissionDeparture(operation)
       : dependencies.cancelledAdmissionDepartureDependencies
         ? departExactRoomSession(
             record,
             dependencies.cancelledAdmissionDepartureDependencies,
           )
-        : retryRoomDepartureAdmission(identity)
+        : retryRoomDepartureAdmission(operation)
   ).catch(() => "failed" as const);
   // A terminal result cannot confirm quiescence yet: the bounded Web request
   // may still commit after this exact attempt.

@@ -10,6 +10,7 @@ import {
   prepareRoomSessionForTab,
   type PreparedRoomSession,
 } from "../src/room-session-storage";
+import type { RoomDepartureRetryIdentity } from "../src/room-departure-retry";
 
 function preparedRoomSession(roomId: string): PreparedRoomSession {
   return {
@@ -39,6 +40,34 @@ const roomSessionRouteDependencies = {
 };
 
 describe("background privileged room route", () => {
+  it("coalesces duplicate cancellation but renews a later same-identity reservation", async () => {
+    const fence = new RoomAdmissionFence();
+    const identity = {
+      roomId: "room-renewed",
+      ownerUserId: "user-a",
+      participantSessionId: "session-reused",
+    };
+    let generation = 0;
+    const renewIntent = vi.fn(async () => ({
+      ...identity,
+      generation: ++generation,
+    }));
+
+    const first = fence.begin(44, identity, renewIntent);
+    const firstCancellation = fence.cancelAny(44);
+    const duplicateCancellation = fence.cancelAny(44);
+    expect(duplicateCancellation).toBe(firstCancellation);
+    await firstCancellation;
+    expect(renewIntent).toHaveBeenCalledOnce();
+    fence.finish(first, { kind: "not-cancelled" });
+
+    const second = fence.begin(44, identity, renewIntent);
+    const laterCancellation = fence.cancelAny(44);
+    await expect(laterCancellation).resolves.toMatchObject({ generation: 2 });
+    expect(renewIntent).toHaveBeenCalledTimes(2);
+    fence.finish(second, { kind: "not-cancelled" });
+  });
+
   it("awaits persisted admission intent before passive tab cleanup and authority removal", async () => {
     vi.stubGlobal("chrome", {});
     const background = await import("../entrypoints/background");
@@ -92,7 +121,10 @@ describe("background privileged room route", () => {
     );
     const webAdmission = deferred<Response>();
     vi.stubGlobal("fetch", vi.fn(() => webAdmission.promise));
-    const persistIntent = vi.fn(async () => undefined);
+    const renewIntent = vi.fn(async (identity: RoomDepartureRetryIdentity) => ({
+      ...identity,
+      generation: 1,
+    }));
     const settleIntent = vi.fn(async () => "departed" as const);
     const sender = { tab: { id: tabId } };
     const connecting = background.dispatchPrivilegedRoomRuntimeMessage(
@@ -101,7 +133,7 @@ describe("background privileged room route", () => {
       {
         roomDependencies: {
           admissionFence,
-          persistCancelledAdmissionDepartureIntent: persistIntent,
+          renewCancelledAdmissionDepartureIntent: renewIntent,
           settleCancelledAdmissionDeparture: settleIntent,
           issueAuthority: async () => null,
           roomSessionDependencies,
@@ -117,8 +149,8 @@ describe("background privileged room route", () => {
       removePrivilegedAuthority: async () => undefined,
     });
 
-    expect(persistIntent).toHaveBeenCalledOnce();
-    expect(persistIntent).toHaveBeenCalledWith({
+    expect(renewIntent).toHaveBeenCalledOnce();
+    expect(renewIntent).toHaveBeenCalledWith({
       roomId: "room-passive-late",
       ownerUserId: "user-a",
       participantSessionId: prepared.participantSessionId,
@@ -136,6 +168,7 @@ describe("background privileged room route", () => {
       roomId: "room-passive-late",
       ownerUserId: "user-a",
       participantSessionId: prepared.participantSessionId,
+      generation: 1,
     });
     await expect(
       loadRoomSessionForTab(tabId, roomSessionDependencies),
@@ -160,7 +193,10 @@ describe("background privileged room route", () => {
     );
     const webAdmission = deferred<Response>();
     vi.stubGlobal("fetch", vi.fn(() => webAdmission.promise));
-    const persistIntent = vi.fn(async () => undefined);
+    const renewIntent = vi.fn(async (identity: RoomDepartureRetryIdentity) => ({
+      ...identity,
+      generation: 1,
+    }));
     const retryIntent = vi.fn(async () => "stale" as const);
     const settleIntent = vi.fn(async () => "stale" as const);
     const connecting = background.dispatchPrivilegedRoomRuntimeMessage(
@@ -169,7 +205,7 @@ describe("background privileged room route", () => {
       {
         roomDependencies: {
           admissionFence,
-          persistCancelledAdmissionDepartureIntent: persistIntent,
+          renewCancelledAdmissionDepartureIntent: renewIntent,
           retryCancelledAdmissionDeparture: retryIntent,
           settleCancelledAdmissionDeparture: settleIntent,
           issueAuthority: async () => null,
@@ -188,7 +224,7 @@ describe("background privileged room route", () => {
     webAdmission.reject(new TypeError("transport lost"));
 
     await expect(connecting).resolves.toMatchObject({ ok: false });
-    expect(persistIntent).toHaveBeenCalledOnce();
+    expect(renewIntent).toHaveBeenCalledOnce();
     expect(retryIntent).toHaveBeenCalledOnce();
     expect(settleIntent).not.toHaveBeenCalled();
   });
@@ -212,8 +248,9 @@ describe("background privileged room route", () => {
     const webAdmission = deferred<Response>();
     vi.stubGlobal("fetch", vi.fn(() => webAdmission.promise));
     let jobOwned = false;
-    const persistIntent = vi.fn(async () => {
+    const renewIntent = vi.fn(async (identity: RoomDepartureRetryIdentity) => {
       jobOwned = true;
+      return { ...identity, generation: 1 };
     });
     const settleIntent = vi.fn(async () => {
       expect(jobOwned).toBe(true);
@@ -235,7 +272,7 @@ describe("background privileged room route", () => {
       },
       roomDependencies: {
         admissionFence,
-        persistCancelledAdmissionDepartureIntent: persistIntent,
+        renewCancelledAdmissionDepartureIntent: renewIntent,
         settleCancelledAdmissionDeparture: settleIntent,
         issueAuthority: async () => null,
         roomSessionDependencies,
@@ -262,7 +299,7 @@ describe("background privileged room route", () => {
 
     await expect(leaving).resolves.toMatchObject({ ok: false });
     expect(jobOwned).toBe(true);
-    expect(persistIntent).toHaveBeenCalledOnce();
+    expect(renewIntent).toHaveBeenCalledOnce();
 
     await background.handleRemovedRoomTab(tabId, {
       cancelRoomAdmission: (removedTabId) =>
@@ -273,7 +310,7 @@ describe("background privileged room route", () => {
     });
 
     expect(jobOwned).toBe(true);
-    expect(persistIntent).toHaveBeenCalledOnce();
+    expect(renewIntent).toHaveBeenCalledOnce();
     webAdmission.resolve(roomResponse("room-explicit-retry"));
 
     await expect(connecting).resolves.toMatchObject({ ok: false });
