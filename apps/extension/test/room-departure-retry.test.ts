@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  ROOM_ADMISSION_HANDOFF_TIMEOUT_MS,
   ROOM_ADMISSION_SETTLEMENT_HORIZON_MS,
   ROOM_DEPARTURE_RETRY_ALARM,
   createRoomDepartureRetryCoordinator,
@@ -13,32 +14,122 @@ const OLD_SESSION: RoomDepartureRetryIdentity = {
 };
 
 describe("room departure retry coordinator", () => {
-  it("retires only the successful current generation and never reuses it", async () => {
+  it("keeps a successful admission persisted until the matching snapshot handoff", async () => {
     const storage = createPersistentStorage();
     const scheduler = createScheduler();
+    let now = 100;
+    const departExact = vi.fn(async () => "departed" as const);
     const coordinator = createRoomDepartureRetryCoordinator({
       storage,
       scheduler,
+      getCurrentUserId: async () => "user-a",
+      departExact,
+      now: () => now,
+    });
+
+    const operation = await coordinator.renewAdmissionIntent(OLD_SESSION);
+    await expect(coordinator.markAdmissionHandoff(operation)).resolves.toBe(true);
+    expect(storage.value()?.jobs).toEqual([
+      expect.objectContaining({
+        admissionState: "handoff-pending",
+        cleanupRequested: false,
+        generation: operation.generation,
+        settleAfter: now + ROOM_ADMISSION_HANDOFF_TIMEOUT_MS,
+      }),
+    ]);
+
+    now += ROOM_ADMISSION_HANDOFF_TIMEOUT_MS - 1;
+    await coordinator.drain({ force: true });
+    expect(departExact).not.toHaveBeenCalled();
+    expect(storage.value()?.jobs).toHaveLength(1);
+
+    await expect(
+      coordinator.acknowledgeAdmissionHandoff(operation),
+    ).resolves.toBe(true);
+    expect(storage.value()).toMatchObject({
+      version: 5,
+      lastGeneration: operation.generation,
+      jobs: [],
+    });
+    expect(scheduler.when()).toBeNull();
+  });
+
+  it("drains a handoff-pending admission after worker restart and the finite deadline", async () => {
+    const storage = createPersistentStorage();
+    const firstScheduler = createScheduler();
+    let now = 1_000;
+    const firstWorker = createRoomDepartureRetryCoordinator({
+      storage,
+      scheduler: firstScheduler,
+      getCurrentUserId: async () => "user-a",
+      departExact: vi.fn(),
+      now: () => now,
+    });
+
+    const operation = await firstWorker.renewAdmissionIntent(OLD_SESSION);
+    await firstWorker.markAdmissionHandoff(operation);
+    expect(firstScheduler.when()).toBe(now + ROOM_ADMISSION_HANDOFF_TIMEOUT_MS);
+
+    const departExact = vi.fn(async () => "departed" as const);
+    const restartedWorker = createRoomDepartureRetryCoordinator({
+      storage,
+      scheduler: createScheduler(),
+      getCurrentUserId: async () => "user-a",
+      departExact,
+      now: () => now,
+    });
+    now += ROOM_ADMISSION_HANDOFF_TIMEOUT_MS;
+    await restartedWorker.handleAlarm(ROOM_DEPARTURE_RETRY_ALARM);
+
+    expect(departExact).toHaveBeenCalledWith(OLD_SESSION);
+    expect(storage.value()?.jobs).toEqual([]);
+  });
+
+  it("accepts only the current generation's snapshot acknowledgement", async () => {
+    const storage = createPersistentStorage();
+    const coordinator = createRoomDepartureRetryCoordinator({
+      storage,
+      scheduler: createScheduler(),
       getCurrentUserId: async () => "user-a",
       departExact: vi.fn(),
       now: () => 100,
     });
 
     const first = await coordinator.renewAdmissionIntent(OLD_SESSION);
-    await expect(coordinator.retireAdmission(first)).resolves.toBe(true);
-    expect(storage.value()).toMatchObject({
-      version: 4,
-      lastGeneration: first.generation,
-      jobs: [],
-    });
-    expect(scheduler.when()).toBeNull();
-
+    await coordinator.markAdmissionHandoff(first);
     const successor = await coordinator.renewAdmissionIntent(OLD_SESSION);
     expect(successor.generation).toBe(first.generation + 1);
-    await expect(coordinator.retireAdmission(first)).resolves.toBe(false);
+    await coordinator.markAdmissionHandoff(successor);
+    await expect(
+      coordinator.acknowledgeAdmissionHandoff(first),
+    ).resolves.toBe(false);
     expect(storage.value()?.jobs).toEqual([
       expect.objectContaining({ generation: successor.generation }),
     ]);
+    await expect(
+      coordinator.acknowledgeAdmissionHandoff(successor),
+    ).resolves.toBe(true);
+  });
+
+  it("makes a canceled handoff immediately settlement-safe across worker suspension", async () => {
+    const storage = createPersistentStorage();
+    const coordinator = createRoomDepartureRetryCoordinator({
+      storage,
+      scheduler: createScheduler(),
+      getCurrentUserId: async () => "user-a",
+      departExact: async () => "departed",
+      now: () => 500,
+    });
+    const operation = await coordinator.renewAdmissionIntent(OLD_SESSION);
+    await coordinator.markAdmissionHandoff(operation);
+    await coordinator.requestAdmissionCleanup(operation);
+
+    expect(storage.value()?.jobs[0]).toMatchObject({
+      admissionState: "settled",
+      cleanupRequested: true,
+    });
+    await coordinator.drain({ force: true });
+    expect(storage.value()?.jobs).toEqual([]);
   });
 
   it("ignores an old alarm after the live same-identity successor commits", async () => {
@@ -56,7 +147,10 @@ describe("room departure retry coordinator", () => {
 
     const first = await coordinator.renewAdmissionIntent(OLD_SESSION);
     const successor = await coordinator.renewAdmissionIntent(OLD_SESSION);
-    await expect(coordinator.retireAdmission(successor)).resolves.toBe(true);
+    await expect(coordinator.markAdmissionHandoff(successor)).resolves.toBe(true);
+    await expect(
+      coordinator.acknowledgeAdmissionHandoff(successor),
+    ).resolves.toBe(true);
 
     now = 1_000 + ROOM_ADMISSION_SETTLEMENT_HORIZON_MS;
     scheduler.consume();
@@ -270,7 +364,7 @@ describe("room departure retry coordinator", () => {
     await firstWorker.renewAdmissionIntent(OLD_SESSION);
     expect(ROOM_ADMISSION_SETTLEMENT_HORIZON_MS).toBe(135_000);
     expect(storage.value()).toMatchObject({
-      version: 4,
+      version: 5,
       lastGeneration: 1,
       jobs: [
         {
@@ -414,7 +508,7 @@ describe("room departure retry coordinator", () => {
   it("fences cleanup to the old participant session and never touches its replacement", async () => {
     const storage = createPersistentStorage();
     const replacement = {
-      roomId: "room-new",
+      roomId: OLD_SESSION.roomId,
       ownerUserId: "user-a",
       participantSessionId: "session-new",
       active: true,
@@ -437,7 +531,7 @@ describe("room departure retry coordinator", () => {
 
     expect(departExact).toHaveBeenCalledWith(OLD_SESSION);
     expect(replacement).toEqual({
-      roomId: "room-new",
+      roomId: OLD_SESSION.roomId,
       ownerUserId: "user-a",
       participantSessionId: "session-new",
       active: true,

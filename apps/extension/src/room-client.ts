@@ -23,9 +23,12 @@ import {
   type RoomTabDepartureOutcome,
 } from "./room-departure";
 import {
+  acknowledgeRoomDepartureAdmissionHandoff,
+  claimRoomDepartureAdmissionHandoffCleanup,
+  isRoomDepartureRetryOperation,
+  markRoomDepartureAdmissionHandoff,
   requestRoomDepartureAdmissionCleanup,
   renewRoomDepartureAdmissionIntent,
-  retireRoomDepartureAdmissionIntent,
   retryRoomDepartureAdmission,
   settleRoomDepartureAdmission,
   type RoomDepartureRetryAttemptOutcome,
@@ -40,11 +43,14 @@ import {
   type PrivilegedOverlayContext,
 } from "./privileged-overlay-intent";
 import {
+  captureRoomSessionIdentity,
   clearRoomSessionForDepartureIfMatch,
   confirmRoomSessionForTab,
   discardPreparedRoomSessionIfMatch,
   isPreparedRoomSession,
+  loadRoomSessionForTab,
   retainPreparedRoomSessionForDepartureRetry,
+  roomSessionIdentityMatches,
   type PreparedRoomSession,
   type RoomSessionBackgroundDependencies,
   type RoomSessionRecord,
@@ -241,6 +247,10 @@ export interface RoomClientOptions {
   onHistoryAuthority?: (authority: RoomHistoryAuthority | null) => void;
   onTerminalClose?: (code: number) => void;
   onTransportReady?: (ready: SignalingTransportReady) => void;
+  admissionHandoff?: RoomAdmissionHandoff;
+  acknowledgeAdmissionHandoff?: (
+    handoff: RoomAdmissionHandoff,
+  ) => Promise<boolean>;
 }
 
 /** Free-plan daily quota summary attached to room API responses (PD2). */
@@ -320,6 +330,8 @@ export function isTerminalRoomJoinError(error: unknown): error is RoomApiError {
 }
 
 const ROOM_HTTP_MESSAGE_TYPE = "ANIDACHI_ROOM_HTTP";
+export const ROOM_ADMISSION_HANDOFF_MESSAGE_TYPE =
+  "ANIDACHI_ROOM_ADMISSION_HANDOFF" as const;
 const ROOM_KEEPALIVE_INTERVAL_MS = 20_000;
 const ROOM_KEEPALIVE_TIMEOUT_MS = 45_000;
 const HIBERNATION_KEEPALIVE_PING = "ping";
@@ -340,6 +352,20 @@ export function isTerminalRoomCloseCode(code: number): boolean {
 }
 
 export type RoomHttpCommand = "create-room" | "connect-room";
+
+export type RoomAdmissionHandoff = RoomDepartureRetryOperation & {
+  tabId: number;
+};
+
+export type RoomAdmissionHandoffMessage = {
+  type: typeof ROOM_ADMISSION_HANDOFF_MESSAGE_TYPE;
+  command: "acknowledge";
+  handoff: RoomAdmissionHandoff;
+};
+
+export type RoomAdmissionHandoffResponse =
+  | { ok: true; acknowledged: boolean }
+  | { ok: false; error: string };
 
 export type RoomHttpMessage =
   | {
@@ -368,6 +394,7 @@ export type RoomHttpMessageResponse =
         quota?: RoomQuotaSummary | null;
         privilegedRoomAuthority?: PrivilegedOverlayContext | null;
         roomSession: RoomSessionRecord;
+        admissionHandoff?: RoomAdmissionHandoff;
       };
     }
   | { ok: true; ended: { endedAt: string | null } }
@@ -491,6 +518,36 @@ export function isRoomHttpMessage(value: unknown): value is RoomHttpMessage {
       message.roomSession.roomId === message.roomId;
   }
   return false;
+}
+
+export function roomAdmissionHandoffMessage(
+  handoff: RoomAdmissionHandoff,
+): RoomAdmissionHandoffMessage {
+  if (!isRoomDepartureRetryOperation(handoff)) {
+    throw new Error("Invalid room admission handoff");
+  }
+  if (!Number.isInteger(handoff.tabId) || handoff.tabId < 0) {
+    throw new Error("Invalid room admission handoff tab");
+  }
+  return {
+    type: ROOM_ADMISSION_HANDOFF_MESSAGE_TYPE,
+    command: "acknowledge",
+    handoff,
+  };
+}
+
+export function isRoomAdmissionHandoffMessage(
+  value: unknown,
+): value is RoomAdmissionHandoffMessage {
+  if (typeof value !== "object" || value === null) return false;
+  const message = value as Partial<RoomAdmissionHandoffMessage>;
+  return message.type === ROOM_ADMISSION_HANDOFF_MESSAGE_TYPE &&
+    message.command === "acknowledge" &&
+    isRoomDepartureRetryOperation(message.handoff) &&
+    typeof message.handoff === "object" &&
+    message.handoff !== null &&
+    Number.isInteger((message.handoff as Partial<RoomAdmissionHandoff>).tabId) &&
+    ((message.handoff as Partial<RoomAdmissionHandoff>).tabId ?? -1) >= 0;
 }
 
 export async function createWebsiteRoomFromApi(
@@ -675,9 +732,15 @@ export interface RoomHttpBackgroundDependencies {
   requestCancelledAdmissionCleanup?: (
     operation: RoomDepartureRetryOperation,
   ) => Promise<boolean>;
-  retireCancelledAdmissionIntent?: (
+  markAdmissionHandoff?: (
     operation: RoomDepartureRetryOperation,
   ) => Promise<boolean>;
+  acknowledgeAdmissionHandoff?: (
+    operation: RoomDepartureRetryOperation,
+  ) => Promise<boolean>;
+  claimAdmissionHandoffCleanup?: (
+    identity: RoomDepartureRetryIdentity,
+  ) => Promise<RoomDepartureRetryOperation | null>;
   settleCancelledAdmissionDeparture?: (
     operation: RoomDepartureRetryOperation,
   ) => Promise<RoomDepartureRetryAttemptOutcome>;
@@ -737,6 +800,7 @@ export async function handleRoomHttpMessage(
       : null;
   let admissionRequestConfirmedSettled = false;
   let admissionFinished = false;
+  let admissionHandoff: RoomAdmissionHandoff | null = null;
   let shouldDiscardPrepared = true;
   const authorityRequest = reserveRoomAuthorityRequest(sender, dependencies.authorityRequestSequences);
   const usesPersistentAuthority = dependencies.issueAuthority === undefined;
@@ -902,15 +966,15 @@ export async function handleRoomHttpMessage(
     }
     if (admissionReservation) {
       const operation = await admissionReservation.operationPersisted;
-      const retired = await (
-        dependencies.retireCancelledAdmissionIntent
-          ? dependencies.retireCancelledAdmissionIntent(operation)
+      const handoffMarked = await (
+        dependencies.markAdmissionHandoff
+          ? dependencies.markAdmissionHandoff(operation)
           : dependencies.cancelledAdmissionDepartureDependencies ||
               dependencies.renewCancelledAdmissionDepartureIntent
             ? Promise.resolve(true)
-            : retireRoomDepartureAdmissionIntent(operation)
+            : markRoomDepartureAdmissionHandoff(operation)
       ).catch(() => false);
-      if (!retired || !admissionFence.isCurrent(admissionReservation)) {
+      if (!handoffMarked || !admissionFence.isCurrent(admissionReservation)) {
         const cleanup = await cleanupCancelledRoomAdmission(
           roomSession,
           admissionReservation,
@@ -942,12 +1006,21 @@ export async function handleRoomHttpMessage(
           409,
         );
       }
+      admissionHandoff = {
+        ...operation,
+        tabId: senderTabId as number,
+      };
       admissionFence.finish(admissionReservation, { kind: "not-cancelled" });
       admissionFinished = true;
     }
     return {
       ok: true,
-      connection: { ...connection, privilegedRoomAuthority, roomSession },
+      connection: {
+        ...connection,
+        privilegedRoomAuthority,
+        roomSession,
+        ...(admissionHandoff ? { admissionHandoff } : {}),
+      },
     };
   } catch (error) {
     if (admissionReservation && admissionRecord && !admissionFinished) {
@@ -1270,6 +1343,7 @@ export async function connectWebsiteRoom(
   quota?: RoomQuotaSummary | null;
   privilegedRoomAuthority?: PrivilegedOverlayContext | null;
   roomSession: RoomSessionRecord;
+  admissionHandoff?: RoomAdmissionHandoff;
 }> {
   logDebug("room.http", "connect room through background bridge", {
     webHttpBase: WEB_HTTP_BASE,
@@ -1281,6 +1355,80 @@ export async function connectWebsiteRoom(
   if (!response.ok) throw bridgeError(response);
   if (!("connection" in response)) throw new Error("Room bridge response is missing connection");
   return response.connection;
+}
+
+export async function acknowledgeRoomAdmissionHandoff(
+  handoff: RoomAdmissionHandoff,
+): Promise<boolean> {
+  const response = await chrome.runtime.sendMessage<
+    RoomAdmissionHandoffMessage,
+    RoomAdmissionHandoffResponse
+  >(roomAdmissionHandoffMessage(handoff));
+  return response?.ok === true && response.acknowledged;
+}
+
+export async function handleRoomAdmissionHandoffMessage(
+  message: RoomAdmissionHandoffMessage,
+  sender: { tab?: { id?: number } },
+  dependencies: RoomHttpBackgroundDependencies = {},
+): Promise<RoomAdmissionHandoffResponse> {
+  const tabId = sender.tab?.id;
+  if (!Number.isInteger(tabId) || (tabId ?? -1) < 0) {
+    return { ok: false, error: "Room admission handoff is missing a sender tab" };
+  }
+  if (message.handoff.tabId !== tabId) {
+    return { ok: true, acknowledged: false };
+  }
+  try {
+    const current = await loadRoomSessionForTab(
+      tabId as number,
+      dependencies.roomSessionDependencies,
+    );
+    if (
+      !current ||
+      !roomSessionIdentityMatches(current, {
+        version: 1,
+        roomId: message.handoff.roomId,
+        ownerUserId: message.handoff.ownerUserId,
+        participantSessionId: message.handoff.participantSessionId,
+      })
+    ) {
+      return { ok: true, acknowledged: false };
+    }
+    const acknowledged = await (
+      dependencies.acknowledgeAdmissionHandoff ??
+      acknowledgeRoomDepartureAdmissionHandoff
+    )(message.handoff);
+    return { ok: true, acknowledged };
+  } catch {
+    return { ok: false, error: "Room admission handoff failed" };
+  }
+}
+
+export async function cleanupRoomAdmissionHandoffForTab(
+  tabId: number,
+  dependencies: Pick<
+    RoomHttpBackgroundDependencies,
+    | "claimAdmissionHandoffCleanup"
+    | "roomSessionDependencies"
+    | "settleCancelledAdmissionDeparture"
+  > = {},
+): Promise<RoomDepartureRetryAttemptOutcome | "no-handoff"> {
+  const current = await loadRoomSessionForTab(
+    tabId,
+    dependencies.roomSessionDependencies,
+  );
+  const identity = captureRoomSessionIdentity(current);
+  if (!identity) return "no-handoff";
+  const operation = await (
+    dependencies.claimAdmissionHandoffCleanup ??
+    claimRoomDepartureAdmissionHandoffCleanup
+  )(identity);
+  if (!operation) return "no-handoff";
+  return (
+    dependencies.settleCancelledAdmissionDeparture ??
+    settleRoomDepartureAdmission
+  )(operation);
 }
 
 
@@ -1408,6 +1556,12 @@ export class RoomClient {
             reconnect: options.reconnect === true,
             ...(event.p2pResyncRequired ? { forceMediaResync: true } : {}),
           });
+          if (options.admissionHandoff) {
+            void (
+              options.acknowledgeAdmissionHandoff ??
+              acknowledgeRoomAdmissionHandoff
+            )(options.admissionHandoff).catch(() => undefined);
+          }
         }
       } catch (error) {
         logDebug("room.recv", "invalid server event", {

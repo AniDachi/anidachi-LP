@@ -881,21 +881,15 @@ async function prepareRoomSessionForTabNow(
     await removeRoomSessionForTabNow(tabId, storage);
     throw new Error("Room session belongs to another account");
   }
-  const reuseParticipantSessionId =
-    input.forceNew !== true && confirmed?.roomId === input.roomId
-      ? confirmed.participantSessionId
-      : input.forceNew !== true &&
-          currentPrepared?.ownerUserId === input.ownerUserId &&
-          currentPrepared.roomId === input.roomId
-        ? currentPrepared.participantSessionId
-        : null;
   const prepared: PreparedRoomSession = {
     version: ROOM_SESSION_RECORD_VERSION,
     preparationId: createBoundedSessionValue("preparation", randomUUID),
     roomId: input.roomId,
     ownerUserId: input.ownerUserId,
-    participantSessionId:
-      reuseParticipantSessionId ?? createParticipantSessionId(randomUUID),
+    // A prepared record is one server admission operation, not a durable tab
+    // identity. Every new preparation gets a fresh compare-delete fence so a
+    // delayed departure from an older admission cannot remove its successor.
+    participantSessionId: createParticipantSessionId(randomUUID),
   };
   await storage.set({ [preparedKey]: prepared });
   return prepared;

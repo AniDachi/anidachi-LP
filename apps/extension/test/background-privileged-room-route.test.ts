@@ -2,7 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 import {
   RoomAdmissionFence,
   cancelRoomAdmissionForTab,
+  cleanupRoomAdmissionHandoffForTab,
   connectRoomHttpMessage,
+  roomAdmissionHandoffMessage,
+  type RoomAdmissionHandoff,
 } from "../src/room-client";
 import {
   confirmRoomSessionForTab,
@@ -15,6 +18,7 @@ import {
   createRoomDepartureRetryCoordinator,
   type RoomDepartureRetryIdentity,
 } from "../src/room-departure-retry";
+import { handleRoomTabDeparture } from "../src/room-departure";
 
 function preparedRoomSession(roomId: string): PreparedRoomSession {
   return {
@@ -46,11 +50,11 @@ const roomSessionRouteDependencies = {
     identity: RoomDepartureRetryIdentity,
   ) => ({ ...identity, generation: ++routeAdmissionGeneration }),
   requestCancelledAdmissionCleanup: async () => true,
-  retireCancelledAdmissionIntent: async () => true,
+  markAdmissionHandoff: async () => true,
 };
 
 describe("background privileged room route", () => {
-  it("keeps a committed same-identity successor when the older admission resolves late", async () => {
+  it("keeps a committed fresh-identity successor when the older admission resolves late", async () => {
     const scenario = await startSameIdentitySuccessorScenario();
 
     scenario.newAdmission.resolve(roomResponse(scenario.roomId));
@@ -68,25 +72,43 @@ describe("background privileged room route", () => {
       code: "STALE_ROOM_SESSION",
     });
 
-    expect(scenario.departExact).not.toHaveBeenCalled();
+    expect(scenario.departExact).toHaveBeenCalledWith({
+      roomId: scenario.roomId,
+      ownerUserId: "user-a",
+      participantSessionId: scenario.oldPrepared.participantSessionId,
+    });
     await expect(
       loadRoomSessionForTab(scenario.tabId, scenario.roomSessionDependencies),
     ).resolves.toMatchObject({
       roomId: scenario.roomId,
       participantSessionId: scenario.newPrepared.participantSessionId,
     });
-    expect(scenario.retryStorage.value()?.jobs).toEqual([]);
+    expect(scenario.retryStorage.value()?.jobs).toEqual([
+      expect.objectContaining({
+        admissionState: "handoff-pending",
+        participantSessionId: scenario.newPrepared.participantSessionId,
+      }),
+    ]);
   });
 
-  it("does not let the older alarm depart a committed same-identity successor", async () => {
+  it("does not let the older alarm depart an acknowledged fresh-identity successor", async () => {
     const scenario = await startSameIdentitySuccessorScenario();
 
     scenario.newAdmission.resolve(roomResponse(scenario.roomId));
-    await expect(scenario.newer).resolves.toMatchObject({ ok: true });
+    const newer = await scenario.newer;
+    const handoff = admittedHandoff(newer);
+    await expect(
+      scenario.coordinator.acknowledgeAdmissionHandoff(handoff),
+    ).resolves.toBe(true);
     scenario.advanceToSettlementHorizon();
     await scenario.coordinator.handleAlarm(ROOM_DEPARTURE_RETRY_ALARM);
 
-    expect(scenario.departExact).not.toHaveBeenCalled();
+    expect(scenario.departExact).toHaveBeenCalledTimes(1);
+    expect(scenario.departExact).toHaveBeenCalledWith({
+      roomId: scenario.roomId,
+      ownerUserId: "user-a",
+      participantSessionId: scenario.oldPrepared.participantSessionId,
+    });
     expect(scenario.retryStorage.value()?.jobs).toEqual([]);
     await expect(
       loadRoomSessionForTab(scenario.tabId, scenario.roomSessionDependencies),
@@ -97,7 +119,7 @@ describe("background privileged room route", () => {
 
     scenario.oldAdmission.resolve(roomResponse(scenario.roomId));
     await expect(scenario.older).resolves.toMatchObject({ ok: false });
-    expect(scenario.departExact).not.toHaveBeenCalled();
+    expect(scenario.departExact).toHaveBeenCalledTimes(1);
   });
 
   it("retains the live successor generation when its admission is ambiguous", async () => {
@@ -106,18 +128,31 @@ describe("background privileged room route", () => {
     scenario.newAdmission.reject(new TypeError("successor transport lost"));
     await expect(scenario.newer).resolves.toMatchObject({ ok: false });
 
+    expect(scenario.retryStorage.value()?.jobs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          cleanupRequested: true,
+          participantSessionId: scenario.oldPrepared.participantSessionId,
+        }),
+        expect.objectContaining({
+          cleanupRequested: false,
+          participantSessionId: scenario.newPrepared.participantSessionId,
+        }),
+      ]),
+    );
+    scenario.oldAdmission.resolve(roomResponse(scenario.roomId));
+    await expect(scenario.older).resolves.toMatchObject({ ok: false });
+    expect(scenario.departExact).toHaveBeenCalledOnce();
+    expect(scenario.departExact).toHaveBeenCalledWith({
+      roomId: scenario.roomId,
+      ownerUserId: "user-a",
+      participantSessionId: scenario.oldPrepared.participantSessionId,
+    });
     expect(scenario.retryStorage.value()?.jobs).toEqual([
       expect.objectContaining({
         cleanupRequested: false,
-        generation: 2,
         participantSessionId: scenario.newPrepared.participantSessionId,
       }),
-    ]);
-    scenario.oldAdmission.resolve(roomResponse(scenario.roomId));
-    await expect(scenario.older).resolves.toMatchObject({ ok: false });
-    expect(scenario.departExact).not.toHaveBeenCalled();
-    expect(scenario.retryStorage.value()?.jobs).toEqual([
-      expect.objectContaining({ cleanupRequested: false, generation: 2 }),
     ]);
   });
 
@@ -127,20 +162,34 @@ describe("background privileged room route", () => {
     await expect(
       cancelRoomAdmissionForTab(scenario.tabId, scenario.admissionFence),
     ).resolves.toMatchObject({
-      operation: { generation: 2 },
+      operation: {
+        participantSessionId: scenario.newPrepared.participantSessionId,
+      },
       owned: true,
     });
     scenario.newAdmission.reject(new TypeError("canceled successor transport lost"));
     await expect(scenario.newer).resolves.toMatchObject({ ok: false });
-    expect(scenario.retryStorage.value()?.jobs).toEqual([
-      expect.objectContaining({ cleanupRequested: true, generation: 2 }),
-    ]);
+    expect(scenario.retryStorage.value()?.jobs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          cleanupRequested: true,
+          participantSessionId: scenario.oldPrepared.participantSessionId,
+        }),
+        expect.objectContaining({
+          cleanupRequested: true,
+          participantSessionId: scenario.newPrepared.participantSessionId,
+        }),
+      ]),
+    );
 
     scenario.oldAdmission.resolve(roomResponse(scenario.roomId));
     await expect(scenario.older).resolves.toMatchObject({ ok: false });
-    expect(scenario.departExact).toHaveBeenCalledOnce();
+    expect(scenario.departExact).toHaveBeenCalledTimes(2);
     expect(scenario.retryStorage.value()?.jobs).toEqual([
-      expect.objectContaining({ cleanupRequested: true, generation: 2 }),
+      expect.objectContaining({
+        cleanupRequested: true,
+        participantSessionId: scenario.newPrepared.participantSessionId,
+      }),
     ]);
   });
 
@@ -283,6 +332,258 @@ describe("background privileged room route", () => {
     await expect(
       loadRoomSessionForTab(tabId, roomSessionDependencies),
     ).resolves.toBeNull();
+  });
+
+  it("exact-cleans a committed admission when its tab closes before snapshot handoff", async () => {
+    vi.stubGlobal("chrome", {});
+    const background = await import("../entrypoints/background");
+    const tabId = 605;
+    const roomId = "room-pre-snapshot-close";
+    const storage = createSessionStorage();
+    let nextId = 0;
+    const roomSessionDependencies = {
+      sessionStorage: storage,
+      localStorage: storage,
+      randomUUID: () => `pre-snapshot-${++nextId}`,
+    };
+    const prepared = await prepareRoomSessionForTab(
+      tabId,
+      { ownerUserId: "user-a", roomId },
+      roomSessionDependencies,
+    );
+    vi.stubGlobal("fetch", vi.fn(async () => roomResponse(roomId)));
+    const retryStorage = createDepartureRetryStorage();
+    const departExact = vi.fn(async () => "departed" as const);
+    const coordinator = createRoomDepartureRetryCoordinator({
+      storage: retryStorage,
+      scheduler: createDepartureRetryScheduler(),
+      getCurrentUserId: async () => "user-a",
+      departExact,
+      now: () => 10_000,
+    });
+    const admissionFence = new RoomAdmissionFence();
+    const roomDependencies = {
+      admissionFence,
+      renewCancelledAdmissionDepartureIntent: coordinator.renewAdmissionIntent,
+      requestCancelledAdmissionCleanup: coordinator.requestAdmissionCleanup,
+      markAdmissionHandoff: coordinator.markAdmissionHandoff,
+      acknowledgeAdmissionHandoff: coordinator.acknowledgeAdmissionHandoff,
+      claimAdmissionHandoffCleanup: coordinator.claimAdmissionHandoffCleanup,
+      settleCancelledAdmissionDeparture: coordinator.settleAdmission,
+      retryCancelledAdmissionDeparture: coordinator.retryAdmission,
+      issueAuthority: async () => null,
+      roomSessionDependencies,
+    };
+    const connected = await background.dispatchPrivilegedRoomRuntimeMessage(
+      connectRoomHttpMessage(roomId, "access-a", prepared),
+      { tab: { id: tabId } },
+      { roomDependencies },
+    );
+    const handoff = admittedHandoff(connected);
+    expect(retryStorage.value()?.jobs).toEqual([
+      expect.objectContaining({
+        admissionState: "handoff-pending",
+        generation: handoff.generation,
+      }),
+    ]);
+
+    await background.handleRemovedRoomTab(tabId, {
+      cancelRoomAdmission: (removedTabId) =>
+        cancelRoomAdmissionForTab(removedTabId, admissionFence),
+      cleanupPendingHandoff: (removedTabId) =>
+        cleanupRoomAdmissionHandoffForTab(removedTabId, roomDependencies),
+      clearRoomAuthorityRequest: () => undefined,
+      departRoom: (removedTabId) =>
+        handleRoomTabDeparture(removedTabId, { roomSessionDependencies }),
+      removePrivilegedAuthority: async () => undefined,
+    });
+
+    expect(departExact).toHaveBeenCalledOnce();
+    expect(departExact).toHaveBeenCalledWith({
+      roomId,
+      ownerUserId: "user-a",
+      participantSessionId: prepared.participantSessionId,
+    });
+    expect(retryStorage.value()?.jobs).toEqual([]);
+    await expect(
+      loadRoomSessionForTab(tabId, roomSessionDependencies),
+    ).resolves.toBeNull();
+  });
+
+  it("retires only a matching snapshot handoff and ignores a stale tab acknowledgement", async () => {
+    vi.stubGlobal("chrome", {});
+    const background = await import("../entrypoints/background");
+    const tabId = 606;
+    const roomId = "room-handoff-ack";
+    const storage = createSessionStorage();
+    let nextId = 0;
+    const roomSessionDependencies = {
+      sessionStorage: storage,
+      localStorage: storage,
+      randomUUID: () => `handoff-ack-${++nextId}`,
+    };
+    vi.stubGlobal("fetch", vi.fn(async () => roomResponse(roomId)));
+    const retryStorage = createDepartureRetryStorage();
+    const coordinator = createRoomDepartureRetryCoordinator({
+      storage: retryStorage,
+      scheduler: createDepartureRetryScheduler(),
+      getCurrentUserId: async () => "user-a",
+      departExact: vi.fn(async () => "stale" as const),
+      now: () => 20_000,
+    });
+    const roomDependencies = {
+      admissionFence: new RoomAdmissionFence(),
+      renewCancelledAdmissionDepartureIntent: coordinator.renewAdmissionIntent,
+      requestCancelledAdmissionCleanup: coordinator.requestAdmissionCleanup,
+      markAdmissionHandoff: coordinator.markAdmissionHandoff,
+      acknowledgeAdmissionHandoff: coordinator.acknowledgeAdmissionHandoff,
+      claimAdmissionHandoffCleanup: coordinator.claimAdmissionHandoffCleanup,
+      settleCancelledAdmissionDeparture: coordinator.settleAdmission,
+      retryCancelledAdmissionDeparture: coordinator.retryAdmission,
+      issueAuthority: async () => null,
+      roomSessionDependencies,
+    };
+    const sender = { tab: { id: tabId } };
+    const firstPrepared = await prepareRoomSessionForTab(
+      tabId,
+      { ownerUserId: "user-a", roomId },
+      roomSessionDependencies,
+    );
+    const first = admittedHandoff(
+      await background.dispatchPrivilegedRoomRuntimeMessage(
+        connectRoomHttpMessage(roomId, "access-a", firstPrepared),
+        sender,
+        { roomDependencies },
+      ),
+    );
+    const secondPrepared = await prepareRoomSessionForTab(
+      tabId,
+      { ownerUserId: "user-a", roomId },
+      roomSessionDependencies,
+    );
+    const second = admittedHandoff(
+      await background.dispatchPrivilegedRoomRuntimeMessage(
+        connectRoomHttpMessage(roomId, "access-a", secondPrepared),
+        sender,
+        { roomDependencies },
+      ),
+    );
+
+    await expect(
+      background.dispatchPrivilegedRoomRuntimeMessage(
+        roomAdmissionHandoffMessage(first),
+        sender,
+        { roomDependencies },
+      ),
+    ).resolves.toEqual({ ok: true, acknowledged: false });
+    expect(retryStorage.value()?.jobs).toHaveLength(2);
+    await expect(
+      background.dispatchPrivilegedRoomRuntimeMessage(
+        roomAdmissionHandoffMessage(second),
+        sender,
+        { roomDependencies },
+      ),
+    ).resolves.toEqual({ ok: true, acknowledged: true });
+    expect(retryStorage.value()?.jobs).toEqual([
+      expect.objectContaining({
+        participantSessionId: firstPrepared.participantSessionId,
+      }),
+    ]);
+  });
+
+  it("keeps a fresh committed session when an older confirmed leave resolves late", async () => {
+    vi.stubGlobal("chrome", {});
+    const background = await import("../entrypoints/background");
+    const tabId = 607;
+    const roomId = "room-late-confirmed-leave";
+    const storage = createSessionStorage();
+    let nextId = 0;
+    const roomSessionDependencies = {
+      sessionStorage: storage,
+      localStorage: storage,
+      randomUUID: () => `late-leave-${++nextId}`,
+    };
+    const oldPrepared = await prepareRoomSessionForTab(
+      tabId,
+      { ownerUserId: "user-a", roomId },
+      roomSessionDependencies,
+    );
+    const oldRecord = await confirmRoomSessionForTab(
+      tabId,
+      oldPrepared,
+      roomId,
+      roomSessionDependencies,
+    );
+    if (!oldRecord) throw new Error("Expected old confirmed record");
+    const oldDeparture = deferred<{
+      kind: "ack";
+      outcome: "stale";
+    }>();
+    const requestDeparture = vi.fn(() => oldDeparture.promise);
+    const sender = { tab: { id: tabId } };
+    const leaving = background.dispatchPrivilegedRoomRuntimeMessage(
+      {
+        type: "ANIDACHI_ROOM_DEPARTURE",
+        command: "depart",
+        roomId,
+        expectedUserId: "user-a",
+        participantSessionId: oldPrepared.participantSessionId,
+      },
+      sender,
+      {
+        departureDependencies: {
+          getStoredSession: async () => sessionFor("user-a"),
+          refreshSession: async () => null,
+          requestDeparture,
+          roomSessionDependencies,
+          timeoutMs: 1_000,
+        },
+      },
+    );
+    await waitForCall(requestDeparture);
+
+    const newPrepared = await prepareRoomSessionForTab(
+      tabId,
+      { ownerUserId: "user-a", roomId },
+      roomSessionDependencies,
+    );
+    expect(newPrepared.participantSessionId).not.toBe(
+      oldPrepared.participantSessionId,
+    );
+    vi.stubGlobal("fetch", vi.fn(async () => roomResponse(roomId)));
+    const connected = await background.dispatchPrivilegedRoomRuntimeMessage(
+      connectRoomHttpMessage(roomId, "access-a", newPrepared),
+      sender,
+      {
+        roomDependencies: {
+          issueAuthority: async () => null,
+          renewCancelledAdmissionDepartureIntent: async (identity) => ({
+            ...identity,
+            generation: 10_000,
+          }),
+          requestCancelledAdmissionCleanup: async () => true,
+          markAdmissionHandoff: async () => true,
+          roomSessionDependencies,
+        },
+      },
+    );
+    expect(connected).toMatchObject({
+      ok: true,
+      connection: {
+        roomSession: {
+          participantSessionId: newPrepared.participantSessionId,
+        },
+      },
+    });
+
+    oldDeparture.resolve({ kind: "ack", outcome: "stale" });
+    await expect(leaving).resolves.toEqual({ ok: true, outcome: "stale" });
+    await expect(
+      loadRoomSessionForTab(tabId, roomSessionDependencies),
+    ).resolves.toMatchObject({
+      roomId,
+      participantSessionId: newPrepared.participantSessionId,
+    });
   });
 
   it("keeps ambiguous canceled transport failure may-commit instead of settling on stale", async () => {
@@ -1211,7 +1512,7 @@ describe("background privileged room route", () => {
       { ownerUserId: "user-a", roomId: "room-prepared-winner" },
       roomSessionDependencies,
     );
-    expect(reusedWinner.participantSessionId).toBe(
+    expect(reusedWinner.participantSessionId).not.toBe(
       newerPrepared.participantSessionId,
     );
   });
@@ -1903,7 +2204,7 @@ async function startSameIdentitySuccessorScenario() {
       identity: RoomDepartureRetryIdentity,
     ) => coordinator.renewAdmissionIntent(identity),
     requestCancelledAdmissionCleanup: coordinator.requestAdmissionCleanup,
-    retireCancelledAdmissionIntent: coordinator.retireAdmission,
+    markAdmissionHandoff: coordinator.markAdmissionHandoff,
     settleCancelledAdmissionDeparture: coordinator.settleAdmission,
     retryCancelledAdmissionDeparture: coordinator.retryAdmission,
     issueAuthority: async () => null,
@@ -1922,7 +2223,7 @@ async function startSameIdentitySuccessorScenario() {
     { ownerUserId: "user-a", roomId },
     roomSessionDependencies,
   );
-  expect(newPrepared.participantSessionId).toBe(
+  expect(newPrepared.participantSessionId).not.toBe(
     oldPrepared.participantSessionId,
   );
   const newer = background.dispatchPrivilegedRoomRuntimeMessage(
@@ -1942,6 +2243,7 @@ async function startSameIdentitySuccessorScenario() {
     departExact,
     newAdmission,
     newPrepared,
+    oldPrepared,
     newer,
     oldAdmission,
     older,
@@ -1964,6 +2266,14 @@ function sessionFor(userId: string) {
       plan: "free" as const,
     },
   };
+}
+
+function admittedHandoff(value: unknown): RoomAdmissionHandoff {
+  const handoff = (
+    value as { connection?: { admissionHandoff?: RoomAdmissionHandoff } }
+  ).connection?.admissionHandoff;
+  if (!handoff) throw new Error("Expected admission handoff");
+  return handoff;
 }
 
 function trustedRoomToken(payload: Record<string, unknown>): string {

@@ -431,7 +431,7 @@ describe("background-owned room session storage", () => {
     });
   });
 
-  it("reuses the confirmed same-tab session and creates a new deliberate takeover candidate", async () => {
+  it("issues a fresh server-visible session for every new preparation", async () => {
     const dependencies = backgroundDependencies();
     const first = await prepareRoomSessionForTab(
       4,
@@ -450,8 +450,51 @@ describe("background-owned room session storage", () => {
       dependencies,
     );
 
-    expect(retry.participantSessionId).toBe(confirmed?.participantSessionId);
+    expect(retry.participantSessionId).not.toBe(confirmed?.participantSessionId);
     expect(takeover.participantSessionId).not.toBe(confirmed?.participantSessionId);
+    expect(takeover.participantSessionId).not.toBe(retry.participantSessionId);
+  });
+
+  it("preserves camera and voice state independently from a fresh admission identity", async () => {
+    const dependencies = backgroundDependencies();
+    const firstPrepared = await prepareRoomSessionForTab(
+      5,
+      { ownerUserId: "user-a", roomId: "room-a" },
+      dependencies,
+    );
+    const first = await confirmRoomSessionForTab(
+      5,
+      firstPrepared,
+      "room-a",
+      dependencies,
+    );
+    if (!first) throw new Error("Expected first room session");
+    const withCamera = await updateRoomSessionCameraEnabled(first, true, {
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(5), dependencies),
+    });
+    if (!withCamera) throw new Error("Expected camera update");
+    const withMedia = await updateRoomSessionVoiceMode(withCamera, "open-mic", {
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(5), dependencies),
+    });
+    if (!withMedia) throw new Error("Expected voice update");
+
+    const nextPrepared = await prepareRoomSessionForTab(
+      5,
+      { ownerUserId: "user-a", roomId: "room-a" },
+      dependencies,
+    );
+    expect(nextPrepared.participantSessionId).not.toBe(
+      firstPrepared.participantSessionId,
+    );
+    await expect(
+      confirmRoomSessionForTab(5, nextPrepared, "room-a", dependencies),
+    ).resolves.toMatchObject({
+      participantSessionId: nextPrepared.participantSessionId,
+      cameraEnabled: true,
+      voiceMode: "open-mic",
+    });
   });
 
   it("keeps a confirmed room until exact admission confirms its replacement", async () => {
@@ -500,7 +543,7 @@ describe("background-owned room session storage", () => {
       dependencies,
     );
 
-    expect(winner.participantSessionId).toBe(stale.participantSessionId);
+    expect(winner.participantSessionId).not.toBe(stale.participantSessionId);
     expect(winner.preparationId).not.toBe(stale.preparationId);
     await expect(
       discardPreparedRoomSessionIfMatch(8, stale, dependencies),

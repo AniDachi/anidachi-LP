@@ -23,9 +23,12 @@ import {
 import {
   cancelRoomAdmissionForDeparture,
   cancelRoomAdmissionForTab,
+  cleanupRoomAdmissionHandoffForTab,
   clearRoomAuthorityRequestForTab,
   endWebsiteRoomFromApi,
   handleRoomHttpMessage,
+  handleRoomAdmissionHandoffMessage,
+  isRoomAdmissionHandoffMessage,
   isRoomHttpMessage,
   type RoomAdmissionCompletion,
   type RoomHttpBackgroundDependencies,
@@ -81,7 +84,8 @@ export const ROOM_ADMISSION_DEPARTURE_SETTLE_TIMEOUT_MS = 2_000;
 export interface RemovedRoomTabDependencies {
   cancelRoomAdmission?: (tabId: number) => Promise<unknown> | null | void;
   clearRoomAuthorityRequest?: (tabId: number) => void;
-  departRoom?: (tabId: number) => Promise<RoomTabDepartureOutcome>;
+  departRoom?: (tabId: number) => Promise<unknown>;
+  cleanupPendingHandoff?: (tabId: number) => Promise<unknown>;
   removePrivilegedAuthority?: (tabId: number) => Promise<void>;
 }
 
@@ -95,6 +99,9 @@ export async function handleRemovedRoomTab(
   (dependencies.clearRoomAuthorityRequest ?? clearRoomAuthorityRequestForTab)(tabId);
   try {
     await persistedAdmissionIntent;
+    await (
+      dependencies.cleanupPendingHandoff ?? cleanupRoomAdmissionHandoffForTab
+    )(tabId).catch(() => undefined);
     await (dependencies.departRoom ?? handleRoomTabDeparture)(tabId);
   } finally {
     await (
@@ -109,6 +116,13 @@ export function dispatchPrivilegedRoomRuntimeMessage(
   sender: { tab?: { id?: number } },
   dependencies: PrivilegedRoomRuntimeDependencies = {},
 ): Promise<unknown> | null {
+  if (isRoomAdmissionHandoffMessage(message)) {
+    return handleRoomAdmissionHandoffMessage(
+      message,
+      sender,
+      dependencies.roomDependencies,
+    );
+  }
   if (isRoomDepartureRuntimeMessage(message)) {
     return dispatchRoomDepartureRuntimeMessage(message, sender, dependencies);
   }

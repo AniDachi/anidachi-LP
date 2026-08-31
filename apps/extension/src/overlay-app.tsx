@@ -183,6 +183,7 @@ import {
 	ROOM_FULL_CLOSE_CODE,
 	ROOM_SESSION_TAKEN_OVER_CLOSE_CODE,
 	RoomClient,
+	type RoomAdmissionHandoff,
 	type RoomConnectionStatus,
 	type RoomQuotaSummary,
 } from "./room-client";
@@ -3494,6 +3495,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			activeParticipant: Participant,
 			nextRoomToken: string,
 			nextStoredRoomSession: RoomSessionRecord,
+			admissionHandoff: RoomAdmissionHandoff | null,
 			isCurrentJoin: () => boolean,
 			createdRoomProvider: SourceProvider | null = null,
 		): Promise<boolean> => {
@@ -3557,6 +3559,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				video: videoDebugSnapshot(adapter.video),
 			});
 			clientRef.current.connect({
+				...(admissionHandoff ? { admissionHandoff } : {}),
 				lastSeenP2PServerSeq: sameRoomReconnect
 					? lastSeenP2PServerSeqRef.current
 					: 0,
@@ -3707,6 +3710,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					activeParticipant,
 					connected.roomToken,
 					connected.roomSession,
+					connected.admissionHandoff ?? null,
 					() =>
 						isCurrentJoin() &&
 						participantRef.current?.id === activeParticipant.id,
@@ -4359,6 +4363,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				activeParticipant,
 				nextRoomToken,
 				created.roomSession,
+				null,
 				() =>
 					isCurrentCreate() &&
 					participantRef.current?.id === activeParticipant.id,

@@ -743,7 +743,7 @@ describe("authenticated room client", () => {
         participantSessionId: string;
       }) => ({ ...identity, generation: ++admissionGeneration }),
       requestCancelledAdmissionCleanup: async () => true,
-      retireCancelledAdmissionIntent: async () => true,
+      markAdmissionHandoff: async () => true,
       settleCancelledAdmissionDeparture: async () => "departed" as const,
     };
     const first = handleRoomHttpMessage(
@@ -882,6 +882,78 @@ describe("authenticated room client", () => {
     expect(warn).not.toHaveBeenCalled();
 
     client.close();
+  });
+
+  it("acknowledges admission handoff only after the first authoritative room snapshot", async () => {
+    installControlledWebSocket();
+    const acknowledgeAdmissionHandoff = vi.fn(async () => true);
+    const admissionHandoff = {
+      tabId: 12,
+      roomId: "room-1",
+      ownerUserId: roomParticipant.id,
+      participantSessionId: "participant-session-1",
+      generation: 7,
+    };
+    const client = new RoomClient();
+
+    client.connect({
+      roomId: "room-1",
+      roomToken: "room-token-1",
+      participant: roomParticipant,
+      participantSessionId: "participant-session-1",
+      videoFingerprint: "video-1",
+      admissionHandoff,
+      acknowledgeAdmissionHandoff,
+      onEvent: vi.fn(),
+      onStatus: vi.fn(),
+    });
+    const socket = ControlledWebSocket.instances[0];
+    socket?.open();
+    await Promise.resolve();
+    expect(acknowledgeAdmissionHandoff).not.toHaveBeenCalled();
+
+    socket?.message(roomSnapshot());
+    await Promise.resolve();
+    expect(acknowledgeAdmissionHandoff).toHaveBeenCalledOnce();
+    expect(acknowledgeAdmissionHandoff).toHaveBeenCalledWith(admissionHandoff);
+
+    socket?.message({ ...roomSnapshot(), serverSeq: 2 });
+    await Promise.resolve();
+    expect(acknowledgeAdmissionHandoff).toHaveBeenCalledOnce();
+  });
+
+  it("sends the bounded internal handoff acknowledgement through the extension runtime", async () => {
+    installControlledWebSocket();
+    const sendMessage = vi.fn(async () => ({ ok: true, acknowledged: true }));
+    vi.stubGlobal("chrome", { runtime: { sendMessage } });
+    const handoff = {
+      tabId: 13,
+      roomId: "room-1",
+      ownerUserId: roomParticipant.id,
+      participantSessionId: "participant-session-1",
+      generation: 8,
+    };
+    const client = new RoomClient();
+
+    client.connect({
+      roomId: "room-1",
+      roomToken: "room-token-1",
+      participant: roomParticipant,
+      participantSessionId: "participant-session-1",
+      videoFingerprint: "video-1",
+      admissionHandoff: handoff,
+      onEvent: vi.fn(),
+      onStatus: vi.fn(),
+    });
+    ControlledWebSocket.instances[0]?.open();
+    ControlledWebSocket.instances[0]?.message(roomSnapshot());
+    await Promise.resolve();
+
+    expect(sendMessage).toHaveBeenCalledWith({
+      type: "ANIDACHI_ROOM_ADMISSION_HANDOFF",
+      command: "acknowledge",
+      handoff,
+    });
   });
 
   it("retains only private history authority matching the current room session and generations", () => {

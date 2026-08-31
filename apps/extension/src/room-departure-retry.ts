@@ -18,6 +18,15 @@ const ROOM_DEPARTURE_RETRY_STORAGE_KEY =
 const INITIAL_RETRY_DELAY_MS = 30_000;
 const ADMISSION_SETTLEMENT_MARGIN_MS = 15_000;
 /**
+ * After Web admission succeeds, the overlay has one bounded minute to open the
+ * room socket and receive its first authoritative ROOM_SNAPSHOT. This covers
+ * the existing 45-second socket liveness timeout, the maximum 8-second overlay
+ * reconnect delay, and 7 seconds of message/scheduler margin. A newer
+ * preparation creates a fresh participantSessionId, so an expired handoff can
+ * be cleaned exactly without touching a successor.
+ */
+export const ROOM_ADMISSION_HANDOFF_TIMEOUT_MS = 60_000;
+/**
  * The client aborts admission after 60 seconds and the connect route has a
  * separate 60-second execution cap. Starting this combined bound at
  * admission start and adding 15 seconds of transport/scheduler margin means
@@ -46,12 +55,23 @@ export type RoomDepartureRetryOperation = RoomDepartureRetryIdentity & {
   generation: number;
 };
 
+export function isRoomDepartureRetryOperation(
+  value: unknown,
+): value is RoomDepartureRetryOperation {
+  try {
+    requireOperation(value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export type RoomDepartureRetryAttemptOutcome =
   | RoomTabDepartureOutcome
   | "operation-superseded";
 
 type RoomDepartureRetryJob = RoomDepartureRetryIdentity & {
-  admissionState: "may-commit" | "settled";
+  admissionState: "handoff-pending" | "may-commit" | "settled";
   attempts: number;
   cleanupRequested: boolean;
   createdAt: number;
@@ -61,7 +81,7 @@ type RoomDepartureRetryJob = RoomDepartureRetryIdentity & {
 };
 
 type RoomDepartureRetryState = {
-  version: 4;
+  version: 5;
   lastGeneration: number;
   jobs: RoomDepartureRetryJob[];
 };
@@ -93,7 +113,13 @@ export interface RoomDepartureRetryCoordinator {
   requestAdmissionCleanup(
     operation: RoomDepartureRetryOperation,
   ): Promise<boolean>;
-  retireAdmission(operation: RoomDepartureRetryOperation): Promise<boolean>;
+  markAdmissionHandoff(operation: RoomDepartureRetryOperation): Promise<boolean>;
+  acknowledgeAdmissionHandoff(
+    operation: RoomDepartureRetryOperation,
+  ): Promise<boolean>;
+  claimAdmissionHandoffCleanup(
+    identity: RoomDepartureRetryIdentity,
+  ): Promise<RoomDepartureRetryOperation | null>;
   retryAdmission(
     operation: RoomDepartureRetryOperation,
   ): Promise<RoomDepartureRetryAttemptOutcome>;
@@ -190,6 +216,10 @@ export function createRoomDepartureRetryCoordinator(
         const now = safeNow(dependencies.now);
         jobs[index] = {
           ...current,
+          admissionState:
+            current.admissionState === "handoff-pending"
+              ? "settled"
+              : current.admissionState,
           cleanupRequested: true,
           nextAttemptAt: Math.min(current.nextAttemptAt, now + INITIAL_RETRY_DELAY_MS),
         };
@@ -201,7 +231,7 @@ export function createRoomDepartureRetryCoordinator(
       return true;
     });
 
-  const retireAdmission = (
+  const markAdmissionHandoff = (
     operation: RoomDepartureRetryOperation,
   ): Promise<boolean> =>
     runSerialized(async () => {
@@ -217,12 +247,62 @@ export function createRoomDepartureRetryCoordinator(
       ) {
         return false;
       }
+      const now = safeNow(dependencies.now);
+      jobs[index] = {
+        ...current,
+        admissionState: "handoff-pending",
+        nextAttemptAt: now + ROOM_ADMISSION_HANDOFF_TIMEOUT_MS,
+        settleAfter: now + ROOM_ADMISSION_HANDOFF_TIMEOUT_MS,
+      };
+      await persist(state);
+      await schedule(jobs);
+      return true;
+    });
+
+  const acknowledgeAdmissionHandoff = (
+    operation: RoomDepartureRetryOperation,
+  ): Promise<boolean> =>
+    runSerialized(async () => {
+      const exact = requireOperation(operation);
+      const state = normalizeState(await dependencies.storage.read());
+      const jobs = state.jobs;
+      const index = jobs.findIndex((job) => sameIdentity(job, exact));
+      const current = jobs[index];
+      if (
+        !current ||
+        current.generation !== exact.generation ||
+        current.admissionState !== "handoff-pending" ||
+        current.cleanupRequested
+      ) {
+        return false;
+      }
       jobs.splice(index, 1);
       await persist(state);
-      // Retirement is already durable. A stale alarm is harmless and will
-      // clear itself when it observes the empty job list.
       await schedule(jobs).catch(() => undefined);
       return true;
+    });
+
+  const claimAdmissionHandoffCleanup = (
+    identity: RoomDepartureRetryIdentity,
+  ): Promise<RoomDepartureRetryOperation | null> =>
+    runSerialized(async () => {
+      const exact = requireIdentity(identity);
+      const state = normalizeState(await dependencies.storage.read());
+      const jobs = state.jobs;
+      const index = jobs.findIndex((job) => sameIdentity(job, exact));
+      const current = jobs[index];
+      if (!current || current.admissionState !== "handoff-pending") return null;
+      const now = safeNow(dependencies.now);
+      const claimed: RoomDepartureRetryJob = {
+        ...current,
+        admissionState: "settled",
+        cleanupRequested: true,
+        nextAttemptAt: now,
+      };
+      jobs[index] = claimed;
+      await persist(state);
+      await dependencies.scheduler.replace(now);
+      return exactOperation(claimed);
     });
 
   const settleAdmission = (
@@ -389,7 +469,9 @@ export function createRoomDepartureRetryCoordinator(
   return {
     renewAdmissionIntent,
     requestAdmissionCleanup,
-    retireAdmission,
+    markAdmissionHandoff,
+    acknowledgeAdmissionHandoff,
+    claimAdmissionHandoffCleanup,
     retryAdmission,
     settleAdmission,
     drain,
@@ -456,10 +538,26 @@ export function requestRoomDepartureAdmissionCleanup(
   return defaultRoomDepartureRetryCoordinator.requestAdmissionCleanup(operation);
 }
 
-export function retireRoomDepartureAdmissionIntent(
+export function markRoomDepartureAdmissionHandoff(
   operation: RoomDepartureRetryOperation,
 ): Promise<boolean> {
-  return defaultRoomDepartureRetryCoordinator.retireAdmission(operation);
+  return defaultRoomDepartureRetryCoordinator.markAdmissionHandoff(operation);
+}
+
+export function acknowledgeRoomDepartureAdmissionHandoff(
+  operation: RoomDepartureRetryOperation,
+): Promise<boolean> {
+  return defaultRoomDepartureRetryCoordinator.acknowledgeAdmissionHandoff(
+    operation,
+  );
+}
+
+export function claimRoomDepartureAdmissionHandoffCleanup(
+  identity: RoomDepartureRetryIdentity,
+): Promise<RoomDepartureRetryOperation | null> {
+  return defaultRoomDepartureRetryCoordinator.claimAdmissionHandoffCleanup(
+    identity,
+  );
 }
 
 export function drainRoomDepartureRetries(options?: {
@@ -478,11 +576,17 @@ export function isRoomDepartureRetryAlarm(name: string): boolean {
 
 function normalizeState(value: unknown): RoomDepartureRetryState {
   if (!isObject(value) || !Array.isArray(value.jobs)) {
-    return { version: 4, lastGeneration: 0, jobs: [] };
+    return { version: 5, lastGeneration: 0, jobs: [] };
   }
   const version = value.version;
-  if (version !== 1 && version !== 2 && version !== 3 && version !== 4) {
-    return { version: 4, lastGeneration: 0, jobs: [] };
+  if (
+    version !== 1 &&
+    version !== 2 &&
+    version !== 3 &&
+    version !== 4 &&
+    version !== 5
+  ) {
+    return { version: 5, lastGeneration: 0, jobs: [] };
   }
 
   const jobs: RoomDepartureRetryJob[] = [];
@@ -507,7 +611,13 @@ function normalizeState(value: unknown): RoomDepartureRetryState {
       job.nextAttemptAt,
     );
     duplicate.settleAfter = Math.max(duplicate.settleAfter, job.settleAfter);
-    if (job.admissionState === "settled") duplicate.admissionState = "settled";
+    if (
+      job.admissionState === "settled" ||
+      (job.admissionState === "handoff-pending" &&
+        duplicate.admissionState === "may-commit")
+    ) {
+      duplicate.admissionState = job.admissionState;
+    }
     if (job.cleanupRequested) duplicate.cleanupRequested = true;
   }
   const highestJobGeneration = jobs.reduce(
@@ -515,13 +625,13 @@ function normalizeState(value: unknown): RoomDepartureRetryState {
     0,
   );
   const storedLastGeneration =
-    version === 4 &&
+    (version === 4 || version === 5) &&
     Number.isSafeInteger(value.lastGeneration) &&
     (value.lastGeneration as number) >= 0
       ? (value.lastGeneration as number)
       : 0;
   return {
-    version: 4,
+    version: 5,
     lastGeneration: Math.max(storedLastGeneration, highestJobGeneration),
     jobs,
   };
@@ -529,7 +639,7 @@ function normalizeState(value: unknown): RoomDepartureRetryState {
 
 function normalizeJob(
   value: unknown,
-  version: 1 | 2 | 3 | 4,
+  version: 1 | 2 | 3 | 4 | 5,
 ): RoomDepartureRetryJob | null {
   if (!isObject(value)) return null;
   const identity = normalizeIdentity(value);
@@ -555,18 +665,20 @@ function normalizeJob(
     };
   }
   if (
-    (value.admissionState !== "may-commit" &&
+    (value.admissionState !== "handoff-pending" &&
+      value.admissionState !== "may-commit" &&
       value.admissionState !== "settled") ||
     !isSafeTimestamp(value.settleAfter)
   ) {
     return null;
   }
-  const generation = version === 3 || version === 4 ? value.generation : 1;
+  const generation =
+    version === 3 || version === 4 || version === 5 ? value.generation : 1;
   if (!Number.isSafeInteger(generation) || (generation as number) < 1) {
     return null;
   }
   const cleanupRequested =
-    version === 4 ? value.cleanupRequested : true;
+    version === 4 || version === 5 ? value.cleanupRequested : true;
   if (typeof cleanupRequested !== "boolean") return null;
   return {
     ...identity,
@@ -626,6 +738,15 @@ function exactIdentity(
     roomId: job.roomId,
     ownerUserId: job.ownerUserId,
     participantSessionId: job.participantSessionId,
+  };
+}
+
+function exactOperation(
+  job: RoomDepartureRetryJob,
+): RoomDepartureRetryOperation {
+  return {
+    ...exactIdentity(job),
+    generation: job.generation,
   };
 }
 

@@ -220,6 +220,52 @@ test("a retry after the first departure response is lost uses legacy-compatible 
   assert.equal(fixture.calls.filter((call) => call === "detach").length, 1);
 });
 
+test("a delayed exact leave cannot release a freshly admitted same-room participant session", async () => {
+  const replacement = {
+    ...MEMBER_ASSIGNMENT,
+    participantSessionId: "participant-session-two",
+  };
+  let current: TestAssignment | null = MEMBER_ASSIGNMENT;
+  let signalReleaseStarted!: () => void;
+  let continueRelease!: () => void;
+  const releaseStarted = new Promise<void>((resolve) => {
+    signalReleaseStarted = resolve;
+  });
+  const releaseGate = new Promise<void>((resolve) => {
+    continueRelease = resolve;
+  });
+  let detachCalls = 0;
+  const fixture = departureDependencies({
+    getActiveAssignment: async () => current,
+    releaseGuest: async (assignment) => {
+      signalReleaseStarted();
+      await releaseGate;
+      if (
+        current?.roomId !== assignment.roomId ||
+        current.userId !== assignment.userId ||
+        current.participantSessionId !== assignment.participantSessionId
+      ) {
+        return { outcome: "stale" };
+      }
+      current = null;
+      return { outcome: "released" };
+    },
+    detachGuest: async () => {
+      detachCalls += 1;
+      return { ok: true, outcome: "detached" };
+    },
+  });
+
+  const leaving = depart(fixture);
+  await releaseStarted;
+  current = replacement;
+  continueRelease();
+
+  assert.deepEqual(await leaving, okResult("stale"));
+  assert.deepEqual(current, replacement);
+  assert.equal(detachCalls, 0);
+});
+
 test("exact departure uses legacy-compatible stale for no assignment and stale exact identifiers", async () => {
   const noAssignment = departureDependencies({
     getActiveAssignment: async () => null,
