@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   ActiveRoomConflictResponseSchema,
+	ActiveRoomRecoveryRequestSchema,
   InternalRoomDepartureCommandSchema,
   MAX_PARTICIPANT_ID_CHARS,
   MAX_ROOM_ID_CHARS,
@@ -95,14 +96,49 @@ describe("active room session contracts", () => {
     expect(() => RoomDepartureCallbackSchema.parse({ ...callback, departedAt: -1 })).toThrow();
   });
 
+	// Break caught: a recovery request could accept a client-selected session
+	// identifier and release a different assignment instead of resolving the
+	// authenticated account's current assignment on the server.
+	it("keeps active-room recovery limited to one bounded room selector", () => {
+		expect(ActiveRoomRecoveryRequestSchema.parse({ roomId: "room-1" })).toEqual(
+			{
+				roomId: "room-1",
+			},
+		);
+		expect(() =>
+			ActiveRoomRecoveryRequestSchema.parse({
+				roomId: "room-1",
+				participantSessionId: "client-selected-session",
+			}),
+		).toThrow();
+		expect(() =>
+			ActiveRoomRecoveryRequestSchema.parse({
+				roomId: "r".repeat(MAX_ROOM_ID_CHARS + 1),
+			}),
+		).toThrow();
+	});
+
   // Break caught: duplicate/already-stale departures could be mistaken for a
   // retryable failure and trigger loops or duplicate room finalization.
   it("uses bounded idempotent departure outcomes and canonical reconnect grace", () => {
     expect(ROOM_DISCONNECT_GRACE_MS).toBe(60_000);
     for (const outcome of ["departed", "room_ended", "stale"] as const) {
-      expect(RoomDepartureAcknowledgementSchema.parse({ ok: true, outcome })).toEqual({ ok: true, outcome });
+			expect(
+				RoomDepartureAcknowledgementSchema.parse({ ok: true, outcome }),
+			).toEqual({ ok: true, outcome });
     }
-    expect(() => RoomDepartureAcknowledgementSchema.parse({ ok: true, outcome: "unknown" })).toThrow();
-    expect(() => RoomDepartureAcknowledgementSchema.parse({ ok: true, outcome: "stale", retry: true })).toThrow();
+		expect(() =>
+			RoomDepartureAcknowledgementSchema.parse({
+				ok: true,
+				outcome: "unknown",
+			}),
+		).toThrow();
+		expect(() =>
+			RoomDepartureAcknowledgementSchema.parse({
+				ok: true,
+				outcome: "stale",
+				retry: true,
+			}),
+		).toThrow();
   });
 });

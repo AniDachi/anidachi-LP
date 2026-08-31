@@ -163,19 +163,17 @@ function resolveReactionPlacement({
 		: 92 + Math.max(0, fallbackParticipantIndex) * 49;
 	const directionToCenter = sourceX >= overlayWidth / 2 ? -1 : 1;
 	const safeLaneIndex = Math.max(0, Math.round(laneIndex));
-	const laneOffset = Math.min(safeLaneIndex, 3) * 8 * directionToCenter;
-	const driftX = directionToCenter * (22 + (safeLaneIndex % 3) * 5);
+	const laneColumn = safeLaneIndex % 4;
+	const laneRow = Math.floor(safeLaneIndex / 4);
+	const laneOffset = (laneColumn * 16 + (laneRow % 2) * 8) * directionToCenter;
+	const driftX = directionToCenter * (24 + laneColumn * 8 + laneRow * 4);
 
 	return {
 		driftX,
 		kind: anchor?.kind ?? "fallback",
 		midDriftX: Math.round(driftX * 0.42),
 		x: clamp(sourceX + laneOffset, 18, Math.max(18, overlayWidth - 18)),
-		y: clamp(
-			sourceY - Math.floor(safeLaneIndex / 4) * 7,
-			18,
-			Math.max(18, overlayHeight - 18),
-		),
+		y: clamp(sourceY - laneRow * 16, 18, Math.max(18, overlayHeight - 18)),
 	};
 }
 

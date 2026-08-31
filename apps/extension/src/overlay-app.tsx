@@ -186,7 +186,11 @@ import {
 	type RoomConnectionStatus,
 	type RoomQuotaSummary,
 } from "./room-client";
-import { confirmExplicitRoomDeparture } from "./room-departure";
+import {
+	confirmExplicitRoomDeparture,
+	requestActiveRoomRecovery,
+	requestCurrentRoomDeparture,
+} from "./room-departure";
 import {
 	mergeRoomInviteTargetStatus,
 	type RoomInviteTargetStatus,
@@ -331,6 +335,22 @@ interface VisibleReaction {
 	reaction: ReactionEvent;
 }
 
+function nextAvailableReactionLane(
+	visibleReactions: readonly VisibleReaction[],
+	participantId: string,
+): number {
+	const occupiedLanes = new Set(
+		visibleReactions
+			.filter((item) => item.reaction.userId === participantId)
+			.map((item) => item.laneIndex),
+	);
+	let laneIndex = 0;
+	while (occupiedLanes.has(laneIndex)) {
+		laneIndex += 1;
+	}
+	return laneIndex;
+}
+
 interface PointerWakePoint {
 	clientX: number;
 	clientY: number;
@@ -463,7 +483,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const fireHoldRef = useRef<FireHoldState | null>(null);
 	const liveChatTimersRef = useRef<Record<string, number | undefined>>({});
 	const reactionIdentityCueTimersRef = useRef(new Map<string, number>());
-	const reactionLaneCounterByParticipantRef = useRef(new Map<string, number>());
 	const reactionVisibleTimersRef = useRef(new Map<string, number>());
 	const handledP2PSignalIdsRef = useRef(new Set<string>());
 	const lastSeenP2PServerSeqRef = useRef(0);
@@ -487,6 +506,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const transientPanelNoticeTimerRef = useRef<number | null>(null);
 	const inviteNoticeTimerRef = useRef<number | null>(null);
 	const roomEndConfirmationTimerRef = useRef<number | null>(null);
+	const activeRoomRecoveryConfirmationTimerRef = useRef<number | null>(null);
 	const signOutConfirmationTimerRef = useRef<number | null>(null);
 	const messageComposerShieldReleaseTimerRef = useRef<number | null>(null);
 	const messageComposerShieldReleasePointerRef =
@@ -554,6 +574,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const [messageComposerOpen, setMessageComposerOpen] = useState(false);
 	const [roomCreatePending, setRoomCreatePending] = useState(false);
 	const [roomEndConfirmationPending, setRoomEndConfirmationPending] =
+		useState(false);
+	const [
+		activeRoomRecoveryConfirmationPending,
+		setActiveRoomRecoveryConfirmationPending,
+	] = useState(false);
+	const [activeRoomRecoveryPending, setActiveRoomRecoveryPending] =
 		useState(false);
 	const [signOutConfirmationPending, setSignOutConfirmationPending] =
 		useState(false);
@@ -871,6 +897,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		setRoomEndConfirmationPending(false);
 	}, []);
 
+	const clearActiveRoomRecoveryConfirmation = useCallback(() => {
+		if (activeRoomRecoveryConfirmationTimerRef.current !== null) {
+			window.clearTimeout(activeRoomRecoveryConfirmationTimerRef.current);
+			activeRoomRecoveryConfirmationTimerRef.current = null;
+		}
+		setActiveRoomRecoveryConfirmationPending(false);
+	}, []);
+
 	const clearSignOutConfirmation = useCallback(() => {
 		if (signOutConfirmationTimerRef.current !== null) {
 			window.clearTimeout(signOutConfirmationTimerRef.current);
@@ -892,6 +926,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			}
 			if (roomEndConfirmationTimerRef.current !== null) {
 				window.clearTimeout(roomEndConfirmationTimerRef.current);
+			}
+			if (activeRoomRecoveryConfirmationTimerRef.current !== null) {
+				window.clearTimeout(activeRoomRecoveryConfirmationTimerRef.current);
 			}
 			if (signOutConfirmationTimerRef.current !== null) {
 				window.clearTimeout(signOutConfirmationTimerRef.current);
@@ -3356,18 +3393,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						return;
 					}
 					cueReactionParticipant(event.reaction.userId);
-					const nextLaneIndex =
-						reactionLaneCounterByParticipantRef.current.get(
+					setReactions((current) => {
+						const laneIndex = nextAvailableReactionLane(
+							current,
 							event.reaction.userId,
-						) ?? 0;
-					reactionLaneCounterByParticipantRef.current.set(
-						event.reaction.userId,
-						(nextLaneIndex + 1) % 4,
-					);
-					setReactions((current) => [
-						...current,
-						{ laneIndex: nextLaneIndex, reaction: event.reaction },
-					]);
+						);
+						return [...current, { laneIndex, reaction: event.reaction }];
+					});
 					const visibleTimerId = window.setTimeout(() => {
 						reactionVisibleTimersRef.current.delete(event.reaction.id);
 						setReactions((current) =>
@@ -3701,6 +3733,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 			roomReconnectSuppressedRef.current = true;
 			clearRoomReconnectTimer();
+			clearActiveRoomRecoveryConfirmation();
 			setActiveRoomConflict(error.activeRoom);
 			setAuthMessage(
 				activeRoomConflictMessage(error.activeRoom.provider, adapter.provider),
@@ -3708,7 +3741,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			setPanelOpen(true);
 			return true;
 		},
-		[adapter.provider, clearRoomReconnectTimer],
+		[
+			adapter.provider,
+			clearActiveRoomRecoveryConfirmation,
+			clearRoomReconnectTimer,
+		],
 	);
 
 	const scheduleRoomReconnect = useCallback(
@@ -4477,7 +4514,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	});
 
 	const handleCreateRoom = async () => {
-		if (roomCreatePending) {
+		if (roomCreatePending || activeRoomRecoveryPending) {
 			return;
 		}
 
@@ -4524,38 +4561,53 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		}
 	};
 
-	const handleOpenActiveRoom = async () => {
+	const handleRecoverActiveRoom = async () => {
 		const conflict = activeRoomConflict;
-		if (!conflict || roomCreatePending) {
-			return;
-		}
-		if (conflict.provider && conflict.provider !== adapter.provider) {
-			setAuthMessage(
-				activeRoomConflictMessage(conflict.provider, adapter.provider),
-			);
+		const expectedUserId = participant?.id;
+		if (!conflict || !expectedUserId || activeRoomRecoveryPending) {
 			return;
 		}
 
-		setRoomCreatePending(true);
+		if (!activeRoomRecoveryConfirmationPending) {
+			setActiveRoomRecoveryConfirmationPending(true);
+			if (activeRoomRecoveryConfirmationTimerRef.current !== null) {
+				window.clearTimeout(activeRoomRecoveryConfirmationTimerRef.current);
+			}
+			activeRoomRecoveryConfirmationTimerRef.current = window.setTimeout(() => {
+				activeRoomRecoveryConfirmationTimerRef.current = null;
+				setActiveRoomRecoveryConfirmationPending(false);
+			}, ROOM_END_CONFIRMATION_DURATION_MS);
+			return;
+		}
+
+		clearActiveRoomRecoveryConfirmation();
+		setActiveRoomRecoveryPending(true);
 		try {
-			await connectToExistingWebsiteRoom(
+			const outcome = await requestActiveRoomRecovery(
 				conflict.roomId,
-				"active-room-conflict",
+				expectedUserId,
 			);
 			setActiveRoomConflict(null);
 			setAuthMessage(null);
+			logDebug("overlay.room", "active room recovered", {
+				roomId: conflict.roomId,
+				role: conflict.role,
+				outcome,
+			});
 		} catch (error) {
-			if (showActiveRoomConflict(error)) {
-				return;
-			}
-			const message = authErrorMessage(error, "Failed to open active room");
-			logDebug("overlay.room", "active room open failed", {
+			const message = authErrorMessage(
+				error,
+				conflict.role === "host"
+					? "Could not end the active room. Please try again."
+					: "Could not leave the active room. Please try again.",
+			);
+			logDebug("overlay.room", "active room recovery failed", {
 				roomId: conflict.roomId,
 				message,
 			});
 			setAuthMessage(message);
 		} finally {
-			setRoomCreatePending(false);
+			setActiveRoomRecoveryPending(false);
 		}
 	};
 
@@ -4642,7 +4694,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	};
 
 	const handleLeaveRoom = async () => {
-		if (roomLeavePending || !roomId || isHost) {
+		const expectedUserId = participant?.id;
+		if (roomLeavePending || !roomId || !expectedUserId || isHost) {
 			return;
 		}
 
@@ -4660,6 +4713,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			}
 
 			const outcome = await confirmExplicitRoomDeparture({
+				requestDeparture: () =>
+					requestCurrentRoomDeparture(activeRoomId, expectedUserId),
 				onConfirmed: () => resetLocalRoomSession(undefined, true),
 			});
 			showRoomActionFeedback("room-left");
@@ -5071,7 +5126,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			window.clearTimeout(timerId);
 		}
 		reactionIdentityCueTimersRef.current.clear();
-		reactionLaneCounterByParticipantRef.current.clear();
 		setReactionCueParticipantIds(new Set());
 	}, [cancelFireHold, reactionsEnabled]);
 
@@ -5743,7 +5797,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 								"panel-primary-action",
 								primaryRoomActionKind !== "create" ? "room-exit" : "",
 								roomEndConfirmationPending ? "confirming" : "",
-								roomCreatePending || roomEndPending || roomLeavePending
+								roomCreatePending ||
+								activeRoomRecoveryPending ||
+								roomEndPending ||
+								roomLeavePending
 									? "loading"
 									: "",
 							]
@@ -5761,6 +5818,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 								!participant ||
 								extensionContextInvalidated ||
 								roomCreatePending ||
+								activeRoomRecoveryPending ||
 								roomEndPending ||
 								roomLeavePending
 							}
@@ -5855,16 +5913,31 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 									Reload page
 								</button>
 							) : null}
-							{activeRoomConflict &&
-							(!activeRoomConflict.provider ||
-								activeRoomConflict.provider === adapter.provider) ? (
+							{activeRoomConflict ? (
 								<button
-									className="button compact"
+									className={[
+										"button",
+										"compact",
+										"active-room-recovery-button",
+										activeRoomRecoveryConfirmationPending ? "confirming" : "",
+									]
+										.filter(Boolean)
+										.join(" ")}
 									type="button"
-									onClick={handleOpenActiveRoom}
-									disabled={roomCreatePending}
+									onClick={handleRecoverActiveRoom}
+									disabled={activeRoomRecoveryPending}
 								>
-									Open active room
+									{activeRoomRecoveryPending
+										? activeRoomConflict.role === "host"
+											? "Ending..."
+											: "Leaving..."
+										: activeRoomRecoveryConfirmationPending
+											? activeRoomConflict.role === "host"
+												? "Confirm end"
+												: "Confirm leave"
+											: activeRoomConflict.role === "host"
+												? "End active room"
+												: "Leave active room"}
 								</button>
 							) : null}
 						</div>
@@ -6934,12 +7007,12 @@ function activeRoomConflictMessage(
 		return ACTIVE_ROOM_CONFLICT_MESSAGE;
 	}
 	if (provider === "youtube") {
-		return "You already have an active watch room on YouTube. Open that tab to continue.";
+		return "You already have an active watch room on YouTube.";
 	}
 	if (provider === "crunchyroll") {
-		return "You already have an active watch room on Crunchyroll. Open that tab to continue.";
+		return "You already have an active watch room on Crunchyroll.";
 	}
-	return "You already have an active watch room on another supported site. Open that tab to continue.";
+	return "You already have an active watch room on another supported site.";
 }
 
 function formatQuotaCountdown(remainingSeconds: number | null): string {

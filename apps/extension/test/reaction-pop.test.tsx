@@ -39,13 +39,29 @@ describe("ReactionPop", () => {
 		expect(reaction.dataset.originKind).toBe("pill");
 		expect(reaction.dataset.laneIndex).toBe("1");
 		expect(reaction.style.getPropertyValue("--reaction-origin-x")).toBe(
-			"647.5px",
+			"639.5px",
 		);
 		expect(reaction.style.getPropertyValue("--reaction-origin-y")).toBe(
 			"385.5px",
 		);
 
 		await unmount(view.root);
+	});
+
+	it("gives every visible burst lane a distinct origin", async () => {
+		mockGeometry();
+		const origins: string[] = [];
+
+		for (let laneIndex = 0; laneIndex < 6; laneIndex += 1) {
+			const view = await renderReaction({ camera: false, laneIndex });
+			const reaction = getReaction(view.container);
+			origins.push(
+				`${reaction.style.getPropertyValue("--reaction-origin-x")}:${reaction.style.getPropertyValue("--reaction-origin-y")}`,
+			);
+			await unmount(view.root);
+		}
+
+		expect(new Set(origins).size).toBe(origins.length);
 	});
 });
 

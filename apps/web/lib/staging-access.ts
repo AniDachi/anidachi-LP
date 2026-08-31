@@ -102,30 +102,46 @@ function canBearerBypassStagingGate(pathname: string, method: string): boolean {
   if (pathname === "/api/me/profile" && method === "PATCH") return true;
   if (pathname === "/api/friends" && method === "GET") return true;
   if (pathname === "/api/friends/requests" && method === "POST") return true;
-  if (/^\/api\/friends\/requests\/[^/]+\/accept$/.test(pathname) && method === "POST") {
+	if (
+		/^\/api\/friends\/requests\/[^/]+\/accept$/.test(pathname) &&
+		method === "POST"
+	) {
     return true;
   }
-  if (/^\/api\/friends\/requests\/[^/]+\/decline$/.test(pathname) && method === "POST") {
+	if (
+		/^\/api\/friends\/requests\/[^/]+\/decline$/.test(pathname) &&
+		method === "POST"
+	) {
     return true;
   }
-  if (/^\/api\/friends\/[^/]+$/.test(pathname) && method === "DELETE") return true;
+	if (/^\/api\/friends\/[^/]+$/.test(pathname) && method === "DELETE")
+		return true;
   if (/^\/api\/users\/[^/]+\/block$/.test(pathname) && method === "POST") {
     return true;
   }
   if (pathname === "/api/recent-people" && method === "GET") return true;
-  if (/^\/api\/recent-people\/[^/]+\/hide$/.test(pathname) && method === "POST") {
+	if (
+		/^\/api\/recent-people\/[^/]+\/hide$/.test(pathname) &&
+		method === "POST"
+	) {
     return true;
   }
   if (pathname === "/api/groups" && (method === "GET" || method === "POST")) {
     return true;
   }
-  if (/^\/api\/groups\/[^/]+$/.test(pathname) && (method === "PATCH" || method === "DELETE")) {
+	if (
+		/^\/api\/groups\/[^/]+$/.test(pathname) &&
+		(method === "PATCH" || method === "DELETE")
+	) {
     return true;
   }
   if (/^\/api\/groups\/[^/]+\/members$/.test(pathname) && method === "POST") {
     return true;
   }
-  if (/^\/api\/groups\/[^/]+\/members\/[^/]+$/.test(pathname) && method === "DELETE") {
+	if (
+		/^\/api\/groups\/[^/]+\/members\/[^/]+$/.test(pathname) &&
+		method === "DELETE"
+	) {
     return true;
   }
   if (pathname === "/api/invites" && (method === "GET" || method === "POST")) {
@@ -148,7 +164,10 @@ function canBearerBypassStagingGate(pathname: string, method: string): boolean {
   ) {
     return true;
   }
-  if (pathname === "/api/watch-library" && (method === "GET" || method === "DELETE")) {
+	if (
+		pathname === "/api/watch-library" &&
+		(method === "GET" || method === "DELETE")
+	) {
     return true;
   }
   if (pathname === "/api/watch-progress/reconcile" && method === "POST") {
@@ -178,13 +197,22 @@ function canBearerBypassStagingGate(pathname: string, method: string): boolean {
   if (/^\/api\/rooms\/[^/]+\/connect$/.test(pathname) && method === "POST") {
     return true;
   }
+	if (/^\/api\/rooms\/[^/]+\/depart$/.test(pathname) && method === "POST") {
+		return true;
+	}
   if (/^\/api\/rooms\/[^/]+\/end$/.test(pathname) && method === "POST") {
     return true;
   }
-  if (/^\/api\/internal\/rooms\/[^/]+\/ended$/.test(pathname) && method === "POST") {
+	if (
+		/^\/api\/internal\/rooms\/[^/]+\/ended$/.test(pathname) &&
+		method === "POST"
+	) {
     return true;
   }
-  if (/^\/api\/internal\/rooms\/[^/]+\/source$/.test(pathname) && method === "POST") {
+	if (
+		/^\/api\/internal\/rooms\/[^/]+\/source$/.test(pathname) &&
+		method === "POST"
+	) {
     return true;
   }
   return false;

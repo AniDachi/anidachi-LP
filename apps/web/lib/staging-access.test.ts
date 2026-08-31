@@ -324,6 +324,22 @@ test("staging gate bypasses extension token endpoints and allowed bearer API cal
     }),
     true,
   );
+	assert.equal(
+		canBypassStagingGate({
+			pathname: "/api/rooms/room_123/depart",
+			method: "POST",
+			authorization: "Bearer token",
+		}),
+		true,
+	);
+	assert.equal(
+		canBypassStagingGate({
+			pathname: "/api/rooms/active-session/depart",
+			method: "POST",
+			authorization: "Bearer token",
+		}),
+		true,
+	);
   assert.equal(
     canBypassStagingGate({
       pathname: "/api/rooms/room_123/end",

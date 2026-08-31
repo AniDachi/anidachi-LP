@@ -349,6 +349,22 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
   and validation, and exact synchronization of both approved test folders.
   Remaining: loaded two-profile host/guest acceptance of the merged staging
   artifact before promotion to `main`.
+- [~] 2026-08-31: Fixed guest departure and added a bounded active-room recovery
+  path on `codex/fix-rapid-reaction-delivery`. The staging bearer allowlist now
+  admits the existing exact `/api/rooms/:roomId/depart` request, which had been
+  blocked even though create/connect/end were allowed. Explicit leave retries a
+  missing or stale tab record through a new authenticated server-owned active
+  assignment lookup for the same room; passive tab close remains exact-session
+  only, so an old tab cannot release a newer winner. Guest recovery removes only
+  that guest; host recovery uses the existing room-end path. The conflict UI no
+  longer offers `Open active room` and instead exposes a confirmed emergency
+  Leave/End action. Verified locally with protocol tests 139/139, Web tests
+  376 passed and 3 skipped out of 379, extension tests 1440/1440, API tests
+  163/163 plus runtime 27/27,
+  root check/test, room harness 39/39, real-WebRTC harness 26/26, and staging
+  extension build/validation.
+  Remaining: staging Web deployment, rebuilt loaded extension, and two-profile
+  proof that ordinary guest leave immediately permits creating another room.
 - [~] 2026-08-29: Added the account-local `Room` defaults surface without
   changing the room protocol, Worker, API, database, permissions, or provider
   adapters. Microphone on join now supports Last used, Push to talk, and Open

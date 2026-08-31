@@ -52,13 +52,21 @@ describe("background privileged room route", () => {
   it("routes an explicit leave through the sender tab's background-owned session", async () => {
     vi.stubGlobal("chrome", {});
     const background = await import("../entrypoints/background");
-    const requestDeparture = vi.fn(async () => ({
+		const requestDeparture = vi.fn(
+			async () =>
+				({
       kind: "ack",
       outcome: "departed",
-    }) as const);
+				}) as const,
+		);
 
     const result = await background.dispatchPrivilegedRoomRuntimeMessage(
-      { type: "ANIDACHI_ROOM_DEPARTURE", command: "depart" },
+			{
+				type: "ANIDACHI_ROOM_DEPARTURE",
+				command: "depart",
+				roomId: "room-a",
+				expectedUserId: "user-a",
+			},
       { tab: { id: 62 } },
       {
         departureDependencies: {
@@ -91,13 +99,19 @@ describe("background privileged room route", () => {
     vi.stubGlobal("chrome", {});
     const background = await import("../entrypoints/background");
     const storage = createSessionStorage();
-    const endRoom = vi.fn(async () => ({ endedAt: "2026-08-21T00:00:00.000Z" }));
+		const endRoom = vi.fn(async () => ({
+			endedAt: "2026-08-21T00:00:00.000Z",
+		}));
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
         new Response(
           JSON.stringify({
-            roomToken: trustedRoomToken({ sub: "user-a", roomId: "room-a", role: "host" }),
+						roomToken: trustedRoomToken({
+							sub: "user-a",
+							roomId: "room-a",
+							role: "host",
+						}),
           }),
           { status: 200 },
         ),
@@ -120,7 +134,11 @@ describe("background privileged room route", () => {
     };
 
     const connected = await background.dispatchPrivilegedRoomRuntimeMessage(
-      connectRoomHttpMessage("room-a", "access-a", preparedRoomSession("room-a")),
+			connectRoomHttpMessage(
+				"room-a",
+				"access-a",
+				preparedRoomSession("room-a"),
+			),
       sender,
       dependencies,
     );
@@ -135,8 +153,9 @@ describe("background privileged room route", () => {
         },
       },
     });
-    const authority = (connected as { connection: { privilegedRoomAuthority: object } }).connection
-      .privilegedRoomAuthority;
+		const authority = (
+			connected as { connection: { privilegedRoomAuthority: object } }
+		).connection.privilegedRoomAuthority;
 
     await expect(
       background.dispatchPrivilegedRoomRuntimeMessage(
@@ -149,7 +168,10 @@ describe("background privileged room route", () => {
         sender,
         dependencies,
       ),
-    ).resolves.toEqual({ ok: false, error: "Privileged overlay room authority is stale" });
+		).resolves.toEqual({
+			ok: false,
+			error: "Privileged overlay room authority is stale",
+		});
     expect(endRoom).not.toHaveBeenCalled();
 
     await expect(
@@ -177,13 +199,18 @@ describe("background privileged room route", () => {
         sender,
         dependencies,
       ),
-    ).resolves.toEqual({ ok: false, error: "Privileged overlay room authority is stale" });
+		).resolves.toEqual({
+			ok: false,
+			error: "Privileged overlay room authority is stale",
+		});
   });
 
   it("keeps the newest out-of-order room authority usable for manual and quota end", async () => {
     vi.stubGlobal("chrome", {});
     const background = await import("../entrypoints/background");
-    const endRoom = vi.fn(async (roomId: string) => ({ endedAt: `${roomId}-ended` }));
+		const endRoom = vi.fn(async (roomId: string) => ({
+			endedAt: `${roomId}-ended`,
+		}));
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
     const sender = { tab: { id: 62 } };
@@ -193,7 +220,9 @@ describe("background privileged room route", () => {
       const requestSequences = new Map<number, number>();
       const oldResponse = deferred<Response>();
       const newResponse = deferred<Response>();
-      fetchMock.mockImplementationOnce(() => oldResponse.promise).mockImplementationOnce(() => newResponse.promise);
+			fetchMock
+				.mockImplementationOnce(() => oldResponse.promise)
+				.mockImplementationOnce(() => newResponse.promise);
       const dependencies = {
         endRoom,
         intentDependencies: {
@@ -232,7 +261,10 @@ describe("background privileged room route", () => {
       oldResponse.resolve(roomResponse(`room-old-${action}`));
       const stale = await older;
 
-      expect(stale).toMatchObject({ ok: true, connection: { privilegedRoomAuthority: null } });
+			expect(stale).toMatchObject({
+				ok: true,
+				connection: { privilegedRoomAuthority: null },
+			});
       expect(newest).toMatchObject({
         ok: true,
         connection: {
@@ -243,8 +275,9 @@ describe("background privileged room route", () => {
           },
         },
       });
-      const authority = (newest as { connection: { privilegedRoomAuthority: object } }).connection
-        .privilegedRoomAuthority;
+			const authority = (
+				newest as { connection: { privilegedRoomAuthority: object } }
+			).connection.privilegedRoomAuthority;
 
       await expect(
         background.dispatchPrivilegedRoomRuntimeMessage(
@@ -257,7 +290,10 @@ describe("background privileged room route", () => {
           sender,
           dependencies,
         ),
-      ).resolves.toEqual({ ok: false, error: "Privileged overlay room authority is stale" });
+			).resolves.toEqual({
+				ok: false,
+				error: "Privileged overlay room authority is stale",
+			});
       await expect(
         background.dispatchPrivilegedRoomRuntimeMessage(
           {
@@ -281,11 +317,22 @@ describe("background privileged room route", () => {
           sender,
           dependencies,
         ),
-      ).resolves.toEqual({ ok: false, error: "Privileged overlay room authority is stale" });
+			).resolves.toEqual({
+				ok: false,
+				error: "Privileged overlay room authority is stale",
+			});
     }
 
-    expect(endRoom).toHaveBeenNthCalledWith(1, "room-new-end-room", "access-token-user-a");
-    expect(endRoom).toHaveBeenNthCalledWith(2, "room-new-quota-end-room", "access-token-user-a");
+		expect(endRoom).toHaveBeenNthCalledWith(
+			1,
+			"room-new-end-room",
+			"access-token-user-a",
+		);
+		expect(endRoom).toHaveBeenNthCalledWith(
+			2,
+			"room-new-quota-end-room",
+			"access-token-user-a",
+		);
   });
 
   it("linearizes a superseding reservation with an older pending authority write", async () => {
@@ -307,12 +354,16 @@ describe("background privileged room route", () => {
         },
       };
       fetchMock
-        .mockImplementationOnce(() => Promise.resolve(roomResponse(`room-old-${outcome}`)))
+				.mockImplementationOnce(() =>
+					Promise.resolve(roomResponse(`room-old-${outcome}`)),
+				)
         .mockImplementationOnce(() =>
           Promise.resolve(
             outcome === "success"
               ? roomResponse(`room-new-${outcome}`)
-              : new Response(JSON.stringify({ error: "new request failed" }), { status: 500 }),
+							: new Response(JSON.stringify({ error: "new request failed" }), {
+									status: 500,
+								}),
           ),
         );
 
@@ -340,13 +391,24 @@ describe("background privileged room route", () => {
       storage.releaseFirstWrite();
       const [oldResult, newResult] = await Promise.all([older, newer]);
 
-      expect(oldResult).toMatchObject({ ok: true, connection: { privilegedRoomAuthority: null } });
+			expect(oldResult).toMatchObject({
+				ok: true,
+				connection: { privilegedRoomAuthority: null },
+			});
       if (outcome === "success") {
         expect(newResult).toMatchObject({
           ok: true,
-          connection: { privilegedRoomAuthority: { roomId: "room-new-success", role: "host" } },
+					connection: {
+						privilegedRoomAuthority: {
+							roomId: "room-new-success",
+							role: "host",
+						},
+					},
+				});
+				expect(storage.value()).toMatchObject({
+					roomId: "room-new-success",
+					role: "host",
         });
-        expect(storage.value()).toMatchObject({ roomId: "room-new-success", role: "host" });
       } else {
         expect(newResult).toMatchObject({ ok: false, status: 500 });
         expect(storage.value()).toBeUndefined();
@@ -359,7 +421,9 @@ describe("background privileged room route", () => {
     const background = await import("../entrypoints/background");
     const storage = createPausableSessionStorage();
     const sender = { tab: { id: 73 } };
-    const endRoom = vi.fn(async () => ({ endedAt: "2026-08-21T00:00:00.000Z" }));
+		const endRoom = vi.fn(async () => ({
+			endedAt: "2026-08-21T00:00:00.000Z",
+		}));
     const oldResponse = deferred<Response>();
     const failedResponseRead = deferred<void>();
     const fetchMock = vi
@@ -450,9 +514,16 @@ describe("background privileged room route", () => {
     expect(invokeSettled).toBe(false);
 
     pausedMutation.release();
-    const [oldResult, newResult, invokeResult] = await Promise.all([older, newer, invoke]);
+		const [oldResult, newResult, invokeResult] = await Promise.all([
+			older,
+			newer,
+			invoke,
+		]);
 
-    expect(oldResult).toMatchObject({ ok: true, connection: { privilegedRoomAuthority: null } });
+		expect(oldResult).toMatchObject({
+			ok: true,
+			connection: { privilegedRoomAuthority: null },
+		});
     expect(newResult).toMatchObject({ ok: false, status: 500 });
     expect(invokeResult).toEqual({
       ok: false,
@@ -505,26 +576,41 @@ describe("background privileged room route", () => {
     };
 
     const first = await background.dispatchPrivilegedRoomRuntimeMessage(
-      connectRoomHttpMessage("room-same", "access-a", preparedRoomSession("room-same")),
+			connectRoomHttpMessage(
+				"room-same",
+				"access-a",
+				preparedRoomSession("room-same"),
+			),
       sender,
       dependencies,
     );
     const second = await background.dispatchPrivilegedRoomRuntimeMessage(
-      connectRoomHttpMessage("room-same", "access-a", preparedRoomSession("room-same")),
+			connectRoomHttpMessage(
+				"room-same",
+				"access-a",
+				preparedRoomSession("room-same"),
+			),
       sender,
       dependencies,
     );
     const firstAuthority = (
-      first as { connection: { privilegedRoomAuthority: Record<string, unknown> } }
+			first as {
+				connection: { privilegedRoomAuthority: Record<string, unknown> };
+			}
     ).connection.privilegedRoomAuthority;
     const secondAuthority = (
-      second as { connection: { privilegedRoomAuthority: Record<string, unknown> } }
+			second as {
+				connection: { privilegedRoomAuthority: Record<string, unknown> };
+			}
     ).connection.privilegedRoomAuthority;
 
     vi.resetModules();
     const restartedIntent = await import("../src/privileged-overlay-intent");
-    const endRoom = vi.fn(async () => ({ endedAt: "2026-08-21T00:00:00.000Z" }));
-    const replayResult = await restartedIntent.handlePrivilegedOverlayIntentMessage(
+		const endRoom = vi.fn(async () => ({
+			endedAt: "2026-08-21T00:00:00.000Z",
+		}));
+		const replayResult =
+			await restartedIntent.handlePrivilegedOverlayIntentMessage(
       {
         type: "ANIDACHI_PRIVILEGED_OVERLAY_INTENT",
         command: "invoke",
@@ -547,7 +633,10 @@ describe("background privileged room route", () => {
     }).toEqual({
       firstGeneration: 1,
       secondGeneration: 2,
-      replayResult: { ok: false, error: "Privileged overlay room authority is stale" },
+			replayResult: {
+				ok: false,
+				error: "Privileged overlay room authority is stale",
+			},
       endCalls: 0,
     });
   });

@@ -23,6 +23,13 @@ export type ActiveRoomReleaseDatabaseResult = {
   outcome: "released" | "stale";
 };
 
+export type ActiveRoomAssignment = {
+	userId: string;
+	roomId: string;
+	role: "host" | "member";
+	participantSessionId: string;
+};
+
 export class ActiveRoomSessionDatabaseError extends Error {
   constructor(message = "Malformed active-room database response") {
     super(message);
@@ -91,9 +98,40 @@ export function parseActiveRoomReleaseRpcResult(
   return { outcome: row.outcome };
 }
 
-export function parseHostLobbyEndRpcResult(
+export function parseActiveRoomAssignmentRow(
   value: unknown,
-): { outcome: "room_ended" | "stale" } {
+): ActiveRoomAssignment | null {
+	if (value === null) return null;
+	if (!isRecord(value)) throw malformed();
+	if (
+		Object.keys(value).sort().join(",") !==
+		"participant_session_id,role,room_id,user_id"
+	) {
+		throw malformed();
+	}
+	const userId = value.user_id;
+	const roomId = value.room_id;
+	const role = value.role;
+	const participantSessionId = value.participant_session_id;
+	if (
+		typeof userId !== "string" ||
+		userId.length < 1 ||
+		typeof roomId !== "string" ||
+		roomId.length < 1 ||
+		roomId.length > 128 ||
+		(role !== "host" && role !== "member") ||
+		typeof participantSessionId !== "string" ||
+		participantSessionId.length < 1 ||
+		participantSessionId.length > 128
+	) {
+		throw malformed();
+	}
+	return { userId, roomId, role, participantSessionId };
+}
+
+export function parseHostLobbyEndRpcResult(value: unknown): {
+	outcome: "room_ended" | "stale";
+} {
   const row = singleStrictRow(value, ["outcome"]);
   if (row.outcome !== "room_ended" && row.outcome !== "stale") {
     throw malformed();

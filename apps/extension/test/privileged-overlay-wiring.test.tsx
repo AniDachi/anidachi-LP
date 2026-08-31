@@ -1212,7 +1212,9 @@ describe("privileged overlay wiring", () => {
 
 		await click(button(view.container, "Open Anidachi controls"));
 		await click(button(view.container, "Quick reactions"));
-		expect(extensionStorage.values.get(REACTIONS_ENABLED_STORAGE_KEY)).toBe(false);
+		expect(extensionStorage.values.get(REACTIONS_ENABLED_STORAGE_KEY)).toBe(
+			false,
+		);
 		send.mockClear();
 		const disabledDigit = new KeyboardEvent("keydown", {
 			bubbles: true,
@@ -1341,6 +1343,29 @@ describe("privileged overlay wiring", () => {
 		].find((item) => item.textContent?.includes("👏"));
 		expect(cameraReaction?.getAttribute("data-origin-kind")).toBe("camera");
 		expect(cameraReaction?.getAttribute("data-lane-index")).toBe("1");
+
+		await act(async () => {
+			for (const [index, emoji] of ["😂", "🤯", "💯", "🥳"].entries()) {
+				roomConnectionOptions?.onEvent({
+					type: "REACTION",
+					reaction: {
+						id: `reaction-burst-${index}`,
+						userId: guestParticipant().id,
+						roomId: "room-a",
+						emoji,
+						videoTime: 11,
+						createdAt: index + 2,
+					},
+				});
+			}
+			await Promise.resolve();
+		});
+		await flushMountedWork();
+		expect(
+			[...view.container.querySelectorAll(".reaction-pop")].map((item) =>
+				item.getAttribute("data-lane-index"),
+			),
+		).toEqual(["0", "1", "2", "3", "4", "5"]);
 
 		await click(button(view.container, "Open Anidachi controls"));
 		await click(button(view.container, "Quick reactions"));
@@ -1566,7 +1591,8 @@ describe("privileged overlay wiring", () => {
 				(message as { type?: string }).type ===
 					"ANIDACHI_ROOM_SESSION_STORAGE" &&
 				(message as { command?: string }).command === "set-voice-mode" &&
-				(message as { rememberPreference?: boolean }).rememberPreference === true,
+				(message as { rememberPreference?: boolean }).rememberPreference ===
+					true,
 		);
 		expect(preferenceWrite).toBeDefined();
 		await unmount(view.root);
@@ -1641,7 +1667,8 @@ describe("privileged overlay wiring", () => {
 				(message as { type?: string }).type ===
 					"ANIDACHI_ROOM_SESSION_STORAGE" &&
 				(message as { command?: string }).command === "set-camera-enabled" &&
-				(message as { rememberPreference?: boolean }).rememberPreference === true,
+				(message as { rememberPreference?: boolean }).rememberPreference ===
+					true,
 		);
 		expect(preferenceWrite).toBeDefined();
 		await unmount(view.root);
@@ -1775,9 +1802,12 @@ describe("privileged overlay wiring", () => {
 		await click(await waitForButton(view.container, "Turn camera on"));
 		await click(await waitForButton(view.container, "Turn camera off"));
 		await trustedClick(primaryRoomAction(view.container));
-		await flushMountedWork();
-		await click(primaryRoomAction(view.container));
-		await flushMountedWork();
+		await waitForText(view.container, "Room closed");
+		const nextCameraRoomAction = await waitForEnabledPrimaryRoomAction(
+			view.container,
+		);
+		await click(nextCameraRoomAction);
+		await flushRoomActionWork();
 		expect(roomCreateCount).toBe(2);
 		expect(roomConnectCount).toBe(2);
 		expect(cameraWrites).toHaveLength(1);
@@ -1870,7 +1900,11 @@ describe("privileged overlay wiring", () => {
 					) {
 						return { ok: true, record: null, prepared: null };
 					}
-					if (message.command === "set-voice-mode" && message.mode && message.record) {
+					if (
+						message.command === "set-voice-mode" &&
+						message.mode &&
+						message.record
+					) {
 						voiceWrites.push({ mode: message.mode, record: message.record });
 						if (voiceWrites.length === 1) {
 							return firstVoiceWrite.promise;
@@ -1916,9 +1950,12 @@ describe("privileged overlay wiring", () => {
 		await click(button(view.container, "Push to talk"));
 		await click(button(view.container, "Open mic"));
 		await trustedClick(primaryRoomAction(view.container));
-		await flushMountedWork();
-		await click(primaryRoomAction(view.container));
-		await flushMountedWork();
+		await waitForText(view.container, "Room closed");
+		const nextVoiceRoomAction = await waitForEnabledPrimaryRoomAction(
+			view.container,
+		);
+		await click(nextVoiceRoomAction);
+		await flushRoomActionWork();
 		expect(roomCreateCount).toBe(2);
 		expect(roomConnectCount).toBe(2);
 		expect(voiceWrites).toHaveLength(1);
@@ -1937,9 +1974,9 @@ describe("privileged overlay wiring", () => {
 		).toHaveLength(0);
 
 		await click(button(view.container, "Voice"));
-		expect(button(view.container, "Push to talk").getAttribute("aria-checked")).toBe(
-			"true",
-		);
+		expect(
+			button(view.container, "Push to talk").getAttribute("aria-checked"),
+		).toBe("true");
 		await click(button(view.container, "Open mic"));
 		await flushMountedWork();
 
@@ -1955,7 +1992,8 @@ describe("privileged overlay wiring", () => {
 
 	it("ignores an older invite-status response after a newer panel refresh", async () => {
 		installActiveHostRoomRuntime();
-		const olderInvites = deferred<Awaited<ReturnType<typeof listRoomInvites>>>();
+		const olderInvites =
+			deferred<Awaited<ReturnType<typeof listRoomInvites>>>();
 		vi.mocked(listInviteTargets).mockResolvedValue({
 			friends: [inviteFriend()],
 			groups: [],
@@ -1989,7 +2027,8 @@ describe("privileged overlay wiring", () => {
 
 	it("keeps a created invite status when an older refresh resolves afterward", async () => {
 		installActiveHostRoomRuntime();
-		const olderInvites = deferred<Awaited<ReturnType<typeof listRoomInvites>>>();
+		const olderInvites =
+			deferred<Awaited<ReturnType<typeof listRoomInvites>>>();
 		vi.mocked(listInviteTargets).mockResolvedValue({
 			friends: [inviteFriend()],
 			groups: [],
@@ -2020,9 +2059,7 @@ describe("privileged overlay wiring", () => {
 		await click(button(view.container, "Invite"));
 		await flushMountedWork();
 
-		expect(button(view.container, "Pending")).toBeInstanceOf(
-			HTMLButtonElement,
-		);
+		expect(button(view.container, "Pending")).toBeInstanceOf(HTMLButtonElement);
 
 		olderInvites.resolve({
 			meta: { serverTime: "2026-08-22T08:01:00.000Z", schemaVersion: 1 },
@@ -2031,9 +2068,7 @@ describe("privileged overlay wiring", () => {
 		});
 		await flushMountedWork();
 
-		expect(button(view.container, "Pending")).toBeInstanceOf(
-			HTMLButtonElement,
-		);
+		expect(button(view.container, "Pending")).toBeInstanceOf(HTMLButtonElement);
 		await unmount(view.root);
 	});
 
@@ -2134,7 +2169,7 @@ describe("privileged overlay wiring", () => {
 		expect(noticeDismissed).toBe(true);
 	});
 
-	it("shows one active-room conflict and opens the authoritative room", async () => {
+	it("offers a confirmed emergency guest exit without reopening the active room", async () => {
 		const sendMessage = vi.fn(
 			async (message: {
 				type?: string;
@@ -2177,32 +2212,18 @@ describe("privileged overlay wiring", () => {
 					};
 				}
 				if (
-					message.type === "ANIDACHI_ROOM_HTTP" &&
-					message.command === "connect-room" &&
+					message.type === "ANIDACHI_ROOM_DEPARTURE" &&
+					message.command === "recover-active" &&
 					message.roomId === "room-active"
-				) {
-					return {
-						ok: true,
-						connection: {
-							roomToken: "room-token-active",
-							roomSession: {
-								...confirmedRoomSession(),
-								roomId: "room-active",
-							},
-						},
-					};
-				}
+				)
+					return { ok: true, outcome: "departed" };
 				throw new Error(
 					`Unexpected runtime message ${message.type}:${message.command}`,
 				);
 			},
 		);
 		installOverlayRuntime(sendMessage);
-		const connect = vi
-			.spyOn(RoomClient.prototype, "connect")
-			.mockImplementation((options) => {
-				options.onStatus("connected");
-			});
+		const connect = vi.spyOn(RoomClient.prototype, "connect");
 		const view = await renderOverlay();
 
 		await click(button(view.container, "Open Anidachi controls"));
@@ -2212,15 +2233,98 @@ describe("privileged overlay wiring", () => {
 		expect(view.container.textContent).toContain(
 			"You already have an active watch room.",
 		);
-		await click(button(view.container, "Open active room"));
+		await click(button(view.container, "Leave active room"));
+		expect(view.container.textContent).toContain("Confirm leave");
+		await click(button(view.container, "Confirm leave"));
 		await flushMountedWork();
 
-		expect(connect).toHaveBeenCalledWith(
-			expect.objectContaining({
-				roomId: "room-active",
-				participantSessionId: "participant-session-a",
-			}),
+		expect(connect).not.toHaveBeenCalled();
+		expect(sendMessage).toHaveBeenCalledWith({
+			type: "ANIDACHI_ROOM_DEPARTURE",
+			command: "recover-active",
+			roomId: "room-active",
+			expectedUserId: "user-a",
+		});
+		expect(view.container.textContent).not.toContain(
+			"You already have an active watch room.",
 		);
+		expect(view.container.textContent).not.toContain("Open active room");
+		await unmount(view.root);
+	});
+
+	it("keeps host emergency room ending separate and confirmed", async () => {
+		const sendMessage = vi.fn(
+			async (message: {
+				type?: string;
+				command?: string;
+				roomId?: string | null;
+				expectedUserId?: string;
+			}) => {
+				if (message.type === "ANIDACHI_AUTH")
+					return { ok: true, tokens: sessionFor("user-a") };
+				if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE") {
+					if (message.command === "load") return { ok: true, record: null };
+					if (message.command === "prepare") {
+						return {
+							ok: true,
+							record: null,
+							prepared: {
+								...preparedRoomSession(),
+								roomId: message.roomId ?? null,
+							},
+						};
+					}
+					if (message.command === "discard-prepared") {
+						return { ok: true, record: null, prepared: null };
+					}
+				}
+				if (
+					message.type === "ANIDACHI_ROOM_HTTP" &&
+					message.command === "create-room"
+				) {
+					return {
+						ok: false,
+						error: "An active room already exists",
+						code: "ACTIVE_ROOM_CONFLICT",
+						status: 409,
+						activeRoom: {
+							roomId: "room-active",
+							role: "host",
+							provider: "youtube",
+							title: "Active video",
+						},
+					};
+				}
+				if (
+					message.type === "ANIDACHI_ROOM_DEPARTURE" &&
+					message.command === "recover-active" &&
+					message.roomId === "room-active" &&
+					message.expectedUserId === "user-a"
+				)
+					return { ok: true, outcome: "room_ended" };
+				throw new Error(
+					`Unexpected runtime message ${message.type}:${message.command}`,
+				);
+			},
+		);
+		installOverlayRuntime(sendMessage);
+		const view = await renderOverlay();
+
+		await click(button(view.container, "Open Anidachi controls"));
+		await click(button(view.container, "Create room"));
+		await waitForText(view.container, "You already have an active watch room.");
+
+		await click(button(view.container, "End active room"));
+		expect(view.container.textContent).toContain("Confirm end");
+		await click(button(view.container, "Confirm end"));
+		await flushMountedWork();
+
+		expect(sendMessage).toHaveBeenCalledWith({
+			type: "ANIDACHI_ROOM_DEPARTURE",
+			command: "recover-active",
+			roomId: "room-active",
+			expectedUserId: "user-a",
+		});
 		expect(view.container.textContent).not.toContain(
 			"You already have an active watch room.",
 		);
@@ -2280,8 +2384,9 @@ describe("privileged overlay wiring", () => {
 		);
 
 		expect(view.container.textContent).toContain(
-			"You already have an active watch room on Crunchyroll. Open that tab to continue.",
+			"You already have an active watch room on Crunchyroll.",
 		);
+		expect(view.container.textContent).toContain("Leave active room");
 		expect(view.container.textContent).not.toContain("Open active room");
 		expect(connect).not.toHaveBeenCalled();
 		await unmount(view.root);
@@ -2675,6 +2780,19 @@ function primaryRoomAction(container: HTMLElement): HTMLButtonElement {
 	return action;
 }
 
+async function waitForEnabledPrimaryRoomAction(
+	container: HTMLElement,
+): Promise<HTMLButtonElement> {
+	for (let attempt = 0; attempt < 24; attempt += 1) {
+		const action = primaryRoomAction(container);
+		if (!action.disabled) return action;
+		await act(async () => {
+			await Promise.resolve();
+		});
+	}
+	throw new Error("Primary room action did not become enabled");
+}
+
 function privilegedInvokes(sendMessage: ReturnType<typeof vi.fn>) {
 	return sendMessage.mock.calls.filter(
 		([message]) =>
@@ -2690,6 +2808,17 @@ async function unmount(root: Root): Promise<void> {
 
 async function flushMountedWork(): Promise<void> {
 	await act(async () => {
+		for (let index = 0; index < 8; index += 1) {
+			await Promise.resolve();
+		}
+	});
+}
+
+async function flushRoomActionWork(): Promise<void> {
+	await act(async () => {
+		// Room actions deliberately yield through a zero-delay browser task so
+		// pending UI can paint before network work begins.
+		await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
 		for (let index = 0; index < 8; index += 1) {
 			await Promise.resolve();
 		}
