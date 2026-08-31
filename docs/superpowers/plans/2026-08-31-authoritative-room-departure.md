@@ -40,8 +40,9 @@
   it survives Manifest V3 worker/browser restart, waits for the matching
   authenticated account, and never invokes broad active-room recovery.
 - The intent stays `may-commit` until the live promise settles or a conservative
-  75-second orphan horizon expires. The bound is the Web connect route's shared
-  60-second execution maximum plus 15 seconds of transport/scheduler margin.
+  135-second orphan horizon expires. The bound is the extension's 60-second
+  request abort plus the Web connect route's shared 60-second execution maximum
+  and 15 seconds of transport/scheduler margin.
   `stale` is nonterminal before settlement; retryable/auth-blocked work has no
   TTL and remains exact-owned until it can be proved safe.
 - The existing `storage` and `alarms` permissions are sufficient. No database
@@ -1808,7 +1809,8 @@ Add a dated entry containing these exact facts:
   job coalesces, survives restart, treats pre-settlement `stale` as
   nonterminal, waits for matching auth without a perpetual alarm loop, and
   cannot touch a replacement. Live settlement drains immediately; an orphaned
-  worker uses the documented 60s + 15s horizon before terminal stale is safe.
+  worker uses the documented 60s client + 60s server + 15s margin before
+  terminal stale is safe.
 - Automated protocol/Web/API/runtime/extension/room/WebRTC gates: [record actual
   command results from Steps 1-4].
 - Staging two-profile YouTube/Crunchyroll acceptance: pending until the candidate

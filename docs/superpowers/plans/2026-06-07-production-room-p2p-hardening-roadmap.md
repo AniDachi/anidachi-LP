@@ -73,7 +73,8 @@
   cleanup. It survives worker/browser restart, keeps pre-settlement `stale`
   nonterminal, waits for matching auth without a perpetual alarm, and is fenced
   from replacements. Live completion drains it immediately; an orphan uses the
-  shared 60-second connect-route bound plus a 15-second safety margin.
+  60-second client request bound, 60-second connect-route bound, and a
+  15-second safety margin.
   Normal extension leave no longer invokes active-room recovery automatically.
   Current public Web uses legacy-compatible `stale` for no assignment, while
   the shared schema/current extension retain forward-compatible acceptance of
@@ -81,7 +82,7 @@
   separately confirmed. The staging gate now lets bearer-authenticated internal
   POST callbacks reach route-level service authentication without opening other
   staging routes. Fresh local proof: protocol 141/141, API 166/166 plus runtime
-  37/37, Web 384 passed/3 skipped, extension 1471/1471, room harness 39/39,
+  37/37, Web 384 passed/3 skipped, extension 1474/1474, room harness 39/39,
   real-WebRTC 26/26, root check/test (6 Turbo tasks each), rooms-profile
   `dev:check` exit 0, and staging artifact build/validation. Generated artifacts
   remain ignored. Remaining proof: deploy the candidate and perform the loaded

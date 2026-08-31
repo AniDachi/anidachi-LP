@@ -268,9 +268,10 @@ request may still commit afterward.
 
 When the live admission promise settles, the background first persists the
 exact job as `settled` and then drains it through exact departure. If Manifest
-V3 suspends the worker before that callback, the connect route's explicit
-60-second maximum execution duration plus a 15-second transport/scheduler
-margin gives a conservative 75-second settlement horizon. Retries continue
+V3 suspends the worker before that callback, the client's explicit 60-second
+request abort plus the connect route's 60-second maximum execution duration and
+a 15-second transport/scheduler margin give a conservative 135-second
+settlement horizon. Retries continue
 through that horizon; only after it expires may terminal exact outcomes remove
 the job. This is a settlement bound, not a cleanup TTL: retryable failure or
 missing matching auth retains the identity indefinitely.
