@@ -80,7 +80,7 @@ export interface PrivilegedRoomRuntimeDependencies {
 export const ROOM_ADMISSION_DEPARTURE_SETTLE_TIMEOUT_MS = 2_000;
 
 export interface RemovedRoomTabDependencies {
-  cancelRoomAdmission?: (tabId: number) => void;
+  cancelRoomAdmission?: (tabId: number) => Promise<void> | null | void;
   clearRoomAuthorityRequest?: (tabId: number) => void;
   departRoom?: (tabId: number) => Promise<RoomTabDepartureOutcome>;
   removePrivilegedAuthority?: (tabId: number) => Promise<void>;
@@ -90,9 +90,12 @@ export async function handleRemovedRoomTab(
   tabId: number,
   dependencies: RemovedRoomTabDependencies = {},
 ): Promise<void> {
-  (dependencies.cancelRoomAdmission ?? cancelRoomAdmissionForTab)(tabId);
+  const persistedAdmissionIntent = (
+    dependencies.cancelRoomAdmission ?? cancelRoomAdmissionForTab
+  )(tabId);
   (dependencies.clearRoomAuthorityRequest ?? clearRoomAuthorityRequestForTab)(tabId);
   try {
+    await persistedAdmissionIntent;
     await (dependencies.departRoom ?? handleRoomTabDeparture)(tabId);
   } finally {
     await (
@@ -157,6 +160,12 @@ async function dispatchRoomDepartureRuntimeMessage(
     );
   }
 
+  try {
+    await cancelledAdmission.intentPersisted;
+  } catch {
+    return roomDepartureRuntimeResponse("retryable");
+  }
+
   clearRoomAuthorityRequestForTab(
     tabId as number,
     dependencies.roomDependencies?.authorityRequestSequences,
@@ -177,7 +186,7 @@ async function dispatchRoomDepartureRuntimeMessage(
   if (!departure.ok) return departure;
 
   const completion = await waitForAdmissionCompletion(
-    cancelledAdmission,
+    cancelledAdmission.completion,
     dependencies.admissionDepartureTimeoutMs,
   );
   if (completion?.kind !== "cleanup-confirmed") {

@@ -25,6 +25,9 @@ import {
 } from "@/lib/room-quota";
 
 export const dynamic = "force-dynamic";
+// Keep this literal statically analyzable by Next/Vercel. A Web source test
+// fences it to the shared client-side settlement horizon constant.
+export const maxDuration = 60;
 
 /**
  * Issues a room token for the extension to open a WebSocket connection.

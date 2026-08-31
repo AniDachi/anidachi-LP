@@ -7,6 +7,7 @@ import {
   MAX_PARTICIPANT_ID_CHARS,
   MAX_ROOM_ID_CHARS,
   MAX_SESSION_ID_CHARS,
+  ROOM_CONNECT_ROUTE_MAX_DURATION_SECONDS,
   ROOM_DISCONNECT_GRACE_MS,
   RoomDepartureAcknowledgementSchema,
 	RoomDepartureErrorResponseSchema,
@@ -17,6 +18,10 @@ import {
 } from "../src";
 
 describe("active room session contracts", () => {
+  it("publishes the bounded Web admission duration used by durable cancellation intent", () => {
+    expect(ROOM_CONNECT_ROUTE_MAX_DURATION_SECONDS).toBe(60);
+  });
+
   // Break caught: create/connect could omit or substitute the tab session that
   // must be bound through database admission, token issuance, and JOIN.
   it("requires one bounded participant session for room admission", () => {

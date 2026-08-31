@@ -12,6 +12,8 @@ const ParticipantIdSchema = z.string().min(1).max(MAX_PARTICIPANT_ID_CHARS);
 const ParticipantSessionIdSchema = z.string().min(1).max(MAX_SESSION_ID_CHARS);
 
 export const ROOM_DISCONNECT_GRACE_MS = 60_000;
+/** Hard platform budget for the Web admission route. */
+export const ROOM_CONNECT_ROUTE_MAX_DURATION_SECONDS = 60;
 export const ROOM_TOKEN_ISSUER = "anidachi-auth";
 export const ROOM_TOKEN_AUDIENCE = "anidachi-worker";
 

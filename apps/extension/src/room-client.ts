@@ -22,7 +22,8 @@ import {
   type RoomTabDepartureOutcome,
 } from "./room-departure";
 import {
-  enqueueRoomDepartureRetry,
+  persistRoomDepartureAdmissionIntent,
+  settleRoomDepartureAdmission,
   type RoomDepartureRetryIdentity,
 } from "./room-departure-retry";
 import {
@@ -45,7 +46,7 @@ import {
 
 type ConfirmedAdmissionDepartureOutcome = Extract<
   RoomTabDepartureOutcome,
-  "already_departed" | "departed" | "room_ended" | "stale"
+  "active-room-changed" | "already_departed" | "departed" | "room_ended" | "stale"
 >;
 
 export type RoomAdmissionCompletion =
@@ -55,23 +56,40 @@ export type RoomAdmissionCompletion =
 
 interface RoomAdmissionReservation {
   readonly completion: Promise<RoomAdmissionCompletion>;
+  readonly identity: RoomDepartureRetryIdentity;
+  readonly persistIntent: (
+    identity: RoomDepartureRetryIdentity,
+  ) => Promise<void>;
   readonly participantSessionId: string;
   readonly sequence: number;
   readonly tabId: number;
   cancelled: boolean;
   explicitDepartureObserver: boolean;
+  intentPersistenceConfirmed: boolean;
+  intentPersisted: Promise<void> | null;
   settled: boolean;
   resolve(result: RoomAdmissionCompletion): void;
+}
+
+export interface RoomAdmissionCancellation {
+  completion: Promise<RoomAdmissionCompletion>;
+  intentPersisted: Promise<void>;
 }
 
 export class RoomAdmissionFence {
   private readonly currentByTab = new Map<number, RoomAdmissionReservation>();
   private nextSequence = 0;
 
-  begin(tabId: number, participantSessionId: string): RoomAdmissionReservation {
+  begin(
+    tabId: number,
+    identity: RoomDepartureRetryIdentity,
+    persistIntent: (
+      identity: RoomDepartureRetryIdentity,
+    ) => Promise<void> = persistRoomDepartureAdmissionIntent,
+  ): RoomAdmissionReservation {
     const previous = this.currentByTab.get(tabId);
     if (previous && !previous.settled) {
-      previous.cancelled = true;
+      this.cancelReservation(previous, false);
     }
     if (this.nextSequence >= Number.MAX_SAFE_INTEGER) {
       throw new Error("Room admission sequence is exhausted");
@@ -84,7 +102,11 @@ export class RoomAdmissionFence {
       cancelled: false,
       completion,
       explicitDepartureObserver: false,
-      participantSessionId,
+      identity,
+      intentPersistenceConfirmed: false,
+      intentPersisted: null,
+      participantSessionId: identity.participantSessionId,
+      persistIntent,
       resolve,
       sequence: ++this.nextSequence,
       settled: false,
@@ -97,7 +119,7 @@ export class RoomAdmissionFence {
   cancel(
     tabId: number,
     participantSessionId: string,
-  ): Promise<RoomAdmissionCompletion> | null {
+  ): RoomAdmissionCancellation | null {
     const current = this.currentByTab.get(tabId);
     if (
       !current ||
@@ -106,16 +128,15 @@ export class RoomAdmissionFence {
     ) {
       return null;
     }
-    current.cancelled = true;
-    current.explicitDepartureObserver = true;
-    return current.completion;
+    return this.cancelReservation(current, true);
   }
 
-  cancelAny(tabId: number): void {
+  cancelAny(tabId: number): Promise<void> | null {
     const current = this.currentByTab.get(tabId);
     if (current && !current.settled) {
-      current.cancelled = true;
+      return this.cancelReservation(current, false).intentPersisted;
     }
+    return null;
   }
 
   isCurrent(reservation: RoomAdmissionReservation): boolean {
@@ -137,6 +158,23 @@ export class RoomAdmissionFence {
     }
     reservation.resolve(result);
   }
+
+  private cancelReservation(
+    reservation: RoomAdmissionReservation,
+    explicitDepartureObserver: boolean,
+  ): RoomAdmissionCancellation {
+    reservation.cancelled = true;
+    if (explicitDepartureObserver) reservation.explicitDepartureObserver = true;
+    reservation.intentPersisted ??= reservation
+      .persistIntent(reservation.identity)
+      .then(() => {
+        reservation.intentPersistenceConfirmed = true;
+      });
+    return {
+      completion: reservation.completion,
+      intentPersisted: reservation.intentPersisted,
+    };
+  }
 }
 
 const defaultRoomAdmissionFence = new RoomAdmissionFence();
@@ -145,15 +183,15 @@ export function cancelRoomAdmissionForDeparture(
   tabId: number,
   participantSessionId: string,
   fence: RoomAdmissionFence = defaultRoomAdmissionFence,
-): Promise<RoomAdmissionCompletion> | null {
+): RoomAdmissionCancellation | null {
   return fence.cancel(tabId, participantSessionId);
 }
 
 export function cancelRoomAdmissionForTab(
   tabId: number,
   fence: RoomAdmissionFence = defaultRoomAdmissionFence,
-): void {
-  fence.cancelAny(tabId);
+): Promise<void> | null {
+  return fence.cancelAny(tabId);
 }
 
 export type RoomConnectionStatus = "idle" | "connecting" | "connected" | "closed" | "error";
@@ -588,9 +626,12 @@ export interface RoomHttpBackgroundDependencies {
     prepared: PreparedRoomSession,
     dependencies?: RoomSessionBackgroundDependencies,
   ) => Promise<boolean>;
-  enqueueCancelledAdmissionDepartureRetry?: (
+  persistCancelledAdmissionDepartureIntent?: (
     identity: RoomDepartureRetryIdentity,
   ) => Promise<void>;
+  settleCancelledAdmissionDeparture?: (
+    identity: RoomDepartureRetryIdentity,
+  ) => Promise<RoomTabDepartureOutcome>;
 }
 
 export async function handleRoomHttpMessage(
@@ -606,7 +647,15 @@ export async function handleRoomHttpMessage(
     (senderTabId ?? -1) >= 0
       ? admissionFence.begin(
           senderTabId as number,
-          message.roomSession.participantSessionId,
+          {
+            roomId: message.roomId,
+            ownerUserId: message.roomSession.ownerUserId,
+            participantSessionId: message.roomSession.participantSessionId,
+          },
+          dependencies.persistCancelledAdmissionDepartureIntent ??
+            (dependencies.cancelledAdmissionDepartureDependencies
+              ? async () => undefined
+              : persistRoomDepartureAdmissionIntent),
         )
       : null;
   const admissionRecord =
@@ -701,12 +750,12 @@ export async function handleRoomHttpMessage(
     ) {
       const cancelledRecord =
         roomSession ?? roomSessionRecordForAdmission(message.roomSession, message.roomId);
-      const cleanup = await cleanupCancelledRoomAdmission(
-        senderTabId as number,
-        cancelledRecord,
-        dependencies,
-      );
       if (admissionReservation) {
+        const cleanup = await cleanupCancelledRoomAdmission(
+          cancelledRecord,
+          admissionReservation,
+          dependencies,
+        );
         const disposition = await ownCancelledAdmissionCleanupFailure(
           senderTabId as number,
           message.roomSession,
@@ -740,8 +789,8 @@ export async function handleRoomHttpMessage(
     });
     if (admissionReservation && !admissionFence.isCurrent(admissionReservation)) {
       const cleanup = await cleanupCancelledRoomAdmission(
-        senderTabId as number,
         roomSession,
+        admissionReservation,
         dependencies,
       );
       const disposition = await ownCancelledAdmissionCleanupFailure(
@@ -783,8 +832,8 @@ export async function handleRoomHttpMessage(
       const completion = admissionFence.isCurrent(admissionReservation)
         ? { kind: "not-cancelled" as const }
         : await cleanupCancelledRoomAdmission(
-            senderTabId as number,
             admissionRecord,
+            admissionReservation,
             dependencies,
           );
       const disposition = await ownCancelledAdmissionCleanupFailure(
@@ -863,30 +912,37 @@ async function ownCancelledAdmissionCleanupFailure(
     }
   }
 
-  try {
-    await (
-      dependencies.enqueueCancelledAdmissionDepartureRetry ??
-      enqueueRoomDepartureRetry
-    )({
-      roomId: record.roomId,
-      ownerUserId: record.ownerUserId,
-      participantSessionId: record.participantSessionId,
-    });
+  if (reservation.intentPersistenceConfirmed) {
     return { backgroundOwnsDeparture: true, shouldDiscardPrepared: true };
-  } catch {
-    return { backgroundOwnsDeparture: false, shouldDiscardPrepared: false };
   }
+  return { backgroundOwnsDeparture: false, shouldDiscardPrepared: false };
 }
 
 async function cleanupCancelledRoomAdmission(
-  tabId: number,
   record: RoomSessionRecord,
+  reservation: RoomAdmissionReservation,
   dependencies: RoomHttpBackgroundDependencies,
 ): Promise<RoomAdmissionCompletion> {
-  const outcome = await departExactRoomSession(
-    record,
-    dependencies.cancelledAdmissionDepartureDependencies,
-  );
+  try {
+    await reservation.intentPersisted;
+  } catch {
+    return { kind: "cleanup-failed", outcome: "failed" };
+  }
+  const identity = {
+    roomId: record.roomId,
+    ownerUserId: record.ownerUserId,
+    participantSessionId: record.participantSessionId,
+  };
+  const outcome = await (
+    dependencies.settleCancelledAdmissionDeparture
+      ? dependencies.settleCancelledAdmissionDeparture(identity)
+      : dependencies.cancelledAdmissionDepartureDependencies
+        ? departExactRoomSession(
+            record,
+            dependencies.cancelledAdmissionDepartureDependencies,
+          )
+        : settleRoomDepartureAdmission(identity)
+  ).catch(() => "failed" as const);
   if (!isConfirmedAdmissionDepartureOutcome(outcome)) {
     return { kind: "cleanup-failed", outcome };
   }

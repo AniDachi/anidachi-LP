@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { ROOM_CONNECT_ROUTE_MAX_DURATION_SECONDS } from "@anidachi/protocol";
 import { activeRoomConflictResponse } from "./active-room-session";
 import {
   handleActiveRoomRecoveryDeparture,
@@ -560,6 +561,13 @@ test("production create and connect routes admit only through the atomic assignm
   assert.match(main, /signRoomToken\([\s\S]*participantSessionId/);
   assert.doesNotMatch(main, /createRoom\(\{/);
   assert.match(connect, /RoomSessionAdmissionInputSchema\.safeParse/);
+  const admissionDuration = connect.match(
+    /export const maxDuration = (\d+);/,
+  );
+  assert.equal(
+    Number(admissionDuration?.[1]),
+    ROOM_CONNECT_ROUTE_MAX_DURATION_SECONDS,
+  );
   assert.match(connect, /claimActiveRoomSession\(\{/);
   assert.match(connect, /activeRoomConflictResponse\([\s\S]*activeRoom/);
   assert.match(connect, /status:\s*409/);
