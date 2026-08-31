@@ -1,8 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import type { ExtensionAuthTokens } from "../src/auth-tokens";
 import {
+  confirmExplicitRoomDeparture,
   departWebsiteRoomFromApi,
+  handleExplicitRoomDeparture,
   handleRoomTabDeparture,
+  requestCurrentRoomDeparture,
   type RoomDepartureRequestResult,
 } from "../src/room-departure";
 import type { RoomSessionRecord } from "../src/room-session-storage";
@@ -155,6 +158,87 @@ describe("closed-tab room departure", () => {
     expect(JSON.parse(String(init?.body))).toEqual({
       participantSessionId: "participant-session-a",
     });
+  });
+});
+
+describe("explicit room departure", () => {
+  it("tears down the local room only after exact departure is confirmed", async () => {
+    const calls: string[] = [];
+
+    await expect(
+      confirmExplicitRoomDeparture({
+        requestDeparture: async () => {
+          calls.push("depart");
+          return "departed";
+        },
+        onConfirmed: () => calls.push("teardown"),
+      }),
+    ).resolves.toBe("departed");
+
+    expect(calls).toEqual(["depart", "teardown"]);
+  });
+
+  it("keeps the local room available for retry when departure is not confirmed", async () => {
+    const teardown = vi.fn();
+
+    await expect(
+      confirmExplicitRoomDeparture({
+        requestDeparture: async () => {
+          throw new Error("temporary departure failure");
+        },
+        onConfirmed: teardown,
+      }),
+    ).rejects.toThrow("temporary departure failure");
+
+    expect(teardown).not.toHaveBeenCalled();
+  });
+
+  it("derives the active tab session in the background without clearing it before the overlay resets", async () => {
+    const requestDeparture = vi.fn(async () => ({
+      kind: "ack",
+      outcome: "departed",
+    }) as const);
+    const clearRoomSession = vi.fn(async () => true);
+
+    await expect(
+      handleExplicitRoomDeparture(16, {
+        loadRoomSession: async () => roomSession(),
+        getStoredSession: async () => authSession(),
+        refreshSession: async () => null,
+        requestDeparture,
+        clearRoomSession,
+        timeoutMs: 100,
+      }),
+    ).resolves.toBe("departed");
+
+    expect(requestDeparture).toHaveBeenCalledWith(
+      roomSession(),
+      "access-user-a",
+      expect.any(AbortSignal),
+    );
+    expect(clearRoomSession).not.toHaveBeenCalled();
+  });
+
+  it("asks the background to depart the sender tab without exposing room authority in the message", async () => {
+    const sendMessage = vi.fn(async () => ({ ok: true, outcome: "departed" as const }));
+
+    await expect(requestCurrentRoomDeparture({ sendMessage })).resolves.toBe("departed");
+
+    expect(sendMessage).toHaveBeenCalledWith({
+      type: "ANIDACHI_ROOM_DEPARTURE",
+      command: "depart",
+    });
+  });
+
+  it("keeps explicit leave retryable when the background cannot confirm departure", async () => {
+    const sendMessage = vi.fn(async () => ({
+      ok: false,
+      error: "Could not leave the room. Please try again.",
+    }));
+
+    await expect(requestCurrentRoomDeparture({ sendMessage })).rejects.toThrow(
+      "Could not leave the room. Please try again.",
+    );
   });
 });
 
