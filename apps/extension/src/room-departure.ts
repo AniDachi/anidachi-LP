@@ -1,4 +1,8 @@
-import { RoomDepartureAcknowledgementSchema } from "@anidachi/protocol";
+import {
+	ActiveRoomRecoveryRequestSchema,
+	MAX_PARTICIPANT_ID_CHARS,
+	RoomDepartureAcknowledgementSchema,
+} from "@anidachi/protocol";
 import { refreshExtensionSession } from "./auth-client";
 import { getStoredAuthTokens, type ExtensionAuthTokens } from "./auth-tokens";
 import { WEB_HTTP_BASE } from "./constants";
@@ -13,7 +17,9 @@ export const ROOM_DEPARTURE_MESSAGE_TYPE = "ANIDACHI_ROOM_DEPARTURE";
 
 export type RoomDepartureRuntimeMessage = {
   type: typeof ROOM_DEPARTURE_MESSAGE_TYPE;
-  command: "depart";
+	command: "depart" | "recover-active";
+	roomId: string;
+	expectedUserId: string;
 };
 
 export type RoomDepartureRuntimeResponse =
@@ -48,6 +54,11 @@ export interface RoomTabDepartureDependencies {
     accessToken: string,
     signal: AbortSignal,
   ) => Promise<RoomDepartureRequestResult>;
+	recoverActiveDeparture?: (
+		roomId: string,
+		accessToken: string,
+		signal: AbortSignal,
+	) => Promise<RoomDepartureRequestResult>;
   timeoutMs?: number;
 }
 
@@ -58,17 +69,24 @@ export interface RoomDepartureClientDependencies {
 type ConfirmedRoomDepartureOutcome = "departed" | "room_ended" | "stale";
 
 export interface ConfirmExplicitRoomDepartureDependencies {
-  requestDeparture?: () => Promise<ConfirmedRoomDepartureOutcome>;
+	requestDeparture(): Promise<ConfirmedRoomDepartureOutcome>;
   onConfirmed(outcome: ConfirmedRoomDepartureOutcome): void;
 }
 
 export function isRoomDepartureRuntimeMessage(
   value: unknown,
 ): value is RoomDepartureRuntimeMessage {
-  return isObject(value) &&
+	return (
+		isObject(value) &&
     value.type === ROOM_DEPARTURE_MESSAGE_TYPE &&
-    value.command === "depart" &&
-    Object.keys(value).length === 2;
+		(value.command === "depart" || value.command === "recover-active") &&
+		ActiveRoomRecoveryRequestSchema.safeParse({ roomId: value.roomId })
+			.success &&
+		typeof value.expectedUserId === "string" &&
+		value.expectedUserId.length >= 1 &&
+		value.expectedUserId.length <= MAX_PARTICIPANT_ID_CHARS &&
+		Object.keys(value).length === 4
+	);
 }
 
 export async function handleRoomDepartureRuntimeMessage(
@@ -81,22 +99,68 @@ export async function handleRoomDepartureRuntimeMessage(
     return { ok: false, error: "Room departure is missing a sender tab" };
   }
 
-  const outcome = await handleExplicitRoomDeparture(tabId as number, dependencies);
-  if (outcome === "departed" || outcome === "room_ended" || outcome === "stale") {
+	const outcome =
+		_message.command === "recover-active"
+			? await handleActiveRoomRecovery(
+					_message.roomId,
+					_message.expectedUserId,
+					dependencies,
+				)
+			: await handleExplicitRoomDeparture(
+					tabId as number,
+					_message.roomId,
+					_message.expectedUserId,
+					dependencies,
+				);
+	if (
+		outcome === "departed" ||
+		outcome === "room_ended" ||
+		outcome === "stale"
+	) {
     return { ok: true, outcome };
   }
   return { ok: false, error: explicitDepartureError(outcome) };
 }
 
 export async function requestCurrentRoomDeparture(
+	roomId: string,
+	expectedUserId: string,
   dependencies: RoomDepartureClientDependencies = {},
 ): Promise<ConfirmedRoomDepartureOutcome> {
-  const sendMessage = dependencies.sendMessage ??
-    ((message: RoomDepartureRuntimeMessage) => chrome.runtime.sendMessage(message));
+	const sendMessage =
+		dependencies.sendMessage ??
+		((message: RoomDepartureRuntimeMessage) =>
+			chrome.runtime.sendMessage(message));
   const response = await sendMessage({
     type: ROOM_DEPARTURE_MESSAGE_TYPE,
     command: "depart",
+		roomId,
+		expectedUserId,
+	});
+	return confirmedRuntimeDeparture(response);
+}
+
+export async function requestActiveRoomRecovery(
+	roomId: string,
+	expectedUserId: string,
+	dependencies: RoomDepartureClientDependencies = {},
+): Promise<ConfirmedRoomDepartureOutcome> {
+	const sendMessage =
+		dependencies.sendMessage ??
+		((message: RoomDepartureRuntimeMessage) =>
+			chrome.runtime.sendMessage(message));
+	const response = await sendMessage({
+		type: ROOM_DEPARTURE_MESSAGE_TYPE,
+		command: "recover-active",
+		roomId,
+		expectedUserId,
   });
+	return confirmedRuntimeDeparture(response);
+}
+
+function confirmedRuntimeDeparture(
+	response: unknown,
+): ConfirmedRoomDepartureOutcome {
   if (!isObject(response) || typeof response.ok !== "boolean") {
     throw new Error("Room departure did not return a response");
   }
@@ -120,9 +184,7 @@ export async function requestCurrentRoomDeparture(
 export async function confirmExplicitRoomDeparture(
   dependencies: ConfirmExplicitRoomDepartureDependencies,
 ): Promise<ConfirmedRoomDepartureOutcome> {
-  const outcome = await (
-    dependencies.requestDeparture ?? requestCurrentRoomDeparture
-  )();
+	const outcome = await dependencies.requestDeparture();
   dependencies.onConfirmed(outcome);
   return outcome;
 }
@@ -133,6 +195,8 @@ export async function confirmExplicitRoomDeparture(
  */
 export async function handleExplicitRoomDeparture(
   tabId: number,
+	requestedRoomId: string,
+	expectedUserId: string,
   dependencies: RoomTabDepartureDependencies = {},
 ): Promise<RoomTabDepartureOutcome> {
   const loadRoomSession = dependencies.loadRoomSession ?? loadRoomSessionForTab;
@@ -142,8 +206,23 @@ export async function handleExplicitRoomDeparture(
   } catch {
     return "failed";
   }
-  if (!record) return "no-session";
-  return notifyBoundedDeparture(record, dependencies);
+	if (!record)
+		return notifyBoundedActiveDeparture(
+			requestedRoomId,
+			expectedUserId,
+			dependencies,
+		);
+	if (record.ownerUserId !== expectedUserId) return "account-changed";
+	if (record.roomId !== requestedRoomId) return "failed";
+	return notifyBoundedDeparture(record, dependencies, true);
+}
+
+export async function handleActiveRoomRecovery(
+	roomId: string,
+	expectedUserId: string,
+	dependencies: RoomTabDepartureDependencies = {},
+): Promise<RoomTabDepartureOutcome> {
+	return notifyBoundedActiveDeparture(roomId, expectedUserId, dependencies);
 }
 
 /**
@@ -171,7 +250,7 @@ export async function handleRoomTabDeparture(
   }
 
   try {
-    return await notifyBoundedDeparture(record, dependencies);
+		return await notifyBoundedDeparture(record, dependencies, false);
   } finally {
     await clearRoomSession(tabId, record).catch(() => false);
   }
@@ -180,6 +259,7 @@ export async function handleRoomTabDeparture(
 async function notifyBoundedDeparture(
   record: RoomSessionRecord,
   dependencies: RoomTabDepartureDependencies,
+	recoverStale: boolean,
 ): Promise<RoomTabDepartureOutcome> {
   const abortController = new AbortController();
   const timeoutMs = normalizeTimeout(dependencies.timeoutMs);
@@ -193,7 +273,45 @@ async function notifyBoundedDeparture(
 
   try {
     return await Promise.race([
-      notifyExactDeparture(record, abortController.signal, dependencies),
+			notifyExactDeparture(
+				record,
+				abortController.signal,
+				dependencies,
+				recoverStale,
+			),
+			timedOut,
+		]);
+	} catch {
+		return abortController.signal.aborted ? "timed-out" : "failed";
+	} finally {
+		if (timeoutId !== null) clearTimeout(timeoutId);
+	}
+}
+
+async function notifyBoundedActiveDeparture(
+	roomId: string,
+	expectedUserId: string,
+	dependencies: RoomTabDepartureDependencies,
+): Promise<RoomTabDepartureOutcome> {
+	const parsed = ActiveRoomRecoveryRequestSchema.safeParse({ roomId });
+	if (!parsed.success) return "failed";
+	const abortController = new AbortController();
+	const timeoutMs = normalizeTimeout(dependencies.timeoutMs);
+	let timeoutId: ReturnType<typeof setTimeout> | null = null;
+	const timedOut = new Promise<"timed-out">((resolve) => {
+		timeoutId = setTimeout(() => {
+			abortController.abort();
+			resolve("timed-out");
+		}, timeoutMs);
+	});
+	try {
+		return await Promise.race([
+			notifyActiveDeparture(
+				parsed.data.roomId,
+				expectedUserId,
+				abortController.signal,
+				dependencies,
+			),
       timedOut,
     ]);
   } catch {
@@ -207,6 +325,7 @@ async function notifyExactDeparture(
   record: RoomSessionRecord,
   signal: AbortSignal,
   dependencies: RoomTabDepartureDependencies,
+	recoverStale: boolean,
 ): Promise<RoomTabDepartureOutcome> {
   const getStoredSession = dependencies.getStoredSession ?? getStoredAuthTokens;
   const requestDeparture = dependencies.requestDeparture ?? departWebsiteRoomFromApi;
@@ -216,7 +335,16 @@ async function notifyExactDeparture(
   if (stored.user.id !== record.ownerUserId) return "account-changed";
 
   const first = await requestDeparture(record, stored.accessToken, signal);
-  if (first.kind === "ack") return first.outcome;
+	if (first.kind === "ack") {
+		return first.outcome === "stale" && recoverStale
+			? requestActiveDeparture(
+					record.roomId,
+					stored.accessToken,
+					signal,
+					dependencies,
+				)
+			: first.outcome;
+	}
   if (first.kind !== "unauthorized" || signal.aborted) return "failed";
 
   const refreshed = await refreshSession();
@@ -225,7 +353,61 @@ async function notifyExactDeparture(
   if (signal.aborted) return "timed-out";
 
   const retry = await requestDeparture(record, refreshed.accessToken, signal);
-  return retry.kind === "ack" ? retry.outcome : "failed";
+	if (retry.kind !== "ack") return "failed";
+	return retry.outcome === "stale" && recoverStale
+		? requestActiveDeparture(
+				record.roomId,
+				refreshed.accessToken,
+				signal,
+				dependencies,
+			)
+		: retry.outcome;
+}
+
+async function notifyActiveDeparture(
+	roomId: string,
+	expectedUserId: string,
+	signal: AbortSignal,
+	dependencies: RoomTabDepartureDependencies,
+): Promise<RoomTabDepartureOutcome> {
+	const getStoredSession = dependencies.getStoredSession ?? getStoredAuthTokens;
+	const refreshSession = dependencies.refreshSession ?? refreshExtensionSession;
+	const stored = await getStoredSession();
+	if (!stored) return "no-auth";
+	if (stored.user.id !== expectedUserId) return "account-changed";
+
+	const first = await requestActiveDeparture(
+		roomId,
+		stored.accessToken,
+		signal,
+		dependencies,
+	);
+	if (first !== "no-auth") return first;
+	if (signal.aborted) return "timed-out";
+
+	const refreshed = await refreshSession();
+	if (!refreshed) return "no-auth";
+	if (refreshed.user.id !== expectedUserId) return "account-changed";
+	if (signal.aborted) return "timed-out";
+	return requestActiveDeparture(
+		roomId,
+		refreshed.accessToken,
+		signal,
+		dependencies,
+	);
+}
+
+async function requestActiveDeparture(
+	roomId: string,
+	accessToken: string,
+	signal: AbortSignal,
+	dependencies: RoomTabDepartureDependencies,
+): Promise<RoomTabDepartureOutcome> {
+	const recover =
+		dependencies.recoverActiveDeparture ?? departActiveWebsiteRoomFromApi;
+	const result = await recover(roomId, accessToken, signal);
+	if (result.kind === "ack") return result.outcome;
+	return result.kind === "unauthorized" ? "no-auth" : "failed";
 }
 
 export async function departWebsiteRoomFromApi(
@@ -255,6 +437,35 @@ export async function departWebsiteRoomFromApi(
   return acknowledgement.success
     ? { kind: "ack", outcome: acknowledgement.data.outcome }
     : { kind: "failed" };
+}
+
+export async function departActiveWebsiteRoomFromApi(
+	roomId: string,
+	accessToken: string,
+	signal: AbortSignal,
+	fetcher: typeof fetch = fetch,
+): Promise<RoomDepartureRequestResult> {
+	const request = ActiveRoomRecoveryRequestSchema.parse({ roomId });
+	const response = await fetcher(
+		new URL("/api/rooms/active-session/depart", WEB_HTTP_BASE),
+		{
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${accessToken}`,
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(request),
+			signal,
+		},
+	);
+	if (response.status === 401) return { kind: "unauthorized" };
+	if (!response.ok) return { kind: "failed" };
+	const acknowledgement = RoomDepartureAcknowledgementSchema.safeParse(
+		await response.json().catch(() => null),
+	);
+	return acknowledgement.success
+		? { kind: "ack", outcome: acknowledgement.data.outcome }
+		: { kind: "failed" };
 }
 
 function normalizeTimeout(timeoutMs: number | undefined): number {

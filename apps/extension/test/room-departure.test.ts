@@ -2,9 +2,11 @@ import { describe, expect, it, vi } from "vitest";
 import type { ExtensionAuthTokens } from "../src/auth-tokens";
 import {
   confirmExplicitRoomDeparture,
+	departActiveWebsiteRoomFromApi,
   departWebsiteRoomFromApi,
   handleExplicitRoomDeparture,
   handleRoomTabDeparture,
+	isRoomDepartureRuntimeMessage,
   requestCurrentRoomDeparture,
   type RoomDepartureRequestResult,
 } from "../src/room-departure";
@@ -162,6 +164,133 @@ describe("closed-tab room departure", () => {
 });
 
 describe("explicit room departure", () => {
+	it("binds every explicit departure request to the account visible in the overlay", () => {
+		expect(
+			isRoomDepartureRuntimeMessage({
+				type: "ANIDACHI_ROOM_DEPARTURE",
+				command: "recover-active",
+				roomId: "room-a",
+				expectedUserId: "user-a",
+			}),
+		).toBe(true);
+		expect(
+			isRoomDepartureRuntimeMessage({
+				type: "ANIDACHI_ROOM_DEPARTURE",
+				command: "recover-active",
+				roomId: "room-a",
+			}),
+		).toBe(false);
+	});
+
+	it("automatically recovers a stale exact guest departure using the server-owned active assignment", async () => {
+		const recoverActiveDeparture = vi.fn(
+			async () =>
+				({
+					kind: "ack",
+					outcome: "departed",
+				}) as const,
+		);
+
+		await expect(
+			handleExplicitRoomDeparture(16, "room-a", "user-a", {
+				loadRoomSession: async () => roomSession(),
+				getStoredSession: async () => authSession(),
+				refreshSession: async () => null,
+				requestDeparture: async () => ({ kind: "ack", outcome: "stale" }),
+				recoverActiveDeparture,
+				timeoutMs: 100,
+			}),
+		).resolves.toBe("departed");
+
+		expect(recoverActiveDeparture).toHaveBeenCalledWith(
+			"room-a",
+			"access-user-a",
+			expect.any(AbortSignal),
+		);
+	});
+
+	it("never lets passive tab close recovery release a newer same-room session", async () => {
+		const recoverActiveDeparture = vi.fn();
+
+		await expect(
+			handleRoomTabDeparture(16, {
+				loadRoomSession: async () => roomSession(),
+				getStoredSession: async () => authSession(),
+				refreshSession: async () => null,
+				requestDeparture: async () => ({ kind: "ack", outcome: "stale" }),
+				recoverActiveDeparture,
+				clearRoomSession: async () => true,
+				timeoutMs: 100,
+			}),
+		).resolves.toBe("stale");
+
+		expect(recoverActiveDeparture).not.toHaveBeenCalled();
+	});
+
+	it("stops recovery when token refresh switches accounts", async () => {
+		const recoverActiveDeparture = vi
+			.fn<
+				(
+					roomId: string,
+					accessToken: string,
+				) => Promise<RoomDepartureRequestResult>
+			>()
+			.mockResolvedValueOnce({ kind: "unauthorized" })
+			.mockResolvedValueOnce({ kind: "ack", outcome: "departed" });
+
+		await expect(
+			handleExplicitRoomDeparture(16, "room-a", "user-a", {
+				loadRoomSession: async () => null,
+				getStoredSession: async () => authSession("user-a"),
+				refreshSession: async () => authSession("user-b"),
+				recoverActiveDeparture,
+				timeoutMs: 100,
+			}),
+		).resolves.toBe("account-changed");
+
+		expect(recoverActiveDeparture).toHaveBeenCalledTimes(1);
+		expect(recoverActiveDeparture).toHaveBeenCalledWith(
+			"room-a",
+			"access-user-a",
+			expect.any(AbortSignal),
+		);
+	});
+
+	it("stops exact-session retry when token refresh switches accounts", async () => {
+		const requestDeparture = vi
+			.fn<
+				(
+					record: RoomSessionRecord,
+					accessToken: string,
+				) => Promise<RoomDepartureRequestResult>
+			>()
+			.mockResolvedValueOnce({ kind: "unauthorized" })
+			.mockResolvedValueOnce({ kind: "ack", outcome: "departed" });
+		const recoverActiveDeparture = vi.fn();
+
+		await expect(
+			handleExplicitRoomDeparture(16, "room-a", "user-a", {
+				loadRoomSession: async () => roomSession(),
+				getStoredSession: async () => authSession("user-a"),
+				refreshSession: async () => authSession("user-b"),
+				requestDeparture,
+				recoverActiveDeparture,
+				timeoutMs: 100,
+			}),
+		).resolves.toBe("account-changed");
+
+		expect(requestDeparture).toHaveBeenCalledTimes(1);
+		expect(requestDeparture).toHaveBeenCalledWith(
+			expect.objectContaining({
+				ownerUserId: "user-a",
+				roomId: "room-a",
+			}),
+			"access-user-a",
+			expect.any(AbortSignal),
+		);
+		expect(recoverActiveDeparture).not.toHaveBeenCalled();
+	});
+
   it("tears down the local room only after exact departure is confirmed", async () => {
     const calls: string[] = [];
 
@@ -194,14 +323,17 @@ describe("explicit room departure", () => {
   });
 
   it("derives the active tab session in the background without clearing it before the overlay resets", async () => {
-    const requestDeparture = vi.fn(async () => ({
+		const requestDeparture = vi.fn(
+			async () =>
+				({
       kind: "ack",
       outcome: "departed",
-    }) as const);
+				}) as const,
+		);
     const clearRoomSession = vi.fn(async () => true);
 
     await expect(
-      handleExplicitRoomDeparture(16, {
+			handleExplicitRoomDeparture(16, "room-a", "user-a", {
         loadRoomSession: async () => roomSession(),
         getStoredSession: async () => authSession(),
         refreshSession: async () => null,
@@ -219,15 +351,43 @@ describe("explicit room departure", () => {
     expect(clearRoomSession).not.toHaveBeenCalled();
   });
 
-  it("asks the background to depart the sender tab without exposing room authority in the message", async () => {
-    const sendMessage = vi.fn(async () => ({ ok: true, outcome: "departed" as const }));
+	it("asks the background to depart the sender tab using only the visible room selector", async () => {
+		const sendMessage = vi.fn(async () => ({
+			ok: true,
+			outcome: "departed" as const,
+		}));
 
-    await expect(requestCurrentRoomDeparture({ sendMessage })).resolves.toBe("departed");
+		await expect(
+			requestCurrentRoomDeparture("room-a", "user-a", { sendMessage }),
+		).resolves.toBe("departed");
 
     expect(sendMessage).toHaveBeenCalledWith({
       type: "ANIDACHI_ROOM_DEPARTURE",
       command: "depart",
+			roomId: "room-a",
+			expectedUserId: "user-a",
+		});
     });
+
+	it("sends only the selected room to the authenticated active-session recovery route", async () => {
+		const fetcher = vi.fn(
+			async (_input: RequestInfo | URL, _init?: RequestInit) =>
+				Response.json({ ok: true, outcome: "departed" }, { status: 200 }),
+		);
+		const controller = new AbortController();
+
+		await expect(
+			departActiveWebsiteRoomFromApi(
+				"room-a",
+				"access-user-a",
+				controller.signal,
+				fetcher,
+			),
+		).resolves.toEqual({ kind: "ack", outcome: "departed" });
+
+		const [url, init] = fetcher.mock.calls[0] ?? [];
+		expect(String(url)).toContain("/api/rooms/active-session/depart");
+		expect(JSON.parse(String(init?.body))).toEqual({ roomId: "room-a" });
   });
 
   it("keeps explicit leave retryable when the background cannot confirm departure", async () => {
@@ -236,9 +396,9 @@ describe("explicit room departure", () => {
       error: "Could not leave the room. Please try again.",
     }));
 
-    await expect(requestCurrentRoomDeparture({ sendMessage })).rejects.toThrow(
-      "Could not leave the room. Please try again.",
-    );
+		await expect(
+			requestCurrentRoomDeparture("room-a", "user-a", { sendMessage }),
+		).rejects.toThrow("Could not leave the room. Please try again.");
   });
 });
 

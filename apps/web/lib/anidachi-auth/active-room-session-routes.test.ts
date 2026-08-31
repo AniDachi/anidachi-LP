@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
+	handleActiveRoomRecoveryDeparture,
   handleInternalRoomDepartureCallback,
   handlePublicRoomDeparture,
 } from "./active-room-session-routes";
@@ -169,6 +170,257 @@ test("a Worker miss uses only the exact safe guest or host fallback", async () =
   assert.deepEqual(hostCalls, ["worker", `end:${SESSION_ID}`]);
 });
 
+test("explicit recovery resolves and departs only the authenticated guest's current assignment", async () => {
+	const calls: string[] = [];
+	let lookups = 0;
+	const result = await handleActiveRoomRecoveryDeparture({
+		userId: USER_ID,
+		value: { roomId: ROOM_ID },
+		requestedAt: 1_000,
+		dependencies: {
+			getActiveAssignment: async () => {
+				lookups += 1;
+				return lookups === 1
+					? {
+							userId: USER_ID,
+							roomId: ROOM_ID,
+							role: "member" as const,
+							participantSessionId: "server-current-session",
+						}
+					: null;
+			},
+			syncWorker: async (command) => {
+				calls.push(`worker:${command.participantSessionId}`);
+				return { ok: true, outcome: "stale" };
+			},
+			releaseGuest: async (command) => {
+				calls.push(`release:${command.participantSessionId}`);
+				return { outcome: "released" };
+			},
+			endHostLobby: async () => {
+				throw new Error("guest recovery must not end the room");
+			},
+		},
+	});
+
+	assert.deepEqual(result, {
+		status: 200,
+		body: { ok: true, outcome: "departed" },
+	});
+	assert.deepEqual(calls, [
+		"worker:server-current-session",
+		"release:server-current-session",
+	]);
+	assert.equal(lookups, 2);
+});
+
+test("explicit recovery cannot clear a newer assignment in another room", async () => {
+	let departureCalls = 0;
+	const result = await handleActiveRoomRecoveryDeparture({
+		userId: USER_ID,
+		value: { roomId: ROOM_ID },
+		requestedAt: 1_000,
+		dependencies: {
+			getActiveAssignment: async () => ({
+				userId: USER_ID,
+				roomId: "newer-room",
+				role: "member",
+				participantSessionId: "newer-session",
+			}),
+			syncWorker: async () => {
+				departureCalls += 1;
+				return { ok: true, outcome: "departed" };
+			},
+			releaseGuest: async () => {
+				departureCalls += 1;
+				return { outcome: "released" };
+			},
+			endHostLobby: async () => {
+				departureCalls += 1;
+				return { outcome: "room_ended" };
+			},
+		},
+	});
+
+	assert.deepEqual(result, {
+		status: 409,
+		body: { error: "Active room changed. Try again." },
+	});
+	assert.equal(departureCalls, 0);
+});
+
+test("explicit recovery is idempotent when the account has no active assignment", async () => {
+	const result = await handleActiveRoomRecoveryDeparture({
+		userId: USER_ID,
+		value: { roomId: ROOM_ID },
+		requestedAt: 1_000,
+		dependencies: {
+			getActiveAssignment: async () => null,
+			syncWorker: async () => {
+				throw new Error("no assignment must not reach Worker");
+			},
+			releaseGuest: async () => {
+				throw new Error("no assignment must not release anything");
+			},
+			endHostLobby: async () => {
+				throw new Error("no assignment must not end anything");
+			},
+		},
+	});
+
+	assert.deepEqual(result, {
+		status: 200,
+		body: { ok: true, outcome: "stale" },
+	});
+});
+
+test("explicit recovery reports a concurrent same-room takeover instead of claiming success", async () => {
+	let lookups = 0;
+	const result = await handleActiveRoomRecoveryDeparture({
+		userId: USER_ID,
+		value: { roomId: ROOM_ID },
+		requestedAt: 1_000,
+		dependencies: {
+			getActiveAssignment: async () => {
+				lookups += 1;
+				return {
+					userId: USER_ID,
+					roomId: ROOM_ID,
+					role: "member" as const,
+					participantSessionId:
+						lookups === 1
+							? "session-before-takeover"
+							: "session-after-takeover",
+				};
+			},
+			syncWorker: async () => ({ ok: true, outcome: "stale" }),
+			releaseGuest: async () => ({ outcome: "stale" }),
+			endHostLobby: async () => {
+				throw new Error("guest recovery must not end the room");
+			},
+		},
+	});
+
+	assert.deepEqual(result, {
+		status: 409,
+		body: { error: "Active room changed. Try again." },
+	});
+	assert.equal(lookups, 2);
+});
+
+test("explicit recovery rechecks authority after Worker departure before claiming success", async () => {
+	let lookups = 0;
+	const result = await handleActiveRoomRecoveryDeparture({
+		userId: USER_ID,
+		value: { roomId: ROOM_ID },
+		requestedAt: 1_000,
+		dependencies: {
+			getActiveAssignment: async () => {
+				lookups += 1;
+				return lookups === 1
+					? {
+							userId: USER_ID,
+							roomId: ROOM_ID,
+							role: "member" as const,
+							participantSessionId: "session-before-takeover",
+						}
+					: {
+							userId: USER_ID,
+							roomId: ROOM_ID,
+							role: "member" as const,
+							participantSessionId: "session-after-takeover",
+						};
+			},
+			syncWorker: async () => ({ ok: true, outcome: "departed" }),
+			releaseGuest: async () => {
+				throw new Error("Worker departure must not use the fallback");
+			},
+			endHostLobby: async () => {
+				throw new Error("guest recovery must not end the room");
+			},
+		},
+	});
+
+	assert.deepEqual(result, {
+		status: 409,
+		body: { error: "Active room changed. Try again." },
+	});
+	assert.equal(lookups, 2);
+});
+
+test("explicit recovery stays retryable when the departed assignment remains authoritative", async () => {
+	const assignment = {
+		userId: USER_ID,
+		roomId: ROOM_ID,
+		role: "member" as const,
+		participantSessionId: SESSION_ID,
+	};
+	const result = await handleActiveRoomRecoveryDeparture({
+		userId: USER_ID,
+		value: { roomId: ROOM_ID },
+		requestedAt: 1_000,
+		dependencies: {
+			getActiveAssignment: async () => assignment,
+			syncWorker: async () => ({ ok: true, outcome: "departed" }),
+			releaseGuest: async () => {
+				throw new Error("Worker departure must not use the fallback");
+			},
+			endHostLobby: async () => {
+				throw new Error("guest recovery must not end the room");
+			},
+		},
+	});
+
+	assert.deepEqual(result, {
+		status: 502,
+		body: {
+			error: "Room departure was not confirmed. Try again.",
+			retryable: true,
+		},
+	});
+});
+
+test("explicit host recovery ends the host room without releasing a guest", async () => {
+	let lookups = 0;
+	const calls: string[] = [];
+	const result = await handleActiveRoomRecoveryDeparture({
+		userId: USER_ID,
+		value: { roomId: ROOM_ID },
+		requestedAt: 1_000,
+		dependencies: {
+			getActiveAssignment: async () => {
+				lookups += 1;
+				return lookups === 1
+					? {
+							userId: USER_ID,
+							roomId: ROOM_ID,
+							role: "host" as const,
+							participantSessionId: SESSION_ID,
+						}
+					: null;
+			},
+			syncWorker: async () => {
+				calls.push("worker");
+				return { ok: true, outcome: "stale" };
+			},
+			releaseGuest: async () => {
+				throw new Error("host recovery must not release a guest");
+			},
+			endHostLobby: async (command) => {
+				calls.push(`end:${command.participantSessionId}`);
+				return { outcome: "room_ended" };
+			},
+		},
+	});
+
+	assert.deepEqual(result, {
+		status: 200,
+		body: { ok: true, outcome: "room_ended" },
+	});
+	assert.equal(lookups, 2);
+	assert.deepEqual(calls, ["worker", `end:${SESSION_ID}`]);
+});
+
 test("internal guest callback requires service auth and exact path/body identity", async () => {
   let releases = 0;
   const release = async () => {
@@ -277,6 +529,13 @@ test("production departure routes keep identity server-derived and callbacks int
     ),
     "utf8",
   );
+	const recoveryRoute = readFileSync(
+		new URL(
+			"../../app/api/rooms/active-session/depart/route.ts",
+			import.meta.url,
+		),
+		"utf8",
+	);
 
   assert.match(publicRoute, /getExtensionSessionFromAuthorization/);
   assert.match(publicRoute, /userId:\s*session\.userId/);
@@ -284,6 +543,13 @@ test("production departure routes keep identity server-derived and callbacks int
   assert.match(publicRoute, /releaseActiveRoomSession/);
   assert.match(publicRoute, /endHostLobbyForActiveSession/);
   assert.doesNotMatch(publicRoute, /userId:\s*(body|value|requestBody)\./);
+	assert.match(recoveryRoute, /getExtensionSessionFromAuthorization/);
+	assert.match(recoveryRoute, /getActiveRoomSessionAssignment/);
+	assert.match(recoveryRoute, /handleActiveRoomRecoveryDeparture/);
+	assert.doesNotMatch(
+		recoveryRoute,
+		/participantSessionId:\s*(body|value|requestBody)\./,
+	);
 
   assert.match(internalRoute, /hasValidInternalServiceAuthorization/);
   assert.match(internalRoute, /handleInternalRoomDepartureCallback/);

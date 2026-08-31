@@ -10,8 +10,10 @@ import { createClient } from "@supabase/supabase-js";
 import {
   parseActiveRoomClaimRpcResult,
   parseActiveRoomCreateRpcResult,
+	parseActiveRoomAssignmentRow,
   parseActiveRoomReleaseRpcResult,
   parseHostLobbyEndRpcResult,
+	type ActiveRoomAssignment,
 } from "./active-room-session";
 import type { PlanCode, RoomCapabilities } from "./plan-entitlements";
 import {
@@ -597,6 +599,20 @@ export async function releaseActiveRoomSession(params: {
     throw new Error(`Failed to release active room: ${result.error.message}`);
   }
   return parseActiveRoomReleaseRpcResult(result.data);
+}
+
+export async function getActiveRoomSessionAssignment(
+	userId: string,
+): Promise<ActiveRoomAssignment | null> {
+	const result = await db()
+		.from("active_room_sessions")
+		.select("user_id,room_id,role,participant_session_id")
+		.eq("user_id", userId)
+		.maybeSingle();
+	if (result.error) {
+		throw new Error(`Failed to read active room: ${result.error.message}`);
+	}
+	return parseActiveRoomAssignmentRow(result.data);
 }
 
 export async function endHostLobbyForActiveSession(params: {

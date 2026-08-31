@@ -36,6 +36,10 @@ export const RoomDepartureRequestSchema = z.strictObject({
   participantSessionId: ParticipantSessionIdSchema,
 });
 
+export const ActiveRoomRecoveryRequestSchema = z.strictObject({
+	roomId: RoomIdSchema,
+});
+
 export const InternalRoomDepartureCommandSchema = z.strictObject({
   roomId: RoomIdSchema,
   userId: ParticipantIdSchema,
@@ -59,6 +63,11 @@ export type ActiveRoomRole = z.infer<typeof ActiveRoomRoleSchema>;
 export type RoomSessionAdmissionInput = z.infer<typeof RoomSessionAdmissionInputSchema>;
 export type ActiveRoomConflictResponse = z.infer<typeof ActiveRoomConflictResponseSchema>;
 export type RoomDepartureRequest = z.infer<typeof RoomDepartureRequestSchema>;
-export type InternalRoomDepartureCommand = z.infer<typeof InternalRoomDepartureCommandSchema>;
+export type ActiveRoomRecoveryRequest = z.infer<
+	typeof ActiveRoomRecoveryRequestSchema
+>;
+export type InternalRoomDepartureCommand = z.infer<
+	typeof InternalRoomDepartureCommandSchema
+>;
 export type RoomDepartureCallback = z.infer<typeof RoomDepartureCallbackSchema>;
 export type RoomDepartureAcknowledgement = z.infer<typeof RoomDepartureAcknowledgementSchema>;

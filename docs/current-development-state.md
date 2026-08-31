@@ -913,7 +913,7 @@ existing room Durable Object remains responsible for live presence, same-room
 takeover, disconnect grace, and room termination. No new service, heartbeat,
 queue, env variable, secret, TURN, Blob, Stripe, or release path was added.
 
-The accepted product behavior is:
+The accepted baseline behavior is:
 
 - one authenticated user can have only one live room across YouTube,
   Crunchyroll, tabs, browser profiles, and devices;
@@ -927,8 +927,30 @@ The accepted product behavior is:
   tab does not silently restore a closed room;
 - room finalization releases matching durable assignments idempotently.
 
-Staging evidence includes successful migration runs `32637163596` and
-`32637269784`, CI `32637269772`, API deployment `32637269793`, extension build
+The current feature branch additionally implements the following behavior,
+which is locally verified but still pending staging and two-profile manual
+acceptance:
+
+- an explicit guest leave confirms server-side departure before local teardown;
+  if the tab's exact session record is missing or stale, the extension resolves
+  the authenticated account's current assignment for that same room and removes
+  only that guest, while passive tab-close cleanup remains exact-session-only;
+- recovery is account-bound and rechecks server authority after departure, so a
+  token refresh, different-room assignment, or concurrent same-room takeover
+  cannot clear or hide a newer session;
+- an active-room conflict no longer offers an ambiguous room takeover button;
+  it offers a confirmed, role-appropriate emergency Leave/End action, and the
+  staging bearer allowlist permits both normal and emergency departure routes.
+
+Fresh local verification for the feature branch on 2026-08-31 includes root
+check/test, protocol tests 139/139, Web tests 376 passed and 3 skipped out of
+379, extension tests 1440/1440, API tests 163/163 plus runtime 27/27, room
+harness 39/39, real-WebRTC harness 26/26, and staging extension build and
+artifact validation. This is code and harness evidence, not staging or
+two-profile acceptance.
+
+Evidence for the original accepted baseline includes successful migration runs
+`32637163596` and `32637269784`, CI `32637269772`, API deployment `32637269793`, extension build
 `32637269796`, Vercel deployment `dpl_D9iXtfYyux52dRp46wucA8VKcM86`, Worker
 smoke, and exact artifact
 `f511b4dcb805e8959412213e00a2499f12f2b8be-staging-125` with SHA-256
