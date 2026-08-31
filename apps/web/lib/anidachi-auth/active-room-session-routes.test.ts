@@ -1,16 +1,141 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { activeRoomConflictResponse } from "./active-room-session";
 import {
-	handleActiveRoomRecoveryDeparture,
+  handleActiveRoomRecoveryDeparture,
   handleInternalRoomDepartureCallback,
   handlePublicRoomDeparture,
+  type RoomDepartureTelemetry,
 } from "./active-room-session-routes";
-import { activeRoomConflictResponse } from "./active-room-session";
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
 const ROOM_ID = "room-one";
 const SESSION_ID = "participant-session-one";
+
+type TestAssignment = {
+  userId: string;
+  roomId: string;
+  role: "host" | "member";
+  participantSessionId: string;
+};
+
+type TestDependencies = {
+  getActiveAssignment(userId: string): Promise<TestAssignment | null>;
+  releaseGuest(assignment: {
+    userId: string;
+    roomId: string;
+    participantSessionId: string;
+  }): Promise<{ outcome: "released" | "stale" }>;
+  detachGuest(command: {
+    userId: string;
+    roomId: string;
+    participantSessionId: string;
+    requestedAt: number;
+  }): Promise<{ ok: true; outcome: "detached" | "stale" }>;
+  syncHostDeparture(command: {
+    userId: string;
+    roomId: string;
+    participantSessionId: string;
+    requestedAt: number;
+  }): Promise<{
+    ok: true;
+    outcome: "departed" | "room_ended" | "already_departed" | "stale";
+  }>;
+  endHostLobby(assignment: {
+    userId: string;
+    roomId: string;
+    participantSessionId: string;
+    endedAt: string;
+  }): Promise<{ outcome: "room_ended" | "stale" }>;
+  report(event: RoomDepartureTelemetry): void;
+};
+
+const MEMBER_ASSIGNMENT = {
+  userId: USER_ID,
+  roomId: ROOM_ID,
+  role: "member" as const,
+  participantSessionId: SESSION_ID,
+};
+
+function departureDependencies(overrides: Partial<TestDependencies> = {}) {
+  const calls: string[] = [];
+  const events: RoomDepartureTelemetry[] = [];
+  let current: TestAssignment | null = MEMBER_ASSIGNMENT;
+  const dependencies: TestDependencies = {
+    getActiveAssignment: async () => {
+      calls.push("read");
+      return current;
+    },
+    releaseGuest: async () => {
+      calls.push("release");
+      current = null;
+      return { outcome: "released" };
+    },
+    detachGuest: async () => {
+      calls.push("detach");
+      return { ok: true, outcome: "detached" };
+    },
+    syncHostDeparture: async () => {
+      calls.push("host-worker");
+      return { ok: true, outcome: "room_ended" };
+    },
+    endHostLobby: async () => {
+      calls.push("host-fallback");
+      return { outcome: "room_ended" };
+    },
+    report: (event) => {
+      events.push(event);
+      calls.push(
+        `report:${event.mode}:${event.durable}:${event.cleanup ?? "none"}`,
+      );
+    },
+    ...overrides,
+  };
+  return { calls, events, dependencies };
+}
+
+function okResult(
+  outcome: "departed" | "room_ended" | "already_departed" | "stale",
+) {
+  return { status: 200 as const, body: { ok: true as const, outcome } };
+}
+
+function unavailableResult() {
+  return {
+    status: 503 as const,
+    body: {
+      code: "ROOM_DEPARTURE_UNAVAILABLE" as const,
+      message: "Could not leave right now. Please try again.",
+      retryable: true as const,
+    },
+  };
+}
+
+async function depart(fixture: ReturnType<typeof departureDependencies>) {
+  return handlePublicRoomDeparture({
+    userId: USER_ID,
+    roomId: ROOM_ID,
+    value: { participantSessionId: SESSION_ID },
+    requestedAt: 1_000,
+    dependencies: fixture.dependencies,
+  });
+}
+
+async function recover(params: {
+  current: typeof MEMBER_ASSIGNMENT | null;
+  requestedRoomId?: string;
+}) {
+  const fixture = departureDependencies({
+    getActiveAssignment: async () => params.current,
+  });
+  return handleActiveRoomRecoveryDeparture({
+    userId: USER_ID,
+    value: { roomId: params.requestedRoomId ?? ROOM_ID },
+    requestedAt: 1_000,
+    dependencies: fixture.dependencies,
+  });
+}
 
 test("the conflict response is the shared minimal safe shape", () => {
   assert.deepEqual(
@@ -33,35 +158,24 @@ test("the conflict response is the shared minimal safe shape", () => {
   );
 });
 
-test("public departure rejects missing auth and malformed exact-session bodies", async () => {
-  let calls = 0;
-  const dependencies = {
-    syncWorker: async () => {
-      calls += 1;
-      return { ok: true as const, outcome: "departed" as const };
-    },
-    releaseGuest: async () => {
-      calls += 1;
-      return { outcome: "released" as const };
-    },
-    endHostLobby: async () => {
-      calls += 1;
-      return { outcome: "room_ended" as const };
-    },
-  };
-
+test("public departure rejects missing auth and malformed exact-session bodies before dependencies", async () => {
+  const fixture = departureDependencies();
   assert.deepEqual(
     await handlePublicRoomDeparture({
       userId: null,
       roomId: ROOM_ID,
-      role: null,
       value: { participantSessionId: SESSION_ID },
       requestedAt: 1_000,
-      dependencies,
+      dependencies: fixture.dependencies,
     }),
-    { status: 401, body: { error: "Unauthorized" } },
+    {
+      status: 401,
+      body: {
+        code: "AUTH_REQUIRED",
+        message: "Sign in again before leaving.",
+      },
+    },
   );
-
   for (const value of [
     {},
     { participantSessionId: "" },
@@ -72,353 +186,287 @@ test("public departure rejects missing auth and malformed exact-session bodies",
       await handlePublicRoomDeparture({
         userId: USER_ID,
         roomId: ROOM_ID,
-        role: "member",
         value,
         requestedAt: 1_000,
-        dependencies,
+        dependencies: fixture.dependencies,
       }),
       { status: 400, body: { error: "Invalid departure request" } },
     );
   }
-  assert.equal(calls, 0);
+  assert.deepEqual(fixture.calls, []);
 });
 
-test("public departure derives the user from auth and consults Worker before durable state", async () => {
+test("exact guest departure commits durable release before bounded live detach", async () => {
+  const fixture = departureDependencies();
+  assert.deepEqual(await depart(fixture), okResult("departed"));
+  assert.deepEqual(fixture.calls, [
+    "read",
+    "release",
+    "detach",
+    "report:exact:departed:detached",
+  ]);
+  assert.deepEqual(fixture.events, [
+    { mode: "exact", durable: "departed", cleanup: "detached" },
+  ]);
+});
+
+test("exact departure is idempotent for no assignment and stale exact identifiers", async () => {
+  const noAssignment = departureDependencies({
+    getActiveAssignment: async () => null,
+  });
+  assert.deepEqual(await depart(noAssignment), okResult("already_departed"));
+  assert.deepEqual(noAssignment.events, [
+    { mode: "exact", durable: "already_departed" },
+  ]);
+
+  for (const current of [
+    { ...MEMBER_ASSIGNMENT, roomId: "new-room" },
+    { ...MEMBER_ASSIGNMENT, participantSessionId: "new-session" },
+  ]) {
+    const staleExact = departureDependencies({
+      getActiveAssignment: async () => current,
+    });
+    assert.deepEqual(await depart(staleExact), okResult("stale"));
+    assert.deepEqual(staleExact.events, [
+      { mode: "exact", durable: "stale" },
+    ]);
+    assert.equal(staleExact.calls.includes("detach"), false);
+  }
+});
+
+test("every post-commit detach result stays departed and reports privacy-safe cleanup once", async () => {
+  const cases: Array<{
+    name: string;
+    detachGuest: TestDependencies["detachGuest"];
+    cleanup: "detached" | "stale" | "timeout" | "failed";
+  }> = [
+    {
+      name: "detached",
+      detachGuest: async () => ({ ok: true, outcome: "detached" }),
+      cleanup: "detached",
+    },
+    {
+      name: "stale",
+      detachGuest: async () => ({ ok: true, outcome: "stale" }),
+      cleanup: "stale",
+    },
+    {
+      name: "timeout",
+      detachGuest: async () => {
+        throw new DOMException("Aborted", "AbortError");
+      },
+      cleanup: "timeout",
+    },
+    {
+      name: "failure",
+      detachGuest: async () => {
+        throw new Error("offline");
+      },
+      cleanup: "failed",
+    },
+  ];
+
+  for (const current of cases) {
+    const fixture = departureDependencies({ detachGuest: current.detachGuest });
+    assert.deepEqual(await depart(fixture), okResult("departed"), current.name);
+    assert.deepEqual(fixture.events, [
+      { mode: "exact", durable: "departed", cleanup: current.cleanup },
+    ]);
+    const serialized = JSON.stringify(fixture.events);
+    assert.equal(serialized.includes(USER_ID), false);
+    assert.equal(serialized.includes(ROOM_ID), false);
+    assert.equal(serialized.includes(SESSION_ID), false);
+  }
+});
+
+test("a stale release rereads exactly once and never authorizes cleanup", async () => {
+  const run = async (currentAfter: TestAssignment | null) => {
+    let reads = 0;
+    let detachCalls = 0;
+    const fixture = departureDependencies({
+      getActiveAssignment: async () => {
+        reads += 1;
+        return reads === 1 ? MEMBER_ASSIGNMENT : currentAfter;
+      },
+      releaseGuest: async () => ({ outcome: "stale" }),
+      detachGuest: async () => {
+        detachCalls += 1;
+        return { ok: true, outcome: "detached" };
+      },
+    });
+    return { result: await depart(fixture), reads, detachCalls, fixture };
+  };
+
+  const noAssignmentAfterMiss = await run(null);
+  const changedAfterMiss = await run({
+    ...MEMBER_ASSIGNMENT,
+    participantSessionId: "replacement-session",
+  });
+  const identicalAfterMiss = await run(MEMBER_ASSIGNMENT);
+
+  assert.deepEqual(noAssignmentAfterMiss.result, okResult("already_departed"));
+  assert.deepEqual(changedAfterMiss.result, okResult("stale"));
+  assert.deepEqual(identicalAfterMiss.result, unavailableResult());
+  for (const current of [
+    noAssignmentAfterMiss,
+    changedAfterMiss,
+    identicalAfterMiss,
+  ]) {
+    assert.equal(current.reads, 2);
+    assert.equal(current.detachCalls, 0);
+    assert.equal(current.fixture.events.length, 1);
+  }
+});
+
+test("database read and release failures are typed retryable failures and skip cleanup", async () => {
+  let readDetachCalls = 0;
+  const readFailure = departureDependencies({
+    getActiveAssignment: async () => {
+      throw new Error("read failed");
+    },
+    detachGuest: async () => {
+      readDetachCalls += 1;
+      return { ok: true, outcome: "detached" };
+    },
+  });
+  assert.deepEqual(await depart(readFailure), unavailableResult());
+  assert.equal(readDetachCalls, 0);
+  assert.deepEqual(readFailure.events, [{ mode: "exact", durable: "failed" }]);
+
+  let releaseDetachCalls = 0;
+  const releaseFailure = departureDependencies({
+    releaseGuest: async () => {
+      throw new Error("release failed");
+    },
+    detachGuest: async () => {
+      releaseDetachCalls += 1;
+      return { ok: true, outcome: "detached" };
+    },
+  });
+  assert.deepEqual(await depart(releaseFailure), unavailableResult());
+  assert.equal(releaseDetachCalls, 0);
+  assert.deepEqual(releaseFailure.events, [
+    { mode: "exact", durable: "failed" },
+  ]);
+});
+
+test("host departure keeps the legacy Worker lifecycle isolated from guest mutation and telemetry", async () => {
+  const hostWorkerSuccess = departureDependencies();
+  hostWorkerSuccess.dependencies.getActiveAssignment = async () => {
+    hostWorkerSuccess.calls.push("read");
+    return { ...MEMBER_ASSIGNMENT, role: "host" };
+  };
+  assert.deepEqual(await depart(hostWorkerSuccess), okResult("room_ended"));
+  assert.deepEqual(hostWorkerSuccess.calls, ["read", "host-worker"]);
+  assert.deepEqual(hostWorkerSuccess.events, []);
+
+  const hostWorkerStale = departureDependencies();
+  hostWorkerStale.dependencies.getActiveAssignment = async () => {
+    hostWorkerStale.calls.push("read");
+    return { ...MEMBER_ASSIGNMENT, role: "host" };
+  };
+  hostWorkerStale.dependencies.syncHostDeparture = async () => {
+    hostWorkerStale.calls.push("host-worker");
+    return { ok: true, outcome: "stale" };
+  };
+  assert.deepEqual(await depart(hostWorkerStale), okResult("room_ended"));
+  assert.deepEqual(hostWorkerStale.calls, [
+    "read",
+    "host-worker",
+    "host-fallback",
+  ]);
+  assert.deepEqual(hostWorkerStale.events, []);
+});
+
+test("recovery is idempotent and refuses a different current room", async () => {
+  assert.deepEqual(await recover({ current: null }), okResult("already_departed"));
+  assert.deepEqual(
+    await recover({
+      requestedRoomId: ROOM_ID,
+      current: { ...MEMBER_ASSIGNMENT, roomId: "new-room" },
+    }),
+    {
+      status: 409,
+      body: {
+        code: "ACTIVE_ROOM_CHANGED",
+        message: "Your active room changed. Nothing was removed.",
+      },
+    },
+  );
+});
+
+test("recovery selects the session server-side and uses the shared durable-first resolver", async () => {
   const calls: string[] = [];
-  const result = await handlePublicRoomDeparture({
-    userId: USER_ID,
-    roomId: ROOM_ID,
-    role: "member",
-    value: { participantSessionId: SESSION_ID },
-    requestedAt: 1_000,
-    dependencies: {
-      syncWorker: async (command) => {
-        calls.push(`worker:${command.userId}:${command.participantSessionId}`);
-        return { ok: true, outcome: "departed" };
-      },
-      releaseGuest: async () => {
-        calls.push("release");
-        return { outcome: "released" };
-      },
-      endHostLobby: async () => {
-        calls.push("end");
-        return { outcome: "room_ended" };
-      },
+  const fixture = departureDependencies({
+    getActiveAssignment: async () => ({
+      ...MEMBER_ASSIGNMENT,
+      participantSessionId: "server-selected-session",
+    }),
+    releaseGuest: async (assignment) => {
+      calls.push(`release:${assignment.participantSessionId}`);
+      return { outcome: "released" };
+    },
+    detachGuest: async (command) => {
+      calls.push(`detach:${command.participantSessionId}`);
+      return { ok: true, outcome: "detached" };
     },
   });
-
-  assert.deepEqual(result, {
-    status: 200,
-    body: { ok: true, outcome: "departed" },
-  });
-  assert.deepEqual(calls, [`worker:${USER_ID}:${SESSION_ID}`]);
+  assert.deepEqual(
+    await handleActiveRoomRecoveryDeparture({
+      userId: USER_ID,
+      value: { roomId: ROOM_ID },
+      requestedAt: 1_000,
+      dependencies: fixture.dependencies,
+    }),
+    okResult("departed"),
+  );
+  assert.deepEqual(calls, [
+    "release:server-selected-session",
+    "detach:server-selected-session",
+  ]);
+  assert.deepEqual(fixture.events, [
+    { mode: "confirmed_recovery", durable: "departed", cleanup: "detached" },
+  ]);
 });
 
-test("a Worker miss uses only the exact safe guest or host fallback", async () => {
-  const guestCalls: string[] = [];
-  const guest = await handlePublicRoomDeparture({
-    userId: USER_ID,
-    roomId: ROOM_ID,
-    role: "member",
-    value: { participantSessionId: SESSION_ID },
-    requestedAt: 1_000,
-    dependencies: {
-      syncWorker: async () => {
-        guestCalls.push("worker");
-        return { ok: true, outcome: "stale" };
+test("a release race is stale for exact mode and a typed conflict for recovery mode", async () => {
+  const run = async (mode: "exact" | "confirmed_recovery") => {
+    let reads = 0;
+    const fixture = departureDependencies({
+      getActiveAssignment: async () => {
+        reads += 1;
+        return reads === 1
+          ? MEMBER_ASSIGNMENT
+          : { ...MEMBER_ASSIGNMENT, participantSessionId: "new-session" };
       },
-      releaseGuest: async (command) => {
-        guestCalls.push(`release:${command.participantSessionId}`);
-        return { outcome: "released" };
-      },
-      endHostLobby: async () => {
-        throw new Error("host fallback must not run");
-      },
+      releaseGuest: async () => ({ outcome: "stale" }),
+    });
+    const result = mode === "exact"
+      ? await depart(fixture)
+      : await handleActiveRoomRecoveryDeparture({
+          userId: USER_ID,
+          value: { roomId: ROOM_ID },
+          requestedAt: 1_000,
+          dependencies: fixture.dependencies,
+        });
+    return { result, fixture };
+  };
+  const recoveryRace = await run("confirmed_recovery");
+  const exactRace = await run("exact");
+  assert.deepEqual(recoveryRace.result, {
+    status: 409,
+    body: {
+      code: "ACTIVE_ROOM_CHANGED",
+      message: "Your active room changed. Nothing was removed.",
     },
   });
-  assert.deepEqual(guest, {
-    status: 200,
-    body: { ok: true, outcome: "departed" },
-  });
-  assert.deepEqual(guestCalls, ["worker", `release:${SESSION_ID}`]);
-
-  const hostCalls: string[] = [];
-  const host = await handlePublicRoomDeparture({
-    userId: USER_ID,
-    roomId: ROOM_ID,
-    role: "host",
-    value: { participantSessionId: SESSION_ID },
-    requestedAt: 1_000,
-    dependencies: {
-      syncWorker: async () => {
-        hostCalls.push("worker");
-        return { ok: true, outcome: "stale" };
-      },
-      releaseGuest: async () => {
-        throw new Error("guest fallback must not run");
-      },
-      endHostLobby: async (command) => {
-        hostCalls.push(`end:${command.participantSessionId}`);
-        return { outcome: "room_ended" };
-      },
-    },
-  });
-  assert.deepEqual(host, {
-    status: 200,
-    body: { ok: true, outcome: "room_ended" },
-  });
-  assert.deepEqual(hostCalls, ["worker", `end:${SESSION_ID}`]);
-});
-
-test("explicit recovery resolves and departs only the authenticated guest's current assignment", async () => {
-	const calls: string[] = [];
-	let lookups = 0;
-	const result = await handleActiveRoomRecoveryDeparture({
-		userId: USER_ID,
-		value: { roomId: ROOM_ID },
-		requestedAt: 1_000,
-		dependencies: {
-			getActiveAssignment: async () => {
-				lookups += 1;
-				return lookups === 1
-					? {
-							userId: USER_ID,
-							roomId: ROOM_ID,
-							role: "member" as const,
-							participantSessionId: "server-current-session",
-						}
-					: null;
-			},
-			syncWorker: async (command) => {
-				calls.push(`worker:${command.participantSessionId}`);
-				return { ok: true, outcome: "stale" };
-			},
-			releaseGuest: async (command) => {
-				calls.push(`release:${command.participantSessionId}`);
-				return { outcome: "released" };
-			},
-			endHostLobby: async () => {
-				throw new Error("guest recovery must not end the room");
-			},
-		},
-	});
-
-	assert.deepEqual(result, {
-		status: 200,
-		body: { ok: true, outcome: "departed" },
-	});
-	assert.deepEqual(calls, [
-		"worker:server-current-session",
-		"release:server-current-session",
-	]);
-	assert.equal(lookups, 2);
-});
-
-test("explicit recovery cannot clear a newer assignment in another room", async () => {
-	let departureCalls = 0;
-	const result = await handleActiveRoomRecoveryDeparture({
-		userId: USER_ID,
-		value: { roomId: ROOM_ID },
-		requestedAt: 1_000,
-		dependencies: {
-			getActiveAssignment: async () => ({
-				userId: USER_ID,
-				roomId: "newer-room",
-				role: "member",
-				participantSessionId: "newer-session",
-			}),
-			syncWorker: async () => {
-				departureCalls += 1;
-				return { ok: true, outcome: "departed" };
-			},
-			releaseGuest: async () => {
-				departureCalls += 1;
-				return { outcome: "released" };
-			},
-			endHostLobby: async () => {
-				departureCalls += 1;
-				return { outcome: "room_ended" };
-			},
-		},
-	});
-
-	assert.deepEqual(result, {
-		status: 409,
-		body: { error: "Active room changed. Try again." },
-	});
-	assert.equal(departureCalls, 0);
-});
-
-test("explicit recovery is idempotent when the account has no active assignment", async () => {
-	const result = await handleActiveRoomRecoveryDeparture({
-		userId: USER_ID,
-		value: { roomId: ROOM_ID },
-		requestedAt: 1_000,
-		dependencies: {
-			getActiveAssignment: async () => null,
-			syncWorker: async () => {
-				throw new Error("no assignment must not reach Worker");
-			},
-			releaseGuest: async () => {
-				throw new Error("no assignment must not release anything");
-			},
-			endHostLobby: async () => {
-				throw new Error("no assignment must not end anything");
-			},
-		},
-	});
-
-	assert.deepEqual(result, {
-		status: 200,
-		body: { ok: true, outcome: "stale" },
-	});
-});
-
-test("explicit recovery reports a concurrent same-room takeover instead of claiming success", async () => {
-	let lookups = 0;
-	const result = await handleActiveRoomRecoveryDeparture({
-		userId: USER_ID,
-		value: { roomId: ROOM_ID },
-		requestedAt: 1_000,
-		dependencies: {
-			getActiveAssignment: async () => {
-				lookups += 1;
-				return {
-					userId: USER_ID,
-					roomId: ROOM_ID,
-					role: "member" as const,
-					participantSessionId:
-						lookups === 1
-							? "session-before-takeover"
-							: "session-after-takeover",
-				};
-			},
-			syncWorker: async () => ({ ok: true, outcome: "stale" }),
-			releaseGuest: async () => ({ outcome: "stale" }),
-			endHostLobby: async () => {
-				throw new Error("guest recovery must not end the room");
-			},
-		},
-	});
-
-	assert.deepEqual(result, {
-		status: 409,
-		body: { error: "Active room changed. Try again." },
-	});
-	assert.equal(lookups, 2);
-});
-
-test("explicit recovery rechecks authority after Worker departure before claiming success", async () => {
-	let lookups = 0;
-	const result = await handleActiveRoomRecoveryDeparture({
-		userId: USER_ID,
-		value: { roomId: ROOM_ID },
-		requestedAt: 1_000,
-		dependencies: {
-			getActiveAssignment: async () => {
-				lookups += 1;
-				return lookups === 1
-					? {
-							userId: USER_ID,
-							roomId: ROOM_ID,
-							role: "member" as const,
-							participantSessionId: "session-before-takeover",
-						}
-					: {
-							userId: USER_ID,
-							roomId: ROOM_ID,
-							role: "member" as const,
-							participantSessionId: "session-after-takeover",
-						};
-			},
-			syncWorker: async () => ({ ok: true, outcome: "departed" }),
-			releaseGuest: async () => {
-				throw new Error("Worker departure must not use the fallback");
-			},
-			endHostLobby: async () => {
-				throw new Error("guest recovery must not end the room");
-			},
-		},
-	});
-
-	assert.deepEqual(result, {
-		status: 409,
-		body: { error: "Active room changed. Try again." },
-	});
-	assert.equal(lookups, 2);
-});
-
-test("explicit recovery stays retryable when the departed assignment remains authoritative", async () => {
-	const assignment = {
-		userId: USER_ID,
-		roomId: ROOM_ID,
-		role: "member" as const,
-		participantSessionId: SESSION_ID,
-	};
-	const result = await handleActiveRoomRecoveryDeparture({
-		userId: USER_ID,
-		value: { roomId: ROOM_ID },
-		requestedAt: 1_000,
-		dependencies: {
-			getActiveAssignment: async () => assignment,
-			syncWorker: async () => ({ ok: true, outcome: "departed" }),
-			releaseGuest: async () => {
-				throw new Error("Worker departure must not use the fallback");
-			},
-			endHostLobby: async () => {
-				throw new Error("guest recovery must not end the room");
-			},
-		},
-	});
-
-	assert.deepEqual(result, {
-		status: 502,
-		body: {
-			error: "Room departure was not confirmed. Try again.",
-			retryable: true,
-		},
-	});
-});
-
-test("explicit host recovery ends the host room without releasing a guest", async () => {
-	let lookups = 0;
-	const calls: string[] = [];
-	const result = await handleActiveRoomRecoveryDeparture({
-		userId: USER_ID,
-		value: { roomId: ROOM_ID },
-		requestedAt: 1_000,
-		dependencies: {
-			getActiveAssignment: async () => {
-				lookups += 1;
-				return lookups === 1
-					? {
-							userId: USER_ID,
-							roomId: ROOM_ID,
-							role: "host" as const,
-							participantSessionId: SESSION_ID,
-						}
-					: null;
-			},
-			syncWorker: async () => {
-				calls.push("worker");
-				return { ok: true, outcome: "stale" };
-			},
-			releaseGuest: async () => {
-				throw new Error("host recovery must not release a guest");
-			},
-			endHostLobby: async (command) => {
-				calls.push(`end:${command.participantSessionId}`);
-				return { outcome: "room_ended" };
-			},
-		},
-	});
-
-	assert.deepEqual(result, {
-		status: 200,
-		body: { ok: true, outcome: "room_ended" },
-	});
-	assert.equal(lookups, 2);
-	assert.deepEqual(calls, ["worker", `end:${SESSION_ID}`]);
+  assert.deepEqual(exactRace.result, okResult("stale"));
+  assert.deepEqual(recoveryRace.fixture.events, [
+    { mode: "confirmed_recovery", durable: "stale" },
+  ]);
+  assert.deepEqual(exactRace.fixture.events, [
+    { mode: "exact", durable: "stale" },
+  ]);
 });
 
 test("internal guest callback requires service auth and exact path/body identity", async () => {
@@ -433,7 +481,6 @@ test("internal guest callback requires service auth and exact path/body identity
     participantSessionId: SESSION_ID,
     departedAt: 1_000,
   };
-
   assert.deepEqual(
     await handleInternalRoomDepartureCallback({
       authorized: false,
@@ -473,7 +520,9 @@ test("internal guest callback compare-deletes once and stays idempotent", async 
   const departed = await handleInternalRoomDepartureCallback({
     ...base,
     release: async (command) => {
-      calls.push(`${command.userId}:${command.roomId}:${command.participantSessionId}`);
+      calls.push(
+        `${command.userId}:${command.roomId}:${command.participantSessionId}`,
+      );
       return { outcome: "released" };
     },
   });
@@ -481,15 +530,8 @@ test("internal guest callback compare-deletes once and stays idempotent", async 
     ...base,
     release: async () => ({ outcome: "stale" }),
   });
-
-  assert.deepEqual(departed, {
-    status: 200,
-    body: { ok: true, outcome: "departed" },
-  });
-  assert.deepEqual(stale, {
-    status: 200,
-    body: { ok: true, outcome: "stale" },
-  });
+  assert.deepEqual(departed, okResult("departed"));
+  assert.deepEqual(stale, okResult("stale"));
   assert.deepEqual(calls, [`${USER_ID}:${ROOM_ID}:${SESSION_ID}`]);
 });
 
@@ -502,14 +544,12 @@ test("production create and connect routes admit only through the atomic assignm
     new URL("../../app/api/rooms/[roomId]/connect/route.ts", import.meta.url),
     "utf8",
   );
-
   assert.match(main, /createRoomWithActiveSession\(\{/);
   assert.match(main, /activeRoomConflictResponse\([\s\S]*activeRoom/);
   assert.match(main, /status:\s*409/);
   assert.match(main, /const \{ participantSessionId, \.\.\.roomInput \} = input/);
   assert.match(main, /signRoomToken\([\s\S]*participantSessionId/);
   assert.doesNotMatch(main, /createRoom\(\{/);
-
   assert.match(connect, /RoomSessionAdmissionInputSchema\.safeParse/);
   assert.match(connect, /claimActiveRoomSession\(\{/);
   assert.match(connect, /activeRoomConflictResponse\([\s\S]*activeRoom/);
@@ -517,7 +557,7 @@ test("production create and connect routes admit only through the atomic assignm
   assert.match(connect, /signRoomToken\([\s\S]*participantSessionId/);
 });
 
-test("production departure routes keep identity server-derived and callbacks internal", () => {
+test("production departure routes derive identity and role from active assignment state", () => {
   const publicRoute = readFileSync(
     new URL("../../app/api/rooms/[roomId]/depart/route.ts", import.meta.url),
     "utf8",
@@ -529,28 +569,30 @@ test("production departure routes keep identity server-derived and callbacks int
     ),
     "utf8",
   );
-	const recoveryRoute = readFileSync(
-		new URL(
-			"../../app/api/rooms/active-session/depart/route.ts",
-			import.meta.url,
-		),
-		"utf8",
-	);
-
+  const recoveryRoute = readFileSync(
+    new URL(
+      "../../app/api/rooms/active-session/depart/route.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
   assert.match(publicRoute, /getExtensionSessionFromAuthorization/);
   assert.match(publicRoute, /userId:\s*session\.userId/);
+  assert.match(publicRoute, /getActiveRoomSessionAssignment/);
+  assert.match(publicRoute, /syncParticipantDetachToWorker/);
   assert.match(publicRoute, /syncParticipantDepartureToWorker/);
   assert.match(publicRoute, /releaseActiveRoomSession/);
   assert.match(publicRoute, /endHostLobbyForActiveSession/);
+  assert.doesNotMatch(publicRoute, /getRoomById|isRoomMember/);
   assert.doesNotMatch(publicRoute, /userId:\s*(body|value|requestBody)\./);
-	assert.match(recoveryRoute, /getExtensionSessionFromAuthorization/);
-	assert.match(recoveryRoute, /getActiveRoomSessionAssignment/);
-	assert.match(recoveryRoute, /handleActiveRoomRecoveryDeparture/);
-	assert.doesNotMatch(
-		recoveryRoute,
-		/participantSessionId:\s*(body|value|requestBody)\./,
-	);
-
+  assert.match(recoveryRoute, /getExtensionSessionFromAuthorization/);
+  assert.match(recoveryRoute, /getActiveRoomSessionAssignment/);
+  assert.match(recoveryRoute, /handleActiveRoomRecoveryDeparture/);
+  assert.match(recoveryRoute, /syncParticipantDetachToWorker/);
+  assert.doesNotMatch(
+    recoveryRoute,
+    /participantSessionId:\s*(body|value|requestBody)\./,
+  );
   assert.match(internalRoute, /hasValidInternalServiceAuthorization/);
   assert.match(internalRoute, /handleInternalRoomDepartureCallback/);
   assert.match(internalRoute, /releaseActiveRoomSession/);
