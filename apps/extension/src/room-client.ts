@@ -33,6 +33,7 @@ import {
   confirmRoomSessionForTab,
   discardPreparedRoomSessionIfMatch,
   isPreparedRoomSession,
+  retainPreparedRoomSessionForDepartureRetry,
   type PreparedRoomSession,
   type RoomSessionBackgroundDependencies,
   type RoomSessionRecord,
@@ -748,6 +749,7 @@ export async function handleRoomHttpMessage(
       connection: { ...connection, privilegedRoomAuthority, roomSession },
     };
   } catch (error) {
+    let shouldDiscardPrepared = true;
     if (admissionReservation && admissionRecord && !admissionFinished) {
       const completion = admissionFence.isCurrent(admissionReservation)
         ? { kind: "not-cancelled" as const }
@@ -756,6 +758,21 @@ export async function handleRoomHttpMessage(
             admissionRecord,
             dependencies,
           );
+      if (
+        admissionReservation.explicitDepartureObserver &&
+        completion.kind === "cleanup-failed"
+      ) {
+        try {
+          await retainPreparedRoomSessionForDepartureRetry(
+            senderTabId as number,
+            message.roomSession,
+            admissionRecord.roomId,
+            dependencies.roomSessionDependencies,
+          );
+        } catch {
+          shouldDiscardPrepared = false;
+        }
+      }
       admissionFence.finish(admissionReservation, completion);
       await clearUnobservedCancelledAdmission(
         senderTabId as number,
@@ -766,12 +783,14 @@ export async function handleRoomHttpMessage(
       );
       admissionFinished = true;
     }
-    await discardPreparedRoomSessionForSender(
-      sender,
-      message.roomSession,
-      dependencies.roomSessionDependencies,
-      dependencies.discardPreparedRoomSession,
-    );
+    if (shouldDiscardPrepared) {
+      await discardPreparedRoomSessionForSender(
+        sender,
+        message.roomSession,
+        dependencies.roomSessionDependencies,
+        dependencies.discardPreparedRoomSession,
+      );
+    }
     const reservation = await authorityReservation;
     const responseError = reservation.ok ? error : reservation.error;
     if (responseError instanceof RoomApiError) {

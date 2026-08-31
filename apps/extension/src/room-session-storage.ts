@@ -510,6 +510,32 @@ export async function discardPreparedRoomSessionIfMatch(
   });
 }
 
+/**
+ * Promotes only the still-current prepared identity into a local retry record.
+ * A confirmed replacement or newer prepared candidate always wins.
+ */
+export async function retainPreparedRoomSessionForDepartureRetry(
+  tabId: number,
+  prepared: PreparedRoomSession,
+  roomId: string,
+  dependencies: RoomSessionBackgroundDependencies = {},
+): Promise<RoomSessionRecord | null> {
+  assertTabId(tabId);
+  return enqueueRoomSessionOperation(tabId, async () => {
+    const sessionStorage = dependencies.sessionStorage ??
+      (chrome.storage.session as StorageAreaLike);
+    const localStorage = dependencies.localStorage ??
+      (chrome.storage.local as StorageAreaLike);
+    return retainPreparedRoomSessionForDepartureRetryNow(
+      sessionStorage,
+      localStorage,
+      tabId,
+      prepared,
+      roomId,
+    );
+  });
+}
+
 async function discardPreparedRoomSessionIfMatchNow(
   storage: StorageAreaLike,
   tabId: number,
@@ -906,6 +932,59 @@ async function confirmRoomSessionForTabNow(
   await sessionStorage.set({ [confirmedKey]: record });
   await sessionStorage.remove(preparedKey);
   return record;
+}
+
+async function retainPreparedRoomSessionForDepartureRetryNow(
+  sessionStorage: StorageAreaLike,
+  localStorage: StorageAreaLike,
+  tabId: number,
+  prepared: PreparedRoomSession,
+  roomId: string,
+): Promise<RoomSessionRecord | null> {
+  const parsedPrepared = parsePreparedRoomSession(prepared);
+  if (
+    !parsedPrepared ||
+    !isBoundedString(roomId, MAX_ROOM_ID_CHARS) ||
+    (parsedPrepared.roomId !== null && parsedPrepared.roomId !== roomId)
+  ) {
+    throw new Error("Invalid room session retry retention");
+  }
+
+  const confirmedKey = roomSessionStorageKey(tabId);
+  const preparedKey = preparedRoomSessionStorageKey(tabId);
+  const [storedConfirmed, storedPrepared] = await Promise.all([
+    sessionStorage.get(confirmedKey),
+    sessionStorage.get(preparedKey),
+  ]);
+  const confirmed = parseRoomSessionRecord(storedConfirmed[confirmedKey]);
+  const currentPrepared = parsePreparedRoomSession(storedPrepared[preparedKey]);
+
+  if (confirmed) {
+    return confirmed;
+  }
+  if (
+    !currentPrepared ||
+    !preparedRoomSessionsMatch(currentPrepared, parsedPrepared)
+  ) {
+    return null;
+  }
+
+  const preferredMedia = await loadRoomMediaDefaults(
+    localStorage,
+    parsedPrepared.ownerUserId,
+  );
+  const retryRecord: RoomSessionRecord = {
+    version: ROOM_SESSION_RECORD_VERSION,
+    revision: 1,
+    roomId,
+    ownerUserId: parsedPrepared.ownerUserId,
+    participantSessionId: parsedPrepared.participantSessionId,
+    cameraEnabled: preferredMedia.cameraEnabled,
+    voiceMode: preferredMedia.voiceMode,
+  };
+  await sessionStorage.set({ [confirmedKey]: retryRecord });
+  await sessionStorage.remove(preparedKey);
+  return retryRecord;
 }
 
 async function migrateRecord(

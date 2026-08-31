@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { connectRoomHttpMessage } from "../src/room-client";
 import {
+  confirmRoomSessionForTab,
   loadRoomSessionForTab,
   prepareRoomSessionForTab,
   type PreparedRoomSession,
@@ -452,6 +453,192 @@ describe("background privileged room route", () => {
       ),
     ).resolves.toEqual({ ok: true, outcome: "already_departed" });
     expect(requestDeparture).toHaveBeenCalledTimes(3);
+  });
+
+  it("retains an exact retry identity when ambiguous admission and compensation both fail", async () => {
+    vi.stubGlobal("chrome", {});
+    const background = await import("../entrypoints/background");
+    const tabId = 86;
+    const storage = createSessionStorage();
+    const roomSessionDependencies = {
+      sessionStorage: storage,
+      localStorage: storage,
+      randomUUID: () => "ambiguous-retry-identity",
+    };
+    const prepared = await prepareRoomSessionForTab(
+      tabId,
+      { ownerUserId: "user-a", roomId: "room-ambiguous-retry" },
+      roomSessionDependencies,
+    );
+    const webAdmission = deferred<Response>();
+    vi.stubGlobal("fetch", vi.fn(() => webAdmission.promise));
+    const requestDeparture = vi
+      .fn()
+      .mockResolvedValueOnce({
+        kind: "ack" as const,
+        outcome: "already_departed" as const,
+      })
+      .mockResolvedValueOnce({
+        kind: "retryable" as const,
+        code: "ROOM_DEPARTURE_UNAVAILABLE" as const,
+        message: "Departure is temporarily unavailable",
+      })
+      .mockResolvedValueOnce({
+        kind: "ack" as const,
+        outcome: "departed" as const,
+      });
+    const dependencies = {
+      admissionDepartureTimeoutMs: 100,
+      departureDependencies: {
+        getStoredSession: async () => sessionFor("user-a"),
+        refreshSession: async () => null,
+        requestDeparture,
+        roomSessionDependencies,
+        timeoutMs: 100,
+      },
+      roomDependencies: {
+        issueAuthority: async () => null,
+        roomSessionDependencies,
+      },
+    };
+    const sender = { tab: { id: tabId } };
+    const departureMessage = {
+      type: "ANIDACHI_ROOM_DEPARTURE",
+      command: "depart",
+      roomId: "room-ambiguous-retry",
+      expectedUserId: "user-a",
+      participantSessionId: prepared.participantSessionId,
+    } as const;
+    const connecting = background.dispatchPrivilegedRoomRuntimeMessage(
+      connectRoomHttpMessage("room-ambiguous-retry", "access-a", prepared),
+      sender,
+      dependencies,
+    );
+    const leaving = background.dispatchPrivilegedRoomRuntimeMessage(
+      departureMessage,
+      sender,
+      dependencies,
+    );
+    await waitForCall(requestDeparture);
+    webAdmission.reject(new TypeError("Admission response was lost"));
+
+    await expect(connecting).resolves.toMatchObject({ ok: false });
+    await expect(leaving).resolves.toMatchObject({ ok: false });
+    await expect(
+      loadRoomSessionForTab(tabId, roomSessionDependencies),
+    ).resolves.toMatchObject({
+      roomId: "room-ambiguous-retry",
+      ownerUserId: "user-a",
+      participantSessionId: prepared.participantSessionId,
+    });
+
+    await expect(
+      background.dispatchPrivilegedRoomRuntimeMessage(
+        departureMessage,
+        sender,
+        dependencies,
+      ),
+    ).resolves.toEqual({ ok: true, outcome: "departed" });
+    expect(requestDeparture).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({
+        roomId: "room-ambiguous-retry",
+        ownerUserId: "user-a",
+        participantSessionId: prepared.participantSessionId,
+      }),
+      "access-token-user-a",
+      expect.any(AbortSignal),
+    );
+  });
+
+  it("does not overwrite a newer winner while retaining an ambiguous retry identity", async () => {
+    vi.stubGlobal("chrome", {});
+    const background = await import("../entrypoints/background");
+    const tabId = 87;
+    const storage = createSessionStorage();
+    let nextId = 0;
+    const roomSessionDependencies = {
+      sessionStorage: storage,
+      localStorage: storage,
+      randomUUID: () => `ambiguous-replacement-${++nextId}`,
+    };
+    const prepared = await prepareRoomSessionForTab(
+      tabId,
+      { ownerUserId: "user-a", roomId: "room-ambiguous-old" },
+      roomSessionDependencies,
+    );
+    const webAdmission = deferred<Response>();
+    vi.stubGlobal("fetch", vi.fn(() => webAdmission.promise));
+    const cleanupResult = deferred<{
+      kind: "retryable";
+      code: "ROOM_DEPARTURE_UNAVAILABLE";
+      message: string;
+    }>();
+    const requestDeparture = vi
+      .fn()
+      .mockResolvedValueOnce({
+        kind: "ack" as const,
+        outcome: "already_departed" as const,
+      })
+      .mockImplementationOnce(() => cleanupResult.promise);
+    const dependencies = {
+      admissionDepartureTimeoutMs: 100,
+      departureDependencies: {
+        getStoredSession: async () => sessionFor("user-a"),
+        refreshSession: async () => null,
+        requestDeparture,
+        roomSessionDependencies,
+        timeoutMs: 100,
+      },
+      roomDependencies: {
+        issueAuthority: async () => null,
+        roomSessionDependencies,
+      },
+    };
+    const sender = { tab: { id: tabId } };
+    const connecting = background.dispatchPrivilegedRoomRuntimeMessage(
+      connectRoomHttpMessage("room-ambiguous-old", "access-a", prepared),
+      sender,
+      dependencies,
+    );
+    const leaving = background.dispatchPrivilegedRoomRuntimeMessage(
+      {
+        type: "ANIDACHI_ROOM_DEPARTURE",
+        command: "depart",
+        roomId: "room-ambiguous-old",
+        expectedUserId: "user-a",
+        participantSessionId: prepared.participantSessionId,
+      },
+      sender,
+      dependencies,
+    );
+    await waitForCall(requestDeparture);
+    webAdmission.reject(new TypeError("Admission response was lost"));
+    await waitForCallCount(requestDeparture, 2);
+
+    const replacementPrepared = await prepareRoomSessionForTab(
+      tabId,
+      { ownerUserId: "user-a", roomId: "room-new-winner", forceNew: true },
+      roomSessionDependencies,
+    );
+    const replacement = await confirmRoomSessionForTab(
+      tabId,
+      replacementPrepared,
+      "room-new-winner",
+      roomSessionDependencies,
+    );
+    if (!replacement) throw new Error("Expected replacement winner");
+    cleanupResult.resolve({
+      kind: "retryable",
+      code: "ROOM_DEPARTURE_UNAVAILABLE",
+      message: "Departure is temporarily unavailable",
+    });
+
+    await expect(connecting).resolves.toMatchObject({ ok: false });
+    await expect(leaving).resolves.toMatchObject({ ok: false });
+    await expect(
+      loadRoomSessionForTab(tabId, roomSessionDependencies),
+    ).resolves.toEqual(replacement);
   });
 
   it("cleans a superseded late admission without touching the newer winning session", async () => {
@@ -1135,10 +1322,12 @@ function failingRoomResponse(read: ReturnType<typeof deferred<void>>): Response 
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
-  const promise = new Promise<T>((nextResolve) => {
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((nextResolve, nextReject) => {
     resolve = nextResolve;
+    reject = nextReject;
   });
-  return { promise, resolve };
+  return { promise, reject, resolve };
 }
 
 async function waitForCall(mock: { mock: { calls: unknown[][] } }): Promise<void> {
@@ -1147,6 +1336,17 @@ async function waitForCall(mock: { mock: { calls: unknown[][] } }): Promise<void
     await new Promise((resolve) => setTimeout(resolve, 0));
   }
   throw new Error("Timed out waiting for the exact departure request");
+}
+
+async function waitForCallCount(
+  mock: { mock: { calls: unknown[][] } },
+  count: number,
+): Promise<void> {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    if (mock.mock.calls.length >= count) return;
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+  throw new Error(`Timed out waiting for ${count} exact departure requests`);
 }
 
 function createSessionStorage() {
