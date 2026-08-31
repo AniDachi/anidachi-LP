@@ -931,23 +931,28 @@ The current feature branch additionally implements the following behavior,
 which is locally verified but still pending staging and two-profile manual
 acceptance:
 
-- an explicit guest leave confirms server-side departure before local teardown;
-  if the tab's exact session record is missing or stale, the extension resolves
-  the authenticated account's current assignment for that same room and removes
-  only that guest, while passive tab-close cleanup remains exact-session-only;
-- recovery is account-bound and rechecks server authority after departure, so a
-  token refresh, different-room assignment, or concurrent same-room takeover
-  cannot clear or hide a newer session;
-- an active-room conflict no longer offers an ambiguous room takeover button;
-  it offers a confirmed, role-appropriate emergency Leave/End action, and the
-  staging bearer allowlist permits both normal and emergency departure routes.
+- explicit guest departure atomically releases the authenticated user's exact
+  Supabase active-room assignment before sending bounded live Worker cleanup;
+  detach success, stale responses, timeouts, and transport failures never
+  turn a durable leave into an error. Passive tab close remains independent and
+  keeps the existing 60-second Worker alarm callback;
+- normal extension leave uses only the exact-departure contract and treats
+  `already_departed` as idempotent success. It never invokes active-room
+  recovery automatically; the role-appropriate emergency Leave/End action is
+  still separately confirmed;
+- the staging gate allows authenticated internal `POST /api/internal/**`
+  callbacks to reach their own service-secret authorization while retaining the
+  human gate for all other staging requests.
 
-Fresh local verification for the feature branch on 2026-08-31 includes root
-check/test, protocol tests 139/139, Web tests 376 passed and 3 skipped out of
-379, extension tests 1440/1440, API tests 163/163 plus runtime 27/27, room
-harness 39/39, real-WebRTC harness 26/26, and staging extension build and
-artifact validation. This is code and harness evidence, not staging or
-two-profile acceptance.
+Fresh local verification for the feature branch on 2026-08-31 includes protocol
+check and 140/140 tests; API check, 166/166 tests, and 36/36 runtime tests; Web
+check and 382 passed/3 skipped tests; extension check and 1457/1457 tests; room
+harness 39/39; real-WebRTC harness 26/26; root check/test (6 Turbo tasks each);
+the rooms-profile `dev:check` command (exit 0); and staging extension build plus
+artifact validation. Generated staging folders and ZIPs remain ignored. This is
+code and harness evidence, not staging or two-profile acceptance. Two-profile
+YouTube/Crunchyroll acceptance remains pending until this candidate is deployed
+and manually exercised.
 
 Evidence for the original accepted baseline includes successful migration runs
 `32637163596` and `32637269784`, CI `32637269772`, API deployment `32637269793`, extension build
