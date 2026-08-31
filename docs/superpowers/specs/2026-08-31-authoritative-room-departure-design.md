@@ -259,12 +259,16 @@ accelerator is not part of normal tab-close behavior.
 
 There is one narrower race: the tab can disappear while its authenticated Web
 admission is still in flight. Cancellation synchronously starts persistence of
-one coalesced extension-local intent for the captured `roomId`, `ownerUserId`,
-and `participantSessionId`, and passive cleanup waits for that write before it
-clears tab-local state. Explicit leave establishes the same intent before its
-first departure request. The job is initially `may-commit`; while that state is
-active, even an exact `stale` response is not terminal because the canceled Web
-request may still commit afterward.
+one extension-local intent for the captured `roomId`, `ownerUserId`, and
+`participantSessionId`, and passive cleanup waits for that write before it
+clears tab-local state. Duplicate cancellation signals for the same admission
+reservation coalesce. A later canceled admission may reuse the same exact
+identity, so it atomically advances a non-secret operation generation, resets
+the job to `may-commit`, and starts a fresh settlement horizon. Completion from
+an older generation cannot settle or remove that newer job. Explicit leave
+establishes the same intent before its first departure request. While
+`may-commit` is active, even an exact `stale` response is not terminal because
+the canceled Web request may still commit afterward.
 
 When the live admission promise settles, the background first persists the
 exact job as `settled` and then drains it through exact departure. If Manifest
@@ -279,14 +283,17 @@ missing matching auth retains the identity indefinitely.
 The Manifest V3 background schedules the earliest eligible job with the
 existing `alarms` permission, restores it from local storage after
 service-worker or browser restart, and also drains on matching auth restoration
-and online events. Missing auth or a different signed-in account retains the
-job without a perpetual five-minute alarm loop; auth change, startup, and
-online events re-arm it. Backoff is capped at one hour. Once admission is
-settled, a job is removed only after exact idempotent success, `stale`,
-`room_ended`, `already_departed`, or `ACTIVE_ROOM_CHANGED`; every one of those
-outcomes proves the old identity cannot block. The retry never invokes
-active-room recovery and never carries tokens, roles, secrets, or tab-local
-replacement state.
+and online events. Every alarm/startup/online/initialization drain installs a
+replacement one-shot wake before storage, auth restoration, or exact network
+cleanup awaits; successful completion then replaces it with the true next due
+time. Missing auth or a different signed-in account retains the job without a
+perpetual five-minute alarm loop; auth change, startup, and online events re-arm
+it. Backoff is capped at one hour. Once admission is settled, a job is removed
+only after exact idempotent success, `stale`, `room_ended`,
+`already_departed`, or `ACTIVE_ROOM_CHANGED`; every one of those outcomes
+proves the old identity cannot block. The retry never invokes active-room
+recovery and never carries tokens, roles, secrets, or tab-local replacement
+state.
 
 ## Worker Detach Cleanup
 
@@ -450,8 +457,9 @@ Ordinary users should see only:
 - passive close and matching explicit cancellation persist exact intent before
   awaiting admission or tab cleanup, then automatically drain it after live
   settlement or the bounded orphan horizon, including across worker restart;
-  early `stale` remains nonterminal, duplicates coalesce, and a replacement
-  participant session is fenced.
+  early `stale` remains nonterminal, duplicate signals for one cancellation
+  coalesce, a later same-identity cancellation receives a fresh fenced
+  generation/horizon, and a replacement participant session is fenced.
 
 ### Harness And staging
 

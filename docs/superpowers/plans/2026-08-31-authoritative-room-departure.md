@@ -34,8 +34,12 @@
   legacy-compatible `stale` when no assignment remains. This keeps deployed
   strict clients compatible after a lost-response retry.
 - Passive tab removal and matching explicit cancellation during an in-flight
-  admission must persist one coalesced exact intent before awaiting admission,
-  departure, or local cleanup. The retry contains only
+  admission must persist one exact intent before awaiting admission, departure,
+  or local cleanup. Duplicate signals for the same reservation coalesce; a
+  later canceled admission that reuses the same exact identity atomically
+  advances its operation generation, resets `may-commit`, and refreshes the
+  settlement horizon. An older operation generation cannot settle or delete
+  the newer job. The retry contains only
   `roomId`, `ownerUserId`, `participantSessionId`, and bounded timing metadata;
   it survives Manifest V3 worker/browser restart, waits for the matching
   authenticated account, and never invokes broad active-room recovery.
@@ -45,6 +49,13 @@
   and 15 seconds of transport/scheduler margin.
   `stale` is nonterminal before settlement; retryable/auth-blocked work has no
   TTL and remains exact-owned until it can be proved safe.
+- Every generic retry drain replaces the one-shot alarm before any persisted
+  state, auth-restoration, or exact-network await. This preserves a wake if the
+  Manifest V3 worker is suspended mid-drain; a completed drain then schedules
+  the true next eligible attempt or clears the alarm for a blocked account.
+- The admission request's 60-second AbortSignal remains active while both
+  successful and error response bodies are consumed, so the settlement bound
+  covers the full request rather than response headers alone.
 - The existing `storage` and `alarms` permissions are sufficient. No database
   table, server queue, host permission, token, role, secret, environment
   variable, or service is added.
@@ -70,9 +81,9 @@
 | `apps/web/lib/staging-access.test.ts` | Prove internal path coverage and prevent unsafe method/header widening. |
 | `apps/web/lib/internal-service-auth.test.ts` | Prove a bearer that passes the staging gate is still rejected unless it exactly matches the internal secret. |
 | `apps/extension/src/room-departure.ts` | Exact normal leave, typed server errors, one auth refresh, and explicitly separate emergency recovery. |
-| `apps/extension/src/room-departure-retry.ts` | Persistent coalesced exact intent before cancellation cleanup, settlement/horizon fencing, and exact late-commit retry ownership. |
+| `apps/extension/src/room-departure-retry.ts` | Persistent exact intent before cancellation cleanup, per-cancellation generation/settlement fencing, pre-await alarm ownership, and exact late-commit retries. |
 | `apps/extension/test/room-departure.test.ts` | Successful local confirmation, missing/stale exact records, typed failures, refresh, and no hidden recovery cascade. |
-| `apps/extension/test/room-departure-retry.test.ts` | Storage, restart, alarm, account fencing, bounded backoff, coalescing, and replacement safety. |
+| `apps/extension/test/room-departure-retry.test.ts` | Storage, restart, pre-await alarm ownership, account/generation fencing, bounded backoff, same-cancellation coalescing, and replacement safety. |
 | `apps/extension/test/privileged-overlay-wiring.test.tsx` | UI boundary: exact success tears down once, durable failure stays recoverable, emergency remains explicitly confirmed. |
 | `docs/current-development-state.md` | Record implemented local behavior and clearly separate it from staging acceptance. |
 | `docs/superpowers/plans/2026-06-07-production-room-p2p-hardening-roadmap.md` | Add implementation/test evidence to the room hardening progress log. |
@@ -1806,11 +1817,14 @@ Add a dated entry containing these exact facts:
   and current extension still accept `already_departed` for forward compatibility.
 - Passive tab removal or matching explicit cancellation starts a
   background-owned exact intent before any departure/local-cleanup await. The
-  job coalesces, survives restart, treats pre-settlement `stale` as
-  nonterminal, waits for matching auth without a perpetual alarm loop, and
-  cannot touch a replacement. Live settlement drains immediately; an orphaned
-  worker uses the documented 60s client + 60s server + 15s margin before
-  terminal stale is safe.
+  same cancellation coalesces, while a later same-identity cancellation renews
+  a fenced operation generation and settlement horizon. The job survives
+  restart, treats pre-settlement `stale` as nonterminal, waits for matching auth
+  without a perpetual alarm loop, and cannot touch a replacement. Generic
+  drains pre-arm the one-shot wake before auth/network awaits, and the 60s
+  request abort remains active through response-body parsing. Live settlement
+  drains immediately; an orphaned worker uses the documented 60s client + 60s
+  server + 15s margin before terminal stale is safe.
 - Automated protocol/Web/API/runtime/extension/room/WebRTC gates: [record actual
   command results from Steps 1-4].
 - Staging two-profile YouTube/Crunchyroll acceptance: pending until the candidate

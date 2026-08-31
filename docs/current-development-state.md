@@ -944,13 +944,18 @@ acceptance:
   never invokes active-room recovery automatically; the role-appropriate
   emergency Leave/End action is still separately confirmed;
 - if passive tab removal or matching explicit leave cancels an in-flight Web
-  admission, one coalesced exact intent is persisted before departure or local
-  cleanup awaits. It contains only the stable room/user/session identity and
+  admission, one exact intent is persisted before departure or local cleanup
+  awaits. Duplicate signals for that reservation coalesce, while a later
+  canceled admission reusing the same exact identity advances a fenced
+  operation generation, resets `may-commit`, and refreshes the horizon. It
+  contains only the stable room/user/session identity, the generation, and
   bounded timing metadata. The job remains `may-commit` across Manifest V3
-  restart, so pre-settlement `stale` cannot erase it. Live completion marks it
-  settled and drains immediately; an orphaned worker uses the client's
-  60-second request abort, the connect route's 60-second maximum, and a
-  15-second margin before terminal stale is safe. It
+  restart, so pre-settlement `stale` cannot erase it and an older completion
+  cannot settle a newer cancellation. Generic drains pre-arm a replacement
+  one-shot alarm before auth/network awaits. Live completion marks the current
+  generation settled and drains immediately; an orphaned worker uses the
+  client's 60-second abort through response-body parsing, the connect route's
+  60-second maximum, and a 15-second margin before terminal stale is safe. It
   waits for matching auth without a perpetual alarm loop, has no cleanup TTL,
   and cannot clear a replacement session;
 - the staging gate allows authenticated internal `POST /api/internal/**`
@@ -959,7 +964,7 @@ acceptance:
 
 Fresh local verification for the feature branch on 2026-08-31 includes protocol
 check and 141/141 tests; API check, 166/166 tests, and 37/37 runtime tests; Web
-check and 384 passed/3 skipped tests; extension check and 1474/1474 tests; room
+check and 384 passed/3 skipped tests; extension check and 1483/1483 tests; room
 harness 39/39; real-WebRTC harness 26/26; root check/test (6 Turbo tasks each);
 the rooms-profile `dev:check` command (exit 0); and staging extension build plus
 artifact validation. Generated staging folders and ZIPs remain ignored. This is
