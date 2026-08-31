@@ -186,6 +186,7 @@ import {
 	type RoomConnectionStatus,
 	type RoomQuotaSummary,
 } from "./room-client";
+import { confirmExplicitRoomDeparture } from "./room-departure";
 import {
 	mergeRoomInviteTargetStatus,
 	type RoomInviteTargetStatus,
@@ -4649,6 +4650,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		setRoomLeavePending(true);
 		setPanelOpen(true);
 		setAuthMessage(null);
+		roomReconnectSuppressedRef.current = true;
+		clearRoomReconnectTimer();
 		try {
 			await waitForOverlayPaint();
 			const activeRoomId = roomIdRef.current;
@@ -4656,9 +4659,28 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				return;
 			}
 
-			resetLocalRoomSession(undefined, true);
+			const outcome = await confirmExplicitRoomDeparture({
+				onConfirmed: () => resetLocalRoomSession(undefined, true),
+			});
 			showRoomActionFeedback("room-left");
-			logDebug("overlay.room", "left by guest", { roomId: activeRoomId });
+			logDebug("overlay.room", "left by guest", {
+				roomId: activeRoomId,
+				outcome,
+			});
+		} catch (error) {
+			roomReconnectSuppressedRef.current = false;
+			const message =
+				error instanceof Error
+					? error.message
+					: "Could not leave the room. Please try again.";
+			logDebug("overlay.room", "leave failed", {
+				roomId: roomIdRef.current,
+				message,
+			});
+			setAuthMessage(message);
+			if (statusRef.current === "closed" || statusRef.current === "error") {
+				scheduleRoomReconnect("leave-failed");
+			}
 		} finally {
 			setRoomLeavePending(false);
 		}

@@ -49,6 +49,44 @@ describe("background privileged room route", () => {
     expect(calls).toEqual(["request:60", "depart:60", "authority:60"]);
   });
 
+  it("routes an explicit leave through the sender tab's background-owned session", async () => {
+    vi.stubGlobal("chrome", {});
+    const background = await import("../entrypoints/background");
+    const requestDeparture = vi.fn(async () => ({
+      kind: "ack",
+      outcome: "departed",
+    }) as const);
+
+    const result = await background.dispatchPrivilegedRoomRuntimeMessage(
+      { type: "ANIDACHI_ROOM_DEPARTURE", command: "depart" },
+      { tab: { id: 62 } },
+      {
+        departureDependencies: {
+          loadRoomSession: async (tabId) => ({
+            version: 1,
+            revision: 1,
+            roomId: "room-a",
+            ownerUserId: "user-a",
+            participantSessionId: `session-${tabId}`,
+            cameraEnabled: false,
+            voiceMode: "push-to-talk",
+          }),
+          getStoredSession: async () => sessionFor("user-a"),
+          refreshSession: async () => null,
+          requestDeparture,
+          timeoutMs: 100,
+        },
+      },
+    );
+
+    expect(result).toEqual({ ok: true, outcome: "departed" });
+    expect(requestDeparture).toHaveBeenCalledWith(
+      expect.objectContaining({ participantSessionId: "session-62" }),
+      expect.any(String),
+      expect.any(AbortSignal),
+    );
+  });
+
   it("routes a background-issued authority through connect, rejects a forgery, ends once, and rejects replay", async () => {
     vi.stubGlobal("chrome", {});
     const background = await import("../entrypoints/background");

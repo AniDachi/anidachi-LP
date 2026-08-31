@@ -28,7 +28,10 @@ import {
   type RoomHttpBackgroundDependencies,
 } from "../src/room-client";
 import {
+  handleRoomDepartureRuntimeMessage,
   handleRoomTabDeparture,
+  isRoomDepartureRuntimeMessage,
+  type RoomTabDepartureDependencies,
   type RoomTabDepartureOutcome,
 } from "../src/room-departure";
 import {
@@ -58,6 +61,7 @@ export interface PrivilegedRoomRuntimeDependencies {
   endRoom?: PrivilegedOverlayIntentDependencies["endRoom"];
   intentDependencies?: Omit<PrivilegedOverlayIntentDependencies, "endRoom">;
   roomDependencies?: RoomHttpBackgroundDependencies;
+  departureDependencies?: RoomTabDepartureDependencies;
 }
 
 export interface RemovedRoomTabDependencies {
@@ -86,6 +90,13 @@ export function dispatchPrivilegedRoomRuntimeMessage(
   sender: { tab?: { id?: number } },
   dependencies: PrivilegedRoomRuntimeDependencies = {},
 ): Promise<unknown> | null {
+  if (isRoomDepartureRuntimeMessage(message)) {
+    return handleRoomDepartureRuntimeMessage(
+      message,
+      sender,
+      dependencies.departureDependencies,
+    );
+  }
   if (isPrivilegedOverlayIntentMessage(message)) {
     return handlePrivilegedOverlayIntentMessage(message, sender, {
       ...dependencies.intentDependencies,

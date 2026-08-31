@@ -1116,6 +1116,46 @@ describe("worker routes", () => {
     expect(consumeRoomFrameBoundary(socket, limiter, "{", 0)?.allowed).toBe(false);
   });
 
+  it("keeps rapid reactions from exhausting the control-event budget", () => {
+    const socket = { close() {} } as unknown as WebSocket;
+    const limiter = new RoomRateLimiter();
+
+    for (let index = 0; index < 80; index += 1) {
+      const reaction = {
+        type: "REACTION" as const,
+        roomId: "room-1",
+        reaction: {
+          id: `reaction-${index}`,
+          userId: "user-1",
+          roomId: "room-1",
+          emoji: "👏",
+          videoTime: 1,
+          createdAt: index,
+        },
+      };
+
+      expect(
+        consumeRoomFrameBoundary(socket, limiter, JSON.stringify(reaction), 0)?.allowed,
+      ).toBe(true);
+      expect(
+        consumeParsedRoomEventBoundary(limiter, reaction, "room-1", 0).rateLimit.allowed,
+      ).toBe(true);
+    }
+
+    for (let index = 0; index < 40; index += 1) {
+      const control = { type: "PING" as const, roomId: "room-1", sentAt: index };
+
+      expect(
+        consumeRoomFrameBoundary(socket, limiter, JSON.stringify(control), 0)?.allowed,
+      ).toBe(true);
+      expect(
+        consumeParsedRoomEventBoundary(limiter, control, "room-1", 0).rateLimit.allowed,
+      ).toBe(true);
+    }
+
+    expect(consumeRoomFrameBoundary(socket, limiter, "{", 0)?.allowed).toBe(false);
+  });
+
   it("counts scope mismatches in the class bucket and closes the third rejection with 1008", () => {
     const closed: number[] = [];
     const socket = {
