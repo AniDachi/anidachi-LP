@@ -478,6 +478,24 @@ describe("background privileged room route", () => {
     ).resolves.toEqual({ ok: true, acknowledged: false });
     expect(retryStorage.value()?.jobs).toHaveLength(2);
     await expect(
+      Promise.all([
+        background.dispatchPrivilegedRoomRuntimeMessage(
+          roomAdmissionHandoffMessage(first),
+          sender,
+          { roomDependencies },
+        ),
+        background.dispatchPrivilegedRoomRuntimeMessage(
+          roomAdmissionHandoffMessage(first),
+          sender,
+          { roomDependencies },
+        ),
+      ]),
+    ).resolves.toEqual([
+      { ok: true, acknowledged: false },
+      { ok: true, acknowledged: false },
+    ]);
+    expect(retryStorage.value()?.jobs).toHaveLength(2);
+    await expect(
       background.dispatchPrivilegedRoomRuntimeMessage(
         roomAdmissionHandoffMessage(second),
         sender,

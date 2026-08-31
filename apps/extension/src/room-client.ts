@@ -334,6 +334,8 @@ export const ROOM_ADMISSION_HANDOFF_MESSAGE_TYPE =
   "ANIDACHI_ROOM_ADMISSION_HANDOFF" as const;
 const ROOM_KEEPALIVE_INTERVAL_MS = 20_000;
 const ROOM_KEEPALIVE_TIMEOUT_MS = 45_000;
+const ROOM_ADMISSION_HANDOFF_ACK_INITIAL_DELAY_MS = 250;
+const ROOM_ADMISSION_HANDOFF_ACK_MAX_DELAY_MS = 4_000;
 const HIBERNATION_KEEPALIVE_PING = "ping";
 const HIBERNATION_KEEPALIVE_PONG = "pong";
 export const ROOM_SESSION_TAKEN_OVER_CLOSE_CODE = 4002;
@@ -1433,6 +1435,7 @@ export async function cleanupRoomAdmissionHandoffForTab(
 
 
 export class RoomClient {
+  private cancelCurrentAdmissionHandoffAck: (() => void) | null = null;
   private currentSenderConnectionId = createRoomConnectionId();
   private currentHistoryAuthority: RoomHistoryAuthority | null = null;
   private currentHistoryBoundary: {
@@ -1497,6 +1500,99 @@ export class RoomClient {
     this.ws = ws;
     let socketClosed = false;
     let transportReadyPublished = false;
+    let handoffAckActive = false;
+    let handoffAckAttemptInFlight = false;
+    let handoffAckRetryCount = 0;
+    let handoffAckRetryTimer: ReturnType<typeof setTimeout> | null = null;
+    let handoffAckStarted = false;
+
+    const isCurrentSocket = (): boolean =>
+      this.ws === ws && !socketClosed;
+    const cancelAdmissionHandoffAck = (): void => {
+      handoffAckActive = false;
+      if (handoffAckRetryTimer !== null) {
+        clearTimeout(handoffAckRetryTimer);
+        handoffAckRetryTimer = null;
+      }
+      if (this.cancelCurrentAdmissionHandoffAck === cancelAdmissionHandoffAck) {
+        this.cancelCurrentAdmissionHandoffAck = null;
+      }
+    };
+    const scheduleAdmissionHandoffAck = (): void => {
+      if (!handoffAckActive || !isCurrentSocket()) {
+        cancelAdmissionHandoffAck();
+        return;
+      }
+      const delay = Math.min(
+        ROOM_ADMISSION_HANDOFF_ACK_INITIAL_DELAY_MS *
+          2 ** Math.min(handoffAckRetryCount, 30),
+        ROOM_ADMISSION_HANDOFF_ACK_MAX_DELAY_MS,
+      );
+      handoffAckRetryCount += 1;
+      handoffAckRetryTimer = setTimeout(() => {
+        handoffAckRetryTimer = null;
+        attemptAdmissionHandoffAck();
+      }, delay);
+    };
+    const attemptAdmissionHandoffAck = (): void => {
+      const handoff = options.admissionHandoff;
+      if (
+        !handoff ||
+        !handoffAckActive ||
+        handoffAckAttemptInFlight ||
+        !isCurrentSocket()
+      ) {
+        if (!isCurrentSocket()) cancelAdmissionHandoffAck();
+        return;
+      }
+      handoffAckAttemptInFlight = true;
+      let attempt: Promise<boolean>;
+      try {
+        attempt = (
+          options.acknowledgeAdmissionHandoff ??
+          acknowledgeRoomAdmissionHandoff
+        )(handoff);
+      } catch {
+        handoffAckAttemptInFlight = false;
+        scheduleAdmissionHandoffAck();
+        return;
+      }
+      void Promise.resolve(attempt).then(
+        (acknowledged) => {
+          handoffAckAttemptInFlight = false;
+          if (!handoffAckActive || !isCurrentSocket()) {
+            cancelAdmissionHandoffAck();
+            return;
+          }
+          if (acknowledged) {
+            cancelAdmissionHandoffAck();
+            return;
+          }
+          scheduleAdmissionHandoffAck();
+        },
+        () => {
+          handoffAckAttemptInFlight = false;
+          scheduleAdmissionHandoffAck();
+        },
+      );
+    };
+    const startAdmissionHandoffAck = (): void => {
+      const handoff = options.admissionHandoff;
+      if (
+        handoffAckStarted ||
+        !handoff ||
+        handoff.roomId !== options.roomId ||
+        handoff.ownerUserId !== options.participant.id ||
+        handoff.participantSessionId !== options.participantSessionId ||
+        !isCurrentSocket()
+      ) {
+        return;
+      }
+      handoffAckStarted = true;
+      handoffAckActive = true;
+      this.cancelCurrentAdmissionHandoffAck = cancelAdmissionHandoffAck;
+      attemptAdmissionHandoffAck();
+    };
 
     ws.addEventListener("open", () => {
       if (this.ws !== ws || socketClosed) {
@@ -1541,6 +1637,13 @@ export class RoomClient {
           return;
         }
 
+        if (event.type === "ROOM_SNAPSHOT" && event.roomId === options.roomId) {
+          // This exact socket has crossed the authoritative join boundary.
+          // Start the durable handoff independently from all consumers below:
+          // their failure must not leave a healthy socket vulnerable to the
+          // background handoff deadline.
+          startAdmissionHandoffAck();
+        }
         logDebug("room.recv", event.type, roomEventDebugSnapshot(event));
         this.consumeHistoryAuthorityEvent(event, options);
         options.onEvent(event);
@@ -1550,17 +1653,13 @@ export class RoomClient {
           this.ws === ws &&
           !socketClosed
         ) {
-          transportReadyPublished = true;
           options.onTransportReady?.({
             senderConnectionId,
             reconnect: options.reconnect === true,
             ...(event.p2pResyncRequired ? { forceMediaResync: true } : {}),
           });
-          if (options.admissionHandoff) {
-            void (
-              options.acknowledgeAdmissionHandoff ??
-              acknowledgeRoomAdmissionHandoff
-            )(options.admissionHandoff).catch(() => undefined);
+          if (this.ws === ws && !socketClosed) {
+            transportReadyPublished = true;
           }
         }
       } catch (error) {
@@ -1577,6 +1676,7 @@ export class RoomClient {
       }
 
       socketClosed = true;
+      cancelAdmissionHandoffAck();
       logDebug("room.ws", "closed", {
         code: event.code,
         participantId: options.participant.id,
@@ -1676,6 +1776,7 @@ export class RoomClient {
 
   private closeSocket(reason: string, publishClosed: boolean): void {
     this.stopKeepalive();
+    this.cancelCurrentAdmissionHandoffAck?.();
     const ws = this.ws;
     const statusPublisher = this.currentStatusPublisher;
     if (ws) {

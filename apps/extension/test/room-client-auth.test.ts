@@ -922,6 +922,202 @@ describe("authenticated room client", () => {
     expect(acknowledgeAdmissionHandoff).toHaveBeenCalledOnce();
   });
 
+  it.each(["history", "event", "transport"] as const)(
+    "starts the exact handoff acknowledgement even when the %s consumer throws",
+    async (throwingConsumer) => {
+      installControlledWebSocket();
+      const acknowledgeAdmissionHandoff = vi.fn(async () => true);
+      const admissionHandoff = {
+        tabId: 14,
+        roomId: "room-1",
+        ownerUserId: roomParticipant.id,
+        participantSessionId: "participant-session-1",
+        generation: 9,
+      };
+      const fail = () => {
+        throw new Error(`failed ${throwingConsumer} consumer`);
+      };
+      const client = new RoomClient();
+
+      client.connect({
+        roomId: "room-1",
+        roomToken: "room-token-1",
+        participant: roomParticipant,
+        participantSessionId: "participant-session-1",
+        videoFingerprint: "video-1",
+        admissionHandoff,
+        acknowledgeAdmissionHandoff,
+        onEvent: throwingConsumer === "event" ? fail : vi.fn(),
+        onStatus: vi.fn(),
+        onHistoryAuthority:
+          throwingConsumer === "history" ? fail : undefined,
+        onTransportReady:
+          throwingConsumer === "transport" ? fail : undefined,
+      });
+      const socket = ControlledWebSocket.instances[0];
+      socket?.open();
+      socket?.message(roomSnapshot());
+      await Promise.resolve();
+
+      expect(acknowledgeAdmissionHandoff).toHaveBeenCalledOnce();
+      expect(acknowledgeAdmissionHandoff).toHaveBeenCalledWith(admissionHandoff);
+      client.close();
+    },
+  );
+
+  it("retries a rejected-by-background handoff acknowledgement until accepted", async () => {
+    vi.useFakeTimers();
+    try {
+      installControlledWebSocket();
+      const acknowledgeAdmissionHandoff = vi
+        .fn<() => Promise<boolean>>()
+        .mockResolvedValueOnce(false)
+        .mockResolvedValueOnce(true);
+      const client = new RoomClient();
+
+      client.connect({
+        roomId: "room-1",
+        roomToken: "room-token-1",
+        participant: roomParticipant,
+        participantSessionId: "participant-session-1",
+        videoFingerprint: "video-1",
+        admissionHandoff: {
+          tabId: 15,
+          roomId: "room-1",
+          ownerUserId: roomParticipant.id,
+          participantSessionId: "participant-session-1",
+          generation: 10,
+        },
+        acknowledgeAdmissionHandoff,
+        onEvent: vi.fn(),
+        onStatus: vi.fn(),
+      });
+      ControlledWebSocket.instances[0]?.open();
+      ControlledWebSocket.instances[0]?.message(roomSnapshot());
+      await Promise.resolve();
+      expect(acknowledgeAdmissionHandoff).toHaveBeenCalledTimes(1);
+
+      await vi.advanceTimersToNextTimerAsync();
+      expect(acknowledgeAdmissionHandoff).toHaveBeenCalledTimes(2);
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(acknowledgeAdmissionHandoff).toHaveBeenCalledTimes(2);
+      client.close();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("retries a transport-rejected handoff acknowledgement until accepted", async () => {
+    vi.useFakeTimers();
+    try {
+      installControlledWebSocket();
+      const acknowledgeAdmissionHandoff = vi
+        .fn<() => Promise<boolean>>()
+        .mockRejectedValueOnce(new Error("background unavailable"))
+        .mockResolvedValueOnce(true);
+      const client = new RoomClient();
+
+      client.connect({
+        roomId: "room-1",
+        roomToken: "room-token-1",
+        participant: roomParticipant,
+        participantSessionId: "participant-session-1",
+        videoFingerprint: "video-1",
+        admissionHandoff: {
+          tabId: 16,
+          roomId: "room-1",
+          ownerUserId: roomParticipant.id,
+          participantSessionId: "participant-session-1",
+          generation: 11,
+        },
+        acknowledgeAdmissionHandoff,
+        onEvent: vi.fn(),
+        onStatus: vi.fn(),
+      });
+      ControlledWebSocket.instances[0]?.open();
+      ControlledWebSocket.instances[0]?.message(roomSnapshot());
+      await Promise.resolve();
+
+      await vi.advanceTimersToNextTimerAsync();
+      expect(acknowledgeAdmissionHandoff).toHaveBeenCalledTimes(2);
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(acknowledgeAdmissionHandoff).toHaveBeenCalledTimes(2);
+      client.close();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it.each(["close", "replacement"] as const)(
+    "cancels a pending handoff retry after socket %s",
+    async (disposition) => {
+      vi.useFakeTimers();
+      try {
+        installControlledWebSocket();
+        const oldAcknowledgement = vi.fn(async () => false);
+        const replacementAcknowledgement = vi.fn(async () => true);
+        const client = new RoomClient();
+
+        client.connect({
+          roomId: "room-1",
+          roomToken: "room-token-1",
+          participant: roomParticipant,
+          participantSessionId: "participant-session-old",
+          videoFingerprint: "video-1",
+          admissionHandoff: {
+            tabId: 17,
+            roomId: "room-1",
+            ownerUserId: roomParticipant.id,
+            participantSessionId: "participant-session-old",
+            generation: 12,
+          },
+          acknowledgeAdmissionHandoff: oldAcknowledgement,
+          onEvent: vi.fn(),
+          onStatus: vi.fn(),
+        });
+        ControlledWebSocket.instances[0]?.open();
+        ControlledWebSocket.instances[0]?.message(roomSnapshot());
+        await Promise.resolve();
+        expect(oldAcknowledgement).toHaveBeenCalledOnce();
+
+        if (disposition === "close") {
+          client.close();
+        } else {
+          client.connect({
+            roomId: "room-1",
+            roomToken: "room-token-2",
+            participant: roomParticipant,
+            participantSessionId: "participant-session-new",
+            videoFingerprint: "video-1",
+            admissionHandoff: {
+              tabId: 17,
+              roomId: "room-1",
+              ownerUserId: roomParticipant.id,
+              participantSessionId: "participant-session-new",
+              generation: 13,
+            },
+            acknowledgeAdmissionHandoff: replacementAcknowledgement,
+            onEvent: vi.fn(),
+            onStatus: vi.fn(),
+          });
+          ControlledWebSocket.instances[1]?.open();
+          ControlledWebSocket.instances[1]?.message(roomSnapshot());
+          await Promise.resolve();
+          expect(replacementAcknowledgement).toHaveBeenCalledOnce();
+        }
+
+        await vi.advanceTimersByTimeAsync(10_000);
+        expect(oldAcknowledgement).toHaveBeenCalledOnce();
+        expect(replacementAcknowledgement).toHaveBeenCalledTimes(
+          disposition === "replacement" ? 1 : 0,
+        );
+        client.close();
+      } finally {
+        vi.useRealTimers();
+      }
+    },
+  );
+
   it("sends the bounded internal handoff acknowledgement through the extension runtime", async () => {
     installControlledWebSocket();
     const sendMessage = vi.fn(async () => ({ ok: true, acknowledged: true }));
