@@ -299,6 +299,7 @@ export function consumeRoomFrameBoundary(
 }
 
 function getRoomEventClass(event: ClientEvent): RoomEventClass {
+  if (event.type === "REACTION") return "reaction";
   if (event.type !== "P2P_SIGNAL") return "control";
   if (event.signal.kind === "ice") return "ice";
   if (event.signal.kind === "offer" || event.signal.kind === "answer") return "sdp";
