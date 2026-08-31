@@ -257,15 +257,23 @@ starts the Durable Object's persisted 60-second reconnect grace and signed Web
 callback; that Worker lifecycle is retained. The removed hidden HTTP
 accelerator is not part of normal tab-close behavior.
 
-There is one narrower race: the tab can disappear while its authenticated Web
-admission is still in flight. Before every Web admission fetch, the background
-persists one extension-local `may-commit` owner for the captured `roomId`,
-`ownerUserId`, and `participantSessionId`. A monotonic non-secret operation
-generation is retained even after the job is retired. Therefore a live
-same-identity successor atomically replaces the predecessor before its fetch;
-the predecessor's late response, alarm, or explicit-cleanup continuation can
-neither exact-depart nor clear the successor. Different participant-session
-identities remain separate exact jobs.
+There are two narrower races around authenticated Web admission. Every new
+prepared room operation receives a fresh `participantSessionId`, including a new
+attempt for the same room, account, and tab. Camera, microphone, and other media
+preferences remain in the tab/account media state and are copied independently;
+they are never preserved by reusing an admission identity. Therefore an older
+confirmed leave or retry can only compare-delete its own server-visible session
+and cannot remove a newly committed same-room assignment. Retrying the exact
+same prepared operation may reuse that prepared record only while no newer
+prepare has replaced it.
+
+Before every connect admission fetch, the background also persists one
+extension-local `may-commit` owner for the captured `roomId`, `ownerUserId`, and
+fresh `participantSessionId`. A monotonic non-secret operation generation is
+retained even after the job is retired. Repeating the exact same prepared
+operation renews that identity's generation; distinct preparations remain
+separate exact jobs. Older completion, alarm, or cleanup paths can therefore
+neither exact-depart nor clear a different participant session.
 
 Cancellation changes only its current generation to `cleanupRequested` and
 passive cleanup waits for that persisted transition before clearing tab-local
@@ -275,8 +283,23 @@ owner, so a successor cannot commit while an older exact request is in flight.
 While `may-commit` is active, even exact `stale` or early success is nonterminal
 because the Web request may still commit afterward.
 
-A current successful admission retires only its own generation after the
-confirmed local record and background authority are current. A canceled live
+A current successful admission does not retire cleanup ownership at the HTTP
+boundary. After the confirmed local record and background authority are
+current, its job transitions to `handoff-pending` for 60 seconds. That bound is
+the existing 45-second socket liveness timeout plus the maximum 8-second
+overlay reconnect delay and 7 seconds of message/scheduler margin. The
+content-side `RoomClient` acknowledges the exact tab, room, user,
+participant-session, and generation only after the joined WebSocket receives
+its first authoritative `ROOM_SNAPSHOT`; only that matching acknowledgement
+retires the job. A stale acknowledgement is a no-op.
+
+If the tab closes after HTTP success but before that acknowledgement, passive
+cleanup claims the existing handoff job, marks it settled, and exact-departs it
+before clearing tab-local state. If Manifest V3 restarts first, startup/alarm
+draining leaves the job untouched before the handoff deadline and exact-cleans
+it after the deadline. Once the matching acknowledgement is durable, a real
+Durable Object socket is known to exist and subsequent ordinary passive close
+again relies exclusively on the Worker's 60-second grace. A canceled live
 completion marks only its current generation `settled` and drains exact
 departure; a failed or ambiguous unobserved request retains its observing job.
 If Manifest V3 suspends the worker before completion, the client's explicit
@@ -461,13 +484,15 @@ Ordinary users should see only:
 - auth failure uses the existing one-refresh retry;
 - normal leave never automatically invokes the emergency recovery route;
 - media, camera, microphone, tab lock, hash, and reconnect state are cleared once.
-- every admission persists a fresh exact generation before Web fetch; matching
-  passive/explicit cancellation marks only that generation cleanup-owned, while
-  current success retires only itself. Same-identity successors therefore fence
-  older responses, alarms, exact cleanup, and local clear. Early `stale` remains
+- every new preparation receives a fresh participant-session fence, and every
+  connect persists an exact generation before Web fetch; matching
+  passive/explicit cancellation marks only that generation cleanup-owned. HTTP success remains
+  `handoff-pending` until the matching first room-socket snapshot
+  acknowledgement. Older responses, alarms, exact cleanup, local clear, and
+  stale acknowledgements cannot touch a newer session. Early `stale` remains
   nonterminal through live settlement or the bounded orphan horizon, duplicate
-  cancellation signals coalesce, restart recovery remains automatic, and a
-  replacement participant session is fenced.
+  cancellation signals coalesce, pre-ack close/restart recovery remains
+  automatic, and media preferences remain independent from admission identity.
 
 ### Harness And staging
 

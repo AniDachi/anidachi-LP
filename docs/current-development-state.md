@@ -943,31 +943,39 @@ acceptance:
   compatibility, but current public Web routes do not emit it. Normal leave
   never invokes active-room recovery automatically; the role-appropriate
   emergency Leave/End action is still separately confirmed;
-- every in-flight Web admission persists a fresh exact `may-commit` generation
-  before fetch. Matching passive/explicit cancellation marks only that current
-  generation cleanup-owned and duplicate signals coalesce. A live
-  same-identity successor atomically replaces its predecessor before fetch, so
-  older completion, alarm, exact departure, and local clear paths cannot touch
-  it. Current success retires only its own generation after the confirmed local
-  record and background authority are current; failure or ambiguity retains the
-  observing job. Persisted data contains only stable room/user/session identity,
-  the non-secret generation watermark, and bounded timing metadata. The job
-  remains `may-commit` across Manifest V3 restart, so pre-settlement `stale`
-  cannot erase it. Generic drains pre-arm a replacement one-shot alarm before
-  auth/network awaits. A canceled live completion marks only its current
-  generation settled and drains immediately; an orphaned worker uses the
-  client's 60-second abort through response-body parsing, the connect route's
-  60-second maximum, and a 15-second margin from admission begin before
-  terminal stale is safe. It
-  waits for matching auth without a perpetual alarm loop, has no cleanup TTL,
-  and cannot clear a replacement session;
+- every new prepared room operation receives a fresh server-visible
+  `participantSessionId`, including a new same-room/account/tab attempt, while
+  confirmed camera and microphone preferences are preserved separately. Before
+  each connect fetch, the background also persists a fresh exact `may-commit`
+  generation.
+  Matching passive/explicit cancellation marks only that generation
+  cleanup-owned and duplicate signals coalesce, so older completion, alarm,
+  exact departure, and local-clear paths cannot touch a newer participant
+  session. HTTP/token success moves the job to `handoff-pending`; it retires
+  only after the same tab/room/user/session/generation receives its first
+  authoritative `ROOM_SNAPSHOT` over the joined room WebSocket. Closing before
+  that acknowledgement claims and exact-cleans the job, while an MV3 restart
+  waits out a separate 60-second handoff bound (45-second socket liveness,
+  maximum 8-second reconnect delay, and a 7-second scheduler margin) before
+  cleanup. Failure or ambiguity retains the observing job. Persisted data
+  contains only stable room/user/session identity, the non-secret generation
+  watermark, and bounded timing metadata. A pre-admission job remains
+  `may-commit` across Manifest V3 restart, so pre-settlement `stale` cannot erase
+  it. Generic drains pre-arm a replacement one-shot alarm before auth/network
+  awaits. A canceled live completion marks only its current generation settled
+  and drains immediately; an orphaned worker uses the client's 60-second abort
+  through response-body parsing, the connect route's 60-second maximum, and a
+  15-second margin from admission begin before terminal stale is safe. It waits
+  for matching auth without a perpetual alarm loop, has no cleanup TTL, and
+  cannot clear a replacement session. After snapshot acknowledgement, ordinary
+  passive close again relies on the Worker's retained 60-second grace;
 - the staging gate allows authenticated internal `POST /api/internal/**`
   callbacks to reach their own service-secret authorization while retaining the
   human gate for all other staging requests.
 
 Fresh local verification for the feature branch on 2026-08-31 includes protocol
 check and 141/141 tests; API check, 166/166 tests, and 37/37 runtime tests; Web
-check and 384 passed/3 skipped tests; extension check and 1483/1483 tests; room
+check and 385 passed/3 skipped tests; extension check and 1500/1500 tests; room
 harness 39/39; real-WebRTC harness 26/26; root check/test (6 Turbo tasks each);
 the rooms-profile `dev:check` command (exit 0); and staging extension build plus
 artifact validation. Generated staging folders and ZIPs remain ignored. This is

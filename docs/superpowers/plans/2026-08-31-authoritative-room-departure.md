@@ -4,7 +4,7 @@
 
 **Goal:** Make explicit guest departure commit against the durable active-room assignment first, then clean exact live Worker state without allowing cleanup failures to block the user from creating or joining another room.
 
-**Architecture:** Supabase remains the durable authority for account eligibility, the room Durable Object remains the live presence authority, and the extension remains the local media/runtime authority. Web resolves the authenticated user's current assignment, atomically releases the exact guest assignment, and only then sends a bounded exact-session detach command to the Worker. The Worker's 60-second passive grace remains independent; ordinary tab close is local-only. Before each in-flight admission fetch, the background persists an exact operation generation, so cancellation, late completion, alarms, and live same-identity successors share one fenced owner.
+**Architecture:** Supabase remains the durable authority for account eligibility, the room Durable Object remains the live presence authority, and the extension remains the local media/runtime authority. Web resolves the authenticated user's current assignment, atomically releases the exact guest assignment, and only then sends a bounded exact-session detach command to the Worker. The Worker's 60-second passive grace remains independent; ordinary tab close is local-only after a room-socket handoff is acknowledged. Every new prepared room operation gets a fresh server-visible participant-session fence. Every connect admission also gets a background-owned exact operation generation before fetch; that owner remains persisted through HTTP/token success until the first authoritative room-socket snapshot is acknowledged.
 
 **Tech Stack:** TypeScript, Zod, Next.js route handlers, Supabase RPC, Cloudflare Workers and Durable Objects, WXT Manifest V3 extension, Vitest, Node test runner, Playwright real-WebRTC harness.
 
@@ -33,13 +33,17 @@
 - Until version negotiation exists, public Web exact and recovery routes emit
   legacy-compatible `stale` when no assignment remains. This keeps deployed
   strict clients compatible after a lost-response retry.
-- Every in-flight admission must persist a fresh exact `may-commit` operation
-  generation before its Web fetch. A live same-identity successor atomically
-  replaces the predecessor; older completion, alarm, exact cleanup, and local
-  clear paths become no-ops. Matching passive/explicit cancellation marks only
-  its current generation cleanup-owned and duplicate signals coalesce. Current
-  success retires only its own generation after the confirmed local record and
-  background authority are current. The retry contains only
+- Every new prepared room operation must receive a fresh server-visible
+  `participantSessionId`, even for the same room/account/tab; camera, voice, and
+  media preferences remain separate state. Before each connect fetch, the
+  background persists a fresh exact `may-commit` operation generation. Older
+  leave, completion, alarm, exact cleanup, and local clear paths remain fenced
+  to their own participant session. Matching passive/explicit cancellation
+  marks only its current generation cleanup-owned and duplicate signals
+  coalesce. After HTTP success and local confirmation, the job moves to
+  `handoff-pending`; it retires only when the same tab/room/user/session/
+  generation receives and acknowledges the first authoritative
+  `ROOM_SNAPSHOT`. The retry contains only
   `roomId`, `ownerUserId`, `participantSessionId`, and bounded timing metadata;
   it survives Manifest V3 worker/browser restart, waits for the matching
   authenticated account, and never invokes broad active-room recovery.
@@ -51,6 +55,13 @@
   `stale` is nonterminal before settlement; failed or ambiguous admission keeps
   its observing generation, and retryable/auth-blocked work has no
   TTL and remains exact-owned until it can be proved safe.
+- `handoff-pending` has a separate 60-second bound derived from the existing
+  45-second socket liveness timeout, maximum 8-second overlay reconnect delay,
+  and 7-second message/scheduler margin. Closing before acknowledgement claims
+  and exact-cleans that job immediately; after an MV3 restart, startup/alarm
+  draining waits until the bound. Matching snapshot acknowledgement retires
+  only that generation; stale acknowledgement is a no-op. After acknowledgement
+  normal passive close again relies on the Worker's retained 60-second grace.
 - Every generic retry drain replaces the one-shot alarm before any persisted
   state, auth-restoration, or exact-network await. This preserves a wake if the
   Manifest V3 worker is suspended mid-drain; a completed drain then schedules
@@ -1817,17 +1828,20 @@ Add a dated entry containing these exact facts:
   recovery automatically. Public Web uses `stale` for no-assignment
   idempotency so deployed strict clients remain compatible; the shared schema
   and current extension still accept `already_departed` for forward compatibility.
-- Every admission starts a background-owned exact generation before Web fetch.
-  Matching passive/explicit cancellation marks only that generation for
-  cleanup; duplicate signals coalesce, current success retires only itself, and
-  a live same-identity successor immediately supersedes older completion,
-  alarm, departure, and clear paths. The job survives restart, treats
-  pre-settlement `stale` as nonterminal, waits for matching auth without a
-  perpetual alarm loop, and cannot touch a replacement. Generic
-  drains pre-arm the one-shot wake before auth/network awaits, and the 60s
-  request abort remains active through response-body parsing. Canceled live
-  settlement drains immediately; an orphaned worker uses the documented 60s
-  client + 60s server + 15s margin before terminal stale is safe.
+- Every new preparation receives a fresh server-visible participant-session
+  fence while media preferences remain separate. Each connect starts a
+  background-owned exact generation before Web fetch. Matching passive/explicit
+  cancellation marks only that generation for cleanup; duplicate signals coalesce. HTTP
+  success remains `handoff-pending` until the exact tab/room/user/session/
+  generation acknowledges its first authoritative room-socket snapshot.
+  Pre-ack tab close exact-cleans immediately; restart waits the documented 60s
+  handoff bound. The job treats pre-settlement `stale` as nonterminal, waits for
+  matching auth without a perpetual alarm loop, and cannot touch a replacement.
+  Generic drains pre-arm the one-shot wake before auth/network awaits, and the
+  60s request abort remains active through response-body parsing. Canceled live
+  settlement drains immediately; an orphaned request uses the documented 60s
+  client + 60s server + 15s margin before terminal stale is safe. After snapshot
+  acknowledgement, passive close again relies on the Worker's 60s grace.
 - Automated protocol/Web/API/runtime/extension/room/WebRTC gates: [record actual
   command results from Steps 1-4].
 - Staging two-profile YouTube/Crunchyroll acceptance: pending until the candidate

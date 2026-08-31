@@ -68,12 +68,18 @@
   detach success, stale, timeout, and transport failure remain nonauthoritative
   after that commit. The Worker 60-second passive alarm callback is retained;
   ordinary tab close is local-only and the hidden tab-close HTTP accelerator is
-  removed. Every admission now persists a fresh exact `may-commit` generation
-  before Web fetch. Matching tab removal/explicit cancellation marks only that
-  generation cleanup-owned and duplicate signals coalesce; current success
-  retires only itself. A live same-identity successor immediately supersedes
-  older completion, alarm, departure, and local-clear paths. It survives
-  worker/browser restart,
+  removed. Every new prepared room operation now gets a fresh server-visible
+  `participantSessionId` while media preferences remain separate. Every connect
+  persists a fresh exact `may-commit` generation before its fetch.
+  Matching tab removal/explicit cancellation marks only that generation
+  cleanup-owned and duplicate signals coalesce. HTTP success transitions to a persisted
+  `handoff-pending` owner; only the exact tab/room/user/session/generation's
+  first authoritative room-socket `ROOM_SNAPSHOT` acknowledgement retires it.
+  Pre-ack tab close exact-cleans immediately, while worker/browser restart uses
+  a 60-second handoff bound from the 45-second socket liveness timeout, maximum
+  8-second reconnect delay, and 7-second scheduler margin. Older completion,
+  alarm, departure, and local-clear paths remain fenced to their participant
+  session. The admission owner survives worker/browser restart,
   keeps pre-settlement `stale` nonterminal, pre-arms the one-shot alarm before
   auth/network awaits, waits for matching auth without a perpetual alarm, and
   is fenced from old completions and replacement sessions. The 60-second
@@ -81,14 +87,16 @@
   completion drains its current generation immediately; an ambiguous request
   remains observing, and an orphan uses the 60-second client request bound,
   60-second connect-route bound, and a 15-second safety margin.
-  Normal extension leave no longer invokes active-room recovery automatically.
+  After snapshot acknowledgement, normal passive close again relies on the
+  Worker's retained 60-second grace. Normal extension leave no longer invokes
+  active-room recovery automatically.
   Current public Web uses legacy-compatible `stale` for no assignment, while
   the shared schema/current extension retain forward-compatible acceptance of
   `already_departed`; the emergency role-specific Leave/End action remains
   separately confirmed. The staging gate now lets bearer-authenticated internal
   POST callbacks reach route-level service authentication without opening other
   staging routes. Fresh local proof: protocol 141/141, API 166/166 plus runtime
-  37/37, Web 384 passed/3 skipped, extension 1483/1483, room harness 39/39,
+  37/37, Web 385 passed/3 skipped, extension 1500/1500, room harness 39/39,
   real-WebRTC 26/26, root check/test (6 Turbo tasks each), rooms-profile
   `dev:check` exit 0, and staging artifact build/validation. Generated artifacts
   remain ignored. Remaining proof: deploy the candidate and perform the loaded
