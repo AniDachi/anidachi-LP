@@ -964,6 +964,64 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		host.close();
 	});
 
+	it("rejects unauthorized and malformed exact detach commands at the DO boundary", async () => {
+		stubSuccessfulWebFinalization();
+		const roomId = `runtime-detach-boundary-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const host = await connectRoomClient(stub, {
+			roomId,
+			role: "host",
+			sessionId: "host-session",
+			userId: "host-user",
+		});
+		const guest = await connectRoomClient(stub, {
+			roomId,
+			role: "member",
+			sessionId: "guest-session",
+			userId: "guest-user",
+		});
+		await guest.waitFor(
+			(event) =>
+				event.type === "ROOM_SNAPSHOT" &&
+				event.participants.some((participant) => participant.id === "guest-user"),
+			"detach boundary guest joined",
+		);
+		const command = {
+			roomId,
+			userId: "guest-user",
+			participantSessionId: "guest-session",
+			requestedAt: Date.now(),
+		};
+
+		const unauthorized = await stub.fetch("https://room.test/internal/detach", {
+			method: "POST",
+			body: JSON.stringify(command),
+		});
+		const malformed = await stub.fetch("https://room.test/internal/detach", {
+			method: "POST",
+			headers: { Authorization: `Bearer ${INTERNAL_SECRET}` },
+			body: JSON.stringify({ ...command, participantSessionId: "" }),
+		});
+
+		expect(unauthorized.status).toBe(401);
+		expect(await unauthorized.json()).toEqual({ error: "UNAUTHORIZED" });
+		expect(malformed.status).toBe(400);
+		expect(await malformed.json()).toEqual({ error: "INVALID_DETACH_COMMAND" });
+		host.send({ type: "PING", roomId, sentAt: 606 });
+		await host.waitFor(
+			(event) => event.type === "PONG" && event.sentAt === 606,
+			"room remains active after rejected detach commands",
+		);
+		guest.send({ type: "PING", roomId, sentAt: 607 });
+		await guest.waitFor(
+			(event) => event.type === "PONG" && event.sentAt === 607,
+			"guest remains connected after rejected detach commands",
+		);
+		guest.close();
+		host.close();
+	});
+
 	it("detaches an exact guest without calling the Web departure callback", async () => {
 		const callbackFetch = stubSuccessfulWebFinalization();
 		const roomId = `runtime-explicit-detach-${crypto.randomUUID()}`;

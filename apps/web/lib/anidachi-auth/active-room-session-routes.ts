@@ -189,7 +189,7 @@ async function departResolvedAssignment(params: {
       mode: params.mode,
       durable: "already_departed",
     });
-    return ok("already_departed");
+    return ok("stale");
   }
   if (!sameAssignment(current, params.assignment)) {
     reportGuestResult(params.dependencies, {
@@ -232,7 +232,7 @@ export async function handlePublicRoomDeparture(params: {
       mode: "exact",
       durable: "already_departed",
     });
-    return ok("already_departed");
+    return ok("stale");
   }
   if (
     assignment.userId !== params.userId ||
@@ -285,7 +285,7 @@ export async function handleActiveRoomRecoveryDeparture(params: {
       mode: "confirmed_recovery",
       durable: "already_departed",
     });
-    return ok("already_departed");
+    return ok("stale");
   }
   if (
     assignment.userId !== params.userId ||

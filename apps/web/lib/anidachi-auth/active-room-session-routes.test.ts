@@ -210,11 +210,20 @@ test("exact guest departure commits durable release before bounded live detach",
   ]);
 });
 
-test("exact departure is idempotent for no assignment and stale exact identifiers", async () => {
+test("a retry after the first departure response is lost uses legacy-compatible stale", async () => {
+  const fixture = departureDependencies();
+
+  assert.deepEqual(await depart(fixture), okResult("departed"));
+  assert.deepEqual(await depart(fixture), okResult("stale"));
+  assert.equal(fixture.calls.filter((call) => call === "release").length, 1);
+  assert.equal(fixture.calls.filter((call) => call === "detach").length, 1);
+});
+
+test("exact departure uses legacy-compatible stale for no assignment and stale exact identifiers", async () => {
   const noAssignment = departureDependencies({
     getActiveAssignment: async () => null,
   });
-  assert.deepEqual(await depart(noAssignment), okResult("already_departed"));
+  assert.deepEqual(await depart(noAssignment), okResult("stale"));
   assert.deepEqual(noAssignment.events, [
     { mode: "exact", durable: "already_departed" },
   ]);
@@ -304,7 +313,7 @@ test("a stale release rereads exactly once and never authorizes cleanup", async 
   });
   const identicalAfterMiss = await run(MEMBER_ASSIGNMENT);
 
-  assert.deepEqual(noAssignmentAfterMiss.result, okResult("already_departed"));
+  assert.deepEqual(noAssignmentAfterMiss.result, okResult("stale"));
   assert.deepEqual(changedAfterMiss.result, okResult("stale"));
   assert.deepEqual(identicalAfterMiss.result, unavailableResult());
   for (const current of [
@@ -378,8 +387,8 @@ test("host departure keeps the legacy Worker lifecycle isolated from guest mutat
   assert.deepEqual(hostWorkerStale.events, []);
 });
 
-test("recovery is idempotent and refuses a different current room", async () => {
-  assert.deepEqual(await recover({ current: null }), okResult("already_departed"));
+test("recovery is idempotent with legacy-compatible stale and refuses a different current room", async () => {
+  assert.deepEqual(await recover({ current: null }), okResult("stale"));
   assert.deepEqual(
     await recover({
       requestedRoomId: ROOM_ID,

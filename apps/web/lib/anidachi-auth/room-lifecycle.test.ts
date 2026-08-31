@@ -367,6 +367,50 @@ test("participant detach aborts its fetch at the configured timeout", async () =
   assert.equal(aborted, true);
 });
 
+test("participant detach applies the executed 1000ms default timeout", async () => {
+  assert.equal(typeof lifecycleApi.syncParticipantDetachToWorker, "function");
+  if (!lifecycleApi.syncParticipantDetachToWorker) return;
+  const originalSetTimeout = globalThis.setTimeout;
+  const originalClearTimeout = globalThis.clearTimeout;
+  let observedDelay: number | undefined;
+  globalThis.setTimeout = ((callback: (...args: unknown[]) => void, delay?: number) => {
+    observedDelay = delay;
+    queueMicrotask(() => callback());
+    return 1 as unknown as ReturnType<typeof setTimeout>;
+  }) as typeof setTimeout;
+  globalThis.clearTimeout = (() => undefined) as typeof clearTimeout;
+
+  try {
+    await assert.rejects(
+      lifecycleApi.syncParticipantDetachToWorker(
+        {
+          roomId: "room-1",
+          userId: "user-1",
+          participantSessionId: "session-1",
+          requestedAt: 1_000,
+        },
+        {
+          baseUrl: "https://worker.test",
+          secret: "internal-secret",
+          fetch: async (_input, init) =>
+            new Promise<Response>((_resolve, reject) => {
+              init?.signal?.addEventListener(
+                "abort",
+                () => reject(new DOMException("Aborted", "AbortError")),
+                { once: true },
+              );
+            }),
+        },
+      ),
+      /aborted/i,
+    );
+  } finally {
+    globalThis.setTimeout = originalSetTimeout;
+    globalThis.clearTimeout = originalClearTimeout;
+  }
+  assert.equal(observedDelay, 1_000);
+});
+
 test("settles an internal callback once and echoes the same event identity on duplicate", async () => {
   assert.equal(typeof lifecycleApi.completeInternalRoomEnd, "function");
   if (!lifecycleApi.completeInternalRoomEnd) return;
