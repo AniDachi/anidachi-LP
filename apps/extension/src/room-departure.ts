@@ -1,43 +1,66 @@
 import {
 	ActiveRoomRecoveryRequestSchema,
 	MAX_PARTICIPANT_ID_CHARS,
+	MAX_SESSION_ID_CHARS,
+	type RoomDepartureAcknowledgement,
 	RoomDepartureAcknowledgementSchema,
+	RoomDepartureErrorResponseSchema,
 } from "@anidachi/protocol";
 import { refreshExtensionSession } from "./auth-client";
 import { getStoredAuthTokens, type ExtensionAuthTokens } from "./auth-tokens";
 import { WEB_HTTP_BASE } from "./constants";
 import {
   clearRoomSessionForClosedTab,
+  loadRoomSessionForExactDeparture,
   loadRoomSessionForTab,
+  roomSessionIdentityMatches,
+  type RoomSessionBackgroundDependencies,
   type RoomSessionRecord,
 } from "./room-session-storage";
 
 export const ROOM_TAB_DEPARTURE_TIMEOUT_MS = 4_000;
 export const ROOM_DEPARTURE_MESSAGE_TYPE = "ANIDACHI_ROOM_DEPARTURE";
 
-export type RoomDepartureRuntimeMessage = {
-  type: typeof ROOM_DEPARTURE_MESSAGE_TYPE;
-	command: "depart" | "recover-active";
-	roomId: string;
-	expectedUserId: string;
-};
+export type RoomDepartureRuntimeMessage =
+	| {
+			type: typeof ROOM_DEPARTURE_MESSAGE_TYPE;
+			command: "depart";
+			roomId: string;
+			expectedUserId: string;
+			participantSessionId: string;
+	  }
+	| {
+			type: typeof ROOM_DEPARTURE_MESSAGE_TYPE;
+			command: "recover-active";
+			roomId: string;
+			expectedUserId: string;
+	  };
 
 export type RoomDepartureRuntimeResponse =
-  | { ok: true; outcome: "departed" | "room_ended" | "stale" }
+	| { ok: true; outcome: RoomDepartureAcknowledgement["outcome"] }
   | { ok: false; error: string };
 
 export type RoomDepartureRequestResult =
-  | { kind: "ack"; outcome: "departed" | "room_ended" | "stale" }
-  | { kind: "unauthorized" }
-  | { kind: "failed" };
+	| { kind: "ack"; outcome: RoomDepartureAcknowledgement["outcome"] }
+	| { kind: "unauthorized" }
+	| { kind: "active-room-changed"; message: string }
+	| {
+			kind: "retryable";
+			code: "ROOM_DEPARTURE_UNAVAILABLE";
+			message: string;
+	  }
+	| { kind: "failed" };
 
 export type RoomTabDepartureOutcome =
   | "departed"
   | "room_ended"
+	| "already_departed"
   | "stale"
   | "no-session"
   | "no-auth"
   | "account-changed"
+	| "active-room-changed"
+	| "retryable"
   | "failed"
   | "timed-out";
 
@@ -54,6 +77,7 @@ export interface RoomTabDepartureDependencies {
     accessToken: string,
     signal: AbortSignal,
   ) => Promise<RoomDepartureRequestResult>;
+	roomSessionDependencies?: RoomSessionBackgroundDependencies;
 	recoverActiveDeparture?: (
 		roomId: string,
 		accessToken: string,
@@ -66,26 +90,45 @@ export interface RoomDepartureClientDependencies {
   sendMessage?: (message: RoomDepartureRuntimeMessage) => Promise<unknown>;
 }
 
-type ConfirmedRoomDepartureOutcome = "departed" | "room_ended" | "stale";
+type ConfirmedRoomDepartureOutcome =
+	RoomDepartureAcknowledgement["outcome"];
 
 export interface ConfirmExplicitRoomDepartureDependencies {
+	roomSession: RoomSessionRecord;
+	cancelPendingJoin(): void;
 	requestDeparture(): Promise<ConfirmedRoomDepartureOutcome>;
-  onConfirmed(outcome: ConfirmedRoomDepartureOutcome): void;
+	getCurrentRoomSession(): RoomSessionRecord | null;
+	onConfirmed(
+		roomSession: RoomSessionRecord,
+		outcome: ConfirmedRoomDepartureOutcome,
+	): void;
 }
 
 export function isRoomDepartureRuntimeMessage(
   value: unknown,
 ): value is RoomDepartureRuntimeMessage {
+	if (
+		!isObject(value) ||
+    value.type !== ROOM_DEPARTURE_MESSAGE_TYPE ||
+		(value.command !== "depart" && value.command !== "recover-active") ||
+		!ActiveRoomRecoveryRequestSchema.safeParse({ roomId: value.roomId })
+			.success ||
+		typeof value.expectedUserId !== "string" ||
+		value.expectedUserId.length < 1 ||
+		value.expectedUserId.length > MAX_PARTICIPANT_ID_CHARS
+	) {
+		return false;
+	}
+
+	if (value.command === "recover-active") {
+		return Object.keys(value).length === 4;
+	}
+
 	return (
-		isObject(value) &&
-    value.type === ROOM_DEPARTURE_MESSAGE_TYPE &&
-		(value.command === "depart" || value.command === "recover-active") &&
-		ActiveRoomRecoveryRequestSchema.safeParse({ roomId: value.roomId })
-			.success &&
-		typeof value.expectedUserId === "string" &&
-		value.expectedUserId.length >= 1 &&
-		value.expectedUserId.length <= MAX_PARTICIPANT_ID_CHARS &&
-		Object.keys(value).length === 4
+		typeof value.participantSessionId === "string" &&
+		value.participantSessionId.length >= 1 &&
+		value.participantSessionId.length <= MAX_SESSION_ID_CHARS &&
+		Object.keys(value).length === 5
 	);
 }
 
@@ -110,21 +153,17 @@ export async function handleRoomDepartureRuntimeMessage(
 					tabId as number,
 					_message.roomId,
 					_message.expectedUserId,
+					_message.participantSessionId,
 					dependencies,
 				);
-	if (
-		outcome === "departed" ||
-		outcome === "room_ended" ||
-		outcome === "stale"
-	) {
+	if (isConfirmedRoomDepartureOutcome(outcome)) {
     return { ok: true, outcome };
   }
   return { ok: false, error: explicitDepartureError(outcome) };
 }
 
 export async function requestCurrentRoomDeparture(
-	roomId: string,
-	expectedUserId: string,
+	roomSession: RoomSessionRecord,
   dependencies: RoomDepartureClientDependencies = {},
 ): Promise<ConfirmedRoomDepartureOutcome> {
 	const sendMessage =
@@ -134,8 +173,9 @@ export async function requestCurrentRoomDeparture(
   const response = await sendMessage({
     type: ROOM_DEPARTURE_MESSAGE_TYPE,
     command: "depart",
-		roomId,
-		expectedUserId,
+		roomId: roomSession.roomId,
+		expectedUserId: roomSession.ownerUserId,
+		participantSessionId: roomSession.participantSessionId,
 	});
 	return confirmedRuntimeDeparture(response);
 }
@@ -171,21 +211,25 @@ function confirmedRuntimeDeparture(
         : "Could not leave the room. Please try again.",
     );
   }
-  if (
-    response.outcome !== "departed" &&
-    response.outcome !== "room_ended" &&
-    response.outcome !== "stale"
-  ) {
+	const acknowledgement = RoomDepartureAcknowledgementSchema.safeParse(response);
+	if (!acknowledgement.success) {
     throw new Error("Room departure returned an invalid response");
   }
-  return response.outcome;
+	return acknowledgement.data.outcome;
 }
 
 export async function confirmExplicitRoomDeparture(
   dependencies: ConfirmExplicitRoomDepartureDependencies,
 ): Promise<ConfirmedRoomDepartureOutcome> {
+	dependencies.cancelPendingJoin();
 	const outcome = await dependencies.requestDeparture();
-  dependencies.onConfirmed(outcome);
+	const currentRoomSession = dependencies.getCurrentRoomSession();
+	if (
+		currentRoomSession &&
+		roomSessionIdentityMatches(currentRoomSession, dependencies.roomSession)
+	) {
+		dependencies.onConfirmed(dependencies.roomSession, outcome);
+	}
   return outcome;
 }
 
@@ -197,24 +241,57 @@ export async function handleExplicitRoomDeparture(
   tabId: number,
 	requestedRoomId: string,
 	expectedUserId: string,
+	expectedParticipantSessionId: string,
   dependencies: RoomTabDepartureDependencies = {},
 ): Promise<RoomTabDepartureOutcome> {
-  const loadRoomSession = dependencies.loadRoomSession ?? loadRoomSessionForTab;
+  const loadRoomSession = dependencies.loadRoomSession ??
+		((resolvedTabId: number) =>
+			loadRoomSessionForExactDeparture(
+				resolvedTabId,
+				{
+					roomId: requestedRoomId,
+					ownerUserId: expectedUserId,
+					participantSessionId: expectedParticipantSessionId,
+				},
+				dependencies.roomSessionDependencies,
+			));
   let record: RoomSessionRecord | null;
-  try {
-    record = await loadRoomSession(tabId);
-  } catch {
-    return "failed";
-  }
-	if (!record)
-		return notifyBoundedActiveDeparture(
-			requestedRoomId,
-			expectedUserId,
-			dependencies,
-		);
+	try {
+		record = await loadRoomSession(tabId);
+	} catch {
+		return "failed";
+	}
+	if (!record) return "no-session";
 	if (record.ownerUserId !== expectedUserId) return "account-changed";
 	if (record.roomId !== requestedRoomId) return "failed";
-	return notifyBoundedDeparture(record, dependencies, true);
+	if (record.participantSessionId !== expectedParticipantSessionId) {
+		return "active-room-changed";
+	}
+	return notifyBoundedDeparture(record, dependencies);
+}
+
+export async function departExactRoomSession(
+	record: RoomSessionRecord,
+	dependencies: RoomTabDepartureDependencies = {},
+): Promise<RoomTabDepartureOutcome> {
+	return notifyBoundedDeparture(record, dependencies);
+}
+
+export async function handleExactRoomSessionDepartureRuntime(
+	record: RoomSessionRecord,
+	dependencies: RoomTabDepartureDependencies = {},
+): Promise<RoomDepartureRuntimeResponse> {
+	const outcome = await departExactRoomSession(record, dependencies);
+	return roomDepartureRuntimeResponse(outcome);
+}
+
+export function roomDepartureRuntimeResponse(
+	outcome: RoomTabDepartureOutcome,
+): RoomDepartureRuntimeResponse {
+	if (isConfirmedRoomDepartureOutcome(outcome)) {
+		return { ok: true, outcome };
+	}
+	return { ok: false, error: explicitDepartureError(outcome) };
 }
 
 export async function handleActiveRoomRecovery(
@@ -226,40 +303,40 @@ export async function handleActiveRoomRecovery(
 }
 
 /**
- * Best-effort close accelerator. Durable Worker disconnect handling remains the
- * fallback if MV3 is suspended, auth is unavailable, or the network is down.
+ * Passive close clears only extension-local bookkeeping. The closing content
+ * script socket is the remote signal; the Worker owns its reconnect grace and
+ * eventual signed durable departure callback.
  */
 export async function handleRoomTabDeparture(
   tabId: number,
   dependencies: RoomTabDepartureDependencies = {},
-): Promise<RoomTabDepartureOutcome> {
-  const loadRoomSession = dependencies.loadRoomSession ?? loadRoomSessionForTab;
-  const clearRoomSession = dependencies.clearRoomSession ?? clearRoomSessionForClosedTab;
-  let record: RoomSessionRecord | null = null;
+): Promise<"closed" | "no-session" | "failed"> {
+  const loadRoomSession = dependencies.loadRoomSession ??
+		((resolvedTabId: number) =>
+			loadRoomSessionForTab(resolvedTabId, dependencies.roomSessionDependencies));
+  const clearRoomSession = dependencies.clearRoomSession ??
+		((resolvedTabId: number, expected: RoomSessionRecord | null) =>
+			clearRoomSessionForClosedTab(
+				resolvedTabId,
+				expected,
+				dependencies.roomSessionDependencies,
+			));
+  let record: RoomSessionRecord | null;
 
   try {
     record = await loadRoomSession(tabId);
   } catch {
-    await clearRoomSession(tabId, null).catch(() => false);
     return "failed";
   }
 
-  if (!record) {
-    await clearRoomSession(tabId, null).catch(() => false);
-    return "no-session";
-  }
-
-  try {
-		return await notifyBoundedDeparture(record, dependencies, false);
-  } finally {
-    await clearRoomSession(tabId, record).catch(() => false);
-  }
+	if (!record) return "no-session";
+	await clearRoomSession(tabId, record).catch(() => false);
+	return "closed";
 }
 
 async function notifyBoundedDeparture(
   record: RoomSessionRecord,
   dependencies: RoomTabDepartureDependencies,
-	recoverStale: boolean,
 ): Promise<RoomTabDepartureOutcome> {
   const abortController = new AbortController();
   const timeoutMs = normalizeTimeout(dependencies.timeoutMs);
@@ -273,12 +350,7 @@ async function notifyBoundedDeparture(
 
   try {
     return await Promise.race([
-			notifyExactDeparture(
-				record,
-				abortController.signal,
-				dependencies,
-				recoverStale,
-			),
+			notifyExactDeparture(record, abortController.signal, dependencies),
 			timedOut,
 		]);
 	} catch {
@@ -325,7 +397,6 @@ async function notifyExactDeparture(
   record: RoomSessionRecord,
   signal: AbortSignal,
   dependencies: RoomTabDepartureDependencies,
-	recoverStale: boolean,
 ): Promise<RoomTabDepartureOutcome> {
   const getStoredSession = dependencies.getStoredSession ?? getStoredAuthTokens;
   const requestDeparture = dependencies.requestDeparture ?? departWebsiteRoomFromApi;
@@ -334,34 +405,18 @@ async function notifyExactDeparture(
   if (!stored) return "no-auth";
   if (stored.user.id !== record.ownerUserId) return "account-changed";
 
-  const first = await requestDeparture(record, stored.accessToken, signal);
-	if (first.kind === "ack") {
-		return first.outcome === "stale" && recoverStale
-			? requestActiveDeparture(
-					record.roomId,
-					stored.accessToken,
-					signal,
-					dependencies,
-				)
-			: first.outcome;
-	}
-  if (first.kind !== "unauthorized" || signal.aborted) return "failed";
+	const first = await requestDeparture(record, stored.accessToken, signal);
+	const firstOutcome = requestResultOutcome(first);
+	if (firstOutcome !== "no-auth") return firstOutcome;
+	if (signal.aborted) return "timed-out";
 
   const refreshed = await refreshSession();
   if (!refreshed) return "no-auth";
   if (refreshed.user.id !== record.ownerUserId) return "account-changed";
   if (signal.aborted) return "timed-out";
 
-  const retry = await requestDeparture(record, refreshed.accessToken, signal);
-	if (retry.kind !== "ack") return "failed";
-	return retry.outcome === "stale" && recoverStale
-		? requestActiveDeparture(
-				record.roomId,
-				refreshed.accessToken,
-				signal,
-				dependencies,
-			)
-		: retry.outcome;
+	const retry = await requestDeparture(record, refreshed.accessToken, signal);
+	return requestResultOutcome(retry);
 }
 
 async function notifyActiveDeparture(
@@ -406,8 +461,7 @@ async function requestActiveDeparture(
 	const recover =
 		dependencies.recoverActiveDeparture ?? departActiveWebsiteRoomFromApi;
 	const result = await recover(roomId, accessToken, signal);
-	if (result.kind === "ack") return result.outcome;
-	return result.kind === "unauthorized" ? "no-auth" : "failed";
+	return requestResultOutcome(result);
 }
 
 export async function departWebsiteRoomFromApi(
@@ -428,15 +482,7 @@ export async function departWebsiteRoomFromApi(
       signal,
     },
   );
-  if (response.status === 401) return { kind: "unauthorized" };
-  if (!response.ok) return { kind: "failed" };
-
-  const acknowledgement = RoomDepartureAcknowledgementSchema.safeParse(
-    await response.json().catch(() => null),
-  );
-  return acknowledgement.success
-    ? { kind: "ack", outcome: acknowledgement.data.outcome }
-    : { kind: "failed" };
+	return parseDepartureResponse(response);
 }
 
 export async function departActiveWebsiteRoomFromApi(
@@ -458,14 +504,64 @@ export async function departActiveWebsiteRoomFromApi(
 			signal,
 		},
 	);
-	if (response.status === 401) return { kind: "unauthorized" };
-	if (!response.ok) return { kind: "failed" };
-	const acknowledgement = RoomDepartureAcknowledgementSchema.safeParse(
-		await response.json().catch(() => null),
-	);
-	return acknowledgement.success
-		? { kind: "ack", outcome: acknowledgement.data.outcome }
-		: { kind: "failed" };
+	return parseDepartureResponse(response);
+}
+
+async function parseDepartureResponse(
+	response: Response,
+): Promise<RoomDepartureRequestResult> {
+	const body = await response.json().catch(() => null);
+	if (response.ok) {
+		const acknowledgement = RoomDepartureAcknowledgementSchema.safeParse(body);
+		return acknowledgement.success
+			? { kind: "ack", outcome: acknowledgement.data.outcome }
+			: { kind: "failed" };
+	}
+
+	const error = RoomDepartureErrorResponseSchema.safeParse(body);
+	if (
+		response.status === 401 &&
+		error.success &&
+		error.data.code === "AUTH_REQUIRED"
+	) {
+		return { kind: "unauthorized" };
+	}
+	if (
+		response.status === 409 &&
+		error.success &&
+		error.data.code === "ACTIVE_ROOM_CHANGED"
+	) {
+		return { kind: "active-room-changed", message: error.data.message };
+	}
+	if (
+		response.status === 503 &&
+		error.success &&
+		error.data.code === "ROOM_DEPARTURE_UNAVAILABLE"
+	) {
+		return {
+			kind: "retryable",
+			code: error.data.code,
+			message: error.data.message,
+		};
+	}
+	return { kind: "failed" };
+}
+
+function requestResultOutcome(
+	result: RoomDepartureRequestResult,
+): RoomTabDepartureOutcome {
+	switch (result.kind) {
+		case "ack":
+			return result.outcome;
+		case "unauthorized":
+			return "no-auth";
+		case "active-room-changed":
+			return "active-room-changed";
+		case "retryable":
+			return "retryable";
+		case "failed":
+			return "failed";
+	}
 }
 
 function normalizeTimeout(timeoutMs: number | undefined): number {
@@ -483,11 +579,24 @@ function explicitDepartureError(outcome: RoomTabDepartureOutcome): string {
       return "Sign in again before leaving the room.";
     case "timed-out":
       return "Leaving the room timed out. Please try again.";
+		case "active-room-changed":
+			return "Your active room changed. Nothing was removed.";
+		case "retryable":
+			return "Could not leave right now. Please try again.";
     case "failed":
       return "Could not leave the room. Please try again.";
     default:
       return "Could not leave the room. Please try again.";
   }
+}
+
+function isConfirmedRoomDepartureOutcome(
+	value: RoomTabDepartureOutcome,
+): value is ConfirmedRoomDepartureOutcome {
+	return RoomDepartureAcknowledgementSchema.safeParse({
+		ok: true,
+		outcome: value,
+	}).success;
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {

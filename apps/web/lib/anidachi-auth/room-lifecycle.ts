@@ -1,15 +1,21 @@
 import { internalServiceAuthorization } from "@/lib/internal-service-auth";
 import {
   EMPTY_ROOM_TIMEOUT_MS,
+  InternalRoomDetachCommandSchema,
   InternalRoomDepartureCommandSchema,
+  RoomDetachAcknowledgementSchema,
   RoomDepartureAcknowledgementSchema,
   RoomUsageSummarySchema,
   createEmptyRoomEndEventId,
   type RoomEndReason,
+  type InternalRoomDetachCommand,
   type InternalRoomDepartureCommand,
+  type RoomDetachAcknowledgement,
   type RoomDepartureAcknowledgement,
   type RoomUsageSummary,
 } from "@anidachi/protocol";
+
+const PARTICIPANT_DETACH_TIMEOUT_MS = 1_000;
 
 export interface EndRoomCommand { endedAt: number; reason: RoomEndReason }
 export interface InternalRoomEndCommand extends EndRoomCommand {
@@ -176,6 +182,61 @@ export async function syncParticipantDepartureToWorker(
     throw new Error("Worker participant departure returned an invalid response");
   }
   return acknowledgement.data;
+}
+
+export async function syncParticipantDetachToWorker(
+  command: InternalRoomDetachCommand,
+  options: {
+    baseUrl?: string;
+    secret?: string;
+    fetch?: typeof fetch;
+    timeoutMs?: number;
+  } = {},
+): Promise<RoomDetachAcknowledgement> {
+  const parsed = InternalRoomDetachCommandSchema.parse(command);
+  const baseUrl = options.baseUrl ?? process.env.ANIDACHI_API_INTERNAL_BASE_URL;
+  const secret = options.secret ?? process.env.ANIDACHI_INTERNAL_API_SECRET;
+  if (!baseUrl || !secret) {
+    throw new Error(
+      "Participant detach Worker synchronization is not configured",
+    );
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(
+    () => controller.abort(),
+    options.timeoutMs ?? PARTICIPANT_DETACH_TIMEOUT_MS,
+  );
+  try {
+    const response = await (options.fetch ?? fetch)(
+      new URL(
+        `/internal/rooms/${encodeURIComponent(parsed.roomId)}` +
+          `/participants/${encodeURIComponent(parsed.userId)}/detach`,
+        baseUrl,
+      ),
+      {
+        method: "POST",
+        headers: {
+          Authorization: internalServiceAuthorization(secret),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(parsed),
+        signal: controller.signal,
+      },
+    );
+    if (!response.ok) {
+      throw new Error(`Worker participant detach failed (${response.status})`);
+    }
+    const acknowledgement = RoomDetachAcknowledgementSchema.safeParse(
+      await response.json().catch(() => null),
+    );
+    if (!acknowledgement.success) {
+      throw new Error("Worker participant detach returned an invalid response");
+    }
+    return acknowledgement.data;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

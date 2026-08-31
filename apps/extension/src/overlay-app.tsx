@@ -183,6 +183,7 @@ import {
 	ROOM_FULL_CLOSE_CODE,
 	ROOM_SESSION_TAKEN_OVER_CLOSE_CODE,
 	RoomClient,
+	type RoomAdmissionHandoff,
 	type RoomConnectionStatus,
 	type RoomQuotaSummary,
 } from "./room-client";
@@ -210,6 +211,7 @@ import { getRoomReconnectDelayMs } from "./room-reconnect";
 import {
 	captureRoomSessionIdentity,
 	clearRoomSession,
+	clearRoomSessionDepartureIfMatch,
 	discardPreparedRoomSession,
 	migrateLegacyRoomSession,
 	prepareRoomSession,
@@ -1414,10 +1416,20 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		[accountUser?.id, flushVoiceAudioPreferencesWrite],
 	);
 
-	const clearStoredRoomSession = useCallback(() => {
+	const clearStoredRoomSession = useCallback((expected?: RoomSessionRecord) => {
+		const current = storedRoomSessionRef.current;
+		if (
+			expected &&
+			(!current || !roomSessionIdentityMatches(current, expected))
+		) {
+			return false;
+		}
 		storedRoomSessionRef.current = null;
 		setStoredRoomSession(null);
-		void clearRoomSession().catch((error) => {
+		const clear = expected
+			? clearRoomSessionDepartureIfMatch(expected)
+			: clearRoomSession();
+		void clear.catch((error) => {
 			logDebug("overlay.room", "failed to clear background room session", {
 				message: error instanceof Error ? error.message : String(error),
 			});
@@ -1425,6 +1437,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				setExtensionContextInvalidated(true);
 			}
 		});
+		return true;
 	}, []);
 
 	useEffect(() => {
@@ -1558,7 +1571,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	}, [resetQuotaDisplayElapsed]);
 
 	const resetLocalRoomSession = useCallback(
-		(message?: string, openPanel = false) => {
+		(message?: string, openPanel = false, expected?: RoomSessionRecord) => {
+			const current = storedRoomSessionRef.current;
+			if (
+				expected &&
+				(!current || !roomSessionIdentityMatches(current, expected))
+			) {
+				return false;
+			}
 			roomReconnectSuppressedRef.current = true;
 			roomJoinSequenceRef.current += 1;
 			roomJoinInFlightRef.current = null;
@@ -1578,7 +1598,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			setRoomToken(null);
 			setRoomShareableLink(null);
 			setRoomCapabilities(null);
-			clearStoredRoomSession();
+			clearStoredRoomSession(expected);
 			clearRoomHash();
 			if (message !== undefined) {
 				setAuthMessage(message);
@@ -1586,6 +1606,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			if (openPanel) {
 				setPanelOpen(true);
 			}
+			return true;
 		},
 		[clearRoomQuotaDisplay, clearStoredRoomSession],
 	);
@@ -3474,6 +3495,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			activeParticipant: Participant,
 			nextRoomToken: string,
 			nextStoredRoomSession: RoomSessionRecord,
+			admissionHandoff: RoomAdmissionHandoff | null,
 			isCurrentJoin: () => boolean,
 			createdRoomProvider: SourceProvider | null = null,
 		): Promise<boolean> => {
@@ -3537,6 +3559,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				video: videoDebugSnapshot(adapter.video),
 			});
 			clientRef.current.connect({
+				...(admissionHandoff ? { admissionHandoff } : {}),
 				lastSeenP2PServerSeq: sameRoomReconnect
 					? lastSeenP2PServerSeqRef.current
 					: 0,
@@ -3664,6 +3687,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							() => undefined,
 						);
 					}
+					if (skipStaleJoin("room-token-error")) {
+						return;
+					}
 					throw error;
 				}
 
@@ -3684,6 +3710,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					activeParticipant,
 					connected.roomToken,
 					connected.roomSession,
+					connected.admissionHandoff ?? null,
 					() =>
 						isCurrentJoin() &&
 						participantRef.current?.id === activeParticipant.id,
@@ -4336,6 +4363,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				activeParticipant,
 				nextRoomToken,
 				created.roomSession,
+				null,
 				() =>
 					isCurrentCreate() &&
 					participantRef.current?.id === activeParticipant.id,
@@ -4706,17 +4734,46 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		roomReconnectSuppressedRef.current = true;
 		clearRoomReconnectTimer();
 		try {
-			await waitForOverlayPaint();
 			const activeRoomId = roomIdRef.current;
 			if (!activeRoomId || isCurrentHost()) {
 				return;
 			}
+			const departingSession = storedRoomSessionRef.current;
+			if (
+				!departingSession ||
+				departingSession.roomId !== activeRoomId ||
+				departingSession.ownerUserId !== expectedUserId
+			) {
+				throw new Error(
+					"Could not verify this room session. Please try again.",
+				);
+			}
 
+			let departureApplied = false;
 			const outcome = await confirmExplicitRoomDeparture({
-				requestDeparture: () =>
-					requestCurrentRoomDeparture(activeRoomId, expectedUserId),
-				onConfirmed: () => resetLocalRoomSession(undefined, true),
+				roomSession: departingSession,
+				cancelPendingJoin: cancelPendingRoomJoin,
+				requestDeparture: async () => {
+					await waitForOverlayPaint();
+					return requestCurrentRoomDeparture(departingSession);
+				},
+				getCurrentRoomSession: () => storedRoomSessionRef.current,
+				onConfirmed: (confirmedSession) => {
+					departureApplied = resetLocalRoomSession(
+						undefined,
+						true,
+						confirmedSession,
+					);
+				},
 			});
+			if (!departureApplied) {
+				roomReconnectSuppressedRef.current = false;
+				logDebug("overlay.room", "old leave acknowledgement ignored", {
+					roomId: activeRoomId,
+					outcome,
+				});
+				return;
+			}
 			showRoomActionFeedback("room-left");
 			logDebug("overlay.room", "left by guest", {
 				roomId: activeRoomId,

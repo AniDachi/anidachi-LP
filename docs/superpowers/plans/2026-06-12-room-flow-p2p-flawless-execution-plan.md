@@ -349,22 +349,48 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
   and validation, and exact synchronization of both approved test folders.
   Remaining: loaded two-profile host/guest acceptance of the merged staging
   artifact before promotion to `main`.
-- [~] 2026-08-31: Fixed guest departure and added a bounded active-room recovery
-  path on `codex/fix-rapid-reaction-delivery`. The staging bearer allowlist now
-  admits the existing exact `/api/rooms/:roomId/depart` request, which had been
-  blocked even though create/connect/end were allowed. Explicit leave retries a
-  missing or stale tab record through a new authenticated server-owned active
-  assignment lookup for the same room; passive tab close remains exact-session
-  only, so an old tab cannot release a newer winner. Guest recovery removes only
-  that guest; host recovery uses the existing room-end path. The conflict UI no
-  longer offers `Open active room` and instead exposes a confirmed emergency
-  Leave/End action. Verified locally with protocol tests 139/139, Web tests
-  376 passed and 3 skipped out of 379, extension tests 1440/1440, API tests
-  163/163 plus runtime 27/27,
-  root check/test, room harness 39/39, real-WebRTC harness 26/26, and staging
-  extension build/validation.
-  Remaining: staging Web deployment, rebuilt loaded extension, and two-profile
-  proof that ordinary guest leave immediately permits creating another room.
+- [~] 2026-08-31: Reworked guest departure on `codex/redesign-room-departure`
+  into an authoritative durable-first lifecycle. Explicit guest leave releases
+  the exact Supabase active-room assignment before bounded exact Worker detach;
+  detach success, stale, timeout, and transport failure remain nonauthoritative
+  after that commit. The Worker 60-second passive alarm callback is retained;
+  ordinary tab close is local-only and the hidden tab-close HTTP accelerator is
+  removed. Every new prepared room operation now gets a fresh server-visible
+  `participantSessionId` while media preferences remain separate. Every connect
+  persists a fresh exact `may-commit` generation before its fetch.
+  Matching tab removal/explicit cancellation marks only that generation
+  cleanup-owned and duplicate signals coalesce. HTTP success transitions to a persisted
+  `handoff-pending` owner; only the exact tab/room/user/session/generation's
+  first authoritative room-socket `ROOM_SNAPSHOT` acknowledgement retires it.
+  That acknowledgement is isolated from history/event/transport consumers and
+  retries transient negative/rejected delivery with exponential 250ms-to-4s
+  backoff until accepted or the exact socket closes/is replaced.
+  Pre-ack tab close exact-cleans immediately, while worker/browser restart uses
+  a 60-second handoff bound from the 45-second socket liveness timeout, maximum
+  8-second reconnect delay, and 7-second scheduler margin. Older completion,
+  alarm, departure, and local-clear paths remain fenced to their participant
+  session. The admission owner survives worker/browser restart,
+  keeps pre-settlement `stale` nonterminal, pre-arms the one-shot alarm before
+  auth/network awaits, waits for matching auth without a perpetual alarm, and
+  is fenced from old completions and replacement sessions. The 60-second
+  client abort remains active through response-body parsing. Canceled live
+  completion drains its current generation immediately; an ambiguous request
+  remains observing, and an orphan uses the 60-second client request bound,
+  60-second connect-route bound, and a 15-second safety margin.
+  After snapshot acknowledgement, normal passive close again relies on the
+  Worker's retained 60-second grace. Normal extension leave no longer invokes
+  active-room recovery automatically.
+  Current public Web uses legacy-compatible `stale` for no assignment, while
+  the shared schema/current extension retain forward-compatible acceptance of
+  `already_departed`; the emergency role-specific Leave/End action remains
+  separately confirmed. The staging gate now lets bearer-authenticated internal
+  POST callbacks reach route-level service authentication without opening other
+  staging routes. Fresh local proof: protocol 141/141, API 166/166 plus runtime
+  37/37, Web 385 passed/3 skipped, extension 1507/1507, room harness 39/39,
+  real-WebRTC 26/26, root check/test (6 Turbo tasks each), rooms-profile
+  `dev:check` exit 0, and staging artifact build/validation. Generated artifacts
+  remain ignored. Remaining proof: deploy the candidate and perform the loaded
+  two-profile YouTube/Crunchyroll acceptance; no staging acceptance is claimed.
 - [~] 2026-08-29: Added the account-local `Room` defaults surface without
   changing the room protocol, Worker, API, database, permissions, or provider
   adapters. Microphone on join now supports Last used, Push to talk, and Open

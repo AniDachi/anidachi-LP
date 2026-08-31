@@ -166,6 +166,39 @@ describe("background-owned room session storage", () => {
     await expect(loadRoomSessionForTab(2, dependencies)).resolves.toBeNull();
   });
 
+  it("does not clear a newly confirmed session when closed-tab cleanup has no snapshot", async () => {
+    const dependencies = backgroundDependencies();
+    const replacement = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-new", ownerUserId: "user-a" }),
+        sender(22),
+        dependencies,
+      ),
+    );
+    const preparedReplacement = await prepareRoomSessionForTab(
+      22,
+      { ownerUserId: "user-a", roomId: "room-new", forceNew: true },
+      dependencies,
+    );
+
+    await expect(
+      clearRoomSessionForClosedTab(22, null, dependencies),
+    ).resolves.toBe(false);
+    await expect(loadRoomSessionForTab(22, dependencies)).resolves.toEqual(
+      replacement,
+    );
+    await expect(
+      confirmRoomSessionForTab(
+        22,
+        preparedReplacement,
+        "room-new",
+        dependencies,
+      ),
+    ).resolves.toMatchObject({
+      participantSessionId: preparedReplacement.participantSessionId,
+    });
+  });
+
   it("persists camera intent for the same room session and resets it for a new room", async () => {
     const dependencies = backgroundDependencies();
     const initial = expectRecord(
@@ -398,7 +431,7 @@ describe("background-owned room session storage", () => {
     });
   });
 
-  it("reuses the confirmed same-tab session and creates a new deliberate takeover candidate", async () => {
+  it("issues a fresh server-visible session for every new preparation", async () => {
     const dependencies = backgroundDependencies();
     const first = await prepareRoomSessionForTab(
       4,
@@ -417,8 +450,51 @@ describe("background-owned room session storage", () => {
       dependencies,
     );
 
-    expect(retry.participantSessionId).toBe(confirmed?.participantSessionId);
+    expect(retry.participantSessionId).not.toBe(confirmed?.participantSessionId);
     expect(takeover.participantSessionId).not.toBe(confirmed?.participantSessionId);
+    expect(takeover.participantSessionId).not.toBe(retry.participantSessionId);
+  });
+
+  it("preserves camera and voice state independently from a fresh admission identity", async () => {
+    const dependencies = backgroundDependencies();
+    const firstPrepared = await prepareRoomSessionForTab(
+      5,
+      { ownerUserId: "user-a", roomId: "room-a" },
+      dependencies,
+    );
+    const first = await confirmRoomSessionForTab(
+      5,
+      firstPrepared,
+      "room-a",
+      dependencies,
+    );
+    if (!first) throw new Error("Expected first room session");
+    const withCamera = await updateRoomSessionCameraEnabled(first, true, {
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(5), dependencies),
+    });
+    if (!withCamera) throw new Error("Expected camera update");
+    const withMedia = await updateRoomSessionVoiceMode(withCamera, "open-mic", {
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(5), dependencies),
+    });
+    if (!withMedia) throw new Error("Expected voice update");
+
+    const nextPrepared = await prepareRoomSessionForTab(
+      5,
+      { ownerUserId: "user-a", roomId: "room-a" },
+      dependencies,
+    );
+    expect(nextPrepared.participantSessionId).not.toBe(
+      firstPrepared.participantSessionId,
+    );
+    await expect(
+      confirmRoomSessionForTab(5, nextPrepared, "room-a", dependencies),
+    ).resolves.toMatchObject({
+      participantSessionId: nextPrepared.participantSessionId,
+      cameraEnabled: true,
+      voiceMode: "open-mic",
+    });
   });
 
   it("keeps a confirmed room until exact admission confirms its replacement", async () => {
@@ -467,7 +543,7 @@ describe("background-owned room session storage", () => {
       dependencies,
     );
 
-    expect(winner.participantSessionId).toBe(stale.participantSessionId);
+    expect(winner.participantSessionId).not.toBe(stale.participantSessionId);
     expect(winner.preparationId).not.toBe(stale.preparationId);
     await expect(
       discardPreparedRoomSessionIfMatch(8, stale, dependencies),
@@ -1038,6 +1114,69 @@ describe("background-owned room session storage", () => {
     );
     expect(currentCleanup).toEqual({ ok: true, record: null });
     expect(dependencies.sessionStorage.values.size).toBe(0);
+  });
+
+  it("clears departure state by stable identity after mutable updates and preserves a replacement", async () => {
+    const dependencies = backgroundDependencies();
+    const captured = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(40),
+        dependencies,
+      ),
+    );
+    const updated = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({
+          command: "set-camera-enabled",
+          enabled: true,
+          record: captured,
+        }),
+        sender(40),
+        dependencies,
+      ),
+    );
+    expect(updated).toMatchObject({ revision: 2, cameraEnabled: true });
+
+    await expect(
+      handleRoomSessionStorageMessage(
+        {
+          type: ROOM_SESSION_MESSAGE_TYPE,
+          command: "clear-departure-if-match",
+          record: captured,
+        } as unknown as RoomSessionMessage,
+        sender(40),
+        dependencies,
+      ),
+    ).resolves.toEqual({ ok: true, record: null });
+
+    const replacementPrepared = await prepareRoomSessionForTab(
+      40,
+      { ownerUserId: "user-a", roomId: "room-a", forceNew: true },
+      dependencies,
+    );
+    const replacement = await confirmRoomSessionForTab(
+      40,
+      replacementPrepared,
+      "room-a",
+      dependencies,
+    );
+    if (!replacement) throw new Error("Expected a replacement room session");
+
+    await expect(
+      handleRoomSessionStorageMessage(
+        {
+          type: ROOM_SESSION_MESSAGE_TYPE,
+          command: "clear-departure-if-match",
+          record: captured,
+        } as unknown as RoomSessionMessage,
+        sender(40),
+        dependencies,
+      ),
+    ).resolves.toEqual({ ok: true, record: replacement });
+    await expect(loadRoomSessionForTab(40, dependencies)).resolves.toEqual(
+      replacement,
+    );
   });
 });
 

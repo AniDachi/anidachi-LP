@@ -126,6 +126,11 @@ export type RoomSessionStorageMessage =
     }
   | {
       type: typeof ROOM_SESSION_STORAGE_MESSAGE_TYPE;
+      command: "clear-departure-if-match";
+      record: RoomSessionRecord;
+    }
+  | {
+      type: typeof ROOM_SESSION_STORAGE_MESSAGE_TYPE;
       command: "set-voice-mode";
       mode: VoiceMode;
       record: RoomSessionRecord;
@@ -199,6 +204,7 @@ export function isRoomSessionStorageMessage(value: unknown): value is RoomSessio
         (value.legacyRecord === null || isLegacyRoomSessionRecord(value.legacyRecord))
       );
     case "clear-if-match":
+    case "clear-departure-if-match":
       return parseRoomSessionRecord(value.record) !== null;
     case "set-voice-mode":
       return isVoiceMode(value.mode) &&
@@ -324,6 +330,15 @@ export async function handleRoomSessionStorageMessage(
               message.record,
             ),
           };
+        case "clear-departure-if-match":
+          return {
+            ok: true,
+            record: await clearRoomSessionForDepartureIfMatchNow(
+              sessionStorage,
+              resolvedTabId,
+              message.record,
+            ),
+          };
         case "set-voice-mode": {
           const record = await setRoomSessionVoiceModeForTab(
             sessionStorage,
@@ -412,6 +427,31 @@ export async function loadRoomSessionForTab(
 }
 
 /**
+ * Loads the authoritative confirmed identity, or promotes only the prepared
+ * identity named by an exact departure request. A newer identity always wins.
+ */
+export async function loadRoomSessionForExactDeparture(
+  tabId: number,
+  requested: {
+    roomId: string;
+    ownerUserId: string;
+    participantSessionId: string;
+  },
+  dependencies: RoomSessionBackgroundDependencies = {},
+): Promise<RoomSessionRecord | null> {
+  assertTabId(tabId);
+  return enqueueRoomSessionOperation(tabId, async () => {
+    const storage = dependencies.sessionStorage ??
+      (chrome.storage.session as StorageAreaLike);
+    return loadRoomSessionForExactDepartureNow(
+      storage,
+      tabId,
+      requested,
+    );
+  });
+}
+
+/**
  * Cleans a closed tab only if its confirmed session is still the snapshot that
  * initiated departure. A recycled tab id or newer exact session wins.
  */
@@ -425,8 +465,7 @@ export async function clearRoomSessionForClosedTab(
     const storage = dependencies.sessionStorage ??
       (chrome.storage.session as StorageAreaLike);
     if (!expected) {
-      await removeRoomSessionForTabNow(tabId, storage);
-      return true;
+      return false;
     }
 
     const key = roomSessionStorageKey(tabId);
@@ -493,6 +532,29 @@ export async function discardPreparedRoomSessionIfMatch(
     const storage = dependencies.sessionStorage ??
       (chrome.storage.session as StorageAreaLike);
     return discardPreparedRoomSessionIfMatchNow(storage, tabId, prepared);
+  });
+}
+
+/**
+ * Promotes only the still-current prepared identity into a local retry record.
+ * A confirmed replacement or newer prepared candidate always wins.
+ */
+export async function retainPreparedRoomSessionForDepartureRetry(
+  tabId: number,
+  prepared: PreparedRoomSession,
+  roomId: string,
+  dependencies: RoomSessionBackgroundDependencies = {},
+): Promise<RoomSessionRecord | null> {
+  assertTabId(tabId);
+  return enqueueRoomSessionOperation(tabId, async () => {
+    const sessionStorage = dependencies.sessionStorage ??
+      (chrome.storage.session as StorageAreaLike);
+    return retainPreparedRoomSessionForDepartureRetryNow(
+      sessionStorage,
+      tabId,
+      prepared,
+      roomId,
+    );
   });
 }
 
@@ -615,6 +677,38 @@ export async function clearRoomSessionIfMatch(
 ): Promise<void> {
   await sendRoomSessionMessage(
     { type: ROOM_SESSION_STORAGE_MESSAGE_TYPE, command: "clear-if-match", record },
+    dependencies.sendMessage,
+  );
+}
+
+export async function clearRoomSessionForDepartureIfMatch(
+  tabId: number,
+  record: RoomSessionRecord,
+  dependencies: RoomSessionBackgroundDependencies = {},
+): Promise<boolean> {
+  assertTabId(tabId);
+  return enqueueRoomSessionOperation(tabId, async () => {
+    const storage = dependencies.sessionStorage ??
+      (chrome.storage.session as StorageAreaLike);
+    const remaining = await clearRoomSessionForDepartureIfMatchNow(
+      storage,
+      tabId,
+      record,
+    );
+    return remaining === null;
+  });
+}
+
+export async function clearRoomSessionDepartureIfMatch(
+  record: RoomSessionRecord,
+  dependencies: RoomSessionClientDependencies = {},
+): Promise<void> {
+  await sendRoomSessionMessage(
+    {
+      type: ROOM_SESSION_STORAGE_MESSAGE_TYPE,
+      command: "clear-departure-if-match",
+      record,
+    },
     dependencies.sendMessage,
   );
 }
@@ -787,21 +881,15 @@ async function prepareRoomSessionForTabNow(
     await removeRoomSessionForTabNow(tabId, storage);
     throw new Error("Room session belongs to another account");
   }
-  const reuseParticipantSessionId =
-    input.forceNew !== true && confirmed?.roomId === input.roomId
-      ? confirmed.participantSessionId
-      : input.forceNew !== true &&
-          currentPrepared?.ownerUserId === input.ownerUserId &&
-          currentPrepared.roomId === input.roomId
-        ? currentPrepared.participantSessionId
-        : null;
   const prepared: PreparedRoomSession = {
     version: ROOM_SESSION_RECORD_VERSION,
     preparationId: createBoundedSessionValue("preparation", randomUUID),
     roomId: input.roomId,
     ownerUserId: input.ownerUserId,
-    participantSessionId:
-      reuseParticipantSessionId ?? createParticipantSessionId(randomUUID),
+    // A prepared record is one server admission operation, not a durable tab
+    // identity. Every new preparation gets a fresh compare-delete fence so a
+    // delayed departure from an older admission cannot remove its successor.
+    participantSessionId: createParticipantSessionId(randomUUID),
   };
   await storage.set({ [preparedKey]: prepared });
   return prepared;
@@ -860,6 +948,101 @@ async function confirmRoomSessionForTabNow(
   await sessionStorage.set({ [confirmedKey]: record });
   await sessionStorage.remove(preparedKey);
   return record;
+}
+
+async function retainPreparedRoomSessionForDepartureRetryNow(
+  sessionStorage: StorageAreaLike,
+  tabId: number,
+  prepared: PreparedRoomSession,
+  roomId: string,
+): Promise<RoomSessionRecord | null> {
+  const parsedPrepared = parsePreparedRoomSession(prepared);
+  if (
+    !parsedPrepared ||
+    !isBoundedString(roomId, MAX_ROOM_ID_CHARS) ||
+    (parsedPrepared.roomId !== null && parsedPrepared.roomId !== roomId)
+  ) {
+    throw new Error("Invalid room session retry retention");
+  }
+
+  const confirmedKey = roomSessionStorageKey(tabId);
+  const preparedKey = preparedRoomSessionStorageKey(tabId);
+  const [storedConfirmed, storedPrepared] = await Promise.all([
+    sessionStorage.get(confirmedKey),
+    sessionStorage.get(preparedKey),
+  ]);
+  const confirmed = parseRoomSessionRecord(storedConfirmed[confirmedKey]);
+  const currentPrepared = parsePreparedRoomSession(storedPrepared[preparedKey]);
+
+  if (confirmed) {
+    return confirmed;
+  }
+  if (
+    !currentPrepared ||
+    !preparedRoomSessionsMatch(currentPrepared, parsedPrepared)
+  ) {
+    return null;
+  }
+
+  const retryRecord = createDepartureRetryRecord(parsedPrepared, roomId);
+  await sessionStorage.set({ [confirmedKey]: retryRecord });
+  await sessionStorage.remove(preparedKey);
+  return retryRecord;
+}
+
+async function loadRoomSessionForExactDepartureNow(
+  storage: StorageAreaLike,
+  tabId: number,
+  requested: {
+    roomId: string;
+    ownerUserId: string;
+    participantSessionId: string;
+  },
+): Promise<RoomSessionRecord | null> {
+  const confirmedKey = roomSessionStorageKey(tabId);
+  const storedConfirmed = await storage.get(confirmedKey);
+  const confirmed = parseRoomSessionRecord(storedConfirmed[confirmedKey]);
+  if (confirmed) return confirmed;
+  if (storedConfirmed[confirmedKey] !== undefined) {
+    await storage.remove(confirmedKey);
+  }
+
+  const preparedKey = preparedRoomSessionStorageKey(tabId);
+  const storedPrepared = await storage.get(preparedKey);
+  const prepared = parsePreparedRoomSession(storedPrepared[preparedKey]);
+  if (!prepared) {
+    if (storedPrepared[preparedKey] !== undefined) {
+      await storage.remove(preparedKey);
+    }
+    return null;
+  }
+  if (
+    prepared.roomId !== requested.roomId ||
+    prepared.ownerUserId !== requested.ownerUserId ||
+    prepared.participantSessionId !== requested.participantSessionId
+  ) {
+    return null;
+  }
+
+  const retryRecord = createDepartureRetryRecord(prepared, requested.roomId);
+  await storage.set({ [confirmedKey]: retryRecord });
+  await storage.remove(preparedKey);
+  return retryRecord;
+}
+
+function createDepartureRetryRecord(
+  prepared: PreparedRoomSession,
+  roomId: string,
+): RoomSessionRecord {
+  return {
+    version: ROOM_SESSION_RECORD_VERSION,
+    revision: 1,
+    roomId,
+    ownerUserId: prepared.ownerUserId,
+    participantSessionId: prepared.participantSessionId,
+    cameraEnabled: false,
+    voiceMode: "push-to-talk",
+  };
 }
 
 async function migrateRecord(
@@ -949,6 +1132,40 @@ async function clearRoomSessionIfMatchForTab(
   }
 
   await storage.remove(key);
+  return null;
+}
+
+async function clearRoomSessionForDepartureIfMatchNow(
+  storage: StorageAreaLike,
+  tabId: number,
+  expected: RoomSessionRecord,
+): Promise<RoomSessionRecord | null> {
+  const key = roomSessionStorageKey(tabId);
+  const stored = await storage.get(key);
+  const current = parseRoomSessionRecord(stored[key]);
+  if (!current) {
+    if (stored[key] !== undefined) {
+      await storage.remove(key);
+    }
+    return null;
+  }
+  if (!roomSessionIdentityMatches(current, expected)) {
+    return current;
+  }
+
+  await storage.remove(key);
+  const preparedKey = preparedRoomSessionStorageKey(tabId);
+  const storedPrepared = await storage.get(preparedKey);
+  const prepared = parsePreparedRoomSession(storedPrepared[preparedKey]);
+  if (
+    prepared &&
+    prepared.version === expected.version &&
+    prepared.roomId === expected.roomId &&
+    prepared.ownerUserId === expected.ownerUserId &&
+    prepared.participantSessionId === expected.participantSessionId
+  ) {
+    await storage.remove(preparedKey);
+  }
   return null;
 }
 

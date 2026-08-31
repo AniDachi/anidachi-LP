@@ -5,8 +5,14 @@ import {
 	releaseActiveRoomSession,
 } from "@/lib/anidachi-auth/db";
 import { getExtensionSessionFromAuthorization } from "@/lib/anidachi-auth/extension-session";
-import { handleActiveRoomRecoveryDeparture } from "@/lib/anidachi-auth/active-room-session-routes";
-import { syncParticipantDepartureToWorker } from "@/lib/anidachi-auth/room-lifecycle";
+import {
+	handleActiveRoomRecoveryDeparture,
+	reportRoomDepartureOutcome,
+} from "@/lib/anidachi-auth/active-room-session-routes";
+import {
+	syncParticipantDepartureToWorker,
+	syncParticipantDetachToWorker,
+} from "@/lib/anidachi-auth/room-lifecycle";
 import { getSession } from "@/lib/anidachi-auth/session";
 
 export const dynamic = "force-dynamic";
@@ -27,15 +33,23 @@ export async function POST(request: NextRequest) {
 					plan: extensionSession.plan,
 				}
 			: null);
+	if (!session) {
+		return NextResponse.json(
+			{ code: "AUTH_REQUIRED", message: "Sign in again before leaving." },
+			{ status: 401 },
+		);
+	}
 	const response = await handleActiveRoomRecoveryDeparture({
-		userId: session?.userId ?? null,
+		userId: session.userId,
 		value: await request.json().catch(() => null),
 		requestedAt: Date.now(),
 		dependencies: {
 			getActiveAssignment: getActiveRoomSessionAssignment,
-			syncWorker: syncParticipantDepartureToWorker,
 			releaseGuest: releaseActiveRoomSession,
+			detachGuest: syncParticipantDetachToWorker,
+			syncHostDeparture: syncParticipantDepartureToWorker,
 			endHostLobby: endHostLobbyForActiveSession,
+			report: reportRoomDepartureOutcome,
 		},
 	});
 	return NextResponse.json(response.body, { status: response.status });

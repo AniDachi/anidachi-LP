@@ -277,6 +277,108 @@ describe("worker routes", () => {
     expect(await requests[0]?.json()).toEqual(command);
   });
 
+  it("forwards one authenticated exact-session detach to the named DO", async () => {
+    const requests: Request[] = [];
+    const command = {
+      roomId: "room-1",
+      userId: "user-1",
+      participantSessionId: "session-1",
+      requestedAt: 1_000,
+    };
+    const response = await app.request(
+      "/internal/rooms/room-1/participants/user-1/detach",
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer internal-secret",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(command),
+      },
+      {
+        ...internalEnv,
+        ROOMS: {
+          idFromName: (roomId: string) => roomId,
+          get: () => ({
+            fetch: async (request: Request) => {
+              requests.push(request);
+              return Response.json({ ok: true, outcome: "detached" });
+            },
+          }),
+        },
+      },
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ ok: true, outcome: "detached" });
+    expect(requests).toHaveLength(1);
+    expect(new URL(requests[0]!.url).pathname).toBe("/internal/detach");
+    expect(requests[0]?.headers.get("Authorization")).toBe(
+      "Bearer internal-secret",
+    );
+    expect(await requests[0]?.json()).toEqual(command);
+  });
+
+  it("rejects unauthorized or malformed participant detach before DO lookup", async () => {
+    const rooms = trackingRooms();
+    const command = {
+      roomId: "room-1",
+      userId: "user-1",
+      participantSessionId: "session-1",
+      requestedAt: 1_000,
+    };
+
+    for (const request of [
+      {
+        path: "/internal/rooms/room-1/participants/user-1/detach",
+        authorization: undefined,
+        body: command,
+        status: 401,
+      },
+      {
+        path: "/internal/rooms/room-1/participants/user-1/detach",
+        authorization: "Bearer wrong-secret",
+        body: command,
+        status: 401,
+      },
+      {
+        path: "/internal/rooms/room-2/participants/user-1/detach",
+        authorization: "Bearer internal-secret",
+        body: command,
+        status: 400,
+      },
+      {
+        path: "/internal/rooms/room-1/participants/user-2/detach",
+        authorization: "Bearer internal-secret",
+        body: command,
+        status: 400,
+      },
+      {
+        path: "/internal/rooms/room-1/participants/user-1/detach",
+        authorization: "Bearer internal-secret",
+        body: { ...command, extra: true },
+        status: 400,
+      },
+    ] as const) {
+      const response = await app.request(
+        request.path,
+        {
+          method: "POST",
+          headers: {
+            ...(request.authorization
+              ? { Authorization: request.authorization }
+              : {}),
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(request.body),
+        },
+        { ...internalEnv, ROOMS: rooms.namespace },
+      );
+      expect(response.status).toBe(request.status);
+    }
+    expect(rooms.calls).toEqual([]);
+  });
+
   it("continues terminal delivery and closure when one socket throws", () => {
     const calls: string[] = [];
     const stale = {
