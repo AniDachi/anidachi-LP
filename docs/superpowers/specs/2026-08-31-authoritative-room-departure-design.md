@@ -258,26 +258,33 @@ callback; that Worker lifecycle is retained. The removed hidden HTTP
 accelerator is not part of normal tab-close behavior.
 
 There is one narrower race: the tab can disappear while its authenticated Web
-admission is still in flight. Cancellation synchronously starts persistence of
-one extension-local intent for the captured `roomId`, `ownerUserId`, and
-`participantSessionId`, and passive cleanup waits for that write before it
-clears tab-local state. Duplicate cancellation signals for the same admission
-reservation coalesce. A later canceled admission may reuse the same exact
-identity, so it atomically advances a non-secret operation generation, resets
-the job to `may-commit`, and starts a fresh settlement horizon. Completion from
-an older generation cannot settle or remove that newer job. Explicit leave
-establishes the same intent before its first departure request. While
-`may-commit` is active, even an exact `stale` response is not terminal because
-the canceled Web request may still commit afterward.
+admission is still in flight. Before every Web admission fetch, the background
+persists one extension-local `may-commit` owner for the captured `roomId`,
+`ownerUserId`, and `participantSessionId`. A monotonic non-secret operation
+generation is retained even after the job is retired. Therefore a live
+same-identity successor atomically replaces the predecessor before its fetch;
+the predecessor's late response, alarm, or explicit-cleanup continuation can
+neither exact-depart nor clear the successor. Different participant-session
+identities remain separate exact jobs.
 
-When the live admission promise settles, the background first persists the
-exact job as `settled` and then drains it through exact departure. If Manifest
-V3 suspends the worker before that callback, the client's explicit 60-second
-request abort plus the connect route's 60-second maximum execution duration and
-a 15-second transport/scheduler margin give a conservative 135-second
-settlement horizon. Retries continue
-through that horizon; only after it expires may terminal exact outcomes remove
-the job. This is a settlement bound, not a cleanup TTL: retryable failure or
+Cancellation changes only its current generation to `cleanupRequested` and
+passive cleanup waits for that persisted transition before clearing tab-local
+state. Duplicate cancellation signals for one reservation coalesce. Explicit
+leave performs its early exact attempt through the same serialized generation
+owner, so a successor cannot commit while an older exact request is in flight.
+While `may-commit` is active, even exact `stale` or early success is nonterminal
+because the Web request may still commit afterward.
+
+A current successful admission retires only its own generation after the
+confirmed local record and background authority are current. A canceled live
+completion marks only its current generation `settled` and drains exact
+departure; a failed or ambiguous unobserved request retains its observing job.
+If Manifest V3 suspends the worker before completion, the client's explicit
+60-second request abort plus the connect route's 60-second maximum execution
+duration and a 15-second transport/scheduler margin give a conservative
+135-second horizon measured from admission begin. Only after it expires may an
+orphan observing job become cleanup-eligible and may terminal exact outcomes
+remove it. This is a settlement bound, not a cleanup TTL: retryable failure or
 missing matching auth retains the identity indefinitely.
 
 The Manifest V3 background schedules the earliest eligible job with the
@@ -454,12 +461,13 @@ Ordinary users should see only:
 - auth failure uses the existing one-refresh retry;
 - normal leave never automatically invokes the emergency recovery route;
 - media, camera, microphone, tab lock, hash, and reconnect state are cleared once.
-- passive close and matching explicit cancellation persist exact intent before
-  awaiting admission or tab cleanup, then automatically drain it after live
-  settlement or the bounded orphan horizon, including across worker restart;
-  early `stale` remains nonterminal, duplicate signals for one cancellation
-  coalesce, a later same-identity cancellation receives a fresh fenced
-  generation/horizon, and a replacement participant session is fenced.
+- every admission persists a fresh exact generation before Web fetch; matching
+  passive/explicit cancellation marks only that generation cleanup-owned, while
+  current success retires only itself. Same-identity successors therefore fence
+  older responses, alarms, exact cleanup, and local clear. Early `stale` remains
+  nonterminal through live settlement or the bounded orphan horizon, duplicate
+  cancellation signals coalesce, restart recovery remains automatic, and a
+  replacement participant session is fenced.
 
 ### Harness And staging
 

@@ -68,16 +68,18 @@
   detach success, stale, timeout, and transport failure remain nonauthoritative
   after that commit. The Worker 60-second passive alarm callback is retained;
   ordinary tab close is local-only and the hidden tab-close HTTP accelerator is
-  removed. Tab removal or matching explicit cancellation now persists one
-  exact intent before waiting for the in-flight admission or local cleanup.
-  Duplicate signals for one reservation coalesce; a later canceled admission
-  reusing the same exact identity advances a fenced operation generation and
-  refreshes `may-commit` plus its horizon. It survives worker/browser restart,
+  removed. Every admission now persists a fresh exact `may-commit` generation
+  before Web fetch. Matching tab removal/explicit cancellation marks only that
+  generation cleanup-owned and duplicate signals coalesce; current success
+  retires only itself. A live same-identity successor immediately supersedes
+  older completion, alarm, departure, and local-clear paths. It survives
+  worker/browser restart,
   keeps pre-settlement `stale` nonterminal, pre-arms the one-shot alarm before
   auth/network awaits, waits for matching auth without a perpetual alarm, and
   is fenced from old completions and replacement sessions. The 60-second
-  client abort remains active through response-body parsing. Live completion
-  drains it immediately; an orphan uses the 60-second client request bound,
+  client abort remains active through response-body parsing. Canceled live
+  completion drains its current generation immediately; an ambiguous request
+  remains observing, and an orphan uses the 60-second client request bound,
   60-second connect-route bound, and a 15-second safety margin.
   Normal extension leave no longer invokes active-room recovery automatically.
   Current public Web uses legacy-compatible `stale` for no assignment, while

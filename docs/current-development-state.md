@@ -943,19 +943,22 @@ acceptance:
   compatibility, but current public Web routes do not emit it. Normal leave
   never invokes active-room recovery automatically; the role-appropriate
   emergency Leave/End action is still separately confirmed;
-- if passive tab removal or matching explicit leave cancels an in-flight Web
-  admission, one exact intent is persisted before departure or local cleanup
-  awaits. Duplicate signals for that reservation coalesce, while a later
-  canceled admission reusing the same exact identity advances a fenced
-  operation generation, resets `may-commit`, and refreshes the horizon. It
-  contains only the stable room/user/session identity, the generation, and
-  bounded timing metadata. The job remains `may-commit` across Manifest V3
-  restart, so pre-settlement `stale` cannot erase it and an older completion
-  cannot settle a newer cancellation. Generic drains pre-arm a replacement
-  one-shot alarm before auth/network awaits. Live completion marks the current
+- every in-flight Web admission persists a fresh exact `may-commit` generation
+  before fetch. Matching passive/explicit cancellation marks only that current
+  generation cleanup-owned and duplicate signals coalesce. A live
+  same-identity successor atomically replaces its predecessor before fetch, so
+  older completion, alarm, exact departure, and local clear paths cannot touch
+  it. Current success retires only its own generation after the confirmed local
+  record and background authority are current; failure or ambiguity retains the
+  observing job. Persisted data contains only stable room/user/session identity,
+  the non-secret generation watermark, and bounded timing metadata. The job
+  remains `may-commit` across Manifest V3 restart, so pre-settlement `stale`
+  cannot erase it. Generic drains pre-arm a replacement one-shot alarm before
+  auth/network awaits. A canceled live completion marks only its current
   generation settled and drains immediately; an orphaned worker uses the
   client's 60-second abort through response-body parsing, the connect route's
-  60-second maximum, and a 15-second margin before terminal stale is safe. It
+  60-second maximum, and a 15-second margin from admission begin before
+  terminal stale is safe. It
   waits for matching auth without a perpetual alarm loop, has no cleanup TTL,
   and cannot clear a replacement session;
 - the staging gate allows authenticated internal `POST /api/internal/**`
