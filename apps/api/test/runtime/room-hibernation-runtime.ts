@@ -964,6 +964,264 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		host.close();
 	});
 
+	it("detaches an exact guest without calling the Web departure callback", async () => {
+		const callbackFetch = stubSuccessfulWebFinalization();
+		const roomId = `runtime-explicit-detach-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const host = await connectRoomClient(stub, {
+			roomId,
+			role: "host",
+			sessionId: "host-session",
+			userId: "host-user",
+		});
+		const guest = await connectRoomClient(stub, {
+			roomId,
+			role: "member",
+			sessionId: "guest-session-1",
+			userId: "guest-1",
+		});
+		await guest.waitFor(
+			(event) =>
+				event.type === "ROOM_SNAPSHOT" &&
+				event.participants.some((participant) => participant.id === "guest-1"),
+			"exact guest joined",
+		);
+
+		const response = await detachParticipant(stub, {
+			roomId,
+			userId: "guest-1",
+			participantSessionId: "guest-session-1",
+			requestedAt: 1_000,
+		});
+
+		expect(response.status).toBe(200);
+		expect(await response.json()).toEqual({ ok: true, outcome: "detached" });
+		await host.waitFor(
+			(event) =>
+				event.type === "PARTICIPANT_LEFT" && event.participant.id === "guest-1",
+			"exact guest detached",
+		);
+		await guest.waitForClose(1000, "exact guest socket closed");
+		await sleep(50);
+		expect(host.countEvents(
+			(event) =>
+				event.type === "PARTICIPANT_LEFT" && event.participant.id === "guest-1",
+		)).toBe(1);
+		expect((await readRoomRuntime(stub)).pendingDisconnect).toBeNull();
+		expect(
+			callbackFetch.mock.calls.filter(([input]) =>
+				String(input).endsWith("/departed")
+			),
+		).toHaveLength(0);
+		host.close();
+	});
+
+	it("returns stale for a duplicate exact guest detach", async () => {
+		stubSuccessfulWebFinalization();
+		const roomId = `runtime-duplicate-detach-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const host = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-session", userId: "host-user",
+		});
+		const guest = await connectRoomClient(stub, {
+			roomId, role: "member", sessionId: "guest-session", userId: "guest-user",
+		});
+		await guest.waitFor(
+			(event) =>
+				event.type === "ROOM_SNAPSHOT" &&
+				event.participants.some((participant) => participant.id === "guest-user"),
+			"duplicate detach guest joined",
+		);
+		const command = {
+			roomId,
+			userId: "guest-user",
+			participantSessionId: "guest-session",
+			requestedAt: Date.now(),
+		};
+
+		const first = await detachParticipant(stub, command);
+		expect(await first.json()).toEqual({ ok: true, outcome: "detached" });
+		const duplicate = await detachParticipant(stub, command);
+		expect(duplicate.status).toBe(200);
+		expect(await duplicate.json()).toEqual({ ok: true, outcome: "stale" });
+		host.close();
+	});
+
+	it("does not detach a winning guest for a stale participant session", async () => {
+		stubSuccessfulWebFinalization();
+		const roomId = `runtime-stale-detach-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const host = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-session", userId: "host-user",
+		});
+		const oldGuest = await connectRoomClient(stub, {
+			roomId,
+			role: "member",
+			sessionId: "guest-session-old",
+			userId: "guest-user",
+		});
+		const winningGuest = await connectRoomClient(stub, {
+			roomId,
+			role: "member",
+			sessionId: "guest-session-new",
+			userId: "guest-user",
+		});
+		await winningGuest.waitFor(
+			(event) =>
+				event.type === "ROOM_SNAPSHOT" &&
+				event.participants.some((participant) => participant.id === "guest-user"),
+			"winning guest joined",
+		);
+
+		const stale = await detachParticipant(stub, {
+			roomId,
+			userId: "guest-user",
+			participantSessionId: "guest-session-old",
+			requestedAt: Date.now(),
+		});
+
+		expect(await stale.json()).toEqual({ ok: true, outcome: "stale" });
+		winningGuest.send({ type: "PING", roomId, sentAt: 77 });
+		await winningGuest.waitFor(
+			(event) => event.type === "PONG" && event.sentAt === 77,
+			"winning guest survives stale detach",
+		);
+		oldGuest.close();
+		winningGuest.close();
+		host.close();
+	});
+
+	it("acknowledges a hibernated pending guest detach without a Web callback", async () => {
+		const callbackFetch = stubSuccessfulWebFinalization();
+		const roomId = `runtime-pending-detach-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const host = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-session", userId: "host-user",
+		});
+		const guest = await connectRoomClient(stub, {
+			roomId, role: "member", sessionId: "guest-session", userId: "guest-user",
+		});
+		await guest.waitFor(
+			(event) =>
+				event.type === "ROOM_SNAPSHOT" &&
+				event.participants.some((participant) => participant.id === "guest-user"),
+			"pending detach guest joined",
+		);
+
+		guest.close();
+		await waitForRoomRuntime(
+			stub,
+			(value) =>
+				value.pendingDisconnect?.records?.some(
+					(record) => record.participantSessionId === "guest-session",
+				) === true,
+			"guest pending disconnect",
+		);
+		await evictDurableObject(stub, { webSockets: "hibernate" });
+		const pendingDetach = await detachParticipant(stub, {
+			roomId,
+			userId: "guest-user",
+			participantSessionId: "guest-session",
+			requestedAt: Date.now(),
+		});
+
+		expect(await pendingDetach.json()).toEqual({ ok: true, outcome: "detached" });
+		expect((await readRoomRuntime(stub)).pendingDisconnect).toBeNull();
+		expect(
+			callbackFetch.mock.calls.filter(([input]) =>
+				String(input).endsWith("/departed")
+			),
+		).toHaveLength(0);
+		host.close();
+	});
+
+	it("does not recreate pending state from a detached socket's late close", async () => {
+		stubSuccessfulWebFinalization();
+		const roomId = `runtime-late-close-detach-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const host = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-session", userId: "host-user",
+		});
+		const guest = await connectRoomClient(stub, {
+			roomId, role: "member", sessionId: "guest-session", userId: "guest-user",
+		});
+		await guest.waitFor(
+			(event) =>
+				event.type === "ROOM_SNAPSHOT" &&
+				event.participants.some((participant) => participant.id === "guest-user"),
+			"late close guest joined",
+		);
+
+		let detachedServerSocket: WebSocket | null = null;
+		await runInDurableObject(stub, (_instance, state) => {
+			detachedServerSocket = state.getWebSockets().find((socket) => {
+				const attachment = socket.deserializeAttachment() as {
+					participantSessionId?: string;
+				} | null;
+				return attachment?.participantSessionId === "guest-session";
+			}) ?? null;
+		});
+		const response = await detachParticipant(stub, {
+			roomId,
+			userId: "guest-user",
+			participantSessionId: "guest-session",
+			requestedAt: Date.now(),
+		});
+		expect(await response.json()).toEqual({ ok: true, outcome: "detached" });
+		if (!detachedServerSocket) throw new Error("Expected exact guest socket");
+		await runInDurableObject(stub, async (instance) => {
+			await (instance as {
+				webSocketClose(
+					socket: WebSocket,
+					code: number,
+					reason: string,
+					wasClean: boolean,
+				): Promise<void>;
+			}).webSocketClose(detachedServerSocket!, 1000, "late close", true);
+		});
+
+		expect((await readRoomRuntime(stub)).pendingDisconnect).toBeNull();
+		host.close();
+	});
+
+	it("rejects live host detach without ending or disconnecting the room", async () => {
+		stubSuccessfulWebFinalization();
+		const roomId = `runtime-host-detach-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const host = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-session", userId: "host-user",
+		});
+		await host.waitFor(
+			(event) =>
+				event.type === "ROOM_SNAPSHOT" &&
+				event.participants.some((participant) => participant.id === "host-user"),
+			"host detach room snapshot",
+		);
+
+		const hostDetach = await detachParticipant(stub, {
+			roomId,
+			userId: "host-user",
+			participantSessionId: "host-session",
+			requestedAt: Date.now(),
+		});
+
+		expect(hostDetach.status).toBe(409);
+		expect(await hostDetach.json()).toEqual({ error: "HOST_DETACH_FORBIDDEN" });
+		host.send({ type: "PING", roomId, sentAt: 88 });
+		await host.waitFor(
+			(event) => event.type === "PONG" && event.sentAt === 88,
+			"host survives forbidden detach",
+		);
+		expect((await readRoomRuntime(stub)).tombstone).toBeNull();
+		host.close();
+	});
+
 	it("handles exact explicit guest departure before or after socket close", async () => {
 		const roomId = `runtime-explicit-departure-${crypto.randomUUID()}`;
 		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
@@ -1862,6 +2120,22 @@ async function departParticipant(
 	return response.json<Record<string, unknown>>();
 }
 
+async function detachParticipant(
+	stub: DurableObjectStub,
+	command: {
+		roomId: string;
+		userId: string;
+		participantSessionId: string;
+		requestedAt: number;
+	},
+): Promise<Response> {
+	return stub.fetch("https://room.test/internal/detach", {
+		method: "POST",
+		headers: { Authorization: `Bearer ${INTERNAL_SECRET}` },
+		body: JSON.stringify(command),
+	});
+}
+
 interface ConnectParams {
 	lastSeenP2PServerSeq?: number;
 	role: "host" | "member";
@@ -1974,6 +2248,10 @@ class RuntimeRoomClient {
 
 	hasEvent(predicate: (event: ServerEvent) => boolean): boolean {
 		return this.events.some(predicate);
+	}
+
+	countEvents(predicate: (event: ServerEvent) => boolean): number {
+		return this.events.filter(predicate).length;
 	}
 
 	async waitFor(

@@ -1,11 +1,14 @@
 import {
   ClientEventSchema,
+  InternalRoomDetachCommandSchema,
   InternalRoomDepartureCommandSchema,
   MAX_ROOM_FRAME_BYTES,
   MAX_ROOM_ID_CHARS,
   type ClientEvent,
+  type InternalRoomDetachCommand,
   type InternalRoomDepartureCommand,
   type Participant,
+  type RoomDetachAcknowledgement,
   type RoomSourcePersistenceCallback,
   type RoomUsageSummary,
   type ServerEvent,
@@ -189,6 +192,46 @@ app.post("/internal/rooms/:roomId/participants/:userId/depart", async (c) => {
   const id = c.env.ROOMS.idFromName(roomId);
   const stub = c.env.ROOMS.get(id);
   return stub.fetch(new Request("https://room.internal/internal/depart", {
+    method: "POST",
+    headers: {
+      Authorization: authorization!,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(command.data),
+  }));
+});
+
+app.post("/internal/rooms/:roomId/participants/:userId/detach", async (c) => {
+  const authorization = c.req.header("authorization") ?? null;
+  if (!hasValidInternalAuthorization(
+    authorization,
+    c.env.ANIDACHI_INTERNAL_API_SECRET,
+  )) {
+    return c.json(
+      { error: "UNAUTHORIZED", message: "Invalid internal authorization" },
+      401,
+    );
+  }
+  const roomId = c.req.param("roomId");
+  const userId = c.req.param("userId");
+  if (roomId.length === 0 || roomId.length > MAX_ROOM_ID_CHARS) {
+    return c.json({ error: "INVALID_ROOM_ID", message: "Invalid room id" }, 400);
+  }
+  const command = InternalRoomDetachCommandSchema.safeParse(
+    await c.req.json().catch(() => null),
+  );
+  if (
+    !command.success ||
+    command.data.roomId !== roomId ||
+    command.data.userId !== userId
+  ) {
+    return c.json(
+      { error: "INVALID_DETACH_COMMAND", message: "Invalid detach command" },
+      400,
+    );
+  }
+  const stub = c.env.ROOMS.get(c.env.ROOMS.idFromName(roomId));
+  return stub.fetch(new Request("https://room.internal/internal/detach", {
     method: "POST",
     headers: {
       Authorization: authorization!,
@@ -784,6 +827,26 @@ export class RoomDurableObject {
       }
       return this.runRoomEndExclusively(
         () => this.handleParticipantDeparture(command.data),
+      );
+    }
+    if (request.method === "POST" && url.pathname === "/internal/detach") {
+      if (!hasValidInternalAuthorization(
+        request.headers.get("authorization"),
+        this.env.ANIDACHI_INTERNAL_API_SECRET,
+      )) {
+        return Response.json({ error: "UNAUTHORIZED" }, { status: 401 });
+      }
+      const command = InternalRoomDetachCommandSchema.safeParse(
+        await request.json().catch(() => null),
+      );
+      if (!command.success || command.data.roomId !== this.room.roomId) {
+        return Response.json(
+          { error: "INVALID_DETACH_COMMAND" },
+          { status: 400 },
+        );
+      }
+      return this.runRoomEndExclusively(
+        () => this.handleParticipantDetach(command.data),
       );
     }
     if (this.endedTombstone) {
@@ -2012,6 +2075,60 @@ export class RoomDurableObject {
     }
   }
 
+  private async handleParticipantDetach(
+    command: InternalRoomDetachCommand,
+  ): Promise<Response> {
+    if (this.endedTombstone) return detachResponse("stale");
+
+    const currentSocket = this.socketsByParticipant.get(command.userId);
+    const currentSessionId = currentSocket
+      ? this.sessionIdBySocket.get(currentSocket)
+      : undefined;
+    let pending: PendingParticipantDisconnect | undefined;
+    if (currentSocket) {
+      if (currentSessionId !== command.participantSessionId) {
+        return detachResponse("stale");
+      }
+      if (this.verifiedBySocket.get(currentSocket)?.role === "host") {
+        return Response.json(
+          { error: "HOST_DETACH_FORBIDDEN" },
+          { status: 409 },
+        );
+      }
+      pending = await this.beginParticipantDisconnect(
+        currentSocket,
+        command.requestedAt,
+      ) ?? undefined;
+      try {
+        currentSocket.close(1000, "Participant left the room");
+      } catch {
+        /* exact live state is already detached */
+      }
+    } else {
+      const stored = await readStoredParticipantDisconnects(this.state.storage);
+      pending = stored?.records.find(
+        (record) =>
+          record.userId === command.userId &&
+          record.participantSessionId === command.participantSessionId,
+      );
+    }
+    if (!pending) return detachResponse("stale");
+    if (pending.role === "host") {
+      return Response.json(
+        { error: "HOST_DETACH_FORBIDDEN" },
+        { status: 409 },
+      );
+    }
+
+    await acknowledgeStoredParticipantDisconnect(
+      this.state.storage,
+      command.userId,
+      command.participantSessionId,
+      reconcileStoredRoomAlarm,
+    );
+    return detachResponse("detached");
+  }
+
   private async deliverGuestParticipantDeparture(
     record: PendingParticipantDisconnect,
   ): Promise<"departed" | "stale"> {
@@ -2147,6 +2264,13 @@ function departureResponse(
   outcome: "departed" | "room_ended" | "stale",
 ): Response {
   return Response.json({ ok: true, outcome });
+}
+
+function detachResponse(
+  outcome: RoomDetachAcknowledgement["outcome"],
+): Response {
+  const acknowledgement: RoomDetachAcknowledgement = { ok: true, outcome };
+  return Response.json(acknowledgement);
 }
 
 function mediaSeatError(
