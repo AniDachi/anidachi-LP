@@ -11,6 +11,7 @@ import { getStoredAuthTokens, type ExtensionAuthTokens } from "./auth-tokens";
 import { WEB_HTTP_BASE } from "./constants";
 import {
   clearRoomSessionForClosedTab,
+  loadRoomSessionForExactDeparture,
   loadRoomSessionForTab,
   roomSessionIdentityMatches,
   type RoomSessionBackgroundDependencies,
@@ -245,7 +246,15 @@ export async function handleExplicitRoomDeparture(
 ): Promise<RoomTabDepartureOutcome> {
   const loadRoomSession = dependencies.loadRoomSession ??
 		((resolvedTabId: number) =>
-			loadRoomSessionForTab(resolvedTabId, dependencies.roomSessionDependencies));
+			loadRoomSessionForExactDeparture(
+				resolvedTabId,
+				{
+					roomId: requestedRoomId,
+					ownerUserId: expectedUserId,
+					participantSessionId: expectedParticipantSessionId,
+				},
+				dependencies.roomSessionDependencies,
+			));
   let record: RoomSessionRecord | null;
 	try {
 		record = await loadRoomSession(tabId);

@@ -427,6 +427,31 @@ export async function loadRoomSessionForTab(
 }
 
 /**
+ * Loads the authoritative confirmed identity, or promotes only the prepared
+ * identity named by an exact departure request. A newer identity always wins.
+ */
+export async function loadRoomSessionForExactDeparture(
+  tabId: number,
+  requested: {
+    roomId: string;
+    ownerUserId: string;
+    participantSessionId: string;
+  },
+  dependencies: RoomSessionBackgroundDependencies = {},
+): Promise<RoomSessionRecord | null> {
+  assertTabId(tabId);
+  return enqueueRoomSessionOperation(tabId, async () => {
+    const storage = dependencies.sessionStorage ??
+      (chrome.storage.session as StorageAreaLike);
+    return loadRoomSessionForExactDepartureNow(
+      storage,
+      tabId,
+      requested,
+    );
+  });
+}
+
+/**
  * Cleans a closed tab only if its confirmed session is still the snapshot that
  * initiated departure. A recycled tab id or newer exact session wins.
  */
@@ -524,11 +549,8 @@ export async function retainPreparedRoomSessionForDepartureRetry(
   return enqueueRoomSessionOperation(tabId, async () => {
     const sessionStorage = dependencies.sessionStorage ??
       (chrome.storage.session as StorageAreaLike);
-    const localStorage = dependencies.localStorage ??
-      (chrome.storage.local as StorageAreaLike);
     return retainPreparedRoomSessionForDepartureRetryNow(
       sessionStorage,
-      localStorage,
       tabId,
       prepared,
       roomId,
@@ -936,7 +958,6 @@ async function confirmRoomSessionForTabNow(
 
 async function retainPreparedRoomSessionForDepartureRetryNow(
   sessionStorage: StorageAreaLike,
-  localStorage: StorageAreaLike,
   tabId: number,
   prepared: PreparedRoomSession,
   roomId: string,
@@ -969,22 +990,65 @@ async function retainPreparedRoomSessionForDepartureRetryNow(
     return null;
   }
 
-  const preferredMedia = await loadRoomMediaDefaults(
-    localStorage,
-    parsedPrepared.ownerUserId,
-  );
-  const retryRecord: RoomSessionRecord = {
-    version: ROOM_SESSION_RECORD_VERSION,
-    revision: 1,
-    roomId,
-    ownerUserId: parsedPrepared.ownerUserId,
-    participantSessionId: parsedPrepared.participantSessionId,
-    cameraEnabled: preferredMedia.cameraEnabled,
-    voiceMode: preferredMedia.voiceMode,
-  };
+  const retryRecord = createDepartureRetryRecord(parsedPrepared, roomId);
   await sessionStorage.set({ [confirmedKey]: retryRecord });
   await sessionStorage.remove(preparedKey);
   return retryRecord;
+}
+
+async function loadRoomSessionForExactDepartureNow(
+  storage: StorageAreaLike,
+  tabId: number,
+  requested: {
+    roomId: string;
+    ownerUserId: string;
+    participantSessionId: string;
+  },
+): Promise<RoomSessionRecord | null> {
+  const confirmedKey = roomSessionStorageKey(tabId);
+  const storedConfirmed = await storage.get(confirmedKey);
+  const confirmed = parseRoomSessionRecord(storedConfirmed[confirmedKey]);
+  if (confirmed) return confirmed;
+  if (storedConfirmed[confirmedKey] !== undefined) {
+    await storage.remove(confirmedKey);
+  }
+
+  const preparedKey = preparedRoomSessionStorageKey(tabId);
+  const storedPrepared = await storage.get(preparedKey);
+  const prepared = parsePreparedRoomSession(storedPrepared[preparedKey]);
+  if (!prepared) {
+    if (storedPrepared[preparedKey] !== undefined) {
+      await storage.remove(preparedKey);
+    }
+    return null;
+  }
+  if (
+    prepared.roomId !== requested.roomId ||
+    prepared.ownerUserId !== requested.ownerUserId ||
+    prepared.participantSessionId !== requested.participantSessionId
+  ) {
+    return null;
+  }
+
+  const retryRecord = createDepartureRetryRecord(prepared, requested.roomId);
+  await storage.set({ [confirmedKey]: retryRecord });
+  await storage.remove(preparedKey);
+  return retryRecord;
+}
+
+function createDepartureRetryRecord(
+  prepared: PreparedRoomSession,
+  roomId: string,
+): RoomSessionRecord {
+  return {
+    version: ROOM_SESSION_RECORD_VERSION,
+    revision: 1,
+    roomId,
+    ownerUserId: prepared.ownerUserId,
+    participantSessionId: prepared.participantSessionId,
+    cameraEnabled: false,
+    voiceMode: "push-to-talk",
+  };
 }
 
 async function migrateRecord(

@@ -551,6 +551,99 @@ describe("background privileged room route", () => {
     );
   });
 
+  it("recovers a prepared retry identity after its first promotion write fails", async () => {
+    vi.stubGlobal("chrome", {});
+    const background = await import("../entrypoints/background");
+    const tabId = 88;
+    const storage = createSessionStorage();
+    const roomSessionDependencies = {
+      sessionStorage: storage,
+      localStorage: storage,
+      randomUUID: () => "failed-promotion-retry",
+    };
+    const prepared = await prepareRoomSessionForTab(
+      tabId,
+      { ownerUserId: "user-a", roomId: "room-failed-promotion" },
+      roomSessionDependencies,
+    );
+    const webAdmission = deferred<Response>();
+    vi.stubGlobal("fetch", vi.fn(() => webAdmission.promise));
+    const requestDeparture = vi
+      .fn()
+      .mockResolvedValueOnce({
+        kind: "ack" as const,
+        outcome: "already_departed" as const,
+      })
+      .mockResolvedValueOnce({
+        kind: "retryable" as const,
+        code: "ROOM_DEPARTURE_UNAVAILABLE" as const,
+        message: "Departure is temporarily unavailable",
+      })
+      .mockResolvedValueOnce({
+        kind: "ack" as const,
+        outcome: "departed" as const,
+      });
+    const dependencies = {
+      admissionDepartureTimeoutMs: 100,
+      departureDependencies: {
+        getStoredSession: async () => sessionFor("user-a"),
+        refreshSession: async () => null,
+        requestDeparture,
+        roomSessionDependencies,
+        timeoutMs: 100,
+      },
+      roomDependencies: {
+        issueAuthority: async () => null,
+        roomSessionDependencies,
+      },
+    };
+    const sender = { tab: { id: tabId } };
+    const departureMessage = {
+      type: "ANIDACHI_ROOM_DEPARTURE",
+      command: "depart",
+      roomId: "room-failed-promotion",
+      expectedUserId: "user-a",
+      participantSessionId: prepared.participantSessionId,
+    } as const;
+    const connecting = background.dispatchPrivilegedRoomRuntimeMessage(
+      connectRoomHttpMessage("room-failed-promotion", "access-a", prepared),
+      sender,
+      dependencies,
+    );
+    const leaving = background.dispatchPrivilegedRoomRuntimeMessage(
+      departureMessage,
+      sender,
+      dependencies,
+    );
+    await waitForCall(requestDeparture);
+    storage.failNextSet();
+    webAdmission.reject(new TypeError("Admission response was lost"));
+
+    await expect(connecting).resolves.toMatchObject({ ok: false });
+    await expect(leaving).resolves.toMatchObject({ ok: false });
+    await expect(
+      loadRoomSessionForTab(tabId, roomSessionDependencies),
+    ).resolves.toBeNull();
+
+    await expect(
+      background.dispatchPrivilegedRoomRuntimeMessage(
+        departureMessage,
+        sender,
+        dependencies,
+      ),
+    ).resolves.toEqual({ ok: true, outcome: "departed" });
+    expect(requestDeparture).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({
+        roomId: "room-failed-promotion",
+        ownerUserId: "user-a",
+        participantSessionId: prepared.participantSessionId,
+      }),
+      "access-token-user-a",
+      expect.any(AbortSignal),
+    );
+  });
+
   it("does not overwrite a newer winner while retaining an ambiguous retry identity", async () => {
     vi.stubGlobal("chrome", {});
     const background = await import("../entrypoints/background");
@@ -639,6 +732,116 @@ describe("background privileged room route", () => {
     await expect(
       loadRoomSessionForTab(tabId, roomSessionDependencies),
     ).resolves.toEqual(replacement);
+    await expect(
+      background.dispatchPrivilegedRoomRuntimeMessage(
+        {
+          type: "ANIDACHI_ROOM_DEPARTURE",
+          command: "depart",
+          roomId: "room-ambiguous-old",
+          expectedUserId: "user-a",
+          participantSessionId: prepared.participantSessionId,
+        },
+        sender,
+        dependencies,
+      ),
+    ).resolves.toMatchObject({ ok: false });
+    expect(requestDeparture).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not consume a newer prepared candidate while recovering an old retry", async () => {
+    vi.stubGlobal("chrome", {});
+    const background = await import("../entrypoints/background");
+    const tabId = 89;
+    const storage = createSessionStorage();
+    let nextId = 0;
+    const roomSessionDependencies = {
+      sessionStorage: storage,
+      localStorage: storage,
+      randomUUID: () => `prepared-winner-${++nextId}`,
+    };
+    const prepared = await prepareRoomSessionForTab(
+      tabId,
+      { ownerUserId: "user-a", roomId: "room-old-retry" },
+      roomSessionDependencies,
+    );
+    const webAdmission = deferred<Response>();
+    vi.stubGlobal("fetch", vi.fn(() => webAdmission.promise));
+    const requestDeparture = vi
+      .fn()
+      .mockResolvedValueOnce({
+        kind: "ack" as const,
+        outcome: "already_departed" as const,
+      })
+      .mockResolvedValueOnce({
+        kind: "retryable" as const,
+        code: "ROOM_DEPARTURE_UNAVAILABLE" as const,
+        message: "Departure is temporarily unavailable",
+      });
+    const dependencies = {
+      admissionDepartureTimeoutMs: 100,
+      departureDependencies: {
+        getStoredSession: async () => sessionFor("user-a"),
+        refreshSession: async () => null,
+        requestDeparture,
+        roomSessionDependencies,
+        timeoutMs: 100,
+      },
+      roomDependencies: {
+        issueAuthority: async () => null,
+        roomSessionDependencies,
+      },
+    };
+    const sender = { tab: { id: tabId } };
+    const connecting = background.dispatchPrivilegedRoomRuntimeMessage(
+      connectRoomHttpMessage("room-old-retry", "access-a", prepared),
+      sender,
+      dependencies,
+    );
+    const leaving = background.dispatchPrivilegedRoomRuntimeMessage(
+      {
+        type: "ANIDACHI_ROOM_DEPARTURE",
+        command: "depart",
+        roomId: "room-old-retry",
+        expectedUserId: "user-a",
+        participantSessionId: prepared.participantSessionId,
+      },
+      sender,
+      dependencies,
+    );
+    await waitForCall(requestDeparture);
+    storage.failNextSet();
+    webAdmission.reject(new TypeError("Admission response was lost"));
+    await expect(connecting).resolves.toMatchObject({ ok: false });
+    await expect(leaving).resolves.toMatchObject({ ok: false });
+
+    const newerPrepared = await prepareRoomSessionForTab(
+      tabId,
+      { ownerUserId: "user-a", roomId: "room-prepared-winner", forceNew: true },
+      roomSessionDependencies,
+    );
+    await expect(
+      background.dispatchPrivilegedRoomRuntimeMessage(
+        {
+          type: "ANIDACHI_ROOM_DEPARTURE",
+          command: "depart",
+          roomId: "room-old-retry",
+          expectedUserId: "user-a",
+          participantSessionId: prepared.participantSessionId,
+        },
+        sender,
+        dependencies,
+      ),
+    ).resolves.toMatchObject({ ok: false });
+    expect(requestDeparture).toHaveBeenCalledTimes(2);
+
+    const reusedWinner = await prepareRoomSessionForTab(
+      tabId,
+      { ownerUserId: "user-a", roomId: "room-prepared-winner" },
+      roomSessionDependencies,
+    );
+    expect(reusedWinner.participantSessionId).toBe(
+      newerPrepared.participantSessionId,
+    );
   });
 
   it("cleans a superseded late admission without touching the newer winning session", async () => {
@@ -1351,11 +1554,19 @@ async function waitForCallCount(
 
 function createSessionStorage() {
   const values = new Map<string, unknown>();
+  let failSet = false;
   return {
+    failNextSet() {
+      failSet = true;
+    },
     async get(key: string) {
       return values.has(key) ? { [key]: values.get(key) } : {};
     },
     async set(items: Record<string, unknown>) {
+      if (failSet) {
+        failSet = false;
+        throw new Error("Session storage write failed");
+      }
       for (const [key, value] of Object.entries(items)) values.set(key, value);
     },
     async remove(key: string) {
