@@ -934,19 +934,27 @@ acceptance:
 - explicit guest departure atomically releases the authenticated user's exact
   Supabase active-room assignment before sending bounded live Worker cleanup;
   detach success, stale responses, timeouts, and transport failures never
-  turn a durable leave into an error. Passive tab close remains independent and
-  keeps the existing 60-second Worker alarm callback;
+  turn a durable leave into an error. The Worker-owned 60-second passive alarm
+  callback is retained, while ordinary tab close is local-only and the hidden
+  tab-close HTTP accelerator has been removed;
 - normal extension leave uses only the exact-departure contract and treats
-  `already_departed` as idempotent success. It never invokes active-room
-  recovery automatically; the role-appropriate emergency Leave/End action is
-  still separately confirmed;
+  public `stale` as the legacy-compatible no-assignment success. The shared
+  protocol and current extension still accept `already_departed` for forward
+  compatibility, but current public Web routes do not emit it. Normal leave
+  never invokes active-room recovery automatically; the role-appropriate
+  emergency Leave/End action is still separately confirmed;
+- if passive tab removal races an in-flight Web admission, a late commit gets
+  one exact compensation. An unconfirmed compensation is persisted as one
+  coalesced background retry containing only the stable room/user/session
+  identity and bounded timing metadata. It survives Manifest V3 worker/browser
+  restart, waits for matching auth, and cannot clear a replacement session;
 - the staging gate allows authenticated internal `POST /api/internal/**`
   callbacks to reach their own service-secret authorization while retaining the
   human gate for all other staging requests.
 
 Fresh local verification for the feature branch on 2026-08-31 includes protocol
-check and 140/140 tests; API check, 166/166 tests, and 36/36 runtime tests; Web
-check and 382 passed/3 skipped tests; extension check and 1457/1457 tests; room
+check and 140/140 tests; API check, 166/166 tests, and 37/37 runtime tests; Web
+check and 384 passed/3 skipped tests; extension check and 1468/1468 tests; room
 harness 39/39; real-WebRTC harness 26/26; root check/test (6 Turbo tasks each);
 the rooms-profile `dev:check` command (exit 0); and staging extension build plus
 artifact validation. Generated staging folders and ZIPs remain ignored. This is

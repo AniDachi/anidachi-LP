@@ -4,7 +4,7 @@
 
 **Goal:** Make explicit guest departure commit against the durable active-room assignment first, then clean exact live Worker state without allowing cleanup failures to block the user from creating or joining another room.
 
-**Architecture:** Supabase remains the durable authority for account eligibility, the room Durable Object remains the live presence authority, and the extension remains the local media/runtime authority. Web resolves the authenticated user's current assignment, atomically releases the exact guest assignment, and only then sends a bounded exact-session detach command to the Worker; passive socket-close recovery and host room finalization keep their existing independent paths.
+**Architecture:** Supabase remains the durable authority for account eligibility, the room Durable Object remains the live presence authority, and the extension remains the local media/runtime authority. Web resolves the authenticated user's current assignment, atomically releases the exact guest assignment, and only then sends a bounded exact-session detach command to the Worker. The Worker's 60-second passive grace remains independent; ordinary tab close is local-only, while a late admission committed after tab removal has a persistent background-owned exact retry.
 
 **Tech Stack:** TypeScript, Zod, Next.js route handlers, Supabase RPC, Cloudflare Workers and Durable Objects, WXT Manifest V3 extension, Vitest, Node test runner, Playwright real-WebRTC harness.
 
@@ -14,7 +14,8 @@
 
 - Branch flow remains `codex/redesign-room-departure` -> PR -> `staging`; do not push directly to `main` and do not deploy or promote without explicit approval.
 - `public.active_room_sessions` and `release_active_room_session_v1(userId, roomId, participantSessionId)` remain the durable authority and atomic compare-and-delete primitive.
-- The 60-second passive reconnect grace remains unchanged.
+- The Worker's 60-second passive reconnect grace is retained; the removed
+  hidden tab-close HTTP accelerator is not part of that normal passive path.
 - Do not add a database migration, table, queue, outbox, secret, environment variable, service, CORS path, or extension host permission.
 - Guest exact departure must never end a host room, and stale exact identifiers must never affect a newer assignment or socket.
 - Worker cleanup success, stale, timeout, and transport failure must not change a successful public result after durable guest release.
@@ -24,6 +25,22 @@
 - The emergency active-session endpoint remains a separately confirmed action; normal departure must never cascade to it automatically.
 - Keep the old Worker `/depart` internal operation during the rollout window so an older Web deployment cannot acknowledge a guest leave without releasing durable state.
 - Do not commit generated extension folders, zip archives, local browser profiles, secrets, or local-only Graphify outputs.
+
+## Final Review Compatibility Amendment (2026-08-31)
+
+- `RoomDepartureAcknowledgementSchema` and the current extension continue to
+  accept `already_departed` for forward compatibility.
+- Until version negotiation exists, public Web exact and recovery routes emit
+  legacy-compatible `stale` when no assignment remains. This keeps deployed
+  strict clients compatible after a lost-response retry.
+- Passive tab removal during an in-flight admission must persist one coalesced
+  exact retry after unconfirmed compensation. The retry contains only
+  `roomId`, `ownerUserId`, `participantSessionId`, and bounded timing metadata;
+  it survives Manifest V3 worker/browser restart, waits for the matching
+  authenticated account, and never invokes broad active-room recovery.
+- The existing `storage` and `alarms` permissions are sufficient. No database
+  table, server queue, host permission, token, role, secret, environment
+  variable, or service is added.
 
 ---
 
@@ -46,7 +63,9 @@
 | `apps/web/lib/staging-access.test.ts` | Prove internal path coverage and prevent unsafe method/header widening. |
 | `apps/web/lib/internal-service-auth.test.ts` | Prove a bearer that passes the staging gate is still rejected unless it exactly matches the internal secret. |
 | `apps/extension/src/room-departure.ts` | Exact normal leave, typed server errors, one auth refresh, and explicitly separate emergency recovery. |
+| `apps/extension/src/room-departure-retry.ts` | Persistent coalesced exact retry ownership for a late admission committed after passive tab removal. |
 | `apps/extension/test/room-departure.test.ts` | Successful local confirmation, missing/stale exact records, typed failures, refresh, and no hidden recovery cascade. |
+| `apps/extension/test/room-departure-retry.test.ts` | Storage, restart, alarm, account fencing, bounded backoff, coalescing, and replacement safety. |
 | `apps/extension/test/privileged-overlay-wiring.test.tsx` | UI boundary: exact success tears down once, durable failure stays recoverable, emergency remains explicitly confirmed. |
 | `docs/current-development-state.md` | Record implemented local behavior and clearly separate it from staging acceptance. |
 | `docs/superpowers/plans/2026-06-07-production-room-p2p-hardening-roadmap.md` | Add implementation/test evidence to the room hardening progress log. |
@@ -813,7 +832,7 @@ assert.deepEqual(success.calls, [
 ]);
 assert.deepEqual(noAssignment.result, {
   status: 200,
-  body: { ok: true, outcome: "already_departed" },
+  body: { ok: true, outcome: "stale" },
 });
 assert.deepEqual(staleExact.result, {
   status: 200,
@@ -844,7 +863,7 @@ For a release RPC returning `stale`, cover all three reread results and assert
 cleanup is skipped because this request did not commit a release:
 
 ```ts
-assert.deepEqual(noAssignmentAfterMiss.result, okResult("already_departed"));
+assert.deepEqual(noAssignmentAfterMiss.result, okResult("stale"));
 assert.deepEqual(changedAfterMiss.result, okResult("stale"));
 assert.deepEqual(identicalAfterMiss.result, unavailableResult());
 assert.equal(noAssignmentAfterMiss.detachCalls, 0);
@@ -881,7 +900,7 @@ Add tests with server-selected session identity:
 ```ts
 assert.deepEqual(await recover({ current: null }), {
   status: 200,
-  body: { ok: true, outcome: "already_departed" },
+  body: { ok: true, outcome: "stale" },
 });
 
 assert.deepEqual(await recover({
@@ -921,7 +940,9 @@ Run:
 fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/web test -- active-room-session-routes.test.ts
 ```
 
-Expected: FAIL because current code calls Worker before the release and has no `already_departed`, typed `503`, or `detachGuest` dependency.
+Expected: FAIL because current code calls Worker before the release and has no
+legacy-compatible no-assignment acknowledgement, typed `503`, or `detachGuest`
+dependency.
 
 - [ ] **Step 4: Implement one resolved-assignment departure state machine**
 
@@ -976,7 +997,7 @@ const assignment = await dependencies
   .getActiveAssignment(userId)
   .catch(() => undefined);
 if (assignment === undefined) return unavailable();
-if (!assignment) return ok("already_departed");
+if (!assignment) return ok("stale");
 if (
   assignment.roomId !== roomId ||
   assignment.participantSessionId !== request.data.participantSessionId
@@ -1023,7 +1044,7 @@ const current = await dependencies
   .getActiveAssignment(assignment.userId)
   .catch(() => undefined);
 if (current === undefined) return unavailable();
-if (!current) return ok("already_departed");
+if (!current) return ok("stale");
 if (!sameAssignment(current, assignment)) {
   return mode === "confirmed_recovery" ? activeRoomChanged() : ok("stale");
 }
@@ -1058,7 +1079,10 @@ Call `dependencies.report` once for each guest terminal branch: durable
 user, session, source, token, name, or content fields. Host branches keep the
 existing room-end telemetry and do not emit guest-departure telemetry.
 
-The recovery handler validates `{ roomId }`, reads the assignment once, returns `already_departed` for null, returns typed `409` for a different room, then calls the same resolver with `mode: "confirmed_recovery"`. It never calls the public exact handler and never trusts a client-selected session ID.
+The recovery handler validates `{ roomId }`, reads the assignment once, returns
+legacy-compatible `stale` for null, returns typed `409` for a different room,
+then calls the same resolver with `mode: "confirmed_recovery"`. It never calls
+the public exact handler and never trusts a client-selected session ID.
 
 - [ ] **Step 5: Add failing lifecycle-client tests for exact URL, schema, and abort timeout**
 
@@ -1767,9 +1791,15 @@ Add a dated entry containing these exact facts:
 ```md
 - Explicit guest departure now commits the exact Supabase active-room release
   before bounded live Worker cleanup. Worker cleanup failure no longer blocks a
-  durable leave; passive disconnect still uses the 60-second alarm callback.
+  durable leave. The Worker 60-second passive alarm callback is retained; the
+  hidden tab-close HTTP accelerator was removed and ordinary tab close is local-only.
 - Normal extension leave stays exact and no longer invokes confirmed active-room
-  recovery automatically. `already_departed` is an idempotent success.
+  recovery automatically. Public Web uses `stale` for no-assignment
+  idempotency so deployed strict clients remain compatible; the shared schema
+  and current extension still accept `already_departed` for forward compatibility.
+- A late admission after passive tab removal persists a background-owned exact
+  retry only when the first compensation is unconfirmed. It coalesces,
+  survives restart, waits for matching auth, and cannot touch a replacement.
 - Automated protocol/Web/API/runtime/extension/room/WebRTC gates: [record actual
   command results from Steps 1-4].
 - Staging two-profile YouTube/Crunchyroll acceptance: pending until the candidate
@@ -1833,7 +1863,9 @@ Summarize:
 ```txt
 Root cause: reverse Worker-to-Web callback was rejected by the staging gate.
 Architecture: exact durable guest release first, bounded live detach second.
-Compatibility: legacy Worker /depart retained; passive alarm callback unchanged.
+Compatibility: legacy Worker /depart retained; Worker 60-second passive alarm
+callback retained; hidden tab-close HTTP accelerator removed/local-only; public
+no-assignment acknowledgement remains legacy-compatible stale.
 Automated proof: list every command and actual result from Steps 1-4.
 Manual proof: list completed or pending items from Step 5.
 Environment impact: no migration, secret, env var, permission, or new service.

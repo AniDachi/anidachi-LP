@@ -68,7 +68,8 @@ round trip from Web to Worker and back to Web before durable state could change.
 | A confirmed emergency action is used after local state was lost | Web derives the current assignment server-side and releases only that explicitly confirmed room. |
 | Guest closes the tab without clicking leave | Worker starts the existing reconnect grace and releases the exact assignment through the signed callback when grace expires. |
 | Host leaves or closes the authoritative host tab | The separate host room-end lifecycle runs; guest departure never ends the room. |
-| No active assignment exists | Departure returns success as `already_departed`. |
+| No active assignment exists | Departure returns the legacy-compatible idempotent success `stale`. |
+| A tab closes while its Web admission is still in flight | A late committed admission is compensated exactly; if that result is unconfirmed, the background persists only the exact identity and retries it without touching a replacement session. |
 
 ## Scope
 
@@ -78,8 +79,10 @@ round trip from Web to Worker and back to Web before durable state could change.
   delivery is temporarily unavailable.
 - Preserve the one-active-room invariant and exact-session stale-tab safety.
 - Make repeated leave requests safe and predictable.
-- Keep passive reload, short disconnect, tab-close, and browser-crash recovery
-  behavior intact.
+- Retain the Worker's 60-second passive reconnect grace while keeping ordinary
+  tab close local-only; remove the hidden tab-close HTTP accelerator.
+- Give an exceptional late admission after tab removal a persistent,
+  background-owned exact retry lifecycle.
 - Replace per-route staging-gate exceptions for internal callbacks with one
   explicit service-to-service boundary.
 - Return typed outcomes so the extension can distinguish durable failures from
@@ -93,7 +96,9 @@ round trip from Web to Worker and back to Web before durable state could change.
   or provider adapters.
 - Changing the 60-second reconnect grace.
 - Replacing Supabase, Durable Objects, or the existing internal service secret.
-- Adding a queue, outbox table, new database table, new secret, or new service.
+- Adding a server-side queue, outbox table, new database table, new secret, or
+  new service. The extension-local exact retry record required for a late
+  admission race is in scope and contains no token, role, or secret.
 - Changing the host's metered room-finalization contract in this slice.
 - Promotion to `main`, production deployment, or Chrome Web Store publication.
 
@@ -189,14 +194,21 @@ type RoomDepartureOutcome =
   | "stale";
 ```
 
+The widened shared schema and current extension continue accepting
+`already_departed` as a forward-compatible acknowledgement. Until explicit
+version negotiation exists, the deployed public Web routes emit only
+`departed`, `room_ended`, or `stale`; absence after an idempotent retry is
+represented as `stale` for compatibility with older strict clients.
+
 - `departed`: the exact durable assignment was released.
 - `room_ended`: the exact authoritative host departure completed the existing
   room-end lifecycle.
-- `already_departed`: no active assignment remains.
+- `already_departed`: accepted for forward compatibility, but not emitted by
+  the current public Web routes.
 - `stale`: the requested room/session is no longer authoritative; no current
   assignment was changed.
 
-All three outcomes authorize teardown of the calling tab's local stale/current
+All accepted outcomes authorize teardown of the calling tab's local stale/current
 room state. They never authorize clearing another tab's background record unless
 that record has the same exact room and participant session.
 
@@ -215,7 +227,7 @@ The route never returns a failure solely because Worker detach cleanup failed.
 1. Extension sends the exact room and participant session.
 2. Web authenticates the user.
 3. Web reads that user's active assignment.
-4. If no assignment exists, Web returns `already_departed`.
+4. If no assignment exists, Web returns legacy-compatible `stale`.
 5. If room or participant session no longer matches, Web returns `stale`
    without changing current state. If the exact assignment is the host, Web
    delegates to the existing room-end lifecycle and returns `room_ended`; the
@@ -223,7 +235,7 @@ The route never returns a failure solely because Worker detach cleanup failed.
 6. For a matching guest, Web calls the exact release RPC.
 7. If the RPC reports `released`, durable departure is committed.
 8. If the RPC reports `stale`, Web re-reads once:
-   - no assignment -> `already_departed`;
+   - no assignment -> `stale`;
    - changed assignment -> `stale`;
    - identical assignment -> retryable `503`, because the invariant did not
      converge.
@@ -235,7 +247,34 @@ The route never returns a failure solely because Worker detach cleanup failed.
     and clears only the matching local room record.
 
 If the public response is lost after step 7, retry restarts at step 3 and returns
-`already_departed`. The extension then completes the same local teardown.
+`stale`. Both deployed strict clients and the current extension then complete
+the same local teardown.
+
+## Passive Close And Late Admission Compensation
+
+Ordinary passive tab close remains local-only. Socket disappearance still
+starts the Durable Object's persisted 60-second reconnect grace and signed Web
+callback; that Worker lifecycle is retained. The removed hidden HTTP
+accelerator is not part of normal tab-close behavior.
+
+There is one narrower race: the tab can disappear while its authenticated Web
+admission is still in flight. If that request later commits, the background
+immediately sends one exact compensation for the captured `roomId`,
+`ownerUserId`, and `participantSessionId`. A confirmed `departed`,
+`room_ended`, `stale`, or forward-compatible `already_departed` completes the
+compensation without creating a retry record. Any unconfirmed result persists
+one coalesced extension-local job containing only that exact identity plus
+bounded retry timing metadata.
+
+The Manifest V3 background schedules the earliest job with the existing
+`alarms` permission, restores it from local storage after service-worker or
+browser restart, and also drains on matching auth restoration and online
+events. Missing auth or a different signed-in account retains the job. Backoff
+is capped at one hour. A job is removed only after exact idempotent success,
+`stale`, `room_ended`, `already_departed`, or `ACTIVE_ROOM_CHANGED`; every one
+of those outcomes proves the old identity cannot block. The retry never invokes
+active-room recovery and never carries tokens, roles, secrets, or tab-local
+replacement state.
 
 ## Worker Detach Cleanup
 
@@ -396,6 +435,9 @@ Ordinary users should see only:
 - auth failure uses the existing one-refresh retry;
 - normal leave never automatically invokes the emergency recovery route;
 - media, camera, microphone, tab lock, hash, and reconnect state are cleared once.
+- passive close during in-flight admission persists and automatically drains
+  one exact retry after failed compensation, including across worker restart;
+  duplicate failures coalesce and a replacement participant session is fenced.
 
 ### Harness And staging
 
@@ -407,7 +449,7 @@ Ordinary users should see only:
 5. Lost local record uses the confirmed emergency action successfully.
 6. Guest tab close without explicit leave releases after grace and does not end
    the host room.
-7. Host tab close/end behavior remains unchanged.
+7. Host tab close/end keeps the existing room-end lifecycle.
 8. Internal room callbacks work through the staging gate with the service token
    and fail with an invalid token.
 9. YouTube and Crunchyroll both pass the two-profile room lifecycle check.
