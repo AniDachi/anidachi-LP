@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import type { FriendListItem, RoomInvite } from "@anidachi/protocol";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -6,12 +7,12 @@ import { mountOverlay, type OverlayRenderer } from "../entrypoints/content";
 import { AUTH_TOKENS_KEY } from "../src/auth-tokens";
 import * as overlayApp from "../src/overlay-app";
 import type { PrivilegedOverlayContext } from "../src/privileged-overlay-intent";
-import { roomJoinDefaultsStorageKeyForUser } from "../src/room-media-defaults";
 import {
-	REACTIONS_ENABLED_STORAGE_KEY,
 	REACTION_SHORTCUTS_STORAGE_KEY,
+	REACTIONS_ENABLED_STORAGE_KEY,
 } from "../src/reaction-shortcuts";
 import { RoomClient } from "../src/room-client";
+import { roomJoinDefaultsStorageKeyForUser } from "../src/room-media-defaults";
 import type { RoomSessionRecord } from "../src/room-session-storage";
 import {
 	createRoomInvite,
@@ -79,6 +80,31 @@ describe("privileged overlay wiring", () => {
 		vi.mocked(listInviteTargets).mockReset();
 		vi.mocked(listRoomInvites).mockReset();
 		vi.mocked(createRoomInvite).mockReset();
+	});
+
+	it("keeps normal leave exact and emergency recovery explicitly confirmed", () => {
+		const source = readFileSync("src/overlay-app.tsx", "utf8");
+
+		expect(source).toContain(
+			"requestCurrentRoomDeparture(activeRoomId, expectedUserId)",
+		);
+		expect(source).toContain(
+			"onConfirmed: () => resetLocalRoomSession(undefined, true)",
+		);
+		expect(source).toContain("roomReconnectSuppressedRef.current = false");
+		expect(source).toContain('scheduleRoomReconnect("leave-failed")');
+
+		const recoverySlice = source.slice(
+			source.indexOf("const handleRecoverActiveRoom"),
+			source.indexOf("const handleEndRoom"),
+		);
+		const leaveSlice = source.slice(
+			source.indexOf("const handleLeaveRoom"),
+			source.indexOf("const reloadPage"),
+		);
+		expect(recoverySlice).toContain("requestActiveRoomRecovery(");
+		expect(recoverySlice).toContain("activeRoomRecoveryConfirmationPending");
+		expect(leaveSlice).not.toContain("requestActiveRoomRecovery(");
 	});
 
 	it("keeps the overlay tree closed to the hosting page", () => {
