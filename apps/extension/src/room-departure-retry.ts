@@ -172,6 +172,9 @@ export function createRoomDepartureRetryCoordinator(
 
       // Persist the settlement transition before any auth or network await.
       await persist(jobs);
+      // Re-arm at the settled job before the network drain. If MV3 suspends at
+      // the next await, Chrome still owns a wake-up for the persisted identity.
+      await dependencies.scheduler.replace(now);
       const currentUserId = await dependencies.getCurrentUserId().catch(() => null);
       if (!currentUserId || currentUserId !== exact.ownerUserId) {
         await scheduleForAccount(jobs, currentUserId);

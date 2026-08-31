@@ -96,6 +96,28 @@ describe("room departure retry coordinator", () => {
     expect(storage.value()).toBeNull();
   });
 
+  it("durably re-arms a settled job before awaiting its exact network drain", async () => {
+    const storage = createPersistentStorage();
+    const scheduler = createScheduler();
+    const departure = deferred<"departed">();
+    const coordinator = createRoomDepartureRetryCoordinator({
+      storage,
+      scheduler,
+      getCurrentUserId: async () => "user-a",
+      departExact: async () => departure.promise,
+      now: () => 25_000,
+    });
+
+    await coordinator.persistAdmissionIntent(OLD_SESSION);
+    const settling = coordinator.settleAdmission(OLD_SESSION);
+    await waitUntil(() => scheduler.when() === 25_000);
+
+    expect(storage.value()?.jobs[0]?.admissionState).toBe("settled");
+    expect(scheduler.when()).toBe(25_000);
+    departure.resolve("departed");
+    await expect(settling).resolves.toBe("departed");
+  });
+
   it("retains a blocked account without a forever alarm and wakes on an auth-triggered drain", async () => {
     const storage = createPersistentStorage();
     const scheduler = createScheduler();
@@ -234,4 +256,20 @@ function createScheduler() {
       return scheduledAt;
     },
   };
+}
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((nextResolve) => {
+    resolve = nextResolve;
+  });
+  return { promise, resolve };
+}
+
+async function waitUntil(predicate: () => boolean): Promise<void> {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    if (predicate()) return;
+    await Promise.resolve();
+  }
+  throw new Error("condition did not become true");
 }
