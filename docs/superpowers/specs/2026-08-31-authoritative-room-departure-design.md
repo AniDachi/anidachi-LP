@@ -69,7 +69,7 @@ round trip from Web to Worker and back to Web before durable state could change.
 | Guest closes the tab without clicking leave | Worker starts the existing reconnect grace and releases the exact assignment through the signed callback when grace expires. |
 | Host leaves or closes the authoritative host tab | The separate host room-end lifecycle runs; guest departure never ends the room. |
 | No active assignment exists | Departure returns the legacy-compatible idempotent success `stale`. |
-| A tab closes while its Web admission is still in flight | A late committed admission is compensated exactly; if that result is unconfirmed, the background persists only the exact identity and retries it without touching a replacement session. |
+| A tab closes while its Web admission is still in flight | Before local cleanup, the background durably owns only the exact room/user/session identity. A late commit is compensated exactly without touching a replacement session, including after MV3 restart. |
 
 ## Scope
 
@@ -258,21 +258,32 @@ callback; that Worker lifecycle is retained. The removed hidden HTTP
 accelerator is not part of normal tab-close behavior.
 
 There is one narrower race: the tab can disappear while its authenticated Web
-admission is still in flight. If that request later commits, the background
-immediately sends one exact compensation for the captured `roomId`,
-`ownerUserId`, and `participantSessionId`. A confirmed `departed`,
-`room_ended`, `stale`, or forward-compatible `already_departed` completes the
-compensation without creating a retry record. Any unconfirmed result persists
-one coalesced extension-local job containing only that exact identity plus
-bounded retry timing metadata.
+admission is still in flight. Cancellation synchronously starts persistence of
+one coalesced extension-local intent for the captured `roomId`, `ownerUserId`,
+and `participantSessionId`, and passive cleanup waits for that write before it
+clears tab-local state. Explicit leave establishes the same intent before its
+first departure request. The job is initially `may-commit`; while that state is
+active, even an exact `stale` response is not terminal because the canceled Web
+request may still commit afterward.
 
-The Manifest V3 background schedules the earliest job with the existing
-`alarms` permission, restores it from local storage after service-worker or
-browser restart, and also drains on matching auth restoration and online
-events. Missing auth or a different signed-in account retains the job. Backoff
-is capped at one hour. A job is removed only after exact idempotent success,
-`stale`, `room_ended`, `already_departed`, or `ACTIVE_ROOM_CHANGED`; every one
-of those outcomes proves the old identity cannot block. The retry never invokes
+When the live admission promise settles, the background first persists the
+exact job as `settled` and then drains it through exact departure. If Manifest
+V3 suspends the worker before that callback, the connect route's explicit
+60-second maximum execution duration plus a 15-second transport/scheduler
+margin gives a conservative 75-second settlement horizon. Retries continue
+through that horizon; only after it expires may terminal exact outcomes remove
+the job. This is a settlement bound, not a cleanup TTL: retryable failure or
+missing matching auth retains the identity indefinitely.
+
+The Manifest V3 background schedules the earliest eligible job with the
+existing `alarms` permission, restores it from local storage after
+service-worker or browser restart, and also drains on matching auth restoration
+and online events. Missing auth or a different signed-in account retains the
+job without a perpetual five-minute alarm loop; auth change, startup, and
+online events re-arm it. Backoff is capped at one hour. Once admission is
+settled, a job is removed only after exact idempotent success, `stale`,
+`room_ended`, `already_departed`, or `ACTIVE_ROOM_CHANGED`; every one of those
+outcomes proves the old identity cannot block. The retry never invokes
 active-room recovery and never carries tokens, roles, secrets, or tab-local
 replacement state.
 
@@ -435,9 +446,11 @@ Ordinary users should see only:
 - auth failure uses the existing one-refresh retry;
 - normal leave never automatically invokes the emergency recovery route;
 - media, camera, microphone, tab lock, hash, and reconnect state are cleared once.
-- passive close during in-flight admission persists and automatically drains
-  one exact retry after failed compensation, including across worker restart;
-  duplicate failures coalesce and a replacement participant session is fenced.
+- passive close and matching explicit cancellation persist exact intent before
+  awaiting admission or tab cleanup, then automatically drain it after live
+  settlement or the bounded orphan horizon, including across worker restart;
+  early `stale` remains nonterminal, duplicates coalesce, and a replacement
+  participant session is fenced.
 
 ### Harness And staging
 

@@ -355,17 +355,20 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
   detach success, stale, timeout, and transport failure remain nonauthoritative
   after that commit. The Worker 60-second passive alarm callback is retained;
   ordinary tab close is local-only and the hidden tab-close HTTP accelerator is
-  removed. A late admission committed after tab removal gets exact compensation;
-  an unconfirmed result persists one coalesced background retry across worker or
-  browser restart, waits for matching auth, and is fenced from replacements.
+  removed. Tab removal or matching explicit cancellation now persists one
+  coalesced exact intent before waiting for the in-flight admission or local
+  cleanup. It survives worker/browser restart, keeps pre-settlement `stale`
+  nonterminal, waits for matching auth without a perpetual alarm, and is fenced
+  from replacements. Live completion drains it immediately; an orphan uses the
+  shared 60-second connect-route bound plus a 15-second safety margin.
   Normal extension leave no longer invokes active-room recovery automatically.
   Current public Web uses legacy-compatible `stale` for no assignment, while
   the shared schema/current extension retain forward-compatible acceptance of
   `already_departed`; the emergency role-specific Leave/End action remains
   separately confirmed. The staging gate now lets bearer-authenticated internal
   POST callbacks reach route-level service authentication without opening other
-  staging routes. Fresh local proof: protocol 140/140, API 166/166 plus runtime
-  37/37, Web 384 passed/3 skipped, extension 1468/1468, room harness 39/39,
+  staging routes. Fresh local proof: protocol 141/141, API 166/166 plus runtime
+  37/37, Web 384 passed/3 skipped, extension 1471/1471, room harness 39/39,
   real-WebRTC 26/26, root check/test (6 Turbo tasks each), rooms-profile
   `dev:check` exit 0, and staging artifact build/validation. Generated artifacts
   remain ignored. Remaining proof: deploy the candidate and perform the loaded

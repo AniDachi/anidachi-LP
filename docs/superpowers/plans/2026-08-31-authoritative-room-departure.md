@@ -4,7 +4,7 @@
 
 **Goal:** Make explicit guest departure commit against the durable active-room assignment first, then clean exact live Worker state without allowing cleanup failures to block the user from creating or joining another room.
 
-**Architecture:** Supabase remains the durable authority for account eligibility, the room Durable Object remains the live presence authority, and the extension remains the local media/runtime authority. Web resolves the authenticated user's current assignment, atomically releases the exact guest assignment, and only then sends a bounded exact-session detach command to the Worker. The Worker's 60-second passive grace remains independent; ordinary tab close is local-only, while a late admission committed after tab removal has a persistent background-owned exact retry.
+**Architecture:** Supabase remains the durable authority for account eligibility, the room Durable Object remains the live presence authority, and the extension remains the local media/runtime authority. Web resolves the authenticated user's current assignment, atomically releases the exact guest assignment, and only then sends a bounded exact-session detach command to the Worker. The Worker's 60-second passive grace remains independent; ordinary tab close is local-only, while cancellation of an in-flight admission first persists a background-owned exact intent that fences any late commit.
 
 **Tech Stack:** TypeScript, Zod, Next.js route handlers, Supabase RPC, Cloudflare Workers and Durable Objects, WXT Manifest V3 extension, Vitest, Node test runner, Playwright real-WebRTC harness.
 
@@ -33,11 +33,17 @@
 - Until version negotiation exists, public Web exact and recovery routes emit
   legacy-compatible `stale` when no assignment remains. This keeps deployed
   strict clients compatible after a lost-response retry.
-- Passive tab removal during an in-flight admission must persist one coalesced
-  exact retry after unconfirmed compensation. The retry contains only
+- Passive tab removal and matching explicit cancellation during an in-flight
+  admission must persist one coalesced exact intent before awaiting admission,
+  departure, or local cleanup. The retry contains only
   `roomId`, `ownerUserId`, `participantSessionId`, and bounded timing metadata;
   it survives Manifest V3 worker/browser restart, waits for the matching
   authenticated account, and never invokes broad active-room recovery.
+- The intent stays `may-commit` until the live promise settles or a conservative
+  75-second orphan horizon expires. The bound is the Web connect route's shared
+  60-second execution maximum plus 15 seconds of transport/scheduler margin.
+  `stale` is nonterminal before settlement; retryable/auth-blocked work has no
+  TTL and remains exact-owned until it can be proved safe.
 - The existing `storage` and `alarms` permissions are sufficient. No database
   table, server queue, host permission, token, role, secret, environment
   variable, or service is added.
@@ -48,7 +54,7 @@
 
 | File | Responsibility after this change |
 | --- | --- |
-| `packages/protocol/src/room-session.ts` | Strict public success/error contracts and exact internal live-detach command/acknowledgement. |
+| `packages/protocol/src/room-session.ts` | Strict public success/error contracts, exact internal live-detach command/acknowledgement, and the shared Web admission duration bound. |
 | `packages/protocol/test/room-session.test.ts` | Contract bounds, strictness, and all accepted outcome/error variants. |
 | `apps/api/src/index.ts` | Additive internal detach transport and Durable Object live-only cleanup; retain legacy departure and passive callback flows. |
 | `apps/api/test/routes.test.ts` | Hono authentication, validation, and forwarding for the new internal detach route. |
@@ -63,7 +69,7 @@
 | `apps/web/lib/staging-access.test.ts` | Prove internal path coverage and prevent unsafe method/header widening. |
 | `apps/web/lib/internal-service-auth.test.ts` | Prove a bearer that passes the staging gate is still rejected unless it exactly matches the internal secret. |
 | `apps/extension/src/room-departure.ts` | Exact normal leave, typed server errors, one auth refresh, and explicitly separate emergency recovery. |
-| `apps/extension/src/room-departure-retry.ts` | Persistent coalesced exact retry ownership for a late admission committed after passive tab removal. |
+| `apps/extension/src/room-departure-retry.ts` | Persistent coalesced exact intent before cancellation cleanup, settlement/horizon fencing, and exact late-commit retry ownership. |
 | `apps/extension/test/room-departure.test.ts` | Successful local confirmation, missing/stale exact records, typed failures, refresh, and no hidden recovery cascade. |
 | `apps/extension/test/room-departure-retry.test.ts` | Storage, restart, alarm, account fencing, bounded backoff, coalescing, and replacement safety. |
 | `apps/extension/test/privileged-overlay-wiring.test.tsx` | UI boundary: exact success tears down once, durable failure stays recoverable, emergency remains explicitly confirmed. |
@@ -1797,9 +1803,12 @@ Add a dated entry containing these exact facts:
   recovery automatically. Public Web uses `stale` for no-assignment
   idempotency so deployed strict clients remain compatible; the shared schema
   and current extension still accept `already_departed` for forward compatibility.
-- A late admission after passive tab removal persists a background-owned exact
-  retry only when the first compensation is unconfirmed. It coalesces,
-  survives restart, waits for matching auth, and cannot touch a replacement.
+- Passive tab removal or matching explicit cancellation starts a
+  background-owned exact intent before any departure/local-cleanup await. The
+  job coalesces, survives restart, treats pre-settlement `stale` as
+  nonterminal, waits for matching auth without a perpetual alarm loop, and
+  cannot touch a replacement. Live settlement drains immediately; an orphaned
+  worker uses the documented 60s + 15s horizon before terminal stale is safe.
 - Automated protocol/Web/API/runtime/extension/room/WebRTC gates: [record actual
   command results from Steps 1-4].
 - Staging two-profile YouTube/Crunchyroll acceptance: pending until the candidate
