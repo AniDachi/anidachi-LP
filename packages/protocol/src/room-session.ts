@@ -47,6 +47,13 @@ export const InternalRoomDepartureCommandSchema = z.strictObject({
   requestedAt: z.number().int().nonnegative(),
 });
 
+export const InternalRoomDetachCommandSchema = z.strictObject({
+  roomId: RoomIdSchema,
+  userId: ParticipantIdSchema,
+  participantSessionId: ParticipantSessionIdSchema,
+  requestedAt: z.number().int().nonnegative(),
+});
+
 export const RoomDepartureCallbackSchema = z.strictObject({
   roomId: RoomIdSchema,
   userId: ParticipantIdSchema,
@@ -56,8 +63,31 @@ export const RoomDepartureCallbackSchema = z.strictObject({
 
 export const RoomDepartureAcknowledgementSchema = z.strictObject({
   ok: z.literal(true),
-  outcome: z.enum(["departed", "room_ended", "stale"]),
+  outcome: z.enum(["departed", "room_ended", "already_departed", "stale"]),
 });
+
+export const RoomDetachAcknowledgementSchema = z.strictObject({
+  ok: z.literal(true),
+  outcome: z.enum(["detached", "stale"]),
+});
+
+const RoomDepartureErrorMessageSchema = z.string().min(1).max(300);
+
+export const RoomDepartureErrorResponseSchema = z.discriminatedUnion("code", [
+  z.strictObject({
+    code: z.literal("AUTH_REQUIRED"),
+    message: RoomDepartureErrorMessageSchema,
+  }),
+  z.strictObject({
+    code: z.literal("ACTIVE_ROOM_CHANGED"),
+    message: RoomDepartureErrorMessageSchema,
+  }),
+  z.strictObject({
+    code: z.literal("ROOM_DEPARTURE_UNAVAILABLE"),
+    message: RoomDepartureErrorMessageSchema,
+    retryable: z.literal(true),
+  }),
+]);
 
 export type ActiveRoomRole = z.infer<typeof ActiveRoomRoleSchema>;
 export type RoomSessionAdmissionInput = z.infer<typeof RoomSessionAdmissionInputSchema>;
@@ -69,5 +99,14 @@ export type ActiveRoomRecoveryRequest = z.infer<
 export type InternalRoomDepartureCommand = z.infer<
 	typeof InternalRoomDepartureCommandSchema
 >;
+export type InternalRoomDetachCommand = z.infer<
+  typeof InternalRoomDetachCommandSchema
+>;
 export type RoomDepartureCallback = z.infer<typeof RoomDepartureCallbackSchema>;
 export type RoomDepartureAcknowledgement = z.infer<typeof RoomDepartureAcknowledgementSchema>;
+export type RoomDetachAcknowledgement = z.infer<
+  typeof RoomDetachAcknowledgementSchema
+>;
+export type RoomDepartureErrorResponse = z.infer<
+  typeof RoomDepartureErrorResponseSchema
+>;
