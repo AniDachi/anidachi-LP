@@ -33,33 +33,54 @@ describe("closed-tab room departure", () => {
 		expect(clearRoomSession).toHaveBeenCalledWith(11, roomSession());
 	});
 
-	it("clears missing local tab state without contacting a departure endpoint", async () => {
+	it("leaves a newer local tab state intact when the close snapshot is missing", async () => {
 		const requestDeparture = vi.fn();
 		const recoverActiveDeparture = vi.fn();
-		const clearRoomSession = vi.fn(async () => true);
+		const replacementSession = {
+			...roomSession(),
+			participantSessionId: "participant-session-replacement",
+		};
+		let storedSession: RoomSessionRecord | null = null;
+		const clearRoomSession = vi.fn(async () => {
+			storedSession = null;
+			return true;
+		});
 
 		await expect(
 			handleRoomTabDeparture(12, {
-				loadRoomSession: async () => null,
+				loadRoomSession: async () => {
+					storedSession = replacementSession;
+					return null;
+				},
 				requestDeparture,
 				recoverActiveDeparture,
 				clearRoomSession,
 			}),
 		).resolves.toBe("no-session");
 
-		expect(clearRoomSession).toHaveBeenCalledWith(12, null);
+		expect(clearRoomSession).not.toHaveBeenCalled();
+		expect(storedSession).toEqual(replacementSession);
 		expect(requestDeparture).not.toHaveBeenCalled();
 		expect(recoverActiveDeparture).not.toHaveBeenCalled();
 	});
 
-	it("clears unreadable local tab state without contacting a departure endpoint", async () => {
+	it("leaves a newer local tab state intact when the close snapshot is unreadable", async () => {
 		const requestDeparture = vi.fn();
 		const recoverActiveDeparture = vi.fn();
-		const clearRoomSession = vi.fn(async () => true);
+		const replacementSession = {
+			...roomSession(),
+			participantSessionId: "participant-session-replacement",
+		};
+		let storedSession: RoomSessionRecord | null = null;
+		const clearRoomSession = vi.fn(async () => {
+			storedSession = null;
+			return true;
+		});
 
 		await expect(
 			handleRoomTabDeparture(13, {
 				loadRoomSession: async () => {
+					storedSession = replacementSession;
 					throw new Error("storage unavailable");
 				},
 				requestDeparture,
@@ -68,7 +89,8 @@ describe("closed-tab room departure", () => {
 			}),
 		).resolves.toBe("failed");
 
-		expect(clearRoomSession).toHaveBeenCalledWith(13, null);
+		expect(clearRoomSession).not.toHaveBeenCalled();
+		expect(storedSession).toEqual(replacementSession);
 		expect(requestDeparture).not.toHaveBeenCalled();
 		expect(recoverActiveDeparture).not.toHaveBeenCalled();
 	});
@@ -183,6 +205,23 @@ describe("explicit room departure", () => {
 		expect(
 			isRoomDepartureRuntimeMessage({
 				type: "ANIDACHI_ROOM_DEPARTURE",
+				command: "depart",
+				roomId: "room-a",
+				expectedUserId: "user-a",
+				participantSessionId: "participant-session-a",
+			}),
+		).toBe(true);
+		expect(
+			isRoomDepartureRuntimeMessage({
+				type: "ANIDACHI_ROOM_DEPARTURE",
+				command: "depart",
+				roomId: "room-a",
+				expectedUserId: "user-a",
+			}),
+		).toBe(false);
+		expect(
+			isRoomDepartureRuntimeMessage({
+				type: "ANIDACHI_ROOM_DEPARTURE",
 				command: "recover-active",
 				roomId: "room-a",
 				expectedUserId: "user-a",
@@ -201,7 +240,7 @@ describe("explicit room departure", () => {
 		const recoverActiveDeparture = vi.fn();
 
 		await expect(
-			handleExplicitRoomDeparture(16, "room-a", "user-a", {
+			handleExplicitRoomDeparture(16, "room-a", "user-a", "participant-session-a", {
 				loadRoomSession: async () => null,
 				recoverActiveDeparture,
 			}),
@@ -215,7 +254,7 @@ describe("explicit room departure", () => {
 		const recoverActiveDeparture = vi.fn();
 
 		await expect(
-			handleExplicitRoomDeparture(16, "room-a", "user-a", {
+			handleExplicitRoomDeparture(16, "room-a", "user-a", "participant-session-a", {
 				loadRoomSession: async () => roomSession(),
 				getStoredSession: async () => authSession(),
 				refreshSession: async () => null,
@@ -228,12 +267,32 @@ describe("explicit room departure", () => {
 		expect(recoverActiveDeparture).not.toHaveBeenCalled();
 	});
 
+	it("does not depart a replacement participant session for an old leave command", async () => {
+		const requestDeparture = vi.fn();
+
+		await expect(
+			handleExplicitRoomDeparture(
+				16,
+				"room-a",
+				"user-a",
+				"participant-session-old",
+				{
+					loadRoomSession: async () => roomSession(),
+					getStoredSession: async () => authSession(),
+					requestDeparture,
+				},
+			),
+		).resolves.toBe("active-room-changed");
+
+		expect(requestDeparture).not.toHaveBeenCalled();
+	});
+
 	it("keeps typed durable failures recoverable without emergency fallback", async () => {
 		const recoverActiveDeparture = vi.fn();
 		const clearRoomSession = vi.fn();
 
 		await expect(
-			handleExplicitRoomDeparture(16, "room-a", "user-a", {
+			handleExplicitRoomDeparture(16, "room-a", "user-a", "participant-session-a", {
 				loadRoomSession: async () => roomSession(),
 				getStoredSession: async () => authSession(),
 				requestDeparture: async () => ({
@@ -254,7 +313,7 @@ describe("explicit room departure", () => {
 		const clearRoomSession = vi.fn();
 
 		await expect(
-			handleExplicitRoomDeparture(16, "room-a", "user-a", {
+			handleExplicitRoomDeparture(16, "room-a", "user-a", "participant-session-a", {
 				loadRoomSession: async () => roomSession(),
 				getStoredSession: async () => authSession(),
 				requestDeparture: async () => ({
@@ -280,7 +339,7 @@ describe("explicit room departure", () => {
 			.mockResolvedValueOnce({ kind: "ack", outcome: "departed" });
 
 		await expect(
-			handleExplicitRoomDeparture(16, "room-a", "user-a", {
+			handleExplicitRoomDeparture(16, "room-a", "user-a", "participant-session-a", {
 				loadRoomSession: async () => roomSession(),
 				getStoredSession: async () => authSession(),
 				refreshSession: async () => ({
@@ -319,7 +378,7 @@ describe("explicit room departure", () => {
 		const recoverActiveDeparture = vi.fn();
 
 		await expect(
-			handleExplicitRoomDeparture(16, "room-a", "user-a", {
+			handleExplicitRoomDeparture(16, "room-a", "user-a", "participant-session-a", {
 				loadRoomSession: async () => roomSession(),
 				getStoredSession: async () => authSession("user-a"),
 				refreshSession: async () => authSession("user-b"),
@@ -360,13 +419,66 @@ describe("explicit room departure", () => {
 			const onConfirmed = vi.fn();
 			await expect(
 				confirmExplicitRoomDeparture({
+					roomSession: roomSession(),
+					cancelPendingJoin: vi.fn(),
 					requestDeparture: async () => outcome,
+					getCurrentRoomSession: () => roomSession(),
 					onConfirmed,
 				}),
 			).resolves.toBe(outcome);
 			expect(onConfirmed).toHaveBeenCalledOnce();
-			expect(onConfirmed).toHaveBeenCalledWith(outcome);
+			expect(onConfirmed).toHaveBeenCalledWith(roomSession(), outcome);
 		}
+	});
+
+	it("invalidates an in-flight join before departure and ignores an old acknowledgement after the session changes", async () => {
+		const departingSession = roomSession();
+		const replacementSession = {
+			...roomSession(),
+			participantSessionId: "participant-session-b",
+		};
+		let currentSession: RoomSessionRecord | null = departingSession;
+		const events: string[] = [];
+		const onConfirmed = vi.fn();
+
+		await expect(
+			confirmExplicitRoomDeparture({
+				roomSession: departingSession,
+				cancelPendingJoin: () => events.push("join-cancelled"),
+				requestDeparture: async () => {
+					events.push("departure-requested");
+					currentSession = replacementSession;
+					return "stale";
+				},
+				getCurrentRoomSession: () => currentSession,
+				onConfirmed,
+			}),
+		).resolves.toBe("stale");
+
+		expect(events).toEqual(["join-cancelled", "departure-requested"]);
+		expect(onConfirmed).not.toHaveBeenCalled();
+	});
+
+	it("confirms teardown for the captured session after mutable session updates", async () => {
+		const departingSession = roomSession();
+		const currentSession = { ...departingSession, revision: 4 };
+		const onConfirmed = vi.fn();
+
+		await expect(
+			confirmExplicitRoomDeparture({
+				roomSession: departingSession,
+				cancelPendingJoin: vi.fn(),
+				requestDeparture: async () => "already_departed",
+				getCurrentRoomSession: () => currentSession,
+				onConfirmed,
+			}),
+		).resolves.toBe("already_departed");
+
+		expect(onConfirmed).toHaveBeenCalledOnce();
+		expect(onConfirmed).toHaveBeenCalledWith(
+			departingSession,
+			"already_departed",
+		);
 	});
 
 	it("keeps the local room available for retry when departure is not confirmed", async () => {
@@ -374,9 +486,12 @@ describe("explicit room departure", () => {
 
 		await expect(
 			confirmExplicitRoomDeparture({
+				roomSession: roomSession(),
+				cancelPendingJoin: vi.fn(),
 				requestDeparture: async () => {
 					throw new Error("temporary departure failure");
 				},
+				getCurrentRoomSession: () => roomSession(),
 				onConfirmed: teardown,
 			}),
 		).rejects.toThrow("temporary departure failure");
@@ -388,7 +503,7 @@ describe("explicit room departure", () => {
 		const clearRoomSession = vi.fn(async () => true);
 
 		await expect(
-			handleExplicitRoomDeparture(16, "room-a", "user-a", {
+			handleExplicitRoomDeparture(16, "room-a", "user-a", "participant-session-a", {
 				loadRoomSession: async () => roomSession(),
 				getStoredSession: async () => authSession(),
 				requestDeparture: async () => ({
@@ -402,21 +517,22 @@ describe("explicit room departure", () => {
 		expect(clearRoomSession).not.toHaveBeenCalled();
 	});
 
-	it("asks the background to depart the sender tab using only the visible room selector", async () => {
+	it("binds the background departure command to the captured participant session", async () => {
 		const sendMessage = vi.fn(async () => ({
 			ok: true,
-			outcome: "already_departed" as const,
+			outcome: "stale" as const,
 		}));
 
 		await expect(
-			requestCurrentRoomDeparture("room-a", "user-a", { sendMessage }),
-		).resolves.toBe("already_departed");
+			requestCurrentRoomDeparture(roomSession(), { sendMessage }),
+		).resolves.toBe("stale");
 
 		expect(sendMessage).toHaveBeenCalledWith({
 			type: "ANIDACHI_ROOM_DEPARTURE",
 			command: "depart",
 			roomId: "room-a",
 			expectedUserId: "user-a",
+			participantSessionId: "participant-session-a",
 		});
 	});
 
@@ -448,7 +564,7 @@ describe("explicit room departure", () => {
 		}));
 
 		await expect(
-			requestCurrentRoomDeparture("room-a", "user-a", { sendMessage }),
+			requestCurrentRoomDeparture(roomSession(), { sendMessage }),
 		).rejects.toThrow("Could not leave the room. Please try again.");
 	});
 });

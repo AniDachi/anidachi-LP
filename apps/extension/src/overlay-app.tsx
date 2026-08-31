@@ -210,6 +210,7 @@ import { getRoomReconnectDelayMs } from "./room-reconnect";
 import {
 	captureRoomSessionIdentity,
 	clearRoomSession,
+	clearRoomSessionIfMatch,
 	discardPreparedRoomSession,
 	migrateLegacyRoomSession,
 	prepareRoomSession,
@@ -1414,10 +1415,20 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		[accountUser?.id, flushVoiceAudioPreferencesWrite],
 	);
 
-	const clearStoredRoomSession = useCallback(() => {
+	const clearStoredRoomSession = useCallback((expected?: RoomSessionRecord) => {
+		const current = storedRoomSessionRef.current;
+		if (
+			expected &&
+			(!current || !roomSessionIdentityMatches(current, expected))
+		) {
+			return false;
+		}
 		storedRoomSessionRef.current = null;
 		setStoredRoomSession(null);
-		void clearRoomSession().catch((error) => {
+		const clear = expected
+			? clearRoomSessionIfMatch(expected)
+			: clearRoomSession();
+		void clear.catch((error) => {
 			logDebug("overlay.room", "failed to clear background room session", {
 				message: error instanceof Error ? error.message : String(error),
 			});
@@ -1425,6 +1436,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				setExtensionContextInvalidated(true);
 			}
 		});
+		return true;
 	}, []);
 
 	useEffect(() => {
@@ -1558,7 +1570,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	}, [resetQuotaDisplayElapsed]);
 
 	const resetLocalRoomSession = useCallback(
-		(message?: string, openPanel = false) => {
+		(message?: string, openPanel = false, expected?: RoomSessionRecord) => {
+			const current = storedRoomSessionRef.current;
+			if (
+				expected &&
+				(!current || !roomSessionIdentityMatches(current, expected))
+			) {
+				return false;
+			}
 			roomReconnectSuppressedRef.current = true;
 			roomJoinSequenceRef.current += 1;
 			roomJoinInFlightRef.current = null;
@@ -1578,7 +1597,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			setRoomToken(null);
 			setRoomShareableLink(null);
 			setRoomCapabilities(null);
-			clearStoredRoomSession();
+			clearStoredRoomSession(expected);
 			clearRoomHash();
 			if (message !== undefined) {
 				setAuthMessage(message);
@@ -1586,6 +1605,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			if (openPanel) {
 				setPanelOpen(true);
 			}
+			return true;
 		},
 		[clearRoomQuotaDisplay, clearStoredRoomSession],
 	);
@@ -4706,17 +4726,46 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		roomReconnectSuppressedRef.current = true;
 		clearRoomReconnectTimer();
 		try {
-			await waitForOverlayPaint();
 			const activeRoomId = roomIdRef.current;
 			if (!activeRoomId || isCurrentHost()) {
 				return;
 			}
+			const departingSession = storedRoomSessionRef.current;
+			if (
+				!departingSession ||
+				departingSession.roomId !== activeRoomId ||
+				departingSession.ownerUserId !== expectedUserId
+			) {
+				throw new Error(
+					"Could not verify this room session. Please try again.",
+				);
+			}
 
+			let departureApplied = false;
 			const outcome = await confirmExplicitRoomDeparture({
-				requestDeparture: () =>
-					requestCurrentRoomDeparture(activeRoomId, expectedUserId),
-				onConfirmed: () => resetLocalRoomSession(undefined, true),
+				roomSession: departingSession,
+				cancelPendingJoin: cancelPendingRoomJoin,
+				requestDeparture: async () => {
+					await waitForOverlayPaint();
+					return requestCurrentRoomDeparture(departingSession);
+				},
+				getCurrentRoomSession: () => storedRoomSessionRef.current,
+				onConfirmed: (confirmedSession) => {
+					departureApplied = resetLocalRoomSession(
+						undefined,
+						true,
+						confirmedSession,
+					);
+				},
 			});
+			if (!departureApplied) {
+				roomReconnectSuppressedRef.current = false;
+				logDebug("overlay.room", "old leave acknowledgement ignored", {
+					roomId: activeRoomId,
+					outcome,
+				});
+				return;
+			}
 			showRoomActionFeedback("room-left");
 			logDebug("overlay.room", "left by guest", {
 				roomId: activeRoomId,

@@ -166,6 +166,39 @@ describe("background-owned room session storage", () => {
     await expect(loadRoomSessionForTab(2, dependencies)).resolves.toBeNull();
   });
 
+  it("does not clear a newly confirmed session when closed-tab cleanup has no snapshot", async () => {
+    const dependencies = backgroundDependencies();
+    const replacement = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-new", ownerUserId: "user-a" }),
+        sender(22),
+        dependencies,
+      ),
+    );
+    const preparedReplacement = await prepareRoomSessionForTab(
+      22,
+      { ownerUserId: "user-a", roomId: "room-new", forceNew: true },
+      dependencies,
+    );
+
+    await expect(
+      clearRoomSessionForClosedTab(22, null, dependencies),
+    ).resolves.toBe(false);
+    await expect(loadRoomSessionForTab(22, dependencies)).resolves.toEqual(
+      replacement,
+    );
+    await expect(
+      confirmRoomSessionForTab(
+        22,
+        preparedReplacement,
+        "room-new",
+        dependencies,
+      ),
+    ).resolves.toMatchObject({
+      participantSessionId: preparedReplacement.participantSessionId,
+    });
+  });
+
   it("persists camera intent for the same room session and resets it for a new room", async () => {
     const dependencies = backgroundDependencies();
     const initial = expectRecord(

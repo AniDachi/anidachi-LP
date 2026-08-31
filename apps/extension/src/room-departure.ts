@@ -1,6 +1,7 @@
 import {
 	ActiveRoomRecoveryRequestSchema,
 	MAX_PARTICIPANT_ID_CHARS,
+	MAX_SESSION_ID_CHARS,
 	type RoomDepartureAcknowledgement,
 	RoomDepartureAcknowledgementSchema,
 	RoomDepartureErrorResponseSchema,
@@ -11,18 +12,27 @@ import { WEB_HTTP_BASE } from "./constants";
 import {
   clearRoomSessionForClosedTab,
   loadRoomSessionForTab,
+  roomSessionIdentityMatches,
   type RoomSessionRecord,
 } from "./room-session-storage";
 
 export const ROOM_TAB_DEPARTURE_TIMEOUT_MS = 4_000;
 export const ROOM_DEPARTURE_MESSAGE_TYPE = "ANIDACHI_ROOM_DEPARTURE";
 
-export type RoomDepartureRuntimeMessage = {
-  type: typeof ROOM_DEPARTURE_MESSAGE_TYPE;
-	command: "depart" | "recover-active";
-	roomId: string;
-	expectedUserId: string;
-};
+export type RoomDepartureRuntimeMessage =
+	| {
+			type: typeof ROOM_DEPARTURE_MESSAGE_TYPE;
+			command: "depart";
+			roomId: string;
+			expectedUserId: string;
+			participantSessionId: string;
+	  }
+	| {
+			type: typeof ROOM_DEPARTURE_MESSAGE_TYPE;
+			command: "recover-active";
+			roomId: string;
+			expectedUserId: string;
+	  };
 
 export type RoomDepartureRuntimeResponse =
 	| { ok: true; outcome: RoomDepartureAcknowledgement["outcome"] }
@@ -81,23 +91,41 @@ type ConfirmedRoomDepartureOutcome =
 	RoomDepartureAcknowledgement["outcome"];
 
 export interface ConfirmExplicitRoomDepartureDependencies {
+	roomSession: RoomSessionRecord;
+	cancelPendingJoin(): void;
 	requestDeparture(): Promise<ConfirmedRoomDepartureOutcome>;
-  onConfirmed(outcome: ConfirmedRoomDepartureOutcome): void;
+	getCurrentRoomSession(): RoomSessionRecord | null;
+	onConfirmed(
+		roomSession: RoomSessionRecord,
+		outcome: ConfirmedRoomDepartureOutcome,
+	): void;
 }
 
 export function isRoomDepartureRuntimeMessage(
   value: unknown,
 ): value is RoomDepartureRuntimeMessage {
+	if (
+		!isObject(value) ||
+    value.type !== ROOM_DEPARTURE_MESSAGE_TYPE ||
+		(value.command !== "depart" && value.command !== "recover-active") ||
+		!ActiveRoomRecoveryRequestSchema.safeParse({ roomId: value.roomId })
+			.success ||
+		typeof value.expectedUserId !== "string" ||
+		value.expectedUserId.length < 1 ||
+		value.expectedUserId.length > MAX_PARTICIPANT_ID_CHARS
+	) {
+		return false;
+	}
+
+	if (value.command === "recover-active") {
+		return Object.keys(value).length === 4;
+	}
+
 	return (
-		isObject(value) &&
-    value.type === ROOM_DEPARTURE_MESSAGE_TYPE &&
-		(value.command === "depart" || value.command === "recover-active") &&
-		ActiveRoomRecoveryRequestSchema.safeParse({ roomId: value.roomId })
-			.success &&
-		typeof value.expectedUserId === "string" &&
-		value.expectedUserId.length >= 1 &&
-		value.expectedUserId.length <= MAX_PARTICIPANT_ID_CHARS &&
-		Object.keys(value).length === 4
+		typeof value.participantSessionId === "string" &&
+		value.participantSessionId.length >= 1 &&
+		value.participantSessionId.length <= MAX_SESSION_ID_CHARS &&
+		Object.keys(value).length === 5
 	);
 }
 
@@ -122,6 +150,7 @@ export async function handleRoomDepartureRuntimeMessage(
 					tabId as number,
 					_message.roomId,
 					_message.expectedUserId,
+					_message.participantSessionId,
 					dependencies,
 				);
 	if (isConfirmedRoomDepartureOutcome(outcome)) {
@@ -131,8 +160,7 @@ export async function handleRoomDepartureRuntimeMessage(
 }
 
 export async function requestCurrentRoomDeparture(
-	roomId: string,
-	expectedUserId: string,
+	roomSession: RoomSessionRecord,
   dependencies: RoomDepartureClientDependencies = {},
 ): Promise<ConfirmedRoomDepartureOutcome> {
 	const sendMessage =
@@ -142,8 +170,9 @@ export async function requestCurrentRoomDeparture(
   const response = await sendMessage({
     type: ROOM_DEPARTURE_MESSAGE_TYPE,
     command: "depart",
-		roomId,
-		expectedUserId,
+		roomId: roomSession.roomId,
+		expectedUserId: roomSession.ownerUserId,
+		participantSessionId: roomSession.participantSessionId,
 	});
 	return confirmedRuntimeDeparture(response);
 }
@@ -189,8 +218,15 @@ function confirmedRuntimeDeparture(
 export async function confirmExplicitRoomDeparture(
   dependencies: ConfirmExplicitRoomDepartureDependencies,
 ): Promise<ConfirmedRoomDepartureOutcome> {
+	dependencies.cancelPendingJoin();
 	const outcome = await dependencies.requestDeparture();
-  dependencies.onConfirmed(outcome);
+	const currentRoomSession = dependencies.getCurrentRoomSession();
+	if (
+		currentRoomSession &&
+		roomSessionIdentityMatches(currentRoomSession, dependencies.roomSession)
+	) {
+		dependencies.onConfirmed(dependencies.roomSession, outcome);
+	}
   return outcome;
 }
 
@@ -202,6 +238,7 @@ export async function handleExplicitRoomDeparture(
   tabId: number,
 	requestedRoomId: string,
 	expectedUserId: string,
+	expectedParticipantSessionId: string,
   dependencies: RoomTabDepartureDependencies = {},
 ): Promise<RoomTabDepartureOutcome> {
   const loadRoomSession = dependencies.loadRoomSession ?? loadRoomSessionForTab;
@@ -214,6 +251,9 @@ export async function handleExplicitRoomDeparture(
 	if (!record) return "no-session";
 	if (record.ownerUserId !== expectedUserId) return "account-changed";
 	if (record.roomId !== requestedRoomId) return "failed";
+	if (record.participantSessionId !== expectedParticipantSessionId) {
+		return "active-room-changed";
+	}
 	return notifyBoundedDeparture(record, dependencies);
 }
 
@@ -241,12 +281,12 @@ export async function handleRoomTabDeparture(
   try {
     record = await loadRoomSession(tabId);
   } catch {
-    await clearRoomSession(tabId, null).catch(() => false);
     return "failed";
   }
 
+	if (!record) return "no-session";
 	await clearRoomSession(tabId, record).catch(() => false);
-	return record ? "closed" : "no-session";
+	return "closed";
 }
 
 async function notifyBoundedDeparture(

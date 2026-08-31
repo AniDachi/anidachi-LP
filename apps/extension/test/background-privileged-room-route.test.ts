@@ -66,6 +66,7 @@ describe("background privileged room route", () => {
 				command: "depart",
 				roomId: "room-a",
 				expectedUserId: "user-a",
+				participantSessionId: "session-62",
 			},
       { tab: { id: 62 } },
       {

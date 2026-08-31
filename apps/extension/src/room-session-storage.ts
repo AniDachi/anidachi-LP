@@ -425,8 +425,7 @@ export async function clearRoomSessionForClosedTab(
     const storage = dependencies.sessionStorage ??
       (chrome.storage.session as StorageAreaLike);
     if (!expected) {
-      await removeRoomSessionForTabNow(tabId, storage);
-      return true;
+      return false;
     }
 
     const key = roomSessionStorageKey(tabId);

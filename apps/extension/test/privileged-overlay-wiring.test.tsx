@@ -86,11 +86,16 @@ describe("privileged overlay wiring", () => {
 		const source = readFileSync("src/overlay-app.tsx", "utf8");
 
 		expect(source).toContain(
-			"requestCurrentRoomDeparture(activeRoomId, expectedUserId)",
+			"requestCurrentRoomDeparture(departingSession)",
 		);
 		expect(source).toContain(
-			"onConfirmed: () => resetLocalRoomSession(undefined, true)",
+			"cancelPendingJoin: cancelPendingRoomJoin",
 		);
+		expect(source).toContain(
+			"departureApplied = resetLocalRoomSession(",
+		);
+		expect(source).toContain('"old leave acknowledgement ignored"');
+		expect(source).toContain("clearRoomSessionIfMatch(expected)");
 		expect(source).toContain("roomReconnectSuppressedRef.current = false");
 		expect(source).toContain('scheduleRoomReconnect("leave-failed")');
 
