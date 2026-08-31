@@ -47,9 +47,15 @@
   `roomId`, `ownerUserId`, `participantSessionId`, and bounded timing metadata;
   it survives Manifest V3 worker/browser restart, waits for the matching
   authenticated account, and never invokes broad active-room recovery.
-- The intent stays `may-commit` until current success safely retires it, a
-  canceled live promise settles it, or a conservative 135-second orphan
-  horizon expires. The bound starts at admission begin and is the extension's
+- The exact snapshot acknowledgement begins before history, event, or transport
+  callbacks can fail. A negative response or rejected runtime delivery retries
+  at 250ms exponential backoff capped at 4 seconds while the same socket and
+  generation remain current. Acceptance stops all retries; socket close,
+  disposal, or replacement cancels the timer and prevents further attempts.
+- The intent stays `may-commit` until current HTTP success moves it to
+  `handoff-pending`, a canceled live promise settles it, or a conservative
+  135-second orphan horizon expires. The bound starts at admission begin and is
+  the extension's
   60-second request abort plus the Web connect route's shared 60-second
   execution maximum and 15 seconds of transport/scheduler margin.
   `stale` is nonterminal before settlement; failed or ambiguous admission keeps
@@ -1834,6 +1840,9 @@ Add a dated entry containing these exact facts:
   cancellation marks only that generation for cleanup; duplicate signals coalesce. HTTP
   success remains `handoff-pending` until the exact tab/room/user/session/
   generation acknowledges its first authoritative room-socket snapshot.
+  Acknowledgement is isolated from consumer callbacks and transient negative or
+  rejected delivery retries with capped exponential backoff while the exact
+  socket remains current.
   Pre-ack tab close exact-cleans immediately; restart waits the documented 60s
   handoff bound. The job treats pre-settlement `stale` as nonterminal, waits for
   matching auth without a perpetual alarm loop, and cannot touch a replacement.

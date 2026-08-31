@@ -957,7 +957,11 @@ acceptance:
   that acknowledgement claims and exact-cleans the job, while an MV3 restart
   waits out a separate 60-second handoff bound (45-second socket liveness,
   maximum 8-second reconnect delay, and a 7-second scheduler margin) before
-  cleanup. Failure or ambiguity retains the observing job. Persisted data
+  cleanup. Snapshot acknowledgement starts before history/event/transport
+  consumers run and is retried after a transient reject or negative response
+  with exponential 250ms-to-4s backoff while that exact socket remains current;
+  success stops the loop, and close or replacement cancels it. Failure or
+  ambiguity retains the observing job. Persisted data
   contains only stable room/user/session identity, the non-secret generation
   watermark, and bounded timing metadata. A pre-admission job remains
   `may-commit` across Manifest V3 restart, so pre-settlement `stale` cannot erase
@@ -975,7 +979,7 @@ acceptance:
 
 Fresh local verification for the feature branch on 2026-08-31 includes protocol
 check and 141/141 tests; API check, 166/166 tests, and 37/37 runtime tests; Web
-check and 385 passed/3 skipped tests; extension check and 1500/1500 tests; room
+check and 385 passed/3 skipped tests; extension check and 1507/1507 tests; room
 harness 39/39; real-WebRTC harness 26/26; root check/test (6 Turbo tasks each);
 the rooms-profile `dev:check` command (exit 0); and staging extension build plus
 artifact validation. Generated staging folders and ZIPs remain ignored. This is

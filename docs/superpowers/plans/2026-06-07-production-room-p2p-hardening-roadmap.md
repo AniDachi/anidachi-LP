@@ -75,6 +75,9 @@
   cleanup-owned and duplicate signals coalesce. HTTP success transitions to a persisted
   `handoff-pending` owner; only the exact tab/room/user/session/generation's
   first authoritative room-socket `ROOM_SNAPSHOT` acknowledgement retires it.
+  That acknowledgement is isolated from history/event/transport consumers and
+  retries transient negative/rejected delivery with exponential 250ms-to-4s
+  backoff until accepted or the exact socket closes/is replaced.
   Pre-ack tab close exact-cleans immediately, while worker/browser restart uses
   a 60-second handoff bound from the 45-second socket liveness timeout, maximum
   8-second reconnect delay, and 7-second scheduler margin. Older completion,
@@ -96,7 +99,7 @@
   separately confirmed. The staging gate now lets bearer-authenticated internal
   POST callbacks reach route-level service authentication without opening other
   staging routes. Fresh local proof: protocol 141/141, API 166/166 plus runtime
-  37/37, Web 385 passed/3 skipped, extension 1500/1500, room harness 39/39,
+  37/37, Web 385 passed/3 skipped, extension 1507/1507, room harness 39/39,
   real-WebRTC 26/26, root check/test (6 Turbo tasks each), rooms-profile
   `dev:check` exit 0, and staging artifact build/validation. Generated artifacts
   remain ignored. Remaining proof: deploy the candidate and perform the loaded

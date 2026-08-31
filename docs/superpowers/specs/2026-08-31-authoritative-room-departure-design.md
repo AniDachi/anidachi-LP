@@ -293,6 +293,14 @@ participant-session, and generation only after the joined WebSocket receives
 its first authoritative `ROOM_SNAPSHOT`; only that matching acknowledgement
 retires the job. A stale acknowledgement is a no-op.
 
+RoomClient starts that exact acknowledgement before history-authority, event,
+or transport-ready consumers run, so a consumer exception cannot suppress the
+handoff. A negative response, synchronous failure, or rejected runtime delivery
+retries at 250ms exponential backoff capped at 4 seconds. There is only one loop
+per exact handoff; acceptance stops it, while socket close, disposal, or
+replacement clears its timer. Every attempt carries the unchanged tab, room,
+user, participant-session, and generation fence.
+
 If the tab closes after HTTP success but before that acknowledgement, passive
 cleanup claims the existing handoff job, marks it settled, and exact-departs it
 before clearing tab-local state. If Manifest V3 restarts first, startup/alarm
@@ -488,7 +496,9 @@ Ordinary users should see only:
   connect persists an exact generation before Web fetch; matching
   passive/explicit cancellation marks only that generation cleanup-owned. HTTP success remains
   `handoff-pending` until the matching first room-socket snapshot
-  acknowledgement. Older responses, alarms, exact cleanup, local clear, and
+  acknowledgement. It is isolated from consumer callbacks and retries transient
+  delivery with capped exponential backoff while the exact socket is current.
+  Older responses, alarms, exact cleanup, local clear, and
   stale acknowledgements cannot touch a newer session. Early `stale` remains
   nonterminal through live settlement or the bounded orphan horizon, duplicate
   cancellation signals coalesce, pre-ack close/restart recovery remains
