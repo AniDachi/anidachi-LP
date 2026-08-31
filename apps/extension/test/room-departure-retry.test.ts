@@ -26,6 +26,7 @@ describe("room departure retry coordinator", () => {
     });
 
     await firstWorker.persistAdmissionIntent(OLD_SESSION);
+    expect(ROOM_ADMISSION_SETTLEMENT_HORIZON_MS).toBe(135_000);
     expect(storage.value()).toMatchObject({
       version: 2,
       jobs: [
@@ -116,6 +117,28 @@ describe("room departure retry coordinator", () => {
     expect(scheduler.when()).toBe(25_000);
     departure.resolve("departed");
     await expect(settling).resolves.toBe("departed");
+  });
+
+  it("durably re-arms an ambiguous job before awaiting its exact network retry", async () => {
+    const storage = createPersistentStorage();
+    const scheduler = createScheduler();
+    const departure = deferred<"stale">();
+    const coordinator = createRoomDepartureRetryCoordinator({
+      storage,
+      scheduler,
+      getCurrentUserId: async () => "user-a",
+      departExact: async () => departure.promise,
+      now: () => 26_000,
+    });
+
+    await coordinator.persistAdmissionIntent(OLD_SESSION);
+    const retrying = coordinator.retryAdmission(OLD_SESSION);
+    await waitUntil(() => scheduler.when() === 26_000);
+
+    expect(storage.value()?.jobs[0]?.admissionState).toBe("may-commit");
+    departure.resolve("stale");
+    await expect(retrying).resolves.toBe("stale");
+    expect(storage.value()?.jobs).toHaveLength(1);
   });
 
   it("retains a blocked account without a forever alarm and wakes on an auth-triggered drain", async () => {

@@ -1,6 +1,7 @@
 import {
   ActiveRoomConflictResponseSchema,
   ClientEventSchema,
+  ROOM_CONNECT_REQUEST_TIMEOUT_MS,
   RoomSessionAdmissionInputSchema,
   RoomCapabilitiesSchema,
   ServerEventSchema,
@@ -23,6 +24,7 @@ import {
 } from "./room-departure";
 import {
   persistRoomDepartureAdmissionIntent,
+  retryRoomDepartureAdmission,
   settleRoomDepartureAdmission,
   type RoomDepartureRetryIdentity,
 } from "./room-departure-retry";
@@ -43,6 +45,8 @@ import {
   type RoomSessionBackgroundDependencies,
   type RoomSessionRecord,
 } from "./room-session-storage";
+
+export { ROOM_CONNECT_REQUEST_TIMEOUT_MS };
 
 type ConfirmedAdmissionDepartureOutcome = Extract<
   RoomTabDepartureOutcome,
@@ -553,14 +557,25 @@ export async function connectWebsiteRoomFromApi(
 }> {
   const admission = RoomSessionAdmissionInputSchema.parse({ participantSessionId });
   logDebug("room.http", "connect website room request", { webHttpBase: WEB_HTTP_BASE, roomId });
-  const response = await fetch(
-    new URL(`/api/rooms/${encodeURIComponent(roomId)}/connect`, WEB_HTTP_BASE),
-    {
-      method: "POST",
-      headers: createWebsiteRoomHeaders(accessToken),
-      body: JSON.stringify(admission),
-    },
+  const abortController = new AbortController();
+  const timeoutId = setTimeout(
+    () => abortController.abort(),
+    ROOM_CONNECT_REQUEST_TIMEOUT_MS,
   );
+  let response: Response;
+  try {
+    response = await fetch(
+      new URL(`/api/rooms/${encodeURIComponent(roomId)}/connect`, WEB_HTTP_BASE),
+      {
+        method: "POST",
+        headers: createWebsiteRoomHeaders(accessToken),
+        body: JSON.stringify(admission),
+        signal: abortController.signal,
+      },
+    );
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!response.ok) {
     logDebug("room.http", "connect website room failed", { roomId, status: response.status });
@@ -632,6 +647,9 @@ export interface RoomHttpBackgroundDependencies {
   settleCancelledAdmissionDeparture?: (
     identity: RoomDepartureRetryIdentity,
   ) => Promise<RoomTabDepartureOutcome>;
+  retryCancelledAdmissionDeparture?: (
+    identity: RoomDepartureRetryIdentity,
+  ) => Promise<RoomTabDepartureOutcome>;
 }
 
 export async function handleRoomHttpMessage(
@@ -662,6 +680,7 @@ export async function handleRoomHttpMessage(
     message.command === "connect-room"
       ? roomSessionRecordForAdmission(message.roomSession, message.roomId)
       : null;
+  let admissionRequestConfirmedSettled = false;
   let admissionFinished = false;
   let shouldDiscardPrepared = true;
   const authorityRequest = reserveRoomAuthorityRequest(sender, dependencies.authorityRequestSequences);
@@ -737,6 +756,7 @@ export async function handleRoomHttpMessage(
       message.accessToken,
       message.roomSession.participantSessionId,
     );
+    admissionRequestConfirmedSettled = true;
     const roomSession = await confirmPreparedRoomSessionForSender(
       sender,
       message.roomSession,
@@ -831,11 +851,17 @@ export async function handleRoomHttpMessage(
     if (admissionReservation && admissionRecord && !admissionFinished) {
       const completion = admissionFence.isCurrent(admissionReservation)
         ? { kind: "not-cancelled" as const }
-        : await cleanupCancelledRoomAdmission(
-            admissionRecord,
-            admissionReservation,
-            dependencies,
-          );
+        : admissionRequestConfirmedSettled
+          ? await cleanupCancelledRoomAdmission(
+              admissionRecord,
+              admissionReservation,
+              dependencies,
+            )
+          : await retryAmbiguousCancelledRoomAdmission(
+              admissionRecord,
+              admissionReservation,
+              dependencies,
+            );
       const disposition = await ownCancelledAdmissionCleanupFailure(
         senderTabId as number,
         message.roomSession,
@@ -947,6 +973,36 @@ async function cleanupCancelledRoomAdmission(
     return { kind: "cleanup-failed", outcome };
   }
   return { kind: "cleanup-confirmed", outcome };
+}
+
+async function retryAmbiguousCancelledRoomAdmission(
+  record: RoomSessionRecord,
+  reservation: RoomAdmissionReservation,
+  dependencies: RoomHttpBackgroundDependencies,
+): Promise<RoomAdmissionCompletion> {
+  try {
+    await reservation.intentPersisted;
+  } catch {
+    return { kind: "cleanup-failed", outcome: "failed" };
+  }
+  const identity = {
+    roomId: record.roomId,
+    ownerUserId: record.ownerUserId,
+    participantSessionId: record.participantSessionId,
+  };
+  const outcome = await (
+    dependencies.retryCancelledAdmissionDeparture
+      ? dependencies.retryCancelledAdmissionDeparture(identity)
+      : dependencies.cancelledAdmissionDepartureDependencies
+        ? departExactRoomSession(
+            record,
+            dependencies.cancelledAdmissionDepartureDependencies,
+          )
+        : retryRoomDepartureAdmission(identity)
+  ).catch(() => "failed" as const);
+  // A terminal result cannot confirm quiescence yet: the bounded Web request
+  // may still commit after this exact attempt.
+  return { kind: "cleanup-failed", outcome };
 }
 
 async function clearUnobservedCancelledAdmission(

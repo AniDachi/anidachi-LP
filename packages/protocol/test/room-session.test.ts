@@ -8,6 +8,7 @@ import {
   MAX_ROOM_ID_CHARS,
   MAX_SESSION_ID_CHARS,
   ROOM_CONNECT_ROUTE_MAX_DURATION_SECONDS,
+  ROOM_CONNECT_REQUEST_TIMEOUT_MS,
   ROOM_DISCONNECT_GRACE_MS,
   RoomDepartureAcknowledgementSchema,
 	RoomDepartureErrorResponseSchema,
@@ -20,6 +21,7 @@ import {
 describe("active room session contracts", () => {
   it("publishes the bounded Web admission duration used by durable cancellation intent", () => {
     expect(ROOM_CONNECT_ROUTE_MAX_DURATION_SECONDS).toBe(60);
+    expect(ROOM_CONNECT_REQUEST_TIMEOUT_MS).toBe(60_000);
   });
 
   // Break caught: create/connect could omit or substitute the tab session that

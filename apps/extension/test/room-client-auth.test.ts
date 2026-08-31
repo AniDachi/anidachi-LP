@@ -14,6 +14,7 @@ import {
   isTerminalRoomJoinError,
   isRoomHttpMessage,
   RoomApiError,
+  ROOM_CONNECT_REQUEST_TIMEOUT_MS,
   RoomClient,
 } from "../src/room-client";
 import type { PreparedRoomSession } from "../src/room-session-storage";
@@ -378,8 +379,35 @@ describe("authenticated room client", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ participantSessionId: "participant-session-1" }),
+        signal: expect.any(AbortSignal),
       },
     );
+  });
+
+  it("bounds a connect request so an orphaned admission has a finite commit horizon", async () => {
+    vi.useFakeTimers();
+    try {
+      let requestSignal: AbortSignal | undefined;
+      vi.stubGlobal("fetch", vi.fn((_url: URL, init?: RequestInit) => {
+        requestSignal = init?.signal ?? undefined;
+        return new Promise<Response>((_resolve, reject) => {
+          requestSignal?.addEventListener("abort", () => reject(new Error("aborted")));
+        });
+      }));
+
+      const connecting = connectWebsiteRoomFromApi(
+        "room-timeout",
+        "access-1",
+        "participant-session-1",
+      );
+      const rejected = expect(connecting).rejects.toThrow("aborted");
+      await vi.advanceTimersByTimeAsync(ROOM_CONNECT_REQUEST_TIMEOUT_MS);
+
+      await rejected;
+      expect(requestSignal?.aborted).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("binds the prepared participant session into create and connect HTTP bodies", async () => {

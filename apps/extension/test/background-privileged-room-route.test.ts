@@ -142,6 +142,57 @@ describe("background privileged room route", () => {
     ).resolves.toBeNull();
   });
 
+  it("keeps ambiguous canceled transport failure may-commit instead of settling on stale", async () => {
+    vi.stubGlobal("chrome", {});
+    const background = await import("../entrypoints/background");
+    const tabId = 603;
+    const admissionFence = new RoomAdmissionFence();
+    const storage = createSessionStorage();
+    const roomSessionDependencies = {
+      sessionStorage: storage,
+      localStorage: storage,
+      randomUUID: () => "ambiguous-canceled-admission",
+    };
+    const prepared = await prepareRoomSessionForTab(
+      tabId,
+      { ownerUserId: "user-a", roomId: "room-ambiguous" },
+      roomSessionDependencies,
+    );
+    const webAdmission = deferred<Response>();
+    vi.stubGlobal("fetch", vi.fn(() => webAdmission.promise));
+    const persistIntent = vi.fn(async () => undefined);
+    const retryIntent = vi.fn(async () => "stale" as const);
+    const settleIntent = vi.fn(async () => "stale" as const);
+    const connecting = background.dispatchPrivilegedRoomRuntimeMessage(
+      connectRoomHttpMessage("room-ambiguous", "access-a", prepared),
+      { tab: { id: tabId } },
+      {
+        roomDependencies: {
+          admissionFence,
+          persistCancelledAdmissionDepartureIntent: persistIntent,
+          retryCancelledAdmissionDeparture: retryIntent,
+          settleCancelledAdmissionDeparture: settleIntent,
+          issueAuthority: async () => null,
+          roomSessionDependencies,
+        },
+      },
+    );
+
+    await background.handleRemovedRoomTab(tabId, {
+      cancelRoomAdmission: (removedTabId) =>
+        cancelRoomAdmissionForTab(removedTabId, admissionFence),
+      clearRoomAuthorityRequest: () => undefined,
+      departRoom: async () => "no-session",
+      removePrivilegedAuthority: async () => undefined,
+    });
+    webAdmission.reject(new TypeError("transport lost"));
+
+    await expect(connecting).resolves.toMatchObject({ ok: false });
+    expect(persistIntent).toHaveBeenCalledOnce();
+    expect(retryIntent).toHaveBeenCalledOnce();
+    expect(settleIntent).not.toHaveBeenCalled();
+  });
+
   it("keeps explicit retry intent when leave is retryable and the tab closes", async () => {
     vi.stubGlobal("chrome", {});
     const background = await import("../entrypoints/background");

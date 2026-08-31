@@ -1,6 +1,7 @@
 import {
   ActiveRoomRecoveryRequestSchema,
   MAX_PARTICIPANT_ID_CHARS,
+  ROOM_CONNECT_REQUEST_TIMEOUT_MS,
   ROOM_CONNECT_ROUTE_MAX_DURATION_SECONDS,
   RoomDepartureRequestSchema,
 } from "@anidachi/protocol";
@@ -17,12 +18,14 @@ const ROOM_DEPARTURE_RETRY_STORAGE_KEY =
 const INITIAL_RETRY_DELAY_MS = 30_000;
 const ADMISSION_SETTLEMENT_MARGIN_MS = 15_000;
 /**
- * The connect route has a shared 60-second execution cap. Starting this
- * horizon at cancellation and adding 15 seconds of transport/scheduler margin
- * means an orphaned MV3 worker cannot declare `stale` terminal while that
- * canceled request can still commit.
+ * The client aborts admission after 60 seconds and the connect route has a
+ * separate 60-second execution cap. Starting this combined bound at
+ * cancellation and adding 15 seconds of transport/scheduler margin means an
+ * orphaned MV3 worker cannot declare `stale` terminal while that canceled
+ * request can still commit.
  */
 export const ROOM_ADMISSION_SETTLEMENT_HORIZON_MS =
+  ROOM_CONNECT_REQUEST_TIMEOUT_MS +
   ROOM_CONNECT_ROUTE_MAX_DURATION_SECONDS * 1_000 +
   ADMISSION_SETTLEMENT_MARGIN_MS;
 const RETRY_DELAYS_MS = [
@@ -74,6 +77,9 @@ export interface RoomDepartureRetryCoordinatorDependencies {
 
 export interface RoomDepartureRetryCoordinator {
   persistAdmissionIntent(identity: RoomDepartureRetryIdentity): Promise<void>;
+  retryAdmission(
+    identity: RoomDepartureRetryIdentity,
+  ): Promise<RoomTabDepartureOutcome>;
   settleAdmission(
     identity: RoomDepartureRetryIdentity,
   ): Promise<RoomTabDepartureOutcome>;
@@ -196,6 +202,44 @@ export function createRoomDepartureRetryCoordinator(
       return outcome;
     });
 
+  const retryAdmission = (
+    identity: RoomDepartureRetryIdentity,
+  ): Promise<RoomTabDepartureOutcome> =>
+    runSerialized(async () => {
+      const exact = requireIdentity(identity);
+      const now = safeNow(dependencies.now);
+      const jobs = normalizeState(await dependencies.storage.read()).jobs;
+      const index = jobs.findIndex((job) => sameIdentity(job, exact));
+      let job = jobs[index];
+      if (!job) return "failed";
+
+      // Preserve a Chrome-owned wake before auth/network awaits, including
+      // when an earlier auth-blocked drain cleared the prior alarm.
+      await dependencies.scheduler.replace(now);
+      const currentUserId = await dependencies.getCurrentUserId().catch(() => null);
+      if (!currentUserId || currentUserId !== exact.ownerUserId) {
+        await scheduleForAccount(jobs, currentUserId);
+        return currentUserId ? "account-changed" : "no-auth";
+      }
+
+      if (job.admissionState === "may-commit" && now >= job.settleAfter) {
+        job = { ...job, admissionState: "settled" };
+        jobs[index] = job;
+        await persist(jobs);
+      }
+      const outcome = await dependencies.departExact(exact).catch(
+        () => "failed" as const,
+      );
+      if (job.admissionState === "settled" && isTerminalRetryOutcome(outcome)) {
+        jobs.splice(index, 1);
+      } else {
+        jobs[index] = retryJob(job, now);
+      }
+      await persist(jobs);
+      await scheduleForAccount(jobs, currentUserId);
+      return outcome;
+    });
+
   const drain = (options: { force?: boolean } = {}): Promise<void> =>
     runSerialized(async () => {
       const jobs = normalizeState(await dependencies.storage.read()).jobs;
@@ -247,6 +291,7 @@ export function createRoomDepartureRetryCoordinator(
 
   return {
     persistAdmissionIntent,
+    retryAdmission,
     settleAdmission,
     drain,
     async handleAlarm(name) {
@@ -298,6 +343,12 @@ export function settleRoomDepartureAdmission(
   identity: RoomDepartureRetryIdentity,
 ): Promise<RoomTabDepartureOutcome> {
   return defaultRoomDepartureRetryCoordinator.settleAdmission(identity);
+}
+
+export function retryRoomDepartureAdmission(
+  identity: RoomDepartureRetryIdentity,
+): Promise<RoomTabDepartureOutcome> {
+  return defaultRoomDepartureRetryCoordinator.retryAdmission(identity);
 }
 
 export function drainRoomDepartureRetries(options?: {
