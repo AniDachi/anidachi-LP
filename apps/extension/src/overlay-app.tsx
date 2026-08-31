@@ -210,7 +210,7 @@ import { getRoomReconnectDelayMs } from "./room-reconnect";
 import {
 	captureRoomSessionIdentity,
 	clearRoomSession,
-	clearRoomSessionIfMatch,
+	clearRoomSessionDepartureIfMatch,
 	discardPreparedRoomSession,
 	migrateLegacyRoomSession,
 	prepareRoomSession,
@@ -1426,7 +1426,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		storedRoomSessionRef.current = null;
 		setStoredRoomSession(null);
 		const clear = expected
-			? clearRoomSessionIfMatch(expected)
+			? clearRoomSessionDepartureIfMatch(expected)
 			: clearRoomSession();
 		void clear.catch((error) => {
 			logDebug("overlay.room", "failed to clear background room session", {
@@ -3683,6 +3683,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						await discardPreparedRoomSession(preparedRoomSession).catch(
 							() => undefined,
 						);
+					}
+					if (skipStaleJoin("room-token-error")) {
+						return;
 					}
 					throw error;
 				}

@@ -13,6 +13,7 @@ import {
   clearRoomSessionForClosedTab,
   loadRoomSessionForTab,
   roomSessionIdentityMatches,
+  type RoomSessionBackgroundDependencies,
   type RoomSessionRecord,
 } from "./room-session-storage";
 
@@ -75,6 +76,7 @@ export interface RoomTabDepartureDependencies {
     accessToken: string,
     signal: AbortSignal,
   ) => Promise<RoomDepartureRequestResult>;
+	roomSessionDependencies?: RoomSessionBackgroundDependencies;
 	recoverActiveDeparture?: (
 		roomId: string,
 		accessToken: string,
@@ -241,7 +243,9 @@ export async function handleExplicitRoomDeparture(
 	expectedParticipantSessionId: string,
   dependencies: RoomTabDepartureDependencies = {},
 ): Promise<RoomTabDepartureOutcome> {
-  const loadRoomSession = dependencies.loadRoomSession ?? loadRoomSessionForTab;
+  const loadRoomSession = dependencies.loadRoomSession ??
+		((resolvedTabId: number) =>
+			loadRoomSessionForTab(resolvedTabId, dependencies.roomSessionDependencies));
   let record: RoomSessionRecord | null;
 	try {
 		record = await loadRoomSession(tabId);
@@ -255,6 +259,24 @@ export async function handleExplicitRoomDeparture(
 		return "active-room-changed";
 	}
 	return notifyBoundedDeparture(record, dependencies);
+}
+
+export async function departExactRoomSession(
+	record: RoomSessionRecord,
+	dependencies: RoomTabDepartureDependencies = {},
+): Promise<RoomTabDepartureOutcome> {
+	return notifyBoundedDeparture(record, dependencies);
+}
+
+export async function handleExactRoomSessionDepartureRuntime(
+	record: RoomSessionRecord,
+	dependencies: RoomTabDepartureDependencies = {},
+): Promise<RoomDepartureRuntimeResponse> {
+	const outcome = await departExactRoomSession(record, dependencies);
+	if (isConfirmedRoomDepartureOutcome(outcome)) {
+		return { ok: true, outcome };
+	}
+	return { ok: false, error: explicitDepartureError(outcome) };
 }
 
 export async function handleActiveRoomRecovery(
@@ -274,8 +296,16 @@ export async function handleRoomTabDeparture(
   tabId: number,
   dependencies: RoomTabDepartureDependencies = {},
 ): Promise<"closed" | "no-session" | "failed"> {
-  const loadRoomSession = dependencies.loadRoomSession ?? loadRoomSessionForTab;
-  const clearRoomSession = dependencies.clearRoomSession ?? clearRoomSessionForClosedTab;
+  const loadRoomSession = dependencies.loadRoomSession ??
+		((resolvedTabId: number) =>
+			loadRoomSessionForTab(resolvedTabId, dependencies.roomSessionDependencies));
+  const clearRoomSession = dependencies.clearRoomSession ??
+		((resolvedTabId: number, expected: RoomSessionRecord | null) =>
+			clearRoomSessionForClosedTab(
+				resolvedTabId,
+				expected,
+				dependencies.roomSessionDependencies,
+			));
   let record: RoomSessionRecord | null;
 
   try {

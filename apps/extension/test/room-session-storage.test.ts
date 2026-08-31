@@ -1072,6 +1072,69 @@ describe("background-owned room session storage", () => {
     expect(currentCleanup).toEqual({ ok: true, record: null });
     expect(dependencies.sessionStorage.values.size).toBe(0);
   });
+
+  it("clears departure state by stable identity after mutable updates and preserves a replacement", async () => {
+    const dependencies = backgroundDependencies();
+    const captured = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(40),
+        dependencies,
+      ),
+    );
+    const updated = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({
+          command: "set-camera-enabled",
+          enabled: true,
+          record: captured,
+        }),
+        sender(40),
+        dependencies,
+      ),
+    );
+    expect(updated).toMatchObject({ revision: 2, cameraEnabled: true });
+
+    await expect(
+      handleRoomSessionStorageMessage(
+        {
+          type: ROOM_SESSION_MESSAGE_TYPE,
+          command: "clear-departure-if-match",
+          record: captured,
+        } as unknown as RoomSessionMessage,
+        sender(40),
+        dependencies,
+      ),
+    ).resolves.toEqual({ ok: true, record: null });
+
+    const replacementPrepared = await prepareRoomSessionForTab(
+      40,
+      { ownerUserId: "user-a", roomId: "room-a", forceNew: true },
+      dependencies,
+    );
+    const replacement = await confirmRoomSessionForTab(
+      40,
+      replacementPrepared,
+      "room-a",
+      dependencies,
+    );
+    if (!replacement) throw new Error("Expected a replacement room session");
+
+    await expect(
+      handleRoomSessionStorageMessage(
+        {
+          type: ROOM_SESSION_MESSAGE_TYPE,
+          command: "clear-departure-if-match",
+          record: captured,
+        } as unknown as RoomSessionMessage,
+        sender(40),
+        dependencies,
+      ),
+    ).resolves.toEqual({ ok: true, record: replacement });
+    await expect(loadRoomSessionForTab(40, dependencies)).resolves.toEqual(
+      replacement,
+    );
+  });
 });
 
 describe("legacy page room session migration", () => {

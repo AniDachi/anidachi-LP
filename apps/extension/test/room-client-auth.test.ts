@@ -670,8 +670,9 @@ describe("authenticated room client", () => {
     });
     firstResponse.resolve(roomConnectionResponse("room-old"));
     await expect(first).resolves.toMatchObject({
-      ok: true,
-      connection: { privilegedRoomAuthority: null },
+      ok: false,
+      code: "STALE_ROOM_SESSION",
+      status: 409,
     });
     expect(issueAuthority).toHaveBeenCalledTimes(1);
   });

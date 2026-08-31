@@ -17,6 +17,11 @@ import { API_WS_BASE, WEB_HTTP_BASE } from "./constants";
 import { logDebug, roomEventDebugSnapshot } from "./debug-log";
 import type { RoomSendDisposition, SignalingTransportReady } from "./media-types";
 import {
+  departExactRoomSession,
+  type RoomTabDepartureDependencies,
+  type RoomTabDepartureOutcome,
+} from "./room-departure";
+import {
   issuePrivilegedRoomAuthority,
   reservePrivilegedRoomAuthorityForTab,
   type IssuedRoomAuthorityInput,
@@ -24,6 +29,7 @@ import {
   type PrivilegedOverlayContext,
 } from "./privileged-overlay-intent";
 import {
+  clearRoomSessionForDepartureIfMatch,
   confirmRoomSessionForTab,
   discardPreparedRoomSessionIfMatch,
   isPreparedRoomSession,
@@ -31,6 +37,115 @@ import {
   type RoomSessionBackgroundDependencies,
   type RoomSessionRecord,
 } from "./room-session-storage";
+
+type ConfirmedAdmissionDepartureOutcome = Extract<
+  RoomTabDepartureOutcome,
+  "already_departed" | "departed" | "room_ended" | "stale"
+>;
+
+export type RoomAdmissionCompletion =
+  | { kind: "cleanup-confirmed"; outcome: ConfirmedAdmissionDepartureOutcome }
+  | { kind: "finished" };
+
+interface RoomAdmissionReservation {
+  readonly completion: Promise<RoomAdmissionCompletion>;
+  readonly participantSessionId: string;
+  readonly sequence: number;
+  readonly tabId: number;
+  cancelled: boolean;
+  settled: boolean;
+  resolve(result: RoomAdmissionCompletion): void;
+}
+
+export class RoomAdmissionFence {
+  private readonly currentByTab = new Map<number, RoomAdmissionReservation>();
+  private nextSequence = 0;
+
+  begin(tabId: number, participantSessionId: string): RoomAdmissionReservation {
+    const previous = this.currentByTab.get(tabId);
+    if (previous && !previous.settled) {
+      previous.cancelled = true;
+    }
+    if (this.nextSequence >= Number.MAX_SAFE_INTEGER) {
+      throw new Error("Room admission sequence is exhausted");
+    }
+    let resolve!: (result: RoomAdmissionCompletion) => void;
+    const completion = new Promise<RoomAdmissionCompletion>((nextResolve) => {
+      resolve = nextResolve;
+    });
+    const reservation: RoomAdmissionReservation = {
+      cancelled: false,
+      completion,
+      participantSessionId,
+      resolve,
+      sequence: ++this.nextSequence,
+      settled: false,
+      tabId,
+    };
+    this.currentByTab.set(tabId, reservation);
+    return reservation;
+  }
+
+  cancel(
+    tabId: number,
+    participantSessionId: string,
+  ): Promise<RoomAdmissionCompletion> | null {
+    const current = this.currentByTab.get(tabId);
+    if (
+      !current ||
+      current.settled ||
+      current.participantSessionId !== participantSessionId
+    ) {
+      return null;
+    }
+    current.cancelled = true;
+    return current.completion;
+  }
+
+  cancelAny(tabId: number): void {
+    const current = this.currentByTab.get(tabId);
+    if (current && !current.settled) {
+      current.cancelled = true;
+    }
+  }
+
+  isCurrent(reservation: RoomAdmissionReservation): boolean {
+    return (
+      !reservation.cancelled &&
+      !reservation.settled &&
+      this.currentByTab.get(reservation.tabId) === reservation
+    );
+  }
+
+  finish(
+    reservation: RoomAdmissionReservation,
+    result: RoomAdmissionCompletion,
+  ): void {
+    if (reservation.settled) return;
+    reservation.settled = true;
+    if (this.currentByTab.get(reservation.tabId) === reservation) {
+      this.currentByTab.delete(reservation.tabId);
+    }
+    reservation.resolve(result);
+  }
+}
+
+const defaultRoomAdmissionFence = new RoomAdmissionFence();
+
+export function cancelRoomAdmissionForDeparture(
+  tabId: number,
+  participantSessionId: string,
+  fence: RoomAdmissionFence = defaultRoomAdmissionFence,
+): Promise<RoomAdmissionCompletion> | null {
+  return fence.cancel(tabId, participantSessionId);
+}
+
+export function cancelRoomAdmissionForTab(
+  tabId: number,
+  fence: RoomAdmissionFence = defaultRoomAdmissionFence,
+): void {
+  fence.cancelAny(tabId);
+}
 
 export type RoomConnectionStatus = "idle" | "connecting" | "connected" | "closed" | "error";
 
@@ -451,6 +566,8 @@ export interface RoomHttpBackgroundDependencies {
   authorityDependencies?: PrivilegedOverlayIntentDependencies;
   authorityRequestSequences?: Map<number, number>;
   roomSessionDependencies?: RoomSessionBackgroundDependencies;
+  admissionFence?: RoomAdmissionFence;
+  cancelledAdmissionDepartureDependencies?: RoomTabDepartureDependencies;
   confirmRoomSession?: (
     tabId: number,
     prepared: PreparedRoomSession,
@@ -469,6 +586,18 @@ export async function handleRoomHttpMessage(
   sender: { tab?: { id?: number } } = {},
   dependencies: RoomHttpBackgroundDependencies = {},
 ): Promise<RoomHttpMessageResponse> {
+  const senderTabId = sender.tab?.id;
+  const admissionFence = dependencies.admissionFence ?? defaultRoomAdmissionFence;
+  const admissionReservation =
+    message.command === "connect-room" &&
+    Number.isInteger(senderTabId) &&
+    (senderTabId ?? -1) >= 0
+      ? admissionFence.begin(
+          senderTabId as number,
+          message.roomSession.participantSessionId,
+        )
+      : null;
+  let admissionFinished = false;
   const authorityRequest = reserveRoomAuthorityRequest(sender, dependencies.authorityRequestSequences);
   const usesPersistentAuthority = dependencies.issueAuthority === undefined;
   const authorityReservation =
@@ -549,7 +678,19 @@ export async function handleRoomHttpMessage(
       dependencies.roomSessionDependencies,
       dependencies.confirmRoomSession,
     );
-    if (!roomSession) {
+    if (
+      !roomSession ||
+      (admissionReservation && !admissionFence.isCurrent(admissionReservation))
+    ) {
+      const cleanup = await cleanupCancelledRoomAdmission(
+        senderTabId as number,
+        roomSession ?? roomSessionRecordForAdmission(message.roomSession, message.roomId),
+        dependencies,
+      );
+      if (admissionReservation) {
+        admissionFence.finish(admissionReservation, cleanup);
+        admissionFinished = true;
+      }
       throw new RoomApiError(
         "This room action was replaced by a newer tab action.",
         "STALE_ROOM_SESSION",
@@ -561,11 +702,34 @@ export async function handleRoomHttpMessage(
       roomId: message.roomId,
       roomToken: connection.roomToken,
     });
+    if (admissionReservation && !admissionFence.isCurrent(admissionReservation)) {
+      const cleanup = await cleanupCancelledRoomAdmission(
+        senderTabId as number,
+        roomSession,
+        dependencies,
+      );
+      admissionFence.finish(admissionReservation, cleanup);
+      admissionFinished = true;
+      throw new RoomApiError(
+        "This room action was replaced by a newer tab action.",
+        "STALE_ROOM_SESSION",
+        undefined,
+        409,
+      );
+    }
+    if (admissionReservation) {
+      admissionFence.finish(admissionReservation, { kind: "finished" });
+      admissionFinished = true;
+    }
     return {
       ok: true,
       connection: { ...connection, privilegedRoomAuthority, roomSession },
     };
   } catch (error) {
+    if (admissionReservation && !admissionFinished) {
+      admissionFence.finish(admissionReservation, { kind: "finished" });
+      admissionFinished = true;
+    }
     await discardPreparedRoomSessionForSender(
       sender,
       message.roomSession,
@@ -589,6 +753,52 @@ export async function handleRoomHttpMessage(
       error: responseError instanceof Error ? responseError.message : "Room request failed",
     };
   }
+}
+
+async function cleanupCancelledRoomAdmission(
+  tabId: number,
+  record: RoomSessionRecord,
+  dependencies: RoomHttpBackgroundDependencies,
+): Promise<RoomAdmissionCompletion> {
+  const outcome = await departExactRoomSession(
+    record,
+    dependencies.cancelledAdmissionDepartureDependencies,
+  );
+  if (!isConfirmedAdmissionDepartureOutcome(outcome)) {
+    return { kind: "finished" };
+  }
+  await clearRoomSessionForDepartureIfMatch(
+    tabId,
+    record,
+    dependencies.roomSessionDependencies,
+  ).catch(() => false);
+  return { kind: "cleanup-confirmed", outcome };
+}
+
+function roomSessionRecordForAdmission(
+  prepared: PreparedRoomSession,
+  roomId: string,
+): RoomSessionRecord {
+  return {
+    version: prepared.version,
+    revision: 1,
+    roomId,
+    ownerUserId: prepared.ownerUserId,
+    participantSessionId: prepared.participantSessionId,
+    cameraEnabled: false,
+    voiceMode: "push-to-talk",
+  };
+}
+
+function isConfirmedAdmissionDepartureOutcome(
+  outcome: RoomTabDepartureOutcome,
+): outcome is ConfirmedAdmissionDepartureOutcome {
+  return (
+    outcome === "departed" ||
+    outcome === "room_ended" ||
+    outcome === "already_departed" ||
+    outcome === "stale"
+  );
 }
 
 async function confirmPreparedRoomSessionForSender(
@@ -625,8 +835,11 @@ async function discardPreparedRoomSessionForSender(
   ).catch(() => false);
 }
 
-export function clearRoomAuthorityRequestForTab(tabId: number): void {
-  roomAuthorityRequestSequenceByTab.delete(tabId);
+export function clearRoomAuthorityRequestForTab(
+  tabId: number,
+  sequences: Map<number, number> = roomAuthorityRequestSequenceByTab,
+): void {
+  sequences.delete(tabId);
 }
 
 function reserveRoomAuthorityRequest(

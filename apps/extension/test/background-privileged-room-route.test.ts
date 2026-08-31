@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { connectRoomHttpMessage } from "../src/room-client";
-import type { PreparedRoomSession } from "../src/room-session-storage";
+import {
+  loadRoomSessionForTab,
+  prepareRoomSessionForTab,
+  type PreparedRoomSession,
+} from "../src/room-session-storage";
 
 function preparedRoomSession(roomId: string): PreparedRoomSession {
   return {
@@ -30,12 +34,13 @@ const roomSessionRouteDependencies = {
 };
 
 describe("background privileged room route", () => {
-  it("routes a real tab removal through exact departure and authority cleanup", async () => {
+  it("cancels admission before passive tab cleanup and authority removal", async () => {
     vi.stubGlobal("chrome", {});
     const background = await import("../entrypoints/background");
     const calls: string[] = [];
 
     await background.handleRemovedRoomTab(60, {
+      cancelRoomAdmission: (tabId) => calls.push(`cancel:${tabId}`),
       clearRoomAuthorityRequest: (tabId) => calls.push(`request:${tabId}`),
       departRoom: async (tabId) => {
         calls.push(`depart:${tabId}`);
@@ -46,7 +51,12 @@ describe("background privileged room route", () => {
       },
     });
 
-    expect(calls).toEqual(["request:60", "depart:60", "authority:60"]);
+    expect(calls).toEqual([
+      "cancel:60",
+      "request:60",
+      "depart:60",
+      "authority:60",
+    ]);
   });
 
   it("routes an explicit leave through the sender tab's background-owned session", async () => {
@@ -94,6 +104,191 @@ describe("background privileged room route", () => {
       expect.any(String),
       expect.any(AbortSignal),
     );
+  });
+
+  it("cancels an in-flight background admission before exact leave and cleans a late Web commit", async () => {
+    vi.stubGlobal("chrome", {});
+    const background = await import("../entrypoints/background");
+    const tabId = 81;
+    const storage = createSessionStorage();
+    const roomSessionDependencies = {
+      sessionStorage: storage,
+      localStorage: storage,
+      randomUUID: () => "late-admission",
+    };
+    const prepared = await prepareRoomSessionForTab(
+      tabId,
+      { ownerUserId: "user-a", roomId: "room-late" },
+      roomSessionDependencies,
+    );
+    const webAdmission = deferred<Response>();
+    vi.stubGlobal("fetch", vi.fn(() => webAdmission.promise));
+    const requestDeparture = vi.fn(async () => ({
+      kind: "ack" as const,
+      outcome: "already_departed" as const,
+    }));
+    const dependencies = {
+      departureDependencies: {
+        getStoredSession: async () => sessionFor("user-a"),
+        refreshSession: async () => null,
+        requestDeparture,
+        roomSessionDependencies,
+        timeoutMs: 100,
+      },
+      roomDependencies: {
+        issueAuthority: async () => null,
+        roomSessionDependencies,
+      },
+    };
+    const sender = { tab: { id: tabId } };
+
+    const connecting = background.dispatchPrivilegedRoomRuntimeMessage(
+      connectRoomHttpMessage("room-late", "access-a", prepared),
+      sender,
+      dependencies,
+    );
+    const leaving = background.dispatchPrivilegedRoomRuntimeMessage(
+      {
+        type: "ANIDACHI_ROOM_DEPARTURE",
+        command: "depart",
+        roomId: "room-late",
+        expectedUserId: "user-a",
+        participantSessionId: prepared.participantSessionId,
+      },
+      sender,
+      dependencies,
+    );
+
+    await waitForCall(requestDeparture);
+    await expect(leaving).resolves.toEqual({
+      ok: true,
+      outcome: "already_departed",
+    });
+
+    webAdmission.resolve(roomResponse("room-late"));
+
+    await expect(connecting).resolves.toMatchObject({
+      ok: false,
+      code: "STALE_ROOM_SESSION",
+      status: 409,
+    });
+    expect(requestDeparture).toHaveBeenCalledTimes(2);
+    expect(requestDeparture).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        roomId: "room-late",
+        ownerUserId: "user-a",
+        participantSessionId: prepared.participantSessionId,
+      }),
+      "access-token-user-a",
+      expect.any(AbortSignal),
+    );
+    expect(requestDeparture).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        roomId: "room-late",
+        ownerUserId: "user-a",
+        participantSessionId: prepared.participantSessionId,
+      }),
+      "access-token-user-a",
+      expect.any(AbortSignal),
+    );
+    await expect(
+      loadRoomSessionForTab(tabId, roomSessionDependencies),
+    ).resolves.toBeNull();
+  });
+
+  it("cleans a superseded late admission without touching the newer winning session", async () => {
+    vi.stubGlobal("chrome", {});
+    const background = await import("../entrypoints/background");
+    const tabId = 82;
+    const storage = createSessionStorage();
+    let nextId = 0;
+    const roomSessionDependencies = {
+      sessionStorage: storage,
+      localStorage: storage,
+      randomUUID: () => `superseded-${++nextId}`,
+    };
+    const oldPrepared = await prepareRoomSessionForTab(
+      tabId,
+      { ownerUserId: "user-a", roomId: "room-old", forceNew: true },
+      roomSessionDependencies,
+    );
+    const oldAdmission = deferred<Response>();
+    const newAdmission = deferred<Response>();
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockImplementationOnce(() => oldAdmission.promise)
+        .mockImplementationOnce(() => newAdmission.promise),
+    );
+    const requestDeparture = vi.fn(async () => ({
+      kind: "ack" as const,
+      outcome: "stale" as const,
+    }));
+    const dependencies = {
+      departureDependencies: {
+        getStoredSession: async () => sessionFor("user-a"),
+        refreshSession: async () => null,
+        requestDeparture,
+        roomSessionDependencies,
+        timeoutMs: 100,
+      },
+      roomDependencies: {
+        issueAuthority: async () => null,
+        roomSessionDependencies,
+      },
+    };
+    const sender = { tab: { id: tabId } };
+    const older = background.dispatchPrivilegedRoomRuntimeMessage(
+      connectRoomHttpMessage("room-old", "access-a", oldPrepared),
+      sender,
+      dependencies,
+    );
+    const newPrepared = await prepareRoomSessionForTab(
+      tabId,
+      { ownerUserId: "user-a", roomId: "room-new", forceNew: true },
+      roomSessionDependencies,
+    );
+    const newer = background.dispatchPrivilegedRoomRuntimeMessage(
+      connectRoomHttpMessage("room-new", "access-a", newPrepared),
+      sender,
+      dependencies,
+    );
+
+    newAdmission.resolve(roomResponse("room-new"));
+    await expect(newer).resolves.toMatchObject({
+      ok: true,
+      connection: {
+        roomSession: {
+          roomId: "room-new",
+          participantSessionId: newPrepared.participantSessionId,
+        },
+      },
+    });
+    oldAdmission.resolve(roomResponse("room-old"));
+    await expect(older).resolves.toMatchObject({
+      ok: false,
+      code: "STALE_ROOM_SESSION",
+      status: 409,
+    });
+
+    expect(requestDeparture).toHaveBeenCalledOnce();
+    expect(requestDeparture).toHaveBeenCalledWith(
+      expect.objectContaining({
+        roomId: "room-old",
+        participantSessionId: oldPrepared.participantSessionId,
+      }),
+      "access-token-user-a",
+      expect.any(AbortSignal),
+    );
+    await expect(
+      loadRoomSessionForTab(tabId, roomSessionDependencies),
+    ).resolves.toMatchObject({
+      roomId: "room-new",
+      participantSessionId: newPrepared.participantSessionId,
+    });
   });
 
   it("routes a background-issued authority through connect, rejects a forgery, ends once, and rejects replay", async () => {
@@ -263,8 +458,9 @@ describe("background privileged room route", () => {
       const stale = await older;
 
 			expect(stale).toMatchObject({
-				ok: true,
-				connection: { privilegedRoomAuthority: null },
+				ok: false,
+				code: "STALE_ROOM_SESSION",
+				status: 409,
 			});
       expect(newest).toMatchObject({
         ok: true,
@@ -393,8 +589,9 @@ describe("background privileged room route", () => {
       const [oldResult, newResult] = await Promise.all([older, newer]);
 
 			expect(oldResult).toMatchObject({
-				ok: true,
-				connection: { privilegedRoomAuthority: null },
+				ok: false,
+				code: "STALE_ROOM_SESSION",
+				status: 409,
 			});
       if (outcome === "success") {
         expect(newResult).toMatchObject({
@@ -522,8 +719,9 @@ describe("background privileged room route", () => {
 		]);
 
 		expect(oldResult).toMatchObject({
-			ok: true,
-			connection: { privilegedRoomAuthority: null },
+			ok: false,
+			code: "STALE_ROOM_SESSION",
+			status: 409,
 		});
     expect(newResult).toMatchObject({ ok: false, status: 500 });
     expect(invokeResult).toEqual({
@@ -685,6 +883,14 @@ function deferred<T>() {
     resolve = nextResolve;
   });
   return { promise, resolve };
+}
+
+async function waitForCall(mock: { mock: { calls: unknown[][] } }): Promise<void> {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    if (mock.mock.calls.length > 0) return;
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+  throw new Error("Timed out waiting for the exact departure request");
 }
 
 function createSessionStorage() {

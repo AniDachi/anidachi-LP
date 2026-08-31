@@ -95,9 +95,10 @@ describe("privileged overlay wiring", () => {
 			"departureApplied = resetLocalRoomSession(",
 		);
 		expect(source).toContain('"old leave acknowledgement ignored"');
-		expect(source).toContain("clearRoomSessionIfMatch(expected)");
+		expect(source).toContain("clearRoomSessionDepartureIfMatch(expected)");
 		expect(source).toContain("roomReconnectSuppressedRef.current = false");
 		expect(source).toContain('scheduleRoomReconnect("leave-failed")');
+		expect(source).toContain('skipStaleJoin("room-token-error")');
 
 		const recoverySlice = source.slice(
 			source.indexOf("const handleRecoverActiveRoom"),

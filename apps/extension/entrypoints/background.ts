@@ -21,6 +21,8 @@ import {
   type PrivilegedOverlayIntentDependencies,
 } from "../src/privileged-overlay-intent";
 import {
+  cancelRoomAdmissionForDeparture,
+  cancelRoomAdmissionForTab,
   clearRoomAuthorityRequestForTab,
   endWebsiteRoomFromApi,
   handleRoomHttpMessage,
@@ -28,6 +30,7 @@ import {
   type RoomHttpBackgroundDependencies,
 } from "../src/room-client";
 import {
+  handleExactRoomSessionDepartureRuntime,
   handleRoomDepartureRuntimeMessage,
   handleRoomTabDeparture,
   isRoomDepartureRuntimeMessage,
@@ -65,6 +68,7 @@ export interface PrivilegedRoomRuntimeDependencies {
 }
 
 export interface RemovedRoomTabDependencies {
+  cancelRoomAdmission?: (tabId: number) => void;
   clearRoomAuthorityRequest?: (tabId: number) => void;
   departRoom?: (tabId: number) => Promise<RoomTabDepartureOutcome>;
   removePrivilegedAuthority?: (tabId: number) => Promise<void>;
@@ -74,6 +78,7 @@ export async function handleRemovedRoomTab(
   tabId: number,
   dependencies: RemovedRoomTabDependencies = {},
 ): Promise<void> {
+  (dependencies.cancelRoomAdmission ?? cancelRoomAdmissionForTab)(tabId);
   (dependencies.clearRoomAuthorityRequest ?? clearRoomAuthorityRequestForTab)(tabId);
   try {
     await (dependencies.departRoom ?? handleRoomTabDeparture)(tabId);
@@ -91,11 +96,7 @@ export function dispatchPrivilegedRoomRuntimeMessage(
   dependencies: PrivilegedRoomRuntimeDependencies = {},
 ): Promise<unknown> | null {
   if (isRoomDepartureRuntimeMessage(message)) {
-    return handleRoomDepartureRuntimeMessage(
-      message,
-      sender,
-      dependencies.departureDependencies,
-    );
+    return dispatchRoomDepartureRuntimeMessage(message, sender, dependencies);
   }
   if (isPrivilegedOverlayIntentMessage(message)) {
     return handlePrivilegedOverlayIntentMessage(message, sender, {
@@ -104,9 +105,62 @@ export function dispatchPrivilegedRoomRuntimeMessage(
     });
   }
   if (isRoomHttpMessage(message)) {
-    return handleRoomHttpMessage(message, sender, dependencies.roomDependencies);
+    return handleRoomHttpMessage(message, sender, {
+      ...dependencies.roomDependencies,
+      cancelledAdmissionDepartureDependencies:
+        dependencies.departureDependencies,
+    });
   }
   return null;
+}
+
+async function dispatchRoomDepartureRuntimeMessage(
+  message: Parameters<typeof handleRoomDepartureRuntimeMessage>[0],
+  sender: { tab?: { id?: number } },
+  dependencies: PrivilegedRoomRuntimeDependencies,
+): Promise<unknown> {
+  const tabId = sender.tab?.id;
+  if (
+    message.command !== "depart" ||
+    !Number.isInteger(tabId) ||
+    (tabId ?? -1) < 0
+  ) {
+    return handleRoomDepartureRuntimeMessage(
+      message,
+      sender,
+      dependencies.departureDependencies,
+    );
+  }
+
+  const cancelledAdmission = cancelRoomAdmissionForDeparture(
+    tabId as number,
+    message.participantSessionId,
+    dependencies.roomDependencies?.admissionFence,
+  );
+  if (!cancelledAdmission) {
+    return handleRoomDepartureRuntimeMessage(
+      message,
+      sender,
+      dependencies.departureDependencies,
+    );
+  }
+
+  clearRoomAuthorityRequestForTab(
+    tabId as number,
+    dependencies.roomDependencies?.authorityRequestSequences,
+  );
+  return handleExactRoomSessionDepartureRuntime(
+    {
+      version: 1,
+      revision: 1,
+      roomId: message.roomId,
+      ownerUserId: message.expectedUserId,
+      participantSessionId: message.participantSessionId,
+      cameraEnabled: false,
+      voiceMode: "push-to-talk",
+    },
+    dependencies.departureDependencies,
+  );
 }
 
 export default defineBackground(() => {

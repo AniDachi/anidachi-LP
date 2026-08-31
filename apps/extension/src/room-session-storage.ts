@@ -126,6 +126,11 @@ export type RoomSessionStorageMessage =
     }
   | {
       type: typeof ROOM_SESSION_STORAGE_MESSAGE_TYPE;
+      command: "clear-departure-if-match";
+      record: RoomSessionRecord;
+    }
+  | {
+      type: typeof ROOM_SESSION_STORAGE_MESSAGE_TYPE;
       command: "set-voice-mode";
       mode: VoiceMode;
       record: RoomSessionRecord;
@@ -199,6 +204,7 @@ export function isRoomSessionStorageMessage(value: unknown): value is RoomSessio
         (value.legacyRecord === null || isLegacyRoomSessionRecord(value.legacyRecord))
       );
     case "clear-if-match":
+    case "clear-departure-if-match":
       return parseRoomSessionRecord(value.record) !== null;
     case "set-voice-mode":
       return isVoiceMode(value.mode) &&
@@ -319,6 +325,15 @@ export async function handleRoomSessionStorageMessage(
           return {
             ok: true,
             record: await clearRoomSessionIfMatchForTab(
+              sessionStorage,
+              resolvedTabId,
+              message.record,
+            ),
+          };
+        case "clear-departure-if-match":
+          return {
+            ok: true,
+            record: await clearRoomSessionForDepartureIfMatchNow(
               sessionStorage,
               resolvedTabId,
               message.record,
@@ -614,6 +629,38 @@ export async function clearRoomSessionIfMatch(
 ): Promise<void> {
   await sendRoomSessionMessage(
     { type: ROOM_SESSION_STORAGE_MESSAGE_TYPE, command: "clear-if-match", record },
+    dependencies.sendMessage,
+  );
+}
+
+export async function clearRoomSessionForDepartureIfMatch(
+  tabId: number,
+  record: RoomSessionRecord,
+  dependencies: RoomSessionBackgroundDependencies = {},
+): Promise<boolean> {
+  assertTabId(tabId);
+  return enqueueRoomSessionOperation(tabId, async () => {
+    const storage = dependencies.sessionStorage ??
+      (chrome.storage.session as StorageAreaLike);
+    const remaining = await clearRoomSessionForDepartureIfMatchNow(
+      storage,
+      tabId,
+      record,
+    );
+    return remaining === null;
+  });
+}
+
+export async function clearRoomSessionDepartureIfMatch(
+  record: RoomSessionRecord,
+  dependencies: RoomSessionClientDependencies = {},
+): Promise<void> {
+  await sendRoomSessionMessage(
+    {
+      type: ROOM_SESSION_STORAGE_MESSAGE_TYPE,
+      command: "clear-departure-if-match",
+      record,
+    },
     dependencies.sendMessage,
   );
 }
@@ -948,6 +995,40 @@ async function clearRoomSessionIfMatchForTab(
   }
 
   await storage.remove(key);
+  return null;
+}
+
+async function clearRoomSessionForDepartureIfMatchNow(
+  storage: StorageAreaLike,
+  tabId: number,
+  expected: RoomSessionRecord,
+): Promise<RoomSessionRecord | null> {
+  const key = roomSessionStorageKey(tabId);
+  const stored = await storage.get(key);
+  const current = parseRoomSessionRecord(stored[key]);
+  if (!current) {
+    if (stored[key] !== undefined) {
+      await storage.remove(key);
+    }
+    return null;
+  }
+  if (!roomSessionIdentityMatches(current, expected)) {
+    return current;
+  }
+
+  await storage.remove(key);
+  const preparedKey = preparedRoomSessionStorageKey(tabId);
+  const storedPrepared = await storage.get(preparedKey);
+  const prepared = parsePreparedRoomSession(storedPrepared[preparedKey]);
+  if (
+    prepared &&
+    prepared.version === expected.version &&
+    prepared.roomId === expected.roomId &&
+    prepared.ownerUserId === expected.ownerUserId &&
+    prepared.participantSessionId === expected.participantSessionId
+  ) {
+    await storage.remove(preparedKey);
+  }
   return null;
 }
 
