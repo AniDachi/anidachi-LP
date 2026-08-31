@@ -14,6 +14,7 @@ import {
   isTerminalRoomJoinError,
   isRoomHttpMessage,
   RoomApiError,
+  RoomAdmissionFence,
   ROOM_CONNECT_REQUEST_TIMEOUT_MS,
   RoomClient,
 } from "../src/room-client";
@@ -731,15 +732,29 @@ describe("authenticated room client", () => {
     const sender = { tab: { id: 42 } };
     const firstPrepared = preparedRoomSessionFor("room-old");
     const secondPrepared = preparedRoomSessionFor("room-new");
+    let admissionGeneration = 0;
+    const dependencies = {
+      admissionFence: new RoomAdmissionFence(),
+      confirmRoomSession,
+      issueAuthority,
+      renewCancelledAdmissionDepartureIntent: async (identity: {
+        roomId: string;
+        ownerUserId: string;
+        participantSessionId: string;
+      }) => ({ ...identity, generation: ++admissionGeneration }),
+      requestCancelledAdmissionCleanup: async () => true,
+      retireCancelledAdmissionIntent: async () => true,
+      settleCancelledAdmissionDeparture: async () => "departed" as const,
+    };
     const first = handleRoomHttpMessage(
       connectRoomHttpMessage("room-old", "access-1", firstPrepared),
       sender,
-      { confirmRoomSession, issueAuthority },
+      dependencies,
     );
     const second = handleRoomHttpMessage(
       connectRoomHttpMessage("room-new", "access-1", secondPrepared),
       sender,
-      { confirmRoomSession, issueAuthority },
+      dependencies,
     );
 
     secondResponse.resolve(roomConnectionResponse("room-new"));

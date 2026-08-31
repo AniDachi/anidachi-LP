@@ -13,6 +13,129 @@ const OLD_SESSION: RoomDepartureRetryIdentity = {
 };
 
 describe("room departure retry coordinator", () => {
+  it("retires only the successful current generation and never reuses it", async () => {
+    const storage = createPersistentStorage();
+    const scheduler = createScheduler();
+    const coordinator = createRoomDepartureRetryCoordinator({
+      storage,
+      scheduler,
+      getCurrentUserId: async () => "user-a",
+      departExact: vi.fn(),
+      now: () => 100,
+    });
+
+    const first = await coordinator.renewAdmissionIntent(OLD_SESSION);
+    await expect(coordinator.retireAdmission(first)).resolves.toBe(true);
+    expect(storage.value()).toMatchObject({
+      version: 4,
+      lastGeneration: first.generation,
+      jobs: [],
+    });
+    expect(scheduler.when()).toBeNull();
+
+    const successor = await coordinator.renewAdmissionIntent(OLD_SESSION);
+    expect(successor.generation).toBe(first.generation + 1);
+    await expect(coordinator.retireAdmission(first)).resolves.toBe(false);
+    expect(storage.value()?.jobs).toEqual([
+      expect.objectContaining({ generation: successor.generation }),
+    ]);
+  });
+
+  it("ignores an old alarm after the live same-identity successor commits", async () => {
+    const storage = createPersistentStorage();
+    const scheduler = createScheduler();
+    let now = 1_000;
+    const departExact = vi.fn(async () => "departed" as const);
+    const coordinator = createRoomDepartureRetryCoordinator({
+      storage,
+      scheduler,
+      getCurrentUserId: async () => "user-a",
+      departExact,
+      now: () => now,
+    });
+
+    const first = await coordinator.renewAdmissionIntent(OLD_SESSION);
+    const successor = await coordinator.renewAdmissionIntent(OLD_SESSION);
+    await expect(coordinator.retireAdmission(successor)).resolves.toBe(true);
+
+    now = 1_000 + ROOM_ADMISSION_SETTLEMENT_HORIZON_MS;
+    scheduler.consume();
+    await coordinator.handleAlarm(ROOM_DEPARTURE_RETRY_ALARM);
+
+    expect(departExact).not.toHaveBeenCalled();
+    await expect(coordinator.settleAdmission(first)).resolves.toBe(
+      "operation-superseded",
+    );
+    expect(storage.value()?.jobs).toEqual([]);
+  });
+
+  it("retains only the current generation for ambiguous or canceled cleanup", async () => {
+    const storage = createPersistentStorage();
+    const coordinator = createRoomDepartureRetryCoordinator({
+      storage,
+      scheduler: createScheduler(),
+      getCurrentUserId: async () => "user-a",
+      departExact: async () => "stale",
+      now: () => 2_000,
+    });
+
+    const first = await coordinator.renewAdmissionIntent(OLD_SESSION);
+    const successor = await coordinator.renewAdmissionIntent(OLD_SESSION);
+
+    await expect(coordinator.requestAdmissionCleanup(first)).resolves.toBe(false);
+    await expect(coordinator.requestAdmissionCleanup(successor)).resolves.toBe(true);
+    await expect(coordinator.retryAdmission(first)).resolves.toBe(
+      "operation-superseded",
+    );
+    await expect(coordinator.retryAdmission(successor)).resolves.toBe("stale");
+    expect(storage.value()?.jobs).toEqual([
+      expect.objectContaining({
+        admissionState: "may-commit",
+        cleanupRequested: true,
+        generation: successor.generation,
+      }),
+    ]);
+  });
+
+  it("serializes an explicit cleanup attempt before a live same-identity successor", async () => {
+    const storage = createPersistentStorage();
+    const departure = deferred<"stale">();
+    const departExact = vi.fn(() => departure.promise);
+    const coordinator = createRoomDepartureRetryCoordinator({
+      storage,
+      scheduler: createScheduler(),
+      getCurrentUserId: async () => "user-a",
+      departExact,
+      now: () => 3_000,
+    });
+
+    const first = await coordinator.renewAdmissionIntent(OLD_SESSION);
+    await coordinator.requestAdmissionCleanup(first);
+    const cleaning = coordinator.retryAdmission(first);
+    await waitUntil(() => departExact.mock.calls.length === 1);
+
+    let successorResolved = false;
+    const successorPromise = coordinator.renewAdmissionIntent(OLD_SESSION).then(
+      (operation) => {
+        successorResolved = true;
+        return operation;
+      },
+    );
+    await Promise.resolve();
+    expect(successorResolved).toBe(false);
+
+    departure.resolve("stale");
+    await expect(cleaning).resolves.toBe("stale");
+    const successor = await successorPromise;
+    expect(successor.generation).toBe(first.generation + 1);
+    expect(storage.value()?.jobs).toEqual([
+      expect.objectContaining({
+        cleanupRequested: false,
+        generation: successor.generation,
+      }),
+    ]);
+  });
+
   it.each(["alarm", "startup", "online", "initialize"] as const)(
     "pre-arms an alarm before deferred auth from %s and safely resumes",
     async (trigger) => {
@@ -47,7 +170,7 @@ describe("room departure retry coordinator", () => {
 
       now = 500 + ROOM_ADMISSION_SETTLEMENT_HORIZON_MS;
       await coordinator.drain({ force: true });
-      expect(storage.value()).toBeNull();
+      expect(storage.value()?.jobs).toEqual([]);
     },
   );
 
@@ -80,7 +203,7 @@ describe("room departure retry coordinator", () => {
 
     now = 800 + ROOM_ADMISSION_SETTLEMENT_HORIZON_MS;
     await coordinator.drain({ force: true });
-    expect(storage.value()).toBeNull();
+    expect(storage.value()?.jobs).toEqual([]);
   });
 
   it("renews a settled same-identity job before a later canceled admission", async () => {
@@ -104,6 +227,7 @@ describe("room departure retry coordinator", () => {
     });
 
     const first = await coordinator.renewAdmissionIntent(OLD_SESSION);
+    await coordinator.requestAdmissionCleanup(first);
     await expect(coordinator.settleAdmission(first)).resolves.toBe("retryable");
     expect(storage.value()?.jobs[0]?.admissionState).toBe("settled");
 
@@ -117,8 +241,9 @@ describe("room departure retry coordinator", () => {
     });
 
     await expect(coordinator.settleAdmission(first)).resolves.toBe(
-      "active-room-changed",
+      "operation-superseded",
     );
+    await coordinator.requestAdmissionCleanup(second);
     await expect(coordinator.retryAdmission(second)).resolves.toBe("stale");
     expect(storage.value()?.jobs[0]).toMatchObject({
       admissionState: "may-commit",
@@ -128,7 +253,7 @@ describe("room departure retry coordinator", () => {
     lateAssignmentActive = true;
     await expect(coordinator.settleAdmission(second)).resolves.toBe("departed");
     expect(lateAssignmentActive).toBe(false);
-    expect(storage.value()).toBeNull();
+    expect(storage.value()?.jobs).toEqual([]);
   });
   it("survives worker recreation before admission settlement and exact-cleans a late commit", async () => {
     const storage = createPersistentStorage();
@@ -145,7 +270,8 @@ describe("room departure retry coordinator", () => {
     await firstWorker.renewAdmissionIntent(OLD_SESSION);
     expect(ROOM_ADMISSION_SETTLEMENT_HORIZON_MS).toBe(135_000);
     expect(storage.value()).toMatchObject({
-      version: 3,
+      version: 4,
+      lastGeneration: 1,
       jobs: [
         {
           ...OLD_SESSION,
@@ -177,11 +303,7 @@ describe("room departure retry coordinator", () => {
 
     expect(oldAssignmentActive).toBe(false);
     expect(departExact).toHaveBeenCalledOnce();
-    expect(storage.value()?.jobs).toHaveLength(1);
-
-    now = 1_000 + ROOM_ADMISSION_SETTLEMENT_HORIZON_MS;
-    await restartedWorker.drain({ force: true });
-    expect(storage.value()).toBeNull();
+    expect(storage.value()?.jobs).toEqual([]);
     expect(restartedScheduler.when()).toBeNull();
   });
 
@@ -203,6 +325,7 @@ describe("room departure retry coordinator", () => {
     });
 
     const operation = await coordinator.renewAdmissionIntent(OLD_SESSION);
+    await coordinator.requestAdmissionCleanup(operation);
     await coordinator.drain({ force: true });
     expect(departExact).toHaveBeenCalledTimes(1);
     expect(storage.value()?.jobs).toHaveLength(1);
@@ -212,7 +335,7 @@ describe("room departure retry coordinator", () => {
 
     expect(departExact).toHaveBeenCalledTimes(2);
     expect(oldAssignmentActive).toBe(false);
-    expect(storage.value()).toBeNull();
+    expect(storage.value()?.jobs).toEqual([]);
   });
 
   it("durably re-arms a settled job before awaiting its exact network drain", async () => {
@@ -228,6 +351,7 @@ describe("room departure retry coordinator", () => {
     });
 
     const operation = await coordinator.renewAdmissionIntent(OLD_SESSION);
+    await coordinator.requestAdmissionCleanup(operation);
     const settling = coordinator.settleAdmission(operation);
     await waitUntil(() => scheduler.when() === 25_000);
 
@@ -250,6 +374,7 @@ describe("room departure retry coordinator", () => {
     });
 
     const operation = await coordinator.renewAdmissionIntent(OLD_SESSION);
+    await coordinator.requestAdmissionCleanup(operation);
     const retrying = coordinator.retryAdmission(operation);
     await waitUntil(() => scheduler.when() === 26_000);
 
@@ -273,6 +398,7 @@ describe("room departure retry coordinator", () => {
     });
 
     const operation = await coordinator.renewAdmissionIntent(OLD_SESSION);
+    await coordinator.requestAdmissionCleanup(operation);
     await coordinator.drain({ force: true });
 
     expect(storage.value()?.jobs).toHaveLength(1);
@@ -282,7 +408,7 @@ describe("room departure retry coordinator", () => {
     currentUserId = "user-a";
     await expect(coordinator.settleAdmission(operation)).resolves.toBe("stale");
     expect(departExact).toHaveBeenCalledOnce();
-    expect(storage.value()).toBeNull();
+    expect(storage.value()?.jobs).toEqual([]);
   });
 
   it("fences cleanup to the old participant session and never touches its replacement", async () => {
@@ -306,6 +432,7 @@ describe("room departure retry coordinator", () => {
     });
 
     const operation = await coordinator.renewAdmissionIntent(OLD_SESSION);
+    await coordinator.requestAdmissionCleanup(operation);
     await coordinator.settleAdmission(operation);
 
     expect(departExact).toHaveBeenCalledWith(OLD_SESSION);
@@ -315,7 +442,7 @@ describe("room departure retry coordinator", () => {
       participantSessionId: "session-new",
       active: true,
     });
-    expect(storage.value()).toBeNull();
+    expect(storage.value()?.jobs).toEqual([]);
   });
 
   it("renews repeated same-identity intents and caps retry backoff", async () => {
@@ -335,6 +462,7 @@ describe("room departure retry coordinator", () => {
     expect(second.generation).toBe(first.generation + 1);
     expect(storage.value()?.jobs).toHaveLength(1);
 
+    await coordinator.requestAdmissionCleanup(second);
     await coordinator.settleAdmission(second);
     for (let attempt = 1; attempt < 12; attempt += 1) {
       const nextAttemptAt = storage.value()?.jobs[0]?.nextAttemptAt;
@@ -364,19 +492,28 @@ describe("room departure retry coordinator", () => {
     });
 
     const operation = await coordinator.renewAdmissionIntent(OLD_SESSION);
+    await coordinator.requestAdmissionCleanup(operation);
     await coordinator.settleAdmission(operation);
 
-    expect(storage.value()).toBeNull();
+    expect(storage.value()?.jobs).toEqual([]);
   });
 });
 
 function createPersistentStorage() {
-  let stored: { version: number; jobs: Array<Record<string, unknown>> } | null = null;
+  let stored: {
+    version: number;
+    lastGeneration?: number;
+    jobs: Array<Record<string, unknown>>;
+  } | null = null;
   return {
     async read() {
       return stored;
     },
-    async write(value: { version: number; jobs: Array<Record<string, unknown>> }) {
+    async write(value: {
+      version: number;
+      lastGeneration?: number;
+      jobs: Array<Record<string, unknown>>;
+    }) {
       stored = structuredClone(value);
     },
     async clear() {

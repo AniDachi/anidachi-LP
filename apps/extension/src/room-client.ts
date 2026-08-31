@@ -23,9 +23,12 @@ import {
   type RoomTabDepartureOutcome,
 } from "./room-departure";
 import {
+  requestRoomDepartureAdmissionCleanup,
   renewRoomDepartureAdmissionIntent,
+  retireRoomDepartureAdmissionIntent,
   retryRoomDepartureAdmission,
   settleRoomDepartureAdmission,
+  type RoomDepartureRetryAttemptOutcome,
   type RoomDepartureRetryIdentity,
   type RoomDepartureRetryOperation,
 } from "./room-departure-retry";
@@ -57,28 +60,41 @@ type ConfirmedAdmissionDepartureOutcome = Extract<
 export type RoomAdmissionCompletion =
   | { kind: "cleanup-confirmed"; outcome: ConfirmedAdmissionDepartureOutcome }
   | { kind: "cleanup-failed"; outcome: RoomTabDepartureOutcome }
+  | { kind: "cleanup-superseded" }
   | { kind: "not-cancelled" };
+
+export interface RoomAdmissionCleanupOwnership {
+  operation: RoomDepartureRetryOperation;
+  owned: boolean;
+}
 
 interface RoomAdmissionReservation {
   readonly completion: Promise<RoomAdmissionCompletion>;
   readonly identity: RoomDepartureRetryIdentity;
-  readonly renewIntent: (
-    identity: RoomDepartureRetryIdentity,
-  ) => Promise<RoomDepartureRetryOperation>;
+  readonly operationPersisted: Promise<RoomDepartureRetryOperation>;
   readonly participantSessionId: string;
+  readonly requestCleanup: (
+    operation: RoomDepartureRetryOperation,
+  ) => Promise<boolean>;
+  readonly retryCleanup: (
+    operation: RoomDepartureRetryOperation,
+  ) => Promise<RoomDepartureRetryAttemptOutcome>;
   readonly sequence: number;
   readonly tabId: number;
   cancelled: boolean;
   explicitDepartureObserver: boolean;
   intentPersistenceConfirmed: boolean;
-  intentPersisted: Promise<RoomDepartureRetryOperation> | null;
+  cleanupIntentPersisted: Promise<RoomAdmissionCleanupOwnership> | null;
   settled: boolean;
   resolve(result: RoomAdmissionCompletion): void;
 }
 
 export interface RoomAdmissionCancellation {
   completion: Promise<RoomAdmissionCompletion>;
-  intentPersisted: Promise<RoomDepartureRetryOperation>;
+  intentPersisted: Promise<RoomAdmissionCleanupOwnership>;
+  retryCleanup(
+    operation: RoomDepartureRetryOperation,
+  ): Promise<RoomDepartureRetryAttemptOutcome>;
 }
 
 export class RoomAdmissionFence {
@@ -91,6 +107,12 @@ export class RoomAdmissionFence {
     renewIntent: (
       identity: RoomDepartureRetryIdentity,
     ) => Promise<RoomDepartureRetryOperation> = renewRoomDepartureAdmissionIntent,
+    requestCleanup: (
+      operation: RoomDepartureRetryOperation,
+    ) => Promise<boolean> = requestRoomDepartureAdmissionCleanup,
+    retryCleanup: (
+      operation: RoomDepartureRetryOperation,
+    ) => Promise<RoomDepartureRetryAttemptOutcome> = retryRoomDepartureAdmission,
   ): RoomAdmissionReservation {
     const previous = this.currentByTab.get(tabId);
     if (previous && !previous.settled) {
@@ -105,13 +127,15 @@ export class RoomAdmissionFence {
     });
     const reservation: RoomAdmissionReservation = {
       cancelled: false,
+      cleanupIntentPersisted: null,
       completion,
       explicitDepartureObserver: false,
       identity,
       intentPersistenceConfirmed: false,
-      intentPersisted: null,
+      operationPersisted: renewIntent(identity),
       participantSessionId: identity.participantSessionId,
-      renewIntent,
+      requestCleanup,
+      retryCleanup,
       resolve,
       sequence: ++this.nextSequence,
       settled: false,
@@ -136,7 +160,7 @@ export class RoomAdmissionFence {
     return this.cancelReservation(current, true);
   }
 
-  cancelAny(tabId: number): Promise<RoomDepartureRetryOperation> | null {
+  cancelAny(tabId: number): Promise<RoomAdmissionCleanupOwnership> | null {
     const current = this.currentByTab.get(tabId);
     if (current && !current.settled) {
       return this.cancelReservation(current, false).intentPersisted;
@@ -170,15 +194,17 @@ export class RoomAdmissionFence {
   ): RoomAdmissionCancellation {
     reservation.cancelled = true;
     if (explicitDepartureObserver) reservation.explicitDepartureObserver = true;
-    reservation.intentPersisted ??= reservation
-      .renewIntent(reservation.identity)
-      .then((operation) => {
-        reservation.intentPersistenceConfirmed = true;
-        return operation;
-      });
+    reservation.cleanupIntentPersisted ??= reservation.operationPersisted.then(
+      async (operation) => {
+        const owned = await reservation.requestCleanup(operation);
+        reservation.intentPersistenceConfirmed = owned;
+        return { operation, owned };
+      },
+    );
     return {
       completion: reservation.completion,
-      intentPersisted: reservation.intentPersisted,
+      intentPersisted: reservation.cleanupIntentPersisted,
+      retryCleanup: reservation.retryCleanup,
     };
   }
 }
@@ -196,7 +222,7 @@ export function cancelRoomAdmissionForDeparture(
 export function cancelRoomAdmissionForTab(
   tabId: number,
   fence: RoomAdmissionFence = defaultRoomAdmissionFence,
-): Promise<RoomDepartureRetryOperation> | null {
+): Promise<RoomAdmissionCleanupOwnership> | null {
   return fence.cancelAny(tabId);
 }
 
@@ -646,12 +672,18 @@ export interface RoomHttpBackgroundDependencies {
   renewCancelledAdmissionDepartureIntent?: (
     identity: RoomDepartureRetryIdentity,
   ) => Promise<RoomDepartureRetryOperation>;
+  requestCancelledAdmissionCleanup?: (
+    operation: RoomDepartureRetryOperation,
+  ) => Promise<boolean>;
+  retireCancelledAdmissionIntent?: (
+    operation: RoomDepartureRetryOperation,
+  ) => Promise<boolean>;
   settleCancelledAdmissionDeparture?: (
     operation: RoomDepartureRetryOperation,
-  ) => Promise<RoomTabDepartureOutcome>;
+  ) => Promise<RoomDepartureRetryAttemptOutcome>;
   retryCancelledAdmissionDeparture?: (
     operation: RoomDepartureRetryOperation,
-  ) => Promise<RoomTabDepartureOutcome>;
+  ) => Promise<RoomDepartureRetryAttemptOutcome>;
 }
 
 export async function handleRoomHttpMessage(
@@ -676,6 +708,27 @@ export async function handleRoomHttpMessage(
             (dependencies.cancelledAdmissionDepartureDependencies
               ? async (identity) => ({ ...identity, generation: 1 })
               : renewRoomDepartureAdmissionIntent),
+          dependencies.requestCancelledAdmissionCleanup ??
+            (dependencies.cancelledAdmissionDepartureDependencies ||
+                dependencies.renewCancelledAdmissionDepartureIntent
+              ? async () => true
+              : requestRoomDepartureAdmissionCleanup),
+          dependencies.retryCancelledAdmissionDeparture ??
+            (dependencies.cancelledAdmissionDepartureDependencies
+              ? (operation) =>
+                  departExactRoomSession(
+                    {
+                      version: 1,
+                      revision: 1,
+                      roomId: operation.roomId,
+                      ownerUserId: operation.ownerUserId,
+                      participantSessionId: operation.participantSessionId,
+                      cameraEnabled: false,
+                      voiceMode: "push-to-talk",
+                    },
+                    dependencies.cancelledAdmissionDepartureDependencies,
+                  )
+              : retryRoomDepartureAdmission),
         )
       : null;
   const admissionRecord =
@@ -723,6 +776,12 @@ export async function handleRoomHttpMessage(
     );
   };
   try {
+    if (admissionReservation) {
+      // The persisted generation owns every later cleanup decision. Do not
+      // let the Web admission begin until this same-identity successor has
+      // invalidated all older local operations.
+      await admissionReservation.operationPersisted;
+    }
     if (message.command === "create-room") {
       const room = await createWebsiteRoomFromApi(
         message.accessToken,
@@ -842,6 +901,47 @@ export async function handleRoomHttpMessage(
       );
     }
     if (admissionReservation) {
+      const operation = await admissionReservation.operationPersisted;
+      const retired = await (
+        dependencies.retireCancelledAdmissionIntent
+          ? dependencies.retireCancelledAdmissionIntent(operation)
+          : dependencies.cancelledAdmissionDepartureDependencies ||
+              dependencies.renewCancelledAdmissionDepartureIntent
+            ? Promise.resolve(true)
+            : retireRoomDepartureAdmissionIntent(operation)
+      ).catch(() => false);
+      if (!retired || !admissionFence.isCurrent(admissionReservation)) {
+        const cleanup = await cleanupCancelledRoomAdmission(
+          roomSession,
+          admissionReservation,
+          dependencies,
+        );
+        const disposition = await ownCancelledAdmissionCleanupFailure(
+          senderTabId as number,
+          message.roomSession,
+          roomSession,
+          admissionReservation,
+          cleanup,
+          dependencies,
+        );
+        shouldDiscardPrepared = disposition.shouldDiscardPrepared;
+        admissionFence.finish(admissionReservation, cleanup);
+        await clearUnobservedCancelledAdmission(
+          senderTabId as number,
+          roomSession,
+          admissionReservation,
+          cleanup,
+          disposition.backgroundOwnsDeparture,
+          dependencies,
+        );
+        admissionFinished = true;
+        throw new RoomApiError(
+          "This room action was replaced by a newer tab action.",
+          "STALE_ROOM_SESSION",
+          undefined,
+          409,
+        );
+      }
       admissionFence.finish(admissionReservation, { kind: "not-cancelled" });
       admissionFinished = true;
     }
@@ -922,6 +1022,9 @@ async function ownCancelledAdmissionCleanupFailure(
   backgroundOwnsDeparture: boolean;
   shouldDiscardPrepared: boolean;
 }> {
+  if (completion.kind === "cleanup-superseded") {
+    return { backgroundOwnsDeparture: false, shouldDiscardPrepared: true };
+  }
   if (completion.kind !== "cleanup-failed") {
     return { backgroundOwnsDeparture: false, shouldDiscardPrepared: true };
   }
@@ -951,23 +1054,27 @@ async function cleanupCancelledRoomAdmission(
   reservation: RoomAdmissionReservation,
   dependencies: RoomHttpBackgroundDependencies,
 ): Promise<RoomAdmissionCompletion> {
-  let operation: RoomDepartureRetryOperation | null;
+  let cleanup: RoomAdmissionCleanupOwnership | null;
   try {
-    operation = await reservation.intentPersisted;
+    cleanup = await reservation.cleanupIntentPersisted;
   } catch {
     return { kind: "cleanup-failed", outcome: "failed" };
   }
-  if (!operation) return { kind: "cleanup-failed", outcome: "failed" };
+  if (!cleanup) return { kind: "cleanup-failed", outcome: "failed" };
+  if (!cleanup.owned) return { kind: "cleanup-superseded" };
   const outcome = await (
     dependencies.settleCancelledAdmissionDeparture
-      ? dependencies.settleCancelledAdmissionDeparture(operation)
+      ? dependencies.settleCancelledAdmissionDeparture(cleanup.operation)
       : dependencies.cancelledAdmissionDepartureDependencies
         ? departExactRoomSession(
             record,
             dependencies.cancelledAdmissionDepartureDependencies,
           )
-        : settleRoomDepartureAdmission(operation)
+        : settleRoomDepartureAdmission(cleanup.operation)
   ).catch(() => "failed" as const);
+  if (outcome === "operation-superseded") {
+    return { kind: "cleanup-superseded" };
+  }
   if (!isConfirmedAdmissionDepartureOutcome(outcome)) {
     return { kind: "cleanup-failed", outcome };
   }
@@ -979,23 +1086,27 @@ async function retryAmbiguousCancelledRoomAdmission(
   reservation: RoomAdmissionReservation,
   dependencies: RoomHttpBackgroundDependencies,
 ): Promise<RoomAdmissionCompletion> {
-  let operation: RoomDepartureRetryOperation | null;
+  let cleanup: RoomAdmissionCleanupOwnership | null;
   try {
-    operation = await reservation.intentPersisted;
+    cleanup = await reservation.cleanupIntentPersisted;
   } catch {
     return { kind: "cleanup-failed", outcome: "failed" };
   }
-  if (!operation) return { kind: "cleanup-failed", outcome: "failed" };
+  if (!cleanup) return { kind: "cleanup-failed", outcome: "failed" };
+  if (!cleanup.owned) return { kind: "cleanup-superseded" };
   const outcome = await (
     dependencies.retryCancelledAdmissionDeparture
-      ? dependencies.retryCancelledAdmissionDeparture(operation)
+      ? dependencies.retryCancelledAdmissionDeparture(cleanup.operation)
       : dependencies.cancelledAdmissionDepartureDependencies
         ? departExactRoomSession(
             record,
             dependencies.cancelledAdmissionDepartureDependencies,
           )
-        : retryRoomDepartureAdmission(operation)
+        : retryRoomDepartureAdmission(cleanup.operation)
   ).catch(() => "failed" as const);
+  if (outcome === "operation-superseded") {
+    return { kind: "cleanup-superseded" };
+  }
   // A terminal result cannot confirm quiescence yet: the bounded Web request
   // may still commit after this exact attempt.
   return { kind: "cleanup-failed", outcome };

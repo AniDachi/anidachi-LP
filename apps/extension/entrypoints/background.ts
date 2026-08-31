@@ -31,7 +31,6 @@ import {
   type RoomHttpBackgroundDependencies,
 } from "../src/room-client";
 import {
-  handleExactRoomSessionDepartureRuntime,
   handleRoomDepartureRuntimeMessage,
   handleRoomTabDeparture,
   isRoomDepartureRuntimeMessage,
@@ -160,8 +159,12 @@ async function dispatchRoomDepartureRuntimeMessage(
     );
   }
 
+  let cleanupOwnership;
   try {
-    await cancelledAdmission.intentPersisted;
+    cleanupOwnership = await cancelledAdmission.intentPersisted;
+    if (!cleanupOwnership.owned) {
+      return roomDepartureRuntimeResponse("retryable");
+    }
   } catch {
     return roomDepartureRuntimeResponse("retryable");
   }
@@ -179,10 +182,13 @@ async function dispatchRoomDepartureRuntimeMessage(
     cameraEnabled: false,
     voiceMode: "push-to-talk" as const,
   };
-  const departure = await handleExactRoomSessionDepartureRuntime(
-    record,
-    dependencies.departureDependencies,
-  );
+  const attempt = await cancelledAdmission
+    .retryCleanup(cleanupOwnership.operation)
+    .catch(() => "failed" as const);
+  if (attempt === "operation-superseded") {
+    return roomDepartureRuntimeResponse("retryable");
+  }
+  const departure = roomDepartureRuntimeResponse(attempt);
   if (!departure.ok) return departure;
 
   const completion = await waitForAdmissionCompletion(
