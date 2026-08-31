@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import { connectRoomHttpMessage } from "../src/room-client";
+import {
+  RoomAdmissionFence,
+  cancelRoomAdmissionForTab,
+  connectRoomHttpMessage,
+} from "../src/room-client";
 import {
   confirmRoomSessionForTab,
   loadRoomSessionForTab,
@@ -58,6 +62,129 @@ describe("background privileged room route", () => {
       "depart:60",
       "authority:60",
     ]);
+  });
+
+  it("persists an exact retry owner when passive close compensation is unconfirmed", async () => {
+    vi.stubGlobal("chrome", {});
+    const background = await import("../entrypoints/background");
+    const tabId = 601;
+    const admissionFence = new RoomAdmissionFence();
+    const storage = createSessionStorage();
+    const roomSessionDependencies = {
+      sessionStorage: storage,
+      localStorage: storage,
+      randomUUID: () => "passive-late-admission",
+    };
+    const prepared = await prepareRoomSessionForTab(
+      tabId,
+      { ownerUserId: "user-a", roomId: "room-passive-late" },
+      roomSessionDependencies,
+    );
+    const webAdmission = deferred<Response>();
+    vi.stubGlobal("fetch", vi.fn(() => webAdmission.promise));
+    const requestDeparture = vi.fn(async () => ({
+      kind: "retryable" as const,
+      code: "ROOM_DEPARTURE_UNAVAILABLE" as const,
+      message: "Departure is temporarily unavailable",
+    }));
+    const enqueueRetry = vi.fn(async () => undefined);
+    const sender = { tab: { id: tabId } };
+    const connecting = background.dispatchPrivilegedRoomRuntimeMessage(
+      connectRoomHttpMessage("room-passive-late", "access-a", prepared),
+      sender,
+      {
+        departureDependencies: {
+          getStoredSession: async () => sessionFor("user-a"),
+          refreshSession: async () => null,
+          requestDeparture,
+          timeoutMs: 100,
+        },
+        roomDependencies: {
+          admissionFence,
+          enqueueCancelledAdmissionDepartureRetry: enqueueRetry,
+          issueAuthority: async () => null,
+          roomSessionDependencies,
+        },
+      },
+    );
+
+    await background.handleRemovedRoomTab(tabId, {
+      cancelRoomAdmission: (removedTabId) =>
+        cancelRoomAdmissionForTab(removedTabId, admissionFence),
+      clearRoomAuthorityRequest: () => undefined,
+      departRoom: async () => "no-session",
+      removePrivilegedAuthority: async () => undefined,
+    });
+    webAdmission.resolve(roomResponse("room-passive-late"));
+
+    await expect(connecting).resolves.toMatchObject({
+      ok: false,
+      code: "STALE_ROOM_SESSION",
+    });
+    expect(requestDeparture).toHaveBeenCalledOnce();
+    expect(enqueueRetry).toHaveBeenCalledOnce();
+    expect(enqueueRetry).toHaveBeenCalledWith({
+      roomId: "room-passive-late",
+      ownerUserId: "user-a",
+      participantSessionId: prepared.participantSessionId,
+    });
+    await expect(
+      loadRoomSessionForTab(tabId, roomSessionDependencies),
+    ).resolves.toBeNull();
+  });
+
+  it("does not create a passive retry job when the first exact compensation succeeds", async () => {
+    vi.stubGlobal("chrome", {});
+    const background = await import("../entrypoints/background");
+    const tabId = 602;
+    const admissionFence = new RoomAdmissionFence();
+    const storage = createSessionStorage();
+    const roomSessionDependencies = {
+      sessionStorage: storage,
+      localStorage: storage,
+      randomUUID: () => "passive-successful-compensation",
+    };
+    const prepared = await prepareRoomSessionForTab(
+      tabId,
+      { ownerUserId: "user-a", roomId: "room-passive-success" },
+      roomSessionDependencies,
+    );
+    const webAdmission = deferred<Response>();
+    vi.stubGlobal("fetch", vi.fn(() => webAdmission.promise));
+    const enqueueRetry = vi.fn(async () => undefined);
+    const connecting = background.dispatchPrivilegedRoomRuntimeMessage(
+      connectRoomHttpMessage("room-passive-success", "access-a", prepared),
+      { tab: { id: tabId } },
+      {
+        departureDependencies: {
+          getStoredSession: async () => sessionFor("user-a"),
+          refreshSession: async () => null,
+          requestDeparture: async () => ({
+            kind: "ack" as const,
+            outcome: "stale" as const,
+          }),
+          timeoutMs: 100,
+        },
+        roomDependencies: {
+          admissionFence,
+          enqueueCancelledAdmissionDepartureRetry: enqueueRetry,
+          issueAuthority: async () => null,
+          roomSessionDependencies,
+        },
+      },
+    );
+
+    await background.handleRemovedRoomTab(tabId, {
+      cancelRoomAdmission: (removedTabId) =>
+        cancelRoomAdmissionForTab(removedTabId, admissionFence),
+      clearRoomAuthorityRequest: () => undefined,
+      departRoom: async () => "no-session",
+      removePrivilegedAuthority: async () => undefined,
+    });
+    webAdmission.resolve(roomResponse("room-passive-success"));
+
+    await expect(connecting).resolves.toMatchObject({ ok: false });
+    expect(enqueueRetry).not.toHaveBeenCalled();
   });
 
   it("routes an explicit leave through the sender tab's background-owned session", async () => {

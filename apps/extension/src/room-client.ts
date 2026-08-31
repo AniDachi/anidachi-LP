@@ -22,6 +22,10 @@ import {
   type RoomTabDepartureOutcome,
 } from "./room-departure";
 import {
+  enqueueRoomDepartureRetry,
+  type RoomDepartureRetryIdentity,
+} from "./room-departure-retry";
+import {
   issuePrivilegedRoomAuthority,
   reservePrivilegedRoomAuthorityForTab,
   type IssuedRoomAuthorityInput,
@@ -584,6 +588,9 @@ export interface RoomHttpBackgroundDependencies {
     prepared: PreparedRoomSession,
     dependencies?: RoomSessionBackgroundDependencies,
   ) => Promise<boolean>;
+  enqueueCancelledAdmissionDepartureRetry?: (
+    identity: RoomDepartureRetryIdentity,
+  ) => Promise<void>;
 }
 
 export async function handleRoomHttpMessage(
@@ -607,6 +614,7 @@ export async function handleRoomHttpMessage(
       ? roomSessionRecordForAdmission(message.roomSession, message.roomId)
       : null;
   let admissionFinished = false;
+  let shouldDiscardPrepared = true;
   const authorityRequest = reserveRoomAuthorityRequest(sender, dependencies.authorityRequestSequences);
   const usesPersistentAuthority = dependencies.issueAuthority === undefined;
   const authorityReservation =
@@ -691,18 +699,30 @@ export async function handleRoomHttpMessage(
       !roomSession ||
       (admissionReservation && !admissionFence.isCurrent(admissionReservation))
     ) {
+      const cancelledRecord =
+        roomSession ?? roomSessionRecordForAdmission(message.roomSession, message.roomId);
       const cleanup = await cleanupCancelledRoomAdmission(
         senderTabId as number,
-        roomSession ?? roomSessionRecordForAdmission(message.roomSession, message.roomId),
+        cancelledRecord,
         dependencies,
       );
       if (admissionReservation) {
+        const disposition = await ownCancelledAdmissionCleanupFailure(
+          senderTabId as number,
+          message.roomSession,
+          cancelledRecord,
+          admissionReservation,
+          cleanup,
+          dependencies,
+        );
+        shouldDiscardPrepared = disposition.shouldDiscardPrepared;
         admissionFence.finish(admissionReservation, cleanup);
         await clearUnobservedCancelledAdmission(
           senderTabId as number,
-          roomSession ?? roomSessionRecordForAdmission(message.roomSession, message.roomId),
+          cancelledRecord,
           admissionReservation,
           cleanup,
+          disposition.backgroundOwnsDeparture,
           dependencies,
         );
         admissionFinished = true;
@@ -724,12 +744,22 @@ export async function handleRoomHttpMessage(
         roomSession,
         dependencies,
       );
+      const disposition = await ownCancelledAdmissionCleanupFailure(
+        senderTabId as number,
+        message.roomSession,
+        roomSession,
+        admissionReservation,
+        cleanup,
+        dependencies,
+      );
+      shouldDiscardPrepared = disposition.shouldDiscardPrepared;
       admissionFence.finish(admissionReservation, cleanup);
       await clearUnobservedCancelledAdmission(
         senderTabId as number,
         roomSession,
         admissionReservation,
         cleanup,
+        disposition.backgroundOwnsDeparture,
         dependencies,
       );
       admissionFinished = true;
@@ -749,7 +779,6 @@ export async function handleRoomHttpMessage(
       connection: { ...connection, privilegedRoomAuthority, roomSession },
     };
   } catch (error) {
-    let shouldDiscardPrepared = true;
     if (admissionReservation && admissionRecord && !admissionFinished) {
       const completion = admissionFence.isCurrent(admissionReservation)
         ? { kind: "not-cancelled" as const }
@@ -758,27 +787,22 @@ export async function handleRoomHttpMessage(
             admissionRecord,
             dependencies,
           );
-      if (
-        admissionReservation.explicitDepartureObserver &&
-        completion.kind === "cleanup-failed"
-      ) {
-        try {
-          await retainPreparedRoomSessionForDepartureRetry(
-            senderTabId as number,
-            message.roomSession,
-            admissionRecord.roomId,
-            dependencies.roomSessionDependencies,
-          );
-        } catch {
-          shouldDiscardPrepared = false;
-        }
-      }
+      const disposition = await ownCancelledAdmissionCleanupFailure(
+        senderTabId as number,
+        message.roomSession,
+        admissionRecord,
+        admissionReservation,
+        completion,
+        dependencies,
+      );
+      shouldDiscardPrepared = disposition.shouldDiscardPrepared;
       admissionFence.finish(admissionReservation, completion);
       await clearUnobservedCancelledAdmission(
         senderTabId as number,
         admissionRecord,
         admissionReservation,
         completion,
+        disposition.backgroundOwnsDeparture,
         dependencies,
       );
       admissionFinished = true;
@@ -810,6 +834,50 @@ export async function handleRoomHttpMessage(
   }
 }
 
+async function ownCancelledAdmissionCleanupFailure(
+  tabId: number,
+  prepared: PreparedRoomSession,
+  record: RoomSessionRecord,
+  reservation: RoomAdmissionReservation,
+  completion: RoomAdmissionCompletion,
+  dependencies: RoomHttpBackgroundDependencies,
+): Promise<{
+  backgroundOwnsDeparture: boolean;
+  shouldDiscardPrepared: boolean;
+}> {
+  if (completion.kind !== "cleanup-failed") {
+    return { backgroundOwnsDeparture: false, shouldDiscardPrepared: true };
+  }
+
+  if (reservation.explicitDepartureObserver) {
+    try {
+      await retainPreparedRoomSessionForDepartureRetry(
+        tabId,
+        prepared,
+        record.roomId,
+        dependencies.roomSessionDependencies,
+      );
+      return { backgroundOwnsDeparture: false, shouldDiscardPrepared: true };
+    } catch {
+      return { backgroundOwnsDeparture: false, shouldDiscardPrepared: false };
+    }
+  }
+
+  try {
+    await (
+      dependencies.enqueueCancelledAdmissionDepartureRetry ??
+      enqueueRoomDepartureRetry
+    )({
+      roomId: record.roomId,
+      ownerUserId: record.ownerUserId,
+      participantSessionId: record.participantSessionId,
+    });
+    return { backgroundOwnsDeparture: true, shouldDiscardPrepared: true };
+  } catch {
+    return { backgroundOwnsDeparture: false, shouldDiscardPrepared: false };
+  }
+}
+
 async function cleanupCancelledRoomAdmission(
   tabId: number,
   record: RoomSessionRecord,
@@ -830,11 +898,12 @@ async function clearUnobservedCancelledAdmission(
   record: RoomSessionRecord,
   reservation: RoomAdmissionReservation,
   completion: RoomAdmissionCompletion,
+  backgroundOwnsDeparture: boolean,
   dependencies: RoomHttpBackgroundDependencies,
 ): Promise<void> {
   if (
     reservation.explicitDepartureObserver ||
-    completion.kind !== "cleanup-confirmed"
+    (completion.kind !== "cleanup-confirmed" && !backgroundOwnsDeparture)
   ) {
     return;
   }

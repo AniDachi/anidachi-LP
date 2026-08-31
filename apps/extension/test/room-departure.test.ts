@@ -536,6 +536,17 @@ describe("explicit room departure", () => {
 		});
 	});
 
+	it("accepts legacy-compatible stale after a lost successful response", async () => {
+		const sendMessage = vi.fn(async () => ({
+			ok: true,
+			outcome: "stale" as const,
+		}));
+
+		await expect(
+			requestCurrentRoomDeparture(roomSession(), { sendMessage }),
+		).resolves.toBe("stale");
+	});
+
 	it("sends only the selected room to the authenticated active-session recovery route", async () => {
 		const fetcher = vi.fn(
 			async (_input: RequestInfo | URL, _init?: RequestInit) =>

@@ -40,6 +40,11 @@ import {
   type RoomTabDepartureOutcome,
 } from "../src/room-departure";
 import {
+  drainRoomDepartureRetries,
+  handleRoomDepartureRetryAlarm,
+  isRoomDepartureRetryAlarm,
+} from "../src/room-departure-retry";
+import {
   createRoomInviteNotificationMaintenanceAlarm,
   handleAuthSessionChanged,
   handleRoomInviteNotificationPermissionRemoved,
@@ -274,6 +279,7 @@ export default defineBackground(() => {
       previous,
       next,
     ).catch(() => undefined);
+    void drainRoomDepartureRetries({ force: true }).catch(() => undefined);
   });
 
   workerScope().addEventListener("push", (event) => {
@@ -281,6 +287,7 @@ export default defineBackground(() => {
   });
   workerScope().addEventListener("online", () => {
     void flushWatchHistoryInBackground().catch(() => undefined);
+    void drainRoomDepartureRetries({ force: true }).catch(() => undefined);
   });
 
   chrome.notifications?.onClicked?.addListener((notificationId) => {
@@ -292,6 +299,10 @@ export default defineBackground(() => {
   });
 
   chrome.alarms.onAlarm.addListener((alarm) => {
+    if (isRoomDepartureRetryAlarm(alarm.name)) {
+      void handleRoomDepartureRetryAlarm(alarm.name).catch(() => undefined);
+      return;
+    }
     if (!isRoomInviteNotificationMaintenanceAlarm(alarm.name)) return;
     void reconcileRoomInviteNotifications({ notify: true }).catch(() => undefined);
   });
@@ -301,6 +312,7 @@ export default defineBackground(() => {
       async () => {
         await reconcileExtensionSessionAgainstWebsite({ adoptIfMissing: false });
         await reconcileRoomInviteNotifications({ notify });
+        await drainRoomDepartureRetries({ force: true });
       },
       flushWatchHistoryInBackground,
     )
@@ -310,6 +322,7 @@ export default defineBackground(() => {
   chrome.runtime.onInstalled?.addListener(() => reconcileStoredWebsiteSession(false));
 
   void createRoomInviteNotificationMaintenanceAlarm().catch(() => undefined);
+  void drainRoomDepartureRetries().catch(() => undefined);
 
   chrome.tabs.onRemoved.addListener((tabId) => {
     void handleRemovedRoomTab(tabId).catch(() => undefined);
