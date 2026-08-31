@@ -389,14 +389,6 @@ test("staging gate bypasses extension token endpoints and allowed bearer API cal
   );
   assert.equal(
     canBypassStagingGate({
-      pathname: "/api/internal/rooms/room_123/source/extra",
-      method: "POST",
-      authorization: "Bearer internal-secret",
-    }),
-    false,
-  );
-  assert.equal(
-    canBypassStagingGate({
       pathname: "/api/internal/rooms/room_123/ended",
       method: "POST",
     }),
@@ -424,6 +416,51 @@ test("staging gate bypasses extension token endpoints and allowed bearer API cal
     }),
     false,
   );
+});
+
+test("staging gate lets bearer-authenticated internal POST callbacks reach route authorization", () => {
+  for (const pathname of [
+    "/api/internal/rooms/room-1/ended",
+    "/api/internal/rooms/room-1/source",
+    "/api/internal/rooms/room-1/participants/user-1/departed",
+    "/api/internal/future/nested/callback",
+  ]) {
+    assert.equal(
+      canBypassStagingGate({
+        pathname,
+        method: "POST",
+        authorization: "Bearer service-token",
+      }),
+      true,
+      `POST ${pathname} with a bearer must reach route authorization`,
+    );
+    assert.equal(
+      canBypassStagingGate({ pathname, method: "POST" }),
+      false,
+      `POST ${pathname} without a bearer must remain password-gated`,
+    );
+    assert.equal(
+      canBypassStagingGate({
+        pathname,
+        method: "GET",
+        authorization: "Bearer service-token",
+      }),
+      false,
+      `GET ${pathname} must remain password-gated`,
+    );
+  }
+
+  for (const pathname of ["/api/internal", "/api/internal-malicious/callback"]) {
+    assert.equal(
+      canBypassStagingGate({
+        pathname,
+        method: "POST",
+        authorization: "Bearer service-token",
+      }),
+      false,
+      `${pathname} must not match the internal callback namespace`,
+    );
+  }
 });
 
 test("staging gate lets an extension bearer reach only the supported Watch History v2 methods", () => {

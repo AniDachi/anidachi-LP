@@ -98,6 +98,9 @@ export function isStaticAssetPath(pathname: string): boolean {
 }
 
 function canBearerBypassStagingGate(pathname: string, method: string): boolean {
+  if (pathname.startsWith("/api/internal/") && method === "POST") {
+    return true;
+  }
   if (pathname === "/api/me" && method === "GET") return true;
   if (pathname === "/api/me/profile" && method === "PATCH") return true;
   if (pathname === "/api/friends" && method === "GET") return true;
@@ -201,18 +204,6 @@ function canBearerBypassStagingGate(pathname: string, method: string): boolean {
 		return true;
 	}
   if (/^\/api\/rooms\/[^/]+\/end$/.test(pathname) && method === "POST") {
-    return true;
-  }
-	if (
-		/^\/api\/internal\/rooms\/[^/]+\/ended$/.test(pathname) &&
-		method === "POST"
-	) {
-    return true;
-  }
-	if (
-		/^\/api\/internal\/rooms\/[^/]+\/source$/.test(pathname) &&
-		method === "POST"
-	) {
     return true;
   }
   return false;
