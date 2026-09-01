@@ -1188,8 +1188,10 @@ describe("legacy page room session migration", () => {
     const dependencies = backgroundDependencies();
     const pageSessionStorage = new PageSessionStorage();
     expect(
-      rememberRoomSessionRecoveryHint("room-after-update", {
+      await rememberRoomSessionRecoveryHint("room-after-update", "user-a", {
         pageSessionStorage,
+        sendMessage: (runtimeMessage) =>
+          handleRoomSessionStorageMessage(runtimeMessage, sender(51), dependencies),
       }),
     ).toBe(true);
 
@@ -1204,7 +1206,7 @@ describe("legacy page room session migration", () => {
       revision: 1,
       roomId: "room-after-update",
       ownerUserId: "user-a",
-      participantSessionId: "session-uuid-1",
+      participantSessionId: "session-uuid-2",
       cameraEnabled: false,
       voiceMode: "push-to-talk",
     });
@@ -1212,23 +1214,68 @@ describe("legacy page room session migration", () => {
       new Map([
         [
           ROOM_SESSION_RECOVERY_HINT_STORAGE_KEY,
-          JSON.stringify({ version: 1, roomId: "room-after-update" }),
+          JSON.stringify({
+            version: 1,
+            roomId: "room-after-update",
+            accountScope: "recovery-uuid-1",
+          }),
         ],
       ]),
     );
   });
 
-  it("keeps only the non-authoritative room id in the page recovery hint", () => {
+  it("does not restore a recovery hint after the authenticated account changes", async () => {
+    const dependencies = backgroundDependencies();
+    const pageSessionStorage = new PageSessionStorage();
+    expect(
+      await rememberRoomSessionRecoveryHint(
+        "room-owned-by-user-a",
+        "user-a",
+        {
+          pageSessionStorage,
+          sendMessage: (runtimeMessage) =>
+            handleRoomSessionStorageMessage(
+              runtimeMessage,
+              sender(53),
+              dependencies,
+            ),
+        },
+      ),
+    ).toBe(true);
+
+    await expect(
+      migrateLegacyRoomSession("user-b", {
+        pageSessionStorage,
+        sendMessage: (runtimeMessage) =>
+          handleRoomSessionStorageMessage(runtimeMessage, sender(53), dependencies),
+      }),
+    ).resolves.toBeNull();
+    expect(pageSessionStorage.values.size).toBe(0);
+    expect(dependencies.sessionStorage.values.size).toBe(0);
+  });
+
+  it("keeps only a non-authoritative room id and opaque account scope in the page recovery hint", async () => {
+    const dependencies = backgroundDependencies();
     const pageSessionStorage = new PageSessionStorage();
 
     expect(
-      rememberRoomSessionRecoveryHint("room-a", { pageSessionStorage }),
+      await rememberRoomSessionRecoveryHint("room-a", "user-a", {
+        pageSessionStorage,
+        sendMessage: (runtimeMessage) =>
+          handleRoomSessionStorageMessage(runtimeMessage, sender(54), dependencies),
+      }),
     ).toBe(true);
 
     const raw = pageSessionStorage.getItem(
       ROOM_SESSION_RECOVERY_HINT_STORAGE_KEY,
     );
-    expect(raw).toBe(JSON.stringify({ version: 1, roomId: "room-a" }));
+    expect(raw).toBe(
+      JSON.stringify({
+        version: 1,
+        roomId: "room-a",
+        accountScope: "recovery-uuid-1",
+      }),
+    );
     expect(raw).not.toContain("user-a");
     expect(raw).not.toContain("participant-session");
 

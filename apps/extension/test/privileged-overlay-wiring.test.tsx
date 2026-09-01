@@ -112,7 +112,7 @@ describe("privileged overlay wiring", () => {
 	it("keeps a safe same-tab room hint across extension reload and clears it on departure", () => {
 		const source = readFileSync("src/overlay-app.tsx", "utf8");
 
-		expect(source).toContain("rememberRoomSessionRecoveryHint(nextRoomId)");
+		expect(source).toContain("await rememberRoomSessionRecoveryHint(");
 		expect(source).toContain("clearRoomSessionRecoveryHint()");
 	});
 

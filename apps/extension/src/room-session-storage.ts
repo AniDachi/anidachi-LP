@@ -21,6 +21,8 @@ export const ROOM_SESSION_RECOVERY_HINT_STORAGE_KEY =
   "anidachi:room-recovery-hint:v1";
 
 const ROOM_SESSION_RECORD_VERSION = 1 as const;
+const ROOM_SESSION_RECOVERY_SCOPE_STORAGE_KEY_PREFIX =
+  "anidachi:room-recovery-scope:v1:user:";
 const ROOM_SESSION_RECORD_KEY_PREFIX = "anidachi:room-session:v1:tab:";
 const PREPARED_ROOM_SESSION_RECORD_KEY_PREFIX =
   "anidachi:prepared-room-session:v1:tab:";
@@ -94,6 +96,11 @@ export type RoomSessionStorageMessage =
   | { type: typeof ROOM_SESSION_STORAGE_MESSAGE_TYPE; command: "legacy-prefix" }
   | {
       type: typeof ROOM_SESSION_STORAGE_MESSAGE_TYPE;
+      command: "recovery-scope";
+      currentUserId: string | null;
+    }
+  | {
+      type: typeof ROOM_SESSION_STORAGE_MESSAGE_TYPE;
       command: "load";
       currentUserId: string | null;
     }
@@ -153,6 +160,7 @@ export type RoomSessionStorageResponse =
       record: RoomSessionRecord | null;
       prepared?: PreparedRoomSession | null;
       legacyPrefix?: string | null;
+      recoveryScope?: string | null;
     }
   | { ok: false; error: string };
 
@@ -168,6 +176,10 @@ type RuntimeMessageSender = (
 ) => Promise<RoomSessionStorageResponse | null | undefined | unknown>;
 
 const roomSessionOperationsByTab = new Map<number, Promise<unknown>>();
+const roomSessionRecoveryScopeOperationsByUser = new Map<
+  string,
+  Promise<unknown>
+>();
 
 export interface RoomSessionBackgroundDependencies {
   sessionStorage?: StorageAreaLike;
@@ -190,6 +202,11 @@ export function isRoomSessionStorageMessage(value: unknown): value is RoomSessio
     case "legacy-prefix":
     case "clear":
       return true;
+    case "recovery-scope":
+      return isNullableBoundedString(
+        value.currentUserId,
+        MAX_PARTICIPANT_ID_CHARS,
+      );
     case "load":
       return isNullableString(value.currentUserId);
     case "persist":
@@ -277,6 +294,16 @@ export async function handleRoomSessionStorageMessage(
                 : null,
           };
         }
+        case "recovery-scope":
+          return {
+            ok: true,
+            record: null,
+            recoveryScope: await getOrCreateRoomSessionRecoveryScope(
+              localStorage,
+              message.currentUserId,
+              randomUUID,
+            ),
+          };
         case "load":
           return {
             ok: true,
@@ -591,6 +618,45 @@ function enqueueRoomSessionOperation<T>(tabId: number, operation: () => Promise<
   return queued;
 }
 
+function enqueueRoomSessionRecoveryScopeOperation<T>(
+  userId: string,
+  operation: () => Promise<T>,
+): Promise<T> {
+  const previous =
+    roomSessionRecoveryScopeOperationsByUser.get(userId) ?? Promise.resolve();
+  const current = previous.catch(() => undefined).then(operation);
+  const queued = current.finally(() => {
+    if (roomSessionRecoveryScopeOperationsByUser.get(userId) === queued) {
+      roomSessionRecoveryScopeOperationsByUser.delete(userId);
+    }
+  });
+  roomSessionRecoveryScopeOperationsByUser.set(userId, queued);
+  return queued;
+}
+
+function getOrCreateRoomSessionRecoveryScope(
+  localStorage: StorageAreaLike,
+  currentUserId: string | null,
+  randomUUID: () => string,
+): Promise<string | null> {
+  if (!isBoundedString(currentUserId, MAX_PARTICIPANT_ID_CHARS)) {
+    return Promise.resolve(null);
+  }
+
+  return enqueueRoomSessionRecoveryScopeOperation(currentUserId, async () => {
+    const key = `${ROOM_SESSION_RECOVERY_SCOPE_STORAGE_KEY_PREFIX}${currentUserId}`;
+    const stored = await localStorage.get(key);
+    const current = stored[key];
+    if (isBoundedString(current, MAX_SESSION_ID_CHARS)) {
+      return current;
+    }
+
+    const created = createBoundedSessionValue("recovery", randomUUID);
+    await localStorage.set({ [key]: created });
+    return created;
+  });
+}
+
 export async function loadRoomSession(
   currentUserId: string | null,
   dependencies: RoomSessionClientDependencies = {},
@@ -764,13 +830,35 @@ export async function migrateLegacyRoomSession(
   dependencies: RoomSessionClientDependencies = {},
 ): Promise<RoomSessionRecord | null> {
   const pageStorage = dependencies.pageSessionStorage ?? sessionStorage;
-  const prefixResponse = await sendRoomSessionMessage(
-    { type: ROOM_SESSION_STORAGE_MESSAGE_TYPE, command: "legacy-prefix" },
-    dependencies.sendMessage,
-  );
+  const hasRecoveryHint =
+    readPageStorageKey(pageStorage, ROOM_SESSION_RECOVERY_HINT_STORAGE_KEY) !==
+    null;
+  const [prefixResponse, recoveryScopeResponse] = await Promise.all([
+    sendRoomSessionMessage(
+      { type: ROOM_SESSION_STORAGE_MESSAGE_TYPE, command: "legacy-prefix" },
+      dependencies.sendMessage,
+    ),
+    hasRecoveryHint
+      ? sendRoomSessionMessage(
+          {
+            type: ROOM_SESSION_STORAGE_MESSAGE_TYPE,
+            command: "recovery-scope",
+            currentUserId,
+          },
+          dependencies.sendMessage,
+        )
+      : Promise.resolve({
+          ok: true as const,
+          record: null,
+          recoveryScope: null,
+        }),
+  ]);
   const legacyGroups = legacyStorageGroups(prefixResponse.legacyPrefix ?? null);
   const values = legacyGroups.map((group) => readLegacyGroup(pageStorage, group));
-  const recoveryRoomId = readRoomSessionRecoveryHint(pageStorage);
+  const recoveryRoomId = readRoomSessionRecoveryHint(
+    pageStorage,
+    recoveryScopeResponse.recoveryScope ?? null,
+  );
   const recoveryRecord =
     isBoundedString(recoveryRoomId, MAX_ROOM_ID_CHARS) &&
     isBoundedString(currentUserId, MAX_PARTICIPANT_ID_CHARS)
@@ -807,23 +895,44 @@ export async function migrateLegacyRoomSession(
 }
 
 /**
- * Keeps only a non-authoritative room pointer in the provider tab. Page
- * sessionStorage survives an extension reload, while identity and media state
- * are deliberately re-minted in trusted background storage.
+ * Keeps only a non-authoritative room pointer and opaque account scope in the
+ * provider tab. Page sessionStorage survives an extension reload, while
+ * identity and media state are deliberately re-minted in trusted background
+ * storage.
  */
-export function rememberRoomSessionRecoveryHint(
+export async function rememberRoomSessionRecoveryHint(
   roomId: string,
-  dependencies: Pick<RoomSessionClientDependencies, "pageSessionStorage"> = {},
-): boolean {
-  if (!isBoundedString(roomId, MAX_ROOM_ID_CHARS)) {
+  currentUserId: string,
+  dependencies: RoomSessionClientDependencies = {},
+): Promise<boolean> {
+  if (
+    !isBoundedString(roomId, MAX_ROOM_ID_CHARS) ||
+    !isBoundedString(currentUserId, MAX_PARTICIPANT_ID_CHARS)
+  ) {
     return false;
   }
 
   const pageStorage = dependencies.pageSessionStorage ?? sessionStorage;
   try {
+    const response = await sendRoomSessionMessage(
+      {
+        type: ROOM_SESSION_STORAGE_MESSAGE_TYPE,
+        command: "recovery-scope",
+        currentUserId,
+      },
+      dependencies.sendMessage,
+    );
+    const accountScope = response.recoveryScope;
+    if (!isBoundedString(accountScope, MAX_SESSION_ID_CHARS)) {
+      return false;
+    }
     pageStorage.setItem(
       ROOM_SESSION_RECOVERY_HINT_STORAGE_KEY,
-      JSON.stringify({ version: ROOM_SESSION_RECORD_VERSION, roomId }),
+      JSON.stringify({
+        version: ROOM_SESSION_RECORD_VERSION,
+        roomId,
+        accountScope,
+      }),
     );
     return true;
   } catch {
@@ -1418,7 +1527,10 @@ function readPageStorageKey(storage: PageSessionStorageLike, key: string): strin
   }
 }
 
-function readRoomSessionRecoveryHint(storage: PageSessionStorageLike): string | null {
+function readRoomSessionRecoveryHint(
+  storage: PageSessionStorageLike,
+  expectedAccountScope: string | null,
+): string | null {
   const raw = readPageStorageKey(storage, ROOM_SESSION_RECOVERY_HINT_STORAGE_KEY);
   if (raw === null) {
     return null;
@@ -1429,7 +1541,9 @@ function readRoomSessionRecoveryHint(storage: PageSessionStorageLike): string | 
     if (
       isObject(value) &&
       value.version === ROOM_SESSION_RECORD_VERSION &&
-      isBoundedString(value.roomId, MAX_ROOM_ID_CHARS)
+      isBoundedString(value.roomId, MAX_ROOM_ID_CHARS) &&
+      isBoundedString(value.accountScope, MAX_SESSION_ID_CHARS) &&
+      value.accountScope === expectedAccountScope
     ) {
       return value.roomId;
     }

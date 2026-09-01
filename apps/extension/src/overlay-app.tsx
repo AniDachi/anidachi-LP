@@ -3529,7 +3529,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			roomReconnectSuppressedRef.current = false;
 			roomIdRef.current = nextRoomId;
 			setRoomId(nextRoomId);
-			rememberRoomSessionRecoveryHint(nextRoomId);
+			await rememberRoomSessionRecoveryHint(
+				nextRoomId,
+				activeParticipant.id,
+			);
 			ensureRoomHash(nextRoomId);
 			logDebug("overlay.room", "connect requested", {
 				roomId: nextRoomId,
