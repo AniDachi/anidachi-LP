@@ -400,26 +400,51 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
   interruption still use the existing 60-second reconnect grace, with the
   Worker's signed callback as an independent fallback. The current extension
   has no post-close recovery choice and no broad Leave/End-active-room conflict
-  action. The exclusive tab lock protects an open same-browser room, while the
-  atomic server assignment protects other profiles and devices. A Create-room
+  action. A same-browser room is protected when `acquireRoomTabLock()` can
+  acquire a working Web Lock. If Web Locks are unavailable or fail, the client
+  proceeds and the atomic server assignment remains authoritative across tabs,
+  profiles, and devices. A Create-room
   conflict now stays mutation-free: it cannot depart, replace, or retry over a
   live host/guest session. The database regression case requires the rejected
   guest create to preserve the exact room/role/session assignment and create no
   orphan host room. Deliberate return uses the ordinary invitation flow. Chrome
   reload/update clears extension-session storage, so the provider tab retains
-  only a non-authoritative page-session `roomId` hint. The restarted extension
-  mints fresh trusted identity with camera Off and Push to talk, then immediately
-  performs the existing same-room takeover; explicit and terminal exits clear
-  the hint. No identity or room authority is stored in the page, and the
-  60-second Worker grace remains transport recovery rather than a UI delay.
-  Local proof: extension check and 1514/1514 tests; Web 386 passed/3 skipped; API
+  only a non-authoritative page-session `roomId` and opaque account scope. The
+  restarted extension accepts the hint only for the same authenticated
+  account, mints fresh trusted identity with camera Off and Push to talk, then
+  immediately performs the existing same-room takeover; explicit and terminal
+  exits clear the hint. No user ID, participant session, or room authority is
+  stored in the page, and the 60-second Worker grace remains transport recovery
+  rather than a UI delay. Local proof: extension check and 1515/1515 tests; Web
+  386 passed/3 skipped; API
   check, 166/166 unit tests, and 37/37 runtime tests; room harness 39/39; and
   real-WebRTC harness 26/26. Local Supabase execution of the added SQL
   regression remains pending because Docker was unavailable. The staging
-  artifact `911da0b-staging-20260901150204` was rebuilt, validated, and
+  artifact `e3345f3-staging-20260901162121` was rebuilt, validated, and
   synchronized byte-for-byte to both approved unpacked test folders (manifest
-  SHA-256 `ed27df0d82caa18190001312f65d20fecd99c62ca4ce4e1aab1ee02e7dbafb56`);
-  loaded two-profile acceptance remains required.
+  SHA-256 `3b63d2558000e3fab2d4890c1d490165296c85b22e946c74471db1d3ad657823`);
+  loaded two-profile acceptance remains required. Reproduce with
+  `pnpm --filter @anidachi/extension check`,
+  `pnpm --filter @anidachi/extension test`,
+  `pnpm --filter @anidachi/web check`,
+  `pnpm --filter @anidachi/web test`,
+  `pnpm --filter @anidachi/api check`,
+  `pnpm --filter @anidachi/api test`,
+  `pnpm --filter @anidachi/api test:runtime`, `pnpm harness:rooms`,
+  `npm --prefix tests/e2e run harness:p2p`,
+  `pnpm build:extension:staging`,
+  `pnpm validate:extension:staging`, and `pnpm dev:check`. The focused SQL
+  regression is `apps/web/supabase/tests/single_active_room_sessions.test.sql`,
+  specifically the guest create-conflict assertions for unchanged assignment
+  and no orphan host room; Docker execution remains pending. Current route
+  boundaries are `POST /api/rooms`,
+  `POST /api/rooms/[roomId]/connect`,
+  `POST /api/rooms/[roomId]/depart`, and
+  `POST /api/rooms/active-session/depart`. Loaded acceptance still covers:
+  guest close affects only the guest; host close ends the room; reload/update
+  restores the same account without a 60-second UI wait; invite join works
+  after deliberate exit; and create conflict neither replaces nor departs the
+  existing host/guest session.
 - [~] 2026-08-29: Added the account-local `Room` defaults surface without
   changing the room protocol, Worker, API, database, permissions, or provider
   adapters. Microphone on join now supports Last used, Push to talk, and Open
