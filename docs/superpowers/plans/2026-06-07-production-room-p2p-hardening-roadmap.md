@@ -104,6 +104,20 @@
   `dev:check` exit 0, and staging artifact build/validation. Generated artifacts
   remain ignored. Remaining proof: deploy the candidate and perform the loaded
   two-profile YouTube/Crunchyroll acceptance; no staging acceptance is claimed.
+- [~] 2026-09-01: Simplified the MVP room lifecycle after invite-flow testing.
+  A real browser-tab removal now attempts exact bounded durable departure before
+  clearing only that tab's matching local record, so deliberate close means
+  exit. Reload, BFCache, sleep, and temporary transport loss retain the existing
+  60-second Worker reconnect grace, with the signed callback as the close
+  request's failure fallback. The current extension removes post-close
+  Rejoin/Start-new state and broad Leave/End-active-room conflict actions; a
+  genuine active room elsewhere is informational and is not silently ended.
+  Returning after deliberate close uses the normal invitation flow. Local
+  proof: extension check and 1508/1508 tests; Web 385 passed/3 skipped; API
+  check, 166/166 unit tests, and 37/37 runtime tests; room harness 39/39;
+  real-WebRTC harness 26/26; staging build/validation; and byte-identical
+  validated synchronization to both canonical test folders. Loaded two-profile
+  acceptance remains pending.
 
 ## Current Reality Check
 

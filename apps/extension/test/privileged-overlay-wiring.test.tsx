@@ -82,7 +82,7 @@ describe("privileged overlay wiring", () => {
 		vi.mocked(createRoomInvite).mockReset();
 	});
 
-	it("keeps normal leave exact and emergency recovery explicitly confirmed", () => {
+	it("keeps normal leave exact and does not expose broad room recovery", () => {
 		const source = readFileSync("src/overlay-app.tsx", "utf8");
 
 		expect(source).toContain(
@@ -100,17 +100,13 @@ describe("privileged overlay wiring", () => {
 		expect(source).toContain('scheduleRoomReconnect("leave-failed")');
 		expect(source).toContain('skipStaleJoin("room-token-error")');
 
-		const recoverySlice = source.slice(
-			source.indexOf("const handleRecoverActiveRoom"),
-			source.indexOf("const handleEndRoom"),
-		);
 		const leaveSlice = source.slice(
 			source.indexOf("const handleLeaveRoom"),
 			source.indexOf("const reloadPage"),
 		);
-		expect(recoverySlice).toContain("requestActiveRoomRecovery(");
-		expect(recoverySlice).toContain("activeRoomRecoveryConfirmationPending");
 		expect(leaveSlice).not.toContain("requestActiveRoomRecovery(");
+		expect(source).not.toContain("requestActiveRoomRecovery(");
+		expect(source).not.toContain('className="active-room-recovery-button"');
 	});
 
 	it("keeps the overlay tree closed to the hosting page", () => {
@@ -2201,7 +2197,7 @@ describe("privileged overlay wiring", () => {
 		expect(noticeDismissed).toBe(true);
 	});
 
-	it("offers a confirmed emergency guest exit without reopening the active room", async () => {
+	it("shows a guest active-room conflict without a destructive action", async () => {
 		const sendMessage = vi.fn(
 			async (message: {
 				type?: string;
@@ -2243,12 +2239,6 @@ describe("privileged overlay wiring", () => {
 						},
 					};
 				}
-				if (
-					message.type === "ANIDACHI_ROOM_DEPARTURE" &&
-					message.command === "recover-active" &&
-					message.roomId === "room-active"
-				)
-					return { ok: true, outcome: "departed" };
 				throw new Error(
 					`Unexpected runtime message ${message.type}:${message.command}`,
 				);
@@ -2265,26 +2255,24 @@ describe("privileged overlay wiring", () => {
 		expect(view.container.textContent).toContain(
 			"You already have an active watch room.",
 		);
-		await click(button(view.container, "Leave active room"));
-		expect(view.container.textContent).toContain("Confirm leave");
-		await click(button(view.container, "Confirm leave"));
-		await flushMountedWork();
-
 		expect(connect).not.toHaveBeenCalled();
-		expect(sendMessage).toHaveBeenCalledWith({
-			type: "ANIDACHI_ROOM_DEPARTURE",
-			command: "recover-active",
-			roomId: "room-active",
-			expectedUserId: "user-a",
-		});
-		expect(view.container.textContent).not.toContain(
+		expect(
+			sendMessage.mock.calls.some(
+				([message]) =>
+					message.type === "ANIDACHI_ROOM_DEPARTURE" &&
+					message.command === "recover-active",
+			),
+		).toBe(false);
+		expect(view.container.textContent).toContain(
 			"You already have an active watch room.",
 		);
+		expect(view.container.textContent).not.toContain("Leave active room");
+		expect(view.container.textContent).not.toContain("End active room");
 		expect(view.container.textContent).not.toContain("Open active room");
 		await unmount(view.root);
 	});
 
-	it("keeps host emergency room ending separate and confirmed", async () => {
+	it("shows a host active-room conflict without ending it from another tab", async () => {
 		const sendMessage = vi.fn(
 			async (message: {
 				type?: string;
@@ -2327,13 +2315,6 @@ describe("privileged overlay wiring", () => {
 						},
 					};
 				}
-				if (
-					message.type === "ANIDACHI_ROOM_DEPARTURE" &&
-					message.command === "recover-active" &&
-					message.roomId === "room-active" &&
-					message.expectedUserId === "user-a"
-				)
-					return { ok: true, outcome: "room_ended" };
 				throw new Error(
 					`Unexpected runtime message ${message.type}:${message.command}`,
 				);
@@ -2346,20 +2327,18 @@ describe("privileged overlay wiring", () => {
 		await click(button(view.container, "Create room"));
 		await waitForText(view.container, "You already have an active watch room.");
 
-		await click(button(view.container, "End active room"));
-		expect(view.container.textContent).toContain("Confirm end");
-		await click(button(view.container, "Confirm end"));
-		await flushMountedWork();
-
-		expect(sendMessage).toHaveBeenCalledWith({
-			type: "ANIDACHI_ROOM_DEPARTURE",
-			command: "recover-active",
-			roomId: "room-active",
-			expectedUserId: "user-a",
-		});
-		expect(view.container.textContent).not.toContain(
+		expect(
+			sendMessage.mock.calls.some(
+				([message]) =>
+					message.type === "ANIDACHI_ROOM_DEPARTURE" &&
+					message.command === "recover-active",
+			),
+		).toBe(false);
+		expect(view.container.textContent).toContain(
 			"You already have an active watch room.",
 		);
+		expect(view.container.textContent).not.toContain("End active room");
+		expect(view.container.textContent).not.toContain("Leave active room");
 		await unmount(view.root);
 	});
 
@@ -2418,7 +2397,8 @@ describe("privileged overlay wiring", () => {
 		expect(view.container.textContent).toContain(
 			"You already have an active watch room on Crunchyroll.",
 		);
-		expect(view.container.textContent).toContain("Leave active room");
+		expect(view.container.textContent).not.toContain("Leave active room");
+		expect(view.container.textContent).not.toContain("End active room");
 		expect(view.container.textContent).not.toContain("Open active room");
 		expect(connect).not.toHaveBeenCalled();
 		await unmount(view.root);

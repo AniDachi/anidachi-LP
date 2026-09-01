@@ -303,14 +303,15 @@ export async function handleActiveRoomRecovery(
 }
 
 /**
- * Passive close clears only extension-local bookkeeping. The closing content
- * script socket is the remote signal; the Worker owns its reconnect grace and
- * eventual signed durable departure callback.
+ * A real browser-tab close is an explicit room exit. Release the exact durable
+ * assignment before removing tab-local bookkeeping. If MV3, auth, or the
+ * network prevents the bounded accelerator from completing, the closing
+ * socket still starts the Worker's disconnect-grace fallback.
  */
 export async function handleRoomTabDeparture(
   tabId: number,
   dependencies: RoomTabDepartureDependencies = {},
-): Promise<"closed" | "no-session" | "failed"> {
+): Promise<RoomTabDepartureOutcome> {
   const loadRoomSession = dependencies.loadRoomSession ??
 		((resolvedTabId: number) =>
 			loadRoomSessionForTab(resolvedTabId, dependencies.roomSessionDependencies));
@@ -330,8 +331,11 @@ export async function handleRoomTabDeparture(
   }
 
 	if (!record) return "no-session";
-	await clearRoomSession(tabId, record).catch(() => false);
-	return "closed";
+	try {
+		return await notifyBoundedDeparture(record, dependencies);
+	} finally {
+		await clearRoomSession(tabId, record).catch(() => false);
+	}
 }
 
 async function notifyBoundedDeparture(
@@ -474,6 +478,7 @@ export async function departWebsiteRoomFromApi(
     new URL(`/api/rooms/${encodeURIComponent(record.roomId)}/depart`, WEB_HTTP_BASE),
     {
       method: "POST",
+      keepalive: true,
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",

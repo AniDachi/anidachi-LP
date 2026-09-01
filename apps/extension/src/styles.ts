@@ -1862,26 +1862,6 @@ ${extensionThemeTokens}
     min-width: 0;
   }
 
-	.auth-notice .active-room-recovery-button {
-		flex: 0 0 auto;
-		border-color: rgba(132, 32, 41, 0.82);
-		background: rgba(88, 21, 28, 0.86);
-		color: rgba(255, 255, 255, 0.92);
-		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-	}
-
-	.auth-notice .active-room-recovery-button:not(:disabled):hover {
-		border-color: #b02a37;
-		background: #842029;
-		color: rgba(255, 255, 255, 0.98);
-	}
-
-	.auth-notice .active-room-recovery-button.confirming {
-		border-color: #dc3545;
-		background: #b02a37;
-		color: rgba(255, 255, 255, 0.98);
-	}
-
   .quota-note {
     margin-top: 8px;
     padding: 2px 4px 0;
