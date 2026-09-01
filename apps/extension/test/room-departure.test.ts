@@ -14,23 +14,53 @@ import {
 import type { RoomSessionRecord } from "../src/room-session-storage";
 
 describe("closed-tab room departure", () => {
-	it("clears only local tab state and leaves passive departure to the Worker", async () => {
-		const requestDeparture = vi.fn();
+	it("releases the exact server assignment before clearing a closed tab", async () => {
+		const requestDeparture = vi.fn(async () => ({
+			kind: "ack" as const,
+			outcome: "departed" as const,
+		}));
 		const recoverActiveDeparture = vi.fn();
 		const clearRoomSession = vi.fn(async () => true);
 
 		await expect(
 			handleRoomTabDeparture(11, {
 				loadRoomSession: async () => roomSession(),
+				getStoredSession: async () => authSession(),
 				requestDeparture,
 				recoverActiveDeparture,
 				clearRoomSession,
 			}),
-		).resolves.toBe("closed");
+		).resolves.toBe("departed");
 
-		expect(requestDeparture).not.toHaveBeenCalled();
+		expect(requestDeparture).toHaveBeenCalledWith(
+			roomSession(),
+			"access-user-a",
+			expect.any(AbortSignal),
+		);
 		expect(recoverActiveDeparture).not.toHaveBeenCalled();
 		expect(clearRoomSession).toHaveBeenCalledWith(11, roomSession());
+		expect(requestDeparture.mock.invocationCallOrder[0]).toBeLessThan(
+			clearRoomSession.mock.invocationCallOrder[0] ?? 0,
+		);
+	});
+
+	it("still clears exact local state when the close accelerator cannot release", async () => {
+		const clearRoomSession = vi.fn(async () => true);
+
+		await expect(
+			handleRoomTabDeparture(14, {
+				loadRoomSession: async () => roomSession(),
+				getStoredSession: async () => authSession(),
+				requestDeparture: async () => ({
+					kind: "retryable",
+					code: "ROOM_DEPARTURE_UNAVAILABLE",
+					message: "Try again",
+				}),
+				clearRoomSession,
+			}),
+		).resolves.toBe("retryable");
+
+		expect(clearRoomSession).toHaveBeenCalledWith(14, roomSession());
 	});
 
 	it("leaves a newer local tab state intact when the close snapshot is missing", async () => {
@@ -117,6 +147,7 @@ describe("departure API responses", () => {
 		expect(String(url)).toContain("/api/rooms/room-a/depart");
 		expect(init).toMatchObject({
 			method: "POST",
+			keepalive: true,
 			headers: {
 				Authorization: "Bearer access-user-a",
 				"Content-Type": "application/json",

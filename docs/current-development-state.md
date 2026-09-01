@@ -931,18 +931,36 @@ The current feature branch additionally implements the following behavior,
 which is locally verified but still pending staging and two-profile manual
 acceptance:
 
+- 2026-09-01 MVP lifecycle correction: a real browser-tab close is again an
+  explicit exit. The background attempts the exact bounded durable departure
+  for the closing tab before clearing only its matching local record. Reload,
+  BFCache, sleep, and temporary network/WebSocket interruption retain the
+  Worker's existing 60-second reconnect grace; if the bounded close request
+  cannot finish, socket disappearance and the signed callback remain the
+  fallback. The current extension no longer keeps a local post-close recovery
+  card or exposes a broad Leave/End-active-room action from a conflict notice.
+  A genuine active room elsewhere is shown as informational and is never
+  silently destroyed; returning after deliberate close uses an invitation.
+  Local proof: extension check and 1508/1508 tests; Web 385 passed/3 skipped;
+  API check, 166/166 unit tests, and 37/37 runtime tests; room harness 39/39;
+  real-WebRTC harness 26/26; staging artifact build/validation; and byte-identical
+  validated synchronization to both canonical test folders. Loaded two-profile
+  close/reload/invite acceptance is still pending.
+
 - explicit guest departure atomically releases the authenticated user's exact
   Supabase active-room assignment before sending bounded live Worker cleanup;
   detach success, stale responses, timeouts, and transport failures never
   turn a durable leave into an error. The Worker-owned 60-second passive alarm
-  callback is retained, while ordinary tab close is local-only and the hidden
-  tab-close HTTP accelerator has been removed;
+  callback is retained for unexpected disconnects, while real tab close uses
+  the exact bounded durable-departure request with Fetch keepalive before local
+  cleanup;
 - normal extension leave uses only the exact-departure contract and treats
   public `stale` as the legacy-compatible no-assignment success. The shared
   protocol and current extension still accept `already_departed` for forward
   compatibility, but current public Web routes do not emit it. Normal leave
-  never invokes active-room recovery automatically; the role-appropriate
-  emergency Leave/End action is still separately confirmed;
+  never invokes active-room recovery automatically. The server recovery route
+  remains compatible with older artifacts, but the current extension does not
+  expose a broad role-specific Leave/End action from a conflict notice;
 - every new prepared room operation receives a fresh server-visible
   `participantSessionId`, including a new same-room/account/tab attempt, while
   confirmed camera and microphone preferences are preserved separately. Before
@@ -971,8 +989,9 @@ acceptance:
   through response-body parsing, the connect route's 60-second maximum, and a
   15-second margin from admission begin before terminal stale is safe. It waits
   for matching auth without a perpetual alarm loop, has no cleanup TTL, and
-  cannot clear a replacement session. After snapshot acknowledgement, ordinary
-  passive close again relies on the Worker's retained 60-second grace;
+  cannot clear a replacement session. After snapshot acknowledgement, real tab
+  close attempts exact durable departure; only an unexpected socket or network
+  interruption relies on the Worker's retained 60-second grace;
 - the staging gate allows authenticated internal `POST /api/internal/**`
   callbacks to reach their own service-secret authorization while retaining the
   human gate for all other staging requests.

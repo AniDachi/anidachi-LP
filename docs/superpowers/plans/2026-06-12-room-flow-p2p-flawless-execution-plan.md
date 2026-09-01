@@ -391,6 +391,19 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
   `dev:check` exit 0, and staging artifact build/validation. Generated artifacts
   remain ignored. Remaining proof: deploy the candidate and perform the loaded
   two-profile YouTube/Crunchyroll acceptance; no staging acceptance is claimed.
+- [~] 2026-09-01: Corrected the MVP close/recovery boundary after invitation
+  lifecycle testing. Real browser-tab removal now performs the exact bounded
+  durable departure attempt before matching local cleanup; reload, BFCache,
+  sleep, and temporary transport interruption still use the existing
+  60-second reconnect grace. Failed close acceleration retains the Worker's
+  signed-callback fallback. The current extension has no post-close recovery
+  choice and no broad Leave/End-active-room conflict action; genuine active
+  sessions elsewhere are informational, while deliberate return uses the
+  ordinary invitation flow. Local proof: extension check and 1508/1508 tests;
+  Web 385 passed/3 skipped; API check, 166/166 unit tests, and 37/37 runtime
+  tests; room harness 39/39; real-WebRTC harness 26/26; staging
+  build/validation; and byte-identical validated synchronization to both
+  canonical test folders. Loaded two-profile acceptance remains required.
 - [~] 2026-08-29: Added the account-local `Room` defaults surface without
   changing the room protocol, Worker, API, database, permissions, or provider
   adapters. Microphone on join now supports Last used, Push to talk, and Open

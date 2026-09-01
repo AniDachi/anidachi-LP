@@ -10,6 +10,25 @@
 
 **Spec:** `docs/superpowers/specs/2026-08-31-authoritative-room-departure-design.md`
 
+## MVP Lifecycle Correction (2026-09-01)
+
+Loaded invite-flow testing changed one product rule after this plan was
+accepted: a real `chrome.tabs.onRemoved` event now means explicit room exit.
+The background first attempts the exact bounded durable departure for that
+tab's room/user/participant-session identity, then clears only the matching
+local record. Reload, BFCache, sleep, and temporary transport interruption keep
+the existing 60-second reconnect grace because they do not remove the tab. If
+the bounded close request cannot complete, the existing socket-disconnect alarm
+and signed callback remain the fallback.
+
+The current MVP also removes the post-close Rejoin/Start-new recovery surface
+and the broad role-specific Leave/End action from active-room conflict notices.
+A genuine room in another tab, profile, or device is informational and is not
+silently destroyed. Returning after deliberate close uses an invitation link
+or a new friends invitation. This correction supersedes the plan's later
+local-only ordinary-tab-close and emergency-action UI instructions; exact
+fencing, unexpected-disconnect recovery, and server compatibility stay intact.
+
 ## Global Constraints
 
 - Branch flow remains `codex/redesign-room-departure` -> PR -> `staging`; do not push directly to `main` and do not deploy or promote without explicit approval.

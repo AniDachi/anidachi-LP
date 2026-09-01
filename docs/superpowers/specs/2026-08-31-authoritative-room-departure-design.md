@@ -7,6 +7,32 @@ scope.
 
 Date: 2026-08-31
 
+## MVP Lifecycle Correction (2026-09-01)
+
+The product owner simplified the post-close lifecycle after loaded-extension
+testing exposed stale active-room conflicts on invite links:
+
+- a real browser tab close is an explicit exit, not a recoverable room hold;
+- the background makes the same exact, bounded durable departure request used
+  by normal leave before clearing that tab's local room record;
+- reload, BFCache restore, browser sleep, and temporary network or WebSocket
+  interruption remain recoverable within the Worker's existing 60-second
+  disconnect grace because they do not produce a real tab-removal event;
+- if the bounded tab-close request cannot finish, socket disappearance and the
+  existing signed Worker callback remain the failure fallback;
+- the current extension does not retain a post-close recovery card and does not
+  offer a broad Leave/End action from an active-room conflict. A genuine active
+  room in another tab, profile, or device is reported without silently
+  destroying it;
+- returning after a deliberate close uses the normal invitation link or a new
+  friends invitation.
+
+This correction supersedes the local-only ordinary-tab-close statements below.
+It does not change the 60-second unexpected-disconnect recovery mechanism,
+exact participant-session fencing, or the one-active-room invariant. The
+server recovery endpoint remains temporarily compatible with older extension
+artifacts but is not part of the current MVP interface.
+
 ## Summary
 
 AniDachi will treat the durable active-room assignment in Supabase as the commit

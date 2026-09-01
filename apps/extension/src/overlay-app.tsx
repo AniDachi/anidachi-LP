@@ -1,5 +1,4 @@
 import type {
-	ActiveRoomConflictResponse,
 	ClientEvent,
 	P2PSignal,
 	Participant,
@@ -189,7 +188,6 @@ import {
 } from "./room-client";
 import {
 	confirmExplicitRoomDeparture,
-	requestActiveRoomRecovery,
 	requestCurrentRoomDeparture,
 } from "./room-departure";
 import {
@@ -508,7 +506,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const transientPanelNoticeTimerRef = useRef<number | null>(null);
 	const inviteNoticeTimerRef = useRef<number | null>(null);
 	const roomEndConfirmationTimerRef = useRef<number | null>(null);
-	const activeRoomRecoveryConfirmationTimerRef = useRef<number | null>(null);
 	const signOutConfirmationTimerRef = useRef<number | null>(null);
 	const messageComposerShieldReleaseTimerRef = useRef<number | null>(null);
 	const messageComposerShieldReleasePointerRef =
@@ -542,9 +539,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const [transientPanelNotice, setTransientPanelNotice] = useState<
 		string | null
 	>(null);
-	const [activeRoomConflict, setActiveRoomConflict] = useState<
-		ActiveRoomConflictResponse["activeRoom"] | null
-	>(null);
 	const [extensionContextInvalidated, setExtensionContextInvalidated] =
 		useState(false);
 	const [storedRoomSession, setStoredRoomSession] =
@@ -576,12 +570,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const [messageComposerOpen, setMessageComposerOpen] = useState(false);
 	const [roomCreatePending, setRoomCreatePending] = useState(false);
 	const [roomEndConfirmationPending, setRoomEndConfirmationPending] =
-		useState(false);
-	const [
-		activeRoomRecoveryConfirmationPending,
-		setActiveRoomRecoveryConfirmationPending,
-	] = useState(false);
-	const [activeRoomRecoveryPending, setActiveRoomRecoveryPending] =
 		useState(false);
 	const [signOutConfirmationPending, setSignOutConfirmationPending] =
 		useState(false);
@@ -899,14 +887,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		setRoomEndConfirmationPending(false);
 	}, []);
 
-	const clearActiveRoomRecoveryConfirmation = useCallback(() => {
-		if (activeRoomRecoveryConfirmationTimerRef.current !== null) {
-			window.clearTimeout(activeRoomRecoveryConfirmationTimerRef.current);
-			activeRoomRecoveryConfirmationTimerRef.current = null;
-		}
-		setActiveRoomRecoveryConfirmationPending(false);
-	}, []);
-
 	const clearSignOutConfirmation = useCallback(() => {
 		if (signOutConfirmationTimerRef.current !== null) {
 			window.clearTimeout(signOutConfirmationTimerRef.current);
@@ -928,9 +908,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			}
 			if (roomEndConfirmationTimerRef.current !== null) {
 				window.clearTimeout(roomEndConfirmationTimerRef.current);
-			}
-			if (activeRoomRecoveryConfirmationTimerRef.current !== null) {
-				window.clearTimeout(activeRoomRecoveryConfirmationTimerRef.current);
 			}
 			if (signOutConfirmationTimerRef.current !== null) {
 				window.clearTimeout(signOutConfirmationTimerRef.current);
@@ -3547,7 +3524,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			setStoredRoomSession(nextStoredRoomSession);
 			setRoomSessionLoadedForUserId(activeParticipant.id);
 			roomReconnectSuppressedRef.current = false;
-			setActiveRoomConflict(null);
 			roomIdRef.current = nextRoomId;
 			setRoomId(nextRoomId);
 			ensureRoomHash(nextRoomId);
@@ -3760,19 +3736,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 			roomReconnectSuppressedRef.current = true;
 			clearRoomReconnectTimer();
-			clearActiveRoomRecoveryConfirmation();
-			setActiveRoomConflict(error.activeRoom);
 			setAuthMessage(
 				activeRoomConflictMessage(error.activeRoom.provider, adapter.provider),
 			);
 			setPanelOpen(true);
 			return true;
 		},
-		[
-			adapter.provider,
-			clearActiveRoomRecoveryConfirmation,
-			clearRoomReconnectTimer,
-		],
+		[adapter.provider, clearRoomReconnectTimer],
 	);
 
 	const scheduleRoomReconnect = useCallback(
@@ -4037,11 +4007,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			reconnectActiveRoom: boolean,
 		) => {
 			const activeRoomId = roomIdRef.current;
-			const previousUserId = participantRef.current?.id ?? null;
-			const nextUserId = result.participant?.id ?? null;
-			if (previousUserId !== nextUserId) {
-				setActiveRoomConflict(null);
-			}
 			syncAuthUserScopedState(result.tokens?.user.id ?? null, reason);
 			authAccessTokenRef.current = result.tokens?.accessToken ?? null;
 			participantRef.current = result.participant;
@@ -4542,7 +4507,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	});
 
 	const handleCreateRoom = async () => {
-		if (roomCreatePending || activeRoomRecoveryPending) {
+		if (roomCreatePending) {
 			return;
 		}
 
@@ -4586,56 +4551,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			setAuthMessage(message);
 		} finally {
 			setRoomCreatePending(false);
-		}
-	};
-
-	const handleRecoverActiveRoom = async () => {
-		const conflict = activeRoomConflict;
-		const expectedUserId = participant?.id;
-		if (!conflict || !expectedUserId || activeRoomRecoveryPending) {
-			return;
-		}
-
-		if (!activeRoomRecoveryConfirmationPending) {
-			setActiveRoomRecoveryConfirmationPending(true);
-			if (activeRoomRecoveryConfirmationTimerRef.current !== null) {
-				window.clearTimeout(activeRoomRecoveryConfirmationTimerRef.current);
-			}
-			activeRoomRecoveryConfirmationTimerRef.current = window.setTimeout(() => {
-				activeRoomRecoveryConfirmationTimerRef.current = null;
-				setActiveRoomRecoveryConfirmationPending(false);
-			}, ROOM_END_CONFIRMATION_DURATION_MS);
-			return;
-		}
-
-		clearActiveRoomRecoveryConfirmation();
-		setActiveRoomRecoveryPending(true);
-		try {
-			const outcome = await requestActiveRoomRecovery(
-				conflict.roomId,
-				expectedUserId,
-			);
-			setActiveRoomConflict(null);
-			setAuthMessage(null);
-			logDebug("overlay.room", "active room recovered", {
-				roomId: conflict.roomId,
-				role: conflict.role,
-				outcome,
-			});
-		} catch (error) {
-			const message = authErrorMessage(
-				error,
-				conflict.role === "host"
-					? "Could not end the active room. Please try again."
-					: "Could not leave the active room. Please try again.",
-			);
-			logDebug("overlay.room", "active room recovery failed", {
-				roomId: conflict.roomId,
-				message,
-			});
-			setAuthMessage(message);
-		} finally {
-			setActiveRoomRecoveryPending(false);
 		}
 	};
 
@@ -5855,7 +5770,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 								primaryRoomActionKind !== "create" ? "room-exit" : "",
 								roomEndConfirmationPending ? "confirming" : "",
 								roomCreatePending ||
-								activeRoomRecoveryPending ||
 								roomEndPending ||
 								roomLeavePending
 									? "loading"
@@ -5875,7 +5789,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 								!participant ||
 								extensionContextInvalidated ||
 								roomCreatePending ||
-								activeRoomRecoveryPending ||
 								roomEndPending ||
 								roomLeavePending
 							}
@@ -5968,33 +5881,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 									onClick={reloadPage}
 								>
 									Reload page
-								</button>
-							) : null}
-							{activeRoomConflict ? (
-								<button
-									className={[
-										"button",
-										"compact",
-										"active-room-recovery-button",
-										activeRoomRecoveryConfirmationPending ? "confirming" : "",
-									]
-										.filter(Boolean)
-										.join(" ")}
-									type="button"
-									onClick={handleRecoverActiveRoom}
-									disabled={activeRoomRecoveryPending}
-								>
-									{activeRoomRecoveryPending
-										? activeRoomConflict.role === "host"
-											? "Ending..."
-											: "Leaving..."
-										: activeRoomRecoveryConfirmationPending
-											? activeRoomConflict.role === "host"
-												? "Confirm end"
-												: "Confirm leave"
-											: activeRoomConflict.role === "host"
-												? "End active room"
-												: "Leave active room"}
 								</button>
 							) : null}
 						</div>
@@ -7057,7 +6943,7 @@ function roomTerminalCloseMessage(code: number): string {
 }
 
 function activeRoomConflictMessage(
-	provider: ActiveRoomConflictResponse["activeRoom"]["provider"],
+	provider: SourceProvider | null,
 	currentProvider: VideoAdapter["provider"],
 ): string {
 	if (!provider || provider === currentProvider) {
