@@ -200,3 +200,15 @@ test("database helpers use only the atomic server RPCs for assignment changes", 
     /\.from\("active_room_sessions"\)[\s\S]{0,300}\.(insert|update|delete)\(/,
   );
 });
+
+test("room creation reports an active assignment without implicitly departing it", () => {
+	const source = readFileSync(
+		new URL("../../app/api/rooms/route.ts", import.meta.url),
+		"utf8",
+	);
+	assert.match(source, /admission\.outcome === "conflict"/);
+	assert.match(source, /activeRoomConflictResponse\(admission\.activeRoom\)/);
+	assert.doesNotMatch(source, /handleActiveRoomRecoveryDeparture/);
+	assert.doesNotMatch(source, /syncParticipant(?:Departure|Detach)ToWorker/);
+	assert.doesNotMatch(source, /active-session\/depart/);
+});

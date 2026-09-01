@@ -932,28 +932,55 @@ which is locally verified but still pending staging and two-profile manual
 acceptance:
 
 - 2026-09-01 MVP lifecycle correction: a real browser-tab close is again an
-  explicit exit. The background attempts the exact bounded durable departure
-  for the closing tab before clearing only its matching local record. Reload,
-  BFCache, sleep, and temporary network/WebSocket interruption retain the
-  Worker's existing 60-second reconnect grace; if the bounded close request
-  cannot finish, socket disappearance and the signed callback remain the
-  fallback. The current extension no longer keeps a local post-close recovery
-  card or exposes a broad Leave/End-active-room action from a conflict notice.
-  A genuine active room elsewhere is shown as informational and is never
-  silently destroyed; returning after deliberate close uses an invitation.
-  Local proof: extension check and 1508/1508 tests; Web 385 passed/3 skipped;
+  explicit exit. Before the bounded request, the background persists a settled
+  exact-departure job for the closing room/user/participant session. Terminal
+  acknowledgements retire that job; timeout, transport, MV3, and temporary
+  authorization failures retain it for Chrome-alarm/startup/online retry before
+  only the matching tab-local record is cleared. Reload, BFCache, sleep, and
+  temporary network/WebSocket interruption retain the Worker's existing
+  60-second reconnect grace, and socket disappearance plus the signed callback
+  remain the independent fallback. The current extension no longer keeps a
+  local post-close recovery card or exposes a broad Leave/End-active-room
+  action from a conflict notice. When `acquireRoomTabLock()` can acquire a
+  working Web Lock, a same-browser room tab is shown as already open. If Web
+  Locks are unavailable or fail, the client proceeds and the server-owned
+  active-room assignment remains the authority across tabs, profiles, and
+  devices. An
+  explicit Create-room conflict is informational and mutation-free: the
+  extension performs no hidden departure, no retry, and no replacement of the
+  current host or guest session. The atomic database RPC rejects a guest's
+  attempted host-room creation without changing the guest assignment or
+  creating an orphan room. Returning to a deliberately left room still uses an
+  invitation.
+  Chrome extension reload/update is also no longer exposed as a one-minute
+  active-room conflict: because Chrome clears `chrome.storage.session` during
+  that lifecycle, the provider tab now retains only a non-authoritative
+  `roomId` and opaque account scope in page `sessionStorage`. The restarted
+  extension accepts the hint only for the same authenticated account, mints a
+  fresh trusted participant session with camera Off and Push to talk, then
+  performs the existing same-room takeover immediately. User ID, participant
+  session, and room authority are never stored in the page; mismatched or
+  malformed hints are discarded, and explicit leave/end/terminal cleanup
+  removes the hint. The 60-second Worker grace stays reserved for real
+  transport interruption rather than becoming a UI wait. Local proof:
+  extension check and 1515/1515 tests; Web 386 passed/3 skipped;
   API check, 166/166 unit tests, and 37/37 runtime tests; room harness 39/39;
-  real-WebRTC harness 26/26; staging artifact build/validation; and byte-identical
-  validated synchronization to both canonical test folders. Loaded two-profile
-  close/reload/invite acceptance is still pending.
+  and real-WebRTC harness 26/26. A focused SQL regression was added for guest
+  create conflict, unchanged assignment, and no orphan room; local Supabase
+  execution is pending because the Docker runtime was unavailable. The staging
+  artifact `e3345f3-staging-20260901162121` was rebuilt, validated, and
+  synchronized byte-for-byte to both approved unpacked test folders (manifest
+  SHA-256 `3b63d2558000e3fab2d4890c1d490165296c85b22e946c74471db1d3ad657823`).
+  Loaded two-profile
+  close/reload/invite/create-conflict acceptance is still pending.
 
 - explicit guest departure atomically releases the authenticated user's exact
   Supabase active-room assignment before sending bounded live Worker cleanup;
   detach success, stale responses, timeouts, and transport failures never
   turn a durable leave into an error. The Worker-owned 60-second passive alarm
-  callback is retained for unexpected disconnects, while real tab close uses
-  the exact bounded durable-departure request with Fetch keepalive before local
-  cleanup;
+  callback is retained for unexpected disconnects, while real tab close first
+  persists exact retry ownership and then uses the bounded durable-departure
+  request with Fetch keepalive before local cleanup;
 - normal extension leave uses only the exact-departure contract and treats
   public `stale` as the legacy-compatible no-assignment success. The shared
   protocol and current extension still accept `already_departed` for forward

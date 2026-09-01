@@ -105,19 +105,61 @@
   remain ignored. Remaining proof: deploy the candidate and perform the loaded
   two-profile YouTube/Crunchyroll acceptance; no staging acceptance is claimed.
 - [~] 2026-09-01: Simplified the MVP room lifecycle after invite-flow testing.
-  A real browser-tab removal now attempts exact bounded durable departure before
-  clearing only that tab's matching local record, so deliberate close means
-  exit. Reload, BFCache, sleep, and temporary transport loss retain the existing
-  60-second Worker reconnect grace, with the signed callback as the close
-  request's failure fallback. The current extension removes post-close
-  Rejoin/Start-new state and broad Leave/End-active-room conflict actions; a
-  genuine active room elsewhere is informational and is not silently ended.
-  Returning after deliberate close uses the normal invitation flow. Local
-  proof: extension check and 1508/1508 tests; Web 385 passed/3 skipped; API
+  A real browser-tab removal now persists a settled exact-departure job before
+  the bounded request and clears only that tab's matching local record, so
+  deliberate close means exit without losing retry identity. Terminal results
+  retire the job; nonterminal timeout, transport, MV3, and temporary auth
+  outcomes retain it for Chrome-alarm/startup/online retry. Reload, BFCache,
+  sleep, and temporary transport loss retain the existing 60-second Worker
+  reconnect grace, with the signed callback as an independent fallback. The
+  current extension removes post-close
+  Rejoin/Start-new state and broad Leave/End-active-room conflict actions. A
+  same-browser room is protected when `acquireRoomTabLock()` can acquire a
+  working Web Lock. If Web Locks are unavailable or fail, the client proceeds
+  and the atomic server assignment remains authoritative across tabs, profiles,
+  and devices. Create-room
+  conflict handling is mutation-free: it performs no hidden departure, retry,
+  or replacement of the current host/guest session. The database regression
+  case also requires a guest create conflict to leave the assignment unchanged
+  and create no host room. Returning after deliberate close uses the normal
+  invitation flow. Chrome reload/update clears its extension-session storage,
+  so the provider tab now retains only a non-authoritative page-session
+  `roomId` and opaque account scope. A restarted extension accepts the hint
+  only for the same authenticated account, mints fresh trusted identity with
+  safe camera/microphone defaults, and immediately performs the existing
+  same-room takeover; explicit and terminal exits clear the hint. No user ID,
+  participant session, or authority is exposed to the page, and the Worker
+  grace remains available for real transport interruption rather than a
+  user-visible wait. Local proof: extension check and 1515/1515 tests; Web 386
+  passed/3 skipped; API
   check, 166/166 unit tests, and 37/37 runtime tests; room harness 39/39;
-  real-WebRTC harness 26/26; staging build/validation; and byte-identical
-  validated synchronization to both canonical test folders. Loaded two-profile
-  acceptance remains pending.
+  and real-WebRTC harness 26/26. Local Supabase execution of the added SQL
+  regression remains pending because Docker was unavailable. The staging
+  artifact `e3345f3-staging-20260901162121` was rebuilt, validated, and
+  synchronized byte-for-byte to both approved unpacked test folders (manifest
+  SHA-256 `3b63d2558000e3fab2d4890c1d490165296c85b22e946c74471db1d3ad657823`);
+  loaded two-profile acceptance remains pending. Reproduce with
+  `pnpm --filter @anidachi/extension check`,
+  `pnpm --filter @anidachi/extension test`,
+  `pnpm --filter @anidachi/web check`,
+  `pnpm --filter @anidachi/web test`,
+  `pnpm --filter @anidachi/api check`,
+  `pnpm --filter @anidachi/api test`,
+  `pnpm --filter @anidachi/api test:runtime`, `pnpm harness:rooms`,
+  `npm --prefix tests/e2e run harness:p2p`,
+  `pnpm build:extension:staging`,
+  `pnpm validate:extension:staging`, and `pnpm dev:check`. The focused SQL
+  regression is `apps/web/supabase/tests/single_active_room_sessions.test.sql`,
+  specifically the guest create-conflict assertions for unchanged assignment
+  and no orphan host room; Docker execution remains pending. Current route
+  boundaries are `POST /api/rooms`,
+  `POST /api/rooms/[roomId]/connect`,
+  `POST /api/rooms/[roomId]/depart`, and
+  `POST /api/rooms/active-session/depart`. Loaded acceptance still covers:
+  guest close affects only the guest; host close ends the room; reload/update
+  restores the same account without a 60-second UI wait; invite join works
+  after deliberate exit; and create conflict neither replaces nor departs the
+  existing host/guest session.
 
 ## Current Reality Check
 

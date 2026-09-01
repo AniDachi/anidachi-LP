@@ -77,6 +77,9 @@ export interface RoomTabDepartureDependencies {
     accessToken: string,
     signal: AbortSignal,
   ) => Promise<RoomDepartureRequestResult>;
+	settlePersistedDeparture?: (
+		record: RoomSessionRecord,
+	) => Promise<RoomTabDepartureOutcome>;
 	roomSessionDependencies?: RoomSessionBackgroundDependencies;
 	recoverActiveDeparture?: (
 		roomId: string,
@@ -303,10 +306,11 @@ export async function handleActiveRoomRecovery(
 }
 
 /**
- * A real browser-tab close is an explicit room exit. Release the exact durable
- * assignment before removing tab-local bookkeeping. If MV3, auth, or the
- * network prevents the bounded accelerator from completing, the closing
- * socket still starts the Worker's disconnect-grace fallback.
+ * A real browser-tab close is an explicit room exit. The production background
+ * persists exact cleanup ownership before attempting the bounded departure, so
+ * MV3 suspension, auth, or transport failure can retry without retaining the
+ * closed tab's local UI state. The closing socket also starts the Worker's
+ * disconnect-grace fallback.
  */
 export async function handleRoomTabDeparture(
   tabId: number,
@@ -332,7 +336,10 @@ export async function handleRoomTabDeparture(
 
 	if (!record) return "no-session";
 	try {
-		return await notifyBoundedDeparture(record, dependencies);
+		return await (
+			dependencies.settlePersistedDeparture?.(record) ??
+			notifyBoundedDeparture(record, dependencies)
+		);
 	} finally {
 		await clearRoomSession(tabId, record).catch(() => false);
 	}

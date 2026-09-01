@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   captureRoomSessionIdentity,
+  clearRoomSessionRecoveryHint,
   clearRoomSessionForClosedTab,
   confirmRoomSessionForTab,
   discardPreparedRoomSessionIfMatch,
@@ -11,6 +12,8 @@ import {
   roomSessionIdentityMatches,
   ROOM_SESSION_INSTALL_ID_STORAGE_KEY as INSTALL_ID_STORAGE_KEY,
   migrateLegacyRoomSession,
+  rememberRoomSessionRecoveryHint,
+  ROOM_SESSION_RECOVERY_HINT_STORAGE_KEY,
   ROOM_SESSION_STORAGE_MESSAGE_TYPE as ROOM_SESSION_MESSAGE_TYPE,
   type RoomSessionStorageMessage as RoomSessionMessage,
   type RoomSessionRecord,
@@ -1181,6 +1184,123 @@ describe("background-owned room session storage", () => {
 });
 
 describe("legacy page room session migration", () => {
+  it("restores the room immediately after extension session storage is cleared", async () => {
+    const dependencies = backgroundDependencies();
+    const pageSessionStorage = new PageSessionStorage();
+    expect(
+      await rememberRoomSessionRecoveryHint("room-after-update", "user-a", {
+        pageSessionStorage,
+        sendMessage: (runtimeMessage) =>
+          handleRoomSessionStorageMessage(runtimeMessage, sender(51), dependencies),
+      }),
+    ).toBe(true);
+
+    const record = await migrateLegacyRoomSession("user-a", {
+      pageSessionStorage,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(51), dependencies),
+    });
+
+    expect(record).toEqual({
+      version: 1,
+      revision: 1,
+      roomId: "room-after-update",
+      ownerUserId: "user-a",
+      participantSessionId: "session-uuid-2",
+      cameraEnabled: false,
+      voiceMode: "push-to-talk",
+    });
+    expect(pageSessionStorage.values).toEqual(
+      new Map([
+        [
+          ROOM_SESSION_RECOVERY_HINT_STORAGE_KEY,
+          JSON.stringify({
+            version: 1,
+            roomId: "room-after-update",
+            accountScope: "recovery-uuid-1",
+          }),
+        ],
+      ]),
+    );
+  });
+
+  it("does not restore a recovery hint after the authenticated account changes", async () => {
+    const dependencies = backgroundDependencies();
+    const pageSessionStorage = new PageSessionStorage();
+    expect(
+      await rememberRoomSessionRecoveryHint(
+        "room-owned-by-user-a",
+        "user-a",
+        {
+          pageSessionStorage,
+          sendMessage: (runtimeMessage) =>
+            handleRoomSessionStorageMessage(
+              runtimeMessage,
+              sender(53),
+              dependencies,
+            ),
+        },
+      ),
+    ).toBe(true);
+
+    await expect(
+      migrateLegacyRoomSession("user-b", {
+        pageSessionStorage,
+        sendMessage: (runtimeMessage) =>
+          handleRoomSessionStorageMessage(runtimeMessage, sender(53), dependencies),
+      }),
+    ).resolves.toBeNull();
+    expect(pageSessionStorage.values.size).toBe(0);
+    expect(dependencies.sessionStorage.values.size).toBe(0);
+  });
+
+  it("keeps only a non-authoritative room id and opaque account scope in the page recovery hint", async () => {
+    const dependencies = backgroundDependencies();
+    const pageSessionStorage = new PageSessionStorage();
+
+    expect(
+      await rememberRoomSessionRecoveryHint("room-a", "user-a", {
+        pageSessionStorage,
+        sendMessage: (runtimeMessage) =>
+          handleRoomSessionStorageMessage(runtimeMessage, sender(54), dependencies),
+      }),
+    ).toBe(true);
+
+    const raw = pageSessionStorage.getItem(
+      ROOM_SESSION_RECOVERY_HINT_STORAGE_KEY,
+    );
+    expect(raw).toBe(
+      JSON.stringify({
+        version: 1,
+        roomId: "room-a",
+        accountScope: "recovery-uuid-1",
+      }),
+    );
+    expect(raw).not.toContain("user-a");
+    expect(raw).not.toContain("participant-session");
+
+    clearRoomSessionRecoveryHint({ pageSessionStorage });
+    expect(pageSessionStorage.values.size).toBe(0);
+  });
+
+  it("ignores and removes a malformed page recovery hint", async () => {
+    const dependencies = backgroundDependencies();
+    const pageSessionStorage = new PageSessionStorage();
+    pageSessionStorage.setItem(
+      ROOM_SESSION_RECOVERY_HINT_STORAGE_KEY,
+      JSON.stringify({ version: 1, roomId: "" }),
+    );
+
+    await expect(
+      migrateLegacyRoomSession("user-a", {
+        pageSessionStorage,
+        sendMessage: (runtimeMessage) =>
+          handleRoomSessionStorageMessage(runtimeMessage, sender(52), dependencies),
+      }),
+    ).resolves.toBeNull();
+    expect(pageSessionStorage.values.size).toBe(0);
+  });
+
   it("migrates namespaced keys through the background and deletes them after ACK", async () => {
     const dependencies = backgroundDependencies();
     const pageSessionStorage = new PageSessionStorage();

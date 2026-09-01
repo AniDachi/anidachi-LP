@@ -262,6 +262,58 @@ describe("background privileged room route", () => {
     ]);
   });
 
+  it("routes a normal removed tab through the persisted exact departure path", async () => {
+    vi.stubGlobal("chrome", {});
+    const background = await import("../entrypoints/background");
+    const events: string[] = [];
+    const record = {
+      version: 1 as const,
+      revision: 3,
+      roomId: "room-closed-tab",
+      ownerUserId: "user-a",
+      participantSessionId: "session-closed-tab",
+      cameraEnabled: true,
+      voiceMode: "open-mic" as const,
+    };
+
+    await background.handleRemovedRoomTab(61, {
+      cancelRoomAdmission: () => {
+        events.push("admission-cancelled");
+      },
+      clearRoomAuthorityRequest: () => events.push("request-cleared"),
+      cleanupPendingHandoff: async () => {
+        events.push("handoff-cleaned");
+      },
+      departureDependencies: {
+        loadRoomSession: async () => {
+          events.push("session-loaded");
+          return record;
+        },
+        settlePersistedDeparture: async (identity) => {
+          events.push(`departure-persisted:${identity.participantSessionId}`);
+          return "retryable";
+        },
+        clearRoomSession: async () => {
+          events.push("session-cleared");
+          return true;
+        },
+      },
+      removePrivilegedAuthority: async () => {
+        events.push("authority-removed");
+      },
+    });
+
+    expect(events).toEqual([
+      "admission-cancelled",
+      "request-cleared",
+      "handoff-cleaned",
+      "session-loaded",
+      "departure-persisted:session-closed-tab",
+      "session-cleared",
+      "authority-removed",
+    ]);
+  });
+
   it("persists exact intent on passive close before the admission promise settles", async () => {
     vi.stubGlobal("chrome", {});
     const background = await import("../entrypoints/background");

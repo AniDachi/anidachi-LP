@@ -4,6 +4,7 @@ import {
   ROOM_ADMISSION_SETTLEMENT_HORIZON_MS,
   ROOM_DEPARTURE_RETRY_ALARM,
   createRoomDepartureRetryCoordinator,
+  departPersistedRoomSession,
   type RoomDepartureRetryIdentity,
 } from "../src/room-departure-retry";
 
@@ -14,6 +15,33 @@ const OLD_SESSION: RoomDepartureRetryIdentity = {
 };
 
 describe("room departure retry coordinator", () => {
+  it("persists a settled closed-tab departure before the network attempt and retains a retryable result", async () => {
+    const storage = createPersistentStorage();
+    const scheduler = createScheduler();
+    const departExact = vi.fn(async () => "retryable" as const);
+    const coordinator = createRoomDepartureRetryCoordinator({
+      storage,
+      scheduler,
+      getCurrentUserId: async () => "user-a",
+      departExact,
+      now: () => 250,
+    });
+
+    const outcome = await departPersistedRoomSession(OLD_SESSION, coordinator);
+
+    expect(outcome).toBe("retryable");
+    expect(departExact).toHaveBeenCalledWith(OLD_SESSION);
+    expect(storage.value()?.jobs).toEqual([
+      expect.objectContaining({
+        ...OLD_SESSION,
+        admissionState: "settled",
+        cleanupRequested: true,
+        attempts: 1,
+      }),
+    ]);
+    expect(scheduler.when()).not.toBeNull();
+  });
+
   it("keeps a successful admission persisted until the matching snapshot handoff", async () => {
     const storage = createPersistentStorage();
     const scheduler = createScheduler();

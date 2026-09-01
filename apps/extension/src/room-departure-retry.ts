@@ -520,6 +520,25 @@ export function renewRoomDepartureAdmissionIntent(
   return defaultRoomDepartureRetryCoordinator.renewAdmissionIntent(identity);
 }
 
+/**
+ * Persists exact cleanup ownership before attempting a real closed-tab
+ * departure. A non-terminal result remains scheduled for an alarm-driven
+ * retry, while a terminal acknowledgement retires the exact job.
+ */
+export async function departPersistedRoomSession(
+  identity: RoomDepartureRetryIdentity,
+  coordinator: RoomDepartureRetryCoordinator =
+    defaultRoomDepartureRetryCoordinator,
+): Promise<RoomTabDepartureOutcome> {
+  const operation = await coordinator.renewAdmissionIntent(identity);
+  const owned = await coordinator.requestAdmissionCleanup(operation);
+  if (!owned) return "active-room-changed";
+  const outcome = await coordinator.settleAdmission(operation);
+  return outcome === "operation-superseded"
+    ? "active-room-changed"
+    : outcome;
+}
+
 export function settleRoomDepartureAdmission(
   operation: RoomDepartureRetryOperation,
 ): Promise<RoomDepartureRetryAttemptOutcome> {

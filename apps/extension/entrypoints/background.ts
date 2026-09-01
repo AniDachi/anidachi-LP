@@ -42,6 +42,7 @@ import {
   type RoomTabDepartureOutcome,
 } from "../src/room-departure";
 import {
+  departPersistedRoomSession,
   drainRoomDepartureRetries,
   handleRoomDepartureRetryAlarm,
   isRoomDepartureRetryAlarm,
@@ -85,6 +86,7 @@ export interface RemovedRoomTabDependencies {
   cancelRoomAdmission?: (tabId: number) => Promise<unknown> | null | void;
   clearRoomAuthorityRequest?: (tabId: number) => void;
   departRoom?: (tabId: number) => Promise<unknown>;
+  departureDependencies?: RoomTabDepartureDependencies;
   cleanupPendingHandoff?: (tabId: number) => Promise<unknown>;
   removePrivilegedAuthority?: (tabId: number) => Promise<void>;
 }
@@ -102,7 +104,16 @@ export async function handleRemovedRoomTab(
     await (
       dependencies.cleanupPendingHandoff ?? cleanupRoomAdmissionHandoffForTab
     )(tabId).catch(() => undefined);
-    await (dependencies.departRoom ?? handleRoomTabDeparture)(tabId);
+    await (
+      dependencies.departRoom ??
+      ((removedTabId) =>
+        handleRoomTabDeparture(removedTabId, {
+          ...dependencies.departureDependencies,
+          settlePersistedDeparture:
+            dependencies.departureDependencies?.settlePersistedDeparture ??
+            departPersistedRoomSession,
+        }))
+    )(tabId);
   } finally {
     await (
       dependencies.removePrivilegedAuthority ?? removePrivilegedRoomAuthorityStateForTab
