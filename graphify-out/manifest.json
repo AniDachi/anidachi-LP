@@ -342,10 +342,10 @@
     "semantic_hash": "46aa97bae6145c0f0a59e3c51cbf50c7"
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1788249442.328949,
-    "seen": 1788250095.941505,
-    "ast_hash": "08d7ba08dad894b49efd18e5528b2033",
-    "semantic_hash": "08d7ba08dad894b49efd18e5528b2033"
+    "mtime": 1788254233.2621298,
+    "seen": 1788255080.9233239,
+    "ast_hash": "1f59f7723915ceb95cb6f4783743bc18",
+    "semantic_hash": "1f59f7723915ceb95cb6f4783743bc18"
   },
   "apps/extension/src/overlay-layout.ts": {
     "mtime": 1786689011.2525907,
@@ -426,10 +426,10 @@
     "semantic_hash": "52e3c8b5a15573ae44906f7b91906743"
   },
   "apps/extension/src/room-session-storage.ts": {
-    "mtime": 1788249442.3272245,
-    "seen": 1788250095.941559,
-    "ast_hash": "d64ce6b957b8e584b6d14d430859c5f0",
-    "semantic_hash": "d64ce6b957b8e584b6d14d430859c5f0"
+    "mtime": 1788254292.5322638,
+    "seen": 1788255080.9233868,
+    "ast_hash": "255a6d8fafdfa4989e97e1583e7bf195",
+    "semantic_hash": "255a6d8fafdfa4989e97e1583e7bf195"
   },
   "apps/extension/src/room-tab-lock.ts": {
     "mtime": 1786689011.2549694,
@@ -582,10 +582,10 @@
     "semantic_hash": "0a9275d09c5c8290375daca384a972e3"
   },
   "apps/extension/test/room-session-storage.test.ts": {
-    "mtime": 1788249352.5112796,
-    "seen": 1788250095.9416802,
-    "ast_hash": "a908b3cfbc9fa6fee9e147c52cb222c9",
-    "semantic_hash": "a908b3cfbc9fa6fee9e147c52cb222c9"
+    "mtime": 1788254292.530237,
+    "seen": 1788255080.923533,
+    "ast_hash": "80f39ecc98a3ea782b1ffbf7650e6d51",
+    "semantic_hash": "80f39ecc98a3ea782b1ffbf7650e6d51"
   },
   "apps/extension/test/room-tab-lock.test.ts": {
     "mtime": 1786689011.2625105,
@@ -3606,10 +3606,10 @@
     "semantic_hash": "7222da43b1fe21764ac60a152d060d29"
   },
   "docs/current-development-state.md": {
-    "mtime": 1788249782.4165988,
-    "seen": 1788250095.942334,
-    "ast_hash": "c8b75af757909a0db730f41def10378b",
-    "semantic_hash": "c8b75af757909a0db730f41def10378b"
+    "mtime": 1788254516.3313775,
+    "seen": 1788255080.9243789,
+    "ast_hash": "a66924cee1f496847615de827cac3584",
+    "semantic_hash": "a66924cee1f496847615de827cac3584"
   },
   "docs/development-environments.md": {
     "mtime": 1786689011.3582418,
@@ -3732,16 +3732,16 @@
     "semantic_hash": "4b3e69f7c66be6dd5977d22cbf37e980"
   },
   "docs/superpowers/plans/2026-06-07-production-room-p2p-hardening-roadmap.md": {
-    "mtime": 1788249782.4171417,
-    "seen": 1788250095.942335,
-    "ast_hash": "20cfb2117fb54e89eb5e1db3d33938ff",
-    "semantic_hash": "20cfb2117fb54e89eb5e1db3d33938ff"
+    "mtime": 1788254516.33198,
+    "seen": 1788255080.9243798,
+    "ast_hash": "848566b366933d988f69730029dea2ee",
+    "semantic_hash": "848566b366933d988f69730029dea2ee"
   },
   "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md": {
-    "mtime": 1788249782.417644,
-    "seen": 1788250095.942336,
-    "ast_hash": "ed4505803ab3d7db257253f23ec30a78",
-    "semantic_hash": "ed4505803ab3d7db257253f23ec30a78"
+    "mtime": 1788254516.332446,
+    "seen": 1788255080.924382,
+    "ast_hash": "76414aa0e6b812e1d7bb16f2d0039550",
+    "semantic_hash": "76414aa0e6b812e1d7bb16f2d0039550"
   },
   "docs/superpowers/plans/2026-06-17-development-flow-quality-system-plan.md": {
     "mtime": 1786689011.361601,
@@ -5880,10 +5880,10 @@
     "semantic_hash": "e10eabda789cf1436be998f1322db8e4"
   },
   "apps/extension/test/privileged-overlay-wiring.test.tsx": {
-    "mtime": 1788249352.512267,
-    "seen": 1788250095.941667,
-    "ast_hash": "d12ae46fab834a3cf34f09e98c664bcf",
-    "semantic_hash": "d12ae46fab834a3cf34f09e98c664bcf"
+    "mtime": 1788254292.5315125,
+    "seen": 1788255080.9235158,
+    "ast_hash": "c8e120475bc04c3e7058e1f6a9814b81",
+    "semantic_hash": "c8e120475bc04c3e7058e1f6a9814b81"
   },
   "graphify-out/memory/query_20260814_143612_\u043e\u0446\u0435\u043d\u0438\u0442\u044c_\u043e\u0442\u0437\u044b\u0432_\u043e_wave_2_watch_history_v2.md": {
     "mtime": 1786718172.9604821,
