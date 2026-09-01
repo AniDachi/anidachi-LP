@@ -492,17 +492,18 @@ describe("authenticated room client", () => {
     });
   });
 
-  it("keeps a structured active-room conflict across the background bridge", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({
+  it("keeps an active-room conflict structured without replacing the live session", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
       code: "ACTIVE_ROOM_CONFLICT",
       message: "You already have an active watch room.",
       activeRoom: {
         roomId: "room-active",
-        role: "host",
+        role: "member",
         provider: "youtube",
         title: "Current video",
       },
-    }), { status: 409 })));
+    }), { status: 409 }));
+    vi.stubGlobal("fetch", fetchMock);
 
     const response = await handleRoomHttpMessage(
       createRoomHttpMessage("access-1", preparedRoomSession),
@@ -517,11 +518,12 @@ describe("authenticated room client", () => {
       status: 409,
       activeRoom: {
         roomId: "room-active",
-        role: "host",
+        role: "member",
         provider: "youtube",
         title: "Current video",
       },
     });
+    expect(fetchMock).toHaveBeenCalledOnce();
   });
 
   it("parses quota, reused, and clientRequestId on create", async () => {

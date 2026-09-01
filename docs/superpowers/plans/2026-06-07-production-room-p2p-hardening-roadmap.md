@@ -105,19 +105,37 @@
   remain ignored. Remaining proof: deploy the candidate and perform the loaded
   two-profile YouTube/Crunchyroll acceptance; no staging acceptance is claimed.
 - [~] 2026-09-01: Simplified the MVP room lifecycle after invite-flow testing.
-  A real browser-tab removal now attempts exact bounded durable departure before
-  clearing only that tab's matching local record, so deliberate close means
-  exit. Reload, BFCache, sleep, and temporary transport loss retain the existing
-  60-second Worker reconnect grace, with the signed callback as the close
-  request's failure fallback. The current extension removes post-close
-  Rejoin/Start-new state and broad Leave/End-active-room conflict actions; a
-  genuine active room elsewhere is informational and is not silently ended.
-  Returning after deliberate close uses the normal invitation flow. Local
-  proof: extension check and 1508/1508 tests; Web 385 passed/3 skipped; API
+  A real browser-tab removal now persists a settled exact-departure job before
+  the bounded request and clears only that tab's matching local record, so
+  deliberate close means exit without losing retry identity. Terminal results
+  retire the job; nonterminal timeout, transport, MV3, and temporary auth
+  outcomes retain it for Chrome-alarm/startup/online retry. Reload, BFCache,
+  sleep, and temporary transport loss retain the existing 60-second Worker
+  reconnect grace, with the signed callback as an independent fallback. The
+  current extension removes post-close
+  Rejoin/Start-new state and broad Leave/End-active-room conflict actions. A
+  same-browser room remains protected by the exclusive tab lock, while the
+  atomic server assignment protects other profiles and devices. Create-room
+  conflict handling is mutation-free: it performs no hidden departure, retry,
+  or replacement of the current host/guest session. The database regression
+  case also requires a guest create conflict to leave the assignment unchanged
+  and create no host room. Returning after deliberate close uses the normal
+  invitation flow. Chrome reload/update clears its extension-session storage,
+  so the provider tab now retains only a non-authoritative page-session
+  `roomId` hint. A restarted extension mints fresh trusted identity with safe
+  camera/microphone defaults and immediately performs the existing same-room
+  takeover; explicit and terminal exits clear the hint. No participant identity
+  or authority is exposed to the page, and the Worker grace remains available
+  for real transport interruption rather than a user-visible wait. Local
+  proof: extension check and 1514/1514 tests; Web 386
+  passed/3 skipped; API
   check, 166/166 unit tests, and 37/37 runtime tests; room harness 39/39;
-  real-WebRTC harness 26/26; staging build/validation; and byte-identical
-  validated synchronization to both canonical test folders. Loaded two-profile
-  acceptance remains pending.
+  and real-WebRTC harness 26/26. Local Supabase execution of the added SQL
+  regression remains pending because Docker was unavailable. The staging
+  artifact `911da0b-staging-20260901150204` was rebuilt, validated, and
+  synchronized byte-for-byte to both approved unpacked test folders (manifest
+  SHA-256 `ed27df0d82caa18190001312f65d20fecd99c62ca4ce4e1aab1ee02e7dbafb56`);
+  loaded two-profile acceptance remains pending.
 
 ## Current Reality Check
 

@@ -17,6 +17,8 @@ import {
 
 export const ROOM_SESSION_INSTALL_ID_STORAGE_KEY = "anidachi:extension-install-id:v1";
 export const ROOM_SESSION_STORAGE_MESSAGE_TYPE = "ANIDACHI_ROOM_SESSION_STORAGE";
+export const ROOM_SESSION_RECOVERY_HINT_STORAGE_KEY =
+  "anidachi:room-recovery-hint:v1";
 
 const ROOM_SESSION_RECORD_VERSION = 1 as const;
 const ROOM_SESSION_RECORD_KEY_PREFIX = "anidachi:room-session:v1:tab:";
@@ -160,7 +162,7 @@ interface StorageAreaLike {
   remove(key: string): Promise<void>;
 }
 
-type PageSessionStorageLike = Pick<Storage, "getItem" | "removeItem">;
+type PageSessionStorageLike = Pick<Storage, "getItem" | "removeItem" | "setItem">;
 type RuntimeMessageSender = (
   message: RoomSessionStorageMessage,
 ) => Promise<RoomSessionStorageResponse | null | undefined | unknown>;
@@ -768,8 +770,22 @@ export async function migrateLegacyRoomSession(
   );
   const legacyGroups = legacyStorageGroups(prefixResponse.legacyPrefix ?? null);
   const values = legacyGroups.map((group) => readLegacyGroup(pageStorage, group));
+  const recoveryRoomId = readRoomSessionRecoveryHint(pageStorage);
+  const recoveryRecord =
+    isBoundedString(recoveryRoomId, MAX_ROOM_ID_CHARS) &&
+    isBoundedString(currentUserId, MAX_PARTICIPANT_ID_CHARS)
+      ? {
+          hasAnyValue: true,
+          record: {
+            roomId: recoveryRoomId,
+            ownerUserId: currentUserId,
+            participantSessionId: null,
+          },
+        }
+      : null;
   const selected =
     values.find((value) => isCompleteLegacyRecordForUser(value.record, currentUserId)) ??
+    recoveryRecord ??
     values.find((value) => value.hasAnyValue);
   const response = await sendRoomSessionMessage(
     {
@@ -788,6 +804,38 @@ export async function migrateLegacyRoomSession(
   }
 
   return response.record;
+}
+
+/**
+ * Keeps only a non-authoritative room pointer in the provider tab. Page
+ * sessionStorage survives an extension reload, while identity and media state
+ * are deliberately re-minted in trusted background storage.
+ */
+export function rememberRoomSessionRecoveryHint(
+  roomId: string,
+  dependencies: Pick<RoomSessionClientDependencies, "pageSessionStorage"> = {},
+): boolean {
+  if (!isBoundedString(roomId, MAX_ROOM_ID_CHARS)) {
+    return false;
+  }
+
+  const pageStorage = dependencies.pageSessionStorage ?? sessionStorage;
+  try {
+    pageStorage.setItem(
+      ROOM_SESSION_RECOVERY_HINT_STORAGE_KEY,
+      JSON.stringify({ version: ROOM_SESSION_RECORD_VERSION, roomId }),
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function clearRoomSessionRecoveryHint(
+  dependencies: Pick<RoomSessionClientDependencies, "pageSessionStorage"> = {},
+): void {
+  const pageStorage = dependencies.pageSessionStorage ?? sessionStorage;
+  removePageStorageKey(pageStorage, ROOM_SESSION_RECOVERY_HINT_STORAGE_KEY);
 }
 
 async function loadRecordForUser(
@@ -1368,6 +1416,29 @@ function readPageStorageKey(storage: PageSessionStorageLike, key: string): strin
   } catch {
     return null;
   }
+}
+
+function readRoomSessionRecoveryHint(storage: PageSessionStorageLike): string | null {
+  const raw = readPageStorageKey(storage, ROOM_SESSION_RECOVERY_HINT_STORAGE_KEY);
+  if (raw === null) {
+    return null;
+  }
+
+  try {
+    const value: unknown = JSON.parse(raw);
+    if (
+      isObject(value) &&
+      value.version === ROOM_SESSION_RECORD_VERSION &&
+      isBoundedString(value.roomId, MAX_ROOM_ID_CHARS)
+    ) {
+      return value.roomId;
+    }
+  } catch {
+    // Invalid page state is not trusted as room authority.
+  }
+
+  removePageStorageKey(storage, ROOM_SESSION_RECOVERY_HINT_STORAGE_KEY);
+  return null;
 }
 
 function removePageStorageKey(storage: PageSessionStorageLike, key: string): void {

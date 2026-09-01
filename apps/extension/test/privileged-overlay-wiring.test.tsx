@@ -109,6 +109,13 @@ describe("privileged overlay wiring", () => {
 		expect(source).not.toContain('className="active-room-recovery-button"');
 	});
 
+	it("keeps a safe same-tab room hint across extension reload and clears it on departure", () => {
+		const source = readFileSync("src/overlay-app.tsx", "utf8");
+
+		expect(source).toContain("rememberRoomSessionRecoveryHint(nextRoomId)");
+		expect(source).toContain("clearRoomSessionRecoveryHint()");
+	});
+
 	it("keeps the overlay tree closed to the hosting page", () => {
 		vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => {
 			callback(0);

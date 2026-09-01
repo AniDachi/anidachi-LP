@@ -392,18 +392,34 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
   remain ignored. Remaining proof: deploy the candidate and perform the loaded
   two-profile YouTube/Crunchyroll acceptance; no staging acceptance is claimed.
 - [~] 2026-09-01: Corrected the MVP close/recovery boundary after invitation
-  lifecycle testing. Real browser-tab removal now performs the exact bounded
-  durable departure attempt before matching local cleanup; reload, BFCache,
-  sleep, and temporary transport interruption still use the existing
-  60-second reconnect grace. Failed close acceleration retains the Worker's
-  signed-callback fallback. The current extension has no post-close recovery
-  choice and no broad Leave/End-active-room conflict action; genuine active
-  sessions elsewhere are informational, while deliberate return uses the
-  ordinary invitation flow. Local proof: extension check and 1508/1508 tests;
-  Web 385 passed/3 skipped; API check, 166/166 unit tests, and 37/37 runtime
-  tests; room harness 39/39; real-WebRTC harness 26/26; staging
-  build/validation; and byte-identical validated synchronization to both
-  canonical test folders. Loaded two-profile acceptance remains required.
+  lifecycle testing. Real browser-tab removal now persists a settled exact
+  departure job before the bounded request and matching local cleanup.
+  Terminal acknowledgement retires the job; nonterminal timeout, transport,
+  MV3, and temporary authorization outcomes retain it for Chrome-alarm,
+  startup, or online retry. Reload, BFCache, sleep, and temporary transport
+  interruption still use the existing 60-second reconnect grace, with the
+  Worker's signed callback as an independent fallback. The current extension
+  has no post-close recovery choice and no broad Leave/End-active-room conflict
+  action. The exclusive tab lock protects an open same-browser room, while the
+  atomic server assignment protects other profiles and devices. A Create-room
+  conflict now stays mutation-free: it cannot depart, replace, or retry over a
+  live host/guest session. The database regression case requires the rejected
+  guest create to preserve the exact room/role/session assignment and create no
+  orphan host room. Deliberate return uses the ordinary invitation flow. Chrome
+  reload/update clears extension-session storage, so the provider tab retains
+  only a non-authoritative page-session `roomId` hint. The restarted extension
+  mints fresh trusted identity with camera Off and Push to talk, then immediately
+  performs the existing same-room takeover; explicit and terminal exits clear
+  the hint. No identity or room authority is stored in the page, and the
+  60-second Worker grace remains transport recovery rather than a UI delay.
+  Local proof: extension check and 1514/1514 tests; Web 386 passed/3 skipped; API
+  check, 166/166 unit tests, and 37/37 runtime tests; room harness 39/39; and
+  real-WebRTC harness 26/26. Local Supabase execution of the added SQL
+  regression remains pending because Docker was unavailable. The staging
+  artifact `911da0b-staging-20260901150204` was rebuilt, validated, and
+  synchronized byte-for-byte to both approved unpacked test folders (manifest
+  SHA-256 `ed27df0d82caa18190001312f65d20fecd99c62ca4ce4e1aab1ee02e7dbafb56`);
+  loaded two-profile acceptance remains required.
 - [~] 2026-08-29: Added the account-local `Room` defaults surface without
   changing the room protocol, Worker, API, database, permissions, or provider
   adapters. Microphone on join now supports Last used, Push to talk, and Open

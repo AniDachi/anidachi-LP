@@ -208,11 +208,13 @@ import {
 import { getRoomReconnectDelayMs } from "./room-reconnect";
 import {
 	captureRoomSessionIdentity,
+	clearRoomSessionRecoveryHint,
 	clearRoomSession,
 	clearRoomSessionDepartureIfMatch,
 	discardPreparedRoomSession,
 	migrateLegacyRoomSession,
 	prepareRoomSession,
+	rememberRoomSessionRecoveryHint,
 	roomSessionIdentityMatches,
 	type RoomSessionRecord,
 	updateRoomSessionCameraEnabled,
@@ -1403,6 +1405,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		}
 		storedRoomSessionRef.current = null;
 		setStoredRoomSession(null);
+		clearRoomSessionRecoveryHint();
 		const clear = expected
 			? clearRoomSessionDepartureIfMatch(expected)
 			: clearRoomSession();
@@ -3526,6 +3529,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			roomReconnectSuppressedRef.current = false;
 			roomIdRef.current = nextRoomId;
 			setRoomId(nextRoomId);
+			rememberRoomSessionRecoveryHint(nextRoomId);
 			ensureRoomHash(nextRoomId);
 			logDebug("overlay.room", "connect requested", {
 				roomId: nextRoomId,

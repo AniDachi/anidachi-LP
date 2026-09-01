@@ -11,6 +11,10 @@ import {
 	type RoomDepartureRequestResult,
 	requestCurrentRoomDeparture,
 } from "../src/room-departure";
+import {
+	createRoomDepartureRetryCoordinator,
+	departPersistedRoomSession,
+} from "../src/room-departure-retry";
 import type { RoomSessionRecord } from "../src/room-session-storage";
 
 describe("closed-tab room departure", () => {
@@ -44,22 +48,52 @@ describe("closed-tab room departure", () => {
 		);
 	});
 
-	it("still clears exact local state when the close accelerator cannot release", async () => {
+	it("persists exact retry ownership before clearing a closed tab after a temporary failure", async () => {
+		let persistedState: unknown = null;
+		let scheduledAt: number | null = null;
+		const coordinator = createRoomDepartureRetryCoordinator({
+			storage: {
+				read: async () => persistedState,
+				write: async (value) => {
+					persistedState = structuredClone(value);
+				},
+				clear: async () => {
+					persistedState = null;
+				},
+			},
+			scheduler: {
+				replace: async (when) => {
+					scheduledAt = when;
+				},
+			},
+			getCurrentUserId: async () => "user-a",
+			departExact: async () => "retryable",
+			now: () => 1_000,
+		});
 		const clearRoomSession = vi.fn(async () => true);
+		const settlePersistedDeparture = (identity: RoomSessionRecord) =>
+			departPersistedRoomSession(identity, coordinator);
 
 		await expect(
 			handleRoomTabDeparture(14, {
 				loadRoomSession: async () => roomSession(),
-				getStoredSession: async () => authSession(),
-				requestDeparture: async () => ({
-					kind: "retryable",
-					code: "ROOM_DEPARTURE_UNAVAILABLE",
-					message: "Try again",
-				}),
+				settlePersistedDeparture,
 				clearRoomSession,
 			}),
 		).resolves.toBe("retryable");
 
+		expect(persistedState).toMatchObject({
+			jobs: [
+				expect.objectContaining({
+					admissionState: "settled",
+					cleanupRequested: true,
+					roomId: "room-a",
+					ownerUserId: "user-a",
+					participantSessionId: "participant-session-a",
+				}),
+			],
+		});
+		expect(scheduledAt).not.toBeNull();
 		expect(clearRoomSession).toHaveBeenCalledWith(14, roomSession());
 	});
 
