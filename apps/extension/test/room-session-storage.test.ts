@@ -169,6 +169,29 @@ describe("background-owned room session storage", () => {
     await expect(loadRoomSessionForTab(2, dependencies)).resolves.toBeNull();
   });
 
+  it("keeps the exact closed-tab identity after an extension update clears session storage", async () => {
+    const dependencies = backgroundDependencies();
+    const record = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({
+          command: "persist",
+          roomId: "room-extension-update",
+          ownerUserId: "user-a",
+        }),
+        sender(24),
+        dependencies,
+      ),
+    );
+
+    dependencies.sessionStorage = new MemoryStorageArea();
+
+    await expect(loadRoomSessionForTab(24, dependencies)).resolves.toEqual(record);
+    await expect(
+      clearRoomSessionForClosedTab(24, record, dependencies),
+    ).resolves.toBe(true);
+    await expect(loadRoomSessionForTab(24, dependencies)).resolves.toBeNull();
+  });
+
   it("does not clear a newly confirmed session when closed-tab cleanup has no snapshot", async () => {
     const dependencies = backgroundDependencies();
     const replacement = expectRecord(

@@ -520,26 +520,24 @@ describe("overlay layout pointer surfaces", () => {
 		);
 	});
 
-	it("keeps the closed room rail inert outside a narrow edge target", () => {
-		expect(getRule(".room-rail-edge")).toContain("width: 24px");
+	it("uses a slim vertically extended menu-style glow for the Smart edge", () => {
+		expect(getRule(".room-rail-edge")).toContain("width: 28px");
 		const edgeCore = getRule(".room-rail-edge::before");
-		expect(edgeCore).toContain("top: var(--room-rail-edge-y, 50%)");
-		expect(edgeCore).toContain("height: 64px");
+		expect(edgeCore).toContain("top: 50%");
+		expect(edgeCore).toContain("right: 0");
+		expect(edgeCore).toContain("width: 0");
+		expect(edgeCore).toContain("height: clamp(144px, 34%, 204px)");
+		expect(edgeCore).toContain("background: transparent");
 		expect(edgeCore).toContain("opacity: 0");
-		expect(edgeCore).toContain("rgba(255, 92, 20");
-		expect(edgeCore).toContain("-14px 0 28px 5px rgba(76, 24, 4, 0.18)");
-		const edgeHalo = getRule(".room-rail-edge::after");
-		expect(edgeHalo).toContain("top: var(--room-rail-edge-y, 50%)");
-		expect(edgeHalo).toContain("width: 46px");
-		expect(edgeHalo).toContain("height: 112px");
-		expect(edgeHalo).toContain("radial-gradient");
-		expect(edgeHalo).toContain("pointer-events: none");
-		expect(getRule(".room-rail.edge-near .room-rail-edge::before")).toContain(
-			"opacity: 0.9",
+		expect(edgeCore).toContain("-3px 0 12px 5px rgba(255, 92, 20, 0.52)");
+		expect(edgeCore).toContain("scaleY(0.72)");
+		expect(edgeCore).not.toContain("radial-gradient");
+		expect(overlayStyles).not.toContain(".room-rail-edge::after");
+		const visibleEdgeCore = getRule(
+			".room-rail.edge-near .room-rail-edge::before",
 		);
-		expect(getRule(".room-rail.edge-near .room-rail-edge::after")).toContain(
-			"opacity: 1",
-		);
+		expect(visibleEdgeCore).toContain("opacity: 0.94");
+		expect(visibleEdgeCore).toContain("scaleY(1)");
 		expect(getRule(".room-rail-panel")).toContain("pointer-events: none");
 		expect(getRule(".room-rail.open .room-rail-panel")).toContain(
 			"pointer-events: auto",
@@ -563,7 +561,7 @@ describe("overlay layout pointer surfaces", () => {
 		const reducedMotionBlock = overlayStyles.slice(mediaStart, mediaEnd);
 
 		expect(reducedMotionBlock).toContain(".room-rail-edge::before");
-		expect(reducedMotionBlock).toContain(".room-rail-edge::after");
+		expect(reducedMotionBlock).not.toContain(".room-rail-edge::after");
 	});
 
 	it("keeps persistent participant pills compact until direct interaction", () => {

@@ -337,6 +337,9 @@ interface VisibleReaction {
 	reaction: ReactionEvent;
 }
 
+const MAX_VISIBLE_REACTIONS_PER_PARTICIPANT = 8;
+const MAX_VISIBLE_REACTIONS_TOTAL = 24;
+
 function nextAvailableReactionLane(
 	visibleReactions: readonly VisibleReaction[],
 	participantId: string,
@@ -351,6 +354,31 @@ function nextAvailableReactionLane(
 		laneIndex += 1;
 	}
 	return laneIndex;
+}
+
+function appendVisibleReaction(
+	visibleReactions: readonly VisibleReaction[],
+	reaction: ReactionEvent,
+): VisibleReaction[] {
+	const next = [
+		...visibleReactions,
+		{
+			laneIndex: nextAvailableReactionLane(visibleReactions, reaction.userId),
+			reaction,
+		},
+	];
+	let participantOverflow =
+		next.filter((item) => item.reaction.userId === reaction.userId).length -
+		MAX_VISIBLE_REACTIONS_PER_PARTICIPANT;
+	const participantBounded = next.filter((item) => {
+		if (participantOverflow > 0 && item.reaction.userId === reaction.userId) {
+			participantOverflow -= 1;
+			return false;
+		}
+		return true;
+	});
+
+	return participantBounded.slice(-MAX_VISIBLE_REACTIONS_TOTAL);
 }
 
 interface PointerWakePoint {
@@ -3394,13 +3422,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						return;
 					}
 					cueReactionParticipant(event.reaction.userId);
-					setReactions((current) => {
-						const laneIndex = nextAvailableReactionLane(
-							current,
-							event.reaction.userId,
-						);
-						return [...current, { laneIndex, reaction: event.reaction }];
-					});
+					setReactions((current) =>
+						appendVisibleReaction(current, event.reaction),
+					);
 					const visibleTimerId = window.setTimeout(() => {
 						reactionVisibleTimersRef.current.delete(event.reaction.id);
 						setReactions((current) =>

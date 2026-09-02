@@ -3613,72 +3613,36 @@ ${extensionThemeTokens}
     top: 0;
     right: 0;
     bottom: 0;
-    width: 24px;
+    width: 28px;
     pointer-events: auto;
   }
 
   .room-rail-edge::before {
     content: "";
     position: absolute;
-    top: var(--room-rail-edge-y, 50%);
+    top: 50%;
     right: 0;
-    width: 2px;
-    height: 64px;
-    border-radius: 999px 0 0 999px;
-    background: linear-gradient(
-      180deg,
-      rgba(255, 92, 20, 0) 0%,
-      rgba(255, 145, 69, 0.92) 50%,
-      rgba(255, 92, 20, 0) 100%
-    );
+    width: 0;
+    height: clamp(144px, 34%, 204px);
+    border-radius: 999px;
+    background: transparent;
     box-shadow:
-      -1px 0 8px 1px rgba(255, 92, 20, 0.48),
-      -6px 0 18px 3px rgba(249, 115, 22, 0.24),
-      -14px 0 28px 5px rgba(76, 24, 4, 0.18);
+      -3px 0 12px 5px rgba(255, 92, 20, 0.52),
+      -11px 0 28px 9px rgba(249, 115, 22, 0.28),
+      -17px 0 38px 12px rgba(76, 24, 4, 0.18);
     opacity: 0;
-    transform: translate(2px, -50%) scaleY(0.68);
+    transform: translate(4px, -50%) scaleY(0.72);
+    transform-origin: right center;
     z-index: 1;
     transition:
-      top 80ms ease-out,
-      opacity 150ms ease,
-      transform 190ms cubic-bezier(0.22, 1, 0.36, 1);
-    pointer-events: none;
-  }
-
-  .room-rail-edge::after {
-    content: "";
-    position: absolute;
-    top: var(--room-rail-edge-y, 50%);
-    right: -2px;
-    width: 46px;
-    height: 112px;
-    border-radius: 999px 0 0 999px;
-    background: radial-gradient(
-      ellipse at right center,
-      rgba(255, 92, 20, 0.28) 0%,
-      rgba(249, 115, 22, 0.15) 32%,
-      rgba(76, 24, 4, 0.08) 56%,
-      transparent 78%
-    );
-    opacity: 0;
-    transform: translateY(-50%) scale(0.78);
-    transform-origin: right center;
-    z-index: 0;
-    transition:
-      top 80ms ease-out,
-      opacity 150ms ease,
-      transform 190ms cubic-bezier(0.22, 1, 0.36, 1);
+      opacity 120ms ease,
+      transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
     pointer-events: none;
   }
 
   .room-rail.edge-near .room-rail-edge::before {
-    opacity: 0.9;
+    opacity: 0.94;
     transform: translate(0, -50%) scaleY(1);
-  }
-
-  .room-rail.edge-near .room-rail-edge::after {
-    opacity: 1;
-    transform: translateY(-50%) scale(1);
   }
 
   .room-rail-panel {
@@ -4849,7 +4813,7 @@ ${extensionThemeTokens}
   }
 
   .reaction-pop[data-ready="true"] {
-    animation: anidachi-reaction-rise 2.6s cubic-bezier(0.22, 0.75, 0.22, 1) forwards;
+    animation: anidachi-reaction-rise var(--reaction-duration, 2360ms) cubic-bezier(0.2, 0.72, 0.2, 1) var(--reaction-delay, 0ms) both;
   }
 
   .reaction-text {
@@ -4891,21 +4855,21 @@ ${extensionThemeTokens}
   @keyframes anidachi-reaction-rise {
     0% {
       opacity: 0;
-      transform: translate3d(-50%, 8px, 0) scale(0.48);
+      transform: translate3d(-50%, 6px, 0) rotate(0deg) scale(0.62);
     }
-    16% {
+    14% {
       opacity: 1;
-      transform: translate3d(calc(-50% + var(--reaction-mid-drift-x, -8px)), -8px, 0) scale(1.08);
+      transform: translate3d(calc(-50% + var(--reaction-lift-x, -4px)), var(--reaction-lift-y, -13px), 0) rotate(var(--reaction-rotation, -4deg)) scale(var(--reaction-peak-scale, 1.07));
     }
-    28% {
-      transform: translate3d(calc(-50% + var(--reaction-mid-drift-x, -8px)), -14px, 0) scale(1);
+    34% {
+      transform: translate3d(calc(-50% + var(--reaction-curve-x, -14px)), var(--reaction-curve-y, -42px), 0) rotate(var(--reaction-rotation, -4deg)) scale(1);
     }
-    78% {
+    72% {
       opacity: 1;
     }
     100% {
       opacity: 0;
-      transform: translate3d(calc(-50% + var(--reaction-drift-x, -22px)), -68px, 0) scale(0.92);
+      transform: translate3d(calc(-50% + var(--reaction-end-x, -24px)), var(--reaction-rise-y, -118px), 0) rotate(0deg) scale(0.86);
     }
   }
 
@@ -5162,7 +5126,6 @@ ${extensionThemeTokens}
     .room-defaults-segmented::before,
     .room-defaults-segmented button,
     .room-rail-edge::before,
-    .room-rail-edge::after,
     .room-rail-slot,
     .room-rail-pill,
     .room-rail-copy,

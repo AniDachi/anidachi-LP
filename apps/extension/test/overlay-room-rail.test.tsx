@@ -58,17 +58,17 @@ describe("RoomRail", () => {
 	it("reveals the Smart list at peek width only after deliberate edge dwell", async () => {
 		const view = await renderRail({ visibilityMode: "smart" });
 		const edge = getElement(view.container, ".room-rail-edge");
-		edge.getBoundingClientRect = () => rect(986, 0, 14, 400);
+		edge.getBoundingClientRect = () => rect(972, 0, 28, 400);
 
-		await pointer(edge, "pointerover", { clientX: 992 });
+		await pointer(edge, "pointerover", { clientX: 978 });
 		expect(
 			getElement(view.container, ".room-rail").classList.contains("edge-near"),
 		).toBe(true);
 		await advance(ROOM_RAIL_OPEN_DELAY_MS * 2);
 		expect(getPresentations(view.container)).toEqual(["hidden", "hidden"]);
 
-		await pointer(edge, "pointermove", { clientX: 996 });
-		await advance(ROOM_RAIL_OPEN_DELAY_MS - 1);
+		await pointer(edge, "pointermove", { clientX: 992 });
+		await advance(209);
 		expect(getPresentations(view.container)).toEqual(["hidden", "hidden"]);
 
 		await advance(1);
@@ -77,20 +77,20 @@ describe("RoomRail", () => {
 		await unmount(view.root);
 	});
 
-	it("positions the Smart edge glow at the approaching cursor height", async () => {
+	it("keeps the Smart edge glow centered instead of following the cursor", async () => {
 		const view = await renderRail({ visibilityMode: "smart" });
 		const rail = getElement(view.container, ".room-rail");
 		const edge = getElement(view.container, ".room-rail-edge");
-		edge.getBoundingClientRect = () => rect(986, 40, 14, 320);
+		edge.getBoundingClientRect = () => rect(972, 40, 28, 320);
 
-		await pointer(edge, "pointerover", { clientX: 992, clientY: 112 });
+		await pointer(edge, "pointerover", { clientX: 978, clientY: 112 });
 
 		expect(rail.classList.contains("edge-near")).toBe(true);
-		expect(edge.style.getPropertyValue("--room-rail-edge-y")).toBe("72px");
+		expect(edge.style.getPropertyValue("--room-rail-edge-y")).toBe("");
 		expect(getPresentations(view.container)).toEqual(["hidden", "hidden"]);
 
-		await pointer(edge, "pointermove", { clientX: 992, clientY: 286 });
-		expect(edge.style.getPropertyValue("--room-rail-edge-y")).toBe("246px");
+		await pointer(edge, "pointermove", { clientX: 978, clientY: 286 });
+		expect(edge.style.getPropertyValue("--room-rail-edge-y")).toBe("");
 
 		await unmount(view.root);
 	});
@@ -199,9 +199,8 @@ describe("RoomRail", () => {
 	it("does not let pointer-originated focus pin a pill after the cursor leaves", async () => {
 		const view = await renderRail({ visibilityMode: "always-visible" });
 		const remoteSlot = getSlots(view.container)[1];
-		const remotePill = remoteSlot?.querySelector<HTMLElement>(
-			".room-rail-pill",
-		);
+		const remotePill =
+			remoteSlot?.querySelector<HTMLElement>(".room-rail-pill");
 		if (!remoteSlot || !remotePill) {
 			throw new Error("Remote participant pill not found.");
 		}
@@ -221,9 +220,8 @@ describe("RoomRail", () => {
 	it("restores keyboard expansion when focus arrives after an outside Tab", async () => {
 		const view = await renderRail({ visibilityMode: "always-visible" });
 		const remoteSlot = getSlots(view.container)[1];
-		const remotePill = remoteSlot?.querySelector<HTMLElement>(
-			".room-rail-pill",
-		);
+		const remotePill =
+			remoteSlot?.querySelector<HTMLElement>(".room-rail-pill");
 		if (!remoteSlot || !remotePill) {
 			throw new Error("Remote participant pill not found.");
 		}
