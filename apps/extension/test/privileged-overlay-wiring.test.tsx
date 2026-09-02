@@ -1440,6 +1440,119 @@ describe("privileged overlay wiring", () => {
 		await unmount(view.root);
 	});
 
+	it("bounds a rapid participant reaction stream while keeping the newest reactions visible", async () => {
+		const sendMessage = vi.fn(
+			async (message: { type?: string; command?: string }) => {
+				if (message.type === "ANIDACHI_AUTH")
+					return { ok: true, tokens: sessionFor("user-a") };
+				if (
+					message.type === "ANIDACHI_ROOM_HTTP" &&
+					message.command === "create-room"
+				) {
+					return {
+						ok: true,
+						room: {
+							roomId: "room-a",
+							roomToken: "room-token-a",
+							shareableLink: "http://localhost:3003/room/room-a",
+							privilegedRoomAuthority: roomAuthority(),
+							roomSession: confirmedRoomSession(),
+						},
+					};
+				}
+				if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE") {
+					const response = roomSessionStorageResponse(message.command);
+					if (response) return response;
+				}
+				throw new Error(
+					`Unexpected runtime message ${message.type}:${message.command}`,
+				);
+			},
+		);
+		installOverlayRuntime(sendMessage);
+		let roomConnectionOptions: Parameters<RoomClient["connect"]>[0] | null =
+			null;
+		vi.spyOn(RoomClient.prototype, "connect").mockImplementation((options) => {
+			roomConnectionOptions = options;
+			options.onStatus("connected");
+			options.onEvent({
+				type: "ROOM_SNAPSHOT",
+				roomId: "room-a",
+				roomGeneration: 1,
+				sourceGeneration: 1,
+				serverSeq: 1,
+				participants: [hostParticipant(), guestParticipant()],
+			});
+		});
+		const view = await renderOverlay();
+
+		await click(button(view.container, "Open Anidachi controls"));
+		await click(button(view.container, "Create room"));
+		await flushMountedWork();
+		await click(button(view.container, "Close Anidachi controls"));
+
+		await act(async () => {
+			for (let index = 0; index < 14; index += 1) {
+				roomConnectionOptions?.onEvent({
+					type: "REACTION",
+					reaction: {
+						id: `dense-reaction-${index}`,
+						userId: guestParticipant().id,
+						roomId: "room-a",
+						emoji: String.fromCodePoint(0x1f600 + index),
+						videoTime: 11,
+						createdAt: index,
+					},
+				});
+			}
+			await Promise.resolve();
+		});
+		await flushMountedWork();
+
+		const visible = [
+			...view.container.querySelectorAll<HTMLElement>(".reaction-pop"),
+		];
+		expect(visible).toHaveLength(8);
+		expect(visible.map((item) => item.textContent)).toEqual(
+			Array.from({ length: 8 }, (_, index) =>
+				String.fromCodePoint(0x1f600 + index + 6),
+			),
+		);
+
+		const additionalParticipantIds = ["guest-b", "guest-c", "guest-d"];
+		const totalCapEmojis = Array.from({ length: 24 }, (_, index) =>
+			String.fromCodePoint(0x1f910 + index),
+		);
+		await act(async () => {
+			for (const [index, emoji] of totalCapEmojis.entries()) {
+				roomConnectionOptions?.onEvent({
+					type: "REACTION",
+					reaction: {
+						id: `total-cap-reaction-${index}`,
+						userId:
+							additionalParticipantIds[Math.floor(index / 8)] ?? "guest-d",
+						roomId: "room-a",
+						emoji,
+						videoTime: 11,
+						createdAt: index + 14,
+					},
+				});
+			}
+			await Promise.resolve();
+		});
+		await flushMountedWork();
+
+		const globallyBounded = [
+			...view.container.querySelectorAll<HTMLElement>(".reaction-pop"),
+		];
+		expect(globallyBounded).toHaveLength(24);
+		expect(globallyBounded.map((item) => item.textContent)).toEqual(
+			totalCapEmojis,
+		);
+
+		await unmount(view.root);
+	});
+
 	it("refreshes an open invite panel when an invited participant joins", async () => {
 		const sendMessage = vi.fn(
 			async (message: { type?: string; command?: string }) => {

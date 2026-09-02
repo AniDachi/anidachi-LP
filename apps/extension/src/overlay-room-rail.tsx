@@ -14,8 +14,8 @@ import {
 } from "./interface-visibility";
 import { ParticipantAudioInlineControl } from "./participant-audio-controls";
 import {
-	isRoomRailEdgeProximity,
 	isRoomRailEdgeIntent,
+	isRoomRailEdgeProximity,
 	ROOM_RAIL_OPEN_DELAY_MS,
 } from "./room-rail-intent";
 import type { ParticipantAudioPreference } from "./voice-audio-preferences";
@@ -137,14 +137,6 @@ export function RoomRail({
 				return;
 			}
 			const edgeBounds = event.currentTarget.getBoundingClientRect();
-			const edgeY = Math.min(
-				edgeBounds.height,
-				Math.max(0, event.clientY - edgeBounds.top),
-			);
-			event.currentTarget.style.setProperty(
-				"--room-rail-edge-y",
-				`${edgeY}px`,
-			);
 			const edgeRight = edgeBounds.right;
 			const nearEdge = isRoomRailEdgeProximity({
 				clientX: event.clientX,

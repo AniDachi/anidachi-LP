@@ -31,7 +31,7 @@ describe("ReactionPop", () => {
 		await unmount(view.root);
 	});
 
-	it("anchors to the visible participant avatar and offsets rapid reactions", async () => {
+	it("anchors rapid reactions to the visible participant avatar", async () => {
 		mockGeometry();
 		const view = await renderReaction({ camera: false, laneIndex: 1 });
 		const reaction = getReaction(view.container);
@@ -39,7 +39,7 @@ describe("ReactionPop", () => {
 		expect(reaction.dataset.originKind).toBe("pill");
 		expect(reaction.dataset.laneIndex).toBe("1");
 		expect(reaction.style.getPropertyValue("--reaction-origin-x")).toBe(
-			"639.5px",
+			"655.5px",
 		);
 		expect(reaction.style.getPropertyValue("--reaction-origin-y")).toBe(
 			"385.5px",
@@ -48,20 +48,43 @@ describe("ReactionPop", () => {
 		await unmount(view.root);
 	});
 
-	it("gives every visible burst lane a distinct origin", async () => {
+	it("keeps rapid reactions in a narrow launch corridor with distinct rise paths", async () => {
 		mockGeometry();
-		const origins: string[] = [];
+		const originXs: number[] = [];
+		const originYs: number[] = [];
+		const risePaths: string[] = [];
 
-		for (let laneIndex = 0; laneIndex < 6; laneIndex += 1) {
+		for (let laneIndex = 0; laneIndex < 8; laneIndex += 1) {
 			const view = await renderReaction({ camera: false, laneIndex });
 			const reaction = getReaction(view.container);
-			origins.push(
-				`${reaction.style.getPropertyValue("--reaction-origin-x")}:${reaction.style.getPropertyValue("--reaction-origin-y")}`,
+			originXs.push(
+				Number.parseFloat(
+					reaction.style.getPropertyValue("--reaction-origin-x"),
+				),
+			);
+			originYs.push(
+				Number.parseFloat(
+					reaction.style.getPropertyValue("--reaction-origin-y"),
+				),
+			);
+			risePaths.push(
+				[
+					reaction.style.getPropertyValue("--reaction-curve-x"),
+					reaction.style.getPropertyValue("--reaction-end-x"),
+					reaction.style.getPropertyValue("--reaction-rise-y"),
+					reaction.style.getPropertyValue("--reaction-delay"),
+				].join(":"),
 			);
 			await unmount(view.root);
 		}
 
-		expect(new Set(origins).size).toBe(origins.length);
+		expect(Math.max(...originXs) - Math.min(...originXs)).toBeLessThanOrEqual(
+			10,
+		);
+		expect(Math.max(...originYs) - Math.min(...originYs)).toBeLessThanOrEqual(
+			4,
+		);
+		expect(new Set(risePaths).size).toBeGreaterThanOrEqual(6);
 	});
 });
 

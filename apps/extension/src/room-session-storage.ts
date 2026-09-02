@@ -23,6 +23,8 @@ export const ROOM_SESSION_RECOVERY_HINT_STORAGE_KEY =
 const ROOM_SESSION_RECORD_VERSION = 1 as const;
 const ROOM_SESSION_RECOVERY_SCOPE_STORAGE_KEY_PREFIX =
   "anidachi:room-recovery-scope:v1:user:";
+const DURABLE_ROOM_SESSIONS_STORAGE_KEY =
+  "anidachi:durable-room-sessions:v1";
 const ROOM_SESSION_RECORD_KEY_PREFIX = "anidachi:room-session:v1:tab:";
 const PREPARED_ROOM_SESSION_RECORD_KEY_PREFIX =
   "anidachi:prepared-room-session:v1:tab:";
@@ -176,6 +178,7 @@ type RuntimeMessageSender = (
 ) => Promise<RoomSessionStorageResponse | null | undefined | unknown>;
 
 const roomSessionOperationsByTab = new Map<number, Promise<unknown>>();
+let durableRoomSessionOperation: Promise<unknown> = Promise.resolve();
 const roomSessionRecoveryScopeOperationsByUser = new Map<
   string,
   Promise<unknown>
@@ -307,7 +310,12 @@ export async function handleRoomSessionStorageMessage(
         case "load":
           return {
             ok: true,
-            record: await loadRecordForUser(sessionStorage, resolvedTabId, message.currentUserId),
+            record: await loadRecordForUser(
+              sessionStorage,
+              localStorage,
+              resolvedTabId,
+              message.currentUserId,
+            ),
           };
         case "persist":
           return {
@@ -344,6 +352,7 @@ export async function handleRoomSessionStorageMessage(
             ok: true,
             record: await migrateRecord(
               sessionStorage,
+              localStorage,
               resolvedTabId,
               message.currentUserId,
               message.legacyRecord,
@@ -353,8 +362,9 @@ export async function handleRoomSessionStorageMessage(
         case "clear-if-match":
           return {
             ok: true,
-            record: await clearRoomSessionIfMatchForTab(
+            record: await clearRoomSessionIfMatchForTabNow(
               sessionStorage,
+              localStorage,
               resolvedTabId,
               message.record,
             ),
@@ -364,6 +374,7 @@ export async function handleRoomSessionStorageMessage(
             ok: true,
             record: await clearRoomSessionForDepartureIfMatchNow(
               sessionStorage,
+              localStorage,
               resolvedTabId,
               message.record,
             ),
@@ -375,6 +386,9 @@ export async function handleRoomSessionStorageMessage(
             message.record,
             message.mode,
           );
+          if (record) {
+            await persistDurableRoomSession(localStorage, resolvedTabId, record);
+          }
           if (
             message.rememberPreference === true &&
             record &&
@@ -399,6 +413,9 @@ export async function handleRoomSessionStorageMessage(
             message.record,
             message.enabled,
           );
+          if (record) {
+            await persistDurableRoomSession(localStorage, resolvedTabId, record);
+          }
           if (
             message.rememberPreference === true &&
             record &&
@@ -417,7 +434,11 @@ export async function handleRoomSessionStorageMessage(
           };
         }
         case "clear":
-          await removeRoomSessionForTabNow(resolvedTabId, sessionStorage);
+          await removeRoomSessionForTabEverywhere(
+            resolvedTabId,
+            sessionStorage,
+            localStorage,
+          );
           return { ok: true, record: null };
       }
     } catch (error) {
@@ -443,15 +464,15 @@ export async function loadRoomSessionForTab(
 ): Promise<RoomSessionRecord | null> {
   assertTabId(tabId);
   return enqueueRoomSessionOperation(tabId, async () => {
-    const storage = dependencies.sessionStorage ??
+    const sessionStorage = dependencies.sessionStorage ??
       (chrome.storage.session as StorageAreaLike);
-    const key = roomSessionStorageKey(tabId);
-    const stored = await storage.get(key);
-    const record = parseRoomSessionRecord(stored[key]);
-    if (!record && stored[key] !== undefined) {
-      await storage.remove(key);
-    }
-    return record;
+    const localStorage = dependencies.localStorage ??
+      (chrome.storage.local as StorageAreaLike);
+    return loadRoomSessionWithDurableFallback(
+      sessionStorage,
+      localStorage,
+      tabId,
+    );
   });
 }
 
@@ -491,21 +512,40 @@ export async function clearRoomSessionForClosedTab(
 ): Promise<boolean> {
   assertTabId(tabId);
   return enqueueRoomSessionOperation(tabId, async () => {
-    const storage = dependencies.sessionStorage ??
+    const sessionStorage = dependencies.sessionStorage ??
       (chrome.storage.session as StorageAreaLike);
+    const localStorage = dependencies.localStorage ??
+      (chrome.storage.local as StorageAreaLike);
     if (!expected) {
       return false;
     }
 
-    const key = roomSessionStorageKey(tabId);
-    const stored = await storage.get(key);
-    const current = parseRoomSessionRecord(stored[key]);
+    const current = await loadRoomSessionWithDurableFallback(
+      sessionStorage,
+      localStorage,
+      tabId,
+    );
     if (!current || !roomSessionIdentityMatches(current, expected)) {
       return false;
     }
-    await removeRoomSessionForTabNow(tabId, storage);
+    await removeRoomSessionForTabEverywhere(
+      tabId,
+      sessionStorage,
+      localStorage,
+    );
     return true;
   });
+}
+
+async function removeRoomSessionForTabEverywhere(
+  tabId: number,
+  sessionStorage: StorageAreaLike,
+  localStorage: StorageAreaLike,
+): Promise<void> {
+  await Promise.all([
+    removeRoomSessionForTabNow(tabId, sessionStorage),
+    removeDurableRoomSession(localStorage, tabId),
+  ]);
 }
 
 async function removeRoomSessionForTabNow(tabId: number, storage: StorageAreaLike): Promise<void> {
@@ -616,6 +656,113 @@ function enqueueRoomSessionOperation<T>(tabId: number, operation: () => Promise<
   });
   roomSessionOperationsByTab.set(tabId, queued);
   return queued;
+}
+
+function enqueueDurableRoomSessionOperation<T>(
+  operation: () => Promise<T>,
+): Promise<T> {
+  const current = durableRoomSessionOperation
+    .catch(() => undefined)
+    .then(operation);
+  durableRoomSessionOperation = current.then(
+    () => undefined,
+    () => undefined,
+  );
+  return current;
+}
+
+async function loadRoomSessionWithDurableFallback(
+  sessionStorage: StorageAreaLike,
+  localStorage: StorageAreaLike,
+  tabId: number,
+): Promise<RoomSessionRecord | null> {
+  const key = roomSessionStorageKey(tabId);
+  const stored = await sessionStorage.get(key);
+  if (stored[key] !== undefined) {
+    const record = parseRoomSessionRecord(stored[key]);
+    if (!record) {
+      await removeRoomSessionForTabEverywhere(
+        tabId,
+        sessionStorage,
+        localStorage,
+      );
+      return null;
+    }
+    await persistDurableRoomSession(localStorage, tabId, record);
+    return record;
+  }
+
+  const durable = await loadDurableRoomSession(localStorage, tabId);
+  if (!durable) return null;
+  await sessionStorage.set({ [key]: durable });
+  return durable;
+}
+
+function loadDurableRoomSession(
+  storage: StorageAreaLike,
+  tabId: number,
+): Promise<RoomSessionRecord | null> {
+  return enqueueDurableRoomSessionOperation(async () => {
+    const state = await readDurableRoomSessionState(storage);
+    return state[String(tabId)] ?? null;
+  });
+}
+
+function persistDurableRoomSession(
+  storage: StorageAreaLike,
+  tabId: number,
+  record: RoomSessionRecord,
+): Promise<void> {
+  return enqueueDurableRoomSessionOperation(async () => {
+    const state = await readDurableRoomSessionState(storage);
+    state[String(tabId)] = record;
+    await storage.set({
+      [DURABLE_ROOM_SESSIONS_STORAGE_KEY]: {
+        version: 1,
+        records: state,
+      },
+    });
+  });
+}
+
+function removeDurableRoomSession(
+  storage: StorageAreaLike,
+  tabId: number,
+): Promise<void> {
+  return enqueueDurableRoomSessionOperation(async () => {
+    const state = await readDurableRoomSessionState(storage);
+    delete state[String(tabId)];
+    if (Object.keys(state).length === 0) {
+      await storage.remove(DURABLE_ROOM_SESSIONS_STORAGE_KEY);
+      return;
+    }
+    await storage.set({
+      [DURABLE_ROOM_SESSIONS_STORAGE_KEY]: {
+        version: 1,
+        records: state,
+      },
+    });
+  });
+}
+
+async function readDurableRoomSessionState(
+  storage: StorageAreaLike,
+): Promise<Record<string, RoomSessionRecord>> {
+  const stored = await storage.get(DURABLE_ROOM_SESSIONS_STORAGE_KEY);
+  const value = stored[DURABLE_ROOM_SESSIONS_STORAGE_KEY];
+  if (!isObject(value) || value.version !== 1 || !isObject(value.records)) {
+    return {};
+  }
+
+  const records: Record<string, RoomSessionRecord> = {};
+  for (const [rawTabId, rawRecord] of Object.entries(value.records)) {
+    const tabId = Number(rawTabId);
+    const record = parseRoomSessionRecord(rawRecord);
+    if (Number.isInteger(tabId) && tabId >= 0 && record) {
+      records[String(tabId)] = record;
+    }
+  }
+  return records;
 }
 
 function enqueueRoomSessionRecoveryScopeOperation<T>(
@@ -756,10 +903,13 @@ export async function clearRoomSessionForDepartureIfMatch(
 ): Promise<boolean> {
   assertTabId(tabId);
   return enqueueRoomSessionOperation(tabId, async () => {
-    const storage = dependencies.sessionStorage ??
+    const sessionStorage = dependencies.sessionStorage ??
       (chrome.storage.session as StorageAreaLike);
+    const localStorage = dependencies.localStorage ??
+      (chrome.storage.local as StorageAreaLike);
     const remaining = await clearRoomSessionForDepartureIfMatchNow(
-      storage,
+      sessionStorage,
+      localStorage,
       tabId,
       record,
     );
@@ -948,20 +1098,24 @@ export function clearRoomSessionRecoveryHint(
 }
 
 async function loadRecordForUser(
-  storage: StorageAreaLike,
+  sessionStorage: StorageAreaLike,
+  localStorage: StorageAreaLike,
   tabId: number,
   currentUserId: string | null,
 ): Promise<RoomSessionRecord | null> {
-  const key = roomSessionStorageKey(tabId);
-  const stored = await storage.get(key);
-  const rawRecord = stored[key];
-  if (rawRecord === undefined) {
-    return null;
-  }
-
-  const record = parseRoomSessionRecord(rawRecord);
+  const record = await loadRoomSessionWithDurableFallback(
+    sessionStorage,
+    localStorage,
+    tabId,
+  );
   if (!record || !isNonEmptyString(currentUserId) || record.ownerUserId !== currentUserId) {
-    await storage.remove(key);
+    if (record) {
+      await removeRoomSessionForTabEverywhere(
+        tabId,
+        sessionStorage,
+        localStorage,
+      );
+    }
     return null;
   }
 
@@ -978,12 +1132,18 @@ async function persistRecord(
 ): Promise<RoomSessionRecord | null> {
   const key = roomSessionStorageKey(tabId);
   if (!isNonEmptyString(roomId) || !isNonEmptyString(ownerUserId)) {
-    await sessionStorage.remove(key);
+    await removeRoomSessionForTabEverywhere(
+      tabId,
+      sessionStorage,
+      localStorage,
+    );
     return null;
   }
 
   const stored = await sessionStorage.get(key);
-  const existing = parseRoomSessionRecord(stored[key]);
+  const existing =
+    parseRoomSessionRecord(stored[key]) ??
+    await loadDurableRoomSession(localStorage, tabId);
   const sameRoom =
     existing?.roomId === roomId && existing.ownerUserId === ownerUserId;
   const preferredMedia = sameRoom
@@ -1001,7 +1161,10 @@ async function persistRecord(
     cameraEnabled: preferredMedia.cameraEnabled,
     voiceMode: preferredMedia.voiceMode,
   };
-  await sessionStorage.set({ [key]: record });
+  await Promise.all([
+    sessionStorage.set({ [key]: record }),
+    persistDurableRoomSession(localStorage, tabId, record),
+  ]);
   return record;
 }
 
@@ -1102,7 +1265,10 @@ async function confirmRoomSessionForTabNow(
     cameraEnabled: preferredMedia.cameraEnabled,
     voiceMode: preferredMedia.voiceMode,
   };
-  await sessionStorage.set({ [confirmedKey]: record });
+  await Promise.all([
+    sessionStorage.set({ [confirmedKey]: record }),
+    persistDurableRoomSession(localStorage, tabId, record),
+  ]);
   await sessionStorage.remove(preparedKey);
   return record;
 }
@@ -1203,21 +1369,41 @@ function createDepartureRetryRecord(
 }
 
 async function migrateRecord(
-  storage: StorageAreaLike,
+  sessionStorage: StorageAreaLike,
+  localStorage: StorageAreaLike,
   tabId: number,
   currentUserId: string | null,
   legacyRecord: LegacyRoomSessionRecord | null,
   randomUUID: () => string,
 ): Promise<RoomSessionRecord | null> {
-  if (legacyRecord === null) {
-    return loadRecordForUser(storage, tabId, currentUserId);
-  }
-
   const key = roomSessionStorageKey(tabId);
-  const stored = await storage.get(key);
+  const stored = await sessionStorage.get(key);
   const existing = parseRoomSessionRecord(stored[key]);
   if (existing?.ownerUserId === currentUserId) {
+    await persistDurableRoomSession(localStorage, tabId, existing);
     return existing;
+  }
+  if (stored[key] !== undefined && !existing) {
+    await removeRoomSessionForTabEverywhere(
+      tabId,
+      sessionStorage,
+      localStorage,
+    );
+  }
+  if (legacyRecord === null) {
+    return null;
+  }
+
+  const durable = await loadDurableRoomSession(localStorage, tabId);
+  if (
+    durable?.ownerUserId === currentUserId &&
+    durable.roomId === legacyRecord.roomId
+  ) {
+    await sessionStorage.set({ [key]: durable });
+    return durable;
+  }
+  if (durable) {
+    await removeDurableRoomSession(localStorage, tabId);
   }
   if (
     !isBoundedString(currentUserId, MAX_PARTICIPANT_ID_CHARS) ||
@@ -1225,7 +1411,7 @@ async function migrateRecord(
     !isBoundedString(legacyRecord.ownerUserId, MAX_PARTICIPANT_ID_CHARS) ||
     legacyRecord.ownerUserId !== currentUserId
   ) {
-    await storage.remove(key);
+    await sessionStorage.remove(key);
     return null;
   }
 
@@ -1249,7 +1435,10 @@ async function migrateRecord(
         ? existing.voiceMode
         : "push-to-talk",
   };
-  await storage.set({ [key]: record });
+  await Promise.all([
+    sessionStorage.set({ [key]: record }),
+    persistDurableRoomSession(localStorage, tabId, record),
+  ]);
   return record;
 }
 
@@ -1269,60 +1458,52 @@ async function sendRoomSessionMessage(
   return response as Extract<RoomSessionStorageResponse, { ok: true }>;
 }
 
-async function clearRoomSessionIfMatchForTab(
-  storage: StorageAreaLike,
+async function clearRoomSessionIfMatchForTabNow(
+  sessionStorage: StorageAreaLike,
+  localStorage: StorageAreaLike,
   tabId: number,
   expected: RoomSessionRecord,
 ): Promise<RoomSessionRecord | null> {
-  const key = roomSessionStorageKey(tabId);
-  const stored = await storage.get(key);
-  const current = parseRoomSessionRecord(stored[key]);
-  if (!current) {
-    if (stored[key] !== undefined) {
-      await storage.remove(key);
-    }
-    return null;
-  }
+  const current = await loadRoomSessionWithDurableFallback(
+    sessionStorage,
+    localStorage,
+    tabId,
+  );
+  if (!current) return null;
 
   if (!roomSessionRecordsMatch(current, expected)) {
     return current;
   }
 
-  await storage.remove(key);
+  await removeRoomSessionForTabEverywhere(
+    tabId,
+    sessionStorage,
+    localStorage,
+  );
   return null;
 }
 
 async function clearRoomSessionForDepartureIfMatchNow(
-  storage: StorageAreaLike,
+  sessionStorage: StorageAreaLike,
+  localStorage: StorageAreaLike,
   tabId: number,
   expected: RoomSessionRecord,
 ): Promise<RoomSessionRecord | null> {
-  const key = roomSessionStorageKey(tabId);
-  const stored = await storage.get(key);
-  const current = parseRoomSessionRecord(stored[key]);
-  if (!current) {
-    if (stored[key] !== undefined) {
-      await storage.remove(key);
-    }
-    return null;
-  }
+  const current = await loadRoomSessionWithDurableFallback(
+    sessionStorage,
+    localStorage,
+    tabId,
+  );
+  if (!current) return null;
   if (!roomSessionIdentityMatches(current, expected)) {
     return current;
   }
 
-  await storage.remove(key);
-  const preparedKey = preparedRoomSessionStorageKey(tabId);
-  const storedPrepared = await storage.get(preparedKey);
-  const prepared = parsePreparedRoomSession(storedPrepared[preparedKey]);
-  if (
-    prepared &&
-    prepared.version === expected.version &&
-    prepared.roomId === expected.roomId &&
-    prepared.ownerUserId === expected.ownerUserId &&
-    prepared.participantSessionId === expected.participantSessionId
-  ) {
-    await storage.remove(preparedKey);
-  }
+  await removeRoomSessionForTabEverywhere(
+    tabId,
+    sessionStorage,
+    localStorage,
+  );
   return null;
 }
 
