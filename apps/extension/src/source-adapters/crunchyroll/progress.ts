@@ -42,7 +42,7 @@ export function resolveCrunchyrollCurrentObjectIdentity(input: {
 	seasonsResponse: unknown;
 	episodesResponse: unknown;
 }): CrunchyrollCurrentObjectIdentity | null {
-	const watchId = readIdentityString(input.watchId);
+	const watchId = readPathSafeId(input.watchId, "crunchyroll:watch:");
 	if (!watchId) return null;
 
 	const objects = responseData(input.objectResponse).filter(
@@ -51,45 +51,91 @@ export function resolveCrunchyrollCurrentObjectIdentity(input: {
 	if (objects.length !== 1) return null;
 
 	const metadata = identityRecord(objects[0].episode_metadata);
-	const providerSeriesId = readIdentityString(metadata?.series_id);
+	const providerSeriesId = readPathSafeId(
+		metadata?.series_id,
+		"crunchyroll:series:",
+	);
 	const objectVariants = identityRecords(metadata?.versions).filter(
 		(variant) => readIdentityString(variant.guid) === watchId,
 	);
 	if (!providerSeriesId || objectVariants.length !== 1) return null;
 
-	const seasonGuid = readIdentityString(objectVariants[0].season_guid);
-	const objectSeasonGuid = readIdentityString(metadata?.season_id);
+	const seasonGuid = readPathSafeId(
+		objectVariants[0].season_guid,
+		"crunchyroll:season:",
+	);
+	const objectSeasonGuid = readPathSafeId(
+		metadata?.season_id,
+		"crunchyroll:season:",
+	);
 	if (!seasonGuid || (objectSeasonGuid && objectSeasonGuid !== seasonGuid)) {
 		return null;
 	}
 
-	const seasons = responseData(input.seasonsResponse).filter((season) =>
-		recordOrVariantHasGuid(season, seasonGuid),
+	const seasons = responseData(input.seasonsResponse).filter(
+		(season) =>
+			(readIdentityString(season.id) === seasonGuid ||
+				matchingVariants(season, seasonGuid).length > 0) &&
+			matchingVariants(season, seasonGuid).length === 1,
 	);
 	if (seasons.length !== 1) return null;
-	const providerSeasonIdentifier = readIdentityString(seasons[0].identifier);
-	if (!providerSeasonIdentifier) return null;
+	const season = seasons[0];
+	const providerSeasonIdentifier = readCanonicalPart(
+		season.identifier,
+		"crunchyroll:season:",
+	);
+	const objectSeasonIdentifier = readCanonicalPart(
+		metadata?.season_identifier,
+		"crunchyroll:season:",
+	);
+	const seasonSeriesId = readIdentityString(season.series_id);
+	if (
+		!providerSeasonIdentifier ||
+		!providerSeasonIdentifier.startsWith(`${providerSeriesId}|`) ||
+		(metadata?.season_identifier != null &&
+			objectSeasonIdentifier !== providerSeasonIdentifier) ||
+		(seasonSeriesId !== null && seasonSeriesId !== providerSeriesId)
+	) return null;
+	const seasonAliases = new Set([
+		readIdentityString(season.id),
+		...identityRecords(season.versions).map((variant) =>
+			readIdentityString(variant.guid),
+		),
+	].filter((value): value is string => value !== null));
 
-	const episodes = responseData(input.episodesResponse).filter((episode) =>
-		recordOrVariantHasGuid(episode, watchId),
+	const episodes = responseData(input.episodesResponse).filter(
+		(episode) =>
+			(readIdentityString(episode.id) === watchId ||
+				matchingVariants(episode, watchId).length > 0) &&
+			matchingVariants(episode, watchId).length === 1,
 	);
 	if (episodes.length !== 1) return null;
-	const episodeVariant = matchingVariant(episodes[0], watchId);
+	const episode = episodes[0];
+	const episodeVariant = matchingVariants(episode, watchId)[0];
+	const episodeSeriesId = readIdentityString(episode.series_id);
+	const episodeSeasonId = readIdentityString(episode.season_id);
 	if (
-		episodeVariant &&
-		readIdentityString(episodeVariant.season_guid) !== seasonGuid
+		readIdentityString(episodeVariant.season_guid) !== seasonGuid ||
+		(episodeSeriesId !== null && episodeSeriesId !== providerSeriesId) ||
+		(episodeSeasonId !== null && !seasonAliases.has(episodeSeasonId))
 	) {
 		return null;
 	}
-	const providerEpisodeIdentifier = readIdentityString(episodes[0].identifier);
-	if (!providerEpisodeIdentifier) return null;
+	const providerEpisodeIdentifier = readCanonicalPart(
+		episode.identifier,
+		"crunchyroll:episode:",
+	);
+	if (
+		!providerEpisodeIdentifier ||
+		!providerEpisodeIdentifier.startsWith(`${providerSeasonIdentifier}|`)
+	) return null;
 
 	return {
 		providerSeriesId,
 		providerSeasonIdentifier,
 		providerEpisodeIdentifier,
 		providerContentId: watchId,
-		audioLocale: readIdentityString(objectVariants[0].audio_locale),
+		audioLocale: readAudioLocale(objectVariants[0].audio_locale),
 		titleKey: `crunchyroll:series:${providerSeriesId}`,
 		seasonKey: `crunchyroll:season:${providerSeasonIdentifier}`,
 		episodeKey: `crunchyroll:episode:${providerEpisodeIdentifier}`,
@@ -117,27 +163,39 @@ function identityRecords(value: unknown): Array<Record<string, unknown>> {
 }
 
 function readIdentityString(value: unknown): string | null {
-	return typeof value === "string" && value.trim() === value && value.length > 0
+	return typeof value === "string" &&
+		value.trim() === value &&
+		value.length > 0 &&
+		!/[\u0000-\u001f\u007f-\u009f]/u.test(value)
 		? value
 		: null;
 }
 
-function matchingVariant(
-	record: Record<string, unknown>,
-	guid: string,
-): Record<string, unknown> | null {
-	const variants = identityRecords(record.versions).filter(
-		(variant) => readIdentityString(variant.guid) === guid,
-	);
-	return variants.length === 1 ? variants[0] : null;
+function readCanonicalPart(value: unknown, prefix: string): string | null {
+	const part = readIdentityString(value);
+	return part && prefix.length + part.length <= 220 ? part : null;
 }
 
-function recordOrVariantHasGuid(
+function readPathSafeId(value: unknown, prefix: string): string | null {
+	const id = readCanonicalPart(value, prefix);
+	return id && /^[A-Za-z0-9_-]+$/u.test(id) ? id : null;
+}
+
+function readAudioLocale(value: unknown): string | null {
+	const locale = readIdentityString(value);
+	return locale &&
+		locale.length <= 35 &&
+		/^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/u.test(locale)
+		? locale
+		: null;
+}
+
+function matchingVariants(
 	record: Record<string, unknown>,
 	guid: string,
-): boolean {
-	return (
-		readIdentityString(record.id) === guid || matchingVariant(record, guid) !== null
+): Array<Record<string, unknown>> {
+	return identityRecords(record.versions).filter(
+		(variant) => readIdentityString(variant.guid) === guid,
 	);
 }
 

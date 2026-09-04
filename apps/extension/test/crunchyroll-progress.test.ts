@@ -40,14 +40,14 @@ describe("Crunchyroll current-object canonical identity", () => {
       },
       episodesResponse: {
         total: 1,
-        data: [{ id: "LEGACY-WATCH-1", identifier: "LEGACY-SERIES|LEGACY-EPISODE-1", versions: [{ guid: "LEGACY-WATCH-1", season_guid: "LEGACY-SEASON-GUID-1" }] }],
+        data: [{ id: "LEGACY-WATCH-1", identifier: "LEGACY-SERIES|LEGACY-SEASON-1|E1", versions: [{ guid: "LEGACY-WATCH-1", season_guid: "LEGACY-SEASON-GUID-1" }] }],
       },
     };
     const first = resolveCrunchyrollCurrentObjectIdentity({
       ...shared,
       seasonsResponse: { total: 2, data: [
-        { id: "LEGACY-SEASON-GUID-1", identifier: "LEGACY-SERIES|LEGACY-SEASON-1", title: "Season 1 (English Dub)", season_number: 1 },
-        { id: "LEGACY-SEASON-GUID-2", identifier: "LEGACY-SERIES|LEGACY-SEASON-2", title: "Season 1 (English Dub)", season_number: 1 },
+        { id: "LEGACY-SEASON-GUID-1", identifier: "LEGACY-SERIES|LEGACY-SEASON-1", title: "Season 1 (English Dub)", season_number: 1, versions: [{ guid: "LEGACY-SEASON-GUID-1" }] },
+        { id: "LEGACY-SEASON-GUID-2", identifier: "LEGACY-SERIES|LEGACY-SEASON-2", title: "Season 1 (English Dub)", season_number: 1, versions: [{ guid: "LEGACY-SEASON-GUID-2" }] },
       ] },
     });
 
@@ -68,6 +68,28 @@ describe("Crunchyroll current-object canonical identity", () => {
       episodesResponse: variantsFixture.episodesResponse,
       ...override,
     })).toBeNull();
+  });
+
+  it.each(variantsFixture.invalidIdentityCases)(
+    "leaves identity pending for $name",
+    ({ input }) => {
+      expect(resolveCrunchyrollCurrentObjectIdentity(input)).toBeNull();
+    },
+  );
+
+  it("keeps identity when an unrecognized audio locale is safely nullable", () => {
+    const objectResponse = structuredClone(
+      variantsFixture.objectResponses.G8WUNEWJE,
+    );
+    objectResponse.data[0].episode_metadata.versions[1].audio_locale =
+      "not a locale";
+
+    expect(resolveCrunchyrollCurrentObjectIdentity({
+      watchId: "G8WUNEWJE",
+      objectResponse,
+      seasonsResponse: variantsFixture.seasonsResponse,
+      episodesResponse: variantsFixture.episodesResponse,
+    })?.audioLocale).toBeNull();
   });
 });
 
