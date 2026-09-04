@@ -5,7 +5,9 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { mountOverlay, type OverlayRenderer } from "../entrypoints/content";
 import { AUTH_TOKENS_KEY } from "../src/auth-tokens";
+import { INTERFACE_PREFERENCES_STORAGE_KEY } from "../src/interface-preferences";
 import * as overlayApp from "../src/overlay-app";
+import { P2PMediaController } from "../src/p2p-media";
 import type { PrivilegedOverlayContext } from "../src/privileged-overlay-intent";
 import {
 	REACTION_SHORTCUTS_STORAGE_KEY,
@@ -20,6 +22,7 @@ import {
 	listRoomInvites,
 } from "../src/social-client";
 import type { VideoAdapter } from "../src/source-adapters/core/types";
+import { TOP_BUBBLE_HIDE_DELAY_MS } from "../src/top-bubble-reveal";
 
 const extensionStorage = vi.hoisted(() => {
 	const values = new Map<string, unknown>();
@@ -1669,6 +1672,72 @@ describe("privileged overlay wiring", () => {
 		expect((closeButtonBeforeLoad as HTMLButtonElement).disabled).toBe(false);
 	});
 
+	it.each(["auto-hide", "always-visible"] as const)(
+		"keeps the main control independent of Open mic in %s mode",
+		async (mainControlVisibility) => {
+			// Keep real overlay/voice state, but do not request a physical microphone.
+			const publication = vi
+				.spyOn(P2PMediaController.prototype, "setMicrophonePublishing")
+				.mockResolvedValue();
+			extensionStorage.values.set(INTERFACE_PREFERENCES_STORAGE_KEY, {
+				version: 1,
+				mainControlVisibility,
+				participantPillVisibility: "smart",
+			});
+			installActiveHostRoomRuntime({
+				mediaSeat: "joined",
+			});
+			const view = await renderOverlay();
+			try {
+				await click(button(view.container, "Open Anidachi controls"));
+				await click(button(view.container, "Create room"));
+				await flushMountedWork();
+				await click(button(view.container, "Voice"));
+				await click(button(view.container, "Open mic"));
+				await flushMountedWork();
+				expect(
+					button(view.container, "Open mic").getAttribute("aria-checked"),
+				).toBe("true");
+				expect(publication).toHaveBeenLastCalledWith(true, "warm", "open-mic");
+				publication.mockClear();
+
+				const launcher = view.container.querySelector(".top-bubble");
+				const reveal = view.container.querySelector(".top-bubble-reveal");
+				if (!(launcher instanceof HTMLButtonElement) || !reveal) {
+					throw new Error("Missing main control");
+				}
+				expect(reveal.classList.contains("bubble-visible")).toBe(true);
+				vi.useFakeTimers();
+				await click(launcher);
+				await act(async () => {
+					window.dispatchEvent(
+						new MouseEvent("pointermove", { clientX: 400, clientY: 300 }),
+					);
+					await vi.advanceTimersByTimeAsync(TOP_BUBBLE_HIDE_DELAY_MS);
+				});
+				expect(reveal.classList.contains("panel-open")).toBe(false);
+				expect(reveal.classList.contains("bubble-visible")).toBe(
+					mainControlVisibility === "always-visible",
+				);
+				expect(launcher.getAttribute("aria-label")).toBe(
+					"Open Anidachi controls",
+				);
+				expect(launcher.querySelector(".top-bubble-open-mic")).toBeNull();
+				expect(publication).not.toHaveBeenCalled();
+
+				// Hiding the launcher must not reset the selected microphone mode.
+				await click(launcher);
+				expect(reveal.classList.contains("bubble-visible")).toBe(true);
+				expect(
+					button(view.container, "Open mic").getAttribute("aria-checked"),
+				).toBe("true");
+			} finally {
+				await unmount(view.root);
+				vi.useRealTimers();
+			}
+		},
+	);
+
 	it("marks a user-selected Voice mode as the preference for future rooms", async () => {
 		let storedRoomSession: RoomSessionRecord = confirmedRoomSession();
 		const sendMessage = vi.fn(
@@ -2717,9 +2786,16 @@ function invitesResponse(status: RoomInvite["recipients"][number]["status"]) {
 	};
 }
 
-function installActiveHostRoomRuntime(): void {
+function installActiveHostRoomRuntime(
+	runtimeOptions: { mediaSeat?: "none" | "joined" } = {},
+): void {
 	const sendMessage = vi.fn(
-		async (message: { type?: string; command?: string }) => {
+		async (message: {
+			type?: string;
+			command?: string;
+			mode?: "open-mic" | "push-to-talk";
+			record?: RoomSessionRecord;
+		}) => {
 			if (message.type === "ANIDACHI_AUTH") {
 				return { ok: true, tokens: sessionFor("user-a") };
 			}
@@ -2741,6 +2817,18 @@ function installActiveHostRoomRuntime(): void {
 			if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE") {
 				const response = roomSessionStorageResponse(message.command);
 				if (response) return response;
+				if (
+					message.command === "set-voice-mode" && message.record && message.mode
+				) {
+					return {
+						ok: true,
+						record: {
+							...message.record,
+							revision: message.record.revision + 1,
+							voiceMode: message.mode,
+						},
+					};
+				}
 			}
 			throw new Error(
 				`Unexpected runtime message ${message.type}:${message.command}`,
@@ -2756,7 +2844,9 @@ function installActiveHostRoomRuntime(): void {
 			roomGeneration: 1,
 			sourceGeneration: 1,
 			serverSeq: 1,
-			participants: [hostParticipant()],
+			participants: [
+				{ ...hostParticipant(), mediaSeat: runtimeOptions.mediaSeat ?? "none" },
+			],
 		});
 	});
 }

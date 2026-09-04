@@ -25,7 +25,6 @@ export interface ParticipantRailPresentation {
 
 export function resolveMainControlPresentation(input: {
 	focused: boolean;
-	forceVisible: boolean;
 	mode: MainControlVisibility;
 	panelOpen: boolean;
 	phase: MainControlRevealPhase;
@@ -33,7 +32,6 @@ export function resolveMainControlPresentation(input: {
 	const pinned =
 		input.mode === "always-visible" ||
 		input.panelOpen ||
-		input.forceVisible ||
 		input.focused;
 
 	return {
