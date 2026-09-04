@@ -16,6 +16,26 @@ function ack(revision: number) {
 }
 
 describe("catalog background begin/commit ownership", () => {
+  it("cannot delete a replacement installed between the successful async ownership check and release cleanup", async () => {
+    let paused = false;
+    let resolveGuard!: (value: boolean) => void;
+    let revision = 0;
+    const coordinator = createWatchHistoryCatalogCoordinator({
+      isCurrent: () => paused ? new Promise((resolve) => { resolveGuard = resolve; }) : Promise.resolve(true),
+      request: async () => ack(++revision), save: async () => undefined, invalidate: async () => undefined,
+    });
+    await coordinator.begin(owner, "first", beginInput);
+    paused = true;
+    const release = coordinator.release(owner, "first", { accountGeneration: 1, titleKey: beginInput.titleKey, revision: 1 });
+    let replacement!: ReturnType<typeof coordinator.begin>;
+    resolveGuard(true);
+    // The current() continuation first sees the old job. This next microtask
+    // installs the replacement before release() resumes from awaiting current().
+    queueMicrotask(() => { paused = false; replacement = coordinator.begin(owner, "replacement", { ...beginInput, context: { ...context, region: "US" } }); });
+    expect(await release).toBe(false);
+    expect(await replacement).toMatchObject({ revision: 2 });
+    expect(await coordinator.release(owner, "replacement", { accountGeneration: 1, titleKey: beginInput.titleKey, revision: 2 })).toBe(true);
+  });
   it("fences release by owner, generation, page and revision without releasing a replacement or concurrent tab", async () => {
     let requests = 0;
     const coordinator = createWatchHistoryCatalogCoordinator({ request: async () => ack(++requests), isCurrent: async () => true,

@@ -1486,11 +1486,11 @@ function inferredObservationDisplayMode(
 }
 
 let backgroundWatchHistoryClient: ReturnType<typeof createWatchHistoryClient> | undefined;
-const historyPageTabs = new Map<string, number>();
+const historyPageTabs = new Map<string, { tabId: number }>();
 
 /** Trusted browser tab lifecycle: the document cannot send a final release after destruction. */
 export function cancelWatchHistoryCatalogForTab(tabId: number): void {
-  for (const [pageId, ownerTab] of historyPageTabs) if (ownerTab === tabId) {
+  for (const [pageId, registration] of historyPageTabs) if (registration.tabId === tabId) {
     historyPageTabs.delete(pageId);
     backgroundWatchHistoryClient?.cancelCatalogPage(pageId);
   }
@@ -1501,22 +1501,23 @@ export async function handleWatchHistoryHttpMessage(
   sender?: chrome.runtime.MessageSender,
 ): Promise<WatchHistoryMessageResponse> {
   if (sender && !isWatchHistorySenderAllowed(message, sender)) return { ok: false, status: "rejected" };
-  if (message.command === "catalog-release" && sender?.tab?.id !== undefined && historyPageTabs.get(message.pageId) !== sender.tab.id) return { ok: false, status: "rejected" };
-  if ((message.command === "catalog-begin" || message.command === "catalog-commit") && sender?.tab?.id !== undefined) historyPageTabs.set(message.pageId, sender.tab.id);
+  const releasingRegistration = message.command === "catalog-release" ? historyPageTabs.get(message.pageId) : undefined;
+  if (message.command === "catalog-release" && sender?.tab?.id !== undefined && releasingRegistration?.tabId !== sender.tab.id) return { ok: false, status: "rejected" };
+  if ((message.command === "catalog-begin" || message.command === "catalog-commit") && sender?.tab?.id !== undefined) historyPageTabs.set(message.pageId, { tabId: sender.tab.id });
   const { getCurrentExtensionSession } = await import("./auth-client");
   const { getStoredAuthTokens } = await import("./auth-tokens");
   backgroundWatchHistoryClient ??= createWatchHistoryClient({
     getCurrentSession: getStoredAuthTokens,
     getRequestSession: getCurrentExtensionSession,
     onCatalogSuperseded: (pageId) => {
-      const tabId = historyPageTabs.get(pageId);
+      const tabId = historyPageTabs.get(pageId)?.tabId;
       historyPageTabs.delete(pageId);
       if (tabId !== undefined) void chrome.tabs.sendMessage(tabId, { type: "ANIDACHI_WATCH_CATALOG_ABORT", pageId }).catch(() => undefined);
     },
   });
-  if (message.command === "catalog-begin" && sender?.tab?.id !== undefined && historyPageTabs.get(message.pageId) !== sender.tab.id) return { ok: false, status: "rejected" };
+  if (message.command === "catalog-begin" && sender?.tab?.id !== undefined && historyPageTabs.get(message.pageId)?.tabId !== sender.tab.id) return { ok: false, status: "rejected" };
   const response = await backgroundWatchHistoryClient.handle(message);
-  if (message.command === "catalog-release" && response.ok) historyPageTabs.delete(message.pageId);
+  if (message.command === "catalog-release" && response.ok && historyPageTabs.get(message.pageId) === releasingRegistration) historyPageTabs.delete(message.pageId);
   return response;
 }
 

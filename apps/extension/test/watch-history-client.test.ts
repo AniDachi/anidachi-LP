@@ -101,6 +101,54 @@ function readyPartition(ownerUserId: string, youtubeHistoryEnabled: boolean) {
 }
 
 describe("watch history v2 client", () => {
+  it("preserves a newer same-visit tab registration installed after release succeeds but before wrapper cleanup", async () => {
+    vi.resetModules();
+    const owner = session.user.id;
+    let stored: WatchHistoryStorageRoot = { schemaVersion: 3, activeGenerations: { [owner]: 1 }, partitions: {
+      [watchHistoryPartitionKey(owner, 1)]: readyPartition(owner, false),
+    } };
+    let armReplacement: (() => void) | undefined;
+    vi.doMock("wxt/utils/storage", () => ({ storage: { defineItem: () => ({
+      getValue: async () => {
+        if (armReplacement) {
+          const replace = armReplacement; armReplacement = undefined;
+          // Interleave at the real release current-check's storage read: five
+          // microtasks let release succeed before its two wrapper awaits unwind.
+          let turns = 5;
+          const next = () => { if (--turns === 0) replace(); else queueMicrotask(next); };
+          queueMicrotask(next);
+        }
+        return stored;
+      }, setValue: async (value: WatchHistoryStorageRoot) => { stored = value; },
+    }) } }));
+    vi.doMock("../src/auth-client", () => ({ getCurrentExtensionSession: async () => session }));
+    vi.doMock("../src/auth-tokens", () => ({ getStoredAuthTokens: async () => session }));
+    vi.stubGlobal("chrome", { runtime: { id: "test-extension", getURL: () => "chrome-extension://test-extension/" },
+      tabs: { sendMessage: async () => undefined }, storage: { local: { get: async () => ({ "anidachi.watchHistory.v3": stored }), getBytesInUse: async () => 0, QUOTA_BYTES: 1_000_000 } } });
+    let revision = 0;
+    const context = { region: "VN", requestedLocale: "fr-FR", audioLocale: null, subtitleLocales: [], observedAt: "2026-09-05T00:00:00.000Z" };
+    vi.stubGlobal("fetch", async () => Response.json({ meta: { schemaVersion: 3, ownerUserId: owner, accountGeneration: 1, serverTime: context.observedAt },
+      schemaVersion: 3, accountGeneration: 1, provider: "crunchyroll", titleKey: "crunchyroll:series:SERIES", revision: ++revision,
+      refreshRequired: true, availabilityChanged: false, effectiveCatalogState: "partial", projectionRevision: null, acceptedHash: null, acceptedAt: null }));
+    try {
+      const { handleWatchHistoryHttpMessage: dispatch } = await import("../src/watch-history-client");
+      const sender = { id: "test-extension", url: "https://www.crunchyroll.com/watch/RAW", tab: { id: 8 }, frameId: 0 } as chrome.runtime.MessageSender;
+      const input = { schemaVersion: 3, accountGeneration: 1, provider: "crunchyroll", titleKey: "crunchyroll:series:SERIES", providerSeriesId: "SERIES", context };
+      const begin = { type: "ANIDACHI_WATCH_HISTORY_V3", command: "catalog-begin", expectedOwnerUserId: owner, pageId: "page:1", input } as const;
+      expect((await dispatch(begin, sender)).ok).toBe(true);
+      let replacement!: ReturnType<typeof dispatch>;
+      armReplacement = () => { replacement = dispatch({ ...begin, input: { ...input, context: { ...context, region: "US" } } }, sender); };
+      const released = await dispatch({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "catalog-release", expectedOwnerUserId: owner,
+        pageId: "page:1", titleKey: input.titleKey, accountGeneration: 1, revision: 1 }, sender);
+      expect(released.ok).toBe(true);
+      expect(replacement).toBeDefined();
+      expect(await replacement).toMatchObject({ ok: true, data: { revision: 2 } });
+      expect((await dispatch({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "catalog-release", expectedOwnerUserId: owner,
+        pageId: "page:1", titleKey: input.titleKey, accountGeneration: 1, revision: 2 }, sender)).ok).toBe(true);
+    } finally {
+      vi.doUnmock("wxt/utils/storage"); vi.doUnmock("../src/auth-client"); vi.doUnmock("../src/auth-tokens"); vi.unstubAllGlobals(); vi.resetModules();
+    }
+  });
   it("retains unresolved latest and terminal on sign-out and resolves only after same-owner reconciliation", async () => {
     const owner = session.user.id;
     const key = watchHistoryPartitionKey(owner, 1);

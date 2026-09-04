@@ -50,8 +50,10 @@ export function createWatchHistoryCatalogCoordinator(dependencies: Dependencies)
   async function release(owner: string, pageId: string, input: { accountGeneration: number; titleKey: string; revision: number }): Promise<boolean> {
     const job = jobs.get(key(owner, input.titleKey));
     if (!job || job.pageId !== pageId || job.input.accountGeneration !== input.accountGeneration ||
-      job.ack?.revision !== input.revision || !await current(owner, job)) return false;
-    job.abort.abort(); jobs.delete(key(owner, input.titleKey));
+      job.ack?.revision !== input.revision || !await current(owner, job) || !owns(owner, job)) return false;
+    // Delete immediately after the synchronous ownership check, before abort
+    // listeners can run user code and install another job at this key.
+    jobs.delete(key(owner, input.titleKey)); job.abort.abort();
     return true;
   }
 
