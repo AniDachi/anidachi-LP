@@ -573,12 +573,35 @@ bounded backoff and Retry-After, at most eight attempts and 24 hours. Missing
 VAPID configuration is an observable delivery failure, not successful delivery
 to zero devices. Provider acceptance is not a user delivery/read receipt.
 
-The existing Cloudflare Worker invokes a server-authenticated recovery drain
-once per minute. This server-side schedule is independent of room Durable
-Objects and does not poll any client's inbox. It recovers missed immediate
-attempts; it is not the normal delivery path. No new queue provider, persistent
-socket, public endpoint, or user setting is introduced. Implementation and
-staging acceptance are tracked in
+One Supabase Cron job checks for due outbox work once per minute and uses pg_net
+to invoke the existing authenticated web drain only when work exists. It is
+independent of room Durable Objects and does not poll any client's inbox. It
+recovers missed immediate attempts; it is not the normal delivery path. A private
+singleton stores only scheduler configuration and the last HTTP attempt/result,
+preventing repeated ticks from accumulating requests while pg_net is stalled.
+Delivery intent remains exclusively in the transactional account outbox.
+
+The scheduler reads a dedicated drain-only credential from Vault and calls the
+fixed canonical endpoint for its explicitly configured environment. It has no
+room-lifecycle authority. Scheduler metadata and Vault access are operator-only.
+Platform-owned pg_net grants stay unchanged; its non-exposed schema and NOLOGIN
+client roles prevent client API access. No public client-callable wrapper may
+expose transport data or the private scheduler. The migration starts disabled;
+activation follows matching web deployment and permission checks. During the
+ordered cutover the preceding internal bearer remains compatible, but it is not
+copied into Vault or used by the new scheduler.
+
+pg_net follows redirects and buffers HTTP responses; it does not provide the
+previous Worker caller's redirect rejection or streaming response-size limit.
+The fixed owned endpoint, scoped credential, 40-second timeout, and validation
+of the small exact acknowledgement are the accepted boundary. Lost pg_net work
+does not lose durable outbox intent. A successful cron SQL invocation is not
+evidence of a successful HTTP drain or of receipt by a user.
+
+No new queue provider, persistent socket, public endpoint, or user setting is
+introduced. The previous Cloudflare timer is disabled on staging only after
+automatic Supabase recovery is verified. Implementation and staging acceptance
+are tracked in
 `docs/superpowers/plans/2026-09-04-invitation-delivery-reliability.md`.
 
 ### Browser Notifications
