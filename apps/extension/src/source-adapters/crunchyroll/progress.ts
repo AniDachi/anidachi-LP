@@ -56,7 +56,7 @@ export function resolveCrunchyrollCurrentObjectIdentity(input: {
 		"crunchyroll:series:",
 	);
 	const objectVariants = identityRecords(metadata?.versions).filter(
-		(variant) => readIdentityString(variant.guid) === watchId,
+		(variant) => readPathSafeId(variant.guid, "crunchyroll:raw:") === watchId,
 	);
 	if (!providerSeriesId || objectVariants.length !== 1) return null;
 
@@ -68,18 +68,23 @@ export function resolveCrunchyrollCurrentObjectIdentity(input: {
 		metadata?.season_id,
 		"crunchyroll:season:",
 	);
-	if (!seasonGuid || (objectSeasonGuid && objectSeasonGuid !== seasonGuid)) {
+	if (
+		!seasonGuid ||
+		(metadata?.season_id != null && objectSeasonGuid === null) ||
+		(objectSeasonGuid && objectSeasonGuid !== seasonGuid)
+	) {
 		return null;
 	}
 
 	const seasons = responseData(input.seasonsResponse).filter(
 		(season) =>
-			(readIdentityString(season.id) === seasonGuid ||
+			(readPathSafeId(season.id, "crunchyroll:raw:") === seasonGuid ||
 				matchingVariants(season, seasonGuid).length > 0) &&
 			matchingVariants(season, seasonGuid).length === 1,
 	);
 	if (seasons.length !== 1) return null;
 	const season = seasons[0];
+	const seasonRawId = readPathSafeId(season.id, "crunchyroll:raw:");
 	const providerSeasonIdentifier = readCanonicalPart(
 		season.identifier,
 		"crunchyroll:season:",
@@ -90,33 +95,38 @@ export function resolveCrunchyrollCurrentObjectIdentity(input: {
 	);
 	const seasonSeriesId = readIdentityString(season.series_id);
 	if (
+		!seasonRawId ||
 		!providerSeasonIdentifier ||
 		!providerSeasonIdentifier.startsWith(`${providerSeriesId}|`) ||
 		(metadata?.season_identifier != null &&
 			objectSeasonIdentifier !== providerSeasonIdentifier) ||
+		(season.series_id != null && seasonSeriesId === null) ||
 		(seasonSeriesId !== null && seasonSeriesId !== providerSeriesId)
 	) return null;
 	const seasonAliases = new Set([
-		readIdentityString(season.id),
+		seasonRawId,
 		...identityRecords(season.versions).map((variant) =>
-			readIdentityString(variant.guid),
+			readPathSafeId(variant.guid, "crunchyroll:raw:"),
 		),
 	].filter((value): value is string => value !== null));
 
 	const episodes = responseData(input.episodesResponse).filter(
 		(episode) =>
-			(readIdentityString(episode.id) === watchId ||
+			(readPathSafeId(episode.id, "crunchyroll:raw:") === watchId ||
 				matchingVariants(episode, watchId).length > 0) &&
 			matchingVariants(episode, watchId).length === 1,
 	);
 	if (episodes.length !== 1) return null;
 	const episode = episodes[0];
+	if (!readPathSafeId(episode.id, "crunchyroll:raw:")) return null;
 	const episodeVariant = matchingVariants(episode, watchId)[0];
 	const episodeSeriesId = readIdentityString(episode.series_id);
 	const episodeSeasonId = readIdentityString(episode.season_id);
 	if (
 		readIdentityString(episodeVariant.season_guid) !== seasonGuid ||
+		(episode.series_id != null && episodeSeriesId === null) ||
 		(episodeSeriesId !== null && episodeSeriesId !== providerSeriesId) ||
+		(episode.season_id != null && episodeSeasonId === null) ||
 		(episodeSeasonId !== null && !seasonAliases.has(episodeSeasonId))
 	) {
 		return null;
@@ -195,7 +205,7 @@ function matchingVariants(
 	guid: string,
 ): Array<Record<string, unknown>> {
 	return identityRecords(record.versions).filter(
-		(variant) => readIdentityString(variant.guid) === guid,
+		(variant) => readPathSafeId(variant.guid, "crunchyroll:raw:") === guid,
 	);
 }
 

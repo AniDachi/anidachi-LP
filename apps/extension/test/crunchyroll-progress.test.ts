@@ -91,6 +91,23 @@ describe("Crunchyroll current-object canonical identity", () => {
       episodesResponse: variantsFixture.episodesResponse,
     })?.audioLocale).toBeNull();
   });
+
+  it.each([
+    ["object season id", (input: any) => { input.objectResponse.data[0].episode_metadata.season_id = " bad "; }],
+    ["season series id", (input: any) => { input.seasonsResponse.data[0].series_id = 42; }],
+    ["episode series id", (input: any) => { input.episodesResponse.data[0].series_id = "SERIES\u0000"; }],
+    ["episode season id", (input: any) => { input.episodesResponse.data[0].season_id = {}; }],
+  ])("rejects a present malformed %s instead of treating it as absent", (_name, mutate) => {
+    const input = {
+      watchId: "G8WUNEWJE",
+      objectResponse: structuredClone(variantsFixture.objectResponses.G8WUNEWJE),
+      seasonsResponse: structuredClone(variantsFixture.seasonsResponse),
+      episodesResponse: structuredClone(variantsFixture.episodesResponse),
+    };
+    mutate(input);
+
+    expect(resolveCrunchyrollCurrentObjectIdentity(input)).toBeNull();
+  });
 });
 
 describe("Crunchyroll progress extraction", () => {
