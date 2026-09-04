@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { MAX_ROOM_FRAME_BYTES, MAX_ROOM_ID_CHARS } from "@anidachi/protocol";
 import { signRoomTokenForTest } from "../src/auth";
-import app, {
+import {
+  app,
   closeInvalidRoomFrame,
   consumeParsedRoomEventBoundary,
   consumeRoomFrameBoundary,
