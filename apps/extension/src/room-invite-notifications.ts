@@ -12,6 +12,14 @@ import { getStoredAuthTokens, type ExtensionAuthTokens } from "./auth-tokens";
 import { WEB_HTTP_BASE, WXT_VAPID_PUBLIC_KEY } from "./constants";
 import { logDebug } from "./debug-log";
 import { withInvitationHttpDeadline } from "./invitation-http-deadline";
+import {
+  beginNotificationRetry,
+  claimNotificationRetry,
+  clearNotificationRetryAccount,
+  completeNotificationRetry,
+  restoreNotificationRetryRecord,
+  ROOM_INVITE_NOTIFICATION_RETRY_ALARM,
+} from "./room-invite-notification-retry";
 import { createWebsiteRoomHeaders, RoomApiError } from "./room-client";
 
 const MESSAGE_TYPE = "ANIDACHI_ROOM_INVITE_NOTIFICATIONS";
@@ -28,6 +36,7 @@ let subscriptionQueue: Promise<void> = Promise.resolve();
 type ReconciliationBatch = {
   epoch: number;
   options: { notify: boolean };
+  dueOnly: boolean;
   trailing: boolean;
   promise: Promise<void>;
 };
@@ -40,7 +49,9 @@ type StoredRegistration = {
   userId: string;
   deviceId: string;
   endpoint: string;
+  verifiedAt?: number;
 };
+class PushSubscriptionUnauthorizedError extends RoomApiError {}
 
 export type PopupRouteIntent = {
   userId: string;
@@ -275,14 +286,25 @@ export async function getRoomInviteNotificationStatus(): Promise<RoomInviteNotif
 export async function reconcileRoomInviteNotifications(options: {
   notify: boolean;
 }): Promise<void> {
+  const epoch = authSessionEpoch;
+  const tokens = await getStoredAuthTokens();
+  if (epoch !== authSessionEpoch) return;
+  if (tokens && !(await beginNotificationRetry(tokens.user.id, options.notify))) return;
+  if (epoch !== authSessionEpoch) return;
+  return enqueueReconciliation(options, false);
+}
+
+function enqueueReconciliation(options: { notify: boolean }, dueOnly: boolean): Promise<void> {
   if (activeReconciliation?.epoch === authSessionEpoch) {
     activeReconciliation.options.notify ||= options.notify;
+    activeReconciliation.dueOnly &&= dueOnly;
     activeReconciliation.trailing = true;
     return activeReconciliation.promise;
   }
   const batch: ReconciliationBatch = {
     epoch: authSessionEpoch,
     options: { ...options },
+    dueOnly,
     trailing: false,
     promise: Promise.resolve(),
   };
@@ -294,7 +316,7 @@ export async function reconcileRoomInviteNotifications(options: {
       do {
         batch.trailing = false;
         try {
-          await reconcileRoomInviteNotificationsNow(batch.options, batch.epoch, subscriptions);
+          await reconcileRoomInviteNotificationsNow(batch.options, batch.dueOnly, batch.epoch, subscriptions);
           failure = undefined;
         } catch (error) {
           failure = error;
@@ -315,12 +337,14 @@ export async function reconcileRoomInviteNotifications(options: {
 
 async function reconcileRoomInviteNotificationsNow(
   options: { notify: boolean },
+  dueOnly: boolean,
   expectedAuthSessionEpoch: number,
   subscriptions: Promise<void>[],
 ): Promise<void> {
   if (authSessionEpoch !== expectedAuthSessionEpoch) return;
-  let tokens = await getStoredAuthTokens();
+  const tokens = await getStoredAuthTokens();
   if (!tokens) {
+    await restoreNotificationRetryRecord();
     await enqueueSubscriptionWork(async () => {
       if (authSessionEpoch !== expectedAuthSessionEpoch || (await getStoredAuthTokens())) return;
       await disableRoomInviteNotificationsNow(null, { clearAccountState: true });
@@ -332,38 +356,81 @@ async function reconcileRoomInviteNotificationsNow(
   const permissionGranted = await containsNotificationsPermission();
   if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return;
 
+  const intent = await claimNotificationRetry(tokens.user.id, "inbox", dueOnly);
+  try {
+    if (intent && await reconcileInboxNotificationNow(
+      tokens, () => intent.notify || options.notify, preference, permissionGranted, expectedAuthSessionEpoch,
+    )) {
+      await completeNotificationRetry(tokens.user.id, "inbox", intent.id);
+    }
+  } finally {
+    // Even a failed inbox pass must leave subscription repair independent.
+    // Enqueue only after visible delivery; never block that lane on registration.
+    subscriptions.push(enqueueSubscriptionWork(async () => {
+      if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return;
+      const subscriptionIntent = await claimNotificationRetry(tokens.user.id, "subscription", dueOnly);
+      if (!subscriptionIntent) return;
+      try {
+        const session = await getStoredAuthTokens();
+        if (!session || session.user.id !== tokens.user.id) return;
+        if (await notificationPreference() && await containsNotificationsPermission() && WXT_VAPID_PUBLIC_KEY) {
+          await ensureRegisteredPushSubscription(session, expectedAuthSessionEpoch);
+        } else {
+          await disableRoomInviteNotificationsNow(session);
+        }
+        if (await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch)) {
+          await completeNotificationRetry(tokens.user.id, "subscription", subscriptionIntent.id);
+        }
+      } catch (error) {
+        logDebug("account.inbox", "notification subscription maintenance failed", {
+          code: (error instanceof RoomApiError && error.code) || "SUBSCRIPTION_UNAVAILABLE",
+        });
+      }
+    }));
+  }
+}
+
+async function reconcileInboxNotificationNow(
+  tokens: ExtensionAuthTokens,
+  shouldNotify: () => boolean,
+  preference: boolean,
+  permissionGranted: boolean,
+  expectedAuthSessionEpoch: number,
+): Promise<boolean> {
+  if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return false;
+
   let inbox: AccountInboxResponse;
   try {
     inbox = await listAccountInboxFromApi(tokens.accessToken);
   } catch (error) {
     if (!(error instanceof AccountInboxUnauthorizedError)) throw error;
-    if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return;
+    if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return false;
     const refreshed = await withInvitationHttpDeadline(() => refreshExtensionSession());
-    if (!refreshed || refreshed.user.id !== tokens.user.id) return;
-    if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return;
+    if (!refreshed || refreshed.user.id !== tokens.user.id) return false;
+    if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return false;
     tokens = refreshed;
     inbox = await listAccountInboxFromApi(tokens.accessToken);
   }
   if (inbox.meta.ownerUserId !== tokens.user.id) {
     throw new Error("Inbox response belongs to another account");
   }
-  if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return;
-  if (!(await setCachedAccountInboxForUser(tokens.user.id, inbox))) return;
-  if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return;
+  if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return false;
+  if (!(await setCachedAccountInboxForUser(tokens.user.id, inbox))) return false;
+  if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return false;
   await setInboxBadge(inbox.counts.unseen);
-  if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return;
+  if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return false;
 
   const remembered = await getRememberedInboxItems(tokens.user.id);
   const pruned = pruneRememberedInboxItemKeys(inbox, remembered.itemKeys);
   const canDisplayNotification =
-    options.notify &&
+    shouldNotify() &&
     preference &&
     permissionGranted &&
     Boolean(chrome.notifications);
   if (canDisplayNotification) {
     const plan = buildInboxNotificationPlan(inbox, pruned);
     if (plan) {
-      if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return;
+      if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return false;
       await chrome.notifications.create(NOTIFICATION_ID, {
         type: "basic",
         iconUrl: chrome.runtime.getURL(NOTIFICATION_ICON),
@@ -374,23 +441,29 @@ async function reconcileRoomInviteNotificationsNow(
       pruned.push(...plan.itemKeys);
     }
   }
-  if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return;
+  if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return false;
   await setRememberedInboxItems(tokens.user.id, [...new Set(pruned)]);
-  const session = tokens;
-  subscriptions.push(enqueueSubscriptionWork(async () => {
-    try {
-      if (!(await isCurrentReconciliation(session.user.id, expectedAuthSessionEpoch))) return;
-      if (preference && permissionGranted && WXT_VAPID_PUBLIC_KEY) {
-        await ensureRegisteredPushSubscription(session, expectedAuthSessionEpoch);
-      } else {
-        await disableRoomInviteNotificationsNow(session);
-      }
-    } catch (error) {
-      logDebug("account.inbox", "notification subscription maintenance failed", {
-        code: (error instanceof RoomApiError && error.code) || "SUBSCRIPTION_UNAVAILABLE",
-      });
-    }
-  }));
+  return true;
+}
+
+export function isRoomInviteNotificationRetryAlarm(name: string): boolean {
+  return name === ROOM_INVITE_NOTIFICATION_RETRY_ALARM;
+}
+
+export async function handleRoomInviteNotificationRetryAlarm(name: string): Promise<void> {
+  if (isRoomInviteNotificationRetryAlarm(name)) await restoreRoomInviteNotificationRetries();
+}
+
+/** Returns whether saved work existed, so startup catch-up cannot upgrade it. */
+export async function restoreRoomInviteNotificationRetries(): Promise<boolean> {
+  const epoch = authSessionEpoch;
+  const record = await restoreNotificationRetryRecord();
+  if (!record) return false;
+  if (epoch !== authSessionEpoch) return true;
+  if ([record.inbox, record.subscription].some((intent) => intent && intent.nextAttemptAt <= Date.now())) {
+    await enqueueReconciliation({ notify: false }, true).catch(() => undefined);
+  }
+  return true;
 }
 
 export async function handleRoomInvitePush(event: ExtensionPushEvent): Promise<void> {
@@ -513,6 +586,7 @@ export async function handleAuthSessionChanged(
   if (previousTokens?.user.id === currentTokens?.user.id) return;
   authSessionEpoch += 1;
   const expectedAuthSessionEpoch = authSessionEpoch;
+  if (previousTokens) await clearNotificationRetryAccount(previousTokens.user.id);
   await enqueueNotificationWork(async () => {
     if (previousTokens && previousTokens.user.id !== currentTokens?.user.id) {
       await disableRoomInviteNotifications(previousTokens, { clearAccountState: true });
@@ -573,7 +647,9 @@ async function ensureRegisteredPushSubscription(
   }
 
   const stored = normalizeStoredRegistration(await storage.getItem(REGISTRATION_KEY));
-  if (stored?.userId === tokens.user.id && stored.endpoint === json.endpoint) return;
+  if (stored?.userId === tokens.user.id && stored.endpoint === json.endpoint &&
+    stored.verifiedAt !== undefined && Date.now() >= stored.verifiedAt &&
+    Date.now() - stored.verifiedAt < 24 * 60 * 60 * 1000) return;
 
   const request: ExtensionPushSubscriptionRequest = {
     installationId: await extensionInstallationId(),
@@ -582,7 +658,20 @@ async function ensureRegisteredPushSubscription(
     keys: { p256dh: json.keys.p256dh, auth: json.keys.auth },
   };
   if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return;
-  const response = await registerPushSubscriptionFromApi(tokens.accessToken, request);
+  let response;
+  try {
+    response = await registerPushSubscriptionFromApi(tokens.accessToken, request);
+  } catch (error) {
+    if (!(error instanceof PushSubscriptionUnauthorizedError)) throw error;
+    if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return;
+    const refreshed = await withInvitationHttpDeadline(
+      () => refreshExtensionSession(), "PUSH_SUBSCRIPTION_TIMEOUT",
+    );
+    if (!refreshed || refreshed.user.id !== tokens.user.id) return;
+    if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return;
+    tokens = refreshed;
+    response = await registerPushSubscriptionFromApi(tokens.accessToken, request);
+  }
   if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) {
     await revokePushSubscriptionFromApi(tokens.accessToken, response.deviceId).catch(() => undefined);
     return;
@@ -591,6 +680,7 @@ async function ensureRegisteredPushSubscription(
     userId: tokens.user.id,
     deviceId: response.deviceId,
     endpoint: request.endpoint,
+    verifiedAt: Date.now(),
   } satisfies StoredRegistration);
 }
 
@@ -624,7 +714,8 @@ async function revokePushSubscriptionFromApi(accessToken: string, deviceId: stri
 
 async function pushHttpError(response: Response, fallback: string): Promise<RoomApiError> {
   const body = (await response.json().catch(() => null)) as { error?: unknown } | null;
-  return new RoomApiError(
+  const ErrorType = response.status === 401 ? PushSubscriptionUnauthorizedError : RoomApiError;
+  return new ErrorType(
     `${typeof body?.error === "string" ? body.error : fallback} (${response.status})`,
   );
 }
@@ -704,7 +795,9 @@ function normalizeStoredRegistration(value: unknown): StoredRegistration | null 
   ) {
     return null;
   }
-  return { userId: stored.userId, deviceId: stored.deviceId, endpoint: stored.endpoint };
+  return { userId: stored.userId, deviceId: stored.deviceId, endpoint: stored.endpoint,
+    verifiedAt: typeof stored.verifiedAt === "number" && Number.isFinite(stored.verifiedAt)
+      ? stored.verifiedAt : undefined };
 }
 
 function normalizePopupRouteIntent(value: unknown): PopupRouteIntent | null {

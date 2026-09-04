@@ -4,8 +4,8 @@ import type { ExtensionAuthTokens } from "../src/auth-tokens";
 
 const state = vi.hoisted(() => ({ map: new Map<string, unknown>() }));
 vi.mock("wxt/utils/storage", () => ({ storage: {
-  getItem: async (key: string) => state.map.get(key) ?? null,
-  setItem: async (key: string, value: unknown) => { state.map.set(key, value); },
+  getItem: async (key: string) => structuredClone(state.map.get(key) ?? null),
+  setItem: async (key: string, value: unknown) => { state.map.set(key, structuredClone(value)); },
   removeItem: async (key: string) => { state.map.delete(key); },
 } }));
 vi.mock("../src/constants", async (original) => ({
@@ -16,6 +16,10 @@ const A = "00000000-0000-4000-8000-000000000001";
 const B = "00000000-0000-4000-8000-000000000002";
 const AUTH = "local:authTokens";
 const REGISTRATION = "local:anidachi.roomInviteNotifications.registration";
+const RETRY = "local:anidachi.roomInviteNotifications.retry.v1";
+const RETRY_ALARM = "anidachi-room-invite-notifications-retry";
+const PREFERENCE = "local:anidachi.roomInviteNotifications.enabled";
+const alarms = new Map<string, chrome.alarms.AlarmCreateInfo>();
 let runtime: typeof import("../src/room-invite-notifications");
 let create: ReturnType<typeof vi.fn>;
 let badge: ReturnType<typeof vi.fn>;
@@ -53,11 +57,17 @@ function requests(path: string) {
 beforeEach(async () => {
   vi.resetModules();
   state.map.clear();
+  alarms.clear();
   state.map.set(AUTH, tokens());
-  state.map.set(REGISTRATION, { userId: A, deviceId: B, endpoint: "https://push.example/device" });
+  state.map.set(REGISTRATION, { userId: A, deviceId: B, endpoint: "https://push.example/device", verifiedAt: Date.now() });
   create = vi.fn().mockResolvedValue("anidachi-room-invites");
   badge = vi.fn().mockResolvedValue(undefined);
   vi.stubGlobal("chrome", {
+    alarms: {
+      get: async (name: string) => alarms.get(name),
+      create: async (name: string, info: chrome.alarms.AlarmCreateInfo) => { alarms.set(name, info); },
+      clear: async (name: string) => alarms.delete(name),
+    },
     permissions: { contains: async () => true },
     notifications: { create, clear: async () => true },
     action: { setBadgeText: badge, setBadgeBackgroundColor: async () => undefined },
@@ -80,6 +90,318 @@ beforeEach(async () => {
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
 
 describe("invitation notification runtime", () => {
+  it("persists ownership and the first recovery alarm before starting inbox HTTP", async () => {
+    const original = http.getMockImplementation()!;
+    http.mockImplementation(async (url) => {
+      if (url.pathname === "/api/account/inbox") {
+        expect(state.map.get(RETRY)).toMatchObject({ userId: A, inbox: { notify: true, attempts: 1 } });
+        expect(alarms.get(RETRY_ALARM)?.when).toBeGreaterThanOrEqual(Date.now() + 29_000);
+        throw new Error("offline");
+      }
+      return original(url);
+    });
+    await expect(runtime.reconcileRoomInviteNotifications({ notify: true })).rejects.toThrow("offline");
+  });
+
+  it("recovers badge and one alert after losing all module globals, then dedupes another push", async () => {
+    vi.useFakeTimers();
+    const original = http.getMockImplementation()!;
+    http.mockImplementation(async (url) => {
+      if (url.pathname === "/api/account/inbox") throw new Error("offline");
+      return original(url);
+    });
+    await expect(runtime.reconcileRoomInviteNotifications({ notify: true })).rejects.toThrow("offline");
+    expect(state.map.get(RETRY)).toMatchObject({ userId: A, inbox: { notify: true } });
+    vi.resetModules();
+    runtime = await import("../src/room-invite-notifications");
+    http.mockImplementation(original);
+    await vi.advanceTimersByTimeAsync(30_000);
+    await runtime.handleRoomInviteNotificationRetryAlarm(RETRY_ALARM);
+    expect(create).toHaveBeenCalledOnce();
+    expect(badge).toHaveBeenCalledWith({ text: "1" });
+    expect(state.map.get(`local:anidachi.accountInbox.v1.${A}`)).toMatchObject({ userId: A });
+    expect(state.map.has(RETRY)).toBe(false);
+    await runtime.handleRoomInvitePush({ data: { text: () => '{"type":"inbox_changed"}' } });
+    expect(create).toHaveBeenCalledOnce();
+  });
+
+  it("registration failure survives inbox success and registration-only recovery stays silent", async () => {
+    vi.useFakeTimers();
+    state.map.delete(REGISTRATION);
+    await runtime.reconcileRoomInviteNotifications({ notify: false });
+    expect(state.map.get(RETRY)).toMatchObject({ userId: A, subscription: { attempts: 1 } });
+    expect((state.map.get(RETRY) as { inbox?: unknown }).inbox).toBeUndefined();
+    vi.resetModules();
+    runtime = await import("../src/room-invite-notifications");
+    http.mockImplementation(async () => registered());
+    http.mockClear();
+    await vi.advanceTimersByTimeAsync(30_000);
+    await runtime.restoreRoomInviteNotificationRetries();
+    expect(requests("/api/account/inbox")).toHaveLength(0);
+    expect(requests("/api/devices/push-subscription")).toHaveLength(1);
+    expect(state.map.has(RETRY)).toBe(false);
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it("registration succeeds independently when inbox fails", async () => {
+    state.map.delete(REGISTRATION);
+    http.mockImplementation(async (url) => {
+      if (url.pathname === "/api/account/inbox") throw new Error("offline");
+      return registered();
+    });
+    await expect(runtime.reconcileRoomInviteNotifications({ notify: true })).rejects.toThrow("offline");
+    expect(state.map.get(REGISTRATION)).toMatchObject({ userId: A, verifiedAt: expect.any(Number) });
+    expect(state.map.get(RETRY)).toMatchObject({ inbox: { notify: true } });
+    expect((state.map.get(RETRY) as { subscription?: unknown }).subscription).toBeUndefined();
+  });
+
+  it.each(["preference", "permission"])("recovers durable inbox with %s disabled but never alerts or registers", async (disabled) => {
+    vi.useFakeTimers();
+    const original = http.getMockImplementation()!;
+    http.mockRejectedValue(new Error("offline"));
+    await runtime.reconcileRoomInviteNotifications({ notify: true }).catch(() => undefined);
+    if (disabled === "preference") state.map.set(PREFERENCE, false);
+    else chrome.permissions.contains = async () => false;
+    http.mockImplementation(original);
+    http.mockClear();
+    await vi.advanceTimersByTimeAsync(30_000);
+    await runtime.restoreRoomInviteNotificationRetries();
+    expect(badge).toHaveBeenCalledWith({ text: "1" });
+    expect(state.map.get(`local:anidachi.accountInbox.v1.${A}`)).toMatchObject({ userId: A });
+    expect(create).not.toHaveBeenCalled();
+    expect(requests("/api/devices/push-subscription")).toHaveLength(0);
+    expect(state.map.has(RETRY)).toBe(false);
+  });
+
+  it("drops stale retry ownership on cold account switch and logout without requesting old data", async () => {
+    http.mockRejectedValue(new Error("offline"));
+    await runtime.reconcileRoomInviteNotifications({ notify: true }).catch(() => undefined);
+    expect(state.map.has(RETRY)).toBe(true);
+    state.map.set(AUTH, tokens(B));
+    vi.resetModules();
+    runtime = await import("../src/room-invite-notifications");
+    http.mockClear();
+    await runtime.restoreRoomInviteNotificationRetries();
+    expect(http).not.toHaveBeenCalled();
+    expect(state.map.has(RETRY)).toBe(false);
+    await runtime.reconcileRoomInviteNotifications({ notify: true }).catch(() => undefined);
+    state.map.delete(AUTH);
+    await runtime.restoreRoomInviteNotificationRetries();
+    expect(state.map.has(RETRY)).toBe(false);
+  });
+
+  it.each(["legacy", "expired", "fresh"])("repairs %s matching registration only when verification is due", async (kind) => {
+    const registration = { userId: A, deviceId: B, endpoint: "https://push.example/device" };
+    state.map.set(REGISTRATION, kind === "legacy" ? registration : {
+      ...registration, verifiedAt: Date.now() - (kind === "expired" ? 86_400_000 : 86_399_000),
+    });
+    const original = http.getMockImplementation()!;
+    http.mockImplementation(async (url) => url.pathname === "/api/devices/push-subscription" ? registered() : original(url));
+    await runtime.reconcileRoomInviteNotifications({ notify: false });
+    expect(requests("/api/devices/push-subscription")).toHaveLength(kind === "fresh" ? 0 : 1);
+    expect(state.map.get(REGISTRATION)).toMatchObject({ verifiedAt: expect.any(Number) });
+  });
+
+  it("bounds recovery to eight total attempts, preserves backoff across starts, and permits new external work", async () => {
+    vi.useFakeTimers();
+    http.mockRejectedValue(new Error("offline"));
+    await runtime.reconcileRoomInviteNotifications({ notify: true }).catch(() => undefined);
+    for (const delay of [30_000, 60_000, 120_000, 240_000, 480_000, 960_000, 1_920_000]) {
+      expect(alarms.get(RETRY_ALARM)?.when).toBe(Date.now() + delay);
+      await runtime.restoreRoomInviteNotificationRetries();
+      await vi.advanceTimersByTimeAsync(delay);
+      await runtime.handleRoomInviteNotificationRetryAlarm(RETRY_ALARM).catch(() => undefined);
+    }
+    expect(requests("/api/account/inbox")).toHaveLength(8);
+    await vi.advanceTimersByTimeAsync(3_600_000);
+    await runtime.restoreRoomInviteNotificationRetries();
+    expect(requests("/api/account/inbox")).toHaveLength(8);
+    expect(state.map.has(RETRY)).toBe(false);
+    expect(alarms.has(RETRY_ALARM)).toBe(false);
+    await runtime.reconcileRoomInviteNotifications({ notify: true }).catch(() => undefined);
+    expect(requests("/api/account/inbox")).toHaveLength(9);
+  });
+
+  it("expires retry work at 24 hours even if few attempts ran", async () => {
+    vi.useFakeTimers();
+    http.mockRejectedValue(new Error("offline"));
+    await runtime.reconcileRoomInviteNotifications({ notify: true }).catch(() => undefined);
+    await vi.advanceTimersByTimeAsync(86_400_000);
+    await runtime.restoreRoomInviteNotificationRetries();
+    expect(requests("/api/account/inbox")).toHaveLength(1);
+    expect(state.map.has(RETRY)).toBe(false);
+    expect(alarms.has(RETRY_ALARM)).toBe(false);
+  });
+
+  it("an older inbox completion cannot acknowledge a newer failed invalidation", async () => {
+    const started = deferred<void>();
+    const result = deferred<Response>();
+    http.mockImplementation(async () => {
+      started.resolve();
+      return result.promise;
+    });
+    const first = runtime.reconcileRoomInviteNotifications({ notify: false });
+    const firstSettled = first.catch(() => undefined);
+    await started.promise;
+    const firstId = (state.map.get(RETRY) as { inbox: { id: string } }).inbox.id;
+    const second = runtime.reconcileRoomInviteNotifications({ notify: true });
+    const secondSettled = second.catch(() => undefined);
+    await vi.waitFor(() => expect((state.map.get(RETRY) as { inbox: { id: string } }).inbox.id).not.toBe(firstId));
+    http.mockRejectedValue(new Error("offline"));
+    result.resolve(json(inbox()));
+    await Promise.all([firstSettled, secondSettled]);
+    expect(state.map.get(RETRY)).toMatchObject({ inbox: { notify: true, attempts: 1 } });
+    expect(create).toHaveBeenCalledOnce();
+    const originalId = (state.map.get(RETRY) as { inbox: { id: string } }).inbox.id;
+    const rotated = tokens(A, "access-2");
+    state.map.set(AUTH, rotated);
+    await runtime.handleAuthSessionChanged(tokens(), rotated);
+    expect((state.map.get(RETRY) as { inbox: { id: string } }).inbox.id).toBe(originalId);
+  });
+
+  it("an older subscription completion preserves a newer pending inbox alert", async () => {
+    state.map.delete(REGISTRATION);
+    const started = deferred<void>();
+    const result = deferred<Response>();
+    let inboxOffline = false;
+    http.mockImplementation(async (url) => {
+      if (url.pathname === "/api/devices/push-subscription") {
+        expect(state.map.get(RETRY)).toMatchObject({ subscription: { attempts: 1 } });
+        expect(alarms.has(RETRY_ALARM)).toBe(true);
+        started.resolve();
+        return result.promise;
+      }
+      if (inboxOffline) throw new Error("offline");
+      return json(inbox());
+    });
+    const first = runtime.reconcileRoomInviteNotifications({ notify: false });
+    await started.promise;
+    inboxOffline = true;
+    const second = runtime.reconcileRoomInviteNotifications({ notify: true }).catch(() => undefined);
+    await vi.waitFor(() => expect(requests("/api/account/inbox")).toHaveLength(2));
+    result.resolve(registered());
+    await Promise.all([first, second]);
+    expect(state.map.get(RETRY)).toMatchObject({ inbox: { notify: true } });
+    expect((state.map.get(RETRY) as { subscription?: unknown }).subscription).toBeUndefined();
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it("recreates a lost browser alarm at startup without renewing or prematurely running the retry", async () => {
+    vi.useFakeTimers();
+    http.mockRejectedValue(new Error("offline"));
+    await runtime.reconcileRoomInviteNotifications({ notify: true }).catch(() => undefined);
+    const saved = structuredClone(state.map.get(RETRY));
+    alarms.clear();
+    vi.resetModules();
+    runtime = await import("../src/room-invite-notifications");
+    await runtime.restoreRoomInviteNotificationRetries();
+    expect(state.map.get(RETRY)).toEqual(saved);
+    expect(alarms.get(RETRY_ALARM)).toEqual({ when: Date.now() + 30_000 });
+    expect(requests("/api/account/inbox")).toHaveLength(1);
+  });
+
+  it("caps the final wakeup delay at one hour before retiring exhausted work", async () => {
+    vi.useFakeTimers();
+    http.mockRejectedValue(new Error("offline"));
+    await runtime.reconcileRoomInviteNotifications({ notify: true }).catch(() => undefined);
+    for (const delay of [30_000, 60_000, 120_000, 240_000, 480_000, 960_000, 1_920_000]) {
+      await vi.advanceTimersByTimeAsync(delay);
+      await runtime.restoreRoomInviteNotificationRetries();
+    }
+    expect(alarms.get(RETRY_ALARM)).toEqual({ when: Date.now() + 3_600_000 });
+    expect(requests("/api/account/inbox")).toHaveLength(8);
+  });
+
+  it("a hung global auth refresh hits the caller deadline while a subsequent valid-token pass still works", async () => {
+    vi.useFakeTimers();
+    const refreshing = deferred<void>();
+    http.mockImplementation(async (url, init) => {
+      const path = new URL(url).pathname;
+      if (path === "/api/extension/auth/refresh") {
+        refreshing.resolve();
+        return new Promise<Response>(() => {});
+      }
+      if (path === "/api/account/inbox") {
+        return new Headers(init?.headers).get("Authorization") === "Bearer access-2"
+          ? json(inbox()) : json({ error: "Unauthorized" }, 401);
+      }
+      return registered();
+    });
+    let failure: unknown;
+    const first = runtime.reconcileRoomInviteNotifications({ notify: true }).catch((error) => { failure = error; });
+    await refreshing.promise;
+    await vi.advanceTimersByTimeAsync(10_001);
+    await first;
+    expect(failure).toBeInstanceOf(Error);
+    expect(state.map.get(AUTH)).toEqual(tokens());
+    const rotated = tokens(A, "access-2");
+    state.map.set(AUTH, rotated);
+    await runtime.handleAuthSessionChanged(tokens(), rotated);
+    await runtime.reconcileRoomInviteNotifications({ notify: true });
+    expect(create).toHaveBeenCalledOnce();
+    expect(badge).toHaveBeenCalledWith({ text: "1" });
+    expect(requests("/api/extension/auth/refresh")).toHaveLength(1);
+  });
+
+  it("registration-only recovery refreshes an expired bearer once on 401 without fetching or alerting inbox", async () => {
+    vi.useFakeTimers();
+    state.map.delete(REGISTRATION);
+    await runtime.reconcileRoomInviteNotifications({ notify: false });
+    http.mockClear();
+    http.mockImplementation(async (url, init) => {
+      const path = new URL(url).pathname;
+      if (path === "/api/extension/auth/refresh") return json({ accessToken: "access-2", refreshToken: "refresh-2" });
+      if (path === "/api/me") return json({ user: tokens().user });
+      if (path === "/api/devices/push-subscription") {
+        return new Headers(init?.headers).get("Authorization") === "Bearer access-2"
+          ? registered() : json({ error: "Unauthorized" }, 401);
+      }
+      throw new Error(`Unexpected request ${path}`);
+    });
+    await vi.advanceTimersByTimeAsync(30_000);
+    await runtime.restoreRoomInviteNotificationRetries();
+    expect(requests("/api/devices/push-subscription")).toHaveLength(2);
+    expect(requests("/api/extension/auth/refresh")).toHaveLength(1);
+    expect(requests("/api/account/inbox")).toHaveLength(0);
+    expect(state.map.get(REGISTRATION)).toMatchObject({ verifiedAt: expect.any(Number) });
+    expect(state.map.has(RETRY)).toBe(false);
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it.each(["unauthorized-again", "refresh-unavailable", "refresh-hung"])(
+    "keeps bounded silent registration work when auth recovery is %s", async (failureMode) => {
+      vi.useFakeTimers();
+      state.map.delete(REGISTRATION);
+      await runtime.reconcileRoomInviteNotifications({ notify: false });
+      const saved = (state.map.get(RETRY) as { subscription: { id: string; createdAt: number } }).subscription;
+      http.mockClear();
+      const refreshing = deferred<void>();
+      http.mockImplementation(async (url) => {
+        const path = new URL(url).pathname;
+        if (path === "/api/extension/auth/refresh") {
+          refreshing.resolve();
+          if (failureMode === "refresh-hung") return new Promise<Response>(() => {});
+          if (failureMode === "refresh-unavailable") return json({ error: "Unavailable" }, 503);
+          return json({ accessToken: "access-2", refreshToken: "refresh-2" });
+        }
+        if (path === "/api/me") return json({ user: tokens().user });
+        return json({ error: "Unauthorized" }, 401);
+      });
+      await vi.advanceTimersByTimeAsync(30_000);
+      const recovery = runtime.restoreRoomInviteNotificationRetries();
+      await refreshing.promise;
+      if (failureMode === "refresh-hung") await vi.advanceTimersByTimeAsync(10_001);
+      await recovery;
+      expect(requests("/api/extension/auth/refresh")).toHaveLength(1);
+      expect(requests("/api/devices/push-subscription")).toHaveLength(failureMode === "unauthorized-again" ? 2 : 1);
+      expect(state.map.get(RETRY)).toMatchObject({ subscription: {
+        id: saved.id, createdAt: saved.createdAt, attempts: 2, notify: false,
+      } });
+      expect(state.map.has(REGISTRATION)).toBe(false);
+      expect(create).not.toHaveBeenCalled();
+    },
+  );
+
   it("delivers through authenticated inbox without any /api/me round trip", async () => {
     await runtime.reconcileRoomInviteNotifications({ notify: true });
     expect(create).toHaveBeenCalledOnce();

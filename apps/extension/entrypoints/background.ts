@@ -53,10 +53,13 @@ import {
   handleRoomInviteNotificationPermissionRemoved,
   handleRoomInviteNotificationClick,
   handleRoomInviteNotificationMessage,
+  handleRoomInviteNotificationRetryAlarm,
   handleRoomInvitePush,
   isRoomInviteNotificationMaintenanceAlarm,
   isRoomInviteNotificationMessage,
+  isRoomInviteNotificationRetryAlarm,
   reconcileRoomInviteNotifications,
+  restoreRoomInviteNotificationRetries,
 } from "../src/room-invite-notifications";
 import {
   clearRoomSessionForDepartureIfMatch,
@@ -326,6 +329,7 @@ export default defineBackground(() => {
     event.waitUntil(handleRoomInvitePush(event).catch(() => undefined));
   });
   workerScope().addEventListener("online", () => {
+    void restoreRoomInviteNotificationRetries().catch(() => undefined);
     void flushWatchHistoryInBackground().catch(() => undefined);
     void drainRoomDepartureRetries({ force: true }).catch(() => undefined);
   });
@@ -339,6 +343,10 @@ export default defineBackground(() => {
   });
 
   chrome.alarms.onAlarm.addListener((alarm) => {
+    if (isRoomInviteNotificationRetryAlarm(alarm.name)) {
+      void handleRoomInviteNotificationRetryAlarm(alarm.name).catch(() => undefined);
+      return;
+    }
     if (isRoomDepartureRetryAlarm(alarm.name)) {
       void handleRoomDepartureRetryAlarm(alarm.name).catch(() => undefined);
       return;
@@ -347,11 +355,21 @@ export default defineBackground(() => {
     void reconcileRoomInviteNotifications({ notify: true }).catch(() => undefined);
   });
 
+  // Every MV3 instantiation restores only existing work, without renewing its
+  // retry budget. Keep this result for onStartup even if recovery just completed.
+  const initialInviteRecovery = restoreRoomInviteNotificationRetries().catch(() => true);
   const reconcileStoredWebsiteSession = (notify: boolean) => {
+    const inviteRecovery = Promise.all([
+      initialInviteRecovery,
+      restoreRoomInviteNotificationRetries().catch(() => true),
+    ]);
     void reconcileWatchHistoryThenDrain(
       async () => {
+        const [initialWork, currentWork] = await inviteRecovery;
         await reconcileExtensionSessionAgainstWebsite({ adoptIfMissing: false });
-        await reconcileRoomInviteNotifications({ notify });
+        // A saved silent registration must not become a startup OS alert. With
+        // no saved work, retain the existing true browser-startup catch-up.
+        if (!initialWork && !currentWork) await reconcileRoomInviteNotifications({ notify });
         await drainRoomDepartureRetries({ force: true });
       },
       flushWatchHistoryInBackground,
