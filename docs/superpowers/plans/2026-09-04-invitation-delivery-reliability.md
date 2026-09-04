@@ -105,9 +105,9 @@ in the real Workers runtime, not only Node mocks.
 ### Task 6: Integration, documentation, and acceptance
 
 - [x] Run extension/web/API checks and tests, `pnpm dev:check`, whitespace checks, and the staging extension build/validation.
-- [ ] Update the canonical invitation-delivery documentation with implemented behavior and remaining acceptance. Refresh Graphify once at this meaningful checkpoint, preserving prior WIP ownership.
-- [ ] Review only this task's diff. Deploy additive migration before web consumer, then scheduler, through the staging workflow.
-- [ ] Synchronize the validated artifact to the user's two verified test folders without renaming/removing those folders; verify file hashes.
+- [x] Update the canonical invitation-delivery documentation with implemented behavior and remaining acceptance. Refresh Graphify once at this meaningful checkpoint, preserving prior WIP ownership.
+- [x] Review only this task's diff. Deploy additive migration before web consumer, then scheduler, through the staging workflow.
+- [x] Synchronize the validated artifact to the user's two verified test folders without renaming/removing those folders; verify file hashes.
 - [ ] Record two-account acceptance for direct/group invites, suspended worker, token refresh, offline retry, account switch, closed room, disabled notifications, and repeated send. Do not claim manual acceptance from unit tests.
 
 ## Progress / evidence
@@ -172,7 +172,7 @@ migration and `apps/web/supabase/tests/inbox_push_scheduler.test.sql`.
 - [x] Disable the old staging Cloudflare schedule only after successful recovery;
   reflect the disabled staging cron in source via a reviewed follow-up PR. Keep
   production config unchanged. Preserve all room bindings and alarms.
-- [ ] Update canonical docs, env matrix, execution evidence, and Graphify, keeping
+- [x] Update canonical docs, env matrix, execution evidence, and Graphify, keeping
   earlier unrelated WIP out of commits. Real two-account OS notification timing
   and manual acceptance remain separate and require the user's test accounts.
 
@@ -233,17 +233,26 @@ function audit found no net/Vault/dynamic-SQL bridge. Repeat after deployment.
 
 ## Staging acceptance checklist
 
+On 2026-09-04 the user tested the staging candidate and reported that it appeared
+to work normally. Before that test, both established tester folders were freshly
+validated and all 12 relative-path/SHA-256 pairs matched
+`7078508-staging-20260904193636`. This is a positive user smoke result, not a
+measured delivery-latency result or confirmation of every scenario below.
+The server cutover completed through PRs #260 and #261; the final staging
+checkpoint is `1080fbd`, with successful web, database, Worker, CI and smoke
+checks recorded in the execution evidence. Production remains unchanged.
+
 Local tests establish retry, ownership and concurrency behavior. The following
 remain explicit acceptance checks against the deployed web/Worker and the exact
 loaded extension build:
 
-- [ ] The additive migration is listed in staging history; web is READY before the Worker cron is deployed.
-- [ ] Unauthorized drain requests fail; an actual scheduled invocation receives the small successful acknowledgement without touching room state.
+- [x] The additive migration is listed in staging history; matching web is READY before the replacement Supabase cron is enabled (the old Worker schedule is disabled).
+- [x] Unauthorized drain requests fail; an actual scheduled invocation receives the small successful acknowledgement without touching room state.
 - [ ] Two signed-in test accounts receive direct and group invitations; an already open Popup updates without reopening it. Record send-to-appearance time, not only provider acceptance.
 - [ ] Repeated send and overlapping catch-up create no duplicate OS alerts; disabled notifications leave the inbox available without an OS alert.
 - [ ] Worker suspension, temporary offline operation and same-account token refresh recover; switching accounts cannot publish the previous account's data or notification.
 - [ ] A room closed before an invitation is opened is not joinable; the existing Missed lifecycle remains unchanged.
-- [ ] Both tester folders match the validated artifact by relative file names and SHA-256 hashes. Record remaining manual checks instead of labeling the entire release accepted.
+- [x] Both tester folders match the validated artifact by relative file names and SHA-256 hashes. Record remaining manual checks instead of labeling the entire release accepted.
 
 ## Rollback
 
