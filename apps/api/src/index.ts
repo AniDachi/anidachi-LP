@@ -1,3 +1,4 @@
+import { scheduled } from "./notification-scheduler";
 import {
   ClientEventSchema,
   InternalRoomDetachCommandSchema,
@@ -118,7 +119,7 @@ export interface Env {
   ROOM_ANALYTICS?: AnalyticsEngineDataset;
 }
 
-const app = new Hono<{ Bindings: Env }>();
+export const app = new Hono<{ Bindings: Env }>();
 
 app.use(
   "*",
@@ -2306,4 +2307,4 @@ function readBearerToken(authorization: string | undefined): string | null {
   return match?.[1] ?? null;
 }
 
-export default app;
+export default { fetch: app.fetch, scheduled } satisfies ExportedHandler<Env>;
