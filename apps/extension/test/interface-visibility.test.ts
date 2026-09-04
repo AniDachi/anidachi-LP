@@ -15,7 +15,6 @@ describe("main control visibility", () => {
 		expect(
 			resolveMainControlPresentation({
 				focused: false,
-				forceVisible: false,
 				mode,
 				panelOpen: false,
 				phase,
@@ -26,27 +25,18 @@ describe("main control visibility", () => {
 	it.each([
 		{
 			focused: false,
-			forceVisible: false,
 			name: "an open panel",
 			panelOpen: true,
 		},
 		{
-			focused: false,
-			forceVisible: true,
-			name: "a force-visible state",
-			panelOpen: false,
-		},
-		{
 			focused: true,
-			forceVisible: false,
 			name: "keyboard focus",
 			panelOpen: false,
 		},
-	])("pins Auto hide for $name", ({ focused, forceVisible, panelOpen }) => {
+	])("pins Auto hide for $name", ({ focused, panelOpen }) => {
 		expect(
 			resolveMainControlPresentation({
 				focused,
-				forceVisible,
 				mode: "auto-hide",
 				panelOpen,
 				phase: "hidden",
@@ -63,7 +53,6 @@ describe("main control visibility", () => {
 		expect(
 			resolveMainControlPresentation({
 				focused: false,
-				forceVisible: false,
 				mode: "always-visible",
 				panelOpen: false,
 				phase: "hidden",

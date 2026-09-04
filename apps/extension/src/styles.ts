@@ -1198,21 +1198,6 @@ ${extensionThemeTokens}
     border-radius: 999px;
   }
 
-  .top-bubble-open-mic {
-    width: 16px;
-    height: 16px;
-    margin-right: -2px;
-    border-radius: 999px;
-    color: rgba(255, 255, 255, 0.68);
-    display: grid;
-    place-items: center;
-  }
-
-  .top-bubble-open-mic.speaking {
-    color: rgba(134, 239, 172, 0.98);
-    filter: drop-shadow(0 0 5px rgba(52, 211, 153, 0.56));
-  }
-
   .stepped-setting-slider-input-v2:disabled {
     cursor: not-allowed;
     opacity: 0.48;

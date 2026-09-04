@@ -150,7 +150,6 @@ function InterfacePreview({
 	const { cursorTarget, cursorVisible, moment } = frame;
 	const mainPresentation = resolveMainControlPresentation({
 		focused: false,
-		forceVisible: false,
 		mode: preferences.mainControlVisibility,
 		panelOpen: false,
 		phase:

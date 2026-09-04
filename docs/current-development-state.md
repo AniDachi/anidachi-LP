@@ -746,8 +746,10 @@ The extension currently supports:
 - an `Interface` settings section with immediately applied, profile-local
   visibility preferences stored under `local:interfacePreferencesV1`. The main
   control can retain its edge-intent auto-hide behavior or remain visible.
-  Open panel, active Open mic publication, and keyboard focus continue to pin
-  it regardless of the selected preference;
+  An open panel and keyboard focus continue to pin it regardless of the
+  selected preference. Microphone mode, publication, and speaking activity do
+  not change the main control's visibility or add a microphone badge there;
+  voice indicators remain on participant pills and video bubbles;
 - an active-room-only side voice rail with `Smart` and `Always visible` modes.
   Smart preserves quiet-hide, speaking-compact, and deliberate edge expansion.
   Always visible keeps eligible no-video participants compact and expands only

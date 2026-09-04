@@ -786,11 +786,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const interfacePreferences = useInterfacePreferences();
 	const roomJoinDefaults = useRoomJoinDefaults(accountUser?.id ?? null);
 	const reactionShortcuts = useReactionShortcuts();
-	const openMicLauncherVisible =
-		voiceSession.mode === "open-mic" && isVoiceSessionPublishing(voiceSession);
 	const topBubbleReveal = useTopBubbleReveal({
 		bubbleRef: topBubbleRef,
-		forceVisible: openMicLauncherVisible,
 		mode: interfacePreferences.preferences.mainControlVisibility,
 		overlayRef: overlayRootRef,
 		panelOpen,
@@ -5702,9 +5699,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				<button
 					aria-controls="anidachi-mini-panel"
 					aria-expanded={panelOpen}
-					aria-label={`${panelOpen ? "Close" : "Open"} Anidachi controls${
-						openMicLauncherVisible ? ". Open mic is on" : ""
-					}`}
+					aria-label={`${panelOpen ? "Close" : "Open"} Anidachi controls`}
 					className="top-bubble"
 					onBlur={topBubbleReveal.handleBubbleBlur}
 					onFocus={topBubbleReveal.handleBubbleFocus}
@@ -5722,14 +5717,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					}}
 				>
 					<AnidachiLogoMark className="top-bubble-logo" size={24} />
-					{openMicLauncherVisible ? (
-						<span
-							aria-hidden="true"
-							className={`top-bubble-open-mic ${localLiveVoiceActive ? "speaking" : ""}`}
-						>
-							<Mic size={11} />
-						</span>
-					) : null}
 					<span
 						className={`sync-dot ${isConnected ? "connected" : catchUp ? "warning" : ""}`}
 					/>
