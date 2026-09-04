@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { afterEach, beforeEach, test } from "node:test";
+import { afterEach, beforeEach, mock, test } from "node:test";
 import { NextRequest } from "next/server";
 import { GET, POST } from "../app/api/internal/notifications/drain/route";
 
@@ -11,10 +11,10 @@ let fail: "claim" | "finish" | null;
 let withDevice: boolean;
 let diagnostics: unknown[][];
 
-beforeEach((context) => {
+beforeEach(() => {
   diagnostics = [];
-  context.mock.method(console, "info", (...args: unknown[]) => diagnostics.push(args));
-  context.mock.method(console, "error", (...args: unknown[]) => diagnostics.push(args));
+  mock.method(console, "info", (...args: unknown[]) => diagnostics.push(args));
+  mock.method(console, "error", (...args: unknown[]) => diagnostics.push(args));
   process.env.ANIDACHI_INTERNAL_API_SECRET = "internal-test-secret";
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://database.example";
   process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role";
@@ -40,7 +40,7 @@ beforeEach((context) => {
     throw new Error(`Unexpected test HTTP ${url.pathname}`);
   };
 });
-afterEach(() => { globalThis.fetch = originalFetch; process.env = { ...originalEnv }; });
+afterEach(() => { mock.restoreAll(); globalThis.fetch = originalFetch; process.env = { ...originalEnv }; });
 
 function request(authorization?: string, method = "POST") {
   return new NextRequest("https://staging.anidachi.app/api/internal/notifications/drain", {
