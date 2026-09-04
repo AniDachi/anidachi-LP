@@ -5,11 +5,13 @@ import {
   InboxChangedPushPayloadSchema,
 } from "@anidachi/protocol";
 import { storage } from "wxt/utils/storage";
-import { listAccountInboxFromApi } from "./account-inbox-client";
+import { AccountInboxUnauthorizedError, listAccountInboxFromApi } from "./account-inbox-client";
 import { setCachedAccountInboxForUser } from "./account-inbox-cache";
-import { getCurrentExtensionSession } from "./auth-client";
-import type { ExtensionAuthTokens } from "./auth-tokens";
+import { getCurrentExtensionSession, refreshExtensionSession } from "./auth-client";
+import { getStoredAuthTokens, type ExtensionAuthTokens } from "./auth-tokens";
 import { WEB_HTTP_BASE, WXT_VAPID_PUBLIC_KEY } from "./constants";
+import { logDebug } from "./debug-log";
+import { withInvitationHttpDeadline } from "./invitation-http-deadline";
 import { createWebsiteRoomHeaders, RoomApiError } from "./room-client";
 
 const MESSAGE_TYPE = "ANIDACHI_ROOM_INVITE_NOTIFICATIONS";
@@ -22,6 +24,14 @@ const REGISTRATION_KEY = "local:anidachi.roomInviteNotifications.registration" a
 const ROUTE_INTENT_KEY = "local:anidachi.popupRouteIntent" as const;
 
 let reconciliationQueue: Promise<void> = Promise.resolve();
+let subscriptionQueue: Promise<void> = Promise.resolve();
+type ReconciliationBatch = {
+  epoch: number;
+  options: { notify: boolean };
+  trailing: boolean;
+  promise: Promise<void>;
+};
+let activeReconciliation: ReconciliationBatch | null = null;
 let authSessionEpoch = 0;
 
 type RememberedInboxItems = { userId: string; itemKeys: string[] };
@@ -228,8 +238,10 @@ export async function handleRoomInviteNotificationMessage(
       const expectedAuthSessionEpoch = authSessionEpoch;
       await enqueueNotificationWork(async () => {
         await disableRoomInviteNotifications();
-        await reconcileRoomInviteNotificationsNow({ notify: false }, expectedAuthSessionEpoch);
       });
+      if (authSessionEpoch === expectedAuthSessionEpoch) {
+        await reconcileRoomInviteNotifications({ notify: false });
+      }
     } else if (message.command === "reconcile") {
       await reconcileRoomInviteNotifications({ notify: false });
     }
@@ -263,33 +275,75 @@ export async function getRoomInviteNotificationStatus(): Promise<RoomInviteNotif
 export async function reconcileRoomInviteNotifications(options: {
   notify: boolean;
 }): Promise<void> {
-  const expectedAuthSessionEpoch = authSessionEpoch;
-  return enqueueNotificationWork(() =>
-    reconcileRoomInviteNotificationsNow(options, expectedAuthSessionEpoch),
-  );
+  if (activeReconciliation?.epoch === authSessionEpoch) {
+    activeReconciliation.options.notify ||= options.notify;
+    activeReconciliation.trailing = true;
+    return activeReconciliation.promise;
+  }
+  const batch: ReconciliationBatch = {
+    epoch: authSessionEpoch,
+    options: { ...options },
+    trailing: false,
+    promise: Promise.resolve(),
+  };
+  activeReconciliation = batch;
+  const subscriptions: Promise<void>[] = [];
+  const delivery = enqueueNotificationWork(async () => {
+    try {
+      let failure: unknown;
+      do {
+        batch.trailing = false;
+        try {
+          await reconcileRoomInviteNotificationsNow(batch.options, batch.epoch, subscriptions);
+          failure = undefined;
+        } catch (error) {
+          failure = error;
+        }
+      } while (batch.trailing && batch.epoch === authSessionEpoch);
+      if (failure !== undefined) throw failure;
+    } finally {
+      if (activeReconciliation === batch) activeReconciliation = null;
+    }
+  });
+  // Keep registration alive for the caller's event lifetime, but never hold the
+  // delivery lane behind it. A later push can read/display inbox immediately.
+  batch.promise = delivery.finally(async () => {
+    await Promise.all(subscriptions);
+  });
+  return batch.promise;
 }
 
 async function reconcileRoomInviteNotificationsNow(
   options: { notify: boolean },
   expectedAuthSessionEpoch: number,
+  subscriptions: Promise<void>[],
 ): Promise<void> {
   if (authSessionEpoch !== expectedAuthSessionEpoch) return;
-  const tokens = await getCurrentExtensionSession().catch(() => null);
+  let tokens = await getStoredAuthTokens();
   if (!tokens) {
-    await disableRoomInviteNotifications(null, { clearAccountState: true });
+    await enqueueSubscriptionWork(async () => {
+      if (authSessionEpoch !== expectedAuthSessionEpoch || (await getStoredAuthTokens())) return;
+      await disableRoomInviteNotificationsNow(null, { clearAccountState: true });
+    });
     return;
   }
 
   const preference = await notificationPreference();
   const permissionGranted = await containsNotificationsPermission();
-  if (preference && permissionGranted && WXT_VAPID_PUBLIC_KEY) {
-    await ensureRegisteredPushSubscription(tokens);
-  } else {
-    await disableRoomInviteNotifications(tokens);
-  }
   if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return;
 
-  const inbox = await listAccountInboxFromApi(tokens.accessToken);
+  let inbox: AccountInboxResponse;
+  try {
+    inbox = await listAccountInboxFromApi(tokens.accessToken);
+  } catch (error) {
+    if (!(error instanceof AccountInboxUnauthorizedError)) throw error;
+    if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return;
+    const refreshed = await withInvitationHttpDeadline(() => refreshExtensionSession());
+    if (!refreshed || refreshed.user.id !== tokens.user.id) return;
+    if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return;
+    tokens = refreshed;
+    inbox = await listAccountInboxFromApi(tokens.accessToken);
+  }
   if (inbox.meta.ownerUserId !== tokens.user.id) {
     throw new Error("Inbox response belongs to another account");
   }
@@ -322,6 +376,21 @@ async function reconcileRoomInviteNotificationsNow(
   }
   if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return;
   await setRememberedInboxItems(tokens.user.id, [...new Set(pruned)]);
+  const session = tokens;
+  subscriptions.push(enqueueSubscriptionWork(async () => {
+    try {
+      if (!(await isCurrentReconciliation(session.user.id, expectedAuthSessionEpoch))) return;
+      if (preference && permissionGranted && WXT_VAPID_PUBLIC_KEY) {
+        await ensureRegisteredPushSubscription(session, expectedAuthSessionEpoch);
+      } else {
+        await disableRoomInviteNotificationsNow(session);
+      }
+    } catch (error) {
+      logDebug("account.inbox", "notification subscription maintenance failed", {
+        code: (error instanceof RoomApiError && error.code) || "SUBSCRIPTION_UNAVAILABLE",
+      });
+    }
+  }));
 }
 
 export async function handleRoomInvitePush(event: ExtensionPushEvent): Promise<void> {
@@ -333,7 +402,14 @@ export async function disableRoomInviteNotifications(
   tokens?: ExtensionAuthTokens | null,
   options: { clearAccountState?: boolean } = {},
 ): Promise<void> {
-  const session = tokens === undefined ? await getCurrentExtensionSession().catch(() => null) : tokens;
+  return enqueueSubscriptionWork(() => disableRoomInviteNotificationsNow(tokens, options));
+}
+
+async function disableRoomInviteNotificationsNow(
+  tokens: ExtensionAuthTokens | null | undefined,
+  options: { clearAccountState?: boolean } = {},
+): Promise<void> {
+  const session = tokens === undefined ? await getStoredAuthTokens() : tokens;
   const registration = normalizeStoredRegistration(await storage.getItem(REGISTRATION_KEY));
   if (session && registration?.userId === session.user.id) {
     await revokePushSubscriptionFromApi(session.accessToken, registration.deviceId).catch(
@@ -362,8 +438,10 @@ export async function handleRoomInviteNotificationPermissionRemoved(
   await storage.setItem(PREFERENCE_KEY, false);
   await enqueueNotificationWork(async () => {
     await disableRoomInviteNotifications();
-    await reconcileRoomInviteNotificationsNow({ notify: false }, expectedAuthSessionEpoch);
   });
+  if (authSessionEpoch === expectedAuthSessionEpoch) {
+    await reconcileRoomInviteNotifications({ notify: false });
+  }
 }
 
 export async function handleRoomInviteNotificationClick(notificationId: string): Promise<void> {
@@ -432,18 +510,17 @@ export async function handleAuthSessionChanged(
   previousTokens: ExtensionAuthTokens | null,
   currentTokens: ExtensionAuthTokens | null,
 ): Promise<void> {
+  if (previousTokens?.user.id === currentTokens?.user.id) return;
   authSessionEpoch += 1;
   const expectedAuthSessionEpoch = authSessionEpoch;
   await enqueueNotificationWork(async () => {
     if (previousTokens && previousTokens.user.id !== currentTokens?.user.id) {
       await disableRoomInviteNotifications(previousTokens, { clearAccountState: true });
     }
-    if (currentTokens && previousTokens?.user.id !== currentTokens.user.id) {
-      await reconcileRoomInviteNotificationsNow({ notify: true }, expectedAuthSessionEpoch).catch(
-        () => undefined,
-      );
-    }
   });
+  if (currentTokens && authSessionEpoch === expectedAuthSessionEpoch) {
+    await reconcileRoomInviteNotifications({ notify: true }).catch(() => undefined);
+  }
 }
 
 function enqueueNotificationWork(work: () => Promise<void>): Promise<void> {
@@ -457,11 +534,20 @@ async function isCurrentReconciliation(
   expectedAuthSessionEpoch: number,
 ): Promise<boolean> {
   if (authSessionEpoch !== expectedAuthSessionEpoch) return false;
-  const current = await getCurrentExtensionSession().catch(() => null);
+  const current = await getStoredAuthTokens();
   return current?.user.id === userId && authSessionEpoch === expectedAuthSessionEpoch;
 }
 
-async function ensureRegisteredPushSubscription(tokens: ExtensionAuthTokens): Promise<void> {
+function enqueueSubscriptionWork(work: () => Promise<void>): Promise<void> {
+  const run = subscriptionQueue.catch(() => undefined).then(work);
+  subscriptionQueue = run;
+  return run;
+}
+
+async function ensureRegisteredPushSubscription(
+  tokens: ExtensionAuthTokens,
+  expectedAuthSessionEpoch: number,
+): Promise<void> {
   if (!globalThis.registration?.pushManager) return;
   const applicationServerKey = base64UrlToUint8Array(WXT_VAPID_PUBLIC_KEY);
   let subscription = await globalThis.registration.pushManager.getSubscription();
@@ -495,7 +581,12 @@ async function ensureRegisteredPushSubscription(tokens: ExtensionAuthTokens): Pr
     expirationTime: subscription.expirationTime,
     keys: { p256dh: json.keys.p256dh, auth: json.keys.auth },
   };
+  if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return;
   const response = await registerPushSubscriptionFromApi(tokens.accessToken, request);
+  if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) {
+    await revokePushSubscriptionFromApi(tokens.accessToken, response.deviceId).catch(() => undefined);
+    return;
+  }
   await storage.setItem(REGISTRATION_KEY, {
     userId: tokens.user.id,
     deviceId: response.deviceId,
@@ -507,23 +598,28 @@ async function registerPushSubscriptionFromApi(
   accessToken: string,
   request: ExtensionPushSubscriptionRequest,
 ) {
-  const response = await fetch(new URL("/api/devices/push-subscription", WEB_HTTP_BASE), {
-    method: "POST",
-    headers: createWebsiteRoomHeaders(accessToken),
-    body: JSON.stringify(request),
-  });
-  if (!response.ok) throw await pushHttpError(response, "Failed to enable notifications");
-  return DevicePushSubscriptionResponseSchema.parse(await response.json());
+  return withInvitationHttpDeadline(async (signal) => {
+    const response = await fetch(new URL("/api/devices/push-subscription", WEB_HTTP_BASE), {
+      method: "POST",
+      headers: createWebsiteRoomHeaders(accessToken),
+      body: JSON.stringify(request),
+      signal,
+    });
+    if (!response.ok) throw await pushHttpError(response, "Failed to enable notifications");
+    return DevicePushSubscriptionResponseSchema.parse(await response.json());
+  }, "PUSH_SUBSCRIPTION_TIMEOUT");
 }
 
 async function revokePushSubscriptionFromApi(accessToken: string, deviceId: string): Promise<void> {
-  const response = await fetch(
-    new URL(`/api/devices/${encodeURIComponent(deviceId)}/push-subscription`, WEB_HTTP_BASE),
-    { method: "DELETE", headers: createWebsiteRoomHeaders(accessToken) },
-  );
-  if (!response.ok && response.status !== 404) {
-    throw await pushHttpError(response, "Failed to disable notifications");
-  }
+  await withInvitationHttpDeadline(async (signal) => {
+    const response = await fetch(
+      new URL(`/api/devices/${encodeURIComponent(deviceId)}/push-subscription`, WEB_HTTP_BASE),
+      { method: "DELETE", headers: createWebsiteRoomHeaders(accessToken), signal },
+    );
+    if (!response.ok && response.status !== 404) {
+      throw await pushHttpError(response, "Failed to disable notifications");
+    }
+  }, "PUSH_SUBSCRIPTION_TIMEOUT");
 }
 
 async function pushHttpError(response: Response, fallback: string): Promise<RoomApiError> {
