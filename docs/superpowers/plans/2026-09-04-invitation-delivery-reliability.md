@@ -124,36 +124,36 @@ and client behavior stay unchanged. This is staging-only; main is not authorized
 **Files:** existing notification drain route and test; one CLI-created additive
 migration and `apps/web/supabase/tests/inbox_push_scheduler.test.sql`.
 
-- [ ] Add a dedicated `ANIDACHI_NOTIFICATION_DRAIN_SECRET` accepted only by the
+- [x] Add a dedicated `ANIDACHI_NOTIFICATION_DRAIN_SECRET` accepted only by the
   notification drain. Keep the existing internal bearer accepted temporarily for
   ordered cutover/rollback; never accept the new bearer at room callbacks.
-- [ ] Create an operator-only private scheduler function, using SECURITY INVOKER,
+- [x] Create an operator-only private scheduler function, using SECURITY INVOKER,
   an empty search_path, and a short SQL timeout. Enable pg_net if absent without
   pinning an extension version. Deny clients access to our private scheduler and
   Vault. Preserve platform-owned pg_net permissions; verify that net, Vault and
   the private scheduler schema are not exposed through the Data API, client
   roles remain NOLOGIN, and no client-callable public function bridges to them.
-- [ ] Use one private singleton config/status row, initially disabled, with
+- [x] Use one private singleton config/status row, initially disabled, with
   explicit staging/production environment. Derive the exact canonical drain URL
   from that environment (no caller-provided URL). Read only a dedicated drain
   secret from Vault. No secret values in migrations, status, logs, or cron text.
-- [ ] Schedule one named once-minute job. Disabled or no due outbox work performs
+- [x] Schedule one named once-minute job. Disabled or no due outbox work performs
   no HTTP request. Respect cooldown and active leases; include expired/exhausted
   rows for existing bounded outbox maintenance. HTTP timeout is 40 seconds. Set
   the short SQL statement timeout before the private call in the cron command;
   a function-level SET alone does not bound an already started outer statement.
-- [ ] Prevent repeated ticks from accumulating HTTP requests while pg_net is
+- [x] Prevent repeated ticks from accumulating HTTP requests while pg_net is
   stalled: retain the last request ID, skip while it is queued, and allow at least
   90 seconds for an in-flight request before retry. Serialize scheduler calls via
   the singleton row. The singleton is operational metadata, not a delivery queue.
-- [ ] Retain only safe last-attempt/result metadata; accept only status 200 and
+- [x] Retain only safe last-attempt/result metadata; accept only status 200 and
   the exact small `{ "ok": true }` acknowledgement as a successful HTTP drain.
   pg_net transport can follow redirects and buffers response bodies; unlike the
   previous Worker caller it cannot enforce redirect rejection or a streaming
   response-size cap. The mitigation is a fixed owned endpoint, a drain-only
   credential, bounded timeout, and rejection of invalid acknowledgements. Do not
   claim transport equivalence. The outbox remains durable if HTTP work is lost.
-- [ ] TDD: observe failures before implementation. Test route authorization and
+- [x] TDD: observe failures before implementation. Test route authorization and
   room-secret isolation, disabled/no-work no-op, due work, cooldown/lease guards,
   missing secret, pending-request suppression, exact request shape, invalid/safe
   response metadata, rollback, and low-privilege denial. Run real local pgTAP and
@@ -161,15 +161,15 @@ migration and `apps/web/supabase/tests/inbox_push_scheduler.test.sql`.
 
 ### Task 8: Ordered staging cutover and acceptance
 
-- [ ] Review Task 7 and merge its PR into staging after gates. The migration is
+- [x] Review Task 7 and merge its PR into staging after gates. The migration is
   dormant by default, so the existing runtime remains compatible during deploy.
-- [ ] Provision one new random drain-only secret in Vercel Preview `staging`
+- [x] Provision one new random drain-only secret in Vercel Preview `staging`
   and staging Vault without printing/persisting it locally. Enable the private
   scheduler only after the matching web deployment is READY and ACLs are checked.
-- [ ] Observe a real automatic cron tick and HTTP acknowledgement, then recovery
+- [x] Observe a real automatic cron tick and HTTP acknowledgement, then recovery
   of an isolated no-device technical outbox fixture without invoking the drain
   manually. Never send fake invitations to real users. Remove only that fixture.
-- [ ] Disable the old staging Cloudflare schedule only after successful recovery;
+- [x] Disable the old staging Cloudflare schedule only after successful recovery;
   reflect the disabled staging cron in source via a reviewed follow-up PR. Keep
   production config unchanged. Preserve all room bindings and alarms.
 - [ ] Update canonical docs, env matrix, execution evidence, and Graphify, keeping
@@ -190,6 +190,36 @@ schema rejection, private/Vault ACLs, and absence of public callable bridges.
 On staging, publishable-key requests for net, vault and anidachi_private each
 returned 406/PGRST106; anon/authenticated are NOLOGIN and the public/graphql_public
 function audit found no net/Vault/dynamic-SQL bridge. Repeat after deployment.
+
+### Supabase cutover evidence (2026-09-04)
+
+- Task 7 PR260 merged as staging `d482061`; migration `20260904154732` applied
+  through workflow `33893249712`. Vercel `dpl_BkV8BhxJEkWJjdBv9vWvmHcWcA1V`
+  was READY on `staging.anidachi.app` before activation at 16:09:38 UTC.
+- Independent scoped review found no Critical/Important findings. Fresh checks:
+  573 pgTAP tests (57 scheduler), 9 route/auth tests, web 412 passed + 3 existing
+  skips, combined check/test and lint passed. Unchanged planes were cache-reused
+  locally; staging CI, room/P2P workflows and smoke also passed.
+- Deployed permission checks repeated successfully: net/vault/private Data API
+  profiles each rejected with 406/PGRST106, client roles NOLOGIN, private/Vault
+  access denied, public bridge count zero. Security advisors had no WARN/ERROR;
+  RLS-without-policy INFO is intentional for operator/server-only tables.
+- Cron job 3 (`anidachi-inbox-push-drain`) automatically invoked the web route at
+  16:10 UTC (run 709, pg_net request 1). Exact HTTP200 acknowledgement; web log
+  claimed=1, completed=1, noDevices=1, errors=0, elapsed approximately 2.3 seconds.
+  The isolated due outbox fixture disappeared without a manual drain invocation.
+- A second no-device fixture had a deadline of 16:12:08 UTC. Runs at 16:11 and
+  16:12 emitted no extra HTTP request; run 712 at 16:13 queued request 2, received
+  exact HTTP200 acknowledgement and completed that outbox row. Both synthetic
+  users were then removed by exact ID/email with no pending outbox/devices.
+  No real room, invitation, subscription or user account was altered.
+- Cloudflare staging schedule was set to an empty list after the first automatic
+  recovery proof and read back empty. This follow-up records the same empty
+  staging cron in source. The Worker handler, room bindings/alarms and production
+  configuration remain unchanged. Main promotion is not authorized by this work.
+- These checks prove autonomous server recovery, not provider retry under a
+  genuine outage or receipt by Chrome/OS. Two-account direct/group notification
+  timing and the remaining manual acceptance scenarios below still need testing.
 
 - 2026-09-04: Started from current `origin/staging` `396bb41` on `codex/invite-notification-delivery`; previous unrelated WIP remains unstaged. Frozen install did not change dependencies. Baseline notification/inbox suites: 3 files, 22 tests passed.
 - Task 1 (`e0f4d9b`): independent review approved; 83 focused and 1531 full extension tests passed, typecheck passed. Normal inbox reconciliation makes zero `/api/me` round trips.

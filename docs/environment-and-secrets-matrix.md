@@ -91,11 +91,12 @@ Engine is enabled and the GitHub token has the current scopes.
 | Worker secret | `ANIDACHI_INTERNAL_API_SECRET` | `ANIDACHI_INTERNAL_API_SECRET` | Must match the Web value for the same environment and differ between staging/production |
 
 The preceding invitation-outbox recovery caller uses the existing internal URL
-and secret. The approved Supabase replacement uses a separate drain-only secret
-and does not access `ROOMS` or change room lifecycle alarms. Disable only the old
-staging cron after verifying automatic Supabase recovery; retain production
-configuration until its separate promotion. The ordered rollout, current
-activation state, and acceptance boundary are recorded in
+and secret. Supabase recovery is active on staging with a separate drain-only
+secret and does not access `ROOMS` or change room lifecycle alarms. The old
+staging cron was disabled after automatic Supabase recovery was verified on
+2026-09-04; `env.staging.triggers.crons` stays empty. Production configuration
+remains unchanged until its separate promotion. The ordered rollout and
+acceptance boundary are recorded in
 `docs/superpowers/plans/2026-09-04-invitation-delivery-reliability.md`.
 
 Worker secrets are managed with Wrangler/GitHub Actions. Do not store them in
