@@ -84,7 +84,9 @@ export function normalizeCrunchyrollCatalog(
 				.map((value) => {
 					const variant = record(value);
 					if (!variant) reasons.add("INVALID_IDENTITY");
-					return boundedString(variant?.guid);
+					const guid = boundedString(variant?.guid);
+					if (variant && !guid) reasons.add("INVALID_IDENTITY");
+					return guid;
 				})
 				.filter(isString),
 		]);
@@ -221,6 +223,7 @@ function normalizeEpisodes(
 	const byIdentifier = new Map<string, ReturnType<typeof normalizedEpisode>>();
 	const conflictingIdentifiers = new Set<string>();
 	const aliasOwners = new Map<string, string>();
+	const conflictingAliases = new Set<string>();
 	const sortedRows = [...rows].sort((left, right) => {
 		const a = record(left) ?? {};
 		const b = record(right) ?? {};
@@ -250,17 +253,12 @@ function normalizeEpisodes(
 			reasons,
 		);
 		if (!episode) continue;
-		let aliasConflict = false;
 		for (const variant of episode.watchVariants) {
 			const owner = aliasOwners.get(variant.providerContentId);
-			if (owner && owner !== identifier) aliasConflict = true;
+			if (owner && owner !== identifier)
+				conflictingAliases.add(variant.providerContentId);
+			else aliasOwners.set(variant.providerContentId, identifier);
 		}
-		if (aliasConflict) {
-			reasons.add("ALIAS_CONFLICT");
-			continue;
-		}
-		for (const variant of episode.watchVariants)
-			aliasOwners.set(variant.providerContentId, identifier);
 		const existing = byIdentifier.get(identifier);
 		if (conflictingIdentifiers.has(identifier)) continue;
 		if (existing && JSON.stringify(existing) !== JSON.stringify(episode)) {
@@ -269,9 +267,14 @@ function normalizeEpisodes(
 			conflictingIdentifiers.add(identifier);
 		} else byIdentifier.set(identifier, episode);
 	}
+	if (conflictingAliases.size > 0) reasons.add("ALIAS_CONFLICT");
 	return [...byIdentifier.values()]
 		.filter(
-			(episode): episode is NonNullable<typeof episode> => episode !== null,
+			(episode): episode is NonNullable<typeof episode> =>
+				episode !== null &&
+				episode.watchVariants.every(
+					(variant) => !conflictingAliases.has(variant.providerContentId),
+				),
 		)
 		.sort(
 			(a, b) =>

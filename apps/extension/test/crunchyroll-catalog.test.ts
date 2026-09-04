@@ -91,6 +91,16 @@ describe("normalizeCrunchyrollCatalog", () => {
 		});
 	});
 
+	it("marks malformed season variant objects and GUIDs partial", () => {
+		for (const malformedVariant of [{}, { guid: 123 }]) {
+			const value = input();
+			value.seasonsResponse.data[0].versions.push(malformedVariant);
+			expect(normalizeCrunchyrollCatalog(value).reasons).toContain(
+				"INVALID_IDENTITY",
+			);
+		}
+	});
+
 	it("keeps distinct provider identifiers separate even when labels and numbers match", () => {
 		const value = input();
 		value.seasonsResponse.data[1] = {
@@ -113,6 +123,16 @@ describe("normalizeCrunchyrollCatalog", () => {
 			completeness: "partial",
 			reasons: ["ALIAS_CONFLICT"],
 		});
+		const forward = normalizeCrunchyrollCatalog(value);
+		value.episodeResponses.GYDQCGQ03.data.reverse();
+		const reversed = normalizeCrunchyrollCatalog(value);
+		expect(forward.hashInput).toBe(reversed.hashInput);
+		expect(
+			forward.snapshot.seasons
+				.flatMap((season) => season.episodes)
+				.flatMap((episode) => episode.watchVariants)
+				.some((variant) => variant.providerContentId === "GRP8P9XGR"),
+		).toBe(false);
 
 		const unknown = input();
 		delete (
