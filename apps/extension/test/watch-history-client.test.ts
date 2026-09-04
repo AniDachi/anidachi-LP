@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { createWatchHistoryPageResolver } from "../src/watch-history-catalog";
+import { createWatchHistoryController } from "../src/watch-history-controller";
+import { subscribeToPopupWatchHistorySnapshot } from "../src/popup-watch-history";
 import {
   createWatchHistoryStorage,
   watchHistoryPartitionKey,
@@ -99,6 +101,92 @@ function readyPartition(ownerUserId: string, youtubeHistoryEnabled: boolean) {
 }
 
 describe("watch history v2 client", () => {
+  it("retains unresolved latest and terminal on sign-out and resolves only after same-owner reconciliation", async () => {
+    const owner = session.user.id;
+    const key = watchHistoryPartitionKey(owner, 1);
+    const { crunchyrollIdentity, ...base } = progressEvent();
+    const events = [base, { ...base, clientEventId: "00000000-0000-4000-8000-000000000012", kind: "ended" as const }]
+      .map((event) => ({ ...event, identityPending: { watchId: "episode-a", requestedLocale: "fr-FR" } }));
+    let stored: WatchHistoryStorageRoot = { schemaVersion: 3, activeGenerations: { [owner]: 1 }, partitions: { [key]: { ...readyPartition(owner, false),
+      outbox: { ownerUserId: owner, accountGeneration: 1, entries: events.map((event, i) => ({ event, key: "original", slot: i ? "terminal" as const : "latest" as const, persistedAt: 1 })) } } } };
+    const storage = createWatchHistoryStorage({ item: { getValue: async () => stored, setValue: async (value) => { stored = value; } }, getBytesInUse: async () => 0, quotaBytes: 1_000_000 });
+    let current: typeof session | null = session;
+    const posted: unknown[] = [];
+    const request: typeof fetch = async (_url, init) => {
+      if (init?.method === "POST") { const event = JSON.parse(String(init.body)); posted.push(event); return Response.json(progressAck(event.clientEventId)); }
+      return Response.json({ meta: { schemaVersion: 3, ownerUserId: owner, accountGeneration: 1, serverTime: base.observedAt }, generatedAt: base.observedAt, totalTitleCount: 0, items: [], nextCursor: null });
+    };
+    const client = createWatchHistoryClient({ storage, getCurrentSession: async () => current, fetch: request });
+    const outage = createWatchHistoryPageResolver({ send: client.handle, command: async () => ({ ok: false } as never) });
+    await outage.resolve(events[0]!, owner, { refreshCatalog: false });
+    current = null;
+    await handleWatchHistoryAuthSessionChange(session, null, { storage, getCurrentSession: async () => current });
+    expect(stored.partitions[key]?.outbox.entries.map((entry) => entry.event)).toEqual(events);
+    expect((await client.handle({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "pending-identities", expectedOwnerUserId: owner })).ok).toBe(false);
+    current = { ...session, user: { ...session.user, id: "00000000-0000-4000-8000-000000000099" } };
+    expect((await client.handle({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "pending-identities", expectedOwnerUserId: owner })).ok).toBe(false);
+    expect(posted).toEqual([]);
+    current = session;
+    await handleWatchHistoryAuthSessionChange(null, session, { storage, getCurrentSession: async () => current, fetch: request });
+    const reconnect = createWatchHistoryPageResolver({ send: client.handle, command: async () => ({ ok: true, metadata: { identity: crunchyrollIdentity, episodeNumber: 1,
+      context: { region: "VN", requestedLocale: "fr-FR", audioLocale: null, subtitleLocales: [], observedAt: base.observedAt } } } as never) });
+    for (const event of events) await reconnect.resolve(event, owner, { refreshCatalog: false });
+    expect(posted).toHaveLength(2);
+    expect(stored.partitions[key]!.outbox.entries).toEqual([]);
+  });
+
+  it("keeps cached identity samples on the controller's 60-second cadence and promptly drains offline completion", async () => {
+    const owner = session.user.id;
+    const key = watchHistoryPartitionKey(owner, 1);
+    let stored: WatchHistoryStorageRoot = { schemaVersion: 3, activeGenerations: { [owner]: 1 }, partitions: { [key]: readyPartition(owner, false) } };
+    let seconds = 0;
+    let online = true;
+    let reads = 0;
+    let changed: ((changes: Record<string, chrome.storage.StorageChange>, area: chrome.storage.AreaName) => void) | undefined;
+    const posted: unknown[] = [];
+    const storage = createWatchHistoryStorage({ item: { getValue: async () => stored, setValue: async (value) => {
+      stored = value; changed?.({ "anidachi.watchHistory.v3": { newValue: value } }, "local");
+    } }, getBytesInUse: async () => 0, quotaBytes: 1_000_000 });
+    const client = createWatchHistoryClient({ storage, getCurrentSession: async () => session, fetch: async (_url, init) => {
+      if (init?.method !== "POST") { reads++; return Response.json({ meta: { schemaVersion: 3, ownerUserId: owner, accountGeneration: 1, serverTime: "2026-08-15T10:00:00.000Z" },
+        generatedAt: "2026-08-15T10:00:00.000Z", totalTitleCount: 0, items: [], nextCursor: null }); }
+      const event = JSON.parse(String(init?.body)); posted.push(event);
+      return online ? Response.json(progressAck(event.clientEventId)) : new Response("offline", { status: 503 });
+    } });
+    const unsubscribe = subscribeToPopupWatchHistorySnapshot(owner, () => undefined, { onChanged: { addListener: (listener) => { changed = listener; }, removeListener: () => { changed = undefined; } },
+      load: async () => null, refresh: client.handle });
+    const { crunchyrollIdentity, ...base } = progressEvent();
+    const resolving: Promise<void>[] = [];
+    const resolver = createWatchHistoryPageResolver({ send: client.handle, command: async () => ({ ok: true, metadata: { identity: crunchyrollIdentity, episodeNumber: 1,
+      context: { region: null, requestedLocale: "fr-FR", audioLocale: null, subtitleLocales: [], observedAt: base.observedAt } } } as never) });
+    const controller = createWatchHistoryController({ getObservation: () => ({ ...base, sharedRoom: null, currentTime: seconds, progress: seconds / 120,
+      identityPending: { watchId: "episode-a", requestedLocale: "fr-FR" } } as never), getRoomActive: () => false,
+      loadPreferences: async () => ({ ownerUserId: owner, accountGeneration: 1, preferences: { youtubeHistoryEnabled: false } }),
+      isPlaying: () => true, isSeeking: () => false, now: () => Date.parse(base.observedAt) + seconds * 1000,
+      observeLocally: (event, expectedOwnerUserId, meaningfulSolo, displayMode, queueForSync, flushNow) => client.handle({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "observe-progress", event, expectedOwnerUserId, meaningfulSolo, displayMode, queueForSync, flushNow }) as never,
+      onPersisted: (event, expected, options) => { resolving.push(resolver.resolve(event, expected, options)); },
+    });
+    await controller.start();
+    for (seconds = 5; seconds <= 60; seconds += 5) { await controller.observe("heartbeat"); await Promise.all(resolving); }
+    expect(posted).toHaveLength(1);
+    expect(stored.partitions[key]!.invalidationRevision).toBe(1);
+    await vi.waitFor(() => expect(reads).toBe(1));
+    await controller.observe("heartbeat"); await Promise.all(resolving);
+    expect(posted).toHaveLength(2);
+    await vi.waitFor(() => expect(reads).toBe(2));
+    online = false; seconds = 70;
+    await controller.observe("ended"); await Promise.all(resolving);
+    expect(posted).toHaveLength(3);
+    expect(stored.partitions[key]!.outbox.entries.some((entry) => entry.slot === "terminal")).toBe(true);
+    online = true;
+    await client.flush(session);
+    expect(posted).toHaveLength(4);
+    expect(stored.partitions[key]!.invalidationRevision).toBe(3);
+    expect(stored.partitions[key]!.outbox.entries).toEqual([]);
+    await vi.waitFor(() => expect(reads).toBe(3));
+    unsubscribe();
+    resolver.dispose(); await controller.dispose();
+  });
   it("resolves the retained latest and terminal slots when discovery outlives coalesced event IDs", async () => {
     const owner = session.user.id;
     const key = watchHistoryPartitionKey(owner, 1);
@@ -2560,10 +2648,12 @@ describe("watch history v2 client", () => {
     expect(drains).toBe(1);
   });
 
-  it("clears only rebuildable switched-owner state and leaves its pending work dormant", async () => {
+  it.each([false, true])("clears only rebuildable switched-owner state and leaves its pending work dormant (identityPending=%s)", async (pending) => {
     const oldOwner = session.user.id;
     const nextSession = { ...session, refreshToken: "next-refresh", user: { ...session.user, id: "00000000-0000-4000-8000-000000000050" } };
-    const event = progressEvent("00000000-0000-4000-8000-000000000051");
+    const resolved = progressEvent("00000000-0000-4000-8000-000000000051");
+    const { crunchyrollIdentity: _identity, ...raw } = resolved;
+    const event = pending ? { ...raw, identityPending: { watchId: "episode-a", requestedLocale: "fr-FR" } } : resolved;
     let stored: WatchHistoryStorageRoot = {
       schemaVersion: 3, activeGenerations: { [oldOwner]: 1 },
       partitions: {
@@ -2591,9 +2681,11 @@ describe("watch history v2 client", () => {
     expect(fetchImpl).toHaveBeenCalledWith(expect.stringContaining("/api/watch-history/v3"), expect.anything());
   });
 
-  it("clears rebuildable state on sign-out and reconciles canonical generation before same-owner draining", async () => {
+  it.each([false, true])("clears rebuildable state on sign-out and reconciles canonical generation before same-owner draining (identityPending=%s)", async (pending) => {
     const owner = session.user.id;
-    const event = progressEvent("00000000-0000-4000-8000-000000000060");
+    const resolved = progressEvent("00000000-0000-4000-8000-000000000060");
+    const { crunchyrollIdentity: _identity, ...raw } = resolved;
+    const event = pending ? { ...raw, identityPending: { watchId: "episode-a", requestedLocale: "fr-FR" } } : resolved;
     let stored: WatchHistoryStorageRoot = {
       schemaVersion: 3, activeGenerations: { [owner]: 1 },
       partitions: {

@@ -53,6 +53,8 @@ export type WatchHistoryLocalStatus =
   | "rejected";
 
 export type WatchHistoryMessage =
+  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "catalog-release"; expectedOwnerUserId: string;
+      pageId: string; accountGeneration: number; titleKey: string; revision: number }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "pending-identities"; expectedOwnerUserId: string }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "catalog-begin" | "catalog-commit";
       expectedOwnerUserId: string; pageId: string; input: unknown }
@@ -187,6 +189,13 @@ export function isWatchHistoryMessage(value: unknown): value is WatchHistoryMess
   if (!isRecord(value) || value.type !== WATCH_HISTORY_MESSAGE_TYPE) return false;
   if ("accessToken" in value) return false;
   switch (value.command) {
+    case "catalog-release":
+      return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "pageId", "accountGeneration", "titleKey", "revision"]) &&
+        typeof value.expectedOwnerUserId === "string" && value.expectedOwnerUserId.length > 0 && value.expectedOwnerUserId.length <= 128 &&
+        typeof value.pageId === "string" && value.pageId.length > 0 && value.pageId.length <= 128 &&
+        WatchProgressEventSchema.shape.accountGeneration.safeParse(value.accountGeneration).success &&
+        WatchProgressEventSchema.shape.titleKey.safeParse(value.titleKey).success &&
+        typeof value.revision === "number" && Number.isSafeInteger(value.revision) && value.revision > 0;
     case "catalog-begin": case "catalog-commit":
       return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "pageId", "input"]) &&
         typeof value.expectedOwnerUserId === "string" && value.expectedOwnerUserId.length > 0 && value.expectedOwnerUserId.length <= 128 &&
@@ -358,11 +367,16 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         : await catalog.commit(session.user.id, message.input);
       return data ? { ok: true, data } : { ok: false, status: "rejected" };
     }
+    if (message.command === "catalog-release") {
+      if (session.user.id !== message.expectedOwnerUserId) return { ok: false, status: "rejected" };
+      return await catalog.release(session.user.id, message.pageId, message) ? { ok: true } : { ok: false, status: "rejected" };
+    }
     if (message.command === "resolve-identity") {
       if (message.expectedOwnerUserId !== session.user.id) return { ok: false, status: "rejected" };
       const identity = CrunchyrollHistoryIdentitySchema.parse(message.identity);
       let found = false;
       let retired = false;
+      let flushAfterIdentity = false;
       const saved = await updateCurrentPartition(session, message.accountGeneration, (partition) => {
         const entries = partition.outbox.entries.map((entry) => {
           if (entry.event.clientEventId !== message.clientEventId ||
@@ -382,7 +396,8 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
           ].map((key) => Date.parse(partition.deletionFences?.[key] ?? "") || 0));
           if (Date.parse(original.observedAt) <= deletion) { retired = true; return null; }
           found = true;
-          return { ...entry, event: resolved.data };
+          flushAfterIdentity ||= entry.flushAfterIdentity === true || original.kind === "ended";
+          return { ...entry, event: resolved.data, flushAfterIdentity: false };
         }).filter((entry) => entry !== null);
         const resolvedCurrent = entries.find((entry) => entry.event.clientEventId === partition.currentObservation?.clientEventId && !("identityPending" in entry.event));
         return found || retired ? { ...partition, outbox: { ...partition.outbox, entries },
@@ -391,7 +406,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       });
       if (!saved.ok) return saved;
       if (!found || saved.stale || saved.authorityRejected) return { ok: false, status: "rejected" };
-      return flush(session);
+      return flushAfterIdentity ? flush(session) : { ok: true };
     }
     if (message.command === "bootstrap" || message.command === "bootstrap-cache") {
       if (message.expectedOwnerUserId !== session.user.id) {
@@ -478,7 +493,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
           ? inferredObservationDisplayMode(event)
           : partition.currentObservationDisplayMode
         : inferredObservationDisplayMode(event),
-      outbox: enqueueWatchHistoryEvent(partition.outbox, event),
+      outbox: enqueueWatchHistoryEvent(partition.outbox, event, undefined, true),
     }), event.provider);
     let saved = await persist();
     if (saved.authorityRejected) return { ok: false, status: "rejected" };
@@ -518,7 +533,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       currentObservationMeaningfulSolo: meaningfulSolo && !parsed.data.sharedRoom,
       currentObservationDisplayMode: displayMode,
       outbox: queueForSync
-        ? enqueueWatchHistoryEvent(partition.outbox, parsed.data)
+        ? enqueueWatchHistoryEvent(partition.outbox, parsed.data, undefined, flushNow)
         : partition.outbox,
     }), parsed.data.provider);
     let saved = await persist();
@@ -546,6 +561,11 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     if (generation === undefined) return { ok: true, flushed: 0 };
     const partition = root.partitions[watchHistoryPartitionKey(session.user.id, generation)];
     if (!partition) return { ok: true, flushed: 0 };
+    if (partition.outbox.entries.some((entry) => entry.event.identityPending && !entry.flushAfterIdentity)) {
+      await updateCurrentPartition(session, generation, (current) => ({ ...current, outbox: { ...current.outbox,
+        entries: current.outbox.entries.map((entry) => entry.event.identityPending ? { ...entry, flushAfterIdentity: true } : entry),
+      } }));
+    }
     const pendingPreferences = WatchHistoryPreferencesSchema.safeParse(partition.preferences);
     if (partition.preferencesSyncPending === true && pendingPreferences.success) {
       queuePreferenceSync(session, generation, pendingPreferences.data);
@@ -1364,7 +1384,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     return reconciled.ok ? { ...reconciled, flushed: drained.flushed } : reconciled;
   }
 
-  return { handle, flush, reconcile, refresh, cancelCatalog: catalog.cancel };
+  return { handle, flush, reconcile, refresh, cancelCatalog: catalog.cancel, cancelCatalogPage: catalog.cancelPage };
 }
 
 function emptyPartition(ownerUserId: string, accountGeneration: number): WatchHistoryAccountPartition {
@@ -1468,11 +1488,20 @@ function inferredObservationDisplayMode(
 let backgroundWatchHistoryClient: ReturnType<typeof createWatchHistoryClient> | undefined;
 const historyPageTabs = new Map<string, number>();
 
+/** Trusted browser tab lifecycle: the document cannot send a final release after destruction. */
+export function cancelWatchHistoryCatalogForTab(tabId: number): void {
+  for (const [pageId, ownerTab] of historyPageTabs) if (ownerTab === tabId) {
+    historyPageTabs.delete(pageId);
+    backgroundWatchHistoryClient?.cancelCatalogPage(pageId);
+  }
+}
+
 export async function handleWatchHistoryHttpMessage(
   message: WatchHistoryMessage,
   sender?: chrome.runtime.MessageSender,
 ): Promise<WatchHistoryMessageResponse> {
   if (sender && !isWatchHistorySenderAllowed(message, sender)) return { ok: false, status: "rejected" };
+  if (message.command === "catalog-release" && sender?.tab?.id !== undefined && historyPageTabs.get(message.pageId) !== sender.tab.id) return { ok: false, status: "rejected" };
   if ((message.command === "catalog-begin" || message.command === "catalog-commit") && sender?.tab?.id !== undefined) historyPageTabs.set(message.pageId, sender.tab.id);
   const { getCurrentExtensionSession } = await import("./auth-client");
   const { getStoredAuthTokens } = await import("./auth-tokens");
@@ -1485,7 +1514,10 @@ export async function handleWatchHistoryHttpMessage(
       if (tabId !== undefined) void chrome.tabs.sendMessage(tabId, { type: "ANIDACHI_WATCH_CATALOG_ABORT", pageId }).catch(() => undefined);
     },
   });
-  return backgroundWatchHistoryClient.handle(message);
+  if (message.command === "catalog-begin" && sender?.tab?.id !== undefined && historyPageTabs.get(message.pageId) !== sender.tab.id) return { ok: false, status: "rejected" };
+  const response = await backgroundWatchHistoryClient.handle(message);
+  if (message.command === "catalog-release" && response.ok) historyPageTabs.delete(message.pageId);
+  return response;
 }
 
 export function isWatchHistorySenderAllowed(message: WatchHistoryMessage, sender: chrome.runtime.MessageSender): boolean {
@@ -1495,7 +1527,7 @@ export function isWatchHistorySenderAllowed(message: WatchHistoryMessage, sender
   let url: URL;
   try { url = new URL(sender.url); } catch { return false; }
   if (url.protocol !== "https:" || !["crunchyroll.com", "www.crunchyroll.com", "youtube.com", "www.youtube.com", "m.youtube.com"].includes(url.hostname)) return false;
-  return ["bootstrap", "bootstrap-cache", "pending-identities", "observe-progress", "enqueue-progress", "resolve-identity", "catalog-begin", "catalog-commit", "content-reconnect", "recover-storage", "flush"].includes(message.command);
+  return ["bootstrap", "bootstrap-cache", "pending-identities", "observe-progress", "enqueue-progress", "resolve-identity", "catalog-begin", "catalog-commit", "catalog-release", "content-reconnect", "recover-storage", "flush"].includes(message.command);
 }
 
 export function usesStoredWatchHistorySession(
@@ -1506,6 +1538,7 @@ export function usesStoredWatchHistorySession(
     command === "pending-identities" ||
     command === "catalog-begin" ||
     command === "catalog-commit" ||
+    command === "catalog-release" ||
     command === "observe-progress" ||
     command === "bootstrap" ||
     command === "bootstrap-cache" ||

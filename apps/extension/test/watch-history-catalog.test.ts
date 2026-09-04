@@ -3,6 +3,8 @@ import { collectCrunchyrollHistoryCatalog, resolveCrunchyrollHistoryMetadata } f
 import variants from "./fixtures/crunchyroll/catalog-variants.json";
 import catalog from "./fixtures/crunchyroll/catalog-complete-multiseason.json";
 import { createWatchHistoryCatalogCoordinator, createWatchHistoryPageResolver } from "../src/watch-history-catalog";
+import { createWatchHistoryClient } from "../src/watch-history-client";
+import { createWatchHistoryStorage, watchHistoryPartitionKey, type WatchHistoryStorageRoot } from "../src/watch-history-storage";
 
 const context = { region: "VN", requestedLocale: "fr-FR", audioLocale: "ja-JP", subtitleLocales: ["en-US"], observedAt: "2026-09-05T00:00:00.000Z" };
 const owner = "00000000-0000-4000-8000-000000000001";
@@ -14,6 +16,57 @@ function ack(revision: number) {
 }
 
 describe("catalog background begin/commit ownership", () => {
+  it("fences release by owner, generation, page and revision without releasing a replacement or concurrent tab", async () => {
+    let requests = 0;
+    const coordinator = createWatchHistoryCatalogCoordinator({ request: async () => ack(++requests), isCurrent: async () => true,
+      save: async () => undefined, invalidate: async () => undefined });
+    await coordinator.begin(owner, "first", beginInput);
+    expect(await coordinator.begin(owner, "concurrent", beginInput)).toBeNull();
+    expect(requests).toBe(1);
+    const input = { accountGeneration: 1, titleKey: beginInput.titleKey, revision: 1 };
+    expect(await coordinator.release("different-owner", "first", input)).toBe(false);
+    expect(await coordinator.release(owner, "first", { ...input, accountGeneration: 2 })).toBe(false);
+    expect(await coordinator.release(owner, "concurrent", input)).toBe(false);
+    expect(await coordinator.release(owner, "first", { ...input, revision: 2 })).toBe(false);
+    expect(await coordinator.release(owner, "first", input)).toBe(true);
+    await coordinator.begin(owner, "second", beginInput);
+    expect(requests).toBe(2);
+    expect(await coordinator.release(owner, "first", input)).toBe(false);
+    coordinator.cancelPage("first");
+    expect(await coordinator.begin(owner, "concurrent", beginInput)).toBeNull();
+    expect(requests).toBe(2);
+    coordinator.cancelPage("second");
+    await coordinator.begin(owner, "third", beginInput);
+    expect(requests).toBe(3);
+  });
+  it.each(["failure", "close"])("releases a %s collection so another page can begin the same context", async (mode) => {
+    let stored: WatchHistoryStorageRoot = { schemaVersion: 3, activeGenerations: { [owner]: 1 }, partitions: {
+      [watchHistoryPartitionKey(owner, 1)]: { ownerUserId: owner, accountGeneration: 1, cache: null, preferences: null, currentObservation: null,
+        outbox: { ownerUserId: owner, accountGeneration: 1, entries: [] } },
+    } };
+    let begins = 0;
+    let collections = 0;
+    const background = createWatchHistoryClient({ getCurrentSession: async () => ({ accessToken: "test", refreshToken: "test", user: { id: owner } } as never),
+      storage: createWatchHistoryStorage({ item: { getValue: async () => stored, setValue: async (value) => { stored = value; } }, getBytesInUse: async () => 0, quotaBytes: 1_000_000 }),
+      fetch: async () => Response.json(ack(++begins)),
+    });
+    const command = async (action: string, _payload?: unknown, _timeout?: number, signal?: AbortSignal) => {
+      if (action === "historyIdentity") return { ok: true, metadata: { identity: { providerContentId: "RAW", providerSeriesId: "SERIES", providerSeasonIdentifier: "SERIES|S1", providerEpisodeIdentifier: "SERIES|S1|E1", audioLocale: "en-US" }, context, episodeNumber: 1 } } as never;
+      collections++;
+      if (mode === "close" && collections === 1) return new Promise<never>((resolve) => signal!.addEventListener("abort", () => resolve({ ok: false } as never), { once: true }));
+      return { ok: false } as never;
+    };
+    const event = { provider: "crunchyroll", accountGeneration: 1, clientEventId: "one", identityPending: { watchId: "RAW", requestedLocale: "fr-FR" } } as never;
+    const first = createWatchHistoryPageResolver({ pageId: "first", send: background.handle, command });
+    const collecting = first.resolve(event, owner, { refreshCatalog: true });
+    await vi.waitFor(() => expect(collections).toBe(1));
+    if (mode === "close") first.dispose();
+    await collecting;
+    const second = createWatchHistoryPageResolver({ pageId: "second", send: background.handle, command });
+    await second.resolve(event, owner, { refreshCatalog: true });
+    expect(begins).toBe(2);
+    expect(collections).toBe(2);
+  });
   it("commits only the issued context once, cancels an older SPA source, and asks the server again after restart", async () => {
     const requests: Array<{ path: string; signal: AbortSignal }> = [];
     const save = vi.fn(async () => undefined);

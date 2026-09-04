@@ -167,7 +167,6 @@ export function createWatchHistoryStorage(
             currentObservationMeaningfulSolo: false,
             currentObservationDisplayMode: null,
             catalogAcknowledgements: {},
-            outbox: { ...partition.outbox, entries: partition.outbox.entries.filter((entry) => !entry.event.identityPending) },
           };
           return cleared.outbox.entries.length === 0 ? [] : [[key, cleared]];
         }),

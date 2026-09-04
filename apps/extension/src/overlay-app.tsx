@@ -2499,6 +2499,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		const definition = getDefinitionForProvider(adapter.provider);
 		if (!definition?.historyPolicy) return;
 		const pageHistory = createWatchHistoryPageResolver({ send: requestWatchHistory });
+		const closeHistoryPage = () => pageHistory.suspendCatalogs();
+		window.addEventListener("pagehide", closeHistoryPage);
 		const abortCatalog = (message: unknown) => {
 			if (typeof message === "object" && message !== null && "type" in message && message.type === "ANIDACHI_WATCH_CATALOG_ABORT" && "pageId" in message && typeof message.pageId === "string") pageHistory.abortCatalogs(message.pageId);
 		};
@@ -2604,6 +2606,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		});
 		return () => {
 			pageHistory.dispose();
+			window.removeEventListener("pagehide", closeHistoryPage);
 			chrome.runtime.onMessage?.removeListener(abortCatalog);
 			removeHistoryPreferenceListener();
 			removeHistoryListeners();

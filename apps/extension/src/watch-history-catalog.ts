@@ -43,6 +43,18 @@ export function createWatchHistoryCatalogCoordinator(dependencies: Dependencies)
     }
   }
 
+  function cancelPage(pageId: string): void {
+    for (const [id, job] of jobs) if (job.pageId === pageId) { job.abort.abort(); jobs.delete(id); }
+  }
+
+  async function release(owner: string, pageId: string, input: { accountGeneration: number; titleKey: string; revision: number }): Promise<boolean> {
+    const job = jobs.get(key(owner, input.titleKey));
+    if (!job || job.pageId !== pageId || job.input.accountGeneration !== input.accountGeneration ||
+      job.ack?.revision !== input.revision || !await current(owner, job)) return false;
+    job.abort.abort(); jobs.delete(key(owner, input.titleKey));
+    return true;
+  }
+
   function begin(owner: string, pageId: string, raw: unknown): Promise<WatchCatalogBeginAck | null> {
     const parsed = WatchCatalogBeginRequestSchema.safeParse(raw);
     if (!parsed.success || !parsed.data.context.region) return Promise.resolve(null);
@@ -98,7 +110,7 @@ export function createWatchHistoryCatalogCoordinator(dependencies: Dependencies)
       return await current(owner, job) ? ack : null;
     } catch { return null; }
   }
-  return { begin, commit, cancel };
+  return { begin, commit, cancel, release, cancelPage };
 }
 
 function matches(owner: string, input: WatchCatalogBeginRequest | WatchCatalogCommitRequest,
@@ -161,17 +173,24 @@ export function createWatchHistoryPageResolver(dependencies: {
     const input: WatchCatalogBeginRequest = { schemaVersion: 3, provider: "crunchyroll", accountGeneration: event.accountGeneration,
       titleKey, providerSeriesId: metadata.identity.providerSeriesId, context: structuredClone(metadata.context) };
     const collecting = (async () => {
+      let revision: number | null = null;
       try {
         const response = await dependencies.send({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "catalog-begin", expectedOwnerUserId: owner, pageId: visitId, input });
-        if (!response.ok || disposed || abort.signal.aborted) return;
+        if (!response.ok) return;
         const parsed = WatchCatalogBeginAckSchema.safeParse(response.data);
-        if (!parsed.success || !matches(owner, input, parsed.data) || !parsed.data.refreshRequired) return;
+        if (!parsed.success || !matches(owner, input, parsed.data)) return;
+        revision = parsed.data.revision;
+        if (disposed || abort.signal.aborted || !parsed.data.refreshRequired) return;
         const result = await command("historyCatalog", { seriesId: input.providerSeriesId, context: input.context }, 120_000, abort.signal);
         if (!result.ok || !result.catalog || disposed || abort.signal.aborted) return;
         await dependencies.send({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "catalog-commit", expectedOwnerUserId: owner, pageId: visitId,
           input: { ...input, revision: parsed.data.revision, snapshot: result.catalog } });
       } catch { /* One bounded attempt per context/visit; a new visit can retry. */ }
-      finally { if (activeCatalogs.get(jobKey)?.abort === abort) activeCatalogs.delete(jobKey); }
+      finally {
+        if (revision !== null) await dependencies.send({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "catalog-release", expectedOwnerUserId: owner,
+          pageId: visitId, accountGeneration: input.accountGeneration, titleKey, revision }).catch(() => undefined);
+        if (activeCatalogs.get(jobKey)?.abort === abort) activeCatalogs.delete(jobKey);
+      }
     })();
     activeCatalogs.set(jobKey, { abort, signature, visitId, promise: collecting });
     await Promise.all([resolution, collecting]);
@@ -181,7 +200,7 @@ export function createWatchHistoryPageResolver(dependencies: {
       active.abort.abort(); activeCatalogs.delete(key);
     }
   }
-  return { resolve, pageId, abortCatalogs, dispose: () => {
+  return { resolve, pageId, abortCatalogs, suspendCatalogs: () => { currentSource = null; abortCatalogs(); }, dispose: () => {
     disposed = true; abortCatalogs();
     for (const { abort } of mappings.values()) abort.abort();
     mappings.clear();

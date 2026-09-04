@@ -779,6 +779,7 @@ describe("privileged overlay wiring", () => {
 		await click(button(view.container, "Open Anidachi controls"));
 		const createRoom = button(view.container, "Create room");
 		await click(createRoom);
+		await flushRoomActionWork();
 		const endRoom = primaryRoomAction(view.container);
 		close.mockClear();
 		await click(endRoom);
@@ -843,6 +844,7 @@ describe("privileged overlay wiring", () => {
 
 		await click(button(view.container, "Open Anidachi controls"));
 		await click(button(view.container, "Create room"));
+		await flushRoomActionWork();
 		await flushMountedWork();
 		await act(async () => {
 			window.dispatchEvent(
@@ -977,6 +979,7 @@ describe("privileged overlay wiring", () => {
 
 		await click(button(view.container, "Open Anidachi controls"));
 		await click(button(view.container, "Create room"));
+		await flushRoomActionWork();
 		const nativeAddEventListener = window.addEventListener.bind(window);
 		const windowComposerListeners = new Map<
 			string,
@@ -2980,9 +2983,7 @@ async function waitForButton(
 				candidate.textContent?.trim() === name,
 		);
 		if (found instanceof HTMLButtonElement) return found;
-		await act(async () => {
-			await Promise.resolve();
-		});
+		await flushRoomActionWork();
 	}
 	throw new Error(`Missing button ${name}`);
 }

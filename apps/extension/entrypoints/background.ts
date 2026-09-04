@@ -68,6 +68,7 @@ import {
 import { handleSocialHttpMessage, isSocialHttpMessage } from "../src/social-client";
 import {
   flushWatchHistoryInBackground,
+  cancelWatchHistoryCatalogForTab,
   handleWatchHistoryAuthSessionChange,
   handleWatchHistoryHttpMessage,
   isWatchHistoryMessage,
@@ -383,7 +384,11 @@ export default defineBackground(() => {
   void drainRoomDepartureRetries().catch(() => undefined);
 
   chrome.tabs.onRemoved.addListener((tabId) => {
+    cancelWatchHistoryCatalogForTab(tabId);
     void handleRemovedRoomTab(tabId).catch(() => undefined);
+  });
+  chrome.tabs.onUpdated?.addListener((tabId, changeInfo) => {
+    if (changeInfo.status === "loading") cancelWatchHistoryCatalogForTab(tabId);
   });
 });
 

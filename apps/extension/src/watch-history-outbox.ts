@@ -33,6 +33,7 @@ export type WatchHistoryOutboxEntry = {
   key: string;
   slot: WatchHistoryOutboxSlot;
   persistedAt: number;
+  flushAfterIdentity?: boolean;
 };
 
 export type WatchHistoryOutboxPartition = {
@@ -61,6 +62,7 @@ export function enqueueWatchHistoryEvent(
   partition: WatchHistoryOutboxPartition,
   event: WatchProgressEvent,
   persistedAt = Date.now(),
+  flushAfterIdentity = false,
 ): WatchHistoryOutboxPartition {
   if (event.accountGeneration !== partition.accountGeneration) {
     throw new Error("Watch history event generation does not match its outbox partition");
@@ -70,7 +72,10 @@ export function enqueueWatchHistoryEvent(
   if (slot === "terminal" && partition.entries.some((candidate) => candidate.key === key && candidate.slot === slot)) {
     return partition;
   }
-  const entry: WatchHistoryOutboxEntry = { event, key, slot, persistedAt };
+  const prior = partition.entries.find((candidate) => candidate.key === key && candidate.slot === slot);
+  const entry: WatchHistoryOutboxEntry = { event, key, slot, persistedAt,
+    ...((event as WatchHistoryLocalEvent).identityPending ? { flushAfterIdentity: flushAfterIdentity || prior?.flushAfterIdentity === true } : {}),
+  };
   return {
     ...partition,
     entries: [...partition.entries.filter((candidate) => candidate.key !== key || candidate.slot !== slot), entry],
