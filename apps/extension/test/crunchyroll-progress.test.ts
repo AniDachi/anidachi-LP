@@ -7,6 +7,21 @@ import {
 } from "../src/source-adapters/crunchyroll/progress";
 
 describe("Crunchyroll current-object canonical identity", () => {
+  it("collapses explicitly matching raw seasons only when canonical identifiers agree", () => {
+    const seasonsResponse = structuredClone(variantsFixture.seasonsResponse);
+    seasonsResponse.data.push({ ...seasonsResponse.data[0], id: "DUPLICATE_RAW_SEASON" });
+    seasonsResponse.total = seasonsResponse.data.length;
+    const input = {
+      watchId: "G8WUNEWJE",
+      objectResponse: variantsFixture.objectResponses.G8WUNEWJE,
+      seasonsResponse,
+      episodesResponse: variantsFixture.episodesResponse,
+    };
+    expect(resolveCrunchyrollCurrentObjectIdentity(input)?.seasonKey)
+      .toBe("crunchyroll:season:G6NQ5DWZ6|S00003205");
+    seasonsResponse.data[1].identifier = "G6NQ5DWZ6|CONFLICT";
+    expect(resolveCrunchyrollCurrentObjectIdentity(input)).toBeNull();
+  });
   it.each([
     ["English dub", "G8WUNEWJE", "en-US"],
     ["Japanese original", "GY2PDV78Y", "ja-JP"],
@@ -131,6 +146,8 @@ describe("Crunchyroll progress extraction", () => {
       titleKey: "crunchyroll-series:my-hero-academia",
       episodeKey: "G8WUNM123",
       catalogState: "unavailable",
+      sourceUrl: "https://www.crunchyroll.com/watch/G8WUNM123",
+      identityPending: { watchId: "G8WUNM123" },
     });
   });
 

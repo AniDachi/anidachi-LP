@@ -364,7 +364,7 @@ function normalizedEpisode(
 		title:
 			boundedString(row.title) ??
 			`Episode ${boundedString(row.episode) ?? ""}`.trim(),
-		episodeNumber: finiteNonnegative(row.episode_number),
+		episodeNumber: crunchyrollDisplayEpisodeNumber(row),
 		order: finiteNonnegative(row.sequence_number) ?? Number.MAX_SAFE_INTEGER,
 		releasedAt: normalDate(row.episode_air_date),
 		available: availability === "available",
@@ -376,6 +376,14 @@ function normalizedEpisode(
 			sourceUrl: `https://www.crunchyroll.com/watch/${variant.providerContentId}`,
 		})),
 	};
+}
+
+/** Numeric provider display field only; never used for identity or ordering. */
+export function crunchyrollDisplayEpisodeNumber(row: Record<string, unknown>): number | null {
+	const display = typeof row.episode === "string" && /^\d+(?:\.\d+)?$/.test(row.episode)
+		? Number(row.episode)
+		: row.episode;
+	return finiteNonnegative(display) ?? finiteNonnegative(row.episode_number);
 }
 
 function envelope(

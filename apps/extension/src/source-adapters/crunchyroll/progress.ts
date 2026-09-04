@@ -82,7 +82,14 @@ export function resolveCrunchyrollCurrentObjectIdentity(input: {
 				matchingVariants(season, seasonGuid).length > 0) &&
 			matchingVariants(season, seasonGuid).length === 1,
 	);
-	if (seasons.length !== 1) return null;
+	if (seasons.length === 0) return null;
+	// Different raw audio-season rows can declare the same canonical season.
+	// Every row matching this exact GUID must agree; labels are not identity.
+	if (seasons.some((candidate) =>
+		candidate.identifier !== seasons[0].identifier ||
+		!readPathSafeId(candidate.id, "crunchyroll:raw:") ||
+		(candidate.series_id != null && candidate.series_id !== providerSeriesId)
+	)) return null;
 	const season = seasons[0];
 	const seasonRawId = readPathSafeId(season.id, "crunchyroll:raw:");
 	const providerSeasonIdentifier = readCanonicalPart(
@@ -103,12 +110,12 @@ export function resolveCrunchyrollCurrentObjectIdentity(input: {
 		(season.series_id != null && seasonSeriesId === null) ||
 		(seasonSeriesId !== null && seasonSeriesId !== providerSeriesId)
 	) return null;
-	const seasonAliases = new Set([
-		seasonRawId,
-		...identityRecords(season.versions).map((variant) =>
+	const seasonAliases = new Set(seasons.flatMap((candidate) => [
+		readPathSafeId(candidate.id, "crunchyroll:raw:"),
+		...identityRecords(candidate.versions).map((variant) =>
 			readPathSafeId(variant.guid, "crunchyroll:raw:"),
 		),
-	].filter((value): value is string => value !== null));
+	]).filter((value): value is string => value !== null));
 
 	const episodes = responseData(input.episodesResponse).filter(
 		(episode) =>
@@ -325,6 +332,10 @@ export function getCrunchyrollHistoryObservation(input: {
     duration: adapter.video.duration,
     progress: adapter.video.currentTime / adapter.video.duration,
     catalogState: "unavailable",
+    identityPending: {
+      watchId: new URL(url).pathname.split("/")[2],
+      requestedLocale: document.documentElement.lang || navigator.language || "en-US",
+    },
   };
 }
 
@@ -340,7 +351,7 @@ function getCanonicalCrunchyrollWatchUrl(value: string): string | null {
     /^\/(?:(?<locale>[a-z]{2}(?:-[a-z]{2})?)\/)?watch\/(?<id>[A-Za-z0-9_-]+)(?:\/(?<slug>[A-Za-z0-9][A-Za-z0-9-]*))?\/?$/,
   );
   if (!match?.groups?.id) return null;
-  return `${url.origin}${url.pathname}`;
+  return `https://www.crunchyroll.com/watch/${match.groups.id}`;
 }
 
 interface CrunchyrollSeriesInfo {

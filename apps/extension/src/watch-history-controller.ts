@@ -6,12 +6,14 @@ import type {
 import type { HistoryObservation } from "./source-adapters/core/history-policy";
 import type { WatchHistoryCaptureResult } from "./watch-history-client";
 import type { WatchHistoryObservationDisplayMode } from "./watch-history-storage";
+import type { WatchHistoryLocalEvent } from "./watch-history-outbox";
 
 export const WATCH_HISTORY_HEARTBEAT_MS = 60_000;
 
 type HistoryEventKind = WatchProgressEvent["kind"];
 
 export type WatchHistoryControllerDependencies = {
+  onPersisted?: (event: WatchHistoryLocalEvent, owner: string, options: { refreshCatalog: boolean }) => Promise<void> | void;
   getObservation: (preferences: WatchHistoryPreferences | null) => HistoryObservation | null;
   getRoomActive: () => boolean;
   loadCachedPreferences?: () => Promise<{
@@ -50,6 +52,7 @@ export type WatchHistoryControllerDependencies = {
 };
 
 export type WatchHistoryController = {
+  notePlaybackInteraction(): Promise<void>;
   start(): Promise<void>;
   observe(kind: HistoryEventKind): Promise<void>;
   noteSeeking(): Promise<void>;
@@ -93,6 +96,7 @@ export function createWatchHistoryController(
   let lifecycle = 0;
   let queue: Promise<void> = Promise.resolve();
   let disposePromise: Promise<void> | null = null;
+  let interactionPending = dependencies.isPlaying();
   let roomExitPromise: Promise<void> | null = null;
 
   function serial(operation: () => Promise<void>): Promise<void> {
@@ -292,6 +296,7 @@ export function createWatchHistoryController(
       }
       resetMeaningfulState();
       retained = observation;
+      interactionPending = true;
       retainedIdentity = identity;
       clientSessionKey = createSessionKey();
       if (awaitingRoomSourceIdentity !== null && identity !== awaitingRoomSourceIdentity) {
@@ -415,6 +420,11 @@ export function createWatchHistoryController(
       if (isFailedCapture(result)) {
         if (persistedAuthorityRevision === authorityRevision) handleCaptureFailure(result);
         return false;
+      }
+      if (queueForSync && dependencies.onPersisted) {
+        const refreshCatalog = interactionPending && event.kind !== "source_change" && event.kind !== "pagehide";
+        if (refreshCatalog) interactionPending = false;
+        void Promise.resolve(dependencies.onPersisted(event, ownerUserId, { refreshCatalog })).catch(() => undefined);
       }
       return true;
     } catch {
@@ -692,6 +702,7 @@ export function createWatchHistoryController(
   }
 
   return {
+    notePlaybackInteraction: () => { interactionPending = true; return Promise.resolve(); },
     start,
     observe,
     noteSeeking,
@@ -740,9 +751,9 @@ function toEvent(
   clientSessionKey: string,
   observedAt: number,
   sharedRoom: RoomHistoryAuthority | null = null,
-): WatchProgressEvent {
+): WatchHistoryLocalEvent {
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     clientEventId,
     clientSessionKey,
     accountGeneration,
@@ -764,5 +775,8 @@ function toEvent(
     observedAt: new Date(observedAt).toISOString(),
     kind,
     sharedRoom,
+    ...(observation.identityPending ? { identityPending: observation.identityPending } : {}),
+    ...(observation.crunchyrollIdentity ? { crunchyrollIdentity: observation.crunchyrollIdentity } : {}),
+    ...(observation.provider === "youtube" ? { youtubeVideoId: observation.youtubeVideoId ?? new URL(observation.sourceUrl).searchParams.get("v") ?? undefined } : {}),
   };
 }

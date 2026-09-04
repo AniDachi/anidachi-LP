@@ -1,7 +1,11 @@
 import type { WatchHistoryPreferences } from "@anidachi/protocol";
 import type { VideoAdapter } from "./types";
+import type { WatchHistoryLocalEvent } from "../../watch-history-outbox";
 
 export type HistoryObservation = {
+  identityPending?: WatchHistoryLocalEvent["identityPending"];
+  crunchyrollIdentity?: WatchHistoryLocalEvent["crunchyrollIdentity"];
+  youtubeVideoId?: string;
   provider: "crunchyroll" | "youtube";
   providerLabel: string;
   titleKey: string;

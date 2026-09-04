@@ -22,6 +22,19 @@ function input(): any {
 }
 
 describe("normalizeCrunchyrollCatalog", () => {
+  it("preserves numeric display episode 13.5 separately from episode_number 13 and sequence 1", () => {
+    const value = input();
+    const episode = value.episodeResponses.GYDQCGQ03.data[0];
+    episode.episode = "13.5";
+    episode.episode_number = 13;
+    episode.sequence_number = 1;
+    const normalized = normalizeCrunchyrollCatalog(value).snapshot.seasons
+      .flatMap((season) => season.episodes)
+      .find((row) => row.providerEpisodeIdentifier === episode.identifier);
+    expect(normalized?.episodeNumber).toBe(13.5);
+    expect(normalized?.providerEpisodeIdentifier).toBe(episode.identifier);
+    expect(normalized?.order).toBe(0);
+  });
 	it("normalizes canonical identities and variants in deterministic provider order", () => {
 		const result = normalizeCrunchyrollCatalog(input());
 		expect(result.completeness).toBe("complete");

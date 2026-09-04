@@ -2,7 +2,6 @@ import {
   WATCH_HISTORY_TITLE_EPISODE_SLICE_LIMIT,
   type WatchHistoryDeleteScope,
   WatchHistoryDeletionAckSchema,
-  WatchHistoryEpisodeSchema,
   type WatchHistoryItem,
   type WatchHistoryPreferences,
   WatchHistoryPreferencesResponseSchema,
@@ -88,7 +87,8 @@ function isSameHistoryRevision(
     current.meta.accountGeneration === next.meta.accountGeneration &&
     current.meta.serverTime === next.meta.serverTime &&
     current.generatedAt === next.generatedAt &&
-    current.totalTitleCount === next.totalTitleCount,
+    current.totalTitleCount === next.totalTitleCount &&
+    JSON.stringify(current.items) === JSON.stringify(next.items),
   );
 }
 
@@ -181,14 +181,14 @@ export function PopupWatchHistoryPanel({
       const preferencesRequest = requestPopupWatchHistory(
         client,
         createWatchHistoryMessage({
-          type: "ANIDACHI_WATCH_HISTORY_V2",
+          type: "ANIDACHI_WATCH_HISTORY_V3",
           command: "get-preferences",
         }),
       );
       const oldOwnerRequest = requestPopupWatchHistory(
         client,
         createWatchHistoryMessage({
-          type: "ANIDACHI_WATCH_HISTORY_V2",
+          type: "ANIDACHI_WATCH_HISTORY_V3",
           command: "other-owner-pending",
         }),
       );
@@ -336,7 +336,7 @@ export function PopupWatchHistoryPanel({
     setBusyAction("preferences");
     setError(null);
     const response = await requestPopupWatchHistory(client, createWatchHistoryMessage({
-      type: "ANIDACHI_WATCH_HISTORY_V2",
+      type: "ANIDACHI_WATCH_HISTORY_V3",
       command: "update-preferences",
       input: nextPreferences,
     }));
@@ -356,10 +356,10 @@ export function PopupWatchHistoryPanel({
     setBusyAction(actionKey);
     setError(null);
     const response = await client.request(createWatchHistoryMessage({
-      type: "ANIDACHI_WATCH_HISTORY_V2",
+      type: "ANIDACHI_WATCH_HISTORY_V3",
       command: "delete",
       input: {
-        schemaVersion: 2,
+        schemaVersion: 3,
         clientMutationId: crypto.randomUUID(),
         accountGeneration: history.meta.accountGeneration,
         target,
@@ -391,7 +391,7 @@ export function PopupWatchHistoryPanel({
     setBusyAction(`room:${session.id}`);
     setError(null);
     const response = await client.request(createWatchHistoryMessage({
-      type: "ANIDACHI_WATCH_HISTORY_V2",
+      type: "ANIDACHI_WATCH_HISTORY_V3",
       command: "create-room",
       sessionId: session.id,
       clientRequestId: crypto.randomUUID(),
@@ -415,7 +415,7 @@ export function PopupWatchHistoryPanel({
     if (!client.confirmDiscard("Discard pending Watch History from another account?")) return;
     setBusyAction("discard-old-owner");
     const response = await client.request(createWatchHistoryMessage({
-      type: "ANIDACHI_WATCH_HISTORY_V2",
+      type: "ANIDACHI_WATCH_HISTORY_V3",
       command: "discard-old-owner-work",
       confirmed: true,
     }));
@@ -431,7 +431,7 @@ export function PopupWatchHistoryPanel({
       setBusyAction("refresh");
       setError(null);
       const response = await client.request(createWatchHistoryMessage({
-        type: "ANIDACHI_WATCH_HISTORY_V2",
+        type: "ANIDACHI_WATCH_HISTORY_V3",
         command: "recover-storage",
       }));
       if (requestGeneration.current !== expectedGeneration) return;
@@ -1292,29 +1292,54 @@ export async function loadConfirmedPopupWatchHistorySnapshot(
   return selectConfirmedPopupWatchHistorySnapshot(root, ownerUserId);
 }
 
-function subscribeToPopupWatchHistorySnapshot(
+export function subscribeToPopupWatchHistorySnapshot(
   ownerUserId: string,
   listener: (snapshot: PopupWatchHistorySnapshot | null) => void,
+  dependencies: {
+    onChanged?: Pick<typeof chrome.storage.onChanged, "addListener" | "removeListener">;
+    load?: typeof loadConfirmedPopupWatchHistorySnapshot;
+    refresh?: typeof requestWatchHistory;
+  } = {},
 ): () => void {
   let disposed = false;
   let sequence = 0;
+  let scheduled = false;
+  let requestedRevision = "";
+  const onChanged = dependencies.onChanged ?? chrome.storage.onChanged;
+  const load = dependencies.load ?? loadConfirmedPopupWatchHistorySnapshot;
+  const refresh = dependencies.refresh ?? requestWatchHistory;
   const handleStorageChange = (
     changes: Record<string, chrome.storage.StorageChange>,
     areaName: string,
   ) => {
-    if (areaName !== "local" || !changes[WATCH_HISTORY_STORAGE_KEY]) return;
+    if (disposed || areaName !== "local" || !changes[WATCH_HISTORY_STORAGE_KEY]) return;
+    const root = changes[WATCH_HISTORY_STORAGE_KEY].newValue as WatchHistoryStorageRoot | undefined;
+    const generation = root?.schemaVersion === 3 ? root.activeGenerations?.[ownerUserId] : undefined;
+    const partition = generation === undefined ? undefined : root?.partitions?.[watchHistoryPartitionKey(ownerUserId, generation)];
+    const invalidation = partition?.invalidationRevision ?? 0;
+    const signature = `${generation}:${invalidation}`;
+    if (partition?.ownerUserId === ownerUserId && invalidation > (partition.cacheRevision ?? 0) && signature !== requestedRevision) {
+      requestedRevision = signature;
+      if (!scheduled) {
+        scheduled = true;
+        queueMicrotask(() => {
+          scheduled = false;
+          if (!disposed) void refresh(createListWatchHistoryMessage({ limit: 100 })).catch(() => undefined);
+        });
+      }
+    }
     const currentSequence = ++sequence;
-    void loadConfirmedPopupWatchHistorySnapshot(ownerUserId)
+    void load(ownerUserId)
       .then((snapshot) => {
         if (!disposed && currentSequence === sequence) listener(snapshot);
       })
       .catch(() => undefined);
   };
-  chrome.storage.onChanged.addListener(handleStorageChange);
+  onChanged.addListener(handleStorageChange);
   return () => {
     disposed = true;
     sequence += 1;
-    chrome.storage.onChanged.removeListener(handleStorageChange);
+    onChanged.removeListener(handleStorageChange);
   };
 }
 
@@ -1373,93 +1398,8 @@ export function selectConfirmedPopupWatchHistorySnapshot(
 }
 
 function normalizeCachedWatchHistoryResponse(value: unknown): WatchHistoryResponse | null {
-  const current = WatchHistoryResponseSchema.safeParse(value);
-  if (current.success) return current.data;
-  if (!isPopupRecord(value) || !Array.isArray(value.items)) return null;
-  const items: unknown[] = [];
-  for (const item of value.items) {
-    const normalized = normalizeLegacyCachedWatchHistoryItem(item);
-    if (!normalized) return null;
-    items.push(normalized);
-  }
-  const normalized = WatchHistoryResponseSchema.safeParse({ ...value, items });
-  return normalized.success ? normalized.data : null;
-}
-
-function normalizeLegacyCachedWatchHistoryItem(value: unknown): unknown | null {
-  if (!isPopupRecord(value) ||
-    Object.hasOwn(value, "observedEpisodeCount") ||
-    Object.hasOwn(value, "completedEpisodeCount") ||
-    Object.hasOwn(value, "episodePage") ||
-    !Array.isArray(value.seasons)) {
-    return null;
-  }
-  type ParsedEpisode = ReturnType<typeof WatchHistoryEpisodeSchema.parse>;
-  const episodesByKey = new Map<string, ParsedEpisode>();
-  const parsedSeasons: Array<{
-    source: Record<string, unknown>;
-    episodes: ParsedEpisode[];
-  }> = [];
-  for (const season of value.seasons) {
-    if (!isPopupRecord(season) || !Array.isArray(season.episodes)) return null;
-    const episodes: ParsedEpisode[] = [];
-    for (const episodeValue of season.episodes) {
-      const episode = WatchHistoryEpisodeSchema.safeParse(episodeValue);
-      if (!episode.success || episodesByKey.has(episode.data.episodeKey)) return null;
-      episodesByKey.set(episode.data.episodeKey, episode.data);
-      episodes.push(episode.data);
-    }
-    parsedSeasons.push({ source: season, episodes });
-  }
-  const allEpisodes = [...episodesByKey.values()].sort(compareWatchHistoryEpisodesNewest);
-  const selected = allEpisodes.slice(0, WATCH_HISTORY_TITLE_EPISODE_SLICE_LIMIT);
-  const selectedKeys = new Set(selected.map((episode) => episode.episodeKey));
-  const seasons = parsedSeasons
-    .map(({ source, episodes }) => {
-      const visibleEpisodes = episodes
-        .filter((episode) => selectedKeys.has(episode.episodeKey))
-        .sort(compareWatchHistoryEpisodesNewest);
-      return {
-        ...source,
-        aggregate: {
-          completedEpisodes: visibleEpisodes.filter((episode) => episode.completedAt !== null).length,
-          availableEpisodes: null,
-          progress: null,
-        },
-        episodes: visibleEpisodes,
-        nextEpisode: null,
-      };
-    })
-    .filter((season) => season.episodes.length > 0)
-    .sort(compareWatchHistorySeasonsNewest)
-    .map((season, order) => ({ ...season, order }));
-  const isMovie = value.itemKind === "movie";
-  const latestActivity = isPopupRecord(value.latestActivity) ? value.latestActivity : null;
-  const observedEpisodeCount = isMovie ? 1 : allEpisodes.length;
-  const completedEpisodeCount = isMovie
-    ? latestActivity?.completedAt ? 1 : 0
-    : allEpisodes.filter((episode) => episode.completedAt !== null).length;
-  const complete = isMovie || observedEpisodeCount <= WATCH_HISTORY_TITLE_EPISODE_SLICE_LIMIT;
-  return {
-    ...value,
-    observedEpisodeCount,
-    completedEpisodeCount,
-    episodePage: {
-      complete,
-      nextCursor: complete ? null : LOCAL_CACHE_REFRESH_CURSOR,
-    },
-    catalogState: "unavailable",
-    aggregate: {
-      completedEpisodes: completedEpisodeCount,
-      availableEpisodes: null,
-      progress: null,
-    },
-    seasons,
-  };
-}
-
-function isPopupRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+  const parsed = WatchHistoryResponseSchema.safeParse(value);
+  return parsed.success ? parsed.data : null;
 }
 
 function isNewerThanCanonicalHistory(

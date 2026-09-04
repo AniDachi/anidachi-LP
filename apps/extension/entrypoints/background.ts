@@ -296,7 +296,7 @@ export default defineBackground(() => {
     }
 
     if (isWatchHistoryMessage(message)) {
-      void handleWatchHistoryHttpMessage(message).then(sendResponse);
+      void handleWatchHistoryHttpMessage(message, sender).then(sendResponse);
       return true;
     }
 

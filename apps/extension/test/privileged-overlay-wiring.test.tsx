@@ -1058,6 +1058,7 @@ describe("privileged overlay wiring", () => {
 
 		await click(button(view.container, "Open Anidachi controls"));
 		await click(button(view.container, "Create room"));
+		await flushRoomActionWork();
 		await flushMountedWork();
 		send.mockClear();
 		await act(async () => {
@@ -1198,6 +1199,7 @@ describe("privileged overlay wiring", () => {
 
 		await click(button(view.container, "Open Anidachi controls"));
 		await click(button(view.container, "Create room"));
+		await flushRoomActionWork();
 		await flushMountedWork();
 		await click(button(view.container, "Close Anidachi controls"));
 		send.mockClear();
@@ -1320,6 +1322,7 @@ describe("privileged overlay wiring", () => {
 
 		await click(button(view.container, "Open Anidachi controls"));
 		await click(button(view.container, "Create room"));
+		await flushRoomActionWork();
 		await flushMountedWork();
 		await click(button(view.container, "Close Anidachi controls"));
 
@@ -1491,6 +1494,7 @@ describe("privileged overlay wiring", () => {
 
 		await click(button(view.container, "Open Anidachi controls"));
 		await click(button(view.container, "Create room"));
+		await flushRoomActionWork();
 		await flushMountedWork();
 		await click(button(view.container, "Close Anidachi controls"));
 
@@ -2356,6 +2360,7 @@ describe("privileged overlay wiring", () => {
 
 		await click(button(view.container, "Open Anidachi controls"));
 		await click(button(view.container, "Create room"));
+		await flushRoomActionWork();
 		await click(
 			await waitForButton(view.container, "Invite friends and groups"),
 		);
