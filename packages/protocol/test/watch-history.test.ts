@@ -671,7 +671,7 @@ describe("watch history v3 progress contracts", () => {
   });
 });
 
-describe("watch history v2 read and mutation contracts", () => {
+describe("watch history v3 read and mutation contracts", () => {
   function responseFixture() {
     const crunchSession = {
       id: SESSION_ID,
@@ -860,6 +860,29 @@ describe("watch history v2 read and mutation contracts", () => {
       observedEpisodeCount: 51,
       completedEpisodeCount: 1,
       episodes: [canonicalEpisodeState()],
+      catalog: {
+        state: "complete" as const,
+        title: "Series One",
+        aggregate: {
+          completedEpisodes: 1,
+          availableEpisodes: 3,
+          progress: 1 / 3,
+        },
+        seasons: [
+          {
+            seasonKey: "season-one",
+            seasonTitle: "Season 1",
+            seasonNumber: 1,
+            order: 0,
+            aggregate: {
+              completedEpisodes: 1,
+              availableEpisodes: 2,
+              progress: 0.5,
+            },
+            nextEpisode: null,
+          },
+        ],
+      },
       complete: false,
       nextCursor: "episode_cursor",
     };
@@ -879,6 +902,29 @@ describe("watch history v2 read and mutation contracts", () => {
           ...canonicalEpisodeState(),
           episodeKey: `episode-${index}`,
         })),
+      }),
+    ).toThrow();
+    expect(() =>
+      WatchHistoryTitleEpisodesResponseSchema.parse({
+        ...detail,
+        catalog: {
+          ...detail.catalog,
+          seasons: Array.from({ length: 50 }, (_, index) => ({
+            ...detail.catalog.seasons[0]!,
+            seasonKey: `season-${index}`,
+            order: index,
+            nextEpisode: {
+              episodeKey: `episode-${index}`,
+              episodeTitle: "Catalog episode",
+              seasonKey: `season-${index}`,
+              seasonTitle: "Catalog season",
+              seasonNumber: index,
+              episodeNumber: 1,
+              sourceUrl: `https://example.com/${"界".repeat(2_000)}`,
+              releasedAt: null,
+            },
+          })),
+        },
       }),
     ).toThrow();
   });

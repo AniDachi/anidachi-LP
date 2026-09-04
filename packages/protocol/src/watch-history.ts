@@ -10,6 +10,7 @@ import { RoomCapabilitiesSchema, RoomHistoryAuthoritySchema } from "./types";
 
 export const WATCH_HISTORY_SCHEMA_VERSION = 3 as const;
 export const WATCH_CATALOG_MAX_BYTES = 1_024 * 1_024;
+export const WATCH_HISTORY_CATALOG_PROJECTION_MAX_BYTES = 256 * 1_024;
 export const WATCH_CATALOG_MAX_EPISODES = 2_000;
 export const WATCH_CATALOG_MAX_VARIANTS_PER_EPISODE = 32;
 export const WATCH_CATALOG_MAX_VARIANTS_PER_TITLE = 10_000;
@@ -591,6 +592,84 @@ export const WatchHistoryNextEpisodeSchema = z.strictObject({
   releasedAt: TimestampSchema.nullable(),
 });
 
+const WatchHistoryExactAggregateSchema = z
+  .strictObject({
+    completedEpisodes: z.number().int().nonnegative(),
+    availableEpisodes: z.number().int().nonnegative(),
+    progress: PlaybackProgressSchema,
+  })
+  .superRefine((aggregate, context) => {
+    if (aggregate.completedEpisodes > aggregate.availableEpisodes) {
+      context.addIssue({
+        code: "custom",
+        message: "Completed episodes cannot exceed available episodes",
+        path: ["completedEpisodes"],
+      });
+    }
+    const expected =
+      aggregate.availableEpisodes === 0
+        ? 0
+        : aggregate.completedEpisodes / aggregate.availableEpisodes;
+    if (Math.abs(aggregate.progress - expected) > 1e-6) {
+      context.addIssue({
+        code: "custom",
+        message: "Catalog progress must match exact episode totals",
+        path: ["progress"],
+      });
+    }
+  });
+
+export const WatchHistoryCatalogSeasonProjectionSchema = z.strictObject({
+  seasonKey: StableKeySchema,
+  seasonTitle: DisplayTitleSchema,
+  seasonNumber: SeasonNumberSchema.nullable(),
+  order: z.number().int().nonnegative(),
+  aggregate: WatchHistoryExactAggregateSchema,
+  nextEpisode: WatchHistoryNextEpisodeSchema.nullable(),
+});
+
+export const WatchHistoryCatalogProjectionSchema = z
+  .strictObject({
+    state: WatchCatalogStateSchema,
+    title: DisplayTitleSchema.nullable(),
+    aggregate: WatchHistoryExactAggregateSchema.nullable(),
+    seasons: z.array(WatchHistoryCatalogSeasonProjectionSchema).max(
+      WATCH_HISTORY_TITLE_EPISODE_PAGE_LIMIT,
+    ),
+  })
+  .superRefine((catalog, context) => {
+    if (
+      new TextEncoder().encode(JSON.stringify(catalog)).byteLength >
+      WATCH_HISTORY_CATALOG_PROJECTION_MAX_BYTES
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Catalog projection exceeds the 256 KiB limit",
+        path: [],
+      });
+    }
+    const exact =
+      catalog.title !== null &&
+      catalog.aggregate !== null;
+    if (catalog.state === "complete" && !exact) {
+      context.addIssue({
+        code: "custom",
+        message: "Complete catalog projections require exact metadata",
+        path: ["state"],
+      });
+    }
+    if (
+      catalog.state !== "complete" &&
+      (exact || catalog.title !== null || catalog.aggregate !== null || catalog.seasons.length > 0)
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Incomplete catalog projections cannot claim exact metadata",
+        path: ["state"],
+      });
+    }
+  });
+
 export const WatchHistoryAggregateSchema = z.strictObject({
   completedEpisodes: z.number().int().nonnegative(),
   availableEpisodes: z.number().int().nonnegative().nullable(),
@@ -832,6 +911,7 @@ export const WatchHistoryTitleEpisodesResponseSchema = z
     episodes: z
       .array(WatchHistoryEpisodeSchema)
       .max(WATCH_HISTORY_TITLE_EPISODE_PAGE_LIMIT),
+    catalog: WatchHistoryCatalogProjectionSchema,
     complete: z.boolean(),
     nextCursor: WatchHistoryEpisodeOpaqueCursorSchema.nullable(),
   })
@@ -977,6 +1057,9 @@ export type WatchHistorySession = z.infer<typeof WatchHistorySessionSchema>;
 export type WatchHistoryEpisode = z.infer<typeof WatchHistoryEpisodeSchema>;
 export type WatchHistoryNextEpisode = z.infer<
   typeof WatchHistoryNextEpisodeSchema
+>;
+export type WatchHistoryCatalogProjection = z.infer<
+  typeof WatchHistoryCatalogProjectionSchema
 >;
 export type WatchHistoryAggregate = z.infer<typeof WatchHistoryAggregateSchema>;
 export type WatchHistorySeason = z.infer<typeof WatchHistorySeasonSchema>;

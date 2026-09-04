@@ -4,23 +4,29 @@ import type {
   WatchHistoryDeletionAck,
   WatchProgressAck,
 } from "@anidachi/protocol";
-import * as watchHistoryV2Module from "./watch-history-v2";
 import {
-  applyWatchProgressV2,
-  buildWatchHistoryV2Response,
+  WatchCatalogBeginRequestSchema,
+  WatchCatalogCommitRequestSchema,
+} from "@anidachi/protocol";
+import * as watchHistoryV3Module from "./watch-history-v3";
+import {
+  applyWatchCatalogV3,
+  applyWatchProgressV3,
+  beginWatchCatalogV3,
+  buildWatchHistoryV3Response,
   decodeWatchHistoryCursor,
-  deleteWatchHistoryV2,
+  deleteWatchHistoryV3,
   encodeWatchHistoryCursor,
-  isMeaningfulWatchHistoryV2SessionIdentity,
-  listWatchHistoryTitleEpisodesV2,
-  listWatchHistoryV2,
+  isMeaningfulWatchHistoryV3SessionIdentity,
+  listWatchHistoryTitleEpisodesV3,
+  listWatchHistoryV3,
   parseResourceBoundedWatchHistoryPage,
   parseWatchHistoryTitleEpisodesPage,
-  parseWatchProgressEventV2,
-  supabaseWatchHistoryV2Store,
-  WatchHistoryV2ApiError,
-  type WatchHistoryV2Store,
-} from "./watch-history-v2";
+  parseWatchProgressEventV3,
+  supabaseWatchHistoryV3Store,
+  WatchHistoryV3ApiError,
+  type WatchHistoryV3Store,
+} from "./watch-history-v3";
 import {
   bindWatchHistoryPageRefresh,
   getWatchHistoryAggregateLabel,
@@ -62,30 +68,139 @@ function progressRow(overrides: Record<string, unknown> = {}) {
 
 function progressEvent(overrides: Record<string, unknown> = {}) {
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     clientEventId: EVENT_ID,
     clientSessionKey: "solo-session-one",
     accountGeneration: 1,
     provider: "crunchyroll",
-    titleKey: "series-one",
+    titleKey: "crunchyroll:series:SERIESONE",
     itemKind: "series",
     title: "Series One",
     artworkUrl: null,
-    episodeKey: "episode-one",
+    episodeKey: "crunchyroll:episode:EPISODEONE",
     episodeTitle: "Episode One",
-    seasonKey: "season-one",
+    seasonKey: "crunchyroll:season:SEASONONE",
     seasonTitle: "Season One",
     seasonNumber: 1,
     episodeNumber: 1,
-    sourceUrl: "https://www.crunchyroll.com/watch/episode-one/demo",
+    sourceUrl: "https://www.crunchyroll.com/watch/CONTENTONE",
     currentTime: 600,
     duration: 1_200,
     progress: 0.5,
     observedAt: NOW,
     kind: "pause",
+    crunchyrollIdentity: {
+      providerSeriesId: "SERIESONE",
+      providerSeasonIdentifier: "SEASONONE",
+      providerEpisodeIdentifier: "EPISODEONE",
+      providerContentId: "CONTENTONE",
+      audioLocale: "ja-JP",
+    },
     ...overrides,
   };
 }
+
+const catalogContext = {
+  region: "US",
+  requestedLocale: "en-US",
+  audioLocale: "ja-JP",
+  subtitleLocales: ["en-US"],
+  observedAt: NOW,
+};
+
+function catalogBeginRequest(overrides: Record<string, unknown> = {}) {
+  return {
+    schemaVersion: 3,
+    accountGeneration: 1,
+    provider: "crunchyroll",
+    titleKey: "crunchyroll:series:SERIESONE",
+    providerSeriesId: "SERIESONE",
+    context: catalogContext,
+    ...overrides,
+  };
+}
+
+function catalogCommitRequest(overrides: Record<string, unknown> = {}) {
+  return {
+    ...catalogBeginRequest(),
+    revision: 7,
+    snapshot: {
+      schemaVersion: 3,
+      provider: "crunchyroll",
+      titleKey: "crunchyroll:series:SERIESONE",
+      providerSeriesId: "SERIESONE",
+      title: "Catalog title",
+      completeness: "complete",
+      context: catalogContext,
+      seasons: [{
+        seasonKey: "crunchyroll:season:SEASONONE",
+        providerSeasonIdentifier: "SEASONONE",
+        title: "Catalog season",
+        seasonNumber: 1,
+        order: 0,
+        episodes: [{
+          episodeKey: "crunchyroll:episode:EPISODEONE",
+          providerEpisodeIdentifier: "EPISODEONE",
+          title: "Catalog episode",
+          episodeNumber: 1,
+          order: 0,
+          releasedAt: null,
+          available: true,
+          watchVariants: [{
+            providerContentId: "CONTENTONE",
+            audioLocale: "ja-JP",
+            original: true,
+            order: 0,
+            sourceUrl: "https://www.crunchyroll.com/watch/CONTENTONE",
+          }],
+        }],
+      }],
+    },
+    ...overrides,
+  };
+}
+
+function catalogBeginAck(overrides: Record<string, unknown> = {}) {
+  return {
+    meta: { serverTime: NOW, schemaVersion: 3, ownerUserId: USER_ID, accountGeneration: 1 },
+    schemaVersion: 3,
+    provider: "crunchyroll",
+    titleKey: "crunchyroll:series:SERIESONE",
+    accountGeneration: 1,
+    revision: 7,
+    refreshRequired: true,
+    availabilityChanged: false,
+    effectiveCatalogState: "unavailable",
+    projectionRevision: null,
+    acceptedHash: null,
+    acceptedAt: null,
+    ...overrides,
+  };
+}
+
+function catalogCommitAck(overrides: Record<string, unknown> = {}) {
+  return {
+    meta: { serverTime: NOW, schemaVersion: 3, ownerUserId: USER_ID, accountGeneration: 1 },
+    schemaVersion: 3,
+    provider: "crunchyroll",
+    titleKey: "crunchyroll:series:SERIESONE",
+    accountGeneration: 1,
+    revision: 7,
+    outcome: "applied",
+    effectiveCatalogState: "complete",
+    projectionRevision: 7,
+    acceptedHash: "sha256:server-authoritative",
+    acceptedAt: NOW,
+    ...overrides,
+  };
+}
+
+const unavailableCatalog = {
+  state: "unavailable" as const,
+  title: null,
+  aggregate: null,
+  seasons: [],
+};
 
 function session() {
   return {
@@ -109,11 +224,11 @@ function ack(overrides: Partial<WatchProgressAck> = {}): WatchProgressAck {
   return {
     meta: {
       serverTime: NOW,
-      schemaVersion: 2,
+      schemaVersion: 3,
       ownerUserId: USER_ID,
       accountGeneration: 1,
     },
-    schemaVersion: 2,
+    schemaVersion: 3,
     acceptedEventId: EVENT_ID,
     acceptedAt: NOW,
     accountGeneration: 1,
@@ -138,47 +253,147 @@ function ack(overrides: Partial<WatchProgressAck> = {}): WatchProgressAck {
 }
 
 test("progress input is strict and accepts only MVP providers on canonical origins", () => {
-  assert.equal(parseWatchProgressEventV2(progressEvent()).provider, "crunchyroll");
+  assert.equal(parseWatchProgressEventV3(progressEvent()).provider, "crunchyroll");
   assert.equal(
-    parseWatchProgressEventV2(
+    parseWatchProgressEventV3(
       progressEvent({
         provider: "youtube",
-        titleKey: "abcdefghijk",
-        episodeKey: "abcdefghijk",
+        titleKey: "youtube:video:abcdefghijk",
+        episodeKey: "youtube:video:abcdefghijk",
         sourceUrl: "https://www.youtube.com/watch?v=abcdefghijk",
-      }),
-    ).provider,
-    "youtube",
-  );
-  assert.equal(
-    parseWatchProgressEventV2(
-      progressEvent({
-        provider: "youtube",
-        titleKey: "abcdefghijk",
-        episodeKey: "abcdefghijk",
-        sourceUrl: "https://youtube.com/watch?v=abcdefghijk",
+        crunchyrollIdentity: undefined,
+        youtubeVideoId: "abcdefghijk",
       }),
     ).provider,
     "youtube",
   );
   assert.throws(
-    () => parseWatchProgressEventV2(progressEvent({
+    () => parseWatchProgressEventV3(
+      progressEvent({
+        provider: "youtube",
+        titleKey: "youtube:video:abcdefghijk",
+        episodeKey: "youtube:video:abcdefghijk",
+        sourceUrl: "https://youtube.com/watch?v=abcdefghijk",
+        crunchyrollIdentity: undefined,
+        youtubeVideoId: "abcdefghijk",
+      }),
+    ),
+    hasCode("INVALID_REQUEST"),
+  );
+  assert.throws(
+    () => parseWatchProgressEventV3(progressEvent({
       provider: "youtube",
       sourceUrl: "https://m.youtube.com/watch?v=abcdefghijk",
     })),
-    hasCode("PROVIDER_DOMAIN_MISMATCH"),
+    hasCode("INVALID_REQUEST"),
   );
 
-  assert.throws(() => parseWatchProgressEventV2(progressEvent({ userId: USER_ID })), hasCode("INVALID_REQUEST"));
-  assert.throws(() => parseWatchProgressEventV2(progressEvent({ provider: "netflix" })), hasCode("UNSUPPORTED_PROVIDER"));
+  assert.throws(() => parseWatchProgressEventV3(progressEvent({ userId: USER_ID })), hasCode("INVALID_REQUEST"));
+  assert.throws(() => parseWatchProgressEventV3(progressEvent({ provider: "netflix" })), hasCode("INVALID_REQUEST"));
   assert.throws(
-    () => parseWatchProgressEventV2(progressEvent({ sourceUrl: "https://crunchyroll.com/watch/demo" })),
-    hasCode("PROVIDER_DOMAIN_MISMATCH"),
+    () => parseWatchProgressEventV3(progressEvent({ sourceUrl: "https://crunchyroll.com/watch/demo" })),
+    hasCode("INVALID_REQUEST"),
   );
   assert.throws(
-    () => parseWatchProgressEventV2(progressEvent({ sourceUrl: "https://www.youtube.com/watch?v=demo" })),
-    hasCode("PROVIDER_DOMAIN_MISMATCH"),
+    () => parseWatchProgressEventV3(progressEvent({ sourceUrl: "https://www.youtube.com/watch?v=demo" })),
+    hasCode("INVALID_REQUEST"),
   );
+  assert.throws(
+    () => parseWatchProgressEventV3(progressEvent({
+      crunchyrollIdentity: {
+        providerSeriesId: "SERIESONE",
+        providerSeasonIdentifier: "SEASONONE",
+        providerEpisodeIdentifier: "DIFFERENT_EPISODE",
+        providerContentId: "CONTENTONE",
+        audioLocale: "ja-JP",
+      },
+    })),
+    hasCode("INVALID_REQUEST"),
+  );
+});
+
+test("catalog services reject legacy and contradictory requests before storage", async () => {
+  let calls = 0;
+  const store = storeStub({
+    beginCatalog: async () => { calls += 1; return catalogBeginAck(); },
+    applyCatalog: async () => { calls += 1; return catalogCommitAck(); },
+  });
+  await assert.rejects(
+    () => beginWatchCatalogV3({ userId: USER_ID, input: catalogBeginRequest({ schemaVersion: 2 }), store }),
+    hasCode("INVALID_REQUEST"),
+  );
+  await assert.rejects(
+    () => applyWatchCatalogV3({
+      userId: USER_ID,
+      input: catalogCommitRequest({ titleKey: "crunchyroll:series:OTHER" }),
+      store,
+    }),
+    hasCode("INVALID_REQUEST"),
+  );
+  await assert.rejects(
+    () => applyWatchCatalogV3({
+      userId: USER_ID,
+      input: catalogCommitRequest({ clientHash: "untrusted-client-hash" }),
+      store,
+    }),
+    hasCode("INVALID_REQUEST"),
+  );
+  assert.equal(calls, 0);
+});
+
+test("catalog services require exact server generation, title, revision, and server hash acknowledgements", async () => {
+  const beginInput = catalogBeginRequest();
+  const commitInput = catalogCommitRequest();
+  const accepted = await applyWatchCatalogV3({
+    userId: USER_ID,
+    input: commitInput,
+    store: storeStub({ applyCatalog: async () => catalogCommitAck() }),
+  });
+  assert.equal(accepted.acceptedHash, "sha256:server-authoritative");
+
+  for (const acknowledgement of [
+    catalogBeginAck({ accountGeneration: 2, meta: { ...catalogBeginAck().meta, accountGeneration: 2 } }),
+    catalogBeginAck({ titleKey: "crunchyroll:series:OTHER" }),
+  ]) {
+    await assert.rejects(
+      () => beginWatchCatalogV3({
+        userId: USER_ID,
+        input: beginInput,
+        store: storeStub({ beginCatalog: async () => acknowledgement }),
+      }),
+      hasCode("INVALID_DATABASE_RESPONSE"),
+    );
+  }
+  for (const acknowledgement of [
+    catalogCommitAck({ accountGeneration: 2, meta: { ...catalogCommitAck().meta, accountGeneration: 2 } }),
+    catalogCommitAck({ revision: 8 }),
+    catalogCommitAck({ titleKey: "crunchyroll:series:OTHER" }),
+  ]) {
+    await assert.rejects(
+      () => applyWatchCatalogV3({
+        userId: USER_ID,
+        input: commitInput,
+        store: storeStub({ applyCatalog: async () => acknowledgement }),
+      }),
+      hasCode("INVALID_DATABASE_RESPONSE"),
+    );
+  }
+
+  const superseded = await applyWatchCatalogV3({
+    userId: USER_ID,
+    input: commitInput,
+    store: storeStub({
+      applyCatalog: async () => catalogCommitAck({
+        outcome: "superseded",
+        effectiveCatalogState: "unavailable",
+        projectionRevision: null,
+        acceptedHash: null,
+        acceptedAt: null,
+      }),
+    }),
+  });
+  assert.equal(superseded.outcome, "superseded");
+  assert.equal(superseded.projectionRevision, null);
 });
 
 test("progress calls the transactional RPC once and never passes the raw authority", async () => {
@@ -198,7 +413,7 @@ test("progress calls the transactional RPC once and never passes the raw authori
   };
 
   assert.deepEqual(
-    await applyWatchProgressV2({
+    await applyWatchProgressV3({
       userId: USER_ID,
       input: progressEvent({ sharedRoom }),
       store,
@@ -220,6 +435,14 @@ test("progress calls the transactional RPC once and never passes the raw authori
   );
   assert.equal(calls.length, 1);
   assert.equal(JSON.stringify(calls).includes("opaque-secret-authority"), false);
+  assert.equal(
+    (calls[0]?.[1] as Record<string, unknown>).episodeKey,
+    "crunchyroll:episode:EPISODEONE",
+  );
+  assert.equal(
+    (calls[0]?.[1] as Record<string, unknown>).sourceUrl,
+    "https://www.crunchyroll.com/watch/CONTENTONE",
+  );
   assert.deepEqual(calls[0]?.[2], {
     typ: "room_history",
     iss: "anidachi-worker",
@@ -239,7 +462,7 @@ test("progress accepts an exact duplicate acknowledgement and rejects malformed 
   const duplicate = ack({ duplicate: true });
   assert.equal(
     (
-      await applyWatchProgressV2({
+      await applyWatchProgressV3({
         userId: USER_ID,
         input: progressEvent(),
         store: storeStub({ applyProgress: async () => duplicate }),
@@ -249,7 +472,7 @@ test("progress accepts an exact duplicate acknowledgement and rejects malformed 
   );
   await assert.rejects(
     () =>
-      applyWatchProgressV2({
+      applyWatchProgressV3({
         userId: USER_ID,
         input: progressEvent(),
         store: storeStub({ applyProgress: async () => ({ sql: "private" }) }),
@@ -270,7 +493,7 @@ test("shared progress returns its canonical receipt before verifying an expired 
     },
   });
 
-  assert.deepEqual(await applyWatchProgressV2({
+  assert.deepEqual(await applyWatchProgressV3({
     userId: USER_ID,
     input: progressEvent({
       sharedRoom: {
@@ -343,7 +566,7 @@ test("shared receipt-first failures close every noncanonical bypass before writi
       });
 
       await assert.rejects(
-        () => applyWatchProgressV2({
+        () => applyWatchProgressV3({
           userId: USER_ID,
           input: progressEvent({
             sharedRoom: {
@@ -392,7 +615,7 @@ test("production receipt lookup is owner-event-expiry scoped and fails closed on
 
   const beforeLookup = Date.now();
   assert.deepEqual(
-    await supabaseWatchHistoryV2Store.getProgressReceipt(USER_ID, EVENT_ID),
+    await supabaseWatchHistoryV3Store.getProgressReceipt(USER_ID, EVENT_ID),
     ack({ duplicate: true }),
   );
   const afterLookup = Date.now();
@@ -408,7 +631,7 @@ test("production receipt lookup is owner-event-expiry scoped and fails closed on
 
   databaseRow = { kind: "delete", acknowledgement: ack({ duplicate: true }) };
   await assert.rejects(
-    () => supabaseWatchHistoryV2Store.getProgressReceipt(USER_ID, EVENT_ID),
+    () => supabaseWatchHistoryV3Store.getProgressReceipt(USER_ID, EVENT_ID),
     /watch_history_client_id_conflict/,
   );
 
@@ -416,7 +639,7 @@ test("production receipt lookup is owner-event-expiry scoped and fails closed on
   let verifyCalls = 0;
   let applyCalls = 0;
   await assert.rejects(
-    () => applyWatchProgressV2({
+    () => applyWatchProgressV3({
       userId: USER_ID,
       input: progressEvent({
         sharedRoom: {
@@ -429,7 +652,7 @@ test("production receipt lookup is owner-event-expiry scoped and fails closed on
       }),
       store: storeStub({
         getProgressReceipt: (userId, clientEventId) =>
-          supabaseWatchHistoryV2Store.getProgressReceipt(userId, clientEventId),
+          supabaseWatchHistoryV3Store.getProgressReceipt(userId, clientEventId),
         applyProgress: async () => {
           applyCalls += 1;
           return ack();
@@ -461,7 +684,7 @@ test("domain failures map to bounded stable public errors", async () => {
   for (const [databaseMessage, publicCode] of failures) {
     await assert.rejects(
       () =>
-        applyWatchProgressV2({
+        applyWatchProgressV3({
           userId: USER_ID,
           input: progressEvent(),
           store: storeStub({
@@ -471,7 +694,7 @@ test("domain failures map to bounded stable public errors", async () => {
           }),
         }),
       (error) =>
-        error instanceof WatchHistoryV2ApiError &&
+        error instanceof WatchHistoryV3ApiError &&
         error.code === publicCode &&
         !error.message.includes("SQL") &&
         !error.message.includes("secret"),
@@ -486,7 +709,7 @@ test("shared session host-order failures map to retryable bounded conflicts", as
   ] as const) {
     await assert.rejects(
       () =>
-        applyWatchProgressV2({
+        applyWatchProgressV3({
           userId: USER_ID,
           input: progressEvent(),
           store: storeStub({
@@ -496,7 +719,7 @@ test("shared session host-order failures map to retryable bounded conflicts", as
           }),
         }),
       (error) =>
-        error instanceof WatchHistoryV2ApiError &&
+        error instanceof WatchHistoryV3ApiError &&
         error.status === 409 &&
         error.code === publicCode &&
         !error.message.includes("private"),
@@ -519,23 +742,23 @@ test("cursor is opaque base64url data and rejects malformed values", () => {
   assert.throws(() => decodeWatchHistoryCursor("a".repeat(513)), hasCode("INVALID_CURSOR"));
 });
 
-test("v2 session identity excludes roomless shared tombstones", () => {
+test("v3 session identity excludes roomless shared tombstones", () => {
   assert.equal(
-    isMeaningfulWatchHistoryV2SessionIdentity({
+    isMeaningfulWatchHistoryV3SessionIdentity({
       roomId: null,
       clientSessionKey: null,
     }),
     false,
   );
   assert.equal(
-    isMeaningfulWatchHistoryV2SessionIdentity({
+    isMeaningfulWatchHistoryV3SessionIdentity({
       roomId: "room-one",
       clientSessionKey: null,
     }),
     true,
   );
   assert.equal(
-    isMeaningfulWatchHistoryV2SessionIdentity({
+    isMeaningfulWatchHistoryV3SessionIdentity({
       roomId: null,
       clientSessionKey: "solo-session-one",
     }),
@@ -543,8 +766,8 @@ test("v2 session identity excludes roomless shared tombstones", () => {
   );
 });
 
-test("canonical read derives observed-only titles, seasons, episodes, and sessions from v2 rows", () => {
-  const response = buildWatchHistoryV2Response({
+test("canonical read derives observed-only titles, seasons, episodes, and sessions from v3 rows", () => {
+  const response = buildWatchHistoryV3Response({
     userId: USER_ID,
     accountGeneration: 1,
     generatedAt: new Date(NOW),
@@ -598,14 +821,14 @@ test("canonical read derives observed-only titles, seasons, episodes, and sessio
   assert.equal(response.items[0]?.sessions[0]?.id, SESSION_ID);
 });
 
-test("canonical read includes every meaningful v2 session associated with the visible episode", () => {
+test("canonical read includes every meaningful v3 session associated with the visible episode", () => {
   const earlierSession = {
     ...session(),
     id: "44444444-4444-4444-8444-444444444444",
     startedAt: "2026-08-14T09:00:00.000Z",
     lastWatchedAt: "2026-08-14T10:00:00.000Z",
   };
-  const response = buildWatchHistoryV2Response({
+  const response = buildWatchHistoryV3Response({
     userId: USER_ID,
     accountGeneration: 1,
     generatedAt: new Date(NOW),
@@ -651,7 +874,7 @@ test("canonical read includes every meaningful v2 session associated with the vi
 });
 
 test("canonical read uses durable host provenance instead of the latest-session pointer", () => {
-  const response = buildWatchHistoryV2Response({
+  const response = buildWatchHistoryV3Response({
     userId: USER_ID,
     accountGeneration: 1,
     generatedAt: new Date(NOW),
@@ -672,7 +895,7 @@ test("canonical read uses durable host provenance instead of the latest-session 
 });
 
 test("canonical read validates and returns an encoded reusable cursor", () => {
-  const response = buildWatchHistoryV2Response({
+  const response = buildWatchHistoryV3Response({
     userId: USER_ID,
     accountGeneration: 1,
     generatedAt: new Date(NOW),
@@ -701,7 +924,7 @@ test("canonical read validates and returns an encoded reusable cursor", () => {
 
 test("canonical read delegates the title page boundary to storage", async () => {
   let requestedPage: unknown;
-  const response = await listWatchHistoryV2({
+  const response = await listWatchHistoryV3({
     userId: USER_ID,
     limit: 1,
     now: new Date(NOW),
@@ -721,6 +944,7 @@ test("canonical read delegates the title page boundary to storage", async () => 
             observedEpisodeCount: 1,
             completedEpisodeCount: 0,
             episodePage: { complete: true, nextCursor: null },
+            catalog: unavailableCatalog,
           }],
         };
       },
@@ -737,7 +961,7 @@ test("canonical read delegates the title page boundary to storage", async () => 
 });
 
 test("canonical read preserves deployed bounded title metadata", async () => {
-  const response = await listWatchHistoryV2({
+  const response = await listWatchHistoryV3({
     userId: USER_ID,
     limit: 1,
     now: new Date(NOW),
@@ -755,6 +979,7 @@ test("canonical read preserves deployed bounded title metadata", async () => {
           observedEpisodeCount: 12,
           completedEpisodeCount: 6,
           episodePage: { complete: false, nextCursor: "episode_cursor" },
+          catalog: unavailableCatalog,
         }],
       }),
     }),
@@ -787,9 +1012,10 @@ test("server-bounded response requires an exact title-summary key set", () => {
     observedEpisodeCount: 1,
     completedEpisodeCount: 0,
     episodePage: { complete: true, nextCursor: null },
+    catalog: unavailableCatalog,
   });
   const build = (progressRows: unknown[], titleSummaries: unknown[]) =>
-    buildWatchHistoryV2Response({
+    buildWatchHistoryV3Response({
       userId: USER_ID,
       accountGeneration: 1,
       generatedAt: new Date(NOW),
@@ -817,7 +1043,7 @@ test("server-bounded response requires an exact title-summary key set", () => {
 
 test("title detail service is owner-bound and returns a strict bounded page", async () => {
   let requested: unknown;
-  const response = await listWatchHistoryTitleEpisodesV2({
+  const response = await listWatchHistoryTitleEpisodesV3({
     userId: USER_ID,
     provider: "crunchyroll",
     titleKey: "series-one",
@@ -834,6 +1060,7 @@ test("title detail service is owner-bound and returns a strict bounded page", as
           observedEpisodeCount: 12,
           completedEpisodeCount: 6,
           progressRows: [progressRow()],
+          catalog: unavailableCatalog,
           sessions: [{
             session: session(),
             provider: "crunchyroll",
@@ -856,7 +1083,7 @@ test("title detail service is owner-bound and returns a strict bounded page", as
   assert.deepEqual(response, {
     meta: {
       serverTime: NOW,
-      schemaVersion: 2,
+      schemaVersion: 3,
       ownerUserId: USER_ID,
       accountGeneration: 1,
     },
@@ -880,6 +1107,7 @@ test("title detail service is owner-bound and returns a strict bounded page", as
       lastWatchedAt: NOW,
       sessions: [session()],
     }],
+    catalog: unavailableCatalog,
     complete: true,
     nextCursor: null,
   });
@@ -893,6 +1121,7 @@ test("bounded database page parsers reject legacy, missing, and unknown fields",
     observedEpisodeCount: 1,
     completedEpisodeCount: 0,
     episodePage: { complete: true, nextCursor: null },
+    catalog: unavailableCatalog,
   };
   const titlePage = {
     accountGeneration: 1,
@@ -924,6 +1153,7 @@ test("bounded database page parsers reject legacy, missing, and unknown fields",
     complete: true,
     nextCursor: null,
     progressRows: [progressRow({ latest_session_id: null })],
+    catalog: unavailableCatalog,
   };
   assert.equal(parseWatchHistoryTitleEpisodesPage(detailPage).progressRows.length, 1);
   assert.throws(() => parseWatchHistoryTitleEpisodesPage({
@@ -953,7 +1183,7 @@ test("production reads call only the deployed resource-bounded RPCs", async (t) 
     if (url.pathname === "/rest/v1/user_watch_settings" && request.method === "GET") {
       return Response.json({ history_generation: 1, youtube_history_enabled: false });
     }
-    if (url.pathname === "/rest/v1/rpc/list_watch_history_v2_bounded_page") {
+    if (url.pathname === "/rest/v1/rpc/list_watch_history_v3_bounded_page") {
       return Response.json({
         accountGeneration: 1,
         totalTitleCount: 1,
@@ -965,12 +1195,13 @@ test("production reads call only the deployed resource-bounded RPCs", async (t) 
           observedEpisodeCount: 1,
           completedEpisodeCount: 0,
           episodePage: { complete: true, nextCursor: null },
+          catalog: unavailableCatalog,
         }],
         progressRows: [progressRow({ latest_session_id: null })],
         sessionIds: [],
       });
     }
-    if (url.pathname === "/rest/v1/rpc/list_watch_history_v2_title_episodes_page") {
+    if (url.pathname === "/rest/v1/rpc/list_watch_history_v3_title_episodes_page") {
       return Response.json({
         accountGeneration: 1,
         provider: "crunchyroll",
@@ -980,21 +1211,28 @@ test("production reads call only the deployed resource-bounded RPCs", async (t) 
         complete: true,
         nextCursor: null,
         progressRows: [progressRow({ latest_session_id: null })],
+        catalog: unavailableCatalog,
       });
+    }
+    if (url.pathname === "/rest/v1/rpc/begin_watch_catalog_v3") {
+      return Response.json(catalogBeginAck());
+    }
+    if (url.pathname === "/rest/v1/rpc/apply_watch_catalog_v3") {
+      return Response.json(catalogCommitAck());
     }
     return Response.json([]);
   });
 
-  const page = await supabaseWatchHistoryV2Store.loadHistory(USER_ID, {
+  const page = await supabaseWatchHistoryV3Store.loadHistory(USER_ID, {
     limit: 50,
     cursor: null,
   });
   assert.equal(page.titleSummaries?.length, 1);
   assert.ok(requests.some(({ url }) =>
-    url.pathname === "/rest/v1/rpc/list_watch_history_v2_bounded_page"));
+    url.pathname === "/rest/v1/rpc/list_watch_history_v3_bounded_page"));
   assert.equal(requests.some(({ url }) =>
-    url.pathname === "/rest/v1/rpc/list_watch_history_v2_page"), false);
-  const detail = await supabaseWatchHistoryV2Store.loadTitleEpisodes?.(USER_ID, {
+    url.pathname === "/rest/v1/rpc/list_watch_history_v3_page"), false);
+  const detail = await supabaseWatchHistoryV3Store.loadTitleEpisodes?.(USER_ID, {
     provider: "crunchyroll",
     titleKey: "series-one",
     limit: 50,
@@ -1003,7 +1241,7 @@ test("production reads call only the deployed resource-bounded RPCs", async (t) 
   assert.equal(detail?.progressRows.length, 1);
   assert.deepEqual(
     requests.find(({ url }) =>
-      url.pathname === "/rest/v1/rpc/list_watch_history_v2_title_episodes_page")?.body,
+      url.pathname === "/rest/v1/rpc/list_watch_history_v3_title_episodes_page")?.body,
     {
       p_user_id: USER_ID,
       p_history_generation: 1,
@@ -1013,10 +1251,40 @@ test("production reads call only the deployed resource-bounded RPCs", async (t) 
       p_cursor: null,
     },
   );
+  assert.equal(
+    (await supabaseWatchHistoryV3Store.beginCatalog(
+      USER_ID,
+      WatchCatalogBeginRequestSchema.parse(catalogBeginRequest()),
+    ) as Record<string, unknown>).revision,
+    7,
+  );
+  assert.equal(
+    (await supabaseWatchHistoryV3Store.applyCatalog(
+      USER_ID,
+      WatchCatalogCommitRequestSchema.parse(catalogCommitRequest()),
+    ) as Record<string, unknown>).acceptedHash,
+    "sha256:server-authoritative",
+  );
+  assert.deepEqual(
+    requests.find(({ url }) => url.pathname === "/rest/v1/rpc/begin_watch_catalog_v3")?.body,
+    { p_user_id: USER_ID, p_request: catalogBeginRequest() },
+  );
+  assert.deepEqual(
+    requests.find(({ url }) => url.pathname === "/rest/v1/rpc/apply_watch_catalog_v3")?.body,
+    { p_user_id: USER_ID, p_request: catalogCommitRequest() },
+  );
+  const settingsUpsert = requests.find(({ url, body }) =>
+    url.pathname === "/rest/v1/user_watch_settings" &&
+    [body].flat().some((row) =>
+      row !== null &&
+      typeof row === "object" &&
+      !Array.isArray(row) &&
+      (row as Record<string, unknown>).write_schema_version === 3));
+  assert.ok(settingsUpsert, "settings bootstrap must pin write_schema_version 3");
 });
 
 test("server-bounded read preserves database binary title order for its cursor", () => {
-  const response = buildWatchHistoryV2Response({
+  const response = buildWatchHistoryV3Response({
     userId: USER_ID,
     accountGeneration: 1,
     generatedAt: new Date(NOW),
@@ -1051,6 +1319,7 @@ test("server-bounded read preserves database binary title order for its cursor",
       observedEpisodeCount: 1,
       completedEpisodeCount: 0,
       episodePage: { complete: true, nextCursor: null },
+      catalog: unavailableCatalog,
     })),
   });
 
@@ -1062,7 +1331,7 @@ test("server-bounded read preserves database binary title order for its cursor",
 });
 
 test("canonical title snapshots enforce the eight-episode resource boundary", () => {
-  const response = buildWatchHistoryV2Response({
+  const response = buildWatchHistoryV3Response({
     userId: USER_ID,
     accountGeneration: 1,
     generatedAt: new Date(NOW),
@@ -1080,7 +1349,7 @@ test("canonical title snapshots enforce the eight-episode resource boundary", ()
   });
   assert.equal(response.items[0]?.seasons[0]?.episodes.length, 8);
 
-  assert.throws(() => buildWatchHistoryV2Response({
+  assert.throws(() => buildWatchHistoryV3Response({
     userId: USER_ID,
     accountGeneration: 1,
     generatedAt: new Date(NOW),
@@ -1100,7 +1369,7 @@ test("canonical title snapshots enforce the eight-episode resource boundary", ()
 
 test("history progress loading advances by capped page length until exact total", async () => {
   const loadAll = (
-    watchHistoryV2Module as unknown as {
+    watchHistoryV3Module as unknown as {
       loadAllWatchHistoryProgressRows?: (
         loadRange: (
           from: number,
@@ -1130,7 +1399,7 @@ test("history progress loading advances by capped page length until exact total"
 
 test("history range loading fails closed on incomplete or unstable exact counts", async () => {
   const loadAll = (
-    watchHistoryV2Module as unknown as {
+    watchHistoryV3Module as unknown as {
       loadAllWatchHistoryProgressRows?: (
         loadRange: (
           from: number,
@@ -1162,7 +1431,7 @@ test("history range loading fails closed on incomplete or unstable exact counts"
 
 test("session enrichment exhausts more than 2000 owners with bounded IN batches", async () => {
   const loadExact = (
-    watchHistoryV2Module as unknown as {
+    watchHistoryV3Module as unknown as {
       loadExactWatchHistorySessionEnrichment?: (params: {
         loadOwnerParticipants: (from: number, to: number) => Promise<unknown>;
         loadSessions: (ids: string[], from: number, to: number) => Promise<unknown>;
@@ -1235,7 +1504,7 @@ test("session enrichment exhausts more than 2000 owners with bounded IN batches"
 
 test("room recreation uses durable host metadata for old and new owned sessions", () => {
   const buildSource = (
-    watchHistoryV2Module as unknown as {
+    watchHistoryV3Module as unknown as {
       buildHostAuthoritativeWatchHistoryRoomSource?: (params: unknown) => unknown;
     }
   ).buildHostAuthoritativeWatchHistoryRoomSource;
@@ -1247,11 +1516,11 @@ test("room recreation uses durable host metadata for old and new owned sessions"
       participant: {
         session_id: sessionId,
         user_id: USER_ID,
-        schema_version: 2,
+        schema_version: 3,
       },
       session: {
         id: sessionId,
-        schema_version: 2,
+        schema_version: 3,
         room_id: "room-one",
         client_session_key: null,
         provider: "crunchyroll",
@@ -1274,7 +1543,7 @@ test("room recreation uses durable host metadata for old and new owned sessions"
 
 test("session profile enrichment replaces malformed public fields safely", () => {
   const normalize = (
-    watchHistoryV2Module as unknown as {
+    watchHistoryV3Module as unknown as {
       normalizeWatchHistoryPublicProfile?: (params: unknown) => unknown;
     }
   ).normalizeWatchHistoryPublicProfile;
@@ -1319,7 +1588,7 @@ test("canonical latest activity uses server order when normalized observation ti
     observed_at: NOW,
     history_generation: 1,
   };
-  const response = buildWatchHistoryV2Response({
+  const response = buildWatchHistoryV3Response({
     userId: USER_ID,
     accountGeneration: 1,
     generatedAt: new Date(NOW),
@@ -1351,20 +1620,20 @@ test("delete parses exact duplicate acknowledgement and never reports optimistic
   const deletionAck: WatchHistoryDeletionAck = {
     meta: {
       serverTime: NOW,
-      schemaVersion: 2,
+      schemaVersion: 3,
       ownerUserId: USER_ID,
       accountGeneration: 2,
     },
-    schemaVersion: 2,
+    schemaVersion: 3,
     clientMutationId: EVENT_ID,
     accountGeneration: 2,
     target: { scope: "all" },
     deletedAt: NOW,
   };
-  const value = await deleteWatchHistoryV2({
+  const value = await deleteWatchHistoryV3({
     userId: USER_ID,
     input: {
-      schemaVersion: 2,
+      schemaVersion: 3,
       clientMutationId: EVENT_ID,
       accountGeneration: 1,
       target: { scope: "all" },
@@ -1375,10 +1644,10 @@ test("delete parses exact duplicate acknowledgement and never reports optimistic
   assert.deepEqual(value, deletionAck);
   await assert.rejects(
     () =>
-      deleteWatchHistoryV2({
+      deleteWatchHistoryV3({
         userId: USER_ID,
         input: {
-          schemaVersion: 2,
+          schemaVersion: 3,
           clientMutationId: EVENT_ID,
           accountGeneration: 1,
           target: { scope: "all" },
@@ -1394,8 +1663,8 @@ test("delete parses exact duplicate acknowledgement and never reports optimistic
   );
 });
 
-test("website v2 model never invents totals for unavailable catalog data", () => {
-  const history = buildWatchHistoryV2Response({
+test("website v3 model never invents totals for unavailable catalog data", () => {
+  const history = buildWatchHistoryV3Response({
     userId: USER_ID,
     accountGeneration: 1,
     progressRows: [
@@ -1419,8 +1688,8 @@ test("website v2 model never invents totals for unavailable catalog data", () =>
   assert.equal(history.items[0]?.seasons[0]?.nextEpisode, null);
 });
 
-test("website v2 model applies acknowledged episode, title, and all deletion scopes", () => {
-  const history = buildWatchHistoryV2Response({
+test("website v3 model applies acknowledged episode, title, and all deletion scopes", () => {
+  const history = buildWatchHistoryV3Response({
     userId: USER_ID,
     accountGeneration: 1,
     progressRows: [
@@ -1472,8 +1741,8 @@ test("website v2 model applies acknowledged episode, title, and all deletion sco
   assert.deepEqual(removeWatchHistoryTarget(withoutTitle, { scope: "all" }).items, []);
 });
 
-test("website v2 model appends opaque cursor pages without duplicating titles", () => {
-  const first = buildWatchHistoryV2Response({
+test("website v3 model appends opaque cursor pages without duplicating titles", () => {
+  const first = buildWatchHistoryV3Response({
     userId: USER_ID,
     accountGeneration: 1,
     progressRows: [progressRow()],
@@ -1522,14 +1791,16 @@ test("website refreshes canonical history when the account page regains focus", 
   assert.equal(refreshes, 2);
 });
 
-function storeStub(overrides: Partial<WatchHistoryV2Store>): WatchHistoryV2Store {
+function storeStub(overrides: Partial<WatchHistoryV3Store>): WatchHistoryV3Store {
   return {
     getProgressReceipt: async () => null,
     applyProgress: async () => ack(),
+    beginCatalog: async () => { throw new Error("not implemented in test"); },
+    applyCatalog: async () => { throw new Error("not implemented in test"); },
     loadHistory: async () => ({ accountGeneration: 1, progressRows: [], sessions: [] }),
     getPreferences: async () => ({ accountGeneration: 1, youtubeHistoryEnabled: false }),
     setPreferences: async () => ({
-      meta: { serverTime: NOW, schemaVersion: 2, ownerUserId: USER_ID, accountGeneration: 1 },
+      meta: { serverTime: NOW, schemaVersion: 3, ownerUserId: USER_ID, accountGeneration: 1 },
       preferences: { youtubeHistoryEnabled: false },
     }),
     deleteHistory: async () => {
@@ -1541,5 +1812,5 @@ function storeStub(overrides: Partial<WatchHistoryV2Store>): WatchHistoryV2Store
 }
 
 function hasCode(code: string) {
-  return (error: unknown) => error instanceof WatchHistoryV2ApiError && error.code === code;
+  return (error: unknown) => error instanceof WatchHistoryV3ApiError && error.code === code;
 }

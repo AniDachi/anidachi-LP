@@ -144,6 +144,7 @@ test("local RPC output passes the production parser and follows canonical clear 
 		limit: 1,
 		totalTitleCount: firstPage.totalTitleCount,
 		hasMore: firstPage.hasMore,
+		titleSummaries: firstPage.titleSummaries,
 		generatedAt: new Date(),
 	});
 	assert.deepEqual(

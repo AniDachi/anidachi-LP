@@ -195,6 +195,20 @@ function canBearerBypassStagingGate(pathname: string, method: string): boolean {
   if (pathname === "/api/watch-history/v2/rooms" && method === "POST") {
     return true;
   }
+  if (pathname === "/api/watch-history/v2/title-episodes" && method === "GET") {
+    return true;
+  }
+  if (pathname === "/api/watch-history/v3" && method === "GET") return true;
+  if (pathname === "/api/watch-history/v3/progress" && method === "POST") return true;
+  if (
+    pathname === "/api/watch-history/v3/preferences" &&
+    (method === "GET" || method === "PATCH")
+  ) return true;
+  if (pathname === "/api/watch-history/v3/delete" && method === "POST") return true;
+  if (pathname === "/api/watch-history/v3/rooms" && method === "POST") return true;
+  if (pathname === "/api/watch-history/v3/title-episodes" && method === "GET") return true;
+  if (pathname === "/api/watch-history/v3/catalog/attempt" && method === "POST") return true;
+  if (pathname === "/api/watch-history/v3/catalog" && method === "POST") return true;
   if (pathname === "/api/rooms" && method === "POST") return true;
   if (/^\/api\/rooms\/[^/]+$/.test(pathname) && method === "GET") return true;
   if (/^\/api\/rooms\/[^/]+\/connect$/.test(pathname) && method === "POST") {

@@ -99,7 +99,7 @@ function detailFixture(): WatchHistoryTitleEpisodesResponse {
   return {
     meta: {
       serverTime: NOW,
-      schemaVersion: 2,
+      schemaVersion: 3,
       ownerUserId: OWNER_ID,
       accountGeneration: 1,
     },
@@ -109,6 +109,12 @@ function detailFixture(): WatchHistoryTitleEpisodesResponse {
     observedEpisodeCount: 12,
     completedEpisodeCount: 3,
     episodes: [episode("episode-two", 2, 120), episode("episode-three", 3, 180)],
+    catalog: {
+      state: "unavailable",
+      title: null,
+      aggregate: null,
+      seasons: [],
+    },
     complete: false,
     nextCursor: "cursor-two",
   };
@@ -118,7 +124,7 @@ function historyFixture(): WatchHistoryResponse {
   return {
     meta: {
       serverTime: NOW,
-      schemaVersion: 2,
+      schemaVersion: 3,
       ownerUserId: OWNER_ID,
       accountGeneration: 1,
     },
@@ -132,7 +138,7 @@ function historyFixture(): WatchHistoryResponse {
 const preferencesFixture: WatchHistoryPreferencesResponse = {
   meta: {
     serverTime: NOW,
-    schemaVersion: 2,
+    schemaVersion: 3,
     ownerUserId: OWNER_ID,
     accountGeneration: 1,
   },
@@ -183,7 +189,7 @@ it("website detail request is owner-bound and a failure leaves the current slice
   });
   assert.equal(loaded.nextCursor, "cursor-two");
   assert.deepEqual(paths, [
-    "/api/watch-history/v2/title-episodes?provider=crunchyroll&titleKey=series-one&limit=50&cursor=cursor+one",
+    "/api/watch-history/v3/title-episodes?provider=crunchyroll&titleKey=series-one&limit=50&cursor=cursor+one",
   ]);
 
   await assert.rejects(() => loadWatchHistoryTitleEpisodePage({
@@ -206,7 +212,7 @@ describe("website detail interactions", () => {
   it("keeps visible rows on failure and retries only after the user asks", async () => {
     let attempts = 0;
     globalThis.fetch = async (input: string | URL | Request) => {
-      if (!String(input).includes("/api/watch-history/v2/title-episodes")) {
+      if (!String(input).includes("/api/watch-history/v3/title-episodes")) {
         throw new Error(`Unexpected request: ${String(input)}`);
       }
       attempts += 1;
@@ -246,11 +252,11 @@ describe("website detail interactions", () => {
     };
     globalThis.fetch = async (input: string | URL | Request) => {
       const path = String(input);
-      if (path.includes("/api/watch-history/v2/title-episodes")) {
+      if (path.includes("/api/watch-history/v3/title-episodes")) {
         return new Promise<Response>((resolve) => { resolveDetail = resolve; });
       }
-      if (path === "/api/watch-history/v2?limit=24") return Response.json(refreshed);
-      if (path === "/api/watch-history/v2/preferences") return Response.json(preferencesFixture);
+      if (path === "/api/watch-history/v3?limit=24") return Response.json(refreshed);
+      if (path === "/api/watch-history/v3/preferences") return Response.json(preferencesFixture);
       throw new Error(`Unexpected request: ${path}`);
     };
     const view = await renderClient();
@@ -273,21 +279,21 @@ describe("website detail interactions", () => {
       testWindow.confirm = () => true;
       globalThis.fetch = async (input: string | URL | Request, init?: RequestInit) => {
         const path = String(input);
-        if (path.includes("/api/watch-history/v2/title-episodes")) {
+        if (path.includes("/api/watch-history/v3/title-episodes")) {
           return new Promise<Response>((resolve) => { resolveDetail = resolve; });
         }
-        if (path === "/api/watch-history/v2/delete") {
+        if (path === "/api/watch-history/v3/delete") {
           const target = scope === "episode"
             ? { scope, provider: "crunchyroll", titleKey: "series-one", episodeKey: "episode-one" }
             : { scope, provider: "crunchyroll", titleKey: "series-one" };
           return Response.json({
             meta: {
               serverTime: NOW,
-              schemaVersion: 2,
+              schemaVersion: 3,
               ownerUserId: OWNER_ID,
               accountGeneration: 1,
             },
-            schemaVersion: 2,
+            schemaVersion: 3,
             clientMutationId: "22222222-2222-4222-8222-222222222222",
             accountGeneration: 1,
             target,

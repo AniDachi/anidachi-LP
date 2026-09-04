@@ -9,6 +9,8 @@ import {
   type WatchHistoryResponse,
   type WatchHistoryTitleEpisodesResponse,
   type WatchProgressAck,
+  type WatchCatalogBeginAck,
+  type WatchCatalogCommitAck,
   type ActiveRoomConflictResponse,
 } from "@anidachi/protocol";
 import { type NextRequest, NextResponse } from "next/server";
@@ -31,27 +33,30 @@ import {
   hostRoomTokenTtlSeconds,
 } from "../room-quota";
 import {
-  applyWatchProgressV2,
+  applyWatchProgressV3,
+  applyWatchCatalogV3,
+  beginWatchCatalogV3,
   decodeWatchHistoryCursor,
-  deleteWatchHistoryV2,
-  getWatchHistoryPreferencesV2,
-  listWatchHistoryTitleEpisodesV2,
-  listWatchHistoryV2,
-  parseWatchProgressEventV2,
-  supabaseWatchHistoryV2Store,
-  updateWatchHistoryPreferencesV2,
-  WatchHistoryV2ApiError,
+  deleteWatchHistoryV3,
+  getWatchHistoryPreferencesV3,
+  listWatchHistoryTitleEpisodesV3,
+  listWatchHistoryV3,
+  parseWatchProgressEventV3,
+  supabaseWatchHistoryV3Store,
+  updateWatchHistoryPreferencesV3,
+  WatchHistoryV3ApiError,
   type WatchHistoryCursor,
-} from "./watch-history-v2";
+} from "./watch-history-v3";
 
 const PROGRESS_BODY_BYTES = 64 * 1_024;
+const CATALOG_BODY_BYTES = 1_024 * 1_024 + 64 * 1_024;
 const MUTATION_BODY_BYTES = 16 * 1_024;
 const SMALL_BODY_BYTES = 4 * 1_024;
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-export type WatchHistoryV2RouteDependencies = {
+export type WatchHistoryV3RouteDependencies = {
   getSession(request: NextRequest): Promise<ApiSession | null>;
   listHistory(params: {
     userId: string;
@@ -66,6 +71,8 @@ export type WatchHistoryV2RouteDependencies = {
     cursor: string | null;
   }): Promise<WatchHistoryTitleEpisodesResponse>;
   applyProgress(params: { userId: string; input: unknown }): Promise<WatchProgressAck>;
+  beginCatalog(params: { userId: string; input: unknown }): Promise<WatchCatalogBeginAck>;
+  applyCatalog(params: { userId: string; input: unknown }): Promise<WatchCatalogCommitAck>;
   getPreferences(params: { userId: string }): Promise<WatchHistoryPreferencesResponse>;
   updatePreferences(params: {
     userId: string;
@@ -87,19 +94,21 @@ export type WatchHistoryV2RouteDependencies = {
   >;
 };
 
-const productionDependencies: WatchHistoryV2RouteDependencies = {
+const productionDependencies: WatchHistoryV3RouteDependencies = {
   getSession: getApiSession,
-  listHistory: listWatchHistoryV2,
-  listTitleEpisodes: listWatchHistoryTitleEpisodesV2,
-  applyProgress: applyWatchProgressV2,
-  getPreferences: getWatchHistoryPreferencesV2,
-  updatePreferences: updateWatchHistoryPreferencesV2,
-  deleteHistory: deleteWatchHistoryV2,
-  createRoomFromSession: createRoomFromV2Session,
+  listHistory: listWatchHistoryV3,
+  listTitleEpisodes: listWatchHistoryTitleEpisodesV3,
+  applyProgress: applyWatchProgressV3,
+  beginCatalog: beginWatchCatalogV3,
+  applyCatalog: applyWatchCatalogV3,
+  getPreferences: getWatchHistoryPreferencesV3,
+  updatePreferences: updateWatchHistoryPreferencesV3,
+  deleteHistory: deleteWatchHistoryV3,
+  createRoomFromSession: createRoomFromV3Session,
 };
 
-export function createWatchHistoryV2RouteHandlers(
-  dependencies: WatchHistoryV2RouteDependencies = productionDependencies,
+export function createWatchHistoryV3RouteHandlers(
+  dependencies: WatchHistoryV3RouteDependencies = productionDependencies,
 ) {
   return {
     async getHistory(request: NextRequest) {
@@ -136,9 +145,35 @@ export function createWatchHistoryV2RouteHandlers(
       if (!session) return unauthorizedResponse();
       try {
         const input = await readBoundedJson(request, PROGRESS_BODY_BYTES);
-        parseWatchProgressEventV2(input);
+        parseWatchProgressEventV3(input);
         return NextResponse.json(
           await dependencies.applyProgress({ userId: session.userId, input }),
+        );
+      } catch (error) {
+        return watchHistoryErrorResponse(error);
+      }
+    },
+
+    async postCatalogAttempt(request: NextRequest) {
+      const session = await dependencies.getSession(request);
+      if (!session) return unauthorizedResponse();
+      try {
+        const input = await readBoundedJson(request, MUTATION_BODY_BYTES);
+        return NextResponse.json(
+          await dependencies.beginCatalog({ userId: session.userId, input }),
+        );
+      } catch (error) {
+        return watchHistoryErrorResponse(error);
+      }
+    },
+
+    async postCatalog(request: NextRequest) {
+      const session = await dependencies.getSession(request);
+      if (!session) return unauthorizedResponse();
+      try {
+        const input = await readBoundedJson(request, CATALOG_BODY_BYTES);
+        return NextResponse.json(
+          await dependencies.applyCatalog({ userId: session.userId, input }),
         );
       } catch (error) {
         return watchHistoryErrorResponse(error);
@@ -164,7 +199,7 @@ export function createWatchHistoryV2RouteHandlers(
       try {
         const input = await readBoundedJson(request, SMALL_BODY_BYTES);
         if (!WatchHistoryPreferencesUpdateSchema.safeParse(input).success) {
-          throw new WatchHistoryV2ApiError(
+          throw new WatchHistoryV3ApiError(
             400,
             "INVALID_REQUEST",
             "Invalid watch history preferences",
@@ -184,7 +219,7 @@ export function createWatchHistoryV2RouteHandlers(
       try {
         const input = await readBoundedJson(request, MUTATION_BODY_BYTES);
         if (!WatchHistoryDeletionRequestSchema.safeParse(input).success) {
-          throw new WatchHistoryV2ApiError(
+          throw new WatchHistoryV3ApiError(
             400,
             "INVALID_REQUEST",
             "Invalid watch history deletion",
@@ -206,7 +241,7 @@ export function createWatchHistoryV2RouteHandlers(
           await readBoundedJson(request, SMALL_BODY_BYTES),
         );
         if (!input) {
-          throw new WatchHistoryV2ApiError(
+          throw new WatchHistoryV3ApiError(
             400,
             "INVALID_REQUEST",
             "Invalid watch session request",
@@ -276,17 +311,19 @@ function parseRoomRecreationRequest(
       };
 }
 
-const productionRoutes = createWatchHistoryV2RouteHandlers();
+const productionRoutes = createWatchHistoryV3RouteHandlers();
 
-export const handleWatchHistoryV2Get = productionRoutes.getHistory;
-export const handleWatchHistoryV2TitleEpisodesGet = productionRoutes.getTitleEpisodes;
-export const handleWatchHistoryV2ProgressPost = productionRoutes.postProgress;
-export const handleWatchHistoryV2PreferencesGet = productionRoutes.getPreferences;
-export const handleWatchHistoryV2PreferencesPatch = productionRoutes.patchPreferences;
-export const handleWatchHistoryV2DeletePost = productionRoutes.postDelete;
-export const handleWatchHistoryV2RoomPost = productionRoutes.postRoom;
+export const handleWatchHistoryV3Get = productionRoutes.getHistory;
+export const handleWatchHistoryV3TitleEpisodesGet = productionRoutes.getTitleEpisodes;
+export const handleWatchHistoryV3ProgressPost = productionRoutes.postProgress;
+export const handleWatchHistoryV3CatalogAttemptPost = productionRoutes.postCatalogAttempt;
+export const handleWatchHistoryV3CatalogPost = productionRoutes.postCatalog;
+export const handleWatchHistoryV3PreferencesGet = productionRoutes.getPreferences;
+export const handleWatchHistoryV3PreferencesPatch = productionRoutes.patchPreferences;
+export const handleWatchHistoryV3DeletePost = productionRoutes.postDelete;
+export const handleWatchHistoryV3RoomPost = productionRoutes.postRoom;
 
-async function createRoomFromV2Session(params: {
+async function createRoomFromV3Session(params: {
   session: ApiSession;
   sessionId: string;
   participantSessionId: string;
@@ -299,20 +336,20 @@ async function createRoomFromV2Session(params: {
       activeRoom: ActiveRoomConflictResponse["activeRoom"];
     }
 > {
-  const source = await supabaseWatchHistoryV2Store.getRoomSource(
+  const source = await supabaseWatchHistoryV3Store.getRoomSource(
     params.session.userId,
     params.sessionId,
   );
   if (!source) {
-    throw new WatchHistoryV2ApiError(404, "SESSION_NOT_FOUND", "Watch session was not found");
+    throw new WatchHistoryV3ApiError(404, "SESSION_NOT_FOUND", "Watch session was not found");
   }
   const user = await getUserById(params.session.userId);
-  if (!user) throw new WatchHistoryV2ApiError(404, "ACCOUNT_NOT_FOUND", "Account was not found");
+  if (!user) throw new WatchHistoryV3ApiError(404, "ACCOUNT_NOT_FOUND", "Account was not found");
   const hostPlan = user.plan ?? params.session.plan;
   const quota = await getHostQuotaView(params.session.userId, hostPlan, new Date());
   if (!canStartHostSession(quota)) {
     const body = quotaExhaustedResponseBody(quota);
-    throw new WatchHistoryV2ApiError(403, body.code, body.error);
+    throw new WatchHistoryV3ApiError(403, body.code, body.error);
   }
   const admission = await createRoomWithActiveSession({
     hostUserId: params.session.userId,
@@ -353,7 +390,7 @@ async function createRoomFromV2Session(params: {
 async function readBoundedJson(request: Request, maxBytes: number): Promise<unknown> {
   const contentLength = request.headers.get("content-length");
   if (contentLength && /^\d+$/.test(contentLength) && Number(contentLength) > maxBytes) {
-    throw new WatchHistoryV2ApiError(413, "PAYLOAD_TOO_LARGE", "Request body is too large");
+    throw new WatchHistoryV3ApiError(413, "PAYLOAD_TOO_LARGE", "Request body is too large");
   }
   const chunks: Uint8Array[] = [];
   let totalBytes = 0;
@@ -366,7 +403,7 @@ async function readBoundedJson(request: Request, maxBytes: number): Promise<unkn
         totalBytes += value.byteLength;
         if (totalBytes > maxBytes) {
           await reader.cancel().catch(() => undefined);
-          throw new WatchHistoryV2ApiError(
+          throw new WatchHistoryV3ApiError(
             413,
             "PAYLOAD_TOO_LARGE",
             "Request body is too large",
@@ -390,13 +427,13 @@ async function readBoundedJson(request: Request, maxBytes: number): Promise<unkn
     text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
     return JSON.parse(text);
   } catch {
-    throw new WatchHistoryV2ApiError(400, "INVALID_JSON", "Request body must be valid JSON");
+    throw new WatchHistoryV3ApiError(400, "INVALID_JSON", "Request body must be valid JSON");
   }
 }
 
 function validateEmptyQuery(searchParams: URLSearchParams): void {
   if (searchParams.size > 0) {
-    throw new WatchHistoryV2ApiError(
+    throw new WatchHistoryV3ApiError(
       400,
       "INVALID_QUERY",
       "Preferences query is invalid",
@@ -408,7 +445,7 @@ function validateHistoryQuery(searchParams: URLSearchParams): void {
   const allowed = new Set(["limit", "cursor"]);
   for (const key of searchParams.keys()) {
     if (!allowed.has(key) || searchParams.getAll(key).length > 1) {
-      throw new WatchHistoryV2ApiError(
+      throw new WatchHistoryV3ApiError(
         400,
         "INVALID_QUERY",
         "History query is invalid",
@@ -450,8 +487,8 @@ function parseTitleEpisodesQuery(searchParams: URLSearchParams): {
   return { provider, titleKey, limit, cursor };
 }
 
-function invalidTitleEpisodesQuery(): WatchHistoryV2ApiError {
-  return new WatchHistoryV2ApiError(
+function invalidTitleEpisodesQuery(): WatchHistoryV3ApiError {
+  return new WatchHistoryV3ApiError(
     400,
     "INVALID_QUERY",
     "History detail query is invalid",
@@ -461,11 +498,11 @@ function invalidTitleEpisodesQuery(): WatchHistoryV2ApiError {
 function parseLimit(value: string | null): number {
   if (value === null || value === "") return 50;
   if (!/^\d{1,3}$/.test(value)) {
-    throw new WatchHistoryV2ApiError(400, "INVALID_LIMIT", "History limit must be from 1 to 100");
+    throw new WatchHistoryV3ApiError(400, "INVALID_LIMIT", "History limit must be from 1 to 100");
   }
   const limit = Number(value);
   if (limit < 1 || limit > 100) {
-    throw new WatchHistoryV2ApiError(400, "INVALID_LIMIT", "History limit must be from 1 to 100");
+    throw new WatchHistoryV3ApiError(400, "INVALID_LIMIT", "History limit must be from 1 to 100");
   }
   return limit;
 }
@@ -478,7 +515,7 @@ function unauthorizedResponse(): NextResponse {
 }
 
 function watchHistoryErrorResponse(error: unknown): NextResponse {
-  if (error instanceof WatchHistoryV2ApiError) {
+  if (error instanceof WatchHistoryV3ApiError) {
     return NextResponse.json(
       { error: error.message, code: error.code },
       { status: error.status },

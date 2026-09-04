@@ -1,5 +1,10 @@
 import {
   WATCH_HISTORY_TITLE_EPISODE_PAGE_LIMIT,
+  WatchCatalogBeginAckSchema,
+  WatchCatalogBeginRequestSchema,
+  WatchCatalogCommitAckSchema,
+  WatchCatalogCommitRequestSchema,
+  WatchHistoryCatalogProjectionSchema,
   WatchHistoryDeletionAckSchema,
   WatchHistoryDeletionRequestSchema,
   WatchHistoryPreferencesResponseSchema,
@@ -16,6 +21,11 @@ import {
   type WatchHistoryResponse,
   type WatchHistorySession,
   type WatchHistoryTitleEpisodesResponse,
+  type WatchHistoryCatalogProjection,
+  type WatchCatalogBeginAck,
+  type WatchCatalogBeginRequest,
+  type WatchCatalogCommitAck,
+  type WatchCatalogCommitRequest,
   type WatchProgressAck,
   type WatchProgressEvent,
   type WatchSharedRoomAuthority,
@@ -92,7 +102,7 @@ type WatchHistorySessionRecord = {
 type ParticipantDatabaseRow = {
   session_id: string;
   user_id: string;
-  schema_version: 2;
+  schema_version: 3;
   role: "host" | "viewer";
   current_time_seconds: number;
   progress: number;
@@ -116,9 +126,10 @@ export type WatchHistoryTitleSummary = {
     complete: boolean;
     nextCursor: string | null;
   };
+  catalog: WatchHistoryCatalogProjection;
 };
 
-type WatchHistoryTitleEpisodePage = {
+export type WatchHistoryTitleEpisodePage = {
   accountGeneration: number;
   provider: "crunchyroll" | "youtube";
   titleKey: string;
@@ -128,15 +139,18 @@ type WatchHistoryTitleEpisodePage = {
   sessions: unknown[];
   complete: boolean;
   nextCursor: string | null;
+  catalog: WatchHistoryCatalogProjection;
 };
 
-export type WatchHistoryV2Store = {
+export type WatchHistoryV3Store = {
   getProgressReceipt(userId: string, clientEventId: string): Promise<unknown | null>;
   applyProgress(
     userId: string,
     event: Record<string, unknown>,
     authority: ValidatedWatchHistoryAuthority | null,
   ): Promise<unknown>;
+  beginCatalog(userId: string, request: WatchCatalogBeginRequest): Promise<unknown>;
+  applyCatalog(userId: string, request: WatchCatalogCommitRequest): Promise<unknown>;
   loadHistory(userId: string, page: {
     limit: number;
     cursor: WatchHistoryCursor | null;
@@ -160,10 +174,10 @@ export type WatchHistoryV2Store = {
   }>;
   setPreferences(userId: string, preferences: WatchHistoryPreferencesUpdate): Promise<unknown>;
   deleteHistory(userId: string, request: WatchHistoryDeletionRequest): Promise<unknown>;
-  getRoomSource(userId: string, sessionId: string): Promise<WatchHistoryV2RoomSource | null>;
+  getRoomSource(userId: string, sessionId: string): Promise<WatchHistoryV3RoomSource | null>;
 };
 
-export type WatchHistoryV2RoomSource = {
+export type WatchHistoryV3RoomSource = {
   sessionId: string;
   showId: string;
   episodeId: string;
@@ -171,7 +185,7 @@ export type WatchHistoryV2RoomSource = {
   title: string;
 };
 
-export class WatchHistoryV2ApiError extends Error {
+export class WatchHistoryV3ApiError extends Error {
   constructor(
     readonly status: number,
     readonly code: string,
@@ -181,27 +195,92 @@ export class WatchHistoryV2ApiError extends Error {
   }
 }
 
-export function isMeaningfulWatchHistoryV2SessionIdentity(identity: {
+export function isMeaningfulWatchHistoryV3SessionIdentity(identity: {
   roomId: string | null;
   clientSessionKey: string | null;
 }): boolean {
   return identity.roomId !== null || identity.clientSessionKey !== null;
 }
 
-export function parseWatchProgressEventV2(input: unknown): WatchProgressEvent {
+function unavailableCatalog(): WatchHistoryCatalogProjection {
+  return { state: "unavailable", title: null, aggregate: null, seasons: [] };
+}
+
+export async function beginWatchCatalogV3(params: {
+  userId: string;
+  input: unknown;
+  store?: WatchHistoryV3Store;
+}): Promise<WatchCatalogBeginAck> {
+  const request = WatchCatalogBeginRequestSchema.safeParse(params.input);
+  if (!request.success) {
+    throw new WatchHistoryV3ApiError(400, "INVALID_REQUEST", "Invalid watch catalog request");
+  }
+  try {
+    const value = await (params.store ?? supabaseWatchHistoryV3Store).beginCatalog(
+      params.userId,
+      request.data,
+    );
+    const response = WatchCatalogBeginAckSchema.safeParse(value);
+    if (
+      !response.success ||
+      response.data.meta.ownerUserId !== params.userId ||
+      response.data.provider !== request.data.provider ||
+      response.data.titleKey !== request.data.titleKey ||
+      response.data.accountGeneration !== request.data.accountGeneration
+    ) {
+      throw invalidDatabaseResponse();
+    }
+    return response.data;
+  } catch (error) {
+    throw publicDatabaseError(error);
+  }
+}
+
+export async function applyWatchCatalogV3(params: {
+  userId: string;
+  input: unknown;
+  store?: WatchHistoryV3Store;
+}): Promise<WatchCatalogCommitAck> {
+  const request = WatchCatalogCommitRequestSchema.safeParse(params.input);
+  if (!request.success) {
+    throw new WatchHistoryV3ApiError(400, "INVALID_REQUEST", "Invalid watch catalog request");
+  }
+  try {
+    const value = await (params.store ?? supabaseWatchHistoryV3Store).applyCatalog(
+      params.userId,
+      request.data,
+    );
+    const response = WatchCatalogCommitAckSchema.safeParse(value);
+    if (
+      !response.success ||
+      response.data.meta.ownerUserId !== params.userId ||
+      response.data.provider !== request.data.provider ||
+      response.data.titleKey !== request.data.titleKey ||
+      response.data.accountGeneration !== request.data.accountGeneration ||
+      response.data.revision !== request.data.revision
+    ) {
+      throw invalidDatabaseResponse();
+    }
+    return response.data;
+  } catch (error) {
+    throw publicDatabaseError(error);
+  }
+}
+
+export function parseWatchProgressEventV3(input: unknown): WatchProgressEvent {
   const parsed = WatchProgressEventSchema.safeParse(input);
   if (!parsed.success) {
-    throw new WatchHistoryV2ApiError(400, "INVALID_REQUEST", "Invalid watch progress event");
+    throw new WatchHistoryV3ApiError(400, "INVALID_REQUEST", "Invalid watch progress event");
   }
   if (!MVP_PROVIDERS.has(parsed.data.provider)) {
-    throw new WatchHistoryV2ApiError(400, "UNSUPPORTED_PROVIDER", "Provider is not supported");
+    throw new WatchHistoryV3ApiError(400, "UNSUPPORTED_PROVIDER", "Provider is not supported");
   }
 
   let url: URL;
   try {
     url = new URL(parsed.data.sourceUrl);
   } catch {
-    throw new WatchHistoryV2ApiError(400, "PROVIDER_DOMAIN_MISMATCH", "Provider source is invalid");
+    throw new WatchHistoryV3ApiError(400, "PROVIDER_DOMAIN_MISMATCH", "Provider source is invalid");
   }
   const validOrigin =
     (parsed.data.provider === "crunchyroll" &&
@@ -212,7 +291,7 @@ export function parseWatchProgressEventV2(input: unknown): WatchProgressEvent {
       url.pathname === "/watch" &&
       url.searchParams.has("v"));
   if (!validOrigin) {
-    throw new WatchHistoryV2ApiError(
+    throw new WatchHistoryV3ApiError(
       400,
       "PROVIDER_DOMAIN_MISMATCH",
       "Provider source does not match the event",
@@ -221,17 +300,17 @@ export function parseWatchProgressEventV2(input: unknown): WatchProgressEvent {
   return parsed.data;
 }
 
-export async function applyWatchProgressV2(params: {
+export async function applyWatchProgressV3(params: {
   userId: string;
   input: unknown;
-  store?: WatchHistoryV2Store;
+  store?: WatchHistoryV3Store;
   verifyAuthority?: (params: {
     authenticatedUserId: string;
     authority: WatchSharedRoomAuthority;
   }) => Promise<ValidatedWatchHistoryAuthority>;
 }): Promise<WatchProgressAck> {
-  const event = parseWatchProgressEventV2(params.input);
-  const store = params.store ?? supabaseWatchHistoryV2Store;
+  const event = parseWatchProgressEventV3(params.input);
+  const store = params.store ?? supabaseWatchHistoryV3Store;
   let validatedAuthority: ValidatedWatchHistoryAuthority | null = null;
   if (event.sharedRoom) {
     try {
@@ -256,7 +335,7 @@ export async function applyWatchProgressV2(params: {
         authority: event.sharedRoom,
       });
     } catch {
-      throw new WatchHistoryV2ApiError(403, "INVALID_ROOM_AUTHORITY", "Shared room authority is invalid");
+      throw new WatchHistoryV3ApiError(403, "INVALID_ROOM_AUTHORITY", "Shared room authority is invalid");
     }
   }
 
@@ -280,7 +359,7 @@ export async function applyWatchProgressV2(params: {
     );
     const parsed = WatchProgressAckSchema.safeParse(value);
     if (!parsed.success || parsed.data.meta.ownerUserId !== params.userId) {
-      throw new WatchHistoryV2ApiError(
+      throw new WatchHistoryV3ApiError(
         502,
         "INVALID_DATABASE_RESPONSE",
         "Watch history response is invalid",
@@ -292,21 +371,21 @@ export async function applyWatchProgressV2(params: {
   }
 }
 
-export async function listWatchHistoryV2(params: {
+export async function listWatchHistoryV3(params: {
   userId: string;
   limit?: number;
   cursor?: WatchHistoryCursor | null;
-  store?: WatchHistoryV2Store;
+  store?: WatchHistoryV3Store;
   now?: Date;
 }): Promise<WatchHistoryResponse> {
   try {
     const limit = params.limit ?? 50;
     const cursor = params.cursor ?? null;
-    const snapshot = await (params.store ?? supabaseWatchHistoryV2Store).loadHistory(
+    const snapshot = await (params.store ?? supabaseWatchHistoryV3Store).loadHistory(
       params.userId,
       { limit, cursor },
     );
-    return buildWatchHistoryV2Response({
+    return buildWatchHistoryV3Response({
       userId: params.userId,
       accountGeneration: snapshot.accountGeneration,
       progressRows: snapshot.progressRows,
@@ -323,7 +402,7 @@ export async function listWatchHistoryV2(params: {
   }
 }
 
-export function buildWatchHistoryV2Response(params: {
+export function buildWatchHistoryV3Response(params: {
   userId: string;
   accountGeneration: number;
   progressRows: unknown[];
@@ -336,10 +415,10 @@ export function buildWatchHistoryV2Response(params: {
   generatedAt: Date;
 }): WatchHistoryResponse {
   if (!Number.isInteger(params.limit) || params.limit < 1 || params.limit > 100) {
-    throw new WatchHistoryV2ApiError(400, "INVALID_LIMIT", "History limit must be from 1 to 100");
+    throw new WatchHistoryV3ApiError(400, "INVALID_LIMIT", "History limit must be from 1 to 100");
   }
   if (!Number.isInteger(params.accountGeneration) || params.accountGeneration < 1) {
-    throw new WatchHistoryV2ApiError(
+    throw new WatchHistoryV3ApiError(
       502,
       "INVALID_DATABASE_RESPONSE",
       "Watch history response is invalid",
@@ -353,7 +432,7 @@ export function buildWatchHistoryV2Response(params: {
         row.user_id !== params.userId || row.history_generation !== params.accountGeneration,
     )
   ) {
-    throw new WatchHistoryV2ApiError(
+    throw new WatchHistoryV3ApiError(
       502,
       "INVALID_DATABASE_RESPONSE",
       "Watch history response is invalid",
@@ -404,6 +483,7 @@ export function buildWatchHistoryV2Response(params: {
           observedEpisodeCount: titleRows.length,
           completedEpisodeCount: completedInSlice,
           episodePage: { complete: true, nextCursor: null },
+          catalog: unavailableCatalog(),
         };
     if (
       !summary ||
@@ -433,6 +513,16 @@ export function buildWatchHistoryV2Response(params: {
       .map((record) => record.session)
       .sort((a, b) => b.lastWatchedAt.localeCompare(a.lastWatchedAt))
       .slice(0, 20);
+    const catalog = summary.catalog;
+    const catalogSeasons = new Map(
+      catalog.seasons.map((season) => [season.seasonKey, season]),
+    );
+    if (
+      catalog.state === "complete" &&
+      [...seasonRows.keys()].some((seasonKey) => !catalogSeasons.has(seasonKey))
+    ) {
+      throw invalidDatabaseResponse();
+    }
 
     return {
       cursor: { lastWatchedAt: summary.lastWatchedAt, stableId },
@@ -443,11 +533,11 @@ export function buildWatchHistoryV2Response(params: {
         completedEpisodeCount: summary.completedEpisodeCount,
         episodePage: summary.episodePage,
         itemKind: latest.item_kind,
-        title: latest.title,
+        title: catalog.title ?? latest.title,
         sourceUrl: latest.source_url,
         artworkUrl: latest.artwork_url,
-        catalogState: "unavailable" as const,
-        aggregate: {
+        catalogState: catalog.state,
+        aggregate: catalog.aggregate ?? {
           completedEpisodes: summary.completedEpisodeCount,
           availableEpisodes: null,
           progress: null,
@@ -456,12 +546,13 @@ export function buildWatchHistoryV2Response(params: {
           .map(([seasonKey, observedRows], order) => {
             const first = observedRows[0]!;
             const observedCompleted = observedRows.filter((row) => row.completed_at !== null).length;
+            const exact = catalogSeasons.get(seasonKey);
             return {
               seasonKey,
-              seasonTitle: first.season_title ?? "Observed episodes",
-              seasonNumber: first.season_number,
-              order,
-              aggregate: {
+              seasonTitle: exact?.seasonTitle ?? first.season_title ?? "Observed episodes",
+              seasonNumber: exact?.seasonNumber ?? first.season_number,
+              order: exact?.order ?? order,
+              aggregate: exact?.aggregate ?? {
                 completedEpisodes: observedCompleted,
                 availableEpisodes: null,
                 progress: null,
@@ -469,15 +560,10 @@ export function buildWatchHistoryV2Response(params: {
               episodes: observedRows.map((row) =>
                 mapProgressRowToEpisode(row, sessionRecords)
               ),
-              nextEpisode: null,
+              nextEpisode: exact?.nextEpisode ?? null,
             };
           })
-          .sort((a, b) =>
-            (a.seasonNumber ?? Number.MAX_SAFE_INTEGER) -
-              (b.seasonNumber ?? Number.MAX_SAFE_INTEGER) ||
-            a.seasonKey.localeCompare(b.seasonKey),
-          )
-          .map((season, order) => ({ ...season, order })),
+          .sort((a, b) => a.order - b.order || a.seasonKey.localeCompare(b.seasonKey)),
         sessions: titleSessions,
         latestActivity: {
           episodeKey: latest.episode_key,
@@ -529,7 +615,7 @@ export function buildWatchHistoryV2Response(params: {
   const response = {
     meta: {
       serverTime: params.generatedAt.toISOString(),
-      schemaVersion: 2 as const,
+      schemaVersion: 3 as const,
       ownerUserId: params.userId,
       accountGeneration: params.accountGeneration,
     },
@@ -541,7 +627,7 @@ export function buildWatchHistoryV2Response(params: {
   };
   const parsed = WatchHistoryResponseSchema.safeParse(response);
   if (!parsed.success) {
-    throw new WatchHistoryV2ApiError(
+    throw new WatchHistoryV3ApiError(
       502,
       "INVALID_DATABASE_RESPONSE",
       "Watch history response is invalid",
@@ -550,13 +636,13 @@ export function buildWatchHistoryV2Response(params: {
   return parsed.data;
 }
 
-export async function listWatchHistoryTitleEpisodesV2(params: {
+export async function listWatchHistoryTitleEpisodesV3(params: {
   userId: string;
   provider: "crunchyroll" | "youtube";
   titleKey: string;
   limit?: number;
   cursor?: string | null;
-  store?: WatchHistoryV2Store;
+  store?: WatchHistoryV3Store;
   now?: Date;
 }): Promise<WatchHistoryTitleEpisodesResponse> {
   const limit = params.limit ?? WATCH_HISTORY_TITLE_EPISODE_PAGE_LIMIT;
@@ -570,11 +656,11 @@ export async function listWatchHistoryTitleEpisodesV2(params: {
     limit > WATCH_HISTORY_TITLE_EPISODE_PAGE_LIMIT ||
     !(cursor === null || isOpaqueEpisodeCursor(cursor))
   ) {
-    throw new WatchHistoryV2ApiError(400, "INVALID_QUERY", "History detail query is invalid");
+    throw new WatchHistoryV3ApiError(400, "INVALID_QUERY", "History detail query is invalid");
   }
 
   try {
-    const store = params.store ?? supabaseWatchHistoryV2Store;
+    const store = params.store ?? supabaseWatchHistoryV3Store;
     if (!store.loadTitleEpisodes) throw invalidDatabaseResponse();
     const page = await store.loadTitleEpisodes(params.userId, {
       provider: params.provider,
@@ -590,42 +676,72 @@ export async function listWatchHistoryTitleEpisodesV2(params: {
     ) {
       throw invalidDatabaseResponse();
     }
-    const rows = page.progressRows.map(parseProgressRow);
-    if (
-      rows.some(
-        (row) =>
-          row.user_id !== params.userId ||
-          row.history_generation !== page.accountGeneration ||
-          row.provider !== params.provider ||
-          row.title_key !== params.titleKey,
-      ) ||
-      new Set(rows.map((row) => row.episode_key)).size !== rows.length
-    ) {
-      throw invalidDatabaseResponse();
-    }
-    const sessionRecords = page.sessions.map(parseHistorySessionRecord);
-    const generatedAt = params.now ?? new Date();
-    const response = WatchHistoryTitleEpisodesResponseSchema.safeParse({
-      meta: {
-        serverTime: generatedAt.toISOString(),
-        schemaVersion: 2,
-        ownerUserId: params.userId,
-        accountGeneration: page.accountGeneration,
-      },
-      generatedAt: generatedAt.toISOString(),
-      provider: page.provider,
-      titleKey: page.titleKey,
-      observedEpisodeCount: page.observedEpisodeCount,
-      completedEpisodeCount: page.completedEpisodeCount,
-      episodes: rows.map((row) => mapProgressRowToEpisode(row, sessionRecords)),
-      complete: page.complete,
-      nextCursor: page.nextCursor,
+    return buildWatchHistoryTitleEpisodesV3Response({
+      userId: params.userId,
+      page,
+      generatedAt: params.now ?? new Date(),
     });
-    if (!response.success) throw invalidDatabaseResponse();
-    return response.data;
   } catch (error) {
     throw publicDatabaseError(error);
   }
+}
+
+export function buildWatchHistoryTitleEpisodesV3Response(params: {
+  userId: string;
+  page: WatchHistoryTitleEpisodePage;
+  generatedAt: Date;
+}): WatchHistoryTitleEpisodesResponse {
+  if (
+    !isUuid(params.userId) ||
+    !isPositiveInteger(params.page.accountGeneration) ||
+    params.page.completedEpisodeCount > params.page.observedEpisodeCount
+  ) {
+    throw invalidDatabaseResponse();
+  }
+  const rows = params.page.progressRows.map(parseProgressRow);
+  if (
+    rows.some(
+      (row) =>
+        row.user_id !== params.userId ||
+        row.history_generation !== params.page.accountGeneration ||
+        row.provider !== params.page.provider ||
+        row.title_key !== params.page.titleKey,
+    ) ||
+    new Set(rows.map((row) => row.episode_key)).size !== rows.length
+  ) {
+    throw invalidDatabaseResponse();
+  }
+  const sessionRecords = params.page.sessions.map(parseHistorySessionRecord);
+  const catalogSeasonKeys = new Set(
+    params.page.catalog.seasons.map((season) => season.seasonKey),
+  );
+  if (
+    params.page.catalog.state === "complete" &&
+    rows.some(
+      (row) => row.season_key !== null && !catalogSeasonKeys.has(row.season_key),
+    )
+  ) {
+    throw invalidDatabaseResponse();
+  }
+  const response = WatchHistoryTitleEpisodesResponseSchema.safeParse({
+    meta: {
+      serverTime: params.generatedAt.toISOString(),
+      schemaVersion: 3,
+      ownerUserId: params.userId,
+      accountGeneration: params.page.accountGeneration,
+    },
+    generatedAt: params.generatedAt.toISOString(),
+    provider: params.page.provider,
+    titleKey: params.page.titleKey,
+    observedEpisodeCount: params.page.observedEpisodeCount,
+    completedEpisodeCount: params.page.completedEpisodeCount,
+    episodes: rows.map((row) => mapProgressRowToEpisode(row, sessionRecords)),
+    catalog: params.page.catalog,
+    complete: params.page.complete,
+    nextCursor: params.page.nextCursor,
+  });
+  if (!response.success) throw invalidDatabaseResponse();
+  return response.data;
 }
 
 export function encodeWatchHistoryCursor(cursor: WatchHistoryCursor): string {
@@ -652,7 +768,7 @@ export function decodeWatchHistoryCursor(value: string): WatchHistoryCursor {
       stableId: decoded[1],
     });
   } catch {
-    throw new WatchHistoryV2ApiError(400, "INVALID_CURSOR", "History cursor is invalid");
+    throw new WatchHistoryV3ApiError(400, "INVALID_CURSOR", "History cursor is invalid");
   }
 }
 
@@ -746,17 +862,17 @@ export function normalizeWatchHistoryPublicProfile(params: {
   };
 }
 
-export async function getWatchHistoryPreferencesV2(params: {
+export async function getWatchHistoryPreferencesV3(params: {
   userId: string;
-  store?: WatchHistoryV2Store;
+  store?: WatchHistoryV3Store;
   now?: Date;
 }): Promise<WatchHistoryPreferencesResponse> {
   try {
-    const value = await (params.store ?? supabaseWatchHistoryV2Store).getPreferences(params.userId);
+    const value = await (params.store ?? supabaseWatchHistoryV3Store).getPreferences(params.userId);
     return WatchHistoryPreferencesResponseSchema.parse({
       meta: {
         serverTime: (params.now ?? new Date()).toISOString(),
-        schemaVersion: 2,
+        schemaVersion: 3,
         ownerUserId: params.userId,
         accountGeneration: value.accountGeneration,
       },
@@ -767,23 +883,23 @@ export async function getWatchHistoryPreferencesV2(params: {
   }
 }
 
-export async function updateWatchHistoryPreferencesV2(params: {
+export async function updateWatchHistoryPreferencesV3(params: {
   userId: string;
   input: unknown;
-  store?: WatchHistoryV2Store;
+  store?: WatchHistoryV3Store;
 }): Promise<WatchHistoryPreferencesResponse> {
   const parsedInput = WatchHistoryPreferencesUpdateSchema.safeParse(params.input);
   if (!parsedInput.success) {
-    throw new WatchHistoryV2ApiError(400, "INVALID_REQUEST", "Invalid watch history preferences");
+    throw new WatchHistoryV3ApiError(400, "INVALID_REQUEST", "Invalid watch history preferences");
   }
   try {
-    const value = await (params.store ?? supabaseWatchHistoryV2Store).setPreferences(
+    const value = await (params.store ?? supabaseWatchHistoryV3Store).setPreferences(
       params.userId,
       parsedInput.data,
     );
     const response = WatchHistoryPreferencesResponseSchema.safeParse(value);
     if (!response.success || response.data.meta.ownerUserId !== params.userId) {
-      throw new WatchHistoryV2ApiError(
+      throw new WatchHistoryV3ApiError(
         502,
         "INVALID_DATABASE_RESPONSE",
         "Watch history response is invalid",
@@ -795,23 +911,23 @@ export async function updateWatchHistoryPreferencesV2(params: {
   }
 }
 
-export async function deleteWatchHistoryV2(params: {
+export async function deleteWatchHistoryV3(params: {
   userId: string;
   input: unknown;
-  store?: WatchHistoryV2Store;
+  store?: WatchHistoryV3Store;
 }): Promise<WatchHistoryDeletionAck> {
   const request = WatchHistoryDeletionRequestSchema.safeParse(params.input);
   if (!request.success || !MVP_PROVIDERS.has(request.data.target.scope === "all" ? "crunchyroll" : request.data.target.provider)) {
-    throw new WatchHistoryV2ApiError(400, "INVALID_REQUEST", "Invalid watch history deletion");
+    throw new WatchHistoryV3ApiError(400, "INVALID_REQUEST", "Invalid watch history deletion");
   }
   try {
-    const value = await (params.store ?? supabaseWatchHistoryV2Store).deleteHistory(
+    const value = await (params.store ?? supabaseWatchHistoryV3Store).deleteHistory(
       params.userId,
       request.data,
     );
     const response = WatchHistoryDeletionAckSchema.safeParse(value);
     if (!response.success || response.data.meta.ownerUserId !== params.userId) {
-      throw new WatchHistoryV2ApiError(
+      throw new WatchHistoryV3ApiError(
         502,
         "INVALID_DATABASE_RESPONSE",
         "Watch history response is invalid",
@@ -823,7 +939,7 @@ export async function deleteWatchHistoryV2(params: {
   }
 }
 
-export const supabaseWatchHistoryV2Store: WatchHistoryV2Store = {
+export const supabaseWatchHistoryV3Store: WatchHistoryV3Store = {
   async getProgressReceipt(userId, clientEventId) {
     const result = await db()
       .from("watch_history_receipts")
@@ -841,7 +957,7 @@ export const supabaseWatchHistoryV2Store: WatchHistoryV2Store = {
   },
 
   async applyProgress(userId, event, authority) {
-    const result = await db().rpc("apply_watch_progress_v2", {
+    const result = await db().rpc("apply_watch_progress_v3", {
       p_user_id: userId,
       p_event: event,
       p_room_authority: authority,
@@ -850,9 +966,27 @@ export const supabaseWatchHistoryV2Store: WatchHistoryV2Store = {
     return result.data;
   },
 
+  async beginCatalog(userId, request) {
+    const result = await db().rpc("begin_watch_catalog_v3", {
+      p_user_id: userId,
+      p_request: request,
+    });
+    if (result.error) throw result.error;
+    return result.data;
+  },
+
+  async applyCatalog(userId, request) {
+    const result = await db().rpc("apply_watch_catalog_v3", {
+      p_user_id: userId,
+      p_request: request,
+    });
+    if (result.error) throw result.error;
+    return result.data;
+  },
+
   async loadHistory(userId, page) {
     const preferences = await this.getPreferences(userId);
-    const result = await db().rpc("list_watch_history_v2_bounded_page", {
+    const result = await db().rpc("list_watch_history_v3_bounded_page", {
       p_user_id: userId,
       p_history_generation: preferences.accountGeneration,
       p_limit: page.limit,
@@ -875,7 +1009,7 @@ export const supabaseWatchHistoryV2Store: WatchHistoryV2Store = {
 
   async loadTitleEpisodes(userId, page) {
     const preferences = await this.getPreferences(userId);
-    const result = await db().rpc("list_watch_history_v2_title_episodes_page", {
+    const result = await db().rpc("list_watch_history_v3_title_episodes_page", {
       p_user_id: userId,
       p_history_generation: preferences.accountGeneration,
       p_provider: page.provider,
@@ -916,7 +1050,10 @@ export const supabaseWatchHistoryV2Store: WatchHistoryV2Store = {
   async getPreferences(userId) {
     const insertResult = await db()
       .from("user_watch_settings")
-      .upsert({ user_id: userId }, { onConflict: "user_id", ignoreDuplicates: true });
+      .upsert(
+        { user_id: userId, write_schema_version: 3 },
+        { onConflict: "user_id", ignoreDuplicates: true },
+      );
     if (insertResult.error) throw insertResult.error;
     const result = await db()
       .from("user_watch_settings")
@@ -938,7 +1075,7 @@ export const supabaseWatchHistoryV2Store: WatchHistoryV2Store = {
   },
 
   async setPreferences(userId, preferences) {
-    const result = await db().rpc("set_watch_preferences_v2", {
+    const result = await db().rpc("set_watch_preferences_v3", {
       p_user_id: userId,
       p_preferences: preferences,
     });
@@ -947,7 +1084,7 @@ export const supabaseWatchHistoryV2Store: WatchHistoryV2Store = {
   },
 
   async deleteHistory(userId, request) {
-    const result = await db().rpc("delete_watch_history_v2", {
+    const result = await db().rpc("delete_watch_history_v3", {
       p_user_id: userId,
       p_request: request,
     });
@@ -961,7 +1098,7 @@ export const supabaseWatchHistoryV2Store: WatchHistoryV2Store = {
       .select("session_id,user_id,schema_version")
       .eq("session_id", sessionId)
       .eq("user_id", userId)
-      .eq("schema_version", 2)
+      .eq("schema_version", 3)
       .maybeSingle();
     if (participant.error) throw participant.error;
     if (!participant.data) return null;
@@ -971,7 +1108,7 @@ export const supabaseWatchHistoryV2Store: WatchHistoryV2Store = {
         "id,schema_version,room_id,client_session_key,provider,item_key,item_kind,item_title,episode_key,episode_title,source_url",
       )
       .eq("id", sessionId)
-      .eq("schema_version", 2)
+      .eq("schema_version", 3)
       .or("room_id.not.is.null,client_session_key.not.is.null")
       .maybeSingle();
     if (session.error) throw session.error;
@@ -990,7 +1127,7 @@ export function buildHostAuthoritativeWatchHistoryRoomSource(params: {
   sessionId: string;
   participant: unknown;
   session: unknown;
-}): WatchHistoryV2RoomSource | null {
+}): WatchHistoryV3RoomSource | null {
   if (
     !isUuid(params.userId) ||
     !isUuid(params.sessionId) ||
@@ -1004,13 +1141,13 @@ export function buildHostAuthoritativeWatchHistoryRoomSource(params: {
   if (
     participant.session_id !== params.sessionId ||
     participant.user_id !== params.userId ||
-    participant.schema_version !== 2 ||
+    participant.schema_version !== 3 ||
     session.id !== params.sessionId ||
-    session.schema_version !== 2 ||
+    session.schema_version !== 3 ||
     !(session.room_id === null || isBoundedString(session.room_id, 128)) ||
     !(session.client_session_key === null ||
       isBoundedString(session.client_session_key, 220)) ||
-    !isMeaningfulWatchHistoryV2SessionIdentity({
+    !isMeaningfulWatchHistoryV3SessionIdentity({
       roomId: session.room_id,
       clientSessionKey: session.client_session_key,
     }) ||
@@ -1127,7 +1264,7 @@ async function loadCanonicalSessions(
         .from("watch_session_participants")
         .select("session_id", { count: "exact" })
         .eq("user_id", userId)
-        .eq("schema_version", 2)
+        .eq("schema_version", 3)
         .order("updated_at", { ascending: false })
         .order("session_id", { ascending: true })
         .range(from, to);
@@ -1142,7 +1279,7 @@ async function loadCanonicalSessions(
           { count: "exact" },
         )
         .in("id", ids)
-        .eq("schema_version", 2)
+        .eq("schema_version", 3)
         .or("room_id.not.is.null,client_session_key.not.is.null")
         .order("id", { ascending: true })
         .range(from, to);
@@ -1157,7 +1294,7 @@ async function loadCanonicalSessions(
           { count: "exact" },
         )
         .in("session_id", ids)
-        .eq("schema_version", 2)
+        .eq("schema_version", 3)
         .order("session_id", { ascending: true })
         .order("joined_at", { ascending: true })
         .order("user_id", { ascending: true })
@@ -1254,41 +1391,6 @@ async function loadCanonicalSessions(
   });
 }
 
-export function parseBoundedWatchHistoryPage(value: unknown): {
-  accountGeneration: number;
-  totalTitleCount: number;
-  hasMore: boolean;
-  progressRows: unknown[];
-  sessionIds: string[];
-} {
-  if (
-    !isRecord(value) ||
-    !hasOnlyKeys(value, [
-      "accountGeneration",
-      "totalTitleCount",
-      "hasMore",
-      "progressRows",
-      "sessionIds",
-    ]) ||
-    !isPositiveInteger(value.accountGeneration) ||
-    !isNonnegativeInteger(value.totalTitleCount) ||
-    typeof value.hasMore !== "boolean" ||
-    !Array.isArray(value.progressRows) ||
-    !Array.isArray(value.sessionIds) ||
-    value.sessionIds.some((id) => !isUuid(id)) ||
-    new Set(value.sessionIds).size !== value.sessionIds.length
-  ) {
-    throw invalidDatabaseResponse();
-  }
-  return {
-    accountGeneration: value.accountGeneration,
-    totalTitleCount: value.totalTitleCount,
-    hasMore: value.hasMore,
-    progressRows: value.progressRows,
-    sessionIds: value.sessionIds,
-  };
-}
-
 export function parseResourceBoundedWatchHistoryPage(value: unknown): {
   accountGeneration: number;
   totalTitleCount: number;
@@ -1336,6 +1438,8 @@ export function parseResourceBoundedWatchHistoryPage(value: unknown): {
   };
 }
 
+export const parseBoundedWatchHistoryPage = parseResourceBoundedWatchHistoryPage;
+
 export function parseWatchHistoryTitleEpisodesPage(value: unknown): Omit<
   WatchHistoryTitleEpisodePage,
   "sessions"
@@ -1351,6 +1455,7 @@ export function parseWatchHistoryTitleEpisodesPage(value: unknown): Omit<
       "complete",
       "nextCursor",
       "progressRows",
+      "catalog",
     ]) ||
     !isPositiveInteger(value.accountGeneration) ||
     (value.provider !== "crunchyroll" && value.provider !== "youtube") ||
@@ -1367,6 +1472,7 @@ export function parseWatchHistoryTitleEpisodesPage(value: unknown): Omit<
   ) {
     throw invalidDatabaseResponse();
   }
+  const catalog = parseWatchHistoryCatalogProjection(value.catalog);
   return {
     accountGeneration: value.accountGeneration,
     provider: value.provider,
@@ -1376,6 +1482,7 @@ export function parseWatchHistoryTitleEpisodesPage(value: unknown): Omit<
     progressRows: value.progressRows,
     complete: value.complete,
     nextCursor: value.nextCursor,
+    catalog,
   };
 }
 
@@ -1389,6 +1496,7 @@ function parseWatchHistoryTitleSummary(value: unknown): WatchHistoryTitleSummary
       "observedEpisodeCount",
       "completedEpisodeCount",
       "episodePage",
+      "catalog",
     ]) ||
     (value.provider !== "crunchyroll" && value.provider !== "youtube") ||
     !isBoundedString(value.titleKey, 220) ||
@@ -1409,6 +1517,7 @@ function parseWatchHistoryTitleSummary(value: unknown): WatchHistoryTitleSummary
   ) {
     throw invalidDatabaseResponse();
   }
+  const catalog = parseWatchHistoryCatalogProjection(value.catalog);
   return {
     provider: value.provider,
     titleKey: value.titleKey,
@@ -1419,7 +1528,16 @@ function parseWatchHistoryTitleSummary(value: unknown): WatchHistoryTitleSummary
       complete: value.episodePage.complete,
       nextCursor: value.episodePage.nextCursor,
     },
+    catalog,
   };
+}
+
+function parseWatchHistoryCatalogProjection(
+  value: unknown,
+): WatchHistoryCatalogProjection {
+  const parsed = WatchHistoryCatalogProjectionSchema.safeParse(value);
+  if (!parsed.success) throw invalidDatabaseResponse();
+  return parsed.data;
 }
 
 function mapProgressRowToEpisode(
@@ -1591,7 +1709,7 @@ function parseSessionDatabaseRow(value: unknown): SessionDatabaseRow {
     !isTimestamp(row.started_at) ||
     !(row.ended_at === null || isTimestamp(row.ended_at)) ||
     !isTimestamp(row.last_checkpoint_at) ||
-    !isMeaningfulWatchHistoryV2SessionIdentity({
+    !isMeaningfulWatchHistoryV3SessionIdentity({
       roomId: row.room_id,
       clientSessionKey: row.client_session_key,
     })
@@ -1618,7 +1736,7 @@ function parseParticipantDatabaseRow(value: unknown): ParticipantDatabaseRow {
     ]) ||
     !isUuid(row.session_id) ||
     !isUuid(row.user_id) ||
-    row.schema_version !== 2 ||
+    row.schema_version !== 3 ||
     (row.role !== "host" && row.role !== "viewer") ||
     !isNonnegativeNumber(row.current_time_seconds) ||
     !isProgress(row.progress) ||
@@ -1633,7 +1751,7 @@ function parseParticipantDatabaseRow(value: unknown): ParticipantDatabaseRow {
 
 function parseWatchHistoryCursor(value: unknown): WatchHistoryCursor {
   if (!isRecord(value) || !hasOnlyKeys(value, ["lastWatchedAt", "stableId"])) {
-    throw new WatchHistoryV2ApiError(400, "INVALID_CURSOR", "History cursor is invalid");
+    throw new WatchHistoryV3ApiError(400, "INVALID_CURSOR", "History cursor is invalid");
   }
   const stableId = typeof value.stableId === "string" ? value.stableId.trim() : "";
   if (
@@ -1646,7 +1764,7 @@ function parseWatchHistoryCursor(value: unknown): WatchHistoryCursor {
     stableId.length > 260 ||
     !/^(crunchyroll|netflix|youtube|amazon):[^\s:][^\s]*$/.test(stableId)
   ) {
-    throw new WatchHistoryV2ApiError(400, "INVALID_CURSOR", "History cursor is invalid");
+    throw new WatchHistoryV3ApiError(400, "INVALID_CURSOR", "History cursor is invalid");
   }
   return { lastWatchedAt: value.lastWatchedAt, stableId };
 }
@@ -1716,16 +1834,16 @@ function isHttpsUrl(value: unknown, maxLength: number): value is string {
   return new URL(value).protocol === "https:";
 }
 
-function invalidDatabaseResponse(): WatchHistoryV2ApiError {
-  return new WatchHistoryV2ApiError(
+function invalidDatabaseResponse(): WatchHistoryV3ApiError {
+  return new WatchHistoryV3ApiError(
     502,
     "INVALID_DATABASE_RESPONSE",
     "Watch history response is invalid",
   );
 }
 
-function publicDatabaseError(error: unknown): WatchHistoryV2ApiError {
-  if (error instanceof WatchHistoryV2ApiError) return error;
+function publicDatabaseError(error: unknown): WatchHistoryV3ApiError {
+  if (error instanceof WatchHistoryV3ApiError) return error;
   const message =
     error && typeof error === "object" && typeof (error as { message?: unknown }).message === "string"
       ? (error as { message: string }).message
@@ -1754,6 +1872,6 @@ function publicDatabaseError(error: unknown): WatchHistoryV2ApiError {
     ["watch_history_preferences_invalid", 400, "INVALID_REQUEST", "Invalid watch history preferences"],
   ];
   const mapping = mappings.find(([databaseCode]) => message.includes(databaseCode));
-  if (mapping) return new WatchHistoryV2ApiError(mapping[1], mapping[2], mapping[3]);
-  return new WatchHistoryV2ApiError(503, "HISTORY_UNAVAILABLE", "Watch history is temporarily unavailable");
+  if (mapping) return new WatchHistoryV3ApiError(mapping[1], mapping[2], mapping[3]);
+  return new WatchHistoryV3ApiError(503, "HISTORY_UNAVAILABLE", "Watch history is temporarily unavailable");
 }

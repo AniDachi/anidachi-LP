@@ -50,8 +50,8 @@ export function WatchLibraryClient({
     setNotice(null);
     try {
       const [historyValue, preferencesValue] = await Promise.all([
-        api<unknown>("/api/watch-history/v2?limit=24"),
-        api<unknown>("/api/watch-history/v2/preferences"),
+        api<unknown>("/api/watch-history/v3?limit=24"),
+        api<unknown>("/api/watch-history/v3/preferences"),
       ]);
       setHistory(parseOwnedHistory(historyValue, history.meta.ownerUserId));
       setPreferences(parseOwnedPreferences(preferencesValue, history.meta.ownerUserId));
@@ -70,7 +70,7 @@ export function WatchLibraryClient({
     setNotice(null);
     try {
       const page = parseOwnedHistory(
-        await api<unknown>(`/api/watch-history/v2?limit=24&cursor=${encodeURIComponent(history.nextCursor)}`),
+        await api<unknown>(`/api/watch-history/v3?limit=24&cursor=${encodeURIComponent(history.nextCursor)}`),
         history.meta.ownerUserId,
       );
       setHistory((current) => mergeWatchHistoryPages(current, page));
@@ -87,7 +87,7 @@ export function WatchLibraryClient({
     setNotice(null);
     try {
       const next = parseOwnedPreferences(
-        await api<unknown>("/api/watch-history/v2/preferences", {
+        await api<unknown>("/api/watch-history/v3/preferences", {
           method: "PATCH",
           body: JSON.stringify({ youtubeHistoryEnabled: !preferences.preferences.youtubeHistoryEnabled }),
         }),
@@ -108,10 +108,10 @@ export function WatchLibraryClient({
     setNotice(null);
     try {
       const acknowledgement = WatchHistoryDeletionAckSchema.parse(
-        await api<unknown>("/api/watch-history/v2/delete", {
+        await api<unknown>("/api/watch-history/v3/delete", {
           method: "POST",
           body: JSON.stringify({
-            schemaVersion: 2,
+            schemaVersion: 3,
             clientMutationId: crypto.randomUUID(),
             accountGeneration: history.meta.accountGeneration,
             target,
@@ -137,7 +137,7 @@ export function WatchLibraryClient({
     setNotice(null);
     try {
       const room = WatchHistoryRoomRecreationResponseSchema.parse(
-        await api<unknown>("/api/watch-history/v2/rooms", {
+        await api<unknown>("/api/watch-history/v3/rooms", {
           method: "POST",
           body: JSON.stringify({ sessionId: session.id, clientRequestId: crypto.randomUUID() }),
         }),
@@ -390,7 +390,7 @@ export async function loadWatchHistoryTitleEpisodePage(params: {
     cursor: params.cursor,
   });
   const value = await (params.request ?? ((path) => api<unknown>(path)))(
-    `/api/watch-history/v2/title-episodes?${query.toString()}`,
+    `/api/watch-history/v3/title-episodes?${query.toString()}`,
   );
   const page = WatchHistoryTitleEpisodesResponseSchema.parse(value);
   if (
