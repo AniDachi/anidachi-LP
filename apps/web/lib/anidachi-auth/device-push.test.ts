@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { createECDH, randomBytes } from "node:crypto";
+import webPush from "web-push";
 import type { ExtensionPushSubscriptionRequest } from "@anidachi/protocol";
 import {
   deferInboxChangedPushToUsers,
   deliverInboxChangedPush,
+  deliverAccountInboxChanged,
   DevicePushApiError,
   readVapidConfiguration,
   registerDevicePushSubscription,
@@ -164,16 +167,12 @@ test("deferred inbox invalidation sends once to unique recipients", async () => 
   const jobs: Array<() => Promise<void>> = [];
   const deliveries: string[][] = [];
 
-  const scheduled = deferInboxChangedPushToUsers(
-    [USER_ID, USER_ID],
-    (job) => jobs.push(job),
-    {
-      deliver: async (recipientUserIds) => {
-        deliveries.push([...recipientUserIds]);
-        return { attempted: 1, delivered: 1, pruned: 0, failed: 0 };
-      },
+  const scheduled = deferInboxChangedPushToUsers([USER_ID, USER_ID], (job) => jobs.push(job), {
+    deliver: async (recipientUserIds) => {
+      deliveries.push([...recipientUserIds]);
+      return { attempted: 1, delivered: 1, pruned: 0, failed: 0 };
     },
-  );
+  });
 
   assert.equal(scheduled, true);
   assert.equal(jobs.length, 1);
@@ -266,3 +265,299 @@ function fakeRepository(): DevicePushRepository {
     markTransientFailure: async () => undefined,
   };
 }
+
+test("outbox delivery distinguishes provider acceptance, retry, gone and permanent failures", async () => {
+  const repo = fakeRepository();
+  repo.listEnabledForUsers = async () => [
+    pushDevice("ok", "https://fcm.googleapis.com/ok"),
+    pushDevice("gone", "https://fcm.googleapis.com/gone"),
+    pushDevice("rate", "https://fcm.googleapis.com/rate"),
+    pushDevice("forbidden", "https://fcm.googleapis.com/forbidden"),
+  ];
+  const result = await deliverAccountInboxChanged(USER_ID, {
+    repository: repo,
+    environment: vapidEnvironment(),
+    now: () => NOW.getTime(),
+    send: async (device, payload, options) => {
+      assert.equal(payload, '{"type":"inbox_changed"}');
+      assert.equal(options.timeout, 10000);
+      if (device.endpoint.endsWith("gone")) throw { statusCode: 410 };
+      if (device.endpoint.endsWith("rate"))
+        throw { statusCode: 429, headers: { "retry-after": "120" } };
+      if (device.endpoint.endsWith("forbidden")) throw { statusCode: 403 };
+    },
+  });
+  assert.equal(result.providerAccepted, 1);
+  assert.equal(result.pruned, 1);
+  assert.equal(result.failed, 2);
+  assert.equal(result.outcome, "retry");
+  assert.equal(result.retryAfterSeconds, 120);
+  assert.equal("delivered" in result, false);
+});
+
+test("missing or incomplete VAPID is observable unavailable work, never a no-device success", async () => {
+  for (const environment of [{}, { ANIDACHI_VAPID_PUBLIC_KEY: "incomplete" }]) {
+    const repository = fakeRepository();
+    repository.listEnabledForUsers = async () => [
+      pushDevice(DEVICE_ID, "https://fcm.googleapis.com/live"),
+    ];
+    const result = await deliverAccountInboxChanged(USER_ID, {
+      repository,
+      environment,
+    });
+    assert.equal(result.outcome, "retry");
+    assert.equal(result.errorCode, "configuration_unavailable");
+    assert.equal(result.noDevices, false);
+  }
+});
+
+test("confirmed no-device accounts complete independently of VAPID availability", async () => {
+  const result = await deliverAccountInboxChanged(USER_ID, {
+    repository: fakeRepository(),
+    environment: {},
+  });
+  assert.equal(result.noDevices, true);
+  assert.equal(result.outcome, "complete");
+});
+
+test("late delivery bookkeeping is fenced to the originally sent account and endpoint", async () => {
+  const repo = fakeRepository();
+  const original = pushDevice(DEVICE_ID, "https://fcm.googleapis.com/old");
+  const current = { ...original };
+  repo.listEnabledForUsers = async () => [{ ...original }];
+  repo.markPermanentFailure = async (id, _code, _time, expected) => {
+    if (
+      id === current.deviceId &&
+      expected.userId === current.userId &&
+      expected.endpoint === current.endpoint
+    ) {
+      current.endpoint = "";
+    }
+  };
+  await deliverAccountInboxChanged(USER_ID, {
+    repository: repo,
+    environment: vapidEnvironment(),
+    send: async () => {
+      current.userId = "44444444-4444-4444-8444-444444444444";
+      current.endpoint = "https://fcm.googleapis.com/rotated";
+      throw { statusCode: 410 };
+    },
+  });
+  assert.equal(current.endpoint, "https://fcm.googleapis.com/rotated");
+});
+
+test("Retry-After HTTP dates and long cooldowns never become an early retry", async () => {
+  for (const [header, want] of [
+    ["Mon, 10 Aug 2026 08:05:00 GMT", 300],
+    ["999999999", 86400],
+  ] as const) {
+    const repo = fakeRepository();
+    repo.listEnabledForUsers = async () => [
+      pushDevice(DEVICE_ID, "https://fcm.googleapis.com/rate"),
+    ];
+    const result = await deliverAccountInboxChanged(USER_ID, {
+      repository: repo,
+      environment: vapidEnvironment(),
+      now: () => NOW.getTime(),
+      send: async () => {
+        throw { statusCode: 429, headers: { "retry-after": header } };
+      },
+    });
+    assert.equal(result.retryAfterSeconds, want);
+    assert.equal(result.outcome, "retry");
+  }
+});
+
+function vapidEnvironment() {
+  return {
+    ANIDACHI_VAPID_SUBJECT: "mailto:test@example.test",
+    ANIDACHI_VAPID_PUBLIC_KEY: "public",
+    ANIDACHI_VAPID_PRIVATE_KEY: "private",
+  };
+}
+
+test("production bookkeeping queries cannot prune or update a rotated subscription", async (t) => {
+  const oldUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const oldKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  process.env.NEXT_PUBLIC_SUPABASE_URL = "https://outbox-db.example.test";
+  process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-key";
+  t.after(() => {
+    if (oldUrl === undefined) delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+    else process.env.NEXT_PUBLIC_SUPABASE_URL = oldUrl;
+    if (oldKey === undefined) delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    else process.env.SUPABASE_SERVICE_ROLE_KEY = oldKey;
+  });
+  for (const providerStatus of [201, 410, 403]) {
+    const state = {
+      userId: USER_ID,
+      endpoint: "https://fcm.googleapis.com/original",
+      error: "new-device-state",
+    };
+    t.mock.method(
+      globalThis,
+      "fetch",
+      async (input: string | URL | Request, init?: RequestInit) => {
+        const url = new URL(String(input));
+        assert.equal(url.hostname, "outbox-db.example.test");
+        if (init?.method === "GET")
+          return Response.json([
+            {
+              id: DEVICE_ID,
+              user_id: state.userId,
+              push_endpoint: state.endpoint,
+              push_p256dh: "key",
+              push_auth: "auth",
+            },
+          ]);
+        assert.equal(init?.method, "PATCH");
+        if (
+          url.searchParams.get("id") === `eq.${DEVICE_ID}` &&
+          (!url.searchParams.has("user_id") ||
+            url.searchParams.get("user_id") === `eq.${state.userId}`) &&
+          (!url.searchParams.has("push_endpoint") ||
+            url.searchParams.get("push_endpoint") === `eq.${state.endpoint}`)
+        ) {
+          state.error = "clobbered";
+        }
+        return new Response(null, { status: 204 });
+      },
+    );
+    await deliverAccountInboxChanged(USER_ID, {
+      environment: vapidEnvironment(),
+      send: async () => {
+        state.userId = "44444444-4444-4444-8444-444444444444";
+        state.endpoint = "https://fcm.googleapis.com/rotated";
+        if (providerStatus !== 201) throw { statusCode: providerStatus };
+      },
+    });
+    assert.equal(state.error, "new-device-state");
+    t.mock.restoreAll();
+  }
+});
+
+test("permanent provider rejection is terminal without pruning a live endpoint", async () => {
+  const repository = fakeRepository();
+  repository.listEnabledForUsers = async () => [
+    pushDevice(DEVICE_ID, "https://fcm.googleapis.com/live"),
+  ];
+  let pruned = false;
+  repository.markPermanentFailure = async () => {
+    pruned = true;
+  };
+  const result = await deliverAccountInboxChanged(USER_ID, {
+    repository,
+    environment: vapidEnvironment(),
+    send: async () => {
+      throw { statusCode: 401 };
+    },
+  });
+  assert.equal(result.outcome, "permanent");
+  assert.equal(result.providerAccepted, 0);
+  assert.equal(result.errorCode, "http_401");
+  assert.equal(pruned, false);
+});
+
+test("a provider that never settles becomes retryable within the ten-second timeout", async () => {
+  const repository = fakeRepository();
+  repository.listEnabledForUsers = async () => [
+    pushDevice(DEVICE_ID, "https://fcm.googleapis.com/hanging"),
+  ];
+  const started = Date.now();
+  const result = await deliverAccountInboxChanged(USER_ID, {
+    repository,
+    environment: vapidEnvironment(),
+    send: () => new Promise(() => undefined),
+  });
+  assert.equal(result.outcome, "retry");
+  assert.equal(result.providerAccepted, 0);
+  assert.ok(Date.now() - started < 12000);
+});
+
+function encryptedDeliveryFixture() {
+  const vapid = webPush.generateVAPIDKeys();
+  const ecdh = createECDH("prime256v1");
+  ecdh.generateKeys();
+  const repository = fakeRepository();
+  repository.listEnabledForUsers = async () => [
+    {
+      ...pushDevice(DEVICE_ID, "https://fcm.googleapis.com/transport-test"),
+      p256dh: ecdh.getPublicKey().toString("base64url"),
+      auth: randomBytes(16).toString("base64url"),
+    },
+  ];
+  return {
+    repository,
+    environment: {
+      ANIDACHI_VAPID_SUBJECT: "mailto:test@example.test",
+      ANIDACHI_VAPID_PUBLIC_KEY: vapid.publicKey,
+      ANIDACHI_VAPID_PRIVATE_KEY: vapid.privateKey,
+    },
+  };
+}
+
+test("actual encrypted transport uses abortable fetch, disallows redirects, and honors provider status", async (t) => {
+  const fixture = encryptedDeliveryFixture();
+  t.mock.method(webPush, "sendNotification", async () => {
+    throw new Error("legacy transport used");
+  });
+  let requests = 0;
+  const signals: AbortSignal[] = [];
+  t.mock.method(
+    globalThis,
+    "fetch",
+    async (input: string | URL | Request, options?: RequestInit) => {
+      requests++;
+      assert.equal(String(input), "https://fcm.googleapis.com/transport-test");
+      assert.equal(options?.method, "POST");
+      assert.equal(options?.redirect, "error");
+      assert.ok(options?.signal);
+      signals.push(options.signal);
+      assert.equal(new Headers(options.headers).get("content-encoding"), "aes128gcm");
+      assert.notEqual(
+        Buffer.from(options.body as Uint8Array).toString(),
+        '{"type":"inbox_changed"}',
+      );
+      return new Response("private provider body", {
+        status: requests === 1 ? 201 : 429,
+        headers: { "Retry-After": "180" },
+      });
+    },
+  );
+  const accepted = await deliverAccountInboxChanged(USER_ID, fixture);
+  const throttled = await deliverAccountInboxChanged(USER_ID, fixture);
+  assert.equal(requests, 2);
+  assert.equal(accepted.providerAccepted, 1);
+  assert.equal(throttled.outcome, "retry");
+  assert.equal(throttled.retryAfterSeconds, 180);
+  assert.ok(
+    signals.every((signal) => signal.aborted),
+    "transport resources released before returning",
+  );
+});
+
+test("actual transport aborts both a hanging fetch and a hanging body cleanup", async (t) => {
+  const fixture = encryptedDeliveryFixture();
+  t.mock.method(webPush, "sendNotification", async () => {
+    throw new Error("legacy transport used");
+  });
+  const signals: AbortSignal[] = [];
+  t.mock.method(globalThis, "fetch", async (_input: unknown, options?: RequestInit) => {
+    const signal = options?.signal;
+    assert.ok(signal);
+    signals.push(signal);
+    if (signals.length === 1)
+      return new Promise<Response>((_resolve, reject) => {
+        signal.addEventListener("abort", () => reject(signal.reason), { once: true });
+      });
+    return new Response(new ReadableStream({ cancel: () => new Promise(() => undefined) }), {
+      status: 201,
+    });
+  });
+  const results = await Promise.all([
+    deliverAccountInboxChanged(USER_ID, fixture),
+    deliverAccountInboxChanged(USER_ID, fixture),
+  ]);
+  assert.equal(signals.length, 2);
+  assert.ok(signals.every((signal) => signal.aborted));
+  assert.ok(results.every((result) => result.outcome === "retry" && result.providerAccepted === 0));
+});

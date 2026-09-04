@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-08-29.
+Last updated: 2026-09-04.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -556,6 +556,19 @@ lifecycle; unresolved invites become a non-actionable `Missed` presentation for
 24 hours after room end. The canonical product and implementation details live
 in
 `docs/superpowers/specs/2026-08-06-account-data-history-social-inbox-design.md`.
+
+The 2026-09-04 reliability candidate on
+`codex/invite-notification-delivery` removes redundant identity requests from
+inbox reconciliation, isolates
+subscription registration from visible inbox updates, persists bounded
+account-owned recovery, and updates an already open Popup from the canonical
+cache. Server delivery uses an additive transactional account outbox with
+targeted immediate processing, revision-fenced leases and bounded retries.
+An independent Worker schedule invokes the authenticated bounded drain; this
+does not use room Durable Objects or change their lifecycle. Ordered staging
+rollout and loaded-artifact acceptance are tracked separately from local test
+evidence in
+`docs/superpowers/plans/2026-09-04-invitation-delivery-reliability.md`.
 
 The current Chrome-only delivery slice accepts only HTTPS subscriptions on
 Chrome's FCM push host, caps active push-enabled extension installations at five

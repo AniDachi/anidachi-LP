@@ -1416,9 +1416,13 @@ Acceptance:
   maintenance, badge, notification aggregation, and popup-first click routing.
 - [x] Update extension permissions and Chrome Web Store privacy/listing copy
   only when the feature is ready.
-- [ ] Replace the current two-write room-invite creator with one idempotent
-  Postgres RPC before claiming transactionally complete invite delivery. Web
-  Push remains post-success and must never notify after a partial write.
+- [x] Replace the two-write room-invite creator with one idempotent Postgres
+  RPC (`20260810190000_room_invite_atomicity.sql`). This establishes atomic
+  invite creation, not durable delivery of the subsequent Web Push.
+- [~] Harden notification delivery with account-owned client recovery,
+  open-popup convergence, and a transactional server outbox with independent
+  recovery. Implementation and remaining staging acceptance:
+  `docs/superpowers/plans/2026-09-04-invitation-delivery-reliability.md`.
 
 Acceptance:
 

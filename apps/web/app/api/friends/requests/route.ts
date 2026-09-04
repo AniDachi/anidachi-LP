@@ -1,10 +1,11 @@
 import { after, type NextRequest, NextResponse } from "next/server";
 import { getApiSession } from "@/lib/anidachi-auth/api-session";
-import { deferInboxChangedPushToUsers } from "@/lib/anidachi-auth/device-push";
+import { deferInboxPushOutboxDrain } from "@/lib/anidachi-auth/inbox-push-outbox";
 import { sendFriendRequest } from "@/lib/anidachi-auth/social";
 import { readJsonBody, socialErrorResponse } from "@/lib/anidachi-auth/social-routes";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
   const session = await getApiSession(request);
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
       addresseeUserId: userId.trim(),
     });
     if (created) {
-      deferInboxChangedPushToUsers([userId.trim()], after);
+      deferInboxPushOutboxDrain([userId.trim()], after);
     }
     return NextResponse.json({ request: requestItem });
   } catch (error) {
