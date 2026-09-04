@@ -496,6 +496,16 @@ describe("watch history v3 progress contracts", () => {
     expect(() =>
       WatchProgressEventSchema.parse({
         ...progressEvent(),
+        sourceUrl: "https://www.crunchyroll.com/watch/CONTENTONE?x=1",
+        crunchyrollIdentity: {
+          ...progressEvent().crunchyrollIdentity,
+          providerContentId: "CONTENTONE?x=1",
+        },
+      }),
+    ).toThrow();
+    expect(() =>
+      WatchProgressEventSchema.parse({
+        ...progressEvent(),
         crunchyrollIdentity: undefined,
       }),
     ).toThrow();

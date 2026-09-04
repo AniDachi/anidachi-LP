@@ -471,6 +471,19 @@ export const WatchProgressEventSchema = z
           path: ["crunchyrollIdentity"],
         });
       }
+      const canonical = canonicalizeRoomSourceUrl(event.sourceUrl, "crunchyroll");
+      if (
+        !canonical.ok ||
+        canonical.source.sourceUrl !== event.sourceUrl ||
+        canonical.source.videoFingerprint !==
+          `crunchyroll|watch/${identity.providerContentId}`
+      ) {
+        context.addIssue({
+          code: "custom",
+          message: "Crunchyroll progress source must be an exact canonical URL",
+          path: ["sourceUrl"],
+        });
+      }
     } else if (event.provider === "youtube") {
       if (
         !event.youtubeVideoId ||

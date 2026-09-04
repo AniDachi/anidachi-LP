@@ -81,9 +81,15 @@ export function normalizeCrunchyrollCatalog(
 		const rawIds = new Set([
 			id,
 			...array(row.versions)
-				.map((value) => boundedString(record(value)?.guid))
+				.map((value) => {
+					const variant = record(value);
+					if (!variant) reasons.add("INVALID_IDENTITY");
+					return boundedString(variant?.guid);
+				})
 				.filter(isString),
 		]);
+		if ("versions" in row && !Array.isArray(row.versions))
+			reasons.add("INVALID_IDENTITY");
 		const existing = seasonsByIdentifier.get(identifier);
 		if (existing) {
 			if (!compatibleSeason(existing.row, row)) reasons.add("ALIAS_CONFLICT");
@@ -93,7 +99,7 @@ export function normalizeCrunchyrollCatalog(
 		}
 	}
 
-	const normalizedSeasons = [...seasonsByIdentifier.entries()]
+	let normalizedSeasons = [...seasonsByIdentifier.entries()]
 		.sort((a, b) =>
 			compareOrder(a[1].row, b[1].row, a[0], b[0], "season_number"),
 		)
@@ -122,6 +128,33 @@ export function normalizeCrunchyrollCatalog(
 			};
 		})
 		.filter((season) => season.episodes.length > 0);
+
+	const titleAliasOwners = new Map<string, string>();
+	const conflictingAliases = new Set<string>();
+	for (const season of normalizedSeasons) {
+		for (const episode of season.episodes) {
+			for (const variant of episode.watchVariants) {
+				const owner = titleAliasOwners.get(variant.providerContentId);
+				if (owner && owner !== episode.episodeKey)
+					conflictingAliases.add(variant.providerContentId);
+				else
+					titleAliasOwners.set(variant.providerContentId, episode.episodeKey);
+			}
+		}
+	}
+	if (conflictingAliases.size > 0) {
+		reasons.add("ALIAS_CONFLICT");
+		normalizedSeasons = normalizedSeasons
+			.map((season) => ({
+				...season,
+				episodes: season.episodes.filter((episode) =>
+					episode.watchVariants.every(
+						(variant) => !conflictingAliases.has(variant.providerContentId),
+					),
+				),
+			}))
+			.filter((season) => season.episodes.length > 0);
+	}
 
 	const episodeCount = normalizedSeasons.reduce(
 		(sum, season) => sum + season.episodes.length,
@@ -156,20 +189,18 @@ export function normalizeCrunchyrollCatalog(
 			subtitleLocales: input.subtitleLocales,
 			observedAt: input.observedAt,
 		},
-		seasons: normalizedSeasons,
+		seasons: reasons.has("COUNT_LIMIT") ? [] : normalizedSeasons,
 	};
 	let completeness: "complete" | "partial" =
 		reasons.size === 0 ? "complete" : "partial";
 	let candidate = { ...base, completeness };
 	const parsed = WatchCatalogSnapshotInputSchema.safeParse(candidate);
 	if (!parsed.success) {
-		reasons.add(
-			serializedBytes(candidate) > WATCH_CATALOG_MAX_BYTES
-				? "COUNT_LIMIT"
-				: "MALFORMED_RESPONSE",
-		);
+		if (serializedBytes(candidate) > WATCH_CATALOG_MAX_BYTES)
+			reasons.add("COUNT_LIMIT");
+		else if (!reasons.has("COUNT_LIMIT")) reasons.add("MALFORMED_RESPONSE");
 		completeness = "partial";
-		candidate = { ...base, completeness };
+		candidate = { ...base, seasons: [], completeness };
 	}
 	const snapshot = WatchCatalogSnapshotInputSchema.parse(candidate);
 	return {
@@ -188,6 +219,7 @@ function normalizeEpisodes(
 	reasons: Set<CrunchyrollCatalogPartialReason>,
 ) {
 	const byIdentifier = new Map<string, ReturnType<typeof normalizedEpisode>>();
+	const conflictingIdentifiers = new Set<string>();
 	const aliasOwners = new Map<string, string>();
 	const sortedRows = [...rows].sort((left, right) => {
 		const a = record(left) ?? {};
@@ -230,9 +262,12 @@ function normalizeEpisodes(
 		for (const variant of episode.watchVariants)
 			aliasOwners.set(variant.providerContentId, identifier);
 		const existing = byIdentifier.get(identifier);
-		if (existing && JSON.stringify(existing) !== JSON.stringify(episode))
+		if (conflictingIdentifiers.has(identifier)) continue;
+		if (existing && JSON.stringify(existing) !== JSON.stringify(episode)) {
 			reasons.add("ALIAS_CONFLICT");
-		else byIdentifier.set(identifier, episode);
+			byIdentifier.delete(identifier);
+			conflictingIdentifiers.add(identifier);
+		} else byIdentifier.set(identifier, episode);
 	}
 	return [...byIdentifier.values()]
 		.filter(
@@ -253,15 +288,31 @@ function normalizedEpisode(
 	availability: Availability,
 	reasons: Set<CrunchyrollCatalogPartialReason>,
 ) {
+	if ("versions" in row && !Array.isArray(row.versions))
+		reasons.add("INVALID_IDENTITY");
 	const variants = array(row.versions)
-		.map(record)
+		.map((value) => {
+			const parsed = record(value);
+			if (!parsed) reasons.add("INVALID_IDENTITY");
+			return parsed;
+		})
 		.filter((value): value is JsonRecord => value !== null)
-		.map((variant) => ({
-			providerContentId: boundedString(variant.guid),
-			audioLocale: locale(variant.audio_locale),
-			original: variant.original === true,
-			seasonGuid: boundedString(variant.season_guid),
-		}))
+		.map((variant) => {
+			const audioLocale = locale(variant.audio_locale);
+			if (
+				("audio_locale" in variant &&
+					variant.audio_locale !== null &&
+					!audioLocale) ||
+				("original" in variant && typeof variant.original !== "boolean")
+			)
+				reasons.add("INVALID_IDENTITY");
+			return {
+				providerContentId: boundedString(variant.guid),
+				audioLocale,
+				original: variant.original === true,
+				seasonGuid: boundedString(variant.season_guid),
+			};
+		})
 		.filter(
 			(
 				variant,
@@ -334,8 +385,9 @@ function envelope(
 		return null;
 	}
 	if (
-		typeof row.total === "number" &&
-		(row.total < 0 ||
+		"total" in row &&
+		(typeof row.total !== "number" ||
+			row.total < 0 ||
 			!Number.isInteger(row.total) ||
 			row.total !== row.data.length)
 	)
@@ -354,21 +406,31 @@ function classifyAvailability(
 	row: JsonRecord,
 	observedAt: string,
 ): Availability {
-	if (row.type === "clip" || row.type === "trailer" || row.type === "preview")
+	if ("is_clip" in row && typeof row.is_clip !== "boolean") return "unknown";
+	if (row.is_clip === true && row.type === "episode") return "unknown";
+	if (
+		row.is_clip === true ||
+		row.type === "clip" ||
+		row.type === "trailer" ||
+		row.type === "preview"
+	)
 		return "excluded-non-episode";
 	if (row.type !== undefined && row.type !== "episode") return "unknown";
 	const now = Date.parse(observedAt);
 	if (!Number.isFinite(now)) return "unknown";
-	const end = providerDate(row.availability_ends);
+	const end = providerDate(row.availability_ends, "availability_ends");
 	if (end.kind === "invalid") return "unknown";
 	if (end.kind === "date" && end.time <= now) return "known-unavailable";
-	const start = providerDate(row.availability_starts);
+	const start = providerDate(row.availability_starts, "availability_starts");
 	if (start.kind === "invalid") return "unknown";
 	if (start.kind === "date" && start.time > now) return "known-unavailable";
-	const air = providerDate(row.episode_air_date);
+	const air = providerDate(row.episode_air_date, "episode_air_date");
 	if (air.kind === "invalid") return "unknown";
 	if (air.kind === "date" && air.time > now) return "known-unavailable";
-	const premium = providerDate(row.premium_available_date);
+	const premium = providerDate(
+		row.premium_available_date,
+		"premium_available_date",
+	);
 	if (premium.kind === "invalid") return "unknown";
 	if (premium.kind === "date")
 		return premium.time <= now ? "available" : "known-unavailable";
@@ -378,6 +440,11 @@ function classifyAvailability(
 
 function providerDate(
 	value: unknown,
+	field:
+		| "availability_starts"
+		| "availability_ends"
+		| "episode_air_date"
+		| "premium_available_date",
 ):
 	| { kind: "absent" | "sentinel" }
 	| { kind: "date"; time: number }
@@ -387,12 +454,14 @@ function providerDate(
 	const time = Date.parse(value);
 	if (!Number.isFinite(time)) return { kind: "invalid" };
 	if (new Date(time).getUTCFullYear() === SENTINEL_YEAR)
-		return { kind: "sentinel" };
+		return field === "availability_starts" || field === "availability_ends"
+			? { kind: "sentinel" }
+			: { kind: "invalid" };
 	return { kind: "date", time };
 }
 
 function normalDate(value: unknown): string | null {
-	const parsed = providerDate(value);
+	const parsed = providerDate(value, "episode_air_date");
 	return parsed.kind === "date" ? new Date(parsed.time).toISOString() : null;
 }
 function compatibleSeason(a: JsonRecord, b: JsonRecord): boolean {

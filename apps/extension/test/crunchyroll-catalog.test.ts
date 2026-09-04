@@ -232,4 +232,102 @@ describe("normalizeCrunchyrollCatalog", () => {
 			}).completeness,
 		).toBe("partial");
 	});
+
+	it("returns bounded metadata-only partials when normalized inventory exceeds schema bounds", () => {
+		const value = input();
+		const seed = value.episodeResponses.GYZXCM252.data[0];
+		value.episodeResponses.GYZXCM252 = {
+			total: 2_001,
+			meta: { versions_considered: true },
+			data: Array.from({ length: 2_001 }, (_, index) => ({
+				...seed,
+				id: `ROW${index}`,
+				identifier: `GY8VM8MWY|S00111803|E${index}`,
+				sequence_number: index,
+				versions: [{ guid: `ROW${index}`, season_guid: "GYZXCM252" }],
+			})),
+		};
+		const result = normalizeCrunchyrollCatalog(value);
+		expect(result).toMatchObject({
+			completeness: "partial",
+			reasons: ["COUNT_LIMIT"],
+		});
+		expect(result.snapshot.seasons).toEqual([]);
+	});
+
+	it("validates clip evidence, field-specific sentinels, declared totals, and every variant", () => {
+		const clip = input();
+		Object.assign(clip.episodeResponses.GYZXCM252.data[0], { is_clip: true });
+		expect(
+			normalizeCrunchyrollCatalog(clip).snapshot.seasons.some((season) =>
+				season.episodes.some(
+					(episode) =>
+						episode.providerEpisodeIdentifier === "GY8VM8MWY|S00111803|E1",
+				),
+			),
+		).toBe(false);
+
+		const contradiction = input();
+		Object.assign(contradiction.episodeResponses.GYZXCM252.data[0], {
+			type: "episode",
+			is_clip: true,
+		});
+		expect(normalizeCrunchyrollCatalog(contradiction).reasons).toContain(
+			"UNKNOWN_AVAILABILITY",
+		);
+
+		const sentinel = input();
+		Object.assign(sentinel.episodeResponses.GYZXCM252.data[0], {
+			episode_air_date: "9998-11-30T17:45:00Z",
+		});
+		expect(normalizeCrunchyrollCatalog(sentinel).reasons).toContain(
+			"UNKNOWN_AVAILABILITY",
+		);
+
+		const malformed = input();
+		malformed.seasonsResponse.total = "2";
+		malformed.episodeResponses.GYZXCM252.data[0].versions.push(null);
+		const malformedResult = normalizeCrunchyrollCatalog(malformed);
+		expect(malformedResult.reasons).toContain("RAW_COUNT_MISMATCH");
+		expect(malformedResult.reasons).toContain("INVALID_IDENTITY");
+	});
+
+	it("quarantines title-wide aliases and conflicting logical duplicates deterministically", () => {
+		const crossSeason = input();
+		crossSeason.episodeResponses.GYDQCGQ03.data[0].versions = [
+			{
+				guid: "GOLDSEASON1",
+				season_guid: "GYDQCGQ03",
+			},
+		];
+		const collision = normalizeCrunchyrollCatalog(crossSeason);
+		expect(collision.reasons).toContain("ALIAS_CONFLICT");
+		expect(
+			collision.snapshot.seasons
+				.flatMap((season) => season.episodes)
+				.flatMap((episode) => episode.watchVariants)
+				.some((variant) => variant.providerContentId === "GOLDSEASON1"),
+		).toBe(false);
+
+		const duplicate = input();
+		const row = duplicate.episodeResponses.GYZXCM252.data[0];
+		duplicate.episodeResponses.GYZXCM252.data = [
+			row,
+			{ ...structuredClone(row), title: "Contradiction" },
+		];
+		duplicate.episodeResponses.GYZXCM252.total = 2;
+		const first = normalizeCrunchyrollCatalog(duplicate);
+		duplicate.episodeResponses.GYZXCM252.data.reverse();
+		const reversed = normalizeCrunchyrollCatalog(duplicate);
+		expect(first.reasons).toContain("ALIAS_CONFLICT");
+		expect(first.hashInput).toBe(reversed.hashInput);
+		expect(
+			first.snapshot.seasons.some((season) =>
+				season.episodes.some(
+					(episode) =>
+						episode.providerEpisodeIdentifier === "GY8VM8MWY|S00111803|E1",
+				),
+			),
+		).toBe(false);
+	});
 });
