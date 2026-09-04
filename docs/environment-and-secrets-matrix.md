@@ -26,7 +26,10 @@ Project: Anidachi web app.
 | `ANIDACHI_STAGING_GATE_COOKIE_SECRET` | Preview / `staging` | Signs staging access cookie | Gate cookie persists in same browser |
 | `ANIDACHI_API_INTERNAL_BASE_URL` | Preview / `staging` | Server-only Worker origin, expected `https://anidachi-api-staging.vladislav-gul7.workers.dev` | Host room end succeeds and the Worker receives `/internal/rooms/:roomId/end` |
 | `ANIDACHI_API_INTERNAL_BASE_URL` | Production | Server-only Worker origin, expected `https://anidachi-api-production.vladislav-gul7.workers.dev` | Production host room end reaches the production Worker, never staging |
-| `ANIDACHI_INTERNAL_API_SECRET` | Production / Preview `staging` | Authenticates Web/Worker room lifecycle calls; use a distinct matching value in both runtimes per environment | Host room end completes without `ROOM_END_SYNC_FAILED`; unauthenticated internal requests return `401` |
+| `ANIDACHI_INTERNAL_API_SECRET` | Production / Preview `staging` | Authenticates Web/Worker room lifecycle calls and invitation-outbox recovery; use a distinct matching value in both runtimes per environment | Host room end completes without `ROOM_END_SYNC_FAILED`; authenticated recovery acknowledges a bounded drain; unauthenticated internal requests return `401` |
+| `ANIDACHI_VAPID_SUBJECT` | Production / Preview `staging` | Server-side contact identity for existing Web Push delivery | Complete VAPID configuration is accepted; unavailable configuration leaves observable retry work |
+| `ANIDACHI_VAPID_PUBLIC_KEY` | Production / Preview `staging` | Public application-server key used by extension push subscription registration | Registered extension subscription and server delivery use the same environment's key |
+| `ANIDACHI_VAPID_PRIVATE_KEY` | Production / Preview `staging` | Server-only Web Push signing key; never include in Worker, extension or browser bundles | Controlled staging invitation records provider acceptance without logging key material |
 | `KREATLI_CRM_PASSWORD` | Production / Preview as needed | Internal CRM access | CRM login works only for authorized users |
 | `KREATLI_CRM_SESSION_SECRET` | Production / Preview as needed | Internal CRM session signing | CRM session survives refresh |
 | `KREATLI_CRM_BLOB_READ_WRITE_TOKEN` | Production / Preview `staging` | Server-only authority for the existing private `kreatli-crm/*` data objects used by the waitlist and public forms | `/api/waitlist-stats` returns the durable nonzero count; a controlled form submission persists across a fresh deployment |
@@ -83,8 +86,15 @@ Engine is enabled and the GitHub token has the current scopes.
 | Analytics Engine binding | `ROOM_ANALYTICS` | `ROOM_ANALYTICS` | Dataset names differ by environment |
 | Analytics dataset | `anidachi_room_events_staging` | `anidachi_room_events_production` | Appears after binding and first writes |
 | Worker env var | `ANIDACHI_ENV=staging` | `ANIDACHI_ENV=production` | Used in telemetry/debugging |
-| Worker env var | `ANIDACHI_WEB_INTERNAL_BASE_URL=https://staging.anidachi.app` | `ANIDACHI_WEB_INTERNAL_BASE_URL=https://www.anidachi.app` | Worker callback target for atomic room finalization |
+| Worker env var | `ANIDACHI_WEB_INTERNAL_BASE_URL=https://staging.anidachi.app` | `ANIDACHI_WEB_INTERNAL_BASE_URL=https://www.anidachi.app` | Environment-specific target for room callbacks and invitation-outbox recovery; scheduler rejects a mismatched origin |
 | Worker secret | `ANIDACHI_INTERNAL_API_SECRET` | `ANIDACHI_INTERNAL_API_SECRET` | Must match the Web value for the same environment and differ between staging/production |
+
+Invitation-outbox recovery uses the existing internal URL and secret; it adds no
+new secret or binding. Its once-per-minute cron is configured per environment in
+`apps/api/wrangler.toml`, after the additive database migration and web drain are
+ready. The scheduler does not access `ROOMS` or change room lifecycle alarms.
+The rollout and acceptance boundary is recorded in
+`docs/superpowers/plans/2026-09-04-invitation-delivery-reliability.md`.
 
 Worker secrets are managed with Wrangler/GitHub Actions. Do not store them in
 repo docs. Expected categories:

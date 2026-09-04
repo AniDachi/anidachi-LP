@@ -535,6 +535,16 @@ Manifest V3 workers and alarms are not a durable process. A cursor advances
 only after a response is schema-validated, stored for the active account, and
 fully processed.
 
+Failed client work also keeps one account-owned recovery record with independent
+inbox and subscription intents. Recovery starts after 30 seconds, uses bounded
+exponential backoff, and stops after eight attempts or 24 hours. Worker wakeups
+restore the existing budget rather than starting it again. A silent subscription
+repair never turns into an OS alert. Subscription registration is independent
+of inbox display, so a registration failure cannot block a successfully fetched
+invitation. Same-account token rotation preserves in-flight work; account
+switch or sign-out invalidates it. Normal reconciliation authenticates through
+the inbox endpoint without repeated identity round trips.
+
 Each browser profile registers one Web Push subscription against the existing
 account device model. Sign-in and notification enablement ensure the current
 subscription is registered. Explicit disablement revokes the subscription and
@@ -550,10 +560,26 @@ validated again before delivery; invalid or permanently failed subscriptions
 are disabled without making an outbound request. Another browser provider is
 added only through an explicit allowlist change with its own staging evidence.
 
-The room-invite writer uses the deployed atomic, idempotent RPC. Notification
-delivery is queued only for a newly created durable invite, after the canonical
-transaction succeeds. Repeated room-invite or friend-request mutations return
-their existing durable state and do not queue duplicate notifications.
+The room-invite writer uses the deployed atomic, idempotent RPC. A genuinely new
+pending room-invite recipient or incoming friend request writes an account
+invalidation to a transactional outbox in the same database transaction. A
+rollback therefore leaves neither a partial invite nor a delivery job. Repeated
+mutations returning existing durable state do not queue another notification.
+
+After commit, a bounded immediate drain targets the new recipients. The outbox
+coalesces work per account; leases and revisions prevent concurrent drains or
+late completions from losing newer work. Transient provider failures retry with
+bounded backoff and Retry-After, at most eight attempts and 24 hours. Missing
+VAPID configuration is an observable delivery failure, not successful delivery
+to zero devices. Provider acceptance is not a user delivery/read receipt.
+
+The existing Cloudflare Worker invokes a server-authenticated recovery drain
+once per minute. This server-side schedule is independent of room Durable
+Objects and does not poll any client's inbox. It recovers missed immediate
+attempts; it is not the normal delivery path. No new queue provider, persistent
+socket, public endpoint, or user setting is introduced. Implementation and
+staging acceptance are tracked in
+`docs/superpowers/plans/2026-09-04-invitation-delivery-reliability.md`.
 
 ### Browser Notifications
 
@@ -611,6 +637,14 @@ worker; the durable inbox and lifecycle reconciliation recover missed delivery.
 The popup shows cached canonical data immediately when the cache belongs to the
 active account, then refreshes from the server. It refreshes on open, after any
 mutation, after reconnect, and after an auth change.
+
+An open popup also observes validated background writes to that account's inbox
+cache. Cache writes are serialized across extension contexts, while network
+requests remain outside the storage lock. Request-start `serverTime` metadata
+is not a database revision: confirmed seen state is merged by item incarnation,
+and detected response/page ambiguity permits one canonical reread, not a
+subscription-driven refresh loop. Counts remain server-global rather than
+being reconstructed from the currently visible page.
 
 The popup may overlay one local `Syncing` progress state on top of a server
 snapshot. That optimistic state is visually explicit and never changes durable
