@@ -16,7 +16,13 @@ import {
   X,
 } from "lucide-react";
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { getCachedAccountInboxForUser, setCachedAccountInboxForUser } from "./account-inbox-cache";
+import {
+  accountInboxItemInstanceKey,
+  getCachedAccountInboxForUser,
+  mergeAccountInboxResponses,
+  publishAccountInboxForUser,
+  subscribeToAccountInboxForUser,
+} from "./account-inbox-cache";
 import { listAccountInbox, markAccountInboxItemsSeen } from "./account-inbox-client";
 import {
   type AccountOwnedState,
@@ -168,6 +174,7 @@ export function PopupApp() {
   const inboxLoadGateRef = useRef(createAsyncGenerationGate());
   const socialMutationInFlightRef = useRef(false);
   const seenInboxSignatureRef = useRef<string | null>(null);
+  const pendingSeenInboxItemsRef = useRef(new Set<string>());
   const consumedRouteIntentUserIdRef = useRef<string | null>(null);
   const activateAccount = useCallback((userId: string | null): AccountRequestToken | null => {
     const previousUserId = accountGateRef.current.currentUserId();
@@ -187,6 +194,7 @@ export function PopupApp() {
       setBusyInviteId(null);
       setBusySocialAction(null);
       seenInboxSignatureRef.current = null;
+      pendingSeenInboxItemsRef.current = new Set();
     }
 
     return userId ? accountGateRef.current.capture(userId) : null;
@@ -268,12 +276,12 @@ export function PopupApp() {
         const cached = await getCachedAccountInboxForUser(tokens.user.id);
         if (!isCurrent()) return false;
         if (cached) {
-          setInboxState({
+          setInboxState((current) => ({
             status: "loading",
             ownerUserId: tokens.user.id,
-            data: cached.data,
+            data: mergeAccountInboxResponses(current.data, cached.data),
             error: null,
-          });
+          }));
         }
 
         const inbox = await listAccountInbox(tokens.accessToken);
@@ -281,9 +289,13 @@ export function PopupApp() {
         if (inbox.meta.ownerUserId !== tokens.user.id) {
           throw new Error("Inbox response belongs to another account");
         }
-        const cacheWriteAccepted = await setCachedAccountInboxForUser(tokens.user.id, inbox);
-        if (!cacheWriteAccepted || !isCurrent()) return false;
-        setInboxState(accountReadyState(tokens.user.id, inbox));
+        const canonical = await publishAccountInboxForUser(tokens.user.id, inbox, {
+          isCurrent,
+          reread: () => listAccountInbox(tokens.accessToken),
+        });
+        if (!canonical || !isCurrent()) return false;
+        setInboxState((current) => accountReadyState(tokens.user.id,
+          mergeAccountInboxResponses(current.data, canonical)));
         return true;
       } catch (error) {
         if (!isCurrent()) return false;
@@ -601,6 +613,18 @@ export function PopupApp() {
   }, [inboxState.data]);
 
   useEffect(() => {
+    const userId = accountUser?.id;
+    if (!userId) return;
+    const request = accountGateRef.current.capture(userId);
+    if (!request) return;
+    return subscribeToAccountInboxForUser(userId, (inbox) => {
+      if (!accountGateRef.current.isCurrent(request)) return;
+      setInboxState((current) => accountReadyState(userId,
+        mergeAccountInboxResponses(current.data, inbox, true)));
+    });
+  }, [accountUser?.id]);
+
+  useEffect(() => {
     if (
       activeTab !== "inbox" ||
       authSession.status !== "ready" ||
@@ -610,20 +634,21 @@ export function PopupApp() {
       return;
     }
 
-    const unseenItems = unseenAccountInboxItems(inboxState.data);
+    const pending = pendingSeenInboxItemsRef.current;
+    const unseenInstances = inboxState.data.items.filter((item) =>
+      item.seenAt === null && !pending.has(accountInboxItemInstanceKey(item)));
+    const unseenItems = unseenAccountInboxItems({ ...inboxState.data, items: unseenInstances });
     if (!unseenItems.length) return;
-    const signature = `${authSession.tokens.user.id}:${unseenItems
-      .map((item) => `${item.kind}:${item.id}`)
+    const signature = `${authSession.tokens.user.id}:${unseenInstances
+      .map(accountInboxItemInstanceKey)
       .join(",")}`;
     if (seenInboxSignatureRef.current === signature) return;
     seenInboxSignatureRef.current = signature;
 
     const request = accountGateRef.current.capture(authSession.tokens.user.id);
     if (!request) return;
-    const seenGeneration = inboxLoadGateRef.current.begin();
-    const isCurrent = () =>
-      accountGateRef.current.isCurrent(request) &&
-      inboxLoadGateRef.current.isCurrent(seenGeneration);
+    const isCurrent = () => accountGateRef.current.isCurrent(request);
+    for (const item of unseenInstances) pending.add(accountInboxItemInstanceKey(item));
     void (async () => {
       try {
         const inbox = await markAccountInboxItemsSeen(authSession.tokens.accessToken, unseenItems);
@@ -632,15 +657,22 @@ export function PopupApp() {
           throw new Error("Inbox response belongs to another account");
         }
         if (!isCurrent()) return;
-        const cached = await setCachedAccountInboxForUser(request.userId, inbox);
+        const cached = await publishAccountInboxForUser(request.userId, inbox, {
+          isCurrent,
+          reread: () => listAccountInbox(authSession.tokens.accessToken),
+          seenItems: unseenInstances,
+        });
         if (!cached || !isCurrent()) return;
-        setInboxState(accountReadyState(request.userId, inbox));
+        setInboxState((current) => accountReadyState(request.userId,
+          mergeAccountInboxResponses(current.data, cached)));
       } catch (error) {
         if (!isCurrent()) return;
         seenInboxSignatureRef.current = null;
         logDebug("account.inbox", "mark seen failed", {
           error: error instanceof Error ? error.message : "Unknown inbox error",
         });
+      } finally {
+        for (const item of unseenInstances) pending.delete(accountInboxItemInstanceKey(item));
       }
     })();
   }, [activeTab, authSession, inboxState]);
