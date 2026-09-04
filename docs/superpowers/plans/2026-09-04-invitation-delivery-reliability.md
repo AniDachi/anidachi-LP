@@ -112,6 +112,85 @@ in the real Workers runtime, not only Node mocks.
 
 ## Progress / evidence
 
+### Approved recovery-scheduler amendment (2026-09-04)
+
+The user approved replacing the unverified Cloudflare timer with one Supabase
+Cron + pg_net trigger after reviewing current documentation and implementation
+examples. Immediate sending, the existing transactional outbox, all retry bounds,
+and client behavior stay unchanged. This is staging-only; main is not authorized.
+
+### Task 7: Narrow drain authority and private database scheduler
+
+**Files:** existing notification drain route and test; one CLI-created additive
+migration and `apps/web/supabase/tests/inbox_push_scheduler.test.sql`.
+
+- [ ] Add a dedicated `ANIDACHI_NOTIFICATION_DRAIN_SECRET` accepted only by the
+  notification drain. Keep the existing internal bearer accepted temporarily for
+  ordered cutover/rollback; never accept the new bearer at room callbacks.
+- [ ] Create an operator-only private scheduler function, using SECURITY INVOKER,
+  an empty search_path, and a short SQL timeout. Enable pg_net if absent without
+  pinning an extension version. Deny clients access to our private scheduler and
+  Vault. Preserve platform-owned pg_net permissions; verify that net, Vault and
+  the private scheduler schema are not exposed through the Data API, client
+  roles remain NOLOGIN, and no client-callable public function bridges to them.
+- [ ] Use one private singleton config/status row, initially disabled, with
+  explicit staging/production environment. Derive the exact canonical drain URL
+  from that environment (no caller-provided URL). Read only a dedicated drain
+  secret from Vault. No secret values in migrations, status, logs, or cron text.
+- [ ] Schedule one named once-minute job. Disabled or no due outbox work performs
+  no HTTP request. Respect cooldown and active leases; include expired/exhausted
+  rows for existing bounded outbox maintenance. HTTP timeout is 40 seconds. Set
+  the short SQL statement timeout before the private call in the cron command;
+  a function-level SET alone does not bound an already started outer statement.
+- [ ] Prevent repeated ticks from accumulating HTTP requests while pg_net is
+  stalled: retain the last request ID, skip while it is queued, and allow at least
+  90 seconds for an in-flight request before retry. Serialize scheduler calls via
+  the singleton row. The singleton is operational metadata, not a delivery queue.
+- [ ] Retain only safe last-attempt/result metadata; accept only status 200 and
+  the exact small `{ "ok": true }` acknowledgement as a successful HTTP drain.
+  pg_net transport can follow redirects and buffers response bodies; unlike the
+  previous Worker caller it cannot enforce redirect rejection or a streaming
+  response-size cap. The mitigation is a fixed owned endpoint, a drain-only
+  credential, bounded timeout, and rejection of invalid acknowledgements. Do not
+  claim transport equivalence. The outbox remains durable if HTTP work is lost.
+- [ ] TDD: observe failures before implementation. Test route authorization and
+  room-secret isolation, disabled/no-work no-op, due work, cooldown/lease guards,
+  missing secret, pending-request suppression, exact request shape, invalid/safe
+  response metadata, rollback, and low-privilege denial. Run real local pgTAP and
+  full web check/tests. Do not reset an existing database or touch user data.
+
+### Task 8: Ordered staging cutover and acceptance
+
+- [ ] Review Task 7 and merge its PR into staging after gates. The migration is
+  dormant by default, so the existing runtime remains compatible during deploy.
+- [ ] Provision one new random drain-only secret in Vercel Preview `staging`
+  and staging Vault without printing/persisting it locally. Enable the private
+  scheduler only after the matching web deployment is READY and ACLs are checked.
+- [ ] Observe a real automatic cron tick and HTTP acknowledgement, then recovery
+  of an isolated no-device technical outbox fixture without invoking the drain
+  manually. Never send fake invitations to real users. Remove only that fixture.
+- [ ] Disable the old staging Cloudflare schedule only after successful recovery;
+  reflect the disabled staging cron in source via a reviewed follow-up PR. Keep
+  production config unchanged. Preserve all room bindings and alarms.
+- [ ] Update canonical docs, env matrix, execution evidence, and Graphify, keeping
+  earlier unrelated WIP out of commits. Real two-account OS notification timing
+  and manual acceptance remain separate and require the user's test accounts.
+
+Rollback: disable only the new named cron/config, retain outbox data, and restore
+the preceding web deployment if needed. Retained Cloudflare caller and legacy
+internal bearer allow an explicit rollback, but its automatic timing remains
+unproven and must not be presented as a validated recovery mechanism.
+
+Permission amendment: local pg_net 0.20.0 objects are owned by supabase_admin;
+postgres cannot revoke their PUBLIC grants (REVOKE only warns). The supported
+[Supabase permission boundary](https://supabase.com/docs/guides/database/extensions/pg_net#permissions)
+is the non-exposed net schema and NOLOGIN client roles, not an unsupported owner
+escalation. Preserve those platform ACLs. Before activation, verify Data API
+schema rejection, private/Vault ACLs, and absence of public callable bridges.
+On staging, publishable-key requests for net, vault and anidachi_private each
+returned 406/PGRST106; anon/authenticated are NOLOGIN and the public/graphql_public
+function audit found no net/Vault/dynamic-SQL bridge. Repeat after deployment.
+
 - 2026-09-04: Started from current `origin/staging` `396bb41` on `codex/invite-notification-delivery`; previous unrelated WIP remains unstaged. Frozen install did not change dependencies. Baseline notification/inbox suites: 3 files, 22 tests passed.
 - Task 1 (`e0f4d9b`): independent review approved; 83 focused and 1531 full extension tests passed, typecheck passed. Normal inbox reconciliation makes zero `/api/me` round trips.
 - Task 2 (`d20b58d`): independent review approved; 109 focused and 1557 full extension tests passed, typecheck passed. Recovery survives fresh module instances with independent account-owned inbox/subscription intents. Browser wakeup/OS delivery acceptance is not inferred from these tests.

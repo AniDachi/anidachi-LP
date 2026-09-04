@@ -10,7 +10,13 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  if (!hasValidInternalServiceAuthorization(request.headers.get("authorization"))) {
+  const authorization = request.headers.get("authorization");
+  // Temporary legacy compatibility supports ordered cutover and rollback. The
+  // drain-only secret is deliberately not added to the shared room auth helper.
+  const drainAuthorized = hasValidInternalServiceAuthorization(
+    authorization, process.env.ANIDACHI_NOTIFICATION_DRAIN_SECRET ?? "",
+  );
+  if (!drainAuthorized && !hasValidInternalServiceAuthorization(authorization)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const startedAt = performance.now();

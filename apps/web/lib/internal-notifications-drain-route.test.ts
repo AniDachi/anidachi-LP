@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { afterEach, beforeEach, mock, test } from "node:test";
 import { NextRequest } from "next/server";
 import { GET, POST } from "../app/api/internal/notifications/drain/route";
+import { POST as endRoom } from "../app/api/internal/rooms/[roomId]/ended/route";
+import { POST as departRoom } from "../app/api/internal/rooms/[roomId]/participants/[userId]/departed/route";
 
 const originalFetch = globalThis.fetch;
 const originalEnv = { ...process.env };
@@ -16,6 +18,7 @@ beforeEach(() => {
   mock.method(console, "info", (...args: unknown[]) => diagnostics.push(args));
   mock.method(console, "error", (...args: unknown[]) => diagnostics.push(args));
   process.env.ANIDACHI_INTERNAL_API_SECRET = "internal-test-secret";
+  delete process.env.ANIDACHI_NOTIFICATION_DRAIN_SECRET;
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://database.example";
   process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role";
   delete process.env.ANIDACHI_VAPID_PUBLIC_KEY;
@@ -61,6 +64,37 @@ test("drain requires the existing internal bearer before database access", async
 
 test("GET never drains even with internal authorization", async () => {
   assert.equal((await GET()).status, 405);
+  assert.deepEqual(calls, []);
+});
+
+test("dedicated drain bearer works with and without the legacy secret", async () => {
+  process.env.ANIDACHI_NOTIFICATION_DRAIN_SECRET = "dedicated-drain-test";
+  for (const legacy of ["internal-test-secret", undefined]) {
+    if (legacy) process.env.ANIDACHI_INTERNAL_API_SECRET = legacy;
+    else delete process.env.ANIDACHI_INTERNAL_API_SECRET;
+    const response = await POST(request("Bearer dedicated-drain-test"));
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { ok: true });
+  }
+});
+
+test("missing or empty drain credentials fail closed", async () => {
+  delete process.env.ANIDACHI_INTERNAL_API_SECRET;
+  for (const dedicated of [undefined, ""]) {
+    if (dedicated === undefined) delete process.env.ANIDACHI_NOTIFICATION_DRAIN_SECRET;
+    else process.env.ANIDACHI_NOTIFICATION_DRAIN_SECRET = dedicated;
+    for (const auth of ["Bearer dedicated-drain-test", "Bearer internal-test-secret", "Bearer undefined", "Bearer "]) {
+      assert.equal((await POST(request(auth))).status, 401);
+    }
+  }
+  assert.deepEqual(calls, []);
+});
+
+test("dedicated drain bearer never authorizes either room callback", async () => {
+  process.env.ANIDACHI_NOTIFICATION_DRAIN_SECRET = "dedicated-drain-test";
+  const context = { params: Promise.resolve({ roomId: "room-test", userId: "user-test" }) };
+  assert.equal((await endRoom(request("Bearer dedicated-drain-test"), context)).status, 401);
+  assert.equal((await departRoom(request("Bearer dedicated-drain-test"), context)).status, 401);
   assert.deepEqual(calls, []);
 });
 

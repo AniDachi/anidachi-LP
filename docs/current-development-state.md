@@ -564,10 +564,14 @@ subscription registration from visible inbox updates, persists bounded
 account-owned recovery, and updates an already open Popup from the canonical
 cache. Server delivery uses an additive transactional account outbox with
 targeted immediate processing, revision-fenced leases and bounded retries.
-An independent Worker schedule invokes the authenticated bounded drain; this
-does not use room Durable Objects or change their lifecycle. Ordered staging
-rollout and loaded-artifact acceptance are tracked separately from local test
-evidence in
+The initial Cloudflare scheduled caller is deployed, but its automatic invocation
+has not been observed; a manually triggered remote callback is not automatic
+recovery proof. The approved follow-up replaces only the staging timer with
+Supabase Cron + pg_net, using a private disabled-by-default scheduler and a
+dedicated drain-only secret. The existing immediate sender and outbox remain
+unchanged. This does not use room Durable Objects or change their lifecycle.
+Activation, ordered staging rollout, and loaded-artifact acceptance are tracked
+separately from local test evidence in
 `docs/superpowers/plans/2026-09-04-invitation-delivery-reliability.md`.
 
 The current Chrome-only delivery slice accepts only HTTPS subscriptions on
