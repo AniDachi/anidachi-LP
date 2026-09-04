@@ -28,7 +28,9 @@ ANIDACHI_ENV = "staging"
 ANIDACHI_WEB_INTERNAL_BASE_URL = "https://staging.anidachi.app"
 
 [env.staging.triggers]
-crons = ["* * * * *"]
+# Invitation recovery now runs from staging Supabase Cron; retain the Worker
+# handler for explicit rollback, without a second active staging timer.
+crons = []
 
 [[env.staging.durable_objects.bindings]]
 name = "ROOMS"
