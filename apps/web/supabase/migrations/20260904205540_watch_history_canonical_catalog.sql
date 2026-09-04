@@ -1930,6 +1930,8 @@ create unique index uniq_watch_sessions_v3_solo on public.watch_sessions(host_us
 create unique index uniq_watch_sessions_v3_shared on public.watch_sessions(room_id, room_generation, source_generation) where schema_version = 3 and room_id is not null;
 
 alter table public.watch_episode_progress add column raw_content_id text, add column audio_locale text;
+create index watch_episode_progress_latest_audio_v3 on public.watch_episode_progress
+  (user_id,history_generation,provider,title_key,observed_at desc,server_order desc) include(audio_locale);
 
 create function public.watch_catalog_json_v3(value jsonb) returns text
 language plpgsql immutable security invoker set search_path='' as $$
@@ -1971,11 +1973,11 @@ create table public.watch_catalog_aliases (
   episode_key text not null,
   audio_locale text,
   original boolean not null,
-  variant_order integer not null,
+  variant_order bigint not null,
   source_url text not null,
   available boolean not null,
-  season_order integer not null,
-  episode_order integer not null,
+  season_order bigint not null,
+  episode_order bigint not null,
   season_title text not null,
   season_number integer,
   episode_title text not null,
@@ -1997,6 +1999,89 @@ create function public.watch_catalog_key_valid_v3(value text) returns boolean
 language sql immutable security invoker set search_path='' as $$
   select coalesce(value=btrim(value) and (select sum(case when ascii(c)>65535 then 2 else 1 end) from unnest(string_to_array(value,null)) c) between 1 and 220,false);
 $$;
+-- These JSON guards run before casts, persistence and hashing, independently of
+-- the HTTP parser. Missing nullable properties are not JSON null.
+create function public.watch_catalog_text_valid_v3(value jsonb, minimum integer, maximum integer, nullable boolean default false) returns boolean
+language sql immutable security invoker set search_path='' as $$
+ select coalesce((nullable and value='null'::jsonb) or (jsonb_typeof(value)='string'
+   and value#>>'{}' !~ U&'^[\0009\000A\000B\000C\000D\0020\00A0\1680\2000-\200A\2028\2029\202F\205F\3000\FEFF]|[\0009\000A\000B\000C\000D\0020\00A0\1680\2000-\200A\2028\2029\202F\205F\3000\FEFF]$' and
+   (select coalesce(sum(case when ascii(c)>65535 then 2 else 1 end),0) from unnest(string_to_array(value#>>'{}',null)) c) between minimum and maximum),false);
+$$;
+create function public.watch_catalog_number_valid_v3(value jsonb, maximum numeric, integral boolean, nullable boolean default false) returns boolean
+language plpgsql immutable security invoker set search_path='' as $$
+begin
+ if nullable and value='null'::jsonb then return true; end if;
+ if jsonb_typeof(value) is distinct from 'number' then return false; end if;
+ return (value::text)::numeric between 0 and maximum and (not integral or trunc((value::text)::numeric)=(value::text)::numeric);
+end; $$;
+create function public.watch_catalog_timestamp_valid_v3(value jsonb, nullable boolean default false) returns boolean
+language plpgsql immutable security invoker set search_path='' as $$
+begin
+ if nullable and value='null'::jsonb then return true; end if;
+ if jsonb_typeof(value) is distinct from 'string' or value#>>'{}' !~ '^\d{4}-\d{2}-\d{2}T([01][0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9](\.\d+)?)?(Z|[+-]\d{2}:\d{2})$' then return false; end if;
+ perform (value#>>'{}')::timestamptz;
+ return true;
+exception when others then return false;
+end; $$;
+create function public.validate_watch_catalog_input_v3(r jsonb, committing boolean) returns void
+language plpgsql immutable security invoker set search_path='' as $$
+declare ctx jsonb:=r->'context'; snap jsonb:=r->'snapshot'; s jsonb; e jsonb; v jsonb;
+begin
+ if jsonb_typeof(r) is distinct from 'object' or r->'schemaVersion' is distinct from '3'::jsonb
+   or not public.watch_catalog_number_valid_v3(r->'accountGeneration',9007199254740991,true) or r->'accountGeneration'='0'::jsonb
+   or r->'provider' is distinct from '"crunchyroll"'::jsonb
+   or not public.watch_catalog_text_valid_v3(r->'titleKey',1,220)
+   or not public.watch_catalog_text_valid_v3(r->'providerSeriesId',1,220)
+   or jsonb_typeof(ctx) is distinct from 'object'
+   or not ctx ?& array['region','requestedLocale','audioLocale','subtitleLocales','observedAt']
+   or ctx-array['region','requestedLocale','audioLocale','subtitleLocales','observedAt']<>'{}'::jsonb
+   or not (ctx->'region'='null'::jsonb or (jsonb_typeof(ctx->'region')='string' and ctx->>'region' ~ '^[A-Z]{2}$'))
+   or not public.watch_catalog_text_valid_v3(ctx->'requestedLocale',2,35)
+   or not public.watch_catalog_text_valid_v3(ctx->'audioLocale',2,35,true)
+   or not public.watch_catalog_timestamp_valid_v3(ctx->'observedAt')
+   or jsonb_typeof(ctx->'subtitleLocales') is distinct from 'array'
+ then raise exception 'watch_catalog_invalid' using errcode='22023'; end if;
+ if jsonb_array_length(ctx->'subtitleLocales')>32 or exists(select 1 from jsonb_array_elements(ctx->'subtitleLocales') x where not public.watch_catalog_text_valid_v3(x,2,35))
+ then raise exception 'watch_catalog_invalid' using errcode='22023'; end if;
+ if not committing then return; end if;
+ if not public.watch_catalog_number_valid_v3(r->'revision',9007199254740991,true) or r->'revision'='0'::jsonb
+   or jsonb_typeof(snap) is distinct from 'object' or snap->'schemaVersion' is distinct from '3'::jsonb
+   or not public.watch_catalog_text_valid_v3(snap->'title',1,300)
+   or not public.watch_catalog_text_valid_v3(snap->'titleKey',1,220)
+   or not public.watch_catalog_text_valid_v3(snap->'providerSeriesId',1,220)
+   or jsonb_typeof(snap->'completeness') is distinct from 'string'
+   or snap->>'completeness' not in ('complete','partial')
+   or jsonb_typeof(snap->'seasons') is distinct from 'array'
+ then raise exception 'watch_catalog_invalid' using errcode='22023'; end if;
+ if jsonb_array_length(snap->'seasons')>100 or octet_length(public.watch_catalog_json_v3(snap))>1048576
+ then raise exception 'watch_catalog_invalid' using errcode='22023'; end if;
+ for s in select value from jsonb_array_elements(snap->'seasons') loop
+   if jsonb_typeof(s) is distinct from 'object' or not public.watch_catalog_text_valid_v3(s->'title',1,300)
+     or not public.watch_catalog_text_valid_v3(s->'seasonKey',1,220) or not public.watch_catalog_text_valid_v3(s->'providerSeasonIdentifier',1,220)
+     or not public.watch_catalog_number_valid_v3(s->'seasonNumber',1000,true,true)
+     or not public.watch_catalog_number_valid_v3(s->'order',9007199254740991,true)
+     or jsonb_typeof(s->'episodes') is distinct from 'array'
+   then raise exception 'watch_catalog_invalid' using errcode='22023'; end if;
+   for e in select value from jsonb_array_elements(s->'episodes') loop
+     if jsonb_typeof(e) is distinct from 'object' or not public.watch_catalog_text_valid_v3(e->'title',1,300)
+       or not public.watch_catalog_text_valid_v3(e->'episodeKey',1,220) or not public.watch_catalog_text_valid_v3(e->'providerEpisodeIdentifier',1,220)
+       or not public.watch_catalog_number_valid_v3(e->'episodeNumber',1.7976931348623157e308,false,true)
+       or not public.watch_catalog_number_valid_v3(e->'order',9007199254740991,true)
+       or not public.watch_catalog_timestamp_valid_v3(e->'releasedAt',true)
+       or jsonb_typeof(e->'available') is distinct from 'boolean'
+       or jsonb_typeof(e->'watchVariants') is distinct from 'array'
+     then raise exception 'watch_catalog_invalid' using errcode='22023'; end if;
+     for v in select value from jsonb_array_elements(e->'watchVariants') loop
+       if jsonb_typeof(v) is distinct from 'object' or not public.watch_catalog_text_valid_v3(v->'providerContentId',1,220)
+         or not public.watch_catalog_text_valid_v3(v->'audioLocale',2,35,true)
+         or jsonb_typeof(v->'original') is distinct from 'boolean'
+         or not public.watch_catalog_number_valid_v3(v->'order',9007199254740991,true)
+         or not public.watch_catalog_text_valid_v3(v->'sourceUrl',1,2048)
+       then raise exception 'watch_catalog_invalid' using errcode='22023'; end if;
+     end loop;
+   end loop;
+ end loop;
+end; $$;
 create function public.validate_watch_identity_v3(p_event jsonb) returns void
 language plpgsql immutable security invoker set search_path = '' as $$
 declare i jsonb := p_event->'crunchyrollIdentity';
@@ -2038,14 +2123,14 @@ $$;
 create function public.watch_catalog_ack_v3(p_user_id uuid, p_request jsonb)
 returns jsonb language sql stable security invoker set search_path = '' as $$
   select jsonb_build_object(
-    'meta', jsonb_build_object('serverTime',statement_timestamp(),'ownerUserId',p_user_id,'schemaVersion',3,'accountGeneration',(p_request->>'accountGeneration')::bigint),
+    'meta', jsonb_build_object('serverTime',statement_timestamp(),'ownerUserId',p_user_id,'schemaVersion',3,'accountGeneration',(p_request->>'accountGeneration')::numeric::bigint),
     'schemaVersion',3,'provider','crunchyroll','titleKey',p_request->>'titleKey',
-    'accountGeneration',(p_request->>'accountGeneration')::bigint,
-    'revision',coalesce(c.revision,(p_request->>'revision')::bigint),
-    'effectiveCatalogState',case when c.user_id is null then 'unavailable' else public.watch_catalog_state_v3(c.context,c.accepted_context) end,
+    'accountGeneration',(p_request->>'accountGeneration')::numeric::bigint,
+    'revision',coalesce(c.revision,(p_request->>'revision')::numeric::bigint),
+    'effectiveCatalogState',case when c.user_id is null then 'unavailable' else public.watch_catalog_state_v3(c.context,case when c.projection is not null then c.accepted_context end) end,
     'projectionRevision', c.accepted_revision,'acceptedHash',c.accepted_hash,'acceptedAt',c.accepted_at)
   from (select 1) singleton left join public.watch_catalog_snapshots c
-    on c.user_id=p_user_id and c.history_generation=(p_request->>'accountGeneration')::bigint
+    on c.user_id=p_user_id and c.history_generation=(p_request->>'accountGeneration')::numeric::bigint
     and c.provider='crunchyroll' and c.title_key=p_request->>'titleKey';
 $$;
 
@@ -2056,6 +2141,7 @@ declare s public.user_watch_settings%rowtype; c public.watch_catalog_snapshots%r
 begin
   if p_request->>'schemaVersion' is distinct from '3' then
     raise exception 'watch_history_upgrade_required' using errcode='22023'; end if;
+  perform public.validate_watch_catalog_input_v3(p_request,false);
   if p_user_id is null or p_request->>'provider' is distinct from 'crunchyroll'
     or p_request-array['schemaVersion','accountGeneration','provider','titleKey','providerSeriesId','context']<>'{}'::jsonb
     or not public.watch_catalog_key_valid_v3(p_request->>'titleKey')
@@ -2072,7 +2158,7 @@ begin
   perform pg_advisory_xact_lock(hashtextextended(p_user_id::text,0));
   insert into public.user_watch_settings(user_id,write_schema_version) values(p_user_id,3) on conflict do nothing;
   select * into strict s from public.user_watch_settings where user_id=p_user_id for update;
-  if (p_request->>'accountGeneration')::bigint is distinct from s.history_generation then
+  if (p_request->>'accountGeneration')::numeric::bigint is distinct from s.history_generation then
     raise exception 'watch_history_generation_mismatch' using errcode='P0001'; end if;
   if exists(select 1 from public.watch_history_deletions d where d.user_id=p_user_id
     and d.history_generation=s.history_generation and d.scope in ('all','title')
@@ -2082,7 +2168,7 @@ begin
   select * into c from public.watch_catalog_snapshots where user_id=p_user_id
     and history_generation=s.history_generation and provider='crunchyroll' and title_key=p_request->>'titleKey';
   changed := c.accepted_context is not null and c.context->>'region' is distinct from p_request#>>'{context,region}';
-  fresh := c.accepted_at > statement_timestamp()-interval '24 hours'
+  fresh := c.projection is not null and c.accepted_at > statement_timestamp()-interval '24 hours'
     and c.accepted_context->>'region' is not distinct from p_request#>>'{context,region}'
     and c.accepted_context->>'requestedLocale' is not distinct from p_request#>>'{context,requestedLocale}'
     and c.context->>'region' is not distinct from p_request#>>'{context,region}'
@@ -2091,8 +2177,10 @@ begin
     return public.watch_catalog_ack_v3(p_user_id,p_request)||jsonb_build_object('refreshRequired',false,'availabilityChanged',false);
   end if;
   update public.user_watch_settings set next_server_order=next_server_order+1 where user_id=p_user_id returning next_server_order into rev;
-  insert into public.watch_catalog_snapshots(user_id,history_generation,provider,title_key,revision,context,attempt_status)
-    values(p_user_id,s.history_generation,'crunchyroll',p_request->>'titleKey',rev,p_request->'context','pending')
+  insert into public.watch_catalog_snapshots(user_id,history_generation,provider,title_key,revision,context,attempt_status,preferred_audio_locale)
+    values(p_user_id,s.history_generation,'crunchyroll',p_request->>'titleKey',rev,p_request->'context','pending',
+      (select p.audio_locale from public.watch_episode_progress p where p.user_id=p_user_id and p.history_generation=s.history_generation
+        and p.provider='crunchyroll' and p.title_key=p_request->>'titleKey' order by p.observed_at desc,p.server_order desc limit 1))
     on conflict(user_id,history_generation,provider,title_key) do update
       set revision=excluded.revision, context=excluded.context, attempt_status='pending';
   return public.watch_catalog_ack_v3(p_user_id,p_request)||jsonb_build_object('refreshRequired',true,'availabilityChanged',coalesce(changed,false));
@@ -2128,7 +2216,13 @@ begin
       'aggregate',jsonb_build_object('availableEpisodes',s.available_count,'completedEpisodes',s.completed_count,'progress',coalesce(s.completed_count::double precision/nullif(s.available_count,0),0)),
       'nextEpisode',(select jsonb_build_object('episodeKey',e.episode_key,'episodeTitle',e.episode_title,'seasonKey',e.season_key,'seasonTitle',e.season_title,'seasonNumber',e.season_number,'episodeNumber',e.episode_number,'sourceUrl',e.source_url,'releasedAt',e.released_at)
         from episodes e where e.season_key=s.season_key and e.available and e.completed_at is null order by e.episode_order,e.episode_key limit 1)) order by s.season_order,s.season_key) from seasons s),'[]'::jsonb)) into result;
-  update public.watch_catalog_snapshots set projection=result where user_id=p_user_id and history_generation=p_generation and provider=p_provider and title_key=p_title;
+  -- A derived view must never make a valid progress/deletion transaction fail.
+  -- Retain inventory and accepted provenance, but suppress exact reads until a
+  -- subsequent derivation fits. Commit handles candidate overflow atomically.
+  if octet_length(result::text)>262144 then result:=null; end if;
+  update public.watch_catalog_snapshots set projection=result,
+    attempt_status=case when result is null then 'partial' else attempt_status end
+    where user_id=p_user_id and history_generation=p_generation and provider=p_provider and title_key=p_title;
 end;
 $$;
 
@@ -2140,14 +2234,15 @@ declare c public.watch_catalog_snapshots%rowtype; gen bigint; snap jsonb:=p_requ
 begin
   if p_request->>'schemaVersion' is distinct from '3' then
     raise exception 'watch_history_upgrade_required' using errcode='22023'; end if;
+  perform public.validate_watch_catalog_input_v3(p_request,true);
   perform pg_advisory_xact_lock(hashtextextended(p_user_id::text,0));
   select history_generation into gen from public.user_watch_settings where user_id=p_user_id for update;
-  if gen is null or gen is distinct from (p_request->>'accountGeneration')::bigint then
+  if gen is null or gen is distinct from (p_request->>'accountGeneration')::numeric::bigint then
     raise exception 'watch_history_generation_mismatch' using errcode='P0001'; end if;
   select * into c from public.watch_catalog_snapshots where user_id=p_user_id and history_generation=gen
     and provider='crunchyroll' and title_key=p_request->>'titleKey';
-  if not found or c.revision is distinct from (p_request->>'revision')::bigint then
-    return public.watch_catalog_ack_v3(p_user_id,p_request)||jsonb_build_object('revision',(p_request->>'revision')::bigint,'outcome','superseded'); end if;
+  if not found or c.revision is distinct from (p_request->>'revision')::numeric::bigint then
+    return public.watch_catalog_ack_v3(p_user_id,p_request)||jsonb_build_object('revision',(p_request->>'revision')::numeric::bigint,'outcome','superseded'); end if;
   if p_request-array['schemaVersion','accountGeneration','provider','titleKey','providerSeriesId','context','revision','snapshot']<>'{}'::jsonb
     or snap-array['schemaVersion','provider','titleKey','providerSeriesId','title','completeness','context','seasons']<>'{}'::jsonb
     or c.context is distinct from p_request->'context' or snap->'context' is distinct from c.context
@@ -2160,19 +2255,15 @@ begin
     or jsonb_array_length(snap->'seasons')>100 or octet_length(public.watch_catalog_json_v3(snap))>1048576
     or snap->>'completeness' not in ('complete','partial')
   then raise exception 'watch_catalog_invalid' using errcode='22023'; end if;
-  if snap->>'completeness'='partial' then
-    update public.watch_catalog_snapshots set attempt_status='partial' where user_id=p_user_id and history_generation=gen and provider='crunchyroll' and title_key=c.title_key;
-    return public.watch_catalog_ack_v3(p_user_id,p_request)||jsonb_build_object('outcome','applied'); end if;
-  if c.context->>'region' is null or jsonb_array_length(snap->'seasons')=0 then
+  if snap->>'completeness'='complete' and (c.context->>'region' is null or jsonb_array_length(snap->'seasons')=0) then
     raise exception 'watch_catalog_invalid' using errcode='22023'; end if;
   for season in select value from jsonb_array_elements(snap->'seasons') loop
     if season->>'seasonKey' is distinct from 'crunchyroll:season:'||(season->>'providerSeasonIdentifier')
       or season-array['seasonKey','providerSeasonIdentifier','title','seasonNumber','order','episodes']<>'{}'::jsonb
       or not public.watch_catalog_key_valid_v3(season->>'seasonKey')
-      or coalesce(season->>'order','') !~ '^[0-9]+$'
       or season->>'seasonKey'=any(season_keys) or coalesce(length(season->>'seasonKey'),0) not between 20 and 220
       or coalesce(length(season->>'title'),0) not between 1 and 300
-      or jsonb_typeof(season->'episodes') is distinct from 'array' or jsonb_array_length(season->'episodes')=0
+      or jsonb_typeof(season->'episodes') is distinct from 'array' or (snap->>'completeness'='complete' and jsonb_array_length(season->'episodes')=0)
     then raise exception 'watch_catalog_invalid' using errcode='22023'; end if;
     season_keys:=array_append(season_keys,season->>'seasonKey');
     for episode in select value from jsonb_array_elements(season->'episodes') loop
@@ -2180,7 +2271,6 @@ begin
       if ec>2000 or episode->>'episodeKey' is distinct from 'crunchyroll:episode:'||(episode->>'providerEpisodeIdentifier')
         or episode-array['episodeKey','providerEpisodeIdentifier','title','episodeNumber','order','releasedAt','available','watchVariants']<>'{}'::jsonb
         or not public.watch_catalog_key_valid_v3(episode->>'episodeKey')
-        or coalesce(episode->>'order','') !~ '^[0-9]+$'
         or episode->>'episodeKey'=any(episode_keys) or coalesce(length(episode->>'episodeKey'),0) not between 21 and 220
         or coalesce(length(episode->>'title'),0) not between 1 and 300
         or jsonb_typeof(episode->'available') is distinct from 'boolean'
@@ -2193,7 +2283,6 @@ begin
         if (variant->>'original')::boolean then original_count:=original_count+1; end if;
         if vc>10000 or original_count>1 or coalesce(variant->>'providerContentId','') !~ '^[A-Za-z0-9_-]+$'
           or variant-array['providerContentId','audioLocale','original','order','sourceUrl']<>'{}'::jsonb
-          or coalesce(variant->>'order','') !~ '^[0-9]+$'
           or length(variant->>'providerContentId')>220 or variant->>'providerContentId'=any(raw_ids)
           or variant->>'sourceUrl' is distinct from 'https://www.crunchyroll.com/watch/'||(variant->>'providerContentId')
           or exists(select 1 from public.watch_catalog_aliases a where a.user_id=p_user_id and a.history_generation=gen
@@ -2203,19 +2292,23 @@ begin
       end loop;
     end loop;
   end loop;
+  if snap->>'completeness'='partial' then
+    update public.watch_catalog_snapshots set attempt_status='partial' where user_id=p_user_id and history_generation=gen and provider='crunchyroll' and title_key=c.title_key;
+    return public.watch_catalog_ack_v3(p_user_id,p_request)||jsonb_build_object('outcome','applied'); end if;
   -- Sort provider order with stable identity tie breakers independently of the client.
   snap:=jsonb_set(snap,'{seasons}',(select jsonb_agg(jsonb_set(s,'{episodes}',
-    (select jsonb_agg(jsonb_set(e,'{watchVariants}',(select jsonb_agg(v order by (v->>'order')::integer,v->>'providerContentId') from jsonb_array_elements(e->'watchVariants') v)) order by (e->>'order')::integer,e->>'episodeKey') from jsonb_array_elements(s->'episodes') e)) order by (s->>'order')::integer,s->>'seasonKey') from jsonb_array_elements(snap->'seasons') s));
+    (select jsonb_agg(jsonb_set(e,'{watchVariants}',(select jsonb_agg(v order by (v->>'order')::numeric::bigint,v->>'providerContentId') from jsonb_array_elements(e->'watchVariants') v)) order by (e->>'order')::numeric::bigint,e->>'episodeKey') from jsonb_array_elements(s->'episodes') e)) order by (s->>'order')::numeric::bigint,s->>'seasonKey') from jsonb_array_elements(snap->'seasons') s));
   hash:=encode(extensions.digest(public.watch_catalog_json_v3(snap),'sha256'),'hex');
   -- Duplicate delivery of the same issued commit cannot extend freshness.
   if c.accepted_revision=c.revision then
     if c.accepted_hash is distinct from hash then raise exception 'watch_catalog_revision_conflict' using errcode='22023'; end if;
     return public.watch_catalog_ack_v3(p_user_id,p_request)||jsonb_build_object('outcome','applied'); end if;
+  begin
   delete from public.watch_catalog_aliases where user_id=p_user_id and history_generation=gen and provider='crunchyroll' and title_key=c.title_key;
   insert into public.watch_catalog_aliases
   select p_user_id,gen,'crunchyroll',c.title_key,v->>'providerContentId',s->>'seasonKey',e->>'episodeKey',
-    v->>'audioLocale',(v->>'original')::boolean,(v->>'order')::integer,v->>'sourceUrl',(e->>'available')::boolean,
-    (s->>'order')::integer,(e->>'order')::integer,s->>'title',(s->>'seasonNumber')::integer,e->>'title',(e->>'episodeNumber')::double precision,
+    v->>'audioLocale',(v->>'original')::boolean,(v->>'order')::numeric::bigint,v->>'sourceUrl',(e->>'available')::boolean,
+    (s->>'order')::numeric::bigint,(e->>'order')::numeric::bigint,s->>'title',(s->>'seasonNumber')::numeric::integer,e->>'title',(e->>'episodeNumber')::double precision,
     (e->>'releasedAt')::timestamptz,encode(extensions.digest(coalesce(c.context->>'region','')||':3','sha256'),'hex')
   from jsonb_array_elements(snap->'seasons') s cross join lateral jsonb_array_elements(s->'episodes') e
     cross join lateral jsonb_array_elements(e->'watchVariants') v;
@@ -2225,6 +2318,14 @@ begin
     accepted_at=statement_timestamp(),accepted_revision=c.revision,attempt_status='complete'
     where user_id=p_user_id and history_generation=gen and provider='crunchyroll' and title_key=c.title_key;
   perform public.refresh_watch_catalog_projection_v3(p_user_id,gen,'crunchyroll',c.title_key);
+  if exists(select 1 from public.watch_catalog_snapshots where user_id=p_user_id and history_generation=gen and provider='crunchyroll' and title_key=c.title_key and projection is null) then
+    raise exception 'watch_catalog_projection_overflow' using errcode='PWC01';
+  end if;
+  exception when sqlstate 'PWC01' then
+    -- Roll back only the candidate bundle, preserving a prior accepted bundle.
+    update public.watch_catalog_snapshots set attempt_status='partial'
+      where user_id=p_user_id and history_generation=gen and provider='crunchyroll' and title_key=c.title_key;
+  end;
   return public.watch_catalog_ack_v3(p_user_id,p_request)||jsonb_build_object('outcome','applied');
 end;
 $$;
@@ -2234,16 +2335,16 @@ returns jsonb language sql stable security invoker set search_path='' as $$
   select jsonb_build_object('episodeTitle',a.episode_title,'seasonTitle',a.season_title,'seasonNumber',a.season_number,'episodeNumber',a.episode_number)
   from public.watch_catalog_aliases a join public.watch_catalog_snapshots c using(user_id,history_generation,provider,title_key)
   where a.user_id=p_user_id and a.history_generation=p_generation and a.provider=p_provider and a.title_key=p_title and a.episode_key=p_episode
-    and public.watch_catalog_state_v3(c.context,c.accepted_context)='complete'
+    and public.watch_catalog_state_v3(c.context,case when c.projection is not null then c.accepted_context end)='complete'
   order by a.variant_order,a.raw_content_id limit 1;
 $$;
 create function public.watch_catalog_read_v3(p_user_id uuid,p_generation bigint,p_provider text,p_title text,p_season_keys text[] default null)
 returns jsonb language sql stable security invoker set search_path='' as $$
-  select jsonb_build_object('state',case when c.user_id is null then 'unavailable' else public.watch_catalog_state_v3(c.context,c.accepted_context) end,
-    'title',case when public.watch_catalog_state_v3(c.context,c.accepted_context)='complete' then c.accepted_title end,
-    'aggregate',case when public.watch_catalog_state_v3(c.context,c.accepted_context)='complete' then c.projection->'aggregate' end,
-    'seasons',case when public.watch_catalog_state_v3(c.context,c.accepted_context)='complete' then
-      coalesce((select jsonb_agg(s order by (s->>'order')::integer,s->>'seasonKey') from jsonb_array_elements(c.projection->'seasons') s
+  select jsonb_build_object('state',case when c.user_id is null then 'unavailable' else public.watch_catalog_state_v3(c.context,case when c.projection is not null then c.accepted_context end) end,
+    'title',case when public.watch_catalog_state_v3(c.context,case when c.projection is not null then c.accepted_context end)='complete' then c.accepted_title end,
+    'aggregate',case when public.watch_catalog_state_v3(c.context,case when c.projection is not null then c.accepted_context end)='complete' then c.projection->'aggregate' end,
+    'seasons',case when public.watch_catalog_state_v3(c.context,case when c.projection is not null then c.accepted_context end)='complete' then
+      coalesce((select jsonb_agg(s order by (s->>'order')::numeric::bigint,s->>'seasonKey') from jsonb_array_elements(c.projection->'seasons') s
         where (p_season_keys is not null and s->>'seasonKey'=any(p_season_keys)) or (p_season_keys is null and s->>'seasonKey' in (select p.season_key from public.watch_episode_progress p where p.user_id=p_user_id and p.history_generation=p_generation
           and p.provider=p_provider and p.title_key=p_title order by p.observed_at desc,p.episode_key collate "C" limit 8))),'[]'::jsonb)
       else '[]'::jsonb end)
@@ -2252,17 +2353,25 @@ $$;
 
 create function public.sync_watch_catalog_progress_v3() returns trigger
 language plpgsql volatile security invoker set search_path = '' as $$
-declare uid uuid; gen bigint; prov text; titlekey text;
+declare uid uuid; gen bigint; prov text; titlekey text; latest_audio text; previous_audio text; accepted boolean;
 begin
-  if tg_op='UPDATE' and new.completed_at is not distinct from old.completed_at
-    and new.audio_locale is not distinct from old.audio_locale then return null; end if;
   uid:=coalesce(new.user_id,old.user_id); gen:=coalesce(new.history_generation,old.history_generation);
   prov:=coalesce(new.provider,old.provider); titlekey:=coalesce(new.title_key,old.title_key);
-  if tg_op<>'DELETE' then
-    update public.watch_catalog_snapshots set preferred_audio_locale=new.audio_locale
+  select preferred_audio_locale,accepted_context is not null into previous_audio,accepted
+    from public.watch_catalog_snapshots where user_id=uid and history_generation=gen and provider=prov and title_key=titlekey;
+  if not found then return null; end if;
+  -- Indexed latest observed row, not the current episode's previous locale.
+  -- Server order breaks timestamp ties; delayed older episodes cannot take over.
+  select audio_locale into latest_audio from public.watch_episode_progress
+    where user_id=uid and history_generation=gen and provider=prov and title_key=titlekey
+    order by observed_at desc,server_order desc limit 1;
+  if latest_audio is distinct from previous_audio then
+    update public.watch_catalog_snapshots set preferred_audio_locale=latest_audio
       where user_id=uid and history_generation=gen and provider=prov and title_key=titlekey;
+  elsif tg_op='UPDATE' and new.completed_at is not distinct from old.completed_at then
+    return null;
   end if;
-  if exists(select 1 from public.watch_catalog_snapshots where user_id=uid and history_generation=gen and provider=prov and title_key=titlekey and accepted_context is not null) then
+  if accepted then
     perform public.refresh_watch_catalog_projection_v3(uid,gen,prov,titlekey);
   end if;
   return null;
