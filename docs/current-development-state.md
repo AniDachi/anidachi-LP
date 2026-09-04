@@ -532,16 +532,17 @@ production acceptance is not claimed.
 Durable room-invite and inbox rows remain authoritative. The authenticated HTTP
 inbox, account-scoped Popup cache, unseen badge, seen acknowledgement, and
 shared web incoming surface are deployed. Standards-based Web Push delivery and
-OS notifications for room invites and incoming friend requests are implemented
-and remain pending loaded-artifact,
-two-account staging acceptance. The extension release manifest grants the
+OS notifications for room invites and incoming friend requests are implemented.
+On 2026-09-04 the user reported that the staging invitation flow worked after
+testing; exact delivery latency and the complete failure/recovery matrix were
+not recorded. The extension release manifest grants the
 notification permission up front so the default-on local preference can
 register a push device automatically after sign-in; the existing local toggle
 still disables and revokes that browser's subscription. The
 additive `devices` Web Push migration is already applied and verified on the
 staging Supabase project and is present in the technical production baseline.
-Loaded-artifact, two-account notification delivery acceptance is still pending,
-and no public extension is distributed.
+Broader two-account notification acceptance remains pending, and no public
+extension is distributed.
 Web Push sends only an `inbox_changed` invalidation so the extension runs the
 same inbox sync and displays minimal English invitation notifications derived
 locally from validated room-invite and friend-request items. There
@@ -572,8 +573,9 @@ deployed web drain, with exact HTTP acknowledgements and outbox completion;
 pre-deadline ticks issued no extra HTTP request. The previous staging Cloudflare
 schedule is disabled. Production remains unchanged. The existing immediate
 sender and outbox are unchanged, and no room Durable Object or lifecycle is
-involved. Real two-account notification timing and loaded-artifact acceptance
-remain separate from this server recovery proof, tracked in
+involved. The subsequent positive user smoke result does not establish exact
+two-account notification timing or the full acceptance matrix. Those remain
+separate from this server recovery proof, tracked in
 `docs/superpowers/plans/2026-09-04-invitation-delivery-reliability.md`.
 
 The current Chrome-only delivery slice accepts only HTTPS subscriptions on
