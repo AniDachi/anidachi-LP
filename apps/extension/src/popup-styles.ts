@@ -1,4 +1,5 @@
 import { extensionThemeTokens } from "./extension-theme";
+import { popupWatchHistoryStyles } from "./popup-watch-history-styles";
 
 export const popupStyles = `
   :root {
@@ -4408,4 +4409,5 @@ ${extensionThemeTokens}
     background: rgba(245, 158, 11, 0.08);
     color: rgba(254, 243, 199, 0.94);
   }
+${popupWatchHistoryStyles}
 `;

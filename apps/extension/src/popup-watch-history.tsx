@@ -1,20 +1,20 @@
 import {
   WATCH_HISTORY_TITLE_EPISODE_SLICE_LIMIT,
+  type WatchHistoryDeleteScope,
   WatchHistoryDeletionAckSchema,
   WatchHistoryEpisodeSchema,
-  type WatchHistoryDeleteScope,
-  WatchHistoryPreferencesResponseSchema,
-  WatchHistoryResponseSchema,
-  WatchHistoryRoomRecreationResponseSchema,
   type WatchHistoryItem,
   type WatchHistoryPreferences,
+  WatchHistoryPreferencesResponseSchema,
   type WatchHistoryResponse,
+  WatchHistoryResponseSchema,
+  WatchHistoryRoomRecreationResponseSchema,
   type WatchHistorySession,
-  WatchProgressEventSchema,
   type WatchProgressEvent,
+  WatchProgressEventSchema,
 } from "@anidachi/protocol";
-import { ChevronDown, RefreshCw, Search, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Check, ChevronDown, RefreshCw, Search, Trash2, X } from "lucide-react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   createListWatchHistoryMessage,
   createWatchHistoryMessage,
@@ -25,9 +25,9 @@ import {
 import {
   createWatchHistoryStorage,
   WATCH_HISTORY_STORAGE_KEY,
-  watchHistoryPartitionKey,
-  type WatchHistoryStorageRoot,
   type WatchHistoryObservationDisplayMode,
+  type WatchHistoryStorageRoot,
+  watchHistoryPartitionKey,
 } from "./watch-history-storage";
 
 export type PopupWatchHistoryLocalObservation = {
@@ -117,6 +117,12 @@ export function PopupWatchHistoryPanel({
   const [oldOwnerPending, setOldOwnerPending] = useState(false);
   const [mode, setMode] = useState<"mine" | "together">("mine");
   const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [expandedBranches, setExpandedBranches] = useState<Record<string, boolean>>({});
+  const [searchBranches, setSearchBranches] = useState<{
+    query: string;
+    branches: Record<string, boolean>;
+  }>({ query: "", branches: {} });
   const [manualRefreshVersion, setManualRefreshVersion] = useState(0);
   const requestGeneration = useRef(0);
   const preferenceRevision = useRef(0);
@@ -129,6 +135,8 @@ export function PopupWatchHistoryPanel({
   useEffect(() => {
     setMode("mine");
     setSearchQuery("");
+    setExpandedBranches({});
+    setSearchBranches({ query: "", branches: {} });
   }, [ownerUserId]);
 
   useEffect(() => {
@@ -292,6 +300,30 @@ export function PopupWatchHistoryPanel({
   );
   const providerGroups = useMemo(() => groupWatchHistoryItems(visibleItems), [visibleItems]);
 
+  // Searching reveals matches without overwriting the user's normal tree layout.
+  const query = searchQuery.trim().toLocaleLowerCase();
+  const updateSearchQuery = (value: string) => {
+    const nextQuery = value.trim().toLocaleLowerCase();
+    setSearchQuery(value);
+    if (nextQuery !== query) setSearchBranches({ query: nextQuery, branches: {} });
+  };
+  const branches = query
+    ? searchBranches.query === query ? searchBranches.branches : {}
+    : expandedBranches;
+  const disclosure: PopupHistoryDisclosure = {
+    isOpen: (key, initiallyOpen) => branches[key] ?? (Boolean(query) || initiallyOpen),
+    toggle: (key, initiallyOpen) => {
+      if (query) {
+        setSearchBranches((current) => {
+          const previous = current.query === query ? current.branches : {};
+          return { query, branches: { ...previous, [key]: !(previous[key] ?? true) } };
+        });
+      } else {
+        setExpandedBranches((current) => ({ ...current, [key]: !(current[key] ?? initiallyOpen) }));
+      }
+    },
+  };
+
   const updateYoutubePreference = async () => {
     if (!ownerUserId || busyAction) return;
     const expectedGeneration = requestGeneration.current;
@@ -445,14 +477,18 @@ export function PopupWatchHistoryPanel({
             aria-label="Search watch history"
             placeholder="Search"
             type="search"
+            ref={searchInputRef}
             value={searchQuery}
-            onChange={(event) => setSearchQuery(event.currentTarget.value)}
+            onChange={(event) => updateSearchQuery(event.currentTarget.value)}
           />
           {searchQuery ? (
             <button
               aria-label="Clear watch history search"
               type="button"
-              onClick={() => setSearchQuery("")}
+              onClick={() => {
+                updateSearchQuery("");
+                searchInputRef.current?.focus();
+              }}
             >
               <X size={12} />
             </button>
@@ -521,6 +557,7 @@ export function PopupWatchHistoryPanel({
             <PopupProviderSection
               busyAction={busyAction}
               group={group}
+              disclosure={disclosure}
               key={group.provider}
               onCreateRoom={createRoom}
               onDelete={deleteTarget}
@@ -554,29 +591,39 @@ export function PopupWatchHistoryPanel({
   );
 }
 
+type PopupHistoryDisclosure = {
+  isOpen: (key: string, initiallyOpen: boolean) => boolean;
+  toggle: (key: string, initiallyOpen: boolean) => void;
+};
+
 function PopupProviderSection({
   busyAction,
+  disclosure,
   group,
   onCreateRoom,
   onDelete,
   pendingByEpisode,
 }: {
   busyAction: string | null;
+  disclosure: PopupHistoryDisclosure;
   group: PopupProviderGroup;
   onCreateRoom: (session: WatchHistorySession, sourceUrl: string) => void;
   onDelete: (target: WatchHistoryDeleteScope) => void;
   pendingByEpisode: Map<string, WatchProgressEvent>;
 }) {
-  const [open, setOpen] = useState(true);
+  const branchKey = JSON.stringify([group.provider]);
+  const open = disclosure.isOpen(branchKey, true);
+  const bodyId = useId();
 
   return (
     <section className="popup-provider" data-provider={group.provider}>
       <button
         aria-expanded={open}
+        aria-controls={bodyId}
         aria-label={`Toggle ${group.label} history`}
         className="popup-provider-row"
         type="button"
-        onClick={() => setOpen((current) => !current)}
+        onClick={() => disclosure.toggle(branchKey, true)}
       >
         <ProviderLogo label={group.label} provider={group.provider} />
         <span className="popup-provider-main">
@@ -590,10 +637,12 @@ function PopupProviderSection({
         </span>
       </button>
       {open ? (
-        <div className="popup-provider-body">
-          {group.items.map((item) => (
+        <div className="popup-provider-body" id={bodyId}>
+          {group.items.map((item, index) => (
             <PopupWatchHistoryItem
               item={item}
+              disclosure={disclosure}
+              initiallyOpen={index === 0}
               key={`${item.provider}:${item.titleKey}`}
               busyAction={busyAction}
               onCreateRoom={onCreateRoom}
@@ -608,156 +657,304 @@ function PopupProviderSection({
 }
 
 function PopupWatchHistoryItem({
-  busyAction,
-  item,
-  onCreateRoom,
-  onDelete,
-  pendingByEpisode,
+	busyAction,
+	disclosure,
+	initiallyOpen,
+	item,
+	onCreateRoom,
+	onDelete,
+	pendingByEpisode,
 }: {
-  busyAction: string | null;
-  item: WatchHistoryItem;
-  onCreateRoom: (session: WatchHistorySession, sourceUrl: string) => void;
-  onDelete: (target: WatchHistoryDeleteScope) => void;
-  pendingByEpisode: Map<string, WatchProgressEvent>;
+	busyAction: string | null;
+	disclosure: PopupHistoryDisclosure;
+	initiallyOpen: boolean;
+	item: WatchHistoryItem;
+	onCreateRoom: (session: WatchHistorySession, sourceUrl: string) => void;
+	onDelete: (target: WatchHistoryDeleteScope) => void;
+	pendingByEpisode: Map<string, WatchProgressEvent>;
 }) {
-  const observedCount = item.observedEpisodeCount;
-  const latestActivityPending = pendingByEpisode.get(
-    pendingEpisodeKey(item.provider, item.titleKey, item.latestActivity.episodeKey),
-  );
-  return (
-    <article className="popup-watch-item" data-kind={item.itemKind} data-provider={item.provider}>
-      <div className="popup-watch-row">
-        <span className="popup-watch-artwork" data-has-artwork={Boolean(item.artworkUrl)}>
-          {item.artworkUrl ? <img alt="" loading="lazy" src={item.artworkUrl} /> : item.title.slice(0, 1)}
-        </span>
-        <span className="popup-watch-main">
-          <strong className="popup-watch-title">{item.title}</strong>
-          <span className="popup-watch-meta">
-            {item.catalogState === "complete" && item.aggregate.availableEpisodes !== null
-              ? `${item.aggregate.completedEpisodes}/${item.aggregate.availableEpisodes} episodes`
-              : `${observedCount} observed ${observedCount === 1 ? "episode" : "episodes"}`}
-          </span>
-        </span>
-        <button
-          aria-label={`Delete ${item.title}`}
-          className="popup-watch-chevron"
-          disabled={busyAction === deleteScopeKey({
-            scope: "title",
-            provider: item.provider,
-            titleKey: item.titleKey,
-          })}
-          type="button"
-          onClick={() => onDelete({
-            scope: "title",
-            provider: item.provider,
-            titleKey: item.titleKey,
-          })}
-        >
-          <X aria-hidden="true" size={14} />
-        </button>
-      </div>
-      {item.seasons.map((season) => (
-        <section className="popup-season-group" key={season.seasonKey}>
-          <div className="popup-season-header">
-            <span className="popup-season-main">
-              <strong className="popup-season-title">{season.seasonTitle}</strong>
-              <span className="popup-season-meta">
-                {season.episodes.length} {season.episodes.length === 1 ? "episode" : "episodes"}
-              </span>
-            </span>
-          </div>
-          <div className="popup-season-episode-list">
-            {season.episodes.map((episode) => {
-              const pending = pendingByEpisode.get(
-                pendingEpisodeKey(item.provider, item.titleKey, episode.episodeKey),
-              );
-              const currentTime = pending?.currentTime ?? episode.currentTime;
-              const progress = pending?.progress ?? episode.progress;
-              return (
-                <div className="popup-episode-row" key={episode.episodeKey}>
-                  <span className="popup-episode-main">
-                    <span className="popup-episode-header">
-                      <span className="popup-episode-number">
-                        {episode.episodeNumber === null ? "Episode" : `E${episode.episodeNumber}`}
-                      </span>
-                      <span className="popup-episode-title">{episode.episodeTitle}</span>
-                    </span>
-                    <span className="popup-series-progress">
-                      <span className="popup-progress-track">
-                        <span style={{ width: `${Math.round(progress * 100)}%` }} />
-                      </span>
-                      <span>{formatClock(currentTime)}</span>
-                    </span>
-                    {episode.sessions.filter((session) => session.kind === "shared").slice(0, 4).map((session) => (
-                      <button
-                        aria-label={`Create room from ${session.kind === "shared" ? "Shared" : "Solo"} session`}
-                        className="popup-session-summary-action"
-                        disabled={busyAction === `room:${session.id}`}
-                        key={session.id}
-                        type="button"
-                        onClick={() => onCreateRoom(session, episode.sourceUrl)}
-                      >
-                        {session.kind === "shared" ? "Shared session" : "Solo session"}
-                      </button>
-                    ))}
-                    <button
-                      aria-label={`Delete ${episode.episodeTitle}`}
-                      className="popup-quiet-danger"
-                      disabled={busyAction === deleteScopeKey({
-                        scope: "episode",
-                        provider: item.provider,
-                        titleKey: item.titleKey,
-                        episodeKey: episode.episodeKey,
-                      })}
-                      type="button"
-                      onClick={() => onDelete({
-                        scope: "episode",
-                        provider: item.provider,
-                        titleKey: item.titleKey,
-                        episodeKey: episode.episodeKey,
-                      })}
-                    >
-                      Delete
-                    </button>
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      ))}
-      {item.seasons.length === 0 ? (
-        <div className="popup-episode-row">
-          <span className="popup-episode-main">
-            <span className="popup-episode-header">
-              <span className="popup-episode-title">Latest activity</span>
-            </span>
-            <span className="popup-series-progress">
-              <span className="popup-progress-track">
-                <span style={{ width: `${Math.round((latestActivityPending?.progress ??
-                  item.latestActivity.progress) * 100)}%` }} />
-              </span>
-              <span>{formatClock(
-                latestActivityPending?.currentTime ?? item.latestActivity.currentTime,
-              )}</span>
-            </span>
-            {item.sessions.filter((session) => session.kind === "shared").slice(0, 4).map((session) => (
-              <button
-                aria-label={`Create room from ${session.kind === "shared" ? "Shared" : "Solo"} session`}
-                className="popup-session-summary-action"
-                disabled={busyAction === `room:${session.id}`}
-                key={session.id}
-                type="button"
-                onClick={() => onCreateRoom(session, item.sourceUrl)}
-              >
-                {session.kind === "shared" ? "Shared session" : "Solo session"}
-              </button>
-            ))}
-          </span>
-        </div>
-      ) : null}
-    </article>
-  );
+	const observedCount = item.observedEpisodeCount;
+	const branchKey = JSON.stringify([item.provider, item.titleKey]);
+	const open = disclosure.isOpen(branchKey, initiallyOpen);
+	const bodyId = useId();
+	const latestSeasonKey =
+		item.seasons.find((season) =>
+			season.episodes.some(
+				(episode) => episode.episodeKey === item.latestActivity.episodeKey,
+			),
+		)?.seasonKey ?? item.seasons[0]?.seasonKey;
+	const latestActivityPending = pendingByEpisode.get(
+		pendingEpisodeKey(
+			item.provider,
+			item.titleKey,
+			item.latestActivity.episodeKey,
+		),
+	);
+	return (
+		<article
+			className="popup-watch-item"
+			data-kind={item.itemKind}
+			data-provider={item.provider}
+			data-open={open}
+		>
+			<div className="popup-watch-row">
+				<button
+					aria-label={`Toggle ${item.title} history`}
+					aria-expanded={open}
+					aria-controls={bodyId}
+					className="popup-watch-title-toggle"
+					type="button"
+					onClick={() => disclosure.toggle(branchKey, initiallyOpen)}
+				>
+					<span
+						className="popup-watch-artwork"
+						data-has-artwork={Boolean(item.artworkUrl)}
+					>
+						{item.artworkUrl ? (
+							<img alt="" loading="lazy" src={item.artworkUrl} />
+						) : (
+							item.title.slice(0, 1)
+						)}
+					</span>
+					<span className="popup-watch-main">
+						<strong className="popup-watch-title">{item.title}</strong>
+						<span className="popup-watch-meta">
+							{item.catalogState === "complete" &&
+							item.aggregate.availableEpisodes !== null
+								? `${item.aggregate.completedEpisodes}/${item.aggregate.availableEpisodes} episodes`
+								: `${observedCount} observed ${observedCount === 1 ? "episode" : "episodes"}`}
+						</span>
+					</span>
+					<ChevronDown
+						aria-hidden="true"
+						className="popup-watch-disclosure-icon"
+						size={16}
+					/>
+				</button>
+				<button
+					aria-label={`Delete ${item.title}`}
+					className="popup-watch-delete"
+					title={`Delete ${item.title}`}
+					disabled={
+						busyAction ===
+						deleteScopeKey({
+							scope: "title",
+							provider: item.provider,
+							titleKey: item.titleKey,
+						})
+					}
+					type="button"
+					onClick={() =>
+						onDelete({
+							scope: "title",
+							provider: item.provider,
+							titleKey: item.titleKey,
+						})
+					}
+				>
+					<Trash2 aria-hidden="true" size={14} />
+				</button>
+			</div>
+			{open ? (
+				<div className="popup-watch-tree" id={bodyId}>
+					{item.seasons.map((season, seasonIndex) => {
+						const seasonKey = JSON.stringify([
+							item.provider,
+							item.titleKey,
+							season.seasonKey,
+						]);
+						const initiallyOpenSeason = season.seasonKey === latestSeasonKey;
+						const seasonOpen = disclosure.isOpen(
+							seasonKey,
+							initiallyOpenSeason,
+						);
+						const seasonBodyId = `${bodyId}-season-${seasonIndex}`;
+						return (
+							<section className="popup-season-group" key={season.seasonKey}>
+								<button
+									aria-label={`Toggle ${item.title} ${season.seasonTitle}`}
+									aria-expanded={seasonOpen}
+									aria-controls={seasonBodyId}
+									className="popup-season-header"
+									type="button"
+									onClick={() =>
+										disclosure.toggle(seasonKey, initiallyOpenSeason)
+									}
+								>
+									<span className="popup-season-main">
+										<strong className="popup-season-title">
+											{season.seasonTitle}
+										</strong>
+										<span className="popup-season-meta">
+											{season.episodes.length}{" "}
+											{season.episodes.length === 1 ? "episode" : "episodes"}
+											{item.episodePage.complete ? "" : " shown"}
+										</span>
+									</span>
+									<ChevronDown
+										aria-hidden="true"
+										className="popup-watch-disclosure-icon"
+										size={14}
+									/>
+								</button>
+								{seasonOpen ? (
+									<div className="popup-season-episode-list" id={seasonBodyId}>
+										{season.episodes.map((episode) => {
+											const pending = pendingByEpisode.get(
+												pendingEpisodeKey(
+													item.provider,
+													item.titleKey,
+													episode.episodeKey,
+												),
+											);
+											const currentTime =
+												pending?.currentTime ?? episode.currentTime;
+											const progress = pending?.progress ?? episode.progress;
+											const completed =
+												Boolean(episode.completedAt) && !pending;
+											return (
+												<div
+													className="popup-episode-row"
+													key={episode.episodeKey}
+													data-selected={
+														episode.episodeKey ===
+														item.latestActivity.episodeKey
+													}
+													data-completed={completed}
+												>
+													<span className="popup-episode-main">
+														<span className="popup-episode-header">
+															<span className="popup-episode-number">
+																{episode.episodeNumber === null
+																	? "Episode"
+																	: `E${episode.episodeNumber}`}
+															</span>
+															<span className="popup-episode-title">
+																{episode.episodeTitle}
+															</span>
+															{completed ? (
+																<span className="popup-episode-complete">
+																	<Check aria-hidden="true" size={13} />
+																	<span className="popup-sr-only">Completed</span>
+																</span>
+															) : null}
+														</span>
+														<span className="popup-series-progress">
+															<span className="popup-progress-track">
+																<span
+																	style={{
+																		width: `${Math.round(progress * 100)}%`,
+																	}}
+																/>
+															</span>
+															<span>{formatClock(currentTime)}</span>
+														</span>
+														{episode.sessions
+															.filter((session) => session.kind === "shared")
+															.slice(0, 4)
+															.map((session) => (
+																<button
+																	aria-label={`Create room from ${session.kind === "shared" ? "Shared" : "Solo"} session`}
+																	className="popup-session-summary-action"
+																	disabled={busyAction === `room:${session.id}`}
+																	key={session.id}
+																	type="button"
+																	onClick={() =>
+																		onCreateRoom(session, episode.sourceUrl)
+																	}
+																>
+																	{session.kind === "shared"
+																		? "Shared session"
+																		: "Solo session"}
+																</button>
+															))}
+														<button
+															aria-label={`Delete ${episode.episodeTitle}`}
+															className="popup-watch-delete popup-episode-delete"
+															title={`Delete ${episode.episodeTitle}`}
+															disabled={
+																busyAction ===
+																deleteScopeKey({
+																	scope: "episode",
+																	provider: item.provider,
+																	titleKey: item.titleKey,
+																	episodeKey: episode.episodeKey,
+																})
+															}
+															type="button"
+															onClick={() =>
+																onDelete({
+																	scope: "episode",
+																	provider: item.provider,
+																	titleKey: item.titleKey,
+																	episodeKey: episode.episodeKey,
+																})
+															}
+														>
+															<Trash2 aria-hidden="true" size={13} />
+														</button>
+													</span>
+												</div>
+											);
+										})}
+									</div>
+								) : null}
+							</section>
+						);
+					})}
+					{item.seasons.length === 0 ? (
+						<div className="popup-episode-row">
+							<span className="popup-episode-main">
+								<span className="popup-episode-header">
+									<span className="popup-episode-title">Latest activity</span>
+								</span>
+								<span className="popup-series-progress">
+									<span className="popup-progress-track">
+										<span
+											style={{
+												width: `${Math.round(
+													(latestActivityPending?.progress ??
+														item.latestActivity.progress) * 100,
+												)}%`,
+											}}
+										/>
+									</span>
+									<span>
+										{formatClock(
+											latestActivityPending?.currentTime ??
+												item.latestActivity.currentTime,
+										)}
+									</span>
+								</span>
+								{item.sessions
+									.filter((session) => session.kind === "shared")
+									.slice(0, 4)
+									.map((session) => (
+										<button
+											aria-label={`Create room from ${session.kind === "shared" ? "Shared" : "Solo"} session`}
+											className="popup-session-summary-action"
+											disabled={busyAction === `room:${session.id}`}
+											key={session.id}
+											type="button"
+											onClick={() => onCreateRoom(session, item.sourceUrl)}
+										>
+											{session.kind === "shared"
+												? "Shared session"
+												: "Solo session"}
+										</button>
+									))}
+							</span>
+						</div>
+					) : null}
+					{!item.episodePage.complete ? (
+						<p className="popup-watch-slice-note">
+							Recent episodes shown · Full history in your account
+						</p>
+					) : null}
+				</div>
+			) : null}
+		</article>
+	);
 }
 
 type PopupProviderGroup = {
@@ -1058,6 +1255,7 @@ function ProviderLogo({ label, provider }: { label: string; provider: string }) 
     return (
       <span aria-hidden="true" className="resource-provider-logo crunchyroll">
         <svg viewBox="0 0 24 24">
+          <title>{label}</title>
           <path
             d="M2.909 13.436C2.914 7.61 7.642 2.893 13.468 2.898c5.576.005 10.137 4.339 10.51 9.819q.021-.351.022-.706C24.007 5.385 18.64.006 12.012 0S.007 5.36 0 11.988 5.36 23.994 11.988 24q.412 0 .815-.027c-5.526-.338-9.9-4.928-9.894-10.538Zm16.284.155a4.1 4.1 0 0 1-4.095-4.103 4.1 4.1 0 0 1 2.712-3.855 8.95 8.95 0 0 0-4.187-1.037 9.007 9.007 0 1 0 8.997 9.016q-.001-.847-.15-1.651a4.1 4.1 0 0 1-3.278 1.63Z"
             fill="currentColor"
@@ -1070,6 +1268,7 @@ function ProviderLogo({ label, provider }: { label: string; provider: string }) 
     return (
       <span aria-hidden="true" className="resource-provider-logo youtube">
         <svg viewBox="0 0 32 32">
+          <title>{label}</title>
           <path
             d="M28.2 9.1a3.8 3.8 0 0 0-2.7-2.7C23.1 5.8 16 5.8 16 5.8s-7.1 0-9.5.6a3.8 3.8 0 0 0-2.7 2.7C3.2 11.5 3.2 16 3.2 16s0 4.5.6 6.9a3.8 3.8 0 0 0 2.7 2.7c2.4.6 9.5.6 9.5.6s7.1 0 9.5-.6a3.8 3.8 0 0 0 2.7-2.7c.6-2.4.6-6.9.6-6.9s0-4.5-.6-6.9Z"
             fill="currentColor"

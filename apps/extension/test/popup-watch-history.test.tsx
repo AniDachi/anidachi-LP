@@ -983,6 +983,87 @@ describe("Popup Watch History v2", () => {
     await unmount(view.root);
   });
 
+  it("collapses titles and seasons independently without fetching or losing disclosure state", async () => {
+    const history = multiSeasonHistoryFixture();
+    const request = vi.fn(requestForHistory(history));
+    const view = await renderPanel(clientFixture({ cached: null, request }));
+    const title = await findButton(view.container, "Toggle Frieren history");
+    const secondTitle = await findButton(view.container, "Toggle Another title history");
+    const firstSeason = await findButton(view.container, "Toggle Frieren Season 1");
+    const latestSeason = await findButton(view.container, "Toggle Frieren Season 2");
+
+    expect(title.getAttribute("aria-expanded")).toBe("true");
+    expect(secondTitle.getAttribute("aria-expanded")).toBe("false");
+    expect(firstSeason.getAttribute("aria-expanded")).toBe("false");
+    expect(latestSeason.getAttribute("aria-expanded")).toBe("true");
+    expect(view.container.textContent).not.toContain("Episode 1 - The Journey");
+    expect(view.container.textContent).toContain("A New Beginning");
+    await click(firstSeason);
+    expect(view.container.textContent).toContain("Episode 1 - The Journey");
+    await click(title);
+    expect(view.container.textContent).not.toContain("A New Beginning");
+    expect(view.container.textContent).toContain("Frieren");
+    await click(title);
+    expect(view.container.textContent).toContain("Episode 1 - The Journey");
+    await click(secondTitle);
+    expect(secondTitle.getAttribute("aria-expanded")).toBe("true");
+    expect(title.getAttribute("aria-expanded")).toBe("true");
+    expect(request.mock.calls.filter(([message]) => message.command === "list")).toHaveLength(1);
+    expect(request.mock.calls.some(([message]) => "titleKey" in message)).toBe(false);
+    await unmount(view.root);
+  });
+
+  it("reveals matching episodes inside collapsed branches and restores the previous view after search", async () => {
+    const history = multiSeasonHistoryFixture();
+    const view = await renderPanel(clientFixture({ cached: null, request: requestForHistory(history) }));
+    await click(await findButton(view.container, "Toggle Frieren history"));
+    await click(await findButton(view.container, "Toggle Crunchyroll history"));
+    const search = await findInput(view.container, "Search watch history");
+    await setInputValue(search, "Journey");
+    expect(view.container.textContent).toContain("Episode 1 - The Journey");
+    expect(view.container.textContent).not.toContain("A New Beginning");
+    await click(await findButton(view.container, "Toggle Frieren Season 1"));
+    const frieren = (await findButton(view.container, "Toggle Frieren history")).closest("article");
+    expect(frieren?.textContent).not.toContain("Episode 1 - The Journey");
+    await setInputValue(search, "Beginning");
+    expect(view.container.textContent).toContain("A New Beginning");
+    await click(await findButton(view.container, "Clear watch history search"));
+    const provider = await findButton(view.container, "Toggle Crunchyroll history");
+    expect(provider.getAttribute("aria-expanded")).toBe("false");
+    await click(provider);
+    expect((await findButton(view.container, "Toggle Frieren history")).getAttribute("aria-expanded"))
+      .toBe("false");
+    expect(history.items[0]?.seasons).toHaveLength(2);
+    await unmount(view.root);
+  });
+
+  it("keeps deletion separate from disclosure and cancel never mutates history", async () => {
+    const request = vi.fn(requestForHistory(historyFixture()));
+    const client = clientFixture({ cached: null, request });
+    client.confirmDiscard = vi.fn(() => false);
+    const view = await renderPanel(client);
+    const title = await findButton(view.container, "Toggle Frieren history");
+    await click(await findButton(view.container, "Delete Frieren"));
+    await click(await findButton(view.container, "Delete Episode 1 - The Journey"));
+    expect(title.getAttribute("aria-expanded")).toBe("true");
+    expect(view.container.textContent).toContain("Episode 1 - The Journey");
+    expect(request.mock.calls.some(([message]) => message.command === "delete")).toBe(false);
+    expect(view.container.querySelector("button button")).toBeNull();
+    await unmount(view.root);
+  });
+
+  it("reveals the same search again after clearing a collapsed search result", async () => {
+    const view = await renderPanel(clientFixture({ cached: null, request: requestForHistory(historyFixture()) }));
+    const search = await findInput(view.container, "Search watch history");
+    await setInputValue(search, "Journey");
+    await click(await findButton(view.container, "Toggle Frieren history"));
+    expect(view.container.textContent).not.toContain("Episode 1 - The Journey");
+    await click(await findButton(view.container, "Clear watch history search"));
+    await setInputValue(search, "Journey");
+    expect(view.container.textContent).toContain("Episode 1 - The Journey");
+    await unmount(view.root);
+  });
+
   it("switches between Mine and Together while keeping provider identity visible", async () => {
     const history = mixedSessionHistoryFixture();
     const view = await renderPanel(
@@ -1338,6 +1419,39 @@ function twoEpisodeHistoryFixture(): WatchHistoryResponse {
       episodePage: { complete: true, nextCursor: null },
       seasons: item.seasons.map((season) => ({ ...season, episodes: [first, second] })),
     })),
+  };
+}
+
+function multiSeasonHistoryFixture(): WatchHistoryResponse {
+  const history = twoEpisodeHistoryFixture();
+  const item = history.items[0];
+  const season = item?.seasons[0];
+  const firstEpisode = season?.episodes[0];
+  if (!item || !season || !firstEpisode) throw new Error("multi-season fixture missing");
+  const latest = {
+    ...firstEpisode,
+    episodeKey: "crunchyroll:season-2-episode-1",
+    episodeTitle: "A New Beginning",
+    seasonKey: "crunchyroll:season-2",
+    seasonTitle: "Season 2",
+    seasonNumber: 2,
+  };
+  return {
+    ...history,
+    totalTitleCount: 2,
+    items: [{
+      ...item,
+      observedEpisodeCount: 3,
+      latestActivity: { ...item.latestActivity, episodeKey: latest.episodeKey },
+      seasons: [season, {
+        ...season,
+        seasonKey: latest.seasonKey,
+        seasonTitle: latest.seasonTitle,
+        seasonNumber: 2,
+        order: 1,
+        episodes: [latest],
+      }],
+    }, { ...item, titleKey: "crunchyroll:another", title: "Another title" }],
   };
 }
 
