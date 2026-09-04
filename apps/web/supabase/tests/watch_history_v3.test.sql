@@ -6,7 +6,7 @@ set search_path = public, extensions;
 select no_plan();
 
 delete from public.rooms
-where room_id = 'watch-v2-room';
+where room_id = 'watch-v3-room';
 
 delete from public.users
 where id in (
@@ -18,46 +18,47 @@ insert into public.users (id, email, display_name)
 values
   (
     '11111111-1111-4111-8111-111111111111',
-    'watch-v2-host@example.test',
+    'watch-v3-host@example.test',
     'Watch V2 Host'
   ),
   (
     '22222222-2222-4222-8222-222222222222',
-    'watch-v2-viewer@example.test',
+    'watch-v3-viewer@example.test',
     'Watch V2 Viewer'
   );
 
-create or replace function pg_temp.watch_v2_event(
+create or replace function pg_temp.watch_v3_event(
   event_id uuid,
   session_key text,
   observed_at timestamptz,
   current_seconds double precision,
   account_generation bigint default 1,
   shared_room jsonb default null,
-  episode_key text default 'episode-one',
-  title_key text default 'series-one',
+  episode_key text default 'crunchyroll:episode:episode-one',
+  title_key text default 'crunchyroll:series:series-one',
   event_kind text default 'heartbeat'
 )
 returns jsonb
 language sql
 as $$
   select pg_catalog.jsonb_build_object(
-    'schemaVersion', 2,
+    'schemaVersion', 3,
     'clientEventId', event_id,
     'clientSessionKey', session_key,
     'accountGeneration', account_generation,
     'provider', 'crunchyroll',
     'titleKey', title_key,
     'itemKind', 'series',
-    'title', case when title_key = 'series-one' then 'Series One' else 'Series Two' end,
+    'title', case when title_key = 'crunchyroll:series:series-one' then 'Series One' else 'Series Two' end,
     'artworkUrl', null,
     'episodeKey', episode_key,
-    'episodeTitle', case when episode_key = 'episode-one' then 'Episode One' else 'Episode Two' end,
-    'seasonKey', 'season-one',
+    'episodeTitle', case when episode_key = 'crunchyroll:episode:episode-one' then 'Episode One' else 'Episode Two' end,
+    'seasonKey', 'crunchyroll:season:season-one',
     'seasonTitle', 'Season One',
     'seasonNumber', 1,
-    'episodeNumber', case when episode_key = 'episode-one' then 1 else 2 end,
-    'sourceUrl', 'https://www.crunchyroll.com/watch/' || episode_key || '/demo',
+    'episodeNumber', case when episode_key = 'crunchyroll:episode:episode-one' then 1 else 2 end,
+    'crunchyrollIdentity',jsonb_build_object('providerSeriesId',replace(title_key,'crunchyroll:series:',''),'providerSeasonIdentifier','season-one','providerEpisodeIdentifier',replace(episode_key,'crunchyroll:episode:',''),'providerContentId',replace(episode_key,'crunchyroll:episode:',''),'audioLocale',null),
+    'sourceUrl', 'https://www.crunchyroll.com/watch/' || replace(episode_key,'crunchyroll:episode:',''),
     'currentTime', current_seconds,
     'duration', 1200,
     'progress', current_seconds / 1200,
@@ -67,7 +68,7 @@ as $$
   );
 $$;
 
-create or replace function pg_temp.watch_v2_shared_room(
+create or replace function pg_temp.watch_v3_shared_room(
   participant_session_id text,
   source_generation bigint default 1
 )
@@ -75,14 +76,14 @@ returns jsonb
 language sql
 as $$
   select pg_catalog.jsonb_build_object(
-    'roomId', 'watch-v2-room',
+    'roomId', 'watch-v3-room',
     'participantSessionId', participant_session_id,
     'roomGeneration', 1,
     'sourceGeneration', source_generation
   );
 $$;
 
-create or replace function pg_temp.watch_v2_authority(
+create or replace function pg_temp.watch_v3_authority(
   user_id uuid,
   participant_session_id text,
   source_generation bigint default 1
@@ -95,7 +96,7 @@ as $$
     'iss', 'anidachi-worker',
     'aud', 'anidachi-web-history',
     'sub', user_id,
-    'roomId', 'watch-v2-room',
+    'roomId', 'watch-v3-room',
     'participantSessionId', participant_session_id,
     'roomGeneration', 1,
     'sourceGeneration', source_generation,
@@ -105,7 +106,7 @@ as $$
   );
 $$;
 
-create or replace function pg_temp.watch_v2_legacy_authority(
+create or replace function pg_temp.watch_v3_legacy_authority(
   user_id uuid,
   participant_session_id text,
   source_generation bigint default 1
@@ -115,7 +116,7 @@ language sql
 as $$
   select pg_catalog.jsonb_build_object(
     'sub', user_id,
-    'roomId', 'watch-v2-room',
+    'roomId', 'watch-v3-room',
     'participantSessionId', participant_session_id,
     'roomGeneration', 1,
     'sourceGeneration', source_generation,
@@ -139,7 +140,7 @@ select is(
       and relation.relrowsecurity
   ),
   5::bigint,
-  'all five v2-owned tables have RLS enabled'
+  'all five v3-owned tables have RLS enabled'
 );
 
 select is(
@@ -170,7 +171,7 @@ select is(
       )
   ),
   0::bigint,
-  'server-only v2 tables expose no browser RLS policies'
+  'server-only v3 tables expose no browser RLS policies'
 );
 
 select ok(
@@ -179,18 +180,18 @@ select ok(
     'public.watch_episode_progress',
     'select'
   ),
-  'authenticated cannot select v2 progress directly'
+  'authenticated cannot select v3 progress directly'
 );
 
 select ok(
   pg_catalog.has_function_privilege(
     'service_role',
-    'public.apply_watch_progress_v2(uuid,jsonb,jsonb)',
+    'public.apply_watch_progress_v3(uuid,jsonb,jsonb)',
     'execute'
   )
   and not pg_catalog.has_function_privilege(
     'authenticated',
-    'public.apply_watch_progress_v2(uuid,jsonb,jsonb)',
+    'public.apply_watch_progress_v3(uuid,jsonb,jsonb)',
     'execute'
   ),
   'only the service role can execute the progress RPC'
@@ -200,16 +201,16 @@ set role authenticated;
 select throws_like(
   $$select pg_catalog.count(*) from public.watch_episode_progress$$,
   '%permission denied%',
-  'an authenticated SQL role is denied direct v2 reads'
+  'an authenticated SQL role is denied direct v3 reads'
 );
 set role postgres;
 
 set role service_role;
 select lives_ok(
   $$
-    select public.apply_watch_progress_v2(
+    select public.apply_watch_progress_v3(
       '11111111-1111-4111-8111-111111111111',
-      pg_temp.watch_v2_event(
+      pg_temp.watch_v3_event(
         'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',
         'solo-session-one',
         pg_catalog.clock_timestamp(),
@@ -227,7 +228,7 @@ select is(
     select episode.current_time_seconds::text
     from public.watch_episode_progress as episode
     where episode.user_id = '11111111-1111-4111-8111-111111111111'
-      and episode.episode_key = 'episode-one'
+      and episode.episode_key = 'crunchyroll:episode:episode-one'
   ),
   '600'::text,
   'solo progress persists the canonical current time'
@@ -257,9 +258,9 @@ select is(
 
 select is(
   (
-    public.apply_watch_progress_v2(
+    public.apply_watch_progress_v3(
       '11111111-1111-4111-8111-111111111111',
-      pg_temp.watch_v2_event(
+      pg_temp.watch_v3_event(
         'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',
         'solo-session-one',
         pg_catalog.clock_timestamp(),
@@ -277,7 +278,7 @@ select is(
     select episode.current_time_seconds::text
     from public.watch_episode_progress as episode
     where episode.user_id = '11111111-1111-4111-8111-111111111111'
-      and episode.episode_key = 'episode-one'
+      and episode.episode_key = 'crunchyroll:episode:episode-one'
   ),
   '600'::text,
   'a duplicate event cannot mutate progress'
@@ -285,9 +286,9 @@ select is(
 
 select lives_ok(
   $$
-    select public.apply_watch_progress_v2(
+    select public.apply_watch_progress_v3(
       '11111111-1111-4111-8111-111111111111',
-      pg_temp.watch_v2_event(
+      pg_temp.watch_v3_event(
         'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2',
         'solo-session-one',
         pg_catalog.clock_timestamp(),
@@ -304,7 +305,7 @@ select is(
     select pg_catalog.concat(episode.server_order, ':', episode.current_time_seconds)
     from public.watch_episode_progress as episode
     where episode.user_id = '11111111-1111-4111-8111-111111111111'
-      and episode.episode_key = 'episode-one'
+      and episode.episode_key = 'crunchyroll:episode:episode-one'
   ),
   '2:900'::text,
   'server order advances exactly once for the later event'
@@ -313,15 +314,15 @@ select is(
 insert into public.users (id, email, display_name)
 values (
   '33333333-3333-4333-8333-333333333333',
-  'watch-v2-page@example.test',
+  'watch-v3-page@example.test',
   'Watch V2 Page'
 );
 
 select lives_ok(
   $$
-    select public.apply_watch_progress_v2(
+    select public.apply_watch_progress_v3(
       '33333333-3333-4333-8333-333333333333',
-      pg_temp.watch_v2_event(
+      pg_temp.watch_v3_event(
         'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa7',
         'page-session-one',
         pg_catalog.clock_timestamp(),
@@ -329,17 +330,17 @@ select lives_ok(
       ),
       null
     );
-    select public.apply_watch_progress_v2(
+    select public.apply_watch_progress_v3(
       '33333333-3333-4333-8333-333333333333',
-      pg_temp.watch_v2_event(
+      pg_temp.watch_v3_event(
         'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa8',
         'page-session-two',
         pg_catalog.clock_timestamp() - interval '1 minute',
         300,
         1,
         null,
-        'episode-two',
-        'series-two'
+        'crunchyroll:episode:episode-two',
+        'crunchyroll:series:series-two'
       ),
       null
     )
@@ -349,7 +350,7 @@ select lives_ok(
 
 select is(
   (
-    public.list_watch_history_v2_page(
+    public.list_watch_history_v3_bounded_page(
       '33333333-3333-4333-8333-333333333333',
       1,
       1,
@@ -363,7 +364,7 @@ select is(
 
 select is(
   (
-    public.list_watch_history_v2_page(
+    public.list_watch_history_v3_bounded_page(
       '33333333-3333-4333-8333-333333333333',
       1,
       1,
@@ -379,7 +380,7 @@ select is(
   (
     select pg_catalog.count(*)
     from pg_catalog.jsonb_array_elements(
-      public.list_watch_history_v2_page(
+      public.list_watch_history_v3_bounded_page(
         '33333333-3333-4333-8333-333333333333',
         1,
         1,
@@ -396,7 +397,7 @@ select is(
   (
     select pg_catalog.array_agg(field.key order by field.key)::text
     from pg_catalog.jsonb_object_keys(
-      public.list_watch_history_v2_page(
+      public.list_watch_history_v3_bounded_page(
         '33333333-3333-4333-8333-333333333333',
         1,
         1,
@@ -433,7 +434,7 @@ select is(
 
 select is(
   (
-    public.list_watch_history_v2_page(
+    public.list_watch_history_v3_bounded_page(
       '33333333-3333-4333-8333-333333333333',
       999,
       1,
@@ -541,7 +542,7 @@ values
     '33333333-3333-4333-8333-333333333333',
     'crunchyroll',
     'A',
-    'episode-uppercase',
+    'crunchyroll:episode:episode-uppercase',
     'series',
     'Uppercase',
     'Uppercase episode',
@@ -559,7 +560,7 @@ values
     '33333333-3333-4333-8333-333333333333',
     'crunchyroll',
     'a-',
-    'episode-hyphen',
+    'crunchyroll:episode:episode-hyphen',
     'series',
     'Hyphen',
     'Hyphen episode',
@@ -577,7 +578,7 @@ values
     '33333333-3333-4333-8333-333333333333',
     'crunchyroll',
     'a_',
-    'episode-underscore',
+    'crunchyroll:episode:episode-underscore',
     'series',
     'Underscore',
     'Underscore episode',
@@ -594,7 +595,7 @@ values
 
 select is(
   (
-    public.list_watch_history_v2_page(
+    public.list_watch_history_v3_bounded_page(
       '33333333-3333-4333-8333-333333333333',
       1,
       1,
@@ -608,7 +609,7 @@ select is(
 
 select is(
   (
-    public.list_watch_history_v2_page(
+    public.list_watch_history_v3_bounded_page(
       '33333333-3333-4333-8333-333333333333',
       1,
       1,
@@ -622,7 +623,7 @@ select is(
 
 select is(
   (
-    public.list_watch_history_v2_page(
+    public.list_watch_history_v3_bounded_page(
       '33333333-3333-4333-8333-333333333333',
       1,
       1,
@@ -661,7 +662,7 @@ select
   'bounded-sessions',
   'series',
   'Bounded sessions',
-  case when series.value % 2 = 0 then 'bounded-episode-two' else 'bounded-episode-one' end,
+  case when series.value % 2 = 0 then 'crunchyroll:episode:bounded-episode-two' else 'crunchyroll:episode:bounded-episode-one' end,
   'Bounded episode',
   'https://www.crunchyroll.com/watch/bounded/demo',
   1200,
@@ -670,7 +671,7 @@ select
   '2100-08-16 08:00:00+00'::timestamptz + series.value * interval '1 second',
   '2100-08-16 08:00:00+00'::timestamptz + series.value * interval '1 second',
   pg_catalog.clock_timestamp(),
-  2,
+  3,
   1,
   'bounded-session-' || series.value
 from pg_catalog.generate_series(1, 25) as series(value);
@@ -693,7 +694,7 @@ select
   session.current_time_seconds,
   session.progress,
   session.updated_at,
-  2
+  3
 from public.watch_sessions as session
 where session.host_user_id = '33333333-3333-4333-8333-333333333333'
   and session.item_key = 'bounded-sessions';
@@ -736,7 +737,7 @@ values
     '33333333-3333-4333-8333-333333333333',
     'crunchyroll',
     'bounded-sessions',
-    'bounded-episode-one',
+    'crunchyroll:episode:bounded-episode-one',
     'series',
     'Bounded sessions',
     'Bounded episode one',
@@ -755,7 +756,7 @@ values
     '33333333-3333-4333-8333-333333333333',
     'crunchyroll',
     'bounded-sessions',
-    'bounded-episode-two',
+    'crunchyroll:episode:bounded-episode-two',
     'series',
     'Bounded sessions',
     'Bounded episode two',
@@ -775,7 +776,7 @@ select is(
   (
     select pg_catalog.jsonb_array_length(page.value -> 'sessionIds')
     from (
-      select public.list_watch_history_v2_page(
+      select public.list_watch_history_v3_bounded_page(
         '33333333-3333-4333-8333-333333333333',
         1,
         1,
@@ -792,7 +793,7 @@ select is(
   (
     select pg_catalog.string_agg(session.value, ',' order by session.value)
     from pg_catalog.jsonb_array_elements_text(
-      public.list_watch_history_v2_page(
+      public.list_watch_history_v3_bounded_page(
         '33333333-3333-4333-8333-333333333333',
         1,
         1,
@@ -845,13 +846,13 @@ values (
   'bounded-sessions',
   'series',
   'Bounded sessions tombstone',
-  'bounded-tombstone-episode',
+  'crunchyroll:episode:bounded-tombstone-episode',
   'Bounded tombstone episode',
   'https://www.crunchyroll.com/watch/bounded-tombstone/demo',
   '2202-08-16 08:00:00+00',
   '2202-08-16 08:00:00+00',
   '2202-08-16 08:00:00+00',
-  2,
+  3,
   1,
   99,
   99
@@ -871,7 +872,7 @@ values (
   'host',
   '2202-08-16 08:00:00+00',
   '2202-08-16 08:00:00+00',
-  2
+  3
 );
 
 select is(
@@ -888,7 +889,7 @@ select is(
   (
     select pg_catalog.count(*)
     from pg_catalog.jsonb_array_elements_text(
-      public.list_watch_history_v2_page(
+      public.list_watch_history_v3_bounded_page(
         '33333333-3333-4333-8333-333333333333',
         1,
         1,
@@ -906,19 +907,19 @@ insert into public.users (id, email, display_name)
 values
   (
     '66666666-6666-4666-8666-666666666666',
-    'watch-v2-generation-host@example.test',
+    'watch-v3-generation-host@example.test',
     'Watch V2 Generation Host'
   ),
   (
     '77777777-7777-4777-8777-777777777777',
-    'watch-v2-generation-viewer@example.test',
+    'watch-v3-generation-viewer@example.test',
     'Watch V2 Generation Viewer'
   );
 
-insert into public.user_watch_settings (user_id, history_generation)
+insert into public.user_watch_settings (user_id, history_generation, write_schema_version)
 values
-  ('66666666-6666-4666-8666-666666666666', 1),
-  ('77777777-7777-4777-8777-777777777777', 2)
+  ('66666666-6666-4666-8666-666666666666', 1, 3),
+  ('77777777-7777-4777-8777-777777777777', 2, 3)
 on conflict (user_id) do update set
   history_generation = excluded.history_generation;
 
@@ -931,7 +932,7 @@ insert into public.rooms (
   title
 )
 values (
-  'watch-v2-generation-room',
+  'watch-v3-generation-room',
   '66666666-6666-4666-8666-666666666666',
   'live',
   '2101-08-16 08:00:00+00',
@@ -941,7 +942,7 @@ values (
 
 insert into public.room_members (room_id, user_id, joined_at)
 values (
-  'watch-v2-generation-room',
+  'watch-v3-generation-room',
   '77777777-7777-4777-8777-777777777777',
   '2101-08-16 08:00:00+00'
 );
@@ -970,13 +971,13 @@ insert into public.watch_sessions (
 )
 select
   ('66666666-6666-4666-8666-' || pg_catalog.lpad(series.value::text, 12, '0'))::uuid,
-  'watch-v2-generation-room',
+  'watch-v3-generation-room',
   '66666666-6666-4666-8666-666666666666',
   'crunchyroll',
-  'generation-title',
+  'crunchyroll:series:generation-title',
   'series',
   'Generation title',
-  'generation-episode-' || series.value,
+  'crunchyroll:episode:generation-episode-' || series.value,
   'Generation episode ' || series.value,
   'https://www.crunchyroll.com/watch/generation-' || series.value || '/demo',
   1200,
@@ -985,7 +986,7 @@ select
   '2101-08-16 08:00:00+00'::timestamptz + series.value * interval '1 minute',
   '2101-08-16 08:00:00+00'::timestamptz + series.value * interval '1 minute',
   '2101-08-16 08:00:00+00'::timestamptz + series.value * interval '1 minute',
-  2,
+  3,
   1,
   1,
   series.value
@@ -1009,14 +1010,14 @@ select
   session.current_time_seconds,
   session.progress,
   session.last_checkpoint_at,
-  2
+  3
 from public.watch_sessions as session
 cross join (
   values
     ('66666666-6666-4666-8666-666666666666'::uuid, 'host'::text),
     ('77777777-7777-4777-8777-777777777777'::uuid, 'viewer'::text)
 ) as participant(user_id, role)
-where session.room_id = 'watch-v2-generation-room';
+where session.room_id = 'watch-v3-generation-room';
 
 insert into public.watch_episode_progress (
   user_id,
@@ -1039,8 +1040,8 @@ insert into public.watch_episode_progress (
 values (
   '77777777-7777-4777-8777-777777777777',
   'crunchyroll',
-  'generation-title',
-  'generation-viewer-episode',
+  'crunchyroll:series:generation-title',
+  'crunchyroll:episode:generation-viewer-episode',
   'series',
   'Generation title',
   'Generation viewer episode',
@@ -1059,7 +1060,7 @@ select is(
   (
     select pg_catalog.string_agg(session.value, ',' order by session.value)
     from pg_catalog.jsonb_array_elements_text(
-      public.list_watch_history_v2_page(
+      public.list_watch_history_v3_bounded_page(
         '77777777-7777-4777-8777-777777777777',
         2,
         1,
@@ -1074,10 +1075,10 @@ select is(
 
 select is(
   (
-    public.delete_watch_history_v2(
+    public.delete_watch_history_v3(
       '77777777-7777-4777-8777-777777777777',
       pg_catalog.jsonb_build_object(
-        'schemaVersion', 2,
+        'schemaVersion', 3,
         'clientMutationId', '77777777-7777-4777-8777-777777777702',
         'accountGeneration', 2,
         'requestedAt', pg_catalog.clock_timestamp(),
@@ -1111,7 +1112,7 @@ select is(
   'viewer full clear removes only viewer session projections and retains host rows'
 );
 
-delete from public.rooms where room_id = 'watch-v2-generation-room';
+delete from public.rooms where room_id = 'watch-v3-generation-room';
 delete from public.users
 where id in (
   '66666666-6666-4666-8666-666666666666',
@@ -1122,7 +1123,7 @@ delete from public.watch_episode_progress
 where user_id = '33333333-3333-4333-8333-333333333333'
   and provider = 'crunchyroll'
   and title_key = 'bounded-sessions'
-  and episode_key = 'bounded-episode-one';
+  and episode_key = 'crunchyroll:episode:bounded-episode-one';
 
 select is(
   (
@@ -1141,7 +1142,7 @@ delete from public.watch_episode_progress
 where user_id = '33333333-3333-4333-8333-333333333333'
   and provider = 'crunchyroll'
   and title_key = 'bounded-sessions'
-  and episode_key = 'bounded-episode-two';
+  and episode_key = 'crunchyroll:episode:bounded-episode-two';
 
 select is(
   (
@@ -1159,12 +1160,12 @@ select is(
 select ok(
   pg_catalog.has_function_privilege(
     'service_role',
-    'public.list_watch_history_v2_page(uuid,bigint,integer,timestamptz,text)',
+    'public.list_watch_history_v3_bounded_page(uuid,bigint,integer,timestamptz,text)',
     'EXECUTE'
   )
   and not pg_catalog.has_function_privilege(
     'authenticated',
-    'public.list_watch_history_v2_page(uuid,bigint,integer,timestamptz,text)',
+    'public.list_watch_history_v3_bounded_page(uuid,bigint,integer,timestamptz,text)',
     'EXECUTE'
   ),
   'only the service role can execute the bounded history page RPC'
@@ -1173,49 +1174,49 @@ select ok(
 delete from public.users
 where id = '33333333-3333-4333-8333-333333333333';
 
-create or replace function pg_temp.watch_v2_force_receipt_failure()
+create or replace function pg_temp.watch_v3_force_receipt_failure()
 returns trigger
 language plpgsql
 as $$
 begin
-  raise exception 'watch_v2_forced_receipt_failure';
+  raise exception 'watch_v3_forced_receipt_failure';
 end;
 $$;
 
-create trigger watch_v2_force_receipt_failure
+create trigger watch_v3_force_receipt_failure
 before insert on public.watch_history_receipts
 for each row
 when (new.user_id = '11111111-1111-4111-8111-111111111111'::uuid)
-execute function pg_temp.watch_v2_force_receipt_failure();
+execute function pg_temp.watch_v3_force_receipt_failure();
 
 select throws_like(
   $$
-    select public.apply_watch_progress_v2(
+    select public.apply_watch_progress_v3(
       '11111111-1111-4111-8111-111111111111',
-      pg_temp.watch_v2_event(
+      pg_temp.watch_v3_event(
         'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa9',
         'rollback-session',
         pg_catalog.clock_timestamp(),
         450,
         1,
         null,
-        'rollback-episode'
+        'crunchyroll:episode:rollback-episode'
       ),
       null
     )
   $$,
-  '%watch_v2_forced_receipt_failure%',
+  '%watch_v3_forced_receipt_failure%',
   'a late receipt failure aborts the entire progress transaction'
 );
 
-drop trigger watch_v2_force_receipt_failure on public.watch_history_receipts;
+drop trigger watch_v3_force_receipt_failure on public.watch_history_receipts;
 
 select is(
   (
     select pg_catalog.count(*)
     from public.watch_episode_progress as episode
     where episode.user_id = '11111111-1111-4111-8111-111111111111'
-      and episode.episode_key = 'rollback-episode'
+      and episode.episode_key = 'crunchyroll:episode:rollback-episode'
   ),
   0::bigint,
   'a late failure rolls back the canonical progress mutation'
@@ -1227,14 +1228,14 @@ select is(
     from public.watch_history_title_summaries as summary
     where summary.user_id = '11111111-1111-4111-8111-111111111111'
       and summary.provider = 'crunchyroll'
-      and summary.title_key = 'series-one'
+      and summary.title_key = 'crunchyroll:series:series-one'
   ),
   (
     select pg_catalog.max(progress.observed_at)::text
     from public.watch_episode_progress as progress
     where progress.user_id = '11111111-1111-4111-8111-111111111111'
       and progress.provider = 'crunchyroll'
-      and progress.title_key = 'series-one'
+      and progress.title_key = 'crunchyroll:series:series-one'
   ),
   'a late failure also rolls back the title projection timestamp'
 );
@@ -1245,7 +1246,7 @@ select is(
     from public.user_watch_settings as settings
     left join public.watch_sessions as session
       on session.host_user_id = settings.user_id
-      and session.episode_key = 'rollback-episode'
+      and session.episode_key = 'crunchyroll:episode:rollback-episode'
     where settings.user_id = '11111111-1111-4111-8111-111111111111'
     group by settings.next_server_order
   ),
@@ -1255,18 +1256,18 @@ select is(
 
 select is(
   (
-    public.delete_watch_history_v2(
+    public.delete_watch_history_v3(
       '11111111-1111-4111-8111-111111111111',
       pg_catalog.jsonb_build_object(
-        'schemaVersion', 2,
+        'schemaVersion', 3,
         'clientMutationId', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1',
         'accountGeneration', 1,
         'requestedAt', pg_catalog.clock_timestamp(),
         'target', pg_catalog.jsonb_build_object(
           'scope', 'episode',
           'provider', 'crunchyroll',
-          'titleKey', 'series-one',
-          'episodeKey', 'episode-one'
+          'titleKey', 'crunchyroll:series:series-one',
+          'episodeKey', 'crunchyroll:episode:episode-one'
         )
       )
     ) #>> '{target,scope}'
@@ -1287,9 +1288,9 @@ select is(
 
 select throws_like(
   $$
-    select public.apply_watch_progress_v2(
+    select public.apply_watch_progress_v3(
       '11111111-1111-4111-8111-111111111111',
-      pg_temp.watch_v2_event(
+      pg_temp.watch_v3_event(
         'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3',
         'solo-session-after-delete',
         '2026-08-14T00:00:00Z',
@@ -1305,9 +1306,9 @@ select throws_like(
 select pg_catalog.pg_sleep(0.01);
 select lives_ok(
   $$
-    select public.apply_watch_progress_v2(
+    select public.apply_watch_progress_v3(
       '11111111-1111-4111-8111-111111111111',
-      pg_temp.watch_v2_event(
+      pg_temp.watch_v3_event(
         'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa4',
         'solo-session-after-delete',
         pg_catalog.clock_timestamp() + interval '1 hour',
@@ -1332,7 +1333,7 @@ select is(
 
 select is(
   (
-    public.set_watch_preferences_v2(
+    public.set_watch_preferences_v3(
       '11111111-1111-4111-8111-111111111111',
       '{"youtubeHistoryEnabled":true}'::jsonb
     ) #>> '{preferences,youtubeHistoryEnabled}'
@@ -1341,7 +1342,7 @@ select is(
   'preferences RPC persists the YouTube opt-in'
 );
 
-create temporary view watch_v2_recent_people_pair as
+create temporary view watch_v3_recent_people_pair as
 select
   evidence.user_id,
   evidence.other_user_id,
@@ -1367,7 +1368,7 @@ insert into public.rooms (
   title
 )
 values (
-  'watch-v2-room',
+  'watch-v3-room',
   '11111111-1111-4111-8111-111111111111',
   'live',
   pg_catalog.clock_timestamp() - interval '2 days',
@@ -1377,24 +1378,24 @@ values (
 
 insert into public.room_members (room_id, user_id, joined_at)
 values (
-  'watch-v2-room',
+  'watch-v3-room',
   '22222222-2222-4222-8222-222222222222',
   pg_catalog.clock_timestamp() - interval '30 minutes'
 );
 
 select lives_ok(
   $$
-    select public.apply_watch_progress_v2(
+    select public.apply_watch_progress_v3(
       '11111111-1111-4111-8111-111111111111',
-      pg_temp.watch_v2_event(
+      pg_temp.watch_v3_event(
         'cccccccc-cccc-4ccc-8ccc-ccccccccccc0',
         'host-participant-session',
         pg_catalog.clock_timestamp(),
         390,
         1,
-        pg_temp.watch_v2_shared_room('host-participant-session')
+        pg_temp.watch_v3_shared_room('host-participant-session')
       ),
-      pg_temp.watch_v2_legacy_authority(
+      pg_temp.watch_v3_legacy_authority(
         '11111111-1111-4111-8111-111111111111',
         'host-participant-session'
       )
@@ -1405,17 +1406,17 @@ select lives_ok(
 
 select lives_ok(
   $$
-    select public.apply_watch_progress_v2(
+    select public.apply_watch_progress_v3(
       '11111111-1111-4111-8111-111111111111',
-      pg_temp.watch_v2_event(
+      pg_temp.watch_v3_event(
         'cccccccc-cccc-4ccc-8ccc-ccccccccccc1',
         'host-participant-session',
         pg_catalog.clock_timestamp(),
         400,
         1,
-        pg_temp.watch_v2_shared_room('host-participant-session')
+        pg_temp.watch_v3_shared_room('host-participant-session')
       ),
-      pg_temp.watch_v2_authority(
+      pg_temp.watch_v3_authority(
         '11111111-1111-4111-8111-111111111111',
         'host-participant-session'
       )
@@ -1425,24 +1426,24 @@ select lives_ok(
 );
 
 select is(
-  (select pg_catalog.count(*) from watch_v2_recent_people_pair),
+  (select pg_catalog.count(*) from watch_v3_recent_people_pair),
   0::bigint,
   'one shared writer alone cannot create Recent People evidence'
 );
 
 select lives_ok(
   $$
-    select public.apply_watch_progress_v2(
+    select public.apply_watch_progress_v3(
       '22222222-2222-4222-8222-222222222222',
-      pg_temp.watch_v2_event(
+      pg_temp.watch_v3_event(
         'cccccccc-cccc-4ccc-8ccc-ccccccccccc2',
         'viewer-participant-session',
         pg_catalog.clock_timestamp(),
         420,
         1,
-        pg_temp.watch_v2_shared_room('viewer-participant-session')
+        pg_temp.watch_v3_shared_room('viewer-participant-session')
       ),
-      pg_temp.watch_v2_authority(
+      pg_temp.watch_v3_authority(
         '22222222-2222-4222-8222-222222222222',
         'viewer-participant-session'
       )
@@ -1456,33 +1457,33 @@ select is(
     select pg_catalog.count(*)
     from public.watch_session_participants as participant
     join public.watch_sessions as session on session.id = participant.session_id
-    where session.room_id = 'watch-v2-room'
-      and session.schema_version = 2
-      and participant.schema_version = 2
+    where session.room_id = 'watch-v3-room'
+      and session.schema_version = 3
+      and participant.schema_version = 3
   ),
   2::bigint,
   'the shared session contains exactly the two accepted writers'
 );
 
 select is(
-  (select pg_catalog.count(*) from watch_v2_recent_people_pair),
+  (select pg_catalog.count(*) from watch_v3_recent_people_pair),
   2::bigint,
   'two accepted shared writers derive both directional evidence rows'
 );
 
 select throws_like(
   $$
-    select public.apply_watch_progress_v2(
+    select public.apply_watch_progress_v3(
       '11111111-1111-4111-8111-111111111111',
-      pg_temp.watch_v2_event(
+      pg_temp.watch_v3_event(
         'cccccccc-cccc-4ccc-8ccc-ccccccccccc7',
         'host-participant-session',
         pg_catalog.clock_timestamp(),
         425,
         1,
-        pg_temp.watch_v2_shared_room('host-participant-session')
+        pg_temp.watch_v3_shared_room('host-participant-session')
       ),
-      pg_temp.watch_v2_authority(
+      pg_temp.watch_v3_authority(
         '11111111-1111-4111-8111-111111111111',
         'host-participant-session'
       ) || pg_catalog.jsonb_build_object(
@@ -1497,19 +1498,19 @@ select throws_like(
 
 select lives_ok(
   $$
-    do $watch_v2_boundary$
+    do $watch_v3_boundary$
     begin
-      perform public.apply_watch_progress_v2(
+      perform public.apply_watch_progress_v3(
         '11111111-1111-4111-8111-111111111111',
-        pg_temp.watch_v2_event(
+        pg_temp.watch_v3_event(
           'cccccccc-cccc-4ccc-8ccc-ccccccccccc8',
           'host-participant-session',
           pg_catalog.clock_timestamp(),
           425,
           1,
-          pg_temp.watch_v2_shared_room('host-participant-session')
+          pg_temp.watch_v3_shared_room('host-participant-session')
         ),
-        pg_temp.watch_v2_authority(
+        pg_temp.watch_v3_authority(
           '11111111-1111-4111-8111-111111111111',
           'host-participant-session'
         ) || pg_catalog.jsonb_build_object(
@@ -1517,30 +1518,30 @@ select lives_ok(
           'exp', pg_catalog.floor(extract(epoch from pg_catalog.transaction_timestamp()))::bigint + 1
         )
       );
-      raise exception 'watch_v2_boundary_rollback';
+      raise exception 'watch_v3_boundary_rollback';
     exception when raise_exception then
-      if sqlerrm <> 'watch_v2_boundary_rollback' then
+      if sqlerrm <> 'watch_v3_boundary_rollback' then
         raise;
       end if;
     end;
-    $watch_v2_boundary$
+    $watch_v3_boundary$
   $$,
   'authority remains valid in the adjacent second before exp'
 );
 
 select is(
   (
-    public.apply_watch_progress_v2(
+    public.apply_watch_progress_v3(
       '11111111-1111-4111-8111-111111111111',
-      pg_temp.watch_v2_event(
+      pg_temp.watch_v3_event(
         'cccccccc-cccc-4ccc-8ccc-ccccccccccc1',
         'host-participant-session',
         pg_catalog.clock_timestamp(),
         999,
         1,
-        pg_temp.watch_v2_shared_room('host-participant-session')
+        pg_temp.watch_v3_shared_room('host-participant-session')
       ),
-      pg_temp.watch_v2_authority(
+      pg_temp.watch_v3_authority(
         '11111111-1111-4111-8111-111111111111',
         'host-participant-session'
       ) || pg_catalog.jsonb_build_object(
@@ -1553,28 +1554,28 @@ select is(
   'an already-receipted duplicate succeeds after its authority expires'
 );
 
-create temporary table watch_v2_recent_people_before_expired
+create temporary table watch_v3_recent_people_before_expired
 as
 select
   evidence.user_id,
   evidence.other_user_id,
   evidence.last_room_id,
   evidence.last_watched_at
-from watch_v2_recent_people_pair as evidence;
+from watch_v3_recent_people_pair as evidence;
 
 select throws_like(
   $$
-    select public.apply_watch_progress_v2(
+    select public.apply_watch_progress_v3(
       '11111111-1111-4111-8111-111111111111',
-      pg_temp.watch_v2_event(
+      pg_temp.watch_v3_event(
         'cccccccc-cccc-4ccc-8ccc-ccccccccccc4',
         'host-participant-session',
         pg_catalog.clock_timestamp(),
         999,
         1,
-        pg_temp.watch_v2_shared_room('host-participant-session')
+        pg_temp.watch_v3_shared_room('host-participant-session')
       ),
-      pg_temp.watch_v2_authority(
+      pg_temp.watch_v3_authority(
         '11111111-1111-4111-8111-111111111111',
         'host-participant-session'
       ) || pg_catalog.jsonb_build_object(
@@ -1596,16 +1597,16 @@ select is(
         select pg_catalog.count(*)
         from public.watch_session_participants as participant
         inner join public.watch_sessions as session on session.id = participant.session_id
-        where session.room_id = 'watch-v2-room'
-          and session.schema_version = 2
-          and participant.schema_version = 2
+        where session.room_id = 'watch-v3-room'
+          and session.schema_version = 3
+          and participant.schema_version = 3
       ),
       ':',
-      (select pg_catalog.count(*) from watch_v2_recent_people_pair)
+      (select pg_catalog.count(*) from watch_v3_recent_people_pair)
     )
     from public.watch_episode_progress as episode
     where episode.user_id = '11111111-1111-4111-8111-111111111111'
-      and episode.episode_key = 'episode-one'
+      and episode.episode_key = 'crunchyroll:episode:episode-one'
   ),
   '400:2:2'::text,
   'expired replay fails before progress, participant, or Recent People mutation'
@@ -1617,15 +1618,15 @@ select is(
     from (
       (
         select user_id, other_user_id, last_room_id, last_watched_at
-        from watch_v2_recent_people_pair
+        from watch_v3_recent_people_pair
         except all
         select user_id, other_user_id, last_room_id, last_watched_at
-        from watch_v2_recent_people_before_expired
+        from watch_v3_recent_people_before_expired
       )
       union all
       (
         select user_id, other_user_id, last_room_id, last_watched_at
-        from watch_v2_recent_people_before_expired
+        from watch_v3_recent_people_before_expired
         except all
         select user_id, other_user_id, last_room_id, last_watched_at
         from public.recent_people_evidence
@@ -1648,10 +1649,10 @@ select is(
       and stored.last_room_id = evidence.last_room_id
       and stored.last_watched_at = evidence.last_watched_at
     where evidence.other_user_id = '22222222-2222-4222-8222-222222222222'
-      and evidence.last_room_id = 'watch-v2-room'
+      and evidence.last_room_id = 'watch-v3-room'
   ),
   1::bigint,
-  'Recent People reads the exact pair-owned v2 evidence row'
+  'Recent People reads the exact pair-owned v3 evidence row'
 );
 
 select ok(
@@ -1660,7 +1661,7 @@ select ok(
     'public.list_recent_people_evidence_v2(uuid)',
     'EXECUTE'
   ),
-  'service_role can execute the v2 Recent People evidence function'
+  'service_role can execute the v3 Recent People evidence function'
 );
 
 select ok(
@@ -1669,7 +1670,7 @@ select ok(
     'public.list_recent_people_evidence_v2(uuid)',
     'EXECUTE'
   ),
-  'anon cannot execute the v2 Recent People evidence function'
+  'anon cannot execute the v3 Recent People evidence function'
 );
 
 select ok(
@@ -1678,22 +1679,22 @@ select ok(
     'public.list_recent_people_evidence_v2(uuid)',
     'EXECUTE'
   ),
-  'authenticated cannot execute the v2 Recent People evidence function'
+  'authenticated cannot execute the v3 Recent People evidence function'
 );
 
 select throws_like(
   $$
-    select public.apply_watch_progress_v2(
+    select public.apply_watch_progress_v3(
       '22222222-2222-4222-8222-222222222222',
-      pg_temp.watch_v2_event(
+      pg_temp.watch_v3_event(
         'cccccccc-cccc-4ccc-8ccc-ccccccccccc3',
         'viewer-mismatch-session',
         pg_catalog.clock_timestamp(),
         430,
         1,
-        pg_temp.watch_v2_shared_room('viewer-mismatch-session', 2)
+        pg_temp.watch_v3_shared_room('viewer-mismatch-session', 2)
       ),
-      pg_temp.watch_v2_authority(
+      pg_temp.watch_v3_authority(
         '22222222-2222-4222-8222-222222222222',
         'viewer-mismatch-session',
         2
@@ -1706,24 +1707,24 @@ select throws_like(
 
 update public.rooms
 set ended_at = pg_catalog.statement_timestamp() - interval '5 minutes'
-where room_id = 'watch-v2-room';
+where room_id = 'watch-v3-room';
 
 select lives_ok(
   $$
-    select public.apply_watch_progress_v2(
+    select public.apply_watch_progress_v3(
       '11111111-1111-4111-8111-111111111111',
-      pg_temp.watch_v2_event(
+      pg_temp.watch_v3_event(
         'cccccccc-cccc-4ccc-8ccc-ccccccccccc5',
         'host-participant-session',
         pg_catalog.statement_timestamp(),
         450,
         1,
-        pg_temp.watch_v2_shared_room('host-participant-session'),
-        'episode-one',
-        'series-one',
+        pg_temp.watch_v3_shared_room('host-participant-session'),
+        'crunchyroll:episode:episode-one',
+        'crunchyroll:series:series-one',
         'room_end'
       ),
-      pg_temp.watch_v2_authority(
+      pg_temp.watch_v3_authority(
         '11111111-1111-4111-8111-111111111111',
         'host-participant-session'
       ) || pg_catalog.jsonb_build_object(
@@ -1736,28 +1737,28 @@ select lives_ok(
   'a terminal attested before room end remains valid when delivered later inside grace'
 );
 
-create temporary table watch_v2_recent_people_before_post_end
+create temporary table watch_v3_recent_people_before_post_end
 as
 select
   evidence.user_id,
   evidence.other_user_id,
   evidence.last_room_id,
   evidence.last_watched_at
-from watch_v2_recent_people_pair as evidence;
+from watch_v3_recent_people_pair as evidence;
 
 select throws_like(
   $$
-    select public.apply_watch_progress_v2(
+    select public.apply_watch_progress_v3(
       '11111111-1111-4111-8111-111111111111',
-      pg_temp.watch_v2_event(
+      pg_temp.watch_v3_event(
         'cccccccc-cccc-4ccc-8ccc-ccccccccccc6',
         'host-participant-session',
         pg_catalog.statement_timestamp(),
         500,
         1,
-        pg_temp.watch_v2_shared_room('host-participant-session')
+        pg_temp.watch_v3_shared_room('host-participant-session')
       ),
-      pg_temp.watch_v2_authority(
+      pg_temp.watch_v3_authority(
         '11111111-1111-4111-8111-111111111111',
         'host-participant-session'
       )
@@ -1772,11 +1773,11 @@ select is(
     select pg_catalog.concat(
       episode.current_time_seconds,
       ':',
-      (select pg_catalog.count(*) from watch_v2_recent_people_pair)
+      (select pg_catalog.count(*) from watch_v3_recent_people_pair)
     )
     from public.watch_episode_progress as episode
     where episode.user_id = '11111111-1111-4111-8111-111111111111'
-      and episode.episode_key = 'episode-one'
+      and episode.episode_key = 'crunchyroll:episode:episode-one'
   ),
   '450:2'::text,
   'post-end rejection cannot mutate progress or refresh Recent People'
@@ -1788,15 +1789,15 @@ select is(
     from (
       (
         select user_id, other_user_id, last_room_id, last_watched_at
-        from watch_v2_recent_people_pair
+        from watch_v3_recent_people_pair
         except all
         select user_id, other_user_id, last_room_id, last_watched_at
-        from watch_v2_recent_people_before_post_end
+        from watch_v3_recent_people_before_post_end
       )
       union all
       (
         select user_id, other_user_id, last_room_id, last_watched_at
-        from watch_v2_recent_people_before_post_end
+        from watch_v3_recent_people_before_post_end
         except all
         select user_id, other_user_id, last_room_id, last_watched_at
         from public.recent_people_evidence
@@ -1809,10 +1810,10 @@ select is(
 
 select is(
   (
-    public.delete_watch_history_v2(
+    public.delete_watch_history_v3(
       '11111111-1111-4111-8111-111111111111',
       pg_catalog.jsonb_build_object(
-        'schemaVersion', 2,
+        'schemaVersion', 3,
         'clientMutationId', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2',
         'accountGeneration', 1,
         'requestedAt', pg_catalog.clock_timestamp(),
@@ -1836,9 +1837,9 @@ select is(
 
 select throws_like(
   $$
-    select public.apply_watch_progress_v2(
+    select public.apply_watch_progress_v3(
       '11111111-1111-4111-8111-111111111111',
-      pg_temp.watch_v2_event(
+      pg_temp.watch_v3_event(
         'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa5',
         'stale-generation-session',
         pg_catalog.clock_timestamp(),
@@ -1855,16 +1856,16 @@ select throws_like(
 select lives_ok(
   $$
     delete from public.rooms
-    where room_id = 'watch-v2-room'
+    where room_id = 'watch-v3-room'
   $$,
-  'hard room deletion invalidates authority without violating v2 session constraints'
+  'hard room deletion invalidates authority without violating v3 session constraints'
 );
 
 select is(
   (
     select pg_catalog.count(*)
     from public.watch_sessions as session
-    where session.schema_version = 2
+    where session.schema_version = 3
       and session.room_id is null
       and session.client_session_key is null
       and session.room_generation is not null
@@ -1890,14 +1891,14 @@ select is(
     )
   ),
   0::bigint,
-  'account deletion cascades all v2 receipts'
+  'account deletion cascades all v3 receipts'
 );
 
 select ok(
   pg_catalog.strpos(
     pg_catalog.lower(
       pg_catalog.pg_get_functiondef(
-        'public.list_watch_history_v2_page(uuid,bigint,integer,timestamp with time zone,text)'::regprocedure
+        'public.list_watch_history_v3_bounded_page(uuid,bigint,integer,timestamp with time zone,text)'::regprocedure
       )
     ),
     'page_titles as materialized'
@@ -1905,7 +1906,7 @@ select ok(
   and pg_catalog.strpos(
     pg_catalog.lower(
       pg_catalog.pg_get_functiondef(
-        'public.list_watch_history_v2_page(uuid,bigint,integer,timestamp with time zone,text)'::regprocedure
+        'public.list_watch_history_v3_bounded_page(uuid,bigint,integer,timestamp with time zone,text)'::regprocedure
       )
     ),
     'all_titles as materialized'
@@ -1913,7 +1914,7 @@ select ok(
   and pg_catalog.strpos(
     pg_catalog.lower(
       pg_catalog.pg_get_functiondef(
-        'public.list_watch_history_v2_page(uuid,bigint,integer,timestamp with time zone,text)'::regprocedure
+        'public.list_watch_history_v3_bounded_page(uuid,bigint,integer,timestamp with time zone,text)'::regprocedure
       )
     ),
     'eligible_titles as'
@@ -1926,7 +1927,7 @@ select ok(
     select 1
     from pg_catalog.pg_trigger as trigger
     where trigger.tgrelid = 'public.watch_episode_progress'::regclass
-      and trigger.tgname = 'sync_watch_history_title_summary_delete_v2'
+      and trigger.tgname = 'sync_watch_history_title_summary_delete_v3'
       and not trigger.tgisinternal
       and pg_catalog.strpos(
         pg_catalog.pg_get_triggerdef(trigger.oid),
@@ -1955,7 +1956,7 @@ select ok(
   and pg_catalog.strpos(
     pg_catalog.lower(
       pg_catalog.pg_get_functiondef(
-        'public.list_watch_history_v2_page(uuid,bigint,integer,timestamp with time zone,text)'::regprocedure
+        'public.list_watch_history_v3_bounded_page(uuid,bigint,integer,timestamp with time zone,text)'::regprocedure
       )
     ),
     'from public.watch_history_user_session_summaries as summary'
@@ -1963,7 +1964,7 @@ select ok(
   and pg_catalog.strpos(
     pg_catalog.lower(
       pg_catalog.pg_get_functiondef(
-        'public.list_watch_history_v2_page(uuid,bigint,integer,timestamp with time zone,text)'::regprocedure
+        'public.list_watch_history_v3_bounded_page(uuid,bigint,integer,timestamp with time zone,text)'::regprocedure
       )
     ),
     'cross join lateral'
@@ -1971,7 +1972,7 @@ select ok(
   and pg_catalog.strpos(
     pg_catalog.lower(
       pg_catalog.pg_get_functiondef(
-        'public.list_watch_history_v2_page(uuid,bigint,integer,timestamp with time zone,text)'::regprocedure
+        'public.list_watch_history_v3_bounded_page(uuid,bigint,integer,timestamp with time zone,text)'::regprocedure
       )
     ),
     'session.history_generation ='
@@ -1984,7 +1985,7 @@ select ok(
     select 1
     from pg_catalog.pg_trigger as trigger
     where trigger.tgrelid = 'public.watch_sessions'::regclass
-      and trigger.tgname = 'sync_watch_history_session_summaries_v2'
+      and trigger.tgname = 'sync_watch_history_session_summaries_v3'
       and not trigger.tgisinternal
   ),
   'canonical session checkpoint and identity writes maintain user-session summaries'
@@ -1994,7 +1995,7 @@ select ok(
   pg_catalog.strpos(
     pg_catalog.lower(
       pg_catalog.pg_get_functiondef(
-        'public.list_watch_history_v2_page(uuid,bigint,integer,timestamp with time zone,text)'::regprocedure
+        'public.list_watch_history_v3_bounded_page(uuid,bigint,integer,timestamp with time zone,text)'::regprocedure
       )
     ),
     'summary.last_watched_at <= p_cursor_watched_at'
@@ -2005,12 +2006,12 @@ select ok(
 insert into public.users (id, email, display_name)
 values (
   '99999999-9999-4999-8999-999999999999',
-  'watch-v2-deep-cursor@example.test',
+  'watch-v3-deep-cursor@example.test',
   'Watch V2 Deep Cursor'
 );
 
-insert into public.user_watch_settings (user_id)
-values ('99999999-9999-4999-8999-999999999999');
+insert into public.user_watch_settings (user_id, write_schema_version)
+values ('99999999-9999-4999-8999-999999999999', 3);
 
 insert into public.watch_episode_progress (
   user_id,
@@ -2033,8 +2034,8 @@ insert into public.watch_episode_progress (
 select
   '99999999-9999-4999-8999-999999999999',
   'crunchyroll',
-  'deep-title-' || pg_catalog.lpad(series.value::text, 3, '0'),
-  'deep-episode-' || pg_catalog.lpad(series.value::text, 3, '0'),
+  'crunchyroll:series:deep-title-' || pg_catalog.lpad(series.value::text, 3, '0'),
+  'crunchyroll:episode:deep-episode-' || pg_catalog.lpad(series.value::text, 3, '0'),
   'series',
   'Deep title ' || series.value,
   'Deep episode ' || series.value,
@@ -2053,16 +2054,16 @@ select is(
   (
     select pg_catalog.string_agg(row.value ->> 'title_key', ',' order by row.ordinality)
     from pg_catalog.jsonb_array_elements(
-      public.list_watch_history_v2_page(
+      public.list_watch_history_v3_bounded_page(
         '99999999-9999-4999-8999-999999999999',
         1,
         3,
         '2103-01-01 00:00:00+00'::timestamptz - 100 * interval '1 minute',
-        'crunchyroll:deep-title-100'
+        'crunchyroll:crunchyroll:series:deep-title-100'
       ) -> 'progressRows'
     ) with ordinality as row(value, ordinality)
   ),
-  'deep-title-101,deep-title-102,deep-title-103'::text,
+  'crunchyroll:series:deep-title-101,crunchyroll:series:deep-title-102,crunchyroll:series:deep-title-103'::text,
   'a deep timestamp cursor returns the next exact title page without skips'
 );
 

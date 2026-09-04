@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-	buildWatchHistoryV2Response,
+	buildWatchHistoryV3Response,
 	parseBoundedWatchHistoryPage,
-} from "./watch-history-v2";
+} from "./watch-history-v3";
 
 const localRpcJson = process.env.WATCH_HISTORY_LOCAL_RPC_JSON;
 const enabled = Boolean(localRpcJson);
@@ -31,7 +31,9 @@ function parseResourceEpisodeCursor(
 	},
 ) {
 	assert.match(cursor, /^(?:[0-9a-f]{2})+$/);
-	const value: unknown = JSON.parse(Buffer.from(cursor, "hex").toString("utf8"));
+	const value: unknown = JSON.parse(
+		Buffer.from(cursor, "hex").toString("utf8"),
+	);
 	const record = exactRecord(value, [
 		"v",
 		"userId",
@@ -71,6 +73,7 @@ function parseResourceTitlePage(value: unknown) {
 			"observedEpisodeCount",
 			"completedEpisodeCount",
 			"episodePage",
+			"catalog",
 		]);
 		const episodePage = exactRecord(summary.episodePage, [
 			"complete",
@@ -103,6 +106,7 @@ function parseResourceDetailPage(value: unknown) {
 		"complete",
 		"nextCursor",
 		"progressRows",
+		"catalog",
 	]);
 	assert.ok(Array.isArray(page.progressRows));
 	assert.ok(page.progressRows.length <= 50);
@@ -132,7 +136,7 @@ test("local RPC output passes the production parser and follows canonical clear 
 	const firstPage = parseBoundedWatchHistoryPage(values[0]);
 	assert.equal(firstPage.accountGeneration, 1);
 	assert.ok(firstPage.progressRows.length >= 1);
-	const firstResponse = buildWatchHistoryV2Response({
+	const firstResponse = buildWatchHistoryV3Response({
 		userId: USER_ID,
 		accountGeneration: firstPage.accountGeneration,
 		progressRows: firstPage.progressRows,
@@ -144,7 +148,7 @@ test("local RPC output passes the production parser and follows canonical clear 
 	});
 	assert.deepEqual(
 		firstResponse.items.map((item) => item.titleKey),
-		["local-rpc-title"],
+		["crunchyroll:series:local-rpc-title"],
 	);
 
 	const afterClear = parseBoundedWatchHistoryPage(values[1]);

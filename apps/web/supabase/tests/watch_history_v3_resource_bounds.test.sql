@@ -17,21 +17,21 @@ insert into public.users (id, email, display_name)
 values
   (
     '33333333-3333-4333-8333-333333333331',
-    'watch-v2-bounds-owner@example.test',
+    'watch-v3-bounds-owner@example.test',
     'Watch V2 Bounds Owner'
   ),
   (
     '33333333-3333-4333-8333-333333333332',
-    'watch-v2-bounds-other@example.test',
+    'watch-v3-bounds-other@example.test',
     'Watch V2 Bounds Other'
   );
 
-create or replace function pg_temp.watch_v2_resource_event(
+create or replace function pg_temp.watch_v3_resource_event(
   event_id uuid,
   episode_key text,
   observed_at timestamptz,
   completed boolean default false,
-  title_key text default 'bounded-title',
+  title_key text default 'crunchyroll:series:bounded-title',
   provider text default 'crunchyroll',
   account_generation bigint default 1
 )
@@ -40,7 +40,7 @@ language sql
 set search_path = ''
 as $$
   select pg_catalog.jsonb_build_object(
-    'schemaVersion', 2,
+    'schemaVersion', 3,
     'clientEventId', event_id,
     'clientSessionKey', 'bounded-session',
     'accountGeneration', account_generation,
@@ -51,13 +51,15 @@ as $$
     'artworkUrl', null,
     'episodeKey', episode_key,
     'episodeTitle', 'Episode ' || episode_key,
-    'seasonKey', 'season-one',
+    'seasonKey', 'crunchyroll:season:season-one',
     'seasonTitle', 'Season One',
     'seasonNumber', 1,
     'episodeNumber', pg_catalog.substring(episode_key, '[0-9]+$')::integer,
+    'crunchyrollIdentity',case when provider='crunchyroll' then jsonb_build_object('providerSeriesId',replace(title_key,'crunchyroll:series:',''),'providerSeasonIdentifier','season-one','providerEpisodeIdentifier',replace(episode_key,'crunchyroll:episode:',''),'providerContentId',replace(episode_key,'crunchyroll:episode:',''),'audioLocale',null) else null end,
+    'youtubeVideoId',case when provider='youtube' then episode_key end,
     'sourceUrl', case provider
       when 'youtube' then 'https://www.youtube.com/watch?v=' || episode_key
-      else 'https://www.crunchyroll.com/watch/' || episode_key || '/demo'
+      else 'https://www.crunchyroll.com/watch/' || replace(episode_key,'crunchyroll:episode:','')
     end,
     'currentTime', case when completed then 1200 else 300 end,
     'duration', 1200,
@@ -68,7 +70,7 @@ as $$
   );
 $$;
 
-create or replace function pg_temp.watch_v2_explain_json(p_query text)
+create or replace function pg_temp.watch_v3_explain_json(p_query text)
 returns jsonb
 language plpgsql
 set search_path = ''
@@ -81,7 +83,7 @@ begin
 end;
 $$;
 
-create or replace function pg_temp.watch_v2_patch_cursor(
+create or replace function pg_temp.watch_v3_patch_cursor(
   p_cursor text,
   p_patch jsonb
 )
@@ -115,13 +117,13 @@ select has_column(
 );
 select has_function(
   'public',
-  'list_watch_history_v2_bounded_page',
+  'list_watch_history_v3_bounded_page',
   array['uuid', 'bigint', 'integer', 'timestamp with time zone', 'text'],
   'the additive bounded title-page RPC exists'
 );
 select has_function(
   'public',
-  'list_watch_history_v2_title_episodes_page',
+  'list_watch_history_v3_title_episodes_page',
   array['uuid', 'bigint', 'text', 'text', 'integer', 'text'],
   'the additive bounded title-detail RPC exists'
 );
@@ -138,7 +140,7 @@ select ok(
       and procedure.proconfig @> array['search_path=""']::text[]
     from pg_catalog.pg_proc as procedure
     where procedure.oid = pg_catalog.to_regprocedure(
-      'public.list_watch_history_v2_bounded_page(uuid,bigint,integer,timestamptz,text)'
+      'public.list_watch_history_v3_bounded_page(uuid,bigint,integer,timestamptz,text)'
     )
   ),
   'bounded title paging is security invoker with an empty search_path'
@@ -149,7 +151,7 @@ select ok(
       and procedure.proconfig @> array['search_path=""']::text[]
     from pg_catalog.pg_proc as procedure
     where procedure.oid = pg_catalog.to_regprocedure(
-      'public.list_watch_history_v2_title_episodes_page(uuid,bigint,text,text,integer,text)'
+      'public.list_watch_history_v3_title_episodes_page(uuid,bigint,text,text,integer,text)'
     )
   ),
   'title-detail paging is security invoker with an empty search_path'
@@ -169,17 +171,17 @@ select ok(
 select ok(
   pg_catalog.has_function_privilege(
     'service_role',
-    'public.list_watch_history_v2_bounded_page(uuid,bigint,integer,timestamptz,text)',
+    'public.list_watch_history_v3_bounded_page(uuid,bigint,integer,timestamptz,text)',
     'execute'
   )
   and not pg_catalog.has_function_privilege(
     'authenticated',
-    'public.list_watch_history_v2_bounded_page(uuid,bigint,integer,timestamptz,text)',
+    'public.list_watch_history_v3_bounded_page(uuid,bigint,integer,timestamptz,text)',
     'execute'
   )
   and not pg_catalog.has_function_privilege(
     'anon',
-    'public.list_watch_history_v2_bounded_page(uuid,bigint,integer,timestamptz,text)',
+    'public.list_watch_history_v3_bounded_page(uuid,bigint,integer,timestamptz,text)',
     'execute'
   ),
   'only service_role can execute bounded title paging'
@@ -187,17 +189,17 @@ select ok(
 select ok(
   pg_catalog.has_function_privilege(
     'service_role',
-    'public.list_watch_history_v2_title_episodes_page(uuid,bigint,text,text,integer,text)',
+    'public.list_watch_history_v3_title_episodes_page(uuid,bigint,text,text,integer,text)',
     'execute'
   )
   and not pg_catalog.has_function_privilege(
     'authenticated',
-    'public.list_watch_history_v2_title_episodes_page(uuid,bigint,text,text,integer,text)',
+    'public.list_watch_history_v3_title_episodes_page(uuid,bigint,text,text,integer,text)',
     'execute'
   )
   and not pg_catalog.has_function_privilege(
     'anon',
-    'public.list_watch_history_v2_title_episodes_page(uuid,bigint,text,text,integer,text)',
+    'public.list_watch_history_v3_title_episodes_page(uuid,bigint,text,text,integer,text)',
     'execute'
   ),
   'only service_role can execute title-detail paging'
@@ -257,7 +259,7 @@ select ok(
 
 set local enable_seqscan = off;
 select ok(
-  pg_temp.watch_v2_explain_json($query$
+  pg_temp.watch_v3_explain_json($query$
     select receipt.user_id, receipt.client_id
     from public.watch_history_receipts as receipt
     where receipt.expires_at <= pg_catalog.transaction_timestamp()
@@ -277,11 +279,11 @@ select lives_ok(
       item integer;
     begin
       for item in 1..12 loop
-        perform public.apply_watch_progress_v2(
+        perform public.apply_watch_progress_v3(
           '33333333-3333-4333-8333-333333333331',
-          pg_temp.watch_v2_resource_event(
+          pg_temp.watch_v3_resource_event(
             ('33333333-3333-4333-8334-' || pg_catalog.lpad(item::text, 12, '0'))::uuid,
-            'episode-' || item,
+            'crunchyroll:episode:episode-' || item,
             case when item in (7, 8)
               then '2026-08-21 10:00:08+00'::timestamptz
               else '2026-08-21 10:00:00+00'::timestamptz + item * interval '1 second'
@@ -308,7 +310,7 @@ select is(
     from public.watch_history_title_summaries as summary
     where summary.user_id = '33333333-3333-4333-8333-333333333331'
       and summary.provider = 'crunchyroll'
-      and summary.title_key = 'bounded-title'
+      and summary.title_key = 'crunchyroll:series:bounded-title'
   ),
   '12:6',
   'title counts are exact after progress writes'
@@ -318,8 +320,8 @@ update public.watch_episode_progress
 set completed_at = observed_at
 where user_id = '33333333-3333-4333-8333-333333333331'
   and provider = 'crunchyroll'
-  and title_key = 'bounded-title'
-  and episode_key = 'episode-1';
+  and title_key = 'crunchyroll:series:bounded-title'
+  and episode_key = 'crunchyroll:episode:episode-1';
 select is(
   (
     select pg_catalog.concat(
@@ -331,7 +333,7 @@ select is(
     where summary.user_id = '33333333-3333-4333-8333-333333333331'
       and summary.history_generation = 1
       and summary.provider = 'crunchyroll'
-      and summary.title_key = 'bounded-title'
+      and summary.title_key = 'crunchyroll:series:bounded-title'
   ),
   '12:7',
   'an incomplete-to-completed transition increments the exact completed count'
@@ -341,8 +343,8 @@ update public.watch_episode_progress
 set completed_at = null
 where user_id = '33333333-3333-4333-8333-333333333331'
   and provider = 'crunchyroll'
-  and title_key = 'bounded-title'
-  and episode_key = 'episode-1';
+  and title_key = 'crunchyroll:series:bounded-title'
+  and episode_key = 'crunchyroll:episode:episode-1';
 select is(
   (
     select pg_catalog.concat(
@@ -354,7 +356,7 @@ select is(
     where summary.user_id = '33333333-3333-4333-8333-333333333331'
       and summary.history_generation = 1
       and summary.provider = 'crunchyroll'
-      and summary.title_key = 'bounded-title'
+      and summary.title_key = 'crunchyroll:series:bounded-title'
   ),
   '12:6',
   'a completed-to-incomplete transition decrements the exact completed count'
@@ -364,8 +366,8 @@ update public.watch_episode_progress
 set observed_at = '2026-08-21 09:59:59+00'
 where user_id = '33333333-3333-4333-8333-333333333331'
   and provider = 'crunchyroll'
-  and title_key = 'bounded-title'
-  and episode_key = 'episode-12';
+  and title_key = 'crunchyroll:series:bounded-title'
+  and episode_key = 'crunchyroll:episode:episode-12';
 select is(
   (
     select pg_catalog.concat(
@@ -379,7 +381,7 @@ select is(
     where summary.user_id = '33333333-3333-4333-8333-333333333331'
       and summary.history_generation = 1
       and summary.provider = 'crunchyroll'
-      and summary.title_key = 'bounded-title'
+      and summary.title_key = 'crunchyroll:series:bounded-title'
   ),
   '2026-08-21 10:00:11+00:12:6',
   'a timestamp regression recomputes the exact title maximum without changing counts'
@@ -388,15 +390,15 @@ update public.watch_episode_progress
 set observed_at = '2026-08-21 10:00:12+00'
 where user_id = '33333333-3333-4333-8333-333333333331'
   and provider = 'crunchyroll'
-  and title_key = 'bounded-title'
-  and episode_key = 'episode-12';
+  and title_key = 'crunchyroll:series:bounded-title'
+  and episode_key = 'crunchyroll:episode:episode-12';
 
 update public.watch_episode_progress
-set title_key = 'moved-title'
+set title_key = 'crunchyroll:series:moved-title'
 where user_id = '33333333-3333-4333-8333-333333333331'
   and provider = 'crunchyroll'
-  and title_key = 'bounded-title'
-  and episode_key = 'episode-1';
+  and title_key = 'crunchyroll:series:bounded-title'
+  and episode_key = 'crunchyroll:episode:episode-1';
 select is(
   (
     select pg_catalog.string_agg(
@@ -408,31 +410,31 @@ select is(
     where summary.user_id = '33333333-3333-4333-8333-333333333331'
       and summary.history_generation = 1
       and summary.provider = 'crunchyroll'
-      and summary.title_key in ('bounded-title', 'moved-title')
+      and summary.title_key in ('crunchyroll:series:bounded-title', 'crunchyroll:series:moved-title')
   ),
-  'bounded-title:11:6,moved-title:1:0',
+  'crunchyroll:series:bounded-title:11:6,crunchyroll:series:moved-title:1:0',
   'an identity move recomputes the source and initializes exact destination counts'
 );
 update public.watch_episode_progress
-set title_key = 'bounded-title'
+set title_key = 'crunchyroll:series:bounded-title'
 where user_id = '33333333-3333-4333-8333-333333333331'
   and provider = 'crunchyroll'
-  and title_key = 'moved-title'
-  and episode_key = 'episode-1';
+  and title_key = 'crunchyroll:series:moved-title'
+  and episode_key = 'crunchyroll:episode:episode-1';
 select is(
   (
     select pg_catalog.concat(
-      pg_catalog.count(*) filter (where summary.title_key = 'moved-title'),
+      pg_catalog.count(*) filter (where summary.title_key = 'crunchyroll:series:moved-title'),
       ':',
-      pg_catalog.max(summary.observed_episode_count) filter (where summary.title_key = 'bounded-title'),
+      pg_catalog.max(summary.observed_episode_count) filter (where summary.title_key = 'crunchyroll:series:bounded-title'),
       ':',
-      pg_catalog.max(summary.completed_episode_count) filter (where summary.title_key = 'bounded-title')
+      pg_catalog.max(summary.completed_episode_count) filter (where summary.title_key = 'crunchyroll:series:bounded-title')
     )
     from public.watch_history_title_summaries as summary
     where summary.user_id = '33333333-3333-4333-8333-333333333331'
       and summary.history_generation = 1
       and summary.provider = 'crunchyroll'
-      and summary.title_key in ('bounded-title', 'moved-title')
+      and summary.title_key in ('crunchyroll:series:bounded-title', 'crunchyroll:series:moved-title')
   ),
   '0:12:6',
   'moving an identity back removes the empty destination and restores source counts'
@@ -443,8 +445,8 @@ set history_generation = 2
 where user_id = '33333333-3333-4333-8333-333333333331'
   and history_generation = 1
   and provider = 'crunchyroll'
-  and title_key = 'bounded-title'
-  and episode_key = 'episode-2';
+  and title_key = 'crunchyroll:series:bounded-title'
+  and episode_key = 'crunchyroll:episode:episode-2';
 select is(
   (
     select pg_catalog.string_agg(
@@ -455,7 +457,7 @@ select is(
     from public.watch_history_title_summaries as summary
     where summary.user_id = '33333333-3333-4333-8333-333333333331'
       and summary.provider = 'crunchyroll'
-      and summary.title_key = 'bounded-title'
+      and summary.title_key = 'crunchyroll:series:bounded-title'
   ),
   '1:11:5,2:1:1',
   'a generation move recomputes the source and initializes exact destination counts'
@@ -465,8 +467,8 @@ set history_generation = 1
 where user_id = '33333333-3333-4333-8333-333333333331'
   and history_generation = 2
   and provider = 'crunchyroll'
-  and title_key = 'bounded-title'
-  and episode_key = 'episode-2';
+  and title_key = 'crunchyroll:series:bounded-title'
+  and episode_key = 'crunchyroll:episode:episode-2';
 select is(
   (
     select pg_catalog.concat(
@@ -479,7 +481,7 @@ select is(
     from public.watch_history_title_summaries as summary
     where summary.user_id = '33333333-3333-4333-8333-333333333331'
       and summary.provider = 'crunchyroll'
-      and summary.title_key = 'bounded-title'
+      and summary.title_key = 'crunchyroll:series:bounded-title'
   ),
   '0:12:6',
   'moving an episode back removes the empty generation summary and restores current counts'
@@ -490,8 +492,8 @@ set completed_at = observed_at
 where user_id = '33333333-3333-4333-8333-333333333331'
   and history_generation = 1
   and provider = 'crunchyroll'
-  and title_key = 'bounded-title'
-  and episode_key in ('episode-1', 'episode-3');
+  and title_key = 'crunchyroll:series:bounded-title'
+  and episode_key in ('crunchyroll:episode:episode-1', 'crunchyroll:episode:episode-3');
 select is(
   (
     select pg_catalog.concat(summary.observed_episode_count, ':', summary.completed_episode_count)
@@ -499,7 +501,7 @@ select is(
     where summary.user_id = '33333333-3333-4333-8333-333333333331'
       and summary.history_generation = 1
       and summary.provider = 'crunchyroll'
-      and summary.title_key = 'bounded-title'
+      and summary.title_key = 'crunchyroll:series:bounded-title'
   ),
   '12:8',
   'a multi-row update applies every completion transition exactly once'
@@ -509,8 +511,8 @@ set completed_at = null
 where user_id = '33333333-3333-4333-8333-333333333331'
   and history_generation = 1
   and provider = 'crunchyroll'
-  and title_key = 'bounded-title'
-  and episode_key in ('episode-1', 'episode-3');
+  and title_key = 'crunchyroll:series:bounded-title'
+  and episode_key in ('crunchyroll:episode:episode-1', 'crunchyroll:episode:episode-3');
 select is(
   (
     select pg_catalog.concat(summary.observed_episode_count, ':', summary.completed_episode_count)
@@ -518,7 +520,7 @@ select is(
     where summary.user_id = '33333333-3333-4333-8333-333333333331'
       and summary.history_generation = 1
       and summary.provider = 'crunchyroll'
-      and summary.title_key = 'bounded-title'
+      and summary.title_key = 'crunchyroll:series:bounded-title'
   ),
   '12:6',
   'a reverse multi-row update restores the exact completed count'
@@ -532,7 +534,7 @@ create temporary table resource_pages (
 insert into resource_pages (name, page)
 values (
   'title',
-  public.list_watch_history_v2_bounded_page(
+  public.list_watch_history_v3_bounded_page(
     '33333333-3333-4333-8333-333333333331',
     999,
     1,
@@ -594,18 +596,18 @@ select is(
       pg_catalog.jsonb_array_elements(page -> 'progressRows') with ordinality as rows(row, ordinal)
     where name = 'title'
   ),
-  'episode-12,episode-11,episode-10,episode-9,episode-7,episode-8,episode-6,episode-5',
+  'crunchyroll:episode:episode-12,crunchyroll:episode:episode-11,crunchyroll:episode:episode-10,crunchyroll:episode:episode-9,crunchyroll:episode:episode-7,crunchyroll:episode:episode-8,crunchyroll:episode:episode-6,crunchyroll:episode:episode-5',
   'recent slices use observed time then C-collated episode identity'
 );
 
 insert into resource_pages (name, page)
 values (
   'static-one',
-  public.list_watch_history_v2_title_episodes_page(
+  public.list_watch_history_v3_title_episodes_page(
     '33333333-3333-4333-8333-333333333331',
     1,
     'crunchyroll',
-    'bounded-title',
+    'crunchyroll:series:bounded-title',
     5,
     null
   )
@@ -613,11 +615,11 @@ values (
 insert into resource_pages (name, page)
 select
   'static-two',
-  public.list_watch_history_v2_title_episodes_page(
+  public.list_watch_history_v3_title_episodes_page(
     '33333333-3333-4333-8333-333333333331',
     1,
     'crunchyroll',
-    'bounded-title',
+    'crunchyroll:series:bounded-title',
     5,
     page ->> 'nextCursor'
   )
@@ -626,11 +628,11 @@ where name = 'static-one';
 insert into resource_pages (name, page)
 select
   'static-three',
-  public.list_watch_history_v2_title_episodes_page(
+  public.list_watch_history_v3_title_episodes_page(
     '33333333-3333-4333-8333-333333333331',
     1,
     'crunchyroll',
-    'bounded-title',
+    'crunchyroll:series:bounded-title',
     5,
     page ->> 'nextCursor'
   )
@@ -669,7 +671,7 @@ select is(
       with ordinality as rows(row, ordinal)
     where name in ('static-one', 'static-two', 'static-three')
   ),
-  'episode-12,episode-11,episode-10,episode-9,episode-7,episode-8,episode-6,episode-5,episode-4,episode-3,episode-2,episode-1',
+  'crunchyroll:episode:episode-12,crunchyroll:episode:episode-11,crunchyroll:episode:episode-10,crunchyroll:episode:episode-9,crunchyroll:episode:episode-7,crunchyroll:episode:episode-8,crunchyroll:episode:episode-6,crunchyroll:episode:episode-5,crunchyroll:episode:episode-4,crunchyroll:episode:episode-3,crunchyroll:episode:episode-2,crunchyroll:episode:episode-1',
   'an unmodified traversal returns the full canonical ordered identity sequence'
 );
 select is(
@@ -699,11 +701,11 @@ select is(
 insert into resource_pages (name, page)
 values (
   'detail-one',
-  public.list_watch_history_v2_title_episodes_page(
+  public.list_watch_history_v3_title_episodes_page(
     '33333333-3333-4333-8333-333333333331',
     1,
     'crunchyroll',
-    'bounded-title',
+    'crunchyroll:series:bounded-title',
     5,
     null
   )
@@ -714,11 +716,11 @@ values (
 set role service_role;
 select lives_ok(
   $$
-    select public.apply_watch_progress_v2(
+    select public.apply_watch_progress_v3(
       '33333333-3333-4333-8333-333333333331',
-      pg_temp.watch_v2_resource_event(
+      pg_temp.watch_v3_resource_event(
         '33333333-3333-4333-8334-999999999999',
-        'episode-12',
+        'crunchyroll:episode:episode-12',
         '2026-08-21 11:00:00+00',
         true
       ),
@@ -732,11 +734,11 @@ set role postgres;
 insert into resource_pages (name, page)
 select
   'detail-two',
-  public.list_watch_history_v2_title_episodes_page(
+  public.list_watch_history_v3_title_episodes_page(
     '33333333-3333-4333-8333-333333333331',
     1,
     'crunchyroll',
-    'bounded-title',
+    'crunchyroll:series:bounded-title',
     5,
     page ->> 'nextCursor'
   )
@@ -786,11 +788,11 @@ select is(
 
 select throws_like(
   $$
-    select public.list_watch_history_v2_title_episodes_page(
+    select public.list_watch_history_v3_title_episodes_page(
       '33333333-3333-4333-8333-333333333332',
       1,
       'crunchyroll',
-      'bounded-title',
+      'crunchyroll:series:bounded-title',
       5,
       (select page ->> 'nextCursor' from resource_pages where name = 'detail-one')
     )
@@ -801,13 +803,13 @@ select throws_like(
 
 select throws_like(
   $$
-    select public.list_watch_history_v2_title_episodes_page(
+    select public.list_watch_history_v3_title_episodes_page(
       '33333333-3333-4333-8333-333333333331',
       1,
       'crunchyroll',
-      'bounded-title',
+      'crunchyroll:series:bounded-title',
       5,
-      pg_temp.watch_v2_patch_cursor(
+      pg_temp.watch_v3_patch_cursor(
         (select page ->> 'nextCursor' from resource_pages where name = 'detail-one'),
         pg_catalog.jsonb_build_object('v', '1')
       )
@@ -818,13 +820,13 @@ select throws_like(
 );
 select throws_like(
   $$
-    select public.list_watch_history_v2_title_episodes_page(
+    select public.list_watch_history_v3_title_episodes_page(
       '33333333-3333-4333-8333-333333333331',
       1,
       'crunchyroll',
-      'bounded-title',
+      'crunchyroll:series:bounded-title',
       5,
-      pg_temp.watch_v2_patch_cursor(
+      pg_temp.watch_v3_patch_cursor(
         (select page ->> 'nextCursor' from resource_pages where name = 'detail-one'),
         pg_catalog.jsonb_build_object('v', null)
       )
@@ -835,13 +837,13 @@ select throws_like(
 );
 select throws_like(
   $$
-    select public.list_watch_history_v2_title_episodes_page(
+    select public.list_watch_history_v3_title_episodes_page(
       '33333333-3333-4333-8333-333333333331',
       1,
       'crunchyroll',
-      'bounded-title',
+      'crunchyroll:series:bounded-title',
       5,
-      pg_temp.watch_v2_patch_cursor(
+      pg_temp.watch_v3_patch_cursor(
         (select page ->> 'nextCursor' from resource_pages where name = 'detail-one'),
         pg_catalog.jsonb_build_object('v', true)
       )
@@ -853,11 +855,11 @@ select throws_like(
 
 select throws_like(
   $$
-    select public.list_watch_history_v2_title_episodes_page(
+    select public.list_watch_history_v3_title_episodes_page(
       '33333333-3333-4333-8333-333333333331',
       1,
       'youtube',
-      'bounded-title',
+      'crunchyroll:series:bounded-title',
       5,
       (select page ->> 'nextCursor' from resource_pages where name = 'detail-one')
     )
@@ -867,11 +869,11 @@ select throws_like(
 );
 select throws_like(
   $$
-    select public.list_watch_history_v2_title_episodes_page(
+    select public.list_watch_history_v3_title_episodes_page(
       '33333333-3333-4333-8333-333333333331',
       1,
       'crunchyroll',
-      'bounded-title',
+      'crunchyroll:series:bounded-title',
       5,
       pg_catalog.encode(
         pg_catalog.convert_to(
@@ -880,9 +882,9 @@ select throws_like(
             'userId', '33333333-3333-4333-8333-333333333331',
             'accountGeneration', 1,
             'provider', 'crunchyroll',
-            'titleKey', 'bounded-title',
+            'titleKey', 'crunchyroll:series:bounded-title',
             'observedAt', '2026-08-21T10:00:08+00:00',
-            'episodeKey', 'episode-8',
+            'episodeKey', 'crunchyroll:episode:episode-8',
             'unknown', true
           )::text,
           'UTF8'
@@ -896,11 +898,11 @@ select throws_like(
 );
 select throws_like(
   $$
-    select public.list_watch_history_v2_title_episodes_page(
+    select public.list_watch_history_v3_title_episodes_page(
       '33333333-3333-4333-8333-333333333331',
       1,
       'crunchyroll',
-      'bounded-title',
+      'crunchyroll:series:bounded-title',
       5,
       pg_catalog.encode(
         pg_catalog.convert_to(
@@ -909,7 +911,7 @@ select throws_like(
             'userId', '33333333-3333-4333-8333-333333333331',
             'accountGeneration', 1,
             'provider', 'crunchyroll',
-            'titleKey', 'bounded-title',
+            'titleKey', 'crunchyroll:series:bounded-title',
             'observedAt', '2026-08-21T10:00:08+00:00',
             'unknown', true
           )::text,
@@ -925,11 +927,11 @@ select throws_like(
 
 select is(
   pg_catalog.jsonb_array_length(
-    public.list_watch_history_v2_title_episodes_page(
+    public.list_watch_history_v3_title_episodes_page(
       '33333333-3333-4333-8333-333333333332',
       1,
       'crunchyroll',
-      'bounded-title',
+      'crunchyroll:series:bounded-title',
       50,
       null
     ) -> 'progressRows'
@@ -941,18 +943,18 @@ select is(
 set role service_role;
 select lives_ok(
   $$
-    select public.delete_watch_history_v2(
+    select public.delete_watch_history_v3(
       '33333333-3333-4333-8333-333333333331',
       pg_catalog.jsonb_build_object(
-        'schemaVersion', 2,
+        'schemaVersion', 3,
         'clientMutationId', '33333333-3333-4333-8335-000000000001',
         'accountGeneration', 1,
         'requestedAt', pg_catalog.transaction_timestamp(),
         'target', pg_catalog.jsonb_build_object(
           'scope', 'episode',
           'provider', 'crunchyroll',
-          'titleKey', 'bounded-title',
-          'episodeKey', 'episode-12'
+          'titleKey', 'crunchyroll:series:bounded-title',
+          'episodeKey', 'crunchyroll:episode:episode-12'
         )
       )
     )
@@ -970,15 +972,15 @@ select is(
     from public.watch_history_title_summaries as summary
     where summary.user_id = '33333333-3333-4333-8333-333333333331'
       and summary.provider = 'crunchyroll'
-      and summary.title_key = 'bounded-title'
+      and summary.title_key = 'crunchyroll:series:bounded-title'
   ),
   '11:5',
   'counts remain exact after deleting a completed episode'
 );
 
 -- A large title stays durable while both read surfaces remain bounded.
-insert into public.user_watch_settings (user_id)
-values ('33333333-3333-4333-8333-333333333332')
+insert into public.user_watch_settings (user_id, write_schema_version)
+values ('33333333-3333-4333-8333-333333333332', 3)
 on conflict (user_id) do nothing;
 
 insert into public.watch_episode_progress (
@@ -1003,8 +1005,8 @@ insert into public.watch_episode_progress (
 select
   '33333333-3333-4333-8333-333333333332',
   'crunchyroll',
-  'two-thousand-title',
-  'episode-' || item,
+  'crunchyroll:series:two-thousand-title',
+  'crunchyroll:episode:episode-' || item,
   'series',
   'Two thousand title',
   'Episode ' || item,
@@ -1013,7 +1015,7 @@ select
   1200,
   0.25,
   case when item % 2 = 0 then '2026-08-20 00:00:00+00'::timestamptz else null end,
-  pg_catalog.md5('watch-v2-large-' || item)::uuid,
+  pg_catalog.md5('watch-v3-large-' || item)::uuid,
   '2026-08-20 00:00:00+00'::timestamptz + item * interval '1 second',
   item,
   1,
@@ -1023,13 +1025,13 @@ from pg_catalog.generate_series(1, 2000) as item;
 analyze public.watch_episode_progress;
 set local enable_seqscan = off;
 select ok(
-  pg_temp.watch_v2_explain_json($query$
+  pg_temp.watch_v3_explain_json($query$
     select episode.episode_key
     from public.watch_episode_progress as episode
     where episode.user_id = '33333333-3333-4333-8333-333333333332'
       and episode.history_generation = 1
       and episode.provider = 'crunchyroll'
-      and episode.title_key = 'two-thousand-title'
+      and episode.title_key = 'crunchyroll:series:two-thousand-title'
     order by episode.observed_at desc, episode.episode_key collate "C"
     limit 51
   $query$)::text like '%idx_watch_episode_progress_title_detail%',
@@ -1046,14 +1048,14 @@ select is(
     )
     from public.watch_history_title_summaries as summary
     where summary.user_id = '33333333-3333-4333-8333-333333333332'
-      and summary.title_key = 'two-thousand-title'
+      and summary.title_key = 'crunchyroll:series:two-thousand-title'
   ),
   '2000:1000',
   'the summary keeps exact counts for a 2,000-episode title'
 );
 select is(
   pg_catalog.jsonb_array_length(
-    public.list_watch_history_v2_bounded_page(
+    public.list_watch_history_v3_bounded_page(
       '33333333-3333-4333-8333-333333333332',
       1,
       1,
@@ -1066,11 +1068,11 @@ select is(
 );
 select is(
   pg_catalog.jsonb_array_length(
-    public.list_watch_history_v2_title_episodes_page(
+    public.list_watch_history_v3_title_episodes_page(
       '33333333-3333-4333-8333-333333333332',
       1,
       'crunchyroll',
-      'two-thousand-title',
+      'crunchyroll:series:two-thousand-title',
       50,
       null
     ) -> 'progressRows'
@@ -1080,7 +1082,7 @@ select is(
 );
 select is(
   pg_catalog.jsonb_array_length(
-    public.list_watch_history_v2_page(
+    public.list_watch_history_v3_bounded_page(
       '33333333-3333-4333-8333-333333333332',
       1,
       1,
@@ -1088,8 +1090,8 @@ select is(
       null
     ) -> 'progressRows'
   ),
-  2000,
-  'the old RPC remains unchanged and compatible'
+  8,
+  'the sole canonical title RPC remains bounded at eight rows'
 );
 
 -- Exact 14-day cleanup boundary and relation scope.
@@ -1189,7 +1191,7 @@ select is(
 -- A concurrent worker must make progress past a locked oldest receipt.
 select extensions.dblink_connect(
   'watch_receipt_setup',
-  'host=host.docker.internal port=54322 dbname=postgres user=postgres password=postgres application_name=watch_receipt_setup'
+  pg_catalog.format('host=%s port=%s dbname=%L user=postgres password=postgres application_name=watch_receipt_setup', pg_catalog.inet_server_addr(), pg_catalog.inet_server_port(), pg_catalog.current_database())
 );
 select extensions.dblink_exec(
   'watch_receipt_setup',
@@ -1197,7 +1199,7 @@ select extensions.dblink_exec(
     insert into public.users (id, email, display_name)
     values (
       '33333333-3333-4333-8338-000000000001',
-      'watch-v2-receipt-lock@example.test',
+      'watch-v3-receipt-lock@example.test',
       'Watch Receipt Lock'
     );
     insert into public.watch_history_receipts (
@@ -1223,7 +1225,7 @@ select extensions.dblink_exec(
 );
 select extensions.dblink_connect(
   'watch_receipt_lock',
-  'host=host.docker.internal port=54322 dbname=postgres user=postgres password=postgres application_name=watch_receipt_lock'
+  pg_catalog.format('host=%s port=%s dbname=%L user=postgres password=postgres application_name=watch_receipt_lock', pg_catalog.inet_server_addr(), pg_catalog.inet_server_port(), pg_catalog.current_database())
 );
 select extensions.dblink_exec('watch_receipt_lock', 'begin');
 select is(
@@ -1245,7 +1247,7 @@ select is(
 );
 select extensions.dblink_connect(
   'watch_receipt_worker',
-  'host=host.docker.internal port=54322 dbname=postgres user=postgres password=postgres application_name=watch_receipt_worker'
+  pg_catalog.format('host=%s port=%s dbname=%L user=postgres password=postgres application_name=watch_receipt_worker', pg_catalog.inet_server_addr(), pg_catalog.inet_server_port(), pg_catalog.current_database())
 );
 select extensions.dblink_exec('watch_receipt_worker', 'set role service_role');
 select is(
@@ -1316,11 +1318,11 @@ select is(
 insert into resource_pages (name, page)
 values (
   'before-full-clear',
-  public.list_watch_history_v2_title_episodes_page(
+  public.list_watch_history_v3_title_episodes_page(
     '33333333-3333-4333-8333-333333333332',
     1,
     'crunchyroll',
-    'two-thousand-title',
+    'crunchyroll:series:two-thousand-title',
     5,
     null
   )
@@ -1329,10 +1331,10 @@ values (
 set role service_role;
 select lives_ok(
   $$
-    select public.delete_watch_history_v2(
+    select public.delete_watch_history_v3(
       '33333333-3333-4333-8333-333333333332',
       pg_catalog.jsonb_build_object(
-        'schemaVersion', 2,
+        'schemaVersion', 3,
         'clientMutationId', '33333333-3333-4333-8337-000000000001',
         'accountGeneration', 1,
         'requestedAt', pg_catalog.transaction_timestamp(),
@@ -1365,11 +1367,11 @@ select is(
 );
 select throws_like(
   $$
-    select public.list_watch_history_v2_title_episodes_page(
+    select public.list_watch_history_v3_title_episodes_page(
       '33333333-3333-4333-8333-333333333332',
       2,
       'crunchyroll',
-      'two-thousand-title',
+      'crunchyroll:series:two-thousand-title',
       5,
       (select page ->> 'nextCursor' from resource_pages where name = 'before-full-clear')
     )
@@ -1382,7 +1384,7 @@ select is(
     select summary.observed_episode_count
     from public.watch_history_title_summaries as summary
     where summary.user_id = '33333333-3333-4333-8333-333333333331'
-      and summary.title_key = 'bounded-title'
+      and summary.title_key = 'crunchyroll:series:bounded-title'
   ),
   11::bigint,
   'full clear leaves another account untouched'

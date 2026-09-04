@@ -34,6 +34,7 @@ function parseResourceBenchmarkPage(value: unknown) {
 			"observedEpisodeCount",
 			"completedEpisodeCount",
 			"episodePage",
+			"catalog",
 		]);
 		exactRecord(summary.episodePage, ["complete", "nextCursor"]);
 	}
@@ -54,10 +55,10 @@ test("realistic large-account RPC page has measured parser and payload evidence"
 
 	assert.equal(page.totalTitleCount, 501);
 	assert.equal(page.hasMore, true);
-	assert.equal((page.titleSummaries as unknown[]).length, 50);
-	assert.equal((page.progressRows as unknown[]).length, 400);
+	assert.equal((page.titleSummaries as unknown[]).length, 100);
+	assert.equal((page.progressRows as unknown[]).length, 800);
 	assert.equal((page.sessionIds as unknown[]).length, 20);
-	assert.ok(Buffer.byteLength(raw) <= 2 * 1024 * 1024);
+	assert.ok(Buffer.byteLength(raw) <= 4 * 1024 * 1024);
 	assert.ok(afterRss - beforeRss < 32 * 1024 * 1024);
 	console.log(
 		JSON.stringify({
