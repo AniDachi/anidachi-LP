@@ -233,6 +233,45 @@ describe("open Popup inbox convergence", () => {
     expect(seenCalls).toBe(1);
   });
 
+  it("rereads when a successful seen response omits a requested instance still unread in the newer cache", async () => {
+    const acknowledgement = deferred<AccountInboxResponse>();
+    const initial = inbox(A, T1, [FIRST]);
+    initial.counts = { unseen: 3, actionable: 151, pendingFriendRequests: 151, activeRoomInvites: 0 };
+    initial.nextCursor = "next-page";
+    const corrected = inbox(A, "2026-09-04T00:00:04.000Z", [SECOND], T2);
+    corrected.counts = { unseen: 2, actionable: 150, pendingFriendRequests: 150, activeRoomInvites: 0 };
+    corrected.nextCursor = "next-page";
+    let firstList = true;
+    list = async () => {
+      if (firstList) { firstList = false; return initial; }
+      return corrected;
+    };
+    seen = async () => acknowledgement.promise;
+    await mount(); await openInbox();
+    expect(seenCalls).toBe(1);
+    const concurrent = { ...initial, meta: { ...initial.meta, serverTime: T3 } };
+    await publish(concurrent);
+    expect(badge).toBe("3");
+    // The successful T2 mutation lists after FIRST left the page, although the
+    // newer request-start T3 cache still contains FIRST with seenAt=null.
+    await act(async () => acknowledgement.resolve({
+      ...corrected, meta: { ...corrected.meta, serverTime: T2 },
+    }));
+    await settle();
+    expect(inboxText()).toContain("Second sender");
+    expect(inboxText()).not.toContain("First sender");
+    expect(badge).toBe("2");
+    const cached = (await getCachedAccountInboxForUser(A))!.data;
+    expect(cached.counts).toEqual({ unseen: 2, actionable: 150, pendingFriendRequests: 150, activeRoomInvites: 0 });
+    expect(cached.nextCursor).toBe("next-page");
+    await publish(concurrent);
+    expect(inboxText()).not.toContain("First sender");
+    expect(badge).toBe("2");
+    expect(lists).toBe(2);
+    expect(seenCalls).toBe(1);
+    expect(store.inboxWrites).toBe(3);
+  });
+
   it("accepts equal-time additions and removals through one canonical reread per completed GET", async () => {
     const pending = deferred<AccountInboxResponse>();
     let requests = 0;

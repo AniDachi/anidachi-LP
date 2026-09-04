@@ -150,8 +150,15 @@ export async function publishAccountInboxForUser(
   const equalConflict = Date.parse(canonical.meta.serverTime) === Date.parse(inbox.meta.serverTime) &&
     inboxStructure(canonical) !== inboxStructure(mergeAccountInboxResponses(canonical, inbox, true));
   const visible = new Set(canonical.items.map(accountInboxItemInstanceKey));
-  const seenOutsidePage = options.seenItems?.some((item) => !visible.has(accountInboxItemInstanceKey(item)));
-  if (!equalConflict && !seenOutsidePage) return canonical;
+  const acknowledged = new Set(inbox.items.filter((item) => item.seenAt !== null)
+    .map(accountInboxItemInstanceKey));
+  // Either page can omit the requested instance: a successful seen response
+  // may list after the item left, while the newer cache still has it unread.
+  const unresolvedSeen = options.seenItems?.some((item) => {
+    const key = accountInboxItemInstanceKey(item);
+    return !visible.has(key) || !acknowledged.has(key);
+  });
+  if (!equalConflict && !unresolvedSeen) return canonical;
   // Never triggered by a subscription; one completed HTTP operation gets at
   // most one causal reread. No network work is held under the storage lock.
   const reread = await options.reread();
