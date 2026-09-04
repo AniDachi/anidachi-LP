@@ -20,6 +20,127 @@ interface CrunchyrollProgressInput {
 	watchedWithCount: number;
 }
 
+export interface CrunchyrollCurrentObjectIdentity {
+	providerSeriesId: string;
+	providerSeasonIdentifier: string;
+	providerEpisodeIdentifier: string;
+	providerContentId: string;
+	audioLocale: string | null;
+	titleKey: `crunchyroll:series:${string}`;
+	seasonKey: `crunchyroll:season:${string}`;
+	episodeKey: `crunchyroll:episode:${string}`;
+}
+
+/**
+ * Resolves one recorded watch GUID without claiming a complete series catalog.
+ * Network traversal and retry ownership remain in the Crunchyroll MAIN-world
+ * bridge; this helper consumes only its sanitized, already-fetched evidence.
+ */
+export function resolveCrunchyrollCurrentObjectIdentity(input: {
+	watchId: string;
+	objectResponse: unknown;
+	seasonsResponse: unknown;
+	episodesResponse: unknown;
+}): CrunchyrollCurrentObjectIdentity | null {
+	const watchId = readIdentityString(input.watchId);
+	if (!watchId) return null;
+
+	const objects = responseData(input.objectResponse).filter(
+		(record) => readIdentityString(record.id) === watchId,
+	);
+	if (objects.length !== 1) return null;
+
+	const metadata = identityRecord(objects[0].episode_metadata);
+	const providerSeriesId = readIdentityString(metadata?.series_id);
+	const objectVariants = identityRecords(metadata?.versions).filter(
+		(variant) => readIdentityString(variant.guid) === watchId,
+	);
+	if (!providerSeriesId || objectVariants.length !== 1) return null;
+
+	const seasonGuid = readIdentityString(objectVariants[0].season_guid);
+	const objectSeasonGuid = readIdentityString(metadata?.season_id);
+	if (!seasonGuid || (objectSeasonGuid && objectSeasonGuid !== seasonGuid)) {
+		return null;
+	}
+
+	const seasons = responseData(input.seasonsResponse).filter((season) =>
+		recordOrVariantHasGuid(season, seasonGuid),
+	);
+	if (seasons.length !== 1) return null;
+	const providerSeasonIdentifier = readIdentityString(seasons[0].identifier);
+	if (!providerSeasonIdentifier) return null;
+
+	const episodes = responseData(input.episodesResponse).filter((episode) =>
+		recordOrVariantHasGuid(episode, watchId),
+	);
+	if (episodes.length !== 1) return null;
+	const episodeVariant = matchingVariant(episodes[0], watchId);
+	if (
+		episodeVariant &&
+		readIdentityString(episodeVariant.season_guid) !== seasonGuid
+	) {
+		return null;
+	}
+	const providerEpisodeIdentifier = readIdentityString(episodes[0].identifier);
+	if (!providerEpisodeIdentifier) return null;
+
+	return {
+		providerSeriesId,
+		providerSeasonIdentifier,
+		providerEpisodeIdentifier,
+		providerContentId: watchId,
+		audioLocale: readIdentityString(objectVariants[0].audio_locale),
+		titleKey: `crunchyroll:series:${providerSeriesId}`,
+		seasonKey: `crunchyroll:season:${providerSeasonIdentifier}`,
+		episodeKey: `crunchyroll:episode:${providerEpisodeIdentifier}`,
+	};
+}
+
+function responseData(value: unknown): Array<Record<string, unknown>> {
+	const response = identityRecord(value);
+	return identityRecords(response?.data);
+}
+
+function identityRecord(value: unknown): Record<string, unknown> | null {
+	return value && typeof value === "object" && !Array.isArray(value)
+		? (value as Record<string, unknown>)
+		: null;
+}
+
+function identityRecords(value: unknown): Array<Record<string, unknown>> {
+	return Array.isArray(value)
+		? value.flatMap((item) => {
+				const record = identityRecord(item);
+				return record ? [record] : [];
+			})
+		: [];
+}
+
+function readIdentityString(value: unknown): string | null {
+	return typeof value === "string" && value.trim() === value && value.length > 0
+		? value
+		: null;
+}
+
+function matchingVariant(
+	record: Record<string, unknown>,
+	guid: string,
+): Record<string, unknown> | null {
+	const variants = identityRecords(record.versions).filter(
+		(variant) => readIdentityString(variant.guid) === guid,
+	);
+	return variants.length === 1 ? variants[0] : null;
+}
+
+function recordOrVariantHasGuid(
+	record: Record<string, unknown>,
+	guid: string,
+): boolean {
+	return (
+		readIdentityString(record.id) === guid || matchingVariant(record, guid) !== null
+	);
+}
+
 export function getCrunchyrollProgressEntry(
 	input: CrunchyrollProgressInput,
 ): ProviderPlaybackMetadata | null {

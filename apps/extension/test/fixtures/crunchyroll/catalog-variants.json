@@ -1,0 +1,83 @@
+{
+  "evidence": {
+    "capturedAt": "2026-09-05",
+    "source": "sanitized public client-context responses",
+    "region": "VN",
+    "note": "The object endpoint omits logical identifiers; exact identity needs the matching series season row and one matching season episode response."
+  },
+  "objectResponses": {
+    "G8WUNEWJE": {
+      "total": 1,
+      "data": [{
+        "id": "G8WUNEWJE",
+        "type": "episode",
+        "title": "Roaring Muscles",
+        "episode_metadata": {
+          "series_id": "G6NQ5DWZ6",
+          "season_id": "G6MGC35ZE",
+          "season_identifier": null,
+          "audio_locale": "en-US",
+          "versions": [
+            { "audio_locale": "ja-JP", "guid": "GY2PDV78Y", "original": true, "season_guid": "GRK587V16" },
+            { "audio_locale": "en-US", "guid": "G8WUNEWJE", "original": false, "season_guid": "G6MGC35ZE" }
+          ]
+        }
+      }]
+    },
+    "GY2PDV78Y": {
+      "total": 1,
+      "data": [{
+        "id": "GY2PDV78Y",
+        "type": "episode",
+        "title": "Roaring Muscles",
+        "episode_metadata": {
+          "series_id": "G6NQ5DWZ6",
+          "season_id": "GRK587V16",
+          "season_identifier": null,
+          "audio_locale": "ja-JP",
+          "versions": [
+            { "audio_locale": "ja-JP", "guid": "GY2PDV78Y", "original": true, "season_guid": "GRK587V16" },
+            { "audio_locale": "en-US", "guid": "G8WUNEWJE", "original": false, "season_guid": "G6MGC35ZE" }
+          ]
+        }
+      }]
+    }
+  },
+  "seasonsResponse": {
+    "total": 9,
+    "meta": { "versions_considered": true },
+    "data": [{
+      "id": "G6MGC35ZE",
+      "identifier": "G6NQ5DWZ6|S00003205",
+      "title": "Season 1",
+      "season_number": 1,
+      "versions": [
+        { "audio_locale": "ja-JP", "guid": "GRK587V16", "original": true },
+        { "audio_locale": "en-US", "guid": "G6MGC35ZE", "original": false }
+      ]
+    }]
+  },
+  "episodesResponse": {
+    "total": 13,
+    "meta": { "versions_considered": true },
+    "data": [{
+      "id": "GY2PDV78Y",
+      "identifier": "G6NQ5DWZ6|S00003205|E3",
+      "title": "Roaring Muscles",
+      "episode": "3",
+      "episode_number": 3,
+      "sequence_number": 3,
+      "versions": [
+        { "audio_locale": "ja-JP", "guid": "GY2PDV78Y", "original": true, "season_guid": "GRK587V16" },
+        { "audio_locale": "en-US", "guid": "G8WUNEWJE", "original": false, "season_guid": "G6MGC35ZE" }
+      ]
+    }]
+  },
+  "ambiguousEpisodesResponse": {
+    "total": 2,
+    "data": [
+      { "id": "GY2PDV78Y", "identifier": "G6NQ5DWZ6|S00003205|E3", "versions": [{ "guid": "G8WUNEWJE", "season_guid": "G6MGC35ZE" }] },
+      { "id": "AMBIGUOUS", "identifier": "G6NQ5DWZ6|S00003205|E999", "versions": [{ "guid": "G8WUNEWJE", "season_guid": "G6MGC35ZE" }] }
+    ]
+  }
+}

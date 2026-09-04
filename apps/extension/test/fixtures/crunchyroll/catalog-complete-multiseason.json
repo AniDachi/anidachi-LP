@@ -1,0 +1,18 @@
+{
+  "fixtureKind": "sanitized-derived-contract-case",
+  "derivedFrom": "2026-09-05 public client-context responses; identifiers and field names are observed, while the bounded two-season assembly is a parser test case and not a completeness claim about the live catalog",
+  "region": "VN",
+  "seriesId": "GY8VM8MWY",
+  "seasonsResponse": {
+    "total": 2,
+    "meta": { "versions_considered": true },
+    "data": [
+      { "id": "GYZXCM252", "identifier": "GY8VM8MWY|S00111803", "title": "HAIKYU!!", "season_number": 1, "versions": [{ "audio_locale": "ja-JP", "guid": "GRZX4P4XY", "original": true }, { "audio_locale": "en-US", "guid": "GYZXCM252", "original": false }] },
+      { "id": "GYDQCGQ03", "identifier": "GY8VM8MWY|S00111804", "title": "HAIKYU!! 2nd Season", "season_number": 2, "versions": [{ "audio_locale": "ja-JP", "guid": "GR3VW8ME6", "original": true }, { "audio_locale": "en-US", "guid": "GYDQCGQ03", "original": false }] }
+    ]
+  },
+  "episodeResponses": {
+    "GYZXCM252": { "total": 1, "meta": { "versions_considered": true }, "data": [{ "id": "GOLDSEASON1", "identifier": "GY8VM8MWY|S00111803|E1", "episode": "1", "episode_number": 1, "sequence_number": 1, "versions": [{ "audio_locale": "ja-JP", "guid": "GOLDSEASON1", "original": true, "season_guid": "GRZX4P4XY" }] }] },
+    "GYDQCGQ03": { "total": 1, "meta": { "versions_considered": true }, "data": [{ "id": "GRP8P9XGR", "identifier": "GY8VM8MWY|S00111804|E1", "episode": "1", "episode_number": 1, "sequence_number": 1, "versions": [{ "audio_locale": "ja-JP", "guid": "GRP8P9XGR", "original": true, "season_guid": "GR3VW8ME6" }, { "audio_locale": "en-US", "guid": "GWDU78GG3", "original": false, "season_guid": "GYDQCGQ03" }] }] }
+  }
+}

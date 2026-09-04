@@ -1,5 +1,75 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { getCrunchyrollProgressEntry, getCrunchyrollHistoryObservation } from "../src/source-adapters/crunchyroll/progress";
+import variantsFixture from "./fixtures/crunchyroll/catalog-variants.json";
+import {
+  getCrunchyrollProgressEntry,
+  getCrunchyrollHistoryObservation,
+  resolveCrunchyrollCurrentObjectIdentity,
+} from "../src/source-adapters/crunchyroll/progress";
+
+describe("Crunchyroll current-object canonical identity", () => {
+  it.each([
+    ["English dub", "G8WUNEWJE", "en-US"],
+    ["Japanese original", "GY2PDV78Y", "ja-JP"],
+  ])("resolves the exact %s watch GUID to one logical episode", (_name, watchId, audioLocale) => {
+    expect(resolveCrunchyrollCurrentObjectIdentity({
+      watchId,
+      objectResponse: variantsFixture.objectResponses[watchId as keyof typeof variantsFixture.objectResponses],
+      seasonsResponse: variantsFixture.seasonsResponse,
+      episodesResponse: variantsFixture.episodesResponse,
+    })).toEqual({
+      providerSeriesId: "G6NQ5DWZ6",
+      providerSeasonIdentifier: "G6NQ5DWZ6|S00003205",
+      providerEpisodeIdentifier: "G6NQ5DWZ6|S00003205|E3",
+      providerContentId: watchId,
+      audioLocale,
+      titleKey: "crunchyroll:series:G6NQ5DWZ6",
+      seasonKey: "crunchyroll:season:G6NQ5DWZ6|S00003205",
+      episodeKey: "crunchyroll:episode:G6NQ5DWZ6|S00003205|E3",
+    });
+  });
+
+  it("keeps provider seasons distinct even when their presentation matches", () => {
+    const shared = {
+      watchId: "LEGACY-WATCH-1",
+      objectResponse: {
+        total: 1,
+        data: [{ id: "LEGACY-WATCH-1", type: "episode", episode_metadata: {
+          series_id: "LEGACY-SERIES", season_id: "LEGACY-SEASON-GUID-1", audio_locale: "en-US",
+          versions: [{ guid: "LEGACY-WATCH-1", season_guid: "LEGACY-SEASON-GUID-1", audio_locale: "en-US" }],
+        } }],
+      },
+      episodesResponse: {
+        total: 1,
+        data: [{ id: "LEGACY-WATCH-1", identifier: "LEGACY-SERIES|LEGACY-EPISODE-1", versions: [{ guid: "LEGACY-WATCH-1", season_guid: "LEGACY-SEASON-GUID-1" }] }],
+      },
+    };
+    const first = resolveCrunchyrollCurrentObjectIdentity({
+      ...shared,
+      seasonsResponse: { total: 2, data: [
+        { id: "LEGACY-SEASON-GUID-1", identifier: "LEGACY-SERIES|LEGACY-SEASON-1", title: "Season 1 (English Dub)", season_number: 1 },
+        { id: "LEGACY-SEASON-GUID-2", identifier: "LEGACY-SERIES|LEGACY-SEASON-2", title: "Season 1 (English Dub)", season_number: 1 },
+      ] },
+    });
+
+    expect(first?.seasonKey).toBe("crunchyroll:season:LEGACY-SERIES|LEGACY-SEASON-1");
+    expect(first?.seasonKey).not.toBe("crunchyroll:season:LEGACY-SERIES|LEGACY-SEASON-2");
+  });
+
+  it.each([
+    ["missing season list", { seasonsResponse: null }],
+    ["missing episode list", { episodesResponse: null }],
+    ["wrong recorded watch GUID", { watchId: "NOT-THE-RECORDED-GUID" }],
+    ["ambiguous episode alias", { episodesResponse: variantsFixture.ambiguousEpisodesResponse }],
+  ])("leaves identity pending for %s", (_name, override) => {
+    expect(resolveCrunchyrollCurrentObjectIdentity({
+      watchId: "G8WUNEWJE",
+      objectResponse: variantsFixture.objectResponses.G8WUNEWJE,
+      seasonsResponse: variantsFixture.seasonsResponse,
+      episodesResponse: variantsFixture.episodesResponse,
+      ...override,
+    })).toBeNull();
+  });
+});
 
 describe("Crunchyroll progress extraction", () => {
   afterEach(() => {

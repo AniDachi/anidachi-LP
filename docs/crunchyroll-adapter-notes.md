@@ -2,6 +2,72 @@
 
 Date: 2026-05-25
 
+## Catalog Identity Evidence
+
+Date: 2026-09-05
+
+Task 1 repeated a secret-free live preflight through Crunchyroll's public web
+client context. This is empirical adapter evidence, not a public or supported
+Crunchyroll API contract. The run used no account session, browser profile,
+cookie, `.env` value, or user identifier. Fixtures retain only catalog fields;
+authorization values and the raw token response are not stored.
+
+The current web client returned these paths:
+
+```txt
+/content/v2/cms/objects/{watchId}
+/content/v2/cms/series/{seriesId}/seasons
+/content/v2/cms/seasons/{seasonId}/episodes
+```
+
+The object response is not canonical identity on its own. For tested English
+dub and Japanese original watch GUIDs it returned `series_id`, the
+variant-specific `season_id`, `audio_locale`, and `versions[]`, but both the
+top-level `identifier` and `episode_metadata.season_identifier` were null.
+Canonical `season.identifier` appeared in the series season list, and canonical
+logical `episode.identifier` appeared in the matching season episode list.
+
+Current-object resolution therefore uses the exact recorded `/watch/{guid}`:
+
+1. Require exactly one object whose `id` is that GUID and exactly one matching
+   `versions[].guid`; take its `series_id`, `season_guid`, and audio locale.
+2. Resolve that raw season GUID to exactly one season row (direct `id` or one
+   `versions[].guid`) with a nonempty `identifier`.
+3. Fetch only that matching season's episode list and resolve the recorded watch
+   GUID to exactly one row (direct `id` or one `versions[].guid`) with a nonempty
+   `identifier` and consistent `season_guid`.
+4. Derive keys exactly as `crunchyroll:series:<series id>`,
+   `crunchyroll:season:<season identifier>`, and
+   `crunchyroll:episode:<episode identifier>`.
+
+This resolves ordinary progress independently of a complete **series** catalog,
+but not independently of provider metadata. Missing lists, null identifiers,
+wrong GUIDs, duplicate aliases, or inconsistent season mappings remain identity
+pending. Titles, slugs, season/episode numbers, locale, and audio are never
+substitute identity. The pure helper is intentionally not wired into runtime
+capture in Task 1; exact progress remains disabled until the coordinated schema
+and bridge work.
+
+The same live pass observed:
+
+- region `VN` in provider response context;
+- stable season identifiers and variant GUIDs while English/French labels
+  differed;
+- `meta.versions_considered: true` on season and episode lists;
+- `total: 25` and 25 raw rows for the sampled season;
+- `start=1&n=1` and `offset=1&limit=1` both returning the same full 25 rows,
+  first ID, and last ID, so these parameters are ignored and prove no pagination;
+- the field-specific year-9998 availability sentinel on sampled episodes.
+
+The fixtures distinguish sanitized live evidence from deliberately derived
+parser cases. Fractional, zero, and null numbering plus future, expired, clip,
+failed-call, raw-count-mismatch, and visually identical legacy-season cases are
+included as labeled contract cases; this preflight did not prove each of those
+cases live. A provider fallback locale was also not proven. AniDachi must persist
+returned labels without machine translation, and any unknown availability,
+failed traversal, count mismatch, or missing completeness proof remains partial.
+No exact denominator is enabled by this task.
+
 ## Watch History v2 Release State
 
 Date: 2026-08-16
