@@ -13,7 +13,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   getCachedAccountInboxForUser,
-  setCachedAccountInboxForUser,
+  publishAccountInboxForUser,
 } from "../src/account-inbox-cache";
 import { listAccountInbox, markAccountInboxItemsSeen } from "../src/account-inbox-client";
 import type { AccountOwnedState } from "../src/account-sync";
@@ -67,7 +67,8 @@ vi.mock("../src/account-inbox-client", async (importOriginal) => ({
 vi.mock("../src/account-inbox-cache", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../src/account-inbox-cache")>()),
   getCachedAccountInboxForUser: vi.fn(),
-  setCachedAccountInboxForUser: vi.fn(),
+  publishAccountInboxForUser: vi.fn(),
+  subscribeToAccountInboxForUser: vi.fn(() => () => {}),
 }));
 
 vi.mock("../src/social-client", async (importOriginal) => ({
@@ -586,7 +587,7 @@ describe("PopupApp social mutations", () => {
     vi.mocked(requestSilentWebsiteSignIn).mockResolvedValue(null);
     vi.mocked(requestWebsiteSignIn).mockResolvedValue(TOKENS);
     vi.mocked(getCachedAccountInboxForUser).mockResolvedValue(null);
-    vi.mocked(setCachedAccountInboxForUser).mockResolvedValue(true);
+    vi.mocked(publishAccountInboxForUser).mockImplementation(async (_userId, inbox) => inbox);
     vi.mocked(listAccountInbox).mockResolvedValue(accountInbox([]));
     vi.mocked(markAccountInboxItemsSeen).mockImplementation(async (_accessToken, _items) =>
       accountInbox([], {
@@ -821,13 +822,13 @@ describe("PopupApp social mutations", () => {
         { kind: "room-invite", id: INBOX_INVITE_ID },
       ]),
     );
-    await waitFor(() => expect(setCachedAccountInboxForUser).toHaveBeenCalledWith(VIEWER_ID, seen));
+    await waitFor(() => expect(publishAccountInboxForUser).toHaveBeenCalledWith(VIEWER_ID, seen, expect.any(Object)));
     expect(markAccountInboxItemsSeen).toHaveBeenCalledTimes(1);
     const inboxTab = await findButton(view.container, "Inbox");
     await waitFor(() => expect(inboxTab.querySelector(".popup-tab-count")).toBeNull());
   });
 
-  it("ignores a late mark-seen response after a newer inbox refresh", async () => {
+  it("uses the canonical publication result for a late mark-seen response after a newer inbox refresh", async () => {
     const unseen = accountInbox(
       [inboxFriendRequest(INCOMING_FRIENDSHIP_ID, INCOMING_USER_ID, "Incoming", null)],
       {
@@ -852,6 +853,7 @@ describe("PopupApp social mutations", () => {
       activeRoomInvites: 0,
       pendingFriendRequests: 0,
     });
+    refreshed.meta.serverTime = "2026-08-09T12:00:01.000Z";
     let resolveSeen!: (value: AccountInboxResponse) => void;
     vi.mocked(listSocialDirectory).mockResolvedValue(directory());
     vi.mocked(listAccountInbox).mockResolvedValueOnce(unseen).mockResolvedValueOnce(refreshed);
@@ -870,15 +872,16 @@ describe("PopupApp social mutations", () => {
     await waitFor(() => expect(listAccountInbox).toHaveBeenCalledTimes(2));
     await waitFor(() => expect(view.container.textContent).toContain("Refreshed person"));
     await waitFor(() =>
-      expect(setCachedAccountInboxForUser).toHaveBeenCalledWith(VIEWER_ID, refreshed),
+      expect(publishAccountInboxForUser).toHaveBeenCalledWith(VIEWER_ID, refreshed, expect.any(Object)),
     );
-    vi.mocked(setCachedAccountInboxForUser).mockClear();
+    vi.mocked(publishAccountInboxForUser).mockClear();
+    vi.mocked(publishAccountInboxForUser).mockResolvedValue(refreshed);
 
     resolveSeen(staleSeen);
     await flushPromises();
 
     expect(view.container.textContent).toContain("Refreshed person");
-    expect(setCachedAccountInboxForUser).not.toHaveBeenCalledWith(VIEWER_ID, staleSeen);
+    expect(publishAccountInboxForUser).toHaveBeenCalledWith(VIEWER_ID, staleSeen, expect.any(Object));
   });
 });
 

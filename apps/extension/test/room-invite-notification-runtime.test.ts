@@ -90,6 +90,28 @@ beforeEach(async () => {
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
 
 describe("invitation notification runtime", () => {
+  it("uses the canonical cache result so a late unread GET cannot restore the badge or create an alert", async () => {
+    const { setCachedAccountInboxForUser } = await import("../src/account-inbox-cache");
+    const seen = inbox();
+    seen.meta.serverTime = "2026-09-04T00:00:03.000Z";
+    seen.items[0]!.seenAt = "2026-09-04T00:00:02.000Z";
+    seen.counts.unseen = 0;
+    await setCachedAccountInboxForUser(A, seen);
+    await runtime.reconcileRoomInviteNotifications({ notify: true });
+    expect(create).not.toHaveBeenCalled();
+    expect(badge).toHaveBeenLastCalledWith({ text: "" });
+    expect(requests("/api/account/inbox")).toHaveLength(1);
+  });
+
+  it("resolves equal-time inbox changes with only one canonical reread before notifying", async () => {
+    const { setCachedAccountInboxForUser } = await import("../src/account-inbox-cache");
+    await setCachedAccountInboxForUser(A, inbox(A, false));
+    await runtime.reconcileRoomInviteNotifications({ notify: true });
+    expect(create).toHaveBeenCalledOnce();
+    expect(badge).toHaveBeenLastCalledWith({ text: "1" });
+    expect(requests("/api/account/inbox")).toHaveLength(2);
+  });
+
   it("persists ownership and the first recovery alarm before starting inbox HTTP", async () => {
     const original = http.getMockImplementation()!;
     http.mockImplementation(async (url) => {

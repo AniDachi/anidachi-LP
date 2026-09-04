@@ -6,7 +6,7 @@ import {
 } from "@anidachi/protocol";
 import { storage } from "wxt/utils/storage";
 import { AccountInboxUnauthorizedError, listAccountInboxFromApi } from "./account-inbox-client";
-import { setCachedAccountInboxForUser } from "./account-inbox-cache";
+import { publishAccountInboxForUser } from "./account-inbox-cache";
 import { getCurrentExtensionSession, refreshExtensionSession } from "./auth-client";
 import { getStoredAuthTokens, type ExtensionAuthTokens } from "./auth-tokens";
 import { WEB_HTTP_BASE, WXT_VAPID_PUBLIC_KEY } from "./constants";
@@ -415,7 +415,12 @@ async function reconcileInboxNotificationNow(
     throw new Error("Inbox response belongs to another account");
   }
   if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return false;
-  if (!(await setCachedAccountInboxForUser(tokens.user.id, inbox))) return false;
+  const canonical = await publishAccountInboxForUser(tokens.user.id, inbox, {
+    isCurrent: () => isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch),
+    reread: () => listAccountInboxFromApi(tokens.accessToken),
+  });
+  if (!canonical) return false;
+  inbox = canonical;
   if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return false;
   await setInboxBadge(inbox.counts.unseen);
   if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return false;
