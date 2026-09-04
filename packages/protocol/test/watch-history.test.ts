@@ -2,13 +2,17 @@ import { describe, expect, it } from "vitest";
 import {
   MAX_ROOM_HISTORY_ATTESTATION_CHARS,
   WATCH_HISTORY_SCHEMA_VERSION,
+  WatchCatalogBeginAckSchema,
+  WatchCatalogBeginRequestSchema,
+  WatchCatalogCommitAckSchema,
+  WatchCatalogCommitRequestSchema,
   WatchCatalogSnapshotInputSchema,
   WatchHistoryDeletionAckSchema,
   WatchHistoryDeletionRequestSchema,
   WatchHistoryPreferencesSchema,
   WatchHistoryPreferencesUpdateSchema,
-  WatchHistoryRoomRecreationResponseSchema,
   WatchHistoryResponseSchema,
+  WatchHistoryRoomRecreationResponseSchema,
   WatchHistoryTitleEpisodesResponseSchema,
   WatchLibraryResponseSchema,
   WatchProgressAckSchema,
@@ -56,15 +60,22 @@ function catalogEpisode(input: {
   title?: string;
 }) {
   return {
-    episodeKey: input.episodeKey,
-    providerEpisodeId: `provider-${input.episodeKey}`,
-    variantKey: null,
+    episodeKey: `crunchyroll:episode:${input.episodeKey}`,
+    providerEpisodeIdentifier: input.episodeKey,
     title: input.title ?? `Episode ${input.episodeNumber}`,
     episodeNumber: input.episodeNumber,
     order: input.order,
-    sourceUrl: `https://www.crunchyroll.com/watch/${input.episodeKey}/demo`,
     releasedAt: EARLIER,
     available: true,
+    watchVariants: [
+      {
+        providerContentId: input.episodeKey,
+        audioLocale: "ja-JP",
+        original: true,
+        order: 0,
+        sourceUrl: `https://www.crunchyroll.com/watch/${input.episodeKey}`,
+      },
+    ],
   };
 }
 
@@ -72,41 +83,49 @@ function completeCatalog() {
   return {
     schemaVersion: WATCH_HISTORY_SCHEMA_VERSION,
     provider: "crunchyroll" as const,
-    titleKey: "series-one",
+    titleKey: "crunchyroll:series:GYQ4MW246",
     providerSeriesId: "GYQ4MW246",
-    itemKind: "series" as const,
     title: "Series One",
-    sourceUrl: "https://www.crunchyroll.com/series/GYQ4MW246/series-one",
-    artworkUrl: "https://static.crunchyroll.com/poster.jpg",
     completeness: "complete" as const,
-    localeContext: {
-      locale: "en-US",
+    context: {
+      region: "VN",
+      requestedLocale: "en-US",
       audioLocale: "ja-JP",
       subtitleLocales: ["en-US"],
+      observedAt: NOW,
     },
-    fetchedAt: NOW,
-    lastAttemptAt: NOW,
-    contentHash: "sha256:complete-catalog",
     seasons: [
       {
-        seasonKey: "season-one",
-        providerSeasonId: "season-provider-one",
+        seasonKey: "crunchyroll:season:season-provider-one",
+        providerSeasonIdentifier: "season-provider-one",
         title: "Season 1",
         seasonNumber: 1,
         order: 0,
         episodes: [
-          catalogEpisode({ episodeKey: "episode-one", episodeNumber: 1, order: 0 }),
-          catalogEpisode({ episodeKey: "episode-two", episodeNumber: 2, order: 1 }),
+          catalogEpisode({
+            episodeKey: "episode-one",
+            episodeNumber: 1,
+            order: 0,
+          }),
+          catalogEpisode({
+            episodeKey: "episode-two",
+            episodeNumber: 2,
+            order: 1,
+          }),
         ],
       },
       {
-        seasonKey: "season-two",
-        providerSeasonId: "season-provider-two",
+        seasonKey: "crunchyroll:season:season-provider-two",
+        providerSeasonIdentifier: "season-provider-two",
         title: "Season 2",
         seasonNumber: 2,
         order: 1,
         episodes: [
-          catalogEpisode({ episodeKey: "episode-three", episodeNumber: 1, order: 0 }),
+          catalogEpisode({
+            episodeKey: "episode-three",
+            episodeNumber: 1,
+            order: 0,
+          }),
         ],
       },
     ],
@@ -120,17 +139,24 @@ function progressEvent() {
     clientSessionKey: "tab-7:source-2",
     accountGeneration: 4,
     provider: "crunchyroll" as const,
-    titleKey: "series-one",
+    titleKey: "crunchyroll:series:GYQ4MW246",
     itemKind: "series" as const,
     title: "Series One",
     artworkUrl: "https://static.crunchyroll.com/poster.jpg",
-    episodeKey: "episode-one",
+    episodeKey: "crunchyroll:episode:EPISODEONE",
     episodeTitle: "Episode 1",
-    seasonKey: "season-one",
+    seasonKey: "crunchyroll:season:SEASONONE",
     seasonTitle: "Season 1",
     seasonNumber: 1,
     episodeNumber: 1,
-    sourceUrl: "https://www.crunchyroll.com/watch/episode-one/demo",
+    sourceUrl: "https://www.crunchyroll.com/watch/CONTENTONE",
+    crunchyrollIdentity: {
+      providerSeriesId: "GYQ4MW246",
+      providerSeasonIdentifier: "SEASONONE",
+      providerEpisodeIdentifier: "EPISODEONE",
+      providerContentId: "CONTENTONE",
+      audioLocale: "ja-JP",
+    },
     currentTime: 600,
     duration: 1_200,
     progress: 0.5,
@@ -185,7 +211,7 @@ function v1Fixture() {
   };
 }
 
-describe("watch history v2 catalog contracts", () => {
+describe("watch history v3 catalog contracts", () => {
   it("accepts a complete two-season catalog snapshot", () => {
     expect(WatchCatalogSnapshotInputSchema.parse(completeCatalog())).toEqual(
       completeCatalog(),
@@ -202,7 +228,6 @@ describe("watch history v2 catalog contracts", () => {
     const partial = {
       ...catalog,
       completeness: "partial" as const,
-      contentHash: "sha256:partial-catalog",
       seasons: [
         {
           ...firstSeason,
@@ -223,7 +248,7 @@ describe("watch history v2 catalog contracts", () => {
       order: index,
       episodes: [],
     }));
-    const tooManyEpisodes = Array.from({ length: 501 }, (_, index) =>
+    const tooManyEpisodes = Array.from({ length: 2_001 }, (_, index) =>
       catalogEpisode({
         episodeKey: `episode-${index}`,
         episodeNumber: index + 1,
@@ -232,7 +257,10 @@ describe("watch history v2 catalog contracts", () => {
     );
 
     expect(() =>
-      WatchCatalogSnapshotInputSchema.parse({ ...catalog, seasons: tooManySeasons }),
+      WatchCatalogSnapshotInputSchema.parse({
+        ...catalog,
+        seasons: tooManySeasons,
+      }),
     ).toThrow();
     expect(() =>
       WatchCatalogSnapshotInputSchema.parse({
@@ -241,38 +269,63 @@ describe("watch history v2 catalog contracts", () => {
       }),
     ).toThrow();
     expect(() =>
-      WatchCatalogSnapshotInputSchema.parse({ ...catalog, title: "x".repeat(301) }),
+      WatchCatalogSnapshotInputSchema.parse({
+        ...catalog,
+        title: "x".repeat(301),
+      }),
+    ).toThrow();
+    const episode = catalog.seasons[0]?.episodes[0];
+    expect(() =>
+      WatchCatalogSnapshotInputSchema.parse({
+        ...catalog,
+        seasons: [
+          {
+            ...catalog.seasons[0],
+            episodes: [
+              {
+                ...episode,
+                watchVariants: [
+                  {
+                    ...episode?.watchVariants[0],
+                    sourceUrl: "file:///tmp/demo",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      }),
     ).toThrow();
     expect(() =>
-      WatchCatalogSnapshotInputSchema.parse({ ...catalog, sourceUrl: "file:///tmp/demo" }),
-    ).toThrow();
-    expect(() =>
-      WatchCatalogSnapshotInputSchema.parse({ ...catalog, privatePayload: "no" }),
+      WatchCatalogSnapshotInputSchema.parse({
+        ...catalog,
+        privatePayload: "no",
+      }),
     ).toThrow();
   });
 
-  it("rejects payloads above 512 KiB before they reach storage", () => {
+  it("rejects payloads above one MiB before they reach storage", () => {
     const catalog = completeCatalog();
     const season = catalog.seasons[0];
     if (!season) {
       throw new Error("Complete catalog fixture must include a season");
     }
-    const paddedEpisodes = Array.from({ length: 300 }, (_, index) => ({
+    const paddedEpisodes = Array.from({ length: 2_000 }, (_, index) => ({
       ...catalogEpisode({
         episodeKey: `episode-${index}`,
         episodeNumber: index + 1,
         order: index,
       }),
-      sourceUrl: `https://www.crunchyroll.com/watch/episode-${index}/${"a".repeat(1_700)}`,
+      title: "a".repeat(300),
     }));
     const oversized = {
       ...catalog,
       seasons: [{ ...season, episodes: paddedEpisodes }],
     };
 
-    expect(new TextEncoder().encode(JSON.stringify(oversized)).byteLength).toBeGreaterThan(
-      512 * 1_024,
-    );
+    expect(
+      new TextEncoder().encode(JSON.stringify(oversized)).byteLength,
+    ).toBeGreaterThan(1_024 * 1_024);
     expect(() => WatchCatalogSnapshotInputSchema.parse(oversized)).toThrow();
   });
 
@@ -297,7 +350,10 @@ describe("watch history v2 catalog contracts", () => {
     expect(() =>
       WatchCatalogSnapshotInputSchema.parse({
         ...catalog,
-        seasons: [firstSeason, { ...secondSeason, seasonKey: firstSeason.seasonKey }],
+        seasons: [
+          firstSeason,
+          { ...secondSeason, seasonKey: firstSeason.seasonKey },
+        ],
       }),
     ).toThrow();
     expect(() =>
@@ -310,11 +366,157 @@ describe("watch history v2 catalog contracts", () => {
       }),
     ).toThrow();
   });
+
+  it("requires exact canonical keys, canonical variant URLs, and consistent aliases", () => {
+    const catalog = completeCatalog();
+    const season = catalog.seasons[0]!;
+    const episode = season.episodes[0]!;
+    expect(() =>
+      WatchCatalogSnapshotInputSchema.parse({
+        ...catalog,
+        titleKey: "GYQ4MW246",
+      }),
+    ).toThrow();
+    expect(() =>
+      WatchCatalogSnapshotInputSchema.parse({
+        ...catalog,
+        seasons: [
+          {
+            ...season,
+            seasonKey: "crunchyroll:season:wrong",
+            episodes: season.episodes,
+          },
+        ],
+      }),
+    ).toThrow();
+    expect(() =>
+      WatchCatalogSnapshotInputSchema.parse({
+        ...catalog,
+        seasons: [
+          {
+            ...season,
+            episodes: [
+              {
+                ...episode,
+                watchVariants: [
+                  {
+                    ...episode.watchVariants[0],
+                    sourceUrl: `https://www.crunchyroll.com/watch/${episode.watchVariants[0]!.providerContentId}/slug`,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      }),
+    ).toThrow();
+    expect(() =>
+      WatchCatalogSnapshotInputSchema.parse({
+        ...catalog,
+        seasons: [
+          {
+            ...season,
+            episodes: [
+              episode,
+              {
+                ...season.episodes[1]!,
+                watchVariants: [{ ...episode.watchVariants[0] }],
+              },
+            ],
+          },
+        ],
+      }),
+    ).toThrow();
+  });
+
+  it("accepts generation- and revision-fenced begin/commit DTOs and rejects client hashes", () => {
+    const begin = {
+      schemaVersion: WATCH_HISTORY_SCHEMA_VERSION,
+      accountGeneration: 4,
+      provider: "crunchyroll" as const,
+      titleKey: "crunchyroll:series:GYQ4MW246",
+      providerSeriesId: "GYQ4MW246",
+      context: completeCatalog().context,
+    };
+    expect(WatchCatalogBeginRequestSchema.parse(begin)).toEqual(begin);
+    const beginAck = {
+      meta: accountMeta(),
+      schemaVersion: WATCH_HISTORY_SCHEMA_VERSION,
+      provider: "crunchyroll" as const,
+      titleKey: begin.titleKey,
+      accountGeneration: 4,
+      revision: 19,
+      refreshRequired: true,
+      availabilityChanged: false,
+      effectiveCatalogState: "partial" as const,
+      projectionRevision: null,
+      acceptedHash: null,
+      acceptedAt: null,
+    };
+    expect(WatchCatalogBeginAckSchema.parse(beginAck)).toEqual(beginAck);
+    const commit = { ...begin, revision: 19, snapshot: completeCatalog() };
+    expect(WatchCatalogCommitRequestSchema.parse(commit)).toEqual(commit);
+    expect(() =>
+      WatchCatalogCommitRequestSchema.parse({
+        ...commit,
+        contentHash: "client-hash",
+      }),
+    ).toThrow();
+    const commitAck = {
+      meta: accountMeta(),
+      schemaVersion: WATCH_HISTORY_SCHEMA_VERSION,
+      provider: "crunchyroll" as const,
+      titleKey: begin.titleKey,
+      accountGeneration: 4,
+      revision: 19,
+      outcome: "applied" as const,
+      effectiveCatalogState: "complete" as const,
+      projectionRevision: 19,
+      acceptedHash: "sha256:server-derived",
+      acceptedAt: NOW,
+    };
+    expect(WatchCatalogCommitAckSchema.parse(commitAck)).toEqual(commitAck);
+    expect(() =>
+      WatchCatalogCommitAckSchema.parse({ ...commitAck, revision: 0 }),
+    ).toThrow();
+  });
 });
 
-describe("watch history v2 progress contracts", () => {
+describe("watch history v3 progress contracts", () => {
+  it("requires exact Crunchyroll provider evidence while preserving YouTube video identity", () => {
+    expect(WatchProgressEventSchema.parse(progressEvent())).toEqual(
+      progressEvent(),
+    );
+    expect(() =>
+      WatchProgressEventSchema.parse({
+        ...progressEvent(),
+        sourceUrl: "https://www.crunchyroll.com/watch/OTHER",
+      }),
+    ).toThrow();
+    expect(() =>
+      WatchProgressEventSchema.parse({
+        ...progressEvent(),
+        crunchyrollIdentity: undefined,
+      }),
+    ).toThrow();
+    const youtube = {
+      ...progressEvent(),
+      provider: "youtube" as const,
+      titleKey: "youtube:video:abcdefghijk",
+      episodeKey: "youtube:video:abcdefghijk",
+      seasonKey: null,
+      seasonTitle: null,
+      seasonNumber: null,
+      sourceUrl: "https://www.youtube.com/watch?v=abcdefghijk",
+      crunchyrollIdentity: undefined,
+      youtubeVideoId: "abcdefghijk",
+    };
+    expect(WatchProgressEventSchema.parse(youtube)).toEqual(youtube);
+  });
   it("accepts meaningful event kinds including backward seeks and shared room authority", () => {
-    expect(WatchProgressEventSchema.parse(progressEvent())).toEqual(progressEvent());
+    expect(WatchProgressEventSchema.parse(progressEvent())).toEqual(
+      progressEvent(),
+    );
     expect(
       WatchProgressEventSchema.parse({
         ...progressEvent(),
@@ -492,7 +694,11 @@ describe("watch history v2 read and mutation contracts", () => {
           sourceUrl: "https://www.crunchyroll.com/series/GYQ4MW246/series-one",
           artworkUrl: null,
           catalogState: "complete" as const,
-          aggregate: { completedEpisodes: 1, availableEpisodes: 3, progress: 1 / 3 },
+          aggregate: {
+            completedEpisodes: 1,
+            availableEpisodes: 3,
+            progress: 1 / 3,
+          },
           seasons: [
             {
               seasonKey: "season-one",
@@ -504,7 +710,9 @@ describe("watch history v2 read and mutation contracts", () => {
                 availableEpisodes: 2,
                 progress: 0.5,
               },
-              episodes: [{ ...canonicalEpisodeState(), sessions: [crunchSession] }],
+              episodes: [
+                { ...canonicalEpisodeState(), sessions: [crunchSession] },
+              ],
               nextEpisode: {
                 episodeKey: "episode-two",
                 episodeTitle: "Episode 2",
@@ -539,7 +747,11 @@ describe("watch history v2 read and mutation contracts", () => {
           sourceUrl: "https://www.youtube.com/watch?v=abcdefghijk",
           artworkUrl: null,
           catalogState: "unavailable" as const,
-          aggregate: { completedEpisodes: 0, availableEpisodes: null, progress: null },
+          aggregate: {
+            completedEpisodes: 0,
+            availableEpisodes: null,
+            progress: null,
+          },
           seasons: [],
           sessions: [],
           latestActivity: {
@@ -593,34 +805,40 @@ describe("watch history v2 read and mutation contracts", () => {
             observedEpisodeCount: 9,
             completedEpisodeCount: 0,
             episodePage: { complete: false, nextCursor: "episode_cursor" },
-            seasons: [{
-              ...item.seasons[0]!,
-              episodes: Array.from({ length: 9 }, (_, index) => ({
-                ...canonicalEpisodeState(),
-                episodeKey: `episode-${index}`,
-                episodeTitle: `Episode ${index}`,
-              })),
-            }],
+            seasons: [
+              {
+                ...item.seasons[0]!,
+                episodes: Array.from({ length: 9 }, (_, index) => ({
+                  ...canonicalEpisodeState(),
+                  episodeKey: `episode-${index}`,
+                  episodeTitle: `Episode ${index}`,
+                })),
+              },
+            ],
           },
         ],
         nextCursor: null,
       }),
     ).toThrow();
-    expect(() => WatchHistoryResponseSchema.parse({
-      ...response,
-      items: [{
-        ...item,
-        observedEpisodeCount: 9,
-        episodePage: { complete: false, nextCursor: "episode_cursor" },
-        seasons: Array.from({ length: 9 }, (_, index) => ({
-          ...item.seasons[0]!,
-          seasonKey: `empty-season-${index}`,
-          order: index,
-          episodes: [],
-        })),
-      }],
-      nextCursor: null,
-    })).toThrow();
+    expect(() =>
+      WatchHistoryResponseSchema.parse({
+        ...response,
+        items: [
+          {
+            ...item,
+            observedEpisodeCount: 9,
+            episodePage: { complete: false, nextCursor: "episode_cursor" },
+            seasons: Array.from({ length: 9 }, (_, index) => ({
+              ...item.seasons[0]!,
+              seasonKey: `empty-season-${index}`,
+              order: index,
+              episodes: [],
+            })),
+          },
+        ],
+        nextCursor: null,
+      }),
+    ).toThrow();
   });
 
   it("defines a strict 50-row title episode detail response", () => {
@@ -635,8 +853,15 @@ describe("watch history v2 read and mutation contracts", () => {
       complete: false,
       nextCursor: "episode_cursor",
     };
-    expect(WatchHistoryTitleEpisodesResponseSchema.parse(detail)).toEqual(detail);
-    expect(() => WatchHistoryTitleEpisodesResponseSchema.parse({ ...detail, unknown: true })).toThrow();
+    expect(WatchHistoryTitleEpisodesResponseSchema.parse(detail)).toEqual(
+      detail,
+    );
+    expect(() =>
+      WatchHistoryTitleEpisodesResponseSchema.parse({
+        ...detail,
+        unknown: true,
+      }),
+    ).toThrow();
     expect(() =>
       WatchHistoryTitleEpisodesResponseSchema.parse({
         ...detail,
@@ -656,11 +881,15 @@ describe("watch history v2 read and mutation contracts", () => {
       throw new Error("Response fixture must include a shared session");
     }
 
-    const { roomGeneration: _roomGeneration, ...withoutRoomGeneration } = session;
+    const { roomGeneration: _roomGeneration, ...withoutRoomGeneration } =
+      session;
     expect(() =>
       WatchHistoryResponseSchema.parse({
         ...response,
-        items: [{ ...item, sessions: [withoutRoomGeneration] }, ...response.items.slice(1)],
+        items: [
+          { ...item, sessions: [withoutRoomGeneration] },
+          ...response.items.slice(1),
+        ],
       }),
     ).toThrow();
   });
@@ -726,6 +955,31 @@ describe("watch history v2 read and mutation contracts", () => {
     ).toThrow();
   });
 
+  it("keeps historical completion distinct from the current available intersection", () => {
+    const response = responseFixture();
+    const item = response.items[0]!;
+    const historical = {
+      ...item,
+      observedEpisodeCount: 2,
+      completedEpisodeCount: 2,
+      episodePage: { complete: false, nextCursor: "episode_cursor" },
+      aggregate: {
+        completedEpisodes: 1,
+        availableEpisodes: 3,
+        progress: 1 / 3,
+      },
+    };
+    expect(
+      WatchHistoryResponseSchema.parse({
+        ...response,
+        items: [historical, ...response.items.slice(1)],
+      }).items[0],
+    ).toMatchObject({
+      completedEpisodeCount: 2,
+      aggregate: { completedEpisodes: 1 },
+    });
+  });
+
   it("accepts episode, title, and all-history deletion requests", () => {
     const base = {
       schemaVersion: WATCH_HISTORY_SCHEMA_VERSION,
@@ -748,11 +1002,18 @@ describe("watch history v2 read and mutation contracts", () => {
     expect(
       WatchHistoryDeletionRequestSchema.parse({
         ...base,
-        target: { scope: "title", provider: "crunchyroll", titleKey: "series-one" },
+        target: {
+          scope: "title",
+          provider: "crunchyroll",
+          titleKey: "series-one",
+        },
       }),
     ).toMatchObject({ target: { scope: "title" } });
     expect(
-      WatchHistoryDeletionRequestSchema.parse({ ...base, target: { scope: "all" } }),
+      WatchHistoryDeletionRequestSchema.parse({
+        ...base,
+        target: { scope: "all" },
+      }),
     ).toMatchObject({ target: { scope: "all" } });
 
     const ack = {
@@ -771,9 +1032,11 @@ describe("watch history v2 read and mutation contracts", () => {
       youtubeHistoryEnabled: false,
     });
     expect(() => WatchHistoryPreferencesUpdateSchema.parse({})).toThrow();
-    expect(WatchHistoryPreferencesUpdateSchema.parse({ youtubeHistoryEnabled: true })).toEqual(
-      { youtubeHistoryEnabled: true },
-    );
+    expect(
+      WatchHistoryPreferencesUpdateSchema.parse({
+        youtubeHistoryEnabled: true,
+      }),
+    ).toEqual({ youtubeHistoryEnabled: true });
   });
 
   it("exposes only a bounded opaque base64url cursor", () => {
@@ -782,10 +1045,16 @@ describe("watch history v2 read and mutation contracts", () => {
       "opaque_cursor-v2",
     );
     expect(() =>
-      WatchHistoryResponseSchema.parse({ ...response, nextCursor: "not opaque" }),
+      WatchHistoryResponseSchema.parse({
+        ...response,
+        nextCursor: "not opaque",
+      }),
     ).toThrow();
     expect(() =>
-      WatchHistoryResponseSchema.parse({ ...response, nextCursor: "a".repeat(513) }),
+      WatchHistoryResponseSchema.parse({
+        ...response,
+        nextCursor: "a".repeat(513),
+      }),
     ).toThrow();
     expect(() =>
       WatchHistoryResponseSchema.parse({
@@ -828,19 +1097,19 @@ describe("watch history v2 read and mutation contracts", () => {
       episodeNumber: index,
     }));
     const parsed = WatchHistoryResponseSchema.parse({
-        ...response,
-        items: [
-          {
-            ...unavailableItem,
-            itemKind: "series",
-            observedEpisodeCount: 501,
-            completedEpisodeCount: 0,
-            episodePage: { complete: false, nextCursor: "episode_cursor" },
-            seasons: [{ ...observedSeason, episodes }],
-          },
-        ],
-        nextCursor: null,
-      });
+      ...response,
+      items: [
+        {
+          ...unavailableItem,
+          itemKind: "series",
+          observedEpisodeCount: 501,
+          completedEpisodeCount: 0,
+          episodePage: { complete: false, nextCursor: "episode_cursor" },
+          seasons: [{ ...observedSeason, episodes }],
+        },
+      ],
+      nextCursor: null,
+    });
     expect(parsed.items[0]?.seasons[0]?.episodes).toHaveLength(8);
   });
 
@@ -850,7 +1119,10 @@ describe("watch history v2 read and mutation contracts", () => {
         .seasonNumber,
     ).toBe(0);
     expect(() =>
-      WatchProgressEventSchema.parse({ ...progressEvent(), seasonNumber: 1001 }),
+      WatchProgressEventSchema.parse({
+        ...progressEvent(),
+        seasonNumber: 1001,
+      }),
     ).toThrow();
   });
 
@@ -922,7 +1194,10 @@ describe("watch history v2 read and mutation contracts", () => {
       }
       if (value !== null && typeof value === "object") {
         return `{${Object.entries(value)
-          .map(([key, item]) => `${JSON.stringify(key)}: ${postgresJsonText(item)}`)
+          .map(
+            ([key, item]) =>
+              `${JSON.stringify(key)}: ${postgresJsonText(item)}`,
+          )
           .join(", ")}}`;
       }
       return JSON.stringify(value);
@@ -944,12 +1219,20 @@ describe("watch history v2 read and mutation contracts", () => {
 
   it("strictly validates room recreation responses", () => {
     const response = roomRecreationResponse();
-    expect(WatchHistoryRoomRecreationResponseSchema.parse(response)).toEqual(response);
+    expect(WatchHistoryRoomRecreationResponseSchema.parse(response)).toEqual(
+      response,
+    );
     expect(() =>
-      WatchHistoryRoomRecreationResponseSchema.parse({ ...response, extra: true }),
+      WatchHistoryRoomRecreationResponseSchema.parse({
+        ...response,
+        extra: true,
+      }),
     ).toThrow();
     expect(() =>
-      WatchHistoryRoomRecreationResponseSchema.parse({ ...response, roomToken: "" }),
+      WatchHistoryRoomRecreationResponseSchema.parse({
+        ...response,
+        roomToken: "",
+      }),
     ).toThrow();
     expect(() =>
       WatchHistoryRoomRecreationResponseSchema.parse({

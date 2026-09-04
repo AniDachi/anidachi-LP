@@ -85,7 +85,27 @@ observed seasons and episodes, reports `catalogState: "unavailable"`, and does
 not fabricate catalog totals or poll Crunchyroll for a complete catalog. No raw
 authenticated provider payload is committed.
 
-## Catalog Observation
+## Catalog Parser Evidence
+
+Date: 2026-09-05
+
+Schema 3 now has a pure, network-free Crunchyroll catalog normalizer. It consumes
+only sanitized provider metadata, preserves provider-returned labels, separates
+canonical episode identity from raw watch variants, checks declared totals before
+collapse, and returns `partial` for failed traversal, ambiguity, unknown
+availability, context drift, or resource overflow. It does not fetch, authenticate,
+write storage, calculate user aggregates, or enable runtime collection by itself.
+
+The parser fixtures distinguish evidence provenance. The Haikyu two-season fixture
+is a bounded derived contract assembly based on sanitized 2026-09-05 response
+shapes; it is not a claim that only two seasons exist or that this synthetic slice
+proves a live complete title. Availability fixtures identify which sentinel row
+was observed live and which future, expired, fractional, zero, null, and clip cases
+remain derived classifier cases. Complete-title traversal counts from the later
+sanitized evidence pass are recorded in the approved implementation plan and task
+evidence, without promoting authenticated provider payloads into protocol fields.
+
+## Earlier Catalog Observation
 
 Date: 2026-08-13
 
@@ -111,11 +131,10 @@ observed watch history, titles, episode numbers, or generated season keys. Resum
 progress for the active episode remains valid and independent of this catalog
 gate.
 
-No catalog fixtures are committed at this stage because the available test
-payloads are handwritten artwork fixtures rather than sanitized captures of a
-complete provider response. When a reliable source is observed, fixtures must be
-reduced from that real response and must exclude cookies, authorization headers,
-tokens, account identifiers, and unrelated private fields.
+This was the 2026-08-13 boundary. Sanitized and explicitly provenance-labeled
+catalog fixtures were added after the 2026-09-05 evidence pass. They exclude
+cookies, authorization headers, tokens, account identifiers, and unrelated
+private fields; derived cases remain labeled and are not presented as live facts.
 
 Crunchyroll endpoint paths and payload shapes remain private implementation
 details of the Crunchyroll adapter. They are not shared AniDachi protocol

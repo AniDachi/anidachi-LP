@@ -5,10 +5,14 @@ import {
   WatchItemKindSchema,
   WatchProviderSchema,
 } from "./account";
+import { canonicalizeRoomSourceUrl } from "./source-url";
 import { RoomCapabilitiesSchema, RoomHistoryAuthoritySchema } from "./types";
 
-export const WATCH_HISTORY_SCHEMA_VERSION = 2 as const;
-export const WATCH_CATALOG_MAX_BYTES = 512 * 1_024;
+export const WATCH_HISTORY_SCHEMA_VERSION = 3 as const;
+export const WATCH_CATALOG_MAX_BYTES = 1_024 * 1_024;
+export const WATCH_CATALOG_MAX_EPISODES = 2_000;
+export const WATCH_CATALOG_MAX_VARIANTS_PER_EPISODE = 32;
+export const WATCH_CATALOG_MAX_VARIANTS_PER_TITLE = 10_000;
 export const WATCH_HISTORY_TITLE_EPISODE_SLICE_LIMIT = 8;
 export const WATCH_HISTORY_TITLE_EPISODE_PAGE_LIMIT = 50;
 
@@ -39,10 +43,11 @@ export const WatchHistoryEpisodeOpaqueCursorSchema = z
   .max(2_048)
   .regex(/^[A-Za-z0-9_-]+$/);
 
-export const WatchHistoryResponseMetaSchema = AccountOwnedResponseMetaSchema.extend({
-  schemaVersion: z.literal(WATCH_HISTORY_SCHEMA_VERSION),
-  accountGeneration: AccountGenerationSchema,
-});
+export const WatchHistoryResponseMetaSchema =
+  AccountOwnedResponseMetaSchema.extend({
+    schemaVersion: z.literal(WATCH_HISTORY_SCHEMA_VERSION),
+    accountGeneration: AccountGenerationSchema,
+  });
 
 export const WatchCatalogCompletenessSchema = z.enum(["complete", "partial"]);
 export const WatchCatalogStateSchema = z.enum([
@@ -77,47 +82,124 @@ export const WatchHistoryDeleteScopeSchema = z.discriminatedUnion("scope", [
 ]);
 
 export const WatchCatalogLocaleContextSchema = z.strictObject({
-  locale: z.string().trim().min(2).max(35).nullable(),
+  region: z
+    .string()
+    .regex(/^[A-Z]{2}$/)
+    .nullable(),
+  requestedLocale: z.string().trim().min(2).max(35),
   audioLocale: z.string().trim().min(2).max(35).nullable(),
   subtitleLocales: z.array(z.string().trim().min(2).max(35)).max(32),
+  observedAt: TimestampSchema,
 });
 
-export const WatchCatalogEpisodeSchema = z.strictObject({
-  episodeKey: StableKeySchema,
-  providerEpisodeId: StableKeySchema,
-  variantKey: StableKeySchema.nullable(),
-  title: DisplayTitleSchema,
-  episodeNumber: z.number().finite().nonnegative().nullable(),
-  order: z.number().int().nonnegative(),
-  sourceUrl: HttpUrlSchema,
-  releasedAt: TimestampSchema.nullable(),
-  available: z.boolean(),
-});
+export const WatchCatalogVariantSchema = z
+  .strictObject({
+    providerContentId: StableKeySchema,
+    audioLocale: z.string().trim().min(2).max(35).nullable(),
+    original: z.boolean(),
+    order: z.number().int().nonnegative(),
+    sourceUrl: HttpUrlSchema,
+  })
+  .superRefine((variant, context) => {
+    const canonical = canonicalizeRoomSourceUrl(
+      variant.sourceUrl,
+      "crunchyroll",
+    );
+    if (
+      !canonical.ok ||
+      canonical.source.sourceUrl !== variant.sourceUrl ||
+      canonical.source.sourceUrl !==
+        `https://www.crunchyroll.com/watch/${variant.providerContentId}` ||
+      canonical.source.videoFingerprint !==
+        `crunchyroll|watch/${variant.providerContentId}`
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Variant URL must exactly match its provider content ID",
+        path: ["sourceUrl"],
+      });
+    }
+  });
 
-export const WatchCatalogSeasonSchema = z.strictObject({
-  seasonKey: StableKeySchema,
-  providerSeasonId: StableKeySchema.nullable(),
-  title: DisplayTitleSchema,
-  seasonNumber: SeasonNumberSchema.nullable(),
-  order: z.number().int().nonnegative(),
-  episodes: z.array(WatchCatalogEpisodeSchema).max(500),
-});
+export const WatchCatalogEpisodeSchema = z
+  .strictObject({
+    episodeKey: StableKeySchema,
+    providerEpisodeIdentifier: StableKeySchema,
+    title: DisplayTitleSchema,
+    episodeNumber: z.number().finite().nonnegative().nullable(),
+    order: z.number().int().nonnegative(),
+    releasedAt: TimestampSchema.nullable(),
+    available: z.boolean(),
+    watchVariants: z
+      .array(WatchCatalogVariantSchema)
+      .min(1)
+      .max(WATCH_CATALOG_MAX_VARIANTS_PER_EPISODE),
+  })
+  .superRefine((episode, context) => {
+    if (
+      episode.episodeKey !==
+      `crunchyroll:episode:${episode.providerEpisodeIdentifier}`
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Episode key must derive from the provider identifier",
+        path: ["episodeKey"],
+      });
+    }
+    if (
+      episode.watchVariants.filter((variant) => variant.original).length > 1
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "At most one variant may be original",
+        path: ["watchVariants"],
+      });
+    }
+    const ids = new Set<string>();
+    for (const [index, variant] of episode.watchVariants.entries()) {
+      if (ids.has(variant.providerContentId))
+        context.addIssue({
+          code: "custom",
+          message: "Variant content IDs must be unique",
+          path: ["watchVariants", index, "providerContentId"],
+        });
+      ids.add(variant.providerContentId);
+    }
+  });
+
+export const WatchCatalogSeasonSchema = z
+  .strictObject({
+    seasonKey: StableKeySchema,
+    providerSeasonIdentifier: StableKeySchema,
+    title: DisplayTitleSchema,
+    seasonNumber: SeasonNumberSchema.nullable(),
+    order: z.number().int().nonnegative(),
+    episodes: z
+      .array(WatchCatalogEpisodeSchema)
+      .max(WATCH_CATALOG_MAX_EPISODES),
+  })
+  .superRefine((season, context) => {
+    if (
+      season.seasonKey !==
+      `crunchyroll:season:${season.providerSeasonIdentifier}`
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Season key must derive from the provider identifier",
+        path: ["seasonKey"],
+      });
+    }
+  });
 
 export const WatchCatalogSnapshotInputSchema = z
   .strictObject({
     schemaVersion: z.literal(WATCH_HISTORY_SCHEMA_VERSION),
-    provider: WatchProviderSchema,
+    provider: z.literal("crunchyroll"),
     titleKey: StableKeySchema,
-    providerSeriesId: StableKeySchema.nullable(),
-    itemKind: WatchItemKindSchema,
+    providerSeriesId: StableKeySchema,
     title: DisplayTitleSchema,
-    sourceUrl: HttpUrlSchema,
-    artworkUrl: NullableHttpUrlSchema,
     completeness: WatchCatalogCompletenessSchema,
-    localeContext: WatchCatalogLocaleContextSchema,
-    fetchedAt: TimestampSchema,
-    lastAttemptAt: TimestampSchema,
-    contentHash: z.string().trim().min(8).max(160),
+    context: WatchCatalogLocaleContextSchema,
     seasons: z.array(WatchCatalogSeasonSchema).max(100),
   })
   .superRefine((snapshot, context) => {
@@ -125,19 +207,54 @@ export const WatchCatalogSnapshotInputSchema = z
       (total, season) => total + season.episodes.length,
       0,
     );
-    if (episodeCount > 500) {
+    const variantCount = snapshot.seasons.reduce(
+      (total, season) =>
+        total +
+        season.episodes.reduce(
+          (sum, episode) => sum + episode.watchVariants.length,
+          0,
+        ),
+      0,
+    );
+    if (
+      snapshot.titleKey !== `crunchyroll:series:${snapshot.providerSeriesId}`
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Title key must derive from the provider series ID",
+        path: ["titleKey"],
+      });
+    }
+    if (
+      snapshot.completeness === "complete" &&
+      snapshot.context.region === null
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Complete catalogs require a known region",
+        path: ["context", "region"],
+      });
+    }
+    if (episodeCount > WATCH_CATALOG_MAX_EPISODES) {
       context.addIssue({
         code: "too_big",
-        maximum: 500,
+        maximum: WATCH_CATALOG_MAX_EPISODES,
         origin: "array",
         inclusive: true,
-        message: "Catalog snapshots may contain at most 500 episodes",
+        message: `Catalog snapshots may contain at most ${WATCH_CATALOG_MAX_EPISODES} episodes`,
         path: ["seasons"],
       });
     }
+    if (variantCount > WATCH_CATALOG_MAX_VARIANTS_PER_TITLE)
+      context.addIssue({
+        code: "custom",
+        message: "Catalog snapshot contains too many variants",
+        path: ["seasons"],
+      });
 
     const seasonKeys = new Set<string>();
     const episodeKeys = new Set<string>();
+    const variantOwners = new Map<string, string>();
     for (const [seasonIndex, season] of snapshot.seasons.entries()) {
       if (seasonKeys.has(season.seasonKey)) {
         context.addIssue({
@@ -153,10 +270,33 @@ export const WatchCatalogSnapshotInputSchema = z
           context.addIssue({
             code: "custom",
             message: "Catalog episode keys must be unique across seasons",
-            path: ["seasons", seasonIndex, "episodes", episodeIndex, "episodeKey"],
+            path: [
+              "seasons",
+              seasonIndex,
+              "episodes",
+              episodeIndex,
+              "episodeKey",
+            ],
           });
         }
         episodeKeys.add(episode.episodeKey);
+        for (const [variantIndex, variant] of episode.watchVariants.entries()) {
+          const previous = variantOwners.get(variant.providerContentId);
+          if (previous && previous !== episode.episodeKey)
+            context.addIssue({
+              code: "custom",
+              message: "A raw content ID may map to only one canonical episode",
+              path: [
+                "seasons",
+                seasonIndex,
+                "episodes",
+                episodeIndex,
+                "watchVariants",
+                variantIndex,
+              ],
+            });
+          variantOwners.set(variant.providerContentId, episode.episodeKey);
+        }
       }
     }
 
@@ -185,49 +325,178 @@ export const WatchCatalogSnapshotInputSchema = z
     ) {
       context.addIssue({
         code: "custom",
-        message: "Catalog snapshot exceeds the 512 KiB limit",
+        message: "Catalog snapshot exceeds the 1 MiB limit",
         path: [],
       });
     }
   });
 
-export const WatchCatalogAckSchema = z.strictObject({
-  meta: WatchHistoryResponseMetaSchema,
-  schemaVersion: z.literal(WATCH_HISTORY_SCHEMA_VERSION),
-  provider: WatchProviderSchema,
-  titleKey: StableKeySchema,
-  acceptedHash: z.string().trim().min(8).max(160),
-  completeness: WatchCatalogCompletenessSchema,
-  fetchedAt: TimestampSchema,
-  retainedOlderComplete: z.boolean(),
-});
+const CatalogRequestBaseSchema = z
+  .strictObject({
+    schemaVersion: z.literal(WATCH_HISTORY_SCHEMA_VERSION),
+    accountGeneration: AccountGenerationSchema,
+    provider: z.literal("crunchyroll"),
+    titleKey: StableKeySchema,
+    providerSeriesId: StableKeySchema,
+    context: WatchCatalogLocaleContextSchema,
+  })
+  .superRefine((request, context) => {
+    if (request.titleKey !== `crunchyroll:series:${request.providerSeriesId}`)
+      context.addIssue({
+        code: "custom",
+        message: "Title key must derive from provider series ID",
+        path: ["titleKey"],
+      });
+  });
+
+export const WatchCatalogBeginRequestSchema = CatalogRequestBaseSchema;
+export const WatchCatalogBeginAckSchema = z
+  .strictObject({
+    meta: WatchHistoryResponseMetaSchema,
+    schemaVersion: z.literal(WATCH_HISTORY_SCHEMA_VERSION),
+    provider: z.literal("crunchyroll"),
+    titleKey: StableKeySchema,
+    accountGeneration: AccountGenerationSchema,
+    revision: z.number().int().positive(),
+    refreshRequired: z.boolean(),
+    availabilityChanged: z.boolean(),
+    effectiveCatalogState: WatchCatalogStateSchema,
+    projectionRevision: z.number().int().positive().nullable(),
+    acceptedHash: z.string().trim().min(8).max(160).nullable(),
+    acceptedAt: TimestampSchema.nullable(),
+  })
+  .refine((ack) => ack.meta.accountGeneration === ack.accountGeneration, {
+    message: "Acknowledgement generation must match response metadata",
+    path: ["accountGeneration"],
+  });
+
+export const WatchCatalogCommitRequestSchema =
+  CatalogRequestBaseSchema.safeExtend({
+    revision: z.number().int().positive(),
+    snapshot: WatchCatalogSnapshotInputSchema,
+  }).superRefine((request, context) => {
+    if (
+      request.snapshot.titleKey !== request.titleKey ||
+      request.snapshot.providerSeriesId !== request.providerSeriesId ||
+      JSON.stringify(request.snapshot.context) !==
+        JSON.stringify(request.context)
+    )
+      context.addIssue({
+        code: "custom",
+        message: "Commit snapshot must match its issued immutable context",
+        path: ["snapshot"],
+      });
+  });
+
+export const WatchCatalogCommitAckSchema = z
+  .strictObject({
+    meta: WatchHistoryResponseMetaSchema,
+    schemaVersion: z.literal(WATCH_HISTORY_SCHEMA_VERSION),
+    provider: z.literal("crunchyroll"),
+    titleKey: StableKeySchema,
+    accountGeneration: AccountGenerationSchema,
+    revision: z.number().int().positive(),
+    outcome: z.enum(["applied", "superseded"]),
+    effectiveCatalogState: WatchCatalogStateSchema,
+    projectionRevision: z.number().int().positive().nullable(),
+    acceptedHash: z.string().trim().min(8).max(160).nullable(),
+    acceptedAt: TimestampSchema.nullable(),
+  })
+  .refine((ack) => ack.meta.accountGeneration === ack.accountGeneration, {
+    message: "Acknowledgement generation must match response metadata",
+    path: ["accountGeneration"],
+  });
 
 export const WatchSharedRoomAuthoritySchema = RoomHistoryAuthoritySchema;
 
-export const WatchProgressEventSchema = z.strictObject({
-  schemaVersion: z.literal(WATCH_HISTORY_SCHEMA_VERSION),
-  clientEventId: DurableIdSchema,
-  clientSessionKey: z.string().trim().min(1).max(220),
-  accountGeneration: AccountGenerationSchema,
-  provider: WatchProviderSchema,
-  titleKey: StableKeySchema,
-  itemKind: WatchItemKindSchema,
-  title: DisplayTitleSchema,
-  artworkUrl: NullableHttpUrlSchema,
-  episodeKey: StableKeySchema,
-  episodeTitle: DisplayTitleSchema,
-  seasonKey: StableKeySchema.nullable(),
-  seasonTitle: NullableDisplayTitleSchema,
-  seasonNumber: SeasonNumberSchema.nullable(),
-  episodeNumber: z.number().finite().nonnegative().nullable(),
-  sourceUrl: HttpUrlSchema,
-  currentTime: PlaybackSecondsSchema,
-  duration: PlaybackSecondsSchema,
-  progress: PlaybackProgressSchema,
-  observedAt: TimestampSchema,
-  kind: WatchProgressEventKindSchema,
-  sharedRoom: WatchSharedRoomAuthoritySchema.nullable().optional(),
+export const CrunchyrollHistoryIdentitySchema = z.strictObject({
+  providerSeriesId: StableKeySchema,
+  providerSeasonIdentifier: StableKeySchema,
+  providerEpisodeIdentifier: StableKeySchema,
+  providerContentId: StableKeySchema,
+  audioLocale: z.string().trim().min(2).max(35).nullable(),
 });
+
+export const WatchProgressEventSchema = z
+  .strictObject({
+    schemaVersion: z.literal(WATCH_HISTORY_SCHEMA_VERSION),
+    clientEventId: DurableIdSchema,
+    clientSessionKey: z.string().trim().min(1).max(220),
+    accountGeneration: AccountGenerationSchema,
+    provider: WatchProviderSchema,
+    titleKey: StableKeySchema,
+    itemKind: WatchItemKindSchema,
+    title: DisplayTitleSchema,
+    artworkUrl: NullableHttpUrlSchema,
+    episodeKey: StableKeySchema,
+    episodeTitle: DisplayTitleSchema,
+    seasonKey: StableKeySchema.nullable(),
+    seasonTitle: NullableDisplayTitleSchema,
+    seasonNumber: SeasonNumberSchema.nullable(),
+    episodeNumber: z.number().finite().nonnegative().nullable(),
+    sourceUrl: HttpUrlSchema,
+    currentTime: PlaybackSecondsSchema,
+    duration: PlaybackSecondsSchema,
+    progress: PlaybackProgressSchema,
+    observedAt: TimestampSchema,
+    kind: WatchProgressEventKindSchema,
+    sharedRoom: WatchSharedRoomAuthoritySchema.nullable().optional(),
+    crunchyrollIdentity: CrunchyrollHistoryIdentitySchema.optional(),
+    youtubeVideoId: StableKeySchema.optional(),
+  })
+  .superRefine((event, context) => {
+    if (event.provider === "crunchyroll") {
+      const identity = event.crunchyrollIdentity;
+      if (!identity || event.youtubeVideoId !== undefined) {
+        context.addIssue({
+          code: "custom",
+          message: "Crunchyroll progress requires only Crunchyroll identity",
+          path: ["crunchyrollIdentity"],
+        });
+        return;
+      }
+      if (
+        event.titleKey !== `crunchyroll:series:${identity.providerSeriesId}` ||
+        event.seasonKey !==
+          `crunchyroll:season:${identity.providerSeasonIdentifier}` ||
+        event.episodeKey !==
+          `crunchyroll:episode:${identity.providerEpisodeIdentifier}` ||
+        event.sourceUrl !==
+          `https://www.crunchyroll.com/watch/${identity.providerContentId}`
+      ) {
+        context.addIssue({
+          code: "custom",
+          message:
+            "Crunchyroll progress identity and source URL must match exactly",
+          path: ["crunchyrollIdentity"],
+        });
+      }
+    } else if (event.provider === "youtube") {
+      if (
+        !event.youtubeVideoId ||
+        event.crunchyrollIdentity !== undefined ||
+        event.titleKey !== `youtube:video:${event.youtubeVideoId}` ||
+        event.episodeKey !== `youtube:video:${event.youtubeVideoId}` ||
+        event.sourceUrl !==
+          `https://www.youtube.com/watch?v=${event.youtubeVideoId}`
+      ) {
+        context.addIssue({
+          code: "custom",
+          message: "YouTube progress requires exact video identity",
+          path: ["youtubeVideoId"],
+        });
+      }
+    } else if (
+      event.youtubeVideoId !== undefined ||
+      event.crunchyrollIdentity !== undefined
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Provider-specific identity does not match provider",
+        path: ["provider"],
+      });
+    }
+  });
 
 export const WatchHistoryParticipantSchema = z.strictObject({
   user: PublicProfileSchema,
@@ -263,7 +532,8 @@ export const WatchHistorySessionSchema = z
     if (session.kind === "shared" && !hasSharedIdentity) {
       context.addIssue({
         code: "custom",
-        message: "Shared sessions require roomId, roomGeneration, and sourceGeneration",
+        message:
+          "Shared sessions require roomId, roomGeneration, and sourceGeneration",
         path: ["roomId"],
       });
     }
@@ -363,7 +633,9 @@ export const WatchHistorySeasonSchema = z.strictObject({
   seasonNumber: SeasonNumberSchema.nullable(),
   order: z.number().int().nonnegative(),
   aggregate: WatchHistoryAggregateSchema,
-  episodes: z.array(WatchHistoryEpisodeSchema).max(WATCH_HISTORY_TITLE_EPISODE_SLICE_LIMIT),
+  episodes: z
+    .array(WatchHistoryEpisodeSchema)
+    .max(WATCH_HISTORY_TITLE_EPISODE_SLICE_LIMIT),
   nextEpisode: WatchHistoryNextEpisodeSchema.nullable(),
 });
 
@@ -411,7 +683,9 @@ export const WatchHistoryItemSchema = z
     artworkUrl: NullableHttpUrlSchema,
     catalogState: WatchCatalogStateSchema,
     aggregate: WatchHistoryAggregateSchema,
-    seasons: z.array(WatchHistorySeasonSchema).max(WATCH_HISTORY_TITLE_EPISODE_SLICE_LIMIT),
+    seasons: z
+      .array(WatchHistorySeasonSchema)
+      .max(WATCH_HISTORY_TITLE_EPISODE_SLICE_LIMIT),
     sessions: z.array(WatchHistorySessionSchema).max(20),
     latestActivity: WatchHistoryLatestActivitySchema,
     lastWatchedAt: TimestampSchema,
@@ -426,7 +700,13 @@ export const WatchHistoryItemSchema = z
           context.addIssue({
             code: "custom",
             message: "Episode slice identities must be unique across seasons",
-            path: ["seasons", seasonIndex, "episodes", episodeIndex, "episodeKey"],
+            path: [
+              "seasons",
+              seasonIndex,
+              "episodes",
+              episodeIndex,
+              "episodeKey",
+            ],
           });
         }
         episodeKeys.add(episode.episodeKey);
@@ -448,8 +728,7 @@ export const WatchHistoryItemSchema = z
     }
     if (
       item.completedEpisodeCount > item.observedEpisodeCount ||
-      representedEpisodeCount > item.observedEpisodeCount ||
-      item.aggregate.completedEpisodes !== item.completedEpisodeCount
+      representedEpisodeCount > item.observedEpisodeCount
     ) {
       context.addIssue({
         code: "custom",
@@ -457,16 +736,21 @@ export const WatchHistoryItemSchema = z
         path: ["observedEpisodeCount"],
       });
     }
-    if (item.episodePage.complete && representedEpisodeCount !== item.observedEpisodeCount) {
+    if (
+      item.episodePage.complete &&
+      representedEpisodeCount !== item.observedEpisodeCount
+    ) {
       context.addIssue({
         code: "custom",
-        message: "A complete episode slice must represent every observed episode",
+        message:
+          "A complete episode slice must represent every observed episode",
         path: ["episodePage", "complete"],
       });
     }
     addAggregateIssues(item.aggregate, context, ["aggregate"]);
     const hasExactTitleTotals =
-      item.aggregate.availableEpisodes !== null && item.aggregate.progress !== null;
+      item.aggregate.availableEpisodes !== null &&
+      item.aggregate.progress !== null;
     if (item.catalogState === "complete" && !hasExactTitleTotals) {
       context.addIssue({
         code: "custom",
@@ -500,14 +784,16 @@ export const WatchHistoryItemSchema = z
       if (item.catalogState !== "complete" && hasExactSeasonTotals) {
         context.addIssue({
           code: "custom",
-          message: "Partial or unavailable catalogs cannot claim exact season totals",
+          message:
+            "Partial or unavailable catalogs cannot claim exact season totals",
           path: ["seasons", seasonIndex, "aggregate"],
         });
       }
       if (item.catalogState !== "complete" && season.nextEpisode !== null) {
         context.addIssue({
           code: "custom",
-          message: "Only complete catalogs can provide a canonical next episode",
+          message:
+            "Only complete catalogs can provide a canonical next episode",
           path: ["seasons", seasonIndex, "nextEpisode"],
         });
       }
@@ -645,8 +931,12 @@ export type WatchCatalogCompleteness = z.infer<
   typeof WatchCatalogCompletenessSchema
 >;
 export type WatchCatalogState = z.infer<typeof WatchCatalogStateSchema>;
-export type WatchProgressEventKind = z.infer<typeof WatchProgressEventKindSchema>;
-export type WatchHistoryDeleteScope = z.infer<typeof WatchHistoryDeleteScopeSchema>;
+export type WatchProgressEventKind = z.infer<
+  typeof WatchProgressEventKindSchema
+>;
+export type WatchHistoryDeleteScope = z.infer<
+  typeof WatchHistoryDeleteScopeSchema
+>;
 export type WatchCatalogLocaleContext = z.infer<
   typeof WatchCatalogLocaleContextSchema
 >;
@@ -655,7 +945,14 @@ export type WatchCatalogSeason = z.infer<typeof WatchCatalogSeasonSchema>;
 export type WatchCatalogSnapshotInput = z.infer<
   typeof WatchCatalogSnapshotInputSchema
 >;
-export type WatchCatalogAck = z.infer<typeof WatchCatalogAckSchema>;
+export type WatchCatalogBeginRequest = z.infer<
+  typeof WatchCatalogBeginRequestSchema
+>;
+export type WatchCatalogBeginAck = z.infer<typeof WatchCatalogBeginAckSchema>;
+export type WatchCatalogCommitRequest = z.infer<
+  typeof WatchCatalogCommitRequestSchema
+>;
+export type WatchCatalogCommitAck = z.infer<typeof WatchCatalogCommitAckSchema>;
 export type WatchSharedRoomAuthority = z.infer<
   typeof WatchSharedRoomAuthoritySchema
 >;
@@ -675,12 +972,16 @@ export type WatchHistoryLatestActivity = z.infer<
 >;
 export type WatchHistoryItem = z.infer<typeof WatchHistoryItemSchema>;
 export type WatchHistoryResponse = z.infer<typeof WatchHistoryResponseSchema>;
-export type WatchHistoryEpisodePage = z.infer<typeof WatchHistoryEpisodePageSchema>;
+export type WatchHistoryEpisodePage = z.infer<
+  typeof WatchHistoryEpisodePageSchema
+>;
 export type WatchHistoryTitleEpisodesResponse = z.infer<
   typeof WatchHistoryTitleEpisodesResponseSchema
 >;
 export type WatchProgressAck = z.infer<typeof WatchProgressAckSchema>;
-export type WatchHistoryPreferences = z.infer<typeof WatchHistoryPreferencesSchema>;
+export type WatchHistoryPreferences = z.infer<
+  typeof WatchHistoryPreferencesSchema
+>;
 export type WatchHistoryPreferencesUpdate = z.infer<
   typeof WatchHistoryPreferencesUpdateSchema
 >;
