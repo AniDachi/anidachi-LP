@@ -1864,12 +1864,16 @@ function publicDatabaseError(error: unknown): WatchHistoryV3ApiError {
     ["watch_history_generation_mismatch", 409, "GENERATION_MISMATCH", "Watch history generation changed"],
     ["watch_history_observation_stale", 409, "STALE_OBSERVATION", "A newer watch observation already exists"],
     ["watch_history_deleted", 409, "DELETED_HISTORY", "This watch observation is behind a deletion fence"],
+    ["watch_history_identity_conflict", 409, "IDENTITY_CONFLICT", "Watch identity conflicts with existing history"],
     ["watch_history_provider_domain_mismatch", 400, "PROVIDER_DOMAIN_MISMATCH", "Provider source does not match the event"],
     ["watch_history_authority_mismatch", 403, "INVALID_ROOM_AUTHORITY", "Shared room authority is invalid"],
     ["watch_history_authority_unexpected", 400, "INVALID_REQUEST", "Invalid watch progress event"],
     ["watch_history_event_invalid", 400, "INVALID_REQUEST", "Invalid watch progress event"],
     ["watch_history_delete_invalid", 400, "INVALID_REQUEST", "Invalid watch history deletion"],
     ["watch_history_preferences_invalid", 400, "INVALID_REQUEST", "Invalid watch history preferences"],
+    ["watch_catalog_alias_conflict", 409, "CATALOG_ALIAS_CONFLICT", "Watch catalog alias conflicts with existing history"],
+    ["watch_catalog_revision_conflict", 409, "CATALOG_REVISION_CONFLICT", "Watch catalog revision conflicts with accepted history"],
+    ["watch_catalog_invalid", 400, "INVALID_REQUEST", "Invalid watch catalog request"],
   ];
   const mapping = mappings.find(([databaseCode]) => message.includes(databaseCode));
   if (mapping) return new WatchHistoryV3ApiError(mapping[1], mapping[2], mapping[3]);

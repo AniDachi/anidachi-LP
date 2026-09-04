@@ -702,6 +702,100 @@ test("domain failures map to bounded stable public errors", async () => {
   }
 });
 
+test("progress maps an accepted Crunchyroll identity contradiction to a sanitized conflict", async () => {
+  await assert.rejects(
+    () =>
+      applyWatchProgressV3({
+        userId: USER_ID,
+        input: progressEvent(),
+        store: storeStub({
+          applyProgress: async () => {
+            throw {
+              message: "watch_history_identity_conflict: private alias row",
+              details: "private SQL",
+            };
+          },
+        }),
+      }),
+    (error) =>
+      error instanceof WatchHistoryV3ApiError &&
+      error.status === 409 &&
+      error.code === "IDENTITY_CONFLICT" &&
+      error.message === "Watch identity conflicts with existing history",
+  );
+});
+
+test("catalog maps malformed input and accepted-state contradictions to bounded public errors", async (t) => {
+  const cases = [
+    {
+      databaseMessage: "watch_catalog_invalid: private payload detail",
+      status: 400,
+      code: "INVALID_REQUEST",
+      message: "Invalid watch catalog request",
+    },
+    {
+      databaseMessage: "watch_catalog_alias_conflict: private alias row",
+      status: 409,
+      code: "CATALOG_ALIAS_CONFLICT",
+      message: "Watch catalog alias conflicts with existing history",
+    },
+    {
+      databaseMessage: "watch_catalog_revision_conflict: private accepted hash",
+      status: 409,
+      code: "CATALOG_REVISION_CONFLICT",
+      message: "Watch catalog revision conflicts with accepted history",
+    },
+  ] as const;
+
+  for (const scenario of cases) {
+    await t.test(scenario.code, async () => {
+      await assert.rejects(
+        () =>
+          applyWatchCatalogV3({
+            userId: USER_ID,
+            input: catalogCommitRequest(),
+            store: storeStub({
+              applyCatalog: async () => {
+                throw {
+                  message: scenario.databaseMessage,
+                  details: "private SQL",
+                };
+              },
+            }),
+          }),
+        (error) =>
+          error instanceof WatchHistoryV3ApiError &&
+          error.status === scenario.status &&
+          error.code === scenario.code &&
+          error.message === scenario.message,
+      );
+    });
+  }
+});
+
+test("unexpected progress storage failures remain a sanitized unavailable response", async () => {
+  await assert.rejects(
+    () =>
+      applyWatchProgressV3({
+        userId: USER_ID,
+        input: progressEvent(),
+        store: storeStub({
+          applyProgress: async () => {
+            throw {
+              message: "unexpected database failure",
+              details: "private SQL",
+            };
+          },
+        }),
+      }),
+    (error) =>
+      error instanceof WatchHistoryV3ApiError &&
+      error.status === 503 &&
+      error.code === "HISTORY_UNAVAILABLE" &&
+      error.message === "Watch history is temporarily unavailable",
+  );
+});
+
 test("shared session host-order failures map to retryable bounded conflicts", async () => {
   for (const [databaseMessage, publicCode] of [
     ["watch_history_shared_session_pending", "SHARED_SESSION_PENDING"],
