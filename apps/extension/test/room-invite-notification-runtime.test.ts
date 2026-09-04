@@ -3,6 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ExtensionAuthTokens } from "../src/auth-tokens";
 
 const state = vi.hoisted(() => ({ map: new Map<string, unknown>() }));
+const diagnostic = vi.hoisted(() => vi.fn());
+vi.mock("../src/debug-log", () => ({ logDebug: diagnostic }));
 vi.mock("wxt/utils/storage", () => ({ storage: {
   getItem: async (key: string) => structuredClone(state.map.get(key) ?? null),
   setItem: async (key: string, value: unknown) => { state.map.set(key, structuredClone(value)); },
@@ -56,6 +58,7 @@ function requests(path: string) {
 
 beforeEach(async () => {
   vi.resetModules();
+  diagnostic.mockClear();
   state.map.clear();
   alarms.clear();
   state.map.set(AUTH, tokens());
@@ -90,6 +93,32 @@ beforeEach(async () => {
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
 
 describe("invitation notification runtime", () => {
+  it("records aggregate reconcile and notification-create timing without private payloads", async () => {
+    await runtime.reconcileRoomInviteNotifications({ notify: true });
+    expect(diagnostic).toHaveBeenCalledWith("account.inbox", "notification creation", {
+      outcome: "created", durationMs: expect.any(Number), itemCount: 1,
+    });
+    expect(diagnostic).toHaveBeenCalledWith("account.inbox", "inbox reconciliation", {
+      outcome: "completed", durationMs: expect.any(Number),
+    });
+    const logged = JSON.stringify(diagnostic.mock.calls);
+    for (const privateValue of [A, B, "access-1", "test@example.com", "Friend", "https://"]) {
+      expect(logged).not.toContain(privateValue);
+    }
+  });
+
+  it("records failures without logging raw network or notification errors", async () => {
+    create.mockRejectedValueOnce(new Error("private notification failure"));
+    await expect(runtime.reconcileRoomInviteNotifications({ notify: true })).rejects.toThrow("private notification failure");
+    expect(diagnostic).toHaveBeenCalledWith("account.inbox", "notification creation", {
+      outcome: "failed", durationMs: expect.any(Number), itemCount: 1,
+    });
+    expect(diagnostic).toHaveBeenCalledWith("account.inbox", "inbox reconciliation", {
+      outcome: "failed", durationMs: expect.any(Number),
+    });
+    expect(JSON.stringify(diagnostic.mock.calls)).not.toContain("private notification failure");
+  });
+
   it("uses the canonical cache result so a late unread GET cannot restore the badge or create an alert", async () => {
     const { setCachedAccountInboxForUser } = await import("../src/account-inbox-cache");
     const seen = inbox();

@@ -397,58 +397,81 @@ async function reconcileInboxNotificationNow(
   permissionGranted: boolean,
   expectedAuthSessionEpoch: number,
 ): Promise<boolean> {
-  if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return false;
-
-  let inbox: AccountInboxResponse;
+  const startedAt = performance.now();
+  let outcome = "superseded";
   try {
-    inbox = await listAccountInboxFromApi(tokens.accessToken);
-  } catch (error) {
-    if (!(error instanceof AccountInboxUnauthorizedError)) throw error;
     if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return false;
-    const refreshed = await withInvitationHttpDeadline(() => refreshExtensionSession());
-    if (!refreshed || refreshed.user.id !== tokens.user.id) return false;
-    if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return false;
-    tokens = refreshed;
-    inbox = await listAccountInboxFromApi(tokens.accessToken);
-  }
-  if (inbox.meta.ownerUserId !== tokens.user.id) {
-    throw new Error("Inbox response belongs to another account");
-  }
-  if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return false;
-  const canonical = await publishAccountInboxForUser(tokens.user.id, inbox, {
-    isCurrent: () => isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch),
-    reread: () => listAccountInboxFromApi(tokens.accessToken),
-  });
-  if (!canonical) return false;
-  inbox = canonical;
-  if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return false;
-  await setInboxBadge(inbox.counts.unseen);
-  if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return false;
 
-  const remembered = await getRememberedInboxItems(tokens.user.id);
-  const pruned = pruneRememberedInboxItemKeys(inbox, remembered.itemKeys);
-  const canDisplayNotification =
-    shouldNotify() &&
-    preference &&
-    permissionGranted &&
-    Boolean(chrome.notifications);
-  if (canDisplayNotification) {
-    const plan = buildInboxNotificationPlan(inbox, pruned);
-    if (plan) {
+    let inbox: AccountInboxResponse;
+    try {
+      inbox = await listAccountInboxFromApi(tokens.accessToken);
+    } catch (error) {
+      if (!(error instanceof AccountInboxUnauthorizedError)) throw error;
       if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return false;
-      await chrome.notifications.create(NOTIFICATION_ID, {
-        type: "basic",
-        iconUrl: chrome.runtime.getURL(NOTIFICATION_ICON),
-        title: plan.title,
-        message: plan.message,
-        priority: 1,
-      });
-      pruned.push(...plan.itemKeys);
+      const refreshed = await withInvitationHttpDeadline(() => refreshExtensionSession());
+      if (!refreshed || refreshed.user.id !== tokens.user.id) return false;
+      if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return false;
+      tokens = refreshed;
+      inbox = await listAccountInboxFromApi(tokens.accessToken);
     }
+    if (inbox.meta.ownerUserId !== tokens.user.id) {
+      throw new Error("Inbox response belongs to another account");
+    }
+    if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return false;
+    const canonical = await publishAccountInboxForUser(tokens.user.id, inbox, {
+      isCurrent: () => isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch),
+      reread: () => listAccountInboxFromApi(tokens.accessToken),
+    });
+    if (!canonical) return false;
+    inbox = canonical;
+    if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return false;
+    await setInboxBadge(inbox.counts.unseen);
+    if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return false;
+
+    const remembered = await getRememberedInboxItems(tokens.user.id);
+    const pruned = pruneRememberedInboxItemKeys(inbox, remembered.itemKeys);
+    const canDisplayNotification =
+      shouldNotify() &&
+      preference &&
+      permissionGranted &&
+      Boolean(chrome.notifications);
+    if (canDisplayNotification) {
+      const plan = buildInboxNotificationPlan(inbox, pruned);
+      if (plan) {
+        if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return false;
+        const creationStartedAt = performance.now();
+        let creationOutcome = "failed";
+        try {
+          await chrome.notifications.create(NOTIFICATION_ID, {
+            type: "basic",
+            iconUrl: chrome.runtime.getURL(NOTIFICATION_ICON),
+            title: plan.title,
+            message: plan.message,
+            priority: 1,
+          });
+          creationOutcome = "created";
+        } finally {
+          logDebug("account.inbox", "notification creation", {
+            outcome: creationOutcome,
+            durationMs: Math.max(0, performance.now() - creationStartedAt),
+            itemCount: plan.itemKeys.length,
+          });
+        }
+        pruned.push(...plan.itemKeys);
+      }
+    }
+    if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return false;
+    await setRememberedInboxItems(tokens.user.id, [...new Set(pruned)]);
+    outcome = "completed";
+    return true;
+  } catch (error) {
+    outcome = "failed";
+    throw error;
+  } finally {
+    logDebug("account.inbox", "inbox reconciliation", {
+      outcome, durationMs: Math.max(0, performance.now() - startedAt),
+    });
   }
-  if (!(await isCurrentReconciliation(tokens.user.id, expectedAuthSessionEpoch))) return false;
-  await setRememberedInboxItems(tokens.user.id, [...new Set(pruned)]);
-  return true;
 }
 
 export function isRoomInviteNotificationRetryAlarm(name: string): boolean {
