@@ -716,6 +716,14 @@ function PopupProviderSection({
   );
 }
 
+function PopupWatchArtwork({ url, title }: { url: string | null; title: string }) {
+  const [failed, setFailed] = useState(false);
+  const visible = Boolean(url) && !failed;
+  return <span className="popup-watch-artwork" data-has-artwork={visible}>
+    {visible ? <img alt="" loading="lazy" decoding="async" src={url!} onError={() => setFailed(true)} /> : title.slice(0, 1)}
+  </span>;
+}
+
 function PopupWatchHistoryItem({
 	busyAction,
 	disclosure,
@@ -766,16 +774,7 @@ function PopupWatchHistoryItem({
 					type="button"
 					onClick={() => disclosure.toggle(branchKey, initiallyOpen)}
 				>
-					<span
-						className="popup-watch-artwork"
-						data-has-artwork={Boolean(item.artworkUrl)}
-					>
-						{item.artworkUrl ? (
-							<img alt="" loading="lazy" src={item.artworkUrl} />
-						) : (
-							item.title.slice(0, 1)
-						)}
-					</span>
+					<PopupWatchArtwork key={item.artworkUrl} url={item.artworkUrl} title={item.title} />
 					<span className="popup-watch-main">
 						<strong className="popup-watch-title" dir="auto">{item.title}</strong>
 						<span className="popup-watch-overall">
@@ -1145,7 +1144,12 @@ function projectPendingWatchHistoryItems(
       projected = [...projected, pendingWatchHistoryItem(event)];
       continue;
     }
-    const item = projected[itemIndex];
+    let item = projected[itemIndex];
+    if (item && !item.artworkUrl && event.artworkUrl) {
+      const enriched = { ...item, artworkUrl: event.artworkUrl };
+      projected = projected.map((candidate, index) => index === itemIndex ? enriched : candidate);
+      item = enriched;
+    }
     if (!item || item.seasons.some((season) =>
       season.episodes.some((episode) => episode.episodeKey === event.episodeKey)
     ) || (item.seasons.length === 0 && item.latestActivity.episodeKey === event.episodeKey)) {

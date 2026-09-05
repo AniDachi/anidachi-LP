@@ -375,7 +375,7 @@ function WatchItemCard({ accountGeneration, busyAction, item, onCreateRoom, onDe
     <section className="overflow-hidden rounded-2xl border border-brand-border/80 bg-brand-surface">
       <div className="flex flex-col gap-4 border-b border-brand-border/80 p-4 sm:flex-row sm:items-center">
         <div className="flex min-w-0 items-center gap-4 sm:flex-1">
-          <Poster item={visibleItem} />
+          <Poster item={visibleItem} key={visibleItem.artworkUrl} />
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold tracking-[0.1em] text-brand-orange">{providerLabel(visibleItem.provider)} · {visibleItem.itemKind}</p>
             <h3 className="mt-1 truncate text-lg font-bold text-foreground" dir="auto">{visibleItem.title}</h3>
@@ -481,7 +481,20 @@ function StatCard({ icon, label, value }: { icon: ReactNode; label: string; valu
 }
 
 function Poster({ item }: { item: WatchHistoryItem }) {
-  return item.artworkUrl ? <img alt="" className="h-16 w-11 shrink-0 rounded-md object-cover" src={item.artworkUrl} /> : <span className="flex h-16 w-11 shrink-0 items-center justify-center rounded-md bg-brand-surface text-foreground/50"><Film className="h-5 w-5" aria-hidden /></span>;
+  const [failed, setFailed] = useState(false);
+  const checkLoadedImage = useCallback((image: HTMLImageElement | null) => {
+    // The browser can finish (or fail) an SSR image before hydration attaches onError.
+    if (image?.complete && image.naturalWidth === 0) setFailed(true);
+  }, []);
+
+  return item.artworkUrl && !failed ? (
+    <img alt="" className="h-16 w-11 shrink-0 rounded-md object-cover" src={item.artworkUrl}
+      ref={checkLoadedImage} loading="lazy" decoding="async" onError={() => setFailed(true)} />
+  ) : (
+    <span className="flex h-16 w-11 shrink-0 items-center justify-center rounded-md bg-brand-surface text-foreground/50">
+      <Film className="h-5 w-5" aria-hidden />
+    </span>
+  );
 }
 
 export function getWatchHistoryAggregateLabel(item: WatchHistoryItem): string {

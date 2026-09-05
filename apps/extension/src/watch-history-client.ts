@@ -60,7 +60,7 @@ export type WatchHistoryMessage =
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "catalog-begin" | "catalog-commit";
       expectedOwnerUserId: string; pageId: string; input: unknown }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "resolve-identity"; expectedOwnerUserId: string;
-      accountGeneration: number; clientEventId: string; identity: unknown; episodeNumber: number | null }
+      accountGeneration: number; clientEventId: string; identity: unknown; episodeNumber: number | null; artworkUrl?: string | null }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "list"; limit?: number; cursor?: string }
   | {
       type: typeof WATCH_HISTORY_MESSAGE_TYPE;
@@ -203,11 +203,12 @@ export function isWatchHistoryMessage(value: unknown): value is WatchHistoryMess
         typeof value.pageId === "string" && value.pageId.length > 0 && value.pageId.length <= 128 &&
         (value.command === "catalog-begin" ? WatchCatalogBeginRequestSchema : WatchCatalogCommitRequestSchema).safeParse(value.input).success;
     case "resolve-identity":
-      return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "accountGeneration", "clientEventId", "identity", "episodeNumber"]) &&
+      return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "accountGeneration", "clientEventId", "identity", "episodeNumber", "artworkUrl"]) &&
         typeof value.expectedOwnerUserId === "string" && value.expectedOwnerUserId.length > 0 && value.expectedOwnerUserId.length <= 128 &&
         WatchProgressEventSchema.shape.accountGeneration.safeParse(value.accountGeneration).success &&
         WatchProgressEventSchema.shape.clientEventId.safeParse(value.clientEventId).success &&
         WatchProgressEventSchema.shape.episodeNumber.safeParse(value.episodeNumber).success &&
+        (value.artworkUrl === undefined || WatchProgressEventSchema.shape.artworkUrl.safeParse(value.artworkUrl).success) &&
         CrunchyrollHistoryIdentitySchema.safeParse(value.identity).success;
     case "list":
       return hasExactKeys(value, ["type", "command", "limit", "cursor"]) &&
@@ -393,6 +394,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
             seasonKey: `crunchyroll:season:${identity.providerSeasonIdentifier}`,
             episodeKey: `crunchyroll:episode:${identity.providerEpisodeIdentifier}`,
             episodeNumber: message.episodeNumber,
+            artworkUrl: message.artworkUrl ?? original.artworkUrl,
           });
           if (!resolved.success) return entry;
           const deletion = Math.max(...[

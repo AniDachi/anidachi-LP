@@ -212,6 +212,64 @@ describe("catalog background begin/commit ownership", () => {
 });
 
 describe("Crunchyroll bounded history traversal", () => {
+  it("times out only the poster request without discarding the resolved episode", async () => {
+    const parent = new AbortController();
+    let artworkSignal: AbortSignal | undefined;
+    const result = await resolveCrunchyrollHistoryMetadata("G8WUNEWJE", context, async (path, signal) => {
+      if (path.includes("/objects/G8WUNEWJE?")) return variants.objectResponses.G8WUNEWJE;
+      if (path.includes("/objects/")) {
+        artworkSignal = signal;
+        return new Promise((_, reject) => signal.addEventListener("abort", () => reject(signal.reason), { once: true }));
+      }
+      return path.includes("/series/") ? variants.seasonsResponse : variants.episodesResponse;
+    }, parent.signal);
+    expect(artworkSignal?.aborted).toBe(true);
+    expect(parent.signal.aborted).toBe(false);
+    expect(result).toMatchObject({ artworkUrl: null, identity: { providerContentId: "G8WUNEWJE" } });
+  });
+
+  it("does not publish optional artwork after the parent history request was cancelled", async () => {
+    const parent = new AbortController();
+    await expect(resolveCrunchyrollHistoryMetadata("G8WUNEWJE", context, async (path) => {
+      if (path.includes("/objects/G8WUNEWJE?")) return variants.objectResponses.G8WUNEWJE;
+      if (path.includes("/objects/")) { parent.abort(); throw new Error("aborted"); }
+      return path.includes("/series/") ? variants.seasonsResponse : variants.episodesResponse;
+    }, parent.signal)).rejects.toThrow("HISTORY_ABORTED");
+  });
+
+  it("enriches identity with the matching series poster, never the episode thumbnail", async () => {
+    const paths: string[] = [];
+    const seriesId = variants.objectResponses.G8WUNEWJE.data[0]!.episode_metadata.series_id;
+    const poster = "https://www.crunchyroll.com/imgsrv/display/thumbnail/480x720/catalog/crunchyroll/poster.jpg";
+    const result = await resolveCrunchyrollHistoryMetadata("G8WUNEWJE", context, async (path) => {
+      paths.push(path);
+      if (path.includes(`/objects/${seriesId}?`)) return { data: [{ id: seriesId, images: {
+        poster_tall: [[{ source: poster, width: 480, height: 720 }]],
+      } }] };
+      if (path.includes("/objects/")) return { data: [{ ...variants.objectResponses.G8WUNEWJE.data[0], images: {
+        thumbnail: [[{ source: "https://www.crunchyroll.com/episode.jpg", width: 640, height: 360 }]],
+      } }] };
+      return path.includes("/series/") ? variants.seasonsResponse : variants.episodesResponse;
+    }, new AbortController().signal);
+    expect(result).toMatchObject({ artworkUrl: poster, identity: { providerContentId: "G8WUNEWJE" } });
+    expect(paths.every((path) => path.includes("locale=fr-FR"))).toBe(true);
+  });
+
+  it.each(["unavailable", "wrong-series", "no-images"])("keeps identity usable when optional artwork is %s", async (failure) => {
+    const seriesId = variants.objectResponses.G8WUNEWJE.data[0]!.episode_metadata.series_id;
+    const result = await resolveCrunchyrollHistoryMetadata("G8WUNEWJE", context, async (path) => {
+      if (path.includes(`/objects/${seriesId}?`)) {
+        if (failure === "unavailable") throw new Error("HTTP_503");
+        return { data: [{ id: failure === "wrong-series" ? "OTHER" : seriesId, images: failure === "no-images" ? {} : {
+          poster_tall: [[{ source: "https://www.crunchyroll.com/wrong.jpg", width: 480, height: 720 }]],
+        } }] };
+      }
+      if (path.includes("/objects/")) return variants.objectResponses.G8WUNEWJE;
+      return path.includes("/series/") ? variants.seasonsResponse : variants.episodesResponse;
+    }, new AbortController().signal);
+    expect(result).toMatchObject({ artworkUrl: null, identity: { providerContentId: "G8WUNEWJE" } });
+  });
+
   it("resolves the recorded raw GUID using only its own object and matching season", async () => {
     const paths: string[] = [];
     const metadata = await resolveCrunchyrollHistoryMetadata("G8WUNEWJE", context, async (path) => {
@@ -220,7 +278,7 @@ describe("Crunchyroll bounded history traversal", () => {
       if (path.includes("/series/")) return variants.seasonsResponse;
       return variants.episodesResponse;
     }, new AbortController().signal);
-    expect(paths).toHaveLength(3);
+    expect(paths).toHaveLength(4);
     expect(paths[0]).toContain("/objects/G8WUNEWJE");
     expect(metadata?.identity).toMatchObject({ providerContentId: "G8WUNEWJE", audioLocale: "en-US" });
     expect(metadata?.context).toEqual(context);

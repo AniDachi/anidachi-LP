@@ -16,6 +16,7 @@ export type CrunchyrollControlAction =
 export type CrunchyrollHistoryMetadata = {
   identity: NonNullable<WatchProgressEvent["crunchyrollIdentity"]>;
   episodeNumber: number | null;
+  artworkUrl?: string | null;
   context: WatchCatalogLocaleContext;
 };
 
@@ -96,7 +97,8 @@ export function isCrunchyrollMetadataResult(value: CrunchyrollControlResult): bo
   if (!value.ok) return typeof value.error === "string" && /^[A-Z_]{1,64}$/.test(value.error);
   if (value.action === "historyCatalog") return value.metadata === undefined && WatchCatalogSnapshotInputSchema.safeParse(value.catalog).success;
   const metadata = value.metadata;
-  return value.catalog === undefined && Boolean(metadata) && exact(metadata!, ["identity", "episodeNumber", "context"]) &&
+  return value.catalog === undefined && Boolean(metadata) && exact(metadata!, ["identity", "episodeNumber", "artworkUrl", "context"]) &&
+    (metadata?.artworkUrl === undefined || WatchProgressEventSchema.shape.artworkUrl.safeParse(metadata.artworkUrl).success) &&
     CrunchyrollHistoryIdentitySchema.safeParse(metadata?.identity).success && WatchCatalogLocaleContextSchema.safeParse(metadata?.context).success &&
     (metadata?.episodeNumber === null || typeof metadata?.episodeNumber === "number" && Number.isFinite(metadata.episodeNumber) && metadata.episodeNumber >= 0);
 }
@@ -134,5 +136,5 @@ export function getCrunchyrollTimelineValueForTime(
 
 	return targetTime;
 }
-import { CrunchyrollHistoryIdentitySchema, WatchCatalogLocaleContextSchema, WatchCatalogSnapshotInputSchema,
+import { CrunchyrollHistoryIdentitySchema, WatchCatalogLocaleContextSchema, WatchCatalogSnapshotInputSchema, WatchProgressEventSchema,
   type WatchCatalogLocaleContext, type WatchCatalogSnapshotInput, type WatchProgressEvent } from "@anidachi/protocol";

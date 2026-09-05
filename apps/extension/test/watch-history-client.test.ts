@@ -199,9 +199,13 @@ describe("watch history v2 client", () => {
     current = session;
     await handleWatchHistoryAuthSessionChange(null, session, { storage, getCurrentSession: async () => current, fetch: request });
     const reconnect = createWatchHistoryPageResolver({ send: client.handle, command: async () => ({ ok: true, metadata: { identity: crunchyrollIdentity, episodeNumber: 1,
+      artworkUrl: "https://www.crunchyroll.com/series-poster.jpg",
       context: { region: "VN", requestedLocale: "fr-FR", audioLocale: null, subtitleLocales: [], observedAt: base.observedAt } } } as never) });
     for (const event of events) await reconnect.resolve(event, owner, { refreshCatalog: false });
     expect(posted).toHaveLength(2);
+    expect(posted).toEqual(expect.arrayContaining(events.map((event) => expect.objectContaining({
+      clientEventId: event.clientEventId, artworkUrl: "https://www.crunchyroll.com/series-poster.jpg",
+    }))));
     expect(stored.partitions[key]!.outbox.entries).toEqual([]);
   });
 

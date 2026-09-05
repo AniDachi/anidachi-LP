@@ -32,6 +32,39 @@ const NOW = "2026-08-15T03:00:00.000Z";
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 describe("Popup Watch History v2", () => {
+  it("shows a newly resolved poster on a cached title before the progress upload is acknowledged", async () => {
+    const history = historyFixture();
+    history.items[0]!.artworkUrl = null;
+    const event = { ...pendingEvent({ currentTime: 610, progress: 0.51, observedAt: "2026-08-15T03:00:10.000Z" }), artworkUrl: "https://www.crunchyroll.com/poster.jpg" };
+    const view = await renderPanel(clientFixture({ cached: snapshotFixture(history, [event]), request: requestForHistory(history) }));
+    try {
+      expect(view.container.querySelector(".popup-watch-artwork img")?.getAttribute("src")).toBe(event.artworkUrl);
+      expect(view.container.querySelectorAll(".popup-watch-item")).toHaveLength(1);
+    } finally { await unmount(view.root); }
+  });
+
+  it("falls back after a failed cover and retries only when its URL changes", async () => {
+    const history = historyFixture();
+    history.items[0]!.artworkUrl = "https://www.crunchyroll.com/old-poster.jpg";
+    let publish!: (snapshot: PopupWatchHistorySnapshot | null) => void;
+    const view = await renderPanel({ ...clientFixture({ cached: snapshotFixture(history), request: requestForHistory(history) }),
+      subscribe: (_owner, listener) => { publish = listener; return () => undefined; },
+    });
+    try {
+      const artwork = () => view.container.querySelector(".popup-watch-artwork")!;
+      expect(artwork().querySelector("img")?.getAttribute("src")).toBe(history.items[0]!.artworkUrl);
+      await act(async () => { artwork().querySelector("img")!.dispatchEvent(new Event("error")); });
+      expect(artwork().querySelector("img")).toBeNull();
+      expect(artwork().textContent).toBe(history.items[0]!.title.slice(0, 1));
+      await act(async () => { publish(snapshotFixture(structuredClone(history))); });
+      expect(artwork().querySelector("img")).toBeNull();
+      const updated = structuredClone(history);
+      updated.items[0]!.artworkUrl = "https://www.crunchyroll.com/new-poster.jpg";
+      await act(async () => { publish(snapshotFixture(updated)); });
+      expect(artwork().querySelector("img")?.getAttribute("src")).toBe(updated.items[0]!.artworkUrl);
+    } finally { await unmount(view.root); }
+  });
+
   it("initializes disclosures from the visible mode, not hidden shared-only titles", async () => {
     const history = multiSeasonHistoryFixture();
     history.items[0] = structuredClone(history.items[0]!);

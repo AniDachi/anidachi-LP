@@ -10,6 +10,7 @@ import type { CrunchyrollHistoryMetadata } from "./bridge-contract";
 import { type WatchCatalogLocaleContext, type WatchCatalogSnapshotInput } from "@anidachi/protocol";
 import { crunchyrollDisplayEpisodeNumber, normalizeCrunchyrollCatalog } from "./catalog";
 import { resolveCrunchyrollCurrentObjectIdentity } from "./progress";
+import { selectCrunchyrollPosterTall } from "./artwork-select";
 
 type HistoryJsonLoader = (path: string, signal: AbortSignal) => Promise<unknown>;
 
@@ -56,7 +57,17 @@ export async function resolveCrunchyrollHistoryMetadata(
   if (!resolved) return null;
   const { titleKey: _title, seasonKey: _season, episodeKey: _episode, ...identity } = resolved;
   const row = rows.find((row) => row.identifier === identity.providerEpisodeIdentifier);
-  return { identity, episodeNumber: row ? crunchyrollDisplayEpisodeNumber(row) : null, context };
+  // Artwork is optional enrichment of the existing durable progress event.
+  // Use the canonical series object, not the current episode's still image.
+  let artworkUrl: string | null = null;
+  try {
+    const artworkSignal = AbortSignal.any([signal, AbortSignal.timeout(2500)]);
+    const seriesResponse = await load(cmsPath(`objects/${seriesId}`, context), artworkSignal);
+    const series = historyRows(seriesResponse, 1).find((candidate) => candidate.id === seriesId);
+    if (!artworkSignal.aborted && series) artworkUrl = selectCrunchyrollPosterTall({ images: series.images });
+  } catch { /* A missing/slow poster must not discard the resolved progress. */ }
+  checkHistoryAbort(signal);
+  return { identity, episodeNumber: row ? crunchyrollDisplayEpisodeNumber(row) : null, artworkUrl, context };
 }
 
 export async function collectCrunchyrollHistoryCatalog(

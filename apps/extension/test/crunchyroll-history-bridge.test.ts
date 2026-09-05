@@ -18,7 +18,9 @@ it("MAIN captures locale/player tracks before async auth and keeps provider cred
   let release!: (value: Response) => void;
   vi.stubGlobal("fetch", vi.fn(async (url: string) => {
     if (url.includes("/auth/")) return new Promise<Response>((resolve) => { release = resolve; });
-    if (url.includes("/objects/")) return Response.json(variants.objectResponses.G8WUNEWJE);
+    if (url.includes("/objects/G8WUNEWJE")) return Response.json(variants.objectResponses.G8WUNEWJE);
+    if (url.includes("/objects/")) return Response.json({ data: [{ id: variants.objectResponses.G8WUNEWJE.data[0]!.episode_metadata.series_id,
+      images: { poster_tall: [[{ source: "https://www.crunchyroll.com/poster.jpg", width: 480, height: 720 }]] } }] });
     if (url.includes("/series/")) return Response.json(variants.seasonsResponse);
     return Response.json(variants.episodesResponse);
   }));
@@ -32,4 +34,5 @@ it("MAIN captures locale/player tracks before async auth and keeps provider cred
   const result = posted.mock.calls.map((call) => call[0]).find((value) => value.source === CRUNCHYROLL_CONTROL_RESULT_SOURCE && value.id === "identity-request");
   expect(result).toMatchObject({ ok: true, metadata: { identity: { providerContentId: "G8WUNEWJE", audioLocale: "en-US" }, context: { requestedLocale: "fr-FR", audioLocale: "ja-JP", region: "VN", subtitleLocales: ["en-US"] } } });
   expect(JSON.stringify(result)).not.toContain("private-provider-token");
+  expect(result.metadata.artworkUrl).toBe("https://www.crunchyroll.com/poster.jpg");
 });
