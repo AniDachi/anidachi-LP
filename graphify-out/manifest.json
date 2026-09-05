@@ -3600,16 +3600,16 @@
     "semantic_hash": "a8e2ac5a7857993560a839b04be5bf25"
   },
   "docs/crunchyroll-adapter-notes.md": {
-    "mtime": 1788568213.5697877,
-    "seen": 1788574053.033091,
-    "ast_hash": "5180e118ceedf6cc70467f7c0037da1f",
-    "semantic_hash": "5180e118ceedf6cc70467f7c0037da1f"
+    "mtime": 1788576521.658792,
+    "seen": 1788577858.468317,
+    "ast_hash": "4e0420e077e5ebc55dbe7b2187df7832",
+    "semantic_hash": "4e0420e077e5ebc55dbe7b2187df7832"
   },
   "docs/current-development-state.md": {
-    "mtime": 1788573358.1750548,
-    "seen": 1788574053.033091,
-    "ast_hash": "3594e13409cd40e2a1aaff2c243234f1",
-    "semantic_hash": "3594e13409cd40e2a1aaff2c243234f1"
+    "mtime": 1788576521.6572263,
+    "seen": 1788577858.468318,
+    "ast_hash": "bbdacaf8090dbecbceb0f29e7736043f",
+    "semantic_hash": "bbdacaf8090dbecbceb0f29e7736043f"
   },
   "docs/development-environments.md": {
     "mtime": 1786689011.3582418,
@@ -3672,10 +3672,10 @@
     "semantic_hash": "e9dedacb54d1af9fcb9cfe6c5647d13c"
   },
   "docs/release-and-rollback-runbook.md": {
-    "mtime": 1788568354.8603847,
-    "seen": 1788574053.033091,
-    "ast_hash": "a1024c6073d2e3ecc16bf64306ede555",
-    "semantic_hash": "a1024c6073d2e3ecc16bf64306ede555"
+    "mtime": 1788576521.6583726,
+    "seen": 1788577858.468318,
+    "ast_hash": "999ad40d8ecd14601b768ec96b975fe7",
+    "semantic_hash": "999ad40d8ecd14601b768ec96b975fe7"
   },
   "docs/shared-watch-progress-tracker.md": {
     "mtime": 1788568253.3943248,
@@ -5310,10 +5310,10 @@
     "semantic_hash": "4801c9cf3f9ef5083c3aec068cb9fb9e"
   },
   "docs/superpowers/specs/2026-08-13-watch-history-catalog-progress-design.md": {
-    "mtime": 1788572804.6018925,
-    "seen": 1788574053.0330932,
-    "ast_hash": "77f1e56f13845b47c51a40c9d81d4830",
-    "semantic_hash": "77f1e56f13845b47c51a40c9d81d4830"
+    "mtime": 1788576521.659076,
+    "seen": 1788577858.468319,
+    "ast_hash": "dfc5c5a45871fde2e5811c29bac58acf",
+    "semantic_hash": "dfc5c5a45871fde2e5811c29bac58acf"
   },
   "docs/superpowers/specs/2026-08-14-watch-history-room-authority-threat-model.md": {
     "mtime": 1787457610.6537025,
@@ -6480,10 +6480,10 @@
     "semantic_hash": "003e2a43d0753bd3ec10e4e466104bd3"
   },
   "docs/superpowers/plans/2026-09-05-watch-history-crunchyroll-catalog-progress-plan.md": {
-    "mtime": 1788573358.1743565,
-    "seen": 1788574053.033092,
-    "ast_hash": "e0d4c42774eab8a4deadd0f607acd055",
-    "semantic_hash": "e0d4c42774eab8a4deadd0f607acd055"
+    "mtime": 1788576521.6595411,
+    "seen": 1788577858.468319,
+    "ast_hash": "56dcfbc44df2ae87a96d1f8f578aa064",
+    "semantic_hash": "56dcfbc44df2ae87a96d1f8f578aa064"
   },
   "apps/extension/src/source-adapters/crunchyroll/catalog.ts": {
     "mtime": 1788561444.9792898,
@@ -6732,9 +6732,15 @@
     "semantic_hash": "c5ff59d1d1b3f79697ec18a5e93eaf3a"
   },
   "docs/watch-history-v3-local-verification.md": {
-    "mtime": 1788573244.4660523,
-    "seen": 1788574053.0330932,
-    "ast_hash": "53d368d1fce52fff0dccc70b34f5b478",
-    "semantic_hash": "53d368d1fce52fff0dccc70b34f5b478"
+    "mtime": 1788576521.6580563,
+    "seen": 1788577858.468319,
+    "ast_hash": "65c607218de9d4c0881eec4a0c9b191a",
+    "semantic_hash": "65c607218de9d4c0881eec4a0c9b191a"
+  },
+  "docs/watch-history-v3-staging-verification.md": {
+    "mtime": 1788576521.6597214,
+    "seen": 1788577858.46832,
+    "ast_hash": "ec7c903f451dca233f96f1e555e67f72",
+    "semantic_hash": "ec7c903f451dca233f96f1e555e67f72"
   }
 }

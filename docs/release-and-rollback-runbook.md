@@ -137,8 +137,9 @@ Do not create the cleanup migration speculatively during a healthy release.
 
 ### Watch History v3 coordinated transition
 
-The schema-3 canonical catalog/progress candidate is local and unactivated. Its
-reviewed migration intentionally clears test history, advances history generation,
+Schema-3 canonical catalog/progress was activated on staging on 2026-09-05 through
+ordered PRs #265 then #264; see `docs/watch-history-v3-staging-verification.md`.
+Main/production was not promoted. The reviewed migration intentionally clears test history, advances history generation,
 and makes old SQL writers terminal. Therefore the old Web deployment alone is not a
 valid rollback after the migration is applied.
 

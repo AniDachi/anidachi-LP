@@ -2,11 +2,16 @@
 
 Date: 2026-09-05
 
-Status: **local, unactivated schema-3 candidate**. Watch History v2 on staging and
+Status of this local evidence record: **local, unactivated schema-3 candidate**. Watch History v2 on staging and
 technical main is the recorded baseline; this fix wave performed no new deployed
 runtime probe and no deployment. This record does not authorize or claim a remote migration,
 deployment, tester-folder update, loaded extension, authenticated provider test, or
 production acceptance.
+
+The later, separately authorized staging activation is recorded in
+`docs/watch-history-v3-staging-verification.md`. It supersedes this record's
+deployment status, not its local evidence or incident disclosure. Main/production
+and authenticated provider acceptance remain outside that activation.
 
 ## Canonical Storage And Transition Boundary
 

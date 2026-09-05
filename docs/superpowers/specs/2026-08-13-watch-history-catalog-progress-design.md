@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-13
 
-**Status:** Approved product design; local implementation authorized 2026-09-05
+**Status:** Approved design; local implementation and separately authorized staging activation completed 2026-09-05; authenticated acceptance pending.
 
 ## 2026-09-05 Clean-Start Amendment
 
@@ -36,10 +36,11 @@ The authorized local implementation is now complete on the feature branch. Its
 retained disposable-database commands, transition proof, schema/RPC/read-state/
 benchmark results, local harness incident disclosure, activation boundary, and
 rollback constraint are recorded in `../../watch-history-v3-local-verification.md`.
-This status does not amend the authorization boundary: staging/technical-main v2 is
-the recorded baseline, with no new deployed-runtime probe or deployment in the
-final local fix wave. No remote history was reset, and authenticated-provider,
-matching-staging, and loaded-extension acceptance remain open.
+The later separately authorized staging cutover is recorded in
+`../../watch-history-v3-staging-verification.md`: schema PR #265 preceded runtime
+PR #264, and the matching CI extension was synchronized to both verified tester
+folders. Only reviewed old test history was reset. Main/production was not
+promoted; authenticated-provider and loaded-extension acceptance remain open.
 
 **Scope:** AniDachi watch history, series catalog metadata, progress sync, and
 the shared data contract used by the extension Popup and website account area

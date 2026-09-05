@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-09-04.
+Last updated: 2026-09-05.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -1093,15 +1093,17 @@ and two-network P2P evidence. Explicit tab close is immediate; a browser crash
 or long offline interval relies on the 60-second fallback. Conflict wording and
 other visual polish remain normal UI/UX work.
 
-## Local Watch History v3 Candidate (Unactivated)
+## Watch History v3 Staging Activation
 
-The 2026-09-05 canonical Crunchyroll catalog/progress implementation is locally
-complete on `codex/watch-drawer-design`, but it has not been migrated, deployed,
-loaded, or accepted on staging or production. Watch History v2 on staging and
-technical main is the recorded baseline, not a new deployed-runtime probe in the
-final local fix wave. A schema-3 extension artifact cannot use that v2 history
-backend and must not be given to testers until a separately authorized coordinated
-database/Web/extension cutover.
+The separately authorized 2026-09-05 staging transition is complete: schema
+prerequisite PR #265 (`9328428e`) applied both reviewed migrations before runtime
+PR #264 (`56dbd901`). The matching website is READY on `staging.anidachi.app`.
+The exact CI extension `56dbd901...-staging-139` was validated and synchronized
+byte-for-byte to both established tester folders, with old artifacts backed up.
+Authenticated Crunchyroll and loaded-extension acceptance remain open; folder
+synchronization is not proof of browser reload. Technical `main` remains at
+`54a154b7` with Watch History v2 and was not promoted. Deployment evidence, scoped
+reset counts and preservation checks are in `docs/watch-history-v3-staging-verification.md`.
 
 Schema 3 keeps Supabase/Postgres as the only durable authority and stores one
 progress row per logical provider episode. The latest actual raw watch/audio
@@ -1192,12 +1194,13 @@ These are intentionally not treated as solved:
   canonical changes, and its coalesced outbox persists the latest higher
   generation without delaying playback. Reload and late join consume the
   durable source; explicit source-switch UI/commands remain future UI/UX work.
-- Watch History v2 is the active `staging` and technical `main` runtime.
+- Watch History v3 is active on `staging`; technical `main` remains on v2.
   Supabase/Postgres is the one durable account-history authority; the extension
   background owns the account-scoped cache/outbox, while Popup and website
-  consume the same strict v2 response. The v1 HTTP paths return
-  `426 UPGRADE_REQUIRED`, and the legacy tables remain inert for rollback rather
-  than being deleted.
+  consume the same version-matched response. On staging, authenticated v1/v2 HTTP
+  paths return `426 UPGRADE_REQUIRED`; old SQL writers are terminal too. The
+  schema-3 reset discards only reviewed test history and preserves surrounding
+  product state. An old web deployment alone is not a schema-3 rollback.
 - `ROOM_HISTORY_GRACE_AMENDMENT_REQUIRED` is the reviewed Task 9 decision after
   the Task 0 report proved unavailable: Worker-issued shared-history authority
   has mandatory exact scalar claims, a unique `jti`, and `exp = iat + 86,400`
