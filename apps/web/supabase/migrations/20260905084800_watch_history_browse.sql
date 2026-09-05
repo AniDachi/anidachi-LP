@@ -96,10 +96,17 @@ end $migration$;
 alter function public.apply_watch_progress_v3(uuid,jsonb,jsonb) rename to apply_watch_progress_v3_canonical;
 create function public.apply_watch_progress_v3(p_user_id uuid,p_event jsonb,p_room_authority jsonb) returns jsonb
 language plpgsql security invoker set search_path='' as $$
-declare ack jsonb; sid uuid; observed timestamptz; generation bigint; ctx record; room_generation_value bigint;
+declare ack jsonb; sid uuid; observed timestamptz; generation bigint; ctx record; action_generation bigint; receipt_existed boolean;
 begin
+  -- The canonical acknowledgement keeps its original duplicate:false on replay.
+  -- Check freshness under the exact same account lock used by the canonical
+  -- writer and deletion function, before delegating validation/acceptance.
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(p_user_id::text,0));
+  select exists(select 1 from public.watch_history_receipts r
+    where r.user_id=p_user_id and r.client_id=(p_event->>'clientEventId')::uuid
+      and r.expires_at>pg_catalog.transaction_timestamp()) into receipt_existed;
   ack:=public.apply_watch_progress_v3_canonical(p_user_id,p_event,p_room_authority);
-  if (ack->>'duplicate')::boolean then return ack; end if;
+  if receipt_existed then return ack; end if;
   generation:=(ack->>'accountGeneration')::bigint;
   -- A delayed event need not be the latest progress. Resolve its actual identity.
   select s.id into sid from public.watch_sessions s join public.watch_session_participants p on p.session_id=s.id and p.user_id=p_user_id
@@ -126,13 +133,21 @@ begin
       and (c.room_generation is null or c.room_generation=s.room_generation)
       and greatest(o.first_observed_at,r.first_observed_at,c.action_at,c.accepted_at)<=least(o.last_observed_at,r.last_observed_at)
     order by c.owner_user_id,c.client_action_id,c.recipient_user_id
-    for update of c
   loop
-    update public.watch_history_group_invitation_contexts c set room_generation=ctx.room_generation
-    where c.owner_user_id=ctx.owner_user_id and c.client_action_id=ctx.client_action_id and c.recipient_user_id=ctx.recipient_user_id
-      and (c.room_generation is null or c.room_generation=ctx.room_generation)
-    returning c.room_generation into room_generation_value;
-    if found then
+    -- Recipients share one immutable action generation. Acquire this lock before
+    -- locking any recipient context rows so concurrent recipients cannot bind
+    -- independently or deadlock while updating the action's other recipients.
+    perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(
+      'watch-group-action:'||ctx.owner_user_id::text||':'||ctx.client_action_id::text,0));
+    select min(c.room_generation) into action_generation
+    from public.watch_history_group_invitation_contexts c
+    where c.owner_user_id=ctx.owner_user_id and c.client_action_id=ctx.client_action_id;
+    if action_generation is null then
+      update public.watch_history_group_invitation_contexts c set room_generation=ctx.room_generation
+      where c.owner_user_id=ctx.owner_user_id and c.client_action_id=ctx.client_action_id;
+      action_generation:=ctx.room_generation;
+    end if;
+    if action_generation=ctx.room_generation then
       insert into public.watch_history_session_groups values(ctx.owner_user_id,ctx.history_generation,sid,ctx.group_id,ctx.group_name) on conflict do nothing;
     end if;
   end loop;
