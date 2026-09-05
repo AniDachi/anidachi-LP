@@ -474,10 +474,10 @@
     "semantic_hash": "c5b05dac7a2f010edb99e91a9db557e3"
   },
   "apps/extension/test/crunchyroll-artwork.test.ts": {
-    "mtime": 1786689011.2591023,
-    "seen": 1787168236.384407,
-    "ast_hash": "310c14ab11b521b44465db8e6bee3d79",
-    "semantic_hash": "310c14ab11b521b44465db8e6bee3d79"
+    "mtime": 1788582540.1984446,
+    "seen": 1788585825.759979,
+    "ast_hash": "ac5859747dc4b54236bb0317b624ffbe",
+    "semantic_hash": "ac5859747dc4b54236bb0317b624ffbe"
   },
   "apps/extension/test/crunchyroll-progress.test.ts": {
     "mtime": 1788562478.182035,
@@ -684,10 +684,10 @@
     "semantic_hash": "1ea4389d65c27317105654961737ddf2"
   },
   "apps/web/app/account/watch-library/watch-library-client.tsx": {
-    "mtime": 1788572314.1956823,
-    "seen": 1788574053.032793,
-    "ast_hash": "6f24187dc10cce051d6939087887ddb1",
-    "semantic_hash": "6f24187dc10cce051d6939087887ddb1"
+    "mtime": 1788583719.7287936,
+    "seen": 1788585825.7600472,
+    "ast_hash": "9d3eedc17a3b4121424664d2ed5ab6da",
+    "semantic_hash": "9d3eedc17a3b4121424664d2ed5ab6da"
   },
   "apps/web/app/anime-watch-party-toolkit/page.tsx": {
     "mtime": 1786728374.6845489,
@@ -3606,10 +3606,10 @@
     "semantic_hash": "4e0420e077e5ebc55dbe7b2187df7832"
   },
   "docs/current-development-state.md": {
-    "mtime": 1788576521.6572263,
-    "seen": 1788577858.468318,
-    "ast_hash": "bbdacaf8090dbecbceb0f29e7736043f",
-    "semantic_hash": "bbdacaf8090dbecbceb0f29e7736043f"
+    "mtime": 1788584806.7327015,
+    "seen": 1788585825.7603872,
+    "ast_hash": "e144b590f99ad1946741cedbe294957b",
+    "semantic_hash": "e144b590f99ad1946741cedbe294957b"
   },
   "docs/development-environments.md": {
     "mtime": 1786689011.3582418,
@@ -4134,10 +4134,10 @@
     "semantic_hash": "61abfb232e04d14542bb1e5256a64439"
   },
   "apps/extension/src/source-adapters/crunchyroll/artwork-select.ts": {
-    "mtime": 1786689011.2561555,
-    "seen": 1787168236.384393,
-    "ast_hash": "a37099ef1e6b599d1b80a1af9e42a231",
-    "semantic_hash": "a37099ef1e6b599d1b80a1af9e42a231"
+    "mtime": 1788582608.954678,
+    "seen": 1788585825.7599518,
+    "ast_hash": "712d428cc25e1120a9d92ae1d0afe864",
+    "semantic_hash": "712d428cc25e1120a9d92ae1d0afe864"
   },
   "apps/extension/src/source-adapters/crunchyroll/artwork.ts": {
     "mtime": 1786689011.256205,
@@ -4146,16 +4146,16 @@
     "semantic_hash": "38e15ea893e46fccde0a87b7e5d86db8"
   },
   "apps/extension/src/source-adapters/crunchyroll/bridge-client.ts": {
-    "mtime": 1788563818.2315922,
-    "seen": 1788574053.032717,
-    "ast_hash": "573b35ff5baa89f5c3a29f846b95a953",
-    "semantic_hash": "573b35ff5baa89f5c3a29f846b95a953"
+    "mtime": 1788582608.9543104,
+    "seen": 1788585825.7599528,
+    "ast_hash": "0af62430d4cb441ebd9976e306f9bb99",
+    "semantic_hash": "0af62430d4cb441ebd9976e306f9bb99"
   },
   "apps/extension/src/source-adapters/crunchyroll/bridge-contract.ts": {
-    "mtime": 1788561934.8497114,
-    "seen": 1788574053.0327182,
-    "ast_hash": "c99cbc641a4c246d2599a8be9257e73f",
-    "semantic_hash": "c99cbc641a4c246d2599a8be9257e73f"
+    "mtime": 1788582608.9539108,
+    "seen": 1788585825.7599528,
+    "ast_hash": "a6424b0ba53439632bd3fa8656ef440c",
+    "semantic_hash": "a6424b0ba53439632bd3fa8656ef440c"
   },
   "apps/extension/src/source-adapters/crunchyroll/definition.ts": {
     "mtime": 1787457610.6056805,
@@ -5382,10 +5382,10 @@
     "semantic_hash": "594e8de32ac2072b78c6d1a791611a3f"
   },
   "apps/extension/src/watch-history-client.ts": {
-    "mtime": 1788565531.44224,
-    "seen": 1788574053.032732,
-    "ast_hash": "2144cedd8aa3fc382e80a3da4f76565d",
-    "semantic_hash": "2144cedd8aa3fc382e80a3da4f76565d"
+    "mtime": 1788582608.9555075,
+    "seen": 1788585825.75997,
+    "ast_hash": "34981ca8cb2a0a692f16e3c86d3a370d",
+    "semantic_hash": "34981ca8cb2a0a692f16e3c86d3a370d"
   },
   "apps/extension/src/watch-history-controller.ts": {
     "mtime": 1788562467.4315684,
@@ -5418,10 +5418,10 @@
     "semantic_hash": "92725e0434a104a0f10ea4bcf6b310f5"
   },
   "apps/extension/test/watch-history-client.test.ts": {
-    "mtime": 1788565502.2201262,
-    "seen": 1788574053.032784,
-    "ast_hash": "38c4dd5d763d07d2f3a8ae8392ab6846",
-    "semantic_hash": "38c4dd5d763d07d2f3a8ae8392ab6846"
+    "mtime": 1788582540.1971397,
+    "seen": 1788585825.760036,
+    "ast_hash": "d582ffeeb47f8c15673396e359395c85",
+    "semantic_hash": "d582ffeeb47f8c15673396e359395c85"
   },
   "apps/extension/test/watch-history-controller.test.ts": {
     "mtime": 1788562442.0452225,
@@ -5472,16 +5472,16 @@
     "semantic_hash": "c1f2fef3b39f9db25f51b5d651bc44fb"
   },
   "apps/extension/src/popup-watch-history.tsx": {
-    "mtime": 1788566636.6872265,
-    "seen": 1788574053.032701,
-    "ast_hash": "18c60d5e7982e943d8e45d954c01fa8a",
-    "semantic_hash": "18c60d5e7982e943d8e45d954c01fa8a"
+    "mtime": 1788582807.0400877,
+    "seen": 1788585825.7599301,
+    "ast_hash": "b28c598ae18e5372b4e561c7839022b7",
+    "semantic_hash": "b28c598ae18e5372b4e561c7839022b7"
   },
   "apps/extension/test/popup-watch-history.test.tsx": {
-    "mtime": 1788566583.0424411,
-    "seen": 1788574053.0327601,
-    "ast_hash": "2f6af135cc6609bdf281f9f150a6dacf",
-    "semantic_hash": "2f6af135cc6609bdf281f9f150a6dacf"
+    "mtime": 1788582795.0925741,
+    "seen": 1788585825.7600052,
+    "ast_hash": "684fb24b02cf131f7a4ad12dfe4d129f",
+    "semantic_hash": "684fb24b02cf131f7a4ad12dfe4d129f"
   },
   "apps/extension/src/extension-theme.ts": {
     "mtime": 1787457610.6017969,
@@ -5886,10 +5886,10 @@
     "semantic_hash": "52cfeaae95d07d855ab977d305f03ca6"
   },
   "apps/web/app/account/watch-library/watch-library-client.test.tsx": {
-    "mtime": 1788572289.5441163,
-    "seen": 1788574053.032792,
-    "ast_hash": "acdb602fe3fa084d5e904892d057d480",
-    "semantic_hash": "acdb602fe3fa084d5e904892d057d480"
+    "mtime": 1788583696.2248266,
+    "seen": 1788585825.760046,
+    "ast_hash": "13e5b6cae86aae6c90d69141d660227c",
+    "semantic_hash": "13e5b6cae86aae6c90d69141d660227c"
   },
   "apps/web/app/api/internal/rooms/[roomId]/source/route.ts": {
     "mtime": 1787457610.618841,
@@ -6474,10 +6474,10 @@
     "semantic_hash": "e72148f46d4fffc4357c96aa2449c5a4"
   },
   "apps/extension/src/popup-watch-history-styles.ts": {
-    "mtime": 1788566255.8571427,
-    "seen": 1788574053.032701,
-    "ast_hash": "003e2a43d0753bd3ec10e4e466104bd3",
-    "semantic_hash": "003e2a43d0753bd3ec10e4e466104bd3"
+    "mtime": 1788581321.7417994,
+    "seen": 1788585825.7599292,
+    "ast_hash": "31a90481f91308aa63e1d2774c6e270a",
+    "semantic_hash": "31a90481f91308aa63e1d2774c6e270a"
   },
   "docs/superpowers/plans/2026-09-05-watch-history-crunchyroll-catalog-progress-plan.md": {
     "mtime": 1788576521.6595411,
@@ -6492,10 +6492,10 @@
     "semantic_hash": "74a27844defb794c1178dc8f8a88fe27"
   },
   "apps/extension/src/watch-history-catalog.ts": {
-    "mtime": 1788565563.854738,
-    "seen": 1788574053.032732,
-    "ast_hash": "f755ebb309c83c2b61913890c2d54239",
-    "semantic_hash": "f755ebb309c83c2b61913890c2d54239"
+    "mtime": 1788582608.955021,
+    "seen": 1788585825.759969,
+    "ast_hash": "e5d10c5850319cd1fb25d1ff5c71a26b",
+    "semantic_hash": "e5d10c5850319cd1fb25d1ff5c71a26b"
   },
   "apps/extension/test/crunchyroll-catalog.test.ts": {
     "mtime": 1788561419.5526478,
@@ -6504,10 +6504,10 @@
     "semantic_hash": "2ad8277561f7f906bc8ffd7ae56af1bb"
   },
   "apps/extension/test/crunchyroll-history-bridge.test.ts": {
-    "mtime": 1788562156.006111,
-    "seen": 1788574053.03274,
-    "ast_hash": "19d20b62e2d8bd371bae770898474da3",
-    "semantic_hash": "19d20b62e2d8bd371bae770898474da3"
+    "mtime": 1788582687.4454372,
+    "seen": 1788585825.75998,
+    "ast_hash": "8fe959cafea96491ac31010d93682f1f",
+    "semantic_hash": "8fe959cafea96491ac31010d93682f1f"
   },
   "apps/extension/test/fixtures/crunchyroll/catalog-availability.json": {
     "mtime": 1788553227.4193099,
@@ -6540,10 +6540,10 @@
     "semantic_hash": "1c01c045f8b32b30a01c9a7b2c16a9ea"
   },
   "apps/extension/test/watch-history-catalog.test.ts": {
-    "mtime": 1788565448.6776505,
-    "seen": 1788574053.032784,
-    "ast_hash": "74ec4dba22c98ea36d23fca942e6e8ec",
-    "semantic_hash": "74ec4dba22c98ea36d23fca942e6e8ec"
+    "mtime": 1788582687.4452846,
+    "seen": 1788585825.760035,
+    "ast_hash": "fe6799c8242a2608a666484fad5bfd1f",
+    "semantic_hash": "fe6799c8242a2608a666484fad5bfd1f"
   },
   "apps/web/app/api/watch-history/v3/catalog/attempt/route.ts": {
     "mtime": 1788559046.8426197,
