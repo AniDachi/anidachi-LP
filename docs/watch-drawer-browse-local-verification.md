@@ -149,12 +149,11 @@ candidate remain ignored local artifacts.
 ## Knowledge Graph Maintenance
 
 Graphify is maintained alongside this handoff through the code AST update and
-Codex semantic extraction. The controller health-validated the first semantic pass
-and will verify a final incremental refresh for this closeout plus the three
-server/test fix paths before treating graph maintenance as closed. Measured agent
-usage is unavailable. Numerical graph metrics remain in
-`graphify-out/GRAPH_REPORT.md`; they are not duplicated in semantic input docs to
-avoid self-churn.
+Codex semantic extraction. The accompanying graph-only checkpoint records the final
+AST/semantic refresh and freshness verification for this source. Graph maintenance
+is complete only with that checkpoint. Measured agent usage is unavailable.
+Numerical graph metrics remain in `graphify-out/GRAPH_REPORT.md`; they are not
+duplicated in semantic input docs to avoid self-churn.
 
 ## Review And Gate Exceptions
 

@@ -27,9 +27,9 @@ in this status is a push, PR, merge, remote migration, staging deployment,
 tester-folder update, authenticated staging acceptance, or production promotion.
 
 Graphify is maintained alongside this handoff through the code AST update and
-Codex semantic extraction. The controller health-validated the first semantic pass
-and will verify a final incremental refresh for this closeout plus the three fix
-paths before closing graph maintenance. Measured agent usage is unavailable;
+Codex semantic extraction. The accompanying graph-only checkpoint records the final
+AST/semantic refresh and freshness verification for this source. Graph maintenance
+is complete only with that checkpoint. Measured agent usage is unavailable;
 numerical graph metrics live in `graphify-out/GRAPH_REPORT.md` and are not repeated
 in semantic input docs to avoid self-churn.
 
@@ -178,11 +178,11 @@ generated artifacts stay ignored.
   unchanged staging. Do not update the two established folders yet.
 - [x] Review the whole diff independently for cross-account leaks, temporal
   provenance, query/cursor isolation, truthfulness, deletion, consent and UI.
-- [ ] Update docs and semantic Graphify with the new boundaries. Preserve historical
+- [x] Update docs and semantic Graphify with the new boundaries. Preserve historical
   release evidence, record additive DB-first rollout and rollback to old runtime.
-  Product documentation is current through the final source verdict. The first
-  semantic pass is health-validated; the controller-owned final incremental refresh
-  after this closeout commit remains the last graph-maintenance step.
+  The accompanying graph-only checkpoint records the final AST/semantic refresh and
+  freshness verification for this source. Graph maintenance is complete only with
+  that checkpoint.
 - [x] Keep all source locally committed in coherent checkpoints; leave no unrelated
   uncommitted source or generated artifacts staged. No push/merge/deploy.
 - [x] Prepare the local handoff with the source verdict, visual evidence, and exact
