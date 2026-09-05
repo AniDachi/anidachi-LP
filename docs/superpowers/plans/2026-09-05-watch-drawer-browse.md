@@ -35,7 +35,9 @@ in semantic input docs to avoid self-churn.
 
 ## Global Constraints
 
-- Local only: no push, PR, merge, remote migration/deploy, or main changes.
+- The original implementation was local-only. On 2026-09-05 the user authorized
+  staging delivery through PR #268 (database first) and PR #269 (runtime second),
+  then both established tester folders. Main/production remain out of scope.
 - Preserve current history, YouTube consent, account fences and media/room flows.
 - Filter durable history before pagination; never infer groups from current members.
 - Group association is owner-private and based on invitation plus actual viewing.
@@ -45,6 +47,18 @@ in semantic input docs to avoid self-churn.
 - No new dependencies, services, polling or speculative history backfill.
 - Do not overwrite tester folders with a client requiring undeployed endpoints.
 - Keep changes isolated in this linked worktree and preserve unrelated edits.
+
+## Authorized Staging Delivery
+
+The original local-task checkboxes below remain the historical implementation
+record. The subsequent staging release must verify the database prerequisite
+before merging matching runtime, retain the previous v3 deployment/artifacts for
+rollback, and record CI, Vercel, smoke and exact tester-artifact evidence in PRs
+#268/#269. The first preview's test-only Next.js reserved-binding error was
+reproduced locally and fixed by renaming the imported test binding (`caa1ecc8`);
+the focused tests and exact lint gate passed without changing runtime behavior.
+No history reset/backfill, new service, permission or production promotion is
+authorized. Authenticated provider/group acceptance follows the user's reload.
 
 ## Task 1: Durable Provenance And Server Browse Boundary
 

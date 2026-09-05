@@ -2,6 +2,11 @@
 
 Date: 2026-09-05.
 
+This is the historical local-verification receipt. The user later authorized
+staging delivery through database prerequisite PR #268 and runtime PR #269, then
+both established tester folders. Those PRs carry the subsequent release evidence;
+the local-only boundaries and observations below describe the earlier checkpoint.
+
 Status: the extension/UI candidate remains verified at source
 `bf260d7e858bbd721820a2c7a4ee5532ac924542`; the later server-only episode-label
 search fix is `a92dbdc6bf631af775742014246b1fb97f151e84`. The strongest-model

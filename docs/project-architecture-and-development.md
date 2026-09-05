@@ -392,15 +392,18 @@ Current ownership:
 - Worker may broadcast live progress inside an active room, but durable progress
   belongs to Supabase.
 
-Watch History v3 is active on staging. The 2026-09-05 Watch drawer browse work is
-an unpublished local candidate that adds bounded server-side search, date,
+Watch History v3 is active on staging. The 2026-09-05 Watch drawer browse work
+adds bounded server-side search, date,
 participant, and owner-private group filtering without changing the progress
 authority, room protocol, Worker, capture, or consent policy. Its approved design
 and rollout boundary are in
 `docs/superpowers/specs/2026-09-05-watch-drawer-browse-design.md` and
 `docs/superpowers/plans/2026-09-05-watch-drawer-browse.md`; local evidence is in
-`docs/watch-drawer-browse-local-verification.md`. Matching database, Web, and
-extension rollout plus authenticated staging acceptance remain required.
+`docs/watch-drawer-browse-local-verification.md`. The user-authorized staging
+delivery uses database-only PR #268 before runtime PR #269; their release receipts
+record matching database, Web and tester-artifact verification. Authenticated
+staging acceptance remains distinct from deployment and folder synchronization.
+Main and production are outside this rollout.
 
 ## Local Development
 

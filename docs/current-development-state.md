@@ -1181,19 +1181,23 @@ the previous staging artifact; no database rollback is required. Continue design
 work from this checkpoint. Production promotion still needs separate authorization
 and the applicable staging acceptance gates.
 
-### Watch Drawer Browse Local Candidate (2026-09-05)
+### Watch Drawer Browse Staging Delivery (2026-09-05)
 
 Branch `codex/watch-history-browse` retains the extension/UI candidate at
 `bf260d7e858bbd721820a2c7a4ee5532ac924542`. The final server review found an
 episode-label search gap; its server-only fix is
 `a92dbdc6bf631af775742014246b1fb97f151e84`, with fresh guarded SQL/RPC evidence.
 The strongest-model final source review and the scoped re-review of that fix found
-no remaining issue; the local implementation and handoff are complete. This is not
-a staging deployment. Staging still reflects PR `#267` at `f2fafb29`; technical
-`main` remains at `54a154b7` with Watch History v2. No remote migration, Web
-deployment, extension synchronization, tester-folder update, browser reload, push,
-PR, merge, or production change is claimed. Authenticated staging activation and
-acceptance remain separately authorized work.
+no remaining issue; the local implementation and handoff are complete. The user
+subsequently authorized staging delivery and both established tester folders.
+Database-only [PR #268](https://github.com/AniDachi/anidachi-LP/pull/268) precedes
+runtime [PR #269](https://github.com/AniDachi/anidachi-LP/pull/269); their release
+receipts record the actual migration, deployment, smoke and artifact outcomes.
+The pre-rollout rollback anchor is PR #267 at `f2fafb29`. Technical `main` remains
+at `54a154b7` with Watch History v2 and is not part of this delivery. Publishing
+or synchronizing folders alone is not authenticated user acceptance or browser
+reload proof. The first preview exposed a test-only Next.js reserved `module`
+binding; `caa1ecc8` renames it without changing runtime or test behavior.
 
 The database remains the durable authority. Canonical personal progress and
 title/season aggregates do not change under search or filters. New bounded reads
