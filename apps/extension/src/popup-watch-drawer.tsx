@@ -3,6 +3,7 @@ import {
 	WatchHistoryBrowseTitleEpisodesResponseSchema,
 	WatchHistoryBrowseSessionsResponseSchema,
 	WatchHistoryRoomRecreationResponseSchema,
+	WatchHistoryResponseSchema,
 	type WatchHistoryBrowseResponse,
 	type WatchHistoryBrowseTitleEpisodesResponse,
 	type WatchHistoryBrowseSessionsResponse,
@@ -12,9 +13,19 @@ import {
 	type WatchProgressEvent,
 } from "@anidachi/protocol";
 import { Check, ChevronDown, RefreshCw, Search, X } from "lucide-react";
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import {
+	useCallback,
+	useEffect,
+	useId,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import { WEB_HTTP_BASE } from "./constants";
-import { usePopupWatchBrowse } from "./popup-watch-browse";
+import {
+	PopupWatchBrowseRecovery,
+	usePopupWatchBrowse,
+} from "./popup-watch-browse";
 import {
 	PopupWatchFilters,
 	emptyHistoryConditions,
@@ -123,6 +134,12 @@ function WatchDrawer({
 	const [now, setNow] = useState(() => new Date());
 	const [busy, setBusy] = useState<string | null>(null);
 	const [actionError, setActionError] = useState<string | null>(null);
+	const [recovering, setRecovering] = useState(false);
+	const [recoveryError, setRecoveryError] = useState<string | null>(null);
+	const recoveryAttempts = useRef(new Set<number | undefined>());
+	const recoveryFlight = useRef<Promise<boolean> | null>(null);
+	const currentClient = useRef(client);
+	currentClient.current = client;
 	const [oldOwnerPending, setOldOwnerPending] = useState(false);
 	const [layout, setLayout] = useState<PopupHistoryLayout | null>(null);
 	const [branches, setBranches] = useState<
@@ -138,6 +155,10 @@ function WatchDrawer({
 	}, [refreshVersion]);
 	useEffect(() => {
 		const token = ++actionGeneration.current;
+		recoveryAttempts.current.clear();
+		recoveryFlight.current = null;
+		setRecovering(false);
+		setRecoveryError(null);
 		let disposed = false;
 		const accept = (value: PopupWatchHistorySnapshot | null) => {
 			if (disposed || !value || value.history.meta.ownerUserId !== ownerUserId)
@@ -190,6 +211,98 @@ function WatchDrawer({
 			if (actionGeneration.current === token) actionGeneration.current++;
 		};
 	}, [client, ownerUserId]);
+	const recoverCanonical = useCallback(() => {
+		if (recoveryFlight.current) return recoveryFlight.current;
+		const token = actionGeneration.current;
+		const startedGeneration = snapshotRef.current?.accountGeneration;
+		const current = () =>
+			actionGeneration.current === token && currentClient.current === client;
+		setRecovering(true);
+		setRecoveryError(null);
+		const flight = (async () => {
+			try {
+				// Only the existing canonical read may advance storage generation. Browse
+				// DTOs stay view-local; the background read retains its auth/write fences.
+				const result = await requestPopupWatchHistory(client, {
+					type: "ANIDACHI_WATCH_HISTORY_V3",
+					command: "list",
+					limit: 100,
+				});
+				if (!current()) return false;
+				const parsed = result.ok
+					? WatchHistoryResponseSchema.safeParse(result.data)
+					: null;
+				if (
+					!parsed?.success ||
+					parsed.data.meta.ownerUserId !== ownerUserId ||
+					parsed.data.meta.accountGeneration < (startedGeneration ?? 0)
+				)
+					throw new Error("canonical recovery");
+				const history = parsed.data;
+				if (startedGeneration === undefined)
+					recoveryAttempts.current.add(history.meta.accountGeneration);
+				const cached = await client.loadCached(ownerUserId);
+				if (
+					!current() ||
+					(snapshotRef.current?.accountGeneration ?? 0) >
+						history.meta.accountGeneration ||
+					(cached?.history.meta.ownerUserId === ownerUserId &&
+						cached.accountGeneration > history.meta.accountGeneration)
+				)
+					return false;
+				setSnapshot((previous) => {
+					if (
+						(previous?.accountGeneration ?? 0) > history.meta.accountGeneration
+					)
+						return previous;
+					if (
+						cached?.history.meta.ownerUserId === ownerUserId &&
+						cached.accountGeneration === history.meta.accountGeneration &&
+						Date.parse(cached.history.generatedAt) >=
+							Date.parse(history.generatedAt)
+					)
+						return cached;
+					const sameGeneration =
+						previous?.accountGeneration === history.meta.accountGeneration;
+					return {
+						history,
+						accountGeneration: history.meta.accountGeneration,
+						preferences: previous?.preferences ?? {
+							youtubeHistoryEnabled: false,
+						},
+						pendingEvents: sameGeneration ? previous.pendingEvents : [],
+						localObservation: sameGeneration ? previous.localObservation : null,
+						capturePaused: sameGeneration ? previous.capturePaused : false,
+					};
+				});
+				setRefresh((value) => value + 1);
+				return true;
+			} catch {
+				if (current())
+					setRecoveryError("Could not refresh watch history. Please retry.");
+				return false;
+			} finally {
+				if (current()) {
+					recoveryFlight.current = null;
+					setRecovering(false);
+				}
+			}
+		})();
+		recoveryFlight.current = flight;
+		return flight;
+	}, [client, ownerUserId]);
+	const recoverAfterMismatch = useCallback(
+		(manual: boolean) => {
+			const generation = snapshotRef.current?.accountGeneration;
+			if (!manual && recoveryAttempts.current.has(generation))
+				return Promise.resolve(false);
+			// All streams share one attempt fence and flight, including child-only
+			// mismatches. Failed recovery needs explicit Retry, not another auto loop.
+			recoveryAttempts.current.add(generation);
+			return recoverCanonical();
+		},
+		[recoverCanonical],
+	);
 
 	const dates = useMemo(
 		() =>
@@ -231,9 +344,13 @@ function WatchDrawer({
 		meta: titleMeta,
 		cursor: titleCursor,
 		refresh: refreshVersion + invalidation,
-		enabled: dates.ok && cacheReady,
+		enabled: dates.ok && cacheReady && !recovering,
 		generation: snapshot?.accountGeneration,
 	});
+	useEffect(() => {
+		if (browsing.errorStatus === "generation-mismatch")
+			void recoverAfterMismatch(false);
+	}, [browsing.errorStatus, recoverAfterMismatch]);
 	const titleItems = dates.ok
 		? mergeBy(
 				browsing.pages.flatMap((page) => page.history.items),
@@ -402,11 +519,15 @@ function WatchDrawer({
 					previous ? { ...previous, capturePaused: false } : previous,
 				);
 			}
+			if (browsing.error || recoveryError) {
+				await recoverAfterMismatch(true);
+				return;
+			}
 			setNow(new Date());
 			setRefresh((value) => value + 1);
 		});
-	const error = actionError ?? browsing.error;
-	return (
+	const error = actionError ?? recoveryError ?? browsing.error;
+	const content = (
 		<section className="popup-watch-screen" aria-label="Watch History">
 			<div className="popup-watch-controls">
 				<div
@@ -473,11 +594,13 @@ function WatchDrawer({
 			</div>
 			<div className="popup-watch-status">
 				<span role="status">
-					{browsing.loading
-						? browsing.pages.length
-							? "Updating..."
-							: "Loading watch history..."
-						: ""}
+					{recovering
+						? "Recovering watch history..."
+						: browsing.loading
+							? browsing.pages.length
+								? "Updating..."
+								: "Loading watch history..."
+							: ""}
 				</span>
 				<button
 					aria-label={
@@ -486,7 +609,7 @@ function WatchDrawer({
 							: "Refresh watch history"
 					}
 					className="popup-watch-refresh"
-					disabled={browsing.loading || Boolean(busy)}
+					disabled={recovering || browsing.loading || Boolean(busy)}
 					type="button"
 					onClick={refreshHistory}
 				>
@@ -605,7 +728,7 @@ function WatchDrawer({
 						);
 					})}
 				</div>
-			) : !browsing.loading && !error && dates.ok ? (
+			) : !recovering && !browsing.loading && !error && dates.ok ? (
 				<div className="popup-empty">
 					{search.trim() ||
 					conditions.period !== "all-time" ||
@@ -639,6 +762,11 @@ function WatchDrawer({
 				</button>
 			</footer>
 		</section>
+	);
+	return (
+		<PopupWatchBrowseRecovery.Provider value={recoverAfterMismatch}>
+			{content}
+		</PopupWatchBrowseRecovery.Provider>
 	);
 }
 
@@ -1076,6 +1204,7 @@ function PopupEpisode({
 		cursor: sessionCursor,
 		refresh,
 		enabled: sessionsOpen && match?.sessionsComplete === false,
+		discard: match?.sessionsComplete === true,
 		generation,
 	});
 	const sessions = mergeBy(

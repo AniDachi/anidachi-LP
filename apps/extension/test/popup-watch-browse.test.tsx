@@ -10,9 +10,18 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
 	PopupWatchHistoryPanel,
+	selectConfirmedPopupWatchHistorySnapshot,
 	type PopupWatchHistoryClient,
 } from "../src/popup-watch-history";
-import type { WatchHistoryMessageResponse } from "../src/watch-history-client";
+import {
+	createWatchHistoryClient,
+	type WatchHistoryMessageResponse,
+} from "../src/watch-history-client";
+import {
+	createWatchHistoryStorage,
+	watchHistoryPartitionKey,
+	type WatchHistoryStorageRoot,
+} from "../src/watch-history-storage";
 
 const OWNER = "00000000-0000-4000-8000-000000000001";
 const GROUP = "00000000-0000-4000-8000-000000000003";
@@ -165,6 +174,62 @@ function clientFixture(
 			}),
 	};
 }
+function generationClient(fetch: typeof globalThis.fetch) {
+	let stored: WatchHistoryStorageRoot = {
+		schemaVersion: 3,
+		activeGenerations: { [OWNER]: 1 },
+		partitions: {
+			[watchHistoryPartitionKey(OWNER, 1)]: {
+				ownerUserId: OWNER,
+				accountGeneration: 1,
+				cache: browse().history,
+				preferences: { youtubeHistoryEnabled: false },
+				preferencesConfirmed: true,
+				capturePaused: false,
+				captureMarkersReady: true,
+				currentObservation: null,
+				outbox: { ownerUserId: OWNER, accountGeneration: 1, entries: [] },
+			},
+		},
+	};
+	const storage = createWatchHistoryStorage({
+		item: {
+			getValue: async () => structuredClone(stored),
+			setValue: async (value) => {
+				stored = structuredClone(value);
+			},
+		},
+		getBytesInUse: async () => 0,
+		quotaBytes: 1_000_000,
+	});
+	const background = createWatchHistoryClient({
+		storage,
+		fetch,
+		getCurrentSession: async () => ({
+			accessToken: "test",
+			refreshToken: "test",
+			user: {
+				id: OWNER,
+				email: "test@example.invalid",
+				displayName: "Test",
+				avatarUrl: null,
+				plan: "plus",
+			},
+		}),
+	});
+	return {
+		storage,
+		client: {
+			...clientFixture(),
+			request: vi.fn(background.handle),
+			loadCached: async (owner: string) =>
+				selectConfirmedPopupWatchHistorySnapshot(
+					await storage.readRoot(),
+					owner,
+				),
+		},
+	};
+}
 (
 	globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
 ).IS_REACT_ACT_ENVIRONMENT = true;
@@ -222,6 +287,322 @@ async function change(label: string, value: string) {
 }
 
 describe("production watch browsing", () => {
+	it("coalesces child-only generation mismatches and lets child Retry recover canonical authority", async () => {
+		let cleared = false;
+		let finishDetail: ((value: Response) => void) | undefined;
+		const canonicalReads: Array<(value: Response) => void> = [];
+		const next = browse("After child recovery");
+		next.history.meta.accountGeneration = 2;
+		const nextDetail = detail();
+		nextDetail.detail.meta.accountGeneration = 2;
+		const { client, storage } = generationClient(async (url) => {
+			const path = new URL(String(url)).pathname;
+			if (path.endsWith("/browse"))
+				return Response.json(cleared ? next : browse());
+			if (path.endsWith("/browse/title-episodes"))
+				return cleared
+					? Response.json(nextDetail)
+					: new Promise((resolve) => {
+							finishDetail = resolve;
+						});
+			if (path.endsWith("/browse/options"))
+				return Response.json({
+					meta: { ...meta, accountGeneration: 2 },
+					options: [],
+					nextCursor: null,
+				});
+			return new Promise((resolve) => canonicalReads.push(resolve));
+		});
+		await mount(client);
+		await click("Together");
+		expect(container.textContent).toContain("Frieren");
+		cleared = true;
+		await click("Filters");
+		await act(async () => required(finishDetail)(Response.json(nextDetail)));
+		expect(canonicalReads).toHaveLength(1);
+		expect(
+			client.request.mock.calls.filter(([m]) => m.command === "list"),
+		).toHaveLength(1);
+		await act(async () =>
+			required(canonicalReads[0])(new Response("offline", { status: 503 })),
+		);
+		expect(button("Retry options")).toBeDefined();
+		expect(button("Retry episodes")).toBeDefined();
+		expect(canonicalReads).toHaveLength(1);
+		await click("Retry options");
+		expect(canonicalReads).toHaveLength(2);
+		await act(async () =>
+			required(canonicalReads[1])(Response.json(next.history)),
+		);
+		expect(container.textContent).toContain("After child recovery");
+		expect((await storage.readRoot()).activeGenerations?.[OWNER]).toBe(2);
+		expect(container.querySelector('[role="alert"]')).toBeNull();
+		expect(
+			client.request.mock.calls.filter(([m]) => m.command === "list"),
+		).toHaveLength(2);
+	});
+	it("recovers an open drawer from cached generation 1 to server generation 2 through canonical authority", async () => {
+		const page = browse("After website clear");
+		page.history.meta.accountGeneration = 2;
+		const fetch = vi.fn(async (url: RequestInfo | URL) => {
+			const path = new URL(String(url)).pathname;
+			if (path.endsWith("/browse")) return Response.json(page);
+			if (path.endsWith("/browse/title-episodes")) {
+				const result = detail();
+				result.detail.meta.accountGeneration = 2;
+				return Response.json(result);
+			}
+			return Response.json(page.history);
+		});
+		const { client, storage } = generationClient(fetch);
+		expect((await client.loadCached(OWNER))?.accountGeneration).toBe(1);
+		await mount(client);
+		expect(container.textContent).toContain("After website clear");
+		expect((await storage.readRoot()).activeGenerations?.[OWNER]).toBe(2);
+		expect(
+			client.request.mock.calls.filter(([m]) => m.command === "list"),
+		).toHaveLength(1);
+		expect(
+			client.request.mock.calls.filter(([m]) => m.command === "browse"),
+		).toHaveLength(2);
+		expect(container.querySelector('[role="alert"]')).toBeNull();
+	});
+	it("bounds failed generation recovery and manual Retry replays the current filtered query", async () => {
+		let available = false;
+		const page = browse("Recovered matching title");
+		page.history.meta.accountGeneration = 2;
+		const { client, storage } = generationClient(
+			vi.fn(async (url: RequestInfo | URL) => {
+				const path = new URL(String(url)).pathname;
+				if (path.endsWith("/browse")) return Response.json(page);
+				if (path.endsWith("/browse/title-episodes")) {
+					const result = detail();
+					result.detail.meta.accountGeneration = 2;
+					return Response.json(result);
+				}
+				return available
+					? Response.json(page.history)
+					: new Response("offline", { status: 503 });
+			}),
+		);
+		await mount(client);
+		expect(
+			client.request.mock.calls.filter(([m]) => m.command === "list"),
+		).toHaveLength(1);
+		expect(container.textContent).toContain("Please retry");
+		await change("Search watch history", "Recovered");
+		expect(
+			client.request.mock.calls.filter(([m]) => m.command === "list"),
+		).toHaveLength(1);
+		available = true;
+		await click("Retry watch history");
+		expect(container.textContent).toContain("Recovered matching title");
+		expect((await storage.readRoot()).activeGenerations?.[OWNER]).toBe(2);
+		expect(
+			client.request.mock.calls.filter(([m]) => m.command === "list"),
+		).toHaveLength(2);
+		expect(
+			client.request.mock.calls
+				.filter(([m]) => m.command === "browse")
+				.at(-1)?.[0],
+		).toMatchObject({
+			input: { search: "Recovered", mode: "solo" },
+			expectedOwnerUserId: OWNER,
+		});
+	});
+	it("retires paged sessions when the same custom range becomes an authoritative complete sample", async () => {
+		const sessions: WatchHistorySession[] = Array.from(
+			{ length: 21 },
+			(_, index) => ({
+				id: `00000000-0000-4000-8000-${String(index + 30).padStart(12, "0")}`,
+				kind: "shared",
+				roomId: "old-room",
+				roomGeneration: 1,
+				sourceGeneration: 1,
+				hostUserId: OWNER,
+				currentTime: 900,
+				duration: 1200,
+				progress: 0.75,
+				startedAt: "2020-01-01T00:00:00.000Z",
+				endedAt: null,
+				lastWatchedAt: "2026-09-01T08:00:00.000Z",
+				participants: [
+					{
+						user: {
+							userId: PERSON,
+							displayName: index === 20 ? "Excluded observer" : "Mira",
+							handle: null,
+							avatarUrl: null,
+						},
+						role: "viewer",
+						currentTime: 600,
+						progress: 0.5,
+						joinedAt: "2020-01-01T00:00:00.000Z",
+						updatedAt: meta.serverTime,
+						leftAt: null,
+					},
+				],
+			}),
+		);
+		let complete = false;
+		let finishLate: ((value: WatchHistoryMessageResponse) => void) | undefined;
+		const fallback = clientFixture();
+		const client = clientFixture(
+			vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
+				if (message.command === "browse-title-episodes") {
+					const page = detail();
+					required(page.detail.episodes[0]).sessions = sessions.slice(0, 20);
+					required(page.matches[0]).matchingSessionCount = complete ? 20 : 21;
+					required(page.matches[0]).sessionsComplete = complete;
+					return {
+						ok: true,
+						data: WatchHistoryBrowseTitleEpisodesResponseSchema.parse(page),
+					};
+				}
+				if (message.command === "browse-sessions") {
+					if (complete)
+						return new Promise((resolve) => {
+							finishLate = resolve;
+						});
+					return {
+						ok: true,
+						data: WatchHistoryBrowseSessionsResponseSchema.parse({
+							meta,
+							sessions,
+							groups: [],
+							totalSessionCount: 21,
+							nextCursor: null,
+						}),
+					};
+				}
+				return fallback.request(message);
+			}),
+		);
+		await mount(client);
+		await click("Together");
+		await click("Filters");
+		await change("Period", "custom");
+		await change("From date", "2026-09-01");
+		await change("Through date", "2026-09-01");
+		await click("21 shared sessions");
+		expect(container.querySelectorAll(".popup-watch-session")).toHaveLength(21);
+		expect(container.textContent).toContain("Excluded observer");
+		complete = true;
+		await click("Refresh watch history");
+		expect(button("20 shared sessions")).toBeDefined();
+		expect(container.querySelectorAll(".popup-watch-session")).toHaveLength(20);
+		expect(
+			container.querySelectorAll(
+				'[aria-label="Create room from Shared session"]',
+			),
+		).toHaveLength(20);
+		expect(container.textContent).not.toContain("Excluded observer");
+		expect(finishLate).toBeTypeOf("function");
+		await act(async () =>
+			required(finishLate)({
+				ok: true,
+				data: {
+					meta,
+					sessions,
+					groups: [],
+					totalSessionCount: 21,
+					nextCursor: "obsolete",
+				},
+			}),
+		);
+		expect(container.querySelectorAll(".popup-watch-session")).toHaveLength(20);
+		expect(container.textContent).not.toContain("Load more sessions");
+	});
+	it("does not loop when canonical recovery succeeds without advancing the mismatched generation", async () => {
+		const newer = browse();
+		newer.history.meta.accountGeneration = 2;
+		const { client } = generationClient(async (url) =>
+			Response.json(
+				new URL(String(url)).pathname.endsWith("/browse")
+					? newer
+					: browse().history,
+			),
+		);
+		await mount(client);
+		expect(
+			client.request.mock.calls.filter(([m]) => m.command === "list"),
+		).toHaveLength(1);
+		expect(button("Retry watch history").disabled).toBe(false);
+		await act(async () => {
+			await Promise.resolve();
+		});
+		expect(
+			client.request.mock.calls.filter(([m]) => m.command === "list"),
+		).toHaveLength(1);
+	});
+	it.each([
+		"owner",
+		"generation",
+	] as const)("ignores a canonical recovery finishing after the current %s changes", async (kind) => {
+		let generation = 1;
+		let finish: ((value: WatchHistoryMessageResponse) => void) | undefined;
+		let publish:
+			| Parameters<NonNullable<PopupWatchHistoryClient["subscribe"]>>[1]
+			| undefined;
+		const fallback = clientFixture();
+		const snapshot = (value: ReturnType<typeof browse>["history"]) => ({
+			history: value,
+			accountGeneration: value.meta.accountGeneration,
+			preferences: { youtubeHistoryEnabled: false },
+			pendingEvents: [],
+			localObservation: null,
+			capturePaused: false,
+		});
+		const client: PopupWatchHistoryClient = {
+			...clientFixture(async (message) => {
+				if (message.command === "list")
+					return new Promise((resolve) => {
+						finish = resolve;
+					});
+				if (message.command === "browse") {
+					if (message.expectedOwnerUserId === OWNER && generation === 1)
+						return { ok: false, status: "generation-mismatch" };
+					const page = browse("Current view");
+					page.history.meta.ownerUserId = message.expectedOwnerUserId;
+					page.history.meta.accountGeneration = generation;
+					return { ok: true, data: page };
+				}
+				if (message.command === "browse-title-episodes") {
+					const page = detail();
+					page.detail.meta.ownerUserId = message.expectedOwnerUserId;
+					page.detail.meta.accountGeneration = generation;
+					return { ok: true, data: page };
+				}
+				return fallback.request(message);
+			}),
+			loadCached: async (owner) =>
+				owner === OWNER ? snapshot(browse().history) : null,
+			subscribe: (_owner, listener) => {
+				publish = listener;
+				return () => undefined;
+			},
+		};
+		await mount(client);
+		expect(finish).toBeTypeOf("function");
+		if (kind === "owner") {
+			await act(async () =>
+				root.render(
+					<PopupWatchHistoryPanel client={client} ownerUserId={PERSON} />,
+				),
+			);
+		} else {
+			generation = 3;
+			const page = browse("Current view");
+			page.history.meta.accountGeneration = 3;
+			await act(async () => required(publish)(snapshot(page.history)));
+		}
+		const stale = browse("Obsolete recovery");
+		stale.history.meta.accountGeneration = 2;
+		await act(async () => required(finish)({ ok: true, data: stale.history }));
+		expect(container.textContent).toContain("Current view");
+		expect(container.textContent).not.toContain("Obsolete recovery");
+		expect(container.querySelector('[role="alert"]')).toBeNull();
+	});
 	it("lets a newer browse restore exact availability and artwork after an older partial cache", async () => {
 		const cached = browse().history;
 		cached.generatedAt = cached.meta.serverTime = "2026-09-01T08:00:00.000Z";

@@ -354,7 +354,9 @@ describe("Popup Watch History v3", () => {
     let resolveList: ((value: WatchHistoryMessageResponse) => void) | undefined;
     const cached = historyFixture({ title: "Cached Frieren", currentTime: 420, progress: 0.2 });
     const refreshed = historyFixture({ title: "Canonical Frieren", currentTime: 1_260, progress: 0.6 });
-    refreshed.items[0]!.seasons[0]!.episodes[0]!.lastWatchedAt = "2026-08-15T03:00:10.000Z";
+    const refreshedEpisode = refreshed.items[0]?.seasons[0]?.episodes[0];
+    if (!refreshedEpisode) throw new Error("Missing refreshed episode fixture");
+    refreshedEpisode.lastWatchedAt = "2026-08-15T03:00:10.000Z";
     const client = clientFixture({
       cached: snapshotFixture(cached, [pendingEvent({ currentTime: 840, progress: 0.4 })]),
       request: vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
@@ -1477,7 +1479,9 @@ describe("Popup Watch History v3", () => {
     await click(retry);
 
     await waitFor(() => expect(view.container.textContent).toContain("Frieren"));
-    expect(listAttempts).toBe(2);
+    // This legacy transport maps browse to list: failed browse, canonical
+    // recovery, then the filtered browse replay are three separate reads.
+    expect(listAttempts).toBe(3);
     expect(view.container.textContent).not.toContain("Could not refresh watch history.");
     await unmount(view.root);
   });
@@ -1665,7 +1669,7 @@ function liveClientFixture(history: WatchHistoryResponse, fetch: typeof globalTh
 function fixtureBrowseEpisodes(history: WatchHistoryResponse, input: Record<string, unknown>) {
   const matches = (title: string, episode: WatchHistoryResponse["items"][number]["seasons"][number]["episodes"][number]) =>
     (input.mode === "shared" ? episode.sessions.some(session => session.kind === "shared") : episode.sessions.length === 0 || episode.sessions.some(session => session.kind === "solo")) &&
-    (!input.search || (title + " " + episode.episodeTitle).toLowerCase().includes(String(input.search).toLowerCase()));
+    (!input.search || `${title} ${episode.episodeTitle}`.toLowerCase().includes(String(input.search).toLowerCase()));
   return history.items.flatMap(item => {
     const episodes = item.seasons.flatMap(season => season.episodes).filter(episode => matches(item.title, episode)).map(episode => ({ ...episode, sessions: episode.sessions.filter(session => session.kind === (input.mode === "shared" ? "shared" : "solo")) }));
     if (!item.seasons.length && (!input.search || item.title.toLowerCase().includes(String(input.search).toLowerCase())) && (input.mode !== "shared" || item.sessions.some(session => session.kind === "shared"))) episodes.push({ episodeTitle: item.title, seasonKey: null, seasonTitle: null, seasonNumber: null, episodeNumber: null, sourceUrl: item.sourceUrl, ...item.latestActivity, sessions: item.sessions.filter(session => session.kind === (input.mode === "shared" ? "shared" : "solo")) });

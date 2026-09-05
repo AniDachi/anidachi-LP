@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+	createContext,
+	useContext,
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import type { PopupWatchHistoryClient } from "./popup-watch-history";
 import type { WatchHistoryMessage } from "./watch-history-client";
 
@@ -15,6 +22,9 @@ type BrowseMessage = Extract<
 type Parser<T> = {
 	safeParse(value: unknown): { success: true; data: T } | { success: false };
 };
+export const PopupWatchBrowseRecovery = createContext<
+	((manual: boolean) => Promise<boolean>) | null
+>(null);
 
 // Pages belong to a rendered owner and complete query. Filtered DTOs never enter
 // the canonical storage cache. Background reads replay only user-opened pages.
@@ -27,6 +37,7 @@ export function usePopupWatchBrowse<T>({
 	refresh,
 	enabled = true,
 	generation,
+	discard = false,
 }: {
 	client: PopupWatchHistoryClient;
 	message: BrowseMessage;
@@ -36,14 +47,17 @@ export function usePopupWatchBrowse<T>({
 	refresh: number;
 	enabled?: boolean;
 	generation?: number;
+	discard?: boolean;
 }) {
-	const key = JSON.stringify([message, generation]);
+	const recover = useContext(PopupWatchBrowseRecovery);
+	const key = JSON.stringify([message, generation, discard]);
 	const [state, setState] = useState<{
 		key: string;
 		pages: T[];
 		loading: boolean;
 		error: string | null;
-	}>({ key, pages: [], loading: false, error: null });
+		errorStatus: string | null;
+	}>({ key, pages: [], loading: false, error: null, errorStatus: null });
 	const latest = useRef({ key, client, generation });
 	latest.current = { key, client, generation };
 	const sequence = useRef(0);
@@ -69,6 +83,7 @@ export function usePopupWatchBrowse<T>({
 				pages: previous.key === key ? previous.pages : [],
 				loading: true,
 				error: null,
+				errorStatus: null,
 			}));
 			const pages: T[] = [];
 			let continuation = nextCursor;
@@ -99,6 +114,14 @@ export function usePopupWatchBrowse<T>({
 					setState((previous) => ({
 						...previous,
 						loading: false,
+						errorStatus: !response.ok
+							? response.status
+							: parsed?.success &&
+									meta(parsed.data).ownerUserId ===
+										message.expectedOwnerUserId &&
+									meta(parsed.data).accountGeneration !== generation
+								? "generation-mismatch"
+								: "invalid-response",
 						error:
 							!response.ok && response.status === "storage-full"
 								? "Browser storage is full."
@@ -118,7 +141,13 @@ export function usePopupWatchBrowse<T>({
 						? [...previous.pages, ...pages]
 						: pages;
 				pageCount.current = Math.max(1, merged.length);
-				return { key, pages: merged, loading: false, error: null };
+				return {
+					key,
+					pages: merged,
+					loading: false,
+					error: null,
+					errorStatus: null,
+				};
 			});
 			// The serialized message is the dependency; metadata readers and schemas are
 			// module constants. Playback object identity must not restart network reads.
@@ -127,23 +156,46 @@ export function usePopupWatchBrowse<T>({
 		[key, client, generation],
 	);
 	useEffect(() => {
-		if (enabled) void load();
+		if (discard) {
+			pageCount.current = 1;
+			setState({
+				key,
+				pages: [],
+				loading: false,
+				error: null,
+				errorStatus: null,
+			});
+		} else if (enabled) void load();
 		return () => {
 			sequence.current += 1;
 		};
-	}, [enabled, load, refresh, retry]);
+	}, [enabled, discard, key, load, refresh, retry]);
 	const visible =
 		state.key === key
 			? state
-			: { key, pages: [], loading: enabled, error: null };
+			: {
+					key,
+					pages: [],
+					loading: enabled && !discard,
+					error: null,
+					errorStatus: null,
+				};
 	const lastPage = visible.pages.at(-1);
 	const nextCursor = lastPage ? cursor(lastPage) : null;
+	useEffect(() => {
+		if (visible.errorStatus === "generation-mismatch" && recover)
+			void recover(false);
+	}, [visible.errorStatus, recover]);
 	return {
 		...visible,
 		nextCursor,
-		reload: () => setRetry((value) => value + 1),
+		reload: () => {
+			if (visible.errorStatus === "generation-mismatch" && recover)
+				void recover(true);
+			else setRetry((value) => value + 1);
+		},
 		loadMore: () => {
-			if (nextCursor && !visible.loading) void load(nextCursor);
+			if (!discard && nextCursor && !visible.loading) void load(nextCursor);
 		},
 	};
 }
