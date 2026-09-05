@@ -45,6 +45,7 @@ import {
   type WatchHistoryAccountPartition,
 } from "./watch-history-storage";
 import { createWatchHistoryCatalogCoordinator } from "./watch-history-catalog";
+import { createWatchHistoryBrowseCache, watchBrowseCacheKey } from "./watch-history-browse-cache";
 
 const WATCH_HISTORY_MESSAGE_TYPE = "ANIDACHI_WATCH_HISTORY_V3";
 const FLUSH_LIMIT = 20;
@@ -94,13 +95,13 @@ export type WatchHistoryMessage =
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "content-reconnect" }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "get-preferences"; expectedOwnerUserId?: string }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "browse";
-      expectedOwnerUserId: string; input: unknown }
+      expectedOwnerUserId: string; input: unknown; cacheOnly?: boolean }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "browse-title-episodes";
-      expectedOwnerUserId: string; input: unknown }
+      expectedOwnerUserId: string; input: unknown; cacheOnly?: boolean }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "browse-sessions";
-      expectedOwnerUserId: string; input: unknown }
+      expectedOwnerUserId: string; input: unknown; cacheOnly?: boolean }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "browse-options";
-      expectedOwnerUserId: string; input: unknown }
+      expectedOwnerUserId: string; input: unknown; cacheOnly?: boolean }
   | {
       type: typeof WATCH_HISTORY_MESSAGE_TYPE;
       command: "bootstrap";
@@ -138,6 +139,7 @@ export type WatchHistoryMessageResponse =
   | {
       ok: true;
       data?: unknown;
+      cachedAt?: number;
       flushed?: number;
       hasPendingWork?: boolean;
       byteUse?: number;
@@ -187,6 +189,7 @@ export function parseWatchHistoryBootstrapData(value: unknown): WatchHistoryBoot
 }
 
 export type WatchHistoryClientDependencies = {
+  browseCache?: ReturnType<typeof createWatchHistoryBrowseCache>;
   onCatalogSuperseded?: (pageId: string) => void;
   getCurrentSession: () => Promise<ExtensionAuthTokens | null>;
   getRequestSession?: () => Promise<ExtensionAuthTokens | null>;
@@ -239,7 +242,8 @@ export function isWatchHistoryMessage(value: unknown): value is WatchHistoryMess
     case "browse-title-episodes":
     case "browse-sessions":
     case "browse-options": {
-      if (!hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "input"]) ||
+      if (!hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "input", "cacheOnly"]) ||
+        (value.cacheOnly !== undefined && typeof value.cacheOnly !== "boolean") ||
         !isExpectedOwnerUserId(value.expectedOwnerUserId) || !("input" in value)) return false;
       const schema = value.command === "browse"
         ? WatchHistoryBrowseQuerySchema
@@ -314,6 +318,7 @@ export function isWatchHistoryMessage(value: unknown): value is WatchHistoryMess
 export function createWatchHistoryClient(dependencies: WatchHistoryClientDependencies) {
   const storage = dependencies.storage ?? createWatchHistoryStorage();
   const request = dependencies.fetch ?? fetch;
+  const browseCache = dependencies.browseCache ?? createWatchHistoryBrowseCache();
   const getRequestSession = dependencies.getRequestSession ?? dependencies.getCurrentSession;
   const refreshFlights = new Map<string, {
     session: ExtensionAuthTokens;
@@ -551,6 +556,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     let root = await storage.readRoot();
     let generation = root.activeGenerations?.[session.user.id];
     if (generation === undefined) {
+      if (message.cacheOnly) return { ok: true };
       const bootstrapped = await bootstrap(session);
       if (!bootstrapped.ok) return bootstrapped;
       root = await storage.readRoot();
@@ -574,6 +580,17 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       revision,
       input,
     ]);
+    const cacheKey = await watchBrowseCacheKey([key, session.refreshToken,
+      partition.preferencesLocalRevision, partition.preferences?.youtubeHistoryEnabled]);
+    if (message.cacheOnly) {
+      const cached = await browseCache.read(cacheKey);
+      const failure = await validateCurrent(session);
+      if (failure) return failure;
+      const data = cached && parseBrowseResponse(message.command, cached.data);
+      if (!data || browseResponseMeta(message.command, data).ownerUserId !== session.user.id ||
+        browseResponseMeta(message.command, data).accountGeneration !== generation) return { ok: true };
+      return { ok: true, data, cachedAt: cached.cachedAt };
+    }
     const existing = browseFlights.get(key);
     if (existing && sameSession(existing.session, session)) return existing.promise;
     const flight = { session, promise: runBrowse() };
@@ -599,25 +616,38 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       if (responseMeta.accountGeneration !== generation) {
         return { ok: false, status: "generation-mismatch" };
       }
+      const failure = await validateCurrent(response.session);
+      if (failure) return failure;
+      const acceptedCacheKey = response.session.refreshToken === session.refreshToken ? cacheKey :
+        await watchBrowseCacheKey([key, response.session.refreshToken,
+          partition.preferencesLocalRevision, partition.preferences?.youtubeHistoryEnabled]);
+      await browseCache.write(acceptedCacheKey, parsed);
+      const afterSave = await validateCurrent(response.session);
+      return afterSave ?? { ok: true, data: parsed };
+    }
+
+    async function validateCurrent(expected: ExtensionAuthTokens): Promise<WatchHistoryMessageResponse | null> {
       const currentRoot = await storage.readRoot();
-      if (!sameSession(response.session, await dependencies.getCurrentSession())) {
+      if (!sameSession(expected, await dependencies.getCurrentSession())) {
         return { ok: false, status: "rejected" };
       }
-      if (currentRoot.activeGenerations?.[response.session.user.id] !== generation) {
+      if (currentRoot.activeGenerations?.[expected.user.id] !== generation) {
         return { ok: false, status: "generation-mismatch" };
       }
       const currentPartition = currentRoot.partitions[
-        watchHistoryPartitionKey(response.session.user.id, generation)
+        watchHistoryPartitionKey(expected.user.id, generation!)
       ];
       if (!currentPartition ||
-        currentPartition.ownerUserId !== response.session.user.id ||
+        currentPartition.ownerUserId !== expected.user.id ||
         currentPartition.accountGeneration !== generation) {
         return { ok: false, status: "generation-mismatch" };
       }
-      if ((currentPartition.invalidationRevision ?? 0) !== revision) {
+      if ((currentPartition.invalidationRevision ?? 0) !== revision ||
+        currentPartition.preferencesLocalRevision !== partition.preferencesLocalRevision ||
+        currentPartition.preferences?.youtubeHistoryEnabled !== partition.preferences?.youtubeHistoryEnabled) {
         return { ok: false, status: "superseded" };
       }
-      return { ok: true, data: parsed };
+      return null;
     }
   }
 

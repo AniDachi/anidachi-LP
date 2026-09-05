@@ -8,6 +8,7 @@ import {
 } from "react";
 import type { PopupWatchHistoryClient } from "./popup-watch-history";
 import type { WatchHistoryMessage } from "./watch-history-client";
+import { WATCH_BROWSE_FRESH_MS } from "./watch-history-browse-cache";
 
 type BrowseMessage = Extract<
 	WatchHistoryMessage,
@@ -62,14 +63,16 @@ export function usePopupWatchBrowse<T>({
 	latest.current = { key, client, generation };
 	const sequence = useRef(0);
 	const pageCount = useRef(1);
+	const queryDepths = useRef(new Map<string, number>());
 	const activeKey = useRef(key);
 	if (activeKey.current !== key) {
 		activeKey.current = key;
-		pageCount.current = 1;
+		pageCount.current = queryDepths.current.get(key) ?? 1;
 	}
 	const [retry, setRetry] = useState(0);
+	const previousRefresh = useRef({ refresh, retry });
 	const load = useCallback(
-		async (nextCursor?: string) => {
+		async (nextCursor?: string, useCache = false) => {
 			const requestKey = key;
 			const token = ++sequence.current;
 			const current = () =>
@@ -78,6 +81,13 @@ export function usePopupWatchBrowse<T>({
 				latest.current.client === client &&
 				latest.current.generation === generation;
 			const retainedCount = pageCount.current;
+			const rememberDepth = (count: number) => {
+				pageCount.current = Math.max(1, count);
+				queryDepths.current.delete(key);
+				queryDepths.current.set(key, pageCount.current);
+				if (queryDepths.current.size > 16)
+					queryDepths.current.delete(queryDepths.current.keys().next().value!);
+			};
 			setState((previous) => ({
 				key,
 				pages: previous.key === key ? previous.pages : [],
@@ -85,6 +95,64 @@ export function usePopupWatchBrowse<T>({
 				error: null,
 				errorStatus: null,
 			}));
+			// The background validates owner/session/generation/invalidation even for
+			// cache reads. Never substitute canonical unfiltered items for query matches.
+			if (useCache && client.loadBrowseCached) {
+				const cachedPages: T[] = [];
+				let cachedCursor = nextCursor;
+				let fresh = true;
+				const seen = new Set<string>();
+				for (let index = 0; index < (nextCursor ? 1 : retainedCount); index++) {
+					const cached = await client
+						.loadBrowseCached({
+							...message,
+							input: {
+								...(message.input as Record<string, unknown>),
+								...(cachedCursor ? { cursor: cachedCursor } : {}),
+							},
+						} as BrowseMessage)
+						.catch(() => null);
+					if (!current()) return;
+					const parsed = cached?.ok ? parser.safeParse(cached.data) : null;
+					if (
+						!cached?.ok ||
+						cached.cachedAt === undefined ||
+						!parsed?.success ||
+						meta(parsed.data).ownerUserId !== message.expectedOwnerUserId ||
+						(generation !== undefined &&
+							meta(parsed.data).accountGeneration !== generation)
+					) {
+						fresh = false;
+						break;
+					}
+					fresh &&= Date.now() - cached.cachedAt < WATCH_BROWSE_FRESH_MS;
+					cachedPages.push(parsed.data);
+					cachedCursor = cursor(parsed.data) ?? undefined;
+					if (!cachedCursor || seen.has(cachedCursor)) break;
+					seen.add(cachedCursor);
+				}
+				if (cachedPages.length) {
+					setState((previous) => {
+						const pages =
+							nextCursor && previous.key === key
+								? [...previous.pages, ...cachedPages]
+								: previous.key === key &&
+										previous.pages.length > cachedPages.length &&
+										!fresh
+									? previous.pages
+									: cachedPages;
+						rememberDepth(pages.length);
+						return {
+							key,
+							pages,
+							loading: !fresh,
+							error: null,
+							errorStatus: null,
+						};
+					});
+					if (fresh) return;
+				}
+			}
 			const pages: T[] = [];
 			let continuation = nextCursor;
 			// A refresh preserves the user's explicitly loaded depth. Stop at the end,
@@ -113,6 +181,16 @@ export function usePopupWatchBrowse<T>({
 				) {
 					setState((previous) => ({
 						...previous,
+						pages:
+							!response.ok &&
+							[
+								"unauthenticated",
+								"rejected",
+								"generation-mismatch",
+								"deleted-history",
+							].includes(response.status)
+								? []
+								: previous.pages,
 						loading: false,
 						errorStatus: !response.ok
 							? response.status
@@ -138,9 +216,9 @@ export function usePopupWatchBrowse<T>({
 			setState((previous) => {
 				const merged =
 					nextCursor && previous.key === key
-						? [...previous.pages, ...pages]
+						? [...previous.pages.slice(0, retainedCount), ...pages]
 						: pages;
-				pageCount.current = Math.max(1, merged.length);
+				rememberDepth(merged.length);
 				return {
 					key,
 					pages: merged,
@@ -157,6 +235,7 @@ export function usePopupWatchBrowse<T>({
 	);
 	useEffect(() => {
 		if (discard) {
+			queryDepths.current.clear();
 			pageCount.current = 1;
 			setState({
 				key,
@@ -165,7 +244,13 @@ export function usePopupWatchBrowse<T>({
 				error: null,
 				errorStatus: null,
 			});
-		} else if (enabled) void load();
+		} else if (enabled) {
+			const changed =
+				previousRefresh.current.refresh !== refresh ||
+				previousRefresh.current.retry !== retry;
+			previousRefresh.current = { refresh, retry };
+			void load(undefined, !changed);
+		}
 		return () => {
 			sequence.current += 1;
 		};
@@ -195,7 +280,8 @@ export function usePopupWatchBrowse<T>({
 			else setRetry((value) => value + 1);
 		},
 		loadMore: () => {
-			if (!discard && nextCursor && !visible.loading) void load(nextCursor);
+			if (!discard && nextCursor && !visible.loading)
+				void load(nextCursor, true);
 		},
 	};
 }

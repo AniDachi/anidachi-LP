@@ -167,7 +167,6 @@ export function PopupApp() {
   const [busyInviteId, setBusyInviteId] = useState<string | null>(null);
   const [busySocialAction, setBusySocialAction] = useState<PopupSocialActionKey | null>(null);
   const [socialNotice, setSocialNotice] = useState<PopupNotice | null>(null);
-  const [watchHistoryRefreshVersion, setWatchHistoryRefreshVersion] = useState(0);
   const accountGateRef = useRef(createAccountRequestGate());
   const popupSyncGateRef = useRef(createAsyncGenerationGate());
   const socialLoadGateRef = useRef(createAsyncGenerationGate());
@@ -354,7 +353,6 @@ export function PopupApp() {
           loadInboxForTokens(tokens, isCurrentSync),
         ]);
         if (!isCurrentSync() || !accountGateRef.current.isCurrent(request)) return null;
-        setWatchHistoryRefreshVersion((current) => current + 1);
         return tokens;
       } catch (error) {
         if (!isCurrentSync()) return null;
@@ -880,7 +878,6 @@ export function PopupApp() {
         <PopupWatchHistoryPanel
           key={accountUser?.id ?? "signed-out"}
           ownerUserId={accountUser?.id ?? null}
-          refreshSignal={watchHistoryRefreshVersion}
         />
       ) : activeTab === "friends" ? (
         <PopupPeoplePanel

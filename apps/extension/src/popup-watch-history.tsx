@@ -37,6 +37,7 @@ export type PopupWatchHistorySnapshot = {
 };
 
 export type PopupWatchHistoryClient = {
+  loadBrowseCached?(message: Extract<WatchHistoryMessage, { command: "browse" | "browse-title-episodes" | "browse-sessions" | "browse-options" }>): Promise<WatchHistoryMessageResponse>;
   loadCached(ownerUserId: string): Promise<PopupWatchHistorySnapshot | null>;
   request(message: WatchHistoryMessage): Promise<WatchHistoryMessageResponse>;
   subscribe?(
@@ -50,6 +51,7 @@ export type PopupWatchHistoryClient = {
 const LOCAL_CACHE_REFRESH_CURSOR = "local_cache_refresh_required";
 
 export const defaultPopupWatchHistoryClient: PopupWatchHistoryClient = {
+  loadBrowseCached: (message) => requestWatchHistory({ ...message, cacheOnly: true }),
   loadCached: loadConfirmedPopupWatchHistorySnapshot,
   request: requestWatchHistory,
   subscribe: subscribeToPopupWatchHistorySnapshot,

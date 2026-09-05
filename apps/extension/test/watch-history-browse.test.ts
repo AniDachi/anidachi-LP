@@ -162,6 +162,66 @@ function browseMessage(input: unknown = { mode: "shared" }) {
 }
 
 describe("watch history query-isolated browsing", () => {
+	it("rechecks authentication after retrieving a cached response", async () => {
+		let current: typeof session | null = session;
+		let cacheRead = false;
+		let reads = 0;
+		const { client } = createStoredClient({
+			getCurrentSession: async () => current,
+			onRead: () => { if (cacheRead && ++reads === 2) current = null; },
+		});
+		await client.handle(browseMessage());
+		cacheRead = true;
+		expect(await client.handle({ ...browseMessage(), cacheOnly: true })).toEqual({ ok: false, status: "rejected" });
+	});
+
+	it("serves a completed query locally without another HTTP read and keeps refresh explicit", async () => {
+		const fetchImpl = vi.fn(async () => Response.json(browseResponse()));
+		const { client, readRoot } = createStoredClient({ fetch: fetchImpl });
+		const before = structuredClone(readRoot());
+		await client.handle(browseMessage());
+		const cached = await client.handle({ ...browseMessage(), cacheOnly: true });
+		expect(cached).toMatchObject({
+			ok: true,
+			data: browseResponse(),
+			cachedAt: expect.any(Number),
+		});
+		expect(fetchImpl).toHaveBeenCalledTimes(1);
+		expect(readRoot()).toEqual(before);
+		await client.handle(browseMessage());
+		expect(fetchImpl).toHaveBeenCalledTimes(2);
+	});
+
+	it("never reuses query results across filters, auth sessions or invalidation", async () => {
+		let current = session;
+		const fetchImpl = vi.fn(async () => Response.json(browseResponse()));
+		const { client, readRoot, replaceRoot } = createStoredClient({
+			fetch: fetchImpl,
+			getCurrentSession: async () => current,
+		});
+		await client.handle(browseMessage());
+		expect(
+			await client.handle({
+				...browseMessage({ mode: "solo" }),
+				cacheOnly: true,
+			}),
+		).toEqual({ ok: true });
+		current = { ...session, refreshToken: "new-login" };
+		expect(
+			await client.handle({ ...browseMessage(), cacheOnly: true }),
+		).toEqual({ ok: true });
+		current = session;
+		const changed = structuredClone(readRoot());
+		changed.partitions[
+			watchHistoryPartitionKey(OWNER, 4)
+		]!.invalidationRevision = 8;
+		replaceRoot(changed);
+		expect(
+			await client.handle({ ...browseMessage(), cacheOnly: true }),
+		).toEqual({ ok: true });
+		expect(fetchImpl).toHaveBeenCalledTimes(1);
+	});
+
 	it("strictly validates all four owner-bound browse commands", () => {
 		expect(isWatchHistoryMessage(browseMessage())).toBe(true);
 		expect(

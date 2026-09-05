@@ -634,7 +634,7 @@ describe("PopupApp social mutations", () => {
     ).toBe("Open settings");
   });
 
-  it("refreshes same-owner Watch History without remounting the visible panel", async () => {
+  it("does not refetch or remount Watch History when the initial social sync finishes", async () => {
     let resolveDirectory: ((value: SocialDirectory) => void) | null = null;
     vi.mocked(listSocialDirectory).mockImplementation(() =>
       new Promise<SocialDirectory>((resolve) => {
@@ -651,13 +651,8 @@ describe("PopupApp social mutations", () => {
       await Promise.resolve();
     });
 
-    await waitFor(() => {
-      expect(
-        view.container.querySelector('[aria-label="Watch History"]')?.getAttribute(
-          "data-refresh-signal",
-        ),
-      ).toBe("1");
-    });
+    await waitFor(() => expect(setCachedSocialSnapshotForUser).toHaveBeenCalled());
+    expect(visiblePanel?.getAttribute("data-refresh-signal")).toBe("0");
     expect(view.container.querySelector('[aria-label="Watch History"]')).toBe(visiblePanel);
   });
 
