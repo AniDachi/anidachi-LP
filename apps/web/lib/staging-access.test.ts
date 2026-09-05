@@ -466,6 +466,10 @@ test("staging gate lets bearer-authenticated internal POST callbacks reach route
 test("staging gate lets an extension bearer reach only the supported Watch History v3 methods", () => {
   const allowedRequests = [
     ["/api/watch-history/v3", "GET"],
+    ["/api/watch-history/v3/browse", "GET"],
+    ["/api/watch-history/v3/browse/title-episodes", "GET"],
+    ["/api/watch-history/v3/browse/sessions", "GET"],
+    ["/api/watch-history/v3/browse/options", "GET"],
     ["/api/watch-history/v3/progress", "POST"],
     ["/api/watch-history/v3/preferences", "GET"],
     ["/api/watch-history/v3/preferences", "PATCH"],
@@ -495,6 +499,11 @@ test("staging gate lets an extension bearer reach only the supported Watch Histo
 
   for (const [pathname, method] of [
     ["/api/watch-history/v3", "POST"],
+    ["/api/watch-history/v3/browse", "POST"],
+    ["/api/watch-history/v3/browse/title-episodes", "POST"],
+    ["/api/watch-history/v3/browse/sessions", "POST"],
+    ["/api/watch-history/v3/browse/options", "POST"],
+    ["/api/watch-history/v3/browse/extra", "GET"],
     ["/api/watch-history/v3/progress", "GET"],
     ["/api/watch-history/v3/preferences", "POST"],
     ["/api/watch-history/v3/delete", "DELETE"],

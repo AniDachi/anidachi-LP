@@ -5,6 +5,14 @@ import {
   WatchHistoryPreferencesResponseSchema,
   WatchHistoryRoomRecreationResponseSchema,
   WatchHistoryPreferencesUpdateSchema,
+  WatchHistoryBrowseOptionsQuerySchema,
+  WatchHistoryBrowseOptionsResponseSchema,
+  WatchHistoryBrowseQuerySchema,
+  WatchHistoryBrowseResponseSchema,
+  WatchHistoryBrowseSessionsQuerySchema,
+  WatchHistoryBrowseSessionsResponseSchema,
+  WatchHistoryBrowseTitleEpisodesQuerySchema,
+  WatchHistoryBrowseTitleEpisodesResponseSchema,
   WatchHistoryResponseSchema,
   WatchProgressAckSchema,
   WatchProgressEventSchema,
@@ -14,6 +22,10 @@ import {
   type WatchHistoryPreferences,
   type WatchProgressEvent,
   type WatchCatalogBeginAck,
+  type WatchHistoryBrowseOptionsQuery,
+  type WatchHistoryBrowseQuery,
+  type WatchHistoryBrowseSessionsQuery,
+  type WatchHistoryBrowseTitleEpisodesQuery,
 } from "@anidachi/protocol";
 import type { ExtensionAuthTokens } from "./auth-tokens";
 import { WEB_HTTP_BASE } from "./constants";
@@ -80,7 +92,15 @@ export type WatchHistoryMessage =
     }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "flush" }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "content-reconnect" }
-  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "get-preferences" }
+  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "get-preferences"; expectedOwnerUserId?: string }
+  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "browse";
+      expectedOwnerUserId: string; input: unknown }
+  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "browse-title-episodes";
+      expectedOwnerUserId: string; input: unknown }
+  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "browse-sessions";
+      expectedOwnerUserId: string; input: unknown }
+  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "browse-options";
+      expectedOwnerUserId: string; input: unknown }
   | {
       type: typeof WATCH_HISTORY_MESSAGE_TYPE;
       command: "bootstrap";
@@ -92,7 +112,8 @@ export type WatchHistoryMessage =
       expectedOwnerUserId: string;
     }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "recover-storage" }
-  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "update-preferences"; input: unknown }
+  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "update-preferences";
+      expectedOwnerUserId?: string; input: unknown }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "delete"; input: unknown }
   | {
       type: typeof WATCH_HISTORY_MESSAGE_TYPE;
@@ -214,6 +235,21 @@ export function isWatchHistoryMessage(value: unknown): value is WatchHistoryMess
       return hasExactKeys(value, ["type", "command", "limit", "cursor"]) &&
         (value.limit === undefined || (typeof value.limit === "number" && Number.isInteger(value.limit) && value.limit >= 1 && value.limit <= 100)) &&
         (value.cursor === undefined || (typeof value.cursor === "string" && value.cursor.length > 0 && value.cursor.length <= 512));
+    case "browse":
+    case "browse-title-episodes":
+    case "browse-sessions":
+    case "browse-options": {
+      if (!hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "input"]) ||
+        !isExpectedOwnerUserId(value.expectedOwnerUserId) || !("input" in value)) return false;
+      const schema = value.command === "browse"
+        ? WatchHistoryBrowseQuerySchema
+        : value.command === "browse-title-episodes"
+          ? WatchHistoryBrowseTitleEpisodesQuerySchema
+          : value.command === "browse-sessions"
+            ? WatchHistoryBrowseSessionsQuerySchema
+            : WatchHistoryBrowseOptionsQuerySchema;
+      return schema.safeParse(value.input).success;
+    }
     case "enqueue-progress":
       return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "event"]) &&
         typeof value.expectedOwnerUserId === "string" &&
@@ -241,14 +277,18 @@ export function isWatchHistoryMessage(value: unknown): value is WatchHistoryMess
         (value.queueForSync === undefined || typeof value.queueForSync === "boolean") &&
         (value.flushNow === undefined || typeof value.flushNow === "boolean");
     case "update-preferences":
+      return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "input"]) &&
+        isOptionalExpectedOwnerUserId(value.expectedOwnerUserId) && "input" in value;
     case "delete":
       return hasExactKeys(value, ["type", "command", "input"]) && "input" in value;
     case "flush":
     case "content-reconnect":
-    case "get-preferences":
     case "recover-storage":
     case "other-owner-pending":
       return hasExactKeys(value, ["type", "command"]);
+    case "get-preferences":
+      return hasExactKeys(value, ["type", "command", "expectedOwnerUserId"]) &&
+        isOptionalExpectedOwnerUserId(value.expectedOwnerUserId);
     case "bootstrap":
     case "bootstrap-cache":
     case "pending-identities":
@@ -276,6 +316,10 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
   const request = dependencies.fetch ?? fetch;
   const getRequestSession = dependencies.getRequestSession ?? dependencies.getCurrentSession;
   const refreshFlights = new Map<string, {
+    session: ExtensionAuthTokens;
+    promise: Promise<WatchHistoryMessageResponse>;
+  }>();
+  const browseFlights = new Map<string, {
     session: ExtensionAuthTokens;
     promise: Promise<WatchHistoryMessageResponse>;
   }>();
@@ -335,6 +379,17 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     const session = await dependencies.getCurrentSession();
     if (!session) return { ok: false, status: "unauthenticated" };
 
+    if ((message.command === "browse" ||
+      message.command === "browse-title-episodes" ||
+      message.command === "browse-sessions" ||
+      message.command === "browse-options" ||
+      message.command === "get-preferences" ||
+      message.command === "update-preferences") &&
+      message.expectedOwnerUserId !== undefined &&
+      message.expectedOwnerUserId !== session.user.id) {
+      return { ok: false, status: "rejected" };
+    }
+
     if (message.command === "discard-old-owner") {
       try {
         const result = await storage.discardOtherOwnerOutbox(
@@ -359,6 +414,12 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       }
     }
     if (message.command === "list") return refresh(session, message);
+    if (message.command === "browse" ||
+      message.command === "browse-title-episodes" ||
+      message.command === "browse-sessions" ||
+      message.command === "browse-options") {
+      return browse(session, message);
+    }
     if (message.command === "pending-identities") {
       if (session.user.id !== message.expectedOwnerUserId) return { ok: false, status: "rejected" };
       const root = await storage.readRoot();
@@ -479,6 +540,85 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     if (saved.stale) return { ok: false, status: "generation-mismatch" };
     if (invalidated) return { ok: false, status: "superseded" };
     return saved.ok ? { ok: true, data: parsed.data } : saved;
+  }
+
+  async function browse(
+    session: ExtensionAuthTokens,
+    message: Extract<WatchHistoryMessage, {
+      command: "browse" | "browse-title-episodes" | "browse-sessions" | "browse-options";
+    }>,
+  ): Promise<WatchHistoryMessageResponse> {
+    let root = await storage.readRoot();
+    let generation = root.activeGenerations?.[session.user.id];
+    if (generation === undefined) {
+      const bootstrapped = await bootstrap(session);
+      if (!bootstrapped.ok) return bootstrapped;
+      root = await storage.readRoot();
+      generation = root.activeGenerations?.[session.user.id];
+      if (generation === undefined) return { ok: false, status: "generation-mismatch" };
+    }
+    const partition = root.partitions[watchHistoryPartitionKey(session.user.id, generation)];
+    if (!partition ||
+      partition.ownerUserId !== session.user.id ||
+      partition.accountGeneration !== generation) {
+      return { ok: false, status: "generation-mismatch" };
+    }
+    const revision = partition.invalidationRevision ?? 0;
+    const parsedInput = parseBrowseInput(message);
+    if (!parsedInput) return { ok: false, status: "invalid-request" };
+    const input = parsedInput;
+    const key = JSON.stringify([
+      message.command,
+      session.user.id,
+      generation,
+      revision,
+      input,
+    ]);
+    const existing = browseFlights.get(key);
+    if (existing && sameSession(existing.session, session)) return existing.promise;
+    const flight = { session, promise: runBrowse() };
+    browseFlights.set(key, flight);
+    try {
+      return await flight.promise;
+    } finally {
+      if (browseFlights.get(key) === flight) browseFlights.delete(key);
+    }
+
+    async function runBrowse(): Promise<WatchHistoryMessageResponse> {
+      const response = await authenticatedRequest(session, browsePath(message.command, input));
+      if (!response.ok) return response.error;
+      const parsed = parseBrowseResponse(message.command, response.body);
+      if (!parsed) return { ok: false, status: "invalid-response" };
+      const responseMeta = browseResponseMeta(message.command, parsed);
+      if (responseMeta.ownerUserId !== response.session.user.id) {
+        return { ok: false, status: "invalid-response" };
+      }
+      if (!sameSession(response.session, await dependencies.getCurrentSession())) {
+        return { ok: false, status: "rejected" };
+      }
+      if (responseMeta.accountGeneration !== generation) {
+        return { ok: false, status: "generation-mismatch" };
+      }
+      const currentRoot = await storage.readRoot();
+      if (!sameSession(response.session, await dependencies.getCurrentSession())) {
+        return { ok: false, status: "rejected" };
+      }
+      if (currentRoot.activeGenerations?.[response.session.user.id] !== generation) {
+        return { ok: false, status: "generation-mismatch" };
+      }
+      const currentPartition = currentRoot.partitions[
+        watchHistoryPartitionKey(response.session.user.id, generation)
+      ];
+      if (!currentPartition ||
+        currentPartition.ownerUserId !== response.session.user.id ||
+        currentPartition.accountGeneration !== generation) {
+        return { ok: false, status: "generation-mismatch" };
+      }
+      if ((currentPartition.invalidationRevision ?? 0) !== revision) {
+        return { ok: false, status: "superseded" };
+      }
+      return { ok: true, data: parsed };
+    }
   }
 
   async function enqueue(
@@ -1501,6 +1641,91 @@ function hasExactKeys(value: Record<string, unknown>, allowed: string[]): boolea
   return Object.keys(value).every((key) => allowed.includes(key));
 }
 
+function isExpectedOwnerUserId(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0 && value.length <= 128;
+}
+
+function isOptionalExpectedOwnerUserId(value: unknown): value is string | undefined {
+  return value === undefined || isExpectedOwnerUserId(value);
+}
+
+type BrowseCommand = Extract<WatchHistoryMessage, {
+  command: "browse" | "browse-title-episodes" | "browse-sessions" | "browse-options";
+}>["command"];
+
+type BrowseInput = WatchHistoryBrowseQuery |
+  WatchHistoryBrowseTitleEpisodesQuery |
+  WatchHistoryBrowseSessionsQuery |
+  WatchHistoryBrowseOptionsQuery;
+
+function parseBrowseInput(
+  message: Extract<WatchHistoryMessage, { command: BrowseCommand }>,
+): BrowseInput | null {
+  const schema = message.command === "browse"
+    ? WatchHistoryBrowseQuerySchema
+    : message.command === "browse-title-episodes"
+      ? WatchHistoryBrowseTitleEpisodesQuerySchema
+      : message.command === "browse-sessions"
+        ? WatchHistoryBrowseSessionsQuerySchema
+        : WatchHistoryBrowseOptionsQuerySchema;
+  const parsed = schema.safeParse(message.input);
+  return parsed.success ? parsed.data : null;
+}
+
+function browsePath(command: BrowseCommand, input: BrowseInput): string {
+  const query = new URLSearchParams();
+  const values = input as Record<string, unknown>;
+  for (const key of [
+    "mode",
+    "search",
+    "groupId",
+    "participantUserId",
+    "from",
+    "until",
+    "limit",
+    "cursor",
+    "provider",
+    "titleKey",
+    "episodeKey",
+  ]) {
+    const value = values[key];
+    if (typeof value === "string" || typeof value === "number") query.set(key, String(value));
+  }
+  const suffix = command === "browse"
+    ? ""
+    : command === "browse-title-episodes"
+      ? "/title-episodes"
+      : command === "browse-sessions"
+        ? "/sessions"
+        : "/options";
+  return `/api/watch-history/v3/browse${suffix}?${query}`;
+}
+
+function parseBrowseResponse(command: BrowseCommand, value: unknown): unknown | null {
+  const schema = command === "browse"
+    ? WatchHistoryBrowseResponseSchema
+    : command === "browse-title-episodes"
+      ? WatchHistoryBrowseTitleEpisodesResponseSchema
+      : command === "browse-sessions"
+        ? WatchHistoryBrowseSessionsResponseSchema
+        : WatchHistoryBrowseOptionsResponseSchema;
+  const parsed = schema.safeParse(value);
+  return parsed.success ? parsed.data : null;
+}
+
+function browseResponseMeta(command: BrowseCommand, value: unknown): {
+  ownerUserId: string;
+  accountGeneration: number;
+} {
+  if (command === "browse") {
+    return (value as { history: { meta: { ownerUserId: string; accountGeneration: number } } }).history.meta;
+  }
+  if (command === "browse-title-episodes") {
+    return (value as { detail: { meta: { ownerUserId: string; accountGeneration: number } } }).detail.meta;
+  }
+  return (value as { meta: { ownerUserId: string; accountGeneration: number } }).meta;
+}
+
 function inferredObservationDisplayMode(
   event: WatchProgressEvent,
 ): WatchHistoryObservationDisplayMode | null {
@@ -1577,6 +1802,10 @@ export function usesStoredWatchHistorySession(
     command === "recover-storage" ||
     command === "get-preferences" ||
     command === "update-preferences" ||
+    command === "browse" ||
+    command === "browse-title-episodes" ||
+    command === "browse-sessions" ||
+    command === "browse-options" ||
     command === "other-owner-pending" ||
     command === "discard-old-owner" ||
     command === "discard-old-owner-work";
