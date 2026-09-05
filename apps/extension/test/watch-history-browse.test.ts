@@ -1,12 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
+import { createWatchHistoryBrowseCache } from "../src/watch-history-browse-cache";
 import {
 	createWatchHistoryClient,
+	handleWatchHistoryAuthSessionChange,
 	isWatchHistoryMessage,
 } from "../src/watch-history-client";
 import {
 	createWatchHistoryStorage,
-	watchHistoryPartitionKey,
 	type WatchHistoryStorageRoot,
+	watchHistoryPartitionKey,
 } from "../src/watch-history-storage";
 
 const OWNER = "00000000-0000-4000-8000-000000000001";
@@ -116,6 +118,7 @@ function createStoredClient(input?: {
 	root?: WatchHistoryStorageRoot;
 	onRead?: () => void;
 	onWrite?: () => void;
+	browseCache?: ReturnType<typeof createWatchHistoryBrowseCache>;
 }) {
 	let stored: WatchHistoryStorageRoot = input?.root ?? {
 		schemaVersion: 3,
@@ -142,6 +145,7 @@ function createStoredClient(input?: {
 		client: createWatchHistoryClient({
 			getCurrentSession: input?.getCurrentSession ?? (async () => session),
 			storage,
+			browseCache: input?.browseCache,
 			fetch: input?.fetch ?? (async () => Response.json(browseResponse())),
 		}),
 		storage,
@@ -161,7 +165,362 @@ function browseMessage(input: unknown = { mode: "shared" }) {
 	} as const;
 }
 
+function required<T>(value: T | undefined): T {
+	if (value === undefined) throw new Error("Required fixture value is missing");
+	return value;
+}
+
 describe("watch history query-isolated browsing", () => {
+	it("cannot resurrect deleted reads after real logout and same-generation login recreate the partition", async () => {
+		let saved: unknown = [];
+		const adapter = {
+			read: async () => saved,
+			write: async (value: unknown) => {
+				saved = structuredClone(value);
+			},
+		};
+		let current: typeof session | null = session;
+		let release: ((response: Response) => void) | undefined;
+		const target = {
+			scope: "title",
+			provider: "crunchyroll",
+			titleKey: "crunchyroll:series:S",
+		};
+		const request: typeof fetch = async (url) => {
+			if (new URL(String(url)).searchParams.get("search") === "held")
+				return new Promise<Response>((resolve) => {
+					release = resolve;
+				});
+			const path = new URL(String(url)).pathname;
+			return Response.json(
+				path.endsWith("/delete")
+					? {
+							meta: meta(),
+							schemaVersion: 3,
+							accountGeneration: 4,
+							clientMutationId: GROUP,
+							target,
+							deletedAt: NOW,
+						}
+					: path.endsWith("/preferences")
+						? { meta: meta(), preferences: { youtubeHistoryEnabled: false } }
+						: path.endsWith("/browse")
+							? browseResponse()
+							: canonical(),
+			);
+		};
+		const setup = createStoredClient({
+			root: { schemaVersion: 3, partitions: {} },
+			getCurrentSession: async () => current,
+			fetch: request,
+			browseCache: createWatchHistoryBrowseCache(adapter),
+		});
+		const dependencies = {
+			storage: setup.storage,
+			getCurrentSession: async () => current,
+			fetch: request,
+		};
+		expect(
+			await handleWatchHistoryAuthSessionChange(null, session, dependencies),
+		).toMatchObject({ ok: true });
+		await setup.client.handle(browseMessage());
+		expect(
+			await setup.client.handle({ ...browseMessage(), cacheOnly: true }),
+		).toHaveProperty("data");
+		current = {
+			...session,
+			accessToken: "rotated-access",
+			refreshToken: "rotated-refresh",
+		};
+		expect(
+			await handleWatchHistoryAuthSessionChange(session, current, dependencies),
+		).toMatchObject({ ok: true });
+		expect(
+			await setup.client.handle({ ...browseMessage(), cacheOnly: true }),
+		).toHaveProperty("data");
+		const signedIn = current;
+		const late = setup.client.handle(
+			browseMessage({ mode: "shared", search: "held" }),
+		);
+		await vi.waitFor(() => expect(release).toBeTypeOf("function"));
+		expect(
+			await setup.client.handle({
+				type: "ANIDACHI_WATCH_HISTORY_V3",
+				command: "delete",
+				input: {
+					schemaVersion: 3,
+					accountGeneration: 4,
+					clientMutationId: GROUP,
+					target,
+					requestedAt: NOW,
+				},
+			}),
+		).toMatchObject({ ok: true });
+		current = null;
+		expect(
+			await handleWatchHistoryAuthSessionChange(signedIn, null, dependencies),
+		).toMatchObject({ ok: true });
+		expect(
+			setup.readRoot().partitions[watchHistoryPartitionKey(OWNER, 4)],
+		).toBeUndefined();
+		current = signedIn;
+		expect(
+			await handleWatchHistoryAuthSessionChange(null, signedIn, dependencies),
+		).toMatchObject({ ok: true });
+		required(release)(Response.json(browseResponse()));
+		expect(await late).toEqual({ ok: false, status: "superseded" });
+		const restarted = createWatchHistoryClient({
+			...dependencies,
+			browseCache: createWatchHistoryBrowseCache(adapter),
+		});
+		for (const client of [setup.client, restarted]) {
+			expect(
+				await client.handle({ ...browseMessage(), cacheOnly: true }),
+			).not.toHaveProperty("data");
+		}
+	});
+	it("does not restore persistent reads after an acknowledged deletion or consent change", async () => {
+		let saved: unknown = [];
+		const adapter = {
+			read: async () => saved,
+			write: async (value: unknown) => {
+				saved = structuredClone(value);
+			},
+		};
+		const target = {
+			scope: "title",
+			provider: "crunchyroll",
+			titleKey: "crunchyroll:series:S",
+		};
+		const setup = createStoredClient({
+			browseCache: createWatchHistoryBrowseCache(adapter),
+			fetch: async (url) =>
+				Response.json(
+					String(url).endsWith("/delete")
+						? {
+								meta: meta(),
+								schemaVersion: 3,
+								accountGeneration: 4,
+								clientMutationId: GROUP,
+								target,
+								deletedAt: NOW,
+							}
+						: browseResponse(),
+				),
+		});
+		await setup.client.handle(browseMessage());
+		expect(
+			await setup.client.handle({ ...browseMessage(), cacheOnly: true }),
+		).toHaveProperty("data");
+		expect(
+			await setup.client.handle({
+				type: "ANIDACHI_WATCH_HISTORY_V3",
+				command: "delete",
+				input: {
+					schemaVersion: 3,
+					accountGeneration: 4,
+					clientMutationId: GROUP,
+					target,
+					requestedAt: NOW,
+				},
+			}),
+		).toMatchObject({ ok: true });
+		const restart = () =>
+			createWatchHistoryClient({
+				getCurrentSession: async () => session,
+				storage: setup.storage,
+				browseCache: createWatchHistoryBrowseCache(adapter),
+				fetch: async () => Response.json(browseResponse()),
+			});
+		let restarted = restart();
+		expect(
+			await restarted.handle({ ...browseMessage(), cacheOnly: true }),
+		).not.toHaveProperty("data");
+		await restarted.handle(browseMessage());
+		const partition = required(
+			setup.readRoot().partitions[watchHistoryPartitionKey(OWNER, 4)],
+		);
+		partition.preferencesLocalRevision = 2;
+		partition.preferences = { youtubeHistoryEnabled: true };
+		restarted = restart();
+		expect(
+			await restarted.handle({ ...browseMessage(), cacheOnly: true }),
+		).not.toHaveProperty("data");
+	});
+	it("retains both modes and unrelated title details across accepted progress and worker recreation", async () => {
+		let saved: unknown = [];
+		const adapter = {
+			read: async () => saved,
+			write: async (value: unknown) => {
+				saved = structuredClone(value);
+			},
+		};
+		const event = {
+			schemaVersion: 3,
+			clientEventId: GROUP,
+			clientSessionKey: "watch-session",
+			accountGeneration: 4,
+			provider: "youtube",
+			youtubeVideoId: "new",
+			titleKey: "youtube:video:new",
+			itemKind: "movie",
+			title: "New video",
+			artworkUrl: null,
+			episodeKey: "youtube:video:new",
+			episodeTitle: "New video",
+			seasonKey: null,
+			seasonTitle: null,
+			seasonNumber: null,
+			episodeNumber: null,
+			sourceUrl: "https://www.youtube.com/watch?v=new",
+			currentTime: 12,
+			duration: 120,
+			progress: 0.1,
+			observedAt: NOW,
+			kind: "heartbeat",
+		};
+		const request: typeof fetch = async (url) => {
+			if (String(url).endsWith("/progress"))
+				return Response.json({
+					meta: meta(),
+					schemaVersion: 3,
+					accountGeneration: 4,
+					acceptedEventId: GROUP,
+					acceptedAt: NOW,
+					duplicate: false,
+					episode: {
+						episodeKey: event.episodeKey,
+						episodeTitle: event.title,
+						seasonKey: null,
+						seasonTitle: null,
+						seasonNumber: null,
+						episodeNumber: null,
+						sourceUrl: event.sourceUrl,
+						currentTime: 12,
+						duration: 120,
+						progress: 0.1,
+						completedAt: null,
+						lastWatchedAt: NOW,
+						sessions: [],
+					},
+				});
+			return Response.json(
+				String(url).includes("title-episodes")
+					? titleEpisodesResponse()
+					: browseResponse(),
+			);
+		};
+		const setup = createStoredClient({
+			fetch: request,
+			browseCache: createWatchHistoryBrowseCache(adapter),
+		});
+		required(
+			setup.readRoot().partitions[watchHistoryPartitionKey(OWNER, 4)],
+		).preferences = { youtubeHistoryEnabled: true };
+		const oldTitle = {
+			...browseMessage({
+				mode: "solo",
+				provider: "crunchyroll",
+				titleKey: "crunchyroll:series:S",
+			}),
+			command: "browse-title-episodes",
+		} as const;
+		await setup.client.handle(browseMessage({ mode: "solo" }));
+		await setup.client.handle(browseMessage());
+		await setup.client.handle(oldTitle);
+		expect(
+			await setup.client.handle({
+				type: "ANIDACHI_WATCH_HISTORY_V3",
+				command: "enqueue-progress",
+				expectedOwnerUserId: OWNER,
+				event,
+			}),
+		).toEqual({ ok: true, flushed: 1 });
+		const restarted = createWatchHistoryClient({
+			getCurrentSession: async () => session,
+			storage: setup.storage,
+			browseCache: createWatchHistoryBrowseCache(adapter),
+			fetch: async () => {
+				throw new Error("Cache-only reads must not use the network");
+			},
+		});
+		for (const message of [browseMessage({ mode: "solo" }), browseMessage()]) {
+			expect(
+				await restarted.handle({ ...message, cacheOnly: true }),
+			).toMatchObject({ ok: true, data: browseResponse(), cachedAt: 0 });
+		}
+		const cached = await restarted.handle({ ...oldTitle, cacheOnly: true });
+		expect(cached).toMatchObject({ ok: true, data: titleEpisodesResponse() });
+		expect(cached.ok && cached.cachedAt).toBeGreaterThan(0);
+		expect(
+			setup.readRoot().partitions[watchHistoryPartitionKey(OWNER, 4)]?.outbox
+				.entries,
+		).toHaveLength(0);
+	});
+	it("rechecks authentication after retrieving a cached response", async () => {
+		let current: typeof session | null = session;
+		let cacheRead = false;
+		let reads = 0;
+		const { client } = createStoredClient({
+			getCurrentSession: async () => current,
+			onRead: () => {
+				if (cacheRead && ++reads === 2) current = null;
+			},
+		});
+		await client.handle(browseMessage());
+		cacheRead = true;
+		expect(
+			await client.handle({ ...browseMessage(), cacheOnly: true }),
+		).toEqual({ ok: false, status: "rejected" });
+	});
+
+	it("serves a completed query locally without another HTTP read and keeps refresh explicit", async () => {
+		const fetchImpl = vi.fn(async () => Response.json(browseResponse()));
+		const { client, readRoot } = createStoredClient({ fetch: fetchImpl });
+		const before = structuredClone(readRoot());
+		await client.handle(browseMessage());
+		const cached = await client.handle({ ...browseMessage(), cacheOnly: true });
+		expect(cached).toMatchObject({
+			ok: true,
+			data: browseResponse(),
+			cachedAt: expect.any(Number),
+		});
+		expect(fetchImpl).toHaveBeenCalledTimes(1);
+		expect(readRoot()).toEqual(before);
+		await client.handle(browseMessage());
+		expect(fetchImpl).toHaveBeenCalledTimes(2);
+	});
+
+	it("isolates filters and hard invalidation while retaining same-owner reads after token rotation", async () => {
+		let current = session;
+		const fetchImpl = vi.fn(async () => Response.json(browseResponse()));
+		const { client, readRoot, replaceRoot } = createStoredClient({
+			fetch: fetchImpl,
+			getCurrentSession: async () => current,
+		});
+		await client.handle(browseMessage());
+		expect(
+			await client.handle({
+				...browseMessage({ mode: "solo" }),
+				cacheOnly: true,
+			}),
+		).toEqual({ ok: true });
+		current = { ...session, refreshToken: "new-login" };
+		expect(
+			await client.handle({ ...browseMessage(), cacheOnly: true }),
+		).toMatchObject({ ok: true, data: browseResponse() });
+		current = session;
+		const changed = structuredClone(readRoot());
+		changed.partitions[
+			watchHistoryPartitionKey(OWNER, 4)
+		]!.invalidationRevision = 8;
+		replaceRoot(changed);
+		expect(
+			await client.handle({ ...browseMessage(), cacheOnly: true }),
+		).toEqual({ ok: true });
+		expect(fetchImpl).toHaveBeenCalledTimes(1);
+	});
+
 	it("strictly validates all four owner-bound browse commands", () => {
 		expect(isWatchHistoryMessage(browseMessage())).toBe(true);
 		expect(
@@ -366,7 +725,7 @@ describe("watch history query-isolated browsing", () => {
 		).resolves.toEqual({ ok: true, data: optionsResponse() });
 
 		expect(requests).toEqual([
-			`/api/watch-history/v3/browse?mode=shared&search=Title&groupId=${GROUP}&participantUserId=${PARTICIPANT}&from=2026-09-01T00%3A00%3A00.000Z&until=2026-10-01T00%3A00%3A00.000Z&limit=20`,
+			`/api/watch-history/v3/browse?mode=shared&search=Title&groupId=${GROUP}&participantUserId=${PARTICIPANT}&from=2026-09-01T00%3A00%3A00.000Z&until=2026-10-01T00%3A00%3A00.000Z&limit=20&includeEpisodePreviews=true`,
 			`/api/watch-history/v3/browse/title-episodes?mode=shared&search=Title&groupId=${GROUP}&participantUserId=${PARTICIPANT}&from=2026-09-01T00%3A00%3A00.000Z&until=2026-10-01T00%3A00%3A00.000Z&limit=20&cursor=episode-page-2&provider=crunchyroll&titleKey=crunchyroll%3Aseries%3AS`,
 			`/api/watch-history/v3/browse/sessions?mode=shared&search=Title&groupId=${GROUP}&participantUserId=${PARTICIPANT}&from=2026-09-01T00%3A00%3A00.000Z&until=2026-10-01T00%3A00%3A00.000Z&limit=20&provider=crunchyroll&titleKey=crunchyroll%3Aseries%3AS&episodeKey=crunchyroll%3Aepisode%3AE`,
 			"/api/watch-history/v3/browse/options?mode=shared&limit=20&cursor=options-page-2",

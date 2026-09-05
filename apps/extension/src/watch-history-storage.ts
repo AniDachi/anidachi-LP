@@ -30,6 +30,10 @@ export type WatchHistoryAccountPartition = {
   outbox: WatchHistoryOutboxPartition;
   catalogAcknowledgements?: Record<string, WatchHistoryCatalogAcknowledgement>;
   invalidationRevision?: number;
+  // Browse retention is fenced separately from ordinary progress freshness.
+  browseInvalidationRevision?: number;
+  browseTitleRevisions?: Record<string, number>;
+  browseRevisionFloor?: number;
   cacheRevision?: number;
   deletionFences?: Record<string, string>;
 };
@@ -38,6 +42,8 @@ export type WatchHistoryStorageRoot = {
   schemaVersion: typeof WATCH_HISTORY_STORAGE_VERSION;
   partitions: Record<string, WatchHistoryAccountPartition>;
   activeGenerations?: Record<string, number>;
+  // Survives removal of empty account partitions on logout.
+  browseAuthEpochs?: Record<string, string>;
 };
 
 export type WatchHistoryStorageResult = { ok: true } | { ok: false; status: "storage-full" };
@@ -158,11 +164,9 @@ export function createWatchHistoryStorage(
 
   async function clearRebuildableAccountData(ownerUserId: string): Promise<WatchHistoryStorageResult> {
     return updateRoot((root) => {
-      let changed = false;
       const partitions = Object.fromEntries(
         Object.entries(root.partitions).flatMap(([key, partition]) => {
           if (partition.ownerUserId !== ownerUserId) return [[key, partition]];
-          changed = true;
           const cleared = {
             ...partition,
             cache: null,
@@ -178,10 +182,10 @@ export function createWatchHistoryStorage(
           return cleared.outbox.entries.length === 0 ? [] : [[key, cleared]];
         }),
       );
-      if (!changed) return root;
       return {
         ...root,
         partitions,
+        browseAuthEpochs: { ...root.browseAuthEpochs, [ownerUserId]: crypto.randomUUID() },
       };
     });
   }

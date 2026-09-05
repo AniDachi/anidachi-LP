@@ -66,6 +66,24 @@ export function parseWatchHistoryBrowseQuery(
 	input: unknown,
 	scope: WatchHistoryBrowseScope,
 ) {
+	let includeEpisodePreviews = false;
+	if (
+		scope === "titles" &&
+		input &&
+		typeof input === "object" &&
+		!Array.isArray(input) &&
+		"includeEpisodePreviews" in input
+	) {
+		if (input.includeEpisodePreviews !== true)
+			throw new WatchHistoryV3ApiError(
+				400,
+				"INVALID_QUERY",
+				"History filters are invalid",
+			);
+		includeEpisodePreviews = true;
+		const { includeEpisodePreviews: _flag, ...filters } = input;
+		input = filters;
+	}
 	const parsed = browseQuerySchemas[scope].safeParse(input);
 	if (!parsed.success)
 		throw new WatchHistoryV3ApiError(
@@ -99,7 +117,12 @@ export function parseWatchHistoryBrowseQuery(
 			);
 		}
 	}
-	return parsed.data;
+	return {
+		...parsed.data,
+		...(includeEpisodePreviews
+			? { includeEpisodePreviews: true as const }
+			: {}),
+	};
 }
 export const supabaseWatchHistoryBrowseStore: WatchHistoryBrowseStore = {
 	async browse(userId, query, scope) {
@@ -216,6 +239,10 @@ export async function readWatchHistoryBrowseV3(
 					raw.sessionIds.indexOf(b.session.id),
 			);
 		if (scope === "titles") {
+			const titleMatches = parseDatabase(
+				WatchHistoryBrowseResponseSchema.shape.matches,
+				raw.matches,
+			);
 			const history = buildWatchHistoryV3Response({
 				userId: params.userId,
 				accountGeneration: raw.accountGeneration,
@@ -231,9 +258,98 @@ export async function readWatchHistoryBrowseV3(
 			const response = parseDatabase(WatchHistoryBrowseResponseSchema, {
 				history,
 				matches: raw.matches,
+				...(query.includeEpisodePreviews
+					? {
+							episodePreviews: (raw.episodePreviews ?? invalidDatabase()).map(
+								(preview, i) => {
+									const title = history.items[i];
+									const titleMatch = titleMatches[i];
+									if (
+										!title ||
+										!titleMatch ||
+										preview.matches.length !==
+											Math.min(8, titleMatch.matchingEpisodeCount) ||
+										preview.complete !== titleMatch.matchingEpisodeCount <= 8 ||
+										title.provider !== preview.provider ||
+										title.titleKey !== preview.titleKey ||
+										preview.complete !== (preview.nextCursor === null) ||
+										new Set(preview.sessionIds).size !==
+											preview.sessionIds.length ||
+										preview.sessionIds.some(
+											(id) => !raw.sessionIds.includes(id),
+										)
+									)
+										return invalidDatabase();
+									const sessions = raw.sessions.filter((record) =>
+										preview.sessionIds.includes(record.session.id),
+									);
+									if (
+										sessions.some(
+											(record) =>
+												record.provider !== preview.provider ||
+												record.titleKey !== preview.titleKey ||
+												!preview.matches.some(
+													(match) => match.episodeKey === record.episodeKey,
+												),
+										)
+									)
+										return invalidDatabase();
+									if (
+										preview.matches.some(
+											(match) =>
+												match.matchingSessionCount < 1 ||
+												match.sessionsComplete !==
+													match.matchingSessionCount <= 2 ||
+												sessions.filter(
+													(record) => record.episodeKey === match.episodeKey,
+												).length !== Math.min(2, match.matchingSessionCount),
+										)
+									)
+										return invalidDatabase();
+									const detail = buildWatchHistoryTitleEpisodesV3Response({
+										userId: params.userId,
+										generatedAt: now,
+										page: {
+											accountGeneration: raw.accountGeneration,
+											provider: preview.provider,
+											titleKey: preview.titleKey,
+											observedEpisodeCount: title.observedEpisodeCount,
+											completedEpisodeCount: title.completedEpisodeCount,
+											catalog: preview.catalog,
+											progressRows: preview.progressRows,
+											sessions,
+											complete: preview.complete,
+											nextCursor: preview.nextCursor,
+										},
+									});
+									if (
+										preview.matches.length !== detail.episodes.length ||
+										preview.matches.some(
+											(match, index) =>
+												match.episodeKey !== detail.episodes[index]?.episodeKey,
+										)
+									)
+										return invalidDatabase();
+									return {
+										detail,
+										matches: preview.matches,
+										groups: raw.groups.filter(
+											(group) =>
+												group &&
+												typeof group === "object" &&
+												"sessionId" in group &&
+												preview.sessionIds.includes(String(group.sessionId)),
+										),
+									};
+								},
+							),
+						}
+					: {}),
 			});
 			if (
 				response.matches.length !== history.items.length ||
+				(response.episodePreviews &&
+					response.episodePreviews.length !== history.items.length) ||
 				response.matches.some(
 					(m, i) =>
 						m.provider !== history.items[i]?.provider ||

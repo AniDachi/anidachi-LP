@@ -1,17 +1,19 @@
 import {
-	WatchHistoryBrowseResponseSchema,
-	WatchHistoryBrowseTitleEpisodesResponseSchema,
-	WatchHistoryBrowseSessionsResponseSchema,
 	type WatchHistoryBrowseQuery,
+	WatchHistoryBrowseResponseSchema,
+	WatchHistoryBrowseSessionsResponseSchema,
+	WatchHistoryBrowseTitleEpisodesResponseSchema,
 	type WatchHistorySession,
+	type WatchProgressEvent,
 } from "@anidachi/protocol";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { usePopupWatchBrowse } from "../src/popup-watch-browse";
 import {
+	type PopupWatchHistoryClient,
 	PopupWatchHistoryPanel,
 	selectConfirmedPopupWatchHistorySnapshot,
-	type PopupWatchHistoryClient,
 } from "../src/popup-watch-history";
 import {
 	createWatchHistoryClient,
@@ -19,8 +21,8 @@ import {
 } from "../src/watch-history-client";
 import {
 	createWatchHistoryStorage,
-	watchHistoryPartitionKey,
 	type WatchHistoryStorageRoot,
+	watchHistoryPartitionKey,
 } from "../src/watch-history-storage";
 
 const OWNER = "00000000-0000-4000-8000-000000000001";
@@ -222,6 +224,8 @@ function generationClient(fetch: typeof globalThis.fetch) {
 		client: {
 			...clientFixture(),
 			request: vi.fn(background.handle),
+			loadBrowseCached: (message: Parameters<typeof background.handle>[0]) =>
+				background.handle({ ...message, cacheOnly: true } as never),
 			loadCached: async (owner: string) =>
 				selectConfirmedPopupWatchHistorySnapshot(
 					await storage.readRoot(),
@@ -264,6 +268,21 @@ function button(name: string) {
 async function click(name: string) {
 	await act(async () => button(name).click());
 }
+async function settles(assertion: () => void) {
+	for (let attempt = 0; attempt < 100; attempt++) {
+		// WebCrypto and extension storage cross task boundaries, not only React's
+		// microtask queue. Wait for the observable result, not a fixed network delay.
+		await act(async () => {
+			await new Promise((resolve) => setTimeout(resolve, 5));
+		});
+		try {
+			assertion();
+			return;
+		} catch (error) {
+			if (attempt === 99) throw error;
+		}
+	}
+}
 async function change(label: string, value: string) {
 	const node = container.querySelector(
 		`[aria-label="${label}"]`,
@@ -287,6 +306,348 @@ async function change(label: string, value: string) {
 }
 
 describe("production watch browsing", () => {
+	it("keeps both saved modes and their episodes visible while progress revalidation is blocked", async () => {
+		let blocked = false;
+		const requests: string[] = [];
+		const setup = generationClient(async (url) => {
+			requests.push(String(url));
+			if (blocked) return new Promise<Response>(() => {});
+			return Response.json({
+				...browse(
+					String(url).includes("mode=shared") ? "Saved together" : "Saved mine",
+				),
+				episodePreviews: [detail()],
+			});
+		});
+		let publish:
+			| Parameters<NonNullable<PopupWatchHistoryClient["subscribe"]>>[1]
+			| undefined;
+		const client = {
+			...setup.client,
+			subscribe: (_owner: string, listener: NonNullable<typeof publish>) => {
+				publish = listener;
+				return () => {};
+			},
+		};
+		await mount(client);
+		await settles(() =>
+			expect(container.textContent).toContain("Matching episode"),
+		);
+		await click("Together");
+		await settles(() =>
+			expect(container.textContent).toContain("Saved together"),
+		);
+		await setup.storage.updateRoot((stored) => ({
+			...stored,
+			partitions: {
+				...stored.partitions,
+				[watchHistoryPartitionKey(OWNER, 1)]: {
+					...required(stored.partitions[watchHistoryPartitionKey(OWNER, 1)]),
+					invalidationRevision: 1,
+					browseInvalidationRevision: 0,
+					browseRevisionFloor: 0,
+					browseTitleRevisions: { '["youtube","new"]': 1 },
+				},
+			},
+		}));
+		blocked = true;
+		await act(async () =>
+			required(publish)(await client.loadCached(OWNER), { ok: true }),
+		);
+		expect(container.textContent).toContain("Saved together");
+		await click("Mine");
+		await settles(() => expect(container.textContent).toContain("Saved mine"));
+		expect(container.textContent).toContain("Matching episode");
+		await act(async () => root.unmount());
+		container.remove();
+		await mount(client);
+		await settles(() => expect(container.textContent).toContain("Saved mine"));
+		expect(container.textContent).toContain("Matching episode");
+		expect(requests.some((url) => url.includes("title-episodes"))).toBe(false);
+	});
+	it("shows a newly observed shared title as pending without guessing confirmed sessions", async () => {
+		const event: WatchProgressEvent = {
+			schemaVersion: 3,
+			clientEventId: GROUP,
+			clientSessionKey: "current-session",
+			accountGeneration: 1,
+			provider: "youtube",
+			youtubeVideoId: "new",
+			titleKey: "youtube:video:new",
+			itemKind: "movie",
+			title: "New shared video",
+			artworkUrl: null,
+			episodeKey: "youtube:video:new",
+			episodeTitle: "New shared video",
+			seasonKey: null,
+			seasonTitle: null,
+			seasonNumber: null,
+			episodeNumber: null,
+			sourceUrl: "https://www.youtube.com/watch?v=new",
+			currentTime: 12,
+			duration: 120,
+			progress: 0.1,
+			observedAt: meta.serverTime,
+			kind: "heartbeat",
+		};
+		const empty = browse();
+		empty.history.items = [];
+		empty.matches = [];
+		const client = {
+			...clientFixture(async (message) =>
+				message.command === "browse" ? { ok: true, data: empty } : { ok: true },
+			),
+			loadCached: async () => ({
+				history: empty.history,
+				accountGeneration: 1,
+				preferences: { youtubeHistoryEnabled: true },
+				pendingEvents: [],
+				capturePaused: false,
+				localObservation: { event, mode: "together" as const },
+			}),
+		};
+		await mount(client);
+		expect(container.textContent).not.toContain("New shared video");
+		await click("Together");
+		expect(container.textContent).toContain("New shared video");
+		expect(container.textContent).toContain("Pending sync");
+		expect(container.textContent).not.toContain("Watch together again");
+	});
+	it.each([
+		"Mine",
+		"Together",
+	])("renders %s preview episodes without a detail request and continues only on demand", async (mode) => {
+		const response = {
+			...browse(),
+			episodePreviews: [detail("next-preview-episodes")],
+		};
+		const requests: string[] = [];
+		const client = clientFixture(async (message) => {
+			if (message.command === "browse") return { ok: true, data: response };
+			if (message.command === "browse-title-episodes") {
+				requests.push(JSON.stringify(message.input));
+				const more = detail();
+				more.detail.episodes = [
+					{
+						...episode,
+						episodeKey: "older",
+						episodeTitle: "Older matching episode",
+						episodeNumber: 2,
+					},
+				];
+				more.matches = [{ ...required(more.matches[0]), episodeKey: "older" }];
+				return { ok: true, data: more };
+			}
+			return { ok: true };
+		});
+		client.loadBrowseCached = async () => ({ ok: true });
+		await mount(client);
+		if (mode === "Together") await click("Together");
+		expect(container.textContent).toContain("Matching episode");
+		expect(container.textContent).not.toContain("Canonical nonmatch");
+		expect(requests).toHaveLength(0);
+		await click("Load more episodes for Frieren");
+		expect(requests).toHaveLength(1);
+		expect(JSON.parse(required(requests[0]))).toMatchObject({
+			mode: mode === "Mine" ? "solo" : "shared",
+			cursor: "next-preview-episodes",
+		});
+		expect(container.textContent).toContain("Matching episode");
+		expect(container.textContent).toContain("Older matching episode");
+	});
+	it.each([
+		"Mine",
+		"Together",
+	])("prefers newer saved %s detail and continues from its cursor with network held", async (mode) => {
+		const preview = detail("preview-next");
+		const saved = detail("saved-next");
+		saved.detail.generatedAt = saved.detail.meta.serverTime =
+			"2026-09-05T09:00:00.000Z";
+		saved.detail.episodes[0] = {
+			...episode,
+			episodeTitle: "Newer saved episode",
+			currentTime: 900,
+			progress: 0.75,
+		};
+		saved.detail.episodes.push({
+			...episode,
+			episodeKey: "saved-extra",
+			episodeTitle: "Additional saved episode",
+			episodeNumber: 2,
+		});
+		saved.matches.push({
+			...required(saved.matches[0]),
+			episodeKey: "saved-extra",
+		});
+		const requests: unknown[] = [];
+		const client = {
+			...clientFixture(async (message) => {
+				if (message.command === "browse")
+					return {
+						ok: true,
+						data: { ...browse(), episodePreviews: [preview] },
+					};
+				if (message.command === "browse-title-episodes") {
+					requests.push(message.input);
+					return new Promise<WatchHistoryMessageResponse>(() => {});
+				}
+				return { ok: true };
+			}),
+			loadBrowseCached: async (
+				message: Parameters<
+					NonNullable<PopupWatchHistoryClient["loadBrowseCached"]>
+				>[0],
+			) =>
+				message.command === "browse-title-episodes" &&
+				!(message.input as { cursor?: string }).cursor
+					? { ok: true as const, data: saved, cachedAt: 0 }
+					: { ok: true as const },
+		};
+		await mount(client);
+		if (mode === "Together") await click("Together");
+		expect(container.textContent).toContain("Newer saved episode");
+		expect(container.textContent).toContain("Additional saved episode");
+		expect(container.textContent).toContain("15:00");
+		expect(requests).toHaveLength(0);
+		await click("Load more episodes for Frieren");
+		expect(requests).toEqual([
+			expect.objectContaining({
+				mode: mode === "Mine" ? "solo" : "shared",
+				cursor: "saved-next",
+			}),
+		]);
+		expect(container.textContent).toContain("Newer saved episode");
+	});
+	it("replaces a stale provisional continuation instead of keeping deleted rows or an extra page", async () => {
+		let finish: ((value: WatchHistoryMessageResponse) => void) | undefined;
+		const stale = browse("Removed title");
+		const empty = browse();
+		empty.history.items = [];
+		empty.matches = [];
+		const client = {
+			...clientFixture(async (message) =>
+				"input" in message && (message.input as { cursor?: string })?.cursor
+					? new Promise<WatchHistoryMessageResponse>((resolve) => {
+							finish = resolve;
+						})
+					: { ok: true, data: browse("First page", "second") },
+			),
+			loadBrowseCached: async (message: {
+				input: unknown;
+			}): Promise<WatchHistoryMessageResponse> =>
+				(message.input as { cursor?: string }).cursor
+					? { ok: true, data: stale, cachedAt: Date.now() - 31_000 }
+					: { ok: true },
+		};
+		function Harness() {
+			const result = usePopupWatchBrowse({
+				client,
+				message: {
+					type: "ANIDACHI_WATCH_HISTORY_V3",
+					command: "browse",
+					expectedOwnerUserId: OWNER,
+					input: { mode: "solo" },
+				},
+				parser: WatchHistoryBrowseResponseSchema,
+				meta: (data) => data.history.meta,
+				cursor: (data) => data.history.nextCursor,
+				refresh: 0,
+				generation: 1,
+			});
+			return (
+				<>
+					<div data-pages={result.pages.length}>
+						{result.pages
+							.flatMap((page) => page.history.items.map((item) => item.title))
+							.join(",")}
+					</div>
+					<button onClick={result.loadMore}>More</button>
+				</>
+			);
+		}
+		container = document.createElement("div");
+		document.body.append(container);
+		root = createRoot(container);
+		await act(async () => root.render(<Harness />));
+		await click("More");
+		expect(container.textContent).toContain("Removed title");
+		await act(async () => required(finish)({ ok: true, data: empty }));
+		expect(
+			container.querySelector("[data-pages]")?.getAttribute("data-pages"),
+		).toBe("2");
+		expect(container.textContent).not.toContain("Removed title");
+	});
+	it("reuses Mine and Together on return and popup remount without another HTTP round trip", async () => {
+		const fetch = vi.fn(async (raw: string | URL | Request) => {
+			const url = String(raw);
+			return Response.json(
+				url.includes("title-episodes")
+					? detail()
+					: browse(url.includes("mode=shared") ? "Shared title" : "My title"),
+			);
+		});
+		const { client } = generationClient(fetch);
+		await mount(client);
+		await settles(() => expect(container.textContent).toContain("My title"));
+		await settles(() =>
+			expect(container.textContent).toContain("Matching episode"),
+		);
+		await click("Together");
+		await settles(() =>
+			expect(container.textContent).toContain("Shared title"),
+		);
+		await settles(() =>
+			expect(container.textContent).toContain("Matching episode"),
+		);
+		const count = fetch.mock.calls.length;
+		await click("Mine");
+		await settles(() => expect(container.textContent).toContain("My title"));
+		expect(fetch).toHaveBeenCalledTimes(count);
+		await act(async () => root.unmount());
+		container.remove();
+		await mount(client);
+		await settles(() => expect(container.textContent).toContain("My title"));
+		expect(fetch).toHaveBeenCalledTimes(count);
+	});
+
+	it("shows stale cached matches while refresh is pending and keeps them after network failure", async () => {
+		let slow = false;
+		const pending: Array<(value: Response) => void> = [];
+		const fetch = vi.fn(
+			async (raw: string | URL | Request): Promise<Response> => {
+				if (slow) return new Promise((resolve) => pending.push(resolve));
+				return Response.json(
+					String(raw).includes("title-episodes")
+						? detail()
+						: browse("Saved title"),
+				);
+			},
+		);
+		const { client } = generationClient(fetch);
+		await mount(client);
+		await settles(() => expect(container.textContent).toContain("Saved title"));
+		await act(async () => root.unmount());
+		container.remove();
+		const now = Date.now();
+		const clock = vi.spyOn(Date, "now").mockReturnValue(now + 31_000);
+		try {
+			slow = true;
+			await mount(client);
+			await settles(() => {
+				expect(container.textContent).toContain("Saved title");
+				expect(pending.length).toBeGreaterThan(0);
+			});
+			await act(async () => {
+				for (const resolve of pending)
+					resolve(Response.json({}, { status: 503 }));
+			});
+			expect(container.textContent).toContain("Saved title");
+			expect(container.textContent).toContain("Could not refresh");
+		} finally {
+			clock.mockRestore();
+		}
+	});
+
 	it("retries a transient primary browse failure without depending on unavailable canonical history", async () => {
 		let available = false;
 		const fallback = clientFixture();
@@ -344,11 +705,12 @@ describe("production watch browsing", () => {
 		});
 		await mount(client);
 		await click("Together");
-		expect(container.textContent).toContain("Frieren");
+		await settles(() => expect(container.textContent).toContain("Frieren"));
+		await settles(() => expect(finishDetail).toBeDefined());
 		cleared = true;
 		await click("Filters");
 		await act(async () => required(finishDetail)(Response.json(nextDetail)));
-		expect(canonicalReads).toHaveLength(1);
+		await settles(() => expect(canonicalReads).toHaveLength(1));
 		expect(
 			client.request.mock.calls.filter(([m]) => m.command === "list"),
 		).toHaveLength(1);
@@ -363,7 +725,9 @@ describe("production watch browsing", () => {
 		await act(async () =>
 			required(canonicalReads[1])(Response.json(next.history)),
 		);
-		expect(container.textContent).toContain("After child recovery");
+		await settles(() =>
+			expect(container.textContent).toContain("After child recovery"),
+		);
 		expect((await storage.readRoot()).activeGenerations?.[OWNER]).toBe(2);
 		expect(container.querySelector('[role="alert"]')).toBeNull();
 		expect(
@@ -386,7 +750,9 @@ describe("production watch browsing", () => {
 		const { client, storage } = generationClient(fetch);
 		expect((await client.loadCached(OWNER))?.accountGeneration).toBe(1);
 		await mount(client);
-		expect(container.textContent).toContain("After website clear");
+		await settles(() =>
+			expect(container.textContent).toContain("After website clear"),
+		);
 		expect((await storage.readRoot()).activeGenerations?.[OWNER]).toBe(2);
 		expect(
 			client.request.mock.calls.filter(([m]) => m.command === "list"),
@@ -415,17 +781,25 @@ describe("production watch browsing", () => {
 			}),
 		);
 		await mount(client);
+		await settles(() =>
+			expect(container.textContent).toContain("Please retry"),
+		);
 		expect(
 			client.request.mock.calls.filter(([m]) => m.command === "list"),
 		).toHaveLength(1);
 		expect(container.textContent).toContain("Please retry");
 		await change("Search watch history", "Recovered");
+		await settles(() =>
+			expect(button("Retry watch history").disabled).toBe(false),
+		);
 		expect(
 			client.request.mock.calls.filter(([m]) => m.command === "list"),
 		).toHaveLength(1);
 		available = true;
 		await click("Retry watch history");
-		expect(container.textContent).toContain("Recovered matching title");
+		await settles(() =>
+			expect(container.textContent).toContain("Recovered matching title"),
+		);
 		expect((await storage.readRoot()).activeGenerations?.[OWNER]).toBe(2);
 		expect(
 			client.request.mock.calls.filter(([m]) => m.command === "list"),
@@ -553,6 +927,9 @@ describe("production watch browsing", () => {
 			),
 		);
 		await mount(client);
+		await settles(() =>
+			expect(container.textContent).toContain("Could not refresh"),
+		);
 		expect(
 			client.request.mock.calls.filter(([m]) => m.command === "list"),
 		).toHaveLength(1);

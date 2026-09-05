@@ -76,7 +76,7 @@ const GroupContext = z.strictObject({
 	sessionId: z.uuid(),
 	groups: z.array(WatchHistoryBrowseGroupSchema).max(100),
 });
-export const WatchHistoryBrowseResponseSchema = z.strictObject({
+const WatchHistoryBrowseTitlesResponseBaseSchema = z.strictObject({
 	history: WatchHistoryResponseSchema,
 	matches: z
 		.array(
@@ -104,6 +104,20 @@ export const WatchHistoryBrowseTitleEpisodesResponseSchema = z.strictObject({
 		.max(50),
 	groups: z.array(GroupContext).max(1000),
 });
+export const WatchHistoryBrowseResponseSchema =
+	WatchHistoryBrowseTitlesResponseBaseSchema.extend({
+		episodePreviews: z
+			.array(
+				WatchHistoryBrowseTitleEpisodesResponseSchema.extend({
+					detail: WatchHistoryTitleEpisodesResponseSchema.safeExtend({
+						episodes:
+							WatchHistoryTitleEpisodesResponseSchema.shape.episodes.max(8),
+					}),
+				}),
+			)
+			.max(50)
+			.optional(),
+	});
 export const WatchHistoryBrowseSessionsResponseSchema = z.strictObject({
 	meta: WatchHistoryResponseMetaSchema,
 	sessions: z.array(WatchHistorySessionSchema).max(50),
@@ -135,10 +149,10 @@ export const WatchHistoryBrowseDatabasePageSchema = z.strictObject({
 	nextCursor: WatchHistoryOpaqueCursorSchema.nullable(),
 	matches: z.array(z.unknown()).max(50),
 	progressRows: z.array(z.unknown()).max(400),
-	sessionIds: z.array(z.uuid()).max(1000),
+	sessionIds: z.array(z.uuid()).max(1800),
 	sessionTimes: z
 		.array(z.strictObject({ sessionId: z.uuid(), lastWatchedAt: Timestamp }))
-		.max(1000),
+		.max(1800),
 	sessions: z
 		.array(
 			z.strictObject({
@@ -148,12 +162,28 @@ export const WatchHistoryBrowseDatabasePageSchema = z.strictObject({
 				episodeKey: Key,
 			}),
 		)
-		.max(1000),
-	groups: z.array(z.unknown()).max(1000),
+		.max(1800),
+	groups: z.array(z.unknown()).max(1800),
 	titleSummaries: z.array(z.unknown()).max(50),
 	catalog: WatchHistoryCatalogProjectionSchema.nullable(),
 	observedEpisodeCount: z.number().int().nonnegative(),
 	completedEpisodeCount: z.number().int().nonnegative(),
+	episodePreviews: z
+		.array(
+			z.strictObject({
+				provider: Provider,
+				titleKey: Key,
+				catalog: WatchHistoryCatalogProjectionSchema,
+				progressRows: z.array(z.unknown()).max(8),
+				matches:
+					WatchHistoryBrowseTitleEpisodesResponseSchema.shape.matches.max(8),
+				sessionIds: z.array(z.uuid()).max(16),
+				complete: z.boolean(),
+				nextCursor: WatchHistoryOpaqueCursorSchema.nullable(),
+			}),
+		)
+		.max(50)
+		.optional(),
 });
 export const WatchHistoryBrowseDatabaseOptionsSchema = z.strictObject({
 	accountGeneration: z.number().int().positive(),
