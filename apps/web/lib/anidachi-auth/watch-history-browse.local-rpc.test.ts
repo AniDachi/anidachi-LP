@@ -31,14 +31,14 @@ test("disposable production RPC payloads parse through canonical builders with o
 	const queries = {
 		titles: {
 			mode: "shared",
-			groupId: "aaaaaaaa-1111-4111-8111-111111111111",
-			limit: 20,
+			search: "tHe pRoMiSe Ω",
+			limit: 1,
 		},
 		episodes: {
 			mode: "shared",
 			provider: "crunchyroll",
-			titleKey: "crunchyroll:series:S",
-			groupId: "aaaaaaaa-1111-4111-8111-111111111111",
+			titleKey: "crunchyroll:series:TARGET",
+			search: "tHe pRoMiSe Ω",
 			limit: 20,
 		},
 		sessions: {
@@ -46,6 +46,7 @@ test("disposable production RPC payloads parse through canonical builders with o
 			provider: "crunchyroll",
 			titleKey: "crunchyroll:series:S",
 			episodeKey: "crunchyroll:episode:OLD",
+			search: "pRoMiSe",
 			participantUserId: "bbbbbbbb-3333-4333-8333-333333333333",
 			limit: 20,
 		},
@@ -138,18 +139,17 @@ rollback;`;
 		input: queries.titles,
 		store,
 	});
-	assert.equal(titles.history.items.length, 2);
-	assert.equal(titles.matches[0]?.titleKey, "crunchyroll:series:S");
+	assert.equal(titles.history.items.length, 1);
+	assert.equal(titles.matches[0]?.titleKey, "crunchyroll:series:TARGET");
 	const episodes = await browseWatchHistoryTitleEpisodesV3({
 		userId: owner,
 		input: queries.episodes,
 		store,
 	});
 	assert.deepEqual(
-		new Set(episodes.detail.episodes.map((e) => e.episodeKey)),
-		new Set(["crunchyroll:episode:E1", "crunchyroll:episode:LATER"]),
+		episodes.detail.episodes.map((e) => [e.episodeKey, e.episodeTitle]),
+		[["crunchyroll:episode:TARGET", "Episode 2 - The Promise Ω"]],
 	);
-	assert.ok(episodes.detail.observedEpisodeCount > 8);
 	const sessions = await browseWatchHistorySessionsV3({
 		userId: "bbbbbbbb-3333-4333-8333-333333333333",
 		input: queries.sessions,

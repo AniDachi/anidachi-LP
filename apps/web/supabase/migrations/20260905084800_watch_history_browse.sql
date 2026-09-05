@@ -172,7 +172,8 @@ language sql stable security invoker set search_path='' as $$
     and (not p_query?'titleKey' or s.item_key=p_query->>'titleKey')
     and (not p_query?'episodeKey' or s.episode_key=p_query->>'episodeKey')
     and (not p_query?'search' or pg_catalog.strpos(pg_catalog.lower(ep.title),pg_catalog.lower(p_query->>'search'))>0
-      or pg_catalog.strpos(pg_catalog.lower(coalesce(public.watch_catalog_read_v3(p_user_id,p_generation,s.provider,s.item_key)->>'title','')),pg_catalog.lower(p_query->>'search'))>0)
+      or pg_catalog.strpos(pg_catalog.lower(coalesce(public.watch_catalog_read_v3(p_user_id,p_generation,s.provider,s.item_key)->>'title','')),pg_catalog.lower(p_query->>'search'))>0
+      or pg_catalog.strpos(pg_catalog.lower(coalesce(public.watch_catalog_label_v3(p_user_id,p_generation,s.provider,s.item_key,s.episode_key)->>'episodeTitle',ep.episode_title,'')),pg_catalog.lower(p_query->>'search'))>0)
     and (not p_query?'from' or coalesce(o.last_observed_at,s.last_checkpoint_at)>=(p_query->>'from')::timestamptz)
     and (not p_query?'until' or coalesce(o.last_observed_at,s.last_checkpoint_at)<(p_query->>'until')::timestamptz)
     and (not p_query?'participantUserId' or exists(select 1 from public.watch_session_participants other where other.session_id=s.id and other.user_id=(p_query->>'participantUserId')::uuid and other.schema_version=3))

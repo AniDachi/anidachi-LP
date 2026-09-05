@@ -20,12 +20,12 @@ insert into public.rooms(room_id,host_user_id,created_at) values('browse-room','
 insert into public.room_members(room_id,user_id,joined_at) values
 ('browse-room','bbbbbbbb-2222-4222-8222-222222222222',now()-interval '2 hours'),
 ('browse-room','bbbbbbbb-3333-4333-8333-333333333333',now()-interval '2 hours');
-create function pg_temp.watch(uid uuid, ep text default 'E1', source_gen int default 1, obs timestamptz default clock_timestamp(), title_id text default 'S', room_gen int default 1, event_id uuid default gen_random_uuid(), account_gen bigint default 1) returns jsonb language plpgsql as $$
+create function pg_temp.watch(uid uuid, ep text default 'E1', source_gen int default 1, obs timestamptz default clock_timestamp(), title_id text default 'S', room_gen int default 1, event_id uuid default gen_random_uuid(), account_gen bigint default 1, episode_label text default null) returns jsonb language plpgsql as $$
 declare e jsonb; a jsonb;
 begin
 e:=jsonb_build_object('schemaVersion',3,'clientEventId',event_id,'clientSessionKey','browse-'||uid||'-'||ep,'accountGeneration',account_gen,
 'provider','crunchyroll','titleKey','crunchyroll:series:'||title_id,'episodeKey','crunchyroll:episode:'||ep,'seasonKey','crunchyroll:season:SS',
-'itemKind','series','title','Title '||title_id,'episodeTitle','Episode '||ep,'seasonTitle','Season','seasonNumber',1,'episodeNumber',1,'artworkUrl',null,
+'itemKind','series','title','Title '||title_id,'episodeTitle',coalesce(episode_label,'Episode '||ep),'seasonTitle','Season','seasonNumber',1,'episodeNumber',1,'artworkUrl',null,
 'sourceUrl','https://www.crunchyroll.com/watch/'||ep,'currentTime',50,'duration',100,'progress',0.5,'kind','heartbeat','observedAt',obs,
 'crunchyrollIdentity',jsonb_build_object('providerSeriesId',title_id,'providerSeasonIdentifier','SS','providerEpisodeIdentifier',ep,'providerContentId',ep,'audioLocale',null),
 'sharedRoom',jsonb_build_object('roomId','browse-room','participantSessionId','browse-'||uid,'roomGeneration',room_gen,'sourceGeneration',source_gen));
@@ -64,8 +64,8 @@ select throws_ok($$select pg_temp.browse('{"mode":"shared","from":"2026-09-05T00
 select pg_temp.watch('bbbbbbbb-1111-4111-8111-111111111111','EARLY',2,now()-interval '1 hour');
 select pg_temp.watch('bbbbbbbb-2222-4222-8222-222222222222','EARLY',2,now()-interval '1 hour');
 select is((select count(*) from public.watch_history_session_groups g join public.watch_sessions s on s.id=g.session_id where s.episode_key='crunchyroll:episode:EARLY'),0::bigint,'delayed upload before action and acceptance cannot establish provenance');
-select pg_temp.watch('bbbbbbbb-1111-4111-8111-111111111111','LATER',3,now()-interval '20 seconds');
-select pg_temp.watch('bbbbbbbb-2222-4222-8222-222222222222','LATER',3,now()-interval '20 seconds');
+select pg_temp.watch('bbbbbbbb-1111-4111-8111-111111111111','LATER',3,now()-interval '20 seconds','S',1,gen_random_uuid(),1,'Episode Later Promise');
+select pg_temp.watch('bbbbbbbb-2222-4222-8222-222222222222','LATER',3,now()-interval '20 seconds','S',1,gen_random_uuid(),1,'Episode Later Promise');
 select is((select count(*) from public.watch_history_session_groups g join public.watch_sessions s on s.id=g.session_id where s.episode_key='crunchyroll:episode:LATER'),2::bigint,'later source in same verified generation retains both group contexts');
 select is(pg_temp.browse(jsonb_build_object('mode','shared','groupId','aaaaaaaa-1111-4111-8111-111111111111','participantUserId','bbbbbbbb-3333-4333-8333-333333333333','from',now()-interval '21 seconds','until',now()-interval '19 seconds'))->>'totalTitleCount','0','group participant and dates must match the same session');
 select pg_temp.watch('bbbbbbbb-1111-4111-8111-111111111111','NEWGEN',1,now(),'S',2);
@@ -82,14 +82,23 @@ select is((select count(*) from public.watch_history_group_invitation_contexts w
 select pg_temp.watch('bbbbbbbb-1111-4111-8111-111111111111','OLD',30,now()-interval '50 seconds');
 select pg_temp.watch('bbbbbbbb-3333-4333-8333-333333333333','OLD',30,now()-interval '50 seconds');
 do $$begin for n in 31..55 loop perform pg_temp.watch('bbbbbbbb-1111-4111-8111-111111111111','OLD',n,now()-interval '10 seconds'); end loop; end $$;
-select is(pg_temp.browse('{"mode":"shared","provider":"crunchyroll","titleKey":"crunchyroll:series:S","episodeKey":"crunchyroll:episode:OLD","participantUserId":"bbbbbbbb-3333-4333-8333-333333333333"}','sessions')->>'totalSessionCount','1','matching session older than twenty is discoverable');
-select pg_temp.watch('bbbbbbbb-1111-4111-8111-111111111111','OLD',30,now()-interval '5 seconds');
+update public.watch_episode_progress set episode_title='Episode Old Promise'
+where user_id in ('bbbbbbbb-1111-4111-8111-111111111111','bbbbbbbb-3333-4333-8333-333333333333')
+  and episode_key='crunchyroll:episode:OLD';
+select is(pg_temp.browse('{"mode":"shared","search":"pRoMiSe","provider":"crunchyroll","titleKey":"crunchyroll:series:S","episodeKey":"crunchyroll:episode:OLD","participantUserId":"bbbbbbbb-3333-4333-8333-333333333333"}','sessions')->>'totalSessionCount','1','observed episode-title search finds a matching session older than twenty');
+select pg_temp.watch('bbbbbbbb-1111-4111-8111-111111111111','OLD',30,now()-interval '5 seconds','S',1,gen_random_uuid(),1,'Episode Old Promise');
 do $$begin for n in 60..71 loop perform pg_temp.watch('bbbbbbbb-1111-4111-8111-111111111111','E'||n,n); end loop; end $$;
-select ok(exists(select 1 from jsonb_array_elements(pg_temp.browse('{"mode":"shared","provider":"crunchyroll","titleKey":"crunchyroll:series:S","groupId":"aaaaaaaa-1111-4111-8111-111111111111"}','episodes')->'matches') m where m->>'episodeKey'='crunchyroll:episode:LATER'),'matching episode older than eight is discoverable');
+select ok(exists(select 1 from jsonb_array_elements(pg_temp.browse('{"mode":"shared","search":"pRoMiSe","provider":"crunchyroll","titleKey":"crunchyroll:series:S","groupId":"aaaaaaaa-1111-4111-8111-111111111111"}','episodes')->'matches') m where m->>'episodeKey'='crunchyroll:episode:LATER'),'observed episode-title search finds a matching episode older than eight');
 do $$begin for n in 100..125 loop perform pg_temp.watch('bbbbbbbb-1111-4111-8111-111111111111','E'||n,n,now(),'T'||n); end loop; end $$;
-select pg_temp.watch('bbbbbbbb-1111-4111-8111-111111111111','TARGET',130,now()-interval '30 seconds','TARGET');
-select pg_temp.watch('bbbbbbbb-2222-4222-8222-222222222222','TARGET',130,now()-interval '30 seconds','TARGET');
-select is(pg_temp.browse('{"mode":"shared","search":"Title TARGET","limit":1}')->>'totalTitleCount','1','search finds matching title beyond the first page');
+select pg_temp.watch('bbbbbbbb-1111-4111-8111-111111111111','TARGET',130,now()-interval '30 seconds','TARGET',1,gen_random_uuid(),1,'Observed target label');
+select pg_temp.watch('bbbbbbbb-2222-4222-8222-222222222222','TARGET',130,now()-interval '30 seconds','TARGET',1,gen_random_uuid(),1,'Observed target label');
+insert into public.watch_catalog_snapshots(user_id,history_generation,provider,title_key,revision,context,attempt_status,accepted_context,accepted_title,accepted_at,accepted_revision,projection)
+values('bbbbbbbb-1111-4111-8111-111111111111',1,'crunchyroll','crunchyroll:series:TARGET',9001,'{"region":"ZZ"}','complete','{"region":"ZZ"}','Quiet winter story',now(),9001,'{"aggregate":{"completedEpisodes":0,"availableEpisodes":1,"progress":0},"seasons":[]}');
+insert into public.watch_catalog_aliases(user_id,history_generation,provider,title_key,raw_content_id,season_key,episode_key,audio_locale,original,variant_order,source_url,available,season_order,episode_order,season_title,season_number,episode_title,episode_number,availability_context_hash)
+values('bbbbbbbb-1111-4111-8111-111111111111',1,'crunchyroll','crunchyroll:series:TARGET','TARGET','crunchyroll:season:SS','crunchyroll:episode:TARGET',null,true,1,'https://www.crunchyroll.com/watch/TARGET',true,1,1,'Season',1,'Episode 2 - The Promise Ω',2,'fixture');
+select is(pg_temp.browse('{"mode":"shared","search":"tHe pRoMiSe Ω","limit":1}')->>'totalTitleCount','1','canonical episode-label search finds a matching title beyond the first page');
+select is(pg_temp.browse('{"mode":"shared","search":"tHe pRoMiSe Ω","provider":"crunchyroll","titleKey":"crunchyroll:series:TARGET"}','episodes')#>>'{progressRows,0,episode_title}','Episode 2 - The Promise Ω','episode-label search returns the same canonical label displayed by browse detail');
+select is(pg_temp.browse('{"mode":"shared","search":"tHe pRoMiSe Ω","limit":1}')#>>'{titleSummaries,0,observedEpisodeCount}',(select observed_episode_count::text from public.watch_history_title_summaries where user_id='bbbbbbbb-1111-4111-8111-111111111111' and title_key='crunchyroll:series:TARGET'),'episode-label search preserves the canonical unfiltered title aggregate');
 select is(pg_temp.browse('{"mode":"shared","search":"%"}')->>'totalTitleCount','0','search treats SQL wildcards literally');
 
 create temporary table pages(name text primary key,payload jsonb);
