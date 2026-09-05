@@ -12,6 +12,154 @@ import {
 
 const enabled = process.env.WATCH_HISTORY_BROWSE_LOCAL_RPC === "1";
 const owner = "bbbbbbbb-1111-4111-8111-111111111111";
+
+test("disposable preview RPC renders only matching canonical episodes and rejects corrupt evidence", {
+	skip: !enabled,
+}, async (context) => {
+	const guard = spawnSync(
+		process.execPath,
+		[resolve("supabase/contracts/watch_history_v3_target_preflight.mjs")],
+		{ encoding: "utf8" },
+	);
+	assert.equal(guard.status, 0, guard.stderr);
+	const fixture = readFileSync(
+		resolve("supabase/tests/watch_history_v3_episode_previews.test.sql"),
+		"utf8",
+	).split("-- Assertions below this marker")[0];
+	const container = process.env.ANIDACHI_DISPOSABLE_DB_CONTAINER;
+	assert.ok(container);
+	const previewOwner = "eeeeeeee-1111-4111-8111-111111111111";
+	const store = {
+		async browse(
+			userId: string,
+			query: Record<string, unknown>,
+			scope: string,
+		) {
+			assert.equal(userId, previewOwner);
+			const sql =
+				fixture +
+				`
+with page as(select public.browse_watch_history_v3('${previewOwner}','${JSON.stringify(query)}'::jsonb,'${scope}') raw)
+select 'PREVIEW_JSON:'||(raw||jsonb_build_object('sessions',coalesce((
+select jsonb_agg(jsonb_build_object('provider',s.provider,'titleKey',s.item_key,'episodeKey',s.episode_key,'session',jsonb_build_object(
+'id',s.id,'roomId',s.room_id,'roomGeneration',s.room_generation,'hostUserId',s.host_user_id,'kind',case when s.room_id is null then 'solo' else 'shared' end,'sourceGeneration',s.source_generation,
+'currentTime',s.current_time_seconds,'duration',s.duration_seconds,'progress',s.progress,'startedAt',s.started_at,'endedAt',s.ended_at,'lastWatchedAt',s.last_checkpoint_at,
+'participants',(select jsonb_agg(jsonb_build_object('user',jsonb_build_object('userId',u.id,'handle',null,'displayName',u.display_name,'avatarUrl',null),'role',p.role,'currentTime',p.current_time_seconds,'progress',p.progress,'joinedAt',p.joined_at,'leftAt',p.left_at,'updatedAt',p.updated_at)) from public.watch_session_participants p join public.users u on u.id=p.user_id where p.session_id=s.id))))
+from public.watch_sessions s where s.id in(select jsonb_array_elements_text(raw->'sessionIds')::uuid)),'[]'::jsonb)))::text from page;
+rollback;`;
+			const result = spawnSync(
+				"docker",
+				[
+					"exec",
+					"-i",
+					container,
+					"psql",
+					"-U",
+					"postgres",
+					"-d",
+					"postgres",
+					"-v",
+					"ON_ERROR_STOP=1",
+					"-qAt",
+				],
+				{ input: sql, encoding: "utf8", maxBuffer: 8 * 1024 * 1024 },
+			);
+			assert.equal(result.status, 0, result.stderr);
+			const line = result.stdout
+				.split("\n")
+				.find((line) => line.startsWith("PREVIEW_JSON:"));
+			assert.ok(line);
+			return JSON.parse(line.slice("PREVIEW_JSON:".length));
+		},
+	};
+	const query = { mode: "shared", search: "MIX", includeEpisodePreviews: true };
+	const response = await browseWatchHistoryV3({
+		userId: previewOwner,
+		input: query,
+		store,
+	});
+	assert.deepEqual(
+		response.episodePreviews?.[0]?.detail.episodes.map((e) => e.episodeKey),
+		["crunchyroll:episode:eligible-old-episode"],
+	);
+	assert.equal(response.episodePreviews?.[0]?.detail.complete, true);
+	assert.equal(response.episodePreviews?.[0]?.detail.observedEpisodeCount, 13);
+	assert.equal(response.history.items[0]?.observedEpisodeCount, 13);
+	const legacy = await browseWatchHistoryV3({
+		userId: previewOwner,
+		input: { mode: "shared", search: "MIX" },
+		store,
+	});
+	assert.deepEqual(Object.keys(legacy).sort(), ["history", "matches"]);
+	assert.deepEqual(
+		response.history.items[0]?.aggregate,
+		legacy.history.items[0]?.aggregate,
+	);
+	const solo = await browseWatchHistoryV3({
+		userId: previewOwner,
+		input: { mode: "solo", search: "MIX", includeEpisodePreviews: true },
+		store,
+	});
+	assert.equal(solo.episodePreviews?.[0]?.detail.episodes.length, 8);
+	assert.ok(
+		solo.episodePreviews?.[0]?.detail.episodes.every((e) =>
+			e.episodeKey.startsWith("crunchyroll:episode:SOLO"),
+		),
+	);
+	const raw = await store.browse(
+		previewOwner,
+		{ ...query, limit: 20 },
+		"titles",
+	);
+	for (const mutate of [
+		(value: typeof raw) => {
+			value.episodePreviews[0].progressRows[0].user_id =
+				"eeeeeeee-2222-4222-8222-222222222222";
+		},
+		(value: typeof raw) => {
+			value.episodePreviews[0].progressRows[0].history_generation = 2;
+		},
+		(value: typeof raw) => {
+			value.episodePreviews[0].matches[0].episodeKey = "unmatched";
+		},
+		(value: typeof raw) => {
+			value.episodePreviews[0].complete = false;
+		},
+		(value: typeof raw) => {
+			value.episodePreviews[0].sessionIds = [];
+		},
+		(value: typeof raw) => {
+			value.episodePreviews[0].unexpected = true;
+		},
+		(value: typeof raw) => {
+			value.episodePreviews[0].matches = [];
+			value.episodePreviews[0].progressRows = [];
+			value.episodePreviews[0].sessionIds = [];
+		},
+	]) {
+		const corrupt = structuredClone(raw);
+		mutate(corrupt);
+		await assert.rejects(
+			browseWatchHistoryV3({
+				userId: previewOwner,
+				input: query,
+				store: {
+					async browse() {
+						return corrupt;
+					},
+				},
+			}),
+			{ code: "INVALID_DATABASE_RESPONSE" },
+		);
+	}
+	context.diagnostic(
+		JSON.stringify({
+			previewResponseBytes: Buffer.byteLength(JSON.stringify(response)),
+			legacyResponseBytes: Buffer.byteLength(JSON.stringify(legacy)),
+			previewCanonicalSessionLoads: raw.sessionIds.length,
+		}),
+	);
+});
 test("disposable production RPC payloads parse through canonical builders with observed session dates", {
 	skip: !enabled,
 }, async (context) => {

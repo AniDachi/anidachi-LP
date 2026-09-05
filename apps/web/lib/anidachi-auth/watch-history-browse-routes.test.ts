@@ -2,6 +2,40 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { NextRequest } from "next/server";
 
+test("titles route parses an explicit boolean preview opt-in", async () => {
+	const { createWatchHistoryBrowseHandler } = await import(
+		"./watch-history-browse-routes"
+	);
+	const handler = createWatchHistoryBrowseHandler("titles", {
+		getSession: async () => ({
+			userId: "11111111-1111-4111-8111-111111111111",
+			email: "owner@example.test",
+			plan: "free",
+			source: "extension",
+		}),
+		browse: async ({ input }) => input,
+	});
+	const response = await handler(
+		new NextRequest(
+			"http://localhost/api/watch-history/v3/browse?mode=solo&includeEpisodePreviews=true",
+		),
+	);
+	assert.equal(response.status, 200);
+	assert.equal((await response.json()).includeEpisodePreviews, true);
+	for (const value of ["false", "1", "TRUE"]) {
+		assert.equal(
+			(
+				await handler(
+					new NextRequest(
+						`http://localhost/api/watch-history/v3/browse?mode=solo&includeEpisodePreviews=${value}`,
+					),
+				)
+			).status,
+			400,
+		);
+	}
+});
+
 test("browse route rejects duplicate filters and client ownership before service access", async () => {
 	const { createWatchHistoryBrowseHandler } = await import(
 		"./watch-history-browse-routes"

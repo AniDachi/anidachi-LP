@@ -37,7 +37,12 @@ export function createWatchHistoryBrowseHandler(
 						"INVALID_QUERY",
 						"History filters are invalid",
 					);
-				input[key] = key === "limit" ? Number(value) : value;
+				input[key] =
+					key === "limit"
+						? Number(value)
+						: key === "includeEpisodePreviews" && value === "true"
+							? true
+							: value;
 			}
 			const query = parseWatchHistoryBrowseQuery(input, scope);
 			return NextResponse.json(

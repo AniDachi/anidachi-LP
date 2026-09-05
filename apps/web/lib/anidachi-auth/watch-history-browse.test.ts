@@ -1,6 +1,59 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+test("titles opt-in is transport-only and preserves an old caller's strict response", async () => {
+	const api = await import("./watch-history-browse");
+	const raw = {
+		accountGeneration: 1,
+		totalTitleCount: 0,
+		totalSessionCount: 0,
+		hasMore: false,
+		nextCursor: null,
+		matches: [],
+		progressRows: [],
+		sessionIds: [],
+		sessionTimes: [],
+		sessions: [],
+		groups: [],
+		titleSummaries: [],
+		catalog: null,
+		observedEpisodeCount: 0,
+		completedEpisodeCount: 0,
+		episodePreviews: [],
+	};
+	const params = {
+		userId: "11111111-1111-4111-8111-111111111111",
+		store: {
+			async browse() {
+				return raw;
+			},
+		},
+	};
+	const response = await api.browseWatchHistoryV3({
+		...params,
+		input: { mode: "solo", includeEpisodePreviews: true },
+	});
+	assert.deepEqual(response.episodePreviews, []);
+	const legacy = await api.browseWatchHistoryV3({
+		...params,
+		input: { mode: "solo" },
+	});
+	assert.equal(Object.hasOwn(legacy, "episodePreviews"), false);
+	assert.throws(
+		() =>
+			api.parseWatchHistoryBrowseQuery(
+				{
+					mode: "solo",
+					provider: "youtube",
+					titleKey: "title",
+					includeEpisodePreviews: true,
+				},
+				"episodes",
+			),
+		{ code: "INVALID_QUERY" },
+	);
+});
+
 test("browse rejects malformed filters before accessing storage", async () => {
 	const browseApi = await import("./watch-history-browse");
 	let accessed = false;
