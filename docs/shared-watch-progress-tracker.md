@@ -86,8 +86,9 @@ or terminal recovery.
 ## Providers
 
 Crunchyroll records the active observed episode after meaningful playback.
-Catalog state stays `unavailable`; observed seasons/episodes are not proof of a
-complete catalog. YouTube is an explicit browser-local opt-in, off by default,
+Canonical catalog evidence is used when available; observed seasons/episodes alone
+are never proof of a complete catalog. YouTube is an explicit browser-local opt-in,
+off by default,
 and accepts only canonical supported long-form playback with actual advancement
 or an ended event. The choice is mirrored to the account in the background and
 seeds only browsers without their own explicit choice. Shorts, embed, preview,

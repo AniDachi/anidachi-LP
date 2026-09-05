@@ -1183,11 +1183,12 @@ and the applicable staging acceptance gates.
 
 ### Watch Drawer Browse Local Candidate (2026-09-05)
 
-Branch `codex/watch-history-browse` has approved runtime source at
-`bf260d7e858bbd721820a2c7a4ee5532ac924542` for the bounded Watch drawer browse
-design. Tasks 1–3 are independently reviewed and the local evidence gates pass;
-final controller integration review remains pending. This is not a staging
-deployment. Staging still reflects PR `#267` at `f2fafb29`; technical
+Branch `codex/watch-history-browse` retains the extension/UI candidate at
+`bf260d7e858bbd721820a2c7a4ee5532ac924542`. The final server review found an
+episode-label search gap; its server-only fix is
+`a92dbdc6bf631af775742014246b1fb97f151e84`, with fresh guarded SQL/RPC evidence.
+Scoped re-review and final controller integration approval remain pending. This is
+not a staging deployment. Staging still reflects PR `#267` at `f2fafb29`; technical
 `main` remains at `54a154b7` with Watch History v2. No remote migration, Web
 deployment, extension synchronization, browser reload, push, PR, merge, or
 production change is claimed.

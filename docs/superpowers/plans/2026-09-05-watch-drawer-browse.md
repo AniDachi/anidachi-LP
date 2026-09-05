@@ -16,13 +16,13 @@ pgTAP; Node 22.23.1 and pnpm 11.2.2. No dependency changes.
 
 **Spec:** docs/superpowers/specs/2026-09-05-watch-drawer-browse-design.md
 
-**Local status (2026-09-05):** Tasks 1–3 are implemented and independently
-reviewed through `bf260d7e858bbd721820a2c7a4ee5532ac924542`. Task 4 automated,
-SQL-source, isolated artifact, and synthetic real-component evidence is recorded in
-`docs/watch-drawer-browse-local-verification.md`. The local documentation checkpoint
-is complete at `6f765e056fe7c6d651ab701c5ba0ec25067efc23`; semantic Graphify
-refresh and final controller review remain pending. Nothing in this status is
-staging deployment or authenticated acceptance.
+**Local status (2026-09-05):** The extension/UI candidate remains at
+`bf260d7e858bbd721820a2c7a4ee5532ac924542`. A final reviewer found that the
+shared server search omitted displayed episode labels; the server-only fix is
+`a92dbdc6bf631af775742014246b1fb97f151e84`, with fresh exact-stack SQL and
+production-RPC evidence in `docs/watch-drawer-browse-local-verification.md`.
+Semantic Graphify refresh and the scoped final re-review remain pending. Nothing
+in this status is staging deployment or authenticated acceptance.
 
 ## Global Constraints
 
@@ -161,9 +161,9 @@ get-preferences/update-preferences commands, not a second source of truth.
 **Files:** Current state and relevant history docs, this plan, review ledger;
 generated artifacts stay ignored.
 
-- [x] Run fresh workspace check/test and retained history tests, reuse the
-  controller's final exact-source dedicated SQL evidence because SQL is unchanged,
-  and run changed-path lint plus git diff checks.
+- [x] Run fresh workspace check/test and retained history tests, then rerun the
+  guarded exact migration stack, retained SQL/RPC evidence, focused lint and diff
+  checks after the final server search fix.
 - [x] Build and validate narrow staging-channel extension as an unpublished local
   candidate. Record that new server-backed filtering cannot be accepted against
   unchanged staging. Do not update the two established folders yet.

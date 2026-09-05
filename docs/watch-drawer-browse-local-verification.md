@@ -2,11 +2,13 @@
 
 Date: 2026-09-05.
 
-Status: local candidate verified at source
-`bf260d7e858bbd721820a2c7a4ee5532ac924542`. Semantic Graphify refresh and final
-controller review are pending. This receipt is not evidence of a push, PR, merge,
-remote migration, deployment, tester-folder update, browser reload, authenticated
-staging acceptance, production promotion, or Chrome Web Store publication.
+Status: the extension/UI candidate remains verified at source
+`bf260d7e858bbd721820a2c7a4ee5532ac924542`; the later server-only episode-label
+search fix is `a92dbdc6bf631af775742014246b1fb97f151e84`. Semantic Graphify refresh and the
+scoped final re-review are pending. This receipt is not evidence of a push, PR,
+merge, remote migration, deployment, tester-folder update, browser reload,
+authenticated staging acceptance, production promotion, or Chrome Web Store
+publication.
 
 The approved scope is
 `docs/superpowers/specs/2026-09-05-watch-drawer-browse-design.md`; execution is
@@ -54,19 +56,30 @@ rerun.
 
 ## Database Evidence
 
-Migration `apps/web/supabase/migrations/20260905084800_watch_history_browse.sql`
-did not change after backend commit `bf72bcec`. The controller then replayed the
-exact complete migration stack on the guarded dedicated disposable database and
-ran the retained canonical, resource-bound, catalog, invitation, and new browse
-pgTAP files: 5 files / 334 assertions passed. The enabled production RPC parser
-and focused service/routes/staging-allowlist run passed 14 tests with no skips;
-security advisors reported no finding.
+Final review found that the common SQL eligibility predicate searched observed and
+canonical title labels but not the episode label displayed by browse responses.
+The popup fixture's own episode-title filtering had masked that transport gap. A
+focused pgTAP red run on the guarded target failed the five new episode-title cases
+and passed the other 49 assertions. The minimal fix searches the same canonical
+episode label used for display, with the observed `episode_title` as fallback.
 
-That exact-source evidence is reused here. The isolated Colima profile and database
-are stopped with backups preserved, so Task 4 did not restart or reset any database.
-No shared, default local, staging, or production database was accessed or changed.
-Expected PostgreSQL extension notices and the Supabase CLI update notice were
-informational.
+After the fix, the dedicated target guard passed again and an exact fresh reset
+replayed all 39 migrations through the unpublished `20260905084800` migration. The
+retained canonical, resource-bound, catalog, invitation, and browse files then
+passed 5 files / 336 assertions. A fresh enabled production RPC parser passed 1/1,
+including the requester-relative session date assertion; its populated eligibility
+plan still used indexes. Security advisors reported no finding. The regression
+covers mixed-case search inside a Unicode-bearing canonical label, observed-label
+fallback, a title beyond the first page, an episode beyond the first eight, and a
+matching session beyond the first 20. It also compares the filtered response with
+the canonical unfiltered observed-episode count.
+
+Only the named disposable Colima project/container on host port `55562` was reset
+and accessed. No shared default-local, staging, or production database was accessed
+or changed. Expected PostgreSQL extension notices and the Supabase CLI update
+notice were informational. A fresh Web TypeScript check, focused Biome lint, and
+fix-path whitespace check also passed; unchanged full extension and visual suites
+were not repeated for this server-only predicate fix.
 
 ## Isolated Staging-channel Artifact
 
@@ -122,6 +135,11 @@ layout, actual filter payloads, a 23-hour daylight-saving day, stable scroll/foc
 order/disclosure, canonical aggregates, retry states, History preference mutation,
 reduced motion, DTO contracts, and no page errors. It uses synthetic account data;
 it is not authenticated or provider-loaded staging acceptance.
+
+The controller later copied the final images, three verification scripts, fixture,
+and local server source into the ignored durable local archive
+`artifacts/watch-drawer-browse-evidence.PPXwrM`. The originals were left untouched;
+this archive is not a new UI run, tester-folder update, or staging acceptance.
 
 ## Review And Gate Exceptions
 
