@@ -257,6 +257,69 @@ it("website detail pages adopt canonical catalog metadata without replacing the 
   );
 });
 
+it("website detail pages retain represented seasons omitted by bounded catalog metadata", () => {
+  const item = itemFixture();
+  const priorSeasonOne = item.seasons[0]!;
+  item.catalogState = "complete";
+  item.aggregate = { completedEpisodes: 5, availableEpisodes: 13, progress: 5 / 13 };
+  item.seasons = [
+    {
+      ...priorSeasonOne,
+      seasonKey: "season-zero",
+      seasonTitle: "Earlier Season Zero",
+      order: 10,
+      episodes: [{
+        ...episode("episode-zero", 0),
+        seasonKey: "season-zero",
+        seasonTitle: "Earlier Season Zero",
+        seasonNumber: 0,
+      }],
+    },
+    {
+      ...priorSeasonOne,
+      seasonTitle: "Canonical Season One",
+      order: 20,
+    },
+  ];
+  const page = detailFixture();
+  page.episodes = [{
+    ...episode("episode-three", 3, 180),
+    seasonKey: "season-zero",
+    seasonTitle: "Observed label that must not win",
+    seasonNumber: 0,
+  }];
+  page.catalog = {
+    state: "complete",
+    title: "Canonical Series One",
+    aggregate: { completedEpisodes: 6, availableEpisodes: 13, progress: 6 / 13 },
+    seasons: [{
+      seasonKey: "season-zero",
+      seasonTitle: "Canonical Season Zero",
+      seasonNumber: 0,
+      order: 10,
+      aggregate: { completedEpisodes: 2, availableEpisodes: 5, progress: 2 / 5 },
+      nextEpisode: null,
+    }],
+  };
+
+  const merged = mergeWatchHistoryTitleEpisodePage(item, page);
+
+  assert.deepEqual(merged.seasons.map((season) => season.seasonKey), [
+    "season-zero",
+    "season-one",
+  ]);
+  assert.equal(merged.seasons[0]?.seasonTitle, "Canonical Season Zero");
+  assert.deepEqual(merged.seasons[0]?.episodes.map((value) => value.episodeKey), [
+    "episode-zero",
+    "episode-three",
+  ]);
+  assert.equal(merged.seasons[1]?.seasonTitle, "Canonical Season One");
+  assert.deepEqual(merged.seasons[1]?.episodes.map((value) => value.episodeKey), [
+    "episode-one",
+    "episode-two",
+  ]);
+});
+
 it("website optimistic episode deletion preserves the last canonical aggregate", () => {
   const history = historyFixture();
   const item = history.items[0]!;
@@ -369,6 +432,73 @@ it("website detail request is owner-bound and a failure leaves the current slice
 });
 
 describe("website detail interactions", () => {
+  it("renders canonical header updates from each accepted detail page", async () => {
+    const initial = historyFixture();
+    const initialItem = initial.items[0]!;
+    initialItem.title = "Observed Series One";
+    initialItem.observedEpisodeCount = 7;
+    initialItem.completedEpisodeCount = 6;
+    initialItem.catalogState = "partial";
+    initialItem.aggregate = { completedEpisodes: 6, availableEpisodes: null, progress: null };
+    const exactPage = detailFixture();
+    exactPage.observedEpisodeCount = 7;
+    exactPage.completedEpisodeCount = 6;
+    exactPage.catalog = {
+      state: "complete",
+      title: "عنوان عربي محدث من المزود",
+      aggregate: { completedEpisodes: 5, availableEpisodes: 13, progress: 5 / 13 },
+      seasons: [{
+        seasonKey: "season-one",
+        seasonTitle: "الموسم الأول",
+        seasonNumber: 1,
+        order: 10,
+        aggregate: { completedEpisodes: 5, availableEpisodes: 13, progress: 5 / 13 },
+        nextEpisode: null,
+      }],
+    };
+    exactPage.complete = false;
+    exactPage.nextCursor = "cursor-two";
+    const partialPage = detailFixture();
+    partialPage.observedEpisodeCount = 8;
+    partialPage.completedEpisodeCount = 6;
+    partialPage.catalog = { state: "partial", title: null, aggregate: null, seasons: [] };
+    partialPage.complete = true;
+    partialPage.nextCursor = null;
+    let detailReads = 0;
+    globalThis.fetch = async (input: string | URL | Request) => {
+      const path = String(input);
+      if (!path.includes("/api/watch-history/v3/title-episodes")) {
+        throw new Error(`Unexpected request: ${path}`);
+      }
+      detailReads += 1;
+      return Response.json(detailReads === 1 ? exactPage : partialPage);
+    };
+    const view = await renderClient(initial);
+    await click(buttonByText(view.container, "Show episodes"));
+
+    await click(buttonByText(view.container, "Load more episodes"));
+    await waitFor(() => {
+      assert.equal(view.container.querySelector("h3")?.textContent, "عنوان عربي محدث من المزود");
+      assert.equal(
+        view.container.querySelector(".watch-library-overall-label")?.textContent,
+        "5 / 13 episodes · 38.46%",
+      );
+      assert.ok(view.container.querySelector(".watch-library-overall-track"));
+    });
+
+    await click(buttonByText(view.container, "Load more episodes"));
+    await waitFor(() => {
+      assert.equal(
+        view.container.querySelector(".watch-library-overall-label")?.textContent,
+        "8 observed episodes",
+      );
+      assert.equal(view.container.querySelector(".watch-library-overall-track"), null);
+    });
+    assert.equal(view.container.querySelector("h3")?.textContent, "عنوان عربي محدث من المزود");
+    assert.equal(detailReads, 2);
+    await unmount(view.root);
+  });
+
   it("keeps visible rows on failure and retries only after the user asks", async () => {
     let attempts = 0;
     globalThis.fetch = async (input: string | URL | Request) => {

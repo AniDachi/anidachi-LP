@@ -371,12 +371,12 @@ function WatchItemCard({ accountGeneration, busyAction, item, onCreateRoom, onDe
     <section className="overflow-hidden rounded-2xl border border-brand-border/80 bg-brand-surface">
       <div className="flex flex-col gap-4 border-b border-brand-border/80 p-4 sm:flex-row sm:items-center">
         <div className="flex min-w-0 items-center gap-4 sm:flex-1">
-          <Poster item={item} />
+          <Poster item={visibleItem} />
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold tracking-[0.1em] text-brand-orange">{providerLabel(item.provider)} · {item.itemKind}</p>
-            <h3 className="mt-1 truncate text-lg font-bold text-foreground" dir="auto">{item.title}</h3>
-            <OverallProgress item={item} />
-            <p className="mt-1 text-xs text-foreground/45">Last watched {formatDate(item.lastWatchedAt)}</p>
+            <p className="text-xs font-semibold tracking-[0.1em] text-brand-orange">{providerLabel(visibleItem.provider)} · {visibleItem.itemKind}</p>
+            <h3 className="mt-1 truncate text-lg font-bold text-foreground" dir="auto">{visibleItem.title}</h3>
+            <OverallProgress item={visibleItem} />
+            <p className="mt-1 text-xs text-foreground/45">Last watched {formatDate(visibleItem.lastWatchedAt)}</p>
           </div>
         </div>
         <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:shrink-0">
@@ -542,12 +542,7 @@ export function mergeWatchHistoryTitleEpisodePage(
   const exactCatalog = page.catalog.state === "complete" &&
     page.catalog.title !== null && page.catalog.aggregate !== null;
   const seasons = exactCatalog
-    ? page.catalog.seasons
-        .map((season) => ({
-          ...season,
-          episodes: mergedEpisodes.filter((episode) => episode.seasonKey === season.seasonKey),
-        }))
-        .filter((season) => season.episodes.length > 0)
+    ? mergeExactCatalogSeasons(item, page.catalog.seasons, mergedEpisodes)
         .sort((a, b) => a.order - b.order || a.seasonKey.localeCompare(b.seasonKey))
     : mergeObservedSeasons(item, mergedEpisodes, page.catalog.state);
   for (const season of seasons) {
@@ -575,6 +570,24 @@ export function mergeWatchHistoryTitleEpisodePage(
     seasons,
     episodePage: { complete: page.complete, nextCursor: page.nextCursor },
   };
+}
+
+function mergeExactCatalogSeasons(
+  item: WatchHistoryItem,
+  catalogSeasons: WatchHistoryTitleEpisodesResponse["catalog"]["seasons"],
+  episodes: WatchHistoryEpisode[],
+): WatchHistoryItem["seasons"] {
+  type CatalogSeason = WatchHistoryTitleEpisodesResponse["catalog"]["seasons"][number];
+  const metadataByKey = new Map<string, WatchHistoryItem["seasons"][number] | CatalogSeason>(
+    item.seasons.map((season) => [season.seasonKey, season]),
+  );
+  for (const season of catalogSeasons) metadataByKey.set(season.seasonKey, season);
+  return Array.from(metadataByKey.values())
+    .map((season) => ({
+      ...season,
+      episodes: episodes.filter((episode) => episode.seasonKey === season.seasonKey),
+    }))
+    .filter((season) => season.episodes.length > 0);
 }
 
 function mergeObservedSeasons(
