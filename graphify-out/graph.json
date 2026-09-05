@@ -130929,15 +130929,15 @@
     },
     {
       "id": "docs_current_development_state_local_watch_drawer_follow_up",
-      "label": "Local Watch Drawer Follow Up",
+      "label": "Watch Drawer Follow Up",
       "author": null,
       "captured_at": null,
       "community": 116,
       "community_name": "Watch History v3 Staging Verification",
       "contributor": null,
       "file_type": "concept",
-      "norm_label": "local watch drawer follow up",
-      "rationale": "The 2026-09-05 codex/watch-drawer-refresh checkpoint follows staging activation: dd5c2a9 stabilizes refresh and presentation; 7474001 restores canonical Crunchyroll series covers and consistent Popup and website image fallbacks. These commits are local and have not been pushed, merged or deployed.",
+      "norm_label": "watch drawer follow up",
+      "rationale": "The 2026-09-05 codex/watch-drawer-refresh checkpoint follows staging activation: dd5c2a9 stabilizes refresh and presentation; 7474001 restores canonical Crunchyroll series covers and consistent Popup and website image fallbacks. The user authorized publication through the feature PR into staging only. Exact merge, CI, Vercel deployment and smoke-test evidence belongs in the staging PR; the recorded local checks do not establish a successful deployment.",
       "source_file": "docs/current-development-state.md",
       "source_location": null,
       "source_url": null
@@ -130997,7 +130997,7 @@
       "contributor": null,
       "file_type": "rationale",
       "norm_label": "fixed size history image fallbacks",
-      "rationale": "Popup and website image failures preserve a fixed-size placeholder and allow another attempt when the URL changes. The website also handles image failure before hydration; its fallback remains local rather than live staging behavior.",
+      "rationale": "Popup and website image failures preserve a fixed-size placeholder and allow another attempt when the URL changes. The website also handles image failure before hydration. These follow-ups are authorized for staging publication; local verification alone does not establish live staging behavior.",
       "source_file": "docs/current-development-state.md",
       "source_location": null,
       "source_url": null
@@ -131042,7 +131042,7 @@
       "contributor": null,
       "file_type": "rationale",
       "norm_label": "watch drawer release boundary",
-      "rationale": "The follow-up changes no SQL schema, server API, room/P2P contract or consent. Generated artifacts and browser fixtures are not committed; closeout does not synchronize tester folders or reload Chrome. User-reported basic tracking, presentation and covers do not close the authenticated catalog/locale matrix. Rollback uses feature commits without database rollback. Remote staging publication and later production promotion need separate authorization.",
+      "rationale": "The follow-up changes no SQL schema, server API, room/P2P contract or consent. Generated artifacts and browser fixtures are not committed; closeout does not synchronize tester folders or reload Chrome. User-reported basic tracking, presentation and covers do not close the authenticated catalog/locale matrix. Publication through a feature PR into staging is authorized; promotion to main or production requires separate authorization and applicable staging acceptance gates. Rollback uses a reviewed revert of the feature commits and the previous staging artifact without database rollback.",
       "source_file": "docs/current-development-state.md",
       "source_location": null,
       "source_url": null
@@ -417663,5 +417663,5 @@
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md"
     }
   ],
-  "built_at_commit": "74740015640b2458534c8b39fe9de38a0b72aad0"
+  "built_at_commit": "024ca4410261732101699969caf7511dca8f0bb9"
 }

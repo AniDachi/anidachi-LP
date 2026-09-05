@@ -1,7 +1,7 @@
 # Graph Report - anidachi-LP-monorepo  (2026-09-05)
 
 ## Corpus Check
-- Large corpus: 1124 files · ~1,127,057 words. Semantic extraction will be expensive (many Claude tokens). Consider running on a subfolder.
+- Large corpus: 1124 files · ~1,127,087 words. Semantic extraction will be expensive (many Claude tokens). Consider running on a subfolder.
 
 ## Summary
 - 10967 nodes · 24539 edges · 688 communities (395 shown, 268 thin omitted)
@@ -9,7 +9,7 @@
 - Token cost: unavailable (the host did not expose semantic subagent usage; AST extraction is deterministic).
 
 ## Graph Freshness
-- Built from commit: `74740015`
+- Built from commit: `024ca441`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -703,26 +703,26 @@
   README.md → AGENTS.md
 
 ## Import Cycles
-- 1-file cycle: `apps/api/src/auth.ts -> apps/api/src/auth.ts`
-- 1-file cycle: `apps/api/test/auth.test.ts -> apps/api/test/auth.test.ts`
-- 1-file cycle: `apps/api/test/runtime/room-hibernation-runtime.ts -> apps/api/test/runtime/room-hibernation-runtime.ts`
-- 1-file cycle: `apps/web/app/account/watch-library/watch-library-client.test.tsx -> apps/web/app/account/watch-library/watch-library-client.test.tsx`
-- 1-file cycle: `apps/web/lib/pre-release-security-boundaries.test.ts -> apps/web/lib/pre-release-security-boundaries.test.ts`
-- 1-file cycle: `apps/extension/entrypoints/background.ts -> apps/extension/entrypoints/background.ts`
-- 1-file cycle: `apps/extension/src/account-inbox-cache.ts -> apps/extension/src/account-inbox-cache.ts`
 - 1-file cycle: `apps/web/app/about/page.tsx -> apps/web/app/about/page.tsx`
-- 1-file cycle: `apps/web/app/account/account-nav.tsx -> apps/web/app/account/account-nav.tsx`
-- 1-file cycle: `apps/web/app/blou/manager/connect-client.tsx -> apps/web/app/blou/manager/connect-client.tsx`
-- 1-file cycle: `apps/extension/src/extension-channel-identity.ts -> apps/extension/src/extension-channel-identity.ts`
-- 1-file cycle: `apps/extension/test/release-channel-build.test.ts -> apps/extension/test/release-channel-build.test.ts`
-- 1-file cycle: `tests/e2e/p2p-media-harness.mjs -> tests/e2e/p2p-media-harness.mjs`
-- 1-file cycle: `packages/protocol/src/account.ts -> packages/protocol/src/account.ts`
-- 1-file cycle: `apps/web/app/kreatli-email-crm/actions.ts -> apps/web/app/kreatli-email-crm/actions.ts`
-- 1-file cycle: `apps/extension/wxt.config.ts -> apps/extension/wxt.config.ts`
+- 1-file cycle: `apps/web/lib/utils.ts -> apps/web/lib/utils.ts`
+- 1-file cycle: `apps/extension/src/current-resource-panel.tsx -> apps/extension/src/current-resource-panel.tsx`
+- 1-file cycle: `apps/extension/src/active-adapter-playback.ts -> apps/extension/src/active-adapter-playback.ts`
 - 1-file cycle: `apps/extension/entrypoints/content.tsx -> apps/extension/entrypoints/content.tsx`
+- 1-file cycle: `apps/extension/src/account-inbox-cache.ts -> apps/extension/src/account-inbox-cache.ts`
 - 1-file cycle: `apps/extension/test/privileged-overlay-wiring.test.tsx -> apps/extension/test/privileged-overlay-wiring.test.tsx`
-- 1-file cycle: `apps/api/src/index.ts -> apps/api/src/index.ts`
-- 1-file cycle: `apps/api/vitest.cloudflare.config.ts -> apps/api/vitest.cloudflare.config.ts`
+- 1-file cycle: `apps/api/test/auth.test.ts -> apps/api/test/auth.test.ts`
+- 1-file cycle: `apps/extension/entrypoints/background.ts -> apps/extension/entrypoints/background.ts`
+- 1-file cycle: `apps/web/app/api/account/inbox/route.ts -> apps/web/app/api/account/inbox/route.ts`
+- 1-file cycle: `apps/web/app/account/watch-library/watch-library-client.test.tsx -> apps/web/app/account/watch-library/watch-library-client.test.tsx`
+- 1-file cycle: `apps/web/app/api/google-ads/oauth/callback/route.ts -> apps/web/app/api/google-ads/oauth/callback/route.ts`
+- 1-file cycle: `apps/web/app/account/account-nav.tsx -> apps/web/app/account/account-nav.tsx`
+- 1-file cycle: `apps/web/app/api/blou/publish/carousel/route.ts -> apps/web/app/api/blou/publish/carousel/route.ts`
+- 1-file cycle: `apps/web/lib/youtube/api.ts -> apps/web/lib/youtube/api.ts`
+- 1-file cycle: `apps/web/app/api/kreatli-crm/gmail/send/route.ts -> apps/web/app/api/kreatli-crm/gmail/send/route.ts`
+- 1-file cycle: `apps/web/app/kreatli-email-crm/actions.ts -> apps/web/app/kreatli-email-crm/actions.ts`
+- 1-file cycle: `apps/web/app/layout.tsx -> apps/web/app/layout.tsx`
+- 1-file cycle: `apps/extension/src/extension-channel-identity.ts -> apps/extension/src/extension-channel-identity.ts`
+- 1-file cycle: `apps/web/lib/pre-release-security-boundaries.test.ts -> apps/web/lib/pre-release-security-boundaries.test.ts`
 
 ## Hyperedges (group relationships)
 - **Account Owned Cross Surface State** — docs_current_development_state_account_contracts_and_popup_isolation, docs_superpowers_specs_2026_08_06_account_data_history_social_inbox_design_account_isolation, docs_superpowers_specs_2026_08_06_account_data_history_social_inbox_design_shared_contracts, docs_superpowers_specs_2026_08_06_account_data_history_social_inbox_design_popup_surface_behavior, docs_superpowers_specs_2026_08_06_account_data_history_social_inbox_design_web_dashboard_behavior [EXTRACTED 1.00]
@@ -1225,7 +1225,7 @@ Nodes (28): noLabelWithoutControl, useButtonType, useKeyWithClickEvents, useSema
 
 ### Community 116 - "Watch History v3 Staging Verification"
 Cohesion: 0.11
-Nodes (29): Authenticated Staging Acceptance Pending, Canonical Crunchyroll Series Artwork, Fixed Size History Image Fallbacks, Local Watch Drawer Follow Up, Scoped Staging History Reset, Watch Drawer Local Closeout, Watch Drawer Presentation Stability, Watch Drawer Release Boundary (+21 more)
+Nodes (29): Authenticated Staging Acceptance Pending, Canonical Crunchyroll Series Artwork, Fixed Size History Image Fallbacks, Watch Drawer Follow Up, Scoped Staging History Reset, Watch Drawer Local Closeout, Watch Drawer Presentation Stability, Watch Drawer Release Boundary (+21 more)
 
 ### Community 117 - "Anidachi Auth Integration Implementation Plan"
 Cohesion: 0.07
@@ -2350,7 +2350,7 @@ Nodes (3): Camera Interaction Shell, Overlay Interaction Boundary, Player Hover 
   docs/superpowers/plans/2026-07-30-interface-visibility-settings.md · relation: implements
 
 ## Knowledge Gaps
-- **3404 isolated node(s):** `Full Local Test Evidence`, `Local Harness Incident`, `Extension Rollback`, `OAuth And Environment Rollback`, `Supabase Rollback` (+3399 more)
+- **3404 isolated node(s):** `SeoGuideOption`, `SeoGuideRelatedLink`, `SeoGuideStep`, `CatchUpState`, `ChatDisplayMode` (+3399 more)
   These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 4476 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **268 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -2362,15 +2362,15 @@ _Questions this graph is uniquely positioned to answer:_
 - **What is the exact relationship between `Codex-Hosted Semantic Extraction` and `Automated Verification and Staging Artifact Evidence`?**
   _Edge tagged AMBIGUOUS (relation: implements) - confidence is low._
 - **Why does `react` connect `react` to `reaction-pop.tsx`, `overlay-app.tsx`, `react`, `getGuideLinks`, `popup-watch-history.test.tsx`, `.next/**`, `popup-app.tsx`, `friends-client.tsx`, `contact-messages.ts`, `playback-sync-controller.ts`, `PlaybackSyncController`, `[slug]/page.tsx`, `panel-account-title.tsx`, `overlay-interface-settings.test.tsx`, `voice-audio-preferences.ts`, `overlay-room-media-controls.tsx`, `overlay-room-rail.tsx`, `popup-people-panel.test.tsx`, `use-camera-interaction-lock.ts`, `room-media-defaults.ts`, `watch-library-client.tsx`, `chrome-extension-demo-async-overlay.tsx`, `crm-client.tsx`, `react`, `reaction-shortcuts.ts`, `popup-watch-history.tsx`, `overlay-layout-editor.tsx`, `account-inbox-cache.ts`, `Participant`, `react`, `overlay-layout-editor.test.tsx`, `react`, `react`, `app/login/page.tsx`, `react`, `invites-client.tsx`, `home-client.tsx`, `overlay-layout-ghost-preview.tsx`, `privileged-overlay-wiring.test.tsx`?**
-  _High betweenness centrality (0.097) - this node is a cross-community bridge._
-- **Why does `.next/**` connect `.next/**` to `getGuideLinks`, `react`, `seo-page-layout.tsx`, `responsive-compare-table.tsx`, `seo-page-layout.tsx`, `.next/**`, `db.ts`, `social.ts`, `.next/**`, `how-to-host-a-crunchyroll-watch-party/page.tsx`, `watch-history-v3.ts`, `connect/page.tsx`, `[slug]/page.tsx`, `seo-page-layout.tsx`, `getGuideLinks`, `react`, `sitemap-discovery.ts`, `react`, `react`, `pseo-new-guides.tsx`, `best-anime-to-watch-with-friends/page.tsx`, `app/login/page.tsx`, `verifyKreatliCrmSession`, `getGuideLinks`, `tasks`?**
-  _High betweenness centrality (0.044) - this node is a cross-community bridge._
+  _High betweenness centrality (0.122) - this node is a cross-community bridge._
 - **Why does `vitest` connect `source-navigation.ts` to `overlay-app.tsx`, `popup-app.tsx`, `auth-client.ts`, `room-invite-notifications.ts`, `room-session-storage.ts`, `watch-history.ts`, `room-client.ts`, `playback-sync-controller.ts`, `createWatchHistoryClient`, `room-persistence.ts`, `crunchyroll/progress.ts`, `protocol/src/index.ts`, `protocol/src/index.ts`, `social-client.ts`, `account.ts`, `overlay-interface-settings.test.tsx`, `voice-audio-preferences.ts`, `diagnostic-log.ts`, `api/src/index.ts`, `overlay-room-rail.tsx`, `popup-people-panel.test.tsx`, `room-media-defaults.ts`, `room-departure-retry.ts`, `privileged-overlay-intent.ts`, `anidachi-auth/room-lifecycle.ts`, `youtube/adapter.ts`, `anidachi-auth/room-lifecycle.ts`, `reaction-shortcuts.ts`, `watch-history-storage.ts`, `overlay-layout-editor.tsx`, `RoomState`, `account-inbox-cache.ts`, `watch-history-controller.ts`, `Participant`, `connect/page.tsx`, `room-hibernation-runtime.ts`, `room-departure.ts`, `PlaybackState`, `youtube/player-chrome.ts`, `participant-disconnect.ts`, `p2p-media.ts`, `crunchyroll/player-chrome.ts`, `catalog.ts`, `privileged-overlay-wiring.test.tsx`, `ice-servers.ts`, `reaction-pop.tsx`, `hotkeys.ts`, `popup-watch-history.test.tsx`, `src/account-inbox-client.ts`, `user-identity.ts`, `p2p-ice.ts`, `room-invite-notifications.ts`, `overlay-layout-model.ts`, `voice-activity.ts`, `artwork-select.ts`, `overlay-layout-runtime.ts`, `RecentP2PSignalBuffer`, `RoomAdmission`, `bridge-client.ts`, `internal-web-client.ts`, `overlay-room-media-controls.tsx`, `room-invite-target-status.ts`, `use-camera-interaction-lock.ts`, `room-metering.ts`, `api/src/index.ts`, `background-privileged-room-route.test.ts`, `content.tsx`, `release-channel-build.test.ts`, `overlay-layout-editor.test.tsx`, `ghost-cam-size.ts`, `popup-styles.ts`, `overlay-layout-ghost-preview.tsx`, `overlay-layout-engine.test.ts`, `overlay-media-session.ts`, `account-inbox-cache.ts`, `node:fs`, `panel-account-title.tsx`, `room-tab-lock.ts`, `overlay-layout.ts`, `room-quota-display.ts`, `overlay-app.tsx`?**
-  _High betweenness centrality (0.043) - this node is a cross-community bridge._
+  _High betweenness centrality (0.048) - this node is a cross-community bridge._
+- **Why does `.next/**` connect `.next/**` to `getGuideLinks`, `react`, `seo-page-layout.tsx`, `responsive-compare-table.tsx`, `seo-page-layout.tsx`, `.next/**`, `db.ts`, `social.ts`, `.next/**`, `how-to-host-a-crunchyroll-watch-party/page.tsx`, `watch-history-v3.ts`, `connect/page.tsx`, `[slug]/page.tsx`, `seo-page-layout.tsx`, `getGuideLinks`, `react`, `sitemap-discovery.ts`, `react`, `react`, `pseo-new-guides.tsx`, `best-anime-to-watch-with-friends/page.tsx`, `app/login/page.tsx`, `verifyKreatliCrmSession`, `getGuideLinks`, `tasks`?**
+  _High betweenness centrality (0.047) - this node is a cross-community bridge._
 - **Are the 13 inferred relationships involving `OverlayApp()` (e.g. with `fallbackCopy()` and `handleOnline()`) actually correct?**
   _`OverlayApp()` has 13 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `Full Local Test Evidence`, `Local Harness Incident`, `Extension Rollback` to the rest of the system?**
+- **What connects `SeoGuideOption`, `SeoGuideRelatedLink`, `SeoGuideStep` to the rest of the system?**
   _3404 weakly-connected nodes found - possible documentation gaps or missing edges._
 ## Local Incremental Update Evidence
 
-Code and current-state documentation were refreshed after local Watch History fixes. Unchanged-source nodes were preserved, and the merged graph has no missing/dangling endpoints, self-loops, or collapsed duplicate edges. Semantic extraction used one Codex subagent. Host token usage was not exposed; any zero token counters above are unavailable accounting, not a claim of zero LLM cost.
+Current-state documentation was refreshed for authorized staging-only Watch History publication; no code changed in this update. Unchanged-source nodes were preserved, and the merged graph has no missing/dangling endpoints, self-loops, or collapsed duplicate edges. Semantic extraction used one Codex subagent. Host token usage was not exposed; any zero token counters above are unavailable accounting, not a claim of zero LLM cost.

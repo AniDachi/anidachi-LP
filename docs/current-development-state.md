@@ -1138,13 +1138,15 @@ requirements, lint notices, the earlier local-port-54322 harness incident, activ
 order, rollback constraint, and open authenticated-provider/staging gates are in
 `docs/watch-history-v3-local-verification.md`.
 
-### Local Watch Drawer Follow-up (2026-09-05)
+### Watch Drawer Follow-up (2026-09-05)
 
-Local branch `codex/watch-drawer-refresh` adds two reviewed checkpoints after the
+Branch `codex/watch-drawer-refresh` adds two reviewed checkpoints after the
 staging activation above: `dd5c2a9` stabilizes history refresh and presentation;
 `7474001` restores canonical Crunchyroll series covers and consistent image-error
-fallbacks in Popup and website. These follow-ups have not been pushed, merged or
-deployed; the website fallback is still local, not live staging behavior.
+fallbacks in Popup and website. The user subsequently authorized publication via
+the feature PR into `staging`, without promotion to `main` or production. The
+staging PR records the exact merge, CI, Vercel deployment and smoke-test receipt;
+the local verification below is not itself evidence of a successful deployment.
 
 Concurrent owner-bound refreshes share work, superseded reads are not reported as
 network failures, and automatic recovery only clears a read warning after a
@@ -1174,9 +1176,10 @@ two established tester folders or reload a browser. The user reported basic
 tracking, presentation and cover loading working; this does not close the full
 authenticated catalog/locale acceptance matrix recorded in the active v3 plan.
 
-Rollback these local follow-ups through their feature-branch commits; no database
-rollback is required. Continue design work from this checkpoint. Remote staging
-review/publication and any later production promotion need separate authorization.
+Rollback these follow-ups through a reviewed revert of their feature commits and
+the previous staging artifact; no database rollback is required. Continue design
+work from this checkpoint. Production promotion still needs separate authorization
+and the applicable staging acceptance gates.
 
 ## Known Fragile Areas
 
