@@ -158,7 +158,8 @@ export function createWatchHistoryPageResolver(dependencies: {
     const metadata = await mappings.get(mappingKey)!.promise;
     if (disposed || !metadata) return;
     const resolution = dependencies.send({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "resolve-identity", expectedOwnerUserId: owner,
-      accountGeneration: event.accountGeneration, clientEventId: event.clientEventId, identity: metadata.identity, episodeNumber: metadata.episodeNumber });
+      accountGeneration: event.accountGeneration, clientEventId: event.clientEventId, identity: metadata.identity,
+      episodeNumber: metadata.episodeNumber, artworkUrl: metadata.artworkUrl });
     if (!options.refreshCatalog || sourceKey !== currentSource || !metadata.context.region) { await resolution; return; }
     const titleKey = `crunchyroll:series:${metadata.identity.providerSeriesId}`;
     const jobKey = `${owner}:${event.accountGeneration}:${titleKey}`;

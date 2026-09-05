@@ -50,6 +50,7 @@ export type WatchHistoryLocalStatus =
   | "invalid-room-authority"
   | "upgrade-required"
   | "storage-full"
+  | "superseded"
   | "rejected";
 
 export type WatchHistoryMessage =
@@ -59,7 +60,7 @@ export type WatchHistoryMessage =
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "catalog-begin" | "catalog-commit";
       expectedOwnerUserId: string; pageId: string; input: unknown }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "resolve-identity"; expectedOwnerUserId: string;
-      accountGeneration: number; clientEventId: string; identity: unknown; episodeNumber: number | null }
+      accountGeneration: number; clientEventId: string; identity: unknown; episodeNumber: number | null; artworkUrl?: string | null }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "list"; limit?: number; cursor?: string }
   | {
       type: typeof WATCH_HISTORY_MESSAGE_TYPE;
@@ -202,11 +203,12 @@ export function isWatchHistoryMessage(value: unknown): value is WatchHistoryMess
         typeof value.pageId === "string" && value.pageId.length > 0 && value.pageId.length <= 128 &&
         (value.command === "catalog-begin" ? WatchCatalogBeginRequestSchema : WatchCatalogCommitRequestSchema).safeParse(value.input).success;
     case "resolve-identity":
-      return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "accountGeneration", "clientEventId", "identity", "episodeNumber"]) &&
+      return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "accountGeneration", "clientEventId", "identity", "episodeNumber", "artworkUrl"]) &&
         typeof value.expectedOwnerUserId === "string" && value.expectedOwnerUserId.length > 0 && value.expectedOwnerUserId.length <= 128 &&
         WatchProgressEventSchema.shape.accountGeneration.safeParse(value.accountGeneration).success &&
         WatchProgressEventSchema.shape.clientEventId.safeParse(value.clientEventId).success &&
         WatchProgressEventSchema.shape.episodeNumber.safeParse(value.episodeNumber).success &&
+        (value.artworkUrl === undefined || WatchProgressEventSchema.shape.artworkUrl.safeParse(value.artworkUrl).success) &&
         CrunchyrollHistoryIdentitySchema.safeParse(value.identity).success;
     case "list":
       return hasExactKeys(value, ["type", "command", "limit", "cursor"]) &&
@@ -273,6 +275,10 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
   const storage = dependencies.storage ?? createWatchHistoryStorage();
   const request = dependencies.fetch ?? fetch;
   const getRequestSession = dependencies.getRequestSession ?? dependencies.getCurrentSession;
+  const refreshFlights = new Map<string, {
+    session: ExtensionAuthTokens;
+    promise: Promise<WatchHistoryMessageResponse>;
+  }>();
   const catalog = createWatchHistoryCatalogCoordinator({
     supersede: dependencies.onCatalogSuperseded,
     request: async (path, body, signal, owner) => {
@@ -388,6 +394,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
             seasonKey: `crunchyroll:season:${identity.providerSeasonIdentifier}`,
             episodeKey: `crunchyroll:episode:${identity.providerEpisodeIdentifier}`,
             episodeNumber: message.episodeNumber,
+            artworkUrl: message.artworkUrl ?? original.artworkUrl,
           });
           if (!resolved.success) return entry;
           const deletion = Math.max(...[
@@ -458,16 +465,19 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     if (!parsed.success || parsed.data.meta.ownerUserId !== response.session.user.id) {
       return { ok: false, status: "invalid-response" };
     }
+    if (!sameSession(response.session, await dependencies.getCurrentSession())) {
+      return { ok: false, status: "rejected" };
+    }
     let invalidated = historyReadSequences.get(sequenceKey) !== sequence;
-    if (invalidated) return { ok: false, status: "rejected" };
+    if (invalidated) return { ok: false, status: "superseded" };
     const saved = await replaceCanonicalPartition(response.session, parsed.data.meta.accountGeneration, (partition) => {
       if (invalidated || historyReadSequences.get(sequenceKey) !== sequence ||
         (partition.invalidationRevision ?? 0) !== revision) { invalidated = true; return partition; }
       return { ...partition, cache: parsed.data, cacheRevision: revision };
     });
-    if (invalidated) return { ok: false, status: "rejected" };
     if (saved.authorityRejected) return { ok: false, status: "rejected" };
     if (saved.stale) return { ok: false, status: "generation-mismatch" };
+    if (invalidated) return { ok: false, status: "superseded" };
     return saved.ok ? { ok: true, data: parsed.data } : saved;
   }
 
@@ -1378,10 +1388,29 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     session: ExtensionAuthTokens,
     message: Extract<WatchHistoryMessage, { command: "list" }> = { type: WATCH_HISTORY_MESSAGE_TYPE, command: "list" },
   ): Promise<WatchHistoryMessageResponse> {
-    const drained = await flush(session);
-    const reconciled = await reconcile(session, message);
-    if (!drained.ok) return drained;
-    return reconciled.ok ? { ...reconciled, flushed: drained.flushed } : reconciled;
+    const root = await storage.readRoot();
+    const key = JSON.stringify([session.user.id, root.activeGenerations?.[session.user.id], message.limit, message.cursor]);
+    const existing = refreshFlights.get(key);
+    if (existing && sameSession(existing.session, session)) return existing.promise;
+    const flight = { session, promise: runRefresh() };
+    refreshFlights.set(key, flight);
+    try {
+      return await flight.promise;
+    } finally {
+      if (refreshFlights.get(key) === flight) refreshFlights.delete(key);
+    }
+
+    async function runRefresh(): Promise<WatchHistoryMessageResponse> {
+      const drained = await flush(session);
+      let reconciled = await reconcile(session, message);
+      // A checkpoint/catalog commit can invalidate a GET in flight. Reread once,
+      // joining concurrent UI refreshes above; never retry genuine failures here.
+      if (!reconciled.ok && reconciled.status === "superseded") {
+        reconciled = await reconcile(session, message);
+      }
+      if (!drained.ok) return drained;
+      return reconciled.ok ? { ...reconciled, flushed: drained.flushed } : reconciled;
+    }
   }
 
   return { handle, flush, reconcile, refresh, cancelCatalog: catalog.cancel, cancelCatalogPage: catalog.cancelPage };

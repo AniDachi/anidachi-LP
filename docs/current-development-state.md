@@ -1138,6 +1138,49 @@ requirements, lint notices, the earlier local-port-54322 harness incident, activ
 order, rollback constraint, and open authenticated-provider/staging gates are in
 `docs/watch-history-v3-local-verification.md`.
 
+### Watch Drawer Follow-up (2026-09-05)
+
+Branch `codex/watch-drawer-refresh` adds two reviewed checkpoints after the
+staging activation above: `dd5c2a9` stabilizes history refresh and presentation;
+`7474001` restores canonical Crunchyroll series covers and consistent image-error
+fallbacks in Popup and website. The user subsequently authorized publication via
+the feature PR into `staging`, without promotion to `main` or production. The
+staging PR records the exact merge, CI, Vercel deployment and smoke-test receipt;
+the local verification below is not itself evidence of a successful deployment.
+
+Concurrent owner-bound refreshes share work, superseded reads are not reported as
+network failures, and automatic recovery only clears a read warning after a
+successful canonical response. Submitted actions survive same-owner focus reads
+while account, generation and deletion fences remain enforced. Open-drawer title
+positions, episode ordering, disclosure defaults and confirmed completion remain
+stable across playback checkpoints; completion does not change row geometry.
+
+Series artwork is optional enrichment of the existing progress event: use the
+matching series object and captured provider locale, validate the URL, and bound
+the optional request to 2.5 seconds. Failure preserves resolved progress and any
+existing observation artwork. Image failures keep a fixed-size placeholder, with
+another image attempt when the URL changes; the website also handles failure
+before hydration. No SQL schema, server API, room/P2P or consent change is included.
+
+Fresh local closeout proof: root test/check completed all 11 Turbo tasks without
+cache reuse (protocol 145, API 201, extension 1,680, web 431 passed with four explicit
+opt-in skips), plus all 19 website component tests. Isolated real-component browser
+checks cover completion/pending-ack cycles, order/disclosure/scroll stability,
+reduced motion, real CDN covers, broken-image recovery and narrow website layout.
+Review found no Critical/Important issues; an additional deferred in-flight
+subscription follow-up test remains a nonblocking coverage improvement.
+The narrow staging-channel build and artifact validation are local checks; the
+existing dynamic-import bundler warnings remain nonblocking. Generated artifacts
+and browser fixtures are not committed. This closeout does not resynchronize the
+two established tester folders or reload a browser. The user reported basic
+tracking, presentation and cover loading working; this does not close the full
+authenticated catalog/locale acceptance matrix recorded in the active v3 plan.
+
+Rollback these follow-ups through a reviewed revert of their feature commits and
+the previous staging artifact; no database rollback is required. Continue design
+work from this checkpoint. Production promotion still needs separate authorization
+and the applicable staging acceptance gates.
+
 ## Known Fragile Areas
 
 These are intentionally not treated as solved:

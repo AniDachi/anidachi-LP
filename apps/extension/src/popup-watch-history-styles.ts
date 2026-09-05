@@ -82,8 +82,6 @@ export const popupWatchHistoryStyles = `
     font-weight: 600;
     color: var(--ad-muted);
   }
-  .popup-watch-screen .popup-watch-item[data-open="false"] .popup-watch-row { min-height: 58px; padding: 8px 0; }
-  .popup-watch-screen .popup-watch-item[data-open="false"] .popup-watch-artwork { height: 42px; width: 30px; }
   .popup-watch-screen .popup-watch-main { min-width: 0; gap: 4px; padding-right: 24px; }
   .popup-watch-screen .popup-watch-title {
     display: -webkit-box;
@@ -254,7 +252,12 @@ export const popupWatchHistoryStyles = `
     background: rgba(249, 115, 22, 0.045);
   }
   .popup-watch-screen .popup-episode-main { position: static; display: grid; gap: 6px; min-width: 0; }
-  .popup-watch-screen .popup-episode-header { display: flex; align-items: baseline; gap: 6px; }
+  .popup-watch-screen .popup-episode-header {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) 13px;
+    align-items: baseline;
+    gap: 6px;
+  }
   .popup-watch-screen .popup-episode-number {
     flex: 0 0 auto;
     min-width: 17px;
@@ -281,16 +284,29 @@ export const popupWatchHistoryStyles = `
   }
   .popup-watch-screen .popup-episode-row[data-selected="true"] .popup-episode-title { color: var(--ad-text); }
   .popup-watch-screen .popup-series-progress {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) 7ch;
     font-size: 9px;
     line-height: 1;
     font-weight: 450;
     font-variant-numeric: tabular-nums;
   }
   .popup-watch-screen .popup-progress-track { height: 3px; background: rgba(255, 255, 255, 0.09); }
-  .popup-watch-screen .popup-progress-track > span { background: linear-gradient(90deg, #f97316, #ffad63); }
+  .popup-watch-screen .popup-series-progress > span:last-child { text-align: right; }
+  .popup-watch-screen .popup-progress-track > span {
+    background: linear-gradient(90deg, #f97316, #ffad63);
+    transition: width 180ms linear, background-color 180ms ease;
+  }
   .popup-watch-screen [data-completed="true"] .popup-progress-track > span { background: rgba(255, 255, 255, 0.28); }
-  .popup-episode-complete { display: inline-flex; align-self: center; margin-left: auto; color: var(--ad-muted); }
+  .popup-episode-complete {
+    display: inline-flex;
+    align-self: center;
+    width: 13px;
+    height: 13px;
+    color: var(--ad-muted);
+    opacity: 0;
+    transition: opacity 140ms ease;
+  }
+  .popup-episode-complete[data-visible="true"] { opacity: 1; }
   .popup-watch-screen .popup-episode-delete { position: absolute; top: 5px; right: 0; }
   .popup-watch-screen .popup-session-summary-action { justify-self: start; font-size: 10px; }
   .popup-watch-screen .popup-watch-slice-note { margin: 8px 4px 0 20px; color: var(--ad-muted); font-size: 10px; line-height: 1.5; }

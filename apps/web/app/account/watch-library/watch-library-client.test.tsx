@@ -9,8 +9,8 @@ import type {
 import { Window } from "happy-dom";
 import * as React from "react";
 import { act } from "react";
-import { createRoot, type Root } from "react-dom/client";
-import { renderToStaticMarkup } from "react-dom/server";
+import { createRoot, hydrateRoot, type Root } from "react-dom/client";
+import { renderToStaticMarkup, renderToString } from "react-dom/server";
 import {
   getWatchHistoryAggregateLabel,
   loadWatchHistoryTitleEpisodePage,
@@ -151,6 +151,60 @@ afterEach(() => {
   document.body.replaceChildren();
   globalThis.fetch = originalFetch;
   testWindow.confirm = () => false;
+});
+
+it("website replaces a failed poster without retrying it on refresh and loads a changed URL", async () => {
+  let history = historyFixture();
+  history.items[0]!.artworkUrl = "https://www.crunchyroll.com/old-poster.jpg";
+  history.items.push({ ...itemFixture(), titleKey: "series-two", title: "Series Two",
+    artworkUrl: "https://www.crunchyroll.com/other-poster.jpg" });
+  history.totalTitleCount = 2;
+  globalThis.fetch = async (input) => {
+    if (String(input) === "/api/watch-history/v3?limit=24") return Response.json(history);
+    if (String(input) === "/api/watch-history/v3/preferences") return Response.json(preferencesFixture);
+    throw new Error(`Unexpected request: ${input}`);
+  };
+  const view = await renderClient(history);
+  try {
+    const poster = view.container.querySelector('img[src="https://www.crunchyroll.com/old-poster.jpg"]');
+    assert.ok(poster);
+    const parent = poster.parentElement!;
+    await act(async () => { poster.dispatchEvent(new Event("error")); });
+    assert.equal(Boolean(parent.querySelector("img")), false);
+    assert.ok(parent.querySelector("svg.lucide-film"));
+    const otherPoster = view.container.querySelector('img[src="https://www.crunchyroll.com/other-poster.jpg"]');
+    assert.ok(otherPoster, "one failed title must not hide another title's poster");
+    await click(buttonByText(view.container, "Refresh"));
+    assert.equal(Boolean(parent.querySelector("img")), false, "same URL must not retry on normal refresh");
+    assert.ok(view.container.querySelector('img[src="https://www.crunchyroll.com/other-poster.jpg"]') === otherPoster);
+    history = structuredClone(history);
+    history.items[0]!.artworkUrl = "https://www.crunchyroll.com/new-poster.jpg";
+    await click(buttonByText(view.container, "Refresh"));
+    assert.equal(parent.querySelector("img")?.getAttribute("src"), history.items[0]!.artworkUrl);
+    history.items[0]!.artworkUrl = null;
+    await click(buttonByText(view.container, "Refresh"));
+    assert.equal(Boolean(parent.querySelector("img")), false);
+    assert.ok(parent.querySelector("svg.lucide-film"));
+  } finally { await unmount(view.root); }
+});
+
+it("website catches a poster that failed before the server-rendered page became interactive", async () => {
+  const history = historyFixture();
+  history.items[0]!.artworkUrl = "https://www.crunchyroll.com/broken-before-hydration.jpg";
+  const element = React.createElement(WatchLibraryClient, { initialHistory: history, initialPreferences: preferencesFixture });
+  const container = document.createElement("div");
+  container.innerHTML = renderToString(element);
+  document.body.append(container);
+  const poster = container.querySelector("img");
+  assert.ok(poster);
+  // Model an actual browser download failure before React attaches onError.
+  Object.defineProperties(poster, { complete: { value: true }, naturalWidth: { value: 0 } });
+  let root!: Root;
+  await act(async () => { root = hydrateRoot(container, element); });
+  try {
+    assert.equal(Boolean(container.querySelector("img")), false);
+    assert.ok(container.querySelector("span.h-16 svg.lucide-film"));
+  } finally { await unmount(root); }
 });
 
 it("website keeps the bounded title slice collapsed until the user asks to see it", () => {
