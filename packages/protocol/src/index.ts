@@ -7,3 +7,4 @@ export * from "./source-url";
 export * from "./sync";
 export * from "./types";
 export * from "./watch-history";
+export * from './watch-history-browse';

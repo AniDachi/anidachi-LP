@@ -1254,7 +1254,7 @@ async function loadWatchHistorySessionEnrichmentForIds(params: {
   return { sessions, participants, users, profiles };
 }
 
-async function loadCanonicalSessions(
+export async function loadCanonicalSessions(
   userId: string,
   boundedSessionIds?: string[],
 ): Promise<WatchHistorySessionRecord[]> {

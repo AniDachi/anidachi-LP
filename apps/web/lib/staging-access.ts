@@ -199,6 +199,12 @@ function canBearerBypassStagingGate(pathname: string, method: string): boolean {
     return true;
   }
   if (pathname === "/api/watch-history/v3" && method === "GET") return true;
+  if (method === "GET" && [
+    "/api/watch-history/v3/browse",
+    "/api/watch-history/v3/browse/title-episodes",
+    "/api/watch-history/v3/browse/sessions",
+    "/api/watch-history/v3/browse/options",
+  ].includes(pathname)) return true;
   if (pathname === "/api/watch-history/v3/progress" && method === "POST") return true;
   if (
     pathname === "/api/watch-history/v3/preferences" &&
