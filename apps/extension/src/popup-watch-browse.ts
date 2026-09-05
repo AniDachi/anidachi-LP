@@ -1,14 +1,15 @@
 import {
 	createContext,
-	useContext,
 	useCallback,
+	useContext,
 	useEffect,
+	useMemo,
 	useRef,
 	useState,
 } from "react";
 import type { PopupWatchHistoryClient } from "./popup-watch-history";
-import type { WatchHistoryMessage } from "./watch-history-client";
 import { WATCH_BROWSE_FRESH_MS } from "./watch-history-browse-cache";
+import type { WatchHistoryMessage } from "./watch-history-client";
 
 type BrowseMessage = Extract<
 	WatchHistoryMessage,
@@ -36,6 +37,8 @@ export function usePopupWatchBrowse<T>({
 	meta,
 	cursor,
 	refresh,
+	forceRefresh = refresh,
+	initialPage,
 	enabled = true,
 	generation,
 	discard = false,
@@ -46,12 +49,26 @@ export function usePopupWatchBrowse<T>({
 	meta: (data: T) => { ownerUserId: string; accountGeneration: number };
 	cursor: (data: T) => string | null;
 	refresh: number;
+	forceRefresh?: number;
+	initialPage?: T;
 	enabled?: boolean;
 	generation?: number;
 	discard?: boolean;
 }) {
 	const recover = useContext(PopupWatchBrowseRecovery);
 	const key = JSON.stringify([message, generation, discard]);
+	const seed = useMemo(() => {
+		if (discard || !initialPage) return undefined;
+		const parsed = parser.safeParse(initialPage);
+		return parsed.success &&
+			meta(parsed.data).ownerUserId === message.expectedOwnerUserId &&
+			(generation === undefined ||
+				meta(parsed.data).accountGeneration === generation)
+			? parsed.data
+			: undefined;
+		// The complete query key fences previews supplied by the owning title page.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [initialPage, key]);
 	const [state, setState] = useState<{
 		key: string;
 		pages: T[];
@@ -70,9 +87,9 @@ export function usePopupWatchBrowse<T>({
 		pageCount.current = queryDepths.current.get(key) ?? 1;
 	}
 	const [retry, setRetry] = useState(0);
-	const previousRefresh = useRef({ refresh, retry });
+	const previousRefresh = useRef({ forceRefresh, retry });
 	const load = useCallback(
-		async (nextCursor?: string, useCache = false) => {
+		async (nextCursor?: string, force = false) => {
 			const requestKey = key;
 			const token = ++sequence.current;
 			const current = () =>
@@ -81,6 +98,14 @@ export function usePopupWatchBrowse<T>({
 				latest.current.client === client &&
 				latest.current.generation === generation;
 			const retainedCount = pageCount.current;
+			const firstPages = !nextCursor && seed ? [seed] : [];
+			const firstCursor =
+				nextCursor ?? (seed ? (cursor(seed) ?? undefined) : undefined);
+			const readCount = nextCursor
+				? 1
+				: seed && !firstCursor
+					? 0
+					: retainedCount - firstPages.length;
 			const rememberDepth = (count: number) => {
 				pageCount.current = Math.max(1, count);
 				queryDepths.current.delete(key);
@@ -90,19 +115,35 @@ export function usePopupWatchBrowse<T>({
 			};
 			setState((previous) => ({
 				key,
-				pages: previous.key === key ? previous.pages : [],
+				pages:
+					previous.key === key && previous.pages.length
+						? previous.pages
+						: firstPages,
 				loading: true,
 				error: null,
 				errorStatus: null,
 			}));
+			// Exact-query previews come from the same server snapshot as their title.
+			// Refresh the parent once, not every open child as another network request.
+			if (!readCount) {
+				rememberDepth(firstPages.length);
+				setState({
+					key,
+					pages: firstPages,
+					loading: false,
+					error: null,
+					errorStatus: null,
+				});
+				return;
+			}
 			// The background validates owner/session/generation/invalidation even for
 			// cache reads. Never substitute canonical unfiltered items for query matches.
-			if (useCache && client.loadBrowseCached) {
-				const cachedPages: T[] = [];
-				let cachedCursor = nextCursor;
+			if (client.loadBrowseCached) {
+				const cachedPages: T[] = [...firstPages];
+				let cachedCursor = firstCursor;
 				let fresh = true;
 				const seen = new Set<string>();
-				for (let index = 0; index < (nextCursor ? 1 : retainedCount); index++) {
+				for (let index = 0; index < readCount; index++) {
 					const cached = await client
 						.loadBrowseCached({
 							...message,
@@ -145,20 +186,20 @@ export function usePopupWatchBrowse<T>({
 						return {
 							key,
 							pages,
-							loading: !fresh,
+							loading: !fresh || force,
 							error: null,
 							errorStatus: null,
 						};
 					});
-					if (fresh) return;
+					if (fresh && !force) return;
 				}
 			}
-			const pages: T[] = [];
-			let continuation = nextCursor;
+			const pages: T[] = [...firstPages];
+			let continuation = firstCursor;
 			// A refresh preserves the user's explicitly loaded depth. Stop at the end,
 			// an error, or a repeated cursor; never walk unseen account history.
 			const seen = new Set<string>();
-			for (let index = 0; index < (nextCursor ? 1 : retainedCount); index++) {
+			for (let index = 0; index < readCount; index++) {
 				let response;
 				try {
 					response = await client.request({
@@ -231,7 +272,7 @@ export function usePopupWatchBrowse<T>({
 			// module constants. Playback object identity must not restart network reads.
 			// eslint-disable-next-line react-hooks/exhaustive-deps
 		},
-		[key, client, generation],
+		[key, client, generation, seed],
 	);
 	useEffect(() => {
 		if (discard) {
@@ -246,21 +287,21 @@ export function usePopupWatchBrowse<T>({
 			});
 		} else if (enabled) {
 			const changed =
-				previousRefresh.current.refresh !== refresh ||
+				previousRefresh.current.forceRefresh !== forceRefresh ||
 				previousRefresh.current.retry !== retry;
-			previousRefresh.current = { refresh, retry };
-			void load(undefined, !changed);
+			previousRefresh.current = { forceRefresh, retry };
+			void load(undefined, changed);
 		}
 		return () => {
 			sequence.current += 1;
 		};
-	}, [enabled, discard, key, load, refresh, retry]);
+	}, [enabled, discard, key, load, refresh, forceRefresh, retry]);
 	const visible =
 		state.key === key
 			? state
 			: {
 					key,
-					pages: [],
+					pages: seed ? [seed] : [],
 					loading: enabled && !discard,
 					error: null,
 					errorStatus: null,
@@ -280,8 +321,7 @@ export function usePopupWatchBrowse<T>({
 			else setRetry((value) => value + 1);
 		},
 		loadMore: () => {
-			if (!discard && nextCursor && !visible.loading)
-				void load(nextCursor, true);
+			if (!discard && nextCursor && !visible.loading) void load(nextCursor);
 		},
 	};
 }

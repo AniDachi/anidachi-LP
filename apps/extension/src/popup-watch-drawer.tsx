@@ -1,14 +1,14 @@
 import {
-	WatchHistoryBrowseResponseSchema,
-	WatchHistoryBrowseTitleEpisodesResponseSchema,
-	WatchHistoryBrowseSessionsResponseSchema,
-	WatchHistoryRoomRecreationResponseSchema,
-	WatchHistoryResponseSchema,
-	type WatchHistoryBrowseResponse,
-	type WatchHistoryBrowseTitleEpisodesResponse,
-	type WatchHistoryBrowseSessionsResponse,
 	type WatchHistoryBrowseQuery,
+	type WatchHistoryBrowseResponse,
+	WatchHistoryBrowseResponseSchema,
+	type WatchHistoryBrowseSessionsResponse,
+	WatchHistoryBrowseSessionsResponseSchema,
+	type WatchHistoryBrowseTitleEpisodesResponse,
+	WatchHistoryBrowseTitleEpisodesResponseSchema,
 	type WatchHistoryItem,
+	WatchHistoryResponseSchema,
+	WatchHistoryRoomRecreationResponseSchema,
 	type WatchHistorySession,
 	type WatchProgressEvent,
 } from "@anidachi/protocol";
@@ -27,32 +27,32 @@ import {
 	usePopupWatchBrowse,
 } from "./popup-watch-browse";
 import {
-	PopupWatchFilters,
 	emptyHistoryConditions,
 	type PopupHistoryConditions,
+	PopupWatchFilters,
 } from "./popup-watch-filters";
-import { createWatchHistoryDateRange } from "./watch-history-browse";
 import {
 	defaultPopupWatchHistoryClient,
-	requestPopupWatchHistory,
-	isSameHistoryRevision,
-	reconcileHistoryLayout,
-	groupWatchHistoryItems,
-	projectPendingWatchHistoryItems,
-	pendingWatchHistoryEpisode,
-	latestPendingByEpisode,
-	pendingEpisodeKey,
-	pendingTitleKey,
-	reconcilePopupPendingEvents,
-	ProviderLogo,
-	watchHistoryOverallProgress,
-	formatProgressPercent,
 	formatClock,
-	withRoomHash,
+	formatProgressPercent,
+	groupWatchHistoryItems,
+	isSameHistoryRevision,
+	latestPendingByEpisode,
+	type PopupHistoryLayout,
 	type PopupWatchHistoryClient,
 	type PopupWatchHistorySnapshot,
-	type PopupHistoryLayout,
+	ProviderLogo,
+	pendingEpisodeKey,
+	pendingTitleKey,
+	pendingWatchHistoryEpisode,
+	projectPendingWatchHistoryItems,
+	reconcileHistoryLayout,
+	reconcilePopupPendingEvents,
+	requestPopupWatchHistory,
+	watchHistoryOverallProgress,
+	withRoomHash,
 } from "./popup-watch-history";
+import { createWatchHistoryDateRange } from "./watch-history-browse";
 
 const titleMeta = (page: WatchHistoryBrowseResponse) => page.history.meta;
 const titleCursor = (page: WatchHistoryBrowseResponse) =>
@@ -344,6 +344,7 @@ function WatchDrawer({
 		meta: titleMeta,
 		cursor: titleCursor,
 		refresh: refreshVersion + invalidation,
+		forceRefresh: refreshVersion,
 		enabled: dates.ok && cacheReady && !recovering,
 		generation: snapshot?.accountGeneration,
 	});
@@ -362,6 +363,14 @@ function WatchDrawer({
 			.flatMap((page) => page.matches)
 			.map((match) => [pendingTitleKey(match.provider, match.titleKey), match]),
 	);
+	const previews = new Map(
+		browsing.pages
+			.flatMap((page) => page.episodePreviews ?? [])
+			.map((preview) => [
+				pendingTitleKey(preview.detail.provider, preview.detail.titleKey),
+				preview,
+			]),
+	);
 	const pending = useMemo(() => {
 		const events = (snapshot?.pendingEvents ?? []).filter((event) =>
 			mode === "mine" ? !event.sharedRoom : Boolean(event.sharedRoom),
@@ -377,7 +386,9 @@ function WatchDrawer({
 		return result;
 	}, [snapshot, mode]);
 	const allowPending =
-		mode === "mine" && !search.trim() && conditions.period === "all-time";
+		!search.trim() &&
+		conditions.period === "all-time" &&
+		(mode === "mine" || (!conditions.group && !conditions.participant));
 	const canonical = new Map(
 		snapshot?.history.items.map((item) => [
 			pendingTitleKey(item.provider, item.titleKey),
@@ -708,6 +719,10 @@ function WatchDrawer({
 												client={client}
 												input={input}
 												refresh={refreshVersion + invalidation}
+												forceRefresh={refreshVersion}
+												preview={previews.get(
+													pendingTitleKey(item.provider, item.titleKey),
+												)}
 												generation={snapshot?.accountGeneration}
 												disclosure={disclosure}
 												initiallyOpen={index === 0}
@@ -808,6 +823,8 @@ function PopupWatchHistoryItem({
 	client,
 	input,
 	refresh,
+	forceRefresh,
+	preview,
 	generation,
 	disclosure,
 	initiallyOpen,
@@ -824,6 +841,8 @@ function PopupWatchHistoryItem({
 	client: PopupWatchHistoryClient;
 	input: WatchHistoryBrowseQuery;
 	refresh: number;
+	forceRefresh: number;
+	preview?: WatchHistoryBrowseTitleEpisodesResponse;
 	generation?: number;
 	disclosure: Disclosure;
 	initiallyOpen: boolean;
@@ -850,6 +869,8 @@ function PopupWatchHistoryItem({
 		meta: detailMeta,
 		cursor: detailCursor,
 		refresh,
+		forceRefresh,
+		initialPage: preview,
 		enabled: open && Boolean(matchingDate),
 		generation,
 	});

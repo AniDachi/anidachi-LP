@@ -1,11 +1,16 @@
-// A disposable read cache, never the canonical history/outbox. Session storage
-// survives popup and service-worker teardown but not a browser/extension restart.
+// A bounded, disposable local read cache, never the canonical history/outbox.
+// Survives browser/update lifecycle; freshness is separate from retention.
 export const WATCH_BROWSE_FRESH_MS = 30_000;
-export const WATCH_BROWSE_MAX_AGE_MS = 5 * 60_000;
-const STORAGE_KEY = "watchHistoryBrowseCacheV1";
+export const WATCH_BROWSE_MAX_AGE_MS = 7 * 24 * 60 * 60_000;
+const STORAGE_KEY = "watchHistoryBrowseCacheV2";
 const MAX_ENTRIES = 32;
 const MAX_BYTES = 1_000_000;
-type Entry = { key: string; cachedAt: number; data: unknown };
+type Entry = {
+	key: string;
+	cachedAt: number;
+	data: unknown;
+	revision?: number;
+};
 export type BrowseCacheStorage = {
 	read(): Promise<unknown>;
 	write(entries: Entry[]): Promise<void>;
@@ -13,12 +18,12 @@ export type BrowseCacheStorage = {
 
 const browserStorage: BrowseCacheStorage = {
 	read: async () =>
-		typeof chrome === "undefined" || !chrome.storage?.session
+		typeof chrome === "undefined" || !chrome.storage?.local
 			? []
-			: (await chrome.storage.session.get(STORAGE_KEY))[STORAGE_KEY],
+			: (await chrome.storage.local.get(STORAGE_KEY))[STORAGE_KEY],
 	write: async (entries) => {
-		if (typeof chrome !== "undefined" && chrome.storage?.session)
-			await chrome.storage.session.set({ [STORAGE_KEY]: entries });
+		if (typeof chrome !== "undefined" && chrome.storage?.local)
+			await chrome.storage.local.set({ [STORAGE_KEY]: entries });
 	},
 };
 
@@ -72,15 +77,21 @@ export function createWatchHistoryBrowseCache(
 			}
 			entries.delete(key);
 			entries.set(key, entry);
-			return { cachedAt: entry.cachedAt, data: structuredClone(entry.data) };
+			return {
+				cachedAt: entry.cachedAt,
+				data: structuredClone(entry.data),
+				revision: entry.revision ?? 0,
+			};
 		},
-		async write(key: string, data: unknown) {
+		async write(key: string, data: unknown, revision = 0) {
 			await initialize();
+			if ((entries.get(key)?.revision ?? 0) > revision) return;
 			entries.delete(key);
 			entries.set(key, {
 				key,
 				cachedAt: Date.now(),
 				data: structuredClone(data),
+				revision,
 			});
 			prune();
 			// One background writer; serialize snapshots so slow storage cannot undo a
@@ -94,7 +105,7 @@ export function createWatchHistoryBrowseCache(
 }
 
 export async function watchBrowseCacheKey(scope: unknown[]) {
-	// Bind to the exact auth session without storing credentials in cache keys.
+	// Bound account/query identity without readable filter values in storage keys.
 	const digest = await crypto.subtle.digest(
 		"SHA-256",
 		new TextEncoder().encode(JSON.stringify(scope)),

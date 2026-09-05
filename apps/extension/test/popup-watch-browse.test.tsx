@@ -1,18 +1,19 @@
 import {
-	WatchHistoryBrowseResponseSchema,
-	WatchHistoryBrowseTitleEpisodesResponseSchema,
-	WatchHistoryBrowseSessionsResponseSchema,
 	type WatchHistoryBrowseQuery,
+	WatchHistoryBrowseResponseSchema,
+	WatchHistoryBrowseSessionsResponseSchema,
+	WatchHistoryBrowseTitleEpisodesResponseSchema,
 	type WatchHistorySession,
+	type WatchProgressEvent,
 } from "@anidachi/protocol";
 import { act } from "react";
-import { usePopupWatchBrowse } from "../src/popup-watch-browse";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { usePopupWatchBrowse } from "../src/popup-watch-browse";
 import {
+	type PopupWatchHistoryClient,
 	PopupWatchHistoryPanel,
 	selectConfirmedPopupWatchHistorySnapshot,
-	type PopupWatchHistoryClient,
 } from "../src/popup-watch-history";
 import {
 	createWatchHistoryClient,
@@ -20,8 +21,8 @@ import {
 } from "../src/watch-history-client";
 import {
 	createWatchHistoryStorage,
-	watchHistoryPartitionKey,
 	type WatchHistoryStorageRoot,
+	watchHistoryPartitionKey,
 } from "../src/watch-history-storage";
 
 const OWNER = "00000000-0000-4000-8000-000000000001";
@@ -305,6 +306,154 @@ async function change(label: string, value: string) {
 }
 
 describe("production watch browsing", () => {
+	it("keeps both saved modes and their episodes visible while progress revalidation is blocked", async () => {
+		let blocked = false;
+		const requests: string[] = [];
+		const setup = generationClient(async (url) => {
+			requests.push(String(url));
+			if (blocked) return new Promise<Response>(() => {});
+			return Response.json({
+				...browse(
+					String(url).includes("mode=shared") ? "Saved together" : "Saved mine",
+				),
+				episodePreviews: [detail()],
+			});
+		});
+		let publish:
+			| Parameters<NonNullable<PopupWatchHistoryClient["subscribe"]>>[1]
+			| undefined;
+		const client = {
+			...setup.client,
+			subscribe: (_owner: string, listener: NonNullable<typeof publish>) => {
+				publish = listener;
+				return () => {};
+			},
+		};
+		await mount(client);
+		await settles(() =>
+			expect(container.textContent).toContain("Matching episode"),
+		);
+		await click("Together");
+		await settles(() =>
+			expect(container.textContent).toContain("Saved together"),
+		);
+		await setup.storage.updateRoot((stored) => ({
+			...stored,
+			partitions: {
+				...stored.partitions,
+				[watchHistoryPartitionKey(OWNER, 1)]: {
+					...required(stored.partitions[watchHistoryPartitionKey(OWNER, 1)]),
+					invalidationRevision: 1,
+					browseInvalidationRevision: 0,
+					browseRevisionFloor: 0,
+					browseTitleRevisions: { '["youtube","new"]': 1 },
+				},
+			},
+		}));
+		blocked = true;
+		await act(async () =>
+			required(publish)(await client.loadCached(OWNER), { ok: true }),
+		);
+		expect(container.textContent).toContain("Saved together");
+		await click("Mine");
+		await settles(() => expect(container.textContent).toContain("Saved mine"));
+		expect(container.textContent).toContain("Matching episode");
+		await act(async () => root.unmount());
+		container.remove();
+		await mount(client);
+		await settles(() => expect(container.textContent).toContain("Saved mine"));
+		expect(container.textContent).toContain("Matching episode");
+		expect(requests.some((url) => url.includes("title-episodes"))).toBe(false);
+	});
+	it("shows a newly observed shared title as pending without guessing confirmed sessions", async () => {
+		const event: WatchProgressEvent = {
+			schemaVersion: 3,
+			clientEventId: GROUP,
+			clientSessionKey: "current-session",
+			accountGeneration: 1,
+			provider: "youtube",
+			youtubeVideoId: "new",
+			titleKey: "youtube:video:new",
+			itemKind: "movie",
+			title: "New shared video",
+			artworkUrl: null,
+			episodeKey: "youtube:video:new",
+			episodeTitle: "New shared video",
+			seasonKey: null,
+			seasonTitle: null,
+			seasonNumber: null,
+			episodeNumber: null,
+			sourceUrl: "https://www.youtube.com/watch?v=new",
+			currentTime: 12,
+			duration: 120,
+			progress: 0.1,
+			observedAt: meta.serverTime,
+			kind: "heartbeat",
+		};
+		const empty = browse();
+		empty.history.items = [];
+		empty.matches = [];
+		const client = {
+			...clientFixture(async (message) =>
+				message.command === "browse" ? { ok: true, data: empty } : { ok: true },
+			),
+			loadCached: async () => ({
+				history: empty.history,
+				accountGeneration: 1,
+				preferences: { youtubeHistoryEnabled: true },
+				pendingEvents: [],
+				capturePaused: false,
+				localObservation: { event, mode: "together" as const },
+			}),
+		};
+		await mount(client);
+		expect(container.textContent).not.toContain("New shared video");
+		await click("Together");
+		expect(container.textContent).toContain("New shared video");
+		expect(container.textContent).toContain("Pending sync");
+		expect(container.textContent).not.toContain("Watch together again");
+	});
+	it.each([
+		"Mine",
+		"Together",
+	])("renders %s preview episodes without a detail request and continues only on demand", async (mode) => {
+		const response = {
+			...browse(),
+			episodePreviews: [detail("next-preview-episodes")],
+		};
+		const requests: string[] = [];
+		const client = clientFixture(async (message) => {
+			if (message.command === "browse") return { ok: true, data: response };
+			if (message.command === "browse-title-episodes") {
+				requests.push(JSON.stringify(message.input));
+				const more = detail();
+				more.detail.episodes = [
+					{
+						...episode,
+						episodeKey: "older",
+						episodeTitle: "Older matching episode",
+						episodeNumber: 2,
+					},
+				];
+				more.matches = [{ ...required(more.matches[0]), episodeKey: "older" }];
+				return { ok: true, data: more };
+			}
+			return { ok: true };
+		});
+		await mount(client);
+		if (mode === "Together") await click("Together");
+		expect(container.textContent).toContain("Matching episode");
+		expect(container.textContent).not.toContain("Canonical nonmatch");
+		expect(requests).toHaveLength(0);
+		await click("Load more episodes for Frieren");
+		expect(requests).toHaveLength(1);
+		expect(JSON.parse(required(requests[0]))).toMatchObject({
+			mode: mode === "Mine" ? "solo" : "shared",
+			cursor: "next-preview-episodes",
+		});
+		expect(container.textContent).toContain("Matching episode");
+		expect(container.textContent).toContain("Older matching episode");
+	});
 	it("replaces a stale provisional continuation instead of keeping deleted rows or an extra page", async () => {
 		let finish: ((value: WatchHistoryMessageResponse) => void) | undefined;
 		const stale = browse("Removed title");

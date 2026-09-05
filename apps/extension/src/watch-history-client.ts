@@ -357,6 +357,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     downgrade?: Pick<WatchCatalogBeginAck, "titleKey" | "effectiveCatalogState">, guard?: () => boolean): Promise<void> {
     await updateCurrentPartition(session, generation, (partition) => guard && !guard() ? partition : ({ ...partition,
       invalidationRevision: (partition.invalidationRevision ?? 0) + 1,
+      browseInvalidationRevision: browseHardRevision(partition) + 1,
       // A server-acknowledged availability change invalidates exact denominators
       // immediately. Watched rows stay intact; only GET supplies replacement totals.
       cache: !partition.cache || !downgrade || downgrade.effectiveCatalogState === "complete" ? partition.cache : {
@@ -569,18 +570,19 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       partition.accountGeneration !== generation) {
       return { ok: false, status: "generation-mismatch" };
     }
-    const revision = partition.invalidationRevision ?? 0;
     const parsedInput = parseBrowseInput(message);
     if (!parsedInput) return { ok: false, status: "invalid-request" };
     const input = parsedInput;
+    const revision = browseReadRevision(partition, input);
+    const hardRevision = browseHardRevision(partition);
     const key = JSON.stringify([
       message.command,
       session.user.id,
       generation,
-      revision,
+      hardRevision,
       input,
     ]);
-    const cacheKey = await watchBrowseCacheKey([key, session.refreshToken,
+    const cacheKey = await watchBrowseCacheKey([key,
       partition.preferencesLocalRevision, partition.preferences?.youtubeHistoryEnabled]);
     if (message.cacheOnly) {
       const cached = await browseCache.read(cacheKey);
@@ -589,16 +591,17 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       const data = cached && parseBrowseResponse(message.command, cached.data);
       if (!data || browseResponseMeta(message.command, data).ownerUserId !== session.user.id ||
         browseResponseMeta(message.command, data).accountGeneration !== generation) return { ok: true };
-      return { ok: true, data, cachedAt: cached.cachedAt };
+      return { ok: true, data, cachedAt: cached.revision === revision ? cached.cachedAt : 0 };
     }
-    const existing = browseFlights.get(key);
+    const flightKey = JSON.stringify([key, revision]);
+    const existing = browseFlights.get(flightKey);
     if (existing && sameSession(existing.session, session)) return existing.promise;
     const flight = { session, promise: runBrowse() };
-    browseFlights.set(key, flight);
+    browseFlights.set(flightKey, flight);
     try {
       return await flight.promise;
     } finally {
-      if (browseFlights.get(key) === flight) browseFlights.delete(key);
+      if (browseFlights.get(flightKey) === flight) browseFlights.delete(flightKey);
     }
 
     async function runBrowse(): Promise<WatchHistoryMessageResponse> {
@@ -618,10 +621,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       }
       const failure = await validateCurrent(response.session);
       if (failure) return failure;
-      const acceptedCacheKey = response.session.refreshToken === session.refreshToken ? cacheKey :
-        await watchBrowseCacheKey([key, response.session.refreshToken,
-          partition.preferencesLocalRevision, partition.preferences?.youtubeHistoryEnabled]);
-      await browseCache.write(acceptedCacheKey, parsed);
+      await browseCache.write(cacheKey, parsed, revision);
       const afterSave = await validateCurrent(response.session);
       return afterSave ?? { ok: true, data: parsed };
     }
@@ -642,7 +642,8 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         currentPartition.accountGeneration !== generation) {
         return { ok: false, status: "generation-mismatch" };
       }
-      if ((currentPartition.invalidationRevision ?? 0) !== revision ||
+      if (browseHardRevision(currentPartition) !== hardRevision ||
+        browseReadRevision(currentPartition, input) !== revision ||
         currentPartition.preferencesLocalRevision !== partition.preferencesLocalRevision ||
         currentPartition.preferences?.youtubeHistoryEnabled !== partition.preferences?.youtubeHistoryEnabled) {
         return { ok: false, status: "superseded" };
@@ -753,6 +754,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     let flushed = 0;
     let activeSession = session;
     let mutated = false;
+    const changedTitles = new Set<string>();
     try {
     for (const entry of orderWatchHistoryOutbox(partition.outbox)) {
         if (entry.event.identityPending) continue;
@@ -809,13 +811,28 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         if (saved.stale) return { ok: false, status: "generation-mismatch" };
         if (saved.authorityRejected) return { ok: false, status: "rejected" };
         if (!saved.ok) return saved;
-        if (!ack.data.duplicate) mutated = true;
+        if (!ack.data.duplicate) {
+          mutated = true;
+          changedTitles.add(JSON.stringify([entry.event.provider, entry.event.titleKey]));
+        }
         await clearUnpersistedPauseIfReady(activeSession, generation);
         flushed += 1;
     }
     return { ok: true, flushed };
     } finally {
-      if (mutated) await invalidateHistory(activeSession, generation);
+      if (mutated) await updateCurrentPartition(activeSession, generation, (partition) => {
+        const revision = (partition.invalidationRevision ?? 0) + 1;
+        const revisions = { ...partition.browseTitleRevisions };
+        for (const title of changedTitles) revisions[title] = revision;
+        // Bounded freshness hints, not another history store. Evicted hints only
+        // make old reads stale; they can never make an old read look fresh again.
+        const ordered = Object.entries(revisions).sort((a, b) => b[1] - a[1]);
+        const floor = Math.max(partition.browseRevisionFloor ?? partition.invalidationRevision ?? 0,
+          ...ordered.slice(64).map(([, value]) => value));
+        return { ...partition, invalidationRevision: revision,
+          browseInvalidationRevision: browseHardRevision(partition),
+          browseTitleRevisions: Object.fromEntries(ordered.slice(0, 64)), browseRevisionFloor: floor };
+      });
     }
   }
 
@@ -1226,6 +1243,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         ? Object.fromEntries(Object.entries(partition.catalogAcknowledgements ?? {}).filter(([key]) => key !== (parsed.data.target as { titleKey: string }).titleKey))
         : parsed.data.target.scope === "all" ? {} : partition.catalogAcknowledgements,
       invalidationRevision: (partition.invalidationRevision ?? 0) + 1,
+      browseInvalidationRevision: browseHardRevision(partition) + 1,
       deletionFences: parsed.data.target.scope === "all" ? {} : {
         ...partition.deletionFences,
         [JSON.stringify(parsed.data.target.scope === "title"
@@ -1702,6 +1720,16 @@ function parseBrowseInput(
   return parsed.success ? parsed.data : null;
 }
 
+function browseHardRevision(partition: WatchHistoryAccountPartition): number {
+  return partition.browseInvalidationRevision ?? partition.invalidationRevision ?? 0;
+}
+
+function browseReadRevision(partition: WatchHistoryAccountPartition, input: BrowseInput): number {
+  if (!("provider" in input) || !("titleKey" in input)) return partition.invalidationRevision ?? 0;
+  return Math.max(partition.browseRevisionFloor ?? partition.invalidationRevision ?? 0,
+    partition.browseTitleRevisions?.[JSON.stringify([input.provider, input.titleKey])] ?? 0);
+}
+
 function browsePath(command: BrowseCommand, input: BrowseInput): string {
   const query = new URLSearchParams();
   const values = input as Record<string, unknown>;
@@ -1721,6 +1749,7 @@ function browsePath(command: BrowseCommand, input: BrowseInput): string {
     const value = values[key];
     if (typeof value === "string" || typeof value === "number") query.set(key, String(value));
   }
+  if (command === "browse") query.set("includeEpisodePreviews", "true");
   const suffix = command === "browse"
     ? ""
     : command === "browse-title-episodes"

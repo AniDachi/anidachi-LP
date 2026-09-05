@@ -30,6 +30,10 @@ export type WatchHistoryAccountPartition = {
   outbox: WatchHistoryOutboxPartition;
   catalogAcknowledgements?: Record<string, WatchHistoryCatalogAcknowledgement>;
   invalidationRevision?: number;
+  // Browse retention is fenced separately from ordinary progress freshness.
+  browseInvalidationRevision?: number;
+  browseTitleRevisions?: Record<string, number>;
+  browseRevisionFloor?: number;
   cacheRevision?: number;
   deletionFences?: Record<string, string>;
 };
