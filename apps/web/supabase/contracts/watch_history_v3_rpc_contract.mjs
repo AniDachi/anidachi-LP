@@ -5,8 +5,10 @@ import { writeFileSync } from "node:fs";
 import {
 	assertV3Prerequisite,
 	DATABASE_PREREQUISITE_SQL,
+	proofPsqlArgs,
 	requireDisposableTarget,
 	requireOutputPath,
+	withPsqlSessionTimeouts,
 } from "./watch_history_v3_disposable_target.mjs";
 
 const target = requireDisposableTarget();
@@ -17,24 +19,12 @@ const outputPath = requireOutputPath(
 const userId = "66666666-6666-4666-8666-666666666666";
 
 function sql(input) {
-	const result = spawnSync(
-		"docker",
-		[
-			"exec",
-			"-i",
-			target.container,
-			"psql",
-			"-U",
-			"postgres",
-			"-d",
-			"postgres",
-			"-X",
-			"-qAt",
-			"-v",
-			"ON_ERROR_STOP=1",
-		],
-		{ input, encoding: "utf8", maxBuffer: 8 * 1024 * 1024, timeout: 30_000 },
-	);
+	const result = spawnSync("docker", proofPsqlArgs(target.container), {
+		input: withPsqlSessionTimeouts(input),
+		encoding: "utf8",
+		maxBuffer: 8 * 1024 * 1024,
+		timeout: 30_000,
+	});
 	assert.equal(result.error, undefined, result.error?.message);
 	assert.equal(result.status, 0, result.stderr);
 	return result.stdout.trim().split("\n").filter(Boolean).map(JSON.parse);

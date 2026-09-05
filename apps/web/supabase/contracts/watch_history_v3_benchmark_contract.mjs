@@ -3,10 +3,13 @@ import { spawnSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
 
 import {
+	assertAcceptedCatalogMeasurement,
 	assertV3Prerequisite,
 	DATABASE_PREREQUISITE_SQL,
+	proofPsqlArgs,
 	requireDisposableTarget,
 	requireOutputPath,
+	withPsqlSessionTimeouts,
 } from "./watch_history_v3_disposable_target.mjs";
 
 const target = requireDisposableTarget();
@@ -22,24 +25,12 @@ const largeUser = "b9999999-1111-4111-8111-111111111111";
 const smallUser = "b9999999-2222-4222-8222-222222222222";
 
 function sql(input, timeout = 60_000) {
-	const result = spawnSync(
-		"docker",
-		[
-			"exec",
-			"-i",
-			target.container,
-			"psql",
-			"-U",
-			"postgres",
-			"-d",
-			"postgres",
-			"-X",
-			"-qAt",
-			"-v",
-			"ON_ERROR_STOP=1",
-		],
-		{ input, encoding: "utf8", maxBuffer: 12 * 1024 * 1024, timeout },
-	);
+	const result = spawnSync("docker", proofPsqlArgs(target.container), {
+		input: withPsqlSessionTimeouts(input),
+		encoding: "utf8",
+		maxBuffer: 12 * 1024 * 1024,
+		timeout,
+	});
 	assert.equal(result.error, undefined, result.error?.message);
 	assert.equal(result.status, 0, result.stderr);
 	return result.stdout.trim();
@@ -50,6 +41,37 @@ const quote = (value) =>
 	`'${JSON.stringify(value).replaceAll("'", "''")}'::jsonb`;
 const cleanup = () =>
 	sql(`delete from public.users where id in ('${largeUser}','${smallUser}');`);
+
+function requireAcceptedCatalog(userId, revision, episodeCount, aliasCount) {
+	const actual = JSON.parse(
+		sql(`select jsonb_build_object(
+      'revision',c.revision,
+      'acceptedRevision',c.accepted_revision,
+      'attemptStatus',c.attempt_status,
+      'snapshotCompleteness',c.snapshot->>'completeness',
+      'projectionState',public.watch_catalog_state_v3(
+        c.context,case when c.projection is not null then c.accepted_context end
+      ),
+      'hasProjection',c.projection is not null,
+      'episodeCount',(select count(distinct a.episode_key)
+        from public.watch_catalog_aliases a
+        where a.user_id=c.user_id and a.history_generation=c.history_generation
+          and a.provider=c.provider and a.title_key=c.title_key),
+      'aliasCount',(select count(*) from public.watch_catalog_aliases a
+        where a.user_id=c.user_id and a.history_generation=c.history_generation
+          and a.provider=c.provider and a.title_key=c.title_key)
+    )
+    from public.watch_catalog_snapshots c
+    where c.user_id='${userId}' and c.history_generation=1
+      and c.provider='crunchyroll' and c.title_key='crunchyroll:series:MAX';`),
+	);
+	assertAcceptedCatalogMeasurement(actual, {
+		revision,
+		episodeCount,
+		aliasCount,
+	});
+	return actual;
+}
 
 function request() {
 	return {
@@ -176,11 +198,18 @@ try {
 				`explain (analyze,format json) select public.apply_watch_catalog_v3('${userId}',${quote(commit)});`,
 			),
 		);
+		const acceptedCatalog = requireAcceptedCatalog(
+			userId,
+			begin.revision,
+			count,
+			count + 31,
+		);
 		measurements.push({
 			count,
 			variants: count + 31,
 			bytes: Buffer.byteLength(JSON.stringify(catalogSnapshot)),
 			commitMs: plan[0]["Execution Time"],
+			acceptedCatalog,
 		});
 	}
 
@@ -258,12 +287,21 @@ try {
 			`select public.begin_watch_catalog_v3('${largeUser}',${quote(sameAccountRequest)});`,
 		),
 	);
-	sql(
-		`select public.apply_watch_catalog_v3('${largeUser}',${quote({
-			...sameAccountRequest,
-			revision: sameBegin.revision,
-			snapshot: snapshot(sameAccountRequest, 1),
-		})});`,
+	const replacementAck = JSON.parse(
+		sql(
+			`select public.apply_watch_catalog_v3('${largeUser}',${quote({
+				...sameAccountRequest,
+				revision: sameBegin.revision,
+				snapshot: snapshot(sameAccountRequest, 1),
+			})});`,
+		),
+	);
+	assert.equal(replacementAck.outcome, "applied");
+	const replacementCatalog = requireAcceptedCatalog(
+		largeUser,
+		sameBegin.revision,
+		1,
+		32,
 	);
 	const controlled = [];
 	const controlledEvent = event();
@@ -283,6 +321,7 @@ try {
 		);
 	}
 	report.sameLargeAccountSmallCatalogHeartbeatMs = controlled;
+	report.replacementCatalog = replacementCatalog;
 
 	writeFileSync(pageOutput, `${JSON.stringify(page)}\n`);
 	writeFileSync(measurementsOutput, `${JSON.stringify(report, null, 2)}\n`);

@@ -5,8 +5,10 @@ import { writeFileSync } from "node:fs";
 import {
 	assertV3Prerequisite,
 	DATABASE_PREREQUISITE_SQL,
+	proofPsqlArgs,
 	requireDisposableTarget,
 	requireOutputPath,
+	withPsqlSessionTimeouts,
 } from "./watch_history_v3_disposable_target.mjs";
 
 const target = requireDisposableTarget();
@@ -14,23 +16,10 @@ const outputPath = requireOutputPath(
 	process.env,
 	"ANIDACHI_WATCH_HISTORY_CATALOG_STATES_OUTPUT",
 );
-const psqlArgs = [
-	"exec",
-	"-i",
-	target.container,
-	"psql",
-	"-U",
-	"postgres",
-	"-d",
-	"postgres",
-	"-X",
-	"-qAt",
-	"-v",
-	"ON_ERROR_STOP=1",
-];
+const psqlArgs = proofPsqlArgs(target.container);
 function sql(input, timeout = 30_000) {
 	const result = spawnSync("docker", psqlArgs, {
-		input,
+		input: withPsqlSessionTimeouts(input),
 		encoding: "utf8",
 		maxBuffer: 8 * 1024 * 1024,
 		timeout,

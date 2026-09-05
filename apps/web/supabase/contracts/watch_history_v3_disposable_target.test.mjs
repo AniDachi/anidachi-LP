@@ -10,6 +10,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
+import * as disposableTarget from "./watch_history_v3_disposable_target.mjs";
 import {
 	assertPreTransitionPrerequisite,
 	assertV3Prerequisite,
@@ -191,4 +192,64 @@ test("fails closed when the database is not at the exact required migration stat
 			}),
 		/schema-3 migration/,
 	);
+});
+
+test("rejects an unaccepted benchmark catalog before measurements are attributed", () => {
+	assert.equal(
+		typeof disposableTarget.assertAcceptedCatalogMeasurement,
+		"function",
+		"benchmark acceptance assertion must exist",
+	);
+	assert.throws(
+		() =>
+			disposableTarget.assertAcceptedCatalogMeasurement(
+				{
+					revision: 42,
+					acceptedRevision: null,
+					attemptStatus: "partial",
+					snapshotCompleteness: null,
+					projectionState: "partial",
+					hasProjection: false,
+					episodeCount: 0,
+					aliasCount: 0,
+				},
+				{ revision: 42, episodeCount: 2000, aliasCount: 2031 },
+			),
+		/unaccepted benchmark catalog/,
+	);
+});
+
+test("wraps synchronous proof SQL with statement, lock, and idle transaction bounds", () => {
+	assert.equal(
+		typeof disposableTarget.withPsqlSessionTimeouts,
+		"function",
+		"synchronous SQL timeout wrapper must exist",
+	);
+	assert.equal(
+		disposableTarget.withPsqlSessionTimeouts("select 1;"),
+		"set statement_timeout='45s'; set lock_timeout='10s'; " +
+			"set idle_in_transaction_session_timeout='15s';\nselect 1;",
+	);
+});
+
+test("uses quiet psql output so timeout command tags cannot corrupt proof JSON", () => {
+	assert.equal(
+		typeof disposableTarget.proofPsqlArgs,
+		"function",
+		"proof psql argument builder must exist",
+	);
+	assert.deepEqual(disposableTarget.proofPsqlArgs("supabase_db_proof"), [
+		"exec",
+		"-i",
+		"supabase_db_proof",
+		"psql",
+		"-U",
+		"postgres",
+		"-d",
+		"postgres",
+		"-X",
+		"-qAt",
+		"-v",
+		"ON_ERROR_STOP=1",
+	]);
 });

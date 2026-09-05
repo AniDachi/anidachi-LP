@@ -162,16 +162,21 @@ container:
   historical 6, retained same-region locale bundle, foreign-region partial state,
   later detail-page catalog metadata, and exact zero availability;
 - the benchmark used 2,000 logical episodes, 2,031 variants, 100 seasons, and a
-  1,029,341-byte normalized snapshot. Local commit time was 625.552 ms; the
-  100-title/800-row/20-session page was 498,415 bytes and 19.228 ms. Large-catalog
-  heartbeats measured 1.18099-1.20501 ms/event; replacing it with a one-episode
-  catalog measured 0.87389-0.90443 ms/event on the same account. These are local
-  wall-clock observations, not staging guarantees;
+  1,029,341-byte normalized snapshot. Before attributing timings, the retained proof
+  verified accepted revision 1, complete snapshot/state, a present projection, and
+  exactly 2,000 stored episode identities / 2,031 variant aliases. Local commit time
+  was 622.305 ms; the 100-title/800-row/20-session page was 499,315 bytes and
+  19.148 ms. Large-catalog heartbeats measured 1.16574-1.26267 ms/event. Before the
+  controlled comparison, the same account's replacement was verified at accepted
+  revision 5,302 with complete state/projection and exactly one episode / 32 aliases;
+  heartbeats then measured 0.87122-0.88084 ms/event. These are local wall-clock
+  observations, not staging guarantees;
 - dedicated pgTAP passed 13 files / 654 assertions. Database lint exited 0 and
   retained the reviewed warnings for intentionally unused terminal-v2 arguments plus
   the two immutable-wrapper/stable-expression notices.
 
-Final retained-source gates passed: disposable-target guard tests 5/5; Biome on the
+Final retained-source gates passed: disposable-target/acceptance guard tests 8/8,
+including a deliberately partial/unaccepted benchmark candidate; Biome on the
 eight retained scripts; generated SQL evidence through production parsers 4/4; and
 the explicit website TSX suite 15/15. Root `pnpm check` passed all six Turbo tasks.
 Root `pnpm test` passed all six tasks and covered protocol 145/145, API 201/201,

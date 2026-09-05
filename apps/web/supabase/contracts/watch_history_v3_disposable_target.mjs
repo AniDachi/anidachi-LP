@@ -11,6 +11,9 @@ export const TRANSITION_ACKNOWLEDGEMENT =
 	"RESET_DEDICATED_HISTORY_FIXTURES_ONLY";
 export const PRE_TRANSITION_MIGRATION = "20260904154732";
 export const SCHEMA_3_MIGRATION = "20260904205540";
+export const SYNC_PSQL_SESSION_TIMEOUTS =
+	"set statement_timeout='45s'; set lock_timeout='10s'; " +
+	"set idle_in_transaction_session_timeout='15s';";
 
 export const DATABASE_PREREQUISITE_SQL = `select jsonb_build_object(
   'latestMigration', (select max(version) from supabase_migrations.schema_migrations),
@@ -183,6 +186,49 @@ export function requireTransitionAcknowledgement(env = process.env) {
 		requireValue(env, "ANIDACHI_WATCH_HISTORY_TRANSITION_ACK"),
 		TRANSITION_ACKNOWLEDGEMENT,
 		`ANIDACHI_WATCH_HISTORY_TRANSITION_ACK must equal ${TRANSITION_ACKNOWLEDGEMENT}`,
+	);
+}
+
+export function withPsqlSessionTimeouts(input) {
+	assert.equal(
+		typeof input,
+		"string",
+		"Synchronous proof SQL must be a string",
+	);
+	return `${SYNC_PSQL_SESSION_TIMEOUTS}\n${input}`;
+}
+
+export function proofPsqlArgs(container) {
+	return [
+		"exec",
+		"-i",
+		container,
+		"psql",
+		"-U",
+		"postgres",
+		"-d",
+		"postgres",
+		"-X",
+		"-qAt",
+		"-v",
+		"ON_ERROR_STOP=1",
+	];
+}
+
+export function assertAcceptedCatalogMeasurement(actual, expected) {
+	assert.deepEqual(
+		actual,
+		{
+			revision: expected.revision,
+			acceptedRevision: expected.revision,
+			attemptStatus: "complete",
+			snapshotCompleteness: "complete",
+			projectionState: "complete",
+			hasProjection: true,
+			episodeCount: expected.episodeCount,
+			aliasCount: expected.aliasCount,
+		},
+		"unaccepted benchmark catalog cannot be attributed to measurements",
 	);
 }
 
