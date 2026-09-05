@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 test("browse rejects malformed filters before accessing storage", async () => {
-	const module = await import("./watch-history-browse");
+	const browseApi = await import("./watch-history-browse");
 	let accessed = false;
 	await assert.rejects(
-		module.browseWatchHistoryV3({
+		browseApi.browseWatchHistoryV3({
 			userId: "11111111-1111-4111-8111-111111111111",
 			input: { mode: "solo", groupId: "11111111-1111-4111-8111-111111111111" },
 			store: {
@@ -21,10 +21,10 @@ test("browse rejects malformed filters before accessing storage", async () => {
 });
 
 test("malformed opaque cursor fails before DB access", async () => {
-	const module = await import("./watch-history-browse");
+	const browseApi = await import("./watch-history-browse");
 	let accessed = false;
 	await assert.rejects(
-		module.browseWatchHistoryV3({
+		browseApi.browseWatchHistoryV3({
 			userId: "11111111-1111-4111-8111-111111111111",
 			input: { mode: "shared", cursor: "deadbeef" },
 			store: {
@@ -39,13 +39,13 @@ test("malformed opaque cursor fails before DB access", async () => {
 	assert.equal(accessed, false);
 });
 test("browse bounds validated storage failures and does not leak database messages", async () => {
-	const module = await import("./watch-history-browse");
+	const browseApi = await import("./watch-history-browse");
 	for (const [raw, want] of [
 		[{}, "INVALID_DATABASE_RESPONSE"],
 		[new Error("private database detail"), "HISTORY_UNAVAILABLE"],
 	] as const) {
 		await assert.rejects(
-			module.browseWatchHistoryV3({
+			browseApi.browseWatchHistoryV3({
 				userId: "11111111-1111-4111-8111-111111111111",
 				input: { mode: "shared" },
 				store: {
