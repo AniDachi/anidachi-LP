@@ -2,8 +2,9 @@
 
 Date: 2026-09-05
 
-Status: **local, unactivated schema-3 candidate**. Staging and technical main still
-run Watch History v2. This record does not authorize or claim a remote migration,
+Status: **local, unactivated schema-3 candidate**. Watch History v2 on staging and
+technical main is the recorded baseline; this fix wave performed no new deployed
+runtime probe and no deployment. This record does not authorize or claim a remote migration,
 deployment, tester-folder update, loaded extension, authenticated provider test, or
 production acceptance.
 
@@ -28,7 +29,7 @@ The reviewed transition is intentionally history-destructive for test data. It:
 - makes v2 progress, delete, preference, and read RPCs terminal upgrade failures, so
   stale schema-2 work cannot recreate settings, sessions, participants, or progress;
 - requires the matching schema-3 web runtime and extension. A schema-3 staging
-  artifact is incompatible with the currently deployed v2 history backend.
+  artifact is incompatible with the recorded v2 history backend baseline.
 
 The extension's one-time local-storage transition copies only a validated,
 owner/generation-matching YouTube preference state. It does not copy or retag v2
@@ -142,7 +143,7 @@ Generated JSON and timing output are local evidence and must not be committed.
 The old `watch_history_v2_*` contract scripts are historical migration assertions;
 they are not schema-3 acceptance generators and must not be run as v3 proof.
 
-## Fresh Local Results
+## Prior Local Results (Before Final Review Fixes)
 
 The retained generators were rerun against their final source on the dedicated
 container:
@@ -195,6 +196,88 @@ Worker, Durable Object, room event, signaling, or media contract and makes no ne
 room/media acceptance claim. No remote Worker smoke was run. No root Web build was
 run because it invokes the unrelated network-writing `cache:jikan` step.
 
+## Final Review Fixes And Covering Proof
+
+The final review at `ce6cfdb` found three boundary defects; the local fix wave
+addresses all three together:
+
+- Website delete/preferences requests now carry `x-anidachi-history-owner` from
+  the rendered owner. Cookie routes require a valid UUID and reject an owner
+  mismatch before service/store/RPC dispatch. The original header survives a
+  401/cookie refresh. Extension bearer requests retain their existing dispatch;
+  an explicitly supplied mismatched header is rejected for either session source.
+- Forward migration `20260905083000_watch_history_observed_season_fallback.sql`
+  replaces only the bounded catalog-read helper and adds an index for one latest
+  observed label per requested season. A season absent from a complete current
+  catalog retains its observed identity/label and returns current `0 / 0`, progress
+  zero and no next episode. Title exact totals and historical completion counts
+  remain separate. The original migration is unchanged; reads never parse the full
+  snapshot and production builders retain their strict membership validation.
+- Existing valid v3 extension roots still retire the exact legacy v2 history key.
+  A rejected cleanup promise can retry in the same instance or after restart.
+  Retry does not recopy legacy progress or overwrite new v3 consent/progress, and
+  the initial transition still saves v3 before removing v2.
+
+The dedicated target was again `anidachi-catalog-v3-79lflf`, container
+`supabase_db_anidachi-catalog-v3-79lflf`, host port `55452`, with the same explicit
+marker/config/both-label guard. The clean chain now contains 39 migrations through
+`20260905083000`. The retained final-state prerequisite requires that exact latest
+migration while separately checking the original canonical migration. The
+pre-transition prerequisite remains `20260904154732`. The populated transition
+generator executes both forward SQL files; the subsequent guarded CLI reset
+records the complete migration chain without hand-editing migration bookkeeping.
+
+Executed RED evidence: six owner tests failed on missing owner rejection; two
+storage tests failed on the cached rejection/missing restart cleanup; actual old
+SQL output failed the production builder with `INVALID_DATABASE_RESPONSE` for an
+omitted season. Removing only the website header also made its two new component
+regressions fail with `[null, null]` across the retry. GREEN covering commands,
+using Node 22.23.1 and pnpm 11.2.2 from the repository root:
+
+```sh
+fnm exec --using=22.23.1 pnpm --filter @anidachi/web exec tsx --test \
+  lib/anidachi-auth/watch-history-v3-owner.test.ts \
+  lib/anidachi-auth/watch-history-v3-routes.test.ts \
+  lib/anidachi-auth/watch-history-v3.test.ts \
+  app/account/watch-library/watch-library-client.test.tsx
+fnm exec --using=22.23.1 pnpm --filter @anidachi/web check
+fnm exec --using=22.23.1 pnpm --filter @anidachi/web test
+fnm exec --using=22.23.1 pnpm --filter @anidachi/extension exec vitest run \
+  test/watch-history-storage.test.ts
+fnm exec --using=22.23.1 pnpm --filter @anidachi/extension check
+fnm exec --using=22.23.1 pnpm --filter @anidachi/extension test
+fnm exec --using=22.23.1 node --test \
+  apps/web/supabase/contracts/watch_history_v3_disposable_target.test.mjs
+```
+
+Results: focused web route/helper/service/component suite 90/90 (including 17
+website TSX cases), web check passed, full web 431 passed plus four explicit SQL
+evidence skips, storage 13/13, extension check passed, full extension 1,653/1,653,
+and disposable prerequisite guards 8/8. Dedicated pgTAP passed 13 files / 654
+assertions. The retained commands above were rerun for populated transition, five
+RPC pages, 13 catalog list/detail states and the bounded benchmark, followed by
+their four production-consumer tests. The four added states cover catalog
+replacement omitting a watched season and new-season progress before refresh,
+each through both SQL list and detail producers. Current title totals stay exactly
+3 completed / 7 available while historical completions stay 6, then advance to 7;
+missing seasons are exactly 0/0. Floating progress uses a `1e-12` tolerance for
+PostgreSQL JSON numeric serialization, with exact integer count assertions.
+
+The final benchmark again verified accepted complete inventory before timing:
+2,000 episodes / 2,031 aliases, 1,029,341 snapshot bytes, 616.899 ms commit,
+17.802 ms for 100 titles / 800 observed rows / 20 session IDs (498,415 SQL JSON
+bytes), and 1.18374–1.25545 ms per large-catalog heartbeat. The same account's
+accepted one-episode / 32-alias replacement measured 0.88001–0.88974 ms per
+heartbeat. These remain local observations. SQL lint exited zero with only the
+previously recorded terminal-v2/immutable-wrapper notices; the new read helper
+produced no lint finding. Changed retained scripts pass Biome.
+
+This wave did not change the shared body protocol or Worker/media contracts.
+Final root/build/artifact/headless gates and Graphify closeout belong to the main
+task; earlier results above remain attributed to their earlier tested source.
+Authenticated provider, loaded extension and matching staging acceptance remain
+open. Existing P3 warning/lint hygiene is still deferred and is not silently muted.
+
 ## Local Harness Incident Disclosure
 
 The initial baseline pgTAP run before this retained proof used existing tests with a
@@ -211,7 +294,7 @@ reset/mutation above is guarded to the dedicated project at port `55452`.
 Before any separately authorized remote transition, record the exact environment,
 reviewed history-table counts, inbound foreign keys/triggers, migration list, current
 web/extension versions, backup/rollback anchor, and preservation checks. Quiesce only
-history writes, apply the reviewed migration, activate the matching v3 web runtime,
+history writes, apply both reviewed forward migrations, activate the matching v3 web runtime,
 verify surrounding product state, then ask testers to reload the exact matching
 extension. Old cached work must receive a terminal upgrade response. Do not introduce
 dual models to hide the short history-only upgrade state.

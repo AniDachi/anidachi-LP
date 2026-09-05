@@ -10,6 +10,45 @@ const ownerA = "00000000-0000-4000-8000-000000000001";
 const ownerB = "00000000-0000-4000-8000-000000000002";
 
 describe("watch history storage", () => {
+  it.each([false, true])("retries interrupted legacy cleanup, preserving new v3 state (restart=%s)", async (restart) => {
+    const key = watchHistoryPartitionKey(ownerA, 1);
+    const values: Record<string, unknown> = {
+      "anidachi.watchHistory.v2": { schemaVersion: 2, partitions: { [key]: {
+        ownerUserId: ownerA, accountGeneration: 1,
+        preferences: { youtubeHistoryEnabled: true }, preferencesConfirmed: true,
+      } } },
+      "unrelated.setting": { retained: true },
+    };
+    let removals = 0;
+    const dependencies = {
+      item: {
+        getValue: async () => values["anidachi.watchHistory.v3"] as WatchHistoryStorageRoot ?? null,
+        setValue: async (value: WatchHistoryStorageRoot) => { values["anidachi.watchHistory.v3"] = value; },
+      },
+      readLegacy: async () => values["anidachi.watchHistory.v2"],
+      removeLegacy: async () => {
+        expect(values["anidachi.watchHistory.v3"]).toBeDefined();
+        if (++removals === 1) throw new Error("injected remove failure");
+        delete values["anidachi.watchHistory.v2"];
+      },
+      quotaBytes: 1_000_000, getBytesInUse: async () => 0,
+    };
+    let storage = createWatchHistoryStorage(dependencies);
+    await expect(storage.readRoot()).rejects.toThrow("injected remove failure");
+    const root = values["anidachi.watchHistory.v3"] as WatchHistoryStorageRoot;
+    root.partitions[key]!.preferences = { youtubeHistoryEnabled: false };
+    root.partitions[key]!.preferencesLocalRevision = 7;
+    root.partitions[key]!.currentObservation = { clientEventId: "new-v3-progress" } as never;
+    const preserved = structuredClone(root);
+    if (restart) storage = createWatchHistoryStorage(dependencies);
+    await storage.readRoot();
+    expect(removals).toBe(2);
+    expect(values).not.toHaveProperty("anidachi.watchHistory.v2");
+    expect(values["anidachi.watchHistory.v3"]).toEqual(preserved);
+    expect(values["unrelated.setting"]).toEqual({ retained: true });
+    await storage.readRoot();
+    expect(removals).toBe(2);
+  });
   it("upgrades only validated account preferences and discards all v2 history once", async () => {
     let stored: WatchHistoryStorageRoot | null = null;
     let legacy: unknown = { schemaVersion: 2, partitions: {

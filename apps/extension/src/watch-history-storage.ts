@@ -84,16 +84,23 @@ export function createWatchHistoryStorage(
     if (migration) return migration;
     migration = rootUpdateQueue.then(async () => {
       const stored = await item.getValue();
-      if (isStorageRoot(stored) && (dependencies.item || await hasStoredRoot())) return;
+      const hasCurrentRoot = isStorageRoot(stored) && (dependencies.item !== undefined || await hasStoredRoot());
       const legacy = dependencies.readLegacy
         ? await dependencies.readLegacy()
         : dependencies.item ? null : (await chrome.storage.local.get("anidachi.watchHistory.v2"))["anidachi.watchHistory.v2"];
       if (!legacy) return;
-      const migrated = migrateLegacyPreferences(legacy);
-      const result = await replaceRoot(migrated);
-      if (!result.ok) throw new Error("Watch history upgrade could not persist preferences");
+      // A worker can stop after saving v3 but before retiring v2. In that case
+      // only cleanup is pending; v3 preferences/progress must never be recopied.
+      if (!hasCurrentRoot) {
+        const migrated = migrateLegacyPreferences(legacy);
+        const result = await replaceRoot(migrated);
+        if (!result.ok) throw new Error("Watch history upgrade could not persist preferences");
+      }
       if (dependencies.removeLegacy) await dependencies.removeLegacy();
       else if (!dependencies.item) await chrome.storage.local.remove("anidachi.watchHistory.v2");
+    }).catch((error) => {
+      migration = undefined;
+      throw error;
     });
     rootUpdateQueue = migration.catch(() => undefined);
     return migration;

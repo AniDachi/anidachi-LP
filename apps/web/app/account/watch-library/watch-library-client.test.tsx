@@ -612,6 +612,29 @@ describe("website detail interactions", () => {
 });
 
 describe("website root history request fences", () => {
+  for (const [kind, label] of [["delete", "Clear history"], ["preferences", "YouTube history: Off"]] as const) {
+    it(`binds rendered owner to ${kind} intent through cookie refresh`, async () => {
+      testWindow.confirm = () => true;
+      const intents: (string | null)[] = [];
+      let refreshes = 0;
+      globalThis.fetch = async (input: string | URL | Request, init?: RequestInit) => {
+        if (String(input) === "/api/auth/refresh") { refreshes++; return Response.json({ ok: true }); }
+        assert.equal(String(input), `/api/watch-history/v3/${kind}`);
+        intents.push(new Headers(init?.headers).get("x-anidachi-history-owner"));
+        return intents.length === 1
+          ? Response.json({}, { status: 401 })
+          : Response.json({ error: "Watch history owner changed" }, { status: 409 });
+      };
+      const view = await renderClient();
+      try {
+        await click(buttonByText(view.container, label));
+        await waitFor(() => assert.match(view.container.textContent ?? "", /Watch history owner changed/));
+        assert.deepEqual(intents, [OWNER_ID, OWNER_ID]);
+        assert.equal(refreshes, 1);
+        assert.match(view.container.textContent ?? "", /Series One/);
+      } finally { await unmount(view.root); }
+    });
+  }
   it("does not let a pre-delete refresh restore removed rows or stale aggregates", async () => {
     let resolveOldRefresh: ((response: Response) => void) | undefined;
     let rootReads = 0;

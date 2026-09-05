@@ -178,13 +178,26 @@ begin(zero);
 commit(snapshot(zero, true));
 list("zero-available");
 detail("zero-available-detail");
+const omitted = request("CA", "en-CA");
+begin(omitted);
+commit({
+	...snapshot(omitted),
+	seasons: snapshot(omitted).seasons.slice(0, 1),
+});
+list("omitted-season");
+detail("omitted-season-detail");
+statements.push(
+	`do $$ begin perform public.apply_watch_progress_v3('${userId}',${quote(event(13))},null); end $$;`,
+);
+list("progress-before-refresh");
+detail("progress-before-refresh-detail");
 statements.push("rollback;");
 
 const cases = sql(statements.join("\n"))
 	.split("\n")
 	.filter(Boolean)
 	.map(JSON.parse);
-assert.equal(cases.length, 9);
+assert.equal(cases.length, 13);
 const catalog = (name) => {
 	const selected = cases.find((value) => value.name === name);
 	return selected.kind === "list"

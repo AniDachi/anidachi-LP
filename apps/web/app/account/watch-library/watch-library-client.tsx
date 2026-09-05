@@ -1,5 +1,7 @@
 "use client";
 
+import { WATCH_HISTORY_OWNER_HEADER } from "../../../lib/watch-history-owner";
+
 import {
   WatchHistoryDeletionAckSchema,
   WatchHistoryPreferencesResponseSchema,
@@ -146,6 +148,7 @@ function WatchLibraryOwnerClient({
       const next = parseOwnedPreferences(
         await api<unknown>("/api/watch-history/v3/preferences", {
           method: "PATCH",
+          headers: { [WATCH_HISTORY_OWNER_HEADER]: ownerUserId },
           body: JSON.stringify({ youtubeHistoryEnabled: !preferences.preferences.youtubeHistoryEnabled }),
         }),
         ownerUserId,
@@ -173,6 +176,7 @@ function WatchLibraryOwnerClient({
       const acknowledgement = WatchHistoryDeletionAckSchema.parse(
         await api<unknown>("/api/watch-history/v3/delete", {
           method: "POST",
+          headers: { [WATCH_HISTORY_OWNER_HEADER]: ownerUserId },
           body: JSON.stringify({
             schemaVersion: 3,
             clientMutationId: crypto.randomUUID(),

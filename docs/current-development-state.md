@@ -1097,8 +1097,9 @@ other visual polish remain normal UI/UX work.
 
 The 2026-09-05 canonical Crunchyroll catalog/progress implementation is locally
 complete on `codex/watch-drawer-design`, but it has not been migrated, deployed,
-loaded, or accepted on staging or production. Deployed staging and technical main
-remain Watch History v2. A schema-3 extension artifact cannot use that v2 history
+loaded, or accepted on staging or production. Watch History v2 on staging and
+technical main is the recorded baseline, not a new deployed-runtime probe in the
+final local fix wave. A schema-3 extension artifact cannot use that v2 history
 backend and must not be given to testers until a separately authorized coordinated
 database/Web/extension cutover.
 
@@ -1118,11 +1119,16 @@ extension clears old history cache/outbox/current observations and migrates only
 validated owner-bound YouTube preference state; unrelated extension settings are
 not cleared.
 
-Fresh dedicated local proof includes the full 38-migration chain, 13 pgTAP files /
+Final review fixes bind website mutation intent to the rendered owner before any
+write, retain omitted historical seasons with honest current 0/0 metadata, and
+retry interrupted legacy-storage cleanup without overwriting v3 consent/progress.
+The forward read fix is migration `20260905083000`; applied migration files remain
+unchanged. Dedicated local proof now includes the 39-migration chain, 13 pgTAP files /
 654 assertions, a populated transition with three blocked already-entered v2 calls,
-five actual RPC pages, nine catalog list/detail states, the 2,000-episode bounded
-benchmark, protocol/Web/extension/root gates, the dedicated 15-test website TSX
-suite, and staging artifact build/validation. Exact commands, measurements, guard
+five actual RPC pages, 13 catalog list/detail states, the 2,000-episode bounded
+benchmark, web/extension checks and suites, and 17 website TSX tests. Earlier
+protocol/root/artifact gates retain their prior tested-source attribution until
+the final main-task gates. Exact commands, measurements, guard
 requirements, lint notices, the earlier local-port-54322 harness incident, activation
 order, rollback constraint, and open authenticated-provider/staging gates are in
 `docs/watch-history-v3-local-verification.md`.

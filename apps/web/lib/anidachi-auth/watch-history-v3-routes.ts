@@ -15,6 +15,7 @@ import {
 } from "@anidachi/protocol";
 import { type NextRequest, NextResponse } from "next/server";
 import { getApiSession, type ApiSession } from "./api-session";
+import { WATCH_HISTORY_OWNER_HEADER } from "../watch-history-owner";
 import {
   createRoomWithActiveSession,
   getUserById,
@@ -197,6 +198,7 @@ export function createWatchHistoryV3RouteHandlers(
       const session = await dependencies.getSession(request);
       if (!session) return unauthorizedResponse();
       try {
+        validateMutationOwner(request, session);
         const input = await readBoundedJson(request, SMALL_BODY_BYTES);
         if (!WatchHistoryPreferencesUpdateSchema.safeParse(input).success) {
           throw new WatchHistoryV3ApiError(
@@ -217,6 +219,7 @@ export function createWatchHistoryV3RouteHandlers(
       const session = await dependencies.getSession(request);
       if (!session) return unauthorizedResponse();
       try {
+        validateMutationOwner(request, session);
         const input = await readBoundedJson(request, MUTATION_BODY_BYTES);
         if (!WatchHistoryDeletionRequestSchema.safeParse(input).success) {
           throw new WatchHistoryV3ApiError(
@@ -268,6 +271,18 @@ export function createWatchHistoryV3RouteHandlers(
       }
     },
   };
+}
+
+function validateMutationOwner(request: NextRequest, session: ApiSession): void {
+  const owner = request.headers.get(WATCH_HISTORY_OWNER_HEADER);
+  // Extension requests already carry the captured owner's bearer token.
+  if (owner === null && session.source === "extension") return;
+  if (owner === null || !UUID_PATTERN.test(owner)) {
+    throw new WatchHistoryV3ApiError(400, "INVALID_REQUEST", "Expected watch history owner is required");
+  }
+  if (owner !== session.userId) {
+    throw new WatchHistoryV3ApiError(409, "OWNER_MISMATCH", "Watch history owner changed");
+  }
 }
 
 function parseRoomRecreationRequest(

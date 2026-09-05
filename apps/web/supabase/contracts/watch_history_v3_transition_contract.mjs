@@ -205,6 +205,14 @@ values('${ids[0]}','${ids[1]}','task3-preserved-room',now());`);
 		assert.notEqual(result.code, 0);
 		assert.match(result.stderr, /write_schema_version.*not-null constraint/);
 	}
+	// Exercise the forward read fix after the original locked cutover. Migration
+	// bookkeeping is intentionally left to the following guarded CLI reset.
+	sql(
+		readFileSync(
+			"apps/web/supabase/migrations/20260905083000_watch_history_observed_season_fallback.sql",
+			"utf8",
+		),
+	);
 	assert.equal(
 		sql(preserveSql),
 		before,
@@ -241,6 +249,7 @@ values('${ids[0]}','${ids[1]}','task3-preserved-room',now());`);
 
 	const result = {
 		populatedTransition: "PASS",
+		appliedSqlMigrations: ["20260904205540", "20260905083000"],
 		target: {
 			project: target.project,
 			container: target.container,

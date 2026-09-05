@@ -11,6 +11,7 @@ export const TRANSITION_ACKNOWLEDGEMENT =
 	"RESET_DEDICATED_HISTORY_FIXTURES_ONLY";
 export const PRE_TRANSITION_MIGRATION = "20260904154732";
 export const SCHEMA_3_MIGRATION = "20260904205540";
+export const SCHEMA_3_FINAL_MIGRATION = "20260905083000";
 export const SYNC_PSQL_SESSION_TIMEOUTS =
 	"set statement_timeout='45s'; set lock_timeout='10s'; " +
 	"set idle_in_transaction_session_timeout='15s';";
@@ -258,8 +259,8 @@ export function assertPreTransitionPrerequisite(state) {
 export function assertV3Prerequisite(state) {
 	assert.equal(
 		state.latestMigration,
-		SCHEMA_3_MIGRATION,
-		`Dedicated database must contain exact schema-3 migration ${SCHEMA_3_MIGRATION}`,
+		SCHEMA_3_FINAL_MIGRATION,
+		`Dedicated database must contain exact schema-3 migration ${SCHEMA_3_FINAL_MIGRATION}`,
 	);
 	assert.equal(
 		state.canonicalMigrationApplied,

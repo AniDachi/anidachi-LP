@@ -176,11 +176,21 @@ test("fails closed when the database is not at the exact required migration stat
 	);
 	assert.doesNotThrow(() =>
 		assertV3Prerequisite({
-			latestMigration: "20260904205540",
+			latestMigration: "20260905083000",
 			canonicalMigrationApplied: true,
 			writeSchemaColumn: true,
 			v3FunctionsAvailable: true,
 		}),
+	);
+	assert.throws(
+		() =>
+			assertV3Prerequisite({
+				latestMigration: "20260904205540",
+				canonicalMigrationApplied: true,
+				writeSchemaColumn: true,
+				v3FunctionsAvailable: true,
+			}),
+		/schema-3 migration/,
 	);
 	assert.throws(
 		() =>

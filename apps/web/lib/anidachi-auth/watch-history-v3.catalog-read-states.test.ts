@@ -45,6 +45,10 @@ test("actual SQL catalog read states pass production parsers, builders, and shar
     "region-pending-detail",
     "zero-available",
     "zero-available-detail",
+    "omitted-season",
+    "omitted-season-detail",
+    "progress-before-refresh",
+    "progress-before-refresh-detail",
   ]);
 
   const outputs = new Map<string, unknown>();
@@ -142,4 +146,30 @@ test("actual SQL catalog read states pass production parsers, builders, and shar
     availableEpisodes: 0,
     progress: 0,
   });
+  for (const [name, historicalCount, missingKeys] of [
+    ["omitted-season", 6, ["crunchyroll:season:RS1"]],
+    ["progress-before-refresh", 7, ["crunchyroll:season:RS1", "crunchyroll:season:RS2"]],
+  ] as const) {
+    const list = WatchHistoryResponseSchema.parse(outputs.get(name));
+    const title = list.items[0]!;
+    const detail = WatchHistoryTitleEpisodesResponseSchema.parse(outputs.get(`${name}-detail`));
+    assert.equal(title.catalogState, "complete");
+    assert.equal(detail.catalog.state, "complete");
+    assert.equal(title.completedEpisodeCount, historicalCount);
+    assert.equal(detail.completedEpisodeCount, historicalCount);
+    assert.equal(title.aggregate.completedEpisodes, 3);
+    assert.equal(title.aggregate.availableEpisodes, 7);
+    assert.ok(Math.abs((title.aggregate.progress ?? 0) - 3 / 7) < 1e-12);
+    assert.deepEqual(detail.catalog.aggregate, title.aggregate);
+    assert.equal(title.observedEpisodeCount, historicalCount === 6 ? 12 : 13);
+    for (const seasonKey of missingKeys) {
+      for (const seasons of [title.seasons, detail.catalog.seasons]) {
+        const season = seasons.find((value) => value.seasonKey === seasonKey);
+        assert.ok(season, `${name} must retain ${seasonKey}`);
+        assert.equal(season.seasonTitle, "Observed season");
+        assert.deepEqual(season.aggregate, { completedEpisodes: 0, availableEpisodes: 0, progress: 0 });
+        assert.equal(season.nextEpisode, null);
+      }
+    }
+  }
 });
