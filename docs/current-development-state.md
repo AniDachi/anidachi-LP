@@ -1093,6 +1093,40 @@ and two-network P2P evidence. Explicit tab close is immediate; a browser crash
 or long offline interval relies on the 60-second fallback. Conflict wording and
 other visual polish remain normal UI/UX work.
 
+## Local Watch History v3 Candidate (Unactivated)
+
+The 2026-09-05 canonical Crunchyroll catalog/progress implementation is locally
+complete on `codex/watch-drawer-design`, but it has not been migrated, deployed,
+loaded, or accepted on staging or production. Deployed staging and technical main
+remain Watch History v2. A schema-3 extension artifact cannot use that v2 history
+backend and must not be given to testers until a separately authorized coordinated
+database/Web/extension cutover.
+
+Schema 3 keeps Supabase/Postgres as the only durable authority and stores one
+progress row per logical provider episode. The latest actual raw watch/audio
+variant remains resume metadata. Bounded catalog snapshots and raw aliases provide
+canonical identity, current regional availability, localized provider labels, and
+server-owned exact title/season aggregates. Partial, missing, changing-region, or
+overflowed evidence suppresses exact totals; a failed same-region locale refresh
+keeps the last committed exact bundle.
+
+The clean-start transition resets only reviewed Watch History data, advances the
+history generation, and makes old v2 SQL/HTTP writers terminal. Accounts, auth,
+subscriptions, rooms/memberships, social/invite/Recent People data, interface/media
+settings, YouTube history consent, and monotonic server order are preserved. The
+extension clears old history cache/outbox/current observations and migrates only a
+validated owner-bound YouTube preference state; unrelated extension settings are
+not cleared.
+
+Fresh dedicated local proof includes the full 38-migration chain, 13 pgTAP files /
+654 assertions, a populated transition with three blocked already-entered v2 calls,
+five actual RPC pages, nine catalog list/detail states, the 2,000-episode bounded
+benchmark, protocol/Web/extension/root gates, the dedicated 15-test website TSX
+suite, and staging artifact build/validation. Exact commands, measurements, guard
+requirements, lint notices, the earlier local-port-54322 harness incident, activation
+order, rollback constraint, and open authenticated-provider/staging gates are in
+`docs/watch-history-v3-local-verification.md`.
+
 ## Known Fragile Areas
 
 These are intentionally not treated as solved:
@@ -1248,6 +1282,8 @@ These are intentionally not treated as solved:
 - Staging acceptance checklist: `docs/staging-acceptance-checklist.md`
 - Release and rollback runbook: `docs/release-and-rollback-runbook.md`
 - Project knowledge map / Graphify policy: `docs/project-knowledge-map.md`
+- Local Watch History v3 verification and activation boundary:
+  `docs/watch-history-v3-local-verification.md`
 - Overall architecture notes: `docs/architecture.md`
 - Extension release channels: `docs/extension-release-channels.md`
 - Site and extension integration: `docs/site-extension-integration-notes.md`

@@ -32,6 +32,14 @@ refreshes retain the last successful complete bundle. Canonical IDs never depend
 on translated labels, numbering, audio locale, or URL slugs. Details and bounded
 limits in the approved plan are normative for implementation and testing.
 
+The authorized local implementation is now complete on the feature branch. Its
+retained disposable-database commands, transition proof, schema/RPC/read-state/
+benchmark results, local harness incident disclosure, activation boundary, and
+rollback constraint are recorded in `../../watch-history-v3-local-verification.md`.
+This status does not amend the authorization boundary: deployed staging/main remain
+v2, no remote history was reset, and authenticated-provider, matching-staging, and
+loaded-extension acceptance remain open.
+
 **Scope:** AniDachi watch history, series catalog metadata, progress sync, and
 the shared data contract used by the extension Popup and website account area
 

@@ -44,9 +44,12 @@ This resolves ordinary progress independently of a complete **series** catalog,
 but not independently of provider metadata. Missing lists, null identifiers,
 wrong GUIDs, duplicate aliases, or inconsistent season mappings remain identity
 pending. Titles, slugs, season/episode numbers, locale, and audio are never
-substitute identity. The pure helper is intentionally not wired into runtime
-capture in Task 1; exact progress remains disabled until the coordinated schema
-and bridge work.
+substitute identity. Task 1 deliberately left its pure helper unwired. The later
+local schema-3 candidate now wires this evidence through pending observation,
+canonical progress, catalog begin/commit, cache invalidation, Popup, and website
+consumers. That implementation is still unactivated: deployed v2 continues to
+record observed history only, and exact catalog progress remains disabled there
+until a coordinated staging transition.
 
 The same live pass observed:
 
@@ -93,8 +96,26 @@ Schema 3 now has a pure, network-free Crunchyroll catalog normalizer. It consume
 only sanitized provider metadata, preserves provider-returned labels, separates
 canonical episode identity from raw watch variants, checks declared totals before
 collapse, and returns `partial` for failed traversal, ambiguity, unknown
-availability, context drift, or resource overflow. It does not fetch, authenticate,
-write storage, calculate user aggregates, or enable runtime collection by itself.
+availability, context drift, or resource overflow. The normalizer itself remains
+pure: it does not fetch, authenticate, write storage, or calculate user aggregates.
+
+The completed local candidate now places that normalizer behind a bounded
+MAIN-world metadata bridge and background coordinator. Progress is stored before
+metadata discovery as identity-pending and is never posted until exact raw GUID
+resolution. The bridge has per-request deadlines, cancellation, response-size
+limits, a maximum of four active metadata requests, 100 raw seasons, 2,000 episode
+rows per response, and a bounded aggregate raw bundle. Catalog collection starts
+only from meaningful title interaction; it is not a startup, heartbeat, Popup,
+polling, or crawling path. Server-issued revision, owner, generation, page/visit,
+context, deletion, and invalidation fences prevent an obsolete collection or
+response from becoming current.
+
+Duplicate audio/watch variants collapse only through provider identifiers. The
+canonical progress row retains the latest actually watched raw GUID, audio locale,
+source URL, position, and duration; completion remains one logical completion.
+Exact aggregates come only from the committed complete regional catalog projection.
+A region change suppresses the old exact projection immediately, while a failed
+same-region locale refresh retains the last committed exact bundle and labels.
 
 The parser fixtures distinguish evidence provenance. The Haikyu two-season fixture
 is a bounded derived contract assembly based on sanitized 2026-09-05 response
@@ -139,6 +160,11 @@ private fields; derived cases remain labeled and are not presented as live facts
 Crunchyroll endpoint paths and payload shapes remain private implementation
 details of the Crunchyroll adapter. They are not shared AniDachi protocol
 contracts and may change without affecting other provider adapters.
+
+Local SQL, fixture, component, and headless rendering proof is recorded in
+`docs/watch-history-v3-local-verification.md`. It is not authenticated provider,
+loaded-extension, or staging acceptance. The matching schema-3 extension must not
+be loaded against the deployed v2 history backend.
 
 ## Live CDP Research: Navigation and Player Lifecycle
 
