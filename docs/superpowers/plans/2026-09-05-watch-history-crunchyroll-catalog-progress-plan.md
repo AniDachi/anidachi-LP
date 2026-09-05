@@ -5,11 +5,11 @@
 > `superpowers:verification-before-completion` for completion claims.
 > Steps use checkbox (`- [ ]`) syntax.
 
-**Status:** Local implementation and final code review complete 2026-09-05 at
-product commit `4d7f395`. The user authorized careful execution after removing
-preservation of old test history as a requirement. Remote database cutover,
-deployment, tester-folder updates and authenticated acceptance are not authorized
-or completed by this local closeout.
+**Status:** Local implementation and final review completed at product `4d7f395`.
+The user subsequently authorized staging activation on 2026-09-05. Schema PR #265
+preceded runtime PR #264 (`56dbd901`); both tester folders now match its CI artifact.
+Authenticated provider/loaded-extension acceptance remains open. No main or
+production promotion. See `docs/watch-history-v3-staging-verification.md`.
 
 **Goal:** Store new history by stable provider identities and show accurate
 server-owned series progress with provider-localized labels in Popup and website.
@@ -55,8 +55,9 @@ That removes a transition constraint, not the need to protect newly recorded dat
   Version rejection also covers accounts that had no settings row at cutover.
 - Do not reset an entire remote database, browser profile, or all extension storage.
   Do not delete/rewrite applied migration files.
-- Current work remains local. Push, deployment, test-folder synchronization, and
-  main promotion require their existing separately authorized release workflow.
+- The original implementation phase was local. The later user approval covers
+  staging PRs, coordinated deployment and verified tester-folder synchronization;
+  main/production promotion still requires separate authorization and acceptance.
 
 ## What Changes From The First Proposal
 
@@ -840,11 +841,11 @@ Intentionally refresh Graphify using its semantic skill.
   The final local documentation commit must also intentionally refresh Graphify
   with current code and semantic sources; only the three team graph artifacts
   belong in that commit. Graphify does not replace source or acceptance evidence.
-- [ ] Before a separately authorized remote transition, record environment,
+- [x] Before a separately authorized remote transition, record environment,
   targeted counts, migration/runtime activation order, and rollback.
-- [ ] Coordinate migration/web/extension cutover. Allow a short history-only upgrade
+- [x] Coordinate migration/web/extension cutover. Allow a short history-only upgrade
   state; do not implement dual models to hide the transition.
-- [ ] Update verified tester folders only when requested, checking paths/hashes.
+- [x] Update verified tester folders only when requested, checking paths/hashes.
 - [ ] Record real authenticated provider/UI acceptance separately from test proof.
 
 **Full local gates:**
@@ -1007,3 +1008,7 @@ part of this closeout. Do not load the schema-3 artifact against the recorded v2
 backend. Next: separately approve matching staging DB/web/extension activation,
 then execute the authenticated acceptance matrix. Shared-history product redesign,
 tree/poster cosmetics and production promotion remain outside this slice.
+
+The subsequent authorized staging activation is complete and recorded separately
+in `docs/watch-history-v3-staging-verification.md`. The preceding local closeout
+remains historical evidence; the authenticated manual acceptance matrix is still open.

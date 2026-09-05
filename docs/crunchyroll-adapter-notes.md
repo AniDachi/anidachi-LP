@@ -45,11 +45,12 @@ but not independently of provider metadata. Missing lists, null identifiers,
 wrong GUIDs, duplicate aliases, or inconsistent season mappings remain identity
 pending. Titles, slugs, season/episode numbers, locale, and audio are never
 substitute identity. Task 1 deliberately left its pure helper unwired. The later
-local schema-3 candidate now wires this evidence through pending observation,
+schema-3 implementation now wires this evidence through pending observation,
 canonical progress, catalog begin/commit, cache invalidation, Popup, and website
-consumers. That implementation is still unactivated: deployed v2 continues to
-record observed history only, and exact catalog progress remains disabled there
-until a coordinated staging transition.
+consumers. The coordinated staging transition completed on 2026-09-05 through
+PRs #265 and #264. Exact progress is enabled only for proven complete current
+catalogs; partial evidence remains observed-only. Authenticated provider and
+loaded-extension acceptance are still required. Technical main remains on v2.
 
 The same live pass observed:
 
@@ -75,7 +76,7 @@ No exact denominator is enabled by this task.
 
 Date: 2026-08-16
 
-Staging now runs the Watch History v2 cutover. The active Crunchyroll adapter
+At this 2026-08-16 checkpoint, staging ran the Watch History v2 cutover. Its Crunchyroll adapter
 observes the current episode and meaningful playback locally, the extension
 background is the only extension writer, and Popup plus website read the same
 canonical account history. A user confirmed the repaired solo Crunchyroll ->
@@ -83,7 +84,7 @@ Popup -> staging website path after PR #188. The broader start/pause/backward
 seek/reload/end/resume matrix and two-profile shared cases have not all been
 manually verified and remain release gates.
 
-This does not change the catalog boundary below. The runtime records only
+This historical checkpoint did not change the catalog boundary below. That runtime recorded only
 observed seasons and episodes, reports `catalogState: "unavailable"`, and does
 not fabricate catalog totals or poll Crunchyroll for a complete catalog. No raw
 authenticated provider payload is committed.
@@ -162,9 +163,10 @@ details of the Crunchyroll adapter. They are not shared AniDachi protocol
 contracts and may change without affecting other provider adapters.
 
 Local SQL, fixture, component, and headless rendering proof is recorded in
-`docs/watch-history-v3-local-verification.md`. It is not authenticated provider,
-loaded-extension, or staging acceptance. The matching schema-3 extension must not
-be loaded against the deployed v2 history backend.
+`docs/watch-history-v3-local-verification.md`. It is not authenticated provider
+or loaded-extension acceptance. Matching staging activation and tester-artifact
+verification are recorded in `docs/watch-history-v3-staging-verification.md`;
+the schema-3 extension must not be pointed at the technical-main v2 backend.
 
 ## Live CDP Research: Navigation and Player Lifecycle
 
