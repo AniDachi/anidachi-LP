@@ -1181,6 +1181,49 @@ the previous staging artifact; no database rollback is required. Continue design
 work from this checkpoint. Production promotion still needs separate authorization
 and the applicable staging acceptance gates.
 
+### Watch Drawer Browse Local Candidate (2026-09-05)
+
+Branch `codex/watch-history-browse` has approved runtime source at
+`bf260d7e858bbd721820a2c7a4ee5532ac924542` for the bounded Watch drawer browse
+design. Tasks 1–3 are independently reviewed and the local evidence gates pass;
+final controller integration review remains pending. This is not a staging
+deployment. Staging still reflects PR `#267` at `f2fafb29`; technical
+`main` remains at `54a154b7` with Watch History v2. No remote migration, Web
+deployment, extension synchronization, browser reload, push, PR, merge, or
+production change is claimed.
+
+The database remains the durable authority. Canonical personal progress and
+title/season aggregates do not change under search or filters. New bounded reads
+filter eligible history before pagination by Mine/Together, search, local-day UTC
+bounds, participant, and owner-private My groups provenance. A group association
+requires authenticated invitation context plus actual overlapping owner/recipient
+observations in the same verified room generation. It is not a second group
+progress record, does not grant members history access, and is never inferred from
+current membership, names, links, or invitation acceptance alone. Old ambiguous
+sessions remain ordinary Together history without backfill.
+
+The extension keeps browse responses out of the canonical account cache and binds
+each request and cursor to the rendered owner, history generation, complete query,
+scope, and local invalidation revision. The drawer removes destructive controls,
+keeps website history management, moves the existing YouTube choice to History
+settings, and preserves its account and optimistic-rollback fences. No room event,
+Worker, media, capture, auth, notification, catalog traversal, polling, service, or
+consent-policy boundary changed.
+
+The approved specification, implementation plan, and exact local evidence are:
+
+- `docs/superpowers/specs/2026-09-05-watch-drawer-browse-design.md`
+- `docs/superpowers/plans/2026-09-05-watch-drawer-browse.md`
+- `docs/watch-drawer-browse-local-verification.md`
+
+Rollout must remain database-first: apply the additive migration, deploy the
+reviewed matching Web runtime, build the matching narrow staging extension, then
+perform authenticated staging acceptance with newly organized group viewing and
+actual participation. Rollback keeps the additive data and restores the prior v3
+Web/extension consumers; restoring the writer entry point, if required, uses a
+reviewed forward migration and never drops history. Each rollout or rollback step
+requires separate authorization.
+
 ## Known Fragile Areas
 
 These are intentionally not treated as solved:
@@ -1339,6 +1382,11 @@ These are intentionally not treated as solved:
 - Project knowledge map / Graphify policy: `docs/project-knowledge-map.md`
 - Local Watch History v3 verification and activation boundary:
   `docs/watch-history-v3-local-verification.md`
+- Local Watch drawer browse verification and rollout boundary:
+  `docs/watch-drawer-browse-local-verification.md`
+- Approved Watch drawer browse design and implementation plan:
+  `docs/superpowers/specs/2026-09-05-watch-drawer-browse-design.md` and
+  `docs/superpowers/plans/2026-09-05-watch-drawer-browse.md`
 - Overall architecture notes: `docs/architecture.md`
 - Extension release channels: `docs/extension-release-channels.md`
 - Site and extension integration: `docs/site-extension-integration-notes.md`

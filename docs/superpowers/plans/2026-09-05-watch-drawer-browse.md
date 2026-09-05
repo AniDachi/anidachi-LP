@@ -16,6 +16,13 @@ pgTAP; Node 22.23.1 and pnpm 11.2.2. No dependency changes.
 
 **Spec:** docs/superpowers/specs/2026-09-05-watch-drawer-browse-design.md
 
+**Local status (2026-09-05):** Tasks 1–3 are implemented and independently
+reviewed through `bf260d7e858bbd721820a2c7a4ee5532ac924542`. Task 4 automated,
+SQL-source, isolated artifact, and synthetic real-component evidence is recorded in
+`docs/watch-drawer-browse-local-verification.md`. Semantic Graphify refresh, final
+controller review, and the local documentation checkpoint remain pending. Nothing
+in this status is staging deployment or authenticated acceptance.
+
 ## Global Constraints
 
 - Local only: no push, PR, merge, remote migration/deploy, or main changes.
@@ -153,15 +160,17 @@ get-preferences/update-preferences commands, not a second source of truth.
 **Files:** Current state and relevant history docs, this plan, review ledger;
 generated artifacts stay ignored.
 
-- [ ] Run fresh workspace check/test, dedicated SQL browse tests and retained
-  history tests, changed-path lint, and git diff --check.
-- [ ] Build and validate narrow staging-channel extension as an unpublished local
+- [x] Run fresh workspace check/test and retained history tests, reuse the
+  controller's final exact-source dedicated SQL evidence because SQL is unchanged,
+  and run changed-path lint plus git diff checks.
+- [x] Build and validate narrow staging-channel extension as an unpublished local
   candidate. Record that new server-backed filtering cannot be accepted against
   unchanged staging. Do not update the two established folders yet.
-- [ ] Review the whole diff independently for cross-account leaks, temporal
+- [x] Review the whole diff independently for cross-account leaks, temporal
   provenance, query/cursor isolation, truthfulness, deletion, consent and UI.
 - [ ] Update docs and semantic Graphify with the new boundaries. Preserve historical
   release evidence, record additive DB-first rollout and rollback to old runtime.
+  Documentation is frozen; semantic Graphify refresh is pending.
 - [ ] Keep all source locally committed in coherent checkpoints; leave no unrelated
   uncommitted source or generated artifacts staged. No push/merge/deploy.
 - [ ] Handoff short user-facing result, local visual evidence and exact remaining
