@@ -21,8 +21,17 @@ pgTAP; Node 22.23.1 and pnpm 11.2.2. No dependency changes.
 shared server search omitted displayed episode labels; the server-only fix is
 `a92dbdc6bf631af775742014246b1fb97f151e84`, with fresh exact-stack SQL and
 production-RPC evidence in `docs/watch-drawer-browse-local-verification.md`.
-Semantic Graphify refresh and the scoped final re-review remain pending. Nothing
-in this status is staging deployment or authenticated acceptance.
+The strongest-model final source review and the scoped re-review of the fix found
+no remaining issue, so the local implementation and handoff are complete. Nothing
+in this status is a push, PR, merge, remote migration, staging deployment,
+tester-folder update, authenticated staging acceptance, or production promotion.
+
+Graphify is maintained alongside this handoff through the code AST update and
+Codex semantic extraction. The controller health-validated the first semantic pass
+and will verify a final incremental refresh for this closeout plus the three fix
+paths before closing graph maintenance. Measured agent usage is unavailable;
+numerical graph metrics live in `graphify-out/GRAPH_REPORT.md` and are not repeated
+in semantic input docs to avoid self-churn.
 
 ## Global Constraints
 
@@ -171,8 +180,11 @@ generated artifacts stay ignored.
   provenance, query/cursor isolation, truthfulness, deletion, consent and UI.
 - [ ] Update docs and semantic Graphify with the new boundaries. Preserve historical
   release evidence, record additive DB-first rollout and rollback to old runtime.
-  Documentation is committed at `6f765e05`; semantic Graphify refresh is pending.
+  Product documentation is current through the final source verdict. The first
+  semantic pass is health-validated; the controller-owned final incremental refresh
+  after this closeout commit remains the last graph-maintenance step.
 - [x] Keep all source locally committed in coherent checkpoints; leave no unrelated
   uncommitted source or generated artifacts staged. No push/merge/deploy.
-- [ ] Handoff short user-facing result, local visual evidence and exact remaining
-  authorization/manual acceptance requirement. Never claim staging already updated.
+- [x] Prepare the local handoff with the source verdict, visual evidence, and exact
+  remaining authorization/manual acceptance requirement. Staging is explicitly not
+  updated, and authenticated staging activation/acceptance remains outstanding.

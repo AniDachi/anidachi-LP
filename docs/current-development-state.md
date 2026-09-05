@@ -1187,11 +1187,13 @@ Branch `codex/watch-history-browse` retains the extension/UI candidate at
 `bf260d7e858bbd721820a2c7a4ee5532ac924542`. The final server review found an
 episode-label search gap; its server-only fix is
 `a92dbdc6bf631af775742014246b1fb97f151e84`, with fresh guarded SQL/RPC evidence.
-Scoped re-review and final controller integration approval remain pending. This is
-not a staging deployment. Staging still reflects PR `#267` at `f2fafb29`; technical
+The strongest-model final source review and the scoped re-review of that fix found
+no remaining issue; the local implementation and handoff are complete. This is not
+a staging deployment. Staging still reflects PR `#267` at `f2fafb29`; technical
 `main` remains at `54a154b7` with Watch History v2. No remote migration, Web
-deployment, extension synchronization, browser reload, push, PR, merge, or
-production change is claimed.
+deployment, extension synchronization, tester-folder update, browser reload, push,
+PR, merge, or production change is claimed. Authenticated staging activation and
+acceptance remain separately authorized work.
 
 The database remains the durable authority. Canonical personal progress and
 title/season aggregates do not change under search or filters. New bounded reads

@@ -4,11 +4,12 @@ Date: 2026-09-05.
 
 Status: the extension/UI candidate remains verified at source
 `bf260d7e858bbd721820a2c7a4ee5532ac924542`; the later server-only episode-label
-search fix is `a92dbdc6bf631af775742014246b1fb97f151e84`. Semantic Graphify refresh and the
-scoped final re-review are pending. This receipt is not evidence of a push, PR,
-merge, remote migration, deployment, tester-folder update, browser reload,
-authenticated staging acceptance, production promotion, or Chrome Web Store
-publication.
+search fix is `a92dbdc6bf631af775742014246b1fb97f151e84`. The strongest-model
+final source review and the scoped re-review of that fix approved the complete
+local source with no remaining finding; local implementation and handoff are
+complete. This receipt is not evidence of a push, PR, merge, remote migration,
+deployment, tester-folder update, browser reload, authenticated staging
+acceptance, production promotion, or Chrome Web Store publication.
 
 The approved scope is
 `docs/superpowers/specs/2026-09-05-watch-drawer-browse-design.md`; execution is
@@ -79,7 +80,9 @@ and accessed. No shared default-local, staging, or production database was acces
 or changed. Expected PostgreSQL extension notices and the Supabase CLI update
 notice were informational. A fresh Web TypeScript check, focused Biome lint, and
 fix-path whitespace check also passed; unchanged full extension and visual suites
-were not repeated for this server-only predicate fix.
+were not repeated for this server-only predicate fix. The controller then stopped
+the dedicated database and its isolated Colima runtime; its backups remain
+preserved.
 
 ## Isolated Staging-channel Artifact
 
@@ -139,7 +142,19 @@ it is not authenticated or provider-loaded staging acceptance.
 The controller later copied the final images, three verification scripts, fixture,
 and local server source into the ignored durable local archive
 `artifacts/watch-drawer-browse-evidence.PPXwrM`. The originals were left untouched;
-this archive is not a new UI run, tester-folder update, or staging acceptance.
+this archive is not a new UI run, tester-folder update, or staging acceptance. The
+local QA server is stopped. Both this evidence archive and the isolated extension
+candidate remain ignored local artifacts.
+
+## Knowledge Graph Maintenance
+
+Graphify is maintained alongside this handoff through the code AST update and
+Codex semantic extraction. The controller health-validated the first semantic pass
+and will verify a final incremental refresh for this closeout plus the three
+server/test fix paths before treating graph maintenance as closed. Measured agent
+usage is unavailable. Numerical graph metrics remain in
+`graphify-out/GRAPH_REPORT.md`; they are not duplicated in semantic input docs to
+avoid self-churn.
 
 ## Review And Gate Exceptions
 
@@ -149,14 +164,15 @@ request/query/cursor/generation isolation, requester-relative session timestamps
 invitation-plus-participation provenance, immutable historical group labels,
 canonical aggregate truthfulness, deletion/generation fences, YouTube consent
 ownership, drawer deletion removal, website management retention, and narrow UI
-behavior. No unresolved Critical or Important issue was found in this pass; final
-controller review remains pending.
+behavior. After the episode-label fix, the strongest-model final source review and
+its scoped re-review approved the complete local source with no remaining Critical
+or Important finding.
 
 No room or P2P harness, real-WebRTC run, remote Worker smoke, or authenticated
 provider flow was added for Task 4. The protocol change exports history browse DTOs;
 it does not change room wire events, Durable Object behavior, signaling, media,
 capture, or Worker deployment. Root API checks/tests and the 41-test Workers-runtime
-suite passed. The retained invitation SQL is included in the exact 334-assertion
+suite passed. The retained invitation SQL is included in the exact 336-assertion
 database evidence. Remote checks would violate the local-only authorization.
 
 ## Activation, Acceptance And Rollback
