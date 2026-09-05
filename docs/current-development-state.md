@@ -1093,6 +1093,49 @@ and two-network P2P evidence. Explicit tab close is immediate; a browser crash
 or long offline interval relies on the 60-second fallback. Conflict wording and
 other visual polish remain normal UI/UX work.
 
+## Local Watch History v3 Candidate (Unactivated)
+
+The 2026-09-05 canonical Crunchyroll catalog/progress implementation is locally
+complete on `codex/watch-drawer-design`, but it has not been migrated, deployed,
+loaded, or accepted on staging or production. Watch History v2 on staging and
+technical main is the recorded baseline, not a new deployed-runtime probe in the
+final local fix wave. A schema-3 extension artifact cannot use that v2 history
+backend and must not be given to testers until a separately authorized coordinated
+database/Web/extension cutover.
+
+Schema 3 keeps Supabase/Postgres as the only durable authority and stores one
+progress row per logical provider episode. The latest actual raw watch/audio
+variant remains resume metadata. Bounded catalog snapshots and raw aliases provide
+canonical identity, current regional availability, localized provider labels, and
+server-owned exact title/season aggregates. Partial, missing, changing-region, or
+overflowed evidence suppresses exact totals; a failed same-region locale refresh
+keeps the last committed exact bundle.
+
+The clean-start transition resets only reviewed Watch History data, advances the
+history generation, and makes old v2 SQL/HTTP writers terminal. Accounts, auth,
+subscriptions, rooms/memberships, social/invite/Recent People data, interface/media
+settings, YouTube history consent, and monotonic server order are preserved. The
+extension clears old history cache/outbox/current observations and migrates only a
+validated owner-bound YouTube preference state; unrelated extension settings are
+not cleared.
+
+Final review fixes bind website mutation intent to the rendered owner before any
+write, retain omitted historical seasons with honest current 0/0 metadata, and
+retry interrupted legacy-storage cleanup without overwriting v3 consent/progress.
+The forward read fix is migration `20260905083000`; applied migration files remain
+unchanged. Dedicated local proof now includes the 39-migration chain, 13 pgTAP files /
+654 assertions, a populated transition with three blocked already-entered v2 calls,
+five actual RPC pages, 13 catalog list/detail states, the 2,000-episode bounded
+benchmark, web/extension checks and suites, and 17 website TSX tests. Final
+controller gates at product commit `4d7f395` pass root check/test (six tasks each;
+four unchanged tasks cached), a fresh 41-test API runtime run, staging artifact
+build/validation, and real-component headless Popup 6 / website 7 cases. The scoped
+final re-review closes all three findings with no new breakage; this is local code
+approval, not deployment acceptance. Exact commands, measurements, guard
+requirements, lint notices, the earlier local-port-54322 harness incident, activation
+order, rollback constraint, and open authenticated-provider/staging gates are in
+`docs/watch-history-v3-local-verification.md`.
+
 ## Known Fragile Areas
 
 These are intentionally not treated as solved:
@@ -1248,6 +1291,8 @@ These are intentionally not treated as solved:
 - Staging acceptance checklist: `docs/staging-acceptance-checklist.md`
 - Release and rollback runbook: `docs/release-and-rollback-runbook.md`
 - Project knowledge map / Graphify policy: `docs/project-knowledge-map.md`
+- Local Watch History v3 verification and activation boundary:
+  `docs/watch-history-v3-local-verification.md`
 - Overall architecture notes: `docs/architecture.md`
 - Extension release channels: `docs/extension-release-channels.md`
 - Site and extension integration: `docs/site-extension-integration-notes.md`

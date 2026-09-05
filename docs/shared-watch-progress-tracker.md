@@ -1,6 +1,6 @@
 # Shared Watch Progress Tracker
 
-Last updated: 2026-08-22.
+Last updated: 2026-09-05.
 
 This document records the current Watch History v2 product and runtime boundary.
 The older local/demo tracker has been retired from active runtime.
@@ -110,6 +110,37 @@ or market readiness, a Chrome Web Store release, two-network/TURN media proof,
 new-provider support, a catalog, telemetry-based creation limits, or a
 production migration/promotion. Those decisions require their own scope,
 verification, and approval.
+
+## Local Schema-3 Candidate
+
+The 2026-09-05 canonical Crunchyroll catalog/progress candidate is implemented and
+locally verified, but it is not activated. The deployed staging and technical-main
+runtime described above remains v2. Schema 3 keeps the same ownership model while
+changing storage identity to one progress row per logical provider episode. Latest
+raw watch/audio/source metadata supplies resume behavior, and bounded catalog
+snapshot/alias evidence supplies localized labels, regional availability, exact
+aggregates, and per-season next-episode metadata.
+
+The extension background remains the only extension writer. Metadata-pending
+observations keep their original timestamps, event IDs, room authority, and source;
+they do not reach the server until canonical identity resolves. The outbox remains
+shape-bounded (terminal plus latest per logical key), account/generation scoped, and
+deletion fenced. YouTube stays opt-in and independent. Shared history still verifies
+the raw room source authority while storing progress by canonical episode key.
+
+The local clean-start migration intentionally discards only test history, advances
+history generation, and blocks every v2 SQL/HTTP writer. It preserves account,
+auth/subscription, room, social/invite/Recent People, interface/media, and YouTube
+consent state. The matching extension storage transition retains only validated
+YouTube preference state; old history cache/outbox/observations are not copied. This
+short incompatible transition is deliberate, not a reason to implement dual models.
+
+Exact retained commands, dedicated-container guards, migration/RPC/read-state/
+benchmark evidence, the local-port-54322 harness incident disclosure, activation
+order, rollback constraints, and outstanding authenticated acceptance are recorded
+in `docs/watch-history-v3-local-verification.md`. A built schema-3 artifact is not
+compatible with the deployed v2 history backend and must not be synchronized to
+tester folders before separately authorized coordinated activation.
 
 ## Rollback
 

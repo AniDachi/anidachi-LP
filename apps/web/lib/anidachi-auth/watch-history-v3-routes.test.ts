@@ -2,14 +2,14 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { NextRequest } from "next/server";
 import {
-  createWatchHistoryV2RouteHandlers,
-  type WatchHistoryV2RouteDependencies,
-} from "./watch-history-v2-routes";
+  createWatchHistoryV3RouteHandlers,
+  type WatchHistoryV3RouteDependencies,
+} from "./watch-history-v3-routes";
 import {
-  applyWatchProgressV2,
+  applyWatchProgressV3,
   encodeWatchHistoryCursor,
-  type WatchHistoryV2Store,
-} from "./watch-history-v2";
+  type WatchHistoryV3Store,
+} from "./watch-history-v3";
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
 const EVENT_ID = "22222222-2222-4222-8222-222222222222";
@@ -21,31 +21,105 @@ function request(path: string, init?: ConstructorParameters<typeof NextRequest>[
 
 function progressBody() {
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     clientEventId: EVENT_ID,
     clientSessionKey: "solo-session-one",
     accountGeneration: 1,
     provider: "crunchyroll",
-    titleKey: "series-one",
+    titleKey: "crunchyroll:series:SERIESONE",
     itemKind: "series",
     title: "Series One",
     artworkUrl: null,
-    episodeKey: "episode-one",
+    episodeKey: "crunchyroll:episode:EPISODEONE",
     episodeTitle: "Episode One",
-    seasonKey: "season-one",
+    seasonKey: "crunchyroll:season:SEASONONE",
     seasonTitle: "Season One",
     seasonNumber: 1,
     episodeNumber: 1,
-    sourceUrl: "https://www.crunchyroll.com/watch/episode-one/demo",
+    sourceUrl: "https://www.crunchyroll.com/watch/CONTENTONE",
     currentTime: 600,
     duration: 1_200,
     progress: 0.5,
     observedAt: NOW,
     kind: "pause",
+    crunchyrollIdentity: {
+      providerSeriesId: "SERIESONE",
+      providerSeasonIdentifier: "SEASONONE",
+      providerEpisodeIdentifier: "EPISODEONE",
+      providerContentId: "CONTENTONE",
+      audioLocale: "ja-JP",
+    },
   };
 }
 
-function dependencies(overrides: Partial<WatchHistoryV2RouteDependencies> = {}) {
+function catalogContext() {
+  return {
+    region: "US",
+    requestedLocale: "en-US",
+    audioLocale: "ja-JP",
+    subtitleLocales: ["en-US"],
+    observedAt: NOW,
+  };
+}
+
+function catalogBeginBody() {
+  return {
+    schemaVersion: 3,
+    accountGeneration: 1,
+    provider: "crunchyroll",
+    titleKey: "crunchyroll:series:SERIESONE",
+    providerSeriesId: "SERIESONE",
+    context: catalogContext(),
+  };
+}
+
+function catalogCommitBody() {
+  return {
+    ...catalogBeginBody(),
+    revision: 1,
+    snapshot: {
+      schemaVersion: 3,
+      provider: "crunchyroll",
+      titleKey: "crunchyroll:series:SERIESONE",
+      providerSeriesId: "SERIESONE",
+      title: "Catalog title",
+      completeness: "complete",
+      context: catalogContext(),
+      seasons: [{
+        seasonKey: "crunchyroll:season:SEASONONE",
+        providerSeasonIdentifier: "SEASONONE",
+        title: "Catalog season",
+        seasonNumber: 1,
+        order: 0,
+        episodes: [{
+          episodeKey: "crunchyroll:episode:EPISODEONE",
+          providerEpisodeIdentifier: "EPISODEONE",
+          title: "Catalog episode",
+          episodeNumber: 1,
+          order: 0,
+          releasedAt: null,
+          available: true,
+          watchVariants: [{
+            providerContentId: "CONTENTONE",
+            audioLocale: "ja-JP",
+            original: true,
+            order: 0,
+            sourceUrl: "https://www.crunchyroll.com/watch/CONTENTONE",
+          }],
+        }],
+      }],
+    },
+  };
+}
+
+const unavailableCatalog = {
+  state: "unavailable" as const,
+  title: null,
+  aggregate: null,
+  seasons: [],
+};
+
+function dependencies(overrides: Partial<WatchHistoryV3RouteDependencies> = {}) {
   return {
     getSession: async () => ({
       userId: USER_ID,
@@ -54,26 +128,27 @@ function dependencies(overrides: Partial<WatchHistoryV2RouteDependencies> = {}) 
       source: "extension" as const,
     }),
     listHistory: async () => ({
-      meta: { serverTime: NOW, schemaVersion: 2 as const, ownerUserId: USER_ID, accountGeneration: 1 },
+      meta: { serverTime: NOW, schemaVersion: 3 as const, ownerUserId: USER_ID, accountGeneration: 1 },
       generatedAt: NOW,
       totalTitleCount: 0,
       items: [],
       nextCursor: null,
     }),
     listTitleEpisodes: async () => ({
-      meta: { serverTime: NOW, schemaVersion: 2 as const, ownerUserId: USER_ID, accountGeneration: 1 },
+      meta: { serverTime: NOW, schemaVersion: 3 as const, ownerUserId: USER_ID, accountGeneration: 1 },
       generatedAt: NOW,
       provider: "crunchyroll" as const,
       titleKey: "series-one",
       observedEpisodeCount: 0,
       completedEpisodeCount: 0,
       episodes: [],
+      catalog: unavailableCatalog,
       complete: true,
       nextCursor: null,
     }),
     applyProgress: async () => ({
-      meta: { serverTime: NOW, schemaVersion: 2 as const, ownerUserId: USER_ID, accountGeneration: 1 },
-      schemaVersion: 2 as const,
+      meta: { serverTime: NOW, schemaVersion: 3 as const, ownerUserId: USER_ID, accountGeneration: 1 },
+      schemaVersion: 3 as const,
       acceptedEventId: EVENT_ID,
       acceptedAt: NOW,
       accountGeneration: 1,
@@ -94,17 +169,44 @@ function dependencies(overrides: Partial<WatchHistoryV2RouteDependencies> = {}) 
         sessions: [],
       },
     }),
+    beginCatalog: async () => ({
+      meta: { serverTime: NOW, schemaVersion: 3 as const, ownerUserId: USER_ID, accountGeneration: 1 },
+      schemaVersion: 3 as const,
+      provider: "crunchyroll" as const,
+      titleKey: "crunchyroll:series:SERIESONE",
+      accountGeneration: 1,
+      revision: 1,
+      refreshRequired: true,
+      availabilityChanged: false,
+      effectiveCatalogState: "unavailable" as const,
+      projectionRevision: null,
+      acceptedHash: null,
+      acceptedAt: null,
+    }),
+    applyCatalog: async () => ({
+      meta: { serverTime: NOW, schemaVersion: 3 as const, ownerUserId: USER_ID, accountGeneration: 1 },
+      schemaVersion: 3 as const,
+      provider: "crunchyroll" as const,
+      titleKey: "crunchyroll:series:SERIESONE",
+      accountGeneration: 1,
+      revision: 1,
+      outcome: "applied" as const,
+      effectiveCatalogState: "complete" as const,
+      projectionRevision: 1,
+      acceptedHash: "sha256:server",
+      acceptedAt: NOW,
+    }),
     getPreferences: async () => ({
-      meta: { serverTime: NOW, schemaVersion: 2 as const, ownerUserId: USER_ID, accountGeneration: 1 },
+      meta: { serverTime: NOW, schemaVersion: 3 as const, ownerUserId: USER_ID, accountGeneration: 1 },
       preferences: { youtubeHistoryEnabled: false },
     }),
     updatePreferences: async () => ({
-      meta: { serverTime: NOW, schemaVersion: 2 as const, ownerUserId: USER_ID, accountGeneration: 1 },
+      meta: { serverTime: NOW, schemaVersion: 3 as const, ownerUserId: USER_ID, accountGeneration: 1 },
       preferences: { youtubeHistoryEnabled: true },
     }),
     deleteHistory: async () => ({
-      meta: { serverTime: NOW, schemaVersion: 2 as const, ownerUserId: USER_ID, accountGeneration: 2 },
-      schemaVersion: 2 as const,
+      meta: { serverTime: NOW, schemaVersion: 3 as const, ownerUserId: USER_ID, accountGeneration: 2 },
+      schemaVersion: 3 as const,
       clientMutationId: EVENT_ID,
       accountGeneration: 2,
       target: { scope: "all" as const },
@@ -125,21 +227,23 @@ function dependencies(overrides: Partial<WatchHistoryV2RouteDependencies> = {}) 
       quota: { remainingSeconds: 1_800, resetAt: "2026-08-15T00:00:00.000Z" },
     }),
     ...overrides,
-  } satisfies WatchHistoryV2RouteDependencies;
+  } satisfies WatchHistoryV3RouteDependencies;
 }
 
-test("every v2 route fails closed when cookie and bearer authentication are invalid", async () => {
-  const routes = createWatchHistoryV2RouteHandlers(
+test("every v3 route fails closed when cookie and bearer authentication are invalid", async () => {
+  const routes = createWatchHistoryV3RouteHandlers(
     dependencies({ getSession: async () => null }),
   );
   const responses = await Promise.all([
-    routes.getHistory(request("/api/watch-history/v2")),
-    routes.getTitleEpisodes(request("/api/watch-history/v2/title-episodes?provider=crunchyroll&titleKey=series-one")),
-    routes.postProgress(request("/api/watch-history/v2/progress", { method: "POST", body: "{}" })),
-    routes.getPreferences(request("/api/watch-history/v2/preferences")),
-    routes.patchPreferences(request("/api/watch-history/v2/preferences", { method: "PATCH", body: "{}" })),
-    routes.postDelete(request("/api/watch-history/v2/delete", { method: "POST", body: "{}" })),
-    routes.postRoom(request("/api/watch-history/v2/rooms", { method: "POST", body: "{}" })),
+    routes.getHistory(request("/api/watch-history/v3")),
+    routes.getTitleEpisodes(request("/api/watch-history/v3/title-episodes?provider=crunchyroll&titleKey=series-one")),
+    routes.postProgress(request("/api/watch-history/v3/progress", { method: "POST", body: "{}" })),
+    routes.postCatalogAttempt(request("/api/watch-history/v3/catalog/attempt", { method: "POST", body: "{}" })),
+    routes.postCatalog(request("/api/watch-history/v3/catalog", { method: "POST", body: "{}" })),
+    routes.getPreferences(request("/api/watch-history/v3/preferences")),
+    routes.patchPreferences(request("/api/watch-history/v3/preferences", { method: "PATCH", body: "{}" })),
+    routes.postDelete(request("/api/watch-history/v3/delete", { method: "POST", body: "{}" })),
+    routes.postRoom(request("/api/watch-history/v3/rooms", { method: "POST", body: "{}" })),
   ]);
   for (const response of responses) {
     assert.equal(response.status, 401);
@@ -147,19 +251,80 @@ test("every v2 route fails closed when cookie and bearer authentication are inva
   }
 });
 
+test("catalog routes bind ownership, preserve superseded acknowledgements, and return only server hashes", async () => {
+  const received: Array<{ kind: string; userId: string; input: unknown }> = [];
+  const deps = dependencies();
+  const routes = createWatchHistoryV3RouteHandlers(dependencies({
+    beginCatalog: async (params) => {
+      received.push({ kind: "begin", ...params });
+      return deps.beginCatalog(params);
+    },
+    applyCatalog: async (params) => {
+      received.push({ kind: "commit", ...params });
+      return {
+        ...(await deps.applyCatalog(params)),
+        outcome: "superseded",
+        effectiveCatalogState: "unavailable",
+        projectionRevision: null,
+        acceptedHash: "sha256:server-authoritative",
+      };
+    },
+  }));
+
+  const attempt = await routes.postCatalogAttempt(request(
+    "/api/watch-history/v3/catalog/attempt",
+    { method: "POST", body: JSON.stringify(catalogBeginBody()) },
+  ));
+  const commit = await routes.postCatalog(request("/api/watch-history/v3/catalog", {
+    method: "POST",
+    body: JSON.stringify(catalogCommitBody()),
+  }));
+
+  assert.equal(attempt.status, 200);
+  assert.equal(commit.status, 200);
+  const commitAck = await commit.json();
+  assert.equal(commitAck.outcome, "superseded");
+  assert.equal(commitAck.acceptedHash, "sha256:server-authoritative");
+  assert.deepEqual(received, [
+    { kind: "begin", userId: USER_ID, input: catalogBeginBody() },
+    { kind: "commit", userId: USER_ID, input: catalogCommitBody() },
+  ]);
+});
+
+test("catalog routes reject oversized envelopes before service work", async () => {
+  let calls = 0;
+  const routes = createWatchHistoryV3RouteHandlers(dependencies({
+    beginCatalog: async () => { calls += 1; throw new Error("must not run"); },
+    applyCatalog: async () => { calls += 1; throw new Error("must not run"); },
+  }));
+  for (const [path, handler, size] of [
+    ["/api/watch-history/v3/catalog/attempt", routes.postCatalogAttempt, 17 * 1_024],
+    ["/api/watch-history/v3/catalog", routes.postCatalog, 1_024 * 1_024 + 64 * 1_024 + 1],
+  ] as const) {
+    const response = await handler(request(path, {
+      method: "POST",
+      headers: { "content-length": String(size) },
+      body: "{}",
+    }));
+    assert.equal(response.status, 413);
+    assert.equal((await response.json()).code, "PAYLOAD_TOO_LARGE");
+  }
+  assert.equal(calls, 0);
+});
+
 test("progress rejects malformed, extra-field, and oversized JSON before service work", async () => {
   let calls = 0;
-  const routes = createWatchHistoryV2RouteHandlers(
+  const routes = createWatchHistoryV3RouteHandlers(
     dependencies({ applyProgress: async () => { calls += 1; throw new Error("must not run"); } }),
   );
   const malformed = await routes.postProgress(
-    request("/api/watch-history/v2/progress", { method: "POST", body: "{" }),
+    request("/api/watch-history/v3/progress", { method: "POST", body: "{" }),
   );
   assert.equal(malformed.status, 400);
   assert.equal((await malformed.json()).code, "INVALID_JSON");
 
   const extra = await routes.postProgress(
-    request("/api/watch-history/v2/progress", {
+    request("/api/watch-history/v3/progress", {
       method: "POST",
       body: JSON.stringify({ ...progressBody(), userId: USER_ID }),
     }),
@@ -167,8 +332,17 @@ test("progress rejects malformed, extra-field, and oversized JSON before service
   assert.equal(extra.status, 400);
   assert.equal((await extra.json()).code, "INVALID_REQUEST");
 
+  const legacy = await routes.postProgress(
+    request("/api/watch-history/v3/progress", {
+      method: "POST",
+      body: JSON.stringify({ ...progressBody(), schemaVersion: 2 }),
+    }),
+  );
+  assert.equal(legacy.status, 400);
+  assert.equal((await legacy.json()).code, "INVALID_REQUEST");
+
   const oversized = await routes.postProgress(
-    request("/api/watch-history/v2/progress", {
+    request("/api/watch-history/v3/progress", {
       method: "POST",
       headers: { "content-length": "70000" },
       body: JSON.stringify(progressBody()),
@@ -195,9 +369,9 @@ test("progress stops reading a chunked body immediately after the actual byte li
       cancelled = true;
     },
   });
-  const routes = createWatchHistoryV2RouteHandlers(dependencies());
+  const routes = createWatchHistoryV3RouteHandlers(dependencies());
   const response = await routes.postProgress(
-    request("/api/watch-history/v2/progress", {
+    request("/api/watch-history/v3/progress", {
       method: "POST",
       headers: { "content-length": "1" },
       body: stream,
@@ -214,7 +388,7 @@ test("progress stops reading a chunked body immediately after the actual byte li
 test("progress derives ownership from the authenticated session", async () => {
   let receivedUserId = "";
   const deps = dependencies();
-  const routes = createWatchHistoryV2RouteHandlers({
+  const routes = createWatchHistoryV3RouteHandlers({
     ...deps,
     applyProgress: async (params) => {
       receivedUserId = params.userId;
@@ -222,7 +396,7 @@ test("progress derives ownership from the authenticated session", async () => {
     },
   });
   const response = await routes.postProgress(
-    request("/api/watch-history/v2/progress", {
+    request("/api/watch-history/v3/progress", {
       method: "POST",
       body: JSON.stringify(progressBody()),
     }),
@@ -236,20 +410,22 @@ test("progress route returns a shared canonical receipt before expired-authority
   const canonicalReceipt = await deps.applyProgress({ userId: USER_ID, input: progressBody() });
   let verifyCalls = 0;
   let writerCalls = 0;
-  const store: WatchHistoryV2Store = {
+  const store: WatchHistoryV3Store = {
     getProgressReceipt: async () => canonicalReceipt,
     applyProgress: async () => {
       writerCalls += 1;
       throw new Error("must not write an already-receipted event");
     },
+    beginCatalog: async () => { throw new Error("not used"); },
+    applyCatalog: async () => { throw new Error("not used"); },
     loadHistory: async () => ({ accountGeneration: 1, progressRows: [], sessions: [] }),
     getPreferences: async () => ({ accountGeneration: 1, youtubeHistoryEnabled: false }),
     setPreferences: async () => { throw new Error("not used"); },
     deleteHistory: async () => { throw new Error("not used"); },
     getRoomSource: async () => null,
   };
-  const routes = createWatchHistoryV2RouteHandlers(dependencies({
-    applyProgress: ({ userId, input }) => applyWatchProgressV2({
+  const routes = createWatchHistoryV3RouteHandlers(dependencies({
+    applyProgress: ({ userId, input }) => applyWatchProgressV3({
       userId,
       input,
       store,
@@ -259,7 +435,7 @@ test("progress route returns a shared canonical receipt before expired-authority
       },
     }),
   }));
-  const response = await routes.postProgress(request("/api/watch-history/v2/progress", {
+  const response = await routes.postProgress(request("/api/watch-history/v3/progress", {
     method: "POST",
     body: JSON.stringify({
       ...progressBody(),
@@ -333,7 +509,7 @@ test("progress route fails closed for every noncanonical receipt-first outcome",
     await t.test(scenario.name, async () => {
       let verifyCalls = 0;
       let writerCalls = 0;
-      const store: WatchHistoryV2Store = {
+      const store: WatchHistoryV3Store = {
         getProgressReceipt: async () => {
           if ("receiptError" in scenario) throw scenario.receiptError;
           return scenario.receipt;
@@ -342,14 +518,16 @@ test("progress route fails closed for every noncanonical receipt-first outcome",
           writerCalls += 1;
           return canonicalReceipt;
         },
+        beginCatalog: async () => { throw new Error("not used"); },
+        applyCatalog: async () => { throw new Error("not used"); },
         loadHistory: async () => ({ accountGeneration: 1, progressRows: [], sessions: [] }),
         getPreferences: async () => ({ accountGeneration: 1, youtubeHistoryEnabled: false }),
         setPreferences: async () => { throw new Error("not used"); },
         deleteHistory: async () => { throw new Error("not used"); },
         getRoomSource: async () => null,
       };
-      const routes = createWatchHistoryV2RouteHandlers(dependencies({
-        applyProgress: ({ userId, input }) => applyWatchProgressV2({
+      const routes = createWatchHistoryV3RouteHandlers(dependencies({
+        applyProgress: ({ userId, input }) => applyWatchProgressV3({
           userId,
           input,
           store,
@@ -359,7 +537,7 @@ test("progress route fails closed for every noncanonical receipt-first outcome",
           },
         }),
       }));
-      const response = await routes.postProgress(request("/api/watch-history/v2/progress", {
+      const response = await routes.postProgress(request("/api/watch-history/v3/progress", {
         method: "POST",
         body: JSON.stringify({
           ...progressBody(),
@@ -382,9 +560,9 @@ test("progress route fails closed for every noncanonical receipt-first outcome",
 });
 
 test("history validates limit and opaque cursor boundaries", async () => {
-  const routes = createWatchHistoryV2RouteHandlers(dependencies());
+  const routes = createWatchHistoryV3RouteHandlers(dependencies());
   for (const query of ["limit=0", "limit=101", "limit=1.5", "cursor=not-a-cursor"]) {
-    const response = await routes.getHistory(request(`/api/watch-history/v2?${query}`));
+    const response = await routes.getHistory(request(`/api/watch-history/v3?${query}`));
     assert.equal(response.status, 400);
   }
 });
@@ -396,7 +574,7 @@ test("history returns an opaque cursor that round-trips unchanged over HTTP", as
   });
   const receivedCursors: unknown[] = [];
   const deps = dependencies();
-  const routes = createWatchHistoryV2RouteHandlers({
+  const routes = createWatchHistoryV3RouteHandlers({
     ...deps,
     listHistory: async (params) => {
       receivedCursors.push(params.cursor);
@@ -407,13 +585,13 @@ test("history returns an opaque cursor that round-trips unchanged over HTTP", as
     },
   });
 
-  const first = await routes.getHistory(request("/api/watch-history/v2?limit=1"));
+  const first = await routes.getHistory(request("/api/watch-history/v3?limit=1"));
   assert.equal(first.status, 200);
   const firstBody = await first.json();
   assert.equal(firstBody.nextCursor, opaqueCursor);
 
   const second = await routes.getHistory(
-    request(`/api/watch-history/v2?limit=1&cursor=${firstBody.nextCursor}`),
+    request(`/api/watch-history/v3?limit=1&cursor=${firstBody.nextCursor}`),
   );
   assert.equal(second.status, 200);
   assert.deepEqual(receivedCursors, [
@@ -423,14 +601,14 @@ test("history returns an opaque cursor that round-trips unchanged over HTTP", as
 });
 
 test("history rejects unknown and duplicate query parameters", async () => {
-  const routes = createWatchHistoryV2RouteHandlers(dependencies());
+  const routes = createWatchHistoryV3RouteHandlers(dependencies());
   for (const query of [
     "unknown=value",
     "limit=1&limit=2",
     "cursor=value&cursor=value",
   ]) {
     const response = await routes.getHistory(
-      request(`/api/watch-history/v2?${query}`),
+      request(`/api/watch-history/v3?${query}`),
     );
     assert.equal(response.status, 400);
     assert.equal((await response.json()).code, "INVALID_QUERY");
@@ -439,13 +617,13 @@ test("history rejects unknown and duplicate query parameters", async () => {
 
 test("title episode detail route authenticates ownership and parses an exact bounded query", async () => {
   const received: unknown[] = [];
-  const routes = createWatchHistoryV2RouteHandlers(dependencies({
+  const routes = createWatchHistoryV3RouteHandlers(dependencies({
     listTitleEpisodes: async (params) => {
       received.push(params);
       return {
         meta: {
           serverTime: NOW,
-          schemaVersion: 2,
+          schemaVersion: 3,
           ownerUserId: USER_ID,
           accountGeneration: 1,
         },
@@ -455,13 +633,14 @@ test("title episode detail route authenticates ownership and parses an exact bou
         observedEpisodeCount: 1,
         completedEpisodeCount: 0,
         episodes: [],
+        catalog: unavailableCatalog,
         complete: true,
         nextCursor: null,
       };
     },
   }));
   const response = await routes.getTitleEpisodes(request(
-    "/api/watch-history/v2/title-episodes?provider=crunchyroll&titleKey=series-one&limit=50&cursor=episode_cursor",
+    "/api/watch-history/v3/title-episodes?provider=crunchyroll&titleKey=series-one&limit=50&cursor=episode_cursor",
   ));
   assert.equal(response.status, 200);
   assert.deepEqual(received, [{
@@ -480,7 +659,7 @@ test("title episode detail route authenticates ownership and parses an exact bou
     "provider=crunchyroll&titleKey=",
   ]) {
     const invalidResponse: Response = await routes.getTitleEpisodes(request(
-      `/api/watch-history/v2/title-episodes?${query}`,
+      `/api/watch-history/v3/title-episodes?${query}`,
     ));
     assert.equal(invalidResponse.status, 400);
     assert.equal((await invalidResponse.json()).code, "INVALID_QUERY");
@@ -490,7 +669,7 @@ test("title episode detail route authenticates ownership and parses an exact bou
 
 test("title episode detail route fails closed before service work when unauthenticated", async () => {
   let calls = 0;
-  const routes = createWatchHistoryV2RouteHandlers(dependencies({
+  const routes = createWatchHistoryV3RouteHandlers(dependencies({
     getSession: async () => null,
     listTitleEpisodes: async () => {
       calls += 1;
@@ -498,21 +677,21 @@ test("title episode detail route fails closed before service work when unauthent
     },
   }));
   const response = await routes.getTitleEpisodes(request(
-    "/api/watch-history/v2/title-episodes?provider=crunchyroll&titleKey=series-one",
+    "/api/watch-history/v3/title-episodes?provider=crunchyroll&titleKey=series-one",
   ));
   assert.equal(response.status, 401);
   assert.equal(calls, 0);
 });
 
 test("preferences expose only the YouTube flag and reject unknown fields", async () => {
-  const routes = createWatchHistoryV2RouteHandlers(dependencies());
-  const getResponse = await routes.getPreferences(request("/api/watch-history/v2/preferences"));
+  const routes = createWatchHistoryV3RouteHandlers(dependencies());
+  const getResponse = await routes.getPreferences(request("/api/watch-history/v3/preferences"));
   assert.deepEqual(await getResponse.json(), {
-    meta: { serverTime: NOW, schemaVersion: 2, ownerUserId: USER_ID, accountGeneration: 1 },
+    meta: { serverTime: NOW, schemaVersion: 3, ownerUserId: USER_ID, accountGeneration: 1 },
     preferences: { youtubeHistoryEnabled: false },
   });
   const patchResponse = await routes.patchPreferences(
-    request("/api/watch-history/v2/preferences", {
+    request("/api/watch-history/v3/preferences", {
       method: "PATCH",
       body: JSON.stringify({ youtubeHistoryEnabled: true, userId: USER_ID }),
     }),
@@ -522,7 +701,7 @@ test("preferences expose only the YouTube flag and reject unknown fields", async
 
   for (const query of ["unused=1", "youtubeHistoryEnabled=true"]) {
     const getWithQuery = await routes.getPreferences(
-      request(`/api/watch-history/v2/preferences?${query}`),
+      request(`/api/watch-history/v3/preferences?${query}`),
     );
     assert.equal(getWithQuery.status, 400);
     assert.equal((await getWithQuery.json()).code, "INVALID_QUERY");
@@ -530,12 +709,12 @@ test("preferences expose only the YouTube flag and reject unknown fields", async
 });
 
 test("delete and room recreation require strict bodies and return only service results", async () => {
-  const routes = createWatchHistoryV2RouteHandlers(dependencies());
+  const routes = createWatchHistoryV3RouteHandlers(dependencies());
   const deleteResponse = await routes.postDelete(
-    request("/api/watch-history/v2/delete", {
+    request("/api/watch-history/v3/delete", {
       method: "POST",
       body: JSON.stringify({
-        schemaVersion: 2,
+        schemaVersion: 3,
         clientMutationId: EVENT_ID,
         accountGeneration: 1,
         target: { scope: "all" },
@@ -547,7 +726,7 @@ test("delete and room recreation require strict bodies and return only service r
   assert.equal((await deleteResponse.json()).accountGeneration, 2);
 
   const badRoom = await routes.postRoom(
-    request("/api/watch-history/v2/rooms", {
+    request("/api/watch-history/v3/rooms", {
       method: "POST",
       body: JSON.stringify({ sessionId: EVENT_ID, userId: USER_ID }),
     }),
@@ -556,7 +735,7 @@ test("delete and room recreation require strict bodies and return only service r
   assert.equal((await badRoom.json()).code, "INVALID_REQUEST");
 
   const missingSessionBinding = await routes.postRoom(
-    request("/api/watch-history/v2/rooms", {
+    request("/api/watch-history/v3/rooms", {
       method: "POST",
       body: JSON.stringify({ sessionId: EVENT_ID }),
     }),
@@ -567,7 +746,7 @@ test("delete and room recreation require strict bodies and return only service r
 
 test("room recreation forwards the exact tab session and returns the shared conflict", async () => {
   let participantSessionId = "";
-  const success = createWatchHistoryV2RouteHandlers(
+  const success = createWatchHistoryV3RouteHandlers(
     dependencies({
       createRoomFromSession: async (params) => {
         participantSessionId = params.participantSessionId;
@@ -576,7 +755,7 @@ test("room recreation forwards the exact tab session and returns the shared conf
     }),
   );
   const response = await success.postRoom(
-    request("/api/watch-history/v2/rooms", {
+    request("/api/watch-history/v3/rooms", {
       method: "POST",
       body: JSON.stringify({
         sessionId: EVENT_ID,
@@ -587,7 +766,7 @@ test("room recreation forwards the exact tab session and returns the shared conf
   assert.equal(response.status, 200);
   assert.equal(participantSessionId, "participant-session-one");
 
-  const conflict = createWatchHistoryV2RouteHandlers(
+  const conflict = createWatchHistoryV3RouteHandlers(
     dependencies({
       createRoomFromSession: async () => ({
         outcome: "conflict",
@@ -601,7 +780,7 @@ test("room recreation forwards the exact tab session and returns the shared conf
     }),
   );
   const conflictResponse = await conflict.postRoom(
-    request("/api/watch-history/v2/rooms", {
+    request("/api/watch-history/v3/rooms", {
       method: "POST",
       body: JSON.stringify({
         sessionId: EVENT_ID,

@@ -9,6 +9,18 @@ import type { HistoryObservation } from "../src/source-adapters/core/history-pol
 import type { WatchHistoryCaptureResult } from "../src/watch-history-client";
 
 describe("watch history meaningful-progress controller", () => {
+  it("signals discovery after durable capture without awaiting metadata and coalesces a playback interaction", async () => {
+    const discovered: Array<{ refreshCatalog: boolean }> = [];
+    const fixture = createFixture({ onPersisted: (_event, _owner, options) => { discovered.push(options); return new Promise<void>(() => undefined); } });
+    await fixture.controller.start();
+    await fixture.controller.notePlaybackInteraction();
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    fixture.setTime(12);
+    await fixture.controller.observe("heartbeat");
+    expect(discovered.map((entry) => entry.refreshCatalog)).toEqual([true, false]);
+    await fixture.controller.dispose();
+  });
   it("starts local capture from confirmed cache without waiting for canonical refresh", async () => {
     let resolveCanonical!: (
       value: Awaited<ReturnType<WatchHistoryControllerDependencies["loadPreferences"]>>,
@@ -1204,6 +1216,7 @@ function roomAuthority(sourceGeneration = 1, attestation = `proof-${sourceGenera
 }
 
 function createFixture(options: {
+  onPersisted?: WatchHistoryControllerDependencies["onPersisted"];
   roomActive?: boolean;
   sessionKeys?: string[];
   loadCachedPreferences?: WatchHistoryControllerDependencies["loadCachedPreferences"];
@@ -1279,6 +1292,7 @@ function createFixture(options: {
     progress: time / 20,
   });
   const dependencies: WatchHistoryControllerDependencies = {
+    onPersisted: options.onPersisted,
     getObservation: options.getObservation
       ? (preferences) => options.getObservation?.(preferences, observation()) ?? null
       : observation,

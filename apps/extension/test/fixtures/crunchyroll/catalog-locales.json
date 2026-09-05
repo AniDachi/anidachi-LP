@@ -1,0 +1,10 @@
+{
+  "fixtureKind": "sanitized-live-evidence",
+  "capturedAt": "2026-09-05",
+  "region": "VN",
+  "requests": [
+    { "requestedLocale": "en-US", "response": { "total": 1, "meta": { "versions_considered": true }, "data": [{ "id": "G6MGC35ZE", "identifier": "G6NQ5DWZ6|S00003205", "title": "Season 1", "season_number": 1, "versions": [{ "audio_locale": "ja-JP", "guid": "GRK587V16", "original": true }, { "audio_locale": "en-US", "guid": "G6MGC35ZE", "original": false }] }] } },
+    { "requestedLocale": "fr-FR", "response": { "total": 1, "meta": { "versions_considered": true }, "data": [{ "id": "G6MGC35ZE", "identifier": "G6NQ5DWZ6|S00003205", "title": "My Hero Academia Saison 1", "season_number": 1, "versions": [{ "audio_locale": "ja-JP", "guid": "GRK587V16", "original": true }, { "audio_locale": "en-US", "guid": "G6MGC35ZE", "original": false }] }] } }
+  ],
+  "providerFallback": { "requestedLocale": "zz-ZZ", "status": "not-live-verified", "rule": "persist returned labels and never machine-translate" }
+}

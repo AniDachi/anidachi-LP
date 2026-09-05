@@ -1,5 +1,7 @@
 "use client";
 
+import { WATCH_HISTORY_OWNER_HEADER } from "../../../lib/watch-history-owner";
+
 import {
   WatchHistoryDeletionAckSchema,
   WatchHistoryPreferencesResponseSchema,
@@ -27,12 +29,42 @@ export function WatchLibraryClient({
   initialHistory: WatchHistoryResponse;
   initialPreferences: WatchHistoryPreferencesResponse;
 }) {
+  const ownerGenerationKey = `${initialHistory.meta.ownerUserId}:${initialHistory.meta.accountGeneration}`;
+  return (
+    <WatchLibraryOwnerClient
+      initialHistory={initialHistory}
+      initialPreferences={initialPreferences}
+      key={ownerGenerationKey}
+    />
+  );
+}
+
+function WatchLibraryOwnerClient({
+  initialHistory,
+  initialPreferences,
+}: {
+  initialHistory: WatchHistoryResponse;
+  initialPreferences: WatchHistoryPreferencesResponse;
+}) {
   const [history, setHistory] = useState(initialHistory);
   const [preferences, setPreferences] = useState(initialPreferences);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
+  const operationRevision = useRef(0);
+  const mutationInFlight = useRef(false);
+  const mounted = useRef(true);
+  const ownerUserId = initialHistory.meta.ownerUserId;
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      operationRevision.current += 1;
+      mutationInFlight.current = false;
+    };
+  }, []);
   const observedEpisodeCount = useMemo(
     () => history.items.reduce((total, item) => total + observedEpisodeCountForItem(item), 0),
     [history.items],
@@ -46,40 +78,67 @@ export function WatchLibraryClient({
   );
 
   const refresh = useCallback(async () => {
+    if (mutationInFlight.current) return;
+    const revision = ++operationRevision.current;
+    const current = () => mounted.current && operationRevision.current === revision;
+    setLoadingMore(false);
     setLoading(true);
     setNotice(null);
     try {
       const [historyValue, preferencesValue] = await Promise.all([
-        api<unknown>("/api/watch-history/v2?limit=24"),
-        api<unknown>("/api/watch-history/v2/preferences"),
+        api<unknown>("/api/watch-history/v3?limit=24"),
+        api<unknown>("/api/watch-history/v3/preferences"),
       ]);
-      setHistory(parseOwnedHistory(historyValue, history.meta.ownerUserId));
-      setPreferences(parseOwnedPreferences(preferencesValue, history.meta.ownerUserId));
+      const nextHistory = parseOwnedHistory(historyValue, ownerUserId);
+      const nextPreferences = parseOwnedPreferences(preferencesValue, ownerUserId);
+      if (nextHistory.meta.accountGeneration !== nextPreferences.meta.accountGeneration) {
+        throw new Error("Watch history generation changed");
+      }
+      if (!current()) return;
+      setHistory(nextHistory);
+      setPreferences(nextPreferences);
     } catch (error) {
-      setNotice({ tone: "error", text: errorMessage(error, "Could not refresh watch history") });
+      if (current()) {
+        setNotice({ tone: "error", text: errorMessage(error, "Could not refresh watch history") });
+      }
     } finally {
-      setLoading(false);
+      if (current()) setLoading(false);
     }
-  }, [history.meta.ownerUserId]);
+  }, [ownerUserId]);
 
   useEffect(() => bindWatchHistoryPageRefresh({ refresh }), [refresh]);
 
   const loadMore = useCallback(async () => {
-    if (!history.nextCursor || loadingMore) return;
+    if (!history.nextCursor || loadingMore || mutationInFlight.current) return;
+    const revision = ++operationRevision.current;
+    const expectedGeneration = history.meta.accountGeneration;
+    const current = () => mounted.current && operationRevision.current === revision;
+    setLoading(false);
     setLoadingMore(true);
     setNotice(null);
     try {
       const page = parseOwnedHistory(
-        await api<unknown>(`/api/watch-history/v2?limit=24&cursor=${encodeURIComponent(history.nextCursor)}`),
-        history.meta.ownerUserId,
+        await api<unknown>(`/api/watch-history/v3?limit=24&cursor=${encodeURIComponent(history.nextCursor)}`),
+        ownerUserId,
       );
-      setHistory((current) => mergeWatchHistoryPages(current, page));
+      if (page.meta.accountGeneration !== expectedGeneration) {
+        throw new Error("Watch history generation changed");
+      }
+      if (!current()) return;
+      setHistory((currentHistory) =>
+        currentHistory.meta.ownerUserId === ownerUserId &&
+          currentHistory.meta.accountGeneration === expectedGeneration
+          ? mergeWatchHistoryPages(currentHistory, page)
+          : currentHistory,
+      );
     } catch (error) {
-      setNotice({ tone: "error", text: errorMessage(error, "Could not load more history") });
+      if (current()) {
+        setNotice({ tone: "error", text: errorMessage(error, "Could not load more history") });
+      }
     } finally {
-      setLoadingMore(false);
+      if (current()) setLoadingMore(false);
     }
-  }, [history, loadingMore]);
+  }, [history, loadingMore, ownerUserId]);
 
   const updateYoutubePreference = useCallback(async () => {
     if (busyAction) return;
@@ -87,11 +146,12 @@ export function WatchLibraryClient({
     setNotice(null);
     try {
       const next = parseOwnedPreferences(
-        await api<unknown>("/api/watch-history/v2/preferences", {
+        await api<unknown>("/api/watch-history/v3/preferences", {
           method: "PATCH",
+          headers: { [WATCH_HISTORY_OWNER_HEADER]: ownerUserId },
           body: JSON.stringify({ youtubeHistoryEnabled: !preferences.preferences.youtubeHistoryEnabled }),
         }),
-        history.meta.ownerUserId,
+        ownerUserId,
       );
       setPreferences(next);
     } catch (error) {
@@ -99,37 +159,71 @@ export function WatchLibraryClient({
     } finally {
       setBusyAction(null);
     }
-  }, [busyAction, history.meta.ownerUserId, preferences.preferences.youtubeHistoryEnabled]);
+  }, [busyAction, ownerUserId, preferences.preferences.youtubeHistoryEnabled]);
 
   const deleteHistory = useCallback(async (target: WatchHistoryDeleteScope) => {
-    if (busyAction || !window.confirm(deleteConfirmation(target))) return;
+    if (busyAction || mutationInFlight.current || !window.confirm(deleteConfirmation(target))) return;
+    mutationInFlight.current = true;
+    const revision = ++operationRevision.current;
+    const expectedGeneration = history.meta.accountGeneration;
+    const current = () => mounted.current && operationRevision.current === revision;
     const action = deleteScopeKey(target);
+    setLoading(false);
+    setLoadingMore(false);
     setBusyAction(action);
     setNotice(null);
     try {
       const acknowledgement = WatchHistoryDeletionAckSchema.parse(
-        await api<unknown>("/api/watch-history/v2/delete", {
+        await api<unknown>("/api/watch-history/v3/delete", {
           method: "POST",
+          headers: { [WATCH_HISTORY_OWNER_HEADER]: ownerUserId },
           body: JSON.stringify({
-            schemaVersion: 2,
+            schemaVersion: 3,
             clientMutationId: crypto.randomUUID(),
-            accountGeneration: history.meta.accountGeneration,
+            accountGeneration: expectedGeneration,
             target,
             requestedAt: new Date().toISOString(),
           }),
         }),
       );
-      if (acknowledgement.meta.ownerUserId !== history.meta.ownerUserId) {
+      if (
+        acknowledgement.meta.ownerUserId !== ownerUserId ||
+        acknowledgement.accountGeneration < expectedGeneration
+      ) {
         throw new Error("Watch history owner changed");
       }
-      setHistory((current) => removeWatchHistoryTarget(current, acknowledgement.target, acknowledgement.accountGeneration));
+      if (!current()) return;
+      setHistory((currentHistory) =>
+        currentHistory.meta.ownerUserId === ownerUserId &&
+          currentHistory.meta.accountGeneration === expectedGeneration
+          ? removeWatchHistoryTarget(
+              currentHistory,
+              acknowledgement.target,
+              acknowledgement.accountGeneration,
+            )
+          : currentHistory,
+      );
       setNotice({ tone: "success", text: "Watch history updated." });
+
+      const canonical = parseOwnedHistory(
+        await api<unknown>("/api/watch-history/v3?limit=24"),
+        ownerUserId,
+      );
+      if (canonical.meta.accountGeneration < acknowledgement.accountGeneration) {
+        throw new Error("Watch history generation changed");
+      }
+      if (current()) setHistory(canonical);
     } catch (error) {
-      setNotice({ tone: "error", text: errorMessage(error, "Could not delete watch history") });
+      if (current()) {
+        setNotice({ tone: "error", text: errorMessage(error, "Could not delete watch history") });
+      }
     } finally {
-      setBusyAction(null);
+      if (current()) {
+        mutationInFlight.current = false;
+        setBusyAction(null);
+      }
     }
-  }, [busyAction, history.meta.accountGeneration, history.meta.ownerUserId]);
+  }, [busyAction, history.meta.accountGeneration, ownerUserId]);
 
   const createRoom = useCallback(async (session: WatchHistorySession, sourceUrl: string) => {
     const action = `room:${session.id}`;
@@ -137,7 +231,7 @@ export function WatchLibraryClient({
     setNotice(null);
     try {
       const room = WatchHistoryRoomRecreationResponseSchema.parse(
-        await api<unknown>("/api/watch-history/v2/rooms", {
+        await api<unknown>("/api/watch-history/v3/rooms", {
           method: "POST",
           body: JSON.stringify({ sessionId: session.id, clientRequestId: crypto.randomUUID() }),
         }),
@@ -279,14 +373,17 @@ function WatchItemCard({ accountGeneration, busyAction, item, onCreateRoom, onDe
 
   return (
     <section className="overflow-hidden rounded-2xl border border-brand-border/80 bg-brand-surface">
-      <div className="flex items-center gap-4 border-b border-brand-border/80 p-4">
-        <Poster item={item} />
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold tracking-[0.1em] text-brand-orange">{providerLabel(item.provider)} · {item.itemKind}</p>
-          <h3 className="mt-1 truncate text-lg font-bold text-foreground">{item.title}</h3>
-          <p className="mt-1 text-sm text-foreground/50">{getWatchHistoryAggregateLabel(item)} · last watched {formatDate(item.lastWatchedAt)}</p>
+      <div className="flex flex-col gap-4 border-b border-brand-border/80 p-4 sm:flex-row sm:items-center">
+        <div className="flex min-w-0 items-center gap-4 sm:flex-1">
+          <Poster item={visibleItem} />
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold tracking-[0.1em] text-brand-orange">{providerLabel(visibleItem.provider)} · {visibleItem.itemKind}</p>
+            <h3 className="mt-1 truncate text-lg font-bold text-foreground" dir="auto">{visibleItem.title}</h3>
+            <OverallProgress item={visibleItem} />
+            <p className="mt-1 text-xs text-foreground/45">Last watched {formatDate(visibleItem.lastWatchedAt)}</p>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:shrink-0">
           <button className="rounded-lg border border-brand-border px-3 py-2 text-xs font-semibold text-foreground disabled:opacity-50" onClick={() => setExpanded((value) => !value)} type="button">{expanded ? "Hide episodes" : "Show episodes"}</button>
           <button className="rounded-lg border border-red-400/25 px-3 py-2 text-xs font-semibold text-red-100 disabled:opacity-50" disabled={Boolean(busyAction)} onClick={() => onDelete({ scope: "title", provider: item.provider, titleKey: item.titleKey })} type="button">Delete title</button>
         </div>
@@ -355,6 +452,30 @@ function ProgressBar({ progress }: { progress: number }) {
   return <div className="mt-2 h-2 overflow-hidden rounded-full bg-brand-surface"><span className="block h-full rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-bright" style={{ width: `${Math.round(clampProgress(progress) * 100)}%` }} /></div>;
 }
 
+function OverallProgress({ item }: { item: WatchHistoryItem }) {
+  const available = item.aggregate.availableEpisodes;
+  const progress = item.aggregate.progress;
+  const exact = item.catalogState === "complete" && available !== null && progress !== null;
+  return (
+    <div className="watch-library-overall mt-1.5 max-w-sm">
+      <p className="watch-library-overall-label text-sm text-foreground/55">
+        {getWatchHistoryAggregateLabel(item)}
+      </p>
+      {exact && available > 0 ? (
+        <div
+          aria-hidden="true"
+          className="watch-library-overall-track mt-1 h-1 overflow-hidden rounded-full bg-white/10"
+        >
+          <span
+            className="block h-full rounded-full bg-brand-orange"
+            style={{ width: `${clampProgress(progress) * 100}%` }}
+          />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function StatCard({ icon, label, value }: { icon: ReactNode; label: string; value: string | number }) {
   return <div className="rounded-lg border border-brand-border bg-brand-surface p-5"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-orange/15 text-brand-orange">{icon}</span><div><p className="text-2xl font-bold text-foreground">{value}</p><p className="text-sm text-foreground/50">{label}</p></div></div></div>;
 }
@@ -365,8 +486,13 @@ function Poster({ item }: { item: WatchHistoryItem }) {
 
 export function getWatchHistoryAggregateLabel(item: WatchHistoryItem): string {
   const observed = item.observedEpisodeCount;
-  if (item.catalogState !== "complete" || item.aggregate.availableEpisodes === null) return `${observed} observed ${observed === 1 ? "episode" : "episodes"}`;
-  return `${item.aggregate.completedEpisodes}/${item.aggregate.availableEpisodes} episodes`;
+  if (
+    item.catalogState !== "complete" ||
+    item.aggregate.availableEpisodes === null ||
+    item.aggregate.progress === null
+  ) return `${observed} observed ${observed === 1 ? "episode" : "episodes"}`;
+  if (item.aggregate.availableEpisodes === 0) return "Not currently available";
+  return `${item.aggregate.completedEpisodes} / ${item.aggregate.availableEpisodes} episodes · ${formatProgressPercent(item.aggregate.progress ?? 0)}%`;
 }
 
 export function mergeWatchHistoryPages(current: WatchHistoryResponse, page: WatchHistoryResponse): WatchHistoryResponse {
@@ -390,7 +516,7 @@ export async function loadWatchHistoryTitleEpisodePage(params: {
     cursor: params.cursor,
   });
   const value = await (params.request ?? ((path) => api<unknown>(path)))(
-    `/api/watch-history/v2/title-episodes?${query.toString()}`,
+    `/api/watch-history/v3/title-episodes?${query.toString()}`,
   );
   const page = WatchHistoryTitleEpisodesResponseSchema.parse(value);
   if (
@@ -410,37 +536,19 @@ export function mergeWatchHistoryTitleEpisodePage(
   page: WatchHistoryTitleEpisodesResponse,
 ): WatchHistoryItem {
   if (page.provider !== item.provider || page.titleKey !== item.titleKey) return item;
-  const seasons = item.seasons.map((season) => ({
-    ...season,
-    episodes: [...season.episodes],
-  }));
+  const episodesByKey = new Map(
+    item.seasons.flatMap((season) => season.episodes).map((episode) => [episode.episodeKey, episode]),
+  );
   for (const episode of page.episodes) {
-    let replaced = false;
-    for (const season of seasons) {
-      const index = season.episodes.findIndex((current) => current.episodeKey === episode.episodeKey);
-      if (index >= 0) {
-        season.episodes[index] = episode;
-        replaced = true;
-        break;
-      }
-    }
-    if (replaced) continue;
-    const seasonKey = episode.seasonKey ?? "observed";
-    let season = seasons.find((current) => current.seasonKey === seasonKey);
-    if (!season) {
-      season = {
-        seasonKey,
-        seasonTitle: episode.seasonTitle ?? "Observed episodes",
-        seasonNumber: episode.seasonNumber,
-        order: seasons.length,
-        aggregate: { completedEpisodes: 0, availableEpisodes: null, progress: null },
-        episodes: [],
-        nextEpisode: null,
-      };
-      seasons.push(season);
-    }
-    season.episodes.push(episode);
+    episodesByKey.set(episode.episodeKey, episode);
   }
+  const mergedEpisodes = Array.from(episodesByKey.values());
+  const exactCatalog = page.catalog.state === "complete" &&
+    page.catalog.title !== null && page.catalog.aggregate !== null;
+  const seasons = exactCatalog
+    ? mergeExactCatalogSeasons(item, page.catalog.seasons, mergedEpisodes)
+        .sort((a, b) => a.order - b.order || a.seasonKey.localeCompare(b.seasonKey))
+    : mergeObservedSeasons(item, mergedEpisodes, page.catalog.state);
   for (const season of seasons) {
     season.episodes.sort(
       (a, b) =>
@@ -449,20 +557,74 @@ export function mergeWatchHistoryTitleEpisodePage(
         b.lastWatchedAt.localeCompare(a.lastWatchedAt) ||
         a.episodeKey.localeCompare(b.episodeKey),
     );
-    season.aggregate = {
-      completedEpisodes: season.episodes.filter((episode) => episode.completedAt !== null).length,
-      availableEpisodes: null,
-      progress: null,
-    };
   }
   return {
     ...item,
+    title: exactCatalog ? page.catalog.title! : item.title,
+    catalogState: page.catalog.state,
     observedEpisodeCount: page.observedEpisodeCount,
     completedEpisodeCount: page.completedEpisodeCount,
-    aggregate: { ...item.aggregate, completedEpisodes: page.completedEpisodeCount },
+    aggregate: exactCatalog
+      ? page.catalog.aggregate!
+      : {
+          completedEpisodes: page.completedEpisodeCount,
+          availableEpisodes: null,
+          progress: null,
+        },
     seasons,
     episodePage: { complete: page.complete, nextCursor: page.nextCursor },
   };
+}
+
+function mergeExactCatalogSeasons(
+  item: WatchHistoryItem,
+  catalogSeasons: WatchHistoryTitleEpisodesResponse["catalog"]["seasons"],
+  episodes: WatchHistoryEpisode[],
+): WatchHistoryItem["seasons"] {
+  type CatalogSeason = WatchHistoryTitleEpisodesResponse["catalog"]["seasons"][number];
+  const metadataByKey = new Map<string, WatchHistoryItem["seasons"][number] | CatalogSeason>(
+    item.seasons.map((season) => [season.seasonKey, season]),
+  );
+  for (const season of catalogSeasons) metadataByKey.set(season.seasonKey, season);
+  return Array.from(metadataByKey.values())
+    .map((season) => ({
+      ...season,
+      episodes: episodes.filter((episode) => episode.seasonKey === season.seasonKey),
+    }))
+    .filter((season) => season.episodes.length > 0);
+}
+
+function mergeObservedSeasons(
+  item: WatchHistoryItem,
+  episodes: WatchHistoryEpisode[],
+  catalogState: WatchHistoryItem["catalogState"],
+): WatchHistoryItem["seasons"] {
+  const seasons = item.seasons.map((season) => ({
+    ...season,
+    aggregate: catalogState === item.catalogState
+      ? season.aggregate
+      : { completedEpisodes: 0, availableEpisodes: null, progress: null },
+    episodes: episodes.filter(
+      (episode) => (episode.seasonKey ?? "observed") === season.seasonKey,
+    ),
+    nextEpisode: null,
+  }));
+  for (const episode of episodes) {
+    const seasonKey = episode.seasonKey ?? "observed";
+    if (seasons.some((season) => season.seasonKey === seasonKey)) continue;
+    seasons.push({
+      seasonKey,
+      seasonTitle: episode.seasonTitle ?? "Observed episodes",
+      seasonNumber: episode.seasonNumber,
+      order: seasons.length,
+      aggregate: { completedEpisodes: 0, availableEpisodes: null, progress: null },
+      episodes: episodes.filter(
+        (candidate) => (candidate.seasonKey ?? "observed") === seasonKey,
+      ),
+      nextEpisode: null,
+    });
+  }
+  return seasons.filter((season) => season.episodes.length > 0);
 }
 
 export function removeWatchHistoryTarget(history: WatchHistoryResponse, target: WatchHistoryDeleteScope, accountGeneration = history.meta.accountGeneration): WatchHistoryResponse {
@@ -490,7 +652,6 @@ export function removeWatchHistoryTarget(history: WatchHistoryResponse, target: 
       ...item,
       observedEpisodeCount,
       completedEpisodeCount,
-      aggregate: { ...item.aggregate, completedEpisodes: completedEpisodeCount },
       seasons,
     }];
   });
@@ -546,6 +707,10 @@ function formatClock(seconds: number): string {
 
 function clampProgress(progress: number): number {
   return Number.isFinite(progress) ? Math.max(0, Math.min(1, progress)) : 0;
+}
+
+function formatProgressPercent(progress: number): string {
+  return String(Number((clampProgress(progress) * 100).toFixed(2)));
 }
 
 function buildLaunchUrl(sourceUrl: string, roomId: string): string {

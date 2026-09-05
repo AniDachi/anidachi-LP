@@ -15,7 +15,7 @@ describe("YouTube history policy", () => {
     expect(getYouTubeHistoryObservation({ adapter, preferences: null })).toBeNull();
     expect(getYouTubeHistoryObservation({ adapter, preferences: { youtubeHistoryEnabled: false } })).toBeNull();
     expect(getYouTubeHistoryObservation({ adapter, preferences: { youtubeHistoryEnabled: true } }))
-      .toMatchObject({ provider: "youtube", providerLabel: "YouTube", titleKey: "youtube:dQw4w9WgXcQ" });
+      .toMatchObject({ provider: "youtube", providerLabel: "YouTube", titleKey: "youtube:video:dQw4w9WgXcQ" });
   });
 
   it.each([
@@ -41,8 +41,8 @@ describe("YouTube history policy", () => {
       adapter,
       preferences: { youtubeHistoryEnabled: true },
     })).toMatchObject({
-      titleKey: "youtube:dQw4w9WgXcQ",
-      episodeKey: "youtube:dQw4w9WgXcQ",
+      titleKey: "youtube:video:dQw4w9WgXcQ",
+      episodeKey: "youtube:video:dQw4w9WgXcQ",
       currentTime: 0.1,
       duration: 0.2,
       sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
@@ -55,7 +55,7 @@ describe("YouTube history policy", () => {
     expect(getYouTubeHistoryObservation({
       adapter: fakeAdapter(),
       preferences: { youtubeHistoryEnabled: true },
-    })).toMatchObject({ sourceUrl: "https://youtube.com/watch?v=dQw4w9WgXcQ" });
+    })).toMatchObject({ sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" });
   });
 
   it("rejects invalid media values", () => {

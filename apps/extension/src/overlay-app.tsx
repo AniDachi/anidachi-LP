@@ -250,6 +250,8 @@ import type {
 	VideoAdapter,
 } from "./source-adapters/core/types";
 import { getDefinitionForProvider } from "./source-adapters/registry";
+import { createWatchHistoryPageResolver } from "./watch-history-catalog";
+import { parseWatchHistoryLocalEvent } from "./watch-history-outbox";
 import { overlayStyles } from "./styles";
 import { useTopBubbleReveal } from "./top-bubble-reveal";
 import { useCameraInteractionLock } from "./use-camera-interaction-lock";
@@ -2496,14 +2498,22 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		if (!expectedOwnerUserId) return;
 		const definition = getDefinitionForProvider(adapter.provider);
 		if (!definition?.historyPolicy) return;
+		const pageHistory = createWatchHistoryPageResolver({ send: requestWatchHistory });
+		const closeHistoryPage = () => pageHistory.suspendCatalogs();
+		window.addEventListener("pagehide", closeHistoryPage);
+		const abortCatalog = (message: unknown) => {
+			if (typeof message === "object" && message !== null && "type" in message && message.type === "ANIDACHI_WATCH_CATALOG_ABORT" && "pageId" in message && typeof message.pageId === "string") pageHistory.abortCatalogs(message.pageId);
+		};
+		chrome.runtime.onMessage?.addListener(abortCatalog);
 		const controller = createWatchHistoryController({
+			onPersisted: pageHistory.resolve,
 			getObservation: (preferences) =>
 				definition.historyPolicy?.observe({ adapter, preferences }) ?? null,
 			getRoomActive: () =>
 				watchHistoryRoomSuppressedRef.current || Boolean(roomIdRef.current),
 			loadCachedPreferences: async () => {
 				const response = await requestWatchHistory({
-					type: "ANIDACHI_WATCH_HISTORY_V2",
+					type: "ANIDACHI_WATCH_HISTORY_V3",
 					command: "bootstrap-cache",
 					expectedOwnerUserId,
 				});
@@ -2513,7 +2523,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			},
 			loadPreferences: async () => {
 				const response = await requestWatchHistory({
-					type: "ANIDACHI_WATCH_HISTORY_V2",
+					type: "ANIDACHI_WATCH_HISTORY_V3",
 					command: "bootstrap",
 					expectedOwnerUserId,
 				});
@@ -2523,12 +2533,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			},
 			recoverCapture: async () => {
 				const recovered = await requestWatchHistory({
-					type: "ANIDACHI_WATCH_HISTORY_V2",
+					type: "ANIDACHI_WATCH_HISTORY_V3",
 					command: "recover-storage",
 				});
 				if (!recovered.ok) return null;
 				const bootstrapped = await requestWatchHistory({
-					type: "ANIDACHI_WATCH_HISTORY_V2",
+					type: "ANIDACHI_WATCH_HISTORY_V3",
 					command: "bootstrap",
 					expectedOwnerUserId,
 				});
@@ -2545,7 +2555,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				flushNow,
 			) => {
 				const response = await requestWatchHistory({
-					type: "ANIDACHI_WATCH_HISTORY_V2",
+					type: "ANIDACHI_WATCH_HISTORY_V3",
 					command: "observe-progress",
 					expectedOwnerUserId,
 					event,
@@ -2579,6 +2589,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				}
 				await controller.recover();
 				await requestWatchHistory(createWatchHistoryContentReconnectMessage());
+				const pending = await requestWatchHistory({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "pending-identities", expectedOwnerUserId });
+				if (pending.ok && Array.isArray(pending.data)) for (const value of pending.data) {
+					const parsed = parseWatchHistoryLocalEvent(value);
+					if (parsed.success) void pageHistory.resolve(parsed.data, expectedOwnerUserId, { refreshCatalog: false }).catch(() => undefined);
+				}
 			})
 			.catch(() => undefined);
 		const removeHistoryListeners = bindWatchHistoryPlaybackListeners({
@@ -2590,6 +2605,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			controller,
 		});
 		return () => {
+			pageHistory.dispose();
+			window.removeEventListener("pagehide", closeHistoryPage);
+			chrome.runtime.onMessage?.removeListener(abortCatalog);
 			removeHistoryPreferenceListener();
 			removeHistoryListeners();
 			if (watchHistoryControllerRef.current === controller) {

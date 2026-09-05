@@ -2,7 +2,44 @@
 
 **Date:** 2026-08-13
 
-**Status:** Approved product design; implementation plan pending
+**Status:** Approved product design; local implementation authorized 2026-09-05
+
+## 2026-09-05 Clean-Start Amendment
+
+The approved implementation plan is
+`../plans/2026-09-05-watch-history-crunchyroll-catalog-progress-plan.md`.
+Its clean-start and canonical-identity rules supersede the older additive
+transition below: test history need not be preserved. Schema 3 stores one row per
+logical provider episode directly, with the latest actual audio/watch variant as
+resume metadata. Applied migrations remain immutable; a separately authorized
+forward cutover clears only reviewed test-history relations and advances history
+generation while preserving accounts, room state, social data, Recent People,
+media/UI settings, and YouTube tracking consent. Old HTTP and SQL writers must
+reject incompatible events. No legacy backfill or parallel raw read model is
+required. This authorization is local only, not permission to deploy or reset a
+remote database.
+
+This slice covers Crunchyroll identity/catalog completeness, localized labels,
+and server-owned overall title progress. A separate redesign of shared watching
+history, poster retrieval, and tree-line cosmetics remains deferred. Existing
+shared viewing still works with schema 3 and validates the original raw room
+source, not the canonical episode key. YouTube keeps its existing capture policy.
+
+Exact aggregates describe currently released/regionally available episodes;
+historical completion counts may include episodes now unavailable. Regional
+context changes suppress the old exact aggregate immediately. Failed same-region
+refreshes retain the last successful complete bundle. Canonical IDs never depend
+on translated labels, numbering, audio locale, or URL slugs. Details and bounded
+limits in the approved plan are normative for implementation and testing.
+
+The authorized local implementation is now complete on the feature branch. Its
+retained disposable-database commands, transition proof, schema/RPC/read-state/
+benchmark results, local harness incident disclosure, activation boundary, and
+rollback constraint are recorded in `../../watch-history-v3-local-verification.md`.
+This status does not amend the authorization boundary: staging/technical-main v2 is
+the recorded baseline, with no new deployed-runtime probe or deployment in the
+final local fix wave. No remote history was reset, and authenticated-provider,
+matching-staging, and loaded-extension acceptance remain open.
 
 **Scope:** AniDachi watch history, series catalog metadata, progress sync, and
 the shared data contract used by the extension Popup and website account area

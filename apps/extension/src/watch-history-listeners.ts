@@ -3,7 +3,7 @@ import type { WatchHistoryController } from "./watch-history-controller";
 type WatchHistoryPlaybackController = Pick<
   WatchHistoryController,
   "dispose" | "noteSeeking" | "observe" | "recover"
->;
+> & Partial<Pick<WatchHistoryController, "notePlaybackInteraction">>;
 
 export type WatchHistoryListenerBindingOptions = {
   video: HTMLVideoElement;
@@ -34,6 +34,9 @@ export function bindWatchHistoryPlaybackListeners(
   const pause = () => {
     if (!disposed) invoke(() => options.controller.observe("pause"));
   };
+  const playing = () => {
+    if (!disposed && options.controller.notePlaybackInteraction) invoke(() => options.controller.notePlaybackInteraction!());
+  };
   const seeking = () => {
     if (!disposed) invoke(() => options.controller.noteSeeking());
   };
@@ -56,6 +59,7 @@ export function bindWatchHistoryPlaybackListeners(
   };
   const interval = setIntervalFn(heartbeat, 5_000);
   options.video.addEventListener("pause", pause);
+  options.video.addEventListener("playing", playing);
   options.video.addEventListener("seeking", seeking);
   options.video.addEventListener("seeked", seeked);
   options.video.addEventListener("ended", ended);
@@ -68,6 +72,7 @@ export function bindWatchHistoryPlaybackListeners(
     disposed = true;
     clearIntervalFn(interval);
     options.video.removeEventListener("pause", pause);
+    options.video.removeEventListener("playing", playing);
     options.video.removeEventListener("seeking", seeking);
     options.video.removeEventListener("seeked", seeked);
     options.video.removeEventListener("ended", ended);

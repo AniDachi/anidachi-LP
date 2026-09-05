@@ -48,7 +48,7 @@ function localPreferenceAuthority(
   value: unknown,
   ownerUserId: string,
 ): LocalPreferenceAuthority | null {
-  if (!isRecord(value) || value.schemaVersion !== 2 || !isRecord(value.activeGenerations) ||
+  if (!isRecord(value) || value.schemaVersion !== 3 || !isRecord(value.activeGenerations) ||
     !isRecord(value.partitions)) {
     return null;
   }

@@ -1,12 +1,39 @@
-import type { WatchHistoryDeleteScope, WatchProgressEvent } from "@anidachi/protocol";
+import { WatchProgressEventSchema, type WatchHistoryDeleteScope, type WatchProgressEvent } from "@anidachi/protocol";
+
+export type WatchHistoryLocalEvent = WatchProgressEvent & {
+  identityPending?: { watchId: string; requestedLocale: string };
+};
+
+/** Local-only envelope. Unresolved events must never reach the HTTP boundary. */
+export function parseWatchHistoryLocalEvent(value: unknown):
+  { success: true; data: WatchHistoryLocalEvent } | { success: false } {
+  const resolved = WatchProgressEventSchema.safeParse(value);
+  if (resolved.success) return resolved;
+  if (!value || typeof value !== "object" || Array.isArray(value)) return { success: false };
+  const event = value as Record<string, unknown>;
+  const pending = event.identityPending;
+  if (!pending || typeof pending !== "object" || Array.isArray(pending)) return { success: false };
+  const { watchId, requestedLocale } = pending as Record<string, unknown>;
+  if (Object.keys(pending).some((key) => key !== "watchId" && key !== "requestedLocale") ||
+    typeof watchId !== "string" || !/^[A-Za-z0-9_-]{1,190}$/.test(watchId) ||
+    typeof requestedLocale !== "string" || !/^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/.test(requestedLocale) || requestedLocale.length > 35 ||
+    event.provider !== "crunchyroll" || event.crunchyrollIdentity !== undefined || event.youtubeVideoId !== undefined ||
+    event.sourceUrl !== `https://www.crunchyroll.com/watch/${watchId}` ||
+    Object.keys(event).some((key) => key !== "identityPending" && !(key in WatchProgressEventSchema.shape))) return { success: false };
+  for (const [key, schema] of Object.entries(WatchProgressEventSchema.shape)) {
+    if (!schema.safeParse(event[key]).success) return { success: false };
+  }
+  return { success: true, data: event as WatchHistoryLocalEvent };
+}
 
 export type WatchHistoryOutboxSlot = "terminal" | "latest";
 
 export type WatchHistoryOutboxEntry = {
-  event: WatchProgressEvent;
+  event: WatchHistoryLocalEvent;
   key: string;
   slot: WatchHistoryOutboxSlot;
   persistedAt: number;
+  flushAfterIdentity?: boolean;
 };
 
 export type WatchHistoryOutboxPartition = {
@@ -35,6 +62,7 @@ export function enqueueWatchHistoryEvent(
   partition: WatchHistoryOutboxPartition,
   event: WatchProgressEvent,
   persistedAt = Date.now(),
+  flushAfterIdentity = false,
 ): WatchHistoryOutboxPartition {
   if (event.accountGeneration !== partition.accountGeneration) {
     throw new Error("Watch history event generation does not match its outbox partition");
@@ -44,7 +72,10 @@ export function enqueueWatchHistoryEvent(
   if (slot === "terminal" && partition.entries.some((candidate) => candidate.key === key && candidate.slot === slot)) {
     return partition;
   }
-  const entry: WatchHistoryOutboxEntry = { event, key, slot, persistedAt };
+  const prior = partition.entries.find((candidate) => candidate.key === key && candidate.slot === slot);
+  const entry: WatchHistoryOutboxEntry = { event, key, slot, persistedAt,
+    ...((event as WatchHistoryLocalEvent).identityPending ? { flushAfterIdentity: flushAfterIdentity || prior?.flushAfterIdentity === true } : {}),
+  };
   return {
     ...partition,
     entries: [...partition.entries.filter((candidate) => candidate.key !== key || candidate.slot !== slot), entry],

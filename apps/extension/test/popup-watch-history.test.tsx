@@ -10,14 +10,17 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   PopupWatchHistoryPanel,
   selectConfirmedPopupWatchHistorySnapshot,
+  subscribeToPopupWatchHistorySnapshot,
   type PopupWatchHistoryClient,
   type PopupWatchHistorySnapshot,
 } from "../src/popup-watch-history";
 import {
+  createWatchHistoryStorage,
   watchHistoryPartitionKey,
   type WatchHistoryStorageRoot,
 } from "../src/watch-history-storage";
 import {
+  createWatchHistoryClient,
   createListWatchHistoryMessage,
   type WatchHistoryMessageResponse,
 } from "../src/watch-history-client";
@@ -29,6 +32,69 @@ const NOW = "2026-08-15T03:00:00.000Z";
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 describe("Popup Watch History v2", () => {
+  it("suppresses foreign-region exact totals immediately, including an already open Popup, while GET fails", async () => {
+    const complete = historyFixture();
+    complete.items[0]!.catalogState = "complete";
+    complete.items[0]!.aggregate = { completedEpisodes: 0, availableEpisodes: 12, progress: 0 };
+    complete.items[0]!.seasons[0]!.aggregate = { completedEpisodes: 0, availableEpisodes: 12, progress: 0 };
+    const key = watchHistoryPartitionKey(OWNER_ID, 1);
+    let stored: WatchHistoryStorageRoot = { schemaVersion: 3, activeGenerations: { [OWNER_ID]: 1 }, partitions: {
+      [key]: { ownerUserId: OWNER_ID, accountGeneration: 1, preferences: { youtubeHistoryEnabled: false }, preferencesConfirmed: true,
+        cache: complete, captureMarkersReady: true, capturePaused: false, currentObservation: null, outbox: { ownerUserId: OWNER_ID, accountGeneration: 1, entries: [] } },
+    } };
+    let getSucceeds = false;
+    const background = createWatchHistoryClient({
+      getCurrentSession: async () => ({ accessToken: "test", refreshToken: "test", user: { id: OWNER_ID } } as never),
+      storage: createWatchHistoryStorage({ item: { getValue: async () => stored, setValue: async (value) => { stored = value; } }, getBytesInUse: async () => 0, quotaBytes: 1_000_000 }),
+      fetch: async (_url, init) => init?.method === "POST" ? new Response(JSON.stringify({ meta: complete.meta,
+        schemaVersion: 3, accountGeneration: 1, provider: "crunchyroll", titleKey: "crunchyroll:series:FRIEREN", revision: 2,
+        refreshRequired: true, availabilityChanged: true, effectiveCatalogState: "partial", projectionRevision: null, acceptedHash: null, acceptedAt: null,
+      })) : getSucceeds ? new Response(JSON.stringify(complete)) : new Response("offline", { status: 503 }),
+    });
+    let publish!: (snapshot: PopupWatchHistorySnapshot | null) => void;
+    const client = { ...clientFixture({ cached: snapshotFixture(complete), request: async () => ({ ok: false, status: "retryable" }) }),
+      subscribe: (_owner: string, listener: typeof publish) => { publish = listener; return () => undefined; },
+    };
+    const view = await renderPanel(client);
+    await waitFor(() => expect(view.container.textContent).toContain("0 / 12 episodes · 0%"));
+    await background.handle({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "catalog-begin", expectedOwnerUserId: OWNER_ID, pageId: "visit",
+      input: { schemaVersion: 3, accountGeneration: 1, provider: "crunchyroll", titleKey: "crunchyroll:series:FRIEREN", providerSeriesId: "FRIEREN",
+        context: { region: "US", requestedLocale: "en-US", audioLocale: null, subtitleLocales: [], observedAt: NOW } } });
+    const partial = selectConfirmedPopupWatchHistorySnapshot(stored, OWNER_ID)!;
+    expect(partial.history.items[0]).toMatchObject({ catalogState: "partial", aggregate: { availableEpisodes: null, progress: null } });
+    expect(partial.history.items[0]!.seasons[0]!.episodes).toEqual(complete.items[0]!.seasons[0]!.episodes);
+    await act(async () => { publish(partial); });
+    expect(view.container.textContent).not.toContain("0 / 12 episodes · 0%");
+    expect(view.container.textContent).toContain("The Journey");
+    await background.handle(createListWatchHistoryMessage());
+    expect(stored.partitions[key]!.cache!.items[0]!.catalogState).toBe("partial");
+    getSucceeds = true;
+    await background.handle(createListWatchHistoryMessage());
+    await act(async () => { publish(selectConfirmedPopupWatchHistorySnapshot(stored, OWNER_ID)); });
+    expect(view.container.textContent).toContain("0 / 12 episodes · 0%");
+    await unmount(view.root);
+  });
+  it("coalesces mutation invalidations for an open subscriber and stops refresh after close", async () => {
+    let listener!: (changes: Record<string, chrome.storage.StorageChange>, area: chrome.storage.AreaName) => void;
+    const refresh = vi.fn(async () => ({ ok: true } as const));
+    const selected: unknown[] = [];
+    const close = subscribeToPopupWatchHistorySnapshot(OWNER_ID, (value) => selected.push(value), {
+      onChanged: { addListener: (next) => { listener = next; }, removeListener: () => undefined },
+      load: async () => snapshotFixture(historyFixture(), []), refresh,
+    });
+    const root = (revision: number) => ({ schemaVersion: 3, activeGenerations: { [OWNER_ID]: 1 }, partitions: {
+      [watchHistoryPartitionKey(OWNER_ID, 1)]: { ownerUserId: OWNER_ID, accountGeneration: 1, invalidationRevision: revision, cacheRevision: 0 },
+    } });
+    listener({ "anidachi.watchHistory.v3": { newValue: root(1) } }, "local");
+    listener({ "anidachi.watchHistory.v3": { newValue: root(2) } }, "local");
+    await Promise.resolve(); await Promise.resolve();
+    expect(refresh).toHaveBeenCalledOnce();
+    expect(selected).toHaveLength(1);
+    close();
+    listener({ "anidachi.watchHistory.v3": { newValue: root(3) } }, "local");
+    await Promise.resolve();
+    expect(refresh).toHaveBeenCalledOnce();
+  });
   afterEach(() => {
     document.body.replaceChildren();
     vi.restoreAllMocks();
@@ -299,7 +365,7 @@ describe("Popup Watch History v2", () => {
     const local: WatchProgressEvent = {
       ...pendingEvent({ currentTime: 12, progress: 12 / 2_100 }),
       clientEventId: "00000000-0000-4000-8000-000000000006",
-      episodeKey: "crunchyroll:episode-2",
+      episodeKey: "crunchyroll:episode:FRIEREN|S1|E2",
       episodeTitle: "Episode 2 - The Promise",
     };
     const view = await renderPanel(clientFixture({
@@ -321,7 +387,7 @@ describe("Popup Watch History v2", () => {
     };
     const partitionKey = watchHistoryPartitionKey(OWNER_ID, 1);
     const root: WatchHistoryStorageRoot = {
-      schemaVersion: 2,
+      schemaVersion: 3,
       activeGenerations: { [OWNER_ID]: 1 },
       partitions: {
         [partitionKey]: {
@@ -353,7 +419,7 @@ describe("Popup Watch History v2", () => {
     };
     const partitionKey = watchHistoryPartitionKey(OWNER_ID, 1);
     const root: WatchHistoryStorageRoot = {
-      schemaVersion: 2,
+      schemaVersion: 3,
       activeGenerations: { [OWNER_ID]: 1 },
       partitions: {
         [partitionKey]: {
@@ -381,7 +447,7 @@ describe("Popup Watch History v2", () => {
     const observation = pendingEvent({ currentTime: 840, progress: 0.4 });
     const partitionKey = watchHistoryPartitionKey(OWNER_ID, 1);
     const root: WatchHistoryStorageRoot = {
-      schemaVersion: 2,
+      schemaVersion: 3,
       activeGenerations: { [OWNER_ID]: 1 },
       partitions: {
         [partitionKey]: {
@@ -403,14 +469,14 @@ describe("Popup Watch History v2", () => {
     expect(selectConfirmedPopupWatchHistorySnapshot(root, OWNER_ID)?.localObservation).toBeNull();
   });
 
-  it("keeps a truthful bounded projection of a pre-Task3 v2 cache while offline", async () => {
+  it("rejects obsolete cache shapes without manufacturing schema3 counts while offline", async () => {
     const legacyCache = legacyHistoryFixture(10);
     expect(WatchHistoryResponseSchema.safeParse(legacyCache).success).toBe(false);
     const local = pendingEvent({
       currentTime: 660,
       progress: 660 / 2_100,
       clientEventId: "00000000-0000-4000-8000-000000000011",
-      episodeKey: "crunchyroll:episode-11",
+      episodeKey: "crunchyroll:episode:FRIEREN|S1|E11",
       episodeTitle: "Episode 11 - Local",
       episodeNumber: 11,
       observedAt: "2026-08-15T03:00:11.000Z",
@@ -419,14 +485,14 @@ describe("Popup Watch History v2", () => {
       currentTime: 720,
       progress: 720 / 2_100,
       clientEventId: "00000000-0000-4000-8000-000000000012",
-      episodeKey: "crunchyroll:episode-12",
+      episodeKey: "crunchyroll:episode:FRIEREN|S1|E12",
       episodeTitle: "Episode 12 - Queued",
       episodeNumber: 12,
       observedAt: "2026-08-15T03:00:12.000Z",
     });
     const partitionKey = watchHistoryPartitionKey(OWNER_ID, 1);
     const root: WatchHistoryStorageRoot = {
-      schemaVersion: 2,
+      schemaVersion: 3,
       activeGenerations: { [OWNER_ID]: 1 },
       partitions: {
         [partitionKey]: {
@@ -450,18 +516,7 @@ describe("Popup Watch History v2", () => {
     };
 
     const snapshot = selectConfirmedPopupWatchHistorySnapshot(root, OWNER_ID);
-    expect(snapshot).not.toBeNull();
-    expect(snapshot?.history.items[0]).toMatchObject({
-      observedEpisodeCount: 10,
-      completedEpisodeCount: 5,
-      episodePage: { complete: false },
-    });
-    expect(snapshot?.history.items[0]?.episodePage.nextCursor).toBe(
-      "local_cache_refresh_required",
-    );
-    expect(snapshot?.history.items[0]?.seasons.flatMap((season) => season.episodes)).toHaveLength(8);
-    expect(snapshot?.pendingEvents).toEqual([queued]);
-    expect(snapshot?.localObservation).toEqual({ event: local, mode: "mine" });
+    expect(snapshot).toBeNull();
     expect(root.partitions[partitionKey]?.outbox.entries).toHaveLength(1);
 
     const request = vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
@@ -473,10 +528,8 @@ describe("Popup Watch History v2", () => {
       return { ok: true };
     });
     const view = await renderPanel(clientFixture({ cached: snapshot, request }));
-    await waitFor(() => expect(view.container.textContent).toContain("Frieren"));
-    expect(view.container.textContent).toContain("Episode 11 - Local");
-    expect(view.container.textContent).toContain("Episode 12 - Queued");
-    expect(view.container.querySelectorAll(".popup-episode-row")).toHaveLength(8);
+    expect(view.container.textContent).not.toContain("Frieren");
+    expect(view.container.querySelectorAll(".popup-episode-row")).toHaveLength(0);
     await unmount(view.root);
   });
 
@@ -487,7 +540,7 @@ describe("Popup Watch History v2", () => {
         currentTime: number * 60,
         progress: number / 20,
         clientEventId: `00000000-0000-4000-8000-${String(number).padStart(12, "0")}`,
-        episodeKey: `crunchyroll:episode-${number}`,
+        episodeKey: `crunchyroll:episode:FRIEREN|S1|E${number}`,
         episodeTitle: `Episode ${number} - Queued`,
         episodeNumber: number,
         observedAt: `2026-08-15T03:00:${String(number).padStart(2, "0")}.000Z`,
@@ -496,7 +549,7 @@ describe("Popup Watch History v2", () => {
         currentTime: 1_200,
         progress: 1_200 / 2_100,
         clientEventId: "00000000-0000-4000-8000-000000000013",
-        episodeKey: "crunchyroll:episode-12",
+        episodeKey: "crunchyroll:episode:FRIEREN|S1|E12",
         episodeTitle: "Episode 12 - Queued later",
         episodeNumber: 12,
         observedAt: "2026-08-15T03:00:12.000Z",
@@ -506,7 +559,7 @@ describe("Popup Watch History v2", () => {
       currentTime: 12,
       progress: 12 / 2_100,
       clientEventId: "00000000-0000-4000-8000-000000000012",
-      episodeKey: "crunchyroll:episode-12",
+      episodeKey: "crunchyroll:episode:FRIEREN|S1|E12",
       episodeTitle: "Episode 12 - Immediate local",
       episodeNumber: 12,
       observedAt: "2026-08-15T03:00:01.000Z",
@@ -531,9 +584,9 @@ describe("Popup Watch History v2", () => {
   it("uses binary episode-key order for equal timestamps while pinning older local progress", async () => {
     const canonical = historyWithEpisodesFixture(8);
     const tied = [
-      ["crunchyroll:episode-a", "Episode tie lowercase", 21],
-      ["crunchyroll:episode-_", "Episode tie underscore", 22],
-      ["crunchyroll:episode-A", "Episode tie uppercase", 23],
+      ["crunchyroll:episode:FRIEREN|S1|Ea", "Episode tie lowercase", 21],
+      ["crunchyroll:episode:FRIEREN|S1|E_", "Episode tie underscore", 22],
+      ["crunchyroll:episode:FRIEREN|S1|EA", "Episode tie uppercase", 23],
     ] as const;
     const pending = tied.map(([episodeKey, episodeTitle, id]) => pendingEvent({
       currentTime: id,
@@ -548,7 +601,7 @@ describe("Popup Watch History v2", () => {
       currentTime: 7,
       progress: 7 / 2_100,
       clientEventId: "00000000-0000-4000-8000-000000000024",
-      episodeKey: "crunchyroll:episode-local",
+      episodeKey: "crunchyroll:episode:FRIEREN|S1|Elocal",
       episodeTitle: "Episode local pinned",
       episodeNumber: 24,
       observedAt: "2026-08-15T01:00:00.000Z",
@@ -751,8 +804,20 @@ describe("Popup Watch History v2", () => {
   });
 
   it("deletes one episode with the current generation and keeps unrelated canonical history", async () => {
+    const exactHistory = twoEpisodeHistoryFixture();
+    const exactItem = exactHistory.items[0]!;
+    exactItem.observedEpisodeCount = 7;
+    exactItem.completedEpisodeCount = 6;
+    exactItem.episodePage = { complete: false, nextCursor: "episode_cursor" };
+    exactItem.catalogState = "complete";
+    exactItem.aggregate = { completedEpisodes: 5, availableEpisodes: 13, progress: 5 / 13 };
+    exactItem.seasons[0]!.aggregate = {
+      completedEpisodes: 5,
+      availableEpisodes: 13,
+      progress: 5 / 13,
+    };
     const request = vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
-      if (message.command === "list") return { ok: true, data: twoEpisodeHistoryFixture() };
+      if (message.command === "list") return { ok: true, data: exactHistory };
       if (message.command === "get-preferences") {
         return { ok: true, data: preferencesFixture(false) };
       }
@@ -769,12 +834,12 @@ describe("Popup Watch History v2", () => {
           ok: true,
           data: {
             meta: {
-              schemaVersion: 2,
+              schemaVersion: 3,
               ownerUserId: OWNER_ID,
               accountGeneration: 1,
               serverTime: NOW,
             },
-            schemaVersion: 2,
+            schemaVersion: 3,
             clientMutationId: input.clientMutationId,
             accountGeneration: input.accountGeneration,
             target: input.target,
@@ -791,18 +856,20 @@ describe("Popup Watch History v2", () => {
 
     await waitFor(() => expect(view.container.textContent).not.toContain("Episode 1 - The Journey"));
     expect(view.container.textContent).toContain("Episode 2 - The Promise");
+    expect(view.container.textContent).toContain("5 / 13 episodes");
+    expect(view.container.textContent).toContain("38.46%");
     const deletion = request.mock.calls.find(([message]) => message.command === "delete")?.[0];
     expect(deletion).toEqual(expect.objectContaining({
       command: "delete",
       input: expect.objectContaining({
-        schemaVersion: 2,
+        schemaVersion: 3,
         accountGeneration: 1,
         clientMutationId: expect.stringMatching(/^[0-9a-f-]{36}$/),
         target: {
           scope: "episode",
           provider: "crunchyroll",
-          titleKey: "crunchyroll:frieren",
-          episodeKey: "crunchyroll:episode-1",
+          titleKey: "crunchyroll:series:FRIEREN",
+          episodeKey: "crunchyroll:episode:FRIEREN|S1|E1",
         },
       }),
     }));
@@ -850,8 +917,8 @@ describe("Popup Watch History v2", () => {
         return {
           ok: true,
           data: {
-            meta: { schemaVersion: 2, ownerUserId: OWNER_ID, accountGeneration: 2, serverTime: NOW },
-            schemaVersion: 2,
+            meta: { schemaVersion: 3, ownerUserId: OWNER_ID, accountGeneration: 2, serverTime: NOW },
+            schemaVersion: 3,
             clientMutationId: input.clientMutationId,
             accountGeneration: 2,
             target: input.target,
@@ -941,7 +1008,7 @@ describe("Popup Watch History v2", () => {
     const first = item.seasons[0]!.episodes[0]!;
     const episodes = Array.from({ length: 8 }, (_, index) => ({
       ...first,
-      episodeKey: `crunchyroll:episode-${index + 1}`,
+      episodeKey: `crunchyroll:episode:FRIEREN|S1|E${index + 1}`,
       episodeTitle: `Episode ${index + 1}`,
       episodeNumber: index + 1,
     }));
@@ -967,6 +1034,119 @@ describe("Popup Watch History v2", () => {
     await unmount(view.root);
   });
 
+  it("renders only server-owned overall progress and exposes the exact state on the disclosure", async () => {
+    const history = historyFixture({ title: "葬送のフリーレン الموسم الطويل جدا" });
+    const item = history.items[0]!;
+    item.observedEpisodeCount = 7;
+    item.completedEpisodeCount = 6;
+    item.episodePage = { complete: false, nextCursor: "episode_cursor" };
+    item.catalogState = "complete";
+    item.aggregate = { completedEpisodes: 5, availableEpisodes: 13, progress: 5 / 13 };
+    item.seasons[0]!.seasonTitle = "الموسم الأول الطويل جدا";
+    item.seasons[0]!.aggregate = {
+      completedEpisodes: 5,
+      availableEpisodes: 13,
+      progress: 5 / 13,
+    };
+    const view = await renderPanel(clientFixture({ cached: null, request: requestForHistory(history) }));
+
+    const disclosure = await findButton(
+      view.container,
+      "Toggle 葬送のフリーレン الموسم الطويل جدا history, 5 of 13 episodes watched, 38.46 percent",
+    );
+    expect(disclosure.textContent).toContain("葬送のフリーレン الموسم الطويل جدا");
+    expect(disclosure.textContent).toContain("5 / 13 episodes");
+    expect(disclosure.textContent).toContain("38.46%");
+    expect(disclosure.querySelector(".popup-watch-title")?.getAttribute("dir")).toBe("auto");
+    const track = disclosure.querySelector(".popup-watch-overall-track");
+    expect(track?.getAttribute("aria-hidden")).toBe("true");
+    expect((track?.firstElementChild as HTMLElement | null)?.style.width).toBe(`${(5 / 13) * 100}%`);
+    expect(item.completedEpisodeCount).toBe(6);
+    await unmount(view.root);
+  });
+
+  for (const catalogState of ["partial", "unavailable"] as const) {
+    it(`keeps ${catalogState} title progress observed-only`, async () => {
+      const history = historyFixture();
+      const item = history.items[0]!;
+      item.catalogState = catalogState;
+      item.observedEpisodeCount = 7;
+      item.completedEpisodeCount = 6;
+      item.episodePage = { complete: false, nextCursor: "episode_cursor" };
+      item.aggregate = { completedEpisodes: 6, availableEpisodes: null, progress: null };
+      const view = await renderPanel(clientFixture({ cached: null, request: requestForHistory(history) }));
+
+      await waitFor(() => expect(view.container.textContent).toContain("7 observed episodes"));
+      expect(view.container.querySelector(".popup-watch-overall-track")).toBeNull();
+      expect(view.container.textContent).not.toContain("0%");
+      await unmount(view.root);
+    });
+  }
+
+  it("shows a complete zero-available catalog as unavailable without a bar or 0 / 0", async () => {
+    const history = historyFixture();
+    const item = history.items[0]!;
+    item.observedEpisodeCount = 7;
+    item.completedEpisodeCount = 6;
+    item.episodePage = { complete: false, nextCursor: "episode_cursor" };
+    item.catalogState = "complete";
+    item.aggregate = { completedEpisodes: 0, availableEpisodes: 0, progress: 0 };
+    item.seasons[0]!.aggregate = { completedEpisodes: 0, availableEpisodes: 0, progress: 0 };
+    const view = await renderPanel(clientFixture({ cached: null, request: requestForHistory(history) }));
+
+    await findButton(view.container, "Toggle Frieren history, Not currently available");
+    expect(view.container.textContent).toContain("Not currently available");
+    expect(view.container.textContent).not.toContain("0 / 0");
+    expect(view.container.querySelector(".popup-watch-overall-track")).toBeNull();
+    await unmount(view.root);
+  });
+
+  it("keeps the canonical overall aggregate while Mine, Together, and search project visible rows", async () => {
+    const history = sameEpisodeMixedSessionHistoryFixture();
+    const item = history.items[0]!;
+    item.observedEpisodeCount = 7;
+    item.completedEpisodeCount = 6;
+    item.episodePage = { complete: false, nextCursor: "episode_cursor" };
+    item.catalogState = "complete";
+    item.aggregate = { completedEpisodes: 5, availableEpisodes: 13, progress: 5 / 13 };
+    item.seasons[0]!.aggregate = {
+      completedEpisodes: 5,
+      availableEpisodes: 13,
+      progress: 5 / 13,
+    };
+    const view = await renderPanel(clientFixture({ cached: null, request: requestForHistory(history) }));
+    const search = await findInput(view.container, "Search watch history");
+    const mode = await findButton(view.container, "Watch history mode: Mine. Switch to Together");
+
+    expect(view.container.textContent).toContain("5 / 13 episodes");
+    await setInputValue(search, "Journey");
+    expect(view.container.textContent).toContain("5 / 13 episodes");
+    await click(mode);
+    await waitFor(() => expect(mode.dataset.mode).toBe("together"));
+    expect(view.container.textContent).toContain("5 / 13 episodes");
+    await unmount(view.root);
+  });
+
+  it("preserves canonical season order while projecting pending rows", async () => {
+    const history = multiSeasonHistoryFixture();
+    const item = history.items[0]!;
+    item.seasons[0]!.order = 10;
+    item.seasons[1]!.order = 20;
+    item.seasons[0]!.episodes[0]!.lastWatchedAt = "2026-08-15T01:00:00.000Z";
+    item.seasons[1]!.episodes[0]!.lastWatchedAt = "2026-08-15T04:00:00.000Z";
+    const pending = pendingEvent({ currentTime: 720, progress: 0.4 });
+    const view = await renderPanel(clientFixture({
+      cached: snapshotFixture(history, [pending]),
+      request: requestForHistory(history),
+    }));
+
+    await waitFor(() => expect(view.container.textContent).toContain("A New Beginning"));
+    expect([...view.container.querySelectorAll(".popup-season-title")].map((node) => node.textContent))
+      .toEqual(["Season 1", "Season 2"]);
+    expect(item.seasons.map((season) => season.order)).toEqual([10, 20]);
+    await unmount(view.root);
+  });
+
   it("searches canonical v2 history by title and episode without mutating the response", async () => {
     const history = twoEpisodeHistoryFixture();
     const request = requestForHistory(history);
@@ -980,6 +1160,87 @@ describe("Popup Watch History v2", () => {
     await setInputValue(search, "missing");
     expect(view.container.textContent).toContain("No titles match your search.");
     expect(history.items[0]?.seasons[0]?.episodes).toHaveLength(2);
+    await unmount(view.root);
+  });
+
+  it("collapses titles and seasons independently without fetching or losing disclosure state", async () => {
+    const history = multiSeasonHistoryFixture();
+    const request = vi.fn(requestForHistory(history));
+    const view = await renderPanel(clientFixture({ cached: null, request }));
+    const title = await findButton(view.container, "Toggle Frieren history");
+    const secondTitle = await findButton(view.container, "Toggle Another title history");
+    const firstSeason = await findButton(view.container, "Toggle Frieren Season 1");
+    const latestSeason = await findButton(view.container, "Toggle Frieren Season 2");
+
+    expect(title.getAttribute("aria-expanded")).toBe("true");
+    expect(secondTitle.getAttribute("aria-expanded")).toBe("false");
+    expect(firstSeason.getAttribute("aria-expanded")).toBe("false");
+    expect(latestSeason.getAttribute("aria-expanded")).toBe("true");
+    expect(view.container.textContent).not.toContain("Episode 1 - The Journey");
+    expect(view.container.textContent).toContain("A New Beginning");
+    await click(firstSeason);
+    expect(view.container.textContent).toContain("Episode 1 - The Journey");
+    await click(title);
+    expect(view.container.textContent).not.toContain("A New Beginning");
+    expect(view.container.textContent).toContain("Frieren");
+    await click(title);
+    expect(view.container.textContent).toContain("Episode 1 - The Journey");
+    await click(secondTitle);
+    expect(secondTitle.getAttribute("aria-expanded")).toBe("true");
+    expect(title.getAttribute("aria-expanded")).toBe("true");
+    expect(request.mock.calls.filter(([message]) => message.command === "list")).toHaveLength(1);
+    expect(request.mock.calls.some(([message]) => "titleKey" in message)).toBe(false);
+    await unmount(view.root);
+  });
+
+  it("reveals matching episodes inside collapsed branches and restores the previous view after search", async () => {
+    const history = multiSeasonHistoryFixture();
+    const view = await renderPanel(clientFixture({ cached: null, request: requestForHistory(history) }));
+    await click(await findButton(view.container, "Toggle Frieren history"));
+    await click(await findButton(view.container, "Toggle Crunchyroll history"));
+    const search = await findInput(view.container, "Search watch history");
+    await setInputValue(search, "Journey");
+    expect(view.container.textContent).toContain("Episode 1 - The Journey");
+    expect(view.container.textContent).not.toContain("A New Beginning");
+    await click(await findButton(view.container, "Toggle Frieren Season 1"));
+    const frieren = (await findButton(view.container, "Toggle Frieren history")).closest("article");
+    expect(frieren?.textContent).not.toContain("Episode 1 - The Journey");
+    await setInputValue(search, "Beginning");
+    expect(view.container.textContent).toContain("A New Beginning");
+    await click(await findButton(view.container, "Clear watch history search"));
+    const provider = await findButton(view.container, "Toggle Crunchyroll history");
+    expect(provider.getAttribute("aria-expanded")).toBe("false");
+    await click(provider);
+    expect((await findButton(view.container, "Toggle Frieren history")).getAttribute("aria-expanded"))
+      .toBe("false");
+    expect(history.items[0]?.seasons).toHaveLength(2);
+    await unmount(view.root);
+  });
+
+  it("keeps deletion separate from disclosure and cancel never mutates history", async () => {
+    const request = vi.fn(requestForHistory(historyFixture()));
+    const client = clientFixture({ cached: null, request });
+    client.confirmDiscard = vi.fn(() => false);
+    const view = await renderPanel(client);
+    const title = await findButton(view.container, "Toggle Frieren history");
+    await click(await findButton(view.container, "Delete Frieren"));
+    await click(await findButton(view.container, "Delete Episode 1 - The Journey"));
+    expect(title.getAttribute("aria-expanded")).toBe("true");
+    expect(view.container.textContent).toContain("Episode 1 - The Journey");
+    expect(request.mock.calls.some(([message]) => message.command === "delete")).toBe(false);
+    expect(view.container.querySelector("button button")).toBeNull();
+    await unmount(view.root);
+  });
+
+  it("reveals the same search again after clearing a collapsed search result", async () => {
+    const view = await renderPanel(clientFixture({ cached: null, request: requestForHistory(historyFixture()) }));
+    const search = await findInput(view.container, "Search watch history");
+    await setInputValue(search, "Journey");
+    await click(await findButton(view.container, "Toggle Frieren history"));
+    expect(view.container.textContent).not.toContain("Episode 1 - The Journey");
+    await click(await findButton(view.container, "Clear watch history search"));
+    await setInputValue(search, "Journey");
+    expect(view.container.textContent).toContain("Episode 1 - The Journey");
     await unmount(view.root);
   });
 
@@ -1256,9 +1517,9 @@ function historyFixture(overrides: {
   const currentTime = overrides.currentTime ?? 600;
   const progress = overrides.progress ?? 0.5;
   const episode = {
-    episodeKey: "crunchyroll:episode-1",
+    episodeKey: "crunchyroll:episode:FRIEREN|S1|E1",
     episodeTitle: "Episode 1 - The Journey",
-    seasonKey: "crunchyroll:season-1",
+    seasonKey: "crunchyroll:season:FRIEREN|S1",
     seasonTitle: "Season 1",
     seasonNumber: 1,
     episodeNumber: 1,
@@ -1272,7 +1533,7 @@ function historyFixture(overrides: {
   };
   return {
     meta: {
-      schemaVersion: 2,
+      schemaVersion: 3,
       ownerUserId: OWNER_ID,
       accountGeneration: 1,
       serverTime: NOW,
@@ -1283,7 +1544,7 @@ function historyFixture(overrides: {
     items: [
       {
         provider: "crunchyroll",
-        titleKey: "crunchyroll:frieren",
+        titleKey: "crunchyroll:series:FRIEREN",
         observedEpisodeCount: 1,
         completedEpisodeCount: 0,
         episodePage: { complete: true, nextCursor: null },
@@ -1295,7 +1556,7 @@ function historyFixture(overrides: {
         aggregate: { completedEpisodes: 0, availableEpisodes: null, progress: null },
         seasons: [
           {
-            seasonKey: "crunchyroll:season-1",
+            seasonKey: "crunchyroll:season:FRIEREN|S1",
             seasonTitle: "Season 1",
             seasonNumber: 1,
             order: 0,
@@ -1325,7 +1586,7 @@ function twoEpisodeHistoryFixture(): WatchHistoryResponse {
   if (!first) throw new Error("fixture episode missing");
   const second = {
     ...first,
-    episodeKey: "crunchyroll:episode-2",
+    episodeKey: "crunchyroll:episode:FRIEREN|S1|E2",
     episodeTitle: "Episode 2 - The Promise",
     episodeNumber: 2,
     sourceUrl: "https://www.crunchyroll.com/watch/EPISODE2",
@@ -1341,6 +1602,39 @@ function twoEpisodeHistoryFixture(): WatchHistoryResponse {
   };
 }
 
+function multiSeasonHistoryFixture(): WatchHistoryResponse {
+  const history = twoEpisodeHistoryFixture();
+  const item = history.items[0];
+  const season = item?.seasons[0];
+  const firstEpisode = season?.episodes[0];
+  if (!item || !season || !firstEpisode) throw new Error("multi-season fixture missing");
+  const latest = {
+    ...firstEpisode,
+    episodeKey: "crunchyroll:season-2-episode-1",
+    episodeTitle: "A New Beginning",
+    seasonKey: "crunchyroll:season-2",
+    seasonTitle: "Season 2",
+    seasonNumber: 2,
+  };
+  return {
+    ...history,
+    totalTitleCount: 2,
+    items: [{
+      ...item,
+      observedEpisodeCount: 3,
+      latestActivity: { ...item.latestActivity, episodeKey: latest.episodeKey },
+      seasons: [season, {
+        ...season,
+        seasonKey: latest.seasonKey,
+        seasonTitle: latest.seasonTitle,
+        seasonNumber: 2,
+        order: 1,
+        episodes: [latest],
+      }],
+    }, { ...item, titleKey: "crunchyroll:another", title: "Another title" }],
+  };
+}
+
 function historyWithEpisodesFixture(count: number): WatchHistoryResponse {
   const history = historyFixture();
   const item = history.items[0];
@@ -1352,7 +1646,7 @@ function historyWithEpisodesFixture(count: number): WatchHistoryResponse {
     const lastWatchedAt = new Date(Date.parse(NOW) - (count - number + 1) * 60_000).toISOString();
     return {
       ...first,
-      episodeKey: `crunchyroll:episode-${number}`,
+      episodeKey: `crunchyroll:episode:FRIEREN|S1|E${number}`,
       episodeTitle: `Episode ${number} - Cached`,
       episodeNumber: number,
       sourceUrl: `https://www.crunchyroll.com/watch/EPISODE${number}`,
@@ -1538,18 +1832,23 @@ function pendingEvent(overrides: {
   observedAt?: string;
 }): WatchProgressEvent {
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     clientEventId: overrides.clientEventId ?? "00000000-0000-4000-8000-000000000003",
     clientSessionKey: "popup-test-session",
+    crunchyrollIdentity: {
+      providerSeriesId: "FRIEREN", providerSeasonIdentifier: "FRIEREN|S1",
+      providerEpisodeIdentifier: (overrides.episodeKey ?? "crunchyroll:episode:FRIEREN|S1|E1").replace("crunchyroll:episode:", ""),
+      providerContentId: "EPISODE1", audioLocale: "ja-JP",
+    },
     accountGeneration: 1,
     provider: "crunchyroll",
-    titleKey: "crunchyroll:frieren",
+    titleKey: "crunchyroll:series:FRIEREN",
     itemKind: "series",
     title: "Cached Frieren",
     artworkUrl: null,
-    episodeKey: overrides.episodeKey ?? "crunchyroll:episode-1",
+    episodeKey: overrides.episodeKey ?? "crunchyroll:episode:FRIEREN|S1|E1",
     episodeTitle: overrides.episodeTitle ?? "Episode 1 - The Journey",
-    seasonKey: "crunchyroll:season-1",
+    seasonKey: "crunchyroll:season:FRIEREN|S1",
     seasonTitle: "Season 1",
     seasonNumber: 1,
     episodeNumber: overrides.episodeNumber ?? 1,
@@ -1572,7 +1871,7 @@ function pendingEvent(overrides: {
 function preferencesFixture(youtubeHistoryEnabled: boolean): WatchHistoryPreferencesResponse {
   return {
     meta: {
-      schemaVersion: 2,
+      schemaVersion: 3,
       ownerUserId: OWNER_ID,
       accountGeneration: 1,
       serverTime: NOW,

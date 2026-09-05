@@ -82,8 +82,8 @@ insert into claimed select * from public.claim_account_inbox_push_outbox(8,array
 select is(public.finish_account_inbox_push_outbox(c.user_id,c.revision,c.lease_token,'complete'),'completed','successful current revision retires') from claimed c;
 select is((select count(*) from public.account_inbox_push_outbox where user_id='94100000-0000-4000-8000-000000000002'),0::bigint,'completed job is removed');
 -- Two real sessions: one holds row locks; the other must skip rather than wait.
-select extensions.dblink_connect('outbox_a','host=host.docker.internal port=54322 dbname=postgres user=postgres password=postgres');
-select extensions.dblink_connect('outbox_b','host=host.docker.internal port=54322 dbname=postgres user=postgres password=postgres');
+select extensions.dblink_connect('outbox_a',pg_catalog.format('host=%s port=%s dbname=%L user=postgres password=postgres', pg_catalog.inet_server_addr(), pg_catalog.inet_server_port(), pg_catalog.current_database()));
+select extensions.dblink_connect('outbox_b',pg_catalog.format('host=%s port=%s dbname=%L user=postgres password=postgres', pg_catalog.inet_server_addr(), pg_catalog.inet_server_port(), pg_catalog.current_database()));
 select extensions.dblink_exec('outbox_a',$sql$
   insert into public.users(id,email,display_name) values('94900000-0000-4000-8000-000000000001','outbox-concurrent@example.test','Outbox concurrent');
   insert into public.account_inbox_push_outbox(user_id) values('94900000-0000-4000-8000-000000000001');
