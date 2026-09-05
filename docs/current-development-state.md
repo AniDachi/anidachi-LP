@@ -1223,7 +1223,7 @@ The approved specification, implementation plan, and exact local evidence are:
 - `docs/superpowers/plans/2026-09-05-watch-drawer-browse.md`
 - `docs/watch-drawer-browse-local-verification.md`
 
-The later local-only `codex/watch-history-fast-reopen` follow-up separates saved
+The `codex/watch-history-fast-reopen` follow-up separates saved
 read availability from refresh freshness. Ordinary progress leaves bounded
 account/query-owned Mine/Together results displayable while they revalidate;
 generation, account departure, deletion and consent still fence reads. The
@@ -1232,10 +1232,15 @@ outbox. An opt-in titles response supplies up to eight exact-query episodes per
 title and explicit continuation, so opening a title does not require another
 initial HTTP request. New shared observations can appear as **Pending sync** only
 without filters; they do not invent confirmed sessions or group provenance.
-This work is not a staging deployment or tester-folder update. Its local evidence
-and remaining activation boundary are in
-`docs/watch-history-local-read-verification.md`; execution is tracked in
-`docs/superpowers/plans/2026-09-05-watch-history-local-read.md`.
+Its completed local evidence is in `docs/watch-history-local-read-verification.md`;
+implementation is tracked in
+`docs/superpowers/plans/2026-09-05-watch-history-local-read.md`. The user subsequently
+authorized coordinated staging delivery and both established tester folders.
+Database-only PR #270 must apply `20260905145315` before the matching runtime PR
+from `codex/watch-history-fast-reopen`. Their release receipts record the exact
+migration, CI, Vercel, smoke and artifact outcomes. Main/production remain outside
+this delivery; deployment and folder synchronization do not prove browser reload
+or authenticated user acceptance.
 
 Rollout must remain database-first: apply the additive migration, deploy the
 reviewed matching Web runtime, build the matching narrow staging extension, then
