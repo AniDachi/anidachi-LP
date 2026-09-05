@@ -1126,9 +1126,12 @@ The forward read fix is migration `20260905083000`; applied migration files rema
 unchanged. Dedicated local proof now includes the 39-migration chain, 13 pgTAP files /
 654 assertions, a populated transition with three blocked already-entered v2 calls,
 five actual RPC pages, 13 catalog list/detail states, the 2,000-episode bounded
-benchmark, web/extension checks and suites, and 17 website TSX tests. Earlier
-protocol/root/artifact gates retain their prior tested-source attribution until
-the final main-task gates. Exact commands, measurements, guard
+benchmark, web/extension checks and suites, and 17 website TSX tests. Final
+controller gates at product commit `4d7f395` pass root check/test (six tasks each;
+four unchanged tasks cached), a fresh 41-test API runtime run, staging artifact
+build/validation, and real-component headless Popup 6 / website 7 cases. The scoped
+final re-review closes all three findings with no new breakage; this is local code
+approval, not deployment acceptance. Exact commands, measurements, guard
 requirements, lint notices, the earlier local-port-54322 harness incident, activation
 order, rollback constraint, and open authenticated-provider/staging gates are in
 `docs/watch-history-v3-local-verification.md`.

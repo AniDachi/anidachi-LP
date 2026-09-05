@@ -5,9 +5,11 @@
 > `superpowers:verification-before-completion` for completion claims.
 > Steps use checkbox (`- [ ]`) syntax.
 
-**Status:** Approved for local implementation 2026-09-05. The user authorized
-careful execution after removing preservation of old test history as a requirement.
-Local implementation is in progress; no remote database cutover is authorized.
+**Status:** Local implementation and final code review complete 2026-09-05 at
+product commit `4d7f395`. The user authorized careful execution after removing
+preservation of old test history as a requirement. Remote database cutover,
+deployment, tester-folder updates and authenticated acceptance are not authorized
+or completed by this local closeout.
 
 **Goal:** Store new history by stable provider identities and show accurate
 server-owned series progress with provider-localized labels in Popup and website.
@@ -72,7 +74,7 @@ next-episode URL selection. They are provider data, not legacy migration machine
 
 ## Evidence Used For The Design
 
-### Current AniDachi baseline
+### AniDachi baseline inspected before implementation
 
 - `packages/protocol/src/watch-history.ts` already contains a dormant catalog
   input and a read model capable of `catalogState: "complete"`, exact title and
@@ -89,7 +91,8 @@ next-episode URL selection. They are provider data, not legacy migration machine
   safe only while exact server aggregates do not exist and must be corrected
   before enabling catalogs.
 - Existing reads are intentionally bounded to eight observed episodes per visible
-  title; the website defaults to 50 titles and the server/Popup maximum is 100.
+  title; the service defaults to 50 titles, the website requests 24, and the
+  server/Popup maximum is 100.
   A full catalog must never be parsed for every visible title during an ordinary
   read.
 
@@ -151,6 +154,14 @@ region. See:
   world bridge; the isolated extension world receives only sanitized validated
   results:
   <https://developer.chrome.com/docs/extensions/develop/concepts/content-scripts>.
+- Chrome service workers may terminate and lose in-memory jobs. Persist observation
+  intent first; tolerate duplicate catalog work through server revisions, not
+  artificial keepalive timers. Rechecked 2026-09-05:
+  <https://developer.chrome.com/docs/extensions/develop/concepts/service-workers/lifecycle>.
+- Chrome's Promise-based message-listener response support is a gradual rollout;
+  existing `return true` plus `sendResponse` remains compatible. Do not convert
+  unrelated listeners into async listeners while adding catalog commands:
+  <https://developer.chrome.com/docs/extensions/develop/concepts/messaging>.
 
 ## Product And Data Definitions
 
@@ -382,9 +393,13 @@ summary tables. Keep indexed pagination, eight episode rows per title, a
 
 Shared history-session identity remains
 `room_id + room_generation + source_generation`. Content keys become canonical,
-but Worker authority still identifies the actual source URL/fingerprint. Verify
-authority against that raw source, not the new logical episode key. Room
-membership, source synchronization, and the live lifecycle do not change.
+but the retained client source context still identifies the actual source
+URL/fingerprint, not the new logical episode key. The existing signed attestation
+binds user, room, participant session and room/source generations; it does not
+contain a signed URL/fingerprint. Preserve that contract. The server validates
+raw GUID/URL equality and the host-established shared history session's raw URL;
+the extension must retain the original source/attestation association. Room
+membership, source synchronization and the live lifecycle do not change.
 
 ### Catalog snapshot and variants
 
@@ -422,11 +437,13 @@ If identity cannot yet be resolved, persist the observation as identity-pending
 inside the existing bounded outbox, with its original owner, generation, event ID,
 observation time, source URL, and room authority. Resolve the recorded watch GUID,
 not whatever episode an SPA page happens to show later. Retain the existing
-outbox capacity/expiry and retry policy; do not add another queue or a raw-key
-server fallback.
+outbox shape, byte-quota and retry policy; do not add another queue or a raw-key
+server fallback. Existing policy explicitly has no outbox age expiry or global
+record-count constant: preserve terminal/latest slots and storage-full handling.
 
-Resolution never advances observation time or changes owner/generation. A deleted,
-expired, signed-out, or old-generation pending observation cannot recreate history.
+Resolution never advances observation time or changes owner/generation. A deleted
+or old-generation pending observation cannot recreate history; a signed-out owner
+cannot publish it, and expired room authority retains the existing rejection policy.
 No pending work blocks playback or room teardown.
 
 ### Catalog begin/commit
@@ -601,10 +618,10 @@ meaningful Crunchyroll interaction
 - [x] Record plan approval, branch/HEAD, and dirty files; preserve the Popup design.
 - [x] Read root/plane AGENTS, canonical docs, and the product spec. Record the
   user's clean-start amendment in the spec before changing runtime behavior.
-- [ ] Isolate feature work if needed; no resetting or discarding the visual work.
-- [ ] Inventory history consumers, legacy write paths, exact reset targets,
+- [x] Isolate feature work if needed; no resetting or discarding the visual work.
+- [x] Inventory history consumers, legacy write paths, exact reset targets,
   surrounding foreign keys/triggers, and preserved settings.
-- [ ] Run scoped baseline checks and classify existing failures before changes.
+- [x] Run scoped baseline checks and classify existing failures before changes.
 
 ### Task 1: Provider Evidence And Current-Object Identity
 
@@ -615,17 +632,21 @@ meaningful Crunchyroll interaction
 `apps/extension/src/source-adapters/crunchyroll/progress.ts`;
 `apps/extension/test/crunchyroll-progress.test.ts`.
 
-- [ ] Capture secret-free fixtures proving exact current-object identity using
+- [x] Capture secret-free fixtures proving exact current-object identity using
   its matching season metadata independently of full series catalog traversal.
-- [ ] Include multiple locales/audio variants, separate legacy dub seasons,
+- [x] Include multiple locales/audio variants, separate legacy dub seasons,
   fractional/zero/null numbering, region, future/expired/clip classification,
   failed traversal, and raw count mismatch.
-- [ ] Record exact field behavior, provider fallback, ignored pagination, and
+- [x] Record exact field behavior, provider fallback, ignored pagination, and
   endpoint limitations. No cookies/tokens/account IDs in fixtures.
-- [ ] Test direct canonical key derivation, exact watch GUID resolution, distinct
+- [x] Test direct canonical key derivation, exact watch GUID resolution, distinct
   legacy seasons, and missing/ambiguous identity remaining pending.
-- [ ] Verify live provider behavior across supported cases. If identity/region/
+- [x] Verify live provider behavior across supported cases. If identity/region/
   complete traversal cannot be proven, keep exact progress disabled.
+
+Local evidence: four fresh anonymous regional traversals normalize complete;
+legacy Naruto evidence remains partial. Derived edge-case fixtures are labeled
+as such. Authenticated provider/browser acceptance remains the Task 7 gate.
 
 ### Task 2: Shared Schema 3 And Pure Catalog Parser
 
@@ -634,16 +655,16 @@ meaningful Crunchyroll interaction
 `apps/extension/src/source-adapters/crunchyroll/catalog.ts`;
 `apps/extension/test/crunchyroll-catalog.test.ts`.
 
-- [ ] Write failing schema/parser tests for the exact identity object and all
+- [x] Write failing schema/parser tests for the exact identity object and all
   bounds, strict unknown keys, source URL equality, variants/conflicts, region,
   locale, zero availability, partial results, and begin/commit acknowledgements.
-- [ ] Bump history schema to 3; add provider-specific canonical progress fields and
+- [x] Bump history schema to 3; add provider-specific canonical progress fields and
   replace the unused catalog input. Preserve YouTube identity/consent behavior.
-- [ ] Remove the invalid historical-completed/current-available equality rule;
+- [x] Remove the invalid historical-completed/current-available equality rule;
   preserve the remaining exact/partial invariants.
-- [ ] Implement a pure normalizer/classifier using Task 1 fixtures. No DOM, network,
+- [x] Implement a pure normalizer/classifier using Task 1 fixtures. No DOM, network,
   auth, database, or aggregate calculation inside it.
-- [ ] Test deterministic ordering/hash input, raw-total checks before collapse,
+- [x] Test deterministic ordering/hash input, raw-total checks before collapse,
   separate provider seasons, sentinel date handling, locale fallback, and limits.
   Ambiguity means partial.
 
@@ -664,30 +685,36 @@ Move/update `apps/web/lib/anidachi-auth/watch-history-v2-sql.test.ts`,
 `watch-history-v2.local-rpc.test.ts`, and
 `watch-history-v2.benchmark.test.ts` to `watch-history-v3*`.
 
-- [ ] Test canonical identity, two audio variants counting once, sticky completion,
+- [x] Test canonical identity, two audio variants counting once, sticky completion,
   latest actual variant resume, account/RLS isolation, and old-schema rejection.
-- [ ] Adapt existing progress/title/session summaries and schema/index predicates
+- [x] Adapt existing progress/title/session summaries and schema/index predicates
   directly. Add bounded snapshot/derived variant relations, no parallel summaries.
-- [ ] Implement `begin_watch_catalog_v3`/`apply_watch_catalog_v3` with account
+- [x] Implement `begin_watch_catalog_v3`/`apply_watch_catalog_v3` with account
   lock, generation, unique monotonic revision, context, deletion, and hash rules.
-- [ ] Adapt progress/delete/read RPCs; preserve existing correct idempotency,
+- [x] Adapt progress/delete/read RPCs; preserve existing correct idempotency,
   requester isolation, shared-source authority, pagination, and receipt bounds.
-- [ ] Implement narrow clean-start transition and terminal/revoked old write paths.
+- [x] Implement narrow clean-start transition and terminal/revoked old write paths.
   Preserve applied migration files and unrelated data.
-- [ ] Test populated-test-database and fresh-migration-chain paths, an in-flight old
+- [x] Test populated-test-database and fresh-migration-chain paths, an in-flight old
   transaction, late schema-2 outbox, and an account without prior settings.
-- [ ] Test title delete/recreate followed by an old catalog commit: revision must
+- [x] Test title delete/recreate followed by an old catalog commit: revision must
   not be reused. Test delayed identity-pending observations after deletion.
-- [ ] Benchmark maximum catalog and 100-title read; heartbeat cost must not scale
+- [x] Benchmark maximum catalog and 100-title read; heartbeat cost must not scale
   with full snapshot size.
 
 ~~~bash
 pnpm --filter @anidachi/web exec tsx --test lib/anidachi-auth/watch-history-v3-sql.test.ts lib/anidachi-auth/watch-history-v3.local-rpc.test.ts lib/anidachi-auth/watch-history-v3.benchmark.test.ts
-fnm exec --using="$(cat .node-version)" pnpm dlx supabase@2.111.0 --workdir apps/web test db
+: "${ANIDACHI_DISPOSABLE_DB_WORKDIR:?Set the verified dedicated disposable Supabase workdir}"
+fnm exec --using="$(cat .node-version)" pnpm dlx supabase@2.111.0 --workdir "$ANIDACHI_DISPOSABLE_DB_WORKDIR" test db
 pnpm --filter @anidachi/web check
 ~~~
 
 Use only a disposable local database for transition/reset tests.
+
+Local SQL checkpoint `6c9d531` passed independent review, 654 pgTAP assertions,
+fresh/populated cutover checks and bounded real-data benchmarks. Dedicated local
+instance only; production service parsing and whole-web checks remain Task 4.
+Normal heartbeat uses indexed aliases and title-audio lookup, not the full snapshot.
 
 ### Task 4: Replace API And Canonical Read Builder
 
@@ -697,27 +724,38 @@ Create the v3 route family under `apps/web/app/api/watch-history/v3/`:
 `route.ts`, `progress/route.ts`, `delete/route.ts`,
 `preferences/route.ts`, `rooms/route.ts`, `title-episodes/route.ts`,
 `catalog/attempt/route.ts`, `catalog/route.ts`.
-Update `apps/web/lib/anidachi-auth/watch-history-authority.ts` and tests,
+Review `apps/web/lib/anidachi-auth/watch-history-authority.ts` and update its tests
+where needed; keep the existing signed-claim contract unchanged. Update
 `apps/web/lib/staging-access.test.ts`, and server consumers/imports.
 
-- [ ] Test auth, canonical ID/source checks, payload limits, generation/revision
+- [x] Test auth, canonical ID/source checks, payload limits, generation/revision
   mismatch, superseded no-mutation behavior, old version rejection, and server hash.
-- [ ] Move consumers to v3 services/RPCs. Replace v2 HTTP handlers with terminal
+- [x] Move server consumers to v3 services/RPCs. Replace v2 HTTP handlers with terminal
   upgrade responses; do not keep legacy raw reads/writes.
-- [ ] Test shared authority where the logical episode ID differs from raw watch
-  GUID. Use actual source fingerprint for room-authority validation.
-- [ ] Prefer accepted localized catalog labels; without a complete catalog use
+- [x] Test shared authority where the logical episode ID differs from raw watch
+  GUID. Preserve raw source validation and original source-generation binding;
+  do not replace raw URL/fingerprint with a logical episode key.
+- [x] Prefer accepted localized catalog labels; without a complete catalog use
   verified current-object labels. Do not group by translated title/slug.
-- [ ] Test canonical progress without full catalog, identity contradiction,
+- [x] Test canonical progress without full catalog, identity contradiction,
   region-change suppression, failed same-region locale refresh, zero denominator,
   and historical vs current completed counts.
-- [ ] Ensure all account/server/extension consumers use v3. Add new endpoints to
-  staging access tests and keep terminal upgrade responses non-retryable.
+- [x] Move account/server consumers to v3 and cover new endpoints in staging access
+  tests. Extension migration and terminal retry handling are explicit Task 5 gates.
+- [x] Include bounded server catalog metadata in the title-episode detail response
+  so later pages retain exact aggregates, labels and next-episode metadata for
+  newly encountered observed seasons. Reuse the compact projection; do not return
+  the full inventory or calculate aggregates in the client merge.
 
 ~~~bash
 pnpm --filter @anidachi/web exec tsx --test lib/anidachi-auth/watch-history-v3-routes.test.ts lib/anidachi-auth/watch-history-v3.test.ts lib/anidachi-auth/watch-history-authority.test.ts lib/staging-access.test.ts
 pnpm --filter @anidachi/web check
 ~~~
+
+Local checkpoint `307262d` passed independent review. Whole-web tests passed
+419 with four opt-in skips; 67 focused tests and web typecheck passed after the
+deterministic SQL error-mapping fix. Actual disposable SQL list/detail states were
+validated through production parsers/builders. No remote migration or deployment.
 
 ### Task 5: Extension Identity, Collection, And Storage Transition
 
@@ -731,23 +769,23 @@ pnpm --filter @anidachi/web check
 their existing bridge/progress/history tests and
 `apps/extension/test/watch-history-catalog.test.ts`.
 
-- [ ] Test exact bridge actions, immutable contexts, current-object identity,
+- [x] Test exact bridge actions, immutable contexts, current-object identity,
   bounded traversal, timeouts/abort, SPA races, and sanitized error handling.
-- [ ] Extend the existing bridge, including actual current locale/audio context;
+- [x] Extend the existing bridge, including actual current locale/audio context;
   do not add page-global network hooks.
-- [ ] Queue observations before metadata discovery. Extend the existing bounded
+- [x] Queue observations before metadata discovery. Extend the existing bounded
   outbox with identity-pending records; resolve the original watch GUID, preserving
   original event/owner/generation/time/room authority. No extra queue or raw fallback.
-- [ ] Use v3 routes/schema; validate stale content-script messages in background.
+- [x] Use v3 routes/schema; validate stale content-script messages in background.
   Drop old history cache/outbox partitions once without touching auth/preferences/
   rooms/media settings or reassigning old events to the new generation.
-- [ ] Implement background begin/commit and one in-flight catalog job per
+- [x] Implement background begin/commit and one in-flight catalog job per
   account/title. New contexts supersede old jobs; no catalog dependency blocks
   resolved progress transport.
-- [ ] Region-changing begin and applied commit emit coalesced history invalidation.
+- [x] Region-changing begin and applied commit emit coalesced history invalidation.
   Fence GETs by owner/generation/request/invalidation revision.
-- [ ] Test worker restart, duplicate/context races, offline retry, pending identity,
-  delete before resolution, outbox capacity/expiry, account switch, schema upgrade,
+- [x] Test worker restart, duplicate/context races, offline retry, pending identity,
+  delete before resolution, outbox quota/authority expiry, account switch, schema upgrade,
   and stale content scripts.
 
 ~~~bash
@@ -761,14 +799,23 @@ pnpm --filter @anidachi/extension check
 `apps/extension/test/popup-watch-history.test.tsx`;
 `apps/web/app/account/watch-library/watch-library-client.tsx` and its test.
 
-- [ ] Integrate the existing visual checkpoint without overwriting user work.
-- [ ] Test complete/partial/unavailable/zero-available states and localized labels.
-- [ ] Render server `aggregate.progress` and counts; remove optimistic aggregate
+- [x] Integrate the existing visual checkpoint without overwriting user work.
+- [x] Test complete/partial/unavailable/zero-available states and localized labels.
+- [x] Render server `aggregate.progress` and counts; remove optimistic aggregate
   mutation from delete paths. Cache refresh retains canonical content.
-- [ ] Use identical semantics on website after its canonical focus/refresh path.
-- [ ] Keep a nested visual bar `aria-hidden` inside a disclosure button; include
+- [x] Keep exact server aggregates during detail-page merging as well as deletion;
+  historical completed counts must not replace the available-episode intersection.
+- [x] Use identical semantics on website after its canonical focus/refresh path.
+- [x] Keep a nested visual bar `aria-hidden` inside a disclosure button; include
   exact state in its accessible name. Test long/RTL labels, keyboard and narrow UI.
-- [ ] Defer poster/tree-line cosmetics and full unwatched episode rendering.
+- [x] Defer poster/tree-line cosmetics and full unwatched episode rendering.
+
+Local checkpoint `571f49a` passed independent review, dedicated website TSX
+15/15 and whole-web 425 passing with four opt-in skips. Extension 1651/1651 and
+typechecks passed. Actual component headless checks passed six Popup and seven
+website cases, including real SQL disjoint detail pages, complete-to-partial
+header changes, 360px layout, Arabic direction and keyboard focus. These are
+isolated local checks, not authenticated provider or loaded-extension acceptance.
 
 ~~~bash
 pnpm --filter @anidachi/extension exec vitest run test/popup-watch-history.test.tsx
@@ -783,13 +830,16 @@ pnpm --filter @anidachi/web check
 `docs/crunchyroll-adapter-notes.md`, appropriate history release notes.
 Intentionally refresh Graphify using its semantic skill.
 
-- [ ] Document canonical storage, schema 3, reset scope, preserved settings, and
+- [x] Document canonical storage, schema 3, reset scope, preserved settings, and
   required tester extension update.
-- [ ] Run protocol/web/extension/local pgTAP/project gates and review the complete
+- [x] Run protocol/web/extension/local pgTAP/project gates and review the complete
   change for identity, session authority, deletion, pending work, auth, and bounds.
-- [ ] Simulate cutover with old data, pending events, and unrelated product
+- [x] Simulate cutover with old data, pending events, and unrelated product
   fixtures. Verify only intended history resets and old writers cannot recreate it.
-- [ ] Refresh Graphify and build/validate staging artifact.
+- [x] Build and validate the matching staging-channel artifact locally.
+  The final local documentation commit must also intentionally refresh Graphify
+  with current code and semantic sources; only the three team graph artifacts
+  belong in that commit. Graphify does not replace source or acceptance evidence.
 - [ ] Before a separately authorized remote transition, record environment,
   targeted counts, migration/runtime activation order, and rollback.
 - [ ] Coordinate migration/web/extension cutover. Allow a short history-only upgrade
@@ -806,8 +856,9 @@ pnpm --filter @anidachi/extension check
 pnpm --filter @anidachi/extension test
 pnpm --filter @anidachi/web check
 pnpm --filter @anidachi/web test
-fnm exec --using="$(cat .node-version)" pnpm dlx supabase@2.111.0 --workdir apps/web test db
-fnm exec --using="$(cat .node-version)" pnpm dlx supabase@2.111.0 --workdir apps/web db lint --level warning
+: "${ANIDACHI_DISPOSABLE_DB_WORKDIR:?Set the verified dedicated disposable Supabase workdir}"
+fnm exec --using="$(cat .node-version)" pnpm dlx supabase@2.111.0 --workdir "$ANIDACHI_DISPOSABLE_DB_WORKDIR" test db
+fnm exec --using="$(cat .node-version)" pnpm dlx supabase@2.111.0 --workdir "$ANIDACHI_DISPOSABLE_DB_WORKDIR" db lint --local --level warning
 pnpm check
 pnpm test
 pnpm dev:check
@@ -874,7 +925,8 @@ record tokens or cookies.
     catalog state.
 
 22. Metadata outage: observations stay bounded/pending; later exact-ID resolution
-    preserves their timestamps. Delete/account switch/expiry prevents resurrection.
+    preserves their timestamps. Deletion/generation fences and account authorization
+    prevent resurrection; expired room authority is never downgraded to solo.
 23. Shared history verifies raw room-source authority while progress uses canonical
     episode keys; a guest clearing history does not change host/room state.
 24. Different durations across audio variants preserve one completion and resume
@@ -916,6 +968,42 @@ is authorized by this plan.
 
 ## Planning Verification (2026-09-05)
 
-At planning close the revised model was proposed, not implemented. Deployed runtime remains Watch
-History v2. No history has been cleared and no product code, test folder, browser
-profile, settings, or deployed database was changed for this amendment.
+At planning close the revised model was proposed, not implemented. Watch History
+v2 was the recorded remote baseline. No history had been cleared and no product
+code, test folder, browser profile, settings, or deployed database had been changed
+for that planning amendment. The implementation below supersedes only this local
+planning status, not the separately authorized remote transition gates.
+
+## Local Implementation Closeout (2026-09-05)
+
+Tasks 0–6 and the local part of Task 7 are complete. The original Popup visual WIP
+is isolated at `b7ec55e`; canonical implementation, tests and scoped fixes remain
+local on `codex/watch-drawer-design`. The full-branch review identified three
+boundary defects (stale website owner intent, omitted historical seasons, and
+interrupted local legacy cleanup). One fix wave at `4d7f395` and one scoped
+re-review closed all three with no new Critical/Important/Minor findings.
+
+Final gates: root check/test passed six Turbo tasks each; changed web/extension
+tasks executed while four unchanged tasks reused the local cache. Protocol 145,
+API 201, extension 1,653, web 431 passed / four explicit opt-in skips; separate
+fresh API runtime 41, website TSX 17, SQL production consumers 4, disposable guards
+8, dedicated pgTAP 654, and all 39 migrations passed. Populated transition proves
+preserved surrounding product data and terminal old writers. The matching
+staging-channel artifact builds/validates locally. Current real-component
+headless proof passes Popup 6 and website 7 cases without console/runtime errors.
+`pnpm dev:check` passes. SQL notices and previously unclassified React/dynamic-import
+warnings remain documented rather than hidden.
+
+The initial local harness reached another local database through old hardcoded
+dblink port 54322; prior state was not captured and exact impact is unknown. Those
+tests now target their current server. Subsequent retained reset/proof uses only
+the explicitly guarded disposable port-55452 target. No remote database was
+changed. Full incident details, reproducible commands, measurements, transition
+order and rollback limits are retained in
+`docs/watch-history-v3-local-verification.md`.
+
+No push, merge, deploy, tester synchronization or personal browser operation is
+part of this closeout. Do not load the schema-3 artifact against the recorded v2
+backend. Next: separately approve matching staging DB/web/extension activation,
+then execute the authenticated acceptance matrix. Shared-history product redesign,
+tree/poster cosmetics and production promotion remain outside this slice.

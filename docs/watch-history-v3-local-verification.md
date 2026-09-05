@@ -273,8 +273,18 @@ previously recorded terminal-v2/immutable-wrapper notices; the new read helper
 produced no lint finding. Changed retained scripts pass Biome.
 
 This wave did not change the shared body protocol or Worker/media contracts.
-Final root/build/artifact/headless gates and Graphify closeout belong to the main
-task; earlier results above remain attributed to their earlier tested source.
+At product commit `4d7f395`, the controller reran root `pnpm check` and `pnpm test`:
+both passed all six Turbo tasks (the changed web/extension tasks executed; four
+unchanged tasks reused the local cache). Counts were protocol 145, API 201,
+extension 1,653, and web 431 passed / four explicit opt-in skips. A separate fresh
+API runtime run passed 41/41. `pnpm dev:check` passed. The matching staging-channel
+extension was rebuilt and validated locally, without synchronization or loading
+against the recorded v2 backend. Real-component, local-origin-only headless proof
+was rerun against current components: Popup 6/6 and website 7/7, zero console/runtime
+errors, including exact/unknown/zero states, Arabic titles, keyboard disclosure,
+search, disjoint detail pages and detail invalidation. These checks are not an
+authenticated loaded-extension test. Earlier results above remain attributed to
+their earlier source. Graphify/plan closeout is a separate local commit gate.
 Authenticated provider, loaded extension and matching staging acceptance remain
 open. Existing P3 warning/lint hygiene is still deferred and is not silently muted.
 
