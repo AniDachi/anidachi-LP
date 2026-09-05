@@ -56,7 +56,7 @@ describe("Popup Watch History v2", () => {
       subscribe: (_owner: string, listener: typeof publish) => { publish = listener; return () => undefined; },
     };
     const view = await renderPanel(client);
-    await waitFor(() => expect(view.container.textContent).toContain("0/12 episodes"));
+    await waitFor(() => expect(view.container.textContent).toContain("0 / 12 episodes · 0%"));
     await background.handle({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "catalog-begin", expectedOwnerUserId: OWNER_ID, pageId: "visit",
       input: { schemaVersion: 3, accountGeneration: 1, provider: "crunchyroll", titleKey: "crunchyroll:series:FRIEREN", providerSeriesId: "FRIEREN",
         context: { region: "US", requestedLocale: "en-US", audioLocale: null, subtitleLocales: [], observedAt: NOW } } });
@@ -64,14 +64,14 @@ describe("Popup Watch History v2", () => {
     expect(partial.history.items[0]).toMatchObject({ catalogState: "partial", aggregate: { availableEpisodes: null, progress: null } });
     expect(partial.history.items[0]!.seasons[0]!.episodes).toEqual(complete.items[0]!.seasons[0]!.episodes);
     await act(async () => { publish(partial); });
-    expect(view.container.textContent).not.toContain("0/12 episodes");
+    expect(view.container.textContent).not.toContain("0 / 12 episodes · 0%");
     expect(view.container.textContent).toContain("The Journey");
     await background.handle(createListWatchHistoryMessage());
     expect(stored.partitions[key]!.cache!.items[0]!.catalogState).toBe("partial");
     getSucceeds = true;
     await background.handle(createListWatchHistoryMessage());
     await act(async () => { publish(selectConfirmedPopupWatchHistorySnapshot(stored, OWNER_ID)); });
-    expect(view.container.textContent).toContain("0/12 episodes");
+    expect(view.container.textContent).toContain("0 / 12 episodes · 0%");
     await unmount(view.root);
   });
   it("coalesces mutation invalidations for an open subscriber and stops refresh after close", async () => {
@@ -804,8 +804,20 @@ describe("Popup Watch History v2", () => {
   });
 
   it("deletes one episode with the current generation and keeps unrelated canonical history", async () => {
+    const exactHistory = twoEpisodeHistoryFixture();
+    const exactItem = exactHistory.items[0]!;
+    exactItem.observedEpisodeCount = 7;
+    exactItem.completedEpisodeCount = 6;
+    exactItem.episodePage = { complete: false, nextCursor: "episode_cursor" };
+    exactItem.catalogState = "complete";
+    exactItem.aggregate = { completedEpisodes: 5, availableEpisodes: 13, progress: 5 / 13 };
+    exactItem.seasons[0]!.aggregate = {
+      completedEpisodes: 5,
+      availableEpisodes: 13,
+      progress: 5 / 13,
+    };
     const request = vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
-      if (message.command === "list") return { ok: true, data: twoEpisodeHistoryFixture() };
+      if (message.command === "list") return { ok: true, data: exactHistory };
       if (message.command === "get-preferences") {
         return { ok: true, data: preferencesFixture(false) };
       }
@@ -844,6 +856,8 @@ describe("Popup Watch History v2", () => {
 
     await waitFor(() => expect(view.container.textContent).not.toContain("Episode 1 - The Journey"));
     expect(view.container.textContent).toContain("Episode 2 - The Promise");
+    expect(view.container.textContent).toContain("5 / 13 episodes");
+    expect(view.container.textContent).toContain("38.46%");
     const deletion = request.mock.calls.find(([message]) => message.command === "delete")?.[0];
     expect(deletion).toEqual(expect.objectContaining({
       command: "delete",
@@ -1017,6 +1031,119 @@ describe("Popup Watch History v2", () => {
     expect(view.container.textContent).toContain("Episode 8");
     expect(request.mock.calls.filter(([message]) => message.command === "list")).toHaveLength(1);
     expect(request.mock.calls.some(([message]) => "titleKey" in message)).toBe(false);
+    await unmount(view.root);
+  });
+
+  it("renders only server-owned overall progress and exposes the exact state on the disclosure", async () => {
+    const history = historyFixture({ title: "葬送のフリーレン الموسم الطويل جدا" });
+    const item = history.items[0]!;
+    item.observedEpisodeCount = 7;
+    item.completedEpisodeCount = 6;
+    item.episodePage = { complete: false, nextCursor: "episode_cursor" };
+    item.catalogState = "complete";
+    item.aggregate = { completedEpisodes: 5, availableEpisodes: 13, progress: 5 / 13 };
+    item.seasons[0]!.seasonTitle = "الموسم الأول الطويل جدا";
+    item.seasons[0]!.aggregate = {
+      completedEpisodes: 5,
+      availableEpisodes: 13,
+      progress: 5 / 13,
+    };
+    const view = await renderPanel(clientFixture({ cached: null, request: requestForHistory(history) }));
+
+    const disclosure = await findButton(
+      view.container,
+      "Toggle 葬送のフリーレン الموسم الطويل جدا history, 5 of 13 episodes watched, 38.46 percent",
+    );
+    expect(disclosure.textContent).toContain("葬送のフリーレン الموسم الطويل جدا");
+    expect(disclosure.textContent).toContain("5 / 13 episodes");
+    expect(disclosure.textContent).toContain("38.46%");
+    expect(disclosure.querySelector(".popup-watch-title")?.getAttribute("dir")).toBe("auto");
+    const track = disclosure.querySelector(".popup-watch-overall-track");
+    expect(track?.getAttribute("aria-hidden")).toBe("true");
+    expect((track?.firstElementChild as HTMLElement | null)?.style.width).toBe(`${(5 / 13) * 100}%`);
+    expect(item.completedEpisodeCount).toBe(6);
+    await unmount(view.root);
+  });
+
+  for (const catalogState of ["partial", "unavailable"] as const) {
+    it(`keeps ${catalogState} title progress observed-only`, async () => {
+      const history = historyFixture();
+      const item = history.items[0]!;
+      item.catalogState = catalogState;
+      item.observedEpisodeCount = 7;
+      item.completedEpisodeCount = 6;
+      item.episodePage = { complete: false, nextCursor: "episode_cursor" };
+      item.aggregate = { completedEpisodes: 6, availableEpisodes: null, progress: null };
+      const view = await renderPanel(clientFixture({ cached: null, request: requestForHistory(history) }));
+
+      await waitFor(() => expect(view.container.textContent).toContain("7 observed episodes"));
+      expect(view.container.querySelector(".popup-watch-overall-track")).toBeNull();
+      expect(view.container.textContent).not.toContain("0%");
+      await unmount(view.root);
+    });
+  }
+
+  it("shows a complete zero-available catalog as unavailable without a bar or 0 / 0", async () => {
+    const history = historyFixture();
+    const item = history.items[0]!;
+    item.observedEpisodeCount = 7;
+    item.completedEpisodeCount = 6;
+    item.episodePage = { complete: false, nextCursor: "episode_cursor" };
+    item.catalogState = "complete";
+    item.aggregate = { completedEpisodes: 0, availableEpisodes: 0, progress: 0 };
+    item.seasons[0]!.aggregate = { completedEpisodes: 0, availableEpisodes: 0, progress: 0 };
+    const view = await renderPanel(clientFixture({ cached: null, request: requestForHistory(history) }));
+
+    await findButton(view.container, "Toggle Frieren history, Not currently available");
+    expect(view.container.textContent).toContain("Not currently available");
+    expect(view.container.textContent).not.toContain("0 / 0");
+    expect(view.container.querySelector(".popup-watch-overall-track")).toBeNull();
+    await unmount(view.root);
+  });
+
+  it("keeps the canonical overall aggregate while Mine, Together, and search project visible rows", async () => {
+    const history = sameEpisodeMixedSessionHistoryFixture();
+    const item = history.items[0]!;
+    item.observedEpisodeCount = 7;
+    item.completedEpisodeCount = 6;
+    item.episodePage = { complete: false, nextCursor: "episode_cursor" };
+    item.catalogState = "complete";
+    item.aggregate = { completedEpisodes: 5, availableEpisodes: 13, progress: 5 / 13 };
+    item.seasons[0]!.aggregate = {
+      completedEpisodes: 5,
+      availableEpisodes: 13,
+      progress: 5 / 13,
+    };
+    const view = await renderPanel(clientFixture({ cached: null, request: requestForHistory(history) }));
+    const search = await findInput(view.container, "Search watch history");
+    const mode = await findButton(view.container, "Watch history mode: Mine. Switch to Together");
+
+    expect(view.container.textContent).toContain("5 / 13 episodes");
+    await setInputValue(search, "Journey");
+    expect(view.container.textContent).toContain("5 / 13 episodes");
+    await click(mode);
+    await waitFor(() => expect(mode.dataset.mode).toBe("together"));
+    expect(view.container.textContent).toContain("5 / 13 episodes");
+    await unmount(view.root);
+  });
+
+  it("preserves canonical season order while projecting pending rows", async () => {
+    const history = multiSeasonHistoryFixture();
+    const item = history.items[0]!;
+    item.seasons[0]!.order = 10;
+    item.seasons[1]!.order = 20;
+    item.seasons[0]!.episodes[0]!.lastWatchedAt = "2026-08-15T01:00:00.000Z";
+    item.seasons[1]!.episodes[0]!.lastWatchedAt = "2026-08-15T04:00:00.000Z";
+    const pending = pendingEvent({ currentTime: 720, progress: 0.4 });
+    const view = await renderPanel(clientFixture({
+      cached: snapshotFixture(history, [pending]),
+      request: requestForHistory(history),
+    }));
+
+    await waitFor(() => expect(view.container.textContent).toContain("A New Beginning"));
+    expect([...view.container.querySelectorAll(".popup-season-title")].map((node) => node.textContent))
+      .toEqual(["Season 1", "Season 2"]);
+    expect(item.seasons.map((season) => season.order)).toEqual([10, 20]);
     await unmount(view.root);
   });
 

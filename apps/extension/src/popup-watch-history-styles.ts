@@ -102,6 +102,26 @@ export const popupWatchHistoryStyles = `
     font-weight: 450;
     color: var(--ad-muted);
   }
+  .popup-watch-screen .popup-watch-overall {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+    max-width: 190px;
+  }
+  .popup-watch-screen .popup-watch-overall-track {
+    display: block;
+    width: 100%;
+    height: 2px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.09);
+  }
+  .popup-watch-screen .popup-watch-overall-track > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--ad-accent);
+  }
   .popup-watch-disclosure-icon {
     flex: 0 0 auto;
     color: rgba(255, 255, 255, 0.45);

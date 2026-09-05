@@ -12,8 +12,10 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
+  getWatchHistoryAggregateLabel,
   loadWatchHistoryTitleEpisodePage,
   mergeWatchHistoryTitleEpisodePage,
+  removeWatchHistoryTarget,
   WatchLibraryClient,
 } from "./watch-library-client";
 
@@ -174,6 +176,164 @@ it("website detail pages merge by canonical episode identity and retain continua
   assert.equal(merged.observedEpisodeCount, 12);
 });
 
+it("website detail pages adopt canonical catalog metadata without replacing the intersection aggregate", () => {
+  const item = itemFixture();
+  item.observedEpisodeCount = 7;
+  item.completedEpisodeCount = 6;
+  item.episodePage = { complete: false, nextCursor: "cursor-one" };
+  const page = detailFixture();
+  page.observedEpisodeCount = 7;
+  page.completedEpisodeCount = 6;
+  page.episodes = [{
+    ...episode("episode-three", 1, 180),
+    seasonKey: "season-two",
+    seasonTitle: "Observed label that must not win",
+    seasonNumber: 2,
+  }];
+  page.catalog = {
+    state: "complete",
+    title: "عنوان عربي طويل من المزود",
+    aggregate: { completedEpisodes: 5, availableEpisodes: 13, progress: 5 / 13 },
+    seasons: [
+      {
+        seasonKey: "season-two",
+        seasonTitle: "الموسم الثاني",
+        seasonNumber: 2,
+        order: 20,
+        aggregate: { completedEpisodes: 2, availableEpisodes: 5, progress: 2 / 5 },
+        nextEpisode: {
+          episodeKey: "episode-four",
+          episodeTitle: "الحلقة التالية",
+          seasonKey: "season-two",
+          seasonTitle: "الموسم الثاني",
+          seasonNumber: 2,
+          episodeNumber: 2,
+          sourceUrl: "https://www.crunchyroll.com/watch/episode-four/demo",
+          releasedAt: NOW,
+        },
+      },
+      {
+        seasonKey: "season-one",
+        seasonTitle: "الموسم الأول",
+        seasonNumber: 1,
+        order: 10,
+        aggregate: { completedEpisodes: 3, availableEpisodes: 8, progress: 3 / 8 },
+        nextEpisode: null,
+      },
+      {
+        seasonKey: "season-three",
+        seasonTitle: "الموسم الثالث غير المشاهد",
+        seasonNumber: 3,
+        order: 30,
+        aggregate: { completedEpisodes: 0, availableEpisodes: 4, progress: 0 },
+        nextEpisode: null,
+      },
+    ],
+  };
+
+  const merged = mergeWatchHistoryTitleEpisodePage(item, page);
+
+  assert.equal(merged.title, "عنوان عربي طويل من المزود");
+  assert.equal(merged.catalogState, "complete");
+  assert.deepEqual(merged.aggregate, {
+    completedEpisodes: 5,
+    availableEpisodes: 13,
+    progress: 5 / 13,
+  });
+  assert.equal(merged.completedEpisodeCount, 6);
+  assert.deepEqual(merged.seasons.map((season) => [season.seasonKey, season.seasonTitle, season.order]), [
+    ["season-one", "الموسم الأول", 10],
+    ["season-two", "الموسم الثاني", 20],
+  ]);
+  assert.equal(merged.seasons[1]?.nextEpisode?.episodeKey, "episode-four");
+  assert.deepEqual(merged.seasons[1]?.aggregate, {
+    completedEpisodes: 2,
+    availableEpisodes: 5,
+    progress: 2 / 5,
+  });
+  assert.deepEqual(
+    merged.seasons[1]?.episodes.map((value) => value.episodeKey),
+    ["episode-three"],
+  );
+});
+
+it("website optimistic episode deletion preserves the last canonical aggregate", () => {
+  const history = historyFixture();
+  const item = history.items[0]!;
+  item.observedEpisodeCount = 7;
+  item.completedEpisodeCount = 6;
+  item.episodePage = { complete: false, nextCursor: "cursor-one" };
+  item.catalogState = "complete";
+  item.aggregate = { completedEpisodes: 5, availableEpisodes: 13, progress: 5 / 13 };
+  item.seasons[0]!.aggregate = {
+    completedEpisodes: 5,
+    availableEpisodes: 13,
+    progress: 5 / 13,
+  };
+
+  const next = removeWatchHistoryTarget(history, {
+    scope: "episode",
+    provider: item.provider,
+    titleKey: item.titleKey,
+    episodeKey: item.seasons[0]!.episodes[0]!.episodeKey,
+  });
+
+  assert.deepEqual(next.items[0]?.aggregate, item.aggregate);
+  assert.deepEqual(next.items[0]?.seasons[0]?.aggregate, item.seasons[0]!.aggregate);
+});
+
+it("website renders complete, observed-only, and zero-available title states honestly", () => {
+  const render = (item: WatchHistoryItem) => renderToStaticMarkup(React.createElement(
+    WatchLibraryClient,
+    {
+      initialHistory: { ...historyFixture(), items: [item] },
+      initialPreferences: preferencesFixture,
+    },
+  ));
+  const exact = itemFixture();
+  exact.title = "عنوان عربي طويل من المزود";
+  exact.observedEpisodeCount = 7;
+  exact.completedEpisodeCount = 6;
+  exact.episodePage = { complete: false, nextCursor: "cursor-one" };
+  exact.catalogState = "complete";
+  exact.aggregate = { completedEpisodes: 5, availableEpisodes: 13, progress: 5 / 13 };
+  exact.seasons[0]!.aggregate = {
+    completedEpisodes: 5,
+    availableEpisodes: 13,
+    progress: 5 / 13,
+  };
+  const exactMarkup = render(exact);
+  assert.match(exactMarkup, /عنوان عربي طويل من المزود/);
+  assert.match(exactMarkup, /<h3[^>]*dir="auto"[^>]*>عنوان عربي طويل من المزود<\/h3>/);
+  assert.match(exactMarkup, /5 \/ 13 episodes/);
+  assert.match(exactMarkup, /38\.46%/);
+  assert.match(exactMarkup, /aria-hidden="true" class="watch-library-overall-track/);
+  assert.equal(getWatchHistoryAggregateLabel(exact), "5 / 13 episodes · 38.46%");
+
+  for (const state of ["partial", "unavailable"] as const) {
+    const nonExact = structuredClone(exact);
+    nonExact.catalogState = state;
+    nonExact.aggregate = { completedEpisodes: 6, availableEpisodes: null, progress: null };
+    nonExact.seasons[0]!.aggregate = {
+      completedEpisodes: 6,
+      availableEpisodes: null,
+      progress: null,
+    };
+    const markup = render(nonExact);
+    assert.match(markup, /7 observed episodes/);
+    assert.doesNotMatch(markup, /watch-library-overall-track/);
+    assert.doesNotMatch(markup, /0%/);
+  }
+
+  const zero = structuredClone(exact);
+  zero.aggregate = { completedEpisodes: 0, availableEpisodes: 0, progress: 0 };
+  zero.seasons[0]!.aggregate = { completedEpisodes: 0, availableEpisodes: 0, progress: 0 };
+  const zeroMarkup = render(zero);
+  assert.match(zeroMarkup, /Not currently available/);
+  assert.doesNotMatch(zeroMarkup, /0 \/ 0/);
+  assert.doesNotMatch(zeroMarkup, /watch-library-overall-track/);
+});
+
 it("website detail request is owner-bound and a failure leaves the current slice untouched", async () => {
   const item = itemFixture();
   const before = structuredClone(item);
@@ -321,17 +481,148 @@ describe("website detail interactions", () => {
   }
 });
 
-async function renderClient(): Promise<{ container: HTMLDivElement; root: Root }> {
+describe("website root history request fences", () => {
+  it("does not let a pre-delete refresh restore removed rows or stale aggregates", async () => {
+    let resolveOldRefresh: ((response: Response) => void) | undefined;
+    let rootReads = 0;
+    testWindow.confirm = () => true;
+    const canonical = historyFixture();
+    canonical.items = [];
+    canonical.totalTitleCount = 0;
+    globalThis.fetch = async (input: string | URL | Request) => {
+      const path = String(input);
+      if (path === "/api/watch-history/v3?limit=24") {
+        rootReads += 1;
+        if (rootReads === 1) {
+          return new Promise<Response>((resolve) => { resolveOldRefresh = resolve; });
+        }
+        return Response.json(canonical);
+      }
+      if (path === "/api/watch-history/v3/preferences") return Response.json(preferencesFixture);
+      if (path === "/api/watch-history/v3/delete") return Response.json(deletionAck({
+        scope: "title",
+        provider: "crunchyroll",
+        titleKey: "series-one",
+      }));
+      throw new Error(`Unexpected request: ${path}`);
+    };
+    const view = await renderClient();
+
+    await click(buttonByText(view.container, "Refresh"));
+    await waitFor(() => assert.equal(typeof resolveOldRefresh, "function"));
+    await click(buttonByText(view.container, "Delete title"));
+    await waitFor(() => assert.doesNotMatch(view.container.textContent ?? "", /Series One/));
+    assert.equal(rootReads, 2);
+    assert.equal(buttonByText(view.container, "Refresh").disabled, false);
+    await act(async () => { resolveOldRefresh?.(Response.json(historyFixture())); });
+    await waitFor(() => assert.doesNotMatch(view.container.textContent ?? "", /Series One/));
+    await unmount(view.root);
+  });
+
+  it("does not let an older root pagination response resurrect a deleted title", async () => {
+    let resolvePage: ((response: Response) => void) | undefined;
+    testWindow.confirm = () => true;
+    const initial = historyFixture();
+    initial.nextCursor = "older-titles";
+    const canonical = { ...historyFixture(), items: [], totalTitleCount: 0 };
+    globalThis.fetch = async (input: string | URL | Request) => {
+      const path = String(input);
+      if (path.includes("cursor=older-titles")) {
+        return new Promise<Response>((resolve) => { resolvePage = resolve; });
+      }
+      if (path === "/api/watch-history/v3?limit=24") return Response.json(canonical);
+      if (path === "/api/watch-history/v3/delete") return Response.json(deletionAck({
+        scope: "title",
+        provider: "crunchyroll",
+        titleKey: "series-one",
+      }));
+      throw new Error(`Unexpected request: ${path}`);
+    };
+    const view = await renderClient(initial);
+
+    await click(buttonByText(view.container, "Load more"));
+    await waitFor(() => assert.equal(typeof resolvePage, "function"));
+    await click(buttonByText(view.container, "Delete title"));
+    await waitFor(() => assert.doesNotMatch(view.container.textContent ?? "", /Series One/));
+    await act(async () => { resolvePage?.(Response.json(historyFixture())); });
+    await waitFor(() => assert.doesNotMatch(view.container.textContent ?? "", /Series One/));
+    await unmount(view.root);
+  });
+
+  it("rekeys state on owner change and ignores the previous owner's late deletion", async () => {
+    const ownerTwo = "22222222-2222-4222-8222-222222222222";
+    let resolveDelete: ((response: Response) => void) | undefined;
+    testWindow.confirm = () => true;
+    globalThis.fetch = async (input: string | URL | Request) => {
+      const path = String(input);
+      if (path === "/api/watch-history/v3/delete") {
+        return new Promise<Response>((resolve) => { resolveDelete = resolve; });
+      }
+      throw new Error(`Unexpected request: ${path}`);
+    };
+    const view = await renderClient();
+    await click(buttonByText(view.container, "Delete title"));
+    await waitFor(() => assert.equal(typeof resolveDelete, "function"));
+    const nextHistory = historyFixture();
+    nextHistory.meta.ownerUserId = ownerTwo;
+    nextHistory.items[0]!.title = "Owner Two Series";
+    const nextPreferences = structuredClone(preferencesFixture);
+    nextPreferences.meta.ownerUserId = ownerTwo;
+
+    await act(async () => {
+      view.root.render(React.createElement(WatchLibraryClient, {
+        initialHistory: nextHistory,
+        initialPreferences: nextPreferences,
+      }));
+    });
+    assert.match(view.container.textContent ?? "", /Owner Two Series/);
+    assert.doesNotMatch(view.container.textContent ?? "", /Series One/);
+    await act(async () => {
+      resolveDelete?.(Response.json(deletionAck({
+        scope: "title",
+        provider: "crunchyroll",
+        titleKey: "series-one",
+      })));
+    });
+    await waitFor(() => assert.match(view.container.textContent ?? "", /Owner Two Series/));
+    await unmount(view.root);
+  });
+});
+
+async function renderClient(
+  initialHistory = historyFixture(),
+  initialPreferences = preferencesFixture,
+): Promise<{ container: HTMLDivElement; root: Root }> {
   const container = document.createElement("div");
   document.body.append(container);
   const root = createRoot(container);
   await act(async () => {
     root.render(React.createElement(WatchLibraryClient, {
-      initialHistory: historyFixture(),
-      initialPreferences: preferencesFixture,
+      initialHistory,
+      initialPreferences,
     }));
   });
   return { container, root };
+}
+
+function deletionAck(target: {
+  scope: "title";
+  provider: "crunchyroll";
+  titleKey: string;
+}) {
+  return {
+    meta: {
+      serverTime: NOW,
+      schemaVersion: 3,
+      ownerUserId: OWNER_ID,
+      accountGeneration: 1,
+    },
+    schemaVersion: 3,
+    clientMutationId: "33333333-3333-4333-8333-333333333333",
+    accountGeneration: 1,
+    target,
+    deletedAt: NOW,
+  };
 }
 
 async function click(button: HTMLButtonElement): Promise<void> {

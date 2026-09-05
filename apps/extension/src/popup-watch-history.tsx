@@ -673,7 +673,7 @@ function PopupWatchHistoryItem({
 	onDelete: (target: WatchHistoryDeleteScope) => void;
 	pendingByEpisode: Map<string, WatchProgressEvent>;
 }) {
-	const observedCount = item.observedEpisodeCount;
+	const overall = watchHistoryOverallProgress(item);
 	const branchKey = JSON.stringify([item.provider, item.titleKey]);
 	const open = disclosure.isOpen(branchKey, initiallyOpen);
 	const bodyId = useId();
@@ -699,7 +699,7 @@ function PopupWatchHistoryItem({
 		>
 			<div className="popup-watch-row">
 				<button
-					aria-label={`Toggle ${item.title} history`}
+					aria-label={`Toggle ${item.title} history${overall.accessibleSuffix}`}
 					aria-expanded={open}
 					aria-controls={bodyId}
 					className="popup-watch-title-toggle"
@@ -717,12 +717,14 @@ function PopupWatchHistoryItem({
 						)}
 					</span>
 					<span className="popup-watch-main">
-						<strong className="popup-watch-title">{item.title}</strong>
-						<span className="popup-watch-meta">
-							{item.catalogState === "complete" &&
-							item.aggregate.availableEpisodes !== null
-								? `${item.aggregate.completedEpisodes}/${item.aggregate.availableEpisodes} episodes`
-								: `${observedCount} observed ${observedCount === 1 ? "episode" : "episodes"}`}
+						<strong className="popup-watch-title" dir="auto">{item.title}</strong>
+						<span className="popup-watch-overall">
+							<span className="popup-watch-meta">{overall.label}</span>
+							{overall.progress === null ? null : (
+								<span aria-hidden="true" className="popup-watch-overall-track">
+									<span style={{ width: `${overall.progress * 100}%` }} />
+								</span>
+							)}
 						</span>
 					</span>
 					<ChevronDown
@@ -1103,9 +1105,7 @@ function boundProjectedWatchHistoryItem(
         .filter((episode) => selectedKeys.has(episode.episodeKey))
         .sort(compareWatchHistoryEpisodesNewest),
     }))
-    .filter((season) => season.episodes.length > 0)
-    .sort(compareWatchHistorySeasonsNewest)
-    .map((season, order) => ({ ...season, order }));
+    .filter((season) => season.episodes.length > 0);
   const observedEpisodeCount = Math.max(item.observedEpisodeCount, episodes.length);
   const representedEpisodeCount = selected.length;
   const incomplete = !item.episodePage.complete || observedEpisodeCount > representedEpisodeCount;
@@ -1132,17 +1132,6 @@ function compareWatchHistoryEpisodesNewest(
 
 function compareCodeUnits(a: string, b: string): number {
   return a < b ? -1 : a > b ? 1 : 0;
-}
-
-function compareWatchHistorySeasonsNewest(
-  a: { episodes: WatchHistoryItem["seasons"][number]["episodes"] },
-  b: { episodes: WatchHistoryItem["seasons"][number]["episodes"] },
-): number {
-  const aNewest = a.episodes[0];
-  const bNewest = b.episodes[0];
-  if (!aNewest) return bNewest ? 1 : 0;
-  if (!bNewest) return -1;
-  return compareWatchHistoryEpisodesNewest(aNewest, bNewest);
 }
 
 function pendingWatchHistoryItem(event: WatchProgressEvent): WatchHistoryItem {
@@ -1217,6 +1206,40 @@ function pendingWatchHistoryLatestActivity(
 
 function unknownWatchHistoryAggregate(): WatchHistoryItem["aggregate"] {
   return { completedEpisodes: 0, availableEpisodes: null, progress: null };
+}
+
+function watchHistoryOverallProgress(item: WatchHistoryItem): {
+  accessibleSuffix: string;
+  label: string;
+  progress: number | null;
+} {
+  const available = item.aggregate.availableEpisodes;
+  const progress = item.aggregate.progress;
+  if (item.catalogState !== "complete" || available === null || progress === null) {
+    const observed = item.observedEpisodeCount;
+    return {
+      accessibleSuffix: "",
+      label: `${observed} observed ${observed === 1 ? "episode" : "episodes"}`,
+      progress: null,
+    };
+  }
+  if (available === 0) {
+    return {
+      accessibleSuffix: ", Not currently available",
+      label: "Not currently available",
+      progress: null,
+    };
+  }
+  const percent = formatProgressPercent(progress);
+  return {
+    accessibleSuffix: `, ${item.aggregate.completedEpisodes} of ${available} episodes watched, ${percent} percent`,
+    label: `${item.aggregate.completedEpisodes} / ${available} episodes · ${percent}%`,
+    progress,
+  };
+}
+
+function formatProgressPercent(progress: number): string {
+  return String(Number((Math.max(0, Math.min(1, progress)) * 100).toFixed(2)));
 }
 
 function newestSession(sessions: WatchHistorySession[]): WatchHistorySession | undefined {
@@ -1553,7 +1576,6 @@ function removeHistoryTarget(
       ...item,
       observedEpisodeCount,
       completedEpisodeCount,
-      aggregate: { ...item.aggregate, completedEpisodes: completedEpisodeCount },
       seasons,
     }];
   });
