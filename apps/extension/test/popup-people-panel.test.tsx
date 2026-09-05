@@ -656,6 +656,42 @@ describe("PopupApp social mutations", () => {
     expect(view.container.querySelector('[aria-label="Watch History"]')).toBe(visiblePanel);
   });
 
+  it("refreshes history once when the same owner's credentials change, not when their profile changes", async () => {
+    const view = await renderPopupApp();
+    root = view.root;
+    const panel = view.container.querySelector('[aria-label="Watch History"]');
+    const listeners = vi.mocked(chrome.storage.onChanged.addListener).mock.calls.map(([listener]) => listener);
+    const publish = async (oldValue: ExtensionAuthTokens, newValue: ExtensionAuthTokens) => {
+      await act(async () => {
+        for (const listener of listeners) listener({ authTokens: { oldValue, newValue } }, "local");
+      });
+    };
+    const refreshed = { ...TOKENS, accessToken: "access-2", refreshToken: "refresh-2" };
+    await publish(TOKENS, refreshed);
+    expect(panel?.getAttribute("data-refresh-signal")).toBe("1");
+    expect(view.container.querySelector('[aria-label="Watch History"]')).toBe(panel);
+    await publish(refreshed, { ...refreshed, user: { ...refreshed.user, displayName: "Updated" } });
+    expect(panel?.getAttribute("data-refresh-signal")).toBe("1");
+    await publish(refreshed, { ...refreshed, accessToken: "access-3" });
+    expect(panel?.getAttribute("data-refresh-signal")).toBe("2");
+  });
+
+  it("refreshes history when startup replaces cached credentials before social loading finishes", async () => {
+    let resolveSession!: (value: ExtensionAuthTokens) => void;
+    vi.mocked(requestCurrentExtensionSession).mockImplementation(() => new Promise((resolve) => { resolveSession = resolve; }));
+    vi.mocked(listSocialDirectory).mockImplementation(() => new Promise(() => {}));
+    const view = await renderElement(<PopupApp />);
+    root = view.root;
+    await waitFor(() => expect(resolveSession).toBeTypeOf("function"));
+    const panel = view.container.querySelector('[aria-label="Watch History"]');
+    expect(panel?.getAttribute("data-refresh-signal")).toBe("0");
+    await act(async () => {
+      resolveSession({ ...TOKENS, accessToken: "renewed-access", refreshToken: "renewed-refresh" });
+    });
+    expect(panel?.getAttribute("data-refresh-signal")).toBe("1");
+    expect(view.container.querySelector('[aria-label="Watch History"]')).toBe(panel);
+  });
+
   it("sends one recent-person request and refreshes the canonical social snapshot", async () => {
     vi.mocked(listSocialDirectory).mockResolvedValue(
       directory({ recentPeople: [recent(RECENT_USER_ID, "Recent Person")] }),

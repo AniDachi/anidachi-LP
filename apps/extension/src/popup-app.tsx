@@ -162,6 +162,22 @@ export function PopupApp() {
     tokens: null,
     error: null,
   });
+  const tokens = authSession.status === "ready" ? authSession.tokens : null;
+  const [historySession, setHistorySession] = useState({ tokens, revision: 0 });
+  if (historySession.tokens?.user.id !== tokens?.user.id ||
+    historySession.tokens?.accessToken !== tokens?.accessToken ||
+    historySession.tokens?.refreshToken !== tokens?.refreshToken) {
+    // A same-owner credential handoff can reject an in-flight history read.
+    // Restart it from the new authority without remounting the drawer or tying
+    // history refreshes to unrelated social/profile updates. Only the counter
+    // reaches the history UI; credentials never enter its query keys or DOM.
+    setHistorySession({
+      tokens,
+      revision: historySession.revision + (
+        tokens && historySession.tokens?.user.id === tokens.user.id ? 1 : 0
+      ),
+    });
+  }
   const [socialState, setSocialState] = useState<SocialPanelState>(() => signedOutAccountState());
   const [inboxState, setInboxState] = useState<AccountInboxState>(() => signedOutAccountState());
   const [busyInviteId, setBusyInviteId] = useState<string | null>(null);
@@ -878,6 +894,7 @@ export function PopupApp() {
         <PopupWatchHistoryPanel
           key={accountUser?.id ?? "signed-out"}
           ownerUserId={accountUser?.id ?? null}
+          refreshSignal={historySession.revision}
         />
       ) : activeTab === "friends" ? (
         <PopupPeoplePanel

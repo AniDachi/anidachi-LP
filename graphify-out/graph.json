@@ -12051,7 +12051,7 @@
       "file_type": "code",
       "norm_label": "panelprops",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L883"
+      "source_location": "L919"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_renderedview",
@@ -12064,7 +12064,7 @@
       "file_type": "code",
       "norm_label": "renderedview",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L887"
+      "source_location": "L923"
     },
     {
       "id": "packages_protocol_src_account_roominvitesresponse",
@@ -59871,7 +59871,7 @@
       "file_type": "code",
       "norm_label": "formatinboxactivity()",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1285"
+      "source_location": "L1302"
     },
     {
       "id": "apps_extension_src_popup_app_friendrequestinboxrow",
@@ -59883,7 +59883,7 @@
       "file_type": "code",
       "norm_label": "friendrequestinboxrow()",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1141"
+      "source_location": "L1158"
     },
     {
       "id": "apps_extension_src_popup_app_getinitials",
@@ -59895,7 +59895,7 @@
       "file_type": "code",
       "norm_label": "getinitials()",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1313"
+      "source_location": "L1330"
     },
     {
       "id": "apps_extension_src_popup_app_inviteinboxrow",
@@ -59907,7 +59907,7 @@
       "file_type": "code",
       "norm_label": "inviteinboxrow()",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1195"
+      "source_location": "L1212"
     },
     {
       "id": "apps_extension_src_popup_app_isfriendrequestactionkey",
@@ -59919,7 +59919,7 @@
       "file_type": "code",
       "norm_label": "isfriendrequestactionkey()",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1281"
+      "source_location": "L1298"
     },
     {
       "id": "apps_extension_src_popup_app_ispopuppeopleactionkey",
@@ -59931,7 +59931,7 @@
       "file_type": "code",
       "norm_label": "ispopuppeopleactionkey()",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1271"
+      "source_location": "L1288"
     },
     {
       "id": "apps_extension_src_popup_app_ispopuppeopleactionnotice",
@@ -59943,7 +59943,7 @@
       "file_type": "code",
       "norm_label": "ispopuppeopleactionnotice()",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1275"
+      "source_location": "L1292"
     },
     {
       "id": "apps_extension_src_popup_app_mapsocialstatetopeoplepresentation",
@@ -59967,7 +59967,7 @@
       "file_type": "code",
       "norm_label": "missedinviteinboxrow()",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1250"
+      "source_location": "L1267"
     },
     {
       "id": "apps_extension_src_popup_app_popupinboxbadgecount",
@@ -59991,7 +59991,7 @@
       "file_type": "code",
       "norm_label": "popupinboxpanel()",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L964"
+      "source_location": "L981"
     },
     {
       "id": "apps_extension_src_popup_app_popupinboxsection",
@@ -60003,7 +60003,7 @@
       "file_type": "code",
       "norm_label": "popupinboxsection()",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1121"
+      "source_location": "L1138"
     },
     {
       "id": "apps_extension_src_popup_app_popupnavigation",
@@ -60015,7 +60015,7 @@
       "file_type": "code",
       "norm_label": "popupnavigation()",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L913"
+      "source_location": "L930"
     },
     {
       "id": "apps_extension_src_popup_app_popupnavigationbutton",
@@ -60027,7 +60027,7 @@
       "file_type": "code",
       "norm_label": "popupnavigationbutton()",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L941"
+      "source_location": "L958"
     },
     {
       "id": "apps_extension_src_popup_app_profileavatar",
@@ -60039,7 +60039,7 @@
       "file_type": "code",
       "norm_label": "profileavatar()",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1299"
+      "source_location": "L1316"
     },
     {
       "id": "apps_extension_src_popup_app_unseenaccountinboxitems",
@@ -60099,7 +60099,7 @@
       "file_type": "code",
       "norm_label": "accountinbox()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L977"
+      "source_location": "L1013"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_click",
@@ -60111,7 +60111,7 @@
       "file_type": "code",
       "norm_label": "click()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1092"
+      "source_location": "L1128"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_directory",
@@ -60123,7 +60123,7 @@
       "file_type": "code",
       "norm_label": "directory()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L950"
+      "source_location": "L986"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_findbutton",
@@ -60135,7 +60135,7 @@
       "file_type": "code",
       "norm_label": "findbutton()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1129"
+      "source_location": "L1165"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_flushpromises",
@@ -60147,7 +60147,7 @@
       "file_type": "code",
       "norm_label": "flushpromises()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1118"
+      "source_location": "L1154"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_friend",
@@ -60159,7 +60159,7 @@
       "file_type": "code",
       "norm_label": "friend()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1044"
+      "source_location": "L1080"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_getbutton",
@@ -60171,7 +60171,7 @@
       "file_type": "code",
       "norm_label": "getbutton()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1150"
+      "source_location": "L1186"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_getgroupinput",
@@ -60183,7 +60183,7 @@
       "file_type": "code",
       "norm_label": "getgroupinput()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1112"
+      "source_location": "L1148"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_group",
@@ -60195,7 +60195,7 @@
       "file_type": "code",
       "norm_label": "group()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1061"
+      "source_location": "L1097"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_inboxfriendrequest",
@@ -60207,7 +60207,7 @@
       "file_type": "code",
       "norm_label": "inboxfriendrequest()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1027"
+      "source_location": "L1063"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_inboxroominvite",
@@ -60219,7 +60219,7 @@
       "file_type": "code",
       "norm_label": "inboxroominvite()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L996"
+      "source_location": "L1032"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_installpopupchrome",
@@ -60231,7 +60231,7 @@
       "file_type": "code",
       "norm_label": "installpopupchrome()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1163"
+      "source_location": "L1199"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_legalpresentationstates",
@@ -60243,7 +60243,7 @@
       "file_type": "code",
       "norm_label": "legalpresentationstates()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L935"
+      "source_location": "L971"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_readystate",
@@ -60255,7 +60255,7 @@
       "file_type": "code",
       "norm_label": "readystate()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L931"
+      "source_location": "L967"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_recent",
@@ -60267,7 +60267,7 @@
       "file_type": "code",
       "norm_label": "recent()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1085"
+      "source_location": "L1121"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_renderelement",
@@ -60279,7 +60279,7 @@
       "file_type": "code",
       "norm_label": "renderelement()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L914"
+      "source_location": "L950"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_renderpanel",
@@ -60291,7 +60291,7 @@
       "file_type": "code",
       "norm_label": "renderpanel()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L892"
+      "source_location": "L928"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_renderpopupapp",
@@ -60303,7 +60303,7 @@
       "file_type": "code",
       "norm_label": "renderpopupapp()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L924"
+      "source_location": "L960"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_roominvites",
@@ -60315,7 +60315,7 @@
       "file_type": "code",
       "norm_label": "roominvites()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L969"
+      "source_location": "L1005"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_setinputvalue",
@@ -60327,7 +60327,7 @@
       "file_type": "code",
       "norm_label": "setinputvalue()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1098"
+      "source_location": "L1134"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_socialsnapshot",
@@ -60339,7 +60339,7 @@
       "file_type": "code",
       "norm_label": "socialsnapshot()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L961"
+      "source_location": "L997"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_submit",
@@ -60351,7 +60351,7 @@
       "file_type": "code",
       "norm_label": "submit()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1105"
+      "source_location": "L1141"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_unmount",
@@ -60363,7 +60363,7 @@
       "file_type": "code",
       "norm_label": "unmount()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1159"
+      "source_location": "L1195"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_waitfor",
@@ -60375,7 +60375,7 @@
       "file_type": "code",
       "norm_label": "waitfor()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1123"
+      "source_location": "L1159"
     },
     {
       "id": "scripts_graphify_code_update_test_refresh",
@@ -154649,7 +154649,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1219",
+      "source_location": "L1236",
       "weight": 1.0
     },
     {
@@ -154661,7 +154661,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1278",
+      "source_location": "L1295",
       "weight": 1.0
     },
     {
@@ -154673,7 +154673,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1262",
+      "source_location": "L1279",
       "weight": 1.0
     },
     {
@@ -154685,7 +154685,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L165",
+      "source_location": "L181",
       "weight": 1.0
     },
     {
@@ -154697,7 +154697,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L170",
+      "source_location": "L186",
       "weight": 1.0
     },
     {
@@ -154709,7 +154709,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L171",
+      "source_location": "L187",
       "weight": 1.0
     },
     {
@@ -154721,7 +154721,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L183",
+      "source_location": "L199",
       "weight": 1.0
     },
     {
@@ -154733,7 +154733,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L202",
+      "source_location": "L218",
       "weight": 1.0
     },
     {
@@ -154745,7 +154745,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L203",
+      "source_location": "L219",
       "weight": 1.0
     },
     {
@@ -154757,7 +154757,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L204",
+      "source_location": "L220",
       "weight": 1.0
     },
     {
@@ -154769,7 +154769,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L205",
+      "source_location": "L221",
       "weight": 1.0
     },
     {
@@ -154781,7 +154781,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L220",
+      "source_location": "L236",
       "weight": 1.0
     },
     {
@@ -154793,7 +154793,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L224",
+      "source_location": "L240",
       "weight": 1.0
     },
     {
@@ -154805,7 +154805,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L225",
+      "source_location": "L241",
       "weight": 1.0
     },
     {
@@ -154817,7 +154817,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L236",
+      "source_location": "L252",
       "weight": 1.0
     },
     {
@@ -154829,7 +154829,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L237",
+      "source_location": "L253",
       "weight": 1.0
     },
     {
@@ -154841,7 +154841,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L242",
+      "source_location": "L258",
       "weight": 1.0
     },
     {
@@ -154853,7 +154853,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L249",
+      "source_location": "L265",
       "weight": 1.0
     },
     {
@@ -154865,7 +154865,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L275",
+      "source_location": "L291",
       "weight": 1.0
     },
     {
@@ -154877,7 +154877,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L281",
+      "source_location": "L297",
       "weight": 1.0
     },
     {
@@ -154889,7 +154889,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L286",
+      "source_location": "L302",
       "weight": 1.0
     },
     {
@@ -154901,7 +154901,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L291",
+      "source_location": "L307",
       "weight": 1.0
     },
     {
@@ -154913,7 +154913,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L325",
+      "source_location": "L341",
       "weight": 1.0
     },
     {
@@ -154925,7 +154925,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L339",
+      "source_location": "L355",
       "weight": 1.0
     },
     {
@@ -154937,7 +154937,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L340",
+      "source_location": "L356",
       "weight": 1.0
     },
     {
@@ -154949,7 +154949,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L340",
+      "source_location": "L356",
       "weight": 1.0
     },
     {
@@ -154961,7 +154961,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L417",
+      "source_location": "L433",
       "weight": 1.0
     },
     {
@@ -154973,7 +154973,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L458",
+      "source_location": "L474",
       "weight": 1.0
     },
     {
@@ -154985,7 +154985,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L545",
+      "source_location": "L561",
       "weight": 1.0
     },
     {
@@ -154997,7 +154997,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L558",
+      "source_location": "L574",
       "weight": 1.0
     },
     {
@@ -155009,7 +155009,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L571",
+      "source_location": "L587",
       "weight": 1.0
     },
     {
@@ -155021,7 +155021,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L584",
+      "source_location": "L600",
       "weight": 1.0
     },
     {
@@ -155033,7 +155033,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L601",
+      "source_location": "L617",
       "weight": 1.0
     },
     {
@@ -155045,7 +155045,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L610",
+      "source_location": "L626",
       "weight": 1.0
     },
     {
@@ -155057,7 +155057,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L618",
+      "source_location": "L634",
       "weight": 1.0
     },
     {
@@ -155069,7 +155069,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L638",
+      "source_location": "L654",
       "weight": 1.0
     },
     {
@@ -155081,7 +155081,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L652",
+      "source_location": "L668",
       "weight": 1.0
     },
     {
@@ -155093,7 +155093,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L669",
+      "source_location": "L685",
       "weight": 1.0
     },
     {
@@ -155105,7 +155105,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L687",
+      "source_location": "L703",
       "weight": 1.0
     },
     {
@@ -155117,7 +155117,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L689",
+      "source_location": "L705",
       "weight": 1.0
     },
     {
@@ -155129,7 +155129,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L730",
+      "source_location": "L746",
       "weight": 1.0
     },
     {
@@ -155141,7 +155141,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L746",
+      "source_location": "L762",
       "weight": 1.0
     },
     {
@@ -155153,7 +155153,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L750",
+      "source_location": "L766",
       "weight": 1.0
     },
     {
@@ -155165,7 +155165,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L998",
+      "source_location": "L1015",
       "weight": 1.0
     },
     {
@@ -155177,7 +155177,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1310",
+      "source_location": "L1327",
       "weight": 1.0
     },
     {
@@ -173525,7 +173525,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1131",
+      "source_location": "L1167",
       "weight": 1.0
     },
     {
@@ -173537,7 +173537,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L940",
+      "source_location": "L976",
       "weight": 1.0
     },
     {
@@ -173549,7 +173549,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L906",
+      "source_location": "L942",
       "weight": 1.0
     },
     {
@@ -173561,7 +173561,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L906",
+      "source_location": "L942",
       "weight": 1.0
     },
     {
@@ -173573,7 +173573,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L925",
+      "source_location": "L961",
       "weight": 1.0
     },
     {
@@ -173585,24 +173585,12 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L926",
+      "source_location": "L962",
       "weight": 1.0
     },
     {
       "source": "apps_extension_test_popup_people_panel_test_renderpopupapp",
       "target": "apps_extension_test_popup_people_panel_test_waitfor",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L927",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_test_popup_people_panel_test_socialsnapshot",
-      "target": "apps_extension_test_popup_people_panel_test_directory",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -173621,7 +173609,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L964",
+      "source_location": "L1000",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_test_popup_people_panel_test_socialsnapshot",
+      "target": "apps_extension_test_popup_people_panel_test_directory",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/test/popup-people-panel.test.tsx",
+      "source_location": "L999",
       "weight": 1.0
     },
     {
@@ -173633,7 +173633,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1108",
+      "source_location": "L1144",
       "weight": 1.0
     },
     {
@@ -324215,18 +324215,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1121",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_popup_app",
-      "target": "apps_extension_src_popup_app_friendrequestinboxrow",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1141",
+      "source_location": "L1138",
       "weight": 1.0
     },
     {
@@ -324242,13 +324231,24 @@
     },
     {
       "source": "apps_extension_src_popup_app",
+      "target": "apps_extension_src_popup_app_friendrequestinboxrow",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/src/popup-app.tsx",
+      "source_location": "L1158",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_popup_app",
       "target": "apps_extension_src_popup_app_inviteinboxrow",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1195",
+      "source_location": "L1212",
       "weight": 1.0
     },
     {
@@ -324259,7 +324259,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1250",
+      "source_location": "L1267",
       "weight": 1.0
     },
     {
@@ -324270,7 +324270,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1271",
+      "source_location": "L1288",
       "weight": 1.0
     },
     {
@@ -324281,7 +324281,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1275",
+      "source_location": "L1292",
       "weight": 1.0
     },
     {
@@ -324292,7 +324292,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1281",
+      "source_location": "L1298",
       "weight": 1.0
     },
     {
@@ -324303,7 +324303,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1285",
+      "source_location": "L1302",
       "weight": 1.0
     },
     {
@@ -324314,7 +324314,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1299",
+      "source_location": "L1316",
       "weight": 1.0
     },
     {
@@ -324325,7 +324325,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1313",
+      "source_location": "L1330",
       "weight": 1.0
     },
     {
@@ -324374,17 +324374,6 @@
     },
     {
       "source": "apps_extension_src_popup_app",
-      "target": "apps_extension_src_popup_app_popupnavigation",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L913",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_popup_app",
       "target": "apps_extension_src_popup_app_socialpaneldata",
       "relation": "contains",
       "_origin": "ast",
@@ -324392,6 +324381,17 @@
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-app.tsx",
       "source_location": "L92",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_popup_app",
+      "target": "apps_extension_src_popup_app_popupnavigation",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/src/popup-app.tsx",
+      "source_location": "L930",
       "weight": 1.0
     },
     {
@@ -324413,7 +324413,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L941",
+      "source_location": "L958",
       "weight": 1.0
     },
     {
@@ -324424,7 +324424,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L964",
+      "source_location": "L981",
       "weight": 1.0
     },
     {
@@ -339906,13 +339906,24 @@
     },
     {
       "source": "apps_extension_test_popup_people_panel_test",
-      "target": "apps_extension_test_popup_people_panel_test_inboxfriendrequest",
+      "target": "apps_extension_test_popup_people_panel_test_roominvites",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1027",
+      "source_location": "L1005",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_test_popup_people_panel_test",
+      "target": "apps_extension_test_popup_people_panel_test_accountinbox",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/test/popup-people-panel.test.tsx",
+      "source_location": "L1013",
       "weight": 1.0
     },
     {
@@ -339928,13 +339939,35 @@
     },
     {
       "source": "apps_extension_test_popup_people_panel_test",
+      "target": "apps_extension_test_popup_people_panel_test_inboxroominvite",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/test/popup-people-panel.test.tsx",
+      "source_location": "L1032",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_test_popup_people_panel_test",
+      "target": "apps_extension_test_popup_people_panel_test_inboxfriendrequest",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/test/popup-people-panel.test.tsx",
+      "source_location": "L1063",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_test_popup_people_panel_test",
       "target": "apps_extension_test_popup_people_panel_test_friend",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1044",
+      "source_location": "L1080",
       "weight": 1.0
     },
     {
@@ -339945,7 +339978,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1061",
+      "source_location": "L1097",
       "weight": 1.0
     },
     {
@@ -339956,7 +339989,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1085",
+      "source_location": "L1121",
       "weight": 1.0
     },
     {
@@ -339967,7 +340000,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1092",
+      "source_location": "L1128",
       "weight": 1.0
     },
     {
@@ -339978,7 +340011,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1098",
+      "source_location": "L1134",
       "weight": 1.0
     },
     {
@@ -339989,7 +340022,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1105",
+      "source_location": "L1141",
       "weight": 1.0
     },
     {
@@ -340000,7 +340033,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1112",
+      "source_location": "L1148",
       "weight": 1.0
     },
     {
@@ -340011,7 +340044,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1118",
+      "source_location": "L1154",
       "weight": 1.0
     },
     {
@@ -340022,7 +340055,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1123",
+      "source_location": "L1159",
       "weight": 1.0
     },
     {
@@ -340033,7 +340066,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1129",
+      "source_location": "L1165",
       "weight": 1.0
     },
     {
@@ -340044,7 +340077,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1150",
+      "source_location": "L1186",
       "weight": 1.0
     },
     {
@@ -340055,7 +340088,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1159",
+      "source_location": "L1195",
       "weight": 1.0
     },
     {
@@ -340066,7 +340099,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1163",
+      "source_location": "L1199",
       "weight": 1.0
     },
     {
@@ -340077,7 +340110,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L883",
+      "source_location": "L919",
       "weight": 1.0
     },
     {
@@ -340088,7 +340121,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L887",
+      "source_location": "L923",
       "weight": 1.0
     },
     {
@@ -340099,7 +340132,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L892",
+      "source_location": "L928",
       "weight": 1.0
     },
     {
@@ -340110,7 +340143,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L914",
+      "source_location": "L950",
       "weight": 1.0
     },
     {
@@ -340121,7 +340154,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L924",
+      "source_location": "L960",
       "weight": 1.0
     },
     {
@@ -340132,7 +340165,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L931",
+      "source_location": "L967",
       "weight": 1.0
     },
     {
@@ -340143,7 +340176,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L935",
+      "source_location": "L971",
       "weight": 1.0
     },
     {
@@ -340154,7 +340187,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L950",
+      "source_location": "L986",
       "weight": 1.0
     },
     {
@@ -340165,40 +340198,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L961",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_test_popup_people_panel_test",
-      "target": "apps_extension_test_popup_people_panel_test_roominvites",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L969",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_test_popup_people_panel_test",
-      "target": "apps_extension_test_popup_people_panel_test_accountinbox",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L977",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_test_popup_people_panel_test",
-      "target": "apps_extension_test_popup_people_panel_test_inboxroominvite",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L996",
+      "source_location": "L997",
       "weight": 1.0
     },
     {
@@ -410498,7 +410498,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L641",
+      "source_location": "L657",
       "weight": 1.0
     },
     {
@@ -410738,7 +410738,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L927",
+      "source_location": "L963",
       "weight": 1.0
     },
     {
@@ -424084,5 +424084,5 @@
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md"
     }
   ],
-  "built_at_commit": "7d85d020b494d8b303717125afd57ac005cfe017"
+  "built_at_commit": "6d1e7a91584a06a7c0d2762cef5eb84a9eda9c5d"
 }

@@ -1,7 +1,7 @@
 # Graph Report - anidachi-LP-monorepo  (2026-09-05)
 
 ## Corpus Check
-- 1121 files · ~1,146,956 words
+- 1121 files · ~1,147,301 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `7d85d020`
+- Built from commit: `6d1e7a91`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
