@@ -127,4 +127,41 @@ describe.sequential("watch history local calendar date ranges", () => {
 			});
 		});
 	});
+
+	describe("in America/Santiago", () => {
+		beforeAll(() => {
+			process.env.TZ = "America/Santiago";
+		});
+
+		it("rebases a preset end onto the destination day's own midnight after a skipped midnight", () => {
+			expect(
+				createWatchHistoryDateRange({
+					preset: "today",
+					now: new Date("2026-09-06T16:00:00.000Z"),
+				}),
+			).toEqual({
+				ok: true,
+				range: {
+					from: "2026-09-06T04:00:00.000Z",
+					until: "2026-09-07T03:00:00.000Z",
+				},
+			});
+		});
+
+		it("rebases a custom inclusive end onto the next date's own midnight", () => {
+			expect(
+				createWatchHistoryDateRange({
+					preset: "custom",
+					fromDate: "2026-09-05",
+					throughDate: "2026-09-06",
+				}),
+			).toEqual({
+				ok: true,
+				range: {
+					from: "2026-09-05T04:00:00.000Z",
+					until: "2026-09-07T03:00:00.000Z",
+				},
+			});
+		});
+	});
 });

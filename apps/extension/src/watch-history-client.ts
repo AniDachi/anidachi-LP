@@ -600,6 +600,9 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         return { ok: false, status: "generation-mismatch" };
       }
       const currentRoot = await storage.readRoot();
+      if (!sameSession(response.session, await dependencies.getCurrentSession())) {
+        return { ok: false, status: "rejected" };
+      }
       if (currentRoot.activeGenerations?.[response.session.user.id] !== generation) {
         return { ok: false, status: "generation-mismatch" };
       }

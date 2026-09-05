@@ -504,6 +504,52 @@ describe("watch history query-isolated browsing", () => {
 		}
 	});
 
+	it("rejects an account switch while the final authority storage read is pending", async () => {
+		const otherSession = {
+			...session,
+			accessToken: "other-access",
+			refreshToken: "other-refresh",
+			user: { ...session.user, id: OTHER_OWNER },
+		};
+		let currentSession: typeof session | null = session;
+		let reads = 0;
+		let releaseFinalRead!: () => void;
+		const root: WatchHistoryStorageRoot = {
+			schemaVersion: 3,
+			activeGenerations: { [OWNER]: 4 },
+			partitions: {},
+		};
+		root.partitions[watchHistoryPartitionKey(OWNER, 4)] = readyPartition();
+		const storage = createWatchHistoryStorage({
+			item: {
+				getValue: async () => {
+					reads += 1;
+					if (reads === 3) {
+						await new Promise<void>((resolve) => {
+							releaseFinalRead = resolve;
+						});
+					}
+					return root;
+				},
+				setValue: async () => undefined,
+			},
+			getBytesInUse: async () => 0,
+			quotaBytes: 1_000_000,
+		});
+		const client = createWatchHistoryClient({
+			getCurrentSession: async () => currentSession,
+			storage,
+			fetch: async () => Response.json(browseResponse()),
+		});
+
+		const browsing = client.handle(browseMessage());
+		await vi.waitFor(() => expect(releaseFinalRead).toBeTypeOf("function"));
+		currentSession = otherSession;
+		releaseFinalRead();
+
+		await expect(browsing).resolves.toEqual({ ok: false, status: "rejected" });
+	});
+
 	it("bootstraps a missing local generation from existing preference authority before browsing", async () => {
 		const requests: string[] = [];
 		const { client, storage } = createStoredClient({
