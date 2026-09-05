@@ -2280,24 +2280,6 @@ ${extensionThemeTokens}
     font-weight: 760;
   }
 
-  .popup-quiet-danger {
-    justify-self: center;
-    min-height: 28px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    border: 0;
-    background: transparent;
-    color: rgba(255, 255, 255, 0.42);
-    cursor: pointer;
-    font-size: 10.5px;
-  }
-
-  .popup-quiet-danger:disabled {
-    opacity: 0.28;
-    cursor: default;
-  }
-
   .resource-provider-logo {
     width: 38px;
     height: 38px;
@@ -2827,10 +2809,6 @@ ${extensionThemeTokens}
     color: #ffc453;
   }
 
-  .popup-quiet-danger {
-    margin-top: 2px;
-  }
-
   /*
    * Final compact-library pass.
    * Keep controls obvious, but stop treating every row as a large capsule.
@@ -3152,83 +3130,6 @@ ${extensionThemeTokens}
     opacity: 0.42;
   }
 
-  .popup-watch-preferences {
-    display: flex;
-    min-height: 30px;
-    align-items: center;
-    justify-content: flex-end;
-    margin-top: -2px;
-  }
-
-  .popup-watch-youtube-switch {
-    min-height: 30px;
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    border: 0;
-    border-radius: 9px;
-    padding: 0 4px 0 7px;
-    background: transparent;
-    color: rgba(255, 255, 255, 0.58);
-    cursor: pointer;
-    font-size: 9.5px;
-    font-weight: 720;
-  }
-
-  .popup-watch-youtube-switch:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.035);
-    color: rgba(255, 255, 255, 0.76);
-  }
-
-  .popup-watch-youtube-switch:focus-visible {
-    outline: 2px solid rgba(255, 174, 106, 0.55);
-    outline-offset: 1px;
-  }
-
-  .popup-watch-youtube-state {
-    min-width: 16px;
-    text-align: right;
-    color: rgba(255, 255, 255, 0.48);
-    font-weight: 820;
-  }
-
-  .popup-watch-youtube-switch[data-enabled="true"] .popup-watch-youtube-state {
-    color: #ffc453;
-  }
-
-  .popup-watch-youtube-switch-track {
-    position: relative;
-    width: 34px;
-    height: 18px;
-    flex: 0 0 auto;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.13);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.09);
-  }
-
-  .popup-watch-youtube-switch-track > span {
-    position: absolute;
-    top: 3px;
-    left: 3px;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.72);
-    transition: transform 140ms ease, background-color 140ms ease;
-  }
-
-  .popup-watch-youtube-switch[data-enabled="true"] .popup-watch-youtube-switch-track {
-    background: rgba(255, 122, 26, 0.4);
-  }
-
-  .popup-watch-youtube-switch[data-enabled="true"] .popup-watch-youtube-switch-track > span {
-    transform: translateX(16px);
-    background: #ff9b55;
-  }
-
-  .popup-watch-youtube-switch:disabled {
-    cursor: default;
-  }
 
   .popup-watch-search {
     min-width: 0;
@@ -3350,92 +3251,6 @@ ${extensionThemeTokens}
   .popup-watch-mode-switch:focus-visible {
     outline: 2px solid rgba(255, 174, 106, 0.66);
     outline-offset: 2px;
-  }
-
-  .popup-watch-mode-track {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    overflow: hidden;
-    padding: 2px;
-    border: 1px solid rgba(255, 255, 255, 0.065);
-    border-radius: 10px;
-    background:
-      linear-gradient(180deg, rgba(7, 7, 10, 0.98), rgba(19, 19, 23, 0.96)),
-      rgba(13, 13, 17, 0.96);
-    box-shadow:
-      inset 0 2px 3px rgba(0, 0, 0, 0.68),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.035),
-      0 1px 1px rgba(0, 0, 0, 0.22);
-  }
-
-  .popup-watch-mode-thumb {
-    position: absolute;
-    top: 2px;
-    bottom: 2px;
-    left: 2px;
-    width: calc(50% - 2px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.016)),
-      rgba(37, 37, 42, 0.99);
-    box-shadow:
-      0 2px 3px rgba(0, 0, 0, 0.44),
-      inset 0 1px 0 rgba(255, 255, 255, 0.085),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.12);
-    transform: translateX(0);
-    transition:
-      transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
-      background-color 220ms ease,
-      box-shadow 220ms ease;
-  }
-
-  .popup-watch-mode-segment {
-    position: relative;
-    z-index: 1;
-    display: grid;
-    place-items: center;
-    min-width: 0;
-    color: rgba(255, 255, 255, 0.44);
-    font-size: 9px;
-    font-weight: 700;
-    line-height: 1;
-    letter-spacing: 0;
-    transition:
-      color 200ms ease,
-      text-shadow 200ms ease;
-  }
-
-  .popup-watch-mode-switch[data-mode="together"] .popup-watch-mode-thumb {
-    transform: translateX(100%);
-  }
-
-  .popup-watch-mode-switch:hover .popup-watch-mode-thumb {
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.095), rgba(255, 255, 255, 0.02)),
-      rgba(39, 39, 44, 0.99);
-  }
-
-  .popup-watch-mode-switch[data-mode="mine"] .popup-watch-mode-segment-mine,
-  .popup-watch-mode-switch[data-mode="together"] .popup-watch-mode-segment-together {
-    color: rgba(255, 248, 242, 0.9);
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.34);
-  }
-
-  .popup-watch-mode-switch:active .popup-watch-mode-thumb {
-    box-shadow:
-      0 1px 2px rgba(0, 0, 0, 0.3),
-      inset 0 1px 2px rgba(0, 0, 0, 0.16),
-      inset 0 1px 0 rgba(255, 255, 255, 0.045);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .popup-watch-mode-thumb,
-    .popup-watch-mode-segment {
-      transition-duration: 1ms;
-    }
   }
 
   .popup-filter-trigger {
@@ -4134,16 +3949,6 @@ ${extensionThemeTokens}
     border-radius: 10px;
     background: rgba(255, 255, 255, 0.035);
     box-shadow: none;
-  }
-
-  .popup-quiet-danger {
-    min-height: 24px;
-    margin-top: 2px;
-    color: rgba(255, 255, 255, 0.32);
-  }
-
-  .popup-quiet-danger:disabled {
-    display: none;
   }
 
   .popup-people-panel {

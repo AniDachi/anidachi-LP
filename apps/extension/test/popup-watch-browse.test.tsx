@@ -1,0 +1,623 @@
+import {
+	WatchHistoryBrowseResponseSchema,
+	WatchHistoryBrowseTitleEpisodesResponseSchema,
+	WatchHistoryBrowseSessionsResponseSchema,
+	type WatchHistoryBrowseQuery,
+	type WatchHistorySession,
+} from "@anidachi/protocol";
+import { act } from "react";
+import { createRoot, type Root } from "react-dom/client";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+	PopupWatchHistoryPanel,
+	type PopupWatchHistoryClient,
+} from "../src/popup-watch-history";
+import type { WatchHistoryMessageResponse } from "../src/watch-history-client";
+
+const OWNER = "00000000-0000-4000-8000-000000000001";
+const GROUP = "00000000-0000-4000-8000-000000000003";
+const PERSON = "00000000-0000-4000-8000-000000000004";
+const meta = {
+	schemaVersion: 3 as const,
+	ownerUserId: OWNER,
+	accountGeneration: 1,
+	serverTime: "2026-09-05T08:00:00.000Z",
+};
+const aggregate = {
+	completedEpisodes: 2,
+	availableEpisodes: 12,
+	progress: 2 / 12,
+};
+const episode = {
+	episodeKey: "crunchyroll:episode:one",
+	episodeTitle: "Matching episode",
+	seasonKey: "season:one",
+	seasonTitle: "Season 1",
+	seasonNumber: 1,
+	episodeNumber: 1,
+	sourceUrl: "https://www.crunchyroll.com/watch/ONE",
+	currentTime: 600,
+	duration: 1200,
+	progress: 0.5,
+	completedAt: null,
+	lastWatchedAt: meta.serverTime,
+	sessions: [],
+};
+const item = {
+	provider: "crunchyroll" as const,
+	titleKey: "crunchyroll:title:one",
+	title: "Frieren",
+	itemKind: "series" as const,
+	sourceUrl: episode.sourceUrl,
+	artworkUrl: null,
+	catalogState: "complete" as const,
+	aggregate,
+	observedEpisodeCount: 3,
+	completedEpisodeCount: 2,
+	episodePage: { complete: false, nextCursor: "canonical-eight" },
+	seasons: [
+		{
+			seasonKey: "season:one",
+			seasonTitle: "Season 1",
+			seasonNumber: 1,
+			order: 0,
+			aggregate,
+			episodes: [{ ...episode, episodeTitle: "Canonical nonmatch" }],
+			nextEpisode: null,
+		},
+	],
+	sessions: [],
+	latestActivity: {
+		episodeKey: episode.episodeKey,
+		currentTime: 600,
+		duration: 1200,
+		progress: 0.5,
+		completedAt: null,
+		lastWatchedAt: meta.serverTime,
+	},
+	lastWatchedAt: meta.serverTime,
+};
+function browse(title = "Frieren", cursor: string | null = null) {
+	return WatchHistoryBrowseResponseSchema.parse({
+		history: {
+			meta,
+			generatedAt: meta.serverTime,
+			items: [{ ...item, title }],
+			totalTitleCount: 1,
+			nextCursor: cursor,
+		},
+		matches: [
+			{
+				provider: item.provider,
+				titleKey: item.titleKey,
+				lastWatchedAt: "2026-09-01T08:00:00.000Z",
+				matchingEpisodeCount: 1,
+				matchingSessionCount: 0,
+			},
+		],
+	});
+}
+function detail(cursor: string | null = null) {
+	return WatchHistoryBrowseTitleEpisodesResponseSchema.parse({
+		detail: {
+			meta,
+			generatedAt: meta.serverTime,
+			provider: item.provider,
+			titleKey: item.titleKey,
+			observedEpisodeCount: 3,
+			completedEpisodeCount: 2,
+			episodes: [episode],
+			catalog: {
+				state: "complete",
+				title: "Frieren",
+				aggregate,
+				seasons: [
+					{
+						seasonKey: "season:one",
+						seasonTitle: "Season 1",
+						seasonNumber: 1,
+						order: 0,
+						aggregate,
+						nextEpisode: null,
+					},
+				],
+			},
+			complete: !cursor,
+			nextCursor: cursor,
+		},
+		matches: [
+			{
+				episodeKey: episode.episodeKey,
+				lastWatchedAt: meta.serverTime,
+				matchingSessionCount: 0,
+				sessionsComplete: true,
+			},
+		],
+		groups: [],
+	});
+}
+function clientFixture(
+	request?: PopupWatchHistoryClient["request"],
+): PopupWatchHistoryClient {
+	return {
+		loadCached: async () => null,
+		confirmDiscard: vi.fn(() => true),
+		openUrl: vi.fn(async () => undefined),
+		request:
+			request ??
+			vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
+				if (message.command === "browse") return { ok: true, data: browse() };
+				if (message.command === "browse-title-episodes")
+					return { ok: true, data: detail() };
+				if (message.command === "browse-options")
+					return {
+						ok: true,
+						data: {
+							meta,
+							options: [
+								{ kind: "group", id: GROUP, label: "Friday crew" },
+								{ kind: "participant", id: PERSON, label: "Mira" },
+							],
+							nextCursor: null,
+						},
+					};
+				return { ok: true };
+			}),
+	};
+}
+(
+	globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
+).IS_REACT_ACT_ENVIRONMENT = true;
+let root: Root;
+let container: HTMLDivElement;
+afterEach(async () => {
+	if (root) await act(async () => root.unmount());
+	container?.remove();
+});
+async function mount(client: PopupWatchHistoryClient) {
+	container = document.createElement("div");
+	document.body.append(container);
+	root = createRoot(container);
+	await act(async () =>
+		root.render(<PopupWatchHistoryPanel client={client} ownerUserId={OWNER} />),
+	);
+	return container;
+}
+function required<T>(value: T | null | undefined): T {
+	if (value === null || value === undefined)
+		throw new Error("Required fixture value is missing");
+	return value;
+}
+function button(name: string) {
+	const found = [...container.querySelectorAll("button")].find(
+		(node) =>
+			node.getAttribute("aria-label") === name || node.textContent === name,
+	);
+	expect(found, name).toBeDefined();
+	return required(found);
+}
+async function click(name: string) {
+	await act(async () => button(name).click());
+}
+async function change(label: string, value: string) {
+	const node = container.querySelector(
+		`[aria-label="${label}"]`,
+	) as HTMLInputElement;
+	expect(node, label).not.toBeNull();
+	await act(async () => {
+		const proto =
+			node.tagName === "SELECT"
+				? HTMLSelectElement.prototype
+				: HTMLInputElement.prototype;
+		required(Object.getOwnPropertyDescriptor(proto, "value")?.set).call(
+			node,
+			value,
+		);
+		node.dispatchEvent(
+			new Event(node.tagName === "SELECT" ? "change" : "input", {
+				bubbles: true,
+			}),
+		);
+	});
+}
+
+describe("production watch browsing", () => {
+	it("lets a newer browse restore exact availability and artwork after an older partial cache", async () => {
+		const cached = browse().history;
+		cached.generatedAt = cached.meta.serverTime = "2026-09-01T08:00:00.000Z";
+		const cachedItem = required(cached.items[0]);
+		cachedItem.catalogState = "partial";
+		cachedItem.aggregate = {
+			completedEpisodes: 2,
+			availableEpisodes: null,
+			progress: null,
+		};
+		cachedItem.artworkUrl = "https://www.crunchyroll.com/old.jpg";
+		const fallback = clientFixture();
+		const client = {
+			...clientFixture(async (message) => {
+				if (message.command !== "browse") return fallback.request(message);
+				const page = browse();
+				required(page.history.items[0]).artworkUrl =
+					"https://www.crunchyroll.com/new.jpg";
+				return { ok: true as const, data: page };
+			}),
+			loadCached: async () => ({
+				history: cached,
+				accountGeneration: 1,
+				preferences: { youtubeHistoryEnabled: false },
+				pendingEvents: [],
+				localObservation: null,
+				capturePaused: false,
+			}),
+		};
+		await mount(client);
+		expect(
+			container.querySelector(".popup-watch-overall .popup-watch-percent")
+				?.textContent,
+		).toBe("17%");
+		expect(
+			container.querySelector(".popup-watch-artwork img")?.getAttribute("src"),
+		).toBe("https://www.crunchyroll.com/new.jpg");
+	});
+	it("groups a matching episode outside the title slice using observed season metadata when catalog availability is unknown", async () => {
+		const fallback = clientFixture();
+		const client = clientFixture(async (message) => {
+			if (message.command !== "browse-title-episodes")
+				return fallback.request(message);
+			const page = detail();
+			page.detail.catalog = {
+				state: "unavailable",
+				title: null,
+				aggregate: null,
+				seasons: [],
+			};
+			page.detail.episodes[0] = {
+				...episode,
+				seasonKey: "season:older",
+				seasonTitle: "Historical season",
+			};
+			return { ok: true, data: page };
+		});
+		await mount(client);
+		expect(container.querySelector(".popup-season-title")?.textContent).toBe(
+			"Historical season",
+		);
+		expect(container.querySelector(".popup-season-meta")?.textContent).toBe(
+			"Availability unknown",
+		);
+		expect(container.textContent).toContain("Matching episode");
+	});
+	it("keeps the active segment selected and uses matching detail instead of the canonical eight-row slice", async () => {
+		const client = clientFixture();
+		await mount(client);
+		await click("Mine");
+		expect(button("Mine").getAttribute("aria-pressed")).toBe("true");
+		expect(container.textContent).toContain("Matching episode");
+		expect(container.textContent).not.toContain("Canonical nonmatch");
+		const calls = vi
+			.mocked(client.request)
+			.mock.calls.map(([m]) => m)
+			.filter((m) => m.command === "browse");
+		expect(calls).toHaveLength(1);
+		expect(calls[0]).toMatchObject({
+			expectedOwnerUserId: OWNER,
+			input: { mode: "solo", limit: 20 },
+		});
+	});
+	it("combines historical group/person/local dates, retains labels in chips, and clears social filters on Mine", async () => {
+		const client = clientFixture();
+		await mount(client);
+		await click("Together");
+		await click("Filters");
+		await change("My groups", GROUP);
+		await change("Participant", PERSON);
+		await change("Period", "custom");
+		await change("From date", "2026-09-01");
+		await change("Through date", "2026-09-03");
+		const calls = vi
+			.mocked(client.request)
+			.mock.calls.map(([m]) => m)
+			.filter((m) => m.command === "browse");
+		const last = calls.at(-1);
+		expect(last).toMatchObject({
+			expectedOwnerUserId: OWNER,
+			input: { mode: "shared", groupId: GROUP, participantUserId: PERSON },
+		});
+		const input = (last as { input: WatchHistoryBrowseQuery }).input;
+		expect(new Date(input.from ?? "").getDate()).toBe(1);
+		expect(new Date(input.until ?? "").getDate()).toBe(4);
+		expect(container.textContent).toContain("Friday crew");
+		expect(button("Remove participant Mira")).toBeDefined();
+		await click("Mine");
+		const mine = vi
+			.mocked(client.request)
+			.mock.calls.map(([m]) => m)
+			.filter((m) => m.command === "browse")
+			.at(-1);
+		expect(mine).toMatchObject({ input: { mode: "solo" } });
+		expect((mine as { input: object }).input).not.toHaveProperty("groupId");
+		expect((mine as { input: object }).input).not.toHaveProperty(
+			"participantUserId",
+		);
+		expect(container.querySelector('[aria-label="My groups"]')).toBeNull();
+		await click("Clear conditions");
+		expect(container.querySelector(".popup-watch-conditions")).toBeNull();
+	});
+	it("retains canonical aggregate and opens account management without destructive controls or consent in Watch", async () => {
+		const client = clientFixture();
+		await mount(client);
+		expect(container.textContent).toContain("2 / 12 episodes");
+		expect(container.textContent).toContain("17%");
+		await click("Together");
+		expect(container.textContent).toContain("2 / 12 episodes");
+		expect(container.querySelector('[aria-label^="Delete"]')).toBeNull();
+		expect(container.querySelector('[role="switch"]')).toBeNull();
+		await click("Manage history");
+		expect(client.openUrl).toHaveBeenCalledWith(
+			"http://localhost:3003/account/watch-library",
+		);
+	});
+	it("hides old-query content immediately and rejects late old query results", async () => {
+		const flights: Array<{
+			input: WatchHistoryBrowseQuery;
+			resolve: (value: WatchHistoryMessageResponse) => void;
+		}> = [];
+		const fallback = clientFixture();
+		const client = clientFixture(async (m) =>
+			m.command === "browse"
+				? new Promise((resolve) =>
+						flights.push({
+							input: m.input as WatchHistoryBrowseQuery,
+							resolve,
+						}),
+					)
+				: fallback.request(m),
+		);
+		await mount(client);
+		await act(async () =>
+			required(flights[0]).resolve({ ok: true, data: browse("Old query") }),
+		);
+		await change("Search watch history", "new");
+		expect(container.textContent).not.toContain("Old query");
+		await change("Search watch history", "latest");
+		await act(async () =>
+			required(flights[2]).resolve({ ok: true, data: browse("Latest query") }),
+		);
+		await act(async () =>
+			required(flights[1]).resolve({ ok: true, data: browse("Stale query") }),
+		);
+		expect(container.textContent).toContain("Latest query");
+		expect(container.textContent).not.toContain("Stale query");
+	});
+	it("continues title and episode streams with their own cursors and resets on changed conditions", async () => {
+		const fallback = clientFixture();
+		const client = clientFixture(
+			vi.fn(async (m): Promise<WatchHistoryMessageResponse> => {
+				if (m.command === "browse")
+					return {
+						ok: true,
+						data: browse(
+							"Frieren",
+							(m.input as WatchHistoryBrowseQuery).cursor ? null : "title-next",
+						),
+					};
+				if (m.command === "browse-title-episodes")
+					return {
+						ok: true,
+						data: detail(
+							(m.input as WatchHistoryBrowseQuery).cursor
+								? null
+								: "episode-next",
+						),
+					};
+				return fallback.request(m);
+			}),
+		);
+		await mount(client);
+		await click("Load more episodes for Frieren");
+		await click("Load more titles");
+		expect(client.request).toHaveBeenCalledWith(
+			expect.objectContaining({
+				command: "browse-title-episodes",
+				input: {
+					mode: "solo",
+					limit: 20,
+					provider: item.provider,
+					titleKey: item.titleKey,
+					cursor: "episode-next",
+				},
+				expectedOwnerUserId: OWNER,
+			}),
+		);
+		expect(client.request).toHaveBeenCalledWith(
+			expect.objectContaining({
+				command: "browse",
+				input: { mode: "solo", limit: 20, cursor: "title-next" },
+			}),
+		);
+		expect(container.querySelectorAll(".popup-watch-item")).toHaveLength(1);
+		await click("Together");
+		expect(
+			vi
+				.mocked(client.request)
+				.mock.calls.map(([m]) => m)
+				.filter((m) => m.command === "browse")
+				.at(-1),
+		).toMatchObject({ input: { mode: "shared", limit: 20 } });
+	});
+	it("starts an independent session stream beyond the sample, merges IDs and shows recorded participants and observed dates", async () => {
+		const sessions: WatchHistorySession[] = Array.from(
+			{ length: 22 },
+			(_, index) => ({
+				id: `00000000-0000-4000-8000-${String(index + 30).padStart(12, "0")}`,
+				kind: "shared",
+				roomId: "old-room",
+				roomGeneration: 1,
+				sourceGeneration: 1,
+				hostUserId: OWNER,
+				currentTime: 900,
+				duration: 1200,
+				progress: 0.75,
+				startedAt: "2020-01-01T00:00:00.000Z",
+				endedAt: null,
+				lastWatchedAt: "2026-09-01T08:00:00.000Z",
+				participants: [
+					{
+						user: {
+							userId: PERSON,
+							displayName: "Mira",
+							handle: null,
+							avatarUrl: null,
+						},
+						role: "viewer",
+						currentTime: 600,
+						progress: 0.5,
+						joinedAt: "2020-01-01T00:00:00.000Z",
+						updatedAt: meta.serverTime,
+						leftAt: null,
+					},
+				],
+			}),
+		);
+		const fallback = clientFixture();
+		const client = clientFixture(
+			vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
+				if (message.command === "browse-title-episodes") {
+					const page = detail();
+					required(page.detail.episodes[0]).sessions = sessions.slice(0, 20);
+					required(page.matches[0]).matchingSessionCount = 22;
+					required(page.matches[0]).sessionsComplete = false;
+					return {
+						ok: true,
+						data: WatchHistoryBrowseTitleEpisodesResponseSchema.parse(page),
+					};
+				}
+				if (message.command === "browse-sessions")
+					return {
+						ok: true,
+						data: WatchHistoryBrowseSessionsResponseSchema.parse({
+							meta,
+							sessions: (message.input as WatchHistoryBrowseQuery).cursor
+								? sessions.slice(20)
+								: sessions.slice(0, 20),
+							groups: [],
+							totalSessionCount: 22,
+							nextCursor: (message.input as WatchHistoryBrowseQuery).cursor
+								? null
+								: "sessions-next",
+						}),
+					};
+				return fallback.request(message);
+			}),
+		);
+		await mount(client);
+		await click("Together");
+		await click("22 shared sessions");
+		expect(container.querySelectorAll(".popup-watch-session")).toHaveLength(20);
+		expect(container.textContent).toContain("Mira");
+		expect(container.textContent).not.toContain("2020");
+		expect(
+			container
+				.querySelector(".popup-watch-session time")
+				?.getAttribute("datetime"),
+		).toBe("2026-09-01T08:00:00.000Z");
+		expect(
+			container.querySelector(".popup-series-progress")?.textContent,
+		).toContain("10:00");
+		await click("Load more sessions");
+		expect(container.querySelectorAll(".popup-watch-session")).toHaveLength(22);
+		const calls = vi
+			.mocked(client.request)
+			.mock.calls.map(([m]) => m)
+			.filter((m) => m.command === "browse-sessions");
+		expect(calls[0]).toMatchObject({
+			expectedOwnerUserId: OWNER,
+			input: {
+				mode: "shared",
+				limit: 20,
+				provider: item.provider,
+				titleKey: item.titleKey,
+				episodeKey: episode.episodeKey,
+			},
+		});
+		expect((calls[0] as { input: object }).input).not.toHaveProperty("cursor");
+		expect(calls[1]).toMatchObject({ input: { cursor: "sessions-next" } });
+	});
+	it("never paints an old owner title or detail when account changes with requests pending", async () => {
+		let finishDetail!: (value: WatchHistoryMessageResponse) => void;
+		const client = clientFixture(async (message) => {
+			if (message.command === "browse") {
+				const page = browse(
+					message.expectedOwnerUserId === OWNER ? "Owner A" : "Owner B",
+				);
+				page.history.meta.ownerUserId = message.expectedOwnerUserId;
+				return { ok: true, data: page };
+			}
+			if (
+				message.command === "browse-title-episodes" &&
+				message.expectedOwnerUserId === OWNER
+			)
+				return new Promise((resolve) => {
+					finishDetail = resolve;
+				});
+			return { ok: true };
+		});
+		await mount(client);
+		expect(container.textContent).toContain("Owner A");
+		await act(async () =>
+			root.render(
+				<PopupWatchHistoryPanel client={client} ownerUserId={PERSON} />,
+			),
+		);
+		await act(async () => finishDetail({ ok: true, data: detail() }));
+		expect(container.textContent).toContain("Owner B");
+		expect(container.textContent).not.toContain("Owner A");
+		expect(container.textContent).not.toContain("Matching episode");
+	});
+	it("keeps selected historical labels when refreshed option pages no longer contain them", async () => {
+		let removed = false;
+		const fallback = clientFixture();
+		const client = clientFixture(async (message) =>
+			message.command === "browse-options" && removed
+				? { ok: true, data: { meta, options: [], nextCursor: null } }
+				: fallback.request(message),
+		);
+		await mount(client);
+		await click("Together");
+		await click("Filters");
+		await change("My groups", GROUP);
+		removed = true;
+		await click("Refresh watch history");
+		expect(button("Remove group Friday crew")).toBeDefined();
+		expect(
+			(container.querySelector('[aria-label="My groups"]') as HTMLSelectElement)
+				.value,
+		).toBe(GROUP);
+	});
+	it.each([
+		{ completed: 1, available: 475, label: "<1%" },
+		{ completed: 474, available: 475, label: "99%" },
+	])("formats truthful integer progress without false completion: $label", async ({
+		completed,
+		available,
+		label,
+	}) => {
+		const fallback = clientFixture();
+		const client = clientFixture(async (message) => {
+			if (message.command !== "browse") return fallback.request(message);
+			const page = browse();
+			required(page.history.items[0]).aggregate = {
+				completedEpisodes: completed,
+				availableEpisodes: available,
+				progress: completed / available,
+			};
+			return { ok: true, data: page };
+		});
+		await mount(client);
+		expect(container.querySelector(".popup-watch-percent")?.textContent).toBe(
+			label,
+		);
+		expect(container.textContent).not.toContain("100%");
+	});
+});

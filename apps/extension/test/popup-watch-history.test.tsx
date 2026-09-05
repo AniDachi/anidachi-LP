@@ -7,6 +7,7 @@ import {
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { PopupHistorySettings } from "../src/popup-history-settings";
 import {
   PopupWatchHistoryPanel,
   selectConfirmedPopupWatchHistorySnapshot,
@@ -31,7 +32,7 @@ const NOW = "2026-08-15T03:00:00.000Z";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-describe("Popup Watch History v2", () => {
+describe("Popup Watch History v3", () => {
   it("shows a newly resolved poster on a cached title before the progress upload is acknowledged", async () => {
     const history = historyFixture();
     history.items[0]!.artworkUrl = null;
@@ -164,100 +165,6 @@ describe("Popup Watch History v2", () => {
     } finally { await unmount(view.root); }
   });
 
-  it("settles an old deletion without downgrading a newer visible history generation", async () => {
-    let finishDelete!: (response: WatchHistoryMessageResponse) => void;
-    let publish!: (snapshot: PopupWatchHistorySnapshot) => void;
-    const canonical = historyFixture();
-    const base = requestForHistory(canonical);
-    const client: PopupWatchHistoryClient = {
-      ...clientFixture({ cached: snapshotFixture(canonical), request: async (message) => {
-        if (message.command === "delete") return new Promise((resolve) => { finishDelete = resolve; });
-        return base(message);
-      } }),
-      subscribe: (_owner, listener) => { publish = listener; return () => undefined; },
-    };
-    const view = await renderPanel(client);
-    try {
-      await click(await findButton(view.container, "Delete Frieren"));
-      const newer = historyFixture({ title: "New generation Frieren" });
-      newer.meta.accountGeneration = 2;
-      const snapshot = snapshotFixture(newer);
-      snapshot.accountGeneration = 2;
-      snapshot.localObservation = { mode: "mine", event: { ...pendingEvent({ currentTime: 900, progress: 0.43 }), accountGeneration: 2 } };
-      await act(async () => { publish(snapshot); });
-      await act(async () => { finishDelete({ ok: true, data: {
-        meta: canonical.meta, schemaVersion: 3, accountGeneration: 1, clientMutationId: "00000000-0000-4000-8000-000000000055",
-        target: { scope: "title", provider: "crunchyroll", titleKey: canonical.items[0]!.titleKey }, deletedAt: NOW,
-      } }); });
-      expect(view.container.textContent).toContain("New generation Frieren");
-      expect(view.container.textContent).toContain("15:00");
-      expect((await findButton(view.container, "Delete New generation Frieren")).disabled).toBe(false);
-    } finally { await unmount(view.root); }
-  });
-
-  it.each(["title", "all"] as const)("ignores a successful read delivered after acknowledged %s deletion", async (scope) => {
-    const canonical = historyFixture();
-    let deleted = false;
-    let deliverOpening!: () => void;
-    const live = liveClientFixture(canonical, async (url, init) => {
-      if (String(url).includes("/preferences")) return Response.json(preferencesFixture(false));
-      if (String(url).includes("/delete")) {
-        deleted = true;
-        const mutation = JSON.parse(String(init?.body));
-        const generation = scope === "all" ? 2 : 1;
-        return Response.json({ meta: { ...canonical.meta, accountGeneration: generation }, schemaVersion: 3, accountGeneration: generation,
-          clientMutationId: mutation.clientMutationId, target: mutation.target, deletedAt: "2026-08-15T03:00:10.000Z" });
-      }
-      return deleted ? new Response("offline", { status: 503 }) : Response.json(canonical);
-    });
-    let firstRead = true;
-    const client = { ...live.client, request: async (message: Parameters<PopupWatchHistoryClient["request"]>[0]) => {
-      const response = await live.background.handle(message);
-      if (message.command === "list" && firstRead) {
-        firstRead = false;
-        await new Promise<void>((resolve) => { deliverOpening = resolve; });
-      }
-      return response;
-    } };
-    const view = await renderPanel(client);
-    try {
-      await waitFor(() => expect(deliverOpening).toBeTypeOf("function"));
-      await click(await findButton(view.container, scope === "all" ? "Clear all watch history" : "Delete Frieren"));
-      await waitFor(() => expect(view.container.textContent).not.toContain("Frieren"));
-      await act(async () => { deliverOpening(); });
-      expect(view.container.textContent).not.toContain("Frieren");
-      expect((await findButton(view.container, "Retry watch history")).disabled).toBe(false);
-    } finally { deliverOpening?.(); await unmount(view.root); }
-  });
-
-  it.each(["title", "episode", "all"] as const)("does not resurrect deleted %s history from the active local observation while refresh is offline", async (scope) => {
-    const canonical = historyFixture();
-    let deleted = false;
-    const live = liveClientFixture(canonical, async (url, init) => {
-      if (String(url).includes("/preferences")) return Response.json(preferencesFixture(false));
-      if (String(url).includes("/delete")) {
-        deleted = true;
-        const mutation = JSON.parse(String(init?.body));
-        const generation = scope === "all" ? 2 : 1;
-        return Response.json({ meta: { ...canonical.meta, accountGeneration: generation }, schemaVersion: 3, accountGeneration: generation,
-          clientMutationId: mutation.clientMutationId, target: mutation.target, deletedAt: "2026-08-15T03:00:10.000Z" });
-      }
-      return deleted ? new Response("offline", { status: 503 }) : Response.json(canonical);
-    });
-    const view = await renderPanel(live.client);
-    try {
-      await act(async () => { await live.background.handle({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "observe-progress",
-        expectedOwnerUserId: OWNER_ID, event: pendingEvent({ currentTime: 900, progress: 0.43, observedAt: "2026-08-15T03:00:05.000Z" }),
-        meaningfulSolo: true, displayMode: "mine" }); });
-      await waitFor(() => expect(view.container.textContent).toContain("15:00"));
-      const button = scope === "all" ? "Clear all watch history" : scope === "episode" ? "Delete Episode 1 - The Journey" : "Delete Frieren";
-      await click(await findButton(view.container, button));
-      await waitFor(() => expect(view.container.textContent).toContain("Could not refresh watch history."));
-      expect(view.container.textContent).not.toContain("Frieren");
-      expect(view.container.textContent).not.toContain("15:00");
-    } finally { await unmount(view.root); }
-  });
-
   it("delivers refresh completion even if a playback notification supersedes its cache load", async () => {
     let changed!: Parameters<typeof chrome.storage.onChanged.addListener>[0];
     let finishRefresh!: (response: WatchHistoryMessageResponse) => void;
@@ -295,39 +202,6 @@ describe("Popup Watch History v2", () => {
     } finally { close(); }
   });
 
-  it("releases deletion controls after a transport exception and keeps canonical rows", async () => {
-    const base = requestForHistory(historyFixture());
-    const client = clientFixture({ cached: snapshotFixture(historyFixture()), request: async (message) => {
-      if (message.command === "delete") throw new Error("Extension port closed");
-      return base(message);
-    } });
-    const view = await renderPanel(client);
-    try {
-      await click(await findButton(view.container, "Delete Frieren"));
-      await waitFor(() => expect(view.container.textContent).toContain("Could not refresh watch history."));
-      expect(view.container.textContent).toContain("Frieren");
-      expect((await findButton(view.container, "Delete Frieren")).disabled).toBe(false);
-      expect((await findButton(view.container, "Retry watch history")).disabled).toBe(false);
-    } finally { await unmount(view.root); }
-  });
-
-  it("finishes a pending action across a same-owner focus refresh", async () => {
-    let finishDelete!: (response: WatchHistoryMessageResponse) => void;
-    const base = requestForHistory(historyFixture());
-    const client = clientFixture({ cached: snapshotFixture(historyFixture()), request: async (message) => {
-      if (message.command === "delete") return new Promise((resolve) => { finishDelete = resolve; });
-      return base(message);
-    } });
-    const view = await renderPanel(client);
-    try {
-      await click(await findButton(view.container, "Delete Frieren"));
-      await act(async () => { view.root.render(<PopupWatchHistoryPanel client={client} ownerUserId={OWNER_ID} refreshSignal={1} />); });
-      await act(async () => { finishDelete({ ok: false, status: "retryable" }); });
-      await waitFor(() => expect((view.container.querySelector('[aria-label="Delete Frieren"]') as HTMLButtonElement).disabled).toBe(false));
-      expect(view.container.textContent).toContain("Could not refresh watch history.");
-    } finally { await unmount(view.root); }
-  });
-
   it("does not let an old owner's discard failure change the newly signed-in drawer", async () => {
     let finishDiscard!: (response: WatchHistoryMessageResponse) => void;
     let owner = OWNER_ID;
@@ -357,6 +231,7 @@ describe("Popup Watch History v2", () => {
     const fresh = historyFixture({ title: "After playback", currentTime: 900, progress: 0.43 });
     fresh.generatedAt = fresh.meta.serverTime = "2026-08-15T03:00:02.000Z";
     const reads: Array<(response: Response) => void> = [];
+    let recovered = false;
     const live = liveClientFixture(cached, async (url, init) => {
       if (String(url).includes("/preferences")) return Response.json(preferencesFixture(false));
       if (init?.method === "POST") {
@@ -365,7 +240,7 @@ describe("Popup Watch History v2", () => {
           acceptedAt: fresh.generatedAt, accountGeneration: 1, duplicate: false,
           episode: fresh.items[0]!.seasons[0]!.episodes[0] });
       }
-      return new Promise<Response>((resolve) => reads.push(resolve));
+      return recovered ? Response.json(fresh) : new Promise<Response>((resolve) => reads.push(resolve));
     });
     const view = await renderPanel(live.client);
     try {
@@ -378,7 +253,7 @@ describe("Popup Watch History v2", () => {
         reads[0]!(Response.json(cached));
       });
       await waitFor(() => expect(reads.length).toBeGreaterThanOrEqual(2));
-      await act(async () => { for (const resolve of reads.slice(1)) resolve(Response.json(fresh)); });
+      await act(async () => { recovered = true; for (const resolve of reads.slice(1)) resolve(Response.json(fresh)); });
       await waitFor(() => expect(view.container.textContent).toContain("After playback"));
       expect(view.container.textContent).not.toContain("Could not refresh watch history.");
       expect((await live.client.loadCached(OWNER_ID))?.pendingEvents).toEqual([]);
@@ -427,11 +302,11 @@ describe("Popup Watch History v2", () => {
       })) : getSucceeds ? new Response(JSON.stringify(complete)) : new Response("offline", { status: 503 }),
     });
     let publish!: (snapshot: PopupWatchHistorySnapshot | null) => void;
-    const client = { ...clientFixture({ cached: snapshotFixture(complete), request: async () => ({ ok: false, status: "retryable" }) }),
+    const client = { ...clientFixture({ cached: snapshotFixture(complete), request: requestForHistory(complete) }),
       subscribe: (_owner: string, listener: typeof publish) => { publish = listener; return () => undefined; },
     };
     const view = await renderPanel(client);
-    await waitFor(() => expect(view.container.textContent).toContain("0 / 12 episodes · 0%"));
+    await waitFor(() => expect(view.container.textContent).toContain("0 / 12 episodes0%"));
     await background.handle({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "catalog-begin", expectedOwnerUserId: OWNER_ID, pageId: "visit",
       input: { schemaVersion: 3, accountGeneration: 1, provider: "crunchyroll", titleKey: "crunchyroll:series:FRIEREN", providerSeriesId: "FRIEREN",
         context: { region: "US", requestedLocale: "en-US", audioLocale: null, subtitleLocales: [], observedAt: NOW } } });
@@ -439,14 +314,14 @@ describe("Popup Watch History v2", () => {
     expect(partial.history.items[0]).toMatchObject({ catalogState: "partial", aggregate: { availableEpisodes: null, progress: null } });
     expect(partial.history.items[0]!.seasons[0]!.episodes).toEqual(complete.items[0]!.seasons[0]!.episodes);
     await act(async () => { publish(partial); });
-    expect(view.container.textContent).not.toContain("0 / 12 episodes · 0%");
+    expect(view.container.textContent).not.toContain("0 / 12 episodes0%");
     expect(view.container.textContent).toContain("The Journey");
     await background.handle(createListWatchHistoryMessage());
     expect(stored.partitions[key]!.cache!.items[0]!.catalogState).toBe("partial");
     getSucceeds = true;
     await background.handle(createListWatchHistoryMessage());
     await act(async () => { publish(selectConfirmedPopupWatchHistorySnapshot(stored, OWNER_ID)); });
-    expect(view.container.textContent).toContain("0 / 12 episodes · 0%");
+    expect(view.container.textContent).toContain("0 / 12 episodes0%");
     await unmount(view.root);
   });
   it("coalesces mutation invalidations for an open subscriber and stops refresh after close", async () => {
@@ -479,6 +354,7 @@ describe("Popup Watch History v2", () => {
     let resolveList: ((value: WatchHistoryMessageResponse) => void) | undefined;
     const cached = historyFixture({ title: "Cached Frieren", currentTime: 420, progress: 0.2 });
     const refreshed = historyFixture({ title: "Canonical Frieren", currentTime: 1_260, progress: 0.6 });
+    refreshed.items[0]!.seasons[0]!.episodes[0]!.lastWatchedAt = "2026-08-15T03:00:10.000Z";
     const client = clientFixture({
       cached: snapshotFixture(cached, [pendingEvent({ currentTime: 840, progress: 0.4 })]),
       request: vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
@@ -506,7 +382,7 @@ describe("Popup Watch History v2", () => {
 
     const view = await renderPanel(client);
     await waitFor(() => expect(view.container.textContent).toContain("Cached Frieren"));
-    expect(view.container.textContent).not.toContain("Pending sync");
+    expect(view.container.textContent).toContain("Pending sync");
     expect(view.container.textContent).toContain("14:00");
 
     await act(async () => {
@@ -517,7 +393,6 @@ describe("Popup Watch History v2", () => {
     await waitFor(() => expect(view.container.textContent).toContain("Canonical Frieren"));
     expect(view.container.textContent).toContain("21:00");
     expect(view.container.textContent).not.toContain("Cached Frieren");
-    expect(client.request).toHaveBeenCalledWith(createListWatchHistoryMessage({ limit: 100 }));
 
     await unmount(view.root);
   });
@@ -540,8 +415,8 @@ describe("Popup Watch History v2", () => {
     const view = await renderPanel(client);
 
     await waitFor(() => expect(view.container.textContent).toContain("14:00"));
-    expect(view.container.textContent).not.toContain("Pending sync");
-    expect(client.loadCached).toHaveBeenCalledTimes(2);
+    expect(view.container.textContent).toContain("Pending sync");
+    expect(client.loadCached).toHaveBeenCalledTimes(1);
     expect(listRequests).toBe(1);
     await unmount(view.root);
   });
@@ -561,7 +436,7 @@ describe("Popup Watch History v2", () => {
     await waitFor(() => expect(view.container.textContent).toContain("Cached Frieren"));
     expect(view.container.textContent).toContain("Episode 1 - The Journey");
     expect(view.container.textContent).toContain("0:12");
-    expect(view.container.textContent).not.toContain("Pending sync");
+    expect(view.container.textContent).toContain("Pending sync");
     expect(view.container.textContent).not.toContain("Progress will appear after meaningful playback.");
     await unmount(view.root);
   });
@@ -586,7 +461,7 @@ describe("Popup Watch History v2", () => {
     await waitFor(() => expect(view.container.textContent).toContain("Cached Frieren"));
     expect(view.container.textContent).toContain("0:03");
     expect(view.container.textContent).not.toContain("Watching now");
-    expect(view.container.textContent).not.toContain("Pending sync");
+    expect(view.container.textContent).toContain("Pending sync");
     await unmount(view.root);
   });
 
@@ -603,10 +478,11 @@ describe("Popup Watch History v2", () => {
       progress: 12 / 2_100,
     });
     let publishSnapshot: ((snapshot: PopupWatchHistorySnapshot | null) => void) | null = null;
+    let servedHistory = emptyHistory;
     const client = {
       ...clientFixture({
         cached: snapshotFixture(emptyHistory),
-        request: requestForHistory(emptyHistory),
+        request: message => requestForHistory(servedHistory)(message),
       }),
       subscribe: (
         _ownerUserId: string,
@@ -637,7 +513,7 @@ describe("Popup Watch History v2", () => {
     });
     await waitFor(() => expect(view.container.textContent).toContain("Cached Frieren"));
     expect(view.container.textContent).not.toContain("Watching now");
-    expect(view.container.textContent).not.toContain("Pending sync");
+    expect(view.container.textContent).toContain("Pending sync");
     expect(view.container.textContent).toContain("0:12");
 
     await act(async () => {
@@ -655,7 +531,7 @@ describe("Popup Watch History v2", () => {
       ));
       await Promise.resolve();
     });
-    expect(view.container.textContent).not.toContain("Pending sync");
+    expect(view.container.textContent).toContain("Pending sync");
     expect(view.container.textContent).not.toContain("Watching now");
     expect(view.container.textContent).toContain("0:12");
 
@@ -664,9 +540,10 @@ describe("Popup Watch History v2", () => {
       await Promise.resolve();
     });
     expect(view.container.textContent).toContain("Cached Frieren");
-    expect(view.container.textContent).not.toContain("Pending sync");
+    expect(view.container.textContent).toContain("Pending sync");
 
     await act(async () => {
+      servedHistory = canonical;
       publishSnapshot?.(snapshotFixture(canonical));
       await Promise.resolve();
     });
@@ -717,7 +594,7 @@ describe("Popup Watch History v2", () => {
 
     await waitFor(() => {
       expect(view.container.textContent).toContain(
-        "Episodes you watch on supported sites will appear here.",
+        "Loading watch history...",
       );
     });
     await act(async () => {
@@ -731,7 +608,7 @@ describe("Popup Watch History v2", () => {
       await Promise.resolve();
     });
     await waitFor(() => expect(view.container.textContent).toContain("Cached Frieren"));
-    expect(view.container.textContent).not.toContain("Pending sync");
+    expect(view.container.textContent).toContain("Pending sync");
     await unmount(view.root);
   });
 
@@ -750,7 +627,7 @@ describe("Popup Watch History v2", () => {
 
     await waitFor(() => expect(view.container.textContent).toContain("Episode 2 - The Promise"));
     expect(view.container.textContent).toContain("0:12");
-    expect(view.container.textContent).not.toContain("Pending sync");
+    expect(view.container.textContent).toContain("Pending sync");
     await unmount(view.root);
   });
 
@@ -908,7 +785,7 @@ describe("Popup Watch History v2", () => {
     await unmount(view.root);
   });
 
-  it("bounds pending projection newest-first without mutating work and always pins local progress", async () => {
+  it("keeps bounded browse episodes plus pending additions without mutating work and pins local progress", async () => {
     const canonical = historyWithEpisodesFixture(8);
     const pending = [
       ...[9, 10, 11].map((number) => pendingEvent({
@@ -947,11 +824,11 @@ describe("Popup Watch History v2", () => {
 
     await waitFor(() => expect(view.container.textContent).toContain("Episode 12 - Immediate local"));
     const rows = [...view.container.querySelectorAll(".popup-episode-row")];
-    expect(rows).toHaveLength(8);
+    expect(rows).toHaveLength(12);
     expect(view.container.textContent).toContain("Episode 11 - Queued");
     expect(view.container.textContent).toContain("0:12");
     expect(view.container.textContent).not.toContain("Episode 12 - Queued later");
-    expect(view.container.textContent).not.toContain("Episode 1 - Cached");
+    expect(view.container.textContent).toContain("Episode 1 - Cached");
     expect(pending).toEqual(originalPending);
     await unmount(view.root);
   });
@@ -995,7 +872,7 @@ describe("Popup Watch History v2", () => {
       "Episode tie underscore",
       "Episode tie lowercase",
     ]);
-    expect(view.container.querySelectorAll(".popup-episode-row")).toHaveLength(8);
+    expect(view.container.querySelectorAll(".popup-episode-row")).toHaveLength(12);
     await unmount(view.root);
   });
 
@@ -1017,12 +894,12 @@ describe("Popup Watch History v2", () => {
       }),
     });
 
-    const view = await renderPanel(client);
+    const view = await renderSettings(client);
     const toggle = await findButton(view.container, "Track YouTube history");
     expect(toggle.disabled).toBe(false);
     expect(toggle.getAttribute("role")).toBe("switch");
     expect(toggle.getAttribute("aria-checked")).toBe("true");
-    expect(toggle.querySelector(".popup-watch-youtube-switch-track")).not.toBeNull();
+    expect(toggle.querySelector(".popup-notification-switch")).not.toBeNull();
     expect(toggle.textContent).toContain("On");
     expect(toggle.textContent).not.toContain("Loading");
     expect(toggle.textContent).not.toContain("Retry");
@@ -1052,7 +929,7 @@ describe("Popup Watch History v2", () => {
       }
       return { ok: true };
     });
-    const view = await renderPanel(clientFixture({
+    const view = await renderSettings(clientFixture({
       cached: snapshotFixture(historyFixture()),
       request,
     }));
@@ -1086,7 +963,7 @@ describe("Popup Watch History v2", () => {
       }
       return { ok: true };
     });
-    const view = await renderPanel(clientFixture({
+    const view = await renderSettings(clientFixture({
       cached: snapshotFixture(historyFixture()),
       request,
     }));
@@ -1112,7 +989,7 @@ describe("Popup Watch History v2", () => {
       }
       return { ok: true };
     });
-    const view = await renderPanel(clientFixture({ cached: null, request }));
+    const view = await renderSettings(clientFixture({ cached: null, request }));
     const toggle = await findButton(view.container, "Track YouTube history");
     await waitFor(() => expect(toggle.disabled).toBe(false));
 
@@ -1172,82 +1049,6 @@ describe("Popup Watch History v2", () => {
     expect(view.container.textContent).toContain("Stable Frieren");
     expect(view.container.textContent).not.toContain("Older cached Frieren");
     expect(view.container.textContent).not.toContain("Loading watch history");
-    const toggle = await findButton(view.container, "Track YouTube history");
-    expect(toggle.getAttribute("aria-checked")).toBe("true");
-
-    await unmount(view.root);
-  });
-
-  it("deletes one episode with the current generation and keeps unrelated canonical history", async () => {
-    const exactHistory = twoEpisodeHistoryFixture();
-    const exactItem = exactHistory.items[0]!;
-    exactItem.observedEpisodeCount = 7;
-    exactItem.completedEpisodeCount = 6;
-    exactItem.episodePage = { complete: false, nextCursor: "episode_cursor" };
-    exactItem.catalogState = "complete";
-    exactItem.aggregate = { completedEpisodes: 5, availableEpisodes: 13, progress: 5 / 13 };
-    exactItem.seasons[0]!.aggregate = {
-      completedEpisodes: 5,
-      availableEpisodes: 13,
-      progress: 5 / 13,
-    };
-    const request = vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
-      if (message.command === "list") return { ok: true, data: exactHistory };
-      if (message.command === "get-preferences") {
-        return { ok: true, data: preferencesFixture(false) };
-      }
-      if (message.command === "other-owner-pending") {
-        return { ok: true, hasPendingWork: false, byteUse: 0 };
-      }
-      if (message.command === "delete") {
-        const input = message.input as {
-          clientMutationId: string;
-          accountGeneration: number;
-          target: { scope: "episode"; provider: "crunchyroll"; titleKey: string; episodeKey: string };
-        };
-        return {
-          ok: true,
-          data: {
-            meta: {
-              schemaVersion: 3,
-              ownerUserId: OWNER_ID,
-              accountGeneration: 1,
-              serverTime: NOW,
-            },
-            schemaVersion: 3,
-            clientMutationId: input.clientMutationId,
-            accountGeneration: input.accountGeneration,
-            target: input.target,
-            deletedAt: NOW,
-          },
-        };
-      }
-      return { ok: true };
-    });
-    const view = await renderPanel(clientFixture({ cached: null, request }));
-    const deleteFirst = await findButton(view.container, "Delete Episode 1 - The Journey");
-
-    await click(deleteFirst);
-
-    await waitFor(() => expect(view.container.textContent).not.toContain("Episode 1 - The Journey"));
-    expect(view.container.textContent).toContain("Episode 2 - The Promise");
-    expect(view.container.textContent).toContain("5 / 13 episodes");
-    expect(view.container.textContent).toContain("38.46%");
-    const deletion = request.mock.calls.find(([message]) => message.command === "delete")?.[0];
-    expect(deletion).toEqual(expect.objectContaining({
-      command: "delete",
-      input: expect.objectContaining({
-        schemaVersion: 3,
-        accountGeneration: 1,
-        clientMutationId: expect.stringMatching(/^[0-9a-f-]{36}$/),
-        target: {
-          scope: "episode",
-          provider: "crunchyroll",
-          titleKey: "crunchyroll:series:FRIEREN",
-          episodeKey: "crunchyroll:episode:FRIEREN|S1|E1",
-        },
-      }),
-    }));
     await unmount(view.root);
   });
 
@@ -1282,39 +1083,6 @@ describe("Popup Watch History v2", () => {
     await unmount(view.root);
   });
 
-  it("accepts an all-history acknowledgement that advances the account generation", async () => {
-    const request = vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
-      if (message.command === "list") return { ok: true, data: historyFixture() };
-      if (message.command === "get-preferences") return { ok: true, data: preferencesFixture(false) };
-      if (message.command === "other-owner-pending") return { ok: true, hasPendingWork: false, byteUse: 0 };
-      if (message.command === "delete") {
-        const input = message.input as { clientMutationId: string; target: { scope: "all" } };
-        return {
-          ok: true,
-          data: {
-            meta: { schemaVersion: 3, ownerUserId: OWNER_ID, accountGeneration: 2, serverTime: NOW },
-            schemaVersion: 3,
-            clientMutationId: input.clientMutationId,
-            accountGeneration: 2,
-            target: input.target,
-            deletedAt: NOW,
-          },
-        };
-      }
-      return { ok: true };
-    });
-    const view = await renderPanel(clientFixture({ cached: null, request }));
-    const clear = await findButton(view.container, "Clear all watch history");
-
-    await click(clear);
-
-    await waitFor(() => expect(view.container.textContent).toContain(
-      "Episodes you watch on supported sites will appear here.",
-    ));
-    expect(view.container.textContent).not.toContain("Frieren");
-    await unmount(view.root);
-  });
-
   it("recreates a room from a canonical session and opens the source with its room id", async () => {
     const openUrl = vi.fn(async () => undefined);
     const history = sameEpisodeMixedSessionHistoryFixture();
@@ -1345,8 +1113,9 @@ describe("Popup Watch History v2", () => {
     });
     const client = { ...clientFixture({ cached: null, request }), openUrl };
     const view = await renderPanel(client);
-    const mode = await findButton(view.container, "Watch history mode: Mine. Switch to Together");
+    const mode = await findButton(view.container, "Together");
     await click(mode);
+    await click(await findButton(view.container, "1 shared session"));
     const createRoom = await findButton(view.container, "Create room from Shared session");
 
     await click(createRoom);
@@ -1427,11 +1196,11 @@ describe("Popup Watch History v2", () => {
 
     const disclosure = await findButton(
       view.container,
-      "Toggle 葬送のフリーレン الموسم الطويل جدا history, 5 of 13 episodes watched, 38.46 percent",
+      "Toggle 葬送のフリーレン الموسم الطويل جدا history, 5 of 13 episodes watched, 38 percent",
     );
     expect(disclosure.textContent).toContain("葬送のフリーレン الموسم الطويل جدا");
     expect(disclosure.textContent).toContain("5 / 13 episodes");
-    expect(disclosure.textContent).toContain("38.46%");
+    expect(disclosure.textContent).toContain("38%");
     expect(disclosure.querySelector(".popup-watch-title")?.getAttribute("dir")).toBe("auto");
     const track = disclosure.querySelector(".popup-watch-overall-track");
     expect(track?.getAttribute("aria-hidden")).toBe("true");
@@ -1491,13 +1260,13 @@ describe("Popup Watch History v2", () => {
     };
     const view = await renderPanel(clientFixture({ cached: null, request: requestForHistory(history) }));
     const search = await findInput(view.container, "Search watch history");
-    const mode = await findButton(view.container, "Watch history mode: Mine. Switch to Together");
+    const mode = await findButton(view.container, "Together");
 
     expect(view.container.textContent).toContain("5 / 13 episodes");
     await setInputValue(search, "Journey");
     expect(view.container.textContent).toContain("5 / 13 episodes");
     await click(mode);
-    await waitFor(() => expect(mode.dataset.mode).toBe("together"));
+    await waitFor(() => expect(mode.getAttribute("aria-pressed")).toBe("true"));
     expect(view.container.textContent).toContain("5 / 13 episodes");
     await unmount(view.root);
   });
@@ -1533,7 +1302,7 @@ describe("Popup Watch History v2", () => {
     expect(view.container.textContent).toContain("Episode 2 - The Promise");
 
     await setInputValue(search, "missing");
-    expect(view.container.textContent).toContain("No titles match your search.");
+    expect(view.container.textContent).toContain("No history matches these conditions.");
     expect(history.items[0]?.seasons[0]?.episodes).toHaveLength(2);
     await unmount(view.root);
   });
@@ -1592,21 +1361,6 @@ describe("Popup Watch History v2", () => {
     await unmount(view.root);
   });
 
-  it("keeps deletion separate from disclosure and cancel never mutates history", async () => {
-    const request = vi.fn(requestForHistory(historyFixture()));
-    const client = clientFixture({ cached: null, request });
-    client.confirmDiscard = vi.fn(() => false);
-    const view = await renderPanel(client);
-    const title = await findButton(view.container, "Toggle Frieren history");
-    await click(await findButton(view.container, "Delete Frieren"));
-    await click(await findButton(view.container, "Delete Episode 1 - The Journey"));
-    expect(title.getAttribute("aria-expanded")).toBe("true");
-    expect(view.container.textContent).toContain("Episode 1 - The Journey");
-    expect(request.mock.calls.some(([message]) => message.command === "delete")).toBe(false);
-    expect(view.container.querySelector("button button")).toBeNull();
-    await unmount(view.root);
-  });
-
   it("reveals the same search again after clearing a collapsed search result", async () => {
     const view = await renderPanel(clientFixture({ cached: null, request: requestForHistory(historyFixture()) }));
     const search = await findInput(view.container, "Search watch history");
@@ -1624,16 +1378,16 @@ describe("Popup Watch History v2", () => {
     const view = await renderPanel(
       clientFixture({ cached: null, request: requestForHistory(history) }),
     );
-    const mode = await findButton(view.container, "Watch history mode: Mine. Switch to Together");
+    const mode = await findButton(view.container, "Together");
 
-    expect(mode.dataset.mode).toBe("mine");
+    expect(mode.getAttribute("aria-pressed")).toBe("false");
     expect(view.container.textContent).toContain("Episode 1 - The Journey");
     expect(view.container.textContent).not.toContain("Episode 2 - The Promise");
     expect(view.container.querySelector(".resource-provider-logo.crunchyroll svg")).not.toBeNull();
 
     await click(mode);
 
-    await waitFor(() => expect(mode.dataset.mode).toBe("together"));
+    await waitFor(() => expect(mode.getAttribute("aria-pressed")).toBe("true"));
     expect(view.container.textContent).not.toContain("Episode 1 - The Journey");
     expect(view.container.textContent).toContain("Episode 2 - The Promise");
     await unmount(view.root);
@@ -1644,12 +1398,12 @@ describe("Popup Watch History v2", () => {
     const view = await renderPanel(
       clientFixture({ cached: null, request: requestForHistory(history) }),
     );
-    const mode = await findButton(view.container, "Watch history mode: Mine. Switch to Together");
+    const mode = await findButton(view.container, "Together");
 
     expect(view.container.textContent).toContain("Episode 1 - The Journey");
     await click(mode);
 
-    await waitFor(() => expect(mode.dataset.mode).toBe("together"));
+    await waitFor(() => expect(mode.getAttribute("aria-pressed")).toBe("true"));
     expect(view.container.textContent).not.toContain("Episode 1 - The Journey");
     expect(view.container.textContent).toContain("Shared sessions will appear after watching together.");
     await unmount(view.root);
@@ -1660,17 +1414,17 @@ describe("Popup Watch History v2", () => {
     const view = await renderPanel(
       clientFixture({ cached: null, request: requestForHistory(history) }),
     );
-    const mode = await findButton(view.container, "Watch history mode: Mine. Switch to Together");
+    const mode = await findButton(view.container, "Together");
 
     expect(view.container.textContent).not.toContain("Solo session");
     expect(view.container.textContent).not.toContain("Shared session");
     expect(view.container.textContent).toContain("10:00");
     await click(mode);
 
-    await waitFor(() => expect(mode.dataset.mode).toBe("together"));
+    await waitFor(() => expect(mode.getAttribute("aria-pressed")).toBe("true"));
     expect(view.container.textContent).not.toContain("Solo session");
-    expect(view.container.textContent).toContain("Shared session");
-    expect(view.container.textContent).toContain("15:00");
+    expect(view.container.textContent).toContain("shared session");
+    expect(view.container.textContent).toContain("10:00");
     await unmount(view.root);
   });
 
@@ -1678,7 +1432,7 @@ describe("Popup Watch History v2", () => {
     const history = sameEpisodeMixedSessionHistoryFixture();
     const sharedPending = pendingEvent({ currentTime: 840, progress: 0.4, shared: true });
     const request = vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
-      if (message.command === "list") return { ok: false, status: "retryable" };
+      if (message.command === "list") return { ok: true, data: history };
       if (message.command === "get-preferences") return { ok: true, data: preferencesFixture(false) };
       if (message.command === "other-owner-pending") {
         return { ok: true, hasPendingWork: false, byteUse: 0 };
@@ -1689,14 +1443,14 @@ describe("Popup Watch History v2", () => {
       cached: snapshotFixture(history, [sharedPending]),
       request,
     }));
-    const mode = await findButton(view.container, "Watch history mode: Mine. Switch to Together");
+    const mode = await findButton(view.container, "Together");
 
     expect(view.container.textContent).not.toContain("Pending sync");
     expect(view.container.textContent).toContain("10:00");
     await click(mode);
 
-    await waitFor(() => expect(mode.dataset.mode).toBe("together"));
-    expect(view.container.textContent).not.toContain("Pending sync");
+    await waitFor(() => expect(mode.getAttribute("aria-pressed")).toBe("true"));
+    expect(view.container.textContent).toContain("Pending sync");
     expect(view.container.textContent).toContain("14:00");
     await unmount(view.root);
   });
@@ -1728,7 +1482,7 @@ describe("Popup Watch History v2", () => {
     await unmount(view.root);
   });
 
-  it("keeps cached rows visible and marks a failed canonical refresh as retryable", async () => {
+  it("keeps unverified cache rows out of a failed browse and offers retry", async () => {
     const cached = snapshotFixture(historyFixture({ title: "Cached Frieren" }));
     const request = vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
       if (message.command === "list") return { ok: false, status: "retryable" };
@@ -1741,7 +1495,7 @@ describe("Popup Watch History v2", () => {
     const view = await renderPanel(clientFixture({ cached, request }));
 
     await waitFor(() => expect(view.container.textContent).toContain("Could not refresh watch history."));
-    expect(view.container.textContent).toContain("Cached Frieren");
+    expect(view.container.textContent).not.toContain("Cached Frieren");
     await findButton(view.container, "Retry watch history");
     await unmount(view.root);
   });
@@ -1827,7 +1581,7 @@ describe("Popup Watch History v2", () => {
       cached: null,
       request: requestForHistory(history),
     }));
-    const mode = await findButton(view.container, "Watch history mode: Mine. Switch to Together");
+    const mode = await findButton(view.container, "Together");
     const search = await findInput(view.container, "Search watch history");
     await click(mode);
     await setInputValue(search, "Journey");
@@ -1835,8 +1589,8 @@ describe("Popup Watch History v2", () => {
 
     await click(refresh);
 
-    await waitFor(() => expect(view.container.textContent).toContain("Shared session"));
-    expect(mode.dataset.mode).toBe("together");
+    await waitFor(() => expect(view.container.textContent).toContain("shared session"));
+    expect(mode.getAttribute("aria-pressed")).toBe("true");
     expect(search.value).toBe("Journey");
     await unmount(view.root);
   });
@@ -1856,6 +1610,27 @@ describe("Popup Watch History v2", () => {
   });
 });
 
+
+function fixtureFetch(fetch: typeof globalThis.fetch, initial: WatchHistoryResponse): typeof globalThis.fetch {
+  let latest = initial;
+  return async (url, init) => {
+    const parsedUrl = new URL(String(url));
+    const input = Object.fromEntries(parsedUrl.searchParams);
+    if (parsedUrl.pathname.endsWith("/browse/title-episodes")) {
+      const page = fixtureBrowseDetail(latest, input);
+      return page.ok ? Response.json(page.data) : new Response("unavailable", { status: 503 });
+    }
+    const response = await fetch(url, init);
+    if (!response.ok) return response;
+    let parsed;
+    try { parsed = WatchHistoryResponseSchema.safeParse(await response.clone().json()); } catch { return response; }
+    if (!parsed.success) return response;
+    latest = parsed.data;
+    if (parsedUrl.pathname.endsWith("/browse")) { const page = fixtureBrowseTitles(latest, input); return Response.json(page.ok ? page.data : null); }
+    return response;
+  };
+}
+
 function liveClientFixture(history: WatchHistoryResponse, fetch: typeof globalThis.fetch) {
   const key = watchHistoryPartitionKey(OWNER_ID, 1);
   let stored: WatchHistoryStorageRoot = { schemaVersion: 3, activeGenerations: { [OWNER_ID]: 1 }, partitions: {
@@ -1872,7 +1647,7 @@ function liveClientFixture(history: WatchHistoryResponse, fetch: typeof globalTh
       for (const listener of listeners) listener({ "anidachi.watchHistory.v3": { oldValue, newValue: stored } }, "local");
     },
   }, getBytesInUse: async () => 0, quotaBytes: 1_000_000 });
-  const background = createWatchHistoryClient({ storage, fetch, getCurrentSession: async () => ({
+  const background = createWatchHistoryClient({ storage, fetch: fixtureFetch(fetch, history), getCurrentSession: async () => ({
     accessToken: "test", refreshToken: "test", user: { id: OWNER_ID, email: "test@example.invalid", displayName: "Test", avatarUrl: null, plan: "plus" },
   }) });
   const loadCached = async (owner: string) => selectConfirmedPopupWatchHistorySnapshot(await storage.readRoot(), owner);
@@ -1886,13 +1661,55 @@ function liveClientFixture(history: WatchHistoryResponse, fetch: typeof globalTh
   return { client, background, storage };
 }
 
+
+function fixtureBrowseEpisodes(history: WatchHistoryResponse, input: Record<string, unknown>) {
+  const matches = (title: string, episode: WatchHistoryResponse["items"][number]["seasons"][number]["episodes"][number]) =>
+    (input.mode === "shared" ? episode.sessions.some(session => session.kind === "shared") : episode.sessions.length === 0 || episode.sessions.some(session => session.kind === "solo")) &&
+    (!input.search || (title + " " + episode.episodeTitle).toLowerCase().includes(String(input.search).toLowerCase()));
+  return history.items.flatMap(item => {
+    const episodes = item.seasons.flatMap(season => season.episodes).filter(episode => matches(item.title, episode)).map(episode => ({ ...episode, sessions: episode.sessions.filter(session => session.kind === (input.mode === "shared" ? "shared" : "solo")) }));
+    if (!item.seasons.length && (!input.search || item.title.toLowerCase().includes(String(input.search).toLowerCase())) && (input.mode !== "shared" || item.sessions.some(session => session.kind === "shared"))) episodes.push({ episodeTitle: item.title, seasonKey: null, seasonTitle: null, seasonNumber: null, episodeNumber: null, sourceUrl: item.sourceUrl, ...item.latestActivity, sessions: item.sessions.filter(session => session.kind === (input.mode === "shared" ? "shared" : "solo")) });
+    return [{ item, episodes }];
+  });
+}
+function fixtureBrowseTitles(history: WatchHistoryResponse, input: Record<string, unknown>): WatchHistoryMessageResponse {
+  const eligible = fixtureBrowseEpisodes(history, input).filter(value => value.episodes.length);
+  return { ok: true, data: { history: { ...history, items: eligible.map(value => value.item), totalTitleCount: eligible.length }, matches: eligible.map(({ item, episodes }) => ({ provider: item.provider, titleKey: item.titleKey, lastWatchedAt: item.lastWatchedAt, matchingEpisodeCount: episodes.length, matchingSessionCount: episodes.reduce((count, episode) => count + episode.sessions.length, 0) })) } };
+}
+function fixtureBrowseDetail(history: WatchHistoryResponse, input: Record<string, unknown>): WatchHistoryMessageResponse {
+  const found = fixtureBrowseEpisodes(history, input).find(value => value.item.titleKey === input.titleKey);
+  if (!found) return { ok: false, status: "retryable" };
+  const { item, episodes } = found;
+  const exact = item.catalogState === "complete";
+  return { ok: true, data: { detail: { meta: history.meta, generatedAt: history.generatedAt, provider: item.provider, titleKey: item.titleKey, observedEpisodeCount: item.observedEpisodeCount, completedEpisodeCount: item.completedEpisodeCount, episodes: episodes.slice(0, 20), catalog: { state: item.catalogState, title: exact ? item.title : null, aggregate: exact ? item.aggregate : null, seasons: exact ? item.seasons.filter(season => season.aggregate.availableEpisodes !== null).map(({ episodes: _episodes, ...season }) => season) : [] }, complete: item.episodePage.complete, nextCursor: item.episodePage.nextCursor }, matches: episodes.slice(0,20).map(episode => ({ episodeKey: episode.episodeKey, lastWatchedAt: episode.lastWatchedAt, matchingSessionCount: episode.sessions.length, sessionsComplete: true })), groups: [] } };
+}
+async function renderSettings(client: PopupWatchHistoryClient) {
+  const container = document.createElement("div");
+  document.body.append(container);
+  const root = createRoot(container);
+  await act(async () => root.render(<PopupHistorySettings ownerUserId={OWNER_ID} client={client} />));
+  return { container, root };
+}
+
 function clientFixture(overrides: {
   cached: PopupWatchHistorySnapshot | null;
   request: PopupWatchHistoryClient["request"];
 }): PopupWatchHistoryClient {
+  let latestHistory = overrides.cached?.history ?? null;
   return {
     loadCached: vi.fn(async () => overrides.cached),
-    request: overrides.request,
+    request: async message => {
+      if (message.command === "browse-title-episodes" && latestHistory) return fixtureBrowseDetail(latestHistory, message.input as Record<string, unknown>);
+      if (message.command !== "browse") return overrides.request(message);
+      // Old fixtures describe canonical server data. Adapt only the simulated
+      // transport to the new browse contract; production filtering stays real.
+      const response = await overrides.request({ ...message, command: "list" } as Parameters<PopupWatchHistoryClient["request"]>[0]);
+      if (!response.ok) return response;
+      const parsed = WatchHistoryResponseSchema.safeParse(response.data);
+      if (!parsed.success) return response;
+      latestHistory = parsed.data;
+      return fixtureBrowseTitles(parsed.data, message.input as Record<string, unknown>);
+    },
     confirmDiscard: vi.fn(() => true),
     openUrl: vi.fn(async () => undefined),
   };
@@ -2299,7 +2116,7 @@ async function findButton(container: HTMLElement, name: string): Promise<HTMLBut
   let button: HTMLButtonElement | null = null;
   await waitFor(() => {
     button = [...container.querySelectorAll("button")].find(
-      (candidate) => candidate.getAttribute("aria-label") === name,
+      (candidate) => candidate.getAttribute("aria-label") === name || candidate.textContent === name,
     ) ?? null;
     expect(button).not.toBeNull();
   });

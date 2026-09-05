@@ -12,7 +12,6 @@ import {
   LogIn,
   RefreshCw,
   Settings,
-  Users,
   X,
 } from "lucide-react";
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -63,6 +62,7 @@ import {
 } from "./popup-people-panel";
 import { popupStyles } from "./popup-styles";
 import { PopupWatchHistoryPanel } from "./popup-watch-history";
+import { PopupHistorySettings } from "./popup-history-settings";
 import {
   consumePopupRouteIntent,
   requestRoomInviteNotificationPermission,
@@ -825,7 +825,7 @@ export function PopupApp() {
           <div className="popup-local-settings-heading">
             <div>
               <strong>Extension settings</strong>
-              <span>This browser only</span>
+              <span>History and notifications</span>
             </div>
             <button
               aria-label="Close settings"
@@ -836,6 +836,8 @@ export function PopupApp() {
               <X size={16} />
             </button>
           </div>
+          <PopupHistorySettings ownerUserId={accountUser?.id ?? null} />
+          <h3 className="popup-settings-section-title">Notifications · This browser only</h3>
           <button
             className="popup-notification-setting"
             type="button"

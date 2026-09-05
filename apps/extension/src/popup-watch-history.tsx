@@ -1,22 +1,15 @@
 import {
   WATCH_HISTORY_TITLE_EPISODE_SLICE_LIMIT,
-  type WatchHistoryDeleteScope,
-  WatchHistoryDeletionAckSchema,
   type WatchHistoryItem,
   type WatchHistoryPreferences,
-  WatchHistoryPreferencesResponseSchema,
   type WatchHistoryResponse,
   WatchHistoryResponseSchema,
-  WatchHistoryRoomRecreationResponseSchema,
-  type WatchHistorySession,
   type WatchProgressEvent,
   WatchProgressEventSchema,
 } from "@anidachi/protocol";
-import { Check, ChevronDown, RefreshCw, Search, Trash2, X } from "lucide-react";
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+export { PopupWatchHistoryPanel } from "./popup-watch-drawer";
 import {
   createListWatchHistoryMessage,
-  createWatchHistoryMessage,
   requestWatchHistory,
   type WatchHistoryMessage,
   type WatchHistoryMessageResponse,
@@ -56,7 +49,7 @@ export type PopupWatchHistoryClient = {
 
 const LOCAL_CACHE_REFRESH_CURSOR = "local_cache_refresh_required";
 
-const defaultClient: PopupWatchHistoryClient = {
+export const defaultPopupWatchHistoryClient: PopupWatchHistoryClient = {
   loadCached: loadConfirmedPopupWatchHistorySnapshot,
   request: requestWatchHistory,
   subscribe: subscribeToPopupWatchHistorySnapshot,
@@ -66,7 +59,7 @@ const defaultClient: PopupWatchHistoryClient = {
   },
 };
 
-async function requestPopupWatchHistory(
+export async function requestPopupWatchHistory(
   client: PopupWatchHistoryClient,
   message: WatchHistoryMessage,
 ): Promise<WatchHistoryMessageResponse> {
@@ -77,7 +70,7 @@ async function requestPopupWatchHistory(
   }
 }
 
-function isSameHistoryRevision(
+export function isSameHistoryRevision(
   current: WatchHistoryResponse | null,
   next: WatchHistoryResponse,
 ): boolean {
@@ -92,945 +85,19 @@ function isSameHistoryRevision(
   );
 }
 
-export function PopupWatchHistoryPanel({
-  ownerUserId,
-  client = defaultClient,
-  onTitleCountChange,
-  refreshSignal = 0,
-}: {
-  ownerUserId: string | null;
-  client?: PopupWatchHistoryClient;
-  onTitleCountChange?: (count: number) => void;
-  refreshSignal?: number;
-}) {
-  const [history, setHistory] = useState<WatchHistoryResponse | null>(null);
-  const [pendingEvents, setPendingEvents] = useState<WatchProgressEvent[]>([]);
-  const [localObservation, setLocalObservation] =
-    useState<PopupWatchHistoryLocalObservation | null>(null);
-  const [capturePaused, setCapturePaused] = useState(false);
-  const [preferences, setPreferences] = useState<WatchHistoryPreferences>({
-    youtubeHistoryEnabled: false,
-  });
-  const [loading, setLoading] = useState(false);
-  const [actionError, setError] = useState<string | null>(null);
-  const [readError, setReadError] = useState<string | null>(null);
-  const error = actionError ?? readError;
-  const [busyAction, setBusyAction] = useState<string | null>(null);
-  const [oldOwnerPending, setOldOwnerPending] = useState(false);
-  const [mode, setMode] = useState<"mine" | "together">("mine");
-  const [searchQuery, setSearchQuery] = useState("");
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const [expandedBranches, setExpandedBranches] = useState<Record<string, boolean>>({});
-  const [searchBranches, setSearchBranches] = useState<{
-    query: string;
-    branches: Record<string, boolean>;
-  }>({ query: "", branches: {} });
-  const [manualRefreshVersion, setManualRefreshVersion] = useState(0);
-  const [layout, setLayout] = useState<PopupHistoryLayout | null>(null);
-  const requestGeneration = useRef(0);
-  const actionGeneration = useRef(0);
-  const preferenceRevision = useRef(0);
-  const renderedOwnerRef = useRef(ownerUserId);
-
-  // Focus/manual reads must not abandon an action already submitted by this
-  // owner. Account/client changes and unmount still retire all late callbacks.
-  useEffect(() => {
-    const generation = ++actionGeneration.current;
-    return () => {
-      if (actionGeneration.current === generation) actionGeneration.current += 1;
-    };
-  }, [client, ownerUserId]);
-
-  useEffect(() => {
-    onTitleCountChange?.(history?.totalTitleCount ?? 0);
-  }, [history?.totalTitleCount, onTitleCountChange]);
-
-  useEffect(() => {
-    setMode("mine");
-    setSearchQuery("");
-    setExpandedBranches({});
-    setSearchBranches({ query: "", branches: {} });
-  }, [ownerUserId]);
-
-  useEffect(() => {
-    const generation = ++requestGeneration.current;
-    const current = () => requestGeneration.current === generation;
-    const ownerChanged = renderedOwnerRef.current !== ownerUserId;
-    renderedOwnerRef.current = ownerUserId;
-    if (ownerChanged) {
-      setHistory(null);
-      setPendingEvents([]);
-      setLocalObservation(null);
-      setCapturePaused(false);
-      setPreferences({ youtubeHistoryEnabled: false });
-      setBusyAction(null);
-      setOldOwnerPending(false);
-      setError(null);
-    }
-    setReadError(null);
-    if (!ownerUserId) {
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    void (async () => {
-      const preferenceRevisionAtLoad = preferenceRevision.current;
-      const cached = await client.loadCached(ownerUserId).catch(() => null);
-      if (!current()) return;
-      if (cached) {
-        setHistory((visibleHistory) => visibleHistory ?? cached.history);
-        setPendingEvents(cached.pendingEvents);
-        setLocalObservation(cached.localObservation);
-        setCapturePaused(cached.capturePaused);
-        if (preferenceRevision.current === preferenceRevisionAtLoad) {
-          setPreferences(cached.preferences);
-        }
-      }
-
-      const historyRequest = requestPopupWatchHistory(
-        client,
-        createListWatchHistoryMessage({ limit: 100 }),
-      );
-      const preferencesRequest = requestPopupWatchHistory(
-        client,
-        createWatchHistoryMessage({
-          type: "ANIDACHI_WATCH_HISTORY_V3",
-          command: "get-preferences",
-        }),
-      );
-      const oldOwnerRequest = requestPopupWatchHistory(
-        client,
-        createWatchHistoryMessage({
-          type: "ANIDACHI_WATCH_HISTORY_V3",
-          command: "other-owner-pending",
-        }),
-      );
-
-      void preferencesRequest.then((preferencesResponse) => {
-        if (!current() || preferenceRevision.current !== preferenceRevisionAtLoad) return;
-        if (!preferencesResponse.ok) return;
-        const parsed = WatchHistoryPreferencesResponseSchema.safeParse(preferencesResponse.data);
-        if (parsed.success && parsed.data.meta.ownerUserId === ownerUserId) {
-          setPreferences(parsed.data.preferences);
-        }
-      });
-      void oldOwnerRequest.then((oldOwnerResponse) => {
-        if (current() && oldOwnerResponse.ok) {
-          setOldOwnerPending(oldOwnerResponse.hasPendingWork === true);
-        }
-      });
-
-      const historyResponse = await historyRequest;
-      if (!current()) return;
-
-      if (historyResponse.ok) {
-        const parsed = WatchHistoryResponseSchema.safeParse(historyResponse.data);
-        if (parsed.success && parsed.data.meta.ownerUserId === ownerUserId) {
-          setReadError(null);
-          setHistory(parsed.data);
-          const refreshedLocal = await client.loadCached(ownerUserId).catch(() => null);
-          if (!current()) return;
-          if (refreshedLocal?.accountGeneration === parsed.data.meta.accountGeneration) {
-            setPendingEvents((currentEvents) =>
-              reconcilePopupPendingEvents(currentEvents, refreshedLocal)
-            );
-            setLocalObservation(refreshedLocal.localObservation);
-            setCapturePaused(refreshedLocal.capturePaused);
-          } else {
-            setPendingEvents([]);
-            setLocalObservation(null);
-          }
-        } else {
-          setReadError("Could not validate watch history.");
-        }
-      } else if (historyResponse.status !== "superseded") {
-        setReadError(messageForStatus(historyResponse.status));
-        if (historyResponse.status === "storage-full") setCapturePaused(true);
-      }
-
-      setLoading(false);
-    })();
-
-    return () => {
-      if (requestGeneration.current === generation) requestGeneration.current += 1;
-    };
-  }, [client, manualRefreshVersion, ownerUserId, refreshSignal]);
-
-  useEffect(() => {
-    if (!ownerUserId || !client.subscribe) return;
-    let disposed = false;
-    const unsubscribe = client.subscribe(ownerUserId, (snapshot, refreshResult) => {
-      if (disposed) return;
-      if (refreshResult && !refreshResult.ok && refreshResult.status !== "superseded") {
-        setReadError(messageForStatus(refreshResult.status));
-      }
-      // Local playback/cache notifications are not proof that a failed server
-      // read recovered. Only a completed canonical refresh clears its warning.
-      if (refreshResult?.ok) {
-        const parsed = WatchHistoryResponseSchema.safeParse(refreshResult.data);
-        if (parsed.success && parsed.data.meta.ownerUserId === ownerUserId) setReadError(null);
-      }
-      if (!snapshot || snapshot.history.meta.ownerUserId !== ownerUserId) return;
-      setHistory((current) => isSameHistoryRevision(current, snapshot.history)
-        ? current
-        : snapshot.history);
-      setPendingEvents((current) => reconcilePopupPendingEvents(current, snapshot));
-      setLocalObservation(snapshot.localObservation);
-      setCapturePaused(snapshot.capturePaused);
-      setPreferences((current) =>
-        current.youtubeHistoryEnabled === snapshot.preferences.youtubeHistoryEnabled
-          ? current
-          : snapshot.preferences
-      );
-    });
-    return () => { disposed = true; unsubscribe(); };
-  }, [client, ownerUserId]);
-
-  const visiblePendingEvents = useMemo(
-    () => pendingEvents.filter((event) =>
-      mode === "together" ? Boolean(event.sharedRoom) : !event.sharedRoom,
-    ),
-    [mode, pendingEvents],
-  );
-  const visibleLocalObservation = localObservation?.mode === mode
-    ? localObservation.event
-    : null;
-  const pendingByEpisode = useMemo(
-    () => {
-      const pending = latestPendingByEpisode(visiblePendingEvents);
-      if (visibleLocalObservation) {
-        pending.set(
-          pendingEpisodeKey(
-            visibleLocalObservation.provider,
-            visibleLocalObservation.titleKey,
-            visibleLocalObservation.episodeKey,
-          ),
-          visibleLocalObservation,
-        );
-      }
-      return pending;
-    },
-    [visibleLocalObservation, visiblePendingEvents],
-  );
-  const itemsWithPending = useMemo(
-    () => projectPendingWatchHistoryItems(
-      history?.items ?? [],
-      pendingByEpisode,
-      visibleLocalObservation,
-    ),
-    [history?.items, pendingByEpisode, visibleLocalObservation],
-  );
-  // Retain positions and initial disclosures for this open account view, not
-  // snapshots of its data. New progress must not move the user's interaction target.
-  const modeItems = useMemo(
-    () => filterWatchHistoryItems(itemsWithPending, mode, "", pendingByEpisode),
-    [itemsWithPending, mode, pendingByEpisode],
-  );
-  const nextLayout = reconcileHistoryLayout(layout, modeItems,
-    JSON.stringify([ownerUserId, history?.meta.accountGeneration, mode]));
-  if (nextLayout !== layout) setLayout(nextLayout);
-  const visibleItems = useMemo(
-    () => {
-      const ranks = new Map(nextLayout.titleKeys.map((key, index) => [key, index]));
-      const filtered = searchQuery.trim()
-        ? filterWatchHistoryItems(itemsWithPending, mode, searchQuery, pendingByEpisode)
-        : [...modeItems];
-      return filtered.sort((a, b) => ranks.get(pendingTitleKey(a.provider, a.titleKey))! -
-        ranks.get(pendingTitleKey(b.provider, b.titleKey))!);
-    },
-    [itemsWithPending, mode, modeItems, nextLayout, pendingByEpisode, searchQuery],
-  );
-  const providerGroups = useMemo(() => groupWatchHistoryItems(visibleItems), [visibleItems]);
-
-  // Searching reveals matches without overwriting the user's normal tree layout.
-  const query = searchQuery.trim().toLocaleLowerCase();
-  const updateSearchQuery = (value: string) => {
-    const nextQuery = value.trim().toLocaleLowerCase();
-    setSearchQuery(value);
-    if (nextQuery !== query) setSearchBranches({ query: nextQuery, branches: {} });
-  };
-  const branches = query
-    ? searchBranches.query === query ? searchBranches.branches : {}
-    : expandedBranches;
-  const disclosure: PopupHistoryDisclosure = {
-    isOpen: (key, initiallyOpen) => branches[key] ??
-      (Boolean(query) || (nextLayout.defaults[key] ?? initiallyOpen)),
-    toggle: (key, initiallyOpen) => {
-      if (query) {
-        setSearchBranches((current) => {
-          const previous = current.query === query ? current.branches : {};
-          return { query, branches: { ...previous, [key]: !(previous[key] ?? true) } };
-        });
-      } else {
-        setExpandedBranches((current) => ({ ...current,
-          [key]: !(current[key] ?? nextLayout.defaults[key] ?? initiallyOpen) }));
-      }
-    },
-  };
-
-  const updateYoutubePreference = async () => {
-    if (!ownerUserId || busyAction) return;
-    const expectedGeneration = actionGeneration.current;
-    const previousPreferences = preferences;
-    const nextPreferences = {
-      youtubeHistoryEnabled: !preferences.youtubeHistoryEnabled,
-    };
-    const revision = ++preferenceRevision.current;
-    setPreferences(nextPreferences);
-    setBusyAction("preferences");
-    setError(null);
-    const response = await requestPopupWatchHistory(client, createWatchHistoryMessage({
-      type: "ANIDACHI_WATCH_HISTORY_V3",
-      command: "update-preferences",
-      input: nextPreferences,
-    }));
-    if (actionGeneration.current !== expectedGeneration) return;
-    const samePreferenceRevision = preferenceRevision.current === revision;
-    if (samePreferenceRevision && !response.ok) {
-      setPreferences(previousPreferences);
-      setError(messageForStatus(response.status));
-    }
-    if (samePreferenceRevision) setBusyAction(null);
-  };
-
-  const deleteTarget = async (target: WatchHistoryDeleteScope) => {
-    if (!ownerUserId || !history || busyAction) return;
-    if (!client.confirmDiscard("Delete this watch history?")) return;
-    const expectedGeneration = actionGeneration.current;
-    const actionKey = deleteScopeKey(target);
-    setBusyAction(actionKey);
-    setError(null);
-    const response = await requestPopupWatchHistory(client, createWatchHistoryMessage({
-      type: "ANIDACHI_WATCH_HISTORY_V3",
-      command: "delete",
-      input: {
-        schemaVersion: 3,
-        clientMutationId: crypto.randomUUID(),
-        accountGeneration: history.meta.accountGeneration,
-        target,
-        requestedAt: new Date().toISOString(),
-      },
-    }));
-    if (actionGeneration.current !== expectedGeneration) return;
-    if (response.ok) {
-      const parsed = WatchHistoryDeletionAckSchema.safeParse(response.data);
-      if (parsed.success &&
-        parsed.data.meta.ownerUserId === ownerUserId &&
-        parsed.data.accountGeneration >= history.meta.accountGeneration) {
-        // A validated GET may still be in transit from the background. Its
-        // pre-deletion rows must never repaint over this acknowledged mutation.
-        requestGeneration.current += 1;
-        setLoading(false);
-        setHistory((current) => current && current.meta.accountGeneration <= parsed.data.accountGeneration
-          ? removeHistoryTarget(current, parsed.data.target, parsed.data.accountGeneration)
-          : current);
-        setPendingEvents((current) => current.filter((event) =>
-          event.accountGeneration > parsed.data.accountGeneration || !eventMatchesScope(event, parsed.data.target)));
-        setLocalObservation((current) => current && current.event.accountGeneration <= parsed.data.accountGeneration &&
-          eventMatchesScope(current.event, parsed.data.target) ? null : current);
-      } else {
-        setError("Could not validate history deletion.");
-      }
-    } else {
-      setError(messageForStatus(response.status));
-    }
-    setBusyAction(null);
-  };
-
-  const createRoom = async (session: WatchHistorySession, sourceUrl: string) => {
-    if (!ownerUserId || busyAction) return;
-    const expectedGeneration = actionGeneration.current;
-    setBusyAction(`room:${session.id}`);
-    setError(null);
-    const response = await requestPopupWatchHistory(client, createWatchHistoryMessage({
-      type: "ANIDACHI_WATCH_HISTORY_V3",
-      command: "create-room",
-      sessionId: session.id,
-      clientRequestId: crypto.randomUUID(),
-    }));
-    if (actionGeneration.current !== expectedGeneration) return;
-    if (response.ok) {
-      const parsed = WatchHistoryRoomRecreationResponseSchema.safeParse(response.data);
-      if (parsed.success) {
-        try { await client.openUrl(withRoomHash(sourceUrl, parsed.data.roomId)); }
-        catch {
-          if (actionGeneration.current === expectedGeneration) setError("Could not open the room tab. Please try again.");
-        }
-      } else {
-        setError("Could not validate the recreated room.");
-      }
-    } else {
-      setError(messageForStatus(response.status));
-    }
-    if (actionGeneration.current === expectedGeneration) setBusyAction(null);
-  };
-
-  const discardOldOwnerWork = async () => {
-    if (!oldOwnerPending || busyAction) return;
-    if (!client.confirmDiscard("Discard pending Watch History from another account?")) return;
-    const expectedGeneration = actionGeneration.current;
-    setBusyAction("discard-old-owner");
-    setError(null);
-    const response = await requestPopupWatchHistory(client, createWatchHistoryMessage({
-      type: "ANIDACHI_WATCH_HISTORY_V3",
-      command: "discard-old-owner-work",
-      confirmed: true,
-    }));
-    if (actionGeneration.current !== expectedGeneration) return;
-    if (response.ok) setOldOwnerPending(false);
-    else setError(messageForStatus(response.status));
-    setBusyAction(null);
-  };
-
-  const refreshHistory = async () => {
-    if (loading || busyAction) return;
-    setError(null);
-    if (capturePaused) {
-      const expectedGeneration = actionGeneration.current;
-      setBusyAction("refresh");
-      setError(null);
-      const response = await requestPopupWatchHistory(client, createWatchHistoryMessage({
-        type: "ANIDACHI_WATCH_HISTORY_V3",
-        command: "recover-storage",
-      }));
-      if (actionGeneration.current !== expectedGeneration) return;
-      if (!response.ok) {
-        setError(messageForStatus(response.status));
-        setBusyAction(null);
-        return;
-      }
-      setCapturePaused(false);
-      setBusyAction(null);
-    }
-    setManualRefreshVersion((current) => current + 1);
-  };
-
-  if (!ownerUserId) {
-    return <div className="popup-empty">Sign in to sync watch history.</div>;
-  }
-
-  return (
-    <section className="popup-watch-screen" aria-label="Watch History">
-      <div className="popup-watch-controls">
-        <button
-          aria-label={`Watch history mode: ${mode === "mine" ? "Mine" : "Together"}. Switch to ${
-            mode === "mine" ? "Together" : "Mine"
-          }`}
-          aria-pressed={mode === "together"}
-          className="popup-watch-mode-switch"
-          data-mode={mode}
-          type="button"
-          onClick={() => setMode((current) => current === "mine" ? "together" : "mine")}
-        >
-          <span aria-hidden="true" className="popup-watch-mode-track">
-            <span className="popup-watch-mode-thumb" />
-            <span className="popup-watch-mode-segment popup-watch-mode-segment-mine">Mine</span>
-            <span className="popup-watch-mode-segment popup-watch-mode-segment-together">
-              Together
-            </span>
-          </span>
-        </button>
-        <div className="popup-watch-search">
-          <Search aria-hidden="true" size={13} />
-          <input
-            aria-label="Search watch history"
-            placeholder="Search"
-            type="search"
-            ref={searchInputRef}
-            value={searchQuery}
-            onChange={(event) => updateSearchQuery(event.currentTarget.value)}
-          />
-          {searchQuery ? (
-            <button
-              aria-label="Clear watch history search"
-              type="button"
-              onClick={() => {
-                updateSearchQuery("");
-                searchInputRef.current?.focus();
-              }}
-            >
-              <X size={12} />
-            </button>
-          ) : null}
-        </div>
-        <button
-          aria-label={error || capturePaused ? "Retry watch history" : "Refresh watch history"}
-          className="popup-watch-refresh"
-          disabled={loading || Boolean(busyAction)}
-          title={error || capturePaused ? "Retry watch history" : "Refresh watch history"}
-          type="button"
-          onClick={() => void refreshHistory()}
-        >
-          <RefreshCw aria-hidden="true" size={13} />
-          <span>{error || capturePaused ? "Retry" : "Refresh"}</span>
-        </button>
-      </div>
-      <div className="popup-watch-preferences">
-        <button
-          aria-label="Track YouTube history"
-          aria-checked={preferences.youtubeHistoryEnabled}
-          className="popup-watch-youtube-switch"
-          data-enabled={preferences.youtubeHistoryEnabled}
-          disabled={Boolean(busyAction)}
-          role="switch"
-          title="Track YouTube history"
-          type="button"
-          onClick={() => void updateYoutubePreference()}
-        >
-          <span className="popup-watch-youtube-label">Track YouTube history</span>
-          <span className="popup-watch-youtube-state">
-            {preferences.youtubeHistoryEnabled ? "On" : "Off"}
-          </span>
-          <span className="popup-watch-youtube-switch-track" aria-hidden="true">
-            <span />
-          </span>
-        </button>
-      </div>
-      {capturePaused ? (
-        <div className="popup-social-empty" data-tone="error">
-          Watch History is paused because browser storage is full.
-        </div>
-      ) : null}
-      {oldOwnerPending ? (
-        <div className="popup-social-empty" data-tone="warning">
-          <span>Pending history from another account</span>
-          <button
-            aria-label="Discard pending history from another account"
-            disabled={busyAction === "discard-old-owner"}
-            type="button"
-            onClick={() => void discardOldOwnerWork()}
-          >
-            Discard
-          </button>
-        </div>
-      ) : null}
-      {error ? <div className="popup-social-empty" data-tone="error">{error}</div> : null}
-      {loading && !history ? (
-        <div className="popup-empty popup-empty-syncing">
-          <RefreshCw size={14} />
-          <span>Loading watch history...</span>
-        </div>
-      ) : providerGroups.length ? (
-        <div className="popup-resource-list">
-          {providerGroups.map((group) => (
-            <PopupProviderSection
-              busyAction={busyAction}
-              group={group}
-              disclosure={disclosure}
-              key={group.provider}
-              onCreateRoom={createRoom}
-              onDelete={deleteTarget}
-              pendingByEpisode={pendingByEpisode}
-            />
-          ))}
-        </div>
-      ) : history?.items.length && searchQuery.trim() ? (
-        <div className="popup-empty">No titles match your search.</div>
-      ) : history?.items.length ? (
-        <div className="popup-empty">
-          {mode === "together"
-            ? "Shared sessions will appear after watching together."
-            : "Episodes you watch on supported sites will appear here."}
-        </div>
-      ) : (
-        <div className="popup-empty">Episodes you watch on supported sites will appear here.</div>
-      )}
-      {history?.items.length ? (
-        <button
-          aria-label="Clear all watch history"
-          className="popup-quiet-danger"
-          disabled={Boolean(busyAction)}
-          type="button"
-          onClick={() => void deleteTarget({ scope: "all" })}
-        >
-          Clear watch history
-        </button>
-      ) : null}
-    </section>
-  );
-}
-
-type PopupHistoryDisclosure = {
-  isOpen: (key: string, initiallyOpen: boolean) => boolean;
-  toggle: (key: string, initiallyOpen: boolean) => void;
-};
-
-function PopupProviderSection({
-  busyAction,
-  disclosure,
-  group,
-  onCreateRoom,
-  onDelete,
-  pendingByEpisode,
-}: {
-  busyAction: string | null;
-  disclosure: PopupHistoryDisclosure;
-  group: PopupProviderGroup;
-  onCreateRoom: (session: WatchHistorySession, sourceUrl: string) => void;
-  onDelete: (target: WatchHistoryDeleteScope) => void;
-  pendingByEpisode: Map<string, WatchProgressEvent>;
-}) {
-  const branchKey = JSON.stringify([group.provider]);
-  const open = disclosure.isOpen(branchKey, true);
-  const bodyId = useId();
-
-  return (
-    <section className="popup-provider" data-provider={group.provider}>
-      <button
-        aria-expanded={open}
-        aria-controls={bodyId}
-        aria-label={`Toggle ${group.label} history`}
-        className="popup-provider-row"
-        type="button"
-        onClick={() => disclosure.toggle(branchKey, true)}
-      >
-        <ProviderLogo label={group.label} provider={group.provider} />
-        <span className="popup-provider-main">
-          <strong className="popup-provider-name">{group.label}</strong>
-          <span className="popup-provider-meta">
-            {group.items.length} {group.items.length === 1 ? "title" : "titles"}
-          </span>
-        </span>
-        <span aria-hidden="true" className="popup-provider-chevron" data-open={open}>
-          <ChevronDown size={18} />
-        </span>
-      </button>
-      {open ? (
-        <div className="popup-provider-body" id={bodyId}>
-          {group.items.map((item, index) => (
-            <PopupWatchHistoryItem
-              item={item}
-              disclosure={disclosure}
-              initiallyOpen={index === 0}
-              key={`${item.provider}:${item.titleKey}`}
-              busyAction={busyAction}
-              onCreateRoom={onCreateRoom}
-              onDelete={onDelete}
-              pendingByEpisode={pendingByEpisode}
-            />
-          ))}
-        </div>
-      ) : null}
-    </section>
-  );
-}
-
-function PopupWatchArtwork({ url, title }: { url: string | null; title: string }) {
-  const [failed, setFailed] = useState(false);
-  const visible = Boolean(url) && !failed;
-  return <span className="popup-watch-artwork" data-has-artwork={visible}>
-    {visible ? <img alt="" loading="lazy" decoding="async" src={url!} onError={() => setFailed(true)} /> : title.slice(0, 1)}
-  </span>;
-}
-
-function PopupWatchHistoryItem({
-	busyAction,
-	disclosure,
-	initiallyOpen,
-	item,
-	onCreateRoom,
-	onDelete,
-	pendingByEpisode,
-}: {
-	busyAction: string | null;
-	disclosure: PopupHistoryDisclosure;
-	initiallyOpen: boolean;
-	item: WatchHistoryItem;
-	onCreateRoom: (session: WatchHistorySession, sourceUrl: string) => void;
-	onDelete: (target: WatchHistoryDeleteScope) => void;
-	pendingByEpisode: Map<string, WatchProgressEvent>;
-}) {
-	const overall = watchHistoryOverallProgress(item);
-	const branchKey = JSON.stringify([item.provider, item.titleKey]);
-	const open = disclosure.isOpen(branchKey, initiallyOpen);
-	const bodyId = useId();
-	const latestSeasonKey =
-		item.seasons.find((season) =>
-			season.episodes.some(
-				(episode) => episode.episodeKey === item.latestActivity.episodeKey,
-			),
-		)?.seasonKey ?? item.seasons[0]?.seasonKey;
-	const latestActivityPending = pendingByEpisode.get(
-		pendingEpisodeKey(
-			item.provider,
-			item.titleKey,
-			item.latestActivity.episodeKey,
-		),
-	);
-	return (
-		<article
-			className="popup-watch-item"
-			data-kind={item.itemKind}
-			data-provider={item.provider}
-			data-open={open}
-		>
-			<div className="popup-watch-row">
-				<button
-					aria-label={`Toggle ${item.title} history${overall.accessibleSuffix}`}
-					aria-expanded={open}
-					aria-controls={bodyId}
-					className="popup-watch-title-toggle"
-					type="button"
-					onClick={() => disclosure.toggle(branchKey, initiallyOpen)}
-				>
-					<PopupWatchArtwork key={item.artworkUrl} url={item.artworkUrl} title={item.title} />
-					<span className="popup-watch-main">
-						<strong className="popup-watch-title" dir="auto">{item.title}</strong>
-						<span className="popup-watch-overall">
-							<span className="popup-watch-meta">{overall.label}</span>
-							{overall.progress === null ? null : (
-								<span aria-hidden="true" className="popup-watch-overall-track">
-									<span style={{ width: `${overall.progress * 100}%` }} />
-								</span>
-							)}
-						</span>
-					</span>
-					<ChevronDown
-						aria-hidden="true"
-						className="popup-watch-disclosure-icon"
-						size={16}
-					/>
-				</button>
-				<button
-					aria-label={`Delete ${item.title}`}
-					className="popup-watch-delete"
-					title={`Delete ${item.title}`}
-					disabled={
-						busyAction ===
-						deleteScopeKey({
-							scope: "title",
-							provider: item.provider,
-							titleKey: item.titleKey,
-						})
-					}
-					type="button"
-					onClick={() =>
-						onDelete({
-							scope: "title",
-							provider: item.provider,
-							titleKey: item.titleKey,
-						})
-					}
-				>
-					<Trash2 aria-hidden="true" size={14} />
-				</button>
-			</div>
-			{open ? (
-				<div className="popup-watch-tree" id={bodyId}>
-					{item.seasons.map((season, seasonIndex) => {
-						const seasonKey = JSON.stringify([
-							item.provider,
-							item.titleKey,
-							season.seasonKey,
-						]);
-						const initiallyOpenSeason = season.seasonKey === latestSeasonKey;
-						const seasonOpen = disclosure.isOpen(
-							seasonKey,
-							initiallyOpenSeason,
-						);
-						const seasonBodyId = `${bodyId}-season-${seasonIndex}`;
-						return (
-							<section className="popup-season-group" key={season.seasonKey}>
-								<button
-									aria-label={`Toggle ${item.title} ${season.seasonTitle}`}
-									aria-expanded={seasonOpen}
-									aria-controls={seasonBodyId}
-									className="popup-season-header"
-									type="button"
-									onClick={() =>
-										disclosure.toggle(seasonKey, initiallyOpenSeason)
-									}
-								>
-									<span className="popup-season-main">
-										<strong className="popup-season-title">
-											{season.seasonTitle}
-										</strong>
-										<span className="popup-season-meta">
-											{season.episodes.length}{" "}
-											{season.episodes.length === 1 ? "episode" : "episodes"}
-											{item.episodePage.complete ? "" : " shown"}
-										</span>
-									</span>
-									<ChevronDown
-										aria-hidden="true"
-										className="popup-watch-disclosure-icon"
-										size={14}
-									/>
-								</button>
-								{seasonOpen ? (
-									<div className="popup-season-episode-list" id={seasonBodyId}>
-										{season.episodes.map((episode) => {
-											const pending = pendingByEpisode.get(
-												pendingEpisodeKey(
-													item.provider,
-													item.titleKey,
-													episode.episodeKey,
-												),
-											);
-											const currentTime =
-												pending?.currentTime ?? episode.currentTime;
-											const progress = pending?.progress ?? episode.progress;
-											// New resume checkpoints do not undo confirmed completion.
-											const completed = Boolean(episode.completedAt);
-											return (
-												<div
-													className="popup-episode-row"
-													key={episode.episodeKey}
-													data-selected={
-														episode.episodeKey ===
-														item.latestActivity.episodeKey
-													}
-													data-completed={completed}
-												>
-													<span className="popup-episode-main">
-														<span className="popup-episode-header">
-															<span className="popup-episode-number">
-																{episode.episodeNumber === null
-																	? "Episode"
-																	: `E${episode.episodeNumber}`}
-															</span>
-															<span className="popup-episode-title">
-																{episode.episodeTitle}
-															</span>
-															<span className="popup-episode-complete" data-visible={completed}>
-																{completed ? <>
-																	<Check aria-hidden="true" size={13} />
-																	<span className="popup-sr-only">Completed</span>
-																</> : null}
-															</span>
-														</span>
-														<span className="popup-series-progress">
-															<span className="popup-progress-track">
-																<span
-																	style={{
-																		width: `${Math.round(progress * 100)}%`,
-																	}}
-																/>
-															</span>
-															<span>{formatClock(currentTime)}</span>
-														</span>
-														{episode.sessions
-															.filter((session) => session.kind === "shared")
-															.slice(0, 4)
-															.map((session) => (
-																<button
-																	aria-label={`Create room from ${session.kind === "shared" ? "Shared" : "Solo"} session`}
-																	className="popup-session-summary-action"
-																	disabled={busyAction === `room:${session.id}`}
-																	key={session.id}
-																	type="button"
-																	onClick={() =>
-																		onCreateRoom(session, episode.sourceUrl)
-																	}
-																>
-																	{session.kind === "shared"
-																		? "Shared session"
-																		: "Solo session"}
-																</button>
-															))}
-														<button
-															aria-label={`Delete ${episode.episodeTitle}`}
-															className="popup-watch-delete popup-episode-delete"
-															title={`Delete ${episode.episodeTitle}`}
-															disabled={
-																busyAction ===
-																deleteScopeKey({
-																	scope: "episode",
-																	provider: item.provider,
-																	titleKey: item.titleKey,
-																	episodeKey: episode.episodeKey,
-																})
-															}
-															type="button"
-															onClick={() =>
-																onDelete({
-																	scope: "episode",
-																	provider: item.provider,
-																	titleKey: item.titleKey,
-																	episodeKey: episode.episodeKey,
-																})
-															}
-														>
-															<Trash2 aria-hidden="true" size={13} />
-														</button>
-													</span>
-												</div>
-											);
-										})}
-									</div>
-								) : null}
-							</section>
-						);
-					})}
-					{item.seasons.length === 0 ? (
-						<div className="popup-episode-row">
-							<span className="popup-episode-main">
-								<span className="popup-episode-header">
-									<span className="popup-episode-title">Latest activity</span>
-								</span>
-								<span className="popup-series-progress">
-									<span className="popup-progress-track">
-										<span
-											style={{
-												width: `${Math.round(
-													(latestActivityPending?.progress ??
-														item.latestActivity.progress) * 100,
-												)}%`,
-											}}
-										/>
-									</span>
-									<span>
-										{formatClock(
-											latestActivityPending?.currentTime ??
-												item.latestActivity.currentTime,
-										)}
-									</span>
-								</span>
-								{item.sessions
-									.filter((session) => session.kind === "shared")
-									.slice(0, 4)
-									.map((session) => (
-										<button
-											aria-label={`Create room from ${session.kind === "shared" ? "Shared" : "Solo"} session`}
-											className="popup-session-summary-action"
-											disabled={busyAction === `room:${session.id}`}
-											key={session.id}
-											type="button"
-											onClick={() => onCreateRoom(session, item.sourceUrl)}
-										>
-											{session.kind === "shared"
-												? "Shared session"
-												: "Solo session"}
-										</button>
-									))}
-							</span>
-						</div>
-					) : null}
-					{!item.episodePage.complete ? (
-						<p className="popup-watch-slice-note">
-							Recent episodes shown · Full history in your account
-						</p>
-					) : null}
-				</div>
-			) : null}
-		</article>
-	);
-}
-
-type PopupProviderGroup = {
+export type PopupProviderGroup = {
   provider: WatchHistoryItem["provider"];
   label: string;
   items: WatchHistoryItem[];
 };
 
-type PopupHistoryLayout = {
+export type PopupHistoryLayout = {
   scope: string;
   titleKeys: string[];
   defaults: Record<string, boolean>;
 };
 
-function reconcileHistoryLayout(
+export function reconcileHistoryLayout(
   previous: PopupHistoryLayout | null,
   items: WatchHistoryItem[],
   scope: string,
@@ -1045,17 +112,12 @@ function reconcileHistoryLayout(
   const defaults: Record<string, boolean> = {};
   const providers = new Set<string>();
   for (const key of titleKeys) {
-    const item = byKey.get(key)!;
+    const item = byKey.get(key);
+    if (!item) continue;
     const titleBranch = JSON.stringify([item.provider, item.titleKey]);
     defaults[titleBranch] = current?.defaults[titleBranch] ?? !providers.has(item.provider);
     providers.add(item.provider);
-    const latestSeason = item.seasons.find((season) =>
-      season.episodes.some((episode) => episode.episodeKey === item.latestActivity.episodeKey)
-    )?.seasonKey ?? item.seasons[0]?.seasonKey;
-    for (const season of item.seasons) {
-      const branch = JSON.stringify([item.provider, item.titleKey, season.seasonKey]);
-      defaults[branch] = current?.defaults[branch] ?? season.seasonKey === latestSeason;
-    }
+
   }
   if (current && titleKeys.length === current.titleKeys.length &&
     titleKeys.every((key, index) => key === current.titleKeys[index]) &&
@@ -1064,71 +126,7 @@ function reconcileHistoryLayout(
   return { scope, titleKeys, defaults };
 }
 
-function filterWatchHistoryItems(
-  items: WatchHistoryItem[],
-  mode: "mine" | "together",
-  searchQuery: string,
-  pendingByEpisode: Map<string, WatchProgressEvent>,
-): WatchHistoryItem[] {
-  const sessionKind = mode === "mine" ? "solo" : "shared";
-  const query = searchQuery.trim().toLocaleLowerCase();
-
-  return items.flatMap((item) => {
-    const titleMatches = !query || item.title.toLocaleLowerCase().includes(query);
-    const sessions = item.sessions.filter((session) => session.kind === sessionKind);
-    const seasons = item.seasons.flatMap((season) => {
-      const episodes = season.episodes.flatMap((episode) => {
-        const episodeSessions = episode.sessions.filter((session) => session.kind === sessionKind);
-        const hasPending = pendingByEpisode.has(
-          pendingEpisodeKey(item.provider, item.titleKey, episode.episodeKey),
-        );
-        const belongsToMode = episodeSessions.length > 0 ||
-          (mode === "mine" && episode.sessions.length === 0) ||
-          hasPending;
-        const matchesSearch = titleMatches || episode.episodeTitle.toLocaleLowerCase().includes(query);
-        if (!belongsToMode || !matchesSearch) return [];
-        const latestSession = newestSession(episodeSessions);
-        return [{
-          ...episode,
-          currentTime: latestSession?.currentTime ?? episode.currentTime,
-          duration: latestSession?.duration ?? episode.duration,
-          progress: latestSession?.progress ?? episode.progress,
-          lastWatchedAt: latestSession?.lastWatchedAt ?? episode.lastWatchedAt,
-          sessions: episodeSessions,
-        }];
-      });
-      // Selection is newest-first and bounded; presentation is episode order.
-      // Never use a changing playback timestamp to position a visible row.
-      episodes.sort((a, b) =>
-        (a.episodeNumber ?? Number.MAX_SAFE_INTEGER) - (b.episodeNumber ?? Number.MAX_SAFE_INTEGER) ||
-        compareCodeUnits(a.episodeKey, b.episodeKey));
-      return episodes.length ? [{ ...season, episodes }] : [];
-    });
-
-    if (seasons.length) return [{ ...item, seasons, sessions }];
-    const latestPending = pendingByEpisode.has(
-      pendingEpisodeKey(item.provider, item.titleKey, item.latestActivity.episodeKey),
-    );
-    if (item.seasons.length === 0 && titleMatches &&
-      (sessions.length > 0 || (mode === "mine" && item.sessions.length === 0) || latestPending)) {
-      const latestSession = newestSession(sessions);
-      return [{
-        ...item,
-        latestActivity: latestSession ? {
-          ...item.latestActivity,
-          currentTime: latestSession.currentTime,
-          duration: latestSession.duration,
-          progress: latestSession.progress,
-          lastWatchedAt: latestSession.lastWatchedAt,
-        } : item.latestActivity,
-        sessions,
-      }];
-    }
-    return [];
-  });
-}
-
-function projectPendingWatchHistoryItems(
+export function projectPendingWatchHistoryItems(
   items: WatchHistoryItem[],
   pendingByEpisode: Map<string, WatchProgressEvent>,
   localObservation: WatchProgressEvent | null,
@@ -1280,7 +278,7 @@ function pendingWatchHistorySeason(
   };
 }
 
-function pendingWatchHistoryEpisode(
+export function pendingWatchHistoryEpisode(
   event: WatchProgressEvent,
 ): WatchHistoryItem["seasons"][number]["episodes"][number] {
   return {
@@ -1317,7 +315,7 @@ function unknownWatchHistoryAggregate(): WatchHistoryItem["aggregate"] {
   return { completedEpisodes: 0, availableEpisodes: null, progress: null };
 }
 
-function watchHistoryOverallProgress(item: WatchHistoryItem): {
+export function watchHistoryOverallProgress(item: WatchHistoryItem): {
   accessibleSuffix: string;
   label: string;
   progress: number | null;
@@ -1347,19 +345,12 @@ function watchHistoryOverallProgress(item: WatchHistoryItem): {
   };
 }
 
-function formatProgressPercent(progress: number): string {
-  return String(Number((Math.max(0, Math.min(1, progress)) * 100).toFixed(2)));
+export function formatProgressPercent(progress: number): string {
+  const bounded = Math.max(0, Math.min(1, progress));
+  return bounded > 0 && bounded < 0.01 ? "<1" : String(bounded === 1 ? 100 : Math.min(99, Math.round(bounded * 100)));
 }
 
-function newestSession(sessions: WatchHistorySession[]): WatchHistorySession | undefined {
-  return sessions.reduce<WatchHistorySession | undefined>((latest, session) =>
-    !latest || Date.parse(session.lastWatchedAt) > Date.parse(latest.lastWatchedAt)
-      ? session
-      : latest,
-  undefined);
-}
-
-function groupWatchHistoryItems(items: WatchHistoryItem[]): PopupProviderGroup[] {
+export function groupWatchHistoryItems(items: WatchHistoryItem[]): PopupProviderGroup[] {
   const groups = new Map<WatchHistoryItem["provider"], PopupProviderGroup>();
   for (const item of items) {
     const current = groups.get(item.provider);
@@ -1382,7 +373,7 @@ function providerLabel(provider: WatchHistoryItem["provider"]): string {
   return provider;
 }
 
-function ProviderLogo({ label, provider }: { label: string; provider: string }) {
+export function ProviderLogo({ label, provider }: { label: string; provider: string }) {
   if (provider === "crunchyroll") {
     return (
       <span aria-hidden="true" className="resource-provider-logo crunchyroll">
@@ -1574,7 +565,7 @@ function isNewerThanCanonicalHistory(
     Date.parse(event.observedAt) > Date.parse(canonicalObservedAt);
 }
 
-function latestPendingByEpisode(events: WatchProgressEvent[]): Map<string, WatchProgressEvent> {
+export function latestPendingByEpisode(events: WatchProgressEvent[]): Map<string, WatchProgressEvent> {
   const pending = new Map<string, WatchProgressEvent>();
   for (const event of events) {
     const key = pendingEpisodeKey(event.provider, event.titleKey, event.episodeKey);
@@ -1586,7 +577,7 @@ function latestPendingByEpisode(events: WatchProgressEvent[]): Map<string, Watch
   return pending;
 }
 
-function reconcilePopupPendingEvents(
+export function reconcilePopupPendingEvents(
   current: WatchProgressEvent[],
   snapshot: PopupWatchHistorySnapshot,
 ): WatchProgressEvent[] {
@@ -1627,15 +618,15 @@ function canonicalHistoryIncludesEvent(
     Date.parse(canonicalObservedAt) >= Date.parse(event.observedAt);
 }
 
-function pendingEpisodeKey(provider: string, titleKey: string, episodeKey: string): string {
+export function pendingEpisodeKey(provider: string, titleKey: string, episodeKey: string): string {
   return `${provider}\u0000${titleKey}\u0000${episodeKey}`;
 }
 
-function pendingTitleKey(provider: string, titleKey: string): string {
+export function pendingTitleKey(provider: string, titleKey: string): string {
   return `${provider}\u0000${titleKey}`;
 }
 
-function formatClock(seconds: number): string {
+export function formatClock(seconds: number): string {
   const value = Math.max(0, Math.floor(seconds));
   const hours = Math.floor(value / 3_600);
   const minutes = Math.floor((value % 3_600) / 60);
@@ -1645,81 +636,7 @@ function formatClock(seconds: number): string {
     : `${minutes}:${String(rest).padStart(2, "0")}`;
 }
 
-function messageForStatus(status: string): string {
-  if (status === "storage-full") return "Browser storage is full.";
-  if (status === "unauthenticated") return "Sign in to sync watch history.";
-  return "Could not refresh watch history.";
-}
-
-function deleteScopeKey(target: WatchHistoryDeleteScope): string {
-  if (target.scope === "all") return "delete:all";
-  if (target.scope === "title") return `delete:${target.provider}:${target.titleKey}`;
-  return `delete:${target.provider}:${target.titleKey}:${target.episodeKey}`;
-}
-
-function removeHistoryTarget(
-  history: WatchHistoryResponse,
-  target: WatchHistoryDeleteScope,
-  accountGeneration = history.meta.accountGeneration,
-): WatchHistoryResponse {
-  if (target.scope === "all") {
-    return {
-      ...history,
-      meta: { ...history.meta, accountGeneration },
-      items: [],
-      totalTitleCount: 0,
-      nextCursor: null,
-    };
-  }
-  if (target.scope === "title") {
-    const items = history.items.filter((item) =>
-      item.provider !== target.provider || item.titleKey !== target.titleKey,
-    );
-    return {
-      ...history,
-      meta: { ...history.meta, accountGeneration },
-      items,
-      totalTitleCount: Math.max(0, history.totalTitleCount - 1),
-    };
-  }
-  const items = history.items.flatMap((item) => {
-    if (item.provider !== target.provider || item.titleKey !== target.titleKey) return [item];
-    const removedEpisode = item.seasons
-      .flatMap((season) => season.episodes)
-      .find((episode) => episode.episodeKey === target.episodeKey);
-    const seasons = item.seasons
-      .map((season) => ({
-        ...season,
-        episodes: season.episodes.filter((episode) => episode.episodeKey !== target.episodeKey),
-      }))
-      .filter((season) => season.episodes.length > 0);
-    const observedEpisodeCount = Math.max(
-      0,
-      item.observedEpisodeCount - (removedEpisode ? 1 : 0),
-    );
-    if (observedEpisodeCount === 0) return [];
-    const completedEpisodeCount = Math.max(
-      0,
-      item.completedEpisodeCount - (removedEpisode?.completedAt ? 1 : 0),
-    );
-    return [{
-      ...item,
-      observedEpisodeCount,
-      completedEpisodeCount,
-      seasons,
-    }];
-  });
-  return {
-    ...history,
-    meta: { ...history.meta, accountGeneration },
-    items,
-    totalTitleCount: items.length === history.items.length
-      ? history.totalTitleCount
-      : Math.max(0, history.totalTitleCount - 1),
-  };
-}
-
-function withRoomHash(sourceUrl: string, roomId: string): string {
+export function withRoomHash(sourceUrl: string, roomId: string): string {
   try {
     const url = new URL(sourceUrl);
     const hash = new URLSearchParams(url.hash.replace(/^#/, ""));
@@ -1729,10 +646,4 @@ function withRoomHash(sourceUrl: string, roomId: string): string {
   } catch {
     return sourceUrl;
   }
-}
-
-function eventMatchesScope(event: WatchProgressEvent, target: WatchHistoryDeleteScope): boolean {
-  if (target.scope === "all") return true;
-  if (event.provider !== target.provider || event.titleKey !== target.titleKey) return false;
-  return target.scope === "title" || event.episodeKey === target.episodeKey;
 }
