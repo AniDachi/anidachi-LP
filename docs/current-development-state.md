@@ -1223,6 +1223,20 @@ The approved specification, implementation plan, and exact local evidence are:
 - `docs/superpowers/plans/2026-09-05-watch-drawer-browse.md`
 - `docs/watch-drawer-browse-local-verification.md`
 
+The later local-only `codex/watch-history-fast-reopen` follow-up separates saved
+read availability from refresh freshness. Ordinary progress leaves bounded
+account/query-owned Mine/Together results displayable while they revalidate;
+generation, account departure, deletion and consent still fence reads. The
+extension read cache uses persistent local storage, not the canonical cache or
+outbox. An opt-in titles response supplies up to eight exact-query episodes per
+title and explicit continuation, so opening a title does not require another
+initial HTTP request. New shared observations can appear as **Pending sync** only
+without filters; they do not invent confirmed sessions or group provenance.
+This work is not a staging deployment or tester-folder update. Its local evidence
+and remaining activation boundary are in
+`docs/watch-history-local-read-verification.md`; execution is tracked in
+`docs/superpowers/plans/2026-09-05-watch-history-local-read.md`.
+
 Rollout must remain database-first: apply the additive migration, deploy the
 reviewed matching Web runtime, build the matching narrow staging extension, then
 perform authenticated staging acceptance with newly organized group viewing and
