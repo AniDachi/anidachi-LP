@@ -575,11 +575,13 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     const input = parsedInput;
     const revision = browseReadRevision(partition, input);
     const hardRevision = browseHardRevision(partition);
+    const authEpoch = root.browseAuthEpochs?.[session.user.id];
     const key = JSON.stringify([
       message.command,
       session.user.id,
       generation,
       hardRevision,
+      authEpoch,
       input,
     ]);
     const cacheKey = await watchBrowseCacheKey([key,
@@ -642,7 +644,8 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         currentPartition.accountGeneration !== generation) {
         return { ok: false, status: "generation-mismatch" };
       }
-      if (browseHardRevision(currentPartition) !== hardRevision ||
+      if (currentRoot.browseAuthEpochs?.[expected.user.id] !== authEpoch ||
+        browseHardRevision(currentPartition) !== hardRevision ||
         browseReadRevision(currentPartition, input) !== revision ||
         currentPartition.preferencesLocalRevision !== partition.preferencesLocalRevision ||
         currentPartition.preferences?.youtubeHistoryEnabled !== partition.preferences?.youtubeHistoryEnabled) {

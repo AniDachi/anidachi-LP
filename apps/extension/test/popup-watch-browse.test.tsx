@@ -440,6 +440,7 @@ describe("production watch browsing", () => {
 			}
 			return { ok: true };
 		});
+		client.loadBrowseCached = async () => ({ ok: true });
 		await mount(client);
 		if (mode === "Together") await click("Together");
 		expect(container.textContent).toContain("Matching episode");
@@ -453,6 +454,69 @@ describe("production watch browsing", () => {
 		});
 		expect(container.textContent).toContain("Matching episode");
 		expect(container.textContent).toContain("Older matching episode");
+	});
+	it.each([
+		"Mine",
+		"Together",
+	])("prefers newer saved %s detail and continues from its cursor with network held", async (mode) => {
+		const preview = detail("preview-next");
+		const saved = detail("saved-next");
+		saved.detail.generatedAt = saved.detail.meta.serverTime =
+			"2026-09-05T09:00:00.000Z";
+		saved.detail.episodes[0] = {
+			...episode,
+			episodeTitle: "Newer saved episode",
+			currentTime: 900,
+			progress: 0.75,
+		};
+		saved.detail.episodes.push({
+			...episode,
+			episodeKey: "saved-extra",
+			episodeTitle: "Additional saved episode",
+			episodeNumber: 2,
+		});
+		saved.matches.push({
+			...required(saved.matches[0]),
+			episodeKey: "saved-extra",
+		});
+		const requests: unknown[] = [];
+		const client = {
+			...clientFixture(async (message) => {
+				if (message.command === "browse")
+					return {
+						ok: true,
+						data: { ...browse(), episodePreviews: [preview] },
+					};
+				if (message.command === "browse-title-episodes") {
+					requests.push(message.input);
+					return new Promise<WatchHistoryMessageResponse>(() => {});
+				}
+				return { ok: true };
+			}),
+			loadBrowseCached: async (
+				message: Parameters<
+					NonNullable<PopupWatchHistoryClient["loadBrowseCached"]>
+				>[0],
+			) =>
+				message.command === "browse-title-episodes" &&
+				!(message.input as { cursor?: string }).cursor
+					? { ok: true as const, data: saved, cachedAt: 0 }
+					: { ok: true as const },
+		};
+		await mount(client);
+		if (mode === "Together") await click("Together");
+		expect(container.textContent).toContain("Newer saved episode");
+		expect(container.textContent).toContain("Additional saved episode");
+		expect(container.textContent).toContain("15:00");
+		expect(requests).toHaveLength(0);
+		await click("Load more episodes for Frieren");
+		expect(requests).toEqual([
+			expect.objectContaining({
+				mode: mode === "Mine" ? "solo" : "shared",
+				cursor: "saved-next",
+			}),
+		]);
+		expect(container.textContent).toContain("Newer saved episode");
 	});
 	it("replaces a stale provisional continuation instead of keeping deleted rows or an extra page", async () => {
 		let finish: ((value: WatchHistoryMessageResponse) => void) | undefined;

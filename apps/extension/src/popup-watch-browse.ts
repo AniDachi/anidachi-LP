@@ -46,7 +46,11 @@ export function usePopupWatchBrowse<T>({
 	client: PopupWatchHistoryClient;
 	message: BrowseMessage;
 	parser: Parser<T>;
-	meta: (data: T) => { ownerUserId: string; accountGeneration: number };
+	meta: (data: T) => {
+		ownerUserId: string;
+		accountGeneration: number;
+		serverTime?: string;
+	};
 	cursor: (data: T) => string | null;
 	refresh: number;
 	forceRefresh?: number;
@@ -98,10 +102,10 @@ export function usePopupWatchBrowse<T>({
 				latest.current.client === client &&
 				latest.current.generation === generation;
 			const retainedCount = pageCount.current;
-			const firstPages = !nextCursor && seed ? [seed] : [];
-			const firstCursor =
+			let firstPages: T[] = !nextCursor && seed ? [seed] : [];
+			let firstCursor =
 				nextCursor ?? (seed ? (cursor(seed) ?? undefined) : undefined);
-			const readCount = nextCursor
+			let readCount = nextCursor
 				? 1
 				: seed && !firstCursor
 					? 0
@@ -123,6 +127,27 @@ export function usePopupWatchBrowse<T>({
 				error: null,
 				errorStatus: null,
 			}));
+			// A saved full first page can be newer (or larger at the same snapshot)
+			// than the bounded title preview. Ask only the exact-query local cache.
+			if (!nextCursor && seed && client.loadBrowseCached) {
+				const cached = await client.loadBrowseCached(message).catch(() => null);
+				if (!current()) return;
+				const parsed = cached?.ok ? parser.safeParse(cached.data) : null;
+				if (
+					cached?.ok &&
+					cached.cachedAt !== undefined &&
+					parsed?.success &&
+					meta(parsed.data).ownerUserId === message.expectedOwnerUserId &&
+					meta(parsed.data).accountGeneration ===
+						meta(seed).accountGeneration &&
+					Date.parse(meta(parsed.data).serverTime ?? "") >=
+						Date.parse(meta(seed).serverTime ?? "")
+				) {
+					firstPages = [parsed.data];
+					firstCursor = cursor(parsed.data) ?? undefined;
+					readCount = firstCursor ? retainedCount - 1 : 0;
+				}
+			}
 			// Exact-query previews come from the same server snapshot as their title.
 			// Refresh the parent once, not every open child as another network request.
 			if (!readCount) {

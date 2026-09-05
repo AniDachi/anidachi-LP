@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createWatchHistoryBrowseCache } from "../src/watch-history-browse-cache";
 import {
 	createWatchHistoryClient,
+	handleWatchHistoryAuthSessionChange,
 	isWatchHistoryMessage,
 } from "../src/watch-history-client";
 import {
@@ -170,6 +171,114 @@ function required<T>(value: T | undefined): T {
 }
 
 describe("watch history query-isolated browsing", () => {
+	it("cannot resurrect deleted reads after real logout and same-generation login recreate the partition", async () => {
+		let saved: unknown = [];
+		const adapter = {
+			read: async () => saved,
+			write: async (value: unknown) => {
+				saved = structuredClone(value);
+			},
+		};
+		let current: typeof session | null = session;
+		let release: ((response: Response) => void) | undefined;
+		const target = {
+			scope: "title",
+			provider: "crunchyroll",
+			titleKey: "crunchyroll:series:S",
+		};
+		const request: typeof fetch = async (url) => {
+			if (new URL(String(url)).searchParams.get("search") === "held")
+				return new Promise<Response>((resolve) => {
+					release = resolve;
+				});
+			const path = new URL(String(url)).pathname;
+			return Response.json(
+				path.endsWith("/delete")
+					? {
+							meta: meta(),
+							schemaVersion: 3,
+							accountGeneration: 4,
+							clientMutationId: GROUP,
+							target,
+							deletedAt: NOW,
+						}
+					: path.endsWith("/preferences")
+						? { meta: meta(), preferences: { youtubeHistoryEnabled: false } }
+						: path.endsWith("/browse")
+							? browseResponse()
+							: canonical(),
+			);
+		};
+		const setup = createStoredClient({
+			root: { schemaVersion: 3, partitions: {} },
+			getCurrentSession: async () => current,
+			fetch: request,
+			browseCache: createWatchHistoryBrowseCache(adapter),
+		});
+		const dependencies = {
+			storage: setup.storage,
+			getCurrentSession: async () => current,
+			fetch: request,
+		};
+		expect(
+			await handleWatchHistoryAuthSessionChange(null, session, dependencies),
+		).toMatchObject({ ok: true });
+		await setup.client.handle(browseMessage());
+		expect(
+			await setup.client.handle({ ...browseMessage(), cacheOnly: true }),
+		).toHaveProperty("data");
+		current = {
+			...session,
+			accessToken: "rotated-access",
+			refreshToken: "rotated-refresh",
+		};
+		expect(
+			await handleWatchHistoryAuthSessionChange(session, current, dependencies),
+		).toMatchObject({ ok: true });
+		expect(
+			await setup.client.handle({ ...browseMessage(), cacheOnly: true }),
+		).toHaveProperty("data");
+		const signedIn = current;
+		const late = setup.client.handle(
+			browseMessage({ mode: "shared", search: "held" }),
+		);
+		await vi.waitFor(() => expect(release).toBeTypeOf("function"));
+		expect(
+			await setup.client.handle({
+				type: "ANIDACHI_WATCH_HISTORY_V3",
+				command: "delete",
+				input: {
+					schemaVersion: 3,
+					accountGeneration: 4,
+					clientMutationId: GROUP,
+					target,
+					requestedAt: NOW,
+				},
+			}),
+		).toMatchObject({ ok: true });
+		current = null;
+		expect(
+			await handleWatchHistoryAuthSessionChange(signedIn, null, dependencies),
+		).toMatchObject({ ok: true });
+		expect(
+			setup.readRoot().partitions[watchHistoryPartitionKey(OWNER, 4)],
+		).toBeUndefined();
+		current = signedIn;
+		expect(
+			await handleWatchHistoryAuthSessionChange(null, signedIn, dependencies),
+		).toMatchObject({ ok: true });
+		required(release)(Response.json(browseResponse()));
+		expect(await late).toEqual({ ok: false, status: "superseded" });
+		const restarted = createWatchHistoryClient({
+			...dependencies,
+			browseCache: createWatchHistoryBrowseCache(adapter),
+		});
+		for (const client of [setup.client, restarted]) {
+			expect(
+				await client.handle({ ...browseMessage(), cacheOnly: true }),
+			).not.toHaveProperty("data");
+		}
+	});
 	it("does not restore persistent reads after an acknowledged deletion or consent change", async () => {
 		let saved: unknown = [];
 		const adapter = {
