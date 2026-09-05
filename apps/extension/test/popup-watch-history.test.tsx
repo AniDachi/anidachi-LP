@@ -32,6 +32,348 @@ const NOW = "2026-08-15T03:00:00.000Z";
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 describe("Popup Watch History v2", () => {
+  it("initializes disclosures from the visible mode, not hidden shared-only titles", async () => {
+    const history = multiSeasonHistoryFixture();
+    history.items[0] = structuredClone(history.items[0]!);
+    const shared = sharedSessionFixture(600, 0.5);
+    history.items[0]!.sessions = [shared];
+    for (const season of history.items[0]!.seasons) {
+      for (const episode of season.episodes) episode.sessions = [shared];
+    }
+    const view = await renderPanel(clientFixture({cached: snapshotFixture(history), request: requestForHistory(history)}));
+    try {
+      expect(view.container.querySelector(".popup-watch-title")?.textContent).toBe("Another title");
+      expect((await findButton(view.container, "Toggle Another title history")).getAttribute("aria-expanded")).toBe("true");
+      expect(view.container.querySelectorAll(".popup-episode-row").length).toBeGreaterThan(0);
+    } finally { await unmount(view.root); }
+  });
+
+  it("opens the visible solo season when latest global activity belongs to a hidden shared season", async () => {
+    const history = multiSeasonHistoryFixture();
+    const shared = sharedSessionFixture(600, 0.5);
+    history.items[0]!.seasons[1]!.episodes[0]!.sessions = [shared];
+    const view = await renderPanel(clientFixture({cached: snapshotFixture(history), request: requestForHistory(history)}));
+    try {
+      expect((await findButton(view.container, "Toggle Frieren Season 1")).getAttribute("aria-expanded")).toBe("true");
+      expect(view.container.querySelectorAll(".popup-episode-row")).toHaveLength(2);
+    } finally { await unmount(view.root); }
+  });
+
+  it("keeps episode order and row identity through local checkpoint and server refresh cycles", async () => {
+    const history = twoEpisodeHistoryFixture();
+    history.items[0]!.seasons[0]!.episodes[1]!.lastWatchedAt = "2026-08-15T03:01:00.000Z";
+    let publish!: (snapshot: PopupWatchHistorySnapshot) => void;
+    const client = {
+      ...clientFixture({ cached: snapshotFixture(history), request: requestForHistory(history) }),
+      subscribe: (_owner: string, listener: typeof publish) => { publish = listener; return () => undefined; },
+    };
+    const view = await renderPanel(client);
+    try {
+      const rows = [...view.container.querySelectorAll(".popup-episode-row")];
+      for (let tick = 0; tick < 3; tick++) {
+        const event = pendingEvent({ currentTime: 601 + tick, progress: 0.3, observedAt: "2026-08-15T03:02:00.000Z" });
+        await act(async () => publish(snapshotFixture(history, [event], false, { event, mode: "mine" })));
+        expect([...view.container.querySelectorAll(".popup-episode-number")].map(node => node.textContent)).toEqual(["E1", "E2"]);
+        expect([...view.container.querySelectorAll(".popup-episode-row")]).toEqual(rows);
+        await act(async () => publish(snapshotFixture(history)));
+        expect([...view.container.querySelectorAll(".popup-episode-row")]).toEqual(rows);
+      }
+    } finally { await unmount(view.root); }
+  });
+
+  it("keeps title positions and default disclosures when latest activity changes", async () => {
+    const history = multiSeasonHistoryFixture();
+    let publish!: (snapshot: PopupWatchHistorySnapshot) => void;
+    const client = {
+      ...clientFixture({ cached: snapshotFixture(history), request: requestForHistory(history) }),
+      subscribe: (_owner: string, listener: typeof publish) => { publish = listener; return () => undefined; },
+    };
+    const view = await renderPanel(client);
+    try {
+      const titles = [...view.container.querySelectorAll(".popup-watch-item")];
+      expect((await findButton(view.container, "Toggle Frieren Season 2")).getAttribute("aria-expanded")).toBe("true");
+      const updated = structuredClone(history);
+      updated.items[0]!.latestActivity.episodeKey = updated.items[0]!.seasons[0]!.episodes[0]!.episodeKey;
+      updated.items.reverse();
+      await act(async () => publish(snapshotFixture(updated)));
+      expect([...view.container.querySelectorAll(".popup-watch-item")]).toEqual(titles);
+      expect((await findButton(view.container, "Toggle Frieren Season 2")).getAttribute("aria-expanded")).toBe("true");
+      expect((await findButton(view.container, "Toggle Frieren Season 1")).getAttribute("aria-expanded")).toBe("false");
+      expect((await findButton(view.container, "Toggle Another title history")).getAttribute("aria-expanded")).toBe("false");
+      await click(await findButton(view.container, "Toggle Crunchyroll history"));
+      await click(await findButton(view.container, "Toggle Crunchyroll history"));
+      expect((await findButton(view.container, "Toggle Frieren Season 2")).getAttribute("aria-expanded")).toBe("true");
+    } finally { await unmount(view.root); }
+  });
+
+  it("keeps confirmed completion while new playback observations arrive and settle", async () => {
+    const history = historyFixture({ currentTime: 2_000, progress: 2_000 / 2_100 });
+    history.items[0]!.seasons[0]!.episodes[0]!.completedAt = NOW;
+    let publish!: (snapshot: PopupWatchHistorySnapshot) => void;
+    const client = {
+      ...clientFixture({ cached: snapshotFixture(history), request: requestForHistory(history) }),
+      subscribe: (_owner: string, listener: typeof publish) => { publish = listener; return () => undefined; },
+    };
+    const view = await renderPanel(client);
+    try {
+      const row = view.container.querySelector(".popup-episode-row")!;
+      expect(row.getAttribute("data-completed")).toBe("true");
+      // Includes a replay/seek: completion is durable, resume position is not.
+      for (const currentTime of [2_001, 2_099, 12]) {
+        const event = pendingEvent({ currentTime, progress: currentTime / 2_100 });
+        await act(async () => publish(snapshotFixture(history, [event], false, { event, mode: "mine" })));
+        expect(row.getAttribute("data-completed")).toBe("true");
+        expect(row.textContent).toContain("Completed");
+        await act(async () => publish(snapshotFixture(history)));
+        expect(view.container.querySelector(".popup-episode-row")).toBe(row);
+        expect(row.getAttribute("data-completed")).toBe("true");
+      }
+    } finally { await unmount(view.root); }
+  });
+
+  it("settles an old deletion without downgrading a newer visible history generation", async () => {
+    let finishDelete!: (response: WatchHistoryMessageResponse) => void;
+    let publish!: (snapshot: PopupWatchHistorySnapshot) => void;
+    const canonical = historyFixture();
+    const base = requestForHistory(canonical);
+    const client: PopupWatchHistoryClient = {
+      ...clientFixture({ cached: snapshotFixture(canonical), request: async (message) => {
+        if (message.command === "delete") return new Promise((resolve) => { finishDelete = resolve; });
+        return base(message);
+      } }),
+      subscribe: (_owner, listener) => { publish = listener; return () => undefined; },
+    };
+    const view = await renderPanel(client);
+    try {
+      await click(await findButton(view.container, "Delete Frieren"));
+      const newer = historyFixture({ title: "New generation Frieren" });
+      newer.meta.accountGeneration = 2;
+      const snapshot = snapshotFixture(newer);
+      snapshot.accountGeneration = 2;
+      snapshot.localObservation = { mode: "mine", event: { ...pendingEvent({ currentTime: 900, progress: 0.43 }), accountGeneration: 2 } };
+      await act(async () => { publish(snapshot); });
+      await act(async () => { finishDelete({ ok: true, data: {
+        meta: canonical.meta, schemaVersion: 3, accountGeneration: 1, clientMutationId: "00000000-0000-4000-8000-000000000055",
+        target: { scope: "title", provider: "crunchyroll", titleKey: canonical.items[0]!.titleKey }, deletedAt: NOW,
+      } }); });
+      expect(view.container.textContent).toContain("New generation Frieren");
+      expect(view.container.textContent).toContain("15:00");
+      expect((await findButton(view.container, "Delete New generation Frieren")).disabled).toBe(false);
+    } finally { await unmount(view.root); }
+  });
+
+  it.each(["title", "all"] as const)("ignores a successful read delivered after acknowledged %s deletion", async (scope) => {
+    const canonical = historyFixture();
+    let deleted = false;
+    let deliverOpening!: () => void;
+    const live = liveClientFixture(canonical, async (url, init) => {
+      if (String(url).includes("/preferences")) return Response.json(preferencesFixture(false));
+      if (String(url).includes("/delete")) {
+        deleted = true;
+        const mutation = JSON.parse(String(init?.body));
+        const generation = scope === "all" ? 2 : 1;
+        return Response.json({ meta: { ...canonical.meta, accountGeneration: generation }, schemaVersion: 3, accountGeneration: generation,
+          clientMutationId: mutation.clientMutationId, target: mutation.target, deletedAt: "2026-08-15T03:00:10.000Z" });
+      }
+      return deleted ? new Response("offline", { status: 503 }) : Response.json(canonical);
+    });
+    let firstRead = true;
+    const client = { ...live.client, request: async (message: Parameters<PopupWatchHistoryClient["request"]>[0]) => {
+      const response = await live.background.handle(message);
+      if (message.command === "list" && firstRead) {
+        firstRead = false;
+        await new Promise<void>((resolve) => { deliverOpening = resolve; });
+      }
+      return response;
+    } };
+    const view = await renderPanel(client);
+    try {
+      await waitFor(() => expect(deliverOpening).toBeTypeOf("function"));
+      await click(await findButton(view.container, scope === "all" ? "Clear all watch history" : "Delete Frieren"));
+      await waitFor(() => expect(view.container.textContent).not.toContain("Frieren"));
+      await act(async () => { deliverOpening(); });
+      expect(view.container.textContent).not.toContain("Frieren");
+      expect((await findButton(view.container, "Retry watch history")).disabled).toBe(false);
+    } finally { deliverOpening?.(); await unmount(view.root); }
+  });
+
+  it.each(["title", "episode", "all"] as const)("does not resurrect deleted %s history from the active local observation while refresh is offline", async (scope) => {
+    const canonical = historyFixture();
+    let deleted = false;
+    const live = liveClientFixture(canonical, async (url, init) => {
+      if (String(url).includes("/preferences")) return Response.json(preferencesFixture(false));
+      if (String(url).includes("/delete")) {
+        deleted = true;
+        const mutation = JSON.parse(String(init?.body));
+        const generation = scope === "all" ? 2 : 1;
+        return Response.json({ meta: { ...canonical.meta, accountGeneration: generation }, schemaVersion: 3, accountGeneration: generation,
+          clientMutationId: mutation.clientMutationId, target: mutation.target, deletedAt: "2026-08-15T03:00:10.000Z" });
+      }
+      return deleted ? new Response("offline", { status: 503 }) : Response.json(canonical);
+    });
+    const view = await renderPanel(live.client);
+    try {
+      await act(async () => { await live.background.handle({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "observe-progress",
+        expectedOwnerUserId: OWNER_ID, event: pendingEvent({ currentTime: 900, progress: 0.43, observedAt: "2026-08-15T03:00:05.000Z" }),
+        meaningfulSolo: true, displayMode: "mine" }); });
+      await waitFor(() => expect(view.container.textContent).toContain("15:00"));
+      const button = scope === "all" ? "Clear all watch history" : scope === "episode" ? "Delete Episode 1 - The Journey" : "Delete Frieren";
+      await click(await findButton(view.container, button));
+      await waitFor(() => expect(view.container.textContent).toContain("Could not refresh watch history."));
+      expect(view.container.textContent).not.toContain("Frieren");
+      expect(view.container.textContent).not.toContain("15:00");
+    } finally { await unmount(view.root); }
+  });
+
+  it("delivers refresh completion even if a playback notification supersedes its cache load", async () => {
+    let changed!: Parameters<typeof chrome.storage.onChanged.addListener>[0];
+    let finishRefresh!: (response: WatchHistoryMessageResponse) => void;
+    let finishLoad!: (snapshot: PopupWatchHistorySnapshot | null) => void;
+    let holdNextLoad = false;
+    const outcomes: WatchHistoryMessageResponse[] = [];
+    const snapshot = snapshotFixture(historyFixture());
+    const close = subscribeToPopupWatchHistorySnapshot(OWNER_ID, (_snapshot, result) => {
+      if (result) outcomes.push(result);
+    }, {
+      onChanged: { addListener: (listener) => { changed = listener; }, removeListener: () => undefined },
+      load: async () => {
+        if (holdNextLoad) { holdNextLoad = false; return new Promise((resolve) => { finishLoad = resolve; }); }
+        return snapshot;
+      },
+      refresh: async () => new Promise((resolve) => { finishRefresh = resolve; }),
+    });
+    const notify = (cacheRevision: number) => changed({ "anidachi.watchHistory.v3": { newValue: {
+      schemaVersion: 3, activeGenerations: { [OWNER_ID]: 1 }, partitions: {
+        [watchHistoryPartitionKey(OWNER_ID, 1)]: { ownerUserId: OWNER_ID, invalidationRevision: 1, cacheRevision },
+      },
+    } } }, "local");
+    try {
+      notify(0);
+      await waitFor(() => expect(finishRefresh).toBeTypeOf("function"));
+      notify(1);
+      await Promise.resolve();
+      holdNextLoad = true;
+      finishRefresh({ ok: true, data: snapshot.history });
+      await waitFor(() => expect(finishLoad).toBeTypeOf("function"));
+      notify(1);
+      finishLoad(snapshot);
+      await waitFor(() => expect(outcomes).toHaveLength(1));
+      expect(outcomes[0]).toMatchObject({ ok: true, data: { meta: { ownerUserId: OWNER_ID } } });
+    } finally { close(); }
+  });
+
+  it("releases deletion controls after a transport exception and keeps canonical rows", async () => {
+    const base = requestForHistory(historyFixture());
+    const client = clientFixture({ cached: snapshotFixture(historyFixture()), request: async (message) => {
+      if (message.command === "delete") throw new Error("Extension port closed");
+      return base(message);
+    } });
+    const view = await renderPanel(client);
+    try {
+      await click(await findButton(view.container, "Delete Frieren"));
+      await waitFor(() => expect(view.container.textContent).toContain("Could not refresh watch history."));
+      expect(view.container.textContent).toContain("Frieren");
+      expect((await findButton(view.container, "Delete Frieren")).disabled).toBe(false);
+      expect((await findButton(view.container, "Retry watch history")).disabled).toBe(false);
+    } finally { await unmount(view.root); }
+  });
+
+  it("finishes a pending action across a same-owner focus refresh", async () => {
+    let finishDelete!: (response: WatchHistoryMessageResponse) => void;
+    const base = requestForHistory(historyFixture());
+    const client = clientFixture({ cached: snapshotFixture(historyFixture()), request: async (message) => {
+      if (message.command === "delete") return new Promise((resolve) => { finishDelete = resolve; });
+      return base(message);
+    } });
+    const view = await renderPanel(client);
+    try {
+      await click(await findButton(view.container, "Delete Frieren"));
+      await act(async () => { view.root.render(<PopupWatchHistoryPanel client={client} ownerUserId={OWNER_ID} refreshSignal={1} />); });
+      await act(async () => { finishDelete({ ok: false, status: "retryable" }); });
+      await waitFor(() => expect((view.container.querySelector('[aria-label="Delete Frieren"]') as HTMLButtonElement).disabled).toBe(false));
+      expect(view.container.textContent).toContain("Could not refresh watch history.");
+    } finally { await unmount(view.root); }
+  });
+
+  it("does not let an old owner's discard failure change the newly signed-in drawer", async () => {
+    let finishDiscard!: (response: WatchHistoryMessageResponse) => void;
+    let owner = OWNER_ID;
+    const client = clientFixture({ cached: null, request: async (message) => {
+      if (message.command === "discard-old-owner-work") return new Promise((resolve) => { finishDiscard = resolve; });
+      if (message.command === "other-owner-pending") return { ok: true, hasPendingWork: owner === OWNER_ID };
+      if (message.command === "get-preferences") return { ok: true, data: { ...preferencesFixture(false), meta: { ...preferencesFixture(false).meta, ownerUserId: owner } } };
+      const history = historyFixture({ title: owner === OWNER_ID ? "First account" : "Second account" });
+      history.meta.ownerUserId = owner;
+      return { ok: true, data: history };
+    } });
+    const view = await renderPanel(client);
+    try {
+      await click(await findButton(view.container, "Discard pending history from another account"));
+      owner = "00000000-0000-4000-8000-000000000099";
+      await act(async () => { view.root.render(<PopupWatchHistoryPanel client={client} ownerUserId={owner} />); });
+      await act(async () => { finishDiscard({ ok: false, status: "retryable" }); });
+      expect(view.container.textContent).toContain("Second account");
+      expect(view.container.textContent).not.toContain("First account");
+      expect(view.container.textContent).not.toContain("Could not refresh watch history.");
+    } finally { await unmount(view.root); }
+  });
+
+
+  it("converges an opening read with a playback acknowledgement without a false refresh error", async () => {
+    const cached = historyFixture({ title: "Before playback" });
+    const fresh = historyFixture({ title: "After playback", currentTime: 900, progress: 0.43 });
+    fresh.generatedAt = fresh.meta.serverTime = "2026-08-15T03:00:02.000Z";
+    const reads: Array<(response: Response) => void> = [];
+    const live = liveClientFixture(cached, async (url, init) => {
+      if (String(url).includes("/preferences")) return Response.json(preferencesFixture(false));
+      if (init?.method === "POST") {
+        const event = JSON.parse(String(init.body));
+        return Response.json({ meta: fresh.meta, schemaVersion: 3, acceptedEventId: event.clientEventId,
+          acceptedAt: fresh.generatedAt, accountGeneration: 1, duplicate: false,
+          episode: fresh.items[0]!.seasons[0]!.episodes[0] });
+      }
+      return new Promise<Response>((resolve) => reads.push(resolve));
+    });
+    const view = await renderPanel(live.client);
+    try {
+      await waitFor(() => expect(reads).toHaveLength(1));
+      await act(async () => {
+        const accepted = await live.background.handle({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "observe-progress",
+          expectedOwnerUserId: OWNER_ID, event: pendingEvent({ currentTime: 900, progress: 0.43 }),
+          meaningfulSolo: true, queueForSync: true, flushNow: true });
+        expect(accepted.ok).toBe(true);
+        reads[0]!(Response.json(cached));
+      });
+      await waitFor(() => expect(reads.length).toBeGreaterThanOrEqual(2));
+      await act(async () => { for (const resolve of reads.slice(1)) resolve(Response.json(fresh)); });
+      await waitFor(() => expect(view.container.textContent).toContain("After playback"));
+      expect(view.container.textContent).not.toContain("Could not refresh watch history.");
+      expect((await live.client.loadCached(OWNER_ID))?.pendingEvents).toEqual([]);
+      expect((await findButton(view.container, "Refresh watch history")).disabled).toBe(false);
+    } finally { await unmount(view.root); }
+  });
+
+  it("clears a recovered automatic read error but not on local observation updates", async () => {
+    let online = false;
+    const live = liveClientFixture(historyFixture(), async (url) => {
+      if (String(url).includes("/preferences")) return Response.json(preferencesFixture(false));
+      return online ? Response.json(historyFixture({ title: "Recovered Frieren" })) : new Response("offline", { status: 503 });
+    });
+    const view = await renderPanel(live.client);
+    try {
+      await waitFor(() => expect(view.container.textContent).toContain("Could not refresh watch history."));
+      await act(async () => { await live.storage.updateRoot((root) => structuredClone(root)); });
+      expect(view.container.textContent).toContain("Could not refresh watch history.");
+      online = true;
+      await act(async () => { await live.storage.updateRoot((root) => {
+        const key = watchHistoryPartitionKey(OWNER_ID, 1);
+        return { ...root, partitions: { ...root.partitions, [key]: { ...root.partitions[key]!, invalidationRevision: 1 } } };
+      }); });
+      await waitFor(() => expect(view.container.textContent).toContain("Recovered Frieren"));
+      expect(view.container.textContent).not.toContain("Could not refresh watch history.");
+    } finally { await unmount(view.root); }
+  });
+
   it("suppresses foreign-region exact totals immediately, including an already open Popup, while GET fails", async () => {
     const complete = historyFixture();
     complete.items[0]!.catalogState = "complete";
@@ -581,14 +923,14 @@ describe("Popup Watch History v2", () => {
     await unmount(view.root);
   });
 
-  it("uses binary episode-key order for equal timestamps while pinning older local progress", async () => {
+  it("uses stable episode-key order for unnumbered episodes while pinning older local progress", async () => {
     const canonical = historyWithEpisodesFixture(8);
     const tied = [
       ["crunchyroll:episode:FRIEREN|S1|Ea", "Episode tie lowercase", 21],
       ["crunchyroll:episode:FRIEREN|S1|E_", "Episode tie underscore", 22],
       ["crunchyroll:episode:FRIEREN|S1|EA", "Episode tie uppercase", 23],
     ] as const;
-    const pending = tied.map(([episodeKey, episodeTitle, id]) => pendingEvent({
+    const pending = tied.map(([episodeKey, episodeTitle, id]) => ({ ...pendingEvent({
       currentTime: id,
       progress: id / 2_100,
       clientEventId: `00000000-0000-4000-8000-${String(id).padStart(12, "0")}`,
@@ -596,7 +938,7 @@ describe("Popup Watch History v2", () => {
       episodeTitle,
       episodeNumber: id,
       observedAt: "2026-08-15T03:00:20.000Z",
-    }));
+    }), episodeNumber: null }));
     const local = pendingEvent({
       currentTime: 7,
       progress: 7 / 2_100,
@@ -1480,6 +1822,36 @@ describe("Popup Watch History v2", () => {
     await unmount(view.root);
   });
 });
+
+function liveClientFixture(history: WatchHistoryResponse, fetch: typeof globalThis.fetch) {
+  const key = watchHistoryPartitionKey(OWNER_ID, 1);
+  let stored: WatchHistoryStorageRoot = { schemaVersion: 3, activeGenerations: { [OWNER_ID]: 1 }, partitions: {
+    [key]: { ownerUserId: OWNER_ID, accountGeneration: 1, cache: history, preferences: { youtubeHistoryEnabled: false },
+      preferencesConfirmed: true, capturePaused: false, captureMarkersReady: true, currentObservation: null,
+      outbox: { ownerUserId: OWNER_ID, accountGeneration: 1, entries: [] } },
+  } };
+  const listeners = new Set<Parameters<typeof chrome.storage.onChanged.addListener>[0]>();
+  const storage = createWatchHistoryStorage({ item: {
+    getValue: async () => structuredClone(stored),
+    setValue: async (value) => {
+      const oldValue = stored;
+      stored = structuredClone(value);
+      for (const listener of listeners) listener({ "anidachi.watchHistory.v3": { oldValue, newValue: stored } }, "local");
+    },
+  }, getBytesInUse: async () => 0, quotaBytes: 1_000_000 });
+  const background = createWatchHistoryClient({ storage, fetch, getCurrentSession: async () => ({
+    accessToken: "test", refreshToken: "test", user: { id: OWNER_ID, email: "test@example.invalid", displayName: "Test", avatarUrl: null, plan: "plus" },
+  }) });
+  const loadCached = async (owner: string) => selectConfirmedPopupWatchHistorySnapshot(await storage.readRoot(), owner);
+  const client: PopupWatchHistoryClient = {
+    loadCached, request: background.handle, confirmDiscard: () => true, openUrl: async () => undefined,
+    subscribe: (owner, listener) => subscribeToPopupWatchHistorySnapshot(owner, listener, {
+      load: loadCached, refresh: background.handle,
+      onChanged: { addListener: (listener) => { listeners.add(listener); }, removeListener: (listener) => { listeners.delete(listener); } },
+    }),
+  };
+  return { client, background, storage };
+}
 
 function clientFixture(overrides: {
   cached: PopupWatchHistorySnapshot | null;

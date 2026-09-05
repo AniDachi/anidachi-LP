@@ -48,7 +48,7 @@ export type PopupWatchHistoryClient = {
   request(message: WatchHistoryMessage): Promise<WatchHistoryMessageResponse>;
   subscribe?(
     ownerUserId: string,
-    listener: (snapshot: PopupWatchHistorySnapshot | null) => void,
+    listener: (snapshot: PopupWatchHistorySnapshot | null, refreshResult?: WatchHistoryMessageResponse) => void,
   ): () => void;
   confirmDiscard(message: string): boolean;
   openUrl(url: string): Promise<void>;
@@ -112,7 +112,9 @@ export function PopupWatchHistoryPanel({
     youtubeHistoryEnabled: false,
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [actionError, setError] = useState<string | null>(null);
+  const [readError, setReadError] = useState<string | null>(null);
+  const error = actionError ?? readError;
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const [oldOwnerPending, setOldOwnerPending] = useState(false);
   const [mode, setMode] = useState<"mine" | "together">("mine");
@@ -124,9 +126,20 @@ export function PopupWatchHistoryPanel({
     branches: Record<string, boolean>;
   }>({ query: "", branches: {} });
   const [manualRefreshVersion, setManualRefreshVersion] = useState(0);
+  const [layout, setLayout] = useState<PopupHistoryLayout | null>(null);
   const requestGeneration = useRef(0);
+  const actionGeneration = useRef(0);
   const preferenceRevision = useRef(0);
   const renderedOwnerRef = useRef(ownerUserId);
+
+  // Focus/manual reads must not abandon an action already submitted by this
+  // owner. Account/client changes and unmount still retire all late callbacks.
+  useEffect(() => {
+    const generation = ++actionGeneration.current;
+    return () => {
+      if (actionGeneration.current === generation) actionGeneration.current += 1;
+    };
+  }, [client, ownerUserId]);
 
   useEffect(() => {
     onTitleCountChange?.(history?.totalTitleCount ?? 0);
@@ -152,8 +165,9 @@ export function PopupWatchHistoryPanel({
       setPreferences({ youtubeHistoryEnabled: false });
       setBusyAction(null);
       setOldOwnerPending(false);
+      setError(null);
     }
-    setError(null);
+    setReadError(null);
     if (!ownerUserId) {
       setLoading(false);
       return;
@@ -213,6 +227,7 @@ export function PopupWatchHistoryPanel({
       if (historyResponse.ok) {
         const parsed = WatchHistoryResponseSchema.safeParse(historyResponse.data);
         if (parsed.success && parsed.data.meta.ownerUserId === ownerUserId) {
+          setReadError(null);
           setHistory(parsed.data);
           const refreshedLocal = await client.loadCached(ownerUserId).catch(() => null);
           if (!current()) return;
@@ -227,10 +242,10 @@ export function PopupWatchHistoryPanel({
             setLocalObservation(null);
           }
         } else {
-          setError("Could not validate watch history.");
+          setReadError("Could not validate watch history.");
         }
-      } else {
-        setError(messageForStatus(historyResponse.status));
+      } else if (historyResponse.status !== "superseded") {
+        setReadError(messageForStatus(historyResponse.status));
         if (historyResponse.status === "storage-full") setCapturePaused(true);
       }
 
@@ -244,7 +259,18 @@ export function PopupWatchHistoryPanel({
 
   useEffect(() => {
     if (!ownerUserId || !client.subscribe) return;
-    return client.subscribe(ownerUserId, (snapshot) => {
+    let disposed = false;
+    const unsubscribe = client.subscribe(ownerUserId, (snapshot, refreshResult) => {
+      if (disposed) return;
+      if (refreshResult && !refreshResult.ok && refreshResult.status !== "superseded") {
+        setReadError(messageForStatus(refreshResult.status));
+      }
+      // Local playback/cache notifications are not proof that a failed server
+      // read recovered. Only a completed canonical refresh clears its warning.
+      if (refreshResult?.ok) {
+        const parsed = WatchHistoryResponseSchema.safeParse(refreshResult.data);
+        if (parsed.success && parsed.data.meta.ownerUserId === ownerUserId) setReadError(null);
+      }
       if (!snapshot || snapshot.history.meta.ownerUserId !== ownerUserId) return;
       setHistory((current) => isSameHistoryRevision(current, snapshot.history)
         ? current
@@ -258,6 +284,7 @@ export function PopupWatchHistoryPanel({
           : snapshot.preferences
       );
     });
+    return () => { disposed = true; unsubscribe(); };
   }, [client, ownerUserId]);
 
   const visiblePendingEvents = useMemo(
@@ -294,9 +321,25 @@ export function PopupWatchHistoryPanel({
     ),
     [history?.items, pendingByEpisode, visibleLocalObservation],
   );
+  // Retain positions and initial disclosures for this open account view, not
+  // snapshots of its data. New progress must not move the user's interaction target.
+  const modeItems = useMemo(
+    () => filterWatchHistoryItems(itemsWithPending, mode, "", pendingByEpisode),
+    [itemsWithPending, mode, pendingByEpisode],
+  );
+  const nextLayout = reconcileHistoryLayout(layout, modeItems,
+    JSON.stringify([ownerUserId, history?.meta.accountGeneration, mode]));
+  if (nextLayout !== layout) setLayout(nextLayout);
   const visibleItems = useMemo(
-    () => filterWatchHistoryItems(itemsWithPending, mode, searchQuery, pendingByEpisode),
-    [itemsWithPending, mode, pendingByEpisode, searchQuery],
+    () => {
+      const ranks = new Map(nextLayout.titleKeys.map((key, index) => [key, index]));
+      const filtered = searchQuery.trim()
+        ? filterWatchHistoryItems(itemsWithPending, mode, searchQuery, pendingByEpisode)
+        : [...modeItems];
+      return filtered.sort((a, b) => ranks.get(pendingTitleKey(a.provider, a.titleKey))! -
+        ranks.get(pendingTitleKey(b.provider, b.titleKey))!);
+    },
+    [itemsWithPending, mode, modeItems, nextLayout, pendingByEpisode, searchQuery],
   );
   const providerGroups = useMemo(() => groupWatchHistoryItems(visibleItems), [visibleItems]);
 
@@ -311,7 +354,8 @@ export function PopupWatchHistoryPanel({
     ? searchBranches.query === query ? searchBranches.branches : {}
     : expandedBranches;
   const disclosure: PopupHistoryDisclosure = {
-    isOpen: (key, initiallyOpen) => branches[key] ?? (Boolean(query) || initiallyOpen),
+    isOpen: (key, initiallyOpen) => branches[key] ??
+      (Boolean(query) || (nextLayout.defaults[key] ?? initiallyOpen)),
     toggle: (key, initiallyOpen) => {
       if (query) {
         setSearchBranches((current) => {
@@ -319,14 +363,15 @@ export function PopupWatchHistoryPanel({
           return { query, branches: { ...previous, [key]: !(previous[key] ?? true) } };
         });
       } else {
-        setExpandedBranches((current) => ({ ...current, [key]: !(current[key] ?? initiallyOpen) }));
+        setExpandedBranches((current) => ({ ...current,
+          [key]: !(current[key] ?? nextLayout.defaults[key] ?? initiallyOpen) }));
       }
     },
   };
 
   const updateYoutubePreference = async () => {
     if (!ownerUserId || busyAction) return;
-    const expectedGeneration = requestGeneration.current;
+    const expectedGeneration = actionGeneration.current;
     const previousPreferences = preferences;
     const nextPreferences = {
       youtubeHistoryEnabled: !preferences.youtubeHistoryEnabled,
@@ -340,8 +385,9 @@ export function PopupWatchHistoryPanel({
       command: "update-preferences",
       input: nextPreferences,
     }));
+    if (actionGeneration.current !== expectedGeneration) return;
     const samePreferenceRevision = preferenceRevision.current === revision;
-    if (requestGeneration.current === expectedGeneration && samePreferenceRevision && !response.ok) {
+    if (samePreferenceRevision && !response.ok) {
       setPreferences(previousPreferences);
       setError(messageForStatus(response.status));
     }
@@ -351,11 +397,11 @@ export function PopupWatchHistoryPanel({
   const deleteTarget = async (target: WatchHistoryDeleteScope) => {
     if (!ownerUserId || !history || busyAction) return;
     if (!client.confirmDiscard("Delete this watch history?")) return;
-    const expectedGeneration = requestGeneration.current;
+    const expectedGeneration = actionGeneration.current;
     const actionKey = deleteScopeKey(target);
     setBusyAction(actionKey);
     setError(null);
-    const response = await client.request(createWatchHistoryMessage({
+    const response = await requestPopupWatchHistory(client, createWatchHistoryMessage({
       type: "ANIDACHI_WATCH_HISTORY_V3",
       command: "delete",
       input: {
@@ -366,16 +412,23 @@ export function PopupWatchHistoryPanel({
         requestedAt: new Date().toISOString(),
       },
     }));
-    if (requestGeneration.current !== expectedGeneration) return;
+    if (actionGeneration.current !== expectedGeneration) return;
     if (response.ok) {
       const parsed = WatchHistoryDeletionAckSchema.safeParse(response.data);
       if (parsed.success &&
         parsed.data.meta.ownerUserId === ownerUserId &&
         parsed.data.accountGeneration >= history.meta.accountGeneration) {
-        setHistory((current) => current
+        // A validated GET may still be in transit from the background. Its
+        // pre-deletion rows must never repaint over this acknowledged mutation.
+        requestGeneration.current += 1;
+        setLoading(false);
+        setHistory((current) => current && current.meta.accountGeneration <= parsed.data.accountGeneration
           ? removeHistoryTarget(current, parsed.data.target, parsed.data.accountGeneration)
-          : null);
-        setPendingEvents((current) => current.filter((event) => !eventMatchesScope(event, parsed.data.target)));
+          : current);
+        setPendingEvents((current) => current.filter((event) =>
+          event.accountGeneration > parsed.data.accountGeneration || !eventMatchesScope(event, parsed.data.target)));
+        setLocalObservation((current) => current && current.event.accountGeneration <= parsed.data.accountGeneration &&
+          eventMatchesScope(current.event, parsed.data.target) ? null : current);
       } else {
         setError("Could not validate history deletion.");
       }
@@ -386,39 +439,45 @@ export function PopupWatchHistoryPanel({
   };
 
   const createRoom = async (session: WatchHistorySession, sourceUrl: string) => {
-    if (busyAction) return;
-    const expectedGeneration = requestGeneration.current;
+    if (!ownerUserId || busyAction) return;
+    const expectedGeneration = actionGeneration.current;
     setBusyAction(`room:${session.id}`);
     setError(null);
-    const response = await client.request(createWatchHistoryMessage({
+    const response = await requestPopupWatchHistory(client, createWatchHistoryMessage({
       type: "ANIDACHI_WATCH_HISTORY_V3",
       command: "create-room",
       sessionId: session.id,
       clientRequestId: crypto.randomUUID(),
     }));
-    if (requestGeneration.current !== expectedGeneration) return;
+    if (actionGeneration.current !== expectedGeneration) return;
     if (response.ok) {
       const parsed = WatchHistoryRoomRecreationResponseSchema.safeParse(response.data);
       if (parsed.success) {
-        await client.openUrl(withRoomHash(sourceUrl, parsed.data.roomId));
+        try { await client.openUrl(withRoomHash(sourceUrl, parsed.data.roomId)); }
+        catch {
+          if (actionGeneration.current === expectedGeneration) setError("Could not open the room tab. Please try again.");
+        }
       } else {
         setError("Could not validate the recreated room.");
       }
     } else {
       setError(messageForStatus(response.status));
     }
-    setBusyAction(null);
+    if (actionGeneration.current === expectedGeneration) setBusyAction(null);
   };
 
   const discardOldOwnerWork = async () => {
     if (!oldOwnerPending || busyAction) return;
     if (!client.confirmDiscard("Discard pending Watch History from another account?")) return;
+    const expectedGeneration = actionGeneration.current;
     setBusyAction("discard-old-owner");
-    const response = await client.request(createWatchHistoryMessage({
+    setError(null);
+    const response = await requestPopupWatchHistory(client, createWatchHistoryMessage({
       type: "ANIDACHI_WATCH_HISTORY_V3",
       command: "discard-old-owner-work",
       confirmed: true,
     }));
+    if (actionGeneration.current !== expectedGeneration) return;
     if (response.ok) setOldOwnerPending(false);
     else setError(messageForStatus(response.status));
     setBusyAction(null);
@@ -426,15 +485,16 @@ export function PopupWatchHistoryPanel({
 
   const refreshHistory = async () => {
     if (loading || busyAction) return;
+    setError(null);
     if (capturePaused) {
-      const expectedGeneration = requestGeneration.current;
+      const expectedGeneration = actionGeneration.current;
       setBusyAction("refresh");
       setError(null);
-      const response = await client.request(createWatchHistoryMessage({
+      const response = await requestPopupWatchHistory(client, createWatchHistoryMessage({
         type: "ANIDACHI_WATCH_HISTORY_V3",
         command: "recover-storage",
       }));
-      if (requestGeneration.current !== expectedGeneration) return;
+      if (actionGeneration.current !== expectedGeneration) return;
       if (!response.ok) {
         setError(messageForStatus(response.status));
         setBusyAction(null);
@@ -812,8 +872,8 @@ function PopupWatchHistoryItem({
 											const currentTime =
 												pending?.currentTime ?? episode.currentTime;
 											const progress = pending?.progress ?? episode.progress;
-											const completed =
-												Boolean(episode.completedAt) && !pending;
+											// New resume checkpoints do not undo confirmed completion.
+											const completed = Boolean(episode.completedAt);
 											return (
 												<div
 													className="popup-episode-row"
@@ -834,12 +894,12 @@ function PopupWatchHistoryItem({
 															<span className="popup-episode-title">
 																{episode.episodeTitle}
 															</span>
-															{completed ? (
-																<span className="popup-episode-complete">
+															<span className="popup-episode-complete" data-visible={completed}>
+																{completed ? <>
 																	<Check aria-hidden="true" size={13} />
 																	<span className="popup-sr-only">Completed</span>
-																</span>
-															) : null}
+																</> : null}
+															</span>
 														</span>
 														<span className="popup-series-progress">
 															<span className="popup-progress-track">
@@ -965,6 +1025,46 @@ type PopupProviderGroup = {
   items: WatchHistoryItem[];
 };
 
+type PopupHistoryLayout = {
+  scope: string;
+  titleKeys: string[];
+  defaults: Record<string, boolean>;
+};
+
+function reconcileHistoryLayout(
+  previous: PopupHistoryLayout | null,
+  items: WatchHistoryItem[],
+  scope: string,
+): PopupHistoryLayout {
+  const current = previous?.scope === scope ? previous : null;
+  const byKey = new Map(items.map((item) => [pendingTitleKey(item.provider, item.titleKey), item]));
+  const keys = [...byKey.keys()];
+  const present = new Set(keys);
+  const retained = current?.titleKeys.filter((key) => present.has(key)) ?? [];
+  const known = new Set(retained);
+  const titleKeys = [...retained, ...keys.filter((key) => !known.has(key))];
+  const defaults: Record<string, boolean> = {};
+  const providers = new Set<string>();
+  for (const key of titleKeys) {
+    const item = byKey.get(key)!;
+    const titleBranch = JSON.stringify([item.provider, item.titleKey]);
+    defaults[titleBranch] = current?.defaults[titleBranch] ?? !providers.has(item.provider);
+    providers.add(item.provider);
+    const latestSeason = item.seasons.find((season) =>
+      season.episodes.some((episode) => episode.episodeKey === item.latestActivity.episodeKey)
+    )?.seasonKey ?? item.seasons[0]?.seasonKey;
+    for (const season of item.seasons) {
+      const branch = JSON.stringify([item.provider, item.titleKey, season.seasonKey]);
+      defaults[branch] = current?.defaults[branch] ?? season.seasonKey === latestSeason;
+    }
+  }
+  if (current && titleKeys.length === current.titleKeys.length &&
+    titleKeys.every((key, index) => key === current.titleKeys[index]) &&
+    Object.keys(defaults).length === Object.keys(current.defaults).length &&
+    Object.entries(defaults).every(([key, value]) => current.defaults[key] === value)) return current;
+  return { scope, titleKeys, defaults };
+}
+
 function filterWatchHistoryItems(
   items: WatchHistoryItem[],
   mode: "mine" | "together",
@@ -998,6 +1098,11 @@ function filterWatchHistoryItems(
           sessions: episodeSessions,
         }];
       });
+      // Selection is newest-first and bounded; presentation is episode order.
+      // Never use a changing playback timestamp to position a visible row.
+      episodes.sort((a, b) =>
+        (a.episodeNumber ?? Number.MAX_SAFE_INTEGER) - (b.episodeNumber ?? Number.MAX_SAFE_INTEGER) ||
+        compareCodeUnits(a.episodeKey, b.episodeKey));
       return episodes.length ? [{ ...season, episodes }] : [];
     });
 
@@ -1317,7 +1422,7 @@ export async function loadConfirmedPopupWatchHistorySnapshot(
 
 export function subscribeToPopupWatchHistorySnapshot(
   ownerUserId: string,
-  listener: (snapshot: PopupWatchHistorySnapshot | null) => void,
+  listener: (snapshot: PopupWatchHistorySnapshot | null, refreshResult?: WatchHistoryMessageResponse) => void,
   dependencies: {
     onChanged?: Pick<typeof chrome.storage.onChanged, "addListener" | "removeListener">;
     load?: typeof loadConfirmedPopupWatchHistorySnapshot;
@@ -1327,10 +1432,39 @@ export function subscribeToPopupWatchHistorySnapshot(
   let disposed = false;
   let sequence = 0;
   let scheduled = false;
+  let refreshing = false;
   let requestedRevision = "";
+  let latestRevision = "";
+  let needsRefresh = false;
   const onChanged = dependencies.onChanged ?? chrome.storage.onChanged;
   const load = dependencies.load ?? loadConfirmedPopupWatchHistorySnapshot;
   const refresh = dependencies.refresh ?? requestWatchHistory;
+  const scheduleRefresh = () => {
+    if (disposed || scheduled || refreshing || !needsRefresh || latestRevision === requestedRevision) return;
+    scheduled = true;
+    queueMicrotask(() => {
+      scheduled = false;
+      if (disposed || !needsRefresh) return;
+      refreshing = true;
+      requestedRevision = latestRevision;
+      void (async () => {
+        let result: WatchHistoryMessageResponse;
+        try { result = await refresh(createListWatchHistoryMessage({ limit: 100 })); }
+        catch { result = { ok: false, status: "retryable" }; }
+        const currentSequence = ++sequence;
+        const snapshot = await load(ownerUserId).catch(() => null);
+        // A newer storage notification can retire this snapshot, not the
+        // completed request's outcome (which clears a recovered read error).
+        if (!disposed) listener(currentSequence === sequence ? snapshot : null, result);
+      })().finally(() => {
+        refreshing = false;
+        // At most one follow-up for mutations received during this request.
+        // A failed revision is retried by a new mutation or the user's Retry,
+        // never by a timer or by our own cache write notifications.
+        scheduleRefresh();
+      });
+    });
+  };
   const handleStorageChange = (
     changes: Record<string, chrome.storage.StorageChange>,
     areaName: string,
@@ -1340,17 +1474,9 @@ export function subscribeToPopupWatchHistorySnapshot(
     const generation = root?.schemaVersion === 3 ? root.activeGenerations?.[ownerUserId] : undefined;
     const partition = generation === undefined ? undefined : root?.partitions?.[watchHistoryPartitionKey(ownerUserId, generation)];
     const invalidation = partition?.invalidationRevision ?? 0;
-    const signature = `${generation}:${invalidation}`;
-    if (partition?.ownerUserId === ownerUserId && invalidation > (partition.cacheRevision ?? 0) && signature !== requestedRevision) {
-      requestedRevision = signature;
-      if (!scheduled) {
-        scheduled = true;
-        queueMicrotask(() => {
-          scheduled = false;
-          if (!disposed) void refresh(createListWatchHistoryMessage({ limit: 100 })).catch(() => undefined);
-        });
-      }
-    }
+    latestRevision = `${generation}:${invalidation}`;
+    needsRefresh = partition?.ownerUserId === ownerUserId && invalidation > (partition.cacheRevision ?? 0);
+    scheduleRefresh();
     const currentSequence = ++sequence;
     void load(ownerUserId)
       .then((snapshot) => {

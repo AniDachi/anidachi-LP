@@ -101,6 +101,28 @@ function readyPartition(ownerUserId: string, youtubeHistoryEnabled: boolean) {
 }
 
 describe("watch history v2 client", () => {
+  it("shares concurrent refreshes and releases the flight after a failed request", async () => {
+    const owner = session.user.id;
+    let stored: WatchHistoryStorageRoot = { schemaVersion: 3, partitions: {}, activeGenerations: {} };
+    const replies: Array<(response: Response) => void> = [];
+    const client = createWatchHistoryClient({ getCurrentSession: async () => session,
+      storage: createWatchHistoryStorage({ item: { getValue: async () => stored, setValue: async (value) => { stored = value; } }, getBytesInUse: async () => 0, quotaBytes: 1_000_000 }),
+      fetch: async () => new Promise<Response>((resolve) => replies.push(resolve)),
+    });
+    const first = client.handle(createListWatchHistoryMessage({ limit: 100 }));
+    const second = client.handle(createListWatchHistoryMessage({ limit: 100 }));
+    await vi.waitFor(() => expect(replies.length).toBeGreaterThan(0));
+    const concurrentReads = replies.length;
+    replies.forEach((resolve) => resolve(new Response("offline", { status: 503 })));
+    expect(await first).toEqual({ ok: false, status: "retryable" });
+    expect(await second).toEqual({ ok: false, status: "retryable" });
+    expect(concurrentReads).toBe(1);
+    const retry = client.handle(createListWatchHistoryMessage({ limit: 100 }));
+    await vi.waitFor(() => expect(replies).toHaveLength(2));
+    replies[1]!(Response.json({ meta: { schemaVersion: 3, ownerUserId: owner, accountGeneration: 1, serverTime: "2026-09-05T00:00:00.000Z" }, generatedAt: "2026-09-05T00:00:00.000Z", totalTitleCount: 0, items: [], nextCursor: null }));
+    expect((await retry).ok).toBe(true);
+  });
+
   it("preserves a newer same-visit tab registration installed after release succeeds but before wrapper cleanup", async () => {
     vi.resetModules();
     const owner = session.user.id;
