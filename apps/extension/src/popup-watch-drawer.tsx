@@ -519,8 +519,12 @@ function WatchDrawer({
 					previous ? { ...previous, capturePaused: false } : previous,
 				);
 			}
-			if (browsing.error || recoveryError) {
+			if (browsing.errorStatus === "generation-mismatch" || recoveryError) {
 				await recoverAfterMismatch(true);
+				return;
+			}
+			if (browsing.error) {
+				browsing.reload();
 				return;
 			}
 			setNow(new Date());

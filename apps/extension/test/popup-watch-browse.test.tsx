@@ -287,6 +287,35 @@ async function change(label: string, value: string) {
 }
 
 describe("production watch browsing", () => {
+	it("retries a transient primary browse failure without depending on unavailable canonical history", async () => {
+		let available = false;
+		const fallback = clientFixture();
+		const client = clientFixture(
+			vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
+				if (message.command === "list")
+					return { ok: false, status: "retryable" };
+				if (message.command === "browse" && !available)
+					return { ok: false, status: "retryable" };
+				return fallback.request(message);
+			}),
+		);
+		await mount(client);
+		expect(button("Retry watch history")).toBeDefined();
+		available = true;
+		await click("Retry watch history");
+		expect(container.textContent).toContain("Frieren");
+		expect(container.querySelector('[role="alert"]')).toBeNull();
+		expect(
+			vi
+				.mocked(client.request)
+				.mock.calls.filter(([message]) => message.command === "browse"),
+		).toHaveLength(2);
+		expect(
+			vi
+				.mocked(client.request)
+				.mock.calls.filter(([message]) => message.command === "list"),
+		).toHaveLength(0);
+	});
 	it("coalesces child-only generation mismatches and lets child Retry recover canonical authority", async () => {
 		let cleared = false;
 		let finishDetail: ((value: Response) => void) | undefined;

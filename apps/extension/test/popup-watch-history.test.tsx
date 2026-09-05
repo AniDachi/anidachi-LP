@@ -1479,9 +1479,7 @@ describe("Popup Watch History v3", () => {
     await click(retry);
 
     await waitFor(() => expect(view.container.textContent).toContain("Frieren"));
-    // This legacy transport maps browse to list: failed browse, canonical
-    // recovery, then the filtered browse replay are three separate reads.
-    expect(listAttempts).toBe(3);
+    expect(listAttempts).toBe(2);
     expect(view.container.textContent).not.toContain("Could not refresh watch history.");
     await unmount(view.root);
   });
