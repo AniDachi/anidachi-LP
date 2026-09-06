@@ -13,7 +13,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   getCachedAccountInboxForUser,
-  setCachedAccountInboxForUser,
+  publishAccountInboxForUser,
 } from "../src/account-inbox-cache";
 import { listAccountInbox, markAccountInboxItemsSeen } from "../src/account-inbox-client";
 import type { AccountOwnedState } from "../src/account-sync";
@@ -67,7 +67,8 @@ vi.mock("../src/account-inbox-client", async (importOriginal) => ({
 vi.mock("../src/account-inbox-cache", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../src/account-inbox-cache")>()),
   getCachedAccountInboxForUser: vi.fn(),
-  setCachedAccountInboxForUser: vi.fn(),
+  publishAccountInboxForUser: vi.fn(),
+  subscribeToAccountInboxForUser: vi.fn(() => () => {}),
 }));
 
 vi.mock("../src/social-client", async (importOriginal) => ({
@@ -586,7 +587,7 @@ describe("PopupApp social mutations", () => {
     vi.mocked(requestSilentWebsiteSignIn).mockResolvedValue(null);
     vi.mocked(requestWebsiteSignIn).mockResolvedValue(TOKENS);
     vi.mocked(getCachedAccountInboxForUser).mockResolvedValue(null);
-    vi.mocked(setCachedAccountInboxForUser).mockResolvedValue(true);
+    vi.mocked(publishAccountInboxForUser).mockImplementation(async (_userId, inbox) => inbox);
     vi.mocked(listAccountInbox).mockResolvedValue(accountInbox([]));
     vi.mocked(markAccountInboxItemsSeen).mockImplementation(async (_accessToken, _items) =>
       accountInbox([], {
@@ -633,7 +634,7 @@ describe("PopupApp social mutations", () => {
     ).toBe("Open settings");
   });
 
-  it("refreshes same-owner Watch History without remounting the visible panel", async () => {
+  it("does not refetch or remount Watch History when the initial social sync finishes", async () => {
     let resolveDirectory: ((value: SocialDirectory) => void) | null = null;
     vi.mocked(listSocialDirectory).mockImplementation(() =>
       new Promise<SocialDirectory>((resolve) => {
@@ -650,14 +651,45 @@ describe("PopupApp social mutations", () => {
       await Promise.resolve();
     });
 
-    await waitFor(() => {
-      expect(
-        view.container.querySelector('[aria-label="Watch History"]')?.getAttribute(
-          "data-refresh-signal",
-        ),
-      ).toBe("1");
-    });
+    await waitFor(() => expect(setCachedSocialSnapshotForUser).toHaveBeenCalled());
+    expect(visiblePanel?.getAttribute("data-refresh-signal")).toBe("0");
     expect(view.container.querySelector('[aria-label="Watch History"]')).toBe(visiblePanel);
+  });
+
+  it("refreshes history once when the same owner's credentials change, not when their profile changes", async () => {
+    const view = await renderPopupApp();
+    root = view.root;
+    const panel = view.container.querySelector('[aria-label="Watch History"]');
+    const listeners = vi.mocked(chrome.storage.onChanged.addListener).mock.calls.map(([listener]) => listener);
+    const publish = async (oldValue: ExtensionAuthTokens, newValue: ExtensionAuthTokens) => {
+      await act(async () => {
+        for (const listener of listeners) listener({ authTokens: { oldValue, newValue } }, "local");
+      });
+    };
+    const refreshed = { ...TOKENS, accessToken: "access-2", refreshToken: "refresh-2" };
+    await publish(TOKENS, refreshed);
+    expect(panel?.getAttribute("data-refresh-signal")).toBe("1");
+    expect(view.container.querySelector('[aria-label="Watch History"]')).toBe(panel);
+    await publish(refreshed, { ...refreshed, user: { ...refreshed.user, displayName: "Updated" } });
+    expect(panel?.getAttribute("data-refresh-signal")).toBe("1");
+    await publish(refreshed, { ...refreshed, accessToken: "access-3" });
+    expect(panel?.getAttribute("data-refresh-signal")).toBe("2");
+  });
+
+  it("refreshes history when startup replaces cached credentials before social loading finishes", async () => {
+    let resolveSession!: (value: ExtensionAuthTokens) => void;
+    vi.mocked(requestCurrentExtensionSession).mockImplementation(() => new Promise((resolve) => { resolveSession = resolve; }));
+    vi.mocked(listSocialDirectory).mockImplementation(() => new Promise(() => {}));
+    const view = await renderElement(<PopupApp />);
+    root = view.root;
+    await waitFor(() => expect(resolveSession).toBeTypeOf("function"));
+    const panel = view.container.querySelector('[aria-label="Watch History"]');
+    expect(panel?.getAttribute("data-refresh-signal")).toBe("0");
+    await act(async () => {
+      resolveSession({ ...TOKENS, accessToken: "renewed-access", refreshToken: "renewed-refresh" });
+    });
+    expect(panel?.getAttribute("data-refresh-signal")).toBe("1");
+    expect(view.container.querySelector('[aria-label="Watch History"]')).toBe(panel);
   });
 
   it("sends one recent-person request and refreshes the canonical social snapshot", async () => {
@@ -821,13 +853,13 @@ describe("PopupApp social mutations", () => {
         { kind: "room-invite", id: INBOX_INVITE_ID },
       ]),
     );
-    await waitFor(() => expect(setCachedAccountInboxForUser).toHaveBeenCalledWith(VIEWER_ID, seen));
+    await waitFor(() => expect(publishAccountInboxForUser).toHaveBeenCalledWith(VIEWER_ID, seen, expect.any(Object)));
     expect(markAccountInboxItemsSeen).toHaveBeenCalledTimes(1);
     const inboxTab = await findButton(view.container, "Inbox");
     await waitFor(() => expect(inboxTab.querySelector(".popup-tab-count")).toBeNull());
   });
 
-  it("ignores a late mark-seen response after a newer inbox refresh", async () => {
+  it("uses the canonical publication result for a late mark-seen response after a newer inbox refresh", async () => {
     const unseen = accountInbox(
       [inboxFriendRequest(INCOMING_FRIENDSHIP_ID, INCOMING_USER_ID, "Incoming", null)],
       {
@@ -852,6 +884,7 @@ describe("PopupApp social mutations", () => {
       activeRoomInvites: 0,
       pendingFriendRequests: 0,
     });
+    refreshed.meta.serverTime = "2026-08-09T12:00:01.000Z";
     let resolveSeen!: (value: AccountInboxResponse) => void;
     vi.mocked(listSocialDirectory).mockResolvedValue(directory());
     vi.mocked(listAccountInbox).mockResolvedValueOnce(unseen).mockResolvedValueOnce(refreshed);
@@ -870,15 +903,16 @@ describe("PopupApp social mutations", () => {
     await waitFor(() => expect(listAccountInbox).toHaveBeenCalledTimes(2));
     await waitFor(() => expect(view.container.textContent).toContain("Refreshed person"));
     await waitFor(() =>
-      expect(setCachedAccountInboxForUser).toHaveBeenCalledWith(VIEWER_ID, refreshed),
+      expect(publishAccountInboxForUser).toHaveBeenCalledWith(VIEWER_ID, refreshed, expect.any(Object)),
     );
-    vi.mocked(setCachedAccountInboxForUser).mockClear();
+    vi.mocked(publishAccountInboxForUser).mockClear();
+    vi.mocked(publishAccountInboxForUser).mockResolvedValue(refreshed);
 
     resolveSeen(staleSeen);
     await flushPromises();
 
     expect(view.container.textContent).toContain("Refreshed person");
-    expect(setCachedAccountInboxForUser).not.toHaveBeenCalledWith(VIEWER_ID, staleSeen);
+    expect(publishAccountInboxForUser).toHaveBeenCalledWith(VIEWER_ID, staleSeen, expect.any(Object));
   });
 });
 

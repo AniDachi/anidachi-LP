@@ -143,6 +143,15 @@ describe("RoomPeopleSection", () => {
 			view.container.querySelectorAll(".room-people-entry"),
 		).toHaveLength(3);
 		expect(view.container.querySelector(".room-people-host-divider")).toBeNull();
+		expect(
+			view.container.querySelector(".room-people-heading-icon"),
+		).toBeInstanceOf(SVGElement);
+		expect(
+			view.container.querySelector(".room-people-heading-label")?.textContent,
+		).toBe("People");
+		expect(
+			view.container.querySelector(".room-people-count")?.textContent,
+		).toBe("1/6 in room");
 
 		await unmount(view.root);
 	});

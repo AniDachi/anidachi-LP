@@ -98,34 +98,53 @@ export function isStaticAssetPath(pathname: string): boolean {
 }
 
 function canBearerBypassStagingGate(pathname: string, method: string): boolean {
+  if (pathname.startsWith("/api/internal/") && method === "POST") {
+    return true;
+  }
   if (pathname === "/api/me" && method === "GET") return true;
   if (pathname === "/api/me/profile" && method === "PATCH") return true;
   if (pathname === "/api/friends" && method === "GET") return true;
   if (pathname === "/api/friends/requests" && method === "POST") return true;
-  if (/^\/api\/friends\/requests\/[^/]+\/accept$/.test(pathname) && method === "POST") {
+	if (
+		/^\/api\/friends\/requests\/[^/]+\/accept$/.test(pathname) &&
+		method === "POST"
+	) {
     return true;
   }
-  if (/^\/api\/friends\/requests\/[^/]+\/decline$/.test(pathname) && method === "POST") {
+	if (
+		/^\/api\/friends\/requests\/[^/]+\/decline$/.test(pathname) &&
+		method === "POST"
+	) {
     return true;
   }
-  if (/^\/api\/friends\/[^/]+$/.test(pathname) && method === "DELETE") return true;
+	if (/^\/api\/friends\/[^/]+$/.test(pathname) && method === "DELETE")
+		return true;
   if (/^\/api\/users\/[^/]+\/block$/.test(pathname) && method === "POST") {
     return true;
   }
   if (pathname === "/api/recent-people" && method === "GET") return true;
-  if (/^\/api\/recent-people\/[^/]+\/hide$/.test(pathname) && method === "POST") {
+	if (
+		/^\/api\/recent-people\/[^/]+\/hide$/.test(pathname) &&
+		method === "POST"
+	) {
     return true;
   }
   if (pathname === "/api/groups" && (method === "GET" || method === "POST")) {
     return true;
   }
-  if (/^\/api\/groups\/[^/]+$/.test(pathname) && (method === "PATCH" || method === "DELETE")) {
+	if (
+		/^\/api\/groups\/[^/]+$/.test(pathname) &&
+		(method === "PATCH" || method === "DELETE")
+	) {
     return true;
   }
   if (/^\/api\/groups\/[^/]+\/members$/.test(pathname) && method === "POST") {
     return true;
   }
-  if (/^\/api\/groups\/[^/]+\/members\/[^/]+$/.test(pathname) && method === "DELETE") {
+	if (
+		/^\/api\/groups\/[^/]+\/members\/[^/]+$/.test(pathname) &&
+		method === "DELETE"
+	) {
     return true;
   }
   if (pathname === "/api/invites" && (method === "GET" || method === "POST")) {
@@ -148,7 +167,10 @@ function canBearerBypassStagingGate(pathname: string, method: string): boolean {
   ) {
     return true;
   }
-  if (pathname === "/api/watch-library" && (method === "GET" || method === "DELETE")) {
+	if (
+		pathname === "/api/watch-library" &&
+		(method === "GET" || method === "DELETE")
+	) {
     return true;
   }
   if (pathname === "/api/watch-progress/reconcile" && method === "POST") {
@@ -173,18 +195,36 @@ function canBearerBypassStagingGate(pathname: string, method: string): boolean {
   if (pathname === "/api/watch-history/v2/rooms" && method === "POST") {
     return true;
   }
+  if (pathname === "/api/watch-history/v2/title-episodes" && method === "GET") {
+    return true;
+  }
+  if (pathname === "/api/watch-history/v3" && method === "GET") return true;
+  if (method === "GET" && [
+    "/api/watch-history/v3/browse",
+    "/api/watch-history/v3/browse/title-episodes",
+    "/api/watch-history/v3/browse/sessions",
+    "/api/watch-history/v3/browse/options",
+    "/api/watch-history/v3/browse/catalog",
+  ].includes(pathname)) return true;
+  if (pathname === "/api/watch-history/v3/progress" && method === "POST") return true;
+  if (
+    pathname === "/api/watch-history/v3/preferences" &&
+    (method === "GET" || method === "PATCH")
+  ) return true;
+  if (pathname === "/api/watch-history/v3/delete" && method === "POST") return true;
+  if (pathname === "/api/watch-history/v3/rooms" && method === "POST") return true;
+  if (pathname === "/api/watch-history/v3/title-episodes" && method === "GET") return true;
+  if (pathname === "/api/watch-history/v3/catalog/attempt" && method === "POST") return true;
+  if (pathname === "/api/watch-history/v3/catalog" && method === "POST") return true;
   if (pathname === "/api/rooms" && method === "POST") return true;
   if (/^\/api\/rooms\/[^/]+$/.test(pathname) && method === "GET") return true;
   if (/^\/api\/rooms\/[^/]+\/connect$/.test(pathname) && method === "POST") {
     return true;
   }
+	if (/^\/api\/rooms\/[^/]+\/depart$/.test(pathname) && method === "POST") {
+		return true;
+	}
   if (/^\/api\/rooms\/[^/]+\/end$/.test(pathname) && method === "POST") {
-    return true;
-  }
-  if (/^\/api\/internal\/rooms\/[^/]+\/ended$/.test(pathname) && method === "POST") {
-    return true;
-  }
-  if (/^\/api\/internal\/rooms\/[^/]+\/source$/.test(pathname) && method === "POST") {
     return true;
   }
   return false;

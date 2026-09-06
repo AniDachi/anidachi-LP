@@ -3,6 +3,19 @@ import { bindWatchHistoryPlaybackListeners } from "../src/watch-history-listener
 import type { WatchHistoryController } from "../src/watch-history-controller";
 
 describe("watch history playback listener binding", () => {
+  it("marks only real playing events as catalog interactions", async () => {
+    const video = document.createElement("video");
+    const interaction = vi.fn(async () => undefined);
+    const cleanup = bindWatchHistoryPlaybackListeners({ video, controller: {
+      observe: async () => undefined, recover: async () => undefined, dispose: async () => undefined,
+      noteSeeking: async () => undefined, notePlaybackInteraction: interaction,
+    }, setInterval: () => 1, clearInterval: () => undefined });
+    video.dispatchEvent(new Event("playing"));
+    expect(interaction).toHaveBeenCalledOnce();
+    cleanup();
+    video.dispatchEvent(new Event("playing"));
+    expect(interaction).toHaveBeenCalledOnce();
+  });
   it("captures the latest position when the document becomes hidden", async () => {
     const video = document.createElement("video");
     const onObserve = vi.fn<WatchHistoryController["observe"]>(async () => undefined);

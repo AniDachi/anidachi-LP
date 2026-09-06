@@ -157,7 +157,8 @@ export async function notifyWebParticipantDeparted(
   const acknowledgement = RoomDepartureAcknowledgementSchema.safeParse(body);
   if (
     !acknowledgement.success ||
-    acknowledgement.data.outcome === "room_ended"
+    (acknowledgement.data.outcome !== "departed" &&
+      acknowledgement.data.outcome !== "stale")
   ) {
     throw new Error(
       "Participant departure Web callback returned an invalid acknowledgement",

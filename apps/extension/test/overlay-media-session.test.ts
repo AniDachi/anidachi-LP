@@ -7,24 +7,37 @@ import {
 } from "../src/overlay-media-session";
 
 describe("overlay P2P media session state", () => {
-  it("starts every new room with camera off while preserving same-room reconnects", () => {
+  it("keeps the mounted camera intent authoritative during a same-room reconnect", () => {
     expect(DEFAULT_LOCAL_CAMERA_ENABLED).toBe(false);
     expect(
       getCameraEnabledForRoomConnection({
-        currentCameraEnabled: true,
-        sameRoomReconnect: false,
+        currentCameraEnabled: false,
+        persistedCameraEnabled: true,
+        sameRoomReconnect: true,
       }),
     ).toBe(false);
     expect(
       getCameraEnabledForRoomConnection({
         currentCameraEnabled: true,
+        persistedCameraEnabled: false,
         sameRoomReconnect: true,
+      }),
+    ).toBe(true);
+  });
+
+  it("restores camera intent from the confirmed session after a full document remount", () => {
+    expect(
+      getCameraEnabledForRoomConnection({
+        currentCameraEnabled: false,
+        persistedCameraEnabled: true,
+        sameRoomReconnect: false,
       }),
     ).toBe(true);
     expect(
       getCameraEnabledForRoomConnection({
-        currentCameraEnabled: false,
-        sameRoomReconnect: true,
+        currentCameraEnabled: true,
+        persistedCameraEnabled: false,
+        sameRoomReconnect: false,
       }),
     ).toBe(false);
   });

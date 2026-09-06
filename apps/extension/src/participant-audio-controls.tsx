@@ -1,19 +1,9 @@
 import { Volume2, VolumeX } from "lucide-react";
-import {
-	type CSSProperties,
-	type KeyboardEvent,
-	type PointerEvent,
-	useEffect,
-	useRef,
-} from "react";
+import { type CSSProperties, useEffect, useRef, useState } from "react";
 import {
 	overlayHotkeyBoundaryProps,
 	overlayInteractionBoundaryProps,
 } from "./overlay-interaction-boundary";
-import {
-	getParticipantVolumeFromKey,
-	getParticipantVolumeFromPointer,
-} from "./participant-volume-geometry";
 import {
 	applyParticipantAudioSliderValue,
 	getParticipantAudioSliderValue,
@@ -42,6 +32,9 @@ export function ParticipantAudioInlineControl({
 	const sliderValue = Math.round(
 		getParticipantAudioSliderValue(preference) * 100,
 	);
+	const style = {
+		"--participant-volume-progress": `${sliderValue}%`,
+	} as CSSProperties;
 
 	const finishAdjustment = () => {
 		if (!adjustmentActiveRef.current) {
@@ -61,11 +54,14 @@ export function ParticipantAudioInlineControl({
 	return (
 		<div
 			className="participant-audio-inline-control"
+			data-muted={preference.muted ? "true" : "false"}
+			style={style}
 			{...overlayHotkeyBoundaryProps}
 			{...overlayInteractionBoundaryProps}
 		>
 			<input
 				aria-label={`${displayName} volume`}
+				aria-valuetext={preference.muted ? "Muted" : `${sliderValue}%`}
 				max={100}
 				min={0}
 				onChange={(event) => {
@@ -109,113 +105,80 @@ export function ParticipantAudioContourControl({
 	onChange,
 	preference,
 }: ParticipantAudioControlProps) {
-	const sliderRef = useRef<HTMLDivElement | null>(null);
-	const capturedPointerIdRef = useRef<number | null>(null);
-	const latestValueRef = useRef(
-		Math.round(getParticipantAudioSliderValue(preference) * 100),
-	);
+	const [adjusting, setAdjusting] = useState(false);
+	const adjustmentActiveRef = useRef(false);
+	const onAdjustmentEndRef = useRef(onAdjustmentEnd);
+	onAdjustmentEndRef.current = onAdjustmentEnd;
 	const sliderValue = Math.round(
 		getParticipantAudioSliderValue(preference) * 100,
 	);
-	latestValueRef.current = sliderValue;
-
-	const applyValue = (value: number) => {
-		latestValueRef.current = value;
-		onChange(applyParticipantAudioSliderValue(preference, value / 100));
-	};
-
-	const readPointerValue = (
-		event: PointerEvent<HTMLDivElement>,
-		captured: boolean,
-	) => {
-		const rect = event.currentTarget.getBoundingClientRect();
-		return getParticipantVolumeFromPointer({
-			captured,
-			centerX: rect.left + rect.width / 2,
-			centerY: rect.top + rect.height / 2,
-			pointerX: event.clientX,
-			pointerY: event.clientY,
-			previousValue: latestValueRef.current,
-			radius: Math.max(0, Math.min(rect.width, rect.height) / 2 - 4),
-		});
-	};
 
 	const finishAdjustment = () => {
-		if (capturedPointerIdRef.current === null) {
+		if (!adjustmentActiveRef.current) {
 			return;
 		}
-		capturedPointerIdRef.current = null;
-		onAdjustmentEnd?.();
+		adjustmentActiveRef.current = false;
+		setAdjusting(false);
+		onAdjustmentEndRef.current?.();
 	};
 
 	useEffect(
 		() => () => {
-			if (capturedPointerIdRef.current !== null) {
-				onAdjustmentEnd?.();
+			if (adjustmentActiveRef.current) {
+				adjustmentActiveRef.current = false;
+				onAdjustmentEndRef.current?.();
 			}
 		},
-		[onAdjustmentEnd],
+		[],
 	);
 
-	const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-		const nextValue = getParticipantVolumeFromKey(
-			latestValueRef.current,
-			event.key,
-		);
-		if (nextValue === null) {
-			return;
-		}
-		event.preventDefault();
-		applyValue(nextValue);
-	};
-
 	const style = {
-		"--participant-volume-progress": `${sliderValue * 2.7}deg`,
+		"--participant-volume-progress": `${sliderValue}%`,
 	} as CSSProperties;
 
 	return (
 		<div
-			className={`participant-audio-contour-control ${
+			className={`participant-audio-video-control ${
 				preference.muted ? "muted" : ""
 			}`}
+			data-adjusting={adjusting ? "true" : "false"}
 			style={style}
 			{...overlayHotkeyBoundaryProps}
 			{...overlayInteractionBoundaryProps}
 		>
-			<div
+			<input
 				aria-label={`${displayName} volume`}
 				aria-valuemax={100}
 				aria-valuemin={0}
 				aria-valuenow={sliderValue}
 				aria-valuetext={preference.muted ? "Muted" : `${sliderValue}%`}
-				className="participant-audio-contour-slider"
-				onKeyDown={handleKeyDown}
+				className="participant-audio-video-slider"
+				max={100}
+				min={0}
+				onBlur={finishAdjustment}
+				onChange={(event) => {
+					onChange(
+						applyParticipantAudioSliderValue(
+							preference,
+							Number(event.currentTarget.value) / 100,
+						),
+					);
+				}}
 				onLostPointerCapture={finishAdjustment}
 				onPointerCancel={finishAdjustment}
 				onPointerDown={(event) => {
 					if (event.button !== 0 || !event.isPrimary) {
 						return;
 					}
-					const nextValue = readPointerValue(event, false);
-					if (nextValue === null) {
-						return;
+					if (!adjustmentActiveRef.current) {
+						adjustmentActiveRef.current = true;
+						setAdjusting(true);
+						onAdjustmentStart?.();
 					}
-					capturedPointerIdRef.current = event.pointerId;
 					event.currentTarget.setPointerCapture?.(event.pointerId);
-					onAdjustmentStart?.();
-					applyValue(nextValue);
-				}}
-				onPointerMove={(event) => {
-					if (capturedPointerIdRef.current !== event.pointerId) {
-						return;
-					}
-					const nextValue = readPointerValue(event, true);
-					if (nextValue !== null && nextValue !== latestValueRef.current) {
-						applyValue(nextValue);
-					}
 				}}
 				onPointerUp={(event) => {
-					if (capturedPointerIdRef.current !== event.pointerId) {
+					if (!adjustmentActiveRef.current) {
 						return;
 					}
 					if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
@@ -223,13 +186,12 @@ export function ParticipantAudioContourControl({
 					}
 					finishAdjustment();
 				}}
-				ref={sliderRef}
-				role="slider"
-				tabIndex={0}
-			>
-				<span aria-hidden="true" className="participant-audio-contour-arc" />
-			</div>
+				step={1}
+				type="range"
+				value={sliderValue}
+			/>
 			<ParticipantMuteButton
+				className="participant-audio-video-mute"
 				displayName={displayName}
 				onChange={onChange}
 				preference={preference}
@@ -239,19 +201,20 @@ export function ParticipantAudioContourControl({
 }
 
 function ParticipantMuteButton({
+	className,
 	displayName,
 	onChange,
 	preference,
 }: Pick<
 	ParticipantAudioControlProps,
 	"displayName" | "onChange" | "preference"
->) {
+> & { className?: string }) {
 	const muted = preference.muted;
 	const Icon = muted ? VolumeX : Volume2;
 	return (
 		<button
 			aria-label={`${muted ? "Unmute" : "Mute"} ${displayName}`}
-			className="participant-audio-mute"
+			className={`participant-audio-mute${className ? ` ${className}` : ""}`}
 			onClick={() => onChange(toggleParticipantAudioMute(preference))}
 			title={`${muted ? "Unmute" : "Mute"} ${displayName}`}
 			type="button"

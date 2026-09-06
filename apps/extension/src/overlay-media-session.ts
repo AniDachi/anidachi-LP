@@ -16,6 +16,7 @@ interface P2PMediaSessionState {
 
 interface CameraEnabledForRoomConnectionInput {
   currentCameraEnabled: boolean;
+  persistedCameraEnabled: boolean;
   sameRoomReconnect: boolean;
 }
 
@@ -23,9 +24,13 @@ export const DEFAULT_LOCAL_CAMERA_ENABLED = false;
 
 export function getCameraEnabledForRoomConnection({
   currentCameraEnabled,
+  persistedCameraEnabled,
   sameRoomReconnect,
 }: CameraEnabledForRoomConnectionInput): boolean {
-  return sameRoomReconnect ? currentCameraEnabled : DEFAULT_LOCAL_CAMERA_ENABLED;
+  // The mounted overlay owns the freshest user intent during an in-document
+  // reconnect. A new document has no such local authority and restores from
+  // the background-owned room session instead.
+  return sameRoomReconnect ? currentCameraEnabled : persistedCameraEnabled;
 }
 
 interface PersistRoomSessionForCurrentJoinInput<T> {

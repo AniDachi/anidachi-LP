@@ -1,4 +1,4 @@
-export type RoomEventClass = "ice" | "sdp" | "control";
+export type RoomEventClass = "ice" | "sdp" | "control" | "reaction";
 
 export interface RoomRateLimitDecision {
 	allowed: boolean;
@@ -12,6 +12,7 @@ const CLASS_LIMITS: Record<RoomEventClass, number> = {
 	ice: 80,
 	sdp: 8,
 	control: 40,
+	reaction: TOTAL_LIMIT,
 };
 
 export class RoomRateLimiter {
@@ -22,6 +23,7 @@ export class RoomRateLimiter {
 		ice: 0,
 		sdp: 0,
 		control: 0,
+		reaction: 0,
 	};
 
 	consume(eventClass: RoomEventClass, now = Date.now()): RoomRateLimitDecision {
@@ -68,6 +70,7 @@ export class RoomRateLimiter {
 		this.classes.ice = 0;
 		this.classes.sdp = 0;
 		this.classes.control = 0;
+		this.classes.reaction = 0;
 	}
 }
 

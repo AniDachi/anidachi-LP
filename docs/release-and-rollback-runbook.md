@@ -135,6 +135,30 @@ needed; apply the reviewed forward cleanup and verify old-runtime writes. After
 the consumer deploy, web rollback comes first and database cleanup is optional.
 Do not create the cleanup migration speculatively during a healthy release.
 
+### Watch History v3 coordinated transition
+
+Schema-3 canonical catalog/progress was activated on staging on 2026-09-05 through
+ordered PRs #265 then #264; see `docs/watch-history-v3-staging-verification.md`.
+Main/production was not promoted. The reviewed migration intentionally clears test history, advances history generation,
+and makes old SQL writers terminal. Therefore the old Web deployment alone is not a
+valid rollback after the migration is applied.
+
+Before a separately authorized transition, record the exact environment, reviewed
+history-relation counts, inbound foreign keys/triggers, migration list, deployed
+Web/extension versions, preservation checks, and backup/rollback anchor. Quiesce
+only history writes; do not stop room/media behavior. Apply the exact reviewed
+migration, activate the matching v3 Web runtime, verify v3 reads/writes and
+unrelated product state, and only then update explicitly approved tester folders to
+the matching extension hash. Schema-2 requests and old cached outbox work must fail
+terminally and create no settings, sessions, participants, or progress.
+
+If activation fails, keep the short history-only upgrade state while preparing a
+reviewed forward fix and matching runtime. A restore requires separate approval and
+must be scoped so newer account, room, subscription, social, invite, Recent People,
+and settings data is not lost. Never reset the whole remote database or promise
+recovery of intentionally discarded test progress. The detailed local evidence and
+remaining acceptance boundary are in `docs/watch-history-v3-local-verification.md`.
+
 ## Incident Note Template
 
 ```md

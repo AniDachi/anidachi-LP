@@ -57,6 +57,19 @@ describe("RoomRateLimiter", () => {
 		expect(limiter.consume("sdp", 0).allowed).toBe(false);
 	});
 
+	it("restores the reaction budget after the active window", () => {
+		const limiter = new RoomRateLimiter();
+		for (let index = 0; index < 120; index += 1) {
+			expect(limiter.consume("reaction", 0).allowed).toBe(true);
+		}
+
+		expect(limiter.consume("reaction", 10_000)).toEqual({
+			allowed: true,
+			close: false,
+			retryAfterMs: 0,
+		});
+	});
+
 	it("aggregates the existing total frame budget across replacement sockets for one subject", () => {
 		const limiters = new RoomSubjectRateLimiters();
 		const originalSocket = limiters.forSubject("member-1");

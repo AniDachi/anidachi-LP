@@ -7,6 +7,7 @@ EXPERIMENT_DIR="$ROOT_DIR/anidachi-extension-experiment"
 PACKAGE_EXTENSION_VERSION="$(node -e "console.log(require('$ROOT_DIR/apps/extension/package.json').version)")"
 
 WXT_EXTENSION_CHANNEL=production
+NODE_ENV=production
 : "${WXT_EXTENSION_VERSION:=$PACKAGE_EXTENSION_VERSION}"
 WXT_WEB_HTTP_BASE=https://www.anidachi.app
 WXT_API_HTTP_BASE=https://anidachi-api-production.vladislav-gul7.workers.dev
@@ -20,6 +21,7 @@ if [[ -z "${WXT_VAPID_PUBLIC_KEY:-}" ]]; then
 fi
 
 export WXT_EXTENSION_CHANNEL
+export NODE_ENV
 export WXT_EXTENSION_VERSION
 export WXT_WEB_HTTP_BASE
 export WXT_API_HTTP_BASE

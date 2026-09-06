@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  captureRoomSessionIdentity,
+  clearRoomSessionRecoveryHint,
   clearRoomSessionForClosedTab,
   confirmRoomSessionForTab,
   discardPreparedRoomSessionIfMatch,
@@ -7,15 +9,20 @@ import {
   handleRoomSessionStorageMessage,
   loadRoomSessionForTab,
   prepareRoomSessionForTab,
+  roomSessionIdentityMatches,
   ROOM_SESSION_INSTALL_ID_STORAGE_KEY as INSTALL_ID_STORAGE_KEY,
   migrateLegacyRoomSession,
+  rememberRoomSessionRecoveryHint,
+  ROOM_SESSION_RECOVERY_HINT_STORAGE_KEY,
   ROOM_SESSION_STORAGE_MESSAGE_TYPE as ROOM_SESSION_MESSAGE_TYPE,
   type RoomSessionStorageMessage as RoomSessionMessage,
   type RoomSessionRecord,
   type RoomSessionStorageResponse as RoomSessionResponse,
   removeRoomSessionForTab,
+  updateRoomSessionCameraEnabled,
   updateRoomSessionVoiceMode,
 } from "../src/room-session-storage";
+import { persistRoomJoinDefaults } from "../src/room-media-defaults";
 
 interface StorageAreaLike {
   get(key: string): Promise<Record<string, unknown>>;
@@ -116,6 +123,37 @@ function expectRecord(response: RoomSessionResponse): RoomSessionRecord {
 }
 
 describe("background-owned room session storage", () => {
+  it("matches the exact room, account, and participant session identity", () => {
+    const record: RoomSessionRecord = {
+      version: 1,
+      revision: 1,
+      roomId: "room-a",
+      ownerUserId: "user-a",
+      participantSessionId: "participant-session-a",
+      cameraEnabled: false,
+      voiceMode: "push-to-talk",
+    };
+    const identity = captureRoomSessionIdentity(record);
+    expect(identity).not.toBeNull();
+    if (!identity) {
+      throw new Error("Expected a captured room session identity");
+    }
+
+    expect(roomSessionIdentityMatches(record, identity)).toBe(true);
+    expect(
+      roomSessionIdentityMatches(
+        { ...record, participantSessionId: "participant-session-b" },
+        identity,
+      ),
+    ).toBe(false);
+    expect(
+      roomSessionIdentityMatches({ ...record, ownerUserId: "user-b" }, identity),
+    ).toBe(false);
+    expect(
+      roomSessionIdentityMatches({ ...record, roomId: "room-b" }, identity),
+    ).toBe(false);
+  });
+
   it("loads the trusted confirmed record before closed-tab cleanup", async () => {
     const dependencies = backgroundDependencies();
     const record = expectRecord(
@@ -129,6 +167,208 @@ describe("background-owned room session storage", () => {
     await expect(loadRoomSessionForTab(2, dependencies)).resolves.toEqual(record);
     await expect(clearRoomSessionForClosedTab(2, record, dependencies)).resolves.toBe(true);
     await expect(loadRoomSessionForTab(2, dependencies)).resolves.toBeNull();
+  });
+
+  it("keeps the exact closed-tab identity after an extension update clears session storage", async () => {
+    const dependencies = backgroundDependencies();
+    const record = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({
+          command: "persist",
+          roomId: "room-extension-update",
+          ownerUserId: "user-a",
+        }),
+        sender(24),
+        dependencies,
+      ),
+    );
+
+    dependencies.sessionStorage = new MemoryStorageArea();
+
+    await expect(loadRoomSessionForTab(24, dependencies)).resolves.toEqual(record);
+    await expect(
+      clearRoomSessionForClosedTab(24, record, dependencies),
+    ).resolves.toBe(true);
+    await expect(loadRoomSessionForTab(24, dependencies)).resolves.toBeNull();
+  });
+
+  it("does not clear a newly confirmed session when closed-tab cleanup has no snapshot", async () => {
+    const dependencies = backgroundDependencies();
+    const replacement = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-new", ownerUserId: "user-a" }),
+        sender(22),
+        dependencies,
+      ),
+    );
+    const preparedReplacement = await prepareRoomSessionForTab(
+      22,
+      { ownerUserId: "user-a", roomId: "room-new", forceNew: true },
+      dependencies,
+    );
+
+    await expect(
+      clearRoomSessionForClosedTab(22, null, dependencies),
+    ).resolves.toBe(false);
+    await expect(loadRoomSessionForTab(22, dependencies)).resolves.toEqual(
+      replacement,
+    );
+    await expect(
+      confirmRoomSessionForTab(
+        22,
+        preparedReplacement,
+        "room-new",
+        dependencies,
+      ),
+    ).resolves.toMatchObject({
+      participantSessionId: preparedReplacement.participantSessionId,
+    });
+  });
+
+  it("persists camera intent for the same room session and resets it for a new room", async () => {
+    const dependencies = backgroundDependencies();
+    const initial = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(12),
+        dependencies,
+      ),
+    );
+    expect(initial.cameraEnabled).toBe(false);
+
+    const enabled = await updateRoomSessionCameraEnabled(initial, true, {
+      sendMessage: (value) =>
+        handleRoomSessionStorageMessage(
+          value,
+          sender(12),
+          dependencies,
+        ),
+    });
+    expect(enabled?.cameraEnabled).toBe(true);
+    await expect(loadRoomSessionForTab(12, dependencies)).resolves.toEqual(enabled);
+
+    const sameRoomCandidate = await prepareRoomSessionForTab(
+      12,
+      { ownerUserId: "user-a", roomId: "room-a" },
+      dependencies,
+    );
+    const sameRoom = await confirmRoomSessionForTab(
+      12,
+      sameRoomCandidate,
+      "room-a",
+      dependencies,
+    );
+    expect(sameRoom?.cameraEnabled).toBe(true);
+
+    const nextRoom = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-b", ownerUserId: "user-a" }),
+        sender(12),
+        dependencies,
+      ),
+    );
+    expect(nextRoom.cameraEnabled).toBe(false);
+  });
+
+  it("starts a new room from explicit microphone and camera join defaults", async () => {
+    const dependencies = backgroundDependencies();
+    await persistRoomJoinDefaults(dependencies.localStorage, "user-a", {
+      version: 1,
+      microphoneOnJoin: "open-mic",
+      cameraOnJoin: "on",
+    });
+
+    const nextRoom = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-defaults", ownerUserId: "user-a" }),
+        sender(13),
+        dependencies,
+      ),
+    );
+
+    expect(nextRoom).toMatchObject({
+      cameraEnabled: true,
+      voiceMode: "open-mic",
+    });
+  });
+
+  it("uses the last explicit camera choice only when Camera on join is Last used", async () => {
+    const dependencies = backgroundDependencies();
+    await persistRoomJoinDefaults(dependencies.localStorage, "user-a", {
+      version: 1,
+      microphoneOnJoin: "last-used",
+      cameraOnJoin: "last-used",
+    });
+    const first = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(14),
+        dependencies,
+      ),
+    );
+    await updateRoomSessionCameraEnabled(first, true, {
+      rememberPreference: true,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(14), dependencies),
+    });
+
+    const nextRoom = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-b", ownerUserId: "user-a" }),
+        sender(14),
+        dependencies,
+      ),
+    );
+    expect(nextRoom.cameraEnabled).toBe(true);
+
+    await persistRoomJoinDefaults(dependencies.localStorage, "user-a", {
+      version: 1,
+      microphoneOnJoin: "last-used",
+      cameraOnJoin: "off",
+    });
+    const forcedOff = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-c", ownerUserId: "user-a" }),
+        sender(14),
+        dependencies,
+      ),
+    );
+    expect(forcedOff.cameraEnabled).toBe(false);
+  });
+
+  it("does not replace the last explicit camera choice during an automatic safety reset", async () => {
+    const dependencies = backgroundDependencies();
+    await persistRoomJoinDefaults(dependencies.localStorage, "user-a", {
+      version: 1,
+      microphoneOnJoin: "last-used",
+      cameraOnJoin: "last-used",
+    });
+    const first = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(15),
+        dependencies,
+      ),
+    );
+    const explicitlyEnabled = await updateRoomSessionCameraEnabled(first, true, {
+      rememberPreference: true,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(15), dependencies),
+    });
+    if (!explicitlyEnabled) throw new Error("Expected enabled camera session");
+    await updateRoomSessionCameraEnabled(explicitlyEnabled, false, {
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(15), dependencies),
+    });
+
+    const nextRoom = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-b", ownerUserId: "user-a" }),
+        sender(15),
+        dependencies,
+      ),
+    );
+    expect(nextRoom.cameraEnabled).toBe(true);
   });
 
   it("drops an oversized confirmed record instead of restoring corrupt authority", async () => {
@@ -217,7 +457,7 @@ describe("background-owned room session storage", () => {
     });
   });
 
-  it("reuses the confirmed same-tab session and creates a new deliberate takeover candidate", async () => {
+  it("issues a fresh server-visible session for every new preparation", async () => {
     const dependencies = backgroundDependencies();
     const first = await prepareRoomSessionForTab(
       4,
@@ -236,8 +476,51 @@ describe("background-owned room session storage", () => {
       dependencies,
     );
 
-    expect(retry.participantSessionId).toBe(confirmed?.participantSessionId);
+    expect(retry.participantSessionId).not.toBe(confirmed?.participantSessionId);
     expect(takeover.participantSessionId).not.toBe(confirmed?.participantSessionId);
+    expect(takeover.participantSessionId).not.toBe(retry.participantSessionId);
+  });
+
+  it("preserves camera and voice state independently from a fresh admission identity", async () => {
+    const dependencies = backgroundDependencies();
+    const firstPrepared = await prepareRoomSessionForTab(
+      5,
+      { ownerUserId: "user-a", roomId: "room-a" },
+      dependencies,
+    );
+    const first = await confirmRoomSessionForTab(
+      5,
+      firstPrepared,
+      "room-a",
+      dependencies,
+    );
+    if (!first) throw new Error("Expected first room session");
+    const withCamera = await updateRoomSessionCameraEnabled(first, true, {
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(5), dependencies),
+    });
+    if (!withCamera) throw new Error("Expected camera update");
+    const withMedia = await updateRoomSessionVoiceMode(withCamera, "open-mic", {
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(5), dependencies),
+    });
+    if (!withMedia) throw new Error("Expected voice update");
+
+    const nextPrepared = await prepareRoomSessionForTab(
+      5,
+      { ownerUserId: "user-a", roomId: "room-a" },
+      dependencies,
+    );
+    expect(nextPrepared.participantSessionId).not.toBe(
+      firstPrepared.participantSessionId,
+    );
+    await expect(
+      confirmRoomSessionForTab(5, nextPrepared, "room-a", dependencies),
+    ).resolves.toMatchObject({
+      participantSessionId: nextPrepared.participantSessionId,
+      cameraEnabled: true,
+      voiceMode: "open-mic",
+    });
   });
 
   it("keeps a confirmed room until exact admission confirms its replacement", async () => {
@@ -286,7 +569,7 @@ describe("background-owned room session storage", () => {
       dependencies,
     );
 
-    expect(winner.participantSessionId).toBe(stale.participantSessionId);
+    expect(winner.participantSessionId).not.toBe(stale.participantSessionId);
     expect(winner.preparationId).not.toBe(stale.preparationId);
     await expect(
       discardPreparedRoomSessionIfMatch(8, stale, dependencies),
@@ -389,6 +672,7 @@ describe("background-owned room session storage", () => {
       roomId: "room-a",
       ownerUserId: "user-a",
       participantSessionId: "session-uuid-1",
+      cameraEnabled: false,
       voiceMode: "push-to-talk",
     });
 
@@ -522,6 +806,190 @@ describe("background-owned room session storage", () => {
       ),
     );
     expect(newRoom.voiceMode).toBe("push-to-talk");
+  });
+
+  it("starts a new room with the last Voice mode explicitly chosen by the account", async () => {
+    const dependencies = backgroundDependencies();
+    const first = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(20),
+        dependencies,
+      ),
+    );
+    const open = await updateRoomSessionVoiceMode(first, "open-mic", {
+      rememberPreference: true,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(20), dependencies),
+    });
+    expect(open?.voiceMode).toBe("open-mic");
+
+    const nextRoomCandidate = await prepareRoomSessionForTab(
+      20,
+      { ownerUserId: "user-a", roomId: null, forceNew: true },
+      dependencies,
+    );
+    const nextRoom = await confirmRoomSessionForTab(
+      20,
+      nextRoomCandidate,
+      "room-b",
+      dependencies,
+    );
+    expect(nextRoom?.voiceMode).toBe("open-mic");
+  });
+
+  it("does not replace the remembered preference during an automatic room safety reset", async () => {
+    const dependencies = backgroundDependencies();
+    const first = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(21),
+        dependencies,
+      ),
+    );
+    const open = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({
+          command: "set-voice-mode",
+          mode: "open-mic",
+          record: first,
+          rememberPreference: true,
+        }),
+        sender(21),
+        dependencies,
+      ),
+    );
+    const safelyStopped = await updateRoomSessionVoiceMode(open, "push-to-talk", {
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(21), dependencies),
+    });
+    expect(safelyStopped?.voiceMode).toBe("push-to-talk");
+
+    const nextRoom = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-b", ownerUserId: "user-a" }),
+        sender(21),
+        dependencies,
+      ),
+    );
+    expect(nextRoom.voiceMode).toBe("open-mic");
+  });
+
+  it("replaces the remembered preference after an explicit Push to talk choice", async () => {
+    const dependencies = backgroundDependencies();
+    const first = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(25),
+        dependencies,
+      ),
+    );
+    const open = await updateRoomSessionVoiceMode(first, "open-mic", {
+      rememberPreference: true,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(25), dependencies),
+    });
+    if (!open) throw new Error("Expected Open mic room session");
+    await updateRoomSessionVoiceMode(open, "push-to-talk", {
+      rememberPreference: true,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(25), dependencies),
+    });
+
+    const nextRoom = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-b", ownerUserId: "user-a" }),
+        sender(25),
+        dependencies,
+      ),
+    );
+    expect(nextRoom.voiceMode).toBe("push-to-talk");
+  });
+
+  it("does not let a stale room session replace the current account preference", async () => {
+    const dependencies = backgroundDependencies();
+    const first = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(24),
+        dependencies,
+      ),
+    );
+    await updateRoomSessionVoiceMode(first, "open-mic", {
+      rememberPreference: true,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(24), dependencies),
+    });
+    const current = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-b", ownerUserId: "user-a" }),
+        sender(24),
+        dependencies,
+      ),
+    );
+    expect(current.voiceMode).toBe("open-mic");
+
+    const staleResult = await updateRoomSessionVoiceMode(first, "push-to-talk", {
+      rememberPreference: true,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(24), dependencies),
+    });
+    expect(staleResult).toEqual(current);
+
+    const nextRoom = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-c", ownerUserId: "user-a" }),
+        sender(24),
+        dependencies,
+      ),
+    );
+    expect(nextRoom.voiceMode).toBe("open-mic");
+  });
+
+  it("keeps remembered Voice modes isolated by account across a browser restart", async () => {
+    const firstWorker = backgroundDependencies();
+    const first = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(22),
+        firstWorker,
+      ),
+    );
+    await updateRoomSessionVoiceMode(first, "open-mic", {
+      rememberPreference: true,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(22), firstWorker),
+    });
+
+    const restartedWorker = {
+      ...backgroundDependencies(),
+      localStorage: firstWorker.localStorage,
+    };
+    const accountACandidate = await prepareRoomSessionForTab(
+      22,
+      { ownerUserId: "user-a", roomId: null, forceNew: true },
+      restartedWorker,
+    );
+    const accountA = await confirmRoomSessionForTab(
+      22,
+      accountACandidate,
+      "room-b",
+      restartedWorker,
+    );
+    const accountBCandidate = await prepareRoomSessionForTab(
+      23,
+      { ownerUserId: "user-b", roomId: null, forceNew: true },
+      restartedWorker,
+    );
+    const accountB = await confirmRoomSessionForTab(
+      23,
+      accountBCandidate,
+      "room-c",
+      restartedWorker,
+    );
+
+    expect(accountA?.voiceMode).toBe("open-mic");
+    expect(accountB?.voiceMode).toBe("push-to-talk");
   });
 
   it("fails closed and clears a record when the current user is missing", async () => {
@@ -673,9 +1141,189 @@ describe("background-owned room session storage", () => {
     expect(currentCleanup).toEqual({ ok: true, record: null });
     expect(dependencies.sessionStorage.values.size).toBe(0);
   });
+
+  it("clears departure state by stable identity after mutable updates and preserves a replacement", async () => {
+    const dependencies = backgroundDependencies();
+    const captured = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(40),
+        dependencies,
+      ),
+    );
+    const updated = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({
+          command: "set-camera-enabled",
+          enabled: true,
+          record: captured,
+        }),
+        sender(40),
+        dependencies,
+      ),
+    );
+    expect(updated).toMatchObject({ revision: 2, cameraEnabled: true });
+
+    await expect(
+      handleRoomSessionStorageMessage(
+        {
+          type: ROOM_SESSION_MESSAGE_TYPE,
+          command: "clear-departure-if-match",
+          record: captured,
+        } as unknown as RoomSessionMessage,
+        sender(40),
+        dependencies,
+      ),
+    ).resolves.toEqual({ ok: true, record: null });
+
+    const replacementPrepared = await prepareRoomSessionForTab(
+      40,
+      { ownerUserId: "user-a", roomId: "room-a", forceNew: true },
+      dependencies,
+    );
+    const replacement = await confirmRoomSessionForTab(
+      40,
+      replacementPrepared,
+      "room-a",
+      dependencies,
+    );
+    if (!replacement) throw new Error("Expected a replacement room session");
+
+    await expect(
+      handleRoomSessionStorageMessage(
+        {
+          type: ROOM_SESSION_MESSAGE_TYPE,
+          command: "clear-departure-if-match",
+          record: captured,
+        } as unknown as RoomSessionMessage,
+        sender(40),
+        dependencies,
+      ),
+    ).resolves.toEqual({ ok: true, record: replacement });
+    await expect(loadRoomSessionForTab(40, dependencies)).resolves.toEqual(
+      replacement,
+    );
+  });
 });
 
 describe("legacy page room session migration", () => {
+  it("restores the room immediately after extension session storage is cleared", async () => {
+    const dependencies = backgroundDependencies();
+    const pageSessionStorage = new PageSessionStorage();
+    expect(
+      await rememberRoomSessionRecoveryHint("room-after-update", "user-a", {
+        pageSessionStorage,
+        sendMessage: (runtimeMessage) =>
+          handleRoomSessionStorageMessage(runtimeMessage, sender(51), dependencies),
+      }),
+    ).toBe(true);
+
+    const record = await migrateLegacyRoomSession("user-a", {
+      pageSessionStorage,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(51), dependencies),
+    });
+
+    expect(record).toEqual({
+      version: 1,
+      revision: 1,
+      roomId: "room-after-update",
+      ownerUserId: "user-a",
+      participantSessionId: "session-uuid-2",
+      cameraEnabled: false,
+      voiceMode: "push-to-talk",
+    });
+    expect(pageSessionStorage.values).toEqual(
+      new Map([
+        [
+          ROOM_SESSION_RECOVERY_HINT_STORAGE_KEY,
+          JSON.stringify({
+            version: 1,
+            roomId: "room-after-update",
+            accountScope: "recovery-uuid-1",
+          }),
+        ],
+      ]),
+    );
+  });
+
+  it("does not restore a recovery hint after the authenticated account changes", async () => {
+    const dependencies = backgroundDependencies();
+    const pageSessionStorage = new PageSessionStorage();
+    expect(
+      await rememberRoomSessionRecoveryHint(
+        "room-owned-by-user-a",
+        "user-a",
+        {
+          pageSessionStorage,
+          sendMessage: (runtimeMessage) =>
+            handleRoomSessionStorageMessage(
+              runtimeMessage,
+              sender(53),
+              dependencies,
+            ),
+        },
+      ),
+    ).toBe(true);
+
+    await expect(
+      migrateLegacyRoomSession("user-b", {
+        pageSessionStorage,
+        sendMessage: (runtimeMessage) =>
+          handleRoomSessionStorageMessage(runtimeMessage, sender(53), dependencies),
+      }),
+    ).resolves.toBeNull();
+    expect(pageSessionStorage.values.size).toBe(0);
+    expect(dependencies.sessionStorage.values.size).toBe(0);
+  });
+
+  it("keeps only a non-authoritative room id and opaque account scope in the page recovery hint", async () => {
+    const dependencies = backgroundDependencies();
+    const pageSessionStorage = new PageSessionStorage();
+
+    expect(
+      await rememberRoomSessionRecoveryHint("room-a", "user-a", {
+        pageSessionStorage,
+        sendMessage: (runtimeMessage) =>
+          handleRoomSessionStorageMessage(runtimeMessage, sender(54), dependencies),
+      }),
+    ).toBe(true);
+
+    const raw = pageSessionStorage.getItem(
+      ROOM_SESSION_RECOVERY_HINT_STORAGE_KEY,
+    );
+    expect(raw).toBe(
+      JSON.stringify({
+        version: 1,
+        roomId: "room-a",
+        accountScope: "recovery-uuid-1",
+      }),
+    );
+    expect(raw).not.toContain("user-a");
+    expect(raw).not.toContain("participant-session");
+
+    clearRoomSessionRecoveryHint({ pageSessionStorage });
+    expect(pageSessionStorage.values.size).toBe(0);
+  });
+
+  it("ignores and removes a malformed page recovery hint", async () => {
+    const dependencies = backgroundDependencies();
+    const pageSessionStorage = new PageSessionStorage();
+    pageSessionStorage.setItem(
+      ROOM_SESSION_RECOVERY_HINT_STORAGE_KEY,
+      JSON.stringify({ version: 1, roomId: "" }),
+    );
+
+    await expect(
+      migrateLegacyRoomSession("user-a", {
+        pageSessionStorage,
+        sendMessage: (runtimeMessage) =>
+          handleRoomSessionStorageMessage(runtimeMessage, sender(52), dependencies),
+      }),
+    ).resolves.toBeNull();
+    expect(pageSessionStorage.values.size).toBe(0);
+  });
+
   it("migrates namespaced keys through the background and deletes them after ACK", async () => {
     const dependencies = backgroundDependencies();
     const pageSessionStorage = new PageSessionStorage();
@@ -699,6 +1347,7 @@ describe("legacy page room session migration", () => {
       roomId: "room-a",
       ownerUserId: "user-a",
       participantSessionId: "session-uuid-1",
+      cameraEnabled: false,
       voiceMode: "push-to-talk",
     });
     expect(pageSessionStorage.values.size).toBe(0);
@@ -724,6 +1373,7 @@ describe("legacy page room session migration", () => {
       roomId: "legacy-room",
       ownerUserId: "user-a",
       participantSessionId: "session-uuid-1",
+      cameraEnabled: false,
       voiceMode: "push-to-talk",
     });
     expect(pageSessionStorage.values.size).toBe(0);

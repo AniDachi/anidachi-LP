@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/anidachi-auth/session";
 import {
-  getWatchHistoryPreferencesV2,
-  listWatchHistoryV2,
-} from "@/lib/anidachi-auth/watch-history-v2";
+  getWatchHistoryPreferencesV3,
+  listWatchHistoryV3,
+} from "@/lib/anidachi-auth/watch-history-v3";
 import { WatchLibraryClient } from "./watch-library-client";
 
 export const dynamic = "force-dynamic";
@@ -19,8 +19,8 @@ export default async function AccountWatchLibraryPage() {
   if (!session) redirect("/login?next=%2Faccount%2Fwatch-library");
 
   const [history, preferences] = await Promise.all([
-    listWatchHistoryV2({ userId: session.userId, limit: 24 }),
-    getWatchHistoryPreferencesV2({ userId: session.userId }),
+    listWatchHistoryV3({ userId: session.userId, limit: 24 }),
+    getWatchHistoryPreferencesV3({ userId: session.userId }),
   ]);
   return <WatchLibraryClient initialHistory={history} initialPreferences={preferences} />;
 }

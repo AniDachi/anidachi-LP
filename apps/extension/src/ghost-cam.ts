@@ -337,8 +337,8 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
           : [sessionParticipant],
         sessionParticipant.id,
         remoteVoiceParticipantIdsRef.current,
-        roomGeneration,
-        sourceGeneration,
+        roomGenerationRef.current,
+        sourceGenerationRef.current,
       );
       controller.updateParticipants(
         getMediaParticipants(sessionParticipant),
@@ -373,7 +373,6 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
     roomGeneration,
     roomId,
     shouldConnect,
-    sourceGeneration,
   ]);
 
   useEffect(() => {

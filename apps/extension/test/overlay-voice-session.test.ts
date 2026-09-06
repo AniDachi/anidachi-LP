@@ -4,6 +4,7 @@ import {
   getVoiceIndicatorParticipantIds,
   isVoiceSessionPublishing,
   reduceVoiceSession,
+  shouldResetPersistedOpenMicAfterMediaSeatLoss,
 } from "../src/overlay-voice-session";
 
 function connectedState(mode: "open-mic" | "push-to-talk" = "push-to-talk") {
@@ -103,6 +104,82 @@ describe("overlay voice session", () => {
 
     expect(reconnected.mode).toBe("open-mic");
     expect(isVoiceSessionPublishing(reconnected)).toBe(true);
+  });
+
+  it.each(["host", "guest"])(
+    "preserves the %s Open mic intent while the same-room media seat is not authoritative",
+    () => {
+      const transitioning = reduceVoiceSession(connectedState("open-mic"), {
+        type: "context",
+        listenerScope: "account-1",
+        localHasMediaSeat: false,
+        localMediaSeatAuthoritative: false,
+        roomId: "room-1",
+      });
+
+      expect(transitioning.mode).toBe("open-mic");
+      expect(transitioning.localHasMediaSeat).toBe(false);
+      expect(isVoiceSessionPublishing(transitioning)).toBe(false);
+
+      const restored = reduceVoiceSession(transitioning, {
+        type: "context",
+        listenerScope: "account-1",
+        localHasMediaSeat: true,
+        localMediaSeatAuthoritative: true,
+        roomId: "room-1",
+      });
+      expect(restored.mode).toBe("open-mic");
+      expect(isVoiceSessionPublishing(restored)).toBe(true);
+    },
+  );
+
+  it("resets Open mic when an unknown same-room seat is later authoritatively revoked", () => {
+    const transitioning = reduceVoiceSession(connectedState("open-mic"), {
+      type: "context",
+      listenerScope: "account-1",
+      localHasMediaSeat: false,
+      localMediaSeatAuthoritative: false,
+      roomId: "room-1",
+    });
+    const revoked = reduceVoiceSession(transitioning, {
+      type: "context",
+      listenerScope: "account-1",
+      localHasMediaSeat: false,
+      localMediaSeatAuthoritative: true,
+      roomId: "room-1",
+    });
+
+    expect(revoked.mode).toBe("push-to-talk");
+    expect(revoked.pushToTalkHeld).toBe(false);
+    expect(revoked.release).toBe("immediate");
+    expect(isVoiceSessionPublishing(revoked)).toBe(false);
+  });
+
+  it("clears persisted Open mic after a remount confirms there is no media seat", () => {
+    expect(
+      shouldResetPersistedOpenMicAfterMediaSeatLoss({
+        localHasMediaSeat: false,
+        persistedVoiceMode: "open-mic",
+        roomId: "room-1",
+        roomSnapshotReady: true,
+      }),
+    ).toBe(true);
+    expect(
+      shouldResetPersistedOpenMicAfterMediaSeatLoss({
+        localHasMediaSeat: false,
+        persistedVoiceMode: "open-mic",
+        roomId: "room-1",
+        roomSnapshotReady: false,
+      }),
+    ).toBe(false);
+    expect(
+      shouldResetPersistedOpenMicAfterMediaSeatLoss({
+        localHasMediaSeat: true,
+        persistedVoiceMode: "open-mic",
+        roomId: "room-1",
+        roomSnapshotReady: true,
+      }),
+    ).toBe(false);
   });
 
   it.each([

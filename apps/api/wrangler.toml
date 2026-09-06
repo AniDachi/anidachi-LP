@@ -27,6 +27,11 @@ workers_dev = true
 ANIDACHI_ENV = "staging"
 ANIDACHI_WEB_INTERNAL_BASE_URL = "https://staging.anidachi.app"
 
+[env.staging.triggers]
+# Invitation recovery now runs from staging Supabase Cron; retain the Worker
+# handler for explicit rollback, without a second active staging timer.
+crons = []
+
 [[env.staging.durable_objects.bindings]]
 name = "ROOMS"
 class_name = "RoomDurableObject"
@@ -42,6 +47,9 @@ workers_dev = true
 [env.production.vars]
 ANIDACHI_ENV = "production"
 ANIDACHI_WEB_INTERNAL_BASE_URL = "https://www.anidachi.app"
+
+[env.production.triggers]
+crons = ["* * * * *"]
 
 [[env.production.durable_objects.bindings]]
 name = "ROOMS"

@@ -1,6 +1,6 @@
 # Anidachi Project Architecture And Development
 
-Last updated: 2026-06-04.
+Last updated: 2026-09-05.
 
 This document describes how the current Anidachi codebase is organized, how the
 runtime systems fit together, and how development should move from local changes
@@ -377,18 +377,44 @@ Media transport:
 Watch progress is durable product data. It should not be modeled as only live
 room state.
 
-Expected ownership:
+Current ownership:
 
 - extension detects provider/show/season/episode/movie identity;
 - extension reports meaningful progress checkpoints, not every second;
 - web API validates and writes progress to Supabase;
-- Supabase stores personal, friend, group, and room progress records;
+- Supabase stores one canonical personal progress row per account and logical
+  provider episode, plus the verified solo/shared sessions that supplied it;
+- a shared-session browse projection may attach owner-private historical group
+  context only when an authenticated group invitation and actual recorded
+  participation overlap. It does not create group progress, change personal
+  completion, grant another member history access, or infer history from current
+  group membership;
 - Worker may broadcast live progress inside an active room, but durable progress
   belongs to Supabase.
 
-The backend-backed watch-library foundation exists, but real staging acceptance
-across extension/browser profiles is still required before treating every
-watch-progress behavior as finished.
+Watch History v3 is active on staging. The 2026-09-05 Watch drawer browse work
+adds bounded server-side search, date,
+participant, and owner-private group filtering without changing the progress
+authority, room protocol, Worker, capture, or consent policy. Its approved design
+and rollout boundary are in
+`docs/superpowers/specs/2026-09-05-watch-drawer-browse-design.md` and
+`docs/superpowers/plans/2026-09-05-watch-drawer-browse.md`; local evidence is in
+`docs/watch-drawer-browse-local-verification.md`. The user-authorized staging
+delivery uses database-only PR #268 before runtime PR #269; their release receipts
+record matching database, Web and tester-artifact verification. Authenticated
+staging acceptance remains distinct from deployment and folder synchronization.
+Main and production are outside this rollout.
+
+The 2026-09-06 episode-grid follow-up adds the read-only
+`GET /api/watch-history/v3/browse/catalog` contract. Web joins an existing
+owner/generation-bound accepted catalog snapshot with at most 50 personal episode
+progress rows, exposes all season summaries with separate main/Specials totals,
+and fences cursor and final reads against account, catalog and progress changes.
+Only an accepted complete catalog in the current region supplies unseen episode
+cells. It reuses existing tables and API session verification; the staging gate
+allows only its exact extension-bearer GET. No migration or room-event contract
+change is required. The user authorized server delivery into staging separately
+from the local episode-grid UI; release evidence is recorded in that PR.
 
 ## Local Development
 

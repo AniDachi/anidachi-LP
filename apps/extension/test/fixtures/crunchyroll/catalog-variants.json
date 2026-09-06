@@ -1,0 +1,139 @@
+{
+  "evidence": {
+    "capturedAt": "2026-09-05",
+    "source": "sanitized public client-context responses",
+    "region": "VN",
+    "note": "The object endpoint omits logical identifiers; exact identity needs the matching series season row and one matching season episode response."
+  },
+  "objectResponses": {
+    "G8WUNEWJE": {
+      "total": 1,
+      "data": [{
+        "id": "G8WUNEWJE",
+        "type": "episode",
+        "title": "Roaring Muscles",
+        "episode_metadata": {
+          "series_id": "G6NQ5DWZ6",
+          "season_id": "G6MGC35ZE",
+          "season_identifier": null,
+          "audio_locale": "en-US",
+          "versions": [
+            { "audio_locale": "ja-JP", "guid": "GY2PDV78Y", "original": true, "season_guid": "GRK587V16" },
+            { "audio_locale": "en-US", "guid": "G8WUNEWJE", "original": false, "season_guid": "G6MGC35ZE" }
+          ]
+        }
+      }]
+    },
+    "GY2PDV78Y": {
+      "total": 1,
+      "data": [{
+        "id": "GY2PDV78Y",
+        "type": "episode",
+        "title": "Roaring Muscles",
+        "episode_metadata": {
+          "series_id": "G6NQ5DWZ6",
+          "season_id": "GRK587V16",
+          "season_identifier": null,
+          "audio_locale": "ja-JP",
+          "versions": [
+            { "audio_locale": "ja-JP", "guid": "GY2PDV78Y", "original": true, "season_guid": "GRK587V16" },
+            { "audio_locale": "en-US", "guid": "G8WUNEWJE", "original": false, "season_guid": "G6MGC35ZE" }
+          ]
+        }
+      }]
+    }
+  },
+  "seasonsResponse": {
+    "total": 9,
+    "meta": { "versions_considered": true },
+    "data": [{
+      "id": "G6MGC35ZE",
+      "identifier": "G6NQ5DWZ6|S00003205",
+      "title": "Season 1",
+      "season_number": 1,
+      "versions": [
+        { "audio_locale": "ja-JP", "guid": "GRK587V16", "original": true },
+        { "audio_locale": "en-US", "guid": "G6MGC35ZE", "original": false }
+      ]
+    }]
+  },
+  "episodesResponse": {
+    "total": 13,
+    "meta": { "versions_considered": true },
+    "data": [{
+      "id": "GY2PDV78Y",
+      "identifier": "G6NQ5DWZ6|S00003205|E3",
+      "title": "Roaring Muscles",
+      "episode": "3",
+      "episode_number": 3,
+      "sequence_number": 3,
+      "versions": [
+        { "audio_locale": "ja-JP", "guid": "GY2PDV78Y", "original": true, "season_guid": "GRK587V16" },
+        { "audio_locale": "en-US", "guid": "G8WUNEWJE", "original": false, "season_guid": "G6MGC35ZE" }
+      ]
+    }]
+  },
+  "ambiguousEpisodesResponse": {
+    "total": 2,
+    "data": [
+      { "id": "GY2PDV78Y", "identifier": "G6NQ5DWZ6|S00003205|E3", "versions": [{ "guid": "G8WUNEWJE", "season_guid": "G6MGC35ZE" }] },
+      { "id": "AMBIGUOUS", "identifier": "G6NQ5DWZ6|S00003205|E999", "versions": [{ "guid": "G8WUNEWJE", "season_guid": "G6MGC35ZE" }] }
+    ]
+  },
+  "invalidIdentityCases": [
+    {
+      "name": "duplicate exact variants on a direct episode row",
+      "input": {
+        "watchId": "WATCH_DUP",
+        "objectResponse": { "data": [{ "id": "WATCH_DUP", "episode_metadata": { "series_id": "SERIES_DUP", "season_id": "SEASON_RAW", "versions": [{ "guid": "WATCH_DUP", "season_guid": "SEASON_RAW", "audio_locale": "en-US" }] } }] },
+        "seasonsResponse": { "data": [{ "id": "SEASON_RAW", "identifier": "SERIES_DUP|SEASON_STABLE", "versions": [{ "guid": "SEASON_RAW" }] }] },
+        "episodesResponse": { "data": [{ "id": "WATCH_DUP", "identifier": "SERIES_DUP|SEASON_STABLE|E1", "versions": [{ "guid": "WATCH_DUP", "season_guid": "SEASON_RAW" }, { "guid": "WATCH_DUP", "season_guid": "OTHER_SEASON" }] }] }
+      }
+    },
+    {
+      "name": "an overlong series id that would overflow its canonical key",
+      "input": {
+        "watchId": "WATCH_LONG",
+        "objectResponse": { "data": [{ "id": "WATCH_LONG", "episode_metadata": { "series_id": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "season_id": "SEASON_RAW", "versions": [{ "guid": "WATCH_LONG", "season_guid": "SEASON_RAW" }] } }] },
+        "seasonsResponse": { "data": [{ "id": "SEASON_RAW", "identifier": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA|S1", "versions": [{ "guid": "SEASON_RAW" }] }] },
+        "episodesResponse": { "data": [{ "id": "WATCH_LONG", "identifier": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA|S1|E1", "versions": [{ "guid": "WATCH_LONG", "season_guid": "SEASON_RAW" }] }] }
+      }
+    },
+    {
+      "name": "a control character in a provider identifier",
+      "input": {
+        "watchId": "WATCH_CONTROL",
+        "objectResponse": { "data": [{ "id": "WATCH_CONTROL", "episode_metadata": { "series_id": "SERIES_OK", "season_id": "SEASON_RAW", "versions": [{ "guid": "WATCH_CONTROL", "season_guid": "SEASON_RAW" }] } }] },
+        "seasonsResponse": { "data": [{ "id": "SEASON_RAW", "identifier": "SERIES_OK|S\u00001", "versions": [{ "guid": "SEASON_RAW" }] }] },
+        "episodesResponse": { "data": [{ "id": "WATCH_CONTROL", "identifier": "SERIES_OK|S1|E1", "versions": [{ "guid": "WATCH_CONTROL", "season_guid": "SEASON_RAW" }] }] }
+      }
+    },
+    {
+      "name": "a season identifier belonging to another series",
+      "input": {
+        "watchId": "WATCH_REL",
+        "objectResponse": { "data": [{ "id": "WATCH_REL", "episode_metadata": { "series_id": "SERIES_A", "season_id": "SEASON_RAW", "versions": [{ "guid": "WATCH_REL", "season_guid": "SEASON_RAW" }] } }] },
+        "seasonsResponse": { "data": [{ "id": "SEASON_RAW", "series_id": "SERIES_B", "identifier": "SERIES_B|S1", "versions": [{ "guid": "SEASON_RAW" }] }] },
+        "episodesResponse": { "data": [{ "id": "WATCH_REL", "identifier": "SERIES_B|S1|E1", "versions": [{ "guid": "WATCH_REL", "season_guid": "SEASON_RAW" }] }] }
+      }
+    },
+    {
+      "name": "an episode identifier belonging to another season",
+      "input": {
+        "watchId": "WATCH_EP_REL",
+        "objectResponse": { "data": [{ "id": "WATCH_EP_REL", "episode_metadata": { "series_id": "SERIES_A", "season_id": "SEASON_RAW", "versions": [{ "guid": "WATCH_EP_REL", "season_guid": "SEASON_RAW" }] } }] },
+        "seasonsResponse": { "data": [{ "id": "SEASON_RAW", "identifier": "SERIES_A|S1", "versions": [{ "guid": "SEASON_RAW" }] }] },
+        "episodesResponse": { "data": [{ "id": "WATCH_EP_REL", "series_id": "SERIES_A", "season_id": "OTHER_SEASON", "identifier": "SERIES_A|S2|E1", "versions": [{ "guid": "WATCH_EP_REL", "season_guid": "SEASON_RAW" }] }] }
+      }
+    },
+    {
+      "name": "a populated object season identifier contradicting the season row",
+      "input": {
+        "watchId": "WATCH_OBJECT_REL",
+        "objectResponse": { "data": [{ "id": "WATCH_OBJECT_REL", "episode_metadata": { "series_id": "SERIES_A", "season_id": "SEASON_RAW", "season_identifier": "SERIES_A|S2", "versions": [{ "guid": "WATCH_OBJECT_REL", "season_guid": "SEASON_RAW" }] } }] },
+        "seasonsResponse": { "data": [{ "id": "SEASON_RAW", "identifier": "SERIES_A|S1", "versions": [{ "guid": "SEASON_RAW" }] }] },
+        "episodesResponse": { "data": [{ "id": "WATCH_OBJECT_REL", "identifier": "SERIES_A|S1|E1", "versions": [{ "guid": "WATCH_OBJECT_REL", "season_guid": "SEASON_RAW" }] }] }
+      }
+    }
+  ]
+}

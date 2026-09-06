@@ -1,10 +1,10 @@
 # Account Data, Watch History, Social, And Inbox Foundation Design
 
-Status: Durable inbox deployed; Web Push implementation pending staging acceptance
+Status: Durable inbox and Web Push implemented; invitation notifications pending staging acceptance
 
 Date: 2026-08-06
 
-Last updated: 2026-08-09
+Last updated: 2026-08-25
 
 ## Summary
 
@@ -507,8 +507,8 @@ independent unread counter.
 ### MVP Channel
 
 The extension uses the standards-based Push API as an immediate invalidation
-channel. After a durable invite transaction commits, the server sends each
-enabled extension installation a minimal `inbox_changed` Web Push. A suspended
+channel. After a new durable room invite or friend request commits, the server
+sends each enabled extension installation a minimal `inbox_changed` Web Push. A suspended
 Manifest V3 service worker wakes, runs the same authenticated `syncInbox()` used
 by the popup, and derives the badge and notification from the validated server
 response. Push data never becomes authoritative account state.
@@ -535,6 +535,16 @@ Manifest V3 workers and alarms are not a durable process. A cursor advances
 only after a response is schema-validated, stored for the active account, and
 fully processed.
 
+Failed client work also keeps one account-owned recovery record with independent
+inbox and subscription intents. Recovery starts after 30 seconds, uses bounded
+exponential backoff, and stops after eight attempts or 24 hours. Worker wakeups
+restore the existing budget rather than starting it again. A silent subscription
+repair never turns into an OS alert. Subscription registration is independent
+of inbox display, so a registration failure cannot block a successfully fetched
+invitation. Same-account token rotation preserves in-flight work; account
+switch or sign-out invalidates it. Normal reconciliation authenticates through
+the inbox endpoint without repeated identity round trips.
+
 Each browser profile registers one Web Push subscription against the existing
 account device model. Sign-in and notification enablement ensure the current
 subscription is registered. Explicit disablement revokes the subscription and
@@ -550,19 +560,56 @@ validated again before delivery; invalid or permanently failed subscriptions
 are disabled without making an outbound request. Another browser provider is
 added only through an explicit allowlist change with its own staging evidence.
 
-Current-state compatibility note: the deployed invite writer predates the
-transactional RPC defined in this specification and still writes the invite and
-recipient snapshot separately. The notification hook runs only after both
-writes succeed, but atomic, idempotent invite creation remains a required
-follow-up server slice rather than a completed guarantee of this rollout.
+The room-invite writer uses the deployed atomic, idempotent RPC. A genuinely new
+pending room-invite recipient or incoming friend request writes an account
+invalidation to a transactional outbox in the same database transaction. A
+rollback therefore leaves neither a partial invite nor a delivery job. Repeated
+mutations returning existing durable state do not queue another notification.
+
+After commit, a bounded immediate drain targets the new recipients. The outbox
+coalesces work per account; leases and revisions prevent concurrent drains or
+late completions from losing newer work. Transient provider failures retry with
+bounded backoff and Retry-After, at most eight attempts and 24 hours. Missing
+VAPID configuration is an observable delivery failure, not successful delivery
+to zero devices. Provider acceptance is not a user delivery/read receipt.
+
+One Supabase Cron job checks for due outbox work once per minute and uses pg_net
+to invoke the existing authenticated web drain only when work exists. It is
+independent of room Durable Objects and does not poll any client's inbox. It
+recovers missed immediate attempts; it is not the normal delivery path. A private
+singleton stores only scheduler configuration and the last HTTP attempt/result,
+preventing repeated ticks from accumulating requests while pg_net is stalled.
+Delivery intent remains exclusively in the transactional account outbox.
+
+The scheduler reads a dedicated drain-only credential from Vault and calls the
+fixed canonical endpoint for its explicitly configured environment. It has no
+room-lifecycle authority. Scheduler metadata and Vault access are operator-only.
+Platform-owned pg_net grants stay unchanged; its non-exposed schema and NOLOGIN
+client roles prevent client API access. No public client-callable wrapper may
+expose transport data or the private scheduler. The migration starts disabled;
+activation follows matching web deployment and permission checks. During the
+ordered cutover the preceding internal bearer remains compatible, but it is not
+copied into Vault or used by the new scheduler.
+
+pg_net follows redirects and buffers HTTP responses; it does not provide the
+previous Worker caller's redirect rejection or streaming response-size limit.
+The fixed owned endpoint, scoped credential, 40-second timeout, and validation
+of the small exact acknowledgement are the accepted boundary. Lost pg_net work
+does not lose durable outbox intent. A successful cron SQL invocation is not
+evidence of a successful HTTP drain or of receipt by a user.
+
+No new queue provider, persistent socket, public endpoint, or user setting is
+introduced. The previous Cloudflare timer is disabled on staging only after
+automatic Supabase recovery is verified. Implementation and staging acceptance
+are tracked in
+`docs/superpowers/plans/2026-09-04-invitation-delivery-reliability.md`.
 
 ### Browser Notifications
 
-The MVP displays system notifications only for explicit room invitations sent
-by a host to accepted friends or a personal group snapshot. Room creation,
-friend activity, presence, and ordinary friend requests do not produce system
-notifications. Incoming friend requests update the action badge and popup inbox
-only.
+The MVP displays system notifications for explicit room invitations and new
+incoming friend requests. Room creation, general friend activity, and presence
+do not produce system notifications. Both supported invitation types remain
+durable Inbox items even if push delivery is delayed or unavailable.
 
 Notification rules:
 
@@ -570,6 +617,7 @@ Notification rules:
 - a direct invite uses copy such as `Vladislav invited you to watch together`;
 - a group invite uses `Vladislav invited you to watch with a group`; the exact
   private group name appears only inside the authenticated inbox;
+- a friend request uses copy such as `Vladislav sent you a friend request`;
 - one unseen active invite may identify the inviter, while multiple unseen or
   offline invites produce one count-based summary instead of an OS notification
   burst;
@@ -592,7 +640,7 @@ Notification rules:
   acknowledges the mutation;
 - disabled permission or preference leaves the durable inbox and badge
   functional;
-- MVP exposes one `Room invite notifications` toggle, enabled by default, with
+- MVP exposes one `Invitation notifications` toggle, enabled by default, with
   no per-group mute, schedule, custom sound, or additional notification modes.
 
 The local notification preference is per browser profile. Push subscription
@@ -612,6 +660,14 @@ worker; the durable inbox and lifecycle reconciliation recover missed delivery.
 The popup shows cached canonical data immediately when the cache belongs to the
 active account, then refreshes from the server. It refreshes on open, after any
 mutation, after reconnect, and after an auth change.
+
+An open popup also observes validated background writes to that account's inbox
+cache. Cache writes are serialized across extension contexts, while network
+requests remain outside the storage lock. Request-start `serverTime` metadata
+is not a database revision: confirmed seen state is merged by item incarnation,
+and detected response/page ambiguity permits one canonical reread, not a
+subscription-driven refresh loop. Counts remain server-global rather than
+being reconstructed from the currently visible page.
 
 The popup may overlay one local `Syncing` progress state on top of a server
 snapshot. That optimistic state is visually explicit and never changes durable

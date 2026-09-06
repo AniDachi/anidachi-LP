@@ -308,3 +308,173 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
   real-WebRTC 17/17, and staging extension build validation.
   Remaining: apply the migration, deploy matching Web/Worker code to staging,
   and run the real Free-room lifecycle acceptance before promotion.
+- [~] 2026-08-28: Preserved the active room media/UI session across same-room
+  YouTube video and Crunchyroll episode changes. A source-generation change now
+  keeps the existing P2P controller and its camera/microphone publication,
+  while stale source-scoped signaling remains fenced. Same-tab page remounts
+  restore room-scoped camera intent; quick-reactions enabled state is a local
+  preference; existing layout, interface, chat, voice, and listener-volume
+  preferences keep their prior ownership. New rooms still start camera-off.
+  Verified: full extension tests 1381/1381, extension check, root room harness
+  39/39, real-WebRTC harness 26/26, staging build, and artifact validation.
+  Remaining before promotion to `main`: loaded two-profile acceptance on both
+  providers.
+- [~] 2026-08-29: Hardened the YouTube same-room media-intent transition after
+  tester feedback on the 2026-08-28 staging ZIP. An already-mounted reconnect
+  keeps the newest local camera choice, while a full same-tab document remount
+  restores camera intent from the confirmed background session. Open mic now
+  treats the pre-snapshot missing-seat interval as unknown: publication pauses
+  without discarding intent, resumes only after an authoritative joined seat,
+  and resets both runtime and stored intent when the authoritative snapshot
+  confirms the seat was revoked. New-room, leave/end, sign-out, account-change,
+  and terminal-failure reset boundaries remain unchanged. Verified locally:
+  extension check, focused media-state tests 24/24, full extension tests
+  1386/1386, room harness 39/39, and real-WebRTC harness 26/26. Remaining:
+  build/validate the final staging artifact and loaded two-profile YouTube
+  acceptance for host and guest before staging promotion.
+- [~] 2026-08-29: Added the approved account-local last Voice-mode preference
+  without changing room protocol, Worker, API, database, or P2P signaling.
+  Explicit Open mic / Push to talk selection updates a versioned
+  authenticated-user key in extension local storage; each genuinely new
+  confirmed room seeds its tab-scoped active mode from that preference. Room
+  leave/end, tab close, sign-out, browser restart, media-seat revoke, and
+  terminal capture failure still stop current publication. Automatic safety
+  resets do not silently overwrite the user's explicit preference, and all
+  Open mic restore paths remain gated by exact room identity, authoritative
+  media seat, snapshot readiness, and a live P2P controller. Focused storage
+  and overlay wiring tests cover production prepare/confirm, account isolation,
+  worker restart, explicit UI intent, and safety reset behavior. Verified:
+  extension check and 1392/1392 tests, API check and 161/161 plus 27/27 runtime
+  tests, room harness 39/39, real-WebRTC harness 26/26, staging artifact build
+  and validation, and exact synchronization of both approved test folders.
+  Remaining: loaded two-profile host/guest acceptance of the merged staging
+  artifact before promotion to `main`.
+- [~] 2026-08-31: Reworked guest departure on `codex/redesign-room-departure`
+  into an authoritative durable-first lifecycle. Explicit guest leave releases
+  the exact Supabase active-room assignment before bounded exact Worker detach;
+  detach success, stale, timeout, and transport failure remain nonauthoritative
+  after that commit. The Worker 60-second passive alarm callback is retained;
+  ordinary tab close is local-only and the hidden tab-close HTTP accelerator is
+  removed. Every new prepared room operation now gets a fresh server-visible
+  `participantSessionId` while media preferences remain separate. Every connect
+  persists a fresh exact `may-commit` generation before its fetch.
+  Matching tab removal/explicit cancellation marks only that generation
+  cleanup-owned and duplicate signals coalesce. HTTP success transitions to a persisted
+  `handoff-pending` owner; only the exact tab/room/user/session/generation's
+  first authoritative room-socket `ROOM_SNAPSHOT` acknowledgement retires it.
+  That acknowledgement is isolated from history/event/transport consumers and
+  retries transient negative/rejected delivery with exponential 250ms-to-4s
+  backoff until accepted or the exact socket closes/is replaced.
+  Pre-ack tab close exact-cleans immediately, while worker/browser restart uses
+  a 60-second handoff bound from the 45-second socket liveness timeout, maximum
+  8-second reconnect delay, and 7-second scheduler margin. Older completion,
+  alarm, departure, and local-clear paths remain fenced to their participant
+  session. The admission owner survives worker/browser restart,
+  keeps pre-settlement `stale` nonterminal, pre-arms the one-shot alarm before
+  auth/network awaits, waits for matching auth without a perpetual alarm, and
+  is fenced from old completions and replacement sessions. The 60-second
+  client abort remains active through response-body parsing. Canceled live
+  completion drains its current generation immediately; an ambiguous request
+  remains observing, and an orphan uses the 60-second client request bound,
+  60-second connect-route bound, and a 15-second safety margin.
+  After snapshot acknowledgement, normal passive close again relies on the
+  Worker's retained 60-second grace. Normal extension leave no longer invokes
+  active-room recovery automatically.
+  Current public Web uses legacy-compatible `stale` for no assignment, while
+  the shared schema/current extension retain forward-compatible acceptance of
+  `already_departed`; the emergency role-specific Leave/End action remains
+  separately confirmed. The staging gate now lets bearer-authenticated internal
+  POST callbacks reach route-level service authentication without opening other
+  staging routes. Fresh local proof: protocol 141/141, API 166/166 plus runtime
+  37/37, Web 385 passed/3 skipped, extension 1507/1507, room harness 39/39,
+  real-WebRTC 26/26, root check/test (6 Turbo tasks each), rooms-profile
+  `dev:check` exit 0, and staging artifact build/validation. Generated artifacts
+  remain ignored. Remaining proof: deploy the candidate and perform the loaded
+  two-profile YouTube/Crunchyroll acceptance; no staging acceptance is claimed.
+- [~] 2026-09-01: Corrected the MVP close/recovery boundary after invitation
+  lifecycle testing. Real browser-tab removal now persists a settled exact
+  departure job before the bounded request and matching local cleanup.
+  Terminal acknowledgement retires the job; nonterminal timeout, transport,
+  MV3, and temporary authorization outcomes retain it for Chrome-alarm,
+  startup, or online retry. Reload, BFCache, sleep, and temporary transport
+  interruption still use the existing 60-second reconnect grace, with the
+  Worker's signed callback as an independent fallback. The current extension
+  has no post-close recovery choice and no broad Leave/End-active-room conflict
+  action. A same-browser room is protected when `acquireRoomTabLock()` can
+  acquire a working Web Lock. If Web Locks are unavailable or fail, the client
+  proceeds and the atomic server assignment remains authoritative across tabs,
+  profiles, and devices. A Create-room
+  conflict now stays mutation-free: it cannot depart, replace, or retry over a
+  live host/guest session. The database regression case requires the rejected
+  guest create to preserve the exact room/role/session assignment and create no
+  orphan host room. Deliberate return uses the ordinary invitation flow. Chrome
+  reload/update clears extension-session storage, so the provider tab retains
+  only a non-authoritative page-session `roomId` and opaque account scope. The
+  restarted extension accepts the hint only for the same authenticated
+  account, mints fresh trusted identity with camera Off and Push to talk, then
+  immediately performs the existing same-room takeover; explicit and terminal
+  exits clear the hint. No user ID, participant session, or room authority is
+  stored in the page, and the 60-second Worker grace remains transport recovery
+  rather than a UI delay. Local proof: extension check and 1515/1515 tests; Web
+  386 passed/3 skipped; API
+  check, 166/166 unit tests, and 37/37 runtime tests; room harness 39/39; and
+  real-WebRTC harness 26/26. Local Supabase execution of the added SQL
+  regression remains pending because Docker was unavailable. The staging
+  artifact `e3345f3-staging-20260901162121` was rebuilt, validated, and
+  synchronized byte-for-byte to both approved unpacked test folders (manifest
+  SHA-256 `3b63d2558000e3fab2d4890c1d490165296c85b22e946c74471db1d3ad657823`);
+  loaded two-profile acceptance remains required. Reproduce with
+  `pnpm --filter @anidachi/extension check`,
+  `pnpm --filter @anidachi/extension test`,
+  `pnpm --filter @anidachi/web check`,
+  `pnpm --filter @anidachi/web test`,
+  `pnpm --filter @anidachi/api check`,
+  `pnpm --filter @anidachi/api test`,
+  `pnpm --filter @anidachi/api test:runtime`, `pnpm harness:rooms`,
+  `npm --prefix tests/e2e run harness:p2p`,
+  `pnpm build:extension:staging`,
+  `pnpm validate:extension:staging`, and `pnpm dev:check`. The focused SQL
+  regression is `apps/web/supabase/tests/single_active_room_sessions.test.sql`,
+  specifically the guest create-conflict assertions for unchanged assignment
+  and no orphan host room; Docker execution remains pending. Current route
+  boundaries are `POST /api/rooms`,
+  `POST /api/rooms/[roomId]/connect`,
+  `POST /api/rooms/[roomId]/depart`, and
+  `POST /api/rooms/active-session/depart`. Loaded acceptance still covers:
+  guest close affects only the guest; host close ends the room; reload/update
+  restores the same account without a 60-second UI wait; invite join works
+  after deliberate exit; and create conflict neither replaces nor departs the
+  existing host/guest session.
+- [~] 2026-08-29: Added the account-local `Room` defaults surface without
+  changing the room protocol, Worker, API, database, permissions, or provider
+  adapters. Microphone on join now supports Last used, Push to talk, and Open
+  mic; camera on join supports Last used, Off, and On, with privacy-safe defaults
+  of Last used -> Push to talk and camera Off. The setting affects only a later
+  newly confirmed room. Exact same-room state still wins, device publication
+  remains gated by authoritative media-seat and P2P readiness, and automatic
+  safety cleanup does not overwrite last explicit camera or microphone choices.
+  Verified locally: focused preference, storage, component, wiring, and session
+  tests 116/116; extension check and 1410/1410 tests; repository check/test 6/6
+  tasks each; API runtime tests 27/27; room harness 39/39; real-WebRTC harness
+  26/26; staging artifact build/validation; and exact synchronization of both
+  approved unpacked test folders. Remaining: loaded two-profile acceptance of
+  the merged staging artifact before promotion to `main`.
+- [~] 2026-08-29: Finalized the staging checkpoint with provider-safe overlay
+  interaction fixes. The camera travel corridor is now pointer-transparent and
+  temporarily pins adaptive safe insets only while the user approaches or
+  interacts with a visible camera bubble, so YouTube controls remain clickable.
+  Closed-Shadow-DOM message composition suspends quick-reaction hotkeys so
+  digits stay available for chat, and the composer plus shortcut editor share
+  one expanded 158-item unique Unicode emoji catalog. The main auto-hide
+  launcher also ignores provider-generated in-viewport `pointerout` noise.
+  Queued camera and microphone persistence writes are fenced to the exact room,
+  account, and participant session that enqueued them, so a delayed write cannot
+  leak into a later room. Late responses clear Voice hydration state only when it
+  still belongs to their own participant session, so the next room remains
+  writable. An already-held charged fire reaction is also released before
+  composer-focus guards, preventing it from remaining stuck if chat opens before
+  keyup.
+  Automated verification: repository check/test 6/6 tasks, extension tests
+  1426/1426, API runtime tests 27/27, room harness 39/39, and real-WebRTC
+  harness 26/26. Remaining: final staging artifact build/validation, CI, and
+  loaded two-profile acceptance before promotion to `main`.

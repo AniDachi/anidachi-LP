@@ -180,7 +180,7 @@ describe("watch history preference listener", () => {
       fetch: vi.fn(async () => new Response(JSON.stringify({
         meta: {
           serverTime: "2026-08-17T09:00:00.000Z",
-          schemaVersion: 2,
+          schemaVersion: 3,
           ownerUserId: OWNER_ID,
           accountGeneration: 1,
         },
@@ -189,7 +189,7 @@ describe("watch history preference listener", () => {
     });
 
     await expect(client.handle({
-      type: "ANIDACHI_WATCH_HISTORY_V2",
+      type: "ANIDACHI_WATCH_HISTORY_V3",
       command: "update-preferences",
       input: { youtubeHistoryEnabled: true },
     })).resolves.toEqual({ ok: true });
@@ -211,7 +211,7 @@ function preferenceRoot(
 ): WatchHistoryStorageRoot {
   const key = watchHistoryPartitionKey(ownerUserId, 1);
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     activeGenerations: { [ownerUserId]: 1 },
     partitions: {
       [key]: {

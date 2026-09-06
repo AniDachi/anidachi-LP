@@ -3,6 +3,7 @@ export type SettingsPanelCategory =
   | "layout"
   | "interface"
   | "voice"
+  | "room"
   | "debug";
 
 export const DEFAULT_SETTINGS_PANEL_CATEGORY: SettingsPanelCategory = "reactions";
@@ -15,5 +16,5 @@ export const SETTINGS_PANEL_CATEGORIES: ReadonlyArray<{
   { id: "layout", label: "Layout" },
   { id: "interface", label: "Interface" },
   { id: "voice", label: "Voice" },
-  { id: "debug", label: "Debug" },
+  { id: "room", label: "Room" },
 ];

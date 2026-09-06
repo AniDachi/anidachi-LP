@@ -5,10 +5,11 @@ type DisabledWatchLibraryRouteDependencies = {
   getSession(request: NextRequest): Promise<ApiSession | null>;
 };
 
-export function createDisabledWatchLibraryRoute(
-  dependencies: DisabledWatchLibraryRouteDependencies = { getSession: getApiSession },
+function createDisabledRoute(
+  error: string,
+  dependencies: DisabledWatchLibraryRouteDependencies,
 ) {
-  return async function disabledWatchLibraryRoute(request: NextRequest): Promise<NextResponse> {
+  return async function disabledRoute(request: NextRequest): Promise<NextResponse> {
     const session = await dependencies.getSession(request);
     if (!session) {
       return NextResponse.json(
@@ -16,12 +17,25 @@ export function createDisabledWatchLibraryRoute(
         { status: 401 },
       );
     }
-
     return NextResponse.json(
-      { error: "Watch History v2 is required", code: "UPGRADE_REQUIRED" },
+      { error, code: "UPGRADE_REQUIRED" },
       { status: 426 },
     );
   };
 }
 
+export function createDisabledWatchLibraryRoute(
+  dependencies: DisabledWatchLibraryRouteDependencies = { getSession: getApiSession },
+) {
+  return createDisabledRoute("Watch History v2 is required", dependencies);
+}
+
 export const disabledWatchLibraryRoute = createDisabledWatchLibraryRoute();
+
+export function createDisabledWatchHistoryV2Route(
+  dependencies: DisabledWatchLibraryRouteDependencies = { getSession: getApiSession },
+) {
+  return createDisabledRoute("Watch History v3 is required", dependencies);
+}
+
+export const disabledWatchHistoryV2Route = createDisabledWatchHistoryV2Route();

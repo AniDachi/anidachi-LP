@@ -61,10 +61,11 @@ export function getYouTubeHistoryObservation(input: {
   if (!videoId || !cleanYouTubeProgressVideoId(videoId)) return null;
   const title = adapter.getTitle()?.trim();
   if (!title) return null;
-  const key = `youtube:${videoId}`;
+  const key = `youtube:video:${videoId}`;
   return {
     provider: "youtube",
     providerLabel: "YouTube",
+    youtubeVideoId: videoId,
     titleKey: key,
     itemKind: "movie",
     title,
@@ -121,9 +122,7 @@ function canonicalYouTubeHistoryUrl(value: string): string | null {
   if (!isSupportedYouTubeHost(url.hostname) || url.pathname !== "/watch") return null;
   const videoId = cleanYouTubeProgressVideoId(url.searchParams.get("v"));
   if (!videoId) return null;
-  const origin = url.hostname === "m.youtube.com"
-    ? "https://www.youtube.com"
-    : url.origin;
+  const origin = "https://www.youtube.com";
   return `${origin}/watch?v=${encodeURIComponent(videoId)}`;
 }
 
