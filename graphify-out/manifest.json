@@ -2910,16 +2910,16 @@
     "semantic_hash": "2bd9076a26ba347c45d44e3606e7dc72"
   },
   "apps/web/lib/staging-access.test.ts": {
-    "mtime": 1788611100.648872,
-    "seen": 1788612387.8053,
-    "ast_hash": "d0e60bff3a5f60beb48b0c0f44d872ba",
-    "semantic_hash": "d0e60bff3a5f60beb48b0c0f44d872ba"
+    "mtime": 1788703128.8624814,
+    "seen": 1788706201.463951,
+    "ast_hash": "0d96b56439733fd6c65dbcba4a6eb094",
+    "semantic_hash": "0d96b56439733fd6c65dbcba4a6eb094"
   },
   "apps/web/lib/staging-access.ts": {
-    "mtime": 1788611100.6490426,
-    "seen": 1788612387.805301,
-    "ast_hash": "cc4b166f817344d1d57dd12d5e15ed05",
-    "semantic_hash": "cc4b166f817344d1d57dd12d5e15ed05"
+    "mtime": 1788703156.1674411,
+    "seen": 1788706201.4639518,
+    "ast_hash": "b303a08dd45b50e6e6c2298e2bc254a2",
+    "semantic_hash": "b303a08dd45b50e6e6c2298e2bc254a2"
   },
   "apps/web/lib/tiktok/api.test.ts": {
     "mtime": 1786689011.3357086,
@@ -3234,10 +3234,10 @@
     "semantic_hash": "008cbb7aa3e7e7917fd1e68946868fb6"
   },
   "packages/protocol/src/index.ts": {
-    "mtime": 1788611100.6662183,
-    "seen": 1788612387.805362,
-    "ast_hash": "252cc1eeded2be26acb493acd7e0ba26",
-    "semantic_hash": "252cc1eeded2be26acb493acd7e0ba26"
+    "mtime": 1788702804.6809711,
+    "seen": 1788706201.464013,
+    "ast_hash": "e7f240fa78d8f251239f7c5bc2a63fff",
+    "semantic_hash": "e7f240fa78d8f251239f7c5bc2a63fff"
   },
   "packages/protocol/src/limits.ts": {
     "mtime": 1786689011.3762326,
@@ -3606,10 +3606,10 @@
     "semantic_hash": "4e0420e077e5ebc55dbe7b2187df7832"
   },
   "docs/current-development-state.md": {
-    "mtime": 1788624763.5917513,
-    "seen": 1788625180.5751731,
-    "ast_hash": "d8242700860182b208585adb7eb5095e",
-    "semantic_hash": "d8242700860182b208585adb7eb5095e"
+    "mtime": 1788703156.1682422,
+    "seen": 1788706201.464034,
+    "ast_hash": "8a4df7f0f4962c17fd980d45a00ebf84",
+    "semantic_hash": "8a4df7f0f4962c17fd980d45a00ebf84"
   },
   "docs/development-environments.md": {
     "mtime": 1786689011.3582418,
@@ -3654,10 +3654,10 @@
     "semantic_hash": "816771011a43e6458031004aba8d35d6"
   },
   "docs/project-architecture-and-development.md": {
-    "mtime": 1788611416.253954,
-    "seen": 1788612387.8053818,
-    "ast_hash": "49ee6a71392245b54efe1bb2a7e441db",
-    "semantic_hash": "49ee6a71392245b54efe1bb2a7e441db"
+    "mtime": 1788703156.1687129,
+    "seen": 1788706201.464035,
+    "ast_hash": "776c85633f4d787f0e1b1d60bbdd9276",
+    "semantic_hash": "776c85633f4d787f0e1b1d60bbdd9276"
   },
   "docs/project-knowledge-map.md": {
     "mtime": 1788541403.0224938,
@@ -5837,7 +5837,7 @@
     "ast_hash": "8936fbeb4855977822525a27ecdfa2d4",
     "semantic_hash": "8936fbeb4855977822525a27ecdfa2d4"
   },
-  "graphify-out/memory/query_20260814_143612_\u043e\u0446\u0435\u043d\u0438\u0442\u044c_\u043e\u0442\u0437\u044b\u0432_\u043e_wave_2_watch_history_v2.md": {
+  "graphify-out/memory/query_20260814_143612_оценить_отзыв_о_wave_2_watch_history_v2.md": {
     "mtime": 1786718172.9604821,
     "seen": 1787320943.449523,
     "ast_hash": "274c1bd1a5d0d0555de1d06bcc2bdf8c",
@@ -5849,7 +5849,7 @@
     "ast_hash": "4957f419ed938e4219f62c415f023896",
     "semantic_hash": "4957f419ed938e4219f62c415f023896"
   },
-  "graphify-out/memory/query_20260819_031739_\u0442\u0430\u043a_\u0447\u0442\u043e_\u0442\u044b_\u0441\u0434\u0435\u043b\u0430\u043b_\u0438_\u0437\u0430\u0447\u0435\u043c_\u0438_\u0447\u0442\u043e_\u0435\u0449\u0435_\u043e\u0441\u0442\u0430\u043b\u043e\u0441\u044c__\u0445\u043e\u0440\u043e.md": {
+  "graphify-out/memory/query_20260819_031739_так_что_ты_сделал_и_зачем_и_что_еще_осталось__хоро.md": {
     "mtime": 1787109459.62409,
     "seen": 1787320943.449524,
     "ast_hash": "93919e977f2d384c45c42dd1a54f7a8b",
@@ -6317,19 +6317,19 @@
     "ast_hash": "581f2a7a52a19e9758ff4d596a841218",
     "semantic_hash": "581f2a7a52a19e9758ff4d596a841218"
   },
-  "graphify-out/memory/query_20260831_025709_\u0445\u043e\u0440\u043e\u0448\u043e__\u043c\u043d\u0435_\u0436\u0430\u043b\u043e\u0432\u0430\u043b\u0438\u0441\u044c_\u043f\u0440\u0438_\u0442\u0435\u0441\u0442\u0430\u0445_\u0447\u0442\u043e_\u043f\u043e\u0441\u043b\u0435_\u0442\u043e\u0433\u043e_\u043a.md": {
+  "graphify-out/memory/query_20260831_025709_хорошо__мне_жаловались_при_тестах_что_после_того_к.md": {
     "mtime": 1788145029.3490942,
     "seen": 1788153295.3567328,
     "ast_hash": "1ff78805cc9294a517d67919dd8af309",
     "semantic_hash": "1ff78805cc9294a517d67919dd8af309"
   },
-  "graphify-out/memory/query_20260831_032831_\u0442\u0430\u043c_\u0442\u043e_\u0447\u0442\u043e_\u0441_\u0437\u0430\u043a\u0440\u044b\u0442\u0438\u0435\u043c_\u0432\u043a\u043b\u0430\u0434\u043a\u0438_\u0432\u0441\u0435_\u0442\u043e\u0436\u0435_\u0445\u043e\u0440\u043e\u0448\u043e_\u043e\u0442\u0440.md": {
+  "graphify-out/memory/query_20260831_032831_там_то_что_с_закрытием_вкладки_все_тоже_хорошо_отр.md": {
     "mtime": 1788146911.1777637,
     "seen": 1788153295.3567328,
     "ast_hash": "ff02a30876103cc0aadd9a7941b8f84b",
     "semantic_hash": "ff02a30876103cc0aadd9a7941b8f84b"
   },
-  "graphify-out/memory/query_20260831_034008_\u043a\u043e\u0433\u0434\u0430_\u0447\u0430\u0441\u0442\u043e_\u0438_\u0431\u044b\u0441\u0442\u0440\u043e_\u043e\u0442\u043f\u0440\u0430\u0432\u043b\u044f\u0435\u0448\u044c_\u0440\u0435\u0430\u043a\u0446\u0438\u0438_\u0442\u043e_\u043e\u043d\u0438_\u043f\u0435.md": {
+  "graphify-out/memory/query_20260831_034008_когда_часто_и_быстро_отправляешь_реакции_то_они_пе.md": {
     "mtime": 1788147608.1902926,
     "seen": 1788153295.356734,
     "ast_hash": "b7cd801149041a325e715a2893400949",
@@ -6928,5 +6928,41 @@
     "seen": 1788623345.075389,
     "ast_hash": "30df4892bc884a4a0e2a79952aa6666f",
     "semantic_hash": "30df4892bc884a4a0e2a79952aa6666f"
+  },
+  "apps/web/app/api/watch-history/v3/browse/catalog/route.ts": {
+    "mtime": 1788702804.6811004,
+    "seen": 1788706201.463737,
+    "ast_hash": "aa27e76dd13c66eb22ce18dc386e18a8",
+    "semantic_hash": "aa27e76dd13c66eb22ce18dc386e18a8"
+  },
+  "apps/web/lib/anidachi-auth/watch-history-grid-routes.ts": {
+    "mtime": 1788702804.6812904,
+    "seen": 1788706201.463896,
+    "ast_hash": "961056e2d7ec9acf396295fbec8add56",
+    "semantic_hash": "961056e2d7ec9acf396295fbec8add56"
+  },
+  "apps/web/lib/anidachi-auth/watch-history-grid.test.ts": {
+    "mtime": 1788702804.6814063,
+    "seen": 1788706201.463897,
+    "ast_hash": "12d652c680389003502fedf0e7cc7fbe",
+    "semantic_hash": "12d652c680389003502fedf0e7cc7fbe"
+  },
+  "apps/web/lib/anidachi-auth/watch-history-grid.ts": {
+    "mtime": 1788702804.68124,
+    "seen": 1788706201.463897,
+    "ast_hash": "84e3ec9bd8f3890a675c90a41fb3f0a1",
+    "semantic_hash": "84e3ec9bd8f3890a675c90a41fb3f0a1"
+  },
+  "packages/protocol/src/watch-history-grid.ts": {
+    "mtime": 1788702804.6814678,
+    "seen": 1788706201.464017,
+    "ast_hash": "f14b73ba4d9e0f85323e8e3120165302",
+    "semantic_hash": "f14b73ba4d9e0f85323e8e3120165302"
+  },
+  "packages/protocol/test/watch-history-grid.test.ts": {
+    "mtime": 1788702804.6815155,
+    "seen": 1788706201.464021,
+    "ast_hash": "380965a2aa0ba82847650b5ded798cb3",
+    "semantic_hash": "380965a2aa0ba82847650b5ded798cb3"
   }
 }

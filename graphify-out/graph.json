@@ -11502,6 +11502,84 @@
       "source_location": "L72"
     },
     {
+      "id": "apps_web_lib_anidachi_auth_watch_history_grid_recordvalue",
+      "label": "RecordValue",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "recordvalue",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L16"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_watch_history_grid_watchhistorygridstore",
+      "label": "WatchHistoryGridStore",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "watchhistorygridstore",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L17"
+    },
+    {
+      "id": "packages_protocol_src_watch_history_grid_watchhistorygridepisode",
+      "label": "WatchHistoryGridEpisode",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "watchhistorygridepisode",
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L146"
+    },
+    {
+      "id": "packages_protocol_src_watch_history_grid_watchhistorygridquery",
+      "label": "WatchHistoryGridQuery",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "watchhistorygridquery",
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L142"
+    },
+    {
+      "id": "packages_protocol_src_watch_history_grid_watchhistorygridresponse",
+      "label": "WatchHistoryGridResponse",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "watchhistorygridresponse",
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L143"
+    },
+    {
+      "id": "packages_protocol_src_watch_history_grid_watchhistorygridseason",
+      "label": "WatchHistoryGridSeason",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "watchhistorygridseason",
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L149"
+    },
+    {
       "id": "apps_api_src_participant_disconnect_participantdisconnectalarmreconciler",
       "label": "ParticipantDisconnectAlarmReconciler",
       "_callable": true,
@@ -58217,6 +58295,114 @@
       "source_location": "L30"
     },
     {
+      "id": "apps_web_lib_anidachi_auth_watch_history_grid_aggregate",
+      "label": "aggregate()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "aggregate()",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L114"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_watch_history_grid_fail",
+      "label": "fail()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "fail()",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L32"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_watch_history_grid_fingerprint",
+      "label": "fingerprint()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "fingerprint()",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L81"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_watch_history_grid_progressfingerprint",
+      "label": "progressFingerprint()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "progressfingerprint()",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L99"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_watch_history_grid_readwatchhistorygrid",
+      "label": "readWatchHistoryGrid()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "readwatchhistorygrid()",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L132"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_watch_history_grid_routes_createwatchhistorygridget",
+      "label": "createWatchHistoryGridGet()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "createwatchhistorygridget()",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid-routes.ts",
+      "source_location": "L7"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_watch_history_grid_test_fixture",
+      "label": "fixture()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "fixture()",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.test.ts",
+      "source_location": "L14"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_watch_history_grid_test_read",
+      "label": "read()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "read()",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.test.ts",
+      "source_location": "L119"
+    },
+    {
+      "id": "packages_protocol_src_watch_history_grid_iswatchspecialseasonlabel",
+      "label": "isWatchSpecialSeasonLabel()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "iswatchspecialseasonlabel()",
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L28"
+    },
+    {
       "id": "apps_api_src_index_roomdurableobject_deliverguestparticipantdeparture",
       "label": ".deliverGuestParticipantDeparture()",
       "_callable": true,
@@ -62390,7 +62576,7 @@
       "file_type": "code",
       "norm_label": "canbypassstaginggate()",
       "source_file": "apps/web/lib/staging-access.ts",
-      "source_location": "L232"
+      "source_location": "L233"
     },
     {
       "id": "apps_web_lib_staging_access_getstagingaccessconfig",
@@ -62474,7 +62660,7 @@
       "file_type": "code",
       "norm_label": "sanitizestagingaccessnextpath()",
       "source_file": "apps/web/lib/staging-access.ts",
-      "source_location": "L251"
+      "source_location": "L252"
     },
     {
       "id": "apps_web_lib_staging_access_sha256hex",
@@ -84682,12 +84868,12 @@
     },
     {
       "id": "apps_web_app_api_watch_history_v3_catalog_route",
-      "label": "catalog/route.ts",
+      "label": "v3/catalog/route.ts",
       "_origin": "ast",
       "community": 16,
       "community_name": "watch-history-v3-routes.ts",
       "file_type": "code",
-      "norm_label": "catalog/route.ts",
+      "norm_label": "v3/catalog/route.ts",
       "source_file": "apps/web/app/api/watch-history/v3/catalog/route.ts",
       "source_location": "L1"
     },
@@ -85863,7 +86049,7 @@
       "node_kind": "heading",
       "norm_label": "documentation map",
       "source_file": "docs/current-development-state.md",
-      "source_location": "L1373"
+      "source_location": "L1418"
     },
     {
       "id": "docs_current_development_state_extension_channels",
@@ -85899,7 +86085,7 @@
       "node_kind": "heading",
       "norm_label": "known fragile areas",
       "source_file": "docs/current-development-state.md",
-      "source_location": "L1234"
+      "source_location": "L1279"
     },
     {
       "id": "docs_current_development_state_last_recorded_legacy_staging_artifact",
@@ -86020,6 +86206,18 @@
       "norm_label": "watch drawer follow-up (2026-09-05)",
       "source_file": "docs/current-development-state.md",
       "source_location": "L1141"
+    },
+    {
+      "id": "docs_current_development_state_watch_episode_catalog_api_staging_delivery_2026_09_06",
+      "label": "Watch Episode Catalog API Staging Delivery (2026-09-06)",
+      "_origin": "ast",
+      "community": 168,
+      "community_name": "Current Development State",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "watch episode catalog api staging delivery (2026-09-06)",
+      "source_file": "docs/current-development-state.md",
+      "source_location": "L1253"
     },
     {
       "id": "docs_current_development_state_watch_history_v3_staging_activation",
@@ -88806,7 +89004,7 @@
       "node_kind": "heading",
       "norm_label": "documentation maintenance",
       "source_file": "docs/project-architecture-and-development.md",
-      "source_location": "L519"
+      "source_location": "L530"
     },
     {
       "id": "docs_project_architecture_and_development_environments",
@@ -88878,7 +89076,7 @@
       "node_kind": "heading",
       "norm_label": "local development",
       "source_file": "docs/project-architecture-and-development.md",
-      "source_location": "L408"
+      "source_location": "L419"
     },
     {
       "id": "docs_project_architecture_and_development_media_architecture",
@@ -88914,7 +89112,7 @@
       "node_kind": "heading",
       "norm_label": "practical development examples",
       "source_file": "docs/project-architecture-and-development.md",
-      "source_location": "L550"
+      "source_location": "L561"
     },
     {
       "id": "docs_project_architecture_and_development_release_channels",
@@ -88950,7 +89148,7 @@
       "node_kind": "heading",
       "norm_label": "secrets and environment values",
       "source_file": "docs/project-architecture-and-development.md",
-      "source_location": "L504"
+      "source_location": "L515"
     },
     {
       "id": "docs_project_architecture_and_development_testing_expectations",
@@ -88962,7 +89160,7 @@
       "node_kind": "heading",
       "norm_label": "testing expectations",
       "source_file": "docs/project-architecture-and-development.md",
-      "source_location": "L476"
+      "source_location": "L487"
     },
     {
       "id": "docs_project_architecture_and_development_watch_progress_direction",
@@ -115364,6 +115562,215 @@
       "source_location": "L1"
     },
     {
+      "id": "apps_web_app_api_watch_history_v3_browse_catalog_route",
+      "label": "browse/catalog/route.ts",
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "browse/catalog/route.ts",
+      "source_file": "apps/web/app/api/watch-history/v3/browse/catalog/route.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_web_app_api_watch_history_v3_browse_catalog_route_dynamic",
+      "label": "dynamic",
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "dynamic",
+      "source_file": "apps/web/app/api/watch-history/v3/browse/catalog/route.ts",
+      "source_location": "L3"
+    },
+    {
+      "id": "apps_web_app_api_watch_history_v3_browse_catalog_route_get",
+      "label": "GET",
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "get",
+      "source_file": "apps/web/app/api/watch-history/v3/browse/catalog/route.ts",
+      "source_location": "L5"
+    },
+    {
+      "id": "apps_web_app_api_watch_history_v3_browse_catalog_route_runtime",
+      "label": "runtime",
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "runtime",
+      "source_file": "apps/web/app/api/watch-history/v3/browse/catalog/route.ts",
+      "source_location": "L4"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_watch_history_grid",
+      "label": "anidachi-auth/watch-history-grid.ts",
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "anidachi-auth/watch-history-grid.ts",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_watch_history_grid_routes",
+      "label": "watch-history-grid-routes.ts",
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "watch-history-grid-routes.ts",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid-routes.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_watch_history_grid_routes_handlewatchhistorygridget",
+      "label": "handleWatchHistoryGridGet",
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "handlewatchhistorygridget",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid-routes.ts",
+      "source_location": "L52"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_watch_history_grid_supabasewatchhistorygridstore",
+      "label": "supabaseWatchHistoryGridStore",
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "supabasewatchhistorygridstore",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L41"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_watch_history_grid_test",
+      "label": "anidachi-auth/watch-history-grid.test.ts",
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "anidachi-auth/watch-history-grid.test.ts",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.test.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_watch_history_grid_test_query",
+      "label": "query",
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "query",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.test.ts",
+      "source_location": "L13"
+    },
+    {
+      "id": "packages_protocol_src_watch_history_grid",
+      "label": "src/watch-history-grid.ts",
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "src/watch-history-grid.ts",
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "packages_protocol_src_watch_history_grid_key",
+      "label": "Key",
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "key",
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L10"
+    },
+    {
+      "id": "packages_protocol_src_watch_history_grid_watch_history_grid_page_size",
+      "label": "WATCH_HISTORY_GRID_PAGE_SIZE",
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "watch_history_grid_page_size",
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L11"
+    },
+    {
+      "id": "packages_protocol_src_watch_history_grid_watchhistorygridepisodeschema",
+      "label": "WatchHistoryGridEpisodeSchema",
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "watchhistorygridepisodeschema",
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L39"
+    },
+    {
+      "id": "packages_protocol_src_watch_history_grid_watchhistorygridqueryschema",
+      "label": "WatchHistoryGridQuerySchema",
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "watchhistorygridqueryschema",
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L13"
+    },
+    {
+      "id": "packages_protocol_src_watch_history_grid_watchhistorygridresponseschema",
+      "label": "WatchHistoryGridResponseSchema",
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "watchhistorygridresponseschema",
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L56"
+    },
+    {
+      "id": "packages_protocol_src_watch_history_grid_watchhistorygridseasonschema",
+      "label": "WatchHistoryGridSeasonSchema",
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "watchhistorygridseasonschema",
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L34"
+    },
+    {
+      "id": "packages_protocol_test_watch_history_grid_test",
+      "label": "test/watch-history-grid.test.ts",
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "test/watch-history-grid.test.ts",
+      "source_file": "packages/protocol/test/watch-history-grid.test.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "packages_protocol_test_watch_history_grid_test_empty",
+      "label": "empty",
+      "_origin": "ast",
+      "community": 663,
+      "community_name": "Watch Episode Catalog API",
+      "file_type": "code",
+      "norm_label": "empty",
+      "source_file": "packages/protocol/test/watch-history-grid.test.ts",
+      "source_location": "L8"
+    },
+    {
       "id": "apps_api_src_participant_disconnect",
       "label": "participant-disconnect.ts",
       "_origin": "ast",
@@ -123330,6 +123737,118 @@
       "source_url": null
     },
     {
+      "id": "docs_current_development_state_watch_episode_catalog_api",
+      "label": "GET /api/watch-history/v3/browse/catalog",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 168,
+      "community_name": "Current Development State",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "get /api/watch-history/v3/browse/catalog",
+      "rationale": "The isolated codex/watch-catalog-api-staging PR adds an authenticated private/no-store read-only GET endpoint over existing schema-3 catalog and owner personal progress. It returns all season summaries and at most 50 real episodes per page. Server staging delivery was separately authorized from local grid UI.",
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_current_development_state_catalog_exactness",
+      "label": "Accepted regional catalog exactness",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 168,
+      "community_name": "Current Development State",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "accepted regional catalog exactness",
+      "rationale": "Bounded snapshots/raw aliases establish logical identity, regional availability, localized labels and server exact title/season totals. Partial/missing/overflowed or changed-region evidence suppresses exact totals; a failed same-region locale refresh preserves the last committed exact bundle.",
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_current_development_state_catalog_main_and_specials",
+      "label": "Separate main-season and Specials totals",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 168,
+      "community_name": "Current Development State",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "separate main-season and specials totals",
+      "rationale": "Main-season and explicitly labeled Specials aggregates are separate. Episode 0 and fractional numbering do not imply Specials. Existing complete accepted regional catalog metadata, rather than inferred numbering, determines unseen cells.",
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_current_development_state_catalog_read_fences",
+      "label": "Catalog cursor and final-read fences",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 168,
+      "community_name": "Current Development State",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "catalog cursor and final-read fences",
+      "rationale": "Cursor binding, account generation, catalog revision and final personal-page validation reject stale results after account reset, catalog change or history deletion. The read joins existing snapshot and owner progress without a migration, reset or secret.",
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_current_development_state_catalog_server_rollback",
+      "label": "Additive catalog endpoint rollback",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 168,
+      "community_name": "Current Development State",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "additive catalog endpoint rollback",
+      "rationale": "The PR receipt must record real CI, Web deployment and staging acceptance. Authorization excludes main/production promotion. Rollback restores the preceding staging Web deployment or reverts this endpoint plus allowlist entry while retaining database data.",
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_current_development_state_catalog_staging_allowlist",
+      "label": "Exact catalog bearer GET staging bypass",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 168,
+      "community_name": "Current Development State",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "exact catalog bearer get staging bypass",
+      "rationale": "Only the exact catalog GET is added to the staging extension-bearer allowlist. Unauthenticated requests and unsupported methods retain existing gates. Existing API session verification authenticates the requester; the human-gate bypass is not independent account authority.",
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_current_development_state_catalog_ui_rollout_boundary",
+      "label": "Separate catalog server and local grid delivery",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 168,
+      "community_name": "Current Development State",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "separate catalog server and local grid delivery",
+      "rationale": "Existing extension consumers stay compatible. The local grid can call the endpoint after publication and uses known-history fallback when no complete catalog exists. Local UI and both approved tester folders are outside this server PR; a staging CI extension artifact cannot replace that local candidate.",
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
       "id": "docs_project_architecture_and_development_documentation_trust_order",
       "label": "Code and deployed behavior precede operational docs and historical plans",
       "_origin": "semantic",
@@ -123880,6 +124399,54 @@
       "file_type": "code",
       "norm_label": "extension popup shell",
       "source_file": "apps/extension/entrypoints/popup/index.html",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_project_architecture_and_development_catalog_grid_contract",
+      "label": "Read-only episode-grid catalog contract",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 183,
+      "community_name": "Anidachi Project Architecture And Development",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "read-only episode-grid catalog contract",
+      "rationale": "September 6 GET /api/watch-history/v3/browse/catalog joins an owner/generation-bound accepted snapshot with at most 50 personal episode rows, plus all season summaries with separate main/Specials totals. Cursor and final reads fence account, catalog and progress changes.",
+      "source_file": "docs/project-architecture-and-development.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_project_architecture_and_development_accepted_catalog_cells",
+      "label": "Current-region unseen catalog cells",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 183,
+      "community_name": "Anidachi Project Architecture And Development",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "current-region unseen catalog cells",
+      "rationale": "Only a complete accepted catalog in the current region supplies unseen episode cells. Existing tables and API session verification are reused, and only the exact extension-bearer GET bypasses the staging human gate. No migration or room-event contract change is needed.",
+      "source_file": "docs/project-architecture-and-development.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_project_architecture_and_development_catalog_server_ui_boundary",
+      "label": "Separate server API and local grid rollout",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 183,
+      "community_name": "Anidachi Project Architecture And Development",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "separate server api and local grid rollout",
+      "rationale": "User-authorized server staging delivery is separate from the local episode-grid UI. The server PR records its release evidence; local grid/tester-folder state and main/production promotion are outside this delivery.",
+      "source_file": "docs/project-architecture-and-development.md",
       "source_location": null,
       "source_url": null
     },
@@ -190274,6 +190841,78 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_readwatchhistorygrid",
+      "target": "apps_web_lib_anidachi_auth_watch_history_grid_fail",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L139",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_readwatchhistorygrid",
+      "target": "apps_web_lib_anidachi_auth_watch_history_grid_fingerprint",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L164",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_readwatchhistorygrid",
+      "target": "packages_protocol_src_watch_history_grid_iswatchspecialseasonlabel",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L207",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_readwatchhistorygrid",
+      "target": "apps_web_lib_anidachi_auth_watch_history_grid_progressfingerprint",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L273",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_readwatchhistorygrid",
+      "target": "apps_web_lib_anidachi_auth_watch_history_grid_aggregate",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L312",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_test_read",
+      "target": "apps_web_lib_anidachi_auth_watch_history_grid_readwatchhistorygrid",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.test.ts",
+      "source_location": "L120",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_lib_anidachi_auth_watch_history_v3_applywatchcatalogv3",
       "target": "apps_web_lib_anidachi_auth_watch_history_v3_watchhistoryv3apierror",
       "relation": "calls",
@@ -197854,7 +198493,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/staging-access.ts",
-      "source_location": "L238",
+      "source_location": "L239",
       "weight": 1.0
     },
     {
@@ -197866,7 +198505,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/staging-access.ts",
-      "source_location": "L247",
+      "source_location": "L248",
       "weight": 1.0
     },
     {
@@ -203764,6 +204403,18 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_app_api_watch_history_v3_browse_catalog_route",
+      "target": "apps_web_lib_anidachi_auth_watch_history_grid_routes",
+      "relation": "re_exports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "export",
+      "source_file": "apps/web/app/api/watch-history/v3/browse/catalog/route.ts",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_app_api_watch_history_v3_catalog_attempt_route",
       "target": "apps_web_lib_anidachi_auth_watch_history_v3_routes",
       "relation": "re_exports",
@@ -204074,6 +204725,18 @@
       "context": "export",
       "source_file": "packages/protocol/src/index.ts",
       "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_protocol_src_index",
+      "target": "packages_protocol_src_watch_history_grid",
+      "relation": "re_exports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "export",
+      "source_file": "packages/protocol/src/index.ts",
+      "source_location": "L11",
       "weight": 1.0
     },
     {
@@ -238050,6 +238713,18 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_app_api_watch_history_v3_browse_catalog_route",
+      "target": "apps_web_lib_anidachi_auth_watch_history_grid_routes_handlewatchhistorygridget",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/app/api/watch-history/v3/browse/catalog/route.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_app_api_watch_history_v3_browse_options_route",
       "target": "apps_web_lib_anidachi_auth_watch_history_browse_routes_createwatchhistorybrowsehandler",
       "relation": "imports",
@@ -257178,6 +257853,186 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid",
+      "target": "apps_web_lib_anidachi_auth_db_db",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid",
+      "target": "apps_web_lib_anidachi_auth_watch_history_v3_watchhistoryv3apierror",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid",
+      "target": "packages_protocol_src_watch_history_grid_iswatchspecialseasonlabel",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid",
+      "target": "packages_protocol_src_watch_history_grid_watchhistorygridquery",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid",
+      "target": "packages_protocol_src_watch_history_grid_watchhistorygridqueryschema",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid",
+      "target": "packages_protocol_src_watch_history_grid_watchhistorygridresponse",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid",
+      "target": "packages_protocol_src_watch_history_grid_watchhistorygridresponseschema",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid",
+      "target": "packages_protocol_src_watch_history_grid_watchhistorygridseason",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_routes",
+      "target": "packages_protocol_src_watch_history_grid_watchhistorygridqueryschema",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid-routes.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_routes",
+      "target": "apps_web_lib_anidachi_auth_api_session_getapisession",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid-routes.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_routes",
+      "target": "apps_web_lib_anidachi_auth_watch_history_grid_readwatchhistorygrid",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid-routes.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_routes",
+      "target": "apps_web_lib_anidachi_auth_watch_history_v3_watchhistoryv3apierror",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid-routes.ts",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_test",
+      "target": "apps_web_lib_anidachi_auth_watch_history_grid_readwatchhistorygrid",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.test.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_test",
+      "target": "apps_web_lib_anidachi_auth_watch_history_grid_watchhistorygridstore",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.test.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_test",
+      "target": "apps_web_lib_anidachi_auth_watch_history_grid_routes_createwatchhistorygridget",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.test.ts",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_lib_anidachi_auth_watch_history_v3",
       "target": "packages_protocol_src_watch_history_watch_history_title_episode_page_limit",
       "relation": "imports",
@@ -264054,6 +264909,66 @@
       "weight": 1.0
     },
     {
+      "source": "packages_protocol_src_watch_history_grid",
+      "target": "packages_protocol_src_watch_history_watchcatalogstateschema",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_protocol_src_watch_history_grid",
+      "target": "packages_protocol_src_watch_history_watchhistoryaggregateschema",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_protocol_src_watch_history_grid",
+      "target": "packages_protocol_src_watch_history_watchhistorycatalogseasonprojectionschema",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_protocol_src_watch_history_grid",
+      "target": "packages_protocol_src_watch_history_watchhistoryepisodeschema",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_protocol_src_watch_history_grid",
+      "target": "packages_protocol_src_watch_history_watchhistoryresponsemetaschema",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
       "source": "packages_protocol_test_account_test",
       "target": "packages_protocol_src_account_account_response_schema_version",
       "relation": "imports",
@@ -264879,6 +265794,42 @@
       "context": "import",
       "source_file": "packages/protocol/test/source-url.test.ts",
       "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_protocol_test_watch_history_grid_test",
+      "target": "packages_protocol_src_watch_history_grid_iswatchspecialseasonlabel",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "packages/protocol/test/watch-history-grid.test.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_protocol_test_watch_history_grid_test",
+      "target": "packages_protocol_src_watch_history_grid_watchhistorygridqueryschema",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "packages/protocol/test/watch-history-grid.test.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_protocol_test_watch_history_grid_test",
+      "target": "packages_protocol_src_watch_history_grid_watchhistorygridresponseschema",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "packages/protocol/test/watch-history-grid.test.ts",
+      "source_location": "L2",
       "weight": 1.0
     },
     {
@@ -300185,6 +301136,174 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid",
+      "target": "ref_node_crypto",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid",
+      "target": "apps_web_lib_anidachi_auth_db",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid",
+      "target": "apps_web_lib_anidachi_auth_watch_history_v3",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid",
+      "target": "packages_protocol_src_index",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_routes",
+      "target": "ref_next_server",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid-routes.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_routes",
+      "target": "packages_protocol_src_index",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid-routes.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_routes",
+      "target": "apps_web_lib_anidachi_auth_api_session",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid-routes.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_routes",
+      "target": "apps_web_lib_anidachi_auth_watch_history_grid",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid-routes.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_routes",
+      "target": "apps_web_lib_anidachi_auth_watch_history_v3",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid-routes.ts",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_test",
+      "target": "ref_node_assert_strict",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.test.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_test",
+      "target": "ref_node_test",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.test.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_test",
+      "target": "ref_next_server",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.test.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_test",
+      "target": "apps_web_lib_anidachi_auth_watch_history_grid",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.test.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_test",
+      "target": "apps_web_lib_anidachi_auth_watch_history_grid_routes",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.test.ts",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_lib_anidachi_auth_watch_history_v3",
       "target": "packages_protocol_src_index",
       "relation": "imports_from",
@@ -305615,6 +306734,30 @@
       "weight": 1.0
     },
     {
+      "source": "packages_protocol_src_watch_history_grid",
+      "target": "ref_zod",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_protocol_src_watch_history_grid",
+      "target": "packages_protocol_src_watch_history",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
       "source": "packages_protocol_test_account_test",
       "target": "ref_vitest",
       "relation": "imports_from",
@@ -305767,6 +306910,30 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "packages/protocol/test/watch-history-browse.test.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_protocol_test_watch_history_grid_test",
+      "target": "ref_vitest",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "packages/protocol/test/watch-history-grid.test.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_protocol_test_watch_history_grid_test",
+      "target": "packages_protocol_src_watch_history_grid",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "packages/protocol/test/watch-history-grid.test.ts",
       "source_location": "L2",
       "weight": 1.0
     },
@@ -345818,6 +346985,39 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_app_api_watch_history_v3_browse_catalog_route",
+      "target": "apps_web_app_api_watch_history_v3_browse_catalog_route_dynamic",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/watch-history/v3/browse/catalog/route.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_watch_history_v3_browse_catalog_route",
+      "target": "apps_web_app_api_watch_history_v3_browse_catalog_route_runtime",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/watch-history/v3/browse/catalog/route.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_watch_history_v3_browse_catalog_route",
+      "target": "apps_web_app_api_watch_history_v3_browse_catalog_route_get",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/watch-history/v3/browse/catalog/route.ts",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_app_api_watch_history_v3_browse_options_route",
       "target": "apps_web_app_api_watch_history_v3_browse_options_route_dynamic",
       "relation": "contains",
@@ -365057,6 +366257,149 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid",
+      "target": "apps_web_lib_anidachi_auth_watch_history_grid_aggregate",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L114",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid",
+      "target": "apps_web_lib_anidachi_auth_watch_history_grid_readwatchhistorygrid",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L132",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid",
+      "target": "apps_web_lib_anidachi_auth_watch_history_grid_recordvalue",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid",
+      "target": "apps_web_lib_anidachi_auth_watch_history_grid_watchhistorygridstore",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid",
+      "target": "apps_web_lib_anidachi_auth_watch_history_grid_fail",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L32",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid",
+      "target": "apps_web_lib_anidachi_auth_watch_history_grid_supabasewatchhistorygridstore",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L41",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid",
+      "target": "apps_web_lib_anidachi_auth_watch_history_grid_fingerprint",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L81",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid",
+      "target": "apps_web_lib_anidachi_auth_watch_history_grid_progressfingerprint",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.ts",
+      "source_location": "L99",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_routes",
+      "target": "apps_web_lib_anidachi_auth_watch_history_grid_routes_handlewatchhistorygridget",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid-routes.ts",
+      "source_location": "L52",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_routes",
+      "target": "apps_web_lib_anidachi_auth_watch_history_grid_routes_createwatchhistorygridget",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid-routes.ts",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_test",
+      "target": "apps_web_lib_anidachi_auth_watch_history_grid_test_read",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.test.ts",
+      "source_location": "L119",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_test",
+      "target": "apps_web_lib_anidachi_auth_watch_history_grid_test_query",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.test.ts",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_watch_history_grid_test",
+      "target": "apps_web_lib_anidachi_auth_watch_history_grid_test_fixture",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/watch-history-grid.test.ts",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_lib_anidachi_auth_watch_history_v3",
       "target": "apps_web_lib_anidachi_auth_watch_history_v3_participantdatabaserow",
       "relation": "contains",
@@ -373171,7 +374514,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/staging-access.ts",
-      "source_location": "L232",
+      "source_location": "L233",
       "weight": 1.0
     },
     {
@@ -373182,7 +374525,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/staging-access.ts",
-      "source_location": "L251",
+      "source_location": "L252",
       "weight": 1.0
     },
     {
@@ -382357,6 +383700,17 @@
       "confidence_score": 1.0,
       "source_file": "docs/current-development-state.md",
       "source_location": "L1184",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_current_development_state_watch_history_v3_staging_activation",
+      "target": "docs_current_development_state_watch_episode_catalog_api_staging_delivery_2026_09_06",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-development-state.md",
+      "source_location": "L1253",
       "weight": 1.0
     },
     {
@@ -395384,6 +396738,127 @@
       "weight": 1.0
     },
     {
+      "source": "packages_protocol_src_watch_history_grid",
+      "target": "packages_protocol_src_watch_history_grid_key",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_protocol_src_watch_history_grid",
+      "target": "packages_protocol_src_watch_history_grid_watch_history_grid_page_size",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_protocol_src_watch_history_grid",
+      "target": "packages_protocol_src_watch_history_grid_watchhistorygridqueryschema",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_protocol_src_watch_history_grid",
+      "target": "packages_protocol_src_watch_history_grid_watchhistorygridquery",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L142",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_protocol_src_watch_history_grid",
+      "target": "packages_protocol_src_watch_history_grid_watchhistorygridresponse",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L143",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_protocol_src_watch_history_grid",
+      "target": "packages_protocol_src_watch_history_grid_watchhistorygridepisode",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L146",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_protocol_src_watch_history_grid",
+      "target": "packages_protocol_src_watch_history_grid_watchhistorygridseason",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L149",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_protocol_src_watch_history_grid",
+      "target": "packages_protocol_src_watch_history_grid_iswatchspecialseasonlabel",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_protocol_src_watch_history_grid",
+      "target": "packages_protocol_src_watch_history_grid_watchhistorygridseasonschema",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L34",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_protocol_src_watch_history_grid",
+      "target": "packages_protocol_src_watch_history_grid_watchhistorygridepisodeschema",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L39",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_protocol_src_watch_history_grid",
+      "target": "packages_protocol_src_watch_history_grid_watchhistorygridresponseschema",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "packages/protocol/src/watch-history-grid.ts",
+      "source_location": "L56",
+      "weight": 1.0
+    },
+    {
       "source": "packages_protocol_test_account_test",
       "target": "packages_protocol_test_account_test_meta",
       "relation": "contains",
@@ -395469,6 +396944,17 @@
       "confidence_score": 1.0,
       "source_file": "packages/protocol/test/auth.test.ts",
       "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_protocol_test_watch_history_grid_test",
+      "target": "packages_protocol_test_watch_history_grid_test_empty",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "packages/protocol/test/watch-history-grid.test.ts",
+      "source_location": "L8",
       "weight": 1.0
     },
     {
@@ -416380,6 +417866,149 @@
       "weight": 1.0
     },
     {
+      "source": "docs_current_development_state_watch_episode_catalog_api",
+      "target": "docs_current_development_state_catalog_exactness",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_current_development_state_watch_episode_catalog_api",
+      "target": "docs_current_development_state_catalog_main_and_specials",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_current_development_state_watch_episode_catalog_api",
+      "target": "docs_current_development_state_catalog_read_fences",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_current_development_state_watch_episode_catalog_api",
+      "target": "docs_current_development_state_catalog_server_rollback",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_current_development_state_watch_episode_catalog_api",
+      "target": "docs_current_development_state_catalog_staging_allowlist",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_current_development_state_watch_episode_catalog_api",
+      "target": "docs_current_development_state_catalog_ui_rollout_boundary",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_current_development_state_watch_episode_catalog_api",
+      "target": "docs_current_development_state_watch_history_ownership",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_current_development_state_watch_episode_catalog_api_staging_delivery_2026_09_06",
+      "target": "docs_current_development_state_catalog_main_and_specials",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_current_development_state_watch_episode_catalog_api_staging_delivery_2026_09_06",
+      "target": "docs_current_development_state_catalog_read_fences",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_current_development_state_watch_episode_catalog_api_staging_delivery_2026_09_06",
+      "target": "docs_current_development_state_catalog_server_rollback",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_current_development_state_watch_episode_catalog_api_staging_delivery_2026_09_06",
+      "target": "docs_current_development_state_catalog_staging_allowlist",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_current_development_state_watch_episode_catalog_api_staging_delivery_2026_09_06",
+      "target": "docs_current_development_state_catalog_ui_rollout_boundary",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_current_development_state_watch_episode_catalog_api_staging_delivery_2026_09_06",
+      "target": "docs_current_development_state_watch_episode_catalog_api",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
       "source": "docs_development_quality_gates_development_quality_gates",
       "target": "docs_development_quality_gates_evidence_capture",
       "relation": "references",
@@ -416666,6 +418295,39 @@
       "weight": 1.0
     },
     {
+      "source": "docs_project_architecture_and_development_catalog_grid_contract",
+      "target": "docs_project_architecture_and_development_accepted_catalog_cells",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-architecture-and-development.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_project_architecture_and_development_catalog_grid_contract",
+      "target": "docs_project_architecture_and_development_catalog_server_ui_boundary",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-architecture-and-development.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_project_architecture_and_development_catalog_grid_contract",
+      "target": "docs_project_architecture_and_development_control_plane",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-architecture-and-development.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
       "source": "docs_project_architecture_and_development_client_plane",
       "target": "docs_project_architecture_and_development_shared_protocol",
       "relation": "references",
@@ -416712,6 +418374,39 @@
     {
       "source": "docs_project_architecture_and_development_watch_progress_browse_ownership",
       "target": "docs_superpowers_plans_2026_09_05_watch_drawer_browse_watch_drawer_browse_implementation_plan",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-architecture-and-development.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_project_architecture_and_development_watch_progress_direction",
+      "target": "docs_project_architecture_and_development_accepted_catalog_cells",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-architecture-and-development.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_project_architecture_and_development_watch_progress_direction",
+      "target": "docs_project_architecture_and_development_catalog_grid_contract",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-architecture-and-development.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_project_architecture_and_development_watch_progress_direction",
+      "target": "docs_project_architecture_and_development_catalog_server_ui_boundary",
       "relation": "references",
       "_origin": "semantic",
       "confidence": "EXTRACTED",
@@ -421221,6 +422916,17 @@
       "weight": 1.0
     },
     {
+      "source": "docs_current_development_state_catalog_read_fences",
+      "target": "docs_project_architecture_and_development_authenticated_room_join",
+      "relation": "semantically_similar_to",
+      "_origin": "semantic",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
       "source": "agents_git_flow",
       "target": "github_workflows_deploy_api_ref_validation",
       "relation": "conceptually_related_to",
@@ -421918,6 +423624,17 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_app_api_watch_history_v3_browse_catalog_route_get",
+      "target": "docs_current_development_state_watch_episode_catalog_api",
+      "relation": "implements",
+      "_origin": "semantic",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_crm_data_workflow_agent_phase_two",
       "target": "apps_web_crm_data_agents_crm_cli_workflow",
       "relation": "implements",
@@ -422112,6 +423829,17 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "apps/web/docs/chrome-web-store-listing.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_current_development_state_watch_episode_catalog_api",
+      "target": "docs_project_architecture_and_development_catalog_grid_contract",
+      "relation": "semantically_similar_to",
+      "_origin": "semantic",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "docs/current-development-state.md",
       "source_location": null,
       "weight": 1.0
     },
@@ -423199,5 +424927,5 @@
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md"
     }
   ],
-  "built_at_commit": "bf5bd89ec067c8502423359cc081b7386c5be6e2"
+  "built_at_commit": "b28f8dc234829429ab60f47bc20c45aca334722a"
 }

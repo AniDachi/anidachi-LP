@@ -204,6 +204,7 @@ function canBearerBypassStagingGate(pathname: string, method: string): boolean {
     "/api/watch-history/v3/browse/title-episodes",
     "/api/watch-history/v3/browse/sessions",
     "/api/watch-history/v3/browse/options",
+    "/api/watch-history/v3/browse/catalog",
   ].includes(pathname)) return true;
   if (pathname === "/api/watch-history/v3/progress" && method === "POST") return true;
   if (
