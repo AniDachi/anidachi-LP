@@ -1250,6 +1250,32 @@ Web/extension consumers; restoring the writer entry point, if required, uses a
 reviewed forward migration and never drops history. Each rollout or rollback step
 requires separate authorization.
 
+### Watch Episode Catalog API Staging Delivery (2026-09-06)
+
+The user authorized the additive server part of the episode-grid candidate for
+delivery through a separate PR into staging. The isolated
+`codex/watch-catalog-api-staging` branch adds authenticated, private/no-store
+`GET /api/watch-history/v3/browse/catalog`. It reads existing schema-3 catalog
+snapshots and the owner's personal progress, returning season summaries and at
+most 50 real episodes per page. Main-season and explicitly labeled Specials
+aggregates are separate; episode 0 and fractional numbers do not imply Specials.
+Cursor, account-generation, catalog-revision and final personal-page checks fence
+stale results after account resets, catalog changes and history deletion.
+
+The exact GET route is included in the staging extension-bearer allowlist;
+unauthenticated requests and unsupported methods retain their existing gates.
+No migration, history reset, new secret, room event or Worker behavior change is
+needed. Existing extension consumers remain compatible. The locally tested
+episode-grid extension can use the endpoint when published and retains its
+known-history fallback when a complete catalog is unavailable.
+
+Local UI work and the two established tester folders remain separate from this
+server PR. A CI extension artifact built from staging does not replace that local
+UI candidate. The PR release receipt must record the actual CI, Web deployment
+and staging acceptance results; this authorization does not include main or
+production promotion. Rollback restores the preceding staging Web deployment or
+reverts this additive endpoint and its allowlist entry; database data is retained.
+
 ## Known Fragile Areas
 
 These are intentionally not treated as solved:

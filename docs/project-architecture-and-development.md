@@ -405,6 +405,17 @@ record matching database, Web and tester-artifact verification. Authenticated
 staging acceptance remains distinct from deployment and folder synchronization.
 Main and production are outside this rollout.
 
+The 2026-09-06 episode-grid follow-up adds the read-only
+`GET /api/watch-history/v3/browse/catalog` contract. Web joins an existing
+owner/generation-bound accepted catalog snapshot with at most 50 personal episode
+progress rows, exposes all season summaries with separate main/Specials totals,
+and fences cursor and final reads against account, catalog and progress changes.
+Only an accepted complete catalog in the current region supplies unseen episode
+cells. It reuses existing tables and API session verification; the staging gate
+allows only its exact extension-bearer GET. No migration or room-event contract
+change is required. The user authorized server delivery into staging separately
+from the local episode-grid UI; release evidence is recorded in that PR.
+
 ## Local Development
 
 Install dependencies:
