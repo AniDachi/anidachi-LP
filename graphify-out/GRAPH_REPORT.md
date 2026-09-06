@@ -1,18 +1,18 @@
-# Graph Report - anidachi-LP-monorepo  (2026-09-05)
+# Graph Report - anidachi-LP-monorepo  (2026-09-06)
 
 ## Corpus Check
-- 1 files · ~1,153,378 words
+- 11 files · ~1,155,063 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 11132 nodes · 24827 edges · 663 communities (389 shown, 248 thin omitted)
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 417 edges (avg confidence: 0.85)
-- Token cost: 0 input · 0 output
+- 11177 nodes · 24928 edges · 664 communities (390 shown, 248 thin omitted)
+- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 420 edges (avg confidence: 0.85)
+- Token cost: current Codex semantic usage unavailable; code extraction was local AST.
 
 ## Graph Freshness
-- Built from commit: `bf5bd89e`
+- Built from commit: `b28f8dc` (scoped catalog API update).
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
-- Run `graphify update .` after code changes (no API cost).
+- Run `pnpm graph:update:code` after meaningful code changes; use the Codex Graphify skill for semantic inputs.
 
 ## Community Hubs (Navigation)
 - .next/**
@@ -2328,3 +2328,12 @@ _Questions this graph is uniquely positioned to answer:_
 - **Should `.next/**` be split into smaller, more focused modules?**
   _Cohesion score 0.010434248887524936 - nodes in this community are weakly interconnected._
 Token accounting: Codex agent usage is unavailable; zero fields are placeholders, not measured zero cost.
+
+## Watch Episode Catalog API (2026-09-06)
+
+- Scoped update: 9 code files and 2 canonical documents; 45 nodes and 101 edges added.
+- Authenticated `GET /api/watch-history/v3/browse/catalog` reads accepted owner/generation-bound snapshots and at most 50 personal episode rows.
+- Separate main/Specials totals, current-region evidence, cursor/revision checks and final personal-page checks preserve catalog and history boundaries.
+- Exact extension-bearer GET reaches normal route authentication through the staging gate. Server-only staging authorization is separate from the local grid UI and production promotion.
+- Existing document concepts were confirmed by a fresh full read and retained; unchanged communities and absent ignored query-memory sources were preserved.
+- Integrity: zero missing or dangling endpoints, self-loops, duplicates or collapsed edges.
