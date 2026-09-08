@@ -180,7 +180,11 @@ ${extensionThemeTokens}
     position: relative;
     min-height: 440px;
     max-height: 560px;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(238, 230, 220, .25) transparent;
     padding: 12px;
     background:
       radial-gradient(circle at 5% 2%, rgba(244, 114, 182, 0.18), transparent 30%),
@@ -201,10 +205,6 @@ ${extensionThemeTokens}
       linear-gradient(180deg, rgba(49, 46, 129, 0.26), rgba(10, 8, 20, 0.02));
     mask-image: linear-gradient(90deg, black 0%, black 54%, transparent 100%);
     opacity: 0.65;
-  }
-
-  .popup-shell::-webkit-scrollbar {
-    width: 0;
   }
 
   .popup-header {
@@ -2358,9 +2358,9 @@ ${extensionThemeTokens}
 
   .popup-profile-avatar,
   .popup-profile-avatar .popup-social-avatar {
-    width: 40px;
-    height: 40px;
-    font-size: 15px;
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
   }
 
   .popup-brand {
@@ -2816,6 +2816,7 @@ ${extensionThemeTokens}
    */
   body {
     width: 392px;
+    max-width: 100vw;
     height: 600px;
     min-height: 600px;
     max-height: 600px;
@@ -2866,6 +2867,7 @@ ${extensionThemeTokens}
   .popup-profile-copy {
     min-width: 0;
     display: grid;
+    align-self: center;
     align-content: center;
     gap: 2px;
   }
@@ -2891,6 +2893,9 @@ ${extensionThemeTokens}
 
   .popup-profile-copy .panel-account-name {
     flex: 0 1 auto;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.25;
   }
 
   .popup-profile-copy .plan-badge {

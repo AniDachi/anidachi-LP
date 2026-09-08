@@ -1,6 +1,6 @@
 # Anidachi Project Architecture And Development
 
-Last updated: 2026-09-05.
+Last updated: 2026-09-08.
 
 This document describes how the current Anidachi codebase is organized, how the
 runtime systems fit together, and how development should move from local changes
@@ -415,6 +415,49 @@ cells. It reuses existing tables and API session verification; the staging gate
 allows only its exact extension-bearer GET. No migration or room-event contract
 change is required. The user authorized server delivery into staging separately
 from the local episode-grid UI; release evidence is recorded in that PR.
+
+### Personal History And Plans MVP Target (2026-09-08)
+
+The [personal-history MVP specification](superpowers/specs/2026-09-08-personal-history-and-plans-mvp-design.md)
+and [implementation plan](superpowers/plans/2026-09-08-personal-history-and-plans-mvp.md)
+replace the deferred Together shared-group target. The durable result is the
+viewer's personal progress from their own eligible playback, combining solo
+and rooms. Plus/Pro access belongs to the viewer; Free does not capture or
+persist history even with a paid host. Groups stay owner-private invite lists.
+
+Supabase/Web remain durable data and entitlement authority. Reviewed local
+implementation uses a personal writer independent of host-created sessions and
+a durable access epoch, consent epoch and account-generation fence. The extension
+background is the only extension writer; it observes only eligible own-player
+playback and retains original authority on bounded queued events. Unified
+browse/Resume reuses canonical progress and sticky completion. Downgrade hides
+and stops history without deleting retained server data or capturing a Free
+period for later backfill. Free can still delete all owned history.
+
+Recent People comes from bounded Worker evidence of actual overlapping connected
+presence, with no title, episode or position. Groups remain private invite lists.
+Worker owns frozen host-plan room caps, independent camera/microphone grants,
+per-kind revocation and authoritative usage. The v2 client receives media without
+publishing and uses Worker quota snapshots without a second subtraction or local
+v2 quota termination. Legacy rooms preserve their negotiated original contract
+and drain normally; they are never reinterpreted as v2.
+
+The durable singleton policy starts version 1 inactive. New personal writes and
+explicit catalog proof already require paid access while inactive. Coordinated
+activation closes legacy writers/aliases and unnegotiated room creation;
+unsupported versions return update-required rather than silently falling back.
+Current cross-plane versions are policyVersion 1, captureVersion 1 and
+mediaProtocolVersion 2, with accessVersion/entitlementsVersion 1.
+
+Tasks 1–9 are locally implemented and scoped-reviewed, not delivered. The
+[verification record](personal-history-and-plans-mvp-verification.md) separates
+local SQL/Worker/actual-controller evidence from loaded-provider, physical-media,
+Stripe TEST and distributed-network acceptance. The [Task 10 delivery packet](releases/personal-history-mvp/README.md)
+orders additive DB prerequisites, compatible inactive Web/Worker, matching
+client and separate activation after review and acceptance. Keep data and epochs
+on recovery; a03c012 is not post-activation compatibility. No prior accepted v2
+deployment exists, so exact compatible recovery/rehearsal remains a gate.
+Production/main promotion is a separate decision.
 
 ## Local Development
 

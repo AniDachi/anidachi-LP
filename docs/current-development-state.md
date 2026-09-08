@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-09-05.
+Last updated: 2026-09-08.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -1250,33 +1250,116 @@ Web/extension consumers; restoring the writer entry point, if required, uses a
 reviewed forward migration and never drops history. Each rollout or rollback step
 requires separate authorization.
 
-### Watch Episode Catalog API Staging Delivery (2026-09-06)
-
-The user authorized the additive server part of the episode-grid candidate for
-delivery through a separate PR into staging. The isolated
-`codex/watch-catalog-api-staging` branch adds authenticated, private/no-store
-`GET /api/watch-history/v3/browse/catalog`. It reads existing schema-3 catalog
-snapshots and the owner's personal progress, returning season summaries and at
-most 50 real episodes per page. Main-season and explicitly labeled Specials
-aggregates are separate; episode 0 and fractional numbers do not imply Specials.
-Cursor, account-generation, catalog-revision and final personal-page checks fence
-stale results after account resets, catalog changes and history deletion.
-
-The exact GET route is included in the staging extension-bearer allowlist;
-unauthenticated requests and unsupported methods retain their existing gates.
-No migration, history reset, new secret, room event or Worker behavior change is
-needed. Existing extension consumers remain compatible. The locally tested
-episode-grid extension can use the endpoint when published and retains its
-known-history fallback when a complete catalog is unavailable.
-
-Local UI work and the two established tester folders remain separate from this
-server PR. A CI extension artifact built from staging does not replace that local
-UI candidate. The PR release receipt must record the actual CI, Web deployment
-and staging acceptance results; this authorization does not include main or
-production promotion. Rollback restores the preceding staging Web deployment or
-reverts this additive endpoint and its allowlist entry; database data is retained.
-
 ## Known Fragile Areas
+
+### Current Local UI Checkpoint
+
+The local-read follow-up above was delivered through PRs #270/#271 to staging
+`4f4e17d2`. The user reported normal history behavior after testing; that does not
+close the broader authenticated provider/group acceptance matrix.
+
+The next bounded cosmetic slice is local branch `codex/watch-toolbar-polish`,
+based on that staging checkpoint. It changes only the Watch toolbar: one row with
+fully readable Mine/Together segments, a flexible neutral search field and an
+icon-only Filters button with an active-condition indicator. All controls share
+one height and compatible styling. Normal Refresh is removed; initial loading,
+screen-reader status and error/storage-recovery Retry remain. Populated and empty
+saved results stay visually stable during background reads. Existing search,
+filter, account, cache, synchronization, room and provider contracts are unchanged.
+Local extension checks/tests and an isolated installed-artifact browser exercise
+cover the toolbar, keyboard focus, retry and constrained host widths. User visual
+acceptance follows reloading the local candidate; this is not a new staging merge
+or production release. Continue cosmetic work top-to-bottom in separate bounded
+slices; title/season/episode presentation, other sections and shared-history
+product changes are outside this toolbar slice. Do not resume the completed
+server/local-read implementation or assume this branch is already on staging.
+
+The user-authorized 2026-09-06 cosmetic follow-ups on this same local branch add
+the ivory animated Mine/Together segment, smaller centered profile presentation,
+and a funnel icon. Filters now open in a compact non-modal popover above the list
+without pushing content down. It dismisses on outside interaction, Escape or
+close; explicit dismissal restores trigger focus and preserves selected values.
+Condition chips below the toolbar are removed. Reset is inside the popover and
+clears filter values while preserving search. Group/participant eligibility,
+period/date semantics, account isolation and durable-history contracts remain
+unchanged. These are local test-artifact refinements, not a staging merge or a
+production release; browser reload and user visual acceptance remain separate.
+
+The next user-approved local slice (2026-09-06) replaces the expanded Crunchyroll
+season/episode tree with one season/Specials dropdown, a bounded episode grid and
+one selected detail. Main-series counts sit under the title; exact Specials totals
+are separate. The grid retains each season's selected episode and scroll position,
+uses four rows in the 600 px popup and at most five in taller drawers, and keeps
+filter semantics and confirmed completion unchanged. Films and YouTube keep their
+respective single-detail and named-video presentations. The earlier provider logo,
+count, spacing, wrapping-title and date-limit refinements remain in this candidate.
+
+The full roster needs the additive, read-only Web route
+`/api/watch-history/v3/browse/catalog`, implemented locally against existing catalog
+snapshots with no migration or env changes. It returns real canonical entries in
+pages of at most 50, fences owner/generation/catalog revision, and separates main
+and Specials aggregates. The extension supports the currently published Web
+runtime: missing/partial catalogs show only known episodes, never guessed cells.
+The user subsequently authorized server delivery through separate PR #272,
+merged into staging as `a03c0128825c73edcfdf9062a8d85e70148b2423`.
+Vercel `dpl_ByCL5o34p44oJE3ZHk8rdReL9EiD` is READY on `staging.anidachi.app`;
+CI, room/P2P suites, staging/Worker smoke and the exact catalog route's access
+checks passed. The migration workflow confirmed the database was already up to
+date. Both tester folders retain the local grid build
+`9ee74a7c-staging-episode-grid-local-20260906-r3`. Authenticated HTTP and loaded
+grid acceptance remain separate manual checks; main/production were not promoted.
+The release receipt is in [PR #272](https://github.com/AniDachi/anidachi-LP/pull/272).
+The approved presentation and compatibility contract are recorded in
+`docs/superpowers/specs/2026-09-05-watch-drawer-browse-design.md`.
+
+### Personal History And Plans MVP Target (2026-09-08)
+
+The agreed MVP direction is [personal history and plans](superpowers/specs/2026-09-08-personal-history-and-plans-mvp-design.md),
+with a separate [implementation plan](superpowers/plans/2026-09-08-personal-history-and-plans-mvp.md).
+It supersedes the deferred September 7 Together target. One personal history
+combines solo and room playback, gated by each viewer's own Plus/Pro access.
+Free accounts do not capture or persist personal progress, including in a paid
+host's room. Groups remain private recipient lists; shared group progress,
+last-member tracking, shared-name migration and group-to-personal import are
+outside this MVP. Watch loses Mine/Together and group/participant filters while
+retaining the accepted provider/title/season/episode presentation.
+
+All supported integrations are available on every plan. Room limits belong to
+the host: Free has 30 daily hosting minutes, 4 participants, 4 cameras and 4
+microphones; Plus has no daily hosting cap, 6 participants, 4 cameras and 6
+microphones; Pro has no daily hosting cap, 15 participants, 4 cameras and 8
+microphones. Participants include the host. History rights belong to the viewer;
+a paid guest must be able to record independently of any host history write.
+
+Tasks 1–9 are implemented and scoped-reviewed on isolated branch
+`codex/personal-history-mvp`; committed runtime source is
+`8e4dd284c65ce47f893d51e28c72700a87e5c68e`. The source now uses independent paid
+personal capture, unified reads/Resume, history-independent presence, versioned
+room grants and authoritative quota snapshots. Legacy media/writers remain
+compatibility paths, not the new contract. R01–R20 and D01–D05 were accepted
+before implementation; the original mixed WIP and r10 tester folders remain
+preserved.
+
+Task 10 is at local **PRE_DELIVERY_READY**, not staging acceptance. The
+[delivery packet](releases/personal-history-mvp/README.md) pins exact migration
+and runtime material, separate PR drafts, cutover/recovery boundaries and open
+gates. The controller's final semantic Graphify and whole-branch review precede
+shared changes. Fourteen migrations bring the disposable staging-baseline chain
+from 41 to 55, with policy version 1 inactive. Task 9 verifies populated
+preservation; no remote migration or activation is implied.
+
+The [verification matrix](personal-history-and-plans-mvp-verification.md) records
+local actual-controller 4/6/15 media, Worker/SQL/consumer and UI evidence with
+explicit limits. Loaded provider/MV3 termination, real Stripe TEST, physical
+media, forced relay/two-network and exact active-policy recovery remain open.
+The current remote staging source is still `a03c012` (read-only refresh September
+8); no new MVP runtime, tester synchronization or Chrome reload has been delivered.
+Old staging is not a valid post-activation rollback. Keep policy true, paid gates,
+personal writer, data and epochs; exact compatible recovery must be verified.
+Production/main and public pricing/media claims require a separate accepted
+release decision.
+
+### Remaining Product Acceptance
 
 These are intentionally not treated as solved:
 

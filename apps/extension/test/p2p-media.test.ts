@@ -155,6 +155,7 @@ function createP2PControllerHarness(
   const cameraStatuses: boolean[] = [];
   const messages: Array<string | null> = [];
   const microphoneFailures: MicrophoneTerminalFailure[] = [];
+  const mediaFailures: Array<import("../src/media-types").MediaCaptureTerminalFailure> = [];
   const videos: GhostVideo[][] = [];
   const microphoneStatuses: MicrophoneStatus[] = [];
   const signals: Array<{
@@ -167,6 +168,7 @@ function createP2PControllerHarness(
     localParticipant,
     onActiveSpeakerIdsChange: (ids) => activeSpeakerChanges.push(ids),
     onCameraStatus: (enabled) => cameraStatuses.push(enabled),
+    onMediaTerminalFailure: failure => mediaFailures.push(failure),
     onMicrophoneTerminalFailure: (failure) =>
       microphoneFailures.push(failure),
     onVideosChange: (items) => videos.push(items),
@@ -183,6 +185,7 @@ function createP2PControllerHarness(
 
   return {
     activeSpeakerChanges,
+    mediaFailures,
     cameraStatuses,
     controller,
     messages,
@@ -3776,5 +3779,80 @@ describe("P2P idle peer linger", () => {
     expect(pc.setRemoteDescription).toHaveBeenCalledTimes(2);
 
     harness.controller.disconnect();
+  });
+});
+
+describe("versioned receive-only topology", () => {
+  beforeEach(() => { vi.useFakeTimers(); FakeRtcPeerConnection.instances = []; vi.stubGlobal("RTCPeerConnection", FakeRtcPeerConnection); vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue(undefined); });
+  afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); vi.restoreAllMocks(); });
+  it("ignores an old async camera failure after a newer capture intent succeeds", async () => {
+    let rejectOld!: (error:unknown)=>void;
+    const oldCapture=new Promise<MediaStream>((_,reject)=>{rejectOld=reject;});
+    const track=new FakeVideoTrack("new-intent");
+    installFakeMediaDevices({addEventListener:vi.fn(),removeEventListener:vi.fn(),getUserMedia:vi.fn().mockReturnValueOnce(oldCapture).mockResolvedValueOnce(fakeVideoStream(track))} as unknown as MediaDevices);
+    const h=createP2PControllerHarness({...roster[0],cameraEnabled:false});
+    const old={type:"SET_MEDIA_INTENT",roomId:"room",roomGeneration:1,participantSessionId:"s0",media:"camera",enabled:true,requestId:"old",intentSequence:1,revocationEpoch:0} as const;
+    h.controller.setCaptureAuthority(true,false,{camera:old});const pending=h.controller.setCameraEnabled(true);
+    h.controller.setCaptureAuthority(true,false,{camera:{...old,requestId:"new",intentSequence:3}});await h.controller.setCameraEnabled(true);
+    rejectOld(new DOMException("late denial","NotAllowedError"));await pending;
+    expect(h.mediaFailures).toEqual([]);expect(track.readyState).toBe("live");expect((await h.controller.getStats()).cameraEnabled).toBe(true);h.controller.disconnect();
+  });
+  it("reports camera and mic permission failure with the captured immutable intent token", async () => {
+    const getUserMedia=vi.fn().mockRejectedValue(new DOMException("denied","NotAllowedError"));
+    installFakeMediaDevices({addEventListener:vi.fn(),removeEventListener:vi.fn(),getUserMedia} as unknown as MediaDevices);
+    const h=createP2PControllerHarness({...roster[0],cameraEnabled:false});
+    const camera={type:"SET_MEDIA_INTENT",roomId:"room",roomGeneration:1,participantSessionId:"s0",media:"camera",enabled:true,requestId:"camera",intentSequence:1,revocationEpoch:0} as const;
+    const microphone={...camera,media:"microphone",requestId:"microphone"} as const;
+    h.controller.setCaptureAuthority(true,true,{camera,microphone});
+    await h.controller.setCameraEnabled(true);await h.controller.setMicrophonePublishing(true,"immediate");
+    expect(h.mediaFailures.map(f=>f.intent)).toEqual([camera,microphone]);h.controller.disconnect();
+  });
+  it("actual controller creates all publisher pairs with zero receiver capture and disposes revoked async capture", async () => {
+    const pending = deferred<MediaStream>(); const track = new FakeAudioTrack("revoked-pending");
+    const getUserMedia = vi.fn().mockReturnValue(pending.promise);
+    installFakeMediaDevices({ addEventListener: vi.fn(), removeEventListener: vi.fn(), getUserMedia } as unknown as MediaDevices);
+    const { controller } = createP2PControllerHarness(roster[14]);
+    controller.setCaptureAuthority(false, false); controller.updateParticipants(roster, undefined, media);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(FakeRtcPeerConnection.instances).toHaveLength(12);
+    await controller.setCameraEnabled(true); await controller.setMicrophonePublishing(true, "warm");
+    expect(getUserMedia).not.toHaveBeenCalled();
+    controller.setCaptureAuthority(false, true);
+    const start = controller.setMicrophonePublishing(true, "warm");
+    controller.setCaptureAuthority(false, false);
+    pending.resolve(fakeAudioStream(track)); await start;
+    expect(track.readyState).toBe("ended");
+    expect((await controller.getStats()).microphonePublishing).toBe(false);
+    controller.disconnect();
+  });
+
+  const roster = Array.from({ length: 15 }, (_, i) => ({ ...participant(`p${i}`, i < 4, "none"), participantSessionId: `s${i}`, connected: true }));
+  const media = { type: "ROOM_MEDIA_SNAPSHOT", roomId: "room", roomGeneration: 1, snapshotSequence: 1,
+    capabilities: { mediaProtocolVersion: 2, hostPlanCode: "pro", maxParticipants: 15, maxCameras: 4, maxMicrophones: 8, capabilityRevision: 1, capabilitiesValidUntil: "2026-09-08T20:00:00Z" }, closingAt: null,
+    participants: roster.map((p, i) => ({ participantSessionId: p.participantSessionId, cameraGranted: i < 4, microphoneGranted: i >= 4 && i < 12, cameraIntentSequence: 1, microphoneIntentSequence: 1, cameraRevocationEpoch: 0, microphoneRevocationEpoch: 0 })),
+  } as import("@anidachi/protocol").RoomMediaSnapshot;
+  it("queues a v2 remote media change behind an in-flight offer without rebuilding the peer", async () => {
+    const harness = createP2PControllerHarness(roster[0]);
+    harness.controller.setCaptureAuthority(false, false);
+    harness.controller.updateParticipants([roster[0], roster[14]], undefined, media);
+    await vi.advanceTimersByTimeAsync(0);
+    const peer = FakeRtcPeerConnection.instances[0];
+    expect(peer.signalingState).toBe("have-local-offer");
+    await harness.controller.handleSignal("p14", { kind: "renegotiate" });
+    expect(peer.close).not.toHaveBeenCalled();
+    expect(FakeRtcPeerConnection.instances).toHaveLength(1);
+    expect(harness.signals.filter(s => s.signal.kind === "offer")).toHaveLength(1);
+    harness.controller.disconnect();
+  });
+
+  it("pairs a publisher with all 14 others and a receiver with exactly 12 publishers", () => {
+    expect(selectP2PMediaParticipants(roster, "p0", false, new Set(), media)).toHaveLength(15);
+    expect(selectP2PMediaParticipants(roster, "p14", false, new Set(), media)).toHaveLength(13);
+    expect(canReceiveP2PSignalFromParticipant(roster, "p14", "p13", false, new Set(), media)).toBe(false);
+    expect(canReceiveP2PSignalFromParticipant(roster, "p14", "p0", false, new Set(), media)).toBe(true);
+  });
+  it("pending v2 never falls back to legacy and disconnected reservations are excluded", () => {
+    expect(selectP2PMediaParticipants(roster.map(p => ({ ...p, mediaSeat: "joined" })), "p0", true, new Set(), null)).toEqual([]);
+    expect(selectP2PMediaParticipants(roster.map(p => p.id === "p0" ? { ...p, connected: false } : p), "p14", false, new Set(), media)).toHaveLength(12);
   });
 });

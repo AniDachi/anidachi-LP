@@ -1,3 +1,5 @@
+import { canCaptureWatchHistory } from "./watch-history-access";
+import { withoutWatchHistoryAttestation } from "./watch-history-storage";
 import {
   WATCH_HISTORY_TITLE_EPISODE_SLICE_LIMIT,
   type WatchHistoryItem,
@@ -34,10 +36,11 @@ export type PopupWatchHistorySnapshot = {
   pendingEvents: WatchProgressEvent[];
   localObservation: PopupWatchHistoryLocalObservation | null;
   capturePaused: boolean;
+  retiredUnprovenCount?: number;
 };
 
 export type PopupWatchHistoryClient = {
-  loadBrowseCached?(message: Extract<WatchHistoryMessage, { command: "browse" | "browse-title-episodes" | "browse-sessions" | "browse-options" }>): Promise<WatchHistoryMessageResponse>;
+  loadBrowseCached?(message: Extract<WatchHistoryMessage, { command: "browse" | "browse-title-episodes" | "browse-sessions" | "browse-options" | "browse-catalog" }>): Promise<WatchHistoryMessageResponse>;
   loadCached(ownerUserId: string): Promise<PopupWatchHistorySnapshot | null>;
   request(message: WatchHistoryMessage): Promise<WatchHistoryMessageResponse>;
   subscribe?(
@@ -392,13 +395,13 @@ export function ProviderLogo({ label, provider }: { label: string; provider: str
   if (provider === "youtube") {
     return (
       <span aria-hidden="true" className="resource-provider-logo youtube">
-        <svg viewBox="0 0 32 32">
+        <svg viewBox="0 0 24 24">
           <title>{label}</title>
           <path
-            d="M28.2 9.1a3.8 3.8 0 0 0-2.7-2.7C23.1 5.8 16 5.8 16 5.8s-7.1 0-9.5.6a3.8 3.8 0 0 0-2.7 2.7C3.2 11.5 3.2 16 3.2 16s0 4.5.6 6.9a3.8 3.8 0 0 0 2.7 2.7c2.4.6 9.5.6 9.5.6s7.1 0 9.5-.6a3.8 3.8 0 0 0 2.7-2.7c.6-2.4.6-6.9.6-6.9s0-4.5-.6-6.9Z"
+            d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.121 2.136c1.872.505 9.377.505 9.377.505s7.505 0 9.376-.505a3.016 3.016 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814Z"
             fill="currentColor"
           />
-          <path d="m13.4 20.4 7-4.4-7-4.4v8.8Z" fill="#fff" />
+          <path d="m9.545 15.568 6.273-3.568-6.273-3.568v7.136Z" fill="#fff" />
         </svg>
       </span>
     );
@@ -499,7 +502,7 @@ export function selectConfirmedPopupWatchHistorySnapshot(
   if (!partition ||
     partition.ownerUserId !== ownerUserId ||
     partition.accountGeneration !== accountGeneration ||
-    partition.preferencesConfirmed !== true) {
+    partition.preferencesConfirmed !== true || !canCaptureWatchHistory(partition.accessLease, ownerUserId, Date.now())) {
     return null;
   }
   const history = normalizeCachedWatchHistoryResponse(partition.cache);
@@ -528,7 +531,7 @@ export function selectConfirmedPopupWatchHistorySnapshot(
     }
   }
   for (const entry of partition.outbox.entries) {
-    const pending = WatchProgressEventSchema.safeParse(entry.event);
+    const pending = WatchProgressEventSchema.safeParse(withoutWatchHistoryAttestation(entry.event));
     if (pending.success && pending.data.accountGeneration === accountGeneration) {
       pendingEvents.set(pending.data.clientEventId, pending.data);
     }
@@ -540,6 +543,7 @@ export function selectConfirmedPopupWatchHistorySnapshot(
     pendingEvents: [...pendingEvents.values()],
     localObservation,
     capturePaused: partition.capturePaused === true,
+    ...((partition.outbox.retiredUnproven ?? 0) > 0 ? { retiredUnprovenCount: partition.outbox.retiredUnproven } : {}),
   };
 }
 

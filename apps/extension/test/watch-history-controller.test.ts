@@ -1,3 +1,4 @@
+import { paidHistoryLease } from "./watch-history-personal-fixtures";
 import { describe, expect, it, vi } from "vitest";
 import {
   createWatchHistoryController,
@@ -9,6 +10,17 @@ import type { HistoryObservation } from "../src/source-adapters/core/history-pol
 import type { WatchHistoryCaptureResult } from "../src/watch-history-client";
 
 describe("watch history meaningful-progress controller", () => {
+  it("does not treat a Resume seek or its synthetic ended checkpoint as new viewing", async () => {
+    const fixture = createFixture(); await fixture.controller.start();
+    fixture.setTime(11); await fixture.controller.observe("heartbeat");
+    const before = fixture.enqueued.length;
+    await fixture.controller.noteResumeSeeking();
+    fixture.setTime(1200); await fixture.controller.observe("ended");
+    expect(fixture.enqueued).toHaveLength(before);
+    fixture.setTime(1201); await fixture.controller.observe("heartbeat");
+    await fixture.controller.observe("pause");
+    expect(fixture.enqueued.at(-1)?.currentTime).toBe(1201);
+  });
   it("signals discovery after durable capture without awaiting metadata and coalesces a playback interaction", async () => {
     const discovered: Array<{ refreshCatalog: boolean }> = [];
     const fixture = createFixture({ onPersisted: (_event, _owner, options) => { discovered.push(options); return new Promise<void>(() => undefined); } });
@@ -29,6 +41,7 @@ describe("watch history meaningful-progress controller", () => {
       loadCachedPreferences: async () => ({
         ownerUserId: "00000000-0000-4000-8000-000000000001",
         accountGeneration: 1,
+        accessLease: paidHistoryLease(undefined, 1_700_000_000_000),
         preferences: { youtubeHistoryEnabled: false },
       }),
       loadPreferences: () => new Promise((resolve) => { resolveCanonical = resolve; }),
@@ -49,12 +62,13 @@ describe("watch history meaningful-progress controller", () => {
     resolveCanonical({
       ownerUserId: "00000000-0000-4000-8000-000000000001",
       accountGeneration: 1,
-      preferences: { youtubeHistoryEnabled: false },
+      accessLease: paidHistoryLease(undefined, 1_700_000_000_000),
+        preferences: { youtubeHistoryEnabled: false },
     });
     await observing;
   });
 
-  it("keeps YouTube disabled during cached startup authority", async () => {
+  it("accepts YouTube only from an unexpired cached paid consent lease", async () => {
     let resolveCanonical!: (
       value: Awaited<ReturnType<WatchHistoryControllerDependencies["loadPreferences"]>>,
     ) => void;
@@ -63,6 +77,7 @@ describe("watch history meaningful-progress controller", () => {
       loadCachedPreferences: async () => ({
         ownerUserId: "00000000-0000-4000-8000-000000000001",
         accountGeneration: 1,
+        accessLease: paidHistoryLease(undefined, 1_700_000_000_000),
         preferences: { youtubeHistoryEnabled: true },
       }),
       loadPreferences: () => new Promise((resolve) => { resolveCanonical = resolve; }),
@@ -74,11 +89,12 @@ describe("watch history meaningful-progress controller", () => {
 
     await fixture.controller.start();
 
-    expect(observedPreferences).toEqual([false]);
+    expect(observedPreferences).toEqual([true]);
     resolveCanonical({
       ownerUserId: "00000000-0000-4000-8000-000000000001",
       accountGeneration: 1,
-      preferences: { youtubeHistoryEnabled: true },
+      accessLease: paidHistoryLease(undefined, 1_700_000_000_000),
+        preferences: { youtubeHistoryEnabled: true },
       capturePaused: false,
     });
   });
@@ -91,7 +107,7 @@ describe("watch history meaningful-progress controller", () => {
 
     const together = createFixture({ roomActive: true });
     await together.controller.start();
-    expect(together.localDisplayModes).toEqual(["together"]);
+    expect(together.localDisplayModes).toEqual(["mine"]);
   });
 
   it("clears active local presentation when the supported source disappears", async () => {
@@ -173,14 +189,14 @@ describe("watch history meaningful-progress controller", () => {
     ]);
   });
 
-  it("never marks active-room observations as meaningful solo progress", async () => {
+  it("records own meaningful progress in an active room", async () => {
     const fixture = createFixture({ roomActive: true });
     await fixture.controller.start();
     fixture.setTime(11);
     await fixture.controller.observe("heartbeat");
     await fixture.controller.observe("ended");
 
-    expect(fixture.localMeaningfulSolo).toEqual([false, false, false]);
+    expect(fixture.localMeaningfulSolo).toEqual([false, true, true]);
   });
 
   it("does not publish pause, seek, pagehide, source change, room leave, or heartbeat before the gate", async () => {
@@ -204,179 +220,36 @@ describe("watch history meaningful-progress controller", () => {
     expect(fixture.enqueued).toEqual([]);
   });
 
-  it("allows ended without prior advancement but suppresses every publication while a room is active", async () => {
+  it("records paid guest ended under a Free host with no room authority", async () => {
     const fixture = createFixture({ roomActive: true });
     await fixture.controller.start();
-    fixture.setTime(11);
-    await fixture.controller.observe("heartbeat");
     await fixture.controller.observe("ended");
-
-    expect(fixture.enqueued).toEqual([]);
-    expect(fixture.local).toHaveLength(3);
+    expect(fixture.enqueued).toHaveLength(1);
+    expect(fixture.enqueued[0]).not.toHaveProperty("sharedRoom");
   });
 
-  it("publishes meaningful shared progress only after exact room authority arrives", async () => {
-    const fixture = createFixture({
-      roomActive: true,
-      sessionKeys: ["11111111-1111-4111-8111-111111111111"],
-    });
-    await fixture.controller.start();
-    fixture.setTime(11);
-    await fixture.controller.observe("heartbeat");
-    expect(fixture.enqueued).toEqual([]);
-
-    await fixture.controller.setRoomHistoryAuthority(roomAuthority());
-    expect(fixture.roomAuthorityStates).toEqual(["ready"]);
-    fixture.setTime(12);
-    await fixture.controller.observe("heartbeat");
-    fixture.setTime(13);
-    await fixture.controller.observe("heartbeat");
-
-    expect(fixture.enqueued).toEqual([
-      expect.objectContaining({
-        currentTime: 13,
-        clientSessionKey: "11111111-1111-4111-8111-111111111111",
-        sharedRoom: roomAuthority(),
-      }),
-    ]);
-  });
-
-  it("keeps a new generation recoverably waiting until the adapter observes the new source", async () => {
-    const fixture = createFixture({
-      roomActive: true,
-      sessionKeys: [
-        "11111111-1111-4111-8111-111111111111",
-        "22222222-2222-4222-8222-222222222222",
-      ],
-    });
-    await fixture.controller.start();
-    await fixture.controller.setRoomHistoryAuthority(roomAuthority());
-    fixture.setTime(11);
-    await fixture.controller.observe("heartbeat");
-    fixture.setTime(12);
-    await fixture.controller.observe("heartbeat");
-
-    await fixture.controller.setRoomHistoryAuthority(null);
-    await fixture.controller.setRoomHistoryAuthority(roomAuthority(2));
-    fixture.setTime(13);
-    await fixture.controller.observe("heartbeat");
-    fixture.setSource({
-      titleKey: "crunchyroll-series:other",
-      episodeKey: "episode-2",
-      sourceUrl: "https://www.crunchyroll.com/watch/episode-2",
-    });
-    fixture.setTime(14);
-    await fixture.controller.observe("heartbeat");
-    fixture.setTime(15);
-    await fixture.controller.observe("heartbeat");
-
-    expect(fixture.enqueued.map((event) => [
-      event.kind,
-      event.currentTime,
-      event.titleKey,
-      event.sharedRoom?.sourceGeneration,
-    ])).toEqual([
-      ["heartbeat", 12, "crunchyroll-series:show", 1],
-      ["source_change", 12, "crunchyroll-series:show", 1],
-      ["heartbeat", 15, "crunchyroll-series:other", 2],
-    ]);
-    expect(fixture.roomAuthorityStates).toContain("waiting");
-    expect(fixture.roomAuthorityStates.at(-1)).toBe("ready");
-  });
-
-  it("finalizes the prior shared source with its old authority before activating a new generation", async () => {
-    const fixture = createFixture({
-      roomActive: true,
-      sessionKeys: [
-        "11111111-1111-4111-8111-111111111111",
-        "22222222-2222-4222-8222-222222222222",
-      ],
-    });
-    await fixture.controller.start();
-    await fixture.controller.setRoomHistoryAuthority(roomAuthority());
-    fixture.setTime(11);
-    await fixture.controller.observe("heartbeat");
-    fixture.setTime(12);
-    await fixture.controller.observe("heartbeat");
-
-    await fixture.controller.setRoomHistoryAuthority(null);
-    fixture.setSource({
-      titleKey: "crunchyroll-series:other",
-      episodeKey: "episode-2",
-      sourceUrl: "https://www.crunchyroll.com/watch/episode-2",
-    });
-    fixture.setTime(13);
-    await fixture.controller.observe("heartbeat");
-    await fixture.controller.setRoomHistoryAuthority(roomAuthority(2));
-    fixture.setTime(14);
-    await fixture.controller.observe("heartbeat");
-    fixture.setTime(15);
-    await fixture.controller.observe("heartbeat");
-
-    expect(fixture.enqueued.map((event) => [
-      event.kind,
-      event.currentTime,
-      event.clientSessionKey,
-      event.sharedRoom?.sourceGeneration,
-    ])).toEqual([
-      ["heartbeat", 12, "11111111-1111-4111-8111-111111111111", 1],
-      ["source_change", 12, "11111111-1111-4111-8111-111111111111", 1],
-      ["heartbeat", 15, "22222222-2222-4222-8222-222222222222", 2],
-    ]);
-  });
-
-  it("reuses the shared session for a replacement proof with the same tuple", async () => {
+  it("keeps one own-player session through room authority changes and leave", async () => {
     const fixture = createFixture({ roomActive: true });
-    await fixture.controller.start();
+    await fixture.controller.start(); fixture.setTime(11); await fixture.controller.observe("heartbeat");
     await fixture.controller.setRoomHistoryAuthority(roomAuthority());
-    fixture.setTime(11);
-    await fixture.controller.observe("heartbeat");
-    fixture.setTime(12);
-    await fixture.controller.observe("heartbeat");
-    await fixture.controller.setRoomHistoryAuthority(roomAuthority(1, "replacement-proof"));
-    fixture.setTime(13);
-    await fixture.controller.observe("pause");
-
-    expect(fixture.enqueued.map((event) => [
-      event.kind,
-      event.clientSessionKey,
-      event.sharedRoom?.attestation,
-    ])).toEqual([
-      ["heartbeat", "11111111-1111-4111-8111-111111111111", "proof-1"],
-      ["pause", "11111111-1111-4111-8111-111111111111", "replacement-proof"],
-    ]);
+    await fixture.controller.setRoomHistoryAuthority(null);
+    await fixture.controller.setRoomHistoryAuthority(roomAuthority(2));
+    fixture.setTime(12); await fixture.controller.observe("pause");
+    await fixture.controller.setRoomActive(false);
+    expect(fixture.enqueued.map((event) => event.kind)).toEqual(["heartbeat", "pause", "room_leave"]);
+    expect(new Set(fixture.enqueued.map((event) => event.clientSessionKey)).size).toBe(1);
+    expect(fixture.enqueued.every((event) => !Object.hasOwn(event, "sharedRoom"))).toBe(true);
   });
 
-  it("publishes room leave with the retained authority then requires a fresh solo gate", async () => {
-    const fixture = createFixture({
-      roomActive: true,
-      sessionKeys: [
-        "11111111-1111-4111-8111-111111111111",
-        "22222222-2222-4222-8222-222222222222",
-      ],
-    });
-    await fixture.controller.start();
-    await fixture.controller.setRoomHistoryAuthority(roomAuthority());
-    fixture.setTime(11);
-    await fixture.controller.observe("heartbeat");
-    fixture.setTime(12);
-    await fixture.controller.observe("heartbeat");
-    fixture.setRoomActive(false);
-    await fixture.controller.setRoomActive(false);
-    fixture.setTime(13);
-    await fixture.controller.observe("heartbeat");
-    fixture.setTime(14);
-    await fixture.controller.observe("heartbeat");
-
-    expect(fixture.enqueued.map((event) => [
-      event.kind,
-      event.currentTime,
-      event.clientSessionKey,
-      event.sharedRoom?.sourceGeneration ?? null,
-    ])).toEqual([
-      ["heartbeat", 12, "11111111-1111-4111-8111-111111111111", 1],
-      ["room_leave", 12, "11111111-1111-4111-8111-111111111111", 1],
-      ["heartbeat", 14, "22222222-2222-4222-8222-222222222222", null],
+  it("rotates the personal session only when the guest's own source changes", async () => {
+    const fixture = createFixture({ roomActive: true, sessionKeys: ["source-a", "source-b"] });
+    await fixture.controller.start(); fixture.setTime(11); await fixture.controller.observe("heartbeat");
+    await fixture.controller.setRoomHistoryAuthority(roomAuthority(2));
+    fixture.setTime(12); await fixture.controller.observe("pause");
+    fixture.setSource({ episodeKey: "episode-2", sourceUrl: "https://www.crunchyroll.com/watch/episode-2" });
+    await fixture.controller.observe("heartbeat"); fixture.setTime(13); await fixture.controller.observe("heartbeat");
+    expect(fixture.enqueued.map((event) => [event.kind, event.currentTime, event.clientSessionKey])).toEqual([
+      ["heartbeat", 11, "source-a"], ["pause", 12, "source-a"], ["source_change", 12, "source-a"], ["heartbeat", 13, "source-b"],
     ]);
   });
 
@@ -438,7 +311,8 @@ describe("watch history meaningful-progress controller", () => {
     let resolvePreferences: ((value: {
       ownerUserId: string;
       accountGeneration: number;
-      preferences: { youtubeHistoryEnabled: boolean };
+      accessLease?: ReturnType<typeof paidHistoryLease>;
+        preferences: { youtubeHistoryEnabled: boolean };
     }) => void) | null = null;
     const fixture = createFixture({
       loadPreferences: () => new Promise((resolve) => { resolvePreferences = resolve; }),
@@ -448,11 +322,13 @@ describe("watch history meaningful-progress controller", () => {
     (resolvePreferences as unknown as (value: {
       ownerUserId: string;
       accountGeneration: number;
-      preferences: { youtubeHistoryEnabled: boolean };
+      accessLease?: ReturnType<typeof paidHistoryLease>;
+        preferences: { youtubeHistoryEnabled: boolean };
     }) => void)({
       ownerUserId: "00000000-0000-4000-8000-000000000001",
       accountGeneration: 1,
-      preferences: { youtubeHistoryEnabled: false },
+      accessLease: paidHistoryLease(undefined, 1_700_000_000_000),
+        preferences: { youtubeHistoryEnabled: false },
     });
     await Promise.all([starting, disposing]);
 
@@ -517,6 +393,7 @@ describe("watch history meaningful-progress controller", () => {
       loadPreferences: async () => ({
         ownerUserId: ownerA,
         accountGeneration: 1,
+        accessLease: paidHistoryLease(undefined, 1_700_000_000_000),
         preferences: { youtubeHistoryEnabled: false },
       }),
       observeLocally: capture,
@@ -571,7 +448,8 @@ describe("watch history meaningful-progress controller", () => {
     let resolveRefresh: ((value: {
       ownerUserId: string;
       accountGeneration: number;
-      preferences: { youtubeHistoryEnabled: boolean };
+      accessLease?: ReturnType<typeof paidHistoryLease>;
+        preferences: { youtubeHistoryEnabled: boolean };
     }) => void) | null = null;
     const fixture = createFixture({
       loadPreferences: async () => {
@@ -580,7 +458,8 @@ describe("watch history meaningful-progress controller", () => {
           return {
             ownerUserId: "00000000-0000-4000-8000-000000000001",
             accountGeneration: 1,
-            preferences: { youtubeHistoryEnabled: true },
+            accessLease: paidHistoryLease(undefined, 1_700_000_000_000),
+        preferences: { youtubeHistoryEnabled: true },
           };
         }
         return new Promise((resolve) => { resolveRefresh = resolve; });
@@ -616,11 +495,13 @@ describe("watch history meaningful-progress controller", () => {
     (resolveRefresh as unknown as (value: {
       ownerUserId: string;
       accountGeneration: number;
-      preferences: { youtubeHistoryEnabled: boolean };
+      accessLease?: ReturnType<typeof paidHistoryLease>;
+        preferences: { youtubeHistoryEnabled: boolean };
     }) => void)({
       ownerUserId: "00000000-0000-4000-8000-000000000001",
       accountGeneration: 1,
-      preferences: { youtubeHistoryEnabled: false },
+      accessLease: paidHistoryLease(undefined, 1_700_000_000_000),
+        preferences: { youtubeHistoryEnabled: false },
     });
     await Promise.all([refreshing, observing]);
 
@@ -650,7 +531,8 @@ describe("watch history meaningful-progress controller", () => {
     await fixture.controller.applyLocalPreferences({
       ownerUserId: "00000000-0000-4000-8000-000000000001",
       accountGeneration: 1,
-      preferences: { youtubeHistoryEnabled: true },
+      accessLease: paidHistoryLease(undefined, 1_700_000_000_000),
+        preferences: { youtubeHistoryEnabled: true },
       capturePaused: false,
     });
 
@@ -673,7 +555,8 @@ describe("watch history meaningful-progress controller", () => {
     let resolveRefresh!: (value: {
       ownerUserId: string;
       accountGeneration: number;
-      preferences: { youtubeHistoryEnabled: boolean };
+      accessLease?: ReturnType<typeof paidHistoryLease>;
+        preferences: { youtubeHistoryEnabled: boolean };
     }) => void;
     const fixture = createFixture({
       loadPreferences: async () => {
@@ -682,7 +565,8 @@ describe("watch history meaningful-progress controller", () => {
           return {
             ownerUserId: "00000000-0000-4000-8000-000000000001",
             accountGeneration: 1,
-            preferences: { youtubeHistoryEnabled: true },
+            accessLease: paidHistoryLease(undefined, 1_700_000_000_000),
+        preferences: { youtubeHistoryEnabled: true },
           };
         }
         return new Promise((resolve) => { resolveRefresh = resolve; });
@@ -708,14 +592,16 @@ describe("watch history meaningful-progress controller", () => {
     const applying = fixture.controller.applyLocalPreferences({
       ownerUserId: "00000000-0000-4000-8000-000000000001",
       accountGeneration: 1,
-      preferences: { youtubeHistoryEnabled: true },
+      accessLease: paidHistoryLease(undefined, 1_700_000_000_000),
+        preferences: { youtubeHistoryEnabled: true },
       capturePaused: false,
     }).then(() => { localChoiceApplied = true; });
     await vi.waitFor(() => expect(localChoiceApplied).toBe(true));
     resolveRefresh({
       ownerUserId: "00000000-0000-4000-8000-000000000001",
       accountGeneration: 1,
-      preferences: { youtubeHistoryEnabled: false },
+      accessLease: paidHistoryLease(undefined, 1_700_000_000_000),
+        preferences: { youtubeHistoryEnabled: false },
     });
     await Promise.all([refreshing, applying]);
 
@@ -728,7 +614,8 @@ describe("watch history meaningful-progress controller", () => {
     let resolveInitial!: (value: {
       ownerUserId: string;
       accountGeneration: number;
-      preferences: { youtubeHistoryEnabled: boolean };
+      accessLease?: ReturnType<typeof paidHistoryLease>;
+        preferences: { youtubeHistoryEnabled: boolean };
     }) => void;
     const fixture = createFixture({
       loadPreferences: () => new Promise((resolve) => { resolveInitial = resolve; }),
@@ -751,7 +638,8 @@ describe("watch history meaningful-progress controller", () => {
     await fixture.controller.applyLocalPreferences({
       ownerUserId: "00000000-0000-4000-8000-000000000001",
       accountGeneration: 1,
-      preferences: { youtubeHistoryEnabled: true },
+      accessLease: paidHistoryLease(undefined, 1_700_000_000_000),
+        preferences: { youtubeHistoryEnabled: true },
       capturePaused: false,
     });
     expect(fixture.local).toHaveLength(1);
@@ -759,7 +647,8 @@ describe("watch history meaningful-progress controller", () => {
     resolveInitial({
       ownerUserId: "00000000-0000-4000-8000-000000000001",
       accountGeneration: 1,
-      preferences: { youtubeHistoryEnabled: false },
+      accessLease: paidHistoryLease(undefined, 1_700_000_000_000),
+        preferences: { youtubeHistoryEnabled: false },
     });
     await starting;
     fixture.setTime(11);
@@ -771,7 +660,8 @@ describe("watch history meaningful-progress controller", () => {
     let resolveCached!: (value: {
       ownerUserId: string;
       accountGeneration: number;
-      preferences: { youtubeHistoryEnabled: boolean };
+      accessLease?: ReturnType<typeof paidHistoryLease>;
+        preferences: { youtubeHistoryEnabled: boolean };
       capturePaused: boolean;
     }) => void;
     const fixture = createFixture({
@@ -798,7 +688,8 @@ describe("watch history meaningful-progress controller", () => {
     await fixture.controller.applyLocalPreferences({
       ownerUserId: "00000000-0000-4000-8000-000000000001",
       accountGeneration: 1,
-      preferences: { youtubeHistoryEnabled: true },
+      accessLease: paidHistoryLease(undefined, 1_700_000_000_000),
+        preferences: { youtubeHistoryEnabled: true },
       capturePaused: false,
     });
     expect(fixture.local).toHaveLength(1);
@@ -806,7 +697,8 @@ describe("watch history meaningful-progress controller", () => {
     resolveCached({
       ownerUserId: "00000000-0000-4000-8000-000000000001",
       accountGeneration: 1,
-      preferences: { youtubeHistoryEnabled: false },
+      accessLease: paidHistoryLease(undefined, 1_700_000_000_000),
+        preferences: { youtubeHistoryEnabled: false },
       capturePaused: false,
     });
     await starting;
@@ -822,6 +714,7 @@ describe("watch history meaningful-progress controller", () => {
       loadPreferences: async () => ({
         ownerUserId: "00000000-0000-4000-8000-000000000001",
         accountGeneration: 1,
+        accessLease: paidHistoryLease(undefined, 1_700_000_000_000),
         preferences: { youtubeHistoryEnabled: true },
       }),
       observeResult: () => rejectHeldCapture
@@ -848,7 +741,8 @@ describe("watch history meaningful-progress controller", () => {
     const disabling = fixture.controller.applyLocalPreferences({
       ownerUserId: "00000000-0000-4000-8000-000000000001",
       accountGeneration: 1,
-      preferences: { youtubeHistoryEnabled: false },
+      accessLease: paidHistoryLease(undefined, 1_700_000_000_000),
+        preferences: { youtubeHistoryEnabled: false },
       capturePaused: false,
     });
     fixture.releaseHeldLocal();
@@ -859,7 +753,8 @@ describe("watch history meaningful-progress controller", () => {
     await fixture.controller.applyLocalPreferences({
       ownerUserId: "00000000-0000-4000-8000-000000000001",
       accountGeneration: 1,
-      preferences: { youtubeHistoryEnabled: true },
+      accessLease: paidHistoryLease(undefined, 1_700_000_000_000),
+        preferences: { youtubeHistoryEnabled: true },
       capturePaused: false,
     });
     fixture.setTime(12);
@@ -872,6 +767,7 @@ describe("watch history meaningful-progress controller", () => {
       loadPreferences: async () => ({
         ownerUserId: "00000000-0000-4000-8000-000000000001",
         accountGeneration: 1,
+        accessLease: paidHistoryLease(undefined, 1_700_000_000_000),
         preferences: { youtubeHistoryEnabled: true },
       }),
       getObservation: (preferences, observation) => preferences?.youtubeHistoryEnabled
@@ -894,7 +790,8 @@ describe("watch history meaningful-progress controller", () => {
     await fixture.controller.applyLocalPreferences({
       ownerUserId: "00000000-0000-4000-8000-000000000001",
       accountGeneration: 1,
-      preferences: { youtubeHistoryEnabled: false },
+      accessLease: paidHistoryLease(undefined, 1_700_000_000_000),
+        preferences: { youtubeHistoryEnabled: false },
       capturePaused: false,
     });
 
@@ -914,7 +811,8 @@ describe("watch history meaningful-progress controller", () => {
     await fixture.controller.applyLocalPreferences({
       ownerUserId: "00000000-0000-4000-8000-000000000001",
       accountGeneration: 1,
-      preferences: { youtubeHistoryEnabled: true },
+      accessLease: paidHistoryLease(undefined, 1_700_000_000_000),
+        preferences: { youtubeHistoryEnabled: true },
       capturePaused: false,
     });
     expect(fixture.local).toHaveLength(1);
@@ -937,7 +835,8 @@ describe("watch history meaningful-progress controller", () => {
           ? {
             ownerUserId: "00000000-0000-4000-8000-000000000001",
             accountGeneration: 1,
-            preferences: { youtubeHistoryEnabled: false },
+            accessLease: paidHistoryLease(undefined, 1_700_000_000_000),
+        preferences: { youtubeHistoryEnabled: false },
           }
           : null;
       },
@@ -993,7 +892,7 @@ describe("watch history meaningful-progress controller", () => {
     });
   });
 
-  it("observes but never publishes shared playback, then requires a fresh solo gate after leave", async () => {
+  it("keeps own progress and one personal session across entry and leave", async () => {
     const fixture = createFixture({
       sessionKeys: [
         "11111111-1111-4111-8111-111111111111",
@@ -1018,8 +917,7 @@ describe("watch history meaningful-progress controller", () => {
 
     expect(fixture.enqueued.map((event) => [event.kind, event.currentTime, event.clientSessionKey])).toEqual([
       ["heartbeat", 11, "11111111-1111-4111-8111-111111111111"],
-      ["source_change", 12, "11111111-1111-4111-8111-111111111111"],
-      ["heartbeat", 15, "33333333-3333-4333-8333-333333333333"],
+      ["room_leave", 13, "11111111-1111-4111-8111-111111111111"],
     ]);
     expect(fixture.local.some((event) => event.currentTime === 13)).toBe(true);
   });
@@ -1039,6 +937,7 @@ describe("watch history meaningful-progress controller", () => {
       loadPreferences: async () => ({
         ownerUserId: "00000000-0000-4000-8000-000000000001",
         accountGeneration: 1,
+        accessLease: paidHistoryLease(undefined, 1_700_000_000_000),
         preferences: { youtubeHistoryEnabled: false },
         capturePaused: true,
       }),
@@ -1050,7 +949,8 @@ describe("watch history meaningful-progress controller", () => {
         return {
           ownerUserId: "00000000-0000-4000-8000-000000000001",
           accountGeneration: 1,
-          preferences: { youtubeHistoryEnabled: false },
+          accessLease: paidHistoryLease(undefined, 1_700_000_000_000),
+        preferences: { youtubeHistoryEnabled: false },
           capturePaused: false,
         };
       },
@@ -1068,7 +968,7 @@ describe("watch history meaningful-progress controller", () => {
     expect(fixture.enqueued).toHaveLength(1);
   });
 
-  it("suppresses solo publication when the final room-entry enqueue fails and requires a fresh session gate after leave", async () => {
+  it("room entry creates no synthetic source-change and cannot break personal persistence", async () => {
     const fixture = createFixture({
       sessionKeys: ["11111111-1111-4111-8111-111111111111", "22222222-2222-4222-8222-222222222222"],
       rejectEnqueueKinds: new Set(["source_change"]),
@@ -1088,10 +988,10 @@ describe("watch history meaningful-progress controller", () => {
 
     expect(fixture.enqueued.map((event) => [event.currentTime, event.clientSessionKey])).toEqual([
       [11, "11111111-1111-4111-8111-111111111111"],
-      [11, "11111111-1111-4111-8111-111111111111"],
-      [14, "33333333-3333-4333-8333-333333333333"],
+      [12, "11111111-1111-4111-8111-111111111111"],
+      [12, "11111111-1111-4111-8111-111111111111"],
     ]);
-    expect(fixture.enqueueFailures).toBe(1);
+    expect(fixture.enqueueFailures).toBe(0);
   });
 
   it("does not start a second forced enqueue until the first deferred enqueue resolves", async () => {
@@ -1113,9 +1013,9 @@ describe("watch history meaningful-progress controller", () => {
     expect(fixture.maxEnqueueConcurrency).toBe(1);
   });
 
-  it("serializes room exit behind an in-flight shared ended observation before opening a fresh solo gate", async () => {
+  it("serializes personal ended and room leave without rotating the recorder", async () => {
     const fixture = createFixture({
-      holdLocalAt: 5,
+      holdLocalAt: 4,
       sessionKeys: [
         "11111111-1111-4111-8111-111111111111",
         "22222222-2222-4222-8222-222222222222",
@@ -1131,7 +1031,7 @@ describe("watch history meaningful-progress controller", () => {
 
     fixture.setTime(13);
     const sharedEnded = fixture.controller.observe("ended");
-    await fixture.waitForLocalAttempts(5);
+    await fixture.waitForLocalAttempts(4);
     const leaving = fixture.controller.setRoomActive(false);
     let leaveResolved = false;
     void leaving.then(() => { leaveResolved = true; });
@@ -1148,14 +1048,14 @@ describe("watch history meaningful-progress controller", () => {
 
     expect(fixture.enqueued.map((event) => [event.kind, event.currentTime])).toEqual([
       ["heartbeat", 11],
-      ["source_change", 11],
-      ["heartbeat", 15],
+      ["ended", 13],
+      ["room_leave", 14],
     ]);
   });
 
-  it("keeps rapid room re-entry active while a queued exit waits for shared persistence", async () => {
+  it("keeps rapid room re-entry independent while personal ended persistence waits", async () => {
     const fixture = createFixture({
-      holdLocalAt: 5,
+      holdLocalAt: 4,
       sessionKeys: [
         "11111111-1111-4111-8111-111111111111",
         "22222222-2222-4222-8222-222222222222",
@@ -1171,7 +1071,7 @@ describe("watch history meaningful-progress controller", () => {
 
     fixture.setTime(13);
     const sharedEnded = fixture.controller.observe("ended");
-    await fixture.waitForLocalAttempts(5);
+    await fixture.waitForLocalAttempts(4);
     const leaving = fixture.controller.setRoomActive(false);
     const reentering = fixture.controller.setRoomActive(true);
 
@@ -1183,24 +1083,25 @@ describe("watch history meaningful-progress controller", () => {
     await fixture.controller.observe("heartbeat");
     expect(fixture.enqueued.map((event) => [event.kind, event.currentTime])).toEqual([
       ["heartbeat", 11],
-      ["source_change", 11],
+      ["ended", 13],
+      ["room_leave", 13],
     ]);
 
     await fixture.controller.setRoomActive(false);
-    expect(fixture.local.filter((event) => event.kind === "room_leave")).toEqual([
+    expect(fixture.local.filter((event) => event.kind === "room_leave").at(-1)).toEqual(
       expect.objectContaining({
         currentTime: 15,
-        clientSessionKey: "22222222-2222-4222-8222-222222222222",
-      }),
-    ]);
+        clientSessionKey: "11111111-1111-4111-8111-111111111111",
+      }));
     fixture.setTime(16);
     await fixture.controller.observe("heartbeat");
     fixture.setTime(17);
     await fixture.controller.observe("heartbeat");
     expect(fixture.enqueued.map((event) => [event.kind, event.currentTime, event.clientSessionKey])).toEqual([
       ["heartbeat", 11, "11111111-1111-4111-8111-111111111111"],
-      ["source_change", 11, "11111111-1111-4111-8111-111111111111"],
-      ["heartbeat", 17, "33333333-3333-4333-8333-333333333333"],
+      ["ended", 13, "11111111-1111-4111-8111-111111111111"],
+      ["room_leave", 13, "11111111-1111-4111-8111-111111111111"],
+      ["room_leave", 15, "11111111-1111-4111-8111-111111111111"],
     ]);
   });
 });
@@ -1301,7 +1202,8 @@ function createFixture(options: {
     loadPreferences: options.loadPreferences ?? (async () => ({
       ownerUserId: "00000000-0000-4000-8000-000000000001",
       accountGeneration: 1,
-      preferences: { youtubeHistoryEnabled: false },
+      accessLease: paidHistoryLease(undefined, 1_700_000_000_000),
+        preferences: { youtubeHistoryEnabled: false },
     })),
     recoverCapture: options.recoverCapture,
     observeLocally: async (

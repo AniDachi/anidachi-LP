@@ -1,3 +1,4 @@
+import { paidHistoryLease } from "./watch-history-personal-fixtures";
 import { describe, expect, it, vi } from "vitest";
 import { collectCrunchyrollHistoryCatalog, resolveCrunchyrollHistoryMetadata } from "../src/source-adapters/crunchyroll/bridge-client";
 import variants from "./fixtures/crunchyroll/catalog-variants.json";
@@ -8,7 +9,7 @@ import { createWatchHistoryStorage, watchHistoryPartitionKey, type WatchHistoryS
 
 const context = { region: "VN", requestedLocale: "fr-FR", audioLocale: "ja-JP", subtitleLocales: ["en-US"], observedAt: "2026-09-05T00:00:00.000Z" };
 const owner = "00000000-0000-4000-8000-000000000001";
-const beginInput = { schemaVersion: 3 as const, accountGeneration: 1, provider: "crunchyroll" as const, titleKey: "crunchyroll:series:SERIES", providerSeriesId: "SERIES", context };
+const beginInput = { historyAccess: { accessVersion: 1 as const, accessEpoch: 1 }, schemaVersion: 3 as const, accountGeneration: 1, provider: "crunchyroll" as const, titleKey: "crunchyroll:series:SERIES", providerSeriesId: "SERIES", context };
 function ack(revision: number) {
   return { meta: { schemaVersion: 3, ownerUserId: owner, accountGeneration: 1, serverTime: context.observedAt },
     schemaVersion: 3, accountGeneration: 1, provider: "crunchyroll", titleKey: beginInput.titleKey,
@@ -61,7 +62,7 @@ describe("catalog background begin/commit ownership", () => {
   });
   it.each(["failure", "close"])("releases a %s collection so another page can begin the same context", async (mode) => {
     let stored: WatchHistoryStorageRoot = { schemaVersion: 3, activeGenerations: { [owner]: 1 }, partitions: {
-      [watchHistoryPartitionKey(owner, 1)]: { ownerUserId: owner, accountGeneration: 1, cache: null, preferences: null, currentObservation: null,
+      [watchHistoryPartitionKey(owner, 1)]: { ownerUserId: owner, accountGeneration: 1, accessLease: paidHistoryLease(owner), cache: null, preferences: { youtubeHistoryEnabled: true }, preferencesConfirmed: true, capturePaused: false, captureMarkersReady: true, currentObservation: null,
         outbox: { ownerUserId: owner, accountGeneration: 1, entries: [] } },
     } };
     let begins = 0;
@@ -76,7 +77,7 @@ describe("catalog background begin/commit ownership", () => {
       if (mode === "close" && collections === 1) return new Promise<never>((resolve) => signal!.addEventListener("abort", () => resolve({ ok: false } as never), { once: true }));
       return { ok: false } as never;
     };
-    const event = { provider: "crunchyroll", accountGeneration: 1, clientEventId: "one", identityPending: { watchId: "RAW", requestedLocale: "fr-FR" } } as never;
+    const event = { captureProof: paidHistoryLease(owner), provider: "crunchyroll", accountGeneration: 1, clientEventId: "one", identityPending: { watchId: "RAW", requestedLocale: "fr-FR" } } as never;
     const first = createWatchHistoryPageResolver({ pageId: "first", send: background.handle, command });
     const collecting = first.resolve(event, owner, { refreshCatalog: true });
     await vi.waitFor(() => expect(collections).toBe(1));
@@ -121,16 +122,16 @@ describe("catalog background begin/commit ownership", () => {
     const messages: Array<{ command: string; pageId?: string }> = [];
     const resolver = createWatchHistoryPageResolver({ pageId: "page-a",
       command: async (_action, payload) => ({ ok: true, metadata: { identity: { providerContentId: payload?.contentId, providerSeriesId: "SERIES", providerSeasonIdentifier: "SERIES|S1", providerEpisodeIdentifier: "SERIES|S1|E1", audioLocale: "en-US" }, context, episodeNumber: 1 } } as never),
-      send: async (message) => { messages.push(message); return { ok: true, data: { ...ack(1), refreshRequired: false } }; },
+      send: async (message) => { if (message.command === "bootstrap-cache") return { ok: true, data: { accessLease: paidHistoryLease(owner) } }; messages.push(message); return { ok: true, data: { ...ack(1), refreshRequired: false } }; },
     });
-    for (const watchId of ["RAW", "RAW", "NEXT"]) await resolver.resolve({ provider: "crunchyroll", accountGeneration: 1,
+    for (const watchId of ["RAW", "RAW", "NEXT"]) await resolver.resolve({ captureProof: paidHistoryLease(owner), provider: "crunchyroll", accountGeneration: 1,
       clientSessionKey: watchId, clientEventId: watchId, identityPending: { watchId, requestedLocale: "fr-FR" } } as never, owner, { refreshCatalog: true });
     const begins = messages.filter((message) => message.command === "catalog-begin");
     expect(begins).toHaveLength(2);
     expect(begins[0]!.pageId).not.toBe(begins[1]!.pageId);
   });
   it.each([false, true])("keeps one collection per visit across in-flight duplicates and new timestamps (applied=%s)", async (applied) => {
-    let clock = 0;
+    let clock = paidHistoryLease(owner).receivedAt;
     let release!: (value: never) => void;
     const messages: string[] = [];
     const signals: AbortSignal[] = [];
@@ -141,9 +142,9 @@ describe("catalog background begin/commit ownership", () => {
         signals.push(signal!);
         return new Promise((resolve) => { release = resolve; });
       },
-      send: async (message) => { messages.push(message.command); return { ok: true, data: ack(1) }; },
+      send: async (message) => { if (message.command === "bootstrap-cache") return { ok: true, data: { accessLease: paidHistoryLease(owner) } }; messages.push(message.command); return { ok: true, data: ack(1) }; },
     });
-    const event = { provider: "crunchyroll", accountGeneration: 1, clientEventId: "one", identityPending: { watchId: "RAW", requestedLocale: "fr-FR" } } as never;
+    const event = { captureProof: paidHistoryLease(owner), provider: "crunchyroll", accountGeneration: 1, clientEventId: "one", identityPending: { watchId: "RAW", requestedLocale: "fr-FR" } } as never;
     const first = resolver.resolve(event, owner, { refreshCatalog: true });
     await vi.waitFor(() => expect(signals).toHaveLength(1));
     const second = resolver.resolve(event, owner, { refreshCatalog: true });
@@ -152,7 +153,7 @@ describe("catalog background begin/commit ownership", () => {
     expect(signals).toHaveLength(1);
     release({ ok: applied, ...(applied ? { catalog: {} } : {}) } as never);
     await Promise.all([first, second]);
-    clock = 20_000;
+    clock = paidHistoryLease(owner).receivedAt + 20_000;
     await resolver.resolve(event, owner, { refreshCatalog: true });
     expect(signals).toHaveLength(1);
     expect(messages.filter((value) => value === "catalog-begin")).toHaveLength(1);
@@ -165,9 +166,9 @@ describe("catalog background begin/commit ownership", () => {
     const resolver = createWatchHistoryPageResolver({
       pageId: "page-a",
       command: async (action) => { commands.push(action); return { ok: true, metadata } as never; },
-      send: async (message) => { messages.push(message.command); return { ok: true }; },
+      send: async (message) => { if (message.command === "bootstrap-cache") return { ok: true, data: { accessLease: paidHistoryLease(owner) } }; messages.push(message.command); return { ok: true }; },
     });
-    const event = { provider: "crunchyroll", accountGeneration: 1, clientEventId: "one", identityPending: { watchId: "RAW", requestedLocale: "fr-FR" } } as never;
+    const event = { captureProof: paidHistoryLease(owner), provider: "crunchyroll", accountGeneration: 1, clientEventId: "one", identityPending: { watchId: "RAW", requestedLocale: "fr-FR" } } as never;
     await resolver.resolve(event, owner, { refreshCatalog: false });
     await resolver.resolve(event, owner, { refreshCatalog: false });
     expect(commands).toEqual(["historyIdentity"]);

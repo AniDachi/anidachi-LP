@@ -267,6 +267,7 @@ describe("authenticated room client", () => {
         headers: {
           Authorization: "Bearer access-1",
           "Content-Type": "application/json",
+          "X-Anidachi-Media-Protocol": "2",
         },
         body: JSON.stringify({
           sourceUrl: "https://www.crunchyroll.com/watch/G8WUNM123",
@@ -378,6 +379,7 @@ describe("authenticated room client", () => {
         headers: {
           Authorization: "Bearer access-1",
           "Content-Type": "application/json",
+          "X-Anidachi-Media-Protocol": "2",
         },
         body: JSON.stringify({ participantSessionId: "participant-session-1" }),
         signal: expect.any(AbortSignal),
@@ -1634,3 +1636,31 @@ function deferred<T>() {
   });
   return { promise, resolve };
 }
+
+describe("negotiated media transport", () => {
+ afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+ it("uses actual socket ACK fencing and retains only same-session intent across reconnect", () => {
+  installControlledWebSocket(); const client = new RoomClient();
+  const options = {roomId:"room",roomToken:"token",participant:roomParticipant,participantSessionId:"session",videoFingerprint:"video",onEvent:vi.fn(),onStatus:vi.fn()};
+  client.connect(options); let ws=ControlledWebSocket.instances.at(-1)!;ws.open();
+  expect(client.setMediaIntent("camera",true)).toBe("dropped");
+  const state={ participantSessionId:"session",cameraGranted:false,microphoneGranted:false,cameraIntentSequence:0,microphoneIntentSequence:0,cameraRevocationEpoch:0,microphoneRevocationEpoch:0 };
+  ws.message({type:"ROOM_MEDIA_SNAPSHOT",roomId:"room",roomGeneration:1,snapshotSequence:1,capabilities:{mediaProtocolVersion:2,hostPlanCode:"pro",maxParticipants:15,maxCameras:4,maxMicrophones:8,capabilityRevision:1,capabilitiesValidUntil:"2026-09-08T20:00:00Z"},participants:[state],closingAt:null});
+  expect(client.setMediaIntent("camera",true)).toBe("sent"); const intent=JSON.parse(ws.sent.at(-1)!);
+  expect(client.media?.canCapture("camera")).toBe(false);
+  const {participantSessionId:_,...mediaState}=state;
+  ws.message({type:"MEDIA_INTENT_ACK",roomId:"room",roomGeneration:1,participantSessionId:"session",media:"camera",requestId:intent.requestId,intentSequence:intent.intentSequence,snapshotSequence:2,state:{...mediaState,cameraGranted:true,cameraIntentSequence:1}});
+  expect(client.media?.canCapture("camera")).toBe(true);
+  const same=client.media; client.connect(options); expect(client.media).toBe(same);
+  client.connect({...options,participantSessionId:"replacement"});expect(client.media).not.toBe(same);expect(client.media?.canCapture("camera")).toBe(false);
+  client.close();
+ });
+ it.each(["closed","connecting"] as const)("replays interrupted off once on actual replacement transport after %s and not repeated snapshots", (interruption) => {
+  installControlledWebSocket();const c=new RoomClient();const options={roomId:"room",roomToken:"token",participant:roomParticipant,participantSessionId:"session",videoFingerprint:"v",onEvent:vi.fn(),onStatus:vi.fn()};c.connect(options);let ws=ControlledWebSocket.instances.at(-1)!;ws.open();
+  const snap={type:"ROOM_MEDIA_SNAPSHOT",roomId:"room",roomGeneration:1,snapshotSequence:1,capabilities:{mediaProtocolVersion:2,hostPlanCode:"pro",maxParticipants:15,maxCameras:4,maxMicrophones:8,capabilityRevision:1,capabilitiesValidUntil:"2026-09-08T20:00:00Z"},participants:[{participantSessionId:"session",cameraGranted:false,microphoneGranted:false,cameraIntentSequence:0,microphoneIntentSequence:0,cameraRevocationEpoch:0,microphoneRevocationEpoch:0}],closingAt:null};
+  ws.message(snap);c.setMediaIntent("camera",true);const on=JSON.parse(ws.sent.at(-1)!);snap.snapshotSequence=2;snap.participants[0].cameraGranted=true;snap.participants[0].cameraIntentSequence=on.intentSequence;ws.message(snap);
+  c.close();if(interruption==="connecting")c.connect(options);expect(c.setMediaIntent("camera",false)).toBe(interruption==="connecting"?"queued":"dropped");c.connect(options);ws=ControlledWebSocket.instances.at(-1)!;ws.open();ws.message(snap);ws.message(snap);
+  const off=ws.sent.filter(x=>x.startsWith("{")).map(x=>JSON.parse(x)).filter(e=>e.type==="SET_MEDIA_INTENT");expect(off).toHaveLength(1);expect(off[0]).toMatchObject({enabled:false,intentSequence:on.intentSequence+1});expect(c.media?.canCapture("camera")).toBe(false);c.close();
+ });
+ it("treats update-required HTTP426 as terminal",()=>{expect(isTerminalRoomJoinError(new RoomApiError("Update required","ROOM_UPDATE_REQUIRED",undefined,426))).toBe(true);});
+});

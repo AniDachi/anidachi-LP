@@ -1,14 +1,21 @@
+import { WATCH_HISTORY_OWNER_HEADER } from "../watch-history-owner";
+import {
+	getAccountAccessSession,
+	HISTORY_PRIVATE_HEADERS,
+} from "./watch-history-access";
 import { type NextRequest, NextResponse } from "next/server";
 import { WatchHistoryGridQuerySchema } from "@anidachi/protocol";
-import { getApiSession } from "./api-session";
 import { readWatchHistoryGrid } from "./watch-history-grid";
 import { WatchHistoryV3ApiError } from "./watch-history-v3";
 
 export function createWatchHistoryGridGet(
-	dependencies = { getSession: getApiSession, read: readWatchHistoryGrid },
+	dependencies = {
+		getSession: getAccountAccessSession,
+		read: readWatchHistoryGrid,
+	},
 ) {
 	return async (request: NextRequest) => {
-		const headers = { "Cache-Control": "private, no-store" };
+		const headers = HISTORY_PRIVATE_HEADERS;
 		const session = await dependencies.getSession(request);
 		if (!session)
 			return NextResponse.json(
@@ -16,6 +23,13 @@ export function createWatchHistoryGridGet(
 				{ status: 401, headers },
 			);
 		try {
+			const expectedOwner = request.headers.get(WATCH_HISTORY_OWNER_HEADER);
+			if (expectedOwner && expectedOwner !== session.userId)
+				throw new WatchHistoryV3ApiError(
+					409,
+					"OWNER_MISMATCH",
+					"Watch history owner changed",
+				);
 			const input: Record<string, unknown> = {};
 			for (const [key, value] of request.nextUrl.searchParams) {
 				if (key in input)

@@ -1,3 +1,5 @@
+import { readCurrentResourceDisplay, type CurrentResourceDisplay } from "./current-resource-display";
+import { takePersonalHistoryResume, applyPersonalHistoryResume } from "./watch-history-resume";
 import type {
 	ClientEvent,
 	P2PSignal,
@@ -5,6 +7,8 @@ import type {
 	PlaybackState,
 	ReactionEvent,
 	RoomCapabilities,
+	RoomMediaCapabilities,
+	RoomMediaSnapshot,
 	RoomUsageSummary,
 	ServerEvent,
 	WatchSourceDescriptor,
@@ -199,6 +203,9 @@ import {
 } from "./room-invite-target-status";
 import {
 	applyRoomUsageSnapshot,
+  acceptAuthoritativeQuota,
+  authoritativeQuotaRemainingSeconds,
+  type AuthoritativeQuotaAnchor,
 	roomQuotaRemainingSeconds,
 } from "./room-quota-display";
 import {
@@ -589,8 +596,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const [roomUsage, setRoomUsage] = useState<RoomUsageSummary | null>(null);
 	const roomQuotaRef = useRef<RoomQuotaSummary | null>(null);
 	const roomUsageRef = useRef<RoomUsageSummary | null>(null);
+  const [authoritativeQuota, setAuthoritativeQuota] = useState<AuthoritativeQuotaAnchor | null>(null);
+  const authoritativeQuotaRef = useRef<AuthoritativeQuotaAnchor | null>(null);
+  const roomEventOwnerRef = useRef<object | null>(null);
 	const [roomCapabilities, setRoomCapabilities] =
-		useState<RoomCapabilities | null>(null);
+		useState<RoomCapabilities | RoomMediaCapabilities | null>(null);
+	const [roomMediaSnapshot, setRoomMediaSnapshot] = useState<RoomMediaSnapshot | null>(null);
+	const [, setMediaRevision] = useState(0);
 	const [quotaDisplayTick, setQuotaDisplayTick] = useState(0);
 	const quotaMeteredMsRef = useRef(0);
 	const quotaTickAtRef = useRef<number | null>(null);
@@ -799,7 +811,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	);
 	const [diagnosticStatus, setDiagnosticStatus] = useState<string | null>(null);
 	const [currentResourceEntry, setCurrentResourceEntry] =
-		useState<HistoryObservation | null>(null);
+		useState<CurrentResourceDisplay | null>(null);
 	const watchHistoryControllerRef = useRef<WatchHistoryController | null>(null);
 	const watchHistoryRoomSuppressedRef = useRef(true);
 	const watchHistoryAuthContextRef = useRef<{
@@ -1573,6 +1585,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		resetQuotaDisplayElapsed();
 		roomQuotaRef.current = null;
 		roomUsageRef.current = null;
+    authoritativeQuotaRef.current = null;
+    setAuthoritativeQuota(null);
 		setRoomQuota(null);
 		setRoomUsage(null);
 	}, [resetQuotaDisplayElapsed]);
@@ -1768,12 +1782,17 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			: [];
 	const participantCount = participants.length || (participant ? 1 : 0);
 	const roomParticipantLimit = roomCapabilities?.maxParticipants ?? 4;
-	const roomMediaSeatLimit = roomCapabilities?.maxMediaSeats ?? 4;
+	const mediaV2 = Boolean(roomCapabilities && "mediaProtocolVersion" in roomCapabilities);
+	const currentMediaSnapshot = roomMediaSnapshot?.roomId === roomId ? roomMediaSnapshot : null;
+	const mediaReady = mediaV2 && Boolean(currentMediaSnapshot);
+	const roomMediaSeatLimit = roomCapabilities && "maxMediaSeats" in roomCapabilities ? roomCapabilities.maxMediaSeats : 4;
+	const cameraAuthorized = !mediaV2 || Boolean(mediaReady && clientRef.current.media?.canCapture("camera"));
+	const microphoneAuthorized = !mediaV2 || Boolean(mediaReady && clientRef.current.media?.canCapture("microphone"));
 	const occupiedMediaSeatCount = visibleParticipants.filter(
 		(item) => item.mediaSeat === "joined",
 	).length;
 	const localMediaSeatState = currentParticipant?.mediaSeat ?? "none";
-	const localHasMediaSeat = localMediaSeatState === "joined";
+	const localHasMediaSeat = mediaV2 ? mediaReady : localMediaSeatState === "joined";
 	const localTryingMedia = Boolean(
 		camsEnabled && currentParticipant && localHasMediaSeat,
 	);
@@ -1783,17 +1802,17 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const displayedCameraParticipants = currentParticipant
 		? visibleParticipants.filter(
 				(item) =>
-					(item.mediaSeat === "joined" && item.cameraEnabled) ||
+					((mediaV2 || item.mediaSeat === "joined") && item.connected !== false && item.cameraEnabled) ||
 					(localTryingMedia && item.id === currentParticipant.id),
 			)
 		: [];
 	const liveMediaAvailable = roomMediaSeatLimit > 0 && localHasMediaSeat;
 	const mediaSeatText =
-		roomMediaSeatLimit > 0
+		mediaV2 ? `${currentMediaSnapshot?.participants.filter(p => p.cameraGranted).length ?? 0}/${currentMediaSnapshot?.capabilities.maxCameras ?? 4} cameras · ${currentMediaSnapshot?.participants.filter(p => p.microphoneGranted).length ?? 0}/${currentMediaSnapshot?.capabilities.maxMicrophones ?? (roomCapabilities && "maxMicrophones" in roomCapabilities ? roomCapabilities.maxMicrophones : 0)} microphones` : roomMediaSeatLimit > 0
 			? `${Math.min(occupiedMediaSeatCount, roomMediaSeatLimit)}/${roomMediaSeatLimit} media seats`
 			: "No live media";
 	const mediaSeatSummaryText =
-		roomMediaSeatLimit > 0
+		mediaV2 ? mediaSeatText : roomMediaSeatLimit > 0
 			? `${Math.min(occupiedMediaSeatCount, roomMediaSeatLimit)}/${roomMediaSeatLimit} media seats`
 			: "No media seats";
 	const roomPeopleCountText = `${participantCount}/${roomParticipantLimit} in room`;
@@ -1847,6 +1866,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	}, [voiceSession.pushToTalkHeld]);
 	const { p2pSessionActive } = getP2PMediaSessionState({
 		localHasMediaSeat,
+		mediaProtocolVersion: mediaV2 ? 2 : 1,
 		participantId: currentParticipant?.id ?? null,
 		roomId,
 		roomMediaSeatLimit,
@@ -1866,7 +1886,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		return storedRoomSession;
 	}, [currentParticipant, roomId, storedRoomSession]);
 	useEffect(() => {
-		if (!activeVoiceRoomSession) {
+		if (mediaV2 || !activeVoiceRoomSession) {
 			hydratedVoiceParticipantSessionRef.current = null;
 			hydratingVoiceModeRef.current = null;
 			return;
@@ -1887,7 +1907,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			type: "mode",
 			mode: activeVoiceRoomSession.voiceMode,
 		});
-	}, [activeVoiceRoomSession, p2pSessionActive]);
+	}, [activeVoiceRoomSession, p2pSessionActive, mediaV2]);
 
 	const enqueueRoomVoiceModePersistence = useCallback(
 		(
@@ -2110,11 +2130,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	// Worker snapshots own accumulated room usage. The local interval only keeps
 	// the display moving between snapshots while host and guest are both live.
 	const quotaMeteringActive =
-		isConnected && isHost && participantCount > 1 && roomQuota !== null;
+		isConnected && isHost && roomQuota !== null &&
+    (mediaV2 ? authoritativeQuota?.quota.metering === true : participantCount > 1);
 	const quotaRemainingSeconds = useMemo(() => {
-		if (!roomQuota) {
-			return null;
-		}
+		if (!roomQuota) return null;
+    if (mediaV2 && !roomSnapshotReady) return null;
+    if (mediaV2) return authoritativeQuotaRemainingSeconds(authoritativeQuota?.quota ?? null, quotaMeteredMsRef.current);
 		// quotaDisplayTick advances once per second while metering is active so the
 		// countdown re-renders even though the elapsed time lives in a ref.
 		return roomQuotaRemainingSeconds({
@@ -2123,7 +2144,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			roomUsage,
 			localMeteredMs: quotaMeteredMsRef.current,
 		});
-	}, [roomQuota, roomUsage, quotaDisplayTick]);
+	}, [roomQuota, roomUsage, quotaDisplayTick, mediaV2, authoritativeQuota, roomSnapshotReady]);
 	const cameraStackVisible = shouldShowCameraStack({
 		cameraParticipantCount: displayedCameraParticipants.length,
 		p2pSessionActive,
@@ -2132,7 +2153,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		chatDisplayMode === "history" ? chatHistoryMessages : liveChatMessages;
 	const liveChatVisible = displayedChatMessages.length > 0;
 	useEffect(() => {
-		if (!roomId || !roomSnapshotReady || !camsEnabled) {
+		if (mediaV2 || !roomId || !roomSnapshotReady || !camsEnabled) {
 			return;
 		}
 
@@ -2482,6 +2503,44 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			window.removeEventListener("focus", refreshWatchHistoryOnFocus);
 	}, []);
 
+	useEffect(() => {
+        if (!adapterActive) { setCurrentResourceEntry(null); return; }
+        const update = () => setCurrentResourceEntry(readCurrentResourceDisplay(adapter));
+        update(); const timer = window.setInterval(update, 1000);
+        return () => { window.clearInterval(timer); setCurrentResourceEntry(null); };
+    }, [adapter, adapterActive, participant?.id]);
+
+	const personalResumeIntentRef = useRef<ReturnType<typeof takePersonalHistoryResume> | undefined>(undefined);
+	useEffect(() => { if (personalResumeIntentRef.current === undefined) personalResumeIntentRef.current = takePersonalHistoryResume(location, (url) => history.replaceState(history.state, "", url)); }, []);
+	useEffect(() => {
+		const intent = personalResumeIntentRef.current;
+		if (!intent || !identityLoaded || !participant?.id || !adapterActive) return;
+		let cancelled = false; let running = false; let claimed = false;
+		const owner = participant.id;
+		const attempt = async () => {
+			if (cancelled || running || !personalResumeIntentRef.current) return;
+			// Room restoration must resolve before a personal seek is considered.
+			if (roomSessionLoadedForUserId !== owner) return;
+			running = true;
+			try {
+				const result = await applyPersonalHistoryResume(intent, {
+					adapter, getOwner: () => participantRef.current?.id ?? null,
+					roomActive: () => !!roomIdRef.current || watchHistoryRoomSuppressedRef.current,
+					isCurrent: () => !cancelled,
+					getLease: async () => { const response = await requestWatchHistory({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "bootstrap", expectedOwnerUserId: owner });
+						return response.ok ? parseWatchHistoryBootstrapData(response.data)?.accessLease ?? null : null; },
+					claim: async () => { if (claimed) return true;
+                        const response = await requestWatchHistory({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "resume-claim", expectedOwnerUserId: owner, input: intent });
+                        claimed = response.ok; return claimed; },
+                    beforeSeek: () => { void watchHistoryControllerRef.current?.noteResumeSeeking(); },
+				});
+				if (result !== "waiting") personalResumeIntentRef.current = null;
+			} finally { running = false; }
+		};
+		void attempt(); const timer = window.setInterval(() => { void attempt(); }, 1000);
+		return () => { cancelled = true; window.clearInterval(timer); };
+	}, [adapter, adapterActive, identityLoaded, participant?.id, roomSessionLoadedForUserId, roomId]);
+
 	const watchHistoryRuntimeGate = resolveWatchHistoryRuntimeGate({
 		identityLoaded,
 		ownerUserId: participant?.id ?? null,
@@ -2507,6 +2566,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		chrome.runtime.onMessage?.addListener(abortCatalog);
 		const controller = createWatchHistoryController({
 			onPersisted: pageHistory.resolve,
+			isOwnerCurrent: (owner) => participantRef.current?.id === owner,
+			getProvider: () => definition.id === "youtube" ? "youtube" : "crunchyroll",
 			getObservation: (preferences) =>
 				definition.historyPolicy?.observe({ adapter, preferences }) ?? null,
 			getRoomActive: () =>
@@ -2568,7 +2629,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					? ({ ok: true } as const)
 					: (response as WatchHistoryCaptureResult);
 			},
-			onObservation: setCurrentResourceEntry,
 			onRoomHistoryAuthorityState: (state) => {
 				logDebug("watch.history", "room authority state", {
 					roomId: roomIdRef.current,
@@ -2762,6 +2822,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 	const handleGhostCamToggle = useCallback(() => {
 		const nextEnabled = !camsEnabled;
+		if (mediaV2) {
+			if (clientRef.current.setMediaIntent("camera", nextEnabled) === "dropped") return;
+			setCamsEnabled(nextEnabled);
+			setMediaRevision(n => n + 1);
+			return;
+		}
 		if (nextEnabled && roomIdRef.current && roomMediaSeatLimit <= 0) {
 			showTransientPanelNotice("Live media is not available in this room.");
 			setPanelOpen(true);
@@ -2785,6 +2851,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		});
 	}, [
 		camsEnabled,
+		mediaV2,
 		clearTransientPanelNotice,
 		enqueueRoomCameraEnabledPersistence,
 		localHasMediaSeat,
@@ -2794,7 +2861,23 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	]);
 
 	const ghostCamSession = useGhostCam({
-		cameraEnabled: camsEnabled,
+		captureIntents: mediaV2 ? {
+			camera: clientRef.current.media?.captureIntent("camera"),
+			microphone: clientRef.current.media?.captureIntent("microphone"),
+		} : undefined,
+		onMediaTerminalFailure: (failure) => {
+			if (!clientRef.current.releaseFailedMedia(failure.intent)) return;
+			if (failure.media === "camera") setCamsEnabled(false);
+			else {
+				pushToTalkHeldRef.current = false;
+				dispatchVoiceSession({ type: "terminal-failure" });
+			}
+			setMediaRevision(n => n + 1);
+		},
+		cameraEnabled: camsEnabled && cameraAuthorized,
+		mediaSnapshot: mediaV2 ? currentMediaSnapshot : undefined,
+		cameraAuthorized,
+		microphoneAuthorized,
 		connected: p2pSessionActive,
 		incomingP2PSignals,
 		participants: visibleParticipants,
@@ -2813,6 +2896,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	});
 	const handleVoiceModeChange = useCallback(
 		(mode: "open-mic" | "push-to-talk") => {
+			if (mediaV2 && mode === "open-mic" && !clientRef.current.media?.canCapture("microphone")) {
+				if (clientRef.current.setMediaIntent("microphone", true) === "dropped") return;
+				setMediaRevision(n => n + 1);
+			}
 			if (
 				mode === "open-mic" &&
 				(!roomId || !localHasMediaSeat || !p2pSessionActive)
@@ -2837,6 +2924,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		[
 			clearTransientPanelNotice,
 			enqueueRoomVoiceModePersistence,
+			mediaV2,
 			localHasMediaSeat,
 			localMediaSeatState,
 			p2pSessionActive,
@@ -3066,7 +3154,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const localLiveVoiceActive = Boolean(
 		participant?.id && liveVoiceActiveSpeakerIds.includes(participant.id),
 	);
-	const microphonePublishingWanted = isVoiceSessionPublishing(voiceSession);
+	const microphonePublishingWanted = isVoiceSessionPublishing(voiceSession) && microphoneAuthorized;
 
 	const isCurrentHost = useCallback((list = participantsRef.current) => {
 		const current = participantRef.current;
@@ -3145,6 +3233,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	// jittering between connect attempts.
 	const terminateRoomSession = useCallback(
 		(message: string) => {
+			ghostCamSession.stop();
 			roomReconnectSuppressedRef.current = true;
 			if (roomReconnectTimerRef.current !== null) {
 				window.clearTimeout(roomReconnectTimerRef.current);
@@ -3170,7 +3259,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			setAuthMessage(message);
 			setPanelOpen(true);
 		},
-		[clearRoomQuotaDisplay, clearStoredRoomSession],
+		[clearRoomQuotaDisplay, clearStoredRoomSession, ghostCamSession.stop],
 	);
 
 	const handleServerEvent = useCallback(
@@ -3183,10 +3272,30 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			});
 
 			switch (event.type) {
+				case "ROOM_MEDIA_SNAPSHOT":
+				case "MEDIA_INTENT_ACK":
+				case "MEDIA_INTENT_ERROR": {
+					const media = clientRef.current.media;
+					if (media?.snapshot) {
+						ghostCamSession.reconcileMediaAuthority(media.canCapture("camera"), media.canCapture("microphone"));
+						setRoomMediaSnapshot(media.snapshot);
+						setRoomCapabilities(media.snapshot.capabilities);
+						setMediaRevision(n => n + 1);
+						if (media.error) setAuthMessage(media.error);
+						if (!media.wants("camera")) setCamsEnabled(false);
+						if (!media.wants("microphone")) { pushToTalkHeldRef.current = false; dispatchVoiceSession({ type: "terminal-failure" }); }
+					}
+					return;
+				}
 				case "ROOM_ENDED":
 					terminateRoomSession("Watch room ended.");
 					return;
 				case "ROOM_SNAPSHOT": {
+          if (event.quota) {
+            const session = storedRoomSessionRef.current;
+            const local = event.participants.find(p => p.id === session?.ownerUserId);
+            if (!session || local?.participantSessionId !== session.participantSessionId) return;
+          }
 					if (
 						isStaleAuthoritativeGeneration(
 							roomGenerationRef.current,
@@ -3219,6 +3328,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							toSourceGeneration: event.sourceGeneration,
 						});
 					}
+          if (roomGenerationRef.current > 0 && roomGenerationRef.current !== event.roomGeneration) {
+            authoritativeQuotaRef.current = null;
+            setAuthoritativeQuota(null);
+          }
 					roomGenerationRef.current = event.roomGeneration;
 					sourceGenerationRef.current = event.sourceGeneration;
 					const currentRoomProvider = roomSourceProviderRef.current;
@@ -3245,9 +3358,32 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					setSourceGeneration(event.sourceGeneration);
 					setRoomSourceProvider(snapshotProvider);
 					setParticipants(event.participants);
-					updateRoomUsage(event.roomUsage);
+          if (event.quota) {
+            const previous = authoritativeQuotaRef.current;
+            const next = acceptAuthoritativeQuota(previous, event.quota, event.serverSeq);
+            if (next !== previous) {
+              authoritativeQuotaRef.current = next;
+              setAuthoritativeQuota(next);
+              quotaMeteredMsRef.current = 0;
+              quotaTickAtRef.current = Date.now();
+              setQuotaDisplayTick(tick => tick + 1);
+            }
+          } else {
+            const previous = authoritativeQuotaRef.current;
+            if (previous && event.serverSeq >= previous.serverSeq &&
+                event.roomUsage && event.roomUsage.day >= previous.quota.day) {
+              // Retain ordering fences while the new day's budget is unknown.
+              authoritativeQuotaRef.current = { ...previous, serverSeq: event.serverSeq, minimumDay: event.roomUsage.day };
+              setAuthoritativeQuota(null);
+            }
+            // The helper exists for legacy rooms too. Use negotiated or already
+            // accepted v2 capabilities; an absent Free budget is still v2.
+            if (!mediaV2 && clientRef.current.media?.snapshot?.capabilities.mediaProtocolVersion !== 2) {
+              updateRoomUsage(event.roomUsage);
+            }
+          }
 					if (event.capabilities) {
-						setRoomCapabilities(event.capabilities);
+						setRoomCapabilities(current => current && "mediaProtocolVersion" in current ? current : event.capabilities ?? null);
 					}
 					setRoomSnapshotReady(true);
 					playbackSyncController.setSession({
@@ -3470,7 +3606,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					}
 					if (
 						event.code === "ROOM_FULL" ||
-						event.code === "SESSION_TAKEN_OVER"
+						event.code === "SESSION_TAKEN_OVER" || event.code === "ROOM_UPDATE_REQUIRED"
 					) {
 						// Terminal: stop reconnecting (the server closes the socket right
 						// after this event) and surface the reason instead of looping.
@@ -3499,7 +3635,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			recordChatHistoryMessage,
 			reactionsEnabled,
 			terminateRoomSession,
+			ghostCamSession.reconcileMediaAuthority,
 			triggerFlameBurst,
+      mediaV2,
 			updateRoomUsage,
 		],
 	);
@@ -3529,6 +3667,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			}
 
 			const sameRoomReconnect = roomIdRef.current === nextRoomId;
+      const priorSession = storedRoomSessionRef.current;
+      if (!priorSession || !roomSessionIdentityMatches(priorSession, nextStoredRoomSession)) {
+        authoritativeQuotaRef.current = null;
+        setAuthoritativeQuota(null);
+      }
+      const eventOwner = {};
+      roomEventOwnerRef.current = eventOwner;
 			if (!sameRoomReconnect) {
 				roomSourceProviderRef.current = createdRoomProvider;
 				setRoomSourceProvider(createdRoomProvider);
@@ -3539,6 +3684,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			}
 
 			setRoomSnapshotReady(false);
+			setRoomMediaSnapshot(null);
 			setSignalingTransportReady(null);
 			if (
 				nextStoredRoomSession.roomId !== nextRoomId ||
@@ -3591,7 +3737,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				roomToken: nextRoomToken,
 				participant: activeParticipant,
 				videoFingerprint: adapter.getFingerprint(),
-				onEvent: (event) => handleServerEventRef.current(event),
+        onEvent: (event) => {
+          const current = storedRoomSessionRef.current;
+          if (roomEventOwnerRef.current !== eventOwner || !current || !roomSessionIdentityMatches(current, nextStoredRoomSession) ||
+              roomIdRef.current !== nextRoomId || participantRef.current?.id !== activeParticipant.id ||
+              ("roomId" in event && event.roomId !== nextRoomId)) return;
+          handleServerEventRef.current(event);
+        },
 				onStatus: setRoomStatus,
 				onHistoryAuthority: (authority) => {
 					void watchHistoryControllerRef.current
@@ -4002,10 +4154,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		};
 	}, [quotaMeteringActive]);
 
-	// When the metered host's free time hits zero, end the session gracefully
-	// (once) rather than letting the room token expire into a reconnect loop.
+	// Legacy hosts retain their existing quota-end path. For v2, this is only
+	// a display estimate: the Worker alone sends the authoritative room end.
 	useEffect(() => {
 		if (
+      mediaV2 ||
 			!quotaMeteringActive ||
 			quotaRemainingSeconds === null ||
 			quotaRemainingSeconds > 0
@@ -4039,6 +4192,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		}
 		terminateRoomSession(quotaExhaustedMessage(roomQuota?.resetAt));
 	}, [
+    mediaV2,
 		quotaMeteringActive,
 		quotaRemainingSeconds,
 		privilegedRoomContext,
@@ -5237,6 +5391,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		if (voiceSession.mode !== "push-to-talk" || !roomId) {
 			return;
 		}
+		if (mediaV2 && !clientRef.current.media?.canCapture("microphone")) {
+			if (clientRef.current.setMediaIntent("microphone", true) === "dropped") return;
+			setMediaRevision(n => n + 1);
+		}
 		if (!localHasMediaSeat) {
 			setAuthMessage(
 				localMediaSeatState === "requested"
@@ -5249,12 +5407,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 		pushToTalkHeldRef.current = true;
 		dispatchVoiceSession({ type: "push-to-talk", held: true });
-	}, [localHasMediaSeat, localMediaSeatState, roomId, voiceSession.mode]);
+	}, [localHasMediaSeat, localMediaSeatState, roomId, voiceSession.mode, mediaV2]);
 
 	const stopPushToTalk = useCallback(() => {
 		pushToTalkHeldRef.current = false;
+		void ghostCamSession.setMicrophonePublishing(false, "warm");
 		dispatchVoiceSession({ type: "push-to-talk", held: false });
-	}, []);
+	}, [ghostCamSession.setMicrophonePublishing]);
 
 	const stopMicrophoneForUnmount = useCallback(() => {
 		pushToTalkHeldRef.current = false;
@@ -5262,7 +5421,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	}, [ghostCamSession.setMicrophonePublishing]);
 
 	useEffect(() => {
-		const publicationKey = `${microphonePublishingWanted}:${voiceSession.mode}`;
+		const publicationKey = `${microphonePublishingWanted}:${voiceSession.mode}:${microphoneAuthorized}:${clientRef.current.media?.captureIntent("microphone")?.requestId ?? "legacy"}`;
 		if (microphonePublicationRef.current === publicationKey) {
 			return;
 		}
@@ -5276,6 +5435,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	}, [
 		ghostCamSession.setMicrophonePublishing,
 		microphonePublishingWanted,
+		microphoneAuthorized,
+		clientRef.current.media?.captureIntent("microphone")?.requestId,
 		voiceSession.mode,
 		voiceSession.release,
 	]);
@@ -5925,7 +6086,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						<div className="quota-note">
 							<span>Free watch-party time today</span>
 							<strong>
-								{formatQuotaCountdown(quotaRemainingSeconds)} left
+								{quotaRemainingSeconds === null ? "Checking room time…" : `${formatQuotaCountdown(quotaRemainingSeconds)} left`}
 							</strong>
 						</div>
 					) : null}
@@ -6129,6 +6290,19 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 					{roomId && visibleParticipants.length ? (
 						<RoomPeopleSection
+							mediaSnapshot={mediaV2 ? currentMediaSnapshot : undefined}
+							microphoneReady={microphoneAuthorized && mediaV2}
+							onMicrophoneReadyChange={(enabled) => {
+								clientRef.current.setMediaIntent("microphone", enabled);
+								if (!enabled) {
+									ghostCamSession.reconcileMediaAuthority(cameraAuthorized, false);
+									dispatchVoiceSession({ type: "terminal-failure" });
+								}
+								setMediaRevision(n => n + 1);
+							}}
+							onRevokeGrant={(targetParticipantSessionId, media) => {
+								if (currentMediaSnapshot) clientRef.current.send({ type: "REVOKE_MEDIA_GRANT", roomId: currentMediaSnapshot.roomId, roomGeneration: currentMediaSnapshot.roomGeneration, targetParticipantSessionId, media, requestId: crypto.randomUUID() });
+							}}
 							currentParticipantId={currentParticipant?.id ?? null}
 							liveVoiceActiveSpeakerIds={voiceIndicatorParticipantIds}
 							maxMediaSeats={roomMediaSeatLimit}
@@ -6961,6 +7135,7 @@ function quotaExhaustedMessage(resetAt: string | undefined): string {
 }
 
 function roomJoinUnavailableMessage(error: { status?: number }): string {
+  if (error.status === 426) return "Update Anidachi to join this room.";
 	if (error.status === 404) {
 		return "This watch room is no longer available.";
 	}

@@ -4,16 +4,21 @@ import {
   ROOM_CONNECT_REQUEST_TIMEOUT_MS,
   RoomSessionAdmissionInputSchema,
   RoomCapabilitiesSchema,
+  RoomMediaCapabilitiesSchema,
+  type RoomMediaCapabilities,
+  type RoomMediaKind,
   ServerEventSchema,
   canonicalizeRoomSourceUrl,
   isLegacyRoomSourceFingerprintAlias,
   type ActiveRoomConflictResponse,
   type ClientEvent,
+  type MediaIntent,
   type Participant,
   type RoomCapabilities,
   type RoomHistoryAuthority,
   type ServerEvent,
 } from "@anidachi/protocol";
+import { RoomMediaSession } from "./room-media-session";
 import { API_WS_BASE, WEB_HTTP_BASE } from "./constants";
 import { logDebug, roomEventDebugSnapshot } from "./debug-log";
 import type { RoomSendDisposition, SignalingTransportReady } from "./media-types";
@@ -265,7 +270,7 @@ export interface CreatedRoom {
   shareableLink: string;
   /** True when an idempotent retry returned the already-created room. */
   reused?: boolean;
-  capabilities?: RoomCapabilities;
+  capabilities?: RoomCapabilities | RoomMediaCapabilities;
   quota?: RoomQuotaSummary | null;
   /** Background-issued per-tab authority for privileged room actions. */
   privilegedRoomAuthority?: PrivilegedOverlayContext | null;
@@ -325,7 +330,7 @@ export function isTerminalRoomJoinError(error: unknown): error is RoomApiError {
   return (
     error instanceof RoomApiError &&
     error.code !== "QUOTA_EXHAUSTED" &&
-    (error.status === 403 || error.status === 404)
+    (error.status === 403 || error.status === 404 || error.status === 426 || error.code === "ROOM_UPDATE_REQUIRED")
   );
 }
 
@@ -392,7 +397,7 @@ export type RoomHttpMessageResponse =
       ok: true;
       connection: {
         roomToken: string;
-        capabilities?: RoomCapabilities;
+        capabilities?: RoomCapabilities | RoomMediaCapabilities;
         quota?: RoomQuotaSummary | null;
         privilegedRoomAuthority?: PrivilegedOverlayContext | null;
         roomSession: RoomSessionRecord;
@@ -456,9 +461,9 @@ function parseQuotaSummary(value: unknown): RoomQuotaSummary | null {
   return { remainingSeconds: quota.remainingSeconds, resetAt: quota.resetAt };
 }
 
-function parseRoomCapabilities(value: unknown): RoomCapabilities | undefined {
+function parseRoomCapabilities(value: unknown): RoomCapabilities | RoomMediaCapabilities | undefined {
   if (value === undefined || value === null) return undefined;
-  const parsed = RoomCapabilitiesSchema.safeParse(value);
+  const parsed = RoomCapabilitiesSchema.or(RoomMediaCapabilitiesSchema).safeParse(value);
   return parsed.success ? parsed.data : undefined;
 }
 
@@ -566,7 +571,7 @@ export async function createWebsiteRoomFromApi(
   });
   const response = await fetch(new URL("/api/rooms", WEB_HTTP_BASE), {
     method: "POST",
-    headers: createWebsiteRoomHeaders(accessToken),
+    headers: { ...createWebsiteRoomHeaders(accessToken), "X-Anidachi-Media-Protocol": "2" },
     body: JSON.stringify({
       ...(normalizedInput ?? {}),
       participantSessionId: admission.participantSessionId,
@@ -639,7 +644,7 @@ export async function connectWebsiteRoomFromApi(
   participantSessionId: string,
 ): Promise<{
   roomToken: string;
-  capabilities?: RoomCapabilities;
+  capabilities?: RoomCapabilities | RoomMediaCapabilities;
   quota?: RoomQuotaSummary | null;
 }> {
   const admission = RoomSessionAdmissionInputSchema.parse({ participantSessionId });
@@ -655,7 +660,7 @@ export async function connectWebsiteRoomFromApi(
       new URL(`/api/rooms/${encodeURIComponent(roomId)}/connect`, WEB_HTTP_BASE),
       {
         method: "POST",
-        headers: createWebsiteRoomHeaders(accessToken),
+        headers: { ...createWebsiteRoomHeaders(accessToken), "X-Anidachi-Media-Protocol": "2" },
         body: JSON.stringify(admission),
         signal: abortController.signal,
       },
@@ -1341,7 +1346,7 @@ export async function connectWebsiteRoom(
   roomSession: PreparedRoomSession,
 ): Promise<{
   roomToken: string;
-  capabilities?: RoomCapabilities;
+  capabilities?: RoomCapabilities | RoomMediaCapabilities;
   quota?: RoomQuotaSummary | null;
   privilegedRoomAuthority?: PrivilegedOverlayContext | null;
   roomSession: RoomSessionRecord;
@@ -1435,6 +1440,20 @@ export async function cleanupRoomAdmissionHandoffForTab(
 
 
 export class RoomClient {
+  media: RoomMediaSession | null = null;
+
+  setMediaIntent(media: RoomMediaKind, enabled: boolean): RoomSendDisposition {
+    const intent = this.media?.intent(media, enabled);
+    return intent ? this.send(intent) : "dropped";
+  }
+
+  releaseFailedMedia(owner: Readonly<MediaIntent>): boolean {
+    const intent = this.media?.disableFailedIntent(owner);
+    if (!intent) return false;
+    this.send(intent);
+    return true;
+  }
+
   private cancelCurrentAdmissionHandoffAck: (() => void) | null = null;
   private currentSenderConnectionId = createRoomConnectionId();
   private currentHistoryAuthority: RoomHistoryAuthority | null = null;
@@ -1476,6 +1495,8 @@ export class RoomClient {
       this.currentHistoryBoundary = null;
     }
     this.currentHistoryConnection = historyConnection;
+    if (!sameHistoryConnection) this.media = new RoomMediaSession(options.roomId, options.participantSessionId);
+    this.media?.beginTransport();
     const senderConnectionId = createRoomConnectionId();
     this.currentSenderConnectionId = senderConnectionId;
     this.pendingEvents = [];
@@ -1645,6 +1666,10 @@ export class RoomClient {
           startAdmissionHandoffAck();
         }
         logDebug("room.recv", event.type, roomEventDebugSnapshot(event));
+        const mediaAccepted = this.media?.consume(event);
+        if (mediaAccepted && event.type === "ROOM_MEDIA_SNAPSHOT") {
+          for (const release of this.media?.releaseRestoredGrants() ?? []) this.send(release);
+        }
         this.consumeHistoryAuthorityEvent(event, options);
         options.onEvent(event);
         if (

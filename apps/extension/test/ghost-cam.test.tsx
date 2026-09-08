@@ -31,6 +31,7 @@ const mockP2PMedia = vi.hoisted(() => {
     hasPeer: ReturnType<typeof vi.fn>;
     isRemoteVoicePublishing: ReturnType<typeof vi.fn>;
     replaceParticipantAudioOutputs: ReturnType<typeof vi.fn>;
+    setCaptureAuthority: ReturnType<typeof vi.fn>;
     setCameraEnabled: ReturnType<typeof vi.fn>;
     setMicrophonePublishing: ReturnType<typeof vi.fn>;
     setParticipantAudioOutput: ReturnType<typeof vi.fn>;
@@ -45,6 +46,7 @@ const mockP2PMedia = vi.hoisted(() => {
     const remoteVoicePublishingIds = new Set<string>();
     const senderMediaSessionIds = new Map<string, string>();
     const controller = {
+      setCaptureAuthority: vi.fn(),
       disconnect: vi.fn(),
       handleSignal: vi.fn(
         (

@@ -14,7 +14,7 @@ import {
   selectCrunchyrollPosterTall,
 } from "../src/source-adapters/crunchyroll/artwork-select";
 import { collectCrunchyrollHistoryCatalog, resolveCrunchyrollHistoryMetadata } from "../src/source-adapters/crunchyroll/bridge-client";
-import type { WatchCatalogLocaleContext } from "@anidachi/protocol";
+import { canonicalizeRoomSourceUrl, type WatchCatalogLocaleContext } from "@anidachi/protocol";
 
 export default defineContentScript({
   matches: ["https://*.crunchyroll.com/*"],
@@ -36,6 +36,8 @@ let contentToken: { value: string; expiresAt: number } | null = null;
 type BitmovinPlayerMethod = (...args: unknown[]) => unknown;
 
 interface BitmovinLikePlayer {
+  ads?: { isLinearAdActive?: () => boolean; getActiveAdBreak?: () => unknown };
+  sgai?: { getActiveAd?: () => unknown };
   getAudio?: () => { lang?: unknown } | null;
   subtitles?: { list?: () => Array<{ lang?: unknown; enabled?: unknown }> };
   getContainer?: () => HTMLElement | null;
@@ -92,7 +94,104 @@ function startCrunchyrollControlBridge(): void {
   });
 }
 
+// Resume is deliberately separate from ordinary room seek/play fallback behavior.
+const personalResumeApplied = new Map<string, number>();
+function handlePersonalResumeRequest(request: CrunchyrollControlRequest): void {
+	const respond = (
+		resumeState: "ready" | "waiting" | "cancelled" | "consumed",
+	) =>
+		postResult({
+			action: request.action,
+			id: request.id,
+			source: CRUNCHYROLL_CONTROL_RESULT_SOURCE,
+			ok: resumeState === "ready" || resumeState === "consumed",
+			resumeState,
+		});
+	const source = canonicalizeRoomSourceUrl(location.href, "crunchyroll");
+	const now = Date.now();
+	if (
+		!source.ok ||
+		source.source.sourceUrl !== request.url ||
+		new URLSearchParams(location.hash.slice(1)).has("anidachiRoom") ||
+		!request.expiresAt ||
+		request.expiresAt <= now ||
+		request.expiresAt > now + 300000
+	) {
+		respond("cancelled");
+		return;
+	}
+	for (const [id, expiry] of personalResumeApplied)
+		if (expiry <= now) personalResumeApplied.delete(id);
+	if (request.intentId && personalResumeApplied.has(request.intentId)) {
+		respond("consumed");
+		return;
+	}
+	const video = findBestVideo();
+	// The normal room helper permits a generic fallback; Resume requires exact video association.
+	const player =
+		video &&
+		(window.__anidachiCrunchyrollBitmovinPlayers ?? []).find(
+			(candidate) => getBitmovinVideoElement(candidate) === video,
+		);
+	const contentReady = () => {
+		try {
+			if (
+				!video ||
+				!video.isConnected ||
+				!player ||
+				getBitmovinVideoElement(player) !== video ||
+				findBestVideo() !== video ||
+				typeof player.seek !== "function" ||
+				typeof player.ads?.isLinearAdActive !== "function" ||
+				typeof player.ads.getActiveAdBreak !== "function" ||
+				player.ads.isLinearAdActive() !== false ||
+				player.ads.getActiveAdBreak() !== null ||
+				(player.sgai !== undefined &&
+					(typeof player.sgai.getActiveAd !== "function" ||
+						player.sgai.getActiveAd() !== null))
+			)
+				return false;
+			return (
+				video.readyState >= 1 &&
+				Number.isFinite(video.duration) &&
+				video.duration > 0 &&
+				request.time! <= video.duration
+			);
+		} catch {
+			return false;
+		}
+	};
+	if (!contentReady()) {
+		respond("waiting");
+		return;
+	}
+	if (request.action === "resumeReadiness") {
+		respond("ready");
+		return;
+	}
+	if (!request.intentId || personalResumeApplied.size >= 128) {
+		respond("cancelled");
+		return;
+	}
+	// No await or fallback between the provider guard and the actual provider seek.
+	if (!contentReady()) {
+		respond("waiting");
+		return;
+	}
+	personalResumeApplied.set(request.intentId, request.expiresAt);
+	try {
+		respond(
+			player!.seek!(request.time!, ANIDACHI_BITMOVIN_ISSUER)
+				? "consumed"
+				: "cancelled",
+		);
+	} catch {
+		respond("cancelled");
+	}
+}
+
 async function handleControlRequest(request: CrunchyrollControlRequest): Promise<void> {
+  if (request.action === "resumeReadiness" || request.action === "resumeSeek") { handlePersonalResumeRequest(request); return; }
   if (request.action === "cancelHistory") { historyRequests.get(request.id)?.abort(); return; }
   if (request.action === "historyIdentity" || request.action === "historyCatalog") {
     await handleHistoryRequest(request);

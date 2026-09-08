@@ -1,3 +1,4 @@
+import { paidHistoryLease } from "./watch-history-personal-fixtures";
 import { describe, expect, it, vi } from "vitest";
 import { createWatchHistoryClient } from "../src/watch-history-client";
 import { createWatchHistoryController } from "../src/watch-history-controller";
@@ -43,6 +44,7 @@ describe("watch history preference listener", () => {
       expect(controller.applyLocalPreferences).toHaveBeenCalledWith({
         ownerUserId: OWNER_ID,
         accountGeneration: 1,
+        accessLease: paidHistoryLease(OWNER_ID),
         preferences: { youtubeHistoryEnabled: true },
         capturePaused: false,
       });
@@ -141,6 +143,7 @@ describe("watch history preference listener", () => {
       loadPreferences: async () => ({
         ownerUserId: OWNER_ID,
         accountGeneration: 1,
+        accessLease: paidHistoryLease(OWNER_ID),
         preferences: { youtubeHistoryEnabled: false },
       }),
       observeLocally: async (event, _owner, _meaningful, _mode, queueForSync) => {
@@ -177,7 +180,7 @@ describe("watch history preference listener", () => {
       getCurrentSession: async () => session,
       getRequestSession: async () => session,
       storage,
-      fetch: vi.fn(async () => new Response(JSON.stringify({
+      fetch: vi.fn(async (url: string) => url.endsWith("/access") ? Response.json(paidHistoryLease(OWNER_ID).access) : new Response(JSON.stringify({
         meta: {
           serverTime: "2026-08-17T09:00:00.000Z",
           schemaVersion: 3,
@@ -217,6 +220,7 @@ function preferenceRoot(
       [key]: {
         ownerUserId,
         accountGeneration: 1,
+        accessLease: paidHistoryLease(ownerUserId),
         cache: null,
         preferences: { youtubeHistoryEnabled: enabled },
         preferencesConfirmed: true,

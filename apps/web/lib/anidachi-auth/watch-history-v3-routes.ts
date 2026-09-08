@@ -1,3 +1,6 @@
+import { getAccountAccessSession, HISTORY_PRIVATE_HEADERS } from "./watch-history-access";
+import { applyPersonalWatchProgress } from "./personal-watch-history";
+import { checkPersonalHistoryOperation } from "./personal-history-policy";
 import {
   RoomSessionAdmissionInputSchema,
   WatchHistoryDeletionRequestSchema,
@@ -14,7 +17,7 @@ import {
   type ActiveRoomConflictResponse,
 } from "@anidachi/protocol";
 import { type NextRequest, NextResponse } from "next/server";
-import { getApiSession, type ApiSession } from "./api-session";
+import { type ApiSession } from "./api-session";
 import { WATCH_HISTORY_OWNER_HEADER } from "../watch-history-owner";
 import {
   createRoomWithActiveSession,
@@ -58,6 +61,7 @@ const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export type WatchHistoryV3RouteDependencies = {
+  checkLegacyRoomOperation(userId: string): Promise<unknown>;
   getSession(request: NextRequest): Promise<ApiSession | null>;
   listHistory(params: {
     userId: string;
@@ -71,6 +75,7 @@ export type WatchHistoryV3RouteDependencies = {
     limit: number;
     cursor: string | null;
   }): Promise<WatchHistoryTitleEpisodesResponse>;
+  applyPersonalProgress?(params: { userId: string; input: unknown }): Promise<WatchProgressAck>;
   applyProgress(params: { userId: string; input: unknown }): Promise<WatchProgressAck>;
   beginCatalog(params: { userId: string; input: unknown }): Promise<WatchCatalogBeginAck>;
   applyCatalog(params: { userId: string; input: unknown }): Promise<WatchCatalogCommitAck>;
@@ -96,10 +101,12 @@ export type WatchHistoryV3RouteDependencies = {
 };
 
 const productionDependencies: WatchHistoryV3RouteDependencies = {
-  getSession: getApiSession,
+  checkLegacyRoomOperation: (userId) => checkPersonalHistoryOperation(userId, "legacy"),
+  getSession: getAccountAccessSession,
   listHistory: listWatchHistoryV3,
   listTitleEpisodes: listWatchHistoryTitleEpisodesV3,
   applyProgress: applyWatchProgressV3,
+  applyPersonalProgress: applyPersonalWatchProgress,
   beginCatalog: beginWatchCatalogV3,
   applyCatalog: applyWatchCatalogV3,
   getPreferences: getWatchHistoryPreferencesV3,
@@ -111,11 +118,12 @@ const productionDependencies: WatchHistoryV3RouteDependencies = {
 export function createWatchHistoryV3RouteHandlers(
   dependencies: WatchHistoryV3RouteDependencies = productionDependencies,
 ) {
-  return {
+  const handlers = {
     async getHistory(request: NextRequest) {
       const session = await dependencies.getSession(request);
       if (!session) return unauthorizedResponse();
       try {
+        validateOptionalHistoryOwner(request, session);
         validateHistoryQuery(request.nextUrl.searchParams);
         const limit = parseLimit(request.nextUrl.searchParams.get("limit"));
         const rawCursor = request.nextUrl.searchParams.get("cursor");
@@ -132,6 +140,7 @@ export function createWatchHistoryV3RouteHandlers(
       const session = await dependencies.getSession(request);
       if (!session) return unauthorizedResponse();
       try {
+        validateOptionalHistoryOwner(request, session);
         const query = parseTitleEpisodesQuery(request.nextUrl.searchParams);
         return NextResponse.json(
           await dependencies.listTitleEpisodes({ userId: session.userId, ...query }),
@@ -145,7 +154,14 @@ export function createWatchHistoryV3RouteHandlers(
       const session = await dependencies.getSession(request);
       if (!session) return unauthorizedResponse();
       try {
+        validateOptionalHistoryOwner(request, session);
         const input = await readBoundedJson(request, PROGRESS_BODY_BYTES);
+        if (input && typeof input === "object" && "captureVersion" in input) {
+          if (!dependencies.applyPersonalProgress) {
+            throw new WatchHistoryV3ApiError(503, "HISTORY_ACCESS_UNAVAILABLE", "Personal history is unavailable");
+          }
+          return NextResponse.json(await dependencies.applyPersonalProgress({ userId: session.userId, input }));
+        }
         parseWatchProgressEventV3(input);
         return NextResponse.json(
           await dependencies.applyProgress({ userId: session.userId, input }),
@@ -159,6 +175,7 @@ export function createWatchHistoryV3RouteHandlers(
       const session = await dependencies.getSession(request);
       if (!session) return unauthorizedResponse();
       try {
+        validateOptionalHistoryOwner(request, session);
         const input = await readBoundedJson(request, MUTATION_BODY_BYTES);
         return NextResponse.json(
           await dependencies.beginCatalog({ userId: session.userId, input }),
@@ -172,6 +189,7 @@ export function createWatchHistoryV3RouteHandlers(
       const session = await dependencies.getSession(request);
       if (!session) return unauthorizedResponse();
       try {
+        validateOptionalHistoryOwner(request, session);
         const input = await readBoundedJson(request, CATALOG_BODY_BYTES);
         return NextResponse.json(
           await dependencies.applyCatalog({ userId: session.userId, input }),
@@ -185,6 +203,7 @@ export function createWatchHistoryV3RouteHandlers(
       const session = await dependencies.getSession(request);
       if (!session) return unauthorizedResponse();
       try {
+        validateOptionalHistoryOwner(request, session);
         validateEmptyQuery(request.nextUrl.searchParams);
         return NextResponse.json(
           await dependencies.getPreferences({ userId: session.userId }),
@@ -198,6 +217,7 @@ export function createWatchHistoryV3RouteHandlers(
       const session = await dependencies.getSession(request);
       if (!session) return unauthorizedResponse();
       try {
+        validateOptionalHistoryOwner(request, session);
         validateMutationOwner(request, session);
         const input = await readBoundedJson(request, SMALL_BODY_BYTES);
         if (!WatchHistoryPreferencesUpdateSchema.safeParse(input).success) {
@@ -219,6 +239,7 @@ export function createWatchHistoryV3RouteHandlers(
       const session = await dependencies.getSession(request);
       if (!session) return unauthorizedResponse();
       try {
+        validateOptionalHistoryOwner(request, session);
         validateMutationOwner(request, session);
         const input = await readBoundedJson(request, MUTATION_BODY_BYTES);
         if (!WatchHistoryDeletionRequestSchema.safeParse(input).success) {
@@ -240,6 +261,8 @@ export function createWatchHistoryV3RouteHandlers(
       const session = await dependencies.getSession(request);
       if (!session) return unauthorizedResponse();
       try {
+        validateOptionalHistoryOwner(request, session);
+        await dependencies.checkLegacyRoomOperation(session.userId);
         const input = parseRoomRecreationRequest(
           await readBoundedJson(request, SMALL_BODY_BYTES),
         );
@@ -267,10 +290,25 @@ export function createWatchHistoryV3RouteHandlers(
           WatchHistoryRoomRecreationResponseSchema.parse(creation),
         );
       } catch (error) {
+        // Activation can race the first legacy fence; the atomic create RPC
+        // rejects version 1 permanently. Keep this mapping scoped to recreation.
+        if (error instanceof Error && error.message === "ROOM_UPDATE_REQUIRED") {
+          return watchHistoryErrorResponse(new WatchHistoryV3ApiError(
+            426, "HISTORY_CLIENT_UPDATE_REQUIRED", "History room recreation is no longer supported",
+          ));
+        }
         return watchHistoryErrorResponse(error);
       }
     },
   };
+  return Object.fromEntries(Object.entries(handlers).map(([key, handler]) => [key,
+    async (request: NextRequest) => {
+      const response = await handler(request);
+      for (const [name, value] of Object.entries(HISTORY_PRIVATE_HEADERS)) response.headers.set(name, value);
+      return response;
+    },
+  ])) as typeof handlers;
+
 }
 
 function validateMutationOwner(request: NextRequest, session: ApiSession): void {
@@ -366,6 +404,7 @@ async function createRoomFromV3Session(params: {
     const body = quotaExhaustedResponseBody(quota);
     throw new WatchHistoryV3ApiError(403, body.code, body.error);
   }
+  await checkPersonalHistoryOperation(params.session.userId, "legacy");
   const admission = await createRoomWithActiveSession({
     hostUserId: params.session.userId,
     participantSessionId: params.participantSessionId,
@@ -540,4 +579,11 @@ function watchHistoryErrorResponse(error: unknown): NextResponse {
     { error: "Watch history is temporarily unavailable", code: "HISTORY_UNAVAILABLE" },
     { status: 503 },
   );
+}
+
+function validateOptionalHistoryOwner(request: NextRequest, session: ApiSession): void {
+  const owner = request.headers.get(WATCH_HISTORY_OWNER_HEADER);
+  if (owner === null) return;
+  if (!UUID_PATTERN.test(owner)) throw new WatchHistoryV3ApiError(400, "INVALID_REQUEST", "Expected watch history owner is invalid");
+  if (owner !== session.userId) throw new WatchHistoryV3ApiError(409, "OWNER_MISMATCH", "Watch history owner changed");
 }

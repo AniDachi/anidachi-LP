@@ -18,7 +18,8 @@ type BrowseMessage = Extract<
 			| "browse"
 			| "browse-title-episodes"
 			| "browse-sessions"
-			| "browse-options";
+			| "browse-options"
+			| "browse-catalog";
 	}
 >;
 type Parser<T> = {
@@ -27,6 +28,13 @@ type Parser<T> = {
 export const PopupWatchBrowseRecovery = createContext<
 	((manual: boolean) => Promise<boolean>) | null
 >(null);
+export const PopupWatchBrowseViews = createContext<{
+	client: PopupWatchHistoryClient;
+	ownerUserId: string;
+	generation?: number;
+	refresh: number;
+	pages: Map<string, unknown[]>;
+} | null>(null);
 
 // Pages belong to a rendered owner and complete query. Filtered DTOs never enter
 // the canonical storage cache. Background reads replay only user-opened pages.
@@ -73,22 +81,52 @@ export function usePopupWatchBrowse<T>({
 		// The complete query key fences previews supplied by the owning title page.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [initialPage, key]);
+	// Keep already rendered queries available synchronously while the background
+	// revalidates them. This is view state only, scoped to the current authority.
+	const localPages = useMemo(
+		() => new Map<string, T[]>(),
+		[client, message.expectedOwnerUserId, generation, refresh, discard],
+	);
+	const sharedViews = useContext(PopupWatchBrowseViews);
+	const queryPages =
+		!discard &&
+		sharedViews?.client === client &&
+		sharedViews.ownerUserId === message.expectedOwnerUserId &&
+		sharedViews.generation === generation &&
+		sharedViews.refresh === refresh
+			? (sharedViews.pages as Map<string, T[]>)
+			: localPages;
+	const savedPages = queryPages.get(key);
+	const restoredPages =
+		seed &&
+		(!savedPages?.length ||
+			Date.parse(meta(seed).serverTime ?? "") >
+				Date.parse(meta(savedPages[0]!).serverTime ?? ""))
+			? [seed]
+			: (savedPages ?? (seed ? [seed] : []));
 	const [state, setState] = useState<{
 		key: string;
 		pages: T[];
 		loading: boolean;
 		error: string | null;
 		errorStatus: string | null;
-	}>({ key, pages: [], loading: false, error: null, errorStatus: null });
+	}>({
+		key,
+		pages: restoredPages,
+		loading: enabled && !discard,
+		error: null,
+		errorStatus: null,
+	});
 	const latest = useRef({ key, client, generation });
 	latest.current = { key, client, generation };
 	const sequence = useRef(0);
-	const pageCount = useRef(1);
+	const pageCount = useRef(Math.max(1, restoredPages.length));
 	const queryDepths = useRef(new Map<string, number>());
 	const activeKey = useRef(key);
 	if (activeKey.current !== key) {
 		activeKey.current = key;
-		pageCount.current = queryDepths.current.get(key) ?? 1;
+		pageCount.current =
+			queryDepths.current.get(key) ?? Math.max(1, restoredPages.length);
 	}
 	const [retry, setRetry] = useState(0);
 	const previousRefresh = useRef({ forceRefresh, retry });
@@ -110,8 +148,12 @@ export function usePopupWatchBrowse<T>({
 				: seed && !firstCursor
 					? 0
 					: retainedCount - firstPages.length;
-			const rememberDepth = (count: number) => {
-				pageCount.current = Math.max(1, count);
+			const rememberPages = (pages: T[]) => {
+				queryPages.delete(key);
+				queryPages.set(key, pages);
+				if (queryPages.size > 16)
+					queryPages.delete(queryPages.keys().next().value!);
+				pageCount.current = Math.max(1, pages.length);
 				queryDepths.current.delete(key);
 				queryDepths.current.set(key, pageCount.current);
 				if (queryDepths.current.size > 16)
@@ -122,7 +164,7 @@ export function usePopupWatchBrowse<T>({
 				pages:
 					previous.key === key && previous.pages.length
 						? previous.pages
-						: firstPages,
+						: (queryPages.get(key) ?? firstPages),
 				loading: true,
 				error: null,
 				errorStatus: null,
@@ -151,7 +193,7 @@ export function usePopupWatchBrowse<T>({
 			// Exact-query previews come from the same server snapshot as their title.
 			// Refresh the parent once, not every open child as another network request.
 			if (!readCount) {
-				rememberDepth(firstPages.length);
+				rememberPages(firstPages);
 				setState({
 					key,
 					pages: firstPages,
@@ -207,7 +249,7 @@ export function usePopupWatchBrowse<T>({
 										!fresh
 									? previous.pages
 									: cachedPages;
-						rememberDepth(pages.length);
+						rememberPages(pages);
 						return {
 							key,
 							pages,
@@ -245,6 +287,19 @@ export function usePopupWatchBrowse<T>({
 					(generation !== undefined &&
 						meta(parsed.data).accountGeneration !== generation)
 				) {
+					if (
+						response.ok ||
+						[
+							"unauthenticated",
+							"rejected",
+							"generation-mismatch",
+							"deleted-history",
+                            "plan-required",
+                            "access-changed",
+							"invalid-response",
+						].includes(response.status)
+					)
+						queryPages.clear();
 					setState((previous) => ({
 						...previous,
 						pages:
@@ -254,6 +309,8 @@ export function usePopupWatchBrowse<T>({
 								"rejected",
 								"generation-mismatch",
 								"deleted-history",
+                            "plan-required",
+                            "access-changed",
 							].includes(response.status)
 								? []
 								: previous.pages,
@@ -284,7 +341,7 @@ export function usePopupWatchBrowse<T>({
 					nextCursor && previous.key === key
 						? [...previous.pages.slice(0, retainedCount), ...pages]
 						: pages;
-				rememberDepth(merged.length);
+				rememberPages(merged);
 				return {
 					key,
 					pages: merged,
@@ -297,7 +354,7 @@ export function usePopupWatchBrowse<T>({
 			// module constants. Playback object identity must not restart network reads.
 			// eslint-disable-next-line react-hooks/exhaustive-deps
 		},
-		[key, client, generation, seed],
+		[key, client, generation, seed, queryPages],
 	);
 	useEffect(() => {
 		if (discard) {
@@ -326,7 +383,7 @@ export function usePopupWatchBrowse<T>({
 			? state
 			: {
 					key,
-					pages: seed ? [seed] : [],
+					pages: restoredPages,
 					loading: enabled && !discard,
 					error: null,
 					errorStatus: null,

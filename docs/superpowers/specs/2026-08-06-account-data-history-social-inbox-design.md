@@ -6,6 +6,12 @@ Date: 2026-08-06
 
 Last updated: 2026-08-25
 
+Current target amendment (2026-09-08): [personal history and plans MVP](2026-09-08-personal-history-and-plans-mvp-design.md)
+supersedes this baseline's solo/shared history split and Free history allowance.
+The [implementation plan](../plans/2026-09-08-personal-history-and-plans-mvp.md)
+keeps invitations, private groups, Inbox and account isolation. The amendment
+is a target decision; underlying runtime changes are not yet delivered.
+
 ## Summary
 
 AniDachi will use one durable account model for the web account dashboard and
@@ -386,6 +392,12 @@ social snapshot as friends and groups. It must not make an unvalidated side
 request or maintain a separate recent-people cache.
 
 ## Personal Groups
+
+Target-model note (2026-09-08): the [personal-history MVP](2026-09-08-personal-history-and-plans-mvp-design.md)
+retains the private recipient-list behavior below. Shared group progress,
+shared-name transition and membership-based access to history are deferred.
+An invitation or link alone does not add someone to the owner's private list.
+The existing invite delivery and account isolation remain the integration baseline.
 
 MVP groups are owner-owned personal recipient lists. They have no shared admins,
 roles, public identity, independent chat, or history.

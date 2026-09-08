@@ -12,7 +12,7 @@ export type WatchHistoryDateRange = {
 
 export type WatchHistoryDateRangeResult =
 	| { ok: true; range: WatchHistoryDateRange | null }
-	| { ok: false; error: "invalid-date" | "reversed-range" };
+	| { ok: false; error: "invalid-date" | "reversed-range" | "future-date" };
 
 export function createWatchHistoryDateRange(input: {
 	preset: WatchHistoryDatePreset;
@@ -22,17 +22,6 @@ export function createWatchHistoryDateRange(input: {
 }): WatchHistoryDateRangeResult {
 	if (input.preset === "all-time") return { ok: true, range: null };
 
-	if (input.preset === "custom") {
-		const from = parseLocalDate(input.fromDate);
-		const through = parseLocalDate(input.throughDate);
-		if (!from || !through) return { ok: false, error: "invalid-date" };
-		if (from.getTime() > through.getTime()) {
-			return { ok: false, error: "reversed-range" };
-		}
-		const until = moveLocalCalendarDate(through, 1);
-		return isoRange(from, until);
-	}
-
 	const now = input.now ?? new Date();
 	if (Number.isNaN(now.getTime())) return { ok: false, error: "invalid-date" };
 	const today = localDateStart(
@@ -40,6 +29,21 @@ export function createWatchHistoryDateRange(input: {
 		now.getMonth(),
 		now.getDate(),
 	);
+
+	if (input.preset === "custom") {
+		const from = parseLocalDate(input.fromDate);
+		const through = parseLocalDate(input.throughDate);
+		if (!from || !through) return { ok: false, error: "invalid-date" };
+		if (from > today || through > today) {
+			return { ok: false, error: "future-date" };
+		}
+		if (from.getTime() > through.getTime()) {
+			return { ok: false, error: "reversed-range" };
+		}
+		const until = moveLocalCalendarDate(through, 1);
+		return isoRange(from, until);
+	}
+
 	const until = moveLocalCalendarDate(today, 1);
 	const from =
 		input.preset === "last-7-days"
@@ -48,6 +52,10 @@ export function createWatchHistoryDateRange(input: {
 				? localDateStart(today.getFullYear(), today.getMonth(), 1)
 				: today;
 	return isoRange(from, until);
+}
+
+export function watchHistoryLocalDate(date: Date): string {
+	return `${String(date.getFullYear()).padStart(4, "0")}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
 function parseLocalDate(value: string | undefined): Date | null {

@@ -1,3 +1,4 @@
+import { withPersonalHistoryRead, personalHistoryError } from "./personal-history-policy";
 import {
   WATCH_HISTORY_TITLE_EPISODE_PAGE_LIMIT,
   WatchCatalogBeginAckSchema,
@@ -211,6 +212,10 @@ export async function beginWatchCatalogV3(params: {
   input: unknown;
   store?: WatchHistoryV3Store;
 }): Promise<WatchCatalogBeginAck> {
+  if (!params.store) {
+    return withPersonalHistoryRead(params.userId,
+      () => beginWatchCatalogV3({ ...params, store: supabaseWatchHistoryV3Store }), "read");
+  }
   const request = WatchCatalogBeginRequestSchema.safeParse(params.input);
   if (!request.success) {
     throw new WatchHistoryV3ApiError(400, "INVALID_REQUEST", "Invalid watch catalog request");
@@ -241,6 +246,10 @@ export async function applyWatchCatalogV3(params: {
   input: unknown;
   store?: WatchHistoryV3Store;
 }): Promise<WatchCatalogCommitAck> {
+  if (!params.store) {
+    return withPersonalHistoryRead(params.userId,
+      () => applyWatchCatalogV3({ ...params, store: supabaseWatchHistoryV3Store }), "read");
+  }
   const request = WatchCatalogCommitRequestSchema.safeParse(params.input);
   if (!request.success) {
     throw new WatchHistoryV3ApiError(400, "INVALID_REQUEST", "Invalid watch catalog request");
@@ -309,6 +318,10 @@ export async function applyWatchProgressV3(params: {
     authority: WatchSharedRoomAuthority;
   }) => Promise<ValidatedWatchHistoryAuthority>;
 }): Promise<WatchProgressAck> {
+  if (!params.store) {
+    return withPersonalHistoryRead(params.userId,
+      () => applyWatchProgressV3({ ...params, store: supabaseWatchHistoryV3Store }), "legacy");
+  }
   const event = parseWatchProgressEventV3(params.input);
   const store = params.store ?? supabaseWatchHistoryV3Store;
   let validatedAuthority: ValidatedWatchHistoryAuthority | null = null;
@@ -378,6 +391,10 @@ export async function listWatchHistoryV3(params: {
   store?: WatchHistoryV3Store;
   now?: Date;
 }): Promise<WatchHistoryResponse> {
+  if (!params.store) {
+    return withPersonalHistoryRead(params.userId,
+      () => listWatchHistoryV3({ ...params, store: supabaseWatchHistoryV3Store }), "read");
+  }
   try {
     const limit = params.limit ?? 50;
     const cursor = params.cursor ?? null;
@@ -645,6 +662,10 @@ export async function listWatchHistoryTitleEpisodesV3(params: {
   store?: WatchHistoryV3Store;
   now?: Date;
 }): Promise<WatchHistoryTitleEpisodesResponse> {
+  if (!params.store) {
+    return withPersonalHistoryRead(params.userId,
+      () => listWatchHistoryTitleEpisodesV3({ ...params, store: supabaseWatchHistoryV3Store }), "read");
+  }
   const limit = params.limit ?? WATCH_HISTORY_TITLE_EPISODE_PAGE_LIMIT;
   const cursor = params.cursor ?? null;
   if (
@@ -867,6 +888,10 @@ export async function getWatchHistoryPreferencesV3(params: {
   store?: WatchHistoryV3Store;
   now?: Date;
 }): Promise<WatchHistoryPreferencesResponse> {
+  if (!params.store) {
+    return withPersonalHistoryRead(params.userId,
+      () => getWatchHistoryPreferencesV3({ ...params, store: supabaseWatchHistoryV3Store }), "metadata");
+  }
   try {
     const value = await (params.store ?? supabaseWatchHistoryV3Store).getPreferences(params.userId);
     return WatchHistoryPreferencesResponseSchema.parse({
@@ -888,6 +913,10 @@ export async function updateWatchHistoryPreferencesV3(params: {
   input: unknown;
   store?: WatchHistoryV3Store;
 }): Promise<WatchHistoryPreferencesResponse> {
+  if (!params.store) {
+    return withPersonalHistoryRead(params.userId,
+      () => updateWatchHistoryPreferencesV3({ ...params, store: supabaseWatchHistoryV3Store }), "metadata");
+  }
   const parsedInput = WatchHistoryPreferencesUpdateSchema.safeParse(params.input);
   if (!parsedInput.success) {
     throw new WatchHistoryV3ApiError(400, "INVALID_REQUEST", "Invalid watch history preferences");
@@ -1093,31 +1122,42 @@ export const supabaseWatchHistoryV3Store: WatchHistoryV3Store = {
   },
 
   async getRoomSource(userId, sessionId) {
-    const participant = await db()
-      .from("watch_session_participants")
-      .select("session_id,user_id,schema_version")
-      .eq("session_id", sessionId)
-      .eq("user_id", userId)
-      .eq("schema_version", 3)
-      .maybeSingle();
-    if (participant.error) throw participant.error;
-    if (!participant.data) return null;
-    const session = await db()
-      .from("watch_sessions")
-      .select(
-        "id,schema_version,room_id,client_session_key,provider,item_key,item_kind,item_title,episode_key,episode_title,source_url",
-      )
-      .eq("id", sessionId)
-      .eq("schema_version", 3)
-      .or("room_id.not.is.null,client_session_key.not.is.null")
-      .maybeSingle();
-    if (session.error) throw session.error;
-    if (!session.data) return null;
-    return buildHostAuthoritativeWatchHistoryRoomSource({
-      userId,
-      sessionId,
-      participant: participant.data,
-      session: session.data,
+    return withPersonalHistoryRead(userId, async () => {
+      const participant = await db()
+        .from("watch_session_participants")
+        .select("session_id,user_id,schema_version")
+        .eq("session_id", sessionId)
+        .eq("user_id", userId)
+        .eq("schema_version", 3)
+        .maybeSingle();
+      if (participant.error) throw participant.error;
+      if (!participant.data) return null;
+      const session = await db()
+        .from("watch_sessions")
+        .select(
+          "id,schema_version,room_id,client_session_key,provider,item_key,item_kind,item_title,episode_key,episode_title,source_url",
+        )
+        .eq("id", sessionId)
+        .eq("schema_version", 3)
+        .or("room_id.not.is.null,client_session_key.not.is.null")
+        .maybeSingle();
+      if (session.error) throw session.error;
+      if (!session.data) return null;
+      // Legacy shared provenance never determines this owner's source variant.
+      const own = await db().from("watch_episode_progress")
+        .select("title,episode_title,source_url")
+        .eq("user_id", userId).eq("provider", session.data.provider)
+        .eq("title_key", session.data.item_key).eq("episode_key", session.data.episode_key)
+        .maybeSingle();
+      if (own.error) throw own.error;
+      if (!own.data) return null;
+      return buildHostAuthoritativeWatchHistoryRoomSource({
+        userId,
+        sessionId,
+        participant: participant.data,
+        session: { ...session.data, item_title: own.data.title,
+          episode_title: own.data.episode_title, source_url: own.data.source_url },
+      });
     });
   },
 };
@@ -1842,8 +1882,10 @@ function invalidDatabaseResponse(): WatchHistoryV3ApiError {
   );
 }
 
-function publicDatabaseError(error: unknown): WatchHistoryV3ApiError {
+export function publicDatabaseError(error: unknown): WatchHistoryV3ApiError {
   if (error instanceof WatchHistoryV3ApiError) return error;
+  const accessError = personalHistoryError(error);
+  if (accessError) return accessError;
   const message =
     error && typeof error === "object" && typeof (error as { message?: unknown }).message === "string"
       ? (error as { message: string }).message

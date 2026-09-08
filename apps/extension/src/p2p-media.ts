@@ -2,6 +2,7 @@ import type {
   P2PIceCandidate,
   P2PSignal,
   Participant,
+  RoomMediaSnapshot,
   VoiceMode,
 } from "@anidachi/protocol";
 import { logDebug } from "./debug-log";
@@ -13,6 +14,8 @@ import type {
   GhostVideo,
   MicrophoneStatus,
   MicrophoneTerminalFailure,
+  MediaCaptureIntents,
+  MediaCaptureTerminalFailure,
   MicrophoneTerminalFailureReason,
   RoomSendDisposition,
   SignalingTransportReady,
@@ -545,7 +548,17 @@ export function selectP2PMediaParticipants(
   localParticipantId: string,
   localMediaWanted: boolean,
   voiceParticipantIds: ReadonlySet<string> = new Set(),
+  mediaSnapshot?: RoomMediaSnapshot | null,
 ): Participant[] {
+  if (mediaSnapshot !== undefined) {
+    if (!mediaSnapshot || participants.length > mediaSnapshot.capabilities.maxParticipants) return [];
+    const grants = new Map(mediaSnapshot.participants.map(p => [p.participantSessionId, p]));
+    const members = participants.filter(p => p.connected !== false && p.participantSessionId && grants.has(p.participantSessionId));
+    const local = members.find(p => p.id === localParticipantId);
+    if (!local) return [];
+    const publishes = (p: Participant) => { const g = grants.get(p.participantSessionId!); return Boolean(g?.cameraGranted || g?.microphoneGranted); };
+    return members.filter(p => p.id === localParticipantId || publishes(local) || publishes(p));
+  }
   const mediaParticipants = participants.filter(
     (participant) => participant.mediaSeat === "joined",
   );
@@ -584,7 +597,11 @@ export function canReceiveP2PSignalFromParticipant(
   remoteParticipantId: string,
   _localMediaWanted: boolean,
   _voiceParticipantIds: ReadonlySet<string> = new Set(),
+  mediaSnapshot?: RoomMediaSnapshot | null,
 ): boolean {
+  if (mediaSnapshot !== undefined) {
+    return localParticipantId !== remoteParticipantId && selectP2PMediaParticipants(participants, localParticipantId, false, new Set(), mediaSnapshot).some(p => p.id === remoteParticipantId);
+  }
   if (localParticipantId === remoteParticipantId) {
     return false;
   }
@@ -640,6 +657,7 @@ interface P2PPeer {
 }
 
 interface P2PMediaControllerOptions {
+  onMediaTerminalFailure?: (failure: MediaCaptureTerminalFailure) => void;
   iceServers?: RTCIceServer[];
   localParticipant: Participant;
   onActiveSpeakerIdsChange: (ids: string[]) => void;
@@ -675,6 +693,9 @@ export interface P2PMediaPeerDiagnostics {
 }
 
 export interface P2PMediaDiagnostics {
+  cameraEnabled: boolean;
+  cameraState: P2PCameraState;
+  localTrackCount: number;
   microphonePublishingWanted: boolean;
   microphonePublishing: boolean;
   localSpeaking: boolean;
@@ -691,6 +712,61 @@ type IceCandidateStatsSnapshot = RTCStats & {
 
 export class P2PMediaController {
   private iceServers: RTCIceServer[];
+  private mediaSnapshot: RoomMediaSnapshot | null | undefined;
+  private permittedPeerIds = new Set<string>();
+  private participantSessions = new Map<string, string>();
+  private cameraAuthorized = true;
+  private microphoneAuthorized = true;
+  private captureIntents: MediaCaptureIntents = {};
+  private cameraAttemptIntent: MediaCaptureIntents["camera"];
+  private microphoneAttemptIntent: MediaCaptureIntents["microphone"];
+  private readonly onMediaTerminalFailure?: (
+    failure: MediaCaptureTerminalFailure,
+  ) => void;
+
+  private ownsCaptureAttempt(
+    media: "camera" | "microphone",
+    intent: MediaCaptureIntents["camera"],
+  ): boolean {
+    return !intent || this.captureIntents[media]?.requestId === intent.requestId;
+  }
+
+  private reportMediaFailure(
+    media: "camera" | "microphone",
+    intent: MediaCaptureIntents["camera"],
+    reason: MediaCaptureTerminalFailure["reason"],
+  ): void {
+    if (!this.disposed && intent && this.ownsCaptureAttempt(media, intent)) {
+      this.onMediaTerminalFailure?.({ media, intent, reason });
+    }
+  }
+
+  setCaptureAuthority(
+    camera: boolean,
+    microphone: boolean,
+    intents?: MediaCaptureIntents,
+  ): void {
+    if (intents) {
+      // A new explicit owner cannot inherit an in-flight acquisition/failure.
+      if (this.captureIntents.camera && intents.camera &&
+          this.captureIntents.camera.requestId !== intents.camera.requestId) {
+        void this.setCameraEnabled(false);
+      }
+      if (this.captureIntents.microphone && intents.microphone &&
+          this.captureIntents.microphone.requestId !== intents.microphone.requestId) {
+        void this.setMicrophonePublishing(false, "immediate");
+      }
+      this.captureIntents = intents;
+    }
+    const cameraRevoked = this.cameraAuthorized && !camera;
+    const microphoneRevoked = this.microphoneAuthorized && !microphone;
+    this.cameraAuthorized = camera; this.microphoneAuthorized = microphone;
+    if (cameraRevoked) void this.setCameraEnabled(false);
+    if (microphoneRevoked) {
+      void this.setMicrophonePublishing(false, "immediate");
+      this.releaseMic();
+    }
+  }
   private readonly localParticipant: Participant;
   private readonly onActiveSpeakerIdsChange: (ids: string[]) => void;
   private readonly onCameraStatus: (enabled: boolean) => void;
@@ -824,6 +900,7 @@ export class P2PMediaController {
     this.onActiveSpeakerIdsChange = options.onActiveSpeakerIdsChange;
     this.onCameraStatus = options.onCameraStatus;
     this.onMicrophoneTerminalFailure = options.onMicrophoneTerminalFailure;
+    this.onMediaTerminalFailure = options.onMediaTerminalFailure;
     this.onVideosChange = options.onVideosChange;
     this.onVoiceMessageChange = options.onVoiceMessageChange;
     this.onMicrophoneStatusChange = options.onMicrophoneStatusChange;
@@ -986,16 +1063,21 @@ export class P2PMediaController {
   updateParticipants(
     participants: Participant[],
     mediaSeatParticipantIds?: ReadonlySet<string>,
+    mediaSnapshot?: RoomMediaSnapshot | null,
   ): void {
     if (this.disposed) {
       return;
     }
 
-    const remoteIds = participants
+    this.mediaSnapshot = mediaSnapshot;
+    const selected = mediaSnapshot === undefined ? participants : selectP2PMediaParticipants(participants, this.localParticipant.id, false, new Set(), mediaSnapshot);
+    const remoteIds = selected
       .map((participant) => participant.id)
       .filter((id) => id !== this.localParticipant.id)
-      .slice(0, P2P_MAX_REMOTE_PARTICIPANTS);
+      .slice(0, mediaSnapshot ? mediaSnapshot.capabilities.maxParticipants - 1 : P2P_MAX_REMOTE_PARTICIPANTS);
     const remoteIdSet = new Set(remoteIds);
+    this.permittedPeerIds = remoteIdSet;
+    this.participantSessions = new Map(participants.filter(p => p.participantSessionId).map(p => [p.id, p.participantSessionId!]));
     const remoteParticipantsById = new Map(
       participants.map((participant) => [participant.id, participant]),
     );
@@ -1009,8 +1091,8 @@ export class P2PMediaController {
     for (const [remoteId, peer] of this.peers) {
       if (!remoteIdSet.has(remoteId)) {
         if (
-          mediaSeatParticipantIds &&
-          !mediaSeatParticipantIds.has(remoteId)
+          mediaSnapshot !== undefined || (mediaSeatParticipantIds &&
+          !mediaSeatParticipantIds.has(remoteId))
         ) {
           this.closePeer(remoteId, false);
           continue;
@@ -1062,7 +1144,7 @@ export class P2PMediaController {
       return;
     }
 
-    if (!enabled) {
+    if (!enabled || !this.cameraAuthorized) {
       await this.stopCamera();
       return;
     }
@@ -1076,6 +1158,8 @@ export class P2PMediaController {
   }
 
   private async acquireCamera(reason: string, intentGeneration: number): Promise<void> {
+    const captureIntent = this.captureIntents.camera;
+    this.cameraAttemptIntent = captureIntent;
     if (
       this.disposed ||
       !this.wantsCamera ||
@@ -1155,7 +1239,7 @@ export class P2PMediaController {
 
       this.setPublicCameraEnabled(true, "track-ready");
     } catch (error) {
-      if (intentGeneration !== this.cameraIntentGeneration) {
+      if (intentGeneration !== this.cameraIntentGeneration || !this.ownsCaptureAttempt("camera",captureIntent)) {
         return;
       }
       logDebug("p2p.camera", "failed", {
@@ -1170,6 +1254,7 @@ export class P2PMediaController {
         this.cameraState = "unavailable";
         this.setPublicCameraEnabled(false, "camera-failed");
         this.onVoiceMessageChange(formatCameraErrorMessage(error));
+        this.reportMediaFailure("camera",captureIntent,"capture-failed");
       }
     } finally {
       if (this.cameraStartingGeneration === intentGeneration) {
@@ -1251,6 +1336,7 @@ export class P2PMediaController {
   }
 
   private giveUpCameraRecovery(reason: string, error?: unknown): void {
+    if (!this.ownsCaptureAttempt("camera",this.cameraAttemptIntent)) return;
     this.clearCameraReacquireTimer();
     this.clearCameraStableTimer();
     this.cameraState = "unavailable";
@@ -1263,6 +1349,7 @@ export class P2PMediaController {
       reason,
     });
     this.setPublicCameraEnabled(false, "recovery-give-up");
+    this.reportMediaFailure("camera",this.cameraAttemptIntent,"recovery-exhausted");
     this.onVoiceMessageChange(formatCameraErrorMessage(error));
   }
 
@@ -1318,6 +1405,7 @@ export class P2PMediaController {
       return;
     }
 
+    enabled = enabled && this.microphoneAuthorized;
     this.microphoneVoiceMode = voiceMode;
 
     if (!enabled) {
@@ -1395,11 +1483,13 @@ export class P2PMediaController {
     // getUserMedia, no track/transceiver churn — the encoder is already warm
     // so audio resumes near-instantly (Block 5.2).
     if (this.localAudioTrack && this.localAudioTrack.readyState === "live") {
+      const intentGeneration = this.microphoneIntentGeneration;
       this.localAudioTrack.enabled = true;
       this.microphonePublishing = true;
       for (const peer of this.peers.values()) {
         const needsMediaOffer = this.peerNeedsMediaOffer(peer);
         const negotiationNeeded = await this.syncPeerMedia(peer);
+        if (this.disposed || intentGeneration !== this.microphoneIntentGeneration || !this.microphonePublishingWanted) return;
         if (needsMediaOffer || negotiationNeeded) {
           this.queueNegotiation(peer, "voice-resume");
         }
@@ -1418,6 +1508,8 @@ export class P2PMediaController {
   }
 
   private async acquireMicrophoneTrack(reason: string, intentGeneration: number): Promise<void> {
+    const captureIntent = this.captureIntents.microphone;
+    this.microphoneAttemptIntent = captureIntent;
     if (
       this.disposed ||
       !this.microphonePublishingWanted ||
@@ -1489,6 +1581,7 @@ export class P2PMediaController {
       for (const peer of this.peers.values()) {
         const needsMediaOffer = this.peerNeedsMediaOffer(peer);
         const negotiationNeeded = await this.syncPeerMedia(peer);
+        if (this.disposed || intentGeneration !== this.microphoneIntentGeneration || !this.microphonePublishingWanted) return;
         if (needsMediaOffer || negotiationNeeded) {
           this.queueNegotiation(peer, "voice-start");
         }
@@ -1498,7 +1591,7 @@ export class P2PMediaController {
       this.updateAudioActivitySampler();
       this.onMicrophoneStatusChange("on");
     } catch (error) {
-      if (intentGeneration !== this.microphoneIntentGeneration) {
+      if (intentGeneration !== this.microphoneIntentGeneration || !this.ownsCaptureAttempt("microphone",captureIntent)) {
         return;
       }
       logDebug("p2p.voice", "failed", {
@@ -1668,6 +1761,7 @@ export class P2PMediaController {
     reason: MicrophoneTerminalFailureReason,
     recoveryReason?: string,
   ): void {
+    if (!this.ownsCaptureAttempt("microphone",this.microphoneAttemptIntent)) return;
     this.clearMicrophoneReacquireTimer();
     this.clearMicrophoneStableTimer();
     this.clearMicReleaseTimer();
@@ -1689,6 +1783,7 @@ export class P2PMediaController {
     const message = formatMicrophoneErrorMessage(error);
     this.onMicrophoneStatusChange("error");
     this.onVoiceMessageChange(message);
+    this.reportMediaFailure("microphone",this.microphoneAttemptIntent,reason);
     this.onMicrophoneTerminalFailure({
       errorName: microphoneErrorName(error) || null,
       message,
@@ -1756,7 +1851,7 @@ export class P2PMediaController {
     metadata: P2PSignalMetadata = {},
   ): Promise<boolean> {
     return this.enqueuePeerOperation(fromUserId, () =>
-      this.handleSignalNow(fromUserId, signal, metadata),
+      this.mediaSnapshot !== undefined && !this.permittedPeerIds.has(fromUserId) ? Promise.resolve(false) : this.handleSignalNow(fromUserId, signal, metadata),
     );
   }
 
@@ -2054,7 +2149,14 @@ export class P2PMediaController {
 
     if (signal.kind === "renegotiate") {
       if (this.shouldInitiateOffers(peer)) {
-        await this.recoverPeerNegotiation(peer, "remote-renegotiate", true);
+        if (this.mediaSnapshot !== undefined) {
+          // A grant change can race with an offer already in transit. Preserve
+          // that peer and let its stable-state drain negotiate the latest media.
+          await this.syncPeerMedia(peer);
+          this.queueNegotiation(peer, "remote-renegotiate");
+        } else {
+          await this.recoverPeerNegotiation(peer, "remote-renegotiate", true);
+        }
       } else {
         logDebug(
           "p2p.negotiation",
@@ -2244,6 +2346,9 @@ export class P2PMediaController {
     );
 
     return {
+      cameraEnabled: this.publicCameraEnabled,
+      cameraState: this.cameraState,
+      localTrackCount: [this.localAudioTrack, this.localVideoTrack].filter(track => track?.readyState === "live").length,
       microphonePublishingWanted: this.microphonePublishingWanted,
       microphonePublishing: this.microphonePublishing,
       localSpeaking: this.localSpeaking,
@@ -3449,8 +3554,12 @@ export class P2PMediaController {
     ) {
       await videoTransceiver.sender.replaceTrack(null);
     }
-    if (videoTransceiver.direction !== videoPlan.desiredDirection) {
-      videoTransceiver.direction = videoPlan.desiredDirection;
+    if (this.peers.get(peer.remoteUserId) !== peer || (peer.pc.signalingState as RTCSignalingState) === "closed") return false;
+    const remoteGrant = this.mediaSnapshot?.participants.find(p => p.participantSessionId === this.participantSessions.get(peer.remoteUserId));
+    const direction = (send: boolean, receive: boolean): RTCRtpTransceiverDirection => send ? receive ? "sendrecv" : "sendonly" : receive ? "recvonly" : "inactive";
+    const videoDirection = this.mediaSnapshot !== undefined ? direction(Boolean(this.localVideoTrack) && this.cameraAuthorized, Boolean(remoteGrant?.cameraGranted)) : videoPlan.desiredDirection;
+    if (videoTransceiver.direction !== videoDirection) {
+      videoTransceiver.direction = videoDirection;
       negotiationNeeded = true;
     }
     await configureSender(videoTransceiver.sender, P2P_VIDEO_BITRATE_BPS, 12);
@@ -3465,8 +3574,10 @@ export class P2PMediaController {
         audioTrackState: this.localAudioTrack?.readyState ?? null,
       });
     }
-    if (audioTransceiver.direction !== P2P_AUDIO_TRANSCEIVER_DIRECTION) {
-      audioTransceiver.direction = P2P_AUDIO_TRANSCEIVER_DIRECTION;
+    if (this.peers.get(peer.remoteUserId) !== peer || (peer.pc.signalingState as RTCSignalingState) === "closed") return false;
+    const audioDirection = this.mediaSnapshot !== undefined ? direction(this.microphoneAuthorized, Boolean(remoteGrant?.microphoneGranted)) : P2P_AUDIO_TRANSCEIVER_DIRECTION;
+    if (audioTransceiver.direction !== audioDirection) {
+      audioTransceiver.direction = audioDirection;
       negotiationNeeded = true;
     }
     await configureSender(audioTransceiver.sender, P2P_AUDIO_BITRATE_BPS);
@@ -3591,7 +3702,7 @@ export class P2PMediaController {
     return (
       !peer.videoTransceiver ||
       !peer.audioTransceiver ||
-      p2pAudioTrackSwapNeedsNegotiation(peer.audioTransceiver.direction)
+      (this.mediaSnapshot === undefined && p2pAudioTrackSwapNeedsNegotiation(peer.audioTransceiver.direction))
     );
   }
 
@@ -3764,6 +3875,7 @@ export class P2PMediaController {
 
   private async stopCamera(): Promise<void> {
     this.cameraIntentGeneration += 1;
+    const stoppedGeneration = this.cameraIntentGeneration;
     this.wantsCamera = false;
     this.cameraStartingGeneration = null;
     this.clearCameraReacquireTimer();
@@ -3784,12 +3896,13 @@ export class P2PMediaController {
         await peer.videoTransceiver.sender
           .replaceTrack(null)
           .catch(() => undefined);
+        if (this.peers.get(peer.remoteUserId) !== peer || peer.pc.signalingState === "closed") continue;
         peer.videoTransceiver.direction = "recvonly";
       }
       this.queueNegotiation(peer, "camera-stop");
     }
 
-    this.setPublicCameraEnabled(false, "camera-stop");
+    if (this.cameraIntentGeneration === stoppedGeneration) this.setPublicCameraEnabled(false, "camera-stop");
   }
 
   private upsertVideo(video: GhostVideo): void {
@@ -5178,6 +5291,8 @@ export function summarizeStats(report: RTCStatsReport): Record<string, unknown> 
     }
 
     if (stat.type === "inbound-rtp" && stat.kind === "video") {
+      const codec = stat.codecId ? report.get(stat.codecId) : undefined;
+      summary.videoFormat = { width: stat.frameWidth, height: stat.frameHeight, codec: codec?.mimeType };
       summary.videoInbound = mergeVideoInboundStats(
         summary.videoInbound as VideoInboundStats | undefined,
         {
@@ -5202,6 +5317,7 @@ export function summarizeStats(report: RTCStatsReport): Record<string, unknown> 
     }
 
     if (stat.type === "inbound-rtp" && stat.kind === "audio") {
+      summary.audioDecoded = { totalAudioEnergy: stat.totalAudioEnergy, totalSamplesReceived: stat.totalSamplesReceived };
       summary.audioInbound = mergeAudioInboundStats(
         summary.audioInbound as AudioActivityStats | undefined,
         {

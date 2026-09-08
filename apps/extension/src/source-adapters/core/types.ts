@@ -57,6 +57,9 @@ export type PlayerEvent =
   | { type: "ratechange"; time: number; playbackRate: number }
   | { type: "phasechange"; snapshot: AdapterPlaybackSnapshot };
 
+export type PersonalResumeTarget = { sourceUrl: string; currentTime: number; expiresAt: number; intentId: string };
+export type PersonalResumeReadiness = "ready" | "waiting" | "cancelled";
+
 export interface VideoAdapter {
   id: string;
   provider: SourceProvider;
@@ -71,6 +74,8 @@ export interface VideoAdapter {
   getState(): PlaybackState;
   getSourceDescriptor(): WatchSourceDescriptor | undefined;
   getPlaybackSnapshot(): AdapterPlaybackSnapshot;
+  getPersonalResumeReadiness?(target: PersonalResumeTarget): Promise<PersonalResumeReadiness>;
+  seekPersonalResume?(target: PersonalResumeTarget, guard: () => boolean): Promise<"consumed" | "waiting" | "cancelled">;
   getOverlayBinding(): AdapterOverlayBinding;
   setPlaybackRate(rate: number): void;
   play(): Promise<void>;

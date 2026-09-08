@@ -12,7 +12,7 @@
  * Run from tests/e2e: `node p2p-media-harness.mjs` (after `pnpm install` here and
  * `npx playwright install chromium`).
  */
-import { spawn } from "node:child_process";
+import { spawn, execFileSync } from "node:child_process";
 import { createHmac, randomUUID } from "node:crypto";
 import { rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
@@ -59,6 +59,10 @@ function signRoomToken(sub, role, participantSessionId) {
 			participantSessionId,
 			displayName: sub,
 			avatarUrl: null,
+            ...(MEDIA_V2_SIZE ? (() => {
+              const capabilities = { mediaProtocolVersion: 2, hostPlanCode: MEDIA_V2_SIZE === 15 ? "pro" : MEDIA_V2_SIZE === 6 ? "plus" : "free", maxParticipants: MEDIA_V2_SIZE, maxCameras: 4, maxMicrophones: MEDIA_V2_SIZE === 15 ? 8 : MEDIA_V2_SIZE, capabilityRevision: mediaCapabilityRevision, capabilitiesValidUntil: new Date((now + 1700) * 1000).toISOString() };
+              return { hostUserId: "p0", capabilities, mediaLease: { roomId: ROOM_ID, roomGeneration: 1, issuedAt: new Date(now * 1000).toISOString(), paidUntil: null, capabilities } };
+            })() : {}),
 			typ: "room",
 			iss: "anidachi-auth",
 			aud: "anidachi-worker",
@@ -70,6 +74,9 @@ function signRoomToken(sub, role, participantSessionId) {
 	return `${data}.${createHmac("sha256", SECRET).update(data).digest("base64url")}`;
 }
 
+const MEDIA_V2_SIZE = Number(process.env.HARNESS_MEDIA_V2 || 0);
+let mediaCapabilityRevision = 1;
+let mediaSettlementPending = false;
 const results = [];
 function record(name, ok, detail = "") {
 	results.push({ name, ok });
@@ -96,7 +103,7 @@ function createVoiceTestWav(durationSeconds = 4, sampleRate = 48_000) {
 	wav.writeUInt16LE(bitsPerSample, 34);
 	wav.write("data", 36);
 	wav.writeUInt32LE(dataSize, 40);
-	for (let sample = sampleRate; sample < durationSeconds * sampleRate; sample += 1) {
+	for (let sample = MEDIA_V2_SIZE ? 0 : sampleRate; sample < durationSeconds * sampleRate; sample += 1) {
 		const time = sample / sampleRate;
 		const value = Math.round(Math.sin(2 * Math.PI * 440 * time) * 0.2 * 32767);
 		wav.writeInt16LE(value, 44 + sample * bytesPerSample);
@@ -266,6 +273,7 @@ async function bundleHarness() {
 	};
 	const result = await build({
 		entryPoints: [resolve(__dirname, "harness-entry.ts")],
+        alias: { react: resolve(REPO, "apps/extension/node_modules/react"), "react-dom": resolve(REPO, "apps/extension/node_modules/react-dom") },
 		bundle: true,
 		format: "iife",
 		write: false,
@@ -293,7 +301,7 @@ async function waitForWorker() {
 
 async function startPeer(
 	page,
-	{ sub, role, sessionId, iceServers, cameraEnabled = true },
+	{ sub, role, sessionId, iceServers, cameraEnabled = true, mediaV2 = false },
 ) {
 	// Token role is the auth role (host|member); the participant role is host|viewer.
 	const token = signRoomToken(
@@ -302,7 +310,7 @@ async function startPeer(
 		sessionId,
 	);
 	await page.evaluate(
-		async ({ roomId, token, sub, role, sessionId, iceServers, cameraEnabled }) => {
+		async ({ roomId, token, sub, role, sessionId, iceServers, cameraEnabled, mediaV2 }) => {
 			await window.AnidachiHarness.start({
 				roomId,
 				token,
@@ -311,6 +319,7 @@ async function startPeer(
 				sessionId,
 				iceServers,
 				cameraEnabled,
+                mediaV2,
 			});
 		},
 		{
@@ -321,6 +330,7 @@ async function startPeer(
 			sessionId,
 			iceServers,
 			cameraEnabled,
+            mediaV2,
 		},
 	);
 }
@@ -550,7 +560,16 @@ async function main() {
 		);
 		await writeFile(silentAudioPath, createVoiceTestWav());
 		const html = `<!doctype html><html><head><meta charset="utf-8"></head><body><script>${bundle}</script></body></html>`;
-		server = createServer((_req, res) => {
+		server = createServer(async (_req, res) => {
+            if (MEDIA_V2_SIZE && _req.method === "POST") {
+              let raw = ""; for await (const chunk of _req) raw += chunk;
+              const body = JSON.parse(raw); mediaCapabilityRevision++;
+              if (process.env.HARNESS_MEDIA_TERMINAL && body.settleOnly) { mediaSettlementPending = true; return; }
+              const day = new Date().toISOString().slice(0, 10);
+              res.writeHead(200, { "Content-Type": "application/json" });
+              res.end(JSON.stringify({ ok: true, roomId: ROOM_ID, roomGeneration: 1, acknowledged: body.usage, policy: body.settleOnly ? null : { denied: false, roomToken: signRoomToken("p0", "host", "internal-renewal"), quota: MEDIA_V2_SIZE === 4 ? { day, remainingSeconds: process.env.HARNESS_MEDIA_TERMINAL ? 6 : 1800, resetAt: new Date((Math.floor(Date.now()/86400000)+1)*86400000).toISOString() } : null } }));
+              return;
+            }
 			res.writeHead(200, { "Content-Type": "text/html" });
 			res.end(html);
 		});
@@ -563,7 +582,7 @@ async function main() {
 
 		const iceMode = HARNESS_FORCE_RELAY ? "relay-only" : "direct-first";
 		console.log(`booting wrangler dev on :${WORKER_PORT} (${iceMode}) ...`);
-		worker = spawn("pnpm", buildWorkerArgs(), {
+		worker = spawn("pnpm", [...buildWorkerArgs(), ...(MEDIA_V2_SIZE ? ["--var", `ANIDACHI_WEB_INTERNAL_BASE_URL:${pageUrl}`, "--var", "ANIDACHI_INTERNAL_API_SECRET:owned-media-harness"] : [])], {
 			cwd: API_DIR,
 			stdio: ["ignore", "pipe", "pipe"],
 		});
@@ -597,6 +616,10 @@ async function main() {
 			],
 		});
 
+		if (MEDIA_V2_SIZE) {
+            await runVersionedMediaCase(browser, pageUrl, activeIceServers);
+            return;
+        }
 		let failed = 0;
 		try {
 		const hostCtx = await browser.newContext();
@@ -1202,8 +1225,684 @@ async function main() {
 	}
 }
 
+async function runVersionedMediaCase(browser, pageUrl, iceServers) {
+  if (![4, 6, 15].includes(MEDIA_V2_SIZE)) throw new Error("HARNESS_MEDIA_V2 must be 4,6,15");
+  const started = Date.now();
+  const watchdog = setTimeout(() => { void browser.close(); }, 60000);
+  const contexts = [], pages = [];
+  const cameras = MEDIA_V2_SIZE === 15 ? 4 : MEDIA_V2_SIZE === 6 ? 2 : 1;
+  const microphones = MEDIA_V2_SIZE === 15 ? 8 : MEDIA_V2_SIZE === 6 ? 3 : 2;
+  const receipt = { size: MEDIA_V2_SIZE, cameras, microphones, engine: "P2PMediaController+RoomClient+Worker", browser: browser.version(), tests: [], diagnostics: [] };
+  const check = (name, ok, detail) => { receipt.tests.push({ name, ok, detail }); record(name, ok, JSON.stringify(detail)); if (!ok) throw new Error(name); };
+  try {
+    for (let i = 0; i < MEDIA_V2_SIZE; i++) {
+      const context = await browser.newContext(); contexts.push(context);
+      const page = await context.newPage(); pages.push(page);
+      page.on("pageerror", e => console.error(`p${i}: ${e.message}`));
+      if (process.env.HARNESS_DEBUG) { await page.addInitScript(() => localStorage.setItem("anidachi:debug-console", "true")); page.on("console", m => { if (shouldPrintHarnessDebug(m.text())) console.log(`p${i}: ${m.text()}`); }); }
+      await page.goto(pageUrl);
+      await startPeer(page, { sub: `p${i}`, role: i ? "viewer" : "host", sessionId: `s${i}`, iceServers, cameraEnabled: i < cameras, mediaV2: true });
+      if (i >= cameras && i < cameras + microphones) await page.evaluate(() => window.AnidachiHarness.startOpenMic());
+    }
+    let diagnostics;
+    const readyStart = Date.now();
+    const allDecoded = ds => ds.every((d, i) => {
+      const peers = d.stats?.peers || [];
+      return Array.from({ length: cameras }, (_, j) => j).filter(j => j !== i).every(j => peers.some(p => p.remoteUserId === `p${j}` && p.stats?.videoInbound?.framesDecoded > 0)) &&
+        Array.from({ length: microphones }, (_, j) => j + cameras).filter(j => j !== i).every(j => peers.some(p => p.remoteUserId === `p${j}` && p.stats?.audioDecoded?.totalAudioEnergy > 0));
+    });
+    do { diagnostics = await Promise.all(pages.map(p => p.evaluate(() => window.AnidachiHarness.diagnostics()))); if (allDecoded(diagnostics)) break; await sleep(200); } while (Date.now() - readyStart < 10000);
+    receipt.diagnostics = diagnostics;
+    check("every participant decodes every permitted camera and microphone", allDecoded(diagnostics), { afterLastJoinMs: Date.now()-readyStart, entireSetupMs: Date.now()-started });
+    check("receiver-only participants call zero getUserMedia", diagnostics.slice(cameras+microphones).every(d => d.captureCount === 0), diagnostics.map(d => d.captureCount));
+    check("bounded graph excludes receiver-to-receiver pairs", diagnostics.every((d,i) => d.stats.peers.length === (i < cameras+microphones ? MEDIA_V2_SIZE-1 : cameras+microphones)), diagnostics.map(d => d.stats.peers.length));
+    const before = diagnostics;
+    const resourceRows = execFileSync("ps", ["-axo", "pid=,ppid=,pcpu=,rss="], {encoding:"utf8"}).trim().split("\n").map(row=>row.trim().split(/\s+/).map(Number));
+    const owned = new Set([process.pid]); for(let pass=0;pass<8;pass++) for(const [pid,ppid] of resourceRows) if(owned.has(ppid)) owned.add(pid);
+    const descendants = resourceRows.filter(([pid])=>owned.has(pid));
+    receipt.hostResourceSample = { scope:"owned Node harness, Chromium and local Worker descendants", cpuPercentLifetime: descendants.reduce((n,r)=>n+r[2],0), rssMiB: descendants.reduce((n,r)=>n+r[3],0)/1024, processCount:descendants.length };
+    const advanceStarted = Date.now();
+    await sleep(1000);
+    const after = await Promise.all(pages.map(p => p.evaluate(() => window.AnidachiHarness.diagnostics())));
+    const advancing = after.every((d,i) => d.stats.peers.every(p => {
+      const old = before[i].stats.peers.find(old => old.remoteUserId === p.remoteUserId);
+      return (!p.stats?.videoInbound || p.stats.videoInbound.framesDecoded > (old?.stats?.videoInbound?.framesDecoded ?? -1)) && (!p.stats?.audioDecoded || p.stats.audioDecoded.totalSamplesReceived > (old?.stats?.audioDecoded?.totalSamplesReceived ?? -1));
+    }));
+    check("all endpoints continue decoding video and audio", advancing, { endpoints: after.reduce((sum,d)=>sum+d.stats.peers.length,0) });
+    receipt.diagnostics = after;
+    const ttfm = after.flatMap(d=>Object.values(d.videoTtfm));
+    check("complete decoded video first-frame sample", ttfm.length === cameras * (MEDIA_V2_SIZE - 1), {samples:ttfm.length,expected:cameras*(MEDIA_V2_SIZE-1),p95Ms:ttfm.sort((a,b)=>a-b)[Math.ceil(ttfm.length*.95)-1]});
+    const deltaMs = Date.now()-advanceStarted;
+    receipt.publisherUplink = after.map((d,i)=>({participant:`p${i}`,kbps: d.stats.peers.reduce((n,p)=>{const old=before[i].stats.peers.find(o=>o.remoteUserId===p.remoteUserId); return n+Math.max(0,(p.stats?.audioOutbound?.bytesSent??0)-(old?.stats?.audioOutbound?.bytesSent??0))+Math.max(0,(p.stats?.videoOutbound?.bytesSent??0)-(old?.stats?.videoOutbound?.bytesSent??0));},0)*8/deltaMs})).filter(p=>p.kbps>0);
+    receipt.uplinkSampleMs=deltaMs;
+    for (const width of [392,320]) for (const i of [0, MEDIA_V2_SIZE-1]) {
+      await pages[i].setViewportSize({width,height:900});
+      await pages[i].evaluate(width => window.AnidachiHarness.renderControls(width,true),width);
+      await pages[i].screenshot({path:`/private/tmp/task8-media-${MEDIA_V2_SIZE}-${i===0?"host":"receiver"}-${width}.png`,fullPage:false});
+    }
+    if (process.env.HARNESS_MEDIA_REVIEW_FIX) {
+      const wait = async (fn) => {const start=Date.now();do {if(await fn())return Date.now()-start;await sleep(25);}while(Date.now()-start<10000);throw new Error("review fix media timeout");};
+      const grant = async (i,kind) => {const d=await pages[i].evaluate(()=>window.AnidachiHarness.diagnostics());return d.media.participants.find(p=>p.participantSessionId===`s${i}`)[`${kind}Granted`];};
+      for (const [i,kind] of [[0,"camera"],[1,"microphone"]]) {
+        await pages[i].evaluate(kind=>window.AnidachiHarness.interruptDisable(kind),kind);
+        const ms=await wait(async()=>!(await grant(i,kind)));
+        check(`interrupted ${kind} off reconciles server grant after same-instance reconnect`,true,{ms});
+      }
+      await sleep(10500); // Permission failures are independent of the preceding reconnect mutations.
+      for (const kind of ["camera","microphone"]) {
+        await pages[3].evaluate(()=>{const original=navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);navigator.mediaDevices.getUserMedia=async c=>{navigator.mediaDevices.getUserMedia=original;throw new DOMException("Synthetic denial","NotAllowedError");};});
+        await pages[3].evaluate(kind=>kind==="camera"?window.AnidachiHarness.setCameraEnabled(true):window.AnidachiHarness.startOpenMic(),kind);
+        const ms=await wait(async()=>!(await grant(3,kind)));
+        const d=await pages[3].evaluate(()=>window.AnidachiHarness.diagnostics());
+        check(`terminal ${kind} permission denial releases only failed grant`,!d.stats.cameraEnabled&&!d.stats.microphonePublishing&&d.media.participants.find(p=>p.participantSessionId==="s2").microphoneGranted,{ms,grants:d.media.participants});
+      }
+      await sleep(10500); // Independent exhaustion case uses a fresh existing rate window.
+      await pages[3].evaluate(()=>window.AnidachiHarness.setCameraEnabled(true));
+      for(let n=0;n<3;n++) {
+        const count=(await pages[3].evaluate(()=>window.AnidachiHarness.diagnostics())).captureCount;
+        await pages[3].evaluate(()=>window.AnidachiHarness.simulateDeviceRemoval());
+        if(n<2) {await wait(async()=>{const d=await pages[3].evaluate(()=>window.AnidachiHarness.diagnostics());return d.captureCount>count&&d.stats.cameraEnabled&&d.stats.localTrackCount>0;});check("recoverable camera retry retains grant",await grant(3,"camera"));}
+      }
+      await wait(async()=>!(await grant(3,"camera")));
+      const d=await pages[3].evaluate(()=>window.AnidachiHarness.diagnostics());
+      check("exhausted camera recovery releases grant and preserves other microphone reception",!d.stats.cameraEnabled&&d.stats.peers.some(p=>p.stats?.audioDecoded?.totalAudioEnergy>0),{grants:d.media.participants});
+      await sleep(10500); // Separate microphone exhaustion from camera exhaustion signaling.
+      await pages[3].evaluate(()=>window.AnidachiHarness.startOpenMic());
+      for(let n=0;n<3;n++) {
+        const count=(await pages[3].evaluate(()=>window.AnidachiHarness.diagnostics())).captureCount;
+        await pages[3].evaluate(()=>window.AnidachiHarness.simulateDeviceRemoval("microphone"));
+        if(n<2) {await wait(async()=>{const d=await pages[3].evaluate(()=>window.AnidachiHarness.diagnostics());return d.captureCount>count&&d.stats.microphonePublishing&&d.stats.localTrackCount>0;});check("recoverable microphone retry retains grant",await grant(3,"microphone"));}
+      }
+      await wait(async()=>!(await grant(3,"microphone")));
+      const mic=await pages[3].evaluate(()=>window.AnidachiHarness.diagnostics());
+      check("exhausted microphone recovery releases grant and preserves reception",!mic.stats.microphonePublishing&&mic.stats.peers.some(p=>p.stats?.audioDecoded?.totalAudioEnergy>0),{grants:mic.media.participants});
+      return;
+    }
+    if (process.env.HARNESS_MEDIA_RELOAD_LIVE) {
+      const wait = async (fn) => {const started=Date.now(); do {if(await fn()) return Date.now()-started; await sleep(25);} while(Date.now()-started<10000); throw new Error("live-grant reload timeout");};
+      await pages[1].evaluate(()=>window.AnidachiHarness.reconnect("live-grant-socket"));
+      const socket=await pages[1].evaluate(()=>window.AnidachiHarness.diagnostics());
+      check("same RoomClient socket reconnect preserves explicit mic capture",socket.captureCount===1&&socket.stats.microphonePublishing&&socket.media.participants.find(p=>p.participantSessionId==="s1").microphoneGranted);
+      for (const [i,media] of [[0,"camera"],[1,"microphone"]]) {
+        await pages[i].reload(); await startPeer(pages[i],{sub:`p${i}`,role:i?"viewer":"host",sessionId:`s${i}`,cameraEnabled:false,mediaV2:true,iceServers});
+        const released=await wait(async()=>{const d=await pages[i].evaluate(()=>window.AnidachiHarness.diagnostics());return d.media && !d.media.participants.find(p=>p.participantSessionId===`s${i}`)[`${media}Granted`]&&d.stats.peers.some(p=>p.stats?.audioDecoded?.totalAudioEnergy>0);});
+        const d=await pages[i].evaluate(()=>window.AnidachiHarness.diagnostics());
+        check(`fresh RoomClient releases restored ${media} grant and receives without capture`,d.captureCount===0,{recoveryMs:released,media:d.media.participants.find(p=>p.participantSessionId===`s${i}`)});
+      }
+      return;
+    }
+    await pages[0].evaluate(() => window.AnidachiHarness.setCameraEnabled(false));
+    await sleep(500);
+    const revoked = await pages[0].evaluate(() => window.AnidachiHarness.diagnostics());
+    check("camera release preserves microphone reception", revoked.stats.peers.some(p => p.stats?.audioDecoded?.totalAudioEnergy > 0), { peers: revoked.stats.peers.length });
+    if (process.env.HARNESS_MEDIA_TERMINAL) {
+      const end = Date.now()+12000; let ended;
+      do { ended=await Promise.all(pages.map(p=>p.evaluate(()=>window.AnidachiHarness.diagnostics()))); if(ended.every(d=>d.terminalEnded)) break; await sleep(50); } while(Date.now()<end);
+      check("ROOM_ENDED tears down actual RTC before stalled accounting ACK", ended.every(d=>d.terminalEnded && d.stats.peers.length===0 && d.stats.localTrackCount===0 && !d.stats.microphonePublishing && !d.stats.cameraEnabled), { settlementPending: mediaSettlementPending, states: ended.map(d=>({terminal:d.terminalEnded,peers:d.stats.peers.length,microphonePublishing:d.stats.microphonePublishing})) });
+    }
+    if (process.env.HARNESS_MEDIA_FAULTS) await runVersionedMediaFaults(pages,contexts,pageUrl,iceServers,check,receipt);
+
+  } finally {
+    receipt.finalDiagnostics = await Promise.all(pages.map(p => p.evaluate(()=>window.AnidachiHarness.diagnostics()).catch(()=>null)));
+    clearTimeout(watchdog);
+    await Promise.allSettled(pages.map(p => p.evaluate(() => window.AnidachiHarness.stop())));
+    await Promise.allSettled(contexts.map(c => c.close()));
+    receipt.elapsedMs = Date.now() - started;
+    await writeFile(process.env.HARNESS_MEDIA_REPORT || `/private/tmp/task8-media-${MEDIA_V2_SIZE}.json`, JSON.stringify(receipt, null, 2));
+  }
+}
+
+async function runVersionedMediaFaults(pages,contexts,pageUrl,iceServers,check,receipt) {
+  const wait = async (fn,limit=10000) => { const start=Date.now(); do {if(await fn()) return Date.now()-start; await sleep(25);} while(Date.now()-start<limit); throw new Error("media recovery timeout"); };
+  await sleep(10500); // Start the independent fault phase in a new existing server rate window.
+  const beforePtt=await pages[1].evaluate(()=>window.AnidachiHarness.diagnostics());
+  await pages[1].evaluate(()=>window.AnidachiHarness.stopOpenMic());
+  const ptt=[];
+  for(let press=0;press<2;press++) {
+    const baseline=await pages[3].evaluate(()=>window.AnidachiHarness.diagnostics());
+    const energy=baseline.stats.peers.find(p=>p.remoteUserId==="p1")?.stats?.audioDecoded?.totalAudioEnergy??0;
+    const start=Date.now(); await pages[1].evaluate(()=>window.AnidachiHarness.startVoice());
+    await wait(async()=>{const d=await pages[3].evaluate(()=>window.AnidachiHarness.diagnostics());return (d.stats.peers.find(p=>p.remoteUserId==="p1")?.stats?.audioDecoded?.totalAudioEnergy??0)>energy;},3000);
+    ptt.push(Date.now()-start); await pages[1].evaluate(()=>window.AnidachiHarness.stopVoice()); await sleep(80);
+  }
+  const mic=await pages[1].evaluate(()=>window.AnidachiHarness.diagnostics());
+  check("PTT first/repeat presses retain grant and reuse warm capture",mic.peerConstructionCount===beforePtt.peerConstructionCount && mic.captureCount===2 && mic.media.participants.find(p=>p.participantSessionId==="s1").microphoneGranted,{latencyMs:ptt,captureCount:mic.captureCount,signalCounts:mic.signalCounts});
+  receipt.ptt=ptt;
+  await pages[1].evaluate(()=>window.AnidachiHarness.startOpenMic());
+  await pages[3].evaluate(()=>window.AnidachiHarness.setCameraEnabled(true));
+  const late=await wait(async()=>{const d=await pages[2].evaluate(()=>window.AnidachiHarness.diagnostics()); return d.stats.peers.some(p=>p.remoteUserId==="p3"&&p.stats?.videoInbound?.framesDecoded>0);});
+  check("receive-only participant can publish later",true,{decodedMs:late});
+  await sleep(1000);
+  await pages[3].evaluate(()=>window.AnidachiHarness.simulateDeviceRemoval());
+  const removed=await wait(async()=>{const d=await pages[3].evaluate(()=>window.AnidachiHarness.diagnostics()); return d.captureCount>=2 && d.stats.cameraEnabled;});
+  check("synthetic device-ended event recovers via actual capture owner",true,{recoveryMs:removed});
+  await pages[3].evaluate(()=>window.AnidachiHarness.setCameraEnabled(false));
+  await pages[3].evaluate(()=>{const original=navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);navigator.mediaDevices.getUserMedia=async c=>{navigator.mediaDevices.getUserMedia=original;throw new DOMException("Synthetic permission denial","NotAllowedError");};});
+  await pages[3].evaluate(()=>window.AnidachiHarness.setCameraEnabled(true));
+  const denied=await pages[3].evaluate(()=>window.AnidachiHarness.diagnostics());
+  check("permission denial leaves camera capture off",!denied.stats.cameraEnabled,{cameraState:denied.stats.cameraState});
+  await pages[3].evaluate(()=>window.AnidachiHarness.setCameraEnabled(false));
+  await sleep(10500); // Reload is a separate recovery case, after repeated capture fault mutations.
+  const reloadStart=Date.now();await pages[3].reload();await startPeer(pages[3],{sub:"p3",role:"viewer",sessionId:"s3",cameraEnabled:false,mediaV2:true,iceServers});
+  await wait(async()=>{const d=await pages[3].evaluate(()=>window.AnidachiHarness.diagnostics());return d.stats.peers.some(p=>p.stats?.audioDecoded?.totalAudioEnergy>0);});
+  const reloaded=await pages[3].evaluate(()=>window.AnidachiHarness.diagnostics());check("viewer reload receives without capture",reloaded.captureCount===0,{recoveryMs:Date.now()-reloadStart});
+  await sleep(10500); // Independently exercise host replacement without prior viewer fault traffic.
+  const hostStart=Date.now();await pages[0].reload();await startPeer(pages[0],{sub:"p0",role:"host",sessionId:"s0",cameraEnabled:false,mediaV2:true,iceServers});
+  await wait(async()=>{const d=await pages[0].evaluate(()=>window.AnidachiHarness.diagnostics());return d.stats.peers.some(p=>p.stats?.audioDecoded?.totalAudioEnergy>0);});
+  const host=await pages[0].evaluate(()=>window.AnidachiHarness.diagnostics());check("host reload receives without auto capture",host.captureCount===0,{recoveryMs:Date.now()-hostStart});
+  const netStart=Date.now();await contexts[3].setOffline(true);await sleep(300);await contexts[3].setOffline(false);
+  await wait(async()=>{const d=await pages[3].evaluate(()=>window.AnidachiHarness.diagnostics());return d.status==="connected"&&d.stats.peers.some(p=>p.stats?.audioDecoded?.totalAudioEnergy>0);});
+  check("emulated short network loss recovers receiver",true,{recoveryMs:Date.now()-netStart});
+}
+
+/** Opt-in bounded transport experiment, never imported by production code.
+ * Run HARNESS_CAPACITY_EXPERIMENT=1 node p2p-media-harness.mjs.
+ * Default scenarios are 4-receiver,6-receiver. Set HARNESS_CAPACITY_SCENARIOS
+ * explicitly to 15-overlap or 15-disjoint for an isolated, supervised run.
+ * HARNESS_CAPACITY_TIMEOUT_MS bounds each whole scenario (default45s,max60s).
+ * Synthetic 320x180@10fps canvas + oscillator audio; no receiver getUserMedia.
+ * In-process signaling deliberately bypasses Worker limits to isolate raw mesh
+ * capacity. Localhost results are not TURN, mobile, or production acceptance.
+ */
+async function runCapacityExperiment() {
+	const scenarios = [
+		{
+			name: "4-receiver",
+			count: 4,
+			cameras: [0, 1, 2],
+			microphones: [0, 1, 2],
+		},
+		{
+			name: "6-receiver",
+			count: 6,
+			cameras: [0, 1, 2, 3],
+			microphones: [0, 1, 2, 3, 4],
+		},
+		{
+			name: "15-overlap",
+			count: 15,
+			cameras: [0, 1, 2, 3],
+			microphones: [0, 1, 2, 3, 4, 5, 6, 7],
+		},
+		{
+			name: "15-disjoint",
+			count: 15,
+			cameras: [0, 1, 2, 3],
+			microphones: [4, 5, 6, 7, 8, 9, 10, 11],
+		},
+	];
+	const selected = (
+		process.env.HARNESS_CAPACITY_SCENARIOS || "4-receiver,6-receiver"
+	).split(",");
+	if (
+		!selected.length ||
+		selected.some((name) => !scenarios.some((s) => s.name === name)) ||
+		new Set(selected).size !== selected.length
+	)
+		throw new Error("Unknown or duplicate capacity scenario");
+	const timeoutMs = Number(process.env.HARNESS_CAPACITY_TIMEOUT_MS || 45000);
+	if (!Number.isInteger(timeoutMs) || timeoutMs < 1000 || timeoutMs > 60000)
+		throw new Error(
+			"Capacity scenario timeout must be between 1000 and 60000ms",
+		);
+	const server = createServer((_req, res) => {
+		res.writeHead(200, { "content-type": "text/html" });
+		res.end("<!doctype html><title>Bounded P2P capacity experiment</title>");
+	});
+	await new Promise((resolve, reject) => {
+		server.once("error", reject);
+		server.listen(0, "127.0.0.1", resolve);
+	});
+	let browser, browserServer;
+	const report = {
+		experiment: "receiver-only-raw-webrtc-v1",
+		createdAt: new Date().toISOString(),
+		environment: "single-machine Chromium localhost, synthetic media",
+		forceRelay: HARNESS_FORCE_RELAY,
+		selectedScenarios: selected,
+		scenarioTimeoutMs: timeoutMs,
+		activeScenario: null,
+		results: [],
+	};
+	// Serialize writes so a slower earlier snapshot cannot overwrite a newer one.
+	let reportWrite = Promise.resolve();
+	const persist = () => {
+		const json = JSON.stringify(report, null, 2) + "\n";
+		reportWrite = reportWrite.then(() =>
+			process.env.HARNESS_CAPACITY_REPORT
+				? writeFile(process.env.HARNESS_CAPACITY_REPORT, json)
+				: undefined,
+		);
+		return reportWrite;
+	};
+	try {
+		if (HARNESS_FORCE_RELAY && !HARNESS_ICE_SERVERS_FROM_ENV)
+			throw new Error(
+				"Capacity relay experiment requires explicit HARNESS_ICE_SERVERS_JSON; no production token lookup",
+			);
+		browserServer = await chromium.launchServer({
+			headless: true,
+			args: [
+				"--autoplay-policy=no-user-gesture-required",
+				"--disable-background-timer-throttling",
+				"--disable-renderer-backgrounding",
+				"--disable-backgrounding-occluded-windows",
+			],
+		});
+		browser = await chromium.connect(browserServer.wsEndpoint());
+		report.browserVersion = browser.version();
+		const system = await browser.newBrowserCDPSession();
+		const cpu = async () =>
+			(await system.send("SystemInfo.getProcessInfo")).processInfo.reduce(
+				(sum, p) => sum + p.cpuTime,
+				0,
+			);
+		for (const scenario of scenarios.filter((s) => selected.includes(s.name))) {
+			const contexts = [],
+				pages = [],
+				roles = Array.from({ length: scenario.count }, (_, i) => ({
+					camera: scenario.cameras.includes(i),
+					microphone: scenario.microphones.includes(i),
+				}));
+			report.activeScenario = {
+				name: scenario.name,
+				startedAt: new Date().toISOString(),
+				phase: "setup",
+				pairsNegotiated: 0,
+			};
+			await persist();
+			let timedOut = false;
+			const watchdog = setTimeout(() => {
+				timedOut = true;
+				// BrowserServer.kill terminates this owned browser even when renderer
+				// evaluation/normal close cannot finish. Do not start another scenario.
+				void browserServer.kill().catch(() => {});
+			}, timeoutMs);
+			try {
+				for (let i = 0; i < scenario.count; i++) {
+					const context = await browser.newContext();
+					contexts.push(context);
+					const page = await context.newPage();
+					pages.push(page);
+					await page.goto(`http://127.0.0.1:${server.address().port}`);
+					await page.evaluate(
+						async ({ role, iceServers, forceRelay }) => {
+							const tracks = {},
+								peers = new Map();
+							let gumCalls = 0;
+							navigator.mediaDevices.getUserMedia = async () => {
+								gumCalls++;
+								throw new Error(
+									"Synthetic experiment must not capture devices",
+								);
+							};
+							if (role.camera) {
+								const canvas = document.createElement("canvas");
+								canvas.width = 320;
+								canvas.height = 180;
+								document.body.append(canvas);
+								const ctx = canvas.getContext("2d");
+								let frame = 0;
+								setInterval(() => {
+									ctx.fillStyle = `hsl(${frame++ % 360},70%,50%)`;
+									ctx.fillRect(0, 0, 320, 180);
+									ctx.fillStyle = "black";
+									ctx.fillText(String(frame), 30, 50);
+								}, 100);
+								tracks.video = canvas.captureStream(10).getVideoTracks()[0];
+							}
+							if (role.microphone) {
+								const audio = new AudioContext();
+								const source = audio.createOscillator();
+								source.frequency.value = 440;
+								const output = audio.createMediaStreamDestination();
+								source.connect(output);
+								source.start();
+								await audio.resume();
+								tracks.audio = output.stream.getAudioTracks()[0];
+							}
+							window.capacity = {
+								peers,
+								tracks,
+								create(id, remote, offerer) {
+									const pc = new RTCPeerConnection({
+										iceServers,
+										iceTransportPolicy: forceRelay ? "relay" : "all",
+									});
+									peers.set(id, pc);
+									pc.capacityRemote = remote;
+									pc.ontrack = (event) => {
+										const el = document.createElement(
+											event.track.kind === "video" ? "video" : "audio",
+										);
+										el.autoplay = true;
+										el.muted = true;
+										el.srcObject = new MediaStream([event.track]);
+										el.dataset.peer = String(id);
+										document.body.append(el);
+										el.play().catch(() => {});
+									};
+									for (const [kind, key] of [
+										["video", "camera"],
+										["audio", "microphone"],
+									]) {
+										if (offerer && (role[key] || remote[key]))
+											pc.addTransceiver(tracks[kind] || kind, {
+												direction: role[key]
+													? remote[key]
+														? "sendrecv"
+														: "sendonly"
+													: "recvonly",
+											});
+									}
+								},
+								async offer(id) {
+									const pc = peers.get(id);
+									await pc.setLocalDescription(await pc.createOffer());
+									await this.gather(pc);
+									return pc.localDescription.toJSON();
+								},
+								async answer(id, offer) {
+									const pc = peers.get(id);
+									await pc.setRemoteDescription(offer);
+									// Answer on the offered m-lines. Pre-creating answerer
+									// transceivers leaves detached senders in Unified Plan.
+									for (const transceiver of pc.getTransceivers()) {
+										const kind = transceiver.receiver.track.kind;
+										const key = kind === "video" ? "camera" : "microphone";
+										await transceiver.sender.replaceTrack(tracks[kind] || null);
+										transceiver.direction = role[key]
+											? pc.capacityRemote[key]
+												? "sendrecv"
+												: "sendonly"
+											: "recvonly";
+									}
+									await pc.setLocalDescription(await pc.createAnswer());
+									await this.gather(pc);
+									return pc.localDescription.toJSON();
+								},
+								async accept(id, answer) {
+									await peers.get(id).setRemoteDescription(answer);
+								},
+								async gather(pc) {
+									if (pc.iceGatheringState === "complete") return;
+									await new Promise((resolve, reject) => {
+										const timeout = setTimeout(
+											() => reject(new Error("ICE gathering timeout")),
+											8000,
+										);
+										pc.addEventListener("icegatheringstatechange", () => {
+											if (pc.iceGatheringState === "complete") {
+												clearTimeout(timeout);
+												resolve();
+											}
+										});
+									});
+								},
+								close(id) {
+									peers.get(id)?.close();
+									peers.delete(id);
+									document
+										.querySelectorAll(`[data-peer="${id}"]`)
+										.forEach((el) => el.remove());
+								},
+								async stats() {
+									const result = {
+										peerCount: peers.size,
+										connected: 0,
+										bytesSent: 0,
+										framesDecoded: 0,
+										audioSamples: 0,
+										receivingVideo: 0,
+										receivingAudio: 0,
+										relayPairs: 0,
+										gumCalls,
+										localTracks: Object.keys(tracks).length,
+										streams: [],
+									};
+									for (const [id, pc] of peers) {
+										if (pc.connectionState === "connected") result.connected++;
+										const stats = await pc.getStats();
+										for (const stat of stats.values()) {
+											if (stat.type === "outbound-rtp")
+												result.bytesSent += stat.bytesSent || 0;
+											if (stat.type === "inbound-rtp") {
+												if (stat.kind === "video") {
+													result.framesDecoded += stat.framesDecoded || 0;
+													if (stat.framesDecoded > 0) result.receivingVideo++;
+												}
+												if (stat.kind === "audio") {
+													result.audioSamples += stat.totalSamplesReceived || 0;
+													if (stat.totalSamplesReceived > 0)
+														result.receivingAudio++;
+												}
+												result.streams.push({
+													peer: id,
+													kind: stat.kind,
+													decoded:
+														stat.kind === "video"
+															? stat.framesDecoded || 0
+															: stat.totalSamplesReceived || 0,
+												});
+											}
+											if (
+												stat.type === "transport" &&
+												stat.selectedCandidatePairId
+											) {
+												const pair = stats.get(stat.selectedCandidatePairId),
+													local = stats.get(pair?.localCandidateId),
+													remote = stats.get(pair?.remoteCandidateId);
+												if (
+													local?.candidateType === "relay" ||
+													remote?.candidateType === "relay"
+												)
+													result.relayPairs++;
+											}
+										}
+									}
+									return result;
+								},
+							};
+						},
+						{
+							role: roles[i],
+							iceServers: HARNESS_ICE_SERVERS_FROM_ENV || [],
+							forceRelay: HARNESS_FORCE_RELAY,
+						},
+					);
+				}
+				const edges = [];
+				for (let a = 0; a < scenario.count; a++)
+					for (let b = a + 1; b < scenario.count; b++)
+						if (
+							roles[a].camera ||
+							roles[a].microphone ||
+							roles[b].camera ||
+							roles[b].microphone
+						)
+							edges.push([a, b]);
+				const connect = async ([a, b]) => {
+					await Promise.all([
+						pages[a].evaluate(
+							({ b, role }) => window.capacity.create(b, role, true),
+							{ b, role: roles[b] },
+						),
+						pages[b].evaluate(
+							({ a, role }) => window.capacity.create(a, role, false),
+							{ a, role: roles[a] },
+						),
+					]);
+					const offer = await pages[a].evaluate(
+						(b) => window.capacity.offer(b),
+						b,
+					);
+					const answer = await pages[b].evaluate(
+						({ a, offer }) => window.capacity.answer(a, offer),
+						{ a, offer },
+					);
+					await pages[a].evaluate(
+						({ b, answer }) => window.capacity.accept(b, answer),
+						{ b, answer },
+					);
+				};
+				const setupStart = Date.now();
+				for (let i = 0; i < edges.length; i += 8) {
+					await Promise.all(edges.slice(i, i + 8).map(connect));
+					report.activeScenario.pairsNegotiated = Math.min(edges.length, i + 8);
+					await persist();
+				}
+				report.activeScenario.phase = "measurement";
+				await persist();
+				const sample = () =>
+					Promise.all(
+						pages.map((page) => page.evaluate(() => window.capacity.stats())),
+					);
+				const expectedVideo = scenario.cameras.length * (scenario.count - 1),
+					expectedAudio = scenario.microphones.length * (scenario.count - 1);
+				let ready;
+				const deadline = Date.now() + 20000;
+				do {
+					ready = await sample();
+					if (
+						ready.reduce((s, p) => s + p.receivingVideo, 0) === expectedVideo &&
+						ready.reduce((s, p) => s + p.receivingAudio, 0) === expectedAudio
+					)
+						break;
+					await sleep(500);
+				} while (Date.now() < deadline);
+				const setupAndDecodeMs = Date.now() - setupStart;
+				const start = await sample(),
+					cpuStart = await cpu(),
+					measureStart = Date.now();
+				await sleep(10000);
+				const end = await sample(),
+					seconds = (Date.now() - measureStart) / 1000,
+					cpuSeconds = (await cpu()) - cpuStart;
+				const receiver = roles.findLastIndex((r) => !r.camera && !r.microphone),
+					reconnectEdges = edges.filter((e) => e.includes(receiver));
+				const reconnectStart = Date.now();
+				for (const [a, b] of reconnectEdges)
+					await Promise.all([
+						pages[a].evaluate((b) => window.capacity.close(b), b),
+						pages[b].evaluate((a) => window.capacity.close(a), a),
+					]);
+				for (let i = 0; i < reconnectEdges.length; i += 8)
+					await Promise.all(reconnectEdges.slice(i, i + 8).map(connect));
+				let recovered;
+				do {
+					recovered = await pages[receiver].evaluate(() =>
+						window.capacity.stats(),
+					);
+					if (
+						recovered.receivingVideo === scenario.cameras.length &&
+						recovered.receivingAudio === scenario.microphones.length
+					)
+						break;
+					await sleep(250);
+				} while (Date.now() - reconnectStart < 20000);
+				const result = {
+					...scenario,
+					pairCount: edges.length,
+					maxPeers: Math.max(...end.map((p) => p.peerCount)),
+					expectedVideo,
+					expectedAudio,
+					decodedVideoStreams: end.reduce((s, p) => s + p.receivingVideo, 0),
+					decodedAudioStreams: end.reduce((s, p) => s + p.receivingAudio, 0),
+					setupAndDecodeMs,
+					measurementSeconds: seconds,
+					browserCpuCorePercent: Math.round((cpuSeconds / seconds) * 100),
+					uplinkKbpsPerClient: end.map((p, i) =>
+						Math.round(
+							((p.bytesSent - start[i].bytesSent) * 8) / seconds / 1000,
+						),
+					),
+					decodedFramesDuringWindow: end.reduce(
+						(s, p, i) => s + p.framesDecoded - start[i].framesDecoded,
+						0,
+					),
+					audioSamplesDuringWindow: end.reduce(
+						(s, p, i) => s + p.audioSamples - start[i].audioSamples,
+						0,
+					),
+					stalledStreams: end.flatMap((p, i) =>
+						p.streams
+							.filter(
+								(t) =>
+									t.decoded <=
+									(start[i].streams.find(
+										(s) => s.peer === t.peer && s.kind === t.kind,
+									)?.decoded ?? 0),
+							)
+							.map((t) => ({ client: i, ...t })),
+					),
+					receiverOnlyGetUserMediaCalls: end
+						.filter((_, i) => !roles[i].camera && !roles[i].microphone)
+						.reduce((s, p) => s + p.gumCalls, 0),
+					receiverOnlyLocalTracks: end
+						.filter((_, i) => !roles[i].camera && !roles[i].microphone)
+						.reduce((s, p) => s + p.localTracks, 0),
+					selectedRelayPeerEndpoints: end.reduce((s, p) => s + p.relayPairs, 0),
+					connectedPeerEndpoints: end.reduce((s, p) => s + p.connected, 0),
+					reconnectReceiver: receiver,
+					reconnectMs: Date.now() - reconnectStart,
+					reconnectDecodedVideo: recovered.receivingVideo,
+					reconnectDecodedAudio: recovered.receivingAudio,
+				};
+				result.pass =
+					result.decodedVideoStreams === expectedVideo &&
+					result.decodedAudioStreams === expectedAudio &&
+					result.connectedPeerEndpoints === edges.length * 2 &&
+					result.stalledStreams.length === 0 &&
+					result.reconnectDecodedVideo === scenario.cameras.length &&
+					result.reconnectDecodedAudio === scenario.microphones.length &&
+					result.receiverOnlyGetUserMediaCalls === 0 &&
+					result.receiverOnlyLocalTracks === 0;
+				report.results.push(result);
+				report.activeScenario = null;
+				await persist();
+			} catch (error) {
+				report.results.push({
+					name: scenario.name,
+					pass: false,
+					timedOut,
+					error: error instanceof Error ? error.message : String(error),
+					progress: report.activeScenario,
+				});
+				await persist();
+				throw error;
+			} finally {
+				// Keep the watchdog armed throughout cleanup as well.
+				await Promise.allSettled(contexts.map((context) => context.close()));
+				clearTimeout(watchdog);
+				if (timedOut) {
+					const outcome = report.results.findLast(
+						(result) => result.name === scenario.name,
+					);
+					Object.assign(outcome, {
+						pass: false,
+						timedOut: true,
+						error: "Capacity scenario deadline exceeded, including cleanup",
+					});
+					await persist();
+					throw new Error(outcome.error);
+				}
+			}
+			console.log(JSON.stringify(report.results.at(-1)));
+		}
+	} finally {
+		// Force-close only the browser owned by this experiment, including failure paths.
+		if (browserServer) await browserServer.kill().catch(() => {});
+		if (browser) await browser.close().catch(() => {});
+		await new Promise((resolve) => server.close(resolve));
+		await persist();
+	}
+	if (report.results.some((r) => !r.pass)) process.exitCode = 1;
+}
+
 try {
-	await main();
+	if (parseBooleanEnv(process.env.HARNESS_CAPACITY_EXPERIMENT))
+		await runCapacityExperiment();
+	else await main();
 } catch (error) {
 	console.error(
 		`harness setup error: ${error instanceof Error ? error.message : String(error)}`,

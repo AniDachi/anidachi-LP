@@ -1,3 +1,4 @@
+import { paidHistoryLease } from "./watch-history-personal-fixtures";
 import { describe, expect, it } from "vitest";
 import {
   createWatchHistoryStorage,
@@ -138,7 +139,7 @@ describe("watch history storage", () => {
           preferences: { youtubeHistoryEnabled: true },
           currentObservation: { clientEventId: "event-a" },
           currentObservationMeaningfulSolo: true,
-          outbox: { ownerUserId: ownerA, accountGeneration: 1, entries: [{ event: { clientEventId: "event-a" } }] },
+          outbox: { ownerUserId: ownerA, accountGeneration: 1, entries: [{ event: { clientSequence: 1, captureProof: paidHistoryLease(), clientEventId: "event-a" } }] },
         },
         [watchHistoryPartitionKey(ownerB, 2)]: {
           ownerUserId: ownerB,
@@ -159,7 +160,7 @@ describe("watch history storage", () => {
       currentObservation: null,
       currentObservationMeaningfulSolo: false,
       currentObservationDisplayMode: null,
-      outbox: { entries: [{ event: { clientEventId: "event-a" } }] },
+      outbox: { entries: [{ event: { clientSequence: 1, captureProof: paidHistoryLease(), clientEventId: "event-a" } }] },
     });
     expect(stored.partitions[watchHistoryPartitionKey(ownerB, 2)]).toMatchObject({ cache: { generation: 2 } });
   });
@@ -261,7 +262,7 @@ describe("watch history storage", () => {
           outbox: {
             ownerUserId: ownerA,
             accountGeneration: 1,
-            entries: [{ event: { title: "Private title", sourceUrl: "https://example.test/private" } }],
+            entries: [{ event: { clientSequence: 1, captureProof: paidHistoryLease(), title: "Private title", sourceUrl: "https://example.test/private" } }],
           },
         },
       },
@@ -300,7 +301,7 @@ describe("watch history storage", () => {
           cache: null,
           preferences: null,
           currentObservation: null,
-          outbox: { ownerUserId: ownerB, accountGeneration: 1, entries: [{ event: { clientEventId: "current" } }] },
+          outbox: { ownerUserId: ownerB, accountGeneration: 1, entries: [{ event: { clientSequence: 1, captureProof: paidHistoryLease(ownerB), clientEventId: "current" } }] },
         },
         [retainedOldKey]: {
           ownerUserId: ownerA,
@@ -308,7 +309,7 @@ describe("watch history storage", () => {
           cache: { retained: true },
           preferences: null,
           currentObservation: null,
-          outbox: { ownerUserId: ownerA, accountGeneration: 1, entries: [{ event: { clientEventId: "old-a" } }] },
+          outbox: { ownerUserId: ownerA, accountGeneration: 1, entries: [{ event: { clientSequence: 1, captureProof: paidHistoryLease(), clientEventId: "old-a" } }] },
         },
         [removableOldKey]: {
           ownerUserId: ownerC,
@@ -316,7 +317,7 @@ describe("watch history storage", () => {
           cache: null,
           preferences: null,
           currentObservation: null,
-          outbox: { ownerUserId: ownerC, accountGeneration: 1, entries: [{ event: { clientEventId: "old-c" } }] },
+          outbox: { ownerUserId: ownerC, accountGeneration: 1, entries: [{ event: { clientSequence: 1, captureProof: paidHistoryLease(ownerC), clientEventId: "old-c" } }] },
         },
       },
     } as unknown as WatchHistoryStorageRoot;
@@ -418,7 +419,7 @@ describe("watch history storage", () => {
           outbox: {
             ownerUserId: ownerA,
             accountGeneration: 1,
-            entries: [{ event: {} as never, key: "old", slot: "latest", persistedAt: 1 }],
+            entries: [{ event: { clientSequence: 1, captureProof: paidHistoryLease() } as never, key: "old", slot: "latest", persistedAt: 1 }],
           },
         },
       },

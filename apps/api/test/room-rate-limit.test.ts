@@ -109,3 +109,40 @@ describe("RoomRateLimiter", () => {
 		expect(limiters.forSubject("overflow-member", 0)).toBeUndefined();
 	});
 });
+
+describe("v2 authorized target budgets", () => {
+ it("allows 14 independent peers without enlarging a single peer or generic budget", () => {
+  const limiter = new RoomRateLimiter();
+  for (let target = 0; target < 14; target++) for (let i = 0; i < 8; i++) expect(limiter.consumeTarget(`p${target}`, "sdp", 15, 1000).allowed).toBe(true);
+  expect(limiter.consumeTarget("p0", "sdp", 15, 1000).allowed).toBe(false);
+  for (let i = 0; i < 120; i++) expect(limiter.consumeTotal(1000).allowed).toBe(true);
+  expect(limiter.consumeTotal(1000).allowed).toBe(false);
+ });
+ it("retains target windows across subject reconnect and denies churn until expiry", () => {
+  const subjects = new RoomSubjectRateLimiters({ maxParticipants: 15 }); const limiter = subjects.forSubject("host", 1000)!;
+  for (let i = 0; i < 14; i++) limiter.consumeTarget(`p${i}`, "sdp", 15, 1000);
+  expect(limiter.consumeTarget("replacement", "sdp", 15, 1001).allowed).toBe(false);
+  subjects.releaseSubject("host", 1002); expect(subjects.forSubject("host", 1003)).toBe(limiter);
+  expect(limiter.consumeTarget("replacement", "sdp", 15, 11000).allowed).toBe(true);
+ });
+ it("caps all pre-parse frames at 120 times frozen participants", () => {
+  const limiter = new RoomRateLimiter();
+  for (let i = 0; i < 1800; i++) expect(limiter.consumeFrameCeiling(15, 0).allowed).toBe(true);
+  expect(limiter.consumeFrameCeiling(15, 0).allowed).toBe(false);
+ });
+});
+
+describe("staggered target retention", () => {
+ it("retains active target rejection and churn windows across released subject pruning", () => {
+  const subjects=new RoomSubjectRateLimiters({maxParticipants:15}); const first=subjects.forSubject("u",0)!;
+  first.consumeFrameCeiling(15,0);
+  for(let target=0;target<14;target++) for(let n=0;n<8;n++) first.consumeTarget(`v${target}`,"sdp",15,9000);
+  expect(first.consumeTarget("v0","sdp",15,9000)).toMatchObject({allowed:false,close:false});
+  subjects.releaseSubject("u",10001); const resumed=subjects.forSubject("u",10002)!;
+  expect(resumed).toBe(first);
+  expect(resumed.consumeTarget("v0","sdp",15,10002)).toMatchObject({allowed:false,close:false,retryAfterMs:8998});
+  expect(resumed.consumeTarget("v0","sdp",15,10003).close).toBe(true);
+  expect(resumed.consumeTarget("churn","sdp",15,10003).allowed).toBe(false);
+  subjects.releaseSubject("u",10004); expect(subjects.forSubject("u",20003)).not.toBe(first);
+ });
+});

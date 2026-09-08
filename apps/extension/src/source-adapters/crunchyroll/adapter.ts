@@ -14,6 +14,8 @@ import type {
 	AdapterOverlayBinding,
 	PlayerEvent,
 	SeekOptions,
+	PersonalResumeTarget,
+	PersonalResumeReadiness,
 } from "../core/types";
 import { runCrunchyrollMainCommand } from "./bridge-client";
 import {
@@ -26,6 +28,37 @@ export class CrunchyrollVideoAdapter extends Html5VideoAdapter {
 	override readonly provider = "crunchyroll" as const;
 	override readonly name = "Crunchyroll";
 	override readonly playbackPolicy = CRUNCHYROLL_PLAYBACK_POLICY;
+
+	async getPersonalResumeReadiness(
+		target: PersonalResumeTarget,
+	): Promise<PersonalResumeReadiness> {
+		const result = await runCrunchyrollMainCommand("resumeReadiness", {
+			url: target.sourceUrl,
+			time: target.currentTime,
+			expiresAt: target.expiresAt,
+			intentId: target.intentId,
+		});
+		return result.ok && result.resumeState === "ready"
+			? "ready"
+			: result.resumeState === "cancelled" || result.resumeState === "consumed"
+				? "cancelled"
+				: "waiting";
+	}
+
+	async seekPersonalResume(
+		target: PersonalResumeTarget,
+		guard: () => boolean,
+	): Promise<"consumed" | "waiting" | "cancelled"> {
+		if (!guard()) return "cancelled";
+		const result = await runCrunchyrollMainCommand("resumeSeek", {
+			url: target.sourceUrl,
+			time: target.currentTime,
+			expiresAt: target.expiresAt,
+			intentId: target.intentId,
+		});
+		if (result.ok && result.resumeState === "consumed") return "consumed";
+		return result.resumeState === "waiting" ? "waiting" : "cancelled";
+	}
 
 	override getTitle(): string | null {
 		const title =

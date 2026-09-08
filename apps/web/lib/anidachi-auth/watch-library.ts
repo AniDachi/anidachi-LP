@@ -18,7 +18,7 @@ import {
   type UserRow,
 } from "./db";
 import {
-  getPlanEntitlements,
+  getLegacyWatchLibraryEntitlements,
   roomCapabilitiesForPlan,
   type PlanCode,
 } from "./plan-entitlements";
@@ -316,7 +316,7 @@ export function roomWatchParticipantTargets(
 }
 
 export function historyRetentionCutoff(now: Date, planCode: PlanCode): Date {
-  const days = getPlanEntitlements(planCode).account.historyRetentionDays;
+  const days = getLegacyWatchLibraryEntitlements(planCode).account.historyRetentionDays;
   return new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
 }
 
@@ -360,7 +360,7 @@ export async function listWatchLibrary(userId: string): Promise<WatchLibraryResp
   if (!user) throw new WatchLibraryApiError(404, "User not found");
 
   const now = new Date();
-  const entitlements = getPlanEntitlements(user.plan);
+  const entitlements = getLegacyWatchLibraryEntitlements(user.plan);
   const retainedSince = historyRetentionCutoff(now, user.plan).toISOString();
 
   const [{ data: trackedData, error: trackedError }, activeCount] = await Promise.all([
@@ -791,7 +791,7 @@ async function archiveOldestTrackedTitlesOverLimit(
   planCode: PlanCode,
   entry: CleanWatchProgressEntry
 ): Promise<void> {
-  const maxActive = getPlanEntitlements(planCode).account.maxActiveTrackedTitles;
+  const maxActive = getLegacyWatchLibraryEntitlements(planCode).account.maxActiveTrackedTitles;
   const { data, error } = await db()
     .from("user_tracked_titles")
     .select("provider,title_key")

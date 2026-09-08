@@ -1,5 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { createWatchHistoryDateRange } from "../src/watch-history-browse";
+import {
+	createWatchHistoryDateRange,
+	watchHistoryLocalDate,
+} from "../src/watch-history-browse";
 
 describe.sequential("watch history local calendar date ranges", () => {
 	const originalTimezone = process.env.TZ;
@@ -81,6 +84,20 @@ describe.sequential("watch history local calendar date ranges", () => {
 			).toEqual({ ok: false, error: "invalid-date" });
 		});
 
+		it.each([
+			["2026-03-08", "2026-03-09"],
+			["2026-03-09", "2026-03-09"],
+		])("rejects future dates: %s through %s", (fromDate, throughDate) => {
+			expect(
+				createWatchHistoryDateRange({
+					preset: "custom",
+					now: new Date("2026-03-08T23:59:59Z"),
+					fromDate,
+					throughDate,
+				}),
+			).toEqual({ ok: false, error: "future-date" });
+		});
+
 		it("rejects a reversed custom range", () => {
 			expect(
 				createWatchHistoryDateRange({
@@ -96,6 +113,27 @@ describe.sequential("watch history local calendar date ranges", () => {
 	describe("in America/New_York", () => {
 		beforeAll(() => {
 			process.env.TZ = "America/New_York";
+		});
+
+		it("uses the local day even when UTC is already tomorrow", () => {
+			const now = new Date("2026-03-09T02:00:00Z");
+			expect(watchHistoryLocalDate(now)).toBe("2026-03-08");
+			expect(
+				createWatchHistoryDateRange({
+					preset: "custom",
+					now,
+					fromDate: "2026-03-08",
+					throughDate: "2026-03-08",
+				}).ok,
+			).toBe(true);
+			expect(
+				createWatchHistoryDateRange({
+					preset: "custom",
+					now,
+					fromDate: "2026-03-08",
+					throughDate: "2026-03-09",
+				}),
+			).toEqual({ ok: false, error: "future-date" });
 		});
 
 		it("crosses spring daylight saving with calendar methods instead of a 24-hour duration", () => {
@@ -152,6 +190,7 @@ describe.sequential("watch history local calendar date ranges", () => {
 			expect(
 				createWatchHistoryDateRange({
 					preset: "custom",
+					now: new Date("2026-09-06T16:00:00Z"),
 					fromDate: "2026-09-05",
 					throughDate: "2026-09-06",
 				}),

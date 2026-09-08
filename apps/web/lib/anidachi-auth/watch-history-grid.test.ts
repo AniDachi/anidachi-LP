@@ -320,3 +320,14 @@ test("catalog route authenticates owner, validates query, and returns private no
 	});
 	assert.equal((await denied(new NextRequest(url))).status, 401);
 });
+
+
+test("catalog launch variants never replace a saved raw Resume observation", async () => {
+	const { store, progress } = fixture();
+	progress.source_url = "https://www.crunchyroll.com/watch/SAVEDABSENT";
+	progress.current_time_seconds = 437;
+	const result = await read(store);
+	assert.equal(result.episodes[0]!.sourceUrl, "https://www.crunchyroll.com/watch/MAIN0EN");
+	assert.equal(result.episodes[0]!.history!.sourceUrl, progress.source_url);
+	assert.equal(result.episodes[0]!.history!.currentTime, 437);
+});

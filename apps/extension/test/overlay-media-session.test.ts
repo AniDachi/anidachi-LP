@@ -170,4 +170,10 @@ describe("overlay P2P media session state", () => {
       p2pSessionActive: false,
     });
   });
+  it("keeps v2 receiver media active without a legacy seat and waits for the room roster", () => {
+    const input = { localHasMediaSeat: false, participantId: "receiver", roomId: "room", roomMediaSeatLimit: 0, mediaProtocolVersion: 2 as const, roomSnapshotReady: true, status: "connected" as const };
+    expect(getP2PMediaSessionState(input)).toEqual({ p2pReady: true, p2pSessionActive: true });
+    expect(getP2PMediaSessionState({ ...input, roomSnapshotReady: false })).toEqual({ p2pReady: false, p2pSessionActive: false });
+  });
+
 });

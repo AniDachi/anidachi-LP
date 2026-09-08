@@ -6,6 +6,7 @@ import {
   type WatchHistoryV3RouteDependencies,
 } from "./watch-history-v3-routes";
 import {
+  WatchHistoryV3ApiError,
   applyWatchProgressV3,
   encodeWatchHistoryCursor,
   type WatchHistoryV3Store,
@@ -121,6 +122,7 @@ const unavailableCatalog = {
 
 function dependencies(overrides: Partial<WatchHistoryV3RouteDependencies> = {}) {
   return {
+    checkLegacyRoomOperation: async () => undefined,
     getSession: async () => ({
       userId: USER_ID,
       email: "private@example.com",
@@ -799,4 +801,109 @@ test("room recreation forwards the exact tab session and returns the shared conf
       title: "Another video",
     },
   });
+});
+
+test("personal envelope dispatch has no legacy fallback and is private", async () => {
+  let personal = 0,
+    legacy = 0;
+  const d = dependencies({
+    applyProgress: async () => {
+      legacy++;
+      throw Error("legacy must not run");
+    },
+    applyPersonalProgress: async ({ userId, input }) => {
+      personal++;
+      assert.equal(userId, USER_ID);
+      assert.equal((input as { captureVersion: number }).captureVersion, 1);
+      throw new (await import("./watch-history-v3")).WatchHistoryV3ApiError(
+        403,
+        "HISTORY_PLAN_REQUIRED",
+        "Plan required",
+      );
+    },
+  });
+  const response = await createWatchHistoryV3RouteHandlers(d).postProgress(
+    request("/api/watch-history/v3/progress", {
+      method: "POST",
+      body: JSON.stringify({
+        captureVersion: 1,
+        accessEpoch: 1,
+        youtubeConsentEpoch: 0,
+        clientSequence: 1,
+        event: progressBody(),
+      }),
+    }),
+  );
+  assert.equal(response.status, 403);
+  assert.equal(personal, 1);
+  assert.equal(legacy, 0);
+  assert.equal(response.headers.get("cache-control"), "private, no-store");
+  assert.equal(response.headers.get("vary"), "Cookie, Authorization");
+});
+test("read owner intent fails before history service", async () => {
+  let calls = 0;
+  const handler = createWatchHistoryV3RouteHandlers(
+    dependencies({
+      listHistory: async () => {
+        calls++;
+        throw Error("must not load");
+      },
+    }),
+  );
+  const response = await handler.getHistory(
+    request("/api/watch-history/v3", {
+      headers: {
+        "x-anidachi-history-owner": "22222222-2222-4222-8222-222222222222",
+      },
+    }),
+  );
+  assert.equal(response.status, 409);
+  assert.equal(calls, 0);
+});
+
+test("legacy room recreation is terminal after activation and on the SQL activation race", async () => {
+  for (const scenario of ["active", "inactive", "race", "unavailable"] as const) {
+    let creates = 0;
+    const deps = dependencies();
+    const legacyCreate = deps.createRoomFromSession;
+    Object.assign(deps, {
+      checkLegacyRoomOperation: async (userId: string) => {
+        assert.equal(userId, USER_ID);
+        if (scenario === "active") throw new WatchHistoryV3ApiError(426, "HISTORY_CLIENT_UPDATE_REQUIRED", "Legacy history operation requires an update");
+      },
+      createRoomFromSession: async (params: Parameters<typeof legacyCreate>[0]) => {
+        creates++;
+        if (scenario === "race") throw new Error("ROOM_UPDATE_REQUIRED");
+        if (scenario === "unavailable") throw new Error("database unavailable");
+        return legacyCreate(params);
+      },
+    });
+    const response = await createWatchHistoryV3RouteHandlers(deps).postRoom(request("/api/watch-history/v3/rooms", {
+      method: "POST", body: JSON.stringify({ sessionId: EVENT_ID, participantSessionId: "history-tab-one" }),
+    }));
+    assert.equal(response.status, scenario === "inactive" ? 200 : scenario === "unavailable" ? 503 : 426, scenario);
+    assert.equal(creates, scenario === "active" ? 0 : 1, scenario);
+    assert.match(response.headers.get("cache-control") ?? "", /no-store/);
+    if (scenario !== "inactive") assert.equal((await response.json()).code, scenario === "unavailable" ? "HISTORY_UNAVAILABLE" : "HISTORY_CLIENT_UPDATE_REQUIRED");
+  }
+});
+
+test("history room retirement preserves authentication and owner checks before the legacy fence", async () => {
+  for (const authenticated of [false, true]) {
+    let checks = 0;
+    let creates = 0;
+    const base = dependencies();
+    const routes = createWatchHistoryV3RouteHandlers(dependencies({
+      getSession: authenticated ? base.getSession : async () => null,
+      checkLegacyRoomOperation: async () => { checks++; },
+      createRoomFromSession: async (params) => { creates++; return base.createRoomFromSession(params); },
+    }));
+    const response = await routes.postRoom(request("/api/watch-history/v3/rooms", {
+      method: "POST", headers: { "X-Anidachi-History-Owner": EVENT_ID }, body: "{}",
+    }));
+    assert.equal(response.status, authenticated ? 409 : 401);
+    assert.equal(checks, 0);
+    assert.equal(creates, 0);
+    assert.match(response.headers.get("cache-control") ?? "", /no-store/);
+  }
 });

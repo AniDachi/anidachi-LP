@@ -30,6 +30,7 @@ function dependencies(
 	overrides: Partial<WatchHistoryV3RouteDependencies>,
 ): WatchHistoryV3RouteDependencies {
 	return {
+		checkLegacyRoomOperation: unexpected,
 		getSession: unexpected,
 		listHistory: unexpected,
 		listTitleEpisodes: unexpected,

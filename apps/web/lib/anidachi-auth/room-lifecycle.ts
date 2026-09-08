@@ -17,7 +17,10 @@ import {
 
 const PARTICIPANT_DETACH_TIMEOUT_MS = 1_000;
 
-export interface EndRoomCommand { endedAt: number; reason: RoomEndReason }
+export interface EndRoomCommand {
+	endedAt: number;
+	reason: RoomEndReason;
+}
 export interface InternalRoomEndCommand extends EndRoomCommand {
   eventId?: string;
   usage?: RoomUsageSummary;
@@ -30,7 +33,9 @@ export interface RoomEndSyncResult {
 
 export class RoomLifecycleSyncError extends Error {
   readonly status = 502;
-  constructor(message = "Room Worker synchronization failed; the room was not finalized") {
+	constructor(
+		message = "Room Worker synchronization failed; the room was not finalized",
+	) {
     super(message);
     this.name = "RoomLifecycleSyncError";
   }
@@ -87,7 +92,8 @@ export async function parseInternalRoomEndCommand(
 
   if (value.reason === "empty_timeout") {
     const emptySince = value.endedAt - EMPTY_ROOM_TIMEOUT_MS;
-    if (!isTimestamp(emptySince) || typeof value.eventId !== "string") return null;
+		if (!isTimestamp(emptySince) || typeof value.eventId !== "string")
+			return null;
     const expectedEventId = await createEmptyRoomEndEventId(roomId, emptySince);
     if (value.eventId !== expectedEventId) return null;
     return {
@@ -113,7 +119,8 @@ export async function syncRoomEndToWorker(
 ): Promise<RoomEndSyncResult> {
   const baseUrl = options.baseUrl ?? process.env.ANIDACHI_API_INTERNAL_BASE_URL;
   const secret = options.secret ?? process.env.ANIDACHI_INTERNAL_API_SECRET;
-  if (!baseUrl || !secret) throw new Error("Room lifecycle Worker synchronization is not configured");
+	if (!baseUrl || !secret)
+		throw new Error("Room lifecycle Worker synchronization is not configured");
   const response = await (options.fetch ?? fetch)(
     new URL(`/internal/rooms/${encodeURIComponent(roomId)}/end`, baseUrl),
     {
@@ -125,7 +132,8 @@ export async function syncRoomEndToWorker(
       body: JSON.stringify(command),
     },
   );
-  if (!response.ok) throw new Error(`Worker room end failed (${response.status})`);
+	if (!response.ok)
+		throw new Error(`Worker room end failed (${response.status})`);
   const body = await response.json().catch(() => null);
   if (!isRecord(body) || body.ok !== true) {
     throw new Error("Worker room end returned an invalid response");
@@ -156,7 +164,9 @@ export async function syncParticipantDepartureToWorker(
   const baseUrl = options.baseUrl ?? process.env.ANIDACHI_API_INTERNAL_BASE_URL;
   const secret = options.secret ?? process.env.ANIDACHI_INTERNAL_API_SECRET;
   if (!baseUrl || !secret) {
-    throw new Error("Participant departure Worker synchronization is not configured");
+		throw new Error(
+			"Participant departure Worker synchronization is not configured",
+		);
   }
   const response = await (options.fetch ?? fetch)(
     new URL(
@@ -179,7 +189,9 @@ export async function syncParticipantDepartureToWorker(
   const body = await response.json().catch(() => null);
   const acknowledgement = RoomDepartureAcknowledgementSchema.safeParse(body);
   if (!acknowledgement.success) {
-    throw new Error("Worker participant departure returned an invalid response");
+		throw new Error(
+			"Worker participant departure returned an invalid response",
+		);
   }
   return acknowledgement.data;
 }
@@ -248,8 +260,12 @@ function isTimestamp(value: unknown): value is number {
 }
 
 function isRoomEndReason(value: unknown): value is RoomEndReason {
-  return value === "host_ended" ||
+	return (
+		value === "host_ended" ||
     value === "host_disconnected" ||
     value === "empty_timeout" ||
-    value === "quota_exhausted";
+		value === "quota_exhausted" ||
+		value === "capability_expired" ||
+		value === "accounting_unavailable"
+	);
 }

@@ -1304,3 +1304,39 @@ describe("watch history v3 read and mutation contracts", () => {
     ).toThrow();
   });
 });
+
+describe("personal catalog access proof", () => {
+  it("accepts additive epoch proof and keeps inactive legacy shape", () => {
+    const base = {
+      schemaVersion: 3,
+      accountGeneration: 1,
+      provider: "crunchyroll",
+      titleKey: "crunchyroll:series:S",
+      providerSeriesId: "S",
+      context: {
+        region: "US",
+        requestedLocale: "en-US",
+        audioLocale: null,
+        subtitleLocales: [],
+        observedAt: NOW,
+      },
+    };
+    expect(WatchCatalogBeginRequestSchema.safeParse(base).success).toBe(true);
+    expect(
+      WatchCatalogBeginRequestSchema.parse({
+        ...base,
+        historyAccess: { accessVersion: 1, accessEpoch: 4 },
+      }).historyAccess,
+    ).toEqual({ accessVersion: 1, accessEpoch: 4 });
+    for (const historyAccess of [
+      { accessVersion: 2, accessEpoch: 4 },
+      { accessVersion: 1, accessEpoch: -1 },
+      { accessVersion: 1, accessEpoch: "4" },
+      { accessVersion: 1, accessEpoch: 4, ownerUserId: USER_ID },
+    ])
+      expect(
+        WatchCatalogBeginRequestSchema.safeParse({ ...base, historyAccess })
+          .success,
+      ).toBe(false);
+  });
+});
