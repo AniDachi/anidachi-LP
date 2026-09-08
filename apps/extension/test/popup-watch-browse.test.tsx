@@ -352,6 +352,106 @@ async function change(label: string, value: string) {
 }
 
 describe("production watch browsing", () => {
+  it("opens with a valid cached access lease before network revalidation finishes, then honors revocation", async () => {
+    let finish!: (value: WatchHistoryMessageResponse) => void;
+    const fallback = clientFixture();
+    const client: PopupWatchHistoryClient = {
+      ...fallback,
+      request: vi.fn((message: Parameters<PopupWatchHistoryClient["request"]>[0]): Promise<WatchHistoryMessageResponse> => {
+        if (message.command === "bootstrap-cache") return Promise.resolve({ ok: true, data: {
+          ownerUserId: OWNER, accountGeneration: 1, preferences: { youtubeHistoryEnabled: true },
+          capturePaused: false, source: "cache", accessLease: paidHistoryLease(OWNER),
+        } });
+        if (message.command === "bootstrap") return new Promise<WatchHistoryMessageResponse>(resolve => { finish = resolve; });
+        return fallback.request(message);
+      }),
+    };
+    await mount(client);
+    expect(container.textContent).toContain("Frieren");
+    expect(container.textContent).not.toContain("Checking history access");
+    await act(async () => finish({ ok: false, status: "plan-required" }));
+    expect(container.textContent).not.toContain("Frieren");
+    expect(container.textContent).toContain("your own Plus or Pro");
+  });
+
+  it("shows artwork for existing YouTube rows whose stored artwork is null", async () => {
+    const page = browse("Saved YouTube video");
+    page.history.items[0] = { ...required(page.history.items[0]), provider: "youtube", itemKind: "movie",
+      titleKey: "youtube:video:FyS5dAywkEo", sourceUrl: "https://www.youtube.com/watch?v=FyS5dAywkEo", artworkUrl: null };
+    page.matches = [{ ...required(page.matches[0]), provider: "youtube", titleKey: "youtube:video:FyS5dAywkEo" }];
+    const client = clientFixture(async message => message.command === "browse" ? { ok: true, data: page } : { ok: true });
+    await mount(client);
+    expect(container.querySelector('.popup-watch-artwork img')?.getAttribute('src'))
+      .toBe('https://i.ytimg.com/vi/FyS5dAywkEo/hqdefault.jpg');
+  });
+
+  it.each(["expired", "other-owner", "other-generation"])("does not use a %s cached lease to reveal history", async kind => {
+    const now = Date.now();
+    const lease = paidHistoryLease(kind === "other-owner" ? PERSON : OWNER,
+      kind === "expired" ? now - 600_000 : now, kind === "other-generation" ? 2 : 1);
+    let finish!: (value: WatchHistoryMessageResponse) => void;
+    const fallback = clientFixture();
+    const request = vi.fn((message: Parameters<PopupWatchHistoryClient["request"]>[0]) => {
+      if (message.command === "bootstrap-cache") return Promise.resolve({ ok: true as const, data: {
+        ownerUserId: OWNER, accountGeneration: 1, preferences: { youtubeHistoryEnabled: true },
+        capturePaused: false, source: "cache", accessLease: lease,
+      } });
+      if (message.command === "bootstrap") return new Promise<WatchHistoryMessageResponse>(resolve => { finish = resolve; });
+      return fallback.request(message);
+    });
+    await mount({ ...fallback, request });
+    expect(container.textContent).not.toContain("Frieren");
+    expect(request.mock.calls.some(([message]) => message.command === "browse")).toBe(false);
+    await act(async () => finish({ ok: false, status: "plan-required" }));
+    expect(container.textContent).toContain("your own Plus or Pro");
+  });
+
+  it("keeps a valid cached lease through a network failure only until its original expiry", async () => {
+    vi.useFakeTimers();
+    try {
+      const now = Date.now();
+      const lease = paidHistoryLease(OWNER, now);
+      lease.access.validUntil = new Date(now + 1_000).toISOString();
+      lease.expiresAt = now + 1_000;
+      const fallback = clientFixture();
+      await mount({ ...fallback, request: async message => {
+        if (message.command === "bootstrap-cache") return { ok: true, data: {
+          ownerUserId: OWNER, accountGeneration: 1, preferences: { youtubeHistoryEnabled: true },
+          capturePaused: false, source: "cache", accessLease: lease,
+        } };
+        if (message.command === "bootstrap") return { ok: false, status: "retryable" };
+        return fallback.request(message);
+      } });
+      expect(container.textContent).toContain("Frieren");
+      await act(async () => { await vi.advanceTimersByTimeAsync(1_001); });
+      expect(container.textContent).not.toContain("Frieren");
+      expect(container.textContent).toContain("temporarily unavailable");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("ignores a late successful bootstrap after a confirmed access loss", async () => {
+    let finish!: (value: WatchHistoryMessageResponse) => void;
+    let publish!: Parameters<NonNullable<PopupWatchHistoryClient["subscribe"]>>[1];
+    const fallback = clientFixture();
+    const data = { ownerUserId: OWNER, accountGeneration: 1, preferences: { youtubeHistoryEnabled: true },
+      capturePaused: false, source: "cache", accessLease: paidHistoryLease(OWNER) };
+    await mount({ ...fallback,
+      subscribe: (_owner, listener) => { publish = listener; return () => {}; },
+      request: async message => {
+        if (message.command === "bootstrap-cache") return { ok: true, data };
+        if (message.command === "bootstrap") return new Promise(resolve => { finish = resolve; });
+        return fallback.request(message);
+      },
+    });
+    expect(container.textContent).toContain("Frieren");
+    await act(async () => publish(null, { ok: false, status: "plan-required" }));
+    await act(async () => finish({ ok: true, data: { ...data, source: "network" } }));
+    expect(container.textContent).not.toContain("Frieren");
+    expect(container.textContent).toContain("your own Plus or Pro");
+  });
+
   it.each(["plan-required", "access-unavailable", "upgrade-required"])("never reveals cached paid titles while access resolves to %s", async (status) => {
     let finish!: (value: WatchHistoryMessageResponse) => void;
     const fallback = clientFixture();
@@ -359,7 +459,7 @@ describe("production watch browsing", () => {
       loadCached: async () => ({ history: browse("Private cached title").history, accountGeneration: 1, preferences: { youtubeHistoryEnabled: false }, pendingEvents: [], localObservation: null, capturePaused: false }),
       request: vi.fn((message: Parameters<PopupWatchHistoryClient["request"]>[0]) => message.command === "bootstrap" ? new Promise<WatchHistoryMessageResponse>(resolve => { finish = resolve; }) : fallback.request(message)) };
     await mount(client);
-    expect(container.textContent).toContain("Checking history access");
+    expect(container.querySelector('[aria-label="Watch History"]')?.getAttribute('aria-busy')).toBe('true');
     expect(container.textContent).not.toContain("Private cached title");
     if (status === "plan-required") {
       const lease = paidHistoryLease(OWNER); lease.access.state = "plan_required";

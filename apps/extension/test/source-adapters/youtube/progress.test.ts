@@ -69,6 +69,19 @@ describe("YouTube history policy", () => {
       preferences: { youtubeHistoryEnabled: true },
     })).toBeNull();
   });
+
+  it("uses the current video thumbnail after YouTube navigation, independent of stale page metadata", () => {
+    document.head.innerHTML = '<meta property="og:image" content="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg">';
+    for (const videoId of ["dQw4w9WgXcQ", "FyS5dAywkEo"]) {
+      mockLocation(`https://www.youtube.com/watch?v=${videoId}`);
+      expect(getYouTubeHistoryObservation({
+        adapter: fakeAdapter(), preferences: { youtubeHistoryEnabled: true },
+      })).toMatchObject({
+        artworkUrl: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+        titleKey: `youtube:video:${videoId}`,
+      });
+    }
+  });
 });
 
 function fakeAdapter(input: { currentTime?: number; duration?: number } = {}): VideoAdapter {
