@@ -1,7 +1,7 @@
-# PR draft: Unify personal history and negotiate independent room media limits
+# Delivered PR: Unify personal history and negotiate independent room media limits
 
 Target: `staging`, after the prerequisite PR has applied and been verified.
-Local draft only; no PR has been opened.
+Delivered through PR #274; see [actual receipt](delivery-receipt.json).
 
 ## Goal and changed areas
 
@@ -70,3 +70,7 @@ runtime recovery. After activation, policy stays true; only tested compatible
 personal/v2 runtime or a reviewed fail-closed forward fix is acceptable. The
 first cutover has no prior accepted v2 deployment: exact candidate/rehearsal
 remains C04, not an assumed rollback to a03c012. Never reset data or epochs.
+
+Actual final source includes reviewed test-only R1 at 2bf18fb; runtime merge c7fbdb5.
+Migration bytes unchanged. Loaded browser, Stripe TEST, physical/network media and C04
+remain open; policy false.

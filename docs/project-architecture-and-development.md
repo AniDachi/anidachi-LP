@@ -449,7 +449,8 @@ unsupported versions return update-required rather than silently falling back.
 Current cross-plane versions are policyVersion 1, captureVersion 1 and
 mediaProtocolVersion 2, with accessVersion/entitlementsVersion 1.
 
-Tasks 1–9 are locally implemented and scoped-reviewed, not delivered. The
+Tasks 1–9 are reviewed and delivered to inactive staging through PR #273/274, runtime
+c7fbdb5; external acceptance and activation remain open. The
 [verification record](personal-history-and-plans-mvp-verification.md) separates
 local SQL/Worker/actual-controller evidence from loaded-provider, physical-media,
 Stripe TEST and distributed-network acceptance. The [Task 10 delivery packet](releases/personal-history-mvp/README.md)

@@ -1,19 +1,37 @@
 # Personal history MVP staging delivery packet
 
-Prepared 2026-09-08. **PRE_DELIVERY_READY is a local review checkpoint. Task 10
-and staging acceptance remain open.** No new runtime has been deployed, no
-remote migration or activation applied, and neither established tester folder
-has been replaced. Production/main is a separate decision; do not merge PR #247.
+Delivered inactive to staging on 2026-09-08 through migration PR
+[#273](https://github.com/AniDachi/anidachi-LP/pull/273) and runtime PR
+[#274](https://github.com/AniDachi/anidachi-LP/pull/274). **Task 10 acceptance remains
+open; policy version 1 is inactive.** Both established tester folders now contain the
+validated committed-source artifact, with separate verified r10 backups. Chrome was not
+reloaded; Mac locked blocks loaded/provider/MV3 proof. Main/production remains a
+separate decision; do not merge PR #247.
 
-The [verification record](../../personal-history-and-plans-mvp-verification.md)
-contains the reviewed Tasks 1–9 evidence and every H/E/UI/M/S/C acceptance row.
-The [source manifest](source-candidate.json) pins committed runtime source
-`d2e32e87494924d73ddb16ed9956490a9f635061`, exact Git objects, all 14 added migration
-SHA256 values and the runtime PR path set. It is not a build/deployment manifest.
-Its null fields deliberately mean **not performed**, never a successful gate.
-Task 9's precommit build version names are not release identities.
+The [delivery receipt](delivery-receipt.json) records exact PR, CI, deployment, source,
+build and hash identities. Runtime staging is
+`c7fbdb5aa1bbad9922dc40b9d557234e762e8d6c`; Web `dpl_BWTGmyLxHTp619UwkHFbit7GG6v9` is
+Ready and Worker version `14e77738-6c1e-4424-a142-366e75137525` serves 100%. All 55
+migrations through 20260908072249 are installed; 17 public wrappers are service-only, 5
+private cores inaccessible to service_role, and service_role cannot update policy.
+Aggregate 62 users/19 progress rows match pre-delivery counts; this is not a substitute
+for Task 9 populated preservation proof.
 
-## Checkpoint and dependencies
+The [source manifest](source-candidate.json) now pins
+`2bf18fba0751b71d3e142d2e16ae4f1bbfedca92`: original reviewed d2e32e8 plus independently
+approved one-line test-only let→const lint correction. Scoped lint and 9 Stripe sync
+tests passed. Extension build `48b5fd8` shares unchanged extension/protocol/scripts
+objects; no rebuild was needed for that Web-test correction. Exact artifact version is
+`48b5fd8-staging-20260908191943`. Null loaded/recovery/activation receipts remain
+unperformed gates. Task 9 precommit artifacts are not release identities.
+
+Graph `48b5fd8` covered 167 code files and 16/16 semantic docs with clean
+health/path/schema checks. Test binding-only and subsequent delivery IDs/status/evidence
+change no architecture or relationships, so this metadata follow-up reuses the reviewed
+graph under the quality-gates receipt exception; no new extraction or unchanged runtime
+suites.
+
+## Reviewed sequencing and dependencies
 
 The controller finishes one whole-branch source/docs review, any scoped fixes,
 then the final semantic Graphify batch and its health/provenance check before
@@ -215,9 +233,8 @@ requires the controller's contract ruling and scoped review.
 
 ## Open acceptance gates and next handoff
 
-- Controller semantic Graphify and whole-branch review: pending at this checkpoint.
-- New DB/Web/Worker deployment, exact final artifact, both backed-up tester syncs
-  and Chrome loaded/reload identity: not performed.
+- Controller whole-branch/scoped review and semantic Graphify: passed. DB/Web/Worker inactive delivery, exact final artifact and both backed-up tester syncs: performed; see receipt.
+- Chrome loaded/reload identity: not performed; Mac locked freshly reconfirmed.
 - C04 compatible active-policy recovery rehearsal and retained deployment pair:
   not performed; the source pin above is not recovery proof.
 - Real Stripe TEST checkout/subscription/webhook transitions: not run; prior
@@ -236,3 +253,12 @@ identity, policyVersion 1, captureVersion 1, mediaProtocolVersion 2, activation
 state/time, recovery candidate/test and each acceptance outcome. Until these are
 recorded, Task 10 remains open even if local preparation is committed. No new
 production pricing claims or main promotion are authorized by this packet.
+
+## Legacy inventory before future activation
+
+Read-only parent aggregate found 177 non-ended legacy DB records: 35 `live` created June
+14–July 7 and 142 `lobby` created June 2–August 16; none created within 24 hours. These
+persisted statuses do not prove active sockets. Before future activation compare them
+with actual Worker lifecycle and perform separately reviewed reconciliation where
+necessary. Age alone never authorizes ending/deleting rows. The atomic post-lock guard
+remains unchanged; no bulk end/delete or predicate weakening occurred.

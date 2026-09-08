@@ -1,6 +1,6 @@
 {
-  "status": "PRE_DELIVERY_SOURCE_PIN_ONLY",
-  "sourceCommit": "d2e32e87494924d73ddb16ed9956490a9f635061",
+  "status": "INACTIVE_STAGING_DELIVERED_ACCEPTANCE_OPEN",
+  "sourceCommit": "2bf18fba0751b71d3e142d2e16ae4f1bbfedca92",
   "stagingBase": "a03c0128825c73edcfdf9062a8d85e70148b2423",
   "mainBaseline": "54a154b702ea26e85fab2f3259aa7e5b98fa51be",
   "contractVersions": {
@@ -11,7 +11,7 @@
     "entitlementsVersion": 1
   },
   "sourceGitObjects": {
-    "apps/web": "ee58ea781a06e4eadc2d6dec0b90fb23d7d8015a",
+    "apps/web": "838e90852a6b99696e1f3f0c1a6059fc70a704a2",
     "apps/api": "37c6de4f5707f542de2a55335ae8ee62fd989ca3",
     "apps/extension": "8ac0c7c3e056f06ef2acad5929f86b99a85bfd93",
     "packages/protocol": "25319377aab9bfdbf4954bc40628109d8097564b",
@@ -723,15 +723,36 @@
     }
   ],
   "delivery": {
-    "prerequisitePR": null,
-    "runtimePR": null,
-    "webDeployment": null,
-    "workerDeployment": null,
-    "extensionVersionName": null,
-    "extensionManifestSha256": null,
-    "extensionFilesSha256": null,
+    "prerequisitePR": 273,
+    "prerequisiteMerge": "756f04e667eb414b6ba279b12716d770b56b8bb4",
+    "runtimePR": 274,
+    "runtimeHead": "f440d3d2c64ee7afd98d645dc30d3ba63f79e44b",
+    "runtimeMerge": "c7fbdb5aa1bbad9922dc40b9d557234e762e8d6c",
+    "webDeployment": "dpl_BWTGmyLxHTp619UwkHFbit7GG6v9",
+    "workerDeployment": "87a4b594-2183-43df-b34f-8f2255e6e8f4",
+    "workerVersion": "14e77738-6c1e-4424-a142-366e75137525",
+    "extensionBuildCommit": "48b5fd8a6bcd1dc30a84047ac5f56d18c32aa8ea",
+    "extensionVersionName": "48b5fd8-staging-20260908191943",
+    "extensionManifestSha256": "9c63f89c52489a81dd7e49dc38cc4bb513a144ae0c863a8db942d728abf13136",
+    "extensionFilesSha256": "c0c9174b4227b97a7ff6becfc849c87f92d3911eb6b06410bb6f2c25b5926abc",
+    "testerSync": "both12-filetargetsverified;separateverifiedr10backups",
     "loadedArtifactReceipt": null,
     "compatRecoveryRehearsal": null,
-    "activationReceipt": null
+    "activationReceipt": null,
+    "policyActive": false
+  },
+  "originalReviewedRuntimeCommit": "d2e32e87494924d73ddb16ed9956490a9f635061",
+  "sourceCorrection": {
+    "commit": "2bf18fba0751b71d3e142d2e16ae4f1bbfedca92",
+    "scope": "one test binding let\u2192const; no runtime behavior change",
+    "independentScopedReview": "PASS",
+    "lint": "PASS",
+    "stripeSyncTests": "9/9PASS"
+  },
+  "graphProvenance": {
+    "commit": "48b5fd8a6bcd1dc30a84047ac5f56d18c32aa8ea",
+    "semanticDocs": 16,
+    "codeFiles": 167,
+    "refreshException": "test binding correction and delivery IDs/status/evidence change no architecture or relationships; retained reviewed graph"
   }
 }

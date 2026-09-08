@@ -671,8 +671,9 @@ uses independent evidence of actual room presence, without storing title or
 progress for Free. Worker owns live room synchronization and publication
 limits; it does not fan out host checkpoints into guest histories.
 
-Tasks 1–9 now implement these contracts in the isolated personal-history branch;
-they are locally scoped-reviewed, not deployed acceptance. Follow the
+Tasks 1–9 are reviewed and delivered inactive through PR #273/274; external acceptance
+and activation remain open. Both tester folders contain the verified build with separate
+backups; folder sync is not loaded Chrome proof. Follow the
 [Task 10 delivery packet](releases/personal-history-mvp/README.md): review first,
 additive DB prerequisites, compatible inactive Web/Worker, matching verified
 client, then separately gated activation. New personal writes are already paid
