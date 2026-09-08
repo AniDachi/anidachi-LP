@@ -530,7 +530,7 @@ describe("production watch browsing", () => {
     expect(container.textContent).toContain("Frieren");
     expect(container.textContent).toContain("Recording new progress requires Plus or Pro");
     await click(`Resume ${episode.episodeTitle}`);
-    expect(client.openUrl).toHaveBeenCalledOnce();
+    await settles(() => expect(client.openUrl).toHaveBeenCalledOnce());
     const url = vi.mocked(client.openUrl).mock.calls[0]![0];
     expect(parsePersonalHistoryResumeUrl(url)?.currentTime).toBe(600);
   });
