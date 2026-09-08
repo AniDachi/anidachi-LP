@@ -174,7 +174,7 @@ test("existing customer/subscription ownership rejects conflicting metadata and 
 	}
 });
 test("repeated or reversed deliveries refetch present state, not event timestamps", async () => {
-	let current = subscriptionFixture({ priceId: "p", planCode: "pro" });
+	const current = subscriptionFixture({ priceId: "p", planCode: "pro" });
 	const stripe = {
 		subscriptions: { retrieve: async () => current },
 	} as unknown as Stripe;
