@@ -199,7 +199,7 @@ function unavailableGrid(
 		nextCursor: null,
 	};
 }
-function generationClient(fetch: typeof globalThis.fetch) {
+function generationClient(fetch: typeof globalThis.fetch, accessFetch?: typeof globalThis.fetch) {
 	let stored: WatchHistoryStorageRoot = {
 		schemaVersion: 3,
 		activeGenerations: { [OWNER]: 1 },
@@ -232,7 +232,7 @@ function generationClient(fetch: typeof globalThis.fetch) {
 		storage,
 		fetch: async (raw, init) => {
 			const url = new URL(String(raw));
-			if (url.pathname.endsWith("/access")) return Response.json(paidHistoryLease(OWNER, Date.now() - 1000, stored.activeGenerations?.[OWNER] ?? 1).access);
+			if (url.pathname.endsWith("/access")) return accessFetch ? accessFetch(raw, init) : Response.json(paidHistoryLease(OWNER, Date.now() - 1000, stored.activeGenerations?.[OWNER] ?? 1).access);
 			// Existing history regression fixtures have no accepted catalog roster.
 			if (url.pathname.endsWith("/browse/catalog"))
 				return Response.json(
@@ -406,7 +406,7 @@ describe("production watch browsing", () => {
     expect(container.textContent).toContain("your own Plus or Pro");
   });
 
-  it("keeps a valid cached lease through a network failure only until its original expiry", async () => {
+  it("uses a cached lease only until its original expiry while network revalidation is pending", async () => {
     vi.useFakeTimers();
     try {
       const now = Date.now();
@@ -419,7 +419,7 @@ describe("production watch browsing", () => {
           ownerUserId: OWNER, accountGeneration: 1, preferences: { youtubeHistoryEnabled: true },
           capturePaused: false, source: "cache", accessLease: lease,
         } };
-        if (message.command === "bootstrap") return { ok: false, status: "retryable" };
+        if (message.command === "bootstrap") return new Promise<WatchHistoryMessageResponse>(() => {});
         return fallback.request(message);
       } });
       expect(container.textContent).toContain("Frieren");
@@ -429,6 +429,21 @@ describe("production watch browsing", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it("opens promptly with the real background client and honors its lease invalidation after a network failure", async () => {
+    let finish!: (response: Response) => void;
+    const { client, storage } = generationClient(
+      async () => Response.json(browse()),
+      async () => new Promise<Response>(resolve => { finish = resolve; }),
+    );
+    await mount(client);
+    await settles(() => expect(container.textContent).toContain("Frieren"));
+    expect(container.textContent).not.toContain("Checking history access");
+    await act(async () => finish(new Response("Unavailable", { status: 503 })));
+    expect((await storage.readRoot()).partitions[watchHistoryPartitionKey(OWNER, 1)]?.accessLease).toBeNull();
+    expect(container.textContent).not.toContain("Frieren");
+    expect(container.textContent).toContain("temporarily unavailable");
   });
 
   it("ignores a late successful bootstrap after a confirmed access loss", async () => {

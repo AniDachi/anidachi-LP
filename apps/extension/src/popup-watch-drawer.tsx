@@ -1,5 +1,5 @@
 import { parseWatchHistoryBootstrapData, type WatchHistoryMessageResponse } from "./watch-history-client";
-import { canCaptureWatchHistory, type WatchHistoryLease } from "./watch-history-access";
+import { canCaptureWatchHistory } from "./watch-history-access";
 import { youtubeHistoryArtworkUrl } from "./source-adapters/youtube/artwork";
 import { buildPersonalHistoryResumeUrl } from "@anidachi/protocol";
 import {
@@ -179,7 +179,6 @@ function WatchDrawer({
 		let disposed = false;
 		const revision = ++accessRevision.current;
 		let expiry: ReturnType<typeof setTimeout> | undefined;
-		let acceptedLease: WatchHistoryLease | null = null;
 		const current = () => !disposed && revision === accessRevision.current;
 		const applyResult = (result: WatchHistoryMessageResponse, cached = false) => {
 			if (!current()) return;
@@ -194,10 +193,6 @@ function WatchDrawer({
 				Date.now() >= (lease.checkedAt ?? lease.receivedAt) &&
 				Date.now() < lease.expiresAt;
 			if (!currentLease && cached) return;
-			// A transport failure does not revoke a still-valid server-issued lease.
-			if (!currentLease && !result.ok &&
-				["retryable", "access-unavailable"].includes(result.status) &&
-				canCaptureWatchHistory(acceptedLease, ownerUserId, Date.now())) return;
 			const status = currentLease
 				? lease.access.state === "allowed"
 					? "allowed"
@@ -208,7 +203,6 @@ function WatchDrawer({
 					: "access-unavailable";
 			setAccessState({ client, status, generation: data?.accountGeneration });
 			clearTimeout(expiry);
-			acceptedLease = currentLease ? lease : null;
 			if (currentLease) {
 				expiry = setTimeout(
 					() => {
