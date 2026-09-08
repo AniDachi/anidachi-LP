@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	createWatchHistoryLease,
 	canCaptureWatchHistory,
+	canReadWatchHistory,
 	personalEnvelopeEligible,
 } from "../src/watch-history-access";
 
@@ -38,6 +39,14 @@ describe("personal history absolute authority", () => {
 				issued,
 			),
 		).toBe(false);
+	});
+	it("Free can read saved history but cannot capture, with owner and time fences intact", () => {
+		const lease = createWatchHistoryLease({ ...access, state: "plan_required", youtubeHistoryEnabled: false }, owner, issued, issued + 100)!;
+		expect(canReadWatchHistory(lease, owner, issued + 200)).toBe(true);
+		expect(canCaptureWatchHistory(lease, owner, issued + 200)).toBe(false);
+		for (const time of [issued, issued + 300_000, NaN]) expect(canReadWatchHistory(lease, owner, time)).toBe(false);
+		expect(canReadWatchHistory(lease, "other", issued + 200)).toBe(false);
+		expect(canReadWatchHistory(null, owner, issued + 200)).toBe(false);
 	});
 	it("persists the original deadline across restart and fails closed on wall clock rollback", () => {
 		const lease = createWatchHistoryLease(

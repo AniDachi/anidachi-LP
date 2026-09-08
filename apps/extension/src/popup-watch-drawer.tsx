@@ -1,6 +1,6 @@
 import { readPopupView, readPopupHistoryView, writePopupHistoryChoice, writePopupQuery, writePopupTitlePages } from "./popup-view-state";
 import { parseWatchHistoryBootstrapData, type WatchHistoryMessageResponse } from "./watch-history-client";
-import { canCaptureWatchHistory } from "./watch-history-access";
+import { canReadWatchHistory } from "./watch-history-access";
 import { youtubeHistoryArtworkUrl } from "./source-adapters/youtube/artwork";
 import { buildPersonalHistoryResumeUrl } from "@anidachi/protocol";
 import {
@@ -133,7 +133,7 @@ function WatchDrawer({
 	}>({ client, status: "checking" });
 	const accessStatus =
 		accessState.client === client ? accessState.status : "checking";
-	const accessAllowed = accessStatus === "allowed";
+	const accessAllowed = accessStatus === "allowed" || accessStatus === "read-only";
 	const accessRevision = useRef(0);
 	const denyAccess = useCallback((status: string) => {
 		accessRevision.current++;
@@ -198,7 +198,7 @@ function WatchDrawer({
 			const status = currentLease
 				? lease.access.state === "allowed"
 					? "allowed"
-					: "plan-required"
+					: "read-only"
 				: !result.ok &&
 						["plan-required", "upgrade-required"].includes(result.status)
 					? result.status
@@ -516,6 +516,7 @@ function WatchDrawer({
 			]),
 	);
 	const pending = useMemo(() => {
+		if (accessStatus !== "allowed" || snapshot?.captureAllowed === false) return new Map<string, WatchProgressEvent>();
 		const events = snapshot?.pendingEvents ?? [];
 		const result = latestPendingByEpisode(events);
 		if (snapshot?.localObservation) {
@@ -526,9 +527,9 @@ function WatchDrawer({
 			);
 		}
 		return result;
-	}, [snapshot]);
+	}, [snapshot, accessStatus]);
 	const allowPending =
-		accessAllowed && !search.trim() && conditions.period === "all-time";
+		accessStatus === "allowed" && snapshot?.captureAllowed !== false && !search.trim() && conditions.period === "all-time";
 	const canonical = new Map(
 		snapshot?.history.items.map((item) => [
 			pendingTitleKey(item.provider, item.titleKey),
@@ -658,7 +659,7 @@ function WatchDrawer({
 			if (
 				!data?.accessLease ||
 				data.accountGeneration !== generation ||
-				!canCaptureWatchHistory(data.accessLease, ownerUserId, Date.now()) ||
+				!canReadWatchHistory(data.accessLease, ownerUserId, Date.now()) ||
 				actionGeneration.current !== token
 			)
 				return;
@@ -755,6 +756,12 @@ function WatchDrawer({
 			className="popup-watch-screen"
 			aria-label="Watch History"
 		>
+			{accessStatus === "read-only" || snapshot?.captureAllowed === false ? (
+				<div className="popup-social-empty" role="status">
+					Saved history is available. Recording new progress requires Plus or Pro.
+					<button type="button" onClick={() => openUrl(new URL("/pricing", WEB_HTTP_BASE).toString())}>View plans</button>
+				</div>
+			) : null}
 			<div className="popup-watch-controls">
 				<div className="popup-watch-search">
 					<Search aria-hidden="true" size={15} />

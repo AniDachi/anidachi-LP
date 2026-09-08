@@ -1,4 +1,4 @@
-import { canCaptureWatchHistory, createWatchHistoryLease, parseWatchHistoryLease, personalEnvelopeEligible, type WatchHistoryLease } from "./watch-history-access";
+import { canReadWatchHistory, canCaptureWatchHistory, createWatchHistoryLease, parseWatchHistoryLease, personalEnvelopeEligible, type WatchHistoryLease } from "./watch-history-access";
 import {
   PersonalHistoryResumeSchema,
   personalHistoryResumeOwnerBinding,
@@ -413,16 +413,18 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       const saved = await replaceCanonicalPartition(response.session, lease.access.accountGeneration, (partition) => {
         const previous = partition.accessLease?.access;
         if (previous && (Date.parse(previous.serverTime) > Date.parse(lease.access.serverTime) || previous.accessEpoch > lease.access.accessEpoch || previous.youtubeConsentEpoch > lease.access.youtubeConsentEpoch)) return partition;
-        const clear = lease.access.state === "plan_required" || previous && previous.accessEpoch !== lease.access.accessEpoch;
+        const authorityChanged = !!previous && (previous.accessEpoch !== lease.access.accessEpoch || previous.state !== lease.access.state);
+        const clearCapture = lease.access.state === "plan_required" || authorityChanged;
         const consentChanged = previous && previous.youtubeConsentEpoch !== lease.access.youtubeConsentEpoch;
         return { ...partition, accessLease: lease,
           preferences: partition.preferencesSyncPending || (partition.preferencesLocalRevision ?? 0) > 0 ? partition.preferences : { youtubeHistoryEnabled: lease.access.youtubeHistoryEnabled },
           preferencesConfirmed: true, captureMarkersReady: true,
-          ...(clear ? { cache: null, currentObservation: null, currentObservationMeaningfulSolo: false, currentObservationDisplayMode: null,
-            catalogAcknowledgements: {}, invalidationRevision: (partition.invalidationRevision ?? 0) + 1,
+          ...(clearCapture ? { currentObservation: null, currentObservationMeaningfulSolo: false, currentObservationDisplayMode: null,
+            catalogAcknowledgements: {} } : {}),
+          ...(authorityChanged ? { cache: lease.access.state === "plan_required" ? partition.cache : null, invalidationRevision: (partition.invalidationRevision ?? 0) + 1,
             browseInvalidationRevision: browseHardRevision(partition) + 1 } : {}),
           ...(consentChanged && partition.currentObservation?.provider === "youtube" ? { currentObservation: null, currentObservationMeaningfulSolo: false, currentObservationDisplayMode: null } : {}),
-          outbox: { ...partition.outbox, entries: partition.outbox.entries.filter((entry) => !clear && !!entry.event.captureProof &&
+          outbox: { ...partition.outbox, entries: partition.outbox.entries.filter((entry) => !clearCapture && !!entry.event.captureProof &&
             entry.event.captureProof.access.accessEpoch === lease.access.accessEpoch &&
             (entry.event.provider !== "youtube" || lease.access.youtubeHistoryEnabled && entry.event.captureProof.access.youtubeConsentEpoch === lease.access.youtubeConsentEpoch)) },
         };
@@ -434,10 +436,10 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     accessFlights.set(key, flight);
     try { return await flight; } finally { if (accessFlights.get(key) === flight) accessFlights.delete(key); }
   }
-  async function requireAccess(session: ExtensionAuthTokens): Promise<WatchHistoryMessageResponse | null> {
+  async function requireAccess(session: ExtensionAuthTokens, operation: "read" | "capture" = "capture"): Promise<WatchHistoryMessageResponse | null> {
     const lease = await access(session);
     if (!lease) return { ok: false, status: "access-unavailable" };
-    return canCaptureWatchHistory(lease, session.user.id, now()) ? null : { ok: false, status: lease.access.state === "plan_required" ? "plan-required" : "access-unavailable" };
+    return (operation === "read" ? canReadWatchHistory(lease, session.user.id, now()) : canCaptureWatchHistory(lease, session.user.id, now())) ? null : { ok: false, status: lease.access.state === "plan_required" ? "plan-required" : "access-unavailable" };
   }
 
   async function invalidateHistory(session: ExtensionAuthTokens, generation: number,
@@ -487,7 +489,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     if (message.command === "resume-claim") {
       const intent = PersonalHistoryResumeSchema.parse(message.input);
       if (message.expectedOwnerUserId !== session.user.id || intent.ownerBinding !== await personalHistoryResumeOwnerBinding(session.user.id, intent.intentId) ||
-        now() < intent.issuedAt || now() >= intent.expiresAt || await requireAccess(session)) return { ok: false, status: "rejected" };
+        now() < intent.issuedAt || now() >= intent.expiresAt || await requireAccess(session, "read")) return { ok: false, status: "rejected" };
       const lease = await readLease(session);
       if (lease?.access.accountGeneration !== intent.accountGeneration || !sameSession(session, await dependencies.getCurrentSession())) return { ok: false, status: "rejected" };
       const authEpoch = (await storage.readRoot()).browseAuthEpochs?.[session.user.id];
@@ -495,7 +497,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       const result = await storage.updateRoot((root) => {
         const currentLease = root.partitions[watchHistoryPartitionKey(session.user.id, intent.accountGeneration)]?.accessLease;
         if (root.browseAuthEpochs?.[session.user.id] !== authEpoch || root.activeGenerations?.[session.user.id] !== intent.accountGeneration ||
-          !canCaptureWatchHistory(currentLease, session.user.id, now(), intent.provider) || currentLease?.access.accessEpoch !== lease.access.accessEpoch || now() >= intent.expiresAt) return root;
+          !canReadWatchHistory(currentLease, session.user.id, now()) || currentLease?.access.accessEpoch !== lease.access.accessEpoch || now() >= intent.expiresAt) return root;
         const claims = Object.fromEntries(Object.entries(root.resumeClaims ?? {}).filter(([, expiry]) => expiry > now()));
         if (claims[intent.intentId] || Object.keys(claims).length >= 128) return root;
         claimed = true; return { ...root, resumeClaims: { ...claims, [intent.intentId]: intent.expiresAt } };
@@ -525,7 +527,10 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         return { ok: false, status: "invalid-request" };
       }
     }
-    if (["list", "browse", "browse-title-episodes", "browse-sessions", "browse-options", "browse-catalog", "pending-identities", "catalog-begin", "catalog-commit", "resolve-identity", "create-room"].includes(message.command)) {
+    if (["list", "browse", "browse-title-episodes", "browse-sessions", "browse-options", "browse-catalog", "create-room"].includes(message.command)) {
+      const denied = await requireAccess(session, "read"); if (denied) return denied;
+    }
+    if (["pending-identities", "catalog-begin", "catalog-commit", "resolve-identity"].includes(message.command)) {
       const denied = await requireAccess(session); if (denied) return denied;
     }
     if (message.command === "list") return refresh(session, message);
@@ -632,7 +637,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     const sequence = (historyReadSequences.get(sequenceKey) ?? 0) + 1;
     historyReadSequences.set(sequenceKey, sequence);
     const initialLease = await readLease(session);
-    if (!canCaptureWatchHistory(initialLease, session.user.id, now())) return { ok: false, status: "access-unavailable" };
+    if (!canReadWatchHistory(initialLease, session.user.id, now())) return { ok: false, status: "access-unavailable" };
     const startedRoot = await storage.readRoot();
     const startedGeneration = startedRoot.activeGenerations?.[session.user.id];
     const revision = startedGeneration === undefined ? 0 : startedRoot.partitions[watchHistoryPartitionKey(session.user.id, startedGeneration)]?.invalidationRevision ?? 0;
@@ -649,7 +654,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       return { ok: false, status: "rejected" };
     }
     const finalLease = await readLease(response.session);
-    if (!canCaptureWatchHistory(finalLease, session.user.id, now()) || finalLease?.access.accessEpoch !== initialLease?.access.accessEpoch) return { ok: false, status: "access-unavailable" };
+    if (!canReadWatchHistory(finalLease, session.user.id, now()) || finalLease?.access.accessEpoch !== initialLease?.access.accessEpoch) return { ok: false, status: "access-unavailable" };
     let invalidated = historyReadSequences.get(sequenceKey) !== sequence;
     if (invalidated) return { ok: false, status: "superseded" };
     const saved = await replaceCanonicalPartition(response.session, parsed.data.meta.accountGeneration, (partition) => {
@@ -759,7 +764,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         currentPartition.accountGeneration !== generation) {
         return { ok: false, status: "generation-mismatch" };
       }
-      if (!canCaptureWatchHistory(currentPartition.accessLease, expected.user.id, now()) || currentPartition.accessLease?.access.accessEpoch !== partition.accessLease?.access.accessEpoch) return { ok: false, status: "access-unavailable" };
+      if (!canReadWatchHistory(currentPartition.accessLease, expected.user.id, now()) || currentPartition.accessLease?.access.accessEpoch !== partition.accessLease?.access.accessEpoch) return { ok: false, status: "access-unavailable" };
       if (currentRoot.browseAuthEpochs?.[expected.user.id] !== authEpoch ||
         browseHardRevision(currentPartition) !== hardRevision ||
         browseReadRevision(currentPartition, input) !== revision ||
@@ -1669,7 +1674,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     session: ExtensionAuthTokens,
     message: Extract<WatchHistoryMessage, { command: "list" }> = { type: WATCH_HISTORY_MESSAGE_TYPE, command: "list" },
   ): Promise<WatchHistoryMessageResponse> {
-    const denied = await requireAccess(session); if (denied) return denied;
+    const denied = await requireAccess(session, "read"); if (denied) return denied;
     return list(session, message);
   }
 
@@ -1697,8 +1702,8 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       if (!reconciled.ok && reconciled.status === "superseded") {
         reconciled = await reconcile(session, message);
       }
-      if (!drained.ok) return drained;
-      return reconciled.ok ? { ...reconciled, flushed: drained.flushed } : reconciled;
+      if (!drained.ok && drained.status !== "plan-required") return drained;
+      return reconciled.ok ? { ...reconciled, flushed: drained.ok ? drained.flushed : 0 } : reconciled;
     }
   }
 

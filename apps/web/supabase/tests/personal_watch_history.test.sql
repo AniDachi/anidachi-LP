@@ -82,9 +82,9 @@ select throws_ok($$select apply_watch_progress_v3(owner,body->'event',null) from
 select throws_ok($$select apply_watch_progress_v3_canonical(owner,body->'event',null) from personal_test_input where owner='a3222222-2222-4222-8222-222222222222'$$,'P0001','HISTORY_CLIENT_UPDATE_REQUIRED','canonical public alias terminal');
 select ok(not has_schema_privilege('service_role','anidachi_history_private','USAGE'),'service role cannot reach internal core schema');
 select ok(not has_function_privilege('service_role','anidachi_history_private.apply_watch_progress_v3_canonical(uuid,jsonb,jsonb,timestamptz)','EXECUTE'),'service role cannot execute internal core');
-select throws_ok($$select browse_watch_history_v3('a3111111-1111-4111-8111-111111111111','{"mode":"personal"}')$$,'P0001','HISTORY_PLAN_REQUIRED','Free browse denied');
-select throws_ok($$select list_watch_history_v3_bounded_page('a3111111-1111-4111-8111-111111111111',1,20)$$,'P0001','HISTORY_PLAN_REQUIRED','Free bounded list denied');
-select throws_ok($$select list_watch_history_v3_title_episodes_page('a3111111-1111-4111-8111-111111111111',1,'crunchyroll','crunchyroll:series:series-one')$$,'P0001','HISTORY_PLAN_REQUIRED','Free detail denied');
+select lives_ok($$select browse_watch_history_v3('a3111111-1111-4111-8111-111111111111','{"mode":"personal"}')$$,'Free browse allowed');
+select lives_ok($$select list_watch_history_v3_bounded_page('a3111111-1111-4111-8111-111111111111',1,20)$$,'Free bounded list allowed');
+select lives_ok($$select list_watch_history_v3_title_episodes_page('a3111111-1111-4111-8111-111111111111',1,'crunchyroll','crunchyroll:series:series-one')$$,'Free detail allowed');
 select lives_ok($$select set_watch_preferences_v3('a3111111-1111-4111-8111-111111111111','{"youtubeHistoryEnabled":true}')$$,'Free explicit consent on allowed');
 select lives_ok($$select set_watch_preferences_v3('a3111111-1111-4111-8111-111111111111','{"youtubeHistoryEnabled":false}')$$,'Free explicit consent off allowed');
 select lives_ok($$select browse_watch_history_v3('a3222222-2222-4222-8222-222222222222','{"mode":"personal"}')$$,'paid personal browse works');
@@ -110,6 +110,11 @@ delete from account_manual_plan_grants where user_id='a3333333-3333-4333-8333-33
 insert into account_manual_plan_grants(user_id,plan_code,reason,valid_until) values('a3333333-3333-4333-8333-333333333333','pro','test',clock_timestamp()-interval '1 second');
 select throws_ok($$select apply_personal_watch_progress_v1(owner,body) from personal_test_input where owner='a3333333-3333-4333-8333-333333333333'$$,'P0001','HISTORY_PLAN_REQUIRED','receipt denied after expiry');
 select is((select current_time_seconds::int from watch_episode_progress where user_id='a3333333-3333-4333-8333-333333333333'),120,'expiry preserves own history');
+select is((browse_watch_history_v3('a3333333-3333-4333-8333-333333333333','{"mode":"personal"}')->>'totalTitleCount')::int,1,'expired subscriber can browse saved title');
+select lives_ok($$select list_watch_history_v3_bounded_page('a3333333-3333-4333-8333-333333333333',1,20)$$,'expired subscriber can read canonical saved rows');
+select lives_ok($$select list_watch_history_v3_title_episodes_page('a3333333-3333-4333-8333-333333333333',1,'crunchyroll','crunchyroll:series:series-one')$$,'expired subscriber can read saved episode detail');
+select is((select current_time_seconds::int from watch_episode_progress where user_id='a3333333-3333-4333-8333-333333333333'),120,'reads do not advance saved progress');
+
 set local role service_role;
 select lives_ok($$select delete_watch_history_v3('a3333333-3333-4333-8333-333333333333',jsonb_build_object('schemaVersion',3,'clientMutationId',gen_random_uuid(),'accountGeneration',1,'requestedAt',clock_timestamp(),'target',jsonb_build_object('scope','all')))$$,'Free delete-all permitted');
 set local role postgres;

@@ -78,6 +78,7 @@ export const WatchHistoryAccessSchema = z
 		accountGeneration: z.number().int().positive(),
 		accessEpoch: Epoch,
 		youtubeConsentEpoch: Epoch,
+		// Recording entitlement only. Authenticated owners can read saved history on either plan.
 		state: z.enum(["allowed", "plan_required"]),
 		serverTime: Timestamp,
 		captureNotBefore: Timestamp,

@@ -1,6 +1,7 @@
 import { paidHistoryLease } from "./watch-history-personal-fixtures";
 import {
 	parsePersonalHistoryResumeUrl,
+	buildPersonalHistoryResumeUrl,
 	type WatchHistoryBrowseQuery,
 	WatchHistoryBrowseResponseSchema,
 	WatchHistoryGridResponseSchema,
@@ -504,7 +505,7 @@ describe("production watch browsing", () => {
     expect(container.textContent).toContain("your own Plus or Pro");
   });
 
-  it.each(["plan-required", "access-unavailable", "upgrade-required"])("never reveals cached paid titles while access resolves to %s", async (status) => {
+  it.each(["access-unavailable", "upgrade-required"])("never reveals cached paid titles while access resolves to %s", async (status) => {
     let finish!: (value: WatchHistoryMessageResponse) => void;
     const fallback = clientFixture();
     const client = { ...fallback,
@@ -513,17 +514,69 @@ describe("production watch browsing", () => {
     await mount(client);
     expect(container.querySelector('[aria-label="Watch History"]')?.getAttribute('aria-busy')).toBe('true');
     expect(container.textContent).not.toContain("Private cached title");
-    if (status === "plan-required") {
-      const lease = paidHistoryLease(OWNER); lease.access.state = "plan_required";
-      await act(async () => finish({ ok: true, data: { ownerUserId: OWNER, accountGeneration: 1, preferences: { youtubeHistoryEnabled: false }, capturePaused: false, source: "network", accessLease: lease } }));
-      expect(container.textContent).toContain("your own Plus or Pro");
-    } else {
-      await act(async () => finish({ ok: false, status: status as "access-unavailable" | "upgrade-required" }));
-      expect(container.textContent).toContain(status === "upgrade-required" ? "Update AniDachi" : "temporarily unavailable");
-    }
+    await act(async () => finish({ ok: false, status: status as "access-unavailable" | "upgrade-required" }));
+    expect(container.textContent).toContain(status === "upgrade-required" ? "Update AniDachi" : "temporarily unavailable");
     expect(container.textContent).not.toContain("Private cached title");
     expect(client.request.mock.calls.some(([m]) => m.command === "browse")).toBe(false);
     expect(container.textContent).toContain("Manage history");
+  });
+  it("Free shows saved titles and resumes them while explaining that recording is paused", async () => {
+    const fallback = clientFixture();
+    const lease = paidHistoryLease(OWNER); lease.access.state = "plan_required";
+    const client = { ...fallback, request: vi.fn(async (message: Parameters<PopupWatchHistoryClient["request"]>[0]) =>
+      message.command === "bootstrap" ? { ok: true as const, data: { ownerUserId: OWNER, accountGeneration: 1,
+        preferences: { youtubeHistoryEnabled: false }, capturePaused: false, source: "network", accessLease: lease } } : fallback.request(message)) };
+    await mount(client);
+    expect(container.textContent).toContain("Frieren");
+    expect(container.textContent).toContain("Recording new progress requires Plus or Pro");
+    await click(`Resume ${episode.episodeTitle}`);
+    expect(client.openUrl).toHaveBeenCalledOnce();
+    const url = vi.mocked(client.openUrl).mock.calls[0]![0];
+    expect(parsePersonalHistoryResumeUrl(url)?.currentTime).toBe(600);
+  });
+  it("real background retains only canonical Free history across reads, renewals, and Resume claims", async () => {
+    const calls: string[] = [];
+    const free = paidHistoryLease(OWNER, Date.now() - 1000);
+    free.access.state = "plan_required"; free.access.accessEpoch++;
+    const f = generationClient(async (raw, init) => {
+      const url = new URL(String(raw)); calls.push(`${init?.method ?? "GET"} ${url.pathname}`);
+      if (url.pathname.endsWith("/browse")) return Response.json(browse());
+      if (url.pathname.endsWith("/preferences")) return Response.json({ meta, preferences: { youtubeHistoryEnabled: false } });
+      if (url.pathname === "/api/watch-history/v3") return Response.json(browse().history);
+      throw new Error(`Unexpected endpoint ${url.pathname}`);
+    }, async () => Response.json(free.access));
+    const pending = { schemaVersion: 3, clientEventId: GROUP, clientSessionKey: "pending-before-free", accountGeneration: 1,
+      provider: "youtube", titleKey: "youtube:video:abcdefghijk", episodeKey: "youtube:video:abcdefghijk", youtubeVideoId: "abcdefghijk",
+      itemKind: "movie", title: "Unsaved video", episodeTitle: "Unsaved video", artworkUrl: null,
+      seasonKey: null, seasonTitle: null, seasonNumber: null, episodeNumber: null,
+      sourceUrl: "https://www.youtube.com/watch?v=abcdefghijk", duration: 1200, currentTime: 900, progress: 0.75,
+      observedAt: new Date().toISOString(), kind: "heartbeat" } as WatchProgressEvent;
+    await f.storage.updateRoot(value => {
+      const partition = value.partitions[watchHistoryPartitionKey(OWNER, 1)]!;
+      return { ...value, partitions: { ...value.partitions, [watchHistoryPartitionKey(OWNER, 1)]: {
+        ...partition, currentObservation: pending, currentObservationMeaningfulSolo: true, currentObservationDisplayMode: "mine",
+      } } };
+    });
+    expect((await f.client.loadCached(OWNER))?.pendingEvents.length).toBe(1);
+    await f.client.request({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "bootstrap", expectedOwnerUserId: OWNER });
+    const snapshot = await f.client.loadCached(OWNER);
+    expect(snapshot?.history.items[0]?.latestActivity.currentTime).toBe(600);
+    expect(snapshot?.captureAllowed).toBe(false);
+    expect(snapshot?.pendingEvents).toEqual([]);
+    expect(snapshot?.localObservation).toBeNull();
+    const revision = (await f.storage.readRoot()).partitions[watchHistoryPartitionKey(OWNER, 1)]!.browseInvalidationRevision;
+    await f.client.request({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "bootstrap", expectedOwnerUserId: OWNER });
+    expect((await f.storage.readRoot()).partitions[watchHistoryPartitionKey(OWNER, 1)]!.browseInvalidationRevision).toBe(revision);
+    expect(await f.client.request({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "list" })).toMatchObject({ ok: true });
+    expect(await f.client.request({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "browse", expectedOwnerUserId: OWNER, input: { mode: "personal", limit: 20 } })).toMatchObject({ ok: true });
+    const launch = parsePersonalHistoryResumeUrl(await buildPersonalHistoryResumeUrl({ ownerUserId: OWNER, accountGeneration: 1,
+      provider: "crunchyroll", sourceUrl: episode.sourceUrl, currentTime: 600 }))!;
+    expect(await f.client.request({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "resume-claim", expectedOwnerUserId: OWNER, input: launch })).toEqual({ ok: true });
+    expect(await f.client.request({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "resume-claim", expectedOwnerUserId: OWNER, input: launch })).toEqual({ ok: false, status: "rejected" });
+    expect(await f.client.request({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "enqueue-progress", expectedOwnerUserId: OWNER,
+      event: { ...pending, captureProof: free, clientSequence: 1 } })).toMatchObject({ ok: false });
+    expect(calls.every(call => call.startsWith("GET "))).toBe(true);
+    expect((await f.storage.readRoot()).partitions[watchHistoryPartitionKey(OWNER, 1)]!.outbox.entries).toEqual([]);
   });
   it("removes paid cards immediately on a confirmed access loss and ignores a delayed browse", async () => {
     let publish!: Parameters<NonNullable<PopupWatchHistoryClient["subscribe"]>>[1];

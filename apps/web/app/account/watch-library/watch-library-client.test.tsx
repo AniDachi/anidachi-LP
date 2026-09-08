@@ -159,18 +159,18 @@ afterEach(() => {
   testWindow.confirm = () => false;
 });
 
-it("SSR gates Free before a private list and serializes only own privacy metadata", async () => {
+it("SSR includes existing Free history with a recording notice", async () => {
   let privateReads = 0;
   const result = await loadWatchLibraryData(OWNER_ID, {
     access: async () => accessFixture("plan_required"),
     preferences: async () => preferencesFixture,
     history: async () => { privateReads++; return historyFixture(); },
   });
-  assert.equal(privateReads, 0);
-  assert.deepEqual(result.history.items, []);
+  assert.equal(privateReads, 1);
+  assert.equal(result.history.items.length, 1);
   const html = renderToStaticMarkup(<WatchLibraryClient initialHistory={result.history} initialPreferences={result.preferences} initialAccess="plan_required" />);
-  assert.doesNotMatch(html, /Series One/);
-  assert.match(html, /own Plus or Pro/);
+  assert.match(html, /Series One/);
+  assert.match(html, /Recording new progress requires Plus or Pro/);
   assert.match(html, /YouTube history/);
   assert.match(html, /Clear history/);
 });
@@ -190,12 +190,13 @@ it("SSR never fetches history on unavailable authority and discards a paid-to-Fr
   }), /CHANGED/);
 });
 
-it("Free consent and clear-all stay usable without requesting private titles", async () => {
+it("Free consent and clear-all refresh the remaining saved history", async () => {
   const empty = { ...historyFixture(), items: [], totalTitleCount: 0, nextCursor: null };
   const requests: string[] = [];
   testWindow.confirm = () => true;
   globalThis.fetch = async (input, init) => {
     const path = String(input); requests.push(path);
+    if (path.includes("?limit=24")) return Response.json({ ...empty, meta: { ...empty.meta, accountGeneration: 2 } });
     assert.equal(new Headers(init?.headers).get("x-anidachi-history-owner"), OWNER_ID);
     if (path.endsWith("/preferences")) return Response.json({ ...preferencesFixture, preferences: { youtubeHistoryEnabled: true } });
     if (path.endsWith("/delete")) {
@@ -209,18 +210,18 @@ it("Free consent and clear-all stay usable without requesting private titles", a
   await waitFor(() => assert.ok(buttonByText(view.container, "YouTube history: On")));
   await click(buttonByText(view.container, "Clear history"));
   await waitFor(() => assert.match(view.container.textContent ?? "", /Watch history updated/));
-  assert.equal(requests.length, 2); assert.doesNotMatch(view.container.textContent ?? "", /Series One/);
+  assert.equal(requests.length, 3); assert.doesNotMatch(view.container.textContent ?? "", /Series One/);
   await unmount(view.root);
 });
-it("explicit website Resume uses the saved canonical position and generation without a room", async () => {
+for (const plan of ["allowed", "plan_required"] as const) it(`website Resume uses saved position without a room on ${plan}`, async () => {
   const oldAssign = testWindow.location.assign;
   const launched: string[] = [];
   testWindow.location.assign = (url: string) => { launched.push(url); };
   const requests: string[] = [];
-  globalThis.fetch = async input => { requests.push(String(input)); return Response.json(accessFixture()); };
+  globalThis.fetch = async input => { requests.push(String(input)); return Response.json(accessFixture(plan)); };
   const history = historyFixture(); history.items[0]!.episodePage = { complete: true, nextCursor: null };
   history.items[0]!.seasons[0]!.episodes[0]!.sourceUrl = "https://www.crunchyroll.com/watch/EPISODE1";
-  const view = await renderClient(history);
+  const view = await renderClient(history, preferencesFixture, plan);
   try {
     await click(buttonByText(view.container, "Show episodes"));
     await click(buttonByText(view.container, "Resume"));
@@ -245,13 +246,11 @@ it("website Resume rejects a changed generation instead of rebinding old rows", 
   } finally { testWindow.location.assign = oldAssign; await unmount(view.root); }
 });
 
-it("a same-owner same-generation confirmed Free render retires paid cards synchronously", async () => {
+it("a same-owner confirmed Free render keeps existing saved cards", async () => {
   const view = await renderClient();
+  await act(async () => view.root.render(<WatchLibraryClient initialHistory={historyFixture()} initialPreferences={preferencesFixture} initialAccess="plan_required" />));
   assert.match(view.container.textContent ?? "", /Series One/);
-  const empty = { ...historyFixture(), items: [], totalTitleCount: 0, nextCursor: null };
-  await act(async () => view.root.render(<WatchLibraryClient initialHistory={empty} initialPreferences={preferencesFixture} initialAccess="plan_required" />));
-  assert.doesNotMatch(view.container.textContent ?? "", /Series One/);
-  assert.match(view.container.textContent ?? "", /own Plus or Pro/);
+  assert.match(view.container.textContent ?? "", /Recording new progress requires Plus or Pro/);
   await unmount(view.root);
 });
 

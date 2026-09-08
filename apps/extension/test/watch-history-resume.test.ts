@@ -103,6 +103,20 @@ describe("explicit personal Resume", () => {
 		expect(await applyPersonalHistoryResume(launch, input)).toBe("cancelled");
 		expect(seek).toHaveBeenCalledTimes(1);
 	});
+	it("Free resumes an existing saved position even with recording consent off", async () => {
+		const lease = paidHistoryLease(historyOwner, now);
+		lease.access.state = "plan_required";
+		lease.access.youtubeHistoryEnabled = false;
+		const seek = vi.fn();
+		const claim = vi.fn(async () => true);
+		const adapter = { provider: "youtube", video: { readyState: 1, duration: 100 },
+			getPlaybackSnapshot: () => ({ phase: "content" }), getSourceDescriptor: () => ({ sourceUrl }), seek } as unknown as VideoAdapter;
+		expect(await applyPersonalHistoryResume(await intent(), {
+			adapter, getOwner: () => historyOwner, roomActive: () => false, isCurrent: () => true,
+			getLease: async () => lease, claim, now: () => now,
+		})).toBe("consumed");
+		expect(seek).toHaveBeenCalledExactlyOnceWith(42, { resumeIfPlaying: false });
+	});
 	it("matches the actual descriptor with preserved hash and provider redirect", async () => {
 		const sourceUrl = "https://www.crunchyroll.com/watch/EPISODE1";
 		const url = await buildPersonalHistoryResumeUrl({

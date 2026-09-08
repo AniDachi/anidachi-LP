@@ -52,6 +52,7 @@ function WatchLibraryOwnerClient({
   initialAccess?: "allowed" | "plan_required";
 }) {
   const [accessState, setAccessState] = useState<string>(initialAccess);
+  const canRead = accessState === "allowed" || accessState === "plan_required";
   const [history, setHistory] = useState(initialHistory);
   const [preferences, setPreferences] = useState(initialPreferences);
   const [loading, setLoading] = useState(false);
@@ -114,10 +115,6 @@ function WatchLibraryOwnerClient({
       const access = await readAccess();
       if (!current()) return;
       setAccessState(access.state);
-      if (access.state !== "allowed") {
-        setHistory(value => ({ ...value, meta: { ...value.meta, accountGeneration: access.accountGeneration }, items: [], totalTitleCount: 0, nextCursor: null }));
-        return;
-      }
       const [historyValue, preferencesValue] = await Promise.all([
         api<unknown>("/api/watch-history/v3?limit=24"),
         api<unknown>("/api/watch-history/v3/preferences"),
@@ -128,7 +125,6 @@ function WatchLibraryOwnerClient({
         throw new Error("Watch history generation changed");
       }
       const finalAccess = await readAccess();
-      if (finalAccess.state !== "allowed") throw new ApiError("Personal history requires your own Plus or Pro plan", "HISTORY_PLAN_REQUIRED", 403);
       if (finalAccess.accountGeneration !== access.accountGeneration || finalAccess.accessEpoch !== access.accessEpoch || nextHistory.meta.accountGeneration !== finalAccess.accountGeneration) throw new ApiError("History access changed during the request", "HISTORY_ACCESS_CHANGED", 409);
       if (!current()) return;
       setHistory(nextHistory);
@@ -248,7 +244,7 @@ function WatchLibraryOwnerClient({
       );
       setNotice({ tone: "success", text: "Watch history updated." });
 
-      if (accessState !== "allowed") return;
+      if (!canRead) return;
       const canonical = parseOwnedHistory(
         await api<unknown>("/api/watch-history/v3?limit=24"),
         ownerUserId,
@@ -268,10 +264,10 @@ function WatchLibraryOwnerClient({
         setBusyAction(null);
       }
     }
-  }, [busyAction, history.meta.accountGeneration, ownerUserId, accessState]);
+  }, [busyAction, history.meta.accountGeneration, ownerUserId, canRead]);
 
   const resume = useCallback(async (provider: WatchHistoryItem["provider"], sourceUrl: string, currentTime: number) => {
-    if (busyAction || mutationInFlight.current || accessState !== "allowed") return;
+    if (busyAction || mutationInFlight.current || !canRead) return;
     if (provider !== "crunchyroll" && provider !== "youtube") return;
     const revision = operationRevision.current;
     const generation = history.meta.accountGeneration;
@@ -281,18 +277,17 @@ function WatchLibraryOwnerClient({
     try {
       const access = await readAccess();
       if (!current()) return;
-      if (access.state !== "allowed") throw new ApiError("Personal history requires your own Plus or Pro plan", "HISTORY_PLAN_REQUIRED", 403);
       if (access.accountGeneration !== generation) throw new ApiError("History access changed during the request", "HISTORY_ACCESS_CHANGED", 409);
       const url = await buildPersonalHistoryResumeUrl({ ownerUserId, accountGeneration: generation, provider, sourceUrl, currentTime });
       if (current()) window.location.assign(url);
     } catch (error) {
       if (current()) { hideInaccessible(error); setNotice({ tone: "error", text: errorMessage(error, "Could not resume playback") }); }
     } finally { if (mounted.current) setBusyAction(value => value === "resume" ? null : value); }
-  }, [busyAction, accessState, history.meta.accountGeneration, ownerUserId, readAccess]);
+  }, [busyAction, canRead, history.meta.accountGeneration, ownerUserId, readAccess]);
 
   return (
     <div className="flex flex-col gap-6">
-      {accessState === "allowed" ? <section className="grid gap-4 md:grid-cols-2">
+      {canRead ? <section className="grid gap-4 md:grid-cols-2">
         <StatCard icon={<Film className="h-5 w-5" aria-hidden />} label="Tracked titles" value={history.totalTitleCount} />
         <StatCard icon={<Clock3 className="h-5 w-5" aria-hidden />} label="Observed episodes" value={observedEpisodeCount} />
       </section> : null}
@@ -317,14 +312,15 @@ function WatchLibraryOwnerClient({
         </div>
       </section>
 
+      {accessState === "plan_required" ? <p className="text-sm text-foreground/60" role="status">Saved history is available. Recording new progress requires Plus or Pro. <a href="/pricing">View plans</a></p> : null}
       {notice ? <div className={`rounded-lg border px-4 py-3 text-sm ${notice.tone === "error" ? "border-red-400/25 bg-red-500/10 text-red-100" : "border-brand-orange/25 bg-brand-orange/10 text-brand-orange"}`}>{notice.text}</div> : null}
 
-      {accessState !== "allowed" ? <section className="rounded-lg border border-brand-border bg-brand-surface p-6 text-sm" role="status">{accessState === "plan_required" ? <>Personal history requires your own Plus or Pro plan. Your saved history is preserved. <a href="/pricing">View plans</a></> : accessState === "upgrade-required" ? "Update AniDachi to use personal history." : "History access is temporarily unavailable. Please retry."}</section> : history.items.length ? (
+      {!canRead ? <section className="rounded-lg border border-brand-border bg-brand-surface p-6 text-sm" role="status">{accessState === "plan-required" ? <>Personal history requires your own Plus or Pro plan. Your saved history is preserved. <a href="/pricing">View plans</a></> : accessState === "upgrade-required" ? "Update AniDachi to use personal history." : "History access is temporarily unavailable. Please retry."}</section> : history.items.length ? (
         <div className="grid gap-4">
           {history.items.map((item) => <WatchItemCard accountGeneration={history.meta.accountGeneration} busyAction={busyAction} item={item} key={`${history.meta.ownerUserId}:${history.meta.accountGeneration}:${item.provider}:${item.titleKey}`} captureAccessFailure={captureDetailAccessFailure} onResume={resume} onDelete={deleteHistory} ownerUserId={history.meta.ownerUserId} />)}
         </div>
       ) : (
-        <section className="rounded-lg border border-brand-border bg-brand-surface p-6 text-sm text-foreground/50">{loading ? "Loading personal history..." : "Progress will appear after meaningful playback while signed in to the extension."}</section>
+        <section className="rounded-lg border border-brand-border bg-brand-surface p-6 text-sm text-foreground/50">{loading ? "Loading personal history..." : accessState === "plan_required" ? "No saved history yet. Plus or Pro records your viewing progress." : "Progress will appear after meaningful playback while signed in to the extension."}</section>
       )}
 
       {history.nextCursor ? <button className="mx-auto inline-flex min-h-11 items-center rounded-lg border border-brand-border px-5 text-sm font-semibold text-foreground disabled:opacity-50" disabled={loadingMore} onClick={() => void loadMore()} type="button">{loadingMore ? "Loading..." : "Load more"}</button> : null}
@@ -769,10 +765,10 @@ function errorMessage(error: unknown, fallback: string): string {
   return error instanceof Error && error.message ? error.message : fallback;
 }
 
-function historyAuthorityState(error: unknown): "plan_required" | "upgrade-required" | "unavailable" | null {
+function historyAuthorityState(error: unknown): "plan-required" | "upgrade-required" | "unavailable" | null {
   if (!(error instanceof ApiError)) return null;
   switch (error.code) {
-    case "HISTORY_PLAN_REQUIRED": return "plan_required";
+    case "HISTORY_PLAN_REQUIRED": return "plan-required";
     case "HISTORY_CLIENT_UPDATE_REQUIRED": return "upgrade-required";
     case "HISTORY_ACCESS_CHANGED":
     case "HISTORY_ACCESS_UNAVAILABLE": return "unavailable";

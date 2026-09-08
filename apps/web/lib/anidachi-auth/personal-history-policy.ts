@@ -53,7 +53,7 @@ export async function checkPersonalHistoryOperation(
 		const access = WatchHistoryAccessSchema.safeParse(value.access);
 		if (!access.success || access.data.ownerUserId !== userId)
 			throw Error("HISTORY_ACCESS_UNAVAILABLE");
-		if (operation !== "metadata" && access.data.state !== "allowed")
+		if ((operation === "personal" || operation === "legacy") && access.data.state !== "allowed")
 			throw Error("HISTORY_PLAN_REQUIRED");
 		return { active: value.active, policyVersion: 1, access: access.data };
 	} catch (error) {

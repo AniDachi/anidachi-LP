@@ -29,7 +29,7 @@ Vitest/Node test runner/pgTAP/Playwright. Node 22.23.1, pnpm 11.2.2.
 ## Global Constraints
 
 - Одна личная история на аккаунт и логический эпизод; нет общего прогресса группы.
-- Free: 30 минут своей комнаты в день, 4 участника, 4 камеры, 4 микрофона, без истории.
+- Free: 30 минут своей комнаты в день, 4 участника, 4 камеры, 4 микрофона, без записи новой истории.
 - Plus: без дневного лимита, 6 участников, 4 камеры, 6 микрофонов, личная история.
 - Pro: без дневного лимита, 15 участников, 4 камеры, 8 микрофонов, личная история.
 - Все поддерживаемые платформы доступны всем тарифам; история зависит от собственного тарифа.
@@ -90,7 +90,7 @@ Graphify использован как навигация: запрос
 Если реальные данные требуют технического изменения плана, записать причину
 и проверить затронутые контракты, сохранив согласованное продуктовое поведение.
 
-- D01: сохранять историю после downgrade, закрыть чтение/запись для Free, убрать старые title/day quotas.
+- D01 (уточнение 2026-09-09): сохранять историю после downgrade, разрешить чтение/Resume/удаление, закрыть запись для Free, убрать старые title/day quotas.
 - D02: upgrade caps только в новой комнате; потеря нужного тарифа — предупреждение и штатный конец через пять минут.
 - D03: явное включение занимает место; PTT удерживает grant до выключения микрофона, без запроса на каждое нажатие.
 - D04: новые ручные отметки и bulk editor отложены; текущее удаление сохраняется.
@@ -197,11 +197,11 @@ terminal до любых writes; прямые anon/authenticated RPC запре�
 | Операция | Free | Plus/Pro | Обязательная проверка |
 | --- | --- | --- | --- |
 | access, entitlements, preferences GET | Metadata без истории | Metadata | Auth + owner + current server state. |
-| history/list, title-episodes, browse, browse/catalog, SSR | 403 HISTORY_PLAN_REQUIRED / locked page | Данные владельца | Gate до чтения/рендера и перед отдачей результата при смене revision. |
+| history/list, title-episodes, browse, browse/catalog, SSR | Сохраненные данные владельца | Данные владельца | Owner/generation до чтения/рендера и повторная проверка revision перед ответом. |
 | progress, catalog attempt/commit | 403 без записи | Валидированная собственная запись | Gate и epoch в одной транзакции с изменением. |
-| consent off, delete all own history | Доступно | Доступно | Auth, mutation owner, generation, idempotency. |
+| consent off, delete own episode/title/all history | Доступно | Доступно | Auth, mutation owner, generation, idempotency. |
 | consent on | Сохранить желание только по явному действию; сбор остается запрещен | Сбор после подтверждения | Не превращать preference в entitlement. |
-| Resume из истории / legacy rooms action | Нет paid-history обхода | Личная точка | Не создавать комнату из чужой/общей точки. |
+| Resume из истории | Сохраненная личная точка, без записи новой | Личная точка | Owner/generation и срок intent; не создавать комнату. |
 | create/connect/invite существующей комнаты | По room rights | По room rights | Не связывать с historyEnabled. |
 
 Ошибки: 401 UNAUTHORIZED; 403 HISTORY_PLAN_REQUIRED; 409 HISTORY_ACCESS_CHANGED
@@ -430,7 +430,7 @@ Prerequisite implementation проверена локально и прошла 
 production grant inventory и согласованная активация остаются открытыми gates;
 отметки выше не означают завершенную поставку нового поведения.
 
-## Task 3: Независимый личный writer, paid reads и единый browse
+## Task 3: Независимый личный writer, owner reads и единый browse
 
 **Create:** `apps/web/lib/anidachi-auth/personal-watch-history.ts`,
 `apps/web/lib/anidachi-auth/personal-watch-history.test.ts`,
@@ -448,12 +448,12 @@ envelope, вызывает `apply_personal_watch_progress_v1(uuid,jsonb)` и в�
 WatchProgressAck. Existing list/detail/catalog read shapes сохраняются; personal
 browse выбирает canonical rows из обоих исторических источников до pagination.
 
-- [x] Сначала поставить failing cases: paid guest + Free host; Free write/read через каждый путь; старый shared session не должен определять точку гостя.
+- [x] Сначала поставить failing cases: paid guest + Free host; Free: чтение своих старых данных разрешено, запись запрещена через каждый путь; старый shared session не должен определять точку гостя.
 - [x] Реализовать личный writer с reuse canonical identity/aggregates/receipts/deletion fences, исключив group/session prerequisites. Старые sessions сохранить как данные, без нового shared result.
 - [x] Проверять gate внутри SQL writes и Web reads, включая SSR, catalog begin/commit, receipt replay, detail, browse/options/sessions и legacy recreation. Публичный canonical alias не должен обходить cutover gate.
 - [x] Обеспечить personal browse: owner progress из прошлых solo/shared, фильтрация перед страницами, поиск по тайтлу/эпизоду, date matching по собственным событиям, стабильный cursor binding.
 - [x] Добавить youtubeConsentEpoch при on/off; новая эпоха не переиздает очередь периода без согласия. Не сбрасывать Crunchyroll consent/историю при YouTube off.
-- [x] Сохранить delete-all для Free; прочие paid-only операции не должны вытекать через preferences/SSR/legacy endpoints.
+- [x] Сохранить чтение и удаление своих данных для Free; запись не должна обходить paid gate через preferences/SSR/legacy endpoints.
 
 Реализация `b03f581` и исправление catalog epoch `899410f` прошли независимое
 ревью. Локальные Web/SQL/контрактные проверки записаны в
@@ -529,7 +529,7 @@ catalog fetch; publisher возвращает существующий ack/recov
 - [x] Failing tests: confirmed Free никогда не вызывает history observation/catalog/enqueue; room detection/sync при этом работает.
 - [x] Один paid recorder работает при solo и room. Убрать ожидание room_history authority именно из личной записи; live source/session fences остаются у комнаты.
 - [x] Persist clientSequence/accessEpoch вместе с очередью; повтор не присваивает новую epoch, owner или eventId. Account switch немедленно отключает все предыдущие callbacks.
-- [x] D05: после validUntil прекратить сбор, сохранить ограниченную уже допустимую очередь; при 503 не показывать Free. При подтвержденном Free очистить текущие observations и закрыть presentation, не стирать durable server history.
+- [x] D05: после validUntil прекратить сбор, сохранить ограниченную уже допустимую очередь; при 503 не показывать Free. При подтвержденном Free очистить текущие observations/очередь и pending presentation, сохранить доступ к canonical server history.
 - [x] При доступном аккаунте на том же epoch повторить eligible очередь; после paid→Free→paid старую очередь не переоформлять как новый просмотр.
 - [x] Resume передавать безопасному player launch path с личным URL/time, без автоматического room create. Сохранить account/current-room protections и явное действие запуска.
 
@@ -581,10 +581,10 @@ episode grid и progress detail принимают те же canonical owner-bou
 
 - [x] Удалить Mine/Together, social history filters и session/company pills; запрос personal содержит оба прошлых источника, search расширяется.
 - [x] Убрать старые UI mode/group/participant, сохранить валидные own search/date; мигрировать persisted keys только если они существуют. Кеш personal имеет отдельный query key, не смешивается с прежним solo/shared.
-- [x] Добавить locked Free, temporary access error, upgrade-required и paid empty states без скачков; stale cached paid cards не мигают перед confirmed Free.
+- [x] Добавить Free с сохраненными данными без записи, temporary access error, upgrade-required и empty states без скачков; неподтвержденный доступ не раскрывает кеш.
 - [x] Сохранить всю согласованную косметику: карточки, posters, dropdown, 4–5 рядов, autohide scrollbars, фокус, reduced motion, отсутствие дат/chips и стабильный нижний detail.
-- [x] На сайте использовать тот же gate до SSR data fetch, убрать shared resume/labels и сохранить удаления/consent controls. Free clear-all не раскрывает список тайтлов.
-- [x] Согласовать pricing copy с общей policy: все интеграции, Free без истории, Plus 6/Pro 8 микрофонов. Публичный выпуск этих обещаний зависит от Task 8/10; не менять Stripe prices.
+- [x] На сайте до SSR data fetch проверить владельца; Free получает старые записи, Resume, удаления и consent controls без права на новую запись.
+- [x] Согласовать pricing copy с общей policy: все интеграции, Free без записи новой истории, Plus 6/Pro 8 микрофонов. Публичный выпуск этих обещаний зависит от Task 8/10; не менять Stripe prices.
 
 Уточнение по исходному коду Task6: просмотренные фильтры хранятся в React state,
 отдельных persisted UI keys нет. Удаляется ненужное состояние без создания
@@ -870,21 +870,21 @@ maxMediaSeats. Данные и epochs назад не откатывать; ис
 | H11 | Delete episode/title/all + late write/retry: удаленное не воскресает. | 3,5 |
 | H12 | MV3/browser kill: восстановлена последняя durable point/eligible очередь, без ложной гарантии последней секунды. | 5 |
 | H13 | Source change/leave/reconnect: финальный checkpoint относится к исходному эпизоду и аккаунту. | 3,5 |
-| E01 | Free GET через все history APIs, SSR, browse и catalog: нет скрытых данных/200 с платными данными. | 2,3,6 |
+| E01 | Free GET через history APIs, SSR, browse и catalog возвращает только свою сохраненную историю. | 2,3,6 |
 | E02 | Free POST напрямую, SQL aliases и stale paid JWT не обходят gate. | 2,3 |
-| E03 | Paid→Free: новая запись/чтение закрыты; old durable history сохранена по D01. | 2,3,5,6 |
+| E03 | Paid→Free: чтение, Resume и удаления доступны; новые записи/обновления закрыты, старые позиции сохранены. | 2,3,5,6 |
 | E04 | Free→paid: без backfill Free-периода, новая epoch, согласие YouTube не включено само. | 2,3,5 |
 | E05 | Consent off/on: события выключенного периода не попадают после включения; CR не сломан. | 3,5 |
 | E06 | Entitlement service failure: retry/unavailable, без ложного downgrade/logout и бесконечного capture. | 2,5,6 |
 | E07 | Cancel-at-period-end, expiry, past_due, duplicate и обратный порядок webhook: одна верная durable policy. | 2 |
 | E08 | Pending response аккаунта A после перехода к B: ноль утечек и записей под B. | 2,3,5,6 |
-| E09 | Free может удалить все свои старые данные без покупки доступа и просмотра списка. | 3,6 |
+| E09 | Free может удалить эпизод, тайтл или всю свою старую историю без покупки подписки. | 3,6 |
 | E10 | Crunchyroll и YouTube: create/join/sync доступны во всех тарифах; отсутствие history access и YouTube-history consent не блокирует просмотр или приглашения. | 1,2,5,6,7 |
 | UI01 | Убрали toggle: прежние solo/shared записи видимы вместе, counts не удвоены. | 3,6 |
 | UI02 | Search/date filter применяются до pagination, future dates заблокированы, UTC/DST корректны. | 3,6 |
 | UI03 | Старые saved social filters не дают пустую историю; search/date сохранены корректно. | 6 |
 | UI04 | Сезон/Specials, длинное название, E0, фильм, missing cover/catalog: стабильная сетка и detail. | 6 |
-| UI05 | Free/paid/loading/error/empty/filter-empty различимы; paid cache не мелькает в Free. | 6 |
+| UI05 | Free/paid/loading/error/empty/filter-empty различимы; Free показывает только сохраненные позиции, без pending projection. | 6 |
 | UI06 | Keyboard, Escape/focus, reduced motion и 4–5 рядов/скроллы работают в узком drawer. | 6 |
 | UI07 | Resume из Popup и сайта открывает личную точку; room invitation остается в плеере. | 5,6 |
 | M01 | Room caps 4/6/15 включают хоста; лишний участник получает ROOM_FULL. | 7 |
@@ -983,3 +983,37 @@ D имеют конкретные рекомендации, нет зависи�
 Supabase changelog.md не отдался через web reader; перед созданием реальных
 миграций перепроверить release notes установленной версии. Новые framework/SDK
 возможности и обновления зависимостей этот план не требует.
+
+## Уточнение D01 от 2026-09-09: чтение истории на Free
+
+Пользователь подтвердил: истечение Plus/Pro останавливает запись и обновление
+позиций; уже сохраненные данные остаются доступны для чтения, Resume и удаления.
+История за период Free не собирается и не добавляется после оплаты задним числом.
+Это уточнение заменяет прежние формулировки locked Free / paid reads в отчете
+о первоначальной реализации, не меняя тарифы и rollout activation.
+
+Контракт access v1 сохраняет форму: `state` и `historyEnabled` означают право
+записи. Валидная owner-bound lease разрешает чтение при обоих значениях state.
+SQL и Web различают `read` и `personal`/`legacy`; запись и catalog proofs сохраняют
+проверки epoch/consent/generation. Старые клиенты до обновления могут продолжать
+скрывать историю Free, но не получают новое право записи. Новая миграция не меняет
+`personal_history_policy.active` и не переписывает историю.
+
+Проверки: сохраненная позиция после paid→Free, чтение/детали/Resume на Free,
+отсутствие локальных и серверных новых отметок, очистка очереди при downgrade,
+повторное открытие без сброса кеша на каждом Free lease refresh, изоляция аккаунтов,
+удаление и отсутствие backfill при Free→paid.
+
+Локальная проверка уточнения: `pnpm check`, `pnpm test` (extension 1840,
+protocol 169, API 217, web 478 passed / 6 existing skipped), отдельная Web Library
+UI suite (40 assertions) и policy tests проходят. Первые targeted SQL suites:
+124 pgTAP assertions на верифицированной disposable DB 55582 проходят, включая
+actual expiry, сохраненные данные, Free reads и запрет записи/capture proofs.
+Независимое ревью выявило и затем приняло исправление pending projection при
+downgrade: canonical cache сохраняется, несохраненные observations немедленно
+убираются. Rollout flag остается false; это не приемка полной активации MVP.
+
+Для этого уточнения Graphify использован для навигации; новый полный refresh
+не выполняется по просьбе пользователя избегать обновления графа после мелких
+итераций. Канонические правила D01 и матрицы выше обновлены непосредственно.
+Новые сущности и связи между плоскостями не добавлены.
