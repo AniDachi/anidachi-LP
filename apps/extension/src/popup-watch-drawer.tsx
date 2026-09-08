@@ -1,3 +1,4 @@
+import { readPopupView, readPopupHistoryView, writePopupHistoryChoice, writePopupQuery, writePopupTitlePages } from "./popup-view-state";
 import { parseWatchHistoryBootstrapData, type WatchHistoryMessageResponse } from "./watch-history-client";
 import { canCaptureWatchHistory } from "./watch-history-access";
 import { youtubeHistoryArtworkUrl } from "./source-adapters/youtube/artwork";
@@ -145,14 +146,15 @@ function WatchDrawer({
 		const timer = setTimeout(() => setShowAccessCheck(true), 200);
 		return () => clearTimeout(timer);
 	}, [accessStatus, client]);
-	const [search, setSearch] = useState("");
+	const [search, setSearch] = useState(() => readPopupView(ownerUserId).search);
 	const searchEpoch = useRef(0);
 	const changeSearch = (value: string) => {
 		if (value.trim() !== search.trim()) searchEpoch.current++;
+		writePopupQuery(ownerUserId, value, conditions);
 		setSearch(value);
 	};
 	const [conditions, setConditions] = useState<PopupHistoryConditions>(
-		emptyHistoryConditions,
+		() => readPopupView(ownerUserId).conditions,
 	);
 	const [refresh, setRefresh] = useState(0);
 	const [invalidation, setInvalidation] = useState(0);
@@ -426,10 +428,13 @@ function WatchDrawer({
 		...(search.trim() ? { search: search.trim() } : {}),
 		...(dates.ok && dates.range ? dates.range : {}),
 	};
+	const generation = snapshot?.accountGeneration ?? accessState.generation;
+	const savedView = useMemo(() => readPopupHistoryView(ownerUserId, generation), [ownerUserId, generation]);
+	const titleQuery = JSON.stringify(input);
 	const queryKey = JSON.stringify([
 		input,
 		dates.ok,
-		snapshot?.accountGeneration,
+		generation,
 		search.trim() ? searchEpoch.current : 0,
 	]);
 	const browsing = usePopupWatchBrowse({
@@ -441,14 +446,19 @@ function WatchDrawer({
 			input,
 		},
 		parser: WatchHistoryBrowseResponseSchema,
+		initialPageCount: savedView.titleQuery === titleQuery ? savedView.titlePages : 1,
 		meta: titleMeta,
 		cursor: titleCursor,
 		refresh: refreshVersion + invalidation,
 		forceRefresh: refreshVersion,
 		enabled: accessAllowed && dates.ok && cacheReady && !recovering,
 		discard: !accessAllowed,
-		generation: snapshot?.accountGeneration,
+		generation,
 	});
+	useEffect(() => {
+		if (accessAllowed && !browsing.loading && browsing.pages.length)
+			writePopupTitlePages(ownerUserId, generation, titleQuery, browsing.pages.length);
+	}, [accessAllowed, browsing.loading, browsing.pages.length, ownerUserId, generation, titleQuery]);
 	useWatchLoadingHeight(
 		watchRootRef,
 		browsing.loading && !browsing.pages.length,
@@ -457,14 +467,14 @@ function WatchDrawer({
 		() => ({
 			client,
 			ownerUserId,
-			generation: snapshot?.accountGeneration,
+			generation,
 			refresh: refreshVersion + invalidation,
 			pages: new Map<string, unknown[]>(),
 		}),
 		[
 			client,
 			ownerUserId,
-			snapshot?.accountGeneration,
+			generation,
 			refreshVersion,
 			invalidation,
 		],
@@ -598,18 +608,15 @@ function WatchDrawer({
 	const disclosure: Disclosure = {
 		isOpen: (key, initial) =>
 			branches[queryKey]?.[key] ??
-			(search.trim() ? true : (nextLayout.defaults[key] ?? initial)),
-		toggle: (key, initial) =>
+			(search.trim() ? true : (savedView.branches[key] ?? nextLayout.defaults[key] ?? initial)),
+		toggle: (key, initial) => {
+			const next = !disclosure.isOpen(key, initial);
+			if (!search.trim()) writePopupHistoryChoice(ownerUserId, generation, "branches", key, next);
 			setBranches((previous) => ({
 				...previous,
-				[queryKey]: {
-					...previous[queryKey],
-					[key]: !(
-						previous[queryKey]?.[key] ??
-						(search.trim() ? true : (nextLayout.defaults[key] ?? initial))
-					),
-				},
-			})),
+				[queryKey]: { ...previous[queryKey], [key]: next },
+			}));
+		},
 	};
 	const total = accessAllowed
 		? (browsing.pages[0]?.history.totalTitleCount ?? 0)
@@ -776,7 +783,7 @@ function WatchDrawer({
 				<PopupWatchFilters
 					ownerUserId={ownerUserId}
 					conditions={conditions}
-					onChange={setConditions}
+					onChange={(value) => { writePopupQuery(ownerUserId, search, value); setConditions(value); }}
 					dateError={dates.ok ? null : dates.error}
 					today={now}
 				/>
@@ -899,7 +906,7 @@ function WatchDrawer({
 								</button>
 								{
 									<div className="popup-provider-body" hidden={!open}>
-										{group.items.map((item, index) => (
+										{group.items.map((item) => (
 											<PopupWatchHistoryItem
 												key={pendingTitleKey(item.provider, item.titleKey)}
 												item={item}
@@ -911,9 +918,9 @@ function WatchDrawer({
 												preview={previews.get(
 													pendingTitleKey(item.provider, item.titleKey),
 												)}
-												generation={snapshot?.accountGeneration}
+												generation={generation}
 												disclosure={disclosure}
-												initiallyOpen={index === 0}
+												initiallyOpen={false}
 												providerOpen={open}
 												matchingDate={
 													matches.get(
@@ -1097,7 +1104,11 @@ function PopupWatchHistoryItem({
 		item.provider === "crunchyroll" && item.itemKind === "series";
 	const fullHistory =
 		input.mode === "personal" && !input.search && !input.from && !input.until;
-	const [chosenSeason, setChosenSeason] = useState<string | null>(null);
+	const [chosenSeason, setChosenSeason] = useState<string | null>(() => readPopupHistoryView(ownerUserId, generation).seasons[branch] ?? null);
+	const chooseSeason = (value: string) => {
+		writePopupHistoryChoice(ownerUserId, generation, "seasons", branch, value);
+		setChosenSeason(value);
+	};
 	const latestSeason = item.seasons.find((season) =>
 		season.episodes.some(
 			(episode) => episode.episodeKey === item.latestActivity.episodeKey,
@@ -1201,14 +1212,19 @@ function PopupWatchHistoryItem({
 				(a.seasonNumber ?? Infinity) - (b.seasonNumber ?? Infinity) ||
 				a.seasonKey.localeCompare(b.seasonKey),
 		);
-	const selectedSeason =
+	const waitingForChosenSeason = Boolean(fullHistory && chosenSeason && !catalog && !grid.errorStatus &&
+		!seasons.some((season) => season.seasonKey === chosenSeason));
+	const selectedSeason = waitingForChosenSeason ? undefined : (
 		seasons.find((season) => season.seasonKey === chosenSeason) ??
 		seasons.find((season) => season.seasonKey === latestSeason) ??
-		seasons[0];
+		seasons[0]);
 	useEffect(() => {
-		if (open && selectedSeason && chosenSeason !== selectedSeason.seasonKey)
+		// Observed episodes are only a partial roster. A hidden/closed title has
+		// no grid request yet, so absence there cannot invalidate a saved season.
+		if (chosenSeason && fullHistory && !exactCatalog) return;
+		if (providerOpen && open && selectedSeason && chosenSeason !== selectedSeason.seasonKey)
 			setChosenSeason(selectedSeason.seasonKey);
-	}, [open, selectedSeason?.seasonKey, chosenSeason]);
+	}, [providerOpen, open, selectedSeason?.seasonKey, chosenSeason, fullHistory, exactCatalog]);
 	const overall =
 		item.itemKind === "movie" && item.provider === "crunchyroll"
 			? {
@@ -1451,7 +1467,7 @@ function PopupWatchHistoryItem({
 								<PopupSeasonPicker
 									seasons={seasons}
 									selected={selectedSeason.seasonKey}
-									onSelect={setChosenSeason}
+									onSelect={chooseSeason}
 									title={item.title}
 								/>
 								<span className="popup-season-counter">

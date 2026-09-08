@@ -580,6 +580,7 @@ describe("PopupApp social mutations", () => {
   let root: Root | null = null;
 
   beforeEach(() => {
+    localStorage.clear();
     vi.clearAllMocks();
     installPopupChrome();
     vi.mocked(getCachedExtensionSession).mockResolvedValue(TOKENS);
@@ -1168,9 +1169,9 @@ async function findButton(container: HTMLElement, name: string): Promise<HTMLBut
     button =
       [...container.querySelectorAll<HTMLButtonElement>("button")].find(
         (candidate) =>
-          candidate.getAttribute("aria-label") === name ||
+          !candidate.closest("[hidden]") && (candidate.getAttribute("aria-label") === name ||
           candidate.querySelector(".popup-tab-label")?.textContent === name ||
-          candidate.textContent?.trim() === name,
+          candidate.textContent?.trim() === name),
       ) ?? null;
     if (!button) {
       const available = [...container.querySelectorAll<HTMLButtonElement>("button")]

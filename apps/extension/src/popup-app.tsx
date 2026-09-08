@@ -1,3 +1,5 @@
+import { PopupRetainedPanel, usePopupNavigation } from "./use-popup-navigation";
+import { forgetPopupView } from "./popup-view-state";
 import {
   type AccountInboxResponse,
   type MarkAccountInboxSeenRequest,
@@ -151,7 +153,7 @@ export function unseenAccountInboxItems(
 }
 
 export function PopupApp() {
-  const [activeTab, setActiveTab] = useState<PopupTab>("resources");
+  const shellRef = useRef<HTMLElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [notificationStatus, setNotificationStatus] =
     useState<RoomInviteNotificationStatus | null>(null);
@@ -193,6 +195,7 @@ export function PopupApp() {
   const consumedRouteIntentUserIdRef = useRef<string | null>(null);
   const activateAccount = useCallback((userId: string | null): AccountRequestToken | null => {
     const previousUserId = accountGateRef.current.currentUserId();
+    if (!userId && previousUserId) forgetPopupView();
     accountGateRef.current.activate(userId);
 
     setSocialState((current) =>
@@ -215,6 +218,7 @@ export function PopupApp() {
     return userId ? accountGateRef.current.capture(userId) : null;
   }, []);
   const accountUser = authSession.status === "ready" ? authSession.tokens.user : null;
+  const [activeTab, setActiveTab] = usePopupNavigation(accountUser?.id ?? null, shellRef);
   const inboxModel = useMemo(() => buildPopupInboxModel(inboxState.data), [inboxState.data]);
   const peoplePresentationState = mapSocialStateToPeoplePresentation(socialState);
   const peoplePendingActionKey = isPopupPeopleActionKey(busySocialAction) ? busySocialAction : null;
@@ -779,7 +783,7 @@ export function PopupApp() {
   };
 
   return (
-    <main className="popup-shell">
+    <main className="popup-shell" ref={shellRef} data-starting={authChecking}>
       <style>{popupStyles}</style>
       <header className="popup-topbar">
         <div className="popup-profile">
@@ -890,13 +894,14 @@ export function PopupApp() {
 
       <PopupNavigation activeTab={activeTab} onSelect={setActiveTab} />
 
-      {activeTab === "resources" ? (
+      <PopupRetainedPanel key={`${accountUser?.id}:resources`} active={activeTab === "resources"} tab="resources">
         <PopupWatchHistoryPanel
           key={accountUser?.id ?? "signed-out"}
           ownerUserId={accountUser?.id ?? null}
           refreshSignal={historySession.revision}
         />
-      ) : activeTab === "friends" ? (
+      </PopupRetainedPanel>
+      <PopupRetainedPanel key={`${accountUser?.id}:friends`} active={activeTab === "friends"} tab="friends">
         <PopupPeoplePanel
           actionNotice={peopleActionNotice}
           pendingActionKey={peoplePendingActionKey}
@@ -907,7 +912,8 @@ export function PopupApp() {
           onSignIn={() => void syncPopupData({ interactive: true })}
           state={peoplePresentationState}
         />
-      ) : (
+      </PopupRetainedPanel>
+      <PopupRetainedPanel key={`${accountUser?.id}:inbox`} active={activeTab === "inbox"} tab="inbox">
         <PopupInboxPanel
           actionNotice={socialNotice}
           busyFriendRequestActionKey={busySocialAction}
@@ -922,7 +928,7 @@ export function PopupApp() {
           onSignIn={() => void syncPopupData({ interactive: true })}
           state={inboxState}
         />
-      )}
+      </PopupRetainedPanel>
     </main>
   );
 }

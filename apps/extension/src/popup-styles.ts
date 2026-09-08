@@ -176,6 +176,9 @@ ${extensionThemeTokens}
     clip: rect(0 0 0 0);
   }
 
+  [data-popup-tab][hidden] { display: none !important; }
+  .popup-shell[data-starting="true"] > :not(style) { visibility: hidden; }
+
   .popup-shell {
     position: relative;
     min-height: 440px;

@@ -7,7 +7,7 @@ import {
 } from "@anidachi/protocol";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PopupHistorySettings } from "../src/popup-history-settings";
 import {
   PopupWatchHistoryPanel,
@@ -32,6 +32,8 @@ const SESSION_ID = "00000000-0000-4000-8000-000000000002";
 const NOW = "2026-08-15T03:00:00.000Z";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+
+beforeEach(() => localStorage.clear());
 
 describe("Popup Watch History v3", () => {
   it("shows a newly resolved poster on a cached title before the progress upload is acknowledged", async () => {
@@ -438,6 +440,7 @@ describe("Popup Watch History v3", () => {
 
     await waitFor(() => expect(view.container.textContent).toContain("Cached Frieren"));
     expect(view.container.textContent).toContain("Episode 1 - The Journey");
+    await click(await findButton(view.container, "Toggle Cached Frieren history"));
     expect(view.container.textContent).toContain("0:12");
     expect(view.container.textContent).toContain("Pending sync");
     expect(view.container.textContent).not.toContain("Progress will appear after meaningful playback.");
@@ -517,6 +520,7 @@ describe("Popup Watch History v3", () => {
     await waitFor(() => expect(view.container.textContent).toContain("Cached Frieren"));
     expect(view.container.textContent).not.toContain("Watching now");
     expect(view.container.textContent).toContain("Pending sync");
+    await click(await findButton(view.container, "Toggle Cached Frieren history"));
     expect(view.container.textContent).toContain("0:12");
 
     await act(async () => {
@@ -1598,6 +1602,10 @@ async function renderSettings(client: PopupWatchHistoryClient) {
   document.body.append(container);
   const root = createRoot(container);
   await act(async () => root.render(<PopupHistorySettings ownerUserId={OWNER_ID} client={client} />));
+  for (const provider of container.querySelectorAll(".popup-provider")) {
+    const title = provider.querySelector<HTMLButtonElement>('.popup-watch-title-toggle[aria-expanded="false"]');
+    if (title) await act(async () => title.click());
+  }
   return { container, root };
 }
 
@@ -2013,6 +2021,7 @@ function preferencesFixture(youtubeHistoryEnabled: boolean): WatchHistoryPrefere
   };
 }
 
+// Episode regression scenarios start with the user opening the first title.
 async function renderPanel(client: PopupWatchHistoryClient) {
   const container = document.createElement("div");
   document.body.append(container);
@@ -2020,6 +2029,10 @@ async function renderPanel(client: PopupWatchHistoryClient) {
   await act(async () => {
     root.render(<PopupWatchHistoryPanel client={client} ownerUserId={OWNER_ID} />);
   });
+  for (const provider of container.querySelectorAll(".popup-provider")) {
+    const title = provider.querySelector<HTMLButtonElement>('.popup-watch-title-toggle[aria-expanded="false"]');
+    if (title) await act(async () => title.click());
+  }
   return { container, root };
 }
 
