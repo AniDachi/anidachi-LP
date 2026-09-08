@@ -1,6 +1,7 @@
 # Personal History And Plans MVP — Implementation Evidence
 
-Started: 2026-09-08 (Asia/Ho_Chi_Minh). Status: Tasks 1–9 locally reviewed; Task 10 pre-delivery checkpoint.
+Started: 2026-09-08 (Asia/Ho_Chi_Minh). Status: Tasks 1–9 reviewed; Task 10 inactive
+staging delivery and both tester syncs performed, external acceptance open.
 
 This record tracks the [implementation plan](superpowers/plans/2026-09-08-personal-history-and-plans-mvp.md)
 and [accepted specification](superpowers/specs/2026-09-08-personal-history-and-plans-mvp-design.md).
@@ -600,7 +601,7 @@ files from staging commit `a03c0128825c73edcfdf9062a8d85e70148b2423`, through
 `20260905145315`. Synthetic data was committed before any new migration. All
 14 forward migrations were then applied in order through `20260908072249`.
 The previously existing project on 55582 was preserved. Both projects were
-read back at55/latest20260908072249/policyfalse and retained; only their task VM
+read back at55/latest20260908072249/policy false and retained; only their task VM
 was gracefully stopped after verification (17:18 local September8). No reset or remote SQL
 was used. The old v2→v3 destructive transition harness was not executed.
 
@@ -665,7 +666,7 @@ proof, not a production-35 chain rehearsal or a permission to migrate production
 | New client + existing legacy room | Negotiated connect returns original legacy caps; legacy media/lifecycle drain remains | Loaded legacy-room reconnect not run |
 | New Worker before Task9 quota consumer | Worker authority correct, old Overlay can prematurely end v2 room | Unsupported activation candidate; deploy matched Task9 consumer |
 | Activation | Durable server policy is the authority; client UI flags cannot activate access | Keep inactive until dependency, queue, migration, runtime and acceptance gates pass |
-| Post-activation rollback | Keep DB, grants, data, generations, consent/access epochs and active write gates; use a tested v2-compatible runtime or fail closed | Exact compatible deployed rollback candidate and rehearsal are NOT RUN; Task10 must bind them |
+| Post-activation rollback | Keep DB, grants, data, generations, consent/access epochs and active write gates; use a tested v2-compatible runtime or fail closed | Exact compatible deployed rollback candidate and rehearsal are NOT RUN; Task 10 must bind them |
 
 Old staging `a03c012` is **not** a valid post-activation rollback: disabling the
 policy or restoring an old writer would reopen Free capture. This first cutover
@@ -702,7 +703,7 @@ Receipts named above are under `/private/tmp/`. Unchanged earlier Task1–8 case
 reuse their reviewed receipts above, rather than implying new executions. Task9
 changes no capture topology; the final actual 4/6/15-controller media receipts
 from Task8 remain the media evidence. No heavy15 repeat was necessary. Graphify
-was queried as navigation; final semantic refresh is parent-owned Task10 work.
+was queried as navigation; final semantic refresh is parent-owned Task 10 work.
 
 ### Task9 scoped review fix1 — legacy quota compatibility
 
@@ -727,7 +728,7 @@ This bounded fix adds no server/DB contract or external proof. Preexisting
 ineffective dynamic-import and large-chunk build warnings remain disclosed and
 are deferred; no bundle cleanup was attempted. Scoped independent re-review of
 `b4706c1..f7ed14c` approved I1 and found no new Critical/Important fix regression.
-Task9 local implementation is approved; the operational Task10 gates below remain.
+Task9 local implementation is approved; the operational Task 10 gates below remain.
 
 ### H/E/UI/M/S/C matrix
 
@@ -787,7 +788,7 @@ above and their reports, not an inferred deployed result.
 | C01 | PASS | Task9 actual populated staging41→55,24old-column counts/hashes | Production35→55 NOT RUN and not authorized |
 | C02 | PASS | Task3 SQL alias/replay/activation races; Task5 stale access queues | Loaded old writer NOT RUN |
 | C03 | PASS | Task7 actual legacy token verifier and Web/SQL negotiation fences; Task9 source matrix | Mixed deployed binaries NOT RUN |
-| C04 | NOT RUN | Additive preservation and gate/source invariants pass; no exact deployed rollback candidate | Task10 must select and rehearse compatible rollback |
+| C04 | NOT RUN | Additive preservation and gate/source invariants pass; no exact deployed rollback candidate | Task 10 must select and rehearse compatible rollback |
 
 ## Remaining Acceptance
 
@@ -803,7 +804,7 @@ manifest must bind deployed Web/Worker commits, all DB migrations, policyVersion
 captureVersion1, mediaProtocolVersion2 and loaded extension version_name/hash.
 A worktree build is not that release manifest.
 
-## Task 10 — Local pre-delivery checkpoint
+## Task 10 — Historical local pre-delivery checkpoint
 
 **PRE_DELIVERY_READY**, stopped before shared delivery. The committed
 [release packet](releases/personal-history-mvp/README.md) includes exact source
@@ -870,7 +871,8 @@ No protocol/media topology/capture change: prior media15 proof was not rerun.
 SQL target was only guarded original disposable55582/project
 anidachi-personal-mvp-20260908 on its explicit task Docker socket. Synthetic
 fixture cleanup completed; successful activation was always rolled back; schema55
-and policyfalse retained. No SQL or fixture changes targeted preservation55592. The owned Colima profile
+and policy false retained. No SQL or fixture changes targeted preservation55592. The
+owned Colima profile
 was stopped afterward; its automatic container lifecycle is shared by both
 retained disposable projects. Initial SQL fixture
 expected outcome `created` rather than actual `claimed`; this fixture correction
@@ -886,3 +888,35 @@ USER_NOT_LOGGED_IN / not connected. These are not new code findings or inactive
 source-delivery blockers; dependent activation gates remain open. H12, C04,
 Stripe TEST, loaded provider/artifact, physical/TURN/two-network proofs remain
 NOT RUN. No remote delivery, activation, production or acceptance is claimed.
+
+## Task 10 — Actual inactive delivery 2026-09-08
+
+[Exact public receipt](releases/personal-history-mvp/delivery-receipt.json) supersedes
+historical pre-delivery status. PR #273→756f04e applied 14 immutable revisions, verified
+55 migrations and policy 1 false, 17 service-only wrappers, 5 private cores and
+service-role policy UPDATE denial. PR #274→c7fbdb5 delivered matching Web Ready and
+Worker 100% after green CI/Rooms/P2P/smoke/Vercel. Initial lint failure was resolved by
+independently reviewed one-line test binding correction: source `2bf18fb`, release
+`f440d3d`; scoped ESLint and 9 Stripe sync cases passed. Original runtime reviewed
+d2e32e8 remains the behavior reference.
+
+Final narrow extension build 48b5fd8 and validation passed. Both 12-file tester
+baselines matched r10 immediately before separate verified backups, then both matched
+final version 48b5fd8-staging-20260908191943. Exact file/manifest/backup hashes are in
+the receipt. No Chrome operation or loaded proof. Original 1,069 source preservation is
+independently audited by controller. Known dynamic-import/chunk warnings remain
+disclosed.
+
+Staging Web returned 200 with password protection and noindex; Worker root returned 200
+and the actual room-scoped unauthenticated ICE route returned 401. All 55 migrations and
+inactive policy remain verified. Historical 177 legacy DB records need separately
+reviewed Worker-lifecycle reconciliation before activation; statuses/age do not prove
+live sockets. Stripe TEST disconnected, Mac locked/provider/MV3/H12, physical
+output/devices/different networks/forced TURN and C04 postactivation operational
+recovery remain open. No real notifications/invites/subscriptions/hardware or activation
+used. Main 54a154b unchanged; promotion PR #247 remains manual with no auto-merge.
+
+Graph 48b5fd8 covers settled behavior with 167 code/16 semantic files. The test-binding
+correction and delivery evidence/status-only metadata alter no relationships; no
+re-extraction or unchanged heavy-suite rerun is warranted. GitHub actual delivery checks
+are distinct from reused local evidence and dev-check classification.

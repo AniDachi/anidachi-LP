@@ -1,6 +1,6 @@
-# PR draft: Add inactive personal-history and room-policy DB prerequisites
+# Delivered PR: Add inactive personal-history and room-policy DB prerequisites
 
-Target: `staging`. Local draft only; no PR has been opened.
+Target: `staging`. Delivered through PR #273; see [actual receipt](delivery-receipt.json).
 
 ## Goal and changed areas
 
@@ -54,3 +54,7 @@ Retain additive schema and data. Stop dependent runtime delivery on failure and
 correct through a forward migration; do not reverse applied migrations or reset
 epochs. The migration PR never enables policy. Runtime rollback and v2 room drain
 are covered by the ordered packet; old staging is not post-activation recovery.
+
+Actual final source includes reviewed test-only R1 at 2bf18fb; runtime merge c7fbdb5.
+Migration bytes unchanged. Loaded browser, Stripe TEST, physical/network media and C04
+remain open; policy false.

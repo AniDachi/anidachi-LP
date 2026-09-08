@@ -786,12 +786,13 @@ Stripe TEST, реальные провайдеры, устройства/TURN/д
 активные room/P2P планы, release PR templates и Graphify artifacts.
 
 - [ ] Зафиксировать совместимый rollback candidate Web/Worker/extension до rollout; активные legacy rooms завершить штатно или дождаться их окончания.
-- [ ] Применить additive DB prerequisites через отдельный migration PR; проверить функции/grants/counts и отсутствие destructive changes.
-- [ ] Доставить совместимые Web/Worker runtimes с еще не активированным новым поведением; затем matching extension. Старый клиент до обновления остается на разрешенном legacy contract либо получает честное update-required.
+- [x] Применить additive DB prerequisites через отдельный migration PR; проверить функции/grants/counts и отсутствие destructive changes.
+- [x] Доставить совместимые Web/Worker runtimes с еще не активированной coordinated policy; затем matching extension. Старый клиент до обновления остается на разрешенном legacy contract либо получает честное update-required.
 - [ ] Проверить loaded artifact, затем включить coordinated policy; проконтролировать 403/426, paid writes, Recent People и media у обоих тарифных направлений гостей.
-- [ ] Синхронизировать ровно согласованный staging artifact в установленные tester folders с backup/hash verification; отдельно зафиксировать reload в Chrome AniDachi Test.
+- [x] Синхронизировать ровно согласованный staging artifact в обе установленные tester folders с отдельными backup и полной hash verification.
+- [ ] Зафиксировать фактический reload и loaded artifact в Chrome AniDachi Test.
 - [ ] Провести staging two-account/two-network flow, Stripe TEST changes и нагрузку 15/4/8. Внести результаты в verification record и активный P2P plan.
-- [ ] Подготовить итог и отдельное решение о main/production. Согласование плана или green local tests не означает разрешение на production.
+- [x] Подготовить итог поставки и сохранить main/production без продвижения: решение о выпуске остается отдельным после операционной приемки. Согласование плана или green local tests не означает разрешение на production.
 
 **Локальная подготовка и итоговое ревью завершены:** пакет поставки создан в
 `61927b0`; единственное полное ревью выявило три Important: атомарную проверку
@@ -799,11 +800,48 @@ Stripe TEST, реальные провайдеры, устройства/TURN/д
 пробуждения Worker и сохранение собственной ссылки вместе со временем Resume.
 Исправления `d2e32e8` и обновленный source pin `fd873a4` прошли регрессионные
 проверки и независимое scoped rereview без новых Critical/Important. Текущий
-runtime pin — `d2e32e87494924d73ddb16ed9956490a9f635061`. Дальше: семантический
-Graphify, контролируемая inactive staging-поставка и отдельная операционная
-приемка. Выше сохранены unchecked пункты фактической поставки и приемки.
+runtime pin — `d2e32e87494924d73ddb16ed9956490a9f635061`. Семантический Graphify
+завершен в `48b5fd8`: все 16 измененных документов и 167 файлов кода обработаны,
+проверки целостности прошли. Найденная CI ошибка линтера исправлена единственной
+строкой `let` → `const` в тесте Stripe (`2bf18fb`); линтер, 9 тестов модуля и
+независимое scoped review прошли. Рабочее поведение и сборка extension не менялись.
+
+**Фактическая поставка:** migration PR
+[#273](https://github.com/AniDachi/anidachi-LP/pull/273) вошел в staging как
+`756f04e`; DB workflow `34225005537` прошел. В staging 55 миграций, policy v1
+неактивна, grants проверены, 62 пользователя и 19 записей прогресса сохранены.
+Runtime PR [#274](https://github.com/AniDachi/anidachi-LP/pull/274) вошел в staging
+как `c7fbdb5` после зеленых CI, Rooms, P2P, smoke и Vercel preview. Staging Web
+`dpl_BWTGmyLxHTp619UwkHFbit7GG6v9` имеет READY и правильные aliases; Worker
+version `14e77738-6c1e-4424-a142-366e75137525` обслуживает 100% deployment
+`87a4b594-2183-43df-b34f-8f2255e6e8f4`. Staging CI, DB/API/extension workflows,
+Rooms/P2P и smoke прошли; сайт остается под паролем с noindex, Worker health
+возвращает 200, ICE без авторизации — 401.
+
+Обе tester folders синхронизированы 8 сентября в 12:37 UTC сборкой
+`48b5fd8-staging-20260908191943`: все 12 файлов совпадают с проверенным
+артефактом, обе отдельные резервные копии совпадают с прежней r10.
+Финальный source pin `2bf18fb` отличается от проверенного runtime `d2e32e8`
+только исправлением линтера в Web-тесте; extension source не изменился после
+сборки `48b5fd8`. Поэтому разные build/source/staging SHA записаны отдельно.
+Повторная независимая проверка в 12:38 UTC подтвердила сохранность всех 1069
+файлов исходного checkout, его HEAD и прежних 38 записей рабочего статуса.
+Поставка с неактивной политикой завершена; unchecked пункты операционной приемки
+остаются открытыми, поэтому Task 10 целиком не объявлен завершенным.
 Mac сейчас заблокирован, Stripe TEST connector не подключен; loaded Chrome/MV3,
 Stripe TEST, C04 и проверки устройств/сетей этим ревью не закрыты.
+
+В базе также остаются 177 старых незавершенных legacy записей: 35 со статусом
+live (созданы в июне–июле) и 142 lobby (июнь–август). Это не доказательство
+наличия 177 активных комнат Worker. Перед activation нужна сверка с фактическим
+жизненным циклом комнат и проверенная процедура согласования устаревших записей;
+возраст записи сам по себе не разрешает ее удаление или принудительное завершение.
+Атомарная проверка перед activation сохранена, shared policy остается выключенной.
+
+Последующая правка тестового binding и фиксация delivery IDs/результатов не
+меняют архитектуру и связи исходников. Graphify `48b5fd8` остается снимком
+проверенной реализации; для этой финальной записи поставки повторный граф не
+требовался. Новые изменения поведения потребуют соответствующих проверок.
 
 **Rollback:** до activation — возврат прежних runtime при сохранении additive
 schema. После activation — вернуть только заранее проверенный compat runtime,

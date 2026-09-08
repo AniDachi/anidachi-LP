@@ -1331,33 +1331,27 @@ microphones; Pro has no daily hosting cap, 15 participants, 4 cameras and 8
 microphones. Participants include the host. History rights belong to the viewer;
 a paid guest must be able to record independently of any host history write.
 
-Tasks 1–9 are implemented and scoped-reviewed on isolated branch
-`codex/personal-history-mvp`; committed runtime source is
-`8e4dd284c65ce47f893d51e28c72700a87e5c68e`. The source now uses independent paid
-personal capture, unified reads/Resume, history-independent presence, versioned
-room grants and authoritative quota snapshots. Legacy media/writers remain
-compatibility paths, not the new contract. R01–R20 and D01–D05 were accepted
-before implementation; the original mixed WIP and r10 tester folders remain
-preserved.
+Tasks 1–9 are implemented and reviewed. Inactive staging delivery completed through PR
+#273 (database) and PR #274 (runtime), runtime merge
+`c7fbdb5aa1bbad9922dc40b9d557234e762e8d6c`. Final source
+`2bf18fba0751b71d3e142d2e16ae4f1bbfedca92` includes original reviewed d2e32e8 and the
+independently approved one-line test-only lint correction. The [delivery
+packet](releases/personal-history-mvp/README.md) and
+[receipt](releases/personal-history-mvp/delivery-receipt.json) record exact identities.
 
-Task 10 is at local **PRE_DELIVERY_READY**, not staging acceptance. The
-[delivery packet](releases/personal-history-mvp/README.md) pins exact migration
-and runtime material, separate PR drafts, cutover/recovery boundaries and open
-gates. The controller's final semantic Graphify and whole-branch review precede
-shared changes. Fourteen migrations bring the disposable staging-baseline chain
-from 41 to 55, with policy version 1 inactive. Task 9 verifies populated
-preservation; no remote migration or activation is implied.
+Remote staging has 55 migrations through 20260908072249 and policy version 1 inactive.
+Web Ready and Worker 100% match c7fbdb5. Both established tester folders were separately
+backed up/hash-verified, then synchronized to final narrow build
+`48b5fd8-staging-20260908191943`. Folder delivery is not loaded Chrome proof; Mac locked
+remains. Original mixed source is preserved. No main/production or activation occurred.
 
-The [verification matrix](personal-history-and-plans-mvp-verification.md) records
-local actual-controller 4/6/15 media, Worker/SQL/consumer and UI evidence with
-explicit limits. Loaded provider/MV3 termination, real Stripe TEST, physical
-media, forced relay/two-network and exact active-policy recovery remain open.
-The current remote staging source is still `a03c012` (read-only refresh September
-8); no new MVP runtime, tester synchronization or Chrome reload has been delivered.
-Old staging is not a valid post-activation rollback. Keep policy true, paid gates,
-personal writer, data and epochs; exact compatible recovery must be verified.
-Production/main and public pricing/media claims require a separate accepted
-release decision.
+Task 10 external acceptance remains open: real Stripe TEST disconnected, loaded
+provider/MV3 termination, physical media/different networks/forced relay and C04
+active-policy recovery. The 177 non-ended legacy DB records are historical inventory,
+not 177 confirmed active rooms; future activation needs separately reviewed
+Worker-lifecycle reconciliation without bulk end/delete or guard weakening. Old a03c012
+is not postactivation recovery. Keep data/epochs and verified compatible policy true
+recovery; main/public claims require a separate decision.
 
 ### Remaining Product Acceptance
 
