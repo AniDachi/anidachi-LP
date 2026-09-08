@@ -463,6 +463,25 @@ test("staging gate lets bearer-authenticated internal POST callbacks reach route
   }
 });
 
+test("staging gate routes extension access checks to the account verifier without a website gate cookie", () => {
+  for (const pathname of ["/api/watch-history/v3/access", "/api/me/entitlements"]) {
+    assert.equal(
+      canBypassStagingGate({ pathname, method: "GET", authorization: "Bearer token" }),
+      true,
+      `${pathname} must reach its own bearer verifier`,
+    );
+    for (const authorization of [undefined, "Basic token"]) {
+      assert.equal(canBypassStagingGate({ pathname, method: "GET", authorization }), false);
+    }
+    for (const method of ["POST", "PATCH", "DELETE", "PUT"]) {
+      assert.equal(canBypassStagingGate({ pathname, method, authorization: "Bearer token" }), false);
+    }
+    for (const neighbor of [`${pathname}/extra`, `${pathname}-extra`]) {
+      assert.equal(canBypassStagingGate({ pathname: neighbor, method: "GET", authorization: "Bearer token" }), false);
+    }
+  }
+});
+
 test("staging gate lets an extension bearer reach only the supported Watch History v3 methods", () => {
   const allowedRequests = [
     ["/api/watch-history/v3", "GET"],
