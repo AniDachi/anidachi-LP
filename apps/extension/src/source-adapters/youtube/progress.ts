@@ -6,6 +6,7 @@ import {
   type SourceAdapterHistoryPolicy,
 } from "../core/history-policy";
 import type { VideoAdapter } from "../core/types";
+import { youtubeHistoryArtworkUrl } from "./artwork";
 
 export interface YouTubeProgressInput {
   title: string | null;
@@ -69,7 +70,7 @@ export function getYouTubeHistoryObservation(input: {
     titleKey: key,
     itemKind: "movie",
     title,
-    artworkUrl: null,
+    artworkUrl: youtubeHistoryArtworkUrl(videoId),
     episodeKey: key,
     episodeTitle: title,
     seasonKey: null,

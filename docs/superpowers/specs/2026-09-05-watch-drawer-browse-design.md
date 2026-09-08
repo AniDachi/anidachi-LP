@@ -10,6 +10,22 @@ filters are removed when the unified personal history is delivered. Solo and
 room records are combined, gated by the viewer's own Plus/Pro plan. This note
 changes the target only; the existing local runtime has not been migrated.
 
+## Drawer State Amendment (2026-09-08)
+
+Preserve visited Watch / People / Inbox panels while navigating inside the popup,
+with a separate scroll position for each section. On popup reopen, restore the
+last section and its position, the Watch query/period, explicit provider/title
+expansion choices and selected seasons. New titles start collapsed; providers
+start open until the user chooses otherwise. Search may reveal matching branches
+temporarily without overwriting the normal library's disclosure choices.
+
+These are bounded local presentation preferences, never history/access authority.
+Do not transfer them between accounts; history choices also require the same
+history generation. Account changes discard mounted panels, and sign-out clears
+the saved view. Fresh data and access revocation still apply normally. If layout
+loads later, restore scroll when space becomes available; user scrolling takes
+priority. Native popup dimensions stay 392 by 600, with a dark initial background.
+
 ## Product
 
 The drawer is a compact, non-destructive way to find and resume viewing. Keep

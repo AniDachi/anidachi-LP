@@ -90,6 +90,7 @@ async function publish(data: AccountInboxResponse) {
 function inboxText() { return container.querySelector(".popup-section")?.textContent; }
 
 beforeEach(() => {
+  localStorage.clear();
   store.data.clear(); store.watchers.clear(); authListeners.clear();
   store.inboxWrites = 0;
   store.data.set(AUTH_TOKENS_KEY, tokens());
@@ -147,6 +148,7 @@ describe("open Popup inbox convergence", () => {
       pending.resolve(inbox(A, T3, [FIRST]));
     });
     await settle();
+    await openInbox();
     expect(inboxText()).toContain("Second sender");
     expect(inboxText()).not.toContain("First sender");
     expect(await getCachedAccountInboxForUser(A)).toBeNull();

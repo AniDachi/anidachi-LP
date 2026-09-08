@@ -115,13 +115,11 @@ export function reconcileHistoryLayout(
   const known = new Set(retained);
   const titleKeys = [...retained, ...keys.filter((key) => !known.has(key))];
   const defaults: Record<string, boolean> = {};
-  const providers = new Set<string>();
   for (const key of titleKeys) {
     const item = byKey.get(key);
     if (!item) continue;
     const titleBranch = JSON.stringify([item.provider, item.titleKey]);
-    defaults[titleBranch] = current?.defaults[titleBranch] ?? !providers.has(item.provider);
-    providers.add(item.provider);
+    defaults[titleBranch] = current?.defaults[titleBranch] ?? false;
 
   }
   if (current && titleKeys.length === current.titleKeys.length &&

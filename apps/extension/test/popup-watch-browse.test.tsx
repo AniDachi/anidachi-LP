@@ -11,7 +11,7 @@ import {
 } from "@anidachi/protocol";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { usePopupWatchBrowse } from "../src/popup-watch-browse";
 import {
 	type PopupWatchHistoryClient,
@@ -199,7 +199,7 @@ function unavailableGrid(
 		nextCursor: null,
 	};
 }
-function generationClient(fetch: typeof globalThis.fetch) {
+function generationClient(fetch: typeof globalThis.fetch, accessFetch?: typeof globalThis.fetch) {
 	let stored: WatchHistoryStorageRoot = {
 		schemaVersion: 3,
 		activeGenerations: { [OWNER]: 1 },
@@ -232,7 +232,7 @@ function generationClient(fetch: typeof globalThis.fetch) {
 		storage,
 		fetch: async (raw, init) => {
 			const url = new URL(String(raw));
-			if (url.pathname.endsWith("/access")) return Response.json(paidHistoryLease(OWNER, Date.now() - 1000, stored.activeGenerations?.[OWNER] ?? 1).access);
+			if (url.pathname.endsWith("/access")) return accessFetch ? accessFetch(raw, init) : Response.json(paidHistoryLease(OWNER, Date.now() - 1000, stored.activeGenerations?.[OWNER] ?? 1).access);
 			// Existing history regression fixtures have no accepted catalog roster.
 			if (url.pathname.endsWith("/browse/catalog"))
 				return Response.json(
@@ -276,17 +276,23 @@ function generationClient(fetch: typeof globalThis.fetch) {
 ).IS_REACT_ACT_ENVIRONMENT = true;
 let root: Root;
 let container: HTMLDivElement;
+beforeEach(() => localStorage.clear());
 afterEach(async () => {
 	if (root) await act(async () => root.unmount());
 	container?.remove();
 });
-async function mount(client: PopupWatchHistoryClient) {
+// Detail/browse regressions begin with an explicitly opened title.
+async function mount(client: PopupWatchHistoryClient, openFirstTitle = true) {
 	container = document.createElement("div");
 	document.body.append(container);
 	root = createRoot(container);
 	await act(async () =>
 		root.render(<PopupWatchHistoryPanel client={client} ownerUserId={OWNER} />),
 	);
+	if (openFirstTitle) for (const provider of container.querySelectorAll(".popup-provider")) {
+		const title = provider.querySelector<HTMLButtonElement>('.popup-watch-title-toggle[aria-expanded="false"]');
+		if (title) await act(async () => title.click());
+	}
 	return container;
 }
 function required<T>(value: T | null | undefined): T {
@@ -352,6 +358,152 @@ async function change(label: string, value: string) {
 }
 
 describe("production watch browsing", () => {
+  it("restores all user-loaded title pages when the drawer is recreated", async () => {
+    const first = browse("First page", "page-two");
+    const second = browse("Second page");
+    second.history.items[0]!.titleKey = "crunchyroll:title:two";
+    second.matches[0]!.titleKey = "crunchyroll:title:two";
+    const client = clientFixture(async message => message.command === "browse" ? {
+      ok: true, data: (message.input as WatchHistoryBrowseQuery).cursor ? second : first,
+    } : { ok: true });
+    await mount(client, false);
+    await click("Load more titles");
+    expect(container.textContent).toContain("Second page");
+    await act(async () => root.unmount()); container.remove();
+    await mount(client, false);
+    expect(container.textContent).toContain("First page");
+    expect(container.textContent).toContain("Second page");
+  });
+
+  it("remembers explicit title and provider disclosure choices across drawer remounts", async () => {
+    const client = clientFixture();
+    await mount(client, false);
+    expect(required(container.querySelector<HTMLButtonElement>(".popup-watch-title-toggle")).getAttribute("aria-expanded")).toBe("false");
+    await act(async () => required(container.querySelector<HTMLButtonElement>(".popup-watch-title-toggle")).click());
+    await click("Toggle Crunchyroll history");
+    await act(async () => root.unmount());
+    container.remove();
+    await mount(client, false);
+    expect(button("Toggle Crunchyroll history").getAttribute("aria-expanded")).toBe("false");
+    await click("Toggle Crunchyroll history");
+    expect(required(container.querySelector<HTMLButtonElement>(".popup-watch-title-toggle")).getAttribute("aria-expanded")).toBe("true");
+  });
+
+  it("opens with a valid cached access lease before network revalidation finishes, then honors revocation", async () => {
+    let finish!: (value: WatchHistoryMessageResponse) => void;
+    const fallback = clientFixture();
+    const client: PopupWatchHistoryClient = {
+      ...fallback,
+      request: vi.fn((message: Parameters<PopupWatchHistoryClient["request"]>[0]): Promise<WatchHistoryMessageResponse> => {
+        if (message.command === "bootstrap-cache") return Promise.resolve({ ok: true, data: {
+          ownerUserId: OWNER, accountGeneration: 1, preferences: { youtubeHistoryEnabled: true },
+          capturePaused: false, source: "cache", accessLease: paidHistoryLease(OWNER),
+        } });
+        if (message.command === "bootstrap") return new Promise<WatchHistoryMessageResponse>(resolve => { finish = resolve; });
+        return fallback.request(message);
+      }),
+    };
+    await mount(client);
+    expect(container.textContent).toContain("Frieren");
+    expect(container.textContent).not.toContain("Checking history access");
+    await act(async () => finish({ ok: false, status: "plan-required" }));
+    expect(container.textContent).not.toContain("Frieren");
+    expect(container.textContent).toContain("your own Plus or Pro");
+  });
+
+  it("shows artwork for existing YouTube rows whose stored artwork is null", async () => {
+    const page = browse("Saved YouTube video");
+    page.history.items[0] = { ...required(page.history.items[0]), provider: "youtube", itemKind: "movie",
+      titleKey: "youtube:video:FyS5dAywkEo", sourceUrl: "https://www.youtube.com/watch?v=FyS5dAywkEo", artworkUrl: null };
+    page.matches = [{ ...required(page.matches[0]), provider: "youtube", titleKey: "youtube:video:FyS5dAywkEo" }];
+    const client = clientFixture(async message => message.command === "browse" ? { ok: true, data: page } : { ok: true });
+    await mount(client);
+    expect(container.querySelector('.popup-watch-artwork img')?.getAttribute('src'))
+      .toBe('https://i.ytimg.com/vi/FyS5dAywkEo/hqdefault.jpg');
+  });
+
+  it.each(["expired", "other-owner", "other-generation"])("does not use a %s cached lease to reveal history", async kind => {
+    const now = Date.now();
+    const lease = paidHistoryLease(kind === "other-owner" ? PERSON : OWNER,
+      kind === "expired" ? now - 600_000 : now, kind === "other-generation" ? 2 : 1);
+    let finish!: (value: WatchHistoryMessageResponse) => void;
+    const fallback = clientFixture();
+    const request = vi.fn((message: Parameters<PopupWatchHistoryClient["request"]>[0]) => {
+      if (message.command === "bootstrap-cache") return Promise.resolve({ ok: true as const, data: {
+        ownerUserId: OWNER, accountGeneration: 1, preferences: { youtubeHistoryEnabled: true },
+        capturePaused: false, source: "cache", accessLease: lease,
+      } });
+      if (message.command === "bootstrap") return new Promise<WatchHistoryMessageResponse>(resolve => { finish = resolve; });
+      return fallback.request(message);
+    });
+    await mount({ ...fallback, request });
+    expect(container.textContent).not.toContain("Frieren");
+    expect(request.mock.calls.some(([message]) => message.command === "browse")).toBe(false);
+    await act(async () => finish({ ok: false, status: "plan-required" }));
+    expect(container.textContent).toContain("your own Plus or Pro");
+  });
+
+  it("uses a cached lease only until its original expiry while network revalidation is pending", async () => {
+    vi.useFakeTimers();
+    try {
+      const now = Date.now();
+      const lease = paidHistoryLease(OWNER, now);
+      lease.access.validUntil = new Date(now + 1_000).toISOString();
+      lease.expiresAt = now + 1_000;
+      const fallback = clientFixture();
+      await mount({ ...fallback, request: async message => {
+        if (message.command === "bootstrap-cache") return { ok: true, data: {
+          ownerUserId: OWNER, accountGeneration: 1, preferences: { youtubeHistoryEnabled: true },
+          capturePaused: false, source: "cache", accessLease: lease,
+        } };
+        if (message.command === "bootstrap") return new Promise<WatchHistoryMessageResponse>(() => {});
+        return fallback.request(message);
+      } });
+      expect(container.textContent).toContain("Frieren");
+      await act(async () => { await vi.advanceTimersByTimeAsync(1_001); });
+      expect(container.textContent).not.toContain("Frieren");
+      expect(container.textContent).toContain("temporarily unavailable");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("opens promptly with the real background client and honors its lease invalidation after a network failure", async () => {
+    let finish!: (response: Response) => void;
+    const { client, storage } = generationClient(
+      async () => Response.json(browse()),
+      async () => new Promise<Response>(resolve => { finish = resolve; }),
+    );
+    await mount(client);
+    await settles(() => expect(container.textContent).toContain("Frieren"));
+    expect(container.textContent).not.toContain("Checking history access");
+    await act(async () => finish(new Response("Unavailable", { status: 503 })));
+    expect((await storage.readRoot()).partitions[watchHistoryPartitionKey(OWNER, 1)]?.accessLease).toBeNull();
+    expect(container.textContent).not.toContain("Frieren");
+    expect(container.textContent).toContain("temporarily unavailable");
+  });
+
+  it("ignores a late successful bootstrap after a confirmed access loss", async () => {
+    let finish!: (value: WatchHistoryMessageResponse) => void;
+    let publish!: Parameters<NonNullable<PopupWatchHistoryClient["subscribe"]>>[1];
+    const fallback = clientFixture();
+    const data = { ownerUserId: OWNER, accountGeneration: 1, preferences: { youtubeHistoryEnabled: true },
+      capturePaused: false, source: "cache", accessLease: paidHistoryLease(OWNER) };
+    await mount({ ...fallback,
+      subscribe: (_owner, listener) => { publish = listener; return () => {}; },
+      request: async message => {
+        if (message.command === "bootstrap-cache") return { ok: true, data };
+        if (message.command === "bootstrap") return new Promise(resolve => { finish = resolve; });
+        return fallback.request(message);
+      },
+    });
+    expect(container.textContent).toContain("Frieren");
+    await act(async () => publish(null, { ok: false, status: "plan-required" }));
+    await act(async () => finish({ ok: true, data: { ...data, source: "network" } }));
+    expect(container.textContent).not.toContain("Frieren");
+    expect(container.textContent).toContain("your own Plus or Pro");
+  });
+
   it.each(["plan-required", "access-unavailable", "upgrade-required"])("never reveals cached paid titles while access resolves to %s", async (status) => {
     let finish!: (value: WatchHistoryMessageResponse) => void;
     const fallback = clientFixture();
@@ -359,7 +511,7 @@ describe("production watch browsing", () => {
       loadCached: async () => ({ history: browse("Private cached title").history, accountGeneration: 1, preferences: { youtubeHistoryEnabled: false }, pendingEvents: [], localObservation: null, capturePaused: false }),
       request: vi.fn((message: Parameters<PopupWatchHistoryClient["request"]>[0]) => message.command === "bootstrap" ? new Promise<WatchHistoryMessageResponse>(resolve => { finish = resolve; }) : fallback.request(message)) };
     await mount(client);
-    expect(container.textContent).toContain("Checking history access");
+    expect(container.querySelector('[aria-label="Watch History"]')?.getAttribute('aria-busy')).toBe('true');
     expect(container.textContent).not.toContain("Private cached title");
     if (status === "plan-required") {
       const lease = paidHistoryLease(OWNER); lease.access.state = "plan_required";
@@ -555,6 +707,8 @@ describe("production watch browsing", () => {
 			},
 		};
 		await mount(client);
+		await settles(() => expect(container.querySelector(".popup-watch-title-toggle")).not.toBeNull());
+		await act(async () => required(container.querySelector<HTMLButtonElement>('.popup-watch-title-toggle[aria-expanded="false"]')).click());
 		await settles(() =>
 			expect(container.textContent).toContain("Matching episode"),
 		);
@@ -825,6 +979,7 @@ describe("production watch browsing", () => {
 		const { client } = generationClient(fetch);
 		await mount(client);
 		await settles(() => expect(container.textContent).toContain("My title"));
+		await act(async () => required(container.querySelector<HTMLButtonElement>('.popup-watch-title-toggle[aria-expanded="false"]')).click());
 		await settles(() =>
 			expect(container.textContent).toContain("Matching episode"),
 		);
@@ -1034,6 +1189,7 @@ describe("production watch browsing", () => {
 		});
 		await mount(client);
 		await settles(() => expect(container.textContent).toContain("Frieren"));
+		await act(async () => required(container.querySelector<HTMLButtonElement>('.popup-watch-title-toggle[aria-expanded="false"]')).click());
 		await settles(() => expect(finishDetail).toBeDefined());
 		cleared = true;
 		await click("Filters");
@@ -1583,6 +1739,36 @@ function gridClient() {
 }
 
 describe("watch episode grid", () => {
+  it.each(["open", "provider-closed", "title-closed"])("keeps the remembered unwatched season after reopening with %s", async state => {
+    const fallback = gridClient();
+    let hold = false;
+    let finish!: (value: WatchHistoryMessageResponse) => void;
+    const requested: string[] = [];
+    const client = clientFixture(async message => {
+      if (message.command === "browse-catalog") {
+        const season = (message.input as { seasonKey?: string }).seasonKey ?? "season:one";
+        requested.push(season);
+        if (hold) return new Promise(resolve => { finish = resolve; });
+      }
+      return fallback.request(message);
+    });
+    await mount(client);
+    await click("Season for Frieren: Season 1"); await click("Season 2");
+    if (state === "provider-closed") await click("Toggle Crunchyroll history");
+    if (state === "title-closed") await act(async () => required(container.querySelector<HTMLButtonElement>(".popup-watch-title-toggle")).click());
+    await act(async () => root.unmount()); container.remove();
+    hold = true; requested.length = 0;
+    await mount(client, false);
+    if (state !== "open") expect(requested).toEqual([]);
+    if (state === "provider-closed") await click("Toggle Crunchyroll history");
+    if (state === "title-closed") await act(async () => required(container.querySelector<HTMLButtonElement>(".popup-watch-title-toggle")).click());
+    expect(requested).toEqual(["season:two"]);
+    expect(container.textContent).not.toContain("Season 1");
+    await act(async () => finish({ ok: true, data: gridResponse("season:two") }));
+    expect(button("Season for Frieren: Season 2")).toBeDefined();
+    expect(requested).toEqual(["season:two"]);
+  });
+
 	it.each(["saved", "canonical", "pending", "canonical-over-older-pending"] as const)("keeps %s raw URL and time as one Resume observation", async (kind) => {
 		const fallback = gridClient();
 		const newer = { ...episode, sourceUrl: "https://www.crunchyroll.com/watch/NEWRAW", currentTime: 731, lastWatchedAt: "2026-09-05T09:00:00.000Z" };

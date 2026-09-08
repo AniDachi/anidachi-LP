@@ -47,6 +47,7 @@ export function usePopupWatchBrowse<T>({
 	refresh,
 	forceRefresh = refresh,
 	initialPage,
+	initialPageCount = 1,
 	enabled = true,
 	generation,
 	discard = false,
@@ -63,6 +64,7 @@ export function usePopupWatchBrowse<T>({
 	refresh: number;
 	forceRefresh?: number;
 	initialPage?: T;
+	initialPageCount?: number;
 	enabled?: boolean;
 	generation?: number;
 	discard?: boolean;
@@ -120,13 +122,14 @@ export function usePopupWatchBrowse<T>({
 	const latest = useRef({ key, client, generation });
 	latest.current = { key, client, generation };
 	const sequence = useRef(0);
-	const pageCount = useRef(Math.max(1, restoredPages.length));
+	const initialDepth = Math.max(1, Math.min(20, initialPageCount));
+	const pageCount = useRef(Math.max(initialDepth, restoredPages.length));
 	const queryDepths = useRef(new Map<string, number>());
 	const activeKey = useRef(key);
 	if (activeKey.current !== key) {
 		activeKey.current = key;
 		pageCount.current =
-			queryDepths.current.get(key) ?? Math.max(1, restoredPages.length);
+			queryDepths.current.get(key) ?? Math.max(initialDepth, restoredPages.length);
 	}
 	const [retry, setRetry] = useState(0);
 	const previousRefresh = useRef({ forceRefresh, retry });
