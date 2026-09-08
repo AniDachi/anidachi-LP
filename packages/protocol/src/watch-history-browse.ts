@@ -12,7 +12,7 @@ const Timestamp = z.iso.datetime({ offset: true });
 const Provider = z.enum(["crunchyroll", "youtube"]);
 const Key = z.string().trim().min(1).max(220);
 const filters = {
-	mode: z.enum(["solo", "shared"]),
+	mode: z.enum(["personal", "solo", "shared"]),
 	search: z.string().trim().min(1).max(200).optional(),
 	groupId: z.uuid().optional(),
 	participantUserId: z.uuid().optional(),
@@ -31,10 +31,10 @@ function validateFilters(
 	},
 	ctx: z.RefinementCtx,
 ) {
-	if (value.mode === "solo" && (value.groupId || value.participantUserId))
+	if (value.mode !== "shared" && (value.groupId || value.participantUserId))
 		ctx.addIssue({
 			code: "custom",
-			message: "Solo history cannot have social filters",
+			message: "Personal and solo history cannot have social filters",
 			path: ["mode"],
 		});
 	if (
@@ -215,3 +215,9 @@ export type WatchHistoryBrowseSessionsResponse = z.infer<
 export type WatchHistoryBrowseOptionsResponse = z.infer<
 	typeof WatchHistoryBrowseOptionsResponseSchema
 >;
+
+/** Personal reads merge historical solo/shared provenance; SQL must apply the
+ * same owner filter to both. This mapping does not migrate or rewrite records. */
+export function getWatchHistoryBrowseSourceModes(mode: WatchHistoryBrowseQuery["mode"]): readonly ("solo" | "shared")[] {
+  return mode === "personal" ? ["solo", "shared"] : [mode];
+}

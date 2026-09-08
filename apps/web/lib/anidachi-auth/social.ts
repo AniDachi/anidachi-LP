@@ -1142,7 +1142,7 @@ export async function listRecentPeople(viewerUserId: string): Promise<RecentPers
       listFriendshipsForViewer(viewerUserId),
     ]);
   if (evidenceError) {
-    throw new Error(`Failed to load recent watch evidence: ${evidenceError.message}`);
+    throw new Error(`Failed to load recent people evidence: ${evidenceError.message}`);
   }
 
   const hidden = new Set(hiddenRows.map((row) => row.hidden_user_id));

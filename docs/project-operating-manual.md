@@ -1,6 +1,6 @@
 # Anidachi Project Operating Manual
 
-Last updated: 2026-06-04.
+Last updated: 2026-09-08.
 
 This is the practical map of how the current Anidachi project is organized and
 how development should move through local work, staging, tester extension builds,
@@ -329,9 +329,12 @@ Flow:
 5. Browser WebRTC chooses a direct/STUN path when possible.
 6. Cloudflare TURN is used as fallback when direct paths fail.
 
-P2P is intended for small rooms, currently around 2-4 people. Do not raise the
-camera/audio room size without revisiting bandwidth, mesh topology, reconnection,
-and TURN cost.
+The deployed legacy P2P baseline targets small rooms around 2–4 people. The
+accepted September 8 MVP adds versioned 4/6/15 participant rooms with independent
+four-camera and 4/6/8-microphone caps. Its local actual-controller experiments
+are recorded in the verification matrix; distributed/TURN/device acceptance and
+coordinated staging rollout remain open. Do not infer release readiness from
+those short local samples or raise limits beyond the accepted contract.
 
 Legacy LiveKit runtime code has been removed. Do not reintroduce LiveKit or any
 SFU/media-server path unless a deliberate product/infra decision changes the
@@ -649,19 +652,31 @@ The code still wins over documentation if behavior has drifted. When that
 happens, fix the documentation in the same PR as the code change or in an
 immediate follow-up PR.
 
-## How Future Watch Progress Should Fit
+## How Watch Progress Fits The MVP Target
 
-Watch progress should be durable product data and therefore belongs in the web
-app/Supabase side of the system, not in the Worker live room state.
+Watch progress is durable personal product data owned by Web/Supabase. The
+[September 8 specification](superpowers/specs/2026-09-08-personal-history-and-plans-mvp-design.md)
+and [implementation plan](superpowers/plans/2026-09-08-personal-history-and-plans-mvp.md)
+are the current target; shared friend/group progress proposals are deferred.
 
-Expected future shape:
+The extension observes its user's eligible playback and reports bounded
+checkpoints through its background writer. Solo and room playback feed one
+personal history, available only on the user's own Plus/Pro plan. A paid host
+does not give Free guests history access. A paid guest's personal write does
+not depend on host history. Room synchronization must continue independently
+of personal-history access or failures.
 
-- extension detects provider/show/episode/movie identity;
-- extension reports meaningful progress checkpoints, not every second;
-- web API writes user/group progress to Supabase;
-- room UI can show personal, friend, and group progress;
-- Worker may broadcast live progress during an active room, but the durable
-  record belongs to Supabase.
+Groups remain private recipient lists for existing invitations. Recent People
+uses independent evidence of actual room presence, without storing title or
+progress for Free. Worker owns live room synchronization and publication
+limits; it does not fan out host checkpoints into guest histories.
 
-The product idea of multiple friend/group progress layers on one episode card is
-documented separately in `docs/shared-watch-progress-tracker.md`.
+Tasks 1–9 now implement these contracts in the isolated personal-history branch;
+they are locally scoped-reviewed, not deployed acceptance. Follow the
+[Task 10 delivery packet](releases/personal-history-mvp/README.md): review first,
+additive DB prerequisites, compatible inactive Web/Worker, matching verified
+client, then separately gated activation. New personal writes are already paid
+while inactive. After activation never disable policy or restore the old Free
+writer; preserve data/epochs and use verified compat recovery or a forward fix.
+Loaded provider/MV3, Stripe TEST, physical media and network acceptance remain
+explicit in the verification matrix. Main/production is a separate decision.

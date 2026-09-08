@@ -6,34 +6,37 @@ import {
   WatchHistoryDeletionAckSchema,
   WatchHistoryPreferencesResponseSchema,
   WatchHistoryResponseSchema,
-  WatchHistoryRoomRecreationResponseSchema,
+  WatchHistoryAccessSchema,
+  buildPersonalHistoryResumeUrl,
   WatchHistoryTitleEpisodesResponseSchema,
   type WatchHistoryDeleteScope,
   type WatchHistoryEpisode,
   type WatchHistoryItem,
   type WatchHistoryPreferencesResponse,
   type WatchHistoryResponse,
-  type WatchHistorySession,
   type WatchHistoryTitleEpisodesResponse,
 } from "@anidachi/protocol";
-import { Clock3, Film, Play, RefreshCw, Trash2, Users } from "lucide-react";
+import { Clock3, Film, Play, RefreshCw, Trash2 } from "lucide-react";
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { api } from "@/lib/client-api";
+import { api, ApiError } from "@/lib/client-api";
 
 type Notice = { tone: "success" | "error"; text: string };
 
 export function WatchLibraryClient({
   initialHistory,
   initialPreferences,
+  initialAccess = "allowed",
 }: {
   initialHistory: WatchHistoryResponse;
   initialPreferences: WatchHistoryPreferencesResponse;
+  initialAccess?: "allowed" | "plan_required";
 }) {
-  const ownerGenerationKey = `${initialHistory.meta.ownerUserId}:${initialHistory.meta.accountGeneration}`;
+  const ownerGenerationKey = `${initialHistory.meta.ownerUserId}:${initialHistory.meta.accountGeneration}:${initialAccess}`;
   return (
     <WatchLibraryOwnerClient
       initialHistory={initialHistory}
       initialPreferences={initialPreferences}
+      initialAccess={initialAccess}
       key={ownerGenerationKey}
     />
   );
@@ -42,10 +45,13 @@ export function WatchLibraryClient({
 function WatchLibraryOwnerClient({
   initialHistory,
   initialPreferences,
+  initialAccess = "allowed",
 }: {
   initialHistory: WatchHistoryResponse;
   initialPreferences: WatchHistoryPreferencesResponse;
+  initialAccess?: "allowed" | "plan_required";
 }) {
+  const [accessState, setAccessState] = useState<string>(initialAccess);
   const [history, setHistory] = useState(initialHistory);
   const [preferences, setPreferences] = useState(initialPreferences);
   const [loading, setLoading] = useState(false);
@@ -69,13 +75,33 @@ function WatchLibraryOwnerClient({
     () => history.items.reduce((total, item) => total + observedEpisodeCountForItem(item), 0),
     [history.items],
   );
-  const sharedSessionCount = useMemo(
-    () => history.items.reduce(
-      (total, item) => total + item.sessions.filter((session) => session.kind === "shared").length,
-      0,
-    ),
-    [history.items],
-  );
+  const readAccess = useCallback(async () => {
+    try {
+      const access = WatchHistoryAccessSchema.parse(await api<unknown>("/api/watch-history/v3/access", { headers: { [WATCH_HISTORY_OWNER_HEADER]: ownerUserId } }));
+      if (access.ownerUserId !== ownerUserId) throw new ApiError("History access changed during the request", "HISTORY_ACCESS_CHANGED", 409);
+      return access;
+    } catch (error) {
+      if (historyAuthorityState(error)) throw error;
+      throw new ApiError("History access is temporarily unavailable", "HISTORY_ACCESS_UNAVAILABLE", 503);
+    }
+  }, [ownerUserId]);
+  const hideInaccessible = useCallback((error: unknown) => {
+    const state = historyAuthorityState(error);
+    if (!state) return false;
+    operationRevision.current += 1;
+    mutationInFlight.current = false;
+    setLoading(false);
+    setLoadingMore(false);
+    setBusyAction(null);
+    setAccessState(state);
+    setHistory(value => ({ ...value, items: [], totalTitleCount: 0, nextCursor: null }));
+    return true;
+  }, []);
+  const captureDetailAccessFailure = useCallback(() => {
+    const revision = operationRevision.current;
+    return (error: unknown) => mounted.current && operationRevision.current === revision &&
+      !mutationInFlight.current && hideInaccessible(error);
+  }, [hideInaccessible]);
 
   const refresh = useCallback(async () => {
     if (mutationInFlight.current) return;
@@ -85,6 +111,13 @@ function WatchLibraryOwnerClient({
     setLoading(true);
     setNotice(null);
     try {
+      const access = await readAccess();
+      if (!current()) return;
+      setAccessState(access.state);
+      if (access.state !== "allowed") {
+        setHistory(value => ({ ...value, meta: { ...value.meta, accountGeneration: access.accountGeneration }, items: [], totalTitleCount: 0, nextCursor: null }));
+        return;
+      }
       const [historyValue, preferencesValue] = await Promise.all([
         api<unknown>("/api/watch-history/v3?limit=24"),
         api<unknown>("/api/watch-history/v3/preferences"),
@@ -94,17 +127,21 @@ function WatchLibraryOwnerClient({
       if (nextHistory.meta.accountGeneration !== nextPreferences.meta.accountGeneration) {
         throw new Error("Watch history generation changed");
       }
+      const finalAccess = await readAccess();
+      if (finalAccess.state !== "allowed") throw new ApiError("Personal history requires your own Plus or Pro plan", "HISTORY_PLAN_REQUIRED", 403);
+      if (finalAccess.accountGeneration !== access.accountGeneration || finalAccess.accessEpoch !== access.accessEpoch || nextHistory.meta.accountGeneration !== finalAccess.accountGeneration) throw new ApiError("History access changed during the request", "HISTORY_ACCESS_CHANGED", 409);
       if (!current()) return;
       setHistory(nextHistory);
       setPreferences(nextPreferences);
     } catch (error) {
       if (current()) {
+        hideInaccessible(error);
         setNotice({ tone: "error", text: errorMessage(error, "Could not refresh watch history") });
       }
     } finally {
       if (current()) setLoading(false);
     }
-  }, [ownerUserId]);
+  }, [ownerUserId, readAccess]);
 
   useEffect(() => bindWatchHistoryPageRefresh({ refresh }), [refresh]);
 
@@ -133,6 +170,7 @@ function WatchLibraryOwnerClient({
       );
     } catch (error) {
       if (current()) {
+        hideInaccessible(error);
         setNotice({ tone: "error", text: errorMessage(error, "Could not load more history") });
       }
     } finally {
@@ -142,6 +180,8 @@ function WatchLibraryOwnerClient({
 
   const updateYoutubePreference = useCallback(async () => {
     if (busyAction) return;
+    const current = () => mounted.current;
+    const revision = operationRevision.current;
     setBusyAction("preferences");
     setNotice(null);
     try {
@@ -153,11 +193,14 @@ function WatchLibraryOwnerClient({
         }),
         ownerUserId,
       );
-      setPreferences(next);
+      if (current()) setPreferences(next);
     } catch (error) {
-      setNotice({ tone: "error", text: errorMessage(error, "Could not update history settings") });
+      if (current()) {
+        if (operationRevision.current === revision) hideInaccessible(error);
+        setNotice({ tone: "error", text: errorMessage(error, "Could not update history settings") });
+      }
     } finally {
-      setBusyAction(null);
+      if (current()) setBusyAction(null);
     }
   }, [busyAction, ownerUserId, preferences.preferences.youtubeHistoryEnabled]);
 
@@ -205,6 +248,7 @@ function WatchLibraryOwnerClient({
       );
       setNotice({ tone: "success", text: "Watch history updated." });
 
+      if (accessState !== "allowed") return;
       const canonical = parseOwnedHistory(
         await api<unknown>("/api/watch-history/v3?limit=24"),
         ownerUserId,
@@ -215,6 +259,7 @@ function WatchLibraryOwnerClient({
       if (current()) setHistory(canonical);
     } catch (error) {
       if (current()) {
+        hideInaccessible(error);
         setNotice({ tone: "error", text: errorMessage(error, "Could not delete watch history") });
       }
     } finally {
@@ -223,40 +268,40 @@ function WatchLibraryOwnerClient({
         setBusyAction(null);
       }
     }
-  }, [busyAction, history.meta.accountGeneration, ownerUserId]);
+  }, [busyAction, history.meta.accountGeneration, ownerUserId, accessState]);
 
-  const createRoom = useCallback(async (session: WatchHistorySession, sourceUrl: string) => {
-    const action = `room:${session.id}`;
-    setBusyAction(action);
+  const resume = useCallback(async (provider: WatchHistoryItem["provider"], sourceUrl: string, currentTime: number) => {
+    if (busyAction || mutationInFlight.current || accessState !== "allowed") return;
+    if (provider !== "crunchyroll" && provider !== "youtube") return;
+    const revision = operationRevision.current;
+    const generation = history.meta.accountGeneration;
+    const current = () => mounted.current && operationRevision.current === revision && !mutationInFlight.current;
+    setBusyAction("resume");
     setNotice(null);
     try {
-      const room = WatchHistoryRoomRecreationResponseSchema.parse(
-        await api<unknown>("/api/watch-history/v3/rooms", {
-          method: "POST",
-          body: JSON.stringify({ sessionId: session.id, clientRequestId: crypto.randomUUID() }),
-        }),
-      );
-      window.location.assign(buildLaunchUrl(sourceUrl, room.roomId));
+      const access = await readAccess();
+      if (!current()) return;
+      if (access.state !== "allowed") throw new ApiError("Personal history requires your own Plus or Pro plan", "HISTORY_PLAN_REQUIRED", 403);
+      if (access.accountGeneration !== generation) throw new ApiError("History access changed during the request", "HISTORY_ACCESS_CHANGED", 409);
+      const url = await buildPersonalHistoryResumeUrl({ ownerUserId, accountGeneration: generation, provider, sourceUrl, currentTime });
+      if (current()) window.location.assign(url);
     } catch (error) {
-      setNotice({ tone: "error", text: errorMessage(error, "Could not create room") });
-    } finally {
-      setBusyAction(null);
-    }
-  }, []);
+      if (current()) { hideInaccessible(error); setNotice({ tone: "error", text: errorMessage(error, "Could not resume playback") }); }
+    } finally { if (mounted.current) setBusyAction(value => value === "resume" ? null : value); }
+  }, [busyAction, accessState, history.meta.accountGeneration, ownerUserId, readAccess]);
 
   return (
     <div className="flex flex-col gap-6">
-      <section className="grid gap-4 md:grid-cols-3">
+      {accessState === "allowed" ? <section className="grid gap-4 md:grid-cols-2">
         <StatCard icon={<Film className="h-5 w-5" aria-hidden />} label="Tracked titles" value={history.totalTitleCount} />
         <StatCard icon={<Clock3 className="h-5 w-5" aria-hidden />} label="Observed episodes" value={observedEpisodeCount} />
-        <StatCard icon={<Users className="h-5 w-5" aria-hidden />} label="Shared sessions" value={sharedSessionCount} />
-      </section>
+      </section> : null}
 
       <section className="rounded-lg border border-brand-border bg-brand-surface p-5">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <h2 className="text-lg font-semibold text-foreground">Watch History</h2>
-            <p className="mt-1 text-sm text-foreground/50">Canonical progress from supported playback in the AniDachi extension.</p>
+            <p className="mt-1 text-sm text-foreground/50">Your own playback progress from Crunchyroll and YouTube, whether you watch alone or in a room.</p>
           </div>
           <div className="flex flex-wrap gap-3">
             <button aria-pressed={preferences.preferences.youtubeHistoryEnabled} className="inline-flex min-h-11 items-center rounded-lg border border-brand-border px-4 text-sm font-semibold text-foreground disabled:opacity-50" disabled={Boolean(busyAction)} onClick={() => void updateYoutubePreference()} type="button">
@@ -265,7 +310,7 @@ function WatchLibraryOwnerClient({
             <button className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-brand-border px-4 text-sm font-semibold text-foreground disabled:opacity-50" disabled={loading || Boolean(busyAction)} onClick={() => void refresh()} type="button">
               <RefreshCw className="h-4 w-4" aria-hidden /> Refresh
             </button>
-            <button className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-red-400/25 bg-red-500/10 px-4 text-sm font-semibold text-red-100 disabled:opacity-50" disabled={Boolean(busyAction) || history.items.length === 0} onClick={() => void deleteHistory({ scope: "all" })} type="button">
+            <button className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-red-400/25 bg-red-500/10 px-4 text-sm font-semibold text-red-100 disabled:opacity-50" disabled={Boolean(busyAction)} onClick={() => void deleteHistory({ scope: "all" })} type="button">
               <Trash2 className="h-4 w-4" aria-hidden /> {busyAction === "delete:all" ? "Clearing..." : "Clear history"}
             </button>
           </div>
@@ -274,12 +319,12 @@ function WatchLibraryOwnerClient({
 
       {notice ? <div className={`rounded-lg border px-4 py-3 text-sm ${notice.tone === "error" ? "border-red-400/25 bg-red-500/10 text-red-100" : "border-brand-orange/25 bg-brand-orange/10 text-brand-orange"}`}>{notice.text}</div> : null}
 
-      {history.items.length ? (
+      {accessState !== "allowed" ? <section className="rounded-lg border border-brand-border bg-brand-surface p-6 text-sm" role="status">{accessState === "plan_required" ? <>Personal history requires your own Plus or Pro plan. Your saved history is preserved. <a href="/pricing">View plans</a></> : accessState === "upgrade-required" ? "Update AniDachi to use personal history." : "History access is temporarily unavailable. Please retry."}</section> : history.items.length ? (
         <div className="grid gap-4">
-          {history.items.map((item) => <WatchItemCard accountGeneration={history.meta.accountGeneration} busyAction={busyAction} item={item} key={`${history.meta.ownerUserId}:${history.meta.accountGeneration}:${item.provider}:${item.titleKey}`} onCreateRoom={createRoom} onDelete={deleteHistory} ownerUserId={history.meta.ownerUserId} />)}
+          {history.items.map((item) => <WatchItemCard accountGeneration={history.meta.accountGeneration} busyAction={busyAction} item={item} key={`${history.meta.ownerUserId}:${history.meta.accountGeneration}:${item.provider}:${item.titleKey}`} captureAccessFailure={captureDetailAccessFailure} onResume={resume} onDelete={deleteHistory} ownerUserId={history.meta.ownerUserId} />)}
         </div>
       ) : (
-        <section className="rounded-lg border border-brand-border bg-brand-surface p-6 text-sm text-foreground/50">Progress will appear after meaningful playback while signed in to the extension.</section>
+        <section className="rounded-lg border border-brand-border bg-brand-surface p-6 text-sm text-foreground/50">{loading ? "Loading personal history..." : "Progress will appear after meaningful playback while signed in to the extension."}</section>
       )}
 
       {history.nextCursor ? <button className="mx-auto inline-flex min-h-11 items-center rounded-lg border border-brand-border px-5 text-sm font-semibold text-foreground disabled:opacity-50" disabled={loadingMore} onClick={() => void loadMore()} type="button">{loadingMore ? "Loading..." : "Load more"}</button> : null}
@@ -327,7 +372,7 @@ export function bindWatchHistoryPageRefresh(options: {
   };
 }
 
-function WatchItemCard({ accountGeneration, busyAction, item, onCreateRoom, onDelete, ownerUserId }: { accountGeneration: number; busyAction: string | null; item: WatchHistoryItem; onCreateRoom: (session: WatchHistorySession, sourceUrl: string) => void; onDelete: (target: WatchHistoryDeleteScope) => void; ownerUserId: string }) {
+function WatchItemCard({ accountGeneration, busyAction, item, onResume, onDelete, ownerUserId, captureAccessFailure }: { captureAccessFailure: () => (error: unknown) => boolean; accountGeneration: number; busyAction: string | null; item: WatchHistoryItem; onResume: (provider: WatchHistoryItem["provider"], sourceUrl: string, currentTime: number) => void; onDelete: (target: WatchHistoryDeleteScope) => void; ownerUserId: string }) {
   const [expanded, setExpanded] = useState(false);
   const [visibleItem, setVisibleItem] = useState(item);
   const [loadingEpisodes, setLoadingEpisodes] = useState(false);
@@ -341,11 +386,13 @@ function WatchItemCard({ accountGeneration, busyAction, item, onCreateRoom, onDe
     setVisibleItem(item);
     setEpisodeLoadError(false);
     setLoadingEpisodes(false);
+    return () => { canonicalRevision.current += 1; detailRequestRevision.current += 1; };
   }, [accountGeneration, item, ownerUserId]);
 
   const loadMoreEpisodes = useCallback(async () => {
     const cursor = visibleItem.episodePage.nextCursor;
     if (!cursor || loadingEpisodes) return;
+    const reportAccessFailure = captureAccessFailure();
     const expectedCanonicalRevision = canonicalRevision.current;
     const requestRevision = ++detailRequestRevision.current;
     const requestIsCurrent = () =>
@@ -364,12 +411,12 @@ function WatchItemCard({ accountGeneration, busyAction, item, onCreateRoom, onDe
       if (requestIsCurrent()) {
         setVisibleItem((current) => mergeWatchHistoryTitleEpisodePage(current, page));
       }
-    } catch {
-      if (requestIsCurrent()) setEpisodeLoadError(true);
+    } catch (error) {
+      if (requestIsCurrent() && !reportAccessFailure(error)) setEpisodeLoadError(true);
     } finally {
       if (requestIsCurrent()) setLoadingEpisodes(false);
     }
-  }, [accountGeneration, loadingEpisodes, ownerUserId, visibleItem]);
+  }, [accountGeneration, loadingEpisodes, ownerUserId, visibleItem, captureAccessFailure]);
 
   return (
     <section className="overflow-hidden rounded-2xl border border-brand-border/80 bg-brand-surface">
@@ -397,10 +444,10 @@ function WatchItemCard({ accountGeneration, busyAction, item, onCreateRoom, onDe
               <p className="mt-0.5 text-xs text-foreground/45">{season.episodes.length} visible {season.episodes.length === 1 ? "episode" : "episodes"}</p>
             </div>
             <div className="divide-y divide-brand-border/50">
-              {season.episodes.map((episode) => <EpisodeRow busyAction={busyAction} episode={episode} item={visibleItem} key={episode.episodeKey} onCreateRoom={onCreateRoom} onDelete={onDelete} />)}
+              {season.episodes.map((episode) => <EpisodeRow busyAction={busyAction} episode={episode} item={visibleItem} key={episode.episodeKey} onResume={onResume} onDelete={onDelete} />)}
             </div>
           </section>
-        )) : <LatestActivityRow busyAction={busyAction} item={visibleItem} onCreateRoom={onCreateRoom} />}
+        )) : <LatestActivityRow busyAction={busyAction} item={visibleItem} onResume={onResume} />}
         {visibleItem.episodePage.nextCursor ? (
           <div className="border-t border-brand-border/50 p-4">
             <button className="inline-flex min-h-11 items-center rounded-lg border border-brand-border px-4 text-sm font-semibold text-foreground disabled:opacity-50" disabled={loadingEpisodes} onClick={() => void loadMoreEpisodes()} type="button">
@@ -414,8 +461,7 @@ function WatchItemCard({ accountGeneration, busyAction, item, onCreateRoom, onDe
   );
 }
 
-function EpisodeRow({ busyAction, episode, item, onCreateRoom, onDelete }: { busyAction: string | null; episode: WatchHistoryEpisode; item: WatchHistoryItem; onCreateRoom: (session: WatchHistorySession, sourceUrl: string) => void; onDelete: (target: WatchHistoryDeleteScope) => void }) {
-  const latestSession = episode.sessions[0] ?? null;
+function EpisodeRow({ busyAction, episode, item, onResume, onDelete }: { busyAction: string | null; episode: WatchHistoryEpisode; item: WatchHistoryItem; onResume: (provider: WatchHistoryItem["provider"], sourceUrl: string, currentTime: number) => void; onDelete: (target: WatchHistoryDeleteScope) => void }) {
   const target = { scope: "episode", provider: item.provider, titleKey: item.titleKey, episodeKey: episode.episodeKey } as const;
   return (
     <div className="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
@@ -423,29 +469,22 @@ function EpisodeRow({ busyAction, episode, item, onCreateRoom, onDelete }: { bus
         <p className="truncate text-sm font-semibold text-foreground">{episode.episodeTitle}</p>
         <ProgressBar progress={episode.progress} />
         <p className="mt-2 text-xs text-foreground/50">{formatClock(episode.currentTime)} / {formatClock(episode.duration)} · {formatDate(episode.lastWatchedAt)}</p>
-        <SessionPills sessions={episode.sessions} />
       </div>
       <div className="flex gap-2">
-        <button className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-brand-orange px-4 text-sm font-semibold text-foreground disabled:opacity-50" disabled={!latestSession || busyAction === `room:${latestSession.id}`} onClick={() => latestSession && onCreateRoom(latestSession, episode.sourceUrl)} type="button"><Play className="h-4 w-4" aria-hidden /> Create room</button>
+        <button className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-brand-orange px-4 text-sm font-semibold text-foreground disabled:opacity-50" disabled={Boolean(busyAction)} onClick={() => onResume(item.provider, episode.sourceUrl, episode.currentTime)} type="button"><Play className="h-4 w-4" aria-hidden /> Resume</button>
         <button aria-label={`Delete ${episode.episodeTitle}`} className="rounded-lg border border-red-400/25 px-3 text-red-100 disabled:opacity-50" disabled={Boolean(busyAction)} onClick={() => onDelete(target)} type="button"><Trash2 className="h-4 w-4" aria-hidden /></button>
       </div>
     </div>
   );
 }
 
-function LatestActivityRow({ busyAction, item, onCreateRoom }: { busyAction: string | null; item: WatchHistoryItem; onCreateRoom: (session: WatchHistorySession, sourceUrl: string) => void }) {
-  const latestSession = item.sessions[0] ?? null;
+function LatestActivityRow({ busyAction, item, onResume }: { busyAction: string | null; item: WatchHistoryItem; onResume: (provider: WatchHistoryItem["provider"], sourceUrl: string, currentTime: number) => void }) {
   return (
     <div className="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
-      <div><p className="text-sm font-semibold text-foreground">Latest activity</p><ProgressBar progress={item.latestActivity.progress} /><p className="mt-2 text-xs text-foreground/50">{formatClock(item.latestActivity.currentTime)} / {formatClock(item.latestActivity.duration)} · {formatDate(item.latestActivity.lastWatchedAt)}</p><SessionPills sessions={item.sessions} /></div>
-      <button className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-brand-orange px-4 text-sm font-semibold text-foreground disabled:opacity-50" disabled={!latestSession || busyAction === `room:${latestSession.id}`} onClick={() => latestSession && onCreateRoom(latestSession, item.sourceUrl)} type="button"><Play className="h-4 w-4" aria-hidden /> Create room</button>
+      <div><p className="text-sm font-semibold text-foreground">Latest activity</p><ProgressBar progress={item.latestActivity.progress} /><p className="mt-2 text-xs text-foreground/50">{formatClock(item.latestActivity.currentTime)} / {formatClock(item.latestActivity.duration)} · {formatDate(item.latestActivity.lastWatchedAt)}</p></div>
+      <button className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-brand-orange px-4 text-sm font-semibold text-foreground disabled:opacity-50" disabled={Boolean(busyAction)} onClick={() => onResume(item.provider, item.sourceUrl, item.latestActivity.currentTime)} type="button"><Play className="h-4 w-4" aria-hidden /> Resume</button>
     </div>
   );
-}
-
-function SessionPills({ sessions }: { sessions: WatchHistorySession[] }) {
-  if (!sessions.length) return null;
-  return <div className="mt-3 flex flex-wrap gap-2">{sessions.slice(0, 4).map((session) => <span className="inline-flex items-center gap-2 rounded-full border border-brand-border bg-brand-orange/5 px-3 py-1 text-xs text-foreground/70" key={session.id}><Users className="h-3.5 w-3.5 text-brand-orange" aria-hidden />{session.kind === "shared" ? `${session.participants.length} people` : "Solo"} · {formatDate(session.lastWatchedAt)}</span>)}</div>;
 }
 
 function ProgressBar({ progress }: { progress: number }) {
@@ -726,19 +765,17 @@ function formatProgressPercent(progress: number): string {
   return String(Number((clampProgress(progress) * 100).toFixed(2)));
 }
 
-function buildLaunchUrl(sourceUrl: string, roomId: string): string {
-  try {
-    const url = new URL(sourceUrl);
-    if (url.protocol !== "http:" && url.protocol !== "https:") throw new Error("Unsupported URL");
-    const params = new URLSearchParams(url.hash.replace(/^#/, ""));
-    params.set("anidachiRoom", roomId);
-    url.hash = params.toString();
-    return url.toString();
-  } catch {
-    return `/room/${encodeURIComponent(roomId)}`;
-  }
-}
-
 function errorMessage(error: unknown, fallback: string): string {
   return error instanceof Error && error.message ? error.message : fallback;
+}
+
+function historyAuthorityState(error: unknown): "plan_required" | "upgrade-required" | "unavailable" | null {
+  if (!(error instanceof ApiError)) return null;
+  switch (error.code) {
+    case "HISTORY_PLAN_REQUIRED": return "plan_required";
+    case "HISTORY_CLIENT_UPDATE_REQUIRED": return "upgrade-required";
+    case "HISTORY_ACCESS_CHANGED":
+    case "HISTORY_ACCESS_UNAVAILABLE": return "unavailable";
+    default: return null;
+  }
 }

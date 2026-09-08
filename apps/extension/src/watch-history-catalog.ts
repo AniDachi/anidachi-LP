@@ -1,3 +1,4 @@
+import { canCaptureWatchHistory, parseWatchHistoryLease, personalEnvelopeEligible } from "./watch-history-access";
 import {
   WatchCatalogBeginAckSchema, WatchCatalogBeginRequestSchema,
   WatchCatalogCommitAckSchema, WatchCatalogCommitRequestSchema,
@@ -16,9 +17,9 @@ export type WatchHistoryCatalogAcknowledgement = {
 
 type Dependencies = {
   request(path: string, body: unknown, signal: AbortSignal, owner: string): Promise<unknown>;
-  isCurrent(owner: string, generation: number): Promise<boolean>;
-  invalidate(owner: string, generation: number, downgrade?: Pick<WatchCatalogBeginAck, "titleKey" | "effectiveCatalogState">, guard?: () => boolean): Promise<void>;
-  save(owner: string, generation: number, titleKey: string, ack: WatchHistoryCatalogAcknowledgement, guard: () => boolean): Promise<void>;
+  isCurrent(owner: string, generation: number, accessEpoch?: number): Promise<boolean>;
+  invalidate(owner: string, generation: number, downgrade?: Pick<WatchCatalogBeginAck, "titleKey" | "effectiveCatalogState">, guard?: () => boolean, accessEpoch?: number): Promise<void>;
+  save(owner: string, generation: number, titleKey: string, ack: WatchHistoryCatalogAcknowledgement, guard: () => boolean, accessEpoch?: number): Promise<void>;
   supersede?(pageId: string): void;
 };
 
@@ -34,7 +35,7 @@ export function createWatchHistoryCatalogCoordinator(dependencies: Dependencies)
   const key = (owner: string, title: string) => `${owner}\u0000${title}`;
   const owns = (owner: string, job: Job) => !job.abort.signal.aborted && jobs.get(key(owner, job.input.titleKey)) === job;
   const current = async (owner: string, job: Job) => owns(owner, job) &&
-    await dependencies.isCurrent(owner, job.input.accountGeneration) && owns(owner, job);
+    await dependencies.isCurrent(owner, job.input.accountGeneration, job.input.historyAccess?.accessEpoch) && owns(owner, job);
 
   function cancel(owner: string, titleKey?: string): void {
     for (const [id, job] of jobs) {
@@ -63,7 +64,7 @@ export function createWatchHistoryCatalogCoordinator(dependencies: Dependencies)
     const input = structuredClone(parsed.data);
     const id = key(owner, input.titleKey);
     const old = jobs.get(id);
-    if (old && old.input.accountGeneration === input.accountGeneration && contextKey(old.input.context) === contextKey(input.context)) {
+    if (old && old.input.accountGeneration === input.accountGeneration && old.input.historyAccess?.accessEpoch === input.historyAccess?.accessEpoch && contextKey(old.input.context) === contextKey(input.context)) {
       if (old.pageId === pageId) return old.committed ? Promise.resolve(null) : old.promise;
       const samePageNewSource = old.pageId.split(":")[0] === pageId.split(":")[0];
       if (!samePageNewSource && (!old.settled || old.ack?.refreshRequired && !old.committed)) return old.promise.then(() => null);
@@ -79,10 +80,10 @@ export function createWatchHistoryCatalogCoordinator(dependencies: Dependencies)
         if (!parsedAck.success || !matches(owner, input, parsedAck.data) || !await current(owner, job)) return null;
         const ack = parsedAck.data;
         job.ack = ack;
-        if (ack.availabilityChanged) await dependencies.invalidate(owner, input.accountGeneration, ack, () => owns(owner, job));
+        if (ack.availabilityChanged) await dependencies.invalidate(owner, input.accountGeneration, ack, () => owns(owner, job), input.historyAccess?.accessEpoch);
         if (!await current(owner, job)) return null;
         if (!ack.refreshRequired) await dependencies.save(owner, input.accountGeneration, input.titleKey,
-          { revision: ack.revision, acceptedHash: ack.acceptedHash, acceptedAt: ack.acceptedAt, context: input.context }, () => owns(owner, job));
+          { revision: ack.revision, acceptedHash: ack.acceptedHash, acceptedAt: ack.acceptedAt, context: input.context }, () => owns(owner, job), input.historyAccess?.accessEpoch);
         return await current(owner, job) ? ack : null;
       } catch { return null; }
       finally { job.settled = true; }
@@ -96,6 +97,7 @@ export function createWatchHistoryCatalogCoordinator(dependencies: Dependencies)
     const input = parsed.data;
     const job = jobs.get(key(owner, input.titleKey));
     if (!job || job.committed || !job.ack?.refreshRequired || job.ack.revision !== input.revision ||
+      job.input.historyAccess?.accessEpoch !== input.historyAccess?.accessEpoch ||
       JSON.stringify(job.input.context) !== JSON.stringify(input.context) || !await current(owner, job)) return null;
     job.committed = true;
     try {
@@ -105,9 +107,9 @@ export function createWatchHistoryCatalogCoordinator(dependencies: Dependencies)
       const ack = parsedAck.data;
       if (ack.outcome === "applied") {
         await dependencies.save(owner, input.accountGeneration, input.titleKey,
-          { revision: ack.revision, acceptedHash: ack.acceptedHash, acceptedAt: ack.acceptedAt, context: input.context }, () => owns(owner, job));
+          { revision: ack.revision, acceptedHash: ack.acceptedHash, acceptedAt: ack.acceptedAt, context: input.context }, () => owns(owner, job), input.historyAccess?.accessEpoch);
         if (!await current(owner, job)) return null;
-        await dependencies.invalidate(owner, input.accountGeneration, undefined, () => owns(owner, job));
+        await dependencies.invalidate(owner, input.accountGeneration, undefined, () => owns(owner, job), input.historyAccess?.accessEpoch);
       }
       return await current(owner, job) ? ack : null;
     } catch { return null; }
@@ -138,9 +140,17 @@ export function createWatchHistoryPageResolver(dependencies: {
   let disposed = false;
   let currentSource: string | null = null;
 
+  async function eligible(event: WatchHistoryLocalEvent, owner: string): Promise<boolean> {
+    if (disposed || !event.captureProof) return false;
+    const response = await dependencies.send({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "bootstrap-cache", expectedOwnerUserId: owner });
+    if (!response.ok || !response.data || typeof response.data !== "object" || !("accessLease" in response.data)) return false;
+    const lease = parseWatchHistoryLease(response.data.accessLease);
+    return !disposed && personalEnvelopeEligible({ captureVersion: 1, accessEpoch: event.captureProof.access.accessEpoch,
+      youtubeConsentEpoch: event.captureProof.access.youtubeConsentEpoch, event }, lease, owner, now());
+  }
   async function resolve(event: WatchHistoryLocalEvent, owner: string, options: { refreshCatalog: boolean }): Promise<void> {
     const pending = event.identityPending;
-    if (disposed || !pending || event.provider !== "crunchyroll") return;
+    if (disposed || !pending || event.provider !== "crunchyroll" || !await eligible(event, owner)) return;
     const sourceKey = `${owner}:${event.accountGeneration}:${event.clientSessionKey}:${pending.watchId}`;
     if (options.refreshCatalog && sourceKey !== currentSource) {
       currentSource = sourceKey;
@@ -156,7 +166,7 @@ export function createWatchHistoryPageResolver(dependencies: {
       mappings.set(mappingKey, mapping);
     }
     const metadata = await mappings.get(mappingKey)!.promise;
-    if (disposed || !metadata) return;
+    if (disposed || !metadata || !await eligible(event, owner)) return;
     const resolution = dependencies.send({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "resolve-identity", expectedOwnerUserId: owner,
       accountGeneration: event.accountGeneration, clientEventId: event.clientEventId, identity: metadata.identity,
       episodeNumber: metadata.episodeNumber, artworkUrl: metadata.artworkUrl });
@@ -174,7 +184,8 @@ export function createWatchHistoryPageResolver(dependencies: {
     attemptedCatalogs.add(attemptKey);
     const abort = new AbortController();
     const input: WatchCatalogBeginRequest = { schemaVersion: 3, provider: "crunchyroll", accountGeneration: event.accountGeneration,
-      titleKey, providerSeriesId: metadata.identity.providerSeriesId, context: structuredClone(metadata.context) };
+      titleKey, providerSeriesId: metadata.identity.providerSeriesId, context: structuredClone(metadata.context),
+      historyAccess: { accessVersion: 1, accessEpoch: event.captureProof!.access.accessEpoch } };
     const collecting = (async () => {
       let revision: number | null = null;
       try {
@@ -183,9 +194,9 @@ export function createWatchHistoryPageResolver(dependencies: {
         const parsed = WatchCatalogBeginAckSchema.safeParse(response.data);
         if (!parsed.success || !matches(owner, input, parsed.data)) return;
         revision = parsed.data.revision;
-        if (disposed || abort.signal.aborted || !parsed.data.refreshRequired) return;
+        if (disposed || abort.signal.aborted || !parsed.data.refreshRequired || !await eligible(event, owner)) return;
         const result = await command("historyCatalog", { seriesId: input.providerSeriesId, context: input.context }, 120_000, abort.signal);
-        if (!result.ok || !result.catalog || disposed || abort.signal.aborted) return;
+        if (!result.ok || !result.catalog || disposed || abort.signal.aborted || !await eligible(event, owner)) return;
         await dependencies.send({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "catalog-commit", expectedOwnerUserId: owner, pageId: visitId,
           input: { ...input, revision: parsed.data.revision, snapshot: result.catalog } });
       } catch { /* One bounded attempt per context/visit; a new visit can retry. */ }

@@ -354,3 +354,25 @@ async function unmount(root: Root): Promise<void> {
 		root.unmount();
 	});
 }
+
+describe("independent room media controls", () => {
+ it("shows independent grants, reconnect reservation, and explicit microphone readiness", async () => {
+  const self = { ...participant("self", "Self", "viewer", "none", false), participantSessionId: "self-session" };
+  const host = { ...participant("host", "Host", "host", "none", false), participantSessionId: "host-session", connected: false };
+  const onMicrophoneReadyChange = vi.fn();
+  const mediaSnapshot: import("@anidachi/protocol").RoomMediaSnapshot = { type: "ROOM_MEDIA_SNAPSHOT", roomId: "room", roomGeneration: 1, snapshotSequence: 1, closingAt: null,
+   capabilities: { mediaProtocolVersion: 2, hostPlanCode: "pro", maxParticipants: 15, maxCameras: 4, maxMicrophones: 8, capabilityRevision: 1, capabilitiesValidUntil: "2026-09-08T20:00:00Z" },
+   participants: [self,host].map((p,i) => ({ participantSessionId: p.participantSessionId, cameraGranted: i===1, microphoneGranted: false, cameraIntentSequence: 1, microphoneIntentSequence: 0, cameraRevocationEpoch: 0, microphoneRevocationEpoch: 0 })) };
+  const view = await renderPeople({ participants: [self,host], mediaSnapshot, onMicrophoneReadyChange });
+  expect(view.container.textContent).toContain("1/4 cameras · 0/8 microphones");
+  expect(view.container.textContent).toContain("Reconnecting — places reserved");
+  expect(onMicrophoneReadyChange).not.toHaveBeenCalled();
+  await click(getButton(view.container,"Enable microphone")); expect(onMicrophoneReadyChange).toHaveBeenCalledWith(true);
+  expect(view.container.textContent).not.toContain("Request media");
+  await unmount(view.root);
+ });
+ it("pending v2 presents no legacy seat request or capture action", async () => {
+  const view=await renderPeople({mediaSnapshot:null}); expect(getButton(view.container,"Enable microphone").disabled).toBe(true);
+  expect(view.container.textContent).toContain("Waiting for room media permissions"); await unmount(view.root);
+ });
+});

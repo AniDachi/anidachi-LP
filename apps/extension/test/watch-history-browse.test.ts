@@ -1,3 +1,4 @@
+import { paidHistoryLease } from "./watch-history-personal-fixtures";
 import { describe, expect, it, vi } from "vitest";
 import { createWatchHistoryBrowseCache } from "../src/watch-history-browse-cache";
 import {
@@ -98,6 +99,7 @@ function readyPartition(cache = canonical()) {
 	return {
 		ownerUserId: OWNER,
 		accountGeneration: 4,
+		accessLease: paidHistoryLease(OWNER, undefined, 4),
 		cache,
 		cacheRevision: 7,
 		invalidationRevision: 7,
@@ -171,6 +173,17 @@ function required<T>(value: T | undefined): T {
 }
 
 describe("watch history query-isolated browsing", () => {
+  it("keeps personal cache entries distinct from both legacy modes", async () => {
+    const fetch = vi.fn(async () => Response.json(browseResponse()));
+    const { client } = createStoredClient({ fetch });
+    await client.handle(browseMessage({ mode: "solo" }));
+    await client.handle(browseMessage({ mode: "shared" }));
+    expect(await client.handle({ ...browseMessage({ mode: "personal" }), cacheOnly: true })).toEqual({ ok: true });
+    await client.handle(browseMessage({ mode: "personal" }));
+    expect(await client.handle({ ...browseMessage({ mode: "personal" }), cacheOnly: true })).toMatchObject({ ok: true, data: browseResponse() });
+    expect(fetch).toHaveBeenCalledTimes(3);
+  });
+
 	it("cannot resurrect deleted reads after real logout and same-generation login recreate the partition", async () => {
 		let saved: unknown = [];
 		const adapter = {
@@ -192,6 +205,7 @@ describe("watch history query-isolated browsing", () => {
 					release = resolve;
 				});
 			const path = new URL(String(url)).pathname;
+			if (path.endsWith("/access")) return Response.json(paidHistoryLease(OWNER, Date.now(), 4).access);
 			return Response.json(
 				path.endsWith("/delete")
 					? {
@@ -356,6 +370,8 @@ describe("watch history query-isolated browsing", () => {
 			},
 		};
 		const event = {
+			captureProof: paidHistoryLease(OWNER, Date.now(), 4),
+			clientSequence: 1,
 			schemaVersion: 3,
 			clientEventId: GROUP,
 			clientSessionKey: "watch-session",
@@ -916,11 +932,8 @@ describe("watch history query-isolated browsing", () => {
 			fetch: async (rawUrl) => {
 				const pathname = new URL(String(rawUrl)).pathname;
 				requests.push(pathname);
-				return pathname.endsWith("/preferences")
-					? Response.json({
-							meta: meta(4),
-							preferences: { youtubeHistoryEnabled: false },
-						})
+				return pathname.endsWith("/access")
+					? Response.json(paidHistoryLease(OWNER, undefined, 4).access)
 					: Response.json(browseResponse(4));
 			},
 		});
@@ -930,7 +943,7 @@ describe("watch history query-isolated browsing", () => {
 			data: browseResponse(4),
 		});
 		expect(requests).toEqual([
-			"/api/watch-history/v3/preferences",
+			"/api/watch-history/v3/access",
 			"/api/watch-history/v3/browse",
 		]);
 		const root = await storage.readRoot();
@@ -938,5 +951,90 @@ describe("watch history query-isolated browsing", () => {
 		expect(root.partitions).not.toHaveProperty(
 			watchHistoryPartitionKey(OWNER, 1),
 		);
+	});
+});
+
+describe("optional catalog browse command", () => {
+	const input = {
+		provider: "crunchyroll",
+		titleKey: "crunchyroll:series:S",
+		seasonKey: "crunchyroll:season:SEASON",
+		limit: 50,
+	};
+	const message = {
+		type: "ANIDACHI_WATCH_HISTORY_V3",
+		command: "browse-catalog",
+		expectedOwnerUserId: OWNER,
+		input,
+	} as const;
+	const response = () => ({
+		meta: meta(),
+		provider: "crunchyroll",
+		titleKey: input.titleKey,
+		state: "unavailable",
+		seasonKey: input.seasonKey,
+		revision: null,
+		seasons: [],
+		episodes: [],
+		mainAggregate: null,
+		specialsAggregate: null,
+		nextCursor: null,
+	});
+	it("validates input, fences exact-query cache and never writes roster data into canonical history", async () => {
+		const fetch = vi.fn(async (_url: string | URL | Request, _init?: RequestInit) => Response.json(response()));
+		const setup = createStoredClient({ fetch });
+		const before = structuredClone(setup.readRoot());
+		expect(isWatchHistoryMessage(message)).toBe(true);
+		expect(
+			isWatchHistoryMessage({ ...message, input: { ...input, limit: 51 } }),
+		).toBe(false);
+		expect((await setup.client.handle(message)).ok).toBe(true);
+		const url = new URL(String(fetch.mock.calls[0]?.[0]));
+		expect(url.pathname).toBe("/api/watch-history/v3/browse/catalog");
+		expect(url.searchParams.get("seasonKey")).toBe(input.seasonKey);
+		expect(
+			(await setup.client.handle({ ...message, cacheOnly: true })).ok,
+		).toBe(true);
+		expect(fetch).toHaveBeenCalledTimes(1);
+		expect(setup.readRoot()).toEqual(before);
+	});
+	it("rejects another owner, generation, title or season in catalog responses", async () => {
+		for (const data of [
+			{ ...response(), meta: meta(4, OTHER_OWNER) },
+			{ ...response(), meta: meta(5) },
+			{ ...response(), titleKey: "another" },
+			{ ...response(), seasonKey: "another" },
+		]) {
+			const { client } = createStoredClient({
+				fetch: async () => Response.json(data),
+			});
+			expect((await client.handle(message)).ok).toBe(false);
+			expect(await client.handle({ ...message, cacheOnly: true })).toEqual({
+				ok: true,
+			});
+		}
+	});
+	it("rejects an account switch before a catalog response settles and tolerates an old server without this endpoint", async () => {
+		let finish: ((response: Response) => void) | undefined;
+		let current: typeof session | null = session;
+		const setup = createStoredClient({
+			getCurrentSession: async () => current,
+			fetch: async () =>
+				new Promise((resolve) => {
+					finish = resolve;
+				}),
+		});
+		const pending = setup.client.handle(message);
+		await vi.waitFor(() => expect(finish).toBeDefined());
+		current = null;
+		finish!(Response.json(response()));
+		expect((await pending).ok).toBe(false);
+		const old = createStoredClient({
+			fetch: async () => new Response("Not found", { status: 404 }),
+		});
+		expect(await old.client.handle(message)).toEqual({
+			ok: false,
+			status: "rejected",
+		});
 	});
 });

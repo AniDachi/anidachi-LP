@@ -1,18 +1,20 @@
+import { parseWatchHistoryBootstrapData } from "./watch-history-client";
+import { canCaptureWatchHistory } from "./watch-history-access";
+import { buildPersonalHistoryResumeUrl } from "@anidachi/protocol";
 import {
 	type WatchHistoryBrowseQuery,
 	type WatchHistoryBrowseResponse,
 	WatchHistoryBrowseResponseSchema,
-	type WatchHistoryBrowseSessionsResponse,
-	WatchHistoryBrowseSessionsResponseSchema,
 	type WatchHistoryBrowseTitleEpisodesResponse,
 	WatchHistoryBrowseTitleEpisodesResponseSchema,
 	type WatchHistoryItem,
+	type WatchHistoryGridResponse,
+	WatchHistoryGridResponseSchema,
+	isWatchSpecialSeasonLabel,
 	WatchHistoryResponseSchema,
-	WatchHistoryRoomRecreationResponseSchema,
-	type WatchHistorySession,
 	type WatchProgressEvent,
 } from "@anidachi/protocol";
-import { Check, ChevronDown, RefreshCw, Search, X } from "lucide-react";
+import { Check, ChevronDown, Play, RefreshCw, Search, X } from "lucide-react";
 import {
 	useCallback,
 	useEffect,
@@ -22,8 +24,11 @@ import {
 	useState,
 } from "react";
 import { WEB_HTTP_BASE } from "./constants";
+import { PopupEpisodeProgress } from "./popup-episode-progress";
+import { useWatchLoadingHeight } from "./use-watch-loading-height";
 import {
 	PopupWatchBrowseRecovery,
+	PopupWatchBrowseViews,
 	usePopupWatchBrowse,
 } from "./popup-watch-browse";
 import {
@@ -50,8 +55,14 @@ import {
 	reconcilePopupPendingEvents,
 	requestPopupWatchHistory,
 	watchHistoryOverallProgress,
-	withRoomHash,
 } from "./popup-watch-history";
+import {
+	PopupEpisodePicker,
+	PopupSeasonPicker,
+	PopupUnwatchedEpisode,
+	type PopupEpisodeChoice,
+} from "./popup-watch-episode-picker";
+import { useWatchProgressPreview } from "./use-watch-progress-preview";
 import { createWatchHistoryDateRange } from "./watch-history-browse";
 
 const titleMeta = (page: WatchHistoryBrowseResponse) => page.history.meta;
@@ -61,9 +72,8 @@ const detailMeta = (page: WatchHistoryBrowseTitleEpisodesResponse) =>
 	page.detail.meta;
 const detailCursor = (page: WatchHistoryBrowseTitleEpisodesResponse) =>
 	page.detail.nextCursor;
-const sessionMeta = (page: WatchHistoryBrowseSessionsResponse) => page.meta;
-const sessionCursor = (page: WatchHistoryBrowseSessionsResponse) =>
-	page.nextCursor;
+const gridMeta = (page: WatchHistoryGridResponse) => page.meta;
+const gridCursor = (page: WatchHistoryGridResponse) => page.nextCursor;
 type Episode = WatchHistoryItem["seasons"][number]["episodes"][number];
 type Disclosure = {
 	isOpen(key: string, initial: boolean): boolean;
@@ -72,13 +82,6 @@ type Disclosure = {
 function mergeBy<T>(values: T[], key: (item: T) => string) {
 	return [...new Map(values.map((value) => [key(value), value])).values()];
 }
-function watchedDate(value: string, time = false) {
-	return new Date(value).toLocaleString(undefined, {
-		dateStyle: "medium",
-		...(time ? { timeStyle: "short" as const } : {}),
-	});
-}
-
 export function PopupWatchHistoryPanel({
 	ownerUserId,
 	client = defaultPopupWatchHistoryClient,
@@ -115,11 +118,20 @@ function WatchDrawer({
 	onTitleCountChange?: (count: number) => void;
 	refreshSignal: number;
 }) {
+	const watchRootRef = useRef<HTMLElement>(null);
+	useWatchProgressPreview(watchRootRef);
 	const [snapshot, setSnapshot] = useState<PopupWatchHistorySnapshot | null>(
 		null,
 	);
 	const [cacheReady, setCacheReady] = useState(false);
-	const [mode, setMode] = useState<"mine" | "together">("mine");
+	const [accessState, setAccessState] = useState<{
+		client: PopupWatchHistoryClient;
+		status: string;
+		generation?: number;
+	}>({ client, status: "checking" });
+	const accessStatus =
+		accessState.client === client ? accessState.status : "checking";
+	const accessAllowed = accessStatus === "allowed";
 	const [search, setSearch] = useState("");
 	const searchEpoch = useRef(0);
 	const changeSearch = (value: string) => {
@@ -150,6 +162,45 @@ function WatchDrawer({
 	snapshotRef.current = snapshot;
 	const searchRef = useRef<HTMLInputElement>(null);
 	const refreshVersion = refresh + refreshSignal;
+	useEffect(() => {
+		let disposed = false;
+		let expiry: ReturnType<typeof setTimeout> | undefined;
+		void requestPopupWatchHistory(client, {
+			type: "ANIDACHI_WATCH_HISTORY_V3",
+			command: "bootstrap",
+			expectedOwnerUserId: ownerUserId,
+		}).then((result) => {
+			if (disposed) return;
+			const data = result.ok
+				? parseWatchHistoryBootstrapData(result.data)
+				: null;
+			const lease = data?.ownerUserId === ownerUserId ? data.accessLease : null;
+			const currentLease =
+				lease &&
+				lease.access.ownerUserId === ownerUserId &&
+				lease.access.accountGeneration === data?.accountGeneration &&
+				Date.now() >= lease.receivedAt &&
+				Date.now() < lease.expiresAt;
+			const status = currentLease
+				? lease.access.state === "allowed"
+					? "allowed"
+					: "plan-required"
+				: !result.ok &&
+						["plan-required", "upgrade-required"].includes(result.status)
+					? result.status
+					: "access-unavailable";
+			setAccessState({ client, status, generation: data?.accountGeneration });
+			if (currentLease)
+				expiry = setTimeout(
+					() => setAccessState({ client, status: "access-unavailable" }),
+					lease.expiresAt - Date.now(),
+				);
+		});
+		return () => {
+			disposed = true;
+			clearTimeout(expiry);
+		};
+	}, [client, ownerUserId, refreshVersion]);
 	useEffect(() => {
 		setNow(new Date());
 	}, [refreshVersion]);
@@ -193,6 +244,22 @@ function WatchDrawer({
 		});
 		const unsubscribe = client.subscribe?.(ownerUserId, (value, result) => {
 			if (disposed) return;
+			if (
+				result &&
+				!result.ok &&
+				[
+					"plan-required",
+					"access-changed",
+					"access-unavailable",
+					"upgrade-required",
+					"unauthenticated",
+					"rejected",
+				].includes(result.status)
+			) {
+				setAccessState({ client, status: result.status });
+				setSnapshot(null);
+				return;
+			}
 			const previous = snapshotRef.current;
 			accept(value);
 			// Playback-only observations update known matches in place. Canonical
@@ -304,6 +371,16 @@ function WatchDrawer({
 		[recoverCanonical],
 	);
 
+	useEffect(() => {
+		const nextDay = new Date(now);
+		nextDay.setHours(24, 0, 0, 0);
+		const timer = window.setTimeout(
+			() => setNow(new Date()),
+			Math.max(0, nextDay.getTime() - Date.now()) + 100,
+		);
+		return () => window.clearTimeout(timer);
+	}, [now]);
+
 	const dates = useMemo(
 		() =>
 			createWatchHistoryDateRange({
@@ -315,15 +392,9 @@ function WatchDrawer({
 		[conditions.period, conditions.fromDate, conditions.throughDate, now],
 	);
 	const input: WatchHistoryBrowseQuery = {
-		mode: mode === "mine" ? "solo" : "shared",
+		mode: "personal",
 		limit: 20,
 		...(search.trim() ? { search: search.trim() } : {}),
-		...(mode === "together" && conditions.group
-			? { groupId: conditions.group.id }
-			: {}),
-		...(mode === "together" && conditions.participant
-			? { participantUserId: conditions.participant.id }
-			: {}),
 		...(dates.ok && dates.range ? dates.range : {}),
 	};
 	const queryKey = JSON.stringify([
@@ -345,19 +416,53 @@ function WatchDrawer({
 		cursor: titleCursor,
 		refresh: refreshVersion + invalidation,
 		forceRefresh: refreshVersion,
-		enabled: dates.ok && cacheReady && !recovering,
+		enabled: accessAllowed && dates.ok && cacheReady && !recovering,
+		discard: !accessAllowed,
 		generation: snapshot?.accountGeneration,
 	});
+	useWatchLoadingHeight(
+		watchRootRef,
+		browsing.loading && !browsing.pages.length,
+	);
+	const browseViews = useMemo(
+		() => ({
+			client,
+			ownerUserId,
+			generation: snapshot?.accountGeneration,
+			refresh: refreshVersion + invalidation,
+			pages: new Map<string, unknown[]>(),
+		}),
+		[
+			client,
+			ownerUserId,
+			snapshot?.accountGeneration,
+			refreshVersion,
+			invalidation,
+		],
+	);
 	useEffect(() => {
 		if (browsing.errorStatus === "generation-mismatch")
 			void recoverAfterMismatch(false);
 	}, [browsing.errorStatus, recoverAfterMismatch]);
-	const titleItems = dates.ok
-		? mergeBy(
-				browsing.pages.flatMap((page) => page.history.items),
-				(item) => pendingTitleKey(item.provider, item.titleKey),
-			)
-		: [];
+	useEffect(() => {
+		if (
+			[
+				"plan-required",
+				"access-changed",
+				"upgrade-required",
+				"access-unavailable",
+			].includes(browsing.errorStatus ?? "")
+		) {
+			setAccessState({ client, status: browsing.errorStatus! });
+		}
+	}, [browsing.errorStatus, client]);
+	const titleItems =
+		accessAllowed && dates.ok
+			? mergeBy(
+					browsing.pages.flatMap((page) => page.history.items),
+					(item) => pendingTitleKey(item.provider, item.titleKey),
+				)
+			: [];
 	const matches = new Map(
 		browsing.pages
 			.flatMap((page) => page.matches)
@@ -372,11 +477,9 @@ function WatchDrawer({
 			]),
 	);
 	const pending = useMemo(() => {
-		const events = (snapshot?.pendingEvents ?? []).filter((event) =>
-			mode === "mine" ? !event.sharedRoom : Boolean(event.sharedRoom),
-		);
+		const events = snapshot?.pendingEvents ?? [];
 		const result = latestPendingByEpisode(events);
-		if (snapshot?.localObservation?.mode === mode) {
+		if (snapshot?.localObservation) {
 			const event = snapshot.localObservation.event;
 			result.set(
 				pendingEpisodeKey(event.provider, event.titleKey, event.episodeKey),
@@ -384,11 +487,9 @@ function WatchDrawer({
 			);
 		}
 		return result;
-	}, [snapshot, mode]);
+	}, [snapshot]);
 	const allowPending =
-		!search.trim() &&
-		conditions.period === "all-time" &&
-		(mode === "mine" || (!conditions.group && !conditions.participant));
+		accessAllowed && !search.trim() && conditions.period === "all-time";
 	const canonical = new Map(
 		snapshot?.history.items.map((item) => [
 			pendingTitleKey(item.provider, item.titleKey),
@@ -481,7 +582,9 @@ function WatchDrawer({
 				},
 			})),
 	};
-	const total = browsing.pages[0]?.history.totalTitleCount ?? 0;
+	const total = accessAllowed
+		? (browsing.pages[0]?.history.totalTitleCount ?? 0)
+		: 0;
 	useEffect(() => {
 		onTitleCountChange?.(total);
 	}, [total, onTitleCountChange]);
@@ -498,23 +601,46 @@ function WatchDrawer({
 		}
 		if (actionGeneration.current === token) setBusy(null);
 	};
-	const openUrl = (url: string) =>
-		void runAction("open", () => client.openUrl(url));
-	const createRoom = (session: WatchHistorySession, sourceUrl: string) =>
-		void runAction(`room:${session.id}`, async () => {
+	const openUrl = (url: string, currentTime?: number) =>
+		void runAction("open", async () => {
 			const token = actionGeneration.current;
-			const result = await requestPopupWatchHistory(client, {
+			const generation =
+				snapshotRef.current?.accountGeneration ??
+				browsing.pages[0]?.history.meta.accountGeneration;
+			if (currentTime === undefined) {
+				await client.openUrl(url);
+				return;
+			}
+			const bootstrapped = await requestPopupWatchHistory(client, {
 				type: "ANIDACHI_WATCH_HISTORY_V3",
-				command: "create-room",
-				sessionId: session.id,
-				clientRequestId: crypto.randomUUID(),
+				command: "bootstrap",
+				expectedOwnerUserId: ownerUserId,
 			});
-			if (actionGeneration.current !== token) return;
-			const parsed = result.ok
-				? WatchHistoryRoomRecreationResponseSchema.safeParse(result.data)
+			const data = bootstrapped.ok
+				? parseWatchHistoryBootstrapData(bootstrapped.data)
 				: null;
-			if (!parsed?.success) throw new Error("room");
-			await client.openUrl(withRoomHash(sourceUrl, parsed.data.roomId));
+			if (
+				!data?.accessLease ||
+				data.accountGeneration !== generation ||
+				!canCaptureWatchHistory(data.accessLease, ownerUserId, Date.now()) ||
+				actionGeneration.current !== token
+			)
+				return;
+			const launch = await buildPersonalHistoryResumeUrl({
+				ownerUserId,
+				accountGeneration: data.accountGeneration,
+				provider: new URL(url).hostname.endsWith("youtube.com")
+					? "youtube"
+					: "crunchyroll",
+				sourceUrl: url,
+				currentTime,
+			});
+			if (
+				actionGeneration.current === token &&
+				(snapshotRef.current?.accountGeneration ??
+					browsing.pages[0]?.history.meta.accountGeneration) === generation
+			)
+				await client.openUrl(launch);
 		});
 	const refreshHistory = () =>
 		void runAction("refresh", async () => {
@@ -542,36 +668,58 @@ function WatchDrawer({
 			setRefresh((value) => value + 1);
 		});
 	const error = actionError ?? recoveryError ?? browsing.error;
-	const content = (
-		<section className="popup-watch-screen" aria-label="Watch History">
-			<div className="popup-watch-controls">
-				<div
-					className="popup-watch-mode-switch"
-					role="group"
-					aria-label="Watch history mode"
-				>
-					{(["mine", "together"] as const).map((value) => (
+	if (!accessAllowed)
+		return (
+			<section className="popup-watch-screen" aria-label="Watch History">
+				<div className="popup-empty" role="status">
+					{accessStatus === "checking"
+						? "Checking history access..."
+						: accessStatus === "plan-required"
+							? "Personal history is available with your own Plus or Pro plan. Your saved history is preserved."
+							: accessStatus === "upgrade-required"
+								? "Update AniDachi to use personal history."
+								: "History access is temporarily unavailable. Please retry."}
+				</div>
+				<footer className="popup-watch-footer">
+					{accessStatus === "plan-required" ? (
 						<button
 							type="button"
-							aria-pressed={mode === value}
-							key={value}
-							onClick={() => {
-								if (value === mode) return;
-								setMode(value);
-								if (value === "mine")
-									setConditions((current) => ({
-										...current,
-										group: null,
-										participant: null,
-									}));
-							}}
+							onClick={() =>
+								openUrl(new URL("/pricing", WEB_HTTP_BASE).toString())
+							}
 						>
-							{value === "mine" ? "Mine" : "Together"}
+							View plans
 						</button>
-					))}
-				</div>
+					) : (
+						<button
+							type="button"
+							onClick={() => setRefresh((value) => value + 1)}
+						>
+							Retry history access
+						</button>
+					)}
+					<button
+						type="button"
+						onClick={() =>
+							openUrl(
+								new URL("/account/watch-library", WEB_HTTP_BASE).toString(),
+							)
+						}
+					>
+						Manage history
+					</button>
+				</footer>
+			</section>
+		);
+	const content = (
+		<section
+			ref={watchRootRef}
+			className="popup-watch-screen"
+			aria-label="Watch History"
+		>
+			<div className="popup-watch-controls">
 				<div className="popup-watch-search">
-					<Search aria-hidden="true" size={13} />
+					<Search aria-hidden="true" size={15} />
 					<input
 						aria-label="Search watch history"
 						type="search"
@@ -595,19 +743,24 @@ function WatchDrawer({
 					) : null}
 				</div>
 				<PopupWatchFilters
-					client={client}
 					ownerUserId={ownerUserId}
-					together={mode === "together"}
 					conditions={conditions}
 					onChange={setConditions}
-					search={search}
-					clearSearch={() => changeSearch("")}
-					refresh={refreshVersion + invalidation}
-					generation={snapshot?.accountGeneration}
-					dateError={!dates.ok}
+					dateError={dates.ok ? null : dates.error}
+					today={now}
 				/>
 			</div>
-			<div className="popup-watch-status">
+			<div
+				className={
+					error ||
+					snapshot?.capturePaused ||
+					(!items.length &&
+						!browsing.pages.length &&
+						(recovering || browsing.loading))
+						? "popup-watch-status"
+						: "popup-sr-only"
+				}
+			>
 				<span role="status">
 					{recovering
 						? "Recovering watch history..."
@@ -617,24 +770,28 @@ function WatchDrawer({
 								: "Loading watch history..."
 							: ""}
 				</span>
-				<button
-					aria-label={
-						error || snapshot?.capturePaused
-							? "Retry watch history"
-							: "Refresh watch history"
-					}
-					className="popup-watch-refresh"
-					disabled={recovering || browsing.loading || Boolean(busy)}
-					type="button"
-					onClick={refreshHistory}
-				>
-					<RefreshCw aria-hidden="true" size={12} />
-					{error || snapshot?.capturePaused ? "Retry" : "Refresh"}
-				</button>
+				{error || snapshot?.capturePaused ? (
+					<button
+						aria-label="Retry watch history"
+						className="popup-watch-refresh"
+						disabled={recovering || browsing.loading || Boolean(busy)}
+						type="button"
+						onClick={refreshHistory}
+					>
+						<RefreshCw aria-hidden="true" size={12} />
+						Retry
+					</button>
+				) : null}
 			</div>
 			{snapshot?.capturePaused ? (
 				<div className="popup-social-empty" data-tone="error">
 					Watch History is paused because browser storage is full.
+				</div>
+			) : null}
+			{snapshot?.retiredUnprovenCount ? (
+				<div className="popup-social-empty" data-tone="warning">
+					Older pending history could not be verified and was not uploaded. Your
+					saved history is retained.
 				</div>
 			) : null}
 			{oldOwnerPending ? (
@@ -687,6 +844,7 @@ function WatchDrawer({
 								<button
 									aria-expanded={open}
 									aria-label={`Toggle ${group.label} history`}
+									aria-description={`${group.items.length} ${group.items.length === 1 ? "title" : "titles"} shown`}
 									className="popup-provider-row"
 									type="button"
 									onClick={() => disclosure.toggle(branch, true)}
@@ -696,9 +854,8 @@ function WatchDrawer({
 										<strong className="popup-provider-name">
 											{group.label}
 										</strong>
-										<span className="popup-provider-meta">
-											{group.items.length}{" "}
-											{group.items.length === 1 ? "title" : "titles"} shown
+										<span className="popup-provider-count" aria-hidden="true">
+											{group.items.length}
 										</span>
 									</span>
 									<span
@@ -709,8 +866,8 @@ function WatchDrawer({
 										<ChevronDown size={16} />
 									</span>
 								</button>
-								{open ? (
-									<div className="popup-provider-body">
+								{
+									<div className="popup-provider-body" hidden={!open}>
 										{group.items.map((item, index) => (
 											<PopupWatchHistoryItem
 												key={pendingTitleKey(item.provider, item.titleKey)}
@@ -726,6 +883,7 @@ function WatchDrawer({
 												generation={snapshot?.accountGeneration}
 												disclosure={disclosure}
 												initiallyOpen={index === 0}
+												providerOpen={open}
 												matchingDate={
 													matches.get(
 														pendingTitleKey(item.provider, item.titleKey),
@@ -738,25 +896,22 @@ function WatchDrawer({
 												)}
 												busy={busy}
 												onOpen={openUrl}
-												onCreateRoom={createRoom}
 											/>
 										))}
 									</div>
-								) : null}
+								}
 							</section>
 						);
 					})}
 				</div>
-			) : !recovering && !browsing.loading && !error && dates.ok ? (
+			) : !recovering &&
+				(!browsing.loading || browsing.pages.length > 0) &&
+				!error &&
+				dates.ok ? (
 				<div className="popup-empty">
-					{search.trim() ||
-					conditions.period !== "all-time" ||
-					conditions.group ||
-					conditions.participant
+					{search.trim() || conditions.period !== "all-time"
 						? "No history matches these conditions."
-						: mode === "together"
-							? "Shared sessions will appear after watching together."
-							: "Episodes you watch on supported sites will appear here."}
+						: "Episodes you watch on supported sites will appear here."}
 				</div>
 			) : null}
 			{browsing.nextCursor && dates.ok ? (
@@ -784,7 +939,9 @@ function WatchDrawer({
 	);
 	return (
 		<PopupWatchBrowseRecovery.Provider value={recoverAfterMismatch}>
-			{content}
+			<PopupWatchBrowseViews.Provider value={browseViews}>
+				{content}
+			</PopupWatchBrowseViews.Provider>
 		</PopupWatchBrowseRecovery.Provider>
 	);
 }
@@ -828,13 +985,13 @@ function PopupWatchHistoryItem({
 	generation,
 	disclosure,
 	initiallyOpen,
+	providerOpen,
 	matchingDate,
 	pending,
 	allowPending,
 	canonical,
 	busy,
 	onOpen,
-	onCreateRoom,
 }: {
 	item: WatchHistoryItem;
 	ownerUserId: string;
@@ -846,17 +1003,19 @@ function PopupWatchHistoryItem({
 	generation?: number;
 	disclosure: Disclosure;
 	initiallyOpen: boolean;
+	providerOpen: boolean;
 	matchingDate?: string;
 	pending: Map<string, WatchProgressEvent>;
 	allowPending: boolean;
 	canonical?: WatchHistoryItem;
 	busy: string | null;
-	onOpen: (url: string) => void;
-	onCreateRoom: (session: WatchHistorySession, url: string) => void;
+	onOpen: (url: string, currentTime?: number) => void;
 }) {
 	const branch = JSON.stringify([item.provider, item.titleKey]);
 	const open = disclosure.isOpen(branch, initiallyOpen);
 	const bodyId = useId();
+	const hasOpened = useRef(open);
+	if (open) hasOpened.current = true;
 	const page = usePopupWatchBrowse({
 		client,
 		message: {
@@ -871,7 +1030,7 @@ function PopupWatchHistoryItem({
 		refresh,
 		forceRefresh,
 		initialPage: preview,
-		enabled: open && Boolean(matchingDate),
+		enabled: providerOpen && open && Boolean(matchingDate),
 		generation,
 	});
 	const matchingEpisodes = mergeBy(
@@ -903,120 +1062,263 @@ function PopupWatchHistoryItem({
 			.flatMap((page) => page.matches)
 			.map((match) => [match.episodeKey, match]),
 	);
-	const seasonMetadata = page.pages[0]?.detail.catalog.seasons ?? item.seasons;
-	const observedSeasons = matchingEpisodes.flatMap((episode) =>
-		episode.seasonKey
-			? [
-					{
-						seasonKey: episode.seasonKey,
-						seasonTitle: episode.seasonTitle ?? "Observed season",
-						seasonNumber: episode.seasonNumber,
-						order: 0,
-						aggregate: {
-							completedEpisodes: 0,
-							availableEpisodes: null,
-							progress: null,
-						},
-						nextEpisode: null,
-					},
-				]
-			: [],
-	);
+	const isSeries =
+		item.provider === "crunchyroll" && item.itemKind === "series";
+	const fullHistory =
+		input.mode === "personal" && !input.search && !input.from && !input.until;
+	const [chosenSeason, setChosenSeason] = useState<string | null>(null);
+	const latestSeason = item.seasons.find((season) =>
+		season.episodes.some(
+			(episode) => episode.episodeKey === item.latestActivity.episodeKey,
+		),
+	)?.seasonKey;
+	const requestedSeason = chosenSeason ?? latestSeason;
+	const grid = usePopupWatchBrowse({
+		client,
+		message: {
+			type: "ANIDACHI_WATCH_HISTORY_V3",
+			command: "browse-catalog",
+			expectedOwnerUserId: ownerUserId,
+			input: {
+				provider: "crunchyroll",
+				titleKey: item.titleKey,
+				...(requestedSeason && requestedSeason !== "__unseasoned__"
+					? { seasonKey: requestedSeason }
+					: {}),
+			},
+		},
+		parser: WatchHistoryGridResponseSchema,
+		meta: gridMeta,
+		cursor: gridCursor,
+		refresh,
+		forceRefresh,
+		generation,
+		enabled: providerOpen && open && isSeries && Boolean(matchingDate),
+	});
+	// Retain just the season menu while another season loads. Never carry it
+	// across an account, generation, client, or history invalidation.
+	const catalogScope = JSON.stringify([ownerUserId, generation, refresh]);
+	const retainedCatalog = useRef<{
+		scope: string;
+		client: PopupWatchHistoryClient;
+		value: WatchHistoryGridResponse;
+	} | null>(null);
+	const catalogInvalid = [
+		"unauthenticated",
+		"rejected",
+		"generation-mismatch",
+		"deleted-history",
+		"invalid-response",
+	].includes(grid.errorStatus ?? "");
+	if (catalogInvalid) retainedCatalog.current = null;
+	else if (grid.pages[0])
+		retainedCatalog.current = {
+			scope: catalogScope,
+			client,
+			value: grid.pages[0],
+		};
+	const catalog = catalogInvalid
+		? undefined
+		: (grid.pages[0] ??
+			(retainedCatalog.current?.scope === catalogScope &&
+			retainedCatalog.current.client === client
+				? retainedCatalog.current.value
+				: undefined));
+	const exactCatalog =
+		catalog?.state === "complete" && item.catalogState === "complete"
+			? catalog
+			: undefined;
+	const seasonMetadata =
+		exactCatalog?.seasons ??
+		page.pages[0]?.detail.catalog.seasons ??
+		item.seasons;
+	const observedSeasons = matchingEpisodes.map((episode) => ({
+		seasonKey: episode.seasonKey ?? "__unseasoned__",
+		seasonTitle: episode.seasonTitle ?? "Other episodes",
+		seasonNumber: episode.seasonNumber,
+		order: Number.MAX_SAFE_INTEGER,
+		aggregate: {
+			completedEpisodes: 0,
+			availableEpisodes: null,
+			progress: null,
+		},
+		nextEpisode: null,
+	}));
 	const seasons = mergeBy(
-		[
-			...item.seasons,
-			...seasonMetadata,
-			...observedSeasons.filter(
-				(observed) =>
-					!item.seasons.some(
-						(season) => season.seasonKey === observed.seasonKey,
-					) &&
-					!seasonMetadata.some(
-						(season) => season.seasonKey === observed.seasonKey,
-					),
-			),
-		],
+		[...observedSeasons, ...item.seasons, ...seasonMetadata],
 		(season) => season.seasonKey,
 	)
+		.filter(
+			(season) =>
+				(fullHistory &&
+					exactCatalog?.seasons.some(
+						(known) => known.seasonKey === season.seasonKey,
+					)) ||
+				matchingEpisodes.some(
+					(episode) =>
+						(episode.seasonKey ?? "__unseasoned__") === season.seasonKey,
+				),
+		)
 		.map((season) => ({
 			...season,
-			episodes: matchingEpisodes
+			special: isWatchSpecialSeasonLabel(season.seasonTitle),
+		}))
+		.sort(
+			(a, b) =>
+				Number(a.special) - Number(b.special) ||
+				a.order - b.order ||
+				(a.seasonNumber ?? Infinity) - (b.seasonNumber ?? Infinity) ||
+				a.seasonKey.localeCompare(b.seasonKey),
+		);
+	const selectedSeason =
+		seasons.find((season) => season.seasonKey === chosenSeason) ??
+		seasons.find((season) => season.seasonKey === latestSeason) ??
+		seasons[0];
+	useEffect(() => {
+		if (open && selectedSeason && chosenSeason !== selectedSeason.seasonKey)
+			setChosenSeason(selectedSeason.seasonKey);
+	}, [open, selectedSeason?.seasonKey, chosenSeason]);
+	const overall =
+		item.itemKind === "movie" && item.provider === "crunchyroll"
+			? {
+					label: item.latestActivity.completedAt
+						? "Watched"
+						: `${formatClock(item.latestActivity.currentTime)} watched`,
+					accessibleSuffix: item.latestActivity.completedAt
+						? ", Watched"
+						: `, ${formatProgressPercent(item.latestActivity.progress)} percent`,
+					progress: item.latestActivity.progress,
+				}
+			: watchHistoryOverallProgress(
+					exactCatalog?.mainAggregate
+						? { ...item, aggregate: exactCatalog.mainAggregate }
+						: item,
+				);
+	const specialAggregate = exactCatalog?.specialsAggregate;
+	const effectiveEpisode = (episode: Episode): Episode => {
+		const personal = canonical?.seasons
+			.flatMap((season) => season.episodes)
+			.find((value) => value.episodeKey === episode.episodeKey);
+		return personal &&
+			Date.parse(personal.lastWatchedAt) >= Date.parse(episode.lastWatchedAt)
+			? {
+					...episode,
+					sourceUrl: personal.sourceUrl,
+					lastWatchedAt: personal.lastWatchedAt,
+					currentTime: personal.currentTime,
+					duration: personal.duration,
+					progress: personal.progress,
+					completedAt: personal.completedAt ?? episode.completedAt,
+				}
+			: episode;
+	};
+	const episodePending = (episode: Episode) => {
+		const event = pending.get(
+			pendingEpisodeKey(item.provider, item.titleKey, episode.episodeKey),
+		);
+		return event &&
+			Date.parse(event.observedAt) >= Date.parse(episode.lastWatchedAt)
+			? event
+			: undefined;
+	};
+	const rosterReady =
+		fullHistory &&
+		exactCatalog &&
+		grid.pages[0]?.state === "complete" &&
+		grid.pages[0].seasonKey === selectedSeason?.seasonKey &&
+		exactCatalog.seasons.some(
+			(season) => season.seasonKey === selectedSeason?.seasonKey,
+		);
+	// Keep Resume attached to the known current episode even when its catalog
+	// cell is on a later page. Never manufacture a cell or fetch the full season.
+	const knownLatest = matchingEpisodes.find(
+		(episode) =>
+			episode.episodeKey === item.latestActivity.episodeKey &&
+			(episode.seasonKey ?? "__unseasoned__") === selectedSeason?.seasonKey,
+	);
+	const choices: PopupEpisodeChoice[] = rosterReady
+		? mergeBy(
+				grid.pages.flatMap((page) => page.episodes),
+				(episode) => episode.episodeKey,
+			).map((episode) => {
+				const matched = matchingEpisodes.find(
+					(value) => value.episodeKey === episode.episodeKey,
+				);
+				const history =
+					episode.history &&
+					(!matched ||
+						Date.parse(episode.history.lastWatchedAt) >
+							Date.parse(matched.lastWatchedAt))
+						? episode.history
+						: matched;
+				const personal = history
+					? effectiveEpisode({
+							...history,
+							episodeTitle: episode.episodeTitle,
+							episodeNumber: episode.episodeNumber,
+						})
+					: undefined;
+				return {
+					key: episode.episodeKey,
+					title: episode.episodeTitle,
+					number: episode.episodeNumber,
+					catalog: episode,
+					history: personal,
+					pending: personal ? episodePending(personal) : undefined,
+				};
+			})
+		: matchingEpisodes
 				.filter(
 					(episode) =>
-						(episode.seasonKey ?? episode.episodeKey) === season.seasonKey,
+						(episode.seasonKey ?? "__unseasoned__") ===
+						selectedSeason?.seasonKey,
 				)
 				.sort(
 					(a, b) =>
-						(a.episodeNumber ?? Number.MAX_SAFE_INTEGER) -
-							(b.episodeNumber ?? Number.MAX_SAFE_INTEGER) ||
+						(a.episodeNumber ?? Infinity) - (b.episodeNumber ?? Infinity) ||
 						(a.episodeKey < b.episodeKey
 							? -1
 							: a.episodeKey > b.episodeKey
 								? 1
 								: 0),
-				),
-		}))
-		.filter((season) => season.episodes.length > 0);
-	const unseasoned = matchingEpisodes.filter(
-		(episode) =>
-			!seasons.some((season) =>
-				season.episodes.some(
-					(value) => value.episodeKey === episode.episodeKey,
-				),
-			),
+				)
+				.map((episode) => {
+					const personal = effectiveEpisode(episode);
+					return {
+						key: episode.episodeKey,
+						title: episode.episodeTitle,
+						number: episode.episodeNumber,
+						history: personal,
+						pending: episodePending(personal),
+					};
+				});
+
+	const renderEpisode = (
+		episode: Episode,
+		detail = false,
+		available = true,
+	) => (
+		<PopupEpisode
+			key={episode.episodeKey}
+			episode={effectiveEpisode(episode)}
+			item={item}
+			pending={episodePending(effectiveEpisode(episode))}
+			match={episodeMatches.get(episode.episodeKey)}
+			ownerUserId={ownerUserId}
+			client={client}
+			input={input}
+			refresh={refresh}
+			generation={generation}
+			busy={busy}
+			onOpen={onOpen}
+			detail={detail}
+			active={providerOpen && open}
+			available={available}
+		/>
 	);
-	const overall = watchHistoryOverallProgress(item);
-	const initialSeason = useRef<string | null>(null);
-	const resolvedSeason =
-		seasons.find((season) =>
-			season.episodes.some(
-				(episode) => episode.episodeKey === item.latestActivity.episodeKey,
-			),
-		)?.seasonKey ?? seasons[0]?.seasonKey;
-	if (initialSeason.current === null && resolvedSeason && page.pages.length > 0)
-		initialSeason.current = resolvedSeason;
-	const latestSeasonKey = initialSeason.current ?? resolvedSeason;
-	const renderEpisode = (episode: Episode) => {
-		const personal = canonical?.seasons
-			.flatMap((season) => season.episodes)
-			.find((value) => value.episodeKey === episode.episodeKey);
-		const updated =
-			personal &&
-			Date.parse(personal.lastWatchedAt) >= Date.parse(episode.lastWatchedAt)
-				? {
-						...episode,
-						currentTime: personal.currentTime,
-						duration: personal.duration,
-						progress: personal.progress,
-						completedAt: personal.completedAt ?? episode.completedAt,
-					}
-				: episode;
-		return (
-			<PopupEpisode
-				key={episode.episodeKey}
-				episode={updated}
-				item={item}
-				pending={(() => {
-					const event = pending.get(
-						pendingEpisodeKey(item.provider, item.titleKey, episode.episodeKey),
-					);
-					return event &&
-						Date.parse(event.observedAt) >= Date.parse(episode.lastWatchedAt)
-						? event
-						: undefined;
-				})()}
-				match={episodeMatches.get(episode.episodeKey)}
-				ownerUserId={ownerUserId}
-				client={client}
-				input={input}
-				refresh={refresh}
-				generation={generation}
-				busy={busy}
-				onOpen={onOpen}
-				onCreateRoom={onCreateRoom}
-			/>
-		);
-	};
+	const selectedAggregate =
+		item.catalogState === "complete" ? selectedSeason?.aggregate : undefined;
+
 	return (
 		<article
 			className="popup-watch-item"
@@ -1030,6 +1332,7 @@ function PopupWatchHistoryItem({
 					aria-expanded={open}
 					aria-controls={bodyId}
 					className="popup-watch-title-toggle"
+					data-has-progress={overall.progress !== null}
 					type="button"
 					onClick={() => disclosure.toggle(branch, initiallyOpen)}
 				>
@@ -1042,26 +1345,42 @@ function PopupWatchHistoryItem({
 						<strong className="popup-watch-title" dir="auto">
 							{item.title}
 						</strong>
-						<span className="popup-watch-overall">
-							<span className="popup-watch-overall-label">
-								<span className="popup-watch-meta">
-									{overall.label.split(" · ")[0]}
-								</span>
-								{overall.progress !== null ? (
-									<span className="popup-watch-percent">
-										{formatProgressPercent(overall.progress)}%
+						<span className="popup-watch-summary">
+							<span className="popup-watch-meta">
+								{overall.label.split(" · ")[0]}
+								{specialAggregate ? (
+									<span className="popup-watch-special-total">
+										{" "}
+										+ {specialAggregate.completedEpisodes} /{" "}
+										{specialAggregate.availableEpisodes} specials
 									</span>
 								) : null}
 							</span>
 							{overall.progress !== null ? (
-								<span aria-hidden="true" className="popup-watch-overall-track">
-									<span style={{ width: `${overall.progress * 100}%` }} />
+								<span
+									className="popup-watch-overall popup-watch-progress-preview"
+									aria-hidden="true"
+								>
+									<span className="popup-watch-overall-label">
+										<span className="popup-watch-meta">
+											{isSeries ? "Series progress" : "Watch progress"}
+										</span>
+										<span className="popup-watch-percent">
+											{formatProgressPercent(overall.progress)}%
+										</span>
+									</span>
+									<span
+										className="popup-watch-overall-track"
+										aria-hidden="true"
+									>
+										<span style={{ width: `${overall.progress * 100}%` }} />
+									</span>
 								</span>
 							) : null}
 						</span>
-						<span className="popup-watch-date">
-							{matchingDate ? watchedDate(matchingDate) : "Pending sync"}
-						</span>
+						{!matchingDate ? (
+							<span className="popup-watch-pending">Pending sync</span>
+						) : null}
 					</span>
 					<ChevronDown
 						aria-hidden="true"
@@ -1070,8 +1389,14 @@ function PopupWatchHistoryItem({
 					/>
 				</button>
 			</div>
-			{open ? (
-				<div className="popup-watch-tree" id={bodyId}>
+			{hasOpened.current ? (
+				<div
+					hidden={!open}
+					className={
+						isSeries ? "popup-watch-grid-view" : "popup-watch-video-list"
+					}
+					id={bodyId}
+				>
 					{page.loading && !page.pages.length && !ownPending.length ? (
 						<p className="popup-watch-slice-note" role="status">
 							Loading matching episodes...
@@ -1085,82 +1410,117 @@ function PopupWatchHistoryItem({
 							</button>
 						</p>
 					) : null}
-					{seasons.map((season, index) => {
-						const key = JSON.stringify([
-							item.provider,
-							item.titleKey,
-							season.seasonKey,
-						]);
-						const initial = season.seasonKey === latestSeasonKey;
-						const expanded = disclosure.isOpen(key, initial);
-						const aggregate =
-							item.catalogState !== "complete"
-								? (item.seasons.find(
-										(value) => value.seasonKey === season.seasonKey,
-									)?.aggregate ?? {
-										completedEpisodes: 0,
-										availableEpisodes: null,
-										progress: null,
-									})
-								: season.aggregate;
-						return (
-							<section className="popup-season-group" key={key}>
-								<button
-									aria-label={`Toggle ${item.title} ${season.seasonTitle}`}
-									aria-expanded={expanded}
-									aria-controls={`${bodyId}-${index}`}
-									className="popup-season-header"
-									type="button"
-									onClick={() => disclosure.toggle(key, initial)}
+					{isSeries && selectedSeason ? (
+						<>
+							<div className="popup-season-toolbar">
+								<PopupSeasonPicker
+									seasons={seasons}
+									selected={selectedSeason.seasonKey}
+									onSelect={setChosenSeason}
+									title={item.title}
+								/>
+								<span className="popup-season-counter">
+									{selectedAggregate?.availableEpisodes === 0
+										? "Unavailable"
+										: selectedAggregate?.availableEpisodes != null
+											? `${selectedAggregate.completedEpisodes} / ${selectedAggregate.availableEpisodes} watched`
+											: `${choices.length} known`}
+								</span>
+							</div>
+							<PopupEpisodePicker
+								pending={
+									fullHistory &&
+									Boolean(exactCatalog) &&
+									!rosterReady &&
+									grid.loading
+								}
+								title={item.title}
+								seasonKey={selectedSeason.seasonKey}
+								seasonTitle={selectedSeason.seasonTitle}
+								entries={choices}
+								latestKey={item.latestActivity.episodeKey}
+								knownLatest={
+									knownLatest
+										? {
+												key: knownLatest.episodeKey,
+												title: knownLatest.episodeTitle,
+												number: knownLatest.episodeNumber,
+												history: effectiveEpisode(knownLatest),
+												pending: episodePending(knownLatest),
+											}
+										: undefined
+								}
+								special={
+									selectedSeason.special ||
+									selectedSeason.seasonKey === "__unseasoned__"
+								}
+								loading={
+									rosterReady || (fullHistory && exactCatalog)
+										? grid.loading
+										: page.loading
+								}
+								hasMore={Boolean(
+									rosterReady ? grid.nextCursor : page.nextCursor,
+								)}
+								loadMore={rosterReady ? grid.loadMore : page.loadMore}
+								renderSelected={(entry) =>
+									entry.history ? (
+										renderEpisode(entry.history, true, entry.catalog?.available)
+									) : (
+										<PopupUnwatchedEpisode
+											entry={entry}
+											onOpen={onOpen}
+											busy={busy === "open"}
+										/>
+									)
+								}
+							/>
+							{fullHistory && !rosterReady ? (
+								<p
+									className="popup-catalog-note"
+									role={grid.loading ? "status" : undefined}
+									hidden={Boolean(exactCatalog) && grid.loading}
 								>
-									<span className="popup-season-main">
-										<strong className="popup-season-title" dir="auto">
-											{season.seasonTitle}
-										</strong>
-										<span className="popup-season-meta">
-											{aggregate.availableEpisodes === null
-												? "Availability unknown"
-												: aggregate.availableEpisodes === 0
-													? "Not currently available"
-													: `${aggregate.completedEpisodes} / ${aggregate.availableEpisodes} episodes`}
-										</span>
-										{aggregate.progress !== null &&
-										aggregate.availableEpisodes ? (
-											<span
-												className="popup-watch-overall-track"
-												aria-hidden="true"
-											>
-												<span
-													style={{ width: `${aggregate.progress * 100}%` }}
-												/>
-											</span>
-										) : null}
-									</span>
-									{aggregate.progress !== null &&
-									aggregate.availableEpisodes ? (
-										<span className="popup-watch-percent">
-											{formatProgressPercent(aggregate.progress)}%
-										</span>
+									{grid.loading
+										? "Loading episode catalog..."
+										: "Known episodes only · full catalog unavailable"}
+									{grid.error ? (
+										<>
+											{" "}
+											<button type="button" onClick={grid.reload}>
+												Retry catalog
+											</button>
+										</>
 									) : null}
-									<ChevronDown
-										aria-hidden="true"
-										className="popup-watch-disclosure-icon"
-										size={14}
-									/>
-								</button>
-								{expanded ? (
-									<div
-										className="popup-season-episode-list"
-										id={`${bodyId}-${index}`}
-									>
-										{season.episodes.map(renderEpisode)}
-									</div>
-								) : null}
-							</section>
-						);
-					})}
-					{unseasoned.map(renderEpisode)}
-					{page.nextCursor ? (
+								</p>
+							) : !fullHistory ? (
+								<p className="popup-catalog-note">
+									Episodes matching your filters
+								</p>
+							) : null}
+							{rosterReady && grid.error ? (
+								<p className="popup-catalog-note" role="alert">
+									Could not load more episodes.{" "}
+									<button type="button" onClick={grid.reload}>
+										Retry catalog
+									</button>
+								</p>
+							) : null}
+						</>
+					) : isSeries ? null : item.itemKind === "movie" &&
+						item.provider === "crunchyroll" ? (
+						(() => {
+							const film =
+								matchingEpisodes.find(
+									(episode) =>
+										episode.episodeKey === item.latestActivity.episodeKey,
+								) ?? matchingEpisodes[0];
+							return film ? renderEpisode(film, true) : null;
+						})()
+					) : (
+						matchingEpisodes.map((episode) => renderEpisode(episode))
+					)}
+					{page.nextCursor && (!isSeries || !selectedSeason) ? (
 						<button
 							className="popup-watch-load-more"
 							aria-label={`Load more episodes for ${item.title}`}
@@ -1174,7 +1534,8 @@ function PopupWatchHistoryItem({
 					{!page.loading &&
 					!page.error &&
 					page.pages.length > 0 &&
-					!matchingEpisodes.length ? (
+					!matchingEpisodes.length &&
+					!selectedSeason ? (
 						<p className="popup-watch-slice-note">No matching episodes.</p>
 					) : null}
 				</div>
@@ -1195,8 +1556,13 @@ function PopupEpisode({
 	generation,
 	busy,
 	onOpen,
-	onCreateRoom,
+	detail = false,
+	available = true,
+	active = true,
 }: {
+	detail?: boolean;
+	available?: boolean;
+	active?: boolean;
 	episode: Episode;
 	item: WatchHistoryItem;
 	pending?: WatchProgressEvent;
@@ -1207,142 +1573,107 @@ function PopupEpisode({
 	refresh: number;
 	generation?: number;
 	busy: string | null;
-	onOpen: (url: string) => void;
-	onCreateRoom: (session: WatchHistorySession, url: string) => void;
+	onOpen: (url: string, currentTime?: number) => void;
 }) {
-	const [sessionsOpen, setSessionsOpen] = useState(false);
-	const pages = usePopupWatchBrowse({
-		client,
-		message: {
-			type: "ANIDACHI_WATCH_HISTORY_V3",
-			command: "browse-sessions",
-			expectedOwnerUserId: ownerUserId,
-			input: {
-				...input,
-				provider: item.provider,
-				titleKey: item.titleKey,
-				episodeKey: episode.episodeKey,
-			},
-		},
-		parser: WatchHistoryBrowseSessionsResponseSchema,
-		meta: sessionMeta,
-		cursor: sessionCursor,
-		refresh,
-		enabled: sessionsOpen && match?.sessionsComplete === false,
-		discard: match?.sessionsComplete === true,
-		generation,
-	});
-	const sessions = mergeBy(
-		[...episode.sessions, ...pages.pages.flatMap((page) => page.sessions)],
-		(session) => session.id,
-	);
 	const completed = Boolean(episode.completedAt);
 	const currentTime = pending?.currentTime ?? episode.currentTime;
 	const progress = pending?.progress ?? episode.progress;
 	return (
 		<div
-			className="popup-episode-row"
+			className={
+				detail
+					? "popup-episode-row popup-selected-episode"
+					: "popup-episode-row"
+			}
 			data-selected={episode.episodeKey === item.latestActivity.episodeKey}
 			data-completed={completed}
 		>
 			<div className="popup-episode-main">
-				<div className="popup-episode-header">
-					<span className="popup-episode-number">
-						{episode.episodeNumber === null
-							? "Video"
-							: `E${episode.episodeNumber}`}
-					</span>
-					<span className="popup-episode-title" dir="auto">
-						{episode.episodeTitle}
-					</span>
-					<span className="popup-episode-complete" data-visible={completed}>
-						{completed ? (
-							<>
-								<Check size={13} aria-hidden="true" />
-								<span className="popup-sr-only">Completed</span>
-							</>
+				{detail ? (
+					<>
+						<div className="popup-selected-episode-heading">
+							<span>
+								{item.itemKind === "movie"
+									? "Film"
+									: episode.episodeNumber === null
+										? "Episode"
+										: `Episode ${episode.episodeNumber}`}
+							</span>
+							<span>
+								{completed
+									? "Watched"
+									: currentTime > 0
+										? "In progress"
+										: "Not watched"}
+							</span>
+						</div>
+						{item.itemKind !== "movie" ? (
+							<strong className="popup-selected-episode-title" dir="auto">
+								{episode.episodeTitle}
+							</strong>
 						) : null}
-					</span>
-				</div>
-				<div className="popup-series-progress">
-					<span className="popup-progress-track">
-						<span
-							style={{
-								width: `${Math.min(progress * 100, completed ? 100 : 99.9)}%`,
-							}}
+						<PopupEpisodeProgress
+							title={episode.episodeTitle}
+							elapsed={formatClock(currentTime)}
+							duration={
+								(pending?.duration ?? episode.duration) > 0
+									? formatClock(pending?.duration ?? episode.duration)
+									: "—"
+							}
+							progress={Math.min(progress, completed ? 1 : 0.999)}
+							action={`${completed ? "Watch again" : currentTime > 0 ? "Resume" : "Watch"}${!completed && item.itemKind !== "movie" && episode.episodeNumber !== null ? ` E${episode.episodeNumber}` : ""}`}
+							actionLabel={`Resume ${episode.episodeTitle}`}
+							disabled={busy === "open" || !available}
+							onOpen={() => onOpen(pending?.sourceUrl ?? episode.sourceUrl, currentTime)}
 						/>
-					</span>
-					<span>{formatClock(currentTime)}</span>
-				</div>
+					</>
+				) : (
+					<>
+						<div className="popup-episode-header">
+							<span className="popup-episode-number">
+								{episode.episodeNumber === null
+									? "Video"
+									: `E${episode.episodeNumber}`}
+							</span>
+							<span className="popup-episode-title" dir="auto">
+								{episode.episodeTitle}
+							</span>
+							<button
+								className="popup-episode-resume"
+								type="button"
+								aria-label={`Resume ${episode.episodeTitle}`}
+								title="Resume"
+								disabled={busy === "open" || !available}
+								onClick={() => onOpen(pending?.sourceUrl ?? episode.sourceUrl, currentTime)}
+							>
+								<Play size={14} fill="currentColor" aria-hidden="true" />
+							</button>
+						</div>
+						<div className="popup-series-progress">
+							<span className="popup-progress-track" aria-hidden="true">
+								<span
+									style={{
+										width: `${Math.min(progress * 100, completed ? 100 : 99.9)}%`,
+									}}
+								/>
+							</span>
+							<span className="popup-episode-time">
+								{completed ? (
+									<span className="popup-episode-complete">
+										<Check size={12} aria-hidden="true" />
+										<span className="popup-sr-only">Completed</span>
+									</span>
+								) : null}
+								{formatClock(currentTime)}
+							</span>
+						</div>
+					</>
+				)}
 				<div className="popup-episode-actions">
-					<button
-						type="button"
-						aria-label={`Resume ${episode.episodeTitle}`}
-						disabled={busy === "open"}
-						onClick={() => onOpen(episode.sourceUrl)}
-					>
-						Resume
-					</button>
-					{input.mode === "shared" &&
-					(match?.matchingSessionCount || sessions.length) ? (
-						<button
-							type="button"
-							aria-expanded={sessionsOpen}
-							onClick={() => setSessionsOpen((value) => !value)}
-						>
-							{match?.matchingSessionCount ?? sessions.length} shared{" "}
-							{(match?.matchingSessionCount ?? sessions.length) === 1
-								? "session"
-								: "sessions"}
-						</button>
-					) : null}
 					{pending ? (
 						<span className="popup-watch-pending">Pending sync</span>
 					) : null}
 				</div>
-				{sessionsOpen ? (
-					<div className="popup-watch-sessions">
-						{sessions.map((session) => (
-							<div className="popup-watch-session" key={session.id}>
-								<time dateTime={session.lastWatchedAt}>
-									{watchedDate(session.lastWatchedAt, true)}
-								</time>
-								<span className="popup-watch-participants" dir="auto">
-									{session.participants
-										.map((participant) => participant.user.displayName)
-										.join(", ") || "No recorded participants"}
-								</span>
-								<button
-									aria-label="Create room from Shared session"
-									className="popup-session-summary-action"
-									type="button"
-									disabled={Boolean(busy)}
-									onClick={() => onCreateRoom(session, episode.sourceUrl)}
-								>
-									Create room
-								</button>
-							</div>
-						))}
-						{pages.loading ? <p role="status">Loading sessions...</p> : null}
-						{pages.error ? (
-							<p role="alert">
-								Could not load sessions.{" "}
-								<button type="button" onClick={pages.reload}>
-									Retry sessions
-								</button>
-							</p>
-						) : null}
-						{pages.nextCursor ? (
-							<button
-								type="button"
-								disabled={pages.loading}
-								onClick={pages.loadMore}
-							>
-								Load more sessions
-							</button>
-						) : null}
-					</div>
-				) : null}
 			</div>
 		</div>
 	);

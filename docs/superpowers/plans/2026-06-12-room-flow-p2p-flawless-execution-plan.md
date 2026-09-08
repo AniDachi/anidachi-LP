@@ -258,6 +258,23 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
 
 ## Progress Log
 
+- 2026-09-08 — `codex/personal-history-mvp`, committed runtime source
+  `8e4dd284`: accepted personal-history MVP supersedes the legacy four-person
+  target only for explicitly negotiated v2 rooms (4/6/15 participants, four
+  cameras, 4/6/8 microphones). Legacy rooms retain their original contract.
+  Tasks 7–9 have scoped approvals; actual local Worker/controller 4/6/15,
+  legacy26 media and room39 harness receipts are in the
+  [verification record](../../personal-history-and-plans-mvp-verification.md).
+  These short synthetic direct-path samples do not establish SLO percentages,
+  endurance, TURN, different networks, physical output or remote-country proof.
+  [Task 10 release preparation](../../releases/personal-history-mvp/README.md)
+  is local PRE_DELIVERY_READY only: additive DB → inactive compatible runtimes →
+  matching client → gated activation, after whole-branch review. Exact active-
+  policy recovery (C04), loaded MV3/provider and staging acceptance remain open.
+  No new staging or production delivery is claimed; existing roadmap acceptance
+  layers remain required. Docs-only preparation reuses the source receipts and
+  checks links/diff/dev:check classification, without repeating heavy capacity.
+
 - [x] 2026-06-12: Full end-to-end code audit of auth/room/invite/connect/reconnect flow in this monorepo; defects 1–6 verified against source (see Verified Current Reality). External references re-checked. Plan created. No product code changed yet.
 - [x] 2026-06-12: Owner set the free-plan business model: 30 free host-minutes per day plus resistance to free-account farming. Replaced the active-room-count limit with the PD2 quota model (Zoom-style host metering, guests always free), added PD4 layered anti-farming, extended Blocks 2/6/7 accordingly (usage_daily metering, DO-precise cutoff in 6.6, rate limits + hashed-IP soft caps in 7.7–7.9). Still docs-only.
 - [ ] 2026-06-13: Block 2 PR-1 (web side) merged via PR #27: migration `20260612_room_lifecycle_quota.sql` (lifecycle columns, partial unique idempotency index, `usage_daily` + `increment_host_usage`), pure quota math in `apps/web/lib/room-quota.ts` (12 node:test cases), orchestration in `lib/anidachi-auth/room-usage.ts`, idempotent `createRoom`, quota-aware create/connect with capped host token TTL, `lobby -> live` promotion, new host-only `POST /api/rooms/:roomId/end`, `last_active_at` bumps on connect/join. Verified: `pnpm check` and `pnpm test` green (33 web tests).

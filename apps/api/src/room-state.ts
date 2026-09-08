@@ -1,3 +1,12 @@
+import {
+	type RoomMediaCapabilities,
+	type RoomMediaSnapshot,
+	type ParticipantMediaState,
+	type MediaIntent,
+	type MediaIntentAck,
+	type MediaIntentError,
+	type HostMediaRevoke,
+} from "@anidachi/protocol";
 import type {
   Participant,
   PlaybackState,
@@ -24,6 +33,8 @@ export const LEGACY_ROOM_CAPABILITIES: RoomCapabilities = {
 
 export interface RoomStateSnapshot {
   schemaVersion: 1;
+	media?: RoomMediaSnapshot;
+	mediaRevocations?: string[];
   capabilities: RoomCapabilities;
   hostId: string | null;
   hostState?: PlaybackState;
@@ -37,6 +48,8 @@ export interface RoomStateSnapshot {
 
 export class RoomState {
   readonly roomId: string;
+	private media: RoomMediaSnapshot | undefined;
+	private mediaRevocations: string[] = [];
   private capabilities: RoomCapabilities;
   private readonly participantsById = new Map<string, Participant>();
   private hostId: string | null = null;
@@ -53,10 +66,15 @@ export class RoomState {
     snapshot?: RoomStateSnapshot,
   ) {
     this.roomId = roomId;
+		this.mediaRevocations = snapshot?.mediaRevocations ?? [];
+		this.media = snapshot?.media ? structuredClone(snapshot.media) : undefined;
     this.capabilities = snapshot?.capabilities ?? capabilities;
     if (snapshot) {
       for (const participant of snapshot.participants) {
-        this.participantsById.set(participant.id, this.normalizePersistedParticipant(participant));
+				this.participantsById.set(
+					participant.id,
+					this.normalizePersistedParticipant(participant),
+				);
       }
       this.hostId = snapshot.hostId;
       this.roomGenerationValue = snapshot.roomGeneration;
@@ -86,7 +104,9 @@ export class RoomState {
   canAdmit(userId: string): boolean {
     return (
       this.participantsById.has(userId) ||
-      this.participantsById.size < this.capabilities.maxParticipants
+			this.participantsById.size <
+				(this.media?.capabilities.maxParticipants ??
+					this.capabilities.maxParticipants)
     );
   }
 
@@ -95,7 +115,9 @@ export class RoomState {
   }
 
   get occupiedMediaSeats(): number {
-    return this.participants.filter((participant) => participant.mediaSeat === "joined").length;
+		return this.participants.filter(
+			(participant) => participant.mediaSeat === "joined",
+		).length;
   }
 
   get currentHostId(): string | null {
@@ -168,6 +190,16 @@ export class RoomState {
   }
 
   join(participant: Participant): Participant {
+		if (
+			this.media &&
+			(!participant.participantSessionId ||
+				this.participants.some(
+					(p) =>
+						p.id !== participant.id &&
+						p.participantSessionId === participant.participantSessionId,
+				))
+		)
+			throw new Error("MEDIA_STALE_SESSION");
     const existing = this.participantsById.get(participant.id);
     const role = participant.role === "host" ? "host" : "viewer";
 
@@ -175,10 +207,29 @@ export class RoomState {
       this.hostId = participant.id;
     }
 
-    const nextMediaSeat =
-      existing?.mediaSeat ?? (this.canAutoAssignMediaSeat() ? "joined" : "none");
+		if (this.media) {
+			if (existing?.participantSessionId !== participant.participantSessionId)
+				this.media.participants = this.media.participants.filter(
+					(p) => p.participantSessionId !== existing?.participantSessionId,
+				);
+			if (
+				participant.participantSessionId &&
+				!this.media.participants.some(
+					(p) => p.participantSessionId === participant.participantSessionId,
+				)
+			)
+				this.media.participants.push({
+					...emptyMediaState(),
+					participantSessionId: participant.participantSessionId,
+				});
+		}
+		const nextMediaSeat = this.media
+			? "none"
+			: (existing?.mediaSeat ??
+				(this.canAutoAssignMediaSeat() ? "joined" : "none"));
     const joined: Participant = {
       ...participant,
+			...(this.media ? { connected: true } : {}),
       cameraEnabled: existing?.cameraEnabled ?? participant.cameraEnabled,
       mediaSeat: nextMediaSeat,
       role,
@@ -197,6 +248,18 @@ export class RoomState {
     return joined;
   }
 
+	disconnect(userId: string): Participant | null {
+		const participant = this.participantsById.get(userId);
+		if (!participant) return null;
+		const disconnected = {
+			...participant,
+			connected: false,
+			cameraEnabled: false,
+		};
+		this.participantsById.set(userId, disconnected);
+		this.bumpServerSeq();
+		return disconnected;
+	}
   leave(participantId: string): Participant | null {
     const leaving = this.participantsById.get(participantId) ?? null;
     if (!leaving) {
@@ -204,9 +267,15 @@ export class RoomState {
     }
 
     this.participantsById.delete(participantId);
+		if (this.media)
+			this.media.participants = this.media.participants.filter(
+				(p) => p.participantSessionId !== leaving.participantSessionId,
+			);
 
     if (this.hostId === participantId) {
-      const nextHost = this.participants.find((participant) => participant.role === "host");
+			const nextHost = this.participants.find(
+				(participant) => participant.role === "host",
+			);
       this.hostId = nextHost?.id ?? null;
 
       if (!nextHost) {
@@ -292,6 +361,21 @@ export class RoomState {
   canSignal(fromUserId: string, toUserId: string): boolean {
     const from = this.participantsById.get(fromUserId);
     const to = this.participantsById.get(toUserId);
+		if (this.media) {
+			const a = this.mediaFor(fromUserId),
+				b = this.mediaFor(toUserId);
+			return (
+				fromUserId !== toUserId &&
+				from?.connected !== false &&
+				to?.connected !== false &&
+				!!a &&
+				!!b &&
+				(a.cameraGranted ||
+					a.microphoneGranted ||
+					b.cameraGranted ||
+					b.microphoneGranted)
+			);
+		}
     return (
       fromUserId !== toUserId &&
       from?.mediaSeat === "joined" &&
@@ -304,7 +388,9 @@ export class RoomState {
     if (!participant) {
       return false;
     }
-    return participant.mediaSeat === "joined";
+		return this.media
+			? this.mediaFor(userId)?.cameraGranted === true
+			: participant.mediaSeat === "joined";
   }
 
   setCamera(userId: string, cameraEnabled: boolean): Participant | null {
@@ -383,7 +469,10 @@ export class RoomState {
     return updated;
   }
 
-  grantMediaSeat(targetUserId: string, byUserId: string): MediaSeatChangeResult {
+	grantMediaSeat(
+		targetUserId: string,
+		byUserId: string,
+	): MediaSeatChangeResult {
     if (!this.canManageMediaSeats(byUserId)) {
       return { accepted: false, code: "NOT_HOST" };
     }
@@ -408,7 +497,10 @@ export class RoomState {
     return { accepted: true, participant: updated };
   }
 
-  revokeMediaSeat(targetUserId: string, byUserId: string): MediaSeatChangeResult {
+	revokeMediaSeat(
+		targetUserId: string,
+		byUserId: string,
+	): MediaSeatChangeResult {
     if (!this.canManageMediaSeats(byUserId)) {
       return { accepted: false, code: "NOT_HOST" };
     }
@@ -434,6 +526,12 @@ export class RoomState {
   toSnapshot(updatedAt = Date.now()): RoomStateSnapshot {
     const snapshot: RoomStateSnapshot = {
       schemaVersion: 1,
+			...(this.media
+				? {
+						media: structuredClone(this.mediaSnapshot!),
+						mediaRevocations: [...this.mediaRevocations],
+					}
+				: {}),
       capabilities: this.capabilities,
       hostId: this.hostId,
       participants: this.participants,
@@ -449,6 +547,175 @@ export class RoomState {
       snapshot.source = this.source;
     }
     return snapshot;
+	}
+
+	get mediaSnapshot(): RoomMediaSnapshot | undefined {
+		return this.media
+			? {
+					...structuredClone(this.media),
+					snapshotSequence: this.serverSeqValue,
+				}
+			: undefined;
+	}
+	setMediaCapabilities(caps: RoomMediaCapabilities): boolean {
+		if (this.media) {
+			const old = this.media.capabilities;
+			if (
+				old.hostPlanCode !== caps.hostPlanCode ||
+				old.maxParticipants !== caps.maxParticipants ||
+				old.maxCameras !== caps.maxCameras ||
+				old.maxMicrophones !== caps.maxMicrophones ||
+				this.media.closingAt ||
+				caps.capabilityRevision <= old.capabilityRevision
+			)
+				return false;
+			this.media.capabilities = caps;
+		} else {
+			if (this.participants.length) return false;
+			this.media = {
+				type: "ROOM_MEDIA_SNAPSHOT",
+				roomId: this.roomId,
+				roomGeneration: this.roomGenerationValue,
+				snapshotSequence: this.serverSeqValue,
+				capabilities: caps,
+				participants: [],
+				closingAt: null,
+			};
+		}
+		this.bumpServerSeq();
+		return true;
+	}
+	closeMediaAt(at: number): void {
+		if (this.media && !this.media.closingAt) {
+			this.media.closingAt = new Date(at).toISOString();
+			this.bumpServerSeq();
+		}
+	}
+	mediaFor(userId: string): ParticipantMediaState | undefined {
+		const session = this.participantsById.get(userId)?.participantSessionId;
+		return this.media?.participants.find(
+			(p) => p.participantSessionId === session,
+		);
+	}
+	applyMediaIntent(
+		userId: string,
+		intent: MediaIntent,
+		now = Date.now(),
+	): MediaIntentAck | MediaIntentError {
+		const state = this.mediaFor(userId);
+		const seqKey =
+			intent.media === "camera"
+				? "cameraIntentSequence"
+				: "microphoneIntentSequence";
+		const grantKey =
+			intent.media === "camera" ? "cameraGranted" : "microphoneGranted";
+		let code: MediaIntentError["code"] | undefined;
+		if (
+			!this.media ||
+			intent.roomId !== this.roomId ||
+			intent.roomGeneration !== this.roomGenerationValue
+		)
+			code = "MEDIA_STALE_GENERATION";
+		else if (
+			!state ||
+			this.participantsById.get(userId)?.participantSessionId !==
+				intent.participantSessionId
+		)
+			code = "MEDIA_STALE_SESSION";
+		else if (
+			intent.revocationEpoch !==
+			state[
+				intent.media === "camera"
+					? "cameraRevocationEpoch"
+					: "microphoneRevocationEpoch"
+			]
+		)
+			code = "MEDIA_STALE_INTENT";
+		else if (intent.intentSequence <= state[seqKey])
+			code = "MEDIA_STALE_INTENT";
+		else {
+			state[seqKey] = intent.intentSequence;
+			if (
+				intent.enabled &&
+				(this.media.closingAt ||
+					now >= Date.parse(this.media.capabilities.capabilitiesValidUntil))
+			)
+				code = "MEDIA_CAPABILITY_EXPIRED";
+			else if (
+				intent.enabled &&
+				!state[grantKey] &&
+				this.media.participants.filter((p) => p[grantKey]).length >=
+					(intent.media === "camera"
+						? this.media.capabilities.maxCameras
+						: this.media.capabilities.maxMicrophones)
+			)
+				code = "MEDIA_LIMIT_REACHED";
+			else {
+				state[grantKey] = intent.enabled;
+				if (!intent.enabled && intent.media === "camera")
+					this.setCamera(userId, false);
+			}
+			this.bumpServerSeq();
+		}
+		const reply = {
+			roomId: this.roomId,
+			roomGeneration: this.roomGenerationValue,
+			participantSessionId: intent.participantSessionId,
+			media: intent.media,
+			requestId: intent.requestId,
+			intentSequence: intent.intentSequence,
+			snapshotSequence: this.serverSeqValue,
+			state: state
+				? {
+						cameraGranted: state.cameraGranted,
+						microphoneGranted: state.microphoneGranted,
+						cameraIntentSequence: state.cameraIntentSequence,
+						microphoneIntentSequence: state.microphoneIntentSequence,
+						cameraRevocationEpoch: state.cameraRevocationEpoch,
+						microphoneRevocationEpoch: state.microphoneRevocationEpoch,
+					}
+				: emptyMediaState(),
+		};
+		return code
+			? { type: "MEDIA_INTENT_ERROR", ...reply, code }
+			: { type: "MEDIA_INTENT_ACK", ...reply };
+	}
+	revokeMediaGrant(byUserId: string, event: HostMediaRevoke): boolean {
+		if (
+			!this.canControlPlayback(byUserId) ||
+			event.roomId !== this.roomId ||
+			event.roomGeneration !== this.roomGenerationValue
+		)
+			return false;
+		const revokeKey = JSON.stringify([
+			event.roomGeneration,
+			event.targetParticipantSessionId,
+			event.media,
+			event.requestId,
+		]);
+		if (this.mediaRevocations.includes(revokeKey)) return true;
+		if (this.mediaRevocations.length >= 1024) return false;
+		const target = this.media?.participants.find(
+			(p) => p.participantSessionId === event.targetParticipantSessionId,
+		);
+		if (!target) return false;
+		const key =
+			event.media === "camera" ? "cameraGranted" : "microphoneGranted";
+		target[key] = false;
+		target[
+			event.media === "camera"
+				? "cameraRevocationEpoch"
+				: "microphoneRevocationEpoch"
+		] += 1;
+		this.mediaRevocations.push(revokeKey);
+		if (event.media === "camera") {
+			const p = this.participants.find(
+				(p) => p.participantSessionId === event.targetParticipantSessionId,
+			);
+			if (p) this.setCamera(p.id, false);
+		}
+		this.bumpServerSeq();
+		return true;
   }
 
   private bumpServerSeq(): void {
@@ -510,7 +777,10 @@ export type HostStateUpdateErrorCode =
   | "NOT_HOST"
   | "SOURCE_PROVIDER_MISMATCH";
 
-export type MediaSeatChangeCode = "MEDIA_SEATS_FULL" | "NOT_HOST" | "NOT_PARTICIPANT";
+export type MediaSeatChangeCode =
+	| "MEDIA_SEATS_FULL"
+	| "NOT_HOST"
+	| "NOT_PARTICIPANT";
 
 export type MediaSeatChangeResult =
   | { accepted: true; participant: Participant }
@@ -551,7 +821,10 @@ function normalizeRoomSourceUpdate(
   if (!candidate) {
     return previousSource ? null : { state };
   }
-  if (candidate.provider !== "crunchyroll" && candidate.provider !== "youtube") {
+	if (
+		candidate.provider !== "crunchyroll" &&
+		candidate.provider !== "youtube"
+	) {
     return null;
   }
 
@@ -568,7 +841,10 @@ function normalizeWatchSourceDescriptor(
   candidate: WatchSourceDescriptor,
   state?: PlaybackState,
 ): NormalizedWatchSourceDescriptor | null {
-  if (candidate.provider !== "crunchyroll" && candidate.provider !== "youtube") {
+	if (
+		candidate.provider !== "crunchyroll" &&
+		candidate.provider !== "youtube"
+	) {
     return null;
   }
 
@@ -589,23 +865,33 @@ function normalizeWatchSourceDescriptor(
   }
 
   const expectedFingerprint = sourceUrl.source.videoFingerprint;
-  if (!matchesCanonicalFingerprint(
+	if (
+		!matchesCanonicalFingerprint(
     candidate.sourceUrl,
     candidate.videoFingerprint,
     expectedFingerprint,
-  )) {
+		)
+	) {
     return null;
   }
   if (state?.sourceUrl) {
-    const stateUrl = canonicalizeRoomSourceUrl(state.sourceUrl, candidate.provider);
-    if (!stateUrl.ok || !sameCanonicalSource(sourceUrl.source, stateUrl.source)) {
+		const stateUrl = canonicalizeRoomSourceUrl(
+			state.sourceUrl,
+			candidate.provider,
+		);
+		if (
+			!stateUrl.ok ||
+			!sameCanonicalSource(sourceUrl.source, stateUrl.source)
+		) {
       return null;
     }
-    if (!matchesCanonicalFingerprint(
+		if (
+			!matchesCanonicalFingerprint(
       state.sourceUrl,
       state.videoFingerprint,
       expectedFingerprint,
-    )) {
+			)
+		) {
       return null;
     }
   } else if (state && state.videoFingerprint !== expectedFingerprint) {
@@ -643,16 +929,31 @@ function matchesCanonicalFingerprint(
   fingerprint: string,
   expectedFingerprint: string,
 ): boolean {
-  return fingerprint === expectedFingerprint ||
-    isLegacyRoomSourceFingerprintAlias(sourceUrl, fingerprint);
+	return (
+		fingerprint === expectedFingerprint ||
+		isLegacyRoomSourceFingerprintAlias(sourceUrl, fingerprint)
+	);
 }
 
 function sameCanonicalSource(
   left: RoomSourceDescriptor,
   right: RoomSourceDescriptor,
 ): boolean {
-  return left.provider === right.provider &&
+	return (
+		left.provider === right.provider &&
     left.sourceUrl === right.sourceUrl &&
     left.canonicalUrl === right.canonicalUrl &&
-    left.videoFingerprint === right.videoFingerprint;
+		left.videoFingerprint === right.videoFingerprint
+	);
+}
+
+function emptyMediaState(): ParticipantMediaState {
+	return {
+		cameraRevocationEpoch: 0,
+		microphoneRevocationEpoch: 0,
+		cameraGranted: false,
+		microphoneGranted: false,
+		cameraIntentSequence: 0,
+		microphoneIntentSequence: 0,
+	};
 }

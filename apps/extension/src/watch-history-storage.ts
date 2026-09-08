@@ -1,3 +1,5 @@
+import type { WatchHistoryLocalEvent } from "./watch-history-outbox";
+import { parseWatchHistoryLease, type WatchHistoryLease } from "./watch-history-access";
 import {
   WatchHistoryPreferencesSchema,
   type WatchHistoryPreferences,
@@ -17,6 +19,7 @@ export type WatchHistoryObservationDisplayMode = "mine" | "together";
 export type WatchHistoryAccountPartition = {
   ownerUserId: string;
   accountGeneration: number;
+  accessLease?: WatchHistoryLease | null;
   cache: WatchHistoryResponse | null;
   preferences: WatchHistoryPreferences | null;
   preferencesConfirmed?: boolean;
@@ -42,6 +45,7 @@ export type WatchHistoryStorageRoot = {
   schemaVersion: typeof WATCH_HISTORY_STORAGE_VERSION;
   partitions: Record<string, WatchHistoryAccountPartition>;
   activeGenerations?: Record<string, number>;
+  resumeClaims?: Record<string, number>;
   // Survives removal of empty account partitions on logout.
   browseAuthEpochs?: Record<string, string>;
 };
@@ -94,6 +98,24 @@ export function createWatchHistoryStorage(
       const legacy = dependencies.readLegacy
         ? await dependencies.readLegacy()
         : dependencies.item ? null : (await chrome.storage.local.get("anidachi.watchHistory.v2"))["anidachi.watchHistory.v2"];
+      if (hasCurrentRoot && stored) {
+        let changed = false;
+        const partitions = Object.fromEntries(Object.entries(stored.partitions).map(([key, partition]) => {
+          const proven = (entry: WatchHistoryOutboxPartition["entries"][number]) => {
+            const proof = parseWatchHistoryLease(entry.event.captureProof);
+            return !!proof && proof.access.state === "allowed" && proof.access.ownerUserId === partition.ownerUserId &&
+              proof.access.accountGeneration === partition.accountGeneration && Number.isSafeInteger(entry.event.clientSequence) &&
+              entry.event.clientSequence! > 0 && !("sharedRoom" in entry.event);
+          };
+          const unproven = partition.outbox.entries.filter((entry) => !proven(entry));
+          if (!unproven.length) return [key, partition];
+          changed = true;
+          return [key, { ...partition, currentObservation: null, currentObservationMeaningfulSolo: false, currentObservationDisplayMode: null,
+            outbox: { ...partition.outbox, entries: partition.outbox.entries.filter(proven),
+              retiredUnproven: Math.min(Number.MAX_SAFE_INTEGER, (partition.outbox.retiredUnproven ?? 0) + unproven.length) } }];
+        }));
+        if (changed && !(await replaceRoot({ ...stored, partitions })).ok) throw new Error("History migration could not persist accounting");
+      }
       if (!legacy) return;
       // A worker can stop after saving v3 but before retiring v2. In that case
       // only cleanup is pending; v3 preferences/progress must never be recopied.
@@ -289,7 +311,7 @@ function migrateLegacyPreferences(value: unknown): WatchHistoryStorageRoot {
 }
 
 export function withoutWatchHistoryAttestation(event: WatchProgressEvent): WatchProgressEvent {
-  const { sharedRoom: _sharedRoom, ...safeObservation } = event;
+  const { sharedRoom: _sharedRoom, captureProof: _proof, clientSequence: _sequence, ...safeObservation } = event as WatchHistoryLocalEvent;
   return safeObservation;
 }
 

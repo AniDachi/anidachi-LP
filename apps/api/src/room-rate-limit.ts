@@ -18,6 +18,39 @@ const CLASS_LIMITS: Record<RoomEventClass, number> = {
 export class RoomRateLimiter {
 	private windowStartedAt: number | null = null;
 	private total = 0;
+	private frames = 0;
+	private readonly targets = new Map<string, RoomRateLimiter>();
+
+	consumeFrameCeiling(
+		maxParticipants: number,
+		now = Date.now(),
+	): RoomRateLimitDecision {
+		this.ensureWindow(now);
+		if (this.frames >= TOTAL_LIMIT * Math.min(15, Math.max(1, maxParticipants)))
+			return this.reject(now);
+		this.frames++;
+		return { allowed: true, close: false, retryAfterMs: 0 };
+	}
+
+	/** Caller must authenticate the current pair before allocating a target. */
+	consumeTarget(
+		target: string,
+		eventClass: RoomEventClass,
+		maxParticipants: number,
+		now = Date.now(),
+	): RoomRateLimitDecision {
+		this.ensureWindow(now);
+		for (const [id, limiter] of this.targets)
+			if (limiter.isWindowExpired(now)) this.targets.delete(id);
+		let limiter = this.targets.get(target);
+		if (!limiter) {
+			if (this.targets.size >= Math.min(14, Math.max(0, maxParticipants - 1)))
+				return this.reject(now);
+			limiter = new RoomRateLimiter();
+			this.targets.set(target, limiter);
+		}
+		return limiter.consume(eventClass, now);
+	}
 	private rejections = 0;
 	private readonly classes: Record<RoomEventClass, number> = {
 		ice: 0,
@@ -39,33 +72,48 @@ export class RoomRateLimiter {
 		return { allowed: true, close: false, retryAfterMs: 0 };
 	}
 
-	consumeClass(eventClass: RoomEventClass, now = Date.now()): RoomRateLimitDecision {
+	consumeClass(
+		eventClass: RoomEventClass,
+		now = Date.now(),
+	): RoomRateLimitDecision {
 		this.ensureWindow(now);
-		if (this.classes[eventClass] >= CLASS_LIMITS[eventClass]) return this.reject(now);
+		if (this.classes[eventClass] >= CLASS_LIMITS[eventClass])
+			return this.reject(now);
 
 		this.classes[eventClass] += 1;
 		return { allowed: true, close: false, retryAfterMs: 0 };
 	}
 
 	isWindowExpired(now = Date.now()): boolean {
-		return this.windowStartedAt === null || now - this.windowStartedAt >= WINDOW_MS;
+		return (
+			(this.windowStartedAt === null ||
+				now - this.windowStartedAt >= WINDOW_MS) &&
+			[...this.targets.values()].every((target) => target.isWindowExpired(now))
+		);
 	}
 
 	private ensureWindow(now: number): void {
-		if (this.windowStartedAt === null || now - this.windowStartedAt >= WINDOW_MS) {
+		if (
+			this.windowStartedAt === null ||
+			now - this.windowStartedAt >= WINDOW_MS
+		) {
 			this.reset(now);
 		}
 	}
 
 	private reject(now: number): RoomRateLimitDecision {
 		this.rejections += 1;
-		const retryAfterMs = Math.max(0, (this.windowStartedAt ?? now) + WINDOW_MS - now);
+		const retryAfterMs = Math.max(
+			0,
+			(this.windowStartedAt ?? now) + WINDOW_MS - now,
+		);
 		return { allowed: false, close: this.rejections >= 3, retryAfterMs };
 	}
 
 	private reset(now: number): void {
 		this.windowStartedAt = now;
 		this.total = 0;
+		this.frames = 0;
 		this.rejections = 0;
 		this.classes.ice = 0;
 		this.classes.sdp = 0;
@@ -80,7 +128,10 @@ export class RoomRateLimiter {
  * one Room Durable Object and expire lazily once no socket still uses them.
  */
 export class RoomSubjectRateLimiters {
-	private readonly limiters = new Map<string, { limiter: RoomRateLimiter; releasedAt?: number }>();
+	private readonly limiters = new Map<
+		string,
+		{ limiter: RoomRateLimiter; releasedAt?: number }
+	>();
 	private maxEntries: number;
 
 	constructor(options: { maxParticipants?: number } = {}) {
@@ -117,7 +168,10 @@ export class RoomSubjectRateLimiters {
 
 	private prune(now: number): void {
 		for (const [subject, entry] of this.limiters) {
-			if (entry.releasedAt !== undefined && entry.limiter.isWindowExpired(now)) {
+			if (
+				entry.releasedAt !== undefined &&
+				entry.limiter.isWindowExpired(now)
+			) {
 				this.limiters.delete(subject);
 			}
 		}

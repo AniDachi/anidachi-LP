@@ -1,3 +1,4 @@
+import { withPersonalHistoryRead } from "./personal-history-policy";
 import { createHash } from "node:crypto";
 import {
 	WatchCatalogSnapshotInputSchema,
@@ -135,6 +136,10 @@ export async function readWatchHistoryGrid(params: {
 	store?: WatchHistoryGridStore;
 	now?: Date;
 }): Promise<WatchHistoryGridResponse> {
+	if (!params.store)
+		return withPersonalHistoryRead(params.userId, () =>
+			readWatchHistoryGrid({ ...params, store: supabaseWatchHistoryGridStore }),
+		);
 	const parsed = WatchHistoryGridQuerySchema.safeParse(params.input);
 	if (!parsed.success) throw fail("INVALID_REQUEST", 400);
 	const query: WatchHistoryGridQuery = parsed.data;
@@ -351,7 +356,8 @@ export async function readWatchHistoryGrid(params: {
 					(!episode.releasedAt ||
 						Date.parse(episode.releasedAt) <= now.getTime()),
 				sourceUrl: variant.sourceUrl,
-				history: history ? { ...history, sourceUrl: variant.sourceUrl } : null,
+				// Catalog launch choice must not rewrite the saved Resume observation.
+				history,
 			};
 		});
 		result.nextCursor =

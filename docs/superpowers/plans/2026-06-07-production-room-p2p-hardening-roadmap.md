@@ -31,6 +31,23 @@
 
 ## Progress Log
 
+- 2026-09-08 — `codex/personal-history-mvp`, committed runtime source
+  `8e4dd284`: accepted personal-history MVP supersedes the legacy four-person
+  target only for explicitly negotiated v2 rooms (4/6/15 participants, four
+  cameras, 4/6/8 microphones). Legacy rooms retain their original contract.
+  Tasks 7–9 have scoped approvals; actual local Worker/controller 4/6/15,
+  legacy26 media and room39 harness receipts are in the
+  [verification record](../../personal-history-and-plans-mvp-verification.md).
+  These short synthetic direct-path samples do not establish SLO percentages,
+  endurance, TURN, different networks, physical output or remote-country proof.
+  [Task 10 release preparation](../../releases/personal-history-mvp/README.md)
+  is local PRE_DELIVERY_READY only: additive DB → inactive compatible runtimes →
+  matching client → gated activation, after whole-branch review. Exact active-
+  policy recovery (C04), loaded MV3/provider and staging acceptance remain open.
+  No new staging or production delivery is claimed; existing roadmap acceptance
+  layers remain required. Docs-only preparation reuses the source receipts and
+  checks links/diff/dev:check classification, without repeating heavy capacity.
+
 - [x] 2026-06-07: Re-read the old commercial room/P2P/progress plan and found stale repo paths, stale repo names, and over-broad Task 6 completion claims.
 - [x] 2026-06-07: Audited current code in `packages/protocol`, `apps/api`, `apps/web`, and `apps/extension` for room lifecycle, P2P signaling, reconnect, and keepalive behavior.
 - [x] 2026-06-07: Ran two focused research passes: one repo-local audit for plan/task ordering and one Cloudflare Hibernation migration audit.

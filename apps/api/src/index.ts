@@ -1,3 +1,25 @@
+import {
+	ROOM_POLICY_STORAGE_KEY,
+	initialRoomPolicy,
+	failRoomPolicy,
+	renewRoomPolicy,
+	nextRoomPolicyAlarm,
+	type RoomPolicyState,
+} from "./room-capability";
+import { notifyWebRoomPolicy } from "./internal-web-client";
+import {
+	roomUsageBuckets,
+	acknowledgeRoomUsageDay,
+	reconcileLegacyRoomMeter,
+} from "./room-metering";
+import {
+  ROOM_PRESENCE_STORAGE_KEY,
+  parsePresenceState,
+  presencePairs,
+  coalescePresence,
+  claimPresence,
+  acknowledgePresence,
+} from "./room-presence-evidence";
 import { scheduled } from "./notification-scheduler";
 import {
   ClientEventSchema,
@@ -26,6 +48,7 @@ import { hasValidInternalAuthorization } from "./internal-auth";
 import {
   notifyWebParticipantDeparted,
   notifyWebRoomEnded,
+  notifyWebRoomPresence,
   notifyWebRoomSource,
 } from "./internal-web-client";
 import {
@@ -134,39 +157,54 @@ app.get("/", (c) => c.json({ ok: true, service: "anidachi-api" }));
 
 app.post("/internal/rooms/:roomId/end", async (c) => {
   const authorization = c.req.header("authorization") ?? null;
-  if (!hasValidInternalAuthorization(
+	if (
+		!hasValidInternalAuthorization(
     authorization,
     c.env.ANIDACHI_INTERNAL_API_SECRET,
-  )) {
-    return c.json({ error: "UNAUTHORIZED", message: "Invalid internal authorization" }, 401);
+		)
+	) {
+		return c.json(
+			{ error: "UNAUTHORIZED", message: "Invalid internal authorization" },
+			401,
+		);
   }
   const roomId = c.req.param("roomId");
   if (roomId.length === 0 || roomId.length > MAX_ROOM_ID_CHARS) {
-    return c.json({ error: "INVALID_ROOM_ID", message: "Invalid room id" }, 400);
+		return c.json(
+			{ error: "INVALID_ROOM_ID", message: "Invalid room id" },
+			400,
+		);
   }
   const body = await c.req.json().catch(() => null);
   const command = parseEndRoomCommand(body);
   if (!command) {
-    return c.json({ error: "INVALID_END_COMMAND", message: "Invalid room end command" }, 400);
+		return c.json(
+			{ error: "INVALID_END_COMMAND", message: "Invalid room end command" },
+			400,
+		);
   }
   const id = c.env.ROOMS.idFromName(roomId);
   const stub = c.env.ROOMS.get(id);
-  return stub.fetch(new Request(`https://room.internal/internal/end`, {
+	return stub.fetch(
+		new Request(`https://room.internal/internal/end`, {
     method: "POST",
     headers: {
       Authorization: authorization!,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(command),
-  }));
+		}),
+	);
 });
 
 app.post("/internal/rooms/:roomId/participants/:userId/depart", async (c) => {
   const authorization = c.req.header("authorization") ?? null;
-  if (!hasValidInternalAuthorization(
+	if (
+		!hasValidInternalAuthorization(
     authorization,
     c.env.ANIDACHI_INTERNAL_API_SECRET,
-  )) {
+		)
+	) {
     return c.json(
       { error: "UNAUTHORIZED", message: "Invalid internal authorization" },
       401,
@@ -175,7 +213,10 @@ app.post("/internal/rooms/:roomId/participants/:userId/depart", async (c) => {
   const roomId = c.req.param("roomId");
   const userId = c.req.param("userId");
   if (roomId.length === 0 || roomId.length > MAX_ROOM_ID_CHARS) {
-    return c.json({ error: "INVALID_ROOM_ID", message: "Invalid room id" }, 400);
+		return c.json(
+			{ error: "INVALID_ROOM_ID", message: "Invalid room id" },
+			400,
+		);
   }
   const command = InternalRoomDepartureCommandSchema.safeParse(
     await c.req.json().catch(() => null),
@@ -186,28 +227,35 @@ app.post("/internal/rooms/:roomId/participants/:userId/depart", async (c) => {
     command.data.userId !== userId
   ) {
     return c.json(
-      { error: "INVALID_DEPARTURE_COMMAND", message: "Invalid departure command" },
+			{
+				error: "INVALID_DEPARTURE_COMMAND",
+				message: "Invalid departure command",
+			},
       400,
     );
   }
   const id = c.env.ROOMS.idFromName(roomId);
   const stub = c.env.ROOMS.get(id);
-  return stub.fetch(new Request("https://room.internal/internal/depart", {
+	return stub.fetch(
+		new Request("https://room.internal/internal/depart", {
     method: "POST",
     headers: {
       Authorization: authorization!,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(command.data),
-  }));
+		}),
+	);
 });
 
 app.post("/internal/rooms/:roomId/participants/:userId/detach", async (c) => {
   const authorization = c.req.header("authorization") ?? null;
-  if (!hasValidInternalAuthorization(
+	if (
+		!hasValidInternalAuthorization(
     authorization,
     c.env.ANIDACHI_INTERNAL_API_SECRET,
-  )) {
+		)
+	) {
     return c.json(
       { error: "UNAUTHORIZED", message: "Invalid internal authorization" },
       401,
@@ -216,7 +264,10 @@ app.post("/internal/rooms/:roomId/participants/:userId/detach", async (c) => {
   const roomId = c.req.param("roomId");
   const userId = c.req.param("userId");
   if (roomId.length === 0 || roomId.length > MAX_ROOM_ID_CHARS) {
-    return c.json({ error: "INVALID_ROOM_ID", message: "Invalid room id" }, 400);
+		return c.json(
+			{ error: "INVALID_ROOM_ID", message: "Invalid room id" },
+			400,
+		);
   }
   const command = InternalRoomDetachCommandSchema.safeParse(
     await c.req.json().catch(() => null),
@@ -232,14 +283,16 @@ app.post("/internal/rooms/:roomId/participants/:userId/detach", async (c) => {
     );
   }
   const stub = c.env.ROOMS.get(c.env.ROOMS.idFromName(roomId));
-  return stub.fetch(new Request("https://room.internal/internal/detach", {
+	return stub.fetch(
+		new Request("https://room.internal/internal/detach", {
     method: "POST",
     headers: {
       Authorization: authorization!,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(command.data),
-  }));
+		}),
+	);
 });
 
 app.post("/rooms", (c) => {
@@ -268,7 +321,10 @@ app.get("/rooms/:roomId/ice-servers", async (c) => {
 
   const verified = await verifyRoomToken(roomToken, roomId, c.env);
   if (!verified) {
-    return c.json({ error: "INVALID_ROOM_TOKEN", message: "Invalid or expired room token" }, 401);
+		return c.json(
+			{ error: "INVALID_ROOM_TOKEN", message: "Invalid or expired room token" },
+			401,
+		);
   }
 
   try {
@@ -284,7 +340,10 @@ app.get("/rooms/:roomId/ice-servers", async (c) => {
     return c.json(
       {
         error: "ICE_SERVER_GENERATION_FAILED",
-        message: error instanceof Error ? error.message : "Failed to generate ICE servers",
+				message:
+					error instanceof Error
+						? error.message
+						: "Failed to generate ICE servers",
       },
       502,
     );
@@ -294,17 +353,26 @@ app.get("/rooms/:roomId/ice-servers", async (c) => {
 app.get("/ws/:roomId", async (c) => {
   const roomId = c.req.param("roomId");
   if (roomId.length === 0 || roomId.length > MAX_ROOM_ID_CHARS) {
-    return c.json({ error: "INVALID_ROOM_ID", message: "Invalid room id" }, 400);
+		return c.json(
+			{ error: "INVALID_ROOM_ID", message: "Invalid room id" },
+			400,
+		);
   }
 
   const roomToken = c.req.query("roomToken");
   if (!roomToken) {
-    return c.json({ error: "ROOM_TOKEN_REQUIRED", message: "Room token is required" }, 401);
+		return c.json(
+			{ error: "ROOM_TOKEN_REQUIRED", message: "Room token is required" },
+			401,
+		);
   }
 
   const verified = await verifyRoomToken(roomToken, roomId, c.env);
   if (!verified) {
-    return c.json({ error: "INVALID_ROOM_TOKEN", message: "Invalid or expired room token" }, 401);
+		return c.json(
+			{ error: "INVALID_ROOM_TOKEN", message: "Invalid or expired room token" },
+			401,
+		);
   }
 
   const id = c.env.ROOMS.idFromName(roomId);
@@ -319,8 +387,14 @@ function encode(event: ServerEvent): string {
 const HIBERNATION_KEEPALIVE_PING = "ping";
 const HIBERNATION_KEEPALIVE_PONG = "pong";
 
-export function closeInvalidRoomFrame(socket: WebSocket, raw: string | ArrayBuffer): boolean {
-  const frameBytes = typeof raw === "string" ? new TextEncoder().encode(raw).byteLength : raw.byteLength;
+export function closeInvalidRoomFrame(
+	socket: WebSocket,
+	raw: string | ArrayBuffer,
+): boolean {
+	const frameBytes =
+		typeof raw === "string"
+			? new TextEncoder().encode(raw).byteLength
+			: raw.byteLength;
   if (typeof raw === "string" && frameBytes <= MAX_ROOM_FRAME_BYTES) {
     return false;
   }
@@ -329,8 +403,14 @@ export function closeInvalidRoomFrame(socket: WebSocket, raw: string | ArrayBuff
   return true;
 }
 
-export function isRoomEventInScope(event: ClientEvent, roomId: string): boolean {
-  return event.roomId === roomId && (event.type !== "REACTION" || event.reaction.roomId === roomId);
+export function isRoomEventInScope(
+	event: ClientEvent,
+	roomId: string,
+): boolean {
+	return (
+		event.roomId === roomId &&
+		(event.type !== "REACTION" || event.reaction.roomId === roomId)
+	);
 }
 
 export function consumeRoomFrameBoundary(
@@ -346,7 +426,8 @@ function getRoomEventClass(event: ClientEvent): RoomEventClass {
   if (event.type === "REACTION") return "reaction";
   if (event.type !== "P2P_SIGNAL") return "control";
   if (event.signal.kind === "ice") return "ice";
-  if (event.signal.kind === "offer" || event.signal.kind === "answer") return "sdp";
+	if (event.signal.kind === "offer" || event.signal.kind === "answer")
+		return "sdp";
   return "control";
 }
 
@@ -440,22 +521,30 @@ export class RoomDurableObject {
   private room: RoomState;
   private readonly participantsBySocket = new Map<WebSocket, string>();
   private readonly p2pSignalBuffer = new RecentP2PSignalBuffer();
-  private readonly p2pSignalOperationsBySocket = new Map<WebSocket, Promise<void>>();
+	private readonly p2pSignalOperationsBySocket = new Map<
+		WebSocket,
+		Promise<void>
+	>();
   private readonly persistedP2PDedupeHashes = new Set<string>();
   private readonly socketsByParticipant = new Map<string, WebSocket>();
   private readonly verifiedBySocket = new Map<WebSocket, VerifiedRoomToken>();
   private readonly sessionIdBySocket = new Map<WebSocket, string | undefined>();
   private readonly admissionIdBySocket = new Map<WebSocket, string>();
-  private readonly admissionTimeoutBySocket = new Map<WebSocket, ReturnType<typeof setTimeout>>();
+	private readonly admissionTimeoutBySocket = new Map<
+		WebSocket,
+		ReturnType<typeof setTimeout>
+	>();
   private admission: RoomAdmission;
   private readonly rateLimitersBySubject = new RoomSubjectRateLimiters();
   private nextP2PServerSeq = 1;
   private endedTombstone: ReturnType<typeof endedRoomTombstone> | null;
   private roomMeter: RoomMeterState;
+	private roomPolicy: RoomPolicyState | null = null;
   private roomEndQueue: Promise<void> = Promise.resolve();
   private roomEndInProgress = false;
   private roomSourceDeliveryQueue: Promise<void> = Promise.resolve();
   private roomSourceRepairNeeded = false;
+  private presenceDelivery: Promise<void> | null = null;
 
   constructor(
     private readonly state: DurableObjectState,
@@ -465,12 +554,24 @@ export class RoomDurableObject {
 
     const roomId = state.id.name ?? "room";
     this.endedTombstone = readEndedRoomTombstone(state.storage);
-    this.roomMeter = readStoredRoomMeter(state.storage) ?? createRoomMeterState();
-    this.room = new RoomState(roomId, undefined, readStoredRoomState(state.storage) ?? undefined);
+		this.roomMeter =
+			readStoredRoomMeter(state.storage) ?? createRoomMeterState();
+		this.room = new RoomState(
+			roomId,
+			undefined,
+			readStoredRoomState(state.storage) ?? undefined,
+		);
     this.admission = new RoomAdmission({
       maxParticipants: this.room.roomCapabilities.maxParticipants,
     });
-    const replayMetadata = this.endedTombstone ? [] : readStoredP2PReplayMetadata(state.storage);
+    // Frozen persisted capabilities must initialize budgets before any restored
+    // socket sends an application frame (without a new upgrade request).
+    this.rateLimitersBySubject.setMaxParticipants(
+      this.room.roomCapabilities.maxParticipants,
+    );
+		const replayMetadata = this.endedTombstone
+			? []
+			: readStoredP2PReplayMetadata(state.storage);
     const latestStoredSeq = replayMetadata.at(-1)?.serverSeq ?? 0;
     for (const item of replayMetadata) {
       this.persistedP2PDedupeHashes.add(item.dedupeHash);
@@ -486,12 +587,21 @@ export class RoomDurableObject {
     this.p2pSignalBuffer.markReplayGapThrough(this.nextP2PServerSeq - 1);
     if (!this.endedTombstone) {
       state.blockConcurrencyWhile(async () => {
+				this.roomPolicy =
+					(await state.storage.get<RoomPolicyState>(ROOM_POLICY_STORAGE_KEY)) ??
+					null;
+				if (!!this.room.mediaSnapshot !== !!this.roomPolicy)
+					throw new Error("Missing durable room policy or media state");
+				if (this.roomPolicy) await this.persistRoomPolicyDeadline(Date.now());
         if (await this.ensureCurrentRoomSourcePending()) {
           state.waitUntil(this.runRoomSourceDeliveryExclusively(false));
         }
       });
       state.setWebSocketAutoResponse(
-        new WebSocketRequestResponsePair(HIBERNATION_KEEPALIVE_PING, HIBERNATION_KEEPALIVE_PONG),
+				new WebSocketRequestResponsePair(
+					HIBERNATION_KEEPALIVE_PING,
+					HIBERNATION_KEEPALIVE_PONG,
+				),
       );
       this.restoreWebSocketsFromAttachments();
       this.reconcileRoomUsage(Date.now());
@@ -510,8 +620,14 @@ export class RoomDurableObject {
     return { env: this.env.ANIDACHI_ENV ?? "local", roomId: this.room.roomId };
   }
 
-  private track(name: Parameters<typeof emitRoomTelemetry>[2]["name"], extra?: { role?: string; value?: number }): void {
-    emitRoomTelemetry(this.env.ROOM_ANALYTICS, this.telemetryContext, { name, ...extra });
+	private track(
+		name: Parameters<typeof emitRoomTelemetry>[2]["name"],
+		extra?: { role?: string; value?: number },
+	): void {
+		emitRoomTelemetry(this.env.ROOM_ANALYTICS, this.telemetryContext, {
+			name,
+			...extra,
+		});
   }
 
   private restoreWebSocketsFromAttachments(): void {
@@ -526,10 +642,15 @@ export class RoomDurableObject {
         continue;
       }
 
-      this.verifiedBySocket.set(socket, attachmentToVerifiedRoomToken(attachment));
-      if (attachment.verified.capabilities) {
+			this.verifiedBySocket.set(
+				socket,
+				attachmentToVerifiedRoomToken(attachment),
+			);
+			if (attachment.verified.capabilities && !this.room.mediaSnapshot) {
         this.room.setCapabilities(attachment.verified.capabilities);
-        this.admission.setMaxParticipants(attachment.verified.capabilities.maxParticipants);
+				this.admission.setMaxParticipants(
+					attachment.verified.capabilities.maxParticipants,
+				);
         this.rateLimitersBySubject.setMaxParticipants(
           attachment.verified.capabilities.maxParticipants,
         );
@@ -537,12 +658,15 @@ export class RoomDurableObject {
       const admissionId = crypto.randomUUID();
       this.admissionIdBySocket.set(socket, admissionId);
       if (!attachment.admission.joined) {
-        if (now >= attachment.admission.deadlineAt || !this.admission.restore({
+				if (
+					now >= attachment.admission.deadlineAt ||
+					!this.admission.restore({
           deadlineAt: attachment.admission.deadlineAt,
           joined: false,
           socketId: admissionId,
           subject: attachment.verified.sub,
-        })) {
+					})
+				) {
           this.admissionIdBySocket.delete(socket);
           this.verifiedBySocket.delete(socket);
           socket.close(4001, "Room JOIN admission expired");
@@ -561,7 +685,9 @@ export class RoomDurableObject {
         continue;
       }
 
-      const existingSocket = this.socketsByParticipant.get(attachment.participant.id);
+			const existingSocket = this.socketsByParticipant.get(
+				attachment.participant.id,
+			);
       if (existingSocket && existingSocket !== socket) {
         const existingAttachment = this.getSocketAttachment(existingSocket);
         const keepExisting =
@@ -579,7 +705,10 @@ export class RoomDurableObject {
       }
 
       if (!this.room.hasParticipant(attachment.participant.id)) {
-        this.room.join(attachment.participant);
+				this.room.join({
+					...attachment.participant,
+					participantSessionId: attachment.participantSessionId,
+				});
       }
       this.participantsBySocket.set(socket, attachment.participant.id);
       this.socketsByParticipant.set(attachment.participant.id, socket);
@@ -588,10 +717,16 @@ export class RoomDurableObject {
   }
 
   private getSocketAttachment(socket: WebSocket): RoomSocketAttachment | null {
-    return parseRoomSocketAttachment(socket.deserializeAttachment(), this.room.roomId);
+		return parseRoomSocketAttachment(
+			socket.deserializeAttachment(),
+			this.room.roomId,
+		);
   }
 
-  private writeSocketAttachment(socket: WebSocket, attachment: RoomSocketAttachment): void {
+	private writeSocketAttachment(
+		socket: WebSocket,
+		attachment: RoomSocketAttachment,
+	): void {
     socket.serializeAttachment(attachment);
   }
 
@@ -600,13 +735,22 @@ export class RoomDurableObject {
     if (!attachment) {
       return;
     }
-    this.writeSocketAttachment(socket, updateRoomSocketAttachment(attachment, { lastSeenAt: Date.now() }));
+		this.writeSocketAttachment(
+			socket,
+			updateRoomSocketAttachment(attachment, { lastSeenAt: Date.now() }),
+		);
   }
 
-  private scheduleAdmissionTimeout(socket: WebSocket, deadlineAt: number): void {
-    const timeout = setTimeout(() => {
+	private scheduleAdmissionTimeout(
+		socket: WebSocket,
+		deadlineAt: number,
+	): void {
+		const timeout = setTimeout(
+			() => {
       this.expirePendingAdmission(socket, deadlineAt);
-    }, Math.max(0, deadlineAt - Date.now()));
+			},
+			Math.max(0, deadlineAt - Date.now()),
+		);
     this.admissionTimeoutBySocket.set(socket, timeout);
   }
 
@@ -625,7 +769,11 @@ export class RoomDurableObject {
 
   private expirePendingAdmission(socket: WebSocket, deadlineAt: number): void {
     const attachment = this.getSocketAttachment(socket);
-    if (!attachment || attachment.admission.joined || attachment.admission.deadlineAt !== deadlineAt) {
+		if (
+			!attachment ||
+			attachment.admission.joined ||
+			attachment.admission.deadlineAt !== deadlineAt
+		) {
       return;
     }
     this.send(socket, {
@@ -669,10 +817,11 @@ export class RoomDurableObject {
   }
 
   private shouldMeterRoom(): boolean {
-    if (!this.isFreeRoom()) return false;
+		if (!this.isFreeRoom() || this.roomPolicy?.endingReason) return false;
     let hostJoined = false;
     let guestJoined = false;
     for (const socket of this.participantsBySocket.keys()) {
+			if (socket.readyState !== WebSocket.OPEN) continue;
       const verified = this.verifiedBySocket.get(socket);
       if (verified?.role === "host") hostJoined = true;
       if (verified?.role === "member") guestJoined = true;
@@ -689,15 +838,269 @@ export class RoomDurableObject {
 
   private reconcileRoomUsage(now: number): void {
     this.updateRoomMeter(
+			(this.room.mediaSnapshot ? reconcileRoomMeter : reconcileLegacyRoomMeter)(
+				this.roomMeter,
+				this.shouldMeterRoom(),
+				now,
+			),
+			now,
+		);
+		if (this.roomPolicy && !this.endedTombstone)
+			this.state.waitUntil(this.persistRoomPolicyDeadline(now));
+	}
+
+	private async persistRoomPolicyDeadline(now: number): Promise<void> {
+		if (!this.roomPolicy || this.endedTombstone || this.roomPolicy.endingReason) return;
+		this.roomPolicy.alarmAt = nextRoomPolicyAlarm(
+			this.roomPolicy,
+			now,
+			roomUsageSummary(this.roomMeter, now),
+			this.shouldMeterRoom(),
+		);
+		await this.state.storage.transaction(async (transaction) => {
+			await transaction.put(ROOM_POLICY_STORAGE_KEY, this.roomPolicy!);
+			await reconcileStoredRoomAlarm(transaction);
+		});
+	}
+	private async settleRoomUsage(): Promise<boolean> {
+		if (!this.roomPolicy || !this.isFreeRoom()) return true;
+		try {
+			const result = await notifyWebRoomPolicy(
+				this.env,
+				this.room.roomId,
+				this.room.roomGeneration,
+				roomUsageBuckets(this.roomMeter),
+				true,
+			);
+			for (const ack of result.acknowledged)
+				this.updateRoomMeter(
+					acknowledgeRoomUsageDay(this.roomMeter, ack.day, ack.seconds),
+					Date.now(),
+				);
+			await this.state.storage.sync();
+			return true;
+		} catch {
+			if (this.roomPolicy) {
+				this.roomPolicy.alarmAt = Date.now() + 10_000;
+				await this.state.storage.put(ROOM_POLICY_STORAGE_KEY, this.roomPolicy);
+				await this.state.storage.transaction((t) =>
+					reconcileStoredRoomAlarm(t),
+				);
+			}
+			return false;
+		}
+	}
+	private async serviceRoomPolicy(now: number): Promise<void> {
+		let policy = this.roomPolicy;
+		if (!policy || this.endedTombstone) return;
+    if (policy.endingReason && policy.closingAt !== null) {
+      if (now >= policy.alarmAt) await this.endRoomExclusive({ reason: policy.endingReason, endedAt: policy.closingAt });
+      return;
+    }
+		if (
+			this.isFreeRoom() &&
+			policy.budget?.day === this.roomMeter.day &&
+			this.roomMeter.activeSince !== null
+		) {
+			const exhaustedAt =
+				this.roomMeter.activeSince +
+				Math.max(
+					0,
+					policy.budget.allowedSeconds * 1000 - this.roomMeter.accumulatedMs,
+				);
+			// A day's allowance governs only its half-open UTC interval. A delayed
+			// alarm must settle midnight before evaluating the following day's budget.
+			const budgetEndsAt =
+				Date.parse(`${policy.budget.day}T00:00:00.000Z`) + 86_400_000;
+			if (now >= exhaustedAt && exhaustedAt < budgetEndsAt) {
+				this.updateRoomMeter(
+					reconcileRoomMeter(this.roomMeter, false, exhaustedAt),
+					exhaustedAt,
+				);
+				await this.endRoomExclusive({
+					reason: "quota_exhausted",
+					endedAt: exhaustedAt,
+				});
+				return;
+			}
+		}
+		this.updateRoomMeter(reconcileRoomMeter(this.roomMeter, false, now), now);
+		const usage = roomUsageSummary(this.roomMeter, now);
+		this.updateRoomMeter(
       reconcileRoomMeter(this.roomMeter, this.shouldMeterRoom(), now),
       now,
     );
+		const leaseExpiry = Date.parse(
+			policy.lease.capabilities.capabilitiesValidUntil,
+		);
+		if (now >= leaseExpiry) policy = failRoomPolicy(policy, leaseExpiry);
+		const needsBudget =
+			this.isFreeRoom() &&
+			(!policy.budget ||
+				policy.budget.day !== usage.day ||
+				this.roomMeter.pending.length > 0);
+		if (this.roomMeter.accountingBlocked) {
+			await this.endRoomExclusive({
+				reason: "accounting_unavailable",
+				endedAt: now,
+			});
+			return;
+		}
+		if (policy.closingAt === null && (now >= policy.refreshAt || needsBudget)) {
+			try {
+				// Cumulative usage is persisted locally before the bounded external call.
+				await this.state.storage.sync();
+				const result = await notifyWebRoomPolicy(
+					this.env,
+					this.room.roomId,
+					this.room.roomGeneration,
+					roomUsageBuckets(this.roomMeter),
+				);
+				for (const ack of result.acknowledged)
+					this.updateRoomMeter(
+						acknowledgeRoomUsageDay(this.roomMeter, ack.day, ack.seconds),
+						now,
+					);
+				const renewal = result.policy as {
+					denied?: boolean;
+					closingAt?: string;
+					roomToken?: string;
+					quota?: { day: string; remainingSeconds: number; resetAt: string };
+				} | null;
+				if (renewal?.denied === true) {
+					const end = Date.parse(renewal.closingAt ?? "");
+					if (!Number.isFinite(end)) throw new Error("Invalid denial");
+					policy = { ...policy, closingAt: Math.min(now + 300_000, end) };
+				} else {
+					const token =
+						typeof renewal?.roomToken === "string"
+							? await verifyRoomToken(
+									renewal.roomToken,
+									this.room.roomId,
+									this.env,
+								)
+							: null;
+					if (
+						!token?.mediaLease ||
+						token.hostUserId !== policy.hostId ||
+						token.role !== "host" ||
+						token.mediaLease.roomGeneration !== this.room.roomGeneration
+					)
+						throw new Error("Invalid renewal authority");
+					const updated = renewRoomPolicy(policy, token.mediaLease);
+					if (updated === policy) throw new Error("Stale renewal");
+					policy = updated;
+					this.room.setMediaCapabilities(token.mediaLease.capabilities);
+					if (this.isFreeRoom()) {
+						const quota = renewal?.quota;
+						if (
+							!quota ||
+							quota.day !== usage.day ||
+							!Number.isSafeInteger(quota.remainingSeconds) ||
+							quota.remainingSeconds < 0 ||
+							quota.remainingSeconds > 1800
+						)
+							throw new Error("Invalid quota");
+						const allowed =
+							quota.remainingSeconds + this.roomMeter.acknowledgedSeconds;
+						policy.budget = {
+							day: usage.day,
+							allowedSeconds:
+								policy.budget?.day === usage.day
+									? Math.min(policy.budget.allowedSeconds, allowed)
+									: allowed,
+						};
+					}
+				}
+			} catch {
+				policy = failRoomPolicy(policy, now);
+				this.broadcast({
+					type: "ERROR",
+					code: needsBudget
+						? "ROOM_ACCOUNTING_UNAVAILABLE"
+						: "ROOM_AUTHORITY_UNAVAILABLE",
+					message: needsBudget
+						? "Room accounting could not be verified"
+						: "Room authority could not be renewed; room closes in five minutes",
+				});
+				if (needsBudget) {
+					policy.closingAt = now;
+					this.roomPolicy = policy;
+					await this.endRoomExclusive({
+						reason: "accounting_unavailable",
+						endedAt: now,
+					});
+					return;
+				}
+			}
+		}
+		if (now >= Date.parse(policy.lease.capabilities.capabilitiesValidUntil))
+			policy = failRoomPolicy(
+				policy,
+				Date.parse(policy.lease.capabilities.capabilitiesValidUntil),
+			);
+		this.roomPolicy = policy;
+		if (policy.closingAt) {
+			if (!this.room.mediaSnapshot?.closingAt)
+				this.broadcast({
+					type: "ERROR",
+					code: "ROOM_CAPABILITY_WARNING",
+					message:
+						"Room capabilities could not be retained; this room is closing in five minutes",
+				});
+			this.room.closeMediaAt(policy.closingAt);
+			if (now >= policy.closingAt) {
+				await this.endRoomExclusive({
+					reason: policy.endingReason ?? "capability_expired",
+					endedAt: policy.closingAt,
+				});
+				return;
+			}
+		}
+		if (this.isFreeRoom() && policy.budget?.day === usage.day) {
+			const remaining = policy.budget.allowedSeconds - usage.seconds;
+			if (remaining <= 0) {
+				await this.endRoomExclusive({
+					reason: "quota_exhausted",
+					endedAt: now,
+				});
+				return;
+			}
+			if (remaining <= 300 && policy.quotaWarnedDay !== usage.day) {
+				policy.quotaWarnedDay = usage.day;
+				this.broadcast({
+					type: "ERROR",
+					code: "ROOM_QUOTA_WARNING",
+					message: "Five minutes or less of Free room time remain",
+				});
+			}
+		}
+		this.persistRoomState();
+		this.updateRoomMeter(
+			reconcileRoomMeter(this.roomMeter, this.shouldMeterRoom(), Date.now()),
+			Date.now(),
+		);
+		await this.persistRoomPolicyDeadline(Date.now());
+    // Existing policy alarms also publish day/budget renewal to connected clients.
+    this.broadcast(this.currentRoomSnapshot(Date.now()));
   }
 
   private stopRoomUsage(now: number): RoomUsageSummary | undefined {
     if (!this.isFreeRoom()) return undefined;
-    this.updateRoomMeter(reconcileRoomMeter(this.roomMeter, false, now), now);
-    return roomUsageSummary(this.roomMeter, now);
+		this.updateRoomMeter(
+			(this.room.mediaSnapshot ? reconcileRoomMeter : reconcileLegacyRoomMeter)(
+				this.roomMeter,
+				false,
+				now,
+			),
+			now,
+		);
+		return this.room.mediaSnapshot
+			? roomUsageSummary(this.roomMeter, now)
+			: {
+					day: this.roomMeter.day ?? new Date(now).toISOString().slice(0, 10),
+					seconds: Math.floor(this.roomMeter.accumulatedMs / 1000),
+				};
   }
 
   private currentRoomSnapshot(
@@ -707,12 +1110,29 @@ export class RoomDurableObject {
     if (snapshot.type !== "ROOM_SNAPSHOT") {
       throw new Error("Room state returned a non-snapshot event");
     }
-    return this.isFreeRoom()
-      ? { ...snapshot, roomUsage: roomUsageSummary(this.roomMeter, now) }
-      : snapshot;
+    if (!this.isFreeRoom()) return snapshot;
+    if (this.room.mediaSnapshot) {
+      const roomUsage = roomUsageSummary(this.roomMeter, now);
+      const budget = this.roomPolicy?.budget;
+      return {
+        ...snapshot, roomUsage,
+        ...(budget?.day === roomUsage.day ? { quota: {
+          day: roomUsage.day,
+          remainingSeconds: Math.max(0, budget.allowedSeconds - roomUsage.seconds),
+          metering: this.shouldMeterRoom(),
+          measuredAt: now,
+        } } : {}),
+      };
+    }
+    return { ...snapshot, roomUsage: {
+      day: this.roomMeter.day ?? new Date(now).toISOString().slice(0, 10),
+      seconds: Math.floor((this.roomMeter.accumulatedMs + (this.roomMeter.activeSince === null ? 0 : Math.max(0, now - this.roomMeter.activeSince))) / 1000),
+    } };
   }
 
-  private async runRoomEndExclusively<T>(operation: () => Promise<T>): Promise<T> {
+	private async runRoomEndExclusively<T>(
+		operation: () => Promise<T>,
+	): Promise<T> {
     const previous = this.roomEndQueue;
     let release: () => void = () => {};
     this.roomEndQueue = new Promise<void>((resolve) => {
@@ -771,25 +1191,25 @@ export class RoomDurableObject {
 
   private async deliverPendingRoomSource(force: boolean): Promise<boolean> {
     try {
-      if (!await this.ensureCurrentRoomSourcePending()) return false;
+			if (!(await this.ensureCurrentRoomSourcePending())) return false;
       const attempt = await claimStoredRoomSourceAttempt(
         this.state.storage,
         Date.now(),
         { force },
       );
       if (!attempt) {
-        return await readStoredRoomSourcePersistence(this.state.storage) === null;
+				return (
+					(await readStoredRoomSourcePersistence(this.state.storage)) === null
+				);
       }
-      await notifyWebRoomSource(
-        this.env,
-        this.room.roomId,
-        attempt.callback,
-      );
+			await notifyWebRoomSource(this.env, this.room.roomId, attempt.callback);
       await acknowledgeStoredRoomSourceAttempt(
         this.state.storage,
         attempt.callback.sourceGeneration,
       );
-      return await readStoredRoomSourcePersistence(this.state.storage) === null;
+			return (
+				(await readStoredRoomSourcePersistence(this.state.storage)) === null
+			);
     } catch {
       // A completed claim already committed its retry deadline before I/O;
       // storage failures remain fail-closed and cannot allow room finalization.
@@ -800,21 +1220,28 @@ export class RoomDurableObject {
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
     if (request.method === "POST" && url.pathname === "/internal/end") {
-      if (!hasValidInternalAuthorization(
+			if (
+				!hasValidInternalAuthorization(
         request.headers.get("authorization"),
         this.env.ANIDACHI_INTERNAL_API_SECRET,
-      )) {
+				)
+			) {
         return Response.json({ error: "UNAUTHORIZED" }, { status: 401 });
       }
-      const command = parseEndRoomCommand(await request.json().catch(() => null));
-      if (!command) return Response.json({ error: "INVALID_END_COMMAND" }, { status: 400 });
+			const command = parseEndRoomCommand(
+				await request.json().catch(() => null),
+			);
+			if (!command)
+				return Response.json({ error: "INVALID_END_COMMAND" }, { status: 400 });
       return this.endRoom(command);
     }
     if (request.method === "POST" && url.pathname === "/internal/depart") {
-      if (!hasValidInternalAuthorization(
+			if (
+				!hasValidInternalAuthorization(
         request.headers.get("authorization"),
         this.env.ANIDACHI_INTERNAL_API_SECRET,
-      )) {
+				)
+			) {
         return Response.json({ error: "UNAUTHORIZED" }, { status: 401 });
       }
       const command = InternalRoomDepartureCommandSchema.safeParse(
@@ -826,15 +1253,17 @@ export class RoomDurableObject {
           { status: 400 },
         );
       }
-      return this.runRoomEndExclusively(
-        () => this.handleParticipantDeparture(command.data),
+			return this.runRoomEndExclusively(() =>
+				this.handleParticipantDeparture(command.data),
       );
     }
     if (request.method === "POST" && url.pathname === "/internal/detach") {
-      if (!hasValidInternalAuthorization(
+			if (
+				!hasValidInternalAuthorization(
         request.headers.get("authorization"),
         this.env.ANIDACHI_INTERNAL_API_SECRET,
-      )) {
+				)
+			) {
         return Response.json({ error: "UNAUTHORIZED" }, { status: 401 });
       }
       const command = InternalRoomDetachCommandSchema.safeParse(
@@ -846,8 +1275,8 @@ export class RoomDurableObject {
           { status: 400 },
         );
       }
-      return this.runRoomEndExclusively(
-        () => this.handleParticipantDetach(command.data),
+			return this.runRoomEndExclusively(() =>
+				this.handleParticipantDetach(command.data),
       );
     }
     if (this.endedTombstone) {
@@ -875,17 +1304,67 @@ export class RoomDurableObject {
       return new Response("Missing room token", { status: 401 });
     }
 
-    const verified = await verifyRoomToken(roomToken, this.room.roomId, this.env);
+		const verified = await verifyRoomToken(
+			roomToken,
+			this.room.roomId,
+			this.env,
+		);
     if (!verified) {
       this.track("ws_token_reject");
       return new Response("Invalid room token", { status: 401 });
     }
-    if (verified.capabilities) {
+		if (this.room.mediaSnapshot && !verified.mediaLease)
+			return Response.json({ error: "ROOM_UPDATE_REQUIRED" }, { status: 426 });
+		if (verified.mediaLease) {
+			if (!this.roomPolicy) {
+				if (this.room.participants.length)
+					return Response.json(
+						{ error: "ROOM_PROTOCOL_MISMATCH" },
+						{ status: 426 },
+					);
+				this.roomPolicy = initialRoomPolicy(
+					verified.hostUserId!,
+					verified.mediaLease,
+					Date.now(),
+				);
+				this.room.setMediaCapabilities(verified.mediaLease.capabilities);
+				if (verified.capabilities)
+					this.room.setCapabilities(verified.capabilities);
+				this.persistRoomState();
+				await this.persistRoomPolicyDeadline(Date.now());
+			} else if (
+				verified.hostUserId !== this.roomPolicy.hostId ||
+				verified.mediaLease.capabilities.hostPlanCode !==
+					this.roomPolicy.lease.capabilities.hostPlanCode ||
+				verified.mediaLease.roomGeneration !== this.room.roomGeneration
+			)
+				return Response.json(
+					{ error: "ROOM_PROTOCOL_MISMATCH" },
+					{ status: 426 },
+				);
+			this.admission.setMaxParticipants(
+				verified.mediaLease.capabilities.maxParticipants,
+			);
+			this.rateLimitersBySubject.setMaxParticipants(
+				verified.mediaLease.capabilities.maxParticipants,
+			);
+			await this.runRoomEndExclusively(() =>
+				this.serviceRoomPolicy(Date.now()),
+			);
+			if (this.endedTombstone)
+				return Response.json({ error: "ROOM_ENDED" }, { status: 410 });
+      if(this.roomPolicy?.endingReason)return Response.json({error:"ROOM_ENDING"},{status:409});
+		}
+		if (verified.capabilities && !this.room.mediaSnapshot) {
       this.room.setCapabilities(verified.capabilities);
       this.admission.setMaxParticipants(verified.capabilities.maxParticipants);
-      this.rateLimitersBySubject.setMaxParticipants(verified.capabilities.maxParticipants);
+			this.rateLimitersBySubject.setMaxParticipants(
+				verified.capabilities.maxParticipants,
+			);
     }
-    const tombstoneAfterVerification = readEndedRoomTombstone(this.state.storage);
+		const tombstoneAfterVerification = readEndedRoomTombstone(
+			this.state.storage,
+		);
     if (tombstoneAfterVerification) {
       this.endedTombstone = tombstoneAfterVerification;
       return Response.json(
@@ -912,7 +1391,11 @@ export class RoomDurableObject {
 
     const admissionId = crypto.randomUUID();
     const admittedAt = Date.now();
-    const reservation = this.admission.reserve(verified.sub, admissionId, admittedAt);
+		const reservation = this.admission.reserve(
+			verified.sub,
+			admissionId,
+			admittedAt,
+		);
     if (!reservation.allowed) {
       return Response.json({ error: "ROOM_ADMISSION_LIMIT" }, { status: 429 });
     }
@@ -952,7 +1435,10 @@ export class RoomDurableObject {
           /* stale socket */
         }
       }
-      return Response.json({ error: "ROOM_ADMISSION_SETUP_FAILED" }, { status: 503 });
+			return Response.json(
+				{ error: "ROOM_ADMISSION_SETUP_FAILED" },
+				{ status: 503 },
+			);
     }
   }
 
@@ -960,6 +1446,14 @@ export class RoomDurableObject {
     return this.runRoomEndExclusively(() => this.endRoomExclusive(command));
   }
 
+  private async retryRoomPolicyEnd(command:EndRoomCommand):Promise<void> {
+    if(!this.roomPolicy)return;
+    this.roomPolicy.closingAt=Math.min(this.roomPolicy.closingAt??command.endedAt,command.endedAt);
+    this.roomPolicy.endingReason=command.reason;
+    this.roomPolicy.alarmAt=Date.now()+10_000;
+    this.room.closeMediaAt(this.roomPolicy.closingAt);this.persistRoomState();
+    await this.state.storage.transaction(async transaction=>{await transaction.put(ROOM_POLICY_STORAGE_KEY,this.roomPolicy!);await reconcileStoredRoomAlarm(transaction);});
+  }
   private async endRoomExclusive(command: EndRoomCommand): Promise<Response> {
     if (this.endedTombstone) {
       await this.applyTerminalRoomState(this.endedTombstone);
@@ -974,9 +1468,23 @@ export class RoomDurableObject {
     this.roomEndInProgress = true;
     const meteredAt = Date.now();
     const usage = this.stopRoomUsage(meteredAt);
+    if (this.roomPolicy) {
+      // Live enforcement precedes network I/O; durable finalization retains the ledger until ACK.
+      await this.retryRoomPolicyEnd(command);
+      await this.state.storage.sync();
+      sendAndCloseEndedRoomSockets(this.state.getWebSockets().filter(socket => socket.readyState === WebSocket.OPEN), roomEndedEvent(this.room.roomId, endedRoomTombstone(command)));
+    }
+		if (this.roomPolicy && !(await this.settleRoomUsage())) {
+      await this.retryRoomPolicyEnd(command);
+			this.roomEndInProgress = false;
+			return Response.json(
+				{ error: "ROOM_ACCOUNTING_UNAVAILABLE" },
+				{ status: 503 },
+			);
+		}
     const sourceDurable = await this.runRoomSourceDeliveryExclusively(true);
     if (!sourceDurable) {
-      this.reconcileRoomUsage(Date.now());
+			if(this.roomPolicy)await this.retryRoomPolicyEnd(command);else this.reconcileRoomUsage(Date.now());
       this.roomEndInProgress = false;
       return Response.json(
         {
@@ -993,7 +1501,7 @@ export class RoomDurableObject {
         ...(usage ? { usage } : {}),
       });
     } catch {
-      this.reconcileRoomUsage(Date.now());
+			if(this.roomPolicy)await this.retryRoomPolicyEnd(command);else this.reconcileRoomUsage(Date.now());
       this.roomEndInProgress = false;
       return Response.json(
         {
@@ -1046,7 +1554,8 @@ export class RoomDurableObject {
     this.socketsByParticipant.clear();
     this.verifiedBySocket.clear();
     this.sessionIdBySocket.clear();
-    for (const timeout of this.admissionTimeoutBySocket.values()) clearTimeout(timeout);
+		for (const timeout of this.admissionTimeoutBySocket.values())
+			clearTimeout(timeout);
     this.admissionTimeoutBySocket.clear();
     this.admissionIdBySocket.clear();
     this.admission = new RoomAdmission({
@@ -1055,7 +1564,10 @@ export class RoomDurableObject {
     this.rateLimitersBySubject.clear();
   }
 
-  async webSocketMessage(socket: WebSocket, raw: string | ArrayBuffer): Promise<void> {
+	async webSocketMessage(
+		socket: WebSocket,
+		raw: string | ArrayBuffer,
+	): Promise<void> {
     if (this.endedTombstone) {
       sendAndCloseEndedRoomSockets(
         [socket],
@@ -1064,6 +1576,17 @@ export class RoomDurableObject {
       return;
     }
     if (this.roomEndInProgress) return;
+		if (this.roomPolicy)
+			await this.runRoomEndExclusively(() =>
+				this.serviceRoomPolicy(Date.now()),
+			);
+		if (
+			this.endedTombstone ||
+			(this.roomPolicy?.closingAt !== null &&
+				this.roomPolicy?.closingAt !== undefined &&
+				this.roomPolicy.closingAt <= Date.now())
+		)
+			return;
     await this.handleMessage(socket, raw);
   }
 
@@ -1094,10 +1617,58 @@ export class RoomDurableObject {
   }
 
   async alarm(): Promise<void> {
+    this.startPresenceDelivery();
     await this.runRoomEndExclusively(() => this.runAlarmExclusive());
   }
 
+  private startPresenceDelivery(): void {
+    if (this.presenceDelivery) return;
+    const operation = this.deliverPresence()
+      .catch(() => undefined)
+      .finally(() => {
+        if (this.presenceDelivery === operation) this.presenceDelivery = null;
+      });
+    this.presenceDelivery = operation;
+    this.state.waitUntil(operation);
+  }
+
+  private async deliverPresence(): Promise<void> {
+    const claimed = await this.state.storage.transaction(
+      async (transaction) => {
+        const current = parsePresenceState(
+          await transaction.get(ROOM_PRESENCE_STORAGE_KEY),
+        );
+        if (!current) return [];
+        const { state, claimed } = claimPresence(current, Date.now());
+        await transaction.put(ROOM_PRESENCE_STORAGE_KEY, state);
+        await reconcileStoredRoomAlarm(transaction);
+        return claimed;
+      },
+    );
+    await Promise.all(
+      claimed.map(async (claim) => {
+        try {
+          await notifyWebRoomPresence(this.env, claim.evidence);
+          await this.state.storage.transaction(async (transaction) => {
+            const current = parsePresenceState(
+              await transaction.get(ROOM_PRESENCE_STORAGE_KEY),
+            );
+            if (current)
+              await transaction.put(
+                ROOM_PRESENCE_STORAGE_KEY,
+                acknowledgePresence(current, claim),
+              );
+            await reconcileStoredRoomAlarm(transaction);
+          });
+        } catch {
+          /* Durable claim already owns a finite retry deadline. */
+        }
+      }),
+    );
+  }
+
   private async runAlarmExclusive(): Promise<void> {
+		if (this.roomPolicy) await this.serviceRoomPolicy(Date.now());
     if (this.endedTombstone) {
       await clearStoredRoomLifecycleAndAlarm(this.state.storage);
       return;
@@ -1130,7 +1701,8 @@ export class RoomDurableObject {
         reconcileStoredRoomAlarm(
           transaction,
           Date.now() + ROOM_SOURCE_RETRY_BASE_MS,
-        ));
+				),
+			);
       return;
     }
 
@@ -1157,6 +1729,7 @@ export class RoomDurableObject {
         { value: attempt.attempts },
       );
       const usage = this.stopRoomUsage(attempt.endedAt);
+			if (this.roomPolicy && !(await this.settleRoomUsage())) return;
 
       try {
         await notifyWebRoomEnded(this.env, this.room.roomId, {
@@ -1189,7 +1762,10 @@ export class RoomDurableObject {
     }
   }
 
-  private async handleMessage(socket: WebSocket, raw: string | ArrayBuffer): Promise<void> {
+	private async handleMessage(
+		socket: WebSocket,
+		raw: string | ArrayBuffer,
+	): Promise<void> {
     if (this.hasJoinDeadlineElapsed(socket)) return;
     const verified = this.verifiedBySocket.get(socket);
     if (!verified) {
@@ -1201,7 +1777,8 @@ export class RoomDurableObject {
       socket.close(1008, "Room event rate capacity exceeded");
       return;
     }
-    const frameRateLimit = consumeRoomFrameBoundary(socket, limiter, raw);
+    const v2Limit = verified.mediaLease && this.room.mediaSnapshot ? this.room.mediaSnapshot.capabilities.maxParticipants : null;
+    const frameRateLimit = v2Limit ? (closeInvalidRoomFrame(socket, raw) ? null : limiter.consumeFrameCeiling(v2Limit)) : consumeRoomFrameBoundary(socket, limiter, raw);
     if (!frameRateLimit) {
       return;
     }
@@ -1210,6 +1787,7 @@ export class RoomDurableObject {
       return;
     }
     if (raw === HIBERNATION_KEEPALIVE_PING) {
+      if (v2Limit && this.rejectRateLimitedEvent(socket, limiter.consumeTotal())) return;
       socket.send(HIBERNATION_KEEPALIVE_PONG);
       this.touchSocketAttachment(socket);
       return;
@@ -1219,11 +1797,21 @@ export class RoomDurableObject {
     try {
       event = ClientEventSchema.parse(JSON.parse(raw));
     } catch {
-      this.send(socket, { type: "ERROR", code: "INVALID_EVENT", message: "Invalid room event" });
+      if (v2Limit && this.rejectRateLimitedEvent(socket, limiter.consumeTotal())) return;
+			this.send(socket, {
+				type: "ERROR",
+				code: "INVALID_EVENT",
+				message: "Invalid room event",
+			});
       return;
     }
 
-    const parsedBoundary = consumeParsedRoomEventBoundary(limiter, event, this.room.roomId);
+    const authorizedTarget = v2Limit && event.type === "P2P_SIGNAL" && this.isCurrentMediaSignalPair(socket, event) ? event.toUserId : null;
+    if (v2Limit && !authorizedTarget && this.rejectRateLimitedEvent(socket, limiter.consumeTotal())) return;
+    const parsedBoundary = authorizedTarget && v2Limit ? {
+      rateLimit: limiter.consumeTarget(authorizedTarget, getRoomEventClass(event), v2Limit),
+      inScope: true,
+    } : consumeParsedRoomEventBoundary(limiter, event, this.room.roomId);
     if (this.rejectRateLimitedEvent(socket, parsedBoundary.rateLimit)) return;
     if (!parsedBoundary.inScope) {
       this.send(socket, {
@@ -1237,6 +1825,43 @@ export class RoomDurableObject {
     this.touchSocketAttachment(socket);
 
     switch (event.type) {
+			case "SET_MEDIA_INTENT":
+			case "REVOKE_MEDIA_GRANT":
+				await this.runRoomEndExclusively(async () => {
+					const userId = this.participantsBySocket.get(socket);
+					if (!userId || this.socketsByParticipant.get(userId) !== socket)
+						return;
+					const before = this.room.toSnapshot();
+					try {
+						const reply =
+							event.type === "SET_MEDIA_INTENT"
+								? this.room.applyMediaIntent(userId, event)
+								: null;
+						if (
+							event.type === "REVOKE_MEDIA_GRANT" &&
+							!this.room.revokeMediaGrant(userId, event)
+						) {
+							this.send(socket, {
+								type: "ERROR",
+								code: "MEDIA_FORBIDDEN",
+								message: "Media revoke was not accepted",
+							});
+							return;
+						}
+						this.persistRoomState();
+						await this.state.storage.sync();
+						if (reply) this.send(socket, reply);
+						this.broadcast(this.currentRoomSnapshot());
+					} catch {
+						this.room = new RoomState(this.room.roomId, undefined, before);
+						this.send(socket, {
+							type: "ERROR",
+							code: "MEDIA_UNAVAILABLE",
+							message: "Media intent was not committed",
+						});
+					}
+				});
+				return;
       case "PING":
         this.handlePing(socket, event);
         return;
@@ -1271,7 +1896,10 @@ export class RoomDurableObject {
     }
   }
 
-  private rejectRateLimitedEvent(socket: WebSocket, rateLimit: RoomRateLimitDecision): boolean {
+	private rejectRateLimitedEvent(
+		socket: WebSocket,
+		rateLimit: RoomRateLimitDecision,
+	): boolean {
     if (!rateLimit.allowed) {
       this.send(socket, {
         type: "ERROR",
@@ -1284,7 +1912,10 @@ export class RoomDurableObject {
     return false;
   }
 
-  private handlePing(socket: WebSocket, event: Extract<ClientEvent, { type: "PING" }>): void {
+	private handlePing(
+		socket: WebSocket,
+		event: Extract<ClientEvent, { type: "PING" }>,
+	): void {
     this.send(socket, {
       type: "PONG",
       roomId: this.room.roomId,
@@ -1326,9 +1957,14 @@ export class RoomDurableObject {
     }
 
     const admissionId = this.admissionIdBySocket.get(socket);
-    const admission = admissionId ? this.admission.canJoin(admissionId, Date.now()) : null;
+		const admission = admissionId
+			? this.admission.canJoin(admissionId, Date.now())
+			: null;
     if (!admission?.allowed) {
-      this.expirePendingAdmission(socket, this.getSocketAttachment(socket)?.admission.deadlineAt ?? 0);
+			this.expirePendingAdmission(
+				socket,
+				this.getSocketAttachment(socket)?.admission.deadlineAt ?? 0,
+			);
       return;
     }
 
@@ -1372,10 +2008,13 @@ export class RoomDurableObject {
         return;
       }
       if (activation.lifecycle?.status === "ended") {
-        this.send(socket, roomEndedEvent(
+				this.send(
+					socket,
+					roomEndedEvent(
           this.room.roomId,
           endedRoomTombstone(activation.lifecycle),
-        ));
+					),
+				);
         socket.close(4004, "Room ended");
         return;
       }
@@ -1398,7 +2037,8 @@ export class RoomDurableObject {
       this.send(socket, {
         type: "ERROR",
         code: "JOIN_COMMIT_FAILED",
-        message: "Unable to commit this room join. Please reconnect and try again.",
+				message:
+					"Unable to commit this room join. Please reconnect and try again.",
       });
       this.releaseAdmission(socket);
       try {
@@ -1413,10 +2053,30 @@ export class RoomDurableObject {
     // until both durable writes have succeeded. A failed attachment or room
     // persistence write must leave this socket eligible to retry before its
     // original absolute deadline.
+		if (
+			this.room.mediaSnapshot &&
+			this.room.participants.some(
+				(p) =>
+					p.id !== serverParticipant.id &&
+					p.participantSessionId === event.participantSessionId,
+			)
+		) {
+			this.send(socket, {
+				type: "ERROR",
+				code: "MEDIA_STALE_SESSION",
+				message: "Participant session is already in use",
+			});
+			return;
+		}
     const roomBeforeJoin = this.room.toSnapshot();
-    const joined = this.room.join(serverParticipant);
+		const joined = this.room.join({
+			...serverParticipant,
+			participantSessionId: event.participantSessionId,
+		});
     const commitAt = Date.now();
-    const commitAdmission = admissionId ? this.admission.canJoin(admissionId, commitAt) : null;
+		const commitAdmission = admissionId
+			? this.admission.canJoin(admissionId, commitAt)
+			: null;
     if (!commitAdmission?.allowed) {
       this.room = new RoomState(this.room.roomId, undefined, roomBeforeJoin);
       this.expirePendingAdmission(socket, attachment.admission.deadlineAt);
@@ -1457,12 +2117,15 @@ export class RoomDurableObject {
       this.send(socket, {
         type: "ERROR",
         code: "JOIN_COMMIT_FAILED",
-        message: "Unable to commit this room join. Please retry before the join deadline.",
+				message:
+					"Unable to commit this room join. Please retry before the join deadline.",
       });
       return;
     }
 
-    const joinedAdmission = admissionId ? this.admission.join(admissionId, commitAt) : null;
+		const joinedAdmission = admissionId
+			? this.admission.join(admissionId, commitAt)
+			: null;
     if (!joinedAdmission?.allowed) {
       // `canJoin` above and this call share the same timestamp, so this is only
       // defensive against an unexpected in-memory admission inconsistency.
@@ -1484,7 +2147,8 @@ export class RoomDurableObject {
     }
     this.clearAdmissionTimeout(socket);
 
-    const existingSessionId = existingSocket && existingSocket !== socket
+		const existingSessionId =
+			existingSocket && existingSocket !== socket
       ? this.sessionIdBySocket.get(existingSocket)
       : undefined;
     if (existingSocket && existingSocket !== socket) {
@@ -1499,10 +2163,43 @@ export class RoomDurableObject {
     this.participantsBySocket.set(socket, joined.id);
     this.socketsByParticipant.set(joined.id, socket);
     this.sessionIdBySocket.set(socket, event.participantSessionId);
+    // Capture only committed authoritative OPEN sockets. Disconnected grace
+    // participants and pre-JOIN admissions are deliberately absent.
+    const live = [...this.socketsByParticipant.entries()].flatMap(
+      ([userId, current]) => {
+        const sessionId = this.sessionIdBySocket.get(current);
+        const verified = this.verifiedBySocket.get(current);
+        return current.readyState === WebSocket.OPEN &&
+          verified?.sub === userId &&
+          sessionId
+          ? [{ userId, sessionId }]
+          : [];
+      },
+    );
+    const evidence = presencePairs(
+      this.room.roomId,
+      this.room.roomGeneration,
+      live,
+      Date.now(),
+    ).filter((pair) =>
+      pair.participants.some((person) => person.userId === joined.id),
+    );
+    if (evidence.length) {
+      await this.state.storage.transaction(async (transaction) => {
+        const current = parsePresenceState(
+          await transaction.get(ROOM_PRESENCE_STORAGE_KEY),
+        );
+        await transaction.put(
+          ROOM_PRESENCE_STORAGE_KEY,
+          coalescePresence(current, evidence, Date.now()),
+        );
+        await reconcileStoredRoomAlarm(transaction);
+      });
+      this.startPresenceDelivery();
+    }
 
     if (existingSocket && existingSocket !== socket) {
-      const sameSession =
-        existingSessionId === event.participantSessionId;
+			const sameSession = existingSessionId === event.participantSessionId;
 
       try {
         if (sameSession) {
@@ -1541,7 +2238,11 @@ export class RoomDurableObject {
     await this.sendRoomHistoryAuthority(socket);
     this.replayP2PSignals(socket, joined.id, lastSeenP2PServerSeq, replayAt);
     this.broadcast({ type: "PARTICIPANT_JOINED", participant: joined }, socket);
-    this.track("join", { role: joined.role, value: this.room.participants.length });
+    if (this.room.mediaSnapshot) this.broadcast(this.currentRoomSnapshot(), socket);
+		this.track("join", {
+			role: joined.role,
+			value: this.room.participants.length,
+		});
   }
 
   private handleReaction(
@@ -1613,7 +2314,9 @@ export class RoomDurableObject {
         serverSeq: this.room.serverSeq,
         serverReceivedAt: Date.now(),
         source: result.source,
-        ...(result.previousSource ? { previousSource: result.previousSource } : {}),
+				...(result.previousSource
+					? { previousSource: result.previousSource }
+					: {}),
         hostState: normalizedState,
       });
       this.state.waitUntil(this.runRoomSourceDeliveryExclusively(false));
@@ -1639,7 +2342,9 @@ export class RoomDurableObject {
       return;
     }
 
-    const lifecycleBeforeSigning = await readStoredRoomLifecycle(this.state.storage);
+		const lifecycleBeforeSigning = await readStoredRoomLifecycle(
+			this.state.storage,
+		);
     if (
       lifecycleBeforeSigning?.status === "ending" ||
       lifecycleBeforeSigning?.status === "ended" ||
@@ -1685,7 +2390,9 @@ export class RoomDurableObject {
       return;
     }
 
-    const lifecycleAfterSigning = await readStoredRoomLifecycle(this.state.storage);
+		const lifecycleAfterSigning = await readStoredRoomLifecycle(
+			this.state.storage,
+		);
     if (
       lifecycleAfterSigning?.status === "ending" ||
       lifecycleAfterSigning?.status === "ended" ||
@@ -1716,7 +2423,11 @@ export class RoomDurableObject {
     event: Extract<ClientEvent, { type: "PLAY" | "PAUSE" | "SEEK" }>,
   ): void {
     const userId = this.participantsBySocket.get(socket);
-    if (!userId || userId !== event.byUserId || !this.room.canControlPlayback(userId)) {
+		if (
+			!userId ||
+			userId !== event.byUserId ||
+			!this.room.canControlPlayback(userId)
+		) {
       this.send(socket, {
         type: "ERROR",
         code: "NOT_PARTICIPANT",
@@ -1791,6 +2502,14 @@ export class RoomDurableObject {
       }
     >,
   ): void {
+		if (this.room.mediaSnapshot) {
+			this.send(socket, {
+				type: "ERROR",
+				code: "ROOM_UPDATE_REQUIRED",
+				message: "Use independent media intents",
+			});
+			return;
+		}
     const userId = this.participantsBySocket.get(socket);
     if (!userId) {
       this.send(socket, {
@@ -1855,7 +2574,10 @@ export class RoomDurableObject {
         : this.room.revokeMediaSeat(event.targetUserId, userId);
 
     if (!result.accepted) {
-      this.send(socket, mediaSeatError(result.code, this.room.roomCapabilities.maxMediaSeats));
+			this.send(
+				socket,
+				mediaSeatError(result.code, this.room.roomCapabilities.maxMediaSeats),
+			);
       return;
     }
 
@@ -1867,11 +2589,24 @@ export class RoomDurableObject {
     this.broadcast(this.currentRoomSnapshot());
   }
 
+  private isCurrentMediaSignalPair(socket: WebSocket, event: Extract<ClientEvent, { type: "P2P_SIGNAL" }>): boolean {
+    const sender = this.participantsBySocket.get(socket);
+    const target = this.socketsByParticipant.get(event.toUserId);
+    return Boolean(sender && sender === event.fromUserId && this.socketsByParticipant.get(sender) === socket &&
+      socket.readyState === WebSocket.OPEN && target?.readyState === WebSocket.OPEN &&
+      event.roomId === this.room.roomId &&
+      (event.roomGeneration === undefined || event.roomGeneration === this.room.roomGeneration) &&
+      (event.sourceGeneration === undefined || event.sourceGeneration === this.room.sourceGeneration) &&
+      this.room.canSignal(sender, event.toUserId) &&
+      (event.signal.kind !== "voice-start" || this.room.mediaFor(sender)?.microphoneGranted));
+  }
+
   private handleP2PSignal(
     socket: WebSocket,
     event: Extract<ClientEvent, { type: "P2P_SIGNAL" }>,
   ): Promise<void> {
-    const previous = this.p2pSignalOperationsBySocket.get(socket) ?? Promise.resolve();
+		const previous =
+			this.p2pSignalOperationsBySocket.get(socket) ?? Promise.resolve();
     const operation = previous
       .catch(() => undefined)
       .then(() => this.handleP2PSignalInOrder(socket, event));
@@ -1888,10 +2623,16 @@ export class RoomDurableObject {
     event: Extract<ClientEvent, { type: "P2P_SIGNAL" }>,
   ): Promise<void> {
     const senderId = this.participantsBySocket.get(socket);
+    if (this.room.mediaSnapshot && !this.isCurrentMediaSignalPair(socket, event)) {
+      this.send(socket, { type: "ERROR", code: "INVALID_P2P_SIGNAL", message: "Media pair is no longer authorized" }); return;
+    }
     if (
       !senderId ||
       senderId !== event.fromUserId ||
-      !this.room.canSignal(senderId, event.toUserId)
+			!this.room.canSignal(senderId, event.toUserId) ||
+			(this.room.mediaSnapshot &&
+				event.signal.kind === "voice-start" &&
+				!this.room.mediaFor(senderId)?.microphoneGranted)
     ) {
       this.send(socket, {
         type: "ERROR",
@@ -1916,11 +2657,15 @@ export class RoomDurableObject {
     );
     if (
       this.endedTombstone ||
+      (this.room.mediaSnapshot && !this.isCurrentMediaSignalPair(socket, event)) ||
       this.participantsBySocket.get(socket) !== senderId ||
       this.socketsByParticipant.get(senderId) !== socket ||
       this.room.roomGeneration !== authorizedRoomGeneration ||
       this.room.sourceGeneration !== authorizedSourceGeneration ||
-      !this.room.canSignal(senderId, event.toUserId)
+			!this.room.canSignal(senderId, event.toUserId) ||
+			(this.room.mediaSnapshot &&
+				event.signal.kind === "voice-start" &&
+				!this.room.mediaFor(senderId)?.microphoneGranted)
     ) {
       return;
     }
@@ -2016,10 +2761,11 @@ export class RoomDurableObject {
       if (currentSessionId !== command.participantSessionId) {
         return departureResponse("stale");
       }
-      pending = await this.beginParticipantDisconnect(
+			pending =
+				(await this.beginParticipantDisconnect(
         currentSocket,
         command.requestedAt,
-      ) ?? undefined;
+				)) ?? undefined;
       try {
         currentSocket.close(1000, "Participant left the room");
       } catch {
@@ -2034,6 +2780,7 @@ export class RoomDurableObject {
       );
     }
     if (!pending) return departureResponse("stale");
+		this.releaseMediaReservation(command.userId, command.participantSessionId);
 
     const expedited = await expediteStoredParticipantDisconnect(
       this.state.storage,
@@ -2096,10 +2843,11 @@ export class RoomDurableObject {
           { status: 409 },
         );
       }
-      pending = await this.beginParticipantDisconnect(
+			pending =
+				(await this.beginParticipantDisconnect(
         currentSocket,
         command.requestedAt,
-      ) ?? undefined;
+				)) ?? undefined;
       try {
         currentSocket.close(1000, "Participant left the room");
       } catch {
@@ -2114,11 +2862,9 @@ export class RoomDurableObject {
       );
     }
     if (!pending) return detachResponse("stale");
+		this.releaseMediaReservation(command.userId, command.participantSessionId);
     if (pending.role === "host") {
-      return Response.json(
-        { error: "HOST_DETACH_FORBIDDEN" },
-        { status: 409 },
-      );
+			return Response.json({ error: "HOST_DETACH_FORBIDDEN" }, { status: 409 });
     }
 
     await acknowledgeStoredParticipantDisconnect(
@@ -2130,9 +2876,23 @@ export class RoomDurableObject {
     return detachResponse("detached");
   }
 
+	private releaseMediaReservation(userId: string, sessionId: string): void {
+		const participant = this.room.participants.find((p) => p.id === userId);
+		if (
+			this.room.mediaSnapshot &&
+			participant?.participantSessionId === sessionId &&
+			participant.connected === false
+		) {
+			this.room.leave(userId);
+			this.persistRoomState();
+			this.broadcast({ type: "PARTICIPANT_LEFT", participant });
+			this.broadcast(this.currentRoomSnapshot());
+		}
+	}
   private async deliverGuestParticipantDeparture(
     record: PendingParticipantDisconnect,
   ): Promise<"departed" | "stale"> {
+		this.releaseMediaReservation(record.userId, record.participantSessionId);
     const outcome = await notifyWebParticipantDeparted(
       this.env,
       this.room.roomId,
@@ -2154,9 +2914,7 @@ export class RoomDurableObject {
   }
 
   private handleClose(socket: WebSocket): Promise<void> {
-    return this.runRoomEndExclusively(
-      () => this.handleCloseExclusive(socket),
-    );
+		return this.runRoomEndExclusively(() => this.handleCloseExclusive(socket));
   }
 
   private async handleCloseExclusive(socket: WebSocket): Promise<void> {
@@ -2209,12 +2967,15 @@ export class RoomDurableObject {
 
     this.participantsBySocket.delete(socket);
     this.socketsByParticipant.delete(participantId);
-    const participant = this.room.leave(participantId);
+		const participant = this.room.mediaSnapshot
+			? this.room.disconnect(participantId)
+			: this.room.leave(participantId);
     this.persistRoomState();
     this.reconcileRoomUsage(Date.now());
     this.track("ws_close", { value: this.room.participants.length });
 
     if (participant) {
+			if (!this.room.mediaSnapshot)
       this.broadcast({ type: "PARTICIPANT_LEFT", participant });
       this.broadcast(this.currentRoomSnapshot());
     }
@@ -2230,6 +2991,8 @@ export class RoomDurableObject {
   private send(socket: WebSocket, event: ServerEvent): void {
     try {
       socket.send(encode(event));
+			if (event.type === "ROOM_SNAPSHOT" && this.room.mediaSnapshot)
+				socket.send(encode(this.room.mediaSnapshot));
     } catch {
       this.state.waitUntil(this.handleClose(socket));
     }
@@ -2243,7 +3006,10 @@ export class RoomDurableObject {
     }
   }
 
-  private writeParticipantAttachment(socket: WebSocket, participant: Participant | null): void {
+	private writeParticipantAttachment(
+		socket: WebSocket,
+		participant: Participant | null,
+	): void {
     if (!participant) {
       return;
     }

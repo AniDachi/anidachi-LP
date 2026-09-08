@@ -133,7 +133,7 @@ select has_function(
 select ok(
   (
     select pg_catalog.bool_and(
-      not procedure.prosecdef
+      procedure.prosecdef = (procedure.proname in ('create_room_with_active_session_v1','claim_active_room_session_v1'))
       and procedure.provolatile = 'v'
       and procedure.proconfig @> array['search_path=""']::text[]
       and procedure.proretset
@@ -154,7 +154,7 @@ select ok(
       )
     )
   ),
-  'active-room RPCs are volatile security-invoker table functions with an empty search_path'
+  'active-room RPCs retain volatility and empty search_path with protected definer admission wrappers'
 );
 
 select ok(

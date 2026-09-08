@@ -1,5 +1,12 @@
 import { z } from "zod";
 import {
+	MediaIntentSchema,
+	HostMediaRevokeSchema,
+	MediaIntentAckSchema,
+	MediaIntentErrorSchema,
+	RoomMediaSnapshotSchema,
+} from "./room-media";
+import {
   MAX_DISPLAY_NAME_CHARS,
   MAX_ICE_CANDIDATE_BYTES,
   MAX_PARTICIPANT_ID_CHARS,
@@ -16,7 +23,10 @@ import { RoomSourceDescriptorSchema } from "./source-url";
 const RoomIdSchema = z.string().min(1).max(MAX_ROOM_ID_CHARS);
 const ParticipantIdSchema = z.string().min(1).max(MAX_PARTICIPANT_ID_CHARS);
 const SessionIdSchema = z.string().min(1).max(MAX_SESSION_ID_CHARS);
-const VideoFingerprintSchema = z.string().min(1).max(MAX_VIDEO_FINGERPRINT_CHARS);
+const VideoFingerprintSchema = z
+	.string()
+	.min(1)
+	.max(MAX_VIDEO_FINGERPRINT_CHARS);
 const UrlSchema = z.string().max(MAX_URL_CHARS).url();
 const textEncoder = new TextEncoder();
 
@@ -39,7 +49,10 @@ export const RoomHistoryAttestationClaimsSchema = z
   })
   .refine(
     (claims) => claims.exp === claims.iat + ROOM_HISTORY_OFFLINE_GRACE_SECONDS,
-    { path: ["exp"], message: "Room history authority must use the canonical grace window" },
+		{
+			path: ["exp"],
+			message: "Room history authority must use the canonical grace window",
+		},
   );
 
 export const RoomHistoryAuthoritySchema = z.strictObject({
@@ -68,6 +81,8 @@ function boundedUtf8String(maxBytes: number) {
 
 export const ParticipantSchema = z.object({
   id: ParticipantIdSchema,
+	participantSessionId: SessionIdSchema.optional(),
+	connected: z.boolean().optional(),
   displayName: z.string().min(1).max(MAX_DISPLAY_NAME_CHARS),
   avatarUrl: UrlSchema.optional(),
   role: z.enum(["host", "viewer"]),
@@ -81,8 +96,12 @@ export const ParticipantSchema = z.object({
 const CanonicalPlanCodeSchema = z.enum(["free", "plus", "pro"]);
 const LegacyPlanCodeSchema = z.enum(["watcher", "nakama", "junkie"]);
 
+// Legacy v1 active wire contract. Do not reinterpret maxMediaSeats as microphone
+// grants; standalone room-media.ts v2 contracts are adopted with Worker/consumer cutover.
 export const RoomCapabilitiesSchema = z.object({
-  hostPlanCode: z.union([CanonicalPlanCodeSchema, LegacyPlanCodeSchema]).transform((value) => {
+	hostPlanCode: z
+		.union([CanonicalPlanCodeSchema, LegacyPlanCodeSchema])
+		.transform((value) => {
     if (value === "watcher") return "free";
     if (value === "nakama") return "plus";
     if (value === "junkie") return "pro";
@@ -103,7 +122,11 @@ export const PlaybackStateSchema = z.object({
   playbackRate: z.number().positive(),
 });
 
-export const WatchSourceProviderSchema = z.enum(["crunchyroll", "youtube", "generic"]);
+export const WatchSourceProviderSchema = z.enum([
+	"crunchyroll",
+	"youtube",
+	"generic",
+]);
 
 export const WatchSourceDescriptorSchema = z.object({
   provider: WatchSourceProviderSchema,
@@ -155,6 +178,8 @@ export const RoomEndReasonSchema = z.enum([
   "host_disconnected",
   "empty_timeout",
   "quota_exhausted",
+	"capability_expired",
+	"accounting_unavailable",
 ]);
 
 const UtcDaySchema = z
@@ -162,13 +187,32 @@ const UtcDaySchema = z
   .regex(/^\d{4}-\d{2}-\d{2}$/)
   .refine((value) => {
     const parsed = new Date(`${value}T00:00:00.000Z`);
-    return Number.isFinite(parsed.getTime()) && parsed.toISOString().startsWith(value);
+		return (
+			Number.isFinite(parsed.getTime()) &&
+			parsed.toISOString().startsWith(value)
+		);
   }, "Invalid UTC day");
 
-export const RoomUsageSummarySchema = z.object({
+/** Worker-owned remaining budget for a frozen Free v2 room at measuredAt.
+ * An absent budget is unknown, never permission for client-side termination. */
+export const RoomQuotaSnapshotSchema = z.strictObject({
   day: UtcDaySchema,
-  seconds: z.number().int().min(0).max(24 * 60 * 60),
-}).strict();
+  remainingSeconds: z.number().int().min(0).max(1800),
+  metering: z.boolean(),
+  measuredAt: z.number().int().nonnegative(),
+});
+export type RoomQuotaSnapshot = z.infer<typeof RoomQuotaSnapshotSchema>;
+
+export const RoomUsageSummarySchema = z
+	.object({
+  day: UtcDaySchema,
+		seconds: z
+			.number()
+			.int()
+			.min(0)
+			.max(24 * 60 * 60),
+	})
+	.strict();
 
 export const P2PSessionDescriptionSchema = z.object({
   type: z.enum(["offer", "answer"]),
@@ -237,7 +281,10 @@ const ServerP2PSignalEnvelopeSchema = ClientP2PSignalEnvelopeSchema.extend({
   sourceGeneration: z.number().int().nonnegative(),
 });
 
-export const ClientEventSchema = z.discriminatedUnion("type", [
+export const ClientEventSchema = z
+	.discriminatedUnion("type", [
+		MediaIntentSchema,
+		HostMediaRevokeSchema,
   RoomScopedSchema.extend({
     type: z.literal("PING"),
     sentAt: z.number().int().nonnegative(),
@@ -304,7 +351,8 @@ export const ClientEventSchema = z.discriminatedUnion("type", [
     targetUserId: ParticipantIdSchema,
   }),
   ClientP2PSignalEnvelopeSchema,
-]).superRefine((event, context) => {
+	])
+	.superRefine((event, context) => {
   if (event.type === "REACTION" && event.reaction.roomId !== event.roomId) {
     context.addIssue({
       code: "custom",
@@ -315,6 +363,9 @@ export const ClientEventSchema = z.discriminatedUnion("type", [
 });
 
 export const ServerEventSchema = z.discriminatedUnion("type", [
+	MediaIntentAckSchema,
+	MediaIntentErrorSchema,
+	RoomMediaSnapshotSchema,
   RoomScopedSchema.extend({
     type: z.literal("ROOM_ENDED"),
     endedAt: z.number().int().nonnegative(),
@@ -333,6 +384,7 @@ export const ServerEventSchema = z.discriminatedUnion("type", [
     participants: z.array(ParticipantSchema),
     p2pResyncRequired: z.boolean().optional(),
     roomUsage: RoomUsageSummarySchema.optional(),
+    quota: RoomQuotaSnapshotSchema.optional(),
     capabilities: RoomCapabilitiesSchema.optional(),
     hostState: PlaybackStateSchema.optional(),
     source: WatchSourceDescriptorSchema.optional(),
@@ -394,15 +446,21 @@ export type RoomCapabilities = z.infer<typeof RoomCapabilitiesSchema>;
 export type PlaybackState = z.infer<typeof PlaybackStateSchema>;
 export type WatchSourceDescriptor = z.infer<typeof WatchSourceDescriptorSchema>;
 export type RoomSourceDescriptor = z.infer<typeof RoomSourceDescriptorSchema>;
-export type RoomSourcePersistenceCallback = z.infer<typeof RoomSourcePersistenceCallbackSchema>;
-export type RoomSourcePersistenceAcknowledgement = z.infer<typeof RoomSourcePersistenceAcknowledgementSchema>;
+export type RoomSourcePersistenceCallback = z.infer<
+	typeof RoomSourcePersistenceCallbackSchema
+>;
+export type RoomSourcePersistenceAcknowledgement = z.infer<
+	typeof RoomSourcePersistenceAcknowledgementSchema
+>;
 export type ReactionEvent = z.infer<typeof ReactionEventSchema>;
 export type P2PSessionDescription = z.infer<typeof P2PSessionDescriptionSchema>;
 export type P2PIceCandidate = z.infer<typeof P2PIceCandidateSchema>;
 export type P2PSignal = z.infer<typeof P2PSignalSchema>;
 export type VoiceMode = z.infer<typeof VoiceModeSchema>;
 export type RoomHistoryAuthority = z.infer<typeof RoomHistoryAuthoritySchema>;
-export type RoomHistoryAttestationClaims = z.infer<typeof RoomHistoryAttestationClaimsSchema>;
+export type RoomHistoryAttestationClaims = z.infer<
+	typeof RoomHistoryAttestationClaimsSchema
+>;
 export type ClientEvent = z.infer<typeof ClientEventSchema>;
 export type ServerEvent = z.infer<typeof ServerEventSchema>;
 export type RoomEndReason = z.infer<typeof RoomEndReasonSchema>;

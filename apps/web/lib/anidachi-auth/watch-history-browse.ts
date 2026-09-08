@@ -1,3 +1,4 @@
+import { withPersonalHistoryRead } from "./personal-history-policy";
 import {
 	WatchHistoryBrowseQuerySchema,
 	WatchHistoryBrowseResponseSchema,
@@ -169,6 +170,13 @@ export async function readWatchHistoryBrowseV3(
 	| WatchHistoryBrowseSessionsResponse
 	| WatchHistoryBrowseOptionsResponse
 > {
+	if (!params.store)
+		return withPersonalHistoryRead(params.userId, () =>
+			readWatchHistoryBrowseV3(
+				{ ...params, store: supabaseWatchHistoryBrowseStore },
+				scope,
+			),
+		);
 	const query = parseWatchHistoryBrowseQuery(params.input, scope);
 	if (
 		!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
@@ -297,7 +305,8 @@ export async function readWatchHistoryBrowseV3(
 									if (
 										preview.matches.some(
 											(match) =>
-												match.matchingSessionCount < 1 ||
+												(query.mode !== "personal" &&
+													match.matchingSessionCount < 1) ||
 												match.sessionsComplete !==
 													match.matchingSessionCount <= 2 ||
 												sessions.filter(

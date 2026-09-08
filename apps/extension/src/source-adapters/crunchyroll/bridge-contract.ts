@@ -3,6 +3,8 @@ export const CRUNCHYROLL_CONTROL_RESULT_SOURCE =
 	"anidachi-crunchyroll-control-result";
 
 export type CrunchyrollControlAction =
+	| "resumeReadiness"
+	| "resumeSeek"
 	| "play"
 	| "pause"
 	| "seek"
@@ -51,6 +53,8 @@ export interface CrunchyrollControlRequest {
 	locale?: string;
 	seriesId?: string;
 	time?: number;
+  expiresAt?: number;
+  intentId?: string;
 	url?: string;
   context?: WatchCatalogLocaleContext;
 }
@@ -64,6 +68,7 @@ export interface CrunchyrollControlResult {
 	currentUrl?: string;
 	method?: string;
 	posterUrl?: string | null;
+  resumeState?: "ready" | "waiting" | "cancelled" | "consumed";
 	timedOut?: boolean;
 	timeline?: CrunchyrollTimelineSnapshot | null;
 	video?: CrunchyrollVideoSnapshot;
@@ -78,6 +83,12 @@ export function isCrunchyrollControlRequest(value: unknown): value is Crunchyrol
   const fields = ["action", "id", "source"];
   const guid = (id: unknown) => typeof id === "string" && /^[A-Za-z0-9_-]{1,190}$/.test(id);
   switch (request.action) {
+    case "resumeReadiness": case "resumeSeek": {
+      const source = typeof request.url === "string" ? canonicalizeRoomSourceUrl(request.url, "crunchyroll") : null;
+      return exact(value, [...fields, "url", "time", "expiresAt", "intentId"]) && !!source?.ok && source.source.sourceUrl === request.url &&
+        typeof request.time === "number" && Number.isFinite(request.time) && request.time >= 0 && request.time <= 604800 &&
+        Number.isSafeInteger(request.expiresAt) && request.expiresAt! > 0 && typeof request.intentId === "string" && /^[a-f0-9-]{36}$/i.test(request.intentId);
+    }
     case "historyIdentity":
       return exact(value, [...fields, "contentId", "locale"]) && guid(request.contentId) &&
         typeof request.locale === "string" && /^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/.test(request.locale) && request.locale.length <= 35;
@@ -136,5 +147,5 @@ export function getCrunchyrollTimelineValueForTime(
 
 	return targetTime;
 }
-import { CrunchyrollHistoryIdentitySchema, WatchCatalogLocaleContextSchema, WatchCatalogSnapshotInputSchema, WatchProgressEventSchema,
+import { canonicalizeRoomSourceUrl, CrunchyrollHistoryIdentitySchema, WatchCatalogLocaleContextSchema, WatchCatalogSnapshotInputSchema, WatchProgressEventSchema,
   type WatchCatalogLocaleContext, type WatchCatalogSnapshotInput, type WatchProgressEvent } from "@anidachi/protocol";

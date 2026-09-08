@@ -14,6 +14,7 @@ import {
 	REACTIONS_ENABLED_STORAGE_KEY,
 } from "../src/reaction-shortcuts";
 import { RoomClient } from "../src/room-client";
+import { RoomMediaSession } from "../src/room-media-session";
 import { roomJoinDefaultsStorageKeyForUser } from "../src/room-media-defaults";
 import type { RoomSessionRecord } from "../src/room-session-storage";
 import {
@@ -1679,6 +1680,174 @@ describe("privileged overlay wiring", () => {
 		expect((closeButtonBeforeLoad as HTMLButtonElement).disabled).toBe(false);
 	});
 
+
+  it("preserves legacy quota subtraction, reanchoring and exhaustion with a real media helper lifecycle", async () => {
+    installActiveHostRoomRuntime();
+    let client!: RoomClient;
+    let options!: Parameters<RoomClient["connect"]>[0];
+    const capabilities = {hostPlanCode:"free" as const,maxParticipants:4,maxMediaSeats:4,canNameRoom:false,canSendPushInvites:false};
+    const send = vi.mocked(chrome.runtime.sendMessage);
+    const original = send.getMockImplementation()!;
+    send.mockImplementation(async (...args: any[]) => {
+      if(args[0]?.action === "quota-end-room") return {ok:true};
+      const result = await (original as any)(...args);
+      if(args[0]?.command === "create-room") return {...result,room:{...result.room,capabilities,quota:{remainingSeconds:1500,resetAt:"2026-09-09T00:00:00Z"}}};
+      return result;
+    });
+    vi.mocked(RoomClient.prototype.connect).mockImplementation(function(this:RoomClient,next) {
+      client=this; options=next;
+      // Actual RoomClient initializes this helper for legacy connections too.
+      this.media = new RoomMediaSession(next.roomId,next.participantSessionId);
+      this.media.beginTransport();
+      next.onStatus("connected");
+    });
+    const view=await renderOverlay();
+    try {
+      await click(button(view.container,"Open Anidachi controls"));
+      vi.useFakeTimers({toFake:["setInterval","clearInterval","Date"]});
+      await click(button(view.container,"Create room"));
+      await vi.waitFor(()=>expect(options).toBeDefined());
+      expect(client.media).toBeInstanceOf(RoomMediaSession);
+      expect(client.media!.snapshot).toBeNull();
+      const snapshot=(seconds:number,serverSeq:number):Extract<import("@anidachi/protocol").ServerEvent,{type:"ROOM_SNAPSHOT"}> => ({
+        type:"ROOM_SNAPSHOT",roomId:"room-a",roomGeneration:1,sourceGeneration:1,serverSeq,capabilities,
+        participants:[{...hostParticipant(),participantSessionId:options.participantSessionId,connected:true},{...guestParticipant(),connected:true}],roomUsage:{day:"2026-09-08",seconds},
+      });
+      await act(async()=>options.onEvent(snapshot(300,1)));
+      expect(view.container.querySelector(".quota-note strong")?.textContent).toContain("20:00");
+      await act(async()=>vi.advanceTimersByTimeAsync(3000));
+      expect(view.container.querySelector(".quota-note strong")?.textContent).toContain("19:57");
+      await act(async()=>options.onEvent(snapshot(600,2)));
+      expect(view.container.querySelector(".quota-note strong")?.textContent).toContain("15:00");
+      const close=vi.spyOn(RoomClient.prototype,"close"); close.mockClear();
+      await act(async()=>options.onEvent(snapshot(1500,3)));
+      expect(send.mock.calls.some(([message]:any)=>message.action === "quota-end-room")).toBe(true);
+      expect(close).toHaveBeenCalled();
+    } finally {vi.useRealTimers();await unmount(view.root);}
+  });
+
+  it("uses authoritative v2 quota across reservations, ACKs and midnight without locally ending", async () => {
+    installActiveHostRoomRuntime();
+    let options!: Parameters<RoomClient["connect"]>[0];
+    let snapshot!: Extract<import("@anidachi/protocol").ServerEvent,{type:"ROOM_SNAPSHOT"}>;
+    const capabilities = { mediaProtocolVersion: 2 as const, hostPlanCode: "free" as const, maxParticipants: 4 as const, maxCameras: 4 as const, maxMicrophones: 4 as const, capabilityRevision: 1, capabilitiesValidUntil: "2026-09-10T20:00:00Z" };
+    const send = vi.mocked(chrome.runtime.sendMessage);
+    const original = send.getMockImplementation()!;
+    send.mockImplementation(async (...args: any[]) => {
+      if(args[0]?.command === "connect-room") return {ok:true,connection:{roomToken:"room-token-reconnect",roomSession:confirmedRoomSession(),capabilities,quota:{remainingSeconds:1500,resetAt:"2026-09-09T00:00:00Z"}}};
+      const result = await (original as any)(...args);
+      if (args[0]?.command === "create-room") return {...result, room:{...result.room, capabilities, quota:{remainingSeconds:1500,resetAt:"2026-09-09T00:00:00Z"}}};
+      return result;
+    });
+    vi.mocked(RoomClient.prototype.connect).mockImplementation(function(this:RoomClient,next) {
+      options=next;
+      this.media ??= new RoomMediaSession(next.roomId,next.participantSessionId);
+      this.media.beginTransport();
+      snapshot ??= {type:"ROOM_SNAPSHOT",roomId:"room-a",roomGeneration:1,sourceGeneration:1,serverSeq:1,
+        participants:[{...hostParticipant(),participantSessionId:next.participantSessionId,connected:true},{...guestParticipant(),connected:false}],
+        roomUsage:{day:"2026-09-08",seconds:1499},
+        quota:{day:"2026-09-08",remainingSeconds:1,metering:false,measuredAt:Date.parse("2026-09-08T23:59:00Z")}};
+      next.onStatus("connected");next.onEvent(snapshot);
+    });
+    const view=await renderOverlay();
+    try {
+      await click(button(view.container,"Open Anidachi controls"));
+      vi.useFakeTimers({toFake:["setInterval","clearInterval","Date"]});
+      await click(button(view.container,"Create room"));await vi.waitFor(()=>expect(options).toBeDefined());await flushMountedWork();
+      await act(async()=>options.onEvent(snapshot));
+      expect(view.container.querySelector(".quota-note strong")?.textContent).toContain("0:01");
+      await act(async()=>{await vi.advanceTimersByTimeAsync(3000);});
+      expect(view.container.querySelector(".quota-note strong")?.textContent).toContain("0:01");
+      vi.useRealTimers();
+      snapshot={...snapshot,serverSeq:2,roomUsage:{day:"2026-09-08",seconds:600},quota:{...snapshot.quota!,remainingSeconds:1200,measuredAt:Date.parse("2026-09-08T23:59:10Z")}};
+      const oldConnection=options;
+      await act(async()=>oldConnection.onStatus("closed"));
+      await vi.waitFor(()=>expect(options).not.toBe(oldConnection),{timeout:5000});
+      expect(options.reconnect).toBe(true);
+      expect(options.participantSessionId).toBe(oldConnection.participantSessionId);
+      await act(async()=>options.onEvent(snapshot));
+      expect(view.container.querySelector(".quota-note strong")?.textContent).toContain("20:00");
+      await act(async()=>oldConnection.onEvent({...snapshot,serverSeq:99,quota:{...snapshot.quota!,remainingSeconds:0,measuredAt:snapshot.quota!.measuredAt+1}}));
+      expect(view.container.querySelector(".quota-note strong")?.textContent).toContain("20:00");
+      const yesterday=snapshot;
+      snapshot={...snapshot,serverSeq:3,roomUsage:{day:"2026-09-09",seconds:0},quota:{day:"2026-09-09",remainingSeconds:1800,metering:false,measuredAt:Date.parse("2026-09-09T00:00:00Z")}};
+      await act(async()=>options.onEvent(snapshot));
+      expect(view.container.querySelector(".quota-note strong")?.textContent).toContain("30:00");
+      await act(async()=>options.onEvent(yesterday));
+      expect(view.container.querySelector(".quota-note strong")?.textContent).toContain("30:00");
+      await act(async()=>options.onEvent({...snapshot,roomId:"stale-room",quota:{...snapshot.quota!,remainingSeconds:0}}));
+      expect(view.container.querySelector(".quota-note strong")?.textContent).toContain("30:00");
+      await act(async()=>options.onEvent({...snapshot,serverSeq:4,participants:snapshot.participants.map(p=>({...p,participantSessionId:"stale-session"})),quota:{...snapshot.quota!,remainingSeconds:0,measuredAt:snapshot.quota!.measuredAt+1}}));
+      expect(view.container.querySelector(".quota-note strong")?.textContent).toContain("30:00");
+      snapshot={...snapshot,sourceGeneration:2,serverSeq:4,quota:{...snapshot.quota!,measuredAt:snapshot.quota!.measuredAt+1}};
+      await act(async()=>options.onEvent(snapshot));
+      expect(view.container.querySelector(".quota-note strong")?.textContent).toContain("30:00");
+      await act(async()=>options.onEvent({...snapshot,sourceGeneration:1,serverSeq:5,quota:{...snapshot.quota!,remainingSeconds:0,measuredAt:snapshot.quota!.measuredAt+1}}));
+      expect(view.container.querySelector(".quota-note strong")?.textContent).toContain("30:00");
+      await act(async()=>options.onEvent({...snapshot,serverSeq:5,quota:undefined}));
+      expect(view.container.querySelector(".quota-note strong")?.textContent).toContain("Checking room time");
+      await act(async()=>options.onEvent({...snapshot,serverSeq:6,quota:{...snapshot.quota!,remainingSeconds:0,metering:true,measuredAt:snapshot.quota!.measuredAt+1}}));
+      expect(view.container.querySelector(".quota-note strong")?.textContent).toContain("0:00");
+      expect(send.mock.calls.some(([m]:any)=>m.action==="quota-end-room")).toBe(false);
+      const close=vi.spyOn(RoomClient.prototype,"close");close.mockClear();
+      await act(async()=>options.onEvent({type:"ROOM_ENDED",roomId:"room-a",endedAt:Date.now(),reason:"quota_exhausted"}));
+      expect(close).toHaveBeenCalled();
+    } finally {vi.useRealTimers();await unmount(view.root);}
+  });
+  it("wires v2 explicit mic intent, revocation and terminal teardown through the actual overlay", async () => {
+    installActiveHostRoomRuntime();
+    const publication = vi.spyOn(P2PMediaController.prototype, "setMicrophonePublishing").mockResolvedValue();
+    const authority = vi.spyOn(P2PMediaController.prototype, "setCaptureAuthority");
+    const disconnect = vi.spyOn(P2PMediaController.prototype, "disconnect");
+    let client!: RoomClient;
+    let options!: Parameters<RoomClient["connect"]>[0];
+    let media!: import("@anidachi/protocol").RoomMediaSnapshot;
+    vi.spyOn(RoomClient.prototype, "send").mockReturnValue("sent");
+    vi.mocked(RoomClient.prototype.connect).mockImplementation(function (this: RoomClient, next) {
+      client = this; options = next;
+      this.media = new RoomMediaSession(next.roomId, next.participantSessionId!);
+      media = { type: "ROOM_MEDIA_SNAPSHOT", roomId: "room-a", roomGeneration: 1, snapshotSequence: 1,
+        capabilities: { mediaProtocolVersion: 2, hostPlanCode: "free", maxParticipants: 4, maxCameras: 4, maxMicrophones: 4, capabilityRevision: 1, capabilitiesValidUntil: "2026-09-08T20:00:00Z" }, closingAt: null,
+        participants: [{ participantSessionId: next.participantSessionId!, cameraGranted: false, microphoneGranted: false, cameraIntentSequence: 0, microphoneIntentSequence: 0, cameraRevocationEpoch: 0, microphoneRevocationEpoch: 0 }] };
+      next.onStatus("connected");
+      next.onEvent({ type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1, participants: [{ ...hostParticipant(), participantSessionId: next.participantSessionId, connected: true, mediaSeat: "none" }] });
+      this.media.consume(media); next.onEvent(media);
+    });
+    const view = await renderOverlay();
+    try {
+      await click(button(view.container, "Open Anidachi controls"));
+      await click(button(view.container, "Create room"));
+      await vi.waitFor(()=>expect(options).toBeDefined());
+      await act(async()=>{options.onEvent({type:"ROOM_SNAPSHOT",roomId:"room-a",roomGeneration:1,sourceGeneration:1,serverSeq:2,participants:[{...hostParticipant(),participantSessionId:options.participantSessionId,connected:true,mediaSeat:"none"}]}); options.onEvent(media);}); await flushMountedWork();
+      expect(client.media?.canCapture("microphone")).toBe(false);
+      expect(publication.mock.calls.some(([enabled])=>enabled)).toBe(false);
+      await click(button(view.container, "Enable microphone"));
+      const intent = vi.mocked(RoomClient.prototype.send).mock.calls.map(([e])=>e).find(e=>e.type==="SET_MEDIA_INTENT");
+      expect(intent?.type).toBe("SET_MEDIA_INTENT");
+      if (intent?.type !== "SET_MEDIA_INTENT") throw new Error("Missing explicit intent");
+      expect(client.media?.canCapture("microphone")).toBe(false);
+      await act(async()=>{ const ack = { ...intent, type: "MEDIA_INTENT_ACK" as const, snapshotSequence: 2, state: { ...media.participants[0], microphoneGranted: true, microphoneIntentSequence: intent.intentSequence } }; client.media!.consume(ack); options.onEvent(ack); });
+      await click(button(view.container,"Voice")); await click(button(view.container,"Open mic")); await flushMountedWork();
+      expect(publication).toHaveBeenLastCalledWith(true,"warm","open-mic");
+      await act(async()=>{media={...media,snapshotSequence:3,participants:[{...media.participants[0],microphoneRevocationEpoch:1}]};client.media!.consume(media); options.onEvent(media);});
+      expect(authority).toHaveBeenLastCalledWith(false,false,expect.any(Object));
+      expect(client.media?.canCapture("microphone")).toBe(false);
+      publication.mockRestore();
+      vi.stubGlobal("navigator",Object.create(navigator,{mediaDevices:{value:{addEventListener:vi.fn(),removeEventListener:vi.fn(),getUserMedia:vi.fn().mockRejectedValue(new DOMException("denied","NotAllowedError"))}}}));
+      for (const kind of ["camera","microphone"] as const) {
+        if(kind==="camera") await click(button(view.container,"Turn camera on"));
+        else {await click(button(view.container,"Enable microphone"));await click(button(view.container,"Open mic"));}
+        const request=vi.mocked(RoomClient.prototype.send).mock.calls.map(([e])=>e).filter(e=>e.type==="SET_MEDIA_INTENT"&&e.media===kind&&e.enabled).at(-1);
+        if(request?.type!=="SET_MEDIA_INTENT") throw new Error("Missing capture intent");
+        await act(async()=>{const ack={...request,type:"MEDIA_INTENT_ACK" as const,snapshotSequence:kind==="camera"?4:5,state:{...media.participants[0],[`${kind}Granted`]:true,[`${kind}IntentSequence`]:request.intentSequence}};client.media!.consume(ack);options.onEvent(ack);});
+        await vi.waitFor(()=>expect(vi.mocked(RoomClient.prototype.send).mock.calls.map(([e])=>e).some(e=>e.type==="SET_MEDIA_INTENT"&&e.media===kind&&!e.enabled&&e.intentSequence===request.intentSequence+1)).toBe(true));
+        expect(client.media!.wants(kind)).toBe(false);
+      }
+      disconnect.mockClear();
+      await act(async()=>{options.onEvent({type:"ROOM_ENDED",roomId:"room-a",endedAt:Date.now(),reason:"host_ended"});});
+      expect(disconnect).toHaveBeenCalled();
+    } finally { await unmount(view.root); }
+  });
 	it.each(["auto-hide", "always-visible"] as const)(
 		"keeps the main control independent of Open mic in %s mode",
 		async (mainControlVisibility) => {

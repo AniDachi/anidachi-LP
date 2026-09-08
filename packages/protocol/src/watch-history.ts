@@ -332,6 +332,13 @@ export const WatchCatalogSnapshotInputSchema = z
     }
   });
 
+/** Optional only for inactive legacy compatibility. Active catalog SQL requires
+ * this proof and binds it to the durable attempt before accepting a commit. */
+export const WatchCatalogHistoryAccessSchema = z.strictObject({
+  accessVersion: z.literal(1),
+  accessEpoch: z.number().int().nonnegative(),
+});
+
 const CatalogRequestBaseSchema = z
   .strictObject({
     schemaVersion: z.literal(WATCH_HISTORY_SCHEMA_VERSION),
@@ -340,6 +347,7 @@ const CatalogRequestBaseSchema = z
     titleKey: StableKeySchema,
     providerSeriesId: StableKeySchema,
     context: WatchCatalogLocaleContextSchema,
+    historyAccess: WatchCatalogHistoryAccessSchema.optional(),
   })
   .superRefine((request, context) => {
     if (request.titleKey !== `crunchyroll:series:${request.providerSeriesId}`)

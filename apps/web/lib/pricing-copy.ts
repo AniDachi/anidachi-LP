@@ -1,3 +1,4 @@
+import { getPlanPolicy } from "@anidachi/protocol";
 import {
   PRICING_PLUS_SHORT,
   PRICING_PRO_SHORT,
@@ -10,9 +11,12 @@ export {
   PRICING_STARTING_AT,
 } from "@/lib/pricing-tiers";
 
+const plusPolicy = getPlanPolicy("plus");
+const proPolicy = getPlanPolicy("pro");
+
 /** Paid plans upgrade the host's room limits; guests can stay on Free. */
 export const PRICING_HOST_MODEL =
-  "Free hosts can start limited rooms; Plus and Pro upgrade the host's room limits while friends can stay on Free accounts.";
+  "Free hosts can start limited rooms; Plus and Pro upgrade the host's room limits while friends can join on Free accounts. Personal watch history requires each viewer’s own Plus or Pro plan; Free does not record history. Crunchyroll and YouTube are available on every plan.";
 
 export const PRICING_REFUND_NOTE =
   "All paid subscriptions include a full refund guarantee before launch.";
@@ -24,7 +28,7 @@ export const PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER =
   `No. ${PRICING_HOST_MODEL} Each person still needs their own Crunchyroll account to stream the video.`;
 
 export const PRICING_PLUS_VS_PRO_ANSWER =
-  `Plus (${PRICING_PLUS_SHORT}) fits regular watch nights: unlimited hosting, up to 6 people, 4 video seats, and 3 months of watch history. Pro (${PRICING_PRO_SHORT}) adds bigger rooms (up to 15 people), invite-only rooms, moderator controls, room personalization, and 12 months of history — best for club hosts and larger groups.`;
+  `Plus (${PRICING_PLUS_SHORT}) fits regular watch nights: unlimited hosting, up to ${plusPolicy.maxParticipants} people, ${plusPolicy.maxCameras} cameras, ${plusPolicy.maxMicrophones} microphones, and personal watch history. Pro (${PRICING_PRO_SHORT}) offers up to ${proPolicy.maxParticipants} people, ${proPolicy.maxCameras} cameras, ${proPolicy.maxMicrophones} microphones, and personal watch history. Each viewer needs their own Plus or Pro plan for history and Resume, whether watching alone or in a room.`;
 
 export function pricingWatchPageFaqAnswer(animeTitle: string): string {
   return `AniDachi has a Free tier for joining friends' rooms and hosting limited rooms. When you want to host without limits, Plus starts at ${PRICING_STARTING_AT} and Pro at ${PRICING_PRO_SHORT.replace("/mo", "/month")} — see homepage pricing and checkout. You still need individual Crunchyroll access for ${animeTitle}; AniDachi provides the watchroom, sync, and chat layer on top of each person's stream.`;
@@ -84,7 +88,7 @@ export const PRICING_GROUP_ONBOARDING =
   "Each viewer still pays their own streaming provider. With AniDachi, Plus or Pro upgrades the host's full room limits while guests can join on Free accounts. Everyone keeps their own Crunchyroll login private.";
 
 export const PRICING_LONG_DISTANCE_SNIPPET =
-  `AniDachi has a Free tier for joining and limited hosting; Plus (${PRICING_PLUS_SHORT}) adds async mode, spoiler control, and progress tracking for hosts — features that matter most when schedules don't align.`;
+  `AniDachi has a Free tier for joining and limited hosting; Plus (${PRICING_PLUS_SHORT}) adds async mode, spoiler control, and personal progress tracking for paid viewers — features that matter most when schedules don't align.`;
 
 export const PRICING_CRUNCHYROLL_GUIDE_PAID_MENTION =
   "AniDachi (sync + async + chat; Free limited hosting, Plus/Pro for higher host limits)";
