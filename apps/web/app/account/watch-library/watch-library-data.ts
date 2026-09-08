@@ -9,7 +9,7 @@ type Dependencies = {
 	preferences(userId: string): Promise<WatchHistoryPreferencesResponse>;
 	history(userId: string): Promise<WatchHistoryResponse>;
 };
-/** Never fetch private rows for Free; discard all loaded rows if authority moves. */
+/** All plans may read saved rows; discard loaded rows if their authority moves. */
 export async function loadWatchLibraryData(userId: string, deps: Dependencies) {
 	const before = await deps.access(userId);
 	if (before.ownerUserId !== userId) throw new Error("HISTORY_ACCESS_CHANGED");
@@ -19,16 +19,7 @@ export async function loadWatchLibraryData(userId: string, deps: Dependencies) {
 		preferences.meta.accountGeneration !== before.accountGeneration
 	)
 		throw new Error("HISTORY_ACCESS_CHANGED");
-	const history =
-		before.state === "allowed"
-			? await deps.history(userId)
-			: {
-					meta: preferences.meta,
-					generatedAt: preferences.meta.serverTime,
-					items: [],
-					totalTitleCount: 0,
-					nextCursor: null,
-				};
+	const history = await deps.history(userId);
 	const after = await deps.access(userId);
 	if (
 		after.ownerUserId !== userId ||

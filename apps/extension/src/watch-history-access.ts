@@ -63,21 +63,28 @@ export function parseWatchHistoryLease(
 		: null;
 }
 
+/** A current owner lease permits reading saved history on every plan.
+ * `state` remains the recording entitlement in the v1 wire contract. */
+export function canReadWatchHistory(
+	lease: WatchHistoryLease | null | undefined,
+	owner: string,
+	now: number,
+): boolean {
+	return !!lease && lease.access.ownerUserId === owner &&
+		(lease.access.state === "allowed" || lease.access.state === "plan_required") &&
+		Number.isFinite(now) && now >= (lease.checkedAt ?? lease.receivedAt) &&
+		now < lease.expiresAt;
+}
+
 export function canCaptureWatchHistory(
 	lease: WatchHistoryLease | null | undefined,
 	owner: string,
 	now: number,
 	provider?: string,
 ): boolean {
-	return (
-		!!lease &&
-		lease.access.ownerUserId === owner &&
-		lease.access.state === "allowed" &&
-		Number.isFinite(now) &&
-		now >= (lease.checkedAt ?? lease.receivedAt) &&
-		now < lease.expiresAt &&
-		(provider !== "youtube" || lease.access.youtubeHistoryEnabled)
-	);
+	return canReadWatchHistory(lease, owner, now) &&
+		lease?.access.state === "allowed" &&
+		(provider !== "youtube" || lease.access.youtubeHistoryEnabled);
 }
 
 export function historyServerTime(

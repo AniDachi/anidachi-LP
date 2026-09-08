@@ -1,4 +1,4 @@
-import { canCaptureWatchHistory } from "./watch-history-access";
+import { canReadWatchHistory, canCaptureWatchHistory } from "./watch-history-access";
 import { withoutWatchHistoryAttestation } from "./watch-history-storage";
 import {
   WATCH_HISTORY_TITLE_EPISODE_SLICE_LIMIT,
@@ -36,6 +36,7 @@ export type PopupWatchHistorySnapshot = {
   pendingEvents: WatchProgressEvent[];
   localObservation: PopupWatchHistoryLocalObservation | null;
   capturePaused: boolean;
+  captureAllowed?: boolean;
   retiredUnprovenCount?: number;
 };
 
@@ -500,7 +501,7 @@ export function selectConfirmedPopupWatchHistorySnapshot(
   if (!partition ||
     partition.ownerUserId !== ownerUserId ||
     partition.accountGeneration !== accountGeneration ||
-    partition.preferencesConfirmed !== true || !canCaptureWatchHistory(partition.accessLease, ownerUserId, Date.now())) {
+    partition.preferencesConfirmed !== true || !canReadWatchHistory(partition.accessLease, ownerUserId, Date.now())) {
     return null;
   }
   const history = normalizeCachedWatchHistoryResponse(partition.cache);
@@ -509,9 +510,10 @@ export function selectConfirmedPopupWatchHistorySnapshot(
     history.meta.accountGeneration !== accountGeneration) {
     return null;
   }
+  const captureAllowed = canCaptureWatchHistory(partition.accessLease, ownerUserId, Date.now());
   const pendingEvents = new Map<string, WatchProgressEvent>();
   let localObservation: PopupWatchHistoryLocalObservation | null = null;
-  if (partition.currentObservation) {
+  if (captureAllowed && partition.currentObservation) {
     const current = WatchProgressEventSchema.safeParse(partition.currentObservation);
     if (current.success &&
       current.data.accountGeneration === accountGeneration &&
@@ -528,7 +530,7 @@ export function selectConfirmedPopupWatchHistorySnapshot(
       }
     }
   }
-  for (const entry of partition.outbox.entries) {
+  for (const entry of captureAllowed ? partition.outbox.entries : []) {
     const pending = WatchProgressEventSchema.safeParse(withoutWatchHistoryAttestation(entry.event));
     if (pending.success && pending.data.accountGeneration === accountGeneration) {
       pendingEvents.set(pending.data.clientEventId, pending.data);
@@ -540,7 +542,8 @@ export function selectConfirmedPopupWatchHistorySnapshot(
     preferences: partition.preferences ?? { youtubeHistoryEnabled: false },
     pendingEvents: [...pendingEvents.values()],
     localObservation,
-    capturePaused: partition.capturePaused === true,
+    captureAllowed,
+    capturePaused: captureAllowed && partition.capturePaused === true,
     ...((partition.outbox.retiredUnproven ?? 0) > 0 ? { retiredUnprovenCount: partition.outbox.retiredUnproven } : {}),
   };
 }
@@ -585,6 +588,7 @@ export function reconcilePopupPendingEvents(
   current: WatchProgressEvent[],
   snapshot: PopupWatchHistorySnapshot,
 ): WatchProgressEvent[] {
+  if (snapshot.captureAllowed === false) return [];
   const pending = new Map<string, WatchProgressEvent>();
   for (const event of [...current, ...snapshot.pendingEvents]) {
     if (event.accountGeneration !== snapshot.accountGeneration ||

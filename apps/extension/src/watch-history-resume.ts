@@ -7,7 +7,7 @@ import {
 } from "@anidachi/protocol";
 import type { VideoAdapter } from "./source-adapters/core/types";
 import {
-	canCaptureWatchHistory,
+	canReadWatchHistory,
 	type WatchHistoryLease,
 } from "./watch-history-access";
 
@@ -89,7 +89,7 @@ export async function applyPersonalHistoryResume(
 	const lease = await input.getLease();
 	if (
 		!matches() ||
-		!canCaptureWatchHistory(lease, owner, now(), intent.provider) ||
+		!canReadWatchHistory(lease, owner, now()) ||
 		lease?.access.accountGeneration !== intent.accountGeneration
 	)
 		return "cancelled";
@@ -97,14 +97,14 @@ export async function applyPersonalHistoryResume(
 		!(await input.claim()) ||
 		!matches() ||
 		!ready() ||
-		!canCaptureWatchHistory(lease, owner, now(), intent.provider)
+		!canReadWatchHistory(lease, owner, now())
 	)
 		return "cancelled";
 	const currentLease = await input.getLease();
 	if (
 		!matches() ||
 		!ready() ||
-		!canCaptureWatchHistory(currentLease, owner, now(), intent.provider) ||
+		!canReadWatchHistory(currentLease, owner, now()) ||
 		currentLease?.access.accountGeneration !== intent.accountGeneration ||
 		currentLease.access.accessEpoch !== lease.access.accessEpoch
 	)
@@ -113,7 +113,7 @@ export async function applyPersonalHistoryResume(
 		if (
 			!matches() ||
 			!ready() ||
-			!canCaptureWatchHistory(currentLease, owner, now(), intent.provider)
+			!canReadWatchHistory(currentLease, owner, now())
 		)
 			return false;
 		input.beforeSeek?.();
