@@ -2,6 +2,13 @@
 export const popupWatchHistoryStyles = `
   .popup-watch-screen [hidden] { display: none !important; }
   .popup-watch-screen { gap: 8px; min-width: 0; align-content: start; color-scheme: dark; }
+  .popup-watch-plan-notice { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 10px 12px; margin-bottom: 4px; border-left: 2px solid var(--ad-accent); border-radius: 0 10px 10px 0; background: rgba(255,150,75,.045); }
+  .popup-watch-plan-notice > div { display: grid; gap: 3px; flex: 1; min-width: 0; }
+  .popup-watch-plan-notice strong { color: var(--ad-text); font-size: 11px; line-height: 1.4; font-weight: 600; }
+  .popup-watch-plan-notice span { color: var(--ad-muted); font-size: 10px; line-height: 1.45; }
+  .popup-watch-screen .popup-watch-plan-notice button { flex: 0 0 auto; min-height: 30px; padding: 5px 10px; border: 1px solid rgba(255,174,106,.2); border-radius: 999px; background: rgba(255,174,106,.06); box-shadow: none; color: var(--ad-accent); font-size: 10px; font-weight: 600; cursor: pointer; }
+  .popup-watch-screen .popup-watch-plan-notice button:hover { border-color: rgba(255,174,106,.4); background: rgba(255,174,106,.12); }
+  .popup-watch-screen .popup-watch-plan-notice button:focus-visible { outline: 2px solid var(--ad-accent); outline-offset: 3px; }
   .popup-watch-screen .popup-watch-controls { display: grid; grid-template-columns: minmax(0, 1fr) 34px; align-items: center; gap: 8px; padding: 4px 0 8px; border: 0; min-height: 34px; }
   .popup-watch-screen .popup-watch-search { grid-template-columns: 15px minmax(0,1fr) 16px; gap: 7px; box-sizing: border-box; width: 100%; height: 34px; min-width: 0; padding: 0 10px; border: 1px solid rgba(255,255,255,.16); border-radius: 999px; background: rgba(255,255,255,.025); box-shadow: none; color: rgba(255,255,255,.5); }
   .popup-watch-screen .popup-watch-search:hover { border-color: rgba(255,255,255,.24); }

@@ -181,6 +181,7 @@ function WatchDrawer({
 		let disposed = false;
 		const revision = ++accessRevision.current;
 		let expiry: ReturnType<typeof setTimeout> | undefined;
+		let renewal: ReturnType<typeof setTimeout> | undefined;
 		const current = () => !disposed && revision === accessRevision.current;
 		const applyResult = (result: WatchHistoryMessageResponse, cached = false) => {
 			if (!current()) return;
@@ -205,13 +206,27 @@ function WatchDrawer({
 					: "access-unavailable";
 			setAccessState({ client, status, generation: data?.accountGeneration });
 			clearTimeout(expiry);
+			clearTimeout(renewal);
 			if (currentLease) {
+				const remaining = lease.expiresAt - Date.now();
 				expiry = setTimeout(
 					() => {
 						if (current()) setAccessState({ client, status: "access-unavailable" });
 					},
-					lease.expiresAt - Date.now(),
+					remaining,
 				);
+				// Retained Watch tabs outlive a lease. Revalidate before it expires;
+				// cached/failed responses never start a renewal loop or extend access.
+				if (!cached && data?.source === "network" && remaining > 10_000) {
+					renewal = setTimeout(() => {
+						if (!current()) return;
+						void requestPopupWatchHistory(client, {
+							type: "ANIDACHI_WATCH_HISTORY_V3",
+							command: "bootstrap",
+							expectedOwnerUserId: ownerUserId,
+						}).then((result) => applyResult(result));
+					}, remaining - 10_000);
+				}
 			}
 		};
 		void (async () => {
@@ -230,6 +245,7 @@ function WatchDrawer({
 		return () => {
 			disposed = true;
 			clearTimeout(expiry);
+			clearTimeout(renewal);
 		};
 	}, [client, ownerUserId, refreshVersion]);
 	useEffect(() => {
@@ -757,10 +773,13 @@ function WatchDrawer({
 			aria-label="Watch History"
 		>
 			{accessStatus === "read-only" || snapshot?.captureAllowed === false ? (
-				<div className="popup-social-empty" role="status">
-					Saved history is available. Recording new progress requires Plus or Pro.
-					<button type="button" onClick={() => openUrl(new URL("/pricing", WEB_HTTP_BASE).toString())}>View plans</button>
-				</div>
+				<aside className="popup-watch-plan-notice" role="status">
+					<div>
+						<strong>History recording is paused</strong>
+						<span>Save new progress with Plus or Pro.</span>
+					</div>
+					<button type="button" aria-label="Upgrade to Plus or Pro" onClick={() => openUrl(new URL("/pricing", WEB_HTTP_BASE).toString())}>Upgrade</button>
+				</aside>
 			) : null}
 			<div className="popup-watch-controls">
 				<div className="popup-watch-search">
