@@ -7,7 +7,6 @@ import { AnidachiLogo } from "@/components/anidachi-logo";
 import {
   Check,
   Lock,
-  ShieldCheck,
   X,
 } from "lucide-react";
 import { trackEvent } from "@/lib/gtag";
@@ -889,12 +888,6 @@ export function PlanSurveyModal({
                     </>
                   )}
                 </ul>
-
-                {/* Trust signal */}
-                <div className="mb-3 flex items-center gap-2 rounded-lg border border-brand-orange/25 bg-brand-orange/10 px-3 py-2 text-xs text-foreground/70">
-                  <ShieldCheck className="h-4 w-4 shrink-0 text-brand-orange" aria-hidden="true" />
-                  Full refund before launch — no questions asked.
-                </div>
 
                 <Button
                   className="w-full bg-brand-orange font-semibold text-primary-foreground glow-orange hover:bg-brand-orange-deep hover:glow-orange-lg disabled:opacity-60"

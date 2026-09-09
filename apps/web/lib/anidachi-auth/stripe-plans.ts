@@ -1,11 +1,11 @@
 import type Stripe from "stripe";
 import {
 	FREE_PLAN_CODE,
-	type PaidPlanCode,
-	type PlanCode,
 	maxPlanCode,
 	normalizePaidPlanCode,
 	normalizePlanCode,
+	type PaidPlanCode,
+	type PlanCode,
 } from "./plan-entitlements";
 import { stripeEnvForMode } from "./stripe-env";
 
@@ -123,6 +123,28 @@ export function currentPeriodEndIso(
 	subscription: Stripe.Subscription,
 ): string | null {
 	const currentPeriodEnd = subscription.items.data[0]?.current_period_end;
-	if (typeof currentPeriodEnd !== "number") return null;
-	return new Date(currentPeriodEnd * 1000).toISOString();
+	if (
+		typeof currentPeriodEnd !== "number" ||
+		!Number.isFinite(currentPeriodEnd)
+	)
+		return null;
+	// Flexible portal cancellations use cancel_at rather than cancel_at_period_end.
+	// A scheduled end can shorten paid access, but cannot extend the paid period.
+	const cancelAt = subscription.cancel_at;
+	const effectiveEnd =
+		typeof cancelAt === "number" && Number.isFinite(cancelAt) && cancelAt > 0
+			? Math.min(currentPeriodEnd, cancelAt)
+			: currentPeriodEnd;
+	return new Date(effectiveEnd * 1000).toISOString();
+}
+
+export function stripeSubscriptionCancellationScheduled(
+	subscription: Stripe.Subscription,
+): boolean {
+	return (
+		subscription.cancel_at_period_end ||
+		(typeof subscription.cancel_at === "number" &&
+			Number.isFinite(subscription.cancel_at) &&
+			subscription.cancel_at > 0)
+	);
 }

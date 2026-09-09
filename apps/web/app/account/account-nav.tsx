@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
-import { BookOpen, Inbox, Lightbulb, User, Users } from "lucide-react";
+import { BookOpen, CreditCard, Inbox, Lightbulb, User, Users } from "lucide-react";
 
 const ITEMS = [
   { href: "/account", label: "Overview", icon: User },
+  { href: "/account/billing", label: "Subscription", icon: CreditCard },
   { href: "/account/watch-library", label: "Watch Library", icon: BookOpen },
   { href: "/account/friends", label: "Friends & Groups", icon: Users },
   { href: "/account/invites", label: "Invites", icon: Inbox },
