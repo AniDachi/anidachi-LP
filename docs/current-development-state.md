@@ -1,12 +1,21 @@
 # Current Development State
 
-Last updated: 2026-09-09.
+Last updated: 2026-09-10.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
 contain old paths, old domains, or old decisions. When release channels,
 endpoints, branch protection, or store workflow changes, update this document in
 the same PR.
+
+## Account library editor, 2026-09-10
+
+The approved cover-based account design is being implemented in the real web
+application. The [account library editor plan](superpowers/plans/2026-09-10-account-library-editor.md)
+records the additive manual-progress API, owner/revision fences, retained Free
+read/delete access and staging checks. This work supersedes the earlier deferral
+of manual watched marks; it does not introduce shared group history or change
+Stripe cancellation behavior. Local implementation is not staging acceptance.
 
 ## History capacity amendment, 2026-09-09
 

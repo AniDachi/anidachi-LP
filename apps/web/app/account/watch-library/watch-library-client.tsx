@@ -16,10 +16,11 @@ import {
   type WatchHistoryResponse,
   type WatchHistoryTitleEpisodesResponse,
 } from "@anidachi/protocol";
-import { Clock3, Film, Play, RefreshCw, Trash2 } from "lucide-react";
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { RefreshCw } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ApiError } from "@/lib/client-api";
 import { WatchLibraryCapacity } from "./watch-library-capacity";
+import { HistoryBrowser } from "./history-browser";
 
 type Notice = { tone: "success" | "error"; text: string };
 
@@ -55,6 +56,8 @@ function WatchLibraryOwnerClient({
   const [accessState, setAccessState] = useState<string>(initialAccess);
   const canRead = accessState === "allowed" || accessState === "plan_required";
   const [history, setHistory] = useState(initialHistory);
+  const loadedTitleCount = useRef(initialHistory.items.length);
+  loadedTitleCount.current = history.items.length;
   const [preferences, setPreferences] = useState(initialPreferences);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -62,6 +65,9 @@ function WatchLibraryOwnerClient({
   const [notice, setNotice] = useState<Notice | null>(null);
   const operationRevision = useRef(0);
   const mutationInFlight = useRef(false);
+  const editorActive = useRef(false);
+  const [editorDirty, setEditorDirty] = useState(false);
+  const onDraftChange = useCallback((active: boolean) => { editorActive.current = active; setEditorDirty(active); }, []);
   const mounted = useRef(true);
   const ownerUserId = initialHistory.meta.ownerUserId;
 
@@ -73,10 +79,6 @@ function WatchLibraryOwnerClient({
       mutationInFlight.current = false;
     };
   }, []);
-  const observedEpisodeCount = useMemo(
-    () => history.items.reduce((total, item) => total + observedEpisodeCountForItem(item), 0),
-    [history.items],
-  );
   const readAccess = useCallback(async () => {
     try {
       const access = WatchHistoryAccessSchema.parse(await api<unknown>("/api/watch-history/v3/access", { headers: { [WATCH_HISTORY_OWNER_HEADER]: ownerUserId } }));
@@ -106,7 +108,7 @@ function WatchLibraryOwnerClient({
   }, [hideInaccessible]);
 
   const refresh = useCallback(async () => {
-    if (mutationInFlight.current) return;
+    if (mutationInFlight.current || editorActive.current) return;
     const revision = ++operationRevision.current;
     const current = () => mounted.current && operationRevision.current === revision;
     setLoadingMore(false);
@@ -120,7 +122,14 @@ function WatchLibraryOwnerClient({
         api<unknown>("/api/watch-history/v3?limit=24"),
         api<unknown>("/api/watch-history/v3/preferences"),
       ]);
-      const nextHistory = parseOwnedHistory(historyValue, ownerUserId);
+      let nextHistory = parseOwnedHistory(historyValue, ownerUserId);
+      // Refresh the already visible window, including a title selected on a later
+      // page. Every retained card comes from the new canonical read.
+      while (nextHistory.nextCursor && nextHistory.items.length < loadedTitleCount.current && current()) {
+        const page = parseOwnedHistory(await api<unknown>(`/api/watch-history/v3?limit=24&cursor=${encodeURIComponent(nextHistory.nextCursor)}`), ownerUserId);
+        if (page.meta.accountGeneration !== nextHistory.meta.accountGeneration) throw new Error("Watch history generation changed");
+        nextHistory = mergeWatchHistoryPages(nextHistory, page);
+      }
       const nextPreferences = parseOwnedPreferences(preferencesValue, ownerUserId);
       if (nextHistory.meta.accountGeneration !== nextPreferences.meta.accountGeneration) {
         throw new Error("Watch history generation changed");
@@ -138,7 +147,7 @@ function WatchLibraryOwnerClient({
     } finally {
       if (current()) setLoading(false);
     }
-  }, [ownerUserId, readAccess]);
+  }, [ownerUserId, readAccess, hideInaccessible]);
 
   useEffect(() => bindWatchHistoryPageRefresh({ refresh }), [refresh]);
 
@@ -173,7 +182,7 @@ function WatchLibraryOwnerClient({
     } finally {
       if (current()) setLoadingMore(false);
     }
-  }, [history, loadingMore, ownerUserId]);
+  }, [history, loadingMore, ownerUserId, hideInaccessible]);
 
   const updateYoutubePreference = useCallback(async () => {
     if (busyAction) return;
@@ -199,7 +208,7 @@ function WatchLibraryOwnerClient({
     } finally {
       if (current()) setBusyAction(null);
     }
-  }, [busyAction, ownerUserId, preferences.preferences.youtubeHistoryEnabled]);
+  }, [busyAction, ownerUserId, preferences.preferences.youtubeHistoryEnabled, hideInaccessible]);
 
   const deleteHistory = useCallback(async (target: WatchHistoryDeleteScope) => {
     if (busyAction || mutationInFlight.current || !window.confirm(deleteConfirmation(target))) return;
@@ -265,7 +274,7 @@ function WatchLibraryOwnerClient({
         setBusyAction(null);
       }
     }
-  }, [busyAction, history.meta.accountGeneration, ownerUserId, canRead]);
+  }, [busyAction, history.meta.accountGeneration, ownerUserId, canRead, hideInaccessible]);
 
   const resume = useCallback(async (provider: WatchHistoryItem["provider"], sourceUrl: string, currentTime: number) => {
     if (busyAction || mutationInFlight.current || !canRead) return;
@@ -284,49 +293,27 @@ function WatchLibraryOwnerClient({
     } catch (error) {
       if (current()) { hideInaccessible(error); setNotice({ tone: "error", text: errorMessage(error, "Could not resume playback") }); }
     } finally { if (mounted.current) setBusyAction(value => value === "resume" ? null : value); }
-  }, [busyAction, canRead, history.meta.accountGeneration, ownerUserId, readAccess]);
+  }, [busyAction, canRead, history.meta.accountGeneration, ownerUserId, readAccess, hideInaccessible]);
 
   return (
-    <div className="flex flex-col gap-6">
-      {canRead ? <section className="grid gap-4 md:grid-cols-2">
-        <StatCard icon={<Film className="h-5 w-5" aria-hidden />} label="Tracked titles" value={history.totalTitleCount} />
-        <StatCard icon={<Clock3 className="h-5 w-5" aria-hidden />} label="Observed episodes" value={observedEpisodeCount} />
-      </section> : null}
-
-      <section className="rounded-lg border border-brand-border bg-brand-surface p-5">
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-          <div>
-            <h2 className="text-lg font-semibold text-foreground">Watch History</h2>
-            <p className="mt-1 text-sm text-foreground/50">Your own playback progress from Crunchyroll and YouTube, whether you watch alone or in a room.</p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <button aria-pressed={preferences.preferences.youtubeHistoryEnabled} className="inline-flex min-h-11 items-center rounded-lg border border-brand-border px-4 text-sm font-semibold text-foreground disabled:opacity-50" disabled={Boolean(busyAction)} onClick={() => void updateYoutubePreference()} type="button">
-              YouTube history: {preferences.preferences.youtubeHistoryEnabled ? "On" : "Off"}
-            </button>
-            <button className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-brand-border px-4 text-sm font-semibold text-foreground disabled:opacity-50" disabled={loading || Boolean(busyAction)} onClick={() => void refresh()} type="button">
-              <RefreshCw className="h-4 w-4" aria-hidden /> Refresh
-            </button>
-            <button className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-red-400/25 bg-red-500/10 px-4 text-sm font-semibold text-red-100 disabled:opacity-50" disabled={Boolean(busyAction)} onClick={() => void deleteHistory({ scope: "all" })} type="button">
-              <Trash2 className="h-4 w-4" aria-hidden /> {busyAction === "delete:all" ? "Clearing..." : "Clear history"}
-            </button>
-          </div>
+    <div className="wh-page">
+      <header className="wh-page-heading">
+        <div><h1>Watch Library</h1><p>Your progress, all in one place.</p></div>
+        <div className="wh-page-actions">
+          <button aria-pressed={preferences.preferences.youtubeHistoryEnabled} className="wh-button" disabled={Boolean(busyAction) || editorDirty} onClick={() => void updateYoutubePreference()} type="button">YouTube history: {preferences.preferences.youtubeHistoryEnabled ? "On" : "Off"}</button>
+          <button className="wh-icon" aria-label="Refresh history" disabled={loading || Boolean(busyAction) || editorDirty} onClick={() => void refresh()} type="button"><RefreshCw size={16} aria-hidden /></button>
+          <button className="wh-text wh-danger" disabled={Boolean(busyAction) || editorDirty} onClick={() => void deleteHistory({ scope: "all" })} type="button">{busyAction === "delete:all" ? "Clearing..." : "Clear history"}</button>
         </div>
-      </section>
-
-      {accessState === "plan_required" ? <p className="text-sm text-foreground/60" role="status">Saved history is available. Recording new progress requires Plus or Pro. <a href="/pricing">View plans</a></p> : null}
-      {canRead ? <WatchLibraryCapacity ownerUserId={ownerUserId} accountGeneration={history.meta.accountGeneration}
-        revision={`${history.generatedAt}:${history.totalTitleCount}`} recordingAllowed={accessState === "allowed"} /> : null}
-      {notice ? <div className={`rounded-lg border px-4 py-3 text-sm ${notice.tone === "error" ? "border-red-400/25 bg-red-500/10 text-red-100" : "border-brand-orange/25 bg-brand-orange/10 text-brand-orange"}`}>{notice.text}</div> : null}
-
-      {!canRead ? <section className="rounded-lg border border-brand-border bg-brand-surface p-6 text-sm" role="status">{accessState === "plan-required" ? <>Personal history requires your own Plus or Pro plan. Your saved history is preserved. <a href="/pricing">View plans</a></> : accessState === "upgrade-required" ? "Update AniDachi to use personal history." : "History access is temporarily unavailable. Please retry."}</section> : history.items.length ? (
-        <div className="grid gap-4">
-          {history.items.map((item) => <WatchItemCard accountGeneration={history.meta.accountGeneration} busyAction={busyAction} item={item} key={`${history.meta.ownerUserId}:${history.meta.accountGeneration}:${item.provider}:${item.titleKey}`} captureAccessFailure={captureDetailAccessFailure} onResume={resume} onDelete={deleteHistory} ownerUserId={history.meta.ownerUserId} />)}
-        </div>
-      ) : (
-        <section className="rounded-lg border border-brand-border bg-brand-surface p-6 text-sm text-foreground/50">{loading ? "Loading personal history..." : accessState === "plan_required" ? "No saved history yet. Plus or Pro records your viewing progress." : "Progress will appear after meaningful playback while signed in to the extension."}</section>
+      </header>
+      {accessState === "plan_required" && <p className="wh-hint" role="status">Your saved history stays here. Plus or Pro unlocks recording and progress editing. <a href="/pricing" className="text-brand-orange">View plans</a></p>}
+      {notice && <div className={notice.tone === "error" ? "wh-error" : "wh-saved"} role="status">{notice.text}</div>}
+      {!canRead ? <section className="wh-error" role="status">{accessState === "upgrade-required" ? "Update AniDachi to use personal history." : "History access is temporarily unavailable. Please retry."}</section> : (
+        <HistoryBrowser key={`${ownerUserId}:${history.meta.accountGeneration}`} items={history.items} owner={ownerUserId} generation={history.meta.accountGeneration}
+          canEdit={accessState === "allowed"} busy={Boolean(busyAction)} nextCursor={history.nextCursor} loadingMore={loadingMore}
+          captureAccessFailure={captureDetailAccessFailure} onLoadMore={loadMore} onEdited={refresh} onDraftChange={onDraftChange} onDelete={deleteHistory} onResume={resume}
+          capacity={<WatchLibraryCapacity ownerUserId={ownerUserId} accountGeneration={history.meta.accountGeneration}
+            revision={`${history.generatedAt}:${history.totalTitleCount}`} recordingAllowed={accessState === "allowed"} />} />
       )}
-
-      {history.nextCursor ? <button className="mx-auto inline-flex min-h-11 items-center rounded-lg border border-brand-border px-5 text-sm font-semibold text-foreground disabled:opacity-50" disabled={loadingMore} onClick={() => void loadMore()} type="button">{loadingMore ? "Loading..." : "Load more"}</button> : null}
     </div>
   );
 }
@@ -369,170 +356,6 @@ export function bindWatchHistoryPageRefresh(options: {
     windowTarget.removeEventListener("focus", onFocus);
     documentTarget.removeEventListener("visibilitychange", onVisibilityChange);
   };
-}
-
-function WatchItemCard({ accountGeneration, busyAction, item, onResume, onDelete, ownerUserId, captureAccessFailure }: { captureAccessFailure: () => (error: unknown) => boolean; accountGeneration: number; busyAction: string | null; item: WatchHistoryItem; onResume: (provider: WatchHistoryItem["provider"], sourceUrl: string, currentTime: number) => void; onDelete: (target: WatchHistoryDeleteScope) => void; ownerUserId: string }) {
-  const [expanded, setExpanded] = useState(false);
-  const [visibleItem, setVisibleItem] = useState(item);
-  const [loadingEpisodes, setLoadingEpisodes] = useState(false);
-  const [episodeLoadError, setEpisodeLoadError] = useState(false);
-  const canonicalRevision = useRef(0);
-  const detailRequestRevision = useRef(0);
-
-  useEffect(() => {
-    canonicalRevision.current += 1;
-    detailRequestRevision.current += 1;
-    setVisibleItem(item);
-    setEpisodeLoadError(false);
-    setLoadingEpisodes(false);
-    return () => { canonicalRevision.current += 1; detailRequestRevision.current += 1; };
-  }, [accountGeneration, item, ownerUserId]);
-
-  const loadMoreEpisodes = useCallback(async () => {
-    const cursor = visibleItem.episodePage.nextCursor;
-    if (!cursor || loadingEpisodes) return;
-    const reportAccessFailure = captureAccessFailure();
-    const expectedCanonicalRevision = canonicalRevision.current;
-    const requestRevision = ++detailRequestRevision.current;
-    const requestIsCurrent = () =>
-      canonicalRevision.current === expectedCanonicalRevision &&
-      detailRequestRevision.current === requestRevision;
-    setLoadingEpisodes(true);
-    setEpisodeLoadError(false);
-    try {
-      const page = await loadWatchHistoryTitleEpisodePage({
-        ownerUserId,
-        accountGeneration,
-        item: visibleItem,
-        cursor,
-        request: (path) => api<unknown>(path),
-      });
-      if (requestIsCurrent()) {
-        setVisibleItem((current) => mergeWatchHistoryTitleEpisodePage(current, page));
-      }
-    } catch (error) {
-      if (requestIsCurrent() && !reportAccessFailure(error)) setEpisodeLoadError(true);
-    } finally {
-      if (requestIsCurrent()) setLoadingEpisodes(false);
-    }
-  }, [accountGeneration, loadingEpisodes, ownerUserId, visibleItem, captureAccessFailure]);
-
-  return (
-    <section className="overflow-hidden rounded-2xl border border-brand-border/80 bg-brand-surface">
-      <div className="flex flex-col gap-4 border-b border-brand-border/80 p-4 sm:flex-row sm:items-center">
-        <div className="flex min-w-0 items-center gap-4 sm:flex-1">
-          <Poster item={visibleItem} key={visibleItem.artworkUrl} />
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold tracking-[0.1em] text-brand-orange">{providerLabel(visibleItem.provider)} · {visibleItem.itemKind}</p>
-            <h3 className="mt-1 truncate text-lg font-bold text-foreground" dir="auto">{visibleItem.title}</h3>
-            <OverallProgress item={visibleItem} />
-            <p className="mt-1 text-xs text-foreground/45">Last watched {formatDate(visibleItem.lastWatchedAt)}</p>
-          </div>
-        </div>
-        <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:shrink-0">
-          <button className="rounded-lg border border-brand-border px-3 py-2 text-xs font-semibold text-foreground disabled:opacity-50" onClick={() => setExpanded((value) => !value)} type="button">{expanded ? "Hide episodes" : "Show episodes"}</button>
-          <button className="rounded-lg border border-red-400/25 px-3 py-2 text-xs font-semibold text-red-100 disabled:opacity-50" disabled={Boolean(busyAction)} onClick={() => onDelete({ scope: "title", provider: item.provider, titleKey: item.titleKey })} type="button">Delete title</button>
-        </div>
-      </div>
-
-      {expanded ? <>
-        {visibleItem.seasons.length ? visibleItem.seasons.map((season) => (
-          <section className="border-b border-brand-border/50 last:border-b-0" key={season.seasonKey}>
-            <div className="bg-white/[0.025] px-4 py-3">
-              <h4 className="text-sm font-bold text-brand-orange">{season.seasonTitle}</h4>
-              <p className="mt-0.5 text-xs text-foreground/45">{season.episodes.length} visible {season.episodes.length === 1 ? "episode" : "episodes"}</p>
-            </div>
-            <div className="divide-y divide-brand-border/50">
-              {season.episodes.map((episode) => <EpisodeRow busyAction={busyAction} episode={episode} item={visibleItem} key={episode.episodeKey} onResume={onResume} onDelete={onDelete} />)}
-            </div>
-          </section>
-        )) : <LatestActivityRow busyAction={busyAction} item={visibleItem} onResume={onResume} />}
-        {visibleItem.episodePage.nextCursor ? (
-          <div className="border-t border-brand-border/50 p-4">
-            <button className="inline-flex min-h-11 items-center rounded-lg border border-brand-border px-4 text-sm font-semibold text-foreground disabled:opacity-50" disabled={loadingEpisodes} onClick={() => void loadMoreEpisodes()} type="button">
-              {loadingEpisodes ? "Loading episodes..." : episodeLoadError ? "Retry loading episodes" : "Load more episodes"}
-            </button>
-            {episodeLoadError ? <p className="mt-2 text-sm text-red-100">Could not load more episodes. Your visible history is unchanged.</p> : null}
-          </div>
-        ) : null}
-      </> : null}
-    </section>
-  );
-}
-
-function EpisodeRow({ busyAction, episode, item, onResume, onDelete }: { busyAction: string | null; episode: WatchHistoryEpisode; item: WatchHistoryItem; onResume: (provider: WatchHistoryItem["provider"], sourceUrl: string, currentTime: number) => void; onDelete: (target: WatchHistoryDeleteScope) => void }) {
-  const target = { scope: "episode", provider: item.provider, titleKey: item.titleKey, episodeKey: episode.episodeKey } as const;
-  return (
-    <div className="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
-      <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-foreground">{episode.episodeTitle}</p>
-        <ProgressBar progress={episode.progress} />
-        <p className="mt-2 text-xs text-foreground/50">{formatClock(episode.currentTime)} / {formatClock(episode.duration)} · {formatDate(episode.lastWatchedAt)}</p>
-      </div>
-      <div className="flex gap-2">
-        <button className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-brand-orange px-4 text-sm font-semibold text-foreground disabled:opacity-50" disabled={Boolean(busyAction)} onClick={() => onResume(item.provider, episode.sourceUrl, episode.currentTime)} type="button"><Play className="h-4 w-4" aria-hidden /> Resume</button>
-        <button aria-label={`Delete ${episode.episodeTitle}`} className="rounded-lg border border-red-400/25 px-3 text-red-100 disabled:opacity-50" disabled={Boolean(busyAction)} onClick={() => onDelete(target)} type="button"><Trash2 className="h-4 w-4" aria-hidden /></button>
-      </div>
-    </div>
-  );
-}
-
-function LatestActivityRow({ busyAction, item, onResume }: { busyAction: string | null; item: WatchHistoryItem; onResume: (provider: WatchHistoryItem["provider"], sourceUrl: string, currentTime: number) => void }) {
-  return (
-    <div className="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
-      <div><p className="text-sm font-semibold text-foreground">Latest activity</p><ProgressBar progress={item.latestActivity.progress} /><p className="mt-2 text-xs text-foreground/50">{formatClock(item.latestActivity.currentTime)} / {formatClock(item.latestActivity.duration)} · {formatDate(item.latestActivity.lastWatchedAt)}</p></div>
-      <button className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-brand-orange px-4 text-sm font-semibold text-foreground disabled:opacity-50" disabled={Boolean(busyAction)} onClick={() => onResume(item.provider, item.sourceUrl, item.latestActivity.currentTime)} type="button"><Play className="h-4 w-4" aria-hidden /> Resume</button>
-    </div>
-  );
-}
-
-function ProgressBar({ progress }: { progress: number }) {
-  return <div className="mt-2 h-2 overflow-hidden rounded-full bg-brand-surface"><span className="block h-full rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-bright" style={{ width: `${Math.round(clampProgress(progress) * 100)}%` }} /></div>;
-}
-
-function OverallProgress({ item }: { item: WatchHistoryItem }) {
-  const available = item.aggregate.availableEpisodes;
-  const progress = item.aggregate.progress;
-  const exact = item.catalogState === "complete" && available !== null && progress !== null;
-  return (
-    <div className="watch-library-overall mt-1.5 max-w-sm">
-      <p className="watch-library-overall-label text-sm text-foreground/55">
-        {getWatchHistoryAggregateLabel(item)}
-      </p>
-      {exact && available > 0 ? (
-        <div
-          aria-hidden="true"
-          className="watch-library-overall-track mt-1 h-1 overflow-hidden rounded-full bg-white/10"
-        >
-          <span
-            className="block h-full rounded-full bg-brand-orange"
-            style={{ width: `${clampProgress(progress) * 100}%` }}
-          />
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function StatCard({ icon, label, value }: { icon: ReactNode; label: string; value: string | number }) {
-  return <div className="rounded-lg border border-brand-border bg-brand-surface p-5"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-orange/15 text-brand-orange">{icon}</span><div><p className="text-2xl font-bold text-foreground">{value}</p><p className="text-sm text-foreground/50">{label}</p></div></div></div>;
-}
-
-function Poster({ item }: { item: WatchHistoryItem }) {
-  const [failed, setFailed] = useState(false);
-  const checkLoadedImage = useCallback((image: HTMLImageElement | null) => {
-    // The browser can finish (or fail) an SSR image before hydration attaches onError.
-    if (image?.complete && image.naturalWidth === 0) setFailed(true);
-  }, []);
-
-  return item.artworkUrl && !failed ? (
-    <img alt="" className="h-16 w-11 shrink-0 rounded-md object-cover" src={item.artworkUrl}
-      ref={checkLoadedImage} loading="lazy" decoding="async" onError={() => setFailed(true)} />
-  ) : (
-    <span className="flex h-16 w-11 shrink-0 items-center justify-center rounded-md bg-brand-surface text-foreground/50">
-      <Film className="h-5 w-5" aria-hidden />
-    </span>
-  );
 }
 
 export function getWatchHistoryAggregateLabel(item: WatchHistoryItem): string {
@@ -721,10 +544,6 @@ function parseOwnedPreferences(value: unknown, ownerUserId: string): WatchHistor
   return parsed;
 }
 
-function observedEpisodeCountForItem(item: WatchHistoryItem): number {
-  return item.observedEpisodeCount;
-}
-
 function deleteScopeKey(target: WatchHistoryDeleteScope): string {
   if (target.scope === "all") return "delete:all";
   if (target.scope === "title") return `delete:${target.provider}:${target.titleKey}`;
@@ -735,25 +554,6 @@ function deleteConfirmation(target: WatchHistoryDeleteScope): string {
   if (target.scope === "all") return "Clear your AniDachi watch history?";
   if (target.scope === "title") return "Delete this title from your watch history?";
   return "Delete this episode from your watch history?";
-}
-
-function providerLabel(provider: string): string {
-  if (provider === "crunchyroll") return "Crunchyroll";
-  if (provider === "youtube") return "YouTube";
-  return provider;
-}
-
-function formatDate(value: string): string {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "Unknown date" : date.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-}
-
-function formatClock(seconds: number): string {
-  const value = Math.max(0, Math.floor(seconds));
-  const hours = Math.floor(value / 3600);
-  const minutes = Math.floor((value % 3600) / 60);
-  const rest = value % 60;
-  return hours > 0 ? `${hours}:${String(minutes).padStart(2, "0")}:${String(rest).padStart(2, "0")}` : `${minutes}:${String(rest).padStart(2, "0")}`;
 }
 
 function clampProgress(progress: number): number {
@@ -773,6 +573,8 @@ function historyAuthorityState(error: unknown): "plan-required" | "upgrade-requi
   switch (error.code) {
     case "HISTORY_PLAN_REQUIRED": return "plan-required";
     case "HISTORY_CLIENT_UPDATE_REQUIRED": return "upgrade-required";
+    case "OWNER_MISMATCH":
+    case "GENERATION_MISMATCH":
     case "HISTORY_ACCESS_CHANGED":
     case "HISTORY_ACCESS_UNAVAILABLE": return "unavailable";
     default: return null;
