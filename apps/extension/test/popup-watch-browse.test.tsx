@@ -14,6 +14,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { usePopupWatchBrowse } from "../src/popup-watch-browse";
+import { PopupHistorySettings } from "../src/popup-history-settings";
 import {
 	type PopupWatchHistoryClient,
 	PopupWatchHistoryPanel,
@@ -577,6 +578,62 @@ describe("production watch browsing", () => {
       event: { ...pending, captureProof: free, clientSequence: 1 } })).toMatchObject({ ok: false });
     expect(calls.every(call => call.startsWith("GET "))).toBe(true);
     expect((await f.storage.readRoot()).partitions[watchHistoryPartitionKey(OWNER, 1)]!.outbox.entries).toEqual([]);
+  });
+  it("refreshes the list when enabling YouTube supersedes an in-flight browse", async () => {
+    let enabled = false;
+    let reads = 0;
+    let release!: () => void;
+    const f = generationClient(async (raw, init) => {
+      const path = new URL(String(raw)).pathname;
+      if (path.endsWith("/preferences")) {
+        if (init?.method === "PATCH") enabled = JSON.parse(String(init.body)).youtubeHistoryEnabled;
+        return Response.json({ meta, preferences: { youtubeHistoryEnabled: enabled } });
+      }
+      if (path.endsWith("/browse")) {
+        reads++;
+        if (reads === 1) await new Promise<void>(resolve => { release = resolve; });
+        return Response.json(browse(reads === 1 ? "Obsolete response" : "Updated history"));
+      }
+      throw new Error(`Unexpected endpoint ${path}`);
+    }, async () => {
+      const lease = paidHistoryLease(OWNER, Date.now() - 1000, 1, enabled);
+      lease.access.youtubeConsentEpoch = enabled ? 2 : 1;
+      return Response.json(lease.access);
+    });
+    container = document.createElement("div");
+    document.body.append(container);
+    root = createRoot(container);
+    await act(async () => root.render(<>
+      <PopupWatchHistoryPanel client={f.client} ownerUserId={OWNER} />
+      <PopupHistorySettings client={f.client} ownerUserId={OWNER} />
+    </>));
+    await settles(() => expect(release).toBeTypeOf("function"));
+    await click("Track YouTube history");
+    await settles(() => expect(enabled).toBe(true));
+    await act(async () => release());
+    await settles(() => expect(container.textContent).toContain("Updated history"));
+    expect(container.textContent).not.toContain("Obsolete response");
+    expect(container.querySelector('[role="alert"]')).toBeNull();
+    expect(button("Track YouTube history").getAttribute("aria-checked")).toBe("true");
+    expect(reads).toBe(2);
+  });
+  it.each([
+    ["superseded", 2],
+    ["retryable", 1],
+  ] as const)("bounds automatic browse recovery for %s and keeps manual Retry", async (status, expectedReads) => {
+    let reads = 0;
+    const fallback = clientFixture();
+    const client = clientFixture(async message => {
+      if (message.command !== "browse") return fallback.request(message);
+      reads++;
+      return { ok: false, status };
+    });
+    await mount(client, false);
+    await settles(() => expect(button("Retry watch history").disabled).toBe(false));
+    expect(container.querySelector('[role="alert"]')).not.toBeNull();
+    expect(reads).toBe(expectedReads);
+    await click("Retry watch history");
+    await settles(() => expect(reads).toBe(expectedReads * 2));
   });
   it("removes paid cards immediately on a confirmed access loss and ignores a delayed browse", async () => {
     let publish!: Parameters<NonNullable<PopupWatchHistoryClient["subscribe"]>>[1];
