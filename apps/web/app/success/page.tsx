@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -6,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CheckCircle, CreditCard, Mail } from "lucide-react";
+import { CheckCircle, CreditCard } from "lucide-react";
 import { AnidachiLogo } from "@/components/anidachi-logo";
 import { DiscordContact } from "@/components/discord-contact";
 import { DiscordCredentialsForm } from "@/components/discord-credentials-form";
@@ -99,20 +100,13 @@ export default async function SuccessPage({
           </div>
 
           <div className="bg-brand-surface rounded-lg p-4 text-sm text-foreground/70">
-            <h4 className="font-medium text-foreground mb-1 flex items-center gap-2">
-              <Mail className="h-4 w-4" aria-hidden="true" />
-              Full refund guarantee
-            </h4>
+            <h4 className="font-medium text-foreground mb-1">Your subscription</h4>
             <p>
-              Changed your mind? No worries — email{" "}
-              <a
-                href="mailto:anidachi.app@gmail.com"
-                className="text-brand-orange hover:underline"
-              >
-                anidachi.app@gmail.com
-              </a>{" "}
-              anytime and we&apos;ll cancel your subscription and refund you
-              promptly. No questions asked.
+              View your billing status or cancel renewal in{" "}
+              <Link href="/account/billing" className="text-brand-orange hover:underline">
+                Account → Subscription
+              </Link>
+              . If you cancel, paid access continues until the end of your billing period.
             </p>
           </div>
 

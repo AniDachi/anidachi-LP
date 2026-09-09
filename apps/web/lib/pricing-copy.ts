@@ -18,11 +18,11 @@ const proPolicy = getPlanPolicy("pro");
 export const PRICING_HOST_MODEL =
   "Free hosts can start limited rooms; Plus and Pro upgrade the host's room limits while friends can join on Free accounts. Personal watch history requires each viewer’s own Plus or Pro plan; Free does not record history. Crunchyroll and YouTube are available on every plan.";
 
-export const PRICING_REFUND_NOTE =
-  "All paid subscriptions include a full refund guarantee before launch.";
+export const PRICING_CANCELLATION_NOTE =
+  "Cancel renewal from Account → Subscription. Paid access continues until the end of your billing period.";
 
 export const PRICING_IS_ANIDACHI_FREE_ANSWER =
-  `Yes — friends can join watchrooms on a Free account. When you want to host your own rooms without the 30-minute daily limit, Plus starts at ${PRICING_STARTING_AT} and Pro at ${PRICING_PRO_SHORT.replace("/mo", "/month")} during pre-launch (locked forever). ${PRICING_HOST_MODEL} ${PRICING_REFUND_NOTE}`;
+  `Yes — friends can join watchrooms on a Free account. When you want to host your own rooms without the 30-minute daily limit, Plus starts at ${PRICING_STARTING_AT} and Pro at ${PRICING_PRO_SHORT.replace("/mo", "/month")} during pre-launch (locked forever). ${PRICING_HOST_MODEL} ${PRICING_CANCELLATION_NOTE}`;
 
 export const PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER =
   `No. ${PRICING_HOST_MODEL} Each person still needs their own Crunchyroll account to stream the video.`;
@@ -38,10 +38,10 @@ export const PRICING_COMPARE_OVERVIEW =
   `AniDachi has a Free tier for joining and hosting limited rooms. Hosts who need unlimited watchrooms, async catch-up, auto anime detection, and progress tracking can upgrade to Plus (${PRICING_PLUS_SHORT}) or Pro (${PRICING_PRO_SHORT}) during pre-launch.`;
 
 export const PRICING_ASYNC_HOST_SNIPPET =
-  `AniDachi offers async watching and progress tracking — Free includes limited hosting; Plus starts at ${PRICING_STARTING_AT} with a full refund guarantee.`;
+  `AniDachi offers async watching and progress tracking — Free includes limited hosting; Plus starts at ${PRICING_STARTING_AT} — manage your subscription from your account.`;
 
 export const PRICING_TELEPARTY_COMPARE_FAQ =
-  "Teleparty has a free tier for basic live sync, plus a premium tier. AniDachi has a Free tier for joining and limited hosting, with Plus/Pro tiers for higher host limits during early access (with a clear refund path). Which is cheaper depends on whether you need multi-platform free live sync, or async progress and anime detection on Crunchyroll.";
+  "Teleparty has a free tier for basic live sync, plus a premium tier. AniDachi has a Free tier for joining and limited hosting, with Plus/Pro tiers for higher host limits during early access. Which is cheaper depends on whether you need multi-platform free live sync, or async progress and anime detection on Crunchyroll.";
 
 export const PRICING_RAVE_COMPARE_FAQ =
   `Rave offers a free tier with basic sync and chat. AniDachi has a Free tier for joining and limited hosting; Plus starts at ${PRICING_PLUS_SHORT} and Pro at ${PRICING_PRO_SHORT} during early access for hosts who need unlimited rooms, async watchrooms, auto anime detection, and per-person progress tracking.`;
@@ -51,7 +51,7 @@ export const PRICING_DISCORD_COMPARE_FAQ =
 
 /** YouTube cluster — do not reuse Crunchyroll-only pricing FAQs on YT pages. */
 export const PRICING_IS_ANIDACHI_FREE_YOUTUBE_ANSWER =
-  `Yes — friends can join YouTube watchrooms on a Free account. When you want to host without the 30-minute daily limit, Plus starts at ${PRICING_STARTING_AT} and Pro at ${PRICING_PRO_SHORT.replace("/mo", "/month")} during pre-launch (locked forever). ${PRICING_HOST_MODEL} ${PRICING_REFUND_NOTE}`;
+  `Yes — friends can join YouTube watchrooms on a Free account. When you want to host without the 30-minute daily limit, Plus starts at ${PRICING_STARTING_AT} and Pro at ${PRICING_PRO_SHORT.replace("/mo", "/month")} during pre-launch (locked forever). ${PRICING_HOST_MODEL} ${PRICING_CANCELLATION_NOTE}`;
 
 export const PRICING_FRIENDS_NEED_YOUTUBE_ANSWER =
   `No. ${PRICING_HOST_MODEL} Each person opens the same full YouTube watch page in their own browser — AniDachi syncs the room; it does not re-stream the video.`;

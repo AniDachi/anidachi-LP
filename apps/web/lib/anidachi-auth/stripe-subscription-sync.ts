@@ -1,10 +1,10 @@
 import type Stripe from "stripe";
 
 import {
-	getUserIdByStripeCustomerId,
-	getSubscriptionOwner,
 	beginStripeSubscriptionRefresh,
 	commitStripeSubscriptionRefresh,
+	getSubscriptionOwner,
+	getUserIdByStripeCustomerId,
 	releaseStripeSubscriptionRefresh,
 	type StripeRefreshLease,
 	type StripeSubscriptionCommit,
@@ -13,6 +13,7 @@ import type { PaidPlanCode, PlanCode } from "./plan-entitlements";
 import {
 	currentPeriodEndIso,
 	paidPlanCodeFromStripeSubscription,
+	stripeSubscriptionCancellationScheduled,
 } from "./stripe-plans";
 
 export class StripeSubscriptionSyncError extends Error {
@@ -33,6 +34,8 @@ export type StripeSubscriptionSyncResult = StripeSubscriptionPlanResolution & {
 	stripeSubscriptionId: string;
 	status: string;
 	effectivePlan: PlanCode;
+	currentPeriodEnd: string | null;
+	cancelAtPeriodEnd: boolean;
 };
 
 function stripeCustomerIdFrom(
@@ -136,7 +139,9 @@ export async function syncStripeSubscriptionById(
 				planCode,
 				status: subscription.status,
 				currentPeriodEnd: currentPeriodEndIso(subscription),
-				cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
+				// The existing mirror flag represents scheduled renewal cancellation in both billing modes.
+				cancelAtPeriodEnd:
+					stripeSubscriptionCancellationScheduled(subscription),
 			},
 			lease,
 		);
@@ -148,6 +153,8 @@ export async function syncStripeSubscriptionById(
 			planCode,
 			status: subscription.status,
 			effectivePlan,
+			currentPeriodEnd: currentPeriodEndIso(subscription),
+			cancelAtPeriodEnd: stripeSubscriptionCancellationScheduled(subscription),
 		};
 	} finally {
 		// Fenced release cannot release a newer holder. Failure leaves only a bounded lease.

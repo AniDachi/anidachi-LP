@@ -55,7 +55,7 @@ export default async function AccountLayout({
           </div>
         </header>
 
-        <div className="grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)]">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[220px_minmax(0,1fr)]">
           <aside className="lg:border-r lg:border-brand-border/70 lg:pr-5">
             <AccountNav />
           </aside>
