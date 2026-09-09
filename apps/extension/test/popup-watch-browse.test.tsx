@@ -235,6 +235,7 @@ function generationClient(fetch: typeof globalThis.fetch, accessFetch?: typeof g
 		fetch: async (raw, init) => {
 			const url = new URL(String(raw));
 			if (url.pathname.endsWith("/access")) return accessFetch ? accessFetch(raw, init) : Response.json(paidHistoryLease(OWNER, Date.now() - 1000, stored.activeGenerations?.[OWNER] ?? 1).access);
+			if (url.pathname.endsWith("/capacity")) return Response.json({ capacityVersion: 1, ownerUserId: OWNER, accountGeneration: stored.activeGenerations?.[OWNER], serverTime: new Date().toISOString(), providers: { youtube: { used: 0, limit: 100 }, crunchyroll: { used: 1, limit: 200 } } });
 			// Existing history regression fixtures have no accepted catalog roster.
 			if (url.pathname.endsWith("/browse/catalog"))
 				return Response.json(
@@ -886,7 +887,7 @@ describe("production watch browsing", () => {
 				return () => {};
 			},
 		};
-		await mount(client);
+		await mount(client, false);
 		await settles(() => expect(container.querySelector(".popup-watch-title-toggle")).not.toBeNull());
 		await act(async () => required(container.querySelector<HTMLButtonElement>('.popup-watch-title-toggle[aria-expanded="false"]')).click());
 		await settles(() =>
@@ -1157,7 +1158,7 @@ describe("production watch browsing", () => {
 			);
 		});
 		const { client } = generationClient(fetch);
-		await mount(client);
+		await mount(client, false);
 		await settles(() => expect(container.textContent).toContain("My title"));
 		await act(async () => required(container.querySelector<HTMLButtonElement>('.popup-watch-title-toggle[aria-expanded="false"]')).click());
 		await settles(() =>
@@ -1367,7 +1368,7 @@ describe("production watch browsing", () => {
 				});
 			return new Promise((resolve) => canonicalReads.push(resolve));
 		});
-		await mount(client);
+		await mount(client, false);
 		await settles(() => expect(container.textContent).toContain("Frieren"));
 		await act(async () => required(container.querySelector<HTMLButtonElement>('.popup-watch-title-toggle[aria-expanded="false"]')).click());
 		await settles(() => expect(finishDetail).toBeDefined());

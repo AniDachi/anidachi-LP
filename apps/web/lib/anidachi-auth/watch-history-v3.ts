@@ -1891,6 +1891,7 @@ export function publicDatabaseError(error: unknown): WatchHistoryV3ApiError {
       ? (error as { message: string }).message
       : "";
   const mappings: Array<[string, number, string, string]> = [
+    ["HISTORY_LIMIT_REACHED", 409, "HISTORY_LIMIT_REACHED", "History is full for this provider. Delete a saved title to add a new one."],
     ["watch_history_cursor_target_mismatch", 400, "INVALID_CURSOR", "History detail cursor is invalid"],
     ["watch_history_invalid_episode_cursor", 400, "INVALID_CURSOR", "History detail cursor is invalid"],
     ["watch_history_invalid_episode_page", 400, "INVALID_QUERY", "History detail query is invalid"],

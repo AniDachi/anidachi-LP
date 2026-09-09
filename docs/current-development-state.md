@@ -1,12 +1,21 @@
 # Current Development State
 
-Last updated: 2026-09-08.
+Last updated: 2026-09-09.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
 contain old paths, old domains, or old decisions. When release channels,
 endpoints, branch protection, or store workflow changes, update this document in
 the same PR.
+
+## History capacity amendment, 2026-09-09
+
+The approved [capacity contract](watch-history-capacity.md) adds 100 YouTube
+videos and 200 Crunchyroll titles per account, without automatic eviction.
+At capacity, saved titles keep updating on paid plans; only new titles are
+rejected. Free read/delete access remains unchanged. Implementation and local
+checks are recorded there; staging deployment and loaded-artifact acceptance
+are tracked separately. Existing room/media rollout gates remain unchanged.
 
 ## Repository
 

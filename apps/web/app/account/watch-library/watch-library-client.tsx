@@ -19,6 +19,7 @@ import {
 import { Clock3, Film, Play, RefreshCw, Trash2 } from "lucide-react";
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, ApiError } from "@/lib/client-api";
+import { WatchLibraryCapacity } from "./watch-library-capacity";
 
 type Notice = { tone: "success" | "error"; text: string };
 
@@ -313,6 +314,8 @@ function WatchLibraryOwnerClient({
       </section>
 
       {accessState === "plan_required" ? <p className="text-sm text-foreground/60" role="status">Saved history is available. Recording new progress requires Plus or Pro. <a href="/pricing">View plans</a></p> : null}
+      {canRead ? <WatchLibraryCapacity ownerUserId={ownerUserId} accountGeneration={history.meta.accountGeneration}
+        revision={`${history.generatedAt}:${history.totalTitleCount}`} recordingAllowed={accessState === "allowed"} /> : null}
       {notice ? <div className={`rounded-lg border px-4 py-3 text-sm ${notice.tone === "error" ? "border-red-400/25 bg-red-500/10 text-red-100" : "border-brand-orange/25 bg-brand-orange/10 text-brand-orange"}`}>{notice.text}</div> : null}
 
       {!canRead ? <section className="rounded-lg border border-brand-border bg-brand-surface p-6 text-sm" role="status">{accessState === "plan-required" ? <>Personal history requires your own Plus or Pro plan. Your saved history is preserved. <a href="/pricing">View plans</a></> : accessState === "upgrade-required" ? "Update AniDachi to use personal history." : "History access is temporarily unavailable. Please retry."}</section> : history.items.length ? (

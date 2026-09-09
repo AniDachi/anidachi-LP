@@ -1,5 +1,6 @@
 import { canReadWatchHistory, canCaptureWatchHistory, createWatchHistoryLease, parseWatchHistoryLease, personalEnvelopeEligible, type WatchHistoryLease } from "./watch-history-access";
 import {
+  WatchHistoryCapacitySchema,
   PersonalHistoryResumeSchema,
   personalHistoryResumeOwnerBinding,
   PersonalWatchProgressRequestSchema,
@@ -62,6 +63,7 @@ const FLUSH_LIMIT = 20;
 const historyReadSequences = new Map<string, number>();
 
 export type WatchHistoryLocalStatus =
+  | "history-full"
   | "plan-required"
   | "access-unavailable"
   | "access-changed"
@@ -80,6 +82,7 @@ export type WatchHistoryLocalStatus =
   | "rejected";
 
 export type WatchHistoryMessage =
+  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "capacity"; expectedOwnerUserId: string }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "resume-claim"; expectedOwnerUserId: string; input: unknown }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "catalog-release"; expectedOwnerUserId: string;
       pageId: string; accountGeneration: number; titleKey: string; revision: number }
@@ -233,6 +236,7 @@ export function isWatchHistoryMessage(value: unknown): value is WatchHistoryMess
   if (!isRecord(value) || value.type !== WATCH_HISTORY_MESSAGE_TYPE) return false;
   if ("accessToken" in value) return false;
   switch (value.command) {
+    case "capacity": return hasExactKeys(value, ["type", "command", "expectedOwnerUserId"]) && isExpectedOwnerUserId(value.expectedOwnerUserId);
     case "resume-claim": return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "input"]) && isExpectedOwnerUserId(value.expectedOwnerUserId) && PersonalHistoryResumeSchema.safeParse(value.input).success;
     case "catalog-release":
       return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "pageId", "accountGeneration", "titleKey", "revision"]) &&
@@ -474,7 +478,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     const session = await dependencies.getCurrentSession();
     if (!session) return { ok: false, status: "unauthenticated" };
 
-    if ((message.command === "browse" ||
+    if ((message.command === "capacity" || message.command === "browse" ||
       message.command === "browse-title-episodes" ||
       message.command === "browse-sessions" ||
       message.command === "browse-options" ||
@@ -527,13 +531,25 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         return { ok: false, status: "invalid-request" };
       }
     }
-    if (["list", "browse", "browse-title-episodes", "browse-sessions", "browse-options", "browse-catalog", "create-room"].includes(message.command)) {
+    if (["capacity", "list", "browse", "browse-title-episodes", "browse-sessions", "browse-options", "browse-catalog", "create-room"].includes(message.command)) {
       const denied = await requireAccess(session, "read"); if (denied) return denied;
     }
     if (["pending-identities", "catalog-begin", "catalog-commit", "resolve-identity"].includes(message.command)) {
       const denied = await requireAccess(session); if (denied) return denied;
     }
     if (message.command === "list") return refresh(session, message);
+    if (message.command === "capacity") {
+      const lease = await readLease(session);
+      const response = await authenticatedRequest(session, "/api/watch-history/v3/capacity");
+      if (!response.ok) return response.error;
+      const parsed = WatchHistoryCapacitySchema.safeParse(response.body);
+      if (!parsed.success || parsed.data.ownerUserId !== session.user.id) return { ok: false, status: "invalid-response" };
+      if (!sameSession(response.session, await dependencies.getCurrentSession())) return { ok: false, status: "rejected" };
+      const currentLease = await readLease(response.session);
+      if (!canReadWatchHistory(currentLease, session.user.id, now())) return { ok: false, status: "access-unavailable" };
+      if (parsed.data.accountGeneration !== lease?.access.accountGeneration || parsed.data.accountGeneration !== currentLease?.access.accountGeneration) return { ok: false, status: "generation-mismatch" };
+      return { ok: true, data: parsed.data };
+    }
     if (message.command === "browse" ||
       message.command === "browse-title-episodes" ||
       message.command === "browse-sessions" ||
@@ -1761,6 +1777,7 @@ function isFailureStatus(
 }
 
 function mapHttpFailure(status: number, body: unknown): WatchHistoryMessageResponse {
+  if (status === 409 && isRecord(body) && body.reason === "HISTORY_LIMIT_REACHED") return { ok: false, status: "history-full" };
   const code = isRecord(body) && typeof body.code === "string" ? body.code : "";
   if (status === 409 && code === "IDENTITY_CONFLICT") return { ok: false, status: "identity-conflict" };
   if (status === 409 && code === "STALE_OBSERVATION") {
@@ -1770,6 +1787,7 @@ function mapHttpFailure(status: number, body: unknown): WatchHistoryMessageRespo
     return { ok: false, status: "deleted-history" };
   }
   const mapped: Record<string, WatchHistoryLocalStatus> = {
+    HISTORY_LIMIT_REACHED: "history-full",
     HISTORY_PLAN_REQUIRED: "plan-required",
     HISTORY_ACCESS_CHANGED: "access-changed",
     HISTORY_ACCESS_UNAVAILABLE: "access-unavailable",
@@ -1786,9 +1804,9 @@ function mapHttpFailure(status: number, body: unknown): WatchHistoryMessageRespo
 
 function isPermanentObservationRejection(
   response: WatchHistoryMessageResponse,
-): response is { ok: false; status: "stale-observation" | "deleted-history" | "identity-conflict" } {
+): response is { ok: false; status: "stale-observation" | "deleted-history" | "identity-conflict" | "history-full" } {
   return !response.ok &&
-    (response.status === "stale-observation" || response.status === "deleted-history" || response.status === "identity-conflict");
+    (response.status === "stale-observation" || response.status === "deleted-history" || response.status === "identity-conflict" || response.status === "history-full");
 }
 
 function sameSession(expected: ExtensionAuthTokens, current: ExtensionAuthTokens | null): boolean {
@@ -1970,7 +1988,7 @@ export function isWatchHistorySenderAllowed(message: WatchHistoryMessage, sender
 export function usesStoredWatchHistorySession(
   command: WatchHistoryMessage["command"],
 ): boolean {
-  return command === "resume-claim" || command === "enqueue-progress" ||
+  return command === "capacity" || command === "resume-claim" || command === "enqueue-progress" ||
     command === "resolve-identity" ||
     command === "pending-identities" ||
     command === "catalog-begin" ||

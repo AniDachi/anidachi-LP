@@ -907,3 +907,15 @@ test("history room retirement preserves authentication and owner checks before t
     assert.match(response.headers.get("cache-control") ?? "", /no-store/);
   }
 });
+
+for (const personal of [false, true]) test(`capacity rejection drains installed clients (${personal ? "personal" : "legacy"})`, async () => {
+  const { WatchHistoryV3ApiError } = await import("./watch-history-v3");
+  const fail = async () => { throw new WatchHistoryV3ApiError(409, "HISTORY_LIMIT_REACHED", "History full"); };
+  const routes = createWatchHistoryV3RouteHandlers(dependencies({ applyProgress: fail, applyPersonalProgress: fail }));
+  const response = await routes.postProgress(request("/api/watch-history/v3/progress", {
+    method: "POST", body: JSON.stringify(personal ? { captureVersion: 1, event: progressBody() } : progressBody()),
+  }));
+  assert.equal(response.status, 409);
+  assert.deepEqual(await response.json(), { error: "History full", code: "STALE_OBSERVATION", reason: "HISTORY_LIMIT_REACHED" });
+  assert.equal(response.headers.get("cache-control"), "private, no-store");
+});
