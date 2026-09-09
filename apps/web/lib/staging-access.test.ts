@@ -10,6 +10,14 @@ import {
   sha256Hex,
 } from "./staging-access";
 
+test("capacity metadata only bypasses staging for authenticated GET", () => {
+  const pathname = "/api/watch-history/v3/capacity";
+  assert.equal(canBypassStagingGate({ pathname, method: "GET", authorization: "Bearer token" }), true);
+  assert.equal(canBypassStagingGate({ pathname, method: "GET" }), false);
+  assert.equal(canBypassStagingGate({ pathname, method: "POST", authorization: "Bearer token" }), false);
+  assert.equal(canBypassStagingGate({ pathname: `${pathname}/extra`, method: "GET", authorization: "Bearer token" }), false);
+});
+
 test("staging gate is disabled unless explicitly enabled", async () => {
   assert.deepEqual(await getStagingAccessConfig({ VERCEL_ENV: "preview" }), {
     enabled: false,

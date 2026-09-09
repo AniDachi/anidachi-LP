@@ -106,6 +106,7 @@ function canBearerBypassStagingGate(pathname: string, method: string): boolean {
   if (method === "GET" && [
     "/api/me/entitlements",
     "/api/watch-history/v3/access",
+    "/api/watch-history/v3/capacity",
   ].includes(pathname)) return true;
   if (pathname === "/api/me/profile" && method === "PATCH") return true;
   if (pathname === "/api/friends" && method === "GET") return true;

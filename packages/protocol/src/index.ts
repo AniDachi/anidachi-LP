@@ -16,3 +16,4 @@ export * from "./room-media";
 export * from "./room-presence-evidence";
 
 export * from "./personal-history-resume";
+export * from "./watch-history-capacity";

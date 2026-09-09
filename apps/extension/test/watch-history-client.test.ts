@@ -100,6 +100,30 @@ function readyPartition(ownerUserId: string, youtubeHistoryEnabled: boolean) {
 }
 
 describe("watch history v2 client", () => {
+  it.each(["valid", "owner", "generation", "session"] as const)("fences capacity metadata: %s", async (variant) => {
+    const owner = session.user.id;
+    const key = watchHistoryPartitionKey(owner, 1);
+    let currentSession = session;
+    let stored: WatchHistoryStorageRoot = { schemaVersion: 3, activeGenerations: { [owner]: 1 }, partitions: { [key]: readyPartition(owner, false) } };
+    const other = "00000000-0000-4000-8000-000000000002";
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => currentSession,
+      storage: createWatchHistoryStorage({ item: { getValue: async () => structuredClone(stored), setValue: async value => { stored = structuredClone(value); } }, getBytesInUse: async () => 0, quotaBytes: 1_000_000 }),
+      fetch: async (input) => {
+        expect(String(input)).toContain("/api/watch-history/v3/capacity");
+        if (variant === "session") currentSession = { ...session, user: { ...session.user, id: other } };
+        return Response.json({ capacityVersion: 1, ownerUserId: variant === "owner" ? other : owner,
+          accountGeneration: variant === "generation" ? 2 : 1, serverTime: "2026-09-09T00:00:00.000Z",
+          providers: { youtube: { used: 100, limit: 100 }, crunchyroll: { used: 200, limit: 200 } } });
+      },
+    });
+    const result = await client.handle({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "capacity", expectedOwnerUserId: owner });
+    expect(result.ok).toBe(variant === "valid");
+    expect(stored.partitions[key]!.cache).toBeNull();
+    expect(stored.partitions[key]!.outbox.entries).toEqual([]);
+    expect(stored.partitions[key]!.accessLease?.access.state).toBe("allowed");
+  });
+
   it("retries a canonical read retired by a new Free recording epoch", async () => {
     const owner = session.user.id;
     const key = watchHistoryPartitionKey(owner, 1);
@@ -409,7 +433,7 @@ describe("watch history v2 client", () => {
     expect((await client.handle(resolution as never)).ok).toBe(false);
     expect(posted).toHaveLength(1);
   });
-  it("retires only a permanent identity conflict and drains the following valid event", async () => {
+  it.each(["IDENTITY_CONFLICT", "HISTORY_LIMIT_REACHED", "STALE_OBSERVATION"])("retires %s without blocking the following saved-title event", async code => {
     const owner = session.user.id;
     const first = progressEvent();
     const second = { ...progressEvent("00000000-0000-4000-8000-000000000012"), clientSessionKey: "next" };
@@ -427,7 +451,7 @@ describe("watch history v2 client", () => {
         const event = JSON.parse(String(init?.body)).event;
         posted.push(event.clientEventId);
         return event.clientEventId === first.clientEventId
-          ? new Response(JSON.stringify({ code: "IDENTITY_CONFLICT" }), { status: 409 })
+          ? new Response(JSON.stringify({ code, ...(code === "STALE_OBSERVATION" ? { reason: "HISTORY_LIMIT_REACHED" } : {}) }), { status: 409 })
           : Response.json(progressAck(second.clientEventId));
       }) as typeof fetch,
     });
@@ -435,6 +459,8 @@ describe("watch history v2 client", () => {
     expect(posted).toEqual([first.clientEventId, second.clientEventId]);
     expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.currentObservation).toBeNull();
     expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.outbox.entries).toEqual([]);
+    expect(await client.flush(session)).toEqual({ ok: true, flushed: 0 });
+    expect(posted).toHaveLength(2);
   });
 
   it("keeps pending YouTube opt-out while canonical list adopts a newer generation", async () => {

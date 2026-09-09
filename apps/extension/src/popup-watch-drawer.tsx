@@ -66,6 +66,7 @@ import {
 } from "./popup-watch-episode-picker";
 import { useWatchProgressPreview } from "./use-watch-progress-preview";
 import { createWatchHistoryDateRange } from "./watch-history-browse";
+import { PopupWatchCapacityNotice } from "./popup-watch-capacity-notice";
 
 const titleMeta = (page: WatchHistoryBrowseResponse) => page.history.meta;
 const titleCursor = (page: WatchHistoryBrowseResponse) =>
@@ -781,6 +782,9 @@ function WatchDrawer({
 					<button type="button" aria-label="Upgrade to Plus or Pro" onClick={() => openUrl(new URL("/pricing", WEB_HTTP_BASE).toString())}>Upgrade</button>
 				</aside>
 			) : null}
+			<PopupWatchCapacityNotice ownerUserId={ownerUserId} accountGeneration={accessState.generation}
+				client={client} revision={`${refreshVersion}:${snapshot?.history.totalTitleCount ?? ""}`}
+				recordingAllowed={accessStatus === "allowed" && snapshot?.captureAllowed !== false} />
 			<div className="popup-watch-controls">
 				<div className="popup-watch-search">
 					<Search aria-hidden="true" size={15} />

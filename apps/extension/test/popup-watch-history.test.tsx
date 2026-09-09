@@ -1529,6 +1529,9 @@ function fixtureFetch(fetch: typeof globalThis.fetch, initial: WatchHistoryRespo
   return async (url, init) => {
     const parsedUrl = new URL(String(url));
     if (parsedUrl.pathname.endsWith("/access")) return Response.json(paidHistoryLease(OWNER_ID, undefined, latest.meta.accountGeneration).access);
+    if (parsedUrl.pathname.endsWith("/capacity")) return Response.json({ capacityVersion: 1, ownerUserId: OWNER_ID,
+      accountGeneration: latest.meta.accountGeneration, serverTime: latest.meta.serverTime,
+      providers: { youtube: { used: 0, limit: 100 }, crunchyroll: { used: latest.totalTitleCount, limit: 200 } } });
     const input = Object.fromEntries(parsedUrl.searchParams);
     if (parsedUrl.pathname.endsWith("/browse/title-episodes")) {
       const page = fixtureBrowseDetail(latest, input);

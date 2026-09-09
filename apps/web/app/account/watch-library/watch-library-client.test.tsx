@@ -27,6 +27,11 @@ function accessFixture(state: "allowed" | "plan_required" = "allowed", generatio
     serverTime: NOW, captureNotBefore: NOW, validUntil: "2026-08-21T12:05:00.000Z", youtubeHistoryEnabled: false };
 }
 
+function capacityFixture(crunchyroll = 200, owner = OWNER_ID, generation = 1) {
+  return { capacityVersion: 1, ownerUserId: owner, accountGeneration: generation, serverTime: NOW,
+    providers: { youtube: { used: 12, limit: 100 }, crunchyroll: { used: crunchyroll, limit: 200 } } };
+}
+
 
 (globalThis as typeof globalThis & { React?: typeof React }).React = React;
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -210,8 +215,47 @@ it("Free consent and clear-all refresh the remaining saved history", async () =>
   await waitFor(() => assert.ok(buttonByText(view.container, "YouTube history: On")));
   await click(buttonByText(view.container, "Clear history"));
   await waitFor(() => assert.match(view.container.textContent ?? "", /Watch history updated/));
-  assert.equal(requests.length, 3); assert.doesNotMatch(view.container.textContent ?? "", /Series One/);
+  assert.equal(requests.filter(path => !path.endsWith("/capacity")).length, 3); assert.doesNotMatch(view.container.textContent ?? "", /Series One/);
   await unmount(view.root);
+});
+
+it("deleting a title refreshes capacity and removes the full-history notice", async () => {
+  let used = 200;
+  testWindow.confirm = () => true;
+  globalThis.fetch = async (input, init) => {
+    const path = String(input);
+    if (path.endsWith("/capacity")) {
+      assert.equal(new Headers(init?.headers).get("x-anidachi-history-owner"), OWNER_ID);
+      return Response.json(capacityFixture(used));
+    }
+    if (path.endsWith("/delete")) {
+      used = 199;
+      return Response.json(deletionAck({ scope: "title", provider: "crunchyroll", titleKey: "series-one" }));
+    }
+    if (path.endsWith("/access")) return Response.json(accessFixture());
+    if (path.includes("?limit=24")) return Response.json({ ...historyFixture(), items: [], totalTitleCount: 0 });
+    throw new Error(`Unexpected request: ${path}`);
+  };
+  const view = await renderClient();
+  try {
+    await waitFor(() => assert.match(view.container.textContent ?? "", /200 \/ 200/));
+    assert.match(view.container.textContent ?? "", /Progress on saved titles keeps updating/);
+    await click(buttonByText(view.container, "Delete title"));
+    await waitFor(() => assert.match(view.container.textContent ?? "", /199 \/ 200/));
+    assert.doesNotMatch(view.container.textContent ?? "", /History is full/);
+  } finally { await unmount(view.root); }
+});
+
+for (const mismatch of ["owner", "generation"] as const) it(`ignores ${mismatch}-mismatched capacity without hiding saved history`, async () => {
+  globalThis.fetch = async () => Response.json(capacityFixture(200,
+    mismatch === "owner" ? "22222222-2222-4222-8222-222222222222" : OWNER_ID,
+    mismatch === "generation" ? 2 : 1));
+  const view = await renderClient();
+  try {
+    assert.equal(view.container.querySelector('[aria-label="History storage"]'), null);
+    assert.match(view.container.textContent ?? "", /Series One/);
+    assert.doesNotMatch(view.container.textContent ?? "", /temporarily unavailable/);
+  } finally { await unmount(view.root); }
 });
 for (const plan of ["allowed", "plan_required"] as const) it(`website Resume uses saved position without a room on ${plan}`, async () => {
   const oldAssign = testWindow.location.assign;
@@ -231,7 +275,7 @@ for (const plan of ["allowed", "plan_required"] as const) it(`website Resume use
     assert.equal(intent.accountGeneration, 1);
     assert.equal(intent.ownerUserId, undefined);
     assert.equal(new URL(launched[0]!).hash.includes("anidachiRoom"), false);
-    assert.deepEqual(requests, ["/api/watch-history/v3/access"]);
+    assert.deepEqual(requests.filter(path => !path.endsWith("/capacity")), ["/api/watch-history/v3/access"]);
   } finally { testWindow.location.assign = oldAssign; await unmount(view.root); }
 });
 it("website Resume rejects a changed generation instead of rebinding old rows", async () => {

@@ -167,6 +167,11 @@ export function createWatchHistoryV3RouteHandlers(
           await dependencies.applyProgress({ userId: session.userId, input }),
         );
       } catch (error) {
+        if (error instanceof WatchHistoryV3ApiError && error.code === "HISTORY_LIMIT_REACHED") {
+          // Installed v3 clients already consume STALE_OBSERVATION and continue
+          // draining. An unknown code would strand saved-title writes behind it.
+          return NextResponse.json({ error: error.message, code: "STALE_OBSERVATION", reason: error.code }, { status: 409 });
+        }
         return watchHistoryErrorResponse(error);
       }
     },
