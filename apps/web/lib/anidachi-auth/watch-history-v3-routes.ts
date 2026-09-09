@@ -446,7 +446,7 @@ async function createRoomFromV3Session(params: {
   };
 }
 
-async function readBoundedJson(request: Request, maxBytes: number): Promise<unknown> {
+export async function readBoundedJson(request: Request, maxBytes: number): Promise<unknown> {
   const contentLength = request.headers.get("content-length");
   if (contentLength && /^\d+$/.test(contentLength) && Number(contentLength) > maxBytes) {
     throw new WatchHistoryV3ApiError(413, "PAYLOAD_TOO_LARGE", "Request body is too large");

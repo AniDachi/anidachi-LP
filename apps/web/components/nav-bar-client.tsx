@@ -63,7 +63,7 @@ async function fetchNavUser(): Promise<NavUser | null> {
   };
 }
 
-function UserMenu({ user }: { user: NavUser }) {
+export function UserMenu({ user }: { user: NavUser }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -78,9 +78,14 @@ function UserMenu({ user }: { user: NavUser }) {
   }, [open]);
 
   async function handleSignOut() {
-    setOpen(false);
-    await fetch("/api/auth/logout", { method: "POST" });
-    window.location.href = "/";
+    const proceed = async () => {
+      setOpen(false);
+      await fetch("/api/auth/logout", { method: "POST" });
+      window.location.href = "/";
+    };
+    // An account editor can ask to save before the session is actually revoked.
+    const intent = new CustomEvent("anidachi:before-sign-out", { cancelable: true, detail: proceed });
+    if (window.dispatchEvent(intent)) await proceed();
   }
 
   const initials = user.displayName

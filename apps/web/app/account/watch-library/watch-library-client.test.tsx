@@ -1,6 +1,8 @@
+import { WATCH_HISTORY_OWNER_HEADER } from "../../../lib/watch-history-owner";
 import assert from "node:assert/strict";
-import { afterEach, describe, it } from "node:test";
+import { afterEach, it } from "node:test";
 import type {
+  WatchHistoryEditRequest,
   WatchHistoryItem,
   WatchHistoryPreferencesResponse,
   WatchHistoryResponse,
@@ -162,205 +164,6 @@ afterEach(() => {
   document.body.replaceChildren();
   globalThis.fetch = originalFetch;
   testWindow.confirm = () => false;
-});
-
-it("SSR includes existing Free history with a recording notice", async () => {
-  let privateReads = 0;
-  const result = await loadWatchLibraryData(OWNER_ID, {
-    access: async () => accessFixture("plan_required"),
-    preferences: async () => preferencesFixture,
-    history: async () => { privateReads++; return historyFixture(); },
-  });
-  assert.equal(privateReads, 1);
-  assert.equal(result.history.items.length, 1);
-  const html = renderToStaticMarkup(<WatchLibraryClient initialHistory={result.history} initialPreferences={result.preferences} initialAccess="plan_required" />);
-  assert.match(html, /Series One/);
-  assert.match(html, /Recording new progress requires Plus or Pro/);
-  assert.match(html, /YouTube history/);
-  assert.match(html, /Clear history/);
-});
-it("SSR never fetches history on unavailable authority and discards a paid-to-Free transition", async () => {
-  let reads = 0;
-  await assert.rejects(loadWatchLibraryData(OWNER_ID, {
-    access: async () => { throw new Error("HISTORY_ACCESS_UNAVAILABLE"); },
-    preferences: async () => preferencesFixture,
-    history: async () => { reads++; return historyFixture(); },
-  }), /UNAVAILABLE/);
-  assert.equal(reads, 0);
-  let accessReads = 0;
-  await assert.rejects(loadWatchLibraryData(OWNER_ID, {
-    access: async () => accessFixture(++accessReads === 1 ? "allowed" : "plan_required"),
-    preferences: async () => preferencesFixture,
-    history: async () => historyFixture(),
-  }), /CHANGED/);
-});
-
-it("Free consent and clear-all refresh the remaining saved history", async () => {
-  const empty = { ...historyFixture(), items: [], totalTitleCount: 0, nextCursor: null };
-  const requests: string[] = [];
-  testWindow.confirm = () => true;
-  globalThis.fetch = async (input, init) => {
-    const path = String(input); requests.push(path);
-    if (path.includes("?limit=24")) return Response.json({ ...empty, meta: { ...empty.meta, accountGeneration: 2 } });
-    assert.equal(new Headers(init?.headers).get("x-anidachi-history-owner"), OWNER_ID);
-    if (path.endsWith("/preferences")) return Response.json({ ...preferencesFixture, preferences: { youtubeHistoryEnabled: true } });
-    if (path.endsWith("/delete")) {
-      const request = JSON.parse(String(init?.body)); assert.deepEqual(request.target, { scope: "all" }); assert.equal(request.accountGeneration, 1);
-      return Response.json({ ...deletionAck({ scope: "title", provider: "crunchyroll", titleKey: "series-one" }), target: { scope: "all" }, accountGeneration: 2, meta: { ...preferencesFixture.meta, accountGeneration: 2 } });
-    }
-    throw new Error("Private read forbidden in Free fixture");
-  };
-  const view = await renderClient(empty, preferencesFixture, "plan_required");
-  await click(buttonByText(view.container, "YouTube history: Off"));
-  await waitFor(() => assert.ok(buttonByText(view.container, "YouTube history: On")));
-  await click(buttonByText(view.container, "Clear history"));
-  await waitFor(() => assert.match(view.container.textContent ?? "", /Watch history updated/));
-  assert.equal(requests.filter(path => !path.endsWith("/capacity")).length, 3); assert.doesNotMatch(view.container.textContent ?? "", /Series One/);
-  await unmount(view.root);
-});
-
-it("deleting a title refreshes capacity and removes the full-history notice", async () => {
-  let used = 200;
-  testWindow.confirm = () => true;
-  globalThis.fetch = async (input, init) => {
-    const path = String(input);
-    if (path.endsWith("/capacity")) {
-      assert.equal(new Headers(init?.headers).get("x-anidachi-history-owner"), OWNER_ID);
-      return Response.json(capacityFixture(used));
-    }
-    if (path.endsWith("/delete")) {
-      used = 199;
-      return Response.json(deletionAck({ scope: "title", provider: "crunchyroll", titleKey: "series-one" }));
-    }
-    if (path.endsWith("/access")) return Response.json(accessFixture());
-    if (path.includes("?limit=24")) return Response.json({ ...historyFixture(), items: [], totalTitleCount: 0 });
-    throw new Error(`Unexpected request: ${path}`);
-  };
-  const view = await renderClient();
-  try {
-    await waitFor(() => assert.match(view.container.textContent ?? "", /200 \/ 200/));
-    assert.match(view.container.textContent ?? "", /Progress on saved titles keeps updating/);
-    await click(buttonByText(view.container, "Delete title"));
-    await waitFor(() => assert.match(view.container.textContent ?? "", /199 \/ 200/));
-    assert.doesNotMatch(view.container.textContent ?? "", /History is full/);
-  } finally { await unmount(view.root); }
-});
-
-for (const mismatch of ["owner", "generation"] as const) it(`ignores ${mismatch}-mismatched capacity without hiding saved history`, async () => {
-  globalThis.fetch = async () => Response.json(capacityFixture(200,
-    mismatch === "owner" ? "22222222-2222-4222-8222-222222222222" : OWNER_ID,
-    mismatch === "generation" ? 2 : 1));
-  const view = await renderClient();
-  try {
-    assert.equal(view.container.querySelector('[aria-label="History storage"]'), null);
-    assert.match(view.container.textContent ?? "", /Series One/);
-    assert.doesNotMatch(view.container.textContent ?? "", /temporarily unavailable/);
-  } finally { await unmount(view.root); }
-});
-for (const plan of ["allowed", "plan_required"] as const) it(`website Resume uses saved position without a room on ${plan}`, async () => {
-  const oldAssign = testWindow.location.assign;
-  const launched: string[] = [];
-  testWindow.location.assign = (url: string) => { launched.push(url); };
-  const requests: string[] = [];
-  globalThis.fetch = async input => { requests.push(String(input)); return Response.json(accessFixture(plan)); };
-  const history = historyFixture(); history.items[0]!.episodePage = { complete: true, nextCursor: null };
-  history.items[0]!.seasons[0]!.episodes[0]!.sourceUrl = "https://www.crunchyroll.com/watch/EPISODE1";
-  const view = await renderClient(history, preferencesFixture, plan);
-  try {
-    await click(buttonByText(view.container, "Show episodes"));
-    await click(buttonByText(view.container, "Resume"));
-    await waitFor(() => assert.equal(launched.length, 1, view.container.textContent ?? ""));
-    const intent = JSON.parse(new URLSearchParams(new URL(launched[0]!).hash.slice(1)).get("anidachiResume")!);
-    assert.equal(intent.currentTime, history.items[0]!.seasons[0]!.episodes[0]!.currentTime);
-    assert.equal(intent.accountGeneration, 1);
-    assert.equal(intent.ownerUserId, undefined);
-    assert.equal(new URL(launched[0]!).hash.includes("anidachiRoom"), false);
-    assert.deepEqual(requests.filter(path => !path.endsWith("/capacity")), ["/api/watch-history/v3/access"]);
-  } finally { testWindow.location.assign = oldAssign; await unmount(view.root); }
-});
-it("website Resume rejects a changed generation instead of rebinding old rows", async () => {
-  const oldAssign = testWindow.location.assign; let navigated = false;
-  testWindow.location.assign = () => { navigated = true; };
-  globalThis.fetch = async () => Response.json(accessFixture("allowed", 2));
-  const view = await renderClient();
-  try {
-    await click(buttonByText(view.container, "Show episodes")); await click(buttonByText(view.container, "Resume"));
-    await waitFor(() => assert.match(view.container.textContent ?? "", /temporarily unavailable/));
-    assert.equal(navigated, false); assert.doesNotMatch(view.container.textContent ?? "", /Series One/);
-  } finally { testWindow.location.assign = oldAssign; await unmount(view.root); }
-});
-
-it("a same-owner confirmed Free render keeps existing saved cards", async () => {
-  const view = await renderClient();
-  await act(async () => view.root.render(<WatchLibraryClient initialHistory={historyFixture()} initialPreferences={preferencesFixture} initialAccess="plan_required" />));
-  assert.match(view.container.textContent ?? "", /Series One/);
-  assert.match(view.container.textContent ?? "", /Recording new progress requires Plus or Pro/);
-  await unmount(view.root);
-});
-
-it("website replaces a failed poster without retrying it on refresh and loads a changed URL", async () => {
-  let history = historyFixture();
-  history.items[0]!.artworkUrl = "https://www.crunchyroll.com/old-poster.jpg";
-  history.items.push({ ...itemFixture(), titleKey: "series-two", title: "Series Two",
-    artworkUrl: "https://www.crunchyroll.com/other-poster.jpg" });
-  history.totalTitleCount = 2;
-  globalThis.fetch = async (input) => {
-    if (String(input) === "/api/watch-history/v3/access") return Response.json(accessFixture());
-    if (String(input) === "/api/watch-history/v3?limit=24") return Response.json(history);
-    if (String(input) === "/api/watch-history/v3/preferences") return Response.json(preferencesFixture);
-    throw new Error(`Unexpected request: ${input}`);
-  };
-  const view = await renderClient(history);
-  try {
-    const poster = view.container.querySelector('img[src="https://www.crunchyroll.com/old-poster.jpg"]');
-    assert.ok(poster);
-    const parent = poster.parentElement!;
-    await act(async () => { poster.dispatchEvent(new Event("error")); });
-    assert.equal(Boolean(parent.querySelector("img")), false);
-    assert.ok(parent.querySelector("svg.lucide-film"));
-    const otherPoster = view.container.querySelector('img[src="https://www.crunchyroll.com/other-poster.jpg"]');
-    assert.ok(otherPoster, "one failed title must not hide another title's poster");
-    await click(buttonByText(view.container, "Refresh"));
-    assert.equal(Boolean(parent.querySelector("img")), false, "same URL must not retry on normal refresh");
-    assert.ok(view.container.querySelector('img[src="https://www.crunchyroll.com/other-poster.jpg"]') === otherPoster);
-    history = structuredClone(history);
-    history.items[0]!.artworkUrl = "https://www.crunchyroll.com/new-poster.jpg";
-    await click(buttonByText(view.container, "Refresh"));
-    assert.equal(parent.querySelector("img")?.getAttribute("src"), history.items[0]!.artworkUrl);
-    history.items[0]!.artworkUrl = null;
-    await click(buttonByText(view.container, "Refresh"));
-    assert.equal(Boolean(parent.querySelector("img")), false);
-    assert.ok(parent.querySelector("svg.lucide-film"));
-  } finally { await unmount(view.root); }
-});
-
-it("website catches a poster that failed before the server-rendered page became interactive", async () => {
-  const history = historyFixture();
-  history.items[0]!.artworkUrl = "https://www.crunchyroll.com/broken-before-hydration.jpg";
-  const element = React.createElement(WatchLibraryClient, { initialHistory: history, initialPreferences: preferencesFixture });
-  const container = document.createElement("div");
-  container.innerHTML = renderToString(element);
-  document.body.append(container);
-  const poster = container.querySelector("img");
-  assert.ok(poster);
-  // Model an actual browser download failure before React attaches onError.
-  Object.defineProperties(poster, { complete: { value: true }, naturalWidth: { value: 0 } });
-  let root!: Root;
-  await act(async () => { root = hydrateRoot(container, element); });
-  try {
-    assert.equal(Boolean(container.querySelector("img")), false);
-    assert.ok(container.querySelector("span.h-16 svg.lucide-film"));
-  } finally { await unmount(root); }
-});
-
-it("website keeps the bounded title slice collapsed until the user asks to see it", () => {
-  const markup = renderToStaticMarkup(React.createElement(
-    WatchLibraryClient,
-    { initialHistory: historyFixture(), initialPreferences: preferencesFixture },
-  ));
-
-  assert.match(markup, /Show episodes/);
-  assert.doesNotMatch(markup, /Episode 1/);
 });
 
 it("website detail pages merge by canonical episode identity and retain continuation", () => {
@@ -567,10 +370,10 @@ it("website renders complete, observed-only, and zero-available title states hon
   };
   const exactMarkup = render(exact);
   assert.match(exactMarkup, /عنوان عربي طويل من المزود/);
-  assert.match(exactMarkup, /<h3[^>]*dir="auto"[^>]*>عنوان عربي طويل من المزود<\/h3>/);
+  assert.match(exactMarkup, /dir="auto"/);
   assert.match(exactMarkup, /5 \/ 13 episodes/);
-  assert.match(exactMarkup, /38\.46%/);
-  assert.match(exactMarkup, /aria-hidden="true" class="watch-library-overall-track/);
+
+
   assert.equal(getWatchHistoryAggregateLabel(exact), "5 / 13 episodes · 38.46%");
 
   for (const state of ["partial", "unavailable"] as const) {
@@ -583,7 +386,7 @@ it("website renders complete, observed-only, and zero-available title states hon
       progress: null,
     };
     const markup = render(nonExact);
-    assert.match(markup, /7 observed episodes/);
+    assert.match(markup, /6 watched · 7 saved/);
     assert.doesNotMatch(markup, /watch-library-overall-track/);
     assert.doesNotMatch(markup, /0%/);
   }
@@ -629,323 +432,6 @@ it("website detail request is owner-bound and a failure leaves the current slice
     request: async () => detailFixture(),
   }), /owner or title changed/);
   assert.deepEqual(item, before);
-});
-
-describe("website detail interactions", () => {
-  it("renders canonical header updates from each accepted detail page", async () => {
-    const initial = historyFixture();
-    const initialItem = initial.items[0]!;
-    initialItem.title = "Observed Series One";
-    initialItem.observedEpisodeCount = 7;
-    initialItem.completedEpisodeCount = 6;
-    initialItem.catalogState = "partial";
-    initialItem.aggregate = { completedEpisodes: 6, availableEpisodes: null, progress: null };
-    const exactPage = detailFixture();
-    exactPage.observedEpisodeCount = 7;
-    exactPage.completedEpisodeCount = 6;
-    exactPage.catalog = {
-      state: "complete",
-      title: "عنوان عربي محدث من المزود",
-      aggregate: { completedEpisodes: 5, availableEpisodes: 13, progress: 5 / 13 },
-      seasons: [{
-        seasonKey: "season-one",
-        seasonTitle: "الموسم الأول",
-        seasonNumber: 1,
-        order: 10,
-        aggregate: { completedEpisodes: 5, availableEpisodes: 13, progress: 5 / 13 },
-        nextEpisode: null,
-      }],
-    };
-    exactPage.complete = false;
-    exactPage.nextCursor = "cursor-two";
-    const partialPage = detailFixture();
-    partialPage.observedEpisodeCount = 8;
-    partialPage.completedEpisodeCount = 6;
-    partialPage.catalog = { state: "partial", title: null, aggregate: null, seasons: [] };
-    partialPage.complete = true;
-    partialPage.nextCursor = null;
-    let detailReads = 0;
-    globalThis.fetch = async (input: string | URL | Request) => {
-      const path = String(input);
-      if (path === "/api/watch-history/v3/access") return Response.json(accessFixture());
-      if (!path.includes("/api/watch-history/v3/title-episodes")) {
-        throw new Error(`Unexpected request: ${path}`);
-      }
-      detailReads += 1;
-      return Response.json(detailReads === 1 ? exactPage : partialPage);
-    };
-    const view = await renderClient(initial);
-    await click(buttonByText(view.container, "Show episodes"));
-
-    await click(buttonByText(view.container, "Load more episodes"));
-    await waitFor(() => {
-      assert.equal(view.container.querySelector("h3")?.textContent, "عنوان عربي محدث من المزود");
-      assert.equal(
-        view.container.querySelector(".watch-library-overall-label")?.textContent,
-        "5 / 13 episodes · 38.46%",
-      );
-      assert.ok(view.container.querySelector(".watch-library-overall-track"));
-    });
-
-    await click(buttonByText(view.container, "Load more episodes"));
-    await waitFor(() => {
-      assert.equal(
-        view.container.querySelector(".watch-library-overall-label")?.textContent,
-        "8 observed episodes",
-      );
-      assert.equal(view.container.querySelector(".watch-library-overall-track"), null);
-    });
-    assert.equal(view.container.querySelector("h3")?.textContent, "عنوان عربي محدث من المزود");
-    assert.equal(detailReads, 2);
-    await unmount(view.root);
-  });
-
-  it("keeps visible rows on failure and retries only after the user asks", async () => {
-    let attempts = 0;
-    globalThis.fetch = async (input: string | URL | Request) => {
-      if (!String(input).includes("/api/watch-history/v3/title-episodes")) {
-        throw new Error(`Unexpected request: ${String(input)}`);
-      }
-      attempts += 1;
-      if (attempts === 1) throw new Error("offline");
-      return Response.json(detailFixture());
-    };
-    const view = await renderClient();
-    await click(buttonByText(view.container, "Show episodes"));
-    assert.match(view.container.textContent ?? "", /Episode 1/);
-
-    await click(buttonByText(view.container, "Load more episodes"));
-    await waitFor(() => {
-      assert.match(view.container.textContent ?? "", /Retry loading episodes/);
-      assert.match(view.container.textContent ?? "", /Episode 1/);
-    });
-    assert.equal(attempts, 1);
-
-    await click(buttonByText(view.container, "Retry loading episodes"));
-    await waitFor(() => assert.match(view.container.textContent ?? "", /Episode 3/));
-    assert.equal(attempts, 2);
-    await unmount(view.root);
-  });
-
-  it("ignores a deferred detail page after a newer canonical refresh", async () => {
-    let resolveDetail: ((response: Response) => void) | undefined;
-    const refreshed = historyFixture();
-    const refreshedItem = refreshed.items[0];
-    const refreshedSeason = refreshedItem?.seasons[0];
-    if (!refreshedItem || !refreshedSeason) throw new Error("Refresh fixture missing");
-    refreshed.items[0] = {
-      ...refreshedItem,
-      title: "Series One Refreshed",
-      seasons: [{
-        ...refreshedSeason,
-        episodes: [episode("episode-one", 1, 900)],
-      }],
-    };
-    globalThis.fetch = async (input: string | URL | Request) => {
-      const path = String(input);
-      if (path === "/api/watch-history/v3/access") return Response.json(accessFixture());
-      if (path.includes("/api/watch-history/v3/title-episodes")) {
-        return new Promise<Response>((resolve) => { resolveDetail = resolve; });
-      }
-      if (path === "/api/watch-history/v3?limit=24") return Response.json(refreshed);
-      if (path === "/api/watch-history/v3/preferences") return Response.json(preferencesFixture);
-      throw new Error(`Unexpected request: ${path}`);
-    };
-    const view = await renderClient();
-    await click(buttonByText(view.container, "Show episodes"));
-    await click(buttonByText(view.container, "Load more episodes"));
-    await waitFor(() => assert.equal(typeof resolveDetail, "function"));
-
-    await click(buttonByText(view.container, "Refresh"));
-    await waitFor(() => assert.match(view.container.textContent ?? "", /Series One Refreshed/));
-    await act(async () => { resolveDetail?.(Response.json(detailFixture())); });
-
-    await waitFor(() => assert.doesNotMatch(view.container.textContent ?? "", /Episode 3/));
-    assert.match(view.container.textContent ?? "", /15:00/);
-    await unmount(view.root);
-  });
-
-  for (const scope of ["episode", "title"] as const) {
-    it(`ignores a deferred detail page after ${scope} deletion`, async () => {
-      let resolveDetail: ((response: Response) => void) | undefined;
-      testWindow.confirm = () => true;
-      globalThis.fetch = async (input: string | URL | Request, init?: RequestInit) => {
-        const path = String(input);
-      if (path === "/api/watch-history/v3/access") return Response.json(accessFixture());
-        if (path.includes("/api/watch-history/v3/title-episodes")) {
-          return new Promise<Response>((resolve) => { resolveDetail = resolve; });
-        }
-        if (path === "/api/watch-history/v3/delete") {
-          const target = scope === "episode"
-            ? { scope, provider: "crunchyroll", titleKey: "series-one", episodeKey: "episode-one" }
-            : { scope, provider: "crunchyroll", titleKey: "series-one" };
-          return Response.json({
-            meta: {
-              serverTime: NOW,
-              schemaVersion: 3,
-              ownerUserId: OWNER_ID,
-              accountGeneration: 1,
-            },
-            schemaVersion: 3,
-            clientMutationId: "22222222-2222-4222-8222-222222222222",
-            accountGeneration: 1,
-            target,
-            deletedAt: NOW,
-          });
-        }
-        throw new Error(`Unexpected request: ${path} ${init?.method ?? "GET"}`);
-      };
-      const view = await renderClient();
-      await click(buttonByText(view.container, "Show episodes"));
-      await click(buttonByText(view.container, "Load more episodes"));
-      await waitFor(() => assert.equal(typeof resolveDetail, "function"));
-
-      await click(scope === "episode"
-        ? buttonByLabel(view.container, "Delete Episode 1")
-        : buttonByText(view.container, "Delete title"));
-      await waitFor(() => {
-        if (scope === "episode") assert.doesNotMatch(view.container.textContent ?? "", /Episode 1/);
-        else assert.doesNotMatch(view.container.textContent ?? "", /Series One/);
-      });
-      await act(async () => { resolveDetail?.(Response.json(detailFixture())); });
-      await waitFor(() => assert.doesNotMatch(view.container.textContent ?? "", /Episode 3/));
-      await unmount(view.root);
-    });
-  }
-});
-
-describe("website root history request fences", () => {
-  for (const [kind, label] of [["delete", "Clear history"], ["preferences", "YouTube history: Off"]] as const) {
-    it(`binds rendered owner to ${kind} intent through cookie refresh`, async () => {
-      testWindow.confirm = () => true;
-      const intents: (string | null)[] = [];
-      let refreshes = 0;
-      globalThis.fetch = async (input: string | URL | Request, init?: RequestInit) => {
-        if (String(input) === "/api/auth/refresh") { refreshes++; return Response.json({ ok: true }); }
-        assert.equal(String(input), `/api/watch-history/v3/${kind}`);
-        intents.push(new Headers(init?.headers).get("x-anidachi-history-owner"));
-        return intents.length === 1
-          ? Response.json({}, { status: 401 })
-          : Response.json({ error: "Watch history owner changed" }, { status: 409 });
-      };
-      const view = await renderClient();
-      try {
-        await click(buttonByText(view.container, label));
-        await waitFor(() => assert.match(view.container.textContent ?? "", /Watch history owner changed/));
-        assert.deepEqual(intents, [OWNER_ID, OWNER_ID]);
-        assert.equal(refreshes, 1);
-        assert.match(view.container.textContent ?? "", /Series One/);
-      } finally { await unmount(view.root); }
-    });
-  }
-  it("does not let a pre-delete refresh restore removed rows or stale aggregates", async () => {
-    let resolveOldRefresh: ((response: Response) => void) | undefined;
-    let rootReads = 0;
-    testWindow.confirm = () => true;
-    const canonical = historyFixture();
-    canonical.items = [];
-    canonical.totalTitleCount = 0;
-    globalThis.fetch = async (input: string | URL | Request) => {
-      const path = String(input);
-      if (path === "/api/watch-history/v3/access") return Response.json(accessFixture());
-      if (path === "/api/watch-history/v3?limit=24") {
-        rootReads += 1;
-        if (rootReads === 1) {
-          return new Promise<Response>((resolve) => { resolveOldRefresh = resolve; });
-        }
-        return Response.json(canonical);
-      }
-      if (path === "/api/watch-history/v3/preferences") return Response.json(preferencesFixture);
-      if (path === "/api/watch-history/v3/delete") return Response.json(deletionAck({
-        scope: "title",
-        provider: "crunchyroll",
-        titleKey: "series-one",
-      }));
-      throw new Error(`Unexpected request: ${path}`);
-    };
-    const view = await renderClient();
-
-    await click(buttonByText(view.container, "Refresh"));
-    await waitFor(() => assert.equal(typeof resolveOldRefresh, "function"));
-    await click(buttonByText(view.container, "Delete title"));
-    await waitFor(() => assert.doesNotMatch(view.container.textContent ?? "", /Series One/));
-    assert.equal(rootReads, 2);
-    assert.equal(buttonByText(view.container, "Refresh").disabled, false);
-    await act(async () => { resolveOldRefresh?.(Response.json(historyFixture())); });
-    await waitFor(() => assert.doesNotMatch(view.container.textContent ?? "", /Series One/));
-    await unmount(view.root);
-  });
-
-  it("does not let an older root pagination response resurrect a deleted title", async () => {
-    let resolvePage: ((response: Response) => void) | undefined;
-    testWindow.confirm = () => true;
-    const initial = historyFixture();
-    initial.nextCursor = "older-titles";
-    const canonical = { ...historyFixture(), items: [], totalTitleCount: 0 };
-    globalThis.fetch = async (input: string | URL | Request) => {
-      const path = String(input);
-      if (path === "/api/watch-history/v3/access") return Response.json(accessFixture());
-      if (path.includes("cursor=older-titles")) {
-        return new Promise<Response>((resolve) => { resolvePage = resolve; });
-      }
-      if (path === "/api/watch-history/v3?limit=24") return Response.json(canonical);
-      if (path === "/api/watch-history/v3/delete") return Response.json(deletionAck({
-        scope: "title",
-        provider: "crunchyroll",
-        titleKey: "series-one",
-      }));
-      throw new Error(`Unexpected request: ${path}`);
-    };
-    const view = await renderClient(initial);
-
-    await click(buttonByText(view.container, "Load more"));
-    await waitFor(() => assert.equal(typeof resolvePage, "function"));
-    await click(buttonByText(view.container, "Delete title"));
-    await waitFor(() => assert.doesNotMatch(view.container.textContent ?? "", /Series One/));
-    await act(async () => { resolvePage?.(Response.json(historyFixture())); });
-    await waitFor(() => assert.doesNotMatch(view.container.textContent ?? "", /Series One/));
-    await unmount(view.root);
-  });
-
-  it("rekeys state on owner change and ignores the previous owner's late deletion", async () => {
-    const ownerTwo = "22222222-2222-4222-8222-222222222222";
-    let resolveDelete: ((response: Response) => void) | undefined;
-    testWindow.confirm = () => true;
-    globalThis.fetch = async (input: string | URL | Request) => {
-      const path = String(input);
-      if (path === "/api/watch-history/v3/access") return Response.json(accessFixture());
-      if (path === "/api/watch-history/v3/delete") {
-        return new Promise<Response>((resolve) => { resolveDelete = resolve; });
-      }
-      throw new Error(`Unexpected request: ${path}`);
-    };
-    const view = await renderClient();
-    await click(buttonByText(view.container, "Delete title"));
-    await waitFor(() => assert.equal(typeof resolveDelete, "function"));
-    const nextHistory = historyFixture();
-    nextHistory.meta.ownerUserId = ownerTwo;
-    nextHistory.items[0]!.title = "Owner Two Series";
-    const nextPreferences = structuredClone(preferencesFixture);
-    nextPreferences.meta.ownerUserId = ownerTwo;
-
-    await act(async () => {
-      view.root.render(React.createElement(WatchLibraryClient, {
-        initialHistory: nextHistory,
-        initialPreferences: nextPreferences,
-      }));
-    });
-    assert.match(view.container.textContent ?? "", /Owner Two Series/);
-    assert.doesNotMatch(view.container.textContent ?? "", /Series One/);
-    await act(async () => {
-      resolveDelete?.(Response.json(deletionAck({
-        scope: "title",
-        provider: "crunchyroll",
-        titleKey: "series-one",
-      })));
-    });
-    await waitFor(() => assert.match(view.container.textContent ?? "", /Owner Two Series/));
-    await unmount(view.root);
-  });
 });
 
 async function renderClient(
@@ -1020,102 +506,233 @@ async function unmount(root: Root): Promise<void> {
   await act(async () => { root.unmount(); });
 }
 
-for (const [code, status, message, gate] of [
-  ["HISTORY_PLAN_REQUIRED", 403, "Personal history requires a paid plan", /own Plus or Pro/],
-  ["HISTORY_ACCESS_CHANGED", 409, "History access changed during the request", /temporarily unavailable/],
-  ["HISTORY_ACCESS_UNAVAILABLE", 503, "Could not resolve history access", /temporarily unavailable/],
-  ["HISTORY_CLIENT_UPDATE_REQUIRED", 409, "Please update your client", /Update AniDachi/],
-] as const) {
-  for (const operation of ["list", "detail"] as const) {
-    it(`${operation} retires private history on route-shaped ${code}`, async () => {
-      globalThis.fetch = async () => Response.json({ code, error: message }, { status });
-      const history = historyFixture(); history.nextCursor = "next-title";
-      const view = await renderClient(history);
-      try {
-        if (operation === "detail") await click(buttonByText(view.container, "Show episodes"));
-        await click(buttonByText(view.container, operation === "list" ? "Load more" : "Load more episodes"));
-        await waitFor(() => assert.match(view.container.textContent ?? "", gate));
-        assert.doesNotMatch(view.container.textContent ?? "", /Series One|Resume/);
-        if (code !== "HISTORY_PLAN_REQUIRED") assert.doesNotMatch(view.container.textContent ?? "", /own Plus or Pro/);
-      } finally { await unmount(view.root); }
-    });
-  }
+
+function editorFixture() {
+  const base = { episodeKey: "episode-one", episodeTitle: "Episode 1", episodeNumber: 1, seasonKey: "season-one", seasonTitle: "Season One", seasonNumber: 1, seasonOrder: 0, order: 0,
+    sourceUrl: "https://www.crunchyroll.com/watch/EPISODE1", available: true, watched: false, currentTime: 60, duration: 1200, progress: .05 };
+  return { meta: { ...preferencesFixture.meta }, provider: "crunchyroll", titleKey: "series-one", revision: "a".repeat(32), catalogComplete: true,
+    episodes: [base, { ...base, episodeKey: "episode-two", episodeTitle: "Episode 2", episodeNumber: 2, order: 1, sourceUrl: "https://www.crunchyroll.com/watch/EPISODE2", currentTime: 0, progress: 0 },
+      { ...base, episodeKey: "episode-three", episodeTitle: "Episode 3", episodeNumber: 1, seasonKey: "season-two", seasonTitle: "Season Two", seasonNumber: 2, seasonOrder: 1, currentTime: 0, progress: 0 },
+      { ...base, episodeKey: "special", episodeTitle: "A special", episodeNumber: 0, seasonKey: "specials", seasonTitle: "Specials", seasonNumber: 0, seasonOrder: 2, currentTime: 0, progress: 0 },
+      { ...base, episodeKey: "future", episodeTitle: "Future episode", episodeNumber: 3, order: 2, available: false, currentTime: 0, progress: 0 }],
+  };
+}
+function installServer(options: { plan?: "allowed" | "plan_required"; history?: WatchHistoryResponse;
+  intercept?: (path: string, init?: RequestInit) => Promise<Response | undefined> | Response | undefined } = {}) {
+  let history = options.history ?? historyFixture();
+  let editor = editorFixture();
+  const calls: { path: string; body?: Record<string, unknown>; headers: Headers }[] = [];
+  globalThis.fetch = async (input, init) => {
+    const path = String(input); calls.push({ path, body: init?.body ? JSON.parse(String(init.body)) : undefined, headers: new Headers(init?.headers) });
+    const override = await options.intercept?.(path, init); if (override) return override;
+    if (path.includes("/editor?") && new URLSearchParams(path.split("?")[1]).get("titleKey") !== editor.titleKey) return Response.json({ error: "Not found" }, { status: 404 });
+    if (path.includes("/editor?") ) return Response.json(editor);
+    if (path.endsWith("/editor") && init?.method === "POST") {
+      const body = JSON.parse(String(init.body)) as WatchHistoryEditRequest;
+      editor = { ...editor, revision: "b".repeat(32), episodes: editor.episodes.map(ep => {
+        const change = body.changes.find(value => value.episodeKey === ep.episodeKey);
+        return change ? { ...ep, watched: change.watched, currentTime: change.watched ? ep.duration : 0, progress: change.watched ? 1 : 0 } : ep;
+      }) };
+      return Response.json({ meta: editor.meta, revision: editor.revision, clientMutationId: body.clientMutationId });
+    }
+    if (path.endsWith("/access")) return Response.json(accessFixture(options.plan));
+    if (path.endsWith("/preferences")) return Response.json({ ...preferencesFixture, preferences: { youtubeHistoryEnabled: init?.method === "PATCH" } });
+    if (path.endsWith("/capacity")) return Response.json(capacityFixture(history.items.length ? 200 : 199));
+    if (path.includes("?limit=24")) return Response.json(history);
+    if (path.endsWith("/delete")) {
+      history = { ...history, items: [], totalTitleCount: 0, nextCursor: null };
+      return Response.json(deletionAck({ scope: "title", provider: "crunchyroll", titleKey: "series-one" }));
+    }
+    throw Error(`Unexpected request: ${path}`);
+  };
+  return { calls, getEditor: () => editor };
+}
+async function openTitle(container: HTMLElement) {
+  await click(buttonByLabel(container, "Manage Series One"));
+  await waitFor(() => assert.ok(container.querySelector('[aria-label="Episodes"]')));
+}
+async function chooseSeason(container: HTMLElement, value: string) {
+  const select = container.querySelector('select[aria-label="Season or specials"], .wh-season-row select') as HTMLSelectElement;
+  assert.ok(select);
+  await act(async () => { select.value = value; select.dispatchEvent(new Event("change", { bubbles: true })); });
+}
+function episodeButton(container: HTMLElement, text: string) {
+  return [...container.querySelectorAll<HTMLButtonElement>(".wh-episode")].find(button => button.getAttribute("aria-label")?.includes(text))!;
 }
 
-it("ordinary detail failure keeps retryable private rows even when human text resembles a code", async () => {
-  globalThis.fetch = async () => Response.json({ code: "TEMPORARY_FAILURE", error: "HISTORY_PLAN_REQUIRED was not confirmed" }, { status: 503 });
-  const view = await renderClient();
+it("SSR includes Free's saved covers with a recording notice and no open editor", () => {
+  const html = renderToStaticMarkup(<WatchLibraryClient initialHistory={historyFixture()} initialPreferences={preferencesFixture} initialAccess="plan_required" />);
+  assert.match(html, /Manage Series One/); assert.match(html, /Plus or Pro unlocks recording/);
+  assert.doesNotMatch(html, /wh-inspector/); assert.match(html, /Clear history/);
+});
+it("SSR refuses unavailable access and an access change during the read", async () => {
+  let reads = 0;
+  await assert.rejects(loadWatchLibraryData(OWNER_ID, { access: async () => { throw Error("HISTORY_ACCESS_UNAVAILABLE"); }, preferences: async () => preferencesFixture, history: async () => { reads++; return historyFixture(); } }), /UNAVAILABLE/);
+  assert.equal(reads, 0); let checks = 0;
+  await assert.rejects(loadWatchLibraryData(OWNER_ID, { access: async () => accessFixture(++checks === 1 ? "allowed" : "plan_required"), preferences: async () => preferencesFixture, history: async () => historyFixture() }), /CHANGED/);
+});
+it("a title and episode click only select; Cancel sends no write", async () => {
+  const server = installServer(); const view = await renderClient();
   try {
-    await click(buttonByText(view.container, "Show episodes"));
-    await click(buttonByText(view.container, "Load more episodes"));
-    await waitFor(() => assert.match(view.container.textContent ?? "", /visible history is unchanged/i));
-    assert.match(view.container.textContent ?? "", /Series One/);
-    assert.doesNotMatch(view.container.textContent ?? "", /own Plus or Pro/);
+    await openTitle(view.container);
+    await click(episodeButton(view.container, "Episode 2"));
+    assert.equal(server.calls.filter(call => call.body).length, 0);
+    await click(buttonByText(view.container, "Edit"));
+    await click(buttonByText(view.container, "Mark watched"));
+    assert.ok(buttonByText(view.container, "Save 1 change"));
+    await click(buttonByText(view.container, "Cancel"));
+    assert.equal(server.calls.filter(call => call.body).length, 0);
+    assert.ok(buttonByText(view.container, "Edit"));
   } finally { await unmount(view.root); }
 });
-
-for (const failure of ["network", "unknown-code"] as const) {
-  it(`access refresh ${failure} retires private rows as unavailable, never Free`, async () => {
-    globalThis.fetch = async () => {
-      if (failure === "network") throw new Error("HISTORY_PLAN_REQUIRED is just untrusted network text");
-      return Response.json({ code: "UNKNOWN", error: "HISTORY_PLAN_REQUIRED" }, { status: 503 });
-    };
-    const view = await renderClient();
-    try {
-      await click(buttonByText(view.container, "Refresh"));
-      await waitFor(() => assert.match(view.container.textContent ?? "", /temporarily unavailable/));
-      assert.doesNotMatch(view.container.textContent ?? "", /Series One|own Plus or Pro/);
-    } finally { await unmount(view.root); }
-  });
-}
-
-it("stale detail authority denial cannot retire replacement owner history", async () => {
-  let resolveDetail: ((response: Response) => void) | undefined;
-  globalThis.fetch = async () => new Promise<Response>(resolve => { resolveDetail = resolve; });
-  const view = await renderClient();
+it("drafts survive season changes and Save sends one atomic owner-bound command", async () => {
+  const server = installServer(); const view = await renderClient();
   try {
-    await click(buttonByText(view.container, "Show episodes"));
-    await click(buttonByText(view.container, "Load more episodes"));
-    await waitFor(() => assert.ok(resolveDetail));
-    const replacement = historyFixture(); replacement.meta = { ...replacement.meta, ownerUserId: "33333333-3333-4333-8333-333333333333", accountGeneration: 2 };
-    replacement.items[0]!.title = "Replacement history";
-    await act(async () => view.root.render(<WatchLibraryClient initialHistory={replacement} initialPreferences={{ ...preferencesFixture, meta: replacement.meta }} />));
-    await act(async () => resolveDetail!(Response.json({ code: "HISTORY_PLAN_REQUIRED", error: "Paid plan required" }, { status: 403 })));
-    assert.match(view.container.textContent ?? "", /Replacement history/);
-    assert.doesNotMatch(view.container.textContent ?? "", /own Plus or Pro/);
+    await openTitle(view.container); await click(buttonByText(view.container, "Edit"));
+    await click(buttonByText(view.container, "Mark watched"));
+    await chooseSeason(view.container, "season-two"); await click(buttonByText(view.container, "Mark watched"));
+    await chooseSeason(view.container, "season-one");
+    assert.match(episodeButton(view.container, "Episode 1").className, /wh-watched/);
+    await click(buttonByText(view.container, "Save 2 changes"));
+    await waitFor(() => assert.match(view.container.textContent ?? "", /Progress saved/));
+    const writes = server.calls.filter(call => call.path.endsWith("/editor") && call.body);
+    assert.equal(writes.length, 1); assert.equal(writes[0].headers.get(WATCH_HISTORY_OWNER_HEADER), OWNER_ID);
+    assert.deepEqual(writes[0].body?.changes, [{ episodeKey: "episode-one", watched: true }, { episodeKey: "episode-three", watched: true }]);
+    assert.equal(server.getEditor().episodes.filter(ep => ep.watched).length, 2);
   } finally { await unmount(view.root); }
 });
-
-it("current preference authority failure also retires private history without blocking privacy controls", async () => {
-  globalThis.fetch = async () => Response.json({ code: "HISTORY_ACCESS_CHANGED", error: "History access changed during the request" }, { status: 409 });
+it("season mark excludes future episodes; specials remain a named dropdown section", async () => {
+  const server = installServer(); const view = await renderClient();
+  try {
+    await openTitle(view.container); await click(buttonByText(view.container, "Edit"));
+    assert.equal(episodeButton(view.container, "Future episode").disabled, true);
+    await click(buttonByText(view.container, "Mark season"));
+    assert.ok(buttonByText(view.container, "Save 2 changes"));
+    await chooseSeason(view.container, "specials");
+    assert.equal(episodeButton(view.container, "A special").textContent, "E0");
+    await click(buttonByText(view.container, "Save 2 changes"));
+    await waitFor(() => assert.match(view.container.textContent ?? "", /Progress saved/));
+    assert.equal(server.getEditor().episodes.find(ep => ep.episodeKey === "future")!.watched, false);
+  } finally { await unmount(view.root); }
+});
+it("Free opens series and resumes its own saved position without edit or room creation", async () => {
+  const server = installServer({ plan: "plan_required" }); const oldAssign = testWindow.location.assign;
+  const launched: string[] = []; testWindow.location.assign = url => { launched.push(String(url)); };
+  const view = await renderClient(historyFixture(), preferencesFixture, "plan_required");
+  try {
+    await openTitle(view.container); assert.equal(buttonByText(view.container, "Edit").disabled, true);
+    await click(buttonByText(view.container, "Resume"));
+    await waitFor(() => assert.equal(launched.length, 1));
+    const intent = JSON.parse(new URLSearchParams(new URL(launched[0]).hash.slice(1)).get("anidachiResume")!);
+    assert.equal(intent.currentTime, 60); assert.equal(intent.accountGeneration, 1);
+    assert.equal(launched[0].includes("anidachiRoom"), false);
+    assert.equal(server.calls.some(call => call.body), false);
+  } finally { testWindow.location.assign = oldAssign; await unmount(view.root); }
+});
+it("a conflict preserves the draft and requires explicit review of latest progress", async () => {
+  let conflicts = 0; const server = installServer({ intercept: (path, init) => path.endsWith("/editor") && init?.method === "POST" && conflicts++ === 0 ? Response.json({ error: "Progress changed elsewhere", code: "HISTORY_EDIT_CONFLICT" }, { status: 409 }) : undefined });
   const view = await renderClient();
   try {
-    await click(buttonByText(view.container, "YouTube history: Off"));
-    await waitFor(() => assert.match(view.container.textContent ?? "", /temporarily unavailable/));
-    assert.doesNotMatch(view.container.textContent ?? "", /Series One|own Plus or Pro/);
-    assert.equal(buttonByText(view.container, "YouTube history: Off").disabled, false);
+    await openTitle(view.container); await click(buttonByText(view.container, "Edit")); await click(buttonByText(view.container, "Mark watched"));
+    await click(buttonByText(view.container, "Save 1 change"));
+    await waitFor(() => assert.ok(buttonByText(view.container, "Load latest & review my changes")));
+    assert.equal(buttonByText(view.container, "Save 1 change").disabled, true);
+    assert.match(episodeButton(view.container, "Episode 1").className, /wh-modified/);
+    await click(buttonByText(view.container, "Load latest & review my changes"));
+    assert.equal(buttonByText(view.container, "Save 1 change").disabled, false);
+    assert.equal(server.calls.filter(call => call.path.endsWith("/editor")).length, 1);
+  } finally { await unmount(view.root); }
+});
+it("network retry keeps the exact mutation id and payload", async () => {
+  let attempts = 0; const server = installServer({ intercept: (path, init) => { if (path.endsWith("/editor") && init?.method === "POST" && attempts++ === 0) throw Error("Connection lost"); return undefined; } });
+  const view = await renderClient();
+  try {
+    await openTitle(view.container); await click(buttonByText(view.container, "Edit")); await click(buttonByText(view.container, "Mark watched"));
+    await click(buttonByText(view.container, "Save 1 change")); await waitFor(() => assert.match(view.container.textContent ?? "", /Connection lost/));
+    await click(buttonByText(view.container, "Retry")); await waitFor(() => assert.match(view.container.textContent ?? "", /Progress saved/));
+    const writes = server.calls.filter(call => call.path.endsWith("/editor")); assert.equal(writes.length, 2); assert.deepEqual(writes[0].body, writes[1].body);
+  } finally { await unmount(view.root); }
+});
+it("changing title asks Save/Discard/Stay and does not silently lose the draft", async () => {
+  const history = historyFixture(); history.items.push({ ...itemFixture(), titleKey: "series-two", title: "Series Two" });
+  installServer({ history }); const view = await renderClient(history);
+  try {
+    await openTitle(view.container); await click(buttonByText(view.container, "Edit")); await click(buttonByText(view.container, "Mark watched"));
+    await click(buttonByLabel(view.container, "Manage Series Two")); assert.ok(buttonByText(view.container, "Stay here"));
+    await click(buttonByText(view.container, "Stay here")); assert.ok(buttonByText(view.container, "Save 1 change"));
+    await click(buttonByLabel(view.container, "Manage Series Two")); await click(buttonByText(view.container, "Discard"));
+    await waitFor(() => assert.ok(view.container.querySelector('dialog[aria-label="Series Two progress"]')));
+  } finally { await unmount(view.root); }
+});
+it("deletion refreshes server capacity and retains privacy actions on Free", async () => {
+  const server = installServer({ plan: "plan_required" }); testWindow.confirm = () => true;
+  const view = await renderClient(historyFixture(), preferencesFixture, "plan_required");
+  try {
+    await openTitle(view.container); await click(buttonByText(view.container, "Remove from history"));
+    await waitFor(() => assert.match(view.container.textContent ?? "", /199 \/ 200/));
+    assert.doesNotMatch(view.container.textContent ?? "", /Series One/);
+    assert.equal(server.calls.filter(call => call.path.endsWith("/delete")).length, 1);
     assert.equal(buttonByText(view.container, "Clear history").disabled, false);
   } finally { await unmount(view.root); }
 });
-
-it("detail denial from before a newer refresh cannot replace its authority", async () => {
-  let resolveDetail: ((response: Response) => void) | undefined;
-  globalThis.fetch = async input => {
-    const path = String(input);
-    if (path.includes("/title-episodes?")) return new Promise<Response>(resolve => { resolveDetail = resolve; });
-    if (path.endsWith("/access")) return Response.json(accessFixture());
-    if (path.endsWith("/preferences")) return Response.json(preferencesFixture);
-    return Response.json(historyFixture());
-  };
+it("old root responses cannot resurrect a deleted title", async () => {
+  let resolveOld: ((response: Response) => void) | undefined; let reads = 0;
+  installServer({ intercept: path => path.includes("?limit=24") && ++reads === 1 ? new Promise(resolve => { resolveOld = resolve; }) : undefined });
+  testWindow.confirm = () => true; const view = await renderClient();
+  try {
+    await openTitle(view.container); await click(buttonByLabel(view.container, "Refresh history"));
+    await waitFor(() => assert.ok(resolveOld)); await click(buttonByText(view.container, "Remove from history"));
+    await waitFor(() => assert.doesNotMatch(view.container.textContent ?? "", /Series One/));
+    await act(async () => resolveOld!(Response.json(historyFixture())));
+    assert.doesNotMatch(view.container.textContent ?? "", /Series One/);
+  } finally { await unmount(view.root); }
+});
+it("an old editor response cannot reveal data after switching account", async () => {
+  let resolveOld: ((response: Response) => void) | undefined;
+  installServer({ intercept: path => path.includes("/editor?") ? new Promise(resolve => { resolveOld = resolve; }) : undefined });
   const view = await renderClient();
   try {
-    await click(buttonByText(view.container, "Show episodes"));
-    await click(buttonByText(view.container, "Load more episodes"));
-    await waitFor(() => assert.ok(resolveDetail));
-    await click(buttonByText(view.container, "Refresh"));
-    await waitFor(() => assert.equal(buttonByText(view.container, "Refresh").disabled, false));
-    await act(async () => resolveDetail!(Response.json({ code: "HISTORY_PLAN_REQUIRED", error: "Paid plan required" }, { status: 403 })));
-    assert.match(view.container.textContent ?? "", /Series One/);
-    assert.doesNotMatch(view.container.textContent ?? "", /own Plus or Pro/);
+    await click(buttonByLabel(view.container, "Manage Series One")); await waitFor(() => assert.ok(resolveOld));
+    const history = historyFixture(); history.meta.ownerUserId = "22222222-2222-4222-8222-222222222222"; history.items[0].title = "Another account";
+    const preferences = structuredClone(preferencesFixture); preferences.meta.ownerUserId = history.meta.ownerUserId;
+    await act(async () => view.root.render(<WatchLibraryClient initialHistory={history} initialPreferences={preferences} />));
+    await act(async () => resolveOld!(Response.json(editorFixture())));
+    assert.doesNotMatch(view.container.textContent ?? "", /Episode 1|Series One/); assert.match(view.container.textContent ?? "", /Another account/);
+  } finally { await unmount(view.root); }
+});
+it("current access denial retires private cards while a transient editor failure stays retryable", async () => {
+  for (const authority of [false,true]) {
+    installServer({ intercept: path => path.includes("/editor?") ? Response.json({ error: "Try again", code: authority ? "HISTORY_ACCESS_CHANGED" : "HISTORY_UNAVAILABLE" }, { status: authority ? 409 : 503 }) : undefined });
+    const view = await renderClient();
+    try {
+      await click(buttonByLabel(view.container, "Manage Series One"));
+      if (authority) { await waitFor(() => assert.doesNotMatch(view.container.textContent ?? "", /Series One/)); assert.match(view.container.textContent ?? "", /temporarily unavailable/); }
+      else { await waitFor(() => assert.ok(buttonByText(view.container,"Retry"))); assert.match(view.container.textContent ?? "", /Series One/); }
+    } finally { await unmount(view.root); }
+  }
+});
+it("poster failure before hydration has a fallback and a new URL can load", async () => {
+  let history = historyFixture(); history.items[0].artworkUrl = "https://www.crunchyroll.com/old.jpg";
+  installServer({ intercept: path => path.includes("?limit=24") ? Response.json(history) : undefined });
+  const element = <WatchLibraryClient initialHistory={history} initialPreferences={preferencesFixture} />;
+  const container = document.createElement("div"); container.innerHTML = renderToString(element); document.body.append(container);
+  Object.defineProperties(container.querySelector("img"), { complete: { value: true }, naturalWidth: { value: 0 } });
+  let root!: Root; await act(async () => { root = hydrateRoot(container, element); });
+  try {
+    assert.equal(container.querySelector("img"), null); assert.ok(container.querySelector(".wh-artwork-fallback"));
+    history = structuredClone(history); history.items[0].artworkUrl = "https://www.crunchyroll.com/new.jpg";
+    await click(buttonByLabel(container, "Refresh history")); await waitFor(() => assert.equal(container.querySelector("img")?.getAttribute("src"), history.items[0].artworkUrl));
+  } finally { await unmount(root); }
+});
+
+it("sign-out waits for the editor decision before revoking the session", async () => {
+  installServer(); const view = await renderClient(); let signedOut = false;
+  try {
+    await openTitle(view.container); await click(buttonByText(view.container,"Edit")); await click(buttonByText(view.container,"Mark watched"));
+    const request = new testWindow.CustomEvent("anidachi:before-sign-out",{cancelable:true,detail:async()=>{signedOut=true;}});
+    await act(async()=>{ assert.equal(testWindow.dispatchEvent(request),false); });
+    assert.equal(signedOut,false); await click(buttonByText(view.container,"Stay")); assert.equal(signedOut,false);
+    await act(async()=>{testWindow.dispatchEvent(new testWindow.CustomEvent("anidachi:before-sign-out",{cancelable:true,detail:async()=>{signedOut=true;}}));});
+    await click(buttonByText(view.container,"Discard")); assert.equal(signedOut,true);
   } finally { await unmount(view.root); }
 });

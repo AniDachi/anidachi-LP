@@ -55,7 +55,7 @@ export function WatchLibraryCapacity({
 	return (
 		<section
 			aria-label="History storage"
-			className="rounded-xl border border-brand-border bg-brand-surface px-4 py-3 text-sm"
+			className="wh-storage"
 		>
 			<div className="flex flex-wrap gap-x-6 gap-y-2 tabular-nums">
 				<span>
@@ -76,12 +76,12 @@ export function WatchLibraryCapacity({
 				</span>
 			</div>
 			<p
-				className="mt-2 text-xs text-foreground/60"
+				className="mt-2 text-xs text-foreground/45"
 				role={full && recordingAllowed ? "status" : undefined}
 			>
 				{full && recordingAllowed
 					? "History is full for resources at their limit. Delete titles below to save new ones. Progress on saved titles keeps updating."
-					: "Each Crunchyroll series or film uses one slot. Delete titles to free space; nothing is removed automatically."}
+					: ""}
 			</p>
 		</section>
 	);

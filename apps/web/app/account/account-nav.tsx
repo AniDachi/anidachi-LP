@@ -6,9 +6,9 @@ import { usePathname } from "next/navigation";
 import { BookOpen, CreditCard, Inbox, Lightbulb, User, Users } from "lucide-react";
 
 const ITEMS = [
+  { href: "/account/watch-library", label: "Watch Library", icon: BookOpen },
   { href: "/account", label: "Overview", icon: User },
   { href: "/account/billing", label: "Subscription", icon: CreditCard },
-  { href: "/account/watch-library", label: "Watch Library", icon: BookOpen },
   { href: "/account/friends", label: "Friends & Groups", icon: Users },
   { href: "/account/invites", label: "Invites", icon: Inbox },
   {
@@ -36,7 +36,7 @@ export function AccountNav() {
     const activeRect = activeEl.getBoundingClientRect();
     if (activeRect.left < navRect.left || activeRect.right > navRect.right) {
       activeEl.scrollIntoView({
-        behavior: "smooth",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
         block: "nearest",
         inline: "center",
       });
@@ -64,10 +64,11 @@ export function AccountNav() {
           return (
             <Link
               ref={active ? activeRef : undefined}
+              aria-current={active ? "page" : undefined}
               className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-3 text-sm font-semibold tracking-[-0.01em] transition-[transform,background-color,color] duration-200 ease-out ${
                 active
-                  ? "bg-brand-orange text-primary-foreground"
-                  : "text-foreground/70 hover:bg-brand-orange hover:text-primary-foreground active:scale-[0.98]"
+                  ? "bg-brand-orange/10 text-brand-orange"
+                  : "text-foreground/55 hover:bg-white/5 hover:text-foreground"
               }`}
               href={item.href}
               key={item.href}
