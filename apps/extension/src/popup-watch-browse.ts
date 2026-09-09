@@ -269,16 +269,26 @@ export function usePopupWatchBrowse<T>({
 			// A refresh preserves the user's explicitly loaded depth. Stop at the end,
 			// an error, or a repeated cursor; never walk unseen account history.
 			const seen = new Set<string>();
+			let canRetrySuperseded = true;
 			for (let index = 0; index < readCount; index++) {
 				let response;
 				try {
-					response = await client.request({
+					const pageMessage = {
 						...message,
 						input: {
 							...(message.input as Record<string, unknown>),
 							...(continuation ? { cursor: continuation } : {}),
 						},
-					} as BrowseMessage);
+					} as BrowseMessage;
+					response = await client.request(pageMessage);
+					if (!current()) return;
+					// Consent or a checkpoint may invalidate a successful GET in flight.
+					// Read once under the new revision; keep real failures and repeat
+					// invalidations visible instead of starting an automatic retry loop.
+					if (!response.ok && response.status === "superseded" && canRetrySuperseded) {
+						canRetrySuperseded = false;
+						response = await client.request(pageMessage);
+					}
 				} catch {
 					response = { ok: false, status: "retryable" } as const;
 				}
