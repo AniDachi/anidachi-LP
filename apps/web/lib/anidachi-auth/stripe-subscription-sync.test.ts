@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type Stripe from "stripe";
 import {
+	invoiceSubscriptionId,
 	resolveStripeSubscriptionPlan,
 	StripeSubscriptionSyncError,
 	syncStripeSubscriptionById,
-	invoiceSubscriptionId,
 } from "./stripe-subscription-sync";
 
 function subscriptionFixture(params: {
@@ -200,4 +200,28 @@ test("invoice subscription uses current SDK parent shape", () => {
 		"sub_current",
 	);
 	assert.equal(invoiceSubscriptionId({ parent: null } as Stripe.Invoice), null);
+});
+
+test("flexible portal cancellation persists pending renewal and never extends paid access", async () => {
+	for (const cancelAt of [1_799_000_000, 1_800_000_000, 1_801_000_000]) {
+		const sub = subscriptionFixture({ priceId: "p", planCode: "plus" });
+		sub.cancel_at_period_end = false;
+		sub.cancel_at = cancelAt;
+		const expectedEnd = new Date(
+			Math.min(cancelAt, 1_800_000_000) * 1000,
+		).toISOString();
+		const synced = await syncStripeSubscriptionById(fakeStripe(sub), sub.id, {
+			...deps,
+			resolveUserId: async () => "owner",
+			commit: async (params) => {
+				assert.equal(params.cancelAtPeriodEnd, true);
+				assert.equal(params.currentPeriodEnd, expectedEnd);
+				assert.equal(params.status, "active");
+				return "plus";
+			},
+		});
+		assert.equal(synced?.cancelAtPeriodEnd, true);
+		assert.equal(synced?.currentPeriodEnd, expectedEnd);
+		assert.equal(synced?.effectivePlan, "plus");
+	}
 });
