@@ -470,6 +470,48 @@ describe("production watch browsing", () => {
     }
   });
 
+  it("still expires the current lease if its automatic renewal stalls", async () => {
+    vi.useFakeTimers();
+    try {
+      let renew = false;
+      const fallback = clientFixture();
+      await mount({ ...fallback, request: async message => {
+        if (message.command === "bootstrap-cache") return { ok: true };
+        if (message.command !== "bootstrap") return fallback.request(message);
+        if (renew) return new Promise<WatchHistoryMessageResponse>(() => {});
+        return { ok: true, data: { ownerUserId: OWNER, accountGeneration: 1,
+          preferences: { youtubeHistoryEnabled: true }, capturePaused: false, source: "network", accessLease: paidHistoryLease(OWNER, Date.now()) } };
+      } });
+      expect(container.textContent).toContain("Frieren");
+      renew = true;
+      await act(async () => { await vi.advanceTimersByTimeAsync(300_001); });
+      expect(container.textContent).toContain("temporarily unavailable");
+      expect(container.textContent).not.toContain("Frieren");
+    } finally { vi.useRealTimers(); }
+  });
+
+  it("renews an open drawer's access and accepts Free before the paid lease expires", async () => {
+    vi.useFakeTimers();
+    try {
+      let free = false;
+      const fallback = clientFixture();
+      await mount({ ...fallback, request: async message => {
+        if (message.command !== "bootstrap") return fallback.request(message);
+        const lease = paidHistoryLease(OWNER, Date.now());
+        if (free) { lease.access.state = "plan_required"; lease.access.accessEpoch = 2; }
+        return { ok: true, data: { ownerUserId: OWNER, accountGeneration: 1,
+          preferences: { youtubeHistoryEnabled: true }, capturePaused: false, source: "network", accessLease: lease } };
+      } });
+      expect(container.textContent).toContain("Frieren");
+      free = true;
+      await act(async () => { await vi.advanceTimersByTimeAsync(290_001); });
+      expect(container.textContent).toContain("History recording is paused");
+      await act(async () => { await vi.advanceTimersByTimeAsync(10_000); });
+      expect(container.textContent).toContain("Frieren");
+      expect(container.textContent).not.toContain("temporarily unavailable");
+    } finally { vi.useRealTimers(); }
+  });
+
   it("opens promptly with the real background client and honors its lease invalidation after a network failure", async () => {
     let finish!: (response: Response) => void;
     const { client, storage } = generationClient(
@@ -529,11 +571,14 @@ describe("production watch browsing", () => {
         preferences: { youtubeHistoryEnabled: false }, capturePaused: false, source: "network", accessLease: lease } } : fallback.request(message)) };
     await mount(client);
     expect(container.textContent).toContain("Frieren");
-    expect(container.textContent).toContain("Recording new progress requires Plus or Pro");
+    expect(container.textContent).toContain("History recording is paused");
     await click(`Resume ${episode.episodeTitle}`);
     await settles(() => expect(client.openUrl).toHaveBeenCalledOnce());
     const url = vi.mocked(client.openUrl).mock.calls[0]![0];
     expect(parsePersonalHistoryResumeUrl(url)?.currentTime).toBe(600);
+    await click("Upgrade to Plus or Pro");
+    const pricingUrl = vi.mocked(client.openUrl).mock.calls[1]![0];
+    expect(new URL(pricingUrl).pathname).toBe("/pricing");
   });
   it("real background retains only canonical Free history across reads, renewals, and Resume claims", async () => {
     const calls: string[] = [];
@@ -578,6 +623,31 @@ describe("production watch browsing", () => {
       event: { ...pending, captureProof: free, clientSequence: 1 } })).toMatchObject({ ok: false });
     expect(calls.every(call => call.startsWith("GET "))).toBe(true);
     expect((await f.storage.readRoot()).partitions[watchHistoryPartitionKey(OWNER, 1)]!.outbox.entries).toEqual([]);
+  });
+  it("keeps saved history readable when an old paid browse finishes after the Free lease arrives", async () => {
+    let finishAccess!: (response: Response) => void;
+    let finishBrowse!: () => void;
+    let reads = 0;
+    const f = generationClient(async raw => {
+      const path = new URL(String(raw)).pathname;
+      if (path.endsWith("/browse")) {
+        reads++;
+        if (reads === 1) await new Promise<void>(resolve => { finishBrowse = resolve; });
+        return Response.json(browse());
+      }
+      throw new Error(`Unexpected endpoint ${path}`);
+    }, async () => new Promise<Response>(resolve => { finishAccess = resolve; }));
+    await mount(f.client, false);
+    await settles(() => expect(finishBrowse).toBeTypeOf("function"));
+    const free = paidHistoryLease(OWNER, Date.now() - 1000);
+    free.access.state = "plan_required";
+    free.access.accessEpoch = 2;
+    await act(async () => finishAccess(Response.json(free.access)));
+    await act(async () => finishBrowse());
+    await settles(() => expect(container.textContent).toContain("Frieren"));
+    expect(container.textContent).toContain("History recording is paused");
+    expect(container.textContent).not.toContain("temporarily unavailable");
+    expect(reads).toBe(2);
   });
   it("refreshes the list when enabling YouTube supersedes an in-flight browse", async () => {
     let enabled = false;

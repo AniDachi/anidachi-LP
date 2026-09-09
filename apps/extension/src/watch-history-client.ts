@@ -654,7 +654,8 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       return { ok: false, status: "rejected" };
     }
     const finalLease = await readLease(response.session);
-    if (!canReadWatchHistory(finalLease, session.user.id, now()) || finalLease?.access.accessEpoch !== initialLease?.access.accessEpoch) return { ok: false, status: "access-unavailable" };
+    if (!canReadWatchHistory(finalLease, session.user.id, now())) return { ok: false, status: "access-unavailable" };
+    if (finalLease?.access.accessEpoch !== initialLease?.access.accessEpoch) return { ok: false, status: "superseded" };
     let invalidated = historyReadSequences.get(sequenceKey) !== sequence;
     if (invalidated) return { ok: false, status: "superseded" };
     const saved = await replaceCanonicalPartition(response.session, parsed.data.meta.accountGeneration, (partition) => {
@@ -764,7 +765,10 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         currentPartition.accountGeneration !== generation) {
         return { ok: false, status: "generation-mismatch" };
       }
-      if (!canReadWatchHistory(currentPartition.accessLease, expected.user.id, now()) || currentPartition.accessLease?.access.accessEpoch !== partition.accessLease?.access.accessEpoch) return { ok: false, status: "access-unavailable" };
+      if (!canReadWatchHistory(currentPartition.accessLease, expected.user.id, now())) return { ok: false, status: "access-unavailable" };
+      // A new recording epoch (including paid -> Free) retires the old GET,
+      // while the current owner lease still authorizes saved-history reads.
+      if (currentPartition.accessLease?.access.accessEpoch !== partition.accessLease?.access.accessEpoch) return { ok: false, status: "superseded" };
       if (currentRoot.browseAuthEpochs?.[expected.user.id] !== authEpoch ||
         browseHardRevision(currentPartition) !== hardRevision ||
         browseReadRevision(currentPartition, input) !== revision ||

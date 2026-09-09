@@ -100,6 +100,28 @@ function readyPartition(ownerUserId: string, youtubeHistoryEnabled: boolean) {
 }
 
 describe("watch history v2 client", () => {
+  it("retries a canonical read retired by a new Free recording epoch", async () => {
+    const owner = session.user.id;
+    const key = watchHistoryPartitionKey(owner, 1);
+    let stored: WatchHistoryStorageRoot = { schemaVersion: 3, activeGenerations: { [owner]: 1 }, partitions: { [key]: readyPartition(owner, false) } };
+    let finish!: (response: Response) => void;
+    let reads = 0;
+    const current = { meta: { schemaVersion: 3, ownerUserId: owner, accountGeneration: 1, serverTime: "2026-09-09T00:00:00.000Z" }, generatedAt: "2026-09-09T00:00:00.000Z", totalTitleCount: 0, items: [], nextCursor: null };
+    const client = createWatchHistoryClient({ getCurrentSession: async () => session,
+      storage: createWatchHistoryStorage({ item: { getValue: async () => structuredClone(stored), setValue: async value => { stored = structuredClone(value); } }, getBytesInUse: async () => 0, quotaBytes: 1_000_000 }),
+      fetch: async () => ++reads === 1 ? new Promise<Response>(resolve => { finish = resolve; }) : Response.json(current),
+    });
+    const pending = client.handle(createListWatchHistoryMessage({ limit: 100 }));
+    await vi.waitFor(() => expect(finish).toBeTypeOf("function"));
+    const free = paidHistoryLease(owner); free.access.state = "plan_required"; free.access.accessEpoch++;
+    stored.partitions[key]!.accessLease = free;
+    finish(Response.json({ ...current, generatedAt: "2026-09-08T00:00:00.000Z" }));
+    expect(await pending).toMatchObject({ ok: true, data: current });
+    expect(reads).toBe(2);
+    expect(stored.partitions[key]!.cache).toEqual(current);
+    expect(stored.partitions[key]!.outbox.entries).toEqual([]);
+  });
+
   it("shares concurrent refreshes and releases the flight after a failed request", async () => {
     const owner = session.user.id;
     let stored: WatchHistoryStorageRoot = { schemaVersion: 3, partitions: { [watchHistoryPartitionKey(owner, 1)]: readyPartition(owner, false) }, activeGenerations: { [owner]: 1 } };
