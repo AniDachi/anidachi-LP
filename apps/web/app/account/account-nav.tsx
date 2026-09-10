@@ -1,93 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
-import {
-  BookOpen,
-  CreditCard,
-  Inbox,
-  Lightbulb,
-  User,
-  Users,
-} from "lucide-react";
+import { BookOpen, CreditCard, CircleHelp, Lightbulb, Users } from "lucide-react";
 
-const ITEMS = [
+const PRIMARY = [
   { href: "/account/watch-library", label: "Watch Library", icon: BookOpen },
-  { href: "/account", label: "Overview", icon: User },
-  { href: "/account/billing", label: "Subscription", icon: CreditCard },
   { href: "/account/friends", label: "Friends & Groups", icon: Users },
-  { href: "/account/invites", label: "Invites", icon: Inbox },
-  {
-    href: "/account/feature-requests",
-    label: "Feature Requests",
-    icon: Lightbulb,
-  },
+  { href: "/account/billing", label: "Subscription", icon: CreditCard },
 ] as const;
-
-function isActive(pathname: string, href: string): boolean {
-  if (href === "/account") return pathname === href;
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
+const SECONDARY = [
+  { href: "/account/feature-requests", label: "Share an idea", icon: Lightbulb },
+  { href: "/account/help", label: "Help", icon: CircleHelp },
+] as const;
 
 export function AccountNav() {
   const pathname = usePathname();
-  const navRef = useRef<HTMLElement>(null);
-  const activeRef = useRef<HTMLAnchorElement>(null);
-
-  useEffect(() => {
-    const activeEl = activeRef.current;
-    const nav = navRef.current;
-    if (!activeEl || !nav) return;
-    const navRect = nav.getBoundingClientRect();
-    const activeRect = activeEl.getBoundingClientRect();
-    if (activeRect.left < navRect.left || activeRect.right > navRect.right) {
-      activeEl.scrollIntoView({
-        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-          ? "instant"
-          : "smooth",
-        block: "nearest",
-        inline: "center",
-      });
-    }
-  }, [pathname]);
-
-  return (
-    <div className="relative lg:static">
-      <div
-        className="pointer-events-none absolute inset-y-0 left-0 z-10 w-6 bg-gradient-to-r from-[#0d0d0f] to-transparent lg:hidden"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute inset-y-0 right-0 z-10 w-6 bg-gradient-to-l from-[#0d0d0f] to-transparent lg:hidden"
-        aria-hidden
-      />
-      <nav
-        ref={navRef}
-        aria-label="Account sections"
-        className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] lg:flex-col lg:gap-1.5 lg:overflow-visible lg:pb-0 [&::-webkit-scrollbar]:hidden"
-      >
-        {ITEMS.map((item) => {
-          const Icon = item.icon;
-          const active = isActive(pathname, item.href);
-          return (
-            <Link
-              ref={active ? activeRef : undefined}
-              aria-current={active ? "page" : undefined}
-              className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-3 text-sm font-semibold tracking-[-0.01em] transition-[transform,background-color,color] duration-200 ease-out ${
-                active
-                  ? "bg-brand-orange/10 text-brand-orange"
-                  : "text-foreground/55 hover:bg-white/5 hover:text-foreground"
-              }`}
-              href={item.href}
-              key={item.href}
-            >
-              <Icon className="h-4 w-4" aria-hidden />
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
-    </div>
-  );
+  const links = (items: ReadonlyArray<{ href: string; label: string; icon: typeof BookOpen }>) => items.map(item => {
+    const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+    const Icon = item.icon;
+    return <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined}>
+      <Icon size={18} aria-hidden /><span>{item.label}</span>
+    </Link>;
+  });
+  return <div className="account-navigation">
+    <nav className="account-primary-nav" aria-label="Account sections">{links(PRIMARY)}</nav>
+    <nav className="account-secondary-nav" aria-label="Help and feedback">{links(SECONDARY)}</nav>
+  </div>;
 }

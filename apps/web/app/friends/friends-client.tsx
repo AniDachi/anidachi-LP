@@ -31,6 +31,7 @@ import {
   AccountPageHeader,
   AccountSectionSwitch,
 } from "@/components/account/account-ui";
+import { useAccountViewState } from "@/components/account/account-workspace-state";
 import { api } from "@/lib/client-api";
 import { parseRecentPeopleResponse } from "@/lib/friends-client-contracts";
 
@@ -97,6 +98,8 @@ type Notice = {
 type RefreshOptions = {
   showLoading?: boolean;
 };
+
+const SOCIAL_CHANGED_EVENT = "anidachi:account-social-changed";
 
 const EMPTY_FRIENDS: FriendsResponse = {
   friends: [],
@@ -262,10 +265,15 @@ function IconButton({
 export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
   const pathname = usePathname();
   const embeddedInAccount = pathname.startsWith("/account/friends");
-  const [view, setView] = useState<
-    "friends" | "groups" | "requests" | "recent"
-  >("friends");
-  const [search, setSearch] = useState("");
+  const [view, setView] = useAccountViewState<"friends" | "groups">(
+    `${currentUser.userId}:social-view`,
+    "friends",
+  );
+  const [addFriendOpen, setAddFriendOpen] = useState(false);
+  const [search, setSearch] = useAccountViewState(
+    `${currentUser.userId}:social-search`,
+    "",
+  );
   const [loaded, setLoaded] = useState(false);
   const [friendsData, setFriendsData] =
     useState<FriendsResponse>(EMPTY_FRIENDS);
@@ -281,6 +289,30 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
     name: string;
     clientRequestId: string;
   } | null>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const mountedRef = useRef(false);
+  const ownerRef = useRef(currentUser.userId);
+  const previousOwnerRef = useRef(currentUser.userId);
+  const refreshSequenceRef = useRef(0);
+  const refreshInFlightRef = useRef(0);
+  const busyRef = useRef<string | null>(null);
+  const pendingReconciliationRef = useRef(false);
+  ownerRef.current = currentUser.userId;
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      refreshSequenceRef.current += 1;
+    };
+  }, []);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (addFriendOpen && !dialog.open) dialog.showModal();
+    if (!addFriendOpen && dialog.open) dialog.close();
+  }, [addFriendOpen]);
 
   useEffect(() => {
     if (!embeddedInAccount) return;
@@ -303,70 +335,170 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
     [groups],
   );
 
-  const refresh = useCallback(async (options: RefreshOptions = {}) => {
-    const showLoading = options.showLoading ?? true;
-    if (showLoading) setLoading(true);
-    try {
-      const [friends, groupPayload, recentPayload] = await Promise.all([
-        api<FriendsResponse>("/api/friends"),
-        api<GroupsResponse>("/api/groups"),
-        api<unknown>("/api/recent-people").then(parseRecentPeopleResponse),
-      ]);
-      setFriendsData(friends);
-      setGroups(groupPayload.groups);
-      setRecentPeople(recentPayload.people);
-      setLoaded(true);
-    } catch (error) {
-      setNotice({
-        tone: "error",
-        text: error instanceof Error ? error.message : "Could not load friends",
-      });
-    } finally {
-      if (showLoading) setLoading(false);
+  const refresh = useCallback(
+    async (options: RefreshOptions = {}) => {
+      const ownerUserId = currentUser.userId;
+      const sequence = ++refreshSequenceRef.current;
+      refreshInFlightRef.current += 1;
+      const isCurrent = () =>
+        mountedRef.current &&
+        ownerRef.current === ownerUserId &&
+        refreshSequenceRef.current === sequence;
+      const showLoading = options.showLoading ?? true;
+      if (showLoading) setLoading(true);
+      try {
+        const [friends, groupPayload, recentPayload] = await Promise.all([
+          api<FriendsResponse>("/api/friends"),
+          api<GroupsResponse>("/api/groups"),
+          api<unknown>("/api/recent-people").then(parseRecentPeopleResponse),
+        ]);
+        if (!isCurrent()) return;
+        setFriendsData(friends);
+        setGroups(groupPayload.groups);
+        setRecentPeople(recentPayload.people);
+        setLoaded(true);
+      } catch (error) {
+        if (!isCurrent()) return;
+        setNotice({
+          tone: "error",
+          text: error instanceof Error ? error.message : "Could not load friends",
+        });
+      } finally {
+        refreshInFlightRef.current = Math.max(
+          0,
+          refreshInFlightRef.current - 1,
+        );
+        if (isCurrent()) setLoading(false);
+      }
+    },
+    [currentUser.userId],
+  );
+
+  useEffect(() => {
+    refreshSequenceRef.current += 1;
+    if (previousOwnerRef.current !== currentUser.userId) {
+      previousOwnerRef.current = currentUser.userId;
+      setView(window.location.hash === "#groups" ? "groups" : "friends");
+      setSearch("");
     }
+    setAddFriendOpen(false);
+    setLoaded(false);
+    setFriendsData(EMPTY_FRIENDS);
+    setGroups([]);
+    setRecentPeople([]);
+    setLoading(true);
+    setBusyKey(null);
+    busyRef.current = null;
+    pendingReconciliationRef.current = false;
+    setNotice(null);
+    setEditingGroupId(null);
+    setEditingGroupName("");
+    createGroupRequestRef.current = null;
+    void refresh();
+  }, [currentUser.userId, refresh, setSearch, setView]);
+
+  const broadcastSocialChange = useCallback((ownerUserId: string) => {
+    if (!mountedRef.current || ownerRef.current !== ownerUserId) return;
+    window.dispatchEvent(
+      new CustomEvent(SOCIAL_CHANGED_EVENT, {
+        detail: { ownerUserId, source: "friends" },
+      }),
+    );
   }, []);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    const reconcile = (event: Event) => {
+      const detail = (
+        event as CustomEvent<{ ownerUserId?: unknown; source?: unknown }>
+      ).detail;
+      const ownerUserId = detail?.ownerUserId;
+      if (ownerUserId !== currentUser.userId) return;
+      if (detail?.source === "friends") return;
+      if (busyRef.current) {
+        pendingReconciliationRef.current = true;
+        return;
+      }
+      void refresh({ showLoading: false });
+    };
+    window.addEventListener(SOCIAL_CHANGED_EVENT, reconcile);
+    return () => window.removeEventListener(SOCIAL_CHANGED_EVENT, reconcile);
+  }, [currentUser.userId, refresh]);
 
   const runAction = useCallback(
-    async (key: string, action: () => Promise<void>, success: string) => {
+    async (
+      key: string,
+      action: () => Promise<void>,
+      success: string,
+      options: { broadcast?: boolean } = {},
+    ) => {
+      const ownerUserId = currentUser.userId;
+      if (refreshInFlightRef.current > 0) {
+        pendingReconciliationRef.current = true;
+      }
+      refreshSequenceRef.current += 1;
+      busyRef.current = key;
       setBusyKey(key);
       setNotice(null);
       try {
         await action();
+        if (!mountedRef.current || ownerRef.current !== ownerUserId) return;
         setNotice({ tone: "success", text: success });
+        pendingReconciliationRef.current = false;
         await refresh({ showLoading: false });
+        if (options.broadcast !== false) broadcastSocialChange(ownerUserId);
       } catch (error) {
+        if (!mountedRef.current || ownerRef.current !== ownerUserId) return;
         setNotice({
           tone: "error",
           text: error instanceof Error ? error.message : "Action failed",
         });
       } finally {
-        setBusyKey(null);
+        if (mountedRef.current && ownerRef.current === ownerUserId) {
+          busyRef.current = null;
+          setBusyKey(null);
+          if (pendingReconciliationRef.current) {
+            pendingReconciliationRef.current = false;
+            void refresh({ showLoading: false });
+          }
+        }
       }
     },
-    [refresh],
+    [broadcastSocialChange, currentUser.userId, refresh],
   );
 
   const runLocalAction = useCallback(
     async (key: string, action: () => Promise<void>, success: string) => {
+      const ownerUserId = currentUser.userId;
+      if (refreshInFlightRef.current > 0) {
+        pendingReconciliationRef.current = true;
+      }
+      refreshSequenceRef.current += 1;
+      busyRef.current = key;
       setBusyKey(key);
       setNotice(null);
       try {
         await action();
+        if (!mountedRef.current || ownerRef.current !== ownerUserId) return;
         setNotice({ tone: "success", text: success });
+        broadcastSocialChange(ownerUserId);
       } catch (error) {
+        if (!mountedRef.current || ownerRef.current !== ownerUserId) return;
         setNotice({
           tone: "error",
           text: error instanceof Error ? error.message : "Action failed",
         });
       } finally {
-        setBusyKey(null);
+        if (mountedRef.current && ownerRef.current === ownerUserId) {
+          busyRef.current = null;
+          setBusyKey(null);
+          if (pendingReconciliationRef.current) {
+            pendingReconciliationRef.current = false;
+            void refresh({ showLoading: false });
+          }
+        }
       }
     },
-    [],
+    [broadcastSocialChange, currentUser.userId, refresh],
   );
 
   const upsertGroup = useCallback((group: FriendGroup) => {
@@ -403,6 +535,7 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
           ? existingRequest.clientRequestId
           : crypto.randomUUID();
       createGroupRequestRef.current = { name, clientRequestId };
+      const ownerUserId = currentUser.userId;
       await runLocalAction(
         "create-group",
         async () => {
@@ -410,6 +543,7 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
             body: JSON.stringify({ name, clientRequestId }),
             method: "POST",
           });
+          if (!mountedRef.current || ownerRef.current !== ownerUserId) return;
           upsertGroup(payload.group);
           createGroupRequestRef.current = null;
           setGroupName("");
@@ -417,10 +551,11 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
         "Group created.",
       );
     },
-    [groupName, runLocalAction, upsertGroup],
+    [currentUser.userId, groupName, runLocalAction, upsertGroup],
   );
 
   const copyFriendInviteLink = useCallback(async () => {
+    const ownerUserId = currentUser.userId;
     await runAction(
       "copy-invite-link",
       async () => {
@@ -430,6 +565,7 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
             method: "POST",
           },
         );
+        if (!mountedRef.current || ownerRef.current !== ownerUserId) return;
         const url = payload.inviteLink.url;
         if (typeof navigator.share === "function") {
           try {
@@ -450,8 +586,9 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
       typeof navigator.share === "function"
         ? "Friend invite link sent."
         : "Friend invite link copied.",
+      { broadcast: false },
     );
-  }, [runAction]);
+  }, [currentUser.userId, runAction]);
 
   const sendFriendRequest = useCallback(
     async (userId: string) => {
@@ -504,6 +641,7 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
       event.preventDefault();
       const name = editingGroupName.trim();
       if (!name) return;
+      const ownerUserId = currentUser.userId;
       await runLocalAction(
         `rename-group:${groupId}`,
         async () => {
@@ -521,18 +659,25 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
                 method: "PATCH",
               },
             );
+            if (!mountedRef.current || ownerRef.current !== ownerUserId) return;
             upsertGroup(payload.group);
             setEditingGroupId(null);
             setEditingGroupName("");
           } catch (error) {
-            if (previous) upsertGroup(previous);
+            if (
+              previous &&
+              mountedRef.current &&
+              ownerRef.current === ownerUserId
+            ) {
+              upsertGroup(previous);
+            }
             throw error;
           }
         },
         "Group renamed.",
       );
     },
-    [editingGroupName, patchGroup, runLocalAction, upsertGroup],
+    [currentUser.userId, editingGroupName, patchGroup, runLocalAction, upsertGroup],
   );
 
   const inviteSection = (
@@ -737,14 +882,15 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
                   disabled={busyKey !== null || loading}
                   icon={<UserMinus className="h-4 w-4" aria-hidden />}
                   onClick={() =>
+                    window.confirm(`Remove ${friend.user.displayName} from friends?`) &&
                     void runAction(
-                      `remove:${friend.user.userId}`,
-                      () =>
-                        api(`/api/friends/${friend.user.userId}`, {
-                          method: "DELETE",
-                        }),
-                      "Friend removed.",
-                    )
+                        `remove:${friend.user.userId}`,
+                        () =>
+                          api(`/api/friends/${friend.user.userId}`, {
+                            method: "DELETE",
+                          }),
+                        "Friend removed.",
+                      )
                   }
                   title="Remove friend"
                   tone="danger"
@@ -873,27 +1019,34 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
                     disabled={busyKey !== null || loading}
                     icon={<Trash2 className="h-4 w-4" aria-hidden />}
                     onClick={() =>
+                      window.confirm(`Archive ${group.name}?`) &&
                       void runLocalAction(
-                        `archive-group:${group.id}`,
-                        async () => {
-                          let previousGroups: FriendGroup[] = [];
-                          setGroups((current) => {
-                            previousGroups = current;
-                            return current.filter(
-                              (item) => item.id !== group.id,
-                            );
-                          });
-                          try {
-                            await api(`/api/groups/${group.id}`, {
-                              method: "DELETE",
+                          `archive-group:${group.id}`,
+                          async () => {
+                            const ownerUserId = currentUser.userId;
+                            let previousGroups: FriendGroup[] = [];
+                            setGroups((current) => {
+                              previousGroups = current;
+                              return current.filter(
+                                (item) => item.id !== group.id,
+                              );
                             });
-                          } catch (error) {
-                            setGroups(previousGroups);
-                            throw error;
-                          }
-                        },
-                        "Group archived.",
-                      )
+                            try {
+                              await api(`/api/groups/${group.id}`, {
+                                method: "DELETE",
+                              });
+                            } catch (error) {
+                              if (
+                                mountedRef.current &&
+                                ownerRef.current === ownerUserId
+                              ) {
+                                setGroups(previousGroups);
+                              }
+                              throw error;
+                            }
+                          },
+                          "Group archived.",
+                        )
                     }
                     title="Archive group"
                     tone="danger"
@@ -914,33 +1067,47 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
                               disabled={busyKey !== null || loading}
                               icon={<X className="h-4 w-4" aria-hidden />}
                               onClick={() =>
+                                window.confirm(
+                                  `Remove ${member.user.displayName} from ${group.name}?`,
+                                ) &&
                                 void runLocalAction(
-                                  `remove-member:${group.id}:${member.user.userId}`,
-                                  async () => {
-                                    const previous = patchGroup(
-                                      group.id,
-                                      (currentGroup) =>
-                                        removeOptimisticMember(
-                                          currentGroup,
-                                          member.user.userId,
-                                          new Date().toISOString(),
-                                        ),
-                                    );
-                                    try {
-                                      const payload = await api<{
-                                        group: FriendGroup;
-                                      }>(
-                                        `/api/groups/${group.id}/members/${member.user.userId}`,
-                                        { method: "DELETE" },
+                                    `remove-member:${group.id}:${member.user.userId}`,
+                                    async () => {
+                                      const ownerUserId = currentUser.userId;
+                                      const previous = patchGroup(
+                                        group.id,
+                                        (currentGroup) =>
+                                          removeOptimisticMember(
+                                            currentGroup,
+                                            member.user.userId,
+                                            new Date().toISOString(),
+                                          ),
                                       );
-                                      upsertGroup(payload.group);
-                                    } catch (error) {
-                                      if (previous) upsertGroup(previous);
-                                      throw error;
-                                    }
-                                  },
-                                  "Group member removed.",
-                                )
+                                      try {
+                                        const payload = await api<{
+                                          group: FriendGroup;
+                                        }>(
+                                          `/api/groups/${group.id}/members/${member.user.userId}`,
+                                          { method: "DELETE" },
+                                        );
+                                        if (
+                                          !mountedRef.current ||
+                                          ownerRef.current !== ownerUserId
+                                        ) return;
+                                        upsertGroup(payload.group);
+                                      } catch (error) {
+                                        if (
+                                          previous &&
+                                          mountedRef.current &&
+                                          ownerRef.current === ownerUserId
+                                        ) {
+                                          upsertGroup(previous);
+                                        }
+                                        throw error;
+                                      }
+                                    },
+                                    "Group member removed.",
+                                  )
                               }
                               title="Remove from group"
                             />
@@ -970,6 +1137,7 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
                         void runLocalAction(
                           `add-member:${group.id}:${userId}`,
                           async () => {
+                            const ownerUserId = currentUser.userId;
                             const previous = patchGroup(
                               group.id,
                               (currentGroup) =>
@@ -987,9 +1155,19 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
                                   method: "POST",
                                 },
                               );
+                              if (
+                                !mountedRef.current ||
+                                ownerRef.current !== ownerUserId
+                              ) return;
                               upsertGroup(payload.group);
                             } catch (error) {
-                              if (previous) upsertGroup(previous);
+                              if (
+                                previous &&
+                                mountedRef.current &&
+                                ownerRef.current === ownerUserId
+                              ) {
+                                upsertGroup(previous);
+                              }
                               throw error;
                             }
                           },
@@ -1023,8 +1201,10 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
     </section>
   );
   const outgoingSection = (
-    <section className="social-section rounded-2xl border border-brand-border/80 bg-brand-surface p-5">
-      <h2 className="text-lg font-semibold text-foreground">Outgoing</h2>
+    <details className="social-section social-outgoing rounded-2xl border border-brand-border/80 bg-brand-surface p-5">
+      <summary className="cursor-pointer text-sm font-medium text-foreground/70">
+        Outgoing requests <span>{friendsData.outgoingRequests.length}</span>
+      </summary>
       <div className="mt-3">
         {friendsData.outgoingRequests.map((request) => (
           <PersonRow
@@ -1034,7 +1214,7 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
           />
         ))}
       </div>
-    </section>
+    </details>
   );
   return (
     <div
@@ -1062,8 +1242,8 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
               <IconButton
                 disabled={busyKey !== null || loading}
                 icon={<Link2 className="h-4 w-4" aria-hidden />}
-                onClick={() => void copyFriendInviteLink()}
-                title="Share friend invite link"
+                onClick={() => setAddFriendOpen(true)}
+                title="Invite a friend"
                 tone="primary"
               >
                 Invite a friend
@@ -1122,34 +1302,46 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
                 label: "Groups",
                 count: loaded ? activeGroups.length : undefined,
               },
-              {
-                value: "requests",
-                label: "Requests",
-                count: loaded
-                  ? friendsData.incomingRequests.length +
-                    friendsData.outgoingRequests.length
-                  : undefined,
-              },
-              { value: "recent", label: "Recent" },
             ]}
           />
           {loaded || loading ? (
             <>
               <div hidden={view !== "friends"} aria-busy={loading}>
+                {friendsData.incomingRequests.length ? incomingSection : null}
                 {friendsSection}
+                {friendsData.outgoingRequests.length ? outgoingSection : null}
               </div>
               <div hidden={view !== "groups"} aria-busy={loading}>
                 {groupsSection}
               </div>
-              <div hidden={view !== "requests"} aria-busy={loading}>
-                {incomingSection}
-                {friendsData.outgoingRequests.length ? outgoingSection : null}
-              </div>
-              <div hidden={view !== "recent"} aria-busy={loading}>
-                {recentSection}
-              </div>
             </>
           ) : null}
+          <dialog
+            aria-labelledby="add-friend-title"
+            className="social-add-friend-dialog"
+            onCancel={(event) => {
+              event.preventDefault();
+              setAddFriendOpen(false);
+            }}
+            onClose={() => setAddFriendOpen(false)}
+            ref={dialogRef}
+          >
+            <div className="social-dialog-heading">
+              <div>
+                <h2 id="add-friend-title">Add friend</h2>
+                <p>Share your invite link or reconnect with someone recent.</p>
+              </div>
+              <IconButton
+                icon={<X className="h-4 w-4" aria-hidden />}
+                onClick={() => setAddFriendOpen(false)}
+                title="Close Add friend"
+              />
+            </div>
+            <div className="social-dialog-content">
+              {inviteSection}
+              {recentSection}
+            </div>
+          </dialog>
         </>
       ) : (
         <>

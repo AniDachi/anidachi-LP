@@ -27,6 +27,7 @@ import {
   AccountSectionSwitch,
 } from "@/components/account/account-ui";
 import { api } from "@/lib/client-api";
+import { requestAccountNavigation } from "@/components/account/account-workspace-state";
 
 type AccountInboxItem = AccountInboxResponse["items"][number];
 type ActiveRoomInvite = Extract<
@@ -149,16 +150,30 @@ async function acknowledgeInboxPageSeen(
   return applyAccountInboxSeenAcknowledgement(page, acknowledgement);
 }
 
-export function InvitesClient({ ownerUserId }: { ownerUserId: string }) {
+export function InvitesClient({ ownerUserId, embedded = false, active = true, onCountsChange, onBeforeNavigate, onNavigateError }: {
+  ownerUserId: string;
+  embedded?: boolean;
+  active?: boolean;
+  onCountsChange?: (counts: AccountInboxResponse["counts"]) => void;
+  onBeforeNavigate?: () => void;
+  onNavigateError?: (message: string) => void;
+}) {
   const [view, setView] = useState<"incoming" | "sent">("incoming");
   const [inbox, setInbox] = useState<AccountInboxResponse | null>(null);
   const [sentInvites, setSentInvites] = useState<RoomInvite[]>([]);
+  const [sentError, setSentError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
   const refreshGenerationRef = useRef(0);
   const ownerUserIdRef = useRef<string | null>(ownerUserId);
+  const onCountsRef = useRef(onCountsChange);
+  onCountsRef.current = onCountsChange;
+  const activeRef = useRef(active);
+  activeRef.current = active;
+  const busyRef = useRef(false);
+  busyRef.current = loading || loadingMore || busyKey !== null;
 
   const friendRequests = useMemo(
     () =>
@@ -188,23 +203,25 @@ export function InvitesClient({ ownerUserId }: { ownerUserId: string }) {
     const generation = ++refreshGenerationRef.current;
     const isCurrent = () => refreshGenerationRef.current === generation;
     setLoading(true);
+    setLoadingMore(false);
     setNotice(null);
     try {
-      const [inboxPayload, invitesPayload] = await Promise.all([
+      const [inboxResult, invitesResult] = await Promise.allSettled([
         api<unknown>("/api/account/inbox?limit=100"),
         api<unknown>("/api/invites"),
       ]);
-      const nextInbox = parseOwnedAccountInboxResponse(
-        inboxPayload,
-        ownerUserId,
-      );
-      const invites = RoomInvitesResponseSchema.parse(invitesPayload);
       if (!isCurrent()) return;
-      setSentInvites(invites.sent);
+      if (invitesResult.status === "fulfilled") {
+        const invites = RoomInvitesResponseSchema.safeParse(invitesResult.value);
+        if (invites.success) { setSentInvites(invites.data.sent); setSentError(null); }
+        else setSentError("Could not refresh sent invitations. Please retry.");
+      } else setSentError("Could not refresh sent invitations. Please retry.");
+      if (inboxResult.status === "rejected") throw inboxResult.reason;
+      const nextInbox = parseOwnedAccountInboxResponse(inboxResult.value, ownerUserId);
 
       let displayInbox = nextInbox;
       try {
-        displayInbox = await acknowledgeInboxPageSeen(nextInbox, ownerUserId);
+        if (activeRef.current) displayInbox = await acknowledgeInboxPageSeen(nextInbox, ownerUserId);
       } catch {
         if (!isCurrent()) return;
         setNotice({
@@ -214,6 +231,7 @@ export function InvitesClient({ ownerUserId }: { ownerUserId: string }) {
       }
       if (!isCurrent()) return;
       setInbox(displayInbox);
+      onCountsRef.current?.(displayInbox.counts);
     } catch (error) {
       if (!isCurrent()) return;
       setNotice({
@@ -238,7 +256,7 @@ export function InvitesClient({ ownerUserId }: { ownerUserId: string }) {
       );
       let page = parseOwnedAccountInboxResponse(pagePayload, ownerUserId);
       try {
-        page = await acknowledgeInboxPageSeen(page, ownerUserId);
+        if (activeRef.current) page = await acknowledgeInboxPageSeen(page, ownerUserId);
       } catch {
         if (!isCurrent()) return;
         setNotice({
@@ -250,6 +268,7 @@ export function InvitesClient({ ownerUserId }: { ownerUserId: string }) {
       setInbox((current) =>
         current ? appendAccountInboxPage(current, page) : page,
       );
+      onCountsRef.current?.(page.counts);
     } catch (error) {
       if (!isCurrent()) return;
       setNotice({
@@ -269,22 +288,48 @@ export function InvitesClient({ ownerUserId }: { ownerUserId: string }) {
     refreshGenerationRef.current += 1;
     setInbox(null);
     setSentInvites([]);
+    setSentError(null);
     setNotice(null);
     setLoading(false);
     setLoadingMore(false);
     setBusyKey(null);
-    void refresh();
     return () => {
       refreshGenerationRef.current += 1;
       ownerUserIdRef.current = null;
     };
+  }, [ownerUserId, refresh]);
+
+  useEffect(() => { if (active) void refresh(); }, [active, refresh]);
+
+  useEffect(() => {
+    const reconcile = () => {
+      if (activeRef.current && !busyRef.current && document.visibilityState !== "hidden") void refresh();
+    };
+    const timer = window.setInterval(reconcile, 60_000);
+    window.addEventListener("focus", reconcile);
+    document.addEventListener("visibilitychange", reconcile);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", reconcile);
+      document.removeEventListener("visibilitychange", reconcile);
+    };
   }, [refresh]);
+
+  useEffect(() => {
+    const reconcile = (event: Event) => {
+      if ((event as CustomEvent<{ ownerUserId: string; source?: string }>).detail?.ownerUserId === ownerUserId
+        && (event as CustomEvent<{ source?: string }>).detail.source !== "inbox" && !busyKey && activeRef.current) void refresh();
+    };
+    window.addEventListener("anidachi:account-social-changed", reconcile);
+    return () => window.removeEventListener("anidachi:account-social-changed", reconcile);
+  }, [ownerUserId, refresh, busyKey]);
 
   const runAction = useCallback(
     async <T,>(
       key: string,
       action: () => Promise<T>,
       onSuccess?: (result: T) => void | Promise<void>,
+      onFailure?: (message: string) => void,
     ) => {
       if (loading || loadingMore || busyKey !== null) return;
       const actionOwnerUserId = ownerUserId;
@@ -297,13 +342,16 @@ export function InvitesClient({ ownerUserId }: { ownerUserId: string }) {
         if (!isCurrentOwner()) return;
         await onSuccess?.(result);
         if (!isCurrentOwner()) return;
+        window.dispatchEvent(new CustomEvent("anidachi:account-social-changed", { detail: { ownerUserId, source: "inbox" } }));
         await refresh();
       } catch (error) {
         if (!isCurrentOwner()) return;
+        const message = error instanceof Error ? error.message : "Action failed";
         setNotice({
           tone: "error",
-          text: error instanceof Error ? error.message : "Action failed",
+          text: message,
         });
+        onFailure?.(message);
       } finally {
         if (isCurrentOwner()) setBusyKey(null);
       }
@@ -320,9 +368,10 @@ export function InvitesClient({ ownerUserId }: { ownerUserId: string }) {
             method: "POST",
           }),
         (payload) => window.location.assign(payload.joinUrl),
+        onNavigateError,
       );
     },
-    [runAction],
+    [runAction, onNavigateError],
   );
 
   const declineInvite = useCallback(
@@ -361,10 +410,10 @@ export function InvitesClient({ ownerUserId }: { ownerUserId: string }) {
   const rowBusyKey = loading || loadingMore ? "inbox:loading" : busyKey;
 
   return (
-    <div className="ac-page ac-invites">
+    <div className={`ac-page ac-invites${embedded ? " ac-invites-embedded" : ""}`}>
       <AccountPageHeader
-        title="Invites"
-        description="Join a room, connect with friends, or check an invitation you sent."
+        title={embedded ? "" : "Notifications"}
+        description={embedded ? "" : "Room invitations and friend requests."}
         action={
           <IconButton
             disabled={loading || loadingMore || busyKey !== null}
@@ -422,7 +471,10 @@ export function InvitesClient({ ownerUserId }: { ownerUserId: string }) {
                     key={invite.inviteId}
                     invite={invite}
                     busyKey={rowBusyKey}
-                    onAccept={() => void acceptInvite(invite.inviteId)}
+                    onAccept={() => {
+                      onBeforeNavigate?.();
+                      requestAccountNavigation(() => acceptInvite(invite.inviteId));
+                    }}
                     onDecline={() => void declineInvite(invite.inviteId)}
                   />
                 ))}
@@ -484,6 +536,7 @@ export function InvitesClient({ ownerUserId }: { ownerUserId: string }) {
         </div>
       ) : (
         <div aria-label="Sent invitations" aria-busy={loading}>
+          {sentError ? <p className="ac-notice ac-notice-error" role="alert">{sentError}</p> : null}
           {loading && !inbox ? (
             <p role="status" className="ac-loading">
               Loading invitations…
@@ -496,14 +549,14 @@ export function InvitesClient({ ownerUserId }: { ownerUserId: string }) {
                   <SentInviteRow key={invite.id} invite={invite} />
                 ))}
               </>
-            ) : (
+            ) : !sentError ? (
               <AccountEmptyState
                 icon={<Send />}
                 title="No sent invitations yet"
               >
                 Invite friends or a group from the room controls in your player.
               </AccountEmptyState>
-            )
+            ) : null
           ) : null}
         </div>
       )}
