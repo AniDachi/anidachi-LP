@@ -8,7 +8,10 @@ import { ensureProfileForUser } from "@/lib/anidachi-auth/social";
 import { AccountNav } from "./account-nav";
 import { AnidachiLogoLink } from "@/components/anidachi-logo";
 import { UserMenu } from "@/components/nav-bar-client";
+import { AccountWorkspaceProvider } from "@/components/account/account-workspace-state";
+import { AccountNotifications } from "@/components/account/account-notifications";
 import "./account.css";
+import "./social.css";
 
 export const dynamic = "force-dynamic";
 
@@ -37,11 +40,13 @@ export default async function AccountLayout({
   const planLabel = getPlanEntitlements(effectivePlan).label;
 
   return (
+    <AccountWorkspaceProvider key={session.userId}>
     <main id="main-content" className="account-workspace min-h-screen bg-background text-foreground/90">
       <header className="account-header">
         <AnidachiLogoLink size={28} />
         <div className="account-identity">
           <span className="account-plan">{planLabel}</span>
+          <AccountNotifications key={session.userId} ownerUserId={session.userId} />
           <UserMenu user={{ displayName, email: session.email, plan: effectivePlan,
             avatarUrl: profile?.avatar_url ?? user?.avatar_url ?? null }} />
         </div>
@@ -54,5 +59,6 @@ export default async function AccountLayout({
           <section className="account-content min-w-0">{children}</section>
       </div>
     </main>
+    </AccountWorkspaceProvider>
   );
 }

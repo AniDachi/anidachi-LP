@@ -8,6 +8,28 @@ contain old paths, old domains, or old decisions. When release channels,
 endpoints, branch protection, or store workflow changes, update this document in
 the same PR.
 
+## Account MVP navigation, 2026-09-10
+
+The [approved account workspace](superpowers/specs/2026-09-10-account-mvp-navigation-design.md)
+replaces Overview with Watch Library as the default landing. Primary navigation
+is Watch Library, Friends & Groups and Subscription; Share an idea and Help are
+secondary links, and Profile opens from the avatar. Notifications use a header
+dialog backed by the existing account inbox; the old `/account/invites` URL
+remains compatible. The website checks counts only while visible, on focus and
+on a one-minute timer; it does not acknowledge unseen items until opened.
+Extension push/notification delivery remains unchanged.
+
+Friends uses two switches, inline requests and an Add friend dialog. Transient
+view controls stay in the mounted owner-keyed account workspace; canonical data
+is re-read on route return. History drafts remain protected when joining from
+notifications. Profile reuses the existing PATCH endpoint and adds an optional
+`x-anidachi-profile-owner` mismatch fence, required by the new website form but
+optional for compatible existing extension callers. Authentication still decides
+the actual owner. No database migration, Stripe configuration, media, history
+ownership or extension artifact changes are part of this delivery. Implementation
+and staging evidence are recorded in the
+[execution plan](superpowers/plans/2026-09-10-account-mvp-navigation.md).
+
 ## Account library editor, 2026-09-10
 
 The approved cover-based account design is being implemented in the real web

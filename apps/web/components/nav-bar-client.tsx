@@ -153,6 +153,11 @@ export function UserMenu({ user }: { user: NavUser }) {
 
           {/* Actions */}
           <div className="border-t border-brand-border px-2 py-2">
+            <Link href="/account/profile" onClick={() => setOpen(false)}
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-foreground/70 transition-colors hover:bg-brand-orange hover:text-primary-foreground">
+              <User className="h-4 w-4" aria-hidden />
+              Profile
+            </Link>
             <Link
               href="/account/friends"
               onClick={() => setOpen(false)}

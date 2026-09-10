@@ -1,0 +1,136 @@
+.ac-social .social-section {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.ac-social .social-section + .social-section {
+  margin-top: 32px;
+}
+
+.ac-social .social-section h2,
+.social-add-friend-dialog h2 {
+  color: var(--account-cream);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.ac-social .social-button {
+  border-color: transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: #a8a39e;
+  font-size: 13px;
+}
+
+.ac-social .social-button:hover:not(:disabled) {
+  background: #ffffff09;
+  color: var(--account-cream);
+}
+
+.ac-social .social-button[data-tone="primary"] {
+  padding-inline: 16px;
+  background: var(--account-cream);
+  color: #181511;
+}
+
+.ac-social .social-button[data-tone="primary"]:hover:not(:disabled) {
+  background: #fff7ec;
+}
+
+.ac-social .social-person {
+  min-height: 78px;
+  border-color: var(--account-line);
+}
+
+.ac-social .social-groups {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+.ac-social .social-group {
+  padding: 20px;
+  border: 1px solid var(--account-line);
+  border-radius: 16px;
+  background: #ffffff02;
+}
+
+.ac-social .social-group-members > summary,
+.ac-social .social-outgoing > summary {
+  min-height: 44px;
+  padding-top: 16px;
+  color: #b4a79a;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.social-add-friend-dialog {
+  display: none;
+  flex-direction: column;
+  width: min(680px, calc(100vw - 32px));
+  max-height: min(760px, calc(100dvh - 32px));
+  margin: auto;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--account-line);
+  border-radius: 20px;
+  background: #181819;
+  color: var(--account-cream);
+  box-shadow: 0 28px 80px #000a;
+}
+
+.social-add-friend-dialog[open] {
+  display: flex;
+}
+
+.social-add-friend-dialog::backdrop {
+  background: #080706b8;
+  backdrop-filter: blur(5px);
+}
+
+.social-dialog-heading {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 24px;
+  border-bottom: 1px solid var(--account-line);
+}
+
+.social-dialog-heading p {
+  margin-top: 5px;
+  color: var(--account-muted);
+  font-size: 13px;
+}
+
+.social-dialog-content {
+  min-height: 0;
+  flex: 1 1 auto;
+  padding: 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.social-dialog-content .social-section + .social-section {
+  margin-top: 28px;
+}
+
+@media (max-width: 640px) {
+  .ac-social .social-group {
+    padding: 16px;
+  }
+
+  .social-dialog-heading,
+  .social-dialog-content {
+    padding: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .social-add-friend-dialog,
+  .ac-social .social-button {
+    transition: none;
+  }
+}

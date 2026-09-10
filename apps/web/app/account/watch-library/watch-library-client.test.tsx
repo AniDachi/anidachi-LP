@@ -736,3 +736,15 @@ it("sign-out waits for the editor decision before revoking the session", async (
     await click(buttonByText(view.container,"Discard")); assert.equal(signedOut,true);
   } finally { await unmount(view.root); }
 });
+
+it("joining from notifications waits for the history editor decision", async () => {
+  installServer(); const view = await renderClient(); let joined = false;
+  try {
+    await openTitle(view.container); await click(buttonByText(view.container,"Edit")); await click(buttonByText(view.container,"Mark watched"));
+    const request = () => testWindow.dispatchEvent(new testWindow.CustomEvent("anidachi:before-account-navigation", {cancelable:true,detail:async()=>{joined=true;}}));
+    await act(async()=>{ assert.equal(request(),false); });
+    assert.equal(joined,false); await click(buttonByText(view.container,"Stay")); assert.equal(joined,false);
+    await act(async()=>{ request(); });
+    await click(buttonByText(view.container,"Discard")); assert.equal(joined,true);
+  } finally { await unmount(view.root); }
+});

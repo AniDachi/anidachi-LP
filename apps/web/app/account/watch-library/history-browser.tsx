@@ -9,6 +9,7 @@ import {
 } from "@anidachi/protocol";
 import { api, ApiError } from "@/lib/client-api";
 import { WATCH_HISTORY_OWNER_HEADER } from "@/lib/watch-history-owner";
+import { useAccountScrollRestoration, useAccountViewState } from "@/components/account/account-workspace-state";
 
 type Props = {
   items: WatchHistoryItem[]; owner: string; generation: number; canEdit: boolean;
@@ -20,10 +21,11 @@ type Props = {
 };
 const itemId = (item: WatchHistoryItem) => `${item.provider}:${item.titleKey}`;
 export function HistoryBrowser(props: Props) {
-  const [query, setQuery] = useState("");
-  const [provider, setProvider] = useState("all");
-  const [status, setStatus] = useState("all");
-  const [selected, setSelected] = useState<string | null>(null);
+  useAccountScrollRestoration(`${props.owner}:library:scroll`);
+  const [query, setQuery] = useAccountViewState(`${props.owner}:library:query`, "");
+  const [provider, setProvider] = useAccountViewState(`${props.owner}:library:provider`, "all");
+  const [status, setStatus] = useAccountViewState(`${props.owner}:library:status`, "all");
+  const [selected, setSelected] = useAccountViewState<string | null>(`${props.owner}:library:selected`, null);
   const [guard, setGuard] = useState<null | (() => void)>(null);
   const [guardSaving, setGuardSaving] = useState(false);
   const inspector = useRef<InspectorHandle | null>(null);
@@ -37,11 +39,11 @@ export function HistoryBrowser(props: Props) {
   // a filtered search empty; the server-owned quota is never inferred here.
   useEffect(() => {
     const attempt = JSON.stringify([query, provider, status, nextCursor]);
-    if ((query || provider !== "all" || status !== "all") && nextCursor && !loadingMore && !busy && autoPageAttempt.current !== attempt) {
+    if ((query || provider !== "all" || status !== "all" || (selected && !selectedItem)) && nextCursor && !loadingMore && !busy && autoPageAttempt.current !== attempt) {
       autoPageAttempt.current = attempt;
       onLoadMore();
     }
-  }, [query, provider, status, nextCursor, loadingMore, busy, onLoadMore]);
+  }, [query, provider, status, selected, selectedItem, nextCursor, loadingMore, busy, onLoadMore]);
   const navigate = (action: () => void) => {
     if (inspector.current?.dirty()) setGuard(() => action);
     else action();
@@ -170,8 +172,9 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
     };
     window.addEventListener("beforeunload", beforeUnload);
     window.addEventListener("anidachi:before-sign-out", signOut);
+    window.addEventListener("anidachi:before-account-navigation", signOut);
     document.addEventListener("click", linkClick, true);
-    return () => { window.removeEventListener("beforeunload", beforeUnload); window.removeEventListener("anidachi:before-sign-out", signOut); document.removeEventListener("click", linkClick, true); };
+    return () => { window.removeEventListener("beforeunload", beforeUnload); window.removeEventListener("anidachi:before-sign-out", signOut); window.removeEventListener("anidachi:before-account-navigation", signOut); document.removeEventListener("click", linkClick, true); };
   }, [dirty, saving]);
 
   const discard = () => { leaveGuard.current = false; setDraft({}); retryRequest.current = null; setEditing(false); setSaved(false); onDraftChange(false); };
