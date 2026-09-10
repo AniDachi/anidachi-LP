@@ -16,9 +16,14 @@ of the September 8 personal-history plan.
 - Open a title in a side inspector on desktop or a modal on smaller screens.
   Seasons and explicitly named specials share a dropdown. Episode 0 stays episode
   0. Display about four episode rows, with an independent scroll area for more.
-- A normal click selects an episode. Edit mode offers watched/unwatched marks,
-  whole-season marks, watched-through-episode, and reset of the whole title.
-  Save applies the draft; Cancel discards it. Drafts survive season changes.
+- A normal click selects an episode. In Edit mode, clicking an episode toggles
+  its watched mark; toggling back restores its original partial position.
+  Save, Cancel and the total unsaved-change count sit above the grid. An Actions
+  dropdown offers whole-season marks, watched-through the selected episode,
+  season reset, and confirmed whole-title reset. Reset explicitly clears playback
+  positions. Playback and removal controls are hidden while editing; films and
+  videos use one watched toggle above their progress. Save applies the draft;
+  Cancel discards it. Drafts survive season changes.
   Changing title, following account links, or signing out asks Save/Discard/Stay;
   browser unload uses its native unsaved-changes warning.
 - Films and YouTube use the same editor with a single progress entry. Unknown

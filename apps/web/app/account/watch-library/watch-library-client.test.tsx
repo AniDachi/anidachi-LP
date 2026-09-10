@@ -517,10 +517,10 @@ function editorFixture() {
       { ...base, episodeKey: "future", episodeTitle: "Future episode", episodeNumber: 3, order: 2, available: false, currentTime: 0, progress: 0 }],
   };
 }
-function installServer(options: { plan?: "allowed" | "plan_required"; history?: WatchHistoryResponse;
+function installServer(options: { plan?: "allowed" | "plan_required"; history?: WatchHistoryResponse; editor?: ReturnType<typeof editorFixture>;
   intercept?: (path: string, init?: RequestInit) => Promise<Response | undefined> | Response | undefined } = {}) {
   let history = options.history ?? historyFixture();
-  let editor = editorFixture();
+  let editor = options.editor ?? editorFixture();
   const calls: { path: string; body?: Record<string, unknown>; headers: Headers }[] = [];
   globalThis.fetch = async (input, init) => {
     const path = String(input); calls.push({ path, body: init?.body ? JSON.parse(String(init.body)) : undefined, headers: new Headers(init?.headers) });
@@ -578,8 +578,8 @@ it("a title and episode click only select; Cancel sends no write", async () => {
     await click(episodeButton(view.container, "Episode 2"));
     assert.equal(server.calls.filter(call => call.body).length, 0);
     await click(buttonByText(view.container, "Edit"));
-    await click(buttonByText(view.container, "Mark watched"));
-    assert.ok(buttonByText(view.container, "Save 1 change"));
+    await click(view.container.querySelector<HTMLButtonElement>(".wh-episode.wh-selected")!);
+    assert.ok(buttonByLabel(view.container, "Save 1 change"));
     await click(buttonByText(view.container, "Cancel"));
     assert.equal(server.calls.filter(call => call.body).length, 0);
     assert.ok(buttonByText(view.container, "Edit"));
@@ -589,11 +589,11 @@ it("drafts survive season changes and Save sends one atomic owner-bound command"
   const server = installServer(); const view = await renderClient();
   try {
     await openTitle(view.container); await click(buttonByText(view.container, "Edit"));
-    await click(buttonByText(view.container, "Mark watched"));
-    await chooseSeason(view.container, "season-two"); await click(buttonByText(view.container, "Mark watched"));
+    await click(view.container.querySelector<HTMLButtonElement>(".wh-episode.wh-selected")!);
+    await chooseSeason(view.container, "season-two"); await click(view.container.querySelector<HTMLButtonElement>(".wh-episode.wh-selected")!);
     await chooseSeason(view.container, "season-one");
     assert.match(episodeButton(view.container, "Episode 1").className, /wh-watched/);
-    await click(buttonByText(view.container, "Save 2 changes"));
+    await click(buttonByLabel(view.container, "Save 2 changes"));
     await waitFor(() => assert.match(view.container.textContent ?? "", /Progress saved/));
     const writes = server.calls.filter(call => call.path.endsWith("/editor") && call.body);
     assert.equal(writes.length, 1); assert.equal(writes[0].headers.get(WATCH_HISTORY_OWNER_HEADER), OWNER_ID);
@@ -601,16 +601,76 @@ it("drafts survive season changes and Save sends one atomic owner-bound command"
     assert.equal(server.getEditor().episodes.filter(ep => ep.watched).length, 2);
   } finally { await unmount(view.root); }
 });
+it("edit cells toggle watched state; toggling back restores the original partial position", async () => {
+  const server = installServer(); const view = await renderClient();
+  try {
+    await openTitle(view.container); await click(buttonByText(view.container, "Edit"));
+    const cell = episodeButton(view.container, "Episode 1");
+    assert.equal(cell.getAttribute("aria-pressed"), "false");
+    await click(cell);
+    assert.equal(cell.getAttribute("aria-pressed"), "true");
+    assert.ok(buttonByLabel(view.container, "Save 1 change"));
+    await click(cell);
+    assert.equal(cell.getAttribute("aria-pressed"), "false");
+    assert.equal(buttonByLabel(view.container, "Save 0 changes").disabled, true);
+    assert.doesNotMatch(cell.className, /wh-modified/);
+    await click(buttonByText(view.container, "Cancel"));
+    assert.equal(view.container.querySelector('[aria-label="Episode progress"]')?.getAttribute("aria-valuenow"), "5");
+    assert.equal(server.calls.filter(call => call.body).length, 0);
+  } finally { await unmount(view.root); }
+});
+it("bulk actions stay scoped to the selected season and title reset remains a confirmed draft", async () => {
+  const server = installServer(); const view = await renderClient();
+  try {
+    await openTitle(view.container); await click(buttonByText(view.container, "Edit"));
+    await click(episodeButton(view.container, "Episode 2"));
+    await click(buttonByText(view.container, "Watched through 02"));
+    assert.ok(buttonByLabel(view.container, "Save 2 changes"));
+    await chooseSeason(view.container, "season-two");
+    await click(episodeButton(view.container, "Episode 3"));
+    await click(buttonByText(view.container, "Reset season progress"));
+    assert.ok(buttonByLabel(view.container, "Save 2 changes"));
+    await click(buttonByText(view.container, "Reset all title progress"));
+    assert.ok(view.container.querySelector('dialog[aria-label="Reset this title’s progress?"]'));
+    await click(buttonByText(view.container, "Keep progress"));
+    assert.ok(buttonByLabel(view.container, "Save 2 changes"));
+    await click(buttonByText(view.container, "Reset all title progress"));
+    await click(buttonByText(view.container, "Reset progress"));
+    assert.ok(buttonByLabel(view.container, "Save 1 change"));
+    assert.equal(server.calls.filter(call => call.body).length, 0);
+    await click(buttonByLabel(view.container, "Save 1 change"));
+    const write = server.calls.find(call => call.path.endsWith("/editor") && call.body);
+    assert.deepEqual(write?.body?.changes, [{ episodeKey: "episode-one", watched: false }]);
+  } finally { await unmount(view.root); }
+});
+it("single films use the same top controls and keep an unknown duration unknown", async () => {
+  const history = historyFixture(); history.items[0].itemKind = "movie";
+  const editor = editorFixture(); editor.episodes = [{ ...editor.episodes[0], duration: 0, currentTime: 60, progress: 0 }];
+  const server = installServer({ history, editor }); const view = await renderClient(history);
+  try {
+    await click(buttonByLabel(view.container, "Manage Series One"));
+    await waitFor(() => assert.ok(buttonByText(view.container, "Edit")));
+    await click(buttonByText(view.container, "Edit"));
+    assert.equal(view.container.querySelector(".wh-episodes"), null);
+    await click(buttonByText(view.container, "Mark watched"));
+    assert.match(view.container.textContent ?? "", /Marked as watched/);
+    await click(buttonByLabel(view.container, "Save 1 change"));
+    await waitFor(() => assert.match(view.container.textContent ?? "", /Progress saved/));
+    assert.equal(server.getEditor().episodes[0].duration, 0);
+    assert.equal(server.getEditor().episodes[0].watched, true);
+  } finally { await unmount(view.root); }
+});
 it("season mark excludes future episodes; specials remain a named dropdown section", async () => {
   const server = installServer(); const view = await renderClient();
   try {
     await openTitle(view.container); await click(buttonByText(view.container, "Edit"));
     assert.equal(episodeButton(view.container, "Future episode").disabled, true);
-    await click(buttonByText(view.container, "Mark season"));
-    assert.ok(buttonByText(view.container, "Save 2 changes"));
+    await act(async () => { (view.container.querySelector(".wh-edit-actions") as HTMLDetailsElement).open = true; });
+    await click(buttonByText(view.container, "Mark season watched"));
+    assert.ok(buttonByLabel(view.container, "Save 2 changes"));
     await chooseSeason(view.container, "specials");
     assert.equal(episodeButton(view.container, "A special").textContent, "E0");
-    await click(buttonByText(view.container, "Save 2 changes"));
+    await click(buttonByLabel(view.container, "Save 2 changes"));
     await waitFor(() => assert.match(view.container.textContent ?? "", /Progress saved/));
     assert.equal(server.getEditor().episodes.find(ep => ep.episodeKey === "future")!.watched, false);
   } finally { await unmount(view.root); }
@@ -633,13 +693,13 @@ it("a conflict preserves the draft and requires explicit review of latest progre
   let conflicts = 0; const server = installServer({ intercept: (path, init) => path.endsWith("/editor") && init?.method === "POST" && conflicts++ === 0 ? Response.json({ error: "Progress changed elsewhere", code: "HISTORY_EDIT_CONFLICT" }, { status: 409 }) : undefined });
   const view = await renderClient();
   try {
-    await openTitle(view.container); await click(buttonByText(view.container, "Edit")); await click(buttonByText(view.container, "Mark watched"));
-    await click(buttonByText(view.container, "Save 1 change"));
+    await openTitle(view.container); await click(buttonByText(view.container, "Edit")); await click(view.container.querySelector<HTMLButtonElement>(".wh-episode.wh-selected")!);
+    await click(buttonByLabel(view.container, "Save 1 change"));
     await waitFor(() => assert.ok(buttonByText(view.container, "Load latest & review my changes")));
-    assert.equal(buttonByText(view.container, "Save 1 change").disabled, true);
+    assert.equal(buttonByLabel(view.container, "Save 1 change").disabled, true);
     assert.match(episodeButton(view.container, "Episode 1").className, /wh-modified/);
     await click(buttonByText(view.container, "Load latest & review my changes"));
-    assert.equal(buttonByText(view.container, "Save 1 change").disabled, false);
+    assert.equal(buttonByLabel(view.container, "Save 1 change").disabled, false);
     assert.equal(server.calls.filter(call => call.path.endsWith("/editor")).length, 1);
   } finally { await unmount(view.root); }
 });
@@ -647,8 +707,8 @@ it("network retry keeps the exact mutation id and payload", async () => {
   let attempts = 0; const server = installServer({ intercept: (path, init) => { if (path.endsWith("/editor") && init?.method === "POST" && attempts++ === 0) throw Error("Connection lost"); return undefined; } });
   const view = await renderClient();
   try {
-    await openTitle(view.container); await click(buttonByText(view.container, "Edit")); await click(buttonByText(view.container, "Mark watched"));
-    await click(buttonByText(view.container, "Save 1 change")); await waitFor(() => assert.match(view.container.textContent ?? "", /Connection lost/));
+    await openTitle(view.container); await click(buttonByText(view.container, "Edit")); await click(view.container.querySelector<HTMLButtonElement>(".wh-episode.wh-selected")!);
+    await click(buttonByLabel(view.container, "Save 1 change")); await waitFor(() => assert.match(view.container.textContent ?? "", /Connection lost/));
     await click(buttonByText(view.container, "Retry")); await waitFor(() => assert.match(view.container.textContent ?? "", /Progress saved/));
     const writes = server.calls.filter(call => call.path.endsWith("/editor")); assert.equal(writes.length, 2); assert.deepEqual(writes[0].body, writes[1].body);
   } finally { await unmount(view.root); }
@@ -657,9 +717,9 @@ it("changing title asks Save/Discard/Stay and does not silently lose the draft",
   const history = historyFixture(); history.items.push({ ...itemFixture(), titleKey: "series-two", title: "Series Two" });
   installServer({ history }); const view = await renderClient(history);
   try {
-    await openTitle(view.container); await click(buttonByText(view.container, "Edit")); await click(buttonByText(view.container, "Mark watched"));
+    await openTitle(view.container); await click(buttonByText(view.container, "Edit")); await click(view.container.querySelector<HTMLButtonElement>(".wh-episode.wh-selected")!);
     await click(buttonByLabel(view.container, "Manage Series Two")); assert.ok(buttonByText(view.container, "Stay here"));
-    await click(buttonByText(view.container, "Stay here")); assert.ok(buttonByText(view.container, "Save 1 change"));
+    await click(buttonByText(view.container, "Stay here")); assert.ok(buttonByLabel(view.container, "Save 1 change"));
     await click(buttonByLabel(view.container, "Manage Series Two")); await click(buttonByText(view.container, "Discard"));
     await waitFor(() => assert.ok(view.container.querySelector('dialog[aria-label="Series Two progress"]')));
   } finally { await unmount(view.root); }
@@ -728,7 +788,7 @@ it("poster failure before hydration has a fallback and a new URL can load", asyn
 it("sign-out waits for the editor decision before revoking the session", async () => {
   installServer(); const view = await renderClient(); let signedOut = false;
   try {
-    await openTitle(view.container); await click(buttonByText(view.container,"Edit")); await click(buttonByText(view.container,"Mark watched"));
+    await openTitle(view.container); await click(buttonByText(view.container,"Edit")); await click(view.container.querySelector<HTMLButtonElement>(".wh-episode.wh-selected")!);
     const request = new testWindow.CustomEvent("anidachi:before-sign-out",{cancelable:true,detail:async()=>{signedOut=true;}});
     await act(async()=>{ assert.equal(testWindow.dispatchEvent(request),false); });
     assert.equal(signedOut,false); await click(buttonByText(view.container,"Stay")); assert.equal(signedOut,false);
@@ -740,7 +800,7 @@ it("sign-out waits for the editor decision before revoking the session", async (
 it("joining from notifications waits for the history editor decision", async () => {
   installServer(); const view = await renderClient(); let joined = false;
   try {
-    await openTitle(view.container); await click(buttonByText(view.container,"Edit")); await click(buttonByText(view.container,"Mark watched"));
+    await openTitle(view.container); await click(buttonByText(view.container,"Edit")); await click(view.container.querySelector<HTMLButtonElement>(".wh-episode.wh-selected")!);
     const request = () => testWindow.dispatchEvent(new testWindow.CustomEvent("anidachi:before-account-navigation", {cancelable:true,detail:async()=>{joined=true;}}));
     await act(async()=>{ assert.equal(request(),false); });
     assert.equal(joined,false); await click(buttonByText(view.container,"Stay")); assert.equal(joined,false);
