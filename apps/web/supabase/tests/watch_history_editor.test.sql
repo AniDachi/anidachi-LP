@@ -63,10 +63,28 @@ create function pg_temp.edit(watched boolean, keys text[] default array['crunchy
  'revision',pg_temp.editor()->>'revision','changes',(select jsonb_agg(jsonb_build_object('episodeKey',key,'watched',watched)) from unnest(keys) key));
 $$;
 select is(jsonb_array_length(pg_temp.editor()->'episodes'),1,'partial catalog exposes saved episode');
+-- The extension reads browse RPC rows through a strict public progress parser.
+-- Internal editor columns must not leak into any of its three row projections.
+create function pg_temp.browse_public_rows() returns boolean language sql as $$
+ with titles as (
+  select browse_watch_history_v3('ed111111-1111-4111-8111-111111111111',
+   '{"mode":"personal","includeEpisodePreviews":true}','titles') p
+ ), episodes as (
+  select browse_watch_history_v3('ed111111-1111-4111-8111-111111111111',
+   '{"mode":"personal","provider":"crunchyroll","titleKey":"crunchyroll:series:series-one"}','episodes') p
+ ), rows as (
+  select jsonb_array_elements(p->'progressRows') r from titles
+  union all select jsonb_array_elements(p#>'{episodePreviews,0,progressRows}') from titles
+  union all select jsonb_array_elements(p->'progressRows') from episodes
+ )
+ select count(*)=3 and bool_and(not r ?| array['manual_edited_at','last_event_id','updated_at','raw_content_id','audio_locale']) from rows;
+$$;
+select ok(pg_temp.browse_public_rows(),'captured progress remains readable through the public browse contract');
 select is(pg_temp.editor()->>'catalogComplete','false','partial catalog is labeled honestly');
 insert into editor_calls values('mark',pg_temp.edit(true));
 select lives_ok($$select edit_watch_history_v1('ed111111-1111-4111-8111-111111111111',body) from editor_calls where name='mark'$$,'mark watched');
 select is(pg_temp.editor()#>>'{episodes,0,watched}','true','completion saved');
+select ok(pg_temp.browse_public_rows(),'manually edited progress remains readable through the public browse contract');
 select is(pg_temp.editor()#>>'{episodes,0,currentTime}','1800','known duration used');
 select is((select count(*)::int from watch_sessions where host_user_id='ed111111-1111-4111-8111-111111111111'),1,'manual marking creates no playback session');
 select ok((select latest_session_id is null from watch_episode_progress where user_id='ed111111-1111-4111-8111-111111111111'),'manual row is independent of playback session');
