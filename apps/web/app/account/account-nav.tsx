@@ -3,7 +3,14 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
-import { BookOpen, CreditCard, Inbox, Lightbulb, User, Users } from "lucide-react";
+import {
+  BookOpen,
+  CreditCard,
+  Inbox,
+  Lightbulb,
+  User,
+  Users,
+} from "lucide-react";
 
 const ITEMS = [
   { href: "/account/watch-library", label: "Watch Library", icon: BookOpen },
@@ -36,7 +43,9 @@ export function AccountNav() {
     const activeRect = activeEl.getBoundingClientRect();
     if (activeRect.left < navRect.left || activeRect.right > navRect.right) {
       activeEl.scrollIntoView({
-        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "instant"
+          : "smooth",
         block: "nearest",
         inline: "center",
       });
@@ -46,11 +55,11 @@ export function AccountNav() {
   return (
     <div className="relative lg:static">
       <div
-        className="pointer-events-none absolute inset-y-0 left-0 z-10 w-6 bg-gradient-to-r from-background to-transparent lg:hidden"
+        className="pointer-events-none absolute inset-y-0 left-0 z-10 w-6 bg-gradient-to-r from-[#0d0d0f] to-transparent lg:hidden"
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute inset-y-0 right-0 z-10 w-6 bg-gradient-to-l from-background to-transparent lg:hidden"
+        className="pointer-events-none absolute inset-y-0 right-0 z-10 w-6 bg-gradient-to-l from-[#0d0d0f] to-transparent lg:hidden"
         aria-hidden
       />
       <nav

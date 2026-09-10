@@ -636,10 +636,10 @@
     "semantic_hash": "c0e4672755ffe15702bfe6072c867896"
   },
   "apps/web/app/account/account-nav.tsx": {
-    "mtime": 1788979804.932128,
-    "seen": 1788983700.9322119,
-    "ast_hash": "9e9adc033ae414d9481626e1a1edbbe2",
-    "semantic_hash": "9e9adc033ae414d9481626e1a1edbbe2"
+    "mtime": 1789011161.6205823,
+    "seen": 1789011236.505127,
+    "ast_hash": "53d9aa00c9ef25aae4b19b95826444c0",
+    "semantic_hash": ""
   },
   "apps/web/app/account/friends/page.tsx": {
     "mtime": 1788807642.2121327,
@@ -648,10 +648,10 @@
     "semantic_hash": "723c7ab00ee3acca397738405452e673"
   },
   "apps/web/app/account/invites/invites-client.tsx": {
-    "mtime": 1788807642.212843,
-    "seen": 1788858338.3332942,
-    "ast_hash": "d2eb0d6f67a7e1f78806d83bb67977ea",
-    "semantic_hash": "d2eb0d6f67a7e1f78806d83bb67977ea"
+    "mtime": 1789011356.7319534,
+    "seen": 1789011533.8763258,
+    "ast_hash": "e3df7052b575396229e1f7e77670313d",
+    "semantic_hash": ""
   },
   "apps/web/app/account/invites/page.tsx": {
     "mtime": 1788807642.2129104,
@@ -666,10 +666,10 @@
     "semantic_hash": "b3687bcf18ca9f1c67a59f51bcf99a91"
   },
   "apps/web/app/account/page.tsx": {
-    "mtime": 1788807642.2130122,
-    "seen": 1788858338.333296,
-    "ast_hash": "2ea4d60d006d94c305df3c6011af9a2a",
-    "semantic_hash": "2ea4d60d006d94c305df3c6011af9a2a"
+    "mtime": 1789011161.6204221,
+    "seen": 1789011236.505132,
+    "ast_hash": "20aaab41bc57d5110daa0f3fd9199777",
+    "semantic_hash": ""
   },
   "apps/web/app/account/watch-library/loading.tsx": {
     "mtime": 1788807642.2130888,
@@ -1326,10 +1326,10 @@
     "semantic_hash": "51e9e4c7401fccd709ac7a3036e6bf3f"
   },
   "apps/web/app/friends/friends-client.tsx": {
-    "mtime": 1788807642.231387,
-    "seen": 1788858338.333361,
-    "ast_hash": "e8b3da527cefba7e6788ef050f5af659",
-    "semantic_hash": "e8b3da527cefba7e6788ef050f5af659"
+    "mtime": 1789011356.7333152,
+    "seen": 1789011533.876406,
+    "ast_hash": "286aa2a4793eead6b23659bd4e61fc5f",
+    "semantic_hash": ""
   },
   "apps/web/app/friends/page.tsx": {
     "mtime": 1788807642.2316766,
@@ -2034,10 +2034,10 @@
     "semantic_hash": "d425e6b5b66690a994e59067c2ff5b71"
   },
   "apps/web/components/account/account-waitlist-card.tsx": {
-    "mtime": 1788807642.2537243,
-    "seen": 1788858338.333429,
-    "ast_hash": "f782d611e3dc453810db52ab5542ef34",
-    "semantic_hash": "f782d611e3dc453810db52ab5542ef34"
+    "mtime": 1789011161.6224499,
+    "seen": 1789011236.505288,
+    "ast_hash": "b386edfe289af1879ec268be8227e2f3",
+    "semantic_hash": ""
   },
   "apps/web/components/analytics-events.tsx": {
     "mtime": 1788807642.253776,
@@ -5184,10 +5184,10 @@
     "semantic_hash": "5f2b7dddd552f8028a8dd9f9c499b273"
   },
   "apps/web/app/account/feature-requests/page.tsx": {
-    "mtime": 1788807642.212062,
-    "seen": 1788858338.3332942,
-    "ast_hash": "dd0c3e38ad9b66f54f3fa34b75dfde40",
-    "semantic_hash": "dd0c3e38ad9b66f54f3fa34b75dfde40"
+    "mtime": 1789011161.6204352,
+    "seen": 1789011236.50513,
+    "ast_hash": "c12f085569990e6f58828acdb97b8844",
+    "semantic_hash": ""
   },
   "apps/web/app/api/contact/route.ts": {
     "mtime": 1788807642.2169547,
@@ -5244,10 +5244,10 @@
     "semantic_hash": "0f4cc63a40c1ed304972174050e2113e"
   },
   "apps/web/components/feature-request-form.tsx": {
-    "mtime": 1788807642.2563915,
-    "seen": 1788858338.3334348,
-    "ast_hash": "094b30637ba131179610d2b25138735b",
-    "semantic_hash": "094b30637ba131179610d2b25138735b"
+    "mtime": 1789011161.6224608,
+    "seen": 1789011236.5052958,
+    "ast_hash": "af046489b2ef7da9cdd0ab9d10d5d881",
+    "semantic_hash": ""
   },
   "apps/web/components/home-section-header.tsx": {
     "mtime": 1788807642.2575712,
@@ -7380,10 +7380,10 @@
     "semantic_hash": "a1d73d29025f27ce30bcb29eabca2320"
   },
   "apps/web/app/account/billing/billing-client.tsx": {
-    "mtime": 1788930488.577746,
-    "seen": 1788930782.27199,
-    "ast_hash": "6b1609b6685f821899e44a3e1209f57f",
-    "semantic_hash": "6b1609b6685f821899e44a3e1209f57f"
+    "mtime": 1789011128.1584647,
+    "seen": 1789011236.505128,
+    "ast_hash": "06f10131d19ad4b02bac1ab6445bb454",
+    "semantic_hash": ""
   },
   "apps/web/app/account/billing/page.tsx": {
     "mtime": 1788930488.577799,
@@ -7458,10 +7458,10 @@
     "semantic_hash": "403b20d1d8702d0824a47ceeddd56256"
   },
   "apps/web/lib/billing-client.test.ts": {
-    "mtime": 1788930488.5797977,
-    "seen": 1788930782.272001,
-    "ast_hash": "ad36cf42bc3b2ba77bab17f41c172991",
-    "semantic_hash": "ad36cf42bc3b2ba77bab17f41c172991"
+    "mtime": 1789010749.3565638,
+    "seen": 1789011236.505375,
+    "ast_hash": "e0602ec3f7ef5ebd1d172d725404b3c4",
+    "semantic_hash": ""
   },
   "apps/web/lib/billing-view.ts": {
     "mtime": 1788930488.5798445,
@@ -7482,15 +7482,15 @@
     "semantic_hash": "182899c9a2d038f3c4379ca0304f72a5"
   },
   "docs/account-subscription-cancellation.md": {
-    "ast_hash": "4adb4ad3bb03a309641aee9190586a01",
     "mtime": 1788930488.5801196,
     "seen": 1788930782.2720041,
+    "ast_hash": "4adb4ad3bb03a309641aee9190586a01",
     "semantic_hash": "4adb4ad3bb03a309641aee9190586a01"
   },
   "docs/watch-history-capacity.md": {
-    "ast_hash": "21fbebc5480767fc15f310bcc0dbd649",
     "mtime": 1788930671.6825953,
     "seen": 1788930782.2720058,
+    "ast_hash": "21fbebc5480767fc15f310bcc0dbd649",
     "semantic_hash": "21fbebc5480767fc15f310bcc0dbd649"
   },
   "packages/protocol/src/watch-history-capacity.ts": {
@@ -7594,5 +7594,23 @@
     "seen": 1788984152.643297,
     "ast_hash": "7662e2bd67b406617f56f1ef74645b52",
     "semantic_hash": "7662e2bd67b406617f56f1ef74645b52"
+  },
+  "apps/web/components/account/account-overview.tsx": {
+    "mtime": 1789011161.621093,
+    "seen": 1789011236.505287,
+    "ast_hash": "4eda554ffbce5f440799ffa8f4574622",
+    "semantic_hash": ""
+  },
+  "apps/web/components/account/account-ui.tsx": {
+    "mtime": 1789011161.620468,
+    "seen": 1789011236.505287,
+    "ast_hash": "c36a5c30217a2a8bfa0e8d0c3ea1f81b",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/account-sections-client.test.ts": {
+    "mtime": 1789011161.6223624,
+    "seen": 1789011236.505313,
+    "ast_hash": "7353ef409ede23cd4c67f00e27152170",
+    "semantic_hash": ""
   }
 }

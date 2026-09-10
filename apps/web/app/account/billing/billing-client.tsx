@@ -1,6 +1,6 @@
 "use client";
 
-import { CreditCard, ExternalLink, RefreshCw } from "lucide-react";
+import { ArrowRight, CreditCard, ExternalLink, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -9,6 +9,7 @@ import {
 	subscriptionDateLabel,
 	subscriptionStatusLabel,
 } from "@/lib/billing-view";
+import { AccountPageHeader } from "@/components/account/account-ui";
 import { api } from "@/lib/client-api";
 
 const PLAN_NAMES = { free: "Free", plus: "Plus", pro: "Pro" };
@@ -105,137 +106,145 @@ export function BillingClient({
 	}
 
 	return (
-		<div className="flex flex-col gap-5" aria-busy={busy}>
-			<div className="flex flex-wrap items-center justify-between gap-3">
-				<div>
-					<h2 className="text-xl font-semibold tracking-[-0.02em] text-foreground">
-						Subscription
-					</h2>
-					<p className="mt-1 text-sm text-foreground/60">
-						View your plan and manage renewal.
-					</p>
-				</div>
-				<button
-					type="button"
-					onClick={() => void load(true)}
-					disabled={busy}
-					className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-brand-border px-4 text-sm font-semibold text-foreground/80 hover:bg-brand-surface disabled:opacity-50"
-				>
-					<RefreshCw
-						className={`h-4 w-4 ${busy ? "animate-spin" : ""}`}
-						aria-hidden
-					/>
-					Refresh status
-				</button>
-			</div>
-
-			{error ? (
-				<div
-					role="alert"
-					className="rounded-xl border border-red-400/30 bg-red-400/10 p-4 text-sm text-foreground"
-				>
-					<p>{error}</p>
-					<a
-						className="mt-2 inline-block text-brand-orange underline underline-offset-4"
-						href="mailto:anidachi.app@gmail.com"
+		<div className="ac-page ac-billing" aria-busy={busy}>
+			<AccountPageHeader
+				title="Subscription"
+				description="Your plan, billing status, and renewal settings."
+				action={
+					<button
+						type="button"
+						className="ac-button ac-button-quiet"
+						onClick={() => void load(true)}
+						disabled={busy}
 					>
-						Contact support
-					</a>
+						<RefreshCw
+							size={16}
+							className={busy ? "ac-spinning" : ""}
+							aria-hidden
+						/>
+						Refresh status
+					</button>
+				}
+			/>
+			{error ? (
+				<div role="alert" className="ac-notice ac-notice-error">
+					<p>{error}</p>
+					<a href="mailto:anidachi.app@gmail.com">Contact support</a>
 				</div>
 			) : null}
 			{notice ? (
-				<p role="status" className="text-sm text-foreground/70">
+				<p role="status" className="ac-notice">
 					{notice}
 				</p>
 			) : null}
 			{busy && !overview ? (
-				<p role="status" className="text-sm text-foreground/60">
+				<p role="status" className="ac-loading">
 					Loading your subscription…
 				</p>
 			) : null}
-
 			{overview ? (
-				<>
-					<section className="rounded-2xl border border-brand-border/80 bg-brand-surface p-5 sm:p-6">
-						<div className="flex items-center gap-3">
-							<CreditCard className="h-5 w-5 text-brand-orange" aria-hidden />
-							<p className="text-sm text-foreground/60">Current plan</p>
+				<div className="ac-detail-layout">
+					<div className="ac-plan-panel">
+						<div className="ac-plan-heading">
+							<div>
+								<p className="ac-eyebrow">
+									<CreditCard size={16} aria-hidden />
+									CURRENT PLAN
+								</p>
+								<h2>
+									AniDachi <span>{PLAN_NAMES[overview.planCode]}</span>
+								</h2>
+							</div>
+							{overview.planCode === "free" ? (
+								<Link href="/pricing" className="ac-button ac-button-primary">
+									View plans <ArrowRight size={16} aria-hidden />
+								</Link>
+							) : null}
 						</div>
-						<p className="mt-3 text-2xl font-semibold text-foreground">
-							{PLAN_NAMES[overview.planCode]}
-						</p>
 						{overview.subscriptions.length === 0 ? (
-							<p className="mt-2 text-sm text-foreground/60">
+							<p className="ac-plan-empty">
 								No recurring subscription is linked to this account.
 							</p>
 						) : null}
-						{overview.planCode === "free" ? (
-							<Link
-								href="/pricing"
-								className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-brand-orange px-4 text-sm font-semibold text-primary-foreground hover:bg-brand-orange-deep"
+						{overview.subscriptions.map((subscription) => (
+							<section
+								key={subscription.id}
+								className="ac-subscription-record"
+								aria-label={`${PLAN_NAMES[subscription.planCode]} subscription`}
 							>
-								View plans
-							</Link>
-						) : null}
-					</section>
-
-					{overview.subscriptions.map((subscription) => (
-						<section
-							key={subscription.id}
-							className="rounded-2xl border border-brand-border/80 bg-brand-surface p-5 sm:p-6"
-						>
-							<div className="flex flex-wrap items-start justify-between gap-3">
-								<h3 className="text-lg font-semibold text-foreground">
-									{PLAN_NAMES[subscription.planCode]} subscription
-								</h3>
-								<span className="rounded-full border border-brand-border px-3 py-1 text-xs font-medium text-foreground/80">
-									{subscriptionStatusLabel(subscription)}
-								</span>
-							</div>
-							{subscription.status !== "canceled" &&
-							subscription.status !== "incomplete_expired" ? (
-								<p className="mt-3 text-sm text-foreground/70">
-									{subscriptionDateLabel(subscription)}:{" "}
-									<span className="font-medium text-foreground">
-										{formatDate(subscription.currentPeriodEnd)}
+								<div className="ac-section-heading">
+									<h3>{PLAN_NAMES[subscription.planCode]} subscription</h3>
+									<span className="ac-status">
+										{subscriptionStatusLabel(subscription)}
 									</span>
-								</p>
-							) : null}
-							{subscription.cancelAtPeriodEnd &&
-							subscription.status !== "canceled" ? (
-								<p className="mt-2 text-sm text-foreground/60">
-									Renewal is canceled. Your subscription will end automatically
-									on the date shown.
-								</p>
-							) : null}
-							{subscription.status === "past_due" ||
-							subscription.status === "unpaid" ? (
-								<p className="mt-2 text-sm text-foreground/60">
-									Your payment needs attention. Paid features may be
-									unavailable; contact support if you need help.
-								</p>
-							) : null}
-							{subscription.canCancel ? (
-								<div className="mt-5 border-t border-brand-border/70 pt-4">
-									<p className="mb-3 max-w-xl text-sm text-foreground/60">
-										Confirm cancellation securely with Stripe. Canceling stops
-										renewal; any remaining paid access continues until the end
-										of your billing period.
-									</p>
-									<button
-										type="button"
-										disabled={busy}
-										onClick={() => void cancel(subscription.id)}
-										className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-brand-border px-4 text-sm font-semibold text-foreground hover:border-brand-orange/60 hover:bg-brand-orange/10 disabled:opacity-50"
-									>
-										Cancel subscription{" "}
-										<ExternalLink className="h-4 w-4" aria-hidden />
-									</button>
 								</div>
-							) : null}
-						</section>
-					))}
-				</>
+								{subscription.status !== "canceled" &&
+								subscription.status !== "incomplete_expired" ? (
+									<dl className="ac-billing-date">
+										<div>
+											<dt>{subscriptionDateLabel(subscription)}</dt>
+											<dd>{formatDate(subscription.currentPeriodEnd)}</dd>
+										</div>
+									</dl>
+								) : null}
+								{subscription.cancelAtPeriodEnd &&
+								subscription.status !== "canceled" ? (
+									<p className="ac-muted">
+										Renewal is canceled. Your subscription will end
+										automatically on the date shown.
+									</p>
+								) : null}
+								{subscription.status === "past_due" ||
+								subscription.status === "unpaid" ? (
+									<p className="ac-notice ac-notice-error">
+										Your payment needs attention. Paid features may be
+										unavailable; contact support if you need help.
+									</p>
+								) : null}
+								{subscription.canCancel ? (
+									<div className="ac-renewal-action">
+										<p>
+											Confirm cancellation securely with Stripe. Canceling stops
+											renewal; any remaining paid access continues until the end
+											of your billing period.
+										</p>
+										<button
+											type="button"
+											disabled={busy}
+											onClick={() => void cancel(subscription.id)}
+											className="ac-button"
+										>
+											Cancel subscription <ExternalLink size={15} aria-hidden />
+										</button>
+									</div>
+								) : null}
+							</section>
+						))}
+					</div>
+					<aside className="ac-context" aria-label="Subscription help">
+						<h2>Make it yours</h2>
+						<p>Compare the available plans and choose what works for you.</p>
+						<Link href="/pricing" className="ac-text-link">
+							Compare plans <ArrowRight size={15} aria-hidden />
+						</Link>
+						<div className="ac-context-section">
+							<h2>Your history stays</h2>
+							<p>
+								On Free, you can view and delete saved history. Recording and
+								editing progress need Plus or Pro.
+							</p>
+							<Link href="/account/watch-library" className="ac-text-link">
+								Open watch library <ArrowRight size={15} aria-hidden />
+							</Link>
+						</div>
+						<div className="ac-context-section">
+							<h2>Need a hand?</h2>
+							<a className="ac-text-link" href="mailto:anidachi.app@gmail.com">
+								Contact support <ArrowRight size={15} aria-hidden />
+							</a>
+						</div>
+					</aside>
+				</div>
 			) : null}
 		</div>
 	);

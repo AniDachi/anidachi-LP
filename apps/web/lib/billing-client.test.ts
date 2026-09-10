@@ -79,7 +79,8 @@ test("active subscription shows renewal date and explicit cancellation with owne
 	};
 	await mount();
 	assert.match(container.textContent ?? "", /Plus subscription/);
-	assert.match(container.textContent ?? "", /Renews: February 1, 2030/);
+	assert.equal(container.querySelector("dt")?.textContent, "Renews");
+	assert.equal(container.querySelector("dd")?.textContent, "February 1, 2030");
 	const button = [...container.querySelectorAll("button")].find((item) =>
 		item.textContent?.includes("Cancel subscription"),
 	);
@@ -122,10 +123,8 @@ test("return from Stripe refreshes status and shows scheduled end without anothe
 	assert.equal(path, "/api/billing/refresh");
 	assert.equal(method, "POST");
 	assert.match(container.textContent ?? "", /Renewal canceled/);
-	assert.match(
-		container.textContent ?? "",
-		/Subscription ends: February 1, 2030/,
-	);
+	assert.equal(container.querySelector("dt")?.textContent, "Subscription ends");
+	assert.equal(container.querySelector("dd")?.textContent, "February 1, 2030");
 	assert.doesNotMatch(container.textContent ?? "", /Cancel subscription/);
 });
 
@@ -139,7 +138,7 @@ test("Free account without billing has no cancellation action", async () => {
 	await mount();
 	assert.match(container.textContent ?? "", /No recurring subscription/);
 	assert.equal(
-		container.querySelector('a[href="/pricing"]')?.textContent,
+		container.querySelector('a[href="/pricing"]')?.textContent?.trim(),
 		"View plans",
 	);
 	assert.doesNotMatch(container.textContent ?? "", /Cancel subscription/);

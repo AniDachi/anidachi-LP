@@ -19,11 +19,18 @@ import {
   RefreshCw,
   Share2,
   Trash2,
+  Search,
+  Users,
   UserMinus,
   UserPlus,
   X,
 } from "lucide-react";
 import type { RecentPerson } from "@anidachi/protocol";
+import {
+  AccountEmptyState,
+  AccountPageHeader,
+  AccountSectionSwitch,
+} from "@/components/account/account-ui";
 import { api } from "@/lib/client-api";
 import { parseRecentPeopleResponse } from "@/lib/friends-client-contracts";
 
@@ -99,12 +106,14 @@ const EMPTY_FRIENDS: FriendsResponse = {
 };
 
 function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("") || "A";
+  return (
+    name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("") || "A"
+  );
 }
 
 function Avatar({ user }: { user: PublicProfile }) {
@@ -133,8 +142,12 @@ export function formatRecentMeta(person: RecentPerson) {
   return `Watched ${dateLabel}`;
 }
 
-function sortGroupMembers(members: FriendGroup["members"]): FriendGroup["members"] {
-  return [...members].sort((a, b) => a.user.displayName.localeCompare(b.user.displayName));
+function sortGroupMembers(
+  members: FriendGroup["members"],
+): FriendGroup["members"] {
+  return [...members].sort((a, b) =>
+    a.user.displayName.localeCompare(b.user.displayName),
+  );
 }
 
 function addOptimisticMember(
@@ -142,7 +155,9 @@ function addOptimisticMember(
   friend: FriendListItem,
   addedAt: string,
 ): FriendGroup {
-  if (group.members.some((member) => member.user.userId === friend.user.userId)) {
+  if (
+    group.members.some((member) => member.user.userId === friend.user.userId)
+  ) {
     return group;
   }
 
@@ -159,7 +174,11 @@ function addOptimisticMember(
   };
 }
 
-function removeOptimisticMember(group: FriendGroup, userId: string, updatedAt: string): FriendGroup {
+function removeOptimisticMember(
+  group: FriendGroup,
+  userId: string,
+  updatedAt: string,
+): FriendGroup {
   return {
     ...group,
     updatedAt,
@@ -177,17 +196,23 @@ function PersonRow({
   user: PublicProfile;
 }) {
   return (
-    <div className="flex min-h-16 items-center justify-between gap-3 border-b border-brand-border py-3 last:border-b-0">
+    <div className="social-person flex min-h-16 items-center justify-between gap-3 border-b border-brand-border py-3 last:border-b-0">
       <div className="flex min-w-0 items-center gap-3">
         <Avatar user={user} />
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-foreground">{user.displayName}</p>
+          <p className="truncate text-sm font-semibold text-foreground">
+            {user.displayName}
+          </p>
           <p className="truncate text-xs text-foreground/50">
-            {user.handle ? `@${user.handle}` : meta ?? "AniDachi user"}
+            {[user.handle ? `@${user.handle}` : null, meta]
+              .filter(Boolean)
+              .join(" · ") || "AniDachi user"}
           </p>
         </div>
       </div>
-      {action ? <div className="flex shrink-0 items-center gap-2">{action}</div> : null}
+      {action ? (
+        <div className="flex shrink-0 items-center gap-2">{action}</div>
+      ) : null}
     </div>
   );
 }
@@ -219,14 +244,17 @@ function IconButton({
   return (
     <button
       aria-label={title}
-      className={`inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-0 ${toneClass}`}
+      data-tone={tone}
+      className={`social-button inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-0 ${toneClass}`}
       disabled={disabled}
       onClick={onClick}
       title={title}
       type={type}
     >
       {icon}
-      {children ? <span className="hidden sm:inline">{children}</span> : null}
+      {children ? (
+        <span className="social-button-label hidden sm:inline">{children}</span>
+      ) : null}
     </button>
   );
 }
@@ -234,7 +262,13 @@ function IconButton({
 export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
   const pathname = usePathname();
   const embeddedInAccount = pathname.startsWith("/account/friends");
-  const [friendsData, setFriendsData] = useState<FriendsResponse>(EMPTY_FRIENDS);
+  const [view, setView] = useState<
+    "friends" | "groups" | "requests" | "recent"
+  >("friends");
+  const [search, setSearch] = useState("");
+  const [loaded, setLoaded] = useState(false);
+  const [friendsData, setFriendsData] =
+    useState<FriendsResponse>(EMPTY_FRIENDS);
   const [groups, setGroups] = useState<FriendGroup[]>([]);
   const [recentPeople, setRecentPeople] = useState<RecentPerson[]>([]);
   const [groupName, setGroupName] = useState("");
@@ -243,7 +277,26 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
   const [loading, setLoading] = useState(true);
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
-  const createGroupRequestRef = useRef<{ name: string; clientRequestId: string } | null>(null);
+  const createGroupRequestRef = useRef<{
+    name: string;
+    clientRequestId: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!embeddedInAccount) return;
+    const syncGroupAnchor = () => {
+      if (window.location.hash === "#groups") setView("groups");
+    };
+    syncGroupAnchor();
+    window.addEventListener("hashchange", syncGroupAnchor);
+    return () => window.removeEventListener("hashchange", syncGroupAnchor);
+  }, [embeddedInAccount]);
+
+  const visibleFriends = friendsData.friends.filter((friend) =>
+    `${friend.user.displayName} ${friend.user.handle ?? ""}`
+      .toLowerCase()
+      .includes(search.trim().toLowerCase()),
+  );
 
   const activeGroups = useMemo(
     () => groups.filter((group) => !group.archivedAt),
@@ -262,6 +315,7 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
       setFriendsData(friends);
       setGroups(groupPayload.groups);
       setRecentPeople(recentPayload.people);
+      setLoaded(true);
     } catch (error) {
       setNotice({
         tone: "error",
@@ -323,17 +377,20 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
     });
   }, []);
 
-  const patchGroup = useCallback((groupId: string, updater: (group: FriendGroup) => FriendGroup) => {
-    let previous: FriendGroup | null = null;
-    setGroups((current) =>
-      current.map((group) => {
-        if (group.id !== groupId) return group;
-        previous = group;
-        return updater(group);
-      }),
-    );
-    return previous;
-  }, []);
+  const patchGroup = useCallback(
+    (groupId: string, updater: (group: FriendGroup) => FriendGroup) => {
+      let previous: FriendGroup | null = null;
+      setGroups((current) =>
+        current.map((group) => {
+          if (group.id !== groupId) return group;
+          previous = group;
+          return updater(group);
+        }),
+      );
+      return previous;
+    },
+    [],
+  );
 
   const createGroup = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
@@ -341,9 +398,10 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
       const name = groupName.trim();
       if (!name) return;
       const existingRequest = createGroupRequestRef.current;
-      const clientRequestId = existingRequest?.name === name
-        ? existingRequest.clientRequestId
-        : crypto.randomUUID();
+      const clientRequestId =
+        existingRequest?.name === name
+          ? existingRequest.clientRequestId
+          : crypto.randomUUID();
       createGroupRequestRef.current = { name, clientRequestId };
       await runLocalAction(
         "create-group",
@@ -366,9 +424,12 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
     await runAction(
       "copy-invite-link",
       async () => {
-        const payload = await api<FriendInviteLinkResponse>("/api/friends/invite-links", {
-          method: "POST",
-        });
+        const payload = await api<FriendInviteLinkResponse>(
+          "/api/friends/invite-links",
+          {
+            method: "POST",
+          },
+        );
         const url = payload.inviteLink.url;
         if (typeof navigator.share === "function") {
           try {
@@ -423,8 +484,12 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
 
   const friendOptionsForGroup = useCallback(
     (group: FriendGroup) => {
-      const memberIds = new Set(group.members.map((member) => member.user.userId));
-      return friendsData.friends.filter((friend) => !memberIds.has(friend.user.userId));
+      const memberIds = new Set(
+        group.members.map((member) => member.user.userId),
+      );
+      return friendsData.friends.filter(
+        (friend) => !memberIds.has(friend.user.userId),
+      );
     },
     [friendsData.friends],
   );
@@ -449,10 +514,13 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
             updatedAt,
           }));
           try {
-            const payload = await api<{ group: FriendGroup }>(`/api/groups/${groupId}`, {
-              body: JSON.stringify({ name }),
-              method: "PATCH",
-            });
+            const payload = await api<{ group: FriendGroup }>(
+              `/api/groups/${groupId}`,
+              {
+                body: JSON.stringify({ name }),
+                method: "PATCH",
+              },
+            );
             upsertGroup(payload.group);
             setEditingGroupId(null);
             setEditingGroupName("");
@@ -467,9 +535,543 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
     [editingGroupName, patchGroup, runLocalAction, upsertGroup],
   );
 
+  const inviteSection = (
+    <div className="social-section rounded-2xl border border-brand-border/80 bg-brand-surface p-5">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-orange/15 text-brand-orange">
+            <Link2 className="h-5 w-5" aria-hidden />
+          </span>
+          <div className="min-w-0">
+            <h2 className="text-lg font-semibold text-foreground">
+              Friend invite link
+            </h2>
+            <p className="text-sm text-foreground/50">
+              Copy a private one-time link to add someone after sign-in.
+            </p>
+          </div>
+        </div>
+        <IconButton
+          disabled={busyKey !== null || loading}
+          icon={
+            typeof navigator !== "undefined" &&
+            typeof navigator.share === "function" ? (
+              <Share2 className="h-4 w-4" aria-hidden />
+            ) : (
+              <Copy className="h-4 w-4" aria-hidden />
+            )
+          }
+          onClick={() => void copyFriendInviteLink()}
+          title={
+            typeof navigator !== "undefined" &&
+            typeof navigator.share === "function"
+              ? "Share friend invite link"
+              : "Copy friend invite link"
+          }
+          tone="primary"
+        >
+          {typeof navigator !== "undefined" &&
+          typeof navigator.share === "function"
+            ? "Share link"
+            : "Copy link"}
+        </IconButton>
+      </div>
+    </div>
+  );
+  const recentSection = (
+    <div className="social-section rounded-2xl border border-brand-border/80 bg-brand-surface p-5">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">
+            Watched together
+          </h2>
+          <p className="mt-1 text-sm text-foreground/50">
+            Add people from recent shared rooms.
+          </p>
+        </div>
+        <span className="rounded-full bg-brand-surface px-2.5 py-1 text-xs text-foreground/70">
+          {recentPeople.length}
+        </span>
+      </div>
+      <div className="mt-3">
+        {loading && !loaded ? (
+          <p className="py-4 text-sm text-foreground/50">Loading...</p>
+        ) : recentPeople.length ? (
+          recentPeople.slice(0, 5).map((person) => (
+            <PersonRow
+              action={
+                <>
+                  <IconButton
+                    disabled={busyKey !== null || loading}
+                    icon={<UserPlus className="h-4 w-4" aria-hidden />}
+                    onClick={() => void sendFriendRequest(person.user.userId)}
+                    title="Add friend"
+                    tone="primary"
+                  />
+                  <IconButton
+                    disabled={busyKey !== null || loading}
+                    icon={<EyeOff className="h-4 w-4" aria-hidden />}
+                    onClick={() => void hideRecent(person.user.userId)}
+                    title="Hide from recent"
+                  />
+                </>
+              }
+              key={person.user.userId}
+              meta={formatRecentMeta(person)}
+              user={person.user}
+            />
+          ))
+        ) : (
+          <p className="py-4 text-sm text-foreground/50">
+            People from your recent watch rooms will appear here.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+  const incomingSection = (
+    <div className="social-section rounded-2xl border border-brand-border/80 bg-brand-surface p-5">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold text-foreground">
+          Friend requests
+        </h2>
+        <span className="rounded-full bg-brand-surface px-2.5 py-1 text-xs text-foreground/70">
+          {friendsData.incomingRequests.length}
+        </span>
+      </div>
+      <div className="mt-3">
+        {loading && !loaded ? (
+          <p className="py-4 text-sm text-foreground/50">Loading...</p>
+        ) : friendsData.incomingRequests.length ? (
+          friendsData.incomingRequests.map((request) => (
+            <PersonRow
+              action={
+                <>
+                  <IconButton
+                    disabled={busyKey !== null || loading}
+                    icon={<Check className="h-4 w-4" aria-hidden />}
+                    onClick={() =>
+                      void runAction(
+                        `accept:${request.friendshipId}`,
+                        () =>
+                          api(
+                            `/api/friends/requests/${request.friendshipId}/accept`,
+                            {
+                              method: "POST",
+                            },
+                          ),
+                        "Friend request accepted.",
+                      )
+                    }
+                    title="Accept request"
+                    tone="primary"
+                  />
+                  <IconButton
+                    disabled={busyKey !== null || loading}
+                    icon={<X className="h-4 w-4" aria-hidden />}
+                    onClick={() =>
+                      void runAction(
+                        `decline:${request.friendshipId}`,
+                        () =>
+                          api(
+                            `/api/friends/requests/${request.friendshipId}/decline`,
+                            {
+                              method: "POST",
+                            },
+                          ),
+                        "Friend request declined.",
+                      )
+                    }
+                    title="Decline request"
+                  />
+                </>
+              }
+              key={request.friendshipId}
+              user={request.user}
+            />
+          ))
+        ) : (
+          <p className="py-4 text-sm text-foreground/50">
+            No incoming requests.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+  const friendsSection = (
+    <div className="social-section rounded-2xl border border-brand-border/80 bg-brand-surface p-5">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold text-foreground">Friends</h2>
+        <span className="rounded-full bg-brand-surface px-2.5 py-1 text-xs text-foreground/70">
+          {friendsData.friends.length}
+        </span>
+      </div>
+      {embeddedInAccount && friendsData.friends.length > 0 ? (
+        <label className="ac-search">
+          <Search size={17} aria-hidden />
+          <input
+            aria-label="Search friends"
+            placeholder="Search friends"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+          {search ? (
+            <button
+              type="button"
+              aria-label="Clear friend search"
+              onClick={() => setSearch("")}
+            >
+              <X size={16} aria-hidden />
+            </button>
+          ) : null}
+        </label>
+      ) : null}
+      <div className="mt-3">
+        {loading && !loaded ? (
+          <p className="py-4 text-sm text-foreground/50">Loading...</p>
+        ) : visibleFriends.length ? (
+          visibleFriends.map((friend) => (
+            <PersonRow
+              action={
+                <IconButton
+                  disabled={busyKey !== null || loading}
+                  icon={<UserMinus className="h-4 w-4" aria-hidden />}
+                  onClick={() =>
+                    void runAction(
+                      `remove:${friend.user.userId}`,
+                      () =>
+                        api(`/api/friends/${friend.user.userId}`, {
+                          method: "DELETE",
+                        }),
+                      "Friend removed.",
+                    )
+                  }
+                  title="Remove friend"
+                  tone="danger"
+                />
+              }
+              key={friend.friendshipId}
+              user={friend.user}
+            />
+          ))
+        ) : embeddedInAccount ? (
+          <AccountEmptyState
+            icon={<Users />}
+            title={
+              search.trim() ? "No matching friends" : "Your people belong here"
+            }
+          >
+            {search.trim()
+              ? "Try a different name or handle."
+              : "Share your friend invite link to add someone."}
+          </AccountEmptyState>
+        ) : (
+          <p className="py-4 text-sm text-foreground/50">No friends yet.</p>
+        )}
+      </div>
+    </div>
+  );
+  const groupsSection = (
+    <section
+      id="groups"
+      className="social-section rounded-2xl border border-brand-border/80 bg-brand-surface p-5"
+    >
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">Groups</h2>
+          <p className="mt-1 text-sm text-foreground/50">
+            {activeGroups.length} active · {friendsData.friends.length} friends
+            available
+          </p>
+        </div>
+        <form
+          className="social-create-group flex flex-col gap-3 sm:flex-row"
+          onSubmit={createGroup}
+        >
+          <input
+            className="min-h-11 min-w-0 rounded-lg border border-brand-border bg-background px-3 text-sm text-foreground outline-none transition placeholder:text-foreground/30 focus:border-brand-orange sm:w-64"
+            onChange={(event) => setGroupName(event.target.value)}
+            aria-label="New group name"
+            maxLength={80}
+            placeholder="Group name"
+            value={groupName}
+          />
+          <IconButton
+            disabled={!groupName.trim() || busyKey !== null || loading}
+            icon={<UserPlus className="h-4 w-4" aria-hidden />}
+            title="Create group"
+            tone="primary"
+            type="submit"
+          >
+            Create
+          </IconButton>
+        </form>
+      </div>
+
+      <div className="social-groups mt-5 grid gap-4 lg:grid-cols-2">
+        {loading && !loaded ? (
+          <p className="text-sm text-foreground/50">Loading...</p>
+        ) : activeGroups.length ? (
+          activeGroups.map((group) => {
+            const addableFriends = friendOptionsForGroup(group);
+            return (
+              <div
+                className="social-group rounded-2xl border border-brand-border/80 bg-brand-surface/60 p-4"
+                key={group.id}
+              >
+                <div className="social-group-heading flex items-start justify-between gap-3">
+                  {editingGroupId === group.id ? (
+                    <form
+                      className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row"
+                      onSubmit={(event) => void renameGroup(event, group.id)}
+                    >
+                      <input
+                        className="min-h-10 min-w-0 flex-1 rounded-lg border border-brand-border bg-background px-3 text-sm text-foreground outline-none transition placeholder:text-foreground/30 focus:border-brand-orange"
+                        aria-label="Group name"
+                        maxLength={80}
+                        onChange={(event) =>
+                          setEditingGroupName(event.target.value)
+                        }
+                        value={editingGroupName}
+                      />
+                      <IconButton
+                        disabled={!editingGroupName.trim() || busyKey !== null}
+                        icon={<Check className="h-4 w-4" aria-hidden />}
+                        title="Save group name"
+                        tone="primary"
+                        type="submit"
+                      />
+                      <IconButton
+                        disabled={busyKey !== null || loading}
+                        icon={<X className="h-4 w-4" aria-hidden />}
+                        onClick={() => {
+                          setEditingGroupId(null);
+                          setEditingGroupName("");
+                        }}
+                        title="Cancel rename"
+                      />
+                    </form>
+                  ) : (
+                    <div className="min-w-0">
+                      <h3 className="social-group-name text-base font-semibold text-foreground">
+                        {group.name}
+                      </h3>
+                      <p className="text-xs text-foreground/50">
+                        {group.members.length} members
+                      </p>
+                    </div>
+                  )}
+                  {editingGroupId !== group.id ? (
+                    <IconButton
+                      disabled={busyKey !== null || loading}
+                      icon={<Pencil className="h-4 w-4" aria-hidden />}
+                      onClick={() => startRenameGroup(group)}
+                      title="Rename group"
+                    />
+                  ) : null}
+                  <IconButton
+                    disabled={busyKey !== null || loading}
+                    icon={<Trash2 className="h-4 w-4" aria-hidden />}
+                    onClick={() =>
+                      void runLocalAction(
+                        `archive-group:${group.id}`,
+                        async () => {
+                          let previousGroups: FriendGroup[] = [];
+                          setGroups((current) => {
+                            previousGroups = current;
+                            return current.filter(
+                              (item) => item.id !== group.id,
+                            );
+                          });
+                          try {
+                            await api(`/api/groups/${group.id}`, {
+                              method: "DELETE",
+                            });
+                          } catch (error) {
+                            setGroups(previousGroups);
+                            throw error;
+                          }
+                        },
+                        "Group archived.",
+                      )
+                    }
+                    title="Archive group"
+                    tone="danger"
+                  />
+                </div>
+
+                <details
+                  className="social-group-members"
+                  open={embeddedInAccount ? undefined : true}
+                >
+                  <summary hidden={!embeddedInAccount}>Manage members</summary>
+                  <div className="mt-4 flex flex-col gap-2">
+                    {group.members.length ? (
+                      group.members.map((member) => (
+                        <PersonRow
+                          action={
+                            <IconButton
+                              disabled={busyKey !== null || loading}
+                              icon={<X className="h-4 w-4" aria-hidden />}
+                              onClick={() =>
+                                void runLocalAction(
+                                  `remove-member:${group.id}:${member.user.userId}`,
+                                  async () => {
+                                    const previous = patchGroup(
+                                      group.id,
+                                      (currentGroup) =>
+                                        removeOptimisticMember(
+                                          currentGroup,
+                                          member.user.userId,
+                                          new Date().toISOString(),
+                                        ),
+                                    );
+                                    try {
+                                      const payload = await api<{
+                                        group: FriendGroup;
+                                      }>(
+                                        `/api/groups/${group.id}/members/${member.user.userId}`,
+                                        { method: "DELETE" },
+                                      );
+                                      upsertGroup(payload.group);
+                                    } catch (error) {
+                                      if (previous) upsertGroup(previous);
+                                      throw error;
+                                    }
+                                  },
+                                  "Group member removed.",
+                                )
+                              }
+                              title="Remove from group"
+                            />
+                          }
+                          key={member.user.userId}
+                          user={member.user}
+                        />
+                      ))
+                    ) : (
+                      <p className="text-sm text-foreground/50">No members.</p>
+                    )}
+                  </div>
+
+                  <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                    <select
+                      aria-label={`Add friend to ${group.name}`}
+                      className="min-h-11 min-w-0 flex-1 rounded-lg border border-brand-border bg-background px-3 text-sm text-foreground outline-none transition focus:border-brand-orange"
+                      disabled={!addableFriends.length || busyKey !== null}
+                      onChange={(event) => {
+                        const userId = event.target.value;
+                        if (!userId) return;
+                        event.target.value = "";
+                        const friend = addableFriends.find(
+                          (item) => item.user.userId === userId,
+                        );
+                        if (!friend) return;
+                        void runLocalAction(
+                          `add-member:${group.id}:${userId}`,
+                          async () => {
+                            const previous = patchGroup(
+                              group.id,
+                              (currentGroup) =>
+                                addOptimisticMember(
+                                  currentGroup,
+                                  friend,
+                                  new Date().toISOString(),
+                                ),
+                            );
+                            try {
+                              const payload = await api<{ group: FriendGroup }>(
+                                `/api/groups/${group.id}/members`,
+                                {
+                                  body: JSON.stringify({ userId }),
+                                  method: "POST",
+                                },
+                              );
+                              upsertGroup(payload.group);
+                            } catch (error) {
+                              if (previous) upsertGroup(previous);
+                              throw error;
+                            }
+                          },
+                          "Friend added to group.",
+                        );
+                      }}
+                    >
+                      <option value="">
+                        {addableFriends.length
+                          ? "Add friend"
+                          : "No friends to add"}
+                      </option>
+                      {addableFriends.map((friend) => (
+                        <option
+                          key={friend.user.userId}
+                          value={friend.user.userId}
+                        >
+                          {friend.user.displayName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </details>
+              </div>
+            );
+          })
+        ) : (
+          <p className="text-sm text-foreground/50">No groups yet.</p>
+        )}
+      </div>
+    </section>
+  );
+  const outgoingSection = (
+    <section className="social-section rounded-2xl border border-brand-border/80 bg-brand-surface p-5">
+      <h2 className="text-lg font-semibold text-foreground">Outgoing</h2>
+      <div className="mt-3">
+        {friendsData.outgoingRequests.map((request) => (
+          <PersonRow
+            key={request.friendshipId}
+            meta="Pending"
+            user={request.user}
+          />
+        ))}
+      </div>
+    </section>
+  );
   return (
-    <div className="flex w-full flex-col gap-6">
-        {!embeddedInAccount ? (
+    <div
+      className={
+        embeddedInAccount ? "ac-page ac-social" : "flex w-full flex-col gap-6"
+      }
+    >
+      {embeddedInAccount ? (
+        <AccountPageHeader
+          title="Friends & Groups"
+          description="Keep your people close. Invite them together from your player."
+          action={
+            <>
+              <IconButton
+                disabled={loading || busyKey !== null}
+                icon={
+                  <RefreshCw
+                    className={`h-4 w-4 ${loading ? "ac-spinning" : ""}`}
+                    aria-hidden
+                  />
+                }
+                onClick={() => void refresh()}
+                title="Refresh"
+              />
+              <IconButton
+                disabled={busyKey !== null || loading}
+                icon={<Link2 className="h-4 w-4" aria-hidden />}
+                onClick={() => void copyFriendInviteLink()}
+                title="Share friend invite link"
+                tone="primary"
+              >
+                Invite a friend
+              </IconButton>
+            </>
+          }
+        />
+      ) : (
         <header className="flex flex-col justify-between gap-4 border-b border-brand-border pb-6 md:flex-row md:items-end">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-orange">
@@ -490,443 +1092,79 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
             Refresh
           </IconButton>
         </header>
-        ) : (
-          <div className="flex justify-end">
-            <IconButton
-              icon={<RefreshCw className="h-4 w-4" aria-hidden />}
-              onClick={() => void refresh()}
-              title="Refresh"
-            >
-              Refresh
-            </IconButton>
-          </div>
-        )}
-
-        {notice ? (
-          <div
-            className={`fixed right-4 top-[calc(1rem+env(safe-area-inset-top,0px))] z-50 max-w-[min(24rem,calc(100vw-2rem))] rounded-lg border px-4 py-3 text-sm shadow-2xl ${
-              notice.tone === "success"
-                ? "border-brand-orange/30 bg-brand-orange/10 text-brand-orange"
-                : "border-red-400/30 bg-red-500/10 text-red-200"
-            }`}
-            role="status"
-          >
-            {notice.text}
-          </div>
-        ) : null}
-
-        <section className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-          <div className="rounded-2xl border border-brand-border/80 bg-brand-surface p-5">
-            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-              <div className="flex min-w-0 items-center gap-3">
-                <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-orange/15 text-brand-orange">
-                  <Link2 className="h-5 w-5" aria-hidden />
-                </span>
-                <div className="min-w-0">
-                  <h2 className="text-lg font-semibold text-foreground">Friend invite link</h2>
-                  <p className="text-sm text-foreground/50">
-                    Copy a private one-time link to add someone after sign-in.
-                  </p>
-                </div>
+      )}
+      {notice ? (
+        <div
+          className={
+            embeddedInAccount
+              ? `ac-notice ${notice.tone === "error" ? "ac-notice-error" : ""}`
+              : `fixed right-4 top-[calc(1rem+env(safe-area-inset-top,0px))] z-50 max-w-[min(24rem,calc(100vw-2rem))] rounded-lg border px-4 py-3 text-sm shadow-2xl ${notice.tone === "success" ? "border-brand-orange/30 bg-brand-orange/10 text-brand-orange" : "border-red-400/30 bg-red-500/10 text-red-200"}`
+          }
+          role={notice.tone === "error" ? "alert" : "status"}
+        >
+          {notice.text}
+        </div>
+      ) : null}
+      {embeddedInAccount ? (
+        <>
+          <AccountSectionSwitch
+            label="People view"
+            value={view}
+            onChange={setView}
+            options={[
+              {
+                value: "friends",
+                label: "Friends",
+                count: loaded ? friendsData.friends.length : undefined,
+              },
+              {
+                value: "groups",
+                label: "Groups",
+                count: loaded ? activeGroups.length : undefined,
+              },
+              {
+                value: "requests",
+                label: "Requests",
+                count: loaded
+                  ? friendsData.incomingRequests.length +
+                    friendsData.outgoingRequests.length
+                  : undefined,
+              },
+              { value: "recent", label: "Recent" },
+            ]}
+          />
+          {loaded || loading ? (
+            <>
+              <div hidden={view !== "friends"} aria-busy={loading}>
+                {friendsSection}
               </div>
-              <IconButton
-                disabled={busyKey !== null}
-                icon={
-                  typeof navigator !== "undefined" && typeof navigator.share === "function" ? (
-                    <Share2 className="h-4 w-4" aria-hidden />
-                  ) : (
-                    <Copy className="h-4 w-4" aria-hidden />
-                  )
-                }
-                onClick={() => void copyFriendInviteLink()}
-                title={
-                  typeof navigator !== "undefined" && typeof navigator.share === "function"
-                    ? "Share friend invite link"
-                    : "Copy friend invite link"
-                }
-                tone="primary"
-              >
-                {typeof navigator !== "undefined" && typeof navigator.share === "function"
-                  ? "Share link"
-                  : "Copy link"}
-              </IconButton>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-brand-border/80 bg-brand-surface p-5">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-semibold text-foreground">Watched together</h2>
-                <p className="mt-1 text-sm text-foreground/50">
-                  Add people from recent shared rooms.
-                </p>
+              <div hidden={view !== "groups"} aria-busy={loading}>
+                {groupsSection}
               </div>
-              <span className="rounded-full bg-brand-surface px-2.5 py-1 text-xs text-foreground/70">
-                {recentPeople.length}
-              </span>
-            </div>
-            <div className="mt-3">
-              {loading ? (
-                <p className="py-4 text-sm text-foreground/50">Loading...</p>
-              ) : recentPeople.length ? (
-                recentPeople.slice(0, 5).map((person) => (
-                  <PersonRow
-                    action={
-                      <>
-                        <IconButton
-                          disabled={busyKey !== null}
-                          icon={<UserPlus className="h-4 w-4" aria-hidden />}
-                          onClick={() => void sendFriendRequest(person.user.userId)}
-                          title="Add friend"
-                          tone="primary"
-                        />
-                        <IconButton
-                          disabled={busyKey !== null}
-                          icon={<EyeOff className="h-4 w-4" aria-hidden />}
-                          onClick={() => void hideRecent(person.user.userId)}
-                          title="Hide from recent"
-                        />
-                      </>
-                    }
-                    key={person.user.userId}
-                    meta={formatRecentMeta(person)}
-                    user={person.user}
-                  />
-                ))
-              ) : (
-                <p className="py-4 text-sm text-foreground/50">No shared watch history yet.</p>
-              )}
-            </div>
-          </div>
-        </section>
-
-        <section className="grid gap-6 lg:grid-cols-2">
-          <div className="rounded-2xl border border-brand-border/80 bg-brand-surface p-5">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-lg font-semibold text-foreground">Incoming</h2>
-              <span className="rounded-full bg-brand-surface px-2.5 py-1 text-xs text-foreground/70">
-                {friendsData.incomingRequests.length}
-              </span>
-            </div>
-            <div className="mt-3">
-              {loading ? (
-                <p className="py-4 text-sm text-foreground/50">Loading...</p>
-              ) : friendsData.incomingRequests.length ? (
-                friendsData.incomingRequests.map((request) => (
-                  <PersonRow
-                    action={
-                      <>
-                        <IconButton
-                          disabled={busyKey !== null}
-                          icon={<Check className="h-4 w-4" aria-hidden />}
-                          onClick={() =>
-                            void runAction(
-                              `accept:${request.friendshipId}`,
-                              () =>
-                                api(`/api/friends/requests/${request.friendshipId}/accept`, {
-                                  method: "POST",
-                                }),
-                              "Friend request accepted.",
-                            )
-                          }
-                          title="Accept request"
-                          tone="primary"
-                        />
-                        <IconButton
-                          disabled={busyKey !== null}
-                          icon={<X className="h-4 w-4" aria-hidden />}
-                          onClick={() =>
-                            void runAction(
-                              `decline:${request.friendshipId}`,
-                              () =>
-                                api(`/api/friends/requests/${request.friendshipId}/decline`, {
-                                  method: "POST",
-                                }),
-                              "Friend request declined.",
-                            )
-                          }
-                          title="Decline request"
-                        />
-                      </>
-                    }
-                    key={request.friendshipId}
-                    user={request.user}
-                  />
-                ))
-              ) : (
-                <p className="py-4 text-sm text-foreground/50">No incoming requests.</p>
-              )}
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-brand-border/80 bg-brand-surface p-5">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-lg font-semibold text-foreground">Friends</h2>
-              <span className="rounded-full bg-brand-surface px-2.5 py-1 text-xs text-foreground/70">
-                {friendsData.friends.length}
-              </span>
-            </div>
-            <div className="mt-3">
-              {loading ? (
-                <p className="py-4 text-sm text-foreground/50">Loading...</p>
-              ) : friendsData.friends.length ? (
-                friendsData.friends.map((friend) => (
-                  <PersonRow
-                    action={
-                      <IconButton
-                        disabled={busyKey !== null}
-                        icon={<UserMinus className="h-4 w-4" aria-hidden />}
-                        onClick={() =>
-                          void runAction(
-                            `remove:${friend.user.userId}`,
-                            () =>
-                              api(`/api/friends/${friend.user.userId}`, {
-                                method: "DELETE",
-                              }),
-                            "Friend removed.",
-                          )
-                        }
-                        title="Remove friend"
-                        tone="danger"
-                      />
-                    }
-                    key={friend.friendshipId}
-                    user={friend.user}
-                  />
-                ))
-              ) : (
-                <p className="py-4 text-sm text-foreground/50">No friends yet.</p>
-              )}
-            </div>
-          </div>
-        </section>
-
-        <section id="groups" className="rounded-2xl border border-brand-border/80 bg-brand-surface p-5">
-          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-            <div>
-              <h2 className="text-lg font-semibold text-foreground">Groups</h2>
-              <p className="mt-1 text-sm text-foreground/50">
-                {activeGroups.length} active · {friendsData.friends.length} friends available
-              </p>
-            </div>
-            <form className="flex flex-col gap-3 sm:flex-row" onSubmit={createGroup}>
-              <input
-                className="min-h-11 min-w-0 rounded-lg border border-brand-border bg-background px-3 text-sm text-foreground outline-none transition placeholder:text-foreground/30 focus:border-brand-orange sm:w-64"
-                onChange={(event) => setGroupName(event.target.value)}
-                placeholder="Group name"
-                value={groupName}
-              />
-              <IconButton
-                disabled={!groupName.trim() || busyKey === "create-group"}
-                icon={<UserPlus className="h-4 w-4" aria-hidden />}
-                title="Create group"
-                tone="primary"
-                type="submit"
-              >
-                Create
-              </IconButton>
-            </form>
-          </div>
-
-          <div className="mt-5 grid gap-4 lg:grid-cols-2">
-            {loading ? (
-              <p className="text-sm text-foreground/50">Loading...</p>
-            ) : activeGroups.length ? (
-              activeGroups.map((group) => {
-                const addableFriends = friendOptionsForGroup(group);
-                return (
-                  <div
-                    className="rounded-2xl border border-brand-border/80 bg-brand-surface/60 p-4"
-                    key={group.id}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      {editingGroupId === group.id ? (
-                        <form
-                          className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row"
-                          onSubmit={(event) => void renameGroup(event, group.id)}
-                        >
-                          <input
-                            className="min-h-10 min-w-0 flex-1 rounded-lg border border-brand-border bg-background px-3 text-sm text-foreground outline-none transition placeholder:text-foreground/30 focus:border-brand-orange"
-                            maxLength={80}
-                            onChange={(event) => setEditingGroupName(event.target.value)}
-                            value={editingGroupName}
-                          />
-                          <IconButton
-                            disabled={!editingGroupName.trim() || busyKey !== null}
-                            icon={<Check className="h-4 w-4" aria-hidden />}
-                            title="Save group name"
-                            tone="primary"
-                            type="submit"
-                          />
-                          <IconButton
-                            disabled={busyKey !== null}
-                            icon={<X className="h-4 w-4" aria-hidden />}
-                            onClick={() => {
-                              setEditingGroupId(null);
-                              setEditingGroupName("");
-                            }}
-                            title="Cancel rename"
-                          />
-                        </form>
-                      ) : (
-                        <div className="min-w-0">
-                          <h3 className="truncate text-base font-semibold text-foreground">
-                            {group.name}
-                          </h3>
-                          <p className="text-xs text-foreground/50">
-                            {group.members.length} members
-                          </p>
-                        </div>
-                      )}
-                      {editingGroupId !== group.id ? (
-                        <IconButton
-                          disabled={busyKey !== null}
-                          icon={<Pencil className="h-4 w-4" aria-hidden />}
-                          onClick={() => startRenameGroup(group)}
-                          title="Rename group"
-                        />
-                      ) : null}
-                      <IconButton
-                        disabled={busyKey !== null}
-                        icon={<Trash2 className="h-4 w-4" aria-hidden />}
-                        onClick={() =>
-                          void runLocalAction(
-                            `archive-group:${group.id}`,
-                            async () => {
-                              let previousGroups: FriendGroup[] = [];
-                              setGroups((current) => {
-                                previousGroups = current;
-                                return current.filter((item) => item.id !== group.id);
-                              });
-                              try {
-                                await api(`/api/groups/${group.id}`, {
-                                  method: "DELETE",
-                                });
-                              } catch (error) {
-                                setGroups(previousGroups);
-                                throw error;
-                              }
-                            },
-                            "Group archived.",
-                          )
-                        }
-                        title="Archive group"
-                        tone="danger"
-                      />
-                    </div>
-
-                    <div className="mt-4 flex flex-col gap-2">
-                      {group.members.length ? (
-                        group.members.map((member) => (
-                          <PersonRow
-                            action={
-                              <IconButton
-                                disabled={busyKey !== null}
-                                icon={<X className="h-4 w-4" aria-hidden />}
-                                onClick={() =>
-                                  void runLocalAction(
-                                    `remove-member:${group.id}:${member.user.userId}`,
-                                    async () => {
-                                      const previous = patchGroup(group.id, (currentGroup) =>
-                                        removeOptimisticMember(
-                                          currentGroup,
-                                          member.user.userId,
-                                          new Date().toISOString(),
-                                        ),
-                                      );
-                                      try {
-                                        const payload = await api<{ group: FriendGroup }>(
-                                          `/api/groups/${group.id}/members/${member.user.userId}`,
-                                          { method: "DELETE" },
-                                        );
-                                        upsertGroup(payload.group);
-                                      } catch (error) {
-                                        if (previous) upsertGroup(previous);
-                                        throw error;
-                                      }
-                                    },
-                                    "Group member removed.",
-                                  )
-                                }
-                                title="Remove from group"
-                              />
-                            }
-                            key={member.user.userId}
-                            user={member.user}
-                          />
-                        ))
-                      ) : (
-                        <p className="text-sm text-foreground/50">No members.</p>
-                      )}
-                    </div>
-
-                    <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                      <select
-                        className="min-h-11 min-w-0 flex-1 rounded-lg border border-brand-border bg-background px-3 text-sm text-foreground outline-none transition focus:border-brand-orange"
-                        disabled={!addableFriends.length || busyKey !== null}
-                        onChange={(event) => {
-                          const userId = event.target.value;
-                          if (!userId) return;
-                          event.target.value = "";
-                          const friend = addableFriends.find((item) => item.user.userId === userId);
-                          if (!friend) return;
-                          void runLocalAction(
-                            `add-member:${group.id}:${userId}`,
-                            async () => {
-                              const previous = patchGroup(group.id, (currentGroup) =>
-                                addOptimisticMember(currentGroup, friend, new Date().toISOString()),
-                              );
-                              try {
-                                const payload = await api<{ group: FriendGroup }>(
-                                  `/api/groups/${group.id}/members`,
-                                  {
-                                    body: JSON.stringify({ userId }),
-                                    method: "POST",
-                                  },
-                                );
-                                upsertGroup(payload.group);
-                              } catch (error) {
-                                if (previous) upsertGroup(previous);
-                                throw error;
-                              }
-                            },
-                            "Friend added to group.",
-                          );
-                        }}
-                      >
-                        <option value="">
-                          {addableFriends.length ? "Add friend" : "No friends to add"}
-                        </option>
-                        {addableFriends.map((friend) => (
-                          <option key={friend.user.userId} value={friend.user.userId}>
-                            {friend.user.displayName}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <p className="text-sm text-foreground/50">No groups yet.</p>
-            )}
-          </div>
-        </section>
-
-        {friendsData.outgoingRequests.length ? (
-          <section className="rounded-2xl border border-brand-border/80 bg-brand-surface p-5">
-            <h2 className="text-lg font-semibold text-foreground">Outgoing</h2>
-            <div className="mt-3">
-              {friendsData.outgoingRequests.map((request) => (
-                <PersonRow
-                  key={request.friendshipId}
-                  meta="Pending"
-                  user={request.user}
-                />
-              ))}
-            </div>
+              <div hidden={view !== "requests"} aria-busy={loading}>
+                {incomingSection}
+                {friendsData.outgoingRequests.length ? outgoingSection : null}
+              </div>
+              <div hidden={view !== "recent"} aria-busy={loading}>
+                {recentSection}
+              </div>
+            </>
+          ) : null}
+        </>
+      ) : (
+        <>
+          <section className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+            {inviteSection}
+            {recentSection}
           </section>
-        ) : null}
+          <section className="grid gap-6 lg:grid-cols-2">
+            {incomingSection}
+            {friendsSection}
+          </section>
+          {groupsSection}
+          {friendsData.outgoingRequests.length ? outgoingSection : null}
+        </>
+      )}
     </div>
   );
 }
