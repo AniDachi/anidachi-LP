@@ -38,16 +38,17 @@ export function AccountNav() {
   }, [open]);
   useEffect(() => { close(); }, [pathname, close]);
   useEffect(() => {
+    const element = dialog.current;
     const desktopWidth = window.matchMedia("(min-width: 1024px)");
     const update = () => {
-      if (!desktopWidth.matches || !dialog.current?.open) return;
+      if (!desktopWidth.matches || !element?.open) return;
       close();
       const activeLink = desktop.current?.querySelector<HTMLAnchorElement>('a[aria-current="page"]')
         ?? desktop.current?.querySelector<HTMLAnchorElement>("a");
       activeLink?.focus();
     };
     desktopWidth.addEventListener("change", update);
-    return () => { desktopWidth.removeEventListener("change", update); dialog.current?.close(); };
+    return () => { desktopWidth.removeEventListener("change", update); element?.close(); };
   }, [close]);
 
   const links = (items: ReadonlyArray<{ href: string; label: string; icon: typeof BookOpen }>, mobile = false) => items.map(item => {
