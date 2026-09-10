@@ -42,13 +42,13 @@ test("account entry and shortcuts point to existing account destinations", async
 test("Escape closes the disclosure and returns focus to the avatar", async () => {
   await mount(); await open();
   await act(async () => container.querySelector<HTMLAnchorElement>("nav a")!.focus());
-  await act(async () => document.dispatchEvent(new dom.KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true })));
+  await act(async () => dom.document.dispatchEvent(new dom.KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true })));
   assert.equal(container.querySelector("nav"), null); assert.equal(document.activeElement, trigger());
 });
 
 test("moving focus or tapping outside closes the disclosure", async () => {
   await mount(); await open();
-  await act(async () => document.dispatchEvent(new dom.PointerEvent("pointerdown", { bubbles: true })));
+  await act(async () => dom.document.dispatchEvent(new dom.PointerEvent("pointerdown", { bubbles: true })));
   assert.equal(trigger().getAttribute("aria-expanded"), "false");
   await open();
   await act(async () => container.querySelector<HTMLAnchorElement>("a")!.focus());
