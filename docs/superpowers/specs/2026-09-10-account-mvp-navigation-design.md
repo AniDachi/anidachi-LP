@@ -43,8 +43,12 @@ earlier account library plan; it does not change personal history ownership.
 
 Dark, calm workspace; cream selected controls and orange status/action accents.
 Cover images remain the library's visual anchor. Desktop has a narrow sidebar,
-main working area and contextual inspector. Mobile uses three compact navigation
-items and secondary links without horizontal page overflow. Notification dialog
+main working area and contextual inspector. Below 1024px, a compact Menu button
+and current-section label replace the navigation rows. The button opens a left
+modal drawer with primary sections above secondary links. Escape, the close
+button and backdrop dismiss it; accepted navigation closes it while existing
+unsaved-change guards remain authoritative. Widening to desktop dismisses the
+drawer and restores sidebar focus. Notification dialog
 has its own bounded scrolling area. Use short opacity/transform transitions,
 clear keyboard focus, native dialog focus containment/return and reduced motion.
 Keep existing English product copy. No dashboard counters or decorative overview.

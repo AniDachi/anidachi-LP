@@ -53,7 +53,6 @@ export default async function AccountLayout({
       </header>
       <div className="account-frame">
           <aside className="account-sidebar">
-            <p className="account-nav-label">YOUR SPACE</p>
             <AccountNav />
           </aside>
           <section className="account-content min-w-0">{children}</section>
