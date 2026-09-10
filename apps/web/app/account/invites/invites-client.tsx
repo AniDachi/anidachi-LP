@@ -7,18 +7,36 @@ import {
   RoomInvitesResponseSchema,
 } from "@anidachi/protocol";
 import { Check, Inbox, RefreshCw, Send, User, Users, X } from "lucide-react";
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   accountInboxSeenItems,
   appendAccountInboxPage,
   applyAccountInboxSeenAcknowledgement,
   parseOwnedAccountInboxResponse,
 } from "@/lib/anidachi-auth/account-inbox-client";
+import {
+  AccountEmptyState,
+  AccountPageHeader,
+  AccountSectionSwitch,
+} from "@/components/account/account-ui";
 import { api } from "@/lib/client-api";
 
 type AccountInboxItem = AccountInboxResponse["items"][number];
-type ActiveRoomInvite = Extract<AccountInboxItem, { kind: "room-invite"; state: "active" }>;
-type MissedRoomInvite = Extract<AccountInboxItem, { kind: "room-invite"; state: "missed" }>;
+type ActiveRoomInvite = Extract<
+  AccountInboxItem,
+  { kind: "room-invite"; state: "active" }
+>;
+type MissedRoomInvite = Extract<
+  AccountInboxItem,
+  { kind: "room-invite"; state: "missed" }
+>;
 type InboxFriendRequest = Extract<AccountInboxItem, { kind: "friend-request" }>;
 
 type AcceptInviteResponse = {
@@ -46,12 +64,16 @@ function initials(name: string): string {
 function Avatar({ user }: { user: PublicProfile }) {
   if (user.avatarUrl) {
     return (
-      <img alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" src={user.avatarUrl} />
+      <img
+        alt=""
+        className="h-10 w-10 shrink-0 rounded-full object-cover"
+        src={user.avatarUrl}
+      />
     );
   }
 
   return (
-    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-orange text-sm font-bold text-foreground">
+    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#44362c] text-sm font-medium text-[#eee5d9]">
       {initials(user.displayName)}
     </span>
   );
@@ -74,22 +96,22 @@ function IconButton({
 }) {
   const toneClass =
     tone === "primary"
-      ? "border-brand-orange/30 bg-brand-orange text-foreground hover:bg-brand-orange-deep"
+      ? "ac-button-primary"
       : tone === "danger"
-        ? "border-red-400/30 bg-red-500/10 text-red-200 hover:bg-red-500/20"
-        : "border-brand-border bg-brand-surface text-foreground/90 hover:bg-brand-orange";
+        ? "ac-button-danger"
+        : "";
 
   return (
     <button
       aria-label={title}
-      className={`inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-0 ${toneClass}`}
+      className={`ac-button ${toneClass}`}
       disabled={disabled}
       onClick={onClick}
       title={title}
       type="button"
     >
       {icon}
-      {children ? <span className="hidden sm:inline">{children}</span> : null}
+      {children ? <span>{children}</span> : null}
     </button>
   );
 }
@@ -128,6 +150,7 @@ async function acknowledgeInboxPageSeen(
 }
 
 export function InvitesClient({ ownerUserId }: { ownerUserId: string }) {
+  const [view, setView] = useState<"incoming" | "sent">("incoming");
   const [inbox, setInbox] = useState<AccountInboxResponse | null>(null);
   const [sentInvites, setSentInvites] = useState<RoomInvite[]>([]);
   const [loading, setLoading] = useState(true);
@@ -139,21 +162,24 @@ export function InvitesClient({ ownerUserId }: { ownerUserId: string }) {
 
   const friendRequests = useMemo(
     () =>
-      inbox?.items.filter((item): item is InboxFriendRequest => item.kind === "friend-request") ??
-      [],
+      inbox?.items.filter(
+        (item): item is InboxFriendRequest => item.kind === "friend-request",
+      ) ?? [],
     [inbox],
   );
   const activeRoomInvites = useMemo(
     () =>
       inbox?.items.filter(
-        (item): item is ActiveRoomInvite => item.kind === "room-invite" && item.state === "active",
+        (item): item is ActiveRoomInvite =>
+          item.kind === "room-invite" && item.state === "active",
       ) ?? [],
     [inbox],
   );
   const missedRoomInvites = useMemo(
     () =>
       inbox?.items.filter(
-        (item): item is MissedRoomInvite => item.kind === "room-invite" && item.state === "missed",
+        (item): item is MissedRoomInvite =>
+          item.kind === "room-invite" && item.state === "missed",
       ) ?? [],
     [inbox],
   );
@@ -168,7 +194,10 @@ export function InvitesClient({ ownerUserId }: { ownerUserId: string }) {
         api<unknown>("/api/account/inbox?limit=100"),
         api<unknown>("/api/invites"),
       ]);
-      const nextInbox = parseOwnedAccountInboxResponse(inboxPayload, ownerUserId);
+      const nextInbox = parseOwnedAccountInboxResponse(
+        inboxPayload,
+        ownerUserId,
+      );
       const invites = RoomInvitesResponseSchema.parse(invitesPayload);
       if (!isCurrent()) return;
       setSentInvites(invites.sent);
@@ -218,12 +247,17 @@ export function InvitesClient({ ownerUserId }: { ownerUserId: string }) {
         });
       }
       if (!isCurrent()) return;
-      setInbox((current) => (current ? appendAccountInboxPage(current, page) : page));
+      setInbox((current) =>
+        current ? appendAccountInboxPage(current, page) : page,
+      );
     } catch (error) {
       if (!isCurrent()) return;
       setNotice({
         tone: "error",
-        text: error instanceof Error ? error.message : "Could not load more invites",
+        text:
+          error instanceof Error
+            ? error.message
+            : "Could not load more invites",
       });
     } finally {
       if (isCurrent()) setLoadingMore(false);
@@ -324,152 +358,155 @@ export function InvitesClient({ ownerUserId }: { ownerUserId: string }) {
     [runAction],
   );
 
-  return (
-    <div className="flex w-full flex-col gap-6">
-      <header className="flex flex-col justify-between gap-4 border-b border-brand-border/80 pb-6 md:flex-row md:items-end">
-        <div>
-          <h2 className="text-2xl font-bold tracking-[-0.02em] text-foreground sm:text-3xl">
-            Invites
-          </h2>
-          <p className="mt-2 text-sm text-foreground/50">
-            Friend requests, room invitations, and recent missed invitations.
-          </p>
-        </div>
-        <IconButton
-          disabled={loading || loadingMore || busyKey !== null}
-          icon={<RefreshCw className="h-4 w-4" aria-hidden />}
-          onClick={() => void refresh()}
-          title="Refresh"
-        >
-          Refresh
-        </IconButton>
-      </header>
+  const rowBusyKey = loading || loadingMore ? "inbox:loading" : busyKey;
 
+  return (
+    <div className="ac-page ac-invites">
+      <AccountPageHeader
+        title="Invites"
+        description="Join a room, connect with friends, or check an invitation you sent."
+        action={
+          <IconButton
+            disabled={loading || loadingMore || busyKey !== null}
+            icon={
+              <RefreshCw
+                className={`h-4 w-4 ${loading ? "ac-spinning" : ""}`}
+                aria-hidden
+              />
+            }
+            onClick={() => void refresh()}
+            title="Refresh"
+          >
+            Refresh
+          </IconButton>
+        }
+      />
       {notice ? (
         <div
-          className={`rounded-lg border px-4 py-3 text-sm ${
-            notice.tone === "success"
-              ? "border-brand-orange/30 bg-brand-orange/10 text-brand-orange"
-              : "border-red-400/30 bg-red-500/10 text-red-200"
-          }`}
-          role="status"
+          className={`ac-notice ${notice.tone === "error" ? "ac-notice-error" : ""}`}
+          role={notice.tone === "error" ? "alert" : "status"}
         >
           {notice.text}
         </div>
       ) : null}
-
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <SummaryTile
-          icon={<Inbox className="h-5 w-5" aria-hidden />}
-          label="Actionable"
-          value={inbox?.counts.actionable ?? 0}
-        />
-        <SummaryTile
-          icon={<Users className="h-5 w-5" aria-hidden />}
-          label="Room invites"
-          value={inbox?.counts.activeRoomInvites ?? 0}
-        />
-        <SummaryTile
-          icon={<User className="h-5 w-5" aria-hidden />}
-          label="Friend requests"
-          value={inbox?.counts.pendingFriendRequests ?? 0}
-        />
-        <SummaryTile
-          icon={<Send className="h-5 w-5" aria-hidden />}
-          label="Sent"
-          value={sentInvites.length}
-        />
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-        <div className="rounded-lg border border-brand-border bg-brand-surface p-5">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-foreground">Inbox</h2>
-            <span className="rounded-full bg-brand-surface px-2.5 py-1 text-xs text-foreground/70">
-              {inbox?.items.length ?? 0}
-            </span>
-          </div>
-          <div className="mt-3">
-            {loading ? (
-              <p className="py-4 text-sm text-foreground/50">Loading...</p>
-            ) : inbox?.items.length ? (
-              <div className="divide-y divide-brand-border">
-                <InboxSubsection count={friendRequests.length} label="Friend requests">
-                  {friendRequests.map((request) => (
-                    <FriendRequestRow
-                      busyKey={loadingMore ? "inbox:loading" : busyKey}
-                      key={request.friendshipId}
-                      request={request}
-                      onAccept={() => void acceptFriendRequest(request.friendshipId)}
-                      onDecline={() => void declineFriendRequest(request.friendshipId)}
-                    />
-                  ))}
-                </InboxSubsection>
-                <InboxSubsection count={activeRoomInvites.length} label="Room invites">
-                  {activeRoomInvites.map((invite) => (
-                    <InboxInviteRow
-                      busyKey={loadingMore ? "inbox:loading" : busyKey}
-                      invite={invite}
-                      key={invite.inviteId}
-                      onAccept={() => void acceptInvite(invite.inviteId)}
-                      onDecline={() => void declineInvite(invite.inviteId)}
-                    />
-                  ))}
-                </InboxSubsection>
-                <InboxSubsection count={missedRoomInvites.length} label="Missed">
+      <AccountSectionSwitch
+        label="Invitation view"
+        value={view}
+        onChange={setView}
+        options={[
+          {
+            value: "incoming",
+            label: "Incoming",
+            count: inbox?.counts.actionable,
+          },
+          { value: "sent", label: "Sent" },
+        ]}
+      />
+      {view === "incoming" ? (
+        <div
+          aria-label="Incoming invitations"
+          aria-busy={loading || loadingMore}
+        >
+          {loading && !inbox ? (
+            <p role="status" className="ac-loading">
+              Loading invitations…
+            </p>
+          ) : inbox ? (
+            <>
+              <InboxSubsection
+                count={activeRoomInvites.length}
+                label="Room invites"
+              >
+                {activeRoomInvites.map((invite) => (
+                  <InboxInviteRow
+                    key={invite.inviteId}
+                    invite={invite}
+                    busyKey={rowBusyKey}
+                    onAccept={() => void acceptInvite(invite.inviteId)}
+                    onDecline={() => void declineInvite(invite.inviteId)}
+                  />
+                ))}
+              </InboxSubsection>
+              <InboxSubsection
+                count={friendRequests.length}
+                label="Friend requests"
+              >
+                {friendRequests.map((request) => (
+                  <FriendRequestRow
+                    key={request.friendshipId}
+                    request={request}
+                    busyKey={rowBusyKey}
+                    onAccept={() =>
+                      void acceptFriendRequest(request.friendshipId)
+                    }
+                    onDecline={() =>
+                      void declineFriendRequest(request.friendshipId)
+                    }
+                  />
+                ))}
+              </InboxSubsection>
+              {!activeRoomInvites.length && !friendRequests.length ? (
+                <AccountEmptyState
+                  icon={<Inbox />}
+                  title={
+                    inbox.counts.actionable > 0
+                      ? "More invitations available"
+                      : "Nothing waiting for a reply"
+                  }
+                >
+                  {inbox.counts.actionable > 0
+                    ? "Load more invitations to find the remaining requests."
+                    : "New room invitations and friend requests will appear here."}
+                </AccountEmptyState>
+              ) : null}
+              {missedRoomInvites.length ? (
+                <details className="ac-missed">
+                  <summary>
+                    Missed invitations <span>{missedRoomInvites.length}</span>
+                  </summary>
                   {missedRoomInvites.map((invite) => (
-                    <MissedInviteRow invite={invite} key={invite.inviteId} />
+                    <MissedInviteRow key={invite.inviteId} invite={invite} />
                   ))}
-                </InboxSubsection>
-                {inbox.nextCursor ? (
-                  <button
-                    className="mt-4 min-h-11 w-full rounded-lg border border-brand-border bg-brand-surface px-4 text-sm font-semibold text-foreground/80 transition hover:border-brand-orange/40 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
-                    disabled={loadingMore || busyKey !== null}
-                    onClick={() => void loadMore()}
-                    type="button"
-                  >
-                    {loadingMore ? "Loading..." : "Load more"}
-                  </button>
-                ) : null}
-              </div>
-            ) : (
-              <p className="py-4 text-sm text-foreground/50">Your inbox is clear.</p>
-            )}
-          </div>
+                </details>
+              ) : null}
+              {inbox.nextCursor ? (
+                <button
+                  type="button"
+                  className="ac-button ac-load-more"
+                  disabled={loading || loadingMore || busyKey !== null}
+                  onClick={() => void loadMore()}
+                >
+                  {loadingMore ? "Loading…" : "Load more invitations"}
+                </button>
+              ) : null}
+            </>
+          ) : null}
         </div>
-
-        <div className="rounded-lg border border-brand-border bg-brand-surface p-5">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-foreground">Sent</h2>
-            <span className="rounded-full bg-brand-surface px-2.5 py-1 text-xs text-foreground/70">
-              {sentInvites.length}
-            </span>
-          </div>
-          <div className="mt-3">
-            {loading ? (
-              <p className="py-4 text-sm text-foreground/50">Loading...</p>
-            ) : sentInvites.length ? (
-              sentInvites.map((invite) => <SentInviteRow invite={invite} key={invite.id} />)
+      ) : (
+        <div aria-label="Sent invitations" aria-busy={loading}>
+          {loading && !inbox ? (
+            <p role="status" className="ac-loading">
+              Loading invitations…
+            </p>
+          ) : inbox ? (
+            sentInvites.length ? (
+              <>
+                <p className="ac-muted">Recent invitations and responses.</p>
+                {sentInvites.map((invite) => (
+                  <SentInviteRow key={invite.id} invite={invite} />
+                ))}
+              </>
             ) : (
-              <p className="py-4 text-sm text-foreground/50">No sent invites yet.</p>
-            )}
-          </div>
+              <AccountEmptyState
+                icon={<Send />}
+                title="No sent invitations yet"
+              >
+                Invite friends or a group from the room controls in your player.
+              </AccountEmptyState>
+            )
+          ) : null}
         </div>
-      </section>
-    </div>
-  );
-}
-
-function SummaryTile({ icon, label, value }: { icon: ReactNode; label: string; value: number }) {
-  return (
-    <div className="flex items-center justify-between rounded-lg border border-brand-border bg-brand-surface p-4">
-      <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-orange/15 text-brand-orange">
-          {icon}
-        </span>
-        <span className="text-sm font-semibold text-foreground/80">{label}</span>
-      </div>
-      <span className="text-2xl font-bold text-foreground">{value}</span>
+      )}
     </div>
   );
 }
@@ -483,13 +520,15 @@ function InboxSubsection({
   count: number;
   label: string;
 }) {
+  if (!count) return null;
   return (
-    <section className="py-3 first:pt-0 last:pb-0" aria-label={label}>
-      <div className="flex items-center justify-between gap-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-foreground/45">
-        <span>{label}</span>
-        <span>{count}</span>
+    <section className="ac-inbox-section" aria-label={label}>
+      <div className="ac-section-heading">
+        <h2>
+          {label} <span className="ac-count">{count}</span>
+        </h2>
       </div>
-      {count ? children : <p className="py-3 text-sm text-foreground/40">Nothing here.</p>}
+      {children}
     </section>
   );
 }
@@ -509,20 +548,20 @@ function FriendRequestRow({
     busyKey === `accept-friend:${request.friendshipId}` ||
     busyKey === `decline-friend:${request.friendshipId}`;
   return (
-    <div className="flex flex-col justify-between gap-3 py-4 sm:flex-row sm:items-center">
+    <div className="ac-invite-row ac-invite-person">
       <div className="flex min-w-0 items-center gap-3">
         <Avatar user={request.sender} />
         <div className="min-w-0">
-          <h3 className="truncate text-base font-semibold text-foreground">
-            {request.sender.displayName}
-          </h3>
+          <h3 className="ac-invite-title">{request.sender.displayName}</h3>
           <p className="mt-1 text-sm text-foreground/50">
-            {request.sender.handle ? `@${request.sender.handle}` : "Wants to be friends"} ·{" "}
-            {formatDate(request.activityAt)}
+            {request.sender.handle
+              ? `@${request.sender.handle}`
+              : "Wants to be friends"}{" "}
+            · {formatDate(request.activityAt)}
           </p>
         </div>
       </div>
-      <div className="flex shrink-0 gap-2">
+      <div className="ac-invite-actions">
         <IconButton
           disabled={busyKey !== null}
           icon={<Check className="h-4 w-4" aria-hidden />}
@@ -559,36 +598,32 @@ function InboxInviteRow({
   const disabled = busyKey !== null;
 
   return (
-    <div className="border-b border-brand-border py-4 last:border-b-0">
+    <div className="ac-invite-row">
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
         <div className="flex min-w-0 gap-3">
           <Avatar user={invite.sender} />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="truncate text-base font-semibold text-foreground">
+              <h3 className="ac-invite-title">
                 {invite.roomTitle ?? "Watch room invite"}
               </h3>
-              <span className="rounded-full bg-brand-orange/15 px-2.5 py-1 text-xs font-semibold text-brand-orange">
-                active
-              </span>
+              <span className="ac-live-label">active</span>
             </div>
             <p className="mt-1 text-sm text-foreground/50">
               {invite.targetGroupName ? `${invite.targetGroupName} · ` : ""}
               From {invite.sender.displayName} · {formatDate(invite.activityAt)}
             </p>
             {invite.message ? (
-              <p className="mt-2 rounded-lg bg-brand-surface px-3 py-2 text-sm text-foreground/70">
-                {invite.message}
-              </p>
+              <p className="ac-invite-message">{invite.message}</p>
             ) : null}
           </div>
         </div>
-        <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row">
+        <div className="ac-invite-actions">
           <IconButton
             disabled={disabled}
             icon={<Check className="h-4 w-4" aria-hidden />}
             onClick={onAccept}
-            title="Accept invite"
+            title="Join room"
             tone="primary"
           >
             Join
@@ -609,17 +644,15 @@ function InboxInviteRow({
 
 function MissedInviteRow({ invite }: { invite: MissedRoomInvite }) {
   return (
-    <div className="py-4">
+    <div className="ac-invite-row">
       <div className="flex min-w-0 gap-3">
         <Avatar user={invite.sender} />
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="truncate text-base font-semibold text-foreground">
+            <h3 className="ac-invite-title">
               {invite.roomTitle ?? "Missed room invite"}
             </h3>
-            <span className="rounded-full bg-amber-500/15 px-2.5 py-1 text-xs font-semibold text-amber-200">
-              missed
-            </span>
+            <span className="ac-status">missed</span>
           </div>
           <p className="mt-1 text-sm text-foreground/50">
             From {invite.sender.displayName} · {formatDate(invite.missedAt)}
@@ -635,7 +668,7 @@ function MissedInviteRow({ invite }: { invite: MissedRoomInvite }) {
 
 function SentInviteRow({ invite }: { invite: RoomInvite }) {
   return (
-    <div className="border-b border-brand-border py-4 last:border-b-0">
+    <div className="ac-invite-row">
       <div className="flex items-start gap-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-orange/15 text-brand-orange">
           {invite.targetKind === "group" ? (
@@ -645,7 +678,7 @@ function SentInviteRow({ invite }: { invite: RoomInvite }) {
           )}
         </span>
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-semibold text-foreground">
+          <h3 className="ac-invite-title">
             {invite.roomTitle ?? "Watch room invite"}
           </h3>
           <p className="mt-1 text-xs text-foreground/50">
@@ -654,9 +687,7 @@ function SentInviteRow({ invite }: { invite: RoomInvite }) {
           <div className="mt-3 flex flex-wrap gap-2">
             {invite.recipients.map((recipient) => (
               <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(
-                  recipient.status,
-                )}`}
+                className={`ac-recipient ${statusTone(recipient.status)}`}
                 key={recipient.user.userId}
               >
                 {recipient.user.displayName}
