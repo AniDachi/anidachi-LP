@@ -16,16 +16,25 @@ of the September 8 personal-history plan.
 - Open a title in a side inspector on desktop or a modal on smaller screens.
   Seasons and explicitly named specials share a dropdown. Episode 0 stays episode
   0. Display about four episode rows, with an independent scroll area for more.
-- A normal click selects an episode. In Edit mode, clicking an episode toggles
-  its watched mark; toggling back restores its original partial position.
-  Save, Cancel and the total unsaved-change count sit above the grid. An Actions
-  dropdown offers whole-season marks, watched-through the selected episode,
-  season reset, and confirmed whole-title reset. Reset explicitly clears playback
-  positions. Playback and removal controls are hidden while editing; films and
-  videos use one watched toggle above their progress. Save applies the draft;
-  Cancel discards it. Drafts survive season changes.
-  Changing title, following account links, or signing out asks Save/Discard/Stay;
-  browser unload uses its native unsaved-changes warning.
+- A normal click selects an episode for playback. In Edit mode, clicks only
+  select episodes for an explicit action: Mark watched or Clear progress.
+  Select season includes all selectable entries in the current season; a mixed
+  selection uses an indeterminate checkbox. Shift-click selects a range.
+  Future/unavailable episodes with no saved progress cannot be selected;
+  unavailable entries with saved progress can be cleared but not marked watched.
+- Actions stage a draft and clear the selection. Undo restores the previous
+  action's draft, including partial positions. Cancel discards the entire draft;
+  Save commits it. Save/Cancel and the total unsaved-change count stay above the
+  grid. An action is never sent to the server merely by selecting episodes.
+  Changing seasons clears only the selection, while staged changes survive.
+  An authoritative reload invalidates Undo so it cannot restore stale drafts.
+- Clear progress removes watched marks and resume positions, keeping the title
+  in the library; it is distinct from Remove from history. A confirmed full-title
+  reset remains under Title options. Films and videos use the two explicit
+  actions directly, without an unnecessary selection step. Playback/removal
+  controls are hidden while editing. Changing title, following account links or
+  signing out protects staged changes with Save/Discard/Stay; browser unload
+  uses its native unsaved-changes warning. Selection alone is not a draft.
 - Films and YouTube use the same editor with a single progress entry. Unknown
   durations stay unknown; manual completion must not invent a runtime.
 - Free retains reading, Resume and deletion. Plus/Pro enables manual edits as well

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Check, ChevronDown, ChevronLeft, Film, LockKeyhole, Pencil, Play, RotateCcw, Search, Trash2, X } from "lucide-react";
+import { Check, ChevronLeft, Ellipsis, Film, LockKeyhole, Pencil, Play, RotateCcw, Search, Trash2, Undo2, X } from "lucide-react";
 import {
   WatchHistoryEditorResponseSchema, WatchHistoryEditAckSchema,
   type WatchHistoryItem, type WatchHistoryDeleteScope, type WatchHistoryEditorResponse,
@@ -95,6 +95,9 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
   const [episodeKey, setEpisodeKey] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Record<string, boolean>>({});
+  const [selection, setSelection] = useState<Set<string>>(() => new Set());
+  const [undo, setUndo] = useState<{ draft: Record<string, boolean>; message: string } | null>(null);
+  const selectionAnchor = useRef<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [conflict, setConflict] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -129,6 +132,7 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
         throw new Error("The signed-in account or history changed. Reload this page.");
       if (!mounted.current || id !== requestId.current) return;
       setData(next);
+      setUndo(null);
       const initial = next.episodes.find(ep => ep.episodeKey === item.latestActivity.episodeKey) ?? next.episodes[0];
       setSeason(value => next.episodes.some(ep => ep.seasonKey === value) ? value : initial.seasonKey);
       setEpisodeKey(value => next.episodes.some(ep => ep.episodeKey === value) ? value : initial.episodeKey);
@@ -188,7 +192,8 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
     return () => { window.removeEventListener("beforeunload", beforeUnload); window.removeEventListener("anidachi:before-sign-out", signOut); window.removeEventListener("anidachi:before-account-navigation", signOut); document.removeEventListener("click", linkClick, true); };
   }, [dirty, saving]);
 
-  const discard = () => { leaveGuard.current = false; setDraft({}); retryRequest.current = null; setEditing(false); setSaved(false); onDraftChange(false); };
+  const clearSelection = () => { setSelection(new Set()); selectionAnchor.current = null; };
+  const discard = () => { leaveGuard.current = false; setDraft({}); clearSelection(); setUndo(null); retryRequest.current = null; setEditing(false); setSaved(false); onDraftChange(false); };
   const save = async (): Promise<boolean> => {
     if (sending.current || !data || !canEdit || conflict) return false;
     if (!dirty) { setEditing(false); return true; }
@@ -205,7 +210,7 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
       if (ack.meta.ownerUserId !== owner || ack.meta.accountGeneration !== generation || ack.clientMutationId !== body.clientMutationId)
         throw new Error("Could not confirm the saved progress. Retry to check the result.");
       if (!mounted.current) return false;
-      leaveGuard.current = false; setDraft({}); setEditing(false); retryRequest.current = null; setSaved(true); onDraftChange(false);
+      leaveGuard.current = false; setDraft({}); clearSelection(); setUndo(null); setEditing(false); retryRequest.current = null; setSaved(true); onDraftChange(false);
       await load(); await onEdited();
       return true;
     } catch (cause) {
@@ -226,19 +231,36 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
   const episodes = data?.episodes.filter(ep => single || ep.seasonKey === season) ?? [];
   const selected = episodes.find(ep => ep.episodeKey === episodeKey) ?? episodes[0];
   const watched = (ep: WatchHistoryEditorEpisode) => draft[ep.episodeKey] ?? ep.watched;
-  const changeEpisodes = (values: WatchHistoryEditorEpisode[], value: boolean, restorePosition = false) => {
+  const hasProgress = (ep: WatchHistoryEditorEpisode) => watched(ep) || (!(ep.episodeKey in draft) && ep.currentTime > 0);
+  const selectable = episodes.filter(ep => ep.available || ep.watched || ep.currentTime > 0);
+  const targets = single ? episodes : selectable.filter(ep => selection.has(ep.episodeKey));
+  const allSelected = selectable.length > 0 && targets.length === selectable.length;
+  const canMark = targets.length > 0 && targets.every(ep => ep.available) && targets.some(ep => !watched(ep));
+  const canClear = targets.some(hasProgress);
+  const changeEpisodes = (values: WatchHistoryEditorEpisode[], value: boolean) => {
     if (saving || loading || !canEdit || conflict) return;
-    retryRequest.current = null; setSaved(false);
-    setDraft(current => {
-      const next = { ...current };
-      for (const ep of values.filter(episode => episode.available || !value)) {
-        // Toggling a cell back undoes the draft without erasing its original
-        // partial position. Explicit reset actions still clear that position.
-        if (value === ep.watched && (restorePosition || value || ep.currentTime === 0)) delete next[ep.episodeKey];
-        else next[ep.episodeKey] = value;
-      }
+    const next = { ...draft };
+    for (const ep of values.filter(episode => episode.available || !value)) {
+      if (value === ep.watched && (value || ep.currentTime === 0)) delete next[ep.episodeKey];
+      else next[ep.episodeKey] = value;
+    }
+    const changed = values.filter(ep => draft[ep.episodeKey] !== next[ep.episodeKey]).length;
+    if (!changed) return;
+    retryRequest.current = null; setSaved(false); setError(null);
+    setUndo({ draft, message: value ? `${changed} marked watched` : `${changed} ${changed === 1 ? "entry" : "entries"} cleared` });
+    setDraft(next); clearSelection();
+  };
+  const toggleSelection = (ep: WatchHistoryEditorEpisode, range: boolean) => {
+    const anchor = selectable.findIndex(value => value.episodeKey === selectionAnchor.current);
+    const index = selectable.indexOf(ep);
+    const keys = range && anchor >= 0 ? selectable.slice(Math.min(anchor, index), Math.max(anchor, index) + 1) : [ep];
+    const add = range || !selection.has(ep.episodeKey);
+    setSelection(current => {
+      const next = new Set(current);
+      for (const value of keys) { if (add) next.add(value.episodeKey); else next.delete(value.episodeKey); }
       return next;
     });
+    if (!range || anchor < 0) selectionAnchor.current = ep.episodeKey;
   };
   const available = episodes.filter(ep => ep.available);
   const completed = available.filter(watched).length;
@@ -254,7 +276,7 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
         <div><span className={`wh-provider wh-provider-${item.provider}`}>{item.provider === "youtube" ? "YouTube" : "Crunchyroll"}</span><h2 dir="auto">{item.title}</h2><p>{titleProgress(item)}</p></div>
       </div>
       <div className={`wh-editor-heading ${editing ? "wh-editor-active" : ""}`}>
-        <div><h3>{editing ? "Edit progress" : "Your progress"}</h3>{editing && <span className="wh-edit-count" role="status">{dirty ? `${changeCount} unsaved ${changeCount === 1 ? "change" : "changes"}` : "No changes yet"}</span>}</div>
+        <div><div className="wh-edit-title"><h3>{editing ? "Edit progress" : "Your progress"}</h3>{editing && !single && <EditorActions disabled={editLocked}><button type="button" className="wh-danger" onClick={() => setResetOpen(true)}><RotateCcw size={15} />Reset all title progress</button></EditorActions>}</div>{editing && <span className="wh-edit-count" role="status">{dirty ? `${changeCount} unsaved ${changeCount === 1 ? "change" : "changes"}` : "No changes yet"}</span>}</div>
         {!editing && <button ref={editButton} className="wh-text" disabled={!canEdit || !data || loading || busy} onClick={() => { setEditing(true); setSaved(false); }}><Pencil size={14} /> Edit</button>}
         {editing && <div className="wh-editor-buttons"><button ref={cancelButton} className="wh-text" disabled={saving} onClick={() => { discard(); setConflict(false); setError(null); }}>Cancel</button><button className="wh-primary" aria-label={saving ? "Saving changes" : `Save ${changeCount} ${changeCount === 1 ? "change" : "changes"}`} disabled={editLocked || !dirty} onClick={() => void save()}>{saving ? "Saving…" : "Save"}</button></div>}
       </div>
@@ -264,39 +286,41 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
         {conflict ? <button className="wh-text" disabled={saving} onClick={async () => {
           const latest = await load(); if (latest) {
             setDraft(current => Object.fromEntries(Object.entries(current).filter(([key, value]) => latest.episodes.some(ep => ep.episodeKey === key && ep.available && (ep.watched !== value || (!value && ep.currentTime > 0))))));
-            retryRequest.current = null; setConflict(false);
+            retryRequest.current = null; setUndo(null); clearSelection(); setConflict(false);
           }
         }}>Load latest & review my changes</button> : <button className="wh-text" disabled={saving} onClick={() => void (dirty ? save() : load())}>Retry</button>}
       </div>}
       {data && <>
         {saved && <p className="wh-saved" role="status"><Check size={14} /> Progress saved</p>}
         {!data.catalogComplete && !single && <p className="wh-hint">Only saved episodes are available. Open this title in Crunchyroll with the extension to load its full catalog.</p>}
-        {!single && <div className="wh-season-row"><label><span className="sr-only">Season or specials</span><select value={season ?? ""} onChange={event => { setSeason(event.target.value || null); setEpisodeKey(null); }}>
+        {!single && <div className="wh-season-row"><label><span className="sr-only">Season or specials</span><select value={season ?? ""} onChange={event => { setSeason(event.target.value || null); setEpisodeKey(null); clearSelection(); }}>
           {seasons.map(value => <option value={value.key ?? ""} key={value.key ?? "saved"}>{value.title}</option>)}
         </select></label><span>{completed} / {available.length} {data.catalogComplete ? "watched" : "saved"}</span></div>}
-        {editing && <div className="wh-edit-tools">
-          {single && selected ? <button className={`wh-button wh-single-mark ${watched(selected) ? "wh-single-watched" : ""}`} aria-pressed={watched(selected)} disabled={editLocked || !selected.available} onClick={() => changeEpisodes([selected], !watched(selected), true)}><Check size={15} />{watched(selected) ? "Watched" : "Mark watched"}</button>
-            : <p className="wh-edit-instruction">Click episodes to mark or unmark.</p>}
-          <EditorActions disabled={editLocked}>
-            {!single && <>
-              <button type="button" disabled={!available.length || completed === available.length} onClick={() => changeEpisodes(available, true)}><Check size={15} />{data.catalogComplete ? "Mark season watched" : "Mark saved episodes watched"}</button>
-              {selected && <button type="button" disabled={!selected.available} onClick={() => changeEpisodes(episodes.slice(0, episodes.indexOf(selected) + 1), true)}><Check size={15} />Watched through {selectedLabel}</button>}
-              <button type="button" disabled={!available.some(ep => watched(ep) || (!(ep.episodeKey in draft) && ep.currentTime > 0))} onClick={() => changeEpisodes(available, false)}><RotateCcw size={15} />{data.catalogComplete ? "Reset season progress" : "Reset saved episodes"}</button>
-              <hr />
-            </>}
-            <button type="button" className="wh-danger" onClick={() => setResetOpen(true)}><RotateCcw size={15} />Reset all title progress</button>
-          </EditorActions>
+        {editing && <div className={`wh-selection-tools ${single ? "wh-single-tools" : ""}`}>
+          {!single && <div className="wh-selection-row">
+            <label className="wh-select-season"><input type="checkbox" checked={allSelected} ref={node => { if (node) node.indeterminate = targets.length > 0 && !allSelected; }} disabled={editLocked || !selectable.length} onChange={() => { setSelection(new Set(allSelected ? [] : selectable.map(ep => ep.episodeKey))); selectionAnchor.current = null; }} />{data.catalogComplete ? "Select season" : "Select all saved"}</label>
+            <div className="wh-selection-count"><span role="status">{targets.length} selected</span><button type="button" className="wh-icon" aria-label="Clear selection" disabled={editLocked || !targets.length} onClick={clearSelection}><X size={14} /></button></div>
+          </div>}
+          <div className="wh-selection-actions" aria-label={single ? "Progress actions" : "Actions for selected episodes"}>
+            <button type="button" className="wh-button" title={targets.some(ep => !ep.available) ? "Unavailable episodes can only have their progress cleared." : undefined} disabled={editLocked || !canMark} onClick={() => changeEpisodes(targets, true)}><Check size={15} />Mark watched</button>
+            <button type="button" className="wh-button" disabled={editLocked || !canClear} onClick={() => changeEpisodes(targets, false)}><RotateCcw size={14} />Clear progress</button>
+          </div>
+          <div className="wh-selection-feedback">
+            {undo ? <><span role="status">{undo.message}</span><button type="button" className="wh-text" disabled={editLocked} onClick={() => { setDraft(undo.draft); setUndo(null); clearSelection(); retryRequest.current = null; setError(null); }}><Undo2 size={13} />Undo</button></>
+              : <span>{single ? "Changes apply when you save." : "Select episodes, then choose an action."}</span>}
+          </div>
         </div>}
-        {!single && <div className={`wh-episodes ${editing ? "wh-episodes-editing" : ""}`} aria-label={editing ? "Episodes: click to mark or unmark watched" : "Episodes"} tabIndex={0}>
-          {episodes.map((ep, index) => <button type="button" key={ep.episodeKey} disabled={!ep.available || saving || (editing && editLocked)}
-            className={`wh-episode ${watched(ep) ? "wh-watched" : ""} ${selected?.episodeKey === ep.episodeKey ? "wh-selected" : ""} ${ep.episodeKey in draft ? "wh-modified" : ""}`}
-            aria-label={`${episodeLabel(ep, index)}: ${ep.episodeTitle}${!ep.available ? ", unavailable" : watched(ep) ? ", watched" : ep.progress > 0 ? ", in progress" : ", not watched"}`}
-            aria-pressed={editing ? watched(ep) : selected?.episodeKey === ep.episodeKey} title={ep.episodeTitle} onClick={() => { setEpisodeKey(ep.episodeKey); if (editing) changeEpisodes([ep], !watched(ep), true); }}>
-            <span>{episodeLabel(ep, index)}</span>{watched(ep) ? <Check size={11} aria-hidden /> : null}
+        {!single && <div className={`wh-episodes ${editing ? "wh-episodes-editing" : ""}`} aria-label={editing ? "Select episodes" : "Episodes"} tabIndex={0}>
+          {episodes.map((ep, index) => <button type="button" key={ep.episodeKey} disabled={saving || (editing ? editLocked || !selectable.includes(ep) : !ep.available)}
+            className={`wh-episode ${watched(ep) ? "wh-watched" : ""} ${!editing && selected?.episodeKey === ep.episodeKey ? "wh-selected" : ""} ${editing && selection.has(ep.episodeKey) ? "wh-picked" : ""} ${ep.episodeKey in draft ? "wh-modified" : ""}`}
+            role={editing ? "checkbox" : undefined} aria-checked={editing ? selection.has(ep.episodeKey) : undefined}
+            aria-label={`${episodeLabel(ep, index)}: ${ep.episodeTitle}${!ep.available ? ", unavailable" : watched(ep) ? ", watched" : !(ep.episodeKey in draft) && ep.progress > 0 ? ", in progress" : ", not watched"}${ep.episodeKey in draft ? ", unsaved change" : ""}`}
+            aria-pressed={editing ? undefined : selected?.episodeKey === ep.episodeKey} title={ep.episodeTitle} onClick={event => { setEpisodeKey(ep.episodeKey); if (editing) toggleSelection(ep, event.shiftKey); }}>
+            <span>{episodeLabel(ep, index)}</span>{editing ? <span className="wh-cell-check" aria-hidden>{selection.has(ep.episodeKey) && <Check size={9} />}</span> : watched(ep) ? <Check size={11} aria-hidden /> : null}
             {!watched(ep) && ep.progress > 0 && !(ep.episodeKey in draft) && <i style={{ width: `${ep.progress * 100}%` }} />}
           </button>)}
         </div>}
-        {editing && !single && selected && <p className="wh-edit-selection"><span>{selectedLabel}</span><span>{selected.episodeTitle}</span></p>}
+        {editing && !single && selected && <div className="wh-edit-selection"><p><span>{selectedLabel}</span><span>{selected.episodeTitle}</span></p><span className="wh-range-hint">Shift + click selects a range.</span></div>}
         {selected && (!editing || single) && <div className="wh-selected-episode">
           <div className="wh-episode-name"><span>{single ? (item.provider === "youtube" ? "Video" : "Film") : episodeLabel(selected, episodes.indexOf(selected))}</span><h4>{single ? (watched(selected) ? "Watched" : progress > 0 ? "In progress" : "Not watched") : selected.episodeTitle}</h4></div>
           <div className="wh-progress" role="progressbar" aria-label="Episode progress" aria-valuenow={Math.round(progress * 100)} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${progress * 100}%` }} /></div>
@@ -334,7 +358,7 @@ function EditorActions({ disabled, children }: { disabled: boolean; children: Re
   return <details ref={ref} className="wh-edit-actions" onKeyDown={event => {
     if (event.key === "Escape" && ref.current?.open) { event.preventDefault(); event.stopPropagation(); close(true); }
   }} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) close(); }}>
-    <summary aria-disabled={disabled} onClick={event => { if (disabled) event.preventDefault(); }}>Actions <ChevronDown size={13} aria-hidden /></summary>
+    <summary aria-label="Title options" title="Title options" aria-disabled={disabled} onClick={event => { if (disabled) event.preventDefault(); }}><Ellipsis size={17} aria-hidden /></summary>
     <div className="wh-actions-popover" onClick={event => { if ((event.target as Element).closest("button:enabled")) close(true); }}>{children}</div>
   </details>;
 }
