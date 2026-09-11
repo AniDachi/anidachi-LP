@@ -290,5 +290,21 @@
   ],
   "first15Run": "Failed203/204selected candidate endpoints despite204decoded endpoints. Same204/204 assertion passed after bounded fresh-stat condition wait; no partial acceptance. Original scratch output was superseded by final run.",
   "forcedRelay": "Actual Worker accepted v2p0/s0 then refused because local TURN configuration was missing. No actual relay pass.",
-  "physicalOrDistributedAcceptance": false
+  "physicalOrDistributedAcceptance": false,
+  "legacyFollowup": {
+    "commit": "128cdb29ad8cd61dd6e53357edeefcf0bd83a880",
+    "change": "Restore legacy8000ms timing; v2p95<6000 and v2 measured behavior unchanged.",
+    "focusedTestsPassed": 3,
+    "legacyScenariosPassed": 26,
+    "firstFrameMs": [
+      159,
+      1
+    ],
+    "testedFiles": {
+      "tests/e2e/README.md": "0ff342a6a5ac6fc7abc4f821b74f9214953368dde09c1f09254e30cbae29c8c1",
+      "tests/e2e/p2p-media-harness-support.mjs": "5ccc7ed0179537082a41f691e1fe4b3828f4109282ee3c2abb15806aaada257e",
+      "tests/e2e/p2p-media-harness.mjs": "017f70b9e26e0c96f2fdc69e5c85d8c5c69e25a030a45d85d0115d46647bb634",
+      "tests/e2e/p2p-media-harness.test.mjs": "2fc684c2059744ae03d7073fa16db82e61f4faae4d6eb3392f2c87145bb63603"
+    }
+  }
 }

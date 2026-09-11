@@ -44,7 +44,7 @@ binds the final synthetic runs to the exact tested harness commit and file hashe
 | Local real-Worker room signaling harness | Passed; 39 scenarios | Signaling/reconnect/limits, not physical media |
 | V2 real local WebRTC | Passed: 4 / 6 / 15 participants, 8 assertions each | Single-machine Chromium, synthetic camera/audio; 12 / 30 / 204 selected endpoints |
 | V2 decoded-video TTFM p95 | 184.10 / 257.70 / 4308.80 ms | Complete 3 / 10 / 56 samples; strict target below 6000 ms |
-| Legacy real local WebRTC | Passed; 26 scenarios | Existing legacy contract retained |
+| Legacy real local WebRTC | Passed; 26 scenarios | Fresh follow-up at `128cdb29`; legacy 8000 ms boundary retained |
 | Harness fixture/measurement unit tests | Passed; 3 tests | Bundled actual Worker verifier, p95 and nonempty relay coverage |
 | Worker-backed forced relay attempt | Auth accepted; blocked by missing local TURN configuration | No actual relay pass claimed |
 | Production transition | Passed; 24 synthetic rehearsal checks and 5 Node checks | Exact bridge/guard files at `3d4263af`; 13 hashes independently matched |
@@ -69,6 +69,11 @@ fresh actual stats to satisfy the same complete 204/204 condition; partial and
 empty samples still fail. The rerun passed. Runtime transport behavior and the
 6-second media target were not weakened. The original failure is retained in this
 record; the final receipt supersedes its reused scratch output path.
+
+Task 4 review identified an unintended change to the old mode's timeout. The
+follow-up `128cdb29` restores its existing 8000 ms boundary while retaining v2's
+strict p95 below 6000 ms. Focused tests and the legacy 26-scenario browser harness
+passed again (first frames 159 ms / 1 ms). Unchanged v2 load runs were not repeated.
 
 ## Remaining launch gates
 
