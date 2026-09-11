@@ -863,7 +863,7 @@ function FriendsWorkspace({ currentUser }: { currentUser: CurrentUser }) {
               </span>
               <p>
                 Send this link to one person. After signing in and accepting,
-                you will appear in each other's friends list.
+                you will appear in each other&apos;s friends list.
               </p>
               {inviteLink ? (
                 <>
