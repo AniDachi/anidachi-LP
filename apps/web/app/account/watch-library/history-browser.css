@@ -6,9 +6,21 @@
 .wh-browser { display: grid; grid-template-columns: minmax(0,1fr); align-items: start; gap: 30px; }
 .wh-browser.wh-has-detail { grid-template-columns: minmax(0,1fr) 360px; }
 .wh-library { min-width: 0; }
-.wh-toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 22px; }
+.wh-platforms { --platform-x: 0; --platform-size: 3; position: relative; isolation: isolate; display: grid; grid-template-columns: 3fr 6fr 5fr; width: min(100%,390px); padding: 4px; margin-bottom: 18px; border: 1px solid #ffffff24; border-radius: 30px; background: #ffffff03; }
+.wh-platforms[data-platform="crunchyroll"] { --platform-x: 3; --platform-size: 6; }
+.wh-platforms[data-platform="youtube"] { --platform-x: 9; --platform-size: 5; }
+.wh-platforms::before { content: ''; position: absolute; z-index: -1; top: 4px; bottom: 4px; left: calc(4px + (100% - 8px) * var(--platform-x) / 14); width: calc((100% - 8px) * var(--platform-size) / 14); border-radius: 25px; background: #eee5d9; transition: left .2s cubic-bezier(.2,.8,.2,1),width .2s cubic-bezier(.2,.8,.2,1); }
+.wh-platforms button { display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 0; min-height: 44px; padding: 8px 10px; background: transparent; border: 0; border-radius: 25px; color: #a59d93; font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; transition: color .18s; }
+.wh-platforms button:hover { color: #eee5d9; }
+.wh-platforms button[aria-checked="true"] { color: #211b15; }
+.wh-platforms button:focus-visible { outline: 2px solid #ffad6e; outline-offset: 2px; }
+.wh-platform-logo { width: 22px; height: 22px; flex-shrink: 0; }
+.wh-platform-crunchyroll { color: #f47521; }
+.wh-platform-youtube { color: #ff0033; }
+.wh-toolbar { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 10px; margin-bottom: 22px; }
 .wh-search { display: flex; align-items: center; gap: 8px; flex: 1 1 160px; min-width: 0; border: 1px solid #ffffff1c; border-radius: 24px; padding: 0 14px; color: #8e8b88; height: 40px; }
 .wh-search input { background: transparent; border: 0; outline: 0; width: 100%; min-width: 0; color: #eee8df; font-size: 12px; }
+.wh-search input:focus-visible { outline: none; }
 .wh-search:focus-within { border-color: #ff9143; }
 .wh-toolbar select { background: #171719; color: #c2bdb7; border: 1px solid #ffffff1c; border-radius: 20px; height: 40px; padding: 0 26px 0 12px; font-size: 12px; max-width: 100%; }
 .wh-covers { display: grid; grid-template-columns: repeat(auto-fill,minmax(145px,1fr)); gap: 28px 22px; margin-top: 26px; }
@@ -134,5 +146,6 @@ html:has(.account-workspace) { scrollbar-gutter: stable; }
 @media(max-width:1099px) { .wh-browser.wh-has-detail { grid-template-columns: minmax(0,1fr); }.wh-inspector { position: fixed; inset: 0 0 0 auto; width: min(460px,100vw); margin: 0; max-height: 100dvh; height: 100dvh; padding: 18px 24px 30px; }.wh-inspector-top { top: -18px; padding-top: 8px; }.wh-editor-active { top: 40px; }.wh-detail-cover { width: 90px; height: 135px; } }
 @media(max-width:600px) { .wh-covers { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px 18px; }.wh-page-heading h1 { font-size: 27px; }.wh-toolbar select { flex: 1; }.wh-search { flex-basis: 100%; }.wh-inspector { width: 100%; border: 0; }.wh-page-actions { gap: 10px; }.wh-page-heading { gap: 12px; }.wh-confirm { padding: 20px; } }
 @media(max-width:360px) { .wh-inspector { padding-inline: 16px; }.wh-episodes { gap: 6px; }.wh-episode { height: 48px; font-size: 12px; }.wh-identity h2 { font-size: 16px; }.wh-detail-cover { width: 72px; height: 108px; } }
-@media(prefers-reduced-motion:reduce) { .wh-browser *, .wh-page-actions * { transition: none !important; scroll-behavior: auto !important; } }
+@media(max-width:360px) { .wh-platforms button { font-size: 12px; gap: 6px; padding-inline: 6px; }.wh-platform-logo { width: 18px; height: 18px; } }
+@media(prefers-reduced-motion:reduce) { .wh-browser *, .wh-browser *::before, .wh-page-actions * { transition: none !important; scroll-behavior: auto !important; } }
 @media(pointer:coarse) { .wh-button,.wh-primary,.wh-text,.wh-icon,.wh-edit-actions summary,.wh-actions-popover button,.wh-select-season,.wh-selection-actions .wh-button { min-height: 44px; }.wh-selection-count .wh-icon { width: 44px; }.wh-edit-actions summary { width: 44px; }.wh-range-hint { display: none; }.wh-editor-active { top: 58px; } }
