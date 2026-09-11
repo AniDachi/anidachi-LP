@@ -1,6 +1,7 @@
 # Extension People: link invitations and private group editor
 
-Status: implementation and local checks complete; staging artifact verification pending. Continues the accepted website Friends &
+Status: implementation, local checks and loaded staging-artifact verification complete.
+PR checks and staging merge evidence are recorded in the delivery PR. Continues the accepted website Friends &
 Groups MVP on staging `43d58692`; user approved the same work in the drawer.
 
 ## Product and visual direction
@@ -64,3 +65,22 @@ No server migration, secret, environment or room protocol change is expected.
   errors or warnings. Fixture data only; no real invitations sent.
 - Drawer shell and fixed sizing rules unchanged. Only the loaded staging folder
   is a delivery target; production/public/experiment artifacts remain separate.
+
+## Loaded staging artifact
+
+Build `6dd848dc-staging-20260911200437` passed staging artifact validation and
+was loaded in Chrome under the existing staging extension ID. Its permission
+sets and key are unchanged. The previous loaded build was backed up and both
+backup and copied candidate were verified by file hashes. Public/experiment
+folders were not replaced.
+
+Actual popup checks: 3 accepted friends and 2 existing groups matched the
+website; editor showed the real accepted-friend list; selecting and discarding
+a member left the original group unchanged and restored focus. Link dialog
+opened without creating a link. Inbox loaded its empty request/invite states.
+History loaded the existing title/season/episode progress. No real invitation
+was sent and no real friendship/group/progress mutation was performed.
+
+Remaining manual acceptance: a user-authorized real group save and a two-account
+friend-link acceptance. Atomic API behavior and mutation failures are covered
+by the existing server tests plus the extension bridge/UI regressions.
