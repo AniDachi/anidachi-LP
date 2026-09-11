@@ -51,6 +51,7 @@ for (const [name, value] of Object.entries({
   Node: testWindow.Node,
   Event: testWindow.Event,
   MouseEvent: testWindow.MouseEvent,
+  KeyboardEvent: testWindow.KeyboardEvent,
 })) {
   Object.defineProperty(globalThis, name, { configurable: true, value, writable: true });
 }
@@ -581,6 +582,48 @@ it("SSR refuses unavailable access and an access change during the read", async 
   await assert.rejects(loadWatchLibraryData(OWNER_ID, { access: async () => { throw Error("HISTORY_ACCESS_UNAVAILABLE"); }, preferences: async () => preferencesFixture, history: async () => { reads++; return historyFixture(); } }), /UNAVAILABLE/);
   assert.equal(reads, 0); let checks = 0;
   await assert.rejects(loadWatchLibraryData(OWNER_ID, { access: async () => accessFixture(++checks === 1 ? "allowed" : "plan_required"), preferences: async () => preferencesFixture, history: async () => historyFixture() }), /CHANGED/);
+});
+it("platform switching completes pagination and keeps the progress filter", async () => {
+  const history = { ...historyFixture(), nextCursor: "next-page", totalTitleCount: 2 };
+  const video = { ...itemFixture(), provider: "youtube" as const, itemKind: "movie" as const, titleKey: "video", title: "Video One",
+    latestActivity: { ...itemFixture().latestActivity, progress: 1, completedAt: NOW } };
+  const server = installServer({ history, intercept: path => path.includes("cursor=next-page")
+    ? Response.json({ ...historyFixture(), items: [video], totalTitleCount: 2 }) : undefined });
+  const view = await renderClient(history);
+  try {
+    const status = view.container.querySelector<HTMLSelectElement>('select[aria-label="Filter by progress"]')!;
+    await act(async () => { status.value = "watched"; status.dispatchEvent(new Event("change", { bubbles: true })); });
+    await click(buttonByLabel(view.container, "YouTube"));
+    await waitFor(() => assert.ok(view.container.querySelector('[aria-label="Manage Video One"]')));
+    assert.equal(view.container.querySelector('[aria-label="Manage Series One"]'), null);
+    assert.equal(status.value, "watched");
+    assert.equal(buttonByLabel(view.container, "YouTube").getAttribute("aria-checked"), "true");
+    assert.equal(server.calls.filter(call => call.path.includes("cursor=next-page")).length, 1);
+    await click(buttonByLabel(view.container, "Crunchyroll"));
+    assert.equal(view.container.querySelector(".wh-card"), null);
+    assert.match(view.container.textContent ?? "", /No titles match these filters/);
+    assert.equal(server.calls.filter(call => call.body).length, 0);
+  } finally { await unmount(view.root); }
+});
+it("keyboard platform selection preserves the open editor draft", async () => {
+  const server = installServer(); const view = await renderClient();
+  try {
+    await openTitle(view.container); await click(buttonByText(view.container, "Edit"));
+    await markFirstEpisode(view.container);
+    const all = buttonByLabel(view.container, "All platforms"); all.focus();
+    await act(async () => { all.dispatchEvent(new KeyboardEvent("keydown", { key: "End", bubbles: true })); });
+    assert.equal(document.activeElement, buttonByLabel(view.container, "YouTube"));
+    assert.equal(buttonByLabel(view.container, "YouTube").getAttribute("aria-checked"), "true");
+    assert.equal(view.container.querySelector(".wh-card"), null);
+    assert.ok(buttonByLabel(view.container, "Save 1 change"));
+    await act(async () => { buttonByLabel(view.container, "YouTube").dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true })); });
+    assert.equal(document.activeElement, all);
+    assert.ok(view.container.querySelector('[aria-label="Manage Series One"]'));
+    assert.ok(buttonByLabel(view.container, "Save 1 change"));
+    assert.equal(view.container.querySelectorAll('.wh-platforms [tabindex="0"]').length, 1);
+    await click(buttonByText(view.container, "Cancel"));
+    assert.equal(server.calls.filter(call => call.body).length, 0);
+  } finally { await unmount(view.root); }
 });
 it("a title and episode click only select; Cancel sends no write", async () => {
   const server = installServer(); const view = await renderClient();
