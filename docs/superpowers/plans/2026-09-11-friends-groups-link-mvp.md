@@ -45,7 +45,9 @@ The existing room-invitation SQL lifecycle suite passes 50 checks; service-role
 privilege checks pass. Desktop 1440px and mobile 390px inspection confirms fit,
 member search/save, native focus return and link generation. Local screenshots
 are in `/tmp/anidachi-friends-*` and `/tmp/anidachi-friend-link-mobile.png`.
-Staging rollout and authenticated acceptance are pending.
+Staging deployment and authenticated smoke evidence are recorded in the companion
+web PR. Acceptance of a new friendship with two real accounts remains a separate
+user check.
 
 No new secrets, environment settings, shared protocol payloads, extension
 artifacts or live room behavior. The `x-anidachi-social-owner` header is required
@@ -55,10 +57,15 @@ resolves the owner and plan server-side. Existing sent invite recipients are
 unchanged. Test fixtures do not contact or invite real users.
 
 
-Release status: local only. Automatic approval review rejected GitHub push and PR
-creation because it requires explicit confirmation of that remote side effect.
-No code was pushed and no PR was created. The SQL prerequisite is isolated in
-local commit `73c511a1` on `codex/friends-groups-db`; the web consumer stays in
-`codex/friends-groups-mvp`. After authorization, publish the prerequisite PR to
-`AniDachi/anidachi-LP:staging`, wait for migration success, then publish the web
-consumer PR and verify authenticated staging. Main remains a separate promotion.
+## Staging delivery, 2026-09-11
+
+GitHub publication and staging delivery were explicitly authorized by the user.
+The database prerequisite was merged in
+[PR #296](https://github.com/AniDachi/anidachi-LP/pull/296) as `c98ac0a7`.
+[Migration run 34582810318](https://github.com/AniDachi/anidachi-LP/actions/runs/34582810318)
+completed successfully, including the pending-migration dry run and apply step,
+before publishing the web consumer. The consumer is delivered by a separate
+`codex/friends-groups-mvp` PR into staging; its final revision, Vercel deployment
+and authenticated smoke evidence belong in that PR. Main remains a separate
+promotion. No real invitations or friendship mutations are part of automated
+staging inspection.

@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-09-10.
+Last updated: 2026-09-11.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -10,7 +10,10 @@ the same PR.
 
 ## Friends and groups editor, 2026-09-11
 
-Implemented and verified locally; not deployed to staging yet.
+Implementation and local verification are complete. The database prerequisite
+was applied to staging through PR #296 before publishing the web consumer.
+Deployment revisions and acceptance evidence are tracked in the staging PRs
+referenced by the linked plan.
 
 The [approved link-first MVP](superpowers/plans/2026-09-11-friends-groups-link-mvp.md)
 adds compact group rows and a single staged name/member editor in the website.
