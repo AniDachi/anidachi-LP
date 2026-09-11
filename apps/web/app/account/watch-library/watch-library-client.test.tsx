@@ -572,9 +572,6 @@ async function markFirstEpisode(container: HTMLElement) {
   await click([...container.querySelectorAll<HTMLButtonElement>(".wh-episode")].find(button => !button.disabled)!);
   await click(buttonByText(container, "Mark watched"));
 }
-async function openTitleOptions(container: HTMLElement) {
-  await act(async () => { container.querySelector<HTMLElement>('summary[aria-label="Title options"]')!.click(); });
-}
 
 it("SSR includes Free's saved covers with a recording notice and no open editor", () => {
   const html = renderToStaticMarkup(<WatchLibraryClient initialHistory={historyFixture()} initialPreferences={preferencesFixture} initialAccess="plan_required" />);
@@ -734,6 +731,8 @@ it("season selection is indeterminate, scoped to the current season and excludes
   const server = installServer(); const view = await renderClient();
   try {
     await openTitle(view.container); await click(buttonByText(view.container, "Edit"));
+    assert.equal(view.container.querySelector('.wh-inspector details'), null);
+    assert.doesNotMatch(view.container.querySelector('.wh-inspector')!.textContent!, /Reset all title progress/);
     await click(episodeButton(view.container, "Episode 1"));
     assert.equal(view.container.querySelector<HTMLInputElement>(".wh-select-season input")!.indeterminate, true);
     await selectSeason(view.container);
@@ -748,13 +747,9 @@ it("season selection is indeterminate, scoped to the current season and excludes
     await markFirstEpisode(view.container);
     await click(buttonByText(view.container, "Undo"));
     assert.ok(buttonByLabel(view.container, "Save 2 changes"));
-    await openTitleOptions(view.container);
-    await click(buttonByText(view.container, "Reset all title progress"));
-    assert.ok(view.container.querySelector('dialog[aria-label="Reset this title’s progress?"]'));
-    await click(buttonByText(view.container, "Keep progress"));
-    assert.ok(buttonByLabel(view.container, "Save 2 changes"));
-    await openTitleOptions(view.container); await click(buttonByText(view.container, "Reset all title progress"));
-    await click(buttonByText(view.container, "Reset progress"));
+    await chooseSeason(view.container, "season-one");
+    await selectSeason(view.container);
+    await click(buttonByText(view.container, "Clear progress"));
     assert.ok(buttonByLabel(view.container, "Save 1 change"));
     assert.equal(server.calls.filter(call => call.body).length, 0);
     await click(buttonByLabel(view.container, "Save 1 change"));

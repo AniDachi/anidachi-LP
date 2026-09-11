@@ -137,7 +137,6 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
   const [mobile, setMobile] = useState(false);
   const [pendingLink, setPendingLink] = useState<string | null>(null);
   const [pendingSignOut, setPendingSignOut] = useState<null | (() => Promise<void>)>(null);
-  const [resetOpen, setResetOpen] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
   const editButton = useRef<HTMLButtonElement>(null);
   const cancelButton = useRef<HTMLButtonElement>(null);
@@ -307,7 +306,7 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
         <div><span className={`wh-provider wh-provider-${item.provider}`}>{item.provider === "youtube" ? "YouTube" : "Crunchyroll"}</span><h2 dir="auto">{item.title}</h2><p>{titleProgress(item)}</p></div>
       </div>
       <div className={`wh-editor-heading ${editing ? "wh-editor-active" : ""}`}>
-        <div><div className="wh-edit-title"><h3>{editing ? "Edit progress" : "Your progress"}</h3>{editing && !single && <HistoryActions disabled={editLocked}><button type="button" className="wh-danger" onClick={() => setResetOpen(true)}><RotateCcw size={15} />Reset all title progress</button></HistoryActions>}</div>{editing && <span className="wh-edit-count" role="status">{dirty ? `${changeCount} unsaved ${changeCount === 1 ? "change" : "changes"}` : "No changes yet"}</span>}</div>
+        <div><h3>{editing ? "Edit progress" : "Your progress"}</h3>{editing && <span className="wh-edit-count" role="status">{dirty ? `${changeCount} unsaved ${changeCount === 1 ? "change" : "changes"}` : "No changes yet"}</span>}</div>
         {!editing && <button ref={editButton} className="wh-text" disabled={!canEdit || !data || loading || busy} onClick={() => { setEditing(true); setSaved(false); }}><Pencil size={14} /> Edit</button>}
         {editing && <div className="wh-editor-buttons"><button ref={cancelButton} className="wh-text" disabled={saving} onClick={() => { discard(); setConflict(false); setError(null); }}>Cancel</button><button className="wh-primary" aria-label={saving ? "Saving changes" : `Save ${changeCount} ${changeCount === 1 ? "change" : "changes"}`} disabled={editLocked || !dirty} onClick={() => void save()}>{saving ? "Saving…" : "Save"}</button></div>}
       </div>
@@ -362,10 +361,6 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
       </>}
       {!editing && <div className="wh-detail-footer"><button className="wh-text wh-danger" disabled={busy || saving} onClick={() => onNavigate(() => onDelete({ scope: "title", provider: item.provider, titleKey: item.titleKey }))}><Trash2 size={14} /> Remove from history</button><p>Removing this title frees one history slot.</p></div>}
     </dialog>
-    {resetOpen && <ConfirmDialog title="Reset this title’s progress?" onClose={() => setResetOpen(false)}>
-      <p>This clears watched marks and playback positions across all saved seasons. The title stays in your library. Review the changes, then press Save to apply them.</p>
-      <div className="wh-dialog-actions"><button className="wh-button" onClick={() => setResetOpen(false)}>Keep progress</button><button className="wh-primary" onClick={() => { changeEpisodes(data?.episodes ?? [], false); setResetOpen(false); }}>Reset progress</button></div>
-    </ConfirmDialog>}
     {(pendingLink || pendingSignOut) && <ConfirmDialog title="Save before leaving?" onClose={() => { if (!saving) { setPendingLink(null); setPendingSignOut(null); } }}><p>You have unsaved progress changes.</p><div className="wh-dialog-actions">
       <button className="wh-button" disabled={saving} onClick={() => { setPendingLink(null); setPendingSignOut(null); }}>Stay</button><button className="wh-button" disabled={saving} onClick={() => { discard(); if (pendingSignOut) void pendingSignOut(); else window.location.assign(pendingLink!); setPendingLink(null); setPendingSignOut(null); }}>Discard</button>
       <button className="wh-primary" disabled={saving} onClick={async () => { if (await save()) { if (pendingSignOut) await pendingSignOut(); else window.location.assign(pendingLink!); setPendingLink(null); setPendingSignOut(null); } }}>Save & leave</button>
@@ -373,7 +368,7 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
   </>;
 }
 
-export function HistoryActions({ disabled, children, label = "Title options" }: { disabled: boolean; children: ReactNode; label?: string }) {
+export function HistoryActions({ disabled, children, label }: { disabled: boolean; children: ReactNode; label: string }) {
   const ref = useRef<HTMLDetailsElement>(null);
   const close = useCallback((restoreFocus = false) => {
     if (!ref.current?.open) return;
