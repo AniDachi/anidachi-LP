@@ -1268,6 +1268,7 @@ async function runVersionedMediaCase(browser, pageUrl, iceServers) {
     const advanceStarted = Date.now();
     await sleep(1000);
     const after = await Promise.all(pages.map(p => p.evaluate(() => window.AnidachiHarness.diagnostics())));
+    const deltaMs = Date.now() - advanceStarted;
     const advancing = after.every((d,i) => d.stats.peers.every(p => {
       const old = before[i].stats.peers.find(old => old.remoteUserId === p.remoteUserId);
       return (!p.stats?.videoInbound || p.stats.videoInbound.framesDecoded > (old?.stats?.videoInbound?.framesDecoded ?? -1)) && (!p.stats?.audioDecoded || p.stats.audioDecoded.totalSamplesReceived > (old?.stats?.audioDecoded?.totalSamplesReceived ?? -1));
@@ -1307,7 +1308,6 @@ async function runVersionedMediaCase(browser, pageUrl, iceServers) {
     const p95Ms = getP95(ttfm);
     check("complete decoded video first-frame sample", ttfm.length === expectedTtfmSamples, {samples:ttfm.length,expected:expectedTtfmSamples,p95Ms});
     check("decoded video TTFM p95 is below 6s (S3)", p95Ms !== null && p95Ms < TTFM_P95_BUDGET_MS, {samples:ttfm.length,p95Ms,budgetMs:TTFM_P95_BUDGET_MS,boundary:"strictly below"});
-    const deltaMs = Date.now()-advanceStarted;
     receipt.publisherUplink = after.map((d,i)=>({participant:`p${i}`,kbps: d.stats.peers.reduce((n,p)=>{const old=before[i].stats.peers.find(o=>o.remoteUserId===p.remoteUserId); return n+Math.max(0,(p.stats?.audioOutbound?.bytesSent??0)-(old?.stats?.audioOutbound?.bytesSent??0))+Math.max(0,(p.stats?.videoOutbound?.bytesSent??0)-(old?.stats?.videoOutbound?.bytesSent??0));},0)*8/deltaMs})).filter(p=>p.kbps>0);
     receipt.uplinkSampleMs=deltaMs;
     for (const width of [392,320]) for (const i of [0, MEDIA_V2_SIZE-1]) {

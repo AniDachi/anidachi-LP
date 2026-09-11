@@ -97,3 +97,17 @@ The user's previous two-device room test is retained as user-reported baseline
 acceptance, not new instrumented relay/load evidence. No old rooms were ended or
 removed to make validation pass. All 38 root-checkout WIP file hashes independently match the prerelease audit;
 the root HEAD and dirty-file count remain unchanged. They are outside this branch.
+
+The final branch review found a delayed-background-acknowledgement race: an ad's
+queued `ended` could be sampled after main content resumed. The final fix binds
+provider eligibility, content values and playback state to event arrival, then
+checks current authority revision, access and source identity before persistence.
+Real YouTube policy/controller regressions first reproduced the defect and now
+prove no ad completion, genuine same-session continuation, and rejection across
+owner, generation, access/consent epoch, opt-out, lease expiry and source changes.
+Extension TypeScript, 149 focused tests and all 1912 extension tests passed.
+The uplink sample duration now freezes immediately after its byte snapshot;
+a deterministic actual-harness check excludes a subsequent candidate-stats wait.
+All four harness tests passed; unchanged 4/6/15 browser loads were not repeated.
+This is local source verification; scoped re-review, final artifact validation
+and loaded staging acceptance remain separate delivery gates.

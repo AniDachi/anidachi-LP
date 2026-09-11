@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 import { pathToFileURL } from "node:url";
 import { build } from "esbuild";
 import {
@@ -142,4 +143,37 @@ test("p95 is deterministic and relay coverage cannot pass with missing pairs", (
 		relayCount: 0,
 		selectedTypes: [],
 	});
+});
+
+
+test("uplink byte measurement excludes delayed candidate sampling in the actual harness", async () => {
+  const source = await readFile(new URL("./p2p-media-harness.mjs", import.meta.url), "utf8");
+  // Execute the actual measurement block without starting Worker or Chromium.
+  const start = source.indexOf("    const before = diagnostics;");
+  const end = source.indexOf("    for (const width of [392,320])", start);
+  assert.ok(start > 0 && end > start);
+  let clock = 0;
+  const snapshot = (bytes, candidate = false) => ({
+    stats: { peers: [{ remoteUserId: "p1", stats: {
+      audioOutbound: { bytesSent: bytes },
+      ...(candidate ? { candidatePair: { localCandidateType: "host", remoteCandidateType: "host" } } : {}),
+    } }] },
+    videoTtfm: { p1: 100 },
+  });
+  const receipt = {};
+  let snapshots = 0;
+  await runInNewContext(`(async () => {${source.slice(start, end)}})()`, {
+    diagnostics: [snapshot(0), snapshot(0)], receipt,
+    pages: Array.from({ length: 2 }, (_, i) => ({ evaluate: async () => ({
+      ...snapshot(1_000, ++snapshots > 2), videoTtfm: i ? { p0: 100 } : {},
+    }) })),
+    cameras: 1, microphones: 0, MEDIA_V2_SIZE: 2, HARNESS_FORCE_RELAY: false,
+    process: { pid: 42 }, execFileSync: () => "42 1 0 0",
+    Date: { now: () => clock }, sleep: async ms => { clock += ms; },
+    summarizeSelectedCandidatePairs, getP95, TTFM_P95_BUDGET_MS,
+    check: (name, ok) => assert.ok(ok, name),
+  });
+  assert.equal(clock, 1_100, "candidate sampling waited after the byte snapshot");
+  assert.equal(receipt.uplinkSampleMs, 1_000);
+  assert.deepEqual(Array.from(receipt.publisherUplink, row => row.kbps), [8, 8]);
 });

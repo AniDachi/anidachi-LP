@@ -197,7 +197,7 @@ export function createWatchHistoryController(
 		if (cached) apply(cached);
 		if (!allowed()) await refreshAuthority();
 		else void refreshAuthority();
-		await serial(() => capture("heartbeat"));
+		await queueCapture("heartbeat");
 	}
 	async function persist(
 		observation: HistoryObservation,
@@ -267,28 +267,54 @@ export function createWatchHistoryController(
 		}
 		return true;
 	}
-	async function capture(kind: HistoryEventKind) {
+	function queueCapture(kind: HistoryEventKind) {
+		const token = revision;
+		const sample = allowed()
+			? dependencies.getObservation(authority!.preferences)
+			: HISTORY_OBSERVATION_SUSPENDED;
+		// Bind provider eligibility and the content clock to event arrival, before
+		// a background acknowledgement can delay this operation past an ad or seek.
+		const observation = sample && sample !== HISTORY_OBSERVATION_SUSPENDED
+			? structuredClone(sample)
+			: sample;
+		const playing = dependencies.isPlaying() && !dependencies.isSeeking();
+		return serial(() => capture(kind, observation, playing, token));
+	}
+	function sourceIsCurrent(observation: HistoryObservation | null) {
+		const current = dependencies.getObservation(authority!.preferences);
+		return current !== HISTORY_OBSERVATION_SUSPENDED &&
+			(current && observation
+				? observationIdentity(current) === observationIdentity(observation)
+				: current === observation);
+	}
+	async function capture(
+		kind: HistoryEventKind,
+		observation: HistoryObservationResult,
+		playing: boolean,
+		token: number,
+	) {
 		if (disposed) return;
 		if (!allowed()) {
 			reset();
 			if (!disposed && now() >= nextRefreshAt) void refreshAuthority();
 			return;
 		}
-		const observation = dependencies.getObservation(authority!.preferences);
-		if (!allowed()) return;
-		if (observation === HISTORY_OBSERVATION_SUSPENDED) return;
+		// The sample conveys no authority: changed account/lease/consent revisions
+		// invalidate queued work, and current source identity must still match.
+		if (token !== revision || observation === HISTORY_OBSERVATION_SUSPENDED) return;
+		if (!sourceIsCurrent(observation) || !allowed()) return;
 		if (
 			retained &&
 			(!observation ||
 				observationIdentity(retained) !== observationIdentity(observation))
 		) {
 			await persist(retained, "source_change", null, meaningful, meaningful);
+			if (token !== revision || !allowed() || !sourceIsCurrent(observation)) return;
 			reset();
 		}
 		if (!observation || !allowed()) return;
 		retained = observation;
 		dependencies.onObservation?.(observation);
-		const playing = dependencies.isPlaying() && !dependencies.isSeeking();
 		if (
 			playing &&
 			previousTime !== null &&
@@ -321,7 +347,7 @@ export function createWatchHistoryController(
 	return {
 		start,
 		refreshAuthority,
-		observe: (kind) => serial(() => capture(kind)),
+		observe: queueCapture,
 		notePlaybackInteraction: async () => {
 			interaction = true;
 		},
@@ -345,13 +371,13 @@ export function createWatchHistoryController(
 					previous?.accessLease?.access.youtubeConsentEpoch !==
 						input.accessLease?.access.youtubeConsentEpoch);
 			if (!operations && allowed() && (!before || !retained || youtubeChanged))
-				await serial(() => capture("heartbeat"));
+				await queueCapture("heartbeat");
 		},
 		setRoomActive: async (active) => {
 			const leaving = roomActive && !active;
 			roomActive = active;
 			dependencies.onRoomHistoryAuthorityState?.(active ? "ready" : "solo");
-			if (leaving) await serial(() => capture("room_leave"));
+			if (leaving) await queueCapture("room_leave");
 		},
 		// Technical room source authority belongs to the live room path, never capture.
 		setRoomHistoryAuthority: async () => undefined,

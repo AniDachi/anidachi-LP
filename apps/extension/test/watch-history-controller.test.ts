@@ -98,7 +98,8 @@ describe("watch history meaningful-progress controller", () => {
 
     await fixture.controller.start();
 
-    expect(observedPreferences).toEqual([true]);
+    expect(observedPreferences.length).toBeGreaterThan(0);
+    expect(observedPreferences.every(enabled => enabled === true)).toBe(true);
     resolveCanonical({
       ownerUserId: "00000000-0000-4000-8000-000000000001",
       accountGeneration: 1,
@@ -326,6 +327,74 @@ describe("watch history meaningful-progress controller", () => {
       clientSessionKey: "11111111-1111-4111-8111-111111111111",
     });
   });
+
+  it("drops an ad ended queued behind a delayed acknowledgement and resumes genuine content in the same session", async () => {
+    const { fixture, playback } = createDelayedYouTubeFixture();
+    await fixture.controller.start();
+    playback.set({ currentTime: 601, contentTime: 601 });
+    const heartbeat = fixture.controller.observe("heartbeat");
+    await fixture.waitForLocalAttempts(2);
+
+    playback.set({ phase: "interstitial", currentTime: 30, duration: 30 });
+    const adEnded = fixture.controller.observe("ended");
+    playback.set({ phase: "content", currentTime: 602, contentTime: 602, duration: 1_200 });
+    const resumed = fixture.controller.observe("heartbeat");
+    playback.set({ currentTime: 603, contentTime: 603 });
+    fixture.releaseHeldLocal();
+    await Promise.all([heartbeat, adEnded, resumed]);
+    await fixture.controller.observe("pause");
+
+    expect(fixture.local.map(event => [event.kind, event.currentTime, event.duration])).toEqual([
+      ["heartbeat", 600, 1_200], ["heartbeat", 601, 1_200],
+      ["heartbeat", 602, 1_200], ["pause", 603, 1_200],
+    ]);
+    expect(fixture.localMeaningfulSolo).toEqual([false, true, true, true]);
+    expect(fixture.localSyncDecisions).toEqual([[false, false], [true, true], [true, false], [true, true]]);
+    expect(new Set(fixture.local.map(event => event.clientSessionKey)).size).toBe(1);
+    expect(fixture.enqueued.some(event => event.kind === "ended")).toBe(false);
+  });
+
+  it.each(["owner", "generation", "access epoch", "consent epoch", "opt-out", "expired lease", "source"] as const)(
+    "does not replay a queued genuine event after a delayed acknowledgement and %s change",
+    async change => {
+      const { fixture, playback } = createDelayedYouTubeFixture();
+      await fixture.controller.start();
+      playback.set({ currentTime: 601, contentTime: 601 });
+      const heartbeat = fixture.controller.observe("heartbeat");
+      await fixture.waitForLocalAttempts(2);
+      playback.set({ currentTime: 602, contentTime: 602 });
+      const ended = fixture.controller.observe("ended");
+      const next = await youtubePreferences();
+      if (change === "source") {
+        mockLocation("https://www.youtube.com/watch?v=abcdefghijk");
+      } else if (change === "expired lease") {
+        fixture.advance(300_001);
+      } else {
+        if (change === "owner") {
+          next.ownerUserId = "00000000-0000-4000-8000-000000000002";
+          next.accessLease = paidHistoryLease(next.ownerUserId, 1_700_000_000_000);
+        }
+        if (change === "generation") {
+          next.accountGeneration = 2;
+          next.accessLease = paidHistoryLease(next.ownerUserId, 1_700_000_000_000, 2);
+        }
+        if (change === "access epoch") next.accessLease.access.accessEpoch++;
+        if (change === "consent epoch") next.accessLease.access.youtubeConsentEpoch++;
+        if (change === "opt-out") next.preferences.youtubeHistoryEnabled = false;
+        await fixture.controller.applyLocalPreferences(next);
+      }
+      fixture.releaseHeldLocal();
+      await Promise.all([heartbeat, ended]);
+      expect(fixture.local).toHaveLength(2);
+      expect(fixture.local.some(event => event.kind === "ended")).toBe(false);
+      if (change !== "expired lease" && change !== "opt-out") {
+        await fixture.controller.observe("heartbeat");
+        expect(fixture.local.at(-1)).toMatchObject({ kind: "heartbeat", currentTime: 602 });
+        expect(fixture.local.at(-1)?.clientSessionKey).not.toBe(fixture.local[0].clientSessionKey);
+        expect(fixture.localMeaningfulSolo.at(-1)).toBe(false);
+      }
+    },
+  );
 
   it("disposes during an ad with only the last genuine YouTube sample", async () => {
     mockLocation("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
@@ -1253,7 +1322,7 @@ describe("watch history meaningful-progress controller", () => {
     expect(fixture.enqueued.map((event) => [event.kind, event.currentTime])).toEqual([
       ["heartbeat", 11],
       ["ended", 13],
-      ["room_leave", 14],
+      ["room_leave", 13],
     ]);
   });
 
@@ -1477,6 +1546,20 @@ function createFixture(options: {
       expect(localAttempts).toBe(count);
     },
   };
+}
+
+function createDelayedYouTubeFixture() {
+  mockLocation("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+  const playback = createYouTubePlayback({
+    phase: "content", currentTime: 600, contentTime: 600, duration: 1_200,
+  });
+  const fixture = createFixture({
+    holdLocalAt: 2,
+    getProvider: () => "youtube",
+    loadPreferences: youtubePreferences,
+    getObservation: preferences => getYouTubeHistoryObservation({ adapter: playback.adapter, preferences }),
+  });
+  return { fixture, playback };
 }
 
 function youtubePreferences() {
