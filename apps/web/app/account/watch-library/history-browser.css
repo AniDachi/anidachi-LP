@@ -82,6 +82,8 @@ html:has(.account-workspace) { scrollbar-gutter: stable; }
 .wh-edit-actions summary::-webkit-details-marker { display: none; }
 .wh-edit-actions summary[aria-disabled="true"] { opacity: .4; cursor: default; }
 .wh-edit-actions[open] summary { color: #ffad6e; }
+.wh-page-actions .wh-edit-actions summary { width: 36px; min-height: 36px; }
+.wh-page-actions .wh-actions-popover { left: auto; right: 0; z-index: 5; }
 .wh-actions-popover { position: absolute; left: -100px; top: calc(100% + 4px); z-index: 4; width: 240px; max-width: calc(100vw - 40px); padding: 6px; border: 1px solid #ffffff24; border-radius: 13px; background: #1c1b1d; box-shadow: 0 12px 30px #0006; }
 .wh-actions-popover button { display: flex; align-items: center; gap: 9px; width: 100%; min-height: 40px; padding: 9px 10px; border: 0; border-radius: 7px; background: transparent; color: #ded6cc; text-align: left; font: inherit; font-size: 12px; line-height: 1.5; cursor: pointer; }
 .wh-actions-popover button svg { flex-shrink: 0; }
@@ -142,6 +144,8 @@ html:has(.account-workspace) { scrollbar-gutter: stable; }
 .wh-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
 .wh-storage { font-size: 11px; color: #928b84; }
 .wh-storage strong { font-weight: 500; color: #d7c6b3; }
+.wh-storage-counts { display: flex; flex-wrap: wrap; gap: 8px 24px; font-variant-numeric: tabular-nums; }
+.wh-storage-notice { margin-top: 10px; font-size: 12px; line-height: 1.6; }
 @media(min-width:1450px) { .wh-browser.wh-has-detail { grid-template-columns: minmax(0,1fr) 400px; gap: 36px; }.wh-inspector { padding-left: 30px; }.wh-episodes { max-height: 264px; }.wh-episode { height: 56px; } }
 @media(max-width:1099px) { .wh-browser.wh-has-detail { grid-template-columns: minmax(0,1fr); }.wh-inspector { position: fixed; inset: 0 0 0 auto; width: min(460px,100vw); margin: 0; max-height: 100dvh; height: 100dvh; padding: 18px 24px 30px; }.wh-inspector-top { top: -18px; padding-top: 8px; }.wh-editor-active { top: 40px; }.wh-detail-cover { width: 90px; height: 135px; } }
 @media(max-width:600px) { .wh-covers { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px 18px; }.wh-page-heading h1 { font-size: 27px; }.wh-toolbar select { flex: 1; }.wh-search { flex-basis: 100%; }.wh-inspector { width: 100%; border: 0; }.wh-page-actions { gap: 10px; }.wh-page-heading { gap: 12px; }.wh-confirm { padding: 20px; } }
@@ -149,3 +153,4 @@ html:has(.account-workspace) { scrollbar-gutter: stable; }
 @media(max-width:360px) { .wh-platforms button { font-size: 12px; gap: 6px; padding-inline: 6px; }.wh-platform-logo { width: 18px; height: 18px; } }
 @media(prefers-reduced-motion:reduce) { .wh-browser *, .wh-browser *::before, .wh-page-actions * { transition: none !important; scroll-behavior: auto !important; } }
 @media(pointer:coarse) { .wh-button,.wh-primary,.wh-text,.wh-icon,.wh-edit-actions summary,.wh-actions-popover button,.wh-select-season,.wh-selection-actions .wh-button { min-height: 44px; }.wh-selection-count .wh-icon { width: 44px; }.wh-edit-actions summary { width: 44px; }.wh-range-hint { display: none; }.wh-editor-active { top: 58px; } }
+@media(pointer:coarse) { .wh-page-actions .wh-edit-actions summary { min-height: 44px; width: 44px; } }

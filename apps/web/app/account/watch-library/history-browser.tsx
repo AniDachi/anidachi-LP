@@ -11,9 +11,10 @@ import { api, ApiError } from "@/lib/client-api";
 import { WATCH_HISTORY_OWNER_HEADER } from "@/lib/watch-history-owner";
 import { useAccountScrollRestoration, useAccountViewState } from "@/components/account/account-workspace-state";
 
+export type HistoryPlatform = "all" | WatchHistoryItem["provider"];
 type Props = {
   items: WatchHistoryItem[]; owner: string; generation: number; canEdit: boolean;
-  busy: boolean; nextCursor: string | null; loadingMore: boolean; capacity: ReactNode;
+  busy: boolean; nextCursor: string | null; loadingMore: boolean; capacity: ReactNode | ((provider: HistoryPlatform) => ReactNode);
   onLoadMore(): void; onEdited(): Promise<void>; onDraftChange(active: boolean): void;
   captureAccessFailure(): (error: unknown) => boolean;
   onResume(provider: WatchHistoryItem["provider"], url: string, time: number): void;
@@ -23,7 +24,7 @@ const itemId = (item: WatchHistoryItem) => `${item.provider}:${item.titleKey}`;
 export function HistoryBrowser(props: Props) {
   useAccountScrollRestoration(`${props.owner}:library:scroll`);
   const [query, setQuery] = useAccountViewState(`${props.owner}:library:query`, "");
-  const [provider, setProvider] = useAccountViewState(`${props.owner}:library:provider`, "all");
+  const [provider, setProvider] = useAccountViewState<HistoryPlatform>(`${props.owner}:library:provider`, "all");
   const [status, setStatus] = useAccountViewState(`${props.owner}:library:status`, "all");
   const [selected, setSelected] = useAccountViewState<string | null>(`${props.owner}:library:selected`, null);
   const [guard, setGuard] = useState<null | (() => void)>(null);
@@ -58,7 +59,7 @@ export function HistoryBrowser(props: Props) {
           <option value="all">All progress</option><option value="watching">Not finished</option><option value="watched">Watched</option>
         </select>
       </div>
-      {props.capacity}
+      {typeof props.capacity === "function" ? props.capacity(provider) : props.capacity}
       <div className="wh-covers">
         {filtered.map(item => <button key={itemId(item)} className={`wh-card ${selected === itemId(item) ? "wh-card-selected" : ""} ${item.provider === "youtube" ? "wh-video" : ""}`}
           type="button" aria-label={`Manage ${item.title}`} aria-pressed={selected === itemId(item)} onClick={() => navigate(() => setSelected(itemId(item)))}>
@@ -90,7 +91,7 @@ const historyPlatforms = [
   { value: "youtube", label: "YouTube", name: "YouTube" },
 ] as const;
 
-function HistoryPlatformSwitch({ value, onChange }: { value: string; onChange(value: string): void }) {
+function HistoryPlatformSwitch({ value, onChange }: { value: HistoryPlatform; onChange(value: HistoryPlatform): void }) {
   return <div className="wh-platforms" role="radiogroup" aria-label="Filter by platform" data-platform={value}>
     {historyPlatforms.map(platform => <button key={platform.value} type="button" role="radio"
       aria-label={platform.name} aria-checked={value === platform.value} tabIndex={value === platform.value ? 0 : -1}
@@ -306,7 +307,7 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
         <div><span className={`wh-provider wh-provider-${item.provider}`}>{item.provider === "youtube" ? "YouTube" : "Crunchyroll"}</span><h2 dir="auto">{item.title}</h2><p>{titleProgress(item)}</p></div>
       </div>
       <div className={`wh-editor-heading ${editing ? "wh-editor-active" : ""}`}>
-        <div><div className="wh-edit-title"><h3>{editing ? "Edit progress" : "Your progress"}</h3>{editing && !single && <EditorActions disabled={editLocked}><button type="button" className="wh-danger" onClick={() => setResetOpen(true)}><RotateCcw size={15} />Reset all title progress</button></EditorActions>}</div>{editing && <span className="wh-edit-count" role="status">{dirty ? `${changeCount} unsaved ${changeCount === 1 ? "change" : "changes"}` : "No changes yet"}</span>}</div>
+        <div><div className="wh-edit-title"><h3>{editing ? "Edit progress" : "Your progress"}</h3>{editing && !single && <HistoryActions disabled={editLocked}><button type="button" className="wh-danger" onClick={() => setResetOpen(true)}><RotateCcw size={15} />Reset all title progress</button></HistoryActions>}</div>{editing && <span className="wh-edit-count" role="status">{dirty ? `${changeCount} unsaved ${changeCount === 1 ? "change" : "changes"}` : "No changes yet"}</span>}</div>
         {!editing && <button ref={editButton} className="wh-text" disabled={!canEdit || !data || loading || busy} onClick={() => { setEditing(true); setSaved(false); }}><Pencil size={14} /> Edit</button>}
         {editing && <div className="wh-editor-buttons"><button ref={cancelButton} className="wh-text" disabled={saving} onClick={() => { discard(); setConflict(false); setError(null); }}>Cancel</button><button className="wh-primary" aria-label={saving ? "Saving changes" : `Save ${changeCount} ${changeCount === 1 ? "change" : "changes"}`} disabled={editLocked || !dirty} onClick={() => void save()}>{saving ? "Saving…" : "Save"}</button></div>}
       </div>
@@ -372,7 +373,7 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
   </>;
 }
 
-function EditorActions({ disabled, children }: { disabled: boolean; children: ReactNode }) {
+export function HistoryActions({ disabled, children, label = "Title options" }: { disabled: boolean; children: ReactNode; label?: string }) {
   const ref = useRef<HTMLDetailsElement>(null);
   const close = useCallback((restoreFocus = false) => {
     if (!ref.current?.open) return;
@@ -388,8 +389,8 @@ function EditorActions({ disabled, children }: { disabled: boolean; children: Re
   return <details ref={ref} className="wh-edit-actions" onKeyDown={event => {
     if (event.key === "Escape" && ref.current?.open) { event.preventDefault(); event.stopPropagation(); close(true); }
   }} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) close(); }}>
-    <summary aria-label="Title options" title="Title options" aria-disabled={disabled} onClick={event => { if (disabled) event.preventDefault(); }}><Ellipsis size={17} aria-hidden /></summary>
-    <div className="wh-actions-popover" onClick={event => { if ((event.target as Element).closest("button:enabled")) close(true); }}>{children}</div>
+    <summary aria-label={label} title={label} aria-disabled={disabled} onClick={event => { if (disabled) event.preventDefault(); }}><Ellipsis size={17} aria-hidden /></summary>
+    <div className="wh-actions-popover" onClick={event => { if ((event.target as Element).closest<HTMLButtonElement>("button")?.disabled === false) close(true); }}>{children}</div>
   </details>;
 }
 
