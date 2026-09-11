@@ -111,3 +111,13 @@ a deterministic actual-harness check excludes a subsequent candidate-stats wait.
 All four harness tests passed; unchanged 4/6/15 browser loads were not repeated.
 This is local source verification; scoped re-review, final artifact validation
 and loaded staging acceptance remain separate delivery gates.
+
+Scoped re-review additionally reproduced an authority-refresh completion race:
+a Crunchyroll event queued during a pending refresh could acquire the response's
+new generation. Authority application now invalidates queued samples when owner,
+generation, access/consent epoch, consent preference or capture-pause state changes;
+existing session-reset conditions remain unchanged. Deferred-response regressions
+prove rejection across generation/access/owner changes, fresh meaningful progress
+under new authority and same-session continuation for an unchanged refresh.
+The corrected source passed 153 focused tests, extension TypeScript and the full
+1916-test extension suite. Earlier harness and other-plane results were not rerun.

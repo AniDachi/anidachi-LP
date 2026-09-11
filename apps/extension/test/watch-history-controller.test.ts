@@ -716,6 +716,69 @@ describe("watch history meaningful-progress controller", () => {
     expect(fixture.enqueued.some((event) => event.kind === "source_change")).toBe(false);
   });
 
+  it.each(["generation", "access epoch", "owner", "unchanged"] as const)(
+    "fences deferred canonical refresh completion with %s authority",
+    async change => {
+      const owner = "00000000-0000-4000-8000-000000000001";
+      const initial = {
+        ownerUserId: owner,
+        accountGeneration: 1,
+        accessLease: paidHistoryLease(owner, 1_700_000_000_000),
+        preferences: { youtubeHistoryEnabled: false },
+      };
+      let loads = 0;
+      let resolveRefresh!: (value: typeof initial) => void;
+      const fixture = createFixture({
+        getProvider: () => "crunchyroll",
+        holdLocalAt: 2,
+        sessionKeys: ["initial-session", "new-authority-session"],
+        loadPreferences: () => ++loads === 1
+          ? Promise.resolve(initial)
+          : new Promise(resolve => { resolveRefresh = resolve; }),
+      });
+      await fixture.controller.start();
+      fixture.setTime(11);
+      const heartbeat = fixture.controller.observe("heartbeat");
+      await fixture.waitForLocalAttempts(2);
+      const refreshing = fixture.controller.refreshAuthority();
+      fixture.setTime(12);
+      const oldEnded = fixture.controller.observe("ended");
+      const next = structuredClone(initial);
+      if (change === "generation") {
+        next.accountGeneration = 2;
+        next.accessLease = paidHistoryLease(owner, 1_700_000_000_000, 2);
+      }
+      if (change === "access epoch") next.accessLease.access.accessEpoch++;
+      if (change === "owner") {
+        next.ownerUserId = "00000000-0000-4000-8000-000000000002";
+        next.accessLease = paidHistoryLease(next.ownerUserId, 1_700_000_000_000);
+      }
+      resolveRefresh(next);
+      await refreshing;
+      fixture.setTime(13);
+      fixture.releaseHeldLocal();
+      await Promise.all([heartbeat, oldEnded]);
+
+      expect(fixture.local.map(event => [event.kind, event.currentTime])).toEqual([
+        ["heartbeat", 10], ["heartbeat", 11],
+        ...(change === "unchanged" ? [["ended", 12]] : []),
+      ]);
+      await fixture.controller.observe("heartbeat");
+      expect(fixture.localMeaningfulSolo.at(-1)).toBe(change === "unchanged");
+      fixture.setTime(14);
+      await fixture.controller.observe("heartbeat");
+      expect(fixture.localMeaningfulSolo.at(-1)).toBe(true);
+      const expectedKey = change === "unchanged" ? "initial-session" : "new-authority-session";
+      expect(fixture.local.slice(-2).map(event => [
+        event.currentTime, event.accountGeneration, event.clientSessionKey,
+      ])).toEqual([[13, next.accountGeneration, expectedKey], [14, next.accountGeneration, expectedKey]]);
+      if (change !== "unchanged") {
+        expect(fixture.enqueued.at(-1)).toMatchObject({ kind: "heartbeat", currentTime: 14 });
+        expect(fixture.local.some(event => event.kind === "ended")).toBe(false);
+      }
+    },
+  );
+
   it("fails closed during an external YouTube opt-out refresh without a stale upload", async () => {
     let loadCount = 0;
     let resolveRefresh: ((value: {

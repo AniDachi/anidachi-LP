@@ -157,18 +157,23 @@ export function createWatchHistoryController(
 			return;
 		const old = authority;
 		authority = next;
+		const accountChanged = old && (
+			old.ownerUserId !== next.ownerUserId ||
+			old.accountGeneration !== next.accountGeneration ||
+			old.accessLease?.access.accessEpoch !== next.accessLease?.access.accessEpoch
+		);
+		const youtubeChanged = old && (
+			old.accessLease?.access.youtubeConsentEpoch !== next.accessLease?.access.youtubeConsentEpoch ||
+			old.preferences.youtubeHistoryEnabled !== next.preferences.youtubeHistoryEnabled
+		);
+		// A refresh request may leave its old lease usable while it awaits a
+		// response. Invalidate samples at semantic application too, including
+		// those queued after that request started but before its authority arrived.
+		if (old && (accountChanged || youtubeChanged || old.capturePaused !== next.capturePaused))
+			++revision;
 		if (
 			old &&
-			(old.ownerUserId !== next.ownerUserId ||
-				old.accountGeneration !== next.accountGeneration ||
-				old.accessLease?.access.accessEpoch !==
-					next.accessLease?.access.accessEpoch ||
-				(retained?.provider === "youtube" &&
-					(old.accessLease?.access.youtubeConsentEpoch !==
-						next.accessLease?.access.youtubeConsentEpoch ||
-						old.preferences.youtubeHistoryEnabled !==
-							next.preferences.youtubeHistoryEnabled)) ||
-				!allowed())
+			(accountChanged || (retained?.provider === "youtube" && youtubeChanged) || !allowed())
 		)
 			reset();
 	}
