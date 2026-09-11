@@ -7,16 +7,14 @@ import {
   SocialSnapshotSchema,
 } from "@anidachi/protocol";
 import {
-  Check,
   Bell,
   BellOff,
-  Inbox,
   LogIn,
   RefreshCw,
   Settings,
   X,
 } from "lucide-react";
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   accountInboxItemInstanceKey,
   getCachedAccountInboxForUser,
@@ -52,8 +50,6 @@ import { logDebug } from "./debug-log";
 import { PanelAccountTitle } from "./panel-account-title";
 import {
   buildPopupInboxModel,
-  type PopupInboxFriendRequest,
-  type PopupInboxInvite,
   type PopupInboxModel,
 } from "./popup-people-model";
 import {
@@ -62,6 +58,8 @@ import {
   PopupPeoplePanel,
   type PopupPeoplePresentationState,
 } from "./popup-people-panel";
+import { PopupInboxPanel, type InboxInviteAction } from "./popup-inbox-panel";
+export { PopupInboxPanel } from "./popup-inbox-panel";
 import { popupStyles } from "./popup-styles";
 import { PopupWatchHistoryPanel } from "./popup-watch-history";
 import { PopupHistorySettings } from "./popup-history-settings";
@@ -187,6 +185,7 @@ export function PopupApp() {
   const [socialState, setSocialState] = useState<SocialPanelState>(() => signedOutAccountState());
   const [inboxState, setInboxState] = useState<AccountInboxState>(() => signedOutAccountState());
   const [busyInviteId, setBusyInviteId] = useState<string | null>(null);
+  const [busyInviteAction, setBusyInviteAction] = useState<InboxInviteAction | null>(null);
   const [busySocialAction, setBusySocialAction] = useState<PopupSocialActionKey | null>(null);
   const [socialNotice, setSocialNotice] = useState<PopupNotice | null>(null);
   const accountGateRef = useRef(createAccountRequestGate());
@@ -214,6 +213,7 @@ export function PopupApp() {
       socialLoadGateRef.current.begin();
       inboxLoadGateRef.current.begin();
       setBusyInviteId(null);
+      setBusyInviteAction(null);
       setBusySocialAction(null);
       seenInboxSignatureRef.current = null;
       pendingSeenInboxItemsRef.current = new Set();
@@ -431,6 +431,7 @@ export function PopupApp() {
         return;
       }
       setBusyInviteId(inviteId);
+      setBusyInviteAction("join");
       try {
         const tokens = await requestCurrentExtensionSession();
         if (!accountGateRef.current.isCurrent(request)) return;
@@ -455,7 +456,10 @@ export function PopupApp() {
         );
       } finally {
         socialMutationInFlightRef.current = false;
-        if (accountGateRef.current.isCurrent(request)) setBusyInviteId(null);
+        if (accountGateRef.current.isCurrent(request)) {
+          setBusyInviteId(null);
+          setBusyInviteAction(null);
+        }
       }
     },
     [loadInboxForTokens, loadSocialForTokens, transitionToResolvedSession],
@@ -472,6 +476,7 @@ export function PopupApp() {
         return;
       }
       setBusyInviteId(inviteId);
+      setBusyInviteAction("decline");
       try {
         const tokens = await requestCurrentExtensionSession();
         if (!accountGateRef.current.isCurrent(request)) return;
@@ -494,7 +499,10 @@ export function PopupApp() {
         );
       } finally {
         socialMutationInFlightRef.current = false;
-        if (accountGateRef.current.isCurrent(request)) setBusyInviteId(null);
+        if (accountGateRef.current.isCurrent(request)) {
+          setBusyInviteId(null);
+          setBusyInviteAction(null);
+        }
       }
     },
     [loadInboxForTokens, loadSocialForTokens, transitionToResolvedSession],
@@ -932,6 +940,7 @@ export function PopupApp() {
           actionNotice={socialNotice}
           busyFriendRequestActionKey={busySocialAction}
           busyInviteId={busyInviteId}
+          busyInviteAction={busyInviteAction}
           model={inboxModel}
           onAcceptFriendRequest={(friendshipId) => void acceptIncomingFriendRequest(friendshipId)}
           onAcceptInvite={(inviteId) => void acceptInvite(inviteId)}
@@ -998,313 +1007,6 @@ function PopupNavigationButton({
   );
 }
 
-export function PopupInboxPanel({
-  actionNotice = null,
-  busyFriendRequestActionKey,
-  busyInviteId,
-  model,
-  onAcceptFriendRequest,
-  onAcceptInvite,
-  onDeclineFriendRequest,
-  onDeclineInvite,
-  onOpenDashboard,
-  onRefresh,
-  onSignIn,
-  state,
-}: {
-  actionNotice?: PopupNotice | null;
-  busyFriendRequestActionKey: string | null;
-  busyInviteId: string | null;
-  model: PopupInboxModel | null;
-  onAcceptFriendRequest: (friendshipId: string) => void;
-  onAcceptInvite: (inviteId: string) => void;
-  onDeclineFriendRequest: (friendshipId: string) => void;
-  onDeclineInvite: (inviteId: string) => void;
-  onOpenDashboard: () => void;
-  onRefresh: () => void;
-  onSignIn: () => void;
-  state: AccountInboxState;
-}) {
-  const pendingFriendRequests = model?.friendRequests ?? [];
-  const pendingInvites = model?.activeRoomInvites ?? [];
-  const missedInvites = model?.missedRoomInvites ?? [];
-  const actionsDisabled = state.status !== "ready";
-  const showsCachedData =
-    Boolean(model) && (state.status === "loading" || state.status === "error");
-  const inboxActionNotice =
-    actionNotice && isFriendRequestActionKey(actionNotice.actionKey) ? actionNotice : null;
-
-  return (
-    <section className="popup-section">
-      <div className="popup-section-header">
-        <div className="popup-section-title">Inbox</div>
-        <button
-          aria-label="Refresh inbox"
-          className="popup-mini-button"
-          disabled={state.status === "loading"}
-          title="Refresh inbox"
-          type="button"
-          onClick={onRefresh}
-        >
-          <RefreshCw size={13} />
-        </button>
-      </div>
-
-      {state.status === "signed-out" ? (
-        <div className="popup-social-empty">
-          <Inbox size={18} />
-          <span>Sign in to view friend requests and room invites.</span>
-          <button className="popup-primary-button" type="button" onClick={onSignIn}>
-            Sign in
-          </button>
-        </div>
-      ) : null}
-
-      {state.status === "error" && !state.data ? (
-        <div className="popup-social-empty" data-tone="error">
-          <span>{state.error}</span>
-          <button className="popup-primary-button" type="button" onClick={onRefresh}>
-            Retry
-          </button>
-        </div>
-      ) : null}
-
-      {state.status === "loading" && !state.data ? (
-        <div className="popup-empty">Loading inbox...</div>
-      ) : null}
-
-      {showsCachedData ? (
-        <div
-          className="popup-people-status"
-          data-state={state.status === "error" ? "error" : "stale"}
-          role="status"
-        >
-          <span>
-            {state.status === "error"
-              ? `${state.error} Saved inbox data may be out of date.`
-              : "Refreshing inbox. Saved data may be out of date."}
-          </span>
-          {state.status === "error" ? (
-            <button className="popup-secondary-button" type="button" onClick={onRefresh}>
-              Retry
-            </button>
-          ) : null}
-        </div>
-      ) : null}
-
-      <div aria-live="polite" className="popup-social-notice-slot">
-        {inboxActionNotice ? (
-          <div className="popup-social-notice" data-tone={inboxActionNotice.tone} role="status">
-            {inboxActionNotice.text}
-          </div>
-        ) : null}
-      </div>
-
-      {model ? (
-        <div className="popup-inbox-sections">
-          <PopupInboxSection count={pendingFriendRequests.length} label="Friend requests">
-            {pendingFriendRequests.length ? (
-              pendingFriendRequests.map((request) => (
-                <FriendRequestInboxRow
-                  actionsDisabled={actionsDisabled}
-                  busyActionKey={busyFriendRequestActionKey}
-                  key={request.friendshipId}
-                  request={request}
-                  onAccept={() => onAcceptFriendRequest(request.friendshipId)}
-                  onDecline={() => onDeclineFriendRequest(request.friendshipId)}
-                />
-              ))
-            ) : (
-              <div className="popup-inbox-empty">No pending friend requests.</div>
-            )}
-          </PopupInboxSection>
-
-          <PopupInboxSection count={pendingInvites.length} label="Room invites">
-            {pendingInvites.length ? (
-              pendingInvites.map((invite) => (
-                <InviteInboxRow
-                  actionsDisabled={actionsDisabled}
-                  busy={busyInviteId === invite.inviteId}
-                  invite={invite}
-                  key={invite.inviteId}
-                  onAccept={() => onAcceptInvite(invite.inviteId)}
-                  onDecline={() => onDeclineInvite(invite.inviteId)}
-                />
-              ))
-            ) : (
-              <div className="popup-inbox-empty">No pending room invites.</div>
-            )}
-          </PopupInboxSection>
-
-          <PopupInboxSection count={missedInvites.length} label="Missed">
-            {missedInvites.length ? (
-              missedInvites.map((invite) => (
-                <MissedInviteInboxRow invite={invite} key={invite.inviteId} />
-              ))
-            ) : (
-              <div className="popup-inbox-empty">No missed room invites.</div>
-            )}
-          </PopupInboxSection>
-        </div>
-      ) : null}
-
-      <button className="popup-dashboard-button" type="button" onClick={onOpenDashboard}>
-        Open dashboard
-      </button>
-    </section>
-  );
-}
-
-function PopupInboxSection({
-  children,
-  count,
-  label,
-}: {
-  children: ReactNode;
-  count: number;
-  label: string;
-}) {
-  return (
-    <section className="popup-inbox-section" aria-label={label}>
-      <div className="popup-inbox-heading">
-        <span>{label}</span>
-        <span>{count}</span>
-      </div>
-      <div className="popup-inbox-list">{children}</div>
-    </section>
-  );
-}
-
-function FriendRequestInboxRow({
-  actionsDisabled,
-  busyActionKey,
-  onAccept,
-  onDecline,
-  request,
-}: {
-  actionsDisabled: boolean;
-  busyActionKey: string | null;
-  onAccept: () => void;
-  onDecline: () => void;
-  request: PopupInboxFriendRequest;
-}) {
-  const acceptBusy = busyActionKey === `accept-friend:${request.friendshipId}`;
-  const declineBusy = busyActionKey === `decline-friend:${request.friendshipId}`;
-  const busy = acceptBusy || declineBusy;
-  return (
-    <div className="popup-inbox-row">
-      <div className="popup-inbox-main">
-        <ProfileAvatar
-          avatarUrl={request.sender.avatarUrl}
-          displayName={request.sender.displayName}
-        />
-        <span className="popup-social-main">
-          <span>{request.sender.displayName}</span>
-          <span>{request.sender.handle ? `@${request.sender.handle}` : "Wants to be friends"}</span>
-        </span>
-      </div>
-      <div className="popup-inbox-actions">
-        <button
-          aria-label={`Accept friend request from ${request.sender.displayName}`}
-          className="popup-primary-button"
-          disabled={actionsDisabled || busy}
-          type="button"
-          onClick={onAccept}
-        >
-          {acceptBusy ? <RefreshCw size={13} /> : <Check size={13} />}
-          Accept
-        </button>
-        <button
-          aria-label={`Decline friend request from ${request.sender.displayName}`}
-          className="popup-secondary-button"
-          disabled={actionsDisabled || busy}
-          type="button"
-          onClick={onDecline}
-        >
-          {declineBusy ? <RefreshCw size={13} /> : <X size={13} />}
-          Decline
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function InviteInboxRow({
-  actionsDisabled,
-  busy,
-  invite,
-  onAccept,
-  onDecline,
-}: {
-  actionsDisabled: boolean;
-  busy: boolean;
-  invite: PopupInboxInvite;
-  onAccept: () => void;
-  onDecline: () => void;
-}) {
-  return (
-    <div className="popup-inbox-card">
-      <div className="popup-inbox-main">
-        <ProfileAvatar
-          avatarUrl={invite.sender.avatarUrl}
-          displayName={invite.sender.displayName}
-        />
-        <span className="popup-social-main">
-          <span>{invite.roomTitle ?? "Watch room invite"}</span>
-          <span>
-            {invite.targetGroupName ? `${invite.targetGroupName} · ` : ""}
-            From {invite.sender.displayName} · {formatInboxActivity(invite.activityAt)}
-          </span>
-        </span>
-      </div>
-      {invite.message ? <p className="popup-inbox-message">{invite.message}</p> : null}
-      <div className="popup-inbox-actions">
-        <button
-          aria-label={`Join room invite from ${invite.sender.displayName}`}
-          className="popup-primary-button"
-          disabled={actionsDisabled || busy}
-          type="button"
-          onClick={onAccept}
-        >
-          <Check size={13} />
-          Join
-        </button>
-        <button
-          aria-label={`Decline room invite from ${invite.sender.displayName}`}
-          className="popup-secondary-button"
-          disabled={actionsDisabled || busy}
-          type="button"
-          onClick={onDecline}
-        >
-          <X size={13} />
-          Decline
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function MissedInviteInboxRow({ invite }: { invite: PopupInboxInvite }) {
-  return (
-    <div className="popup-inbox-card" data-state="missed">
-      <div className="popup-inbox-main">
-        <ProfileAvatar
-          avatarUrl={invite.sender.avatarUrl}
-          displayName={invite.sender.displayName}
-        />
-        <span className="popup-social-main">
-          <span>{invite.roomTitle ?? "Missed invite"}</span>
-          <span>
-            Missed invite · From {invite.sender.displayName} ·{" "}
-            {formatInboxActivity(invite.activityAt)}
-          </span>
-        </span>
-      </div>
-      {invite.message ? <p className="popup-inbox-message">{invite.message}</p> : null}
-    </div>
-  );
-}
-
 function isPopupPeopleActionKey(value: string | null): value is PopupPeopleActionKey {
   return value === "create-friend-link" || Boolean(value && ["save-group:", "delete-group:", "remove-friend:"].some((prefix) => value.startsWith(prefix)));
 }
@@ -1313,24 +1015,6 @@ function isPopupPeopleActionNotice(
   notice: PopupNotice | null,
 ): notice is PopupNotice & PopupPeopleActionNotice {
   return Boolean(notice && isPopupPeopleActionKey(notice.actionKey));
-}
-
-function isFriendRequestActionKey(value: string): boolean {
-  return value.startsWith("accept-friend:") || value.startsWith("decline-friend:");
-}
-
-function formatInboxActivity(value: string): string {
-  const timestamp = new Date(value).getTime();
-  if (!Number.isFinite(timestamp)) return "recently";
-  const minutes = Math.max(0, Math.floor((Date.now() - timestamp) / 60_000));
-  if (minutes < 1) return "now";
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return new Date(timestamp).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
 }
 
 function ProfileAvatar({

@@ -25,6 +25,21 @@ supplies an owner mismatch fence; established extension requests remain valid.
 Database prerequisites must deploy before these web consumers. Staging acceptance
 and release evidence are recorded in the linked plan.
 
+## Extension Inbox presentation, 2026-09-11
+
+The [Inbox polish plan](superpowers/plans/2026-09-11-extension-inbox-polish.md)
+replaces three always-visible empty sections with one empty state and populated
+Friend requests, Room invites and Missed lists. Active invitations use a quiet
+action card; missed rooms remain visible without Join. Sender/group context and
+action-specific pending feedback match the People drawer. Cached refresh errors
+retain the list while disabling actions. The fixed drawer, durable inbox,
+unread/seen reconciliation, room flow and server contracts are unchanged.
+
+Extension typecheck and 128 test files / 1895 tests passed; independent review
+found no actionable issues. Browser fixtures cover populated/empty/error states,
+long text at 320px and action loading. Loaded-artifact/staging delivery evidence
+is recorded in the plan and PR; no main promotion is included.
+
 ## Extension People editor, 2026-09-11
 
 The [extension People plan](superpowers/plans/2026-09-11-extension-people-mvp.md)

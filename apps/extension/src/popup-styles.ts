@@ -1,3 +1,4 @@
+import { popupInboxStyles } from "./popup-inbox-styles";
 import { popupPeopleStyles } from "./popup-people-styles";
 import { extensionThemeTokens } from "./extension-theme";
 import { popupWatchHistoryStyles } from "./popup-watch-history-styles";
@@ -528,40 +529,6 @@ ${extensionThemeTokens}
     color: rgba(254, 243, 199, 0.94);
   }
 
-  .popup-inbox-card {
-    display: grid;
-    gap: 8px;
-    padding: 9px;
-    border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background:
-      radial-gradient(circle at 0 0, rgba(139, 92, 246, 0.13), transparent 42%),
-      linear-gradient(120deg, rgba(255, 255, 255, 0.054), rgba(255, 255, 255, 0.018)),
-      rgba(14, 16, 30, 0.78);
-  }
-
-  .popup-inbox-main {
-    display: grid;
-    grid-template-columns: 34px minmax(0, 1fr);
-    align-items: center;
-    gap: 9px;
-  }
-
-  .popup-inbox-message {
-    margin: 0;
-    padding: 8px 9px;
-    border-radius: 11px;
-    background: rgba(255, 255, 255, 0.055);
-    color: rgba(255, 255, 255, 0.68);
-    font-size: 11.5px;
-    line-height: 1.35;
-  }
-
-  .popup-inbox-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-  }
 
   .popup-social-avatar {
     width: 34px;
@@ -2303,7 +2270,6 @@ ${extensionThemeTokens}
     border-right-color: transparent;
   }
 
-  .popup-inbox-card,
   .popup-social-empty,
   .popup-empty {
     border-color: rgba(255, 255, 255, 0.1);
@@ -3863,70 +3829,6 @@ ${extensionThemeTokens}
     letter-spacing: 0.12em;
   }
 
-  .popup-inbox-sections,
-  .popup-inbox-section,
-  .popup-inbox-list {
-    display: grid;
-    min-width: 0;
-  }
-
-  .popup-inbox-sections {
-    gap: 12px;
-  }
-
-  .popup-inbox-section {
-    gap: 0;
-  }
-
-  .popup-inbox-heading {
-    display: flex;
-    min-height: 30px;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    color: rgba(255, 255, 255, 0.58);
-    font-size: 10.5px;
-    font-weight: 800;
-  }
-
-  .popup-inbox-heading span:last-child {
-    color: rgba(255, 255, 255, 0.38);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .popup-inbox-row,
-  .popup-inbox-card {
-    display: grid;
-    min-width: 0;
-    min-height: 54px;
-    gap: 8px;
-    padding: 9px 0;
-    border: 0;
-    border-radius: 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.055);
-    background: transparent;
-    box-shadow: none;
-  }
-
-  .popup-inbox-row:hover,
-  .popup-inbox-card:hover {
-    background: rgba(255, 255, 255, 0.025);
-  }
-
-  .popup-inbox-empty {
-    min-height: 46px;
-    display: flex;
-    align-items: center;
-    border-top: 1px solid rgba(255, 255, 255, 0.055);
-    color: rgba(255, 255, 255, 0.48);
-    font-size: 11.5px;
-  }
-
-  .popup-inbox-actions button {
-    min-width: 0;
-  }
-
-  .popup-inbox-actions button:focus-visible,
   .popup-dashboard-button:focus-visible {
     outline: 2px solid rgba(255, 190, 99, 0.86);
     outline-offset: 2px;
@@ -4037,6 +3939,7 @@ ${extensionThemeTokens}
     background: rgba(245, 158, 11, 0.08);
     color: rgba(254, 243, 199, 0.94);
   }
+${popupInboxStyles}
 ${popupPeopleStyles}
 ${popupWatchHistoryStyles}
 `;
