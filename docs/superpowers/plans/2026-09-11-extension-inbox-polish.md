@@ -1,6 +1,7 @@
 # Extension Inbox polish
 
-Status: implementation and local verification complete; staging delivery pending.
+Status: implementation, local checks and loaded staging-artifact verification
+complete. PR checks and staging merge evidence are recorded in the delivery PR.
 User approved improving the drawer Inbox.
 Base: staging `89d1cf55`; isolated from unrelated root worktree changes.
 
@@ -57,3 +58,21 @@ No entrance animation on every navigation, and no automatic room joining.
   cards have no Join/Decline controls. Empty state has no zero-count sections.
 - Fixture browser console: no warnings or errors. Fixture callbacks only;
   real invitation acceptance is not claimed from these checks.
+
+## Loaded staging artifact
+
+Build `939f9f4c-staging-20260911223839` passed staging validation and was loaded
+under the existing staging extension ID in Chrome. Permission sets and extension
+key are unchanged. The previous `6dd848dc-staging-20260911200437` build was
+backed up; backup and copied candidate were verified by file hashes. Only the
+installed staging folder was replaced; public/experiment builds were untouched.
+
+The real account Inbox loaded the new empty state; manual Refresh returned to
+the same ready state without errors. People retained its three accepted friends.
+Watch loaded provider sections and existing Crunchyroll progress (Daemons, 4/22)
+after navigation. The actual popup retained its fixed size. No real invitation
+was sent, accepted or declined, and no friendships/groups/history were edited.
+
+Remaining manual acceptance: receive and act on a real invitation between two
+accounts. Populated UI, callback routing, stale safety and unread convergence
+are covered by fixtures and automated tests, but do not prove live delivery.
