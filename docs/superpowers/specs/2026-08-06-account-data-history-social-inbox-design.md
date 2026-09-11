@@ -727,8 +727,13 @@ canonical server-derived unseen count; actionable counts remain inside the
 Inbox surface.
 
 Rows are deduplicated by user ID before rendering. The popup remains a compact,
-scrollable quick-action surface and always provides an `Open dashboard` escape
-hatch for full management.
+scrollable quick-action surface and provides a quiet website link for full
+management. The September 11 Inbox polish shows only populated Friend requests,
+Room invites and Missed sections, in that order, with one empty state after a
+successful empty response. Missed items remain visible without actions. Cached
+loading/error data is identified as stale and cannot be acted on; pending
+mutations disable duplicate actions and show the selected action in progress.
+See `../plans/2026-09-11-extension-inbox-polish.md` for verification and delivery.
 
 The current monolithic popup component should be split only along domain
 boundaries needed by this work: account sync, resources/history, social/groups,

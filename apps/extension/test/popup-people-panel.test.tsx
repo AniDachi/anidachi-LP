@@ -488,7 +488,7 @@ describe("Popup People integration boundaries", () => {
       />,
     );
 
-    const headings = [...view.container.querySelectorAll(".popup-inbox-heading")].map((heading) =>
+    const headings = [...view.container.querySelectorAll(".inbox-heading")].map((heading) =>
       heading.textContent?.trim(),
     );
     expect(headings).toEqual(["Friend requests1", "Room invites1", "Missed1"]);
@@ -540,8 +540,8 @@ describe("Popup People integration boundaries", () => {
     );
 
     expect(popupInboxBadgeCount(model)).toBe(0);
-    expect(view.container.querySelectorAll(".popup-inbox-row")).toHaveLength(1);
-    expect(view.container.querySelectorAll(".popup-inbox-card")).toHaveLength(1);
+    expect(view.container.querySelectorAll(".inbox-friend")).toHaveLength(1);
+    expect(view.container.querySelectorAll(".inbox-room")).toHaveLength(1);
     await unmount(view.root);
   });
 
@@ -575,7 +575,7 @@ describe("Popup People integration boundaries", () => {
       "Refreshing inbox",
     );
     for (const button of view.container.querySelectorAll<HTMLButtonElement>(
-      ".popup-inbox-actions button",
+      ".inbox-actions button",
     )) {
       expect(button.disabled).toBe(true);
     }
@@ -834,7 +834,7 @@ describe("PopupApp social mutations", () => {
     root = view.root;
 
     await click(await findButton(view.container, "Inbox"));
-    await click(await findButton(view.container, "Open dashboard"));
+    await click(await findButton(view.container, "View on website"));
     await waitFor(() =>
       expect(chrome.tabs.create).toHaveBeenCalledWith({
         url: "http://localhost:3003/account/invites",
