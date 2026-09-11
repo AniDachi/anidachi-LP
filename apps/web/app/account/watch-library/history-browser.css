@@ -55,7 +55,6 @@ html:has(.account-workspace) { scrollbar-gutter: stable; }
 .wh-editor-heading h3 { font-size: 19px; font-weight: 600; letter-spacing: -.02em; }
 .wh-editor-active { position: sticky; top: 50px; z-index: 2; background: #0d0d0f; padding: 8px 0 12px; margin: -8px 0 4px; }
 .wh-editor-active h3 { font-size: 16px; }
-.wh-edit-title { display: flex; align-items: center; gap: 4px; }
 .wh-edit-count { display: block; color: #a59d93; font-size: 11px; margin-top: 4px; font-variant-numeric: tabular-nums; }
 .wh-editor-buttons { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
 .wh-editor-buttons .wh-primary { min-width: 70px; padding-inline: 15px; }

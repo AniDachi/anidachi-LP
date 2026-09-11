@@ -33,8 +33,8 @@ of the September 8 personal-history plan.
   Changing seasons clears only the selection, while staged changes survive.
   An authoritative reload invalidates Undo so it cannot restore stale drafts.
 - Clear progress removes watched marks and resume positions, keeping the title
-  in the library; it is distinct from Remove from history. A confirmed full-title
-  reset remains under Title options. Films and videos use the two explicit
+  in the library; it is distinct from Remove from history. There is no full-title
+  reset menu: clear selected episodes or seasons. Films and videos use the two explicit
   actions directly, without an unnecessary selection step. Playback/removal
   controls are hidden while editing. Changing title, following account links or
   signing out protects staged changes with Save/Discard/Stay; browser unload
