@@ -8,6 +8,20 @@ contain old paths, old domains, or old decisions. When release channels,
 endpoints, branch protection, or store workflow changes, update this document in
 the same PR.
 
+## Friends and groups editor, 2026-09-11
+
+Implemented and verified locally; not deployed to staging yet.
+
+The [approved link-first MVP](superpowers/plans/2026-09-11-friends-groups-link-mvp.md)
+adds compact group rows and a single staged name/member editor in the website.
+New website friend connections use one-time links only; existing pending requests
+remain actionable. Groups remain private owner-owned player invitation lists.
+An additive server-only migration makes group saves and link acceptance atomic,
+rejects stale edits and clears memberships when friendship ends. The website
+supplies an owner mismatch fence; established extension requests remain valid.
+Database prerequisites must deploy before these web consumers. Staging acceptance
+and release evidence are recorded in the linked plan.
+
 ## Account MVP navigation, 2026-09-10
 
 The [approved account workspace](superpowers/specs/2026-09-10-account-mvp-navigation-design.md)

@@ -53,3 +53,12 @@ for `/api/groups/editor` and optional on established APIs; it is a mismatch fenc
 not authentication. Public RPC execution is revoked; the authenticated website
 resolves the owner and plan server-side. Existing sent invite recipients are
 unchanged. Test fixtures do not contact or invite real users.
+
+
+Release status: local only. Automatic approval review rejected GitHub push and PR
+creation because it requires explicit confirmation of that remote side effect.
+No code was pushed and no PR was created. The SQL prerequisite is isolated in
+local commit `73c511a1` on `codex/friends-groups-db`; the web consumer stays in
+`codex/friends-groups-mvp`. After authorization, publish the prerequisite PR to
+`AniDachi/anidachi-LP:staging`, wait for migration success, then publish the web
+consumer PR and verify authenticated staging. Main remains a separate promotion.
