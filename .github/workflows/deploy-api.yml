@@ -20,7 +20,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  production-hold:
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refuse uncoordinated production runtime
+        run: |
+          echo 'Production Worker held: docs/releases/personal-history-mvp/production-35-to-60-transition.md'
+          exit 1
+
   deploy:
+    if: github.ref_name == 'staging'
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
     env:

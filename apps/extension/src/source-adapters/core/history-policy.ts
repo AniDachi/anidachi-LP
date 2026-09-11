@@ -1,6 +1,6 @@
 import type { WatchHistoryPreferences } from "@anidachi/protocol";
-import type { VideoAdapter } from "./types";
 import type { WatchHistoryLocalEvent } from "../../watch-history-outbox";
+import type { VideoAdapter } from "./types";
 
 export type HistoryObservation = {
   identityPending?: WatchHistoryLocalEvent["identityPending"];
@@ -24,6 +24,15 @@ export type HistoryObservation = {
   progress: number;
   catalogState?: "unavailable";
 };
+
+export const HISTORY_OBSERVATION_SUSPENDED = Symbol("history-observation-suspended");
+
+// The sentinel pauses capture while a provider cannot confirm main content.
+// `null` means the supported source is gone and closes the retained session.
+export type HistoryObservationResult =
+  | HistoryObservation
+  | typeof HISTORY_OBSERVATION_SUSPENDED
+  | null;
 
 export type ProviderPlaybackMetadata = {
   provider: "crunchyroll" | "youtube";
@@ -51,7 +60,7 @@ export type HistoryPolicyInput = {
 };
 
 export interface SourceAdapterHistoryPolicy {
-  observe(input: HistoryPolicyInput): HistoryObservation | null;
+  observe(input: HistoryPolicyInput): HistoryObservationResult;
 }
 
 export function isValidHistoryMedia(video: HTMLVideoElement): boolean {

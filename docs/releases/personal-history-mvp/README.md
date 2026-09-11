@@ -1,5 +1,20 @@
 # Personal history MVP staging delivery packet
 
+## September 12 follow-up
+
+The deployment identities and ordered staging steps below are the historical
+September 8 delivery packet, not the current release candidate. Follow the
+[prelaunch remediation plan](../../superpowers/plans/2026-09-12-prelaunch-remediation.md)
+and [verification record](2026-09-12-prelaunch-verification.md)
+for current verification and production preparation. The retained Free contract
+is read/Resume/delete allowed, with new capture and progress editing paid-only.
+Stripe Sandbox cancellation and restoration have now been verified through the
+real website/portal and API; see the
+[cancellation receipt](2026-09-12-sandbox-cancellation-verification.md).
+This does not close LIVE or end-of-period downgrade acceptance.
+
+## September 8 delivery record
+
 Delivered inactive to staging on 2026-09-08 through migration PR
 [#273](https://github.com/AniDachi/anidachi-LP/pull/273) and runtime PR
 [#274](https://github.com/AniDachi/anidachi-LP/pull/274). **Task 10 acceptance remains
@@ -185,9 +200,10 @@ select singleton, policy_version, active from public.personal_history_policy;
 commit;
 ```
 
-After commit independently re-read policy. Verify Free reads/writes deny with
-403, old writer/alias/replay and unsupported room creation return explicit 426,
-new paid own-player writes persist, and delete remains available to Free.
+After commit independently re-read policy. Verify Free can read saved history,
+Resume and delete, while new capture and progress editing deny with 403. Old
+writer/alias/replay and unsupported room creation return explicit 426, and new
+paid own-player writes persist. Never interpret a Free read failure as expected.
 Check Recent People with actual co-presence, both guest tariff directions,
 quota/reservation/reconnect behavior and allowed media reception/publication.
 Record expected 403/426 separately from unexpected increases; 503 is retryable
@@ -212,8 +228,9 @@ stack before restoring it, keeping policy inactive and all additive data intact.
 is a *proposed compatible recovery source*, not yet an operationally accepted
 rollback. Build/deploy it, record recoverable Vercel deployment and Worker version
 IDs plus immutable extension hashes, then rehearse recovery using synthetic
-records with policy true: Free writes/reads still denied, legacy aliases/replays
-terminal, paid personal writes still work, and history/generations/access/consent
+records with policy true: Free read/Resume/delete still allowed, new capture and
+progress editing denied, legacy aliases/replays terminal, paid personal writes
+still work, and history/generations/access/consent
 epochs remain intact across recovery and the subsequent forward fix. An inactive
 re-deploy or source tests alone do not close C04. Perform an active-policy
 rehearsal first on a guarded disposable environment; actual retained staging

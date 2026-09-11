@@ -186,6 +186,13 @@ document.
 
 ## Branch Model
 
+Production delivery currently has an additional
+[35-to-60 history transition gate](releases/personal-history-mvp/production-35-to-60-transition.md).
+The database, Worker and website must be released in the reviewed order after
+preservation and recovery evidence. A staging merge does not execute or unlock
+that transition; existing production deployment controls need separate operator
+verification before a future promotion.
+
 Use this development path:
 
 ```txt
@@ -430,9 +437,10 @@ implementation uses a personal writer independent of host-created sessions and
 a durable access epoch, consent epoch and account-generation fence. The extension
 background is the only extension writer; it observes only eligible own-player
 playback and retains original authority on bounded queued events. Unified
-browse/Resume reuses canonical progress and sticky completion. Downgrade hides
-and stops history without deleting retained server data or capturing a Free
-period for later backfill. Free can still delete all owned history.
+browse/Resume reuses canonical progress and sticky completion. Downgrade stops
+new capture and progress editing without deleting retained server data or
+capturing a Free period for later backfill. Free keeps read, Resume and deletion
+of saved history.
 
 Recent People comes from bounded Worker evidence of actual overlapping connected
 presence, with no title, episode or position. Groups remain private invite lists.

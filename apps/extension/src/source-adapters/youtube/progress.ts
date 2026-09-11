@@ -1,7 +1,8 @@
 import {
+  HISTORY_OBSERVATION_SUSPENDED,
+  type HistoryObservationResult,
   isValidHistoryMedia,
   normalizeHistoryUrl,
-  type HistoryObservation,
   type ProviderPlaybackMetadata,
   type SourceAdapterHistoryPolicy,
 } from "../core/history-policy";
@@ -50,12 +51,19 @@ export const youtubeHistoryPolicy: SourceAdapterHistoryPolicy = {
 export function getYouTubeHistoryObservation(input: {
   adapter: VideoAdapter;
   preferences: { youtubeHistoryEnabled: boolean } | null;
-}): HistoryObservation | null {
+}): HistoryObservationResult {
   const { adapter, preferences } = input;
   if (!preferences?.youtubeHistoryEnabled || adapter.id !== "youtube" || adapter.provider !== "youtube") {
     return null;
   }
+  const playback = adapter.getPlaybackSnapshot();
+  if (playback.phase !== "content") return HISTORY_OBSERVATION_SUSPENDED;
   if (!isValidHistoryMedia(adapter.video)) return null;
+  if (
+    !Number.isFinite(playback.contentTime) ||
+    playback.contentTime < 0 ||
+    playback.contentTime > adapter.video.duration
+  ) return null;
   const sourceUrl = canonicalYouTubeHistoryUrl(location.href);
   if (!sourceUrl) return null;
   const videoId = new URL(sourceUrl).searchParams.get("v");
@@ -78,9 +86,9 @@ export function getYouTubeHistoryObservation(input: {
     seasonNumber: null,
     episodeNumber: null,
     sourceUrl,
-    currentTime: adapter.video.currentTime,
+    currentTime: playback.contentTime,
     duration: adapter.video.duration,
-    progress: adapter.video.currentTime / adapter.video.duration,
+    progress: playback.contentTime / adapter.video.duration,
   };
 }
 
