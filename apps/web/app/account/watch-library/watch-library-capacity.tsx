@@ -7,17 +7,20 @@ import {
 import { useEffect, useState } from "react";
 import { api } from "@/lib/client-api";
 import { WATCH_HISTORY_OWNER_HEADER } from "@/lib/watch-history-owner";
+import type { HistoryPlatform } from "./history-browser";
 
 export function WatchLibraryCapacity({
 	ownerUserId,
 	accountGeneration,
 	revision,
 	recordingAllowed,
+	provider = "all",
 }: {
 	ownerUserId: string;
 	accountGeneration: number;
 	revision: string;
 	recordingAllowed: boolean;
+	provider?: HistoryPlatform;
 }) {
 	const [capacity, setCapacity] = useState<WatchHistoryCapacity | null>(null);
 	useEffect(() => {
@@ -49,40 +52,25 @@ export function WatchLibraryCapacity({
 		capacity.accountGeneration !== accountGeneration
 	)
 		return null;
-	const full = Object.values(capacity.providers).some(
-		(value) => value.used >= value.limit,
+	const providers = (["crunchyroll", "youtube"] as const).filter(
+		key => provider === "all" || key === provider,
 	);
+	const full = providers.filter(key => capacity.providers[key].used >= capacity.providers[key].limit);
+	const name = (key: "crunchyroll" | "youtube") => key === "youtube" ? "YouTube" : "Crunchyroll";
 	return (
 		<section
 			aria-label="History storage"
 			className="wh-storage"
 		>
-			<div className="flex flex-wrap gap-x-6 gap-y-2 tabular-nums">
-				<span>
-					YouTube{" "}
-					<strong className="text-brand-orange">
-						{capacity.providers.youtube.used} /{" "}
-						{capacity.providers.youtube.limit}
-					</strong>{" "}
-					videos
-				</span>
-				<span>
-					Crunchyroll{" "}
-					<strong className="text-brand-orange">
-						{capacity.providers.crunchyroll.used} /{" "}
-						{capacity.providers.crunchyroll.limit}
-					</strong>{" "}
-					titles
-				</span>
+			<div className="wh-storage-counts">
+				{providers.map(key => <span key={key}>
+					{name(key)}{" "}<strong>{capacity.providers[key].used} / {capacity.providers[key].limit}</strong>{" "}
+					{key === "youtube" ? "videos" : "titles"}
+				</span>)}
 			</div>
-			<p
-				className="mt-2 text-xs text-foreground/45"
-				role={full && recordingAllowed ? "status" : undefined}
-			>
-				{full && recordingAllowed
-					? "History is full for resources at their limit. Delete titles below to save new ones. Progress on saved titles keeps updating."
-					: ""}
-			</p>
+			{full.length > 0 && recordingAllowed && <p className="wh-storage-notice" role="status">
+				{full.map(name).join(" and ")} history is full. Delete saved titles to add new ones. Progress on saved titles keeps updating.
+			</p>}
 		</section>
 	);
 }

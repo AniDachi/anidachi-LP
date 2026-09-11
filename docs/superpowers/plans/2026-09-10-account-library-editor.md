@@ -13,6 +13,10 @@ of the September 8 personal-history plan.
 - Show saved titles as cover cards. Search and provider/progress filters operate
   on the library, completing bounded pagination before reporting a full search.
   Quota counters come from the capacity endpoint, not the visible cards.
+- Show only the selected platform's storage counter and capacity warning; All
+  shows both. YouTube recording is controlled in the extension drawer settings.
+  The website header keeps Refresh and a Library options menu containing
+  confirmed Clear all history. Individual title removal stays in the inspector.
 - Open a title in a side inspector on desktop or a modal on smaller screens.
   Seasons and explicitly named specials share a dropdown. Episode 0 stays episode
   0. Display about four episode rows, with an independent scroll area for more.

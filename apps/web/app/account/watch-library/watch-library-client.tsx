@@ -16,17 +16,16 @@ import {
   type WatchHistoryResponse,
   type WatchHistoryTitleEpisodesResponse,
 } from "@anidachi/protocol";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ApiError } from "@/lib/client-api";
 import { WatchLibraryCapacity } from "./watch-library-capacity";
-import { HistoryBrowser } from "./history-browser";
+import { HistoryBrowser, HistoryActions } from "./history-browser";
 
 type Notice = { tone: "success" | "error"; text: string };
 
 export function WatchLibraryClient({
   initialHistory,
-  initialPreferences,
   initialAccess = "allowed",
 }: {
   initialHistory: WatchHistoryResponse;
@@ -37,7 +36,6 @@ export function WatchLibraryClient({
   return (
     <WatchLibraryOwnerClient
       initialHistory={initialHistory}
-      initialPreferences={initialPreferences}
       initialAccess={initialAccess}
       key={ownerGenerationKey}
     />
@@ -46,11 +44,9 @@ export function WatchLibraryClient({
 
 function WatchLibraryOwnerClient({
   initialHistory,
-  initialPreferences,
   initialAccess = "allowed",
 }: {
   initialHistory: WatchHistoryResponse;
-  initialPreferences: WatchHistoryPreferencesResponse;
   initialAccess?: "allowed" | "plan_required";
 }) {
   const [accessState, setAccessState] = useState<string>(initialAccess);
@@ -58,7 +54,6 @@ function WatchLibraryOwnerClient({
   const [history, setHistory] = useState(initialHistory);
   const loadedTitleCount = useRef(initialHistory.items.length);
   loadedTitleCount.current = history.items.length;
-  const [preferences, setPreferences] = useState(initialPreferences);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [busyAction, setBusyAction] = useState<string | null>(null);
@@ -138,7 +133,6 @@ function WatchLibraryOwnerClient({
       if (finalAccess.accountGeneration !== access.accountGeneration || finalAccess.accessEpoch !== access.accessEpoch || nextHistory.meta.accountGeneration !== finalAccess.accountGeneration) throw new ApiError("History access changed during the request", "HISTORY_ACCESS_CHANGED", 409);
       if (!current()) return;
       setHistory(nextHistory);
-      setPreferences(nextPreferences);
     } catch (error) {
       if (current()) {
         hideInaccessible(error);
@@ -183,32 +177,6 @@ function WatchLibraryOwnerClient({
       if (current()) setLoadingMore(false);
     }
   }, [history, loadingMore, ownerUserId, hideInaccessible]);
-
-  const updateYoutubePreference = useCallback(async () => {
-    if (busyAction) return;
-    const current = () => mounted.current;
-    const revision = operationRevision.current;
-    setBusyAction("preferences");
-    setNotice(null);
-    try {
-      const next = parseOwnedPreferences(
-        await api<unknown>("/api/watch-history/v3/preferences", {
-          method: "PATCH",
-          headers: { [WATCH_HISTORY_OWNER_HEADER]: ownerUserId },
-          body: JSON.stringify({ youtubeHistoryEnabled: !preferences.preferences.youtubeHistoryEnabled }),
-        }),
-        ownerUserId,
-      );
-      if (current()) setPreferences(next);
-    } catch (error) {
-      if (current()) {
-        if (operationRevision.current === revision) hideInaccessible(error);
-        setNotice({ tone: "error", text: errorMessage(error, "Could not update history settings") });
-      }
-    } finally {
-      if (current()) setBusyAction(null);
-    }
-  }, [busyAction, ownerUserId, preferences.preferences.youtubeHistoryEnabled, hideInaccessible]);
 
   const deleteHistory = useCallback(async (target: WatchHistoryDeleteScope) => {
     if (busyAction || mutationInFlight.current || !window.confirm(deleteConfirmation(target))) return;
@@ -300,9 +268,10 @@ function WatchLibraryOwnerClient({
       <header className="wh-page-heading">
         <div><h1>Watch Library</h1><p>Your progress, all in one place.</p></div>
         <div className="wh-page-actions">
-          <button aria-pressed={preferences.preferences.youtubeHistoryEnabled} className="wh-button" disabled={Boolean(busyAction) || editorDirty} onClick={() => void updateYoutubePreference()} type="button">YouTube history: {preferences.preferences.youtubeHistoryEnabled ? "On" : "Off"}</button>
           <button className="wh-icon" aria-label="Refresh history" disabled={loading || Boolean(busyAction) || editorDirty} onClick={() => void refresh()} type="button"><RefreshCw size={16} aria-hidden /></button>
-          <button className="wh-text wh-danger" disabled={Boolean(busyAction) || editorDirty} onClick={() => void deleteHistory({ scope: "all" })} type="button">{busyAction === "delete:all" ? "Clearing..." : "Clear history"}</button>
+          <HistoryActions label="Library options" disabled={Boolean(busyAction) || editorDirty}>
+            <button className="wh-danger" disabled={Boolean(busyAction) || editorDirty} onClick={() => void deleteHistory({ scope: "all" })} type="button"><Trash2 size={15} aria-hidden />Clear all history</button>
+          </HistoryActions>
         </div>
       </header>
       {accessState === "plan_required" && <p className="wh-hint" role="status">Your saved history stays here. Plus or Pro unlocks recording and progress editing. <a href="/pricing" className="text-brand-orange">View plans</a></p>}
@@ -311,7 +280,7 @@ function WatchLibraryOwnerClient({
         <HistoryBrowser key={`${ownerUserId}:${history.meta.accountGeneration}`} items={history.items} owner={ownerUserId} generation={history.meta.accountGeneration}
           canEdit={accessState === "allowed"} busy={Boolean(busyAction)} nextCursor={history.nextCursor} loadingMore={loadingMore}
           captureAccessFailure={captureDetailAccessFailure} onLoadMore={loadMore} onEdited={refresh} onDraftChange={onDraftChange} onDelete={deleteHistory} onResume={resume}
-          capacity={<WatchLibraryCapacity ownerUserId={ownerUserId} accountGeneration={history.meta.accountGeneration}
+          capacity={provider => <WatchLibraryCapacity provider={provider} ownerUserId={ownerUserId} accountGeneration={history.meta.accountGeneration}
             revision={`${history.generatedAt}:${history.totalTitleCount}`} recordingAllowed={accessState === "allowed"} />} />
       )}
     </div>
@@ -551,7 +520,7 @@ function deleteScopeKey(target: WatchHistoryDeleteScope): string {
 }
 
 function deleteConfirmation(target: WatchHistoryDeleteScope): string {
-  if (target.scope === "all") return "Clear your AniDachi watch history?";
+  if (target.scope === "all") return "Clear all your AniDachi watch history on YouTube and Crunchyroll? This cannot be undone.";
   if (target.scope === "title") return "Delete this title from your watch history?";
   return "Delete this episode from your watch history?";
 }

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { afterEach, it } from "node:test";
 import type {
   WatchHistoryEditRequest,
+  WatchHistoryDeleteScope,
   WatchHistoryItem,
   WatchHistoryPreferencesResponse,
   WatchHistoryResponse,
@@ -538,11 +539,14 @@ function installServer(options: { plan?: "allowed" | "plan_required"; history?: 
     }
     if (path.endsWith("/access")) return Response.json(accessFixture(options.plan));
     if (path.endsWith("/preferences")) return Response.json({ ...preferencesFixture, preferences: { youtubeHistoryEnabled: init?.method === "PATCH" } });
-    if (path.endsWith("/capacity")) return Response.json(capacityFixture(history.items.length ? 200 : 199));
+    if (path.endsWith("/capacity")) return Response.json(capacityFixture(history.items.length ? 200 : 199, OWNER_ID, history.meta.accountGeneration));
     if (path.includes("?limit=24")) return Response.json(history);
     if (path.endsWith("/delete")) {
-      history = { ...history, items: [], totalTitleCount: 0, nextCursor: null };
-      return Response.json(deletionAck({ scope: "title", provider: "crunchyroll", titleKey: "series-one" }));
+      const target = (JSON.parse(String(init?.body)) as { target: WatchHistoryDeleteScope }).target;
+      const generation = history.meta.accountGeneration + (target.scope === "all" ? 1 : 0);
+      history = { ...history, meta: { ...history.meta, accountGeneration: generation }, items: [], totalTitleCount: 0, nextCursor: null };
+      return Response.json({ ...deletionAck({ scope: "title", provider: "crunchyroll", titleKey: "series-one" }), target,
+        meta: { ...history.meta }, accountGeneration: generation });
     }
     throw Error(`Unexpected request: ${path}`);
   };
@@ -569,19 +573,65 @@ async function markFirstEpisode(container: HTMLElement) {
   await click(buttonByText(container, "Mark watched"));
 }
 async function openTitleOptions(container: HTMLElement) {
-  await act(async () => { container.querySelector<HTMLElement>(".wh-edit-actions summary")!.click(); });
+  await act(async () => { container.querySelector<HTMLElement>('summary[aria-label="Title options"]')!.click(); });
 }
 
 it("SSR includes Free's saved covers with a recording notice and no open editor", () => {
   const html = renderToStaticMarkup(<WatchLibraryClient initialHistory={historyFixture()} initialPreferences={preferencesFixture} initialAccess="plan_required" />);
   assert.match(html, /Manage Series One/); assert.match(html, /Plus or Pro unlocks recording/);
-  assert.doesNotMatch(html, /wh-inspector/); assert.match(html, /Clear history/);
+  assert.doesNotMatch(html, /wh-inspector/); assert.match(html, /Clear all history/);
+  assert.doesNotMatch(html, /YouTube history:|aria-label="Track YouTube history"/);
+  assert.match(html, /aria-label="Library options"/);
 });
 it("SSR refuses unavailable access and an access change during the read", async () => {
   let reads = 0;
   await assert.rejects(loadWatchLibraryData(OWNER_ID, { access: async () => { throw Error("HISTORY_ACCESS_UNAVAILABLE"); }, preferences: async () => preferencesFixture, history: async () => { reads++; return historyFixture(); } }), /UNAVAILABLE/);
   assert.equal(reads, 0); let checks = 0;
   await assert.rejects(loadWatchLibraryData(OWNER_ID, { access: async () => accessFixture(++checks === 1 ? "allowed" : "plan_required"), preferences: async () => preferencesFixture, history: async () => historyFixture() }), /CHANGED/);
+});
+it("storage counts and full warnings follow the platform without refetching or counting visible cards", async () => {
+  const server = installServer(); const view = await renderClient();
+  try {
+    const storage = () => view.container.querySelector('[aria-label="History storage"]')?.textContent ?? "";
+    await waitFor(() => assert.match(storage(), /200 \/ 200/));
+    await click(buttonByLabel(view.container, "YouTube"));
+    assert.match(storage(), /YouTube 12 \/ 100 videos/);
+    assert.doesNotMatch(storage(), /Crunchyroll|history is full/);
+    assert.equal(view.container.querySelector(".wh-card"), null);
+    await click(buttonByLabel(view.container, "Crunchyroll"));
+    assert.match(storage(), /Crunchyroll 200 \/ 200 titles/);
+    assert.match(storage(), /Crunchyroll history is full/);
+    assert.doesNotMatch(storage(), /YouTube/);
+    await click(buttonByLabel(view.container, "All platforms"));
+    assert.match(storage(), /YouTube 12 \/ 100 videos/);
+    assert.match(storage(), /Crunchyroll 200 \/ 200 titles/);
+    assert.equal(server.calls.filter(call => call.path.endsWith("/capacity")).length, 1);
+    assert.equal(server.calls.filter(call => call.body).length, 0);
+  } finally { await unmount(view.root); }
+});
+it("bulk clearing stays in Library options and requires confirmation on Free", async () => {
+  const server = installServer({ plan: "plan_required" });
+  const view = await renderClient(historyFixture(), preferencesFixture, "plan_required");
+  try {
+    const options = view.container.querySelector<HTMLDetailsElement>('.wh-page-actions details')!;
+    assert.equal(options.open, false);
+    await act(async () => { options.querySelector("summary")!.click(); });
+    assert.equal(options.open, true);
+    let message = "";
+    testWindow.confirm = value => { message = value ?? ""; return false; };
+    await click(buttonByText(view.container, "Clear all history"));
+    assert.match(message, /YouTube and Crunchyroll/);
+    assert.equal(server.calls.filter(call => call.body).length, 0);
+    assert.equal(options.open, false);
+    await act(async () => { options.querySelector("summary")!.click(); });
+    testWindow.confirm = () => true;
+    await click(buttonByText(view.container, "Clear all history"));
+    await waitFor(() => assert.equal(view.container.querySelector(".wh-card"), null));
+    const writes = server.calls.filter(call => call.body);
+    assert.equal(writes.length, 1);
+    assert.deepEqual(writes[0].body?.target, { scope: "all" });
+    assert.equal(writes[0].headers.get(WATCH_HISTORY_OWNER_HEADER), OWNER_ID);
+  } finally { await unmount(view.root); }
 });
 it("platform switching completes pagination and keeps the progress filter", async () => {
   const history = { ...historyFixture(), nextCursor: "next-page", totalTitleCount: 2 };
@@ -610,6 +660,7 @@ it("keyboard platform selection preserves the open editor draft", async () => {
   try {
     await openTitle(view.container); await click(buttonByText(view.container, "Edit"));
     await markFirstEpisode(view.container);
+    assert.equal(view.container.querySelector('summary[aria-label="Library options"]')?.getAttribute("aria-disabled"), "true");
     const all = buttonByLabel(view.container, "All platforms"); all.focus();
     await act(async () => { all.dispatchEvent(new KeyboardEvent("keydown", { key: "End", bubbles: true })); });
     assert.equal(document.activeElement, buttonByLabel(view.container, "YouTube"));
@@ -830,7 +881,7 @@ it("deletion refreshes server capacity and retains privacy actions on Free", asy
     await waitFor(() => assert.match(view.container.textContent ?? "", /199 \/ 200/));
     assert.doesNotMatch(view.container.textContent ?? "", /Series One/);
     assert.equal(server.calls.filter(call => call.path.endsWith("/delete")).length, 1);
-    assert.equal(buttonByText(view.container, "Clear history").disabled, false);
+    assert.equal(buttonByText(view.container, "Clear all history").disabled, false);
   } finally { await unmount(view.root); }
 });
 it("old root responses cannot resurrect a deleted title", async () => {
