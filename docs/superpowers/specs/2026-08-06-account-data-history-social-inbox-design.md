@@ -689,8 +689,8 @@ Popup responsibilities:
 
 - recent resources and resume actions;
 - recent solo/shared sessions;
-- accepted friends and contextual recent-people discovery;
-- lightweight group creation, selection, and invite targeting;
+- accepted friends and one-time friend links;
+- private group creation, editing, selection, and invite targeting;
 - pending inbox actions;
 - current server-derived counts and plan-limit feedback;
 - offline, stale, loading, empty, syncing, and error states.
@@ -709,16 +709,17 @@ Watch | People | Inbox
 Friends | Groups
 ```
 
-The `Friends` mode is the default. It shows accepted friends first, then a
-compact `Watched with recently` section only when eligible recent people exist.
-The recent section is contextual discovery, so it disappears entirely when
-empty instead of leaving an empty navigation destination. Incoming friend
+The `Friends` mode is the default. The September 11 link-only MVP amendment
+replaces recent-people discovery with accepted-friend search and a one-time
+invitation link dialog, matching the website. Incoming friend
 requests remain actionable in `Inbox`; outgoing request status does not create
 another popup subsection.
 
-The `Groups` mode shows personal groups and supports only quick creation,
-selection, and invite use. Rename, archive, bulk membership editing, limits,
-and other full management belong to the web account.
+The `Groups` mode shows private owner-owned lists. The September 11 extension
+amendment adds a compact modal for name and membership editing with atomic
+save, cancel and confirmed deletion, matching the website. Group invitations
+still use the player pill. This does not introduce shared group history.
+See `../plans/2026-09-11-extension-people-mvp.md` for delivery and validation.
 
 The `People` top-level tab has no aggregate numeric badge. Adding friend and
 group counts together is not a meaningful people count. `Inbox` shows the

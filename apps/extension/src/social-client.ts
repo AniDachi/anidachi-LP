@@ -63,6 +63,19 @@ export interface CreateFriendGroupInput {
   clientRequestId?: string;
 }
 
+export interface SaveFriendGroupInput {
+  groupId: string;
+  name: string;
+  memberIds: string[];
+  create: boolean;
+  expectedUpdatedAt: string | null;
+}
+
+export interface FriendInviteLink {
+  url: string;
+  expiresAt: string;
+}
+
 export interface UpdateFriendGroupInput {
   groupId: string;
   name: string;
@@ -74,6 +87,12 @@ export interface FriendGroupMemberInput {
 }
 
 export type SocialHttpMessage =
+  | { type: typeof SOCIAL_HTTP_MESSAGE_TYPE; command: "save-group";
+      accessToken: string; ownerUserId: string; input: SaveFriendGroupInput }
+  | { type: typeof SOCIAL_HTTP_MESSAGE_TYPE; command: "create-friend-link";
+      accessToken: string; ownerUserId: string }
+  | { type: typeof SOCIAL_HTTP_MESSAGE_TYPE; command: "remove-friend";
+      accessToken: string; ownerUserId: string; userId: string }
   | {
       type: typeof SOCIAL_HTTP_MESSAGE_TYPE;
       command: "list-social-directory";
@@ -139,6 +158,8 @@ export type SocialHttpMessage =
     };
 
 export type SocialHttpMessageResponse =
+  | { ok: true; inviteLink: FriendInviteLink }
+  | { ok: true; removedUserId: string }
   | { ok: true; directory: SocialDirectory }
   | { ok: true; targets: InviteTargets }
   | { ok: true; invite: RoomInvite }
@@ -311,6 +332,12 @@ export function isSocialHttpMessage(value: unknown): value is SocialHttpMessage 
   const message = value as Partial<SocialHttpMessage>;
   if (message.type !== SOCIAL_HTTP_MESSAGE_TYPE || typeof message.accessToken !== "string") {
     return false;
+  }
+  if (message.command === "save-group" || message.command === "create-friend-link" || message.command === "remove-friend") {
+    if (!isUuid(message.ownerUserId) || !message.accessToken.trim()) return false;
+    if (message.command === "save-group") return isSaveFriendGroupInput(message.input);
+    if (message.command === "remove-friend") return isUuid(message.userId);
+    return true;
   }
   if (message.command === "list-social-directory" || message.command === "list-invite-targets") {
     return true;
@@ -793,6 +820,16 @@ export async function handleSocialHttpMessage(
   message: SocialHttpMessage,
 ): Promise<SocialHttpMessageResponse> {
   try {
+    if (message.command === "save-group") {
+      return { ok: true, group: await saveFriendGroupFromApi(message.accessToken, message.ownerUserId, message.input) };
+    }
+    if (message.command === "create-friend-link") {
+      return { ok: true, inviteLink: await createFriendInviteLinkFromApi(message.accessToken, message.ownerUserId) };
+    }
+    if (message.command === "remove-friend") {
+      await removeFriendFromApi(message.accessToken, message.ownerUserId, message.userId);
+      return { ok: true, removedUserId: message.userId };
+    }
     if (message.command === "list-social-directory") {
       return { ok: true, directory: await listSocialDirectoryFromApi(message.accessToken) };
     }
@@ -1066,4 +1103,88 @@ export async function declineRoomInvite(
 function responseField(value: unknown, key: string): unknown {
   if (!value || typeof value !== "object" || !(key in value)) return undefined;
   return (value as Record<string, unknown>)[key];
+}
+
+function isUuid(value: unknown): value is string {
+  return typeof value === "string" && UUID_PATTERN.test(value);
+}
+
+export function isSaveFriendGroupInput(value: unknown): value is SaveFriendGroupInput {
+  if (!value || typeof value !== "object") return false;
+  const input = value as Partial<SaveFriendGroupInput>;
+  return isUuid(input.groupId) && typeof input.name === "string" &&
+    input.name.trim().length > 0 && input.name.trim().length <= 80 &&
+    Array.isArray(input.memberIds) && input.memberIds.length <= 100 && input.memberIds.every(isUuid) &&
+    typeof input.create === "boolean" && (input.create
+      ? input.expectedUpdatedAt === null
+      : typeof input.expectedUpdatedAt === "string" && Number.isFinite(Date.parse(input.expectedUpdatedAt)));
+}
+
+function ownerHeaders(accessToken: string, ownerUserId: string): Headers {
+  if (!isUuid(ownerUserId)) throw new Error("Reload this account before saving.");
+  const headers = new Headers(createWebsiteRoomHeaders(accessToken));
+  headers.set("x-anidachi-social-owner", ownerUserId);
+  return headers;
+}
+
+function parseFriendInviteLink(value: unknown): FriendInviteLink {
+  const link = value as Partial<FriendInviteLink> | null;
+  try {
+    if (typeof link?.url !== "string" || typeof link.expiresAt !== "string" || !Number.isFinite(Date.parse(link.expiresAt))) throw new Error();
+    const url = new URL(link.url);
+    if (url.origin !== new URL(WEB_HTTP_BASE).origin || url.username || url.password ||
+      !/^\/friend\/invite\/[a-zA-Z0-9_-]+$/.test(url.pathname) || url.search || url.hash) throw new Error();
+    return { url: url.toString(), expiresAt: link.expiresAt };
+  } catch {
+    throw new RoomApiError(INVALID_ACCOUNT_RESPONSE_MESSAGE, "INVALID_ACCOUNT_RESPONSE");
+  }
+}
+
+export async function saveFriendGroupFromApi(accessToken: string, ownerUserId: string, input: SaveFriendGroupInput): Promise<FriendGroup> {
+  if (!isSaveFriendGroupInput(input)) throw new Error("Check the group name and selected friends.");
+  const response = await fetch(new URL("/api/groups/editor", WEB_HTTP_BASE), {
+    method: "POST", headers: ownerHeaders(accessToken, ownerUserId), body: JSON.stringify(input),
+  });
+  if (!response.ok) throw await socialHttpError(response, "Could not save group");
+  const group = parseSocialContract(FriendGroupSchema, responseField(await decodeSocialAccountResponse(response, "saved group"), "group"), "saved group");
+  if (group.id !== input.groupId) throw new RoomApiError(INVALID_ACCOUNT_RESPONSE_MESSAGE, "INVALID_ACCOUNT_RESPONSE");
+  return group;
+}
+
+export async function createFriendInviteLinkFromApi(accessToken: string, ownerUserId: string): Promise<FriendInviteLink> {
+  const response = await fetch(new URL("/api/friends/invite-links", WEB_HTTP_BASE), {
+    method: "POST", headers: ownerHeaders(accessToken, ownerUserId),
+  });
+  if (!response.ok) throw await socialHttpError(response, "Could not create invitation link");
+  return parseFriendInviteLink(responseField(await decodeSocialAccountResponse(response, "friend link"), "inviteLink"));
+}
+
+export async function removeFriendFromApi(accessToken: string, ownerUserId: string, userId: string): Promise<void> {
+  if (!isUuid(userId)) throw new Error("Invalid friend");
+  const response = await fetch(new URL(`/api/friends/${encodeURIComponent(userId)}`, WEB_HTTP_BASE), {
+    method: "DELETE", headers: ownerHeaders(accessToken, ownerUserId),
+  });
+  if (!response.ok) throw await socialHttpError(response, "Could not remove friend");
+}
+
+export async function saveFriendGroup(accessToken: string, ownerUserId: string, input: SaveFriendGroupInput): Promise<FriendGroup> {
+  const response = assertSocialHttpResponse(await sendSocialHttpMessage({ type: SOCIAL_HTTP_MESSAGE_TYPE, command: "save-group", accessToken, ownerUserId, input }));
+  if (!response.ok) throw socialBridgeError(response);
+  if (!("group" in response)) throw new Error("Social bridge response is missing group");
+  const group = parseSocialContract(FriendGroupSchema, response.group, "saved group bridge");
+  if (group.id !== input.groupId) throw new RoomApiError(INVALID_ACCOUNT_RESPONSE_MESSAGE, "INVALID_ACCOUNT_RESPONSE");
+  return group;
+}
+
+export async function createFriendInviteLink(accessToken: string, ownerUserId: string): Promise<FriendInviteLink> {
+  const response = assertSocialHttpResponse(await sendSocialHttpMessage({ type: SOCIAL_HTTP_MESSAGE_TYPE, command: "create-friend-link", accessToken, ownerUserId }));
+  if (!response.ok) throw socialBridgeError(response);
+  if (!("inviteLink" in response)) throw new Error("Social bridge response is missing invitation link");
+  return parseFriendInviteLink(response.inviteLink);
+}
+
+export async function removeFriend(accessToken: string, ownerUserId: string, userId: string): Promise<void> {
+  const response = assertSocialHttpResponse(await sendSocialHttpMessage({ type: SOCIAL_HTTP_MESSAGE_TYPE, command: "remove-friend", accessToken, ownerUserId, userId }));
+  if (!response.ok) throw socialBridgeError(response);
+  if (!("removedUserId" in response) || response.removedUserId !== userId) throw new Error("Social bridge response is missing removed friend");
 }
