@@ -387,6 +387,13 @@ distributed as the staging candidate.
 
 ## Development Flow
 
+The September 12 [production history transition hold](releases/personal-history-mvp/production-35-to-60-transition.md)
+is an additional release gate: production DB/Worker/Web delivery needs a
+separately reviewed preservation procedure and explicit unlock. Do not treat a
+normal main merge as permission to apply the pending history reset. Staging
+delivery continues normally. Source guards do not prove existing production
+deployments or external Vercel promotion routes are already frozen.
+
 Normal feature flow:
 
 1. Start from `staging`.
@@ -661,9 +668,10 @@ are the current target; shared friend/group progress proposals are deferred.
 
 The extension observes its user's eligible playback and reports bounded
 checkpoints through its background writer. Solo and room playback feed one
-personal history, available only on the user's own Plus/Pro plan. A paid host
-does not give Free guests history access. A paid guest's personal write does
-not depend on host history. Room synchronization must continue independently
+personal history. New capture and progress editing require the user's own
+Plus/Pro plan; Free retains read, Resume and deletion of saved history. A paid
+host does not give Free guests capture or editing access. A paid guest's personal
+write does not depend on host history. Room synchronization must continue independently
 of personal-history access or failures.
 
 Groups remain private recipient lists for existing invitations. Recent People

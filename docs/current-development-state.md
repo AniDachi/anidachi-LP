@@ -1,12 +1,41 @@
 # Current Development State
 
-Last updated: 2026-09-11.
+Last updated: 2026-09-12.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
 contain old paths, old domains, or old decisions. When release channels,
 endpoints, branch protection, or store workflow changes, update this document in
 the same PR.
+
+## Prelaunch remediation, 2026-09-12
+
+The [remediation plan](superpowers/plans/2026-09-12-prelaunch-remediation.md)
+tracks the final ad-history, Sandbox cancellation, production preservation and
+room-harness checks. It starts from staging `0b2c4e84`; production promotion and
+shared-media policy activation remain separately gated. The
+[verification record](releases/personal-history-mvp/2026-09-12-prelaunch-verification.md)
+separates source/local evidence from deployed and loaded-browser acceptance.
+
+The real staging subscription flow now opens the configured Stripe Sandbox
+portal. An explicitly authorized cancel-and-restore test preserved Plus access
+and the billing period, and finished with renewal restored. The
+[verification receipt](releases/personal-history-mvp/2026-09-12-sandbox-cancellation-verification.md)
+separates this proof from LIVE configuration and end-of-period expiry.
+
+Production is still at 35 migrations through `20260823132355`, while the audited
+staging baseline has 60 through `20260911070906`. The pending canonical history
+reset must not run through an ordinary promotion. Six schema-1 sessions, six
+schema-1 participants, 21 checkpoints and three schema-1 tracked titles exist;
+they are not disposable. The current preparation must preserve these records
+before the full pending chain, with isolated rehearsal and explicit production
+deployment ordering. No production migration or policy activation is included
+in the Sandbox test.
+
+The [production transition runbook](releases/personal-history-mvp/production-35-to-60-transition.md)
+describes the source-controlled DB/Worker/Web hold and its future unlock.
+Source preparation does not mean that production is already frozen: existing
+queued deployments and external Vercel promotion require operator verification.
 
 ## Friends and groups editor, 2026-09-11
 

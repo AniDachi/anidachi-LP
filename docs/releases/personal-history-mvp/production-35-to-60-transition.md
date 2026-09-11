@@ -6,6 +6,10 @@ activation are not authorized by this document. The executable driver deliberate
 refuses both hosted project identities; a separately reviewed production adapter
 and release unlock remain necessary. There is no environment-variable bypass.
 
+The [aggregate rehearsal receipt](2026-09-12-production-transition-rehearsal.json)
+records the 24 passed synthetic checks and the exact tested commit/file hashes.
+It contains no user records or backup contents.
+
 ## Fixed scope and eligibility
 
 Production project `bynsjjxzatxndzjkogim` was observed at 35 versions through
