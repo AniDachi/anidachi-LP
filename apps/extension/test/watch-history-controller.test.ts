@@ -5,6 +5,11 @@ import {
   type HistoryObservation,
   type HistoryObservationResult,
 } from "../src/source-adapters/core/history-policy";
+import type {
+  AdapterPlaybackPhase,
+  VideoAdapter,
+} from "../src/source-adapters/core/types";
+import { getYouTubeHistoryObservation } from "../src/source-adapters/youtube/progress";
 import type { WatchHistoryCaptureResult } from "../src/watch-history-client";
 import {
   createWatchHistoryController,
@@ -263,6 +268,110 @@ describe("watch history meaningful-progress controller", () => {
       currentTime: 6,
       clientSessionKey: "22222222-2222-4222-8222-222222222222",
     });
+  });
+
+  it("creates no pre-roll session and starts only after confirmed YouTube content advances", async () => {
+    mockLocation("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+    const playback = createYouTubePlayback({
+      phase: "interstitial",
+      currentTime: 5,
+      contentTime: 0,
+      duration: 30,
+    });
+    const fixture = createFixture({
+      getProvider: () => "youtube",
+      sessionKeys: ["11111111-1111-4111-8111-111111111111"],
+      loadPreferences: youtubePreferences,
+      getObservation: (preferences) => getYouTubeHistoryObservation({
+        adapter: playback.adapter,
+        preferences,
+      }),
+    });
+
+    await fixture.controller.start();
+    playback.set({ currentTime: 10 });
+    await fixture.controller.observe("heartbeat");
+    playback.set({ currentTime: 30 });
+    await fixture.controller.observe("ended");
+
+    expect(fixture.local).toEqual([]);
+    expect(fixture.enqueued).toEqual([]);
+    expect(fixture.current).toEqual([]);
+
+    playback.set({
+      phase: "content",
+      currentTime: 600,
+      contentTime: 600,
+      duration: 1_200,
+    });
+    await fixture.controller.observe("heartbeat");
+
+    expect(fixture.local).toHaveLength(1);
+    expect(fixture.enqueued).toEqual([]);
+    expect(fixture.local[0]).toMatchObject({
+      kind: "heartbeat",
+      currentTime: 600,
+      duration: 1_200,
+      clientSessionKey: "11111111-1111-4111-8111-111111111111",
+    });
+
+    playback.set({ currentTime: 601, contentTime: 601 });
+    await fixture.controller.observe("heartbeat");
+
+    expect(fixture.enqueued).toHaveLength(1);
+    expect(fixture.enqueued[0]).toMatchObject({
+      kind: "heartbeat",
+      currentTime: 601,
+      duration: 1_200,
+      clientSessionKey: "11111111-1111-4111-8111-111111111111",
+    });
+  });
+
+  it("disposes during an ad with only the last genuine YouTube sample", async () => {
+    mockLocation("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+    const playback = createYouTubePlayback({
+      phase: "content",
+      currentTime: 600,
+      contentTime: 600,
+      duration: 1_200,
+    });
+    const fixture = createFixture({
+      getProvider: () => "youtube",
+      sessionKeys: ["11111111-1111-4111-8111-111111111111"],
+      loadPreferences: youtubePreferences,
+      getObservation: (preferences) => getYouTubeHistoryObservation({
+        adapter: playback.adapter,
+        preferences,
+      }),
+    });
+    await fixture.controller.start();
+    playback.set({ currentTime: 601, contentTime: 601 });
+    await fixture.controller.observe("heartbeat");
+
+    playback.set({
+      phase: "interstitial",
+      currentTime: 30,
+      contentTime: 601,
+      duration: 30,
+    });
+    await fixture.controller.dispose();
+
+    expect(fixture.local.at(-1)).toMatchObject({
+      kind: "source_change",
+      currentTime: 601,
+      duration: 1_200,
+      progress: 601 / 1_200,
+      clientSessionKey: "11111111-1111-4111-8111-111111111111",
+    });
+    expect(fixture.enqueued.at(-1)).toMatchObject({
+      kind: "source_change",
+      currentTime: 601,
+      duration: 1_200,
+      clientSessionKey: "11111111-1111-4111-8111-111111111111",
+    });
+    expect(fixture.local.some((event) =>
+      event.currentTime === 30 || event.duration === 30 || event.kind === "ended"
+    )).toBe(false);
   });
 
   it("durably coalesces every meaningful local sample but requests transport only on cadence and boundaries", async () => {
@@ -1213,6 +1322,7 @@ function roomAuthority(sourceGeneration = 1, attestation = `proof-${sourceGenera
 
 function createFixture(options: {
   onPersisted?: WatchHistoryControllerDependencies["onPersisted"];
+  getProvider?: WatchHistoryControllerDependencies["getProvider"];
   roomActive?: boolean;
   sessionKeys?: string[];
   loadCachedPreferences?: WatchHistoryControllerDependencies["loadCachedPreferences"];
@@ -1289,6 +1399,7 @@ function createFixture(options: {
   });
   const dependencies: WatchHistoryControllerDependencies = {
     onPersisted: options.onPersisted,
+    getProvider: options.getProvider,
     getObservation: options.getObservation
       ? (preferences) => options.getObservation?.(preferences, observation()) ?? null
       : observation,
@@ -1366,4 +1477,55 @@ function createFixture(options: {
       expect(localAttempts).toBe(count);
     },
   };
+}
+
+function youtubePreferences() {
+  return Promise.resolve({
+    ownerUserId: "00000000-0000-4000-8000-000000000001",
+    accountGeneration: 1,
+    accessLease: paidHistoryLease(undefined, 1_700_000_000_000),
+    preferences: { youtubeHistoryEnabled: true },
+    capturePaused: false,
+  });
+}
+
+function createYouTubePlayback(initial: {
+  phase: AdapterPlaybackPhase;
+  currentTime: number;
+  contentTime: number;
+  duration: number;
+}) {
+  const state = { ...initial };
+  const video = document.createElement("video");
+  Object.defineProperties(video, {
+    currentTime: { configurable: true, get: () => state.currentTime },
+    duration: { configurable: true, get: () => state.duration },
+  });
+  const adapter = {
+    id: "youtube",
+    provider: "youtube",
+    video,
+    getTitle: () => "Main video",
+    getPlaybackSnapshot: () => ({
+      phase: state.phase,
+      contentTime: state.contentTime,
+      playing: state.phase === "content",
+      playbackRate: 1,
+      capturedAt: 1_700_000_000_000,
+    }),
+  } as VideoAdapter;
+
+  return {
+    adapter,
+    set(next: Partial<typeof state>) {
+      Object.assign(state, next);
+    },
+  };
+}
+
+function mockLocation(url: string): void {
+  Object.defineProperty(window, "location", {
+    configurable: true,
+    value: new URL(url),
+  });
 }
