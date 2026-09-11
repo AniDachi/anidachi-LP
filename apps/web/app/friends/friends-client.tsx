@@ -6,26 +6,29 @@ import {
   useMemo,
   useRef,
   useState,
-  type FormEvent,
   type ReactNode,
 } from "react";
-import { usePathname } from "next/navigation";
 import {
   Check,
+  ChevronRight,
   Copy,
-  EyeOff,
   Link2,
-  Pencil,
+  Loader2,
+  MoreHorizontal,
+  Plus,
   RefreshCw,
+  Search,
   Share2,
   Trash2,
-  Search,
-  Users,
   UserMinus,
-  UserPlus,
+  Users,
   X,
 } from "lucide-react";
-import type { RecentPerson } from "@anidachi/protocol";
+import type {
+  FriendGroup,
+  FriendListItem,
+  PublicProfile,
+} from "@anidachi/protocol";
 import {
   AccountEmptyState,
   AccountPageHeader,
@@ -33,7 +36,12 @@ import {
 } from "@/components/account/account-ui";
 import { useAccountViewState } from "@/components/account/account-workspace-state";
 import { api } from "@/lib/client-api";
-import { parseRecentPeopleResponse } from "@/lib/friends-client-contracts";
+import {
+  parseFriendDirectory,
+  parseGroupDirectory,
+  parseSavedGroup,
+  SOCIAL_OWNER_HEADER,
+} from "@/lib/social-editor-contracts";
 
 type CurrentUser = {
   userId: string;
@@ -41,1321 +49,1058 @@ type CurrentUser = {
   email: string;
   plan: string;
 };
-
-type PublicProfile = {
-  userId: string;
-  handle: string | null;
-  displayName: string;
-  avatarUrl: string | null;
-};
-
-type FriendListItem = {
-  friendshipId: string;
-  user: PublicProfile;
-  status: string;
-  direction: string;
-  requestedAt: string;
-  respondedAt: string | null;
-  updatedAt: string;
-};
-
-type FriendGroup = {
-  id: string;
+type Directory = Pick<
+  ReturnType<typeof parseFriendDirectory>,
+  "friends" | "incomingRequests" | "outgoingRequests" | "blocked"
+>;
+type Notice = { text: string; error?: boolean };
+type InviteLink = { url: string; expiresAt: string };
+type Editor = {
+  groupId: string;
+  original: FriendGroup | null;
   name: string;
-  archivedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-  members: Array<{
-    user: PublicProfile;
-    addedAt: string;
-  }>;
+  memberIds: string[];
 };
-
-type FriendsResponse = {
-  friends: FriendListItem[];
-  incomingRequests: FriendListItem[];
-  outgoingRequests: FriendListItem[];
-  blocked: FriendListItem[];
-};
-
-type GroupsResponse = {
-  groups: FriendGroup[];
-};
-
-type FriendInviteLinkResponse = {
-  inviteLink: {
-    token: string;
-    url: string;
-    expiresAt: string;
-  };
-};
-
-type Notice = {
-  tone: "success" | "error";
-  text: string;
-};
-
-type RefreshOptions = {
-  showLoading?: boolean;
-};
-
-const SOCIAL_CHANGED_EVENT = "anidachi:account-social-changed";
-
-const EMPTY_FRIENDS: FriendsResponse = {
+type Modal =
+  | { type: "invite" }
+  | { type: "editor" }
+  | { type: "remove"; friend: FriendListItem }
+  | { type: "delete"; group: FriendGroup };
+const EMPTY: Directory = {
   friends: [],
   incomingRequests: [],
   outgoingRequests: [],
   blocked: [],
 };
-
-function initials(name: string) {
-  return (
-    name
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase())
-      .join("") || "A"
-  );
-}
+const SOCIAL_CHANGED = "anidachi:account-social-changed";
 
 function Avatar({ user }: { user: PublicProfile }) {
-  if (user.avatarUrl) {
-    return (
-      <img
-        alt=""
-        className="h-10 w-10 rounded-full object-cover"
-        src={user.avatarUrl}
-      />
-    );
-  }
-
-  return (
-    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-orange text-sm font-bold text-foreground">
-      {initials(user.displayName)}
+  return user.avatarUrl ? (
+    <img className="people-avatar" src={user.avatarUrl} alt="" />
+  ) : (
+    <span className="people-avatar">
+      {user.displayName
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0])
+        .join("")
+        .toUpperCase() || "A"}
     </span>
   );
 }
-
-export function formatRecentMeta(person: RecentPerson) {
-  const date = new Date(person.lastWatchedAt);
-  const dateLabel = Number.isNaN(date.getTime())
-    ? "recently"
-    : date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-  return `Watched ${dateLabel}`;
-}
-
-function sortGroupMembers(
-  members: FriendGroup["members"],
-): FriendGroup["members"] {
-  return [...members].sort((a, b) =>
-    a.user.displayName.localeCompare(b.user.displayName),
-  );
-}
-
-function addOptimisticMember(
-  group: FriendGroup,
-  friend: FriendListItem,
-  addedAt: string,
-): FriendGroup {
-  if (
-    group.members.some((member) => member.user.userId === friend.user.userId)
-  ) {
-    return group;
-  }
-
-  return {
-    ...group,
-    updatedAt: addedAt,
-    members: sortGroupMembers([
-      ...group.members,
-      {
-        user: friend.user,
-        addedAt,
-      },
-    ]),
-  };
-}
-
-function removeOptimisticMember(
-  group: FriendGroup,
-  userId: string,
-  updatedAt: string,
-): FriendGroup {
-  return {
-    ...group,
-    updatedAt,
-    members: group.members.filter((member) => member.user.userId !== userId),
-  };
-}
-
-function PersonRow({
-  action,
-  meta,
+function Person({
   user,
+  children,
+  meta,
 }: {
-  action?: ReactNode;
-  meta?: string;
   user: PublicProfile;
+  children?: ReactNode;
+  meta?: string;
 }) {
   return (
-    <div className="social-person flex min-h-16 items-center justify-between gap-3 border-b border-brand-border py-3 last:border-b-0">
-      <div className="flex min-w-0 items-center gap-3">
-        <Avatar user={user} />
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-foreground">
-            {user.displayName}
-          </p>
-          <p className="truncate text-xs text-foreground/50">
-            {[user.handle ? `@${user.handle}` : null, meta]
-              .filter(Boolean)
-              .join(" · ") || "AniDachi user"}
-          </p>
-        </div>
+    <div className="people-person">
+      <Avatar user={user} />
+      <div className="people-identity">
+        <strong>{user.displayName}</strong>
+        <span>
+          {meta ?? (user.handle ? `@${user.handle}` : "AniDachi friend")}
+        </span>
       </div>
-      {action ? (
-        <div className="flex shrink-0 items-center gap-2">{action}</div>
-      ) : null}
+      {children}
     </div>
   );
 }
-
-function IconButton({
+function Button({
   children,
-  disabled,
   icon,
-  onClick,
-  title,
-  tone = "default",
-  type = "button",
-}: {
-  children?: ReactNode;
-  disabled?: boolean;
-  icon: ReactNode;
-  onClick?: () => void;
-  title: string;
-  tone?: "default" | "danger" | "primary";
-  type?: "button" | "submit";
+  label,
+  primary,
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  icon?: ReactNode;
+  label?: string;
+  primary?: boolean;
 }) {
-  const toneClass =
-    tone === "primary"
-      ? "bg-brand-orange text-foreground hover:bg-brand-orange-deep"
-      : tone === "danger"
-        ? "border-red-400/30 bg-red-500/10 text-red-200 hover:bg-red-500/20"
-        : "border-brand-border bg-brand-surface text-foreground/90 hover:bg-brand-orange";
-
   return (
     <button
-      aria-label={title}
-      data-tone={tone}
-      className={`social-button inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-0 ${toneClass}`}
-      disabled={disabled}
-      onClick={onClick}
-      title={title}
-      type={type}
+      type="button"
+      className={`people-button ${primary ? "people-primary" : ""} ${!children ? "people-icon-button" : ""}`}
+      aria-label={label}
+      {...props}
     >
       {icon}
-      {children ? (
-        <span className="social-button-label hidden sm:inline">{children}</span>
-      ) : null}
+      {children}
     </button>
   );
 }
+function Options({ label, children }: { label: string; children: ReactNode }) {
+  const ref = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const close = (event: PointerEvent) => {
+      if (
+        event.target instanceof Node &&
+        !ref.current?.contains(event.target) &&
+        ref.current
+      )
+        ref.current.open = false;
+    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, []);
+  return (
+    <details
+      className="people-options"
+      ref={ref}
+      onClick={(event) => {
+        if (
+          event.target instanceof Element &&
+          event.target.closest("button") &&
+          ref.current
+        )
+          ref.current.open = false;
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Escape" && ref.current) {
+          ref.current.open = false;
+          ref.current.querySelector("summary")?.focus();
+        }
+      }}
+    >
+      <summary aria-label={label}>
+        <MoreHorizontal size={20} />
+      </summary>
+      <div>{children}</div>
+    </details>
+  );
+}
 
+// Remount account-bound data and drafts on identity change. View state alone is
+// retained by the surrounding account workspace; late operations cannot cross it.
 export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
-  const pathname = usePathname();
-  const embeddedInAccount = pathname.startsWith("/account/friends");
+  return (
+    <FriendsWorkspace key={currentUser.userId} currentUser={currentUser} />
+  );
+}
+function FriendsWorkspace({ currentUser }: { currentUser: CurrentUser }) {
   const [view, setView] = useAccountViewState<"friends" | "groups">(
     `${currentUser.userId}:social-view`,
     "friends",
   );
-  const [addFriendOpen, setAddFriendOpen] = useState(false);
   const [search, setSearch] = useAccountViewState(
     `${currentUser.userId}:social-search`,
     "",
   );
-  const [loaded, setLoaded] = useState(false);
-  const [friendsData, setFriendsData] =
-    useState<FriendsResponse>(EMPTY_FRIENDS);
+  const [directory, setDirectory] = useState<Directory>(EMPTY);
   const [groups, setGroups] = useState<FriendGroup[]>([]);
-  const [recentPeople, setRecentPeople] = useState<RecentPerson[]>([]);
-  const [groupName, setGroupName] = useState("");
-  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
-  const [editingGroupName, setEditingGroupName] = useState("");
+  const [loaded, setLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
-  const createGroupRequestRef = useRef<{
-    name: string;
-    clientRequestId: string;
-  } | null>(null);
+  const [modal, setModal] = useState<Modal | null>(null);
+  const [modalNotice, setModalNotice] = useState<Notice | null>(null);
+  const [editor, setEditor] = useState<Editor | null>(null);
+  const [memberSearch, setMemberSearch] = useState("");
+  const [inviteLink, setInviteLink] = useState<InviteLink | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const mountedRef = useRef(false);
-  const ownerRef = useRef(currentUser.userId);
-  const previousOwnerRef = useRef(currentUser.userId);
-  const refreshSequenceRef = useRef(0);
-  const refreshInFlightRef = useRef(0);
-  const busyRef = useRef<string | null>(null);
-  const pendingReconciliationRef = useRef(false);
-  ownerRef.current = currentUser.userId;
-
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-      refreshSequenceRef.current += 1;
-    };
-  }, []);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-    if (addFriendOpen && !dialog.open) dialog.showModal();
-    if (!addFriendOpen && dialog.open) dialog.close();
-  }, [addFriendOpen]);
-
-  useEffect(() => {
-    if (!embeddedInAccount) return;
-    const syncGroupAnchor = () => {
-      if (window.location.hash === "#groups") setView("groups");
-    };
-    syncGroupAnchor();
-    window.addEventListener("hashchange", syncGroupAnchor);
-    return () => window.removeEventListener("hashchange", syncGroupAnchor);
-  }, [embeddedInAccount]);
-
-  const visibleFriends = friendsData.friends.filter((friend) =>
-    `${friend.user.displayName} ${friend.user.handle ?? ""}`
-      .toLowerCase()
-      .includes(search.trim().toLowerCase()),
-  );
-
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+  const mounted = useRef(false);
+  const sequence = useRef(0);
+  const reads = useRef(0);
+  const working = useRef(false);
+  const reconcilePending = useRef(false);
   const activeGroups = useMemo(
     () => groups.filter((group) => !group.archivedAt),
     [groups],
   );
-
-  const refresh = useCallback(
-    async (options: RefreshOptions = {}) => {
-      const ownerUserId = currentUser.userId;
-      const sequence = ++refreshSequenceRef.current;
-      refreshInFlightRef.current += 1;
-      const isCurrent = () =>
-        mountedRef.current &&
-        ownerRef.current === ownerUserId &&
-        refreshSequenceRef.current === sequence;
-      const showLoading = options.showLoading ?? true;
-      if (showLoading) setLoading(true);
-      try {
-        const [friends, groupPayload, recentPayload] = await Promise.all([
-          api<FriendsResponse>("/api/friends"),
-          api<GroupsResponse>("/api/groups"),
-          api<unknown>("/api/recent-people").then(parseRecentPeopleResponse),
-        ]);
-        if (!isCurrent()) return;
-        setFriendsData(friends);
-        setGroups(groupPayload.groups);
-        setRecentPeople(recentPayload.people);
-        setLoaded(true);
-      } catch (error) {
-        if (!isCurrent()) return;
-        setNotice({
-          tone: "error",
-          text: error instanceof Error ? error.message : "Could not load friends",
-        });
-      } finally {
-        refreshInFlightRef.current = Math.max(
-          0,
-          refreshInFlightRef.current - 1,
-        );
-        if (isCurrent()) setLoading(false);
-      }
-    },
+  const dirty =
+    !!editor &&
+    (editor.name !== (editor.original?.name ?? "") ||
+      [...editor.memberIds].sort().join() !==
+        (editor.original?.members
+          .map((m) => m.user.userId)
+          .sort()
+          .join() ?? ""));
+  const request = useCallback(
+    <T,>(path: string, init?: RequestInit) =>
+      api<T>(path, {
+        ...init,
+        headers: {
+          ...Object.fromEntries(new Headers(init?.headers)),
+          [SOCIAL_OWNER_HEADER]: currentUser.userId,
+        },
+      }),
     [currentUser.userId],
   );
-
   useEffect(() => {
-    refreshSequenceRef.current += 1;
-    if (previousOwnerRef.current !== currentUser.userId) {
-      previousOwnerRef.current = currentUser.userId;
-      setView(window.location.hash === "#groups" ? "groups" : "friends");
-      setSearch("");
-    }
-    setAddFriendOpen(false);
-    setLoaded(false);
-    setFriendsData(EMPTY_FRIENDS);
-    setGroups([]);
-    setRecentPeople([]);
-    setLoading(true);
-    setBusyKey(null);
-    busyRef.current = null;
-    pendingReconciliationRef.current = false;
-    setNotice(null);
-    setEditingGroupId(null);
-    setEditingGroupName("");
-    createGroupRequestRef.current = null;
-    void refresh();
-  }, [currentUser.userId, refresh, setSearch, setView]);
-
-  const broadcastSocialChange = useCallback((ownerUserId: string) => {
-    if (!mountedRef.current || ownerRef.current !== ownerUserId) return;
-    window.dispatchEvent(
-      new CustomEvent(SOCIAL_CHANGED_EVENT, {
-        detail: { ownerUserId, source: "friends" },
-      }),
-    );
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      sequence.current++;
+    };
   }, []);
-
-  useEffect(() => {
-    const reconcile = (event: Event) => {
-      const detail = (
-        event as CustomEvent<{ ownerUserId?: unknown; source?: unknown }>
-      ).detail;
-      const ownerUserId = detail?.ownerUserId;
-      if (ownerUserId !== currentUser.userId) return;
-      if (detail?.source === "friends") return;
-      if (busyRef.current) {
-        pendingReconciliationRef.current = true;
+  const refresh = useCallback(
+    async (showLoading = true) => {
+      if (working.current) {
+        reconcilePending.current = true;
         return;
       }
-      void refresh({ showLoading: false });
-    };
-    window.addEventListener(SOCIAL_CHANGED_EVENT, reconcile);
-    return () => window.removeEventListener(SOCIAL_CHANGED_EVENT, reconcile);
-  }, [currentUser.userId, refresh]);
-
-  const runAction = useCallback(
-    async (
-      key: string,
-      action: () => Promise<void>,
-      success: string,
-      options: { broadcast?: boolean } = {},
-    ) => {
-      const ownerUserId = currentUser.userId;
-      if (refreshInFlightRef.current > 0) {
-        pendingReconciliationRef.current = true;
-      }
-      refreshSequenceRef.current += 1;
-      busyRef.current = key;
-      setBusyKey(key);
-      setNotice(null);
+      const ticket = ++sequence.current;
+      reads.current++;
+      if (showLoading) setLoading(true);
       try {
-        await action();
-        if (!mountedRef.current || ownerRef.current !== ownerUserId) return;
-        setNotice({ tone: "success", text: success });
-        pendingReconciliationRef.current = false;
-        await refresh({ showLoading: false });
-        if (options.broadcast !== false) broadcastSocialChange(ownerUserId);
+        const [friends, groupList] = await Promise.all([
+          request<unknown>("/api/friends").then(parseFriendDirectory),
+          request<unknown>("/api/groups").then(parseGroupDirectory),
+        ]);
+        if (!mounted.current || ticket !== sequence.current) return;
+        setDirectory(friends);
+        setGroups(groupList.groups);
+        setLoaded(true);
       } catch (error) {
-        if (!mountedRef.current || ownerRef.current !== ownerUserId) return;
-        setNotice({
-          tone: "error",
-          text: error instanceof Error ? error.message : "Action failed",
-        });
-      } finally {
-        if (mountedRef.current && ownerRef.current === ownerUserId) {
-          busyRef.current = null;
-          setBusyKey(null);
-          if (pendingReconciliationRef.current) {
-            pendingReconciliationRef.current = false;
-            void refresh({ showLoading: false });
-          }
-        }
-      }
-    },
-    [broadcastSocialChange, currentUser.userId, refresh],
-  );
-
-  const runLocalAction = useCallback(
-    async (key: string, action: () => Promise<void>, success: string) => {
-      const ownerUserId = currentUser.userId;
-      if (refreshInFlightRef.current > 0) {
-        pendingReconciliationRef.current = true;
-      }
-      refreshSequenceRef.current += 1;
-      busyRef.current = key;
-      setBusyKey(key);
-      setNotice(null);
-      try {
-        await action();
-        if (!mountedRef.current || ownerRef.current !== ownerUserId) return;
-        setNotice({ tone: "success", text: success });
-        broadcastSocialChange(ownerUserId);
-      } catch (error) {
-        if (!mountedRef.current || ownerRef.current !== ownerUserId) return;
-        setNotice({
-          tone: "error",
-          text: error instanceof Error ? error.message : "Action failed",
-        });
-      } finally {
-        if (mountedRef.current && ownerRef.current === ownerUserId) {
-          busyRef.current = null;
-          setBusyKey(null);
-          if (pendingReconciliationRef.current) {
-            pendingReconciliationRef.current = false;
-            void refresh({ showLoading: false });
-          }
-        }
-      }
-    },
-    [broadcastSocialChange, currentUser.userId, refresh],
-  );
-
-  const upsertGroup = useCallback((group: FriendGroup) => {
-    setGroups((current) => {
-      const exists = current.some((item) => item.id === group.id);
-      if (!exists) return [group, ...current];
-      return current.map((item) => (item.id === group.id ? group : item));
-    });
-  }, []);
-
-  const patchGroup = useCallback(
-    (groupId: string, updater: (group: FriendGroup) => FriendGroup) => {
-      let previous: FriendGroup | null = null;
-      setGroups((current) =>
-        current.map((group) => {
-          if (group.id !== groupId) return group;
-          previous = group;
-          return updater(group);
-        }),
-      );
-      return previous;
-    },
-    [],
-  );
-
-  const createGroup = useCallback(
-    async (event: FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
-      const name = groupName.trim();
-      if (!name) return;
-      const existingRequest = createGroupRequestRef.current;
-      const clientRequestId =
-        existingRequest?.name === name
-          ? existingRequest.clientRequestId
-          : crypto.randomUUID();
-      createGroupRequestRef.current = { name, clientRequestId };
-      const ownerUserId = currentUser.userId;
-      await runLocalAction(
-        "create-group",
-        async () => {
-          const payload = await api<{ group: FriendGroup }>("/api/groups", {
-            body: JSON.stringify({ name, clientRequestId }),
-            method: "POST",
+        if (mounted.current && ticket === sequence.current)
+          setNotice({
+            error: true,
+            text:
+              error instanceof Error
+                ? error.message
+                : "Could not load friends.",
           });
-          if (!mountedRef.current || ownerRef.current !== ownerUserId) return;
-          upsertGroup(payload.group);
-          createGroupRequestRef.current = null;
-          setGroupName("");
-        },
-        "Group created.",
-      );
+      } finally {
+        reads.current--;
+        if (mounted.current && ticket === sequence.current) setLoading(false);
+      }
     },
-    [currentUser.userId, groupName, runLocalAction, upsertGroup],
+    [request],
   );
-
-  const copyFriendInviteLink = useCallback(async () => {
-    const ownerUserId = currentUser.userId;
-    await runAction(
-      "copy-invite-link",
-      async () => {
-        const payload = await api<FriendInviteLinkResponse>(
-          "/api/friends/invite-links",
-          {
-            method: "POST",
-          },
-        );
-        if (!mountedRef.current || ownerRef.current !== ownerUserId) return;
-        const url = payload.inviteLink.url;
-        if (typeof navigator.share === "function") {
-          try {
-            await navigator.share({
-              title: "AniDachi friend invite",
-              text: "Add me on AniDachi",
-              url,
-            });
-            return;
-          } catch (error) {
-            if (error instanceof Error && error.name === "AbortError") {
-              throw error;
-            }
-          }
-        }
-        await navigator.clipboard.writeText(url);
-      },
-      typeof navigator.share === "function"
-        ? "Friend invite link sent."
-        : "Friend invite link copied.",
-      { broadcast: false },
-    );
-  }, [currentUser.userId, runAction]);
-
-  const sendFriendRequest = useCallback(
-    async (userId: string) => {
-      await runAction(
-        `send-request:${userId}`,
-        () =>
-          api("/api/friends/requests", {
-            body: JSON.stringify({ userId }),
-            method: "POST",
-          }),
-        "Friend request sent.",
-      );
-    },
-    [runAction],
-  );
-
-  const hideRecent = useCallback(
-    async (userId: string) => {
-      await runAction(
-        `hide-recent:${userId}`,
-        () =>
-          api(`/api/recent-people/${userId}/hide`, {
-            method: "POST",
-          }),
-        "Person hidden.",
-      );
-    },
-    [runAction],
-  );
-
-  const friendOptionsForGroup = useCallback(
-    (group: FriendGroup) => {
-      const memberIds = new Set(
-        group.members.map((member) => member.user.userId),
-      );
-      return friendsData.friends.filter(
-        (friend) => !memberIds.has(friend.user.userId),
-      );
-    },
-    [friendsData.friends],
-  );
-
-  const startRenameGroup = useCallback((group: FriendGroup) => {
-    setEditingGroupId(group.id);
-    setEditingGroupName(group.name);
-  }, []);
-
-  const renameGroup = useCallback(
-    async (event: FormEvent<HTMLFormElement>, groupId: string) => {
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+  useEffect(() => {
+    const hash = () => {
+      if (window.location.hash === "#groups") setView("groups");
+    };
+    hash();
+    window.addEventListener("hashchange", hash);
+    return () => window.removeEventListener("hashchange", hash);
+  }, [setView]);
+  useEffect(() => {
+    const sync = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      if (
+        detail?.ownerUserId === currentUser.userId &&
+        detail?.source !== "friends"
+      )
+        void refresh(false);
+    };
+    const focus = () => {
+      if (document.visibilityState === "visible") void refresh(false);
+    };
+    window.addEventListener(SOCIAL_CHANGED, sync);
+    window.addEventListener("focus", focus);
+    return () => {
+      window.removeEventListener(SOCIAL_CHANGED, sync);
+      window.removeEventListener("focus", focus);
+    };
+  }, [currentUser.userId, refresh]);
+  useEffect(() => {
+    if (!dirty && !busy) return;
+    const leave = () =>
+      !working.current && window.confirm("Discard your unsaved group changes?");
+    const beforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
-      const name = editingGroupName.trim();
-      if (!name) return;
-      const ownerUserId = currentUser.userId;
-      await runLocalAction(
-        `rename-group:${groupId}`,
-        async () => {
-          const updatedAt = new Date().toISOString();
-          const previous = patchGroup(groupId, (group) => ({
-            ...group,
-            name,
-            updatedAt,
-          }));
-          try {
-            const payload = await api<{ group: FriendGroup }>(
-              `/api/groups/${groupId}`,
-              {
-                body: JSON.stringify({ name }),
-                method: "PATCH",
-              },
-            );
-            if (!mountedRef.current || ownerRef.current !== ownerUserId) return;
-            upsertGroup(payload.group);
-            setEditingGroupId(null);
-            setEditingGroupName("");
-          } catch (error) {
-            if (
-              previous &&
-              mountedRef.current &&
-              ownerRef.current === ownerUserId
-            ) {
-              upsertGroup(previous);
-            }
-            throw error;
+      event.returnValue = "";
+    };
+    const intent = (event: Event) => {
+      if (!leave()) event.preventDefault();
+    };
+    const link = (event: MouseEvent) => {
+      if (
+        event.target instanceof Element &&
+        event.target.closest("a[href]") &&
+        !leave()
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+    window.addEventListener("beforeunload", beforeUnload);
+    window.addEventListener("anidachi:before-account-navigation", intent);
+    window.addEventListener("anidachi:before-sign-out", intent);
+    document.addEventListener("click", link, true);
+    return () => {
+      window.removeEventListener("beforeunload", beforeUnload);
+      window.removeEventListener("anidachi:before-account-navigation", intent);
+      window.removeEventListener("anidachi:before-sign-out", intent);
+      document.removeEventListener("click", link, true);
+    };
+  }, [dirty, busy]);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (modal && dialog && !dialog.open) dialog.showModal();
+  }, [modal]);
+  function dismissModal() {
+    // Native close restores the opener's focus before React removes the dialog.
+    dialogRef.current?.close();
+    const opener = returnFocusRef.current;
+    if (opener?.isConnected) opener.focus();
+    setModal(null);
+    window.requestAnimationFrame(() => {
+      if (!mounted.current) return;
+      if (!opener?.isConnected && document.activeElement === document.body)
+        document
+          .querySelector<HTMLButtonElement>(
+            ".people-workspace .ac-header-actions button:last-child",
+          )
+          ?.focus();
+    });
+  }
+  function closeModal() {
+    if (
+      working.current ||
+      (dirty && !window.confirm("Discard your unsaved group changes?"))
+    )
+      return;
+    dismissModal();
+    setEditor(null);
+    setModalNotice(null);
+  }
+  function openModal(next: Modal) {
+    const active = document.activeElement;
+    returnFocusRef.current =
+      active instanceof HTMLElement
+        ? (active.closest("details")?.querySelector<HTMLElement>("summary") ??
+          active)
+        : null;
+    setModalNotice(null);
+    setModal(next);
+  }
+  function editGroup(group: FriendGroup | null) {
+    setEditor({
+      groupId: group?.id ?? crypto.randomUUID(),
+      original: group,
+      name: group?.name ?? "",
+      memberIds: group?.members.map((m) => m.user.userId) ?? [],
+    });
+    setMemberSearch("");
+    openModal({ type: "editor" });
+  }
+  async function action(
+    task: () => Promise<void>,
+    message: string,
+    options: {
+      modal?: boolean;
+      reload?: boolean;
+      broadcast?: boolean;
+      dismiss?: boolean;
+    } = {},
+  ) {
+    if (working.current) return;
+    working.current = true;
+    setBusy(true);
+    setNotice(null);
+    setModalNotice(null);
+    if (reads.current) reconcilePending.current = true;
+    sequence.current++;
+    try {
+      await task();
+      if (!mounted.current) return;
+      (options.modal && !options.dismiss ? setModalNotice : setNotice)({
+        text: message,
+      });
+      if (options.broadcast !== false)
+        window.dispatchEvent(
+          new CustomEvent(SOCIAL_CHANGED, {
+            detail: { ownerUserId: currentUser.userId, source: "friends" },
+          }),
+        );
+      if (options.reload) reconcilePending.current = true;
+    } catch (error) {
+      if (mounted.current)
+        (options.modal ? setModalNotice : setNotice)({
+          error: true,
+          text:
+            error instanceof Error
+              ? error.message
+              : "Could not complete the action. Try again.",
+        });
+    } finally {
+      working.current = false;
+      if (mounted.current) {
+        setBusy(false);
+        setLoading(false);
+        if (reconcilePending.current) {
+          reconcilePending.current = false;
+          void refresh(false);
+        }
+      }
+    }
+  }
+  async function saveGroup() {
+    if (!editor?.name.trim()) return;
+    const draft = editor;
+    await action(
+      async () => {
+        const group = parseSavedGroup(
+          await request("/api/groups/editor", {
+            method: "POST",
+            body: JSON.stringify({
+              groupId: draft.groupId,
+              name: draft.name.trim(),
+              memberIds: draft.memberIds,
+              create: !draft.original,
+              expectedUpdatedAt: draft.original?.updatedAt ?? null,
+            }),
+          }),
+        );
+        if (!mounted.current) return;
+        setGroups((items) => [
+          group,
+          ...items.filter((item) => item.id !== group.id),
+        ]);
+        setEditor(null);
+        dismissModal();
+      },
+      draft.original ? "Group saved." : "Group created.",
+      { modal: true, dismiss: true },
+    );
+  }
+  async function generateLink() {
+    await action(
+      async () => {
+        const result = await request<{ inviteLink: InviteLink }>(
+          "/api/friends/invite-links",
+          { method: "POST" },
+        );
+        const link = result?.inviteLink;
+        if (
+          !link ||
+          typeof link.url !== "string" ||
+          !Number.isFinite(Date.parse(link.expiresAt))
+        )
+          throw new Error("Could not create an invite link.");
+        const url = new URL(link.url);
+        if (
+          url.origin !== window.location.origin ||
+          !url.pathname.startsWith("/friend/invite/")
+        )
+          throw new Error("Could not create an invite link.");
+        if (mounted.current) setInviteLink(link);
+      },
+      "Your link is ready to share.",
+      { modal: true, broadcast: false },
+    );
+  }
+  async function copyLink() {
+    if (!inviteLink) return;
+    try {
+      await navigator.clipboard.writeText(inviteLink.url);
+      if (mounted.current) setModalNotice({ text: "Link copied." });
+    } catch {
+      if (mounted.current)
+        setModalNotice({
+          error: true,
+          text: "Select and copy the link below.",
+        });
+    }
+  }
+  async function shareLink() {
+    if (!inviteLink) return;
+    try {
+      await navigator.share({
+        title: "AniDachi friend invite",
+        url: inviteLink.url,
+      });
+    } catch (error) {
+      if (
+        mounted.current &&
+        !(error instanceof Error && error.name === "AbortError")
+      )
+        setModalNotice({
+          error: true,
+          text: "Could not share. Copy the link instead.",
+        });
+    }
+  }
+  const query = search.trim().toLowerCase();
+  const visibleFriends = directory.friends.filter((f) =>
+    `${f.user.displayName} ${f.user.handle ?? ""}`
+      .toLowerCase()
+      .includes(query),
+  );
+  const friendIds = new Set(directory.friends.map((f) => f.user.userId));
+  const missingMembers =
+    editor?.memberIds.filter((id) => !friendIds.has(id)) ?? [];
+  const memberQuery = memberSearch.trim().toLowerCase();
+  const choices = directory.friends.filter((f) =>
+    `${f.user.displayName} ${f.user.handle ?? ""}`
+      .toLowerCase()
+      .includes(memberQuery),
+  );
+  function toggleMember(id: string) {
+    setEditor((draft) =>
+      draft
+        ? {
+            ...draft,
+            memberIds: draft.memberIds.includes(id)
+              ? draft.memberIds.filter((value) => value !== id)
+              : [...draft.memberIds, id],
           }
-        },
-        "Group renamed.",
-      );
-    },
-    [currentUser.userId, editingGroupName, patchGroup, runLocalAction, upsertGroup],
-  );
-
-  const inviteSection = (
-    <div className="social-section rounded-2xl border border-brand-border/80 bg-brand-surface p-5">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-orange/15 text-brand-orange">
-            <Link2 className="h-5 w-5" aria-hidden />
-          </span>
-          <div className="min-w-0">
-            <h2 className="text-lg font-semibold text-foreground">
-              Friend invite link
-            </h2>
-            <p className="text-sm text-foreground/50">
-              Copy a private one-time link to add someone after sign-in.
-            </p>
-          </div>
-        </div>
-        <IconButton
-          disabled={busyKey !== null || loading}
-          icon={
-            typeof navigator !== "undefined" &&
-            typeof navigator.share === "function" ? (
-              <Share2 className="h-4 w-4" aria-hidden />
-            ) : (
-              <Copy className="h-4 w-4" aria-hidden />
-            )
-          }
-          onClick={() => void copyFriendInviteLink()}
-          title={
-            typeof navigator !== "undefined" &&
-            typeof navigator.share === "function"
-              ? "Share friend invite link"
-              : "Copy friend invite link"
-          }
-          tone="primary"
-        >
-          {typeof navigator !== "undefined" &&
-          typeof navigator.share === "function"
-            ? "Share link"
-            : "Copy link"}
-        </IconButton>
-      </div>
-    </div>
-  );
-  const recentSection = (
-    <div className="social-section rounded-2xl border border-brand-border/80 bg-brand-surface p-5">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">
-            Watched together
-          </h2>
-          <p className="mt-1 text-sm text-foreground/50">
-            Add people from recent shared rooms.
-          </p>
-        </div>
-        <span className="rounded-full bg-brand-surface px-2.5 py-1 text-xs text-foreground/70">
-          {recentPeople.length}
-        </span>
-      </div>
-      <div className="mt-3">
-        {loading && !loaded ? (
-          <p className="py-4 text-sm text-foreground/50">Loading...</p>
-        ) : recentPeople.length ? (
-          recentPeople.slice(0, 5).map((person) => (
-            <PersonRow
-              action={
-                <>
-                  <IconButton
-                    disabled={busyKey !== null || loading}
-                    icon={<UserPlus className="h-4 w-4" aria-hidden />}
-                    onClick={() => void sendFriendRequest(person.user.userId)}
-                    title="Add friend"
-                    tone="primary"
-                  />
-                  <IconButton
-                    disabled={busyKey !== null || loading}
-                    icon={<EyeOff className="h-4 w-4" aria-hidden />}
-                    onClick={() => void hideRecent(person.user.userId)}
-                    title="Hide from recent"
-                  />
-                </>
-              }
-              key={person.user.userId}
-              meta={formatRecentMeta(person)}
-              user={person.user}
-            />
-          ))
-        ) : (
-          <p className="py-4 text-sm text-foreground/50">
-            People from your recent watch rooms will appear here.
-          </p>
-        )}
-      </div>
-    </div>
-  );
-  const incomingSection = (
-    <div className="social-section rounded-2xl border border-brand-border/80 bg-brand-surface p-5">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-foreground">
-          Friend requests
-        </h2>
-        <span className="rounded-full bg-brand-surface px-2.5 py-1 text-xs text-foreground/70">
-          {friendsData.incomingRequests.length}
-        </span>
-      </div>
-      <div className="mt-3">
-        {loading && !loaded ? (
-          <p className="py-4 text-sm text-foreground/50">Loading...</p>
-        ) : friendsData.incomingRequests.length ? (
-          friendsData.incomingRequests.map((request) => (
-            <PersonRow
-              action={
-                <>
-                  <IconButton
-                    disabled={busyKey !== null || loading}
-                    icon={<Check className="h-4 w-4" aria-hidden />}
-                    onClick={() =>
-                      void runAction(
-                        `accept:${request.friendshipId}`,
-                        () =>
-                          api(
-                            `/api/friends/requests/${request.friendshipId}/accept`,
-                            {
-                              method: "POST",
-                            },
-                          ),
-                        "Friend request accepted.",
-                      )
-                    }
-                    title="Accept request"
-                    tone="primary"
-                  />
-                  <IconButton
-                    disabled={busyKey !== null || loading}
-                    icon={<X className="h-4 w-4" aria-hidden />}
-                    onClick={() =>
-                      void runAction(
-                        `decline:${request.friendshipId}`,
-                        () =>
-                          api(
-                            `/api/friends/requests/${request.friendshipId}/decline`,
-                            {
-                              method: "POST",
-                            },
-                          ),
-                        "Friend request declined.",
-                      )
-                    }
-                    title="Decline request"
-                  />
-                </>
-              }
-              key={request.friendshipId}
-              user={request.user}
-            />
-          ))
-        ) : (
-          <p className="py-4 text-sm text-foreground/50">
-            No incoming requests.
-          </p>
-        )}
-      </div>
-    </div>
-  );
-  const friendsSection = (
-    <div className="social-section rounded-2xl border border-brand-border/80 bg-brand-surface p-5">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-foreground">Friends</h2>
-        <span className="rounded-full bg-brand-surface px-2.5 py-1 text-xs text-foreground/70">
-          {friendsData.friends.length}
-        </span>
-      </div>
-      {embeddedInAccount && friendsData.friends.length > 0 ? (
-        <label className="ac-search">
-          <Search size={17} aria-hidden />
-          <input
-            aria-label="Search friends"
-            placeholder="Search friends"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-          {search ? (
-            <button
-              type="button"
-              aria-label="Clear friend search"
-              onClick={() => setSearch("")}
-            >
-              <X size={16} aria-hidden />
-            </button>
-          ) : null}
-        </label>
-      ) : null}
-      <div className="mt-3">
-        {loading && !loaded ? (
-          <p className="py-4 text-sm text-foreground/50">Loading...</p>
-        ) : visibleFriends.length ? (
-          visibleFriends.map((friend) => (
-            <PersonRow
-              action={
-                <IconButton
-                  disabled={busyKey !== null || loading}
-                  icon={<UserMinus className="h-4 w-4" aria-hidden />}
-                  onClick={() =>
-                    window.confirm(`Remove ${friend.user.displayName} from friends?`) &&
-                    void runAction(
-                        `remove:${friend.user.userId}`,
-                        () =>
-                          api(`/api/friends/${friend.user.userId}`, {
-                            method: "DELETE",
-                          }),
-                        "Friend removed.",
-                      )
-                  }
-                  title="Remove friend"
-                  tone="danger"
-                />
-              }
-              key={friend.friendshipId}
-              user={friend.user}
-            />
-          ))
-        ) : embeddedInAccount ? (
-          <AccountEmptyState
-            icon={<Users />}
-            title={
-              search.trim() ? "No matching friends" : "Your people belong here"
-            }
-          >
-            {search.trim()
-              ? "Try a different name or handle."
-              : "Share your friend invite link to add someone."}
-          </AccountEmptyState>
-        ) : (
-          <p className="py-4 text-sm text-foreground/50">No friends yet.</p>
-        )}
-      </div>
-    </div>
-  );
-  const groupsSection = (
-    <section
-      id="groups"
-      className="social-section rounded-2xl border border-brand-border/80 bg-brand-surface p-5"
-    >
-      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">Groups</h2>
-          <p className="mt-1 text-sm text-foreground/50">
-            {activeGroups.length} active · {friendsData.friends.length} friends
-            available
-          </p>
-        </div>
-        <form
-          className="social-create-group flex flex-col gap-3 sm:flex-row"
-          onSubmit={createGroup}
-        >
-          <input
-            className="min-h-11 min-w-0 rounded-lg border border-brand-border bg-background px-3 text-sm text-foreground outline-none transition placeholder:text-foreground/30 focus:border-brand-orange sm:w-64"
-            onChange={(event) => setGroupName(event.target.value)}
-            aria-label="New group name"
-            maxLength={80}
-            placeholder="Group name"
-            value={groupName}
-          />
-          <IconButton
-            disabled={!groupName.trim() || busyKey !== null || loading}
-            icon={<UserPlus className="h-4 w-4" aria-hidden />}
-            title="Create group"
-            tone="primary"
-            type="submit"
-          >
-            Create
-          </IconButton>
-        </form>
-      </div>
-
-      <div className="social-groups mt-5 grid gap-4 lg:grid-cols-2">
-        {loading && !loaded ? (
-          <p className="text-sm text-foreground/50">Loading...</p>
-        ) : activeGroups.length ? (
-          activeGroups.map((group) => {
-            const addableFriends = friendOptionsForGroup(group);
-            return (
-              <div
-                className="social-group rounded-2xl border border-brand-border/80 bg-brand-surface/60 p-4"
-                key={group.id}
-              >
-                <div className="social-group-heading flex items-start justify-between gap-3">
-                  {editingGroupId === group.id ? (
-                    <form
-                      className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row"
-                      onSubmit={(event) => void renameGroup(event, group.id)}
-                    >
-                      <input
-                        className="min-h-10 min-w-0 flex-1 rounded-lg border border-brand-border bg-background px-3 text-sm text-foreground outline-none transition placeholder:text-foreground/30 focus:border-brand-orange"
-                        aria-label="Group name"
-                        maxLength={80}
-                        onChange={(event) =>
-                          setEditingGroupName(event.target.value)
-                        }
-                        value={editingGroupName}
-                      />
-                      <IconButton
-                        disabled={!editingGroupName.trim() || busyKey !== null}
-                        icon={<Check className="h-4 w-4" aria-hidden />}
-                        title="Save group name"
-                        tone="primary"
-                        type="submit"
-                      />
-                      <IconButton
-                        disabled={busyKey !== null || loading}
-                        icon={<X className="h-4 w-4" aria-hidden />}
-                        onClick={() => {
-                          setEditingGroupId(null);
-                          setEditingGroupName("");
-                        }}
-                        title="Cancel rename"
-                      />
-                    </form>
-                  ) : (
-                    <div className="min-w-0">
-                      <h3 className="social-group-name text-base font-semibold text-foreground">
-                        {group.name}
-                      </h3>
-                      <p className="text-xs text-foreground/50">
-                        {group.members.length} members
-                      </p>
-                    </div>
-                  )}
-                  {editingGroupId !== group.id ? (
-                    <IconButton
-                      disabled={busyKey !== null || loading}
-                      icon={<Pencil className="h-4 w-4" aria-hidden />}
-                      onClick={() => startRenameGroup(group)}
-                      title="Rename group"
-                    />
-                  ) : null}
-                  <IconButton
-                    disabled={busyKey !== null || loading}
-                    icon={<Trash2 className="h-4 w-4" aria-hidden />}
-                    onClick={() =>
-                      window.confirm(`Archive ${group.name}?`) &&
-                      void runLocalAction(
-                          `archive-group:${group.id}`,
-                          async () => {
-                            const ownerUserId = currentUser.userId;
-                            let previousGroups: FriendGroup[] = [];
-                            setGroups((current) => {
-                              previousGroups = current;
-                              return current.filter(
-                                (item) => item.id !== group.id,
-                              );
-                            });
-                            try {
-                              await api(`/api/groups/${group.id}`, {
-                                method: "DELETE",
-                              });
-                            } catch (error) {
-                              if (
-                                mountedRef.current &&
-                                ownerRef.current === ownerUserId
-                              ) {
-                                setGroups(previousGroups);
-                              }
-                              throw error;
-                            }
-                          },
-                          "Group archived.",
-                        )
-                    }
-                    title="Archive group"
-                    tone="danger"
-                  />
-                </div>
-
-                <details
-                  className="social-group-members"
-                  open={embeddedInAccount ? undefined : true}
-                >
-                  <summary hidden={!embeddedInAccount}>Manage members</summary>
-                  <div className="mt-4 flex flex-col gap-2">
-                    {group.members.length ? (
-                      group.members.map((member) => (
-                        <PersonRow
-                          action={
-                            <IconButton
-                              disabled={busyKey !== null || loading}
-                              icon={<X className="h-4 w-4" aria-hidden />}
-                              onClick={() =>
-                                window.confirm(
-                                  `Remove ${member.user.displayName} from ${group.name}?`,
-                                ) &&
-                                void runLocalAction(
-                                    `remove-member:${group.id}:${member.user.userId}`,
-                                    async () => {
-                                      const ownerUserId = currentUser.userId;
-                                      const previous = patchGroup(
-                                        group.id,
-                                        (currentGroup) =>
-                                          removeOptimisticMember(
-                                            currentGroup,
-                                            member.user.userId,
-                                            new Date().toISOString(),
-                                          ),
-                                      );
-                                      try {
-                                        const payload = await api<{
-                                          group: FriendGroup;
-                                        }>(
-                                          `/api/groups/${group.id}/members/${member.user.userId}`,
-                                          { method: "DELETE" },
-                                        );
-                                        if (
-                                          !mountedRef.current ||
-                                          ownerRef.current !== ownerUserId
-                                        ) return;
-                                        upsertGroup(payload.group);
-                                      } catch (error) {
-                                        if (
-                                          previous &&
-                                          mountedRef.current &&
-                                          ownerRef.current === ownerUserId
-                                        ) {
-                                          upsertGroup(previous);
-                                        }
-                                        throw error;
-                                      }
-                                    },
-                                    "Group member removed.",
-                                  )
-                              }
-                              title="Remove from group"
-                            />
-                          }
-                          key={member.user.userId}
-                          user={member.user}
-                        />
-                      ))
-                    ) : (
-                      <p className="text-sm text-foreground/50">No members.</p>
-                    )}
-                  </div>
-
-                  <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                    <select
-                      aria-label={`Add friend to ${group.name}`}
-                      className="min-h-11 min-w-0 flex-1 rounded-lg border border-brand-border bg-background px-3 text-sm text-foreground outline-none transition focus:border-brand-orange"
-                      disabled={!addableFriends.length || busyKey !== null}
-                      onChange={(event) => {
-                        const userId = event.target.value;
-                        if (!userId) return;
-                        event.target.value = "";
-                        const friend = addableFriends.find(
-                          (item) => item.user.userId === userId,
-                        );
-                        if (!friend) return;
-                        void runLocalAction(
-                          `add-member:${group.id}:${userId}`,
-                          async () => {
-                            const ownerUserId = currentUser.userId;
-                            const previous = patchGroup(
-                              group.id,
-                              (currentGroup) =>
-                                addOptimisticMember(
-                                  currentGroup,
-                                  friend,
-                                  new Date().toISOString(),
-                                ),
-                            );
-                            try {
-                              const payload = await api<{ group: FriendGroup }>(
-                                `/api/groups/${group.id}/members`,
-                                {
-                                  body: JSON.stringify({ userId }),
-                                  method: "POST",
-                                },
-                              );
-                              if (
-                                !mountedRef.current ||
-                                ownerRef.current !== ownerUserId
-                              ) return;
-                              upsertGroup(payload.group);
-                            } catch (error) {
-                              if (
-                                previous &&
-                                mountedRef.current &&
-                                ownerRef.current === ownerUserId
-                              ) {
-                                upsertGroup(previous);
-                              }
-                              throw error;
-                            }
-                          },
-                          "Friend added to group.",
-                        );
-                      }}
-                    >
-                      <option value="">
-                        {addableFriends.length
-                          ? "Add friend"
-                          : "No friends to add"}
-                      </option>
-                      {addableFriends.map((friend) => (
-                        <option
-                          key={friend.user.userId}
-                          value={friend.user.userId}
-                        >
-                          {friend.user.displayName}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </details>
-              </div>
-            );
-          })
-        ) : (
-          <p className="text-sm text-foreground/50">No groups yet.</p>
-        )}
-      </div>
-    </section>
-  );
-  const outgoingSection = (
-    <details className="social-section social-outgoing rounded-2xl border border-brand-border/80 bg-brand-surface p-5">
-      <summary className="cursor-pointer text-sm font-medium text-foreground/70">
-        Outgoing requests <span>{friendsData.outgoingRequests.length}</span>
-      </summary>
-      <div className="mt-3">
-        {friendsData.outgoingRequests.map((request) => (
-          <PersonRow
-            key={request.friendshipId}
-            meta="Pending"
-            user={request.user}
-          />
-        ))}
-      </div>
-    </details>
+        : null,
+    );
+  }
+  const dismissButton = (
+    <Button
+      label="Close dialog"
+      icon={<X size={20} />}
+      disabled={busy}
+      onClick={closeModal}
+    />
   );
   return (
-    <div
-      className={
-        embeddedInAccount ? "ac-page ac-social" : "flex w-full flex-col gap-6"
-      }
-    >
-      {embeddedInAccount ? (
-        <AccountPageHeader
-          title="Friends & Groups"
-          description="Keep your people close. Invite them together from your player."
-          action={
-            <>
-              <IconButton
-                disabled={loading || busyKey !== null}
-                icon={
-                  <RefreshCw
-                    className={`h-4 w-4 ${loading ? "ac-spinning" : ""}`}
-                    aria-hidden
-                  />
-                }
-                onClick={() => void refresh()}
-                title="Refresh"
-              />
-              <IconButton
-                disabled={busyKey !== null || loading}
-                icon={<Link2 className="h-4 w-4" aria-hidden />}
-                onClick={() => setAddFriendOpen(true)}
-                title="Invite a friend"
-                tone="primary"
-              >
-                Invite a friend
-              </IconButton>
-            </>
-          }
-        />
-      ) : (
-        <header className="flex flex-col justify-between gap-4 border-b border-brand-border pb-6 md:flex-row md:items-end">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-orange">
-              AniDachi
-            </p>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-              Friends
-            </h1>
-            <p className="mt-2 text-sm text-foreground/50">
-              {currentUser.displayName} · {currentUser.email}
-            </p>
-          </div>
-          <IconButton
-            icon={<RefreshCw className="h-4 w-4" aria-hidden />}
-            onClick={() => void refresh()}
-            title="Refresh"
-          >
-            Refresh
-          </IconButton>
-        </header>
-      )}
-      {notice ? (
-        <div
-          className={
-            embeddedInAccount
-              ? `ac-notice ${notice.tone === "error" ? "ac-notice-error" : ""}`
-              : `fixed right-4 top-[calc(1rem+env(safe-area-inset-top,0px))] z-50 max-w-[min(24rem,calc(100vw-2rem))] rounded-lg border px-4 py-3 text-sm shadow-2xl ${notice.tone === "success" ? "border-brand-orange/30 bg-brand-orange/10 text-brand-orange" : "border-red-400/30 bg-red-500/10 text-red-200"}`
-          }
-          role={notice.tone === "error" ? "alert" : "status"}
+    <div className="people-workspace">
+      <AccountPageHeader
+        title="Friends & Groups"
+        description="Your people, ready for the next watch."
+        action={
+          <>
+            <Button
+              label="Refresh"
+              icon={
+                <RefreshCw size={18} className={loading ? "ac-spinning" : ""} />
+              }
+              disabled={busy || loading}
+              onClick={() => {
+                setNotice(null);
+                void refresh();
+              }}
+            />
+            <Button
+              primary
+              icon={
+                view === "groups" ? <Plus size={18} /> : <Link2 size={18} />
+              }
+              disabled={busy || !loaded}
+              onClick={() =>
+                view === "groups"
+                  ? editGroup(null)
+                  : openModal({ type: "invite" })
+              }
+            >
+              {view === "groups" ? "Create group" : "Invite a friend"}
+            </Button>
+          </>
+        }
+      />
+      {notice && (
+        <p
+          className={`people-notice ${notice.error ? "people-error" : ""}`}
+          role={notice.error ? "alert" : "status"}
         >
           {notice.text}
-        </div>
-      ) : null}
-      {embeddedInAccount ? (
-        <>
-          <AccountSectionSwitch
-            label="People view"
-            value={view}
-            onChange={setView}
-            options={[
-              {
-                value: "friends",
-                label: "Friends",
-                count: loaded ? friendsData.friends.length : undefined,
-              },
-              {
-                value: "groups",
-                label: "Groups",
-                count: loaded ? activeGroups.length : undefined,
-              },
-            ]}
-          />
-          {loaded || loading ? (
-            <>
-              <div hidden={view !== "friends"} aria-busy={loading}>
-                {friendsData.incomingRequests.length ? incomingSection : null}
-                {friendsSection}
-                {friendsData.outgoingRequests.length ? outgoingSection : null}
-              </div>
-              <div hidden={view !== "groups"} aria-busy={loading}>
-                {groupsSection}
-              </div>
-            </>
-          ) : null}
-          <dialog
-            aria-labelledby="add-friend-title"
-            className="social-add-friend-dialog"
-            onCancel={(event) => {
-              event.preventDefault();
-              setAddFriendOpen(false);
-            }}
-            onClose={() => setAddFriendOpen(false)}
-            ref={dialogRef}
+        </p>
+      )}
+      <AccountSectionSwitch
+        label="People view"
+        value={view}
+        onChange={setView}
+        options={[
+          {
+            value: "friends",
+            label: "Friends",
+            count: loaded ? directory.friends.length : undefined,
+          },
+          {
+            value: "groups",
+            label: "Groups",
+            count: loaded ? activeGroups.length : undefined,
+          },
+        ]}
+      />
+      <div aria-busy={loading}>
+        {!loaded ? (
+          <AccountEmptyState
+            title={
+              loading
+                ? "Loading your people…"
+                : "Your people could not be loaded"
+            }
           >
-            <div className="social-dialog-heading">
-              <div>
-                <h2 id="add-friend-title">Add friend</h2>
-                <p>Share your invite link or reconnect with someone recent.</p>
+            <span>{loading ? "" : "Use Refresh to try again."}</span>
+          </AccountEmptyState>
+        ) : view === "friends" ? (
+          <>
+            {!!directory.incomingRequests.length && (
+              <section className="people-requests">
+                <h2>
+                  Friend requests{" "}
+                  <span>{directory.incomingRequests.length}</span>
+                </h2>
+                {directory.incomingRequests.map((friend) => (
+                  <Person
+                    key={friend.friendshipId}
+                    user={friend.user}
+                    meta="Wants to be your friend"
+                  >
+                    <Button
+                      label="Accept request"
+                      primary
+                      icon={<Check size={18} />}
+                      disabled={busy}
+                      onClick={() =>
+                        void action(
+                          () =>
+                            request(
+                              `/api/friends/requests/${friend.friendshipId}/accept`,
+                              { method: "POST" },
+                            ),
+                          "Friend added.",
+                          { reload: true },
+                        )
+                      }
+                    >
+                      Accept
+                    </Button>
+                    <Button
+                      label="Decline request"
+                      icon={<X size={18} />}
+                      disabled={busy}
+                      onClick={() =>
+                        void action(
+                          () =>
+                            request(
+                              `/api/friends/requests/${friend.friendshipId}/decline`,
+                              { method: "POST" },
+                            ),
+                          "Request declined.",
+                          { reload: true },
+                        )
+                      }
+                    />
+                  </Person>
+                ))}
+              </section>
+            )}
+            <div className="people-list-heading">
+              <h2>
+                Friends <span>{directory.friends.length}</span>
+              </h2>
+              <label className="people-search">
+                <Search size={17} />
+                <input
+                  aria-label="Search friends"
+                  placeholder="Search friends"
+                  value={search}
+                  onInput={(event) => setSearch(event.currentTarget.value)}
+                />
+              </label>
+            </div>
+            {visibleFriends.map((friend) => (
+              <Person key={friend.user.userId} user={friend.user}>
+                <Options label={`Options for ${friend.user.displayName}`}>
+                  <button
+                    disabled={busy}
+                    onClick={() => openModal({ type: "remove", friend })}
+                  >
+                    <UserMinus size={16} />
+                    Remove friend
+                  </button>
+                </Options>
+              </Person>
+            ))}
+            {!visibleFriends.length && (
+              <AccountEmptyState
+                icon={<Users size={24} />}
+                title={
+                  query ? "No matching friends" : "Bring your people along"
+                }
+              >
+                {query
+                  ? "Try another name or handle."
+                  : "Share a private invite link. Once accepted, you can invite your friend from the player."}
+              </AccountEmptyState>
+            )}
+            {!!directory.outgoingRequests.length && (
+              <details className="people-legacy social-outgoing">
+                <summary>
+                  Sent requests <span>{directory.outgoingRequests.length}</span>
+                </summary>
+                {directory.outgoingRequests.map((friend) => (
+                  <Person
+                    key={friend.friendshipId}
+                    user={friend.user}
+                    meta="Pending"
+                  >
+                    <Button
+                      disabled={busy}
+                      onClick={() => openModal({ type: "remove", friend })}
+                    >
+                      Cancel request
+                    </Button>
+                  </Person>
+                ))}
+              </details>
+            )}
+          </>
+        ) : (
+          <>
+            <p className="people-hint">
+              Private lists, visible only to you. Choose a group in your player
+              to invite everyone at once.
+            </p>
+            <div className="people-groups">
+              {activeGroups.map((group) => (
+                <div key={group.id} className="people-group-row">
+                  <button
+                    className="people-group-open"
+                    onClick={() => editGroup(group)}
+                    aria-label={`Edit ${group.name}`}
+                  >
+                    <span className="people-group-symbol">
+                      <Users size={23} />
+                    </span>
+                    <span className="people-identity">
+                      <strong>{group.name}</strong>
+                      <span>
+                        {group.members.length}{" "}
+                        {group.members.length === 1 ? "friend" : "friends"}
+                      </span>
+                    </span>
+                    <span className="people-avatar-stack" aria-hidden>
+                      {group.members.slice(0, 3).map((member) => (
+                        <Avatar key={member.user.userId} user={member.user} />
+                      ))}
+                      {group.members.length > 3 && (
+                        <span>+{group.members.length - 3}</span>
+                      )}
+                    </span>
+                    <ChevronRight size={18} />
+                  </button>
+                  <Options label={`Options for ${group.name}`}>
+                    <button onClick={() => editGroup(group)}>Edit group</button>
+                    <button
+                      disabled={busy}
+                      onClick={() => openModal({ type: "delete", group })}
+                    >
+                      <Trash2 size={16} />
+                      Delete group
+                    </button>
+                  </Options>
+                </div>
+              ))}
+            </div>
+            {!activeGroups.length && (
+              <AccountEmptyState
+                icon={<Users size={24} />}
+                title="Keep your watch circle together"
+              >
+                Create a group from your friends, then invite it from the
+                player. Adding people here does not send invitations.
+              </AccountEmptyState>
+            )}
+          </>
+        )}
+      </div>
+      {modal && (
+        <dialog
+          className="people-dialog"
+          ref={dialogRef}
+          aria-labelledby="people-dialog-title"
+          onCancel={(event) => {
+            event.preventDefault();
+            closeModal();
+          }}
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              const rect = event.currentTarget.getBoundingClientRect();
+              if (
+                event.clientX < rect.left ||
+                event.clientX > rect.right ||
+                event.clientY < rect.top ||
+                event.clientY > rect.bottom
+              )
+                closeModal();
+            }
+          }}
+        >
+          <header>
+            <div>
+              <h2 id="people-dialog-title">
+                {modal.type === "invite"
+                  ? "Invite a friend"
+                  : modal.type === "editor"
+                    ? editor?.original
+                      ? "Edit group"
+                      : "Create group"
+                    : modal.type === "delete"
+                      ? "Delete this group?"
+                      : modal.friend.status === "pending"
+                        ? "Cancel this request?"
+                        : "Remove this friend?"}
+              </h2>
+              <p>
+                {modal.type === "invite"
+                  ? "One link. One friend. Ready to watch together."
+                  : modal.type === "editor"
+                    ? "Choose who you want to invite together."
+                    : ""}
+              </p>
+            </div>
+            {dismissButton}
+          </header>
+          {modalNotice && (
+            <p
+              className={`people-notice ${modalNotice.error ? "people-error" : ""}`}
+              role={modalNotice.error ? "alert" : "status"}
+            >
+              {modalNotice.text}
+            </p>
+          )}
+          {modal.type === "invite" ? (
+            <div className="people-invite">
+              <span className="people-invite-symbol">
+                <Link2 size={30} />
+              </span>
+              <p>
+                Send this link to one person. After signing in and accepting,
+                you will appear in each other&apos;s friends list.
+              </p>
+              {inviteLink ? (
+                <>
+                  <label className="people-link-label">
+                    Your private invite link
+                    <input
+                      aria-label="Friend invite link"
+                      readOnly
+                      value={inviteLink.url}
+                      onFocus={(e) => e.target.select()}
+                    />
+                  </label>
+                  <p className="people-hint">
+                    One use · Expires{" "}
+                    {new Date(inviteLink.expiresAt).toLocaleDateString(
+                      undefined,
+                      { month: "short", day: "numeric" },
+                    )}
+                  </p>
+                  <div className="people-invite-actions">
+                    <Button
+                      primary
+                      icon={<Copy size={17} />}
+                      disabled={busy}
+                      onClick={() => void copyLink()}
+                    >
+                      Copy link
+                    </Button>
+                    {typeof navigator !== "undefined" &&
+                      typeof navigator.share === "function" && (
+                        <Button
+                          icon={<Share2 size={17} />}
+                          onClick={() => void shareLink()}
+                        >
+                          Share
+                        </Button>
+                      )}
+                  </div>
+                  <Button
+                    disabled={busy}
+                    onClick={() => void generateLink()}
+                    icon={
+                      busy ? (
+                        <Loader2 className="ac-spinning" size={16} />
+                      ) : (
+                        <Plus size={16} />
+                      )
+                    }
+                  >
+                    Create another link
+                  </Button>
+                  <small>
+                    Inviting someone else? Create a separate link for them.
+                  </small>
+                </>
+              ) : (
+                <Button
+                  primary
+                  disabled={busy}
+                  icon={
+                    busy ? (
+                      <Loader2 size={17} className="ac-spinning" />
+                    ) : (
+                      <Link2 size={17} />
+                    )
+                  }
+                  onClick={() => void generateLink()}
+                >
+                  Create invite link
+                </Button>
+              )}
+            </div>
+          ) : modal.type === "editor" && editor ? (
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                void saveGroup();
+              }}
+            >
+              <div className="people-editor-name">
+                <label htmlFor="people-group-name">Group name</label>
+                <input
+                  autoFocus
+                  id="people-group-name"
+                  aria-label="Group name"
+                  placeholder="e.g. Friday anime"
+                  maxLength={80}
+                  value={editor.name}
+                  disabled={busy}
+                  onInput={(event) =>
+                    setEditor({ ...editor, name: event.currentTarget.value })
+                  }
+                />
               </div>
-              <IconButton
-                icon={<X className="h-4 w-4" aria-hidden />}
-                onClick={() => setAddFriendOpen(false)}
-                title="Close Add friend"
-              />
+              <div className="people-member-heading">
+                <span>Friends</span>
+                <span aria-live="polite">
+                  {editor.memberIds.length} selected
+                </span>
+              </div>
+              <label className="people-search">
+                <Search size={17} />
+                <input
+                  aria-label="Find friends for group"
+                  placeholder="Find a friend"
+                  value={memberSearch}
+                  onInput={(event) =>
+                    setMemberSearch(event.currentTarget.value)
+                  }
+                />
+              </label>
+              <div className="people-member-list">
+                {missingMembers.map((id) => (
+                  <label className="people-member" key={id}>
+                    <input
+                      type="checkbox"
+                      checked
+                      disabled={busy}
+                      onChange={() => toggleMember(id)}
+                    />
+                    <span className="people-identity">
+                      <strong>
+                        {editor.original?.members.find(
+                          (m) => m.user.userId === id,
+                        )?.user.displayName ?? "Unavailable friend"}
+                      </strong>
+                      <span>
+                        No longer in your friends list. Unselect to save.
+                      </span>
+                    </span>
+                  </label>
+                ))}
+                {choices.map((friend) => (
+                  <label className="people-member" key={friend.user.userId}>
+                    <input
+                      type="checkbox"
+                      disabled={
+                        busy ||
+                        (!editor.memberIds.includes(friend.user.userId) &&
+                          editor.memberIds.length >= 100)
+                      }
+                      checked={editor.memberIds.includes(friend.user.userId)}
+                      onChange={() => toggleMember(friend.user.userId)}
+                    />
+                    <Avatar user={friend.user} />
+                    <span className="people-identity">
+                      <strong>{friend.user.displayName}</strong>
+                      <span>
+                        {friend.user.handle
+                          ? `@${friend.user.handle}`
+                          : "AniDachi friend"}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+                {!choices.length && !missingMembers.length && (
+                  <p className="people-member-empty">
+                    {memberQuery
+                      ? "No matching friends."
+                      : "No friends yet. You can save an empty group and add friends later."}
+                  </p>
+                )}
+              </div>
+              <footer>
+                <span>Only you can see this group.</span>
+                <Button disabled={busy} onClick={closeModal}>
+                  Cancel
+                </Button>
+                <Button
+                  primary
+                  type="submit"
+                  disabled={
+                    busy ||
+                    !editor.name.trim() ||
+                    !!missingMembers.length ||
+                    (!dirty && !!editor.original)
+                  }
+                  icon={
+                    busy ? (
+                      <Loader2 size={16} className="ac-spinning" />
+                    ) : undefined
+                  }
+                >
+                  {busy
+                    ? "Saving…"
+                    : editor.original
+                      ? "Save changes"
+                      : "Create group"}
+                </Button>
+              </footer>
+            </form>
+          ) : modal.type === "delete" || modal.type === "remove" ? (
+            <div className="people-confirm">
+              <p>
+                {modal.type === "delete"
+                  ? `“${modal.group.name}” will no longer be available for invitations. Your friends will stay in your list.`
+                  : modal.friend.status === "pending"
+                    ? `Your request to ${modal.friend.user.displayName} will be canceled.`
+                    : `${modal.friend.user.displayName} will be removed from your friends and your group lists. You can add each other again with a new link.`}
+              </p>
+              <footer>
+                <Button disabled={busy} onClick={closeModal}>
+                  Cancel
+                </Button>
+                <Button
+                  disabled={busy}
+                  primary
+                  onClick={() =>
+                    void action(
+                      async () => {
+                        await request(
+                          modal.type === "delete"
+                            ? `/api/groups/${modal.group.id}`
+                            : `/api/friends/${modal.friend.user.userId}`,
+                          { method: "DELETE" },
+                        );
+                        if (mounted.current) dismissModal();
+                      },
+                      modal.type === "delete"
+                        ? "Group deleted."
+                        : "Friend list updated.",
+                      { modal: true, reload: true, dismiss: true },
+                    )
+                  }
+                >
+                  {busy
+                    ? "Saving…"
+                    : modal.type === "delete"
+                      ? "Delete group"
+                      : modal.friend.status === "pending"
+                        ? "Cancel request"
+                        : "Remove friend"}
+                </Button>
+              </footer>
             </div>
-            <div className="social-dialog-content">
-              {inviteSection}
-              {recentSection}
-            </div>
-          </dialog>
-        </>
-      ) : (
-        <>
-          <section className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-            {inviteSection}
-            {recentSection}
-          </section>
-          <section className="grid gap-6 lg:grid-cols-2">
-            {incomingSection}
-            {friendsSection}
-          </section>
-          {groupsSection}
-          {friendsData.outgoingRequests.length ? outgoingSection : null}
-        </>
+          ) : null}
+        </dialog>
       )}
     </div>
   );

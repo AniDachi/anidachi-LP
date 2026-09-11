@@ -25,9 +25,10 @@ earlier account library plan; it does not change personal history ownership.
   and a bounded visible-page timer, retaining current data on failures. Changes
   to friend requests reconcile other mounted account surfaces, not a new queue.
 - Friends has two switches: Friends and Groups. Incoming requests appear above
-  friends only when present; outgoing requests are expandable. Add friend opens
-  the existing invitation-link and recent-people actions. Groups preserve
-  existing create/rename/archive/member actions and owner-private invitation-list
+  friends only when present; outgoing requests are expandable. The September 11
+  [link-first amendment](../plans/2026-09-11-friends-groups-link-mvp.md) replaces
+  recent-people actions with one-time friend links and moves group name/member
+  changes into one staged dialog. Groups retain owner-private invitation-list
   meaning. No shared progress, group hosting or new room creation path.
 - Profile edits name, handle and avatar through the existing profile API;
   identity comes from the authenticated server session and late responses must
@@ -60,8 +61,10 @@ returns 409 before body processing or mutation. The new form always supplies it;
 existing extension clients without it remain compatible. It is not authentication.
 Keep its constant module client-safe and the handler/server dependencies separate.
 
-No new database schema, Stripe settings, shared protocol, Worker behavior,
-extension build or history realtime invalidation. Free reads/resumes/deletes
+The original September 10 delivery adds no database schema, Stripe settings,
+shared protocol, Worker behavior, extension build or history realtime
+invalidation. The September 11 link-first amendment adds the server-only
+transactional social RPCs documented in its execution plan. Free reads/resumes/deletes
 retained history; paid capture/manual edits and capacity remain unchanged.
 Server data stays authoritative. API failures never become empty-success UI.
 No notification transmission to real people as part of testing.

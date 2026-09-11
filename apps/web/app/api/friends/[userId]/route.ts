@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getApiSession } from "@/lib/anidachi-auth/api-session";
 import { removeFriendship } from "@/lib/anidachi-auth/social";
-import { socialErrorResponse } from "@/lib/anidachi-auth/social-routes";
+import { socialErrorResponse, socialOwnerError } from "@/lib/anidachi-auth/social-routes";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +13,8 @@ export async function DELETE(
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const ownerError = socialOwnerError(request, session.userId);
+  if (ownerError) return ownerError;
 
   try {
     const { userId } = await params;

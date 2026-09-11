@@ -161,6 +161,7 @@ export type FriendInviteLink = {
 };
 
 export type FriendInvitePreview = {
+  alreadyFriends: boolean;
   token: string;
   sender: PublicProfile;
   createdAt: string;
@@ -861,14 +862,19 @@ async function assertActiveFriendInviteLinkLimit(senderUserId: string): Promise<
   }
 }
 
-export async function getFriendInvitePreview(tokenValue: string): Promise<FriendInvitePreview> {
+export async function getFriendInvitePreview(tokenValue: string, viewerUserId?: string): Promise<FriendInvitePreview> {
   const token = cleanFriendInviteToken(tokenValue);
   if (!token) throw new SocialApiError(404, "Friend invite not found");
 
   const invite = await getFriendInviteLinkByToken(token);
   if (!invite || invite.revoked_at) throw new SocialApiError(404, "Friend invite not found");
-  if (friendInviteExpired(invite)) throw new SocialApiError(410, "Friend invite expired");
-  if (invite.accepted_at) throw new SocialApiError(409, "Friend invite already used");
+  if (invite.accepted_at) {
+    const friendship = viewerUserId === invite.accepted_by_user_id
+      ? await getFriendshipBetween(viewerUserId, invite.sender_user_id) : null;
+    if (friendship?.status !== "accepted") throw new SocialApiError(409, "This invite has already been used. Ask for a new link.");
+  } else if (friendInviteExpired(invite)) {
+    throw new SocialApiError(410, "This invite has expired. Ask for a new link.");
+  }
 
   const [profile, user] = await Promise.all([
     ensureProfileForUser(invite.sender_user_id),
@@ -876,7 +882,10 @@ export async function getFriendInvitePreview(tokenValue: string): Promise<Friend
   ]);
   if (!user) throw new SocialApiError(404, "Friend invite sender not found");
 
+  const relationship = viewerUserId && viewerUserId !== invite.sender_user_id
+    ? await getFriendshipBetween(viewerUserId, invite.sender_user_id) : null;
   return {
+    alreadyFriends: relationship?.status === "accepted",
     token,
     sender: publicProfileFromRows(invite.sender_user_id, profile, user),
     createdAt: invite.created_at,
@@ -892,55 +901,14 @@ export async function acceptFriendInviteLink(params: {
   const token = cleanFriendInviteToken(params.token);
   if (!token) throw new SocialApiError(404, "Friend invite not found");
 
-  const invite = await getFriendInviteLinkByToken(token);
-  if (!invite || invite.revoked_at) throw new SocialApiError(404, "Friend invite not found");
-  if (friendInviteExpired(invite)) throw new SocialApiError(410, "Friend invite expired");
-  if (invite.sender_user_id === params.viewerUserId) {
-    throw new SocialApiError(400, "Cannot accept your own friend invite");
-  }
-
-  if (invite.accepted_at) {
-    if (invite.accepted_by_user_id === params.viewerUserId) {
-      const existing = await getFriendshipBetween(params.viewerUserId, invite.sender_user_id);
-      if (existing) return itemForFriendship(params.viewerUserId, existing);
-    }
-    throw new SocialApiError(409, "Friend invite already used");
-  }
-
-  const [viewer, sender] = await Promise.all([
-    ensureProfileForUser(params.viewerUserId),
-    ensureProfileForUser(invite.sender_user_id),
-  ]);
-  if (!viewer || !sender) throw new SocialApiError(404, "User not found");
-
-  const existing = await getFriendshipBetween(params.viewerUserId, invite.sender_user_id);
-  if (existing?.status === "blocked") {
-    throw new SocialApiError(403, "This relationship is blocked");
-  }
-
-  const now = new Date().toISOString();
-  const { data: acceptedInvite, error: acceptError } = await db()
-    .from("friend_invite_links")
-    .update({
-      accepted_at: now,
-      accepted_by_user_id: params.viewerUserId,
-    })
-    .eq("id", invite.id)
-    .is("accepted_at", null)
-    .select("*")
-    .maybeSingle();
-  if (acceptError) {
-    throw new Error(`Failed to accept friend invite link: ${acceptError.message}`);
-  }
-  if (!acceptedInvite) {
-    throw new SocialApiError(409, "Friend invite already used");
-  }
-
-  return acceptFriendshipFromInvite({
-    senderUserId: invite.sender_user_id,
-    viewerUserId: params.viewerUserId,
-    acceptedAt: now,
+  const { data, error } = await db().rpc("accept_friend_link_v1", {
+    p_token_hash: hashFriendInviteToken(token),
+    p_viewer_user_id: params.viewerUserId,
   });
+  if (error) throw socialEditorError(error.message);
+  const friendship = (Array.isArray(data) ? data[0] : data) as FriendshipRow | null;
+  if (!friendship) throw new Error("Friend invite returned no friendship");
+  return itemForFriendship(params.viewerUserId, friendship);
 }
 
 async function getFriendInviteLinkByToken(token: string): Promise<FriendInviteLinkRow | null> {
@@ -951,38 +919,6 @@ async function getFriendInviteLinkByToken(token: string): Promise<FriendInviteLi
     .maybeSingle();
   if (error) throw new Error(`Failed to load friend invite link: ${error.message}`);
   return (data as FriendInviteLinkRow | null) ?? null;
-}
-
-async function acceptFriendshipFromInvite(params: {
-  senderUserId: string;
-  viewerUserId: string;
-  acceptedAt: string;
-}): Promise<FriendListItem> {
-  const existing = await getFriendshipBetween(params.senderUserId, params.viewerUserId);
-  if (existing?.status === "blocked") {
-    throw new SocialApiError(403, "This relationship is blocked");
-  }
-  if (existing?.status === "accepted") {
-    return itemForFriendship(params.viewerUserId, existing);
-  }
-
-  const payload = {
-    requester_user_id: params.senderUserId,
-    addressee_user_id: params.viewerUserId,
-    status: "accepted" as FriendshipStatus,
-    blocked_by_user_id: null,
-    requested_at: existing?.requested_at ?? params.acceptedAt,
-    responded_at: params.acceptedAt,
-    updated_at: params.acceptedAt,
-  };
-
-  const query = existing
-    ? db().from("friendships").update(payload).eq("id", existing.id)
-    : db().from("friendships").insert(payload);
-
-  const { data, error } = await query.select().single();
-  if (error) throw new Error(`Failed to accept friend invite: ${error.message}`);
-  return itemForFriendship(params.viewerUserId, data as FriendshipRow);
 }
 
 export async function acceptFriendRequest(
@@ -1307,6 +1243,46 @@ export async function createFriendGroup(params: {
     updatedAt: group.updated_at,
     members: [],
   };
+}
+
+export function socialEditorError(message: string): Error {
+  const errors: Record<string, [number, string]> = {
+    group_input_invalid: [400, "Check the group name and selected friends."],
+    group_not_found: [404, "This group is no longer available."],
+    group_archived: [409, "This group is archived and cannot be edited."],
+    group_friend_unavailable: [409, "A selected person is no longer your friend. Refresh the list and try again."],
+    group_edit_conflict: [409, "This group changed elsewhere. Reopen it to load the latest version."],
+    group_request_conflict: [409, "This group was already created. Refresh to see its current version."],
+    group_limit_reached: [403, "Your plan's group limit is reached. Delete an unused group or change your plan."],
+    friend_link_not_found: [404, "This friend invite is no longer available."],
+    friend_link_self: [400, "This is your own friend invite link."],
+    friend_link_used: [409, "This invite has already been used. Ask for a new link."],
+    friend_link_expired: [410, "This invite has expired. Ask for a new link."],
+    friend_link_blocked: [403, "This friend invite cannot be accepted."],
+  };
+  const entry = Object.entries(errors).find(([key]) => message.includes(key));
+  return entry ? new SocialApiError(...entry[1]) : new Error(`Social operation failed: ${message}`);
+}
+
+export async function saveFriendGroup(params: {
+  ownerUserId: string; groupId: string; name: string; memberIds: string[];
+  expectedUpdatedAt: string | null; create: boolean;
+}): Promise<FriendGroup> {
+  assertUuid(params.ownerUserId, "ownerUserId");
+  assertUuid(params.groupId, "groupId");
+  params.memberIds.forEach((id) => assertUuid(id, "memberId"));
+  const user = await getUserById(params.ownerUserId);
+  if (!user) throw new SocialApiError(404, "User not found");
+  const { data, error } = await db().rpc("save_friend_group_v1", {
+    p_owner_user_id: params.ownerUserId, p_group_id: params.groupId,
+    p_name: params.name, p_member_ids: params.memberIds,
+    p_expected_updated_at: params.expectedUpdatedAt, p_create: params.create,
+    p_max_groups: getPlanEntitlements(user.plan).account.maxOwnedGroups,
+  });
+  if (error) throw socialEditorError(error.message);
+  const group = (Array.isArray(data) ? data[0] : data) as FriendGroupRow | null;
+  if (!group) throw new Error("Group save returned no group");
+  return friendGroupViewFromRow(group);
 }
 
 export async function updateFriendGroup(params: {

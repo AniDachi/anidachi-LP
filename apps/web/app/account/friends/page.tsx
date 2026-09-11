@@ -1,3 +1,4 @@
+import "../../friends/friends.css";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { FriendsClient } from "@/app/friends/friends-client";

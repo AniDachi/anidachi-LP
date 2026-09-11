@@ -87,12 +87,13 @@ afterEach(async () => {
   globalThis.fetch = originalFetch;
 });
 
-test("people section changes preserve expanded group members and do not reload the directory", async () => {
+test("people section changes keep groups available without reloading the directory", async () => {
   let reads = 0;
   globalThis.fetch = async (input) => {
     reads++;
     if (String(input) === "/api/groups")
       return Response.json({
+        meta,
         groups: [
           {
             id: groupId,
@@ -107,6 +108,7 @@ test("people section changes preserve expanded group members and do not reload t
     if (String(input) === "/api/recent-people")
       return Response.json({ meta, people: [] });
     return Response.json({
+      meta,
       friends: [
         {
           friendshipId: peer,
@@ -137,19 +139,16 @@ test("people section changes preserve expanded group members and do not reload t
       }),
     ),
   );
-  assert.equal(reads, 3);
+  assert.equal(reads, 2);
   await click("Groups 1");
-  const groupPanel = container.querySelector("#groups");
-  assert.ok(groupPanel);
-  assert.equal(groupPanel.parentElement?.hidden, false);
-  const details = groupPanel.querySelector("details");
-  assert.ok(details);
-  details.open = true;
+  await click("Edit Friday anime");
+  assert.ok(container.querySelector<HTMLDialogElement>("dialog")?.open);
+  await click("Cancel");
   await click("Friends 1");
-  assert.equal(groupPanel.parentElement?.hidden, true);
   await click("Groups 1");
-  assert.equal(details.open, true);
-  assert.equal(reads, 3);
+  await click("Edit Friday anime");
+  assert.equal(container.querySelector<HTMLInputElement>('dialog input[type="checkbox"]')?.checked, true);
+  assert.equal(reads, 2);
 });
 
 test("failed initial friends load does not claim the user has no friends", async () => {
