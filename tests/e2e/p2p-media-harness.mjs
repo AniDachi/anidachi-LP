@@ -25,6 +25,7 @@ import {
 	createHarnessRoomToken,
 	getHarnessHostIdentity,
 	getP95,
+	LEGACY_TTFM_BUDGET_MS,
 	summarizeSelectedCandidatePairs,
 	TTFM_P95_BUDGET_MS,
 } from "./p2p-media-harness-support.mjs";
@@ -35,7 +36,7 @@ const API_DIR = resolve(REPO, "apps/api");
 const SECRET = "local-harness-secret";
 const WORKER_PORT = 8787; // matches the constants.ts fallback ws base
 const ROOM_ID = `media-harness-room-${randomUUID()}`;
-const TTFM_BUDGET_MS = TTFM_P95_BUDGET_MS;
+const TTFM_BUDGET_MS = LEGACY_TTFM_BUDGET_MS;
 const RECOVERY_BUDGET_MS = 12000;
 const HARNESS_FORCE_RELAY = parseBooleanEnv(process.env.HARNESS_FORCE_RELAY);
 const HARNESS_ICE_SERVERS_FROM_ENV = parseHarnessIceServers(

@@ -9,6 +9,7 @@ import {
 	createHarnessRoomToken,
 	getHarnessHostIdentity,
 	getP95,
+	LEGACY_TTFM_BUDGET_MS,
 	summarizeSelectedCandidatePairs,
 	TTFM_P95_BUDGET_MS,
 } from "./p2p-media-harness-support.mjs";
@@ -110,6 +111,7 @@ test("actual Worker rejects the former v2 ICE host fixture but accepts legacy", 
 });
 
 test("p95 is deterministic and relay coverage cannot pass with missing pairs", () => {
+	assert.equal(LEGACY_TTFM_BUDGET_MS, 8_000);
 	assert.equal(TTFM_P95_BUDGET_MS, 6_000);
 	assert.equal(getP95([5_999, 100, 200]), 5_999);
 	assert.equal(getP95([6_000]) < TTFM_P95_BUDGET_MS, false);

@@ -17,6 +17,10 @@ node p2p-media-harness.mjs
 
 Set `HARNESS_DEBUG=1` to stream per-page browser console output.
 
+The default legacy scenario retains its existing per-direction 8000 ms
+first-frame wait and assertion. Media-v2 scenarios use the separate complete
+sample p95 target documented below.
+
 The local harness token fixture follows the production room-token boundary: it
 uses issuer `anidachi-auth`, audience `anidachi-worker`, and binds the exact
 `participantSessionId` that `RoomClient` sends in JOIN. Legacy runs use host

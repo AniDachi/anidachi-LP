@@ -1,6 +1,7 @@
 import { createHmac } from "node:crypto";
 
 export const TTFM_P95_BUDGET_MS = 6_000;
+export const LEGACY_TTFM_BUDGET_MS = 8_000;
 
 function b64url(input) {
 	return Buffer.from(input).toString("base64url");
