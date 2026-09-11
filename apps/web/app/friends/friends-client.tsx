@@ -342,12 +342,12 @@ function FriendsWorkspace({ currentUser }: { currentUser: CurrentUser }) {
   function dismissModal() {
     // Native close restores the opener's focus before React removes the dialog.
     dialogRef.current?.close();
+    const opener = returnFocusRef.current;
+    if (opener?.isConnected) opener.focus();
     setModal(null);
     window.requestAnimationFrame(() => {
       if (!mounted.current) return;
-      const opener = returnFocusRef.current;
-      if (opener?.isConnected) opener.focus();
-      else
+      if (!opener?.isConnected && document.activeElement === document.body)
         document
           .querySelector<HTMLButtonElement>(
             ".people-workspace .ac-header-actions button:last-child",
