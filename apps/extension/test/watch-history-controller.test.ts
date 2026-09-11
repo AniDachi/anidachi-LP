@@ -1,13 +1,17 @@
-import { paidHistoryLease } from "./watch-history-personal-fixtures";
+import type { WatchProgressEvent } from "@anidachi/protocol";
 import { describe, expect, it, vi } from "vitest";
+import {
+  HISTORY_OBSERVATION_SUSPENDED,
+  type HistoryObservation,
+  type HistoryObservationResult,
+} from "../src/source-adapters/core/history-policy";
+import type { WatchHistoryCaptureResult } from "../src/watch-history-client";
 import {
   createWatchHistoryController,
   type WatchHistoryController,
   type WatchHistoryControllerDependencies,
 } from "../src/watch-history-controller";
-import type { WatchProgressEvent } from "@anidachi/protocol";
-import type { HistoryObservation } from "../src/source-adapters/core/history-policy";
-import type { WatchHistoryCaptureResult } from "../src/watch-history-client";
+import { paidHistoryLease } from "./watch-history-personal-fixtures";
 
 describe("watch history meaningful-progress controller", () => {
   it("does not treat a Resume seek or its synthetic ended checkpoint as new viewing", async () => {
@@ -168,6 +172,97 @@ describe("watch history meaningful-progress controller", () => {
     expect(fixture.enqueued.map((event) => [event.kind, event.currentTime])).toEqual([
       ["heartbeat", 11],
     ]);
+  });
+
+  it("preserves genuine progress and meaningful state across a suspended ad", async () => {
+    let suspended = false;
+    const fixture = createFixture({
+      sessionKeys: ["11111111-1111-4111-8111-111111111111"],
+      getObservation: (_preferences, observation) =>
+        suspended ? HISTORY_OBSERVATION_SUSPENDED : observation,
+    });
+    await fixture.controller.start();
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    const localBeforeAd = fixture.local.length;
+    const queuedBeforeAd = fixture.enqueued.length;
+
+    suspended = true;
+    fixture.setTime(30);
+    await fixture.controller.observe("heartbeat");
+    await fixture.controller.observe("ended");
+
+    expect(fixture.local).toHaveLength(localBeforeAd);
+    expect(fixture.enqueued).toHaveLength(queuedBeforeAd);
+    expect(fixture.enqueued.some((event) => event.kind === "ended")).toBe(false);
+
+    suspended = false;
+    fixture.setTime(12);
+    await fixture.controller.observe("heartbeat");
+
+    expect(fixture.local.at(-1)).toMatchObject({
+      kind: "heartbeat",
+      currentTime: 12,
+      clientSessionKey: "11111111-1111-4111-8111-111111111111",
+    });
+    expect(fixture.localMeaningfulSolo.at(-1)).toBe(true);
+  });
+
+  it("waits for confirmed content before rotating a session after a suspended video switch", async () => {
+    let suspended = false;
+    const fixture = createFixture({
+      sessionKeys: [
+        "11111111-1111-4111-8111-111111111111",
+        "22222222-2222-4222-8222-222222222222",
+      ],
+      getObservation: (_preferences, observation) =>
+        suspended ? HISTORY_OBSERVATION_SUSPENDED : observation,
+    });
+    await fixture.controller.start();
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    const localBeforeSwitch = fixture.local.length;
+
+    suspended = true;
+    fixture.setSource({
+      titleKey: "youtube:video:next-video",
+      episodeKey: "youtube:video:next-video",
+      sourceUrl: "https://www.youtube.com/watch?v=next-video",
+    });
+    fixture.setTime(30);
+    await fixture.controller.observe("ended");
+
+    expect(fixture.local).toHaveLength(localBeforeSwitch);
+    expect(fixture.enqueued.some((event) =>
+      event.titleKey === "youtube:video:next-video"
+    )).toBe(false);
+
+    suspended = false;
+    fixture.setTime(5);
+    await fixture.controller.observe("heartbeat");
+
+    expect(fixture.enqueued.at(-1)).toMatchObject({
+      kind: "source_change",
+      titleKey: "crunchyroll-series:show",
+      currentTime: 11,
+      clientSessionKey: "11111111-1111-4111-8111-111111111111",
+    });
+    expect(fixture.local.at(-1)).toMatchObject({
+      kind: "heartbeat",
+      titleKey: "youtube:video:next-video",
+      currentTime: 5,
+      clientSessionKey: "22222222-2222-4222-8222-222222222222",
+    });
+    expect(fixture.localMeaningfulSolo.at(-1)).toBe(false);
+
+    fixture.setTime(6);
+    await fixture.controller.observe("heartbeat");
+    expect(fixture.enqueued.at(-1)).toMatchObject({
+      kind: "heartbeat",
+      titleKey: "youtube:video:next-video",
+      currentTime: 6,
+      clientSessionKey: "22222222-2222-4222-8222-222222222222",
+    });
   });
 
   it("durably coalesces every meaningful local sample but requests transport only on cadence and boundaries", async () => {
@@ -1131,7 +1226,7 @@ function createFixture(options: {
   getObservation?: (
     preferences: Parameters<WatchHistoryControllerDependencies["getObservation"]>[0],
     observation: HistoryObservation,
-  ) => HistoryObservation | null;
+  ) => HistoryObservationResult;
 } = {}) {
   let now = 1_700_000_000_000;
   let time = 10;

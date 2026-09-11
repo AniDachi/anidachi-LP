@@ -8,7 +8,11 @@ import {
 	historyServerTime,
 	type WatchHistoryLease,
 } from "./watch-history-access";
-import type { HistoryObservation } from "./source-adapters/core/history-policy";
+import {
+	HISTORY_OBSERVATION_SUSPENDED,
+	type HistoryObservation,
+	type HistoryObservationResult,
+} from "./source-adapters/core/history-policy";
 import type { WatchHistoryCaptureResult } from "./watch-history-client";
 import type { WatchHistoryObservationDisplayMode } from "./watch-history-storage";
 import type { WatchHistoryLocalEvent } from "./watch-history-outbox";
@@ -27,7 +31,7 @@ export type WatchHistoryControllerDependencies = {
 	getProvider?: () => "crunchyroll" | "youtube";
 	getObservation: (
 		preferences: WatchHistoryPreferences | null,
-	) => HistoryObservation | null;
+	) => HistoryObservationResult;
 	getRoomActive: () => boolean;
 	loadCachedPreferences?: () => Promise<{
 		ownerUserId: string;
@@ -272,6 +276,7 @@ export function createWatchHistoryController(
 		}
 		const observation = dependencies.getObservation(authority!.preferences);
 		if (!allowed()) return;
+		if (observation === HISTORY_OBSERVATION_SUSPENDED) return;
 		if (
 			retained &&
 			(!observation ||
@@ -364,6 +369,7 @@ export function createWatchHistoryController(
 			if (allowed()) {
 				const latest = dependencies.getObservation(authority!.preferences);
 				if (
+					latest !== HISTORY_OBSERVATION_SUSPENDED &&
 					latest &&
 					retained &&
 					observationIdentity(latest) === observationIdentity(retained)
