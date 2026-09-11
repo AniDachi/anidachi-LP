@@ -76,12 +76,16 @@ import {
 import {
   acceptFriendRequest,
   acceptRoomInvite,
-  createFriendGroup,
+  createFriendInviteLink,
+  saveFriendGroup,
+  archiveFriendGroup,
+  removeFriend,
+  type FriendInviteLink,
+  type SaveFriendGroupInput,
   declineFriendRequest,
   declineRoomInvite,
   listRoomInvites,
   listSocialDirectory,
-  sendFriendRequest,
 } from "./social-client";
 import {
   getCachedSocialSnapshotForUser,
@@ -499,9 +503,10 @@ export function PopupApp() {
   const runSocialAction = useCallback(
     async (
       key: PopupSocialActionKey,
-      action: (accessToken: string) => Promise<unknown>,
+      action: (accessToken: string, ownerUserId: string) => Promise<unknown>,
       success: string,
       fallbackError: string,
+      refresh = true,
     ): Promise<boolean> => {
       if (socialMutationInFlightRef.current) return false;
       socialMutationInFlightRef.current = true;
@@ -511,6 +516,7 @@ export function PopupApp() {
         socialMutationInFlightRef.current = false;
         return false;
       }
+      let actionTokens: ExtensionAuthTokens | null = null;
       setBusySocialAction(key);
       setSocialNotice(null);
       try {
@@ -524,8 +530,10 @@ export function PopupApp() {
         }
 
         setAuthSession({ status: "ready", tokens, error: null });
-        await action(tokens.accessToken);
+        actionTokens = tokens;
+        await action(tokens.accessToken, request.userId);
         if (!accountGateRef.current.isCurrent(request)) return false;
+        if (!refresh) return true;
         const [socialRefreshed, inboxRefreshed] = await Promise.all([
           loadSocialForTokens(tokens),
           loadInboxForTokens(tokens),
@@ -543,6 +551,12 @@ export function PopupApp() {
         return true;
       } catch (error) {
         if (!accountGateRef.current.isCurrent(request)) return false;
+        // Reconcile revisions and removed friendships without overwriting the
+        // open draft. Reopening after a conflict must use the latest group.
+        if (key.startsWith("save-group:") && actionTokens) {
+          await loadSocialForTokens(actionTokens);
+          if (!accountGateRef.current.isCurrent(request)) return false;
+        }
         setSocialNotice({
           actionKey: key,
           tone: "error",
@@ -557,31 +571,28 @@ export function PopupApp() {
     [loadInboxForTokens, loadSocialForTokens, transitionToResolvedSession],
   );
 
-  const createGroup = useCallback(
-    async (name: string, clientRequestId: string) =>
-      runSocialAction(
-        "create-group",
-        async (accessToken) => {
-          await createFriendGroup(accessToken, { name, clientRequestId });
-        },
-        "Group created.",
-        "Could not create group",
-      ),
-    [runSocialAction],
+  const saveGroup = useCallback(
+    (input: SaveFriendGroupInput) => runSocialAction(
+      `save-group:${input.groupId}`,
+      (accessToken, ownerUserId) => saveFriendGroup(accessToken, ownerUserId, input),
+      input.create ? "Group created." : "Group saved.", "Could not save group",
+    ), [runSocialAction],
   );
-
-  const addFriend = useCallback(
-    async (userId: string) =>
-      runSocialAction(
-        `add-friend:${userId}`,
-        async (accessToken) => {
-          await sendFriendRequest(accessToken, userId);
-        },
-        "Friend request sent.",
-        "Could not send friend request",
-      ),
-    [runSocialAction],
-  );
+  const createInviteLink = useCallback(async (): Promise<FriendInviteLink | null> => {
+    let link: FriendInviteLink | null = null;
+    const success = await runSocialAction("create-friend-link", async (accessToken, ownerUserId) => {
+      link = await createFriendInviteLink(accessToken, ownerUserId);
+    }, "Invitation link created.", "Could not create invitation link", false);
+    return success ? link : null;
+  }, [runSocialAction]);
+  const deleteGroup = useCallback((groupId: string) => runSocialAction(
+    `delete-group:${groupId}`, (accessToken) => archiveFriendGroup(accessToken, groupId),
+    "Group deleted. Your friends are unchanged.", "Could not delete group",
+  ), [runSocialAction]);
+  const removeFriendFromPeople = useCallback((userId: string) => runSocialAction(
+    `remove-friend:${userId}`, (accessToken, ownerUserId) => removeFriend(accessToken, ownerUserId, userId),
+    "Friend removed.", "Could not remove friend",
+  ), [runSocialAction]);
 
   const acceptIncomingFriendRequest = useCallback(
     async (friendshipId: string) =>
@@ -905,8 +916,11 @@ export function PopupApp() {
         <PopupPeoplePanel
           actionNotice={peopleActionNotice}
           pendingActionKey={peoplePendingActionKey}
-          onAddFriend={addFriend}
-          onCreateGroup={createGroup}
+          onSaveGroup={saveGroup}
+          onCreateInviteLink={createInviteLink}
+          onDeleteGroup={deleteGroup}
+          onRemoveFriend={removeFriendFromPeople}
+          onDismissNotice={() => setSocialNotice(null)}
           onOpenDashboard={() => void openAccount("/account/friends")}
           onRefresh={() => void syncPopupData()}
           onSignIn={() => void syncPopupData({ interactive: true })}
@@ -1292,7 +1306,7 @@ function MissedInviteInboxRow({ invite }: { invite: PopupInboxInvite }) {
 }
 
 function isPopupPeopleActionKey(value: string | null): value is PopupPeopleActionKey {
-  return value === "create-group" || Boolean(value?.startsWith("add-friend:"));
+  return value === "create-friend-link" || Boolean(value && ["save-group:", "delete-group:", "remove-friend:"].some((prefix) => value.startsWith(prefix)));
 }
 
 function isPopupPeopleActionNotice(

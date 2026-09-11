@@ -25,6 +25,17 @@ supplies an owner mismatch fence; established extension requests remain valid.
 Database prerequisites must deploy before these web consumers. Staging acceptance
 and release evidence are recorded in the linked plan.
 
+## Extension People editor, 2026-09-11
+
+The [extension People plan](superpowers/plans/2026-09-11-extension-people-mvp.md)
+continues the same MVP in the drawer: accepted-friend search, deliberate one-time
+links, private group name/member editing and confirmed removal. It consumes the
+existing atomic website APIs through the background bridge with account-owner
+fencing. Failed edits retain their draft and reconcile the latest directory for
+conflict recovery. Inbox requests and player invitations remain compatible.
+No room/media protocol, history, drawer dimensions or permissions change.
+Local verification and loaded-artifact evidence are recorded in the plan/PR.
+
 ## Account MVP navigation, 2026-09-10
 
 The [approved account workspace](superpowers/specs/2026-09-10-account-mvp-navigation-design.md)
