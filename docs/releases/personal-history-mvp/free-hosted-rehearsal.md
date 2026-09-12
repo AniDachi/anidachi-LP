@@ -47,8 +47,10 @@ privileges; reject unsupported owners, grantors or object/column ACL forms rathe
 than applying blanket revocations or changing managed catalogs. Test this under
 PostgreSQL 17 non-superuser privileges with surviving default ACLs and forced
 transaction failure. Separately resolve the residual managed role through a
-supported platform procedure or an explicitly reviewed recovery policy. These
-corrections are requirements, **not implemented behavior** of the commands below.
+supported platform procedure or an explicitly reviewed recovery policy.
+The ACL correction below is a locally verified offline candidate requiring
+independent review and fresh hosted acceptance. The managed-role correction
+remains unresolved.
 Task 2/4 recovery gates and production promotion remain open.
 
 ## 1. Prepare tools, target and local artifacts
@@ -75,7 +77,7 @@ test "$(sb --version)" = 2.111.0
 sb db push --help
 sb projects create --help
 sb projects delete --help
-fnm exec --using=22.23.1 node --test scripts/production-history-hosted-artifacts.test.mjs
+fnm exec --using=22.23.1 node --test scripts/production-history-hosted-artifacts.test.mjs scripts/production-history-application-acl.test.mjs
 ```
 
 After the window is approved, create the new Free project in the approved Free
@@ -273,6 +275,38 @@ chmod 400 "$REHEARSAL_ROOT/baseline.dump" "$REHEARSAL_ROOT/application.toc" \
   "$REHEARSAL_ROOT/application-restore.sql"
 ```
 
+Before applying any pending migration, capture the complete baseline application
+ACL metadata while the same independent drain remains in force. This covers all
+34 baseline public tables, `supabase_migrations.schema_migrations`, and every
+public function; unsupported public relation/type/extension forms, column ACLs,
+owners or grantors fail closed. The snapshot includes raw ACLs for audit and
+normalized privileges (including NULL ACL defaults and unambiguous PUBLIC),
+grant options and stable object identities. No application row is emitted.
+
+```bash
+fnm exec --using=22.23.1 node scripts/production-history-application-acl.mjs capture \
+  "$REHEARSAL_ROOT/binding.json" "$REHEARSAL_ROOT/application-acl-capture"
+(cd "$REHEARSAL_ROOT/application-acl-capture" && shasum -a 256 -c SHA256SUMS)
+# noclobber preserves a previous failed/partial capture too: inspect it, never replace it.
+(set -o noclobber; psql -X -qAt -v ON_ERROR_STOP=1 \
+  -f "$REHEARSAL_ROOT/application-acl-capture/capture.sql" \
+  > "$REHEARSAL_ROOT/baseline-application-acl.json")
+chmod 400 "$REHEARSAL_ROOT/baseline-application-acl.json"
+fnm exec --using=22.23.1 node scripts/production-history-application-acl.mjs reconcile \
+  "$REHEARSAL_ROOT/binding.json" "$REHEARSAL_ROOT/application-acl" \
+  "$REHEARSAL_ROOT/baseline-application-acl.json"
+(cd "$REHEARSAL_ROOT/application-acl" && shasum -a 256 -c SHA256SUMS)
+```
+
+Both packages reuse the original target/nonce/source/archive binding. The offline
+helper validates the snapshot before writing anything; its immutable checksum
+manifest binds the snapshot and generated SQL. On retry, repeat both helper
+commands and checksum checks with the original inputs, without recapturing the
+baseline. Changed inputs or tampered owned artifacts stop before any overwrite.
+Copy these files with the independent checkpoint and preserve their hashes in
+the receipt. A new run gets a new directory; the old FAILED rehearsal evidence
+must never be overwritten.
+
 Each dump opens a new connection and explicitly selects `postgres`; a previous
 psql SET ROLE does not carry over. pg_dump takes its own read-only consistent
 snapshot; `PGOPTIONS` is not used as proof of session settings through a hosted
@@ -416,19 +450,41 @@ private overloads must match the actual canonical prefix; review the generated
 DROP list. No `public` or `supabase_migrations` schema/default ACL is dropped.
 
 Do not execute a blank/partial generated file. Require its reviewed list and
-SHA-256 in the recovery receipt before this transaction:
+SHA-256 in the recovery receipt before this transaction. Re-run the offline ACL
+helper against the original snapshot and verify both immutable packages:
+
+```bash
+fnm exec --using=22.23.1 node scripts/production-history-application-acl.mjs reconcile \
+  "$REHEARSAL_ROOT/binding.json" "$REHEARSAL_ROOT/application-acl" \
+  "$REHEARSAL_ROOT/baseline-application-acl.json"
+(cd "$REHEARSAL_ROOT/transition" && shasum -a 256 -c SHA256SUMS)
+(cd "$REHEARSAL_ROOT/application-acl" && shasum -a 256 -c SHA256SUMS)
+```
+
+Include reconciliation after archive replay, before `install_holds()` and COMMIT,
+in this same connection and explicit transaction:
 
 ```bash
 psql -X -v ON_ERROR_STOP=1 -f "$REHEARSAL_ROOT/transition/guard.sql" \
   -c 'begin;' -f "$REHEARSAL_ROOT/recovery-cleanup.sql" \
   -f "$REHEARSAL_ROOT/application-restore.sql" \
+  -f "$REHEARSAL_ROOT/application-acl/reconcile.sql" \
   -c 'select anidachi_transition_20260912.install_holds();' \
   -c "notify pgrst, 'reload schema';" -c 'commit;'
 ```
 
 The generated pg_restore SQL loads table data before user triggers/FKs from
 post-data. Owners and application ACLs are replayed normally. The final hold
-installation commits together with recovery; any SQL error closes the session
+installation commits together with recovery. Reconciliation first requires the
+exact original object identity/owner inventory, then removes only surplus
+privileges or grant options and grants only missing ones. It asserts complete
+normalized ACL/owner/grantor equality before hold installation. It preserves
+schema/default ACLs and uses RESTRICT for dependency failures. The reconciliation
+file contains no COMMIT; transaction-scoped input rejects standalone psql
+execution before privilege mutations. Never run it in a separate connection or
+remove its final equality assertion. Keep the independent post-restore pg_dump
+and schema/catalog comparisons in section 6; normalized ACL equality alone does
+not compare routine definitions or managed roles. Any SQL error closes the session
 and rolls the whole application transaction back. The prior cron unschedule is
 a separate safe, inactive checkpoint; it remains absent after failure and may
 be repeated. On disconnect, inspect whether 35 or the prior prefix committed,
@@ -628,11 +684,34 @@ project/window through the same controlled teardown.
 - [Supabase CLI db push](https://supabase.com/docs/reference/cli/supabase-db-push): normal migration history and dry-run; actual 2.111.0 help was read for push, query, link, create and delete.
 - [Supabase connection guidance](https://supabase.com/docs/guides/database/connecting-to-postgres): direct/session endpoints and 5432/6543 distinction.
 - [CLI connection parser](https://github.com/supabase/cli/blob/develop/apps/cli/src/legacy/shared/legacy-db-config.layer.ts): Context7-first lookup for `--db-url` versus linked credentials; runtime behavior still needs the selected hosted connection test.
+- [PostgreSQL 17 ACL catalog functions](https://www.postgresql.org/docs/17/functions-info.html) and [REVOKE](https://www.postgresql.org/docs/17/sql-revoke.html): normalized ACL defaults, grant options and RESTRICT dependency behavior.
 - [PostgreSQL 17 pg_restore](https://www.postgresql.org/docs/17/app-pgrestore.html): archive TOC selection, ownership/ACL replay and error handling.
 - [Supabase backup/restore guidance](https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore): managed boundary differs from a raw cluster replacement.
 
-Preparation verified offline helper tests, immutable canonical hashes and CLI
-help only. Hosted permission/dependency cleanup, exact recovery equality,
-interrupted-prefix behavior and actual hold release remain unexecuted. These
-are the concrete observations the temporary project must produce; this document
-is not an acceptance receipt.
+The ACL correction has a separate local PostgreSQL 17.6 proof under ordinary
+non-superuser `postgres`: real pg_dump replay reproduces the surplus-default-grant
+bug, and transactional reconciliation restores exact normalized ACLs, owners and
+grantors while preserving legitimate grants and default ACLs. Tests include NULL
+and explicit-empty ACLs, grant options, quoted overloads, unsupported objects and
+security metadata, immutable-input tampering, standalone misuse, repeated
+reconciliation and forced failure preserving pre-restore rows/OIDs/ACLs. The
+focused offline bundle passes 12 tests with no skips.
+
+The local integration harness requires an already-running, freshly initialized
+synthetic PostgreSQL 17 container, with ordinary `postgres` owning database and
+public schema, synthetic anon/authenticated/service_role memberships and the
+owner-test schema permission. It checks the `anidachi.task=acl-recovery-20260912`
+label, network `none`, no published ports and an empty application fixture before
+creating anything. Container setup/cleanup is a separate local operator action;
+the harness uses only inspect/exec and never resets an existing fixture.
+
+```bash
+# Explicitly select the already-approved local Docker context; do not switch it globally.
+DOCKER_CONTEXT=colima-anidachi-personal-mvp fnm exec --using=22.23.1 node \
+  scripts/production-history-application-acl.integration.mjs anidachi-acl-fresh-test
+```
+
+This local result does not replace the earlier FAILED hosted security comparison.
+Fresh hosted permission/dependency cleanup, exact recovery equality,
+interrupted-prefix behavior and actual hold release remain acceptance gates;
+this command package is not an acceptance receipt.
