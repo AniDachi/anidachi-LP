@@ -97,7 +97,8 @@ These are observations, not a traffic freeze. Recheck immediately before executi
 - [ ] Review and rehearse the actual hosted recovery path under the production operator's non-superuser privileges. Local restoration used the initial `supabase_admin` superuser; this does not prove that the production `postgres` operator can restore managed roles/schemas or replace the hosted database.
 - [x] Correct and independently review exact application ACL recovery: checksum-bound baseline privileges/owners/grantors/options, transactional reconciliation and a pre-commit equality assertion; preserve permitted grants/default ACLs and fail closed on unsupported cases. The companion helper passes 12 focused offline tests and the real non-superuser PostgreSQL 17 regression with surviving default privileges and forced rollback. This closes the local correction only, not hosted recovery acceptance.
 - [x] Independently review the conditional policy for the exact platform-created LOGIN/CREATEROLE residual within application-scoped recovery. Baseline absence, recorded hook origin, full expected attributes, password exactly false, zero cluster dependencies/membership edges/settings/sessions and denied five-role SET paths are mandatory; all existing strict recovery checks remain. Policy approval is not a passed hosted result.
-- [ ] Independently review the read-only managed-role receipt SQL, capture fresh baseline/post-install/post-cleanup measurements and explicitly record conditional-policy acceptance before repeating hosted 35 -> 60 -> 35 acceptance. Do not change managed roles, pre-seed a baseline, rewrite the role dump or ignore other differences. Missing/partial/unreadable evidence remains failure/unknown.
+- [x] Independently review the read-only managed-role receipt SQL and capture instructions. Spec compliance and task quality approved with no actionable findings; this source review is not a guarded capture run or hosted acceptance.
+- [ ] Execute fresh guarded baseline/post-install/post-cleanup captures, verify all fresh target conditions and explicitly record target-specific conditional-policy acceptance before accepting a new hosted 35 -> 60 -> 35 recovery. Do not change managed roles, pre-seed a baseline, rewrite the role dump or ignore other differences. Missing/partial/unreadable evidence remains failure/unknown.
 - [x] Establish recovery storage outside the releasable worktree and verify the copied archive/roles hashes and owner-only permissions. This copy is on the same Mac and does not protect against loss of that device.
 - [ ] Take a fresh recoverable baseline under established maintenance immediately before the transition. An older successful rehearsal does not freeze current production data.
 
@@ -124,9 +125,10 @@ dependency, not the required fresh post-drop zero result. The new
 records original input/source/target/time, explicit existence and full role
 attributes, server-only password boolean, all role/member/grantor edges,
 cluster-wide dependencies, settings names, session count, expected-role SET
-checks, PUBLIC access and the named hook/extension metadata. Capture-source
-review, all new post-cleanup measurements and explicit recorded policy acceptance
-remain required. Loaded HBA is unknown and is not queried or bypassed; the policy
+checks, PUBLIC access and the named hook/extension metadata. Independent
+capture-source review passed. Fresh guarded captures, all new post-cleanup
+measurements and explicit recorded target-specific policy acceptance remain
+required. Loaded HBA is unknown and is not queried or bypassed; the policy
 uses the documented managed customer password/SCRAM boundary and does not claim
 to exclude privileged internal platform access. Unknown customer non-password
 authentication or contradictory platform evidence is a stop. Keep the exact

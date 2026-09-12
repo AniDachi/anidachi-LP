@@ -51,7 +51,9 @@ supported platform procedure or an explicitly reviewed recovery policy.
 The ACL correction below is a locally verified and independently reviewed offline
 candidate requiring fresh hosted acceptance. A conditional policy for the exact
 managed-role residual is independently reviewed; fresh measurements and explicit
-acceptance of that policy on the new recovery remain pending.
+acceptance of that policy on the new recovery remain pending. Independent review
+of the receipt SQL and capture instructions passed; the complete guarded capture
+path and fresh target conditions still require a new hosted run.
 Task 2/4 recovery gates and production promotion remain open.
 
 Current [Supabase platform source](https://github.com/supabase/postgres/blob/develop/migrations/db/init-scripts/00000000000003-post-setup.sql)

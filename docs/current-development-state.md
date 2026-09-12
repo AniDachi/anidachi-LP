@@ -82,8 +82,9 @@ now permits only the exact absent-before/present-after platform principal within
 application-scoped recovery, after all fresh credential, attribute, membership,
 cluster-dependency, SET-path and ordinary recovery checks pass. The read-only
 receipt SQL records producing source/target/time and preserves missing or
-unavailable evidence. Capture-source review and fresh post-cleanup measurements,
-explicit policy acceptance and hosted recovery remain pending. The historical
+unavailable evidence. Independent capture-source review passed. Fresh guarded
+baseline/post-install/post-cleanup measurements, explicit target-specific policy
+acceptance and hosted recovery remain pending. The historical
 FAILED result is unchanged; no new staging pause or production action is implied.
 
 A default-open [application admission gate](releases/personal-history-mvp/maintenance-admission.md)
