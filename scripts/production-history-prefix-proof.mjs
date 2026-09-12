@@ -443,6 +443,11 @@ export function assessPrefixAttempt({
 	validateReceipt(before, "before", binding, expectedPrefix, document);
 	validateReceipt(after, "after", binding, expectedPrefix, document);
 	assert.deepEqual(
+		after.control,
+		before.control,
+		"Prepared control changed during prefix attempt",
+	);
+	assert.deepEqual(
 		before.ledger,
 		expectedLedger(35),
 		"Before must be exact prefix 35",

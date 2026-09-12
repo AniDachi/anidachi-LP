@@ -88,5 +88,25 @@
 		"Before/after public schema equality and actual CLI error classification passed for the denied file; unchanged retry then created its column, check and security-definer function.",
 		"Prefixes37/38 require full recovery regardless of ledger-only observations; no suffix retry was attempted for the authored-COMMIT generic fixture.",
 		"Every hosted target still requires fresh original binding/archive, guard verification, prefix/recovery/role evidence, independent acceptance and controlled teardown."
-	]
+	],
+	"finalClassifierReassessment": {
+		"passed": true,
+		"scope": "final classifier re-assessment of unchanged retained actual local CLI/SQL receipts; no new database operation",
+		"helperSha256": "c3b4849eceb447b5f56c27677d4166c0263c99aaabcc7b8a535096df463fd239",
+		"captureSqlSha256": "35049bc5ae1ba06e9b8bf365ed01d3f56228e4b7b2a4f61a9dbeb3af09cf4d43",
+		"captureSqlByteIdentical": true,
+		"actualNativeReceiptStillAccepted": true,
+		"changedPreparationRejected": true,
+		"completedAt": "2026-09-12T16:41:37.835Z"
+	},
+	"documentedTimeoutPath": {
+		"passed": true,
+		"scope": "controlled mocked timeout of the exact documented Python block; no real process or database action",
+		"sourceBlockSha256": "74c1601eb9a61440c0d10dc9cf720ac191e8d796b7a59ca3972645848ea294f2",
+		"partialStreamsPreserved": true,
+		"exitCode": null,
+		"timingAndHashesPreserved": true,
+		"explicitStopRaised": true,
+		"completedAt": "2026-09-12T16:41:37.780171+00:00"
+	}
 }

@@ -938,23 +938,31 @@ url=urlsplit(env['REHEARSAL_DB_URL'])
 assert (url.scheme,url.hostname,url.port,url.username,url.password,url.path,url.query)==(
     'postgresql',binding['host'],binding['port'],binding['user'],None,'/postgres','sslmode=require')
 started=datetime.now(timezone.utc).isoformat()
-r=subprocess.run([str(binary),'--workdir',str(root/'transition/all60'),'db','push',
-                  '--db-url',env['REHEARSAL_DB_URL'],'--yes'],env=env,
-                 capture_output=True,timeout=300)
+try:
+    r=subprocess.run([str(binary),'--workdir',str(root/'transition/all60'),'db','push',
+                      '--db-url',env['REHEARSAL_DB_URL'],'--yes'],env=env,
+                     capture_output=True,timeout=300)
+    stdout,stderr,exit_code=r.stdout,r.stderr,r.returncode
+except subprocess.TimeoutExpired as error:
+    stdout,stderr,exit_code=error.stdout or b'',error.stderr or b'',None
 ended=datetime.now(timezone.utc).isoformat()
-for name,data in [('stdout',r.stdout),('stderr',r.stderr)]:
+for name,data in [('stdout',stdout),('stderr',stderr)]:
     with (proof/f'denied-push.{name}.log').open('xb') as f: f.write(data)
 attempt={'binding':binding,'expectedPrefix':int(env['REHEARSAL_EXPECTED_PREFIX']),
-         'cli':expected,'startedAt':started,'endedAt':ended,'exitCode':r.returncode,
-         'stdoutSha256':sha(r.stdout),'stderrSha256':sha(r.stderr)}
+         'cli':expected,'startedAt':started,'endedAt':ended,'exitCode':exit_code,
+         'stdoutSha256':sha(stdout),'stderrSha256':sha(stderr)}
 with (proof/'attempt.json').open('x') as f:
     json.dump(attempt,f,indent=2); f.write('\n')
 assert sha(binary.read_bytes())==expected['binarySha256']
+if exit_code is None:
+    raise SystemExit('STOP: CLI timeout; partial evidence retained; complete recovery required')
 PYTHON
 ```
 
 On timeout, interruption, network failure or a different SQL error, keep isolation
-and take complete recovery; a missing/partial receipt never permits resume.
+and take complete recovery. A timeout retains its partial streams and timing with
+`exitCode=null`, which the classifier rejects; a missing/partial receipt never
+permits resume.
 Disable/drain the new cron job immediately if present, as in section 4. If this
 prefix installed `pg_net`, capture its fresh post-install managed-role origin
 before cleanup; otherwise preserve baseline absence and strict equality.

@@ -97,11 +97,11 @@ function proof(prefix) {
 			manifestSha256: document.manifestSha256,
 			bridgeSha256: document.bridgeSha256,
 		},
-		control,
-		touched,
 	};
 	const before = {
 		...receiptBase,
+		control: structuredClone(control),
+		touched: structuredClone(touched),
 		observedAt: "2026-09-12T01:00:01.000Z",
 		capturedLocallyAt: "2026-09-12T01:00:02.000Z",
 		ledger: ledger(35),
@@ -109,6 +109,8 @@ function proof(prefix) {
 	};
 	const after = {
 		...receiptBase,
+		control: structuredClone(control),
+		touched: structuredClone(touched),
 		observedAt: "2026-09-12T01:00:05.000Z",
 		capturedLocallyAt: "2026-09-12T01:00:06.000Z",
 		ledger: ledger(prefix),
@@ -214,6 +216,15 @@ test("host chronology and independent database clock ordering fail closed", () =
 		mutate(p);
 		assert.throws(() => assessPrefixAttempt(p));
 	}
+});
+
+test("preparation identity cannot change during the failed push", () => {
+	const p = proof(50);
+	p.after.control.preparedAt = "2026-09-12T01:00:04.500Z";
+	assert.throws(
+		() => assessPrefixAttempt(p),
+		/Prepared control changed during prefix attempt/,
+	);
 });
 
 test("only the exact singleton history-insert failure is accepted", () => {
