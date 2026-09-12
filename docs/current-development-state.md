@@ -110,7 +110,21 @@ binding, ledger and touched-state evidence plus fresh archive/hold verification.
 Its read-only SQL and the unchanged canonical file 51 failure/retry passed on
 synthetic local prerequisites. The [aggregate evidence](releases/personal-history-mvp/2026-09-12-prefix-cli-atomicity.json)
 keeps this separate from a complete chain, real bridge or hosted acceptance.
-Temporary local resources were removed; no new staging window was opened.
+Temporary local resources were removed; that local preparation did not open a
+new staging window.
+
+The subsequent third authorized Free window at `4cebafab` passed
+[hosted interrupted-prefix-37 recovery](releases/personal-history-mvp/free-hosted-rehearsal.md#accepted-interrupted-prefix-37-2026-09-12).
+The denied history INSERT left committed application effects, so the checker
+refused suffix retry and full recovery restored the exact original 35 versions,
+35 relation digests, application schema, 76 ACL objects and bridge identity.
+Fresh target-specific managed-role conditions and all four write-hold/release
+probes passed independent review. Evidence copies were verified before deleting
+the disposable project. The window closed at 18:18:53 UTC after 38m54s with
+staging restored and history, Inbox and normal extension room flows checked.
+Production stayed unchanged. Prefixes 38/50, the production operating sequence
+and a fresh maintenance-bound checkpoint remain open; Tasks 2/4 and promotion
+are not complete.
 
 A default-open [application admission gate](releases/personal-history-mvp/maintenance-admission.md)
 is prepared in source for Web and Worker. When explicitly configured closed, it

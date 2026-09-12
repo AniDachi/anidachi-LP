@@ -1,6 +1,6 @@
 # Free hosted 35 -> 60 -> 35 rehearsal commands
 
-Status: **second hosted application recovery accepted on 2026-09-12; interrupted-prefix proof remains pending**.
+Status: **straight hosted recovery and interrupted prefix 37 accepted on 2026-09-12; prefixes 38 and 50 remain pending**.
 This prepares Tasks 2 and 4 of the [production preparation plan](../../superpowers/plans/2026-09-12-production-promotion-preparation.md).
 Production remains withheld by the [transition contract](production-35-to-60-transition.md).
 The separate [staging pause/resume window](free-rehearsal-window.md) must be agreed
@@ -12,6 +12,47 @@ normal CLI history, existing bridge SQL and a new project's real non-superuser
 operator. It is not a production executor, a production clone, or a full managed
 cluster restore. Retain the existing real recovery archive and its independent
 copy. None of the cleanup below deletes local backups.
+
+## Accepted interrupted prefix 37, 2026-09-12
+
+The frozen package at `4cebafab` completed a new synthetic Free-project failure
+and same-target recovery under ordinary non-superuser `postgres`, PostgreSQL
+17.6 and native CLI 2.111.0. Independent review accepted this target's
+**application-scoped recovery** before its write holds were released.
+
+- The injected CHECK rejected the normal CLI history INSERT for
+  `20260904205540`, leaving the exact 37-version prefix. The native CLI exited
+  with code 1 and reported SQLSTATE `23514`; effects after the authored COMMIT remained,
+  including v3 objects and emptied legacy history relations. The checker returned
+  `canResume=false` and required complete application recovery. No suffix retry
+  or migration-history repair was performed.
+- Full recovery restored all 35 original ordered migration versions, all 35
+  full application/history relation digests, the application schema and all
+  76 application ACL objects. Fresh post-recovery capture confirmed the exact
+  original bridge control, including its preparation time; original archive,
+  binding and nonce were retained.
+- Existing managed catalog state matched apart from the accounted private
+  bridge schema and the sole conditionally accepted `supabase_functions_admin`
+  residual. The earlier migration in this prefix installs `pg_net`; fresh
+  baseline/post-install/post-cleanup receipts passed all six policy conditions
+  for this target. No preexisting managed role, credential, membership or default privilege
+  was changed. PUBLIC-derived access and the managed authentication boundary
+  remain explicit; loaded HBA is unknown and whole-cluster equality is not claimed.
+- INSERT, UPDATE, DELETE and TRUNCATE were rejected with SQLSTATE `55000`
+  while holds remained active. After independent acceptance and release on this
+  isolated target, all four rollback-only service-role writes passed and all
+  35 relation digests remained unchanged.
+- All 304 evidence files were independently copied and byte/hash-verified
+  before deleting the disposable project. The third staging-only window closed
+  at 18:18:53 UTC after 38m54s, within its 45-minute bound. Staging's exact
+  migrations, original jobs and Worker configuration were restored; account
+  history, Inbox and normal extension room creation/completion passed.
+
+Exact target, archive, input and query identities remain in restricted receipts
+outside Git. Prefixes **38 and 50 were not started**; the production operating
+sequence and fresh maintenance-bound checkpoint also remain open. Production,
+paid plans and shared Git branches were unchanged. This closed window does not
+authorize another staging pause or a production transition.
 
 ## Accepted second rehearsal, 2026-09-12
 

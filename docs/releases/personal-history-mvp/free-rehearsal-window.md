@@ -6,6 +6,27 @@ staging pause, project creation/deletion, production release or plan upgrade.
 Agree the window with the owner after the command package is reviewed. The
 production transition still follows the [release contract](production-35-to-60-transition.md).
 
+## Third executed window, 2026-09-12
+
+The third owner-authorized zero-cost window is **closed**. It ran from
+17:39:59 to 18:18:53 UTC, **38m54s** within the agreed 45-minute bound.
+The frozen package at `4cebafab` passed independently reviewed
+[interrupted-prefix-37 recovery](free-hosted-rehearsal.md#accepted-interrupted-prefix-37-2026-09-12).
+Prefixes 38 and 50 were not started, preserving the staging restoration margin.
+
+All 304 original experiment files and their independent copy matched byte counts
+and hashes before the disposable project was deleted. Only the two original
+projects remain, both healthy. Staging retained its exact 60 migration versions;
+its three original active jobs, scheduler configuration, Worker version and
+publication flags were restored. Canonical staging and production Worker
+health/auth smokes passed. The authorized account loaded history and Inbox, and
+the installed extension created and ended a room through the normal UI. No
+invitation was sent or camera/microphone enabled; the dedicated test tab closed.
+Production, the shared Vercel project, paid plans and shared Git refs were unchanged.
+
+Any further staging pause requires its own agreed window. Prefix 37 acceptance
+does not complete the remaining interrupted cases or the production procedure.
+
 ## Second executed window, 2026-09-12
 
 The second owner-authorized zero-cost window is **closed**. It ran from
