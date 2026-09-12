@@ -20,6 +20,8 @@ Project: Anidachi web app.
 | --- | --- | --- | --- |
 | `NEXT_PUBLIC_SITE_URL` | Production | Public canonical site URL, expected `https://www.anidachi.app` | Inspect production metadata/canonical URLs |
 | `NEXT_PUBLIC_SITE_URL` | Preview / `staging` | Staging public site URL, expected `https://staging.anidachi.app` | Load staging after password gate |
+| `ANIDACHI_EXTENSION_CLIENT_ID` | Production | Public approved store/ZIP identity `gpkolofebdhfpapbbgdkdkmlmjfidgmn` | After deployment, only this client's exact Chromium `/auth` and `/logout` callbacks are accepted; mismatched clients/paths remain rejected |
+| `ANIDACHI_EXTENSION_CLIENT_ID` | Preview / exact branch `staging` | Public unpacked staging identity `ndkfphbchhfephdodcpehdcoclojagje` | Staging login stays bound to its own identity; production ID is not accepted |
 | `NEXT_PUBLIC_ROBOTS_NOINDEX` | Preview / `staging` | Forces noindex behavior on staging | Check `robots.txt` and `X-Robots-Tag` |
 | `ANIDACHI_STAGING_GATE_ENABLED` | Preview / `staging` | Enables app-level staging password gate | Unauthenticated staging request shows gate |
 | `ANIDACHI_STAGING_GATE_PASSWORD_SHA256` | Preview / `staging` | Hash of staging access password | Gate accepts known password, rejects wrong password |

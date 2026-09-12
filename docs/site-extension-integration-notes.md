@@ -346,9 +346,10 @@ Important:
 - The extension must never contain Supabase service-role credentials.
 - The extension must never contain TURN provider secrets, service-role
   credentials, or server-side signing secrets.
-- Local and staging use separate repository-controlled public manifest keys and
-  exact IDs. Only public key material is committed; production has no approved
-  identity and web connection stays fail-closed until an explicit cutover.
+- Local, staging and production use separate repository-controlled public
+  manifest keys and exact IDs. The owner-approved production/store identity is
+  `gpkolofebdhfpapbbgdkdkmlmjfidgmn`; only public key material is committed.
+  Web login stays fail-closed unless the environment has its matching approved ID.
 - Never accept an arbitrary `*.chromiumapp.org` host. Each web environment
   accepts one exact ID and only its `/auth` and `/logout` callback paths.
 - Room WebSocket joins must verify room membership.
