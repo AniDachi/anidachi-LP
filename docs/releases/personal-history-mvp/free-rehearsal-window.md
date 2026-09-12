@@ -6,9 +6,30 @@ staging pause, project creation/deletion, production release or plan upgrade.
 Agree the window with the owner after the command package is reviewed. The
 production transition still follows the [release contract](production-35-to-60-transition.md).
 
+## Second executed window, 2026-09-12
+
+The second owner-authorized zero-cost window is **closed**. It ran from
+14:21:31 to 14:59:41 UTC, **38m10s** within the agreed 45-minute bound.
+The corrected, independently reviewed application recovery passed; its
+[separate result](free-hosted-rehearsal.md#accepted-second-rehearsal-2026-09-12)
+does not change the earlier failed receipt or complete interrupted-prefix proof.
+
+Before deleting the new disposable project, original artifacts and complete
+recovery receipts were copied and byte-verified. Only the two original projects
+remain, both healthy. Staging retained its exact 60 migration versions and
+scheduler configuration; the original three active jobs, Worker publication
+flags and Worker version were restored. Canonical Worker health/auth smoke,
+authorized account history and Inbox, and normal loaded-extension room
+creation/completion passed. No invitation or camera/microphone test was started.
+Production, the shared Vercel project and paid plans were unchanged.
+
+No new prefix campaign was started within this window, leaving a restoration
+margin. Any later staging pause requires its own agreed window; this completed
+window does not remain active.
+
 ## Executed window, 2026-09-12
 
-The owner-authorized zero-cost window is **closed**. It started at 11:18:55 UTC;
+The first owner-authorized zero-cost window is **closed**. It started at 11:18:55 UTC;
 staging restoration and final checks completed at 12:01:45 UTC, within the
 45-minute bound. The temporary synthetic project was deleted, and only the two
 original projects remain. No plan upgrade or production change occurred.

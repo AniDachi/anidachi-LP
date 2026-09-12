@@ -59,7 +59,7 @@ existing project refs; it is not a production executor. No pause, temporary
 project or cloud change was included in the source preparation. Shared Vercel
 project pause is explicitly excluded from a staging-only window.
 
-The subsequently authorized Free window is now closed: staging was restored and
+The first authorized Free window closed with staging restored and
 verified within 45 minutes, and the disposable synthetic project was deleted.
 The unchanged 35 -> 60 chain and recovery of all 35 application/history table
 digests passed, but **hosted recovery acceptance failed**: default privileges
@@ -75,17 +75,32 @@ The companion application-ACL artifact helper now passes a real local
 PostgreSQL 17 non-superuser regression: exact privileges return after archive
 replay under surviving default grants, and failures roll back the complete
 restore. It leaves managed roles and default privileges unchanged. Independent
-source review passed; this is not a fresh hosted recovery result. Platform-source
+source review passed. Platform-source
 research established the residual role's origin, but no supported customer
 cleanup procedure. An independently reviewed [conditional managed-role policy](releases/personal-history-mvp/free-hosted-rehearsal.md#executed-result-and-correction-gate)
 now permits only the exact absent-before/present-after platform principal within
 application-scoped recovery, after all fresh credential, attribute, membership,
 cluster-dependency, SET-path and ordinary recovery checks pass. The read-only
 receipt SQL records producing source/target/time and preserves missing or
-unavailable evidence. Independent capture-source review passed. Fresh guarded
-baseline/post-install/post-cleanup measurements, explicit target-specific policy
-acceptance and hosted recovery remain pending. The historical
-FAILED result is unchanged; no new staging pause or production action is implied.
+unavailable evidence. Independent capture-source review passed.
+
+The second authorized Free rehearsal at `bb0b546c` has now passed independent
+**application-scoped recovery** review: exact 35 versions, all 35 full relation
+digests, application schema and all 76 ACL objects matched; existing catalog
+state stayed unchanged except the explicitly accounted bridge schema and sole
+conditionally accepted managed role. Fresh baseline/post-install/post-cleanup
+captures passed every required role condition. Write holds rejected all four
+service-role mutation types; after acceptance and release, rollback-only writes
+passed without changing the restored data. See the
+[accepted result](releases/personal-history-mvp/free-hosted-rehearsal.md#accepted-second-rehearsal-2026-09-12).
+
+Its staging-only window closed at 14:59:41 UTC after 38m10s. The disposable
+project was deleted after verified receipt copies; staging's exact migration,
+scheduler and Worker configuration returned, and history, Inbox and normal
+extension room creation/completion passed. Production stayed unchanged. The
+historical FAILED run remains failed. Interrupted-prefix proof, the production
+operating sequence and a fresh maintenance-bound checkpoint are still pending;
+Tasks 2/4 and production promotion are not complete.
 
 A default-open [application admission gate](releases/personal-history-mvp/maintenance-admission.md)
 is prepared in source for Web and Worker. When explicitly configured closed, it

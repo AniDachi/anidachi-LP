@@ -94,15 +94,15 @@ These are observations, not a traffic freeze. Recheck immediately before executi
 - [x] Record artifact identity, creation time, owner-only storage, local restore evidence, operator and retention review deadline **2026-09-19**. Archive SHA-256: `a55e71cac42e700dcc82fb3a82a633cda468d834aa13d06d943574c9f256433c`. The successful local restore and verification took 3.32 seconds on an already running local engine; this is not a cloud recovery-time estimate. A verified owner-only copy and recovery receipts now also exist outside the releasable worktree; neither copy is in Git/CI or off-device storage.
 - [x] Restore the complete application archive selection into an isolated hosted database with the actual non-superuser operator. Record the managed default-ACL exclusions and keep this narrower evidence separate from post-migration recovery.
 - [x] Execute the authorized zero-cost independent hosted rehearsal and close its staging-only window. The unchanged 35 -> 60 chain and exact 35-version/application-row recovery passed; recovery security equality failed. Staging was restored and verified within 45 minutes, the disposable project was deleted, and production remained unchanged. This records an executed experiment, not accepted recovery.
-- [ ] Review and rehearse the actual hosted recovery path under the production operator's non-superuser privileges. Local restoration used the initial `supabase_admin` superuser; this does not prove that the production `postgres` operator can restore managed roles/schemas or replace the hosted database.
+- [x] Review and rehearse the application-scoped hosted recovery path under ordinary non-superuser `postgres`: the corrected second 35 -> 60 -> 35 run passed independent review. This does not prove managed-role/schema replacement or whole hosted-cluster recovery; interrupted-prefix proof remains separate.
 - [x] Correct and independently review exact application ACL recovery: checksum-bound baseline privileges/owners/grantors/options, transactional reconciliation and a pre-commit equality assertion; preserve permitted grants/default ACLs and fail closed on unsupported cases. The companion helper passes 12 focused offline tests and the real non-superuser PostgreSQL 17 regression with surviving default privileges and forced rollback. This closes the local correction only, not hosted recovery acceptance.
 - [x] Independently review the conditional policy for the exact platform-created LOGIN/CREATEROLE residual within application-scoped recovery. Baseline absence, recorded hook origin, full expected attributes, password exactly false, zero cluster dependencies/membership edges/settings/sessions and denied five-role SET paths are mandatory; all existing strict recovery checks remain. Policy approval is not a passed hosted result.
 - [x] Independently review the read-only managed-role receipt SQL and capture instructions. Spec compliance and task quality approved with no actionable findings; this source review is not a guarded capture run or hosted acceptance.
-- [ ] Execute fresh guarded baseline/post-install/post-cleanup captures, verify all fresh target conditions and explicitly record target-specific conditional-policy acceptance before accepting a new hosted 35 -> 60 -> 35 recovery. Do not change managed roles, pre-seed a baseline, rewrite the role dump or ignore other differences. Missing/partial/unreadable evidence remains failure/unknown.
+- [x] Execute fresh guarded baseline/post-install/post-cleanup captures and record independently reviewed target-specific conditional-policy acceptance before accepting the corrected hosted 35 -> 60 -> 35 recovery. Every required condition passed; no managed role, membership, credential, default privilege or original baseline was changed. The acceptance is confined to this measured application recovery.
 - [x] Establish recovery storage outside the releasable worktree and verify the copied archive/roles hashes and owner-only permissions. This copy is on the same Mac and does not protect against loss of that device.
 - [ ] Take a fresh recoverable baseline under established maintenance immediately before the transition. An older successful rehearsal does not freeze current production data.
 
-**Current stop condition:** Sign-in, full local restoration, narrower hosted application restoration and storage outside the worktree are verified. The independent in-place rehearsal restored exact rows but failed security equality: 108 surplus client grants and a residual platform-created `supabase_functions_admin` role. See the [executed result and correction gate](../../releases/personal-history-mvp/free-hosted-rehearsal.md#executed-result-and-correction-gate). Full recovery acceptance, interrupted-prefix proof and the final maintenance-bound checkpoint remain open. Production currently has `pg_cron` but no `pg_net`; installing/removing the latter and the new cron job must be part of recovery proof. Existing public default privileges, managed schemas and platform event triggers must be preserved, not omitted after dropping their containers. Do not infer hosted superuser access from the local rehearsal, buy a backup product, or create a billed clone without an approved concrete choice. Do not re-request sign-in or report that no real production export has been made.
+**Current stop condition:** The corrected second in-place hosted application recovery passed independent review: exact data/schema/application ACLs, unchanged preexisting catalog state, the sole explicitly accepted managed-role residual, write-hold rejection and rollback-only writes after hold release. The first failed receipt remains failed. See the [accepted second result](../../releases/personal-history-mvp/free-hosted-rehearsal.md#accepted-second-rehearsal-2026-09-12). Interrupted-prefix proof, the production operating sequence and a fresh maintenance-bound checkpoint remain open. Installation/removal of `pg_net` and the new cron job were covered by the accepted straight recovery; it does not replace later target-specific evidence. Existing default privileges, managed schemas and platform event triggers remain preserved. Do not infer hosted superuser or whole-cluster replacement capability, buy a backup product, or create a billed clone without an approved concrete choice.
 
 **Independent target boundary:** A sibling database cannot host the exact full chain because existing staging `pg_cron` is configured for `postgres` (`postmaster` setting), and both canonical migrations and the bridge require local cron objects. A separate disposable instance is needed for a full hosted 35→60→35 rehearsal. The accepted path is the temporary Free slot described above, after a separately agreed staging pause. Recheck actual zero-cost eligibility; if unavailable, resume staging and report the constraint rather than buying an alternative. Production clone/PITR is not required. Local non-superuser recovery tests remain useful but cannot silently replace this hosted acceptance. Do not change working staging cron settings or reset its default database to manufacture proof.
 
@@ -115,7 +115,7 @@ reconciliation and full rollback on an injected failure. Default privileges and
 managed roles remain untouched. Independent source review passed; a local
 pass does not supersede the failed hosted receipt or authorize another pause.
 
-**Managed-role policy reviewed, fresh recovery pending:** [Official Supabase platform source](https://github.com/supabase/postgres/blob/develop/migrations/db/init-scripts/00000000000003-post-setup.sql)
+**Managed-role policy reviewed and measured in the second recovery:** [Official Supabase platform source](https://github.com/supabase/postgres/blob/develop/migrations/db/init-scripts/00000000000003-post-setup.sql)
 explains the `pg_net` hook's creation of `supabase_functions_admin`; no supported
 customer role-cleanup procedure was found. Independent review approved the six
 [conditional application-recovery conditions](../../releases/personal-history-mvp/free-hosted-rehearsal.md#executed-result-and-correction-gate).
@@ -126,9 +126,10 @@ records original input/source/target/time, explicit existence and full role
 attributes, server-only password boolean, all role/member/grantor edges,
 cluster-wide dependencies, settings names, session count, expected-role SET
 checks, PUBLIC access and the named hook/extension metadata. Independent
-capture-source review passed. Fresh guarded captures, all new post-cleanup
-measurements and explicit recorded target-specific policy acceptance remain
-required. Loaded HBA is unknown and is not queried or bypassed; the policy
+capture-source review passed. Fresh guarded captures, all post-cleanup
+measurements and explicit target-specific acceptance passed in the second
+rehearsal; a future target requires its own evidence. Loaded HBA is unknown and
+is not queried or bypassed; the policy
 uses the documented managed customer password/SCRAM boundary and does not claim
 to exclude privileged internal platform access. Unknown customer non-password
 authentication or contradictory platform evidence is a stop. Keep the exact
@@ -160,7 +161,7 @@ equality, a new pause or production authorization.
 **Interfaces:** Consumes the approved owner connection, recovery identity, immutable manifest and proven holds; produces an aggregate phase receipt bound to the exact project, release SHA and backup. The durable phases remain `prepared -> chain_applied -> verified -> completed`; completed still means database writes are held.
 
 - [x] Review native CLI and connector operator identities and correct their narrow bridge compatibility. CLI keeps `session_user=cli_login_postgres` after explicit `SET ROLE postgres`; require effective postgres and real membership. Security review has no open findings. All 91 real SQL role/definer probes, forced timeout rollback cleanup, 25 full transition checks and full CLI-identity prepare/verify/install/finish operations passed locally. Keep exact file-hash receipts; this does not validate a hosted executor, install production holds or weaken the disposable target guard.
-- [ ] Verify the complete hosted execution/recovery connection and scheduler/admin topology in the independent target. No migration repair, modified canonical SQL, or ad hoc timestamped connector migrations.
+- [x] Verify the hosted execution/recovery connection and scheduler/admin topology in the independent target. Native CLI 2.111.0 and ordinary non-superuser `postgres` completed the corrected straight rehearsal; no migration repair, modified canonical SQL or ad hoc connector migrations were used. The production executor and interrupted-prefix proof remain separate.
 - [ ] Run the production bridge only after the stable backup boundary. Verify the private archive and immutable hashes before the first pending migration; a retry must verify and reuse the original snapshot.
 - [ ] Apply the unchanged canonical chain with CLI 2.111.0 in order. A committed-prefix failure retains maintenance and resumes only the unchanged suffix after diagnosis. It never rebuilds an archive from emptied tables.
 - [ ] Verify the 60-version target, archive identities, old+1 generation, preserved consent/counters, unchanged unrelated original columns, intended billing grants, private ACLs and disabled policy/scheduler flags.
@@ -187,9 +188,12 @@ Main promotion and runtime release are not equivalent: the candidate deliberatel
 Source preparation did not change staging or production. The later authorized
 Free rehearsal temporarily paused staging and returned it to its original
 configuration with verified account and room flows; production stayed unchanged.
-The candidate failed recovery acceptance and must be corrected before reuse.
-Tasks 2–4 are not complete and their production execution remains gated. Keep
-command review, offline checks and the actual failed hosted result distinct.
+The first candidate failed recovery acceptance. The corrected second candidate
+passed independently reviewed application recovery, then restored staging and
+closed its separately approved window within 45 minutes. Tasks 2–4 are not
+complete: interrupted-prefix proof and the production operating prerequisites
+remain gated. Keep source review, offline checks, the failed first receipt and
+the accepted second application recovery distinct.
 Check links, reconcile canonical docs and intentionally update Graphify once for
 this result batch.
 

@@ -1,6 +1,6 @@
 # Free hosted 35 -> 60 -> 35 rehearsal commands
 
-Status: **hosted rehearsal executed on 2026-09-12; recovery acceptance failed**.
+Status: **second hosted application recovery accepted on 2026-09-12; interrupted-prefix proof remains pending**.
 This prepares Tasks 2 and 4 of the [production preparation plan](../../superpowers/plans/2026-09-12-production-promotion-preparation.md).
 Production remains withheld by the [transition contract](production-35-to-60-transition.md).
 The separate [staging pause/resume window](free-rehearsal-window.md) must be agreed
@@ -13,9 +13,48 @@ operator. It is not a production executor, a production clone, or a full managed
 cluster restore. Retain the existing real recovery archive and its independent
 copy. None of the cleanup below deletes local backups.
 
+## Accepted second rehearsal, 2026-09-12
+
+The corrected package at `bb0b546c` completed a fresh isolated Free-project
+35 -> 60 -> 35 rehearsal under ordinary non-superuser `postgres`, PostgreSQL
+17.6 and native CLI 2.111.0. Independent review accepted this target's
+**application-scoped recovery** before the rehearsal write holds were released.
+
+- All 35 ordered migration versions and all 35 full application/history
+  relation digests matched the original immutable checkpoint. The application
+  schema matched after excluding only generated psql restrict tokens and the
+  34 explicitly identified bridge maintenance triggers.
+- All 76 baseline application ACL objects matched, including owners,
+  privileges, grantors and grant options. Existing roles, memberships, settings,
+  schema/default ACLs, extensions, event triggers, publications and inactive
+  baseline job definitions remained unchanged. The retained private bridge
+  schema was accounted for separately.
+- Fresh bound baseline, post-install and post-cleanup receipts passed the six
+  conditions below. Independent review explicitly accepted only the named
+  platform-created `supabase_functions_admin` residual for this recovery.
+  No managed role, membership, credential or default privilege was changed.
+  This does not claim whole-cluster or bitwise role-catalog equality: the role
+  retains PUBLIC-derived privileges and the documented managed authentication
+  trust boundary; loaded HBA remains unknown.
+- INSERT, UPDATE, DELETE and TRUNCATE were denied with the maintenance SQLSTATE
+  before release. After recorded acceptance and hold removal, all four
+  rollback-only service-role writes succeeded; full baseline digests remained
+  identical and baseline jobs stayed inactive.
+- Original artifacts and recovery receipts were copied and byte-verified before
+  deleting the disposable project. Deletion and window-closure receipts were
+  subsequently copied and verified as well. The second staging-only window closed at
+  14:59:41 UTC after 38m10s, with staging restored and account/room flows checked.
+  Production and paid plans were unchanged.
+
+Exact target/input/archive/query hashes and producing times remain in restricted
+operator receipts outside Git. The earlier failed run below remains failed.
+No interrupted-prefix campaign was started in this window, preserving time for
+staging restoration. That proof, the production operating sequence, and a fresh
+maintenance-bound production checkpoint remain separate release prerequisites.
+
 ## Executed result and correction gate
 
-The candidate at `c0b0bb93` ran in an isolated, synthetic Free project under
+The first candidate at `c0b0bb93` ran in an isolated, synthetic Free project under
 ordinary non-superuser `postgres`. The agreed staging-only window finished with
 staging restored and verified; the disposable project was deleted. Production
 and existing deployment versions remained unchanged. Private receipts and the
@@ -38,8 +77,8 @@ original immutable archive have independently verified copies outside Git.
   as an unreviewed cleanup step, or seed the baseline to hide this difference.
 - Interrupted-prefix recovery and hold-release probes were not executed.
 
-**Do not rerun the unchanged command package as an accepted recovery procedure.**
-Before a fresh hosted run, bind a complete baseline application-object privilege
+**The original failed command package is not an accepted recovery procedure.**
+The correction required binding a complete baseline application-object privilege
 snapshot to the immutable artifacts. Reconcile exact privileges, grant options,
 owners and grantors inside the cleanup/restore transaction, with an equality
 assertion before commit. Preserve legitimate client grants and existing default
@@ -48,13 +87,11 @@ than applying blanket revocations or changing managed catalogs. Test this under
 PostgreSQL 17 non-superuser privileges with surviving default ACLs and forced
 transaction failure. Separately resolve the residual managed role through a
 supported platform procedure or an explicitly reviewed recovery policy.
-The ACL correction below is a locally verified and independently reviewed offline
-candidate requiring fresh hosted acceptance. A conditional policy for the exact
-managed-role residual is independently reviewed; fresh measurements and explicit
-acceptance of that policy on the new recovery remain pending. Independent review
-of the receipt SQL and capture instructions passed; the complete guarded capture
-path and fresh target conditions still require a new hosted run.
-Task 2/4 recovery gates and production promotion remain open.
+The ACL correction below and guarded capture workflow subsequently passed the
+fresh hosted application recovery recorded above. Conditional-policy acceptance
+belongs only to that measured target; a later target still requires its own
+complete receipts and explicit acceptance. Interrupted-prefix proof and the
+remaining Task 2/4 production prerequisites stay open.
 
 Current [Supabase platform source](https://github.com/supabase/postgres/blob/develop/migrations/db/init-scripts/00000000000003-post-setup.sql)
 supports the recorded `pg_net` role origin, but provides no customer cleanup
@@ -142,8 +179,13 @@ sb projects delete --help
 fnm exec --using=22.23.1 node --test scripts/production-history-hosted-artifacts.test.mjs scripts/production-history-application-acl.test.mjs
 ```
 
-After the window is approved, create the new Free project in the approved Free
-organization through its Dashboard, with no upgrade, add-on, clone or PITR.
+After the window is approved, verify the creation screen's actual Free
+entitlement and the current zero-cost quote for the approved organization.
+Create the new project through its Dashboard or the authenticated native CLI
+with the same agreed name, organization and region, with no upgrade, add-on,
+paid size, clone or PITR. The second run used the native CLI with a generated
+disposable password kept only in the operator session's memory; no existing
+project credential was changed.
 The checked CLI has `projects create`/`delete`, but no `projects pause`/`resume`
 subcommands and no `--free` creation switch; use the explicit window procedure
 for those controls. The creation screen must show the actual Free entitlement.
