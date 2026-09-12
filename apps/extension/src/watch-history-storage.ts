@@ -1,13 +1,17 @@
+import type { WatchHistoryLocalEvent } from "./watch-history-outbox";
+import { parseWatchHistoryLease, type WatchHistoryLease } from "./watch-history-access";
 import {
+  WatchHistoryPreferencesSchema,
   type WatchHistoryPreferences,
   type WatchHistoryResponse,
   type WatchProgressEvent,
 } from "@anidachi/protocol";
 import { storage } from "wxt/utils/storage";
 import type { WatchHistoryOutboxPartition } from "./watch-history-outbox";
+import type { WatchHistoryCatalogAcknowledgement } from "./watch-history-catalog";
 
-export const WATCH_HISTORY_STORAGE_VERSION = 2 as const;
-export const WATCH_HISTORY_STORAGE_KEY = "anidachi.watchHistory.v2";
+export const WATCH_HISTORY_STORAGE_VERSION = 3 as const;
+export const WATCH_HISTORY_STORAGE_KEY = "anidachi.watchHistory.v3";
 export const WATCH_HISTORY_STORAGE_ITEM_KEY = `local:${WATCH_HISTORY_STORAGE_KEY}` as const;
 
 export type WatchHistoryObservationDisplayMode = "mine" | "together";
@@ -15,6 +19,7 @@ export type WatchHistoryObservationDisplayMode = "mine" | "together";
 export type WatchHistoryAccountPartition = {
   ownerUserId: string;
   accountGeneration: number;
+  accessLease?: WatchHistoryLease | null;
   cache: WatchHistoryResponse | null;
   preferences: WatchHistoryPreferences | null;
   preferencesConfirmed?: boolean;
@@ -26,12 +31,23 @@ export type WatchHistoryAccountPartition = {
   capturePaused?: boolean;
   captureMarkersReady?: boolean;
   outbox: WatchHistoryOutboxPartition;
+  catalogAcknowledgements?: Record<string, WatchHistoryCatalogAcknowledgement>;
+  invalidationRevision?: number;
+  // Browse retention is fenced separately from ordinary progress freshness.
+  browseInvalidationRevision?: number;
+  browseTitleRevisions?: Record<string, number>;
+  browseRevisionFloor?: number;
+  cacheRevision?: number;
+  deletionFences?: Record<string, string>;
 };
 
 export type WatchHistoryStorageRoot = {
   schemaVersion: typeof WATCH_HISTORY_STORAGE_VERSION;
   partitions: Record<string, WatchHistoryAccountPartition>;
   activeGenerations?: Record<string, number>;
+  resumeClaims?: Record<string, number>;
+  // Survives removal of empty account partitions on logout.
+  browseAuthEpochs?: Record<string, string>;
 };
 
 export type WatchHistoryStorageResult = { ok: true } | { ok: false; status: "storage-full" };
@@ -47,6 +63,8 @@ export type WatchHistoryStorageDependencies = {
   getBytesInUse?: () => Promise<number>;
   quotaBytes?: number;
   serialize?: (value: WatchHistoryStorageRoot) => string;
+  readLegacy?: () => Promise<unknown>;
+  removeLegacy?: () => Promise<void>;
 };
 
 let watchHistoryStorageItem: StorageItemLike | null = null;
@@ -70,8 +88,54 @@ export function createWatchHistoryStorage(
   const getBytesInUse = dependencies.getBytesInUse ?? defaultGetBytesInUse;
   const quotaBytes = dependencies.quotaBytes ?? defaultQuotaBytes();
   const serialize = dependencies.serialize ?? JSON.stringify;
+  let migration: Promise<void> | undefined;
+
+  function ensureMigration(): Promise<void> {
+    if (migration) return migration;
+    migration = rootUpdateQueue.then(async () => {
+      const stored = await item.getValue();
+      const hasCurrentRoot = isStorageRoot(stored) && (dependencies.item !== undefined || await hasStoredRoot());
+      const legacy = dependencies.readLegacy
+        ? await dependencies.readLegacy()
+        : dependencies.item ? null : (await chrome.storage.local.get("anidachi.watchHistory.v2"))["anidachi.watchHistory.v2"];
+      if (hasCurrentRoot && stored) {
+        let changed = false;
+        const partitions = Object.fromEntries(Object.entries(stored.partitions).map(([key, partition]) => {
+          const proven = (entry: WatchHistoryOutboxPartition["entries"][number]) => {
+            const proof = parseWatchHistoryLease(entry.event.captureProof);
+            return !!proof && proof.access.state === "allowed" && proof.access.ownerUserId === partition.ownerUserId &&
+              proof.access.accountGeneration === partition.accountGeneration && Number.isSafeInteger(entry.event.clientSequence) &&
+              entry.event.clientSequence! > 0 && !("sharedRoom" in entry.event);
+          };
+          const unproven = partition.outbox.entries.filter((entry) => !proven(entry));
+          if (!unproven.length) return [key, partition];
+          changed = true;
+          return [key, { ...partition, currentObservation: null, currentObservationMeaningfulSolo: false, currentObservationDisplayMode: null,
+            outbox: { ...partition.outbox, entries: partition.outbox.entries.filter(proven),
+              retiredUnproven: Math.min(Number.MAX_SAFE_INTEGER, (partition.outbox.retiredUnproven ?? 0) + unproven.length) } }];
+        }));
+        if (changed && !(await replaceRoot({ ...stored, partitions })).ok) throw new Error("History migration could not persist accounting");
+      }
+      if (!legacy) return;
+      // A worker can stop after saving v3 but before retiring v2. In that case
+      // only cleanup is pending; v3 preferences/progress must never be recopied.
+      if (!hasCurrentRoot) {
+        const migrated = migrateLegacyPreferences(legacy);
+        const result = await replaceRoot(migrated);
+        if (!result.ok) throw new Error("Watch history upgrade could not persist preferences");
+      }
+      if (dependencies.removeLegacy) await dependencies.removeLegacy();
+      else if (!dependencies.item) await chrome.storage.local.remove("anidachi.watchHistory.v2");
+    }).catch((error) => {
+      migration = undefined;
+      throw error;
+    });
+    rootUpdateQueue = migration.catch(() => undefined);
+    return migration;
+  }
 
   async function readRoot(): Promise<WatchHistoryStorageRoot> {
+    await ensureMigration();
     const stored = await item.getValue();
     return normalizeStorageRoot(stored);
   }
@@ -107,8 +171,9 @@ export function createWatchHistoryStorage(
   async function updateRoot(
     update: (root: WatchHistoryStorageRoot) => WatchHistoryStorageRoot,
   ): Promise<WatchHistoryStorageResult> {
+    await ensureMigration();
     const operation: Promise<WatchHistoryStorageResult> = rootUpdateQueue.then(async () => {
-      const root = await readRoot();
+      const root = normalizeStorageRoot(await item.getValue());
       const candidate = update(root);
       return candidate === root ? ({ ok: true } as const) : replaceRoot(candidate);
     });
@@ -121,11 +186,9 @@ export function createWatchHistoryStorage(
 
   async function clearRebuildableAccountData(ownerUserId: string): Promise<WatchHistoryStorageResult> {
     return updateRoot((root) => {
-      let changed = false;
       const partitions = Object.fromEntries(
         Object.entries(root.partitions).flatMap(([key, partition]) => {
           if (partition.ownerUserId !== ownerUserId) return [[key, partition]];
-          changed = true;
           const cleared = {
             ...partition,
             cache: null,
@@ -136,14 +199,15 @@ export function createWatchHistoryStorage(
             currentObservation: null,
             currentObservationMeaningfulSolo: false,
             currentObservationDisplayMode: null,
+            catalogAcknowledgements: {},
           };
           return cleared.outbox.entries.length === 0 ? [] : [[key, cleared]];
         }),
       );
-      if (!changed) return root;
       return {
         ...root,
         partitions,
+        browseAuthEpochs: { ...root.browseAuthEpochs, [ownerUserId]: crypto.randomUUID() },
       };
     });
   }
@@ -221,8 +285,33 @@ export function createWatchHistoryStorage(
   };
 }
 
+function migrateLegacyPreferences(value: unknown): WatchHistoryStorageRoot {
+  const root = createWatchHistoryStorageRoot();
+  if (!value || typeof value !== "object" || !("schemaVersion" in value) || value.schemaVersion !== 2 ||
+    !("partitions" in value) || !value.partitions || typeof value.partitions !== "object") return root;
+  for (const [key, candidate] of Object.entries(value.partitions)) {
+    if (!candidate || typeof candidate !== "object") continue;
+    const { ownerUserId, accountGeneration } = candidate;
+    if (typeof ownerUserId !== "string" || !ownerUserId || ownerUserId.length > 128 ||
+      !Number.isSafeInteger(accountGeneration) || accountGeneration < 1 ||
+      key !== watchHistoryPartitionKey(ownerUserId, accountGeneration)) continue;
+    const preferences = WatchHistoryPreferencesSchema.safeParse(candidate.preferences);
+    if (!preferences.success || candidate.preferencesConfirmed !== true) continue;
+    root.partitions[key] = {
+      ownerUserId, accountGeneration, cache: null, currentObservation: null,
+      preferences: preferences.data, preferencesConfirmed: true,
+      preferencesSyncPending: candidate.preferencesSyncPending === true,
+      preferencesLocalRevision: normalizeLocalRevision(candidate.preferencesLocalRevision),
+      capturePaused: true, captureMarkersReady: true,
+      outbox: { ownerUserId, accountGeneration, entries: [] },
+    };
+    root.activeGenerations![ownerUserId] = Math.max(root.activeGenerations![ownerUserId] ?? 0, accountGeneration);
+  }
+  return root;
+}
+
 export function withoutWatchHistoryAttestation(event: WatchProgressEvent): WatchProgressEvent {
-  const { sharedRoom: _sharedRoom, ...safeObservation } = event;
+  const { sharedRoom: _sharedRoom, captureProof: _proof, clientSequence: _sequence, ...safeObservation } = event as WatchHistoryLocalEvent;
   return safeObservation;
 }
 

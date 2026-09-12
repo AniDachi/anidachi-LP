@@ -2,29 +2,18 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { AnidachiLogoLink } from "@/components/anidachi-logo";
-import { Menu, X, LogOut, ChevronDown, Users, User } from "lucide-react";
+import { Menu, X, ChevronDown } from "lucide-react";
 import { NavPricingButton } from "@/components/nav-pricing-button";
 import { NavPricingLink } from "@/components/nav-pricing-link";
 import { JoinDiscordButton } from "@/components/join-discord-button";
 import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
 import { cn } from "@/lib/utils";
 import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
-
-type NavUser = {
-  displayName: string;
-  avatarUrl: string | null;
-  email: string;
-  plan: string;
-};
-
-const PLAN_LABELS: Record<string, string> = {
-  free: "Free",
-  plus: "Plus",
-  pro: "Pro",
-};
+import { AccountEntryLink, UserMenu, type NavUser } from "./account-menu";
+import "./account-menu.css";
+export { UserMenu } from "./account-menu";
 
 type MeResponse = {
   user?: {
@@ -61,132 +50,6 @@ async function fetchNavUser(): Promise<NavUser | null> {
     email: user.email,
     plan: user.plan,
   };
-}
-
-function UserMenu({ user }: { user: NavUser }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function onClickOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    if (open) document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
-  }, [open]);
-
-  async function handleSignOut() {
-    setOpen(false);
-    await fetch("/api/auth/logout", { method: "POST" });
-    window.location.href = "/";
-  }
-
-  const initials = user.displayName
-    .split(" ")
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-
-  return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        aria-expanded={open}
-        aria-label="Account menu"
-        className="flex min-h-9 items-center gap-2 rounded-full border border-brand-border bg-brand-surface py-1 pl-1 pr-3 text-sm font-medium text-foreground transition-colors hover:bg-brand-orange hover:text-primary-foreground hover:border-brand-orange"
-      >
-        {user.avatarUrl ? (
-          <Image
-            src={user.avatarUrl}
-            alt={user.displayName}
-            width={28}
-            height={28}
-            className="h-7 w-7 rounded-full object-cover"
-          />
-        ) : (
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-orange text-xs font-bold text-primary-foreground">
-            {initials}
-          </span>
-        )}
-        <span className="max-w-[120px] truncate">{user.displayName}</span>
-        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")} aria-hidden />
-      </button>
-
-      {open && (
-        <div className="absolute right-0 top-full z-[100] mt-2 w-64 rounded-xl border border-brand-border bg-brand-surface shadow-2xl glow-orange-sm">
-          {/* User info */}
-          <div className="flex items-center gap-3 border-b border-brand-border px-4 py-3">
-            {user.avatarUrl ? (
-              <Image
-                src={user.avatarUrl}
-                alt={user.displayName}
-                width={40}
-                height={40}
-                className="h-10 w-10 rounded-full object-cover"
-              />
-            ) : (
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-orange text-sm font-bold text-primary-foreground">
-                {initials}
-              </span>
-            )}
-            <div className="min-w-0">
-              <p className="truncate font-semibold text-foreground">{user.displayName}</p>
-              <p className="truncate text-xs text-foreground/50">{user.email}</p>
-            </div>
-          </div>
-
-          {/* Plan badge */}
-          <div className="px-4 py-2.5">
-            <span className="inline-block rounded-full bg-brand-orange/15 border border-brand-orange/30 px-2.5 py-0.5 text-xs font-medium text-brand-orange-bright">
-              {PLAN_LABELS[user.plan] ?? user.plan}
-            </span>
-          </div>
-
-          {/* Actions */}
-          <div className="border-t border-brand-border px-2 py-2">
-            <Link
-              href="/account/friends"
-              onClick={() => setOpen(false)}
-              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-foreground/70 transition-colors hover:bg-brand-orange hover:text-primary-foreground"
-            >
-              <Users className="h-4 w-4" aria-hidden />
-              Friends
-            </Link>
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-foreground/70 transition-colors hover:bg-brand-orange hover:text-primary-foreground"
-            >
-              <LogOut className="h-4 w-4" aria-hidden />
-              Sign out
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function MobileSignOut({ onDone }: { onDone: () => void }) {
-  async function handleSignOut() {
-    onDone();
-    await fetch("/api/auth/logout", { method: "POST" });
-    window.location.href = "/";
-  }
-  return (
-    <button
-      type="button"
-      onClick={handleSignOut}
-      className="flex min-h-11 w-full items-center gap-2.5 rounded-lg px-3 text-base text-foreground/70 transition-colors hover:bg-brand-orange hover:text-primary-foreground"
-    >
-      <LogOut className="h-4 w-4" aria-hidden />
-      Sign out
-    </button>
-  );
 }
 
 /** Sibling hubs under Watch — platforms are peers of the anime vertical (not nested under anime). */
@@ -535,6 +398,13 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [menuOpen]);
 
+  useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 1280px)");
+    const closeOnDesktop = () => { if (desktop.matches) setMenuOpen(false); };
+    desktop.addEventListener("change", closeOnDesktop);
+    return () => desktop.removeEventListener("change", closeOnDesktop);
+  }, []);
+
   useBodyScrollLock(menuOpen);
 
   return (
@@ -548,13 +418,13 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
       <div className="container mx-auto flex w-full items-center justify-between gap-2 px-4 py-3">
         <AnidachiLogoLink
           size={28}
-          wordmarkClassName="text-white"
+          wordmarkClassName="hidden min-[400px]:inline text-white"
           className="min-h-11"
           priority
         />
 
         {/* Desktop inline nav */}
-        <ul className="hidden items-center gap-4 text-sm md:flex md:gap-6">
+        <ul className="hidden items-center gap-5 text-sm xl:flex">
           <li>
             <Link
               href="/#how-it-works"
@@ -566,10 +436,10 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
           <WatchNavMenu variant="desktop" />
           <ContactNavMenu variant="desktop" />
           <li>
-            <JoinDiscordButton variant="nav" placement="nav" />
+            <JoinDiscordButton variant="nav" placement="nav" className="min-h-11 rounded-xl px-4" />
           </li>
           <li>
-            <NavPricingButton />
+            {user ? <AccountEntryLink /> : <NavPricingButton />}
           </li>
           <li>
             {user ? (
@@ -585,64 +455,26 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
           </li>
         </ul>
 
-        {/* Mobile-only: pricing + sign in + hamburger (hidden from sm up — tablet uses inline strip) */}
-        <div className="flex items-center gap-1 sm:hidden">
-          <span className="inline-flex min-h-11 min-w-11 items-center justify-center">
-            <NavPricingLink className="inline-flex min-h-11 items-center rounded-full bg-brand-orange/15 border border-brand-orange/30 px-3 text-sm font-semibold text-brand-orange-bright transition-colors hover:bg-brand-orange" />
-          </span>
-          {!user ? (
-            <Link
-              href="/login"
-              className="inline-flex min-h-11 items-center rounded-full border border-brand-border px-3 text-xs font-semibold text-foreground transition-colors hover:border-brand-orange/50 hover:text-brand-orange-bright"
-            >
-              Sign in
-            </Link>
-          ) : null}
+        {/* Keep account access visible on phones and tablets. */}
+        <div className="flex items-center gap-2 xl:hidden">
+          {user ? <AccountEntryLink onClick={() => setMenuOpen(false)} /> : (
+            <>
+              <NavPricingLink className="inline-flex min-h-11 items-center rounded-full border border-brand-orange/30 bg-brand-orange/15 px-3 text-sm font-semibold text-brand-orange-bright" />
+              <Link href="/login" className="inline-flex min-h-11 items-center rounded-full border border-brand-border px-3 text-xs font-semibold text-foreground">Sign in</Link>
+            </>
+          )}
           <button
             type="button"
-            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-foreground transition-colors hover:bg-brand-orange hover:text-primary-foreground"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full text-foreground transition-colors hover:bg-white/5"
             aria-expanded={menuOpen}
             aria-controls="mobile-nav-menu"
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             onClick={() => setMenuOpen((o) => !o)}
           >
-            {menuOpen ? (
-              <X className="h-6 w-6" aria-hidden="true" />
-            ) : (
-              <Menu className="h-6 w-6" aria-hidden="true" />
-            )}
+            {menuOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
           </button>
+          {user && <UserMenu user={user} compact onOpen={() => setMenuOpen(false)} />}
         </div>
-
-        {/* Tablet: inline nav + pricing (no hamburger) */}
-        <ul className="hidden items-center gap-4 text-sm sm:flex md:hidden">
-          <li>
-            <Link
-              href="/#how-it-works"
-              className="inline-flex min-h-11 items-center text-foreground/70 transition-colors hover:text-brand-orange-bright"
-            >
-              How It Works
-            </Link>
-          </li>
-          <WatchNavMenu variant="tablet" />
-          <ContactNavMenu variant="tablet" />
-          <li>
-            <JoinDiscordButton variant="nav" placement="nav_tablet" />
-          </li>
-          <li className="hidden sm:block">
-            <NavPricingLink className="inline-flex min-h-11 items-center font-semibold text-brand-orange-bright transition-colors hover:text-brand-orange" />
-          </li>
-          {!user ? (
-            <li>
-              <Link
-                href="/login"
-                className="inline-flex min-h-11 items-center rounded-full border border-brand-border px-4 text-sm font-semibold text-foreground transition-colors hover:border-brand-orange/50 hover:text-brand-orange-bright"
-              >
-                Sign in
-              </Link>
-            </li>
-          ) : null}
-        </ul>
       </div>
 
       {/* Mobile drawer */}
@@ -650,14 +482,14 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
         <>
           <button
             type="button"
-            className="fixed inset-0 z-[45] bg-black/50 sm:hidden touch-none"
+            className="fixed inset-0 z-[45] bg-black/50 xl:hidden touch-none"
             aria-label="Close menu"
             onClick={() => setMenuOpen(false)}
           />
           <div
             id="mobile-nav-menu"
             data-scroll-lock-scrollable
-            className="fixed inset-x-0 top-[calc(3.5rem+var(--safe-top))] z-[46] max-h-[min(70dvh,calc(100dvh-3.5rem-var(--safe-top)))] overflow-y-auto overscroll-contain border-b border-brand-border bg-background/95 backdrop-blur-xl px-4 py-4 shadow-lg sm:hidden"
+            className="absolute inset-x-0 top-full z-[46] max-h-[min(70dvh,calc(100dvh-3.5rem-var(--safe-top)))] overflow-y-auto overscroll-contain border-b border-brand-border bg-background/95 backdrop-blur-xl px-4 py-4 shadow-lg xl:hidden"
             role="dialog"
             aria-modal="true"
             aria-label="Mobile navigation menu"
@@ -698,65 +530,14 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
                   FAQ
                 </Link>
               </li>
-              <li className="pt-2" onClick={() => setMenuOpen(false)}>
-                <NavPricingButton />
-              </li>
-              {user ? (
+              {!user && (
                 <>
-                  <li className="mt-3 border-t border-brand-border pt-3">
-                    <div className="flex items-center gap-3 px-3 py-1">
-                      {user.avatarUrl ? (
-                        <Image
-                          src={user.avatarUrl}
-                          alt={user.displayName}
-                          width={36}
-                          height={36}
-                          className="h-9 w-9 rounded-full object-cover"
-                        />
-                      ) : (
-                        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-orange text-sm font-bold text-primary-foreground">
-                          {user.displayName.slice(0, 2).toUpperCase()}
-                        </span>
-                      )}
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-foreground">{user.displayName}</p>
-                        <p className="truncate text-xs text-foreground/50">{user.email}</p>
-                      </div>
-                    </div>
-                  </li>
-                  <li>
-                    <Link
-                      href="/account"
-                      className="flex min-h-11 items-center gap-2.5 rounded-lg px-3 text-base text-foreground/70 transition-colors hover:bg-brand-orange hover:text-primary-foreground"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      <User className="h-4 w-4" aria-hidden />
-                      Account
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/account/friends"
-                      className="flex min-h-11 items-center gap-2.5 rounded-lg px-3 text-base text-foreground/70 transition-colors hover:bg-brand-orange hover:text-primary-foreground"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      <Users className="h-4 w-4" aria-hidden />
-                      Friends
-                    </Link>
-                  </li>
-                  <li>
-                    <MobileSignOut onDone={() => setMenuOpen(false)} />
+                  <li className="pt-2" onClick={() => setMenuOpen(false)}><NavPricingButton /></li>
+                  <li className="mt-2 border-t border-brand-border pt-2">
+                    <Link href="/login" onClick={() => setMenuOpen(false)}
+                      className="flex min-h-11 items-center rounded-lg px-3 text-base font-semibold text-foreground">Sign in</Link>
                   </li>
                 </>
-              ) : (
-                <li className="mt-2 border-t border-brand-border pt-2" onClick={() => setMenuOpen(false)}>
-                  <Link
-                    href="/login"
-                    className="flex min-h-11 items-center rounded-lg px-3 text-base font-semibold text-foreground transition-colors hover:bg-brand-orange hover:text-primary-foreground"
-                  >
-                    Sign in
-                  </Link>
-                </li>
               )}
             </ul>
           </div>

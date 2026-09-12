@@ -70,6 +70,19 @@ describe("top bubble edge reveal", () => {
     await unmount(view.root);
   });
 
+  it("keeps revealing when YouTube emits a null-related pointerout inside the viewport", async () => {
+    const view = await renderHarness(false);
+
+    await movePointer(995, 5);
+    expect(readPhase(view.container)).toBe("glow");
+
+    await pointerOutInsideViewport(995, 5);
+    await advance(TOP_BUBBLE_REVEAL_DELAY_MS);
+
+    expect(readPhase(view.container)).toBe("visible");
+    await unmount(view.root);
+  });
+
   it("keeps the revealed bubble while the pointer moves from the edge onto it", async () => {
     const view = await renderHarness(false);
 
@@ -128,7 +141,9 @@ describe("top bubble edge reveal", () => {
 
     await movePointer(995, 5);
     expect(readPhase(view.container)).toBe("glow");
-    window.dispatchEvent(new Event("blur"));
+    await act(async () => {
+      window.dispatchEvent(new Event("blur"));
+    });
     await advance(TOP_BUBBLE_REVEAL_DELAY_MS);
 
     expect(readPhase(view.container)).toBe("hidden");
@@ -171,25 +186,10 @@ describe("top bubble edge reveal", () => {
     await unmount(view.root);
   });
 
-  it("keeps a quiet Open mic launcher visible without edge intent", async () => {
-    const view = await renderHarness(false, rect(900, 10, 80, 32), true);
-    expect(readPhase(view.container)).toBe("visible");
-
-    await movePointer(400, 300);
-    await advance(TOP_BUBBLE_HIDE_DELAY_MS);
-    expect(readPhase(view.container)).toBe("visible");
-
-    await view.rerender(false, false);
-    await advance(TOP_BUBBLE_HIDE_DELAY_MS);
-    expect(readPhase(view.container)).toBe("hidden");
-    await unmount(view.root);
-  });
-
   it("starts and remains visible without edge intent in Always visible mode", async () => {
     const view = await renderHarness(
       false,
       rect(900, 10, 80, 32),
-      false,
       "always-visible",
     );
     expect(readPhase(view.container)).toBe("visible");
@@ -207,12 +207,11 @@ describe("top bubble edge reveal", () => {
     const view = await renderHarness(
       false,
       rect(900, 10, 80, 32),
-      false,
       "always-visible",
     );
     expect(readPhase(view.container)).toBe("visible");
 
-    await view.rerender(false, false, "auto-hide");
+    await view.rerender(false, "auto-hide");
     await advance(TOP_BUBBLE_HIDE_DELAY_MS - 1);
     expect(readPhase(view.container)).toBe("visible");
     await advance(1);
@@ -224,12 +223,10 @@ describe("top bubble edge reveal", () => {
 
 function Harness({
   bubbleRect,
-  forceVisible,
   mode,
   panelOpen,
 }: {
   bubbleRect: DOMRect;
-  forceVisible: boolean;
   mode: MainControlVisibility;
   panelOpen: boolean;
 }) {
@@ -237,7 +234,6 @@ function Harness({
   const bubbleRef = useRef<HTMLButtonElement>(null);
   const reveal = useTopBubbleReveal({
     bubbleRef,
-    forceVisible,
     mode,
     overlayRef,
     panelOpen,
@@ -273,13 +269,11 @@ function Harness({
 async function renderHarness(
   panelOpen: boolean,
   bubbleRect = rect(900, 10, 80, 32),
-  forceVisible = false,
   mode: MainControlVisibility = "auto-hide",
 ): Promise<{
   container: HTMLDivElement;
   rerender(
     panelOpen: boolean,
-    forceVisible?: boolean,
     mode?: MainControlVisibility,
   ): Promise<void>;
   root: Root;
@@ -291,7 +285,6 @@ async function renderHarness(
     root.render(
       <Harness
         bubbleRect={bubbleRect}
-        forceVisible={forceVisible}
         mode={mode}
         panelOpen={panelOpen}
       />,
@@ -300,12 +293,11 @@ async function renderHarness(
   return {
     container,
     root,
-    async rerender(nextPanelOpen, nextForceVisible = forceVisible, nextMode = mode) {
+    async rerender(nextPanelOpen, nextMode = mode) {
       await act(async () =>
         root.render(
           <Harness
             bubbleRect={bubbleRect}
-            forceVisible={nextForceVisible}
             mode={nextMode}
             panelOpen={nextPanelOpen}
           />,
@@ -324,6 +316,18 @@ async function movePointer(clientX: number, clientY: number, pointerType?: strin
 async function leaveWindow(): Promise<void> {
   await act(async () => {
     window.dispatchEvent(new PointerEvent("pointerout", { relatedTarget: null }));
+  });
+}
+
+async function pointerOutInsideViewport(clientX: number, clientY: number): Promise<void> {
+  await act(async () => {
+    window.dispatchEvent(
+      new PointerEvent("pointerout", {
+        clientX,
+        clientY,
+        relatedTarget: null,
+      }),
+    );
   });
 }
 

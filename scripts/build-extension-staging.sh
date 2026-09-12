@@ -20,6 +20,7 @@ OUTPUT_ZIP="$ROOT_DIR/$OUTPUT_NAME.zip"
 ARTIFACT_ZIP="$ARTIFACTS_DIR/${OUTPUT_NAME}-${SHORT_SHA}.zip"
 
 WXT_EXTENSION_CHANNEL=staging
+NODE_ENV=production
 : "${WXT_EXTENSION_VERSION:=$PACKAGE_EXTENSION_VERSION}"
 WXT_WEB_HTTP_BASE=https://staging.anidachi.app
 WXT_API_HTTP_BASE=https://anidachi-api-staging.vladislav-gul7.workers.dev
@@ -31,6 +32,7 @@ if [[ "${1:-}" == "--broad" ]]; then
 fi
 
 export WXT_EXTENSION_CHANNEL
+export NODE_ENV
 export WXT_EXTENSION_VERSION
 export WXT_WEB_HTTP_BASE
 export WXT_API_HTTP_BASE

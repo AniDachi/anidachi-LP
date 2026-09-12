@@ -1,6 +1,6 @@
-import { handleWatchHistoryV2TitleEpisodesGet } from "@/lib/anidachi-auth/watch-history-v2-routes";
+import { disabledWatchHistoryV2Route } from "@/lib/anidachi-auth/watch-library-routes";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-export const GET = handleWatchHistoryV2TitleEpisodesGet;
+export const GET = disabledWatchHistoryV2Route;

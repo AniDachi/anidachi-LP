@@ -4,6 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Anidachi</title>
+    <style>
+      /* Chrome sizes the native popup from its document, before React mounts. */
+      html,
+      body {
+        width: 392px;
+        min-width: 392px;
+        height: 600px;
+        min-height: 600px;
+        max-height: 600px;
+        margin: 0;
+        background: #09090b;
+        color-scheme: dark;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

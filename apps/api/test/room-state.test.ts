@@ -500,7 +500,7 @@ describe("RoomState", () => {
       runRoomEndExclusively: vi.fn(async (operation: () => Promise<void>) =>
         operation()),
       runRoomSourceDeliveryExclusively: vi.fn().mockResolvedValue(false),
-      state: { storage: storage.asDurableObjectStorage() },
+      state: { storage: storage.asDurableObjectStorage(), waitUntil: vi.fn() },
     };
     Object.setPrototypeOf(fakeRoomObject, RoomDurableObject.prototype);
 

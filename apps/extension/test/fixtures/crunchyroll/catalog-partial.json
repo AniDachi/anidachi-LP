@@ -1,0 +1,16 @@
+{
+  "fixtureKind": "live-pagination-evidence-plus-derived-failures",
+  "capturedAt": "2026-09-05",
+  "region": "VN",
+  "ignoredPagination": {
+    "endpoint": "seasons/{seasonId}/episodes",
+    "baseline": { "total": 25, "dataLength": 25, "firstId": "GRP8P9XGR", "lastId": "GRDQVZ5GY" },
+    "startAndN": { "parameters": { "start": 1, "n": 1 }, "total": 25, "dataLength": 25, "firstId": "GRP8P9XGR", "lastId": "GRDQVZ5GY" },
+    "offsetAndLimit": { "parameters": { "offset": 1, "limit": 1 }, "total": 25, "dataLength": 25, "firstId": "GRP8P9XGR", "lastId": "GRDQVZ5GY" }
+  },
+  "derivedFailures": {
+    "failedTraversal": { "seasonId": "SEASON-FAILED", "ok": false, "error": "HTTP_ERROR" },
+    "rawCountMismatch": { "total": 3, "data": [{ "id": "ROW-1" }, { "id": "ROW-2" }] }
+  },
+  "rule": "Ignored pagination is not pagination proof. Failed traversal or raw data length differing from declared total is partial, never complete."
+}

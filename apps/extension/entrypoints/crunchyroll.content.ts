@@ -3,6 +3,7 @@ import {
   CRUNCHYROLL_CONTROL_RESULT_SOURCE,
   CRUNCHYROLL_CONTROL_SOURCE,
   getCrunchyrollTimelineValueForTime,
+  isCrunchyrollControlRequest,
   type CrunchyrollControlRequest,
   type CrunchyrollControlResult,
   type CrunchyrollTimelineSnapshot,
@@ -12,6 +13,8 @@ import {
   getCrunchyrollRelatedSeriesId,
   selectCrunchyrollPosterTall,
 } from "../src/source-adapters/crunchyroll/artwork-select";
+import { collectCrunchyrollHistoryCatalog, resolveCrunchyrollHistoryMetadata } from "../src/source-adapters/crunchyroll/bridge-client";
+import { canonicalizeRoomSourceUrl, type WatchCatalogLocaleContext } from "@anidachi/protocol";
 
 export default defineContentScript({
   matches: ["https://*.crunchyroll.com/*"],
@@ -33,6 +36,10 @@ let contentToken: { value: string; expiresAt: number } | null = null;
 type BitmovinPlayerMethod = (...args: unknown[]) => unknown;
 
 interface BitmovinLikePlayer {
+  ads?: { isLinearAdActive?: () => boolean; getActiveAdBreak?: () => unknown };
+  sgai?: { getActiveAd?: () => unknown };
+  getAudio?: () => { lang?: unknown } | null;
+  subtitles?: { list?: () => Array<{ lang?: unknown; enabled?: unknown }> };
   getContainer?: () => HTMLElement | null;
   getCurrentTime?: () => number;
   getVideoElement?: () => HTMLVideoElement | null;
@@ -87,7 +94,109 @@ function startCrunchyrollControlBridge(): void {
   });
 }
 
+// Resume is deliberately separate from ordinary room seek/play fallback behavior.
+const personalResumeApplied = new Map<string, number>();
+function handlePersonalResumeRequest(request: CrunchyrollControlRequest): void {
+	const respond = (
+		resumeState: "ready" | "waiting" | "cancelled" | "consumed",
+	) =>
+		postResult({
+			action: request.action,
+			id: request.id,
+			source: CRUNCHYROLL_CONTROL_RESULT_SOURCE,
+			ok: resumeState === "ready" || resumeState === "consumed",
+			resumeState,
+		});
+	const source = canonicalizeRoomSourceUrl(location.href, "crunchyroll");
+	const now = Date.now();
+	if (
+		!source.ok ||
+		source.source.sourceUrl !== request.url ||
+		new URLSearchParams(location.hash.slice(1)).has("anidachiRoom") ||
+		!request.expiresAt ||
+		request.expiresAt <= now ||
+		request.expiresAt > now + 300000
+	) {
+		respond("cancelled");
+		return;
+	}
+	for (const [id, expiry] of personalResumeApplied)
+		if (expiry <= now) personalResumeApplied.delete(id);
+	if (request.intentId && personalResumeApplied.has(request.intentId)) {
+		respond("consumed");
+		return;
+	}
+	const video = findBestVideo();
+	// The normal room helper permits a generic fallback; Resume requires exact video association.
+	const player =
+		video &&
+		(window.__anidachiCrunchyrollBitmovinPlayers ?? []).find(
+			(candidate) => getBitmovinVideoElement(candidate) === video,
+		);
+	const contentReady = () => {
+		try {
+			if (
+				!video ||
+				!video.isConnected ||
+				!player ||
+				getBitmovinVideoElement(player) !== video ||
+				findBestVideo() !== video ||
+				typeof player.seek !== "function" ||
+				typeof player.ads?.isLinearAdActive !== "function" ||
+				typeof player.ads.getActiveAdBreak !== "function" ||
+				player.ads.isLinearAdActive() !== false ||
+				player.ads.getActiveAdBreak() !== null ||
+				(player.sgai !== undefined &&
+					(typeof player.sgai.getActiveAd !== "function" ||
+						player.sgai.getActiveAd() !== null))
+			)
+				return false;
+			return (
+				video.readyState >= 1 &&
+				Number.isFinite(video.duration) &&
+				video.duration > 0 &&
+				request.time! <= video.duration
+			);
+		} catch {
+			return false;
+		}
+	};
+	if (!contentReady()) {
+		respond("waiting");
+		return;
+	}
+	if (request.action === "resumeReadiness") {
+		respond("ready");
+		return;
+	}
+	if (!request.intentId || personalResumeApplied.size >= 128) {
+		respond("cancelled");
+		return;
+	}
+	// No await or fallback between the provider guard and the actual provider seek.
+	if (!contentReady()) {
+		respond("waiting");
+		return;
+	}
+	personalResumeApplied.set(request.intentId, request.expiresAt);
+	try {
+		respond(
+			player!.seek!(request.time!, ANIDACHI_BITMOVIN_ISSUER)
+				? "consumed"
+				: "cancelled",
+		);
+	} catch {
+		respond("cancelled");
+	}
+}
+
 async function handleControlRequest(request: CrunchyrollControlRequest): Promise<void> {
+  if (request.action === "resumeReadiness" || request.action === "resumeSeek") { handlePersonalResumeRequest(request); return; }
+  if (request.action === "cancelHistory") { historyRequests.get(request.id)?.abort(); return; }
+  if (request.action === "historyIdentity" || request.action === "historyCatalog") {
+    await handleHistoryRequest(request);
+    return;
+  }
   if (request.action === "navigate") {
     await handleNavigateRequest(request);
     return;
@@ -219,21 +328,78 @@ async function handleControlRequest(request: CrunchyrollControlRequest): Promise
 }
 
 function isControlRequest(value: unknown): value is CrunchyrollControlRequest {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
+  return isCrunchyrollControlRequest(value);
+}
 
-  const candidate = value as Partial<CrunchyrollControlRequest>;
-  return (
-    candidate.source === CRUNCHYROLL_CONTROL_SOURCE &&
-    typeof candidate.id === "string" &&
-    (candidate.action === "play" ||
-      candidate.action === "pause" ||
-      candidate.action === "seek" ||
-      candidate.action === "snapshot" ||
-      candidate.action === "navigate" ||
-      candidate.action === "seriesPoster")
-  );
+const historyRequests = new Map<string, AbortController>();
+
+function historyPlayerContext(): Pick<WatchCatalogLocaleContext, "audioLocale" | "subtitleLocales"> {
+  const video = findBestVideo();
+  const player = video ? findCapturedBitmovinPlayer(video) : null;
+  const locale = (value: unknown) => typeof value === "string" && value.length <= 35 && /^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/.test(value) ? value : null;
+  try {
+    const audioLocale = locale(player?.getAudio?.()?.lang);
+    const tracks = player?.subtitles?.list?.();
+    const subtitleLocales = Array.isArray(tracks) ? [...new Set(tracks.slice(0, 32).filter((track) => track.enabled === true).map((track) => locale(track.lang)).filter((value): value is string => value !== null))].sort() : [];
+    return { audioLocale, subtitleLocales };
+  } catch { return { audioLocale: null, subtitleLocales: [] }; }
+}
+
+async function handleHistoryRequest(request: CrunchyrollControlRequest): Promise<void> {
+  if (historyRequests.has(request.id) || historyRequests.size >= 4) return;
+  const abort = new AbortController();
+  historyRequests.set(request.id, abort);
+  const timer = window.setTimeout(() => abort.abort(), request.action === "historyIdentity" ? 30_000 : 120_000);
+  // Audio is current-player context only when the original watch GUID is still
+  // current. It is never substituted for the raw object's declared audio variant.
+  const currentGuid = location.pathname.match(/\/watch\/([A-Za-z0-9_-]+)/)?.[1];
+  const tracks = request.action === "historyIdentity" && currentGuid !== request.contentId
+    ? { audioLocale: null, subtitleLocales: [] }
+    : historyPlayerContext();
+  const context = structuredClone(request.context ?? {
+    requestedLocale: request.locale!, ...tracks, region: null, observedAt: new Date().toISOString(),
+  });
+  try {
+    // Region is sampled from this authenticated provider response, never inferred
+    // from language or relabeled from the poster helper's cached token.
+    const auth = await fetch(getCrunchyrollApiUrl("/auth/v1/token"), {
+      method: "POST", credentials: "include", signal: abort.signal,
+      headers: { authorization: `Basic ${btoa(`${CRUNCHYROLL_AUTH_CLIENT_ID}:`)}`, "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ grant_type: "client_id" }),
+    });
+    if (!auth.ok) throw new Error("HISTORY_UNAVAILABLE");
+    const token = await auth.json() as { access_token?: unknown; country?: unknown; region?: unknown };
+    if (typeof token.access_token !== "string") throw new Error("HISTORY_UNAVAILABLE");
+    const regionValue = token.country ?? token.region;
+    const region = typeof regionValue === "string" && /^[A-Z]{2}$/.test(regionValue) ? regionValue : null;
+    if (request.action === "historyIdentity") context.region = region;
+    const contextMatches = () => request.action !== "historyCatalog" ||
+      region === context.region && getCrunchyrollLocale() === context.requestedLocale &&
+      JSON.stringify(historyPlayerContext()) === JSON.stringify({ audioLocale: context.audioLocale, subtitleLocales: context.subtitleLocales });
+    const load = async (path: string, signal: AbortSignal): Promise<unknown> => {
+      if (signal.aborted) throw new Error("HISTORY_ABORTED");
+      if (!contextMatches()) throw new Error("HISTORY_CONTEXT_CHANGED");
+      const response = await fetch(getCrunchyrollApiUrl(path), { credentials: "include", signal, headers: { authorization: `Bearer ${token.access_token}` } });
+      if (!response.ok) throw new Error("HISTORY_UNAVAILABLE");
+      if (Number(response.headers.get("content-length")) > 4 * 1024 * 1024) throw new Error("HISTORY_LIMIT");
+      const body = await response.text();
+      if (body.length > 4 * 1024 * 1024) throw new Error("HISTORY_LIMIT");
+      if (!contextMatches()) throw new Error("HISTORY_CONTEXT_CHANGED");
+      return JSON.parse(body);
+    };
+    const payload = request.action === "historyIdentity"
+      ? { metadata: await resolveCrunchyrollHistoryMetadata(request.contentId!, context, load, abort.signal) }
+      : { catalog: await collectCrunchyrollHistoryCatalog(request.seriesId!, context, load, abort.signal) };
+    if (abort.signal.aborted) throw new Error("HISTORY_ABORTED");
+    if ("metadata" in payload && !payload.metadata) throw new Error("HISTORY_IDENTITY_PENDING");
+    postResult({ action: request.action, id: request.id, source: CRUNCHYROLL_CONTROL_RESULT_SOURCE, ok: true, ...payload } as CrunchyrollControlResult);
+  } catch {
+    postResult({ action: request.action, id: request.id, source: CRUNCHYROLL_CONTROL_RESULT_SOURCE, ok: false,
+      error: abort.signal.aborted ? "HISTORY_ABORTED" : "HISTORY_UNAVAILABLE" });
+  } finally {
+    window.clearTimeout(timer);
+    historyRequests.delete(request.id);
+  }
 }
 
 function postResult(result: CrunchyrollControlResult): void {

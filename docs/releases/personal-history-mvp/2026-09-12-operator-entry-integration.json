@@ -1,0 +1,40 @@
+{
+  "pass": true,
+  "kind": "local-synthetic-full-entry-cli-identity",
+  "createdAt": "2026-09-12T07:24:12.207Z",
+  "bridgeSha256": "424eeeb36373efdc50ab07db3520b0abfd33c1b53797f8bc9688b7cf03655d9f",
+  "checks": [
+    {
+      "prefix": 35,
+      "actualSessionUser": "cli_login_postgres",
+      "effectiveRole": "postgres",
+      "effectiveRoleSuperuser": false,
+      "operations": [
+        "full prepare",
+        "full verify-archive",
+        "full install_holds"
+      ],
+      "rollbackRestoredRolesAndBridge": true
+    },
+    {
+      "prefix": 60,
+      "actualSessionUser": "cli_login_postgres",
+      "effectiveRole": "postgres",
+      "effectiveRoleSuperuser": false,
+      "operations": [
+        "full verify-archive",
+        "full install_holds",
+        "full finish"
+      ],
+      "rollbackRestoredRolesAndBridge": true
+    }
+  ],
+  "sourceHashes": {
+    "prepare.sql": "351b0f34e71c1542684f8a4e453d45c68f055523e663e5b11185c89115aa24cf",
+    "verify-archive.sql": "a039c6b626e1319eef06f4189bfa7d0489522b54e698ce2ec5ccfbb275d12d1e",
+    "finish.sql": "ca71791a16d4166bb03680548a215480b3ce001393791989be3200d7bf94603c"
+  },
+  "hostedExecutorVerified": false,
+  "productionDataUsed": false,
+  "productionChanged": false
+}

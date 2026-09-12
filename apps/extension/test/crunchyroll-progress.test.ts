@@ -1,5 +1,129 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { getCrunchyrollProgressEntry, getCrunchyrollHistoryObservation } from "../src/source-adapters/crunchyroll/progress";
+import variantsFixture from "./fixtures/crunchyroll/catalog-variants.json";
+import {
+  getCrunchyrollProgressEntry,
+  getCrunchyrollHistoryObservation,
+  resolveCrunchyrollCurrentObjectIdentity,
+} from "../src/source-adapters/crunchyroll/progress";
+
+describe("Crunchyroll current-object canonical identity", () => {
+  it("collapses explicitly matching raw seasons only when canonical identifiers agree", () => {
+    const seasonsResponse = structuredClone(variantsFixture.seasonsResponse);
+    seasonsResponse.data.push({ ...seasonsResponse.data[0], id: "DUPLICATE_RAW_SEASON" });
+    seasonsResponse.total = seasonsResponse.data.length;
+    const input = {
+      watchId: "G8WUNEWJE",
+      objectResponse: variantsFixture.objectResponses.G8WUNEWJE,
+      seasonsResponse,
+      episodesResponse: variantsFixture.episodesResponse,
+    };
+    expect(resolveCrunchyrollCurrentObjectIdentity(input)?.seasonKey)
+      .toBe("crunchyroll:season:G6NQ5DWZ6|S00003205");
+    seasonsResponse.data[1].identifier = "G6NQ5DWZ6|CONFLICT";
+    expect(resolveCrunchyrollCurrentObjectIdentity(input)).toBeNull();
+  });
+  it.each([
+    ["English dub", "G8WUNEWJE", "en-US"],
+    ["Japanese original", "GY2PDV78Y", "ja-JP"],
+  ])("resolves the exact %s watch GUID to one logical episode", (_name, watchId, audioLocale) => {
+    expect(resolveCrunchyrollCurrentObjectIdentity({
+      watchId,
+      objectResponse: variantsFixture.objectResponses[watchId as keyof typeof variantsFixture.objectResponses],
+      seasonsResponse: variantsFixture.seasonsResponse,
+      episodesResponse: variantsFixture.episodesResponse,
+    })).toEqual({
+      providerSeriesId: "G6NQ5DWZ6",
+      providerSeasonIdentifier: "G6NQ5DWZ6|S00003205",
+      providerEpisodeIdentifier: "G6NQ5DWZ6|S00003205|E3",
+      providerContentId: watchId,
+      audioLocale,
+      titleKey: "crunchyroll:series:G6NQ5DWZ6",
+      seasonKey: "crunchyroll:season:G6NQ5DWZ6|S00003205",
+      episodeKey: "crunchyroll:episode:G6NQ5DWZ6|S00003205|E3",
+    });
+  });
+
+  it("keeps provider seasons distinct even when their presentation matches", () => {
+    const shared = {
+      watchId: "LEGACY-WATCH-1",
+      objectResponse: {
+        total: 1,
+        data: [{ id: "LEGACY-WATCH-1", type: "episode", episode_metadata: {
+          series_id: "LEGACY-SERIES", season_id: "LEGACY-SEASON-GUID-1", audio_locale: "en-US",
+          versions: [{ guid: "LEGACY-WATCH-1", season_guid: "LEGACY-SEASON-GUID-1", audio_locale: "en-US" }],
+        } }],
+      },
+      episodesResponse: {
+        total: 1,
+        data: [{ id: "LEGACY-WATCH-1", identifier: "LEGACY-SERIES|LEGACY-SEASON-1|E1", versions: [{ guid: "LEGACY-WATCH-1", season_guid: "LEGACY-SEASON-GUID-1" }] }],
+      },
+    };
+    const first = resolveCrunchyrollCurrentObjectIdentity({
+      ...shared,
+      seasonsResponse: { total: 2, data: [
+        { id: "LEGACY-SEASON-GUID-1", identifier: "LEGACY-SERIES|LEGACY-SEASON-1", title: "Season 1 (English Dub)", season_number: 1, versions: [{ guid: "LEGACY-SEASON-GUID-1" }] },
+        { id: "LEGACY-SEASON-GUID-2", identifier: "LEGACY-SERIES|LEGACY-SEASON-2", title: "Season 1 (English Dub)", season_number: 1, versions: [{ guid: "LEGACY-SEASON-GUID-2" }] },
+      ] },
+    });
+
+    expect(first?.seasonKey).toBe("crunchyroll:season:LEGACY-SERIES|LEGACY-SEASON-1");
+    expect(first?.seasonKey).not.toBe("crunchyroll:season:LEGACY-SERIES|LEGACY-SEASON-2");
+  });
+
+  it.each([
+    ["missing season list", { seasonsResponse: null }],
+    ["missing episode list", { episodesResponse: null }],
+    ["wrong recorded watch GUID", { watchId: "NOT-THE-RECORDED-GUID" }],
+    ["ambiguous episode alias", { episodesResponse: variantsFixture.ambiguousEpisodesResponse }],
+  ])("leaves identity pending for %s", (_name, override) => {
+    expect(resolveCrunchyrollCurrentObjectIdentity({
+      watchId: "G8WUNEWJE",
+      objectResponse: variantsFixture.objectResponses.G8WUNEWJE,
+      seasonsResponse: variantsFixture.seasonsResponse,
+      episodesResponse: variantsFixture.episodesResponse,
+      ...override,
+    })).toBeNull();
+  });
+
+  it.each(variantsFixture.invalidIdentityCases)(
+    "leaves identity pending for $name",
+    ({ input }) => {
+      expect(resolveCrunchyrollCurrentObjectIdentity(input)).toBeNull();
+    },
+  );
+
+  it("keeps identity when an unrecognized audio locale is safely nullable", () => {
+    const objectResponse = structuredClone(
+      variantsFixture.objectResponses.G8WUNEWJE,
+    );
+    objectResponse.data[0].episode_metadata.versions[1].audio_locale =
+      "not a locale";
+
+    expect(resolveCrunchyrollCurrentObjectIdentity({
+      watchId: "G8WUNEWJE",
+      objectResponse,
+      seasonsResponse: variantsFixture.seasonsResponse,
+      episodesResponse: variantsFixture.episodesResponse,
+    })?.audioLocale).toBeNull();
+  });
+
+  it.each([
+    ["object season id", (input: any) => { input.objectResponse.data[0].episode_metadata.season_id = " bad "; }],
+    ["season series id", (input: any) => { input.seasonsResponse.data[0].series_id = 42; }],
+    ["episode series id", (input: any) => { input.episodesResponse.data[0].series_id = "SERIES\u0000"; }],
+    ["episode season id", (input: any) => { input.episodesResponse.data[0].season_id = {}; }],
+  ])("rejects a present malformed %s instead of treating it as absent", (_name, mutate) => {
+    const input = {
+      watchId: "G8WUNEWJE",
+      objectResponse: structuredClone(variantsFixture.objectResponses.G8WUNEWJE),
+      seasonsResponse: structuredClone(variantsFixture.seasonsResponse),
+      episodesResponse: structuredClone(variantsFixture.episodesResponse),
+    };
+    mutate(input);
+
+    expect(resolveCrunchyrollCurrentObjectIdentity(input)).toBeNull();
+  });
+});
 
 describe("Crunchyroll progress extraction", () => {
   afterEach(() => {
@@ -22,6 +146,8 @@ describe("Crunchyroll progress extraction", () => {
       titleKey: "crunchyroll-series:my-hero-academia",
       episodeKey: "G8WUNM123",
       catalogState: "unavailable",
+      sourceUrl: "https://www.crunchyroll.com/watch/G8WUNM123",
+      identityPending: { watchId: "G8WUNM123" },
     });
   });
 

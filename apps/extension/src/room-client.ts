@@ -1,21 +1,45 @@
 import {
   ActiveRoomConflictResponseSchema,
   ClientEventSchema,
+  ROOM_CONNECT_REQUEST_TIMEOUT_MS,
   RoomSessionAdmissionInputSchema,
   RoomCapabilitiesSchema,
+  RoomMediaCapabilitiesSchema,
+  type RoomMediaCapabilities,
+  type RoomMediaKind,
   ServerEventSchema,
   canonicalizeRoomSourceUrl,
   isLegacyRoomSourceFingerprintAlias,
   type ActiveRoomConflictResponse,
   type ClientEvent,
+  type MediaIntent,
   type Participant,
   type RoomCapabilities,
   type RoomHistoryAuthority,
   type ServerEvent,
 } from "@anidachi/protocol";
+import { RoomMediaSession } from "./room-media-session";
 import { API_WS_BASE, WEB_HTTP_BASE } from "./constants";
 import { logDebug, roomEventDebugSnapshot } from "./debug-log";
 import type { RoomSendDisposition, SignalingTransportReady } from "./media-types";
+import {
+  departExactRoomSession,
+  type RoomTabDepartureDependencies,
+  type RoomTabDepartureOutcome,
+} from "./room-departure";
+import {
+  acknowledgeRoomDepartureAdmissionHandoff,
+  claimRoomDepartureAdmissionHandoffCleanup,
+  isRoomDepartureRetryOperation,
+  markRoomDepartureAdmissionHandoff,
+  requestRoomDepartureAdmissionCleanup,
+  renewRoomDepartureAdmissionIntent,
+  retryRoomDepartureAdmission,
+  settleRoomDepartureAdmission,
+  type RoomDepartureRetryAttemptOutcome,
+  type RoomDepartureRetryIdentity,
+  type RoomDepartureRetryOperation,
+} from "./room-departure-retry";
 import {
   issuePrivilegedRoomAuthority,
   reservePrivilegedRoomAuthorityForTab,
@@ -24,13 +48,194 @@ import {
   type PrivilegedOverlayContext,
 } from "./privileged-overlay-intent";
 import {
+  captureRoomSessionIdentity,
+  clearRoomSessionForDepartureIfMatch,
   confirmRoomSessionForTab,
   discardPreparedRoomSessionIfMatch,
   isPreparedRoomSession,
+  loadRoomSessionForTab,
+  retainPreparedRoomSessionForDepartureRetry,
+  roomSessionIdentityMatches,
   type PreparedRoomSession,
   type RoomSessionBackgroundDependencies,
   type RoomSessionRecord,
 } from "./room-session-storage";
+
+export { ROOM_CONNECT_REQUEST_TIMEOUT_MS };
+
+type ConfirmedAdmissionDepartureOutcome = Extract<
+  RoomTabDepartureOutcome,
+  "active-room-changed" | "already_departed" | "departed" | "room_ended" | "stale"
+>;
+
+export type RoomAdmissionCompletion =
+  | { kind: "cleanup-confirmed"; outcome: ConfirmedAdmissionDepartureOutcome }
+  | { kind: "cleanup-failed"; outcome: RoomTabDepartureOutcome }
+  | { kind: "cleanup-superseded" }
+  | { kind: "not-cancelled" };
+
+export interface RoomAdmissionCleanupOwnership {
+  operation: RoomDepartureRetryOperation;
+  owned: boolean;
+}
+
+interface RoomAdmissionReservation {
+  readonly completion: Promise<RoomAdmissionCompletion>;
+  readonly identity: RoomDepartureRetryIdentity;
+  readonly operationPersisted: Promise<RoomDepartureRetryOperation>;
+  readonly participantSessionId: string;
+  readonly requestCleanup: (
+    operation: RoomDepartureRetryOperation,
+  ) => Promise<boolean>;
+  readonly retryCleanup: (
+    operation: RoomDepartureRetryOperation,
+  ) => Promise<RoomDepartureRetryAttemptOutcome>;
+  readonly sequence: number;
+  readonly tabId: number;
+  cancelled: boolean;
+  explicitDepartureObserver: boolean;
+  intentPersistenceConfirmed: boolean;
+  cleanupIntentPersisted: Promise<RoomAdmissionCleanupOwnership> | null;
+  settled: boolean;
+  resolve(result: RoomAdmissionCompletion): void;
+}
+
+export interface RoomAdmissionCancellation {
+  completion: Promise<RoomAdmissionCompletion>;
+  intentPersisted: Promise<RoomAdmissionCleanupOwnership>;
+  retryCleanup(
+    operation: RoomDepartureRetryOperation,
+  ): Promise<RoomDepartureRetryAttemptOutcome>;
+}
+
+export class RoomAdmissionFence {
+  private readonly currentByTab = new Map<number, RoomAdmissionReservation>();
+  private nextSequence = 0;
+
+  begin(
+    tabId: number,
+    identity: RoomDepartureRetryIdentity,
+    renewIntent: (
+      identity: RoomDepartureRetryIdentity,
+    ) => Promise<RoomDepartureRetryOperation> = renewRoomDepartureAdmissionIntent,
+    requestCleanup: (
+      operation: RoomDepartureRetryOperation,
+    ) => Promise<boolean> = requestRoomDepartureAdmissionCleanup,
+    retryCleanup: (
+      operation: RoomDepartureRetryOperation,
+    ) => Promise<RoomDepartureRetryAttemptOutcome> = retryRoomDepartureAdmission,
+  ): RoomAdmissionReservation {
+    const previous = this.currentByTab.get(tabId);
+    if (previous && !previous.settled) {
+      this.cancelReservation(previous, false);
+    }
+    if (this.nextSequence >= Number.MAX_SAFE_INTEGER) {
+      throw new Error("Room admission sequence is exhausted");
+    }
+    let resolve!: (result: RoomAdmissionCompletion) => void;
+    const completion = new Promise<RoomAdmissionCompletion>((nextResolve) => {
+      resolve = nextResolve;
+    });
+    const reservation: RoomAdmissionReservation = {
+      cancelled: false,
+      cleanupIntentPersisted: null,
+      completion,
+      explicitDepartureObserver: false,
+      identity,
+      intentPersistenceConfirmed: false,
+      operationPersisted: renewIntent(identity),
+      participantSessionId: identity.participantSessionId,
+      requestCleanup,
+      retryCleanup,
+      resolve,
+      sequence: ++this.nextSequence,
+      settled: false,
+      tabId,
+    };
+    this.currentByTab.set(tabId, reservation);
+    return reservation;
+  }
+
+  cancel(
+    tabId: number,
+    participantSessionId: string,
+  ): RoomAdmissionCancellation | null {
+    const current = this.currentByTab.get(tabId);
+    if (
+      !current ||
+      current.settled ||
+      current.participantSessionId !== participantSessionId
+    ) {
+      return null;
+    }
+    return this.cancelReservation(current, true);
+  }
+
+  cancelAny(tabId: number): Promise<RoomAdmissionCleanupOwnership> | null {
+    const current = this.currentByTab.get(tabId);
+    if (current && !current.settled) {
+      return this.cancelReservation(current, false).intentPersisted;
+    }
+    return null;
+  }
+
+  isCurrent(reservation: RoomAdmissionReservation): boolean {
+    return (
+      !reservation.cancelled &&
+      !reservation.settled &&
+      this.currentByTab.get(reservation.tabId) === reservation
+    );
+  }
+
+  finish(
+    reservation: RoomAdmissionReservation,
+    result: RoomAdmissionCompletion,
+  ): void {
+    if (reservation.settled) return;
+    reservation.settled = true;
+    if (this.currentByTab.get(reservation.tabId) === reservation) {
+      this.currentByTab.delete(reservation.tabId);
+    }
+    reservation.resolve(result);
+  }
+
+  private cancelReservation(
+    reservation: RoomAdmissionReservation,
+    explicitDepartureObserver: boolean,
+  ): RoomAdmissionCancellation {
+    reservation.cancelled = true;
+    if (explicitDepartureObserver) reservation.explicitDepartureObserver = true;
+    reservation.cleanupIntentPersisted ??= reservation.operationPersisted.then(
+      async (operation) => {
+        const owned = await reservation.requestCleanup(operation);
+        reservation.intentPersistenceConfirmed = owned;
+        return { operation, owned };
+      },
+    );
+    return {
+      completion: reservation.completion,
+      intentPersisted: reservation.cleanupIntentPersisted,
+      retryCleanup: reservation.retryCleanup,
+    };
+  }
+}
+
+const defaultRoomAdmissionFence = new RoomAdmissionFence();
+
+export function cancelRoomAdmissionForDeparture(
+  tabId: number,
+  participantSessionId: string,
+  fence: RoomAdmissionFence = defaultRoomAdmissionFence,
+): RoomAdmissionCancellation | null {
+  return fence.cancel(tabId, participantSessionId);
+}
+
+export function cancelRoomAdmissionForTab(
+  tabId: number,
+  fence: RoomAdmissionFence = defaultRoomAdmissionFence,
+): Promise<RoomAdmissionCleanupOwnership> | null {
+  return fence.cancelAny(tabId);
+}
 
 export type RoomConnectionStatus = "idle" | "connecting" | "connected" | "closed" | "error";
 
@@ -47,6 +252,10 @@ export interface RoomClientOptions {
   onHistoryAuthority?: (authority: RoomHistoryAuthority | null) => void;
   onTerminalClose?: (code: number) => void;
   onTransportReady?: (ready: SignalingTransportReady) => void;
+  admissionHandoff?: RoomAdmissionHandoff;
+  acknowledgeAdmissionHandoff?: (
+    handoff: RoomAdmissionHandoff,
+  ) => Promise<boolean>;
 }
 
 /** Free-plan daily quota summary attached to room API responses (PD2). */
@@ -61,7 +270,7 @@ export interface CreatedRoom {
   shareableLink: string;
   /** True when an idempotent retry returned the already-created room. */
   reused?: boolean;
-  capabilities?: RoomCapabilities;
+  capabilities?: RoomCapabilities | RoomMediaCapabilities;
   quota?: RoomQuotaSummary | null;
   /** Background-issued per-tab authority for privileged room actions. */
   privilegedRoomAuthority?: PrivilegedOverlayContext | null;
@@ -121,13 +330,17 @@ export function isTerminalRoomJoinError(error: unknown): error is RoomApiError {
   return (
     error instanceof RoomApiError &&
     error.code !== "QUOTA_EXHAUSTED" &&
-    (error.status === 403 || error.status === 404)
+    (error.status === 403 || error.status === 404 || error.status === 426 || error.code === "ROOM_UPDATE_REQUIRED")
   );
 }
 
 const ROOM_HTTP_MESSAGE_TYPE = "ANIDACHI_ROOM_HTTP";
+export const ROOM_ADMISSION_HANDOFF_MESSAGE_TYPE =
+  "ANIDACHI_ROOM_ADMISSION_HANDOFF" as const;
 const ROOM_KEEPALIVE_INTERVAL_MS = 20_000;
 const ROOM_KEEPALIVE_TIMEOUT_MS = 45_000;
+const ROOM_ADMISSION_HANDOFF_ACK_INITIAL_DELAY_MS = 250;
+const ROOM_ADMISSION_HANDOFF_ACK_MAX_DELAY_MS = 4_000;
 const HIBERNATION_KEEPALIVE_PING = "ping";
 const HIBERNATION_KEEPALIVE_PONG = "pong";
 export const ROOM_SESSION_TAKEN_OVER_CLOSE_CODE = 4002;
@@ -146,6 +359,20 @@ export function isTerminalRoomCloseCode(code: number): boolean {
 }
 
 export type RoomHttpCommand = "create-room" | "connect-room";
+
+export type RoomAdmissionHandoff = RoomDepartureRetryOperation & {
+  tabId: number;
+};
+
+export type RoomAdmissionHandoffMessage = {
+  type: typeof ROOM_ADMISSION_HANDOFF_MESSAGE_TYPE;
+  command: "acknowledge";
+  handoff: RoomAdmissionHandoff;
+};
+
+export type RoomAdmissionHandoffResponse =
+  | { ok: true; acknowledged: boolean }
+  | { ok: false; error: string };
 
 export type RoomHttpMessage =
   | {
@@ -170,10 +397,11 @@ export type RoomHttpMessageResponse =
       ok: true;
       connection: {
         roomToken: string;
-        capabilities?: RoomCapabilities;
+        capabilities?: RoomCapabilities | RoomMediaCapabilities;
         quota?: RoomQuotaSummary | null;
         privilegedRoomAuthority?: PrivilegedOverlayContext | null;
         roomSession: RoomSessionRecord;
+        admissionHandoff?: RoomAdmissionHandoff;
       };
     }
   | { ok: true; ended: { endedAt: string | null } }
@@ -233,9 +461,9 @@ function parseQuotaSummary(value: unknown): RoomQuotaSummary | null {
   return { remainingSeconds: quota.remainingSeconds, resetAt: quota.resetAt };
 }
 
-function parseRoomCapabilities(value: unknown): RoomCapabilities | undefined {
+function parseRoomCapabilities(value: unknown): RoomCapabilities | RoomMediaCapabilities | undefined {
   if (value === undefined || value === null) return undefined;
-  const parsed = RoomCapabilitiesSchema.safeParse(value);
+  const parsed = RoomCapabilitiesSchema.or(RoomMediaCapabilitiesSchema).safeParse(value);
   return parsed.success ? parsed.data : undefined;
 }
 
@@ -299,6 +527,36 @@ export function isRoomHttpMessage(value: unknown): value is RoomHttpMessage {
   return false;
 }
 
+export function roomAdmissionHandoffMessage(
+  handoff: RoomAdmissionHandoff,
+): RoomAdmissionHandoffMessage {
+  if (!isRoomDepartureRetryOperation(handoff)) {
+    throw new Error("Invalid room admission handoff");
+  }
+  if (!Number.isInteger(handoff.tabId) || handoff.tabId < 0) {
+    throw new Error("Invalid room admission handoff tab");
+  }
+  return {
+    type: ROOM_ADMISSION_HANDOFF_MESSAGE_TYPE,
+    command: "acknowledge",
+    handoff,
+  };
+}
+
+export function isRoomAdmissionHandoffMessage(
+  value: unknown,
+): value is RoomAdmissionHandoffMessage {
+  if (typeof value !== "object" || value === null) return false;
+  const message = value as Partial<RoomAdmissionHandoffMessage>;
+  return message.type === ROOM_ADMISSION_HANDOFF_MESSAGE_TYPE &&
+    message.command === "acknowledge" &&
+    isRoomDepartureRetryOperation(message.handoff) &&
+    typeof message.handoff === "object" &&
+    message.handoff !== null &&
+    Number.isInteger((message.handoff as Partial<RoomAdmissionHandoff>).tabId) &&
+    ((message.handoff as Partial<RoomAdmissionHandoff>).tabId ?? -1) >= 0;
+}
+
 export async function createWebsiteRoomFromApi(
   accessToken: string,
   participantSessionId: string,
@@ -313,7 +571,7 @@ export async function createWebsiteRoomFromApi(
   });
   const response = await fetch(new URL("/api/rooms", WEB_HTTP_BASE), {
     method: "POST",
-    headers: createWebsiteRoomHeaders(accessToken),
+    headers: { ...createWebsiteRoomHeaders(accessToken), "X-Anidachi-Media-Protocol": "2" },
     body: JSON.stringify({
       ...(normalizedInput ?? {}),
       participantSessionId: admission.participantSessionId,
@@ -386,38 +644,49 @@ export async function connectWebsiteRoomFromApi(
   participantSessionId: string,
 ): Promise<{
   roomToken: string;
-  capabilities?: RoomCapabilities;
+  capabilities?: RoomCapabilities | RoomMediaCapabilities;
   quota?: RoomQuotaSummary | null;
 }> {
   const admission = RoomSessionAdmissionInputSchema.parse({ participantSessionId });
   logDebug("room.http", "connect website room request", { webHttpBase: WEB_HTTP_BASE, roomId });
-  const response = await fetch(
-    new URL(`/api/rooms/${encodeURIComponent(roomId)}/connect`, WEB_HTTP_BASE),
-    {
-      method: "POST",
-      headers: createWebsiteRoomHeaders(accessToken),
-      body: JSON.stringify(admission),
-    },
+  const abortController = new AbortController();
+  const timeoutId = setTimeout(
+    () => abortController.abort(),
+    ROOM_CONNECT_REQUEST_TIMEOUT_MS,
   );
+  let response: Response;
+  try {
+    response = await fetch(
+      new URL(`/api/rooms/${encodeURIComponent(roomId)}/connect`, WEB_HTTP_BASE),
+      {
+        method: "POST",
+        headers: { ...createWebsiteRoomHeaders(accessToken), "X-Anidachi-Media-Protocol": "2" },
+        body: JSON.stringify(admission),
+        signal: abortController.signal,
+      },
+    );
 
-  if (!response.ok) {
-    logDebug("room.http", "connect website room failed", { roomId, status: response.status });
-    throw await websiteRoomHttpError(response, "Failed to connect website room");
-  }
+    if (!response.ok) {
+      logDebug("room.http", "connect website room failed", { roomId, status: response.status });
+      throw await websiteRoomHttpError(response, "Failed to connect website room");
+    }
 
-  const payload = (await response.json()) as {
-    roomToken?: unknown;
-    capabilities?: unknown;
-    quota?: unknown;
-  };
-  if (typeof payload.roomToken !== "string") {
-    throw new Error("Website room connect response is missing roomToken");
+    const payload = (await response.json()) as {
+      roomToken?: unknown;
+      capabilities?: unknown;
+      quota?: unknown;
+    };
+    if (typeof payload.roomToken !== "string") {
+      throw new Error("Website room connect response is missing roomToken");
+    }
+    return {
+      roomToken: payload.roomToken,
+      capabilities: parseRoomCapabilities(payload.capabilities),
+      quota: parseQuotaSummary(payload.quota),
+    };
+  } finally {
+    clearTimeout(timeoutId);
   }
-  return {
-    roomToken: payload.roomToken,
-    capabilities: parseRoomCapabilities(payload.capabilities),
-    quota: parseQuotaSummary(payload.quota),
-  };
 }
 
 export async function endWebsiteRoomFromApi(
@@ -451,6 +720,8 @@ export interface RoomHttpBackgroundDependencies {
   authorityDependencies?: PrivilegedOverlayIntentDependencies;
   authorityRequestSequences?: Map<number, number>;
   roomSessionDependencies?: RoomSessionBackgroundDependencies;
+  admissionFence?: RoomAdmissionFence;
+  cancelledAdmissionDepartureDependencies?: RoomTabDepartureDependencies;
   confirmRoomSession?: (
     tabId: number,
     prepared: PreparedRoomSession,
@@ -462,6 +733,27 @@ export interface RoomHttpBackgroundDependencies {
     prepared: PreparedRoomSession,
     dependencies?: RoomSessionBackgroundDependencies,
   ) => Promise<boolean>;
+  renewCancelledAdmissionDepartureIntent?: (
+    identity: RoomDepartureRetryIdentity,
+  ) => Promise<RoomDepartureRetryOperation>;
+  requestCancelledAdmissionCleanup?: (
+    operation: RoomDepartureRetryOperation,
+  ) => Promise<boolean>;
+  markAdmissionHandoff?: (
+    operation: RoomDepartureRetryOperation,
+  ) => Promise<boolean>;
+  acknowledgeAdmissionHandoff?: (
+    operation: RoomDepartureRetryOperation,
+  ) => Promise<boolean>;
+  claimAdmissionHandoffCleanup?: (
+    identity: RoomDepartureRetryIdentity,
+  ) => Promise<RoomDepartureRetryOperation | null>;
+  settleCancelledAdmissionDeparture?: (
+    operation: RoomDepartureRetryOperation,
+  ) => Promise<RoomDepartureRetryAttemptOutcome>;
+  retryCancelledAdmissionDeparture?: (
+    operation: RoomDepartureRetryOperation,
+  ) => Promise<RoomDepartureRetryAttemptOutcome>;
 }
 
 export async function handleRoomHttpMessage(
@@ -469,6 +761,54 @@ export async function handleRoomHttpMessage(
   sender: { tab?: { id?: number } } = {},
   dependencies: RoomHttpBackgroundDependencies = {},
 ): Promise<RoomHttpMessageResponse> {
+  const senderTabId = sender.tab?.id;
+  const admissionFence = dependencies.admissionFence ?? defaultRoomAdmissionFence;
+  const admissionReservation =
+    message.command === "connect-room" &&
+    Number.isInteger(senderTabId) &&
+    (senderTabId ?? -1) >= 0
+      ? admissionFence.begin(
+          senderTabId as number,
+          {
+            roomId: message.roomId,
+            ownerUserId: message.roomSession.ownerUserId,
+            participantSessionId: message.roomSession.participantSessionId,
+          },
+          dependencies.renewCancelledAdmissionDepartureIntent ??
+            (dependencies.cancelledAdmissionDepartureDependencies
+              ? async (identity) => ({ ...identity, generation: 1 })
+              : renewRoomDepartureAdmissionIntent),
+          dependencies.requestCancelledAdmissionCleanup ??
+            (dependencies.cancelledAdmissionDepartureDependencies ||
+                dependencies.renewCancelledAdmissionDepartureIntent
+              ? async () => true
+              : requestRoomDepartureAdmissionCleanup),
+          dependencies.retryCancelledAdmissionDeparture ??
+            (dependencies.cancelledAdmissionDepartureDependencies
+              ? (operation) =>
+                  departExactRoomSession(
+                    {
+                      version: 1,
+                      revision: 1,
+                      roomId: operation.roomId,
+                      ownerUserId: operation.ownerUserId,
+                      participantSessionId: operation.participantSessionId,
+                      cameraEnabled: false,
+                      voiceMode: "push-to-talk",
+                    },
+                    dependencies.cancelledAdmissionDepartureDependencies,
+                  )
+              : retryRoomDepartureAdmission),
+        )
+      : null;
+  const admissionRecord =
+    message.command === "connect-room"
+      ? roomSessionRecordForAdmission(message.roomSession, message.roomId)
+      : null;
+  let admissionRequestConfirmedSettled = false;
+  let admissionFinished = false;
+  let admissionHandoff: RoomAdmissionHandoff | null = null;
+  let shouldDiscardPrepared = true;
   const authorityRequest = reserveRoomAuthorityRequest(sender, dependencies.authorityRequestSequences);
   const usesPersistentAuthority = dependencies.issueAuthority === undefined;
   const authorityReservation =
@@ -507,6 +847,12 @@ export async function handleRoomHttpMessage(
     );
   };
   try {
+    if (admissionReservation) {
+      // The persisted generation owns every later cleanup decision. Do not
+      // let the Web admission begin until this same-identity successor has
+      // invalidated all older local operations.
+      await admissionReservation.operationPersisted;
+    }
     if (message.command === "create-room") {
       const room = await createWebsiteRoomFromApi(
         message.accessToken,
@@ -542,6 +888,7 @@ export async function handleRoomHttpMessage(
       message.accessToken,
       message.roomSession.participantSessionId,
     );
+    admissionRequestConfirmedSettled = true;
     const roomSession = await confirmPreparedRoomSessionForSender(
       sender,
       message.roomSession,
@@ -549,7 +896,38 @@ export async function handleRoomHttpMessage(
       dependencies.roomSessionDependencies,
       dependencies.confirmRoomSession,
     );
-    if (!roomSession) {
+    if (
+      !roomSession ||
+      (admissionReservation && !admissionFence.isCurrent(admissionReservation))
+    ) {
+      const cancelledRecord =
+        roomSession ?? roomSessionRecordForAdmission(message.roomSession, message.roomId);
+      if (admissionReservation) {
+        const cleanup = await cleanupCancelledRoomAdmission(
+          cancelledRecord,
+          admissionReservation,
+          dependencies,
+        );
+        const disposition = await ownCancelledAdmissionCleanupFailure(
+          senderTabId as number,
+          message.roomSession,
+          cancelledRecord,
+          admissionReservation,
+          cleanup,
+          dependencies,
+        );
+        shouldDiscardPrepared = disposition.shouldDiscardPrepared;
+        admissionFence.finish(admissionReservation, cleanup);
+        await clearUnobservedCancelledAdmission(
+          senderTabId as number,
+          cancelledRecord,
+          admissionReservation,
+          cleanup,
+          disposition.backgroundOwnsDeparture,
+          dependencies,
+        );
+        admissionFinished = true;
+      }
       throw new RoomApiError(
         "This room action was replaced by a newer tab action.",
         "STALE_ROOM_SESSION",
@@ -561,17 +939,139 @@ export async function handleRoomHttpMessage(
       roomId: message.roomId,
       roomToken: connection.roomToken,
     });
+    if (admissionReservation && !admissionFence.isCurrent(admissionReservation)) {
+      const cleanup = await cleanupCancelledRoomAdmission(
+        roomSession,
+        admissionReservation,
+        dependencies,
+      );
+      const disposition = await ownCancelledAdmissionCleanupFailure(
+        senderTabId as number,
+        message.roomSession,
+        roomSession,
+        admissionReservation,
+        cleanup,
+        dependencies,
+      );
+      shouldDiscardPrepared = disposition.shouldDiscardPrepared;
+      admissionFence.finish(admissionReservation, cleanup);
+      await clearUnobservedCancelledAdmission(
+        senderTabId as number,
+        roomSession,
+        admissionReservation,
+        cleanup,
+        disposition.backgroundOwnsDeparture,
+        dependencies,
+      );
+      admissionFinished = true;
+      throw new RoomApiError(
+        "This room action was replaced by a newer tab action.",
+        "STALE_ROOM_SESSION",
+        undefined,
+        409,
+      );
+    }
+    if (admissionReservation) {
+      const operation = await admissionReservation.operationPersisted;
+      const handoffMarked = await (
+        dependencies.markAdmissionHandoff
+          ? dependencies.markAdmissionHandoff(operation)
+          : dependencies.cancelledAdmissionDepartureDependencies ||
+              dependencies.renewCancelledAdmissionDepartureIntent
+            ? Promise.resolve(true)
+            : markRoomDepartureAdmissionHandoff(operation)
+      ).catch(() => false);
+      if (!handoffMarked || !admissionFence.isCurrent(admissionReservation)) {
+        const cleanup = await cleanupCancelledRoomAdmission(
+          roomSession,
+          admissionReservation,
+          dependencies,
+        );
+        const disposition = await ownCancelledAdmissionCleanupFailure(
+          senderTabId as number,
+          message.roomSession,
+          roomSession,
+          admissionReservation,
+          cleanup,
+          dependencies,
+        );
+        shouldDiscardPrepared = disposition.shouldDiscardPrepared;
+        admissionFence.finish(admissionReservation, cleanup);
+        await clearUnobservedCancelledAdmission(
+          senderTabId as number,
+          roomSession,
+          admissionReservation,
+          cleanup,
+          disposition.backgroundOwnsDeparture,
+          dependencies,
+        );
+        admissionFinished = true;
+        throw new RoomApiError(
+          "This room action was replaced by a newer tab action.",
+          "STALE_ROOM_SESSION",
+          undefined,
+          409,
+        );
+      }
+      admissionHandoff = {
+        ...operation,
+        tabId: senderTabId as number,
+      };
+      admissionFence.finish(admissionReservation, { kind: "not-cancelled" });
+      admissionFinished = true;
+    }
     return {
       ok: true,
-      connection: { ...connection, privilegedRoomAuthority, roomSession },
+      connection: {
+        ...connection,
+        privilegedRoomAuthority,
+        roomSession,
+        ...(admissionHandoff ? { admissionHandoff } : {}),
+      },
     };
   } catch (error) {
-    await discardPreparedRoomSessionForSender(
-      sender,
-      message.roomSession,
-      dependencies.roomSessionDependencies,
-      dependencies.discardPreparedRoomSession,
-    );
+    if (admissionReservation && admissionRecord && !admissionFinished) {
+      const completion = admissionFence.isCurrent(admissionReservation)
+        ? { kind: "not-cancelled" as const }
+        : admissionRequestConfirmedSettled
+          ? await cleanupCancelledRoomAdmission(
+              admissionRecord,
+              admissionReservation,
+              dependencies,
+            )
+          : await retryAmbiguousCancelledRoomAdmission(
+              admissionRecord,
+              admissionReservation,
+              dependencies,
+            );
+      const disposition = await ownCancelledAdmissionCleanupFailure(
+        senderTabId as number,
+        message.roomSession,
+        admissionRecord,
+        admissionReservation,
+        completion,
+        dependencies,
+      );
+      shouldDiscardPrepared = disposition.shouldDiscardPrepared;
+      admissionFence.finish(admissionReservation, completion);
+      await clearUnobservedCancelledAdmission(
+        senderTabId as number,
+        admissionRecord,
+        admissionReservation,
+        completion,
+        disposition.backgroundOwnsDeparture,
+        dependencies,
+      );
+      admissionFinished = true;
+    }
+    if (shouldDiscardPrepared) {
+      await discardPreparedRoomSessionForSender(
+        sender,
+        message.roomSession,
+        dependencies.roomSessionDependencies,
+        dependencies.discardPreparedRoomSession,
+      );
+    }
     const reservation = await authorityReservation;
     const responseError = reservation.ok ? error : reservation.error;
     if (responseError instanceof RoomApiError) {
@@ -589,6 +1089,154 @@ export async function handleRoomHttpMessage(
       error: responseError instanceof Error ? responseError.message : "Room request failed",
     };
   }
+}
+
+async function ownCancelledAdmissionCleanupFailure(
+  tabId: number,
+  prepared: PreparedRoomSession,
+  record: RoomSessionRecord,
+  reservation: RoomAdmissionReservation,
+  completion: RoomAdmissionCompletion,
+  dependencies: RoomHttpBackgroundDependencies,
+): Promise<{
+  backgroundOwnsDeparture: boolean;
+  shouldDiscardPrepared: boolean;
+}> {
+  if (completion.kind === "cleanup-superseded") {
+    return { backgroundOwnsDeparture: false, shouldDiscardPrepared: true };
+  }
+  if (completion.kind !== "cleanup-failed") {
+    return { backgroundOwnsDeparture: false, shouldDiscardPrepared: true };
+  }
+
+  if (reservation.explicitDepartureObserver) {
+    try {
+      await retainPreparedRoomSessionForDepartureRetry(
+        tabId,
+        prepared,
+        record.roomId,
+        dependencies.roomSessionDependencies,
+      );
+      return { backgroundOwnsDeparture: false, shouldDiscardPrepared: true };
+    } catch {
+      return { backgroundOwnsDeparture: false, shouldDiscardPrepared: false };
+    }
+  }
+
+  if (reservation.intentPersistenceConfirmed) {
+    return { backgroundOwnsDeparture: true, shouldDiscardPrepared: true };
+  }
+  return { backgroundOwnsDeparture: false, shouldDiscardPrepared: false };
+}
+
+async function cleanupCancelledRoomAdmission(
+  record: RoomSessionRecord,
+  reservation: RoomAdmissionReservation,
+  dependencies: RoomHttpBackgroundDependencies,
+): Promise<RoomAdmissionCompletion> {
+  let cleanup: RoomAdmissionCleanupOwnership | null;
+  try {
+    cleanup = await reservation.cleanupIntentPersisted;
+  } catch {
+    return { kind: "cleanup-failed", outcome: "failed" };
+  }
+  if (!cleanup) return { kind: "cleanup-failed", outcome: "failed" };
+  if (!cleanup.owned) return { kind: "cleanup-superseded" };
+  const outcome = await (
+    dependencies.settleCancelledAdmissionDeparture
+      ? dependencies.settleCancelledAdmissionDeparture(cleanup.operation)
+      : dependencies.cancelledAdmissionDepartureDependencies
+        ? departExactRoomSession(
+            record,
+            dependencies.cancelledAdmissionDepartureDependencies,
+          )
+        : settleRoomDepartureAdmission(cleanup.operation)
+  ).catch(() => "failed" as const);
+  if (outcome === "operation-superseded") {
+    return { kind: "cleanup-superseded" };
+  }
+  if (!isConfirmedAdmissionDepartureOutcome(outcome)) {
+    return { kind: "cleanup-failed", outcome };
+  }
+  return { kind: "cleanup-confirmed", outcome };
+}
+
+async function retryAmbiguousCancelledRoomAdmission(
+  record: RoomSessionRecord,
+  reservation: RoomAdmissionReservation,
+  dependencies: RoomHttpBackgroundDependencies,
+): Promise<RoomAdmissionCompletion> {
+  let cleanup: RoomAdmissionCleanupOwnership | null;
+  try {
+    cleanup = await reservation.cleanupIntentPersisted;
+  } catch {
+    return { kind: "cleanup-failed", outcome: "failed" };
+  }
+  if (!cleanup) return { kind: "cleanup-failed", outcome: "failed" };
+  if (!cleanup.owned) return { kind: "cleanup-superseded" };
+  const outcome = await (
+    dependencies.retryCancelledAdmissionDeparture
+      ? dependencies.retryCancelledAdmissionDeparture(cleanup.operation)
+      : dependencies.cancelledAdmissionDepartureDependencies
+        ? departExactRoomSession(
+            record,
+            dependencies.cancelledAdmissionDepartureDependencies,
+          )
+        : retryRoomDepartureAdmission(cleanup.operation)
+  ).catch(() => "failed" as const);
+  if (outcome === "operation-superseded") {
+    return { kind: "cleanup-superseded" };
+  }
+  // A terminal result cannot confirm quiescence yet: the bounded Web request
+  // may still commit after this exact attempt.
+  return { kind: "cleanup-failed", outcome };
+}
+
+async function clearUnobservedCancelledAdmission(
+  tabId: number,
+  record: RoomSessionRecord,
+  reservation: RoomAdmissionReservation,
+  completion: RoomAdmissionCompletion,
+  backgroundOwnsDeparture: boolean,
+  dependencies: RoomHttpBackgroundDependencies,
+): Promise<void> {
+  if (
+    reservation.explicitDepartureObserver ||
+    (completion.kind !== "cleanup-confirmed" && !backgroundOwnsDeparture)
+  ) {
+    return;
+  }
+  await clearRoomSessionForDepartureIfMatch(
+    tabId,
+    record,
+    dependencies.roomSessionDependencies,
+  ).catch(() => false);
+}
+
+function roomSessionRecordForAdmission(
+  prepared: PreparedRoomSession,
+  roomId: string,
+): RoomSessionRecord {
+  return {
+    version: prepared.version,
+    revision: 1,
+    roomId,
+    ownerUserId: prepared.ownerUserId,
+    participantSessionId: prepared.participantSessionId,
+    cameraEnabled: false,
+    voiceMode: "push-to-talk",
+  };
+}
+
+function isConfirmedAdmissionDepartureOutcome(
+  outcome: RoomTabDepartureOutcome,
+): outcome is ConfirmedAdmissionDepartureOutcome {
+  return (
+    outcome === "departed" ||
+    outcome === "room_ended" ||
+    outcome === "already_departed" ||
+    outcome === "stale"
+  );
 }
 
 async function confirmPreparedRoomSessionForSender(
@@ -625,8 +1273,11 @@ async function discardPreparedRoomSessionForSender(
   ).catch(() => false);
 }
 
-export function clearRoomAuthorityRequestForTab(tabId: number): void {
-  roomAuthorityRequestSequenceByTab.delete(tabId);
+export function clearRoomAuthorityRequestForTab(
+  tabId: number,
+  sequences: Map<number, number> = roomAuthorityRequestSequenceByTab,
+): void {
+  sequences.delete(tabId);
 }
 
 function reserveRoomAuthorityRequest(
@@ -695,10 +1346,11 @@ export async function connectWebsiteRoom(
   roomSession: PreparedRoomSession,
 ): Promise<{
   roomToken: string;
-  capabilities?: RoomCapabilities;
+  capabilities?: RoomCapabilities | RoomMediaCapabilities;
   quota?: RoomQuotaSummary | null;
   privilegedRoomAuthority?: PrivilegedOverlayContext | null;
   roomSession: RoomSessionRecord;
+  admissionHandoff?: RoomAdmissionHandoff;
 }> {
   logDebug("room.http", "connect room through background bridge", {
     webHttpBase: WEB_HTTP_BASE,
@@ -712,8 +1364,97 @@ export async function connectWebsiteRoom(
   return response.connection;
 }
 
+export async function acknowledgeRoomAdmissionHandoff(
+  handoff: RoomAdmissionHandoff,
+): Promise<boolean> {
+  const response = await chrome.runtime.sendMessage<
+    RoomAdmissionHandoffMessage,
+    RoomAdmissionHandoffResponse
+  >(roomAdmissionHandoffMessage(handoff));
+  return response?.ok === true && response.acknowledged;
+}
+
+export async function handleRoomAdmissionHandoffMessage(
+  message: RoomAdmissionHandoffMessage,
+  sender: { tab?: { id?: number } },
+  dependencies: RoomHttpBackgroundDependencies = {},
+): Promise<RoomAdmissionHandoffResponse> {
+  const tabId = sender.tab?.id;
+  if (!Number.isInteger(tabId) || (tabId ?? -1) < 0) {
+    return { ok: false, error: "Room admission handoff is missing a sender tab" };
+  }
+  if (message.handoff.tabId !== tabId) {
+    return { ok: true, acknowledged: false };
+  }
+  try {
+    const current = await loadRoomSessionForTab(
+      tabId as number,
+      dependencies.roomSessionDependencies,
+    );
+    if (
+      !current ||
+      !roomSessionIdentityMatches(current, {
+        version: 1,
+        roomId: message.handoff.roomId,
+        ownerUserId: message.handoff.ownerUserId,
+        participantSessionId: message.handoff.participantSessionId,
+      })
+    ) {
+      return { ok: true, acknowledged: false };
+    }
+    const acknowledged = await (
+      dependencies.acknowledgeAdmissionHandoff ??
+      acknowledgeRoomDepartureAdmissionHandoff
+    )(message.handoff);
+    return { ok: true, acknowledged };
+  } catch {
+    return { ok: false, error: "Room admission handoff failed" };
+  }
+}
+
+export async function cleanupRoomAdmissionHandoffForTab(
+  tabId: number,
+  dependencies: Pick<
+    RoomHttpBackgroundDependencies,
+    | "claimAdmissionHandoffCleanup"
+    | "roomSessionDependencies"
+    | "settleCancelledAdmissionDeparture"
+  > = {},
+): Promise<RoomDepartureRetryAttemptOutcome | "no-handoff"> {
+  const current = await loadRoomSessionForTab(
+    tabId,
+    dependencies.roomSessionDependencies,
+  );
+  const identity = captureRoomSessionIdentity(current);
+  if (!identity) return "no-handoff";
+  const operation = await (
+    dependencies.claimAdmissionHandoffCleanup ??
+    claimRoomDepartureAdmissionHandoffCleanup
+  )(identity);
+  if (!operation) return "no-handoff";
+  return (
+    dependencies.settleCancelledAdmissionDeparture ??
+    settleRoomDepartureAdmission
+  )(operation);
+}
+
 
 export class RoomClient {
+  media: RoomMediaSession | null = null;
+
+  setMediaIntent(media: RoomMediaKind, enabled: boolean): RoomSendDisposition {
+    const intent = this.media?.intent(media, enabled);
+    return intent ? this.send(intent) : "dropped";
+  }
+
+  releaseFailedMedia(owner: Readonly<MediaIntent>): boolean {
+    const intent = this.media?.disableFailedIntent(owner);
+    if (!intent) return false;
+    this.send(intent);
+    return true;
+  }
+
+  private cancelCurrentAdmissionHandoffAck: (() => void) | null = null;
   private currentSenderConnectionId = createRoomConnectionId();
   private currentHistoryAuthority: RoomHistoryAuthority | null = null;
   private currentHistoryBoundary: {
@@ -754,6 +1495,8 @@ export class RoomClient {
       this.currentHistoryBoundary = null;
     }
     this.currentHistoryConnection = historyConnection;
+    if (!sameHistoryConnection) this.media = new RoomMediaSession(options.roomId, options.participantSessionId);
+    this.media?.beginTransport();
     const senderConnectionId = createRoomConnectionId();
     this.currentSenderConnectionId = senderConnectionId;
     this.pendingEvents = [];
@@ -778,6 +1521,99 @@ export class RoomClient {
     this.ws = ws;
     let socketClosed = false;
     let transportReadyPublished = false;
+    let handoffAckActive = false;
+    let handoffAckAttemptInFlight = false;
+    let handoffAckRetryCount = 0;
+    let handoffAckRetryTimer: ReturnType<typeof setTimeout> | null = null;
+    let handoffAckStarted = false;
+
+    const isCurrentSocket = (): boolean =>
+      this.ws === ws && !socketClosed;
+    const cancelAdmissionHandoffAck = (): void => {
+      handoffAckActive = false;
+      if (handoffAckRetryTimer !== null) {
+        clearTimeout(handoffAckRetryTimer);
+        handoffAckRetryTimer = null;
+      }
+      if (this.cancelCurrentAdmissionHandoffAck === cancelAdmissionHandoffAck) {
+        this.cancelCurrentAdmissionHandoffAck = null;
+      }
+    };
+    const scheduleAdmissionHandoffAck = (): void => {
+      if (!handoffAckActive || !isCurrentSocket()) {
+        cancelAdmissionHandoffAck();
+        return;
+      }
+      const delay = Math.min(
+        ROOM_ADMISSION_HANDOFF_ACK_INITIAL_DELAY_MS *
+          2 ** Math.min(handoffAckRetryCount, 30),
+        ROOM_ADMISSION_HANDOFF_ACK_MAX_DELAY_MS,
+      );
+      handoffAckRetryCount += 1;
+      handoffAckRetryTimer = setTimeout(() => {
+        handoffAckRetryTimer = null;
+        attemptAdmissionHandoffAck();
+      }, delay);
+    };
+    const attemptAdmissionHandoffAck = (): void => {
+      const handoff = options.admissionHandoff;
+      if (
+        !handoff ||
+        !handoffAckActive ||
+        handoffAckAttemptInFlight ||
+        !isCurrentSocket()
+      ) {
+        if (!isCurrentSocket()) cancelAdmissionHandoffAck();
+        return;
+      }
+      handoffAckAttemptInFlight = true;
+      let attempt: Promise<boolean>;
+      try {
+        attempt = (
+          options.acknowledgeAdmissionHandoff ??
+          acknowledgeRoomAdmissionHandoff
+        )(handoff);
+      } catch {
+        handoffAckAttemptInFlight = false;
+        scheduleAdmissionHandoffAck();
+        return;
+      }
+      void Promise.resolve(attempt).then(
+        (acknowledged) => {
+          handoffAckAttemptInFlight = false;
+          if (!handoffAckActive || !isCurrentSocket()) {
+            cancelAdmissionHandoffAck();
+            return;
+          }
+          if (acknowledged) {
+            cancelAdmissionHandoffAck();
+            return;
+          }
+          scheduleAdmissionHandoffAck();
+        },
+        () => {
+          handoffAckAttemptInFlight = false;
+          scheduleAdmissionHandoffAck();
+        },
+      );
+    };
+    const startAdmissionHandoffAck = (): void => {
+      const handoff = options.admissionHandoff;
+      if (
+        handoffAckStarted ||
+        !handoff ||
+        handoff.roomId !== options.roomId ||
+        handoff.ownerUserId !== options.participant.id ||
+        handoff.participantSessionId !== options.participantSessionId ||
+        !isCurrentSocket()
+      ) {
+        return;
+      }
+      handoffAckStarted = true;
+      handoffAckActive = true;
+      this.cancelCurrentAdmissionHandoffAck = cancelAdmissionHandoffAck;
+      attemptAdmissionHandoffAck();
+    };
 
     ws.addEventListener("open", () => {
       if (this.ws !== ws || socketClosed) {
@@ -822,7 +1658,18 @@ export class RoomClient {
           return;
         }
 
+        if (event.type === "ROOM_SNAPSHOT" && event.roomId === options.roomId) {
+          // This exact socket has crossed the authoritative join boundary.
+          // Start the durable handoff independently from all consumers below:
+          // their failure must not leave a healthy socket vulnerable to the
+          // background handoff deadline.
+          startAdmissionHandoffAck();
+        }
         logDebug("room.recv", event.type, roomEventDebugSnapshot(event));
+        const mediaAccepted = this.media?.consume(event);
+        if (mediaAccepted && event.type === "ROOM_MEDIA_SNAPSHOT") {
+          for (const release of this.media?.releaseRestoredGrants() ?? []) this.send(release);
+        }
         this.consumeHistoryAuthorityEvent(event, options);
         options.onEvent(event);
         if (
@@ -831,12 +1678,14 @@ export class RoomClient {
           this.ws === ws &&
           !socketClosed
         ) {
-          transportReadyPublished = true;
           options.onTransportReady?.({
             senderConnectionId,
             reconnect: options.reconnect === true,
             ...(event.p2pResyncRequired ? { forceMediaResync: true } : {}),
           });
+          if (this.ws === ws && !socketClosed) {
+            transportReadyPublished = true;
+          }
         }
       } catch (error) {
         logDebug("room.recv", "invalid server event", {
@@ -852,6 +1701,7 @@ export class RoomClient {
       }
 
       socketClosed = true;
+      cancelAdmissionHandoffAck();
       logDebug("room.ws", "closed", {
         code: event.code,
         participantId: options.participant.id,
@@ -951,6 +1801,7 @@ export class RoomClient {
 
   private closeSocket(reason: string, publishClosed: boolean): void {
     this.stopKeepalive();
+    this.cancelCurrentAdmissionHandoffAck?.();
     const ws = this.ws;
     const statusPublisher = this.currentStatusPublisher;
     if (ws) {

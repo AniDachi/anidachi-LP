@@ -1,12 +1,136 @@
 # Current Development State
 
-Last updated: 2026-08-24.
+Last updated: 2026-09-12.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
 contain old paths, old domains, or old decisions. When release channels,
 endpoints, branch protection, or store workflow changes, update this document in
 the same PR.
+
+## Prelaunch remediation, 2026-09-12
+
+The [remediation plan](superpowers/plans/2026-09-12-prelaunch-remediation.md)
+tracks the final ad-history, Sandbox cancellation, production preservation and
+room-harness checks. It starts from staging `0b2c4e84`; production promotion and
+shared-media policy activation remain separately gated. The
+[verification record](releases/personal-history-mvp/2026-09-12-prelaunch-verification.md)
+separates source/local evidence from deployed and loaded-browser acceptance.
+
+The real staging subscription flow now opens the configured Stripe Sandbox
+portal. An explicitly authorized cancel-and-restore test preserved Plus access
+and the billing period, and finished with renewal restored. The
+[verification receipt](releases/personal-history-mvp/2026-09-12-sandbox-cancellation-verification.md)
+separates this proof from LIVE configuration and end-of-period expiry.
+
+Production is still at 35 migrations through `20260823132355`, while the audited
+staging baseline has 60 through `20260911070906`. The pending canonical history
+reset must not run through an ordinary promotion. Six schema-1 sessions, six
+schema-1 participants, 21 checkpoints and three schema-1 tracked titles exist;
+they are not disposable. The current preparation must preserve these records
+before the full pending chain, with isolated rehearsal and explicit production
+deployment ordering. No production migration or policy activation is included
+in the Sandbox test.
+
+The [production transition runbook](releases/personal-history-mvp/production-35-to-60-transition.md)
+describes the source-controlled DB/Worker/Web hold and its future unlock.
+Source preparation does not mean that production is already frozen: existing
+queued deployments and external Vercel promotion require operator verification.
+
+The [production preparation plan](superpowers/plans/2026-09-12-production-promotion-preparation.md)
+now records a complete real logical backup/local restore and a narrower hosted
+application restore. Copies are retained outside the worktree on the same Mac.
+The native CLI operator fence has a reviewed correction, 91 real SQL role checks,
+and a fresh full synthetic migration/recovery rehearsal bound to the new bytes.
+These are preparation results: production remains unchanged. The complete hosted
+rollback needs an independent disposable instance because staging's cron is bound
+to its default database; a sibling database cannot exercise the unchanged chain.
+External traffic maintenance, the hosted executor, a final stable checkpoint and
+the existing activation/physical-media gates remain open. No new paid environment
+or plan upgrade has been authorized or created.
+
+## Friends and groups editor, 2026-09-11
+
+Implementation and local verification are complete. The database prerequisite
+was applied to staging through PR #296 before publishing the web consumer.
+Deployment revisions and acceptance evidence are tracked in the staging PRs
+referenced by the linked plan.
+
+The [approved link-first MVP](superpowers/plans/2026-09-11-friends-groups-link-mvp.md)
+adds compact group rows and a single staged name/member editor in the website.
+New website friend connections use one-time links only; existing pending requests
+remain actionable. Groups remain private owner-owned player invitation lists.
+An additive server-only migration makes group saves and link acceptance atomic,
+rejects stale edits and clears memberships when friendship ends. The website
+supplies an owner mismatch fence; established extension requests remain valid.
+Database prerequisites must deploy before these web consumers. Staging acceptance
+and release evidence are recorded in the linked plan.
+
+## Extension Inbox presentation, 2026-09-11
+
+The [Inbox polish plan](superpowers/plans/2026-09-11-extension-inbox-polish.md)
+replaces three always-visible empty sections with one empty state and populated
+Friend requests, Room invites and Missed lists. Active invitations use a quiet
+action card; missed rooms remain visible without Join. Sender/group context and
+action-specific pending feedback match the People drawer. Cached refresh errors
+retain the list while disabling actions. The fixed drawer, durable inbox,
+unread/seen reconciliation, room flow and server contracts are unchanged.
+
+Extension typecheck and 128 test files / 1895 tests passed; independent review
+found no actionable issues. Browser fixtures cover populated/empty/error states,
+long text at 320px and action loading. Loaded-artifact/staging delivery evidence
+is recorded in the plan and PR; no main promotion is included.
+
+## Extension People editor, 2026-09-11
+
+The [extension People plan](superpowers/plans/2026-09-11-extension-people-mvp.md)
+continues the same MVP in the drawer: accepted-friend search, deliberate one-time
+links, private group name/member editing and confirmed removal. It consumes the
+existing atomic website APIs through the background bridge with account-owner
+fencing. Failed edits retain their draft and reconcile the latest directory for
+conflict recovery. Inbox requests and player invitations remain compatible.
+No room/media protocol, history, drawer dimensions or permissions change.
+Local verification and loaded-artifact evidence are recorded in the plan/PR.
+
+## Account MVP navigation, 2026-09-10
+
+The [approved account workspace](superpowers/specs/2026-09-10-account-mvp-navigation-design.md)
+replaces Overview with Watch Library as the default landing. Primary navigation
+is Watch Library, Friends & Groups and Subscription; Share an idea and Help are
+secondary links, and Profile opens from the avatar. Notifications use a header
+dialog backed by the existing account inbox; the old `/account/invites` URL
+remains compatible. The website checks counts only while visible, on focus and
+on a one-minute timer; it does not acknowledge unseen items until opened.
+Extension push/notification delivery remains unchanged.
+
+Friends uses two switches, inline requests and an Add friend dialog. Transient
+view controls stay in the mounted owner-keyed account workspace; canonical data
+is re-read on route return. History drafts remain protected when joining from
+notifications. Profile reuses the existing PATCH endpoint and adds an optional
+`x-anidachi-profile-owner` mismatch fence, required by the new website form but
+optional for compatible existing extension callers. Authentication still decides
+the actual owner. No database migration, Stripe configuration, media, history
+ownership or extension artifact changes are part of this delivery. Implementation
+and staging evidence are recorded in the
+[execution plan](superpowers/plans/2026-09-10-account-mvp-navigation.md).
+
+## Account library editor, 2026-09-10
+
+The approved cover-based account design is being implemented in the real web
+application. The [account library editor plan](superpowers/plans/2026-09-10-account-library-editor.md)
+records the additive manual-progress API, owner/revision fences, retained Free
+read/delete access and staging checks. This work supersedes the earlier deferral
+of manual watched marks; it does not introduce shared group history or change
+Stripe cancellation behavior. Local implementation is not staging acceptance.
+
+## History capacity amendment, 2026-09-09
+
+The approved [capacity contract](watch-history-capacity.md) adds 100 YouTube
+videos and 200 Crunchyroll titles per account, without automatic eviction.
+At capacity, saved titles keep updating on paid plans; only new titles are
+rejected. Free read/delete access remains unchanged. Implementation and local
+checks are recorded there; staging deployment and loaded-artifact acceptance
+are tracked separately. Existing room/media rollout gates remain unchanged.
 
 ## Repository
 
@@ -527,22 +651,25 @@ missed room invites, and cursor pagination in the full web surface. Task 7's
 two-profile loaded-artifact acceptance is recorded above; authenticated
 production acceptance is not claimed.
 
-## Room Invite Notification Direction
+## Invitation Notification Direction
 
 Durable room-invite and inbox rows remain authoritative. The authenticated HTTP
 inbox, account-scoped Popup cache, unseen badge, seen acknowledgement, and
 shared web incoming surface are deployed. Standards-based Web Push delivery and
-OS notifications are implemented and remain pending loaded-artifact,
-two-account staging acceptance. The extension release manifest grants the
+OS notifications for room invites and incoming friend requests are implemented.
+On 2026-09-04 the user reported that the staging invitation flow worked after
+testing; exact delivery latency and the complete failure/recovery matrix were
+not recorded. The extension release manifest grants the
 notification permission up front so the default-on local preference can
 register a push device automatically after sign-in; the existing local toggle
 still disables and revokes that browser's subscription. The
 additive `devices` Web Push migration is already applied and verified on the
 staging Supabase project and is present in the technical production baseline.
-Loaded-artifact, two-account notification delivery acceptance is still pending,
-and no public extension is distributed.
+Broader two-account notification acceptance remains pending, and no public
+extension is distributed.
 Web Push sends only an `inbox_changed` invalidation so the extension runs the
-same inbox sync and displays minimal English room-invite notifications. There
+same inbox sync and displays minimal English invitation notifications derived
+locally from validated room-invite and friend-request items. There
 is no frequent background inbox polling, Chrome GCM, Supabase Realtime
 subscription, persistent notification WebSocket, or separate notification
 event platform.
@@ -554,6 +681,26 @@ lifecycle; unresolved invites become a non-actionable `Missed` presentation for
 24 hours after room end. The canonical product and implementation details live
 in
 `docs/superpowers/specs/2026-08-06-account-data-history-social-inbox-design.md`.
+
+The 2026-09-04 reliability candidate on
+`codex/invite-notification-delivery` removes redundant identity requests from
+inbox reconciliation, isolates
+subscription registration from visible inbox updates, persists bounded
+account-owned recovery, and updates an already open Popup from the canonical
+cache. Server delivery uses an additive transactional account outbox with
+targeted immediate processing, revision-fenced leases and bounded retries.
+Staging now uses one Supabase Cron + pg_net recovery timer, with a private
+disabled-by-default migration and an explicitly activated staging configuration.
+The dedicated drain-only key has no room authority. On 2026-09-04, automatic
+cron runs processed both due and future-deadline no-device fixtures through the
+deployed web drain, with exact HTTP acknowledgements and outbox completion;
+pre-deadline ticks issued no extra HTTP request. The previous staging Cloudflare
+schedule is disabled. Production remains unchanged. The existing immediate
+sender and outbox are unchanged, and no room Durable Object or lifecycle is
+involved. The subsequent positive user smoke result does not establish exact
+two-account notification timing or the full acceptance matrix. Those remain
+separate from this server recovery proof, tracked in
+`docs/superpowers/plans/2026-09-04-invitation-delivery-reliability.md`.
 
 The current Chrome-only delivery slice accepts only HTTPS subscriptions on
 Chrome's FCM push host, caps active push-enabled extension installations at five
@@ -725,8 +872,10 @@ The extension currently supports:
 - an `Interface` settings section with immediately applied, profile-local
   visibility preferences stored under `local:interfacePreferencesV1`. The main
   control can retain its edge-intent auto-hide behavior or remain visible.
-  Open panel, active Open mic publication, and keyboard focus continue to pin
-  it regardless of the selected preference;
+  An open panel and keyboard focus continue to pin it regardless of the
+  selected preference. Microphone mode, publication, and speaking activity do
+  not change the main control's visibility or add a microphone badge there;
+  voice indicators remain on participant pills and video bubbles;
 - an active-room-only side voice rail with `Smart` and `Always visible` modes.
   Smart preserves quiet-hide, speaking-compact, and deliberate edge expansion.
   Always visible keeps eligible no-video participants compact and expands only
@@ -736,12 +885,29 @@ The extension currently supports:
 - sign-in through the web app with Google/Discord;
 - room creation and invite copying through the website/API/Worker flow;
 - WebSocket room join and playback sync;
-- reactions and live chat input;
-- Ghost Cam camera bubbles;
-- local camera publishing is opt-in for every newly created, joined, or restored
-  room session. A same-room network reconnect preserves the user's explicit
-  camera choice, while leaving the room, signing out, or switching account
-  resets the next room to camera off;
+- reactions and live chat input backed by one dependency-free Unicode emoji
+  catalog. The composer picker is scrollable, and while the composer is open
+  global quick-reaction shortcuts are suspended so digits remain normal message
+  input even inside the extension's closed Shadow DOM. The quick-reactions
+  enabled state and shortcut assignments are local preferences and survive
+  supported-site navigation;
+- Ghost Cam camera bubbles. They continue to adapt to provider player controls,
+  but pointer approach temporarily pins the active safe insets so a bubble does
+  not move away during volume interaction. The travel corridor is observed
+  passively rather than rendered as a pointer-catching layer, leaving native
+  player controls outside the visible bubbles clickable;
+- an account-scoped `Room` settings section controls only the next newly
+  confirmed room. Microphone startup can use the last explicit mode, Push to
+  talk, or Open mic; camera startup can use the last explicit choice, Off, or
+  On. The defaults apply immediately to later create/join operations without an
+  Apply button, but never mutate an already active room. Camera remains Off by
+  default. Same-room network reconnect and same-tab YouTube/Crunchyroll page
+  navigation preserve the active room's explicit media intent. Leaving or
+  ending the room, signing out, switching account, tab close, and browser
+  restart still stop current capture. Restored Open mic or camera-on intent can
+  start publication only after exact room/account validation, an authoritative
+  media seat, and P2P readiness. Automatic safety resets do not overwrite the
+  account's last explicit camera or microphone choice;
 - one extension-local Overlay Layout Engine V2 now drives both the live camera/chat
   geometry and the Layout editor. It stores only grid intent under
   `local:overlayLayoutPreferencesV2`, previews one camera leader plus three
@@ -758,11 +924,18 @@ The extension currently supports:
 - one microphone publication lifecycle shared by `V`-only Push to talk and
   explicit Open mic. Selecting Open mic starts continuous publication only
   after the exact room session, listener, media seat, snapshot, and P2P
-  controller are ready. The selected mode is stored per sender tab in
-  extension-owned session storage, survives same-room source changes and a tab
-  reload, and resets to Push to talk for a new room, leave/end, sign-out,
-  account change, media-seat loss, terminal microphone failure, or full browser
-  restart;
+  controller are ready. The active mode is stored per sender tab in
+  extension-owned session storage and survives same-room source changes and a
+  tab reload. The last mode explicitly selected by the user is also stored as a
+  separate account-scoped local preference. A new room resolves the `Room`
+  startup setting against that last explicit choice; missing, malformed, or
+  another account's data falls back to Last used and then Push to talk. A
+  pre-snapshot media-seat gap pauses publication without erasing current intent;
+  an authoritative seat revoke or terminal microphone failure stops capture and
+  normalizes only the current room back to Push to talk without overwriting the
+  user's preference. Leave/end, sign-out, account change, tab close, and browser
+  restart stop current capture; a later explicit create/join applies the saved
+  preference only after all room and media-readiness gates pass;
 - local and remote speaking indicators are measured independently from
   transport flow: quiet Open mic remains published without appearing to speak
   or triggering audio-stall recovery, while sender/receiver audio levels drive
@@ -887,7 +1060,7 @@ existing room Durable Object remains responsible for live presence, same-room
 takeover, disconnect grace, and room termination. No new service, heartbeat,
 queue, env variable, secret, TURN, Blob, Stripe, or release path was added.
 
-The accepted product behavior is:
+The accepted baseline behavior is:
 
 - one authenticated user can have only one live room across YouTube,
   Crunchyroll, tabs, browser profiles, and devices;
@@ -901,8 +1074,114 @@ The accepted product behavior is:
   tab does not silently restore a closed room;
 - room finalization releases matching durable assignments idempotently.
 
-Staging evidence includes successful migration runs `32637163596` and
-`32637269784`, CI `32637269772`, API deployment `32637269793`, extension build
+The current feature branch additionally implements the following behavior,
+which is locally verified but still pending staging and two-profile manual
+acceptance:
+
+- 2026-09-01 MVP lifecycle correction: a real browser-tab close is again an
+  explicit exit. Before the bounded request, the background persists a settled
+  exact-departure job for the closing room/user/participant session. Terminal
+  acknowledgements retire that job; timeout, transport, MV3, and temporary
+  authorization failures retain it for Chrome-alarm/startup/online retry before
+  only the matching tab-local record is cleared. Reload, BFCache, sleep, and
+  temporary network/WebSocket interruption retain the Worker's existing
+  60-second reconnect grace, and socket disappearance plus the signed callback
+  remain the independent fallback. The current extension no longer keeps a
+  local post-close recovery card or exposes a broad Leave/End-active-room
+  action from a conflict notice. When `acquireRoomTabLock()` can acquire a
+  working Web Lock, a same-browser room tab is shown as already open. If Web
+  Locks are unavailable or fail, the client proceeds and the server-owned
+  active-room assignment remains the authority across tabs, profiles, and
+  devices. An
+  explicit Create-room conflict is informational and mutation-free: the
+  extension performs no hidden departure, no retry, and no replacement of the
+  current host or guest session. The atomic database RPC rejects a guest's
+  attempted host-room creation without changing the guest assignment or
+  creating an orphan room. Returning to a deliberately left room still uses an
+  invitation.
+  Chrome extension reload/update is also no longer exposed as a one-minute
+  active-room conflict: because Chrome clears `chrome.storage.session` during
+  that lifecycle, the provider tab now retains only a non-authoritative
+  `roomId` and opaque account scope in page `sessionStorage`. The restarted
+  extension accepts the hint only for the same authenticated account, mints a
+  fresh trusted participant session with camera Off and Push to talk, then
+  performs the existing same-room takeover immediately. User ID, participant
+  session, and room authority are never stored in the page; mismatched or
+  malformed hints are discarded, and explicit leave/end/terminal cleanup
+  removes the hint. The 60-second Worker grace stays reserved for real
+  transport interruption rather than becoming a UI wait. Local proof:
+  extension check and 1515/1515 tests; Web 386 passed/3 skipped;
+  API check, 166/166 unit tests, and 37/37 runtime tests; room harness 39/39;
+  and real-WebRTC harness 26/26. A focused SQL regression was added for guest
+  create conflict, unchanged assignment, and no orphan room; local Supabase
+  execution is pending because the Docker runtime was unavailable. The staging
+  artifact `e3345f3-staging-20260901162121` was rebuilt, validated, and
+  synchronized byte-for-byte to both approved unpacked test folders (manifest
+  SHA-256 `3b63d2558000e3fab2d4890c1d490165296c85b22e946c74471db1d3ad657823`).
+  Loaded two-profile
+  close/reload/invite/create-conflict acceptance is still pending.
+
+- explicit guest departure atomically releases the authenticated user's exact
+  Supabase active-room assignment before sending bounded live Worker cleanup;
+  detach success, stale responses, timeouts, and transport failures never
+  turn a durable leave into an error. The Worker-owned 60-second passive alarm
+  callback is retained for unexpected disconnects, while real tab close first
+  persists exact retry ownership and then uses the bounded durable-departure
+  request with Fetch keepalive before local cleanup;
+- normal extension leave uses only the exact-departure contract and treats
+  public `stale` as the legacy-compatible no-assignment success. The shared
+  protocol and current extension still accept `already_departed` for forward
+  compatibility, but current public Web routes do not emit it. Normal leave
+  never invokes active-room recovery automatically. The server recovery route
+  remains compatible with older artifacts, but the current extension does not
+  expose a broad role-specific Leave/End action from a conflict notice;
+- every new prepared room operation receives a fresh server-visible
+  `participantSessionId`, including a new same-room/account/tab attempt, while
+  confirmed camera and microphone preferences are preserved separately. Before
+  each connect fetch, the background also persists a fresh exact `may-commit`
+  generation.
+  Matching passive/explicit cancellation marks only that generation
+  cleanup-owned and duplicate signals coalesce, so older completion, alarm,
+  exact departure, and local-clear paths cannot touch a newer participant
+  session. HTTP/token success moves the job to `handoff-pending`; it retires
+  only after the same tab/room/user/session/generation receives its first
+  authoritative `ROOM_SNAPSHOT` over the joined room WebSocket. Closing before
+  that acknowledgement claims and exact-cleans the job, while an MV3 restart
+  waits out a separate 60-second handoff bound (45-second socket liveness,
+  maximum 8-second reconnect delay, and a 7-second scheduler margin) before
+  cleanup. Snapshot acknowledgement starts before history/event/transport
+  consumers run and is retried after a transient reject or negative response
+  with exponential 250ms-to-4s backoff while that exact socket remains current;
+  success stops the loop, and close or replacement cancels it. Failure or
+  ambiguity retains the observing job. Persisted data
+  contains only stable room/user/session identity, the non-secret generation
+  watermark, and bounded timing metadata. A pre-admission job remains
+  `may-commit` across Manifest V3 restart, so pre-settlement `stale` cannot erase
+  it. Generic drains pre-arm a replacement one-shot alarm before auth/network
+  awaits. A canceled live completion marks only its current generation settled
+  and drains immediately; an orphaned worker uses the client's 60-second abort
+  through response-body parsing, the connect route's 60-second maximum, and a
+  15-second margin from admission begin before terminal stale is safe. It waits
+  for matching auth without a perpetual alarm loop, has no cleanup TTL, and
+  cannot clear a replacement session. After snapshot acknowledgement, real tab
+  close attempts exact durable departure; only an unexpected socket or network
+  interruption relies on the Worker's retained 60-second grace;
+- the staging gate allows authenticated internal `POST /api/internal/**`
+  callbacks to reach their own service-secret authorization while retaining the
+  human gate for all other staging requests.
+
+Fresh local verification for the feature branch on 2026-08-31 includes protocol
+check and 141/141 tests; API check, 166/166 tests, and 37/37 runtime tests; Web
+check and 385 passed/3 skipped tests; extension check and 1507/1507 tests; room
+harness 39/39; real-WebRTC harness 26/26; root check/test (6 Turbo tasks each);
+the rooms-profile `dev:check` command (exit 0); and staging extension build plus
+artifact validation. Generated staging folders and ZIPs remain ignored. This is
+code and harness evidence, not staging or two-profile acceptance. Two-profile
+YouTube/Crunchyroll acceptance remains pending until this candidate is deployed
+and manually exercised.
+
+Evidence for the original accepted baseline includes successful migration runs
+`32637163596` and `32637269784`, CI `32637269772`, API deployment `32637269793`, extension build
 `32637269796`, Vercel deployment `dpl_D9iXtfYyux52dRp46wucA8VKcM86`, Worker
 smoke, and exact artifact
 `f511b4dcb805e8959412213e00a2499f12f2b8be-staging-125` with SHA-256
@@ -938,7 +1217,267 @@ and two-network P2P evidence. Explicit tab close is immediate; a browser crash
 or long offline interval relies on the 60-second fallback. Conflict wording and
 other visual polish remain normal UI/UX work.
 
+## Watch History v3 Staging Activation
+
+The separately authorized 2026-09-05 staging transition is complete: schema
+prerequisite PR #265 (`9328428e`) applied both reviewed migrations before runtime
+PR #264 (`56dbd901`). The matching website is READY on `staging.anidachi.app`.
+The exact CI extension `56dbd901...-staging-139` was validated and synchronized
+byte-for-byte to both established tester folders, with old artifacts backed up.
+Authenticated Crunchyroll and loaded-extension acceptance remain open; folder
+synchronization is not proof of browser reload. Technical `main` remains at
+`54a154b7` with Watch History v2 and was not promoted. Deployment evidence, scoped
+reset counts and preservation checks are in `docs/watch-history-v3-staging-verification.md`.
+
+Schema 3 keeps Supabase/Postgres as the only durable authority and stores one
+progress row per logical provider episode. The latest actual raw watch/audio
+variant remains resume metadata. Bounded catalog snapshots and raw aliases provide
+canonical identity, current regional availability, localized provider labels, and
+server-owned exact title/season aggregates. Partial, missing, changing-region, or
+overflowed evidence suppresses exact totals; a failed same-region locale refresh
+keeps the last committed exact bundle.
+
+The clean-start transition resets only reviewed Watch History data, advances the
+history generation, and makes old v2 SQL/HTTP writers terminal. Accounts, auth,
+subscriptions, rooms/memberships, social/invite/Recent People data, interface/media
+settings, YouTube history consent, and monotonic server order are preserved. The
+extension clears old history cache/outbox/current observations and migrates only a
+validated owner-bound YouTube preference state; unrelated extension settings are
+not cleared.
+
+Final review fixes bind website mutation intent to the rendered owner before any
+write, retain omitted historical seasons with honest current 0/0 metadata, and
+retry interrupted legacy-storage cleanup without overwriting v3 consent/progress.
+The forward read fix is migration `20260905083000`; applied migration files remain
+unchanged. Dedicated local proof now includes the 39-migration chain, 13 pgTAP files /
+654 assertions, a populated transition with three blocked already-entered v2 calls,
+five actual RPC pages, 13 catalog list/detail states, the 2,000-episode bounded
+benchmark, web/extension checks and suites, and 17 website TSX tests. Final
+controller gates at product commit `4d7f395` pass root check/test (six tasks each;
+four unchanged tasks cached), a fresh 41-test API runtime run, staging artifact
+build/validation, and real-component headless Popup 6 / website 7 cases. The scoped
+final re-review closes all three findings with no new breakage; this is local code
+approval, not deployment acceptance. Exact commands, measurements, guard
+requirements, lint notices, the earlier local-port-54322 harness incident, activation
+order, rollback constraint, and open authenticated-provider/staging gates are in
+`docs/watch-history-v3-local-verification.md`.
+
+### Watch Drawer Follow-up (2026-09-05)
+
+Branch `codex/watch-drawer-refresh` adds two reviewed checkpoints after the
+staging activation above: `dd5c2a9` stabilizes history refresh and presentation;
+`7474001` restores canonical Crunchyroll series covers and consistent image-error
+fallbacks in Popup and website. The user subsequently authorized publication via
+the feature PR into `staging`, without promotion to `main` or production. The
+staging PR records the exact merge, CI, Vercel deployment and smoke-test receipt;
+the local verification below is not itself evidence of a successful deployment.
+
+Concurrent owner-bound refreshes share work, superseded reads are not reported as
+network failures, and automatic recovery only clears a read warning after a
+successful canonical response. Submitted actions survive same-owner focus reads
+while account, generation and deletion fences remain enforced. Open-drawer title
+positions, episode ordering, disclosure defaults and confirmed completion remain
+stable across playback checkpoints; completion does not change row geometry.
+
+Series artwork is optional enrichment of the existing progress event: use the
+matching series object and captured provider locale, validate the URL, and bound
+the optional request to 2.5 seconds. Failure preserves resolved progress and any
+existing observation artwork. Image failures keep a fixed-size placeholder, with
+another image attempt when the URL changes; the website also handles failure
+before hydration. No SQL schema, server API, room/P2P or consent change is included.
+
+Fresh local closeout proof: root test/check completed all 11 Turbo tasks without
+cache reuse (protocol 145, API 201, extension 1,680, web 431 passed with four explicit
+opt-in skips), plus all 19 website component tests. Isolated real-component browser
+checks cover completion/pending-ack cycles, order/disclosure/scroll stability,
+reduced motion, real CDN covers, broken-image recovery and narrow website layout.
+Review found no Critical/Important issues; an additional deferred in-flight
+subscription follow-up test remains a nonblocking coverage improvement.
+The narrow staging-channel build and artifact validation are local checks; the
+existing dynamic-import bundler warnings remain nonblocking. Generated artifacts
+and browser fixtures are not committed. This closeout does not resynchronize the
+two established tester folders or reload a browser. The user reported basic
+tracking, presentation and cover loading working; this does not close the full
+authenticated catalog/locale acceptance matrix recorded in the active v3 plan.
+
+Rollback these follow-ups through a reviewed revert of their feature commits and
+the previous staging artifact; no database rollback is required. Continue design
+work from this checkpoint. Production promotion still needs separate authorization
+and the applicable staging acceptance gates.
+
+### Watch Drawer Browse Staging Delivery (2026-09-05)
+
+Branch `codex/watch-history-browse` retains the extension/UI candidate at
+`bf260d7e858bbd721820a2c7a4ee5532ac924542`. The final server review found an
+episode-label search gap; its server-only fix is
+`a92dbdc6bf631af775742014246b1fb97f151e84`, with fresh guarded SQL/RPC evidence.
+The strongest-model final source review and the scoped re-review of that fix found
+no remaining issue; the local implementation and handoff are complete. The user
+subsequently authorized staging delivery and both established tester folders.
+Database-only [PR #268](https://github.com/AniDachi/anidachi-LP/pull/268) precedes
+runtime [PR #269](https://github.com/AniDachi/anidachi-LP/pull/269); their release
+receipts record the actual migration, deployment, smoke and artifact outcomes.
+The pre-rollout rollback anchor is PR #267 at `f2fafb29`. Technical `main` remains
+at `54a154b7` with Watch History v2 and is not part of this delivery. Publishing
+or synchronizing folders alone is not authenticated user acceptance or browser
+reload proof. The first preview exposed a test-only Next.js reserved `module`
+binding; `caa1ecc8` renames it without changing runtime or test behavior.
+
+The database remains the durable authority. Canonical personal progress and
+title/season aggregates do not change under search or filters. New bounded reads
+filter eligible history before pagination by Mine/Together, search, local-day UTC
+bounds, participant, and owner-private My groups provenance. A group association
+requires authenticated invitation context plus actual overlapping owner/recipient
+observations in the same verified room generation. It is not a second group
+progress record, does not grant members history access, and is never inferred from
+current membership, names, links, or invitation acceptance alone. Old ambiguous
+sessions remain ordinary Together history without backfill.
+
+The extension keeps browse responses out of the canonical account cache and binds
+each request and cursor to the rendered owner, history generation, complete query,
+scope, and local invalidation revision. The drawer removes destructive controls,
+keeps website history management, moves the existing YouTube choice to History
+settings, and preserves its account and optimistic-rollback fences. No room event,
+Worker, media, capture, auth, notification, catalog traversal, polling, service, or
+consent-policy boundary changed.
+
+The approved specification, implementation plan, and exact local evidence are:
+
+- `docs/superpowers/specs/2026-09-05-watch-drawer-browse-design.md`
+- `docs/superpowers/plans/2026-09-05-watch-drawer-browse.md`
+- `docs/watch-drawer-browse-local-verification.md`
+
+The `codex/watch-history-fast-reopen` follow-up separates saved
+read availability from refresh freshness. Ordinary progress leaves bounded
+account/query-owned Mine/Together results displayable while they revalidate;
+generation, account departure, deletion and consent still fence reads. The
+extension read cache uses persistent local storage, not the canonical cache or
+outbox. An opt-in titles response supplies up to eight exact-query episodes per
+title and explicit continuation, so opening a title does not require another
+initial HTTP request. New shared observations can appear as **Pending sync** only
+without filters; they do not invent confirmed sessions or group provenance.
+Its completed local evidence is in `docs/watch-history-local-read-verification.md`;
+implementation is tracked in
+`docs/superpowers/plans/2026-09-05-watch-history-local-read.md`. The user subsequently
+authorized coordinated staging delivery and both established tester folders.
+Database-only PR #270 must apply `20260905145315` before the matching runtime PR
+from `codex/watch-history-fast-reopen`. Their release receipts record the exact
+migration, CI, Vercel, smoke and artifact outcomes. Main/production remain outside
+this delivery; deployment and folder synchronization do not prove browser reload
+or authenticated user acceptance.
+
+Rollout must remain database-first: apply the additive migration, deploy the
+reviewed matching Web runtime, build the matching narrow staging extension, then
+perform authenticated staging acceptance with newly organized group viewing and
+actual participation. Rollback keeps the additive data and restores the prior v3
+Web/extension consumers; restoring the writer entry point, if required, uses a
+reviewed forward migration and never drops history. Each rollout or rollback step
+requires separate authorization.
+
 ## Known Fragile Areas
+
+### Current Local UI Checkpoint
+
+The local-read follow-up above was delivered through PRs #270/#271 to staging
+`4f4e17d2`. The user reported normal history behavior after testing; that does not
+close the broader authenticated provider/group acceptance matrix.
+
+The next bounded cosmetic slice is local branch `codex/watch-toolbar-polish`,
+based on that staging checkpoint. It changes only the Watch toolbar: one row with
+fully readable Mine/Together segments, a flexible neutral search field and an
+icon-only Filters button with an active-condition indicator. All controls share
+one height and compatible styling. Normal Refresh is removed; initial loading,
+screen-reader status and error/storage-recovery Retry remain. Populated and empty
+saved results stay visually stable during background reads. Existing search,
+filter, account, cache, synchronization, room and provider contracts are unchanged.
+Local extension checks/tests and an isolated installed-artifact browser exercise
+cover the toolbar, keyboard focus, retry and constrained host widths. User visual
+acceptance follows reloading the local candidate; this is not a new staging merge
+or production release. Continue cosmetic work top-to-bottom in separate bounded
+slices; title/season/episode presentation, other sections and shared-history
+product changes are outside this toolbar slice. Do not resume the completed
+server/local-read implementation or assume this branch is already on staging.
+
+The user-authorized 2026-09-06 cosmetic follow-ups on this same local branch add
+the ivory animated Mine/Together segment, smaller centered profile presentation,
+and a funnel icon. Filters now open in a compact non-modal popover above the list
+without pushing content down. It dismisses on outside interaction, Escape or
+close; explicit dismissal restores trigger focus and preserves selected values.
+Condition chips below the toolbar are removed. Reset is inside the popover and
+clears filter values while preserving search. Group/participant eligibility,
+period/date semantics, account isolation and durable-history contracts remain
+unchanged. These are local test-artifact refinements, not a staging merge or a
+production release; browser reload and user visual acceptance remain separate.
+
+The next user-approved local slice (2026-09-06) replaces the expanded Crunchyroll
+season/episode tree with one season/Specials dropdown, a bounded episode grid and
+one selected detail. Main-series counts sit under the title; exact Specials totals
+are separate. The grid retains each season's selected episode and scroll position,
+uses four rows in the 600 px popup and at most five in taller drawers, and keeps
+filter semantics and confirmed completion unchanged. Films and YouTube keep their
+respective single-detail and named-video presentations. The earlier provider logo,
+count, spacing, wrapping-title and date-limit refinements remain in this candidate.
+
+The full roster needs the additive, read-only Web route
+`/api/watch-history/v3/browse/catalog`, implemented locally against existing catalog
+snapshots with no migration or env changes. It returns real canonical entries in
+pages of at most 50, fences owner/generation/catalog revision, and separates main
+and Specials aggregates. The extension supports the currently published Web
+runtime: missing/partial catalogs show only known episodes, never guessed cells.
+The user subsequently authorized server delivery through separate PR #272,
+merged into staging as `a03c0128825c73edcfdf9062a8d85e70148b2423`.
+Vercel `dpl_ByCL5o34p44oJE3ZHk8rdReL9EiD` is READY on `staging.anidachi.app`;
+CI, room/P2P suites, staging/Worker smoke and the exact catalog route's access
+checks passed. The migration workflow confirmed the database was already up to
+date. Both tester folders retain the local grid build
+`9ee74a7c-staging-episode-grid-local-20260906-r3`. Authenticated HTTP and loaded
+grid acceptance remain separate manual checks; main/production were not promoted.
+The release receipt is in [PR #272](https://github.com/AniDachi/anidachi-LP/pull/272).
+The approved presentation and compatibility contract are recorded in
+`docs/superpowers/specs/2026-09-05-watch-drawer-browse-design.md`.
+
+### Personal History And Plans MVP Target (2026-09-08)
+
+The agreed MVP direction is [personal history and plans](superpowers/specs/2026-09-08-personal-history-and-plans-mvp-design.md),
+with a separate [implementation plan](superpowers/plans/2026-09-08-personal-history-and-plans-mvp.md).
+It supersedes the deferred September 7 Together target. One personal history
+combines solo and room playback, gated by each viewer's own Plus/Pro access.
+Free accounts do not capture or persist personal progress, including in a paid
+host's room. Groups remain private recipient lists; shared group progress,
+last-member tracking, shared-name migration and group-to-personal import are
+outside this MVP. Watch loses Mine/Together and group/participant filters while
+retaining the accepted provider/title/season/episode presentation.
+
+All supported integrations are available on every plan. Room limits belong to
+the host: Free has 30 daily hosting minutes, 4 participants, 4 cameras and 4
+microphones; Plus has no daily hosting cap, 6 participants, 4 cameras and 6
+microphones; Pro has no daily hosting cap, 15 participants, 4 cameras and 8
+microphones. Participants include the host. History rights belong to the viewer;
+a paid guest must be able to record independently of any host history write.
+
+Tasks 1–9 are implemented and reviewed. Inactive staging delivery completed through PR
+#273 (database) and PR #274 (runtime), runtime merge
+`c7fbdb5aa1bbad9922dc40b9d557234e762e8d6c`. Final source
+`2bf18fba0751b71d3e142d2e16ae4f1bbfedca92` includes original reviewed d2e32e8 and the
+independently approved one-line test-only lint correction. The [delivery
+packet](releases/personal-history-mvp/README.md) and
+[receipt](releases/personal-history-mvp/delivery-receipt.json) record exact identities.
+
+Remote staging has 55 migrations through 20260908072249 and policy version 1 inactive.
+Web Ready and Worker 100% match c7fbdb5. Both established tester folders were separately
+backed up/hash-verified, then synchronized to final narrow build
+`48b5fd8-staging-20260908191943`. Folder delivery is not loaded Chrome proof; Mac locked
+remains. Original mixed source is preserved. No main/production or activation occurred.
+
+Task 10 external acceptance remains open: real Stripe TEST disconnected, loaded
+provider/MV3 termination, physical media/different networks/forced relay and C04
+active-policy recovery. The 177 non-ended legacy DB records are historical inventory,
+not 177 confirmed active rooms; future activation needs separately reviewed
+Worker-lifecycle reconciliation without bulk end/delete or guard weakening. Old a03c012
+is not postactivation recovery. Keep data/epochs and verified compatible policy true
+recovery; main/public claims require a separate decision.
+
+### Remaining Product Acceptance
 
 These are intentionally not treated as solved:
 
@@ -994,12 +1533,13 @@ These are intentionally not treated as solved:
   canonical changes, and its coalesced outbox persists the latest higher
   generation without delaying playback. Reload and late join consume the
   durable source; explicit source-switch UI/commands remain future UI/UX work.
-- Watch History v2 is the active `staging` and technical `main` runtime.
+- Watch History v3 is active on `staging`; technical `main` remains on v2.
   Supabase/Postgres is the one durable account-history authority; the extension
   background owns the account-scoped cache/outbox, while Popup and website
-  consume the same strict v2 response. The v1 HTTP paths return
-  `426 UPGRADE_REQUIRED`, and the legacy tables remain inert for rollback rather
-  than being deleted.
+  consume the same version-matched response. On staging, authenticated v1/v2 HTTP
+  paths return `426 UPGRADE_REQUIRED`; old SQL writers are terminal too. The
+  schema-3 reset discards only reviewed test history and preserves surrounding
+  product state. An old web deployment alone is not a schema-3 rollback.
 - `ROOM_HISTORY_GRACE_AMENDMENT_REQUIRED` is the reviewed Task 9 decision after
   the Task 0 report proved unavailable: Worker-issued shared-history authority
   has mandatory exact scalar claims, a unique `jti`, and `exp = iat + 86,400`
@@ -1093,6 +1633,13 @@ These are intentionally not treated as solved:
 - Staging acceptance checklist: `docs/staging-acceptance-checklist.md`
 - Release and rollback runbook: `docs/release-and-rollback-runbook.md`
 - Project knowledge map / Graphify policy: `docs/project-knowledge-map.md`
+- Local Watch History v3 verification and activation boundary:
+  `docs/watch-history-v3-local-verification.md`
+- Local Watch drawer browse verification and rollout boundary:
+  `docs/watch-drawer-browse-local-verification.md`
+- Approved Watch drawer browse design and implementation plan:
+  `docs/superpowers/specs/2026-09-05-watch-drawer-browse-design.md` and
+  `docs/superpowers/plans/2026-09-05-watch-drawer-browse.md`
 - Overall architecture notes: `docs/architecture.md`
 - Extension release channels: `docs/extension-release-channels.md`
 - Site and extension integration: `docs/site-extension-integration-notes.md`

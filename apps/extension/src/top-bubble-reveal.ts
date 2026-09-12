@@ -17,7 +17,6 @@ const OVERLAY_RECT_MAX_AGE_MS = 250;
 
 interface UseTopBubbleRevealOptions {
   bubbleRef: RefObject<HTMLButtonElement | null>;
-  forceVisible?: boolean;
   mode: MainControlVisibility;
   overlayRef: RefObject<HTMLElement | null>;
   panelOpen: boolean;
@@ -32,18 +31,16 @@ interface TopBubbleRevealState {
 
 export function useTopBubbleReveal({
   bubbleRef,
-  forceVisible = false,
   mode,
   overlayRef,
   panelOpen,
 }: UseTopBubbleRevealOptions): TopBubbleRevealState {
-  const initiallyVisible = mode === "always-visible" || panelOpen || forceVisible;
+  const initiallyVisible = mode === "always-visible" || panelOpen;
   const [phase, setPhaseState] = useState<MainControlRevealPhase>(
     initiallyVisible ? "visible" : "hidden",
   );
   const phaseRef = useRef<MainControlRevealPhase>(initiallyVisible ? "visible" : "hidden");
   const panelOpenRef = useRef(panelOpen);
-  const forceVisibleRef = useRef(forceVisible);
   const modeRef = useRef(mode);
   const focusedRef = useRef(false);
   const lastPointerRef = useRef<{ x: number; y: number } | null>(null);
@@ -72,7 +69,6 @@ export function useTopBubbleReveal({
     (currentPhase = phaseRef.current) =>
       resolveMainControlPresentation({
         focused: focusedRef.current,
-        forceVisible: forceVisibleRef.current,
         mode: modeRef.current,
         panelOpen: panelOpenRef.current,
         phase: currentPhase,
@@ -218,7 +214,10 @@ export function useTopBubbleReveal({
       evaluatePointer(event.clientX, event.clientY);
     };
     const handlePointerOut = (event: PointerEvent) => {
-      if (event.relatedTarget === null) {
+      if (
+        event.relatedTarget === null &&
+        !pointInsideViewport(event.clientX, event.clientY)
+      ) {
         handlePointerExit();
       }
     };
@@ -256,12 +255,10 @@ export function useTopBubbleReveal({
 
   useEffect(() => {
     panelOpenRef.current = panelOpen;
-    forceVisibleRef.current = forceVisible;
     modeRef.current = mode;
     if (
       resolveMainControlPresentation({
         focused: focusedRef.current,
-        forceVisible,
         mode,
         panelOpen,
         phase: phaseRef.current,
@@ -277,7 +274,7 @@ export function useTopBubbleReveal({
     } else {
       scheduleHide();
     }
-  }, [evaluatePointer, forceVisible, mode, panelOpen, revealImmediately, scheduleHide]);
+  }, [evaluatePointer, mode, panelOpen, revealImmediately, scheduleHide]);
 
   useEffect(
     () => () => {
@@ -299,7 +296,6 @@ export function useTopBubbleReveal({
 
   const presentation = resolveMainControlPresentation({
     focused: focusedRef.current,
-    forceVisible,
     mode,
     panelOpen,
     phase,
@@ -324,5 +320,14 @@ function clearTimer(timerRef: { current: number | null }): void {
 function pointInsideRect(clientX: number, clientY: number, rect: DOMRect): boolean {
   return (
     clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom
+  );
+}
+
+function pointInsideViewport(clientX: number, clientY: number): boolean {
+  return (
+    clientX > 0 &&
+    clientX < window.innerWidth &&
+    clientY > 0 &&
+    clientY < window.innerHeight
   );
 }

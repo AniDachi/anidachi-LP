@@ -20,6 +20,202 @@ interface CrunchyrollProgressInput {
 	watchedWithCount: number;
 }
 
+export interface CrunchyrollCurrentObjectIdentity {
+	providerSeriesId: string;
+	providerSeasonIdentifier: string;
+	providerEpisodeIdentifier: string;
+	providerContentId: string;
+	audioLocale: string | null;
+	titleKey: `crunchyroll:series:${string}`;
+	seasonKey: `crunchyroll:season:${string}`;
+	episodeKey: `crunchyroll:episode:${string}`;
+}
+
+/**
+ * Resolves one recorded watch GUID without claiming a complete series catalog.
+ * Network traversal and retry ownership remain in the Crunchyroll MAIN-world
+ * bridge; this helper consumes only its sanitized, already-fetched evidence.
+ */
+export function resolveCrunchyrollCurrentObjectIdentity(input: {
+	watchId: string;
+	objectResponse: unknown;
+	seasonsResponse: unknown;
+	episodesResponse: unknown;
+}): CrunchyrollCurrentObjectIdentity | null {
+	const watchId = readPathSafeId(input.watchId, "crunchyroll:watch:");
+	if (!watchId) return null;
+
+	const objects = responseData(input.objectResponse).filter(
+		(record) => readIdentityString(record.id) === watchId,
+	);
+	if (objects.length !== 1) return null;
+
+	const metadata = identityRecord(objects[0].episode_metadata);
+	const providerSeriesId = readPathSafeId(
+		metadata?.series_id,
+		"crunchyroll:series:",
+	);
+	const objectVariants = identityRecords(metadata?.versions).filter(
+		(variant) => readPathSafeId(variant.guid, "crunchyroll:raw:") === watchId,
+	);
+	if (!providerSeriesId || objectVariants.length !== 1) return null;
+
+	const seasonGuid = readPathSafeId(
+		objectVariants[0].season_guid,
+		"crunchyroll:season:",
+	);
+	const objectSeasonGuid = readPathSafeId(
+		metadata?.season_id,
+		"crunchyroll:season:",
+	);
+	if (
+		!seasonGuid ||
+		(metadata?.season_id != null && objectSeasonGuid === null) ||
+		(objectSeasonGuid && objectSeasonGuid !== seasonGuid)
+	) {
+		return null;
+	}
+
+	const seasons = responseData(input.seasonsResponse).filter(
+		(season) =>
+			(readPathSafeId(season.id, "crunchyroll:raw:") === seasonGuid ||
+				matchingVariants(season, seasonGuid).length > 0) &&
+			matchingVariants(season, seasonGuid).length === 1,
+	);
+	if (seasons.length === 0) return null;
+	// Different raw audio-season rows can declare the same canonical season.
+	// Every row matching this exact GUID must agree; labels are not identity.
+	if (seasons.some((candidate) =>
+		candidate.identifier !== seasons[0].identifier ||
+		!readPathSafeId(candidate.id, "crunchyroll:raw:") ||
+		(candidate.series_id != null && candidate.series_id !== providerSeriesId)
+	)) return null;
+	const season = seasons[0];
+	const seasonRawId = readPathSafeId(season.id, "crunchyroll:raw:");
+	const providerSeasonIdentifier = readCanonicalPart(
+		season.identifier,
+		"crunchyroll:season:",
+	);
+	const objectSeasonIdentifier = readCanonicalPart(
+		metadata?.season_identifier,
+		"crunchyroll:season:",
+	);
+	const seasonSeriesId = readIdentityString(season.series_id);
+	if (
+		!seasonRawId ||
+		!providerSeasonIdentifier ||
+		!providerSeasonIdentifier.startsWith(`${providerSeriesId}|`) ||
+		(metadata?.season_identifier != null &&
+			objectSeasonIdentifier !== providerSeasonIdentifier) ||
+		(season.series_id != null && seasonSeriesId === null) ||
+		(seasonSeriesId !== null && seasonSeriesId !== providerSeriesId)
+	) return null;
+	const seasonAliases = new Set(seasons.flatMap((candidate) => [
+		readPathSafeId(candidate.id, "crunchyroll:raw:"),
+		...identityRecords(candidate.versions).map((variant) =>
+			readPathSafeId(variant.guid, "crunchyroll:raw:"),
+		),
+	]).filter((value): value is string => value !== null));
+
+	const episodes = responseData(input.episodesResponse).filter(
+		(episode) =>
+			(readPathSafeId(episode.id, "crunchyroll:raw:") === watchId ||
+				matchingVariants(episode, watchId).length > 0) &&
+			matchingVariants(episode, watchId).length === 1,
+	);
+	if (episodes.length !== 1) return null;
+	const episode = episodes[0];
+	if (!readPathSafeId(episode.id, "crunchyroll:raw:")) return null;
+	const episodeVariant = matchingVariants(episode, watchId)[0];
+	const episodeSeriesId = readIdentityString(episode.series_id);
+	const episodeSeasonId = readIdentityString(episode.season_id);
+	if (
+		readIdentityString(episodeVariant.season_guid) !== seasonGuid ||
+		(episode.series_id != null && episodeSeriesId === null) ||
+		(episodeSeriesId !== null && episodeSeriesId !== providerSeriesId) ||
+		(episode.season_id != null && episodeSeasonId === null) ||
+		(episodeSeasonId !== null && !seasonAliases.has(episodeSeasonId))
+	) {
+		return null;
+	}
+	const providerEpisodeIdentifier = readCanonicalPart(
+		episode.identifier,
+		"crunchyroll:episode:",
+	);
+	if (
+		!providerEpisodeIdentifier ||
+		!providerEpisodeIdentifier.startsWith(`${providerSeasonIdentifier}|`)
+	) return null;
+
+	return {
+		providerSeriesId,
+		providerSeasonIdentifier,
+		providerEpisodeIdentifier,
+		providerContentId: watchId,
+		audioLocale: readAudioLocale(objectVariants[0].audio_locale),
+		titleKey: `crunchyroll:series:${providerSeriesId}`,
+		seasonKey: `crunchyroll:season:${providerSeasonIdentifier}`,
+		episodeKey: `crunchyroll:episode:${providerEpisodeIdentifier}`,
+	};
+}
+
+function responseData(value: unknown): Array<Record<string, unknown>> {
+	const response = identityRecord(value);
+	return identityRecords(response?.data);
+}
+
+function identityRecord(value: unknown): Record<string, unknown> | null {
+	return value && typeof value === "object" && !Array.isArray(value)
+		? (value as Record<string, unknown>)
+		: null;
+}
+
+function identityRecords(value: unknown): Array<Record<string, unknown>> {
+	return Array.isArray(value)
+		? value.flatMap((item) => {
+				const record = identityRecord(item);
+				return record ? [record] : [];
+			})
+		: [];
+}
+
+function readIdentityString(value: unknown): string | null {
+	return typeof value === "string" &&
+		value.trim() === value &&
+		value.length > 0 &&
+		!/[\u0000-\u001f\u007f-\u009f]/u.test(value)
+		? value
+		: null;
+}
+
+function readCanonicalPart(value: unknown, prefix: string): string | null {
+	const part = readIdentityString(value);
+	return part && prefix.length + part.length <= 220 ? part : null;
+}
+
+function readPathSafeId(value: unknown, prefix: string): string | null {
+	const id = readCanonicalPart(value, prefix);
+	return id && /^[A-Za-z0-9_-]+$/u.test(id) ? id : null;
+}
+
+function readAudioLocale(value: unknown): string | null {
+	const locale = readIdentityString(value);
+	return locale &&
+		locale.length <= 35 &&
+		/^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/u.test(locale)
+		? locale
+		: null;
+}
+
+function matchingVariants(
+	record: Record<string, unknown>,
+	guid: string,
+): Array<Record<string, unknown>> {
+	return identityRecords(record.versions).filter(
+		(variant) => readPathSafeId(variant.guid, "crunchyroll:raw:") === guid,
+	);
+}
+
 export function getCrunchyrollProgressEntry(
 	input: CrunchyrollProgressInput,
 ): ProviderPlaybackMetadata | null {
@@ -136,6 +332,10 @@ export function getCrunchyrollHistoryObservation(input: {
     duration: adapter.video.duration,
     progress: adapter.video.currentTime / adapter.video.duration,
     catalogState: "unavailable",
+    identityPending: {
+      watchId: new URL(url).pathname.split("/")[2],
+      requestedLocale: document.documentElement.lang || navigator.language || "en-US",
+    },
   };
 }
 
@@ -151,7 +351,7 @@ function getCanonicalCrunchyrollWatchUrl(value: string): string | null {
     /^\/(?:(?<locale>[a-z]{2}(?:-[a-z]{2})?)\/)?watch\/(?<id>[A-Za-z0-9_-]+)(?:\/(?<slug>[A-Za-z0-9][A-Za-z0-9-]*))?\/?$/,
   );
   if (!match?.groups?.id) return null;
-  return `${url.origin}${url.pathname}`;
+  return `https://www.crunchyroll.com/watch/${match.groups.id}`;
 }
 
 interface CrunchyrollSeriesInfo {

@@ -374,6 +374,16 @@ describe("internal Web participant departure client", () => {
       async () => Response.json({ ok: true, outcome: "stale" }),
     )).resolves.toBe("stale");
   });
+
+  it("rejects the public-only already-departed outcome on the passive callback", async () => {
+    await expect(internalWebClient.notifyWebParticipantDeparted(
+      env,
+      callback.roomId,
+      callback.userId,
+      callback,
+      async () => Response.json({ ok: true, outcome: "already_departed" }),
+    )).rejects.toThrow("invalid acknowledgement");
+  });
 });
 
 function stallingJsonBodyFetch(): {

@@ -1,8 +1,10 @@
-import type { Participant, VoiceMode } from "@anidachi/protocol";
+import type { Participant, VoiceMode, RoomMediaSnapshot } from "@anidachi/protocol";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { logDebug } from "./debug-log";
 import type {
   GhostVideo,
+  MediaCaptureIntents,
+  MediaCaptureTerminalFailure,
   IncomingP2PSignal,
   MicrophoneStatus,
   MicrophoneTerminalFailure,
@@ -21,6 +23,8 @@ import type { ParticipantAudioPreference } from "./voice-audio-preferences";
 export type { GhostVideo, MicrophoneStatus } from "./media-types";
 
 export interface GhostCamSession {
+  reconcileMediaAuthority: (camera: boolean, microphone: boolean) => void;
+  stop: () => void;
   activeSpeakerIds: string[];
   getDiagnostics: () => Promise<P2PMediaDiagnostics | null>;
   microphoneStatus: MicrophoneStatus;
@@ -40,6 +44,11 @@ export interface GhostCamSession {
 }
 
 interface GhostCamOptions {
+  mediaSnapshot?: RoomMediaSnapshot | null;
+  captureIntents?: MediaCaptureIntents;
+  onMediaTerminalFailure?: (failure: MediaCaptureTerminalFailure) => void;
+  cameraAuthorized?: boolean;
+  microphoneAuthorized?: boolean;
   cameraEnabled: boolean;
   connected: boolean;
   incomingP2PSignals: IncomingP2PSignal[];
@@ -95,6 +104,8 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
   const [voiceMessage, setVoiceMessage] = useState<string | null>(null);
   const [activeSpeakerIds, setActiveSpeakerIds] = useState<string[]>([]);
   const controllerRef = useRef<P2PMediaController | null>(null);
+  const mediaAuthorityRef = useRef(options);
+  mediaAuthorityRef.current = options;
   const cameraEnabledRef = useRef(cameraEnabled);
   const incomingP2PSignalsRef = useRef(incomingP2PSignals);
   const onCameraStatusRef = useRef(onCameraStatus);
@@ -135,6 +146,7 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
         activeParticipant.id,
         cameraEnabledRef.current,
         getVoiceParticipantIds(activeParticipant),
+        mediaAuthorityRef.current.mediaSnapshot,
       ),
     [getVoiceParticipantIds],
   );
@@ -147,7 +159,7 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
             ? participantsRef.current
             : [activeParticipant]
         )
-          .filter((item) => item.mediaSeat === "joined")
+          .filter((item) => mediaAuthorityRef.current.mediaSnapshot !== undefined ? item.connected !== false : item.mediaSeat === "joined")
           .map((item) => item.id),
       ),
     [],
@@ -166,9 +178,11 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
           remoteVoiceParticipantIdsRef.current.delete(participantId);
         }
       }
+      controllerRef.current?.setCaptureAuthority(mediaAuthorityRef.current.cameraAuthorized ?? true, mediaAuthorityRef.current.microphoneAuthorized ?? true, mediaAuthorityRef.current.captureIntents);
       controllerRef.current?.updateParticipants(
         getMediaParticipants(activeParticipant),
         mediaSeatParticipantIds,
+        mediaAuthorityRef.current.mediaSnapshot,
       );
     },
     [getMediaParticipants, getMediaSeatParticipantIds],
@@ -301,7 +315,13 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
         localParticipant: sessionParticipant,
         onActiveSpeakerIdsChange: setActiveSpeakerIds,
         onCameraStatus: (enabled) => onCameraStatusRef.current(enabled),
+        onMediaTerminalFailure: (failure) => {
+          if (disposed || controllerRef.current !== controller) return;
+          mediaAuthorityRef.current.onMediaTerminalFailure?.(failure);
+          updateControllerParticipants(sessionParticipant);
+        },
         onMicrophoneTerminalFailure: (failure) => {
+          if (mediaAuthorityRef.current.mediaSnapshot !== undefined) return;
           microphonePublishingRef.current = false;
           microphoneReleaseRef.current = "immediate";
           setMicrophoneTerminalFailure(failure);
@@ -320,6 +340,7 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
 
       ownedController = controller;
       controllerRef.current = controller;
+      controller.setCaptureAuthority(mediaAuthorityRef.current.cameraAuthorized ?? true, mediaAuthorityRef.current.microphoneAuthorized ?? true, mediaAuthorityRef.current.captureIntents);
       await controller.setCameraEnabled(cameraEnabledRef.current);
       if (disposed) {
         return;
@@ -327,6 +348,7 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
       controller.updateParticipants(
         getMediaParticipants(sessionParticipant),
         getMediaSeatParticipantIds(sessionParticipant),
+        mediaAuthorityRef.current.mediaSnapshot,
       );
       await replayPendingP2PSignals(
         controller,
@@ -337,12 +359,14 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
           : [sessionParticipant],
         sessionParticipant.id,
         remoteVoiceParticipantIdsRef.current,
-        roomGeneration,
-        sourceGeneration,
+        roomGenerationRef.current,
+        sourceGenerationRef.current,
+        mediaAuthorityRef.current.mediaSnapshot,
       );
       controller.updateParticipants(
         getMediaParticipants(sessionParticipant),
         getMediaSeatParticipantIds(sessionParticipant),
+        mediaAuthorityRef.current.mediaSnapshot,
       );
       const readyTransport = signalingTransportReadyRef.current;
       if (readyTransport) {
@@ -373,7 +397,6 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
     roomGeneration,
     roomId,
     shouldConnect,
-    sourceGeneration,
   ]);
 
   useEffect(() => {
@@ -389,7 +412,7 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
     }
 
     updateControllerParticipants(activeParticipant);
-  }, [participantId, participants, updateControllerParticipants]);
+  }, [participantId, participants, options.mediaSnapshot, options.cameraAuthorized, options.microphoneAuthorized, options.captureIntents?.camera?.requestId, options.captureIntents?.microphone?.requestId, updateControllerParticipants]);
 
   useEffect(() => {
     void controllerRef.current?.setCameraEnabled(cameraEnabled);
@@ -403,7 +426,7 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
     }
 
     updateControllerParticipants(activeParticipant);
-  }, [cameraEnabled, participantId, updateControllerParticipants]);
+  }, [cameraEnabled, options.cameraAuthorized, options.captureIntents?.camera?.requestId, participantId, updateControllerParticipants]);
 
   useEffect(() => {
     const controller = controllerRef.current;
@@ -448,6 +471,7 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
         item.fromUserId,
         cameraEnabledRef.current,
         voiceParticipantIds,
+        mediaAuthorityRef.current.mediaSnapshot,
       );
 
       if (item.signal.kind === "voice-start") {
@@ -624,7 +648,12 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
     [],
   );
 
+  const reconcileMediaAuthority = useCallback((camera: boolean, microphone: boolean) => { controllerRef.current?.setCaptureAuthority(camera, microphone, mediaAuthorityRef.current.captureIntents); }, []);
+  const stop = useCallback(() => { controllerRef.current?.disconnect(); controllerRef.current = null; microphonePublishingRef.current = false; }, []);
+
   return {
+    reconcileMediaAuthority,
+    stop,
     activeSpeakerIds,
     getDiagnostics,
     microphoneStatus,
@@ -646,6 +675,7 @@ async function replayPendingP2PSignals(
   remoteVoiceParticipantIds: Set<string>,
   roomGeneration: number,
   sourceGeneration: number,
+  mediaSnapshot?: RoomMediaSnapshot | null,
 ): Promise<void> {
   for (const item of incomingP2PSignals) {
     if (item.sequence <= lastSignalSequenceRef.current) {
@@ -663,6 +693,8 @@ async function replayPendingP2PSignals(
         localParticipantId,
         item.fromUserId,
         false,
+        new Set(),
+        mediaSnapshot,
       )
     ) {
       continue;

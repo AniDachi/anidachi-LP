@@ -1,4 +1,12 @@
 import {
+	ROOM_POLICY_STORAGE_KEY,
+	type RoomPolicyState,
+} from "./room-capability";
+import {
+	ROOM_PRESENCE_STORAGE_KEY,
+	nextPresenceAlarm,
+} from "./room-presence-evidence";
+import {
   RoomSourcePersistenceCallbackSchema,
   type RoomSourcePersistenceCallback,
 } from "@anidachi/protocol";
@@ -32,10 +40,19 @@ export function parsePendingRoomSourcePersistence(
   value: unknown,
 ): PendingRoomSourcePersistence | null {
   if (!isRecord(value) || value.schemaVersion !== 1) return null;
-  if (!hasExactKeys(value, ["attempts", "callback", "nextAttemptAt", "schemaVersion"])) {
+	if (
+		!hasExactKeys(value, [
+			"attempts",
+			"callback",
+			"nextAttemptAt",
+			"schemaVersion",
+		])
+	) {
     return null;
   }
-  const callback = RoomSourcePersistenceCallbackSchema.safeParse(value.callback);
+	const callback = RoomSourcePersistenceCallbackSchema.safeParse(
+		value.callback,
+	);
   if (
     !callback.success ||
     !Number.isSafeInteger(value.attempts) ||
@@ -74,13 +91,15 @@ export async function enqueueStoredRoomSource(
   callback: RoomSourcePersistenceCallback,
   now: number,
 ): Promise<PendingRoomSourcePersistence> {
-  const parsedCallback = RoomSourcePersistenceCallbackSchema.safeParse(callback);
+	const parsedCallback =
+		RoomSourcePersistenceCallbackSchema.safeParse(callback);
   if (!parsedCallback.success || !isTimestamp(now)) {
     throw new Error("Invalid room source persistence callback");
   }
 
   return storage.transaction((transaction) =>
-    putPendingRoomSource(transaction, parsedCallback.data, now));
+		putPendingRoomSource(transaction, parsedCallback.data, now),
+	);
 }
 
 export async function ensureStoredRoomSourcePending(
@@ -111,12 +130,14 @@ export async function claimStoredRoomSourceAttempt(
   now: number,
   options: { force?: boolean } = {},
 ): Promise<PendingRoomSourcePersistence | null> {
-  if (!isTimestamp(now)) throw new Error("Invalid room source persistence claim time");
+	if (!isTimestamp(now))
+		throw new Error("Invalid room source persistence claim time");
   return storage.transaction(async (transaction) => {
     const raw = await transaction.get<unknown>(ROOM_SOURCE_PENDING_STORAGE_KEY);
     const current = parsePendingRoomSourcePersistence(raw);
     if (!current) {
-      if (raw !== undefined) await transaction.delete(ROOM_SOURCE_PENDING_STORAGE_KEY);
+			if (raw !== undefined)
+				await transaction.delete(ROOM_SOURCE_PENDING_STORAGE_KEY);
       await reconcileStoredRoomAlarm(transaction);
       return null;
     }
@@ -144,12 +165,14 @@ export async function acknowledgeStoredRoomSourceAttempt(
   storage: DurableObjectStorage,
   sourceGeneration: number,
 ): Promise<boolean> {
-  if (!Number.isSafeInteger(sourceGeneration) || sourceGeneration < 1) return false;
+	if (!Number.isSafeInteger(sourceGeneration) || sourceGeneration < 1)
+		return false;
   return storage.transaction(async (transaction) => {
     const raw = await transaction.get<unknown>(ROOM_SOURCE_PENDING_STORAGE_KEY);
     const current = parsePendingRoomSourcePersistence(raw);
     if (!current) {
-      if (raw !== undefined) await transaction.delete(ROOM_SOURCE_PENDING_STORAGE_KEY);
+			if (raw !== undefined)
+				await transaction.delete(ROOM_SOURCE_PENDING_STORAGE_KEY);
       await reconcileStoredRoomAlarm(transaction);
       return false;
     }
@@ -176,7 +199,7 @@ export function roomSourceRetryAt(attempts: number, now: number): number {
   const exponent = Math.max(0, Math.min(16, Math.floor(attempts) - 1));
   const delay = Math.min(
     ROOM_SOURCE_RETRY_MAX_MS,
-    ROOM_SOURCE_RETRY_BASE_MS * (2 ** exponent),
+		ROOM_SOURCE_RETRY_BASE_MS * 2 ** exponent,
   );
   return Math.min(Number.MAX_SAFE_INTEGER, now + delay);
 }
@@ -186,7 +209,8 @@ export function nextRoomAlarmAt(
   pendingSource: PendingRoomSourcePersistence | null,
   participantDisconnects: ParticipantDisconnectState | null = null,
 ): number | null {
-  const lifecycleAt = lifecycle?.status === "empty"
+	const lifecycleAt =
+		lifecycle?.status === "empty"
     ? lifecycle.alarmAt
     : lifecycle?.status === "ending"
       ? lifecycle.nextAttemptAt
@@ -204,7 +228,8 @@ export async function reconcileStoredRoomAlarm(
   fallbackAt: number | null = null,
   options: { ignoreLifecycle?: boolean } = {},
 ): Promise<number | null> {
-  const [rawLifecycle, rawPendingSource, rawParticipantDisconnects] = await Promise.all([
+	const [rawLifecycle, rawPendingSource, rawParticipantDisconnects] =
+		await Promise.all([
     transaction.get<unknown>(ROOM_LIFECYCLE_STORAGE_KEY),
     transaction.get<unknown>(ROOM_SOURCE_PENDING_STORAGE_KEY),
     transaction.get<unknown>(PARTICIPANT_DISCONNECT_STORAGE_KEY),
@@ -214,18 +239,39 @@ export async function reconcileStoredRoomAlarm(
   if (rawPendingSource !== undefined && !pendingSource) {
     await transaction.delete(ROOM_SOURCE_PENDING_STORAGE_KEY);
   }
-  const participantDisconnects = rawParticipantDisconnects === undefined
+	const participantDisconnects =
+		rawParticipantDisconnects === undefined
     ? null
     : parseParticipantDisconnectState(rawParticipantDisconnects);
   if (rawParticipantDisconnects !== undefined && !participantDisconnects) {
     throw new Error("Invalid persisted participant disconnect state");
   }
-  const logicalAlarmAt = nextRoomAlarmAt(
+	const policy = await transaction.get<RoomPolicyState>(
+		ROOM_POLICY_STORAGE_KEY,
+	);
+	if (policy && (!Number.isSafeInteger(policy.alarmAt) || policy.alarmAt < 0))
+		throw new Error("Invalid room policy alarm");
+	if (policy)
+		fallbackAt =
+			fallbackAt === null
+				? policy.alarmAt
+				: Math.min(fallbackAt, policy.alarmAt);
+	const presenceAt = nextPresenceAlarm(
+		await transaction.get(ROOM_PRESENCE_STORAGE_KEY),
+	);
+  const roomAlarmAt = nextRoomAlarmAt(
     options.ignoreLifecycle ? null : lifecycle,
     pendingSource,
     participantDisconnects,
   );
-  const alarmAt = logicalAlarmAt === null
+	const logicalAlarmAt =
+		roomAlarmAt === null
+    ? presenceAt
+    : presenceAt === null
+      ? roomAlarmAt
+      : Math.min(roomAlarmAt, presenceAt);
+	const alarmAt =
+		logicalAlarmAt === null
     ? fallbackAt
     : fallbackAt === null
       ? logicalAlarmAt
@@ -242,12 +288,14 @@ function sameCallback(
   left: RoomSourcePersistenceCallback,
   right: RoomSourcePersistenceCallback,
 ): boolean {
-  return left.roomId === right.roomId &&
+	return (
+		left.roomId === right.roomId &&
     left.sourceGeneration === right.sourceGeneration &&
     left.source.provider === right.source.provider &&
     left.source.sourceUrl === right.source.sourceUrl &&
     left.source.canonicalUrl === right.source.canonicalUrl &&
-    left.source.videoFingerprint === right.source.videoFingerprint;
+		left.source.videoFingerprint === right.source.videoFingerprint
+	);
 }
 
 async function putPendingRoomSource(
@@ -293,7 +341,10 @@ async function putPendingRoomSource(
 function hasExactKeys(value: Record<string, unknown>, keys: string[]): boolean {
   const actual = Object.keys(value).sort();
   const expected = [...keys].sort();
-  return actual.length === expected.length && actual.every((key, index) => key === expected[index]);
+	return (
+		actual.length === expected.length &&
+		actual.every((key, index) => key === expected[index])
+	);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -306,6 +357,6 @@ function isTimestamp(value: unknown): value is number {
 
 function parseAcknowledgedGeneration(value: unknown): number {
   return Number.isSafeInteger(value) && (value as number) >= 1
-    ? value as number
+		? (value as number)
     : 0;
 }

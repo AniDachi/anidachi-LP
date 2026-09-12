@@ -10,8 +10,10 @@ import { createClient } from "@supabase/supabase-js";
 import {
   parseActiveRoomClaimRpcResult,
   parseActiveRoomCreateRpcResult,
+	parseActiveRoomAssignmentRow,
   parseActiveRoomReleaseRpcResult,
   parseHostLobbyEndRpcResult,
+	type ActiveRoomAssignment,
 } from "./active-room-session";
 import type { PlanCode, RoomCapabilities } from "./plan-entitlements";
 import {
@@ -38,7 +40,7 @@ function getSupabaseServiceClient() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) {
     throw new Error(
-      "Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY"
+			"Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY",
     );
   }
   return createClient(url, key, {
@@ -91,6 +93,8 @@ export type SubscriptionRow = {
 };
 
 export type RoomRow = {
+	media_lease?: unknown;
+	media_closing_at?: string | null;
   id: string;
   room_id: string;
   host_user_id: string;
@@ -180,16 +184,21 @@ async function syncProfileFromUserRow(user: UserRow): Promise<void> {
     .select("user_id, display_name, avatar_url")
     .eq("user_id", user.id)
     .maybeSingle();
-  if (readError) throw new Error(`Failed to load profile: ${readError.message}`);
+	if (readError)
+		throw new Error(`Failed to load profile: ${readError.message}`);
 
   if (existing) {
     const profile = existing as ProfileSyncRow;
     const updates: Partial<ProfileSyncRow> & { updated_at?: string } = {};
-    if (!profile.avatar_url && user.avatar_url) updates.avatar_url = user.avatar_url;
+		if (!profile.avatar_url && user.avatar_url)
+			updates.avatar_url = user.avatar_url;
 
     if (Object.keys(updates).length > 0) {
       updates.updated_at = new Date().toISOString();
-      const { error } = await client.from("profiles").update(updates).eq("user_id", user.id);
+			const { error } = await client
+				.from("profiles")
+				.update(updates)
+				.eq("user_id", user.id);
       if (error) throw new Error(`Failed to sync profile: ${error.message}`);
     }
     return;
@@ -231,7 +240,11 @@ export function generateRefreshToken(): string {
 
 export type RefreshChannel = "website" | "extension";
 
-export type RefreshRotationOutcome = "rotated" | "reused" | "replayed" | "invalid";
+export type RefreshRotationOutcome =
+	| "rotated"
+	| "reused"
+	| "replayed"
+	| "invalid";
 
 export type RefreshRotationRow = {
   rotation_outcome: RefreshRotationOutcome;
@@ -250,11 +263,20 @@ function isNullableUuid(value: unknown): value is string | null {
   return value === null || isUuid(value);
 }
 
-function isRefreshRotationOutcome(value: unknown): value is RefreshRotationOutcome {
-  return value === "rotated" || value === "reused" || value === "replayed" || value === "invalid";
+function isRefreshRotationOutcome(
+	value: unknown,
+): value is RefreshRotationOutcome {
+	return (
+		value === "rotated" ||
+		value === "reused" ||
+		value === "replayed" ||
+		value === "invalid"
+	);
 }
 
-export function parseRefreshTokenResolutionResult(value: unknown): string | null {
+export function parseRefreshTokenResolutionResult(
+	value: unknown,
+): string | null {
   if (value === null) return null;
   if (!isUuid(value)) {
     throw new Error("Malformed refresh token resolution response");
@@ -262,7 +284,9 @@ export function parseRefreshTokenResolutionResult(value: unknown): string | null
   return value;
 }
 
-export function parseRefreshTokenRotationResult(value: unknown): RefreshRotationRow {
+export function parseRefreshTokenRotationResult(
+	value: unknown,
+): RefreshRotationRow {
   if (!Array.isArray(value) || value.length !== 1) {
     throw new Error("Malformed refresh token rotation response");
   }
@@ -277,10 +301,11 @@ export function parseRefreshTokenRotationResult(value: unknown): RefreshRotation
     throw new Error("Malformed refresh token rotation response");
   }
 
-  const { rotation_outcome: outcome, user_id: userId, family_id: familyId } = row as Record<
-    string,
-    unknown
-  >;
+	const {
+		rotation_outcome: outcome,
+		user_id: userId,
+		family_id: familyId,
+	} = row as Record<string, unknown>;
   if (
     !isRefreshRotationOutcome(outcome) ||
     !isNullableUuid(userId) ||
@@ -290,7 +315,9 @@ export function parseRefreshTokenRotationResult(value: unknown): RefreshRotation
   }
 
   const coherent =
-    ((outcome === "rotated" || outcome === "reused") && userId !== null && familyId !== null) ||
+		((outcome === "rotated" || outcome === "reused") &&
+			userId !== null &&
+			familyId !== null) ||
     (outcome === "replayed" && userId === null && familyId !== null) ||
     (outcome === "invalid" && userId === null);
   if (!coherent) {
@@ -363,7 +390,7 @@ export async function revokeRefreshTokenFamily(
 }
 
 export async function revokeAllRefreshTokenFamiliesForUser(
-  userId: string
+	userId: string,
 ): Promise<void> {
   const result = await db().rpc("revoke_refresh_token_families_for_user_v1", {
     p_user_id: userId,
@@ -374,7 +401,7 @@ export async function revokeAllRefreshTokenFamiliesForUser(
 // ---------- Billing helpers ----------
 
 export async function getBillingCustomerByUserId(
-  userId: string
+	userId: string,
 ): Promise<BillingCustomerRow | null> {
   const { data } = await db()
     .from("billing_customers")
@@ -385,13 +412,15 @@ export async function getBillingCustomerByUserId(
 }
 
 export async function getUserIdByStripeCustomerId(
-  stripeCustomerId: string
+  stripeCustomerId: string,
 ): Promise<string | null> {
-  const { data } = await db()
+  const { data, error } = await db()
     .from("billing_customers")
     .select("user_id")
     .eq("stripe_customer_id", stripeCustomerId)
+    .abortSignal(AbortSignal.timeout(10_000))
     .maybeSingle();
+  if (error) throw new Error("Billing customer ownership unavailable");
   return (data?.user_id as string | undefined) ?? null;
 }
 
@@ -405,9 +434,10 @@ export async function upsertBillingCustomer(params: {
       stripe_customer_id: params.stripeCustomerId,
       updated_at: new Date().toISOString(),
     },
-    { onConflict: "user_id" }
+		{ onConflict: "user_id" },
   );
-  if (error) throw new Error(`Failed to upsert billing customer: ${error.message}`);
+	if (error)
+		throw new Error(`Failed to upsert billing customer: ${error.message}`);
 }
 
 export async function beginStripeEventProcessing(params: {
@@ -443,12 +473,13 @@ export async function markStripeEventProcessed(eventId: string): Promise<void> {
       last_error: null,
     })
     .eq("event_id", eventId);
-  if (error) throw new Error(`Failed to mark Stripe event processed: ${error.message}`);
+	if (error)
+		throw new Error(`Failed to mark Stripe event processed: ${error.message}`);
 }
 
 export async function markStripeEventFailed(
   eventId: string,
-  errorMessage: string
+	errorMessage: string,
 ): Promise<void> {
   const { error } = await db()
     .from("stripe_events")
@@ -456,53 +487,106 @@ export async function markStripeEventFailed(
       last_error: errorMessage.slice(0, 2000),
     })
     .eq("event_id", eventId);
-  if (error) throw new Error(`Failed to mark Stripe event failed: ${error.message}`);
+	if (error)
+		throw new Error(`Failed to mark Stripe event failed: ${error.message}`);
 }
 
-export async function upsertSubscription(params: {
-  userId: string;
-  stripeCustomerId: string;
-  stripeSubscriptionId: string;
-  stripePriceId: string;
-  planCode: PlanCode;
-  status: string;
-  currentPeriodEnd: string | null;
-  cancelAtPeriodEnd: boolean;
-}): Promise<void> {
-  const { error } = await db().from("subscriptions").upsert(
-    {
-      user_id: params.userId,
-      stripe_customer_id: params.stripeCustomerId,
-      stripe_subscription_id: params.stripeSubscriptionId,
-      stripe_price_id: params.stripePriceId,
-      plan_code: params.planCode,
-      status: params.status,
-      current_period_end: params.currentPeriodEnd,
-      cancel_at_period_end: params.cancelAtPeriodEnd,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "stripe_subscription_id" }
-  );
-  if (error) throw new Error(`Failed to upsert subscription: ${error.message}`);
+// Billing refreshes must use the fenced transaction below. Do not mutate the
+// subscription/user mirrors separately: access epochs share their commit boundary.
+export async function resolveWatchHistoryAccess(
+	userId: string,
+): Promise<unknown> {
+	const { data, error } = await db()
+		.rpc("resolve_watch_history_access_v1", { p_user_id: userId })
+		.abortSignal(AbortSignal.timeout(10_000));
+  if (error || !data) throw new Error("History access authority unavailable");
+  return data;
 }
-
+export type StripeRefreshLease = { fence: number; token: string };
+export type StripeSubscriptionCommit = {
+	userId: string;
+	stripeCustomerId: string;
+	stripeSubscriptionId: string;
+	stripePriceId: string;
+	planCode: PlanCode;
+	status: string;
+	currentPeriodEnd: string | null;
+	cancelAtPeriodEnd: boolean;
+};
+export async function beginStripeSubscriptionRefresh(
+	subscriptionId: string,
+): Promise<StripeRefreshLease | null> {
+	const { data, error } = await db()
+		.rpc("begin_stripe_subscription_refresh_v1", {
+			p_subscription_id: subscriptionId,
+		})
+		.abortSignal(AbortSignal.timeout(10_000));
+  if (error) throw new Error("Stripe refresh authority unavailable");
+  if (!data) return null;
+	if (
+		!Number.isSafeInteger(data.fence) ||
+		data.fence < 1 ||
+		typeof data.token !== "string"
+	)
+		throw new Error("Invalid Stripe fence");
+  return data as StripeRefreshLease;
+}
+export async function releaseStripeSubscriptionRefresh(
+	subscriptionId: string,
+	lease: StripeRefreshLease,
+): Promise<void> {
+	const { error } = await db()
+		.rpc("release_stripe_subscription_refresh_v1", {
+			p_subscription_id: subscriptionId,
+			p_fence: lease.fence,
+			p_token: lease.token,
+		})
+		.abortSignal(AbortSignal.timeout(10_000));
+  if (error) throw new Error("Stripe refresh release unavailable");
+}
+export async function commitStripeSubscriptionRefresh(
+	params: StripeSubscriptionCommit,
+	lease: StripeRefreshLease,
+): Promise<PlanCode> {
+	const { data, error } = await db()
+		.rpc("commit_stripe_subscription_refresh_v1", {
+			p_subscription_id: params.stripeSubscriptionId,
+			p_fence: lease.fence,
+			p_token: lease.token,
+			p_user_id: params.userId,
+			p_customer_id: params.stripeCustomerId,
+			p_price_id: params.stripePriceId,
+			p_plan_code: params.planCode,
+			p_status: params.status,
+			p_period_end: params.currentPeriodEnd,
+			p_cancel_at_period_end: params.cancelAtPeriodEnd,
+		})
+		.abortSignal(AbortSignal.timeout(10_000));
+	if (error || !data || !["free", "plus", "pro"].includes(data.planCode))
+		throw new Error("Stripe refresh commit unavailable or stale");
+  return data.planCode as PlanCode;
+}
+export async function getSubscriptionOwner(
+	subscriptionId: string,
+): Promise<string | null> {
+	const { data, error } = await db()
+		.from("subscriptions")
+		.select("user_id")
+		.eq("stripe_subscription_id", subscriptionId)
+		.abortSignal(AbortSignal.timeout(10_000))
+		.maybeSingle();
+  if (error) throw new Error("Subscription ownership unavailable");
+  return data?.user_id ?? null;
+}
 export async function listSubscriptionsForUser(
-  userId: string
+	userId: string,
 ): Promise<SubscriptionRow[]> {
-  const { data, error } = await db()
-    .from("subscriptions")
-    .select("*")
-    .eq("user_id", userId);
+	const { data, error } = await db()
+		.from("subscriptions")
+		.select("*")
+		.eq("user_id", userId);
   if (error) throw new Error(`Failed to list subscriptions: ${error.message}`);
   return (data as SubscriptionRow[] | null) ?? [];
-}
-
-export async function updateUserPlan(
-  userId: string,
-  plan: PlanCode
-): Promise<void> {
-  const { error } = await db().from("users").update({ plan }).eq("id", userId);
-  if (error) throw new Error(`Failed to update user plan: ${error.message}`);
 }
 
 // ---------- Room helpers ----------
@@ -524,6 +608,7 @@ export async function createRoomWithActiveSession(params: {
   hostUserId: string;
   participantSessionId: string;
   capabilities: RoomCapabilities;
+	mediaProtocolVersion?: number;
   showId?: string;
   episodeId?: string;
   sourceProvider?: unknown;
@@ -537,7 +622,8 @@ export async function createRoomWithActiveSession(params: {
     sourceUrl: params.sourceUrl,
     videoFingerprint: params.videoFingerprint,
   });
-  const result = await db().rpc("create_room_with_active_session_v1", {
+	const result = await db().rpc("create_room_with_active_session_v2", {
+		p_media_protocol_version: params.mediaProtocolVersion ?? 1,
     p_host_user_id: params.hostUserId,
     p_participant_session_id: params.participantSessionId,
     p_show_id: params.showId ?? null,
@@ -555,6 +641,8 @@ export async function createRoomWithActiveSession(params: {
     p_can_send_push_invites: params.capabilities.canSendPushInvites,
   });
   if (result.error) {
+		if (result.error.message.includes("ROOM_UPDATE_REQUIRED"))
+			throw new Error("ROOM_UPDATE_REQUIRED");
     throw new Error(`Failed to create active room: ${result.error.message}`);
   }
   const parsed = parseActiveRoomCreateRpcResult(result.data);
@@ -570,8 +658,10 @@ export async function claimActiveRoomSession(params: {
   roomId: string;
   role: ActiveRoomRole;
   participantSessionId: string;
+	mediaProtocolVersion?: number;
 }): Promise<ActiveRoomClaimResult> {
-  const result = await db().rpc("claim_active_room_session_v1", {
+	const result = await db().rpc("claim_active_room_session_v2", {
+		p_media_protocol_version: params.mediaProtocolVersion ?? 1,
     p_user_id: params.userId,
     p_room_id: params.roomId,
     p_role: params.role,
@@ -597,6 +687,20 @@ export async function releaseActiveRoomSession(params: {
     throw new Error(`Failed to release active room: ${result.error.message}`);
   }
   return parseActiveRoomReleaseRpcResult(result.data);
+}
+
+export async function getActiveRoomSessionAssignment(
+	userId: string,
+): Promise<ActiveRoomAssignment | null> {
+	const result = await db()
+		.from("active_room_sessions")
+		.select("user_id,room_id,role,participant_session_id")
+		.eq("user_id", userId)
+		.maybeSingle();
+	if (result.error) {
+		throw new Error(`Failed to read active room: ${result.error.message}`);
+	}
+	return parseActiveRoomAssignmentRow(result.data);
 }
 
 export async function endHostLobbyForActiveSession(params: {
@@ -663,7 +767,7 @@ export async function createRoom(params: {
   if (error.code === UNIQUE_VIOLATION && params.clientRequestId) {
     const existing = await getActiveRoomByClientRequestId(
       params.hostUserId,
-      params.clientRequestId
+			params.clientRequestId,
     );
     if (existing) return { room: existing, reused: true };
   }
@@ -699,7 +803,7 @@ export function roomCapabilitiesFromRoom(room: RoomRow): RoomCapabilities {
 
 export async function getActiveRoomByClientRequestId(
   hostUserId: string,
-  clientRequestId: string
+	clientRequestId: string,
 ): Promise<RoomRow | null> {
   const { data } = await db()
     .from("rooms")
@@ -714,10 +818,16 @@ export async function getActiveRoomByClientRequestId(
 export async function updateRoom(
   roomId: string,
   fields: Partial<
-    Pick<RoomRow, "status" | "last_active_at" | "ended_at" | "host_connected_at">
+		Pick<
+			RoomRow,
+			"status" | "last_active_at" | "ended_at" | "host_connected_at"
   >
+	>,
 ): Promise<void> {
-  const { error } = await db().from("rooms").update(fields).eq("room_id", roomId);
+	const { error } = await db()
+		.from("rooms")
+		.update(fields)
+		.eq("room_id", roomId);
   if (error) throw new Error(`Failed to update room: ${error.message}`);
 }
 
@@ -761,7 +871,7 @@ export async function getRoomById(roomId: string): Promise<RoomRow | null> {
 
 export async function getUsageSecondsForDay(
   userId: string,
-  day: string
+	day: string,
 ): Promise<number> {
   const { data, error } = await db()
     .from("usage_daily")
@@ -775,17 +885,20 @@ export async function getUsageSecondsForDay(
 
 export async function addRoomMember(
   roomId: string,
-  userId: string
+	userId: string,
 ): Promise<void> {
   const { error } = await db()
     .from("room_members")
-    .upsert({ room_id: roomId, user_id: userId }, { onConflict: "room_id,user_id" });
+		.upsert(
+			{ room_id: roomId, user_id: userId },
+			{ onConflict: "room_id,user_id" },
+		);
   if (error) throw new Error(`Failed to add room member: ${error.message}`);
 }
 
 export async function isRoomMember(
   roomId: string,
-  userId: string
+	userId: string,
 ): Promise<boolean> {
   const { data } = await db()
     .from("room_members")
@@ -804,7 +917,9 @@ export async function getRoomMemberCount(roomId: string): Promise<number> {
   return count ?? 0;
 }
 
-export async function listRoomMembers(roomId: string): Promise<RoomMemberRow[]> {
+export async function listRoomMembers(
+	roomId: string,
+): Promise<RoomMemberRow[]> {
   const { data, error } = await db()
     .from("room_members")
     .select("room_id,user_id,joined_at")
@@ -812,4 +927,43 @@ export async function listRoomMembers(roomId: string): Promise<RoomMemberRow[]> 
     .order("joined_at", { ascending: true });
   if (error) throw new Error(`Failed to list room members: ${error.message}`);
   return (data as RoomMemberRow[] | null) ?? [];
+}
+
+export async function getPersonalHistoryPolicyActive(): Promise<boolean> {
+	const { data, error } = await db()
+		.from("personal_history_policy")
+		.select("active")
+		.eq("singleton", true)
+		.abortSignal(AbortSignal.timeout(10_000))
+		.single();
+	if (error || typeof data?.active !== "boolean")
+		throw new Error("Room policy unavailable");
+	return data.active;
+}
+export async function renewRoomMediaLease(roomId: string): Promise<unknown> {
+	const { data, error } = await db()
+		.rpc("renew_room_media_lease_v2", { p_room_id: roomId })
+		.abortSignal(AbortSignal.timeout(10_000));
+	if (error) throw new Error("Room capability unavailable");
+	return data;
+}
+export async function commitRoomUsageDay(
+	roomId: string,
+	usage: { day: string; seconds: number },
+): Promise<{ day: string; seconds: number }> {
+	const { data, error } = await db()
+		.rpc("commit_room_usage_day_v1", {
+			p_room_id: roomId,
+			p_day: usage.day,
+			p_cumulative_seconds: usage.seconds,
+		})
+		.abortSignal(AbortSignal.timeout(10_000));
+	if (
+		error ||
+		data?.day !== usage.day ||
+		!Number.isInteger(data?.seconds) ||
+		data.seconds < usage.seconds
+	)
+		throw new Error("Room usage acknowledgement unavailable");
+	return data;
 }

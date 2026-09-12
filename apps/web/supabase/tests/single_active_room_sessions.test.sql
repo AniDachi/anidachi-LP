@@ -133,7 +133,7 @@ select has_function(
 select ok(
   (
     select pg_catalog.bool_and(
-      not procedure.prosecdef
+      procedure.prosecdef = (procedure.proname in ('create_room_with_active_session_v1','claim_active_room_session_v1'))
       and procedure.provolatile = 'v'
       and procedure.proconfig @> array['search_path=""']::text[]
       and procedure.proretset
@@ -154,7 +154,7 @@ select ok(
       )
     )
   ),
-  'active-room RPCs are volatile security-invoker table functions with an empty search_path'
+  'active-room RPCs retain volatility and empty search_path with protected definer admission wrappers'
 );
 
 select ok(
@@ -485,6 +485,52 @@ select is(
 select is(
   (
     select outcome
+    from public.create_room_with_active_session_v1(
+      'a1000000-0000-4000-8000-000000000003',
+      'member-create-session',
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      'Must not replace guest room',
+      'member-create-conflict-request',
+      'free',
+      4,
+      4,
+      false,
+      false
+    )
+  ),
+  'conflict',
+  'a guest cannot create a room while the account is active in another room'
+);
+
+select is(
+  (
+    select room_id || ':' || role || ':' || participant_session_id
+    from public.active_room_sessions
+    where user_id = 'a1000000-0000-4000-8000-000000000003'
+  ),
+  'active-room-one:member:member-session-one',
+  'a rejected guest create leaves the live room assignment unchanged'
+);
+
+select is(
+  (
+    select count(*)::integer
+    from public.rooms
+    where host_user_id = 'a1000000-0000-4000-8000-000000000003'
+      and client_request_id = 'member-create-conflict-request'
+  ),
+  0,
+  'a rejected guest create leaves no orphan host room'
+);
+
+select is(
+  (
+    select outcome
     from public.claim_active_room_session_v1(
       'a1000000-0000-4000-8000-000000000003',
       'active-room-one',
@@ -777,7 +823,7 @@ reset role;
 
 select extensions.dblink_connect(
   'active_room_setup',
-  'host=host.docker.internal port=54322 dbname=postgres user=postgres password=postgres application_name=active_room_setup'
+  pg_catalog.format('host=%s port=%s dbname=%L user=postgres password=postgres application_name=active_room_setup', pg_catalog.inet_server_addr(), pg_catalog.inet_server_port(), pg_catalog.current_database())
 );
 select extensions.dblink_exec(
   'active_room_setup',
@@ -813,11 +859,11 @@ select extensions.dblink_disconnect('active_room_setup');
 
 select extensions.dblink_connect(
   'active_room_winner',
-  'host=host.docker.internal port=54322 dbname=postgres user=postgres password=postgres application_name=active_room_winner'
+  pg_catalog.format('host=%s port=%s dbname=%L user=postgres password=postgres application_name=active_room_winner', pg_catalog.inet_server_addr(), pg_catalog.inet_server_port(), pg_catalog.current_database())
 );
 select extensions.dblink_connect(
   'active_room_loser',
-  'host=host.docker.internal port=54322 dbname=postgres user=postgres password=postgres application_name=active_room_loser'
+  pg_catalog.format('host=%s port=%s dbname=%L user=postgres password=postgres application_name=active_room_loser', pg_catalog.inet_server_addr(), pg_catalog.inet_server_port(), pg_catalog.current_database())
 );
 select extensions.dblink_exec('active_room_winner', 'begin');
 select extensions.dblink_exec('active_room_winner', 'set role service_role');
@@ -892,7 +938,7 @@ select is(
 
 select extensions.dblink_connect(
   'active_room_cleanup',
-  'host=host.docker.internal port=54322 dbname=postgres user=postgres password=postgres application_name=active_room_cleanup'
+  pg_catalog.format('host=%s port=%s dbname=%L user=postgres password=postgres application_name=active_room_cleanup', pg_catalog.inet_server_addr(), pg_catalog.inet_server_port(), pg_catalog.current_database())
 );
 select extensions.dblink_exec(
   'active_room_cleanup',

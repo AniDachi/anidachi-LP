@@ -10,6 +10,8 @@ import {
   ROOM_TOKEN_ISSUER,
   RoomHistoryAttestationClaimsSchema,
   RoomCapabilitiesSchema,
+	RoomMediaCapabilityLeaseSchema,
+	type RoomMediaCapabilityLease,
   type RoomCapabilities,
 } from "@anidachi/protocol";
 
@@ -23,6 +25,8 @@ export interface VerifiedRoomToken {
   role: "host" | "member";
   participantSessionId: string;
   capabilities?: RoomCapabilities;
+	mediaLease?: RoomMediaCapabilityLease;
+	hostUserId?: string;
   displayName?: string;
   avatarUrl?: string | null;
 }
@@ -56,13 +60,29 @@ export async function verifyRoomToken(
     });
     if (payload.typ !== "room") return null;
     if (!isBoundedId(payload.sub, MAX_PARTICIPANT_ID_CHARS)) return null;
-    if (!isBoundedId(payload.roomId, MAX_ROOM_ID_CHARS) || payload.roomId !== expectedRoomId) {
+		if (
+			!isBoundedId(payload.roomId, MAX_ROOM_ID_CHARS) ||
+			payload.roomId !== expectedRoomId
+		) {
       return null;
     }
     if (payload.role !== "host" && payload.role !== "member") return null;
-    if (!isBoundedId(payload.participantSessionId, MAX_SESSION_ID_CHARS)) return null;
+		if (!isBoundedId(payload.participantSessionId, MAX_SESSION_ID_CHARS))
+			return null;
+		const mediaLease =
+			payload.mediaLease === undefined
+				? undefined
+				: RoomMediaCapabilityLeaseSchema.safeParse(payload.mediaLease);
+		if (
+			mediaLease &&
+			(!mediaLease.success ||
+				mediaLease.data.roomId !== expectedRoomId ||
+				JSON.stringify(mediaLease.data.capabilities) !==
+					JSON.stringify(payload.capabilities))
+		)
+			return null;
     const capabilities =
-      payload.capabilities === undefined
+			mediaLease || payload.capabilities === undefined
         ? undefined
         : RoomCapabilitiesSchema.safeParse(payload.capabilities);
     if (capabilities !== undefined && !capabilities.success) return null;
@@ -87,6 +107,23 @@ export async function verifyRoomToken(
       participantSessionId: payload.participantSessionId,
       avatarUrl: payload.avatarUrl ?? null,
     };
+		if (mediaLease?.success) {
+			if (
+				!isBoundedId(payload.hostUserId, MAX_PARTICIPANT_ID_CHARS) ||
+				(payload.role === "host" && payload.sub !== payload.hostUserId)
+			)
+				return null;
+			verified.hostUserId = payload.hostUserId;
+			verified.mediaLease = mediaLease.data;
+			const caps = mediaLease.data.capabilities;
+			verified.capabilities = {
+				hostPlanCode: caps.hostPlanCode,
+				maxParticipants: caps.maxParticipants,
+				maxMediaSeats: 0,
+				canNameRoom: caps.hostPlanCode !== "free",
+				canSendPushInvites: caps.hostPlanCode !== "free",
+			};
+		}
     if (capabilities?.data) {
       verified.capabilities = capabilities.data;
     }
@@ -147,7 +184,9 @@ export async function signRoomHistoryAttestation(
 }
 
 function isBoundedId(value: unknown, maxChars: number): value is string {
-  return typeof value === "string" && value.length > 0 && value.length <= maxChars;
+	return (
+		typeof value === "string" && value.length > 0 && value.length <= maxChars
+	);
 }
 
 function isBoundedUrl(value: unknown): value is string {
@@ -176,6 +215,11 @@ export async function signRoomTokenForTest(
   if (params.capabilities) {
     claims.capabilities = params.capabilities;
   }
+	if (params.mediaLease) {
+		claims.hostUserId = params.hostUserId;
+		claims.mediaLease = params.mediaLease;
+		claims.capabilities = params.mediaLease.capabilities;
+	}
   if (params.displayName) {
     claims.displayName = params.displayName;
   }

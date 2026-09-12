@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Check, UserPlus } from "lucide-react";
+import { Check, Copy } from "lucide-react";
 import { trackEvent } from "@/lib/gtag";
 
 type Props = {
@@ -41,46 +40,32 @@ export function AccountWaitlistCard({
   }, [referralLink]);
 
   return (
-    <section className="relative overflow-hidden rounded-2xl border border-brand-orange/30 bg-brand-surface p-5 sm:p-6">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(100%_80%_at_0%_0%,oklch(0.71_0.20_45_/_0.16),transparent_55%)]"
-      />
-      <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-xs font-semibold tracking-[0.12em] text-brand-orange">
-            EARLY ACCESS WAITLIST
-          </p>
-          <p className="mt-2 text-3xl font-bold tracking-[-0.02em] text-foreground tabular-nums">
-            #{waitlistPosition}
-            <span className="ml-2 text-base font-medium tracking-normal text-foreground/50">
-              in line
-            </span>
-          </p>
-          <p className="mt-1.5 text-sm leading-relaxed text-foreground/60">
-            {referralCount > 0
-              ? `${referralCount} friend${referralCount === 1 ? "" : "s"} joined via your link.`
-              : "Invite friends to move up 10 spots per signup."}
-          </p>
-        </div>
-        <Button
-          type="button"
-          className="shrink-0 bg-brand-orange font-semibold text-primary-foreground transition-[transform,background-color] duration-200 hover:bg-brand-orange-deep active:scale-[0.98]"
-          onClick={inviteFriends}
-        >
-          {copied ? (
-            <>
-              <Check className="mr-2 h-4 w-4" aria-hidden="true" />
-              Link copied
-            </>
-          ) : (
-            <>
-              <UserPlus className="mr-2 h-4 w-4" aria-hidden="true" />
-              Invite friends
-            </>
-          )}
-        </Button>
+    <section className="ac-referral">
+      <div>
+        <h2>
+          Early access <span className="ac-count">#{waitlistPosition}</span>
+        </h2>
+        <p>
+          {referralCount > 0
+            ? `${referralCount} friend${referralCount === 1 ? "" : "s"} joined via your link.`
+            : "Move up 10 spots for each friend who joins the waitlist."}
+        </p>
       </div>
+      <button
+        type="button"
+        aria-label={copied ? "Link copied" : "Copy referral link"}
+        className="ac-button"
+        onClick={inviteFriends}
+      >
+        {copied ? (
+          <Check size={16} aria-hidden />
+        ) : (
+          <Copy size={16} aria-hidden />
+        )}
+        <span role="status">
+          {copied ? "Link copied" : "Copy referral link"}
+        </span>
+      </button>
     </section>
   );
 }

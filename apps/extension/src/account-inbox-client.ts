@@ -6,10 +6,13 @@ import {
 } from "@anidachi/protocol";
 import { WEB_HTTP_BASE } from "./constants";
 import { logDebug } from "./debug-log";
+import { withInvitationHttpDeadline } from "./invitation-http-deadline";
 import { createWebsiteRoomHeaders, RoomApiError } from "./room-client";
 
 const ACCOUNT_INBOX_HTTP_MESSAGE_TYPE = "ANIDACHI_ACCOUNT_INBOX_HTTP";
 const INVALID_ACCOUNT_RESPONSE_MESSAGE = "Account data is temporarily unavailable. Try again.";
+
+export class AccountInboxUnauthorizedError extends RoomApiError {}
 
 export type AccountInboxHttpMessage =
   | {
@@ -65,11 +68,14 @@ export function isAccountInboxHttpMessage(value: unknown): value is AccountInbox
 export async function listAccountInboxFromApi(accessToken: string): Promise<AccountInboxResponse> {
   const url = new URL("/api/account/inbox", WEB_HTTP_BASE);
   url.searchParams.set("limit", "100");
-  const response = await fetch(url, {
-    headers: createWebsiteRoomHeaders(accessToken),
+  return withInvitationHttpDeadline(async (signal) => {
+    const response = await fetch(url, {
+      headers: createWebsiteRoomHeaders(accessToken),
+      signal,
+    });
+    if (!response.ok) throw await accountInboxHttpError(response, "Failed to load inbox");
+    return parseAccountInboxResponse(await decodeAccountInboxResponse(response));
   });
-  if (!response.ok) throw await accountInboxHttpError(response, "Failed to load inbox");
-  return parseAccountInboxResponse(await decodeAccountInboxResponse(response));
 }
 
 export async function markAccountInboxItemsSeenFromApi(
@@ -79,13 +85,16 @@ export async function markAccountInboxItemsSeenFromApi(
   const payload = MarkAccountInboxSeenRequestSchema.parse({ items });
   const url = new URL("/api/account/inbox/seen", WEB_HTTP_BASE);
   url.searchParams.set("limit", "100");
-  const response = await fetch(url, {
-    method: "POST",
-    headers: createWebsiteRoomHeaders(accessToken),
-    body: JSON.stringify(payload),
+  return withInvitationHttpDeadline(async (signal) => {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: createWebsiteRoomHeaders(accessToken),
+      body: JSON.stringify(payload),
+      signal,
+    });
+    if (!response.ok) throw await accountInboxHttpError(response, "Failed to update inbox");
+    return parseAccountInboxResponse(await decodeAccountInboxResponse(response));
   });
-  if (!response.ok) throw await accountInboxHttpError(response, "Failed to update inbox");
-  return parseAccountInboxResponse(await decodeAccountInboxResponse(response));
 }
 
 export async function handleAccountInboxHttpMessage(
@@ -166,7 +175,8 @@ async function accountInboxHttpError(response: Response, fallback: string): Prom
     (typeof body?.error === "string" && body.error) ||
     (typeof body?.code === "string" && body.code) ||
     fallback;
-  return new RoomApiError(
+  const ErrorType = response.status === 401 ? AccountInboxUnauthorizedError : RoomApiError;
+  return new ErrorType(
     `${detail} (${response.status})`,
     typeof body?.code === "string" ? body.code : undefined,
   );

@@ -16,7 +16,7 @@ function event(
   clientSessionKey = "session-a",
 ) {
   return {
-    schemaVersion: 2 as const,
+    schemaVersion: 3 as const,
     clientEventId: id,
     clientSessionKey,
     accountGeneration: 1,

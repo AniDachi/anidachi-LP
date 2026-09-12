@@ -22,16 +22,29 @@ Current policy:
 If `graphify-out/graph.json` exists, agents should query it before broad
 architecture reads.
 
-Observed local status on 2026-08-21:
+Observed local status on 2026-09-04:
 
 - Graphify CLI is installed via `uv tool` in the current development
-  environment and upgraded to `0.9.48`.
+  environment and upgraded to `0.9.53` (the current upstream release).
 - Codex project integration is installed under `.codex/`.
 - Codex `multi_agent = true` is enabled in the local `~/.codex/config.toml`.
-- Code graph baseline is maintained with `graphify update . --no-cluster`.
+- Code graph baseline is maintained with `graphify update .`, including
+  deterministic community detection and a matching report, without an LLM.
 - Post-commit and post-checkout hooks are intentionally uninstalled locally to
   avoid dirtying `graphify-out/` during normal checkout/commit work.
 - The Graphify merge driver is installed locally for `graphify-out/graph.json`.
+- Project and global Codex skills match the packaged Codex skill and references;
+  the isolated Python dependencies are compatible. The Codex `hook-check` entry
+  is an upstream no-op; graph-first guidance comes from `AGENTS.md` and the skill.
+
+The September audit found that the former `--no-cluster` shortcut persisted raw
+extraction: 748 import links had unresolved endpoints and the report was stale.
+The code-update command now uses the normal build/normalization path and refreshes
+the report together with the graph. HTML remains an ignored local output.
+Changed documents still require the separate Codex semantic pass below; a code
+refresh must not mark them semantically current.
+
+Upstream reference: [Graphify 0.9.53 release](https://github.com/Graphify-Labs/graphify/releases/tag/v0.9.53).
 
 ## Why Use It
 
@@ -175,10 +188,20 @@ pnpm graph:update:code
 $graphify . --update
 ```
 
-`pnpm graph:update:code` uses `graphify update . --no-cluster`, so it is fast,
-AST-only, and does not require an LLM backend. `pnpm graph:update` remains a
+`pnpm graph:update:code` uses `graphify update .`: extraction is AST-only,
+with deterministic graph normalization, clustering, and report generation. It
+does not require an LLM backend. `pnpm graph:update` remains a
 compatibility alias for this code-only command; neither command performs
 semantic document extraction.
+
+The optional local regression test requires the installed Graphify CLI and runs
+only in isolated temporary directories, never against the repository graph:
+
+```bash
+fnm exec --using="$(cat .node-version)" node --test scripts/graphify-code-update.test.mjs
+```
+
+It is not part of `pnpm test`, so CI does not acquire a Graphify dependency.
 
 Watcher and git hooks are local opt-ins only:
 
@@ -193,8 +216,11 @@ Check whether Graphify thinks a manual update is pending:
 pnpm graph:check-update
 ```
 
-Do not fully re-extract on every small change. Use full extraction after major
-refactors, after Graphify upgrades, or if the graph becomes obviously stale.
+Do not fully re-extract on every small change. After an upgrade, first check
+the installed skill/references, corpus exclusions, freshness, and graph health.
+Refresh code with the current extractor and use the incremental semantic pass
+for changed documents. Reserve full semantic extraction for major refactors or
+evidence that unchanged semantic content needs rebuilding.
 
 ## Pull Request Rule
 

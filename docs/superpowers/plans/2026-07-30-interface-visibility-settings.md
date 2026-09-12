@@ -17,6 +17,27 @@ extension Shadow DOM CSS.
 **Implementation Status:** Tasks 1-6 and automated Task 7 verification are
 complete on `codex/voice-controls-plan`. Staging visual acceptance is pending.
 
+**2026-09-04 correction:** The approved main-control behavior is independent of
+microphone state. Remove the former Open mic pin, badge, and label suffix; keep
+participant voice indicators and publication unchanged. The policy and hook
+examples below reflect this correction. Verify active Open mic in both main
+visibility modes with the real overlay component before rebuilding the artifact.
+
+Local correction verification: extension check, 1517/1517 tests, changed-file
+lint, staging build/validation, and byte-for-byte synchronization of both test
+folders passed. Loaded-browser acceptance remains pending. Graphify maintenance
+and the documentation refresh are tracked in `docs/project-knowledge-map.md`.
+
+Closeout verification on 2026-09-04: the full workspace test run was repeated
+without cache reuse (extension 1578 passed; web 412 passed and 3 existing skips;
+API 201 passed; protocol 141 passed). Workspace typechecks passed. This is an
+extension-local visibility correction, not a microphone/transport change; the
+real overlay integration tests verify that hiding the launcher does not stop
+publication. The correction is being integrated through a dedicated staging PR,
+separate from Graphify maintenance. The historical rollout instructions below
+describe the original feature; the broader provider/mode visual matrix remains
+a pre-production acceptance requirement, not a claim made by these tests.
+
 ## Global Constraints
 
 - The approved design is
@@ -27,8 +48,8 @@ complete on `codex/voice-controls-plan`. Staging visual acceptance is pending.
 - Participant-pill choices are `Smart` and `Always visible`.
 - No presets, `Apply`, `Revert`, advanced section, or account synchronization.
 - Defaults must reproduce the current launcher and room-rail behavior.
-- Open panel, published Open mic, and keyboard focus override main-control
-  auto-hide.
+- Open panel and keyboard focus override main-control auto-hide. Microphone
+  state does not affect the launcher.
 - The side rail never renders without an active room or while the main panel is
   open.
 - A mounted video participant never receives a duplicate side pill.
@@ -252,7 +273,6 @@ export interface MainControlPresentation {
 
 export function resolveMainControlPresentation(input: {
   focused: boolean;
-  forceVisible: boolean;
   mode: MainControlVisibility;
   panelOpen: boolean;
   phase: MainControlRevealPhase;
@@ -292,7 +312,6 @@ describe("main control visibility", () => {
     expect(
       resolveMainControlPresentation({
         focused: false,
-        forceVisible: false,
         mode,
         panelOpen: false,
         phase,
@@ -300,11 +319,10 @@ describe("main control visibility", () => {
     ).toMatchObject({ visible, edgeGlowVisible: glow });
   });
 
-  it("pins Auto hide for panel, Open mic, or focus", () => {
+  it("pins Auto hide for panel or focus", () => {
     for (const override of [
-      { panelOpen: true, forceVisible: false, focused: false },
-      { panelOpen: false, forceVisible: true, focused: false },
-      { panelOpen: false, forceVisible: false, focused: true },
+      { panelOpen: true, focused: false },
+      { panelOpen: false, focused: true },
     ]) {
       expect(
         resolveMainControlPresentation({
@@ -386,7 +404,6 @@ Use the approved precedence directly:
 const pinned =
   input.mode === "always-visible" ||
   input.panelOpen ||
-  input.forceVisible ||
   input.focused;
 
 return {
@@ -785,7 +802,6 @@ git commit -m "feat(extension): add interface visibility settings"
 ```ts
 interface UseTopBubbleRevealOptions {
   bubbleRef: RefObject<HTMLButtonElement | null>;
-  forceVisible?: boolean;
   mode: MainControlVisibility;
   overlayRef: RefObject<HTMLElement | null>;
   panelOpen: boolean;
@@ -801,7 +817,8 @@ Update `Harness` and `renderHarness` so every existing test explicitly uses
 - moving away never hides it;
 - it never shows the proximity glow;
 - switching back to `auto-hide` schedules the existing delayed hide;
-- panel-open, focus, and Open mic still pin `auto-hide`.
+- panel-open and focus still pin `auto-hide`;
+- active Open mic does not pin `auto-hide` or alter the launcher.
 
 - [x] **Step 2: Run the launcher test and verify failure**
 
@@ -860,7 +877,8 @@ Render `InterfaceSettingsPanel` only for the `interface` category:
 ) : null}
 ```
 
-Do not move or alter `openMicLauncherVisible`; it remains `forceVisible`.
+Do not pass microphone state to the launcher. Voice indicators remain on the
+participant surfaces, and hiding the launcher must not change publication.
 
 - [x] **Step 5: Run launcher, settings, and voice-session tests**
 
@@ -1127,7 +1145,7 @@ Add one concise `current-development-state.md` entry covering:
 
 - `Interface` section and both setting pairs;
 - profile-local storage key;
-- launcher/Open mic/panel precedence;
+- launcher/panel precedence and microphone-independent visibility;
 - Smart versus persistent participant pills;
 - no protocol or server changes.
 
@@ -1135,8 +1153,11 @@ Mark completed checkboxes in this plan only after their commands have passed.
 
 - [x] **Step 5: Refresh and inspect Graphify**
 
+```txt
+$graphify . --update
+```
+
 ```bash
-pnpm graph:update
 git status --short
 ```
 

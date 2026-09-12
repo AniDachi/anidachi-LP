@@ -7,9 +7,8 @@ import {
   markStripeEventProcessed,
 } from "@/lib/anidachi-auth/db";
 import {
-  stripeSubscriptionIdFromUnknown,
+  invoiceSubscriptionId,
   syncStripeSubscriptionById,
-  syncStripeSubscriptionFromStripe,
 } from "@/lib/anidachi-auth/stripe-subscription-sync";
 import { sendSubscriptionAlertEmail } from "@/lib/send-subscription-alert-email";
 import { createStripeClient, getStripeWebhookSecret } from "@/lib/anidachi-auth/stripe-env";
@@ -103,12 +102,10 @@ export async function POST(request: NextRequest) {
       event.type === "customer.subscription.updated" ||
       event.type === "customer.subscription.deleted"
     ) {
-      await syncStripeSubscriptionFromStripe(event.data.object as Stripe.Subscription);
+      await syncStripeSubscriptionById(stripe, (event.data.object as Stripe.Subscription).id);
     } else if (event.type === "invoice.paid" || event.type === "invoice.payment_failed") {
       const invoice = event.data.object as Stripe.Invoice;
-      const subscriptionId = stripeSubscriptionIdFromUnknown(
-        (invoice as unknown as { subscription?: unknown }).subscription
-      );
+      const subscriptionId = invoiceSubscriptionId(invoice);
       await syncStripeSubscriptionById(stripe, subscriptionId);
     } else if (event.type === "entitlements.active_entitlement_summary.updated") {
       // Stripe Entitlements can become the primary feature gate once configured.

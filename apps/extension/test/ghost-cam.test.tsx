@@ -31,6 +31,7 @@ const mockP2PMedia = vi.hoisted(() => {
     hasPeer: ReturnType<typeof vi.fn>;
     isRemoteVoicePublishing: ReturnType<typeof vi.fn>;
     replaceParticipantAudioOutputs: ReturnType<typeof vi.fn>;
+    setCaptureAuthority: ReturnType<typeof vi.fn>;
     setCameraEnabled: ReturnType<typeof vi.fn>;
     setMicrophonePublishing: ReturnType<typeof vi.fn>;
     setParticipantAudioOutput: ReturnType<typeof vi.fn>;
@@ -45,6 +46,7 @@ const mockP2PMedia = vi.hoisted(() => {
     const remoteVoicePublishingIds = new Set<string>();
     const senderMediaSessionIds = new Map<string, string>();
     const controller = {
+      setCaptureAuthority: vi.fn(),
       disconnect: vi.fn(),
       handleSignal: vi.fn(
         (
@@ -155,6 +157,7 @@ vi.mock("../src/p2p-media", () => ({
 }));
 
 import { canReceiveP2PSignalFromParticipant } from "../src/p2p-media";
+import { loadP2PIceServers } from "../src/p2p-ice";
 import { type GhostCamSession, useGhostCam } from "../src/ghost-cam";
 import type { ParticipantAudioPreference } from "../src/voice-audio-preferences";
 
@@ -194,6 +197,7 @@ function GhostCamHarness({
   participantAudioPreferences = {},
   participantAudioPreferencesReady = true,
   participants,
+  roomGeneration = 1,
   roomId = "room-1",
   signalingTransportReady = null,
   sourceGeneration = 1,
@@ -209,6 +213,7 @@ function GhostCamHarness({
   >;
   participantAudioPreferencesReady?: boolean;
   participants: Participant[];
+  roomGeneration?: number;
   roomId?: string;
   signalingTransportReady?: SignalingTransportReady | null;
   sourceGeneration?: number;
@@ -223,7 +228,7 @@ function GhostCamHarness({
     participantAudioPreferences,
     participantAudioPreferencesReady,
     participants,
-    roomGeneration: 1,
+    roomGeneration,
     roomId,
     roomToken: "token-1",
     sendP2PSignal: noopSendP2PSignal,
@@ -274,6 +279,116 @@ describe("useGhostCam P2P session lifecycle", () => {
     });
 
     expect(firstController.disconnect).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the same media controller when the room switches source generation", async () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const host = participant("user-1", "Host");
+    let session: GhostCamSession | null = null;
+
+    await act(async () => {
+      root.render(
+        <GhostCamHarness
+          cameraEnabled
+          onSession={(value) => {
+            session = value;
+          }}
+          participant={host}
+          participants={[host]}
+          sourceGeneration={1}
+        />,
+      );
+    });
+    await act(async () => undefined);
+
+    const firstController = mockP2PMedia.controllers[0];
+    await act(async () => {
+      await session?.setMicrophonePublishing(true, "warm", "open-mic");
+    });
+
+    await act(async () => {
+      root.render(
+        <GhostCamHarness
+          cameraEnabled
+          onSession={(value) => {
+            session = value;
+          }}
+          participant={host}
+          participants={[host]}
+          sourceGeneration={2}
+        />,
+      );
+    });
+    await act(async () => undefined);
+
+    expect(mockP2PMedia.controllers).toHaveLength(1);
+    expect(firstController.disconnect).not.toHaveBeenCalled();
+    expect(firstController.setCameraEnabled).toHaveBeenCalledTimes(1);
+    expect(firstController.setMicrophonePublishing).toHaveBeenCalledTimes(2);
+
+    await act(async () => root.unmount());
+  });
+
+  it("replays buffered signals against the latest source generation while ICE loads", async () => {
+    const iceServers = deferred<RTCIceServer[]>();
+    vi.mocked(loadP2PIceServers).mockImplementationOnce(() => iceServers.promise);
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const host = participant("host", "Host");
+    const viewer = participant("viewer", "Viewer", "viewer");
+    const signal: IncomingP2PSignal = {
+      clientSignalId: "signal-source-2",
+      fromUserId: viewer.id,
+      roomGeneration: 1,
+      senderConnectionId: "connection-viewer",
+      sequence: 1,
+      signal: { kind: "renegotiate" },
+      sourceGeneration: 2,
+    };
+
+    await act(async () => {
+      root.render(
+        <GhostCamHarness
+          incomingP2PSignals={[]}
+          participant={host}
+          participants={[host, viewer]}
+          sourceGeneration={1}
+        />,
+      );
+      await Promise.resolve();
+    });
+    expect(mockP2PMedia.controllers).toHaveLength(0);
+
+    await act(async () => {
+      root.render(
+        <GhostCamHarness
+          incomingP2PSignals={[signal]}
+          participant={host}
+          participants={[host, viewer]}
+          sourceGeneration={2}
+        />,
+      );
+      await Promise.resolve();
+    });
+
+    await act(async () => {
+      iceServers.resolve([]);
+      await iceServers.promise;
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(mockP2PMedia.controllers).toHaveLength(1);
+    expect(mockP2PMedia.controllers[0]?.handleSignal).toHaveBeenCalledWith(
+      viewer.id,
+      signal.signal,
+      { senderConnectionId: signal.senderConnectionId },
+    );
+
+    await act(async () => root.unmount());
   });
 
   it("delivers a signal from an existing peer even if the latest snapshot is temporarily inactive", async () => {
@@ -927,7 +1042,7 @@ describe("useGhostCam P2P session lifecycle", () => {
           }}
           participant={host}
           participants={[host]}
-          sourceGeneration={2}
+          roomGeneration={2}
         />,
       );
     });
@@ -941,7 +1056,7 @@ describe("useGhostCam P2P session lifecycle", () => {
     await act(async () => root.unmount());
   });
 
-  it("restores explicit microphone publication after a same-room controller replacement", async () => {
+  it("restores explicit microphone publication after a room-generation controller replacement", async () => {
     const container = document.createElement("div");
     document.body.append(container);
     const root = createRoot(container);
@@ -956,7 +1071,7 @@ describe("useGhostCam P2P session lifecycle", () => {
           }}
           participant={host}
           participants={[host]}
-          sourceGeneration={1}
+          roomGeneration={1}
         />,
       );
     });
@@ -973,7 +1088,7 @@ describe("useGhostCam P2P session lifecycle", () => {
           }}
           participant={host}
           participants={[host]}
-          sourceGeneration={2}
+          roomGeneration={2}
         />,
       );
     });
@@ -1245,3 +1360,14 @@ describe("useGhostCam P2P session lifecycle", () => {
     await act(async () => root.unmount());
   });
 });
+
+function deferred<T>(): {
+  readonly promise: Promise<T>;
+  readonly resolve: (value: T) => void;
+} {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((next) => {
+    resolve = next;
+  });
+  return { promise, resolve };
+}

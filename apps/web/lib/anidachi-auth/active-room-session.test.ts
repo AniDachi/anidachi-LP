@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   ActiveRoomSessionDatabaseError,
+	parseActiveRoomAssignmentRow,
   parseActiveRoomClaimRpcResult,
   parseActiveRoomCreateRpcResult,
   parseActiveRoomReleaseRpcResult,
@@ -15,6 +16,49 @@ const activeRoom = {
   provider: "youtube",
   title: "A safe title",
 };
+
+test("active assignment lookup accepts only the exact server-owned identity", () => {
+	assert.equal(parseActiveRoomAssignmentRow(null), null);
+	assert.deepEqual(
+		parseActiveRoomAssignmentRow({
+			user_id: "11111111-1111-4111-8111-111111111111",
+			room_id: "room-one",
+			role: "member",
+			participant_session_id: "server-session-one",
+		}),
+		{
+			userId: "11111111-1111-4111-8111-111111111111",
+			roomId: "room-one",
+			role: "member",
+			participantSessionId: "server-session-one",
+		},
+	);
+	for (const value of [
+		{
+			user_id: "user",
+			room_id: "room-one",
+			role: "viewer",
+			participant_session_id: "s",
+		},
+		{
+			user_id: "user",
+			room_id: "",
+			role: "member",
+			participant_session_id: "s",
+		},
+		{
+			user_id: "user",
+			room_id: "room-one",
+			role: "member",
+			participant_session_id: "",
+		},
+	]) {
+		assert.throws(
+			() => parseActiveRoomAssignmentRow(value),
+			ActiveRoomSessionDatabaseError,
+		);
+	}
+});
 
 test("create parser accepts one claimed room record", () => {
   assert.deepEqual(
@@ -58,9 +102,7 @@ test("create parser accepts idempotent reuse and a structured conflict", () => {
 
 test("claim and release parsers preserve only the documented outcomes", () => {
   assert.deepEqual(
-    parseActiveRoomClaimRpcResult([
-      { outcome: "claimed", active_room: null },
-    ]),
+		parseActiveRoomClaimRpcResult([{ outcome: "claimed", active_room: null }]),
     { outcome: "claimed" },
   );
   assert.deepEqual(
@@ -69,22 +111,18 @@ test("claim and release parsers preserve only the documented outcomes", () => {
     ]),
     { outcome: "conflict", activeRoom },
   );
-  assert.deepEqual(
-    parseActiveRoomReleaseRpcResult([{ outcome: "released" }]),
-    { outcome: "released" },
-  );
-  assert.deepEqual(
-    parseActiveRoomReleaseRpcResult([{ outcome: "stale" }]),
-    { outcome: "stale" },
-  );
-  assert.deepEqual(
-    parseHostLobbyEndRpcResult([{ outcome: "room_ended" }]),
-    { outcome: "room_ended" },
-  );
-  assert.deepEqual(
-    parseHostLobbyEndRpcResult([{ outcome: "stale" }]),
-    { outcome: "stale" },
-  );
+	assert.deepEqual(parseActiveRoomReleaseRpcResult([{ outcome: "released" }]), {
+		outcome: "released",
+	});
+	assert.deepEqual(parseActiveRoomReleaseRpcResult([{ outcome: "stale" }]), {
+		outcome: "stale",
+	});
+	assert.deepEqual(parseHostLobbyEndRpcResult([{ outcome: "room_ended" }]), {
+		outcome: "room_ended",
+	});
+	assert.deepEqual(parseHostLobbyEndRpcResult([{ outcome: "stale" }]), {
+		outcome: "stale",
+	});
 });
 
 test("malformed RPC rows fail closed instead of allowing room admission", () => {
@@ -124,7 +162,10 @@ test("malformed RPC rows fail closed instead of allowing room admission", () => 
   }
 
   assert.throws(
-    () => parseActiveRoomClaimRpcResult([{ outcome: "released", active_room: null }]),
+		() =>
+			parseActiveRoomClaimRpcResult([
+				{ outcome: "released", active_room: null },
+			]),
     ActiveRoomSessionDatabaseError,
   );
   assert.throws(
@@ -140,10 +181,10 @@ test("malformed RPC rows fail closed instead of allowing room admission", () => 
 test("database helpers use only the atomic server RPCs for assignment changes", () => {
   const source = readFileSync(new URL("./db.ts", import.meta.url), "utf8");
   assert.match(source, /export async function createRoomWithActiveSession/);
-  assert.match(source, /\.rpc\("create_room_with_active_session_v1"/);
+	assert.match(source, /\.rpc\("create_room_with_active_session_v2"/);
   assert.match(source, /parseActiveRoomCreateRpcResult\(result\.data\)/);
   assert.match(source, /export async function claimActiveRoomSession/);
-  assert.match(source, /\.rpc\("claim_active_room_session_v1"/);
+	assert.match(source, /\.rpc\("claim_active_room_session_v2"/);
   assert.match(source, /parseActiveRoomClaimRpcResult\(result\.data\)/);
   assert.match(source, /export async function releaseActiveRoomSession/);
   assert.match(source, /\.rpc\("release_active_room_session_v1"/);
@@ -155,4 +196,16 @@ test("database helpers use only the atomic server RPCs for assignment changes", 
     source,
     /\.from\("active_room_sessions"\)[\s\S]{0,300}\.(insert|update|delete)\(/,
   );
+});
+
+test("room creation reports an active assignment without implicitly departing it", () => {
+	const source = readFileSync(
+		new URL("../../app/api/rooms/route.ts", import.meta.url),
+		"utf8",
+	);
+	assert.match(source, /admission\.outcome === "conflict"/);
+	assert.match(source, /activeRoomConflictResponse\(admission\.activeRoom\)/);
+	assert.doesNotMatch(source, /handleActiveRoomRecoveryDeparture/);
+	assert.doesNotMatch(source, /syncParticipant(?:Departure|Detach)ToWorker/);
+	assert.doesNotMatch(source, /active-session\/depart/);
 });

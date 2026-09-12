@@ -124,7 +124,7 @@ build the `main` artifact when that variable is missing. Staging uses its own
 key and remains isolated from production subscriptions.
 
 The release manifest includes Chrome's `notifications` permission. This lets
-the default-on room-invite preference register a Web Push subscription after
+the default-on invitation preference register a Web Push subscription after
 sign-in without hiding a second activation step in extension settings. Turning
 the preference off revokes the local subscription while durable Inbox data and
 the action badge continue to work.

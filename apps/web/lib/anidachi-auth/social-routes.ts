@@ -1,5 +1,15 @@
 import { NextResponse } from "next/server";
 import { SocialApiError } from "./social";
+import { SOCIAL_OWNER_HEADER } from "../social-editor-contracts";
+
+// Optional on established APIs to retain extension compatibility. The new web
+// client supplies it; authentication always determines the actual owner.
+export function socialOwnerError(request: Request, ownerUserId: string) {
+  const expected = request.headers.get(SOCIAL_OWNER_HEADER);
+  return expected && expected !== ownerUserId
+    ? NextResponse.json({ error: "Your account changed. Reload before continuing." }, { status: 409 })
+    : null;
+}
 
 export function socialErrorResponse(error: unknown): NextResponse {
   if (error instanceof SocialApiError) {

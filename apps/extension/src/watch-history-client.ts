@@ -1,23 +1,51 @@
+import { canReadWatchHistory, canCaptureWatchHistory, createWatchHistoryLease, parseWatchHistoryLease, personalEnvelopeEligible, type WatchHistoryLease } from "./watch-history-access";
 import {
+  WatchHistoryCapacitySchema,
+  PersonalHistoryResumeSchema,
+  personalHistoryResumeOwnerBinding,
+  PersonalWatchProgressRequestSchema,
+  type PersonalWatchProgressRequest,
   WatchHistoryDeletionAckSchema,
   WatchHistoryDeletionRequestSchema,
   WatchHistoryPreferencesSchema,
   WatchHistoryPreferencesResponseSchema,
   WatchHistoryRoomRecreationResponseSchema,
   WatchHistoryPreferencesUpdateSchema,
+  WatchHistoryBrowseOptionsQuerySchema,
+  WatchHistoryBrowseOptionsResponseSchema,
+  WatchHistoryBrowseQuerySchema,
+  WatchHistoryBrowseResponseSchema,
+  WatchHistoryBrowseSessionsQuerySchema,
+  WatchHistoryBrowseSessionsResponseSchema,
+  WatchHistoryBrowseTitleEpisodesQuerySchema,
+  WatchHistoryBrowseTitleEpisodesResponseSchema,
   WatchHistoryResponseSchema,
+  WatchHistoryGridQuerySchema,
+  WatchHistoryGridResponseSchema,
+  type WatchHistoryGridQuery,
   WatchProgressAckSchema,
   WatchProgressEventSchema,
+  CrunchyrollHistoryIdentitySchema,
+  WatchCatalogBeginRequestSchema,
+  WatchCatalogCommitRequestSchema,
   type WatchHistoryPreferences,
   type WatchProgressEvent,
+  type WatchCatalogBeginAck,
+  type WatchHistoryBrowseOptionsQuery,
+  type WatchHistoryBrowseQuery,
+  type WatchHistoryBrowseSessionsQuery,
+  type WatchHistoryBrowseTitleEpisodesQuery,
 } from "@anidachi/protocol";
 import type { ExtensionAuthTokens } from "./auth-tokens";
 import { WEB_HTTP_BASE } from "./constants";
 import {
+  personalRequest,
+  type WatchHistoryLocalEvent,
   acknowledgeWatchHistoryEvent,
   enqueueWatchHistoryEvent,
   orderWatchHistoryOutbox,
   removeWatchHistoryEventsForDeletion,
+  parseWatchHistoryLocalEvent,
   type WatchHistoryOutboxPartition,
 } from "./watch-history-outbox";
 import {
@@ -27,11 +55,19 @@ import {
   type WatchHistoryObservationDisplayMode,
   type WatchHistoryAccountPartition,
 } from "./watch-history-storage";
+import { createWatchHistoryCatalogCoordinator } from "./watch-history-catalog";
+import { createWatchHistoryBrowseCache, watchBrowseCacheKey } from "./watch-history-browse-cache";
 
-const WATCH_HISTORY_MESSAGE_TYPE = "ANIDACHI_WATCH_HISTORY_V2";
+const WATCH_HISTORY_MESSAGE_TYPE = "ANIDACHI_WATCH_HISTORY_V3";
 const FLUSH_LIMIT = 20;
+const historyReadSequences = new Map<string, number>();
 
 export type WatchHistoryLocalStatus =
+  | "history-full"
+  | "plan-required"
+  | "access-unavailable"
+  | "access-changed"
+  | "identity-conflict"
   | "unauthenticated"
   | "invalid-request"
   | "invalid-response"
@@ -42,9 +78,19 @@ export type WatchHistoryLocalStatus =
   | "invalid-room-authority"
   | "upgrade-required"
   | "storage-full"
+  | "superseded"
   | "rejected";
 
 export type WatchHistoryMessage =
+  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "capacity"; expectedOwnerUserId: string }
+  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "resume-claim"; expectedOwnerUserId: string; input: unknown }
+  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "catalog-release"; expectedOwnerUserId: string;
+      pageId: string; accountGeneration: number; titleKey: string; revision: number }
+  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "pending-identities"; expectedOwnerUserId: string }
+  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "catalog-begin" | "catalog-commit";
+      expectedOwnerUserId: string; pageId: string; input: unknown }
+  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "resolve-identity"; expectedOwnerUserId: string;
+      accountGeneration: number; clientEventId: string; identity: unknown; episodeNumber: number | null; artworkUrl?: string | null }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "list"; limit?: number; cursor?: string }
   | {
       type: typeof WATCH_HISTORY_MESSAGE_TYPE;
@@ -64,7 +110,17 @@ export type WatchHistoryMessage =
     }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "flush" }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "content-reconnect" }
-  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "get-preferences" }
+  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "get-preferences"; expectedOwnerUserId?: string }
+  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "browse-catalog";
+      expectedOwnerUserId: string; input: unknown; cacheOnly?: boolean }
+  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "browse";
+      expectedOwnerUserId: string; input: unknown; cacheOnly?: boolean }
+  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "browse-title-episodes";
+      expectedOwnerUserId: string; input: unknown; cacheOnly?: boolean }
+  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "browse-sessions";
+      expectedOwnerUserId: string; input: unknown; cacheOnly?: boolean }
+  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "browse-options";
+      expectedOwnerUserId: string; input: unknown; cacheOnly?: boolean }
   | {
       type: typeof WATCH_HISTORY_MESSAGE_TYPE;
       command: "bootstrap";
@@ -76,7 +132,8 @@ export type WatchHistoryMessage =
       expectedOwnerUserId: string;
     }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "recover-storage" }
-  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "update-preferences"; input: unknown }
+  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "update-preferences";
+      expectedOwnerUserId?: string; input: unknown }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "delete"; input: unknown }
   | {
       type: typeof WATCH_HISTORY_MESSAGE_TYPE;
@@ -101,6 +158,7 @@ export type WatchHistoryMessageResponse =
   | {
       ok: true;
       data?: unknown;
+      cachedAt?: number;
       flushed?: number;
       hasPendingWork?: boolean;
       byteUse?: number;
@@ -114,6 +172,7 @@ export type WatchHistoryBootstrapData = {
   accountGeneration: number;
   preferences: { youtubeHistoryEnabled: boolean };
   capturePaused: boolean;
+  accessLease: WatchHistoryLease | null;
   source: "network" | "cache";
 };
 
@@ -126,7 +185,7 @@ let preferenceSyncTail: Promise<void> = Promise.resolve();
 
 export function parseWatchHistoryBootstrapData(value: unknown): WatchHistoryBootstrapData | null {
   if (!isRecord(value) ||
-    !hasExactKeys(value, ["ownerUserId", "accountGeneration", "preferences", "capturePaused", "source"]) ||
+    !hasExactKeys(value, ["ownerUserId", "accountGeneration", "preferences", "capturePaused", "accessLease", "source"]) ||
     typeof value.ownerUserId !== "string" ||
     value.ownerUserId.length === 0 ||
     value.ownerUserId.length > 128 ||
@@ -144,12 +203,16 @@ export function parseWatchHistoryBootstrapData(value: unknown): WatchHistoryBoot
         accountGeneration: value.accountGeneration,
         preferences: preferences.data,
         capturePaused: value.capturePaused,
+        accessLease: parseWatchHistoryLease(value.accessLease),
         source: value.source,
       }
     : null;
 }
 
 export type WatchHistoryClientDependencies = {
+  now?: () => number;
+  browseCache?: ReturnType<typeof createWatchHistoryBrowseCache>;
+  onCatalogSuperseded?: (pageId: string) => void;
   getCurrentSession: () => Promise<ExtensionAuthTokens | null>;
   getRequestSession?: () => Promise<ExtensionAuthTokens | null>;
   storage?: WatchHistoryStorage;
@@ -173,10 +236,49 @@ export function isWatchHistoryMessage(value: unknown): value is WatchHistoryMess
   if (!isRecord(value) || value.type !== WATCH_HISTORY_MESSAGE_TYPE) return false;
   if ("accessToken" in value) return false;
   switch (value.command) {
+    case "capacity": return hasExactKeys(value, ["type", "command", "expectedOwnerUserId"]) && isExpectedOwnerUserId(value.expectedOwnerUserId);
+    case "resume-claim": return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "input"]) && isExpectedOwnerUserId(value.expectedOwnerUserId) && PersonalHistoryResumeSchema.safeParse(value.input).success;
+    case "catalog-release":
+      return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "pageId", "accountGeneration", "titleKey", "revision"]) &&
+        typeof value.expectedOwnerUserId === "string" && value.expectedOwnerUserId.length > 0 && value.expectedOwnerUserId.length <= 128 &&
+        typeof value.pageId === "string" && value.pageId.length > 0 && value.pageId.length <= 128 &&
+        WatchProgressEventSchema.shape.accountGeneration.safeParse(value.accountGeneration).success &&
+        WatchProgressEventSchema.shape.titleKey.safeParse(value.titleKey).success &&
+        typeof value.revision === "number" && Number.isSafeInteger(value.revision) && value.revision > 0;
+    case "catalog-begin": case "catalog-commit":
+      return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "pageId", "input"]) &&
+        typeof value.expectedOwnerUserId === "string" && value.expectedOwnerUserId.length > 0 && value.expectedOwnerUserId.length <= 128 &&
+        typeof value.pageId === "string" && value.pageId.length > 0 && value.pageId.length <= 128 &&
+        (value.command === "catalog-begin" ? WatchCatalogBeginRequestSchema : WatchCatalogCommitRequestSchema).safeParse(value.input).success;
+    case "resolve-identity":
+      return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "accountGeneration", "clientEventId", "identity", "episodeNumber", "artworkUrl"]) &&
+        typeof value.expectedOwnerUserId === "string" && value.expectedOwnerUserId.length > 0 && value.expectedOwnerUserId.length <= 128 &&
+        WatchProgressEventSchema.shape.accountGeneration.safeParse(value.accountGeneration).success &&
+        WatchProgressEventSchema.shape.clientEventId.safeParse(value.clientEventId).success &&
+        WatchProgressEventSchema.shape.episodeNumber.safeParse(value.episodeNumber).success &&
+        (value.artworkUrl === undefined || WatchProgressEventSchema.shape.artworkUrl.safeParse(value.artworkUrl).success) &&
+        CrunchyrollHistoryIdentitySchema.safeParse(value.identity).success;
     case "list":
       return hasExactKeys(value, ["type", "command", "limit", "cursor"]) &&
         (value.limit === undefined || (typeof value.limit === "number" && Number.isInteger(value.limit) && value.limit >= 1 && value.limit <= 100)) &&
         (value.cursor === undefined || (typeof value.cursor === "string" && value.cursor.length > 0 && value.cursor.length <= 512));
+    case "browse":
+    case "browse-title-episodes":
+    case "browse-sessions":
+    case "browse-catalog":
+    case "browse-options": {
+      if (!hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "input", "cacheOnly"]) ||
+        (value.cacheOnly !== undefined && typeof value.cacheOnly !== "boolean") ||
+        !isExpectedOwnerUserId(value.expectedOwnerUserId) || !("input" in value)) return false;
+      const schema = value.command === "browse-catalog" ? WatchHistoryGridQuerySchema : value.command === "browse"
+        ? WatchHistoryBrowseQuerySchema
+        : value.command === "browse-title-episodes"
+          ? WatchHistoryBrowseTitleEpisodesQuerySchema
+          : value.command === "browse-sessions"
+            ? WatchHistoryBrowseSessionsQuerySchema
+            : WatchHistoryBrowseOptionsQuerySchema;
+      return schema.safeParse(value.input).success;
+    }
     case "enqueue-progress":
       return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "event"]) &&
         typeof value.expectedOwnerUserId === "string" &&
@@ -204,16 +306,21 @@ export function isWatchHistoryMessage(value: unknown): value is WatchHistoryMess
         (value.queueForSync === undefined || typeof value.queueForSync === "boolean") &&
         (value.flushNow === undefined || typeof value.flushNow === "boolean");
     case "update-preferences":
+      return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "input"]) &&
+        isOptionalExpectedOwnerUserId(value.expectedOwnerUserId) && "input" in value;
     case "delete":
       return hasExactKeys(value, ["type", "command", "input"]) && "input" in value;
     case "flush":
     case "content-reconnect":
-    case "get-preferences":
     case "recover-storage":
     case "other-owner-pending":
       return hasExactKeys(value, ["type", "command"]);
+    case "get-preferences":
+      return hasExactKeys(value, ["type", "command", "expectedOwnerUserId"]) &&
+        isOptionalExpectedOwnerUserId(value.expectedOwnerUserId);
     case "bootstrap":
     case "bootstrap-cache":
+    case "pending-identities":
       return hasExactKeys(value, ["type", "command", "expectedOwnerUserId"]) &&
         typeof value.expectedOwnerUserId === "string" &&
         value.expectedOwnerUserId.length > 0 &&
@@ -234,11 +341,133 @@ export function isWatchHistoryMessage(value: unknown): value is WatchHistoryMess
 }
 
 export function createWatchHistoryClient(dependencies: WatchHistoryClientDependencies) {
+  const now = dependencies.now ?? Date.now;
+  const accessFailures = new Map<string, WatchHistoryMessageResponse>();
+  const accessFlights = new Map<string, Promise<WatchHistoryLease | null>>();
   const storage = dependencies.storage ?? createWatchHistoryStorage();
   const request = dependencies.fetch ?? fetch;
+  const browseCache = dependencies.browseCache ?? createWatchHistoryBrowseCache();
   const getRequestSession = dependencies.getRequestSession ?? dependencies.getCurrentSession;
+  const refreshFlights = new Map<string, {
+    session: ExtensionAuthTokens;
+    promise: Promise<WatchHistoryMessageResponse>;
+  }>();
+  const browseFlights = new Map<string, {
+    session: ExtensionAuthTokens;
+    promise: Promise<WatchHistoryMessageResponse>;
+  }>();
+  const catalog = createWatchHistoryCatalogCoordinator({
+    supersede: dependencies.onCatalogSuperseded,
+    request: async (path, body, signal, owner) => {
+      const session = await dependencies.getCurrentSession();
+      if (!session || session.user.id !== owner || signal.aborted) return null;
+      if (await requireAccess(session)) return null;
+      const response = await authenticatedRequest(session, path, { method: "POST", body: JSON.stringify(body), signal });
+      return response.ok ? response.body : null;
+    },
+    isCurrent: async (owner, generation, accessEpoch) => {
+      const session = await dependencies.getCurrentSession();
+      return session?.user.id === owner && (await readLease(session))?.access.accessEpoch === accessEpoch && canCaptureWatchHistory(await readLease(session), owner, now()) && (await storage.readRoot()).activeGenerations?.[owner] === generation;
+    },
+    invalidate: async (owner, generation, downgrade, guard, accessEpoch) => {
+      const session = await dependencies.getCurrentSession();
+      if (session?.user.id === owner) await invalidateHistory(session, generation, downgrade, guard, accessEpoch);
+    },
+    save: async (owner, generation, titleKey, ack, guard, accessEpoch) => {
+      const session = await dependencies.getCurrentSession();
+      if (session?.user.id !== owner) return;
+      await updateCurrentPartition(session, generation, (partition) => !guard() || !canCaptureWatchHistory(partition.accessLease, owner, now()) || partition.accessLease?.access.accessEpoch !== accessEpoch ? partition : ({ ...partition,
+        catalogAcknowledgements: { ...partition.catalogAcknowledgements, [titleKey]: ack },
+      }));
+    },
+  });
+
+  async function readLease(session: ExtensionAuthTokens): Promise<WatchHistoryLease | null> {
+    const root = await storage.readRoot();
+    const generation = root.activeGenerations?.[session.user.id];
+    return generation === undefined ? null : parseWatchHistoryLease(root.partitions[watchHistoryPartitionKey(session.user.id, generation)]?.accessLease);
+  }
+  async function access(session: ExtensionAuthTokens, force = false): Promise<WatchHistoryLease | null> {
+    const cached = await readLease(session);
+    if (!sameSession(session, await dependencies.getCurrentSession())) return null;
+    if (!force && cached && now() >= cached.receivedAt && now() < cached.expiresAt) return cached;
+    const key = JSON.stringify([session.user.id, session.refreshToken]);
+    const existing = accessFlights.get(key); if (existing) return existing;
+    const flight = (async () => {
+      const startedAuthEpoch = (await storage.readRoot()).browseAuthEpochs?.[session.user.id];
+      const requestedAt = now();
+      const response = await authenticatedRequest(session, "/api/watch-history/v3/access");
+      if (!response.ok) {
+        accessFailures.set(session.user.id, response.error);
+        if (cached && sameSession(session, await dependencies.getCurrentSession())) await updateCurrentPartition(session, cached.access.accountGeneration,
+          (partition) => ({ ...partition, accessLease: null, currentObservation: null, currentObservationMeaningfulSolo: false, currentObservationDisplayMode: null }));
+        catalog.cancel(session.user.id);
+        return null;
+      }
+      if (!sameSession(response.session, await dependencies.getCurrentSession())) { accessFailures.set(session.user.id, { ok: false, status: "rejected" }); return null; }
+      const lease = createWatchHistoryLease(response.body, session.user.id, requestedAt, now());
+      if (!lease) {
+        accessFailures.set(session.user.id, { ok: false, status: "invalid-response" });
+        if (cached) await updateCurrentPartition(response.session, cached.access.accountGeneration, (partition) => ({ ...partition,
+          accessLease: null, currentObservation: null, currentObservationMeaningfulSolo: false, currentObservationDisplayMode: null }));
+        catalog.cancel(session.user.id); return null;
+      }
+      accessFailures.delete(session.user.id);
+      if (!lease || !sameSession(response.session, await dependencies.getCurrentSession()) || (await storage.readRoot()).browseAuthEpochs?.[session.user.id] !== startedAuthEpoch) return null;
+      const saved = await replaceCanonicalPartition(response.session, lease.access.accountGeneration, (partition) => {
+        const previous = partition.accessLease?.access;
+        if (previous && (Date.parse(previous.serverTime) > Date.parse(lease.access.serverTime) || previous.accessEpoch > lease.access.accessEpoch || previous.youtubeConsentEpoch > lease.access.youtubeConsentEpoch)) return partition;
+        const authorityChanged = !!previous && (previous.accessEpoch !== lease.access.accessEpoch || previous.state !== lease.access.state);
+        const clearCapture = lease.access.state === "plan_required" || authorityChanged;
+        const consentChanged = previous && previous.youtubeConsentEpoch !== lease.access.youtubeConsentEpoch;
+        return { ...partition, accessLease: lease,
+          preferences: partition.preferencesSyncPending || (partition.preferencesLocalRevision ?? 0) > 0 ? partition.preferences : { youtubeHistoryEnabled: lease.access.youtubeHistoryEnabled },
+          preferencesConfirmed: true, captureMarkersReady: true,
+          ...(clearCapture ? { currentObservation: null, currentObservationMeaningfulSolo: false, currentObservationDisplayMode: null,
+            catalogAcknowledgements: {} } : {}),
+          ...(authorityChanged ? { cache: lease.access.state === "plan_required" ? partition.cache : null, invalidationRevision: (partition.invalidationRevision ?? 0) + 1,
+            browseInvalidationRevision: browseHardRevision(partition) + 1 } : {}),
+          ...(consentChanged && partition.currentObservation?.provider === "youtube" ? { currentObservation: null, currentObservationMeaningfulSolo: false, currentObservationDisplayMode: null } : {}),
+          outbox: { ...partition.outbox, entries: partition.outbox.entries.filter((entry) => !clearCapture && !!entry.event.captureProof &&
+            entry.event.captureProof.access.accessEpoch === lease.access.accessEpoch &&
+            (entry.event.provider !== "youtube" || lease.access.youtubeHistoryEnabled && entry.event.captureProof.access.youtubeConsentEpoch === lease.access.youtubeConsentEpoch)) },
+        };
+      });
+      if (!saved.ok || saved.stale || saved.authorityRejected) return null;
+      if (lease.access.state === "plan_required" || cached?.access.accessEpoch !== lease.access.accessEpoch) catalog.cancel(session.user.id);
+      return readLease(response.session);
+    })();
+    accessFlights.set(key, flight);
+    try { return await flight; } finally { if (accessFlights.get(key) === flight) accessFlights.delete(key); }
+  }
+  async function requireAccess(session: ExtensionAuthTokens, operation: "read" | "capture" = "capture"): Promise<WatchHistoryMessageResponse | null> {
+    const lease = await access(session);
+    if (!lease) return { ok: false, status: "access-unavailable" };
+    return (operation === "read" ? canReadWatchHistory(lease, session.user.id, now()) : canCaptureWatchHistory(lease, session.user.id, now())) ? null : { ok: false, status: lease.access.state === "plan_required" ? "plan-required" : "access-unavailable" };
+  }
+
+  async function invalidateHistory(session: ExtensionAuthTokens, generation: number,
+    downgrade?: Pick<WatchCatalogBeginAck, "titleKey" | "effectiveCatalogState">, guard?: () => boolean, accessEpoch?: number): Promise<void> {
+    await updateCurrentPartition(session, generation, (partition) => guard && !guard() || !canCaptureWatchHistory(partition.accessLease, session.user.id, now()) || partition.accessLease?.access.accessEpoch !== accessEpoch ? partition : ({ ...partition,
+      invalidationRevision: (partition.invalidationRevision ?? 0) + 1,
+      browseInvalidationRevision: browseHardRevision(partition) + 1,
+      // A server-acknowledged availability change invalidates exact denominators
+      // immediately. Watched rows stay intact; only GET supplies replacement totals.
+      cache: !partition.cache || !downgrade || downgrade.effectiveCatalogState === "complete" ? partition.cache : {
+        ...partition.cache,
+        items: partition.cache.items.map((item) => item.titleKey !== downgrade.titleKey ? item : ({
+          ...item, catalogState: downgrade.effectiveCatalogState,
+          aggregate: { ...item.aggregate, availableEpisodes: null, progress: null },
+          seasons: item.seasons.map((season) => ({ ...season, nextEpisode: null,
+            aggregate: { ...season.aggregate, availableEpisodes: null, progress: null },
+          })),
+        })),
+      },
+    }));
+  }
 
   async function handle(message: WatchHistoryMessage): Promise<WatchHistoryMessageResponse> {
+    if (!isWatchHistoryMessage(message)) return { ok: false, status: "invalid-request" };
     if (message.command === "other-owner-pending") {
       const session = await dependencies.getCurrentSession();
       if (!session) return { ok: false, status: "unauthenticated" };
@@ -249,6 +478,36 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     const session = await dependencies.getCurrentSession();
     if (!session) return { ok: false, status: "unauthenticated" };
 
+    if ((message.command === "capacity" || message.command === "browse" ||
+      message.command === "browse-title-episodes" ||
+      message.command === "browse-sessions" ||
+      message.command === "browse-options" ||
+      message.command === "browse-catalog" ||
+      message.command === "get-preferences" ||
+      message.command === "update-preferences") &&
+      message.expectedOwnerUserId !== undefined &&
+      message.expectedOwnerUserId !== session.user.id) {
+      return { ok: false, status: "rejected" };
+    }
+
+    if (message.command === "resume-claim") {
+      const intent = PersonalHistoryResumeSchema.parse(message.input);
+      if (message.expectedOwnerUserId !== session.user.id || intent.ownerBinding !== await personalHistoryResumeOwnerBinding(session.user.id, intent.intentId) ||
+        now() < intent.issuedAt || now() >= intent.expiresAt || await requireAccess(session, "read")) return { ok: false, status: "rejected" };
+      const lease = await readLease(session);
+      if (lease?.access.accountGeneration !== intent.accountGeneration || !sameSession(session, await dependencies.getCurrentSession())) return { ok: false, status: "rejected" };
+      const authEpoch = (await storage.readRoot()).browseAuthEpochs?.[session.user.id];
+      let claimed = false;
+      const result = await storage.updateRoot((root) => {
+        const currentLease = root.partitions[watchHistoryPartitionKey(session.user.id, intent.accountGeneration)]?.accessLease;
+        if (root.browseAuthEpochs?.[session.user.id] !== authEpoch || root.activeGenerations?.[session.user.id] !== intent.accountGeneration ||
+          !canReadWatchHistory(currentLease, session.user.id, now()) || currentLease?.access.accessEpoch !== lease.access.accessEpoch || now() >= intent.expiresAt) return root;
+        const claims = Object.fromEntries(Object.entries(root.resumeClaims ?? {}).filter(([, expiry]) => expiry > now()));
+        if (claims[intent.intentId] || Object.keys(claims).length >= 128) return root;
+        claimed = true; return { ...root, resumeClaims: { ...claims, [intent.intentId]: intent.expiresAt } };
+      });
+      return result.ok && claimed && sameSession(session, await dependencies.getCurrentSession()) ? { ok: true } : { ok: false, status: "rejected" };
+    }
     if (message.command === "discard-old-owner") {
       try {
         const result = await storage.discardOtherOwnerOutbox(
@@ -272,7 +531,89 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         return { ok: false, status: "invalid-request" };
       }
     }
+    if (["capacity", "list", "browse", "browse-title-episodes", "browse-sessions", "browse-options", "browse-catalog", "create-room"].includes(message.command)) {
+      const denied = await requireAccess(session, "read"); if (denied) return denied;
+    }
+    if (["pending-identities", "catalog-begin", "catalog-commit", "resolve-identity"].includes(message.command)) {
+      const denied = await requireAccess(session); if (denied) return denied;
+    }
     if (message.command === "list") return refresh(session, message);
+    if (message.command === "capacity") {
+      const lease = await readLease(session);
+      const response = await authenticatedRequest(session, "/api/watch-history/v3/capacity");
+      if (!response.ok) return response.error;
+      const parsed = WatchHistoryCapacitySchema.safeParse(response.body);
+      if (!parsed.success || parsed.data.ownerUserId !== session.user.id) return { ok: false, status: "invalid-response" };
+      if (!sameSession(response.session, await dependencies.getCurrentSession())) return { ok: false, status: "rejected" };
+      const currentLease = await readLease(response.session);
+      if (!canReadWatchHistory(currentLease, session.user.id, now())) return { ok: false, status: "access-unavailable" };
+      if (parsed.data.accountGeneration !== lease?.access.accountGeneration || parsed.data.accountGeneration !== currentLease?.access.accountGeneration) return { ok: false, status: "generation-mismatch" };
+      return { ok: true, data: parsed.data };
+    }
+    if (message.command === "browse" ||
+      message.command === "browse-title-episodes" ||
+      message.command === "browse-sessions" ||
+      message.command === "browse-options" || message.command === "browse-catalog") {
+      return browse(session, message);
+    }
+    if (message.command === "pending-identities") {
+      if (session.user.id !== message.expectedOwnerUserId) return { ok: false, status: "rejected" };
+      const root = await storage.readRoot();
+      const generation = root.activeGenerations?.[session.user.id];
+      const entries = generation === undefined ? [] : root.partitions[watchHistoryPartitionKey(session.user.id, generation)]?.outbox.entries ?? [];
+      return { ok: true, data: entries.filter((entry) => entry.event.identityPending).slice(0, FLUSH_LIMIT).map((entry) => entry.event) };
+    }
+    if (message.command === "catalog-begin" || message.command === "catalog-commit") {
+      if (session.user.id !== message.expectedOwnerUserId) return { ok: false, status: "rejected" };
+      const data = message.command === "catalog-begin"
+        ? await catalog.begin(session.user.id, message.pageId, message.input)
+        : await catalog.commit(session.user.id, message.input);
+      return data ? { ok: true, data } : { ok: false, status: "rejected" };
+    }
+    if (message.command === "catalog-release") {
+      if (session.user.id !== message.expectedOwnerUserId) return { ok: false, status: "rejected" };
+      return await catalog.release(session.user.id, message.pageId, message) ? { ok: true } : { ok: false, status: "rejected" };
+    }
+    if (message.command === "resolve-identity") {
+      if (message.expectedOwnerUserId !== session.user.id) return { ok: false, status: "rejected" };
+      const identity = CrunchyrollHistoryIdentitySchema.parse(message.identity);
+      let found = false;
+      let retired = false;
+      let flushAfterIdentity = false;
+      const saved = await updateCurrentPartition(session, message.accountGeneration, (partition) => {
+        const entries = partition.outbox.entries.map((entry) => {
+          if (entry.event.clientEventId !== message.clientEventId ||
+            entry.event.identityPending?.watchId !== identity.providerContentId) return entry;
+          const { identityPending: _pending, captureProof, clientSequence, ...original } = entry.event;
+          if (!captureProof || !personalEnvelopeEligible({ captureVersion: 1, accessEpoch: captureProof.access.accessEpoch, youtubeConsentEpoch: captureProof.access.youtubeConsentEpoch, event: original }, partition.accessLease, session.user.id, now())) return entry;
+          const resolved = WatchProgressEventSchema.safeParse({
+            ...original, crunchyrollIdentity: identity,
+            titleKey: `crunchyroll:series:${identity.providerSeriesId}`,
+            seasonKey: `crunchyroll:season:${identity.providerSeasonIdentifier}`,
+            episodeKey: `crunchyroll:episode:${identity.providerEpisodeIdentifier}`,
+            episodeNumber: message.episodeNumber,
+            artworkUrl: message.artworkUrl ?? original.artworkUrl,
+          });
+          if (!resolved.success) return entry;
+          const deletion = Math.max(...[
+            JSON.stringify(["title", resolved.data.provider, resolved.data.titleKey]),
+            JSON.stringify(["episode", resolved.data.provider, resolved.data.titleKey, resolved.data.episodeKey]),
+          ].map((key) => Date.parse(partition.deletionFences?.[key] ?? "") || 0));
+          if (Date.parse(original.observedAt) <= deletion) { retired = true; return null; }
+          found = true;
+          flushAfterIdentity ||= entry.flushAfterIdentity === true || original.kind === "ended";
+          const event = { ...resolved.data, captureProof, clientSequence };
+          return { ...entry, event, request: personalRequest(event) ?? undefined, flushAfterIdentity: false };
+        }).filter((entry) => entry !== null);
+        const resolvedCurrent = entries.find((entry) => entry.event.clientEventId === partition.currentObservation?.clientEventId && !("identityPending" in entry.event));
+        return found || retired ? { ...partition, outbox: { ...partition.outbox, entries },
+          currentObservation: retired && partition.currentObservation?.clientEventId === message.clientEventId ? null : resolvedCurrent ? withoutWatchHistoryAttestation(resolvedCurrent.event) : partition.currentObservation,
+        } : partition;
+      });
+      if (!saved.ok) return saved;
+      if (!found || saved.stale || saved.authorityRejected) return { ok: false, status: "rejected" };
+      return flushAfterIdentity ? flush(session) : { ok: true };
+    }
     if (message.command === "bootstrap" || message.command === "bootstrap-cache") {
       if (message.expectedOwnerUserId !== session.user.id) {
         return { ok: false, status: "rejected" };
@@ -301,36 +642,165 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     if (message.command === "get-preferences") return getPreferences(session);
     if (message.command === "update-preferences") return updatePreferences(session, message.input);
     if (message.command === "delete") return deleteHistory(session, message.input);
-    return createRoom(session, message);
+    return message.command === "create-room" ? createRoom(session, message) : { ok: false, status: "invalid-request" };
   }
 
   async function list(
     session: ExtensionAuthTokens,
     message: Extract<WatchHistoryMessage, { command: "list" }>,
   ): Promise<WatchHistoryMessageResponse> {
+    const sequenceKey = session.user.id;
+    const sequence = (historyReadSequences.get(sequenceKey) ?? 0) + 1;
+    historyReadSequences.set(sequenceKey, sequence);
+    const initialLease = await readLease(session);
+    if (!canReadWatchHistory(initialLease, session.user.id, now())) return { ok: false, status: "access-unavailable" };
+    const startedRoot = await storage.readRoot();
+    const startedGeneration = startedRoot.activeGenerations?.[session.user.id];
+    const revision = startedGeneration === undefined ? 0 : startedRoot.partitions[watchHistoryPartitionKey(session.user.id, startedGeneration)]?.invalidationRevision ?? 0;
     const query = new URLSearchParams();
     if (message.limit !== undefined) query.set("limit", String(message.limit));
     if (message.cursor) query.set("cursor", message.cursor);
-    const response = await authenticatedRequest(session, `/api/watch-history/v2${query.size ? `?${query}` : ""}`);
+    const response = await authenticatedRequest(session, `/api/watch-history/v3${query.size ? `?${query}` : ""}`);
     if (!response.ok) return response.error;
     const parsed = WatchHistoryResponseSchema.safeParse(response.body);
     if (!parsed.success || parsed.data.meta.ownerUserId !== response.session.user.id) {
       return { ok: false, status: "invalid-response" };
     }
-    const saved = await replaceCanonicalPartition(response.session, parsed.data.meta.accountGeneration, (partition) => ({
-      ...partition,
-      cache: parsed.data,
-    }));
+    if (!sameSession(response.session, await dependencies.getCurrentSession())) {
+      return { ok: false, status: "rejected" };
+    }
+    const finalLease = await readLease(response.session);
+    if (!canReadWatchHistory(finalLease, session.user.id, now())) return { ok: false, status: "access-unavailable" };
+    if (finalLease?.access.accessEpoch !== initialLease?.access.accessEpoch) return { ok: false, status: "superseded" };
+    let invalidated = historyReadSequences.get(sequenceKey) !== sequence;
+    if (invalidated) return { ok: false, status: "superseded" };
+    const saved = await replaceCanonicalPartition(response.session, parsed.data.meta.accountGeneration, (partition) => {
+      if (invalidated || historyReadSequences.get(sequenceKey) !== sequence ||
+        (partition.invalidationRevision ?? 0) !== revision) { invalidated = true; return partition; }
+      return { ...partition, cache: parsed.data, cacheRevision: revision };
+    });
     if (saved.authorityRejected) return { ok: false, status: "rejected" };
     if (saved.stale) return { ok: false, status: "generation-mismatch" };
+    if (invalidated) return { ok: false, status: "superseded" };
     return saved.ok ? { ok: true, data: parsed.data } : saved;
+  }
+
+  async function browse(
+    session: ExtensionAuthTokens,
+    message: Extract<WatchHistoryMessage, {
+      command: "browse" | "browse-title-episodes" | "browse-sessions" | "browse-options" | "browse-catalog";
+    }>,
+  ): Promise<WatchHistoryMessageResponse> {
+    let root = await storage.readRoot();
+    let generation = root.activeGenerations?.[session.user.id];
+    if (generation === undefined) {
+      if (message.cacheOnly) return { ok: true };
+      const bootstrapped = await bootstrap(session);
+      if (!bootstrapped.ok) return bootstrapped;
+      root = await storage.readRoot();
+      generation = root.activeGenerations?.[session.user.id];
+      if (generation === undefined) return { ok: false, status: "generation-mismatch" };
+    }
+    const partition = root.partitions[watchHistoryPartitionKey(session.user.id, generation)];
+    if (!partition ||
+      partition.ownerUserId !== session.user.id ||
+      partition.accountGeneration !== generation) {
+      return { ok: false, status: "generation-mismatch" };
+    }
+    const parsedInput = parseBrowseInput(message);
+    if (!parsedInput) return { ok: false, status: "invalid-request" };
+    const input = parsedInput;
+    const revision = browseReadRevision(partition, input);
+    const hardRevision = browseHardRevision(partition);
+    const authEpoch = root.browseAuthEpochs?.[session.user.id];
+    const key = JSON.stringify([
+      message.command,
+      session.user.id,
+      generation,
+      hardRevision,
+      authEpoch,
+      input,
+    ]);
+    const cacheKey = await watchBrowseCacheKey([key,
+      partition.preferencesLocalRevision, partition.preferences?.youtubeHistoryEnabled]);
+    if (message.cacheOnly) {
+      const cached = await browseCache.read(cacheKey);
+      const failure = await validateCurrent(session);
+      if (failure) return failure;
+      const data = cached && parseBrowseResponse(message.command, cached.data);
+      if (!data || !browseResponseMatchesQuery(message.command, input, data) || browseResponseMeta(message.command, data).ownerUserId !== session.user.id ||
+        browseResponseMeta(message.command, data).accountGeneration !== generation) return { ok: true };
+      return { ok: true, data, cachedAt: cached.revision === revision ? cached.cachedAt : 0 };
+    }
+    const flightKey = JSON.stringify([key, revision]);
+    const existing = browseFlights.get(flightKey);
+    if (existing && sameSession(existing.session, session)) return existing.promise;
+    const flight = { session, promise: runBrowse() };
+    browseFlights.set(flightKey, flight);
+    try {
+      return await flight.promise;
+    } finally {
+      if (browseFlights.get(flightKey) === flight) browseFlights.delete(flightKey);
+    }
+
+    async function runBrowse(): Promise<WatchHistoryMessageResponse> {
+      const response = await authenticatedRequest(session, browsePath(message.command, input));
+      if (!response.ok) return response.error;
+      const parsed = parseBrowseResponse(message.command, response.body);
+      if (!parsed || !browseResponseMatchesQuery(message.command, input, parsed)) return { ok: false, status: "invalid-response" };
+      const responseMeta = browseResponseMeta(message.command, parsed);
+      if (responseMeta.ownerUserId !== response.session.user.id) {
+        return { ok: false, status: "invalid-response" };
+      }
+      if (!sameSession(response.session, await dependencies.getCurrentSession())) {
+        return { ok: false, status: "rejected" };
+      }
+      if (responseMeta.accountGeneration !== generation) {
+        return { ok: false, status: "generation-mismatch" };
+      }
+      const failure = await validateCurrent(response.session);
+      if (failure) return failure;
+      await browseCache.write(cacheKey, parsed, revision);
+      const afterSave = await validateCurrent(response.session);
+      return afterSave ?? { ok: true, data: parsed };
+    }
+
+    async function validateCurrent(expected: ExtensionAuthTokens): Promise<WatchHistoryMessageResponse | null> {
+      const currentRoot = await storage.readRoot();
+      if (!sameSession(expected, await dependencies.getCurrentSession())) {
+        return { ok: false, status: "rejected" };
+      }
+      if (currentRoot.activeGenerations?.[expected.user.id] !== generation) {
+        return { ok: false, status: "generation-mismatch" };
+      }
+      const currentPartition = currentRoot.partitions[
+        watchHistoryPartitionKey(expected.user.id, generation!)
+      ];
+      if (!currentPartition ||
+        currentPartition.ownerUserId !== expected.user.id ||
+        currentPartition.accountGeneration !== generation) {
+        return { ok: false, status: "generation-mismatch" };
+      }
+      if (!canReadWatchHistory(currentPartition.accessLease, expected.user.id, now())) return { ok: false, status: "access-unavailable" };
+      // A new recording epoch (including paid -> Free) retires the old GET,
+      // while the current owner lease still authorizes saved-history reads.
+      if (currentPartition.accessLease?.access.accessEpoch !== partition.accessLease?.access.accessEpoch) return { ok: false, status: "superseded" };
+      if (currentRoot.browseAuthEpochs?.[expected.user.id] !== authEpoch ||
+        browseHardRevision(currentPartition) !== hardRevision ||
+        browseReadRevision(currentPartition, input) !== revision ||
+        currentPartition.preferencesLocalRevision !== partition.preferencesLocalRevision ||
+        currentPartition.preferences?.youtubeHistoryEnabled !== partition.preferences?.youtubeHistoryEnabled) {
+        return { ok: false, status: "superseded" };
+      }
+      return null;
+    }
   }
 
   async function enqueue(
     session: ExtensionAuthTokens,
     rawEvent: unknown,
   ): Promise<WatchHistoryMessageResponse> {
-    const parsed = WatchProgressEventSchema.safeParse(rawEvent);
+    const parsed = parseWatchHistoryLocalEvent(rawEvent);
     if (!parsed.success) return { ok: false, status: "invalid-request" };
     const event = parsed.data;
     const captureAuthorityFailure = await validateCaptureAuthority(session, event);
@@ -348,8 +818,8 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
           ? inferredObservationDisplayMode(event)
           : partition.currentObservationDisplayMode
         : inferredObservationDisplayMode(event),
-      outbox: enqueueWatchHistoryEvent(partition.outbox, event),
-    }), event.provider);
+      outbox: enqueueWatchHistoryEvent(partition.outbox, event, undefined, true),
+    }), event.provider, event);
     let saved = await persist();
     if (saved.authorityRejected) return { ok: false, status: "rejected" };
     if (saved.stale) return { ok: false, status: "generation-mismatch" };
@@ -374,7 +844,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     queueForSync: boolean,
     flushNow: boolean,
   ): Promise<WatchHistoryMessageResponse> {
-    const parsed = WatchProgressEventSchema.safeParse(rawEvent);
+    const parsed = parseWatchHistoryLocalEvent(rawEvent);
     if (!parsed.success) return { ok: false, status: "invalid-request" };
     const captureAuthorityFailure = await validateCaptureAuthority(session, parsed.data);
     if (captureAuthorityFailure) return captureAuthorityFailure;
@@ -388,9 +858,9 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       currentObservationMeaningfulSolo: meaningfulSolo && !parsed.data.sharedRoom,
       currentObservationDisplayMode: displayMode,
       outbox: queueForSync
-        ? enqueueWatchHistoryEvent(partition.outbox, parsed.data)
+        ? enqueueWatchHistoryEvent(partition.outbox, parsed.data, undefined, flushNow)
         : partition.outbox,
-    }), parsed.data.provider);
+    }), parsed.data.provider, parsed.data);
     let saved = await persist();
     if (saved.authorityRejected) return { ok: false, status: "rejected" };
     if (saved.stale) return { ok: false, status: "generation-mismatch" };
@@ -405,31 +875,52 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       }
     }
     if (!flushNow) return { ok: true };
+    if (parsed.data.identityPending) return { ok: true };
     const drained = await flush(session);
     return !drained.ok && drained.status === "retryable" ? { ok: true } : drained;
   }
 
   async function flush(session: ExtensionAuthTokens): Promise<WatchHistoryMessageResponse> {
+    const denied = await requireAccess(session); if (denied) return denied;
     const root = await storage.readRoot();
     const generation = root.activeGenerations?.[session.user.id];
     if (generation === undefined) return { ok: true, flushed: 0 };
     const partition = root.partitions[watchHistoryPartitionKey(session.user.id, generation)];
     if (!partition) return { ok: true, flushed: 0 };
+    if (partition.outbox.entries.some((entry) => entry.event.identityPending && !entry.flushAfterIdentity)) {
+      await updateCurrentPartition(session, generation, (current) => ({ ...current, outbox: { ...current.outbox,
+        entries: current.outbox.entries.map((entry) => entry.event.identityPending ? { ...entry, flushAfterIdentity: true } : entry),
+      } }));
+    }
     const pendingPreferences = WatchHistoryPreferencesSchema.safeParse(partition.preferences);
     if (partition.preferencesSyncPending === true && pendingPreferences.success) {
       queuePreferenceSync(session, generation, pendingPreferences.data);
     }
     let flushed = 0;
     let activeSession = session;
+    let mutated = false;
+    const changedTitles = new Set<string>();
+    try {
     for (const entry of orderWatchHistoryOutbox(partition.outbox)) {
+        if (entry.event.identityPending) continue;
+        const envelope = PersonalWatchProgressRequestSchema.safeParse(entry.request);
+        if (!envelope.success) continue;
+        // Re-read membership after every async boundary: deletion/generation changes
+        // may have removed an event since this drain took its snapshot.
+        const latestRoot = await storage.readRoot();
+        if (latestRoot.activeGenerations?.[session.user.id] !== generation) break;
+        if (!latestRoot.partitions[watchHistoryPartitionKey(session.user.id, generation)]?.outbox.entries
+          .some((candidate) => candidate.event.clientEventId === entry.event.clientEventId)) continue;
         if (flushed >= FLUSH_LIMIT) return { ok: true, flushed };
         const current = await dependencies.getCurrentSession();
         if (!sameSession(activeSession, current)) return { ok: true, flushed };
-        const response = await authenticatedRequest(activeSession, "/api/watch-history/v2/progress", {
+        if (!personalEnvelopeEligible(envelope.data, await readLease(activeSession), activeSession.user.id, now())) return { ok: false, status: "access-unavailable" };
+        const response = await authenticatedRequest(activeSession, "/api/watch-history/v3/progress", {
           method: "POST",
-          body: JSON.stringify(entry.event),
+          body: JSON.stringify(envelope.data),
         });
         if (!response.ok) {
+          if (isFailureStatus(response.error, "plan-required") || isFailureStatus(response.error, "access-changed")) await access(activeSession, true);
           if (!isPermanentObservationRejection(response.error)) return response.error;
           activeSession = response.session ?? activeSession;
           const saved = await consumeRejectedEvent(activeSession, generation, entry.event.clientEventId);
@@ -465,14 +956,33 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
               ? acceptedDisplayMode
               : candidate.currentObservationDisplayMode ?? null,
           };
-        });
+        }, undefined, undefined, envelope.data);
         if (saved.stale) return { ok: false, status: "generation-mismatch" };
         if (saved.authorityRejected) return { ok: false, status: "rejected" };
         if (!saved.ok) return saved;
+        if (!ack.data.duplicate) {
+          mutated = true;
+          changedTitles.add(JSON.stringify([entry.event.provider, entry.event.titleKey]));
+        }
         await clearUnpersistedPauseIfReady(activeSession, generation);
         flushed += 1;
     }
     return { ok: true, flushed };
+    } finally {
+      if (mutated) await updateCurrentPartition(activeSession, generation, (partition) => {
+        const revision = (partition.invalidationRevision ?? 0) + 1;
+        const revisions = { ...partition.browseTitleRevisions };
+        for (const title of changedTitles) revisions[title] = revision;
+        // Bounded freshness hints, not another history store. Evicted hints only
+        // make old reads stale; they can never make an old read look fresh again.
+        const ordered = Object.entries(revisions).sort((a, b) => b[1] - a[1]);
+        const floor = Math.max(partition.browseRevisionFloor ?? partition.invalidationRevision ?? 0,
+          ...ordered.slice(64).map(([, value]) => value));
+        return { ...partition, invalidationRevision: revision,
+          browseInvalidationRevision: browseHardRevision(partition),
+          browseTitleRevisions: Object.fromEntries(ordered.slice(0, 64)), browseRevisionFloor: floor };
+      });
+    }
   }
 
   async function getPreferences(session: ExtensionAuthTokens): Promise<WatchHistoryMessageResponse> {
@@ -496,7 +1006,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       };
     }
     const startedPreference = await readPreferenceRevision(session);
-    const response = await authenticatedRequest(session, "/api/watch-history/v2/preferences");
+    const response = await authenticatedRequest(session, "/api/watch-history/v3/preferences");
     if (!response.ok) return response.error;
     const parsed = WatchHistoryPreferencesResponseSchema.safeParse(response.body);
     if (!parsed.success || parsed.data.meta.ownerUserId !== response.session.user.id) {
@@ -543,68 +1053,17 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
 
   async function bootstrap(session: ExtensionAuthTokens): Promise<WatchHistoryMessageResponse> {
     const pending = await readPendingPreferences(session);
-    if (pending) {
-      queuePreferenceSync(session, pending.accountGeneration, pending.preferences);
+    if (pending) queuePreferenceSync(session, pending.accountGeneration, pending.preferences);
+    const lease = await access(session, true);
+    if (!lease) {
+      const failure = accessFailures.get(session.user.id);
+      if (failure && !isFailureStatus(failure, "retryable") && !isFailureStatus(failure, "access-unavailable")) return failure;
       return cachedBootstrap(session);
     }
-    const explicitLocalChoice = await readConfirmedPreferences(session);
-    if (explicitLocalChoice && explicitLocalChoice.localRevision > 0) {
-      return cachedBootstrap(session);
-    }
-    const startedPreference = await readPreferenceRevision(session);
-    const response = await authenticatedRequest(session, "/api/watch-history/v2/preferences");
-    if (!response.ok) {
-      if (!isFailureStatus(response.error, "retryable")) return response.error;
-      return cachedBootstrap(response.session ?? session);
-    }
-    const parsed = WatchHistoryPreferencesResponseSchema.safeParse(response.body);
-    if (!parsed.success || parsed.data.meta.ownerUserId !== response.session.user.id) {
-      return { ok: false, status: "invalid-response" };
-    }
-    const generation = parsed.data.meta.accountGeneration;
-    let localWon = false;
-    const saved = await replaceCanonicalPartition(response.session, generation, (partition) => {
-      const changedWhileReading = startedPreference?.accountGeneration === partition.accountGeneration &&
-        partition.preferencesLocalRevision !== startedPreference.localRevision;
-      if (partition.preferencesSyncPending === true || changedWhileReading) {
-        localWon = true;
-        return partition;
-      }
-      return {
-        ...partition,
-        preferences: parsed.data.preferences,
-        preferencesConfirmed: true,
-        preferencesSyncPending: false,
-        captureMarkersReady: true,
-      };
-    });
-    if (saved.authorityRejected) return { ok: false, status: "rejected" };
-    if (saved.stale) return { ok: false, status: "generation-mismatch" };
-    if (!saved.ok) return saved;
-    if (localWon) {
-      const latest = await readPendingPreferences(response.session);
-      if (latest) {
-        queuePreferenceSync(response.session, latest.accountGeneration, latest.preferences);
-      }
-      return cachedBootstrap(response.session);
-    }
-    const paused = await capturePauseState(response.session, generation);
-    if (!sameSession(response.session, await dependencies.getCurrentSession())) {
-      return { ok: false, status: "rejected" };
-    }
-    return {
-      ok: true,
-      data: {
-        ownerUserId: response.session.user.id,
-        accountGeneration: generation,
-        preferences: parsed.data.preferences,
-        capturePaused: paused.capturePaused,
-        source: "network",
-      } satisfies WatchHistoryBootstrapData,
-    };
+    return cachedBootstrap(session, "network");
   }
 
-  async function cachedBootstrap(session: ExtensionAuthTokens): Promise<WatchHistoryMessageResponse> {
+  async function cachedBootstrap(session: ExtensionAuthTokens, source: "network" | "cache" = "cache"): Promise<WatchHistoryMessageResponse> {
     const current = await dependencies.getCurrentSession();
     if (!sameSession(session, current)) return { ok: false, status: "rejected" };
     const root = await storage.readRoot();
@@ -631,7 +1090,8 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         accountGeneration: generation,
         preferences: preferences.data,
         capturePaused: paused.capturePaused,
-        source: "cache",
+        accessLease: parseWatchHistoryLease(partition.accessLease),
+        source,
       } satisfies WatchHistoryBootstrapData,
     };
   }
@@ -698,8 +1158,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         !input.data.youtubeHistoryEnabled;
       const clearingYouTubeObservation = disablingYouTube &&
         partition.currentObservation?.provider === "youtube";
-      const queueMeaningfulSoloObservation = clearingYouTubeObservation &&
-        partition.currentObservationMeaningfulSolo === true;
+      const queueMeaningfulSoloObservation = false;
       queuedFinalObservation ||= queueMeaningfulSoloObservation;
       return {
         ...partition,
@@ -714,9 +1173,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         currentObservationDisplayMode: clearingYouTubeObservation
           ? null
           : partition.currentObservationDisplayMode ?? null,
-        outbox: queueMeaningfulSoloObservation && partition.currentObservation
-          ? enqueueWatchHistoryEvent(partition.outbox, partition.currentObservation)
-          : partition.outbox,
+        outbox: { ...partition.outbox, entries: partition.outbox.entries.filter((entry) => entry.event.provider !== "youtube") },
         captureMarkersReady: true,
       };
     });
@@ -818,7 +1275,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         pending.preferences.youtubeHistoryEnabled !== preferences.youtubeHistoryEnabled) {
         return;
       }
-      const response = await authenticatedRequest(session, "/api/watch-history/v2/preferences", {
+      const response = await authenticatedRequest(session, "/api/watch-history/v3/preferences", {
         method: "PATCH",
         body: JSON.stringify(preferences),
       });
@@ -826,11 +1283,11 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       const parsed = WatchHistoryPreferencesResponseSchema.safeParse(response.body);
       if (!parsed.success ||
         parsed.data.meta.ownerUserId !== response.session.user.id ||
-        parsed.data.meta.accountGeneration !== accountGeneration ||
+        parsed.data.meta.accountGeneration < accountGeneration ||
         parsed.data.preferences.youtubeHistoryEnabled !== preferences.youtubeHistoryEnabled) {
         return;
       }
-      await updateCurrentPartition(response.session, accountGeneration, (partition) => {
+      await replaceCanonicalPartition(response.session, parsed.data.meta.accountGeneration, (partition) => {
         const current = WatchHistoryPreferencesSchema.safeParse(partition.preferences);
         if (partition.preferencesSyncPending !== true ||
           !current.success ||
@@ -842,9 +1299,11 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
           preferences: parsed.data.preferences,
           preferencesConfirmed: true,
           preferencesSyncPending: false,
+          capturePaused: false,
           captureMarkersReady: true,
         };
       });
+      await access(response.session, true);
     } catch {
       // The durable local choice remains pending for the next event-driven retry.
     }
@@ -856,11 +1315,12 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
   ): Promise<WatchHistoryMessageResponse> {
     const input = WatchHistoryDeletionRequestSchema.safeParse(rawInput);
     if (!input.success) return { ok: false, status: "invalid-request" };
+    if (input.data.target.scope !== "episode") catalog.cancel(session.user.id, input.data.target.scope === "title" ? input.data.target.titleKey : undefined);
     const root = await storage.readRoot();
     if (root.activeGenerations?.[session.user.id] !== input.data.accountGeneration) {
       return { ok: false, status: "generation-mismatch" };
     }
-    const response = await authenticatedRequest(session, "/api/watch-history/v2/delete", {
+    const response = await authenticatedRequest(session, "/api/watch-history/v3/delete", {
       method: "POST",
       body: JSON.stringify(input.data),
     });
@@ -876,6 +1336,17 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       currentObservationMeaningfulSolo: false,
       currentObservationDisplayMode: null,
       outbox: removeWatchHistoryEventsForDeletion(partition.outbox, parsed.data.target),
+      catalogAcknowledgements: parsed.data.target.scope === "title"
+        ? Object.fromEntries(Object.entries(partition.catalogAcknowledgements ?? {}).filter(([key]) => key !== (parsed.data.target as { titleKey: string }).titleKey))
+        : parsed.data.target.scope === "all" ? {} : partition.catalogAcknowledgements,
+      invalidationRevision: (partition.invalidationRevision ?? 0) + 1,
+      browseInvalidationRevision: browseHardRevision(partition) + 1,
+      deletionFences: parsed.data.target.scope === "all" ? {} : {
+        ...partition.deletionFences,
+        [JSON.stringify(parsed.data.target.scope === "title"
+          ? ["title", parsed.data.target.provider, parsed.data.target.titleKey]
+          : ["episode", parsed.data.target.provider, parsed.data.target.titleKey, parsed.data.target.episodeKey])]: parsed.data.deletedAt,
+      },
     }));
     if (saved.authorityRejected) return { ok: false, status: "rejected" };
     if (saved.stale) return { ok: false, status: "generation-mismatch" };
@@ -886,7 +1357,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     session: ExtensionAuthTokens,
     message: Extract<WatchHistoryMessage, { command: "create-room" }>,
   ): Promise<WatchHistoryMessageResponse> {
-    const response = await authenticatedRequest(session, "/api/watch-history/v2/rooms", {
+    const response = await authenticatedRequest(session, "/api/watch-history/v3/rooms", {
       method: "POST",
       body: JSON.stringify({
         sessionId: message.sessionId,
@@ -909,15 +1380,17 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     | { ok: false; error: WatchHistoryMessageResponse; session?: ExtensionAuthTokens }
   > {
     let response: Response;
+    if (!sameSession(session, await dependencies.getCurrentSession())) return { ok: false, error: { ok: false, status: "rejected" } };
     try {
       response = await request(new URL(path, WEB_HTTP_BASE).toString(), {
         ...init,
-        headers: { Authorization: `Bearer ${session.accessToken}`, "Content-Type": "application/json" },
+        headers: { Authorization: `Bearer ${session.accessToken}`, "Content-Type": "application/json", "x-anidachi-history-owner": session.user.id },
       });
     } catch {
       return { ok: false, error: { ok: false, status: "retryable" }, session };
     }
     let body = await response.json().catch(() => null);
+    if (!sameSession(session, await dependencies.getCurrentSession())) return { ok: false, error: { ok: false, status: "rejected" } };
     if (response.status === 401) {
       let refreshed: ExtensionAuthTokens | null;
       try {
@@ -928,7 +1401,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       if (!refreshed) {
         return { ok: false, error: { ok: false, status: "unauthenticated" } };
       }
-      if (refreshed.user.id !== session.user.id) {
+      if (refreshed.user.id !== session.user.id || !sameSession(refreshed, await dependencies.getCurrentSession())) {
         return { ok: false, error: { ok: false, status: "rejected" } };
       }
       if (refreshed.accessToken === session.accessToken) {
@@ -940,12 +1413,14 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
           headers: {
             Authorization: `Bearer ${refreshed.accessToken}`,
             "Content-Type": "application/json",
+            "x-anidachi-history-owner": session.user.id,
           },
         });
       } catch {
         return { ok: false, error: { ok: false, status: "retryable" }, session: refreshed };
       }
       body = await response.json().catch(() => null);
+      if (!sameSession(refreshed, await dependencies.getCurrentSession())) return { ok: false, error: { ok: false, status: "rejected" } };
       if (response.status === 401) {
         return { ok: false, error: { ok: false, status: "retryable" }, session: refreshed };
       }
@@ -983,7 +1458,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
 
   async function validateCaptureAuthority(
     session: ExtensionAuthTokens,
-    event: { accountGeneration: number; provider: string },
+    event: WatchHistoryLocalEvent,
   ): Promise<WatchHistoryMessageResponse | null> {
     const current = await dependencies.getCurrentSession();
     if (!sameSession(session, current)) return { ok: false, status: "rejected" };
@@ -997,7 +1472,14 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       partition.accountGeneration !== event.accountGeneration) {
       return { ok: false, status: "generation-mismatch" };
     }
+    if (!event.captureProof || !event.clientSequence || "sharedRoom" in event) return { ok: false, status: "invalid-request" };
+    if (!canCaptureWatchHistory(event.captureProof, session.user.id, now(), event.provider) ||
+      !personalEnvelopeEligible({ captureVersion: 1, accessEpoch: event.captureProof.access.accessEpoch,
+        youtubeConsentEpoch: event.captureProof.access.youtubeConsentEpoch, event }, partition.accessLease, session.user.id, now())) {
+      return { ok: false, status: partition.accessLease?.access.state === "plan_required" ? "plan-required" : "access-unavailable" };
+    }
     if (event.provider !== "youtube") return null;
+    if (partition.preferencesSyncPending) return { ok: false, status: "access-unavailable" };
     const preferences = WatchHistoryPreferencesSchema.safeParse(partition.preferences);
     return partition.preferencesConfirmed === true &&
       preferences.success &&
@@ -1098,6 +1580,8 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     generation: number,
     update: (partition: WatchHistoryAccountPartition) => WatchHistoryAccountPartition,
     captureProvider?: string,
+    captureEvent?: WatchHistoryLocalEvent,
+    requiredEnvelope?: PersonalWatchProgressRequest,
   ): Promise<ReturnType<WatchHistoryStorage["updateRoot"]> extends Promise<infer Result>
     ? Result & { stale?: boolean; authorityRejected?: boolean }
     : never> {
@@ -1119,11 +1603,20 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         stale = true;
         return root;
       }
+      if (requiredEnvelope && !personalEnvelopeEligible(requiredEnvelope, partition.accessLease, session.user.id, now())) {
+        authorityRejected = true; return root;
+      }
+      if (captureEvent && (!captureEvent.captureProof || !canCaptureWatchHistory(captureEvent.captureProof, session.user.id, now(), captureProvider) ||
+        !personalEnvelopeEligible({ captureVersion: 1, accessEpoch: captureEvent.captureProof.access.accessEpoch,
+          youtubeConsentEpoch: captureEvent.captureProof.access.youtubeConsentEpoch, event: captureEvent }, partition.accessLease, session.user.id, now()) ||
+        ((captureEvent.clientSequence ?? 0) <= (partition.outbox.sequences?.[captureEvent.clientSessionKey] ?? 0) && partition.currentObservation?.clientEventId !== captureEvent.clientEventId))) {
+        authorityRejected = true; return root;
+      }
       if (captureProvider === "youtube") {
         const confirmed = WatchHistoryPreferencesSchema.safeParse(partition.preferences);
         if (partition.preferencesConfirmed !== true ||
           !confirmed.success ||
-          !confirmed.data.youtubeHistoryEnabled) {
+          !confirmed.data.youtubeHistoryEnabled || partition.preferencesSyncPending) {
           authorityRejected = true;
           return root;
         }
@@ -1131,7 +1624,13 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       return {
         ...root,
         activeGenerations: { ...root.activeGenerations, [session.user.id]: generation },
-        partitions: { ...root.partitions, [key]: update(partition) },
+        partitions: { ...root.partitions, [key]: (() => {
+          const next = update(partition);
+          if (!captureEvent || !next.accessLease) return next;
+          return { ...next, accessLease: { ...next.accessLease, checkedAt: now() }, outbox: { ...next.outbox,
+            sequences: Object.fromEntries([...Object.entries(next.outbox.sequences ?? {}).filter(([key]) => key !== captureEvent.clientSessionKey),
+              [captureEvent.clientSessionKey, captureEvent.clientSequence!]].slice(-128)) } };
+        })() },
       };
     });
     const currentAfterWrite = await dependencies.getCurrentSession();
@@ -1159,26 +1658,25 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         stale = true;
         return root;
       }
+      const previous = active === undefined ? undefined : root.partitions[watchHistoryPartitionKey(session.user.id, active)];
       const partitions = Object.fromEntries(
         Object.entries(root.partitions).flatMap(([partitionKey, partition]) => {
           if (partition.ownerUserId !== session.user.id || partition.accountGeneration === generation) {
             return [[partitionKey, partition]];
           }
-          const cleared = {
-            ...partition,
-            cache: null,
-            preferences: null,
-            preferencesConfirmed: false,
-            preferencesSyncPending: false,
-            currentObservation: null,
-            currentObservationMeaningfulSolo: false,
-            currentObservationDisplayMode: null,
-            outbox: { ...partition.outbox, entries: [] },
-          };
           return [];
         }),
       );
-      const partition = partitions[key] ?? emptyPartition(session.user.id, generation);
+      const inheritedPreferences = previous?.preferencesConfirmed === true &&
+        WatchHistoryPreferencesSchema.safeParse(previous.preferences).success
+        ? {
+            preferences: previous.preferences,
+            preferencesConfirmed: true,
+            preferencesSyncPending: previous.preferencesSyncPending === true,
+            preferencesLocalRevision: previous.preferencesLocalRevision ?? 0,
+          }
+        : {};
+      const partition = partitions[key] ?? { ...emptyPartition(session.user.id, generation), ...inheritedPreferences };
       return {
         ...root,
         activeGenerations: { ...root.activeGenerations, [session.user.id]: generation },
@@ -1196,6 +1694,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     session: ExtensionAuthTokens,
     message: Extract<WatchHistoryMessage, { command: "list" }> = { type: WATCH_HISTORY_MESSAGE_TYPE, command: "list" },
   ): Promise<WatchHistoryMessageResponse> {
+    const denied = await requireAccess(session, "read"); if (denied) return denied;
     return list(session, message);
   }
 
@@ -1203,13 +1702,32 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     session: ExtensionAuthTokens,
     message: Extract<WatchHistoryMessage, { command: "list" }> = { type: WATCH_HISTORY_MESSAGE_TYPE, command: "list" },
   ): Promise<WatchHistoryMessageResponse> {
-    const drained = await flush(session);
-    const reconciled = await reconcile(session, message);
-    if (!drained.ok) return drained;
-    return reconciled.ok ? { ...reconciled, flushed: drained.flushed } : reconciled;
+    const root = await storage.readRoot();
+    const key = JSON.stringify([session.user.id, root.activeGenerations?.[session.user.id], message.limit, message.cursor]);
+    const existing = refreshFlights.get(key);
+    if (existing && sameSession(existing.session, session)) return existing.promise;
+    const flight = { session, promise: runRefresh() };
+    refreshFlights.set(key, flight);
+    try {
+      return await flight.promise;
+    } finally {
+      if (refreshFlights.get(key) === flight) refreshFlights.delete(key);
+    }
+
+    async function runRefresh(): Promise<WatchHistoryMessageResponse> {
+      const drained = await flush(session);
+      let reconciled = await reconcile(session, message);
+      // A checkpoint/catalog commit can invalidate a GET in flight. Reread once,
+      // joining concurrent UI refreshes above; never retry genuine failures here.
+      if (!reconciled.ok && reconciled.status === "superseded") {
+        reconciled = await reconcile(session, message);
+      }
+      if (!drained.ok && drained.status !== "plan-required") return drained;
+      return reconciled.ok ? { ...reconciled, flushed: drained.ok ? drained.flushed : 0 } : reconciled;
+    }
   }
 
-  return { handle, flush, reconcile, refresh };
+  return { handle, flush, reconcile, refresh, cancelCatalog: catalog.cancel, cancelCatalogPage: catalog.cancelPage };
 }
 
 function emptyPartition(ownerUserId: string, accountGeneration: number): WatchHistoryAccountPartition {
@@ -1239,7 +1757,7 @@ function localPreferencesResponse(
   return {
     meta: {
       serverTime: new Date().toISOString(),
-      schemaVersion: 2 as const,
+      schemaVersion: 3 as const,
       ownerUserId,
       accountGeneration,
     },
@@ -1259,7 +1777,9 @@ function isFailureStatus(
 }
 
 function mapHttpFailure(status: number, body: unknown): WatchHistoryMessageResponse {
+  if (status === 409 && isRecord(body) && body.reason === "HISTORY_LIMIT_REACHED") return { ok: false, status: "history-full" };
   const code = isRecord(body) && typeof body.code === "string" ? body.code : "";
+  if (status === 409 && code === "IDENTITY_CONFLICT") return { ok: false, status: "identity-conflict" };
   if (status === 409 && code === "STALE_OBSERVATION") {
     return { ok: false, status: "stale-observation" };
   }
@@ -1267,6 +1787,11 @@ function mapHttpFailure(status: number, body: unknown): WatchHistoryMessageRespo
     return { ok: false, status: "deleted-history" };
   }
   const mapped: Record<string, WatchHistoryLocalStatus> = {
+    HISTORY_LIMIT_REACHED: "history-full",
+    HISTORY_PLAN_REQUIRED: "plan-required",
+    HISTORY_ACCESS_CHANGED: "access-changed",
+    HISTORY_ACCESS_UNAVAILABLE: "access-unavailable",
+    HISTORY_CLIENT_UPDATE_REQUIRED: "upgrade-required",
     GENERATION_MISMATCH: "generation-mismatch",
     INVALID_AUTHORITY: "invalid-room-authority",
     INVALID_ROOM_AUTHORITY: "invalid-room-authority",
@@ -1279,9 +1804,9 @@ function mapHttpFailure(status: number, body: unknown): WatchHistoryMessageRespo
 
 function isPermanentObservationRejection(
   response: WatchHistoryMessageResponse,
-): response is { ok: false; status: "stale-observation" | "deleted-history" } {
+): response is { ok: false; status: "stale-observation" | "deleted-history" | "identity-conflict" | "history-full" } {
   return !response.ok &&
-    (response.status === "stale-observation" || response.status === "deleted-history");
+    (response.status === "stale-observation" || response.status === "deleted-history" || response.status === "identity-conflict" || response.status === "history-full");
 }
 
 function sameSession(expected: ExtensionAuthTokens, current: ExtensionAuthTokens | null): boolean {
@@ -1294,6 +1819,111 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function hasExactKeys(value: Record<string, unknown>, allowed: string[]): boolean {
   return Object.keys(value).every((key) => allowed.includes(key));
+}
+
+function isExpectedOwnerUserId(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0 && value.length <= 128;
+}
+
+function isOptionalExpectedOwnerUserId(value: unknown): value is string | undefined {
+  return value === undefined || isExpectedOwnerUserId(value);
+}
+
+type BrowseCommand = Extract<WatchHistoryMessage, {
+  command: "browse" | "browse-title-episodes" | "browse-sessions" | "browse-options" | "browse-catalog";
+}>["command"];
+
+type BrowseInput = WatchHistoryGridQuery | WatchHistoryBrowseQuery |
+  WatchHistoryBrowseTitleEpisodesQuery |
+  WatchHistoryBrowseSessionsQuery |
+  WatchHistoryBrowseOptionsQuery;
+
+function parseBrowseInput(
+  message: Extract<WatchHistoryMessage, { command: BrowseCommand }>,
+): BrowseInput | null {
+  const schema = message.command === "browse-catalog" ? WatchHistoryGridQuerySchema : message.command === "browse"
+    ? WatchHistoryBrowseQuerySchema
+    : message.command === "browse-title-episodes"
+      ? WatchHistoryBrowseTitleEpisodesQuerySchema
+      : message.command === "browse-sessions"
+        ? WatchHistoryBrowseSessionsQuerySchema
+        : WatchHistoryBrowseOptionsQuerySchema;
+  const parsed = schema.safeParse(message.input);
+  return parsed.success ? parsed.data : null;
+}
+
+function browseHardRevision(partition: WatchHistoryAccountPartition): number {
+  return partition.browseInvalidationRevision ?? partition.invalidationRevision ?? 0;
+}
+
+function browseReadRevision(partition: WatchHistoryAccountPartition, input: BrowseInput): number {
+  if (!("provider" in input) || !("titleKey" in input)) return partition.invalidationRevision ?? 0;
+  return Math.max(partition.browseRevisionFloor ?? partition.invalidationRevision ?? 0,
+    partition.browseTitleRevisions?.[JSON.stringify([input.provider, input.titleKey])] ?? 0);
+}
+
+function browsePath(command: BrowseCommand, input: BrowseInput): string {
+  const query = new URLSearchParams();
+  const values = input as Record<string, unknown>;
+  for (const key of [
+    "mode",
+    "search",
+    "groupId",
+    "participantUserId",
+    "from",
+    "until",
+    "limit",
+    "cursor",
+    "provider",
+    "titleKey",
+    "episodeKey",
+    "seasonKey",
+  ]) {
+    const value = values[key];
+    if (typeof value === "string" || typeof value === "number") query.set(key, String(value));
+  }
+  if (command === "browse") query.set("includeEpisodePreviews", "true");
+  const suffix = command === "browse-catalog" ? "/catalog" : command === "browse"
+    ? ""
+    : command === "browse-title-episodes"
+      ? "/title-episodes"
+      : command === "browse-sessions"
+        ? "/sessions"
+        : "/options";
+  return `/api/watch-history/v3/browse${suffix}?${query}`;
+}
+
+function parseBrowseResponse(command: BrowseCommand, value: unknown): unknown | null {
+  const schema = command === "browse-catalog" ? WatchHistoryGridResponseSchema : command === "browse"
+    ? WatchHistoryBrowseResponseSchema
+    : command === "browse-title-episodes"
+      ? WatchHistoryBrowseTitleEpisodesResponseSchema
+      : command === "browse-sessions"
+        ? WatchHistoryBrowseSessionsResponseSchema
+        : WatchHistoryBrowseOptionsResponseSchema;
+  const parsed = schema.safeParse(value);
+  return parsed.success ? parsed.data : null;
+}
+
+function browseResponseMatchesQuery(command: BrowseCommand, input: BrowseInput, value: unknown): boolean {
+  if (command !== "browse-catalog") return true;
+  const response = value as { provider: string; titleKey: string; seasonKey: string | null };
+  const query = input as WatchHistoryGridQuery;
+  return response.provider === query.provider && response.titleKey === query.titleKey &&
+    (!query.seasonKey || response.seasonKey === query.seasonKey);
+}
+
+function browseResponseMeta(command: BrowseCommand, value: unknown): {
+  ownerUserId: string;
+  accountGeneration: number;
+} {
+  if (command === "browse") {
+    return (value as { history: { meta: { ownerUserId: string; accountGeneration: number } } }).history.meta;
+  }
+  if (command === "browse-title-episodes") {
+    return (value as { detail: { meta: { ownerUserId: string; accountGeneration: number } } }).detail.meta;
+  }
+  return (value as { meta: { ownerUserId: string; accountGeneration: number } }).meta;
 }
 
 function inferredObservationDisplayMode(
@@ -1309,24 +1939,61 @@ function inferredObservationDisplayMode(
   return event.sharedRoom ? "together" : "mine";
 }
 
+let backgroundWatchHistoryClient: ReturnType<typeof createWatchHistoryClient> | undefined;
+const historyPageTabs = new Map<string, { tabId: number }>();
+
+/** Trusted browser tab lifecycle: the document cannot send a final release after destruction. */
+export function cancelWatchHistoryCatalogForTab(tabId: number): void {
+  for (const [pageId, registration] of historyPageTabs) if (registration.tabId === tabId) {
+    historyPageTabs.delete(pageId);
+    backgroundWatchHistoryClient?.cancelCatalogPage(pageId);
+  }
+}
+
 export async function handleWatchHistoryHttpMessage(
   message: WatchHistoryMessage,
+  sender?: chrome.runtime.MessageSender,
 ): Promise<WatchHistoryMessageResponse> {
+  if (sender && !isWatchHistorySenderAllowed(message, sender)) return { ok: false, status: "rejected" };
+  const releasingRegistration = message.command === "catalog-release" ? historyPageTabs.get(message.pageId) : undefined;
+  if (message.command === "catalog-release" && sender?.tab?.id !== undefined && releasingRegistration?.tabId !== sender.tab.id) return { ok: false, status: "rejected" };
+  if ((message.command === "catalog-begin" || message.command === "catalog-commit") && sender?.tab?.id !== undefined) historyPageTabs.set(message.pageId, { tabId: sender.tab.id });
   const { getCurrentExtensionSession } = await import("./auth-client");
   const { getStoredAuthTokens } = await import("./auth-tokens");
-  const getCurrentSession = usesStoredWatchHistorySession(message.command)
-    ? getStoredAuthTokens
-    : async () => getCurrentExtensionSession().catch(getStoredAuthTokens);
-  return createWatchHistoryClient({
-    getCurrentSession,
+  backgroundWatchHistoryClient ??= createWatchHistoryClient({
+    getCurrentSession: getStoredAuthTokens,
     getRequestSession: getCurrentExtensionSession,
-  }).handle(message);
+    onCatalogSuperseded: (pageId) => {
+      const tabId = historyPageTabs.get(pageId)?.tabId;
+      historyPageTabs.delete(pageId);
+      if (tabId !== undefined) void chrome.tabs.sendMessage(tabId, { type: "ANIDACHI_WATCH_CATALOG_ABORT", pageId }).catch(() => undefined);
+    },
+  });
+  if (message.command === "catalog-begin" && sender?.tab?.id !== undefined && historyPageTabs.get(message.pageId)?.tabId !== sender.tab.id) return { ok: false, status: "rejected" };
+  const response = await backgroundWatchHistoryClient.handle(message);
+  if (message.command === "catalog-release" && response.ok && historyPageTabs.get(message.pageId) === releasingRegistration) historyPageTabs.delete(message.pageId);
+  return response;
+}
+
+export function isWatchHistorySenderAllowed(message: WatchHistoryMessage, sender: chrome.runtime.MessageSender): boolean {
+  if (sender.id !== chrome.runtime.id || !sender.url) return false;
+  if (sender.url.startsWith(chrome.runtime.getURL(""))) return true;
+  if (sender.tab?.id === undefined || sender.frameId !== undefined && sender.frameId !== 0) return false;
+  let url: URL;
+  try { url = new URL(sender.url); } catch { return false; }
+  if (url.protocol !== "https:" || !["crunchyroll.com", "www.crunchyroll.com", "youtube.com", "www.youtube.com", "m.youtube.com"].includes(url.hostname)) return false;
+  return ["resume-claim", "bootstrap", "bootstrap-cache", "pending-identities", "observe-progress", "enqueue-progress", "resolve-identity", "catalog-begin", "catalog-commit", "catalog-release", "content-reconnect", "recover-storage", "flush"].includes(message.command);
 }
 
 export function usesStoredWatchHistorySession(
   command: WatchHistoryMessage["command"],
 ): boolean {
-  return command === "enqueue-progress" ||
+  return command === "capacity" || command === "resume-claim" || command === "enqueue-progress" ||
+    command === "resolve-identity" ||
+    command === "pending-identities" ||
+    command === "catalog-begin" ||
+    command === "catalog-commit" ||
+    command === "catalog-release" ||
     command === "observe-progress" ||
     command === "bootstrap" ||
     command === "bootstrap-cache" ||
@@ -1335,6 +2002,11 @@ export function usesStoredWatchHistorySession(
     command === "recover-storage" ||
     command === "get-preferences" ||
     command === "update-preferences" ||
+    command === "browse" ||
+    command === "browse-title-episodes" ||
+    command === "browse-sessions" ||
+    command === "browse-options" ||
+    command === "browse-catalog" ||
     command === "other-owner-pending" ||
     command === "discard-old-owner" ||
     command === "discard-old-owner-work";
@@ -1348,6 +2020,7 @@ export async function handleWatchHistoryAuthSessionChange(
   const storage = dependencies.storage ?? createWatchHistoryStorage();
   try {
     if (previous && previous.user.id !== next?.user.id) {
+      backgroundWatchHistoryClient?.cancelCatalog(previous.user.id);
       const cleared = await storage.clearRebuildableAccountData(previous.user.id);
       if (!cleared.ok) return { ok: false, status: "retryable" };
     }
@@ -1356,6 +2029,8 @@ export async function handleWatchHistoryAuthSessionChange(
     const current = await getCurrentSession();
     if (!current || !sameSession(next, current)) return { ok: false, status: "retryable" };
     const client = createWatchHistoryClient({ ...dependencies, storage, getCurrentSession });
+    const bootstrapped = await client.handle({ type: WATCH_HISTORY_MESSAGE_TYPE, command: "bootstrap", expectedOwnerUserId: current.user.id });
+    if (!bootstrapped.ok) return bootstrapped;
     const reconciled = await client.reconcile(current);
     if (!reconciled.ok) return { ok: false, status: "retryable" };
     return client.flush(current);

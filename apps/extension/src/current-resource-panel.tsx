@@ -1,8 +1,8 @@
 import { ChevronRight } from "lucide-react";
-import type { HistoryObservation } from "./source-adapters/core/history-policy";
+import type { CurrentResourceDisplay } from "./current-resource-display";
 
 interface CurrentResourcePanelProps {
-  entry: HistoryObservation | null;
+  entry: CurrentResourceDisplay | null;
 }
 
 export function CurrentResourcePanel({ entry }: CurrentResourcePanelProps) {

@@ -1,0 +1,310 @@
+{
+  "kind": "single-machine-synthetic-WebRTC-only",
+  "testedCommit": "72e1ea9a8513e0566254ceda70f7c9dd5975ed76",
+  "testedFiles": {
+    "tests/e2e/README.md": "33ba15e12f29e3e182ac9c51bbf688dee6b1063cd0f2db224fa2c92277eed0e5",
+    "tests/e2e/p2p-media-harness-support.mjs": "1d495d2c0b474c191353f566ec14ca4b293df82639622d25041a6e12d13182d9",
+    "tests/e2e/p2p-media-harness.mjs": "805652bf5e13b506c853a008a3604a492dbae1c1f264d2d51dd7f7941af6689e",
+    "tests/e2e/p2p-media-harness.test.mjs": "b127114783d95485bc15800ec51fd4867ed95a6265943f87d8b0fbf0e49f6fe9",
+    "tests/e2e/package.json": "c9f016b272bd916310bcbb0705536ce8a1d33c1576569c0caf42f7333cd700f1"
+  },
+  "scenarios": [
+    {
+      "size": 4,
+      "cameras": 1,
+      "microphones": 2,
+      "browser": "153.0.8010.12",
+      "receiptSha256": "010ea47f43d82865fa68e091cb6a01c2e2bd2c8c0f6750c1721f3d6aaf7c6a34",
+      "tests": [
+        {
+          "name": "every participant decodes every permitted camera and microphone",
+          "ok": true,
+          "detail": {
+            "afterLastJoinMs": 230,
+            "entireSetupMs": 1277
+          }
+        },
+        {
+          "name": "receiver-only participants call zero getUserMedia",
+          "ok": true,
+          "detail": [
+            1,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "bounded graph excludes receiver-to-receiver pairs",
+          "ok": true,
+          "detail": [
+            3,
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "name": "all endpoints continue decoding video and audio",
+          "ok": true,
+          "detail": {
+            "endpoints": 12
+          }
+        },
+        {
+          "name": "selected candidate pair exists at both endpoints of every expected media edge",
+          "ok": true,
+          "detail": {
+            "expectedMediaEdges": 6,
+            "expectedPeerEndpoints": 12,
+            "sampleWaitMs": 0,
+            "selectedCount": 12,
+            "relayCount": 0,
+            "selectedTypes": [
+              "host/host"
+            ]
+          }
+        },
+        {
+          "name": "complete decoded video first-frame sample",
+          "ok": true,
+          "detail": {
+            "samples": 3,
+            "expected": 3,
+            "p95Ms": 184.0999999642372
+          }
+        },
+        {
+          "name": "decoded video TTFM p95 is below 6s (S3)",
+          "ok": true,
+          "detail": {
+            "samples": 3,
+            "p95Ms": 184.0999999642372,
+            "budgetMs": 6000,
+            "boundary": "strictly below"
+          }
+        },
+        {
+          "name": "camera release preserves microphone reception",
+          "ok": true,
+          "detail": {
+            "peers": 2
+          }
+        }
+      ]
+    },
+    {
+      "size": 6,
+      "cameras": 2,
+      "microphones": 3,
+      "browser": "153.0.8010.12",
+      "receiptSha256": "b81535728622a9a1a4ae83fdd2379b0f01973c34638528df56c7f62afe3d48b1",
+      "tests": [
+        {
+          "name": "every participant decodes every permitted camera and microphone",
+          "ok": true,
+          "detail": {
+            "afterLastJoinMs": 261,
+            "entireSetupMs": 1790
+          }
+        },
+        {
+          "name": "receiver-only participants call zero getUserMedia",
+          "ok": true,
+          "detail": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "bounded graph excludes receiver-to-receiver pairs",
+          "ok": true,
+          "detail": [
+            5,
+            5,
+            5,
+            5,
+            5,
+            5
+          ]
+        },
+        {
+          "name": "all endpoints continue decoding video and audio",
+          "ok": true,
+          "detail": {
+            "endpoints": 30
+          }
+        },
+        {
+          "name": "selected candidate pair exists at both endpoints of every expected media edge",
+          "ok": true,
+          "detail": {
+            "expectedMediaEdges": 15,
+            "expectedPeerEndpoints": 30,
+            "sampleWaitMs": 0,
+            "selectedCount": 30,
+            "relayCount": 0,
+            "selectedTypes": [
+              "host/host"
+            ]
+          }
+        },
+        {
+          "name": "complete decoded video first-frame sample",
+          "ok": true,
+          "detail": {
+            "samples": 10,
+            "expected": 10,
+            "p95Ms": 257.69999998807907
+          }
+        },
+        {
+          "name": "decoded video TTFM p95 is below 6s (S3)",
+          "ok": true,
+          "detail": {
+            "samples": 10,
+            "p95Ms": 257.69999998807907,
+            "budgetMs": 6000,
+            "boundary": "strictly below"
+          }
+        },
+        {
+          "name": "camera release preserves microphone reception",
+          "ok": true,
+          "detail": {
+            "peers": 4
+          }
+        }
+      ]
+    },
+    {
+      "size": 15,
+      "cameras": 4,
+      "microphones": 8,
+      "browser": "153.0.8010.12",
+      "receiptSha256": "7afb3b4d3888ddef69db6a8809d0e7d4a83f2c3f09d1991df901918f1063417d",
+      "tests": [
+        {
+          "name": "every participant decodes every permitted camera and microphone",
+          "ok": true,
+          "detail": {
+            "afterLastJoinMs": 6786,
+            "entireSetupMs": 26631
+          }
+        },
+        {
+          "name": "receiver-only participants call zero getUserMedia",
+          "ok": true,
+          "detail": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "bounded graph excludes receiver-to-receiver pairs",
+          "ok": true,
+          "detail": [
+            14,
+            14,
+            14,
+            14,
+            14,
+            14,
+            14,
+            14,
+            14,
+            14,
+            14,
+            14,
+            12,
+            12,
+            12
+          ]
+        },
+        {
+          "name": "all endpoints continue decoding video and audio",
+          "ok": true,
+          "detail": {
+            "endpoints": 204
+          }
+        },
+        {
+          "name": "selected candidate pair exists at both endpoints of every expected media edge",
+          "ok": true,
+          "detail": {
+            "expectedMediaEdges": 102,
+            "expectedPeerEndpoints": 204,
+            "sampleWaitMs": 2,
+            "selectedCount": 204,
+            "relayCount": 0,
+            "selectedTypes": [
+              "host/host"
+            ]
+          }
+        },
+        {
+          "name": "complete decoded video first-frame sample",
+          "ok": true,
+          "detail": {
+            "samples": 56,
+            "expected": 56,
+            "p95Ms": 4308.800000011921
+          }
+        },
+        {
+          "name": "decoded video TTFM p95 is below 6s (S3)",
+          "ok": true,
+          "detail": {
+            "samples": 56,
+            "p95Ms": 4308.800000011921,
+            "budgetMs": 6000,
+            "boundary": "strictly below"
+          }
+        },
+        {
+          "name": "camera release preserves microphone reception",
+          "ok": true,
+          "detail": {
+            "peers": 11
+          }
+        }
+      ]
+    }
+  ],
+  "first15Run": "Failed203/204selected candidate endpoints despite204decoded endpoints. Same204/204 assertion passed after bounded fresh-stat condition wait; no partial acceptance. Original scratch output was superseded by final run.",
+  "forcedRelay": "Actual Worker accepted v2p0/s0 then refused because local TURN configuration was missing. No actual relay pass.",
+  "physicalOrDistributedAcceptance": false,
+  "legacyFollowup": {
+    "commit": "128cdb29ad8cd61dd6e53357edeefcf0bd83a880",
+    "change": "Restore legacy8000ms timing; v2p95<6000 and v2 measured behavior unchanged.",
+    "focusedTestsPassed": 3,
+    "legacyScenariosPassed": 26,
+    "firstFrameMs": [
+      159,
+      1
+    ],
+    "testedFiles": {
+      "tests/e2e/README.md": "0ff342a6a5ac6fc7abc4f821b74f9214953368dde09c1f09254e30cbae29c8c1",
+      "tests/e2e/p2p-media-harness-support.mjs": "5ccc7ed0179537082a41f691e1fe4b3828f4109282ee3c2abb15806aaada257e",
+      "tests/e2e/p2p-media-harness.mjs": "017f70b9e26e0c96f2fdc69e5c85d8c5c69e25a030a45d85d0115d46647bb634",
+      "tests/e2e/p2p-media-harness.test.mjs": "2fc684c2059744ae03d7073fa16db82e61f4faae4d6eb3392f2c87145bb63603"
+    }
+  }
+}

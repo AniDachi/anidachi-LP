@@ -782,7 +782,7 @@ reset role;
 -- and return stale without overwriting it.
 select extensions.dblink_connect(
   'room_source_setup',
-  'host=host.docker.internal port=54322 dbname=postgres user=postgres password=postgres application_name=room_source_setup'
+  pg_catalog.format('host=%s port=%s dbname=%L user=postgres password=postgres application_name=room_source_setup', pg_catalog.inet_server_addr(), pg_catalog.inet_server_port(), pg_catalog.current_database())
 );
 select extensions.dblink_exec(
   'room_source_setup',
@@ -821,11 +821,11 @@ select extensions.dblink_disconnect('room_source_setup');
 
 select extensions.dblink_connect(
   'room_source_high',
-  'host=host.docker.internal port=54322 dbname=postgres user=postgres password=postgres application_name=room_source_high'
+  pg_catalog.format('host=%s port=%s dbname=%L user=postgres password=postgres application_name=room_source_high', pg_catalog.inet_server_addr(), pg_catalog.inet_server_port(), pg_catalog.current_database())
 );
 select extensions.dblink_connect(
   'room_source_low',
-  'host=host.docker.internal port=54322 dbname=postgres user=postgres password=postgres application_name=room_source_low'
+  pg_catalog.format('host=%s port=%s dbname=%L user=postgres password=postgres application_name=room_source_low', pg_catalog.inet_server_addr(), pg_catalog.inet_server_port(), pg_catalog.current_database())
 );
 select extensions.dblink_exec('room_source_high', 'begin');
 select extensions.dblink_exec('room_source_high', 'set role service_role');
@@ -903,7 +903,7 @@ select is(
 
 select extensions.dblink_connect(
   'room_source_cleanup',
-  'host=host.docker.internal port=54322 dbname=postgres user=postgres password=postgres application_name=room_source_cleanup'
+  pg_catalog.format('host=%s port=%s dbname=%L user=postgres password=postgres application_name=room_source_cleanup', pg_catalog.inet_server_addr(), pg_catalog.inet_server_port(), pg_catalog.current_database())
 );
 select extensions.dblink_exec(
   'room_source_cleanup',

@@ -1,0 +1,3074 @@
+{
+	"active_room_sessions": {
+		"columns": [
+			{
+				"default": null,
+				"name": "user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "room_id",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "role",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "participant_session_id",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": "now()",
+				"name": "claimed_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": "now()",
+				"name": "updated_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "CHECK (((char_length(participant_session_id) >= 1) AND (char_length(participant_session_id) <= 128)))",
+				"name": "active_room_sessions_participant_session_id_check",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (user_id)",
+				"name": "active_room_sessions_pkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((role = ANY (ARRAY['host'::text, 'member'::text])))",
+				"name": "active_room_sessions_role_check",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (room_id) REFERENCES public.rooms(room_id) ON DELETE CASCADE",
+				"name": "active_room_sessions_room_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "active_room_sessions_user_id_fkey",
+				"validated": true
+			}
+		]
+	},
+	"billing_customers": {
+		"columns": [
+			{
+				"default": null,
+				"name": "user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "stripe_customer_id",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": "now()",
+				"name": "created_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": "now()",
+				"name": "updated_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "PRIMARY KEY (user_id)",
+				"name": "billing_customers_pkey",
+				"validated": true
+			},
+			{
+				"definition": "UNIQUE (stripe_customer_id)",
+				"name": "billing_customers_stripe_customer_id_key",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "billing_customers_user_id_fkey",
+				"validated": true
+			}
+		]
+	},
+	"devices": {
+		"columns": [
+			{
+				"default": "gen_random_uuid()",
+				"name": "id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": "'Chrome extension'::text",
+				"name": "label",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "extension_installation_id",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": "now()",
+				"name": "created_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": "now()",
+				"name": "last_seen_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "push_endpoint",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "push_p256dh",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "push_auth",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "push_expiration_at",
+				"nullable": true,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "push_subscription_updated_at",
+				"nullable": true,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": "false",
+				"name": "notifications_enabled",
+				"nullable": false,
+				"type": "boolean"
+			},
+			{
+				"default": null,
+				"name": "revoked_at",
+				"nullable": true,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "last_delivery_error",
+				"nullable": true,
+				"type": "text"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "CHECK (((notifications_enabled = false) OR ((push_endpoint IS NOT NULL) AND (push_p256dh IS NOT NULL) AND (push_auth IS NOT NULL) AND (push_subscription_updated_at IS NOT NULL))))",
+				"name": "devices_enabled_push_subscription_check",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (id)",
+				"name": "devices_pkey",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "devices_user_id_fkey",
+				"validated": true
+			}
+		]
+	},
+	"extension_auth_codes": {
+		"columns": [
+			{
+				"default": "gen_random_uuid()",
+				"name": "id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "code_hash",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "state_hash",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "redirect_uri",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "expires_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "consumed_at",
+				"nullable": true,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": "now()",
+				"name": "created_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "extension_id",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "code_challenge",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "code_challenge_method",
+				"nullable": true,
+				"type": "text"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "CHECK ((((extension_id IS NULL) AND (code_challenge IS NULL) AND (code_challenge_method IS NULL)) OR ((extension_id IS NOT NULL) AND (code_challenge IS NOT NULL) AND (code_challenge_method IS NOT NULL))))",
+				"name": "extension_auth_codes_binding_completeness_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((code_challenge ~ '^[A-Za-z0-9_-]{43}$'::text))",
+				"name": "extension_auth_codes_code_challenge_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((code_challenge_method = 'S256'::text))",
+				"name": "extension_auth_codes_code_challenge_method_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((code_hash ~ '^[0-9a-f]{64}$'::text))",
+				"name": "extension_auth_codes_code_hash_check",
+				"validated": true
+			},
+			{
+				"definition": "UNIQUE (code_hash)",
+				"name": "extension_auth_codes_code_hash_key",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((consumed_at IS NULL) OR (consumed_at >= created_at)))",
+				"name": "extension_auth_codes_consumed_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((extension_id IS NULL) OR ((expires_at > created_at) AND (expires_at <= (created_at + '00:05:00'::interval)))))",
+				"name": "extension_auth_codes_expiry_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((extension_id ~ '^[a-p]{32}$'::text))",
+				"name": "extension_auth_codes_extension_id_check",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (id)",
+				"name": "extension_auth_codes_pkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((redirect_uri = (('https://'::text || extension_id) || '.chromiumapp.org/auth'::text)))",
+				"name": "extension_auth_codes_redirect_uri_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((state_hash ~ '^[0-9a-f]{64}$'::text))",
+				"name": "extension_auth_codes_state_hash_check",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "extension_auth_codes_user_id_fkey",
+				"validated": true
+			}
+		]
+	},
+	"friend_group_members": {
+		"columns": [
+			{
+				"default": null,
+				"name": "group_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "friend_user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": "now()",
+				"name": "added_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "FOREIGN KEY (friend_user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "friend_group_members_friend_user_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (group_id) REFERENCES public.friend_groups(id) ON DELETE CASCADE",
+				"name": "friend_group_members_group_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (group_id, friend_user_id)",
+				"name": "friend_group_members_pkey",
+				"validated": true
+			}
+		]
+	},
+	"friend_groups": {
+		"columns": [
+			{
+				"default": "gen_random_uuid()",
+				"name": "id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "owner_user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "name",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "archived_at",
+				"nullable": true,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": "now()",
+				"name": "created_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": "now()",
+				"name": "updated_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 80)))",
+				"name": "friend_groups_name_check",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (owner_user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "friend_groups_owner_user_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (id)",
+				"name": "friend_groups_pkey",
+				"validated": true
+			}
+		]
+	},
+	"friend_invite_links": {
+		"columns": [
+			{
+				"default": "gen_random_uuid()",
+				"name": "id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "sender_user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "token_hash",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": "now()",
+				"name": "created_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": "(now() + '30 days'::interval)",
+				"name": "expires_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "accepted_at",
+				"nullable": true,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "accepted_by_user_id",
+				"nullable": true,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "revoked_at",
+				"nullable": true,
+				"type": "timestamp with time zone"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "FOREIGN KEY (accepted_by_user_id) REFERENCES public.users(id) ON DELETE SET NULL",
+				"name": "friend_invite_links_accepted_by_user_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((((accepted_at IS NULL) AND (accepted_by_user_id IS NULL)) OR ((accepted_at IS NOT NULL) AND (accepted_by_user_id IS NOT NULL))))",
+				"name": "friend_invite_links_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((accepted_by_user_id IS NULL) OR (accepted_by_user_id <> sender_user_id)))",
+				"name": "friend_invite_links_check1",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (id)",
+				"name": "friend_invite_links_pkey",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (sender_user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "friend_invite_links_sender_user_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((token_hash ~ '^[a-f0-9]{64}$'::text))",
+				"name": "friend_invite_links_token_hash_check",
+				"validated": true
+			},
+			{
+				"definition": "UNIQUE (token_hash)",
+				"name": "friend_invite_links_token_hash_key",
+				"validated": true
+			}
+		]
+	},
+	"friendships": {
+		"columns": [
+			{
+				"default": "gen_random_uuid()",
+				"name": "id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "requester_user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "addressee_user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "status",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "blocked_by_user_id",
+				"nullable": true,
+				"type": "uuid"
+			},
+			{
+				"default": "now()",
+				"name": "requested_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "responded_at",
+				"nullable": true,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": "now()",
+				"name": "updated_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "addressee_seen_at",
+				"nullable": true,
+				"type": "timestamp with time zone"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "FOREIGN KEY (addressee_user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "friendships_addressee_user_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (blocked_by_user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "friendships_blocked_by_user_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((requester_user_id <> addressee_user_id))",
+				"name": "friendships_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((((status = 'blocked'::text) AND (blocked_by_user_id IS NOT NULL)) OR ((status <> 'blocked'::text) AND (blocked_by_user_id IS NULL))))",
+				"name": "friendships_check1",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (id)",
+				"name": "friendships_pkey",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (requester_user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "friendships_requester_user_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((status = ANY (ARRAY['pending'::text, 'accepted'::text, 'declined'::text, 'blocked'::text, 'removed'::text])))",
+				"name": "friendships_status_check",
+				"validated": true
+			}
+		]
+	},
+	"oauth_login_transactions": {
+		"columns": [
+			{
+				"default": "gen_random_uuid()",
+				"name": "id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "state_hash",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "browser_correlation_hash",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "provider",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": "''::text",
+				"name": "return_to",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": "clock_timestamp()",
+				"name": "created_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "expires_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "consumed_at",
+				"nullable": true,
+				"type": "timestamp with time zone"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "CHECK (((consumed_at IS NULL) OR (consumed_at >= created_at)))",
+				"name": "oauth_login_transactions_consumed_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((browser_correlation_hash ~ '^[0-9a-f]{64}$'::text))",
+				"name": "oauth_login_transactions_correlation_hash_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((expires_at > created_at))",
+				"name": "oauth_login_transactions_expiry_check",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (id)",
+				"name": "oauth_login_transactions_pkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((provider = ANY (ARRAY['discord'::text, 'google'::text])))",
+				"name": "oauth_login_transactions_provider_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((return_to = ''::text) OR ((\"left\"(return_to, 1) = '/'::text) AND (\"left\"(return_to, 2) <> '//'::text) AND (return_to !~~ '/api/%'::text) AND (return_to !~~ '/_next/%'::text) AND (return_to !~~ '/__anidachi/%'::text))))",
+				"name": "oauth_login_transactions_return_to_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((state_hash ~ '^[0-9a-f]{64}$'::text))",
+				"name": "oauth_login_transactions_state_hash_check",
+				"validated": true
+			},
+			{
+				"definition": "UNIQUE (state_hash)",
+				"name": "oauth_login_transactions_state_hash_key",
+				"validated": true
+			}
+		]
+	},
+	"profiles": {
+		"columns": [
+			{
+				"default": null,
+				"name": "user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "handle",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "display_name",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "avatar_url",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": "now()",
+				"name": "created_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": "now()",
+				"name": "updated_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "CHECK (((handle IS NULL) OR (handle ~ '^[a-z0-9_]{3,24}$'::text)))",
+				"name": "profiles_handle_check",
+				"validated": true
+			},
+			{
+				"definition": "UNIQUE (handle)",
+				"name": "profiles_handle_key",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (user_id)",
+				"name": "profiles_pkey",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "profiles_user_id_fkey",
+				"validated": true
+			}
+		]
+	},
+	"recent_people_evidence": {
+		"columns": [
+			{
+				"default": null,
+				"name": "user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "other_user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "last_room_id",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "last_watched_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "CHECK ((user_id <> other_user_id))",
+				"name": "recent_people_evidence_check",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (last_room_id) REFERENCES public.rooms(room_id) ON DELETE CASCADE",
+				"name": "recent_people_evidence_last_room_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (other_user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "recent_people_evidence_other_user_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (user_id, other_user_id)",
+				"name": "recent_people_evidence_pkey",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "recent_people_evidence_user_id_fkey",
+				"validated": true
+			}
+		]
+	},
+	"recent_people_hidden": {
+		"columns": [
+			{
+				"default": null,
+				"name": "user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "hidden_user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": "now()",
+				"name": "hidden_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "CHECK ((user_id <> hidden_user_id))",
+				"name": "recent_people_hidden_check",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (hidden_user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "recent_people_hidden_hidden_user_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (user_id, hidden_user_id)",
+				"name": "recent_people_hidden_pkey",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "recent_people_hidden_user_id_fkey",
+				"validated": true
+			}
+		]
+	},
+	"refresh_token_families": {
+		"columns": [
+			{
+				"default": "gen_random_uuid()",
+				"name": "id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "channel",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "device_id",
+				"nullable": true,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "current_token_hash",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "created_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "last_used_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "absolute_expires_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "revoked_at",
+				"nullable": true,
+				"type": "timestamp with time zone"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "CHECK ((channel = ANY (ARRAY['website'::text, 'extension'::text])))",
+				"name": "refresh_token_families_channel_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((current_token_hash ~ '^[0-9a-f]{64}$'::text))",
+				"name": "refresh_token_families_current_hash_check",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (device_id) REFERENCES public.devices(id) ON DELETE SET NULL",
+				"name": "refresh_token_families_device_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((last_used_at >= created_at) AND (absolute_expires_at = (created_at + '365 days'::interval)) AND ((revoked_at IS NULL) OR (revoked_at >= created_at))))",
+				"name": "refresh_token_families_lifecycle_check",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (id)",
+				"name": "refresh_token_families_pkey",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "refresh_token_families_user_id_fkey",
+				"validated": true
+			}
+		]
+	},
+	"refresh_token_lineage": {
+		"columns": [
+			{
+				"default": null,
+				"name": "token_hash",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "family_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "successor_token_hash",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "used_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "CHECK ((token_hash <> successor_token_hash))",
+				"name": "refresh_token_lineage_distinct_hashes_check",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (family_id) REFERENCES public.refresh_token_families(id) ON DELETE CASCADE",
+				"name": "refresh_token_lineage_family_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (token_hash)",
+				"name": "refresh_token_lineage_pkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((successor_token_hash ~ '^[0-9a-f]{64}$'::text))",
+				"name": "refresh_token_lineage_successor_hash_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((token_hash ~ '^[0-9a-f]{64}$'::text))",
+				"name": "refresh_token_lineage_token_hash_check",
+				"validated": true
+			}
+		]
+	},
+	"refresh_tokens": {
+		"columns": [
+			{
+				"default": "gen_random_uuid()",
+				"name": "id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "token_hash",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "expires_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": "now()",
+				"name": "created_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "revoked_at",
+				"nullable": true,
+				"type": "timestamp with time zone"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "PRIMARY KEY (id)",
+				"name": "refresh_tokens_pkey",
+				"validated": true
+			},
+			{
+				"definition": "UNIQUE (token_hash)",
+				"name": "refresh_tokens_token_hash_key",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "refresh_tokens_user_id_fkey",
+				"validated": true
+			}
+		]
+	},
+	"room_invite_actions": {
+		"columns": [
+			{
+				"default": null,
+				"name": "sender_user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "client_action_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "room_id",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "target_kind",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "target_group_id",
+				"nullable": true,
+				"type": "uuid"
+			},
+			{
+				"default": "'{}'::uuid[]",
+				"name": "direct_recipient_user_ids",
+				"nullable": false,
+				"type": "uuid[]"
+			},
+			{
+				"default": null,
+				"name": "message",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "invite_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": "now()",
+				"name": "created_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "CHECK ((((target_kind = 'direct'::text) AND (target_group_id IS NULL) AND (cardinality(direct_recipient_user_ids) > 0)) OR ((target_kind = 'group'::text) AND (target_group_id IS NOT NULL) AND (cardinality(direct_recipient_user_ids) = 0))))",
+				"name": "room_invite_actions_check",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (invite_id) REFERENCES public.room_invites(id) ON DELETE CASCADE",
+				"name": "room_invite_actions_invite_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((message IS NULL) OR (char_length(message) <= 180)))",
+				"name": "room_invite_actions_message_check",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (sender_user_id, client_action_id)",
+				"name": "room_invite_actions_pkey",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (room_id) REFERENCES public.rooms(room_id) ON DELETE CASCADE",
+				"name": "room_invite_actions_room_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (sender_user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "room_invite_actions_sender_user_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (target_group_id) REFERENCES public.friend_groups(id) ON DELETE CASCADE",
+				"name": "room_invite_actions_target_group_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((target_kind = ANY (ARRAY['direct'::text, 'group'::text])))",
+				"name": "room_invite_actions_target_kind_check",
+				"validated": true
+			}
+		]
+	},
+	"room_invite_recipients": {
+		"columns": [
+			{
+				"default": null,
+				"name": "invite_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "recipient_user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": "'pending'::text",
+				"name": "status",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": "now()",
+				"name": "created_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": "now()",
+				"name": "updated_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "responded_at",
+				"nullable": true,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "seen_at",
+				"nullable": true,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "missed_at",
+				"nullable": true,
+				"type": "timestamp with time zone"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "FOREIGN KEY (invite_id) REFERENCES public.room_invites(id) ON DELETE CASCADE",
+				"name": "room_invite_recipients_invite_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (invite_id, recipient_user_id)",
+				"name": "room_invite_recipients_pkey",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (recipient_user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "room_invite_recipients_recipient_user_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((status = ANY (ARRAY['pending'::text, 'accepted'::text, 'declined'::text, 'expired'::text])))",
+				"name": "room_invite_recipients_status_check",
+				"validated": true
+			}
+		]
+	},
+	"room_invites": {
+		"columns": [
+			{
+				"default": "gen_random_uuid()",
+				"name": "id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "room_id",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "sender_user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "target_kind",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "target_group_id",
+				"nullable": true,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "message",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "room_title",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "source_url",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "video_fingerprint",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": "now()",
+				"name": "created_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": "(now() + '12:00:00'::interval)",
+				"name": "expires_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "CHECK ((((target_kind = 'direct'::text) AND (target_group_id IS NULL)) OR ((target_kind = 'group'::text) AND (target_group_id IS NOT NULL))))",
+				"name": "room_invites_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((message IS NULL) OR (char_length(message) <= 180)))",
+				"name": "room_invites_message_check",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (id)",
+				"name": "room_invites_pkey",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (room_id) REFERENCES public.rooms(room_id) ON DELETE CASCADE",
+				"name": "room_invites_room_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (sender_user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "room_invites_sender_user_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (target_group_id) REFERENCES public.friend_groups(id) ON DELETE SET NULL",
+				"name": "room_invites_target_group_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((target_kind = ANY (ARRAY['direct'::text, 'group'::text])))",
+				"name": "room_invites_target_kind_check",
+				"validated": true
+			}
+		]
+	},
+	"room_members": {
+		"columns": [
+			{
+				"default": null,
+				"name": "room_id",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": "now()",
+				"name": "joined_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "PRIMARY KEY (room_id, user_id)",
+				"name": "room_members_pkey",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (room_id) REFERENCES public.rooms(room_id) ON DELETE CASCADE",
+				"name": "room_members_room_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "room_members_user_id_fkey",
+				"validated": true
+			}
+		]
+	},
+	"rooms": {
+		"columns": [
+			{
+				"default": "gen_random_uuid()",
+				"name": "id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": "(gen_random_uuid())::text",
+				"name": "room_id",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "host_user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "show_id",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "episode_id",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": "'lobby'::text",
+				"name": "status",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": "now()",
+				"name": "created_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "source_url",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "video_fingerprint",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "title",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "client_request_id",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": "now()",
+				"name": "last_active_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "ended_at",
+				"nullable": true,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "host_connected_at",
+				"nullable": true,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": "'free'::text",
+				"name": "host_plan_code",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": "4",
+				"name": "max_participants",
+				"nullable": false,
+				"type": "integer"
+			},
+			{
+				"default": "4",
+				"name": "max_media_seats",
+				"nullable": false,
+				"type": "integer"
+			},
+			{
+				"default": "false",
+				"name": "can_name_room",
+				"nullable": false,
+				"type": "boolean"
+			},
+			{
+				"default": "false",
+				"name": "can_send_push_invites",
+				"nullable": false,
+				"type": "boolean"
+			},
+			{
+				"default": null,
+				"name": "source_provider",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "source_generation",
+				"nullable": true,
+				"type": "bigint"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "CHECK ((host_plan_code = ANY (ARRAY['free'::text, 'plus'::text, 'pro'::text, 'watcher'::text, 'nakama'::text, 'junkie'::text])))",
+				"name": "rooms_host_plan_code_check",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (host_user_id) REFERENCES public.users(id)",
+				"name": "rooms_host_user_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((max_media_seats >= 0) AND (max_media_seats <= 16)))",
+				"name": "rooms_max_media_seats_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((max_participants >= 1) AND (max_participants <= 50)))",
+				"name": "rooms_max_participants_check",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (id)",
+				"name": "rooms_pkey",
+				"validated": true
+			},
+			{
+				"definition": "UNIQUE (room_id)",
+				"name": "rooms_room_id_key",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((((source_provider IS NULL) AND (source_generation IS NULL)) OR ((source_provider IS NOT NULL) AND (source_generation IS NOT NULL) AND (source_provider = ANY (ARRAY['crunchyroll'::text, 'youtube'::text])) AND ((source_generation >= 1) AND (source_generation <= '9007199254740991'::bigint)) AND (source_url IS NOT NULL) AND (source_url = btrim(source_url)) AND ((char_length(source_url) >= 1) AND (char_length(source_url) <= 2048)) AND (video_fingerprint IS NOT NULL) AND (video_fingerprint = btrim(video_fingerprint)) AND ((char_length(video_fingerprint) >= 1) AND (char_length(video_fingerprint) <= 400)))))",
+				"name": "rooms_source_tuple_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((source_provider IS NULL) OR ((source_provider = 'youtube'::text) AND (source_url ~ '^https://www[.]youtube[.]com/watch[?]v=[A-Za-z0-9_-]+$'::text) AND ((char_length(\"substring\"(source_url, '^https://www[.]youtube[.]com/watch[?]v=([A-Za-z0-9_-]+)$'::text)) >= 6) AND (char_length(\"substring\"(source_url, '^https://www[.]youtube[.]com/watch[?]v=([A-Za-z0-9_-]+)$'::text)) <= 392)) AND (video_fingerprint = ('youtube|'::text || \"substring\"(source_url, '^https://www[.]youtube[.]com/watch[?]v=([A-Za-z0-9_-]+)$'::text)))) OR ((source_provider = 'crunchyroll'::text) AND (source_url ~ '^https://www[.]crunchyroll[.]com/watch/[A-Za-z0-9_-]+$'::text) AND ((char_length(\"substring\"(source_url, '^https://www[.]crunchyroll[.]com/watch/([A-Za-z0-9_-]+)$'::text)) >= 1) AND (char_length(\"substring\"(source_url, '^https://www[.]crunchyroll[.]com/watch/([A-Za-z0-9_-]+)$'::text)) <= 382)) AND (video_fingerprint = ('crunchyroll|watch/'::text || \"substring\"(source_url, '^https://www[.]crunchyroll[.]com/watch/([A-Za-z0-9_-]+)$'::text))))))",
+				"name": "rooms_source_url_canonical_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((status = ANY (ARRAY['lobby'::text, 'live'::text, 'ended'::text])))",
+				"name": "rooms_status_check",
+				"validated": true
+			}
+		]
+	},
+	"stripe_events": {
+		"columns": [
+			{
+				"default": null,
+				"name": "event_id",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "event_type",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": "now()",
+				"name": "received_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "processed_at",
+				"nullable": true,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "last_error",
+				"nullable": true,
+				"type": "text"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "PRIMARY KEY (event_id)",
+				"name": "stripe_events_pkey",
+				"validated": true
+			}
+		]
+	},
+	"subscriptions": {
+		"columns": [
+			{
+				"default": "gen_random_uuid()",
+				"name": "id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "stripe_customer_id",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "stripe_subscription_id",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "stripe_price_id",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "plan_code",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "status",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "current_period_end",
+				"nullable": true,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": "false",
+				"name": "cancel_at_period_end",
+				"nullable": false,
+				"type": "boolean"
+			},
+			{
+				"default": "now()",
+				"name": "created_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": "now()",
+				"name": "updated_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "PRIMARY KEY (id)",
+				"name": "subscriptions_pkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((plan_code = ANY (ARRAY['free'::text, 'plus'::text, 'pro'::text, 'watcher'::text, 'nakama'::text, 'junkie'::text])))",
+				"name": "subscriptions_plan_code_check",
+				"validated": true
+			},
+			{
+				"definition": "UNIQUE (stripe_subscription_id)",
+				"name": "subscriptions_stripe_subscription_id_key",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "subscriptions_user_id_fkey",
+				"validated": true
+			}
+		]
+	},
+	"usage_daily": {
+		"columns": [
+			{
+				"default": null,
+				"name": "user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "day",
+				"nullable": false,
+				"type": "date"
+			},
+			{
+				"default": "0",
+				"name": "host_seconds",
+				"nullable": false,
+				"type": "integer"
+			},
+			{
+				"default": "now()",
+				"name": "updated_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "PRIMARY KEY (user_id, day)",
+				"name": "usage_daily_pkey",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "usage_daily_user_id_fkey",
+				"validated": true
+			}
+		]
+	},
+	"user_tracked_titles": {
+		"columns": [
+			{
+				"default": null,
+				"name": "user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "provider",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "title_key",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "item_kind",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "item_title",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "source_url",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "artwork_url",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": "true",
+				"name": "active",
+				"nullable": false,
+				"type": "boolean"
+			},
+			{
+				"default": null,
+				"name": "archived_reason",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "latest_session_id",
+				"nullable": true,
+				"type": "uuid"
+			},
+			{
+				"default": "now()",
+				"name": "last_watched_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": "now()",
+				"name": "created_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": "now()",
+				"name": "updated_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": "1",
+				"name": "schema_version",
+				"nullable": false,
+				"type": "smallint"
+			},
+			{
+				"default": "1",
+				"name": "history_generation",
+				"nullable": false,
+				"type": "bigint"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "CHECK ((history_generation > 0))",
+				"name": "user_tracked_titles_history_generation_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((item_kind = ANY (ARRAY['series'::text, 'movie'::text])))",
+				"name": "user_tracked_titles_item_kind_check",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (latest_session_id) REFERENCES public.watch_sessions(id) ON DELETE SET NULL",
+				"name": "user_tracked_titles_latest_session_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (user_id, provider, title_key)",
+				"name": "user_tracked_titles_pkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((provider = ANY (ARRAY['crunchyroll'::text, 'netflix'::text, 'youtube'::text, 'amazon'::text])))",
+				"name": "user_tracked_titles_provider_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((schema_version = ANY (ARRAY[1, 2])))",
+				"name": "user_tracked_titles_schema_version_check",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "user_tracked_titles_user_id_fkey",
+				"validated": true
+			}
+		]
+	},
+	"user_watch_settings": {
+		"columns": [
+			{
+				"default": null,
+				"name": "user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": "1",
+				"name": "history_generation",
+				"nullable": false,
+				"type": "bigint"
+			},
+			{
+				"default": "0",
+				"name": "next_server_order",
+				"nullable": false,
+				"type": "bigint"
+			},
+			{
+				"default": "false",
+				"name": "youtube_history_enabled",
+				"nullable": false,
+				"type": "boolean"
+			},
+			{
+				"default": "transaction_timestamp()",
+				"name": "updated_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "CHECK ((history_generation > 0))",
+				"name": "user_watch_settings_history_generation_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((next_server_order >= 0))",
+				"name": "user_watch_settings_next_server_order_check",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (user_id)",
+				"name": "user_watch_settings_pkey",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "user_watch_settings_user_id_fkey",
+				"validated": true
+			}
+		]
+	},
+	"users": {
+		"columns": [
+			{
+				"default": "gen_random_uuid()",
+				"name": "id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "email",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "discord_id",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "google_id",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "display_name",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "avatar_url",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": "'free'::text",
+				"name": "plan",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": "now()",
+				"name": "created_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "UNIQUE (discord_id)",
+				"name": "users_discord_id_key",
+				"validated": true
+			},
+			{
+				"definition": "UNIQUE (email)",
+				"name": "users_email_key",
+				"validated": true
+			},
+			{
+				"definition": "UNIQUE (google_id)",
+				"name": "users_google_id_key",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (id)",
+				"name": "users_pkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((plan = ANY (ARRAY['free'::text, 'plus'::text, 'pro'::text, 'watcher'::text, 'nakama'::text, 'junkie'::text])))",
+				"name": "users_plan_check",
+				"validated": true
+			}
+		]
+	},
+	"watch_episode_progress": {
+		"columns": [
+			{
+				"default": null,
+				"name": "user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "provider",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "title_key",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "episode_key",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "item_kind",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "title",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "artwork_url",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "episode_title",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "season_key",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "season_title",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "season_number",
+				"nullable": true,
+				"type": "integer"
+			},
+			{
+				"default": null,
+				"name": "episode_number",
+				"nullable": true,
+				"type": "double precision"
+			},
+			{
+				"default": null,
+				"name": "source_url",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "current_time_seconds",
+				"nullable": false,
+				"type": "double precision"
+			},
+			{
+				"default": null,
+				"name": "duration",
+				"nullable": false,
+				"type": "double precision"
+			},
+			{
+				"default": null,
+				"name": "progress",
+				"nullable": false,
+				"type": "double precision"
+			},
+			{
+				"default": null,
+				"name": "completed_at",
+				"nullable": true,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "latest_session_id",
+				"nullable": true,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "last_event_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "observed_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "server_order",
+				"nullable": false,
+				"type": "bigint"
+			},
+			{
+				"default": null,
+				"name": "history_generation",
+				"nullable": false,
+				"type": "bigint"
+			},
+			{
+				"default": null,
+				"name": "updated_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "CHECK (((artwork_url IS NULL) OR (char_length(artwork_url) <= 2048)))",
+				"name": "watch_episode_progress_artwork_url_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((current_time_seconds >= (0)::double precision))",
+				"name": "watch_episode_progress_current_time_seconds_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((duration >= (0)::double precision))",
+				"name": "watch_episode_progress_duration_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((char_length(episode_key) >= 1) AND (char_length(episode_key) <= 220)))",
+				"name": "watch_episode_progress_episode_key_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((episode_number IS NULL) OR (episode_number >= (0)::double precision)))",
+				"name": "watch_episode_progress_episode_number_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((char_length(episode_title) >= 1) AND (char_length(episode_title) <= 300)))",
+				"name": "watch_episode_progress_episode_title_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((history_generation > 0))",
+				"name": "watch_episode_progress_history_generation_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((item_kind = ANY (ARRAY['series'::text, 'movie'::text])))",
+				"name": "watch_episode_progress_item_kind_check",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (latest_session_id) REFERENCES public.watch_sessions(id) ON DELETE SET NULL",
+				"name": "watch_episode_progress_latest_session_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (user_id, provider, title_key, episode_key)",
+				"name": "watch_episode_progress_pkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((progress >= (0)::double precision) AND (progress <= (1)::double precision)))",
+				"name": "watch_episode_progress_progress_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((provider = ANY (ARRAY['crunchyroll'::text, 'youtube'::text])))",
+				"name": "watch_episode_progress_provider_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((season_key IS NULL) OR ((char_length(season_key) >= 1) AND (char_length(season_key) <= 220))))",
+				"name": "watch_episode_progress_season_key_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((season_number IS NULL) OR ((season_number >= 0) AND (season_number <= 1000))))",
+				"name": "watch_episode_progress_season_number_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((season_title IS NULL) OR ((char_length(season_title) >= 1) AND (char_length(season_title) <= 300))))",
+				"name": "watch_episode_progress_season_title_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((server_order > 0))",
+				"name": "watch_episode_progress_server_order_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((char_length(source_url) >= 1) AND (char_length(source_url) <= 2048)))",
+				"name": "watch_episode_progress_source_url_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((char_length(title) >= 1) AND (char_length(title) <= 300)))",
+				"name": "watch_episode_progress_title_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((char_length(title_key) >= 1) AND (char_length(title_key) <= 220)))",
+				"name": "watch_episode_progress_title_key_check",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "watch_episode_progress_user_id_fkey",
+				"validated": true
+			}
+		]
+	},
+	"watch_history_deletions": {
+		"columns": [
+			{
+				"default": "gen_random_uuid()",
+				"name": "id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "scope",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "provider",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "title_key",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "episode_key",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "history_generation",
+				"nullable": false,
+				"type": "bigint"
+			},
+			{
+				"default": null,
+				"name": "deleted_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "last_client_mutation_id",
+				"nullable": false,
+				"type": "uuid"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "CHECK ((((scope = 'all'::text) AND (provider IS NULL) AND (title_key IS NULL) AND (episode_key IS NULL)) OR ((scope = 'title'::text) AND (provider IS NOT NULL) AND (title_key IS NOT NULL) AND (episode_key IS NULL)) OR ((scope = 'episode'::text) AND (provider IS NOT NULL) AND (title_key IS NOT NULL) AND (episode_key IS NOT NULL))))",
+				"name": "watch_history_deletions_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((episode_key IS NULL) OR ((char_length(episode_key) >= 1) AND (char_length(episode_key) <= 220))))",
+				"name": "watch_history_deletions_episode_key_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((history_generation > 0))",
+				"name": "watch_history_deletions_history_generation_check",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (id)",
+				"name": "watch_history_deletions_pkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((provider IS NULL) OR (provider = ANY (ARRAY['crunchyroll'::text, 'youtube'::text]))))",
+				"name": "watch_history_deletions_provider_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((scope = ANY (ARRAY['all'::text, 'title'::text, 'episode'::text])))",
+				"name": "watch_history_deletions_scope_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((title_key IS NULL) OR ((char_length(title_key) >= 1) AND (char_length(title_key) <= 220))))",
+				"name": "watch_history_deletions_title_key_check",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "watch_history_deletions_user_id_fkey",
+				"validated": true
+			}
+		]
+	},
+	"watch_history_receipts": {
+		"columns": [
+			{
+				"default": null,
+				"name": "user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "client_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "kind",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "acknowledgement",
+				"nullable": false,
+				"type": "jsonb"
+			},
+			{
+				"default": "transaction_timestamp()",
+				"name": "accepted_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": "(transaction_timestamp() + '14 days'::interval)",
+				"name": "expires_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "CHECK (((jsonb_typeof(acknowledgement) = 'object'::text) AND (octet_length((acknowledgement)::text) <= 2097152)))",
+				"name": "watch_history_receipts_acknowledgement_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((expires_at = (accepted_at + '14 days'::interval)))",
+				"name": "watch_history_receipts_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((kind = ANY (ARRAY['progress'::text, 'delete'::text])))",
+				"name": "watch_history_receipts_kind_check",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (user_id, client_id)",
+				"name": "watch_history_receipts_pkey",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "watch_history_receipts_user_id_fkey",
+				"validated": true
+			}
+		]
+	},
+	"watch_history_title_summaries": {
+		"columns": [
+			{
+				"default": null,
+				"name": "user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "history_generation",
+				"nullable": false,
+				"type": "bigint"
+			},
+			{
+				"default": null,
+				"name": "provider",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "title_key",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "stable_id",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "last_watched_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "observed_episode_count",
+				"nullable": false,
+				"type": "bigint"
+			},
+			{
+				"default": null,
+				"name": "completed_episode_count",
+				"nullable": false,
+				"type": "bigint"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "CHECK (((stable_id = ((provider || ':'::text) || title_key)) AND (char_length(stable_id) <= 512)))",
+				"name": "watch_history_title_summaries_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((completed_episode_count >= 0) AND (completed_episode_count <= observed_episode_count)))",
+				"name": "watch_history_title_summaries_completed_count_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((history_generation > 0))",
+				"name": "watch_history_title_summaries_history_generation_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((observed_episode_count > 0))",
+				"name": "watch_history_title_summaries_observed_count_check",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (user_id, history_generation, provider, title_key)",
+				"name": "watch_history_title_summaries_pkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((provider = ANY (ARRAY['crunchyroll'::text, 'youtube'::text])))",
+				"name": "watch_history_title_summaries_provider_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((char_length(title_key) >= 1) AND (char_length(title_key) <= 220)))",
+				"name": "watch_history_title_summaries_title_key_check",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "watch_history_title_summaries_user_id_fkey",
+				"validated": true
+			}
+		]
+	},
+	"watch_history_user_session_summaries": {
+		"columns": [
+			{
+				"default": null,
+				"name": "user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "session_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "history_generation",
+				"nullable": false,
+				"type": "bigint"
+			},
+			{
+				"default": null,
+				"name": "provider",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "title_key",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "last_watched_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "CHECK ((history_generation > 0))",
+				"name": "watch_history_user_session_summaries_history_generation_check",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (user_id, session_id)",
+				"name": "watch_history_user_session_summaries_pkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((provider = ANY (ARRAY['crunchyroll'::text, 'youtube'::text])))",
+				"name": "watch_history_user_session_summaries_provider_check",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (session_id, user_id) REFERENCES public.watch_session_participants(session_id, user_id) ON UPDATE CASCADE ON DELETE CASCADE",
+				"name": "watch_history_user_session_summaries_session_id_user_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((char_length(title_key) >= 1) AND (char_length(title_key) <= 220)))",
+				"name": "watch_history_user_session_summaries_title_key_check",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "watch_history_user_session_summaries_user_id_fkey",
+				"validated": true
+			}
+		]
+	},
+	"watch_progress_checkpoints": {
+		"columns": [
+			{
+				"default": "gen_random_uuid()",
+				"name": "id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "session_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "room_id",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": "'reconcile'::text",
+				"name": "kind",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": "0",
+				"name": "current_time_seconds",
+				"nullable": false,
+				"type": "integer"
+			},
+			{
+				"default": "0",
+				"name": "duration_seconds",
+				"nullable": false,
+				"type": "integer"
+			},
+			{
+				"default": "0",
+				"name": "progress",
+				"nullable": false,
+				"type": "double precision"
+			},
+			{
+				"default": "now()",
+				"name": "observed_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": "now()",
+				"name": "created_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "season_key",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "season_title",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "season_number",
+				"nullable": true,
+				"type": "integer"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "CHECK ((current_time_seconds >= 0))",
+				"name": "watch_progress_checkpoints_current_time_seconds_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((duration_seconds >= 0))",
+				"name": "watch_progress_checkpoints_duration_seconds_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((kind = ANY (ARRAY['local'::text, 'room'::text, 'pause'::text, 'seeked'::text, 'ended'::text, 'pagehide'::text, 'reconcile'::text, 'manual'::text])))",
+				"name": "watch_progress_checkpoints_kind_check",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (id)",
+				"name": "watch_progress_checkpoints_pkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((progress >= (0)::double precision) AND (progress <= (1)::double precision)))",
+				"name": "watch_progress_checkpoints_progress_check",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (room_id) REFERENCES public.rooms(room_id) ON DELETE SET NULL",
+				"name": "watch_progress_checkpoints_room_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((season_number IS NULL) OR ((season_number >= 0) AND (season_number <= 1000))))",
+				"name": "watch_progress_checkpoints_season_number_check",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (session_id) REFERENCES public.watch_sessions(id) ON DELETE CASCADE",
+				"name": "watch_progress_checkpoints_session_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "watch_progress_checkpoints_user_id_fkey",
+				"validated": true
+			}
+		]
+	},
+	"watch_session_participants": {
+		"columns": [
+			{
+				"default": null,
+				"name": "session_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "role",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": "now()",
+				"name": "joined_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "left_at",
+				"nullable": true,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": "0",
+				"name": "current_time_seconds",
+				"nullable": false,
+				"type": "integer"
+			},
+			{
+				"default": "0",
+				"name": "progress",
+				"nullable": false,
+				"type": "double precision"
+			},
+			{
+				"default": "now()",
+				"name": "updated_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": "1",
+				"name": "schema_version",
+				"nullable": false,
+				"type": "smallint"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "CHECK ((current_time_seconds >= 0))",
+				"name": "watch_session_participants_current_time_seconds_check",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (session_id, user_id)",
+				"name": "watch_session_participants_pkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((progress >= (0)::double precision) AND (progress <= (1)::double precision)))",
+				"name": "watch_session_participants_progress_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((role = ANY (ARRAY['host'::text, 'viewer'::text])))",
+				"name": "watch_session_participants_role_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((schema_version = ANY (ARRAY[1, 2])))",
+				"name": "watch_session_participants_schema_version_check",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (session_id) REFERENCES public.watch_sessions(id) ON DELETE CASCADE",
+				"name": "watch_session_participants_session_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "watch_session_participants_user_id_fkey",
+				"validated": true
+			}
+		]
+	},
+	"watch_sessions": {
+		"columns": [
+			{
+				"default": "gen_random_uuid()",
+				"name": "id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "room_id",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "host_user_id",
+				"nullable": false,
+				"type": "uuid"
+			},
+			{
+				"default": null,
+				"name": "provider",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "item_key",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "item_kind",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "item_title",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "content_id",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "series_id",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "episode_key",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "episode_title",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "source_url",
+				"nullable": false,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "artwork_url",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": "0",
+				"name": "duration_seconds",
+				"nullable": false,
+				"type": "integer"
+			},
+			{
+				"default": "0",
+				"name": "current_time_seconds",
+				"nullable": false,
+				"type": "integer"
+			},
+			{
+				"default": "0",
+				"name": "progress",
+				"nullable": false,
+				"type": "double precision"
+			},
+			{
+				"default": "now()",
+				"name": "started_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "ended_at",
+				"nullable": true,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": "now()",
+				"name": "last_checkpoint_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": "now()",
+				"name": "updated_at",
+				"nullable": false,
+				"type": "timestamp with time zone"
+			},
+			{
+				"default": null,
+				"name": "season_key",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "season_title",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "season_number",
+				"nullable": true,
+				"type": "integer"
+			},
+			{
+				"default": "1",
+				"name": "schema_version",
+				"nullable": false,
+				"type": "smallint"
+			},
+			{
+				"default": "1",
+				"name": "history_generation",
+				"nullable": false,
+				"type": "bigint"
+			},
+			{
+				"default": null,
+				"name": "client_session_key",
+				"nullable": true,
+				"type": "text"
+			},
+			{
+				"default": null,
+				"name": "room_generation",
+				"nullable": true,
+				"type": "bigint"
+			},
+			{
+				"default": null,
+				"name": "source_generation",
+				"nullable": true,
+				"type": "bigint"
+			}
+		],
+		"constraints": [
+			{
+				"definition": "CHECK (((client_session_key IS NULL) OR ((char_length(client_session_key) >= 1) AND (char_length(client_session_key) <= 220))))",
+				"name": "watch_sessions_client_session_key_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((current_time_seconds >= 0))",
+				"name": "watch_sessions_current_time_seconds_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((duration_seconds >= 0))",
+				"name": "watch_sessions_duration_seconds_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((history_generation > 0))",
+				"name": "watch_sessions_history_generation_check",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (host_user_id) REFERENCES public.users(id) ON DELETE CASCADE",
+				"name": "watch_sessions_host_user_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((item_kind = ANY (ARRAY['series'::text, 'movie'::text])))",
+				"name": "watch_sessions_item_kind_check",
+				"validated": true
+			},
+			{
+				"definition": "PRIMARY KEY (id)",
+				"name": "watch_sessions_pkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((progress >= (0)::double precision) AND (progress <= (1)::double precision)))",
+				"name": "watch_sessions_progress_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((provider = ANY (ARRAY['crunchyroll'::text, 'netflix'::text, 'youtube'::text, 'amazon'::text])))",
+				"name": "watch_sessions_provider_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((room_generation IS NULL) OR (room_generation > 0)))",
+				"name": "watch_sessions_room_generation_check",
+				"validated": true
+			},
+			{
+				"definition": "FOREIGN KEY (room_id) REFERENCES public.rooms(room_id) ON DELETE SET NULL",
+				"name": "watch_sessions_room_id_fkey",
+				"validated": true
+			},
+			{
+				"definition": "CHECK ((schema_version = ANY (ARRAY[1, 2])))",
+				"name": "watch_sessions_schema_version_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((season_number IS NULL) OR ((season_number >= 0) AND (season_number <= 1000))))",
+				"name": "watch_sessions_season_number_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((source_generation IS NULL) OR (source_generation > 0)))",
+				"name": "watch_sessions_source_generation_check",
+				"validated": true
+			},
+			{
+				"definition": "CHECK (((schema_version = 1) OR ((room_id IS NULL) AND (client_session_key IS NOT NULL) AND (room_generation IS NULL) AND (source_generation IS NULL)) OR ((room_id IS NOT NULL) AND (client_session_key IS NULL) AND (room_generation IS NOT NULL) AND (source_generation IS NOT NULL)) OR ((room_id IS NULL) AND (client_session_key IS NULL) AND (room_generation IS NOT NULL) AND (source_generation IS NOT NULL))))",
+				"name": "watch_sessions_v2_identity_check",
+				"validated": true
+			}
+		]
+	}
+}

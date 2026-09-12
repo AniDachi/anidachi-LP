@@ -13,6 +13,7 @@ const INBOX_PUSH_TOPIC = "inbox-sync";
 const PUSH_REQUEST_TIMEOUT_MS = 10_000;
 const MAX_CONCURRENT_PUSH_REQUESTS = 8;
 const MAX_ACTIVE_PUSH_DEVICES_PER_USER = 5;
+export const INBOX_PUSH_DATABASE_TIMEOUT_MS = 2_000;
 
 export type VapidConfiguration = {
   subject: string;
@@ -41,9 +42,18 @@ export interface DevicePushRepository {
   }): Promise<DevicePushRegistration>;
   revoke(input: { ownerUserId: string; deviceId: string; nowIso: string }): Promise<boolean>;
   listEnabledForUsers(userIds: readonly string[]): Promise<EnabledDevicePushSubscription[]>;
-  markDelivered(deviceId: string): Promise<void>;
-  markPermanentFailure(deviceId: string, error: string, nowIso: string): Promise<void>;
-  markTransientFailure(deviceId: string, error: string): Promise<void>;
+  markDelivered(deviceId: string, expected: EnabledDevicePushSubscription): Promise<void>;
+  markPermanentFailure(
+    deviceId: string,
+    error: string,
+    nowIso: string,
+    expected: EnabledDevicePushSubscription,
+  ): Promise<void>;
+  markTransientFailure(
+    deviceId: string,
+    error: string,
+    expected: EnabledDevicePushSubscription,
+  ): Promise<void>;
 }
 
 export class DevicePushApiError extends Error {
@@ -143,6 +153,39 @@ export type InboxPushDeliverySummary = {
   failed: number;
 };
 
+type DeferredTaskScheduler = (task: () => Promise<void>) => void;
+type InboxPushDeliverer = (
+  recipientUserIds: readonly string[],
+) => Promise<InboxPushDeliverySummary>;
+
+export function deferInboxChangedPushToUsers(
+  recipientUserIds: readonly string[],
+  defer: DeferredTaskScheduler,
+  options: {
+    deliver?: InboxPushDeliverer;
+    reportError?: (message: string) => void;
+  } = {},
+): boolean {
+  const uniqueRecipientUserIds = [...new Set(recipientUserIds)];
+  if (uniqueRecipientUserIds.length === 0) return false;
+
+  const deliver = options.deliver ?? sendInboxChangedPushToUsers;
+  const reportError =
+    options.reportError ??
+    ((message: string) => console.error(`[anidachi/device-push] ${message}`));
+  defer(async () => {
+    try {
+      const summary = await deliver(uniqueRecipientUserIds);
+      if (summary.failed > 0) {
+        reportError(`Inbox invalidation failed for ${summary.failed} device(s)`);
+      }
+    } catch {
+      reportError("Failed to deliver inbox invalidation");
+    }
+  });
+  return true;
+}
+
 export async function deliverInboxChangedPush(params: {
   subscriptions: readonly EnabledDevicePushSubscription[];
   vapid: VapidConfiguration;
@@ -160,55 +203,44 @@ export async function deliverInboxChangedPush(params: {
     failed: 0,
   };
 
-  await mapWithConcurrency(
-    subscriptions,
-    MAX_CONCURRENT_PUSH_REQUESTS,
-    async (device) => {
-      if (!isAllowedChromePushEndpoint(device.endpoint)) {
+  await mapWithConcurrency(subscriptions, MAX_CONCURRENT_PUSH_REQUESTS, async (device) => {
+    if (!isAllowedChromePushEndpoint(device.endpoint)) {
+      summary.pruned += 1;
+      await params.markPermanentFailure(device.deviceId, "invalid_endpoint").catch(() => undefined);
+      return;
+    }
+    try {
+      await params.send(
+        {
+          endpoint: device.endpoint,
+          keys: { p256dh: device.p256dh, auth: device.auth },
+        },
+        JSON.stringify(payload),
+        {
+          TTL: INBOX_PUSH_TTL_SECONDS,
+          urgency: "normal",
+          topic: INBOX_PUSH_TOPIC,
+          contentEncoding: "aes128gcm",
+          timeout: PUSH_REQUEST_TIMEOUT_MS,
+          vapidDetails: params.vapid,
+        },
+      );
+      summary.delivered += 1;
+      await params.markDelivered(device.deviceId).catch(() => undefined);
+    } catch (error) {
+      const status = pushErrorStatus(error);
+      if (status === 404 || status === 410) {
         summary.pruned += 1;
-        await params
-          .markPermanentFailure(device.deviceId, "invalid_endpoint")
-          .catch(() => undefined);
+        await params.markPermanentFailure(device.deviceId, `http_${status}`).catch(() => undefined);
         return;
       }
-      try {
-        await params.send(
-          {
-            endpoint: device.endpoint,
-            keys: { p256dh: device.p256dh, auth: device.auth },
-          },
-          JSON.stringify(payload),
-          {
-            TTL: INBOX_PUSH_TTL_SECONDS,
-            urgency: "normal",
-            topic: INBOX_PUSH_TOPIC,
-            contentEncoding: "aes128gcm",
-            timeout: PUSH_REQUEST_TIMEOUT_MS,
-            vapidDetails: params.vapid,
-          },
-        );
-        summary.delivered += 1;
-        await params.markDelivered(device.deviceId).catch(() => undefined);
-      } catch (error) {
-        const status = pushErrorStatus(error);
-        if (status === 404 || status === 410) {
-          summary.pruned += 1;
-          await params
-            .markPermanentFailure(device.deviceId, `http_${status}`)
-            .catch(() => undefined);
-          return;
-        }
 
-        summary.failed += 1;
-        await params
-          .markTransientFailure(
-            device.deviceId,
-            status ? `http_${status}` : "network_error",
-          )
-          .catch(() => undefined);
-      }
-    },
-  );
+      summary.failed += 1;
+      await params
+        .markTransientFailure(device.deviceId, status ? `http_${status}` : "network_error")
+        .catch(() => undefined);
+    }
+  });
 
   return summary;
 }
@@ -231,16 +263,13 @@ async function mapWithConcurrency<T>(
   visit: (item: T) => Promise<void>,
 ): Promise<void> {
   let nextIndex = 0;
-  const workers = Array.from(
-    { length: Math.min(concurrency, items.length) },
-    async () => {
-      while (nextIndex < items.length) {
-        const item = items[nextIndex];
-        nextIndex += 1;
-        if (item !== undefined) await visit(item);
-      }
-    },
-  );
+  const workers = Array.from({ length: Math.min(concurrency, items.length) }, async () => {
+    while (nextIndex < items.length) {
+      const item = items[nextIndex];
+      nextIndex += 1;
+      if (item !== undefined) await visit(item);
+    }
+  });
   await Promise.all(workers);
 }
 
@@ -263,17 +292,209 @@ export async function sendInboxChangedPushToUsers(
   }
   const subscriptions = await repository.listEnabledForUsers(userIds);
   const nowIso = (options.now ?? new Date()).toISOString();
+  const sentDevice = (deviceId: string) => {
+    const device = subscriptions.find((item) => item.deviceId === deviceId);
+    if (!device) throw new Error("inbox_push_device_missing");
+    return device;
+  };
   return deliverInboxChangedPush({
     subscriptions,
     vapid,
     send: options.send ?? ((...args) => webPush.sendNotification(...args)),
-    markDelivered: (deviceId) => repository.markDelivered(deviceId),
+    markDelivered: (deviceId) => repository.markDelivered(deviceId, sentDevice(deviceId)),
     markPermanentFailure: (deviceId, error) =>
-      repository.markPermanentFailure(deviceId, error, nowIso),
+      repository.markPermanentFailure(deviceId, error, nowIso, sentDevice(deviceId)),
     markTransientFailure: (deviceId, error) =>
-      repository.markTransientFailure(deviceId, error),
+      repository.markTransientFailure(deviceId, error, sentDevice(deviceId)),
   });
 }
+
+export type AccountInboxPushResult = {
+  outcome: "complete" | "retry" | "permanent";
+  errorCode: string | null;
+  retryAfterSeconds: number;
+  attempted: number;
+  providerAccepted: number;
+  pruned: number;
+  failed: number;
+  noDevices: boolean;
+};
+
+// Includes body parsing in the caller's promise; clears timers on either outcome.
+export async function withInboxPushTimeout<T>(work: PromiseLike<T>, timeoutMs: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      Promise.resolve(work),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error("inbox_push_timeout")), timeoutMs);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** At most five parallel sends; <=14s I/O (list2 + provider10 + bookkeeping2). */
+export async function deliverAccountInboxChanged(
+  userId: string,
+  options: {
+    environment?: Record<string, string | undefined>;
+    repository?: DevicePushRepository;
+    send?: PushSend;
+    now?: () => number;
+  } = {},
+): Promise<AccountInboxPushResult> {
+  const result: AccountInboxPushResult = {
+    outcome: "complete",
+    errorCode: null,
+    retryAfterSeconds: 0,
+    attempted: 0,
+    providerAccepted: 0,
+    pruned: 0,
+    failed: 0,
+    noDevices: false,
+  };
+  const repository = options.repository ?? defaultDevicePushRepository;
+  const now = options.now ?? Date.now;
+  const send = options.send ?? sendAbortableInboxPush;
+  const subscriptions = await withInboxPushTimeout(
+    repository.listEnabledForUsers([userId]),
+    INBOX_PUSH_DATABASE_TIMEOUT_MS,
+  );
+  const devices = subscriptions
+    .filter((device) => device.userId === userId)
+    .slice(0, MAX_ACTIVE_PUSH_DEVICES_PER_USER);
+  result.noDevices = devices.length === 0;
+  if (result.noDevices) return result;
+  let vapid: VapidConfiguration | null;
+  try {
+    vapid = readVapidConfiguration(options.environment);
+  } catch {
+    vapid = null;
+  }
+  if (!vapid) return { ...result, outcome: "retry", errorCode: "configuration_unavailable" };
+  result.attempted = devices.length;
+  const fail = (code: string, retryable: boolean) => {
+    result.failed++;
+    if (retryable || result.outcome === "complete") {
+      result.outcome = retryable ? "retry" : "permanent";
+      result.errorCode = code;
+    }
+  };
+  await Promise.all(
+    devices.map(async (device) => {
+      let code: string | null = null;
+      let prune = !isAllowedChromePushEndpoint(device.endpoint);
+      if (prune) code = "invalid_endpoint";
+      else {
+        try {
+          await withInboxPushTimeout(
+            send(
+              { endpoint: device.endpoint, keys: { p256dh: device.p256dh, auth: device.auth } },
+              JSON.stringify({ type: "inbox_changed" } satisfies InboxChangedPushPayload),
+              {
+                TTL: INBOX_PUSH_TTL_SECONDS,
+                urgency: "normal",
+                topic: INBOX_PUSH_TOPIC,
+                contentEncoding: "aes128gcm",
+                timeout: PUSH_REQUEST_TIMEOUT_MS,
+                vapidDetails: vapid,
+              },
+            ),
+            PUSH_REQUEST_TIMEOUT_MS,
+          );
+          result.providerAccepted++;
+        } catch (error) {
+          const status = pushErrorStatus(error);
+          code = status ? `http_${status}` : "network_error";
+          prune = status === 404 || status === 410;
+          if (!prune) {
+            const retryable = status === null || status === 429 || status >= 500;
+            fail(code, retryable);
+            if (retryable)
+              result.retryAfterSeconds = Math.max(
+                result.retryAfterSeconds,
+                pushRetryAfterSeconds(error, now()),
+              );
+          }
+        }
+      }
+      try {
+        await withInboxPushTimeout(
+          prune
+            ? repository.markPermanentFailure(
+                device.deviceId,
+                code ?? "invalid_endpoint",
+                new Date(now()).toISOString(),
+                device,
+              )
+            : code
+              ? repository.markTransientFailure(device.deviceId, code, device)
+              : repository.markDelivered(device.deviceId, device),
+          INBOX_PUSH_DATABASE_TIMEOUT_MS,
+        );
+        if (prune) result.pruned++;
+      } catch {
+        fail("device_bookkeeping_unavailable", true);
+      }
+    }),
+  );
+  return result;
+}
+
+function pushRetryAfterSeconds(error: unknown, now: number): number {
+  if (
+    !error ||
+    typeof error !== "object" ||
+    !("headers" in error) ||
+    !error.headers ||
+    typeof error.headers !== "object"
+  )
+    return 0;
+  const header = Object.entries(error.headers).find(
+    ([key]) => key.toLowerCase() === "retry-after",
+  )?.[1];
+  if (typeof header !== "string" && typeof header !== "number") return 0;
+  const value = String(header).trim();
+  const seconds = /^\d+$/.test(value) ? Number(value) : (Date.parse(value) - now) / 1000;
+  return Number.isFinite(seconds) ? Math.min(86400, Math.max(0, Math.ceil(seconds))) : 0;
+}
+
+// web-push's sendNotification timeout is socket inactivity only. Keep its
+// encryption/VAPID generation but abort the full HTTP operation before reusing
+// this concurrency slot. No provider body or sensitive headers escape here.
+const sendAbortableInboxPush: PushSend = async (subscription, payload, options) => {
+  const details = webPush.generateRequestDetails(subscription, payload, options);
+  const controller = new AbortController();
+  let rejection: { statusCode: number; headers: { "retry-after": string } } | null = null;
+  try {
+    await withInboxPushTimeout(
+      (async () => {
+        const response = await fetch(details.endpoint, {
+          method: details.method,
+          headers: details.headers as Record<string, string>,
+          body: new Uint8Array(details.body),
+          redirect: "error",
+          signal: controller.signal,
+        });
+        if (!response.ok)
+          rejection = {
+            statusCode: response.status,
+            headers: { "retry-after": response.headers.get("retry-after") ?? "" },
+          };
+        await response.body?.cancel();
+      })(),
+      PUSH_REQUEST_TIMEOUT_MS,
+    );
+    if (rejection) throw rejection;
+  } catch (error) {
+    // Preserve a known 429/5xx and its cooldown even if body cleanup hangs.
+    throw rejection ?? error;
+  } finally {
+    controller.abort();
+  }
+};
 
 function pushErrorStatus(error: unknown): number | null {
   if (!error || typeof error !== "object" || !("statusCode" in error)) return null;
@@ -308,9 +529,7 @@ const defaultDevicePushRepository: DevicePushRepository = {
       .eq("extension_installation_id", subscription.installationId)
       .maybeSingle();
     if (existingByInstallation.error) {
-      throw new Error(
-        `Failed to load extension device: ${existingByInstallation.error.message}`,
-      );
+      throw new Error(`Failed to load extension device: ${existingByInstallation.error.message}`);
     }
     const existingByEndpoint = existingByInstallation.data
       ? null
@@ -437,7 +656,8 @@ const defaultDevicePushRepository: DevicePushRepository = {
       .is("revoked_at", null)
       .not("push_endpoint", "is", null)
       .not("push_p256dh", "is", null)
-      .not("push_auth", "is", null);
+      .not("push_auth", "is", null)
+      .abortSignal(AbortSignal.timeout(INBOX_PUSH_DATABASE_TIMEOUT_MS));
     if (error) throw new Error(`Failed to load push subscriptions: ${error.message}`);
 
     return ((data as EnabledDevicePushRow[] | null) ?? []).flatMap((row) =>
@@ -455,15 +675,18 @@ const defaultDevicePushRepository: DevicePushRepository = {
     );
   },
 
-  async markDelivered(deviceId) {
+  async markDelivered(deviceId, expected) {
     const { error } = await db()
       .from("devices")
       .update({ last_delivery_error: null })
-      .eq("id", deviceId);
+      .eq("id", deviceId)
+      .eq("user_id", expected.userId)
+      .eq("push_endpoint", expected.endpoint)
+      .abortSignal(AbortSignal.timeout(INBOX_PUSH_DATABASE_TIMEOUT_MS));
     if (error) throw new Error(`Failed to clear push delivery error: ${error.message}`);
   },
 
-  async markPermanentFailure(deviceId, errorCode, nowIso) {
+  async markPermanentFailure(deviceId, errorCode, nowIso, expected) {
     const { error } = await db()
       .from("devices")
       .update({
@@ -475,15 +698,21 @@ const defaultDevicePushRepository: DevicePushRepository = {
         revoked_at: nowIso,
         last_delivery_error: errorCode,
       })
-      .eq("id", deviceId);
+      .eq("id", deviceId)
+      .eq("user_id", expected.userId)
+      .eq("push_endpoint", expected.endpoint)
+      .abortSignal(AbortSignal.timeout(INBOX_PUSH_DATABASE_TIMEOUT_MS));
     if (error) throw new Error(`Failed to prune push subscription: ${error.message}`);
   },
 
-  async markTransientFailure(deviceId, errorCode) {
+  async markTransientFailure(deviceId, errorCode, expected) {
     const { error } = await db()
       .from("devices")
       .update({ last_delivery_error: errorCode })
-      .eq("id", deviceId);
+      .eq("id", deviceId)
+      .eq("user_id", expected.userId)
+      .eq("push_endpoint", expected.endpoint)
+      .abortSignal(AbortSignal.timeout(INBOX_PUSH_DATABASE_TIMEOUT_MS));
     if (error) throw new Error(`Failed to record push delivery error: ${error.message}`);
   },
 };

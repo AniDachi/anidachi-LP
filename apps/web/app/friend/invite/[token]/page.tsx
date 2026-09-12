@@ -40,7 +40,7 @@ export default async function FriendInvitePage({ params }: Props) {
 
   let preview;
   try {
-    preview = await getFriendInvitePreview(token);
+    preview = await getFriendInvitePreview(token, session.userId);
   } catch (error) {
     const message =
       error instanceof SocialApiError
@@ -63,7 +63,7 @@ export default async function FriendInvitePage({ params }: Props) {
         Accept the invite to add this person to your AniDachi friends.
       </p>
       <div className="mt-6">
-        <FriendInviteClient sender={preview.sender} token={preview.token} />
+        <FriendInviteClient key={session.userId} sender={preview.sender} token={preview.token} ownerUserId={session.userId} alreadyFriends={preview.alreadyFriends} />
       </div>
     </AuthPageShell>
   );

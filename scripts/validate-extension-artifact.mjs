@@ -30,6 +30,35 @@ const contentMatches = (manifest.content_scripts ?? []).flatMap(
 const permissions = manifest.permissions ?? [];
 const optionalPermissions = manifest.optional_permissions ?? [];
 
+function assertProductionReactRuntime(rootDir) {
+  const pending = [rootDir];
+  while (pending.length > 0) {
+    const currentDir = pending.pop();
+    for (const entry of fs.readdirSync(currentDir, { withFileTypes: true })) {
+      const entryPath = path.join(currentDir, entry.name);
+      if (entry.isDirectory()) {
+        pending.push(entryPath);
+        continue;
+      }
+      if (!entry.isFile() || !entry.name.endsWith(".js")) continue;
+
+      const source = fs.readFileSync(entryPath, "utf8");
+      if (/\.jsxDEV\)\s*\(/.test(source) || /\bjsxDEV\s*\(/.test(source)) {
+        throw new Error(
+          `Invalid production artifact calls jsxDEV, which is unavailable in the production React runtime: ${entryPath}`,
+        );
+      }
+      if (source.includes("Static children should always be an array")) {
+        throw new Error(
+          `Invalid production artifact contains the React development runtime: ${entryPath}`,
+        );
+      }
+    }
+  }
+}
+
+assertProductionReactRuntime(dir);
+
 const videoHosts = [
   "https://youtube.com/*",
   "https://*.youtube.com/*",

@@ -5,14 +5,14 @@ import {
 } from "../src/watch-history-runtime-policy";
 
 describe("watch history runtime hydration gate", () => {
-  it("fails closed until the current identity room session is hydrated", () => {
+  it("requires only current identity, independently of room hydration", () => {
     expect(resolveWatchHistoryRuntimeGate({
       identityLoaded: false,
       ownerUserId: null,
       roomSessionLoadedForUserId: undefined,
       storedRoomSessionOwnerUserId: null,
       roomActive: false,
-    })).toEqual({ ready: false, roomSuppressed: true });
+    })).toEqual({ ready: false, roomSuppressed: false });
 
     expect(resolveWatchHistoryRuntimeGate({
       identityLoaded: true,
@@ -20,7 +20,7 @@ describe("watch history runtime hydration gate", () => {
       roomSessionLoadedForUserId: null,
       storedRoomSessionOwnerUserId: null,
       roomActive: false,
-    })).toEqual({ ready: false, roomSuppressed: true });
+    })).toEqual({ ready: false, roomSuppressed: false });
 
     expect(resolveWatchHistoryRuntimeGate({
       identityLoaded: true,
@@ -28,7 +28,7 @@ describe("watch history runtime hydration gate", () => {
       roomSessionLoadedForUserId: undefined,
       storedRoomSessionOwnerUserId: null,
       roomActive: false,
-    })).toEqual({ ready: false, roomSuppressed: true });
+    })).toEqual({ ready: true, roomSuppressed: false });
   });
 
   it("suppresses an owner-matching restored room before reconnect and opens solo only after proven absence", () => {

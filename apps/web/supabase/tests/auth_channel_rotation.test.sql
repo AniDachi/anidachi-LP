@@ -877,7 +877,7 @@ select is(
 -- two must wait, then return the already-issued current successor.
 select extensions.dblink_connect(
   'auth_rotation_setup',
-  'host=host.docker.internal port=54322 dbname=postgres user=postgres password=postgres application_name=auth_rotation_setup'
+  pg_catalog.format('host=%s port=%s dbname=%L user=postgres password=postgres application_name=auth_rotation_setup', pg_catalog.inet_server_addr(), pg_catalog.inet_server_port(), pg_catalog.current_database())
 );
 select extensions.dblink_exec(
   'auth_rotation_setup',
@@ -905,11 +905,11 @@ select extensions.dblink_disconnect('auth_rotation_setup');
 
 select extensions.dblink_connect(
   'auth_rotation_one',
-  'host=host.docker.internal port=54322 dbname=postgres user=postgres password=postgres application_name=auth_rotation_one'
+  pg_catalog.format('host=%s port=%s dbname=%L user=postgres password=postgres application_name=auth_rotation_one', pg_catalog.inet_server_addr(), pg_catalog.inet_server_port(), pg_catalog.current_database())
 );
 select extensions.dblink_connect(
   'auth_rotation_two',
-  'host=host.docker.internal port=54322 dbname=postgres user=postgres password=postgres application_name=auth_rotation_two'
+  pg_catalog.format('host=%s port=%s dbname=%L user=postgres password=postgres application_name=auth_rotation_two', pg_catalog.inet_server_addr(), pg_catalog.inet_server_port(), pg_catalog.current_database())
 );
 select extensions.dblink_exec('auth_rotation_one', 'begin');
 select extensions.dblink_exec('auth_rotation_one', 'set role service_role');
@@ -1007,7 +1007,7 @@ select is(
 
 select extensions.dblink_connect(
   'auth_rotation_cleanup',
-  'host=host.docker.internal port=54322 dbname=postgres user=postgres password=postgres application_name=auth_rotation_cleanup'
+  pg_catalog.format('host=%s port=%s dbname=%L user=postgres password=postgres application_name=auth_rotation_cleanup', pg_catalog.inet_server_addr(), pg_catalog.inet_server_port(), pg_catalog.current_database())
 );
 select extensions.dblink_exec(
   'auth_rotation_cleanup',

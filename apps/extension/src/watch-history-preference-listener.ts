@@ -1,3 +1,4 @@
+import { parseWatchHistoryLease, type WatchHistoryLease } from "./watch-history-access";
 import type { WatchHistoryController } from "./watch-history-controller";
 import { WATCH_HISTORY_STORAGE_KEY, watchHistoryPartitionKey } from "./watch-history-storage";
 
@@ -29,6 +30,7 @@ export function bindWatchHistoryPreferenceListener(options: {
       ownerUserId: next.ownerUserId,
       accountGeneration: next.accountGeneration,
       preferences: next.preferences,
+      accessLease: next.accessLease,
       capturePaused: next.capturePaused,
     }).catch(() => undefined);
   };
@@ -40,6 +42,7 @@ type LocalPreferenceAuthority = {
   ownerUserId: string;
   accountGeneration: number;
   preferences: { youtubeHistoryEnabled: boolean };
+  accessLease: WatchHistoryLease | null;
   localRevision: number;
   capturePaused: boolean;
 };
@@ -48,7 +51,7 @@ function localPreferenceAuthority(
   value: unknown,
   ownerUserId: string,
 ): LocalPreferenceAuthority | null {
-  if (!isRecord(value) || value.schemaVersion !== 2 || !isRecord(value.activeGenerations) ||
+  if (!isRecord(value) || value.schemaVersion !== 3 || !isRecord(value.activeGenerations) ||
     !isRecord(value.partitions)) {
     return null;
   }
@@ -71,7 +74,8 @@ function localPreferenceAuthority(
   return {
     ownerUserId,
     accountGeneration: generation,
-    preferences: { youtubeHistoryEnabled: partition.preferences.youtubeHistoryEnabled },
+    preferences: { youtubeHistoryEnabled: partition.preferences.youtubeHistoryEnabled && partition.preferencesSyncPending !== true },
+    accessLease: parseWatchHistoryLease(partition.accessLease),
     localRevision,
     capturePaused: partition.capturePaused,
   };
@@ -79,7 +83,7 @@ function localPreferenceAuthority(
 
 function preferenceSignature(authority: LocalPreferenceAuthority | null): string | null {
   return authority
-    ? `${authority.accountGeneration}:${authority.localRevision}:${authority.preferences.youtubeHistoryEnabled}`
+    ? JSON.stringify([authority.accountGeneration, authority.localRevision, authority.preferences.youtubeHistoryEnabled, authority.capturePaused, authority.accessLease?.access, authority.accessLease?.expiresAt])
     : null;
 }
 

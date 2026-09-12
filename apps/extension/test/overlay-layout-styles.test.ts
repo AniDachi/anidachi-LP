@@ -6,6 +6,49 @@ describe("overlay layout pointer surfaces", () => {
 		expect(getRule(".mini-panel")).toContain("cursor: default");
 	});
 
+	it("keeps the cursor visible while crossing the message composer and emoji grid", () => {
+		expect(getRule(".message-composer")).toContain("cursor: default");
+		expect(getRule(".message-composer-emoji-popover")).toContain(
+			"cursor: default",
+		);
+		expect(getRule(".message-composer input")).toContain("cursor: text");
+		expect(getRule(".message-composer-emoji-popover button")).toContain(
+			"cursor: pointer",
+		);
+	});
+
+	it("keeps an expanded composer emoji catalog inside a scrollable compact popover", () => {
+		const popover = getRule(".message-composer-emoji-popover");
+
+		expect(popover).toContain("max-height:");
+		expect(popover).toContain("overflow-y: auto");
+		expect(popover).toContain("overscroll-behavior: contain");
+	});
+
+	it("keeps the composer interaction layer above every room overlay surface", () => {
+		const panelLayer = getNumericProperty(".mini-panel", "z-index");
+		const shieldLayer = getNumericProperty(
+			".message-composer-shield",
+			"z-index",
+		);
+		const composerLayer = getNumericProperty(".message-composer", "z-index");
+
+		expect(shieldLayer).toBeGreaterThan(panelLayer);
+		expect(composerLayer).toBeGreaterThan(shieldLayer);
+	});
+
+	it("moves the smart participant preview cursor all the way to the rail edge", () => {
+		expect(overlayStyles.replace(/\s+/g, " ")).toContain(
+			'.interface-settings-preview[data-cursor-target="rail-edge"] .interface-settings-demo-cursor { top: 57px; left: calc(100% - 4px);',
+		);
+	});
+
+	it("lands the persistent participant preview cursor over the compact pill", () => {
+		expect(overlayStyles.replace(/\s+/g, " ")).toContain(
+			'.interface-settings-preview[data-cursor-target="participant-pill"] .interface-settings-demo-cursor { top: 57px; left: calc(100% - 34px);',
+		);
+	});
+
 	it("separates personal camera controls from the participant hierarchy", () => {
 		const cameraControl = getRule(".icon-button.panel-camera-control");
 		expect(cameraControl).toContain("position: relative");
@@ -136,7 +179,7 @@ describe("overlay layout pointer surfaces", () => {
 		expect(activePrimaryAction).toContain("max-width: none");
 	});
 
-	it("renders room exit as a restrained destructive primary action", () => {
+	it("renders room exit as a clearly destructive primary action", () => {
 		const primaryAction = getRule(".button.panel-primary-action");
 		expect(primaryAction).toContain("height: 36px");
 		expect(primaryAction).toContain("min-height: 36px");
@@ -144,32 +187,200 @@ describe("overlay layout pointer surfaces", () => {
 		const exitAction = getRule(
 			".button.primary.panel-primary-action.room-exit",
 		);
-		expect(exitAction).toContain("border-color: rgba(248, 113, 113, 0.24)");
-		expect(exitAction).toContain("background: rgba(51, 35, 37, 0.88)");
-		expect(exitAction).toContain("color: rgba(255, 255, 255, 0.9)");
+		expect(exitAction).toContain("border-color: #842029");
+		expect(exitAction).toContain("background: #58151c");
+		expect(exitAction).toContain("color: rgba(255, 255, 255, 0.98)");
 		expect(exitAction).toContain(
-			"box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025)",
+			"box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08)",
 		);
 		expect(exitAction).not.toContain("linear-gradient");
-		expect(
-			getRule(".button.primary.panel-primary-action.room-exit.confirming"),
-		).toContain("background: rgba(88, 38, 42, 0.96)");
+		const exitActionHover = getRule(
+			".button.primary.panel-primary-action.room-exit:not(:disabled):hover",
+		);
+		expect(exitActionHover).toContain("border-color: #b02a37");
+		expect(exitActionHover).toContain("background: #842029");
+		const exitActionConfirming = getRule(
+			".button.primary.panel-primary-action.room-exit.confirming",
+		);
+		expect(exitActionConfirming).toContain("border-color: #dc3545");
+		expect(exitActionConfirming).toContain("background: #b02a37");
 	});
 
-	it("uses restrained text tabs for settings navigation", () => {
+	it("aligns the first settings tab with the heading label and keeps even gaps", () => {
+		const rail = getRule(".settings-category-scroll");
+		expect(rail).toContain("display: flex");
+		expect(rail).toContain("justify-content: space-between");
+		expect(rail).toContain("align-items: stretch");
+		expect(rail).toContain("overflow-x: visible");
+		expect(rail).toContain("position: relative");
+		expect(rail).toContain("box-sizing: border-box");
+		expect(rail).toContain("padding: 0");
+		expect(rail).not.toContain("padding: 0 22px");
+		expect(rail).toContain("border-bottom: 0");
+
+		const track = getRule(".settings-category-scroll::after");
+		expect(track).toContain("left: 0");
+		expect(track).toContain("right: 0");
+		expect(track).toContain("bottom: 0");
+		expect(track).toContain("height: 1px");
+		expect(track).toContain("z-index: 0");
+
 		const tab = getRule(".settings-category-tab");
 		expect(tab).toContain("position: relative");
+		expect(tab).toContain("width: auto");
+		expect(tab).toContain("flex: 0 0 auto");
+		expect(tab).toContain("height: 40px");
+		expect(tab).toContain("padding: 0");
+		expect(tab).toContain("font-size: 12px");
+		expect(tab).toContain("font-weight: 680");
+		expect(tab).toContain("letter-spacing: -0.1px");
 		expect(tab).toContain("border: 0");
 		expect(tab).toContain("border-radius: 0");
 		expect(tab).toContain("background: transparent");
 
-		const indicator = getRule(".settings-category-tab::after");
-		expect(indicator).toContain("width: 22px");
+		const indicator = getRule(".settings-category-scroll::before");
+		expect(indicator).toContain("left: var(--settings-indicator-left, 0px)");
+		expect(indicator).toContain("width: var(--settings-indicator-width, 58px)");
 		expect(indicator).toContain("height: 2px");
-		expect(indicator).toContain("scaleX(0)");
-		expect(getRule(".settings-category-tab.active::after")).toContain(
-			"scaleX(1)",
+		expect(indicator).toContain("bottom: -0.5px");
+		expect(indicator).toContain("z-index: 2");
+		expect(indicator).toContain("transition:");
+		expect(indicator).toContain("left 180ms");
+		expect(indicator).toContain("width 180ms");
+		expect(overlayStyles).not.toContain(
+			'.settings-category-scroll[data-active-category="layout"]::before',
 		);
+		expect(overlayStyles).not.toContain(".settings-category-tab.active::after");
+	});
+
+	it("keeps the emoji shortcut row free of a redundant bottom divider", () => {
+		const shortcutGrid = getRule(".reaction-shortcut-grid");
+		expect(shortcutGrid).toContain("box-shadow: none");
+		expect(shortcutGrid).not.toContain("inset 0 -1px");
+	});
+
+	it("keeps Room defaults aligned with the existing restrained settings style", () => {
+		const intro = getRule(".room-defaults-intro");
+		expect(intro).toContain("display: grid");
+		expect(intro).not.toContain("border");
+
+		const controls = getRule(".room-defaults-controls");
+		expect(controls).toContain("display: grid");
+		expect(controls).toContain("gap: 4px");
+		expect(controls).not.toContain("border-top");
+		expect(controls).not.toContain("border-radius");
+		expect(controls).not.toContain("background:");
+
+		const row = getRule(".room-defaults-control");
+		expect(row).toContain("box-sizing: border-box");
+		expect(row).toContain("width: 100%");
+		expect(row).toContain("grid-template-columns: 82px minmax(0, 1fr)");
+		expect(row).toContain("gap: 8px");
+		expect(row).not.toContain("minmax(210px");
+		expect(row).not.toContain("border-bottom");
+
+		const segmented = getRule(".room-defaults-segmented");
+		expect(segmented).toContain(
+			"grid-template-columns: repeat(3, minmax(0, 1fr))",
+		);
+		expect(
+			getRule('.room-defaults-segmented[data-state="third"]::before'),
+		).toContain("transform: translateX(calc(200% + 4px))");
+	});
+
+	it("keeps Layout controls open and aligns both actions evenly", () => {
+		const selector = getRule(".layout-object-selector-v2");
+		expect(selector).toContain("padding: 0");
+		expect(selector).toContain("border: 0");
+		expect(selector).toContain("border-radius: 0");
+		expect(selector).toContain("background: transparent");
+
+		const selectorButton = getRule(".layout-object-selector-v2 button");
+		expect(selectorButton).toContain("border: 0");
+		expect(selectorButton).toContain("border-radius: 0");
+		expect(selectorButton).toContain("background: transparent");
+		expect(selectorButton).toContain("display: inline-flex");
+
+		const activeSelector = getRule(
+			'.layout-object-selector-v2 button[aria-pressed="true"]',
+		);
+		expect(activeSelector).toContain("background: transparent");
+
+		const slider = getRule(".stepped-setting-slider-v2");
+		expect(slider).toContain("padding: 8px 2px 7px");
+		expect(slider).toContain("border: 0");
+		expect(slider).toContain("border-radius: 0");
+		expect(slider).toContain("background: transparent");
+
+		const actions = getRule(".layout-editor-actions-v2");
+		expect(actions).toContain(
+			"grid-template-columns: repeat(2, minmax(0, 1fr))",
+		);
+	});
+
+	it("uses a full-width low-contrast Chat content switcher", () => {
+		const segmented = getRule(".layout-chat-mode-segmented-v2");
+		expect(segmented).toContain("position: relative");
+		expect(segmented).toContain("width: 100%");
+		expect(segmented).toContain("height: 32px");
+		expect(segmented).toContain("padding: 2px");
+		expect(segmented).toContain("border-radius: 8px");
+		expect(segmented).toContain("background: rgba(255, 255, 255, 0.025)");
+		expect(segmented).toContain(
+			"grid-template-columns: repeat(2, minmax(0, 1fr))",
+		);
+
+		const activePill = getRule(".layout-chat-mode-segmented-v2::before");
+		expect(activePill).toContain("border-radius: 6px");
+		expect(activePill).toContain("background: rgba(255, 255, 255, 0.075)");
+		expect(activePill).not.toContain("171, 73, 28");
+
+		const historyPill = getRule(
+			'.layout-chat-mode-segmented-v2[data-state="history"]::before',
+		);
+		expect(historyPill).toContain("transform: translateX(calc(100% + 2px))");
+
+		const option = getRule(".layout-chat-mode-segmented-v2 button");
+		expect(option).toContain("background: transparent");
+		expect(option).toContain("z-index: 1");
+	});
+
+	it("uses the same low-contrast segmented pattern for Interface modes", () => {
+		const segmented = getRule(".interface-settings-segmented");
+		expect(segmented).toContain("position: relative");
+		expect(segmented).toContain("height: 32px");
+		expect(segmented).toContain("padding: 2px");
+		expect(segmented).toContain("border-radius: 8px");
+		expect(segmented).toContain("background: rgba(255, 255, 255, 0.025)");
+
+		const activePill = getRule(".interface-settings-segmented::before");
+		expect(activePill).toContain("border-radius: 6px");
+		expect(activePill).toContain("background: rgba(255, 255, 255, 0.075)");
+		expect(
+			getRule('.interface-settings-segmented[data-state="second"]::before'),
+		).toContain("transform: translateX(calc(100% + 2px))");
+
+		const selected = getRule(".interface-settings-segmented button.selected");
+		expect(selected).toContain("background: transparent");
+	});
+
+	it("uses the same low-contrast segmented pattern for Voice modes", () => {
+		const segmented = getRule(".voice-mode-control");
+		expect(segmented).toContain("position: relative");
+		expect(segmented).toContain("height: 32px");
+		expect(segmented).toContain("padding: 2px");
+		expect(segmented).toContain("border-radius: 8px");
+		expect(segmented).toContain("background: rgba(255, 255, 255, 0.025)");
+
+		const activePill = getRule(".voice-mode-control::before");
+		expect(activePill).toContain("border-radius: 6px");
+		expect(activePill).toContain("background: rgba(255, 255, 255, 0.075)");
+		expect(
+			getRule('.voice-mode-control[data-state="second"]::before'),
+		).toContain("transform: translateX(calc(100% + 2px))");
+
+		const selected = getRule(".voice-mode-control button.selected");
+		expect(selected).toContain("background: transparent");
 	});
 
 	it("separates structural headings from interactive accents", () => {
@@ -184,9 +395,32 @@ describe("overlay layout pointer surfaces", () => {
 		expect(settingsTitle).toContain("padding-top: 14px");
 		expect(settingsTitle).toContain("margin: 18px 0 2px");
 
-		expect(getRule(".room-people-heading")).toContain("align-items: baseline");
+		expect(settingsTitle).toContain("display: flex");
+		expect(settingsTitle).toContain("align-items: center");
+		expect(getRule(".section-title-icon")).toContain(
+			"color: rgba(255, 181, 116, 0.82)",
+		);
+		expect(getRule(".room-people-heading")).toContain("align-items: center");
 		expect(getRule(".settings-category-tab")).toContain(
 			"color: rgba(255, 255, 255, 0.58)",
+		);
+		const footer = getRule(".account-footer");
+		expect(footer).toContain("display: flex");
+		expect(footer).toContain("border-top: 1px solid rgba(255, 255, 255, 0.07)");
+		const footerAction = getRule(".account-footer-action");
+		expect(footerAction).toContain("width: auto");
+		expect(footerAction).toContain("background: transparent");
+		expect(footerAction).toContain("color: #58151c");
+		const footerActionHover = getRule(
+			".account-footer-action:not(:disabled):hover",
+		);
+		expect(footerActionHover).toContain("background: transparent");
+		expect(footerActionHover).toContain("color: #842029");
+		const footerActionConfirming = getRule(".account-footer-action.confirming");
+		expect(footerActionConfirming).toContain("background: transparent");
+		expect(footerActionConfirming).toContain("color: #b02a37");
+		expect(getRule(".account-footer-action:focus-visible")).toContain(
+			"outline: 2px solid rgba(220, 53, 69, 0.62)",
 		);
 	});
 
@@ -286,12 +520,48 @@ describe("overlay layout pointer surfaces", () => {
 		);
 	});
 
-	it("keeps the closed room rail inert outside a narrow edge target", () => {
-		expect(getRule(".room-rail-edge")).toContain("width: 6px");
+	it("uses a slim vertically extended menu-style glow for the Smart edge", () => {
+		expect(getRule(".room-rail-edge")).toContain("width: 28px");
+		const edgeCore = getRule(".room-rail-edge::before");
+		expect(edgeCore).toContain("top: 50%");
+		expect(edgeCore).toContain("right: 0");
+		expect(edgeCore).toContain("width: 0");
+		expect(edgeCore).toContain("height: clamp(144px, 34%, 204px)");
+		expect(edgeCore).toContain("background: transparent");
+		expect(edgeCore).toContain("opacity: 0");
+		expect(edgeCore).toContain("-3px 0 12px 5px rgba(255, 92, 20, 0.52)");
+		expect(edgeCore).toContain("scaleY(0.72)");
+		expect(edgeCore).not.toContain("radial-gradient");
+		expect(overlayStyles).not.toContain(".room-rail-edge::after");
+		const visibleEdgeCore = getRule(
+			".room-rail.edge-near .room-rail-edge::before",
+		);
+		expect(visibleEdgeCore).toContain("opacity: 0.94");
+		expect(visibleEdgeCore).toContain("scaleY(1)");
 		expect(getRule(".room-rail-panel")).toContain("pointer-events: none");
 		expect(getRule(".room-rail.open .room-rail-panel")).toContain(
 			"pointer-events: auto",
 		);
+	});
+
+	it("collapses participant pills without a lingering width animation", () => {
+		expect(getRule(".room-rail-slot")).toContain(
+			"width 180ms cubic-bezier(0.2, 0.8, 0.2, 1)",
+		);
+		expect(getRule(".room-rail-pill")).toContain(
+			"width 180ms cubic-bezier(0.2, 0.8, 0.2, 1)",
+		);
+	});
+
+	it("removes the participant edge animation when reduced motion is requested", () => {
+		const mediaStart = overlayStyles.lastIndexOf(
+			"@media (prefers-reduced-motion: reduce)",
+		);
+		const mediaEnd = overlayStyles.indexOf(".catch-up {", mediaStart);
+		const reducedMotionBlock = overlayStyles.slice(mediaStart, mediaEnd);
+
+		expect(reducedMotionBlock).toContain(".room-rail-edge::before");
+		expect(reducedMotionBlock).not.toContain(".room-rail-edge::after");
 	});
 
 	it("keeps persistent participant pills compact until direct interaction", () => {
@@ -304,38 +574,135 @@ describe("overlay layout pointer surfaces", () => {
 		);
 		expect(
 			getRule('.room-rail-slot[data-presentation="compact"] .room-rail-pill'),
-		).toContain("width: 64px");
+		).toContain("width: var(--room-rail-compact-width, 44px)");
+		expect(
+			getRule('.room-rail-slot[data-presentation="peek"] .room-rail-pill'),
+		).toContain("width: var(--room-rail-peek-width, 104px)");
 		expect(
 			getRule('.room-rail-slot[data-presentation="expanded"] .room-rail-pill'),
-		).toContain("width: 162px");
+		).toContain("width: var(--room-rail-expanded-width, 196px)");
+		expect(getRule(".room-rail-pill")).toContain(
+			"height: var(--room-rail-pill-height, 48px)",
+		);
+		expect(getRule(".room-rail-avatar")).toContain(
+			"width: var(--room-rail-avatar-size, 32px)",
+		);
+		expect(getRule(".room-rail-avatar-image")).toContain("object-fit: cover");
+	});
+
+	it("scales participant pill content from the same room rail geometry", () => {
+		expect(getRule(".room-rail-pill")).toContain(
+			"gap: var(--room-rail-pill-gap, 7px)",
+		);
+		expect(getRule(".room-rail-avatar-fallback")).toContain(
+			"font-size: var(--room-rail-avatar-font-size, 10px)",
+		);
+		expect(getRule(".room-rail-voice-bars")).toContain(
+			"width: var(--room-rail-voice-indicator-size, 15px)",
+		);
+		expect(getRule(".room-rail-copy")).toContain(
+			"gap: var(--room-rail-content-gap, 4px)",
+		);
+		expect(getRule(".room-rail-identity")).toContain(
+			"gap: var(--room-rail-identity-gap, 6px)",
+		);
+		expect(getRule(".room-rail-name")).toContain(
+			"font-size: var(--room-rail-name-font-size, 11.5px)",
+		);
+		expect(getRule(".room-rail-role")).toContain(
+			"font-size: var(--room-rail-role-font-size, 8px)",
+		);
+		expect(overlayStyles).toContain(
+			"font-size: var(--room-rail-status-font-size, 9.5px)",
+		);
+
+		const inlineControl = getRule(".participant-audio-inline-control");
+		expect(inlineControl).toContain(
+			"height: var(--room-rail-audio-height, 20px)",
+		);
+		expect(inlineControl).toContain("gap: var(--room-rail-audio-gap, 6px)");
+		expect(getRule(".participant-audio-mute")).toContain(
+			"width: var(--room-rail-audio-button-size, 22px)",
+		);
+		expect(getRule(".participant-audio-mute svg")).toContain(
+			"width: var(--room-rail-audio-icon-size, 12px)",
+		);
+	});
+
+	it("reserves a shadow gutter inside the scrollable Smart participant rail", () => {
+		const smartList = getComputedRoomRailListStyles("room-rail open");
+		const persistentList = getComputedRoomRailListStyles(
+			"room-rail persistent",
+		);
+
+		expect(smartList.overflowY).toBe("auto");
+		expect(Number.parseFloat(smartList.paddingTop)).toBeGreaterThanOrEqual(20);
+		expect(Number.parseFloat(smartList.paddingRight)).toBe(0);
+		expect(Number.parseFloat(smartList.paddingBottom)).toBeGreaterThanOrEqual(
+			30,
+		);
+		expect(Number.parseFloat(smartList.paddingLeft)).toBeGreaterThanOrEqual(24);
+		expect(smartList.boxSizing).toBe("border-box");
+		expect(persistentList.overflowY).toBe("visible");
 	});
 
 	it("keeps participant audio controls stable on both rail and camera surfaces", () => {
 		const inlineControl = getRule(".participant-audio-inline-control");
-		expect(inlineControl).toContain("width: 84px");
-		expect(inlineControl).toContain("flex: 0 0 84px");
+		expect(inlineControl).toContain("width: 100%");
 		expect(inlineControl).toContain("opacity: 0");
 		expect(
 			getRule(
-				".room-rail.open .room-rail-slot:hover .participant-audio-inline-control",
+				'.room-rail-slot[data-presentation="expanded"] .participant-audio-inline-control',
 			),
+		).toContain("opacity: 1");
+		expect(overlayStyles).not.toContain(
+			'.room-rail-slot[data-presentation="expanded"]:hover .room-rail-copy',
+		);
+		expect(
+			getRule('.room-rail-slot[data-presentation="expanded"] .room-rail-copy'),
 		).toContain("opacity: 1");
 		expect(getRule(".room-rail-panel.adjusting-audio")).toContain(
 			"pointer-events: auto",
 		);
 
-		const contour = getRule(".participant-audio-contour-control");
-		expect(contour).toContain("position: absolute");
-		expect(contour).toContain("inset: -8px");
+		const videoControl = getRule(".participant-audio-video-control");
+		expect(videoControl).toContain("position: absolute");
+		expect(videoControl).toContain("inset: 0");
+		expect(videoControl).toContain("pointer-events: auto");
+		expect(videoControl).toContain("cursor: default");
 		expect(
-			getNumericProperty(".participant-audio-contour-control", "z-index"),
+			getNumericProperty(".participant-audio-video-control", "z-index"),
 		).toBeGreaterThan(getNumericProperty(".nuke-burst", "z-index"));
-		expect(getRule(".participant-audio-contour-arc")).toContain(
-			"conic-gradient",
-		);
+		const videoSlider = getRule(".participant-audio-video-slider");
+		expect(videoSlider).toContain("width: 72%");
+		expect(videoSlider).toContain("opacity: 0");
+		expect(videoSlider).toContain("cursor: default");
 		expect(
-			getRule(".cam-bubble:hover .participant-audio-contour-control"),
-		).toContain("pointer-events: auto");
+			getRule(".cam-bubble:hover .participant-audio-video-slider"),
+		).toContain("opacity: 1");
+		const mutedIndicator = getRule(
+			".participant-audio-video-control.muted > .participant-audio-video-mute",
+		);
+		expect(mutedIndicator).toContain("opacity: 1");
+		expect(mutedIndicator).toContain("animation: anidachi-video-mute-settle");
+		expect(overlayStyles).not.toContain("participant-audio-contour-arc");
+
+		const cameraBubble = getRule(".cam-bubble");
+		expect(cameraBubble).toContain("cursor: default");
+		expect(cameraBubble).not.toContain("transform 180ms ease");
+		expect(getRule(".cam-bubble:hover")).not.toContain("transform:");
+	});
+
+	it("uses one clean idle frame for local and remote camera bubbles", () => {
+		const cameraBubble = getRule(".cam-bubble");
+		expect(cameraBubble).not.toContain("0 0 0 1px rgba(8, 10, 18, 0.5)");
+		expect(overlayStyles).not.toContain(".cam-bubble.active {");
+	});
+
+	it("leaves the camera travel path transparent to native player controls", () => {
+		expect(overlayStyles).not.toContain(".cam-stack-interaction-corridor");
+		expect(getRule(".cam-stack")).toContain("pointer-events: none");
+		expect(getRule(".cam-bubble")).toContain("pointer-events: auto");
 	});
 
 	it("keeps ghost objects legible over changing video frames", () => {
@@ -379,6 +746,18 @@ describe("overlay layout pointer surfaces", () => {
 		expect(
 			getRule(".live-chat-column.layout-chat-preview-shell .live-chat-text"),
 		).not.toContain("-webkit-line-clamp: 1");
+
+		const editorPreview = getRule(".layout-chat-preview-v2");
+		expect(editorPreview).toContain("gap: var(--layout-preview-chat-gap, 5px)");
+		expect(editorPreview).toContain(
+			"padding: var(--layout-preview-chat-padding-y, 8px)",
+		);
+		expect(editorPreview).toContain(
+			"var(--layout-preview-chat-padding-x, 10px)",
+		);
+		expect(getRule(".layout-chat-preview-v2 .live-chat-name")).toContain(
+			"font-size: var(--layout-preview-chat-name-font-size, 10px)",
+		);
 	});
 
 	it("wraps complete live messages with the same text flow as history", () => {
@@ -435,4 +814,37 @@ function getNumericProperty(selector: string, property: string): number {
 		throw new Error(`Missing ${property} in ${selector}`);
 	}
 	return Number(match[1]);
+}
+
+function getComputedRoomRailListStyles(railClassName: string): {
+	boxSizing: string;
+	overflowY: string;
+	paddingBottom: string;
+	paddingLeft: string;
+	paddingRight: string;
+	paddingTop: string;
+} {
+	const style = document.createElement("style");
+	style.textContent = overlayStyles;
+	const rail = document.createElement("aside");
+	rail.className = railClassName;
+	const list = document.createElement("div");
+	list.className = "room-rail-list";
+	rail.append(list);
+	document.head.append(style);
+	document.body.append(rail);
+
+	const computed = getComputedStyle(list);
+	const styles = {
+		boxSizing: computed.boxSizing,
+		overflowY: computed.overflowY || computed.overflow || "visible",
+		paddingBottom: computed.paddingBottom,
+		paddingLeft: computed.paddingLeft,
+		paddingRight: computed.paddingRight,
+		paddingTop: computed.paddingTop,
+	};
+
+	rail.remove();
+	style.remove();
+	return styles;
 }
