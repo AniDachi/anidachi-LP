@@ -3606,10 +3606,10 @@
     "semantic_hash": "4e0420e077e5ebc55dbe7b2187df7832"
   },
   "docs/current-development-state.md": {
-    "mtime": 1789225375.7818704,
-    "seen": 1789226437.455234,
-    "ast_hash": "cde56fcb5dd3a4a3dcc1f00c44a77f71",
-    "semantic_hash": "cde56fcb5dd3a4a3dcc1f00c44a77f71"
+    "mtime": 1789230571.5549676,
+    "seen": 1789232433.690685,
+    "ast_hash": "dfb71d3b5daf1b410bd8532fb0fbdd13",
+    "semantic_hash": "dfb71d3b5daf1b410bd8532fb0fbdd13"
   },
   "docs/development-environments.md": {
     "mtime": 1788807642.3055499,
@@ -7884,10 +7884,10 @@
     "semantic_hash": "34b84da7ca09aa79f5d0d42c63286066"
   },
   "docs/releases/personal-history-mvp/production-35-to-60-transition.md": {
-    "mtime": 1789208988.9592745,
-    "seen": 1789210297.597682,
-    "ast_hash": "5b53d9df7eea90590857c1aa3d900f39",
-    "semantic_hash": "5b53d9df7eea90590857c1aa3d900f39"
+    "mtime": 1789229638.829643,
+    "seen": 1789232433.690686,
+    "ast_hash": "ae7616ad7dc740503a6369f4cecfc7b4",
+    "semantic_hash": "ae7616ad7dc740503a6369f4cecfc7b4"
   },
   "docs/superpowers/plans/2026-09-11-extension-inbox-polish.md": {
     "mtime": 1789146711.4960988,
@@ -7938,10 +7938,10 @@
     "semantic_hash": "5ee0c506fe97362023ed1e97ae29ad5a"
   },
   "docs/superpowers/plans/2026-09-12-production-promotion-preparation.md": {
-    "mtime": 1789225375.8532147,
-    "seen": 1789226437.4552372,
-    "ast_hash": "300fc7354106270bef9f5994c24f9b33",
-    "semantic_hash": "300fc7354106270bef9f5994c24f9b33"
+    "mtime": 1789230571.622109,
+    "seen": 1789232433.690686,
+    "ast_hash": "d4cd421bdfc2d03299d256969a4bb323",
+    "semantic_hash": "d4cd421bdfc2d03299d256969a4bb323"
   },
   "apps/api/test/maintenance.test.ts": {
     "mtime": 1789204068.949726,
@@ -7992,10 +7992,10 @@
     "semantic_hash": "49414d8868919af8d041d7b2bf3073d5"
   },
   "docs/releases/personal-history-mvp/free-hosted-rehearsal.md": {
-    "mtime": 1789225637.2972686,
-    "seen": 1789226437.4552362,
-    "ast_hash": "150eb6fc09956b48d2871d36b726798e",
-    "semantic_hash": "150eb6fc09956b48d2871d36b726798e"
+    "mtime": 1789231210.1981208,
+    "seen": 1789232433.690685,
+    "ast_hash": "9671a042d5796250470474d128f0c07c",
+    "semantic_hash": "9671a042d5796250470474d128f0c07c"
   },
   "docs/releases/personal-history-mvp/free-rehearsal-window.md": {
     "mtime": 1789225375.707832,
@@ -8026,5 +8026,23 @@
     "seen": 1789221144.776942,
     "ast_hash": "5cf3ee7ea319f8c0434d456fc6729379",
     "semantic_hash": "5cf3ee7ea319f8c0434d456fc6729379"
+  },
+  "docs/releases/personal-history-mvp/2026-09-12-prefix-cli-atomicity.json": {
+    "mtime": 1789231323.5360043,
+    "seen": 1789232433.690648,
+    "ast_hash": "ccced4cdffd49ec6144e821b96d382e3",
+    "semantic_hash": "ccced4cdffd49ec6144e821b96d382e3"
+  },
+  "scripts/production-history-prefix-proof.mjs": {
+    "mtime": 1789231181.6309426,
+    "seen": 1789232433.690677,
+    "ast_hash": "0d35c7d4fee4cd8142f02f0a408cb315",
+    "semantic_hash": "0d35c7d4fee4cd8142f02f0a408cb315"
+  },
+  "scripts/production-history-prefix-proof.test.mjs": {
+    "mtime": 1789231181.7028327,
+    "seen": 1789232433.690677,
+    "ast_hash": "8623e1182555a58b140e1b033be20c80",
+    "semantic_hash": "8623e1182555a58b140e1b033be20c80"
   }
 }
