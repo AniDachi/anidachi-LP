@@ -49,6 +49,92 @@ External traffic maintenance, the hosted executor, a final stable checkpoint and
 the existing activation/physical-media gates remain open. No new paid environment
 or plan upgrade has been authorized or created.
 
+The owner selected a manual Free-plan path: prepare commands, agree a temporary
+staging pause, run one synthetic hosted rehearsal in the freed project slot,
+then resume staging before scheduling production. The
+[window procedure](releases/personal-history-mvp/free-rehearsal-window.md) and
+[database command package](releases/personal-history-mvp/free-hosted-rehearsal.md)
+describe that candidate. Its small artifact builder is offline and rejects both
+existing project refs; it is not a production executor. No pause, temporary
+project or cloud change was included in the source preparation. Shared Vercel
+project pause is explicitly excluded from a staging-only window.
+
+The first authorized Free window closed with staging restored and
+verified within 45 minutes, and the disposable synthetic project was deleted.
+The unchanged 35 -> 60 chain and recovery of all 35 application/history table
+digests passed, but **hosted recovery acceptance failed**: default privileges
+left surplus object grants after restore, and a platform-created managed role
+remained after `pg_net` removal. Maintenance stayed held on the rehearsal target.
+The [recorded correction gate](releases/personal-history-mvp/free-hosted-rehearsal.md#executed-result-and-correction-gate)
+requires exact transactional ACL restoration and supported treatment of the
+managed-role difference before a fresh hosted run. Staging history, Inbox and
+normal extension room creation/completion were verified after resume. Production
+remains unchanged; Tasks 2/4 and the separate production gates are not complete.
+
+The companion application-ACL artifact helper now passes a real local
+PostgreSQL 17 non-superuser regression: exact privileges return after archive
+replay under surviving default grants, and failures roll back the complete
+restore. It leaves managed roles and default privileges unchanged. Independent
+source review passed. Platform-source
+research established the residual role's origin, but no supported customer
+cleanup procedure. An independently reviewed [conditional managed-role policy](releases/personal-history-mvp/free-hosted-rehearsal.md#executed-result-and-correction-gate)
+now permits only the exact absent-before/present-after platform principal within
+application-scoped recovery, after all fresh credential, attribute, membership,
+cluster-dependency, SET-path and ordinary recovery checks pass. The read-only
+receipt SQL records producing source/target/time and preserves missing or
+unavailable evidence. Independent capture-source review passed.
+
+The second authorized Free rehearsal at `bb0b546c` has now passed independent
+**application-scoped recovery** review: exact 35 versions, all 35 full relation
+digests, application schema and all 76 ACL objects matched; existing catalog
+state stayed unchanged except the explicitly accounted bridge schema and sole
+conditionally accepted managed role. Fresh baseline/post-install/post-cleanup
+captures passed every required role condition. Write holds rejected all four
+service-role mutation types; after acceptance and release, rollback-only writes
+passed without changing the restored data. See the
+[accepted result](releases/personal-history-mvp/free-hosted-rehearsal.md#accepted-second-rehearsal-2026-09-12).
+
+Its staging-only window closed at 14:59:41 UTC after 38m10s. The disposable
+project was deleted after verified receipt copies; staging's exact migration,
+scheduler and Worker configuration returned, and history, Inbox and normal
+extension room creation/completion passed. Production stayed unchanged. The
+historical FAILED run remains failed. Interrupted-prefix proof, the production
+operating sequence and a fresh maintenance-bound checkpoint are still pending;
+Tasks 2/4 and production promotion are not complete.
+
+Local CLI 2.111.0 probes now distinguish a failed history insertion after an
+authored COMMIT from a fully rolled-back file. The fixed
+[prefix proof checker](../scripts/production-history-prefix-proof.mjs) requires
+full recovery for prefixes 37/38 and permits a 50 suffix only with exact failure,
+binding, ledger and touched-state evidence plus fresh archive/hold verification.
+Its read-only SQL and the unchanged canonical file 51 failure/retry passed on
+synthetic local prerequisites. The [aggregate evidence](releases/personal-history-mvp/2026-09-12-prefix-cli-atomicity.json)
+keeps this separate from a complete chain, real bridge or hosted acceptance.
+Temporary local resources were removed; that local preparation did not open a
+new staging window.
+
+The subsequent third authorized Free window at `4cebafab` passed
+[hosted interrupted-prefix-37 recovery](releases/personal-history-mvp/free-hosted-rehearsal.md#accepted-interrupted-prefix-37-2026-09-12).
+The denied history INSERT left committed application effects, so the checker
+refused suffix retry and full recovery restored the exact original 35 versions,
+35 relation digests, application schema, 76 ACL objects and bridge identity.
+Fresh target-specific managed-role conditions and all four write-hold/release
+probes passed independent review. Evidence copies were verified before deleting
+the disposable project. The window closed at 18:18:53 UTC after 38m54s with
+staging restored and history, Inbox and normal extension room flows checked.
+Production stayed unchanged. Prefixes 38/50, the production operating sequence
+and a fresh maintenance-bound checkpoint remain open; Tasks 2/4 and promotion
+are not complete.
+
+A default-open [application admission gate](releases/personal-history-mvp/maintenance-admission.md)
+is prepared in source for Web and Worker. When explicitly configured closed, it
+returns retryable 503 responses before product handlers and pauses the Worker's
+notification recovery dispatch. No environment setting is enabled by this
+change. It does not close old deployments, drain rooms or stop database jobs;
+those controls and the hosted recovery gate remain prerequisites to production
+execution. Existing history queues retain unacknowledged entries on a temporary
+503 under their normal account, lease and generation fences.
+
 ## Friends and groups editor, 2026-09-11
 
 Implementation and local verification are complete. The database prerequisite

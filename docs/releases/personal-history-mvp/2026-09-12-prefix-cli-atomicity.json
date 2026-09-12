@@ -1,0 +1,112 @@
+{
+	"format": 1,
+	"date": "2026-09-12",
+	"evidenceClass": "local-cli-atomicity-and-receipt-validation-only",
+	"hostedPrefixAccepted": false,
+	"productionChanged": false,
+	"stagingPaused": false,
+	"cli": {
+		"version": "2.111.0",
+		"platform": "@supabase/cli-darwin-arm64",
+		"upstreamReleaseCommit": "ae89b16c7e0e472c849d89c947513872b3c537f5",
+		"binarySha256": "3a92cc2ea6b9fe75078305ba07923b916b509dc8d14c0f4e1153d3ddc402e796"
+	},
+	"localEnvironment": {
+		"postgres": "17.6",
+		"operator": "postgres",
+		"superuser": false,
+		"data": "fresh synthetic fixtures only",
+		"publishedEndpoint": "loopback only",
+		"cronExecution": "disabled"
+	},
+	"genericTransactionProbe": {
+		"completedAt": "2026-09-12T16:04:48.497815+00:00",
+		"driverSha256": "8b384bf2005b3e1c49e16e6d6f77459771b67eb04eaf97094ee30a3c40f6a004",
+		"cases": [
+			{
+				"case": "explicit",
+				"migration_sha256": "f69d6f5f0f1476e66009cd8a77917386b3a9028441a39acb62a79c2c1b00f193",
+				"failed_exit": 1,
+				"history_unchanged": true,
+				"application_rolled_back": false,
+				"classification": "unrecorded-application-effects",
+				"suffix_retried": false,
+				"required_action": "retain isolation; full baseline recovery; do not retry or repair ledger"
+			},
+			{
+				"case": "implicit",
+				"migration_sha256": "bf2c53d8a59967f68f27608528f718aa6b126be9d9923b710694595f7a7306c5",
+				"failed_exit": 1,
+				"history_unchanged": true,
+				"application_rolled_back": true,
+				"classification": "rollback-proved-for-this-fixture",
+				"suffix_retried": true,
+				"unchanged_resume_passed": true
+			}
+		]
+	},
+	"canonicalFileAndCaptureProbe": {
+		"passed": true,
+		"completedAt": "2026-09-12T16:26:30.641227+00:00",
+		"scope": "local read-only receipt SQL and native CLI transaction/unchanged retry for canonical file 51 only; preceding ledger/archive/hold shapes are synthetic fixtures, not application recovery, real bridge verification, whole chain, or hosted acceptance",
+		"helperSha256": "50dbc4baf6ced1c2ce02f1cd9c7efded5acc53384be1795a9150b0725441f1bd",
+		"binarySha256": "3a92cc2ea6b9fe75078305ba07923b916b509dc8d14c0f4e1153d3ddc402e796",
+		"canonicalMigrationSha256": "dbc7cde6e2d9f355370cc398bee641f7658f77ab4270e1a1ce07e4819139d875",
+		"actualFailureExit": 1,
+		"beforeAfterPublicSchemaEqual": true,
+		"actualMetadataCaptureAndClassifierPassed": true,
+		"unchangedCanonical51RetryExit": 0,
+		"afterRetryColumnCheckAndDefinerFunctionPresent": true
+	},
+	"canonicalCases": [
+		{
+			"committedPrefix": 37,
+			"deniedVersion": "20260904205540",
+			"migrationSha256": "168733739d57aca7a8a0ab6952ef1d2943238912f95b219e7b5087faa67a4a9c",
+			"handling": "full-recovery-only"
+		},
+		{
+			"committedPrefix": 38,
+			"deniedVersion": "20260905083000",
+			"migrationSha256": "dd96099edd6ba904fc2b39a5f66f0768ed1046b7da3a51edbd5d2a91c4ee0194",
+			"handling": "full-recovery-only"
+		},
+		{
+			"committedPrefix": 50,
+			"deniedVersion": "20260908040654",
+			"migrationSha256": "dbc7cde6e2d9f355370cc398bee641f7658f77ab4270e1a1ce07e4819139d875",
+			"handling": "unchanged-suffix-only-after-exact-fault-and-rollback-proof"
+		}
+	],
+	"retainedEvidence": {
+		"sourceAndRawLogs": "owner-only operator archive; no production data",
+		"failedSetupAttempts": "retained separately; network publication and TLS configuration failed before baseline SQL"
+	},
+	"limits": [
+		"Generic transaction fixtures do not prove the canonical 35-to-60 chain or hosted recovery.",
+		"The canonical file51 probe uses synthetic preceding ledger, archive and hold metadata; it validates this file and the read-only receipt SQL, not real preservation-bridge holds or archive equality.",
+		"Before/after public schema equality and actual CLI error classification passed for the denied file; unchanged retry then created its column, check and security-definer function.",
+		"Prefixes37/38 require full recovery regardless of ledger-only observations; no suffix retry was attempted for the authored-COMMIT generic fixture.",
+		"Every hosted target still requires fresh original binding/archive, guard verification, prefix/recovery/role evidence, independent acceptance and controlled teardown."
+	],
+	"finalClassifierReassessment": {
+		"passed": true,
+		"scope": "final classifier re-assessment of unchanged retained actual local CLI/SQL receipts; no new database operation",
+		"helperSha256": "c3b4849eceb447b5f56c27677d4166c0263c99aaabcc7b8a535096df463fd239",
+		"captureSqlSha256": "35049bc5ae1ba06e9b8bf365ed01d3f56228e4b7b2a4f61a9dbeb3af09cf4d43",
+		"captureSqlByteIdentical": true,
+		"actualNativeReceiptStillAccepted": true,
+		"changedPreparationRejected": true,
+		"completedAt": "2026-09-12T16:41:37.835Z"
+	},
+	"documentedTimeoutPath": {
+		"passed": true,
+		"scope": "controlled mocked timeout of the exact documented Python block; no real process or database action",
+		"sourceBlockSha256": "74c1601eb9a61440c0d10dc9cf720ac191e8d796b7a59ca3972645848ea294f2",
+		"partialStreamsPreserved": true,
+		"exitCode": null,
+		"timingAndHashesPreserved": true,
+		"explicitStopRaised": true,
+		"completedAt": "2026-09-12T16:41:37.780171+00:00"
+	}
+}
