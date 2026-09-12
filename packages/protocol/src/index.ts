@@ -18,3 +18,5 @@ export * from "./room-presence-evidence";
 export * from "./personal-history-resume";
 export * from "./watch-history-capacity";
 export * from "./watch-history-editor";
+
+export * from "./maintenance";

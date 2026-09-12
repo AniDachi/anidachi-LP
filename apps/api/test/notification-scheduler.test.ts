@@ -33,6 +33,27 @@ afterEach(() => {
 });
 
 describe("notification scheduled recovery boundary", () => {
+  it.each(["closed", "invalid", "OPEN"])("skips %s before reading delivery bindings or HTTP", async (mode) => {
+    const reads: string[] = [];
+    const env = new Proxy({ ANIDACHI_MAINTENANCE_MODE: mode }, {
+      get(target, key) {
+        reads.push(String(key));
+        if (key !== "ANIDACHI_MAINTENANCE_MODE") throw new Error("Unexpected delivery binding");
+        return target.ANIDACHI_MAINTENANCE_MODE;
+      },
+    });
+    await worker.scheduled(event, env, ctx);
+    expect(reads).toEqual(["ANIDACHI_MAINTENANCE_MODE"]);
+    expect(http).not.toHaveBeenCalled();
+    expect(console.info).toHaveBeenCalledExactlyOnceWith("[anidachi/inbox-push] scheduler", { outcome: "maintenance_skipped" });
+    expect(console.error).not.toHaveBeenCalled();
+  });
+
+  it.each(["", "open"])("dispatches with explicit %j admission", async (mode) => {
+    await worker.scheduled(event, { ANIDACHI_ENV: "staging", ANIDACHI_WEB_INTERNAL_BASE_URL: "https://staging.anidachi.app", ANIDACHI_INTERNAL_API_SECRET: "scheduler-test-secret", ANIDACHI_MAINTENANCE_MODE: mode }, ctx);
+    expect(http).toHaveBeenCalledOnce();
+  });
+
 	it("exposes independent scheduled recovery on the actual entrypoint", async () => {
 		expect(typeof worker.scheduled).toBe("function");
 		await worker.scheduled(event, environment, ctx);
