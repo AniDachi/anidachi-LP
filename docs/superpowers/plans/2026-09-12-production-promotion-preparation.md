@@ -10,6 +10,19 @@
 
 **Spec:** [Personal history and plans](../../superpowers/specs/2026-09-08-personal-history-and-plans-mvp-design.md), [production transition contract](../../releases/personal-history-mvp/production-35-to-60-transition.md), [quality gates](../../development-quality-gates.md), and [existing rollout/activation contract](../../releases/personal-history-mvp/README.md).
 
+## Owner correction, 2026-09-13
+
+The owner confirmed there is no real viewing history and current application
+data is prelaunch test data. The non-disposable-history assumption behind this
+plan is superseded. Stop the remaining preservation/recovery campaign, including
+hosted prefixes 38/50; do not require it for release or open another staging
+pause for it. Completed evidence stays retained, with no further rehearsal or
+reporting expansion. The intended next work is the normal canonical migrations,
+compatible Web/Worker/extension release and essential product checks. Keep
+accounts, service configuration and external billing intact; no whole-project
+reset is needed. Historical recovery checkboxes below are no longer release
+gates. Follow the owner clarification in the current development state.
+
 ## Global constraints
 
 - Preserve root worktree `codex/watch-toolbar-polish` and its 38 existing dirty paths. Preparation uses the separate linked worktree; the current continuation branch is `codex/production-traffic-maintenance` (draft PR #302), following the earlier merged preparation work.

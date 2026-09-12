@@ -1,12 +1,27 @@
 # Current Development State
 
-Last updated: 2026-09-12.
+Last updated: 2026-09-13.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
 contain old paths, old domains, or old decisions. When release channels,
 endpoints, branch protection, or store workflow changes, update this document in
 the same PR.
+
+## Owner clarification: prelaunch test data, 2026-09-13
+
+The owner confirmed that the existing application data is test data and there is
+no real viewing history to preserve. This supersedes the earlier classification
+of legacy history as non-disposable and its preservation-driven release gates
+below. Stop additional hosted recovery rehearsals, including prefixes 38/50;
+they are not prerequisites for this prelaunch release. Retain existing evidence
+without further recovery/reporting work.
+
+Use the normal migration and compatible deployment path, with essential checks
+of the released product. This clarification permits the canonical reset of test
+history; it does not call for deleting accounts, resetting the whole project,
+changing service credentials or modifying external Stripe subscriptions.
+Earlier recovery results below remain historical evidence, not current blockers.
 
 ## Prelaunch remediation, 2026-09-12
 
