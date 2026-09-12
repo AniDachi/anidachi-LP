@@ -23,6 +23,22 @@ history; it does not call for deleting accounts, resetting the whole project,
 changing service credentials or modifying external Stripe subscriptions.
 Earlier recovery results below remain historical evidence, not current blockers.
 
+## Production database upgrade, 2026-09-13
+
+The owner-authorized normal CLI release applied the unchanged 25 pending
+migrations to `anidachi-prod` successfully in 88 seconds using CLI 2.111.0.
+Production now has all 60 versions through `20260911070906`. Account/profile
+counts remain 309/309, subscription/customer counts 3/16 and watch settings 12;
+test tracked history is empty after the canonical reset. The policy flag remains
+inactive, matching staging. No whole-project reset or account/billing deletion
+was performed.
+
+The temporary source delivery holds can now be removed: restore the existing
+production migration workflow (main only), enable the normal production Worker
+job and remove the Vercel ignored-build hold. This records database completion;
+Web/Worker promotion and production extension identity/distribution are still
+pending until their actual deployment results are recorded.
+
 ## Prelaunch remediation, 2026-09-12
 
 The [remediation plan](superpowers/plans/2026-09-12-prelaunch-remediation.md)
