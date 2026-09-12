@@ -35,6 +35,13 @@ production clone has been authorized or created for this preparation. Applicatio
 recovery must preserve managed roles/default privileges and verify product
 objects/data/security, without rewinding shared cron operational log counters.
 
+The accepted next step uses [one temporary Free project](free-rehearsal-window.md)
+after an agreed staging pause. The [hosted command package](free-hosted-rehearsal.md)
+and offline artifact builder prepare synthetic inputs while refusing both
+existing hosted refs. They do not weaken this driver's target restriction or
+prove production recovery. Stop on a failed rehearsal, retain its receipts and
+resume staging; do not purchase a plan upgrade or skip the hosted result.
+
 ## Operator identity
 
 Bridge entry points and write holds accept the ordinary `postgres` login, or the

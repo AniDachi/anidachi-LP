@@ -67,9 +67,10 @@ the durable Web outbox intact. Its open-mode timeout and retry behavior remain.
 
 ## Operating sequence and remaining gates
 
-1. Complete independent hosted update-and-restore rehearsal. Free project
-   capacity or a separately approved paid target is an operational choice;
-   implementing this gate requires neither a new project nor a plan upgrade.
+1. Complete independent hosted update-and-restore rehearsal using the accepted
+   [temporary Free-project window](free-rehearsal-window.md). Implementing this
+   application gate requires neither a new project nor a plan upgrade. The
+   staging-only pause and production traffic closure are distinct operations.
 2. Prepare and verify external controls against every production-connected Web
    deployment and Worker ingress. An environment variable on a new deployment
    does not change old deployment URLs or cancel queued builds. GitHub Team's

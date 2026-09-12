@@ -49,6 +49,16 @@ External traffic maintenance, the hosted executor, a final stable checkpoint and
 the existing activation/physical-media gates remain open. No new paid environment
 or plan upgrade has been authorized or created.
 
+The owner selected a manual Free-plan path: prepare commands, agree a temporary
+staging pause, run one synthetic hosted rehearsal in the freed project slot,
+then resume staging before scheduling production. The
+[window procedure](releases/personal-history-mvp/free-rehearsal-window.md) and
+[database command package](releases/personal-history-mvp/free-hosted-rehearsal.md)
+describe that candidate. Its small artifact builder is offline and rejects both
+existing project refs; it is not a production executor. No pause, temporary
+project or cloud change is included in the source preparation. Shared Vercel
+project pause is explicitly excluded from a staging-only window.
+
 A default-open [application admission gate](releases/personal-history-mvp/maintenance-admission.md)
 is prepared in source for Web and Worker. When explicitly configured closed, it
 returns retryable 503 responses before product handlers and pauses the Worker's

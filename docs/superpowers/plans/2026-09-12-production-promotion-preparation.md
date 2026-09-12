@@ -12,7 +12,7 @@
 
 ## Global constraints
 
-- Preserve root worktree `codex/watch-toolbar-polish` and its 38 existing dirty paths. Preparation uses the separate linked worktree on `codex/production-release-preparation`.
+- Preserve root worktree `codex/watch-toolbar-polish` and its 38 existing dirty paths. Preparation uses the separate linked worktree; the current continuation branch is `codex/production-traffic-maintenance` (draft PR #302), following the earlier merged preparation work.
 - Feature branch -> reviewed PR -> staging -> tested promotion PR -> main. No direct main push, force-push, automatic merge or unrelated changes.
 - Preserve original data and user-visible progress; no remote reset, rewritten migration bytes, skipped/relabeled migration versions, guessed v1-to-v3 history, or eviction of user history.
 - Personal history only; Free retains read/Resume/delete, paid capture/editor; existing consent, owner/epoch fences, capacity and completion rules remain.
@@ -20,6 +20,28 @@
 - No real charge, refund or real subscription cancellation as an incidental test. LIVE portal configuration is already completed; it does not prove the new application is deployed.
 - Physical A/V, selected TURN, multi-network capacity and active-policy recovery cannot be inferred from synthetic/local results.
 - A failed prerequisite keeps the dependent release step closed. A passed read-only audit does not install a hold, create a backup, or authorize irreversible operations.
+
+## Accepted Free-plan execution path
+
+The owner chose a manual release without a Pro upgrade or a general deployment
+framework. Prepare and review the commands first. Then agree a temporary staging
+pause, use the freed active-project slot for one synthetic Free hosted rehearsal,
+remove or pause that disposable target and resume staging. Only after the hosted
+result is accepted should the final production procedure/window be scheduled.
+
+The [window procedure](../../releases/personal-history-mvp/free-rehearsal-window.md)
+pins staging/production identities, cost checks, normal room completion,
+per-script publication control and restoration after success or failure. The
+[database command package](../../releases/personal-history-mvp/free-hosted-rehearsal.md)
+uses unchanged SQL with a small offline artifact builder; it cannot connect to or
+execute against either existing project. It is a candidate for the independent
+rehearsal, not an already proven production executor. It does not replace the
+protected real-data backup with synthetic evidence.
+
+This source preparation can precede the hosted proof in Task 2; executing the
+production transition cannot. Production traffic/probe gates remain separate from
+the staging-only pause. In particular, an account-wide or shared Vercel-project
+pause must not be used to pause staging, because it also hosts production.
 
 ## Verified baseline, 2026-09-12 04:44 UTC
 
@@ -77,7 +99,7 @@ These are observations, not a traffic freeze. Recheck immediately before executi
 
 **Current stop condition:** Sign-in, full local restoration, narrower hosted application restoration and storage outside the worktree are verified. In-place rollback after the exact pending chain and the final maintenance-bound checkpoint remain open. Production currently has `pg_cron` but no `pg_net`; installing/removing the latter and the new cron job must be part of recovery proof. Existing public default privileges, managed schemas and platform event triggers must be preserved, not omitted after dropping their containers. Do not infer hosted superuser access from the local rehearsal, buy a backup product, or create a billed clone without an approved concrete choice. Do not re-request sign-in or report that no real production export has been made.
 
-**Independent target boundary:** A sibling database cannot host the exact full chain because existing staging `pg_cron` is configured for `postgres` (`postmaster` setting), and both canonical migrations and the bridge require local cron objects. A separate disposable instance is needed for a full hosted 35→60→35 rehearsal. First check an available disposable project or Free eligibility; quote any paid option for the chosen organization before creating it. Production clone/PITR is not intrinsically required. Local non-superuser recovery tests remain useful but cannot silently replace this hosted acceptance. Do not change working staging cron settings or reset its default database to manufacture proof.
+**Independent target boundary:** A sibling database cannot host the exact full chain because existing staging `pg_cron` is configured for `postgres` (`postmaster` setting), and both canonical migrations and the bridge require local cron objects. A separate disposable instance is needed for a full hosted 35→60→35 rehearsal. The accepted path is the temporary Free slot described above, after a separately agreed staging pause. Recheck actual zero-cost eligibility; if unavailable, resume staging and report the constraint rather than buying an alternative. Production clone/PITR is not required. Local non-superuser recovery tests remain useful but cannot silently replace this hosted acceptance. Do not change working staging cron settings or reset its default database to manufacture proof.
 
 **Rehearsal details:** PostgreSQL role-grant provenance requires the source bootstrap role `supabase_admin` to be created by `initdb`; only that duplicate `CREATE ROLE` is omitted during replay, while its attributes and every grant remain intact. Use the archive's `--create` restoration so database owner/settings/ACLs are included. Match the source's `extra_float_digits=0`, UTC and ICU `en-US` collation for JSONB digest comparisons; default float formatting initially produced three mismatched digests with identical row counts. With source settings, all digests matched. Role passwords are deliberately absent; connection secrets and other platform state need the separate hosted recovery procedure.
 
@@ -88,7 +110,7 @@ These are observations, not a traffic freeze. Recheck immediately before executi
 **Interfaces:** Consumes a pinned accepted source and recovery evidence; produces independently verified delivery holds, application traffic maintenance and a drained stable database boundary.
 
 - [ ] Deliver the narrow production holds through reviewed staging-first work before a full promotion. Inspect old-source/manual dispatch paths and queued jobs; a new-source ignore command cannot stop a previously queued or manually promoted deployment.
-- [ ] Require the operator workflow to select the protected production environment; adding reviewers to an environment that the DB job never selects is ineffective. Preserve staging delivery and use one noncanceling transition operation.
+- [ ] Keep automated production apply/deploy held and use one identified manual operator/window for this release. Do not claim required environment reviewers protect a private GitHub Team repository; that control needs Enterprise. If a future workflow replaces the manual operation, explicitly review its available protection and environment selection first. Preserve staging delivery outside the agreed pause.
 - [x] Review and verify the default-open [application admission slice](../../releases/personal-history-mvp/maintenance-admission.md): shared configuration/503 contract, Web early return, Worker ingress denial and notification timer suppression. Independent review found no actionable issues; protocol, Web, API, native Workerd and extension consumer checks pass. Keep it disabled in deployed environments; this source preparation is independent of the pending hosted rehearsal.
 - [ ] Specify and test the complete Web/Worker traffic maintenance mechanism before using it. The bounded application admission slice complements database write barriers and build holds; it does not close old deployments, drain existing rooms or stop in-flight jobs. Cover new room creation/join, existing room lifecycle, auth callbacks, provider history queues, personal settings/editor/deletes, and internal Worker-to-Web requests through independently verified external closure and a separately reviewed operator-probe path.
 - [ ] Drain rooms through their normal lifecycle. Historical DB room rows do not prove live sockets; do not bulk-delete rooms or force-disconnect users as test setup.
@@ -98,7 +120,7 @@ These are observations, not a traffic freeze. Recheck immediately before executi
 
 ## Task 4: Review the hosted executor and final operating sequence
 
-**Files:** Existing `apps/web/supabase/operations/production-history-20260912/` SQL/manifest and `scripts/production-history-transition.mjs` / tests. Keep the disposable driver's hosted-project rejection intact. A hosted executor is a separate reviewed deliverable after Tasks 2–3 establish its real connection, recovery and maintenance interfaces.
+**Files:** Existing `apps/web/supabase/operations/production-history-20260912/` SQL/manifest and `scripts/production-history-transition.mjs` / tests. Keep the disposable driver's hosted-project rejection intact. `scripts/production-history-hosted-artifacts.mjs` only prepares immutable files for a new synthetic hosted target; it performs no database/network operation and rejects both existing project identities. A production procedure is a separate reviewed deliverable after Tasks 2–3 establish its real connection, recovery and maintenance interfaces.
 
 **Interfaces:** Consumes the approved owner connection, recovery identity, immutable manifest and proven holds; produces an aggregate phase receipt bound to the exact project, release SHA and backup. The durable phases remain `prepared -> chain_applied -> verified -> completed`; completed still means database writes are held.
 
@@ -127,7 +149,11 @@ Before any migration commits, abort to the unchanged old DB/runtime while retain
 
 Main promotion and runtime release are not equivalent: the candidate deliberately holds automatic production deployment. A merged PR is not a successful DB transition, and a green DB receipt is not a reopened service. Record every step's actual evidence and stop at the first unmet prerequisite.
 
-Preparation currently leaves production unchanged. Tasks 2–4 are not ready for execution; this is the explicit remaining release work, not a completed hosted migration procedure. Draft release documentation will receive its link checks, canonical reconciliation and one intentional Graphify update when the recovery/maintenance interfaces are settled, before its PR.
+Preparation leaves staging and production unchanged. The new command package
+prepares the next independent Free rehearsal; it does not mark Tasks 2–4 complete
+or authorize their production execution. Record command review and offline
+verification separately from the eventual hosted receipt. Check links, reconcile
+canonical docs and intentionally update Graphify once for this preparation batch.
 
 ## Current documentation references
 
