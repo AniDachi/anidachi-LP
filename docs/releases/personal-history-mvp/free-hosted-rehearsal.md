@@ -49,8 +49,9 @@ PostgreSQL 17 non-superuser privileges with surviving default ACLs and forced
 transaction failure. Separately resolve the residual managed role through a
 supported platform procedure or an explicitly reviewed recovery policy.
 The ACL correction below is a locally verified and independently reviewed offline
-candidate requiring fresh hosted acceptance. The managed-role correction
-remains unresolved.
+candidate requiring fresh hosted acceptance. A conditional policy for the exact
+managed-role residual is independently reviewed; fresh measurements and explicit
+acceptance of that policy on the new recovery remain pending.
 Task 2/4 recovery gates and production promotion remain open.
 
 Current [Supabase platform source](https://github.com/supabase/postgres/blob/develop/migrations/db/init-scripts/00000000000003-post-setup.sql)
@@ -58,12 +59,59 @@ supports the recorded `pg_net` role origin, but provides no customer cleanup
 procedure for this residual role. Extension removal and role administration are
 different privileges; PostgreSQL 17 requires CREATEROLE and ADMIN OPTION for
 ordinary [role removal](https://www.postgresql.org/docs/17/sql-droprole.html).
-Keep managed roles untouched. A narrowly scoped retained-role policy remains a
-proposal, requiring a fresh receipt for actual attributes, creation origin,
-memberships/dependencies and authentication/effective-access boundaries, followed
-by explicit recovery-policy review. The additional LOGIN/CREATEROLE principal
-must be recorded, not called inert or silently excluded from equality. If that
-evidence is unavailable, the managed-role gate remains open.
+Keep managed roles untouched. The following conditional policy has independent
+review approval for **application-scoped recovery**, not a passed hosted result:
+
+1. Keep the original baseline and FAILED receipt unchanged. This policy applies
+   only when `supabase_functions_admin` is absent before the pending chain and
+   appears through the recorded `extensions.grant_pg_net_access()` platform hook.
+   A preexisting role or another origin requires a separate baseline decision.
+   Prefixes before role creation retain strict role equality, with no exception.
+2. Capture the hook definition/owner and matching event trigger before pg_net,
+   then capture installed pg_net version/owner/schema and the resulting role.
+   The expected hook and `issue_pg_net_access` trigger are owned by
+   `supabase_admin`; the recorded CREATE EXTENSION path must explain the role.
+   The only permitted added principal is exactly `supabase_functions_admin`:
+   LOGIN/CREATEROLE true; INHERIT/SUPERUSER/BYPASSRLS/CREATEDB/REPLICATION false;
+   connection_limit -1; valid_until NULL. This is a retained LOGIN/CREATEROLE
+   role, not an inert or credential-free principal inferred from absence.
+3. On the new target immediately before recovery acceptance, require zero
+   cluster-wide `pg_shdepend` references, zero `pg_auth_members` edges involving
+   it as role, member **or grantor**, no role settings and no sessions. All five
+   checked roles—anon, authenticated, authenticator, service_role and postgres—
+   must exist, with both SET directions exactly false. Staging's observed net
+   schema ACL dependency is not the required post-drop zero result.
+4. Recheck `password_configured` is exactly false using only the server-side
+   NULL predicate on this role's password. Missing role/field, partial inventory,
+   NULL/unavailable checks, permission errors, a configured password or an
+   unexplained customer-accessible non-password path keep acceptance closed.
+   Loaded HBA remains unknown: the prior ordinary-operator read was denied by
+   its underlying function. Do not query it again, bypass its permissions or
+   attempt a login as the role. This policy relies on the documented managed
+   customer password/SCRAM connection contract; privileged internal platform
+   access stays within the existing managed-service trust boundary. Changed or
+   contradictory platform/authentication evidence is a stop, not an exception.
+5. Preserve strict application data/schema/owners/ACLs/grantors/options,
+   schema/default ACLs, preexisting roles/memberships/settings and disabled-job
+   comparisons. Record PUBLIC-derived database/schema privileges in the receipt
+   and PUBLIC routine EXECUTE in the existing application ACL snapshot; never
+   call this zero access. The residual role may receive no explicit application
+   grant or ownership. Do not rewrite the baseline role dump, pre-seed a role,
+   replay role SQL, DROP/ALTER the role, add membership/credentials, change
+   defaults or broadly ignore `supabase_*` differences. Every other delta fails.
+6. Preserve all producing SQL/source, original target/input hashes and capture
+   times. Record explicit conditional-policy acceptance for this single retained
+   principal and narrowed scope only after every fresh post-cleanup measurement
+   and ordinary recovery comparison passes. Missing/partial/unreadable evidence
+   remains failure/unknown. Do not claim bitwise role-catalog, whole-cluster or
+   prior hosted equality. Independent review of capture source remains separate
+   from policy review. No new pause/window, cloud mutation, role cleanup, hold
+   release or production action is authorized by the policy or its receipts.
+
+The earlier read-only staging observation (no configured password, no relevant
+SET paths, no settings/sessions and one net ACL dependency) informed policy
+review. It is not a measurement of the deleted rehearsal or a future recovery.
+
 
 ## 1. Prepare tools, target and local artifacts
 
@@ -319,6 +367,77 @@ Copy these files with the independent checkpoint and preserve their hashes in
 the receipt. A new run gets a new directory; the old FAILED rehearsal evidence
 must never be overwritten.
 
+Capture the managed-role receipt in this same drained baseline, before any
+pending migration can install pg_net. The reusable
+[metadata SELECT](../../../scripts/production-history-managed-role-receipt.sql)
+uses one psql JSON binding and the existing disposable target guard. It emits
+one JSON receipt, including source/input/target/time, ordinary operator/server
+identity, the complete specified role tuple, boolean password state, all relevant
+membership/dependency edges, setting names only, session count, the explicit
+five-role SET inventory, PUBLIC database/schema ACLs and named platform hook.
+It reads no password/hash value, other function definitions, application rows,
+HBA or GUC values. A missing managed role produces `exists=false` and NULL
+role-dependent fields; baseline absence is explicit, not a false password result.
+
+Define this command in the same operator terminal. The original transition input
+and reviewed SQL bytes must still match the pinned release. The SQL copy and
+receipts are immutable; a failed/partial capture remains in its original file.
+The function validates receipt structure/producer identity only; it does not
+classify policy acceptance or release holds.
+
+```bash
+capture_managed_role_receipt() {
+  local role_phase="$1"
+  case "$role_phase" in baseline|pg-net-installed|post-cleanup) ;; *) return 1 ;; esac
+  test "$(git rev-parse HEAD)" = "$REHEARSAL_RELEASE_SHA"
+  git diff --quiet "$REHEARSAL_RELEASE_SHA" -- scripts/production-history-managed-role-receipt.sql
+  (cd "$REHEARSAL_ROOT/transition" && shasum -a 256 -c SHA256SUMS)
+  local receipt_context
+  receipt_context="$(fnm exec --using=22.23.1 node --input-type=module - "$role_phase" <<'JS'
+import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
+import {readFileSync} from 'node:fs';
+import {buildArtifacts,writeArtifacts} from './scripts/production-history-hosted-artifacts.mjs';
+const e=process.env,root=e.REHEARSAL_ROOT;
+const original=readFileSync(`${root}/transition/input.json`,'utf8'),input=JSON.parse(original);
+assert.equal(buildArtifacts(input.target)['input.json'],original);
+assert.equal(input.target.releaseCommit,e.REHEARSAL_RELEASE_SHA);
+const sql=readFileSync('scripts/production-history-managed-role-receipt.sql');
+const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
+writeArtifacts(`${root}/managed-role-source`,{'receipt.sql':sql,'SHA256SUMS':`${sha(sql)}  receipt.sql\n`});
+console.log(JSON.stringify({phase:process.argv[2],input_sha256:sha(original),query_sha256:sha(sql),source_commit:e.REHEARSAL_RELEASE_SHA,target:input.target}));
+JS
+)"
+  (cd "$REHEARSAL_ROOT/managed-role-source" && shasum -a 256 -c SHA256SUMS)
+  local role_receipt="$REHEARSAL_ROOT/managed-role-$role_phase.json"
+  (set -o noclobber; psql -X -qAt -v ON_ERROR_STOP=1 -v receipt_context="$receipt_context" \
+    -f "$REHEARSAL_ROOT/transition/guard.sql" -c 'begin read only;' \
+    -f "$REHEARSAL_ROOT/managed-role-source/receipt.sql" -c 'commit;' > "$role_receipt")
+  chmod 400 "$role_receipt"
+  (cd "$REHEARSAL_ROOT"; set -o noclobber; shasum -a 256 "managed-role-$role_phase.json" > "managed-role-$role_phase.json.sha256")
+  chmod 400 "$role_receipt.sha256"
+  fnm exec --using=22.23.1 node --input-type=module - "$role_receipt" <<'JS'
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const r=JSON.parse(readFileSync(process.argv[2],'utf8'));
+assert.equal(r.format,1);assert.equal(r.context_complete,true);
+assert.equal(r.producer.session_user,'postgres');assert.equal(r.producer.effective_user,'postgres');
+assert.equal(r.producer.effective_superuser,false);assert.equal(r.producer.transaction_read_only,'on');
+JS
+}
+capture_managed_role_receipt baseline
+```
+
+For this policy, require the baseline role and pg_net to be absent, the named
+platform hook/event trigger to be present with the reviewed origin, and all five
+expected application/operator roles to exist. Inspect every field; the structure
+check above is not an acceptance decision. Copy and checksum-verify the original
+baseline receipt, source SQL and each later receipt alongside the independent
+checkpoint. Preserve the existing baseline roles dump and membership/settings
+measurements; this narrowly scoped receipt does not replace them. On an error,
+retain the partial file and stop. Never rerun into an existing phase filename or
+replace old FAILED evidence with a new capture.
+
 Each dump opens a new connection and explicitly selects `postgres`; a previous
 psql SET ROLE does not carry over. pg_dump takes its own read-only consistent
 snapshot; `PGOPTIONS` is not used as proof of session settings through a hosted
@@ -353,9 +472,17 @@ sb --workdir "$REHEARSAL_ROOT/transition/all60" db push \
   --db-url "$REHEARSAL_DB_URL" --dry-run
 sb --workdir "$REHEARSAL_ROOT/transition/all60" db push \
   --db-url "$REHEARSAL_DB_URL" --yes
+capture_managed_role_receipt pg-net-installed
 psql -X -v ON_ERROR_STOP=1 -f "$REHEARSAL_ROOT/transition/verify.sql"
 psql -X -v ON_ERROR_STOP=1 -f "$REHEARSAL_ROOT/transition/finish.sql"
 ```
+
+Inspect the post-install receipt for pg_net and the exact recorded hook/role
+origin before proceeding. For an interrupted committed prefix, preserve its
+failure receipt and measure the actual state under isolation. If it already
+created the role, capture the post-install origin before cleanup; if it did not,
+retain strict role equality and do not manufacture a role exception or claim a
+pg-net-installed phase.
 
 Require the dry-run to show only manifest entries 36–60. The normal CLI runs
 all unchanged files and records the suffix, including the zero-byte migration.
@@ -575,6 +702,26 @@ still fails with `55000 PRODUCTION_HISTORY_MAINTENANCE`, and a normal operator
 transaction can read the restored baseline. Keep rollback-only probes separate
 from actual archive equality. No real account/client acceptance is claimed.
 
+Immediately before accepting recovery, take the fresh post-cleanup receipt:
+
+```bash
+capture_managed_role_receipt post-cleanup
+```
+
+For a run that created the role, compare all three immutable receipts and the
+unchanged baseline role/catalog and application evidence against the six
+conditions above. Require pg_net absent,
+the sole permitted residual role's full expected tuple, password exactly false,
+zero cluster shared dependencies, zero membership edges including grantor, no
+settings/sessions and all five bidirectional SET checks available and false.
+Missing role/field, permission error or another mismatch leaves the result
+failed/unknown. An interrupted prefix that never created the role needs baseline
+absence and strict equality, without a fabricated post-install receipt or the
+conditional exception. Record explicit
+conditional-policy acceptance and its scope in the new aggregate recovery
+receipt before any hold release. This does not convert the earlier FAILED run
+or current staging observation into accepted recovery.
+
 After recovery equality passes, test hold removal only inside the still isolated
 rehearsal project. Keep baseline cron flags inactive during this exercise; the
 real production reopening step must restore the recorded original active flags
@@ -698,6 +845,7 @@ project/window through the same controlled teardown.
 - [CLI connection parser](https://github.com/supabase/cli/blob/develop/apps/cli/src/legacy/shared/legacy-db-config.layer.ts): Context7-first lookup for `--db-url` versus linked credentials; runtime behavior still needs the selected hosted connection test.
 - [PostgreSQL 17 ACL catalog functions](https://www.postgresql.org/docs/17/functions-info.html) and [REVOKE](https://www.postgresql.org/docs/17/sql-revoke.html): normalized ACL defaults, grant options and RESTRICT dependency behavior.
 - [PostgreSQL 17 pg_restore](https://www.postgresql.org/docs/17/app-pgrestore.html): archive TOC selection, ownership/ACL replay and error handling.
+- [PostgreSQL password authentication](https://www.postgresql.org/docs/17/auth-password.html), [Supabase connection guidance](https://supabase.com/docs/guides/database/connecting-to-postgres), and [Supavisor NULL-secret behavior](https://supabase.com/docs/guides/troubleshooting/supavisor-connection-error-fatal-eauthquery-unsupported-or-invalid-secret-format-d23dd4): the declared managed customer-authentication boundary; no claim to inspect loaded HBA or exclude privileged internal platform access.
 - [Supabase backup/restore guidance](https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore): managed boundary differs from a raw cluster replacement.
 
 The ACL correction has a separate local PostgreSQL 17.6 proof under ordinary

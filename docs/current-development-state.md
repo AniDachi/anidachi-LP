@@ -75,10 +75,16 @@ The companion application-ACL artifact helper now passes a real local
 PostgreSQL 17 non-superuser regression: exact privileges return after archive
 replay under surviving default grants, and failures roll back the complete
 restore. It leaves managed roles and default privileges unchanged. Independent
-source review passed; this is not a fresh hosted recovery result. Current
-platform-source research established the residual role's origin, but no supported
-customer cleanup procedure. The managed-role decision remains open and must not
-be hidden by an ACL-only passing result.
+source review passed; this is not a fresh hosted recovery result. Platform-source
+research established the residual role's origin, but no supported customer
+cleanup procedure. An independently reviewed [conditional managed-role policy](releases/personal-history-mvp/free-hosted-rehearsal.md#executed-result-and-correction-gate)
+now permits only the exact absent-before/present-after platform principal within
+application-scoped recovery, after all fresh credential, attribute, membership,
+cluster-dependency, SET-path and ordinary recovery checks pass. The read-only
+receipt SQL records producing source/target/time and preserves missing or
+unavailable evidence. Capture-source review and fresh post-cleanup measurements,
+explicit policy acceptance and hosted recovery remain pending. The historical
+FAILED result is unchanged; no new staging pause or production action is implied.
 
 A default-open [application admission gate](releases/personal-history-mvp/maintenance-admission.md)
 is prepared in source for Web and Worker. When explicitly configured closed, it

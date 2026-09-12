@@ -96,7 +96,8 @@ These are observations, not a traffic freeze. Recheck immediately before executi
 - [x] Execute the authorized zero-cost independent hosted rehearsal and close its staging-only window. The unchanged 35 -> 60 chain and exact 35-version/application-row recovery passed; recovery security equality failed. Staging was restored and verified within 45 minutes, the disposable project was deleted, and production remained unchanged. This records an executed experiment, not accepted recovery.
 - [ ] Review and rehearse the actual hosted recovery path under the production operator's non-superuser privileges. Local restoration used the initial `supabase_admin` superuser; this does not prove that the production `postgres` operator can restore managed roles/schemas or replace the hosted database.
 - [x] Correct and independently review exact application ACL recovery: checksum-bound baseline privileges/owners/grantors/options, transactional reconciliation and a pre-commit equality assertion; preserve permitted grants/default ACLs and fail closed on unsupported cases. The companion helper passes 12 focused offline tests and the real non-superuser PostgreSQL 17 regression with surviving default privileges and forced rollback. This closes the local correction only, not hosted recovery acceptance.
-- [ ] Resolve the platform-created LOGIN/CREATEROLE managed-role residual through a supported procedure or explicitly reviewed recovery policy, then repeat the hosted 35 -> 60 -> 35 acceptance. Do not change managed roles or seed away the baseline difference to obtain a passing comparison.
+- [x] Independently review the conditional policy for the exact platform-created LOGIN/CREATEROLE residual within application-scoped recovery. Baseline absence, recorded hook origin, full expected attributes, password exactly false, zero cluster dependencies/membership edges/settings/sessions and denied five-role SET paths are mandatory; all existing strict recovery checks remain. Policy approval is not a passed hosted result.
+- [ ] Independently review the read-only managed-role receipt SQL, capture fresh baseline/post-install/post-cleanup measurements and explicitly record conditional-policy acceptance before repeating hosted 35 -> 60 -> 35 acceptance. Do not change managed roles, pre-seed a baseline, rewrite the role dump or ignore other differences. Missing/partial/unreadable evidence remains failure/unknown.
 - [x] Establish recovery storage outside the releasable worktree and verify the copied archive/roles hashes and owner-only permissions. This copy is on the same Mac and does not protect against loss of that device.
 - [ ] Take a fresh recoverable baseline under established maintenance immediately before the transition. An older successful rehearsal does not freeze current production data.
 
@@ -113,15 +114,25 @@ reconciliation and full rollback on an injected failure. Default privileges and
 managed roles remain untouched. Independent source review passed; a local
 pass does not supersede the failed hosted receipt or authorize another pause.
 
-**Managed-role investigation:** [Official Supabase platform source](https://github.com/supabase/postgres/blob/develop/migrations/db/init-scripts/00000000000003-post-setup.sql)
-confirms that the `pg_net` installation hook can create `supabase_functions_admin`; removing
-the extension does not establish removal of that role. No supported customer
-cleanup procedure was found. A retained managed-role difference is only a
-proposal for explicit recovery-policy review, not an accepted exception or an
-inert-role claim. A fresh hosted receipt must establish its actual attributes,
-origin, memberships/dependencies and authentication/access boundary before that
-decision; all other role and application-ACL differences remain failures. Do
-not alter managed roles or widen operator privileges to manufacture equality.
+**Managed-role policy reviewed, fresh recovery pending:** [Official Supabase platform source](https://github.com/supabase/postgres/blob/develop/migrations/db/init-scripts/00000000000003-post-setup.sql)
+explains the `pg_net` hook's creation of `supabase_functions_admin`; no supported
+customer role-cleanup procedure was found. Independent review approved the six
+[conditional application-recovery conditions](../../releases/personal-history-mvp/free-hosted-rehearsal.md#executed-result-and-correction-gate).
+Read-only staging observations informed that policy but retain one net ACL
+dependency, not the required fresh post-drop zero result. The new
+[receipt SELECT](../../../scripts/production-history-managed-role-receipt.sql)
+records original input/source/target/time, explicit existence and full role
+attributes, server-only password boolean, all role/member/grantor edges,
+cluster-wide dependencies, settings names, session count, expected-role SET
+checks, PUBLIC access and the named hook/extension metadata. Capture-source
+review, all new post-cleanup measurements and explicit recorded policy acceptance
+remain required. Loaded HBA is unknown and is not queried or bypassed; the policy
+uses the documented managed customer password/SCRAM boundary and does not claim
+to exclude privileged internal platform access. Unknown customer non-password
+authentication or contradictory platform evidence is a stop. Keep the exact
+LOGIN/CREATEROLE residual visible, preserve every other role/application/default
+ACL comparison and the original FAILED receipt, and do not imply whole-cluster
+equality, a new pause or production authorization.
 
 **Rehearsal details:** PostgreSQL role-grant provenance requires the source bootstrap role `supabase_admin` to be created by `initdb`; only that duplicate `CREATE ROLE` is omitted during replay, while its attributes and every grant remain intact. Use the archive's `--create` restoration so database owner/settings/ACLs are included. Match the source's `extra_float_digits=0`, UTC and ICU `en-US` collation for JSONB digest comparisons; default float formatting initially produced three mismatched digests with identical row counts. With source settings, all digests matched. Role passwords are deliberately absent; connection secrets and other platform state need the separate hosted recovery procedure.
 
