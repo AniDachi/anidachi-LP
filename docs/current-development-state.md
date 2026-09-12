@@ -49,6 +49,15 @@ External traffic maintenance, the hosted executor, a final stable checkpoint and
 the existing activation/physical-media gates remain open. No new paid environment
 or plan upgrade has been authorized or created.
 
+A default-open [application admission gate](releases/personal-history-mvp/maintenance-admission.md)
+is prepared in source for Web and Worker. When explicitly configured closed, it
+returns retryable 503 responses before product handlers and pauses the Worker's
+notification recovery dispatch. No environment setting is enabled by this
+change. It does not close old deployments, drain rooms or stop database jobs;
+those controls and the hosted recovery gate remain prerequisites to production
+execution. Existing history queues retain unacknowledged entries on a temporary
+503 under their normal account, lease and generation fences.
+
 ## Friends and groups editor, 2026-09-11
 
 Implementation and local verification are complete. The database prerequisite

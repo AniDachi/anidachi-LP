@@ -160,6 +160,10 @@ is provided because choosing when to reopen is a separate accepted release step.
    clients, queues, cron, mutating readers, settings/preferences/deletes and FK
    cascades. Confirm no other operator session can mutate the snapshot. Record
    the actual maintenance mechanism and test it under production role topology.
+   The default-open [application admission preparation](maintenance-admission.md)
+   supplies a retryable deployment-local refusal only. It does not close old
+   deployments, drain sockets, stop database schedules or provide the controlled
+   operator path; all of those must be verified before using this sequence.
 5. Take and verify a complete recoverable baseline backup/checkpoint under that
    stable boundary; rehearse restoration with matching migration history and
    compatible runtime. The private archive is not a full-database backup. Then

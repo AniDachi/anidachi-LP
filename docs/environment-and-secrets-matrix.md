@@ -55,6 +55,21 @@ The one-off recovery CLI uses
 belong only in the operator process environment. They must not be committed,
 printed, or added to browser/extension configuration.
 
+## Application maintenance preparation
+
+`ANIDACHI_MAINTENANCE_MODE` is an optional server-only setting for Web and
+Worker. Unset, empty or exact `open` preserves existing behavior; `closed` or
+an invalid nonempty value returns retryable HTTP 503 before application handlers
+and pauses the Worker's notification recovery caller. It adds no new secret or
+operator bypass. No environment enables it automatically.
+
+This is deployment-local admission only. Existing sockets, Durable Object
+alarms, Postgres jobs, in-flight work and old deployments need separate controls.
+Activation and reopening follow the
+[maintenance admission contract](releases/personal-history-mvp/maintenance-admission.md)
+and the reviewed production transition sequence. Never apply it to working
+staging or production as an incidental configuration test.
+
 ## GitHub Actions
 
 Repository: `AniDachi/anidachi-LP`.
