@@ -71,6 +71,15 @@ managed-role difference before a fresh hosted run. Staging history, Inbox and
 normal extension room creation/completion were verified after resume. Production
 remains unchanged; Tasks 2/4 and the separate production gates are not complete.
 
+The companion application-ACL artifact helper now passes a real local
+PostgreSQL 17 non-superuser regression: exact privileges return after archive
+replay under surviving default grants, and failures roll back the complete
+restore. It leaves managed roles and default privileges unchanged. Independent
+source review passed; this is not a fresh hosted recovery result. Current
+platform-source research established the residual role's origin, but no supported
+customer cleanup procedure. The managed-role decision remains open and must not
+be hidden by an ACL-only passing result.
+
 A default-open [application admission gate](releases/personal-history-mvp/maintenance-admission.md)
 is prepared in source for Web and Worker. When explicitly configured closed, it
 returns retryable 503 responses before product handlers and pauses the Worker's

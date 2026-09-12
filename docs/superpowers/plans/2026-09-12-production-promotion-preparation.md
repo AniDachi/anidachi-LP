@@ -95,7 +95,7 @@ These are observations, not a traffic freeze. Recheck immediately before executi
 - [x] Restore the complete application archive selection into an isolated hosted database with the actual non-superuser operator. Record the managed default-ACL exclusions and keep this narrower evidence separate from post-migration recovery.
 - [x] Execute the authorized zero-cost independent hosted rehearsal and close its staging-only window. The unchanged 35 -> 60 chain and exact 35-version/application-row recovery passed; recovery security equality failed. Staging was restored and verified within 45 minutes, the disposable project was deleted, and production remained unchanged. This records an executed experiment, not accepted recovery.
 - [ ] Review and rehearse the actual hosted recovery path under the production operator's non-superuser privileges. Local restoration used the initial `supabase_admin` superuser; this does not prove that the production `postgres` operator can restore managed roles/schemas or replace the hosted database.
-- [ ] Correct and independently review exact application ACL recovery: checksum-bound baseline privileges/owners/grantors/options, transactional reconciliation and a pre-commit equality assertion; preserve permitted grants/default ACLs and fail closed on unsupported cases. Test under non-superuser PostgreSQL 17 with surviving default privileges and forced rollback.
+- [x] Correct and independently review exact application ACL recovery: checksum-bound baseline privileges/owners/grantors/options, transactional reconciliation and a pre-commit equality assertion; preserve permitted grants/default ACLs and fail closed on unsupported cases. The companion helper passes 12 focused offline tests and the real non-superuser PostgreSQL 17 regression with surviving default privileges and forced rollback. This closes the local correction only, not hosted recovery acceptance.
 - [ ] Resolve the platform-created LOGIN/CREATEROLE managed-role residual through a supported procedure or explicitly reviewed recovery policy, then repeat the hosted 35 -> 60 -> 35 acceptance. Do not change managed roles or seed away the baseline difference to obtain a passing comparison.
 - [x] Establish recovery storage outside the releasable worktree and verify the copied archive/roles hashes and owner-only permissions. This copy is on the same Mac and does not protect against loss of that device.
 - [ ] Take a fresh recoverable baseline under established maintenance immediately before the transition. An older successful rehearsal does not freeze current production data.
@@ -103,6 +103,25 @@ These are observations, not a traffic freeze. Recheck immediately before executi
 **Current stop condition:** Sign-in, full local restoration, narrower hosted application restoration and storage outside the worktree are verified. The independent in-place rehearsal restored exact rows but failed security equality: 108 surplus client grants and a residual platform-created `supabase_functions_admin` role. See the [executed result and correction gate](../../releases/personal-history-mvp/free-hosted-rehearsal.md#executed-result-and-correction-gate). Full recovery acceptance, interrupted-prefix proof and the final maintenance-bound checkpoint remain open. Production currently has `pg_cron` but no `pg_net`; installing/removing the latter and the new cron job must be part of recovery proof. Existing public default privileges, managed schemas and platform event triggers must be preserved, not omitted after dropping their containers. Do not infer hosted superuser access from the local rehearsal, buy a backup product, or create a billed clone without an approved concrete choice. Do not re-request sign-in or report that no real production export has been made.
 
 **Independent target boundary:** A sibling database cannot host the exact full chain because existing staging `pg_cron` is configured for `postgres` (`postmaster` setting), and both canonical migrations and the bridge require local cron objects. A separate disposable instance is needed for a full hosted 35→60→35 rehearsal. The accepted path is the temporary Free slot described above, after a separately agreed staging pause. Recheck actual zero-cost eligibility; if unavailable, resume staging and report the constraint rather than buying an alternative. Production clone/PITR is not required. Local non-superuser recovery tests remain useful but cannot silently replace this hosted acceptance. Do not change working staging cron settings or reset its default database to manufacture proof.
+
+**Local ACL correction, 2026-09-12:** The offline companion helper captures a
+checksum-bound baseline and reconciles application-object ACLs inside the
+existing cleanup/restore transaction. The real PostgreSQL 17 non-superuser
+regression passes exact privileges/owners/grantors/options, legitimate client and
+PUBLIC grants, NULL and empty ACLs, unsupported-object rejection, repeated
+reconciliation and full rollback on an injected failure. Default privileges and
+managed roles remain untouched. Independent source review passed; a local
+pass does not supersede the failed hosted receipt or authorize another pause.
+
+**Managed-role investigation:** [Official Supabase platform source](https://github.com/supabase/postgres/blob/develop/migrations/db/init-scripts/00000000000003-post-setup.sql)
+confirms that the `pg_net` installation hook can create `supabase_functions_admin`; removing
+the extension does not establish removal of that role. No supported customer
+cleanup procedure was found. A retained managed-role difference is only a
+proposal for explicit recovery-policy review, not an accepted exception or an
+inert-role claim. A fresh hosted receipt must establish its actual attributes,
+origin, memberships/dependencies and authentication/access boundary before that
+decision; all other role and application-ACL differences remain failures. Do
+not alter managed roles or widen operator privileges to manufacture equality.
 
 **Rehearsal details:** PostgreSQL role-grant provenance requires the source bootstrap role `supabase_admin` to be created by `initdb`; only that duplicate `CREATE ROLE` is omitted during replay, while its attributes and every grant remain intact. Use the archive's `--create` restoration so database owner/settings/ACLs are included. Match the source's `extra_float_digits=0`, UTC and ICU `en-US` collation for JSONB digest comparisons; default float formatting initially produced three mismatched digests with identical row counts. With source settings, all digests matched. Role passwords are deliberately absent; connection secrets and other platform state need the separate hosted recovery procedure.
 

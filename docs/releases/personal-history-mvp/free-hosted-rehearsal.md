@@ -48,10 +48,22 @@ than applying blanket revocations or changing managed catalogs. Test this under
 PostgreSQL 17 non-superuser privileges with surviving default ACLs and forced
 transaction failure. Separately resolve the residual managed role through a
 supported platform procedure or an explicitly reviewed recovery policy.
-The ACL correction below is a locally verified offline candidate requiring
-independent review and fresh hosted acceptance. The managed-role correction
+The ACL correction below is a locally verified and independently reviewed offline
+candidate requiring fresh hosted acceptance. The managed-role correction
 remains unresolved.
 Task 2/4 recovery gates and production promotion remain open.
+
+Current [Supabase platform source](https://github.com/supabase/postgres/blob/develop/migrations/db/init-scripts/00000000000003-post-setup.sql)
+supports the recorded `pg_net` role origin, but provides no customer cleanup
+procedure for this residual role. Extension removal and role administration are
+different privileges; PostgreSQL 17 requires CREATEROLE and ADMIN OPTION for
+ordinary [role removal](https://www.postgresql.org/docs/17/sql-droprole.html).
+Keep managed roles untouched. A narrowly scoped retained-role policy remains a
+proposal, requiring a fresh receipt for actual attributes, creation origin,
+memberships/dependencies and authentication/effective-access boundaries, followed
+by explicit recovery-policy review. The additional LOGIN/CREATEROLE principal
+must be recorded, not called inert or silently excluded from equality. If that
+evidence is unavailable, the managed-role gate remains open.
 
 ## 1. Prepare tools, target and local artifacts
 
