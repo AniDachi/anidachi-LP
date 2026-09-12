@@ -3606,10 +3606,10 @@
     "semantic_hash": "4e0420e077e5ebc55dbe7b2187df7832"
   },
   "docs/current-development-state.md": {
-    "mtime": 1789214867.2025592,
-    "seen": 1789215131.5219939,
-    "ast_hash": "0fef03436f25962903b55dbd2036b747",
-    "semantic_hash": "0fef03436f25962903b55dbd2036b747"
+    "mtime": 1789217710.4229138,
+    "seen": 1789217951.3091788,
+    "ast_hash": "6651df2531b2e1d0a5043ed8ecd00d4f",
+    "semantic_hash": "6651df2531b2e1d0a5043ed8ecd00d4f"
   },
   "docs/development-environments.md": {
     "mtime": 1788807642.3055499,
@@ -7938,10 +7938,10 @@
     "semantic_hash": "5ee0c506fe97362023ed1e97ae29ad5a"
   },
   "docs/superpowers/plans/2026-09-12-production-promotion-preparation.md": {
-    "mtime": 1789214867.2728863,
-    "seen": 1789215131.521996,
-    "ast_hash": "e78f7760774a6509ca51fcb197eb67af",
-    "semantic_hash": "e78f7760774a6509ca51fcb197eb67af"
+    "mtime": 1789217710.4914052,
+    "seen": 1789217951.30918,
+    "ast_hash": "51b3640250f773dedcc89f0a29c0a03c",
+    "semantic_hash": "51b3640250f773dedcc89f0a29c0a03c"
   },
   "apps/api/test/maintenance.test.ts": {
     "mtime": 1789204068.949726,
@@ -7992,15 +7992,33 @@
     "semantic_hash": "49414d8868919af8d041d7b2bf3073d5"
   },
   "docs/releases/personal-history-mvp/free-hosted-rehearsal.md": {
-    "mtime": 1789214867.049915,
-    "seen": 1789215131.521995,
-    "ast_hash": "f7d8124233192622b7fdf2127f406d0d",
-    "semantic_hash": "f7d8124233192622b7fdf2127f406d0d"
+    "mtime": 1789217710.5542383,
+    "seen": 1789217951.3091788,
+    "ast_hash": "7ebb907ee4b3a0371c92f1392ae2207b",
+    "semantic_hash": "7ebb907ee4b3a0371c92f1392ae2207b"
   },
   "docs/releases/personal-history-mvp/free-rehearsal-window.md": {
     "mtime": 1789214867.1290817,
     "seen": 1789215131.521995,
     "ast_hash": "231eafe321aa73c2a7556d3a017aaea7",
     "semantic_hash": "231eafe321aa73c2a7556d3a017aaea7"
+  },
+  "scripts/production-history-application-acl.integration.mjs": {
+    "mtime": 1789217279.846971,
+    "seen": 1789217951.3091671,
+    "ast_hash": "f437040846799217129a4d53fad77f96",
+    "semantic_hash": "f437040846799217129a4d53fad77f96"
+  },
+  "scripts/production-history-application-acl.mjs": {
+    "mtime": 1789217160.1362643,
+    "seen": 1789217951.309168,
+    "ast_hash": "8cf832a780eec9693d44a1a84b4007a1",
+    "semantic_hash": "8cf832a780eec9693d44a1a84b4007a1"
+  },
+  "scripts/production-history-application-acl.test.mjs": {
+    "mtime": 1789216646.6628885,
+    "seen": 1789217951.3091688,
+    "ast_hash": "42ef4c94f34f072ee84fd1c03ac1102b",
+    "semantic_hash": "42ef4c94f34f072ee84fd1c03ac1102b"
   }
 }
