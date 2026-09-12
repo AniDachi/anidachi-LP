@@ -211,9 +211,14 @@ is provided because choosing when to reopen is a separate accepted release step.
 
 Before a migration commits, abort while keeping the old database/runtime. After
 any committed file, retain maintenance and both recovery artifacts. Inspect the
-real applied prefix and schema; resolve the failure, then resume only the exact
-unchanged suffix through the normal CLI. Never call preparation against the
-partially migrated live tables to create a replacement archive.
+real applied prefix and schema. A history prefix alone does not establish that
+the failed file rolled back: CLI 2.111.0 can execute an authored COMMIT before
+inserting that file's history row. Missing history with committed or uncertain
+application effects requires complete baseline recovery; never retry that file
+or repair its history row. Resume the exact unchanged suffix only after the
+specific failure and absence of failed-file effects have been proved, and the
+original archive/holds have been verified again. Never call preparation against
+the partially migrated live tables to create a replacement archive.
 
 After the canonical reset, schema1 rows cannot be inserted into v3 tables. A
 rollback uses the **complete baseline database backup with its 35-version history**
@@ -275,7 +280,11 @@ The same driver exposes `prepare`, `apply`, `finish`, `status`. `apply` always
 passes all 60 hash-checked files to pinned CLI `db push`; the normal database
 history selects the pending suffix. The rehearsal deliberately injects real SQL
 failures at prefixes 35, 37, 38 and 50, including before/after the canonical reset,
-then resumes without modifying migration bytes. It verifies rollback of failed
+then resumes without modifying migration bytes. Its event trigger fails at
+`CREATE FUNCTION`, before the authored COMMIT; this does not prove rollback when
+the later CLI history INSERT fails. The separate
+[history-insert fault procedure](free-hosted-rehearsal.md#separate-later-pass-committed-prefix-failure)
+covers that distinction. The local driver verifies rollback of failed
 preparation, role/definer/FK maintenance, drift refusals, immutable recovery data,
 full-chain invariants, and restores the complete baseline into the second isolated
 container. Only aggregate `rehearsal-receipt.json` is emitted. No production row

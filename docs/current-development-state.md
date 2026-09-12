@@ -102,6 +102,16 @@ historical FAILED run remains failed. Interrupted-prefix proof, the production
 operating sequence and a fresh maintenance-bound checkpoint are still pending;
 Tasks 2/4 and production promotion are not complete.
 
+Local CLI 2.111.0 probes now distinguish a failed history insertion after an
+authored COMMIT from a fully rolled-back file. The fixed
+[prefix proof checker](../scripts/production-history-prefix-proof.mjs) requires
+full recovery for prefixes 37/38 and permits a 50 suffix only with exact failure,
+binding, ledger and touched-state evidence plus fresh archive/hold verification.
+Its read-only SQL and the unchanged canonical file 51 failure/retry passed on
+synthetic local prerequisites. The [aggregate evidence](releases/personal-history-mvp/2026-09-12-prefix-cli-atomicity.json)
+keeps this separate from a complete chain, real bridge or hosted acceptance.
+Temporary local resources were removed; no new staging window was opened.
+
 A default-open [application admission gate](releases/personal-history-mvp/maintenance-admission.md)
 is prepared in source for Web and Worker. When explicitly configured closed, it
 returns retryable 503 responses before product handlers and pauses the Worker's

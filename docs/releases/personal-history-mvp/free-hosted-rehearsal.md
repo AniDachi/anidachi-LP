@@ -176,7 +176,7 @@ test "$(sb --version)" = 2.111.0
 sb db push --help
 sb projects create --help
 sb projects delete --help
-fnm exec --using=22.23.1 node --test scripts/production-history-hosted-artifacts.test.mjs scripts/production-history-application-acl.test.mjs
+fnm exec --using=22.23.1 node --test scripts/production-history-hosted-artifacts.test.mjs scripts/production-history-application-acl.test.mjs scripts/production-history-prefix-proof.test.mjs
 ```
 
 After the window is approved, verify the creation screen's actual Free
@@ -552,8 +552,12 @@ For failure/resume, preserve the failed command's exit code/time, original
 input/backup and actual ordered history; verify it is an exact 35–60 prefix.
 Do not rerun `prepare.sql` if the control table exists: run `verify.sql` with
 the original input. A missing control table plus any pending migration committed
-is a hard stop. After diagnosing/removing only the rehearsal fault, repeat the
-hash checks, `verify.sql`, dry-run and unchanged `db push` suffix. At history 60
+is a hard stop. A history prefix alone cannot show that the unrecorded file
+rolled back. Committed or uncertain effects require complete baseline recovery;
+do not retry the file or repair its history row. Only after the specific failure
+and absence of its effects are proved may the single rehearsal fault be removed,
+followed by the hash checks, `verify.sql`, dry-run and unchanged `db push` suffix.
+At history 60
 with phase still `prepared` (interruption before phase update), `finish.sql`
 performs the checked advancement. A non-prefix history or ambiguous committed
 object state requires diagnosis under isolation, not history repair.
@@ -802,85 +806,230 @@ Run this only **after a successful straight 35 -> 60 -> 35 recovery**, on anothe
 fresh synthetic 35 baseline prepared with sections 1–4 through `prepare.sql`,
 before its first pending `db push`. Keep the first pass's archive/receipt
 immutable outside the project before deleting/recreating the temporary project.
-Use a new nonce, binding, checkpoint and local directory; never recycle the
-first transition's completed control record into a new campaign.
+Use a new nonce, binding, checkpoint and local directory; never recycle a
+completed control record into a new campaign. The earlier window is closed;
+this procedure requires its own agreed staging-only window.
 
-This fault is a temporary CHECK constraint on the history table in this
-nonce-bound disposable project. It rejects one exact future version's normal
-CLI history insertion without editing migration files or existing history rows.
-Choose one named boundary per pass:
+The fault is one temporary CHECK constraint on the history table in this
+nonce-bound disposable project. It rejects one future version's normal CLI
+history insertion without editing migrations or existing history rows.
+Choose one named boundary per fresh pass:
 
-| Expected committed prefix | Denied next version | Risk exercised |
+| Expected committed prefix | Denied next version | Required result handling |
 | --- | --- | --- |
-| 37 | `20260904205540` | Canonical destructive reset and its history atomicity |
-| 38 | `20260905083000` | Failure immediately after the reset boundary |
-| 50 | `20260908040654` | Nonempty file without explicit BEGIN/COMMIT |
+| 37 | `20260904205540` | Authored COMMIT precedes history insertion: complete baseline recovery, never suffix retry |
+| 38 | `20260905083000` | Same transaction boundary: complete baseline recovery, never suffix retry |
+| 50 | `20260908040654` | Resume only after exact fault and failed-file rollback evidence; otherwise complete recovery |
+
+The [local native-CLI evidence](2026-09-12-prefix-cli-atomicity.json) confirms the
+transaction distinction on isolated synthetic fixtures with CLI 2.111.0. It does
+not accept a hosted prefix or replace fresh recovery evidence. In the pinned
+[source runner](https://github.com/supabase/cli/blob/ae89b16c7e0e472c849d89c947513872b3c537f5/apps/cli/src/legacy/shared/legacy-migration-apply.ts#L116-L220),
+the history INSERT follows the file's statements. An authored COMMIT can therefore
+leave application effects committed while the history row is absent. A history
+count, maximum version or exact prefix alone cannot authorize retry.
+
+The fixed-case [offline checker](../../../scripts/production-history-prefix-proof.mjs)
+emits a guarded read-only capture and assesses saved receipts. It cannot connect,
+remove a fault or run a migration. It binds the decision to the original
+ref/nonce/source/backup, reviewed CLI artifact, complete ordered `(version,name)`
+ledger, precise history-insert error and before/after observations. It always
+returns `canResume=false` for 37/38. Missing or contradictory evidence fails closed.
+
+For 50, the failed file's only top-level effects are the new
+`rooms.presence_room_generation` column/check and
+`record_recent_room_presence_v1(jsonb)` definition/privileges. Capture their full
+metadata before the first push at **35**, then require them still absent after
+failure at **50**. The frozen preceding 50 files do not mention either target.
+Other legitimate changes from versions 36–50 must not be compared to a whole
+35-version schema as if they were partial failed-file effects.
+
+Use Bash, owner-only files and no-clobber output. Select the native executable
+path from the reviewed local CLI provenance; the runner below refuses a different
+binary hash or version. A future platform/CLI artifact requires a new source
+review and local proof rather than changing the expected hash to make it pass.
 
 ```bash
-export REHEARSAL_DENIED_VERSION=20260904205540
 export REHEARSAL_EXPECTED_PREFIX=37
-fnm exec --using=22.23.1 node --input-type=module <<'JS'
+export REHEARSAL_DENIED_VERSION=20260904205540
+export REHEARSAL_PREFIX_ROOT="$REHEARSAL_ROOT/prefix-$REHEARSAL_EXPECTED_PREFIX"
+# Set to the resolved native executable recorded in the reviewed local proof.
+export REHEARSAL_SB_BINARY='/absolute/path/to/the/reviewed/native/supabase'
+umask 077
+set -euo pipefail
+set -o noclobber
+mkdir -m 700 "$REHEARSAL_PREFIX_ROOT"
+fnm exec --using=22.23.1 node scripts/production-history-prefix-proof.mjs capture \
+  "$REHEARSAL_ROOT/binding.json" "$REHEARSAL_EXPECTED_PREFIX" \
+  > "$REHEARSAL_PREFIX_ROOT/capture.sql"
+fnm exec --using=22.23.1 node --input-type=module <<'JS' \
+  > "$REHEARSAL_PREFIX_ROOT/expected-cli.json"
 import assert from 'node:assert/strict';
 import {manifest,verifyManifest} from './scripts/production-history-transition.mjs';
+import {CLI_VERSION,CLI_BINARY_SHA256} from './scripts/production-history-prefix-proof.mjs';
 verifyManifest();
 const n=Number(process.env.REHEARSAL_EXPECTED_PREFIX);
 assert.ok([37,38,50].includes(n));
 assert.equal(manifest.migrations[n].version,process.env.REHEARSAL_DENIED_VERSION);
+console.log(JSON.stringify({version:CLI_VERSION,binarySha256:CLI_BINARY_SHA256}));
 JS
+capture_prefix_receipt() {
+  CAPTURE_NAME="$1" python3 <<'PYTHON'
+import json, os, subprocess
+from datetime import datetime, timezone
+from pathlib import Path
+root=Path(os.environ['REHEARSAL_PREFIX_ROOT'])
+name=os.environ['CAPTURE_NAME']
+assert name in ('before','after')
+r=subprocess.run(['psql','-XqAt','-v','ON_ERROR_STOP=1','-f',str(root/'capture.sql')],
+                 capture_output=True,text=True,check=True,timeout=120)
+receipt=json.loads(r.stdout)
+receipt['capturedLocallyAt']=datetime.now(timezone.utc).isoformat()
+with (root/f'{name}.json').open('x') as f:
+    json.dump(receipt,f,indent=2); f.write('\n')
+PYTHON
+}
 psql -X -v ON_ERROR_STOP=1 -f "$REHEARSAL_ROOT/transition/verify.sql"
+capture_prefix_receipt before
 psql -X -v ON_ERROR_STOP=1 -v denied="$REHEARSAL_DENIED_VERSION" \
   -f "$REHEARSAL_ROOT/transition/guard.sql" -f - <<'SQL'
 begin;
 do $$ begin
  if (select count(*) from supabase_migrations.schema_migrations)<>35
  or (select phase from anidachi_transition_20260912.control)<>'prepared'
+ or (select maintenance from anidachi_transition_20260912.control) is distinct from true
  then raise exception 'FRESH_PREPARED_35_REQUIRED'; end if;
 end $$;
 alter table supabase_migrations.schema_migrations
  add constraint rehearsal_deny_one_version check(version<>:'denied') not valid;
 commit;
 SQL
-if sb --workdir "$REHEARSAL_ROOT/transition/all60" db push \
-  --db-url "$REHEARSAL_DB_URL" --yes; then
-  printf 'STOP: expected rehearsal failure did not occur\n' >&2
-  exit 1
-fi
-psql -X -v ON_ERROR_STOP=1 -f "$REHEARSAL_ROOT/transition/guard.sql" \
-  -c "select version from supabase_migrations.schema_migrations order by version;" \
-  -c "select phase,maintenance from anidachi_transition_20260912.control;"
 ```
 
-Require the actual error to name `rehearsal_deny_one_version`, and the ordered
-history to equal the exact expected manifest prefix. Then inspect the failed
-file's known objects and data: for `20260904205540`, old session/settings rows,
-generation values, schema checks and catalog tables; for `20260905083000`, its
-observed-season index; for `20260908040654`, `rooms.presence_room_generation` and
-its recent-person routines. Compare with the exact source, not just max version.
-
-A file's explicit COMMIT may leave schema/data committed before history insert
-fails. That result is **not** safe suffix-resume proof even if history is an exact
-prefix. Keep isolation, record the outcome, and perform the proven complete
-application recovery from section 5. Do not insert the missing version or call
-migration repair. If and only if the failing file's changes are proved rolled
-back, remove the single fault, verify the original archive/holds and resume the
-unchanged suffix:
+Retain the actual exit code, both output streams and their hashes; do not use a
+bare `if db push` that discards the failure classification. The password-free URL
+and every connection field must match the immutable binding. The normal CLI
+receives the complete unchanged `all60` directory and selects its pending suffix.
 
 ```bash
-psql -X -v ON_ERROR_STOP=1 -f "$REHEARSAL_ROOT/transition/guard.sql" \
-  -c 'alter table supabase_migrations.schema_migrations drop constraint rehearsal_deny_one_version;'
-psql -X -v ON_ERROR_STOP=1 -f "$REHEARSAL_ROOT/transition/verify.sql"
+python3 <<'PYTHON'
+import hashlib, json, os, subprocess
+from datetime import datetime, timezone
+from pathlib import Path
+from urllib.parse import urlsplit
+root=Path(os.environ['REHEARSAL_ROOT'])
+proof=Path(os.environ['REHEARSAL_PREFIX_ROOT'])
+binding=json.loads((root/'binding.json').read_text())
+expected=json.loads((proof/'expected-cli.json').read_text())
+binary=Path(os.environ['REHEARSAL_SB_BINARY']).resolve(strict=True)
+sha=lambda data: hashlib.sha256(data).hexdigest()
+assert sha(binary.read_bytes())==expected['binarySha256']
+env={k:v for k,v in os.environ.items() if not k.startswith('SUPABASE_')}
+assert subprocess.run(['git','rev-parse','HEAD'],capture_output=True,text=True,
+                      check=True).stdout.strip()==binding['releaseCommit']
+subprocess.run(['git','diff','--quiet'],check=True)
+subprocess.run(['git','diff','--cached','--quiet'],check=True)
+assert subprocess.run([str(binary),'--version'],env=env,capture_output=True,
+                      text=True,check=True,timeout=30).stdout.strip()==expected['version']
+for key,field in [('PGHOST','host'),('PGPORT','port'),('PGDATABASE','database'),('PGUSER','user')]:
+    assert env.get(key)==str(binding[field])
+assert env.get('PGSSLMODE')=='require' and env.get('PGPASSWORD')
+url=urlsplit(env['REHEARSAL_DB_URL'])
+assert (url.scheme,url.hostname,url.port,url.username,url.password,url.path,url.query)==(
+    'postgresql',binding['host'],binding['port'],binding['user'],None,'/postgres','sslmode=require')
+started=datetime.now(timezone.utc).isoformat()
+r=subprocess.run([str(binary),'--workdir',str(root/'transition/all60'),'db','push',
+                  '--db-url',env['REHEARSAL_DB_URL'],'--yes'],env=env,
+                 capture_output=True,timeout=300)
+ended=datetime.now(timezone.utc).isoformat()
+for name,data in [('stdout',r.stdout),('stderr',r.stderr)]:
+    with (proof/f'denied-push.{name}.log').open('xb') as f: f.write(data)
+attempt={'binding':binding,'expectedPrefix':int(env['REHEARSAL_EXPECTED_PREFIX']),
+         'cli':expected,'startedAt':started,'endedAt':ended,'exitCode':r.returncode,
+         'stdoutSha256':sha(r.stdout),'stderrSha256':sha(r.stderr)}
+with (proof/'attempt.json').open('x') as f:
+    json.dump(attempt,f,indent=2); f.write('\n')
+assert sha(binary.read_bytes())==expected['binarySha256']
+PYTHON
+```
+
+On timeout, interruption, network failure or a different SQL error, keep isolation
+and take complete recovery; a missing/partial receipt never permits resume.
+Disable/drain the new cron job immediately if present, as in section 4. If this
+prefix installed `pg_net`, capture its fresh post-install managed-role origin
+before cleanup; otherwise preserve baseline absence and strict equality.
+Then capture the failed state and assess the fixed case:
+
+```bash
+capture_prefix_receipt after
+fnm exec --using=22.23.1 node scripts/production-history-prefix-proof.mjs assess \
+  "$REHEARSAL_ROOT/binding.json" "$REHEARSAL_EXPECTED_PREFIX" \
+  "$REHEARSAL_PREFIX_ROOT" > "$REHEARSAL_PREFIX_ROOT/decision.json"
+```
+
+A successful classification requires normal exit 1, the exact
+`LegacyDbPushApplyError` with SQLSTATE `23514`, constraint
+`rehearsal_deny_one_version`, the denied version in the failing row, and the final
+statement equal to the CLI's history INSERT. It also requires the exact expected
+ledger, installed fault, original target and prepared/held control state.
+Database observation times remain separate from host capture/attempt times;
+clock skew between the server and operator is not treated as data divergence.
+
+**For 37/38, proceed directly to sections 5–6 and full application recovery.**
+Retain the actual schema/data and catalog/security observations to document the
+unrecorded effects; the recovery comparison uses every baseline relation and
+application ACL, not a spot check of the reset/index. Never create the missing
+history row, call migration repair or rerun the destructive file.
+
+**Only for a classified 50 with `canResume=true`:** independently verify the
+original archive/holds and immutable files again. The checker is evidence
+validation, not proof that holds remain installed or authorization to reopen.
+Require the same live prefix and absent failed-file objects while dropping the
+one injected fault; keep all other maintenance controls in place.
+
+```bash
+fnm exec --using=22.23.1 node --input-type=module <<'JS'
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {assessPrefixAttempt} from './scripts/production-history-prefix-proof.mjs';
+const p=process.env.REHEARSAL_PREFIX_ROOT;
+const json=name=>JSON.parse(readFileSync(`${p}/${name}.json`,'utf8'));
+assert.equal(Number(process.env.REHEARSAL_EXPECTED_PREFIX),50);
+const result=assessPrefixAttempt({binding:JSON.parse(readFileSync(`${process.env.REHEARSAL_ROOT}/binding.json`,'utf8')),
+ expectedPrefix:50,before:json('before'),after:json('after'),attempt:json('attempt'),
+ stdout:readFileSync(`${p}/denied-push.stdout.log`,'utf8'),stderr:readFileSync(`${p}/denied-push.stderr.log`,'utf8')});
+assert.equal(result.canResume,true);
+JS
 fnm exec --using=22.23.1 node scripts/production-history-hosted-artifacts.mjs \
   "$REHEARSAL_ROOT/binding.json" "$REHEARSAL_ROOT/transition"
-sb --workdir "$REHEARSAL_ROOT/transition/all60" db push \
+psql -X -v ON_ERROR_STOP=1 -f "$REHEARSAL_ROOT/transition/verify.sql"
+psql -X -v ON_ERROR_STOP=1 -f "$REHEARSAL_ROOT/transition/guard.sql" -f - <<'SQL'
+begin;
+do $$ begin
+ if (select count(*) from supabase_migrations.schema_migrations)<>50
+ or exists(select 1 from pg_attribute where attrelid='public.rooms'::regclass
+           and attname='presence_room_generation' and not attisdropped)
+ or exists(select 1 from pg_constraint where conrelid='public.rooms'::regclass
+           and conname='rooms_presence_room_generation_check')
+ or to_regprocedure('public.record_recent_room_presence_v1(jsonb)') is not null
+ then raise exception 'ROLLBACK_PROVED_PREFIX_50_REQUIRED'; end if;
+end $$;
+alter table supabase_migrations.schema_migrations drop constraint rehearsal_deny_one_version;
+commit;
+SQL
+test "$(shasum -a 256 "$REHEARSAL_SB_BINARY" | cut -d ' ' -f 1)" = \
+  "$(fnm exec --using=22.23.1 node --input-type=module -e "import {CLI_BINARY_SHA256} from './scripts/production-history-prefix-proof.mjs'; console.log(CLI_BINARY_SHA256)")"
+"$REHEARSAL_SB_BINARY" --workdir "$REHEARSAL_ROOT/transition/all60" db push \
   --db-url "$REHEARSAL_DB_URL" --dry-run
-sb --workdir "$REHEARSAL_ROOT/transition/all60" db push \
+"$REHEARSAL_SB_BINARY" --workdir "$REHEARSAL_ROOT/transition/all60" db push \
   --db-url "$REHEARSAL_DB_URL" --yes
 psql -X -v ON_ERROR_STOP=1 -f "$REHEARSAL_ROOT/transition/finish.sql"
 ```
 
-This is a candidate fault procedure, not a hosted result or a guarantee of CLI
-atomicity for every file. Reuse the measured recovery and close the temporary
-project/window through the same controlled teardown.
+Resume uses the same pinned CLI artifact and unchanged canonical directory.
+Require exact 60 verification, then complete sections 5–6 recovery/equality/holds
+and controlled teardown for this target. This remains a candidate hosted fault
+procedure until that fresh pass and its independent recovery review succeed.
 
 ## Primary references and observed preparation limits
 
