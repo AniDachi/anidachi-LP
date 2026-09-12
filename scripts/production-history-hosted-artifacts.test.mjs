@@ -48,6 +48,23 @@ test("reject live targets, mismatched endpoints, transaction pooling and credent
 		host: "aws-0-ap-southeast-1.pooler.supabase.com",
 		user: `postgres.${binding.projectRef}`,
 	});
+	for (const endpoint of [
+		{ host: binding.host, user: "cli_login_postgres" },
+		{
+			host: "aws-0-ap-southeast-1.pooler.supabase.com",
+			user: `cli_login_postgres.${binding.projectRef}`,
+		},
+	]) {
+		assert.throws(
+			() =>
+				validateBinding({
+					...binding,
+					...endpoint,
+					sessionUser: "cli_login_postgres",
+				}),
+			/ordinary postgres login/,
+		);
+	}
 });
 test("all phases bind exact original backup/target/input and unchanged SQL; no executor", () => {
 	const files = buildArtifacts(binding),

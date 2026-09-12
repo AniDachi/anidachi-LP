@@ -49,7 +49,11 @@ export function validateBinding(binding) {
 		5432,
 		"Only direct/session connection; no transaction pooler",
 	);
-	assert.ok(["postgres", "cli_login_postgres"].includes(binding.sessionUser));
+	assert.equal(
+		binding.sessionUser,
+		"postgres",
+		"This hosted candidate requires ordinary postgres login; temporary CLI login is not supported",
+	);
 	const direct = binding.host === `db.${binding.projectRef}.supabase.co`;
 	const pooled = /^aws-[0-9]+-[a-z0-9-]+\.pooler\.supabase\.com$/.test(
 		binding.host,

@@ -55,10 +55,12 @@ Copy the **direct** host/user from this project's Connect dialog; use the
 **session pooler on 5432** if IPv6 is unavailable. Do not invent the pooler host
 or use transaction mode 6543. Export only the connection metadata below; obtain
 the new project's database password via a private terminal prompt, never from
-an old production credential file. Example below selects the direct postgres
-login. For the native temporary CLI login select the actual issued
-`cli_login_postgres` identity and its existing membership; do not create/grant
-that role yourself. The SQL explicitly selects `postgres` in either case.
+an old production credential file. This candidate uses **ordinary `postgres`
+login only** for every hosted CLI, dump and SQL command, with the new disposable
+project's own password. The existing bridge's temporary `cli_login_postgres`
+support is unchanged and tested separately; it is not selected by this candidate
+because role selection on that CLI `--db-url` path remains unproved. The offline
+helper rejects that login, including an otherwise matching endpoint binding.
 
 ```bash
 export REHEARSAL_REF='replace-with-new-20-letter-project-ref'
@@ -74,8 +76,8 @@ printf '\n'
 ```
 
 These are Bash commands, including `read -p`; run them in Bash. A session pooler
-uses `PGUSER=postgres.<new-ref>` (or `cli_login_postgres.<new-ref>`), but the
-server `session_user` must still match `REHEARSAL_SESSION_USER`. The local helper
+uses `PGUSER=postgres.<new-ref>`, and the server `session_user` must remain
+`postgres`, matching `REHEARSAL_SESSION_USER`. The local helper
 checks the endpoint/ref/user relationship, rejects the two live refs, and emits
 no bridge phase when `backupSha256` is null. It never opens a network connection.
 
@@ -107,8 +109,8 @@ The following password-free URL uses inherited `PGPASSWORD`; the pinned CLI's
 connection parser supports libpq `PG*` fallbacks. Do not substitute
 `SUPABASE_DB_PASSWORD` or `--password` for the direct `--db-url` path. If actual
 CLI authentication fails, stop and correct the connection; never print a secret
-URL or switch to a different target. An explicit linked CLI connection can be
-reviewed separately if temporary-login renewal requires it.
+URL, switch targets or substitute a temporary CLI login. This sequence stays on
+the ordinary postgres connection established above.
 
 ```bash
 export REHEARSAL_DB_URL="postgresql://${PGUSER}@${PGHOST}:${PGPORT}/postgres?sslmode=require"
