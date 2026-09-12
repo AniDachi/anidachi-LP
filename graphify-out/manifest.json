@@ -3606,10 +3606,10 @@
     "semantic_hash": "4e0420e077e5ebc55dbe7b2187df7832"
   },
   "docs/current-development-state.md": {
-    "mtime": 1789204361.5585232,
-    "seen": 1789204933.065473,
-    "ast_hash": "ccfdb2a2958a036c9168551b2ba89aa6",
-    "semantic_hash": "ccfdb2a2958a036c9168551b2ba89aa6"
+    "mtime": 1789208988.8994775,
+    "seen": 1789210297.59768,
+    "ast_hash": "dd2115bcebd7b76d5e2d694f4226bd25",
+    "semantic_hash": "dd2115bcebd7b76d5e2d694f4226bd25"
   },
   "docs/development-environments.md": {
     "mtime": 1788807642.3055499,
@@ -7884,10 +7884,10 @@
     "semantic_hash": "34b84da7ca09aa79f5d0d42c63286066"
   },
   "docs/releases/personal-history-mvp/production-35-to-60-transition.md": {
-    "mtime": 1789204509.3355653,
-    "seen": 1789204933.065474,
-    "ast_hash": "f4389bb52d73de518e8cc2ca298b17d0",
-    "semantic_hash": "f4389bb52d73de518e8cc2ca298b17d0"
+    "mtime": 1789208988.9592745,
+    "seen": 1789210297.597682,
+    "ast_hash": "5b53d9df7eea90590857c1aa3d900f39",
+    "semantic_hash": "5b53d9df7eea90590857c1aa3d900f39"
   },
   "docs/superpowers/plans/2026-09-11-extension-inbox-polish.md": {
     "mtime": 1789146711.4960988,
@@ -7938,10 +7938,10 @@
     "semantic_hash": "5ee0c506fe97362023ed1e97ae29ad5a"
   },
   "docs/superpowers/plans/2026-09-12-production-promotion-preparation.md": {
-    "mtime": 1789204583.401834,
-    "seen": 1789204933.065475,
-    "ast_hash": "6cdb5f6691c505b9e839ecf8144b1d18",
-    "semantic_hash": "6cdb5f6691c505b9e839ecf8144b1d18"
+    "mtime": 1789209024.1347184,
+    "seen": 1789210297.597682,
+    "ast_hash": "8d675324990065d3429c4ccfcc507572",
+    "semantic_hash": "8d675324990065d3429c4ccfcc507572"
   },
   "apps/api/test/maintenance.test.ts": {
     "mtime": 1789204068.949726,
@@ -7974,9 +7974,33 @@
     "semantic_hash": "25f3c5da6dc60fc654aa4859d0ed9587"
   },
   "docs/releases/personal-history-mvp/maintenance-admission.md": {
-    "mtime": 1789204622.417373,
-    "seen": 1789204933.065474,
-    "ast_hash": "dc236b7537ea162e8292e34f289b790d",
-    "semantic_hash": "dc236b7537ea162e8292e34f289b790d"
+    "mtime": 1789208989.0177526,
+    "seen": 1789210297.5976808,
+    "ast_hash": "191dfe3314dc9b2038c11570ba6c24e5",
+    "semantic_hash": "191dfe3314dc9b2038c11570ba6c24e5"
+  },
+  "scripts/production-history-hosted-artifacts.mjs": {
+    "mtime": 1789209946.191279,
+    "seen": 1789210297.5976708,
+    "ast_hash": "5022fd5dde79336389e272a17c3f9a69",
+    "semantic_hash": "5022fd5dde79336389e272a17c3f9a69"
+  },
+  "scripts/production-history-hosted-artifacts.test.mjs": {
+    "mtime": 1789209946.6599498,
+    "seen": 1789210297.597672,
+    "ast_hash": "49414d8868919af8d041d7b2bf3073d5",
+    "semantic_hash": "49414d8868919af8d041d7b2bf3073d5"
+  },
+  "docs/releases/personal-history-mvp/free-hosted-rehearsal.md": {
+    "mtime": 1789209946.3293607,
+    "seen": 1789210297.5976808,
+    "ast_hash": "5bd078f60f122dfbc97298683b3bd820",
+    "semantic_hash": "5bd078f60f122dfbc97298683b3bd820"
+  },
+  "docs/releases/personal-history-mvp/free-rehearsal-window.md": {
+    "mtime": 1789209360.9050293,
+    "seen": 1789210297.5976808,
+    "ast_hash": "562bace983330e0d77ef1ace56ccee6d",
+    "semantic_hash": "562bace983330e0d77ef1ace56ccee6d"
   }
 }
