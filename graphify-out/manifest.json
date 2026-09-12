@@ -3606,10 +3606,10 @@
     "semantic_hash": "4e0420e077e5ebc55dbe7b2187df7832"
   },
   "docs/current-development-state.md": {
-    "mtime": 1789150497.8442745,
-    "seen": 1789154161.7194948,
-    "ast_hash": "fc7e9bc22ea205ed6c5c0cbdf075d797",
-    "semantic_hash": "fc7e9bc22ea205ed6c5c0cbdf075d797"
+    "mtime": 1789197413.2246232,
+    "seen": 1789198673.269346,
+    "ast_hash": "09b734dda6d63fe8d46686f411d59202",
+    "semantic_hash": "09b734dda6d63fe8d46686f411d59202"
   },
   "docs/development-environments.md": {
     "mtime": 1788807642.3055499,
@@ -7788,10 +7788,10 @@
     "semantic_hash": "562e972f810c309b9537a94283330268"
   },
   "apps/web/supabase/operations/production-history-20260912/finish.sql": {
-    "mtime": 1789148378.3249013,
-    "seen": 1789154161.719434,
-    "ast_hash": "4dadc7790054b50908879e7af74bd831",
-    "semantic_hash": "4dadc7790054b50908879e7af74bd831"
+    "mtime": 1789194864.1796644,
+    "seen": 1789198673.269297,
+    "ast_hash": "28a98a671d9ede044304d005606ac567",
+    "semantic_hash": "28a98a671d9ede044304d005606ac567"
   },
   "apps/web/supabase/operations/production-history-20260912/fixture.sql": {
     "mtime": 1789148660.8643992,
@@ -7806,16 +7806,16 @@
     "semantic_hash": "088ec6eeb6bddd1ef7eecfcb5c9eee4c"
   },
   "apps/web/supabase/operations/production-history-20260912/prepare.sql": {
-    "mtime": 1789148592.6917686,
-    "seen": 1789154161.719435,
-    "ast_hash": "3811f5e5a924ca9ae6a2aff062f43afb",
-    "semantic_hash": "3811f5e5a924ca9ae6a2aff062f43afb"
+    "mtime": 1789194864.1789637,
+    "seen": 1789198673.269299,
+    "ast_hash": "3c1e930869ed54ec3b1081885ba14384",
+    "semantic_hash": "3c1e930869ed54ec3b1081885ba14384"
   },
   "apps/web/supabase/operations/production-history-20260912/verify-archive.sql": {
-    "mtime": 1789149768.9566514,
-    "seen": 1789154161.719436,
-    "ast_hash": "0afb846ece0c1cf0712469770ee8d1e9",
-    "semantic_hash": "0afb846ece0c1cf0712469770ee8d1e9"
+    "mtime": 1789194864.1793482,
+    "seen": 1789198673.269299,
+    "ast_hash": "081ff5d52f4a655b6a32e5dac40afd83",
+    "semantic_hash": "081ff5d52f4a655b6a32e5dac40afd83"
   },
   "apps/web/supabase/tests/friends_groups_editor.test.sql": {
     "mtime": 1789146711.4773176,
@@ -7842,10 +7842,10 @@
     "semantic_hash": "e33aa6f4dc179fc0d118f4467e46c7ef"
   },
   "scripts/production-history-rehearsal.mjs": {
-    "mtime": 1789149586.0810015,
-    "seen": 1789154161.719485,
-    "ast_hash": "78b55d6b9cbf86ecf87b3d1eb98d07ee",
-    "semantic_hash": "78b55d6b9cbf86ecf87b3d1eb98d07ee"
+    "mtime": 1789197667.506833,
+    "seen": 1789198673.2693388,
+    "ast_hash": "5f2139dc339e4b1e392aa050d842bc69",
+    "semantic_hash": "5f2139dc339e4b1e392aa050d842bc69"
   },
   "scripts/production-history-transition.mjs": {
     "mtime": 1789149586.081194,
@@ -7884,10 +7884,10 @@
     "semantic_hash": "34b84da7ca09aa79f5d0d42c63286066"
   },
   "docs/releases/personal-history-mvp/production-35-to-60-transition.md": {
-    "mtime": 1789150350.3108337,
-    "seen": 1789154161.719499,
-    "ast_hash": "5a6b235b17189ba62c9e84b874281964",
-    "semantic_hash": "5a6b235b17189ba62c9e84b874281964"
+    "mtime": 1789197322.1264842,
+    "seen": 1789198673.269346,
+    "ast_hash": "7b89beb903e18f305d41ce7be595cd97",
+    "semantic_hash": "7b89beb903e18f305d41ce7be595cd97"
   },
   "docs/superpowers/plans/2026-09-11-extension-inbox-polish.md": {
     "mtime": 1789146711.4960988,
@@ -7912,5 +7912,35 @@
     "seen": 1789154161.719502,
     "ast_hash": "03de973598b428ef433a4518415d7e37",
     "semantic_hash": "03de973598b428ef433a4518415d7e37"
+  },
+  "docs/releases/personal-history-mvp/2026-09-12-operator-entry-integration.json": {
+    "mtime": 1789197852.2134342,
+    "seen": 1789198673.269313,
+    "ast_hash": "23f76876c2252dd51bdcb63d84267fd9",
+    "semantic_hash": "23f76876c2252dd51bdcb63d84267fd9"
+  },
+  "docs/releases/personal-history-mvp/2026-09-12-operator-fence-rehearsal.json": {
+    "mtime": 1789197852.2128365,
+    "seen": 1789198673.269313,
+    "ast_hash": "81d499e6649f5d337664b0777278ccf8",
+    "semantic_hash": "81d499e6649f5d337664b0777278ccf8"
+  },
+  "docs/releases/personal-history-mvp/2026-09-12-production-readiness-audit.json": {
+    "mtime": 1789197901.7097986,
+    "seen": 1789198673.269314,
+    "ast_hash": "76b417a33c8694198aea356623b16800",
+    "semantic_hash": "76b417a33c8694198aea356623b16800"
+  },
+  "scripts/production-history-rehearsal-operator-fence.mjs": {
+    "mtime": 1789195051.0012927,
+    "seen": 1789198673.2693381,
+    "ast_hash": "5ee0c506fe97362023ed1e97ae29ad5a",
+    "semantic_hash": "5ee0c506fe97362023ed1e97ae29ad5a"
+  },
+  "docs/superpowers/plans/2026-09-12-production-promotion-preparation.md": {
+    "mtime": 1789197322.126786,
+    "seen": 1789198673.269346,
+    "ast_hash": "d07eee71ac826b455446f0bbaf75cb39",
+    "semantic_hash": "d07eee71ac826b455446f0bbaf75cb39"
   }
 }

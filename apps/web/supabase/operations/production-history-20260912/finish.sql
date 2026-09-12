@@ -2,6 +2,11 @@
 do $$
 declare doc jsonb; versions jsonb; r record; m jsonb; n bigint;
 begin
+ if not (current_user = 'postgres' and (
+  (session_user = 'postgres' and current_setting('role') in ('none','postgres')) or
+  (session_user = 'cli_login_postgres' and current_setting('role') = 'postgres'
+   and pg_catalog.pg_has_role(session_user, 'postgres', 'MEMBER'))
+ )) then raise exception 'OPERATOR_LOGIN_REQUIRED'; end if;
  select document into strict doc from anidachi_transition_20260912.control where singleton;
  select jsonb_agg(version order by version) into versions from supabase_migrations.schema_migrations;
  if versions<>doc->'targetVersions' then raise exception 'TARGET_CHAIN_INCOMPLETE'; end if;
