@@ -6,9 +6,52 @@ activation are not authorized by this document. The executable driver deliberate
 refuses both hosted project identities; a separately reviewed production adapter
 and release unlock remain necessary. There is no environment-variable bypass.
 
-The [aggregate rehearsal receipt](2026-09-12-production-transition-rehearsal.json)
-records the 24 passed synthetic checks and the exact tested commit/file hashes.
-It contains no user records or backup contents.
+The [original rehearsal receipt](2026-09-12-production-transition-rehearsal.json)
+records 24 synthetic checks for the earlier bridge bytes. The
+[current operator-fence rehearsal](2026-09-12-operator-fence-rehearsal.json)
+records 25 checks, including 91 rollback-only role probes, and exact tested file
+hashes. The [full CLI-identity entry proof](2026-09-12-operator-entry-integration.json)
+additionally executes prepare, verify, hold installation and finish as
+non-superuser `postgres` selected by `cli_login_postgres`, at synthetic baseline
+and completed prefixes. All fixture role/bridge changes roll back. These receipts
+contain no real user records or backup contents and do not prove hosted execution.
+
+The [preparation audit](2026-09-12-production-readiness-audit.json) separately
+records a full logical export of the actual production baseline, complete local
+restoration and a narrower application restore in an isolated hosted database.
+The hosted probe verified 35 table digests and migration versions, replaying
+application object owners/ACLs and `postgres` defaults while excluding exactly
+three managed `supabase_admin` default-ACL entries. It does not prove rollback
+after the pending chain or a complete hosted project replacement. The owner-only
+backup also exists outside the releasable worktree on the same Mac; a fresh
+maintenance-bound checkpoint is still required.
+
+The staging sibling-database probe cannot run the complete unchanged chain:
+`pg_cron` is bound to the cluster's `postgres` database and its configuration
+requires a server restart. A full hosted transition/rollback rehearsal needs an
+independent disposable instance with its own scheduler. Check existing or Free
+eligibility before considering a paid target; no new project, plan upgrade or
+production clone has been authorized or created for this preparation. Application
+recovery must preserve managed roles/default privileges and verify product
+objects/data/security, without rewinding shared cron operational log counters.
+
+## Operator identity
+
+Bridge entry points and write holds accept the ordinary `postgres` login, or the
+exact Supabase-managed `cli_login_postgres` login after explicit selection of the
+effective `postgres` role and verification of actual membership. An arbitrary
+member of `postgres`, a similarly named login, a client-provided setting or a
+`SECURITY DEFINER` function cannot substitute for the required original login.
+Operator connections that select `service_role` remain subject to the hold.
+
+The native CLI probe confirmed that `session_user` remains `cli_login_postgres`
+after `SET ROLE postgres`; it is different from the connector's `postgres`
+session. A future hosted executor must verify that complete identity and set
+required session options through SQL; the hosted pooler did not preserve all
+`PGOPTIONS` settings during the restore probe. This compatibility correction
+does not enable hosted execution. Changed bridge bytes require a fresh prepared
+document and new rehearsal evidence; an older immutable snapshot must not be
+relabelled or silently replaced.
 
 ## Fixed scope and eligibility
 
@@ -35,12 +78,15 @@ The supplied read-only production inventory is:
 | `watch_history_user_session_summaries` | 0 | — |
 | `user_watch_settings` | 11 | consent/generation/counters retained |
 
-These records are real unless proved otherwise. Source evidence in
-`20260814020000_watch_history_v2_clean_cutover.sql` describes v1 as inert, and the
-old web `/api/watch-library` source rejects legacy operations. **The deployed
-production Web and Worker versions and all relevant read/write routes have not
-been verified here.** If any legacy records are currently user-visible, archive
-alone is insufficient: stop and review a compatible read/conversion design.
+These records are real unless proved otherwise. The September 12
+[read-only audit](2026-09-12-production-readiness-audit.json) binds the deployed
+Web to its source: the account page reads v2, old library/reconcile routes reject
+legacy operations, and production social code uses the v2 RPC. Legacy table RLS
+and RPC access were checked; v1 helpers remain uncalled in that source. Worker
+version/health were observed separately. **This is source/database evidence, not
+an authenticated production UI acceptance test or a complete Worker source
+binding.** If any legacy records are currently user-visible, archive alone is
+insufficient: stop and review a compatible read/conversion design.
 There is no inference of canonical provider identifiers, watched episode counts,
 completion, room generations, solo sessions or v3 history from v1 rows.
 
@@ -74,9 +120,9 @@ original generation must become exactly old+1. Reverting generations is forbidde
 
 The bridge installs statement triggers on all existing public tables, including
 users/rooms and other FK parents. It rejects writes from runtime session identities
-through direct SQL, mutating reads and SECURITY DEFINER RPCs. Only the actual
-`postgres` operator login with no client SET ROLE bypasses it; changing a request
-GUC cannot turn an authenticator session into that login. Existing scheduled jobs
+through direct SQL, mutating reads and SECURITY DEFINER RPCs. Only the operator identity/role combinations described above bypass it; changing
+a request GUC or entering a definer function cannot turn an authenticator session
+into an operator login. Existing scheduled jobs
 are suspended through `cron.alter_job`, with their flags retained. These are
 maintenance protections, not a concurrency-group substitute. Before production,
 operators must independently drain running jobs/transactions and exclude other
@@ -130,17 +176,25 @@ is provided because choosing when to reopen is a separate accepted release step.
    do not create a new Stripe subscription. Verify private ACLs, inactive policy,
    disabled inbox scheduler and suspended original cron jobs. Publish only an
    aggregate DB receipt, tied to the exact release SHA/manifest/backup identity.
-8. Deliver the pinned compatible Web and Worker while maintenance remains held.
-   Verify real legacy 426/upgrade behavior, v3 empty reads, Free read/Resume/delete,
-   current paid capture authority and stale-generation rejection before releasing
-   the barrier. These HTTP/runtime contracts require their own acceptance: local
-   database preservation does not prove them. Preserve consent and fences. Shared
-   media/personal-policy activation and extension distribution remain separate
-   acceptance/approval decisions.
-9. A separately reviewed unlock removes the fixed maintenance triggers and
-   restores only approved scheduler states once the compatible stack is accepted.
-   Explicitly review whether production automatic delivery should resume; do not
-   silently delete the hold because the database reached version 60.
+8. Deliver the pinned compatible Web and Worker while application traffic remains
+   held and database write holds are still installed. Verify deployment identity
+   and read-only compatibility first. A positive paid capture, preference creation
+   or delete probe cannot pass while database triggers reject all runtime writes.
+9. A separately reviewed unlock removes the fixed database maintenance triggers
+   **while independent application traffic maintenance remains enforced**. Use the
+   controlled authorized operator path to verify legacy 426/upgrade behavior, v3
+   empty reads, Free read/Resume/delete, paid capture authority and stale-generation
+   rejection. A failed probe keeps public traffic closed. These HTTP/runtime
+   contracts require their own acceptance: local database preservation does not
+   prove them. Preserve consent and fences; keep policy activation and extension
+   distribution as separate acceptance decisions.
+10. Reopen application traffic and restore only approved scheduler states after
+    the controlled runtime checks pass. Reconcile retryable Stripe webhooks and
+    deferred invitation delivery without duplicate effects. Explicitly review
+    whether automatic production delivery should resume; do not silently delete
+    its hold because the database reached version 60. The concrete readiness and
+    remaining operating prerequisites are in the
+    [production preparation plan](../../superpowers/plans/2026-09-12-production-promotion-preparation.md).
 
 ## Failure, rollback and retention
 

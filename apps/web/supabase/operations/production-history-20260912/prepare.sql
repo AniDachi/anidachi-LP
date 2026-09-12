@@ -1,6 +1,14 @@
 -- Operator bridge, deliberately OUTSIDE supabase/migrations. Called in one
 -- transaction with pg_temp.transition_input(document jsonb), after target checks.
 -- Production execution is withheld pending the separate operator release review.
+do $$
+begin
+ if not (current_user = 'postgres' and (
+  (session_user = 'postgres' and current_setting('role') in ('none','postgres')) or
+  (session_user = 'cli_login_postgres' and current_setting('role') = 'postgres'
+   and pg_catalog.pg_has_role(session_user, 'postgres', 'MEMBER'))
+ )) then raise exception 'OPERATOR_LOGIN_REQUIRED'; end if;
+end $$;
 create schema anidachi_transition_20260912;
 revoke all on schema anidachi_transition_20260912 from public,anon,authenticated,service_role;
 create table anidachi_transition_20260912.control (
@@ -56,13 +64,18 @@ begin
  into result using descriptor;
  return result;
 end $$;
--- session_user stays authenticator through SECURITY DEFINER RPCs. The role GUC
--- additionally rejects operator tests using SET ROLE service_role. It grants no
--- privilege: an arbitrary client-set GUC cannot become session_user postgres.
+-- SECURITY DEFINER changes current_user, but not session_user or the selected
+-- role GUC. Require both the exact login and effective postgres role. The managed
+-- CLI login must explicitly SET ROLE postgres and still have real membership;
+-- neither an arbitrary postgres member nor a client identity GUC is sufficient.
 create function anidachi_transition_20260912.block_runtime_writes() returns trigger
 language plpgsql security invoker set search_path='' as $$
 begin
- if session_user <> 'postgres' or current_setting('role') not in ('none','postgres') then
+ if not (current_user = 'postgres' and (
+  (session_user = 'postgres' and current_setting('role') in ('none','postgres')) or
+  (session_user = 'cli_login_postgres' and current_setting('role') = 'postgres'
+   and pg_catalog.pg_has_role(session_user, 'postgres', 'MEMBER'))
+ )) then
   raise exception 'PRODUCTION_HISTORY_MAINTENANCE' using errcode='55000';
  end if;
  return null;
@@ -71,6 +84,11 @@ create function anidachi_transition_20260912.install_holds() returns void
 language plpgsql security invoker set search_path='' as $$
 declare t record;
 begin
+ if not (current_user = 'postgres' and (
+  (session_user = 'postgres' and current_setting('role') in ('none','postgres')) or
+  (session_user = 'cli_login_postgres' and current_setting('role') = 'postgres'
+   and pg_catalog.pg_has_role(session_user, 'postgres', 'MEMBER'))
+ )) then raise exception 'OPERATOR_LOGIN_REQUIRED'; end if;
  for t in select tablename from pg_catalog.pg_tables where schemaname='public' order by tablename loop
   execute format('lock table public.%I in share row exclusive mode',t.tablename);
   if not exists(select 1 from pg_catalog.pg_trigger where tgrelid=pg_catalog.to_regclass('public.'||pg_catalog.quote_ident(t.tablename)) and tgname='production_history_maintenance') then
@@ -85,7 +103,6 @@ select anidachi_transition_20260912.install_holds();
 do $$
 declare doc jsonb; t record; d jsonb; m jsonb; schemas jsonb; actual_versions jsonb; key_columns text;
 begin
- if session_user <> 'postgres' or current_setting('role') not in ('none','postgres') then raise exception 'OPERATOR_LOGIN_REQUIRED'; end if;
  select document into strict doc from pg_temp.transition_input;
  select jsonb_agg(version order by version) into actual_versions from supabase_migrations.schema_migrations;
  if actual_versions <> doc->'baselineVersions' then raise exception 'BASELINE_DRIFT'; end if;

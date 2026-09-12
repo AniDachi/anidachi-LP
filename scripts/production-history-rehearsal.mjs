@@ -5,6 +5,8 @@ import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { withPsqlSessionTimeouts } from "../apps/web/supabase/contracts/watch_history_v3_disposable_target.mjs";
+import { runOperatorFenceChecks } from "./production-history-rehearsal-operator-fence.mjs";
 import {
 	createDriver,
 	manifest,
@@ -54,6 +56,37 @@ function rejected(query, pattern) {
 		"The test must reach the actual runtime role",
 	);
 }
+// createDriver has already enforced the existing disposable target guards.
+const operatorFenceChecks = runOperatorFenceChecks((query) =>
+	spawnSync(
+		"docker",
+		[
+			"exec",
+			"-i",
+			"-e",
+			"PGPASSWORD=task3-disposable-only",
+			d.target.container,
+			"psql",
+			"-U",
+			"supabase_admin",
+			"-d",
+			"postgres",
+			"-XqAt",
+			"-v",
+			"ON_ERROR_STOP=1",
+		],
+		{
+			// Backend statement/lock/idle-transaction limits (45s/10s/15s)
+			// expire before the Docker client limit; ON_ERROR_STOP closes psql.
+			input: withPsqlSessionTimeouts(query),
+			encoding: "utf8",
+			timeout: 60_000,
+		},
+	),
+);
+pass(
+	`${operatorFenceChecks.length} rollback-only operator login, membership, role and definer checks`,
+);
 assert.equal(d.prefix(), 35);
 d.sql(
 	"drop event trigger if exists task3_failure; drop function if exists public.task3_fail_migration();",
@@ -401,6 +434,7 @@ const report = {
 	target: d.target,
 	restoredContainer: restoreContainer,
 	checks,
+	operatorFenceChecks,
 	finished,
 	productionApplyAuthorized: false,
 };
@@ -408,6 +442,7 @@ report.testedFiles = Object.fromEntries(
 	[
 		"scripts/production-history-transition.mjs",
 		"scripts/production-history-rehearsal.mjs",
+		"scripts/production-history-rehearsal-operator-fence.mjs",
 		"scripts/production-history-transition.test.mjs",
 		"scripts/production-deployment-hold.mjs",
 		".github/workflows/db-production.yml",

@@ -1,0 +1,386 @@
+{
+  "observedAt": "2026-09-12T04:44:00Z",
+  "scope": "Read-only production readiness and source inspection. No production mutation in this preparation pass.",
+  "authorization": {
+    "productionApplyPerformed": false,
+    "mainMergePerformed": false,
+    "runtimeDeploymentPerformed": false,
+    "liveSubscriptionChanged": false,
+    "nativeCliTemporaryLoginUsed": true,
+    "isolatedStagingApplicationProbePerformed": true,
+    "temporaryProbeDatabasesRetained": 0
+  },
+  "git": {
+    "main": "54a154b702ea26e85fab2f3259aa7e5b98fa51be",
+    "staging": "1c68c31cc6ca3a1bf2aea0ca1fc21654e9a67ba1",
+    "promotionPr": 247,
+    "state": "OPEN",
+    "autoMerge": false,
+    "runningActions": 0,
+    "queuedActions": 0,
+    "productionEnvironment": {
+      "name": "Production",
+      "protectionRules": [],
+      "deploymentBranchPolicy": null,
+      "oldDatabaseJobSelectsEnvironment": false
+    }
+  },
+  "productionWeb": {
+    "projectId": "prj_E6UFEzEZYaarqkbfLRJFS1lHzNER",
+    "deploymentId": "dpl_8syhEybTfDdm9M4ab1cFKxpz1zZt",
+    "state": "READY",
+    "target": "production",
+    "sourceSha": "54a154b702ea26e85fab2f3259aa7e5b98fa51be",
+    "rootDirectory": "apps/web",
+    "productionBranch": "main",
+    "projectIgnoreCommand": null
+  },
+  "productionWorker": {
+    "script": "anidachi-api-production",
+    "deploymentId": "82a55b9d-166d-47e9-8e78-8f240930014d",
+    "versionId": "c2cc7ccb-041b-4e51-be2f-0a2593796f67",
+    "percentage": 100,
+    "createdAt": "2026-08-23T14:02:48.780037Z",
+    "publicHealthAndUnauthenticatedIceSmoke": "passed",
+    "sourceShaIndependentlyBound": false
+  },
+  "database": {
+    "projectId": "bynsjjxzatxndzjkogim",
+    "status": "ACTIVE_HEALTHY",
+    "postgresVersion": "17.6",
+    "migrationCount": 35,
+    "latestMigration": "20260823132355",
+    "publicTableDescriptorComparison": {
+      "expectedTables": 34,
+      "actualTables": 34,
+      "missing": [],
+      "extra": [],
+      "changed": []
+    },
+    "comparisonScope": "Column names/types/nullability/defaults and constraints/validation; not all database objects, function bodies, indexes or privileges.",
+    "canonicalMigrationFiles": {
+      "count": 60,
+      "pending": 25,
+      "hashMismatches": [],
+      "missing": [],
+      "extra": []
+    },
+    "inventory": {
+      "watch_sessions": {
+        "count": 6,
+        "schemas": [
+          1
+        ],
+        "lastUpdatedAt": "2026-08-12T15:31:41.754+00:00"
+      },
+      "watch_session_participants": {
+        "count": 6,
+        "schemas": [
+          1
+        ]
+      },
+      "watch_progress_checkpoints": {
+        "count": 21
+      },
+      "user_tracked_titles": {
+        "count": 3,
+        "schemas": [
+          1
+        ]
+      },
+      "watch_episode_progress": {
+        "count": 0
+      },
+      "watch_history_receipts": {
+        "count": 0
+      },
+      "watch_history_deletions": {
+        "count": 0
+      },
+      "watch_history_title_summaries": {
+        "count": 0
+      },
+      "watch_history_user_session_summaries": {
+        "count": 0
+      },
+      "user_watch_settings": {
+        "count": 11
+      }
+    },
+    "archiveInstalled": false,
+    "connection": {
+      "sessionUser": "postgres",
+      "currentUser": "postgres",
+      "postgresSuperuser": false,
+      "postgresBypassRls": true,
+      "authenticatorCanLogin": true,
+      "serviceRoleCanLogin": false,
+      "serviceRoleBypassRls": true
+    },
+    "exposedSchemasIndependentlyEstablished": false,
+    "schedulerJobs": [
+      {
+        "id": 1,
+        "name": "anidachi-auth-artifact-cleanup-hourly",
+        "schedule": "0 * * * *",
+        "active": true,
+        "username": "postgres"
+      },
+      {
+        "id": 2,
+        "name": "anidachi-watch-history-receipt-cleanup-hourly",
+        "schedule": "0 * * * *",
+        "active": true,
+        "username": "postgres"
+      }
+    ],
+    "runningCronJobsObserved": 0,
+    "activeNonAuditTransactionObserved": false,
+    "maintenanceEstablished": false,
+    "productionBackupVerified": true,
+    "productionRestoreRehearsed": true,
+    "productionRestoreScope": "Local isolated restoration of actual production archive only",
+    "hostedRecoveryRehearsed": false,
+    "releaseRecoveryGateSatisfied": false,
+    "finalMaintenanceCheckpointTaken": false
+  },
+  "legacyReadPaths": {
+    "productionWebSourceUsesV2AccountReads": true,
+    "authenticatedLegacyLibraryRoutesReturn426InSource": true,
+    "legacyLibraryModuleRuntimeConsumersInDeployedSource": 0,
+    "productionSocialSourceUses": "list_recent_people_evidence_v2",
+    "legacySocialRpc": {
+      "exists": true,
+      "anonExecute": false,
+      "authenticatedExecute": false,
+      "serviceRoleExecute": true,
+      "legacyMultiUserCheckpointSessions": 0
+    },
+    "legacyTablesRlsEnabled": true,
+    "legacyTablePolicyCounts": 0,
+    "authenticatedProductionUiSmokePerformed": false,
+    "conclusion": "Source-bound and database-access evidence supports inert v1 product history. Authenticated runtime acceptance remains separate; preservation still required."
+  },
+  "vercelOldDependency": {
+    "resource": "supabase-blouapp",
+    "projectRef": "wyozxtzsjsjqyscfqgbg",
+    "environments": [
+      "production",
+      "development"
+    ],
+    "required": true,
+    "prefix": "BLOU",
+    "dashboardStatus": "Available",
+    "changed": false,
+    "note": "Earlier preview incident reported Suspended; do not reuse that historical state as a current outage."
+  },
+  "existingCompletedBillingEvidence": {
+    "livePortalConfiguration": "bpc_1UEiR1AGc1Bd58CjV6IRKFT5",
+    "mode": "at_period_end",
+    "source": "Prior authorized LIVE configuration and independent read-back in this task; no new configuration mutation in this pass.",
+    "newProductionAccountUiDeployed": false
+  },
+  "remainingGates": [
+    "In-place recovery procedure for the exact pending migration chain; fresh maintenance-bound production baseline. Outside-worktree recovery storage is verified on the same Mac.",
+    "Installed external deployment holds and independently tested application traffic maintenance",
+    "Reviewed hosted executor without weakening disposable-only guards",
+    "Controlled runtime write acceptance after database unlock while public traffic remains held",
+    "Matching production extension identity and activation/recovery/media acceptance"
+  ],
+  "limitations": [
+    "Read-only observations are not a traffic/drain guarantee.",
+    "Unchanged row counts do not prove unchanged row values.",
+    "No authenticated production account or physical media test was performed in this pass.",
+    "A full real production logical export and local isolated restore were made. The application schemas were additionally restored and verified in a temporary hosted staging database; full hosted replacement and post-migration rollback remain unverified.",
+    "The 3.32-second local rehearsal is not a cloud recovery-time estimate."
+  ],
+  "recoveryObservedAt": "2026-09-12T05:33:37.991307+00:00",
+  "recovery": {
+    "projectId": "bynsjjxzatxndzjkogim",
+    "dashboardLoginVerified": true,
+    "plan": "Free",
+    "managedProjectBackupsAvailable": false,
+    "pitrRequiresUpgrade": true,
+    "restoreToNewProjectRequiresUpgrade": true,
+    "paidUpgradePerformed": false,
+    "logicalArchive": {
+      "createdAt": "2026-09-12T05:21:10.446482+00:00",
+      "sha256": "a55e71cac42e700dcc82fb3a82a633cda468d834aa13d06d943574c9f256433c",
+      "bytes": 774237,
+      "rolesSha256": "951c8e0bc6ca629873a282f202f695ceabc2a4715aa724f677e912054a4646ec",
+      "rolePasswordsIncluded": false,
+      "databaseSessionsReadOnly": true,
+      "snapshotConsistentData": true,
+      "roleMetadataIsSeparateFromDatabaseSnapshot": true
+    },
+    "localRestoration": {
+      "verified": true,
+      "image": "public.ecr.aws/supabase/postgres:17.6.1.156",
+      "tablesChecked": 72,
+      "tableMismatches": [],
+      "roleStatementsChecked": 65,
+      "roleStatementsMatch": true,
+      "sequenceStatesChecked": 4,
+      "sequenceMismatches": [],
+      "migrationVersionsChecked": 35,
+      "migrationVersionsMatch": true,
+      "databaseCreationOwnerSettingsAndAclsReplayed": true,
+      "ownersOrAclsSkipped": false,
+      "elapsedSeconds": 3.32,
+      "network": "none",
+      "publishedPorts": [],
+      "cronExecution": "off",
+      "temporaryContainerRemoved": true,
+      "usedBootstrapSuperuser": true,
+      "floatComparisonSetting": 0
+    },
+    "storage": {
+      "scope": "Owner-only archive and recovery receipts copied outside the releasable worktree to the AniDachi backup directory in the owner Library/Application Support; source hashes verified",
+      "operator": "Codex for the signed-in AniDachi owner",
+      "retentionReviewBy": "2026-09-19",
+      "automaticDeletionConfigured": false,
+      "independentOfWorktree": true,
+      "offDevice": false
+    },
+    "externalState": {
+      "storageBucketsObserved": 0,
+      "storageObjectsObserved": 0,
+      "vaultSecretRecordsObserved": 0,
+      "databaseBackupIncludesStorageObjectBytes": false,
+      "includesVercelBlobContents": false,
+      "includesWorkerDurableObjectState": false,
+      "includesStripeSubscriptions": false,
+      "canonicalChainChangesExternalState": false,
+      "notificationSchedulerMustRemainDisabled": true
+    },
+    "remaining": [
+      "Rehearse in-place hosted application rollback for the exact canonical chain while preserving managed Supabase objects/roles",
+      "Take a fresh checkpoint under established release maintenance; the earlier snapshot is rehearsal evidence",
+      "Account for credentials and platform state not contained in the logical archive; current independent storage is on the same Mac"
+    ],
+    "hostedApplicationRestoration": {
+      "targetProject": "cyppqpprkygjloyfvvvj",
+      "sourceArchiveSha256": "a55e71cac42e700dcc82fb3a82a633cda468d834aa13d06d943574c9f256433c",
+      "restoreVerified": true,
+      "tablesVerified": 35,
+      "tableMismatches": [],
+      "migrationVersionsMatch": true,
+      "restoreSeconds": 27.06,
+      "excludedManagedDefaultPrivileges": [
+        {
+          "schema": "public",
+          "owner": "supabase_admin",
+          "objectType": "SEQUENCES",
+          "tocId": "2588"
+        },
+        {
+          "schema": "public",
+          "owner": "supabase_admin",
+          "objectType": "FUNCTIONS",
+          "tocId": "2590"
+        },
+        {
+          "schema": "public",
+          "owner": "supabase_admin",
+          "objectType": "TABLES",
+          "tocId": "2589"
+        }
+      ],
+      "applicationObjectOwnersAndAclsReplayed": true,
+      "postgresDefaultPrivilegesReplayed": true,
+      "aclCatalogEqualityVerified": false,
+      "globalRoleChangesRequested": false,
+      "managedSchemaChangesRequested": false,
+      "hostedProjectReplacementVerified": false,
+      "temporaryDatabaseRemoved": true,
+      "stagingMigrationCountAfter": 60,
+      "migrationVersionsChecked": 35,
+      "limits": [
+        "Isolated additional database in the existing staging project, using non-superuser postgres; no production connection",
+        "Only public and supabase_migrations restored; Supabase services/default staging database were not modified",
+        "Does not verify a complete hosted project replacement or in-place rollback after the canonical pending migrations",
+        "The measured restore time excludes admission drain, final backup, platform changes and runtime validation"
+      ]
+    },
+    "hostedOperator": {
+      "nativeCliSessionUser": "cli_login_postgres",
+      "effectiveRoleAfterExplicitSetRole": "postgres",
+      "superuser": false,
+      "correctionState": "isolated source correction reviewed; full local synthetic transition and exact CLI-identity entry operations passed; no production operation",
+      "connectorSessionUser": "postgres",
+      "privilegedExtensionMechanism": "supautils",
+      "privilegedRole": "supabase_privileged_role",
+      "pgNetAllowlisted": true,
+      "pgCronAllowlisted": true,
+      "productionPgNetInstalled": false,
+      "productionPgCronVersion": "1.6.4",
+      "publicPublicationRelations": 0,
+      "baselineBridgeAcceptsNativeCli": false,
+      "correctedBridgeSha256": "424eeeb36373efdc50ab07db3520b0abfd33c1b53797f8bc9688b7cf03655d9f",
+      "localVerification": {
+        "observedAt": "2026-09-12T07:24:12.207Z",
+        "operatorRoleChecksPassed": 91,
+        "transitionChecksPassed": 25,
+        "fullEntryOperationsAtPrefixes": [
+          35,
+          60
+        ],
+        "serverTimeoutAndRollbackCleanupVerified": true,
+        "securityReviewOpenFindings": 0,
+        "rehearsalReceipt": "2026-09-12-operator-fence-rehearsal.json",
+        "entryReceipt": "2026-09-12-operator-entry-integration.json",
+        "hostedExecutorVerified": false
+      }
+    },
+    "hostedRehearsalBoundary": {
+      "accessibleProjects": [
+        "bynsjjxzatxndzjkogim",
+        "cyppqpprkygjloyfvvvj"
+      ],
+      "stagingCronDatabase": "postgres",
+      "cronDatabaseSettingContext": "postmaster",
+      "additionalDatabaseSupportsUnchangedFullChain": false,
+      "reason": "pg_cron installs in one configured database per cluster. The canonical chain and preservation bridge need that local extension and cron.job; a sibling staging database cannot provide an independent scheduler without altering working staging or replacing the contract.",
+      "minimumFullHostedTarget": "Independent disposable Supabase PostgreSQL instance with its own postgres/cron, matching non-superuser operator and managed privileges; a production clone is not required.",
+      "alternatives": [
+        "Existing explicitly disposable independent project if available",
+        "New Free-eligible project if entitlement permits",
+        "Exact-byte local recovery rehearsal plus bounded hosted permission checks, keeping the remaining full-hosted gap explicit",
+        "A separately approved temporary paid target after quoting its actual organization cost"
+      ],
+      "projectCreated": false,
+      "planUpgraded": false,
+      "costApproved": false,
+      "checkedOn": "2026-09-12"
+    }
+  },
+  "hostedApplicationProbeObservedAt": "2026-09-12T06:20:21.458865+00:00",
+  "maintenanceCapabilityObservation": {
+    "observedAt": "2026-09-12T06:23:38.548764+00:00",
+    "mutationsPerformed": false,
+    "cloudflare": {
+      "productionScript": "anidachi-api-production",
+      "workersDevEnabled": true,
+      "previewsEnabled": true,
+      "customWorkerDomains": 0,
+      "anidachiZoneWorkerRoutes": 0,
+      "accessEnabled": false,
+      "accessReadErrorCode": 9999,
+      "publicationToggleDocumented": true,
+      "publicationToggleTested": false,
+      "establishedWebsocketDrainVerified": false
+    },
+    "vercel": {
+      "projectId": "prj_E6UFEzEZYaarqkbfLRJFS1lHzNER",
+      "activeCustomFirewallConfiguration": false,
+      "pauseProject503Documented": true,
+      "pauseProjectTested": false,
+      "allHistoricalDeploymentClosureVerified": false
+    },
+    "limits": [
+      "Publication changes do not prove that established sockets, service bindings, cron or Durable Object alarms have stopped",
+      "Current wrangler production workers_dev=true would reenable publication on a later deployment unless closure is explicitly persisted",
+      "Vercel project pause documents production 503 responses, but old deployment URLs and protected operator probes require separate closure validation"
+    ]
+  }
+}

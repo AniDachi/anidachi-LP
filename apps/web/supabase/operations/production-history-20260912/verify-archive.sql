@@ -2,6 +2,11 @@
 do $$
 declare r record; actual_hash text; actual_count bigint; doc jsonb; measured jsonb;
 begin
+ if not (current_user = 'postgres' and (
+  (session_user = 'postgres' and current_setting('role') in ('none','postgres')) or
+  (session_user = 'cli_login_postgres' and current_setting('role') = 'postgres'
+   and pg_catalog.pg_has_role(session_user, 'postgres', 'MEMBER'))
+ )) then raise exception 'OPERATOR_LOGIN_REQUIRED'; end if;
  select document into strict doc from anidachi_transition_20260912.control where singleton;
  if doc <> (select document from pg_temp.transition_input) then raise exception 'TRANSITION_DOCUMENT_DRIFT'; end if;
  if (select count(*) from anidachi_transition_20260912.relations where archived) <> 10 then raise exception 'ARCHIVE_RELATIONS_MISSING'; end if;

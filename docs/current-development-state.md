@@ -37,6 +37,18 @@ describes the source-controlled DB/Worker/Web hold and its future unlock.
 Source preparation does not mean that production is already frozen: existing
 queued deployments and external Vercel promotion require operator verification.
 
+The [production preparation plan](superpowers/plans/2026-09-12-production-promotion-preparation.md)
+now records a complete real logical backup/local restore and a narrower hosted
+application restore. Copies are retained outside the worktree on the same Mac.
+The native CLI operator fence has a reviewed correction, 91 real SQL role checks,
+and a fresh full synthetic migration/recovery rehearsal bound to the new bytes.
+These are preparation results: production remains unchanged. The complete hosted
+rollback needs an independent disposable instance because staging's cron is bound
+to its default database; a sibling database cannot exercise the unchanged chain.
+External traffic maintenance, the hosted executor, a final stable checkpoint and
+the existing activation/physical-media gates remain open. No new paid environment
+or plan upgrade has been authorized or created.
+
 ## Friends and groups editor, 2026-09-11
 
 Implementation and local verification are complete. The database prerequisite
