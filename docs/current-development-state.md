@@ -56,8 +56,20 @@ then resume staging before scheduling production. The
 [database command package](releases/personal-history-mvp/free-hosted-rehearsal.md)
 describe that candidate. Its small artifact builder is offline and rejects both
 existing project refs; it is not a production executor. No pause, temporary
-project or cloud change is included in the source preparation. Shared Vercel
+project or cloud change was included in the source preparation. Shared Vercel
 project pause is explicitly excluded from a staging-only window.
+
+The subsequently authorized Free window is now closed: staging was restored and
+verified within 45 minutes, and the disposable synthetic project was deleted.
+The unchanged 35 -> 60 chain and recovery of all 35 application/history table
+digests passed, but **hosted recovery acceptance failed**: default privileges
+left surplus object grants after restore, and a platform-created managed role
+remained after `pg_net` removal. Maintenance stayed held on the rehearsal target.
+The [recorded correction gate](releases/personal-history-mvp/free-hosted-rehearsal.md#executed-result-and-correction-gate)
+requires exact transactional ACL restoration and supported treatment of the
+managed-role difference before a fresh hosted run. Staging history, Inbox and
+normal extension room creation/completion were verified after resume. Production
+remains unchanged; Tasks 2/4 and the separate production gates are not complete.
 
 A default-open [application admission gate](releases/personal-history-mvp/maintenance-admission.md)
 is prepared in source for Web and Worker. When explicitly configured closed, it

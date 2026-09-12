@@ -6,18 +6,38 @@ staging pause, project creation/deletion, production release or plan upgrade.
 Agree the window with the owner after the command package is reviewed. The
 production transition still follows the [release contract](production-35-to-60-transition.md).
 
+## Executed window, 2026-09-12
+
+The owner-authorized zero-cost window is **closed**. It started at 11:18:55 UTC;
+staging restoration and final checks completed at 12:01:45 UTC, within the
+45-minute bound. The temporary synthetic project was deleted, and only the two
+original projects remain. No plan upgrade or production change occurred.
+
+Staging returned to its exact 60-version migration baseline, original three
+active jobs, scheduler settings, Worker publication flags and Worker version.
+Worker health/auth checks passed; the authorized account loaded history and
+Inbox, and the loaded extension created and ended a room through the normal
+flow. No invitation was sent. The shared Vercel project was not paused.
+
+The [database recovery result](free-hosted-rehearsal.md#executed-result-and-correction-gate)
+failed acceptance on object privileges and a residual managed role despite
+matching restored rows. Receipts and the original synthetic archive were
+preserved with verified independent copies outside Git. No rehearsal hold was
+released. A fresh window requires corrected, reviewed recovery commands and a
+new agreed staging pause; the completed window does not remain active.
+
 ## Targets and cost boundary
 
-Read-only control-plane inspection on 2026-09-12 confirmed:
+The 2026-09-12 control-plane and final restoration checks confirmed:
 
 | Purpose | Project | Organization | State |
 | --- | --- | --- | --- |
 | Production, never pause for this rehearsal | `anidachi-prod` / `bynsjjxzatxndzjkogim` | `swqtnczsqxubsecedcjp` | `ACTIVE_HEALTHY`, PG 17.6.1.127 |
 | Staging, temporarily paused only in the agreed window | `anidachi` / `cyppqpprkygjloyfvvvj` | Same organization | `ACTIVE_HEALTHY`, PG 17.6.1.121 |
-| Rehearsal | A newly created, explicitly disposable project; record its returned ref | Proposed: same organization | Not created |
+| Rehearsal | Disposable synthetic project; exact identity retained in the private receipt | Same organization, zero-cost Free entitlement verified | Created for this window, then deleted |
 
-The organization is **George-Kreatli's Org**, currently `free`. Ask the owner to
-confirm that organization with the window, and recheck creation eligibility/cost
+The organization is **George-Kreatli's Org**, verified `free` for this window.
+For a future window, confirm its scope and recheck creation eligibility/cost
 before creating anything. Supabase allows two active Free projects across the
 owner/admin's organizations; paused projects do not consume a slot. Do not create
 another organization, buy Pro, enable a clone/PITR/add-on, or assume that a

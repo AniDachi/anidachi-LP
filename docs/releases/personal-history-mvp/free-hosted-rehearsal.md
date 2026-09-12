@@ -1,6 +1,6 @@
 # Free hosted 35 -> 60 -> 35 rehearsal commands
 
-Status: **candidate for the temporary Free project; no hosted pass claimed**.
+Status: **hosted rehearsal executed on 2026-09-12; recovery acceptance failed**.
 This prepares Tasks 2 and 4 of the [production preparation plan](../../superpowers/plans/2026-09-12-production-promotion-preparation.md).
 Production remains withheld by the [transition contract](production-35-to-60-transition.md).
 The separate [staging pause/resume window](free-rehearsal-window.md) must be agreed
@@ -12,6 +12,44 @@ normal CLI history, existing bridge SQL and a new project's real non-superuser
 operator. It is not a production executor, a production clone, or a full managed
 cluster restore. Retain the existing real recovery archive and its independent
 copy. None of the cleanup below deletes local backups.
+
+## Executed result and correction gate
+
+The candidate at `c0b0bb93` ran in an isolated, synthetic Free project under
+ordinary non-superuser `postgres`. The agreed staging-only window finished with
+staging restored and verified; the disposable project was deleted. Production
+and existing deployment versions remained unchanged. Private receipts and the
+original immutable archive have independently verified copies outside Git.
+
+- The unchanged native 35 -> 60 migration chain passed. Same-database cleanup
+  and application restoration committed, recovering the exact ordered 35
+  migration versions and all 35 application/history table digests.
+- Original bridge verification and service-role INSERT, UPDATE, DELETE and
+  TRUNCATE rejection probes passed. Maintenance was never released.
+- **Object privileges did not match:** 108 surplus grants to `anon` and
+  `authenticated` remained across 41 functions and 13 tables. Surviving default
+  privileges applied when the restore recreated objects; replaying the archive's
+  object ACL statements did not remove these additions. Equal rows and a
+  committed restore transaction are insufficient recovery acceptance.
+- **Managed roles did not match:** the platform's `pg_net` installation trigger
+  created `supabase_functions_admin`, which remained after extension removal.
+  It has LOGIN and CREATEROLE. Zero dependencies or memberships do not establish
+  that this residual role is safe. Do not remove, disable or alter managed roles
+  as an unreviewed cleanup step, or seed the baseline to hide this difference.
+- Interrupted-prefix recovery and hold-release probes were not executed.
+
+**Do not rerun the unchanged command package as an accepted recovery procedure.**
+Before a fresh hosted run, bind a complete baseline application-object privilege
+snapshot to the immutable artifacts. Reconcile exact privileges, grant options,
+owners and grantors inside the cleanup/restore transaction, with an equality
+assertion before commit. Preserve legitimate client grants and existing default
+privileges; reject unsupported owners, grantors or object/column ACL forms rather
+than applying blanket revocations or changing managed catalogs. Test this under
+PostgreSQL 17 non-superuser privileges with surviving default ACLs and forced
+transaction failure. Separately resolve the residual managed role through a
+supported platform procedure or an explicitly reviewed recovery policy. These
+corrections are requirements, **not implemented behavior** of the commands below.
+Task 2/4 recovery gates and production promotion remain open.
 
 ## 1. Prepare tools, target and local artifacts
 
