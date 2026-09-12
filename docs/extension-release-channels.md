@@ -1,6 +1,6 @@
 # Anidachi Extension Release Channels
 
-Last updated: 2026-08-19.
+Last updated: 2026-09-13.
 
 This document describes the current Chrome extension release setup. Treat it as the
 source of truth for the current implementation, not as a permanent product contract.
@@ -15,7 +15,7 @@ Anidachi uses three extension channels.
 | --- | --- | --- | --- | --- |
 | `local` | `Anidachi Local MVP` | Local development and broad site experiments | `http://localhost:3003` by default | `http://127.0.0.1:8787` / `ws://127.0.0.1:8787` by default |
 | `staging` | `Anidachi Staging` | Stable unpacked artifact for founders/testers | `https://staging.anidachi.app` | `https://anidachi-api-staging.vladislav-gul7.workers.dev` / `wss://anidachi-api-staging.vladislav-gul7.workers.dev` |
-| `production` | `Anidachi` | Future public user build; extension auth fail-closed | `https://www.anidachi.app` | `https://anidachi-api-production.vladislav-gul7.workers.dev` / `wss://anidachi-api-production.vladislav-gul7.workers.dev` |
+| `production` | `Anidachi` | Production ZIP for owner testing and the approved store identity | `https://www.anidachi.app` | `https://anidachi-api-production.vladislav-gul7.workers.dev` / `wss://anidachi-api-production.vladislav-gul7.workers.dev` |
 
 The channel is selected with `WXT_EXTENSION_CHANNEL`.
 
@@ -32,24 +32,36 @@ Channel sources:
   development experiments; web defaults to localhost.
 - `staging`: unpacked artifact from the `staging` branch; narrow permissions
   only; web is `https://staging.anidachi.app`.
-- `production`: future artifact from the `main` branch; narrow permissions
-  only; web is `https://www.anidachi.app`. It currently has no approved
-  extension identity and cannot connect to web auth.
+- `production`: artifact from the `main` branch; narrow permissions
+  only; web is `https://www.anidachi.app`. The owner supplied the existing store
+  item's public key on 2026-09-13 and authorized using that identity for production.
 
-Local and staging have separate stable Chromium identities derived from
+All channels have separate stable Chromium identities derived from
 repository-controlled public manifest keys:
 
 | Channel | Exact extension ID | Auth callback origin |
 | --- | --- | --- |
 | `local` | `nkinhhgigcflmfhilmcakbkongcpkfnl` | `https://nkinhhgigcflmfhilmcakbkongcpkfnl.chromiumapp.org` |
 | `staging` | `ndkfphbchhfephdodcpehdcoclojagje` | `https://ndkfphbchhfephdodcpehdcoclojagje.chromiumapp.org` |
-| `production` | none | none; fail closed |
+| `production` | `gpkolofebdhfpapbbgdkdkmlmjfidgmn` | `https://gpkolofebdhfpapbbgdkdkmlmjfidgmn.chromiumapp.org` |
 
 The manifest `key` contains public material only. Never create, persist, or
-commit a corresponding private key. Each local/staging web environment sets the
+commit a corresponding private key. Each web environment sets the
 single `ANIDACHI_EXTENSION_CLIENT_ID` variable to its exact matching ID. Only
 the exact `/auth` and `/logout` paths are accepted; suffix wildcards and
 cross-channel IDs are forbidden.
+
+The production ID belongs to the owner's existing store item formerly named
+`Anidachi Staging`; it is different from the current unpacked staging ID above.
+The production ZIP embeds that item's public key. Its website environment needs
+`ANIDACHI_EXTENSION_CLIENT_ID=gpkolofebdhfpapbbgdkdkmlmjfidgmn`, followed by a
+production deployment. The existing exact callback, PKCE and one-time-code
+checks remain unchanged. A missing or mismatched configuration still rejects login.
+
+First deliver the production ZIP for owner testing. Store renaming, a new package
+submission and public download/sales launch are later delivery steps, not effects
+of committing the key. Unpacked updates and the eventual store installation are
+manual; matching IDs do not turn an unpacked install into store auto-updates.
 
 The staging web URL is internal tester infrastructure. It may appear in staging
 extension builds, OAuth callback allowlists, and internal docs, but it must stay
@@ -178,8 +190,8 @@ Before distributing an artifact, inspect `manifest.json` and the debug panel bui
 Pre-upload checklist:
 
 - `manifest.name` matches the channel.
-- Local and staging `manifest.key` values derive the exact channel ID above.
-- Production has no `manifest.key` and no approved web-auth identity.
+- Every release `manifest.key` derives the exact channel ID above.
+- Production web auth is configured for its exact ID on the deployed environment.
 - `manifest.version_name` contains the current git SHA, channel name, and CI run
   number or build timestamp.
 - `host_permissions` does not contain `http://*/*`, `https://*/*`, `file:///*`,

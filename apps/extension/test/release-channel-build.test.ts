@@ -16,6 +16,7 @@ import { describe, expect, it } from "vitest";
 const repoRoot = resolve(process.cwd(), "../..");
 const BUILD_TEST_TIMEOUT_MS = 30_000;
 const stagingId = "ndkfphbchhfephdodcpehdcoclojagje";
+const productionId = "gpkolofebdhfpapbbgdkdkmlmjfidgmn";
 const broadPatterns = ["http://*/*", "https://*/*", "file:///*", "<all_urls>"];
 const localHostPermissions = [
   "http://127.0.0.1/*",
@@ -182,7 +183,8 @@ describe.sequential("extension release channel builds", () => {
 
     const manifest = manifestAt("anidachi-extension-public/manifest.json");
     expect(manifest.name).toBe("Anidachi");
-    expect(manifest.key).toBeUndefined();
+    expect(manifest.key).toBeTypeOf("string");
+    expect(deriveId(manifest.key ?? "")).toBe(productionId);
     expect(manifest.permissions ?? []).not.toContain("downloads");
     expectExact(manifest.host_permissions, productionHostPermissions);
     expectExact(contentMatches(manifest), videoHosts);
@@ -266,6 +268,28 @@ describe.sequential("extension release channel builds", () => {
       {},
     );
     expect(ignoreCheck.status, ignoreCheck.stderr).toBe(0);
+  });
+
+  it("rejects a production artifact without its approved public key", () => {
+    const manifest = manifestAt("anidachi-extension-public/manifest.json");
+    delete manifest.key;
+
+    const result = validateFixture(manifest);
+    expect(result.status).not.toBe(0);
+    expect(`${result.stdout}\n${result.stderr}`).toContain(
+      "production artifact is missing its stable public manifest key",
+    );
+  });
+
+  it("rejects a production artifact carrying the staging identity", () => {
+    const manifest = manifestAt("anidachi-extension-public/manifest.json");
+    manifest.key = manifestAt("anidachi-extension-staging/manifest.json").key;
+
+    const result = validateFixture(manifest);
+    expect(result.status).not.toBe(0);
+    expect(`${result.stdout}\n${result.stderr}`).toContain(
+      `Expected production extension ID ${productionId}, got ${stagingId}`,
+    );
   });
 
   it("rejects an otherwise valid production artifact with an extra host", () => {

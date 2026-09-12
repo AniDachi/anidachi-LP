@@ -29,6 +29,8 @@ import {
 import {
   LOCAL_EXTENSION_ID,
   LOCAL_EXTENSION_MANIFEST_KEY,
+  PRODUCTION_EXTENSION_ID,
+  PRODUCTION_EXTENSION_MANIFEST_KEY,
   STAGING_EXTENSION_ID,
   STAGING_EXTENSION_MANIFEST_KEY,
   deriveChromiumExtensionId,
@@ -148,7 +150,7 @@ describe("extension auth client", () => {
     expect(first.codeChallengeMethod).toBe("S256");
   });
 
-  it("derives stable local and staging IDs from committed public keys only", () => {
+  it("derives distinct stable channel IDs from committed public keys only", () => {
     expect(deriveChromiumExtensionId(LOCAL_EXTENSION_MANIFEST_KEY)).toBe(
       "nkinhhgigcflmfhilmcakbkongcpkfnl",
     );
@@ -156,9 +158,14 @@ describe("extension auth client", () => {
       "ndkfphbchhfephdodcpehdcoclojagje",
     );
     expect(LOCAL_EXTENSION_ID).not.toBe(STAGING_EXTENSION_ID);
+    expect(PRODUCTION_EXTENSION_ID).toBe("gpkolofebdhfpapbbgdkdkmlmjfidgmn");
+    expect(PRODUCTION_EXTENSION_ID).not.toBe(LOCAL_EXTENSION_ID);
+    expect(PRODUCTION_EXTENSION_ID).not.toBe(STAGING_EXTENSION_ID);
     expect(getExtensionManifestKey("local")).toBe(LOCAL_EXTENSION_MANIFEST_KEY);
     expect(getExtensionManifestKey("staging")).toBe(STAGING_EXTENSION_MANIFEST_KEY);
-    expect(getExtensionManifestKey("production")).toBeUndefined();
+    expect(getExtensionManifestKey("production")).toBe(
+      PRODUCTION_EXTENSION_MANIFEST_KEY,
+    );
   });
 
   it("builds the website extension logout URL", () => {

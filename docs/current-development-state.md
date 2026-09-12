@@ -39,6 +39,24 @@ job and remove the Vercel ignored-build hold. This records database completion;
 Web/Worker promotion and production extension identity/distribution are still
 pending until their actual deployment results are recorded.
 
+## Production extension identity, 2026-09-13
+
+The owner authorized reusing the existing Chrome Web Store item formerly named
+`Anidachi Staging` for production and supplied its RSA public key. The production
+ID is `gpkolofebdhfpapbbgdkdkmlmjfidgmn`; it differs from the unchanged local and
+unpacked staging identities. Production ZIP builds now embed this public key,
+and artifact validation rejects missing or cross-channel keys. The production
+web environment must accept that exact ID through `ANIDACHI_EXTENSION_CLIENT_ID`
+and a fresh deployment. Auth callbacks, PKCE and one-time exchanges are unchanged.
+
+The immediate delivery is a ZIP for the owner's tests on production. Source and
+artifact checks do not claim an installed-browser login or store publication;
+record the target deployment and delivered ZIP in the PR/release receipt.
+Public download/sales launch and store resubmission follow owner acceptance.
+The prior main promotion has deployed compatible Web and Worker runtimes; old
+transition notes below are historical. This step does not activate the separate
+commercial/media policy or change account/billing data.
+
 ## Prelaunch remediation, 2026-09-12
 
 The [remediation plan](superpowers/plans/2026-09-12-prelaunch-remediation.md)
@@ -916,8 +934,9 @@ branches.
 `production`:
 
 - Extension name: `Anidachi`
-- Has no approved identity or manifest key in the current pre-release phase
-- Web connection therefore fails closed until an explicit production cutover
+- Stable production/store ID: `gpkolofebdhfpapbbgdkdkmlmjfidgmn`
+- Uses the owner-supplied public manifest key; web login requires the matching
+  production `ANIDACHI_EXTENSION_CLIENT_ID` configuration and deployment
 - Uses production web/API endpoints
 - Uses narrow release permissions for YouTube, Crunchyroll, Anidachi web, and
   production Worker hosts

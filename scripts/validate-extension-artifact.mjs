@@ -115,7 +115,7 @@ const expectedByChannel = {
     ],
     contentMatches: videoHosts,
     buildIdPart: "-production-",
-    extensionId: null,
+    extensionId: "gpkolofebdhfpapbbgdkdkmlmjfidgmn",
   },
 };
 const expected = expectedByChannel[channel];
@@ -141,18 +141,14 @@ if (!manifest.version_name?.includes(expected.buildIdPart)) {
   );
 }
 
-if (expected.extensionId) {
-  if (!manifest.key) {
-    throw new Error(`${channel} artifact is missing its stable public manifest key`);
-  }
-  const actualExtensionId = deriveChromiumExtensionId(manifest.key);
-  if (actualExtensionId !== expected.extensionId) {
-    throw new Error(
-      `Expected ${channel} extension ID ${expected.extensionId}, got ${actualExtensionId}`,
-    );
-  }
-} else if (manifest.key !== undefined) {
-  throw new Error("Production must remain fail-closed without an approved manifest key");
+if (!manifest.key) {
+  throw new Error(`${channel} artifact is missing its stable public manifest key`);
+}
+const actualExtensionId = deriveChromiumExtensionId(manifest.key);
+if (actualExtensionId !== expected.extensionId) {
+  throw new Error(
+    `Expected ${channel} extension ID ${expected.extensionId}, got ${actualExtensionId}`,
+  );
 }
 
 for (const required of [expected.web, expected.api]) {

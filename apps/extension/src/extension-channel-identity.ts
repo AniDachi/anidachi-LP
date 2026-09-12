@@ -16,6 +16,9 @@ export const LOCAL_EXTENSION_MANIFEST_KEY =
   "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArdb3yWhwaq8CTVKGA3X+DpMU4WsXvWqRegTLEtOVmEINxuDNadym/K01l9mlMwkDFux9mwa3K4Vn0jW/IrBbCjVEoocmzLPZOh5sMrqhtFtboj+hHEdfKjqXZaTAzenCJzarIHQT/rOKfV+sRGjCbaxPzb2svOswUlYa7aHOsM1XYybNXfVsj4uw87iWjSwU66Q9/RfL5sGV6qq24ZZy6qlmlibwAea+2ZzUwbvAOOvqhenG4AdhWhLKVnHa1+9PkYWrfJu9ifQW+l+HkpoKQQ82zKEXaU9nn1A1cn5D51eryWg1qA9OGEnj6yISBfyF7LFk5Kl+/qQWV2D0PsclYQIDAQAB";
 export const STAGING_EXTENSION_MANIFEST_KEY =
   "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmGnHyF+eB7g2WFus9eJkTJbaLBEurgFoMb9iJ5QYU0X7pNcx66ZnOHaa4gsNT5auQVXZxwejwUwBqr/pko/e3kSxZPWV9/UUFkvUTkhGxnge14Dt2G9JFV4LqmdSQu4U+DPVpQ2rCDGuhXL/11oeJKTjk0l9MG21V5FknwftQe+xYbwUIzeOeIFdkhkeGMGLPwJZxRH1QmkmHWU4SuPN9BEeyst9kd9ynpEhD+ki8vw1qpTUCPFJFDgAaHD7Ea/MdLxK3iZQq91gPtOCzTAy9Ar411atlnIIYATcESz3D8z8Pnoi3wuXK/YekMZYrR2/rSH6ArBaUxUuziJ1DXUeKwIDAQAB";
+// Public key supplied by the owner for the existing Chrome Web Store item.
+export const PRODUCTION_EXTENSION_MANIFEST_KEY =
+  "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsASBML2m760sY29reUr0tGNnlo9XE21NlKojLhlA9v7nPzdAueRUrRh/5/22STfJbUOSqKQtmVJV+QdJSmd5IFeE06vCF+ez/gm6N64W2/EI+1p9NhGfsyACazCKsaWoelTQl/W1tizPr7IzfrL1jTFuyZGjlNIDjT39qxadYPyam8x4PSkC45tHXWPqZ5V5C0aL+QLi8P2JEhoi9m7S++ON9zolyI0siMmkbumAHBvKsC8AXCHWTBRRJGGnHGnh4LYC0X0dhaKz7iEJIjK4as0XRjvwF8YkQFLzSyvhU279yBnb8YxC/LHrGNheQtRM+3EexE4J8hQj3bBcwg+QGwIDAQAB";
 
 export function deriveChromiumExtensionId(manifestKey: string): string {
   const digest = createHash("sha256")
@@ -35,11 +38,14 @@ export const LOCAL_EXTENSION_ID = deriveChromiumExtensionId(
 export const STAGING_EXTENSION_ID = deriveChromiumExtensionId(
   STAGING_EXTENSION_MANIFEST_KEY,
 );
+export const PRODUCTION_EXTENSION_ID = deriveChromiumExtensionId(
+  PRODUCTION_EXTENSION_MANIFEST_KEY,
+);
 
 export function getExtensionManifestKey(
   channel: ExtensionChannel,
 ): string | undefined {
   if (channel === "local") return LOCAL_EXTENSION_MANIFEST_KEY;
   if (channel === "staging") return STAGING_EXTENSION_MANIFEST_KEY;
-  return undefined;
+  return PRODUCTION_EXTENSION_MANIFEST_KEY;
 }
