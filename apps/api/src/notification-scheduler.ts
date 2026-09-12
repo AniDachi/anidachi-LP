@@ -1,7 +1,9 @@
+import { parseMaintenanceMode } from "@anidachi/protocol";
 import type { Env } from "./index";
 
 type SchedulerEnv = Pick<
 	Env,
+	| "ANIDACHI_MAINTENANCE_MODE"
 	| "ANIDACHI_ENV"
 	| "ANIDACHI_WEB_INTERNAL_BASE_URL"
 	| "ANIDACHI_INTERNAL_API_SECRET"
@@ -40,6 +42,11 @@ export const scheduled: ExportedHandlerScheduledHandler<SchedulerEnv> = async (
 	_event,
 	env,
 ) => {
+	// Leave durable queued work in Web untouched; do not even read delivery config.
+	if (parseMaintenanceMode(env.ANIDACHI_MAINTENANCE_MODE) === "closed") {
+		console.info("[anidachi/inbox-push] scheduler", { outcome: "maintenance_skipped" });
+		return;
+	}
 	const startedAt = performance.now();
 	const controller = new AbortController();
 	let timer: ReturnType<typeof setTimeout> | undefined;

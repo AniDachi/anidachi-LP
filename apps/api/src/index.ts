@@ -22,6 +22,8 @@ import {
 } from "./room-presence-evidence";
 import { scheduled } from "./notification-scheduler";
 import {
+  parseMaintenanceMode,
+  maintenanceHttpResponse,
   ClientEventSchema,
   InternalRoomDetachCommandSchema,
   InternalRoomDepartureCommandSchema,
@@ -131,6 +133,7 @@ import {
 } from "./telemetry";
 
 export interface Env {
+  ANIDACHI_MAINTENANCE_MODE?: string;
   ROOMS: DurableObjectNamespace;
   CLOUDFLARE_TURN_KEY_ID?: string;
   CLOUDFLARE_TURN_KEY_API_TOKEN?: string;
@@ -153,7 +156,29 @@ app.use(
   }),
 );
 
-app.get("/", (c) => c.json({ ok: true, service: "anidachi-api" }));
+// CORS handles harmless preflights first. Existing sockets and DO alarms are separate.
+app.use("*", async (c, next) => {
+  if (
+    parseMaintenanceMode(c.env.ANIDACHI_MAINTENANCE_MODE) === "closed" &&
+    !(c.req.method === "GET" && c.req.path === "/")
+  ) {
+    const { body, status, headers } = maintenanceHttpResponse();
+    return c.json(body, status, headers);
+  }
+  await next();
+});
+
+app.get("/", (c) => {
+  if (parseMaintenanceMode(c.env.ANIDACHI_MAINTENANCE_MODE) === "closed") {
+    // Configured admission status is not evidence of global drain or readiness.
+    return c.json(
+      { ok: true, service: "anidachi-api", maintenance: "closed" },
+      200,
+      { "Cache-Control": "no-store" },
+    );
+  }
+  return c.json({ ok: true, service: "anidachi-api" });
+});
 
 app.post("/internal/rooms/:roomId/end", async (c) => {
   const authorization = c.req.header("authorization") ?? null;

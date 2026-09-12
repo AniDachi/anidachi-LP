@@ -30,10 +30,10 @@
     "semantic_hash": "10c7ffb4e1227855af283f14bd0ec83d"
   },
   "apps/api/src/index.ts": {
-    "mtime": 1789146711.2847426,
-    "seen": 1789154161.7187688,
-    "ast_hash": "35c33de0a33807c8639ec84873b6deac",
-    "semantic_hash": "35c33de0a33807c8639ec84873b6deac"
+    "mtime": 1789204239.8689978,
+    "seen": 1789204933.064848,
+    "ast_hash": "e51b2b4adc96b42174ffaa74cfaeb947",
+    "semantic_hash": "e51b2b4adc96b42174ffaa74cfaeb947"
   },
   "apps/api/src/internal-auth.ts": {
     "mtime": 1789146711.28526,
@@ -3024,10 +3024,10 @@
     "semantic_hash": "770d4ee1fc72b122d4c38edde6705a8a"
   },
   "apps/web/middleware.ts": {
-    "mtime": 1789146711.4497018,
-    "seen": 1789154161.7193742,
-    "ast_hash": "f77c79a47626de661502215dd6a656c5",
-    "semantic_hash": "f77c79a47626de661502215dd6a656c5"
+    "mtime": 1789204239.8691192,
+    "seen": 1789204933.065364,
+    "ast_hash": "a523c79c27fec42c3b3a4c1692103bb0",
+    "semantic_hash": "a523c79c27fec42c3b3a4c1692103bb0"
   },
   "apps/web/next.config.ts": {
     "mtime": 1789146711.44977,
@@ -3234,10 +3234,10 @@
     "semantic_hash": "008cbb7aa3e7e7917fd1e68946868fb6"
   },
   "packages/protocol/src/index.ts": {
-    "mtime": 1789146711.5874758,
-    "seen": 1789154161.719458,
-    "ast_hash": "38d9c379c73f92bf9af8c4eaf21c5ba6",
-    "semantic_hash": "38d9c379c73f92bf9af8c4eaf21c5ba6"
+    "mtime": 1789204003.7472725,
+    "seen": 1789204933.0654411,
+    "ast_hash": "f1034969bdd757a2872b13fa36b204c0",
+    "semantic_hash": "f1034969bdd757a2872b13fa36b204c0"
   },
   "packages/protocol/src/limits.ts": {
     "mtime": 1789146711.5875428,
@@ -3606,10 +3606,10 @@
     "semantic_hash": "4e0420e077e5ebc55dbe7b2187df7832"
   },
   "docs/current-development-state.md": {
-    "mtime": 1789197413.2246232,
-    "seen": 1789198673.269346,
-    "ast_hash": "09b734dda6d63fe8d46686f411d59202",
-    "semantic_hash": "09b734dda6d63fe8d46686f411d59202"
+    "mtime": 1789237500.302736,
+    "seen": 1789238524.1553762,
+    "ast_hash": "cdc3714c3f70e0cc065e325443aa6e33",
+    "semantic_hash": "cdc3714c3f70e0cc065e325443aa6e33"
   },
   "docs/development-environments.md": {
     "mtime": 1788807642.3055499,
@@ -3624,10 +3624,10 @@
     "semantic_hash": "b0979d5c3588dbbfd34ff46d5274f5d2"
   },
   "docs/environment-and-secrets-matrix.md": {
-    "mtime": 1788807642.3057497,
-    "seen": 1788858338.333644,
-    "ast_hash": "5546abeaebce928b1c91332e1d433452",
-    "semantic_hash": "5546abeaebce928b1c91332e1d433452"
+    "mtime": 1789203994.523161,
+    "seen": 1789204933.065473,
+    "ast_hash": "5d2afd928cd64c50a33868868eeb8d2b",
+    "semantic_hash": "5d2afd928cd64c50a33868868eeb8d2b"
   },
   "docs/experimental-features.md": {
     "mtime": 1788807642.3059926,
@@ -6306,16 +6306,16 @@
     "semantic_hash": "b9903c5bd35d97b8264f50d0772ce3f1"
   },
   "apps/api/src/notification-scheduler.ts": {
-    "mtime": 1789146711.2854137,
-    "seen": 1789154161.718772,
-    "ast_hash": "d1c20ecd19cf5d0890162fd4a3c8617b",
-    "semantic_hash": "d1c20ecd19cf5d0890162fd4a3c8617b"
+    "mtime": 1789204239.8688464,
+    "seen": 1789204933.0648499,
+    "ast_hash": "850115544378bb1757f5a19759766a1f",
+    "semantic_hash": "850115544378bb1757f5a19759766a1f"
   },
   "apps/api/test/notification-scheduler.test.ts": {
-    "mtime": 1789146711.2871966,
-    "seen": 1789154161.718787,
-    "ast_hash": "c259c2f918b859f446a6042172d956f5",
-    "semantic_hash": "c259c2f918b859f446a6042172d956f5"
+    "mtime": 1789204003.749806,
+    "seen": 1789204933.064864,
+    "ast_hash": "aacd950812ae3018ce38c078a32c76d2",
+    "semantic_hash": "aacd950812ae3018ce38c078a32c76d2"
   },
   "apps/api/test/runtime/notification-scheduler-runtime.ts": {
     "mtime": 1789146711.2886593,
@@ -7884,10 +7884,10 @@
     "semantic_hash": "34b84da7ca09aa79f5d0d42c63286066"
   },
   "docs/releases/personal-history-mvp/production-35-to-60-transition.md": {
-    "mtime": 1789197322.1264842,
-    "seen": 1789198673.269346,
-    "ast_hash": "7b89beb903e18f305d41ce7be595cd97",
-    "semantic_hash": "7b89beb903e18f305d41ce7be595cd97"
+    "mtime": 1789229638.829643,
+    "seen": 1789232433.690686,
+    "ast_hash": "ae7616ad7dc740503a6369f4cecfc7b4",
+    "semantic_hash": "ae7616ad7dc740503a6369f4cecfc7b4"
   },
   "docs/superpowers/plans/2026-09-11-extension-inbox-polish.md": {
     "mtime": 1789146711.4960988,
@@ -7938,9 +7938,111 @@
     "semantic_hash": "5ee0c506fe97362023ed1e97ae29ad5a"
   },
   "docs/superpowers/plans/2026-09-12-production-promotion-preparation.md": {
-    "mtime": 1789197322.126786,
-    "seen": 1789198673.269346,
-    "ast_hash": "d07eee71ac826b455446f0bbaf75cb39",
-    "semantic_hash": "d07eee71ac826b455446f0bbaf75cb39"
+    "mtime": 1789237500.3769112,
+    "seen": 1789238524.155377,
+    "ast_hash": "1499a3600d71a9d5c75968f4e24d474c",
+    "semantic_hash": "1499a3600d71a9d5c75968f4e24d474c"
+  },
+  "apps/api/test/maintenance.test.ts": {
+    "mtime": 1789204068.949726,
+    "seen": 1789204933.064862,
+    "ast_hash": "480ff21443d5aa973e0c9d822a7af955",
+    "semantic_hash": "480ff21443d5aa973e0c9d822a7af955"
+  },
+  "apps/api/test/runtime/maintenance-runtime.ts": {
+    "mtime": 1789204179.2812085,
+    "seen": 1789204933.064873,
+    "ast_hash": "c10a63afd2fa0bab8f51a93a458ee47e",
+    "semantic_hash": "c10a63afd2fa0bab8f51a93a458ee47e"
+  },
+  "apps/web/lib/maintenance-middleware.test.ts": {
+    "mtime": 1789204179.2810786,
+    "seen": 1789204933.0653389,
+    "ast_hash": "ebf2c19d1c8bf6cd4a300fbf5aae7f0d",
+    "semantic_hash": "ebf2c19d1c8bf6cd4a300fbf5aae7f0d"
+  },
+  "packages/protocol/src/maintenance.ts": {
+    "mtime": 1789204003.7115285,
+    "seen": 1789204933.065442,
+    "ast_hash": "0fdb2271dca6cc89bcf426a8f544bac7",
+    "semantic_hash": "0fdb2271dca6cc89bcf426a8f544bac7"
+  },
+  "packages/protocol/test/maintenance.test.ts": {
+    "mtime": 1789203938.8364983,
+    "seen": 1789204933.065452,
+    "ast_hash": "25f3c5da6dc60fc654aa4859d0ed9587",
+    "semantic_hash": "25f3c5da6dc60fc654aa4859d0ed9587"
+  },
+  "docs/releases/personal-history-mvp/maintenance-admission.md": {
+    "mtime": 1789208989.0177526,
+    "seen": 1789210297.5976808,
+    "ast_hash": "191dfe3314dc9b2038c11570ba6c24e5",
+    "semantic_hash": "191dfe3314dc9b2038c11570ba6c24e5"
+  },
+  "scripts/production-history-hosted-artifacts.mjs": {
+    "mtime": 1789209946.191279,
+    "seen": 1789210297.5976708,
+    "ast_hash": "5022fd5dde79336389e272a17c3f9a69",
+    "semantic_hash": "5022fd5dde79336389e272a17c3f9a69"
+  },
+  "scripts/production-history-hosted-artifacts.test.mjs": {
+    "mtime": 1789209946.6599498,
+    "seen": 1789210297.597672,
+    "ast_hash": "49414d8868919af8d041d7b2bf3073d5",
+    "semantic_hash": "49414d8868919af8d041d7b2bf3073d5"
+  },
+  "docs/releases/personal-history-mvp/free-hosted-rehearsal.md": {
+    "mtime": 1789237644.4305692,
+    "seen": 1789238524.1553762,
+    "ast_hash": "ff94e30b8b2d4be2d90279a565d4af86",
+    "semantic_hash": "ff94e30b8b2d4be2d90279a565d4af86"
+  },
+  "docs/releases/personal-history-mvp/free-rehearsal-window.md": {
+    "mtime": 1789237500.2293243,
+    "seen": 1789238524.155377,
+    "ast_hash": "f80d13bf966ac543f0d0ecaf92268816",
+    "semantic_hash": "f80d13bf966ac543f0d0ecaf92268816"
+  },
+  "scripts/production-history-application-acl.integration.mjs": {
+    "mtime": 1789217279.846971,
+    "seen": 1789217951.3091671,
+    "ast_hash": "f437040846799217129a4d53fad77f96",
+    "semantic_hash": "f437040846799217129a4d53fad77f96"
+  },
+  "scripts/production-history-application-acl.mjs": {
+    "mtime": 1789217160.1362643,
+    "seen": 1789217951.309168,
+    "ast_hash": "8cf832a780eec9693d44a1a84b4007a1",
+    "semantic_hash": "8cf832a780eec9693d44a1a84b4007a1"
+  },
+  "scripts/production-history-application-acl.test.mjs": {
+    "mtime": 1789216646.6628885,
+    "seen": 1789217951.3091688,
+    "ast_hash": "42ef4c94f34f072ee84fd1c03ac1102b",
+    "semantic_hash": "42ef4c94f34f072ee84fd1c03ac1102b"
+  },
+  "scripts/production-history-managed-role-receipt.sql": {
+    "mtime": 1789219453.176574,
+    "seen": 1789221144.776942,
+    "ast_hash": "5cf3ee7ea319f8c0434d456fc6729379",
+    "semantic_hash": "5cf3ee7ea319f8c0434d456fc6729379"
+  },
+  "docs/releases/personal-history-mvp/2026-09-12-prefix-cli-atomicity.json": {
+    "mtime": 1789231323.5360043,
+    "seen": 1789232433.690648,
+    "ast_hash": "ccced4cdffd49ec6144e821b96d382e3",
+    "semantic_hash": "ccced4cdffd49ec6144e821b96d382e3"
+  },
+  "scripts/production-history-prefix-proof.mjs": {
+    "mtime": 1789231181.6309426,
+    "seen": 1789232433.690677,
+    "ast_hash": "0d35c7d4fee4cd8142f02f0a408cb315",
+    "semantic_hash": "0d35c7d4fee4cd8142f02f0a408cb315"
+  },
+  "scripts/production-history-prefix-proof.test.mjs": {
+    "mtime": 1789231181.7028327,
+    "seen": 1789232433.690677,
+    "ast_hash": "8623e1182555a58b140e1b033be20c80",
+    "semantic_hash": "8623e1182555a58b140e1b033be20c80"
   }
 }
