@@ -1,0 +1,758 @@
+{
+  "status": "INACTIVE_STAGING_DELIVERED_ACCEPTANCE_OPEN",
+  "sourceCommit": "2bf18fba0751b71d3e142d2e16ae4f1bbfedca92",
+  "stagingBase": "a03c0128825c73edcfdf9062a8d85e70148b2423",
+  "mainBaseline": "54a154b702ea26e85fab2f3259aa7e5b98fa51be",
+  "contractVersions": {
+    "policyVersion": 1,
+    "captureVersion": 1,
+    "mediaProtocolVersion": 2,
+    "accessVersion": 1,
+    "entitlementsVersion": 1
+  },
+  "sourceGitObjects": {
+    "apps/web": "838e90852a6b99696e1f3f0c1a6059fc70a704a2",
+    "apps/api": "37c6de4f5707f542de2a55335ae8ee62fd989ca3",
+    "apps/extension": "8ac0c7c3e056f06ef2acad5929f86b99a85bfd93",
+    "packages/protocol": "25319377aab9bfdbf4954bc40628109d8097564b",
+    "scripts": "16c29ad8ca7f3b3578e17558963eea3ac3e44346",
+    "tests/e2e": "525d59dbf3e452562eaf3f963ca5c735acc716b2",
+    "pnpm-lock.yaml": "864a7d63ee0cb3c68d9f6c661eee6e96fcfff538",
+    ".node-version": "f9e7451e77154a175f7247041a35d1b08d85f8c2"
+  },
+  "database": {
+    "baselineCount": 41,
+    "targetCount": 55,
+    "lastRevision": "20260908072249",
+    "expectedPolicyActive": false,
+    "migrations": [
+      {
+        "path": "apps/web/supabase/migrations/20260907194413_personal_history_access.sql",
+        "sha256": "3596460ffe4362738ef3e629d421ec7a1ec1ac01967bc3a1545afe402edf8b9b"
+      },
+      {
+        "path": "apps/web/supabase/migrations/20260907195651_personal_history_refresh_recovery.sql",
+        "sha256": "6ed1085a186b89e9852763ce4d106676cfab209e0363a03e41a2eeb5e8deb61f"
+      },
+      {
+        "path": "apps/web/supabase/migrations/20260908030441_personal_watch_history.sql",
+        "sha256": "092db2c2d292bcb838f3dba8dfcf381ce82964314b9cdac8e17acd75c21fb267"
+      },
+      {
+        "path": "apps/web/supabase/migrations/20260908031435_personal_history_metadata_fences.sql",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "apps/web/supabase/migrations/20260908031543_personal_history_metadata_authority.sql",
+        "sha256": "6d94dee7b4c9e979edb232419ce8e826fd70390631c4ee4cfe7ee39aa01fae95"
+      },
+      {
+        "path": "apps/web/supabase/migrations/20260908031940_personal_history_ordering_fences.sql",
+        "sha256": "5f7c3e83da0d46f8774215e8f444cae65941938f551beff9dd022e05a1ab051c"
+      },
+      {
+        "path": "apps/web/supabase/migrations/20260908033545_personal_history_browse_preservation.sql",
+        "sha256": "87043d11b5e1ec5987389ea89d3ac1580da51cb8fd12e20fc31ff91475a83571"
+      },
+      {
+        "path": "apps/web/supabase/migrations/20260908034732_personal_history_delete_ordering.sql",
+        "sha256": "739f91b54694992a3cca15135e47a3ad987e957ce93c6dfec0969548ea814a6b"
+      },
+      {
+        "path": "apps/web/supabase/migrations/20260908035702_personal_catalog_immutable_attempt_epoch.sql",
+        "sha256": "518006586959ae7ca0d483aae54cb2161a7429311478fabfd0e85687a8395fc0"
+      },
+      {
+        "path": "apps/web/supabase/migrations/20260908040654_recent_people_from_room_presence.sql",
+        "sha256": "dbc7cde6e2d9f355370cc398bee641f7658f77ab4270e1a1ce07e4819139d875"
+      },
+      {
+        "path": "apps/web/supabase/migrations/20260908065520_room_media_capabilities_v2.sql",
+        "sha256": "b154a94665e34f6079de0ffa9c75f862f0350921cfc8abf3a0486705142d3ffb"
+      },
+      {
+        "path": "apps/web/supabase/migrations/20260908070552_room_media_compatibility_fence.sql",
+        "sha256": "efd22c24cf32b2c6cc19530f891a321fd5472ddf9b05d793a2bf17db575cb261"
+      },
+      {
+        "path": "apps/web/supabase/migrations/20260908071729_room_media_negotiation_fence.sql",
+        "sha256": "80ba863ef014945fba1da0f7e9028eebf0609aa01776e3edddf3b3c1e9756c59"
+      },
+      {
+        "path": "apps/web/supabase/migrations/20260908072249_room_usage_zero_finalization.sql",
+        "sha256": "5d2b945d0a2debcc53a5cd4091ae859e16111d19990e4a8ee686b2422945fd92"
+      }
+    ]
+  },
+  "runtimeSplitChanges": [
+    {
+      "status": "M",
+      "path": "apps/api/src/auth.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/src/index.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/src/internal-web-client.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/api/src/room-capability.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/src/room-metering.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/src/room-persistence.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/api/src/room-presence-evidence.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/src/room-rate-limit.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/src/room-socket-attachment.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/src/room-source-persistence.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/src/room-state.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/api/test/room-media-grants.test.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/api/test/room-metering-v2.test.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/api/test/room-presence-evidence.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/test/room-rate-limit.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/test/room-state.test.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/api/test/room-token-v2-compat.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/test/runtime/room-hibernation-runtime.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/entrypoints/crunchyroll.content.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/extension/src/current-resource-display.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/src/current-resource-panel.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/src/debug-log.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/src/ghost-cam.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/src/media-types.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/src/overlay-app.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/src/overlay-media-session.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/src/overlay-room-media-controls.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/src/p2p-media.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/extension/src/popup-episode-progress.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/src/popup-styles.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/src/popup-watch-browse.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/src/popup-watch-drawer.tsx"
+    },
+    {
+      "status": "A",
+      "path": "apps/extension/src/popup-watch-episode-picker.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/src/popup-watch-filters.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/src/popup-watch-history-styles.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/src/popup-watch-history.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/src/room-client.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/extension/src/room-media-session.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/src/room-quota-display.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/src/source-adapters/core/types.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/src/source-adapters/crunchyroll/adapter.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/src/source-adapters/crunchyroll/bridge-contract.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/extension/src/use-watch-filter-popover.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/extension/src/use-watch-loading-height.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/extension/src/use-watch-progress-preview.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/extension/src/watch-history-access.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/src/watch-history-browse.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/src/watch-history-catalog.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/src/watch-history-client.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/src/watch-history-controller.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/src/watch-history-outbox.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/src/watch-history-preference-listener.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/extension/src/watch-history-resume.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/src/watch-history-runtime-policy.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/src/watch-history-storage.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/extension/test/crunchyroll-resume-bridge.test.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/extension/test/current-resource-display.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/test/debug-log.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/test/ghost-cam.test.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/test/overlay-media-session.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/test/overlay-room-media-controls.test.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/test/p2p-media.test.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/extension/test/personal-history-capture.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/test/popup-watch-browse.test.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/test/popup-watch-history.test.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/test/privileged-overlay-wiring.test.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/test/room-client-auth.test.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/extension/test/room-media-session.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/test/room-quota-display.test.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/extension/test/watch-history-access.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/test/watch-history-browse-date.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/test/watch-history-browse.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/test/watch-history-catalog.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/test/watch-history-client.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/test/watch-history-controller.test.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/extension/test/watch-history-personal-fixtures.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/test/watch-history-preference-listener.test.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/extension/test/watch-history-resume.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/test/watch-history-runtime-policy.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/extension/test/watch-history-storage.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/app/account/watch-library/page.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/app/account/watch-library/watch-library-client.test.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/app/account/watch-library/watch-library-client.tsx"
+    },
+    {
+      "status": "A",
+      "path": "apps/web/app/account/watch-library/watch-library-data.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/app/api/billing/sync-checkout-session/route.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/app/api/internal/rooms/[roomId]/ended/route.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/web/app/api/internal/rooms/presence-evidence/route.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/app/api/me/entitlements/route.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/app/api/rooms/[roomId]/connect/route.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/app/api/rooms/route.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/app/api/stripe/webhook/route.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/web/app/api/watch-history/v3/access/route.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/web/lib/anidachi-auth/account-entitlements.test.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/web/lib/anidachi-auth/account-entitlements.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/anidachi-auth/active-room-session.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/anidachi-auth/db.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/anidachi-auth/jwt.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/web/lib/anidachi-auth/personal-history-policy.test.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/web/lib/anidachi-auth/personal-history-policy.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/web/lib/anidachi-auth/personal-watch-history.test.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/web/lib/anidachi-auth/personal-watch-history.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/anidachi-auth/plan-entitlements.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/anidachi-auth/plan-entitlements.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/web/lib/anidachi-auth/room-capability.test.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/web/lib/anidachi-auth/room-capability.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/anidachi-auth/room-create.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/anidachi-auth/room-lifecycle.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/web/lib/anidachi-auth/room-presence-evidence.test.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/web/lib/anidachi-auth/room-presence-evidence.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/anidachi-auth/room-source-wiring.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/anidachi-auth/room-usage.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/anidachi-auth/social.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/anidachi-auth/stripe-plans.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/anidachi-auth/stripe-plans.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/anidachi-auth/stripe-subscription-sync.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/web/lib/anidachi-auth/watch-history-access.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/anidachi-auth/watch-history-browse-routes.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/anidachi-auth/watch-history-browse.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/anidachi-auth/watch-history-grid-routes.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/anidachi-auth/watch-history-grid.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/anidachi-auth/watch-history-grid.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/anidachi-auth/watch-history-v3-owner.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/anidachi-auth/watch-history-v3-routes.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/anidachi-auth/watch-history-v3-routes.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/anidachi-auth/watch-history-v3.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/anidachi-auth/watch-library.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/client-api.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/client-api.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/pricing-copy.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/lib/pricing-tiers.ts"
+    },
+    {
+      "status": "A",
+      "path": "apps/web/supabase/contracts/personal_mvp_activation_contract.mjs"
+    },
+    {
+      "status": "A",
+      "path": "apps/web/supabase/contracts/personal_mvp_preservation_contract.mjs"
+    },
+    {
+      "status": "A",
+      "path": "apps/web/supabase/contracts/personal_mvp_preservation_seed.sql"
+    },
+    {
+      "status": "A",
+      "path": "apps/web/supabase/tests/personal_history_access.test.sql"
+    },
+    {
+      "status": "A",
+      "path": "apps/web/supabase/tests/personal_watch_catalog_epochs.test.sql"
+    },
+    {
+      "status": "A",
+      "path": "apps/web/supabase/tests/personal_watch_history.test.sql"
+    },
+    {
+      "status": "A",
+      "path": "apps/web/supabase/tests/room_media_capabilities.test.sql"
+    },
+    {
+      "status": "A",
+      "path": "apps/web/supabase/tests/room_presence_evidence.test.sql"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/supabase/tests/single_active_room_sessions.test.sql"
+    },
+    {
+      "status": "A",
+      "path": "packages/protocol/src/commercial-policy.ts"
+    },
+    {
+      "status": "M",
+      "path": "packages/protocol/src/index.ts"
+    },
+    {
+      "status": "A",
+      "path": "packages/protocol/src/personal-history-resume.ts"
+    },
+    {
+      "status": "A",
+      "path": "packages/protocol/src/personal-watch-history.ts"
+    },
+    {
+      "status": "A",
+      "path": "packages/protocol/src/room-media.ts"
+    },
+    {
+      "status": "A",
+      "path": "packages/protocol/src/room-presence-evidence.test.ts"
+    },
+    {
+      "status": "A",
+      "path": "packages/protocol/src/room-presence-evidence.ts"
+    },
+    {
+      "status": "M",
+      "path": "packages/protocol/src/types.ts"
+    },
+    {
+      "status": "M",
+      "path": "packages/protocol/src/watch-history-browse.ts"
+    },
+    {
+      "status": "M",
+      "path": "packages/protocol/src/watch-history.ts"
+    },
+    {
+      "status": "A",
+      "path": "packages/protocol/test/commercial-policy.test.ts"
+    },
+    {
+      "status": "A",
+      "path": "packages/protocol/test/personal-history-resume.test.ts"
+    },
+    {
+      "status": "A",
+      "path": "packages/protocol/test/personal-watch-history.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "packages/protocol/test/protocol.test.ts"
+    },
+    {
+      "status": "A",
+      "path": "packages/protocol/test/room-media.test.ts"
+    },
+    {
+      "status": "A",
+      "path": "packages/protocol/test/room-quota-snapshot.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "packages/protocol/test/watch-history.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "tests/e2e/harness-entry.ts"
+    },
+    {
+      "status": "M",
+      "path": "tests/e2e/p2p-media-harness.mjs"
+    }
+  ],
+  "delivery": {
+    "prerequisitePR": 273,
+    "prerequisiteMerge": "756f04e667eb414b6ba279b12716d770b56b8bb4",
+    "runtimePR": 274,
+    "runtimeHead": "f440d3d2c64ee7afd98d645dc30d3ba63f79e44b",
+    "runtimeMerge": "c7fbdb5aa1bbad9922dc40b9d557234e762e8d6c",
+    "webDeployment": "dpl_BWTGmyLxHTp619UwkHFbit7GG6v9",
+    "workerDeployment": "87a4b594-2183-43df-b34f-8f2255e6e8f4",
+    "workerVersion": "14e77738-6c1e-4424-a142-366e75137525",
+    "extensionBuildCommit": "48b5fd8a6bcd1dc30a84047ac5f56d18c32aa8ea",
+    "extensionVersionName": "48b5fd8-staging-20260908191943",
+    "extensionManifestSha256": "9c63f89c52489a81dd7e49dc38cc4bb513a144ae0c863a8db942d728abf13136",
+    "extensionFilesSha256": "c0c9174b4227b97a7ff6becfc849c87f92d3911eb6b06410bb6f2c25b5926abc",
+    "testerSync": "both12-filetargetsverified;separateverifiedr10backups",
+    "loadedArtifactReceipt": null,
+    "compatRecoveryRehearsal": null,
+    "activationReceipt": null,
+    "policyActive": false
+  },
+  "originalReviewedRuntimeCommit": "d2e32e87494924d73ddb16ed9956490a9f635061",
+  "sourceCorrection": {
+    "commit": "2bf18fba0751b71d3e142d2e16ae4f1bbfedca92",
+    "scope": "one test binding let\u2192const; no runtime behavior change",
+    "independentScopedReview": "PASS",
+    "lint": "PASS",
+    "stripeSyncTests": "9/9PASS"
+  },
+  "graphProvenance": {
+    "commit": "48b5fd8a6bcd1dc30a84047ac5f56d18c32aa8ea",
+    "semanticDocs": 16,
+    "codeFiles": 167,
+    "refreshException": "test binding correction and delivery IDs/status/evidence change no architecture or relationships; retained reviewed graph"
+  }
+}

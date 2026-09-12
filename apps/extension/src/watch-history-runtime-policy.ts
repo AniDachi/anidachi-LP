@@ -26,13 +26,12 @@ export function resolveWatchHistoryRuntimeGate(
   input: WatchHistoryRuntimeGateInput,
 ): WatchHistoryRuntimeGate {
   const ready = input.identityLoaded &&
-    input.ownerUserId !== null &&
-    input.roomSessionLoadedForUserId === input.ownerUserId;
+    input.ownerUserId !== null;
   const restoredRoomActive = input.ownerUserId !== null &&
     input.storedRoomSessionOwnerUserId === input.ownerUserId;
   return {
     ready,
-    roomSuppressed: !ready || input.roomActive || restoredRoomActive,
+    roomSuppressed: input.roomActive || restoredRoomActive,
   };
 }
 

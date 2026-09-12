@@ -1,4 +1,8 @@
 import {
+  RoomPresenceEvidenceSchema,
+	RoomUsageSummarySchema,
+  RoomPresenceAcknowledgementSchema,
+  type RoomPresenceEvidence,
   RoomDepartureAcknowledgementSchema,
   RoomDepartureCallbackSchema,
   RoomSourcePersistenceAcknowledgementSchema,
@@ -35,7 +39,10 @@ export async function notifyWebRoomEnded(
   try {
     ({ response, body } = await fetchAndReadJsonWithBoundedTimeout(
       fetchImplementation,
-      new URL(`/api/internal/rooms/${encodeURIComponent(roomId)}/ended`, config.baseUrl),
+			new URL(
+				`/api/internal/rooms/${encodeURIComponent(roomId)}/ended`,
+				config.baseUrl,
+			),
       {
         method: "POST",
         headers: {
@@ -57,9 +64,12 @@ export async function notifyWebRoomEnded(
   if (
     acknowledgement?.ok !== true ||
     acknowledgement.usageFinalized !== true ||
-    (command.eventId !== undefined && acknowledgement.eventId !== command.eventId)
+		(command.eventId !== undefined &&
+			acknowledgement.eventId !== command.eventId)
   ) {
-    throw new Error("Room lifecycle Web callback returned an invalid acknowledgement");
+		throw new Error(
+			"Room lifecycle Web callback returned an invalid acknowledgement",
+		);
   }
 }
 
@@ -71,7 +81,8 @@ export async function notifyWebRoomSource(
   timeoutMs = INTERNAL_WEB_CALLBACK_TIMEOUT_MS,
 ): Promise<void> {
   const config = internalWebCallbackConfig(env);
-  const parsedCallback = RoomSourcePersistenceCallbackSchema.safeParse(callback);
+	const parsedCallback =
+		RoomSourcePersistenceCallbackSchema.safeParse(callback);
   if (!parsedCallback.success || parsedCallback.data.roomId !== roomId) {
     throw new Error("Room source Web callback received an invalid callback");
   }
@@ -81,7 +92,10 @@ export async function notifyWebRoomSource(
   try {
     ({ response, body } = await fetchAndReadJsonWithBoundedTimeout(
       fetchImplementation,
-      new URL(`/api/internal/rooms/${encodeURIComponent(roomId)}/source`, config.baseUrl),
+			new URL(
+				`/api/internal/rooms/${encodeURIComponent(roomId)}/source`,
+				config.baseUrl,
+			),
       {
         method: "POST",
         headers: {
@@ -99,14 +113,16 @@ export async function notifyWebRoomSource(
     throw new Error(`Room source Web callback failed (${response.status})`);
   }
 
-  const acknowledgement = RoomSourcePersistenceAcknowledgementSchema.safeParse(
-    body,
-  );
+	const acknowledgement =
+		RoomSourcePersistenceAcknowledgementSchema.safeParse(body);
   if (
     !acknowledgement.success ||
-    acknowledgement.data.sourceGeneration !== parsedCallback.data.sourceGeneration
+		acknowledgement.data.sourceGeneration !==
+			parsedCallback.data.sourceGeneration
   ) {
-    throw new Error("Room source Web callback returned an invalid acknowledgement");
+		throw new Error(
+			"Room source Web callback returned an invalid acknowledgement",
+		);
   }
 }
 
@@ -125,7 +141,9 @@ export async function notifyWebParticipantDeparted(
     parsedCallback.data.roomId !== roomId ||
     parsedCallback.data.userId !== userId
   ) {
-    throw new Error("Participant departure Web callback received an invalid callback");
+		throw new Error(
+			"Participant departure Web callback received an invalid callback",
+		);
   }
 
   let response: Response;
@@ -151,13 +169,16 @@ export async function notifyWebParticipantDeparted(
     throw new Error("Participant departure Web callback request failed");
   }
   if (!response.ok) {
-    throw new Error(`Participant departure Web callback failed (${response.status})`);
+		throw new Error(
+			`Participant departure Web callback failed (${response.status})`,
+		);
   }
 
   const acknowledgement = RoomDepartureAcknowledgementSchema.safeParse(body);
   if (
     !acknowledgement.success ||
-    acknowledgement.data.outcome === "room_ended"
+    (acknowledgement.data.outcome !== "departed" &&
+      acknowledgement.data.outcome !== "stale")
   ) {
     throw new Error(
       "Participant departure Web callback returned an invalid acknowledgement",
@@ -168,7 +189,10 @@ export async function notifyWebParticipantDeparted(
 
 function boundedInternalWebCallbackTimeout(timeoutMs: number): number {
   return Number.isFinite(timeoutMs)
-    ? Math.max(1, Math.min(INTERNAL_WEB_CALLBACK_MAX_TIMEOUT_MS, Math.floor(timeoutMs)))
+		? Math.max(
+				1,
+				Math.min(INTERNAL_WEB_CALLBACK_MAX_TIMEOUT_MS, Math.floor(timeoutMs)),
+			)
     : INTERNAL_WEB_CALLBACK_TIMEOUT_MS;
 }
 
@@ -253,9 +277,9 @@ function internalWebCallbackConfig(env: InternalWebLifecycleEnv): {
   } catch {
     throw new Error("Room lifecycle Web callback is not configured");
   }
-  const secureTransport = baseUrl.protocol === "https:" || (
-    baseUrl.protocol === "http:" && isLoopbackHostname(baseUrl.hostname)
-  );
+	const secureTransport =
+		baseUrl.protocol === "https:" ||
+		(baseUrl.protocol === "http:" && isLoopbackHostname(baseUrl.hostname));
   if (
     !secureTransport ||
     baseUrl.username !== "" ||
@@ -270,8 +294,89 @@ function internalWebCallbackConfig(env: InternalWebLifecycleEnv): {
 }
 
 function isLoopbackHostname(hostname: string): boolean {
-  return hostname === "localhost" ||
+	return (
+		hostname === "localhost" ||
     hostname.endsWith(".localhost") ||
     hostname === "127.0.0.1" ||
-    hostname === "[::1]";
+		hostname === "[::1]"
+	);
+}
+
+export async function notifyWebRoomPresence(
+  env: InternalWebLifecycleEnv,
+  evidence: RoomPresenceEvidence,
+  fetchImplementation: typeof fetch = fetch,
+  timeoutMs = INTERNAL_WEB_CALLBACK_TIMEOUT_MS,
+): Promise<void> {
+  const config = internalWebCallbackConfig(env);
+  const input = RoomPresenceEvidenceSchema.parse(evidence);
+  const { response, body } = await fetchAndReadJsonWithBoundedTimeout(
+    fetchImplementation,
+    new URL("/api/internal/rooms/presence-evidence", config.baseUrl),
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${config.secret}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(input),
+    },
+    timeoutMs,
+  );
+  if (
+    !response.ok ||
+    !RoomPresenceAcknowledgementSchema.safeParse(body).success
+  )
+    throw new Error("Room presence callback failed");
+}
+
+export async function notifyWebRoomPolicy(
+	env: InternalWebLifecycleEnv,
+	roomId: string,
+	roomGeneration: number,
+	usage: RoomUsageSummary[],
+	settleOnly = false,
+): Promise<{ acknowledged: RoomUsageSummary[]; policy: unknown }> {
+	const config = internalWebCallbackConfig(env);
+	const { response, body } = await fetchAndReadJsonWithBoundedTimeout(
+		fetch,
+		new URL(
+			`/api/internal/rooms/${encodeURIComponent(roomId)}/ended`,
+			config.baseUrl,
+		),
+		{
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${config.secret}`,
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				operation: "room_policy_v2",
+				roomGeneration,
+				usage,
+				settleOnly,
+			}),
+		},
+		INTERNAL_WEB_CALLBACK_TIMEOUT_MS,
+	);
+	const result = body as Record<string, unknown> | null;
+	if (
+		!response.ok ||
+		result?.ok !== true ||
+		result.roomId !== roomId ||
+		result.roomGeneration !== roomGeneration ||
+		!Array.isArray(result.acknowledged)
+	)
+		throw new Error("Room policy callback failed");
+	const acknowledged = RoomUsageSummarySchema.array()
+		.max(2)
+		.parse(result.acknowledged);
+	if (
+		usage.some(
+			(u) =>
+				!acknowledged.some((a) => a.day === u.day && a.seconds >= u.seconds),
+		)
+	)
+		throw new Error("Room usage not acknowledged");
+	return { acknowledged, policy: result.policy };
 }

@@ -2,16 +2,17 @@ import type { AccountInboxResponse } from "@anidachi/protocol";
 import { describe, expect, it, vi } from "vitest";
 import {
   applicationServerKeyMatches,
-  buildRoomInviteNotificationPlan,
+  buildInboxNotificationPlan,
+  normalizeRememberedInboxItems,
   openRoomInviteNotificationDestination,
   parseInboxChangedPushPayload,
-  pruneRememberedRoomInviteIds,
+  pruneRememberedInboxItemKeys,
 } from "../src/room-invite-notifications";
 
 const NOW = "2026-08-10T08:00:00.000Z";
 const USER_ID = "11111111-1111-4111-8111-111111111111";
 
-describe("room invite notification planning", () => {
+describe("inbox notification planning", () => {
   it("opens the action popup in the last focused normal Chrome window", async () => {
     const getLastFocusedWindow = vi.fn().mockResolvedValue({ id: 42 });
     const openPopup = vi.fn().mockResolvedValue(undefined);
@@ -45,23 +46,33 @@ describe("room invite notification planning", () => {
   });
 
   it("uses direct and group copy without leaking private room data", () => {
-    const direct = buildRoomInviteNotificationPlan(inbox([roomInvite("invite-a", "direct")]));
+    const direct = buildInboxNotificationPlan(inbox([roomInvite("invite-a", "direct")]));
     expect(direct).toEqual({
       title: "Host invited you to watch together",
       message: "Open AniDachi to view the invitation.",
-      inviteIds: ["invite-a"],
+      itemKeys: ["room-invite:invite-a"],
     });
 
-    const group = buildRoomInviteNotificationPlan(inbox([roomInvite("invite-b", "group")]));
+    const group = buildInboxNotificationPlan(inbox([roomInvite("invite-b", "group")]));
     expect(group).toEqual({
       title: "Host invited you to watch with a group",
       message: "Open AniDachi to view the invitation.",
-      inviteIds: ["invite-b"],
+      itemKeys: ["room-invite:invite-b"],
     });
   });
 
-  it("aggregates multiple unseen room invites and ignores friend requests", () => {
-    const plan = buildRoomInviteNotificationPlan(
+  it("notifies for a new friend request without exposing private inbox data", () => {
+    const plan = buildInboxNotificationPlan(inbox([friendRequest("friendship-a")]));
+
+    expect(plan).toEqual({
+      title: "Friend sent you a friend request",
+      message: "Open AniDachi to respond.",
+      itemKeys: ["friend-request:friendship-a"],
+    });
+  });
+
+  it("aggregates mixed unseen invitations into one system alert", () => {
+    const plan = buildInboxNotificationPlan(
       inbox([
         roomInvite("invite-a", "direct"),
         friendRequest("friendship-a"),
@@ -70,42 +81,70 @@ describe("room invite notification planning", () => {
     );
 
     expect(plan).toEqual({
-      title: "2 watch invitations",
+      title: "3 new invitations",
       message: "Open AniDachi to view them.",
-      inviteIds: ["invite-a", "invite-b"],
+      itemKeys: [
+        "room-invite:invite-a",
+        "friend-request:friendship-a",
+        "room-invite:invite-b",
+      ],
     });
   });
 
   it("uses neutral copy for a missed room invite", () => {
-    const plan = buildRoomInviteNotificationPlan(
+    const plan = buildInboxNotificationPlan(
       inbox([roomInvite("invite-missed", "direct", "missed")]),
     );
 
     expect(plan).toEqual({
       title: "You missed a watch invitation from Host",
       message: "Open AniDachi to view it.",
-      inviteIds: ["invite-missed"],
+      itemKeys: ["room-invite:invite-missed"],
     });
   });
 
-  it("does not notify twice and prunes resolved invite ids", () => {
-    const current = inbox([roomInvite("invite-a", "direct")]);
-    expect(buildRoomInviteNotificationPlan(current, ["invite-a"])).toBeNull();
-    expect(pruneRememberedRoomInviteIds(current, ["invite-a", "invite-old"])).toEqual([
-      "invite-a",
+  it("does not notify twice and prunes resolved inbox item keys", () => {
+    const current = inbox([
+      roomInvite("invite-a", "direct"),
+      friendRequest("friendship-a"),
     ]);
+    expect(
+      buildInboxNotificationPlan(current, [
+        "room-invite:invite-a",
+        "friend-request:friendship-a",
+      ]),
+    ).toBeNull();
+    expect(
+      pruneRememberedInboxItemKeys(current, [
+        "room-invite:invite-a",
+        "friend-request:friendship-a",
+        "room-invite:invite-old",
+      ]),
+    ).toEqual(["room-invite:invite-a", "friend-request:friendship-a"]);
+  });
+
+  it("preserves room-invite dedupe when an existing profile upgrades", () => {
+    expect(
+      normalizeRememberedInboxItems(
+        { userId: USER_ID, inviteIds: ["invite-a", "invite-b"] },
+        USER_ID,
+      ),
+    ).toEqual({
+      userId: USER_ID,
+      itemKeys: ["room-invite:invite-a", "room-invite:invite-b"],
+    });
   });
 
   it("aggregates all current unseen invitations when a later invite arrives", () => {
-    const plan = buildRoomInviteNotificationPlan(
+    const plan = buildInboxNotificationPlan(
       inbox([roomInvite("invite-a", "direct"), roomInvite("invite-b", "group")]),
-      ["invite-a"],
+      ["room-invite:invite-a"],
     );
 
     expect(plan).toEqual({
       title: "2 watch invitations",
       message: "Open AniDachi to view them.",
-      inviteIds: ["invite-a", "invite-b"],
+      itemKeys: ["room-invite:invite-a", "room-invite:invite-b"],
     });
   });
 

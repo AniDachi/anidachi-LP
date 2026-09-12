@@ -419,7 +419,9 @@ test("legacy invite listing cannot become a second received-inbox authority", ()
   assert.match(socialSource, /roomInviteRecipientLifecycleStatus\(/);
   assert.match(socialSource, /room:rooms!inner\(room_id,status,ended_at\)/);
   assert.match(socialSource, /recipients:room_invite_recipients\(\*\)/);
-  assert.match(accountPageSource, /listAccountInbox\(/);
+  // The removed Overview no longer fetches notifications; the header bell and
+  // retained inbox page use the canonical account endpoint.
+  assert.match(accountPageSource, /redirect\("\/account\/watch-library"\)/);
   assert.doesNotMatch(accountPageSource, /listRoomInvites\(/);
 });
 

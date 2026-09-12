@@ -1,7 +1,17 @@
 import type {
   P2PSignal,
+  MediaIntent,
+  RoomMediaKind,
   VoiceMode as ProtocolVoiceMode,
 } from "@anidachi/protocol";
+
+/** Internal capture-attempt identity; never sent as a new wire event. */
+export type MediaCaptureIntents = Partial<Record<RoomMediaKind, Readonly<MediaIntent>>>;
+export interface MediaCaptureTerminalFailure {
+  media: RoomMediaKind;
+  intent: Readonly<MediaIntent>;
+  reason: MicrophoneTerminalFailureReason | "capture-failed";
+}
 
 export interface GhostVideo {
   participantId: string;

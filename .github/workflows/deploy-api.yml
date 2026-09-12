@@ -21,6 +21,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: github.ref_name == 'staging' || github.ref_name == 'main'
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
     env:

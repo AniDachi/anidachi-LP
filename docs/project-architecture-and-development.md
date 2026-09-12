@@ -1,6 +1,6 @@
 # Anidachi Project Architecture And Development
 
-Last updated: 2026-06-04.
+Last updated: 2026-09-08.
 
 This document describes how the current Anidachi codebase is organized, how the
 runtime systems fit together, and how development should move from local changes
@@ -185,6 +185,13 @@ domain is planned later, but these are the active endpoints at the time of this
 document.
 
 ## Branch Model
+
+Production delivery currently has an additional
+[35-to-60 history transition gate](releases/personal-history-mvp/production-35-to-60-transition.md).
+The database, Worker and website must be released in the reviewed order after
+preservation and recovery evidence. A staging merge does not execute or unlock
+that transition; existing production deployment controls need separate operator
+verification before a future promotion.
 
 Use this development path:
 
@@ -377,18 +384,89 @@ Media transport:
 Watch progress is durable product data. It should not be modeled as only live
 room state.
 
-Expected ownership:
+Current ownership:
 
 - extension detects provider/show/season/episode/movie identity;
 - extension reports meaningful progress checkpoints, not every second;
 - web API validates and writes progress to Supabase;
-- Supabase stores personal, friend, group, and room progress records;
+- Supabase stores one canonical personal progress row per account and logical
+  provider episode, plus the verified solo/shared sessions that supplied it;
+- a shared-session browse projection may attach owner-private historical group
+  context only when an authenticated group invitation and actual recorded
+  participation overlap. It does not create group progress, change personal
+  completion, grant another member history access, or infer history from current
+  group membership;
 - Worker may broadcast live progress inside an active room, but durable progress
   belongs to Supabase.
 
-The backend-backed watch-library foundation exists, but real staging acceptance
-across extension/browser profiles is still required before treating every
-watch-progress behavior as finished.
+Watch History v3 is active on staging. The 2026-09-05 Watch drawer browse work
+adds bounded server-side search, date,
+participant, and owner-private group filtering without changing the progress
+authority, room protocol, Worker, capture, or consent policy. Its approved design
+and rollout boundary are in
+`docs/superpowers/specs/2026-09-05-watch-drawer-browse-design.md` and
+`docs/superpowers/plans/2026-09-05-watch-drawer-browse.md`; local evidence is in
+`docs/watch-drawer-browse-local-verification.md`. The user-authorized staging
+delivery uses database-only PR #268 before runtime PR #269; their release receipts
+record matching database, Web and tester-artifact verification. Authenticated
+staging acceptance remains distinct from deployment and folder synchronization.
+Main and production are outside this rollout.
+
+The 2026-09-06 episode-grid follow-up adds the read-only
+`GET /api/watch-history/v3/browse/catalog` contract. Web joins an existing
+owner/generation-bound accepted catalog snapshot with at most 50 personal episode
+progress rows, exposes all season summaries with separate main/Specials totals,
+and fences cursor and final reads against account, catalog and progress changes.
+Only an accepted complete catalog in the current region supplies unseen episode
+cells. It reuses existing tables and API session verification; the staging gate
+allows only its exact extension-bearer GET. No migration or room-event contract
+change is required. The user authorized server delivery into staging separately
+from the local episode-grid UI; release evidence is recorded in that PR.
+
+### Personal History And Plans MVP Target (2026-09-08)
+
+The [personal-history MVP specification](superpowers/specs/2026-09-08-personal-history-and-plans-mvp-design.md)
+and [implementation plan](superpowers/plans/2026-09-08-personal-history-and-plans-mvp.md)
+replace the deferred Together shared-group target. The durable result is the
+viewer's personal progress from their own eligible playback, combining solo
+and rooms. Plus/Pro access belongs to the viewer; Free does not capture or
+persist history even with a paid host. Groups stay owner-private invite lists.
+
+Supabase/Web remain durable data and entitlement authority. Reviewed local
+implementation uses a personal writer independent of host-created sessions and
+a durable access epoch, consent epoch and account-generation fence. The extension
+background is the only extension writer; it observes only eligible own-player
+playback and retains original authority on bounded queued events. Unified
+browse/Resume reuses canonical progress and sticky completion. Downgrade stops
+new capture and progress editing without deleting retained server data or
+capturing a Free period for later backfill. Free keeps read, Resume and deletion
+of saved history.
+
+Recent People comes from bounded Worker evidence of actual overlapping connected
+presence, with no title, episode or position. Groups remain private invite lists.
+Worker owns frozen host-plan room caps, independent camera/microphone grants,
+per-kind revocation and authoritative usage. The v2 client receives media without
+publishing and uses Worker quota snapshots without a second subtraction or local
+v2 quota termination. Legacy rooms preserve their negotiated original contract
+and drain normally; they are never reinterpreted as v2.
+
+The durable singleton policy starts version 1 inactive. New personal writes and
+explicit catalog proof already require paid access while inactive. Coordinated
+activation closes legacy writers/aliases and unnegotiated room creation;
+unsupported versions return update-required rather than silently falling back.
+Current cross-plane versions are policyVersion 1, captureVersion 1 and
+mediaProtocolVersion 2, with accessVersion/entitlementsVersion 1.
+
+Tasks 1–9 are reviewed and delivered to inactive staging through PR #273/274, runtime
+c7fbdb5; external acceptance and activation remain open. The
+[verification record](personal-history-and-plans-mvp-verification.md) separates
+local SQL/Worker/actual-controller evidence from loaded-provider, physical-media,
+Stripe TEST and distributed-network acceptance. The [Task 10 delivery packet](releases/personal-history-mvp/README.md)
+orders additive DB prerequisites, compatible inactive Web/Worker, matching
+client and separate activation after review and acceptance. Keep data and epochs
+on recovery; a03c012 is not post-activation compatibility. No prior accepted v2
+deployment exists, so exact compatible recovery/rehearsal remains a gate.
+Production/main promotion is a separate decision.
 
 ## Local Development
 

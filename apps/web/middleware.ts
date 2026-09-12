@@ -1,3 +1,4 @@
+import { parseMaintenanceMode, maintenanceHttpResponse } from "@anidachi/protocol";
 import { type NextRequest, NextResponse } from "next/server";
 import {
   ACCESS_TOKEN_COOKIE,
@@ -175,7 +176,58 @@ function nextWithOptionalInternalToolNoindex(pathname: string): NextResponse {
   return response;
 }
 
+function maintenanceResponse(request: NextRequest): NextResponse {
+  const { status, headers, body } = maintenanceHttpResponse();
+  const isDocument =
+    (request.method === "GET" || request.method === "HEAD") &&
+    !isApiPath(request.nextUrl.pathname) &&
+    !request.headers.has("Next-Action") &&
+    request.headers.get("RSC") !== "1" &&
+    (request.headers.get("sec-fetch-dest") === "document" ||
+      request.headers.get("accept")?.includes("text/html"));
+
+  if (!isDocument) {
+    return NextResponse.json(body, {
+      status,
+      headers: { ...headers, "X-Robots-Tag": "noindex, nofollow" },
+    });
+  }
+
+  return new NextResponse(
+    `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>AniDachi temporarily unavailable</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center;
+      background: #0b0c16; color: #f4f3ff; font-family: system-ui, sans-serif; }
+    main { max-width: 30rem; margin: 24px; padding: 28px; border: 1px solid #39344e; border-radius: 20px; }
+    h1 { font-size: 1.75rem; line-height: 1.2; }
+    p { color: #ccc8dd; line-height: 1.6; }
+  </style>
+</head>
+<body><main><h1>Temporarily unavailable</h1><p>${body.message}</p></main></body>
+</html>`,
+    {
+      status,
+      headers: {
+        ...headers,
+        "Content-Type": "text/html; charset=utf-8",
+        "X-Robots-Tag": "noindex, nofollow",
+      },
+    },
+  );
+}
+
 export async function middleware(request: NextRequest) {
+  // No staging, auth refresh, cookies or application handler runs while closed.
+  if (parseMaintenanceMode(process.env.ANIDACHI_MAINTENANCE_MODE) === "closed") {
+    return maintenanceResponse(request);
+  }
   const pathname = request.nextUrl.pathname;
   const currentPath = `${pathname}${request.nextUrl.search}`;
   const config = await getStagingAccessConfig();

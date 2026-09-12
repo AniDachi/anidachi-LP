@@ -1,3 +1,4 @@
+import { getPlanPolicy } from "@anidachi/protocol";
 import type { CheckoutTier } from "@/lib/home-survey";
 
 export const PRICING_PLUS_MONTHLY = 7.99;
@@ -21,6 +22,10 @@ export type PricingTierMarketing = {
   features: string[];
 };
 
+const freePolicy = getPlanPolicy("free");
+const plusPolicy = getPlanPolicy("plus");
+const proPolicy = getPlanPolicy("pro");
+
 export const PRICING_TIERS: PricingTierMarketing[] = [
   {
     id: "free",
@@ -28,15 +33,17 @@ export const PRICING_TIERS: PricingTierMarketing[] = [
     priceDisplay: "$0",
     priceSuffix: "/month",
     audience: "Try AniDachi and join friends in their rooms",
-    summary: "Join watchrooms, sync, and chat — pay only when you want to host without limits",
+    summary: "Join watchrooms, sync, and chat; upgrade for unlimited hosting and personal history",
     features: [
       "Crunchyroll & YouTube watchrooms",
       "Join friends' watchrooms for free",
       "Sync, chat & reactions",
       "Chrome extension access",
-      "Host up to 30 min/day",
-      "Up to 4 people in your room",
-      "1 friend group & 3 tracked titles",
+      `Host up to ${freePolicy.dailyHostSeconds! / 60} min/day (UTC)`,
+      `Up to ${freePolicy.maxParticipants} people in your room`,
+      `Up to ${freePolicy.maxCameras} cameras & ${freePolicy.maxMicrophones} microphones`,
+      "1 friend group",
+      "No personal watch history",
     ],
   },
   {
@@ -44,15 +51,16 @@ export const PRICING_TIERS: PricingTierMarketing[] = [
     label: "Plus",
     priceDisplay: PRICING_PLUS_LABEL,
     priceSuffix: "/month",
-    audience: "Regular watch nights with friends, sync, chat, and shared progress",
-    summary: "Host without the free time limit, invite friends, and use up to 4 video seats",
+    audience: "Regular watch nights and your personal watch progress",
+    summary: "Unlimited hosting and personal history, alone or in a room",
     features: [
       "Unlimited watchrooms",
-      "Up to 6 people in your room",
-      "Up to 4 video seats",
+      `Up to ${plusPolicy.maxParticipants} people in your room`,
+      `Up to ${plusPolicy.maxCameras} cameras & ${plusPolicy.maxMicrophones} microphones`,
       "Real-time chat & discussions",
       "Cross-device playback sync",
-      "Watch history & progress (3 months)",
+      "Personal watch history & Resume",
+      "Crunchyroll & YouTube",
       "Priority support",
     ],
   },
@@ -62,14 +70,15 @@ export const PRICING_TIERS: PricingTierMarketing[] = [
     priceDisplay: PRICING_PRO_LABEL,
     priceSuffix: "/month",
     audience: "Club hosts and bigger groups who need private rooms and moderator controls",
-    summary: "Bigger groups, longer history, invite-only rooms, and host controls",
+    summary: "Bigger groups and personal watch history",
     features: [
       "Everything in Plus",
-      "Up to 15 people in your room",
+      `Up to ${proPolicy.maxParticipants} people in your room`,
+      `Up to ${proPolicy.maxCameras} cameras & ${proPolicy.maxMicrophones} microphones`,
       "Invite-only rooms (private links + approval)",
       "Host & moderator controls (kick/ban, lock playback)",
       "Room personalization (name, cover, pinned notes)",
-      "Watch history up to 12 months",
+      "Personal watch history & Resume",
       "Founder badge + fast-track support",
     ],
   },

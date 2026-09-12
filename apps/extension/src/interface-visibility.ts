@@ -1,68 +1,78 @@
 import type {
-  MainControlVisibility,
-  ParticipantPillVisibility,
+	MainControlVisibility,
+	ParticipantPillVisibility,
 } from "./interface-preferences";
 
 export type MainControlRevealPhase = "hidden" | "glow" | "visible";
-export type ParticipantPillPresentation = "hidden" | "compact" | "expanded";
+export type ParticipantPillPresentation =
+	| "hidden"
+	| "compact"
+	| "peek"
+	| "expanded";
 
 export interface MainControlPresentation {
-  edgeGlowVisible: boolean;
-  edgeIntentEnabled: boolean;
-  pinned: boolean;
-  visible: boolean;
+	edgeGlowVisible: boolean;
+	edgeIntentEnabled: boolean;
+	pinned: boolean;
+	visible: boolean;
 }
 
 export interface ParticipantRailPresentation {
-  edgeIntentEnabled: boolean;
-  fullListExpanded: boolean;
-  persistentCompact: boolean;
+	edgeIntentEnabled: boolean;
+	fullListExpanded: boolean;
+	persistentCompact: boolean;
 }
 
 export function resolveMainControlPresentation(input: {
-  focused: boolean;
-  forceVisible: boolean;
-  mode: MainControlVisibility;
-  panelOpen: boolean;
-  phase: MainControlRevealPhase;
+	focused: boolean;
+	mode: MainControlVisibility;
+	panelOpen: boolean;
+	phase: MainControlRevealPhase;
 }): MainControlPresentation {
-  const pinned =
-    input.mode === "always-visible" || input.panelOpen || input.forceVisible || input.focused;
+	const pinned =
+		input.mode === "always-visible" ||
+		input.panelOpen ||
+		input.focused;
 
-  return {
-    edgeGlowVisible: !pinned && input.phase === "glow",
-    edgeIntentEnabled: !pinned,
-    pinned,
-    visible: pinned || input.phase === "visible",
-  };
+	return {
+		edgeGlowVisible: !pinned && input.phase === "glow",
+		edgeIntentEnabled: !pinned,
+		pinned,
+		visible: pinned || input.phase === "visible",
+	};
 }
 
 export function resolveParticipantRailPresentation(input: {
-  edgeExpanded: boolean;
-  mode: ParticipantPillVisibility;
+	edgeExpanded: boolean;
+	mode: ParticipantPillVisibility;
 }): ParticipantRailPresentation {
-  const persistentCompact = input.mode === "always-visible";
+	const persistentCompact = input.mode === "always-visible";
 
-  return {
-    edgeIntentEnabled: !persistentCompact,
-    fullListExpanded: !persistentCompact && input.edgeExpanded,
-    persistentCompact,
-  };
+	return {
+		edgeIntentEnabled: !persistentCompact,
+		fullListExpanded: !persistentCompact && input.edgeExpanded,
+		persistentCompact,
+	};
 }
 
 export function resolveParticipantPillPresentation(input: {
-  interacted: boolean;
-  mode: ParticipantPillVisibility;
-  railExpanded: boolean;
-  speaking: boolean;
+	interacted: boolean;
+	mode: ParticipantPillVisibility;
+	reacting?: boolean;
+	railExpanded: boolean;
+	speaking: boolean;
 }): ParticipantPillPresentation {
-  if (input.mode === "always-visible") {
-    return input.interacted ? "expanded" : "compact";
-  }
+	if (input.interacted) {
+		return "expanded";
+	}
 
-  if (input.railExpanded) {
-    return "expanded";
-  }
+	if (input.railExpanded) {
+		return "peek";
+	}
 
-  return input.speaking ? "compact" : "hidden";
+	if (input.mode === "always-visible") {
+		return "compact";
+	}
+
+	return input.speaking || input.reacting ? "compact" : "hidden";
 }

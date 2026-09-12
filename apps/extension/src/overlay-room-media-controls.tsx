@@ -1,9 +1,14 @@
-import type { Participant } from "@anidachi/protocol";
+import type {
+	Participant,
+	RoomMediaSnapshot,
+	RoomMediaKind,
+} from "@anidachi/protocol";
 import {
 	CircleCheck,
 	CircleMinus,
 	CirclePlus,
 	Radio,
+	UsersRound,
 	Video,
 	VideoOff,
 	X,
@@ -54,6 +59,10 @@ export function PanelCameraControl({
 }
 
 export interface RoomPeopleSectionProps {
+	mediaSnapshot?: RoomMediaSnapshot | null;
+	microphoneReady?: boolean;
+	onMicrophoneReadyChange?: (enabled: boolean) => void;
+	onRevokeGrant?: (sessionId: string, media: RoomMediaKind) => void;
 	currentParticipantId: string | null;
 	liveVoiceActiveSpeakerIds: string[];
 	maxMediaSeats: number;
@@ -67,6 +76,10 @@ export interface RoomPeopleSectionProps {
 }
 
 export function RoomPeopleSection({
+	mediaSnapshot,
+	microphoneReady,
+	onMicrophoneReadyChange,
+	onRevokeGrant,
 	currentParticipantId,
 	liveVoiceActiveSpeakerIds,
 	maxMediaSeats,
@@ -91,9 +104,45 @@ export function RoomPeopleSection({
 	return (
 		<section className="room-people-section" aria-label="Room participants">
 			<div className="section-title room-people-heading">
-				<span>People</span>
-				<span>{roomPeopleCountText}</span>
+				<span className="room-people-heading-label">
+					<UsersRound
+						aria-hidden="true"
+						className="section-title-icon room-people-heading-icon"
+						size={15}
+						strokeWidth={1.8}
+					/>
+					<span>People</span>
+				</span>
+				<span className="room-people-count">{roomPeopleCountText}</span>
 			</div>
+			{mediaSnapshot !== undefined ? (
+				<div className="room-media-grants">
+					<p className="room-people-count">
+						{mediaSnapshot
+							? `${mediaSnapshot.participants.filter((p) => p.cameraGranted).length}/${mediaSnapshot.capabilities.maxCameras} cameras · ${mediaSnapshot.participants.filter((p) => p.microphoneGranted).length}/${mediaSnapshot.capabilities.maxMicrophones} microphones`
+							: "Waiting for room media permissions…"}
+					</p>
+					<button
+						className="button secondary"
+						type="button"
+						disabled={!mediaSnapshot}
+						onClick={() => onMicrophoneReadyChange?.(!microphoneReady)}
+					>
+						{microphoneReady ? "Disable microphone" : "Enable microphone"}
+					</button>
+					{microphoneReady ? (
+						<p className="room-people-status">
+							Microphone ready · Hold V to talk
+						</p>
+					) : null}
+					{mediaSnapshot?.closingAt ? (
+						<p role="status">
+							Room closes at{" "}
+							{new Date(mediaSnapshot.closingAt).toLocaleTimeString()}.
+						</p>
+					) : null}
+				</div>
+			) : null}
 			<div className="room-people-list">
 				{orderedParticipants.map((item) => {
 					const isSpeaking = liveVoiceActiveSpeakerIds.includes(item.id);
@@ -104,17 +153,42 @@ export function RoomPeopleSection({
 					) : isSelf ? (
 						<span className="room-people-you">You</span>
 					) : null;
-					const mediaAction = getMediaAction({
-						currentUserIsHost,
-						isSelf,
-						item,
-						maxMediaSeats,
-						mediaSeatsFull,
-						onCancelMediaSeatRequest,
-						onGrantMediaSeat,
-						onRequestMediaSeat,
-						onRevokeMediaSeat,
-					});
+					const grant = mediaSnapshot?.participants.find(
+						(p) => p.participantSessionId === item.participantSessionId,
+					);
+					const mediaAction =
+						mediaSnapshot !== undefined ? (
+							currentUserIsHost && grant ? (
+								<span>
+									{(["camera", "microphone"] as const).map((media) =>
+										grant[`${media}Granted`] ? (
+											<button
+												className="button secondary"
+												key={media}
+												type="button"
+												onClick={() =>
+													onRevokeGrant?.(grant.participantSessionId, media)
+												}
+											>
+												Revoke {media}
+											</button>
+										) : null,
+									)}
+								</span>
+							) : null
+						) : (
+							getMediaAction({
+								currentUserIsHost,
+								isSelf,
+								item,
+								maxMediaSeats,
+								mediaSeatsFull,
+								onCancelMediaSeatRequest,
+								onGrantMediaSeat,
+								onRequestMediaSeat,
+								onRevokeMediaSeat,
+							})
+						);
 
 					return (
 						<div className="room-people-entry" key={item.id}>
@@ -139,7 +213,11 @@ export function RoomPeopleSection({
 											</span>
 										</span>
 										<span className="room-people-status">
-											{participantMediaStatus(item)}
+											{item.connected === false
+												? "Reconnecting — places reserved"
+												: mediaSnapshot !== undefined
+													? `${item.cameraEnabled ? "Camera on" : grant?.cameraGranted ? "Camera granted, off" : "Camera off"} · ${isSpeaking ? "Speaking" : grant?.microphoneGranted ? "Microphone ready" : "Listening"}`
+													: participantMediaStatus(item)}
 										</span>
 									</span>
 								</div>
@@ -194,9 +272,7 @@ function participantInitials(displayName: string): string {
 	);
 }
 
-function participantMediaStatus(
-	participant: Participant,
-): ReactNode {
+function participantMediaStatus(participant: Participant): ReactNode {
 	if (participant.mediaSeat === "requested") return "Requested media";
 	if (participant.mediaSeat !== "joined") return "Chat only";
 	const CameraIcon = participant.cameraEnabled ? Video : VideoOff;

@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "harness:p2p": "node p2p-media-harness.mjs"
+    "harness:p2p": "node p2p-media-harness.mjs",
+    "test:harness": "node --test p2p-media-harness.test.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.0",

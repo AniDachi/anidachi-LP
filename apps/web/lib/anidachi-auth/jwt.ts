@@ -1,3 +1,7 @@
+import {
+	RoomMediaCapabilityLeaseSchema,
+	type RoomMediaCapabilityLease,
+} from "@anidachi/protocol";
 import { SignJWT, jwtVerify, type JWTPayload } from "jose";
 import {
   ROOM_TOKEN_AUDIENCE,
@@ -32,7 +36,7 @@ export type AccessTokenPayload = {
 };
 
 export async function signAccessToken(
-  payload: AccessTokenPayload
+	payload: AccessTokenPayload,
 ): Promise<string> {
   return new SignJWT({
     email: payload.email,
@@ -49,7 +53,7 @@ export async function signAccessToken(
 }
 
 export async function verifyAccessToken(
-  token: string
+	token: string,
 ): Promise<AccessTokenPayload | null> {
   try {
     const { payload } = await jwtVerify(token, getJwtSecret(), {
@@ -88,6 +92,8 @@ export type RoomTokenPayload = {
   role: "host" | "member";
   participantSessionId: string;
   capabilities?: RoomCapabilities;
+	mediaLease?: RoomMediaCapabilityLease;
+	hostUserId?: string;
   displayName?: string;
   avatarUrl?: string | null;
 };
@@ -96,7 +102,7 @@ const ROOM_TOKEN_DEFAULT_TTL_SECONDS = 30 * 60;
 
 export async function signRoomToken(
   payload: RoomTokenPayload,
-  expiresInSeconds: number = ROOM_TOKEN_DEFAULT_TTL_SECONDS
+	expiresInSeconds: number = ROOM_TOKEN_DEFAULT_TTL_SECONDS,
 ): Promise<string> {
   const admission = RoomSessionAdmissionInputSchema.parse({
     participantSessionId: payload.participantSessionId,
@@ -105,13 +111,19 @@ export async function signRoomToken(
   // the TTL can shrink but never exceed the standard room token life.
   const ttl = Math.max(
     1,
-    Math.min(ROOM_TOKEN_DEFAULT_TTL_SECONDS, Math.floor(expiresInSeconds))
+		Math.min(ROOM_TOKEN_DEFAULT_TTL_SECONDS, Math.floor(expiresInSeconds)),
   );
   return new SignJWT({
     roomId: payload.roomId,
     role: payload.role,
     participantSessionId: admission.participantSessionId,
-    capabilities: payload.capabilities,
+		capabilities: payload.mediaLease?.capabilities ?? payload.capabilities,
+		...(payload.mediaLease
+			? {
+					mediaLease: RoomMediaCapabilityLeaseSchema.parse(payload.mediaLease),
+					hostUserId: payload.hostUserId,
+				}
+			: {}),
     displayName: payload.displayName,
     avatarUrl: payload.avatarUrl ?? null,
     typ: "room",
@@ -126,7 +138,7 @@ export async function signRoomToken(
 }
 
 export async function verifyRoomToken(
-  token: string
+	token: string,
 ): Promise<RoomTokenPayload | null> {
   try {
     const { payload } = await jwtVerify(token, getJwtSecret(), {
@@ -152,10 +164,30 @@ export async function verifyRoomToken(
       participantSessionId: payload.participantSessionId,
     });
     if (!admission.success) return null;
-    if (payload.capabilities !== undefined && !isRoomCapabilities(payload.capabilities)) {
+		const mediaLease =
+			payload.mediaLease === undefined
+				? undefined
+				: RoomMediaCapabilityLeaseSchema.safeParse(payload.mediaLease);
+		if (
+			mediaLease &&
+			(!mediaLease.success ||
+				mediaLease.data.roomId !== payload.roomId ||
+				JSON.stringify(mediaLease.data.capabilities) !==
+					JSON.stringify(payload.capabilities))
+		)
+			return null;
+		if (
+			!mediaLease &&
+			payload.capabilities !== undefined &&
+			!isRoomCapabilities(payload.capabilities)
+		) {
       return null;
     }
-    if (payload.displayName !== undefined && typeof payload.displayName !== "string") return null;
+		if (
+			payload.displayName !== undefined &&
+			typeof payload.displayName !== "string"
+		)
+			return null;
     if (
       payload.avatarUrl !== null &&
       payload.avatarUrl !== undefined &&
@@ -169,7 +201,15 @@ export async function verifyRoomToken(
       roomId: payload.roomId as string,
       role: payload.role,
       participantSessionId: admission.data.participantSessionId,
-      capabilities: payload.capabilities,
+			capabilities: mediaLease?.success
+				? undefined
+				: (payload.capabilities as RoomCapabilities | undefined),
+			...(mediaLease?.success
+				? {
+						mediaLease: mediaLease.data,
+						hostUserId: payload.hostUserId as string,
+					}
+				: {}),
       displayName: payload.displayName,
       avatarUrl: payload.avatarUrl ?? null,
     };

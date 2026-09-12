@@ -61,9 +61,10 @@ extension behavior:
 - Ghost Cam, mic, and camera features use WebRTC between room participants only
   when the user enables them.
 - Clipboard permission is used to copy invite links.
-- The optional Notifications permission is requested only when the user enables
-  room-invite alerts. Web Push wakes the extension to refresh the authenticated
-  inbox; push payloads contain no room, sender, group, title, or message data.
+- The Notifications permission supports default-on room-invite and friend-request
+  alerts and can be disabled for the current browser in extension settings. Web
+  Push wakes the extension to refresh the authenticated inbox; push payloads
+  contain no room, sender, group, title, or message data.
 - The Alarms permission runs one daily subscription and inbox recovery check;
   it is not used for frequent polling.
 - Service-role keys, OAuth secrets, JWT secrets, Stripe secrets, and TURN secrets

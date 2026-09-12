@@ -1,13 +1,25 @@
 import type { SocialDirectory } from "@anidachi/protocol";
-import { FolderPlus, RefreshCw, UserPlus, Users } from "lucide-react";
-import { useRef, useState, type FormEvent } from "react";
+import {
+  ArrowUpRight,
+  Check,
+  ChevronRight,
+  Copy,
+  Link,
+  MoreHorizontal,
+  Plus,
+  RefreshCw,
+  Search,
+  Trash2,
+  Users,
+  X,
+} from "lucide-react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import {
   buildPopupPeopleModel,
-  type PopupPeopleFriend,
   type PopupPeopleGroup,
   type PopupPeopleProfile,
-  type PopupPeopleRecentPerson,
 } from "./popup-people-model";
+import type { FriendInviteLink, SaveFriendGroupInput } from "./social-client";
 
 export type PopupPeoplePresentationState =
   | Readonly<{ status: "signed-out" }>
@@ -15,349 +27,926 @@ export type PopupPeoplePresentationState =
   | Readonly<{ status: "error"; errorMessage: string }>
   | Readonly<{ status: "ready"; directory: SocialDirectory }>
   | Readonly<{ status: "stale"; directory: SocialDirectory }>
-  | Readonly<{ status: "stale-error"; directory: SocialDirectory; errorMessage: string }>;
+  | Readonly<{
+      status: "stale-error";
+      directory: SocialDirectory;
+      errorMessage: string;
+    }>;
 
-export type PopupPeopleActionKey = "create-group" | `add-friend:${string}`;
-
+export type PopupPeopleActionKey =
+  | "create-friend-link"
+  | `save-group:${string}`
+  | `delete-group:${string}`
+  | `remove-friend:${string}`;
 export type PopupPeopleActionNotice = Readonly<{
   actionKey: PopupPeopleActionKey;
   tone: "success" | "warning" | "error";
   text: string;
 }>;
-
 export type PopupPeoplePanelProps = {
   actionNotice: PopupPeopleActionNotice | null;
   pendingActionKey: PopupPeopleActionKey | null;
-  onAddFriend: (userId: string) => Promise<boolean>;
-  onCreateGroup: (name: string, clientRequestId: string) => Promise<boolean>;
+  onSaveGroup: (input: SaveFriendGroupInput) => Promise<boolean>;
+  onCreateInviteLink: () => Promise<FriendInviteLink | null>;
+  onDeleteGroup: (groupId: string) => Promise<boolean>;
+  onRemoveFriend: (userId: string) => Promise<boolean>;
+  onDismissNotice: () => void;
   onOpenDashboard: () => void;
   onRefresh: () => void;
   onSignIn: () => void;
   state: PopupPeoplePresentationState;
 };
+type Mode = "friends" | "groups";
+type Editor = { initial: SaveFriendGroupInput; group: PopupPeopleGroup | null };
+type Removal = { kind: "friend" | "group"; id: string; name: string };
 
-type PopupPeopleMode = "friends" | "groups";
-
-export function PopupPeoplePanel({
-  actionNotice,
-  pendingActionKey,
-  onAddFriend,
-  onCreateGroup,
-  onOpenDashboard,
-  onRefresh,
-  onSignIn,
-  state,
-}: PopupPeoplePanelProps) {
-  const [mode, setMode] = useState<PopupPeopleMode>("friends");
-  const model = stateHasDirectory(state) ? buildPopupPeopleModel(state.directory) : null;
-  const showsStaleData = state.status === "stale" || state.status === "stale-error";
+export function PopupPeoplePanel(props: PopupPeoplePanelProps) {
+  const { state, pendingActionKey, actionNotice } = props;
+  const [mode, setMode] = useState<Mode>("friends");
+  const [queries, setQueries] = useState({ friends: "", groups: "" });
+  const [editor, setEditor] = useState<Editor | null>(null);
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [link, setLink] = useState<FriendInviteLink | null>(null);
+  const [removal, setRemoval] = useState<Removal | null>(null);
+  const model =
+    "directory" in state ? buildPopupPeopleModel(state.directory) : null;
+  const id = useId();
+  const query = queries[mode].trim().toLocaleLowerCase();
+  const friends =
+    model?.friends.filter(
+      ({ user }) =>
+        matches(user.displayName, query) || matches(user.handle ?? "", query),
+    ) ?? [];
+  const groups =
+    model?.groups.filter((group) => matches(group.name, query)) ?? [];
+  const beginEditor = (group: PopupPeopleGroup | null) => {
+    props.onDismissNotice();
+    setEditor({
+      group,
+      initial: {
+        groupId: group?.id ?? crypto.randomUUID(),
+        name: group?.name ?? "",
+        memberIds: group?.members.map(({ user }) => user.userId) ?? [],
+        create: !group,
+        expectedUpdatedAt: group?.updatedAt ?? null,
+      },
+    });
+  };
+  const beginRemoval = (value: Removal) => {
+    props.onDismissNotice();
+    setRemoval(value);
+  };
+  const showNotice = actionNotice && !editor && !linkOpen && !removal;
 
   return (
     <section className="popup-section popup-people-panel" aria-label="People">
-      <div className="popup-section-header">
-        <div className="popup-section-title">People</div>
+      <div className="people-toolbar">
+        <div
+          aria-label="People mode"
+          className="people-modes"
+          data-mode={mode}
+          role="tablist"
+        >
+          {(["friends", "groups"] as const).map((value) => (
+            <button
+              key={value}
+              type="button"
+              role="tab"
+              id={`${id}-${value}`}
+              aria-controls={`${id}-list`}
+              aria-selected={mode === value}
+              tabIndex={mode === value ? 0 : -1}
+              onClick={() => setMode(value)}
+              onKeyDown={(event) => {
+                if (
+                  !["ArrowLeft", "ArrowRight", "Home", "End"].includes(
+                    event.key,
+                  )
+                )
+                  return;
+                event.preventDefault();
+                const next =
+                  event.key === "Home"
+                    ? "friends"
+                    : event.key === "End"
+                      ? "groups"
+                      : mode === "friends"
+                        ? "groups"
+                        : "friends";
+                setMode(next);
+                document.getElementById(`${id}-${next}`)?.focus();
+              }}
+            >
+              {value === "friends" ? "Friends" : "Groups"}
+            </button>
+          ))}
+        </div>
         <button
+          className="people-icon-button"
           aria-label="Refresh people"
-          className="popup-mini-button"
-          disabled={state.status === "loading"}
           title="Refresh people"
           type="button"
-          onClick={onRefresh}
+          disabled={state.status === "loading" || !!pendingActionKey}
+          onClick={props.onRefresh}
         >
-          <RefreshCw size={13} />
+          <RefreshCw size={16} />
         </button>
       </div>
-
-      <div aria-label="People mode" className="popup-people-mode-tabs" role="tablist">
-        <PeopleModeButton active={mode === "friends"} label="Friends" onClick={() => setMode("friends")} />
-        <PeopleModeButton active={mode === "groups"} label="Groups" onClick={() => setMode("groups")} />
-      </div>
-
-      <div className="popup-people-content" data-presentation-state={state.status}>
-        {state.status === "signed-out" ? (
+      <div
+        className="popup-people-content"
+        data-presentation-state={state.status}
+      >
+        {state.status === "signed-out" && (
           <div className="popup-people-state" data-state="signed-out">
-            <Users size={17} />
+            <Users size={22} />
             <span>Sign in to see your people.</span>
-            <button className="popup-primary-button" type="button" onClick={onSignIn}>
+            <button className="people-primary" onClick={props.onSignIn}>
               Sign in
             </button>
           </div>
-        ) : null}
-
-        {state.status === "loading" ? (
-          <div className="popup-people-state" data-state="loading">
+        )}
+        {state.status === "loading" && (
+          <div
+            className="popup-people-state"
+            data-state="loading"
+            role="status"
+          >
             Loading people...
           </div>
-        ) : null}
-
-        {state.status === "error" ? (
+        )}
+        {state.status === "error" && (
           <div className="popup-people-state" data-state="error">
             <span>{state.errorMessage}</span>
-            <button className="popup-primary-button" type="button" onClick={onRefresh}>
+            <button className="people-secondary" onClick={props.onRefresh}>
               Retry
             </button>
           </div>
-        ) : null}
-
-        {showsStaleData ? (
+        )}
+        {(state.status === "stale" || state.status === "stale-error") && (
           <div
             className="popup-people-status"
-            data-state={state.status === "stale-error" ? "error" : "stale"}
             role="status"
+            data-state={state.status === "stale-error" ? "error" : "stale"}
           >
-            <span>
-              {state.status === "stale-error"
-                ? state.errorMessage
-                : "Showing saved people while we reconnect."}
-            </span>
-            {state.status === "stale-error" ? (
-              <button className="popup-secondary-button" type="button" onClick={onRefresh}>
+            {state.status === "stale-error"
+              ? state.errorMessage
+              : "Showing saved people while we reconnect."}
+            {state.status === "stale-error" && (
+              <button
+                className="people-secondary"
+                disabled={!!pendingActionKey}
+                onClick={props.onRefresh}
+              >
                 Retry
               </button>
-            ) : null}
+            )}
           </div>
-        ) : null}
-
-        {model ? (
-          mode === "friends" ? (
-            <FriendsMode
-              friends={model.friends}
-              pendingActionKey={pendingActionKey}
-              recentPeople={model.recentPeople}
-              onAddFriend={onAddFriend}
-            />
-          ) : (
-            <GroupsMode
-              groups={model.groups}
-              pendingActionKey={pendingActionKey}
-              onCreateGroup={onCreateGroup}
-            />
-          )
-        ) : null}
+        )}
+        {model && (
+          <>
+            <div className="people-list-tools">
+              <label className="people-search">
+                <Search size={16} aria-hidden="true" />
+                <input
+                  aria-label={`Search ${mode}`}
+                  placeholder={`Search ${mode}`}
+                  value={queries[mode]}
+                  onChange={(event) =>
+                    setQueries({ ...queries, [mode]: event.target.value })
+                  }
+                />
+              </label>
+              <button
+                className="people-primary people-add"
+                disabled={!!pendingActionKey}
+                onClick={() => {
+                  if (mode === "groups") beginEditor(null);
+                  else {
+                    props.onDismissNotice();
+                    setLinkOpen(true);
+                  }
+                }}
+              >
+                <Plus size={16} />
+                {mode === "friends" ? "Invite" : "New group"}
+              </button>
+            </div>
+            <div
+              role="tabpanel"
+              id={`${id}-list`}
+              aria-labelledby={`${id}-${mode}`}
+            >
+              <div className="people-list-caption">
+                <span>
+                  {mode === "friends" ? "Your friends" : "Your groups"}
+                </span>
+                <span>
+                  {mode === "friends"
+                    ? model.friends.length
+                    : model.groups.length}
+                </span>
+              </div>
+              {mode === "friends" ? (
+                <div className="people-rows">
+                  {friends.map(({ user }) => (
+                    <div className="people-row" key={user.userId}>
+                      <ProfileAvatar profile={user} />
+                      <span className="people-row-copy">
+                        <strong>{user.displayName}</strong>
+                        <small>
+                          {user.handle ? `@${user.handle}` : "Friend"}
+                        </small>
+                      </span>
+                      <FriendMenu
+                        name={user.displayName}
+                        disabled={!!pendingActionKey}
+                        onRemove={() =>
+                          beginRemoval({
+                            kind: "friend",
+                            id: user.userId,
+                            name: user.displayName,
+                          })
+                        }
+                      />
+                    </div>
+                  ))}
+                  {!friends.length && (
+                    <EmptyState>
+                      {query
+                        ? "No friends found."
+                        : "Invite a friend with a link to get started."}
+                    </EmptyState>
+                  )}
+                </div>
+              ) : (
+                <div className="people-rows">
+                  {groups.map((group) => (
+                    <button
+                      className="people-row people-group-row"
+                      key={group.id}
+                      disabled={!!pendingActionKey}
+                      onClick={() => beginEditor(group)}
+                      aria-label={`Edit ${group.name}`}
+                    >
+                      <span className="people-group-avatar">
+                        <Users size={20} />
+                      </span>
+                      <span className="people-row-copy">
+                        <strong>{group.name}</strong>
+                        <small>
+                          {group.members.length}{" "}
+                          {group.members.length === 1 ? "friend" : "friends"}
+                        </small>
+                      </span>
+                      <span className="people-avatar-stack" aria-hidden="true">
+                        {group.members.slice(0, 3).map(({ user }) => (
+                          <ProfileAvatar profile={user} key={user.userId} />
+                        ))}
+                      </span>
+                      <ChevronRight size={16} />
+                    </button>
+                  ))}
+                  {!groups.length && (
+                    <EmptyState>
+                      {query
+                        ? "No groups found."
+                        : "Keep friends in a group to invite them together."}
+                    </EmptyState>
+                  )}
+                  {model.groups.length > 0 && (
+                    <p className="people-hint">
+                      Only you see your groups. Invite them from the player.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
-
-      <div aria-atomic="true" aria-live="polite" className="popup-people-action-notice-slot">
-        {actionNotice ? (
-          <div
-            className="popup-people-action-notice"
-            data-action-key={actionNotice.actionKey}
-            data-tone={actionNotice.tone}
-            role="status"
-          >
-            {actionNotice.text}
-          </div>
-        ) : null}
+      <div aria-live="polite" aria-atomic="true">
+        {showNotice && <Notice notice={actionNotice} />}
       </div>
-
-      <button className="popup-dashboard-button" type="button" onClick={onOpenDashboard}>
-        Open dashboard
+      <button
+        className="people-website"
+        type="button"
+        onClick={props.onOpenDashboard}
+      >
+        Manage on website <ArrowUpRight size={14} />
       </button>
+      {editor && model && (
+        <GroupEditor
+          key={editor.initial.groupId}
+          editor={editor}
+          friends={model.friends.map(({ user }) => user)}
+          notice={actionNotice}
+          onSave={props.onSaveGroup}
+          onClose={() => setEditor(null)}
+          onDelete={() =>
+            beginRemoval({
+              kind: "group",
+              id: editor.initial.groupId,
+              name: editor.initial.name,
+            })
+          }
+        />
+      )}
+      {linkOpen && (
+        <LinkDialog
+          link={link}
+          onLink={setLink}
+          onCreate={props.onCreateInviteLink}
+          notice={actionNotice}
+          onClose={() => setLinkOpen(false)}
+        />
+      )}
+      {removal && (
+        <RemovalDialog
+          removal={removal}
+          notice={actionNotice}
+          onClose={() => setRemoval(null)}
+          onConfirm={async () => {
+            const saved = await (removal.kind === "friend"
+              ? props.onRemoveFriend(removal.id)
+              : props.onDeleteGroup(removal.id));
+            if (saved) {
+              setRemoval(null);
+              if (removal.kind === "group") setEditor(null);
+            }
+            return saved;
+          }}
+        />
+      )}
     </section>
   );
 }
 
-function stateHasDirectory(
-  state: PopupPeoplePresentationState,
-): state is Extract<PopupPeoplePresentationState, { directory: SocialDirectory }> {
-  return state.status === "ready" || state.status === "stale" || state.status === "stale-error";
-}
-
-function PeopleModeButton({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) {
-  return (
-    <button aria-selected={active} className="popup-people-mode-button" role="tab" type="button" onClick={onClick}>
-      {label}
-    </button>
-  );
-}
-
-function FriendsMode({
+function GroupEditor({
+  editor,
   friends,
-  pendingActionKey,
-  recentPeople,
-  onAddFriend,
+  notice,
+  onSave,
+  onClose,
+  onDelete,
 }: {
-  friends: readonly PopupPeopleFriend[];
-  pendingActionKey: PopupPeopleActionKey | null;
-  recentPeople: readonly PopupPeopleRecentPerson[];
-  onAddFriend: (userId: string) => Promise<boolean>;
+  editor: Editor;
+  friends: PopupPeopleProfile[];
+  notice: PopupPeopleActionNotice | null;
+  onSave: PopupPeoplePanelProps["onSaveGroup"];
+  onClose: () => void;
+  onDelete: () => void;
 }) {
-  return (
-    <div className="popup-people-list">
-      <PeopleHeading count={friends.length} label="Friends" />
-      {friends.length ? (
-        friends.map((friend) => <PersonRow key={friend.user.userId} profile={friend.user} />)
-      ) : (
-        <div className="popup-people-empty" data-state="empty">No friends yet.</div>
-      )}
-
-      {recentPeople.length ? (
-        <div className="popup-people-recent">
-          <PeopleHeading count={recentPeople.length} label="Watched with recently" />
-          {recentPeople.map((person) => {
-            const actionKey = addFriendActionKey(person.user.userId);
-            const pending = pendingActionKey === actionKey;
-            return (
-              <PersonRow
-                action={
-                  <button
-                    className="popup-people-add-button"
-                    disabled={pending}
-                    type="button"
-                    onClick={async () => {
-                      if (pending) return;
-                      try {
-                        await onAddFriend(person.user.userId);
-                      } catch {
-                        // The parent owns the visible action error state.
-                      }
-                    }}
-                  >
-                    {pending ? <RefreshCw size={13} /> : <UserPlus size={13} />}
-                    {pending ? "Adding..." : "Add friend"}
-                  </button>
-                }
-                key={person.user.userId}
-                profile={person.user}
-                subtitle={formatRecentSubtitle(person.lastWatchedAt)}
-              />
-            );
-          })}
-        </div>
-      ) : null}
-    </div>
+  const [name, setName] = useState(editor.initial.name);
+  const [selected, setSelected] = useState(
+    () => new Set(editor.initial.memberIds),
   );
-}
-
-function formatRecentSubtitle(lastWatchedAt: string): string {
-  const date = new Date(lastWatchedAt);
-  const dateLabel = Number.isNaN(date.getTime())
-    ? "recently"
-    : date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-  return `Watched ${dateLabel}`;
-}
-
-function GroupsMode({
-  groups,
-  pendingActionKey,
-  onCreateGroup,
-}: {
-  groups: readonly PopupPeopleGroup[];
-  pendingActionKey: PopupPeopleActionKey | null;
-  onCreateGroup: (name: string, clientRequestId: string) => Promise<boolean>;
-}) {
-  const createPending = pendingActionKey === "create-group";
-  const requestRef = useRef<{ name: string; clientRequestId: string } | null>(null);
-
-  const submitCreateGroup = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const name = new FormData(form).get("group-name");
-    if (createPending || typeof name !== "string" || !name.trim()) return;
-    const normalizedName = name.trim();
-    const pendingRequest = requestRef.current?.name === normalizedName
-      ? requestRef.current
-      : { name: normalizedName, clientRequestId: crypto.randomUUID() };
-    requestRef.current = pendingRequest;
-    try {
-      if (await onCreateGroup(normalizedName, pendingRequest.clientRequestId)) {
-        requestRef.current = null;
-        form.reset();
-      }
-    } catch {
-      // The parent owns the visible action error state.
+  const [query, setQuery] = useState("");
+  const [discard, setDiscard] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
+  const lock = useRef(false);
+  const mounted = useMounted();
+  const nameId = useId();
+  const dirty =
+    name.trim() !== editor.initial.name ||
+    [...selected].sort().join() !== [...editor.initial.memberIds].sort().join();
+  const friendIds = new Set(friends.map((friend) => friend.userId));
+  const candidates = [
+    ...friends,
+    ...(editor.group?.members
+      .map(({ user }) => user)
+      .filter((user) => !friendIds.has(user.userId)) ?? []),
+  ];
+  const visible = candidates.filter((user) =>
+    matches(
+      `${user.displayName} ${user.handle ?? ""}`,
+      query.trim().toLocaleLowerCase(),
+    ),
+  );
+  const requestClose = () => {
+    if (!lock.current) {
+      if (dirty) setDiscard(true);
+      else onClose();
     }
   };
-
+  const save = async () => {
+    if (lock.current || !name.trim() || selected.size > 100) return;
+    lock.current = true;
+    setBusy(true);
+    setLocalError(null);
+    try {
+      const saved = await onSave({
+        ...editor.initial,
+        name: name.trim(),
+        memberIds: [...selected],
+      });
+      if (mounted.current && saved) onClose();
+    } catch {
+      if (mounted.current)
+        setLocalError("Could not save group. Your changes are still here.");
+    } finally {
+      lock.current = false;
+      if (mounted.current) setBusy(false);
+    }
+  };
   return (
-    <div className="popup-people-list">
-      <form className="popup-people-create-form" onSubmit={submitCreateGroup}>
-        <label className="popup-sr-only" htmlFor="popup-people-group-name">Group name</label>
-        <input
-          disabled={createPending}
-          id="popup-people-group-name"
-          maxLength={80}
-          name="group-name"
-          placeholder="New group"
-          required
-        />
-        <button
-          aria-label="Create group"
-          className="popup-people-create-button"
-          disabled={createPending}
-          type="submit"
-        >
-          {createPending ? <RefreshCw size={13} /> : <FolderPlus size={13} />}
-          {createPending ? "Creating..." : "Create"}
-        </button>
+    <PeopleDialog
+      title={editor.initial.create ? "New group" : "Edit group"}
+      onClose={requestClose}
+      busy={busy}
+    >
+      <form
+        className="people-editor"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void save();
+        }}
+      >
+        <div className="people-dialog-body">
+          <label className="people-field" htmlFor={nameId}>
+            Group name
+            <input
+              id={nameId}
+              name="group-name"
+              autoFocus
+              value={name}
+              maxLength={80}
+              required
+              disabled={busy}
+              placeholder="e.g. Anime night"
+              onChange={(event) => setName(event.target.value)}
+            />
+          </label>
+          <div className="people-list-caption">
+            <span>Choose friends</span>
+            <span>{selected.size} / 100</span>
+          </div>
+          <label className="people-search">
+            <Search size={16} />
+            <input
+              aria-label="Search group friends"
+              placeholder="Search friends"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </label>
+          <div className="people-member-list">
+            {visible.map((user) => (
+              <label className="people-row people-member" key={user.userId}>
+                <ProfileAvatar profile={user} />
+                <span className="people-row-copy">
+                  <strong>{user.displayName}</strong>
+                  <small>
+                    {!friendIds.has(user.userId)
+                      ? "No longer a friend"
+                      : user.handle
+                        ? `@${user.handle}`
+                        : "Friend"}
+                  </small>
+                </span>
+                <input
+                  type="checkbox"
+                  aria-label={user.displayName}
+                  checked={selected.has(user.userId)}
+                  disabled={
+                    busy ||
+                    (!selected.has(user.userId) &&
+                      (selected.size >= 100 || !friendIds.has(user.userId)))
+                  }
+                  onChange={() =>
+                    setSelected((current) => {
+                      const next = new Set(current);
+                      if (next.has(user.userId)) next.delete(user.userId);
+                      else next.add(user.userId);
+                      return next;
+                    })
+                  }
+                />
+              </label>
+            ))}
+            {!visible.length && (
+              <EmptyState>
+                {query ? "No friends found." : "You can add friends later."}
+              </EmptyState>
+            )}
+          </div>
+          <p className="people-hint">
+            A private list for inviting friends together.
+          </p>
+          {notice?.actionKey === `save-group:${editor.initial.groupId}` &&
+            notice.tone === "error" && <Notice notice={notice} />}
+          {localError && (
+            <p className="people-error" role="alert">
+              {localError}
+            </p>
+          )}
+        </div>
+        {discard ? (
+          <div className="people-discard" role="alert">
+            <span>Discard unsaved changes?</span>
+            <div>
+              <button
+                className="people-secondary"
+                type="button"
+                onClick={() => setDiscard(false)}
+              >
+                Keep editing
+              </button>
+              <button className="people-danger" type="button" onClick={onClose}>
+                Discard
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="people-dialog-footer">
+            {!editor.initial.create && (
+              <button
+                className="people-icon-button people-delete"
+                type="button"
+                aria-label="Delete group"
+                title="Delete group"
+                disabled={busy}
+                onClick={onDelete}
+              >
+                <Trash2 size={17} />
+              </button>
+            )}
+            <span className="people-footer-spacer" />
+            <button
+              className="people-secondary"
+              type="button"
+              disabled={busy}
+              onClick={requestClose}
+            >
+              Cancel
+            </button>
+            <button
+              className="people-primary"
+              type="submit"
+              disabled={
+                busy ||
+                !name.trim() ||
+                (!dirty && !editor.initial.create) ||
+                selected.size > 100
+              }
+            >
+              {busy ? "Saving..." : "Save"}
+            </button>
+          </div>
+        )}
       </form>
-
-      <PeopleHeading count={groups.length} label="Groups" />
-      {groups.length ? (
-        groups.map((group) => <GroupSummary group={group} key={group.id} />)
-      ) : (
-        <div className="popup-people-empty" data-state="empty">No groups yet.</div>
-      )}
-    </div>
+    </PeopleDialog>
   );
 }
 
-function PeopleHeading({ count, label }: { count: number; label: string }) {
-  return (
-    <div className="popup-people-heading">
-      <span>{label}</span>
-      <span>{count}</span>
-    </div>
-  );
-}
-
-function PersonRow({
-  action,
-  profile,
-  subtitle,
+function LinkDialog({
+  link,
+  onLink,
+  onCreate,
+  notice,
+  onClose,
 }: {
-  action?: React.ReactNode;
-  profile: PopupPeopleProfile;
-  subtitle?: string;
+  link: FriendInviteLink | null;
+  onLink: (link: FriendInviteLink) => void;
+  onCreate: PopupPeoplePanelProps["onCreateInviteLink"];
+  notice: PopupPeopleActionNotice | null;
+  onClose: () => void;
 }) {
+  const [busy, setBusy] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const lock = useRef(false);
+  const mounted = useMounted();
+  const activeLink =
+    link && Date.parse(link.expiresAt) > Date.now() ? link : null;
+  const create = async () => {
+    if (lock.current) return;
+    lock.current = true;
+    setBusy(true);
+    setFeedback("");
+    try {
+      const result = await onCreate();
+      if (mounted.current && result) onLink(result);
+    } catch {
+      if (mounted.current) setFeedback("Could not create a link. Try again.");
+    } finally {
+      lock.current = false;
+      if (mounted.current) setBusy(false);
+    }
+  };
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(activeLink!.url);
+      if (mounted.current) setFeedback("Copied. Send this link to one friend.");
+    } catch {
+      if (mounted.current)
+        setFeedback(
+          "Could not copy. Select the link above and copy it manually.",
+        );
+    }
+  };
   return (
-    <div className="popup-people-row">
-      <ProfileAvatar profile={profile} />
-      <span className="popup-people-row-main">
-        <span>{profile.displayName}</span>
-        <span>{subtitle ?? (profile.handle ? `@${profile.handle}` : "AniDachi user")}</span>
-      </span>
-      {action}
-    </div>
+    <PeopleDialog
+      title="Invite a friend"
+      busy={busy}
+      onClose={() => {
+        if (!lock.current) onClose();
+      }}
+    >
+      <div className="people-dialog-body people-link-body">
+        <span className="people-link-icon">
+          <Link size={24} />
+        </span>
+        <p>Send a one-time link. You become friends when they accept it.</p>
+        {activeLink && (
+          <>
+            <label className="people-field">
+              Invitation link
+              <input
+                readOnly
+                value={activeLink.url}
+                onFocus={(event) => event.currentTarget.select()}
+              />
+            </label>
+            <p className="people-hint">
+              One person can use this link. Expires{" "}
+              {new Date(activeLink.expiresAt).toLocaleDateString()}.
+            </p>
+            <button
+              className="people-secondary"
+              disabled={busy}
+              onClick={() => void create()}
+            >
+              {busy ? "Creating..." : "Create another link"}
+            </button>
+          </>
+        )}
+        {notice?.actionKey === "create-friend-link" &&
+          notice.tone === "error" && <Notice notice={notice} />}
+        {feedback && (
+          <p className="people-hint" role="status">
+            {feedback}
+          </p>
+        )}
+      </div>
+      <div className="people-dialog-footer">
+        <button className="people-secondary" disabled={busy} onClick={onClose}>
+          Close
+        </button>
+        <span className="people-footer-spacer" />
+        {activeLink ? (
+          <button
+            className="people-primary"
+            disabled={busy}
+            onClick={() => void copy()}
+          >
+            {feedback.startsWith("Copied") ? (
+              <Check size={16} />
+            ) : (
+              <Copy size={16} />
+            )}
+            Copy link
+          </button>
+        ) : (
+          <button
+            className="people-primary"
+            disabled={busy}
+            onClick={() => void create()}
+          >
+            {busy ? "Creating..." : "Create link"}
+          </button>
+        )}
+      </div>
+    </PeopleDialog>
   );
 }
 
-function GroupSummary({ group }: { group: PopupPeopleGroup }) {
-  const memberCount = group.members.length;
+function RemovalDialog({
+  removal,
+  notice,
+  onClose,
+  onConfirm,
+}: {
+  removal: Removal;
+  notice: PopupPeopleActionNotice | null;
+  onClose: () => void;
+  onConfirm: () => Promise<boolean>;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const lock = useRef(false);
+  const mounted = useMounted();
+  const confirm = async () => {
+    if (lock.current) return;
+    lock.current = true;
+    setBusy(true);
+    try {
+      await onConfirm();
+    } catch {
+      if (mounted.current)
+        setError("Could not complete this action. Try again.");
+    } finally {
+      lock.current = false;
+      if (mounted.current) setBusy(false);
+    }
+  };
+  const actionKey = `${removal.kind === "friend" ? "remove-friend" : "delete-group"}:${removal.id}`;
   return (
-    <div className="popup-people-row popup-people-group-row">
-      <span className="popup-people-group-icon"><Users size={15} /></span>
-      <span className="popup-people-row-main">
-        <span>{group.name}</span>
-        <span>{memberCount} {memberCount === 1 ? "member" : "members"}</span>
-      </span>
-    </div>
+    <PeopleDialog
+      title={removal.kind === "friend" ? "Remove friend?" : "Delete group?"}
+      busy={busy}
+      onClose={() => {
+        if (!lock.current) onClose();
+      }}
+    >
+      <div className="people-dialog-body">
+        <p className="people-removal-name">{removal.name}</p>
+        <p className="people-hint">
+          {removal.kind === "friend"
+            ? "They will leave your friends list. You can reconnect with a new invitation link."
+            : "This removes your private group. Everyone stays in your friends list."}
+        </p>
+        {notice?.actionKey === actionKey && notice.tone === "error" && (
+          <Notice notice={notice} />
+        )}
+        {error && <p role="alert">{error}</p>}
+      </div>
+      <div className="people-dialog-footer">
+        <button className="people-secondary" disabled={busy} onClick={onClose}>
+          Cancel
+        </button>
+        <span className="people-footer-spacer" />
+        <button
+          className="people-danger"
+          disabled={busy}
+          onClick={() => void confirm()}
+        >
+          {busy
+            ? "Removing..."
+            : removal.kind === "friend"
+              ? "Remove friend"
+              : "Delete group"}
+        </button>
+      </div>
+    </PeopleDialog>
   );
 }
 
+function PeopleDialog({
+  title,
+  onClose,
+  busy,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  busy: boolean;
+  children: ReactNode;
+}) {
+  const ref = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
+  useEffect(() => {
+    const dialog = ref.current!;
+    const opener = document.activeElement as HTMLElement | null;
+    dialog.showModal();
+    return () => {
+      dialog.close();
+      if (opener?.isConnected) opener.focus();
+      else
+        document
+          .querySelector<HTMLElement>('.people-modes [aria-selected="true"]')
+          ?.focus();
+    };
+  }, []);
+  return (
+    <dialog
+      ref={ref}
+      className="people-dialog"
+      aria-labelledby={titleId}
+      aria-busy={busy}
+      onCancel={(event) => {
+        event.preventDefault();
+        onClose();
+      }}
+    >
+      <div className="people-dialog-header">
+        <h2 id={titleId}>{title}</h2>
+        <button
+          className="people-icon-button"
+          type="button"
+          aria-label="Close dialog"
+          disabled={busy}
+          onClick={onClose}
+        >
+          <X size={19} />
+        </button>
+      </div>
+      {children}
+    </dialog>
+  );
+}
+function FriendMenu({
+  name,
+  disabled,
+  onRemove,
+}: {
+  name: string;
+  disabled: boolean;
+  onRemove: () => void;
+}) {
+  const ref = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const close = (event: Event) => {
+      if (ref.current && !ref.current.contains(event.target as Node))
+        ref.current.open = false;
+    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, []);
+  return (
+    <details
+      className="people-row-menu"
+      ref={ref}
+      onKeyDown={(event) => {
+        if (event.key === "Escape" && ref.current?.open) {
+          event.preventDefault();
+          event.stopPropagation();
+          ref.current.open = false;
+          ref.current.querySelector("summary")?.focus();
+        }
+      }}
+    >
+      <summary
+        aria-label={`Actions for ${name}`}
+        className="people-icon-button"
+      >
+        <MoreHorizontal size={18} />
+      </summary>
+      <div>
+        <button
+          disabled={disabled}
+          onClick={() => {
+            if (ref.current) {
+              ref.current.open = false;
+              ref.current.querySelector("summary")?.focus();
+            }
+            onRemove();
+          }}
+        >
+          <Trash2 size={14} />
+          Remove friend
+        </button>
+      </div>
+    </details>
+  );
+}
+function Notice({ notice }: { notice: PopupPeopleActionNotice }) {
+  return (
+    <div
+      className="popup-people-action-notice"
+      data-action-key={notice.actionKey}
+      data-tone={notice.tone}
+      role={notice.tone === "error" ? "alert" : "status"}
+    >
+      {notice.text}
+    </div>
+  );
+}
+function EmptyState({ children }: { children: ReactNode }) {
+  return (
+    <div className="people-empty" data-state="empty">
+      {children}
+    </div>
+  );
+}
 function ProfileAvatar({ profile }: { profile: PopupPeopleProfile }) {
-  if (profile.avatarUrl) return <img alt="" className="popup-people-avatar" loading="lazy" src={profile.avatarUrl} />;
-  return <span className="popup-people-avatar">{initials(profile.displayName)}</span>;
+  return profile.avatarUrl ? (
+    <img
+      className="people-avatar"
+      src={profile.avatarUrl}
+      alt=""
+      loading="lazy"
+    />
+  ) : (
+    <span className="people-avatar">
+      {profile.displayName
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0]?.toUpperCase())
+        .join("") || "A"}
+    </span>
+  );
 }
-
-function initials(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("") || "A";
+function matches(value: string, query: string) {
+  return value.toLocaleLowerCase().includes(query);
 }
-
-function addFriendActionKey(userId: string): PopupPeopleActionKey {
-  return `add-friend:${userId}`;
+function useMounted() {
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+  return mounted;
 }

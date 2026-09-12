@@ -171,6 +171,15 @@ export function roomEventDebugSnapshot(event: ClientEvent | ServerEvent): Record
 
 function roomEventDebugSnapshotRaw(event: ClientEvent | ServerEvent): Record<string, unknown> {
   switch (event.type) {
+    case "SET_MEDIA_INTENT":
+      return {type:event.type,media:event.media,enabled:event.enabled,intentSequence:event.intentSequence,revocationEpoch:event.revocationEpoch};
+    case "REVOKE_MEDIA_GRANT":
+      return {type:event.type,media:event.media};
+    case "MEDIA_INTENT_ACK":
+    case "MEDIA_INTENT_ERROR":
+      return {type:event.type,media:event.media,intentSequence:event.intentSequence,snapshotSequence:event.snapshotSequence,...(event.type==="MEDIA_INTENT_ERROR" ? {code:event.code} : {})};
+    case "ROOM_MEDIA_SNAPSHOT":
+      return {type:event.type,mediaProtocolVersion:event.capabilities.mediaProtocolVersion,snapshotSequence:event.snapshotSequence,participantCount:event.participants.length,cameraCount:event.participants.filter(p=>p.cameraGranted).length,microphoneCount:event.participants.filter(p=>p.microphoneGranted).length};
     case "ROOM_ENDED":
       return {
         type: event.type,

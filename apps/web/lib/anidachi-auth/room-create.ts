@@ -14,8 +14,11 @@ export type RoomCreateRequestInput = {
 
 type RoomCreateFailure = {
 	ok: false;
-	status: 400;
-	body: { error: string; code: "INVALID_REQUEST" | "INVALID_ROOM_SOURCE" };
+	status: 400 | 426;
+	body: {
+		error: string;
+		code: "INVALID_REQUEST" | "INVALID_ROOM_SOURCE" | "ROOM_UPDATE_REQUIRED";
+	};
 };
 
 export async function handleRoomCreateRequestBody<T>(params: {
@@ -34,6 +37,12 @@ export async function handleRoomCreateRequestBody<T>(params: {
 	try {
 		return { ok: true, value: await params.create(parsed.input) };
 	} catch (error) {
+		if (error instanceof Error && error.message === "ROOM_UPDATE_REQUIRED")
+			return {
+				ok: false,
+				status: 426,
+				body: { error: "Update required", code: "ROOM_UPDATE_REQUIRED" },
+			};
 		if (
 			error instanceof RoomSourcePersistenceError &&
 			error.kind === "invalid"

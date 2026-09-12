@@ -2,11 +2,81 @@
 
 Date: 2026-05-25
 
+## Catalog Identity Evidence
+
+Date: 2026-09-05
+
+Task 1 repeated a secret-free live preflight through Crunchyroll's public web
+client context. This is empirical adapter evidence, not a public or supported
+Crunchyroll API contract. The run used no account session, browser profile,
+cookie, `.env` value, or user identifier. Fixtures retain only catalog fields;
+authorization values and the raw token response are not stored.
+
+The current web client returned these paths:
+
+```txt
+/content/v2/cms/objects/{watchId}
+/content/v2/cms/series/{seriesId}/seasons
+/content/v2/cms/seasons/{seasonId}/episodes
+```
+
+The object response is not canonical identity on its own. For tested English
+dub and Japanese original watch GUIDs it returned `series_id`, the
+variant-specific `season_id`, `audio_locale`, and `versions[]`, but both the
+top-level `identifier` and `episode_metadata.season_identifier` were null.
+Canonical `season.identifier` appeared in the series season list, and canonical
+logical `episode.identifier` appeared in the matching season episode list.
+
+Current-object resolution therefore uses the exact recorded `/watch/{guid}`:
+
+1. Require exactly one object whose `id` is that GUID and exactly one matching
+   `versions[].guid`; take its `series_id`, `season_guid`, and audio locale.
+2. Resolve that raw season GUID to exactly one season row (direct `id` or one
+   `versions[].guid`) with a nonempty `identifier`.
+3. Fetch only that matching season's episode list and resolve the recorded watch
+   GUID to exactly one row (direct `id` or one `versions[].guid`) with a nonempty
+   `identifier` and consistent `season_guid`.
+4. Derive keys exactly as `crunchyroll:series:<series id>`,
+   `crunchyroll:season:<season identifier>`, and
+   `crunchyroll:episode:<episode identifier>`.
+
+This resolves ordinary progress independently of a complete **series** catalog,
+but not independently of provider metadata. Missing lists, null identifiers,
+wrong GUIDs, duplicate aliases, or inconsistent season mappings remain identity
+pending. Titles, slugs, season/episode numbers, locale, and audio are never
+substitute identity. Task 1 deliberately left its pure helper unwired. The later
+schema-3 implementation now wires this evidence through pending observation,
+canonical progress, catalog begin/commit, cache invalidation, Popup, and website
+consumers. The coordinated staging transition completed on 2026-09-05 through
+PRs #265 and #264. Exact progress is enabled only for proven complete current
+catalogs; partial evidence remains observed-only. Authenticated provider and
+loaded-extension acceptance are still required. Technical main remains on v2.
+
+The same live pass observed:
+
+- region `VN` in provider response context;
+- stable season identifiers and variant GUIDs while English/French labels
+  differed;
+- `meta.versions_considered: true` on season and episode lists;
+- `total: 25` and 25 raw rows for the sampled season;
+- `start=1&n=1` and `offset=1&limit=1` both returning the same full 25 rows,
+  first ID, and last ID, so these parameters are ignored and prove no pagination;
+- the field-specific year-9998 availability sentinel on sampled episodes.
+
+The fixtures distinguish sanitized live evidence from deliberately derived
+parser cases. Fractional, zero, and null numbering plus future, expired, clip,
+failed-call, raw-count-mismatch, and visually identical legacy-season cases are
+included as labeled contract cases; this preflight did not prove each of those
+cases live. A provider fallback locale was also not proven. AniDachi must persist
+returned labels without machine translation, and any unknown availability,
+failed traversal, count mismatch, or missing completeness proof remains partial.
+No exact denominator is enabled by this task.
+
 ## Watch History v2 Release State
 
 Date: 2026-08-16
 
-Staging now runs the Watch History v2 cutover. The active Crunchyroll adapter
+At this 2026-08-16 checkpoint, staging ran the Watch History v2 cutover. Its Crunchyroll adapter
 observes the current episode and meaningful playback locally, the extension
 background is the only extension writer, and Popup plus website read the same
 canonical account history. A user confirmed the repaired solo Crunchyroll ->
@@ -14,12 +84,50 @@ Popup -> staging website path after PR #188. The broader start/pause/backward
 seek/reload/end/resume matrix and two-profile shared cases have not all been
 manually verified and remain release gates.
 
-This does not change the catalog boundary below. The runtime records only
+This historical checkpoint did not change the catalog boundary below. That runtime recorded only
 observed seasons and episodes, reports `catalogState: "unavailable"`, and does
 not fabricate catalog totals or poll Crunchyroll for a complete catalog. No raw
 authenticated provider payload is committed.
 
-## Catalog Observation
+## Catalog Parser Evidence
+
+Date: 2026-09-05
+
+Schema 3 now has a pure, network-free Crunchyroll catalog normalizer. It consumes
+only sanitized provider metadata, preserves provider-returned labels, separates
+canonical episode identity from raw watch variants, checks declared totals before
+collapse, and returns `partial` for failed traversal, ambiguity, unknown
+availability, context drift, or resource overflow. The normalizer itself remains
+pure: it does not fetch, authenticate, write storage, or calculate user aggregates.
+
+The completed local candidate now places that normalizer behind a bounded
+MAIN-world metadata bridge and background coordinator. Progress is stored before
+metadata discovery as identity-pending and is never posted until exact raw GUID
+resolution. The bridge has per-request deadlines, cancellation, response-size
+limits, a maximum of four active metadata requests, 100 raw seasons, 2,000 episode
+rows per response, and a bounded aggregate raw bundle. Catalog collection starts
+only from meaningful title interaction; it is not a startup, heartbeat, Popup,
+polling, or crawling path. Server-issued revision, owner, generation, page/visit,
+context, deletion, and invalidation fences prevent an obsolete collection or
+response from becoming current.
+
+Duplicate audio/watch variants collapse only through provider identifiers. The
+canonical progress row retains the latest actually watched raw GUID, audio locale,
+source URL, position, and duration; completion remains one logical completion.
+Exact aggregates come only from the committed complete regional catalog projection.
+A region change suppresses the old exact projection immediately, while a failed
+same-region locale refresh retains the last committed exact bundle and labels.
+
+The parser fixtures distinguish evidence provenance. The Haikyu two-season fixture
+is a bounded derived contract assembly based on sanitized 2026-09-05 response
+shapes; it is not a claim that only two seasons exist or that this synthetic slice
+proves a live complete title. Availability fixtures identify which sentinel row
+was observed live and which future, expired, fractional, zero, null, and clip cases
+remain derived classifier cases. Complete-title traversal counts from the later
+sanitized evidence pass are recorded in the approved implementation plan and task
+evidence, without promoting authenticated provider payloads into protocol fields.
+
+## Earlier Catalog Observation
 
 Date: 2026-08-13
 
@@ -45,15 +153,20 @@ observed watch history, titles, episode numbers, or generated season keys. Resum
 progress for the active episode remains valid and independent of this catalog
 gate.
 
-No catalog fixtures are committed at this stage because the available test
-payloads are handwritten artwork fixtures rather than sanitized captures of a
-complete provider response. When a reliable source is observed, fixtures must be
-reduced from that real response and must exclude cookies, authorization headers,
-tokens, account identifiers, and unrelated private fields.
+This was the 2026-08-13 boundary. Sanitized and explicitly provenance-labeled
+catalog fixtures were added after the 2026-09-05 evidence pass. They exclude
+cookies, authorization headers, tokens, account identifiers, and unrelated
+private fields; derived cases remain labeled and are not presented as live facts.
 
 Crunchyroll endpoint paths and payload shapes remain private implementation
 details of the Crunchyroll adapter. They are not shared AniDachi protocol
 contracts and may change without affecting other provider adapters.
+
+Local SQL, fixture, component, and headless rendering proof is recorded in
+`docs/watch-history-v3-local-verification.md`. It is not authenticated provider
+or loaded-extension acceptance. Matching staging activation and tester-artifact
+verification are recorded in `docs/watch-history-v3-staging-verification.md`;
+the schema-3 extension must not be pointed at the technical-main v2 backend.
 
 ## Live CDP Research: Navigation and Player Lifecycle
 

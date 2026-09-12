@@ -1,8 +1,5 @@
-import type { NextRequest } from "next/server";
-import { handleWatchHistoryV2RoomPost } from "@/lib/anidachi-auth/watch-history-v2-routes";
+import { disabledWatchHistoryV2Route } from "@/lib/anidachi-auth/watch-library-routes";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(request: NextRequest) {
-  return handleWatchHistoryV2RoomPost(request);
-}
+export const POST = disabledWatchHistoryV2Route;

@@ -26,7 +26,11 @@ Project: Anidachi web app.
 | `ANIDACHI_STAGING_GATE_COOKIE_SECRET` | Preview / `staging` | Signs staging access cookie | Gate cookie persists in same browser |
 | `ANIDACHI_API_INTERNAL_BASE_URL` | Preview / `staging` | Server-only Worker origin, expected `https://anidachi-api-staging.vladislav-gul7.workers.dev` | Host room end succeeds and the Worker receives `/internal/rooms/:roomId/end` |
 | `ANIDACHI_API_INTERNAL_BASE_URL` | Production | Server-only Worker origin, expected `https://anidachi-api-production.vladislav-gul7.workers.dev` | Production host room end reaches the production Worker, never staging |
-| `ANIDACHI_INTERNAL_API_SECRET` | Production / Preview `staging` | Authenticates Web/Worker room lifecycle calls; use a distinct matching value in both runtimes per environment | Host room end completes without `ROOM_END_SYNC_FAILED`; unauthenticated internal requests return `401` |
+| `ANIDACHI_INTERNAL_API_SECRET` | Production / Preview `staging` | Authenticates Web/Worker room lifecycle calls and invitation-outbox recovery; use a distinct matching value in both runtimes per environment | Host room end completes without `ROOM_END_SYNC_FAILED`; authenticated recovery acknowledges a bounded drain; unauthenticated internal requests return `401` |
+| `ANIDACHI_NOTIFICATION_DRAIN_SECRET` | Preview / exact branch `staging`; production only after separate promotion | Dedicated server-only authority for the notification drain; same environment's value is stored in Vault as `anidachi_notification_drain_secret`. Never reuse the room/internal secret | Missing/wrong bearer fails before database access; dedicated bearer works only at the drain, not room callbacks; verify after a new web deployment |
+| `ANIDACHI_VAPID_SUBJECT` | Production / Preview `staging` | Server-side contact identity for existing Web Push delivery | Complete VAPID configuration is accepted; unavailable configuration leaves observable retry work |
+| `ANIDACHI_VAPID_PUBLIC_KEY` | Production / Preview `staging` | Public application-server key used by extension push subscription registration | Registered extension subscription and server delivery use the same environment's key |
+| `ANIDACHI_VAPID_PRIVATE_KEY` | Production / Preview `staging` | Server-only Web Push signing key; never include in Worker, extension or browser bundles | Controlled staging invitation records provider acceptance without logging key material |
 | `KREATLI_CRM_PASSWORD` | Production / Preview as needed | Internal CRM access | CRM login works only for authorized users |
 | `KREATLI_CRM_SESSION_SECRET` | Production / Preview as needed | Internal CRM session signing | CRM session survives refresh |
 | `KREATLI_CRM_BLOB_READ_WRITE_TOKEN` | Production / Preview `staging` | Server-only authority for the existing private `kreatli-crm/*` data objects used by the waitlist and public forms | `/api/waitlist-stats` returns the durable nonzero count; a controlled form submission persists across a fresh deployment |
@@ -50,6 +54,21 @@ The one-off recovery CLI uses
 `KREATLI_CRM_BLOB_READ_WRITE_TOKEN` for the private destination. These values
 belong only in the operator process environment. They must not be committed,
 printed, or added to browser/extension configuration.
+
+## Application maintenance preparation
+
+`ANIDACHI_MAINTENANCE_MODE` is an optional server-only setting for Web and
+Worker. Unset, empty or exact `open` preserves existing behavior; `closed` or
+an invalid nonempty value returns retryable HTTP 503 before application handlers
+and pauses the Worker's notification recovery caller. It adds no new secret or
+operator bypass. No environment enables it automatically.
+
+This is deployment-local admission only. Existing sockets, Durable Object
+alarms, Postgres jobs, in-flight work and old deployments need separate controls.
+Activation and reopening follow the
+[maintenance admission contract](releases/personal-history-mvp/maintenance-admission.md)
+and the reviewed production transition sequence. Never apply it to working
+staging or production as an incidental configuration test.
 
 ## GitHub Actions
 
@@ -83,8 +102,17 @@ Engine is enabled and the GitHub token has the current scopes.
 | Analytics Engine binding | `ROOM_ANALYTICS` | `ROOM_ANALYTICS` | Dataset names differ by environment |
 | Analytics dataset | `anidachi_room_events_staging` | `anidachi_room_events_production` | Appears after binding and first writes |
 | Worker env var | `ANIDACHI_ENV=staging` | `ANIDACHI_ENV=production` | Used in telemetry/debugging |
-| Worker env var | `ANIDACHI_WEB_INTERNAL_BASE_URL=https://staging.anidachi.app` | `ANIDACHI_WEB_INTERNAL_BASE_URL=https://www.anidachi.app` | Worker callback target for atomic room finalization |
+| Worker env var | `ANIDACHI_WEB_INTERNAL_BASE_URL=https://staging.anidachi.app` | `ANIDACHI_WEB_INTERNAL_BASE_URL=https://www.anidachi.app` | Environment-specific target for room callbacks and invitation-outbox recovery; scheduler rejects a mismatched origin |
 | Worker secret | `ANIDACHI_INTERNAL_API_SECRET` | `ANIDACHI_INTERNAL_API_SECRET` | Must match the Web value for the same environment and differ between staging/production |
+
+The preceding invitation-outbox recovery caller uses the existing internal URL
+and secret. Supabase recovery is active on staging with a separate drain-only
+secret and does not access `ROOMS` or change room lifecycle alarms. The old
+staging cron was disabled after automatic Supabase recovery was verified on
+2026-09-04; `env.staging.triggers.crons` stays empty. Production configuration
+remains unchanged until its separate promotion. The ordered rollout and
+acceptance boundary are recorded in
+`docs/superpowers/plans/2026-09-04-invitation-delivery-reliability.md`.
 
 Worker secrets are managed with Wrangler/GitHub Actions. Do not store them in
 repo docs. Expected categories:
@@ -112,6 +140,24 @@ browser client bundles.
 
 Document schema changes in migrations and verify them before relying on new
 columns/RPCs in product code.
+
+Invitation recovery uses pg_cron, pg_net and Vault in the same environment's
+database. Its migration is dormant until an operator sets the environment and
+enables the private singleton. Provision a fresh random drain-only value in
+Vercel Preview `staging` and staging Vault without logging it or adding it to
+local files. Verify effective denial of Vault and private scheduler access before
+sending a credential-bearing request. Never grant `anon` or `authenticated`
+access to scheduler state or the drain function. Preserve the platform-owned
+pg_net ACLs: Supabase intentionally grants PUBLIC transport access, protected by
+the non-exposed `net` schema and NOLOGIN client roles. Verify that `net`, `vault`
+and `anidachi_private` are rejected by the Data API and that no client-callable
+public function exposes their data. Do not attempt unsupported owner escalation.
+
+The scheduled SQL sets a short statement timeout before a fixed private function
+call; function-level timeout alone does not bound its outer SQL statement. Do not
+put bearer values in cron commands, committed migrations, request IDs, or diagnostics.
+Validate cron execution, HTTP result, and durable outbox completion separately.
+The pg_net request queue is transient and is not a second delivery outbox.
 
 ## Change Checklist
 

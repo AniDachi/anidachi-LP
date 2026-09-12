@@ -1,3 +1,5 @@
+import { PopupRetainedPanel, usePopupNavigation } from "./use-popup-navigation";
+import { forgetPopupView } from "./popup-view-state";
 import {
   type AccountInboxResponse,
   type MarkAccountInboxSeenRequest,
@@ -5,18 +7,21 @@ import {
   SocialSnapshotSchema,
 } from "@anidachi/protocol";
 import {
-  Check,
   Bell,
   BellOff,
-  Inbox,
   LogIn,
   RefreshCw,
   Settings,
-  Users,
   X,
 } from "lucide-react";
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { getCachedAccountInboxForUser, setCachedAccountInboxForUser } from "./account-inbox-cache";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  accountInboxItemInstanceKey,
+  getCachedAccountInboxForUser,
+  mergeAccountInboxResponses,
+  publishAccountInboxForUser,
+  subscribeToAccountInboxForUser,
+} from "./account-inbox-cache";
 import { listAccountInbox, markAccountInboxItemsSeen } from "./account-inbox-client";
 import {
   type AccountOwnedState,
@@ -45,8 +50,6 @@ import { logDebug } from "./debug-log";
 import { PanelAccountTitle } from "./panel-account-title";
 import {
   buildPopupInboxModel,
-  type PopupInboxFriendRequest,
-  type PopupInboxInvite,
   type PopupInboxModel,
 } from "./popup-people-model";
 import {
@@ -55,8 +58,11 @@ import {
   PopupPeoplePanel,
   type PopupPeoplePresentationState,
 } from "./popup-people-panel";
+import { PopupInboxPanel, type InboxInviteAction } from "./popup-inbox-panel";
+export { PopupInboxPanel } from "./popup-inbox-panel";
 import { popupStyles } from "./popup-styles";
 import { PopupWatchHistoryPanel } from "./popup-watch-history";
+import { PopupHistorySettings } from "./popup-history-settings";
 import {
   consumePopupRouteIntent,
   requestRoomInviteNotificationPermission,
@@ -68,12 +74,16 @@ import {
 import {
   acceptFriendRequest,
   acceptRoomInvite,
-  createFriendGroup,
+  createFriendInviteLink,
+  saveFriendGroup,
+  archiveFriendGroup,
+  removeFriend,
+  type FriendInviteLink,
+  type SaveFriendGroupInput,
   declineFriendRequest,
   declineRoomInvite,
   listRoomInvites,
   listSocialDirectory,
-  sendFriendRequest,
 } from "./social-client";
 import {
   getCachedSocialSnapshotForUser,
@@ -145,7 +155,7 @@ export function unseenAccountInboxItems(
 }
 
 export function PopupApp() {
-  const [activeTab, setActiveTab] = useState<PopupTab>("resources");
+  const shellRef = useRef<HTMLElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [notificationStatus, setNotificationStatus] =
     useState<RoomInviteNotificationStatus | null>(null);
@@ -156,21 +166,39 @@ export function PopupApp() {
     tokens: null,
     error: null,
   });
+  const tokens = authSession.status === "ready" ? authSession.tokens : null;
+  const [historySession, setHistorySession] = useState({ tokens, revision: 0 });
+  if (historySession.tokens?.user.id !== tokens?.user.id ||
+    historySession.tokens?.accessToken !== tokens?.accessToken ||
+    historySession.tokens?.refreshToken !== tokens?.refreshToken) {
+    // A same-owner credential handoff can reject an in-flight history read.
+    // Restart it from the new authority without remounting the drawer or tying
+    // history refreshes to unrelated social/profile updates. Only the counter
+    // reaches the history UI; credentials never enter its query keys or DOM.
+    setHistorySession({
+      tokens,
+      revision: historySession.revision + (
+        tokens && historySession.tokens?.user.id === tokens.user.id ? 1 : 0
+      ),
+    });
+  }
   const [socialState, setSocialState] = useState<SocialPanelState>(() => signedOutAccountState());
   const [inboxState, setInboxState] = useState<AccountInboxState>(() => signedOutAccountState());
   const [busyInviteId, setBusyInviteId] = useState<string | null>(null);
+  const [busyInviteAction, setBusyInviteAction] = useState<InboxInviteAction | null>(null);
   const [busySocialAction, setBusySocialAction] = useState<PopupSocialActionKey | null>(null);
   const [socialNotice, setSocialNotice] = useState<PopupNotice | null>(null);
-  const [watchHistoryRefreshVersion, setWatchHistoryRefreshVersion] = useState(0);
   const accountGateRef = useRef(createAccountRequestGate());
   const popupSyncGateRef = useRef(createAsyncGenerationGate());
   const socialLoadGateRef = useRef(createAsyncGenerationGate());
   const inboxLoadGateRef = useRef(createAsyncGenerationGate());
   const socialMutationInFlightRef = useRef(false);
   const seenInboxSignatureRef = useRef<string | null>(null);
+  const pendingSeenInboxItemsRef = useRef(new Set<string>());
   const consumedRouteIntentUserIdRef = useRef<string | null>(null);
   const activateAccount = useCallback((userId: string | null): AccountRequestToken | null => {
     const previousUserId = accountGateRef.current.currentUserId();
+    if (!userId && previousUserId) forgetPopupView();
     accountGateRef.current.activate(userId);
 
     setSocialState((current) =>
@@ -185,13 +213,16 @@ export function PopupApp() {
       socialLoadGateRef.current.begin();
       inboxLoadGateRef.current.begin();
       setBusyInviteId(null);
+      setBusyInviteAction(null);
       setBusySocialAction(null);
       seenInboxSignatureRef.current = null;
+      pendingSeenInboxItemsRef.current = new Set();
     }
 
     return userId ? accountGateRef.current.capture(userId) : null;
   }, []);
   const accountUser = authSession.status === "ready" ? authSession.tokens.user : null;
+  const [activeTab, setActiveTab] = usePopupNavigation(accountUser?.id ?? null, shellRef);
   const inboxModel = useMemo(() => buildPopupInboxModel(inboxState.data), [inboxState.data]);
   const peoplePresentationState = mapSocialStateToPeoplePresentation(socialState);
   const peoplePendingActionKey = isPopupPeopleActionKey(busySocialAction) ? busySocialAction : null;
@@ -268,12 +299,12 @@ export function PopupApp() {
         const cached = await getCachedAccountInboxForUser(tokens.user.id);
         if (!isCurrent()) return false;
         if (cached) {
-          setInboxState({
+          setInboxState((current) => ({
             status: "loading",
             ownerUserId: tokens.user.id,
-            data: cached.data,
+            data: mergeAccountInboxResponses(current.data, cached.data),
             error: null,
-          });
+          }));
         }
 
         const inbox = await listAccountInbox(tokens.accessToken);
@@ -281,9 +312,13 @@ export function PopupApp() {
         if (inbox.meta.ownerUserId !== tokens.user.id) {
           throw new Error("Inbox response belongs to another account");
         }
-        const cacheWriteAccepted = await setCachedAccountInboxForUser(tokens.user.id, inbox);
-        if (!cacheWriteAccepted || !isCurrent()) return false;
-        setInboxState(accountReadyState(tokens.user.id, inbox));
+        const canonical = await publishAccountInboxForUser(tokens.user.id, inbox, {
+          isCurrent,
+          reread: () => listAccountInbox(tokens.accessToken),
+        });
+        if (!canonical || !isCurrent()) return false;
+        setInboxState((current) => accountReadyState(tokens.user.id,
+          mergeAccountInboxResponses(current.data, canonical)));
         return true;
       } catch (error) {
         if (!isCurrent()) return false;
@@ -342,7 +377,6 @@ export function PopupApp() {
           loadInboxForTokens(tokens, isCurrentSync),
         ]);
         if (!isCurrentSync() || !accountGateRef.current.isCurrent(request)) return null;
-        setWatchHistoryRefreshVersion((current) => current + 1);
         return tokens;
       } catch (error) {
         if (!isCurrentSync()) return null;
@@ -397,6 +431,7 @@ export function PopupApp() {
         return;
       }
       setBusyInviteId(inviteId);
+      setBusyInviteAction("join");
       try {
         const tokens = await requestCurrentExtensionSession();
         if (!accountGateRef.current.isCurrent(request)) return;
@@ -421,7 +456,10 @@ export function PopupApp() {
         );
       } finally {
         socialMutationInFlightRef.current = false;
-        if (accountGateRef.current.isCurrent(request)) setBusyInviteId(null);
+        if (accountGateRef.current.isCurrent(request)) {
+          setBusyInviteId(null);
+          setBusyInviteAction(null);
+        }
       }
     },
     [loadInboxForTokens, loadSocialForTokens, transitionToResolvedSession],
@@ -438,6 +476,7 @@ export function PopupApp() {
         return;
       }
       setBusyInviteId(inviteId);
+      setBusyInviteAction("decline");
       try {
         const tokens = await requestCurrentExtensionSession();
         if (!accountGateRef.current.isCurrent(request)) return;
@@ -460,7 +499,10 @@ export function PopupApp() {
         );
       } finally {
         socialMutationInFlightRef.current = false;
-        if (accountGateRef.current.isCurrent(request)) setBusyInviteId(null);
+        if (accountGateRef.current.isCurrent(request)) {
+          setBusyInviteId(null);
+          setBusyInviteAction(null);
+        }
       }
     },
     [loadInboxForTokens, loadSocialForTokens, transitionToResolvedSession],
@@ -469,9 +511,10 @@ export function PopupApp() {
   const runSocialAction = useCallback(
     async (
       key: PopupSocialActionKey,
-      action: (accessToken: string) => Promise<unknown>,
+      action: (accessToken: string, ownerUserId: string) => Promise<unknown>,
       success: string,
       fallbackError: string,
+      refresh = true,
     ): Promise<boolean> => {
       if (socialMutationInFlightRef.current) return false;
       socialMutationInFlightRef.current = true;
@@ -481,6 +524,7 @@ export function PopupApp() {
         socialMutationInFlightRef.current = false;
         return false;
       }
+      let actionTokens: ExtensionAuthTokens | null = null;
       setBusySocialAction(key);
       setSocialNotice(null);
       try {
@@ -494,8 +538,10 @@ export function PopupApp() {
         }
 
         setAuthSession({ status: "ready", tokens, error: null });
-        await action(tokens.accessToken);
+        actionTokens = tokens;
+        await action(tokens.accessToken, request.userId);
         if (!accountGateRef.current.isCurrent(request)) return false;
+        if (!refresh) return true;
         const [socialRefreshed, inboxRefreshed] = await Promise.all([
           loadSocialForTokens(tokens),
           loadInboxForTokens(tokens),
@@ -513,6 +559,12 @@ export function PopupApp() {
         return true;
       } catch (error) {
         if (!accountGateRef.current.isCurrent(request)) return false;
+        // Reconcile revisions and removed friendships without overwriting the
+        // open draft. Reopening after a conflict must use the latest group.
+        if (key.startsWith("save-group:") && actionTokens) {
+          await loadSocialForTokens(actionTokens);
+          if (!accountGateRef.current.isCurrent(request)) return false;
+        }
         setSocialNotice({
           actionKey: key,
           tone: "error",
@@ -527,31 +579,28 @@ export function PopupApp() {
     [loadInboxForTokens, loadSocialForTokens, transitionToResolvedSession],
   );
 
-  const createGroup = useCallback(
-    async (name: string, clientRequestId: string) =>
-      runSocialAction(
-        "create-group",
-        async (accessToken) => {
-          await createFriendGroup(accessToken, { name, clientRequestId });
-        },
-        "Group created.",
-        "Could not create group",
-      ),
-    [runSocialAction],
+  const saveGroup = useCallback(
+    (input: SaveFriendGroupInput) => runSocialAction(
+      `save-group:${input.groupId}`,
+      (accessToken, ownerUserId) => saveFriendGroup(accessToken, ownerUserId, input),
+      input.create ? "Group created." : "Group saved.", "Could not save group",
+    ), [runSocialAction],
   );
-
-  const addFriend = useCallback(
-    async (userId: string) =>
-      runSocialAction(
-        `add-friend:${userId}`,
-        async (accessToken) => {
-          await sendFriendRequest(accessToken, userId);
-        },
-        "Friend request sent.",
-        "Could not send friend request",
-      ),
-    [runSocialAction],
-  );
+  const createInviteLink = useCallback(async (): Promise<FriendInviteLink | null> => {
+    let link: FriendInviteLink | null = null;
+    const success = await runSocialAction("create-friend-link", async (accessToken, ownerUserId) => {
+      link = await createFriendInviteLink(accessToken, ownerUserId);
+    }, "Invitation link created.", "Could not create invitation link", false);
+    return success ? link : null;
+  }, [runSocialAction]);
+  const deleteGroup = useCallback((groupId: string) => runSocialAction(
+    `delete-group:${groupId}`, (accessToken) => archiveFriendGroup(accessToken, groupId),
+    "Group deleted. Your friends are unchanged.", "Could not delete group",
+  ), [runSocialAction]);
+  const removeFriendFromPeople = useCallback((userId: string) => runSocialAction(
+    `remove-friend:${userId}`, (accessToken, ownerUserId) => removeFriend(accessToken, ownerUserId, userId),
+    "Friend removed.", "Could not remove friend",
+  ), [runSocialAction]);
 
   const acceptIncomingFriendRequest = useCallback(
     async (friendshipId: string) =>
@@ -601,6 +650,18 @@ export function PopupApp() {
   }, [inboxState.data]);
 
   useEffect(() => {
+    const userId = accountUser?.id;
+    if (!userId) return;
+    const request = accountGateRef.current.capture(userId);
+    if (!request) return;
+    return subscribeToAccountInboxForUser(userId, (inbox) => {
+      if (!accountGateRef.current.isCurrent(request)) return;
+      setInboxState((current) => accountReadyState(userId,
+        mergeAccountInboxResponses(current.data, inbox, true)));
+    });
+  }, [accountUser?.id]);
+
+  useEffect(() => {
     if (
       activeTab !== "inbox" ||
       authSession.status !== "ready" ||
@@ -610,20 +671,21 @@ export function PopupApp() {
       return;
     }
 
-    const unseenItems = unseenAccountInboxItems(inboxState.data);
+    const pending = pendingSeenInboxItemsRef.current;
+    const unseenInstances = inboxState.data.items.filter((item) =>
+      item.seenAt === null && !pending.has(accountInboxItemInstanceKey(item)));
+    const unseenItems = unseenAccountInboxItems({ ...inboxState.data, items: unseenInstances });
     if (!unseenItems.length) return;
-    const signature = `${authSession.tokens.user.id}:${unseenItems
-      .map((item) => `${item.kind}:${item.id}`)
+    const signature = `${authSession.tokens.user.id}:${unseenInstances
+      .map(accountInboxItemInstanceKey)
       .join(",")}`;
     if (seenInboxSignatureRef.current === signature) return;
     seenInboxSignatureRef.current = signature;
 
     const request = accountGateRef.current.capture(authSession.tokens.user.id);
     if (!request) return;
-    const seenGeneration = inboxLoadGateRef.current.begin();
-    const isCurrent = () =>
-      accountGateRef.current.isCurrent(request) &&
-      inboxLoadGateRef.current.isCurrent(seenGeneration);
+    const isCurrent = () => accountGateRef.current.isCurrent(request);
+    for (const item of unseenInstances) pending.add(accountInboxItemInstanceKey(item));
     void (async () => {
       try {
         const inbox = await markAccountInboxItemsSeen(authSession.tokens.accessToken, unseenItems);
@@ -632,15 +694,22 @@ export function PopupApp() {
           throw new Error("Inbox response belongs to another account");
         }
         if (!isCurrent()) return;
-        const cached = await setCachedAccountInboxForUser(request.userId, inbox);
+        const cached = await publishAccountInboxForUser(request.userId, inbox, {
+          isCurrent,
+          reread: () => listAccountInbox(authSession.tokens.accessToken),
+          seenItems: unseenInstances,
+        });
         if (!cached || !isCurrent()) return;
-        setInboxState(accountReadyState(request.userId, inbox));
+        setInboxState((current) => accountReadyState(request.userId,
+          mergeAccountInboxResponses(current.data, cached)));
       } catch (error) {
         if (!isCurrent()) return;
         seenInboxSignatureRef.current = null;
         logDebug("account.inbox", "mark seen failed", {
           error: error instanceof Error ? error.message : "Unknown inbox error",
         });
+      } finally {
+        for (const item of unseenInstances) pending.delete(accountInboxItemInstanceKey(item));
       }
     })();
   }, [activeTab, authSession, inboxState]);
@@ -733,7 +802,7 @@ export function PopupApp() {
   };
 
   return (
-    <main className="popup-shell">
+    <main className="popup-shell" ref={shellRef} data-starting={authChecking}>
       <style>{popupStyles}</style>
       <header className="popup-topbar">
         <div className="popup-profile">
@@ -793,7 +862,7 @@ export function PopupApp() {
           <div className="popup-local-settings-heading">
             <div>
               <strong>Extension settings</strong>
-              <span>This browser only</span>
+              <span>History and notifications</span>
             </div>
             <button
               aria-label="Close settings"
@@ -804,6 +873,8 @@ export function PopupApp() {
               <X size={16} />
             </button>
           </div>
+          <PopupHistorySettings ownerUserId={accountUser?.id ?? null} />
+          <h3 className="popup-settings-section-title">Notifications · This browser only</h3>
           <button
             className="popup-notification-setting"
             type="button"
@@ -819,7 +890,7 @@ export function PopupApp() {
               {notificationStatus?.enabled ? <Bell size={17} /> : <BellOff size={17} />}
             </span>
             <span className="popup-notification-setting-copy">
-              <strong>Room invite notifications</strong>
+              <strong>Invitation notifications</strong>
               <span>
                 {!notificationStatus
                   ? "Checking this browser..."
@@ -827,7 +898,7 @@ export function PopupApp() {
                     ? "Unavailable in this build"
                     : notificationStatus.enabled
                       ? "Chrome alerts are on"
-                      : "Get notified when someone invites you"}
+                      : "Get room invites and friend requests"}
               </span>
             </span>
             <span className="popup-notification-switch" aria-hidden="true">
@@ -842,28 +913,34 @@ export function PopupApp() {
 
       <PopupNavigation activeTab={activeTab} onSelect={setActiveTab} />
 
-      {activeTab === "resources" ? (
+      <PopupRetainedPanel key={`${accountUser?.id}:resources`} active={activeTab === "resources"} tab="resources">
         <PopupWatchHistoryPanel
           key={accountUser?.id ?? "signed-out"}
           ownerUserId={accountUser?.id ?? null}
-          refreshSignal={watchHistoryRefreshVersion}
+          refreshSignal={historySession.revision}
         />
-      ) : activeTab === "friends" ? (
+      </PopupRetainedPanel>
+      <PopupRetainedPanel key={`${accountUser?.id}:friends`} active={activeTab === "friends"} tab="friends">
         <PopupPeoplePanel
           actionNotice={peopleActionNotice}
           pendingActionKey={peoplePendingActionKey}
-          onAddFriend={addFriend}
-          onCreateGroup={createGroup}
+          onSaveGroup={saveGroup}
+          onCreateInviteLink={createInviteLink}
+          onDeleteGroup={deleteGroup}
+          onRemoveFriend={removeFriendFromPeople}
+          onDismissNotice={() => setSocialNotice(null)}
           onOpenDashboard={() => void openAccount("/account/friends")}
           onRefresh={() => void syncPopupData()}
           onSignIn={() => void syncPopupData({ interactive: true })}
           state={peoplePresentationState}
         />
-      ) : (
+      </PopupRetainedPanel>
+      <PopupRetainedPanel key={`${accountUser?.id}:inbox`} active={activeTab === "inbox"} tab="inbox">
         <PopupInboxPanel
           actionNotice={socialNotice}
           busyFriendRequestActionKey={busySocialAction}
           busyInviteId={busyInviteId}
+          busyInviteAction={busyInviteAction}
           model={inboxModel}
           onAcceptFriendRequest={(friendshipId) => void acceptIncomingFriendRequest(friendshipId)}
           onAcceptInvite={(inviteId) => void acceptInvite(inviteId)}
@@ -874,7 +951,7 @@ export function PopupApp() {
           onSignIn={() => void syncPopupData({ interactive: true })}
           state={inboxState}
         />
-      )}
+      </PopupRetainedPanel>
     </main>
   );
 }
@@ -930,339 +1007,14 @@ function PopupNavigationButton({
   );
 }
 
-export function PopupInboxPanel({
-  actionNotice = null,
-  busyFriendRequestActionKey,
-  busyInviteId,
-  model,
-  onAcceptFriendRequest,
-  onAcceptInvite,
-  onDeclineFriendRequest,
-  onDeclineInvite,
-  onOpenDashboard,
-  onRefresh,
-  onSignIn,
-  state,
-}: {
-  actionNotice?: PopupNotice | null;
-  busyFriendRequestActionKey: string | null;
-  busyInviteId: string | null;
-  model: PopupInboxModel | null;
-  onAcceptFriendRequest: (friendshipId: string) => void;
-  onAcceptInvite: (inviteId: string) => void;
-  onDeclineFriendRequest: (friendshipId: string) => void;
-  onDeclineInvite: (inviteId: string) => void;
-  onOpenDashboard: () => void;
-  onRefresh: () => void;
-  onSignIn: () => void;
-  state: AccountInboxState;
-}) {
-  const pendingFriendRequests = model?.friendRequests ?? [];
-  const pendingInvites = model?.activeRoomInvites ?? [];
-  const missedInvites = model?.missedRoomInvites ?? [];
-  const actionsDisabled = state.status !== "ready";
-  const showsCachedData =
-    Boolean(model) && (state.status === "loading" || state.status === "error");
-  const inboxActionNotice =
-    actionNotice && isFriendRequestActionKey(actionNotice.actionKey) ? actionNotice : null;
-
-  return (
-    <section className="popup-section">
-      <div className="popup-section-header">
-        <div className="popup-section-title">Inbox</div>
-        <button
-          aria-label="Refresh inbox"
-          className="popup-mini-button"
-          disabled={state.status === "loading"}
-          title="Refresh inbox"
-          type="button"
-          onClick={onRefresh}
-        >
-          <RefreshCw size={13} />
-        </button>
-      </div>
-
-      {state.status === "signed-out" ? (
-        <div className="popup-social-empty">
-          <Inbox size={18} />
-          <span>Sign in to view friend requests and room invites.</span>
-          <button className="popup-primary-button" type="button" onClick={onSignIn}>
-            Sign in
-          </button>
-        </div>
-      ) : null}
-
-      {state.status === "error" && !state.data ? (
-        <div className="popup-social-empty" data-tone="error">
-          <span>{state.error}</span>
-          <button className="popup-primary-button" type="button" onClick={onRefresh}>
-            Retry
-          </button>
-        </div>
-      ) : null}
-
-      {state.status === "loading" && !state.data ? (
-        <div className="popup-empty">Loading inbox...</div>
-      ) : null}
-
-      {showsCachedData ? (
-        <div
-          className="popup-people-status"
-          data-state={state.status === "error" ? "error" : "stale"}
-          role="status"
-        >
-          <span>
-            {state.status === "error"
-              ? `${state.error} Saved inbox data may be out of date.`
-              : "Refreshing inbox. Saved data may be out of date."}
-          </span>
-          {state.status === "error" ? (
-            <button className="popup-secondary-button" type="button" onClick={onRefresh}>
-              Retry
-            </button>
-          ) : null}
-        </div>
-      ) : null}
-
-      <div aria-live="polite" className="popup-social-notice-slot">
-        {inboxActionNotice ? (
-          <div className="popup-social-notice" data-tone={inboxActionNotice.tone} role="status">
-            {inboxActionNotice.text}
-          </div>
-        ) : null}
-      </div>
-
-      {model ? (
-        <div className="popup-inbox-sections">
-          <PopupInboxSection count={pendingFriendRequests.length} label="Friend requests">
-            {pendingFriendRequests.length ? (
-              pendingFriendRequests.map((request) => (
-                <FriendRequestInboxRow
-                  actionsDisabled={actionsDisabled}
-                  busyActionKey={busyFriendRequestActionKey}
-                  key={request.friendshipId}
-                  request={request}
-                  onAccept={() => onAcceptFriendRequest(request.friendshipId)}
-                  onDecline={() => onDeclineFriendRequest(request.friendshipId)}
-                />
-              ))
-            ) : (
-              <div className="popup-inbox-empty">No pending friend requests.</div>
-            )}
-          </PopupInboxSection>
-
-          <PopupInboxSection count={pendingInvites.length} label="Room invites">
-            {pendingInvites.length ? (
-              pendingInvites.map((invite) => (
-                <InviteInboxRow
-                  actionsDisabled={actionsDisabled}
-                  busy={busyInviteId === invite.inviteId}
-                  invite={invite}
-                  key={invite.inviteId}
-                  onAccept={() => onAcceptInvite(invite.inviteId)}
-                  onDecline={() => onDeclineInvite(invite.inviteId)}
-                />
-              ))
-            ) : (
-              <div className="popup-inbox-empty">No pending room invites.</div>
-            )}
-          </PopupInboxSection>
-
-          <PopupInboxSection count={missedInvites.length} label="Missed">
-            {missedInvites.length ? (
-              missedInvites.map((invite) => (
-                <MissedInviteInboxRow invite={invite} key={invite.inviteId} />
-              ))
-            ) : (
-              <div className="popup-inbox-empty">No missed room invites.</div>
-            )}
-          </PopupInboxSection>
-        </div>
-      ) : null}
-
-      <button className="popup-dashboard-button" type="button" onClick={onOpenDashboard}>
-        Open dashboard
-      </button>
-    </section>
-  );
-}
-
-function PopupInboxSection({
-  children,
-  count,
-  label,
-}: {
-  children: ReactNode;
-  count: number;
-  label: string;
-}) {
-  return (
-    <section className="popup-inbox-section" aria-label={label}>
-      <div className="popup-inbox-heading">
-        <span>{label}</span>
-        <span>{count}</span>
-      </div>
-      <div className="popup-inbox-list">{children}</div>
-    </section>
-  );
-}
-
-function FriendRequestInboxRow({
-  actionsDisabled,
-  busyActionKey,
-  onAccept,
-  onDecline,
-  request,
-}: {
-  actionsDisabled: boolean;
-  busyActionKey: string | null;
-  onAccept: () => void;
-  onDecline: () => void;
-  request: PopupInboxFriendRequest;
-}) {
-  const acceptBusy = busyActionKey === `accept-friend:${request.friendshipId}`;
-  const declineBusy = busyActionKey === `decline-friend:${request.friendshipId}`;
-  const busy = acceptBusy || declineBusy;
-  return (
-    <div className="popup-inbox-row">
-      <div className="popup-inbox-main">
-        <ProfileAvatar
-          avatarUrl={request.sender.avatarUrl}
-          displayName={request.sender.displayName}
-        />
-        <span className="popup-social-main">
-          <span>{request.sender.displayName}</span>
-          <span>{request.sender.handle ? `@${request.sender.handle}` : "Wants to be friends"}</span>
-        </span>
-      </div>
-      <div className="popup-inbox-actions">
-        <button
-          aria-label={`Accept friend request from ${request.sender.displayName}`}
-          className="popup-primary-button"
-          disabled={actionsDisabled || busy}
-          type="button"
-          onClick={onAccept}
-        >
-          {acceptBusy ? <RefreshCw size={13} /> : <Check size={13} />}
-          Accept
-        </button>
-        <button
-          aria-label={`Decline friend request from ${request.sender.displayName}`}
-          className="popup-secondary-button"
-          disabled={actionsDisabled || busy}
-          type="button"
-          onClick={onDecline}
-        >
-          {declineBusy ? <RefreshCw size={13} /> : <X size={13} />}
-          Decline
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function InviteInboxRow({
-  actionsDisabled,
-  busy,
-  invite,
-  onAccept,
-  onDecline,
-}: {
-  actionsDisabled: boolean;
-  busy: boolean;
-  invite: PopupInboxInvite;
-  onAccept: () => void;
-  onDecline: () => void;
-}) {
-  return (
-    <div className="popup-inbox-card">
-      <div className="popup-inbox-main">
-        <ProfileAvatar
-          avatarUrl={invite.sender.avatarUrl}
-          displayName={invite.sender.displayName}
-        />
-        <span className="popup-social-main">
-          <span>{invite.roomTitle ?? "Watch room invite"}</span>
-          <span>
-            {invite.targetGroupName ? `${invite.targetGroupName} · ` : ""}
-            From {invite.sender.displayName} · {formatInboxActivity(invite.activityAt)}
-          </span>
-        </span>
-      </div>
-      {invite.message ? <p className="popup-inbox-message">{invite.message}</p> : null}
-      <div className="popup-inbox-actions">
-        <button
-          aria-label={`Join room invite from ${invite.sender.displayName}`}
-          className="popup-primary-button"
-          disabled={actionsDisabled || busy}
-          type="button"
-          onClick={onAccept}
-        >
-          <Check size={13} />
-          Join
-        </button>
-        <button
-          aria-label={`Decline room invite from ${invite.sender.displayName}`}
-          className="popup-secondary-button"
-          disabled={actionsDisabled || busy}
-          type="button"
-          onClick={onDecline}
-        >
-          <X size={13} />
-          Decline
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function MissedInviteInboxRow({ invite }: { invite: PopupInboxInvite }) {
-  return (
-    <div className="popup-inbox-card" data-state="missed">
-      <div className="popup-inbox-main">
-        <ProfileAvatar
-          avatarUrl={invite.sender.avatarUrl}
-          displayName={invite.sender.displayName}
-        />
-        <span className="popup-social-main">
-          <span>{invite.roomTitle ?? "Missed invite"}</span>
-          <span>
-            Missed invite · From {invite.sender.displayName} ·{" "}
-            {formatInboxActivity(invite.activityAt)}
-          </span>
-        </span>
-      </div>
-      {invite.message ? <p className="popup-inbox-message">{invite.message}</p> : null}
-    </div>
-  );
-}
-
 function isPopupPeopleActionKey(value: string | null): value is PopupPeopleActionKey {
-  return value === "create-group" || Boolean(value?.startsWith("add-friend:"));
+  return value === "create-friend-link" || Boolean(value && ["save-group:", "delete-group:", "remove-friend:"].some((prefix) => value.startsWith(prefix)));
 }
 
 function isPopupPeopleActionNotice(
   notice: PopupNotice | null,
 ): notice is PopupNotice & PopupPeopleActionNotice {
   return Boolean(notice && isPopupPeopleActionKey(notice.actionKey));
-}
-
-function isFriendRequestActionKey(value: string): boolean {
-  return value.startsWith("accept-friend:") || value.startsWith("decline-friend:");
-}
-
-function formatInboxActivity(value: string): string {
-  const timestamp = new Date(value).getTime();
-  if (!Number.isFinite(timestamp)) return "recently";
-  const minutes = Math.max(0, Math.floor((Date.now() - timestamp) / 60_000));
-  if (minutes < 1) return "now";
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return new Date(timestamp).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
 }
 
 function ProfileAvatar({

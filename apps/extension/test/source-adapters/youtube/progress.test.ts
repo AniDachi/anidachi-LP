@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it } from "vitest";
+import { HISTORY_OBSERVATION_SUSPENDED } from "../../../src/source-adapters/core/history-policy";
+import type {
+  AdapterPlaybackPhase,
+  VideoAdapter,
+} from "../../../src/source-adapters/core/types";
 import { getYouTubeHistoryObservation } from "../../../src/source-adapters/youtube/progress";
-import type { VideoAdapter } from "../../../src/source-adapters/core/types";
 
 describe("YouTube history policy", () => {
   afterEach(() => {
@@ -15,7 +19,7 @@ describe("YouTube history policy", () => {
     expect(getYouTubeHistoryObservation({ adapter, preferences: null })).toBeNull();
     expect(getYouTubeHistoryObservation({ adapter, preferences: { youtubeHistoryEnabled: false } })).toBeNull();
     expect(getYouTubeHistoryObservation({ adapter, preferences: { youtubeHistoryEnabled: true } }))
-      .toMatchObject({ provider: "youtube", providerLabel: "YouTube", titleKey: "youtube:dQw4w9WgXcQ" });
+      .toMatchObject({ provider: "youtube", providerLabel: "YouTube", titleKey: "youtube:video:dQw4w9WgXcQ" });
   });
 
   it.each([
@@ -41,12 +45,45 @@ describe("YouTube history policy", () => {
       adapter,
       preferences: { youtubeHistoryEnabled: true },
     })).toMatchObject({
-      titleKey: "youtube:dQw4w9WgXcQ",
-      episodeKey: "youtube:dQw4w9WgXcQ",
+      titleKey: "youtube:video:dQw4w9WgXcQ",
+      episodeKey: "youtube:video:dQw4w9WgXcQ",
       currentTime: 0.1,
       duration: 0.2,
       sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     });
+  });
+
+  it("uses the confirmed content clock instead of the raw media clock", () => {
+    mockLocation("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+    const adapter = fakeAdapter({
+      currentTime: 30,
+      duration: 120,
+      contentTime: 12,
+      phase: "content",
+    });
+
+    expect(getYouTubeHistoryObservation({
+      adapter,
+      preferences: { youtubeHistoryEnabled: true },
+    })).toMatchObject({
+      currentTime: 12,
+      duration: 120,
+      progress: 0.1,
+    });
+  });
+
+  it.each([
+    "interstitial",
+    "buffering",
+    "transition",
+    "unsupported",
+  ] as const)("suspends history while playback phase is %s", (phase) => {
+    mockLocation("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+
+    expect(getYouTubeHistoryObservation({
+      adapter: fakeAdapter({ currentTime: 30, duration: 30, contentTime: 600, phase }),
+      preferences: { youtubeHistoryEnabled: true },
+    })).toBe(HISTORY_OBSERVATION_SUSPENDED);
   });
 
   it("keeps bare YouTube watch URLs inside the server-approved canonical host set", () => {
@@ -55,7 +92,7 @@ describe("YouTube history policy", () => {
     expect(getYouTubeHistoryObservation({
       adapter: fakeAdapter(),
       preferences: { youtubeHistoryEnabled: true },
-    })).toMatchObject({ sourceUrl: "https://youtube.com/watch?v=dQw4w9WgXcQ" });
+    })).toMatchObject({ sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" });
   });
 
   it("rejects invalid media values", () => {
@@ -69,13 +106,43 @@ describe("YouTube history policy", () => {
       preferences: { youtubeHistoryEnabled: true },
     })).toBeNull();
   });
+
+  it("uses the current video thumbnail after YouTube navigation, independent of stale page metadata", () => {
+    document.head.innerHTML = '<meta property="og:image" content="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg">';
+    for (const videoId of ["dQw4w9WgXcQ", "FyS5dAywkEo"]) {
+      mockLocation(`https://www.youtube.com/watch?v=${videoId}`);
+      expect(getYouTubeHistoryObservation({
+        adapter: fakeAdapter(), preferences: { youtubeHistoryEnabled: true },
+      })).toMatchObject({
+        artworkUrl: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+        titleKey: `youtube:video:${videoId}`,
+      });
+    }
+  });
 });
 
-function fakeAdapter(input: { currentTime?: number; duration?: number } = {}): VideoAdapter {
+function fakeAdapter(input: {
+  currentTime?: number;
+  duration?: number;
+  contentTime?: number;
+  phase?: AdapterPlaybackPhase;
+} = {}): VideoAdapter {
   const video = document.createElement("video");
   Object.defineProperty(video, "currentTime", { configurable: true, value: input.currentTime ?? 12 });
   Object.defineProperty(video, "duration", { configurable: true, value: input.duration ?? 120 });
-  return { id: "youtube", provider: "youtube", video, getTitle: () => "A short title" } as VideoAdapter;
+  return {
+    id: "youtube",
+    provider: "youtube",
+    video,
+    getTitle: () => "A short title",
+    getPlaybackSnapshot: () => ({
+      phase: input.phase ?? "content",
+      contentTime: input.contentTime ?? input.currentTime ?? 12,
+      playing: true,
+      playbackRate: 1,
+      capturedAt: 1_700_000_000_000,
+    }),
+  } as VideoAdapter;
 }
 
 function mockLocation(url: string): void {

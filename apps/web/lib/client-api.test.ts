@@ -71,3 +71,21 @@ test("client api keeps the original error when session refresh fails", async () 
     globalThis.fetch = originalFetch;
   }
 });
+
+test("client api preserves structured authority codes and human error precedence", async () => {
+  const originalFetch = globalThis.fetch;
+  try {
+    for (const status of [403, 409, 503]) {
+      globalThis.fetch = async () => Response.json({ code: "HISTORY_ACCESS_CHANGED", error: "Human fallback", message: "Human message" }, { status });
+      await assert.rejects(api("/api/watch-history/v3"), (error: unknown) => {
+        assert.ok(error instanceof Error);
+        assert.equal(error.message, "Human message");
+        assert.equal((error as Error & { code: string }).code, "HISTORY_ACCESS_CHANGED");
+        assert.equal((error as Error & { status: number }).status, status);
+        return true;
+      });
+    }
+    globalThis.fetch = async () => new Response("invalid JSON", { status: 503 });
+    await assert.rejects(api("/api/watch-history/v3"), /Request failed \(503\)/);
+  } finally { globalThis.fetch = originalFetch; }
+});

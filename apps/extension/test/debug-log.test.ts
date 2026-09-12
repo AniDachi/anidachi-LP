@@ -481,3 +481,9 @@ describe("debug log", () => {
     expect(exported).toContain("/room/<redacted-id>");
   });
 });
+
+it("summarizes v2 media without participant or request identities",()=>{
+ const summary=roomEventDebugSnapshot({type:"SET_MEDIA_INTENT",roomId:"private-room",roomGeneration:1,participantSessionId:"private-session",requestId:"private-request",media:"microphone",enabled:true,intentSequence:7,revocationEpoch:2});
+ expect(summary).toMatchObject({type:"SET_MEDIA_INTENT",media:"microphone",intentSequence:7,revocationEpoch:2});
+ expect(JSON.stringify(summary)).not.toContain("private-");
+});

@@ -7,24 +7,37 @@ import {
 } from "../src/overlay-media-session";
 
 describe("overlay P2P media session state", () => {
-  it("starts every new room with camera off while preserving same-room reconnects", () => {
+  it("keeps the mounted camera intent authoritative during a same-room reconnect", () => {
     expect(DEFAULT_LOCAL_CAMERA_ENABLED).toBe(false);
     expect(
       getCameraEnabledForRoomConnection({
-        currentCameraEnabled: true,
-        sameRoomReconnect: false,
+        currentCameraEnabled: false,
+        persistedCameraEnabled: true,
+        sameRoomReconnect: true,
       }),
     ).toBe(false);
     expect(
       getCameraEnabledForRoomConnection({
         currentCameraEnabled: true,
+        persistedCameraEnabled: false,
         sameRoomReconnect: true,
+      }),
+    ).toBe(true);
+  });
+
+  it("restores camera intent from the confirmed session after a full document remount", () => {
+    expect(
+      getCameraEnabledForRoomConnection({
+        currentCameraEnabled: false,
+        persistedCameraEnabled: true,
+        sameRoomReconnect: false,
       }),
     ).toBe(true);
     expect(
       getCameraEnabledForRoomConnection({
-        currentCameraEnabled: false,
-        sameRoomReconnect: true,
+        currentCameraEnabled: true,
+        persistedCameraEnabled: false,
+        sameRoomReconnect: false,
       }),
     ).toBe(false);
   });
@@ -157,4 +170,10 @@ describe("overlay P2P media session state", () => {
       p2pSessionActive: false,
     });
   });
+  it("keeps v2 receiver media active without a legacy seat and waits for the room roster", () => {
+    const input = { localHasMediaSeat: false, participantId: "receiver", roomId: "room", roomMediaSeatLimit: 0, mediaProtocolVersion: 2 as const, roomSnapshotReady: true, status: "connected" as const };
+    expect(getP2PMediaSessionState(input)).toEqual({ p2pReady: true, p2pSessionActive: true });
+    expect(getP2PMediaSessionState({ ...input, roomSnapshotReady: false })).toEqual({ p2pReady: false, p2pSessionActive: false });
+  });
+
 });

@@ -1,5 +1,7 @@
+import { ROOM_POLICY_STORAGE_KEY } from "./room-capability";
 import {
   ParticipantSchema,
+	RoomMediaSnapshotSchema,
   PlaybackStateSchema,
   RoomCapabilitiesSchema,
   RoomUsageSummarySchema,
@@ -88,9 +90,14 @@ export function initializeRoomStorage(storage: DurableObjectStorage): void {
   );
 }
 
-export function readStoredRoomState(storage: DurableObjectStorage): RoomStateSnapshot | null {
+export function readStoredRoomState(
+	storage: DurableObjectStorage,
+): RoomStateSnapshot | null {
   const row = storage.sql
-    .exec<RoomMetaRow>("SELECT value_json, updated_at, key FROM room_meta WHERE key = ?", ROOM_STATE_META_KEY)
+		.exec<RoomMetaRow>(
+			"SELECT value_json, updated_at, key FROM room_meta WHERE key = ?",
+			ROOM_STATE_META_KEY,
+		)
     .toArray()[0];
   if (!row) {
     return null;
@@ -135,7 +142,9 @@ export function writeStoredRoomMeter(
   writeMeta(storage, ROOM_METER_META_KEY, meter, updatedAt);
 }
 
-export function readNextP2PServerSeq(storage: DurableObjectStorage): number | null {
+export function readNextP2PServerSeq(
+	storage: DurableObjectStorage,
+): number | null {
   const row = storage.sql
     .exec<RoomMetaRow>(
       "SELECT value_json, updated_at, key FROM room_meta WHERE key = ?",
@@ -148,19 +157,29 @@ export function readNextP2PServerSeq(storage: DurableObjectStorage): number | nu
 
   try {
     const value = JSON.parse(row.value_json);
-    return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : null;
+		return typeof value === "number" && Number.isInteger(value) && value > 0
+			? value
+			: null;
   } catch {
     return null;
   }
 }
 
-export function writeNextP2PServerSeq(storage: DurableObjectStorage, nextSeq: number): void {
+export function writeNextP2PServerSeq(
+	storage: DurableObjectStorage,
+	nextSeq: number,
+): void {
   writeMeta(storage, NEXT_P2P_SERVER_SEQ_META_KEY, nextSeq, Date.now());
 }
 
-export function readEndedRoomTombstone(storage: DurableObjectStorage): EndedRoomTombstone | null {
+export function readEndedRoomTombstone(
+	storage: DurableObjectStorage,
+): EndedRoomTombstone | null {
   const row = storage.sql
-    .exec<RoomMetaRow>("SELECT value_json, updated_at, key FROM room_meta WHERE key = ?", ROOM_ENDED_META_KEY)
+		.exec<RoomMetaRow>(
+			"SELECT value_json, updated_at, key FROM room_meta WHERE key = ?",
+			ROOM_ENDED_META_KEY,
+		)
     .toArray()[0];
   if (!row) return null;
   try {
@@ -271,7 +290,9 @@ export async function claimStoredRoomEndAttempt(
   now: number,
 ): Promise<EndingRoomLifecycle | null> {
   return storage.transaction(async (transaction) => {
-    const rawPendingSource = await transaction.get<unknown>(ROOM_SOURCE_PENDING_STORAGE_KEY);
+		const rawPendingSource = await transaction.get<unknown>(
+			ROOM_SOURCE_PENDING_STORAGE_KEY,
+		);
     const pendingSource = parsePendingRoomSourcePersistence(rawPendingSource);
     if (rawPendingSource !== undefined && !pendingSource) {
       await transaction.delete(ROOM_SOURCE_PENDING_STORAGE_KEY);
@@ -332,12 +353,15 @@ export async function claimStoredRoomEndAttempt(
   });
 }
 
+// Presence evidence deliberately survives terminal cleanup. The shared alarm
+// reconciler retains its bounded retry deadline even after the tombstone wakes.
 export async function clearStoredRoomLifecycleAndAlarm(
   storage: DurableObjectStorage,
 ): Promise<void> {
   await storage.transaction(async (transaction) => {
     await Promise.all([
       transaction.delete(ROOM_LIFECYCLE_STORAGE_KEY),
+			transaction.delete(ROOM_POLICY_STORAGE_KEY),
       transaction.delete(PARTICIPANT_DISCONNECT_STORAGE_KEY),
     ]);
     await reconcileStoredRoomAlarm(transaction);
@@ -367,7 +391,10 @@ export function readStoredP2PReplayMetadata(
     if (parsed) {
       metadata.push(parsed);
     } else {
-      storage.sql.exec("DELETE FROM p2p_replay_meta WHERE server_seq = ?", row.server_seq);
+			storage.sql.exec(
+				"DELETE FROM p2p_replay_meta WHERE server_seq = ?",
+				row.server_seq,
+			);
     }
   }
   return metadata;
@@ -456,7 +483,9 @@ function parseStoredP2PReplayMetadataRow(
   };
 }
 
-function isP2PSignalKind(value: unknown): value is BufferedP2PSignalEvent["signal"]["kind"] {
+function isP2PSignalKind(
+	value: unknown,
+): value is BufferedP2PSignalEvent["signal"]["kind"] {
   return (
     value === "offer" ||
     value === "answer" ||
@@ -469,7 +498,12 @@ function isP2PSignalKind(value: unknown): value is BufferedP2PSignalEvent["signa
   );
 }
 
-function writeMeta(storage: DurableObjectStorage, key: string, value: unknown, updatedAt: number): void {
+function writeMeta(
+	storage: DurableObjectStorage,
+	key: string,
+	value: unknown,
+	updatedAt: number,
+): void {
   storage.sql.exec(
     `INSERT INTO room_meta (key, value_json, updated_at)
      VALUES (?, ?, ?)
@@ -489,7 +523,9 @@ function parseStoredLifecycle(
   return parseRoomLifecycleState(raw) ?? "invalid";
 }
 
-export function parseRoomStateSnapshot(value: unknown): RoomStateSnapshot | null {
+export function parseRoomStateSnapshot(
+	value: unknown,
+): RoomStateSnapshot | null {
   if (!isRecord(value)) {
     return null;
   }
@@ -517,7 +553,10 @@ export function parseRoomStateSnapshot(value: unknown): RoomStateSnapshot | null
   if (!Array.isArray(value.participants)) {
     return null;
   }
-  const parsedParticipants: { hadMediaSeat: boolean; participant: Participant }[] = [];
+	const parsedParticipants: {
+		hadMediaSeat: boolean;
+		participant: Participant;
+	}[] = [];
   for (const participantValue of value.participants) {
     if (!isRecord(participantValue)) {
       return null;
@@ -531,9 +570,11 @@ export function parseRoomStateSnapshot(value: unknown): RoomStateSnapshot | null
   }
 
   let occupiedMediaSeats = parsedParticipants.filter(
-    ({ hadMediaSeat, participant }) => hadMediaSeat && participant.mediaSeat === "joined",
+		({ hadMediaSeat, participant }) =>
+			hadMediaSeat && participant.mediaSeat === "joined",
   ).length;
-  const participants = parsedParticipants.map(({ hadMediaSeat, participant }) => {
+	const participants = parsedParticipants.map(
+		({ hadMediaSeat, participant }) => {
     if (hadMediaSeat) {
       return participant;
     }
@@ -558,7 +599,8 @@ export function parseRoomStateSnapshot(value: unknown): RoomStateSnapshot | null
       mediaSeat: "none" as const,
       mediaSeatSource: undefined,
     };
-  });
+		},
+	);
 
   if (
     value.hostId !== null &&
@@ -577,6 +619,33 @@ export function parseRoomStateSnapshot(value: unknown): RoomStateSnapshot | null
     sourceGeneration: value.sourceGeneration,
     updatedAt: value.updatedAt,
   };
+
+	if (value.media !== undefined) {
+		const media = RoomMediaSnapshotSchema.safeParse(value.media);
+		if (
+			!media.success ||
+			media.data.roomGeneration !== snapshot.roomGeneration ||
+			media.data.participants.some(
+				(p) =>
+					!participants.some(
+						(member) => member.participantSessionId === p.participantSessionId,
+					),
+			)
+		)
+			return null;
+		snapshot.media = media.data;
+		if (
+			value.mediaRevocations !== undefined &&
+			(!Array.isArray(value.mediaRevocations) ||
+				value.mediaRevocations.length > 1024 ||
+				value.mediaRevocations.some(
+					(v) => typeof v !== "string" || v.length > 512,
+				))
+		)
+			return null;
+		snapshot.mediaRevocations =
+			(value.mediaRevocations as string[] | undefined) ?? [];
+	}
 
   if (value.hostState !== undefined) {
     const hostState = PlaybackStateSchema.safeParse(value.hostState);

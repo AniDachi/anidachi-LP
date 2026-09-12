@@ -1416,9 +1416,13 @@ Acceptance:
   maintenance, badge, notification aggregation, and popup-first click routing.
 - [x] Update extension permissions and Chrome Web Store privacy/listing copy
   only when the feature is ready.
-- [ ] Replace the current two-write room-invite creator with one idempotent
-  Postgres RPC before claiming transactionally complete invite delivery. Web
-  Push remains post-success and must never notify after a partial write.
+- [x] Replace the two-write room-invite creator with one idempotent Postgres
+  RPC (`20260810190000_room_invite_atomicity.sql`). This establishes atomic
+  invite creation, not durable delivery of the subsequent Web Push.
+- [~] Harden notification delivery with account-owned client recovery,
+  open-popup convergence, and a transactional server outbox with independent
+  recovery. Implementation and remaining staging acceptance:
+  `docs/superpowers/plans/2026-09-04-invitation-delivery-reliability.md`.
 
 Acceptance:
 
@@ -1561,6 +1565,17 @@ Acceptance:
   continue-together paths before production promotion.
 
 ## Progress Log
+
+- [~] 2026-08-25: Extended the existing durable Inbox/Web Push channel to new
+  incoming friend requests without adding polling, Realtime, or another event
+  store. New friend requests now queue the same minimal `inbox_changed` signal
+  used by room invites; the extension derives either notification from the
+  authenticated Inbox, deduplicates both item kinds per account and browser
+  profile, and migrates existing room-invite dedupe state in place. Room and
+  friend delivery share one deferred best-effort coordinator so durable writes
+  remain successful when a push provider fails, while non-private delivery
+  failures become observable. Focused web and extension tests and type checks
+  pass; loaded-artifact two-account staging acceptance remains open.
 
 - [~] 2026-08-10: Implemented the Chrome room-invite notification slice on
   `codex/room-invite-web-push`. The server registers owner-bound Web Push

@@ -1,11 +1,13 @@
 import {
+  HISTORY_OBSERVATION_SUSPENDED,
+  type HistoryObservationResult,
   isValidHistoryMedia,
   normalizeHistoryUrl,
-  type HistoryObservation,
   type ProviderPlaybackMetadata,
   type SourceAdapterHistoryPolicy,
 } from "../core/history-policy";
 import type { VideoAdapter } from "../core/types";
+import { youtubeHistoryArtworkUrl } from "./artwork";
 
 export interface YouTubeProgressInput {
   title: string | null;
@@ -49,26 +51,34 @@ export const youtubeHistoryPolicy: SourceAdapterHistoryPolicy = {
 export function getYouTubeHistoryObservation(input: {
   adapter: VideoAdapter;
   preferences: { youtubeHistoryEnabled: boolean } | null;
-}): HistoryObservation | null {
+}): HistoryObservationResult {
   const { adapter, preferences } = input;
   if (!preferences?.youtubeHistoryEnabled || adapter.id !== "youtube" || adapter.provider !== "youtube") {
     return null;
   }
+  const playback = adapter.getPlaybackSnapshot();
+  if (playback.phase !== "content") return HISTORY_OBSERVATION_SUSPENDED;
   if (!isValidHistoryMedia(adapter.video)) return null;
+  if (
+    !Number.isFinite(playback.contentTime) ||
+    playback.contentTime < 0 ||
+    playback.contentTime > adapter.video.duration
+  ) return null;
   const sourceUrl = canonicalYouTubeHistoryUrl(location.href);
   if (!sourceUrl) return null;
   const videoId = new URL(sourceUrl).searchParams.get("v");
   if (!videoId || !cleanYouTubeProgressVideoId(videoId)) return null;
   const title = adapter.getTitle()?.trim();
   if (!title) return null;
-  const key = `youtube:${videoId}`;
+  const key = `youtube:video:${videoId}`;
   return {
     provider: "youtube",
     providerLabel: "YouTube",
+    youtubeVideoId: videoId,
     titleKey: key,
     itemKind: "movie",
     title,
-    artworkUrl: null,
+    artworkUrl: youtubeHistoryArtworkUrl(videoId),
     episodeKey: key,
     episodeTitle: title,
     seasonKey: null,
@@ -76,9 +86,9 @@ export function getYouTubeHistoryObservation(input: {
     seasonNumber: null,
     episodeNumber: null,
     sourceUrl,
-    currentTime: adapter.video.currentTime,
+    currentTime: playback.contentTime,
     duration: adapter.video.duration,
-    progress: adapter.video.currentTime / adapter.video.duration,
+    progress: playback.contentTime / adapter.video.duration,
   };
 }
 
@@ -121,9 +131,7 @@ function canonicalYouTubeHistoryUrl(value: string): string | null {
   if (!isSupportedYouTubeHost(url.hostname) || url.pathname !== "/watch") return null;
   const videoId = cleanYouTubeProgressVideoId(url.searchParams.get("v"));
   if (!videoId) return null;
-  const origin = url.hostname === "m.youtube.com"
-    ? "https://www.youtube.com"
-    : url.origin;
+  const origin = "https://www.youtube.com";
   return `${origin}/watch?v=${encodeURIComponent(videoId)}`;
 }
 

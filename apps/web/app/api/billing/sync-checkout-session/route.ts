@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Checkout session has no subscription yet" }, { status: 409 });
     }
 
-    const result = await syncStripeSubscriptionById(stripe, subscriptionId);
+    const result = await syncStripeSubscriptionById(stripe, subscriptionId, { expectedUserId: authSession.userId });
     if (!result) {
       return NextResponse.json({ error: "Subscription could not be synchronized" }, { status: 409 });
     }
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
       subscriptionPlanCode: result.planCode,
       status: result.status,
       next: sanitizeAuthReturnTo(next) || "/account",
-    });
+    }, { headers: { "Cache-Control": "private, no-store" } });
 
     const refreshToken = request.cookies.get(REFRESH_TOKEN_COOKIE)?.value;
     if (refreshToken) {

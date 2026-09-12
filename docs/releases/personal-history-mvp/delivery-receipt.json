@@ -1,0 +1,176 @@
+{
+  "status": "INACTIVE_STAGING_DELIVERED_ACCEPTANCE_OPEN",
+  "sourceCommit": "2bf18fba0751b71d3e142d2e16ae4f1bbfedca92",
+  "originalReviewedRuntimeCommit": "d2e32e87494924d73ddb16ed9956490a9f635061",
+  "sourceGitObjects": {
+    "apps/web": "838e90852a6b99696e1f3f0c1a6059fc70a704a2",
+    "apps/api": "37c6de4f5707f542de2a55335ae8ee62fd989ca3",
+    "apps/extension": "8ac0c7c3e056f06ef2acad5929f86b99a85bfd93",
+    "packages/protocol": "25319377aab9bfdbf4954bc40628109d8097564b",
+    "scripts": "16c29ad8ca7f3b3578e17558963eea3ac3e44346",
+    "tests/e2e": "525d59dbf3e452562eaf3f963ca5c735acc716b2",
+    "pnpm-lock.yaml": "864a7d63ee0cb3c68d9f6c661eee6e96fcfff538",
+    ".node-version": "f9e7451e77154a175f7247041a35d1b08d85f8c2"
+  },
+  "delivery": {
+    "prerequisitePR": 273,
+    "prerequisiteMerge": "756f04e667eb414b6ba279b12716d770b56b8bb4",
+    "runtimePR": 274,
+    "runtimeHead": "f440d3d2c64ee7afd98d645dc30d3ba63f79e44b",
+    "runtimeMerge": "c7fbdb5aa1bbad9922dc40b9d557234e762e8d6c",
+    "webDeployment": "dpl_BWTGmyLxHTp619UwkHFbit7GG6v9",
+    "workerDeployment": "87a4b594-2183-43df-b34f-8f2255e6e8f4",
+    "workerVersion": "14e77738-6c1e-4424-a142-366e75137525",
+    "extensionBuildCommit": "48b5fd8a6bcd1dc30a84047ac5f56d18c32aa8ea",
+    "extensionVersionName": "48b5fd8-staging-20260908191943",
+    "extensionManifestSha256": "9c63f89c52489a81dd7e49dc38cc4bb513a144ae0c863a8db942d728abf13136",
+    "extensionFilesSha256": "c0c9174b4227b97a7ff6becfc849c87f92d3911eb6b06410bb6f2c25b5926abc",
+    "testerSync": "both12-filetargetsverified;separateverifiedr10backups",
+    "loadedArtifactReceipt": null,
+    "compatRecoveryRehearsal": null,
+    "activationReceipt": null,
+    "policyActive": false
+  },
+  "checks": {
+    "pr": "https://github.com/AniDachi/anidachi-LP/pull/274",
+    "assemblyCommit": "a139f740d43accddaaef7480f4c2a829971faf43",
+    "blocker": null,
+    "finalSourceCommit": "2bf18fba0751b71d3e142d2e16ae4f1bbfedca92",
+    "headAfterR1": "f440d3d2c64ee7afd98d645dc30d3ba63f79e44b",
+    "stagingCommit": "c7fbdb5aa1bbad9922dc40b9d557234e762e8d6c",
+    "prCi": 34226243307,
+    "prRooms": 34226243279,
+    "prP2P": 34226243280,
+    "prSmoke": 34226557773,
+    "stagingCi": [
+      34226712566,
+      34226724338
+    ],
+    "stagingRooms": 34226724345,
+    "stagingP2P": 34226724397,
+    "stagingExtensionBuild": 34226712869,
+    "stagingDb": 34226712605,
+    "stagingSmoke": 34226853344,
+    "webDeployment": "dpl_BWTGmyLxHTp619UwkHFbit7GG6v9",
+    "webState": "READY",
+    "workerDeployment": "87a4b594-2183-43df-b34f-8f2255e6e8f4",
+    "workerVersion": "14e77738-6c1e-4424-a142-366e75137525",
+    "workerWorkflow": 34226712615,
+    "workerPercentage": 100,
+    "initialFailedAttempt": {
+      "ciRun": 34225367299,
+      "vercelPreview": "dpl_AZEvtn5BMykk8c7CBoJtz7XMv89V",
+      "status": "FAILURE",
+      "reason": "prefer-const in stripe-subscription-sync.test.ts177; resolved by independently reviewed R1"
+    }
+  },
+  "database": {
+    "revisionCount": 55,
+    "latestRevision": "20260908072249",
+    "policyVersion": 1,
+    "active": false,
+    "usersBeforeAfter": [
+      62,
+      62
+    ],
+    "progressBeforeAfter": [
+      19,
+      19
+    ],
+    "publicFunctionsServiceOnly": 17,
+    "privateFunctionsDeniedToServiceRole": 5,
+    "serviceRolePolicyUpdate": false
+  },
+  "artifact": {
+    "buildCommit": "48b5fd8a6bcd1dc30a84047ac5f56d18c32aa8ea",
+    "sourcePin": "d2e32e87494924d73ddb16ed9956490a9f635061",
+    "versionName": "48b5fd8-staging-20260908191943",
+    "manifestSha256": "9c63f89c52489a81dd7e49dc38cc4bb513a144ae0c863a8db942d728abf13136",
+    "filesSha256": "c0c9174b4227b97a7ff6becfc849c87f92d3911eb6b06410bb6f2c25b5926abc",
+    "files": {
+      "Anidachi_logo.png": "764bbe7c6c5be972d6e3973ccafb76e22b12e6821ca9f668a66cb19d57500604",
+      "background.js": "1d30200438b84c5a791edc95fc6bd0bc43b13b76503c85b75c96bacb2f76c1d9",
+      "chunks/popup-CEvbcgu-.js": "6cbe13894e7660f54c09a0f086d1c360a7efb85d6eec76a2b7e0c26f935fb9d5",
+      "chunks/storage-B48GtMbM.js": "a01fd81359af91f02e589797b9a873777de161763e05f142f9e59160d05477a8",
+      "content-scripts/content.js": "5d3a4f191a201c84ba1477bd51b0ec687b04c07db0ecbdc1f714e254cb3a6b62",
+      "content-scripts/crunchyroll.js": "a0d7319928ba5269bb701fc7e4fca74954e382b8b42a389ba974c1c09ec3e7ed",
+      "icons/icon-128.png": "f97dcf123fb6cbb6f852f0840aeb188db6dc5495e4b71b3567984cf01769be85",
+      "icons/icon-16.png": "d28d511c997300161c22a2a23bd94c1592fe4e434ea68089f8774e44e61d4115",
+      "icons/icon-32.png": "12148956dc5588bc88768798a0389dd9a58097de1873f8d20258ea111c589bd3",
+      "icons/icon-48.png": "0ddb3a2ebaef53a213a6bcb53e2a17aa3d79181dce604c5da6e08941c467bf9c",
+      "manifest.json": "9c63f89c52489a81dd7e49dc38cc4bb513a144ae0c863a8db942d728abf13136",
+      "popup.html": "4c30e6773d499d186c25ecce880cd4d77b0927833fe75bb39cc798be92d85c03"
+    },
+    "hostPermissions": [
+      "https://youtube.com/*",
+      "https://*.youtube.com/*",
+      "https://youtu.be/*",
+      "https://*.youtu.be/*",
+      "https://*.youtube-nocookie.com/*",
+      "https://crunchyroll.com/*",
+      "https://*.crunchyroll.com/*",
+      "https://staging.anidachi.app/*",
+      "https://anidachi-api-staging.vladislav-gul7.workers.dev/*"
+    ],
+    "validation": "PASS staging narrow",
+    "zipSha256": "2fce50bc3fb1179ac7597d8f10392bf5bdf1bdcb2847b12f4058e557e5de8870",
+    "loadedProof": false
+  },
+  "testerBackups": [
+    {
+      "target": "established-tester-1",
+      "fileCount": 12,
+      "verified": true,
+      "backupFilesSha256": "c20dd4c65b032131b0451f135e5951b94402a61c11dc5dbafb03c76b9ce672ae",
+      "afterFilesSha256": "c0c9174b4227b97a7ff6becfc849c87f92d3911eb6b06410bb6f2c25b5926abc"
+    },
+    {
+      "target": "established-tester-2",
+      "fileCount": 12,
+      "verified": true,
+      "backupFilesSha256": "c20dd4c65b032131b0451f135e5951b94402a61c11dc5dbafb03c76b9ce672ae",
+      "afterFilesSha256": "c0c9174b4227b97a7ff6becfc849c87f92d3911eb6b06410bb6f2c25b5926abc"
+    }
+  ],
+  "publicChecks": {
+    "web": 200,
+    "passwordInput": true,
+    "robots": "noindex, nofollow",
+    "workerRoot": 200,
+    "roomScopedIceNoAuth": 401,
+    "wrongUnscopedIcePath": 404,
+    "pythonClientCloudflare1010": "probe client rejected; standard Node fetch passed real routes"
+  },
+  "legacyInventory": {
+    "records": 177,
+    "liveStatus": 35,
+    "lobbyStatus": 142,
+    "createdWithin24h": 0,
+    "authority": "parent read-only aggregate; not live socket evidence",
+    "action": "future reconciliation against Worker lifecycle must be separately reviewed; no bulk end/delete or weaker guard"
+  },
+  "graph": {
+    "commit": "48b5fd8a6bcd1dc30a84047ac5f56d18c32aa8ea",
+    "semanticDocs": 16,
+    "codeFiles": 167,
+    "refreshException": "test binding correction and delivery IDs/status/evidence change no architecture or relationships; retained reviewed graph"
+  },
+  "openGates": [
+    "Stripe TEST disconnected",
+    "Mac locked: loaded Chrome/provider/MV3 unavailable",
+    "different-network/physical-device/forced-TURN acceptance unavailable",
+    "C04 postactivation operational recovery open"
+  ],
+  "mainBaseline": "54a154b702ea26e85fab2f3259aa7e5b98fa51be",
+  "productionPromotion": "PR247open;autoMergeRequestnull;notauthorized",
+  "preservation": {
+    "checkedAt": "2026-09-08T12:38:18Z",
+    "originalSourceHashCount": 1069,
+    "originalSourceMismatches": 0,
+    "originalHeadUnchanged": true,
+    "originalStatusUnchanged": true,
+    "bothTesterFinalFileMapsMatch": true,
+    "bothBackupsMatchR10": true,
+    "independentControllerAudit": "PASS"
+  }
+}

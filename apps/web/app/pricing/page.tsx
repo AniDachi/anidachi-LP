@@ -8,7 +8,7 @@ import {
   PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER,
   PRICING_IS_ANIDACHI_FREE_ANSWER,
   PRICING_PLUS_VS_PRO_ANSWER,
-  PRICING_REFUND_NOTE,
+  PRICING_CANCELLATION_NOTE,
   PRICING_STARTING_AT,
 } from "@/lib/pricing-copy";
 
@@ -56,8 +56,8 @@ const faq = [
     answer: PRICING_PLUS_VS_PRO_ANSWER,
   },
   {
-    question: "Can I get a refund?",
-    answer: PRICING_REFUND_NOTE,
+    question: "How do I cancel my subscription?",
+    answer: PRICING_CANCELLATION_NOTE,
   },
   {
     question: "Do I still need Crunchyroll or YouTube?",

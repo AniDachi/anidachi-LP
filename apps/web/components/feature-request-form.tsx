@@ -16,21 +16,28 @@ const CATEGORY_LABELS: Record<FeatureRequestCategory, string> = {
   other: "Other",
 };
 
-export function FeatureRequestForm() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+export function FeatureRequestForm({
+  variant = "public",
+  initialContact,
+}: {
+  variant?: "public" | "account";
+  initialContact?: { name: string; email: string };
+}) {
+  const [name, setName] = useState(initialContact?.name ?? "");
+  const [email, setEmail] = useState(initialContact?.email ?? "");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] =
     useState<FeatureRequestCategory>("watchrooms");
   const [honeypot, setHoneypot] = useState("");
-  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">(
-    "idle",
-  );
+  const [status, setStatus] = useState<
+    "idle" | "submitting" | "success" | "error"
+  >("idle");
   const [error, setError] = useState<string | null>(null);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (status === "submitting") return;
     setStatus("submitting");
     setError(null);
 
@@ -54,8 +61,10 @@ export function FeatureRequestForm() {
         return;
       }
       setStatus("success");
-      setName("");
-      setEmail("");
+      if (variant !== "account") {
+        setName("");
+        setEmail("");
+      }
       setTitle("");
       setDescription("");
       setCategory("watchrooms");
@@ -69,7 +78,11 @@ export function FeatureRequestForm() {
   if (status === "success") {
     return (
       <div
-        className="rounded-2xl border border-brand-border/80 bg-brand-surface px-6 py-8 text-center"
+        className={
+          variant === "account"
+            ? "ac-empty ac-form-success"
+            : "rounded-2xl border border-brand-border/80 bg-brand-surface px-6 py-8 text-center"
+        }
         role="status"
       >
         <p className="text-lg font-semibold tracking-[-0.01em] text-foreground">
@@ -82,7 +95,11 @@ export function FeatureRequestForm() {
         <Button
           type="button"
           variant="ghost"
-          className="mt-6 border border-brand-border"
+          className={
+            variant === "account"
+              ? "ac-button mt-6"
+              : "mt-6 border border-brand-border"
+          }
           onClick={() => setStatus("idle")}
         >
           Submit another idea
@@ -91,36 +108,50 @@ export function FeatureRequestForm() {
     );
   }
 
+  const contactFields = (
+    <div className="grid gap-5 sm:grid-cols-2">
+      <label className="block text-sm">
+        <span className="mb-1.5 block font-medium text-foreground">Name</span>
+        <input
+          required
+          maxLength={120}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full rounded-xl border border-brand-border bg-background px-3.5 py-2.5 text-foreground outline-none transition-colors focus:border-brand-orange"
+          autoComplete="name"
+        />
+      </label>
+      <label className="block text-sm">
+        <span className="mb-1.5 block font-medium text-foreground">Email</span>
+        <input
+          required
+          type="email"
+          maxLength={254}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full rounded-xl border border-brand-border bg-background px-3.5 py-2.5 text-foreground outline-none transition-colors focus:border-brand-orange"
+          autoComplete="email"
+        />
+      </label>
+    </div>
+  );
+
   return (
-    <form onSubmit={onSubmit} className="relative space-y-5" noValidate>
-      <div className="grid gap-5 sm:grid-cols-2">
-        <label className="block text-sm">
-          <span className="mb-1.5 block font-medium text-foreground">Name</span>
-          <input
-            required
-            maxLength={120}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-xl border border-brand-border bg-background px-3.5 py-2.5 text-foreground outline-none transition-colors focus:border-brand-orange"
-            autoComplete="name"
-          />
-        </label>
-        <label className="block text-sm">
-          <span className="mb-1.5 block font-medium text-foreground">Email</span>
-          <input
-            required
-            type="email"
-            maxLength={254}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-xl border border-brand-border bg-background px-3.5 py-2.5 text-foreground outline-none transition-colors focus:border-brand-orange"
-            autoComplete="email"
-          />
-        </label>
-      </div>
+    <form
+      onSubmit={onSubmit}
+      className={
+        variant === "account"
+          ? "ac-request-form relative space-y-5"
+          : "relative space-y-5"
+      }
+      noValidate={variant !== "account"}
+    >
+      {variant !== "account" ? contactFields : null}
 
       <label className="block text-sm">
-        <span className="mb-1.5 block font-medium text-foreground">Category</span>
+        <span className="mb-1.5 block font-medium text-foreground">
+          Category
+        </span>
         <select
           value={category}
           onChange={(e) =>
@@ -165,8 +196,19 @@ export function FeatureRequestForm() {
         />
       </label>
 
+      {variant === "account" ? (
+        <div className="ac-form-contact-heading">
+          <h2>Your contact details</h2>
+          <p>We will use this email if we need to follow up.</p>
+        </div>
+      ) : null}
+      {variant === "account" ? contactFields : null}
+
       {/* Honeypot — leave empty */}
-      <div className="absolute -left-[9999px] h-0 w-0 overflow-hidden" aria-hidden>
+      <div
+        className="absolute -left-[9999px] h-0 w-0 overflow-hidden"
+        aria-hidden
+      >
         <label>
           Company website
           <input
@@ -188,7 +230,11 @@ export function FeatureRequestForm() {
         type="submit"
         size="touch"
         disabled={status === "submitting"}
-        className="w-full bg-brand-orange font-semibold text-primary-foreground transition-[transform,background-color] duration-200 hover:bg-brand-orange-deep active:scale-[0.98] sm:w-auto"
+        className={
+          variant === "account"
+            ? "ac-button ac-button-primary"
+            : "w-full bg-brand-orange font-semibold text-primary-foreground transition-[transform,background-color] duration-200 hover:bg-brand-orange-deep active:scale-[0.98] sm:w-auto"
+        }
       >
         {status === "submitting" ? "Sending…" : "Submit feature request"}
       </Button>

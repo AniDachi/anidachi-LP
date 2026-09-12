@@ -1,0 +1,15 @@
+{
+  "fixtureKind": "mixed-live-and-derived-classifier-cases",
+  "capturedAt": "2026-09-05",
+  "region": "VN",
+  "liveSentinel": { "id": "GY2PDV78Y", "identifier": "G6NQ5DWZ6|S00003205|E3", "type": "episode", "episode": "3", "episode_number": 3, "sequence_number": 3, "episode_air_date": "2016-04-17T00:00:00Z", "availability_starts": "9998-11-30T17:45:00Z", "availability_ends": "9998-11-30T17:45:00Z" },
+  "derivedCases": [
+    { "case": "fractional", "type": "episode", "identifier": "SERIES|SEASON|E12.5", "episode": "12.5", "episode_number": 12.5, "sequence_number": 12.5 },
+    { "case": "zero", "type": "episode", "identifier": "SERIES|SEASON|E0", "episode": "0", "episode_number": 0, "sequence_number": 0 },
+    { "case": "null-number", "type": "episode", "identifier": "SERIES|SEASON|SPECIAL", "episode": null, "episode_number": null, "sequence_number": 30 },
+    { "case": "future", "type": "episode", "identifier": "SERIES|SEASON|FUTURE", "episode_air_date": "2099-01-01T00:00:00Z", "availability_starts": "2099-01-01T00:00:00Z", "availability_ends": "9998-11-30T17:45:00Z" },
+    { "case": "expired", "type": "episode", "identifier": "SERIES|SEASON|EXPIRED", "availability_starts": "2020-01-01T00:00:00Z", "availability_ends": "2021-01-01T00:00:00Z" },
+    { "case": "clip", "type": "clip", "identifier": "SERIES|SEASON|CLIP", "episode_number": null }
+  ],
+  "warning": "Derived cases exercise observed field shapes only; they are not represented as live provider observations. Unknown date/type behavior must remain partial."
+}

@@ -38,6 +38,20 @@ const lifecycleApi = roomLifecycle as typeof roomLifecycle & {
     },
     options?: { baseUrl?: string; secret?: string; fetch?: typeof fetch },
   ) => Promise<{ ok: true; outcome: "departed" | "room_ended" | "stale" }>;
+  syncParticipantDetachToWorker?: (
+    command: {
+      roomId: string;
+      userId: string;
+      participantSessionId: string;
+      requestedAt: number;
+    },
+    options?: {
+      baseUrl?: string;
+      secret?: string;
+      fetch?: typeof fetch;
+      timeoutMs?: number;
+    },
+  ) => Promise<{ ok: true; outcome: "detached" | "stale" }>;
 };
 
 test("trusts a new Worker's confirmed Web finalization without writing twice", async () => {
@@ -241,6 +255,160 @@ test("participant departure sync fails closed on a malformed Worker acknowledgem
     ),
     /invalid response/,
   );
+});
+
+test("sends a bounded exact participant detach command to the Worker", async () => {
+  assert.equal(typeof lifecycleApi.syncParticipantDetachToWorker, "function");
+  if (!lifecycleApi.syncParticipantDetachToWorker) return;
+  const command = {
+    roomId: "room-1",
+    userId: "user-1",
+    participantSessionId: "session-1",
+    requestedAt: 1_000,
+  };
+  const acknowledgement = await lifecycleApi.syncParticipantDetachToWorker(
+    command,
+    {
+      baseUrl: "https://worker.test",
+      secret: "internal-secret",
+      timeoutMs: 25,
+      fetch: async (input, init) => {
+        assert.equal(
+          input.toString(),
+          "https://worker.test/internal/rooms/room-1/participants/user-1/detach",
+        );
+        assert.equal(init?.method, "POST");
+        assert.equal(
+          new Headers(init?.headers).get("Authorization"),
+          "Bearer internal-secret",
+        );
+        assert.equal(init?.body, JSON.stringify(command));
+        assert.ok(init?.signal);
+        return Response.json({ ok: true, outcome: "detached" });
+      },
+    },
+  );
+  assert.deepEqual(acknowledgement, { ok: true, outcome: "detached" });
+});
+
+test("participant detach rejects an invalid Worker acknowledgement", async () => {
+  assert.equal(typeof lifecycleApi.syncParticipantDetachToWorker, "function");
+  if (!lifecycleApi.syncParticipantDetachToWorker) return;
+  await assert.rejects(
+    lifecycleApi.syncParticipantDetachToWorker(
+      {
+        roomId: "room-1",
+        userId: "user-1",
+        participantSessionId: "session-1",
+        requestedAt: 1_000,
+      },
+      {
+        baseUrl: "https://worker.test",
+        secret: "internal-secret",
+        fetch: async () => Response.json({ ok: true, outcome: "departed" }),
+      },
+    ),
+    /invalid response/i,
+  );
+});
+
+test("participant detach rejects a non-success Worker response", async () => {
+  assert.equal(typeof lifecycleApi.syncParticipantDetachToWorker, "function");
+  if (!lifecycleApi.syncParticipantDetachToWorker) return;
+  await assert.rejects(
+    lifecycleApi.syncParticipantDetachToWorker(
+      {
+        roomId: "room-1",
+        userId: "user-1",
+        participantSessionId: "session-1",
+        requestedAt: 1_000,
+      },
+      {
+        baseUrl: "https://worker.test",
+        secret: "internal-secret",
+        fetch: async () => new Response(null, { status: 500 }),
+      },
+    ),
+    /failed \(500\)/i,
+  );
+});
+
+test("participant detach aborts its fetch at the configured timeout", async () => {
+  assert.equal(typeof lifecycleApi.syncParticipantDetachToWorker, "function");
+  if (!lifecycleApi.syncParticipantDetachToWorker) return;
+  let aborted = false;
+  await assert.rejects(
+    lifecycleApi.syncParticipantDetachToWorker(
+      {
+        roomId: "room-1",
+        userId: "user-1",
+        participantSessionId: "session-1",
+        requestedAt: 1_000,
+      },
+      {
+        baseUrl: "https://worker.test",
+        secret: "internal-secret",
+        timeoutMs: 25,
+        fetch: async (_input, init) =>
+          new Promise<Response>((_resolve, reject) => {
+            init?.signal?.addEventListener(
+              "abort",
+              () => {
+                aborted = true;
+                reject(new DOMException("Aborted", "AbortError"));
+              },
+              { once: true },
+            );
+          }),
+      },
+    ),
+    /aborted/i,
+  );
+  assert.equal(aborted, true);
+});
+
+test("participant detach applies the executed 1000ms default timeout", async () => {
+  assert.equal(typeof lifecycleApi.syncParticipantDetachToWorker, "function");
+  if (!lifecycleApi.syncParticipantDetachToWorker) return;
+  const originalSetTimeout = globalThis.setTimeout;
+  const originalClearTimeout = globalThis.clearTimeout;
+  let observedDelay: number | undefined;
+  globalThis.setTimeout = ((callback: (...args: unknown[]) => void, delay?: number) => {
+    observedDelay = delay;
+    queueMicrotask(() => callback());
+    return 1 as unknown as ReturnType<typeof setTimeout>;
+  }) as typeof setTimeout;
+  globalThis.clearTimeout = (() => undefined) as typeof clearTimeout;
+
+  try {
+    await assert.rejects(
+      lifecycleApi.syncParticipantDetachToWorker(
+        {
+          roomId: "room-1",
+          userId: "user-1",
+          participantSessionId: "session-1",
+          requestedAt: 1_000,
+        },
+        {
+          baseUrl: "https://worker.test",
+          secret: "internal-secret",
+          fetch: async (_input, init) =>
+            new Promise<Response>((_resolve, reject) => {
+              init?.signal?.addEventListener(
+                "abort",
+                () => reject(new DOMException("Aborted", "AbortError")),
+                { once: true },
+              );
+            }),
+        },
+      ),
+      /aborted/i,
+    );
+  } finally {
+    globalThis.setTimeout = originalSetTimeout;
+    globalThis.clearTimeout = originalClearTimeout;
+  }
+  assert.equal(observedDelay, 1_000);
 });
 
 test("settles an internal callback once and echoes the same event identity on duplicate", async () => {

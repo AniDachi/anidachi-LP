@@ -2,6 +2,8 @@ import {
   MAX_SESSION_ID_CHARS,
   ParticipantSchema,
   RoomCapabilitiesSchema,
+	RoomMediaCapabilityLeaseSchema,
+	type RoomMediaCapabilityLease,
   type Participant,
   type RoomCapabilities,
 } from "@anidachi/protocol";
@@ -13,6 +15,8 @@ export const ROOM_SOCKET_ATTACHMENT_VERSION = 3;
 export interface RoomSocketVerifiedIdentity {
   avatarUrl?: string | null;
   capabilities?: RoomCapabilities;
+	mediaLease?: RoomMediaCapabilityLease;
+	hostUserId?: string;
   displayName?: string;
   participantSessionId: string;
   role: "host" | "member";
@@ -68,7 +72,10 @@ export function parseRoomSocketAttachment(
   if (value.roomId !== expectedRoomId) {
     return null;
   }
-  if (!isNonNegativeInteger(value.connectedAt) || !isNonNegativeInteger(value.lastSeenAt)) {
+	if (
+		!isNonNegativeInteger(value.connectedAt) ||
+		!isNonNegativeInteger(value.lastSeenAt)
+	) {
     return null;
   }
 
@@ -77,7 +84,8 @@ export function parseRoomSocketAttachment(
     return null;
   }
 
-  const participant = value.participant === undefined
+	const participant =
+		value.participant === undefined
     ? undefined
     : ParticipantSchema.safeParse(value.participant);
   if (participant && !participant.success) {
@@ -98,7 +106,10 @@ export function parseRoomSocketAttachment(
     verified,
   };
 
-  if (typeof value.participantSessionId === "string" && value.participantSessionId.length > 0) {
+	if (
+		typeof value.participantSessionId === "string" &&
+		value.participantSessionId.length > 0
+	) {
     attachment.participantSessionId = value.participantSessionId;
   }
 
@@ -126,6 +137,10 @@ export function attachmentToVerifiedRoomToken(
     roomId: attachment.verified.roomId,
     sub: attachment.verified.sub,
   };
+	if (attachment.verified.mediaLease) {
+		verified.mediaLease = attachment.verified.mediaLease;
+		verified.hostUserId = attachment.verified.hostUserId!;
+	}
   if (attachment.verified.capabilities) {
     verified.capabilities = attachment.verified.capabilities;
   }
@@ -160,13 +175,18 @@ export function updateRoomSocketAttachment(
 
 function parseAdmission(value: unknown): RoomSocketAdmission | null {
   if (!isRecord(value)) return null;
-  if (!isNonNegativeInteger(value.deadlineAt) || typeof value.joined !== "boolean") {
+	if (
+		!isNonNegativeInteger(value.deadlineAt) ||
+		typeof value.joined !== "boolean"
+	) {
     return null;
   }
   return { deadlineAt: value.deadlineAt, joined: value.joined };
 }
 
-function serializeVerifiedRoomToken(verified: VerifiedRoomToken): RoomSocketVerifiedIdentity {
+function serializeVerifiedRoomToken(
+	verified: VerifiedRoomToken,
+): RoomSocketVerifiedIdentity {
   const identity: RoomSocketVerifiedIdentity = {
     avatarUrl: verified.avatarUrl ?? null,
     role: verified.role,
@@ -174,6 +194,10 @@ function serializeVerifiedRoomToken(verified: VerifiedRoomToken): RoomSocketVeri
     roomId: verified.roomId,
     sub: verified.sub,
   };
+	if (verified.mediaLease) {
+		identity.mediaLease = verified.mediaLease;
+		identity.hostUserId = verified.hostUserId!;
+	}
   if (verified.capabilities) {
     identity.capabilities = verified.capabilities;
   }
@@ -213,7 +237,10 @@ function parseVerifiedIdentity(
   ) {
     return null;
   }
-  if (value.displayName !== undefined && typeof value.displayName !== "string") {
+	if (
+		value.displayName !== undefined &&
+		typeof value.displayName !== "string"
+	) {
     return null;
   }
 
@@ -236,6 +263,17 @@ function parseVerifiedIdentity(
     }
     identity.capabilities = capabilities.data;
   }
+	if (value.mediaLease !== undefined) {
+		const lease = RoomMediaCapabilityLeaseSchema.safeParse(value.mediaLease);
+		if (
+			!lease.success ||
+			lease.data.roomId !== expectedRoomId ||
+			typeof value.hostUserId !== "string"
+		)
+			return null;
+		identity.mediaLease = lease.data;
+		identity.hostUserId = value.hostUserId;
+	}
   return identity;
 }
 

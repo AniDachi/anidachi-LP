@@ -25,7 +25,7 @@ or protocol events.
 - In the new persistent mode, expand only the participant being hovered or
   keyboard-focused.
 - Show the result before leaving settings through a truthful miniature preview.
-- Preserve privacy-critical and room-lifecycle overrides.
+- Preserve panel access, keyboard focus, and room-lifecycle eligibility.
 - Keep the settings local, lightweight, validated, and immediately applied.
 - Reuse the existing launcher and room-rail behavior instead of creating a
   second overlay system.
@@ -86,13 +86,17 @@ The following higher-priority rules apply in both modes:
 
 - an open AniDachi panel always pins the main control because it is the panel's
   close control;
-- actively published Open mic always pins the main control as a privacy
-  indicator;
 - focus keeps the control visible until focus leaves;
 - provider-specific overlay placement and safe insets remain unchanged.
 
 `Always visible` suppresses the idle edge glow because the control is already
 present.
+
+As approved on 2026-09-04, microphone mode, publication, and speaking activity
+are independent of the main control: they neither pin it nor add a microphone
+badge or microphone-specific accessible label. Voice indicators belong to the
+participant pills and video bubbles. Hiding the main control never stops or
+changes microphone publication.
 
 ### Participant Pills
 
@@ -242,7 +246,7 @@ machine.
 The existing precedence is retained:
 
 ```txt
-privacy and panel overrides
+panel access overrides
   > room/video eligibility
   > direct pointer or focus interaction
   > speaking activity
@@ -272,8 +276,9 @@ provider-specific policy.
 
 - Preference parsing accepts valid values and falls back field-by-field.
 - Unknown versions return the complete default.
-- Main-control policy covers auto-hide, always-visible, panel-open, focus, and
-  published Open mic precedence.
+- Main-control policy covers auto-hide, always-visible, panel-open, and focus.
+- Overlay integration verifies that active Open mic does not override Auto hide
+  or change the launcher, and that hiding it does not stop microphone publication.
 - Participant policy covers no room, open panel, quiet, speaking, persistent,
   mounted video, local participant, remote mute, and audio adjustment.
 - Settings navigation includes `Interface` in the approved order.
@@ -289,7 +294,8 @@ Verify on both Crunchyroll and YouTube in normal, theater, and fullscreen modes:
 - defaults match the current launcher and rail behavior;
 - main-control `Always visible` stays present without an edge glow;
 - Auto hide still uses deliberate edge intent and does not flicker;
-- Open mic remains visibly disclosed in Auto hide mode;
+- Open mic does not pin the main control in Auto hide mode; participant voice
+  indicators and microphone publication continue independently;
 - no side rail appears before joining or creating a room;
 - Smart reveals a speaking no-video participant and hides after silence;
 - Always visible keeps quiet no-video participants compact;
@@ -310,9 +316,11 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension check
 fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension test
 fnm exec --using="$(cat .node-version)" pnpm build:extension:staging
 fnm exec --using="$(cat .node-version)" pnpm validate:extension:staging
-pnpm graph:update
 git diff --check
 ```
+
+For the changed design and plan documents, run `$graphify . --update` inside
+Codex; the code-only `pnpm graph:update:code` command is not a semantic refresh.
 
 ## Rollout
 

@@ -1,0 +1,344 @@
+{
+	"transition": "production-history-20260912",
+	"productionProject": "bynsjjxzatxndzjkogim",
+	"sourceCommit": "0b2c4e84a1c041fc7ead7a504880ec47f2af31e2",
+	"cli": "2.111.0",
+	"baselineCount": 35,
+	"inventory": {
+		"watch_sessions": {
+			"count": 6,
+			"schemas": [1]
+		},
+		"watch_session_participants": {
+			"count": 6,
+			"schemas": [1]
+		},
+		"watch_progress_checkpoints": {
+			"count": 21
+		},
+		"user_tracked_titles": {
+			"count": 3,
+			"schemas": [1]
+		},
+		"watch_episode_progress": {
+			"count": 0
+		},
+		"watch_history_receipts": {
+			"count": 0
+		},
+		"watch_history_deletions": {
+			"count": 0
+		},
+		"watch_history_title_summaries": {
+			"count": 0
+		},
+		"watch_history_user_session_summaries": {
+			"count": 0
+		},
+		"user_watch_settings": {
+			"count": 11
+		}
+	},
+	"migrations": [
+		{
+			"file": "20260525_anidachi_auth.sql",
+			"version": "20260525",
+			"sha256": "a19911aca16fce5f45afb12c31703f079d1f7e920e1d8861319e72f6a9e61913"
+		},
+		{
+			"file": "20260602_extension_auth.sql",
+			"version": "20260602",
+			"sha256": "e202555b13a1eae39d66ee51f84e63e1ae548f26ff1483e910c89efd4e385572"
+		},
+		{
+			"file": "20260603_room_invite_source.sql",
+			"version": "20260603",
+			"sha256": "e980c896a6e343a20b2544a12193ad0364fa7619c7db3446cd7b9d851316555b"
+		},
+		{
+			"file": "20260612_room_lifecycle_quota.sql",
+			"version": "20260612",
+			"sha256": "e68be976af3100b9d2a3d92f681357256c158eccebba78fa72b1d0e52b7a89a0"
+		},
+		{
+			"file": "20260620_billing_entitlements.sql",
+			"version": "20260620",
+			"sha256": "896c6bb85a702a1187737ffe4fee0b6df3516be0d52d1091b71d968b691429b2"
+		},
+		{
+			"file": "20260621_social_profiles_friends_recent.sql",
+			"version": "20260621",
+			"sha256": "3f1b1541b9920d2223fe1b9140862da4fab23f9ed00b3a55c8ea95f7399aa748"
+		},
+		{
+			"file": "20260622_friend_groups.sql",
+			"version": "20260622",
+			"sha256": "21f3466a116716576c078d67da212dab38cc1dd9d0ec92fec53fc7e3a3ec9fa5"
+		},
+		{
+			"file": "20260623_room_capabilities.sql",
+			"version": "20260623",
+			"sha256": "f13b8ff9a1f7fb06ab77ff94490c6c30bcc396c3527855a8b5a4c29168ce4cd0"
+		},
+		{
+			"file": "20260624_room_invites.sql",
+			"version": "20260624",
+			"sha256": "8ca268df6d95c9a3256b4a298f8746b713aede73d48f344efc19028a5d447747"
+		},
+		{
+			"file": "20260625_friend_invite_links.sql",
+			"version": "20260625",
+			"sha256": "39588a270baca221263bfc9593fb69e94db45d33bc9f80b24fb1670d0443bc0e"
+		},
+		{
+			"file": "20260626_watch_library.sql",
+			"version": "20260626",
+			"sha256": "ee6b9311ec5026a3457f90465ad0cc492ab302b628f5e2dcf092627fde3f5afa"
+		},
+		{
+			"file": "20260627_plan_code_canonicalization_bridge.sql",
+			"version": "20260627",
+			"sha256": "052d1c451d4efc9e335703b4f09f45565e426e710ab6d24b2b082fdcbd785d4e"
+		},
+		{
+			"file": "20260628_watch_library_seasons.sql",
+			"version": "20260628",
+			"sha256": "18558d6aa1e4bc37ff880f04a62e4ee515b738445a3dddb22cb204798434af76"
+		},
+		{
+			"file": "20260629_crunchyroll_known_season_backfill.sql",
+			"version": "20260629",
+			"sha256": "72ab2bbe1733a4381cf727b98b4892073635b2b31521142c7600793a3103df4e"
+		},
+		{
+			"file": "20260630_crunchyroll_kaguya_season_fix.sql",
+			"version": "20260630",
+			"sha256": "d9fd3f3f771453170da1981bc4f696ae8a2412ff8ff9a2b0e68351f42d4d049e"
+		},
+		{
+			"file": "20260712150606_finalize_room_usage.sql",
+			"version": "20260712150606",
+			"sha256": "c5ae0d3a54a202404d4308e99224fdb2e4f21f699a13203c8a8705fb45abc584"
+		},
+		{
+			"file": "20260808_social_atomicity.sql",
+			"version": "20260808",
+			"sha256": "e1018f4296612015716b252bd127867ac78ce8a6517a76269a4969160c8a6bfd"
+		},
+		{
+			"file": "20260809_room_invite_inbox_foundation.sql",
+			"version": "20260809",
+			"sha256": "c00afef7bb323a94043128a62238a660b8c6dcaf75152662bcd99e82c0c1c3a4"
+		},
+		{
+			"file": "20260810061205_device_web_push.sql",
+			"version": "20260810061205",
+			"sha256": "37e8892a6a7f2fcec0302e2ba34de323347e94197056ddc59095c810d377bb73"
+		},
+		{
+			"file": "20260810190000_room_invite_atomicity.sql",
+			"version": "20260810190000",
+			"sha256": "636a0d7de08679f6341009c429088376545715bbd1f0f33492af6d0c6db79164"
+		},
+		{
+			"file": "20260814010000_watch_history_v2_foundation.sql",
+			"version": "20260814010000",
+			"sha256": "dbaaceb9791f5cedfeef0be64be6f5e0bd43e43105d9d837afa7a7c1f3f07012"
+		},
+		{
+			"file": "20260814020000_watch_history_v2_clean_cutover.sql",
+			"version": "20260814020000",
+			"sha256": "4f7e127e5de8563cad3c346ecb37fe8c080df68c97580d8dfbddd6f487e2c4e0"
+		},
+		{
+			"file": "20260816090000_watch_history_v2_bounded_read.sql",
+			"version": "20260816090000",
+			"sha256": "94a9e07c10a48c385cef227eb97459b1c48520f60a72ccf4711c7607205abf5c"
+		},
+		{
+			"file": "20260818131602_oauth_login_transactions.sql",
+			"version": "20260818131602",
+			"sha256": "32a683bf926947071ae76996ed9b7a055968fcdf801ab3e08caebfbd011b86b7"
+		},
+		{
+			"file": "20260818192007_extension_auth_pkce.sql",
+			"version": "20260818192007",
+			"sha256": "1a25875f700214e41475843c4c5e9b28a905f23936cc4aa6e55a5929be0cdc6f"
+		},
+		{
+			"file": "20260819133849_auth_channel_rotation.sql",
+			"version": "20260819133849",
+			"sha256": "34a178fd114a5a6074257fbaf579ceade81a7d6a5131b5a26ce35148624adcb4"
+		},
+		{
+			"file": "20260820040229_auth_artifact_cleanup.sql",
+			"version": "20260820040229",
+			"sha256": "e8c78e66b8f785c118d3c59f2e8536ed50e52d4d799cd6a18a0bcd9adc038f62"
+		},
+		{
+			"file": "20260820111116_room_history_authority_expiry.sql",
+			"version": "20260820111116",
+			"sha256": "e22ab3f5e948a410a1805738162689192cce3454c0ad7c0922f8804ec08a1f2b"
+		},
+		{
+			"file": "20260821162622_watch_history_v2_resource_bounds.sql",
+			"version": "20260821162622",
+			"sha256": "c24c95117e9c85000b323f0aa23e58ef80a5b9879a40a5a3cbae47e8af611d4c"
+		},
+		{
+			"file": "20260822033019_room_source_generation.sql",
+			"version": "20260822033019",
+			"sha256": "0c19539ae40173bdb6ac63ee09411c391b39e8eca157ac57e66fc16ac20ffb60"
+		},
+		{
+			"file": "20260822065227_room_invite_lifecycle_actions.sql",
+			"version": "20260822065227",
+			"sha256": "7dc23a7ae5dd5ec621c026f69b44f37d1d686cc7411fdbb44cbe4c67ac105df2"
+		},
+		{
+			"file": "20260822091552_finalize_legacy_orphan_invite_rooms.sql",
+			"version": "20260822091552",
+			"sha256": "c3f93105ad9f3b408df347d45461938b938afbaeb68bab943b73be44fa1c67df"
+		},
+		{
+			"file": "20260822173304_explicit_service_role_privileges.sql",
+			"version": "20260822173304",
+			"sha256": "9896074f81ef4d8df6db764c763564964b6eb7947197b359c473c2c666594e9c"
+		},
+		{
+			"file": "20260823090624_single_active_room_sessions.sql",
+			"version": "20260823090624",
+			"sha256": "abc5febfb1a0dd79de845cadb507d9c80528453e41ebd68dbb2b37346fbf7ad5"
+		},
+		{
+			"file": "20260823132355_single_active_room_input_validation.sql",
+			"version": "20260823132355",
+			"sha256": "8b44a8ec902a82664905ae543f5f6c40bb802bbfc362b9632a1af43d89b92783"
+		},
+		{
+			"file": "20260904114914_account_inbox_push_outbox.sql",
+			"version": "20260904114914",
+			"sha256": "97fdbe241b0742ef4ab672bd4af87527593050b3eea3bcbec7961e1bba589812"
+		},
+		{
+			"file": "20260904154732_private_inbox_push_scheduler.sql",
+			"version": "20260904154732",
+			"sha256": "b6760aaf56884ba1445f55738489d2f2c21bd03cb52f34ad64d7fe74c127a7cb"
+		},
+		{
+			"file": "20260904205540_watch_history_canonical_catalog.sql",
+			"version": "20260904205540",
+			"sha256": "168733739d57aca7a8a0ab6952ef1d2943238912f95b219e7b5087faa67a4a9c"
+		},
+		{
+			"file": "20260905083000_watch_history_observed_season_fallback.sql",
+			"version": "20260905083000",
+			"sha256": "dd96099edd6ba904fc2b39a5f66f0768ed1046b7da3a51edbd5d2a91c4ee0194"
+		},
+		{
+			"file": "20260905084800_watch_history_browse.sql",
+			"version": "20260905084800",
+			"sha256": "7a1573ee7ebf40047515ba15cb4c150bbad2ec5e32b4b84d813172f94f0499d3"
+		},
+		{
+			"file": "20260905145315_watch_history_browse_episode_previews.sql",
+			"version": "20260905145315",
+			"sha256": "4b0eebddd7ca0c5192b1d7608d4778d62cde9c9667cabbf578a214fa48c2a2d2"
+		},
+		{
+			"file": "20260907194413_personal_history_access.sql",
+			"version": "20260907194413",
+			"sha256": "3596460ffe4362738ef3e629d421ec7a1ec1ac01967bc3a1545afe402edf8b9b"
+		},
+		{
+			"file": "20260907195651_personal_history_refresh_recovery.sql",
+			"version": "20260907195651",
+			"sha256": "6ed1085a186b89e9852763ce4d106676cfab209e0363a03e41a2eeb5e8deb61f"
+		},
+		{
+			"file": "20260908030441_personal_watch_history.sql",
+			"version": "20260908030441",
+			"sha256": "092db2c2d292bcb838f3dba8dfcf381ce82964314b9cdac8e17acd75c21fb267"
+		},
+		{
+			"file": "20260908031435_personal_history_metadata_fences.sql",
+			"version": "20260908031435",
+			"sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+		},
+		{
+			"file": "20260908031543_personal_history_metadata_authority.sql",
+			"version": "20260908031543",
+			"sha256": "6d94dee7b4c9e979edb232419ce8e826fd70390631c4ee4cfe7ee39aa01fae95"
+		},
+		{
+			"file": "20260908031940_personal_history_ordering_fences.sql",
+			"version": "20260908031940",
+			"sha256": "5f7c3e83da0d46f8774215e8f444cae65941938f551beff9dd022e05a1ab051c"
+		},
+		{
+			"file": "20260908033545_personal_history_browse_preservation.sql",
+			"version": "20260908033545",
+			"sha256": "87043d11b5e1ec5987389ea89d3ac1580da51cb8fd12e20fc31ff91475a83571"
+		},
+		{
+			"file": "20260908034732_personal_history_delete_ordering.sql",
+			"version": "20260908034732",
+			"sha256": "739f91b54694992a3cca15135e47a3ad987e957ce93c6dfec0969548ea814a6b"
+		},
+		{
+			"file": "20260908035702_personal_catalog_immutable_attempt_epoch.sql",
+			"version": "20260908035702",
+			"sha256": "518006586959ae7ca0d483aae54cb2161a7429311478fabfd0e85687a8395fc0"
+		},
+		{
+			"file": "20260908040654_recent_people_from_room_presence.sql",
+			"version": "20260908040654",
+			"sha256": "dbc7cde6e2d9f355370cc398bee641f7658f77ab4270e1a1ce07e4819139d875"
+		},
+		{
+			"file": "20260908065520_room_media_capabilities_v2.sql",
+			"version": "20260908065520",
+			"sha256": "b154a94665e34f6079de0ffa9c75f862f0350921cfc8abf3a0486705142d3ffb"
+		},
+		{
+			"file": "20260908070552_room_media_compatibility_fence.sql",
+			"version": "20260908070552",
+			"sha256": "efd22c24cf32b2c6cc19530f891a321fd5472ddf9b05d793a2bf17db575cb261"
+		},
+		{
+			"file": "20260908071729_room_media_negotiation_fence.sql",
+			"version": "20260908071729",
+			"sha256": "80ba863ef014945fba1da0f7e9028eebf0609aa01776e3edddf3b3c1e9756c59"
+		},
+		{
+			"file": "20260908072249_room_usage_zero_finalization.sql",
+			"version": "20260908072249",
+			"sha256": "5d2b945d0a2debcc53a5cd4091ae859e16111d19990e4a8ee686b2422945fd92"
+		},
+		{
+			"file": "20260908174716_personal_history_readonly_free.sql",
+			"version": "20260908174716",
+			"sha256": "b8cac9387e6eb811b1249e47cc5608272dbf1fda83545ab0dd54ddb773634e3f"
+		},
+		{
+			"file": "20260909043915_watch_history_provider_capacity.sql",
+			"version": "20260909043915",
+			"sha256": "99198b6da98fd9dc80ab8a7973b21297bc4c595c92110eeaabe938ee110b5467"
+		},
+		{
+			"file": "20260909185238_account_history_editor.sql",
+			"version": "20260909185238",
+			"sha256": "3c62ea5c375f751c87151242366ecd1a59db245d865ecd0e4052111d7c8bedce"
+		},
+		{
+			"file": "20260910041523_history_browse_explicit_projection.sql",
+			"version": "20260910041523",
+			"sha256": "494c445d78058d2778bfebe780df75bcc73bef2314f3a5b50c2cc25be0d73588"
+		},
+		{
+			"file": "20260911070906_friends_groups_editor_atomic.sql",
+			"version": "20260911070906",
+			"sha256": "8c214da0e547596fc931381d461abfa98191a79b5674030b4c8d609e83bf2e68"
+		}
+	]
+}

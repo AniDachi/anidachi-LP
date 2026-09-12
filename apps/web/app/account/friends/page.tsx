@@ -1,3 +1,4 @@
+import "../../friends/friends.css";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { FriendsClient } from "@/app/friends/friends-client";
@@ -23,6 +24,7 @@ export default async function AccountFriendsPage() {
 
   return (
     <FriendsClient
+      key={session.userId}
       currentUser={{
         userId: session.userId,
         displayName: profile?.display_name ?? user?.display_name ?? "AniDachi user",

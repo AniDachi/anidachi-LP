@@ -6,7 +6,7 @@ import { InvitesClient } from "./invites-client";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Invites",
+  title: "Notifications",
   robots: { index: false, follow: false },
 };
 

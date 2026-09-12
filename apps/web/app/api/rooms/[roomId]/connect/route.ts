@@ -11,6 +11,8 @@ import {
   updateRoom,
 } from "@/lib/anidachi-auth/db";
 import { getExtensionSessionFromAuthorization } from "@/lib/anidachi-auth/extension-session";
+import { resolveAccountEntitlements } from "@/lib/anidachi-auth/account-entitlements";
+import { roomMediaLease } from "@/lib/anidachi-auth/room-capability";
 import { signRoomToken } from "@/lib/anidachi-auth/jwt";
 import {
   getHostQuotaView,
@@ -25,6 +27,9 @@ import {
 } from "@/lib/room-quota";
 
 export const dynamic = "force-dynamic";
+// Keep this literal statically analyzable by Next/Vercel. A Web source test
+// fences it to the shared client-side settlement horizon constant.
+export const maxDuration = 60;
 
 /**
  * Issues a room token for the extension to open a WebSocket connection.
@@ -38,13 +43,17 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ roomId: string }> }
+	{ params }: { params: Promise<{ roomId: string }> },
 ) {
   const cookieSession = await getSession();
   const extensionSession = cookieSession
     ? null
-    : await getExtensionSessionFromAuthorization(request.headers.get("authorization"));
-  const session = cookieSession ?? (extensionSession
+		: await getExtensionSessionFromAuthorization(
+				request.headers.get("authorization"),
+			);
+	const session =
+		cookieSession ??
+		(extensionSession
     ? {
         userId: extensionSession.sub,
         email: extensionSession.email,
@@ -76,13 +85,24 @@ export async function POST(
   if (!isHost && !isMember) {
     return NextResponse.json(
       { error: "You are not a participant in this room" },
-      { status: 403 }
+			{ status: 403 },
     );
   }
 
   const now = new Date();
   const user = await getUserById(session.userId);
-  const userPlan = user?.plan ?? session.plan;
+	try {
+		await resolveAccountEntitlements(session.userId, now);
+	} catch {
+		return NextResponse.json(
+			{ code: "ROOM_AUTHORITY_UNAVAILABLE" },
+			{ status: 503 },
+		);
+	}
+	const mediaLease = roomMediaLease(room);
+	if (mediaLease && request.headers.get("x-anidachi-media-protocol") !== "2")
+		return NextResponse.json({ code: "ROOM_UPDATE_REQUIRED" }, { status: 426 });
+	const userPlan = room.host_plan_code;
   const capabilities = roomCapabilitiesFromRoom(room);
   let tokenTtlSeconds = ROOM_TOKEN_TTL_SECONDS;
   let quotaSummary: { remainingSeconds: number; resetAt: string } | null = null;
@@ -98,21 +118,21 @@ export async function POST(
       tokenTtlSeconds = hostRoomTokenTtlSeconds(quota);
       quotaSummary = quotaSummaryForResponse(userPlan, quota);
     }
-
   }
 
   const role = isHost ? "host" : "member";
   const admission = await claimActiveRoomSession({
     userId: session.userId,
+		mediaProtocolVersion:
+			request.headers.get("x-anidachi-media-protocol") === "2" ? 2 : 1,
     roomId,
     role,
     participantSessionId: admissionInput.data.participantSessionId,
   });
   if (admission.outcome === "conflict") {
-    return NextResponse.json(
-      activeRoomConflictResponse(admission.activeRoom),
-      { status: 409 },
-    );
+		return NextResponse.json(activeRoomConflictResponse(admission.activeRoom), {
+			status: 409,
+		});
   }
   if (isHost) {
     await updateRoom(roomId, {
@@ -130,11 +150,18 @@ export async function POST(
       role,
       participantSessionId: admissionInput.data.participantSessionId,
       capabilities,
+			mediaLease,
+			hostUserId: room.host_user_id,
       displayName: user?.display_name ?? session.email,
       avatarUrl: user?.avatar_url ?? null,
     },
-    tokenTtlSeconds
+		tokenTtlSeconds,
   );
 
-  return NextResponse.json({ roomToken, capabilities, quota: quotaSummary });
+	return NextResponse.json({
+		roomToken,
+		capabilities,
+		mediaCapabilities: mediaLease?.capabilities,
+		quota: quotaSummary,
+	});
 }

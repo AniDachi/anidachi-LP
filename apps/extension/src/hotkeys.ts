@@ -1,5 +1,8 @@
-import { EMOJI_PALETTE } from "./constants";
 import type { VoiceMode } from "./media-types";
+import {
+  DEFAULT_REACTION_SHORTCUTS,
+  reactionShortcutIndexFromCode,
+} from "./reaction-shortcuts";
 
 export type HotkeyAction =
   | { type: "fire-start" }
@@ -12,7 +15,9 @@ export type HotkeyAction =
 export interface HotkeyState {
   roomActive: boolean;
   panelOpen: boolean;
+  messageComposerOpen: boolean;
   reactionsEnabled: boolean;
+  reactionShortcuts?: readonly string[];
   experimentalSuperReactionsEnabled?: boolean;
   voiceMode: VoiceMode;
 }
@@ -34,7 +39,12 @@ export type HotkeyEventLike = Pick<
 };
 
 export function getHotkeyAction(event: HotkeyEventLike, state: HotkeyState): HotkeyAction | null {
-  if (!state.roomActive || hasBlockedModifier(event) || isEditableEventTarget(event)) {
+  if (
+    !state.roomActive ||
+    state.messageComposerOpen ||
+    hasBlockedModifier(event) ||
+    isEditableEventTarget(event)
+  ) {
     return null;
   }
 
@@ -53,7 +63,7 @@ export function getHotkeyAction(event: HotkeyEventLike, state: HotkeyState): Hot
   }
 
   if (state.reactionsEnabled) {
-    const emoji = getEmojiHotkey(event);
+    const emoji = getEmojiHotkey(event, state.reactionShortcuts);
     if (emoji === "🔥") {
       if (!state.experimentalSuperReactionsEnabled) {
         return event.type === "keydown" ? { type: "reaction", emoji } : null;
@@ -76,6 +86,20 @@ export function getHotkeyAction(event: HotkeyEventLike, state: HotkeyState): Hot
   return null;
 }
 
+export function shouldCaptureReactionShortcutEvent(
+  event: HotkeyEventLike,
+  state: HotkeyState,
+): boolean {
+  return (
+    state.roomActive &&
+    !state.messageComposerOpen &&
+    state.reactionsEnabled &&
+    !hasBlockedModifier(event) &&
+    !isEditableEventTarget(event) &&
+    reactionShortcutIndexFromCode(event.code) !== null
+  );
+}
+
 export function shouldStopVoiceTalkOnWindowBlur(voiceMode: VoiceMode): boolean {
   return voiceMode === "push-to-talk";
 }
@@ -89,6 +113,20 @@ export function isPushToTalkReleaseEvent(
 ): boolean {
   return (
     state.held && state.voiceMode === "push-to-talk" && event.type === "keyup" && isVoiceKey(event)
+  );
+}
+
+export function isFireReactionReleaseEvent(
+  event: Pick<HotkeyEventLike, "code" | "key" | "repeat" | "type">,
+  state: {
+    held: boolean;
+    reactionShortcuts?: readonly string[];
+  },
+): boolean {
+  return (
+    state.held &&
+    event.type === "keyup" &&
+    getEmojiHotkey(event, state.reactionShortcuts) === "🔥"
   );
 }
 
@@ -110,14 +148,20 @@ function isMessageComposerOpenKey(event: HotkeyEventLike): boolean {
   );
 }
 
-function getEmojiHotkey(event: HotkeyEventLike): string | null {
+function getEmojiHotkey(
+  event: Pick<HotkeyEventLike, "code" | "repeat">,
+  reactionShortcuts: readonly string[] = DEFAULT_REACTION_SHORTCUTS,
+): string | null {
   if (event.repeat) {
     return null;
   }
 
-  const digitMatch = event.code.match(/^Digit([1-6])$/) ?? event.code.match(/^Numpad([1-6])$/);
-  const index = digitMatch ? Number(digitMatch[1]) - 1 : Number.NaN;
-  return Number.isInteger(index) ? (EMOJI_PALETTE[index] ?? null) : null;
+  const index = reactionShortcutIndexFromCode(event.code);
+  if (index === null) {
+    return null;
+  }
+
+  return reactionShortcuts[index] ?? DEFAULT_REACTION_SHORTCUTS[index] ?? null;
 }
 
 function isEditableEventTarget(event: HotkeyEventLike): boolean {

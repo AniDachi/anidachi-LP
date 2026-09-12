@@ -1,3 +1,5 @@
+import { WatchProgressEventSchema } from "@anidachi/protocol";
+
 const POSTER_TARGET_WIDTH = 480;
 
 export function selectCrunchyrollPosterTall(value: unknown): string | null {
@@ -84,8 +86,10 @@ function readArtworkImages(
 				const record = image as Record<string, unknown>;
 				return (
 					typeof record.source === "string" &&
+					WatchProgressEventSchema.shape.artworkUrl.safeParse(record.source).success &&
 					typeof record.width === "number" &&
 					typeof record.height === "number" &&
+					Number.isFinite(record.width) && Number.isFinite(record.height) &&
 					record.width > 0 &&
 					record.height > 0
 				);

@@ -99,6 +99,19 @@ describe("OverlayLayoutEditor", () => {
 		);
 		expect(leader.style.left).toBe(`${(projectedLeader.x / 1920) * 100}%`);
 		expect(leader.style.top).toBe(`${(projectedLeader.y / 1080) * 100}%`);
+		const chat = getChat(editor.container);
+		expect(chat.style.getPropertyValue("--layout-preview-chat-gap")).toBe(
+			`${(5 / 1920) * 100}cqw`,
+		);
+		expect(
+			chat.style.getPropertyValue("--layout-preview-chat-name-font-size"),
+		).toBe(`${(10 / 1920) * 100}cqw`);
+		expect(chat.style.getPropertyValue("--layout-preview-chat-padding-x")).toBe(
+			`${(10 / 1920) * 100}cqw`,
+		);
+		expect(chat.style.getPropertyValue("--layout-preview-chat-padding-y")).toBe(
+			`${(8 / 1920) * 100}cqw`,
+		);
 
 		await unmount(editor.root);
 	});
@@ -157,9 +170,21 @@ describe("OverlayLayoutEditor", () => {
 		const editor = await renderEditor();
 
 		expect(editor.container.querySelector("select")).toBeNull();
-		expect(
-			getRange(editor.container, "Camera size").getAttribute("aria-valuetext"),
-		).toBe("Normal");
+		expect(getRange(editor.container, "Camera size").max).toBe("4");
+		for (const [value, label] of [
+			["0", "Small"],
+			["1", "Medium"],
+			["2", "Large"],
+			["3", "XL"],
+			["4", "XXL"],
+		] as const) {
+			await changeRange(getRange(editor.container, "Camera size"), value);
+			expect(
+				getRange(editor.container, "Camera size").getAttribute(
+					"aria-valuetext",
+				),
+			).toBe(label);
+		}
 
 		await click(getButton(editor.container, "Chat"));
 		expect(getRange(editor.container, "Chat width").min).toBe("1");
@@ -168,10 +193,23 @@ describe("OverlayLayoutEditor", () => {
 		expect(
 			getRange(editor.container, "Chat width").getAttribute("aria-valuetext"),
 		).toBe("1 column");
-		expect(getRange(editor.container, "Text scale").max).toBe("2");
-		expect(getRange(editor.container, "Chat transparency").min).toBe("0");
-		expect(getRange(editor.container, "Chat transparency").max).toBe("95");
-		expect(getRange(editor.container, "Chat transparency").step).toBe("5");
+		const textScale = getRange(editor.container, "Text scale");
+		expect(textScale.max).toBe("3");
+		for (const [value, label] of [
+			["0", "Small"],
+			["1", "Medium"],
+			["2", "Large"],
+			["3", "XL"],
+		] as const) {
+			await changeRange(textScale, value);
+			expect(textScale.getAttribute("aria-valuetext")).toBe(label);
+		}
+		const textOpacity = getRange(editor.container, "Text opacity");
+		expect(textOpacity.min).toBe("5");
+		expect(textOpacity.max).toBe("100");
+		expect(textOpacity.step).toBe("5");
+		expect(textOpacity.value).toBe("100");
+		expect(textOpacity.getAttribute("aria-valuetext")).toBe("100%");
 		expect(
 			Number(getRange(editor.container, "Visible messages").max),
 		).toBeGreaterThan(8);
@@ -179,7 +217,28 @@ describe("OverlayLayoutEditor", () => {
 		await unmount(editor.root);
 	});
 
-	it("keeps Live and History inside Chat settings without a Bubbles mode", async () => {
+	it("uses consistent icons for layout modes and editor actions", async () => {
+		const editor = await renderEditor();
+
+		expect(
+			getButton(editor.container, "Video").querySelector("svg"),
+		).not.toBeNull();
+		expect(
+			getButton(editor.container, "Chat").querySelector("svg"),
+		).not.toBeNull();
+
+		await changeRange(getRange(editor.container, "Camera size"), "4");
+		expect(
+			getButton(editor.container, "Revert").querySelector("svg"),
+		).not.toBeNull();
+		expect(
+			getButton(editor.container, "Apply").querySelector("svg"),
+		).not.toBeNull();
+
+		await unmount(editor.root);
+	});
+
+	it("uses a compact segmented control for Live and History chat modes", async () => {
 		const editor = await renderEditor();
 
 		expect(
@@ -187,22 +246,35 @@ describe("OverlayLayoutEditor", () => {
 		).toBeNull();
 		await click(getButton(editor.container, "Chat"));
 
-		expect(
-			editor.container.querySelector('[aria-label="Message display mode"]'),
-		).toBeNull();
 		expect(editor.container.textContent).not.toContain("Bubbles");
-		expect(
-			getButtonInGroup(
-				editor.container,
-				"Chat display mode",
-				"Live",
-			).classList.contains("selected"),
-		).toBe(true);
-		await click(
-			getButtonInGroup(editor.container, "Chat display mode", "History"),
+		expect(editor.container.textContent).not.toContain("Chat mode");
+		const modeControl = getGroup(editor.container, "Chat display mode");
+		expect(modeControl.getAttribute("data-state")).toBe("live");
+		expect(getButton(modeControl, "Live").getAttribute("aria-pressed")).toBe(
+			"true",
 		);
+		expect(getButton(modeControl, "History").getAttribute("aria-pressed")).toBe(
+			"false",
+		);
+		await click(getButton(modeControl, "History"));
 
 		expect(editor.onChatDisplayModeChange).toHaveBeenCalledWith("history");
+
+		await unmount(editor.root);
+	});
+
+	it("switches from History back to Live through the segmented control", async () => {
+		const editor = await renderEditor({ chatDisplayMode: "history" });
+		await click(getButton(editor.container, "Chat"));
+
+		const modeControl = getGroup(editor.container, "Chat display mode");
+		expect(modeControl.getAttribute("data-state")).toBe("history");
+		expect(getButton(modeControl, "History").getAttribute("aria-pressed")).toBe(
+			"true",
+		);
+		await click(getButton(modeControl, "Live"));
+
+		expect(editor.onChatDisplayModeChange).toHaveBeenCalledWith("live");
 
 		await unmount(editor.root);
 	});
@@ -336,22 +408,22 @@ describe("OverlayLayoutEditor", () => {
 	it("normalizes and sends the draft on Apply, then treats it as locally applied", async () => {
 		const editor = await renderEditor();
 
-		await changeRange(getRange(editor.container, "Camera size"), "3");
+		await changeRange(getRange(editor.container, "Camera size"), "4");
 		await click(getButton(editor.container, "Chat"));
 		await changeRange(getRange(editor.container, "Chat width"), "6");
-		await changeRange(getRange(editor.container, "Text scale"), "2");
-		await changeRange(getRange(editor.container, "Chat transparency"), "65");
+		await changeRange(getRange(editor.container, "Text scale"), "3");
+		await changeRange(getRange(editor.container, "Text opacity"), "35");
 		await changeRange(getRange(editor.container, "Visible messages"), "8");
 		await click(getButton(editor.container, "Apply"));
 
 		expect(editor.onApply).toHaveBeenCalledTimes(1);
 		expect(editor.onApply).toHaveBeenCalledWith({
-			video: { anchor: { x: 11, y: 6 }, leaderSide: "right", sizeStep: 3 },
+			video: { anchor: { x: 11, y: 6 }, leaderSide: "right", sizeStep: 4 },
 			chat: {
 				messageTransparency: 65,
 				position: { x: 0, y: 4 },
 				width: 6,
-				textScale: "large",
+				textScale: "xlarge",
 				maxMessages: 8,
 			},
 		});
@@ -928,19 +1000,12 @@ function getButton(container: HTMLElement, name: string): HTMLButtonElement {
 	return button;
 }
 
-function getButtonInGroup(
-	container: HTMLElement,
-	groupLabel: string,
-	buttonLabel: string,
-): HTMLButtonElement {
-	const group = container.querySelector(`[aria-label="${groupLabel}"]`);
-	const button = Array.from(group?.querySelectorAll("button") ?? []).find(
-		(candidate) => candidate.textContent?.trim() === buttonLabel,
-	);
-	if (!(button instanceof HTMLButtonElement)) {
-		throw new Error(`Button not found in ${groupLabel}: ${buttonLabel}`);
+function getGroup(container: HTMLElement, name: string): HTMLElement {
+	const group = container.querySelector(`[role="group"][aria-label="${name}"]`);
+	if (!(group instanceof HTMLElement)) {
+		throw new Error(`Group not found: ${name}`);
 	}
-	return button;
+	return group;
 }
 
 function getRange(container: HTMLElement, label: string): HTMLInputElement {

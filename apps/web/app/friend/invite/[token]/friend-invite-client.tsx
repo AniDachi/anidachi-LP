@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import { Check, Loader2, UserPlus } from "lucide-react";
 
@@ -11,7 +11,11 @@ type PublicProfile = {
   avatarUrl: string | null;
 };
 
+import { SOCIAL_OWNER_HEADER } from "@/lib/social-editor-contracts";
+
 type Props = {
+  alreadyFriends?: boolean;
+  ownerUserId: string;
   sender: PublicProfile;
   token: string;
 };
@@ -34,27 +38,32 @@ function initials(name: string) {
   );
 }
 
-export function FriendInviteClient({ sender, token }: Props) {
+export function FriendInviteClient({ sender, token, ownerUserId, alreadyFriends = false }: Props) {
+  const busyRef = useRef(false);
   const [busy, setBusy] = useState(false);
-  const [accepted, setAccepted] = useState(false);
+  const [accepted, setAccepted] = useState(alreadyFriends);
   const [error, setError] = useState<string | null>(null);
 
   const acceptInvite = useCallback(async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
     setBusy(true);
     setError(null);
     try {
       await readJson(
         await fetch(`/api/friends/invite-links/${encodeURIComponent(token)}/accept`, {
           method: "POST",
+          headers: { [SOCIAL_OWNER_HEADER]: ownerUserId },
         }),
       );
       setAccepted(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not accept invite");
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
-  }, [token]);
+  }, [token, ownerUserId]);
 
   return (
     <div className="rounded-lg border border-brand-border bg-brand-surface p-6">
@@ -81,7 +90,7 @@ export function FriendInviteClient({ sender, token }: Props) {
       {accepted ? (
         <div className="mt-6 rounded-lg border border-brand-orange/30 bg-brand-orange/10 px-4 py-3 text-sm text-brand-orange">
           <Check className="mr-2 inline h-4 w-4" aria-hidden />
-          You are friends now.
+          You are friends.
         </div>
       ) : null}
 
@@ -103,7 +112,7 @@ export function FriendInviteClient({ sender, token }: Props) {
           ) : (
             <UserPlus className="h-4 w-4" aria-hidden />
           )}
-          {accepted ? "Accepted" : "Add friend"}
+          {accepted ? "Already friends" : "Add friend"}
         </button>
         <Link
           className="inline-flex min-h-11 items-center justify-center rounded-lg border border-brand-border bg-brand-surface px-4 text-sm font-semibold text-foreground/90 transition hover:bg-brand-orange/20"

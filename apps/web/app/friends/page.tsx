@@ -1,3 +1,4 @@
+import "./friends.css";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 

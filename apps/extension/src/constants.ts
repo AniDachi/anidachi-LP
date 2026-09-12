@@ -16,32 +16,3 @@ export const VOICE_KEYWORD_EMOJI: Record<string, string> = {
   плачу: "😭",
   смотри: "👀",
 };
-
-export const EMOJI_PALETTE = ["😂", "😱", "❤️", "🔥", "😭", "👀"];
-
-export const COMPOSER_EMOJI_PACK = [
-  "😂",
-  "😭",
-  "😱",
-  "🤯",
-  "😳",
-  "👀",
-  "💀",
-  "😮‍💨",
-  "❤️",
-  "🫶",
-  "🔥",
-  "✨",
-  "👏",
-  "🙏",
-  "🤝",
-  "🍿",
-  "😤",
-  "😎",
-  "😈",
-  "🥹",
-  "😍",
-  "😬",
-  "🤌",
-  "💯",
-];

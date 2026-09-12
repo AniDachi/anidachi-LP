@@ -7,9 +7,10 @@ import {
 import { getUsageSecondsForDay } from "./db";
 
 /**
- * Durable room usage is finalized atomically by `finalize_room_usage`. Open
- * room time stays in the room Durable Object and reaches the extension through
- * ROOM_SNAPSHOT, so this Web view reads only committed daily usage.
+ * This Web view reads committed daily usage: legacy finalization and v2
+ * cumulative acknowledgements during renewal/end. The Worker reconciles those
+ * acknowledgements with live usage and publishes v2 remaining room time in
+ * ROOM_SNAPSHOT.quota; clients must not subtract full room usage again.
  */
 export async function getHostQuotaView(
   userId: string,

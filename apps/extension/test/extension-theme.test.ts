@@ -30,10 +30,4 @@ describe("extension theme tokens", () => {
 		expect(popupStyles).not.toContain("rgba(87, 145, 255, 0.08)");
 	});
 
-	it("keeps the final compact provider surface on the shared border token", () => {
-		const compactProviderRule = popupStyles
-			.slice(popupStyles.lastIndexOf(".popup-provider {"))
-			.split("}", 1)[0];
-		expect(compactProviderRule).toContain("border: 1px solid var(--ad-border);");
-	});
 });

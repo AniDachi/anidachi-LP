@@ -8,7 +8,7 @@ import {
   isUuid,
   listFriendGroups,
 } from "@/lib/anidachi-auth/social";
-import { readJsonBody, socialErrorResponse } from "@/lib/anidachi-auth/social-routes";
+import { readJsonBody, socialErrorResponse, socialOwnerError } from "@/lib/anidachi-auth/social-routes";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +17,8 @@ export async function GET(request: NextRequest) {
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const ownerError = socialOwnerError(request, session.userId);
+  if (ownerError) return ownerError;
 
   try {
     const response: FriendGroupsResponse = {
@@ -34,6 +36,8 @@ export async function POST(request: NextRequest) {
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const ownerError = socialOwnerError(request, session.userId);
+  if (ownerError) return ownerError;
 
   const body = await readJsonBody(request);
   const rawName =

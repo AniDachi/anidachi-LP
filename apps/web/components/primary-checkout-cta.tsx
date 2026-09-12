@@ -29,7 +29,7 @@ const COPY = {
     body: "Subscribe before launch and keep your rate forever.",
   },
   glossary: {
-    body: "Full refund before launch if it is not a fit.",
+    body: "Choose your plan and manage your subscription from your account.",
   },
   pillar: {
     body: "Lock in pre-launch pricing before we go public.",

@@ -29,6 +29,7 @@ function minimalChromeForPath(pathname: string): MinimalChromeConfig | null {
 
 export function ConditionalNav({ marketingNav }: { marketingNav: ReactNode }) {
   const pathname = usePathname();
+  if (pathname === "/account" || pathname.startsWith("/account/")) return null;
   const minimal = minimalChromeForPath(pathname);
   if (minimal) {
     return (
@@ -44,6 +45,7 @@ export function ConditionalNav({ marketingNav }: { marketingNav: ReactNode }) {
 
 export function ConditionalFooter({ marketingFooter }: { marketingFooter: ReactNode }) {
   const pathname = usePathname();
+  if (pathname === "/account" || pathname.startsWith("/account/")) return null;
   if (minimalChromeForPath(pathname)) {
     return null;
   }

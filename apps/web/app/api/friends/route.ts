@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createAccountResponseMeta } from "@/lib/anidachi-auth/account-response";
 import { getApiSession } from "@/lib/anidachi-auth/api-session";
 import { listFriends } from "@/lib/anidachi-auth/social";
-import { socialErrorResponse } from "@/lib/anidachi-auth/social-routes";
+import { socialErrorResponse, socialOwnerError } from "@/lib/anidachi-auth/social-routes";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +12,8 @@ export async function GET(request: NextRequest) {
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const ownerError = socialOwnerError(request, session.userId);
+  if (ownerError) return ownerError;
 
   try {
     const data = await listFriends(session.userId);

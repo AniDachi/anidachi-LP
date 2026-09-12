@@ -5,6 +5,13 @@ import {
 } from "../src/source-adapters/crunchyroll/artwork-select";
 
 describe("Crunchyroll artwork", () => {
+  it("skips malformed or unsafe candidates instead of losing a valid poster", () => {
+    expect(selectCrunchyrollPosterTall({ images: { poster_tall: [[
+      { source: "javascript:alert(1)", width: 480, height: 720 },
+      { source: "https://www.crunchyroll.com/invalid.jpg", width: Infinity, height: 720 },
+      { source: "https://www.crunchyroll.com/poster.jpg", width: 360, height: 540 },
+    ]] } })).toBe("https://www.crunchyroll.com/poster.jpg");
+  });
   it("selects catalog poster_tall artwork instead of wide artwork", () => {
     const posterUrl =
       "https://www.crunchyroll.com/imgsrv/display/thumbnail/480x720/catalog/crunchyroll/d1c2ab296014342d154f8467628ad323.png";

@@ -31,7 +31,7 @@ test("production active-room create keeps canonical source columns in its atomic
 	assert.ok(
 		createRoomWithActiveSession.indexOf("roomSourceCreationColumns") <
 			createRoomWithActiveSession.indexOf(
-				'.rpc("create_room_with_active_session_v1"',
+				'.rpc("create_room_with_active_session_v2"',
 			),
 	);
 	assert.match(

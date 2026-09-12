@@ -44,31 +44,48 @@ describe("room protocol schemas", () => {
       },
     } as const;
 
-    expect(RoomSourcePersistenceCallbackSchema.parse(callback)).toEqual(callback);
-    expect(() => RoomSourcePersistenceCallbackSchema.parse({ ...callback, sourceGeneration: 0 })).toThrow();
-    expect(() => RoomSourcePersistenceCallbackSchema.parse({ ...callback, extra: true })).toThrow();
+		expect(RoomSourcePersistenceCallbackSchema.parse(callback)).toEqual(
+			callback,
+		);
+		expect(() =>
+			RoomSourcePersistenceCallbackSchema.parse({
+				...callback,
+				sourceGeneration: 0,
+			}),
+		).toThrow();
+		expect(() =>
+			RoomSourcePersistenceCallbackSchema.parse({ ...callback, extra: true }),
+		).toThrow();
 
-    expect(RoomSourcePersistenceAcknowledgementSchema.parse({
+		expect(
+			RoomSourcePersistenceAcknowledgementSchema.parse({
       ok: true,
       outcome: "persisted",
       sourceGeneration: 2,
-    })).toEqual({ ok: true, outcome: "persisted", sourceGeneration: 2 });
-    expect(RoomSourcePersistenceAcknowledgementSchema.parse({
+			}),
+		).toEqual({ ok: true, outcome: "persisted", sourceGeneration: 2 });
+		expect(
+			RoomSourcePersistenceAcknowledgementSchema.parse({
       ok: true,
       outcome: "stale",
       sourceGeneration: 1,
-    })).toEqual({ ok: true, outcome: "stale", sourceGeneration: 1 });
-    expect(() => RoomSourcePersistenceAcknowledgementSchema.parse({
+			}),
+		).toEqual({ ok: true, outcome: "stale", sourceGeneration: 1 });
+		expect(() =>
+			RoomSourcePersistenceAcknowledgementSchema.parse({
       ok: true,
       outcome: "persisted",
       sourceGeneration: 0,
-    })).toThrow();
-    expect(() => RoomSourcePersistenceAcknowledgementSchema.parse({
+			}),
+		).toThrow();
+		expect(() =>
+			RoomSourcePersistenceAcknowledgementSchema.parse({
       ok: true,
       outcome: "persisted",
       sourceGeneration: 2,
       unexpected: true,
-    })).toThrow();
+			}),
+		).toThrow();
   });
 
   it("derives one private empty-room callback identity across service planes", async () => {
@@ -80,7 +97,9 @@ describe("room protocol schemas", () => {
     expect(eventId).toMatch(/^empty_timeout:[a-f0-9]{64}$/);
     expect(eventId).toBe(await createEmptyRoomEndEventId(roomId, emptySince));
     expect(eventId).not.toContain(roomId);
-    expect(eventId).not.toBe(await createEmptyRoomEndEventId(roomId, emptySince + 1));
+		expect(eventId).not.toBe(
+			await createEmptyRoomEndEventId(roomId, emptySince + 1),
+		);
   });
 
   it("accepts one terminal room-ended event with a bounded reason", () => {
@@ -89,6 +108,8 @@ describe("room protocol schemas", () => {
       "host_disconnected",
       "empty_timeout",
       "quota_exhausted",
+			"capability_expired",
+			"accounting_unavailable",
     ]);
     expect(
       ServerEventSchema.parse({
@@ -135,12 +156,18 @@ describe("room protocol schemas", () => {
     } as const;
 
     expect(() =>
-      ClientEventSchema.parse({ ...baseJoin, roomId: "r".repeat(MAX_ROOM_ID_CHARS + 1) }),
+			ClientEventSchema.parse({
+				...baseJoin,
+				roomId: "r".repeat(MAX_ROOM_ID_CHARS + 1),
+			}),
     ).toThrow();
     expect(() =>
       ClientEventSchema.parse({
         ...baseJoin,
-        participant: { ...baseJoin.participant, id: "u".repeat(MAX_PARTICIPANT_ID_CHARS + 1) },
+				participant: {
+					...baseJoin.participant,
+					id: "u".repeat(MAX_PARTICIPANT_ID_CHARS + 1),
+				},
       }),
     ).toThrow();
     expect(() =>
@@ -645,7 +672,10 @@ describe("room protocol schemas", () => {
 
     expect(source.provider).toBe("crunchyroll");
     expect(source.episodeNumber).toBe(2);
-    expect(WatchSourceDescriptorSchema.parse({ ...source, seasonNumber: 0 }).seasonNumber).toBe(0);
+		expect(
+			WatchSourceDescriptorSchema.parse({ ...source, seasonNumber: 0 })
+				.seasonNumber,
+		).toBe(0);
     expect(() =>
       WatchSourceDescriptorSchema.parse({ ...source, seasonNumber: 1001 }),
     ).toThrow();
@@ -698,7 +728,10 @@ describe("room protocol schemas", () => {
     expect(ServerEventSchema.parse(authority)).toEqual(authority);
     expect(() => ClientEventSchema.parse(authority)).toThrow();
     expect(() =>
-      ServerEventSchema.parse({ ...authority, participantSessionId: undefined }),
+			ServerEventSchema.parse({
+				...authority,
+				participantSessionId: undefined,
+			}),
     ).toThrow();
     expect(() =>
       ServerEventSchema.parse({ ...authority, purpose: "room" }),
@@ -731,12 +764,36 @@ describe("room protocol schemas", () => {
     };
 
     expect(RoomHistoryAttestationClaimsSchema.parse(claims)).toEqual(claims);
-    expect(() => RoomHistoryAttestationClaimsSchema.parse({ ...claims, exp: undefined })).toThrow();
-    expect(() => RoomHistoryAttestationClaimsSchema.parse({ ...claims, jti: undefined })).toThrow();
-    expect(() => RoomHistoryAttestationClaimsSchema.parse({ ...claims, exp: claims.exp - 1 })).toThrow();
-    expect(() => RoomHistoryAttestationClaimsSchema.parse({ ...claims, exp: claims.exp + 1 })).toThrow();
-    expect(() => RoomHistoryAttestationClaimsSchema.parse({ ...claims, aud: [claims.aud] })).toThrow();
-    expect(() => RoomHistoryAttestationClaimsSchema.parse({ ...claims, email: "private@example.com" })).toThrow();
+		expect(() =>
+			RoomHistoryAttestationClaimsSchema.parse({ ...claims, exp: undefined }),
+		).toThrow();
+		expect(() =>
+			RoomHistoryAttestationClaimsSchema.parse({ ...claims, jti: undefined }),
+		).toThrow();
+		expect(() =>
+			RoomHistoryAttestationClaimsSchema.parse({
+				...claims,
+				exp: claims.exp - 1,
+			}),
+		).toThrow();
+		expect(() =>
+			RoomHistoryAttestationClaimsSchema.parse({
+				...claims,
+				exp: claims.exp + 1,
+			}),
+		).toThrow();
+		expect(() =>
+			RoomHistoryAttestationClaimsSchema.parse({
+				...claims,
+				aud: [claims.aud],
+			}),
+		).toThrow();
+		expect(() =>
+			RoomHistoryAttestationClaimsSchema.parse({
+				...claims,
+				email: "private@example.com",
+			}),
+		).toThrow();
   });
 
   it("accepts explicit playback command server events", () => {

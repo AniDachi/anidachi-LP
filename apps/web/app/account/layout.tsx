@@ -6,6 +6,12 @@ import { getPlanEntitlements } from "@/lib/anidachi-auth/plan-entitlements";
 import { getSession } from "@/lib/anidachi-auth/session";
 import { ensureProfileForUser } from "@/lib/anidachi-auth/social";
 import { AccountNav } from "./account-nav";
+import { AnidachiLogoLink } from "@/components/anidachi-logo";
+import { UserMenu } from "@/components/nav-bar-client";
+import { AccountWorkspaceProvider } from "@/components/account/account-workspace-state";
+import { AccountNotifications } from "@/components/account/account-notifications";
+import "./account.css";
+import "./social.css";
 
 export const dynamic = "force-dynamic";
 
@@ -34,34 +40,24 @@ export default async function AccountLayout({
   const planLabel = getPlanEntitlements(effectivePlan).label;
 
   return (
-    <main id="main-content" className="min-h-screen bg-background text-foreground/90">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <header className="flex flex-col justify-between gap-5 border-b border-brand-border/80 pb-7 lg:flex-row lg:items-end">
-          <div className="min-w-0">
-            <p className="text-xs font-semibold tracking-[0.14em] text-brand-orange">
-              ACCOUNT
-            </p>
-            <h1 className="mt-2 truncate text-3xl font-bold tracking-[-0.03em] text-foreground sm:text-4xl">
-              {displayName}
-            </h1>
-            <p className="mt-2 truncate text-sm text-foreground/45">
-              {session.email}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <span className="rounded-full border border-brand-orange/35 bg-brand-orange/12 px-3.5 py-1.5 text-xs font-semibold text-brand-orange-bright">
-              {planLabel}
-            </span>
-          </div>
-        </header>
-
-        <div className="grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)]">
-          <aside className="lg:border-r lg:border-brand-border/70 lg:pr-5">
+    <AccountWorkspaceProvider key={session.userId}>
+    <main id="main-content" className="account-workspace min-h-screen bg-background text-foreground/90">
+      <header className="account-header">
+        <AnidachiLogoLink size={28} />
+        <div className="account-identity">
+          <span className="account-plan">{planLabel}</span>
+          <AccountNotifications key={session.userId} ownerUserId={session.userId} />
+          <UserMenu user={{ displayName, email: session.email, plan: effectivePlan,
+            avatarUrl: profile?.avatar_url ?? user?.avatar_url ?? null }} />
+        </div>
+      </header>
+      <div className="account-frame">
+          <aside className="account-sidebar">
             <AccountNav />
           </aside>
-          <section className="min-w-0">{children}</section>
-        </div>
+          <section className="account-content min-w-0">{children}</section>
       </div>
     </main>
+    </AccountWorkspaceProvider>
   );
 }

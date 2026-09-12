@@ -978,7 +978,7 @@ $$;
 
 select extensions.dblink_connect(
   'invite_response_setup',
-  'host=host.docker.internal port=54322 dbname=postgres user=postgres password=postgres application_name=invite_response_setup'
+  pg_catalog.format('host=%s port=%s dbname=%L user=postgres password=postgres application_name=invite_response_setup', pg_catalog.inet_server_addr(), pg_catalog.inet_server_port(), pg_catalog.current_database())
 );
 select extensions.dblink_exec(
   'invite_response_setup',
@@ -1064,11 +1064,11 @@ select extensions.dblink_disconnect('invite_response_setup');
 
 select extensions.dblink_connect(
   'invite_response_accept',
-  'host=host.docker.internal port=54322 dbname=postgres user=postgres password=postgres application_name=invite_response_accept'
+  pg_catalog.format('host=%s port=%s dbname=%L user=postgres password=postgres application_name=invite_response_accept', pg_catalog.inet_server_addr(), pg_catalog.inet_server_port(), pg_catalog.current_database())
 );
 select extensions.dblink_connect(
   'invite_response_decline',
-  'host=host.docker.internal port=54322 dbname=postgres user=postgres password=postgres application_name=invite_response_decline'
+  pg_catalog.format('host=%s port=%s dbname=%L user=postgres password=postgres application_name=invite_response_decline', pg_catalog.inet_server_addr(), pg_catalog.inet_server_port(), pg_catalog.current_database())
 );
 select extensions.dblink_exec('invite_response_accept', 'begin');
 select extensions.dblink_exec('invite_response_accept', 'set role service_role');
@@ -1165,7 +1165,7 @@ select is(
 
 select extensions.dblink_connect(
   'invite_response_cleanup',
-  'host=host.docker.internal port=54322 dbname=postgres user=postgres password=postgres application_name=invite_response_cleanup'
+  pg_catalog.format('host=%s port=%s dbname=%L user=postgres password=postgres application_name=invite_response_cleanup', pg_catalog.inet_server_addr(), pg_catalog.inet_server_port(), pg_catalog.current_database())
 );
 select extensions.dblink_exec(
   'invite_response_cleanup',

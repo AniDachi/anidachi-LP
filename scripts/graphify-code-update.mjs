@@ -1,6 +1,8 @@
 import { spawn } from "node:child_process";
 
-const child = spawn("graphify", ["update", ".", "--no-cluster"], {
+// Persist a normalized graph and matching report, not raw extraction JSON.
+// The update command remains AST-only; clustering does not invoke an LLM.
+const child = spawn("graphify", ["update", "."], {
   env: {
     ...process.env,
     GRAPHIFY_NO_TIPS: "1",

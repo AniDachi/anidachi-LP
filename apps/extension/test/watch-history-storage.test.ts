@@ -1,3 +1,4 @@
+import { paidHistoryLease } from "./watch-history-personal-fixtures";
 import { describe, expect, it } from "vitest";
 import {
   createWatchHistoryStorage,
@@ -10,10 +11,84 @@ const ownerA = "00000000-0000-4000-8000-000000000001";
 const ownerB = "00000000-0000-4000-8000-000000000002";
 
 describe("watch history storage", () => {
+  it.each([false, true])("retries interrupted legacy cleanup, preserving new v3 state (restart=%s)", async (restart) => {
+    const key = watchHistoryPartitionKey(ownerA, 1);
+    const values: Record<string, unknown> = {
+      "anidachi.watchHistory.v2": { schemaVersion: 2, partitions: { [key]: {
+        ownerUserId: ownerA, accountGeneration: 1,
+        preferences: { youtubeHistoryEnabled: true }, preferencesConfirmed: true,
+      } } },
+      "unrelated.setting": { retained: true },
+    };
+    let removals = 0;
+    const dependencies = {
+      item: {
+        getValue: async () => values["anidachi.watchHistory.v3"] as WatchHistoryStorageRoot ?? null,
+        setValue: async (value: WatchHistoryStorageRoot) => { values["anidachi.watchHistory.v3"] = value; },
+      },
+      readLegacy: async () => values["anidachi.watchHistory.v2"],
+      removeLegacy: async () => {
+        expect(values["anidachi.watchHistory.v3"]).toBeDefined();
+        if (++removals === 1) throw new Error("injected remove failure");
+        delete values["anidachi.watchHistory.v2"];
+      },
+      quotaBytes: 1_000_000, getBytesInUse: async () => 0,
+    };
+    let storage = createWatchHistoryStorage(dependencies);
+    await expect(storage.readRoot()).rejects.toThrow("injected remove failure");
+    const root = values["anidachi.watchHistory.v3"] as WatchHistoryStorageRoot;
+    root.partitions[key]!.preferences = { youtubeHistoryEnabled: false };
+    root.partitions[key]!.preferencesLocalRevision = 7;
+    root.partitions[key]!.currentObservation = { clientEventId: "new-v3-progress" } as never;
+    const preserved = structuredClone(root);
+    if (restart) storage = createWatchHistoryStorage(dependencies);
+    await storage.readRoot();
+    expect(removals).toBe(2);
+    expect(values).not.toHaveProperty("anidachi.watchHistory.v2");
+    expect(values["anidachi.watchHistory.v3"]).toEqual(preserved);
+    expect(values["unrelated.setting"]).toEqual({ retained: true });
+    await storage.readRoot();
+    expect(removals).toBe(2);
+  });
+  it("upgrades only validated account preferences and discards all v2 history once", async () => {
+    let stored: WatchHistoryStorageRoot | null = null;
+    let legacy: unknown = { schemaVersion: 2, partitions: {
+      [watchHistoryPartitionKey(ownerA, 1)]: {
+        ownerUserId: ownerA, accountGeneration: 1,
+        preferences: { youtubeHistoryEnabled: false }, preferencesConfirmed: true,
+        preferencesSyncPending: true, preferencesLocalRevision: 4,
+        cache: { private: "old" }, currentObservation: { old: true },
+        outbox: { entries: [{ old: true }] },
+      },
+      [watchHistoryPartitionKey(ownerB, 2)]: {
+        ownerUserId: ownerB, accountGeneration: 2,
+        preferences: { youtubeHistoryEnabled: true }, preferencesConfirmed: true,
+      },
+      invalid: { ownerUserId: ownerA, accountGeneration: 9, preferences: { youtubeHistoryEnabled: true } },
+    } };
+    let removals = 0;
+    const storage = createWatchHistoryStorage({
+      item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+      readLegacy: async () => legacy,
+      removeLegacy: async () => { legacy = null; removals += 1; },
+      quotaBytes: 1_000_000, getBytesInUse: async () => 0,
+    });
+    const root = await storage.readRoot();
+    expect(root.schemaVersion).toBe(3);
+    expect(root.partitions[watchHistoryPartitionKey(ownerA, 1)]).toMatchObject({
+      preferences: { youtubeHistoryEnabled: false }, preferencesSyncPending: true,
+      preferencesLocalRevision: 4, cache: null, currentObservation: null,
+      outbox: { entries: [] }, capturePaused: true,
+    });
+    expect(root.partitions[watchHistoryPartitionKey(ownerB, 2)]?.preferences?.youtubeHistoryEnabled).toBe(true);
+    expect(root.partitions).not.toHaveProperty("invalid");
+    await storage.readRoot();
+    expect(removals).toBe(1);
+  });
   it("normalizes pre-release roots with fixed capture and confirmed-preference flags", async () => {
     const partitionKey = watchHistoryPartitionKey(ownerA, 1);
     const stored = {
-      schemaVersion: 2 as const,
+      schemaVersion: 3 as const,
       activeGenerations: { [ownerA]: 1 },
       partitions: {
         [partitionKey]: {
@@ -55,7 +130,7 @@ describe("watch history storage", () => {
       quotaBytes: 1_000_000,
     });
     await store.replaceRoot({
-      schemaVersion: 2,
+      schemaVersion: 3,
       partitions: {
         [watchHistoryPartitionKey(ownerA, 1)]: {
           ownerUserId: ownerA,
@@ -64,7 +139,7 @@ describe("watch history storage", () => {
           preferences: { youtubeHistoryEnabled: true },
           currentObservation: { clientEventId: "event-a" },
           currentObservationMeaningfulSolo: true,
-          outbox: { ownerUserId: ownerA, accountGeneration: 1, entries: [{ event: { clientEventId: "event-a" } }] },
+          outbox: { ownerUserId: ownerA, accountGeneration: 1, entries: [{ event: { clientSequence: 1, captureProof: paidHistoryLease(), clientEventId: "event-a" } }] },
         },
         [watchHistoryPartitionKey(ownerB, 2)]: {
           ownerUserId: ownerB,
@@ -85,7 +160,7 @@ describe("watch history storage", () => {
       currentObservation: null,
       currentObservationMeaningfulSolo: false,
       currentObservationDisplayMode: null,
-      outbox: { entries: [{ event: { clientEventId: "event-a" } }] },
+      outbox: { entries: [{ event: { clientSequence: 1, captureProof: paidHistoryLease(), clientEventId: "event-a" } }] },
     });
     expect(stored.partitions[watchHistoryPartitionKey(ownerB, 2)]).toMatchObject({ cache: { generation: 2 } });
   });
@@ -107,7 +182,7 @@ describe("watch history storage", () => {
     });
 
     const result = await store.replaceRoot({
-      schemaVersion: 2,
+      schemaVersion: 3,
       partitions: {
         [watchHistoryPartitionKey(ownerA, 1)]: {
           ownerUserId: ownerA,
@@ -136,7 +211,7 @@ describe("watch history storage", () => {
   it("counts a first root write in addition to unrelated local bytes", async () => {
     let stored: WatchHistoryStorageRoot | null = null;
     const candidate = createWatchHistoryStorageRoot();
-    const keyBytes = new TextEncoder().encode("anidachi.watchHistory.v2").byteLength;
+    const keyBytes = new TextEncoder().encode("anidachi.watchHistory.v3").byteLength;
     const store = createWatchHistoryStorage({
       item: {
         getValue: async () => stored,
@@ -157,7 +232,7 @@ describe("watch history storage", () => {
       ...stored,
       partitions: { retained: {} as never },
     };
-    const keyBytes = new TextEncoder().encode("anidachi.watchHistory.v2").byteLength;
+    const keyBytes = new TextEncoder().encode("anidachi.watchHistory.v3").byteLength;
     const existingBytes = keyBytes + new TextEncoder().encode(JSON.stringify(stored)).byteLength;
     const candidateBytes = keyBytes + new TextEncoder().encode(JSON.stringify(candidate)).byteLength;
     const store = createWatchHistoryStorage({
@@ -176,7 +251,7 @@ describe("watch history storage", () => {
 
   it("reports only aggregate old-owner work and requires confirmation for its discard", async () => {
     let stored = {
-      schemaVersion: 2 as const,
+      schemaVersion: 3 as const,
       partitions: {
         [watchHistoryPartitionKey(ownerA, 1)]: {
           ownerUserId: ownerA,
@@ -187,7 +262,7 @@ describe("watch history storage", () => {
           outbox: {
             ownerUserId: ownerA,
             accountGeneration: 1,
-            entries: [{ event: { title: "Private title", sourceUrl: "https://example.test/private" } }],
+            entries: [{ event: { clientSequence: 1, captureProof: paidHistoryLease(), title: "Private title", sourceUrl: "https://example.test/private" } }],
           },
         },
       },
@@ -217,7 +292,7 @@ describe("watch history storage", () => {
     const retainedOldKey = watchHistoryPartitionKey(ownerA, 1);
     const removableOldKey = watchHistoryPartitionKey(ownerC, 1);
     let stored = {
-      schemaVersion: 2 as const,
+      schemaVersion: 3 as const,
       activeGenerations: { [ownerA]: 1, [ownerB]: 1, [ownerC]: 1 },
       partitions: {
         [currentKey]: {
@@ -226,7 +301,7 @@ describe("watch history storage", () => {
           cache: null,
           preferences: null,
           currentObservation: null,
-          outbox: { ownerUserId: ownerB, accountGeneration: 1, entries: [{ event: { clientEventId: "current" } }] },
+          outbox: { ownerUserId: ownerB, accountGeneration: 1, entries: [{ event: { clientSequence: 1, captureProof: paidHistoryLease(ownerB), clientEventId: "current" } }] },
         },
         [retainedOldKey]: {
           ownerUserId: ownerA,
@@ -234,7 +309,7 @@ describe("watch history storage", () => {
           cache: { retained: true },
           preferences: null,
           currentObservation: null,
-          outbox: { ownerUserId: ownerA, accountGeneration: 1, entries: [{ event: { clientEventId: "old-a" } }] },
+          outbox: { ownerUserId: ownerA, accountGeneration: 1, entries: [{ event: { clientSequence: 1, captureProof: paidHistoryLease(), clientEventId: "old-a" } }] },
         },
         [removableOldKey]: {
           ownerUserId: ownerC,
@@ -242,7 +317,7 @@ describe("watch history storage", () => {
           cache: null,
           preferences: null,
           currentObservation: null,
-          outbox: { ownerUserId: ownerC, accountGeneration: 1, entries: [{ event: { clientEventId: "old-c" } }] },
+          outbox: { ownerUserId: ownerC, accountGeneration: 1, entries: [{ event: { clientSequence: 1, captureProof: paidHistoryLease(ownerC), clientEventId: "old-c" } }] },
         },
       },
     } as unknown as WatchHistoryStorageRoot;
@@ -279,7 +354,7 @@ describe("watch history storage", () => {
       quotaBytes: 1_000_000,
     });
     const candidate = {
-      schemaVersion: 2 as const,
+      schemaVersion: 3 as const,
       partitions: {
         [watchHistoryPartitionKey(ownerA, 1)]: {
           ownerUserId: ownerA,
@@ -333,7 +408,7 @@ describe("watch history storage", () => {
   it("discarding old-owner work retains that partition's rebuildable state", async () => {
     const partitionKey = watchHistoryPartitionKey(ownerA, 1);
     let stored: WatchHistoryStorageRoot = {
-      schemaVersion: 2,
+      schemaVersion: 3,
       partitions: {
         [partitionKey]: {
           ownerUserId: ownerA,
@@ -344,7 +419,7 @@ describe("watch history storage", () => {
           outbox: {
             ownerUserId: ownerA,
             accountGeneration: 1,
-            entries: [{ event: {} as never, key: "old", slot: "latest", persistedAt: 1 }],
+            entries: [{ event: { clientSequence: 1, captureProof: paidHistoryLease() } as never, key: "old", slot: "latest", persistedAt: 1 }],
           },
         },
       },
