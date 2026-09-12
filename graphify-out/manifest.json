@@ -3606,10 +3606,10 @@
     "semantic_hash": "4e0420e077e5ebc55dbe7b2187df7832"
   },
   "docs/current-development-state.md": {
-    "mtime": 1789230571.5549676,
-    "seen": 1789232433.690685,
-    "ast_hash": "dfb71d3b5daf1b410bd8532fb0fbdd13",
-    "semantic_hash": "dfb71d3b5daf1b410bd8532fb0fbdd13"
+    "mtime": 1789237500.302736,
+    "seen": 1789238524.1553762,
+    "ast_hash": "cdc3714c3f70e0cc065e325443aa6e33",
+    "semantic_hash": "cdc3714c3f70e0cc065e325443aa6e33"
   },
   "docs/development-environments.md": {
     "mtime": 1788807642.3055499,
@@ -7938,10 +7938,10 @@
     "semantic_hash": "5ee0c506fe97362023ed1e97ae29ad5a"
   },
   "docs/superpowers/plans/2026-09-12-production-promotion-preparation.md": {
-    "mtime": 1789230571.622109,
-    "seen": 1789232433.690686,
-    "ast_hash": "d4cd421bdfc2d03299d256969a4bb323",
-    "semantic_hash": "d4cd421bdfc2d03299d256969a4bb323"
+    "mtime": 1789237500.3769112,
+    "seen": 1789238524.155377,
+    "ast_hash": "1499a3600d71a9d5c75968f4e24d474c",
+    "semantic_hash": "1499a3600d71a9d5c75968f4e24d474c"
   },
   "apps/api/test/maintenance.test.ts": {
     "mtime": 1789204068.949726,
@@ -7992,16 +7992,16 @@
     "semantic_hash": "49414d8868919af8d041d7b2bf3073d5"
   },
   "docs/releases/personal-history-mvp/free-hosted-rehearsal.md": {
-    "mtime": 1789231210.1981208,
-    "seen": 1789232433.690685,
-    "ast_hash": "9671a042d5796250470474d128f0c07c",
-    "semantic_hash": "9671a042d5796250470474d128f0c07c"
+    "mtime": 1789237644.4305692,
+    "seen": 1789238524.1553762,
+    "ast_hash": "ff94e30b8b2d4be2d90279a565d4af86",
+    "semantic_hash": "ff94e30b8b2d4be2d90279a565d4af86"
   },
   "docs/releases/personal-history-mvp/free-rehearsal-window.md": {
-    "mtime": 1789225375.707832,
-    "seen": 1789226437.4552372,
-    "ast_hash": "a323496bce6a7dabb8f02d8e6c34a042",
-    "semantic_hash": "a323496bce6a7dabb8f02d8e6c34a042"
+    "mtime": 1789237500.2293243,
+    "seen": 1789238524.155377,
+    "ast_hash": "f80d13bf966ac543f0d0ecaf92268816",
+    "semantic_hash": "f80d13bf966ac543f0d0ecaf92268816"
   },
   "scripts/production-history-application-acl.integration.mjs": {
     "mtime": 1789217279.846971,
