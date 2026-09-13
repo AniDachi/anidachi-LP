@@ -532,10 +532,13 @@ function WatchDrawer({
 				preview,
 			]),
 	);
-	const pending = useMemo(() => {
+	const queued = useMemo(() => {
 		if (accessStatus !== "allowed" || snapshot?.captureAllowed === false) return new Map<string, WatchProgressEvent>();
-		const events = snapshot?.pendingEvents ?? [];
-		const result = latestPendingByEpisode(events);
+		return latestPendingByEpisode(snapshot?.pendingEvents ?? []);
+	}, [snapshot, accessStatus]);
+	const pending = useMemo(() => {
+		const result = new Map(queued);
+		if (accessStatus !== "allowed" || snapshot?.captureAllowed === false) return result;
 		if (snapshot?.localObservation) {
 			const event = snapshot.localObservation.event;
 			result.set(
@@ -544,7 +547,7 @@ function WatchDrawer({
 			);
 		}
 		return result;
-	}, [snapshot, accessStatus]);
+	}, [snapshot, accessStatus, queued]);
 	const allowPending =
 		accessStatus === "allowed" && snapshot?.captureAllowed !== false && !search.trim() && conditions.period === "all-time";
 	const canonical = new Map(
@@ -958,6 +961,7 @@ function WatchDrawer({
 													)?.lastWatchedAt
 												}
 												pending={pending}
+												queued={queued}
 												allowPending={allowPending}
 												canonical={canonical.get(
 													pendingTitleKey(item.provider, item.titleKey),
@@ -1056,6 +1060,7 @@ function PopupWatchHistoryItem({
 	providerOpen,
 	matchingDate,
 	pending,
+	queued,
 	allowPending,
 	canonical,
 	busy,
@@ -1074,6 +1079,7 @@ function PopupWatchHistoryItem({
 	providerOpen: boolean;
 	matchingDate?: string;
 	pending: Map<string, WatchProgressEvent>;
+	queued: Map<string, WatchProgressEvent>;
 	allowPending: boolean;
 	canonical?: WatchHistoryItem;
 	busy: string | null;
@@ -1289,8 +1295,8 @@ function PopupWatchHistoryItem({
 				}
 			: episode;
 	};
-	const episodePending = (episode: Episode) => {
-		const event = pending.get(
+	const episodePending = (episode: Episode, events = pending) => {
+		const event = events.get(
 			pendingEpisodeKey(item.provider, item.titleKey, episode.episodeKey),
 		);
 		return event &&
@@ -1380,6 +1386,7 @@ function PopupWatchHistoryItem({
 			episode={effectiveEpisode(episode)}
 			item={item}
 			pending={episodePending(effectiveEpisode(episode))}
+			syncPending={Boolean(episodePending(effectiveEpisode(episode), queued))}
 			match={episodeMatches.get(episode.episodeKey)}
 			ownerUserId={ownerUserId}
 			client={client}
@@ -1459,7 +1466,7 @@ function PopupWatchHistoryItem({
 								</span>
 							) : null}
 						</span>
-						{!matchingDate ? (
+						{!matchingDate && [...queued.values()].some(event => event.provider === item.provider && event.titleKey === item.titleKey) ? (
 							<span className="popup-watch-pending">Pending sync</span>
 						) : null}
 					</span>
@@ -1629,6 +1636,7 @@ function PopupEpisode({
 	episode,
 	item,
 	pending,
+	syncPending,
 	match,
 	ownerUserId,
 	client,
@@ -1647,6 +1655,7 @@ function PopupEpisode({
 	episode: Episode;
 	item: WatchHistoryItem;
 	pending?: WatchProgressEvent;
+	syncPending: boolean;
 	match?: WatchHistoryBrowseTitleEpisodesResponse["matches"][number];
 	ownerUserId: string;
 	client: PopupWatchHistoryClient;
@@ -1659,6 +1668,9 @@ function PopupEpisode({
 	const completed = Boolean(episode.completedAt);
 	const currentTime = pending?.currentTime ?? episode.currentTime;
 	const progress = pending?.progress ?? episode.progress;
+	// A catalog availability hint must not block the exact URL already watched.
+	// The provider still decides whether that saved URL can play now.
+	const canOpen = available || completed || currentTime > 0;
 	return (
 		<div
 			className={
@@ -1704,7 +1716,7 @@ function PopupEpisode({
 							progress={Math.min(progress, completed ? 1 : 0.999)}
 							action={`${completed ? "Watch again" : currentTime > 0 ? "Resume" : "Watch"}${!completed && item.itemKind !== "movie" && episode.episodeNumber !== null ? ` E${episode.episodeNumber}` : ""}`}
 							actionLabel={`Resume ${episode.episodeTitle}`}
-							disabled={busy === "open" || !available}
+							disabled={busy === "open" || !canOpen}
 							onOpen={() => onOpen(pending?.sourceUrl ?? episode.sourceUrl, currentTime)}
 						/>
 					</>
@@ -1724,7 +1736,7 @@ function PopupEpisode({
 								type="button"
 								aria-label={`Resume ${episode.episodeTitle}`}
 								title="Resume"
-								disabled={busy === "open" || !available}
+								disabled={busy === "open" || !canOpen}
 								onClick={() => onOpen(pending?.sourceUrl ?? episode.sourceUrl, currentTime)}
 							>
 								<Play size={14} fill="currentColor" aria-hidden="true" />
@@ -1751,7 +1763,7 @@ function PopupEpisode({
 					</>
 				)}
 				<div className="popup-episode-actions">
-					{pending ? (
+					{syncPending ? (
 						<span className="popup-watch-pending">Pending sync</span>
 					) : null}
 				</div>

@@ -36,6 +36,49 @@ const NOW = "2026-08-15T03:00:00.000Z";
 beforeEach(() => localStorage.clear());
 
 describe("Popup Watch History v3", () => {
+  it("does not label live playback as pending when no upload is queued", async () => {
+    const history = historyFixture();
+    const local = pendingEvent({ currentTime: 840, progress: 0.4, observedAt: "2026-08-15T03:00:05.000Z" });
+    const view = await renderPanel(clientFixture({
+      cached: snapshotFixture(history, [], false, { event: local, mode: "mine" }),
+      request: requestForHistory(history),
+    }));
+    try {
+      expect(view.container.textContent).toContain("14:00");
+      expect(view.container.textContent).not.toContain("Pending sync");
+    } finally { await unmount(view.root); }
+  });
+
+  it("does not recreate pending work from a paused observation after acknowledgement", () => {
+    const history = historyFixture({ currentTime: 840, progress: 0.4 });
+    const local = pendingEvent({ currentTime: 840, progress: 0.4, observedAt: "2026-08-15T03:00:05.000Z" });
+    const key = watchHistoryPartitionKey(OWNER_ID, 1);
+    const snapshot = selectConfirmedPopupWatchHistorySnapshot({
+      schemaVersion: 3, activeGenerations: { [OWNER_ID]: 1 }, partitions: { [key]: {
+        ownerUserId: OWNER_ID, accountGeneration: 1, accessLease: paidHistoryLease(OWNER_ID),
+        cache: history, preferences: { youtubeHistoryEnabled: false }, preferencesConfirmed: true,
+        currentObservation: local, currentObservationMeaningfulSolo: true, currentObservationDisplayMode: "mine",
+        capturePaused: false, captureMarkersReady: true,
+        outbox: { ownerUserId: OWNER_ID, accountGeneration: 1, entries: [] },
+      } },
+    }, OWNER_ID);
+    expect(snapshot?.pendingEvents).toEqual([]);
+  });
+
+  it("keeps a real queued upload visible while the live player observation advances", async () => {
+    const history = historyFixture();
+    const queued = pendingEvent({ currentTime: 720, progress: 720 / 2_100, observedAt: "2026-08-15T03:00:03.000Z" });
+    const local = pendingEvent({ currentTime: 840, progress: 0.4, observedAt: "2026-08-15T03:00:05.000Z" });
+    const view = await renderPanel(clientFixture({
+      cached: snapshotFixture(history, [queued], false, { event: local, mode: "mine" }),
+      request: requestForHistory(history),
+    }));
+    try {
+      expect(view.container.textContent).toContain("14:00");
+      expect(view.container.textContent).toContain("Pending sync");
+    } finally { await unmount(view.root); }
+  });
+
   it("shows a newly resolved poster on a cached title before the progress upload is acknowledged", async () => {
     const history = historyFixture();
     history.items[0]!.artworkUrl = null;
@@ -467,7 +510,7 @@ describe("Popup Watch History v3", () => {
     await waitFor(() => expect(view.container.textContent).toContain("Cached Frieren"));
     expect(view.container.textContent).toContain("0:03");
     expect(view.container.textContent).not.toContain("Watching now");
-    expect(view.container.textContent).toContain("Pending sync");
+    expect(view.container.textContent).not.toContain("Pending sync");
     await unmount(view.root);
   });
 
@@ -519,7 +562,7 @@ describe("Popup Watch History v3", () => {
     });
     await waitFor(() => expect(view.container.textContent).toContain("Cached Frieren"));
     expect(view.container.textContent).not.toContain("Watching now");
-    expect(view.container.textContent).toContain("Pending sync");
+    expect(view.container.textContent).not.toContain("Pending sync");
     await click(await findButton(view.container, "Toggle Cached Frieren history"));
     expect(view.container.textContent).toContain("0:12");
 

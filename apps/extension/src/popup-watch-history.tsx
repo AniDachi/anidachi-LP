@@ -525,9 +525,8 @@ export function selectConfirmedPopupWatchHistorySnapshot(
           ? "mine"
           : null;
       if (displayMode) localObservation = { event: current.data, mode: displayMode };
-      if (partition.currentObservationMeaningfulSolo === true && !current.data.sharedRoom) {
-        pendingEvents.set(current.data.clientEventId, current.data);
-      }
+      // The current player position can outlive an acknowledgement (including
+      // paused heartbeats). Only the durable outbox represents pending uploads.
     }
   }
   for (const entry of captureAllowed ? partition.outbox.entries : []) {
