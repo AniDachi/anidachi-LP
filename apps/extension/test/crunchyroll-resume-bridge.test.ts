@@ -38,6 +38,8 @@ let player: {
 };
 let currentNow: number;
 beforeAll(() => {
+	// Capture the MAIN bridge's startup interval before the test DOM is torn down.
+	vi.useFakeTimers();
 	(script as unknown as { main(): void }).main();
 });
 beforeEach(() => {
@@ -74,6 +76,7 @@ beforeEach(() => {
 	});
 });
 afterEach(() => {
+	vi.clearAllTimers();
 	vi.useRealTimers();
 	vi.restoreAllMocks();
 });
