@@ -2894,3 +2894,10 @@ describe("watch history v2 client", () => {
     expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]).toBeUndefined();
   });
 });
+
+// Existing history scenarios assume this browser's owner has opted in.
+// Consent transitions and fail-closed behavior have separate integration tests.
+vi.mock("../src/history-recording-choice", async (importOriginal) => ({
+  ...await importOriginal<typeof import("../src/history-recording-choice")>(),
+  hasHistoryRecordingConsent: async () => true,
+}));

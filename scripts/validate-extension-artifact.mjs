@@ -81,7 +81,7 @@ function deriveChromiumExtensionId(manifestKey) {
   ).join("");
 }
 
-const broadPatterns = new Set(["http://*/*", "https://*/*", "file:///*", "<all_urls>"]);
+const broadPatterns = new Set(["*://*/*", "http://*/*", "https://*/*", "file:///*", "<all_urls>"]);
 for (const value of [...hostPermissions, ...contentMatches]) {
   if (broadPatterns.has(value)) {
     throw new Error(
@@ -130,6 +130,13 @@ assertExactAllowlist(
   contentMatches,
   expected.contentMatches,
 );
+
+const publicResources = manifest.web_accessible_resources ?? [];
+if (publicResources.length !== 1 || publicResources[0].extension_ids?.length) {
+  throw new Error("Expected one public logo resource entry limited to supported sites");
+}
+assertExactAllowlist("public resource", publicResources[0].resources ?? [], ["Anidachi_logo.png"]);
+assertExactAllowlist("public resource match", publicResources[0].matches ?? [], videoHosts);
 
 if (manifest.name !== expected.name) {
   throw new Error(`Expected manifest.name ${expected.name}, got ${manifest.name}`);

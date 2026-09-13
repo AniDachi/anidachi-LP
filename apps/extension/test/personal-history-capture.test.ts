@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { createWatchHistoryController } from "../src/watch-history-controller";
-import { createWatchHistoryClient } from "../src/watch-history-client";
+import { createWatchHistoryClient, type WatchHistoryClientDependencies } from "../src/watch-history-client";
 import {
 	createWatchHistoryStorage,
 	watchHistoryPartitionKey,
@@ -63,12 +63,13 @@ function fixture() {
 			refreshToken: "refresh",
 			user: { id: currentOwner },
 		} as never);
-	const client = () =>
+	const client = (overrides: Partial<WatchHistoryClientDependencies> = {}) =>
 		createWatchHistoryClient({
 			storage,
 			getCurrentSession: session,
 			now: () => now,
 			fetch: request as typeof fetch,
+			...overrides,
 		});
 	function event(
 		sequence = 1,
@@ -139,6 +140,107 @@ const observe = (event: WatchHistoryLocalEvent) => ({
 	queueForSync: true,
 });
 describe("personal history recorder/background integration", () => {
+  it.each(["sign-out", "account-switch"])("does not send the old owner's progress after %s during the final consent lookup", async (change) => {
+    const f = fixture();
+    await f.client().handle(observe(f.event()));
+    let session = { accessToken: "token", refreshToken: "refresh", user: { id: owner } } as Awaited<ReturnType<WatchHistoryClientDependencies["getCurrentSession"]>>;
+    let entered!: () => void;
+    const pending = new Promise<void>((resolve) => { entered = resolve; });
+    let release!: (allowed: boolean) => void;
+    let reads = 0;
+    const client = f.client({
+      getCurrentSession: async () => session,
+      hasRecordingConsent: async () => ++reads === 2 ? (entered(), new Promise<boolean>((resolve) => { release = resolve; })) : true,
+    });
+    const flush = client.handle({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "flush" });
+    await pending;
+    session = change === "sign-out" ? null : { ...session!, user: { ...session!.user, id: "different-owner" } };
+    release(true);
+    expect(await flush).toMatchObject({ ok: false, status: "rejected" });
+    expect(f.posts).toHaveLength(0);
+    expect(f.root.partitions[f.key]!.outbox.entries).toHaveLength(1);
+  });
+
+  it("fences a stale consent result when consent changes during the final session read", async () => {
+    const f = fixture();
+    await f.client().handle(observe(f.event()));
+    let revision = 0;
+    let consentReads = 0;
+    let entered!: () => void;
+    const pending = new Promise<void>((resolve) => { entered = resolve; });
+    let release!: () => void;
+    const wait = new Promise<void>((resolve) => { release = resolve; });
+    const session = { accessToken: "token", refreshToken: "refresh", user: { id: owner } } as never;
+    const client = f.client({
+      recordingContextRevision: () => revision,
+      hasRecordingConsent: async () => { ++consentReads; return true; },
+      getCurrentSession: async () => { if (consentReads === 2) { entered(); await wait; } return session; },
+    });
+    const flush = client.handle({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "flush" });
+    await pending;
+    ++revision; release();
+    expect(await flush).toMatchObject({ ok: false, status: "rejected" });
+    expect(f.posts).toHaveLength(0);
+  });
+
+  it("keeps saved-history read authority while refusing all new capture and flush work", async () => {
+    const f = fixture();
+    let allowed = false;
+    const client = f.client({ hasRecordingConsent: async () => allowed });
+    expect(await client.handle(observe(f.event()))).toMatchObject({ ok: false, status: "consent-required" });
+    expect(f.root.partitions[f.key]!.currentObservation).toBeNull();
+    expect(f.root.partitions[f.key]!.outbox.entries).toHaveLength(0);
+    expect(f.request).not.toHaveBeenCalled();
+    const bootstrap = await client.handle({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "bootstrap-cache", expectedOwnerUserId: owner });
+    expect(bootstrap).toMatchObject({ ok: true, data: { accessLease: f.lease, capturePaused: false } });
+    allowed = true;
+    expect(await client.handle(observe(f.event()))).toEqual({ ok: true });
+    const retained = structuredClone(f.root.partitions[f.key]);
+    allowed = false;
+    expect(await client.handle({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "flush" })).toMatchObject({ ok: false, status: "consent-required" });
+    expect(f.root.partitions[f.key]).toEqual(retained);
+    expect(f.posts).toHaveLength(0);
+  });
+
+  it("fails closed on consent lookup errors", async () => {
+    const f = fixture();
+    expect(await f.client({ hasRecordingConsent: async () => { throw new Error("unavailable"); } }).handle(observe(f.event()))).toMatchObject({ ok: false, status: "consent-required" });
+    expect(f.root.partitions[f.key]!.outbox.entries).toHaveLength(0);
+  });
+
+  it("blocks a capture queued behind storage work when consent is revoked before dispatch", async () => {
+    const f = fixture(); let allowed = true;
+    let release!: () => void;
+    const wait = new Promise<void>((resolve) => { release = resolve; });
+    let reached!: () => void;
+    const entered = new Promise<void>((resolve) => { reached = resolve; });
+    const blocker = f.storage.updateRoot((root) => ({ ...root }), async () => { reached(); await wait; return true; });
+    await entered;
+    const client = f.client({ hasRecordingConsent: async () => allowed });
+    const capture = client.handle(observe(f.event()));
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    allowed = false; release(); await blocker;
+    expect(await capture).toMatchObject({ ok: false });
+    expect(f.root.partitions[f.key]!.currentObservation).toBeNull();
+    expect(f.root.partitions[f.key]!.outbox.entries).toHaveLength(0);
+  });
+
+  it("does not retry a progress POST after consent is revoked during token refresh", async () => {
+    const f = fixture(); let allowed = true;
+    let session = { accessToken: "old", refreshToken: "refresh", user: { id: owner } };
+    const request = vi.fn(async (url: string) => url.endsWith("/access") ? Response.json(f.lease.access) : new Response("{}", { status: 401 }));
+    const client = f.client({
+      hasRecordingConsent: async () => allowed,
+      getCurrentSession: async () => session as never,
+      getRequestSession: async () => { allowed = false; session = { ...session, accessToken: "new" }; return session as never; },
+      fetch: request as typeof fetch,
+    });
+    await client.handle(observe(f.event()));
+    expect(await client.handle({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "flush" })).toMatchObject({ ok: false, status: "consent-required" });
+    expect(request.mock.calls.filter(([url]) => url.endsWith("/progress"))).toHaveLength(1);
+    expect(f.root.partitions[f.key]!.outbox.entries).toHaveLength(1);
+  });
+
 	it("Free never observes, discovers, or persists for any playback or room lifecycle", async () => {
 		const f = fixture();
 		const lease = {
@@ -353,3 +455,10 @@ describe("personal history recorder/background integration", () => {
 		expect(f.root.partitions[f.key]!.outbox.retiredUnproven).toBe(1);
 	});
 });
+
+// Existing history scenarios assume this browser's owner has opted in.
+// Consent transitions and fail-closed behavior have separate integration tests.
+vi.mock("../src/history-recording-choice", async (importOriginal) => ({
+  ...await importOriginal<typeof import("../src/history-recording-choice")>(),
+  hasHistoryRecordingConsent: async () => true,
+}));

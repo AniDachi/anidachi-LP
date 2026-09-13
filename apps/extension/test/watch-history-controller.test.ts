@@ -19,6 +19,26 @@ import {
 import { paidHistoryLease } from "./watch-history-personal-fixtures";
 
 describe("watch history meaningful-progress controller", () => {
+  it.each(["crunchyroll", "youtube"] as const)("invalidates %s capture immediately even while an older refresh is stalled", async (provider) => {
+    const authority = { ownerUserId: "00000000-0000-4000-8000-000000000001", accountGeneration: 1,
+      accessLease: paidHistoryLease(undefined, 1_700_000_000_000), preferences: { youtubeHistoryEnabled: true } };
+    let resolveOld!: (value: typeof authority) => void;
+    const fixture = createFixture({
+      getProvider: () => provider,
+      getObservation: (_preferences, value) => ({ ...value, provider }),
+      loadCachedPreferences: async () => authority,
+      loadPreferences: () => new Promise((resolve) => { resolveOld = resolve; }),
+    });
+    await fixture.controller.start();
+    const count = fixture.local.length;
+    fixture.controller.invalidateCaptureAuthority();
+    resolveOld(authority);
+    await Promise.resolve(); await Promise.resolve();
+    fixture.setTime(11); await fixture.controller.observe("heartbeat");
+    await fixture.controller.dispose();
+    expect(fixture.local).toHaveLength(count);
+  });
+
   it("does not treat a Resume seek or its synthetic ended checkpoint as new viewing", async () => {
     const fixture = createFixture(); await fixture.controller.start();
     fixture.setTime(11); await fixture.controller.observe("heartbeat");

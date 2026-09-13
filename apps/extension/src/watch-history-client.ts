@@ -37,6 +37,7 @@ import {
   type WatchHistoryBrowseTitleEpisodesQuery,
 } from "@anidachi/protocol";
 import type { ExtensionAuthTokens } from "./auth-tokens";
+import { hasHistoryRecordingConsent, historyRecordingContextRevision } from "./history-recording-choice";
 import { WEB_HTTP_BASE } from "./constants";
 import {
   personalRequest,
@@ -63,6 +64,7 @@ const FLUSH_LIMIT = 20;
 const historyReadSequences = new Map<string, number>();
 
 export type WatchHistoryLocalStatus =
+  | "consent-required"
   | "history-full"
   | "plan-required"
   | "access-unavailable"
@@ -210,6 +212,8 @@ export function parseWatchHistoryBootstrapData(value: unknown): WatchHistoryBoot
 }
 
 export type WatchHistoryClientDependencies = {
+  hasRecordingConsent?: (ownerUserId: string) => Promise<boolean>;
+  recordingContextRevision?: () => number;
   now?: () => number;
   browseCache?: ReturnType<typeof createWatchHistoryBrowseCache>;
   onCatalogSuperseded?: (pageId: string) => void;
@@ -342,6 +346,11 @@ export function isWatchHistoryMessage(value: unknown): value is WatchHistoryMess
 
 export function createWatchHistoryClient(dependencies: WatchHistoryClientDependencies) {
   const now = dependencies.now ?? Date.now;
+  const consent = dependencies.hasRecordingConsent ?? hasHistoryRecordingConsent;
+  const recordingRevision = dependencies.recordingContextRevision ?? historyRecordingContextRevision;
+  const recordingAllowed = async (owner: string) => {
+    try { return await consent(owner); } catch { return false; }
+  };
   const accessFailures = new Map<string, WatchHistoryMessageResponse>();
   const accessFlights = new Map<string, Promise<WatchHistoryLease | null>>();
   const storage = dependencies.storage ?? createWatchHistoryStorage();
@@ -367,7 +376,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     },
     isCurrent: async (owner, generation, accessEpoch) => {
       const session = await dependencies.getCurrentSession();
-      return session?.user.id === owner && (await readLease(session))?.access.accessEpoch === accessEpoch && canCaptureWatchHistory(await readLease(session), owner, now()) && (await storage.readRoot()).activeGenerations?.[owner] === generation;
+      return session?.user.id === owner && (await readLease(session))?.access.accessEpoch === accessEpoch && canCaptureWatchHistory(await readLease(session), owner, now()) && (await storage.readRoot()).activeGenerations?.[owner] === generation && await recordingAllowed(owner);
     },
     invalidate: async (owner, generation, downgrade, guard, accessEpoch) => {
       const session = await dependencies.getCurrentSession();
@@ -376,7 +385,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     save: async (owner, generation, titleKey, ack, guard, accessEpoch) => {
       const session = await dependencies.getCurrentSession();
       if (session?.user.id !== owner) return;
-      await updateCurrentPartition(session, generation, (partition) => !guard() || !canCaptureWatchHistory(partition.accessLease, owner, now()) || partition.accessLease?.access.accessEpoch !== accessEpoch ? partition : ({ ...partition,
+      await updateRecordingPartition(session, generation, (partition) => !guard() || !canCaptureWatchHistory(partition.accessLease, owner, now()) || partition.accessLease?.access.accessEpoch !== accessEpoch ? partition : ({ ...partition,
         catalogAcknowledgements: { ...partition.catalogAcknowledgements, [titleKey]: ack },
       }));
     },
@@ -441,6 +450,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     try { return await flight; } finally { if (accessFlights.get(key) === flight) accessFlights.delete(key); }
   }
   async function requireAccess(session: ExtensionAuthTokens, operation: "read" | "capture" = "capture"): Promise<WatchHistoryMessageResponse | null> {
+    if (operation === "capture" && !await recordingAllowed(session.user.id)) return { ok: false, status: "consent-required" };
     const lease = await access(session);
     if (!lease) return { ok: false, status: "access-unavailable" };
     return (operation === "read" ? canReadWatchHistory(lease, session.user.id, now()) : canCaptureWatchHistory(lease, session.user.id, now())) ? null : { ok: false, status: lease.access.state === "plan_required" ? "plan-required" : "access-unavailable" };
@@ -448,7 +458,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
 
   async function invalidateHistory(session: ExtensionAuthTokens, generation: number,
     downgrade?: Pick<WatchCatalogBeginAck, "titleKey" | "effectiveCatalogState">, guard?: () => boolean, accessEpoch?: number): Promise<void> {
-    await updateCurrentPartition(session, generation, (partition) => guard && !guard() || !canCaptureWatchHistory(partition.accessLease, session.user.id, now()) || partition.accessLease?.access.accessEpoch !== accessEpoch ? partition : ({ ...partition,
+    await updateRecordingPartition(session, generation, (partition) => guard && !guard() || !canCaptureWatchHistory(partition.accessLease, session.user.id, now()) || partition.accessLease?.access.accessEpoch !== accessEpoch ? partition : ({ ...partition,
       invalidationRevision: (partition.invalidationRevision ?? 0) + 1,
       browseInvalidationRevision: browseHardRevision(partition) + 1,
       // A server-acknowledged availability change invalidates exact denominators
@@ -580,7 +590,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       let found = false;
       let retired = false;
       let flushAfterIdentity = false;
-      const saved = await updateCurrentPartition(session, message.accountGeneration, (partition) => {
+      const saved = await updateRecordingPartition(session, message.accountGeneration, (partition) => {
         const entries = partition.outbox.entries.map((entry) => {
           if (entry.event.clientEventId !== message.clientEventId ||
             entry.event.identityPending?.watchId !== identity.providerContentId) return entry;
@@ -1380,7 +1390,11 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     | { ok: false; error: WatchHistoryMessageResponse; session?: ExtensionAuthTokens }
   > {
     let response: Response;
+    const isRecording = path === "/api/watch-history/v3/progress" || path.startsWith("/api/watch-history/v3/catalog");
+    const revision = isRecording ? recordingRevision() : 0;
     if (!sameSession(session, await dependencies.getCurrentSession())) return { ok: false, error: { ok: false, status: "rejected" } };
+    if (isRecording && !await recordingAllowed(session.user.id)) return { ok: false, error: { ok: false, status: "consent-required" } };
+    if (isRecording && (!sameSession(session, await dependencies.getCurrentSession()) || revision !== recordingRevision())) return { ok: false, error: { ok: false, status: "rejected" } };
     try {
       response = await request(new URL(path, WEB_HTTP_BASE).toString(), {
         ...init,
@@ -1407,6 +1421,10 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       if (refreshed.accessToken === session.accessToken) {
         return { ok: false, error: { ok: false, status: "retryable" }, session: refreshed };
       }
+      const retryRevision = isRecording ? recordingRevision() : 0;
+      if (!sameSession(refreshed, await dependencies.getCurrentSession())) return { ok: false, error: { ok: false, status: "rejected" } };
+      if (isRecording && !await recordingAllowed(refreshed.user.id)) return { ok: false, error: { ok: false, status: "consent-required" } };
+      if (isRecording && (!sameSession(refreshed, await dependencies.getCurrentSession()) || retryRevision !== recordingRevision())) return { ok: false, error: { ok: false, status: "rejected" } };
       try {
         response = await request(new URL(path, WEB_HTTP_BASE).toString(), {
           ...init,
@@ -1460,6 +1478,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     session: ExtensionAuthTokens,
     event: WatchHistoryLocalEvent,
   ): Promise<WatchHistoryMessageResponse | null> {
+    if (!await recordingAllowed(session.user.id)) return { ok: false, status: "consent-required" };
     const current = await dependencies.getCurrentSession();
     if (!sameSession(session, current)) return { ok: false, status: "rejected" };
     const root = await storage.readRoot();
@@ -1575,6 +1594,14 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     }
   }
 
+  function updateRecordingPartition(
+    session: ExtensionAuthTokens,
+    generation: number,
+    update: (partition: WatchHistoryAccountPartition) => WatchHistoryAccountPartition,
+  ) {
+    return updateCurrentPartition(session, generation, update, undefined, undefined, undefined, true);
+  }
+
   async function updateCurrentPartition(
     session: ExtensionAuthTokens,
     generation: number,
@@ -1582,9 +1609,12 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     captureProvider?: string,
     captureEvent?: WatchHistoryLocalEvent,
     requiredEnvelope?: PersonalWatchProgressRequest,
+    recordingWrite = false,
   ): Promise<ReturnType<WatchHistoryStorage["updateRoot"]> extends Promise<infer Result>
     ? Result & { stale?: boolean; authorityRejected?: boolean }
     : never> {
+    const writeRevision = captureEvent || recordingWrite ? recordingRevision() : 0;
+    if ((captureEvent || recordingWrite) && !await recordingAllowed(session.user.id)) return { ok: true, authorityRejected: true } as const;
     const current = await dependencies.getCurrentSession();
     if (!sameSession(session, current)) return { ok: true, authorityRejected: true } as const;
     const key = watchHistoryPartitionKey(session.user.id, generation);
@@ -1632,7 +1662,14 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
               [captureEvent.clientSessionKey, captureEvent.clientSequence!]].slice(-128)) } };
         })() },
       };
-    });
+    }, captureEvent || recordingWrite ? async () => {
+      // The storage queue and quota estimate may have waited since validation.
+      // Re-check immediately before dispatching the actual Chrome storage write.
+      const allowed = await recordingAllowed(session.user.id) &&
+        sameSession(session, await dependencies.getCurrentSession()) && writeRevision === recordingRevision();
+      authorityRejected ||= !allowed;
+      return allowed;
+    } : undefined);
     const currentAfterWrite = await dependencies.getCurrentSession();
     if (!sameSession(session, currentAfterWrite)) {
       return { ...result, authorityRejected: true };

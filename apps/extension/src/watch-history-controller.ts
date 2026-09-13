@@ -91,6 +91,7 @@ export type WatchHistoryController = {
 	setRoomHistoryAuthority(
 		authority: RoomHistoryAuthority | null,
 	): Promise<void>;
+	invalidateCaptureAuthority(): void;
 	refreshAuthority(): Promise<void>;
 	recover(): Promise<void>;
 	dispose(): Promise<void>;
@@ -352,6 +353,12 @@ export function createWatchHistoryController(
 	return {
 		start,
 		refreshAuthority,
+		invalidateCaptureAuthority: () => {
+			++revision;
+			refreshFlight = null;
+			if (authority) authority = { ...authority, accessLease: null };
+			reset();
+		},
 		observe: queueCapture,
 		notePlaybackInteraction: async () => {
 			interaction = true;

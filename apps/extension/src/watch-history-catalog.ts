@@ -1,3 +1,4 @@
+import { hasHistoryRecordingConsent } from "./history-recording-choice";
 import { canCaptureWatchHistory, parseWatchHistoryLease, personalEnvelopeEligible } from "./watch-history-access";
 import {
   WatchCatalogBeginAckSchema, WatchCatalogBeginRequestSchema,
@@ -145,7 +146,7 @@ export function createWatchHistoryPageResolver(dependencies: {
     const response = await dependencies.send({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "bootstrap-cache", expectedOwnerUserId: owner });
     if (!response.ok || !response.data || typeof response.data !== "object" || !("accessLease" in response.data)) return false;
     const lease = parseWatchHistoryLease(response.data.accessLease);
-    return !disposed && personalEnvelopeEligible({ captureVersion: 1, accessEpoch: event.captureProof.access.accessEpoch,
+    return await hasHistoryRecordingConsent(owner) && !disposed && personalEnvelopeEligible({ captureVersion: 1, accessEpoch: event.captureProof.access.accessEpoch,
       youtubeConsentEpoch: event.captureProof.access.youtubeConsentEpoch, event }, lease, owner, now());
   }
   async function resolve(event: WatchHistoryLocalEvent, owner: string, options: { refreshCatalog: boolean }): Promise<void> {
