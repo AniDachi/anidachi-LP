@@ -172,7 +172,6 @@ export const popupWatchHistoryStyles = `
   .popup-episode-cell[data-completed="true"] > svg { flex-shrink: 0; width: 10px; color: rgba(238,230,220,.6); }
   .popup-episode-cell[data-current="true"] .popup-cell-number { color: var(--ad-accent); }
   .popup-episode-cell[aria-pressed="true"], .popup-special-choice[aria-pressed="true"] { border-color: var(--ad-accent); background: rgba(255,149,64,.06); color: var(--ad-text); }
-  .popup-episode-cell[data-available="false"] { border-style: dashed; color: rgba(238,230,220,.36); }
   .popup-cell-progress { position: absolute; left: 0; bottom: 0; height: 2px; background: var(--ad-accent); pointer-events: none; }
   .popup-special-choices { display: grid; gap: 6px; }
   .popup-special-choice { display: flex; align-items: center; gap: 9px; box-sizing: border-box; min-height: var(--episode-cell-height); min-width: 0; padding: 8px 10px; border: 1px solid rgba(255,255,255,.1); border-radius: 9px; background: transparent; color: var(--ad-muted); font: inherit; font-size: 11px; line-height: 1.5; text-align: left; cursor: pointer; }
