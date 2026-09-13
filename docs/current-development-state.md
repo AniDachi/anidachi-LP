@@ -8,6 +8,40 @@ contain old paths, old domains, or old decisions. When release channels,
 endpoints, branch protection, or store workflow changes, update this document in
 the same PR.
 
+## Private tester handoff, 2026-09-13
+
+The current owner-approved sequence is: finish preparation, deliver a production
+ZIP privately to testers, fix reported bugs, then publish the download after
+acceptance. Website ZIP publication and Chrome Web Store preparation are outside
+this step. This section supersedes the older inactive-policy and pending-deploy
+status snapshots below.
+
+Both databases have 60 migrations through `20260911070906`. The existing
+`personal_history_policy` version 1 is now active: staging at 04:23:31 UTC and
+production at 04:26:35 UTC on September 13. No source, schema, secret or Stripe
+subscription changes were needed for this operator activation. Free/Plus/Pro
+room caps are respectively 4/6/15 participants, 4/4/4 cameras and 4/6/8
+microphones. Personal history records on paid plans; expired subscribers keep
+read and privacy-delete access to saved history.
+
+The owner explicitly approved finalizing the 177 stale staging test-room records.
+The existing finalizer received an explicit UTC usage day and zero seconds;
+23 protected account, billing, history and usage tables retained identical
+contents. No unfinished legacy rooms or active DB assignments remained in either
+environment at activation. This is a DB cleanup receipt, not proof of WebSocket
+tombstones for historical Worker instances.
+
+Rollback-only RPC checks passed on staging before activation and on both active
+databases afterward. Fresh local room harness: 39/39; Pro media harness: 8/8 with
+15 local Chromium participants and 204/204 expected media endpoints decoding.
+Physical devices, different networks and forced TURN remain tester acceptance.
+
+The private production ZIP remains the immutable CI build from main `92659774`
+(`production-158`), with ID `gpkolofebdhfpapbbgdkdkmlmjfidgmn`. Both standard local
+extension folders now contain validated CI artifacts. Older local toolbar work
+was preserved in an archive branch before bringing the main checkout to clean
+staging. See the [verification and tester handoff record](releases/personal-history-mvp/2026-09-13-private-tester-readiness.md).
+
 ## Owner clarification: prelaunch test data, 2026-09-13
 
 The owner confirmed that the existing application data is test data and there is
