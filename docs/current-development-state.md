@@ -18,6 +18,15 @@ Deployment and staging/production SQL receipts belong to the promotion PR.
 
 ## Private tester handoff, 2026-09-13
 
+The subsequent Chrome compliance patch adds per-account/per-browser recording
+choice, extension-only Zod jitless initialization, and narrow logo accessibility.
+It updates the privacy policy and disables website Amplitude Session Replay
+while retaining explicit analytics events. The earlier tester ZIP remains
+immutable. Source preparation and local browser checks do not publish a new ZIP,
+deploy the policy page, or update Chrome Web Store. See the
+[compliance delivery record](releases/personal-history-mvp/2026-09-13-chrome-compliance.md)
+for validation and remaining deployment acceptance.
+
 The current owner-approved sequence is: finish preparation, deliver a production
 ZIP privately to testers, fix reported bugs, then publish the download after
 acceptance. Website ZIP publication and Chrome Web Store preparation are outside

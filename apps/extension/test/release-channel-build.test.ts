@@ -54,6 +54,7 @@ type Manifest = {
   key?: string;
   permissions?: string[];
   host_permissions?: string[];
+  web_accessible_resources?: Array<{ resources?: string[]; matches?: string[] }>;
   content_scripts?: Array<{ matches?: string[] }>;
   [key: string]: unknown;
 };
@@ -188,6 +189,7 @@ describe.sequential("extension release channel builds", () => {
     expect(manifest.permissions ?? []).not.toContain("downloads");
     expectExact(manifest.host_permissions, productionHostPermissions);
     expectExact(contentMatches(manifest), videoHosts);
+    expectExact(manifest.web_accessible_resources?.[0]?.matches, videoHosts);
     expectNarrow(manifest);
     expectCanonicalRuntime("anidachi-extension-public", {
       web: "https://www.anidachi.app",
@@ -215,6 +217,7 @@ describe.sequential("extension release channel builds", () => {
       "https://anidachi-api-staging.vladislav-gul7.workers.dev/*",
     ]);
     expectExact(contentMatches(manifest), videoHosts);
+    expectExact(manifest.web_accessible_resources?.[0]?.matches, videoHosts);
     expectNarrow(manifest);
     expectCanonicalRuntime("anidachi-extension-staging", {
       web: "https://staging.anidachi.app",
@@ -319,6 +322,14 @@ describe.sequential("extension release channel builds", () => {
     expect(`${result.stdout}\n${result.stderr}`).toContain(
       "Unexpected content-script match: https://evil-extra.example/*",
     );
+  });
+
+  it("rejects a public logo accessible from unrelated sites", () => {
+    const manifest = manifestAt("anidachi-extension-public/manifest.json");
+    manifest.web_accessible_resources = [{ resources: ["Anidachi_logo.png"], matches: ["*://*/*"] }];
+    const result = validateFixture(manifest);
+    expect(result.status).not.toBe(0);
+    expect(`${result.stdout}\n${result.stderr}`).toContain("Unexpected public resource match: *://*/*");
   });
 
   it("rejects an artifact that calls the unavailable production jsxDEV runtime", () => {

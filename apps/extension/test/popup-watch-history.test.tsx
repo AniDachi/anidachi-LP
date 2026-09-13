@@ -2094,3 +2094,10 @@ async function waitFor(assertion: () => void, timeoutMs = 2_000): Promise<void> 
 async function unmount(root: Root): Promise<void> {
   await act(async () => root.unmount());
 }
+
+// Existing history scenarios assume this browser's owner has opted in.
+// Consent transitions and fail-closed behavior have separate integration tests.
+vi.mock("../src/history-recording-choice", async (importOriginal) => ({
+  ...await importOriginal<typeof import("../src/history-recording-choice")>(),
+  hasHistoryRecordingConsent: async () => true,
+}));

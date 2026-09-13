@@ -1,3 +1,4 @@
+import "../src/zod-csp";
 import { defineBackground } from "wxt/utils/define-background";
 import {
   handleAccountInboxHttpMessage,
