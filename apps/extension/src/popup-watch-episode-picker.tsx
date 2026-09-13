@@ -282,6 +282,7 @@ export function PopupEpisodePicker({
 							const completed = Boolean(entry.history?.completedAt);
 							const progress =
 								entry.pending?.progress ?? entry.history?.progress ?? 0;
+							const hasProgress = completed || (entry.pending?.currentTime ?? entry.history?.currentTime ?? 0) > 0;
 							const current = entry.key === latestKey && !completed;
 							const number =
 								entry.number === null
@@ -301,8 +302,8 @@ export function PopupEpisodePicker({
 									data-episode-key={entry.key}
 									data-completed={completed}
 									data-current={current}
-									data-available={entry.catalog?.available !== false}
-									aria-label={`${entry.number === null ? entry.title : `Episode ${entry.number}: ${entry.title}`}, ${completed ? "watched" : entry.catalog?.available === false ? "not available" : progress > 0 ? "in progress" : "not watched"}`}
+									data-available={hasProgress || entry.catalog?.available !== false}
+									aria-label={`${entry.number === null ? entry.title : `Episode ${entry.number}: ${entry.title}`}, ${completed ? "watched" : hasProgress ? "in progress" : entry.catalog?.available === false ? "not available" : "not watched"}`}
 									aria-pressed={entry.key === selected?.key}
 									tabIndex={entry.key === focusKey ? 0 : -1}
 									title={entry.title}

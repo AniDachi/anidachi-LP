@@ -262,6 +262,9 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
   const selected = episodes.find(ep => ep.episodeKey === episodeKey) ?? episodes[0];
   const watched = (ep: WatchHistoryEditorEpisode) => draft[ep.episodeKey] ?? ep.watched;
   const hasProgress = (ep: WatchHistoryEditorEpisode) => watched(ep) || (!(ep.episodeKey in draft) && ep.currentTime > 0);
+  // Saved playback has its own exact URL; a stale catalog hint is not a reason
+  // to disable Resume. Unwatched catalog entries still require availability.
+  const canOpen = (ep: WatchHistoryEditorEpisode) => ep.available || hasProgress(ep);
   const selectable = episodes.filter(ep => ep.available || ep.watched || ep.currentTime > 0);
   const targets = single ? episodes : selectable.filter(ep => selection.has(ep.episodeKey));
   const allSelected = selectable.length > 0 && targets.length === selectable.length;
@@ -341,10 +344,10 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
           </div>
         </div>}
         {!single && <div className={`wh-episodes ${editing ? "wh-episodes-editing" : ""}`} aria-label={editing ? "Select episodes" : "Episodes"} tabIndex={0}>
-          {episodes.map((ep, index) => <button type="button" key={ep.episodeKey} disabled={saving || (editing ? editLocked || !selectable.includes(ep) : !ep.available)}
+          {episodes.map((ep, index) => <button type="button" key={ep.episodeKey} disabled={saving || (editing ? editLocked || !selectable.includes(ep) : !canOpen(ep))}
             className={`wh-episode ${watched(ep) ? "wh-watched" : ""} ${!editing && selected?.episodeKey === ep.episodeKey ? "wh-selected" : ""} ${editing && selection.has(ep.episodeKey) ? "wh-picked" : ""} ${ep.episodeKey in draft ? "wh-modified" : ""}`}
             role={editing ? "checkbox" : undefined} aria-checked={editing ? selection.has(ep.episodeKey) : undefined}
-            aria-label={`${episodeLabel(ep, index)}: ${ep.episodeTitle}${!ep.available ? ", unavailable" : watched(ep) ? ", watched" : !(ep.episodeKey in draft) && ep.progress > 0 ? ", in progress" : ", not watched"}${ep.episodeKey in draft ? ", unsaved change" : ""}`}
+            aria-label={`${episodeLabel(ep, index)}: ${ep.episodeTitle}${watched(ep) ? ", watched" : hasProgress(ep) ? ", in progress" : !ep.available ? ", unavailable" : ", not watched"}${ep.episodeKey in draft ? ", unsaved change" : ""}`}
             aria-pressed={editing ? undefined : selected?.episodeKey === ep.episodeKey} title={ep.episodeTitle} onClick={event => { setEpisodeKey(ep.episodeKey); if (editing) toggleSelection(ep, event.shiftKey); }}>
             <span>{episodeLabel(ep, index)}</span>{editing ? <span className="wh-cell-check" aria-hidden>{selection.has(ep.episodeKey) && <Check size={9} />}</span> : watched(ep) ? <Check size={11} aria-hidden /> : null}
             {!watched(ep) && ep.progress > 0 && !(ep.episodeKey in draft) && <i style={{ width: `${ep.progress * 100}%` }} />}
@@ -355,7 +358,7 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
           <div className="wh-episode-name"><span>{single ? (item.provider === "youtube" ? "Video" : "Film") : episodeLabel(selected, episodes.indexOf(selected))}</span><h4>{single ? (watched(selected) ? "Watched" : progress > 0 ? "In progress" : "Not watched") : selected.episodeTitle}</h4></div>
           <div className="wh-progress" role="progressbar" aria-label="Episode progress" aria-valuenow={Math.round(progress * 100)} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${progress * 100}%` }} /></div>
           <div className="wh-playback"><span>{selected.duration > 0 ? `${clock(currentTime)} / ${clock(selected.duration)}` : watched(selected) ? "Marked as watched" : currentTime > 0 ? `${clock(currentTime)} watched` : "Not started"}</span>
-            {!editing && <button className="wh-primary" disabled={busy || !selected.available} onClick={() => onNavigate(() => onResume(item.provider, selected.sourceUrl, watched(selected) ? 0 : currentTime))}><Play size={14} fill="currentColor" />{watched(selected) ? "Watch again" : currentTime > 0 ? "Resume" : "Watch"}</button>}
+            {!editing && <button className="wh-primary" disabled={busy || !canOpen(selected)} onClick={() => onNavigate(() => onResume(item.provider, selected.sourceUrl, watched(selected) ? 0 : currentTime))}><Play size={14} fill="currentColor" />{watched(selected) ? "Watch again" : currentTime > 0 ? "Resume" : "Watch"}</button>}
           </div>
         </div>}
       </>}
