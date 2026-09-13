@@ -602,6 +602,7 @@ describe("production watch browsing", () => {
       const partition = value.partitions[watchHistoryPartitionKey(OWNER, 1)]!;
       return { ...value, partitions: { ...value.partitions, [watchHistoryPartitionKey(OWNER, 1)]: {
         ...partition, currentObservation: pending, currentObservationMeaningfulSolo: true, currentObservationDisplayMode: "mine",
+        outbox: { ...partition.outbox, entries: [{ event: pending, key: "pending-before-free", slot: "latest", persistedAt: Date.now() }] },
       } } };
     });
     expect((await f.client.loadCached(OWNER))?.pendingEvents.length).toBe(1);
@@ -925,7 +926,7 @@ describe("production watch browsing", () => {
 		expect(container.textContent).toContain("Matching episode");
 		expect(requests.some((url) => url.includes("title-episodes"))).toBe(false);
 	});
-	it("shows a newly observed shared title as pending without guessing confirmed sessions", async () => {
+	it("previews a newly observed shared title without claiming an upload or guessing confirmed sessions", async () => {
 		const event: WatchProgressEvent = {
 			schemaVersion: 3,
 			clientEventId: GROUP,
@@ -968,8 +969,7 @@ describe("production watch browsing", () => {
 		};
 		await mount(client);
 		expect(container.textContent).toContain("New shared video");
-		expect(container.textContent).toContain("New shared video");
-		expect(container.textContent).toContain("Pending sync");
+		expect(container.textContent).not.toContain("Pending sync");
 		expect(container.textContent).not.toContain("Watch together again");
 	});
 	it.each(["Personal"])("renders %s preview episodes without a detail request and continues only on demand", async (mode) => {
@@ -1920,6 +1920,22 @@ function gridClient() {
 }
 
 describe("watch episode grid", () => {
+	it("resumes a saved episode from its exact URL when the catalog says unavailable", async () => {
+		const fallback = gridClient();
+		const client = clientFixture(async message => {
+			if (message.command !== "browse-catalog") return fallback.request(message);
+			const data = gridResponse();
+			data.episodes[0]!.available = false;
+			return { ok: true, data };
+		});
+		await mount(client);
+		expect(button(`Resume ${episode.episodeTitle}`)?.disabled).toBe(false);
+		await click(`Resume ${episode.episodeTitle}`);
+		await settles(() => expect(client.openUrl).toHaveBeenCalledTimes(1));
+		const intent = parsePersonalHistoryResumeUrl(vi.mocked(client.openUrl).mock.calls[0]![0]);
+		expect(intent?.sourceUrl).toBe(episode.sourceUrl);
+		expect(intent?.currentTime).toBe(episode.currentTime);
+	});
   it.each(["open", "provider-closed", "title-closed"])("keeps the remembered unwatched season after reopening with %s", async state => {
     const fallback = gridClient();
     let hold = false;

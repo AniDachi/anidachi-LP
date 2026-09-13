@@ -832,6 +832,25 @@ it("Free opens series and resumes its own saved position without edit or room cr
     assert.equal(server.calls.some(call => call.body), false);
   } finally { testWindow.location.assign = oldAssign; await unmount(view.root); }
 });
+for (const plan of ["allowed", "plan_required"] as const) it(`${plan} resumes recorded progress despite an unavailable catalog hint`, async () => {
+  const editor = editorFixture(); editor.episodes[0].available = false;
+  const server = installServer({ plan, editor }); const oldAssign = testWindow.location.assign;
+  const launched: string[] = []; testWindow.location.assign = url => { launched.push(String(url)); };
+  const view = await renderClient(historyFixture(), preferencesFixture, plan);
+  try {
+    await openTitle(view.container);
+    const cell = episodeButton(view.container, "Episode 1");
+    assert.equal(cell.disabled, false);
+    assert.equal(episodeButton(view.container, "Future episode").disabled, true);
+    assert.equal(buttonByText(view.container, "Resume").disabled, false);
+    await click(buttonByText(view.container, "Resume"));
+    await waitFor(() => assert.equal(launched.length, 1));
+    const intent = JSON.parse(new URLSearchParams(new URL(launched[0]).hash.slice(1)).get("anidachiResume")!);
+    assert.equal(intent.sourceUrl, editor.episodes[0].sourceUrl);
+    assert.equal(intent.currentTime, editor.episodes[0].currentTime);
+    assert.equal(server.calls.some(call => call.body), false);
+  } finally { testWindow.location.assign = oldAssign; await unmount(view.root); }
+});
 it("a conflict preserves the draft and requires explicit review of latest progress", async () => {
   let conflicts = 0; const server = installServer({ intercept: (path, init) => path.endsWith("/editor") && init?.method === "POST" && conflicts++ === 0 ? Response.json({ error: "Progress changed elsewhere", code: "HISTORY_EDIT_CONFLICT" }, { status: 409 }) : undefined });
   const view = await renderClient();
