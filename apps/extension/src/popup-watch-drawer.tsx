@@ -1376,11 +1376,7 @@ function PopupWatchHistoryItem({
 					};
 				});
 
-	const renderEpisode = (
-		episode: Episode,
-		detail = false,
-		available = true,
-	) => (
+	const renderEpisode = (episode: Episode, detail = false) => (
 		<PopupEpisode
 			key={episode.episodeKey}
 			episode={effectiveEpisode(episode)}
@@ -1397,7 +1393,6 @@ function PopupWatchHistoryItem({
 			onOpen={onOpen}
 			detail={detail}
 			active={providerOpen && open}
-			available={available}
 		/>
 	);
 	const selectedAggregate =
@@ -1436,7 +1431,7 @@ function PopupWatchHistoryItem({
 						<span className="popup-watch-summary">
 							<span className="popup-watch-meta">
 								{overall.label.split(" · ")[0]}
-								{specialAggregate ? (
+								{specialAggregate && (specialAggregate.availableEpisodes ?? 0) > 0 ? (
 									<span className="popup-watch-special-total">
 										{" "}
 										+ {specialAggregate.completedEpisodes} /{" "}
@@ -1508,11 +1503,10 @@ function PopupWatchHistoryItem({
 									title={item.title}
 								/>
 								<span className="popup-season-counter">
-									{selectedAggregate?.availableEpisodes === 0
-										? "Unavailable"
-										: selectedAggregate?.availableEpisodes != null
-											? `${selectedAggregate.completedEpisodes} / ${selectedAggregate.availableEpisodes} watched`
-											: `${choices.length} known`}
+									{selectedAggregate?.availableEpisodes != null &&
+									selectedAggregate.availableEpisodes > 0
+										? `${selectedAggregate.completedEpisodes} / ${selectedAggregate.availableEpisodes} watched`
+										: `${choices.length} known`}
 								</span>
 							</div>
 							<PopupEpisodePicker
@@ -1553,7 +1547,7 @@ function PopupWatchHistoryItem({
 								loadMore={rosterReady ? grid.loadMore : page.loadMore}
 								renderSelected={(entry) =>
 									entry.history ? (
-										renderEpisode(entry.history, true, entry.catalog?.available)
+										renderEpisode(entry.history, true)
 									) : (
 										<PopupUnwatchedEpisode
 											entry={entry}
@@ -1646,11 +1640,9 @@ function PopupEpisode({
 	busy,
 	onOpen,
 	detail = false,
-	available = true,
 	active = true,
 }: {
 	detail?: boolean;
-	available?: boolean;
 	active?: boolean;
 	episode: Episode;
 	item: WatchHistoryItem;
@@ -1668,9 +1660,9 @@ function PopupEpisode({
 	const completed = Boolean(episode.completedAt);
 	const currentTime = pending?.currentTime ?? episode.currentTime;
 	const progress = pending?.progress ?? episode.progress;
-	// A catalog availability hint must not block the exact URL already watched.
-	// The provider still decides whether that saved URL can play now.
-	const canOpen = available || completed || currentTime > 0;
+	// Catalog availability is not permission to open a provider URL. The
+	// provider decides playback access; Watch again explicitly starts at zero.
+	const resumeTime = completed ? 0 : currentTime;
 	return (
 		<div
 			className={
@@ -1716,8 +1708,8 @@ function PopupEpisode({
 							progress={Math.min(progress, completed ? 1 : 0.999)}
 							action={`${completed ? "Watch again" : currentTime > 0 ? "Resume" : "Watch"}${!completed && item.itemKind !== "movie" && episode.episodeNumber !== null ? ` E${episode.episodeNumber}` : ""}`}
 							actionLabel={`Resume ${episode.episodeTitle}`}
-							disabled={busy === "open" || !canOpen}
-							onOpen={() => onOpen(pending?.sourceUrl ?? episode.sourceUrl, currentTime)}
+							disabled={busy === "open"}
+							onOpen={() => onOpen(pending?.sourceUrl ?? episode.sourceUrl, resumeTime)}
 						/>
 					</>
 				) : (
@@ -1736,8 +1728,8 @@ function PopupEpisode({
 								type="button"
 								aria-label={`Resume ${episode.episodeTitle}`}
 								title="Resume"
-								disabled={busy === "open" || !canOpen}
-								onClick={() => onOpen(pending?.sourceUrl ?? episode.sourceUrl, currentTime)}
+								disabled={busy === "open"}
+								onClick={() => onOpen(pending?.sourceUrl ?? episode.sourceUrl, resumeTime)}
 							>
 								<Play size={14} fill="currentColor" aria-hidden="true" />
 							</button>

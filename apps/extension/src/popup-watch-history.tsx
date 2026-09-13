@@ -326,18 +326,11 @@ export function watchHistoryOverallProgress(item: WatchHistoryItem): {
 } {
   const available = item.aggregate.availableEpisodes;
   const progress = item.aggregate.progress;
-  if (item.catalogState !== "complete" || available === null || progress === null) {
+  if (item.catalogState !== "complete" || available === null || available === 0 || progress === null) {
     const observed = item.observedEpisodeCount;
     return {
       accessibleSuffix: "",
       label: `${observed} observed ${observed === 1 ? "episode" : "episodes"}`,
-      progress: null,
-    };
-  }
-  if (available === 0) {
-    return {
-      accessibleSuffix: ", Not currently available",
-      label: "Not currently available",
       progress: null,
     };
   }

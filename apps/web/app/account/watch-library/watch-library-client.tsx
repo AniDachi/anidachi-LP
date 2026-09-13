@@ -334,7 +334,7 @@ export function getWatchHistoryAggregateLabel(item: WatchHistoryItem): string {
     item.aggregate.availableEpisodes === null ||
     item.aggregate.progress === null
   ) return `${observed} observed ${observed === 1 ? "episode" : "episodes"}`;
-  if (item.aggregate.availableEpisodes === 0) return "Not currently available";
+  if (item.aggregate.availableEpisodes === 0) return `${item.completedEpisodeCount} watched · ${item.observedEpisodeCount} saved`;
   return `${item.aggregate.completedEpisodes} / ${item.aggregate.availableEpisodes} episodes · ${formatProgressPercent(item.aggregate.progress ?? 0)}%`;
 }
 
