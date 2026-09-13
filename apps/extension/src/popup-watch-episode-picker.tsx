@@ -302,8 +302,7 @@ export function PopupEpisodePicker({
 									data-episode-key={entry.key}
 									data-completed={completed}
 									data-current={current}
-									data-available={hasProgress || entry.catalog?.available !== false}
-									aria-label={`${entry.number === null ? entry.title : `Episode ${entry.number}: ${entry.title}`}, ${completed ? "watched" : hasProgress ? "in progress" : entry.catalog?.available === false ? "not available" : "not watched"}`}
+									aria-label={`${entry.number === null ? entry.title : `Episode ${entry.number}: ${entry.title}`}, ${completed ? "watched" : hasProgress ? "in progress" : "not watched"}`}
 									aria-pressed={entry.key === selected?.key}
 									tabIndex={entry.key === focusKey ? 0 : -1}
 									title={entry.title}
@@ -431,24 +430,18 @@ export function PopupUnwatchedEpisode({
 						? "Special episode"
 						: `Episode ${entry.number}`}
 				</span>
-				<span>
-					{episode.available ? "Not watched" : "Not currently available"}
-				</span>
+				<span>Not watched</span>
 			</div>
 			<strong className="popup-selected-episode-title" dir="auto">
 				{entry.title}
 			</strong>
 			<PopupEpisodeProgress
 				title={entry.title}
-				elapsed={
-					episode.releasedAt && !episode.available
-						? new Date(episode.releasedAt).toLocaleDateString()
-						: "0:00"
-				}
-				duration={episode.releasedAt && !episode.available ? undefined : "—"}
+				elapsed="0:00"
+				duration="—"
 				progress={0}
 				action={`Watch${entry.number === null ? "" : ` E${entry.number}`}`}
-				disabled={busy || !episode.available}
+				disabled={busy}
 				onOpen={() => onOpen(episode.sourceUrl)}
 			/>
 		</div>

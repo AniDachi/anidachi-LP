@@ -1920,12 +1920,19 @@ function gridClient() {
 }
 
 describe("watch episode grid", () => {
-	it("resumes a saved episode from its exact URL when the catalog says unavailable", async () => {
+	it.each(["not started", "in progress", "watched"])("opens a %s saved episode from its exact URL despite catalog availability", async state => {
 		const fallback = gridClient();
+		const saved = { ...episode,
+			currentTime: state === "not started" ? 0 : state === "watched" ? episode.duration : episode.currentTime,
+			progress: state === "not started" ? 0 : state === "watched" ? 1 : episode.progress,
+			completedAt: state === "watched" ? "2026-09-05T09:00:00.000Z" : null,
+			lastWatchedAt: "2026-09-05T09:00:00.000Z",
+		};
 		const client = clientFixture(async message => {
 			if (message.command !== "browse-catalog") return fallback.request(message);
 			const data = gridResponse();
 			data.episodes[0]!.available = false;
+			data.episodes[0]!.history = saved;
 			return { ok: true, data };
 		});
 		await mount(client);
@@ -1934,7 +1941,7 @@ describe("watch episode grid", () => {
 		await settles(() => expect(client.openUrl).toHaveBeenCalledTimes(1));
 		const intent = parsePersonalHistoryResumeUrl(vi.mocked(client.openUrl).mock.calls[0]![0]);
 		expect(intent?.sourceUrl).toBe(episode.sourceUrl);
-		expect(intent?.currentTime).toBe(episode.currentTime);
+		expect(intent?.currentTime).toBe(state === "watched" ? 0 : saved.currentTime);
 	});
   it.each(["open", "provider-closed", "title-closed"])("keeps the remembered unwatched season after reopening with %s", async state => {
     const fallback = gridClient();
@@ -2057,7 +2064,12 @@ describe("watch episode grid", () => {
 				),
 			).click(),
 		);
-		expect(button("Watch E11").disabled).toBe(true);
+		expect(button("Watch E11").disabled).toBe(false);
+		expect(container.textContent).not.toContain("Not currently available");
+		expect(container.querySelector('[title="Catalog Season 1 10"]')?.getAttribute("aria-label")).toContain("not watched");
+		await click("Watch E11");
+		expect(client.openUrl).toHaveBeenLastCalledWith("https://www.crunchyroll.com/watch/GRID10");
+		expect(vi.mocked(client.request).mock.calls.every(([message]) => !["enqueue", "progress"].includes(message.command))).toBe(true);
 	});
 	it("switches seasons with one dropdown, preserves the selected episode, and renders named specials with exact source numbers", async () => {
 		await mount(gridClient());

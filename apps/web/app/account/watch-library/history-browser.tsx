@@ -262,9 +262,8 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
   const selected = episodes.find(ep => ep.episodeKey === episodeKey) ?? episodes[0];
   const watched = (ep: WatchHistoryEditorEpisode) => draft[ep.episodeKey] ?? ep.watched;
   const hasProgress = (ep: WatchHistoryEditorEpisode) => watched(ep) || (!(ep.episodeKey in draft) && ep.currentTime > 0);
-  // Saved playback has its own exact URL; a stale catalog hint is not a reason
-  // to disable Resume. Unwatched catalog entries still require availability.
-  const canOpen = (ep: WatchHistoryEditorEpisode) => ep.available || hasProgress(ep);
+  // Catalog availability is not a navigation gate. Playback access is checked
+  // by the provider; progress editing keeps its separate server-owned rules.
   const selectable = episodes.filter(ep => ep.available || ep.watched || ep.currentTime > 0);
   const targets = single ? episodes : selectable.filter(ep => selection.has(ep.episodeKey));
   const allSelected = selectable.length > 0 && targets.length === selectable.length;
@@ -328,7 +327,7 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
         {!data.catalogComplete && !single && <p className="wh-hint">Only saved episodes are available. Open this title in Crunchyroll with the extension to load its full catalog.</p>}
         {!single && <div className="wh-season-row"><label><span className="sr-only">Season or specials</span><select value={season ?? ""} onChange={event => { setSeason(event.target.value || null); setEpisodeKey(null); clearSelection(); }}>
           {seasons.map(value => <option value={value.key ?? ""} key={value.key ?? "saved"}>{value.title}</option>)}
-        </select></label><span>{completed} / {available.length} {data.catalogComplete ? "watched" : "saved"}</span></div>}
+        </select></label><span>{available.length > 0 ? `${completed} / ${available.length} ${data.catalogComplete ? "watched" : "saved"}` : `${episodes.filter(watched).length} watched`}</span></div>}
         {editing && <div className={`wh-selection-tools ${single ? "wh-single-tools" : ""}`}>
           {!single && <div className="wh-selection-row">
             <label className="wh-select-season"><input type="checkbox" checked={allSelected} ref={node => { if (node) node.indeterminate = targets.length > 0 && !allSelected; }} disabled={editLocked || !selectable.length} onChange={() => { setSelection(new Set(allSelected ? [] : selectable.map(ep => ep.episodeKey))); selectionAnchor.current = null; }} />{data.catalogComplete ? "Select season" : "Select all saved"}</label>
@@ -344,10 +343,10 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
           </div>
         </div>}
         {!single && <div className={`wh-episodes ${editing ? "wh-episodes-editing" : ""}`} aria-label={editing ? "Select episodes" : "Episodes"} tabIndex={0}>
-          {episodes.map((ep, index) => <button type="button" key={ep.episodeKey} disabled={saving || (editing ? editLocked || !selectable.includes(ep) : !canOpen(ep))}
+          {episodes.map((ep, index) => <button type="button" key={ep.episodeKey} disabled={saving || (editing && (editLocked || !selectable.includes(ep)))}
             className={`wh-episode ${watched(ep) ? "wh-watched" : ""} ${!editing && selected?.episodeKey === ep.episodeKey ? "wh-selected" : ""} ${editing && selection.has(ep.episodeKey) ? "wh-picked" : ""} ${ep.episodeKey in draft ? "wh-modified" : ""}`}
             role={editing ? "checkbox" : undefined} aria-checked={editing ? selection.has(ep.episodeKey) : undefined}
-            aria-label={`${episodeLabel(ep, index)}: ${ep.episodeTitle}${watched(ep) ? ", watched" : hasProgress(ep) ? ", in progress" : !ep.available ? ", unavailable" : ", not watched"}${ep.episodeKey in draft ? ", unsaved change" : ""}`}
+            aria-label={`${episodeLabel(ep, index)}: ${ep.episodeTitle}${watched(ep) ? ", watched" : hasProgress(ep) ? ", in progress" : editing && !ep.available ? ", unavailable" : ", not watched"}${ep.episodeKey in draft ? ", unsaved change" : ""}`}
             aria-pressed={editing ? undefined : selected?.episodeKey === ep.episodeKey} title={ep.episodeTitle} onClick={event => { setEpisodeKey(ep.episodeKey); if (editing) toggleSelection(ep, event.shiftKey); }}>
             <span>{episodeLabel(ep, index)}</span>{editing ? <span className="wh-cell-check" aria-hidden>{selection.has(ep.episodeKey) && <Check size={9} />}</span> : watched(ep) ? <Check size={11} aria-hidden /> : null}
             {!watched(ep) && ep.progress > 0 && !(ep.episodeKey in draft) && <i style={{ width: `${ep.progress * 100}%` }} />}
@@ -358,7 +357,7 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
           <div className="wh-episode-name"><span>{single ? (item.provider === "youtube" ? "Video" : "Film") : episodeLabel(selected, episodes.indexOf(selected))}</span><h4>{single ? (watched(selected) ? "Watched" : progress > 0 ? "In progress" : "Not watched") : selected.episodeTitle}</h4></div>
           <div className="wh-progress" role="progressbar" aria-label="Episode progress" aria-valuenow={Math.round(progress * 100)} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${progress * 100}%` }} /></div>
           <div className="wh-playback"><span>{selected.duration > 0 ? `${clock(currentTime)} / ${clock(selected.duration)}` : watched(selected) ? "Marked as watched" : currentTime > 0 ? `${clock(currentTime)} watched` : "Not started"}</span>
-            {!editing && <button className="wh-primary" disabled={busy || !canOpen(selected)} onClick={() => onNavigate(() => onResume(item.provider, selected.sourceUrl, watched(selected) ? 0 : currentTime))}><Play size={14} fill="currentColor" />{watched(selected) ? "Watch again" : currentTime > 0 ? "Resume" : "Watch"}</button>}
+            {!editing && <button className="wh-primary" disabled={busy} onClick={() => onNavigate(() => onResume(item.provider, selected.sourceUrl, watched(selected) ? 0 : currentTime))}><Play size={14} fill="currentColor" />{watched(selected) ? "Watch again" : currentTime > 0 ? "Resume" : "Watch"}</button>}
           </div>
         </div>}
       </>}
@@ -407,7 +406,7 @@ function HistoryArtwork({ item }: { item: WatchHistoryItem }) {
 function isTitleWatched(item: WatchHistoryItem) { return item.itemKind === "movie" || item.provider === "youtube" ? Boolean(item.latestActivity.completedAt) : item.aggregate.progress === 1; }
 function titleProgress(item: WatchHistoryItem) {
   if (item.itemKind === "movie" || item.provider === "youtube") return item.latestActivity.completedAt ? "Watched" : `${clock(item.latestActivity.currentTime)} watched`;
-  return item.aggregate.availableEpisodes === 0 ? "Not currently available" : item.aggregate.availableEpisodes !== null ? `${item.aggregate.completedEpisodes} / ${item.aggregate.availableEpisodes} episodes` : `${item.completedEpisodeCount} watched · ${item.observedEpisodeCount} saved`;
+  return item.aggregate.availableEpisodes !== null && item.aggregate.availableEpisodes > 0 ? `${item.aggregate.completedEpisodes} / ${item.aggregate.availableEpisodes} episodes` : `${item.completedEpisodeCount} watched · ${item.observedEpisodeCount} saved`;
 }
 function episodeLabel(ep: WatchHistoryEditorEpisode, index: number) { return ep.episodeNumber === null ? String(index + 1).padStart(2, "0") : ep.episodeNumber === 0 ? "E0" : String(ep.episodeNumber).padStart(2, "0"); }
 function clock(seconds: number) { const value = Math.max(0, Math.floor(seconds)); const hours = Math.floor(value / 3600); return `${hours ? `${hours}:` : ""}${hours ? String(Math.floor(value % 3600 / 60)).padStart(2, "0") : Math.floor(value / 60)}:${String(value % 60).padStart(2, "0")}`; }

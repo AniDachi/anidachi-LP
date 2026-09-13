@@ -2,6 +2,26 @@
 
 Date: 2026-05-25
 
+## History Episode Navigation
+
+Date: 2026-09-14
+
+The account library and extension drawer may open any episode with a validated
+provider URL. Catalog `available` is metadata, not authorization to follow that
+link: Crunchyroll decides whether the current viewer can play it. This applies
+to new, started, completed, and upcoming catalog entries. Selecting an episode
+or opening its link does not itself record viewing progress.
+
+Started episodes retain their exact saved watch variant and position; Watch
+again starts at zero. The drawer opens an unwatched entry's canonical catalog
+URL. Episode navigation shows watched/not-watched state instead of declaring
+playback unavailable from catalog dates. A zero availability denominator falls
+back to known or saved counts, without a fabricated total or percentage.
+
+This navigation rule does not change catalog normalization, exact aggregate
+calculation, manual progress-edit eligibility, subscription access, or room
+playback synchronization.
+
 ## Catalog Identity Evidence
 
 Date: 2026-09-05

@@ -397,7 +397,8 @@ it("website renders complete, observed-only, and zero-available title states hon
   zero.aggregate = { completedEpisodes: 0, availableEpisodes: 0, progress: 0 };
   zero.seasons[0]!.aggregate = { completedEpisodes: 0, availableEpisodes: 0, progress: 0 };
   const zeroMarkup = render(zero);
-  assert.match(zeroMarkup, /Not currently available/);
+  assert.match(zeroMarkup, /6 watched · 7 saved/);
+  assert.doesNotMatch(zeroMarkup, /Not currently available/);
   assert.doesNotMatch(zeroMarkup, /0 \/ 0/);
   assert.doesNotMatch(zeroMarkup, /watch-library-overall-track/);
 });
@@ -832,8 +833,12 @@ it("Free opens series and resumes its own saved position without edit or room cr
     assert.equal(server.calls.some(call => call.body), false);
   } finally { testWindow.location.assign = oldAssign; await unmount(view.root); }
 });
-for (const plan of ["allowed", "plan_required"] as const) it(`${plan} resumes recorded progress despite an unavailable catalog hint`, async () => {
-  const editor = editorFixture(); editor.episodes[0].available = false;
+for (const plan of ["allowed", "plan_required"] as const) for (const state of ["new", "started", "watched"] as const) it(`${plan} opens a ${state} episode despite an unavailable catalog hint`, async () => {
+  const editor = editorFixture();
+  const selected = editor.episodes[0]; selected.available = false;
+  selected.watched = state === "watched";
+  selected.currentTime = state === "new" ? 0 : state === "watched" ? selected.duration : selected.currentTime;
+  selected.progress = selected.currentTime / selected.duration;
   const server = installServer({ plan, editor }); const oldAssign = testWindow.location.assign;
   const launched: string[] = []; testWindow.location.assign = url => { launched.push(String(url)); };
   const view = await renderClient(historyFixture(), preferencesFixture, plan);
@@ -841,13 +846,21 @@ for (const plan of ["allowed", "plan_required"] as const) it(`${plan} resumes re
     await openTitle(view.container);
     const cell = episodeButton(view.container, "Episode 1");
     assert.equal(cell.disabled, false);
-    assert.equal(episodeButton(view.container, "Future episode").disabled, true);
-    assert.equal(buttonByText(view.container, "Resume").disabled, false);
-    await click(buttonByText(view.container, "Resume"));
+    assert.equal(episodeButton(view.container, "Future episode").disabled, false);
+    const action = state === "new" ? "Watch" : state === "watched" ? "Watch again" : "Resume";
+    assert.equal(buttonByText(view.container, action).disabled, false);
+    await click(buttonByText(view.container, action));
     await waitFor(() => assert.equal(launched.length, 1));
     const intent = JSON.parse(new URLSearchParams(new URL(launched[0]).hash.slice(1)).get("anidachiResume")!);
     assert.equal(intent.sourceUrl, editor.episodes[0].sourceUrl);
-    assert.equal(intent.currentTime, editor.episodes[0].currentTime);
+    assert.equal(intent.currentTime, state === "watched" ? 0 : selected.currentTime);
+    await click(episodeButton(view.container, "Future episode"));
+    assert.equal(buttonByText(view.container, "Watch").disabled, false);
+    await click(buttonByText(view.container, "Watch"));
+    await waitFor(() => assert.equal(launched.length, 2));
+    const nextIntent = JSON.parse(new URLSearchParams(new URL(launched[1]).hash.slice(1)).get("anidachiResume")!);
+    assert.equal(nextIntent.sourceUrl, editor.episodes[4].sourceUrl);
+    assert.equal(nextIntent.currentTime, 0);
     assert.equal(server.calls.some(call => call.body), false);
   } finally { testWindow.location.assign = oldAssign; await unmount(view.root); }
 });

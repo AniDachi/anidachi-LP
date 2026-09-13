@@ -1250,7 +1250,7 @@ describe("Popup Watch History v3", () => {
     });
   }
 
-  it("shows a complete zero-available catalog as unavailable without a bar or 0 / 0", async () => {
+  it("falls back to saved counts for zero availability without claiming the title cannot open", async () => {
     const history = historyFixture();
     const item = history.items[0]!;
     item.observedEpisodeCount = 7;
@@ -1261,8 +1261,8 @@ describe("Popup Watch History v3", () => {
     item.seasons[0]!.aggregate = { completedEpisodes: 0, availableEpisodes: 0, progress: 0 };
     const view = await renderPanel(clientFixture({ cached: null, request: requestForHistory(history) }));
 
-    await findButton(view.container, "Toggle Frieren history, Not currently available");
-    expect(view.container.textContent).toContain("Not currently available");
+    await waitFor(() => expect(view.container.textContent).toContain("7 observed episodes"));
+    expect(view.container.textContent).not.toContain("Not currently available");
     expect(view.container.textContent).not.toContain("0 / 0");
     expect(view.container.querySelector(".popup-watch-overall-track")).toBeNull();
     await unmount(view.root);
