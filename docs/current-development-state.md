@@ -8,6 +8,14 @@ contain old paths, old domains, or old decisions. When release channels,
 endpoints, branch protection, or store workflow changes, update this document in
 the same PR.
 
+## Room renewal correction, 2026-09-13
+
+Private testing found a runtime-role permission failure causing valid paid rooms
+to close after five minutes. The bounded correction and role-aware regression are
+in [the room renewal record](releases/personal-history-mvp/2026-09-13-room-policy-renewal.md).
+It preserves the operator-only activation flag and requires no new extension ZIP.
+Deployment and staging/production SQL receipts belong to the promotion PR.
+
 ## Private tester handoff, 2026-09-13
 
 The current owner-approved sequence is: finish preparation, deliver a production

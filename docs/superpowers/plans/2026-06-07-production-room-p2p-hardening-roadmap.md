@@ -31,6 +31,12 @@
 
 ## Progress Log
 
+- 2026-09-13 — `codex/room-policy-renewal`: reproduced the production renewal
+  failure under `service_role` (42501), unlike prior administrator-role smoke.
+  Added a bounded policy-lock delegation fix and rollback-only runtime-role
+  regression. See [the correction record](../../releases/personal-history-mvp/2026-09-13-room-policy-renewal.md);
+  deployed acceptance is recorded in its promotion PR.
+
 - 2026-09-08 — `codex/personal-history-mvp`, committed runtime source
   `8e4dd284`: accepted personal-history MVP supersedes the legacy four-person
   target only for explicitly negotiated v2 rooms (4/6/15 participants, four
