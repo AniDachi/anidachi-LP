@@ -1,3 +1,4 @@
+import "../src/zod-csp";
 import { defineContentScript } from "wxt/utils/define-content-script";
 import {
   CRUNCHYROLL_CONTROL_RESULT_SOURCE,

@@ -1,3 +1,4 @@
+import "../src/zod-csp";
 import { flushSync } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { defineContentScript } from "wxt/utils/define-content-script";

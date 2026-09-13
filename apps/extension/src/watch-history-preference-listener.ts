@@ -1,5 +1,6 @@
 import { parseWatchHistoryLease, type WatchHistoryLease } from "./watch-history-access";
 import type { WatchHistoryController } from "./watch-history-controller";
+import { hasHistoryRecordingConsent, historyRecordingChoiceKey } from "./history-recording-choice";
 import { WATCH_HISTORY_STORAGE_KEY, watchHistoryPartitionKey } from "./watch-history-storage";
 
 type StorageChange = { oldValue?: unknown; newValue?: unknown };
@@ -15,27 +16,41 @@ type StorageChangedEventLike = {
 
 export function bindWatchHistoryPreferenceListener(options: {
   ownerUserId: string;
-  controller: Pick<WatchHistoryController, "applyLocalPreferences">;
+  controller: Pick<WatchHistoryController, "applyLocalPreferences"> & Partial<Pick<WatchHistoryController, "refreshAuthority" | "invalidateCaptureAuthority">>;
+  hasRecordingConsent?: (owner: string) => Promise<boolean>;
   onChanged?: StorageChangedEventLike;
 }): () => void {
   const onChanged = options.onChanged ?? chrome.storage.onChanged;
+  const consent = options.hasRecordingConsent ?? hasHistoryRecordingConsent;
+  let revision = 0;
+  let disposed = false;
   const listener: StorageChangeListener = (changes, areaName) => {
     if (areaName !== "local") return;
+    if (changes[historyRecordingChoiceKey(options.ownerUserId)]) {
+      ++revision;
+      options.controller.invalidateCaptureAuthority?.();
+      void options.controller.refreshAuthority?.().catch(() => undefined);
+    }
     const change = changes[WATCH_HISTORY_STORAGE_KEY];
     if (!change) return;
     const previous = localPreferenceAuthority(change.oldValue, options.ownerUserId);
     const next = localPreferenceAuthority(change.newValue, options.ownerUserId);
     if (!next || preferenceSignature(previous) === preferenceSignature(next)) return;
-    void options.controller.applyLocalPreferences({
-      ownerUserId: next.ownerUserId,
-      accountGeneration: next.accountGeneration,
-      preferences: next.preferences,
-      accessLease: next.accessLease,
-      capturePaused: next.capturePaused,
-    }).catch(() => undefined);
+    const request = ++revision;
+    void (async () => {
+      const allowed = await consent(options.ownerUserId).catch(() => false);
+      if (disposed || request !== revision) return;
+      await options.controller.applyLocalPreferences({
+        ownerUserId: next.ownerUserId,
+        accountGeneration: next.accountGeneration,
+        preferences: next.preferences,
+        accessLease: allowed ? next.accessLease : null,
+        capturePaused: next.capturePaused,
+      });
+    })().catch(() => undefined);
   };
   onChanged.addListener(listener);
-  return () => onChanged.removeListener(listener);
+  return () => { disposed = true; ++revision; onChanged.removeListener(listener); };
 }
 
 type LocalPreferenceAuthority = {

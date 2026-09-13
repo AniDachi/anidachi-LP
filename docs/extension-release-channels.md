@@ -90,6 +90,24 @@ the product decision is explicit.
 content-script match sets without depending on order. Missing and extra values
 both fail validation.
 
+The logo's `web_accessible_resources` entry uses the same supported video
+origins in narrow builds; unrelated sites cannot request it. The validator also
+rejects additional resources, extension IDs, or broad logo match patterns.
+The explicit local-broad build retains its separate development-only behavior.
+
+Every extension entrypoint imports `src/zod-csp.ts` before shared protocol
+schemas. It sets Zod's `jitless` option to avoid dynamic compilation and even the
+Function capability probe under MV3 CSP. Validation schemas and Worker/web Zod
+configuration are unchanged; no `unsafe-eval` permission is added.
+
+Automatic personal-history recording now also requires an explicit choice for
+the signed-in account in this browser. A fresh or upgraded installation without
+that choice does not capture, discover catalog metadata, or flush progress.
+Existing saved history, Resume, and rooms remain available. Declining can be
+reversed in Settings; stopping recording preserves saved history and pauses
+pending work. Already dispatched requests can finish. Plus/Pro entitlement and
+the separate YouTube preference still apply. Website manual edits are unchanged.
+
 ## Build Commands
 
 Generate the stable staging unpacked artifact:

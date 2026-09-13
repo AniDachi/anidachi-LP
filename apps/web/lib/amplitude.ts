@@ -1,21 +1,14 @@
 "use client";
 
-import * as amplitude from "@amplitude/unified";
+import { createInstance } from "@amplitude/unified";
 
-import type { UnifiedOptions } from "@amplitude/unified";
-
-/**
- * Aligns with Amplitude Session Replay setup (Browser / CDN snippet):
- * fetchRemoteConfig + autocapture off + replay sampleRate 1.
- * NPM `@amplitude/unified` + `initAll` is equivalent to loader + init + sessionReplay.plugin.
- */
-const UNIFIED_OPTIONS = {
-  analytics: {
-    fetchRemoteConfig: true,
-    autocapture: false,
-  },
-  sessionReplay: { sampleRate: 1 },
-} as const satisfies UnifiedOptions;
+// Initialize analytics only. initAll also installs Session Replay, which must
+// never record the account/history interface or authentication screens.
+const amplitude = createInstance();
+const ANALYTICS_OPTIONS = {
+  fetchRemoteConfig: false,
+  autocapture: false,
+} as const;
 
 let initPromise: Promise<void> | null = null;
 
@@ -24,12 +17,12 @@ function startInit(): void {
   const apiKey = process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY;
   if (!apiKey) return;
   if (initPromise === null) {
-    initPromise = amplitude.initAll(apiKey, UNIFIED_OPTIONS);
+    initPromise = amplitude.init(apiKey, ANALYTICS_OPTIONS).promise;
   }
 }
 
 /**
- * Initialize Amplitude Unified once (analytics + session replay). Safe to call multiple times.
+ * Initialize explicit Amplitude analytics events once, without Session Replay.
  * Only runs in the browser when `NEXT_PUBLIC_AMPLITUDE_API_KEY` is set.
  */
 export function initAmplitudeClient(): void {

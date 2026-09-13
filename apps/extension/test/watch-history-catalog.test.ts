@@ -6,6 +6,7 @@ import catalog from "./fixtures/crunchyroll/catalog-complete-multiseason.json";
 import { createWatchHistoryCatalogCoordinator, createWatchHistoryPageResolver } from "../src/watch-history-catalog";
 import { createWatchHistoryClient } from "../src/watch-history-client";
 import { createWatchHistoryStorage, watchHistoryPartitionKey, type WatchHistoryStorageRoot } from "../src/watch-history-storage";
+import { hasHistoryRecordingConsent } from "../src/history-recording-choice";
 
 const context = { region: "VN", requestedLocale: "fr-FR", audioLocale: "ja-JP", subtitleLocales: ["en-US"], observedAt: "2026-09-05T00:00:00.000Z" };
 const owner = "00000000-0000-4000-8000-000000000001";
@@ -17,6 +18,19 @@ function ack(revision: number) {
 }
 
 describe("catalog background begin/commit ownership", () => {
+  it("does not request provider metadata when the page closes during its consent lookup", async () => {
+    let release!: (allowed: boolean) => void;
+    vi.mocked(hasHistoryRecordingConsent).mockImplementationOnce(() => new Promise((resolve) => { release = resolve; }));
+    const command = vi.fn();
+    const resolver = createWatchHistoryPageResolver({ pageId: "closing-page", command,
+      send: async () => ({ ok: true, data: { accessLease: paidHistoryLease(owner) } }) });
+    const resolving = resolver.resolve({ captureProof: paidHistoryLease(owner), provider: "crunchyroll",
+      identityPending: { watchId: "RAW", requestedLocale: "fr-FR" } } as never, owner, { refreshCatalog: true });
+    await vi.waitFor(() => expect(release).toBeTypeOf("function"));
+    resolver.dispose(); release(true); await resolving;
+    expect(command).not.toHaveBeenCalled();
+  });
+
   it("cannot delete a replacement installed between the successful async ownership check and release cleanup", async () => {
     let paused = false;
     let resolveGuard!: (value: boolean) => void;
@@ -318,3 +332,10 @@ describe("Crunchyroll bounded history traversal", () => {
     expect(calls).toBe(2);
   });
 });
+
+// Existing history scenarios assume this browser's owner has opted in.
+// Consent transitions and fail-closed behavior have separate integration tests.
+vi.mock("../src/history-recording-choice", async (importOriginal) => ({
+  ...await importOriginal<typeof import("../src/history-recording-choice")>(),
+  hasHistoryRecordingConsent: vi.fn(async () => true),
+}));

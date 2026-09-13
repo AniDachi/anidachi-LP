@@ -134,7 +134,7 @@ export default defineConfig({
     web_accessible_resources: [
       {
         resources: ["Anidachi_logo.png"],
-        matches: ["*://*/*"],
+        matches: useBroadHostPermissions ? ["*://*/*"] : STORE_VIDEO_HOST_PERMISSIONS,
       },
     ],
     action: {

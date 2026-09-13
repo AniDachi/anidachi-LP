@@ -140,7 +140,7 @@ export function createWatchHistoryStorage(
     return normalizeStorageRoot(stored);
   }
 
-  async function replaceRoot(candidate: WatchHistoryStorageRoot): Promise<WatchHistoryStorageResult> {
+  async function replaceRoot(candidate: WatchHistoryStorageRoot, beforeWrite?: () => Promise<boolean>): Promise<WatchHistoryStorageResult> {
     if (!isStorageRoot(candidate)) throw new Error("Invalid watch history storage root");
     const storedValue = await item.getValue();
     const hasStoredValue = await hasStoredRoot();
@@ -161,6 +161,7 @@ export function createWatchHistoryStorage(
       return { ok: false, status: "storage-full" };
     }
     try {
+      if (beforeWrite && !await beforeWrite()) return { ok: true };
       await item.setValue(candidate);
       return { ok: true };
     } catch {
@@ -170,12 +171,13 @@ export function createWatchHistoryStorage(
 
   async function updateRoot(
     update: (root: WatchHistoryStorageRoot) => WatchHistoryStorageRoot,
+    beforeWrite?: () => Promise<boolean>,
   ): Promise<WatchHistoryStorageResult> {
     await ensureMigration();
     const operation: Promise<WatchHistoryStorageResult> = rootUpdateQueue.then(async () => {
       const root = normalizeStorageRoot(await item.getValue());
       const candidate = update(root);
-      return candidate === root ? ({ ok: true } as const) : replaceRoot(candidate);
+      return candidate === root ? ({ ok: true } as const) : replaceRoot(candidate, beforeWrite);
     });
     rootUpdateQueue = operation.then(
       () => undefined,

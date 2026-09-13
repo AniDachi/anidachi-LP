@@ -1,3 +1,4 @@
+import "../../src/zod-csp";
 import { createRoot } from "react-dom/client";
 import { PopupApp } from "../../src/popup-app";
 

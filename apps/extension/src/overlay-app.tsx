@@ -1,4 +1,5 @@
 import { readCurrentResourceDisplay, type CurrentResourceDisplay } from "./current-resource-display";
+import { hasHistoryRecordingConsent } from "./history-recording-choice";
 import { takePersonalHistoryResume, applyPersonalHistoryResume } from "./watch-history-resume";
 import type {
 	ClientEvent,
@@ -2580,7 +2581,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				});
 				if (!response?.ok) return null;
 				const loaded = parseWatchHistoryBootstrapData(response.data);
-				return loaded?.ownerUserId === expectedOwnerUserId ? loaded : null;
+				return loaded?.ownerUserId === expectedOwnerUserId
+					? { ...loaded, accessLease: await hasHistoryRecordingConsent(expectedOwnerUserId) ? loaded.accessLease : null }
+					: null;
 			},
 			loadPreferences: async () => {
 				const response = await requestWatchHistory({
@@ -2590,7 +2593,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				});
 				if (!response?.ok) return null;
 				const loaded = parseWatchHistoryBootstrapData(response.data);
-				return loaded?.ownerUserId === expectedOwnerUserId ? loaded : null;
+				return loaded?.ownerUserId === expectedOwnerUserId
+					? { ...loaded, accessLease: await hasHistoryRecordingConsent(expectedOwnerUserId) ? loaded.accessLease : null }
+					: null;
 			},
 			recoverCapture: async () => {
 				const recovered = await requestWatchHistory({
@@ -2605,7 +2610,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				});
 				if (!bootstrapped.ok) return null;
 				const loaded = parseWatchHistoryBootstrapData(bootstrapped.data);
-				return loaded?.ownerUserId === expectedOwnerUserId ? loaded : null;
+				return loaded?.ownerUserId === expectedOwnerUserId
+					? { ...loaded, accessLease: await hasHistoryRecordingConsent(expectedOwnerUserId) ? loaded.accessLease : null }
+					: null;
 			},
 			observeLocally: async (
 				event,

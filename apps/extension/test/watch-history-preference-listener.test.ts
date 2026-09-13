@@ -1,3 +1,4 @@
+import { historyRecordingChoiceKey } from "../src/history-recording-choice";
 import { paidHistoryLease } from "./watch-history-personal-fixtures";
 import { describe, expect, it, vi } from "vitest";
 import { createWatchHistoryClient } from "../src/watch-history-client";
@@ -14,6 +15,24 @@ const OWNER_ID = "00000000-0000-4000-8000-000000000001";
 const OTHER_OWNER_ID = "00000000-0000-4000-8000-000000000002";
 
 describe("watch history preference listener", () => {
+  it("invalidates immediately and discards an older delayed preference lookup after revocation", async () => {
+    let listener!: (changes: Record<string, { oldValue?: unknown; newValue?: unknown }>, area: string) => void;
+    let resolveConsent!: (value: boolean) => void;
+    const controller = { applyLocalPreferences: vi.fn(async () => undefined), invalidateCaptureAuthority: vi.fn(), refreshAuthority: vi.fn(async () => undefined) };
+    const dispose = bindWatchHistoryPreferenceListener({ ownerUserId: OWNER_ID, controller,
+      hasRecordingConsent: () => new Promise((resolve) => { resolveConsent = resolve; }),
+      onChanged: { addListener: (next) => { listener = next; }, removeListener: () => undefined },
+    });
+    listener({ [WATCH_HISTORY_STORAGE_KEY]: { oldValue: preferenceRoot(OWNER_ID, false, 0), newValue: preferenceRoot(OWNER_ID, true, 1) } }, "local");
+    listener({ [historyRecordingChoiceKey(OTHER_OWNER_ID)]: { newValue: { enabled: false } } }, "local");
+    expect(controller.invalidateCaptureAuthority).not.toHaveBeenCalled();
+    listener({ [historyRecordingChoiceKey(OWNER_ID)]: { newValue: { enabled: false } } }, "local");
+    expect(controller.invalidateCaptureAuthority).toHaveBeenCalledTimes(1);
+    expect(controller.refreshAuthority).toHaveBeenCalledTimes(1);
+    resolveConsent(true); await Promise.resolve(); await Promise.resolve();
+    expect(controller.applyLocalPreferences).not.toHaveBeenCalled(); dispose();
+  });
+
   it("refreshes and observes immediately only when the current owner's explicit choice changes", async () => {
     type Listener = (changes: Record<string, { oldValue?: unknown; newValue?: unknown }>, area: string) => void;
     let listener: Listener = () => undefined;
@@ -236,3 +255,10 @@ function preferenceRoot(
     },
   };
 }
+
+// Existing history scenarios assume this browser's owner has opted in.
+// Consent transitions and fail-closed behavior have separate integration tests.
+vi.mock("../src/history-recording-choice", async (importOriginal) => ({
+  ...await importOriginal<typeof import("../src/history-recording-choice")>(),
+  hasHistoryRecordingConsent: async () => true,
+}));
