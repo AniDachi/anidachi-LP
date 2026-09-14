@@ -571,7 +571,7 @@ export async function createWebsiteRoomFromApi(
   });
   const response = await fetch(new URL("/api/rooms", WEB_HTTP_BASE), {
     method: "POST",
-    headers: { ...createWebsiteRoomHeaders(accessToken), "X-Anidachi-Media-Protocol": "2" },
+    headers: { ...createWebsiteRoomHeaders(accessToken), "X-Anidachi-Media-Protocol": "3" },
     body: JSON.stringify({
       ...(normalizedInput ?? {}),
       participantSessionId: admission.participantSessionId,
@@ -660,7 +660,7 @@ export async function connectWebsiteRoomFromApi(
       new URL(`/api/rooms/${encodeURIComponent(roomId)}/connect`, WEB_HTTP_BASE),
       {
         method: "POST",
-        headers: { ...createWebsiteRoomHeaders(accessToken), "X-Anidachi-Media-Protocol": "2" },
+        headers: { ...createWebsiteRoomHeaders(accessToken), "X-Anidachi-Media-Protocol": "3" },
         body: JSON.stringify(admission),
         signal: abortController.signal,
       },
@@ -1441,6 +1441,17 @@ export async function cleanupRoomAdmissionHandoffForTab(
 
 export class RoomClient {
   media: RoomMediaSession | null = null;
+  private mediaParticipants = new Map<string, Participant>();
+
+  setMediaSeat(targetUserId: string, enabled: boolean): RoomSendDisposition {
+    const sessionId = this.mediaParticipants.get(targetUserId)?.participantSessionId;
+    if (!sessionId) return "dropped";
+    const command = this.media?.setMediaSeat(targetUserId, sessionId, enabled);
+    if (!command) return "dropped";
+    const disposition = this.send(command);
+    if (disposition === "dropped") this.media?.interruptSeatCommands();
+    return disposition;
+  }
 
   setMediaIntent(media: RoomMediaKind, enabled: boolean): RoomSendDisposition {
     const intent = this.media?.intent(media, enabled);
@@ -1495,7 +1506,10 @@ export class RoomClient {
       this.currentHistoryBoundary = null;
     }
     this.currentHistoryConnection = historyConnection;
-    if (!sameHistoryConnection) this.media = new RoomMediaSession(options.roomId, options.participantSessionId);
+    if (!sameHistoryConnection) {
+      this.media = new RoomMediaSession(options.roomId, options.participantSessionId);
+      this.mediaParticipants.clear();
+    }
     this.media?.beginTransport();
     const senderConnectionId = createRoomConnectionId();
     this.currentSenderConnectionId = senderConnectionId;
@@ -1503,6 +1517,7 @@ export class RoomClient {
     let lastStatus: RoomConnectionStatus = "idle";
     const publishStatus = (status: RoomConnectionStatus): void => {
       if (lastStatus === status) return;
+      if (status === "closed" || status === "error") this.media?.interruptSeatCommands();
       lastStatus = status;
       options.onStatus(status);
     };
@@ -1667,9 +1682,18 @@ export class RoomClient {
         }
         logDebug("room.recv", event.type, roomEventDebugSnapshot(event));
         const mediaAccepted = this.media?.consume(event);
-        if (mediaAccepted && event.type === "ROOM_MEDIA_SNAPSHOT") {
+        if (mediaAccepted && event.type === "ROOM_SNAPSHOT") {
+          this.mediaParticipants = new Map(event.participants.map(p => [p.id, p]));
+        } else if (event.type === "PARTICIPANT_JOINED") {
+          this.mediaParticipants.set(event.participant.id, event.participant);
+        } else if (event.type === "PARTICIPANT_LEFT") {
+          this.mediaParticipants.delete(event.participant.id);
+        }
+        if (event.type === "ROOM_MEDIA_SNAPSHOT" && this.media?.snapshot?.roomId === event.roomId &&
+          this.media.snapshot.roomGeneration === event.roomGeneration && this.media.snapshot.snapshotSequence === event.snapshotSequence) {
           for (const release of this.media?.releaseRestoredGrants() ?? []) this.send(release);
         }
+        if (!mediaAccepted && ["ROOM_MEDIA_SNAPSHOT", "MEDIA_INTENT_ACK", "MEDIA_INTENT_ERROR", "MEDIA_SEAT_RESULT"].includes(event.type)) return;
         this.consumeHistoryAuthorityEvent(event, options);
         options.onEvent(event);
         if (
@@ -1800,6 +1824,7 @@ export class RoomClient {
   }
 
   private closeSocket(reason: string, publishClosed: boolean): void {
+    this.media?.interruptSeatCommands();
     this.stopKeepalive();
     this.cancelCurrentAdmissionHandoffAck?.();
     const ws = this.ws;

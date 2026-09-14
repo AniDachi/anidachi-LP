@@ -23,7 +23,7 @@ import type { ParticipantAudioPreference } from "./voice-audio-preferences";
 export type { GhostVideo, MicrophoneStatus } from "./media-types";
 
 export interface GhostCamSession {
-  reconcileMediaAuthority: (camera: boolean, microphone: boolean) => void;
+  reconcileMediaAuthority: (camera: boolean, microphone: boolean, latestSnapshot?: RoomMediaSnapshot) => void;
   stop: () => void;
   activeSpeakerIds: string[];
   getDiagnostics: () => Promise<P2PMediaDiagnostics | null>;
@@ -178,12 +178,12 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
           remoteVoiceParticipantIdsRef.current.delete(participantId);
         }
       }
-      controllerRef.current?.setCaptureAuthority(mediaAuthorityRef.current.cameraAuthorized ?? true, mediaAuthorityRef.current.microphoneAuthorized ?? true, mediaAuthorityRef.current.captureIntents);
       controllerRef.current?.updateParticipants(
         getMediaParticipants(activeParticipant),
         mediaSeatParticipantIds,
         mediaAuthorityRef.current.mediaSnapshot,
       );
+      controllerRef.current?.setCaptureAuthority(mediaAuthorityRef.current.cameraAuthorized ?? true, mediaAuthorityRef.current.microphoneAuthorized ?? true, mediaAuthorityRef.current.captureIntents);
     },
     [getMediaParticipants, getMediaSeatParticipantIds],
   );
@@ -648,7 +648,20 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
     [],
   );
 
-  const reconcileMediaAuthority = useCallback((camera: boolean, microphone: boolean) => { controllerRef.current?.setCaptureAuthority(camera, microphone, mediaAuthorityRef.current.captureIntents); }, []);
+  const reconcileMediaAuthority = useCallback((camera: boolean, microphone: boolean, latestSnapshot?: RoomMediaSnapshot) => {
+    const controller = controllerRef.current;
+    if (!controller) return;
+    if (latestSnapshot) {
+      // The server event precedes the React render carrying this snapshot.
+      // Publish its peer authorization before capture revocation emits off signals.
+      controller.updateParticipants(
+        participantsRef.current.length ? participantsRef.current : participantRef.current ? [participantRef.current] : [],
+        undefined,
+        latestSnapshot,
+      );
+    }
+    controller.setCaptureAuthority(camera, microphone, mediaAuthorityRef.current.captureIntents);
+  }, []);
   const stop = useCallback(() => { controllerRef.current?.disconnect(); controllerRef.current = null; microphonePublishingRef.current = false; }, []);
 
   return {

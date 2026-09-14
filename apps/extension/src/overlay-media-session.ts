@@ -1,7 +1,7 @@
 import type { RoomConnectionStatus } from "./room-client";
 
 interface P2PMediaSessionInput {
-  mediaProtocolVersion?: 1 | 2;
+  mediaProtocolVersion?: 1 | 2 | 3;
   localHasMediaSeat: boolean;
   participantId: string | null;
   roomId: string | null;
@@ -65,7 +65,7 @@ export function getP2PMediaSessionState({
 }: P2PMediaSessionInput): P2PMediaSessionState {
   const roomSessionActive = status !== "idle";
   const p2pSessionActive = Boolean(
-    roomSessionActive && roomId && participantId && (mediaProtocolVersion === 2 ? roomSnapshotReady : roomMediaSeatLimit > 0 && localHasMediaSeat),
+    roomSessionActive && roomId && participantId && (mediaProtocolVersion !== 1 ? roomSnapshotReady : roomMediaSeatLimit > 0 && localHasMediaSeat),
   );
   const p2pReady = Boolean(p2pSessionActive && status === "connected" && roomSnapshotReady);
 

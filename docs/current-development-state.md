@@ -1,12 +1,31 @@
 # Current Development State
 
-Last updated: 2026-09-13.
+Last updated: 2026-09-14.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
 contain old paths, old domains, or old decisions. When release channels,
 endpoints, branch protection, or store workflow changes, update this document in
 the same PR.
+
+## Host-managed media seats, 2026-09-14
+
+The owner-approved [media-seat plan](superpowers/plans/2026-09-14-host-managed-media-seats.md)
+is being implemented on `codex/room-media-seats-v3`. New media-v3 rooms use
+4/6/8 host-managed seats for Free/Plus/Pro, within the existing 4/6/15-person
+and four-camera limits. A seat permits microphone use and requesting a camera
+slot; granting it never activates a device. Revocation stops both publications
+while incoming media continues. Existing v2 rooms keep their original contract.
+
+Protocol, Web/SQL, Worker and extension changes have scoped reviews and local
+regression evidence. Full local SQL verification passed 1087 assertions;
+the final extension suite passed 1967 tests. Real-browser v3 scenarios passed
+for all three plans, and the staging artifact was built and validated.
+Whole-branch review and the scoped persistence-error correction are approved.
+Ordered staging delivery is being prepared;
+this entry does not claim a production release or authorize a new public ZIP.
+See the [delivery and verification record](releases/room-media-seats/2026-09-14-delivery.md)
+for exact evidence, rollout ordering and remaining acceptance.
 
 ## Room renewal correction, 2026-09-13
 

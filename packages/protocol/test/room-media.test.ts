@@ -1,11 +1,11 @@
 import { expect, it } from "vitest";
 import {
 	MediaIntentSchema,
-	MediaIntentAckSchema,
-	MediaIntentErrorSchema,
-	RoomMediaSnapshotSchema,
-	RoomMediaCapabilitiesSchema,
-	RoomMediaCapabilityLeaseSchema,
+	MediaV2IntentAckSchema,
+	MediaV2IntentErrorSchema,
+	RoomMediaV2SnapshotSchema,
+	RoomMediaV2CapabilitiesSchema,
+	RoomMediaV2CapabilityLeaseSchema,
 	HostMediaRevokeSchema,
 	isRoomMediaPairAllowed,
 } from "../src/room-media";
@@ -68,10 +68,12 @@ it("requires generation/session/sequence and strict independent intent grants", 
 		snapshotSequence: 1,
 		state: { ...state, microphoneGranted: true, microphoneIntentSequence: 1 },
 	};
-	expect(MediaIntentAckSchema.safeParse(ack).success).toBe(true);
-	expect(MediaIntentAckSchema.safeParse({ ...ack, state }).success).toBe(false);
+	expect(MediaV2IntentAckSchema.safeParse(ack).success).toBe(true);
+	expect(MediaV2IntentAckSchema.safeParse({ ...ack, state }).success).toBe(
+		false,
+	);
 	expect(
-		MediaIntentErrorSchema.safeParse({
+		MediaV2IntentErrorSchema.safeParse({
 			type: "MEDIA_INTENT_ERROR",
 			...scope,
 			media: "camera",
@@ -84,7 +86,7 @@ it("requires generation/session/sequence and strict independent intent grants", 
 	).toBe(true);
 });
 it("bounds capability leases and disallows invented cap matrices", () => {
-	expect(RoomMediaCapabilitiesSchema.safeParse(capabilities).success).toBe(
+	expect(RoomMediaV2CapabilitiesSchema.safeParse(capabilities).success).toBe(
 		true,
 	);
 	for (const patch of [
@@ -94,7 +96,7 @@ it("bounds capability leases and disallows invented cap matrices", () => {
 		{ capabilityRevision: 0 },
 	])
 		expect(
-			RoomMediaCapabilitiesSchema.safeParse({ ...capabilities, ...patch })
+			RoomMediaV2CapabilitiesSchema.safeParse({ ...capabilities, ...patch })
 				.success,
 		).toBe(false);
 	const lease = {
@@ -104,15 +106,15 @@ it("bounds capability leases and disallows invented cap matrices", () => {
 		paidUntil: null,
 		capabilities,
 	};
-	expect(RoomMediaCapabilityLeaseSchema.safeParse(lease).success).toBe(true);
+	expect(RoomMediaV2CapabilityLeaseSchema.safeParse(lease).success).toBe(true);
 	expect(
-		RoomMediaCapabilityLeaseSchema.safeParse({
+		RoomMediaV2CapabilityLeaseSchema.safeParse({
 			...lease,
 			paidUntil: "2026-09-08T12:29:59Z",
 		}).success,
 	).toBe(false);
 	expect(
-		RoomMediaCapabilityLeaseSchema.safeParse({
+		RoomMediaV2CapabilityLeaseSchema.safeParse({
 			...lease,
 			issuedAt: "2026-09-08T11:59:59Z",
 		}).success,
@@ -129,15 +131,15 @@ it("rejects duplicate sessions, excess grants and stale generation pairing", () 
 		participants: [{ participantSessionId: "s1", ...state }],
 		closingAt: null,
 	};
-	expect(RoomMediaSnapshotSchema.safeParse(snapshot).success).toBe(true);
+	expect(RoomMediaV2SnapshotSchema.safeParse(snapshot).success).toBe(true);
 	expect(
-		RoomMediaSnapshotSchema.safeParse({
+		RoomMediaV2SnapshotSchema.safeParse({
 			...snapshot,
 			participants: [...snapshot.participants, ...snapshot.participants],
 		}).success,
 	).toBe(false);
 	expect(
-		RoomMediaSnapshotSchema.safeParse({
+		RoomMediaV2SnapshotSchema.safeParse({
 			...snapshot,
 			participants: Array.from({ length: 5 }, (_, i) => ({
 				participantSessionId: `s${i}`,
