@@ -387,6 +387,7 @@ export const RoomMediaSnapshotSchema = z
 	});
 export const MediaSeatResultCodeSchema = z.enum([
 	"OK",
+	"MEDIA_UNAVAILABLE",
 	"MEDIA_FORBIDDEN",
 	"MEDIA_LIMIT_REACHED",
 	"MEDIA_STALE_SESSION",

@@ -1854,6 +1854,20 @@ describe("privileged overlay wiring", () => {
       if (camera?.type !== "SET_MEDIA_INTENT") throw new Error("Missing own camera intent");
       await act(async () => {media = {...media, snapshotSequence: 7, participants: [{...media.participants[0], cameraGranted: true, cameraIntentSequence: camera.intentSequence}, ...remoteCameras]}; client.media!.consume(media); options.onEvent(media);});
       expect((button(view.container, "Turn camera off") as HTMLButtonElement).disabled).toBe(false);
+      const seatCommand = client.media!.setMediaSeat("camera-user-1", "camera-1", false)!;
+      expect(seatCommand).not.toBeNull();
+      const ownCameraIntent = client.media!.captureIntent("camera");
+      expect(ownCameraIntent).toBeDefined();
+      await act(async () => {
+        const failure = {type: "MEDIA_SEAT_RESULT" as const, requestId: seatCommand.requestId,
+          targetParticipantSessionId: seatCommand.targetParticipantSessionId, code: "MEDIA_UNAVAILABLE" as const, snapshot: media};
+        client.media!.consume(failure);
+        options.onEvent(failure);
+      });
+      await flushMountedWork();
+      expect(client.media!.seatControls.get("camera-user-1")).toMatchObject({pending: false, error: expect.any(String)});
+      expect(client.media!.captureIntent("camera")).toEqual(ownCameraIntent);
+      expect((button(view.container, "Turn camera off") as HTMLButtonElement).disabled).toBe(false);
       await click(button(view.container, "Turn camera off"));
       // Until the server confirms release, all four reservations remain occupied.
       const unavailable = button(view.container, "Camera unavailable") as HTMLButtonElement;

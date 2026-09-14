@@ -1666,6 +1666,76 @@ describe("negotiated media transport", () => {
   expect(client.media!.seatControls.get("guest")).toMatchObject({pending:false,error:expect.any(String)});
   client.close();
  });
+ it("settles a rolled-back seat failure through the socket without losing own capture or a newer request", () => {
+  installControlledWebSocket();
+  const client = new RoomClient();
+  const onEvent = vi.fn();
+  client.connect({roomId:"room",roomToken:"token",participant:roomParticipant,participantSessionId:"session",videoFingerprint:"video",onEvent,onStatus:vi.fn()});
+  const ws = ControlledWebSocket.instances.at(-1)!;
+  ws.open();
+  const guest = {...roomParticipant,id:"guest",role:"viewer",participantSessionId:"guest-session"};
+  ws.message({type:"ROOM_SNAPSHOT",roomId:"room",roomGeneration:1,sourceGeneration:1,serverSeq:1,participants:[{...roomParticipant,participantSessionId:"session"},guest]});
+  const state = {participantSessionId:"session",mediaSeatGranted:true,seatRevision:0,cameraGranted:false,microphoneGranted:false,cameraIntentSequence:0,microphoneIntentSequence:0,cameraRevocationEpoch:0,microphoneRevocationEpoch:0};
+  const snapshot = {type:"ROOM_MEDIA_SNAPSHOT",roomId:"room",roomGeneration:1,snapshotSequence:1,closingAt:null,
+    capabilities:{mediaProtocolVersion:3,hostPlanCode:"free",maxParticipants:4,maxMediaSeats:4,maxCameras:4,capabilityRevision:1,capabilitiesValidUntil:"2026-09-15T12:30:00Z"},
+    participants:[state,{...state,participantSessionId:"guest-session",mediaSeatGranted:false,seatRevision:7}]};
+  ws.message(snapshot);
+  for (const media of ["camera", "microphone"] as const) {
+    expect(client.setMediaIntent(media, true)).toBe("sent");
+    const intent = JSON.parse(ws.sent.at(-1)!);
+    state[`${media}Granted`] = true;
+    state[`${media}IntentSequence`] = intent.intentSequence;
+  }
+  const restored = {...snapshot,snapshotSequence:3};
+  ws.message(restored);
+  const camera = client.media!.captureIntent("camera");
+  const microphone = client.media!.captureIntent("microphone");
+  expect(camera).toBeDefined();
+  expect(microphone).toBeDefined();
+  expect(client.setMediaSeat("guest",true)).toBe("sent");
+  const command = JSON.parse(ws.sent.at(-1)!);
+  const failure = {type:"MEDIA_SEAT_RESULT",requestId:command.requestId,targetParticipantSessionId:"guest-session",code:"MEDIA_UNAVAILABLE",snapshot:restored};
+  // Neither wrong target/session, room nor generation may settle this row.
+  for (const invalid of [
+    {...failure,requestId:"unrelated"},
+    {...failure,targetParticipantSessionId:"old-session"},
+    {...failure,snapshot:{...restored,roomId:"other"}},
+    {...failure,snapshot:{...restored,roomGeneration:0}},
+  ]) {
+    ws.message(invalid);
+    expect(client.media!.seatControls.get("guest")).toEqual({pending:true});
+  }
+  onEvent.mockClear();
+  ws.message(failure);
+  expect(client.media!.seatControls.get("guest")).toMatchObject({pending:false,error:expect.any(String)});
+  expect(onEvent).toHaveBeenCalledExactlyOnceWith(failure);
+  expect(client.media!.captureIntent("camera")).toEqual(camera);
+  expect(client.media!.captureIntent("microphone")).toEqual(microphone);
+  expect(client.media!.snapshot!.participants[1]).toMatchObject({mediaSeatGranted:false,seatRevision:7});
+  expect(ws.readyState).toBe(ControlledWebSocket.OPEN);
+  expect(client.setMediaSeat("guest",true)).toBe("sent");
+  const retry = JSON.parse(ws.sent.at(-1)!);
+  expect(retry.requestId).not.toBe(command.requestId);
+  // A newer snapshot may arrive before the old failure. Never regress authority
+  // or clear the retry when the failed request is delivered again.
+  const newer = {...restored,snapshotSequence:4,participants:[state,{...snapshot.participants[1],seatRevision:8}]};
+  ws.message(newer);
+  ws.message(failure);
+  expect(client.media!.snapshot!.snapshotSequence).toBe(4);
+  expect(client.media!.seatControls.get("guest")).toEqual({pending:true});
+  // A correlated failure can settle even when its snapshot is now stale.
+  ws.message({...failure,requestId:retry.requestId});
+  expect(client.media!.seatControls.get("guest")).toMatchObject({pending:false,error:expect.any(String)});
+  expect(client.media!.snapshot!.snapshotSequence).toBe(4);
+  expect(client.setMediaSeat("guest",true)).toBe("sent");
+  const finalRetry = JSON.parse(ws.sent.at(-1)!);
+  expect(finalRetry.expectedSeatRevision).toBe(8);
+  ws.message({...failure,requestId:finalRetry.requestId,code:"OK",snapshot:{...newer,snapshotSequence:5,participants:[state,{...newer.participants[1],mediaSeatGranted:true,seatRevision:9}]}});
+  expect(client.media!.seatControls.get("guest")).toEqual({pending:false});
+  expect(client.media!.captureIntent("camera")).toEqual(camera);
+  expect(client.media!.captureIntent("microphone")).toEqual(microphone);
+  client.close();
+ });
  it("uses actual socket ACK fencing and retains only same-session intent across reconnect", () => {
   installControlledWebSocket(); const client = new RoomClient();
   const options = {roomId:"room",roomToken:"token",participant:roomParticipant,participantSessionId:"session",videoFingerprint:"video",onEvent:vi.fn(),onStatus:vi.fn()};

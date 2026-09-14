@@ -276,6 +276,7 @@ it("correlates stale revision denials and fences late result snapshots", () => {
 	).toBe(true);
 	for (const code of [
 		"OK",
+		"MEDIA_UNAVAILABLE",
 		"MEDIA_FORBIDDEN",
 		"MEDIA_LIMIT_REACHED",
 		"MEDIA_STALE_SESSION",
@@ -283,7 +284,7 @@ it("correlates stale revision denials and fences late result snapshots", () => {
 		"MEDIA_STALE_SEAT_REVISION",
 		"MEDIA_CAPABILITY_EXPIRED",
 	])
-		expect(MediaSeatResultSchema.safeParse({ ...result, code }).success).toBe(
+		expect(ServerEventSchema.safeParse({ ...result, code }).success).toBe(
 			true,
 		);
 });

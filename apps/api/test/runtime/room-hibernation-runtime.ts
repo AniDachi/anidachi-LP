@@ -3414,7 +3414,7 @@ it.each([
 	"before-write",
 	"after-write",
  "sync",
-])("v3 rolls back a failed durable seat write (%s) and emits no success", async (phase) => {
+])("v3 settles a failed durable seat write (%s) after rollback and permits retry", async (phase) => {
 	const f = await fixture("pro", 3);
 	const host = await f.join(0);
 	await host.waitFor((e) => e.type === "ROOM_MEDIA_SNAPSHOT", "joined");
@@ -3446,13 +3446,17 @@ it.each([
 		enabled: false,
 		requestId: "failed-revoke",
 	});
-	await host.waitFor(
-		(e) => e.type === "ERROR" && e.code === "MEDIA_UNAVAILABLE",
-		"storage error",
+	const failure = await host.waitFor(
+		(e) => e.type === "MEDIA_SEAT_RESULT" && e.requestId === "failed-revoke",
+		"correlated storage failure",
 	);
+	expect(failure).toMatchObject({code: "MEDIA_UNAVAILABLE", targetParticipantSessionId: "v2-session-0",
+		snapshot: {roomId: f.roomId, roomGeneration: 1, participants: [expect.objectContaining({
+			participantSessionId: "v2-session-0", mediaSeatGranted: true, seatRevision: 0,
+		})]}});
 	expect(
 		host.hasEvent(
-			(e) => e.type === "MEDIA_SEAT_RESULT" && e.requestId === "failed-revoke",
+			(e) => e.type === "MEDIA_SEAT_RESULT" && e.requestId === "failed-revoke" && e.code === "OK",
 		),
 	).toBe(false);
 	await evictDurableObject(f.stub, { webSockets: "hibernate" });
@@ -3467,6 +3471,40 @@ it.each([
 		media: { mediaSeatGranted: true, seatRevision: 0 },
 		denials: [],
 	});
+	expect(host.hasEvent((e) => e.type === "ERROR" && e.code === "MEDIA_UNAVAILABLE")).toBe(false);
+	host.send({type: "SET_MEDIA_SEAT", roomId: f.roomId, roomGeneration: 1,
+		targetUserId: hostId, targetParticipantSessionId: "v2-session-0", expectedSeatRevision: 0,
+		enabled: false, requestId: "retry-revoke"});
+	expect(await host.waitFor((e) => e.type === "MEDIA_SEAT_RESULT" && e.requestId === "retry-revoke", "retry on same socket"))
+		.toMatchObject({code: "OK", snapshot: {participants: [expect.objectContaining({mediaSeatGranted: false, seatRevision: 1})]}});
+});
+
+it("v3 interrupts a seat command when durable rollback cannot be established", async () => {
+	const f = await fixture("pro", 3);
+	const host = await f.join(0);
+	await host.waitFor((e) => e.type === "ROOM_MEDIA_SNAPSHOT", "joined");
+	await runInDurableObject(f.stub, async (instance) => {
+		const i = instance as any;
+		const persist = i.persistRoomState.bind(i);
+		let failedMutation = false;
+		let failedRollback = false;
+		i.persistRoomState = () => {
+			if (!failedMutation && i.room.mediaFor(hostId)?.mediaSeatGranted === false) {
+				failedMutation = true;
+				throw new Error("injected mutation failure");
+			}
+			if (failedMutation && !failedRollback) {
+				failedRollback = true;
+				throw new Error("injected rollback failure");
+			}
+			persist();
+		};
+	});
+	host.send({type: "SET_MEDIA_SEAT", roomId: f.roomId, roomGeneration: 1,
+		targetUserId: hostId, targetParticipantSessionId: "v2-session-0", expectedSeatRevision: 0,
+		enabled: false, requestId: "unsafe-rollback"});
+	await host.waitForClose(1011, "unconfirmed rollback interrupts the transport");
+	expect(host.hasEvent((e) => e.type === "MEDIA_SEAT_RESULT" && e.requestId === "unsafe-rollback")).toBe(false);
 });
 
 it.each([

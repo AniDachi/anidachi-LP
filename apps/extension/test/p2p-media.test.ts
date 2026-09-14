@@ -3899,7 +3899,7 @@ describe("versioned receive-only topology", () => {
     h.controller.disconnect();
   });
 
-  it.each(["satisfied", "unsatisfied", "failed"] as const)("settles a crossed remote renegotiation from the answer (%s)", async (outcome) => {
+  it.each(["satisfied", "unsatisfied", "recvonly", "failed"] as const)("settles a crossed remote renegotiation from the answer (%s)", async (outcome) => {
     const harness = createP2PControllerHarness(roster[0]);
     harness.controller.setCaptureAuthority(false, false);
     harness.controller.updateParticipants([roster[0], roster[14]], undefined, mediaV3);
@@ -3907,7 +3907,12 @@ describe("versioned receive-only topology", () => {
     const peer = FakeRtcPeerConnection.instances[0]!;
     await harness.controller.handleSignal("p14", { kind: "renegotiate" });
     for (const transceiver of peer.getTransceivers()) {
-      transceiver.currentDirection = outcome === "unsatisfied" ? null : transceiver.direction;
+      if (outcome === "recvonly") {
+        transceiver.direction = "sendrecv";
+        transceiver.currentDirection = "recvonly";
+      } else {
+        transceiver.currentDirection = outcome === "unsatisfied" ? null : transceiver.direction;
+      }
     }
     if (outcome === "failed") peer.iceConnectionState = "failed";
     await harness.controller.handleSignal("p14", {

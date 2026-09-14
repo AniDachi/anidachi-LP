@@ -837,14 +837,16 @@ export class RoomDurableObject {
   private async restoreMediaPreimage(
     socket: WebSocket,
     before: RoomStateSnapshot,
-  ): Promise<void> {
+  ): Promise<boolean> {
     this.room = new RoomState(this.room.roomId, undefined, before);
     // A failed write/sync must not resurrect a rejected mutation on wake.
     try {
       this.persistRoomState();
       await this.state.storage.sync();
+      return true;
     } catch {
       socket.close(1011, "Media persistence unavailable");
+      return false;
     }
   }
 
@@ -1894,11 +1896,15 @@ export class RoomDurableObject {
 					});
 					this.broadcast(this.currentRoomSnapshot());
 				} catch {
-					await this.restoreMediaPreimage(socket, before);
+					if (!(await this.restoreMediaPreimage(socket, before))) return;
+					// Settle only this seat command after the preimage is durable. A
+					// generic media ERROR would also disable the host's own camera.
 					this.send(socket, {
-						type: "ERROR",
+						type: "MEDIA_SEAT_RESULT",
+						requestId: event.requestId,
+						targetParticipantSessionId: event.targetParticipantSessionId,
 						code: "MEDIA_UNAVAILABLE",
-						message: "Media seat was not committed",
+						snapshot: RoomMediaV3SnapshotSchema.parse(this.room.mediaSnapshot),
 					});
 				}
 			});
