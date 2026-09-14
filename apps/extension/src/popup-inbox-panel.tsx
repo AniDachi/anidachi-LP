@@ -60,6 +60,7 @@ export function PopupInboxPanel({
 		Boolean(
 			model!.friendRequests.length +
 				model!.activeRoomInvites.length +
+				model!.returnableRoomInvites.length +
 				model!.missedRoomInvites.length,
 		);
 	const stale = hasCache && (refreshing || state.status === "error");
@@ -193,6 +194,19 @@ export function PopupInboxPanel({
 									}
 									onJoin={() => onAcceptInvite(invite.inviteId)}
 									onDecline={() => onDeclineInvite(invite.inviteId)}
+								/>
+							))}
+						</InboxSection>
+					) : null}
+					{model.returnableRoomInvites.length ? (
+						<InboxSection label="Return" count={model.returnableRoomInvites.length}>
+							{model.returnableRoomInvites.map((invite) => (
+								<RoomInviteRow
+									key={invite.inviteId}
+									invite={invite}
+									disabled={disabled}
+									busyAction={busyInviteId === invite.inviteId ? busyInviteAction : null}
+									onJoin={() => onAcceptInvite(invite.inviteId)}
 								/>
 							))}
 						</InboxSection>
@@ -333,6 +347,7 @@ function RoomInviteRow({
 	onDecline?: () => void;
 }) {
 	const missed = invite.state === "missed";
+	const returning = invite.state === "returnable";
 	return (
 		<article
 			className="inbox-room"
@@ -343,7 +358,7 @@ function RoomInviteRow({
 				<InboxAvatar profile={invite.sender} />
 				<div className="inbox-person">
 					<strong>{invite.sender.displayName}</strong>
-					<span>{missed ? "Missed invite" : "Invited you to watch"}</span>
+					<span>{missed ? "Missed invite" : returning ? "Return to this room" : "Invited you to watch"}</span>
 				</div>
 				<ActivityTime value={invite.activityAt} />
 			</div>
@@ -366,16 +381,16 @@ function RoomInviteRow({
 						type="button"
 						disabled={disabled}
 						onClick={onJoin}
-						aria-label={`Join room invite from ${invite.sender.displayName}`}
+						aria-label={returning ? "Return to room" : `Join room invite from ${invite.sender.displayName}`}
 					>
 						{busyAction === "join" ? (
 							<Spinner />
 						) : (
 							<Play size={13} fill="currentColor" />
 						)}
-						{busyAction === "join" ? "Joining…" : "Join room"}
+						{busyAction === "join" ? "Joining…" : returning ? "Return" : "Join room"}
 					</button>
-					<button
+					{!returning ? <button
 						className="inbox-secondary"
 						type="button"
 						disabled={disabled}
@@ -384,7 +399,7 @@ function RoomInviteRow({
 					>
 						{busyAction === "decline" ? <Spinner /> : null}
 						{busyAction === "decline" ? "Declining…" : "Decline"}
-					</button>
+					</button> : null}
 				</div>
 			) : null}
 		</article>

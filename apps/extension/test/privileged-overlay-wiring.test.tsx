@@ -1572,7 +1572,7 @@ describe("privileged overlay wiring", () => {
 		await unmount(view.root);
 	});
 
-	it("refreshes an open invite panel when an invited participant joins", async () => {
+	it("uses snapshot member identities to disable an in-room friend and re-enable Return after leave", async () => {
 		const sendMessage = vi.fn(
 			async (message: { type?: string; command?: string }) => {
 				if (message.type === "ANIDACHI_AUTH")
@@ -1608,6 +1608,7 @@ describe("privileged overlay wiring", () => {
 		});
 		vi.mocked(listRoomInvites)
 			.mockResolvedValueOnce(invitesResponse("pending"))
+			.mockResolvedValueOnce(invitesResponse("accepted"))
 			.mockResolvedValueOnce(invitesResponse("accepted"));
 
 		let roomConnectionOptions: Parameters<RoomClient["connect"]>[0] | null =
@@ -1646,9 +1647,19 @@ describe("privileged overlay wiring", () => {
 		await flushMountedWork();
 
 		expect(listRoomInvites).toHaveBeenCalledTimes(2);
-		expect(button(view.container, "Accepted")).toBeInstanceOf(
+		expect(button(view.container, "In room")).toBeInstanceOf(
 			HTMLButtonElement,
 		);
+		await act(async () => {
+			roomConnectionOptions?.onEvent({
+				type: "PARTICIPANT_LEFT",
+				participant: guestParticipant(),
+			});
+			await Promise.resolve();
+		});
+		await flushMountedWork();
+		expect(listRoomInvites).toHaveBeenCalledTimes(3);
+		expect(button(view.container, "Invite").disabled).toBe(false);
 		await unmount(view.root);
 	});
 
@@ -2592,14 +2603,14 @@ describe("privileged overlay wiring", () => {
 		await click(button(view.container, "Invite friends and groups"));
 		await flushMountedWork();
 
-		expect(button(view.container, "Accepted")).toBeInstanceOf(
+		expect(button(view.container, "Invite")).toBeInstanceOf(
 			HTMLButtonElement,
 		);
 
 		olderInvites.resolve(invitesResponse("pending"));
 		await flushMountedWork();
 
-		expect(button(view.container, "Accepted")).toBeInstanceOf(
+		expect(button(view.container, "Invite")).toBeInstanceOf(
 			HTMLButtonElement,
 		);
 		await unmount(view.root);
@@ -2669,7 +2680,7 @@ describe("privileged overlay wiring", () => {
 			await waitForButton(view.container, "Invite friends and groups"),
 		);
 		await flushMountedWork();
-		expect(button(view.container, "Accepted")).toBeInstanceOf(
+		expect(button(view.container, "Invite")).toBeInstanceOf(
 			HTMLButtonElement,
 		);
 
@@ -2685,13 +2696,13 @@ describe("privileged overlay wiring", () => {
 		await click(button(view.container, "Invite friends and groups"));
 		await flushMountedWork();
 
-		const keptAcceptedStatus = [
+		const keptReturnEligibility = [
 			...view.container.querySelectorAll("button"),
-		].some((candidate) => candidate.textContent?.trim() === "Accepted");
+		].some((candidate) => candidate.textContent?.trim() === "Invite");
 		const message = view.container.textContent;
 		await unmount(view.root);
 
-		expect(keptAcceptedStatus).toBe(true);
+		expect(keptReturnEligibility).toBe(true);
 		expect(message).toContain(
 			"Could not refresh invite status. Showing the latest available status.",
 		);

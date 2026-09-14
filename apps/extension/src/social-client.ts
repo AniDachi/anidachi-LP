@@ -137,6 +137,7 @@ export type SocialHttpMessage =
       type: typeof SOCIAL_HTTP_MESSAGE_TYPE;
       command: "list-invites";
       accessToken: string;
+			roomId?: string;
     }
   | {
       type: typeof SOCIAL_HTTP_MESSAGE_TYPE;
@@ -259,11 +260,12 @@ export function removeGroupMemberHttpMessage(
   };
 }
 
-export function listInvitesHttpMessage(accessToken: string): SocialHttpMessage {
+export function listInvitesHttpMessage(accessToken: string, roomId?: string): SocialHttpMessage {
   return {
     type: SOCIAL_HTTP_MESSAGE_TYPE,
     command: "list-invites",
     accessToken,
+		...(roomId ? { roomId } : {}),
   };
 }
 
@@ -342,7 +344,11 @@ export function isSocialHttpMessage(value: unknown): value is SocialHttpMessage 
   if (message.command === "list-social-directory" || message.command === "list-invite-targets") {
     return true;
   }
-  if (message.command === "list-invites") return true;
+  if (message.command === "list-invites") {
+		return message.roomId === undefined || (
+			typeof message.roomId === "string" && Boolean(message.roomId.trim())
+		);
+	}
   if (message.command === "accept-invite" || message.command === "decline-invite") {
     return typeof message.inviteId === "string" && Boolean(message.inviteId.trim());
   }
@@ -530,9 +536,12 @@ export async function listSocialDirectoryFromApi(accessToken: string): Promise<S
 
 export async function listRoomInvitesFromApi(
   accessToken: string,
+	roomId?: string,
 ): Promise<RoomInvitesResponse> {
   logDebug("social.http", "list invites request", { webHttpBase: WEB_HTTP_BASE });
-  const response = await fetch(new URL("/api/invites", WEB_HTTP_BASE), {
+	const url = new URL("/api/invites", WEB_HTTP_BASE);
+	if (roomId) url.searchParams.set("roomId", roomId);
+  const response = await fetch(url, {
     headers: createWebsiteRoomHeaders(accessToken),
   });
 
@@ -837,7 +846,7 @@ export async function handleSocialHttpMessage(
       return { ok: true, targets: await listInviteTargetsFromApi(message.accessToken) };
     }
     if (message.command === "list-invites") {
-      return { ok: true, invites: await listRoomInvitesFromApi(message.accessToken) };
+      return { ok: true, invites: await listRoomInvitesFromApi(message.accessToken, message.roomId) };
     }
     if (message.command === "accept-invite") {
       return {
@@ -982,9 +991,9 @@ export async function declineFriendRequest(
   return parseSocialContract(FriendListItemSchema, response.request, "friend request bridge");
 }
 
-export async function listRoomInvites(accessToken: string): Promise<RoomInvitesResponse> {
+export async function listRoomInvites(accessToken: string, roomId?: string): Promise<RoomInvitesResponse> {
   const response = assertSocialHttpResponse(
-    await sendSocialHttpMessage(listInvitesHttpMessage(accessToken)),
+    await sendSocialHttpMessage(listInvitesHttpMessage(accessToken, roomId)),
   );
   if (!response.ok) throw socialBridgeError(response);
   if (!("invites" in response)) throw new Error("Social bridge response is missing invites");
