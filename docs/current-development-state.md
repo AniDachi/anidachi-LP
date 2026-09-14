@@ -19,9 +19,10 @@ while incoming media continues. Existing v2 rooms keep their original contract.
 
 Protocol, Web/SQL, Worker and extension changes have scoped reviews and local
 regression evidence. Full local SQL verification passed 1087 assertions;
-the final extension suite passed 1965 tests. Real-browser v3 scenarios passed
+the final extension suite passed 1967 tests. Real-browser v3 scenarios passed
 for all three plans, and the staging artifact was built and validated.
-Whole-branch review and staging delivery are still in progress;
+Whole-branch review and the scoped persistence-error correction are approved.
+Ordered staging delivery is being prepared;
 this entry does not claim a production release or authorize a new public ZIP.
 See the [delivery and verification record](releases/room-media-seats/2026-09-14-delivery.md)
 for exact evidence, rollout ordering and remaining acceptance.

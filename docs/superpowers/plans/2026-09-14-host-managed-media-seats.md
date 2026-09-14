@@ -10,7 +10,7 @@
 
 **Spec:** Согласованные продуктовые решения сохранены в разделе «Спецификация» этого документа. Исходные ограничения: [MVP specification](../specs/2026-09-08-personal-history-and-plans-mvp-design.md), [room/P2P roadmap](2026-06-07-production-room-p2p-hardening-roadmap.md), [room-flow execution plan](2026-06-12-room-flow-p2p-flawless-execution-plan.md).
 
-**Status:** Реализация задач 1–4 и локальные проверки выполнены, идет итоговая проверка ветки и подготовка staging. Приемка двумя устройствами и выпуск main еще не выполнены. Результаты: [delivery record](../../releases/room-media-seats/2026-09-14-delivery.md). База разработки: staging `ccb86654ad08752d9f17d6b5b508548919884740`, production main `f9e6b96453b5344aeed0476fbd2900f7ce355acd`; на момент начала работы деревья файлов совпадали. Изолированная ветка реализации: `codex/room-media-seats-v3`.
+**Status:** Реализация задач 1–4, локальные проверки и итоговая независимая проверка ветки выполнены; идет подготовка staging. Приемка двумя устройствами и выпуск main еще не выполнены. Результаты: [delivery record](../../releases/room-media-seats/2026-09-14-delivery.md). База разработки: staging `ccb86654ad08752d9f17d6b5b508548919884740`, production main `f9e6b96453b5344aeed0476fbd2900f7ce355acd`; на момент начала работы деревья файлов совпадали. Изолированная ветка реализации: `codex/room-media-seats-v3`.
 
 ## Global Constraints
 
