@@ -20,18 +20,20 @@ export function createHarnessRoomToken({
 	roomId,
 	secret,
 	mediaV2Size = 0,
+	mediaProtocolVersion = 2,
 	mediaCapabilityRevision = 1,
 	nowSeconds = Math.floor(Date.now() / 1_000),
 }) {
 	const header = b64url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
 	const capabilities = mediaV2Size
 		? {
-				mediaProtocolVersion: 2,
+				mediaProtocolVersion,
 				hostPlanCode:
 					mediaV2Size === 15 ? "pro" : mediaV2Size === 6 ? "plus" : "free",
 				maxParticipants: mediaV2Size,
-				maxCameras: 4,
-				maxMicrophones: mediaV2Size === 15 ? 8 : mediaV2Size,
+				...(mediaProtocolVersion === 3
+					? { maxMediaSeats: mediaV2Size === 15 ? 8 : mediaV2Size, maxCameras: 4 }
+					: { maxCameras: 4, maxMicrophones: mediaV2Size === 15 ? 8 : mediaV2Size }),
 				capabilityRevision: mediaCapabilityRevision,
 				capabilitiesValidUntil: new Date(
 					(nowSeconds + 1_700) * 1_000,
