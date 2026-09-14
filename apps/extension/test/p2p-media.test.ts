@@ -3870,6 +3870,35 @@ describe("versioned receive-only topology", () => {
     capabilities: {mediaProtocolVersion: 3, hostPlanCode: "pro", maxParticipants: 15, maxMediaSeats: 8, maxCameras: 4, capabilityRevision: 1, capabilitiesValidUntil: "2026-09-15T12:30:00Z"},
     participants: media.participants.map((p, i) => ({...p, mediaSeatGranted: i < 8, seatRevision: 0, cameraGranted: i < 4, microphoneGranted: i < 8})),
   };
+  it("drops late signaling for a revoked listener edge while preserving publisher off signals", async () => {
+    const track = new FakeAudioTrack("published-mic");
+    installFakeMediaDevices({addEventListener: vi.fn(), removeEventListener: vi.fn(),
+      getUserMedia: vi.fn().mockResolvedValue(fakeAudioStream(track))} as unknown as MediaDevices);
+    const h = createP2PControllerHarness(roster[0]);
+    h.controller.updateParticipants([roster[0], roster[1], roster[14]], undefined, mediaV3);
+    h.controller.setCaptureAuthority(false, true);
+    await h.controller.setMicrophonePublishing(true, "immediate");
+    const removedPeer = FakeRtcPeerConnection.instances[1]!;
+    h.signals.length = 0;
+    const revoked = {...mediaV3, snapshotSequence: 2, participants: mediaV3.participants.map(p =>
+      p.participantSessionId === "s0" ? {...p, mediaSeatGranted: false, cameraGranted: false, microphoneGranted: false} : p)};
+    h.controller.updateParticipants([roster[0], roster[1], roster[14]], undefined, revoked);
+    h.controller.setCaptureAuthority(false, false);
+    expect(track.readyState).toBe("ended");
+    const lateIce = new Event("icecandidate");
+    Object.defineProperty(lateIce, "candidate", {value: {
+      candidate: "candidate:1 1 udp 1 127.0.0.1 1234 typ host",
+      toJSON: () => ({sdpMid: "0", sdpMLineIndex: 0}),
+    }});
+    removedPeer.dispatchEvent(lateIce);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(h.signals.some(s => s.toUserId === "p14")).toBe(false);
+    expect(h.signals.some(s => s.toUserId === "p1" && s.signal.kind === "voice-stop")).toBe(true);
+    expect(h.controller.hasPeer("p1")).toBe(true);
+    expect(await h.controller.handleSignal("p1", {kind: "voice-start", voiceMode: "open-mic"})).toBe(true);
+    h.controller.disconnect();
+  });
+
   it.each(["satisfied", "unsatisfied", "failed"] as const)("settles a crossed remote renegotiation from the answer (%s)", async (outcome) => {
     const harness = createP2PControllerHarness(roster[0]);
     harness.controller.setCaptureAuthority(false, false);

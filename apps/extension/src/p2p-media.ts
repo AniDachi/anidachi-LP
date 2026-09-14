@@ -932,6 +932,9 @@ export class P2PMediaController {
   }
 
   private sendSignal(toUserId: string, signal: P2PSignal): RoomSendDisposition {
+    if (this.mediaSnapshot !== undefined && !this.permittedPeerIds.has(toUserId)) {
+      return "dropped";
+    }
     const disposition = this.sendSignalToTransport(toUserId, signal, {
       senderMediaSessionId: this.mediaSessionId,
     });

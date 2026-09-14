@@ -253,6 +253,33 @@ describe("useGhostCam P2P session lifecycle", () => {
     document.body.replaceChildren();
   });
 
+  it("publishes the event snapshot before synchronously revoking capture", async () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const local = {...participant("p0"), participantSessionId: "s0"};
+    const remote = {...participant("p1"), participantSessionId: "s1"};
+    let session!: GhostCamSession;
+    await act(async () => {
+      root.render(<GhostCamHarness participant={local} participants={[local, remote]} onSession={value => {session = value;}} />);
+    });
+    const controller = mockP2PMedia.controllers[0]!;
+    controller.updateParticipants.mockClear();
+    controller.setCaptureAuthority.mockClear();
+    const snapshot: import("@anidachi/protocol").RoomMediaV3Snapshot = {
+      type: "ROOM_MEDIA_SNAPSHOT", roomId: "room-1", roomGeneration: 1, snapshotSequence: 2, closingAt: null,
+      capabilities: {mediaProtocolVersion: 3, hostPlanCode: "free", maxParticipants: 4, maxMediaSeats: 4, maxCameras: 4, capabilityRevision: 1, capabilitiesValidUntil: "2026-09-15T12:30:00Z"},
+      participants: ["s0", "s1"].map(participantSessionId => ({participantSessionId, mediaSeatGranted: false, seatRevision: 1, cameraGranted: false, microphoneGranted: false, cameraIntentSequence: 1, microphoneIntentSequence: 1, cameraRevocationEpoch: 1, microphoneRevocationEpoch: 1})),
+    };
+    session.reconcileMediaAuthority(false, false, snapshot);
+    expect(controller.updateParticipants).toHaveBeenCalledWith([local, remote], undefined, snapshot);
+    expect(controller.updateParticipants.mock.invocationCallOrder[0]).toBeLessThan(controller.setCaptureAuthority.mock.invocationCallOrder[0]!);
+    controller.updateParticipants.mockClear();
+    session.reconcileMediaAuthority(false, false);
+    expect(controller.updateParticipants).not.toHaveBeenCalled();
+    await act(async () => {root.unmount();});
+  });
+
   it("keeps the same media controller when the same participant id is refreshed as a new object", async () => {
     const container = document.createElement("div");
     document.body.append(container);

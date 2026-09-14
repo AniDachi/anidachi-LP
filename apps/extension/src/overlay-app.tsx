@@ -3302,7 +3302,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				case "MEDIA_INTENT_ERROR": {
 					const media = clientRef.current.media;
 					if (media?.snapshot) {
-						ghostCamSession.reconcileMediaAuthority(media.canCapture("camera"), media.canCapture("microphone"));
+						ghostCamSession.reconcileMediaAuthority(media.canCapture("camera"), media.canCapture("microphone"), media.snapshot);
 						setRoomMediaSnapshot(media.snapshot);
 						setRoomCapabilities(media.snapshot.capabilities);
 						setMediaRevision(n => n + 1);
