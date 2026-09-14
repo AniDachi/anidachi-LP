@@ -23,7 +23,7 @@ export default function AccountHelpPage() {
       </div>
       <section className="help-support">
         <div><h2>Still need help?</h2><p>Tell us what happened and include your browser and extension version when useful.</p></div>
-        <div className="help-actions"><Link href="/contact">Contact support</Link><Link href="/account/feature-requests">Share an idea</Link></div>
+        <div className="help-actions"><Link href="/account/bug-report">Report a bug</Link><Link href="/contact">Contact support</Link><Link href="/account/feature-requests">Share an idea</Link></div>
       </section>
     </div>
   );

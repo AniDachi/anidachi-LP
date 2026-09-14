@@ -24091,7 +24091,7 @@
       "file_type": "code",
       "norm_label": "contactform()",
       "source_file": "apps/web/components/contact-form.tsx",
-      "source_location": "L19"
+      "source_location": "L21"
     },
     {
       "id": "apps_web_components_contact_form_contactform_onsubmit",
@@ -24103,7 +24103,19 @@
       "file_type": "code",
       "norm_label": "onsubmit()",
       "source_file": "apps/web/components/contact-form.tsx",
-      "source_location": "L31"
+      "source_location": "L40"
+    },
+    {
+      "id": "apps_web_lib_contact_form_client_test_mount",
+      "label": "mount()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 131,
+      "community_name": "contact messages ts",
+      "file_type": "code",
+      "norm_label": "mount()",
+      "source_file": "apps/web/lib/contact-form-client.test.ts",
+      "source_location": "L37"
     },
     {
       "id": "apps_web_lib_kreatli_crm_contact_message_shared_iscontactcategory",
@@ -47863,7 +47875,7 @@
       "file_type": "code",
       "norm_label": "accountnav()",
       "source_file": "apps/web/app/account/account-nav.tsx",
-      "source_location": "L18"
+      "source_location": "L19"
     },
     {
       "id": "apps_web_lib_account_navigation_client_test_dialog",
@@ -69574,6 +69586,66 @@
       "source_location": "L21"
     },
     {
+      "id": "apps_web_app_account_bug_report_page_accountbugreportpage",
+      "label": "AccountBugReportPage()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 795,
+      "community_name": "Account feedback",
+      "file_type": "code",
+      "norm_label": "accountbugreportpage()",
+      "source_file": "apps/web/app/account/bug-report/page.tsx",
+      "source_location": "L16"
+    },
+    {
+      "id": "apps_web_lib_contact_form_client_test_click",
+      "label": "click()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 795,
+      "community_name": "Account feedback",
+      "file_type": "code",
+      "norm_label": "click()",
+      "source_file": "apps/web/lib/contact-form-client.test.ts",
+      "source_location": "L87"
+    },
+    {
+      "id": "apps_web_lib_contact_form_client_test_field",
+      "label": "field()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 795,
+      "community_name": "Account feedback",
+      "file_type": "code",
+      "norm_label": "field()",
+      "source_file": "apps/web/lib/contact-form-client.test.ts",
+      "source_location": "L51"
+    },
+    {
+      "id": "apps_web_lib_contact_form_client_test_fill",
+      "label": "fill()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 795,
+      "community_name": "Account feedback",
+      "file_type": "code",
+      "norm_label": "fill()",
+      "source_file": "apps/web/lib/contact-form-client.test.ts",
+      "source_location": "L64"
+    },
+    {
+      "id": "apps_web_lib_contact_form_client_test_submit",
+      "label": "submit()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 795,
+      "community_name": "Account feedback",
+      "file_type": "code",
+      "norm_label": "submit()",
+      "source_file": "apps/web/lib/contact-form-client.test.ts",
+      "source_location": "L79"
+    },
+    {
       "id": "packages_protocol_src_watch_history_addaggregateissues",
       "label": "addAggregateIssues()",
       "_callable": true,
@@ -80259,12 +80331,23 @@
       "community": 82,
       "community_name": "Account Runtime And Acceptance",
       "contributor": null,
-      "evidence_excerpt": "## Account MVP navigation, 2026-09-10\n\nThe [approved account workspace](superpowers/specs/2026-09-10-account-mvp-navigation-design.md)\nreplaces Overview with Watch Library as the default landing. Primary navigation\nis Watch Library, Friends & Groups and Subscription; Share an idea and Help are",
+      "evidence_excerpt": "## Account MVP navigation, 2026-09-10\n\nThe [approved account workspace](superpowers/specs/2026-09-10-account-mvp-navigation-design.md)\nreplaces Overview with Watch Library as the default landing. Primary navigation\nis Watch Library, Friends & Groups and Subscription; Report a bug, Share an idea\nand Help are secondary links, and Profile opens from the avatar. Notifications use a header\ndialog backed by the existing account inbox; the old `/account/invites` URL\nremains compatible. The website checks counts only while visible, on focus and\non a one-minute timer; it does not acknowledge unseen items until opened.\nExtension push/notification delivery remains unchanged.\n\nThe September 14 feedback correction restores `/account/bug-report` with a compact\nform and prefilled account contact details. It reuses `/api/contact` with category\n`support` and a `[Bug report]` subject prefix; suggestions keep their separate\nexisting form. Failed submissions retain the draft and success requires the\nexisting durable-storage acknowledgement. No new storage, endpoint contract,\nnotification channel or extension build is needed.",
       "file_type": "concept",
       "norm_label": "watch library account workspace",
+      "primary_navigation": [
+        "Watch Library",
+        "Friends & Groups",
+        "Subscription"
+      ],
+      "profile_navigation": "avatar",
       "rationale": "Owner-keyed navigation and profile fence preserve drafts; visible-only notification counts do not acknowledge unseen items.",
+      "secondary_navigation": [
+        "Report a bug",
+        "Share an idea",
+        "Help"
+      ],
       "source_file": "docs/current-development-state.md",
-      "source_location": "L300-L320: Account MVP navigation, 2026-09-10",
+      "source_location": "/Users/vladyslavhulyi/anidachi-LP-monorepo/.worktrees/room-media-seats-v3/docs/current-development-state.md:334-350",
       "source_url": null
     },
     {
@@ -100287,6 +100370,17 @@
       "norm_label": "pricing_starting_at",
       "source_file": "apps/web/lib/pricing-tiers.ts",
       "source_location": "L9"
+    },
+    {
+      "id": "apps_web_app_account_bug_report_page",
+      "label": "bug-report/page.tsx",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "Account Social Sections",
+      "file_type": "code",
+      "norm_label": "bug-report/page.tsx",
+      "source_file": "apps/web/app/account/bug-report/page.tsx",
+      "source_location": "L1"
     },
     {
       "id": "apps_web_app_account_invites_invites_client",
@@ -132215,6 +132309,39 @@
       "source_location": "L36"
     },
     {
+      "id": "apps_web_app_account_bug_report_page_metadata",
+      "label": "metadata",
+      "_origin": "ast",
+      "community": 795,
+      "community_name": "Account feedback",
+      "file_type": "code",
+      "norm_label": "metadata",
+      "source_file": "apps/web/app/account/bug-report/page.tsx",
+      "source_location": "L11"
+    },
+    {
+      "id": "apps_web_lib_contact_form_client_test_contact",
+      "label": "contact",
+      "_origin": "ast",
+      "community": 795,
+      "community_name": "Account feedback",
+      "file_type": "code",
+      "norm_label": "contact",
+      "source_file": "apps/web/lib/contact-form-client.test.ts",
+      "source_location": "L33"
+    },
+    {
+      "id": "apps_web_lib_contact_form_client_test_dom",
+      "label": "dom",
+      "_origin": "ast",
+      "community": 795,
+      "community_name": "Account feedback",
+      "file_type": "code",
+      "norm_label": "dom",
+      "source_file": "apps/web/lib/contact-form-client.test.ts",
+      "source_location": "L8"
+    },
+    {
       "id": "apps_web_lib_anidachi_auth_personal_watch_history",
       "label": "anidachi-auth/personal-watch-history.ts",
       "_origin": "ast",
@@ -133962,6 +134089,17 @@
       "norm_label": "user",
       "source_file": "apps/web/lib/anidachi-auth/website-session.test.ts",
       "source_location": "L5"
+    },
+    {
+      "id": "apps_web_lib_contact_form_client_test",
+      "label": "contact-form-client.test.ts",
+      "_origin": "ast",
+      "community": 87,
+      "community_name": "node fs",
+      "file_type": "code",
+      "norm_label": "contact-form-client.test.ts",
+      "source_file": "apps/web/lib/contact-form-client.test.ts",
+      "source_location": "L1"
     },
     {
       "id": "apps_web_lib_kreatli_crm_public_form_notification_route_test",
@@ -136272,6 +136410,70 @@
       "norm_label": "session",
       "source_file": "apps/web/lib/anidachi-auth/watch-library-routes.test.ts",
       "source_location": "L27"
+    },
+    {
+      "id": "docs_current_development_state_account_bug_report_restoration",
+      "label": "Account bug report restoration",
+      "_origin": "semantic",
+      "account_route": "/account/bug-report",
+      "api_endpoint": "/api/contact",
+      "author": null,
+      "captured_at": null,
+      "category": "support",
+      "community": 82,
+      "community_name": "Account Runtime And Acceptance",
+      "contributor": null,
+      "evidence_excerpt": "The September 14 feedback correction restores `/account/bug-report` with a compact\nform and prefilled account contact details. It reuses `/api/contact` with category\n`support` and a `[Bug report]` subject prefix; suggestions keep their separate\nexisting form. Failed submissions retain the draft and success requires the\nexisting durable-storage acknowledgement. No new storage, endpoint contract,\nnotification channel or extension build is needed.",
+      "file_type": "concept",
+      "norm_label": "account bug report restoration",
+      "rationale": "The September 14 feedback correction reuses existing contact storage and the existing durable-storage acknowledgement. Suggestions retain their separate form; no new storage, endpoint contract, notification channel or extension build is introduced.",
+      "source_file": "docs/current-development-state.md",
+      "source_location": "/Users/vladyslavhulyi/anidachi-LP-monorepo/.worktrees/room-media-seats-v3/docs/current-development-state.md:345-350",
+      "source_url": null,
+      "subject_prefix": "[Bug report]"
+    },
+    {
+      "id": "docs_superpowers_specs_2026_09_10_account_mvp_navigation_design_account_bug_report_contact_contract",
+      "label": "Account bug report contact contract",
+      "_origin": "semantic",
+      "account_route": "/account/bug-report",
+      "author": null,
+      "captured_at": null,
+      "category": "support",
+      "community": 206,
+      "community_name": "Friends And Groups Link First",
+      "contributor": null,
+      "evidence_excerpt": "  The September 14 owner-requested bug-report restoration adds a compact\n  `/account/bug-report` form using existing contact storage, category `support`\n  and a `[Bug report]` subject prefix. Account contact details are prefilled and\n  editable. Failed sends preserve the draft; pending sends disable editing and\n  duplicate submission; acknowledged success keeps contact details for the next\n  report. Help and Share an idea link directly to the bug-report page.",
+      "file_type": "concept",
+      "norm_label": "account bug report contact contract",
+      "rationale": "The compact account report form reuses existing contact storage with support categorization and a stable subject prefix, keeping the existing suggestion form and contact flow.",
+      "source_file": "docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md",
+      "source_location": "/Users/vladyslavhulyi/anidachi-LP-monorepo/.worktrees/room-media-seats-v3/docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md:40-45",
+      "source_url": null,
+      "subject_prefix": "[Bug report]"
+    },
+    {
+      "id": "docs_superpowers_specs_2026_09_10_account_mvp_navigation_design_report_a_bug_secondary_navigation",
+      "label": "Report a bug secondary navigation",
+      "_origin": "semantic",
+      "account_route": "/account/bug-report",
+      "author": null,
+      "captured_at": null,
+      "community": 206,
+      "community_name": "Friends And Groups Link First",
+      "contributor": null,
+      "evidence_excerpt": "- `/account` redirects to `/account/watch-library`. Primary navigation contains\n  Watch Library, Friends & Groups, Subscription, in that order. Report a bug,\n  Share an idea and Help are visible secondary links. Profile is accessible from the avatar.",
+      "file_type": "concept",
+      "norm_label": "report a bug secondary navigation",
+      "rationale": "Report a bug is a visible secondary account link while Watch Library, Friends & Groups and Subscription remain the three primary tasks. Help and Share an idea also link directly to the report page.",
+      "related_entry_points": [
+        "Help",
+        "Share an idea"
+      ],
+      "related_entry_points_source_location": "/Users/vladyslavhulyi/anidachi-LP-monorepo/.worktrees/room-media-seats-v3/docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md:45",
+      "source_file": "docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md",
+      "source_location": "/Users/vladyslavhulyi/anidachi-LP-monorepo/.worktrees/room-media-seats-v3/docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md:10-12",
+      "source_url": null
     },
     {
       "id": "docs_superpowers_plans_2026_09_05_watch_history_crunchyroll_catalog_progress_plan_catalog_snapshot_and_variants",
@@ -140593,6 +140795,50 @@
       "source_url": null
     },
     {
+      "id": "docs_superpowers_specs_2026_09_10_account_mvp_navigation_design_bug_report_submission_lifecycle",
+      "label": "Bug report submission lifecycle",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 206,
+      "community_name": "Friends And Groups Link First",
+      "contributor": null,
+      "evidence_excerpt": "  and a `[Bug report]` subject prefix. Account contact details are prefilled and\n  editable. Failed sends preserve the draft; pending sends disable editing and\n  duplicate submission; acknowledged success keeps contact details for the next\n  report. Help and Share an idea link directly to the bug-report page.",
+      "file_type": "rationale",
+      "norm_label": "bug report submission lifecycle",
+      "rationale": "Account contact details start prefilled and remain editable. Failed sends preserve the draft. Pending sends disable editing and duplicate submission. Acknowledged success retains contact details for the next report.",
+      "source_file": "docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md",
+      "source_location": "/Users/vladyslavhulyi/anidachi-LP-monorepo/.worktrees/room-media-seats-v3/docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md:42-45",
+      "source_url": null
+    },
+    {
+      "id": "docs_superpowers_specs_2026_09_10_account_mvp_navigation_design_watch_library_friends_groups_subscription_primary_navigation",
+      "label": "Watch Library Friends Groups Subscription primary navigation",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 206,
+      "community_name": "Friends And Groups Link First",
+      "contributor": null,
+      "evidence_excerpt": "- `/account` redirects to `/account/watch-library`. Primary navigation contains\n  Watch Library, Friends & Groups, Subscription, in that order. Report a bug,\n  Share an idea and Help are visible secondary links. Profile is accessible from the avatar.",
+      "file_type": "concept",
+      "norm_label": "watch library friends groups subscription primary navigation",
+      "primary_navigation": [
+        "Watch Library",
+        "Friends & Groups",
+        "Subscription"
+      ],
+      "profile_navigation": "avatar",
+      "secondary_navigation": [
+        "Report a bug",
+        "Share an idea",
+        "Help"
+      ],
+      "source_file": "docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md",
+      "source_location": "/Users/vladyslavhulyi/anidachi-LP-monorepo/.worktrees/room-media-seats-v3/docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md:10-12",
+      "source_url": null
+    },
+    {
       "id": "docs_superpowers_plans_2026_09_11_extension_people_mvp_atomic_private_group_modal_with_retained_drafts",
       "label": "Atomic private group modal with retained drafts",
       "_origin": "semantic",
@@ -140710,21 +140956,6 @@
       "norm_label": "september 11 website link first social amendment",
       "source_file": "docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md",
       "source_location": "/Users/vladyslavhulyi/anidachi-LP-monorepo/.worktrees/prelaunch-fixes/docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md:28",
-      "source_url": null
-    },
-    {
-      "id": "docs_superpowers_specs_2026_09_10_account_mvp_navigation_design_watch_library_friends_groups_subscription_primary_navigation",
-      "label": "Watch Library Friends Groups Subscription primary navigation",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 206,
-      "community_name": "Friends And Groups Link First",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "watch library friends groups subscription primary navigation",
-      "source_file": "docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md",
-      "source_location": "/Users/vladyslavhulyi/anidachi-LP-monorepo/.worktrees/prelaunch-fixes/docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md:10",
       "source_url": null
     },
     {
@@ -214412,6 +214643,18 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_lib_contact_form_client_test_fill",
+      "target": "apps_web_lib_contact_form_client_test_field",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/web/lib/contact-form-client.test.ts",
+      "source_location": "L65",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_lib_conversion_events_trackconversion",
       "target": "apps_web_lib_seo_landing_path_getseoattributionfields",
       "relation": "calls",
@@ -255371,6 +255614,66 @@
       "context": "import",
       "source_file": "apps/web/app/account/billing/page.tsx",
       "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_account_bug_report_page",
+      "target": "apps_web_components_account_account_ui_accountpageheader",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/app/account/bug-report/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_account_bug_report_page",
+      "target": "apps_web_components_contact_form_contactform",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/app/account/bug-report/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_account_bug_report_page",
+      "target": "apps_web_lib_anidachi_auth_session_getsession",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/app/account/bug-report/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_account_bug_report_page",
+      "target": "apps_web_lib_anidachi_auth_db_getuserbyid",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/app/account/bug-report/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_account_bug_report_page",
+      "target": "apps_web_lib_anidachi_auth_social_ensureprofileforuser",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/app/account/bug-report/page.tsx",
+      "source_location": "L9",
       "weight": 1.0
     },
     {
@@ -306892,18 +307195,6 @@
       "weight": 1.0
     },
     {
-      "source": "apps_web_app_account_account_nav",
-      "target": "lucide_react",
-      "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/app/account/account-nav.tsx",
-      "source_location": "L6",
-      "weight": 1.0
-    },
-    {
       "source": "apps_web_app_account_billing_billing_client",
       "target": "apps_web_components_account_account_ui",
       "relation": "imports_from",
@@ -307025,6 +307316,103 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_app_account_bug_report_page",
+      "target": "ref_next",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/app/account/bug-report/page.tsx",
+      "source_location": "L1",
+      "type_only": true,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_account_bug_report_page",
+      "target": "ref_next_link",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/app/account/bug-report/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_account_bug_report_page",
+      "target": "ref_next_navigation",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/app/account/bug-report/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_account_bug_report_page",
+      "target": "apps_web_components_account_account_ui",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/app/account/bug-report/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_account_bug_report_page",
+      "target": "apps_web_components_contact_form",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/app/account/bug-report/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_account_bug_report_page",
+      "target": "apps_web_lib_anidachi_auth_session",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/app/account/bug-report/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_account_bug_report_page",
+      "target": "apps_web_lib_anidachi_auth_db",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/app/account/bug-report/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_account_bug_report_page",
+      "target": "apps_web_lib_anidachi_auth_social",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/app/account/bug-report/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_app_account_feature_requests_page",
       "target": "ref_next",
       "relation": "imports_from",
@@ -307059,18 +307447,6 @@
       "context": "import",
       "source_file": "apps/web/app/account/feature-requests/page.tsx",
       "source_location": "L3",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_app_account_feature_requests_page",
-      "target": "lucide_react",
-      "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/app/account/feature-requests/page.tsx",
-      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -307229,18 +307605,6 @@
       "context": "import",
       "source_file": "apps/web/app/account/help/page.tsx",
       "source_location": "L2",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_app_account_help_page",
-      "target": "lucide_react",
-      "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/app/account/help/page.tsx",
-      "source_location": "L3",
       "weight": 1.0
     },
     {
@@ -333630,6 +333994,55 @@
       "context": "import",
       "source_file": "apps/web/lib/client-api.test.ts",
       "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_contact_form_client_test",
+      "target": "ref_node_assert_strict",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/contact-form-client.test.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_contact_form_client_test",
+      "target": "ref_node_test",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/contact-form-client.test.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_contact_form_client_test",
+      "target": "ref_react",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/contact-form-client.test.ts",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_contact_form_client_test",
+      "target": "ref_react_dom_client",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/lib/contact-form-client.test.ts",
+      "source_location": "L6",
+      "type_only": true,
       "weight": 1.0
     },
     {
@@ -379034,7 +379447,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/account/account-nav.tsx",
-      "source_location": "L18",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -379112,6 +379525,28 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/app/account/billing/page.tsx",
       "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_account_bug_report_page",
+      "target": "apps_web_app_account_bug_report_page_metadata",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/account/bug-report/page.tsx",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_account_bug_report_page",
+      "target": "apps_web_app_account_bug_report_page_accountbugreportpage",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/account/bug-report/page.tsx",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -394401,7 +394836,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/contact-form.tsx",
-      "source_location": "L19",
+      "source_location": "L21",
       "weight": 1.0
     },
     {
@@ -394412,7 +394847,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/contact-form.tsx",
-      "source_location": "L31",
+      "source_location": "L40",
       "weight": 1.0
     },
     {
@@ -406326,6 +406761,83 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/community-discord.ts",
       "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_contact_form_client_test",
+      "target": "apps_web_lib_contact_form_client_test_contact",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/contact-form-client.test.ts",
+      "source_location": "L33",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_contact_form_client_test",
+      "target": "apps_web_lib_contact_form_client_test_mount",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/contact-form-client.test.ts",
+      "source_location": "L37",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_contact_form_client_test",
+      "target": "apps_web_lib_contact_form_client_test_field",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/contact-form-client.test.ts",
+      "source_location": "L51",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_contact_form_client_test",
+      "target": "apps_web_lib_contact_form_client_test_fill",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/contact-form-client.test.ts",
+      "source_location": "L64",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_contact_form_client_test",
+      "target": "apps_web_lib_contact_form_client_test_submit",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/contact-form-client.test.ts",
+      "source_location": "L79",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_contact_form_client_test",
+      "target": "apps_web_lib_contact_form_client_test_dom",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/contact-form-client.test.ts",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_contact_form_client_test",
+      "target": "apps_web_lib_contact_form_client_test_click",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/contact-form-client.test.ts",
+      "source_location": "L87",
       "weight": 1.0
     },
     {
@@ -441012,6 +441524,24 @@
       "source_file": "apps/web/lib/anidachi-auth/watch-history-browse.test.ts"
     },
     {
+      "source": "apps_web_lib_contact_form_client_test",
+      "target": "apps_web_components_contact_form",
+      "relation": "dynamic_import",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/contact-form-client.test.ts"
+    },
+    {
+      "source": "apps_web_lib_contact_form_client_test",
+      "target": "apps_web_lib_google_ads_client",
+      "relation": "dynamic_import",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/contact-form-client.test.ts"
+    },
+    {
       "source": "apps_web_lib_gtag",
       "target": "apps_web_lib_amplitude",
       "relation": "dynamic_import",
@@ -456812,6 +457342,18 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_lib_contact_form_client_test_mount",
+      "target": "apps_web_components_contact_form_contactform",
+      "relation": "indirect_call",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "context": "argument",
+      "source_file": "apps/web/lib/contact-form-client.test.ts",
+      "source_location": "L43",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_lib_kreatli_crm_survey_lead_shared_listsurveyleads",
       "target": "apps_web_lib_kreatli_crm_survey_lead_shared_issurveylead",
       "relation": "indirect_call",
@@ -463781,6 +464323,17 @@
       "weight": 1.0
     },
     {
+      "source": "docs_superpowers_specs_2026_09_10_account_mvp_navigation_design_bug_report_submission_lifecycle",
+      "target": "docs_superpowers_specs_2026_09_10_account_mvp_navigation_design_account_bug_report_contact_contract",
+      "relation": "rationale_for",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md",
+      "source_location": "/Users/vladyslavhulyi/anidachi-LP-monorepo/.worktrees/room-media-seats-v3/docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md:42-45",
+      "weight": 1.0
+    },
+    {
       "source": "docs_watch_history_capacity_capacity_endpoint",
       "target": "docs_watch_history_capacity_access_lease_compatibility",
       "relation": "rationale_for",
@@ -464750,6 +465303,39 @@
       "weight": 1.0
     },
     {
+      "source": "docs_current_development_state_account_bug_report_restoration",
+      "target": "docs_superpowers_specs_2026_09_10_account_mvp_navigation_design_account_bug_report_contact_contract",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-development-state.md",
+      "source_location": "/Users/vladyslavhulyi/anidachi-LP-monorepo/.worktrees/room-media-seats-v3/docs/current-development-state.md:336-350",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_current_development_state_account_bug_report_restoration",
+      "target": "apps_web_app_api_contact_route",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-development-state.md",
+      "source_location": "/Users/vladyslavhulyi/anidachi-LP-monorepo/.worktrees/room-media-seats-v3/docs/current-development-state.md:345-349",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_current_development_state_account_navigation",
+      "target": "docs_current_development_state_account_bug_report_restoration",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-development-state.md",
+      "source_location": "/Users/vladyslavhulyi/anidachi-LP-monorepo/.worktrees/room-media-seats-v3/docs/current-development-state.md:336-350",
+      "weight": 1.0
+    },
+    {
       "source": "docs_current_development_state_current_development_state",
       "target": "docs_current_development_state_host_managed_media_seats_current_status",
       "relation": "references",
@@ -464769,6 +465355,17 @@
       "confidence_score": 1.0,
       "source_file": "docs/current-development-state.md",
       "source_location": "## Private tester handoff, 2026-09-13",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_current_development_state_current_development_state",
+      "target": "docs_current_development_state_account_bug_report_restoration",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-development-state.md",
+      "source_location": "/Users/vladyslavhulyi/anidachi-LP-monorepo/.worktrees/room-media-seats-v3/docs/current-development-state.md:345-350",
       "weight": 1.0
     },
     {
@@ -472381,6 +472978,39 @@
       "weight": 1.0
     },
     {
+      "source": "docs_superpowers_specs_2026_09_10_account_mvp_navigation_design_account_mvp_navigation_design",
+      "target": "docs_superpowers_specs_2026_09_10_account_mvp_navigation_design_report_a_bug_secondary_navigation",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md",
+      "source_location": "/Users/vladyslavhulyi/anidachi-LP-monorepo/.worktrees/room-media-seats-v3/docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md:10-12",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_specs_2026_09_10_account_mvp_navigation_design_account_mvp_navigation_design",
+      "target": "docs_superpowers_specs_2026_09_10_account_mvp_navigation_design_account_bug_report_contact_contract",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md",
+      "source_location": "/Users/vladyslavhulyi/anidachi-LP-monorepo/.worktrees/room-media-seats-v3/docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md:40-45",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_specs_2026_09_10_account_mvp_navigation_design_account_mvp_navigation_design",
+      "target": "docs_superpowers_specs_2026_09_10_account_mvp_navigation_design_bug_report_submission_lifecycle",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md",
+      "source_location": "/Users/vladyslavhulyi/anidachi-LP-monorepo/.worktrees/room-media-seats-v3/docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md:42-45",
+      "weight": 1.0
+    },
+    {
       "source": "docs_superpowers_specs_2026_09_10_account_mvp_navigation_design_header_notification_dialog_backed_by_canonical_account_inbox",
       "target": "docs_superpowers_specs_2026_09_10_account_mvp_navigation_design_mounted_history_draft_protection_through_navigation_and_join",
       "relation": "references",
@@ -472403,6 +473033,17 @@
       "weight": 1.0
     },
     {
+      "source": "docs_superpowers_specs_2026_09_10_account_mvp_navigation_design_report_a_bug_secondary_navigation",
+      "target": "docs_superpowers_specs_2026_09_10_account_mvp_navigation_design_account_bug_report_contact_contract",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md",
+      "source_location": "/Users/vladyslavhulyi/anidachi-LP-monorepo/.worktrees/room-media-seats-v3/docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md:40-45",
+      "weight": 1.0
+    },
+    {
       "source": "docs_superpowers_specs_2026_09_10_account_mvp_navigation_design_september_11_website_link_first_social_amendment",
       "target": "docs_superpowers_plans_2026_09_11_friends_groups_link_mvp_friends_and_groups_link_first_mvp_plan",
       "relation": "references",
@@ -472422,6 +473063,17 @@
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md",
       "source_location": "/Users/vladyslavhulyi/anidachi-LP-monorepo/.worktrees/prelaunch-fixes/docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md:10",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_specs_2026_09_10_account_mvp_navigation_design_watch_library_friends_groups_subscription_primary_navigation",
+      "target": "docs_superpowers_specs_2026_09_10_account_mvp_navigation_design_report_a_bug_secondary_navigation",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md",
+      "source_location": "/Users/vladyslavhulyi/anidachi-LP-monorepo/.worktrees/room-media-seats-v3/docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md:10-12",
       "weight": 1.0
     },
     {
@@ -476019,5 +476671,5 @@
       "source_file": "docs/superpowers/specs/2026-08-23-single-active-room-session-design.md"
     }
   ],
-  "built_at_commit": "31bc181e4dd25a9763c476f5952da4bfb2f3ce41"
+  "built_at_commit": "e285785bb982be91395973f272e8d94d445a9592"
 }

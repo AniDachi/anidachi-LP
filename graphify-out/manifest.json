@@ -636,10 +636,10 @@
     "semantic_hash": "9d41e7808a58199eb3a5e1fc4ba3a658"
   },
   "apps/web/app/account/account-nav.tsx": {
-    "mtime": 1789366502.8557124,
-    "seen": 1789374356.237226,
-    "ast_hash": "d9ab41735de046b30d0454c14c46dd6f",
-    "semantic_hash": "d9ab41735de046b30d0454c14c46dd6f"
+    "mtime": 1789404279.075102,
+    "seen": 1789404982.916333,
+    "ast_hash": "3d1477869079ceb328890f7f9548c2b3",
+    "semantic_hash": ""
   },
   "apps/web/app/account/friends/page.tsx": {
     "mtime": 1789366502.8561447,
@@ -3606,10 +3606,10 @@
     "semantic_hash": "773034b218ba95d0712867ff35698f20"
   },
   "docs/current-development-state.md": {
-    "mtime": 1789400307.1450093,
-    "seen": 1789401382.683187,
+    "mtime": 1789404544.836034,
+    "seen": 1789404982.9597719,
     "ast_hash": "ccda832776055fcc9b51806280a59c5a",
-    "semantic_hash": "1038fb454772a91555f8c44c49e42394"
+    "semantic_hash": "9520ca7b7b369d79070b1e3a646cc030"
   },
   "docs/development-environments.md": {
     "mtime": 1788807642.3055499,
@@ -5184,10 +5184,10 @@
     "semantic_hash": ""
   },
   "apps/web/app/account/feature-requests/page.tsx": {
-    "mtime": 1789366502.8560643,
-    "seen": 1789374356.237227,
-    "ast_hash": "c12f085569990e6f58828acdb97b8844",
-    "semantic_hash": "c12f085569990e6f58828acdb97b8844"
+    "mtime": 1789404279.3194664,
+    "seen": 1789404982.9163468,
+    "ast_hash": "a6758777ae46d6d47f949bfe202c9dae",
+    "semantic_hash": ""
   },
   "apps/web/app/api/contact/route.ts": {
     "mtime": 1789366502.8622522,
@@ -5238,10 +5238,10 @@
     "semantic_hash": "a39f34fa8e82d7465a91f41fa21f3a63"
   },
   "apps/web/components/contact-form.tsx": {
-    "mtime": 1789366502.9016526,
-    "seen": 1789374356.237371,
-    "ast_hash": "0f4cc63a40c1ed304972174050e2113e",
-    "semantic_hash": "0f4cc63a40c1ed304972174050e2113e"
+    "mtime": 1789404874.984854,
+    "seen": 1789404982.916349,
+    "ast_hash": "d947cb75c026c3e47ca5729f13f3c5e2",
+    "semantic_hash": ""
   },
   "apps/web/components/feature-request-form.tsx": {
     "mtime": 1789366502.9019938,
@@ -7608,10 +7608,10 @@
     "semantic_hash": ""
   },
   "apps/web/app/account/help/page.tsx": {
-    "mtime": 1789366502.8562238,
-    "seen": 1789374356.237228,
-    "ast_hash": "ef94efea239ac8447ebd35e68fe320d8",
-    "semantic_hash": "ef94efea239ac8447ebd35e68fe320d8"
+    "mtime": 1789404279.254413,
+    "seen": 1789404982.916348,
+    "ast_hash": "92b3b4dcac14fd9a1f690664f42baf64",
+    "semantic_hash": ""
   },
   "apps/web/app/account/profile/page.tsx": {
     "mtime": 1789366502.857173,
@@ -7686,10 +7686,10 @@
     "semantic_hash": "ea55b0cab15edcef72b9ffc793c6843e"
   },
   "docs/superpowers/specs/2026-09-10-account-mvp-navigation-design.md": {
-    "mtime": 1789146711.4997644,
-    "seen": 1789154161.7195032,
+    "mtime": 1789404544.9048998,
+    "seen": 1789404982.9597728,
     "ast_hash": "fa0e69d9bd197e89fe0482ebc50e3f0e",
-    "semantic_hash": "fa0e69d9bd197e89fe0482ebc50e3f0e"
+    "semantic_hash": "1cbca477bf6c29a8fe664a2fb0b55f87"
   },
   "apps/extension/src/popup-inbox-panel.tsx": {
     "mtime": 1789400294.6954577,
@@ -8188,5 +8188,17 @@
     "seen": 1789401382.68319,
     "ast_hash": "",
     "semantic_hash": "6ab3acffa7bf49530f5895df4c2e8a1b"
+  },
+  "apps/web/app/account/bug-report/page.tsx": {
+    "mtime": 1789404501.7869215,
+    "seen": 1789404982.916336,
+    "ast_hash": "b7f412b0eba6d89bd9bd5b8b0db88cfd",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/contact-form-client.test.ts": {
+    "mtime": 1789404501.7869925,
+    "seen": 1789404982.91635,
+    "ast_hash": "c307336ae0f5e780ca38cb148337f3b4",
+    "semantic_hash": ""
   }
 }
