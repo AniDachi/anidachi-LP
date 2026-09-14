@@ -4,6 +4,7 @@ import { markAccountInboxItemsSeen } from "@/lib/anidachi-auth/account-inbox";
 import {
 	accountInboxErrorResponse,
 	accountInboxPageLimit,
+	accountInboxIncludeReturnable,
 } from "@/lib/anidachi-auth/account-inbox-routes";
 import { getApiSession } from "@/lib/anidachi-auth/api-session";
 import { readJsonBody } from "@/lib/anidachi-auth/social-routes";
@@ -27,6 +28,9 @@ export async function POST(request: NextRequest) {
 		return NextResponse.json(
 			await markAccountInboxItemsSeen({
 				ownerUserId: session.userId,
+				includeReturnable: accountInboxIncludeReturnable(
+					request.nextUrl.searchParams.get("includeReturnable"),
+				),
 				items: payload.data.items,
 				limit: accountInboxPageLimit(request.nextUrl.searchParams.get("limit")),
 			}),
