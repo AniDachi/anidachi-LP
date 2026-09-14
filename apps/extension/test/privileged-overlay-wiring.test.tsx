@@ -1572,7 +1572,7 @@ describe("privileged overlay wiring", () => {
 		await unmount(view.root);
 	});
 
-	it("uses snapshot member identities to disable an in-room friend and re-enable Return after leave", async () => {
+	it("uses snapshot member identities to disable an in-room friend and re-enable Return after same-count replacement", async () => {
 		const sendMessage = vi.fn(
 			async (message: { type?: string; command?: string }) => {
 				if (message.type === "ANIDACHI_AUTH")
@@ -1655,6 +1655,10 @@ describe("privileged overlay wiring", () => {
 				type: "PARTICIPANT_LEFT",
 				participant: guestParticipant(),
 			});
+			roomConnectionOptions?.onEvent({
+				type: "PARTICIPANT_JOINED",
+				participant: { ...guestParticipant(), id: "replacement-user", displayName: "Replacement" },
+			});
 			await Promise.resolve();
 		});
 		await flushMountedWork();
@@ -1697,6 +1701,67 @@ describe("privileged overlay wiring", () => {
 		expect(loadingVisibleBeforeLoad).toBe(true);
 		expect(closeButtonBeforeLoad).toBeInstanceOf(HTMLButtonElement);
 		expect((closeButtonBeforeLoad as HTMLButtonElement).disabled).toBe(false);
+	});
+
+	it("drops a deferred account A target response after account B replaces it in the same room", async () => {
+		let currentSession = sessionFor("user-a");
+		installActiveHostRoomRuntime({ getSession: () => currentSession });
+		const targets = deferred<Awaited<ReturnType<typeof listInviteTargets>>>();
+		vi.mocked(listInviteTargets).mockReturnValue(targets.promise);
+		vi.mocked(listRoomInvites).mockResolvedValue({
+			meta: { serverTime: "2026-08-22T08:01:00.000Z", schemaVersion: 1 },
+			inbox: [],
+			sent: [],
+		});
+		const view = await renderOverlay();
+
+		await click(button(view.container, "Open Anidachi controls"));
+		await click(button(view.container, "Create room"));
+		await click(await waitForButton(view.container, "Invite friends and groups"));
+		await flushMountedWork();
+
+		currentSession = sessionFor("user-b");
+		await extensionStorage.storage.setItem(AUTH_TOKENS_KEY, currentSession);
+		await flushMountedWork();
+		targets.resolve({ friends: [inviteFriend()], groups: [] });
+		await flushMountedWork();
+
+		expect(view.container.textContent).not.toContain("Ads Mag");
+		expect(view.container.textContent).not.toContain("1 available");
+		await unmount(view.root);
+	});
+
+	it("drops a deferred account A send result after account B replaces it in the same room", async () => {
+		let currentSession = sessionFor("user-a");
+		installActiveHostRoomRuntime({ getSession: () => currentSession });
+		vi.mocked(listInviteTargets).mockResolvedValue({ friends: [inviteFriend()], groups: [] });
+		vi.mocked(listRoomInvites).mockResolvedValue({
+			meta: { serverTime: "2026-08-22T08:01:00.000Z", schemaVersion: 1 },
+			inbox: [],
+			sent: [],
+		});
+		const sent = deferred<Awaited<ReturnType<typeof createRoomInvite>>>();
+		vi.mocked(createRoomInvite).mockReturnValue(sent.promise);
+		const view = await renderOverlay();
+
+		await click(button(view.container, "Open Anidachi controls"));
+		await click(button(view.container, "Create room"));
+		await click(await waitForButton(view.container, "Invite friends and groups"));
+		await flushMountedWork();
+		await click(button(view.container, "Invite"));
+		await flushMountedWork();
+
+		currentSession = sessionFor("user-b");
+		await extensionStorage.storage.setItem(AUTH_TOKENS_KEY, currentSession);
+		await flushMountedWork();
+		const pendingInvite = invitesResponse("pending").sent[0];
+		if (!pendingInvite) throw new Error("Missing pending invite fixture");
+		sent.resolve({ created: true, invite: pendingInvite });
+		await flushMountedWork();
+
+		expect(view.container.textContent).not.toContain("Invite sent to Ads Mag");
+		expect(view.container.textContent).not.toContain("Pending");
+		await unmount(view.root);
 	});
 
 
@@ -3162,7 +3227,10 @@ function invitesResponse(status: RoomInvite["recipients"][number]["status"]) {
 }
 
 function installActiveHostRoomRuntime(
-	runtimeOptions: { mediaSeat?: "none" | "joined" } = {},
+	runtimeOptions: {
+		mediaSeat?: "none" | "joined";
+		getSession?: () => ReturnType<typeof sessionFor> | null;
+	} = {},
 ): void {
 	const sendMessage = vi.fn(
 		async (message: {
@@ -3172,7 +3240,12 @@ function installActiveHostRoomRuntime(
 			record?: RoomSessionRecord;
 		}) => {
 			if (message.type === "ANIDACHI_AUTH") {
-				return { ok: true, tokens: sessionFor("user-a") };
+				return {
+					ok: true,
+					tokens: runtimeOptions.getSession
+						? runtimeOptions.getSession()
+						: sessionFor("user-a"),
+				};
 			}
 			if (
 				message.type === "ANIDACHI_ROOM_HTTP" &&
