@@ -2,9 +2,11 @@ import { z } from "zod";
 import {
 	MediaIntentSchema,
 	HostMediaRevokeSchema,
+	SetMediaSeatSchema,
 	MediaIntentAckSchema,
 	MediaIntentErrorSchema,
 	RoomMediaSnapshotSchema,
+	MediaSeatResultSchema,
 } from "./room-media";
 import {
   MAX_DISPLAY_NAME_CHARS,
@@ -285,6 +287,7 @@ export const ClientEventSchema = z
 	.discriminatedUnion("type", [
 		MediaIntentSchema,
 		HostMediaRevokeSchema,
+		SetMediaSeatSchema,
   RoomScopedSchema.extend({
     type: z.literal("PING"),
     sentAt: z.number().int().nonnegative(),
@@ -363,6 +366,7 @@ export const ClientEventSchema = z
 });
 
 export const ServerEventSchema = z.discriminatedUnion("type", [
+	MediaSeatResultSchema,
 	MediaIntentAckSchema,
 	MediaIntentErrorSchema,
 	RoomMediaSnapshotSchema,

@@ -258,6 +258,16 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
 
 ## Progress Log
 
+- 2026-09-14 — The approved [host-managed-seat plan](2026-09-14-host-managed-media-seats.md)
+  adds negotiated v3 rooms without changing frozen plan capacities, room
+  lifecycle, quota, invite flow or the existing v2 contract. Seat authority and
+  device intent are separate; host revocation stops outgoing media while
+  receiving continues. Cross-plane implementation and scoped reviews are local;
+  the [delivery record](../../releases/room-media-seats/2026-09-14-delivery.md)
+  tracks final WebRTC checks, compatible rollout and staging acceptance. The
+  June four-person topology target remains historical, as superseded by the
+  approved September limits; media quality and network acceptance gates remain.
+
 - 2026-09-08 — `codex/personal-history-mvp`, committed runtime source
   `8e4dd284`: accepted personal-history MVP supersedes the legacy four-person
   target only for explicitly negotiated v2 rooms (4/6/15 participants, four

@@ -119,7 +119,9 @@ export async function verifyRoomToken(
 			verified.capabilities = {
 				hostPlanCode: caps.hostPlanCode,
 				maxParticipants: caps.maxParticipants,
-				maxMediaSeats: 0,
+				// Legacy projection stays disabled: negotiated v2/v3 snapshots
+ // are the sole publication/seat authority.
+ maxMediaSeats: 0,
 				canNameRoom: caps.hostPlanCode !== "free",
 				canSendPushInvites: caps.hostPlanCode !== "free",
 			};

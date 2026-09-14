@@ -637,6 +637,9 @@ interface P2PPeer {
   lastSignalingRecoveryConnectionId: string | null;
   lastMediaStallRecoveryAt: number;
   makingOffer: boolean;
+  mediaNegotiationRevision: number;
+  offeredMediaNegotiationRevision: number;
+  remoteRenegotiationPending: boolean;
   mediaSyncChain: Promise<void>;
   mediaSyncPendingCount: number;
   mediaSyncing: boolean;
@@ -929,6 +932,9 @@ export class P2PMediaController {
   }
 
   private sendSignal(toUserId: string, signal: P2PSignal): RoomSendDisposition {
+    if (this.mediaSnapshot !== undefined && !this.permittedPeerIds.has(toUserId)) {
+      return "dropped";
+    }
     const disposition = this.sendSignalToTransport(toUserId, signal, {
       senderMediaSessionId: this.mediaSessionId,
     });
@@ -1233,7 +1239,7 @@ export class P2PMediaController {
       for (const peer of this.peers.values()) {
         const changed = await this.syncPeerMedia(peer);
         if (changed || !this.shouldInitiateOffers(peer)) {
-          this.queueNegotiation(peer, "camera-start");
+          this.queueNegotiation(peer, "camera-start", peer.mediaNegotiationRevision);
         }
       }
 
@@ -1491,7 +1497,7 @@ export class P2PMediaController {
         const negotiationNeeded = await this.syncPeerMedia(peer);
         if (this.disposed || intentGeneration !== this.microphoneIntentGeneration || !this.microphonePublishingWanted) return;
         if (needsMediaOffer || negotiationNeeded) {
-          this.queueNegotiation(peer, "voice-resume");
+          this.queueNegotiation(peer, "voice-resume", peer.mediaNegotiationRevision);
         }
         this.sendMicrophonePublicationState(peer.remoteUserId, true);
       }
@@ -1583,7 +1589,7 @@ export class P2PMediaController {
         const negotiationNeeded = await this.syncPeerMedia(peer);
         if (this.disposed || intentGeneration !== this.microphoneIntentGeneration || !this.microphonePublishingWanted) return;
         if (needsMediaOffer || negotiationNeeded) {
-          this.queueNegotiation(peer, "voice-start");
+          this.queueNegotiation(peer, "voice-start", peer.mediaNegotiationRevision);
         }
         this.sendMicrophonePublicationState(peer.remoteUserId, true);
       }
@@ -2153,7 +2159,13 @@ export class P2PMediaController {
           // A grant change can race with an offer already in transit. Preserve
           // that peer and let its stable-state drain negotiate the latest media.
           await this.syncPeerMedia(peer);
-          this.queueNegotiation(peer, "remote-renegotiate");
+          if (peer.makingOffer || peer.pc.signalingState === "have-local-offer") {
+            // A snapshot-driven offer can cross the remote request for that
+            // same change. Its answer will tell us whether another is needed.
+            peer.remoteRenegotiationPending = true;
+          } else {
+            this.queueNegotiation(peer, "remote-renegotiate");
+          }
         } else {
           await this.recoverPeerNegotiation(peer, "remote-renegotiate", true);
         }
@@ -2284,6 +2296,20 @@ export class P2PMediaController {
       if (description.type === "offer") {
         peer.signalingRecoveryNeeded =
           (await this.createAndSendAnswer(peer)) !== "sent";
+      } else if (peer.remoteRenegotiationPending) {
+        const transceivers = [peer.audioTransceiver, peer.videoTransceiver];
+        const mediaSatisfied = transceivers.every(
+          (transceiver) => transceiver && transceiver.currentDirection === transceiver.direction,
+        );
+        const transportFailed =
+          ["failed", "disconnected"].includes(peer.pc.connectionState) ||
+          ["failed", "disconnected"].includes(peer.pc.iceConnectionState);
+        if (mediaSatisfied && !transportFailed) {
+          peer.remoteRenegotiationPending = false;
+        } else if (!peer.makingOffer && peer.pc.signalingState === "stable") {
+          peer.remoteRenegotiationPending = false;
+          this.queueNegotiation(peer, "remote-renegotiate-unsatisfied");
+        }
       }
       return true;
     } catch (error) {
@@ -3218,6 +3244,9 @@ export class P2PMediaController {
       lastSignalingRecoveryConnectionId: null,
       lastMediaStallRecoveryAt: 0,
       makingOffer: false,
+      mediaNegotiationRevision: 0,
+      offeredMediaNegotiationRevision: -1,
+      remoteRenegotiationPending: false,
       mediaSyncChain: Promise.resolve(),
       mediaSyncPendingCount: 0,
       mediaSyncing: false,
@@ -3270,7 +3299,7 @@ export class P2PMediaController {
         localParticipantId: this.localParticipant.id,
         remoteUserId,
       });
-      this.queueNegotiation(peer, "negotiationneeded");
+      this.queueNegotiation(peer, "negotiationneeded", peer.mediaNegotiationRevision);
     });
 
     pc.addEventListener("signalingstatechange", () => {
@@ -3460,7 +3489,7 @@ export class P2PMediaController {
     // synchronized. Drain that request as soon as the sync releases the peer;
     // otherwise no signaling-state event is guaranteed to wake it up again.
     if (forceOffer || changed || peer.needsNegotiation) {
-      this.queueNegotiation(peer, reason);
+      this.queueNegotiation(peer, reason, forceOffer || peer.needsNegotiation ? undefined : peer.mediaNegotiationRevision);
     }
   }
 
@@ -3583,6 +3612,7 @@ export class P2PMediaController {
     await configureSender(audioTransceiver.sender, P2P_AUDIO_BITRATE_BPS);
 
     if (negotiationNeeded) {
+      peer.mediaNegotiationRevision += 1;
       logDebug("p2p.media", "synced senders", {
         localParticipantId: this.localParticipant.id,
         remoteUserId: peer.remoteUserId,
@@ -3706,7 +3736,11 @@ export class P2PMediaController {
     );
   }
 
-  private queueNegotiation(peer: P2PPeer, _reason: string): void {
+  private queueNegotiation(
+    peer: P2PPeer,
+    _reason: string,
+    mediaRevision?: number,
+  ): void {
     if (
       this.disposed ||
       this.peers.get(peer.remoteUserId) !== peer ||
@@ -3717,6 +3751,18 @@ export class P2PMediaController {
         remoteUserId: peer.remoteUserId,
         reason: _reason,
       });
+      return;
+    }
+
+    // Explicit sync and the browser's later negotiationneeded task can refer
+    // to the same media change. Once an offer includes that revision, neither
+    // may create a second pending offer. Untagged recovery requests still force
+    // negotiation, and a newer revision during an offer remains pending.
+    if (
+      mediaRevision !== undefined &&
+      this.shouldInitiateOffers(peer) &&
+      mediaRevision <= peer.offeredMediaNegotiationRevision
+    ) {
       return;
     }
 
@@ -3784,6 +3830,8 @@ export class P2PMediaController {
 
     peer.needsNegotiation = false;
     peer.makingOffer = true;
+    const previousOfferedRevision = peer.offeredMediaNegotiationRevision;
+    peer.offeredMediaNegotiationRevision = peer.mediaNegotiationRevision;
 
     try {
       const offer = await peer.pc.createOffer();
@@ -3800,6 +3848,7 @@ export class P2PMediaController {
         peer.needsNegotiation = true;
       }
     } catch (error) {
+      peer.offeredMediaNegotiationRevision = previousOfferedRevision;
       logDebug("p2p.negotiation", "offer failed", {
         localParticipantId: this.localParticipant.id,
         remoteUserId: peer.remoteUserId,

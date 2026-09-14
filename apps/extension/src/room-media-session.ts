@@ -4,12 +4,22 @@ import type {
 	RoomMediaKind,
 	RoomMediaSnapshot,
 	ServerEvent,
+	SetMediaSeat,
 } from "@anidachi/protocol";
+import { shouldApplyRoomMediaSnapshot } from "@anidachi/protocol";
+
+export interface MediaSeatControlState {
+	pending: boolean;
+	error?: string;
+}
 
 /** Client intent only. Server snapshots/ACKs remain the sole grant authority. */
 export class RoomMediaSession {
 	snapshot: RoomMediaSnapshot | null = null;
 	error: string | null = null;
+	readonly seatControls = new Map<string, MediaSeatControlState>();
+	private seatRequests = new Map<string, SetMediaSeat>();
+	private roomGeneration: number | null = null;
 	private current = new Map<RoomMediaKind, MediaIntent>();
 	private accepted = new Map<RoomMediaKind, number>();
 	private sequences = { camera: 0, microphone: 0 };
@@ -22,8 +32,41 @@ export class RoomMediaSession {
 		readonly participantSessionId: string,
 	) {}
 
+	/** Only the authenticated ROOM_SNAPSHOT lifecycle may change this binding. */
+	bindRoomGeneration(generation: number): boolean {
+		if (this.roomGeneration !== null && generation < this.roomGeneration) return false;
+		if (this.roomGeneration !== null && generation > this.roomGeneration) this.reset();
+		this.roomGeneration = generation;
+		return true;
+	}
+
+	hasSeat(): boolean {
+		return Boolean(this.state && (!("mediaSeatGranted" in this.state) || this.state.mediaSeatGranted));
+	}
+
+	setMediaSeat(targetUserId: string, targetParticipantSessionId: string, enabled: boolean): SetMediaSeat | null {
+		const snapshot = this.snapshot;
+		const state = snapshot?.participants.find(p => p.participantSessionId === targetParticipantSessionId);
+		if (!snapshot || snapshot.capabilities.mediaProtocolVersion !== 3 || !state ||
+			!("seatRevision" in state) || typeof state.seatRevision !== "number" || this.seatControls.get(targetUserId)?.pending) return null;
+		const command: SetMediaSeat = {type: "SET_MEDIA_SEAT", roomId: this.roomId,
+			roomGeneration: snapshot.roomGeneration, targetUserId, targetParticipantSessionId,
+			expectedSeatRevision: state.seatRevision, enabled, requestId: crypto.randomUUID()};
+		this.seatRequests.set(targetUserId, command);
+		this.seatControls.set(targetUserId, {pending: true});
+		return command;
+	}
+
+	interruptSeatCommands(): void {
+		for (const userId of this.seatRequests.keys()) {
+			this.seatControls.set(userId, {pending: false, error: "Connection interrupted. Check the seat and try again."});
+		}
+		this.seatRequests.clear();
+	}
+
 	intent(media: RoomMediaKind, enabled: boolean): MediaIntent | null {
 		if (!this.snapshot || !this.state) return null;
+		if (enabled && !this.hasSeat()) return null;
 		const intent: MediaIntent = {
 			type: "SET_MEDIA_INTENT",
 			roomId: this.roomId,
@@ -101,6 +144,7 @@ export class RoomMediaSession {
 		const intent = this.current.get(media);
 		return Boolean(
 			intent?.enabled &&
+				this.hasSeat() &&
 				this.state?.[`${media}Granted`] &&
 				intent.revocationEpoch === this.state[`${media}RevocationEpoch`] &&
 				intent.intentSequence === this.state[`${media}IntentSequence`] &&
@@ -109,14 +153,33 @@ export class RoomMediaSession {
 	}
 
 	consume(event: ServerEvent): boolean {
+		if (event.type === "ROOM_SNAPSHOT") {
+			if (event.roomId !== this.roomId || !event.participants.some(p => p.participantSessionId === this.participantSessionId)) return false;
+			return this.bindRoomGeneration(event.roomGeneration);
+		}
+		if (event.type === "MEDIA_SEAT_RESULT") {
+			if (event.snapshot.roomId !== this.roomId || event.snapshot.roomGeneration !== this.roomGeneration) return false;
+			const acceptedSnapshot = this.consume(event.snapshot);
+			for (const [userId, command] of this.seatRequests) {
+				if (command.requestId !== event.requestId || command.targetParticipantSessionId !== event.targetParticipantSessionId) continue;
+				this.seatRequests.delete(userId);
+				const error = event.code === "OK" ? undefined : event.code === "MEDIA_LIMIT_REACHED"
+					? "All media seats are in use. Free a seat first."
+					: event.code === "MEDIA_STALE_SESSION" ? "Participant reconnected. Try again."
+					: event.code === "MEDIA_STALE_SEAT_REVISION" ? "The seat changed. Check its state and try again."
+					: "Could not change the media seat. Try again.";
+				this.seatControls.set(userId, {pending: false, ...(error ? {error} : {})});
+				return true;
+			}
+			return acceptedSnapshot;
+		}
 		if (event.type === "ROOM_MEDIA_SNAPSHOT") {
 			if (
-				event.roomId !== this.roomId ||
-				(this.snapshot && event.roomGeneration < this.snapshot.roomGeneration)
+				this.roomGeneration === null ||
+				(this.snapshot && event.capabilities.mediaProtocolVersion !== this.snapshot.capabilities.mediaProtocolVersion) ||
+				!shouldApplyRoomMediaSnapshot({roomId: this.roomId, roomGeneration: this.roomGeneration}, this.snapshot, event)
 			)
 				return false;
-			if (this.snapshot && event.roomGeneration > this.snapshot.roomGeneration)
-				this.reset();
 			if (event.snapshotSequence < this.sequence) return false;
 			this.snapshot = event;
 			this.sequence = event.snapshotSequence;
@@ -135,6 +198,7 @@ export class RoomMediaSession {
 			return false;
 		if (
 			!this.snapshot ||
+			("mediaSeatGranted" in event.state) !== (this.snapshot.capabilities.mediaProtocolVersion === 3) ||
 			event.roomId !== this.roomId ||
 			event.roomGeneration !== this.snapshot.roomGeneration ||
 			event.participantSessionId !== this.participantSessionId ||
@@ -155,7 +219,8 @@ export class RoomMediaSession {
 			this.accepted.delete(event.media);
 			this.error =
 				event.code === "MEDIA_LIMIT_REACHED"
-					? `All ${event.media} places are occupied. Try again when one is free.`
+					? event.media === "camera" ? "All 4 cameras are in use" : "All microphone places are occupied. Try again when one is free."
+					: event.code === "MEDIA_SEAT_REQUIRED" ? "Media seat required"
 					: "Media request expired. Try again.";
 		} else if (
 			intent.revocationEpoch === event.state[`${event.media}RevocationEpoch`] &&
@@ -174,6 +239,7 @@ export class RoomMediaSession {
 			const intent = this.current.get(media);
 			if (
 				!state ||
+				("mediaSeatGranted" in state && !state.mediaSeatGranted) ||
 				(intent && intent.revocationEpoch !== state[`${media}RevocationEpoch`])
 			) {
 				this.current.delete(media);
@@ -205,5 +271,8 @@ export class RoomMediaSession {
 		this.current.clear();
 		this.accepted.clear();
 		this.sequences = { camera: 0, microphone: 0 };
+		this.roomGeneration = null;
+		this.seatRequests.clear();
+		this.seatControls.clear();
 	}
 }
