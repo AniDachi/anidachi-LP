@@ -12556,7 +12556,7 @@
       "file_type": "code",
       "norm_label": "p2psignalserverevent",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7042"
+      "source_location": "L7074"
     },
     {
       "id": "apps_extension_src_overlay_app_pointerwakepoint",
@@ -26995,7 +26995,7 @@
       "file_type": "code",
       "norm_label": "button()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3216"
+      "source_location": "L3391"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_click",
@@ -27007,7 +27007,7 @@
       "file_type": "code",
       "norm_label": "click()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3195"
+      "source_location": "L3370"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_confirmedroomsession",
@@ -27019,7 +27019,7 @@
       "file_type": "code",
       "norm_label": "confirmedroomsession()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2951"
+      "source_location": "L3055"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_createadapter",
@@ -27031,7 +27031,7 @@
       "file_type": "code",
       "norm_label": "createadapter()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2857"
+      "source_location": "L2961"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_deferred",
@@ -27043,7 +27043,7 @@
       "file_type": "code",
       "norm_label": "deferred()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3114"
+      "source_location": "L3289"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_flushmountedwork",
@@ -27055,7 +27055,7 @@
       "file_type": "code",
       "norm_label": "flushmountedwork()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3289"
+      "source_location": "L3464"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_flushroomactionwork",
@@ -27067,7 +27067,7 @@
       "file_type": "code",
       "norm_label": "flushroomactionwork()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3297"
+      "source_location": "L3472"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_guestparticipant",
@@ -27079,7 +27079,7 @@
       "file_type": "code",
       "norm_label": "guestparticipant()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2986"
+      "source_location": "L3090"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_hostparticipant",
@@ -27091,7 +27091,7 @@
       "file_type": "code",
       "norm_label": "hostparticipant()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2974"
+      "source_location": "L3078"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_installactivehostroomruntime",
@@ -27103,7 +27103,7 @@
       "file_type": "code",
       "norm_label": "installactivehostroomruntime()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3049"
+      "source_location": "L3153"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_installoverlayruntime",
@@ -27115,7 +27115,19 @@
       "file_type": "code",
       "norm_label": "installoverlayruntime()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3183"
+      "source_location": "L3358"
+    },
+    {
+      "id": "apps_extension_test_privileged_overlay_wiring_test_installroomdefaultsruntime",
+      "label": "installRoomDefaultsRuntime()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 149,
+      "community_name": "Privileged Overlay Wiring Test",
+      "file_type": "code",
+      "norm_label": "installroomdefaultsruntime()",
+      "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
+      "source_location": "L3220"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_invitefriend",
@@ -27127,7 +27139,7 @@
       "file_type": "code",
       "norm_label": "invitefriend()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2998"
+      "source_location": "L3102"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_invitesresponse",
@@ -27139,7 +27151,7 @@
       "file_type": "code",
       "norm_label": "invitesresponse()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3015"
+      "source_location": "L3119"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_preparedroomsession",
@@ -27151,7 +27163,7 @@
       "file_type": "code",
       "norm_label": "preparedroomsession()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2941"
+      "source_location": "L3045"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_primaryroomaction",
@@ -27163,7 +27175,7 @@
       "file_type": "code",
       "norm_label": "primaryroomaction()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3256"
+      "source_location": "L3431"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_privilegedinvokes",
@@ -27175,7 +27187,7 @@
       "file_type": "code",
       "norm_label": "privilegedinvokes()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3276"
+      "source_location": "L3451"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_renderoverlay",
@@ -27187,7 +27199,7 @@
       "file_type": "code",
       "norm_label": "renderoverlay()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3125"
+      "source_location": "L3300"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_renderoverlayinclosedshadow",
@@ -27199,7 +27211,7 @@
       "file_type": "code",
       "norm_label": "renderoverlayinclosedshadow()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3151"
+      "source_location": "L3326"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_roomauthority",
@@ -27211,7 +27223,7 @@
       "file_type": "code",
       "norm_label": "roomauthority()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2932"
+      "source_location": "L3036"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_roomsessionstorageresponse",
@@ -27223,7 +27235,7 @@
       "file_type": "code",
       "norm_label": "roomsessionstorageresponse()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2963"
+      "source_location": "L3067"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_sessionfor",
@@ -27235,7 +27247,7 @@
       "file_type": "code",
       "norm_label": "sessionfor()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2918"
+      "source_location": "L3022"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_trustedclick",
@@ -27247,7 +27259,7 @@
       "file_type": "code",
       "norm_label": "trustedclick()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3203"
+      "source_location": "L3378"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_unmount",
@@ -27259,7 +27271,7 @@
       "file_type": "code",
       "norm_label": "unmount()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3285"
+      "source_location": "L3460"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_waitforbutton",
@@ -27271,7 +27283,7 @@
       "file_type": "code",
       "norm_label": "waitforbutton()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3227"
+      "source_location": "L3402"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_waitforenabledprimaryroomaction",
@@ -27283,7 +27295,7 @@
       "file_type": "code",
       "norm_label": "waitforenabledprimaryroomaction()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3263"
+      "source_location": "L3438"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_waitfortext",
@@ -27295,7 +27307,7 @@
       "file_type": "code",
       "norm_label": "waitfortext()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3243"
+      "source_location": "L3418"
     },
     {
       "id": "apps_web_supabase_contracts_personal_mvp_preservation_contract_chain",
@@ -65719,7 +65731,7 @@
       "file_type": "code",
       "norm_label": "activeroomconflictmessage()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7192"
+      "source_location": "L7224"
     },
     {
       "id": "apps_extension_src_overlay_app_appendvisiblereaction",
@@ -65743,7 +65755,7 @@
       "file_type": "code",
       "norm_label": "buildcurrentsourceurlforinvite()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7238"
+      "source_location": "L7270"
     },
     {
       "id": "apps_extension_src_overlay_app_camerabubble",
@@ -65755,7 +65767,7 @@
       "file_type": "code",
       "norm_label": "camerabubble()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6792"
+      "source_location": "L6824"
     },
     {
       "id": "apps_extension_src_overlay_app_clearroomhash",
@@ -65767,7 +65779,7 @@
       "file_type": "code",
       "norm_label": "clearroomhash()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7143"
+      "source_location": "L7175"
     },
     {
       "id": "apps_extension_src_overlay_app_createclientsignalid",
@@ -65779,7 +65791,7 @@
       "file_type": "code",
       "norm_label": "createclientsignalid()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7044"
+      "source_location": "L7076"
     },
     {
       "id": "apps_extension_src_overlay_app_ensureroomhash",
@@ -65791,7 +65803,7 @@
       "file_type": "code",
       "norm_label": "ensureroomhash()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7222"
+      "source_location": "L7254"
     },
     {
       "id": "apps_extension_src_overlay_app_fallbackcopy",
@@ -65803,7 +65815,7 @@
       "file_type": "code",
       "norm_label": "fallbackcopy()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7259"
+      "source_location": "L7291"
     },
     {
       "id": "apps_extension_src_overlay_app_formatquotacountdown",
@@ -65815,7 +65827,7 @@
       "file_type": "code",
       "norm_label": "formatquotacountdown()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7208"
+      "source_location": "L7240"
     },
     {
       "id": "apps_extension_src_overlay_app_getincomingp2psignaldedupekey",
@@ -65827,7 +65839,7 @@
       "file_type": "code",
       "norm_label": "getincomingp2psignaldedupekey()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7048"
+      "source_location": "L7080"
     },
     {
       "id": "apps_extension_src_overlay_app_getlivechatnamecolor",
@@ -65839,7 +65851,7 @@
       "file_type": "code",
       "norm_label": "getlivechatnamecolor()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7033"
+      "source_location": "L7065"
     },
     {
       "id": "apps_extension_src_overlay_app_getroomidfromhash",
@@ -65851,7 +65863,7 @@
       "file_type": "code",
       "norm_label": "getroomidfromhash()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7138"
+      "source_location": "L7170"
     },
     {
       "id": "apps_extension_src_overlay_app_initials",
@@ -65863,7 +65875,7 @@
       "file_type": "code",
       "norm_label": "initials()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7273"
+      "source_location": "L7305"
     },
     {
       "id": "apps_extension_src_overlay_app_isescapekey",
@@ -65875,7 +65887,7 @@
       "file_type": "code",
       "norm_label": "isescapekey()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7111"
+      "source_location": "L7143"
     },
     {
       "id": "apps_extension_src_overlay_app_isfullscreenactive",
@@ -65887,7 +65899,7 @@
       "file_type": "code",
       "norm_label": "isfullscreenactive()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7115"
+      "source_location": "L7147"
     },
     {
       "id": "apps_extension_src_overlay_app_iskeyboardeditableelement",
@@ -65899,7 +65911,7 @@
       "file_type": "code",
       "norm_label": "iskeyboardeditableelement()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7127"
+      "source_location": "L7159"
     },
     {
       "id": "apps_extension_src_overlay_app_iskeyboardeditabletarget",
@@ -65911,7 +65923,7 @@
       "file_type": "code",
       "norm_label": "iskeyboardeditabletarget()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7119"
+      "source_location": "L7151"
     },
     {
       "id": "apps_extension_src_overlay_app_ismessagecomposershortcut",
@@ -65923,7 +65935,7 @@
       "file_type": "code",
       "norm_label": "ismessagecomposershortcut()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7107"
+      "source_location": "L7139"
     },
     {
       "id": "apps_extension_src_overlay_app_isstaleauthoritativegeneration",
@@ -65935,7 +65947,7 @@
       "file_type": "code",
       "norm_label": "isstaleauthoritativegeneration()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7246"
+      "source_location": "L7278"
     },
     {
       "id": "apps_extension_src_overlay_app_livechatcolumn",
@@ -65947,7 +65959,7 @@
       "file_type": "code",
       "norm_label": "livechatcolumn()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6960"
+      "source_location": "L6992"
     },
     {
       "id": "apps_extension_src_overlay_app_nextavailablereactionlane",
@@ -65971,7 +65983,7 @@
       "file_type": "code",
       "norm_label": "normalizechatdisplaymode()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7099"
+      "source_location": "L7131"
     },
     {
       "id": "apps_extension_src_overlay_app_normalizeoverlayviewportdimension",
@@ -65983,7 +65995,7 @@
       "file_type": "code",
       "norm_label": "normalizeoverlayviewportdimension()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7103"
+      "source_location": "L7135"
     },
     {
       "id": "apps_extension_src_overlay_app_overlayapp",
@@ -66007,7 +66019,7 @@
       "file_type": "code",
       "norm_label": "handleonline()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4101"
+      "source_location": "L4133"
     },
     {
       "id": "apps_extension_src_overlay_app_overlayapp_handlepagehide",
@@ -66019,7 +66031,7 @@
       "file_type": "code",
       "norm_label": "handlepagehide()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4116"
+      "source_location": "L4148"
     },
     {
       "id": "apps_extension_src_overlay_app_overlayapp_handlepageshow",
@@ -66031,7 +66043,7 @@
       "file_type": "code",
       "norm_label": "handlepageshow()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4124"
+      "source_location": "L4156"
     },
     {
       "id": "apps_extension_src_overlay_app_overlayapp_handlevisibilitychange",
@@ -66043,7 +66055,7 @@
       "file_type": "code",
       "norm_label": "handlevisibilitychange()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4105"
+      "source_location": "L4137"
     },
     {
       "id": "apps_extension_src_overlay_app_overlayapp_refreshwatchhistoryonfocus",
@@ -66055,7 +66067,7 @@
       "file_type": "code",
       "norm_label": "refreshwatchhistoryonfocus()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2499"
+      "source_location": "L2522"
     },
     {
       "id": "apps_extension_src_overlay_app_prunehandledp2psignalids",
@@ -66067,7 +66079,7 @@
       "file_type": "code",
       "norm_label": "prunehandledp2psignalids()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7055"
+      "source_location": "L7087"
     },
     {
       "id": "apps_extension_src_overlay_app_quotaexhaustedmessage",
@@ -66079,7 +66091,7 @@
       "file_type": "code",
       "norm_label": "quotaexhaustedmessage()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7158"
+      "source_location": "L7190"
     },
     {
       "id": "apps_extension_src_overlay_app_resetcomposershieldinlinestyles",
@@ -66091,7 +66103,7 @@
       "file_type": "code",
       "norm_label": "resetcomposershieldinlinestyles()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7282"
+      "source_location": "L7314"
     },
     {
       "id": "apps_extension_src_overlay_app_roomjoinunavailablemessage",
@@ -66103,7 +66115,7 @@
       "file_type": "code",
       "norm_label": "roomjoinunavailablemessage()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7173"
+      "source_location": "L7205"
     },
     {
       "id": "apps_extension_src_overlay_app_roomterminalclosemessage",
@@ -66115,7 +66127,7 @@
       "file_type": "code",
       "norm_label": "roomterminalclosemessage()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7182"
+      "source_location": "L7214"
     },
     {
       "id": "apps_extension_src_overlay_app_runoverlayprivilegedaction",
@@ -66139,7 +66151,7 @@
       "file_type": "code",
       "norm_label": "setroomhash()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7228"
+      "source_location": "L7260"
     },
     {
       "id": "apps_extension_src_overlay_app_shouldopenpanelforinitialroom",
@@ -66151,7 +66163,7 @@
       "file_type": "code",
       "norm_label": "shouldopenpanelforinitialroom()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7215"
+      "source_location": "L7247"
     },
     {
       "id": "apps_extension_src_overlay_app_stopnativeevent",
@@ -66163,7 +66175,7 @@
       "file_type": "code",
       "norm_label": "stopnativeevent()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7334"
+      "source_location": "L7366"
     },
     {
       "id": "apps_extension_src_overlay_app_toincomingp2psignal",
@@ -66175,7 +66187,7 @@
       "file_type": "code",
       "norm_label": "toincomingp2psignal()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7071"
+      "source_location": "L7103"
     },
     {
       "id": "apps_extension_src_overlay_app_useplayeroverlaygeometry",
@@ -66199,7 +66211,7 @@
       "file_type": "code",
       "norm_label": "wakeplayeraftercomposershieldrelease()",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7291"
+      "source_location": "L7323"
     },
     {
       "id": "apps_extension_src_overlay_panel_interaction_shoulddismissoverlaypanel",
@@ -75541,7 +75553,7 @@
       "norm_label": "authenticated ice endpoint",
       "rationale": "Room-bound token prevents anonymous TURN credential minting; legacy no-token client gets401/STUN fallback.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L213",
+      "source_location": "L224",
       "source_url": null
     },
     {
@@ -75557,7 +75569,7 @@
       "norm_label": "bfcache session resume",
       "rationale": "pagehide closes socket; persisted pageshow resumes stable participant session.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L159",
+      "source_location": "L170",
       "source_url": null
     },
     {
@@ -75573,7 +75585,7 @@
       "norm_label": "bounded camera recovery state",
       "rationale": "Explicit camera states, backoff and rapid-failure budget avoid track and public-status flapping.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L182",
+      "source_location": "L193",
       "source_url": null
     },
     {
@@ -75589,7 +75601,7 @@
       "norm_label": "decoded frame stall recovery",
       "rationale": "Decoded frames outrank moving bytes; expected video stall triggers throttled automatic ICE recovery.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L178",
+      "source_location": "L189",
       "source_url": null
     },
     {
@@ -75605,7 +75617,7 @@
       "norm_label": "deferred hmac ip abuse signals",
       "rationale": "Historical proposal retains hashed IPs, soft shared-NAT-aware cap and conditional Turnstile; no raw IP logging or hard bans.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L221",
+      "source_location": "L232",
       "source_url": null
     },
     {
@@ -75621,7 +75633,7 @@
       "norm_label": "deferred relay privacy mode",
       "rationale": "Peer IP exposure acceptable for friends rooms; future public-room relay privacy is documentation only.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L219",
+      "source_location": "L230",
       "source_url": null
     },
     {
@@ -75637,7 +75649,7 @@
       "norm_label": "forced relay harness",
       "rationale": "HARNESS_FORCE_RELAY=true must select relay candidate pairs with real short-lived TURN; host/srflx alone cannot pass.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L45",
+      "source_location": "L56",
       "source_url": null
     },
     {
@@ -75653,7 +75665,7 @@
       "norm_label": "four acceptance layers",
       "rationale": "Direct local harness, real forced relay, staging different-device/network, remote-country tester are separate required evidence layers.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L39",
+      "source_location": "L50",
       "source_url": null
     },
     {
@@ -75669,7 +75681,7 @@
       "norm_label": "free host quota",
       "rationale": "Thirty daily own-host minutes while host plus guest connected; paid unmetered; UTC reset and graceful warning/end; guest plan does not set room usage.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L71",
+      "source_location": "L82",
       "source_url": null
     },
     {
@@ -75685,7 +75697,7 @@
       "norm_label": "future abuse controls",
       "rationale": "Historical planned observability-first account-farming limits, HMAC identifiers and shared-NAT safety; unchecked items are not claimed deployed.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L224",
+      "source_location": "L235",
       "source_url": null
     },
     {
@@ -75701,7 +75713,7 @@
       "norm_label": "historical four person cap",
       "rationale": "Legacy four-person cap preserved as historical baseline, superseded for negotiated v2 by September 8 progress amendment.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L72",
+      "source_location": "L83",
       "source_url": null
     },
     {
@@ -75717,7 +75729,7 @@
       "norm_label": "historical immortal lobby defect",
       "rationale": "June audit identified non-ended lobby records permanently consuming the old room limit.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L57",
+      "source_location": "L68",
       "source_url": null
     },
     {
@@ -75733,7 +75745,7 @@
       "norm_label": "idempotent peer reconciliation",
       "rationale": "Five-second loop repairs ICE or real negotiation drift without steady-state churn.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L173",
+      "source_location": "L184",
       "source_url": null
     },
     {
@@ -75749,7 +75761,7 @@
       "norm_label": "idempotent room lifecycle",
       "rationale": "Client action identity and atomic creation prevent duplicate rooms; ended/stale rooms cannot consume quota forever.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L121",
+      "source_location": "L132",
       "source_url": null
     },
     {
@@ -75765,7 +75777,7 @@
       "norm_label": "invite flow without dead ends",
       "rationale": "Missing source waits for host; existing membership reopens room; ended room gives clear non-actionable state.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L139",
+      "source_location": "L150",
       "source_url": null
     },
     {
@@ -75781,7 +75793,7 @@
       "norm_label": "legacy livekit removal",
       "rationale": "P2P-only runtime removes token route, transport switch and dependency.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L214",
+      "source_location": "L225",
       "source_url": null
     },
     {
@@ -75797,7 +75809,7 @@
       "norm_label": "local web lock first wins",
       "rationale": "One browser-profile overlay owns anidachi-room-session; cross-device server takeover remains last-wins.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L158",
+      "source_location": "L169",
       "source_url": null
     },
     {
@@ -75813,7 +75825,7 @@
       "norm_label": "mvp v2 release checkpoint",
       "rationale": "Reviewed local v2 controller evidence with 4/6/15 does not close external SLOs or C04; additive DB then inactive runtimes then matching client then activation.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L261",
+      "source_location": "L272",
       "source_url": null
     },
     {
@@ -75829,7 +75841,7 @@
       "norm_label": "native codec preferences",
       "rationale": "Prefer supported RED then Opus while preserving video repair codecs.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L179",
+      "source_location": "L190",
       "source_url": null
     },
     {
@@ -75845,7 +75857,7 @@
       "norm_label": "network change ice restart",
       "rationale": "Online and connection-change listeners trigger throttled restart.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L217",
+      "source_location": "L228",
       "source_url": null
     },
     {
@@ -75861,7 +75873,7 @@
       "norm_label": "opus dtx and fec patch",
       "rationale": "Patch only local negotiated Opus fmtp, preserve existing parameters and remote SDP.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L181",
+      "source_location": "L192",
       "source_url": null
     },
     {
@@ -75877,7 +75889,7 @@
       "norm_label": "orphan host offline state",
       "rationale": "PD1 explains host absence and ends empty rooms after4h; host transfer deferred.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L70",
+      "source_location": "L81",
       "source_url": null
     },
     {
@@ -75893,7 +75905,7 @@
       "norm_label": "privacy safe media telemetry",
       "rationale": "Expose direct/relay types, transport and recovery evidence without raw candidates, IPs, URLs or participant IDs.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L301",
+      "source_location": "L312",
       "source_url": null
     },
     {
@@ -75909,7 +75921,7 @@
       "norm_label": "provider origin cors audit pending",
       "rationale": "Content-script requests may use provider origins; exact CORS policy requires focused audit.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L215",
+      "source_location": "L226",
       "source_url": null
     },
     {
@@ -75925,7 +75937,7 @@
       "norm_label": "remote audio stall recovery",
       "rationale": "Two missing/stalled expected audio samples trigger automatic throttled recovery.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L180",
+      "source_location": "L191",
       "source_url": null
     },
     {
@@ -75941,7 +75953,7 @@
       "norm_label": "remote voice stats authority",
       "rationale": "Actual inbound audio corrects stale voice-start/stop presentation.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L177",
+      "source_location": "L188",
       "source_url": null
     },
     {
@@ -75957,7 +75969,7 @@
       "norm_label": "september tab close correction",
       "rationale": "Exact persisted departure retry differs from reload/BFCache grace; page hint is non-authoritative and same-account restoration uses fresh trusted identity.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L411",
+      "source_location": "L422",
       "source_url": null
     },
     {
@@ -75973,7 +75985,7 @@
       "norm_label": "single active room assignment",
       "rationale": "PR231 exact server assignment prevents cross-provider/device room conflicts and stale cleanup; dated staging acceptance is distinct from current release.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L160",
+      "source_location": "L171",
       "source_url": null
     },
     {
@@ -75989,7 +76001,7 @@
       "norm_label": "stable primitive media session",
       "rationale": "Hook lifecycle keys on room/user/generation primitives rather than refreshed object identity.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L183",
+      "source_location": "L194",
       "source_url": null
     },
     {
@@ -76005,7 +76017,7 @@
       "norm_label": "stats based peer health",
       "rationale": "Connected RTT and media stats distinguish good, degraded and recovering peers.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L174",
+      "source_location": "L185",
       "source_url": null
     },
     {
@@ -76021,7 +76033,7 @@
       "norm_label": "terminal session takeover",
       "rationale": "Different session receives SESSION_TAKEN_OVER and terminal teardown, preventing reconnect ping-pong.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L156",
+      "source_location": "L167",
       "source_url": null
     },
     {
@@ -76037,7 +76049,7 @@
       "norm_label": "warm push to talk track",
       "rationale": "Warm enabled toggle avoids repeat capture startup; idle release and disconnect preserve privacy. Historical measured local result is not real-device guarantee.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L172",
+      "source_location": "L183",
       "source_url": null
     },
     {
@@ -76053,7 +76065,7 @@
       "norm_label": "web acknowledged usage finalization",
       "rationale": "DO waits for atomic Web acknowledgment before persisting terminal tombstone.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L198",
+      "source_location": "L209",
       "source_url": null
     },
     {
@@ -79101,7 +79113,7 @@
       "norm_label": "measurement foundation",
       "rationale": "Scorecard and actual RoomClient/P2PMediaController with real local Worker measure decoded media rather than avatar/socket existence.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L103",
+      "source_location": "L114",
       "source_url": null
     },
     {
@@ -79117,7 +79129,7 @@
       "norm_label": "service level objectives",
       "rationale": "Targets: create p95<2s, invite launch<60s, media p50<2s/p95<6s, >=99% connect/recovery, recovery<10s, warm PTT p50<300ms, no ghosts/false limits, two-hour endurance.",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L22",
+      "source_location": "L33",
       "source_url": null
     },
     {
@@ -152487,6 +152499,261 @@
       "source_url": null
     },
     {
+      "id": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_last_used",
+      "label": "Last Used",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 793,
+      "community_name": "Room Defaults And Admission",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "last used",
+      "rationale": "Only explicit device choices update the saved preference. Revocation, rejected startup and capture cleanup change current room state while preserving the preferred setup for a future room.",
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_mounted_overlay_regression_verification",
+      "label": "Mounted Overlay Regression Verification",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 793,
+      "community_name": "Room Defaults And Admission",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "mounted overlay regression verification",
+      "rationale": "Mounted overlay reproductions failed before the fix and cover staggered snapshots, ACK gating, Last used writes, capacity limits, pending and active revoke, silent regrant, and settings persistence across remounts. Extension typecheck, 131 test files with 1976 tests, staging build and artifact validation passed.",
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_synthetic_pro_webrtc_verification",
+      "label": "Synthetic Pro WebRTC Verification",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 793,
+      "community_name": "Room Defaults And Admission",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "synthetic pro webrtc verification",
+      "rationale": "The harness passed 14 checks with 15 synthetic Chromium participants, eight microphones, four cameras and all 168 expected media endpoints; 56 video samples yielded p95 4722 ms. This evidence covers the Worker, client and controller, while mounted tests cover the changed overlay; it does not establish physical-device behavior.",
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_room_defaults_with_media_seats",
+      "label": "Room Defaults With Media Seats",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 793,
+      "community_name": "Room Defaults And Admission",
+      "contributor": null,
+      "file_type": "document",
+      "norm_label": "room defaults with media seats",
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_account_scoped_next_room_defaults",
+      "label": "Account Scoped Next Room Defaults",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 793,
+      "community_name": "Room Defaults And Admission",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "account scoped next room defaults",
+      "rationale": "Room settings automatically persist for the signed-in account in the current browser. Editing them configures the next room without changing current devices.",
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_capture_authority_gate",
+      "label": "Capture Authority Gate",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 793,
+      "community_name": "Room Defaults And Admission",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "capture authority gate",
+      "rationale": "Open mic and Camera on defaults send the participant's existing media intents. Capture is permitted only after a server ACK or matching accepted snapshot.",
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_immutable_tester_zip_rollback",
+      "label": "Immutable Tester ZIP Rollback",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 793,
+      "community_name": "Room Defaults And Admission",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "immutable tester zip rollback",
+      "rationale": "Rollback reinstalls the prior immutable production-baseline 6a144ed1 tester ZIP. No server migration or account-data rollback is required; deployment and immutable ZIP receipts belong to the delivery PR.",
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_initial_authoritative_admission_once",
+      "label": "Initial Authoritative Admission Once",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 793,
+      "community_name": "Room Defaults And Admission",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "initial authoritative admission once",
+      "rationale": "Saved room setup applies once after both the connected room and its authoritative media snapshot are available, preventing premature treatment of missing media authority as revocation.",
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_private_tester_artifact_acceptance",
+      "label": "Private Tester Artifact Acceptance",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 793,
+      "community_name": "Room Defaults And Admission",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "private tester artifact acceptance",
+      "rationale": "Loaded-artifact acceptance remains pending in the owner's private production ZIP flow: save Open mic and Camera on, create a new room, then repeat with Last used and host revoke/regrant. Local Chromium evidence does not prove exact-ZIP or physical-device acceptance. Website ZIP publication and Store submission are excluded.",
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_push_to_talk_starts_silent",
+      "label": "Push To Talk Starts Silent",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 793,
+      "community_name": "Room Defaults And Admission",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "push to talk starts silent",
+      "rationale": "Applying a Push to talk default leaves the participant silent until they press the existing PTT control.",
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_revoke_safe_reconnect_restoration",
+      "label": "Revoke Safe Reconnect Restoration",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 793,
+      "community_name": "Room Defaults And Admission",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "revoke safe reconnect restoration",
+      "rationale": "Defaults are not replayed during a same-document reconnect. After a host seat change or device revocation, a new document also requires its own device action even when an old local record says On, avoiding revival of a revoke missed while disconnected.",
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_seat_and_camera_capacity_defaults",
+      "label": "Seat And Camera Capacity Defaults",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 793,
+      "community_name": "Room Defaults And Admission",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "seat and camera capacity defaults",
+      "rationale": "Without a media seat, the participant listens with devices off. Four occupied camera slots suppress only the camera; a participant with a seat may still use Open mic.",
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_silent_regrant",
+      "label": "Silent Regrant",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 793,
+      "community_name": "Room Defaults And Admission",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "silent regrant",
+      "rationale": "A later seat grant or freed camera slot never queues an automatic device start; renewed host authority does not itself start the participant's devices.",
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_skipped_preference_hydration_and_writes",
+      "label": "Skipped Preference Hydration And Writes",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 793,
+      "community_name": "Room Defaults And Admission",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "skipped preference hydration and writes",
+      "rationale": "Versioned overlay startup skipped persisted Voice mode and blocked explicit Voice preference writes; the versioned camera toggle returned before its preference write. These defects broke applying defaults and Last used persistence.",
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_staggered_snapshots_false_revoke",
+      "label": "Staggered Snapshots False Revoke",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 793,
+      "community_name": "Room Defaults And Admission",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "staggered snapshots false revoke",
+      "rationale": "A room snapshot arriving before its media snapshot could incorrectly reset Open mic as though the host had revoked the media seat.",
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_unchanged_runtime_contracts",
+      "label": "Unchanged Runtime Contracts",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 793,
+      "community_name": "Room Defaults And Admission",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "unchanged runtime contracts",
+      "rationale": "The correction restores existing defaults while preserving legacy room behavior and v2 readers. It requires no API, database, protocol, permissions, tariff, provider or drawer geometry change.",
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
       "id": "docs_current_development_state_durable_source",
       "label": "Provider-pinned monotonic durable room source",
       "_origin": "semantic",
@@ -165592,6 +165859,18 @@
     },
     {
       "source": "apps_extension_src_overlay_app_camerabubble",
+      "target": "apps_extension_src_media_element_playback_attachandplayvideoelement",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L6848",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_camerabubble",
       "target": "apps_extension_src_debug_log_logdebug",
       "relation": "calls",
       "_origin": "ast",
@@ -165599,7 +165878,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6818",
+      "source_location": "L6850",
       "weight": 1.0
     },
     {
@@ -165611,7 +165890,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7223",
+      "source_location": "L7255",
       "weight": 1.0
     },
     {
@@ -165623,7 +165902,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7224",
+      "source_location": "L7256",
       "weight": 1.0
     },
     {
@@ -165635,7 +165914,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7123",
+      "source_location": "L7155",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_ismessagecomposershortcut",
+      "target": "apps_extension_src_message_composer_events_ismessagecomposershortcutevent",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L7140",
       "weight": 1.0
     },
     {
@@ -165647,7 +165938,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7019",
+      "source_location": "L7051",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_panel_interaction_shoulddismissoverlaypanel",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L1291",
       "weight": 1.0
     },
     {
@@ -165659,7 +165962,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L1307",
+      "source_location": "L1308",
       "weight": 1.0
     },
     {
@@ -165671,7 +165974,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L1308",
+      "source_location": "L1309",
       "weight": 1.0
     },
     {
@@ -165683,7 +165986,139 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L1398",
+      "source_location": "L1399",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_voice_audio_preferences_voiceaudiopreferencesstoragekeyforuser",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L1418",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_room_session_storage_roomsessionidentitymatches",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L1443",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_room_session_storage_clearroomsessionrecoveryhint",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L1449",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_room_session_storage_clearroomsessiondepartureifmatch",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L1451",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_room_session_storage_clearroomsession",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L1452",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_user_identity_isextensioncontextinvalidatederror",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L1457",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_room_session_storage_migratelegacyroomsession",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L1471",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_user_identity_autherrormessage",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L1493",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_voice_audio_preferences_parsevoiceaudiopreferences",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L1525",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_room_quota_display_applyroomusagesnapshot",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L1575",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_room_tab_lock_releaseroomtablock",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L1613",
       "weight": 1.0
     },
     {
@@ -165695,7 +166130,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L1624",
+      "source_location": "L1625",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_user_identity_createcurrentparticipant",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L1665",
       "weight": 1.0
     },
     {
@@ -165707,7 +166154,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L1730",
+      "source_location": "L1731",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_voice_audio_preferences_resolvevoiceaudiopreferencesforlistener",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L1848",
       "weight": 1.0
     },
     {
@@ -165719,7 +166178,91 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L1871",
+      "source_location": "L1873",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_room_session_storage_captureroomsessionidentity",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L1900",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_room_session_storage_updateroomsessionvoicemode",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L1928",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_room_session_storage_updateroomsessioncameraenabled",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L2011",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_voice_session_shouldresetpersistedopenmicaftermediaseatloss",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L2120",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_room_quota_display_authoritativequotaremainingseconds",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L2165",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_room_quota_display_roomquotaremainingseconds",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L2168",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_layout_shouldshowcamerastack",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L2175",
       "weight": 1.0
     },
     {
@@ -165731,7 +166274,43 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2189",
+      "source_location": "L2212",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_layout_model_parseoverlaylayoutpreferencesv2",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L2271",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_reaction_shortcuts_parsereactionsenabled",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L2299",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_experiments_normalizeexperimentflag",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L2321",
       "weight": 1.0
     },
     {
@@ -165743,7 +166322,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2325",
+      "source_location": "L2348",
       "weight": 1.0
     },
     {
@@ -165755,12 +166334,24 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2363",
+      "source_location": "L2386",
       "weight": 1.0
     },
     {
       "source": "apps_extension_src_overlay_app_overlayapp",
-      "target": "apps_extension_src_watch_history_client_parsewatchhistorybootstrapdata",
+      "target": "apps_extension_src_overlay_layout_model_normalizeoverlaylayoutdefinition",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L2397",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_current_resource_display_readcurrentresourcedisplay",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -165772,19 +166363,43 @@
     },
     {
       "source": "apps_extension_src_overlay_app_overlayapp",
-      "target": "apps_extension_src_watch_history_catalog_createwatchhistorypageresolver",
+      "target": "apps_extension_src_watch_history_resume_takepersonalhistoryresume",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2564",
+      "source_location": "L2541",
       "weight": 1.0
     },
     {
       "source": "apps_extension_src_overlay_app_overlayapp",
-      "target": "apps_extension_src_watch_history_controller_createwatchhistorycontroller",
+      "target": "apps_extension_src_watch_history_resume_applypersonalhistoryresume",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L2553",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_watch_history_client_parsewatchhistorybootstrapdata",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L2558",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_watch_history_runtime_policy_resolvewatchhistoryruntimegate",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -165796,6 +166411,30 @@
     },
     {
       "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_watch_history_catalog_createwatchhistorypageresolver",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L2587",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_watch_history_controller_createwatchhistorycontroller",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L2594",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
       "target": "apps_extension_src_history_recording_choice_hashistoryrecordingconsent",
       "relation": "calls",
       "_origin": "ast",
@@ -165803,7 +166442,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2588",
+      "source_location": "L2611",
       "weight": 1.0
     },
     {
@@ -165815,7 +166454,31 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2661",
+      "source_location": "L2684",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_watch_history_outbox_parsewatchhistorylocalevent",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L2687",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_watch_history_listeners_bindwatchhistoryplaybacklisteners",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L2692",
       "weight": 1.0
     },
     {
@@ -165827,7 +166490,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2673",
+      "source_location": "L2696",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_watch_history_runtime_policy_shouldrefreshwatchhistoryauthority",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L2720",
       "weight": 1.0
     },
     {
@@ -165839,7 +166514,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2749",
+      "source_location": "L2772",
       "weight": 1.0
     },
     {
@@ -165851,7 +166526,187 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2879",
+      "source_location": "L2903",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_voice_audio_preferences_updateparticipantaudiopreference",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L2992",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_voice_audio_preferences_getdefaultparticipantaudiopreference",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L3005",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_room_rail_intent_selectvoicerailparticipants",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L3031",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_room_rail_intent_shouldrenderroomrail",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L3037",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_layout_getoverlaychromeplacement",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L3043",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_layout_runtime_getoverlaylayoutcameraslotcount",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L3049",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_layout_runtime_getroomrailbottominsetpx",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L3056",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_layout_runtime_createoverlaylayoutruntimecontext",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L3062",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_layout_engine_resolveoverlaylayout",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L3078",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_layout_runtime_getcamerainteractioncorridor",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L3110",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_use_camera_interaction_lock_usecamerainteractionlock",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L3130",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_layout_runtime_getoverlaylayoutruntimestyles",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L3175",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_layout_runtime_getroomrailruntimestyles",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L3176",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_voice_session_getvoiceindicatorparticipantids",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L3198",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_voice_session_isvoicesessionpublishing",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L3208",
       "weight": 1.0
     },
     {
@@ -165863,7 +166718,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3292",
+      "source_location": "L3319",
       "weight": 1.0
     },
     {
@@ -165875,7 +166730,31 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3325",
+      "source_location": "L3357",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_room_quota_display_acceptauthoritativequota",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L3420",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_playback_sync_controller_playbacksynccontroller_applyhoststate",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L3456",
       "weight": 1.0
     },
     {
@@ -165887,7 +166766,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3555",
+      "source_location": "L3587",
       "weight": 1.0
     },
     {
@@ -165899,7 +166778,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3571",
+      "source_location": "L3603",
       "weight": 1.0
     },
     {
@@ -165911,7 +166790,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3575",
+      "source_location": "L3607",
       "weight": 1.0
     },
     {
@@ -165923,7 +166802,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3602",
+      "source_location": "L3634",
       "weight": 1.0
     },
     {
@@ -165935,7 +166814,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3730",
+      "source_location": "L3762",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_room_session_storage_rememberroomsessionrecoveryhint",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L3774",
       "weight": 1.0
     },
     {
@@ -165947,7 +166838,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3746",
+      "source_location": "L3778",
       "weight": 1.0
     },
     {
@@ -165959,7 +166850,31 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3779",
+      "source_location": "L3811",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_room_session_storage_prepareroomsession",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L3902",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_room_session_storage_discardpreparedroomsession",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L3907",
       "weight": 1.0
     },
     {
@@ -165971,7 +166886,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3878",
+      "source_location": "L3910",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_room_url_buildroomshareableurl",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L3936",
       "weight": 1.0
     },
     {
@@ -165983,7 +166910,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3956",
+      "source_location": "L3988",
       "weight": 1.0
     },
     {
@@ -165995,7 +166922,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3963",
+      "source_location": "L3995",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_room_reconnect_getroomreconnectdelayms",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L4025",
       "weight": 1.0
     },
     {
@@ -166007,7 +166946,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4046",
+      "source_location": "L4078",
       "weight": 1.0
     },
     {
@@ -166019,7 +166958,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4053",
+      "source_location": "L4085",
       "weight": 1.0
     },
     {
@@ -166031,7 +166970,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4057",
+      "source_location": "L4089",
       "weight": 1.0
     },
     {
@@ -166043,12 +166982,24 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4065",
+      "source_location": "L4097",
       "weight": 1.0
     },
     {
       "source": "apps_extension_src_overlay_app_overlayapp",
-      "target": "apps_extension_src_overlay_app_runoverlayprivilegedaction",
+      "target": "apps_extension_src_privileged_overlay_intent_requestquotaroomend",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L4238",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_user_identity_signinandcreateparticipant",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -166060,6 +167011,54 @@
     },
     {
       "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_privileged_overlay_intent_istrustedoverlayactionevent",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L4322",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_app_runoverlayprivilegedaction",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L4340",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_silent_session_adoption_adoptwebsitesessionwithretry",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L4444",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_room_tab_lock_acquireroomtablock",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L4513",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
       "target": "apps_extension_src_room_client_createroom",
       "relation": "calls",
       "_origin": "ast",
@@ -166067,7 +167066,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4507",
+      "source_location": "L4539",
       "weight": 1.0
     },
     {
@@ -166079,7 +167078,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4508",
+      "source_location": "L4540",
       "weight": 1.0
     },
     {
@@ -166091,7 +167090,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4550",
+      "source_location": "L4582",
       "weight": 1.0
     },
     {
@@ -166103,7 +167102,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4654",
+      "source_location": "L4686",
       "weight": 1.0
     },
     {
@@ -166115,7 +167114,139 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4715",
+      "source_location": "L4747",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_active_adapter_playback_useactiveadapterplayback",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L4760",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_panel_interaction_waitforoverlaypaint",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L4786",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_room_action_feedback_shouldconfirmroomend",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L4881",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_room_departure_confirmexplicitroomdeparture",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L4925",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_room_departure_requestcurrentroomdeparture",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L4930",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_room_action_feedback_copyroominvitetext",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L4985",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_social_client_listinvitetargets",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L5026",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_social_client_listroominvites",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L5027",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_room_invite_target_status_roominvitetargetstatuses",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L5038",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_social_client_createroominvite",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L5161",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_room_invite_target_status_mergeroominvitetargetstatus",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L5172",
       "weight": 1.0
     },
     {
@@ -166139,7 +167270,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5212",
+      "source_location": "L5244",
       "weight": 1.0
     },
     {
@@ -166151,7 +167282,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5212",
+      "source_location": "L5244",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_diagnostic_log_savediagnosticsfrompage",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L5246",
       "weight": 1.0
     },
     {
@@ -166163,7 +167306,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5247",
+      "source_location": "L5279",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_diagnostic_log_cleardiagnosticsfrompage",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L5280",
       "weight": 1.0
     },
     {
@@ -166175,7 +167330,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5597",
+      "source_location": "L5629",
       "weight": 1.0
     },
     {
@@ -166187,7 +167342,31 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5624",
+      "source_location": "L5656",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_voice_audio_preferences_getdefaultvoiceaudiopreferences",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L569",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_interaction_boundary_iswithinoverlayhotkeyboundary",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L5723",
       "weight": 1.0
     },
     {
@@ -166199,7 +167378,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5702",
+      "source_location": "L5734",
       "weight": 1.0
     },
     {
@@ -166211,7 +167390,115 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5711",
+      "source_location": "L5743",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_hotkeys_gethotkeyaction",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L5752",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_hotkeys_shouldcapturereactionshortcutevent",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L5753",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_hotkeys_ispushtotalkreleaseevent",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L5781",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_hotkeys_isfirereactionreleaseevent",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L5793",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_hotkeys_shouldstopvoicetalkonwindowblur",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L5842",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_unmount_cleanup_useoverlayunmountcleanup",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L5885",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_room_action_feedback_getprimaryroomactionkind",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L5898",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_room_action_feedback_getprimaryroomactionlabel",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L5902",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_room_action_feedback_isinvitecopiedfeedback",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L5911",
       "weight": 1.0
     },
     {
@@ -166223,7 +167510,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5950",
+      "source_location": "L5982",
       "weight": 1.0
     },
     {
@@ -166235,7 +167522,55 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6122",
+      "source_location": "L6154",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_room_invite_target_status_roominvitegroupstatus",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L6219",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_room_invite_target_status_roominvitetargetstatuslabel",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L6230",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_layout_model_getdefaultoverlaylayoutdefinition",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L634",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_room_rail_roomrailprops_getparticipantaudiopreference",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L6741",
       "weight": 1.0
     },
     {
@@ -166252,6 +167587,102 @@
     },
     {
       "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_layout_runtime_mergemaximumplayeroverlayinsets",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L696",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_playback_sync_controller_playbacksynccontroller",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L756",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_source_adapters_core_source_navigation_ensuresourceforprovider",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L758",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_voice_session_createvoicesessionstate",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L794",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_use_interface_preferences_useinterfacepreferences",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L801",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_use_room_join_defaults_useroomjoindefaults",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L802",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_use_reaction_shortcuts_usereactionshortcuts",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L803",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_top_bubble_reveal_usetopbubblereveal",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L804",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
       "target": "apps_extension_src_debug_log_getdebugentries",
       "relation": "calls",
       "_origin": "ast",
@@ -166260,6 +167691,42 @@
       "context": "call",
       "source_file": "apps/extension/src/overlay-app.tsx",
       "source_location": "L811",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_runoverlayprivilegedaction",
+      "target": "apps_extension_src_privileged_overlay_intent_requestprivilegedoverlayaction",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L513",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_useplayeroverlaygeometry",
+      "target": "apps_extension_src_source_adapters_core_overlay_geometry_normalizeplayeroverlaygeometry",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L451",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_useplayeroverlaygeometry",
+      "target": "apps_extension_src_source_adapters_core_overlay_geometry_areplayeroverlaygeometriesequal",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L471",
       "weight": 1.0
     },
     {
@@ -194447,7 +195914,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3060",
+      "source_location": "L3164",
       "weight": 1.0
     },
     {
@@ -194459,7 +195926,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3072",
+      "source_location": "L3176",
       "weight": 1.0
     },
     {
@@ -194471,7 +195938,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3073",
+      "source_location": "L3177",
       "weight": 1.0
     },
     {
@@ -194483,7 +195950,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3078",
+      "source_location": "L3182",
       "weight": 1.0
     },
     {
@@ -194495,7 +195962,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3098",
+      "source_location": "L3202",
       "weight": 1.0
     },
     {
@@ -194507,7 +195974,55 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3108",
+      "source_location": "L3212",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_test_privileged_overlay_wiring_test_installroomdefaultsruntime",
+      "target": "apps_extension_test_privileged_overlay_wiring_test_installactivehostroomruntime",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
+      "source_location": "L3221",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_test_privileged_overlay_wiring_test_installroomdefaultsruntime",
+      "target": "apps_extension_test_privileged_overlay_wiring_test_confirmedroomsession",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
+      "source_location": "L3222",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_test_privileged_overlay_wiring_test_installroomdefaultsruntime",
+      "target": "apps_extension_src_room_media_session_roommediasession",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
+      "source_location": "L3251",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_test_privileged_overlay_wiring_test_installroomdefaultsruntime",
+      "target": "apps_extension_test_privileged_overlay_wiring_test_flushmountedwork",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
+      "source_location": "L3257",
       "weight": 1.0
     },
     {
@@ -194519,7 +196034,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3002",
+      "source_location": "L3106",
       "weight": 1.0
     },
     {
@@ -194531,7 +196046,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3035",
+      "source_location": "L3139",
       "weight": 1.0
     },
     {
@@ -194543,7 +196058,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3143",
+      "source_location": "L3318",
       "weight": 1.0
     },
     {
@@ -194555,7 +196070,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3174",
+      "source_location": "L3349",
       "weight": 1.0
     },
     {
@@ -194567,7 +196082,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2966",
+      "source_location": "L3070",
       "weight": 1.0
     },
     {
@@ -194579,7 +196094,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3238",
+      "source_location": "L3413",
       "weight": 1.0
     },
     {
@@ -194591,7 +196106,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3267",
+      "source_location": "L3442",
       "weight": 1.0
     },
     {
@@ -228299,6 +229814,19 @@
       "deferred": true,
       "source_file": "apps/extension/test/p2p-media.test.ts",
       "source_location": "L158",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_test_privileged_overlay_wiring_test_installroomdefaultsruntime",
+      "target": "packages_protocol_src_index",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "deferred": true,
+      "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
+      "source_location": "L3244",
       "weight": 1.0
     },
     {
@@ -295425,18 +296953,6 @@
     },
     {
       "source": "apps_extension_src_overlay_app",
-      "target": "lucide_react",
-      "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L17",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_overlay_app",
       "target": "apps_extension_src_reaction_pop",
       "relation": "imports_from",
       "_origin": "ast",
@@ -342368,7 +343884,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L213",
+      "source_location": "L224",
       "weight": 1.0
     },
     {
@@ -342379,7 +343895,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L159",
+      "source_location": "L170",
       "weight": 1.0
     },
     {
@@ -342390,7 +343906,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L182",
+      "source_location": "L193",
       "weight": 1.0
     },
     {
@@ -342401,7 +343917,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L178",
+      "source_location": "L189",
       "weight": 1.0
     },
     {
@@ -342412,7 +343928,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L221",
+      "source_location": "L232",
       "weight": 1.0
     },
     {
@@ -342423,7 +343939,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L219",
+      "source_location": "L230",
       "weight": 1.0
     },
     {
@@ -342434,7 +343950,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L57",
+      "source_location": "L68",
       "weight": 1.0
     },
     {
@@ -342445,7 +343961,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L173",
+      "source_location": "L184",
       "weight": 1.0
     },
     {
@@ -342456,7 +343972,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L214",
+      "source_location": "L225",
       "weight": 1.0
     },
     {
@@ -342467,7 +343983,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L158",
+      "source_location": "L169",
       "weight": 1.0
     },
     {
@@ -342478,7 +343994,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L179",
+      "source_location": "L190",
       "weight": 1.0
     },
     {
@@ -342489,7 +344005,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L217",
+      "source_location": "L228",
       "weight": 1.0
     },
     {
@@ -342500,7 +344016,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L181",
+      "source_location": "L192",
       "weight": 1.0
     },
     {
@@ -342511,7 +344027,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L70",
+      "source_location": "L81",
       "weight": 1.0
     },
     {
@@ -342522,7 +344038,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L215",
+      "source_location": "L226",
       "weight": 1.0
     },
     {
@@ -342533,7 +344049,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L180",
+      "source_location": "L191",
       "weight": 1.0
     },
     {
@@ -342544,7 +344060,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L177",
+      "source_location": "L188",
       "weight": 1.0
     },
     {
@@ -342555,7 +344071,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L183",
+      "source_location": "L194",
       "weight": 1.0
     },
     {
@@ -342566,7 +344082,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L174",
+      "source_location": "L185",
       "weight": 1.0
     },
     {
@@ -342577,7 +344093,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L156",
+      "source_location": "L167",
       "weight": 1.0
     },
     {
@@ -342588,7 +344104,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L198",
+      "source_location": "L209",
       "weight": 1.0
     },
     {
@@ -353687,7 +355203,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6792",
+      "source_location": "L6824",
       "weight": 1.0
     },
     {
@@ -353698,7 +355214,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6960",
+      "source_location": "L6992",
       "weight": 1.0
     },
     {
@@ -353709,7 +355225,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7033",
+      "source_location": "L7065",
       "weight": 1.0
     },
     {
@@ -353720,7 +355236,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7042",
+      "source_location": "L7074",
       "weight": 1.0
     },
     {
@@ -353731,7 +355247,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7044",
+      "source_location": "L7076",
       "weight": 1.0
     },
     {
@@ -353742,7 +355258,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7048",
+      "source_location": "L7080",
       "weight": 1.0
     },
     {
@@ -353753,7 +355269,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7055",
+      "source_location": "L7087",
       "weight": 1.0
     },
     {
@@ -353764,7 +355280,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7071",
+      "source_location": "L7103",
       "weight": 1.0
     },
     {
@@ -353775,7 +355291,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7099",
+      "source_location": "L7131",
       "weight": 1.0
     },
     {
@@ -353786,7 +355302,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7103",
+      "source_location": "L7135",
       "weight": 1.0
     },
     {
@@ -353797,7 +355313,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7107",
+      "source_location": "L7139",
       "weight": 1.0
     },
     {
@@ -353808,7 +355324,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7111",
+      "source_location": "L7143",
       "weight": 1.0
     },
     {
@@ -353819,7 +355335,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7115",
+      "source_location": "L7147",
       "weight": 1.0
     },
     {
@@ -353830,7 +355346,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7119",
+      "source_location": "L7151",
       "weight": 1.0
     },
     {
@@ -353841,7 +355357,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7127",
+      "source_location": "L7159",
       "weight": 1.0
     },
     {
@@ -353852,7 +355368,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7138",
+      "source_location": "L7170",
       "weight": 1.0
     },
     {
@@ -353863,7 +355379,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7143",
+      "source_location": "L7175",
       "weight": 1.0
     },
     {
@@ -353874,7 +355390,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7158",
+      "source_location": "L7190",
       "weight": 1.0
     },
     {
@@ -353885,7 +355401,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7173",
+      "source_location": "L7205",
       "weight": 1.0
     },
     {
@@ -353896,7 +355412,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7182",
+      "source_location": "L7214",
       "weight": 1.0
     },
     {
@@ -353907,7 +355423,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7192",
+      "source_location": "L7224",
       "weight": 1.0
     },
     {
@@ -353918,7 +355434,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7208",
+      "source_location": "L7240",
       "weight": 1.0
     },
     {
@@ -353929,7 +355445,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7215",
+      "source_location": "L7247",
       "weight": 1.0
     },
     {
@@ -353940,7 +355456,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7222",
+      "source_location": "L7254",
       "weight": 1.0
     },
     {
@@ -353951,7 +355467,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7228",
+      "source_location": "L7260",
       "weight": 1.0
     },
     {
@@ -353962,7 +355478,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7238",
+      "source_location": "L7270",
       "weight": 1.0
     },
     {
@@ -353973,7 +355489,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7246",
+      "source_location": "L7278",
       "weight": 1.0
     },
     {
@@ -353984,7 +355500,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7259",
+      "source_location": "L7291",
       "weight": 1.0
     },
     {
@@ -353995,7 +355511,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7273",
+      "source_location": "L7305",
       "weight": 1.0
     },
     {
@@ -354006,7 +355522,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7282",
+      "source_location": "L7314",
       "weight": 1.0
     },
     {
@@ -354017,7 +355533,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7291",
+      "source_location": "L7323",
       "weight": 1.0
     },
     {
@@ -354028,7 +355544,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L7334",
+      "source_location": "L7366",
       "weight": 1.0
     },
     {
@@ -375720,7 +377236,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2857",
+      "source_location": "L2961",
       "weight": 1.0
     },
     {
@@ -375731,7 +377247,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2918",
+      "source_location": "L3022",
       "weight": 1.0
     },
     {
@@ -375742,7 +377258,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2932",
+      "source_location": "L3036",
       "weight": 1.0
     },
     {
@@ -375753,7 +377269,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2941",
+      "source_location": "L3045",
       "weight": 1.0
     },
     {
@@ -375764,7 +377280,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2951",
+      "source_location": "L3055",
       "weight": 1.0
     },
     {
@@ -375775,7 +377291,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2963",
+      "source_location": "L3067",
       "weight": 1.0
     },
     {
@@ -375786,7 +377302,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2974",
+      "source_location": "L3078",
       "weight": 1.0
     },
     {
@@ -375797,7 +377313,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2986",
+      "source_location": "L3090",
       "weight": 1.0
     },
     {
@@ -375808,7 +377324,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2998",
+      "source_location": "L3102",
       "weight": 1.0
     },
     {
@@ -375819,7 +377335,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3015",
+      "source_location": "L3119",
       "weight": 1.0
     },
     {
@@ -375830,7 +377346,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3049",
+      "source_location": "L3153",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_test_privileged_overlay_wiring_test",
+      "target": "apps_extension_test_privileged_overlay_wiring_test_installroomdefaultsruntime",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
+      "source_location": "L3220",
       "weight": 1.0
     },
     {
@@ -375841,7 +377368,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3114",
+      "source_location": "L3289",
       "weight": 1.0
     },
     {
@@ -375852,7 +377379,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3125",
+      "source_location": "L3300",
       "weight": 1.0
     },
     {
@@ -375863,7 +377390,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3151",
+      "source_location": "L3326",
       "weight": 1.0
     },
     {
@@ -375874,7 +377401,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3183",
+      "source_location": "L3358",
       "weight": 1.0
     },
     {
@@ -375885,7 +377412,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3195",
+      "source_location": "L3370",
       "weight": 1.0
     },
     {
@@ -375896,7 +377423,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3203",
+      "source_location": "L3378",
       "weight": 1.0
     },
     {
@@ -375907,7 +377434,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3216",
+      "source_location": "L3391",
       "weight": 1.0
     },
     {
@@ -375918,7 +377445,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3227",
+      "source_location": "L3402",
       "weight": 1.0
     },
     {
@@ -375929,7 +377456,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3243",
+      "source_location": "L3418",
       "weight": 1.0
     },
     {
@@ -375940,7 +377467,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3256",
+      "source_location": "L3431",
       "weight": 1.0
     },
     {
@@ -375951,7 +377478,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3263",
+      "source_location": "L3438",
       "weight": 1.0
     },
     {
@@ -375962,7 +377489,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3276",
+      "source_location": "L3451",
       "weight": 1.0
     },
     {
@@ -375973,7 +377500,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3285",
+      "source_location": "L3460",
       "weight": 1.0
     },
     {
@@ -375984,7 +377511,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3289",
+      "source_location": "L3464",
       "weight": 1.0
     },
     {
@@ -375995,7 +377522,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3297",
+      "source_location": "L3472",
       "weight": 1.0
     },
     {
@@ -440674,7 +442201,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L103",
+      "source_location": "L114",
       "weight": 1.0
     },
     {
@@ -451113,7 +452640,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L39",
+      "source_location": "L50",
       "weight": 1.0
     },
     {
@@ -451267,7 +452794,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L156",
+      "source_location": "L167",
       "weight": 1.0
     },
     {
@@ -451278,7 +452805,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L158",
+      "source_location": "L169",
       "weight": 1.0
     },
     {
@@ -451289,7 +452816,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L159",
+      "source_location": "L170",
       "weight": 1.0
     },
     {
@@ -451300,7 +452827,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L173",
+      "source_location": "L184",
       "weight": 1.0
     },
     {
@@ -451311,7 +452838,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L174",
+      "source_location": "L185",
       "weight": 1.0
     },
     {
@@ -451322,7 +452849,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L177",
+      "source_location": "L188",
       "weight": 1.0
     },
     {
@@ -451333,7 +452860,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L178",
+      "source_location": "L189",
       "weight": 1.0
     },
     {
@@ -451344,7 +452871,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L179",
+      "source_location": "L190",
       "weight": 1.0
     },
     {
@@ -451355,7 +452882,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L180",
+      "source_location": "L191",
       "weight": 1.0
     },
     {
@@ -451366,7 +452893,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L181",
+      "source_location": "L192",
       "weight": 1.0
     },
     {
@@ -451377,7 +452904,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L182",
+      "source_location": "L193",
       "weight": 1.0
     },
     {
@@ -451388,7 +452915,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L183",
+      "source_location": "L194",
       "weight": 1.0
     },
     {
@@ -451399,7 +452926,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L198",
+      "source_location": "L209",
       "weight": 1.0
     },
     {
@@ -451410,7 +452937,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L213",
+      "source_location": "L224",
       "weight": 1.0
     },
     {
@@ -451421,7 +452948,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L214",
+      "source_location": "L225",
       "weight": 1.0
     },
     {
@@ -451432,7 +452959,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L215",
+      "source_location": "L226",
       "weight": 1.0
     },
     {
@@ -451443,7 +452970,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L217",
+      "source_location": "L228",
       "weight": 1.0
     },
     {
@@ -451454,7 +452981,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L219",
+      "source_location": "L230",
       "weight": 1.0
     },
     {
@@ -451465,7 +452992,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L221",
+      "source_location": "L232",
       "weight": 1.0
     },
     {
@@ -451476,7 +453003,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L57",
+      "source_location": "L68",
       "weight": 1.0
     },
     {
@@ -451487,7 +453014,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L70",
+      "source_location": "L81",
       "weight": 1.0
     },
     {
@@ -453728,6 +455255,66 @@
       "weight": 1.0
     },
     {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_source_adapters_core_types_videoadapter_getfingerprint",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L3783",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_source_adapters_core_types_videoadapter_gettitle",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L4542",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_source_adapters_core_types_videoadapter_getcurrenttime",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L5306",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_useplayeroverlaygeometry",
+      "target": "apps_extension_src_source_adapters_core_types_videoadapter_getoverlaygeometry",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L451",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_useplayeroverlaygeometry",
+      "target": "apps_extension_src_source_adapters_core_types_videoadapter_subscribeoverlaygeometry",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "context": "call",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L493",
+      "weight": 1.0
+    },
+    {
       "source": "apps_extension_src_playback_sync_controller_playbacksynccontroller_applyauthoritativeplaybackrate",
       "target": "apps_extension_src_source_adapters_core_types_videoadapter_setplaybackrate",
       "relation": "calls",
@@ -454492,7 +456079,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2505",
+      "source_location": "L2528",
       "weight": 1.0
     },
     {
@@ -454504,7 +456091,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4130",
+      "source_location": "L4162",
       "weight": 1.0
     },
     {
@@ -454516,7 +456103,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4131",
+      "source_location": "L4163",
       "weight": 1.0
     },
     {
@@ -454528,7 +456115,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4132",
+      "source_location": "L4164",
       "weight": 1.0
     },
     {
@@ -454540,7 +456127,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4133",
+      "source_location": "L4165",
       "weight": 1.0
     },
     {
@@ -454552,7 +456139,31 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4961",
+      "source_location": "L4993",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_source_adapters_registry_getdefinitionforprovider",
+      "relation": "indirect_call",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "context": "argument",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L758",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_voice_session_reducevoicesession",
+      "relation": "indirect_call",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "context": "argument",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L793",
       "weight": 1.0
     },
     {
@@ -455704,7 +457315,19 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2564",
+      "source_location": "L2587",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_user_identity_trysilentsignin",
+      "relation": "indirect_call",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "context": "collection",
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L4447",
       "weight": 1.0
     },
     {
@@ -456975,7 +458598,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L39",
+      "source_location": "L50",
       "weight": 1.0
     },
     {
@@ -458546,6 +460169,72 @@
       "weight": 1.0
     },
     {
+      "source": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_initial_authoritative_admission_once",
+      "target": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_capture_authority_gate",
+      "relation": "conceptually_related_to",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_initial_authoritative_admission_once",
+      "target": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_push_to_talk_starts_silent",
+      "relation": "conceptually_related_to",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_initial_authoritative_admission_once",
+      "target": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_seat_and_camera_capacity_defaults",
+      "relation": "conceptually_related_to",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_revoke_safe_reconnect_restoration",
+      "target": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_initial_authoritative_admission_once",
+      "relation": "conceptually_related_to",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_seat_and_camera_capacity_defaults",
+      "target": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_silent_regrant",
+      "relation": "conceptually_related_to",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_synthetic_pro_webrtc_verification",
+      "target": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_private_tester_artifact_acceptance",
+      "relation": "conceptually_related_to",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
       "source": "docs_shared_watch_progress_tracker_bounded_history_reads",
       "target": "docs_shared_watch_progress_tracker_transactional_history_fences",
       "relation": "conceptually_related_to",
@@ -459856,6 +461545,17 @@
       "confidence_score": 1.0,
       "source_file": "docs/releases/room-media-seats/2026-09-14-delivery.md",
       "source_location": "## Verification",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_initial_authoritative_admission_once",
+      "target": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_account_scoped_next_room_defaults",
+      "relation": "implements",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
       "weight": 1.0
     },
     {
@@ -461597,6 +463297,39 @@
       "confidence_score": 1.0,
       "source_file": "docs/releases/room-media-seats/2026-09-14-delivery.md",
       "source_location": "## Ordered staging delivery",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_skipped_preference_hydration_and_writes",
+      "target": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_account_scoped_next_room_defaults",
+      "relation": "rationale_for",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_skipped_preference_hydration_and_writes",
+      "target": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_last_used",
+      "relation": "rationale_for",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_staggered_snapshots_false_revoke",
+      "target": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_initial_authoritative_admission_once",
+      "relation": "rationale_for",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
       "weight": 1.0
     },
     {
@@ -463842,6 +465575,17 @@
       "confidence_score": 1.0,
       "source_file": "docs/current-development-state.md",
       "source_location": "L986-L1029: Extension Channels",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_current_development_state_current_development_state",
+      "target": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_room_defaults_with_media_seats",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
       "weight": 1.0
     },
     {
@@ -466931,6 +468675,105 @@
       "weight": 1.0
     },
     {
+      "source": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_mounted_overlay_regression_verification",
+      "target": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_capture_authority_gate",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_mounted_overlay_regression_verification",
+      "target": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_last_used",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_mounted_overlay_regression_verification",
+      "target": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_silent_regrant",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_room_defaults_with_media_seats",
+      "target": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_account_scoped_next_room_defaults",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_room_defaults_with_media_seats",
+      "target": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_immutable_tester_zip_rollback",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_room_defaults_with_media_seats",
+      "target": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_mounted_overlay_regression_verification",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_room_defaults_with_media_seats",
+      "target": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_private_tester_artifact_acceptance",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_room_defaults_with_media_seats",
+      "target": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_synthetic_pro_webrtc_verification",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_room_defaults_with_media_seats",
+      "target": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_unchanged_runtime_contracts",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
       "source": "docs_shared_watch_progress_tracker_local_watch_drawer_browse_candidate",
       "target": "docs_shared_watch_progress_tracker_owner_private_browse_provenance",
       "relation": "references",
@@ -467319,6 +469162,28 @@
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
       "source_location": "L70-L70: Product Decisions Fixed By This Plan",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_06_12_room_flow_p2p_flawless_execution_plan_room_flow_and_p2p_flawless_execution_plan",
+      "target": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_private_tester_artifact_acceptance",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_06_12_room_flow_p2p_flawless_execution_plan_room_flow_and_p2p_flawless_execution_plan",
+      "target": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_room_defaults_with_media_seats",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
+      "source_location": null,
       "weight": 1.0
     },
     {
@@ -472423,6 +474288,17 @@
       "weight": 1.0
     },
     {
+      "source": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_last_used",
+      "target": "docs_releases_room_media_seats_2026_09_14_room_defaults_fix_account_scoped_next_room_defaults",
+      "relation": "shares_data_with",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
       "source": "docs_shared_watch_progress_tracker_background_cache_outbox",
       "target": "docs_shared_watch_progress_tracker_canonical_progress_authority",
       "relation": "shares_data_with",
@@ -475272,5 +477148,5 @@
       "source_file": "docs/superpowers/specs/2026-08-23-single-active-room-session-design.md"
     }
   ],
-  "built_at_commit": "e95f6363678563d6c147f5da38cdeed7be9fb700"
+  "built_at_commit": "c2e2f8ecdb85b5c4e694c8dc95c2724296b8a997"
 }

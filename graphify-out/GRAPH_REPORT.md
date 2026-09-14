@@ -1,13 +1,21 @@
 # Graph Report - anidachi-LP-monorepo  (2026-09-14)
 
 ## Corpus Check
-- 102 files · ~1,354,058 words
+- 1360 files · ~1,356,339 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 12708 nodes · 27500 edges · 793 communities (462 shown, 288 thin omitted)
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 453 edges (avg confidence: 0.85)
+- 12725 nodes · 27636 edges · 794 communities (463 shown, 288 thin omitted)
+- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 461 edges (avg confidence: 0.85)
 Token accounting unavailable for hosted semantic extraction.
+
+## Scoped Incremental Refresh - Room Defaults
+
+- Refreshed two extension TSX files and three documents for the room-defaults correction, using AST extraction and one Codex semantic subagent.
+- Added 16 semantic concepts and one test helper; graph totals changed from 12708 to 12725 nodes and from 27500 to 27636 edges.
+- Preserved 73 prior semantic nodes from the two additive documents, with their line references adjusted; all 47 hyperedges and all unrelated node/link records and directions remain intact.
+- Exactly five manifest rows were updated. The prior delivery-record and media-seat-plan changes remain outside this refresh and unstamped.
+- Existing community labels and report navigation are retained. New defaults concepts form Room Defaults And Admission; physical-device and exact private tester ZIP acceptance remain pending in the correction record.
 
 ## Community Hubs (Navigation)
 - SEO Guide Content
@@ -761,6 +769,8 @@ Token accounting unavailable for hosted semantic extraction.
 - Apps Web Lib Google Ads
 - Apps Web Lib Kreatli Crm
 
+- Room Defaults And Admission
+
 ## God Nodes (most connected - your core abstractions)
 1. `.next/**` - 176 edges
 2. `next/link` - 175 edges
@@ -856,7 +866,7 @@ Token accounting unavailable for hosted semantic extraction.
 - **Schema 3 Staging Activation** — docs_superpowers_plans_2026_09_05_watch_history_crunchyroll_catalog_progress_plan_staging_activation_closeout, docs_superpowers_specs_2026_08_13_watch_history_catalog_progress_design_staging_activation_completion, docs_watch_history_v3_staging_verification_ordered_staging_activation [INFERRED 0.95]
 - **Single Active Room Cross-plane Authority** — docs_superpowers_specs_2026_08_23_single_active_room_session_design_durable_cross_room_assignment, docs_superpowers_specs_2026_08_23_single_active_room_session_design_live_room_state, docs_superpowers_specs_2026_08_23_single_active_room_session_design_session_binding [INFERRED 0.95]
 
-## Communities (793 total, 288 thin omitted)
+## Communities (794 total, 288 thin omitted)
 
 ### Community 0 - "SEO Guide Content"
 Cohesion: 0.03
@@ -1452,7 +1462,7 @@ Nodes (29): Atomic Invite Response, Bounded Watch History, Bounded Watch History
 
 ### Community 149 - "Privileged Overlay Wiring Test"
 Cohesion: 0.11
-Nodes (19): confirmedRoomSession(), createAdapter(), extensionStorage, flushRoomActionWork(), guestParticipant(), hostParticipant(), installActiveHostRoomRuntime(), installOverlayRuntime() (+11 more)
+Nodes (20): confirmedRoomSession(), createAdapter(), extensionStorage, flushRoomActionWork(), guestParticipant(), hostParticipant(), installActiveHostRoomRuntime(), installOverlayRuntime() (+11 more), installRoomDefaultsRuntime()
 
 ### Community 150 - "Watch History V2 Clean Mvp"
 Cohesion: 0.07
@@ -2705,6 +2715,10 @@ Nodes (3): Filter Before Pagination, Filter Reset Preserves Search, Nonmodal Fil
 ### Community 498 - "Build Extension Workflow"
 Cohesion: 0.67
 Nodes (3): Build Extension Workflow, Extension Channel, Release Ref Validation
+
+### Community 793 - "Room Defaults And Admission"
+Cohesion: 0.17
+Nodes (16): Room Defaults With Media Seats, Skipped Preference Hydration And Writes, Staggered Snapshots False Revoke, Account Scoped Next Room Defaults, Initial Authoritative Admission Once, Capture Authority Gate, Push To Talk Starts Silent, Seat And Camera Capacity Defaults (+8 more)
 
 ## Ambiguous Edges - Review These
 - `Historical 12 hour expires_at runtime bridge` → `Room lifecycle actionability and 24 hour Missed retention`  [AMBIGUOUS]
