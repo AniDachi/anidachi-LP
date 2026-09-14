@@ -11,7 +11,8 @@ the same PR.
 ## Host-managed media seats, 2026-09-14
 
 The owner-approved [media-seat plan](superpowers/plans/2026-09-14-host-managed-media-seats.md)
-is being implemented on `codex/room-media-seats-v3`. New media-v3 rooms use
+was delivered to staging through PRs [#316](https://github.com/AniDachi/anidachi-LP/pull/316)
+and [#318](https://github.com/AniDachi/anidachi-LP/pull/318), source `293da9f1`. New media-v3 rooms use
 4/6/8 host-managed seats for Free/Plus/Pro, within the existing 4/6/15-person
 and four-camera limits. A seat permits microphone use and requesting a camera
 slot; granting it never activates a device. Revocation stops both publications
@@ -22,7 +23,10 @@ regression evidence. Full local SQL verification passed 1087 assertions;
 the final extension suite passed 1967 tests. Real-browser v3 scenarios passed
 for all three plans, and the staging artifact was built and validated.
 Whole-branch review and the scoped persistence-error correction are approved.
-Ordered staging delivery is being prepared;
+Staging Web, compatible Worker and all 62 migrations are deployed. Staging CI,
+room/P2P suites, Web/Worker smoke and hosted runtime-role create/renew/claim
+checks passed. The staging artifact is ready; exact loaded-extension and
+physical two-device acceptance remain pending. Main remains `f9e6b964`;
 this entry does not claim a production release or authorize a new public ZIP.
 See the [delivery and verification record](releases/room-media-seats/2026-09-14-delivery.md)
 for exact evidence, rollout ordering and remaining acceptance.
