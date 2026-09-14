@@ -3870,6 +3870,27 @@ describe("versioned receive-only topology", () => {
     capabilities: {mediaProtocolVersion: 3, hostPlanCode: "pro", maxParticipants: 15, maxMediaSeats: 8, maxCameras: 4, capabilityRevision: 1, capabilitiesValidUntil: "2026-09-15T12:30:00Z"},
     participants: media.participants.map((p, i) => ({...p, mediaSeatGranted: i < 8, seatRevision: 0, cameraGranted: i < 4, microphoneGranted: i < 8})),
   };
+  it.each(["satisfied", "unsatisfied", "failed"] as const)("settles a crossed remote renegotiation from the answer (%s)", async (outcome) => {
+    const harness = createP2PControllerHarness(roster[0]);
+    harness.controller.setCaptureAuthority(false, false);
+    harness.controller.updateParticipants([roster[0], roster[14]], undefined, mediaV3);
+    await vi.advanceTimersByTimeAsync(0);
+    const peer = FakeRtcPeerConnection.instances[0]!;
+    await harness.controller.handleSignal("p14", { kind: "renegotiate" });
+    for (const transceiver of peer.getTransceivers()) {
+      transceiver.currentDirection = outcome === "unsatisfied" ? null : transceiver.direction;
+    }
+    if (outcome === "failed") peer.iceConnectionState = "failed";
+    await harness.controller.handleSignal("p14", {
+      kind: "answer", sdp: { type: "answer", sdp: "v=0\r\no=crossed-answer\r\n" },
+    });
+    peer.dispatchEvent(new Event("signalingstatechange"));
+    await vi.advanceTimersByTimeAsync(0);
+    expect(peer.createOffer).toHaveBeenCalledTimes(outcome === "satisfied" ? 1 : 2);
+    expect(FakeRtcPeerConnection.instances).toHaveLength(1);
+    harness.controller.disconnect();
+  });
+
   it.each([2, 3] as const)("queues a v%s remote media change behind an in-flight offer without rebuilding the peer", async (version) => {
     const harness = createP2PControllerHarness(roster[0]);
     harness.controller.setCaptureAuthority(false, false);

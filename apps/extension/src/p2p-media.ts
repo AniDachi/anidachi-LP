@@ -639,6 +639,7 @@ interface P2PPeer {
   makingOffer: boolean;
   mediaNegotiationRevision: number;
   offeredMediaNegotiationRevision: number;
+  remoteRenegotiationPending: boolean;
   mediaSyncChain: Promise<void>;
   mediaSyncPendingCount: number;
   mediaSyncing: boolean;
@@ -2155,7 +2156,13 @@ export class P2PMediaController {
           // A grant change can race with an offer already in transit. Preserve
           // that peer and let its stable-state drain negotiate the latest media.
           await this.syncPeerMedia(peer);
-          this.queueNegotiation(peer, "remote-renegotiate");
+          if (peer.makingOffer || peer.pc.signalingState === "have-local-offer") {
+            // A snapshot-driven offer can cross the remote request for that
+            // same change. Its answer will tell us whether another is needed.
+            peer.remoteRenegotiationPending = true;
+          } else {
+            this.queueNegotiation(peer, "remote-renegotiate");
+          }
         } else {
           await this.recoverPeerNegotiation(peer, "remote-renegotiate", true);
         }
@@ -2286,6 +2293,20 @@ export class P2PMediaController {
       if (description.type === "offer") {
         peer.signalingRecoveryNeeded =
           (await this.createAndSendAnswer(peer)) !== "sent";
+      } else if (peer.remoteRenegotiationPending) {
+        const transceivers = [peer.audioTransceiver, peer.videoTransceiver];
+        const mediaSatisfied = transceivers.every(
+          (transceiver) => transceiver && transceiver.currentDirection === transceiver.direction,
+        );
+        const transportFailed =
+          ["failed", "disconnected"].includes(peer.pc.connectionState) ||
+          ["failed", "disconnected"].includes(peer.pc.iceConnectionState);
+        if (mediaSatisfied && !transportFailed) {
+          peer.remoteRenegotiationPending = false;
+        } else if (!peer.makingOffer && peer.pc.signalingState === "stable") {
+          peer.remoteRenegotiationPending = false;
+          this.queueNegotiation(peer, "remote-renegotiate-unsatisfied");
+        }
       }
       return true;
     } catch (error) {
@@ -3222,6 +3243,7 @@ export class P2PMediaController {
       makingOffer: false,
       mediaNegotiationRevision: 0,
       offeredMediaNegotiationRevision: -1,
+      remoteRenegotiationPending: false,
       mediaSyncChain: Promise.resolve(),
       mediaSyncPendingCount: 0,
       mediaSyncing: false,
