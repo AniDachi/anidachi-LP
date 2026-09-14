@@ -335,12 +335,19 @@ Local verification and loaded-artifact evidence are recorded in the plan/PR.
 
 The [approved account workspace](superpowers/specs/2026-09-10-account-mvp-navigation-design.md)
 replaces Overview with Watch Library as the default landing. Primary navigation
-is Watch Library, Friends & Groups and Subscription; Share an idea and Help are
-secondary links, and Profile opens from the avatar. Notifications use a header
+is Watch Library, Friends & Groups and Subscription; Report a bug, Share an idea
+and Help are secondary links, and Profile opens from the avatar. Notifications use a header
 dialog backed by the existing account inbox; the old `/account/invites` URL
 remains compatible. The website checks counts only while visible, on focus and
 on a one-minute timer; it does not acknowledge unseen items until opened.
 Extension push/notification delivery remains unchanged.
+
+The September 14 feedback correction restores `/account/bug-report` with a compact
+form and prefilled account contact details. It reuses `/api/contact` with category
+`support` and a `[Bug report]` subject prefix; suggestions keep their separate
+existing form. Failed submissions retain the draft and success requires the
+existing durable-storage acknowledgement. No new storage, endpoint contract,
+notification channel or extension build is needed.
 
 Friends uses two switches, inline requests and an Add friend dialog. Transient
 view controls stay in the mounted owner-keyed account workspace; canonical data

@@ -42,13 +42,12 @@ export default async function AccountFeatureRequestsPage() {
             would like it to work.
           </p>
           <div className="ac-context-section">
-            <h2>Need help right now?</h2>
+            <h2>Something not working?</h2>
             <p>
-              For account issues, billing questions, or something that stopped
-              working, contact support.
+              Report a problem with AniDachi so we can investigate and fix it.
             </p>
-            <Link href="/contact" className="ac-text-link">
-              Contact support <ArrowRight size={15} aria-hidden />
+            <Link href="/account/bug-report" className="ac-text-link">
+              Report a bug <ArrowRight size={15} aria-hidden />
             </Link>
           </div>
         </aside>
