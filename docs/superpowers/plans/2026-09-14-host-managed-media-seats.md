@@ -75,7 +75,7 @@
 | --- | --- |
 | Контракт | `packages/protocol/src/room-media.ts`, `src/types.ts`, `src/index.ts`: версия, seat state, команда хоста, схемы и события. `src/commercial-policy.ts`: источник существующих лимитов. |
 | Durable authority | `apps/api/src/room-state.ts`, `index.ts`, `room-persistence.ts`, `room-socket-attachment.ts`, `participant-disconnect.ts`: распределение, полномочия, persistence, reconnect. `auth.ts`, `room-capability.ts`: совместимые lease readers. |
-| Web / Supabase | `apps/web/lib/anidachi-auth/db.ts`, `room-capability.ts`, `jwt.ts`; `app/api/rooms/route.ts`, `app/api/rooms/[roomId]/connect/route.ts`; новая миграция `apps/web/supabase/migrations/20260914180000_room_media_seats_v3.sql`: создание, допуск, renewal без смены версии. Перед созданием проверить порядок миграций. |
+| Web / Supabase | `apps/web/lib/anidachi-auth/db.ts`, `room-capability.ts`, `jwt.ts`; `app/api/rooms/route.ts`, `app/api/rooms/[roomId]/connect/route.ts`; новая миграция `apps/web/supabase/migrations/20260914063511_room_media_seats_v3.sql`: создание, допуск, renewal без смены версии. Перед созданием проверить порядок миграций. |
 | Клиент | `apps/extension/src/room-client.ts`, `room-media-session.ts`, `overlay-media-session.ts`, `overlay-voice-session.ts`, `p2p-media.ts`, `overlay-app.tsx`, `debug-log.ts`: negotiation, события, capture и сохранение приема медиа. |
 | UI | `apps/extension/src/overlay-room-media-controls.tsx`, `styles.ts`: единая кнопка, причины недоступности, стабильная разметка. |
 
@@ -125,7 +125,7 @@ type SetMediaSeat = {
 ```
 
 - [x] Расширить shared events/exports и snapshot validation: мест не больше лимита, камер не больше четырех, без места grants отсутствуют. Вложенное `state` в v3 `MEDIA_INTENT_ACK` / `MEDIA_INTENT_ERROR` также принимает v3-схему; для отказа публикации без места добавить `MEDIA_SEAT_REQUIRED`. Сохранить v2 lease/snapshot/intent/ACK семантику без изменений.
-- [x] Определить `MediaSeatResultSchema`: strict-ответ `type: "MEDIA_SEAT_RESULT"`, `requestId`, `targetParticipantSessionId`, `code` и полный v3 `snapshot`. Коды: `OK`, `MEDIA_FORBIDDEN`, `MEDIA_LIMIT_REACHED`, `MEDIA_STALE_SESSION`, `MEDIA_STALE_GENERATION`, `MEDIA_STALE_SEAT_REVISION`, `MEDIA_CAPABILITY_EXPIRED`. Ответ коррелирует действие хоста; состояние интерфейса берется только из подтвержденного snapshot с проверкой поколения/sequence, в том числе при ошибке. Тестировать поздний результат после более нового snapshot и отказ устаревшей revision.
+- [x] Определить `MediaSeatResultSchema`: strict-ответ `type: "MEDIA_SEAT_RESULT"`, `requestId`, `targetParticipantSessionId`, `code` и полный v3 `snapshot`. Коды: `OK`, `MEDIA_FORBIDDEN`, `MEDIA_LIMIT_REACHED`, `MEDIA_STALE_SESSION`, `MEDIA_STALE_GENERATION`, `MEDIA_STALE_SEAT_REVISION`, `MEDIA_CAPABILITY_EXPIRED`, `MEDIA_UNAVAILABLE`. Ответ коррелирует действие хоста; состояние интерфейса берется только из подтвержденного snapshot с проверкой поколения/sequence, в том числе при ошибке. Тестировать поздний результат после более нового snapshot и отказ устаревшей revision.
 - [x] Запустить `pnpm --filter @anidachi/protocol check` и `pnpm --filter @anidachi/protocol test`; зафиксировать отдельный commit `feat(protocol): define host-managed media seats v3`.
 
 ## Task 2: Durable room policy и совместимость Web
