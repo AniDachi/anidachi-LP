@@ -82,9 +82,47 @@ begin
     or (activated and p_media_protocol_version=1) then
    raise exception 'ROOM_UPDATE_REQUIRED';
  end if;
- if p_host_user_id is null then
-   raise exception 'active_room_session_invalid_input' using errcode='22023';
- end if;
+ -- Preserve the private core's complete input guard before our earlier
+ -- authority lookup. This is the guard from 20260908065520; creation and
+ -- entitlement logic remain exclusively in the unchanged private core.
+  if p_host_user_id is null
+    or p_participant_session_id is null
+    or pg_catalog.char_length(p_participant_session_id) not between 1 and 128
+    or (p_show_id is not null and pg_catalog.char_length(p_show_id) > 200)
+    or (p_episode_id is not null and pg_catalog.char_length(p_episode_id) > 200)
+    or (p_title is not null and pg_catalog.char_length(p_title) > 300)
+    or (
+      p_client_request_id is not null
+      and (
+        p_client_request_id <> pg_catalog.btrim(p_client_request_id)
+        or pg_catalog.char_length(p_client_request_id) not between 1 and 100
+      )
+    )
+    or p_host_plan_code is null
+    or p_host_plan_code not in ('free', 'plus', 'pro', 'watcher', 'nakama', 'junkie')
+    or p_max_participants is null
+    or p_max_participants not between 1 and 50
+    or p_max_media_seats is null
+    or p_max_media_seats not between 0 and 16
+    or p_can_name_room is null
+    or p_can_send_push_invites is null
+    or (
+      (p_source_provider is null) <> (p_source_url is null)
+      or (p_source_provider is null) <> (p_video_fingerprint is null)
+      or (p_source_provider is null) <> (p_source_generation is null)
+    )
+    or (
+      p_source_provider is not null
+      and (
+        p_source_provider not in ('crunchyroll', 'youtube')
+        or pg_catalog.char_length(p_source_url) not between 1 and 2048
+        or pg_catalog.char_length(p_video_fingerprint) not between 1 and 400
+        or p_source_generation not between 1 and 9007199254740991
+      )
+    )
+  then
+    raise exception 'active_room_session_invalid_input' using errcode = '22023';
+  end if;
  -- Match the private core's policy -> account -> room lock order. All creates
  -- serialize on this account; the lookup is identical to the core's reuse test.
  perform public.resolve_watch_history_access_v1(p_host_user_id);
