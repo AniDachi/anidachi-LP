@@ -1800,6 +1800,7 @@ export class RoomClient {
     if (ws?.readyState === WebSocket.OPEN) {
       logDebug("room.send", parsed.type, roomEventDebugSnapshot(parsed));
       ws.send(JSON.stringify(parsed));
+      if (parsed.type === "SET_MEDIA_INTENT") this.media?.markIntentSent(parsed);
       return "sent";
     }
 

@@ -1761,5 +1761,30 @@ describe("negotiated media transport", () => {
   c.close();if(interruption==="connecting")c.connect(options);expect(c.setMediaIntent("camera",false)).toBe(interruption==="connecting"?"queued":"dropped");c.connect(options);ws=ControlledWebSocket.instances.at(-1)!;ws.open();ws.message(snap);ws.message(snap);
   const off=ws.sent.filter(x=>x.startsWith("{")).map(x=>JSON.parse(x)).filter(e=>e.type==="SET_MEDIA_INTENT");expect(off).toHaveLength(1);expect(off[0]).toMatchObject({enabled:false,intentSequence:on.intentSequence+1});expect(c.media?.canCapture("camera")).toBe(false);c.close();
  });
+ it.each(["explicit", "capture-failure"] as const)("does not resend %s off on the same solo-host transport while its ACK is pending", (release) => {
+  installControlledWebSocket();
+  const client = new RoomClient();
+  const options = {roomId: "room", roomToken: "token", participant: roomParticipant, participantSessionId: "session", videoFingerprint: "v", onEvent: vi.fn(), onStatus: vi.fn()};
+  client.connect(options);
+  const ws = ControlledWebSocket.instances.at(-1)!; ws.open();
+  const local = {participantSessionId: "session", mediaSeatGranted: true, seatRevision: 0, cameraGranted: false, microphoneGranted: false, cameraIntentSequence: 0, microphoneIntentSequence: 0, cameraRevocationEpoch: 0, microphoneRevocationEpoch: 0};
+  const snap = {type: "ROOM_MEDIA_SNAPSHOT", roomId: "room", roomGeneration: 1, snapshotSequence: 1, capabilities: {mediaProtocolVersion: 3, hostPlanCode: "pro", maxParticipants: 15, maxCameras: 4, maxMediaSeats: 8, capabilityRevision: 1, capabilitiesValidUntil: "2026-09-15T20:00:00Z"}, participants: [local], closingAt: null};
+  ws.message({type: "ROOM_SNAPSHOT", roomId: "room", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1, participants: [{...roomParticipant, participantSessionId: "session"}]});
+  ws.message(snap);
+  client.setMediaIntent("microphone", true);
+  const on = JSON.parse(ws.sent.at(-1)!);
+  local.microphoneGranted = true; local.microphoneIntentSequence = on.intentSequence;
+  const {participantSessionId: _session, ...granted} = local;
+  ws.message({type: "MEDIA_INTENT_ACK", roomId: "room", roomGeneration: 1, participantSessionId: "session", media: "microphone", requestId: on.requestId, intentSequence: on.intentSequence, snapshotSequence: 2, state: granted});
+  expect(client.media!.canCapture("microphone")).toBe(true);
+  if (release === "capture-failure") expect(client.releaseFailedMedia(client.media!.captureIntent("microphone")!)).toBe(true);
+  else expect(client.setMediaIntent("microphone", false)).toBe("sent");
+  // The enable's broadcast can arrive after local capture failure sent Off.
+  ws.message({...snap, snapshotSequence: 2});
+  const off = ws.sent.filter(x => x.startsWith("{")).map(x => JSON.parse(x)).filter(e => e.type === "SET_MEDIA_INTENT" && !e.enabled);
+  expect(off).toHaveLength(1);
+  expect(client.media!.canCapture("microphone")).toBe(false);
+  client.close();
+ });
  it("treats update-required HTTP426 as terminal",()=>{expect(isTerminalRoomJoinError(new RoomApiError("Update required","ROOM_UPDATE_REQUIRED",undefined,426))).toBe(true);});
 });

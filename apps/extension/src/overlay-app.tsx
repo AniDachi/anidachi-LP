@@ -3343,11 +3343,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				case "MEDIA_INTENT_ERROR": {
 					const media = clientRef.current.media;
 					if (media?.snapshot) {
+						if (media.error) showTransientPanelNotice(media.error);
 						ghostCamSession.reconcileMediaAuthority(media.canCapture("camera"), media.canCapture("microphone"), media.snapshot);
 						setRoomMediaSnapshot(media.snapshot);
 						setRoomCapabilities(media.snapshot.capabilities);
 						setMediaRevision(n => n + 1);
-						if (media.error) setAuthMessage(media.error);
 						if (!media.wants("camera")) {
 							setCamsEnabled(false);
 							if (appliedMediaDefaultsSessionRef.current === storedRoomSessionRef.current?.participantSessionId) {
@@ -3705,6 +3705,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			playbackSyncController,
 			recordChatHistoryMessage,
 			reactionsEnabled,
+			showTransientPanelNotice,
 			terminateRoomSession,
 			ghostCamSession.reconcileMediaAuthority,
 			triggerFlameBurst,
