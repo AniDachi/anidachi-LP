@@ -198,6 +198,7 @@ import {
 import {
 	mergeRoomInviteTargetStatus,
 	type RoomInviteTargetStatus,
+	roomInviteEligibleRecipientIds,
 	roomInviteGroupStatus,
 	roomInviteTargetStatuses,
 	roomInviteTargetStatusLabel,
@@ -552,6 +553,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		useRef<PointerWakePoint | null>(null);
 	const authUserIdRef = useRef<string | null>(null);
 	const authUserIdInitializedRef = useRef(false);
+	const authGenerationRef = useRef(0);
 	const suppressSilentSignInUntilRef = useRef(0);
 	const [participant, setParticipant] = useState<Participant | null>(null);
 	const [identityLoaded, setIdentityLoaded] = useState(false);
@@ -658,7 +660,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const inviteStatusRequestEpochRef = useRef(0);
 	const inviteStatusMembershipRef = useRef({
 		roomId: null as string | null,
-		participantCount: 0,
+		userIdentity: "",
+		ready: false,
 	});
 	const [messageComposerGuardActive, setMessageComposerGuardActive] =
 		useState(false);
@@ -1645,6 +1648,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			}
 
 			authUserIdRef.current = nextAuthUserId;
+			authGenerationRef.current += 1;
+			inviteStatusRequestEpochRef.current += 1;
+			inviteActionIdsRef.current.clear();
+			setInviteTargets(null);
+			setInviteTargetsLoading(false);
+			setInviteSendingTarget(null);
+			setInviteTargetStatuses(new Map());
+			clearInviteNotice();
 			if (!wasInitialized || previousAuthUserId === null) {
 				return;
 			}
@@ -1658,7 +1669,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			});
 			resetLocalRoomSession(undefined, false);
 		},
-		[resetLocalRoomSession],
+		[clearInviteNotice, resetLocalRoomSession],
 	);
 
 	const refreshRoomActionIdentity = useCallback(async (reason: string) => {
@@ -1691,9 +1702,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 		return {
 			accessToken: result.tokens?.accessToken ?? null,
+			accountGeneration: authGenerationRef.current,
+			ownerUserId: result.tokens?.user.id ?? null,
 			participant: result.participant,
 		};
-	}, []);
+	}, [syncAuthUserScopedState]);
 
 	const getFreshAuthAccessToken = useCallback(
 		async (reason: string): Promise<string | null> => {
@@ -1783,6 +1796,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			? [participant]
 			: [];
 	const participantCount = participants.length || (participant ? 1 : 0);
+	const inviteMembershipReady = roomSnapshotReady || participants.length > 0;
 	const roomParticipantLimit = roomCapabilities?.maxParticipants ?? 4;
 	const mediaProtocolVersion = roomCapabilities && "mediaProtocolVersion" in roomCapabilities ? roomCapabilities.mediaProtocolVersion : 1;
 	const versionedMedia = mediaProtocolVersion !== 1;
@@ -5013,25 +5027,41 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			return;
 		}
 		const statusRequestEpoch = ++inviteStatusRequestEpochRef.current;
+		let requestOwnerUserId = authUserIdRef.current;
+		let requestAccountGeneration = authGenerationRef.current;
+		const isCurrentAccount = () =>
+			requestOwnerUserId !== null &&
+			authUserIdRef.current === requestOwnerUserId &&
+			authGenerationRef.current === requestAccountGeneration;
 
 		try {
-			const accessToken = await getFreshAuthAccessToken("invite-targets");
+			const refreshed = await refreshRoomActionIdentity("invite-targets");
+			const { accessToken, accountGeneration, ownerUserId } = refreshed;
+			requestOwnerUserId = ownerUserId;
+			requestAccountGeneration = accountGeneration;
+			const isCurrent = () =>
+				isCurrentAccount() &&
+				roomIdRef.current === activeRoomId;
 			if (!accessToken) {
-				showInviteNotice("Sign in to invite friends.", "error");
+				if (roomIdRef.current === activeRoomId && authGenerationRef.current === accountGeneration) {
+					showInviteNotice("Sign in to invite friends.", "error");
+					setInviteTargetsLoading(false);
+				}
 				return;
 			}
-			if (roomIdRef.current !== activeRoomId) return;
+			if (!isCurrent()) return;
 
 			const [targets, inviteResult] = await Promise.all([
 				listInviteTargets(accessToken),
-				listRoomInvites(accessToken)
+				listRoomInvites(accessToken, activeRoomId)
 					.then((invites) => ({ ok: true as const, invites }))
 					.catch((error: unknown) => ({ ok: false as const, error })),
 			]);
-			if (roomIdRef.current !== activeRoomId) return;
+			if (!isCurrent()) return;
 			setInviteTargets(targets);
 			if (
 				inviteResult.ok &&
+				isCurrent() &&
 				inviteStatusRequestEpochRef.current === statusRequestEpoch
 			) {
 				setInviteTargetStatuses(
@@ -5039,6 +5069,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				);
 			} else if (
 				!inviteResult.ok &&
+				isCurrent() &&
 				inviteStatusRequestEpochRef.current === statusRequestEpoch
 			) {
 				showInviteNotice(
@@ -5058,46 +5089,52 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				groupCount: targets.groups.length,
 			});
 		} catch (error) {
-			if (roomIdRef.current !== activeRoomId) return;
+			if (!isCurrentAccount() || roomIdRef.current !== activeRoomId) return;
 			const message = authErrorMessage(error, "Failed to load invite targets");
 			showInviteNotice(message, "error");
 			logDebug("overlay.invite", "targets failed", { message });
 		} finally {
-			if (roomIdRef.current === activeRoomId) {
+			if (isCurrentAccount() && roomIdRef.current === activeRoomId) {
 				setInviteTargetsLoading(false);
 			}
 		}
-	}, [clearInviteNotice, getFreshAuthAccessToken, showInviteNotice]);
+	}, [clearInviteNotice, refreshRoomActionIdentity, showInviteNotice]);
 
 	const refreshInviteStatusesForRoom = useCallback(async () => {
 		const activeRoomId = roomIdRef.current;
 		if (!activeRoomId) return;
 		const statusRequestEpoch = ++inviteStatusRequestEpochRef.current;
-		const accessToken = await getFreshAuthAccessToken(
+		const refreshed = await refreshRoomActionIdentity(
 			"invite-status-membership-change",
 		);
-		if (!accessToken || roomIdRef.current !== activeRoomId) return;
+		const { accessToken, accountGeneration, ownerUserId } = refreshed;
+		const isCurrent = () =>
+			ownerUserId !== null &&
+			authUserIdRef.current === ownerUserId &&
+			authGenerationRef.current === accountGeneration &&
+			roomIdRef.current === activeRoomId;
+		if (!accessToken || !isCurrent()) return;
 
 		try {
-			const invites = await listRoomInvites(accessToken);
+			const invites = await listRoomInvites(accessToken, activeRoomId);
 			if (
-				roomIdRef.current !== activeRoomId ||
+				!isCurrent() ||
 				inviteStatusRequestEpochRef.current !== statusRequestEpoch
 			)
 				return;
 			setInviteTargetStatuses(
 				roomInviteTargetStatuses(invites.sent, activeRoomId),
 			);
-			logDebug("overlay.invite", "status refreshed after participant joined", {
+		logDebug("overlay.invite", "status refreshed after membership changed", {
 				roomId: activeRoomId,
 			});
 		} catch (error) {
-			logDebug("overlay.invite", "participant-join status refresh failed", {
+			logDebug("overlay.invite", "membership status refresh failed", {
 				roomId: activeRoomId,
 				message: authErrorMessage(error, "Failed to refresh invite status"),
 			});
 		}
-	}, [getFreshAuthAccessToken]);
+	}, [refreshRoomActionIdentity]);
 
 	const toggleInvitePanel = useCallback(() => {
 		if (invitePanelOpen) {
@@ -5111,7 +5148,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 	useEffect(() => {
 		const previous = inviteStatusMembershipRef.current;
-		const current = { roomId, participantCount };
+		const current = {
+			roomId,
+			ready: roomSnapshotReady,
+			userIdentity: participants.map((participant) => participant.id).sort().join("\u0000"),
+		};
 
 		if (previous.roomId !== roomId) {
 			inviteStatusMembershipRef.current = current;
@@ -5121,7 +5162,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		if (!invitePanelOpen) return;
 		inviteStatusMembershipRef.current = current;
 
-		if (!isHost || !roomId || participantCount <= previous.participantCount) {
+		if (!isHost || !roomId || current.userIdentity === previous.userIdentity) {
 			return;
 		}
 
@@ -5129,9 +5170,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	}, [
 		invitePanelOpen,
 		isHost,
-		participantCount,
+		participants,
 		refreshInviteStatusesForRoom,
 		roomId,
+		roomSnapshotReady,
 	]);
 
 	const sendInviteToTarget = useCallback(
@@ -5141,19 +5183,25 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			input: Pick<CreateRoomInviteInput, "recipientUserIds" | "groupId">,
 		) => {
 			const activeRoomId = roomIdRef.current;
-			const accessToken = await getFreshAuthAccessToken("send-invite");
+			const refreshed = await refreshRoomActionIdentity("send-invite");
+			const { accessToken, accountGeneration, ownerUserId } = refreshed;
+			const isCurrent = () =>
+				ownerUserId !== null &&
+				authUserIdRef.current === ownerUserId &&
+				authGenerationRef.current === accountGeneration &&
+				roomIdRef.current === activeRoomId;
 			if (!activeRoomId || !accessToken) {
-				showInviteNotice(
+				if (roomIdRef.current === activeRoomId && authGenerationRef.current === accountGeneration) showInviteNotice(
 					"Create a room and sign in before inviting friends.",
 					"error",
 				);
 				return;
 			}
-			if (roomIdRef.current !== activeRoomId) return;
+			if (!isCurrent()) return;
 
 			setInviteSendingTarget(targetKey);
 			clearInviteNotice();
-			const requestKey = `${activeRoomId}:${targetKey}`;
+			const requestKey = `${ownerUserId}:${activeRoomId}:${targetKey}`;
 			const clientActionId =
 				inviteActionIdsRef.current.get(requestKey) ?? crypto.randomUUID();
 			inviteActionIdsRef.current.set(requestKey, clientActionId);
@@ -5163,7 +5211,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					clientActionId,
 					...input,
 				});
-				if (roomIdRef.current !== activeRoomId) return;
+				if (!isCurrent()) return;
 				if (inviteActionIdsRef.current.get(requestKey) === clientActionId) {
 					inviteActionIdsRef.current.delete(requestKey);
 				}
@@ -5171,6 +5219,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				setInviteTargetStatuses((current) =>
 					mergeRoomInviteTargetStatus(current, targetKey, result.invite),
 				);
+				void refreshInviteStatusesForRoom();
 				showInviteNotice(
 					result.created
 						? `Invite sent to ${label}. Waiting for a response.`
@@ -5184,6 +5233,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					created: result.created,
 				});
 			} catch (error) {
+				if (!isCurrent()) return;
 				const message = authErrorMessage(error, "Failed to send invite");
 				showInviteNotice(message, "error");
 				logDebug("overlay.invite", "send failed", {
@@ -5192,12 +5242,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					message,
 				});
 			} finally {
-				if (roomIdRef.current === activeRoomId) {
+				if (isCurrent()) {
 					setInviteSendingTarget(null);
 				}
 			}
 		},
-		[clearInviteNotice, getFreshAuthAccessToken, showInviteNotice],
+		[clearInviteNotice, refreshInviteStatusesForRoom, refreshRoomActionIdentity, showInviteNotice],
 	);
 
 	const sendDirectInvite = useCallback(
@@ -6220,12 +6270,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 											inviteTargetStatuses,
 											group.members.map((member) => member.user.userId),
 										);
-										const invitedMemberCount =
-											targetStatus?.recipientStatuses.size ?? 0;
-										const uninvitedMemberCount = Math.max(
-											0,
-											group.members.length - invitedMemberCount,
-										);
+										const currentRoomUserIds = new Set(participants.map((participant) => participant.id));
+										const eligibleMemberCount = inviteMembershipReady
+											? roomInviteEligibleRecipientIds(
+												group.members.map((member) => member.user.userId),
+												inviteTargetStatuses,
+												currentRoomUserIds,
+											).length
+											: 0;
 										const statusLabel = targetStatus
 											? roomInviteTargetStatusLabel(targetStatus)
 											: null;
@@ -6253,7 +6305,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 													disabled={
 														inviteSendingTarget !== null ||
 														group.members.length === 0 ||
-														uninvitedMemberCount === 0
+														!inviteMembershipReady || eligibleMemberCount === 0
 													}
 													onClick={() => sendGroupInvite(group)}
 													type="button"
@@ -6262,10 +6314,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 														? "Sending…"
 														: group.members.length === 0
 															? "No members"
-															: targetStatus && uninvitedMemberCount === 0
+													: targetStatus && eligibleMemberCount === 0
 																? roomInviteTargetStatusLabel(targetStatus)
 																: targetStatus
-																	? `Invite ${uninvitedMemberCount} new`
+															? `Invite ${eligibleMemberCount}`
 																	: "Invite"}
 												</button>
 											</div>
@@ -6282,6 +6334,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 									{inviteTargets.friends.map((friend) => {
 										const targetKey = `friend:${friend.user.userId}`;
 										const targetStatus = inviteTargetStatuses.get(targetKey);
+										const inRoom = inviteMembershipReady && participants.some((participant) => participant.id === friend.user.userId);
+										const eligible = inviteMembershipReady && roomInviteEligibleRecipientIds(
+											[friend.user.userId], inviteTargetStatuses,
+											new Set(participants.map((participant) => participant.id)),
+										).length === 1;
 										return (
 											<div
 												className="invite-target-row"
@@ -6305,15 +6362,19 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 													data-state={targetStatus?.state ?? "idle"}
 													disabled={
 														inviteSendingTarget !== null ||
-														Boolean(targetStatus)
+														!eligible
 													}
 													onClick={() => sendDirectInvite(friend)}
 													type="button"
 												>
 													{inviteSendingTarget === targetKey
 														? "Sending…"
-														: targetStatus
-															? roomInviteTargetStatusLabel(targetStatus)
+													: inRoom
+														? "In room"
+														: eligible
+															? "Invite"
+															: targetStatus
+														? roomInviteTargetStatusLabel(targetStatus)
 															: "Invite"}
 												</button>
 											</div>

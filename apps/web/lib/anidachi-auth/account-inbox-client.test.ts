@@ -106,3 +106,60 @@ function inboxResponse(ownerUserId: string): AccountInboxResponse {
     nextCursor: null,
   };
 }
+
+test("a replacement invitation from a newer page removes the prior Return card for that room", () => {
+  const original = inboxResponse(OWNER_ID);
+  const sender = original.items[0]!.sender;
+  const common = {
+    kind: "room-invite" as const,
+    roomId: "room-return",
+    sender,
+    targetKind: "direct" as const,
+    targetGroupId: null,
+    targetGroupName: null,
+    message: null,
+    roomTitle: null,
+    sourceUrl: null,
+    videoFingerprint: null,
+    missedAt: null,
+  };
+  original.items = [
+    {
+      ...common,
+      inviteId: FRIENDSHIP_ID,
+      state: "returnable",
+      createdAt: "2026-08-09T10:00:00.000Z",
+      activityAt: NOW,
+      seenAt: NOW,
+    },
+  ];
+  original.meta.serverTime = "2026-08-09T11:00:00.000Z";
+  original.counts = {
+    unseen: 0,
+    actionable: 0,
+    activeRoomInvites: 0,
+    pendingFriendRequests: 0,
+  };
+  const page: AccountInboxResponse = {
+    ...inboxResponse(OWNER_ID),
+    items: [
+      {
+        ...common,
+        inviteId: OTHER_ID,
+        state: "active",
+        createdAt: NOW,
+        activityAt: NOW,
+        seenAt: null,
+      },
+    ],
+  };
+  const merged = appendAccountInboxPage(original, page);
+  assert.equal(merged.items.length, 1);
+  assert.equal(merged.items[0]?.state, "active");
+  assert.equal(merged.items[0]?.seenAt, null);
+  const lateOldPage = appendAccountInboxPage(merged, original);
+  assert.equal(lateOldPage.items.length, 1);
+  assert.equal(lateOldPage.items[0]?.state, "active");
+  assert.deepEqual(lateOldPage.counts, merged.counts);
+  assert.deepEqual(lateOldPage.meta, merged.meta);
+});

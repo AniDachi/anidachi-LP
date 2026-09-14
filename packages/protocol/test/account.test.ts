@@ -223,6 +223,51 @@ describe("account response contracts", () => {
     expect(AccountInboxResponseSchema.parse(response)).toEqual(response);
   });
 
+  it("accepts an already-seen Return invitation without treating it as a new response", () => {
+    const item = {
+      kind: "room-invite",
+      inviteId: INVITE_ID,
+      roomId: ROOM_ID,
+      sender: userB,
+      targetKind: "direct",
+      targetGroupId: null,
+      targetGroupName: null,
+      message: null,
+      roomTitle: null,
+      sourceUrl: null,
+      videoFingerprint: null,
+      state: "returnable",
+      createdAt: NOW,
+      activityAt: NOW,
+      seenAt: NOW,
+      missedAt: null,
+    };
+    const response = {
+      meta: { ...meta, ownerUserId: USER_A },
+      items: [item],
+      counts: {
+        unseen: 0,
+        actionable: 0,
+        activeRoomInvites: 0,
+        pendingFriendRequests: 0,
+      },
+      nextCursor: null,
+    };
+    expect(AccountInboxResponseSchema.parse(response).items[0]).toEqual(item);
+    expect(
+      AccountInboxResponseSchema.safeParse({
+        ...response,
+        items: [{ ...item, seenAt: null }],
+      }).success,
+    ).toBe(false);
+    expect(
+      AccountInboxResponseSchema.safeParse({
+        ...response,
+        items: [{ ...item, missedAt: NOW }],
+      }).success,
+    ).toBe(false);
+  });
+
   it("accepts the minimal extension push registration contract", () => {
     const request = {
       installationId: "99999999-9999-4999-8999-999999999999",

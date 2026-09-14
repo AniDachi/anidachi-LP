@@ -368,3 +368,54 @@ test("failed Join reports its error outside the closed notification dialog", asy
   await click("View invitations");
   assert.equal(container.querySelector("dialog")?.hasAttribute("open"),true);
 });
+
+test("accepted rooms offer Return after a failed entry without a second Decline action", async () => {
+  const requests: string[] = [];
+  let accepts = 0;
+  const invite = {
+    kind: "room-invite",
+    inviteId: peer,
+    roomId: "return-room",
+    sender: user,
+    targetKind: "direct",
+    targetGroupId: null,
+    targetGroupName: null,
+    message: null,
+    roomTitle: "Return to Friday anime",
+    sourceUrl: null,
+    videoFingerprint: null,
+    createdAt: now,
+    activityAt: now,
+    seenAt: now,
+    state: "returnable",
+    missedAt: null,
+  };
+  globalThis.fetch = async (input) => {
+    requests.push(String(input));
+    if (String(input).includes("/accept")) {
+      accepts++;
+      return Response.json({ error: "Room is full. Try again shortly." }, { status: 409 });
+    }
+    return String(input).startsWith("/api/account/inbox")
+      ? Response.json({
+          meta: { ...meta, ownerUserId: owner },
+          items: [invite],
+          counts,
+          nextCursor: null,
+        })
+      : Response.json({ meta, inbox: [], sent: [] });
+  };
+  await mount(React.createElement(InvitesClient, { ownerUserId: owner }));
+  assert.equal(button("Return to room").disabled, false);
+  assert.equal(container.querySelector('[aria-label="Decline invite"]'), null);
+  await click("Return to room");
+  assert.equal(accepts, 1);
+  assert.match(container.textContent ?? "", /Room is full/);
+  assert.equal(button("Return to room").disabled, false);
+  assert.ok(
+    requests
+      .filter((url) => url.startsWith("/api/account/inbox"))
+      .every((url) => url.includes("includeReturnable=true")),
+  );
+  assert.ok(!requests.some((url) => url.includes("/seen")));
+});

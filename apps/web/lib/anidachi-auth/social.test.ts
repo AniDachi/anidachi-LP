@@ -314,10 +314,8 @@ test("atomic room invite responses fail closed on malformed or mismatched databa
     null,
     atomicInviteResponseOutcome({ invite_id: OTHER_ID }),
     atomicInviteResponseOutcome({ outcome: "accepted", recipient_status: "pending" }),
-    atomicInviteResponseOutcome({ outcome: "friendship_required", recipient_status: "accepted" }),
     atomicInviteResponseOutcome({ outcome: "room_ended", recipient_status: "expired", missed_at: null }),
     atomicInviteResponseOutcome({ outcome: "not_found", room_id: "room-1" }),
-    atomicInviteResponseOutcome({ outcome: "already_resolved", recipient_status: "accepted" }),
     atomicInviteResponseOutcome({
       outcome: "already_resolved",
       recipient_status: "declined",
@@ -437,17 +435,16 @@ test("social APIs validate UUID-shaped ids before hitting Supabase", () => {
 
 test("public profiles never expose email and fall back to user display fields", () => {
   assert.deepEqual(
-    publicProfileFromRows(
-      "u1",
-      null,
-      { display_name: "Fallback Name", avatar_url: "https://cdn.example/avatar.png" }
-    ),
+    publicProfileFromRows("u1", null, {
+      display_name: "Fallback Name",
+      avatar_url: "https://cdn.example/avatar.png",
+    }),
     {
       userId: "u1",
       handle: null,
       displayName: "Fallback Name",
       avatarUrl: "https://cdn.example/avatar.png",
-    }
+    },
   );
 });
 
@@ -501,3 +498,28 @@ function roomInviteErrorShape(code: string) {
   assert.ok(error);
   return { status: error.status, message: error.message };
 }
+
+test("Return denials keep accepted history but produce lifecycle errors instead of malformed response errors", () => {
+  for (const [outcome, status] of [
+    ["already_resolved", 409],
+    ["friendship_required", 403],
+    ["room_ended", 410],
+  ] as const) {
+    assert.throws(
+      () =>
+        resolveRoomInviteResponseOutcome(
+          atomicInviteResponseOutcome({
+            outcome,
+            recipient_status: "accepted",
+          }),
+          "accept",
+          INVITE_ID,
+        ),
+      (error) => error instanceof SocialApiError && error.status === status,
+    );
+  }
+  assert.deepEqual(roomInviteErrorShape("room_invite_already_in_room"), {
+    status: 409,
+    message: "These people are already in this room or joining it",
+  });
+});

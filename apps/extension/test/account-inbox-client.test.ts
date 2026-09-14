@@ -28,6 +28,7 @@ describe("account inbox HTTP bridge", () => {
     const url = new URL(requestUrl);
     expect(url.pathname).toBe("/api/account/inbox");
     expect(url.searchParams.get("limit")).toBe("100");
+		expect(url.searchParams.get("includeReturnable")).toBe("true");
   });
 
   it("posts the exact seen item identities and validates the returned inbox", async () => {
@@ -41,6 +42,7 @@ describe("account inbox HTTP bridge", () => {
     const url = new URL(requestUrl);
     expect(url.pathname).toBe("/api/account/inbox/seen");
     expect(url.searchParams.get("limit")).toBe("100");
+		expect(url.searchParams.get("includeReturnable")).toBe("true");
     expect(fetchMock).toHaveBeenCalledWith(
       expect.any(URL),
       expect.objectContaining({

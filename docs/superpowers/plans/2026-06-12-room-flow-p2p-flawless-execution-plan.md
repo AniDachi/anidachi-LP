@@ -19,6 +19,18 @@
 
 ---
 
+## Follow-up: room invitation return, 2026-09-14
+
+Private testing found that permanent recipient deduplication blocked inviting an
+accepted guest after departure. The [return correction](2026-09-14-room-invite-return.md)
+allows a fresh invitation only after the active assignment has been released,
+and keeps accepted active-room invitations available through a seen Return card.
+The host button remains Invite. Pending/declined recipients and current room
+participants do not receive repeat invitations. Room-first SQL lock ordering and
+fresh identities protect concurrent response, resend and notification delivery.
+The existing admission path, Worker, P2P and media defaults remain unchanged.
+Physical two-account acceptance follows the owner's private production test flow.
+
 ## Follow-up: room defaults with media seats, 2026-09-14
 
 The private tester correction restores saved microphone/camera defaults after

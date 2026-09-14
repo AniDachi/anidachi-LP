@@ -56,13 +56,36 @@ export function appendAccountInboxPage(
   if (current.meta.ownerUserId !== page.meta.ownerUserId) {
     throw new Error("Account inbox response belongs to another account");
   }
-  const seenKeys = new Set(current.items.map(accountInboxItemKey));
+  if (page.meta.serverTime < current.meta.serverTime) return current;
+  const merged = new Map(current.items.map((item) => [accountInboxItemKey(item), item]));
+  for (const item of page.items) {
+    const key = accountInboxItemKey(item);
+    merged.set(key, item);
+  }
+  // Different send cycles use different IDs. A page fetched during a reinvite
+  // must not leave the previous accepted card beside its pending replacement.
+  const latestByRoom = new Map<
+    string,
+    Extract<AccountInboxResponse["items"][number], { kind: "room-invite" }>
+  >();
+  for (const item of merged.values()) {
+    if (item.kind !== "room-invite") continue;
+    const prior = latestByRoom.get(item.roomId);
+    if (
+      !prior ||
+      item.createdAt > prior.createdAt ||
+      (item.createdAt === prior.createdAt &&
+        item.state === "active" &&
+        prior.state === "returnable")
+    ) {
+      latestByRoom.set(item.roomId, item);
+    }
+  }
   return {
     meta: page.meta,
-    items: [
-      ...current.items,
-      ...page.items.filter((item) => !seenKeys.has(accountInboxItemKey(item))),
-    ],
+    items: [...merged.values()].filter(
+      (item) => item.kind !== "room-invite" || latestByRoom.get(item.roomId) === item,
+    ),
     counts: page.counts,
     nextCursor: page.nextCursor,
   };

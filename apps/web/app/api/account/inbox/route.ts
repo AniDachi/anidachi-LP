@@ -3,6 +3,7 @@ import { listAccountInbox } from "@/lib/anidachi-auth/account-inbox";
 import {
 	accountInboxErrorResponse,
 	accountInboxPageLimit,
+	accountInboxIncludeReturnable,
 } from "@/lib/anidachi-auth/account-inbox-routes";
 import { getApiSession } from "@/lib/anidachi-auth/api-session";
 
@@ -18,6 +19,9 @@ export async function GET(request: NextRequest) {
 		return NextResponse.json(
 			await listAccountInbox({
 				ownerUserId: session.userId,
+				includeReturnable: accountInboxIncludeReturnable(
+					request.nextUrl.searchParams.get("includeReturnable"),
+				),
 				cursor: request.nextUrl.searchParams.get("cursor"),
 				limit: accountInboxPageLimit(request.nextUrl.searchParams.get("limit")),
 			}),
