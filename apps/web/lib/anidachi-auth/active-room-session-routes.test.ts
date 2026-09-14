@@ -663,7 +663,10 @@ test("production departure routes derive identity and role from active assignmen
 
 test("connect rejects unsupported durable media before active session claim", () => {
   const connect = readFileSync(new URL("../../app/api/rooms/[roomId]/connect/route.ts", import.meta.url), "utf8");
-  assert.ok(connect.indexOf("negotiateRoomMediaLease(room.media_lease, mediaProtocolVersion)") < connect.indexOf("await claimActiveRoomSession("));
+  const negotiateAt = connect.indexOf("negotiateRoomMediaLease(room.media_lease, mediaProtocolVersion)");
+  const claimAt = connect.indexOf("await claimActiveRoomSession(");
+  assert.ok(negotiateAt >= 0 && claimAt >= 0);
+  assert.ok(negotiateAt < claimAt);
   assert.match(connect, /claimActiveRoomSession\(\{[\s\S]*mediaProtocolVersion,/);
   assert.match(connect, /error.message === "ROOM_UPDATE_REQUIRED"/);
   const create = readFileSync(new URL("../../app/api/rooms/route.ts", import.meta.url), "utf8");
