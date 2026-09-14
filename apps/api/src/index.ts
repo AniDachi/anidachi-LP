@@ -1,3 +1,4 @@
+import {RoomMediaV3SnapshotSchema} from "@anidachi/protocol";
 import {
 	ROOM_POLICY_STORAGE_KEY,
 	initialRoomPolicy,
@@ -1850,6 +1851,52 @@ export class RoomDurableObject {
     this.touchSocketAttachment(socket);
 
     switch (event.type) {
+		case "SET_MEDIA_SEAT":
+			await this.runRoomEndExclusively(async () => {
+				const userId = this.participantsBySocket.get(socket);
+				if (!userId || this.socketsByParticipant.get(userId) !== socket) return;
+				const before = this.room.toSnapshot();
+				if (before.media?.capabilities.mediaProtocolVersion !== 3) {
+					this.send(socket, {
+						type: "ERROR",
+						code: "MEDIA_FORBIDDEN",
+						message: "Room does not support host-managed media seats",
+					});
+					return;
+				}
+				try {
+					const result = this.room.applyMediaSeatCommand(userId, event);
+					this.persistRoomState();
+					await this.state.storage.sync();
+					const snapshot = RoomMediaV3SnapshotSchema.parse(
+						this.room.mediaSnapshot,
+					);
+					this.send(socket, {
+						type: "MEDIA_SEAT_RESULT",
+						requestId: event.requestId,
+						targetParticipantSessionId: event.targetParticipantSessionId,
+						code: result.accepted ? "OK" : result.code,
+						snapshot,
+					});
+					this.broadcast(this.currentRoomSnapshot());
+				} catch {
+					this.room = new RoomState(this.room.roomId, undefined, before);
+					// Restore the durable image too: sync failures must not revive a
+					// rejected grant/denial on the next hibernation wake.
+					try {
+						this.persistRoomState();
+						await this.state.storage.sync();
+					} catch {
+						socket.close(1011, "Media persistence unavailable");
+					}
+					this.send(socket, {
+						type: "ERROR",
+						code: "MEDIA_UNAVAILABLE",
+						message: "Media seat was not committed",
+					});
+				}
+			});
+			return;
 			case "SET_MEDIA_INTENT":
 			case "REVOKE_MEDIA_GRANT":
 				await this.runRoomEndExclusively(async () => {
@@ -2469,7 +2516,7 @@ export class RoomDurableObject {
     event: Extract<ClientEvent, { type: "CAMERA_ON" | "CAMERA_OFF" }>,
   ): void {
     const userId = this.participantsBySocket.get(socket);
-    if (!userId || userId !== event.userId) {
+    if (!userId || this.socketsByParticipant.get(userId) !== socket || userId !== event.userId) {
       this.send(socket, {
         type: "ERROR",
         code: "NOT_PARTICIPANT",

@@ -71,6 +71,7 @@ export function initializeRoomStorage(storage: DurableObjectStorage): void {
       updated_at INTEGER NOT NULL
     )`,
   );
+  storage.sql.exec("CREATE TABLE IF NOT EXISTS room_media_seat_denials (user_id TEXT PRIMARY KEY)");
   // Earlier builds stored complete P2P envelopes, including SDP and ICE, in
   // p2p_replay. They cannot be migrated safely, so remove that legacy table
   // before creating the metadata-only replacement.
@@ -104,7 +105,9 @@ export function readStoredRoomState(
   }
 
   try {
-    return parseRoomStateSnapshot(JSON.parse(row.value_json));
+    const snapshot = parseRoomStateSnapshot(JSON.parse(row.value_json));
+    if(snapshot) snapshot.mediaSeatDenials = storage.sql.exec<{user_id:string}>("SELECT user_id FROM room_media_seat_denials").toArray().map(row => row.user_id);
+    return snapshot;
   } catch {
     return null;
   }
@@ -114,7 +117,12 @@ export function writeStoredRoomState(
   storage: DurableObjectStorage,
   snapshot: RoomStateSnapshot,
 ): void {
-  writeMeta(storage, ROOM_STATE_META_KEY, snapshot, snapshot.updatedAt);
+  const {mediaSeatDenials = [], ...roomSnapshot} = snapshot;
+  storage.transactionSync(() => {
+    writeMeta(storage, ROOM_STATE_META_KEY, roomSnapshot, snapshot.updatedAt);
+    storage.sql.exec("DELETE FROM room_media_seat_denials");
+    for(const userId of mediaSeatDenials) storage.sql.exec("INSERT INTO room_media_seat_denials (user_id) VALUES (?)",userId);
+  });
 }
 
 export function readStoredRoomMeter(
@@ -214,6 +222,7 @@ export function persistEndedRoomTombstoneAndClearRuntime(
   storage.transactionSync(() => {
     writeMeta(storage, ROOM_ENDED_META_KEY, tombstone, tombstone.endedAt);
     storage.sql.exec("DELETE FROM p2p_replay_meta");
+ storage.sql.exec("DELETE FROM room_media_seat_denials");
     storage.sql.exec("DROP TABLE IF EXISTS p2p_replay");
     storage.sql.exec(
       "DELETE FROM room_meta WHERE key IN (?, ?, ?)",
@@ -639,7 +648,7 @@ export function parseRoomStateSnapshot(
 			(!Array.isArray(value.mediaRevocations) ||
 				value.mediaRevocations.length > 1024 ||
 				value.mediaRevocations.some(
-					(v) => typeof v !== "string" || v.length > 512,
+					(v) => typeof v !== "string" || v.length > 2048,
 				))
 		)
 			return null;
