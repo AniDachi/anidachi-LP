@@ -16,6 +16,27 @@ const participantScope = { ...scope, participantSessionId: SessionId };
 export const ROOM_MEDIA_CAPABILITY_LEASE_MS = 30 * 60 * 1000;
 export const ROOM_MEDIA_CAPABILITY_RENEW_BEFORE_MS = 5 * 60 * 1000;
 export const ROOM_MEDIA_CAPABILITY_END_GRACE_MS = 5 * 60 * 1000;
+function validateLeaseAuthority(
+	lease: {
+		issuedAt: string;
+		paidUntil: string | null;
+		capabilities: { capabilitiesValidUntil: string };
+	},
+	ctx: z.RefinementCtx,
+): void {
+	const issued = Date.parse(lease.issuedAt),
+		expiry = Date.parse(lease.capabilities.capabilitiesValidUntil);
+	if (
+		expiry <= issued ||
+		expiry > issued + ROOM_MEDIA_CAPABILITY_LEASE_MS ||
+		(lease.paidUntil !== null && expiry > Date.parse(lease.paidUntil))
+	)
+		ctx.addIssue({
+			code: "custom",
+			path: ["capabilities", "capabilitiesValidUntil"],
+			message: "Capability lease exceeds server authority",
+		});
+}
 export const RoomMediaKindSchema = z.enum(["camera", "microphone"]);
 export const ParticipantMediaV2StateSchema = z.strictObject({
 	cameraRevocationEpoch: Sequence.default(0),
@@ -76,20 +97,7 @@ export const RoomMediaV2CapabilityLeaseSchema = z
 		paidUntil: Timestamp.nullable(),
 		capabilities: RoomMediaV2CapabilitiesSchema,
 	})
-	.superRefine((lease, ctx) => {
-		const issued = Date.parse(lease.issuedAt),
-			expiry = Date.parse(lease.capabilities.capabilitiesValidUntil);
-		if (
-			expiry <= issued ||
-			expiry > issued + ROOM_MEDIA_CAPABILITY_LEASE_MS ||
-			(lease.paidUntil !== null && expiry > Date.parse(lease.paidUntil))
-		)
-			ctx.addIssue({
-				code: "custom",
-				path: ["capabilities", "capabilitiesValidUntil"],
-				message: "Capability lease exceeds server authority",
-			});
-	});
+	.superRefine(validateLeaseAuthority);
 const reply = {
 	...participantScope,
 	media: RoomMediaKindSchema,
@@ -274,20 +282,7 @@ export const RoomMediaV3CapabilityLeaseSchema = z
 		paidUntil: Timestamp.nullable(),
 		capabilities: RoomMediaV3CapabilitiesSchema,
 	})
-	.superRefine((lease, ctx) => {
-		const issued = Date.parse(lease.issuedAt),
-			expiry = Date.parse(lease.capabilities.capabilitiesValidUntil);
-		if (
-			expiry <= issued ||
-			expiry > issued + ROOM_MEDIA_CAPABILITY_LEASE_MS ||
-			(lease.paidUntil !== null && expiry > Date.parse(lease.paidUntil))
-		)
-			ctx.addIssue({
-				code: "custom",
-				path: ["capabilities", "capabilitiesValidUntil"],
-				message: "Capability lease exceeds server authority",
-			});
-	});
+	.superRefine(validateLeaseAuthority);
 export const RoomMediaCapabilityLeaseSchema = z.union([
 	RoomMediaV2CapabilityLeaseSchema,
 	RoomMediaV3CapabilityLeaseSchema,

@@ -59,7 +59,9 @@ it.each([
 	expect(RoomMediaV3CapabilitiesSchema.safeParse(value).success).toBe(true);
 	for (const patch of [
 		{ maxMediaSeats: Number(maxMediaSeats) + 1 },
+		{ maxMediaSeats: maxMediaSeats === 4 ? 6 : 4 },
 		{ maxParticipants: 14 },
+		{ maxParticipants: maxParticipants === 4 ? 6 : 4 },
 		{ maxCameras: 5 },
 		{ maxMicrophones: 8 },
 		{ capabilityRevision: 0 },
