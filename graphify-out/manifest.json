@@ -342,10 +342,10 @@
     "semantic_hash": "46aa97bae6145c0f0a59e3c51cbf50c7"
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1789371199.5500216,
-    "seen": 1789374356.237094,
-    "ast_hash": "e2f7ac4d04d3cccc54c92d412391717b",
-    "semantic_hash": "e2f7ac4d04d3cccc54c92d412391717b"
+    "mtime": 1789387645.696131,
+    "seen": 1789388760.166037,
+    "ast_hash": "9e4d719a1112a65cd4ba63711757611f",
+    "semantic_hash": "9e4d719a1112a65cd4ba63711757611f"
   },
   "apps/extension/src/overlay-layout.ts": {
     "mtime": 1789366502.820302,
@@ -3606,10 +3606,10 @@
     "semantic_hash": "773034b218ba95d0712867ff35698f20"
   },
   "docs/current-development-state.md": {
-    "mtime": 1789373136.0291378,
-    "seen": 1789374356.23759,
-    "ast_hash": "549bbb72b806a0eb926058cf8ce0afe9",
-    "semantic_hash": "549bbb72b806a0eb926058cf8ce0afe9"
+    "mtime": 1789388077.1357052,
+    "seen": 1789388760.1660402,
+    "ast_hash": "ccda832776055fcc9b51806280a59c5a",
+    "semantic_hash": "ccda832776055fcc9b51806280a59c5a"
   },
   "docs/development-environments.md": {
     "mtime": 1788807642.3055499,
@@ -3738,10 +3738,10 @@
     "semantic_hash": "1a64e025a5001eede8fbb97c9ba09961"
   },
   "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md": {
-    "mtime": 1789370778.723527,
-    "seen": 1789374356.2375948,
-    "ast_hash": "5afb88fb61e0496d0be2ac2504ae11c3",
-    "semantic_hash": "5afb88fb61e0496d0be2ac2504ae11c3"
+    "mtime": 1789388077.1363907,
+    "seen": 1789388760.1660402,
+    "ast_hash": "b98ff8403005a3b099a8bd81c066cd1e",
+    "semantic_hash": "b98ff8403005a3b099a8bd81c066cd1e"
   },
   "docs/superpowers/plans/2026-06-17-development-flow-quality-system-plan.md": {
     "mtime": 1788807642.3083527,
@@ -5826,10 +5826,10 @@
     "semantic_hash": "e10eabda789cf1436be998f1322db8e4"
   },
   "apps/extension/test/privileged-overlay-wiring.test.tsx": {
-    "mtime": 1789372706.742684,
-    "seen": 1789374356.237191,
-    "ast_hash": "9a834f4b05f2dd7164acc7e8f5926527",
-    "semantic_hash": "9a834f4b05f2dd7164acc7e8f5926527"
+    "mtime": 1789388193.9990344,
+    "seen": 1789388760.166039,
+    "ast_hash": "464b91182d6386a5aee437b506719356",
+    "semantic_hash": "464b91182d6386a5aee437b506719356"
   },
   "scripts/graphify-code-update.mjs": {
     "mtime": 1789366503.0354874,
@@ -8152,5 +8152,11 @@
     "seen": 1789374356.237597,
     "ast_hash": "0475c4eb00a5972bbfbd133913f68ce8",
     "semantic_hash": "0475c4eb00a5972bbfbd133913f68ce8"
+  },
+  "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md": {
+    "mtime": 1789388077.1349547,
+    "seen": 1789388760.1660411,
+    "ast_hash": "22ff71e7b95668e2a5c86f2bdbb687b0",
+    "semantic_hash": "22ff71e7b95668e2a5c86f2bdbb687b0"
   }
 }

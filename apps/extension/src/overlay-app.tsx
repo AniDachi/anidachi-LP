@@ -830,6 +830,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const authAccessTokenRef = useRef<string | null>(null);
 	const storedRoomSessionRef = useRef<RoomSessionRecord | null>(null);
 	const hydratedVoiceParticipantSessionRef = useRef<string | null>(null);
+	const appliedMediaDefaultsSessionRef = useRef<string | null>(null);
 	const hydratingVoiceModeRef = useRef<"open-mic" | "push-to-talk" | null>(
 		null,
 	);
@@ -1797,6 +1798,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const localMediaSeatState = currentParticipant?.mediaSeat ?? "none";
 	const localHasMediaSeat = versionedMedia ? mediaReady && (!mediaV3 || Boolean(clientRef.current.media?.hasSeat())) : localMediaSeatState === "joined";
 	const camerasFull = (currentMediaSnapshot?.participants.filter(p => p.cameraGranted).length ?? 0) >= 4;
+	const mediaSeatAuthoritative = !roomId || (roomSnapshotReady && (!versionedMedia || mediaReady));
 	const localTryingMedia = Boolean(
 		camsEnabled && currentParticipant && localHasMediaSeat,
 	);
@@ -1856,14 +1858,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			type: "context",
 			listenerScope: participantAudioPreferenceScope,
 			localHasMediaSeat,
-			localMediaSeatAuthoritative: !roomId || roomSnapshotReady,
+			localMediaSeatAuthoritative: mediaSeatAuthoritative,
 			roomId,
 		});
 	}, [
 		localHasMediaSeat,
+		mediaSeatAuthoritative,
 		participantAudioPreferenceScope,
 		roomId,
-		roomSnapshotReady,
 	]);
 	useEffect(() => {
 		pushToTalkHeldRef.current = voiceSession.pushToTalkHeld;
@@ -1889,29 +1891,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		}
 		return storedRoomSession;
 	}, [currentParticipant, roomId, storedRoomSession]);
-	useEffect(() => {
-		if (versionedMedia || !activeVoiceRoomSession) {
-			hydratedVoiceParticipantSessionRef.current = null;
-			hydratingVoiceModeRef.current = null;
-			return;
-		}
-		if (
-			!p2pSessionActive ||
-			hydratedVoiceParticipantSessionRef.current ===
-				activeVoiceRoomSession.participantSessionId
-		) {
-			return;
-		}
-
-		hydratedVoiceParticipantSessionRef.current =
-			activeVoiceRoomSession.participantSessionId;
-		hydratingVoiceModeRef.current = activeVoiceRoomSession.voiceMode;
-		pushToTalkHeldRef.current = false;
-		dispatchVoiceSession({
-			type: "mode",
-			mode: activeVoiceRoomSession.voiceMode,
-		});
-	}, [activeVoiceRoomSession, p2pSessionActive, versionedMedia]);
 
 	const enqueueRoomVoiceModePersistence = useCallback(
 		(
@@ -2069,6 +2048,50 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		[],
 	);
 	useEffect(() => {
+		if (!activeVoiceRoomSession) {
+			hydratedVoiceParticipantSessionRef.current = null;
+			appliedMediaDefaultsSessionRef.current = null;
+			hydratingVoiceModeRef.current = null;
+			return;
+		}
+		if (!p2pSessionActive) return;
+		const sessionId = activeVoiceRoomSession.participantSessionId;
+		let mode = activeVoiceRoomSession.voiceMode;
+		if (versionedMedia) {
+			// Room admission precedes the media snapshot. Neither an unknown seat
+			// nor a reconnect is permission to clear or replay the user's defaults.
+			if (!isConnected || !roomSnapshotReady || !mediaReady) return;
+			if (appliedMediaDefaultsSessionRef.current === sessionId) return;
+			const state = currentMediaSnapshot?.participants.find(p => p.participantSessionId === sessionId);
+			if (!state) return;
+			appliedMediaDefaultsSessionRef.current = sessionId;
+			hydratedVoiceParticipantSessionRef.current = sessionId;
+			// A host grant/regrant must not launch devices, including after this
+			// document missed a revoke while disconnected. A fresh room starts at 0.
+			const initialSeat = localHasMediaSeat && (!("seatRevision" in state) || state.seatRevision === 0);
+			const microphoneOn = initialSeat && state.microphoneRevocationEpoch === 0 && mode === "open-mic";
+			const cameraOn = initialSeat && state.cameraRevocationEpoch === 0 && activeVoiceRoomSession.cameraEnabled && (!camerasFull || state.cameraGranted);
+			mode = microphoneOn && clientRef.current.setMediaIntent("microphone", true) !== "dropped" ? "open-mic" : "push-to-talk";
+			const cameraEnabled = cameraOn && clientRef.current.setMediaIntent("camera", true) !== "dropped";
+			setCamsEnabled(cameraEnabled);
+			setMediaRevision(n => n + 1);
+			// Admission limits affect this room only, never the saved Last used choice.
+			enqueueRoomCameraEnabledPersistence(cameraEnabled);
+			enqueueRoomVoiceModePersistence(mode);
+		} else {
+			if (hydratedVoiceParticipantSessionRef.current === sessionId) return;
+			hydratedVoiceParticipantSessionRef.current = sessionId;
+		}
+		hydratingVoiceModeRef.current = mode;
+		pushToTalkHeldRef.current = false;
+		dispatchVoiceSession({type: "mode", mode});
+	}, [
+		activeVoiceRoomSession, camerasFull, currentMediaSnapshot,
+		enqueueRoomCameraEnabledPersistence, enqueueRoomVoiceModePersistence,
+		isConnected, localHasMediaSeat, mediaReady, p2pSessionActive,
+		roomSnapshotReady, versionedMedia,
+	]);
+	useEffect(() => {
 		if (
 			!activeVoiceRoomSession ||
 			hydratedVoiceParticipantSessionRef.current !==
@@ -2098,7 +2121,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				localHasMediaSeat,
 				persistedVoiceMode: activeVoiceRoomSession.voiceMode,
 				roomId,
-				roomSnapshotReady,
+				roomSnapshotReady: mediaSeatAuthoritative,
 			})
 		) {
 			return;
@@ -2117,8 +2140,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		activeVoiceRoomSession,
 		enqueueRoomVoiceModePersistence,
 		localHasMediaSeat,
+		mediaSeatAuthoritative,
 		roomId,
-		roomSnapshotReady,
 	]);
 	const messageComposerShieldVisible =
 		messageComposerOpen || messageComposerShieldActive;
@@ -2839,6 +2862,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			}
 			if (clientRef.current.setMediaIntent("camera", nextEnabled) === "dropped") return;
 			setCamsEnabled(nextEnabled);
+			enqueueRoomCameraEnabledPersistence(nextEnabled, {rememberPreference: true});
 			setMediaRevision(n => n + 1);
 			return;
 		}
@@ -2883,7 +2907,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		} : undefined,
 		onMediaTerminalFailure: (failure) => {
 			if (!clientRef.current.releaseFailedMedia(failure.intent)) return;
-			if (failure.media === "camera") setCamsEnabled(false);
+			if (failure.media === "camera") {
+				setCamsEnabled(false);
+				enqueueRoomCameraEnabledPersistence(false);
+			}
 			else {
 				pushToTalkHeldRef.current = false;
 				dispatchVoiceSession({ type: "terminal-failure" });
@@ -3307,7 +3334,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						setRoomCapabilities(media.snapshot.capabilities);
 						setMediaRevision(n => n + 1);
 						if (media.error) setAuthMessage(media.error);
-						if (!media.wants("camera")) setCamsEnabled(false);
+						if (!media.wants("camera")) {
+							setCamsEnabled(false);
+							if (appliedMediaDefaultsSessionRef.current === storedRoomSessionRef.current?.participantSessionId) {
+								enqueueRoomCameraEnabledPersistence(false);
+							}
+						}
 						if (!media.wants("microphone")) { pushToTalkHeldRef.current = false; dispatchVoiceSession({ type: "terminal-failure" }); }
 					}
 					return;
