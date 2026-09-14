@@ -68,6 +68,7 @@ export function isAccountInboxHttpMessage(value: unknown): value is AccountInbox
 export async function listAccountInboxFromApi(accessToken: string): Promise<AccountInboxResponse> {
   const url = new URL("/api/account/inbox", WEB_HTTP_BASE);
   url.searchParams.set("limit", "100");
+	url.searchParams.set("includeReturnable", "true");
   return withInvitationHttpDeadline(async (signal) => {
     const response = await fetch(url, {
       headers: createWebsiteRoomHeaders(accessToken),
@@ -85,6 +86,7 @@ export async function markAccountInboxItemsSeenFromApi(
   const payload = MarkAccountInboxSeenRequestSchema.parse({ items });
   const url = new URL("/api/account/inbox/seen", WEB_HTTP_BASE);
   url.searchParams.set("limit", "100");
+	url.searchParams.set("includeReturnable", "true");
   return withInvitationHttpDeadline(async (signal) => {
     const response = await fetch(url, {
       method: "POST",

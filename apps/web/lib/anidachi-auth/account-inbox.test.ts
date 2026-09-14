@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import test from "node:test";
 import type { AccountInboxItem } from "@anidachi/protocol";
 import {
@@ -11,14 +10,6 @@ import {
 const OWNER_ID = "11111111-1111-4111-8111-111111111111";
 const SENDER_ID = "22222222-2222-4222-8222-222222222222";
 const NOW = new Date("2026-08-09T12:00:00.000Z");
-const ACCOUNT_INBOX_SOURCE_URL = new URL("./account-inbox.ts", import.meta.url);
-
-test("account inbox reads the lifecycle-consistent v2 database page", () => {
-	const source = readFileSync(ACCOUNT_INBOX_SOURCE_URL, "utf8");
-	assert.match(source, /\.rpc\("get_account_inbox_page_v2"/);
-	assert.doesNotMatch(source, /\.rpc\("get_account_inbox_page"/);
-});
-
 test("room invite lifecycle uses durable recipient state", () => {
 	assert.deepEqual(
 		roomInviteInboxLifecycle({
@@ -313,3 +304,38 @@ function inboxDatabaseRow(overrides: Record<string, unknown> = {}) {
 		...overrides,
 	};
 }
+
+test("accepted Return projection survives DB mapping without unread or response counts", () => {
+	const response = buildAccountInboxResponseFromDatabase({
+		ownerUserId: OWNER_ID,
+		limit: 50,
+		now: NOW,
+		value: {
+			entries: [
+				inboxDatabaseRow({
+					item_state: "returnable",
+					seen_at: "2026-08-09T11:00:00.000Z",
+				}),
+			],
+			counts: {
+				unseen_count: 0,
+				actionable_count: 0,
+				active_room_invite_count: 0,
+				pending_friend_request_count: 0,
+			},
+		},
+	});
+	assert.equal(response.items[0]?.state, "returnable");
+	assert.equal(response.items[0]?.seenAt, "2026-08-09T11:00:00.000Z");
+	assert.equal(response.items[0]?.kind, "room-invite");
+	assert.deepEqual(
+		buildAccountInboxPage({ ownerUserId: OWNER_ID, items: response.items })
+			.counts,
+		{
+			unseen: 0,
+			actionable: 0,
+			activeRoomInvites: 0,
+			pendingFriendRequests: 0,
+		},
+	);
+});

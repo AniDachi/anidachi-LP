@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { AccountInboxApiError } from "./account-inbox";
-import { accountInboxPageLimit } from "./account-inbox-routes";
+import {
+	accountInboxPageLimit,
+	accountInboxIncludeReturnable,
+} from "./account-inbox-routes";
 
 test("account inbox page limit accepts the supported range", () => {
 	assert.equal(accountInboxPageLimit(null), undefined);
@@ -18,6 +21,18 @@ test("account inbox page limit rejects malformed and out-of-range values", () =>
 				error instanceof AccountInboxApiError &&
 				error.status === 400 &&
 				error.message === "Invalid inbox limit",
+		);
+	}
+});
+
+test("Return projection requires an explicit valid opt-in; old clients keep v2", () => {
+	assert.equal(accountInboxIncludeReturnable(null), false);
+	assert.equal(accountInboxIncludeReturnable("false"), false);
+	assert.equal(accountInboxIncludeReturnable("true"), true);
+	for (const input of ["1", "", "yes", " true "]) {
+		assert.throws(
+			() => accountInboxIncludeReturnable(input),
+			(error) => error instanceof AccountInboxApiError && error.status === 400,
 		);
 	}
 });

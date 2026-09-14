@@ -62,6 +62,7 @@ export type PopupPeopleModel = Readonly<{
 export type PopupInboxModel = Readonly<{
   friendRequests: readonly PopupInboxFriendRequest[];
   activeRoomInvites: readonly PopupInboxInvite[];
+	returnableRoomInvites: readonly PopupInboxInvite[];
   missedRoomInvites: readonly PopupInboxInvite[];
   unseenCount: number;
   actionableCount: number;
@@ -127,10 +128,17 @@ export function buildPopupInboxModel(
         item.kind === "room-invite" && item.state === "missed",
     )
     .map(cloneInboxItem);
+	const returnableRoomInvites = response.items
+		.filter(
+			(item): item is Extract<AccountInboxItem, { kind: "room-invite"; state: "returnable" }> =>
+				item.kind === "room-invite" && item.state === "returnable",
+		)
+		.map(cloneInboxItem);
 
   return Object.freeze({
     friendRequests: frozenArray(friendRequests),
     activeRoomInvites: frozenArray(activeRoomInvites),
+		returnableRoomInvites: frozenArray(returnableRoomInvites),
     missedRoomInvites: frozenArray(missedRoomInvites),
     unseenCount: response.counts.unseen,
     actionableCount: response.counts.actionable,

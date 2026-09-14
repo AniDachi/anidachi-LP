@@ -39,6 +39,7 @@ import {
 } from "../src/popup-people-panel";
 import {
   acceptFriendRequest,
+	acceptRoomInvite,
   saveFriendGroup,
   createFriendInviteLink,
   removeFriend,
@@ -76,6 +77,7 @@ vi.mock("../src/account-inbox-cache", async (importOriginal) => ({
 vi.mock("../src/social-client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../src/social-client")>()),
   acceptFriendRequest: vi.fn(),
+	acceptRoomInvite: vi.fn(),
   saveFriendGroup: vi.fn(),
   createFriendInviteLink: vi.fn(),
   removeFriend: vi.fn(),
@@ -615,6 +617,11 @@ describe("PopupApp social mutations", () => {
     vi.mocked(acceptFriendRequest).mockResolvedValue(
       friend(INCOMING_USER_ID, INCOMING_FRIENDSHIP_ID, "Incoming", "accepted"),
     );
+		vi.mocked(acceptRoomInvite).mockResolvedValue({
+			invite: roomInviteContract(INBOX_INVITE_ID),
+			roomId: `room-${INBOX_INVITE_ID}`,
+			joinUrl: "http://localhost:3003/room/return-room",
+		});
     vi.mocked(declineFriendRequest).mockResolvedValue(
       friend(INCOMING_USER_ID, INCOMING_FRIENDSHIP_ID, "Incoming", "declined"),
     );
@@ -901,6 +908,26 @@ describe("PopupApp social mutations", () => {
     await waitFor(() => expect(inboxTab.querySelector(".popup-tab-count")).toBeNull());
   });
 
+	it("keeps a Return card available when opening the ordinary join destination fails", async () => {
+		const returning = inboxRoomInvite(INBOX_INVITE_ID, "returnable", NOW);
+		vi.mocked(listSocialDirectory).mockResolvedValue(directory());
+		vi.mocked(listAccountInbox).mockResolvedValue(accountInbox([returning], {
+			actionable: 0,
+			unseen: 0,
+			activeRoomInvites: 0,
+			pendingFriendRequests: 0,
+		}));
+		vi.mocked(chrome.tabs.create).mockRejectedValueOnce(new Error("Could not open room"));
+		const view = await renderPopupApp();
+		root = view.root;
+
+		await click(await findButton(view.container, "Inbox"));
+		await click(await findButton(view.container, "Return to room"));
+		await waitFor(() => expect(view.container.textContent).toContain("Could not open room"));
+		expect(await findButton(view.container, "Return to room")).toBeInstanceOf(HTMLButtonElement);
+		expect(view.container.textContent).not.toContain("Decline");
+	});
+
   it("uses the canonical publication result for a late mark-seen response after a newer inbox refresh", async () => {
     const unseen = accountInbox(
       [inboxFriendRequest(INCOMING_FRIENDSHIP_ID, INCOMING_USER_ID, "Incoming", null)],
@@ -1076,7 +1103,7 @@ function accountInbox(
 
 function inboxRoomInvite(
   inviteId: string,
-  state: "active" | "missed",
+	state: "active" | "missed" | "returnable",
   seenAt: string | null,
 ): Extract<AccountInboxResponse["items"][number], { kind: "room-invite" }> {
   const item = {
@@ -1100,9 +1127,26 @@ function inboxRoomInvite(
     activityAt: NOW,
     seenAt,
   };
-  return state === "active"
-    ? { ...item, state: "active", missedAt: null }
-    : { ...item, state: "missed", missedAt: NOW };
+	if (state === "active") return { ...item, state, missedAt: null };
+	if (state === "returnable") return { ...item, state, seenAt: seenAt ?? NOW, missedAt: null };
+	return { ...item, state, missedAt: NOW };
+}
+
+function roomInviteContract(inviteId: string): RoomInvite {
+	return {
+		id: inviteId,
+		roomId: `room-${inviteId}`,
+		sender: { userId: RECENT_USER_ID, handle: "host", displayName: "Room Host", avatarUrl: null },
+		targetKind: "direct",
+		targetGroupId: null,
+		message: null,
+		roomTitle: "Friday watch",
+		sourceUrl: "https://www.youtube.com/watch?v=video",
+		videoFingerprint: "youtube:video",
+		createdAt: NOW,
+		expiresAt: "2026-08-08T12:00:00.000Z",
+		recipients: [],
+	};
 }
 
 function inboxFriendRequest(

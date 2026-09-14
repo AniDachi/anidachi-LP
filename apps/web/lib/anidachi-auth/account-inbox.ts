@@ -32,7 +32,7 @@ type InboxCursor = {
 type AccountInboxEntryRow = {
 	item_kind: "room-invite" | "friend-request";
 	item_id: string;
-	item_state: "active" | "missed" | "pending";
+	item_state: "active" | "returnable" | "missed" | "pending";
 	activity_at: string;
 	created_at: string;
 	seen_at: string | null;
@@ -136,6 +136,7 @@ export function buildAccountInboxPage(params: {
 
 export async function listAccountInbox(params: {
 	ownerUserId: string;
+	includeReturnable?: boolean;
 	cursor?: string | null;
 	limit?: number;
 	now?: Date;
@@ -160,13 +161,18 @@ export async function listAccountInbox(params: {
 		throw error;
 	}
 
-	const pageResult = await db().rpc("get_account_inbox_page_v2", {
-		p_user_id: params.ownerUserId,
-		p_now: nowIso,
-		p_cursor_activity_at: cursor?.activityAt ?? null,
-		p_cursor_key: cursor?.key ?? null,
-		p_limit: limit + 1,
-	});
+	const pageResult = await db().rpc(
+		params.includeReturnable
+			? "get_account_inbox_page_v3"
+			: "get_account_inbox_page_v2",
+		{
+			p_user_id: params.ownerUserId,
+			p_now: nowIso,
+			p_cursor_activity_at: cursor?.activityAt ?? null,
+			p_cursor_key: cursor?.key ?? null,
+			p_limit: limit + 1,
+		},
+	);
 	if (pageResult.error) {
 		throw accountInboxDatabaseError("load account inbox", pageResult.error);
 	}
@@ -209,6 +215,7 @@ export function buildAccountInboxResponseFromDatabase(params: {
 
 export async function markAccountInboxItemsSeen(params: {
 	ownerUserId: string;
+	includeReturnable?: boolean;
 	items: ReadonlyArray<{ kind: "room-invite" | "friend-request"; id: string }>;
 	limit?: number;
 	now?: Date;
@@ -238,6 +245,7 @@ export async function markAccountInboxItemsSeen(params: {
 
 	return listAccountInbox({
 		ownerUserId: params.ownerUserId,
+		includeReturnable: params.includeReturnable,
 		limit: params.limit,
 		now,
 	});
@@ -294,16 +302,27 @@ function accountInboxItemFromRow(
 	if (row.item_kind !== "room-invite") {
 		throw new Error("Invalid account inbox item kind");
 	}
-	if (row.item_state !== "active" && row.item_state !== "missed") {
+	if (
+		row.item_state !== "active" &&
+		row.item_state !== "missed" &&
+		row.item_state !== "returnable"
+	) {
 		throw new Error("Invalid room invite inbox lifecycle");
 	}
 
-	const lifecycle = roomInviteInboxLifecycle({
-		recipientStatus: row.item_state === "active" ? "pending" : "expired",
-		createdAt: row.activity_at,
-		missedAt: row.missed_at,
-		now,
-	});
+	const lifecycle =
+		row.item_state === "returnable"
+			? {
+					state: "returnable" as const,
+					missedAt: null,
+					activityAt: row.activity_at,
+				}
+			: roomInviteInboxLifecycle({
+					recipientStatus: row.item_state === "active" ? "pending" : "expired",
+					createdAt: row.activity_at,
+					missedAt: row.missed_at,
+					now,
+				});
 	if (!lifecycle || !row.room_id || !row.target_kind) {
 		throw new Error("Invalid room invite inbox lifecycle");
 	}
@@ -325,6 +344,16 @@ function accountInboxItemFromRow(
 		seenAt: row.seen_at,
 	};
 
+	if (lifecycle.state === "returnable") {
+		if (!row.seen_at || row.missed_at !== null)
+			throw new Error("Invalid returnable invite state");
+		return {
+			...common,
+			state: "returnable",
+			seenAt: row.seen_at,
+			missedAt: null,
+		};
+	}
 	return lifecycle.state === "active"
 		? { ...common, state: "active", missedAt: null }
 		: { ...common, state: "missed", missedAt: lifecycle.missedAt };

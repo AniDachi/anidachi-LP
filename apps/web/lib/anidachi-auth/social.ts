@@ -570,7 +570,7 @@ export function resolveRoomInviteResponseOutcome(
   }
   if (result.outcome === "already_resolved") {
     if (
-      result.recipient_status !== (action === "accept" ? "declined" : "accepted") ||
+      !["accepted", "declined"].includes(result.recipient_status ?? "") ||
       result.responded_at === null ||
       result.missed_at !== null
     ) {
@@ -580,9 +580,14 @@ export function resolveRoomInviteResponseOutcome(
   }
   if (result.outcome === "room_ended") {
     if (
-      result.recipient_status !== "expired" ||
-      result.responded_at !== null ||
-      result.missed_at === null
+      !(
+        (result.recipient_status === "expired" &&
+          result.responded_at === null &&
+          result.missed_at !== null) ||
+        (result.recipient_status === "accepted" &&
+          result.responded_at !== null &&
+          result.missed_at === null)
+      )
     ) {
       return invalidResponse();
     }
@@ -591,8 +596,10 @@ export function resolveRoomInviteResponseOutcome(
   if (result.outcome === "friendship_required") {
     if (
       action !== "accept" ||
-      result.recipient_status !== "pending" ||
-      result.responded_at !== null ||
+      !(
+        (result.recipient_status === "pending" && result.responded_at === null) ||
+        (result.recipient_status === "accepted" && result.responded_at !== null)
+      ) ||
       result.missed_at !== null
     ) {
       return invalidResponse();
@@ -632,6 +639,7 @@ export function roomInviteCreateError(message: string): SocialApiError | null {
     ["room_invite_recipient_forbidden", 403, "Direct invites can target accepted friends only"],
     ["room_invite_self_recipient", 400, "Cannot invite yourself"],
     ["room_invite_no_recipients", 400, "Invite has no eligible recipients"],
+    ["room_invite_already_in_room", 409, "These people are already in this room or joining it"],
     ["room_invite_recipient_limit", 400, "Invite can target at most 100 people"],
     ["room_invite_target_invalid", 400, "Provide either recipientUserIds or groupId"],
     ["room_invite_message_invalid", 400, "Invite message is invalid"],
@@ -1443,20 +1451,32 @@ export async function createRoomInvite(params: {
   };
 }
 
-export async function listRoomInvites(viewerUserId: string): Promise<{
+export async function listRoomInvites(
+  viewerUserId: string,
+  roomId?: string,
+): Promise<{
   inbox: RoomInvite[];
   sent: RoomInvite[];
 }> {
   assertUuid(viewerUserId, "viewerUserId");
+  if (roomId !== undefined && (!roomId.trim() || roomId.length > 128)) {
+    throw new SocialApiError(400, "Invalid roomId");
+  }
 
-  const { data: sentInvitesData, error: sentError } = await db()
+  let sentQuery = db()
     .from("room_invites")
     .select(
-      "*,room:rooms!inner(room_id,status,ended_at),recipients:room_invite_recipients(*)",
+      roomId === undefined
+        ? "*,room:rooms!inner(room_id,status,ended_at),recipients:room_invite_recipients(*)"
+        : "*,room:rooms!inner(room_id,status,ended_at),recipients:room_invite_recipients!inner(*)",
     )
     .eq("sender_user_id", viewerUserId)
     .order("created_at", { ascending: false })
-    .limit(50);
+    .limit(roomId === undefined ? 50 : 1000);
+  if (roomId !== undefined) {
+    sentQuery = sentQuery.eq("room_id", roomId).is("recipients.superseded_at", null);
+  }
+  const { data: sentInvitesData, error: sentError } = await sentQuery;
   if (sentError) throw new Error(`Failed to list sent invites: ${sentError.message}`);
 
   const sent = await Promise.all(

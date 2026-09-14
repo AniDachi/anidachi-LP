@@ -78,6 +78,18 @@ export function roomInviteGroupStatus(
 	return summarizeRecipients(recipients);
 }
 
+export function roomInviteEligibleRecipientIds(
+	memberUserIds: readonly string[],
+	statuses: ReadonlyMap<string, RoomInviteTargetStatus>,
+	currentRoomUserIds: ReadonlySet<string>,
+): string[] {
+	return memberUserIds.filter((userId) => {
+		if (currentRoomUserIds.has(userId)) return false;
+		const status = statuses.get(`friend:${userId}`)?.recipientStatuses.get(userId);
+		return status === undefined || status === "accepted";
+	});
+}
+
 export function mergeRoomInviteTargetStatus(
 	current: ReadonlyMap<string, RoomInviteTargetStatus>,
 	targetKey: string,

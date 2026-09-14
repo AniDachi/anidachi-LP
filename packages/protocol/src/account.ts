@@ -202,6 +202,15 @@ export const AccountInboxActiveRoomInviteItemSchema = z.strictObject({
   missedAt: z.null(),
 });
 
+// Only returned by clients opting into accepted-room recovery. A Return card
+// is never an unread invitation or another request for consent.
+export const AccountInboxReturnableRoomInviteItemSchema = z.strictObject({
+  ...AccountInboxRoomInviteFields,
+  state: z.literal("returnable"),
+  seenAt: TimestampSchema,
+  missedAt: z.null(),
+});
+
 export const AccountInboxMissedRoomInviteItemSchema = z.strictObject({
   ...AccountInboxRoomInviteFields,
   state: z.literal("missed"),
@@ -220,6 +229,7 @@ export const AccountInboxFriendRequestItemSchema = z.strictObject({
 
 export const AccountInboxItemSchema = z.union([
   AccountInboxActiveRoomInviteItemSchema,
+  AccountInboxReturnableRoomInviteItemSchema,
   AccountInboxMissedRoomInviteItemSchema,
   AccountInboxFriendRequestItemSchema,
 ]);
