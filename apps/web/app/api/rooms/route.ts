@@ -10,6 +10,7 @@ import { activeRoomConflictResponse } from "@/lib/anidachi-auth/active-room-sess
 import { getExtensionSessionFromAuthorization } from "@/lib/anidachi-auth/extension-session";
 import { signRoomToken } from "@/lib/anidachi-auth/jwt";
 import { resolveAccountEntitlements } from "@/lib/anidachi-auth/account-entitlements";
+import { clientMediaProtocolVersion } from "@/lib/anidachi-auth/room-media-negotiation";
 import { roomMediaLease } from "@/lib/anidachi-auth/room-capability";
 import { roomCapabilitiesForPlan } from "@/lib/anidachi-auth/plan-entitlements";
 import { handleRoomCreateRequestBody } from "@/lib/anidachi-auth/room-create";
@@ -43,6 +44,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const mediaProtocolVersion = clientMediaProtocolVersion(request.headers.get("x-anidachi-media-protocol"));
+  if (mediaProtocolVersion === null)
+    return NextResponse.json({ code: "ROOM_UPDATE_REQUIRED" }, { status: 426 });
   const user = await getUserById(session.userId);
 	let hostPlan;
 	try {
@@ -50,7 +54,7 @@ export async function POST(request: NextRequest) {
 			.policy.planCode;
 		if (
 			(await getPersonalHistoryPolicyActive()) &&
-			request.headers.get("x-anidachi-media-protocol") !== "2"
+			mediaProtocolVersion === 1
 		)
 			return NextResponse.json(
 				{ code: "ROOM_UPDATE_REQUIRED" },
@@ -80,8 +84,7 @@ export async function POST(request: NextRequest) {
       return {
         admission: await createRoomWithActiveSession({
           hostUserId: session.userId,
-					mediaProtocolVersion:
-						request.headers.get("x-anidachi-media-protocol") === "2" ? 2 : 1,
+					mediaProtocolVersion,
           participantSessionId,
           capabilities,
           ...roomInput,

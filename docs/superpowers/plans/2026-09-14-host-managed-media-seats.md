@@ -10,7 +10,7 @@
 
 **Spec:** Согласованные продуктовые решения сохранены в разделе «Спецификация» этого документа. Исходные ограничения: [MVP specification](../specs/2026-09-08-personal-history-and-plans-mvp-design.md), [room/P2P roadmap](2026-06-07-production-room-p2p-hardening-roadmap.md), [room-flow execution plan](2026-06-12-room-flow-p2p-flawless-execution-plan.md).
 
-**Status:** Реализация задач 1–4, локальные проверки и итоговая независимая проверка ветки выполнены; идет подготовка staging. Приемка двумя устройствами и выпуск main еще не выполнены. Результаты: [delivery record](../../releases/room-media-seats/2026-09-14-delivery.md). База разработки: staging `ccb86654ad08752d9f17d6b5b508548919884740`, production main `f9e6b96453b5344aeed0476fbd2900f7ce355acd`; на момент начала работы деревья файлов совпадали. Изолированная ветка реализации: `codex/room-media-seats-v3`.
+**Status:** Реализация задач 1–4, локальные проверки и итоговая независимая проверка ветки выполнены; изменения доставлены в staging через PR #316 и #318 (`293da9f1`). Владелец явно разрешил выпуск main и перенес оставшуюся ручную приемку на production: «Давай уже в прод чтобы там проверить». Приемка двумя устройствами и точными установленными ZIP пока не выполнена. Выпуск идет через совместимые предпосылки #320 и активацию #317; фактические deployment/ZIP receipts записываются в #317. Результаты: [delivery record](../../releases/room-media-seats/2026-09-14-delivery.md). База разработки: staging `ccb86654ad08752d9f17d6b5b508548919884740`, production main `f9e6b96453b5344aeed0476fbd2900f7ce355acd`; на момент начала работы деревья файлов совпадали. Изолированная ветка реализации: `codex/room-media-seats-v3`.
 
 ## Global Constraints
 
@@ -75,7 +75,7 @@
 | --- | --- |
 | Контракт | `packages/protocol/src/room-media.ts`, `src/types.ts`, `src/index.ts`: версия, seat state, команда хоста, схемы и события. `src/commercial-policy.ts`: источник существующих лимитов. |
 | Durable authority | `apps/api/src/room-state.ts`, `index.ts`, `room-persistence.ts`, `room-socket-attachment.ts`, `participant-disconnect.ts`: распределение, полномочия, persistence, reconnect. `auth.ts`, `room-capability.ts`: совместимые lease readers. |
-| Web / Supabase | `apps/web/lib/anidachi-auth/db.ts`, `room-capability.ts`, `jwt.ts`; `app/api/rooms/route.ts`, `app/api/rooms/[roomId]/connect/route.ts`; новая миграция `apps/web/supabase/migrations/20260914180000_room_media_seats_v3.sql`: создание, допуск, renewal без смены версии. Перед созданием проверить порядок миграций. |
+| Web / Supabase | `apps/web/lib/anidachi-auth/db.ts`, `room-capability.ts`, `jwt.ts`; `app/api/rooms/route.ts`, `app/api/rooms/[roomId]/connect/route.ts`; новая миграция `apps/web/supabase/migrations/20260914063511_room_media_seats_v3.sql`: создание, допуск, renewal без смены версии. Перед созданием проверить порядок миграций. |
 | Клиент | `apps/extension/src/room-client.ts`, `room-media-session.ts`, `overlay-media-session.ts`, `overlay-voice-session.ts`, `p2p-media.ts`, `overlay-app.tsx`, `debug-log.ts`: negotiation, события, capture и сохранение приема медиа. |
 | UI | `apps/extension/src/overlay-room-media-controls.tsx`, `styles.ts`: единая кнопка, причины недоступности, стабильная разметка. |
 
@@ -125,7 +125,7 @@ type SetMediaSeat = {
 ```
 
 - [x] Расширить shared events/exports и snapshot validation: мест не больше лимита, камер не больше четырех, без места grants отсутствуют. Вложенное `state` в v3 `MEDIA_INTENT_ACK` / `MEDIA_INTENT_ERROR` также принимает v3-схему; для отказа публикации без места добавить `MEDIA_SEAT_REQUIRED`. Сохранить v2 lease/snapshot/intent/ACK семантику без изменений.
-- [x] Определить `MediaSeatResultSchema`: strict-ответ `type: "MEDIA_SEAT_RESULT"`, `requestId`, `targetParticipantSessionId`, `code` и полный v3 `snapshot`. Коды: `OK`, `MEDIA_FORBIDDEN`, `MEDIA_LIMIT_REACHED`, `MEDIA_STALE_SESSION`, `MEDIA_STALE_GENERATION`, `MEDIA_STALE_SEAT_REVISION`, `MEDIA_CAPABILITY_EXPIRED`. Ответ коррелирует действие хоста; состояние интерфейса берется только из подтвержденного snapshot с проверкой поколения/sequence, в том числе при ошибке. Тестировать поздний результат после более нового snapshot и отказ устаревшей revision.
+- [x] Определить `MediaSeatResultSchema`: strict-ответ `type: "MEDIA_SEAT_RESULT"`, `requestId`, `targetParticipantSessionId`, `code` и полный v3 `snapshot`. Коды: `OK`, `MEDIA_FORBIDDEN`, `MEDIA_LIMIT_REACHED`, `MEDIA_STALE_SESSION`, `MEDIA_STALE_GENERATION`, `MEDIA_STALE_SEAT_REVISION`, `MEDIA_CAPABILITY_EXPIRED`, `MEDIA_UNAVAILABLE`. Ответ коррелирует действие хоста; состояние интерфейса берется только из подтвержденного snapshot с проверкой поколения/sequence, в том числе при ошибке. Тестировать поздний результат после более нового snapshot и отказ устаревшей revision.
 - [x] Запустить `pnpm --filter @anidachi/protocol check` и `pnpm --filter @anidachi/protocol test`; зафиксировать отдельный commit `feat(protocol): define host-managed media seats v3`.
 
 ## Task 2: Durable room policy и совместимость Web
@@ -223,11 +223,11 @@ const publicationAllowed = (
 
 - [x] Расширить существующий harness сценариями: 15 участников/8 мест/4 камеры; два конкурирующих запроса последнего ресурса; host revoke -> audio/video stop -> grant -> только собственное включение; no-seat receive; повторное подключение и DO restore. Зафиксировать результаты по действующему [quality gate](../../development-quality-gates.md).
 - [x] Выполнить `pnpm dev:check`, общий check/test для затронутых потребителей, room harness и `npm --prefix tests/e2e run harness:p2p`. Повторять успешно пройденные проверки только после релевантных изменений.
-- [ ] Обновить контрактные разделы документации и Graphify по реальному изменению. Старая спецификация независимых grants остается историей v2; новый документ описывает v3. PR содержит scope, тесты, миграцию, совместимость, staging evidence и rollback.
-- [ ] На staging сначала развернуть additive SQL и совместимые readers Worker/Web, затем новый клиент. Во время промежуточного состояния создание v3 не включать. SQL/Worker/Web должны продолжать обслуживать действующие v2-комнаты.
-- [ ] В `Chrome AniDachi Test` проверить шторку и реальную комнату со вторым устройством/аккаунтом. Проверить PTT, Open mic, камеру, отзыв/возврат места, продолжение приема после отзыва, reload и смену ролика. Массовые лимиты проверяются harness, реальный WebRTC — двумя устройствами; не выдавать одно за другое.
+- [x] Обновить контрактные разделы документации и Graphify по реальному изменению. Старая спецификация независимых grants остается историей v2; новый документ описывает v3. PR содержит scope, тесты, миграцию, совместимость, staging evidence и rollback.
+- [x] На staging последовательно развернуты additive SQL и совместимый Worker (#316), затем Web v3 (#318). До готовности SQL/Worker создание v3 было выключено. Новый ZIP собран и проверен; его загрузка относится к следующему шагу приемки. Совместимость v2 подтверждена локальными и hosted runtime-role проверками.
+- [ ] По решению владельца выполнить ручную приемку на production: в `Chrome AniDachi Test` проверить шторку и реальную комнату со вторым устройством/аккаунтом. Проверить PTT, Open mic, камеру, отзыв/возврат места, продолжение приема после отзыва, reload и смену ролика. Массовые лимиты проверяются harness, реальный WebRTC — двумя устройствами; не выдавать одно за другое.
 - [ ] Провести матрицу совместимости старого ZIP/нового ZIP с v2/v3. Старый клиент получает понятное предложение обновиться при попытке войти в новую комнату, не занимает слот и не ломает личную историю.
-- [ ] После приемки staging подготовить promotion PR. Выпуск main — после явного согласования в рабочей сессии; затем проверить production policy renewal и собрать/проверить новый приватный ZIP с SHA и инструкцией тестеру.
+- [ ] Выполнить явно согласованный владельцем выпуск через #320 и #317, с оставшейся ручной приемкой на production; проверить production policy renewal и собрать/проверить новый приватный ZIP с SHA и инструкцией тестеру. Результаты развертывания записать в #317.
 
 ### Критерии готовности
 

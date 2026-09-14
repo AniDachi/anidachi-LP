@@ -21,6 +21,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 import { chromium } from "playwright";
+import { runMediaSeatsCase } from "./media-seats-harness-case.mjs";
 import {
 	createHarnessRoomToken,
 	getHarnessHostIdentity,
@@ -60,12 +61,17 @@ function signRoomToken(sub, role, participantSessionId) {
 		participantSessionId,
 		roomId: ROOM_ID,
 		secret: SECRET,
-		mediaV2Size: MEDIA_V2_SIZE,
+		mediaV2Size: MEDIA_SIZE,
+		mediaProtocolVersion: MEDIA_V3_SIZE ? 3 : 2,
 		mediaCapabilityRevision,
 	});
 }
 
-const MEDIA_V2_SIZE = Number(process.env.HARNESS_MEDIA_V2 || 0);
+const MEDIA_V3_SIZE = Number(process.env.HARNESS_MEDIA_V3 || 0);
+const MEDIA_SIZE = MEDIA_V3_SIZE || Number(process.env.HARNESS_MEDIA_V2 || 0);
+if (process.env.HARNESS_MEDIA_V3 && process.env.HARNESS_MEDIA_V2) {
+	throw new Error("Choose one media protocol per harness run");
+}
 let mediaCapabilityRevision = 1;
 let mediaSettlementPending = false;
 const results = [];
@@ -94,7 +100,7 @@ function createVoiceTestWav(durationSeconds = 4, sampleRate = 48_000) {
 	wav.writeUInt16LE(bitsPerSample, 34);
 	wav.write("data", 36);
 	wav.writeUInt32LE(dataSize, 40);
-	for (let sample = MEDIA_V2_SIZE ? 0 : sampleRate; sample < durationSeconds * sampleRate; sample += 1) {
+	for (let sample = MEDIA_SIZE ? 0 : sampleRate; sample < durationSeconds * sampleRate; sample += 1) {
 		const time = sample / sampleRate;
 		const value = Math.round(Math.sin(2 * Math.PI * 440 * time) * 0.2 * 32767);
 		wav.writeInt16LE(value, 44 + sample * bytesPerSample);
@@ -226,9 +232,9 @@ async function loadIceServersFromWorker(roomToken) {
 	if (!response.ok) {
 		throw new Error(`Worker /ice-servers failed: ${response.status}`);
 	}
-	const hostIdentity = getHarnessHostIdentity(MEDIA_V2_SIZE);
+	const hostIdentity = getHarnessHostIdentity(MEDIA_SIZE);
 	console.log(
-		`   actual Worker ICE verifier accepted ${MEDIA_V2_SIZE ? "v2" : "legacy"} host ${hostIdentity.sub}/${hostIdentity.participantSessionId}`,
+		`   actual Worker ICE verifier accepted ${MEDIA_V3_SIZE ? "v3" : MEDIA_SIZE ? "v2" : "legacy"} host ${hostIdentity.sub}/${hostIdentity.participantSessionId}`,
 	);
 
 	const payload = await response.json();
@@ -556,13 +562,13 @@ async function main() {
 		await writeFile(silentAudioPath, createVoiceTestWav());
 		const html = `<!doctype html><html><head><meta charset="utf-8"></head><body><script>${bundle}</script></body></html>`;
 		server = createServer(async (_req, res) => {
-            if (MEDIA_V2_SIZE && _req.method === "POST") {
+            if (MEDIA_SIZE && _req.method === "POST") {
               let raw = ""; for await (const chunk of _req) raw += chunk;
               const body = JSON.parse(raw); mediaCapabilityRevision++;
               if (process.env.HARNESS_MEDIA_TERMINAL && body.settleOnly) { mediaSettlementPending = true; return; }
               const day = new Date().toISOString().slice(0, 10);
               res.writeHead(200, { "Content-Type": "application/json" });
-              res.end(JSON.stringify({ ok: true, roomId: ROOM_ID, roomGeneration: 1, acknowledged: body.usage, policy: body.settleOnly ? null : { denied: false, roomToken: signRoomToken("p0", "host", "internal-renewal"), quota: MEDIA_V2_SIZE === 4 ? { day, remainingSeconds: process.env.HARNESS_MEDIA_TERMINAL ? 6 : 1800, resetAt: new Date((Math.floor(Date.now()/86400000)+1)*86400000).toISOString() } : null } }));
+              res.end(JSON.stringify({ ok: true, roomId: ROOM_ID, roomGeneration: 1, acknowledged: body.usage, policy: body.settleOnly ? null : { denied: false, roomToken: signRoomToken("p0", "host", "internal-renewal"), quota: MEDIA_SIZE === 4 ? { day, remainingSeconds: process.env.HARNESS_MEDIA_TERMINAL ? 6 : 1800, resetAt: new Date((Math.floor(Date.now()/86400000)+1)*86400000).toISOString() } : null } }));
               return;
             }
 			res.writeHead(200, { "Content-Type": "text/html" });
@@ -577,7 +583,7 @@ async function main() {
 
 		const iceMode = HARNESS_FORCE_RELAY ? "relay-only" : "direct-first";
 		console.log(`booting wrangler dev on :${WORKER_PORT} (${iceMode}) ...`);
-		worker = spawn("pnpm", [...buildWorkerArgs(), ...(MEDIA_V2_SIZE ? ["--var", `ANIDACHI_WEB_INTERNAL_BASE_URL:${pageUrl}`, "--var", "ANIDACHI_INTERNAL_API_SECRET:owned-media-harness"] : [])], {
+		worker = spawn("pnpm", [...buildWorkerArgs(), ...(MEDIA_SIZE ? ["--var", `ANIDACHI_WEB_INTERNAL_BASE_URL:${pageUrl}`, "--var", "ANIDACHI_INTERNAL_API_SECRET:owned-media-harness"] : [])], {
 			cwd: API_DIR,
 			stdio: ["ignore", "pipe", "pipe"],
 		});
@@ -592,8 +598,8 @@ async function main() {
 
 		let activeIceServers = HARNESS_ICE_SERVERS_FROM_ENV;
 		let workerIceServers;
-		if (MEDIA_V2_SIZE || HARNESS_USE_WORKER_ICE_SERVERS) {
-			const hostIdentity = getHarnessHostIdentity(MEDIA_V2_SIZE);
+		if (MEDIA_SIZE || HARNESS_USE_WORKER_ICE_SERVERS) {
+			const hostIdentity = getHarnessHostIdentity(MEDIA_SIZE);
 			workerIceServers = await loadIceServersFromWorker(
 				signRoomToken(
 					hostIdentity.sub,
@@ -620,8 +626,9 @@ async function main() {
 			],
 		});
 
-		if (MEDIA_V2_SIZE) {
-            await runVersionedMediaCase(browser, pageUrl, activeIceServers);
+		if (MEDIA_SIZE) {
+            if (MEDIA_V3_SIZE) await runMediaSeatsCase({ browser, pageUrl, iceServers: activeIceServers, size: MEDIA_SIZE, startPeer, record, forceRelay: HARNESS_FORCE_RELAY, reportPath: process.env.HARNESS_MEDIA_REPORT });
+            else await runVersionedMediaCase(browser, pageUrl, activeIceServers);
             return;
         }
 		let failed = 0;
@@ -1230,16 +1237,16 @@ async function main() {
 }
 
 async function runVersionedMediaCase(browser, pageUrl, iceServers) {
-  if (![4, 6, 15].includes(MEDIA_V2_SIZE)) throw new Error("HARNESS_MEDIA_V2 must be 4,6,15");
+  if (![4, 6, 15].includes(MEDIA_SIZE)) throw new Error("HARNESS_MEDIA_V2 must be 4,6,15");
   const started = Date.now();
   const watchdog = setTimeout(() => { void browser.close(); }, 60000);
   const contexts = [], pages = [];
-  const cameras = MEDIA_V2_SIZE === 15 ? 4 : MEDIA_V2_SIZE === 6 ? 2 : 1;
-  const microphones = MEDIA_V2_SIZE === 15 ? 8 : MEDIA_V2_SIZE === 6 ? 3 : 2;
-  const receipt = { size: MEDIA_V2_SIZE, cameras, microphones, engine: "P2PMediaController+RoomClient+Worker", browser: browser.version(), tests: [], diagnostics: [] };
+  const cameras = MEDIA_SIZE === 15 ? 4 : MEDIA_SIZE === 6 ? 2 : 1;
+  const microphones = MEDIA_SIZE === 15 ? 8 : MEDIA_SIZE === 6 ? 3 : 2;
+  const receipt = { size: MEDIA_SIZE, cameras, microphones, engine: "P2PMediaController+RoomClient+Worker", browser: browser.version(), tests: [], diagnostics: [] };
   const check = (name, ok, detail) => { receipt.tests.push({ name, ok, detail }); record(name, ok, JSON.stringify(detail)); if (!ok) throw new Error(name); };
   try {
-    for (let i = 0; i < MEDIA_V2_SIZE; i++) {
+    for (let i = 0; i < MEDIA_SIZE; i++) {
       const context = await browser.newContext(); contexts.push(context);
       const page = await context.newPage(); pages.push(page);
       page.on("pageerror", e => console.error(`p${i}: ${e.message}`));
@@ -1259,7 +1266,7 @@ async function runVersionedMediaCase(browser, pageUrl, iceServers) {
     receipt.diagnostics = diagnostics;
     check("every participant decodes every permitted camera and microphone", allDecoded(diagnostics), { afterLastJoinMs: Date.now()-readyStart, entireSetupMs: Date.now()-started });
     check("receiver-only participants call zero getUserMedia", diagnostics.slice(cameras+microphones).every(d => d.captureCount === 0), diagnostics.map(d => d.captureCount));
-    check("bounded graph excludes receiver-to-receiver pairs", diagnostics.every((d,i) => d.stats.peers.length === (i < cameras+microphones ? MEDIA_V2_SIZE-1 : cameras+microphones)), diagnostics.map(d => d.stats.peers.length));
+    check("bounded graph excludes receiver-to-receiver pairs", diagnostics.every((d,i) => d.stats.peers.length === (i < cameras+microphones ? MEDIA_SIZE-1 : cameras+microphones)), diagnostics.map(d => d.stats.peers.length));
     const before = diagnostics;
     const resourceRows = execFileSync("ps", ["-axo", "pid=,ppid=,pcpu=,rss="], {encoding:"utf8"}).trim().split("\n").map(row=>row.trim().split(/\s+/).map(Number));
     const owned = new Set([process.pid]); for(let pass=0;pass<8;pass++) for(const [pid,ppid] of resourceRows) if(owned.has(ppid)) owned.add(pid);
@@ -1275,7 +1282,7 @@ async function runVersionedMediaCase(browser, pageUrl, iceServers) {
     }));
     check("all endpoints continue decoding video and audio", advancing, { endpoints: after.reduce((sum,d)=>sum+d.stats.peers.length,0) });
     const publishers = cameras + microphones;
-    const expectedMediaEdges = publishers * (MEDIA_V2_SIZE - publishers) + publishers * (publishers - 1) / 2;
+    const expectedMediaEdges = publishers * (MEDIA_SIZE - publishers) + publishers * (publishers - 1) / 2;
     const expectedPeerEndpoints = expectedMediaEdges * 2;
     const candidateSampleStarted = Date.now();
     let candidateDiagnostics = after;
@@ -1304,16 +1311,16 @@ async function runVersionedMediaCase(browser, pageUrl, iceServers) {
       );
     }
     const ttfm = candidateDiagnostics.flatMap(d=>Object.values(d.videoTtfm));
-    const expectedTtfmSamples = cameras * (MEDIA_V2_SIZE - 1);
+    const expectedTtfmSamples = cameras * (MEDIA_SIZE - 1);
     const p95Ms = getP95(ttfm);
     check("complete decoded video first-frame sample", ttfm.length === expectedTtfmSamples, {samples:ttfm.length,expected:expectedTtfmSamples,p95Ms});
     check("decoded video TTFM p95 is below 6s (S3)", p95Ms !== null && p95Ms < TTFM_P95_BUDGET_MS, {samples:ttfm.length,p95Ms,budgetMs:TTFM_P95_BUDGET_MS,boundary:"strictly below"});
     receipt.publisherUplink = after.map((d,i)=>({participant:`p${i}`,kbps: d.stats.peers.reduce((n,p)=>{const old=before[i].stats.peers.find(o=>o.remoteUserId===p.remoteUserId); return n+Math.max(0,(p.stats?.audioOutbound?.bytesSent??0)-(old?.stats?.audioOutbound?.bytesSent??0))+Math.max(0,(p.stats?.videoOutbound?.bytesSent??0)-(old?.stats?.videoOutbound?.bytesSent??0));},0)*8/deltaMs})).filter(p=>p.kbps>0);
     receipt.uplinkSampleMs=deltaMs;
-    for (const width of [392,320]) for (const i of [0, MEDIA_V2_SIZE-1]) {
+    for (const width of [392,320]) for (const i of [0, MEDIA_SIZE-1]) {
       await pages[i].setViewportSize({width,height:900});
       await pages[i].evaluate(width => window.AnidachiHarness.renderControls(width,true),width);
-      await pages[i].screenshot({path:`/private/tmp/task8-media-${MEDIA_V2_SIZE}-${i===0?"host":"receiver"}-${width}.png`,fullPage:false});
+      await pages[i].screenshot({path:`/private/tmp/task8-media-${MEDIA_SIZE}-${i===0?"host":"receiver"}-${width}.png`,fullPage:false});
     }
     if (process.env.HARNESS_MEDIA_REVIEW_FIX) {
       const wait = async (fn) => {const start=Date.now();do {if(await fn())return Date.now()-start;await sleep(25);}while(Date.now()-start<10000);throw new Error("review fix media timeout");};
@@ -1383,7 +1390,7 @@ async function runVersionedMediaCase(browser, pageUrl, iceServers) {
     await Promise.allSettled(pages.map(p => p.evaluate(() => window.AnidachiHarness.stop())));
     await Promise.allSettled(contexts.map(c => c.close()));
     receipt.elapsedMs = Date.now() - started;
-    await writeFile(process.env.HARNESS_MEDIA_REPORT || `/private/tmp/task8-media-${MEDIA_V2_SIZE}.json`, JSON.stringify(receipt, null, 2));
+    await writeFile(process.env.HARNESS_MEDIA_REPORT || `/private/tmp/task8-media-${MEDIA_SIZE}.json`, JSON.stringify(receipt, null, 2));
   }
 }
 

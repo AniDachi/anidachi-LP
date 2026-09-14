@@ -622,7 +622,7 @@ export async function createRoomWithActiveSession(params: {
     sourceUrl: params.sourceUrl,
     videoFingerprint: params.videoFingerprint,
   });
-	const result = await db().rpc("create_room_with_active_session_v2", {
+	const result = await db().rpc("create_room_with_active_session_v3", {
 		p_media_protocol_version: params.mediaProtocolVersion ?? 1,
     p_host_user_id: params.hostUserId,
     p_participant_session_id: params.participantSessionId,
@@ -660,7 +660,7 @@ export async function claimActiveRoomSession(params: {
   participantSessionId: string;
 	mediaProtocolVersion?: number;
 }): Promise<ActiveRoomClaimResult> {
-	const result = await db().rpc("claim_active_room_session_v2", {
+	const result = await db().rpc("claim_active_room_session_v3", {
 		p_media_protocol_version: params.mediaProtocolVersion ?? 1,
     p_user_id: params.userId,
     p_room_id: params.roomId,
@@ -668,6 +668,8 @@ export async function claimActiveRoomSession(params: {
     p_participant_session_id: params.participantSessionId,
   });
   if (result.error) {
+    if (result.error.message.includes("ROOM_UPDATE_REQUIRED"))
+      throw new Error("ROOM_UPDATE_REQUIRED");
     throw new Error(`Failed to claim active room: ${result.error.message}`);
   }
   return parseActiveRoomClaimRpcResult(result.data);
@@ -942,7 +944,7 @@ export async function getPersonalHistoryPolicyActive(): Promise<boolean> {
 }
 export async function renewRoomMediaLease(roomId: string): Promise<unknown> {
 	const { data, error } = await db()
-		.rpc("renew_room_media_lease_v2", { p_room_id: roomId })
+		.rpc("renew_room_media_lease_v3", { p_room_id: roomId })
 		.abortSignal(AbortSignal.timeout(10_000));
 	if (error) throw new Error("Room capability unavailable");
 	return data;

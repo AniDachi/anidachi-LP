@@ -58,6 +58,31 @@ media topology update, and stops at the receiver's first decoded video frame.
 The run fails unless the sample is complete and its nearest-rank p95 is strictly
 below 6000 ms.
 
+## Media-v3 host-managed seats
+
+Run each host plan independently with the production client and Worker:
+
+```bash
+HARNESS_MEDIA_V3=4 node p2p-media-harness.mjs
+HARNESS_MEDIA_V3=6 node p2p-media-harness.mjs
+HARNESS_MEDIA_V3=15 node p2p-media-harness.mjs
+```
+
+These scenarios verify admission-order seats, four simultaneous cameras,
+4/6/8 microphone publishers, receiver-only participants, host revocation of
+both outgoing tracks while incoming playback advances, and regrant without
+automatic capture. A fifth camera request is rejected without interrupting its
+microphone; a released camera slot can be reused by an explicit action.
+
+For v3, the first-frame clock begins when the receiver observes the remote
+camera grant, before the topology update. Seat admission alone does not mean
+the camera owner has requested capture. The complete decoded-video sample
+must still have p95 below 6000 ms. Screenshots include host and guest People
+controls at 392 and 320 pixels. Receipts default to
+`/private/tmp/media-seats-v3-<size>.json`; use `HARNESS_MEDIA_REPORT` to override.
+
+Do not combine `HARNESS_MEDIA_V2` and `HARNESS_MEDIA_V3` in one run.
+
 ## Relay/TURN Mode
 
 The default run is direct-first and often selects `host/host` candidate pairs on

@@ -15,6 +15,7 @@ import { createRoot } from "react-dom/client";
 import { RoomPeopleSection } from "../../apps/extension/src/overlay-room-media-controls";
 import { overlayStyles } from "../../apps/extension/src/styles";
 import type { ParticipantAudioPreference } from "../../apps/extension/src/voice-audio-preferences";
+import { getDebugEntries } from "../../apps/extension/src/debug-log";
 
 const nativeGetUserMedia = navigator.mediaDevices.getUserMedia.bind(
   navigator.mediaDevices,
@@ -245,7 +246,7 @@ class Harness {
   private onServerEvent(selfId: string, event: ServerEvent): void {
     if (event.type === "ERROR") this.errors.push(event.code + ":" + event.message);
     if (event.type === "ROOM_ENDED") { this.terminalEnded = true; this.stop(); return; }
-    if (event.type === "ROOM_MEDIA_SNAPSHOT" || event.type === "MEDIA_INTENT_ACK" || event.type === "MEDIA_INTENT_ERROR") { this.updateControllerParticipants(); return; }
+    if (event.type === "ROOM_MEDIA_SNAPSHOT" || event.type === "MEDIA_INTENT_ACK" || event.type === "MEDIA_INTENT_ERROR" || event.type === "MEDIA_SEAT_RESULT") { this.updateControllerParticipants(); return; }
     if (event.type === "ROOM_SNAPSHOT") {
       this.participants = event.participants;
       this.updateControllerParticipants();
@@ -284,9 +285,16 @@ class Harness {
     }
 
     if (this.options?.mediaV2) {
-      for (const p of this.participants) if (p.id !== this.self.id && !this.expectedAt.has(p.id)) this.expectedAt.set(p.id, performance.now());
-      this.controller.setCaptureAuthority(this.client?.media?.canCapture("camera") ?? false, this.client?.media?.canCapture("microphone") ?? false, {camera:this.client?.media?.captureIntent("camera"),microphone:this.client?.media?.captureIntent("microphone")});
+      const snapshot = this.client?.media?.snapshot;
+      for (const p of this.participants) {
+        // v3 seats do not imply device intent: start this sample only when
+        // the remote camera is authorized, not while its owner is waiting.
+        const cameraExpected = snapshot?.capabilities.mediaProtocolVersion === 2 ||
+          (snapshot?.capabilities.mediaProtocolVersion === 3 && snapshot.participants.some(state => state.participantSessionId === p.participantSessionId && state.cameraGranted));
+        if (p.id !== this.self.id && cameraExpected && !this.expectedAt.has(p.id)) this.expectedAt.set(p.id, performance.now());
+      }
       this.controller.updateParticipants(this.participants, undefined, this.client?.media?.snapshot ?? null);
+      this.controller.setCaptureAuthority(this.client?.media?.canCapture("camera") ?? false, this.client?.media?.canCapture("microphone") ?? false, {camera:this.client?.media?.captureIntent("camera"),microphone:this.client?.media?.captureIntent("microphone")});
     } else this.controller.updateParticipants(selectP2PMediaParticipants(this.participants, this.self.id, this.self.cameraEnabled));
   }
 
@@ -424,7 +432,18 @@ class Harness {
     await this.reconnect("interrupted-disable");
   }
 
-  async diagnostics() { return { captureCount, peerConstructionCount, terminalEnded: this.terminalEnded, signalCounts: this.signalCounts, videoTtfm: this.videoTtfm, errors: this.errors, roster: this.participants, status: this.status, media: this.client?.media?.snapshot, stats: await this.controller?.getStats() }; }
+  async setMediaSeat(userId: string, enabled: boolean): Promise<{error?: string}> {
+    if (!this.client || this.client.setMediaSeat(userId, enabled) === "dropped") throw new Error("seat command dropped");
+    const deadline = Date.now() + 8000;
+    while (this.client.media?.seatControls.get(userId)?.pending) {
+      if (Date.now() > deadline) throw new Error("seat command timeout");
+      await new Promise(resolve => setTimeout(resolve, 20));
+    }
+    this.updateControllerParticipants();
+    return { error: this.client.media?.seatControls.get(userId)?.error };
+  }
+
+  async diagnostics() { return { captureCount, peerConstructionCount, terminalEnded: this.terminalEnded, signalCounts: this.signalCounts, videoTtfm: this.videoTtfm, videoExpectedIds: [...this.expectedAt.keys()], errors: this.errors, roster: this.participants, status: this.status, media: this.client?.media?.snapshot, stats: await this.controller?.getStats(), debug: getDebugEntries().filter(entry => entry.scope.startsWith("p2p")) }; }
 
   renderControls(width = 392, reconnecting = false): void {
     document.body.style.margin = "0";
@@ -433,7 +452,7 @@ class Harness {
     const host = document.createElement("div"); host.id = "media-controls-fixture"; document.body.appendChild(host);
     const shadow = host.attachShadow({ mode: "open" }); const style = document.createElement("style"); style.textContent = overlayStyles; shadow.appendChild(style);
     const container = document.createElement("div"); container.className = "mini-panel"; container.style.cssText = "top:10px;right:10px;max-height:650px"; const shell = document.createElement("div"); shell.className = "anidachi-overlay"; shell.style.cssText = `position:relative;width:${width}px;height:680px;pointer-events:auto`; shell.appendChild(container); shadow.appendChild(shell);
-    createRoot(container).render(createElement(RoomPeopleSection, { currentParticipantId: this.self?.id ?? null, participants: this.participants.map((p,i) => ({ ...p, displayName: `${p.id} — Participant with a deliberately long display name`, ...(reconnecting && i === 1 ? { connected: false } : {}) })), mediaSnapshot: this.client?.media?.snapshot, microphoneReady: this.client?.media?.canCapture("microphone"), liveVoiceActiveSpeakerIds: [], roomPeopleCountText: `${this.participants.length} in room`, maxMediaSeats: 0, occupiedMediaSeatCount: 0, onCancelMediaSeatRequest: () => {}, onGrantMediaSeat: () => {}, onRequestMediaSeat: () => {}, onRevokeMediaSeat: () => {}, onMicrophoneReadyChange: enabled => { void this.requestGrant("microphone", enabled); } }));
+    createRoot(container).render(createElement(RoomPeopleSection, { currentParticipantId: this.self?.id ?? null, participants: this.participants.map((p,i) => ({ ...p, displayName: `${p.id} — Participant with a deliberately long display name`, ...(reconnecting && i === 1 ? { connected: false } : {}) })), mediaSnapshot: this.client?.media?.snapshot, microphoneReady: this.client?.media?.canCapture("microphone"), liveVoiceActiveSpeakerIds: [], roomPeopleCountText: `${this.participants.length} in room`, maxMediaSeats: 0, occupiedMediaSeatCount: 0, onCancelMediaSeatRequest: () => {}, onGrantMediaSeat: () => {}, onRequestMediaSeat: () => {}, onRevokeMediaSeat: () => {}, onMicrophoneReadyChange: enabled => { void this.requestGrant("microphone", enabled); }, seatControls: this.client?.media?.seatControls, onSetMediaSeat: (userId, enabled) => { void this.setMediaSeat(userId, enabled).then(() => this.renderControls(width, reconnecting)); } }));
   }
 
   simulateDeviceRemoval(media: "camera" | "microphone" = "camera"): void {
