@@ -11,6 +11,7 @@ import {
 	type Participant,
 	type ServerEvent,
 	ServerEventSchema,
+ RoomMediaCapabilityLeaseSchema,
 	createEmptyRoomEndEventId,
 } from "@anidachi/protocol";
 import { jwtVerify } from "jose";
@@ -3141,7 +3142,7 @@ function sleep(ms: number): Promise<void> {
 // Negotiated v2 rooms use real signed capabilities and the actual hibernating DO.
 describe("RoomDurableObject media v2", () => {
 	const hostId = "v2-host";
-	async function fixture(plan: "free" | "plus" | "pro" = "pro") {
+	async function fixture(plan: "free" | "plus" | "pro" = "pro", version: 2 | 3 = 2) {
 		const roomId = `media-v2-${crypto.randomUUID()}`;
 		const ns = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
 		const stub = ns.get(ns.idFromName(roomId));
@@ -3154,17 +3155,14 @@ describe("RoomDurableObject media v2", () => {
 				issuedAt: new Date(now).toISOString(),
 				paidUntil: null,
 				capabilities: {
-					mediaProtocolVersion: 2 as const,
+					mediaProtocolVersion: version,
 					hostPlanCode: plan,
 					maxParticipants: (plan === "pro" ? 15 : plan === "plus" ? 6 : 4) as
 						| 4
 						| 6
 						| 15,
 					maxCameras: 4 as const,
-					maxMicrophones: (plan === "pro" ? 8 : plan === "plus" ? 6 : 4) as
-						| 4
-						| 6
-						| 8,
+          ...(version === 3 ? {maxMediaSeats: plan === "pro" ? 8 : plan === "plus" ? 6 : 4} : {maxMicrophones: plan === "pro" ? 8 : plan === "plus" ? 6 : 4}),
 					capabilityRevision: revision,
 					capabilitiesValidUntil: new Date(now + 1800000).toISOString(),
 				},
@@ -3178,7 +3176,7 @@ describe("RoomDurableObject media v2", () => {
 					role: userId === hostId ? "host" : "member",
 					participantSessionId: sessionId,
 					hostUserId: hostId,
-					mediaLease: lease(),
+					mediaLease: RoomMediaCapabilityLeaseSchema.parse(lease()),
 				},
 				TEST_SECRET_ENV,
 			);
@@ -3279,6 +3277,329 @@ describe("RoomDurableObject media v2", () => {
 		};
 	}
 
+
+it("v3 durably fences revocation, receiver-only sessions and two grants for the last seat", async () => {
+	const f = await fixture("pro", 3);
+	const clients: RuntimeRoomClient[] = [];
+	for (let i = 0; i < 10; i++) {
+		const c = await f.join(i);
+		clients.push(c);
+		await c.waitFor(
+			(e) =>
+				e.type === "ROOM_MEDIA_SNAPSHOT" && e.participants.length === i + 1,
+			"v3 join",
+		);
+	}
+	const cmd = (
+		i: number,
+		enabled: boolean,
+		revision = 0,
+		requestId = `seat-${i}-${revision}`,
+	) => ({
+		type: "SET_MEDIA_SEAT",
+		roomId: f.roomId,
+		roomGeneration: 1,
+		targetUserId: i === 0 ? hostId : `v2-user-${i}`,
+		targetParticipantSessionId: `v2-session-${i}`,
+		expectedSeatRevision: revision,
+		enabled,
+		requestId,
+	});
+	clients[0]!.send(cmd(1, false));
+	await clients[0]!.waitFor(
+		(e) =>
+			e.type === "MEDIA_SEAT_RESULT" &&
+			e.requestId === "seat-1-0" &&
+			e.code === "OK",
+		"revoke durable",
+	);
+	clients[0]!.send(cmd(8, true));
+	clients[0]!.send(cmd(9, true));
+	await clients[0]!.waitFor(
+		(e) =>
+			e.type === "MEDIA_SEAT_RESULT" &&
+			e.requestId === "seat-8-0" &&
+			e.code === "OK",
+		"last seat granted",
+	);
+	await clients[0]!.waitFor(
+		(e) =>
+			e.type === "MEDIA_SEAT_RESULT" &&
+			e.requestId === "seat-9-0" &&
+			e.code === "MEDIA_LIMIT_REACHED",
+		"second grant denied",
+	);
+	for (let i = 2; i < 7; i++)
+		clients[i]!.send({
+			type: "SET_MEDIA_INTENT",
+			roomId: f.roomId,
+			roomGeneration: 1,
+			participantSessionId: `v2-session-${i}`,
+			media: "camera",
+			enabled: true,
+			requestId: `camera-${i}`,
+			intentSequence: 1,
+			revocationEpoch: 0,
+		});
+	await Promise.all(
+		clients
+			.slice(2, 7)
+			.map((c, i) =>
+				c.waitFor(
+					(e) =>
+						(e.type === "MEDIA_INTENT_ACK" ||
+							e.type === "MEDIA_INTENT_ERROR") &&
+						e.requestId === `camera-${i + 2}`,
+					"camera race",
+				),
+			),
+	);
+	expect(
+		clients
+			.slice(2, 7)
+			.filter((c) =>
+				c.hasEvent(
+					(e) => e.type === "MEDIA_INTENT_ACK" && e.media === "camera",
+				),
+			),
+	).toHaveLength(4);
+	expect(
+		await runInDurableObject(f.stub, async (_i, state) =>
+			state.storage.sql
+				.exec("SELECT user_id FROM room_media_seat_denials")
+				.toArray(),
+		),
+	).toEqual([{ user_id: "v2-user-1" }]);
+	await evictDurableObject(f.stub, { webSockets: "hibernate" });
+	const replaced = await f.join(1, "new-session");
+	await replaced.waitFor(
+		(e) =>
+			e.type === "ROOM_MEDIA_SNAPSHOT" &&
+			e.participants.some(
+				(p) =>
+					p.participantSessionId === "new-session" &&
+					"mediaSeatGranted" in p &&
+					!p.mediaSeatGranted,
+			),
+		"denial restored",
+	);
+	replaced.send({
+		type: "SET_MEDIA_INTENT",
+		roomId: f.roomId,
+		roomGeneration: 1,
+		participantSessionId: "new-session",
+		media: "microphone",
+		enabled: true,
+		requestId: "denied-new",
+		intentSequence: 1,
+		revocationEpoch: 0,
+	});
+	await replaced.waitFor(
+		(e) => e.type === "MEDIA_INTENT_ERROR" && e.code === "MEDIA_SEAT_REQUIRED",
+		"new session cannot bypass",
+	);
+ replaced.close();
+ await clients[0]!.waitFor(e=>e.type === "ROOM_SNAPSHOT" && e.participants.some(p=>p.id==="v2-user-1" && p.connected===false),"denied member disconnected");
+ await makeParticipantDisconnectDue(f.stub,"v2-user-1","new-session");
+ await runDurableObjectAlarm(f.stub);
+ expect(await runInDurableObject(f.stub,async(instance)=>(instance as any).room.hasParticipant("v2-user-1"))).toBe(false);
+ await evictDurableObject(f.stub,{webSockets:"hibernate"});
+ const rejoined=await f.join(1,"after-grace");
+ await rejoined.waitFor(e=>e.type==="ROOM_MEDIA_SNAPSHOT" && e.participants.some(p=>p.participantSessionId==="after-grace" && "mediaSeatGranted" in p && !p.mediaSeatGranted),"denial survives real departure");
+ expect((await endRoom(f.stub,{endedAt:Date.now(),reason:"host_ended"})).status).toBe(200);
+ expect(await runInDurableObject(f.stub,async(_i,state)=>state.storage.sql.exec("SELECT user_id FROM room_media_seat_denials").toArray())).toEqual([]);
+
+});
+it.each([
+	"before-write",
+	"after-write",
+ "sync",
+])("v3 settles a failed durable seat write (%s) after rollback and permits retry", async (phase) => {
+	const f = await fixture("pro", 3);
+	const host = await f.join(0);
+	await host.waitFor((e) => e.type === "ROOM_MEDIA_SNAPSHOT", "joined");
+	await runInDurableObject(f.stub, async (instance, state) => {
+		const i = instance as any;
+		const persist = i.persistRoomState.bind(i);
+		let fail = true;
+  if(phase === "sync") {
+   const sync=state.storage.sync.bind(state.storage);
+   state.storage.sync=async()=>{if(fail && i.room.mediaFor(hostId)?.mediaSeatGranted===false){fail=false;throw new Error("injected sync failure");}return sync();};
+   return;
+  }
+		i.persistRoomState = () => {
+			if (fail && i.room.mediaFor(hostId)?.mediaSeatGranted === false) {
+				fail = false;
+				if (phase === "after-write") persist();
+				throw new Error("injected storage failure");
+			}
+			persist();
+		};
+	});
+	host.send({
+		type: "SET_MEDIA_SEAT",
+		roomId: f.roomId,
+		roomGeneration: 1,
+		targetUserId: hostId,
+		targetParticipantSessionId: "v2-session-0",
+		expectedSeatRevision: 0,
+		enabled: false,
+		requestId: "failed-revoke",
+	});
+	const failure = await host.waitFor(
+		(e) => e.type === "MEDIA_SEAT_RESULT" && e.requestId === "failed-revoke",
+		"correlated storage failure",
+	);
+	expect(failure).toMatchObject({code: "MEDIA_UNAVAILABLE", targetParticipantSessionId: "v2-session-0",
+		snapshot: {roomId: f.roomId, roomGeneration: 1, participants: [expect.objectContaining({
+			participantSessionId: "v2-session-0", mediaSeatGranted: true, seatRevision: 0,
+		})]}});
+	expect(
+		host.hasEvent(
+			(e) => e.type === "MEDIA_SEAT_RESULT" && e.requestId === "failed-revoke" && e.code === "OK",
+		),
+	).toBe(false);
+	await evictDurableObject(f.stub, { webSockets: "hibernate" });
+	expect(
+		await runInDurableObject(f.stub, async (instance, state) => ({
+			media: (instance as any).room.mediaFor(hostId),
+			denials: state.storage.sql
+				.exec("SELECT user_id FROM room_media_seat_denials")
+				.toArray(),
+		})),
+	).toMatchObject({
+		media: { mediaSeatGranted: true, seatRevision: 0 },
+		denials: [],
+	});
+	expect(host.hasEvent((e) => e.type === "ERROR" && e.code === "MEDIA_UNAVAILABLE")).toBe(false);
+	host.send({type: "SET_MEDIA_SEAT", roomId: f.roomId, roomGeneration: 1,
+		targetUserId: hostId, targetParticipantSessionId: "v2-session-0", expectedSeatRevision: 0,
+		enabled: false, requestId: "retry-revoke"});
+	expect(await host.waitFor((e) => e.type === "MEDIA_SEAT_RESULT" && e.requestId === "retry-revoke", "retry on same socket"))
+		.toMatchObject({code: "OK", snapshot: {participants: [expect.objectContaining({mediaSeatGranted: false, seatRevision: 1})]}});
+});
+
+it("v3 interrupts a seat command when durable rollback cannot be established", async () => {
+	const f = await fixture("pro", 3);
+	const host = await f.join(0);
+	await host.waitFor((e) => e.type === "ROOM_MEDIA_SNAPSHOT", "joined");
+	await runInDurableObject(f.stub, async (instance) => {
+		const i = instance as any;
+		const persist = i.persistRoomState.bind(i);
+		let failedMutation = false;
+		let failedRollback = false;
+		i.persistRoomState = () => {
+			if (!failedMutation && i.room.mediaFor(hostId)?.mediaSeatGranted === false) {
+				failedMutation = true;
+				throw new Error("injected mutation failure");
+			}
+			if (failedMutation && !failedRollback) {
+				failedRollback = true;
+				throw new Error("injected rollback failure");
+			}
+			persist();
+		};
+	});
+	host.send({type: "SET_MEDIA_SEAT", roomId: f.roomId, roomGeneration: 1,
+		targetUserId: hostId, targetParticipantSessionId: "v2-session-0", expectedSeatRevision: 0,
+		enabled: false, requestId: "unsafe-rollback"});
+	await host.waitForClose(1011, "unconfirmed rollback interrupts the transport");
+	expect(host.hasEvent((e) => e.type === "MEDIA_SEAT_RESULT" && e.requestId === "unsafe-rollback")).toBe(false);
+});
+
+it.each([
+	{ version: 2, enabled: true, phase: "after-write" },
+	{ version: 2, enabled: false, phase: "sync" },
+	{ version: 3, enabled: true, phase: "after-write" },
+	{ version: 3, enabled: false, phase: "after-write" },
+	{ version: 3, enabled: true, phase: "sync" },
+	{ version: 3, enabled: false, phase: "sync" },
+] as const)("v$version rolls back camera enabled=$enabled after $phase failure", async ({
+	version,
+	enabled,
+	phase,
+}) => {
+	const f = await fixture("pro", version);
+	const host = await f.join(0);
+	await host.waitFor((e) => e.type === "ROOM_MEDIA_SNAPSHOT", "host joined");
+	const intent = (on: boolean, sequence: number, requestId: string) => ({
+		type: "SET_MEDIA_INTENT",
+		roomId: f.roomId,
+		roomGeneration: 1,
+		participantSessionId: "v2-session-0",
+		media: "camera",
+		enabled: on,
+		intentSequence: sequence,
+		revocationEpoch: 0,
+		requestId,
+	});
+	if (!enabled) {
+		host.send(intent(true, 1, "initial-camera"));
+		await host.waitFor(
+			(e) => e.type === "MEDIA_INTENT_ACK" && e.requestId === "initial-camera",
+			"initial camera granted",
+		);
+	}
+	const sequence = enabled ? 1 : 2;
+	const before = await runInDurableObject(f.stub, async (instance) =>
+		structuredClone((instance as any).room.mediaFor(hostId)),
+	);
+	await runInDurableObject(f.stub, async (instance, state) => {
+		const i = instance as any;
+		let fail = true;
+		const shouldFail = () =>
+			fail && i.room.mediaFor(hostId)?.cameraIntentSequence === sequence;
+		if (phase === "sync") {
+			const sync = state.storage.sync.bind(state.storage);
+			state.storage.sync = async () => {
+				if (shouldFail()) {
+					fail = false;
+					throw new Error("injected intent sync failure");
+				}
+				return sync();
+			};
+		} else {
+			const persist = i.persistRoomState.bind(i);
+			i.persistRoomState = () => {
+				persist();
+				if (shouldFail()) {
+					fail = false;
+					throw new Error("injected post-write intent failure");
+				}
+			};
+		}
+	});
+	host.send(intent(enabled, sequence, "failed-camera"));
+	await host.waitFor(
+		(e) => e.type === "ERROR" && e.code === "MEDIA_UNAVAILABLE",
+		"intent storage error",
+	);
+	expect(
+		host.hasEvent(
+			(e) => e.type === "MEDIA_INTENT_ACK" && e.requestId === "failed-camera",
+		),
+	).toBe(false);
+	expect(
+		await runInDurableObject(f.stub, async (instance) =>
+			(instance as any).room.mediaFor(hostId),
+		),
+	).toEqual(before);
+	await evictDurableObject(f.stub, { webSockets: "hibernate" });
+	expect(
+		await runInDurableObject(f.stub, async (instance) =>
+			(instance as any).room.mediaFor(hostId),
+		),
+	).toEqual(before);
+	host.send(intent(enabled, sequence, "retry-camera"));
+	await host.waitFor(
+		(e) =>
+			e.type === "MEDIA_INTENT_ACK" &&
+			e.requestId === "retry-camera" &&
+			e.state.cameraGranted === enabled &&
+			e.state.cameraIntentSequence === sequence,
+		"retry after durable rollback",
+	);
+});
   it("routes 14 authorized v2 SDP targets while retaining single-target and reconnect budgets", async () => {
     const f = await fixture(); const clients: RuntimeRoomClient[] = [];
     for (let i=0; i<15; i++) { const c=await f.join(i); clients.push(c); await c.waitFor(e=>e.type==="ROOM_MEDIA_SNAPSHOT" && e.participants.length===i+1,"joined"); }
@@ -3538,8 +3859,8 @@ describe("RoomDurableObject media v2", () => {
     const paused=await host.waitFor(e=>e.type==="ROOM_SNAPSHOT"&&e.quota?.metering===false&&e.participants.some(p=>p.connected===false),"reserved guest paused quota");
     expect(paused.type==="ROOM_SNAPSHOT"&&paused.quota?.remainingSeconds).toBeGreaterThan(0);
   });
-	it("retains grants only through same-session disconnect grace and releases on new-session replacement", async () => {
-		const f = await fixture();
+	it.each([2,3] as const)("v%s retains grants through same-session grace and resets capture on replacement", async (version) => {
+		const f = await fixture("pro",version);
 		const host = await f.join(0);
 		await host.waitFor((e) => e.type === "ROOM_MEDIA_SNAPSHOT", "host");
 		let guest = await f.join(1);

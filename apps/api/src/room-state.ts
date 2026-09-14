@@ -1,11 +1,15 @@
 import {
-	type RoomMediaCapabilities,
+	RoomMediaSnapshotSchema,
+ type RoomMediaCapabilities,
 	type RoomMediaSnapshot,
 	type ParticipantMediaState,
 	type MediaIntent,
 	type MediaIntentAck,
 	type MediaIntentError,
 	type HostMediaRevoke,
+ type SetMediaSeat,
+ type MediaSeatResultCode,
+ type ParticipantMediaV2State,
 } from "@anidachi/protocol";
 import type {
   Participant,
@@ -35,6 +39,7 @@ export interface RoomStateSnapshot {
   schemaVersion: 1;
 	media?: RoomMediaSnapshot;
 	mediaRevocations?: string[];
+ mediaSeatDenials?: string[];
   capabilities: RoomCapabilities;
   hostId: string | null;
   hostState?: PlaybackState;
@@ -48,8 +53,9 @@ export interface RoomStateSnapshot {
 
 export class RoomState {
   readonly roomId: string;
-	private media: RoomMediaSnapshot | undefined;
+	private media: (Omit<RoomMediaSnapshot, "participants"> & {participants: (ParticipantMediaState & {participantSessionId:string})[]}) | undefined;
 	private mediaRevocations: string[] = [];
+ private mediaSeatDenials = new Set<string>();
   private capabilities: RoomCapabilities;
   private readonly participantsById = new Map<string, Participant>();
   private hostId: string | null = null;
@@ -66,7 +72,8 @@ export class RoomState {
     snapshot?: RoomStateSnapshot,
   ) {
     this.roomId = roomId;
-		this.mediaRevocations = snapshot?.mediaRevocations ?? [];
+		this.mediaRevocations = [...(snapshot?.mediaRevocations ?? [])];
+ this.mediaSeatDenials = new Set(snapshot?.mediaSeatDenials ?? []);
 		this.media = snapshot?.media ? structuredClone(snapshot.media) : undefined;
     this.capabilities = snapshot?.capabilities ?? capabilities;
     if (snapshot) {
@@ -115,6 +122,7 @@ export class RoomState {
   }
 
   get occupiedMediaSeats(): number {
+ if(this.media?.capabilities.mediaProtocolVersion === 3) return this.media.participants.filter(p => "mediaSeatGranted" in p && p.mediaSeatGranted).length;
 		return this.participants.filter(
 			(participant) => participant.mediaSeat === "joined",
 		).length;
@@ -208,6 +216,7 @@ export class RoomState {
     }
 
 		if (this.media) {
+			const previousMedia = this.mediaFor(participant.id);
 			if (existing?.participantSessionId !== participant.participantSessionId)
 				this.media.participants = this.media.participants.filter(
 					(p) => p.participantSessionId !== existing?.participantSessionId,
@@ -220,9 +229,25 @@ export class RoomState {
 			)
 				this.media.participants.push({
 					...emptyMediaState(),
+					...(this.media.capabilities.mediaProtocolVersion === 3
+						? {
+								mediaSeatGranted:
+									!this.mediaSeatDenials.has(participant.id) &&
+									(previousMedia && "mediaSeatGranted" in previousMedia
+										? previousMedia.mediaSeatGranted
+										: this.media.participants.filter(
+												(p) => "mediaSeatGranted" in p && p.mediaSeatGranted,
+											).length < this.media.capabilities.maxMediaSeats),
+								seatRevision:
+									previousMedia && "seatRevision" in previousMedia
+										? previousMedia.seatRevision
+										: 0,
+							}
+						: {}),
 					participantSessionId: participant.participantSessionId,
 				});
 		}
+
 		const nextMediaSeat = this.media
 			? "none"
 			: (existing?.mediaSeat ??
@@ -413,6 +438,7 @@ export class RoomState {
   }
 
   requestMediaSeat(userId: string): Participant | null {
+ if(this.media) return null;
     const participant = this.participantsById.get(userId);
     if (!participant) {
       return null;
@@ -433,6 +459,7 @@ export class RoomState {
   }
 
   cancelMediaSeatRequest(userId: string): Participant | null {
+ if(this.media) return null;
     const participant = this.participantsById.get(userId);
     if (!participant || participant.mediaSeat !== "requested") {
       return participant ?? null;
@@ -450,6 +477,7 @@ export class RoomState {
   }
 
   leaveMediaSeat(userId: string): Participant | null {
+ if(this.media) return null;
     const participant = this.participantsById.get(userId);
     if (!participant) {
       return null;
@@ -473,7 +501,7 @@ export class RoomState {
 		targetUserId: string,
 		byUserId: string,
 	): MediaSeatChangeResult {
-    if (!this.canManageMediaSeats(byUserId)) {
+    if (this.media || !this.canManageMediaSeats(byUserId)) {
       return { accepted: false, code: "NOT_HOST" };
     }
     const participant = this.participantsById.get(targetUserId);
@@ -501,7 +529,7 @@ export class RoomState {
 		targetUserId: string,
 		byUserId: string,
 	): MediaSeatChangeResult {
-    if (!this.canManageMediaSeats(byUserId)) {
+    if (this.media || !this.canManageMediaSeats(byUserId)) {
       return { accepted: false, code: "NOT_HOST" };
     }
     const participant = this.participantsById.get(targetUserId);
@@ -530,6 +558,7 @@ export class RoomState {
 				? {
 						media: structuredClone(this.mediaSnapshot!),
 						mediaRevocations: [...this.mediaRevocations],
+ mediaSeatDenials: [...this.mediaSeatDenials],
 					}
 				: {}),
       capabilities: this.capabilities,
@@ -552,7 +581,7 @@ export class RoomState {
 	get mediaSnapshot(): RoomMediaSnapshot | undefined {
 		return this.media
 			? {
-					...structuredClone(this.media),
+					...RoomMediaSnapshotSchema.parse(structuredClone(this.media)),
 					snapshotSequence: this.serverSeqValue,
 				}
 			: undefined;
@@ -564,7 +593,9 @@ export class RoomState {
 				old.hostPlanCode !== caps.hostPlanCode ||
 				old.maxParticipants !== caps.maxParticipants ||
 				old.maxCameras !== caps.maxCameras ||
-				old.maxMicrophones !== caps.maxMicrophones ||
+				old.mediaProtocolVersion !== caps.mediaProtocolVersion ||
+ (old.mediaProtocolVersion === 2 ? old.maxMicrophones : old.maxMediaSeats) !==
+ (caps.mediaProtocolVersion === 2 ? caps.maxMicrophones : caps.maxMediaSeats) ||
 				this.media.closingAt ||
 				caps.capabilityRevision <= old.capabilityRevision
 			)
@@ -641,13 +672,15 @@ export class RoomState {
 					now >= Date.parse(this.media.capabilities.capabilitiesValidUntil))
 			)
 				code = "MEDIA_CAPABILITY_EXPIRED";
+			else if (intent.enabled && "mediaSeatGranted" in state && !state.mediaSeatGranted)
+ code = "MEDIA_SEAT_REQUIRED";
 			else if (
 				intent.enabled &&
 				!state[grantKey] &&
 				this.media.participants.filter((p) => p[grantKey]).length >=
 					(intent.media === "camera"
 						? this.media.capabilities.maxCameras
-						: this.media.capabilities.maxMicrophones)
+						: this.media.capabilities.mediaProtocolVersion === 2 ? this.media.capabilities.maxMicrophones : this.media.capabilities.maxMediaSeats)
 			)
 				code = "MEDIA_LIMIT_REACHED";
 			else {
@@ -667,20 +700,22 @@ export class RoomState {
 			snapshotSequence: this.serverSeqValue,
 			state: state
 				? {
-						cameraGranted: state.cameraGranted,
+						...("mediaSeatGranted" in state ? {mediaSeatGranted: state.mediaSeatGranted, seatRevision: state.seatRevision} : {}),
+ cameraGranted: state.cameraGranted,
 						microphoneGranted: state.microphoneGranted,
 						cameraIntentSequence: state.cameraIntentSequence,
 						microphoneIntentSequence: state.microphoneIntentSequence,
 						cameraRevocationEpoch: state.cameraRevocationEpoch,
 						microphoneRevocationEpoch: state.microphoneRevocationEpoch,
 					}
-				: emptyMediaState(),
+				: {...emptyMediaState(), ...(this.media?.capabilities.mediaProtocolVersion === 3 ? {mediaSeatGranted:false,seatRevision:0} : {})},
 		};
 		return code
 			? { type: "MEDIA_INTENT_ERROR", ...reply, code }
 			: { type: "MEDIA_INTENT_ACK", ...reply };
 	}
 	revokeMediaGrant(byUserId: string, event: HostMediaRevoke): boolean {
+ if (this.media?.capabilities.mediaProtocolVersion === 3) return false;
 		if (
 			!this.canControlPlayback(byUserId) ||
 			event.roomId !== this.roomId ||
@@ -718,6 +753,82 @@ export class RoomState {
 		return true;
   }
 
+	applyMediaSeatCommand(
+		actorUserId: string,
+		command: SetMediaSeat,
+	): { accepted: true } | { accepted: false; code: MediaSeatResultCode } {
+		const fail = (code: MediaSeatResultCode) => ({
+			accepted: false as const,
+			code,
+		});
+		if (
+			!this.canManageMediaSeats(actorUserId) ||
+			this.media?.capabilities.mediaProtocolVersion !== 3
+		)
+			return fail("MEDIA_FORBIDDEN");
+		if (
+			command.roomId !== this.roomId ||
+			command.roomGeneration !== this.roomGenerationValue
+		)
+			return fail("MEDIA_STALE_GENERATION");
+		const target = this.participantsById.get(command.targetUserId);
+		const media = this.mediaFor(command.targetUserId);
+		if (
+			!target ||
+			target.participantSessionId !== command.targetParticipantSessionId ||
+			!media ||
+			!("mediaSeatGranted" in media)
+		)
+			return fail("MEDIA_STALE_SESSION");
+		const key = JSON.stringify([actorUserId, {
+ roomId: command.roomId, roomGeneration: command.roomGeneration,
+ targetUserId: command.targetUserId, targetParticipantSessionId: command.targetParticipantSessionId,
+ expectedSeatRevision: command.expectedSeatRevision, enabled: command.enabled, requestId: command.requestId,
+ }]);
+		if (this.mediaRevocations.includes(key)) return { accepted: true };
+		// A request id names one immutable host command, not a mutable toggle.
+		if (
+			this.mediaRevocations.some((entry) => {
+				const saved = JSON.parse(entry);
+				return (
+					saved[0] === actorUserId && saved[1]?.requestId === command.requestId
+				);
+			})
+		)
+			return fail("MEDIA_FORBIDDEN");
+		if (command.expectedSeatRevision !== media.seatRevision)
+			return fail("MEDIA_STALE_SEAT_REVISION");
+		if (
+			command.enabled &&
+			(this.media.closingAt ||
+				Date.now() >=
+					Date.parse(this.media.capabilities.capabilitiesValidUntil))
+		)
+			return fail("MEDIA_CAPABILITY_EXPIRED");
+		if (
+			command.enabled &&
+			!media.mediaSeatGranted &&
+			this.media.participants.filter(
+				(p) => "mediaSeatGranted" in p && p.mediaSeatGranted,
+			).length >= this.media.capabilities.maxMediaSeats
+		)
+			return fail("MEDIA_LIMIT_REACHED");
+		media.mediaSeatGranted = command.enabled;
+		media.seatRevision++;
+		if (command.enabled) this.mediaSeatDenials.delete(target.id);
+		else {
+			this.mediaSeatDenials.add(target.id);
+			media.cameraGranted = false;
+			media.microphoneGranted = false;
+			media.cameraRevocationEpoch++;
+			media.microphoneRevocationEpoch++;
+			this.setCamera(target.id, false);
+		}
+		this.mediaRevocations.push(key);
+		if (this.mediaRevocations.length > 1024) this.mediaRevocations.shift();
+		this.bumpServerSeq();
+		return { accepted: true };
+	}
   private bumpServerSeq(): void {
     this.serverSeqValue += 1;
   }
@@ -947,7 +1058,7 @@ function sameCanonicalSource(
 	);
 }
 
-function emptyMediaState(): ParticipantMediaState {
+function emptyMediaState(): ParticipantMediaV2State {
 	return {
 		cameraRevocationEpoch: 0,
 		microphoneRevocationEpoch: 0,

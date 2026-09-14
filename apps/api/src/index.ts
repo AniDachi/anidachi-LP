@@ -1,3 +1,4 @@
+import {RoomMediaV3SnapshotSchema} from "@anidachi/protocol";
 import {
 	ROOM_POLICY_STORAGE_KEY,
 	initialRoomPolicy,
@@ -116,7 +117,7 @@ import {
   type RoomRateLimitDecision,
 } from "./room-rate-limit";
 import { RoomAdmission } from "./room-admission";
-import { RoomState } from "./room-state";
+import { RoomState, type RoomStateSnapshot } from "./room-state";
 import {
   ROOM_SOURCE_RETRY_BASE_MS,
   acknowledgeStoredRoomSourceAttempt,
@@ -831,6 +832,22 @@ export class RoomDurableObject {
 
   private persistRoomState(): void {
     writeStoredRoomState(this.state.storage, this.room.toSnapshot());
+  }
+
+  private async restoreMediaPreimage(
+    socket: WebSocket,
+    before: RoomStateSnapshot,
+  ): Promise<boolean> {
+    this.room = new RoomState(this.room.roomId, undefined, before);
+    // A failed write/sync must not resurrect a rejected mutation on wake.
+    try {
+      this.persistRoomState();
+      await this.state.storage.sync();
+      return true;
+    } catch {
+      socket.close(1011, "Media persistence unavailable");
+      return false;
+    }
   }
 
   private persistP2PState(): void {
@@ -1850,6 +1867,48 @@ export class RoomDurableObject {
     this.touchSocketAttachment(socket);
 
     switch (event.type) {
+		case "SET_MEDIA_SEAT":
+			await this.runRoomEndExclusively(async () => {
+				const userId = this.participantsBySocket.get(socket);
+				if (!userId || this.socketsByParticipant.get(userId) !== socket) return;
+				const before = this.room.toSnapshot();
+				if (before.media?.capabilities.mediaProtocolVersion !== 3) {
+					this.send(socket, {
+						type: "ERROR",
+						code: "MEDIA_FORBIDDEN",
+						message: "Room does not support host-managed media seats",
+					});
+					return;
+				}
+				try {
+					const result = this.room.applyMediaSeatCommand(userId, event);
+					this.persistRoomState();
+					await this.state.storage.sync();
+					const snapshot = RoomMediaV3SnapshotSchema.parse(
+						this.room.mediaSnapshot,
+					);
+					this.send(socket, {
+						type: "MEDIA_SEAT_RESULT",
+						requestId: event.requestId,
+						targetParticipantSessionId: event.targetParticipantSessionId,
+						code: result.accepted ? "OK" : result.code,
+						snapshot,
+					});
+					this.broadcast(this.currentRoomSnapshot());
+				} catch {
+					if (!(await this.restoreMediaPreimage(socket, before))) return;
+					// Settle only this seat command after the preimage is durable. A
+					// generic media ERROR would also disable the host's own camera.
+					this.send(socket, {
+						type: "MEDIA_SEAT_RESULT",
+						requestId: event.requestId,
+						targetParticipantSessionId: event.targetParticipantSessionId,
+						code: "MEDIA_UNAVAILABLE",
+						snapshot: RoomMediaV3SnapshotSchema.parse(this.room.mediaSnapshot),
+					});
+				}
+			});
+			return;
 			case "SET_MEDIA_INTENT":
 			case "REVOKE_MEDIA_GRANT":
 				await this.runRoomEndExclusively(async () => {
@@ -1878,7 +1937,7 @@ export class RoomDurableObject {
 						if (reply) this.send(socket, reply);
 						this.broadcast(this.currentRoomSnapshot());
 					} catch {
-						this.room = new RoomState(this.room.roomId, undefined, before);
+						await this.restoreMediaPreimage(socket, before);
 						this.send(socket, {
 							type: "ERROR",
 							code: "MEDIA_UNAVAILABLE",
@@ -2469,7 +2528,7 @@ export class RoomDurableObject {
     event: Extract<ClientEvent, { type: "CAMERA_ON" | "CAMERA_OFF" }>,
   ): void {
     const userId = this.participantsBySocket.get(socket);
-    if (!userId || userId !== event.userId) {
+    if (!userId || this.socketsByParticipant.get(userId) !== socket || userId !== event.userId) {
       this.send(socket, {
         type: "ERROR",
         code: "NOT_PARTICIPANT",

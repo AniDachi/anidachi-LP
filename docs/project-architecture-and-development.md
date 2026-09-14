@@ -444,18 +444,30 @@ of saved history.
 
 Recent People comes from bounded Worker evidence of actual overlapping connected
 presence, with no title, episode or position. Groups remain private invite lists.
-Worker owns frozen host-plan room caps, independent camera/microphone grants,
-per-kind revocation and authoritative usage. The v2 client receives media without
-publishing and uses Worker quota snapshots without a second subtraction or local
-v2 quota termination. Legacy rooms preserve their negotiated original contract
-and drain normally; they are never reinterpreted as v2.
+Worker owns frozen host-plan room caps and authoritative usage. Existing v2 rooms
+retain independent camera/microphone grants and per-kind revocation. New v3
+rooms use [host-managed media seats](superpowers/plans/2026-09-14-host-managed-media-seats.md):
+4/6/8 seats, four cameras, and 4/6/15 participants for Free/Plus/Pro. The server
+assigns free seats in admission order; only the host subsequently redistributes
+them. Revocation clears both grants and capture epochs, preserves incoming
+media, and persists a user-bound denial across reconnects in that room. Granting
+a seat permits an explicit local device action; it does not itself start capture.
+
+The durable capability lease pins protocol 2 or 3 for the room lifetime. Client
+3 reads both versions; client 2 is rejected before active-session claim when
+entering a v3 room. The v3 client separates seat state, explicit device intent,
+and acknowledged capture authority. First PTT/Open mic use requests its own
+microphone grant; release-before-ACK cancels it. Quota, renewal and room ending
+retain their existing contracts. Legacy rooms drain under their original version.
 
 The durable singleton policy starts version 1 inactive. New personal writes and
 explicit catalog proof already require paid access while inactive. Coordinated
 activation closes legacy writers/aliases and unnegotiated room creation;
 unsupported versions return update-required rather than silently falling back.
 Current cross-plane versions are policyVersion 1, captureVersion 1 and
-mediaProtocolVersion 2, with accessVersion/entitlementsVersion 1.
+mediaProtocolVersion 2 (retained rooms) or 3 (new host-managed-seat rooms), with
+accessVersion/entitlementsVersion 1. The [v3 delivery record](releases/room-media-seats/2026-09-14-delivery.md)
+separates implemented contracts from current deployment and acceptance.
 
 Tasks 1–9 are reviewed and delivered to inactive staging through PR #273/274, runtime
 c7fbdb5; external acceptance and activation remain open. The

@@ -1794,6 +1794,88 @@ describe("privileged overlay wiring", () => {
       expect(close).toHaveBeenCalled();
     } finally {vi.useRealTimers();await unmount(view.root);}
   });
+  it("uses the first v3 PTT press and cancels publication when released before ACK", async () => {
+    installActiveHostRoomRuntime();
+    const publication = vi.spyOn(P2PMediaController.prototype, "setMicrophonePublishing").mockResolvedValue();
+    const send = vi.spyOn(RoomClient.prototype, "send").mockReturnValue("sent");
+    let client!: RoomClient;
+    let options!: Parameters<RoomClient["connect"]>[0];
+    let media!: import("@anidachi/protocol").RoomMediaV3Snapshot;
+    vi.mocked(RoomClient.prototype.connect).mockImplementation(function(this: RoomClient, next) {
+      client = this; options = next;
+      this.media = new RoomMediaSession(next.roomId, next.participantSessionId);
+      this.media.bindRoomGeneration(1);
+      media = {type: "ROOM_MEDIA_SNAPSHOT", roomId: "room-a", roomGeneration: 1, snapshotSequence: 1, closingAt: null,
+        capabilities: {mediaProtocolVersion: 3, hostPlanCode: "free", maxParticipants: 4, maxMediaSeats: 4, maxCameras: 4, capabilityRevision: 1, capabilitiesValidUntil: "2026-09-15T12:30:00Z"},
+        participants: [{participantSessionId: next.participantSessionId, mediaSeatGranted: true, seatRevision: 0, cameraGranted: false, microphoneGranted: false, cameraIntentSequence: 0, microphoneIntentSequence: 0, cameraRevocationEpoch: 0, microphoneRevocationEpoch: 0}]};
+      next.onStatus("connected");
+      next.onEvent({type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1, participants: [{...hostParticipant(), participantSessionId: next.participantSessionId, connected: true, mediaSeat: "none"}]});
+      this.media.consume(media); next.onEvent(media);
+    });
+    const view = await renderOverlay();
+    try {
+      await click(button(view.container, "Open Anidachi controls"));
+      await click(button(view.container, "Create room"));
+      await vi.waitFor(() => expect(options).toBeDefined());
+      await act(async () => {options.onEvent({type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 2, participants: [{...hostParticipant(), participantSessionId: options.participantSessionId, connected: true, mediaSeat: "none"}]}); options.onEvent(media);});
+      await flushMountedWork();
+      expect(view.container.textContent).not.toContain("Enable microphone");
+      expect(publication.mock.calls.some(([enabled]) => enabled)).toBe(false);
+      await act(async () => {window.dispatchEvent(new KeyboardEvent("keydown", {key: "v", code: "KeyV", bubbles: true}));});
+      const intent = send.mock.calls.map(([event]) => event).find(event => event.type === "SET_MEDIA_INTENT" && event.media === "microphone" && event.enabled);
+      expect(intent?.type).toBe("SET_MEDIA_INTENT");
+      if (intent?.type !== "SET_MEDIA_INTENT") throw new Error("First PTT press did not request microphone");
+      expect(publication.mock.calls.some(([enabled]) => enabled)).toBe(false);
+      await act(async () => {window.dispatchEvent(new KeyboardEvent("keyup", {key: "v", code: "KeyV", bubbles: true}));});
+      expect(client.media!.wants("microphone")).toBe(false);
+      await act(async () => {const ack = {...intent, type: "MEDIA_INTENT_ACK" as const, snapshotSequence: 2, state: {...media.participants[0], microphoneGranted: true, microphoneIntentSequence: intent.intentSequence}}; client.media!.consume(ack); options.onEvent(ack);});
+      expect(publication.mock.calls.some(([enabled]) => enabled)).toBe(false);
+      expect(client.media!.hasSeat()).toBe(true);
+      await click(button(view.container, "Voice")); await click(button(view.container, "Open mic"));
+      const openMic = send.mock.calls.map(([event]) => event).filter(event => event.type === "SET_MEDIA_INTENT" && event.media === "microphone" && event.enabled).at(-1);
+      if (openMic?.type !== "SET_MEDIA_INTENT") throw new Error("Missing own Open mic intent");
+      await act(async () => {const ack = {...openMic, type: "MEDIA_INTENT_ACK" as const, snapshotSequence: 3, state: {...media.participants[0], microphoneGranted: true, microphoneIntentSequence: openMic.intentSequence}}; client.media!.consume(ack); options.onEvent(ack);});
+      await flushMountedWork();
+      expect(publication).toHaveBeenLastCalledWith(true, "warm", "open-mic");
+      const disconnect = vi.spyOn(P2PMediaController.prototype, "disconnect"); disconnect.mockClear();
+      await act(async () => {media = {...media, snapshotSequence: 4, participants: [{...media.participants[0], mediaSeatGranted: false, seatRevision: 1, cameraRevocationEpoch: 1, microphoneRevocationEpoch: 1}]}; client.media!.consume(media); options.onEvent(media);});
+      expect(publication.mock.calls.at(-1)?.[0]).toBe(false);
+      expect(disconnect).not.toHaveBeenCalled();
+      publication.mockClear();
+      await act(async () => {media = {...media, snapshotSequence: 5, participants: [{...media.participants[0], mediaSeatGranted: true, seatRevision: 2}]}; client.media!.consume(media); options.onEvent(media);});
+      expect(publication.mock.calls.some(([enabled]) => enabled)).toBe(false);
+      expect(disconnect).not.toHaveBeenCalled();
+      // Three remote cameras leave the fourth slot for this user's own action.
+      vi.spyOn(P2PMediaController.prototype, "setCameraEnabled").mockResolvedValue();
+      const remoteCameras = ["camera-1", "camera-2", "camera-3"].map(participantSessionId => ({...media.participants[0], participantSessionId, cameraGranted: true}));
+      await act(async () => {media = {...media, snapshotSequence: 6, participants: [media.participants[0], ...remoteCameras]}; client.media!.consume(media); options.onEvent(media);});
+      await click(button(view.container, "Turn camera on"));
+      const camera = send.mock.calls.map(([event]) => event).filter(event => event.type === "SET_MEDIA_INTENT" && event.media === "camera" && event.enabled).at(-1);
+      if (camera?.type !== "SET_MEDIA_INTENT") throw new Error("Missing own camera intent");
+      await act(async () => {media = {...media, snapshotSequence: 7, participants: [{...media.participants[0], cameraGranted: true, cameraIntentSequence: camera.intentSequence}, ...remoteCameras]}; client.media!.consume(media); options.onEvent(media);});
+      expect((button(view.container, "Turn camera off") as HTMLButtonElement).disabled).toBe(false);
+      const seatCommand = client.media!.setMediaSeat("camera-user-1", "camera-1", false)!;
+      expect(seatCommand).not.toBeNull();
+      const ownCameraIntent = client.media!.captureIntent("camera");
+      expect(ownCameraIntent).toBeDefined();
+      await act(async () => {
+        const failure = {type: "MEDIA_SEAT_RESULT" as const, requestId: seatCommand.requestId,
+          targetParticipantSessionId: seatCommand.targetParticipantSessionId, code: "MEDIA_UNAVAILABLE" as const, snapshot: media};
+        client.media!.consume(failure);
+        options.onEvent(failure);
+      });
+      await flushMountedWork();
+      expect(client.media!.seatControls.get("camera-user-1")).toMatchObject({pending: false, error: expect.any(String)});
+      expect(client.media!.captureIntent("camera")).toEqual(ownCameraIntent);
+      expect((button(view.container, "Turn camera off") as HTMLButtonElement).disabled).toBe(false);
+      await click(button(view.container, "Turn camera off"));
+      // Until the server confirms release, all four reservations remain occupied.
+      const unavailable = button(view.container, "Camera unavailable") as HTMLButtonElement;
+      expect(unavailable.disabled).toBe(true);
+      expect(unavailable.title).toBe("All 4 cameras are in use");
+    } finally {await unmount(view.root);}
+  });
+
   it("wires v2 explicit mic intent, revocation and terminal teardown through the actual overlay", async () => {
     installActiveHostRoomRuntime();
     const publication = vi.spyOn(P2PMediaController.prototype, "setMicrophonePublishing").mockResolvedValue();
@@ -1801,11 +1883,12 @@ describe("privileged overlay wiring", () => {
     const disconnect = vi.spyOn(P2PMediaController.prototype, "disconnect");
     let client!: RoomClient;
     let options!: Parameters<RoomClient["connect"]>[0];
-    let media!: import("@anidachi/protocol").RoomMediaSnapshot;
+    let media!: import("@anidachi/protocol").RoomMediaV2Snapshot;
     vi.spyOn(RoomClient.prototype, "send").mockReturnValue("sent");
     vi.mocked(RoomClient.prototype.connect).mockImplementation(function (this: RoomClient, next) {
       client = this; options = next;
       this.media = new RoomMediaSession(next.roomId, next.participantSessionId!);
+      this.media.bindRoomGeneration(1);
       media = { type: "ROOM_MEDIA_SNAPSHOT", roomId: "room-a", roomGeneration: 1, snapshotSequence: 1,
         capabilities: { mediaProtocolVersion: 2, hostPlanCode: "free", maxParticipants: 4, maxCameras: 4, maxMicrophones: 4, capabilityRevision: 1, capabilitiesValidUntil: "2026-09-08T20:00:00Z" }, closingAt: null,
         participants: [{ participantSessionId: next.participantSessionId!, cameraGranted: false, microphoneGranted: false, cameraIntentSequence: 0, microphoneIntentSequence: 0, cameraRevocationEpoch: 0, microphoneRevocationEpoch: 0 }] };
