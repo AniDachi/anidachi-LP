@@ -66,13 +66,11 @@ export function VoiceSettingsPanel({
 				)}
 				<div className="voice-mode-hint-copy">
 					<p className="voice-mode-hint-title">
-						{pushToTalk ? "Hold V to talk" : "Talk without holding a key"}
+						{pushToTalk ? "Hold V to talk" : "Microphone stays on"}
 					</p>
-					<p className="voice-mode-hint-description">
-						{pushToTalk
-							? "Release to mute. Click outside settings to use the shortcut."
-							: "Switch to Push to talk when you want your microphone quiet between turns."}
-					</p>
+					{pushToTalk ? (
+						<p className="voice-mode-hint-description">Release to mute.</p>
+					) : null}
 				</div>
 			</div>
 
