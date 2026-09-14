@@ -117,7 +117,7 @@ import {
   type RoomRateLimitDecision,
 } from "./room-rate-limit";
 import { RoomAdmission } from "./room-admission";
-import { RoomState } from "./room-state";
+import { RoomState, type RoomStateSnapshot } from "./room-state";
 import {
   ROOM_SOURCE_RETRY_BASE_MS,
   acknowledgeStoredRoomSourceAttempt,
@@ -832,6 +832,20 @@ export class RoomDurableObject {
 
   private persistRoomState(): void {
     writeStoredRoomState(this.state.storage, this.room.toSnapshot());
+  }
+
+  private async restoreMediaPreimage(
+    socket: WebSocket,
+    before: RoomStateSnapshot,
+  ): Promise<void> {
+    this.room = new RoomState(this.room.roomId, undefined, before);
+    // A failed write/sync must not resurrect a rejected mutation on wake.
+    try {
+      this.persistRoomState();
+      await this.state.storage.sync();
+    } catch {
+      socket.close(1011, "Media persistence unavailable");
+    }
   }
 
   private persistP2PState(): void {
@@ -1880,15 +1894,7 @@ export class RoomDurableObject {
 					});
 					this.broadcast(this.currentRoomSnapshot());
 				} catch {
-					this.room = new RoomState(this.room.roomId, undefined, before);
-					// Restore the durable image too: sync failures must not revive a
-					// rejected grant/denial on the next hibernation wake.
-					try {
-						this.persistRoomState();
-						await this.state.storage.sync();
-					} catch {
-						socket.close(1011, "Media persistence unavailable");
-					}
+					await this.restoreMediaPreimage(socket, before);
 					this.send(socket, {
 						type: "ERROR",
 						code: "MEDIA_UNAVAILABLE",
@@ -1925,7 +1931,7 @@ export class RoomDurableObject {
 						if (reply) this.send(socket, reply);
 						this.broadcast(this.currentRoomSnapshot());
 					} catch {
-						this.room = new RoomState(this.room.roomId, undefined, before);
+						await this.restoreMediaPreimage(socket, before);
 						this.send(socket, {
 							type: "ERROR",
 							code: "MEDIA_UNAVAILABLE",

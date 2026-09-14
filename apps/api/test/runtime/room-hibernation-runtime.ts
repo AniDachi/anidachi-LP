@@ -3468,6 +3468,100 @@ it.each([
 		denials: [],
 	});
 });
+
+it.each([
+	{ version: 2, enabled: true, phase: "after-write" },
+	{ version: 2, enabled: false, phase: "sync" },
+	{ version: 3, enabled: true, phase: "after-write" },
+	{ version: 3, enabled: false, phase: "after-write" },
+	{ version: 3, enabled: true, phase: "sync" },
+	{ version: 3, enabled: false, phase: "sync" },
+] as const)("v$version rolls back camera enabled=$enabled after $phase failure", async ({
+	version,
+	enabled,
+	phase,
+}) => {
+	const f = await fixture("pro", version);
+	const host = await f.join(0);
+	await host.waitFor((e) => e.type === "ROOM_MEDIA_SNAPSHOT", "host joined");
+	const intent = (on: boolean, sequence: number, requestId: string) => ({
+		type: "SET_MEDIA_INTENT",
+		roomId: f.roomId,
+		roomGeneration: 1,
+		participantSessionId: "v2-session-0",
+		media: "camera",
+		enabled: on,
+		intentSequence: sequence,
+		revocationEpoch: 0,
+		requestId,
+	});
+	if (!enabled) {
+		host.send(intent(true, 1, "initial-camera"));
+		await host.waitFor(
+			(e) => e.type === "MEDIA_INTENT_ACK" && e.requestId === "initial-camera",
+			"initial camera granted",
+		);
+	}
+	const sequence = enabled ? 1 : 2;
+	const before = await runInDurableObject(f.stub, async (instance) =>
+		structuredClone((instance as any).room.mediaFor(hostId)),
+	);
+	await runInDurableObject(f.stub, async (instance, state) => {
+		const i = instance as any;
+		let fail = true;
+		const shouldFail = () =>
+			fail && i.room.mediaFor(hostId)?.cameraIntentSequence === sequence;
+		if (phase === "sync") {
+			const sync = state.storage.sync.bind(state.storage);
+			state.storage.sync = async () => {
+				if (shouldFail()) {
+					fail = false;
+					throw new Error("injected intent sync failure");
+				}
+				return sync();
+			};
+		} else {
+			const persist = i.persistRoomState.bind(i);
+			i.persistRoomState = () => {
+				persist();
+				if (shouldFail()) {
+					fail = false;
+					throw new Error("injected post-write intent failure");
+				}
+			};
+		}
+	});
+	host.send(intent(enabled, sequence, "failed-camera"));
+	await host.waitFor(
+		(e) => e.type === "ERROR" && e.code === "MEDIA_UNAVAILABLE",
+		"intent storage error",
+	);
+	expect(
+		host.hasEvent(
+			(e) => e.type === "MEDIA_INTENT_ACK" && e.requestId === "failed-camera",
+		),
+	).toBe(false);
+	expect(
+		await runInDurableObject(f.stub, async (instance) =>
+			(instance as any).room.mediaFor(hostId),
+		),
+	).toEqual(before);
+	await evictDurableObject(f.stub, { webSockets: "hibernate" });
+	expect(
+		await runInDurableObject(f.stub, async (instance) =>
+			(instance as any).room.mediaFor(hostId),
+		),
+	).toEqual(before);
+	host.send(intent(enabled, sequence, "retry-camera"));
+	await host.waitFor(
+		(e) =>
+			e.type === "MEDIA_INTENT_ACK" &&
+			e.requestId === "retry-camera" &&
+			e.state.cameraGranted === enabled &&
+			e.state.cameraIntentSequence === sequence,
+		"retry after durable rollback",
+	);
+});
   it("routes 14 authorized v2 SDP targets while retaining single-target and reconnect budgets", async () => {
     const f = await fixture(); const clients: RuntimeRoomClient[] = [];
     for (let i=0; i<15; i++) { const c=await f.join(i); clients.push(c); await c.waitFor(e=>e.type==="ROOM_MEDIA_SNAPSHOT" && e.participants.length===i+1,"joined"); }
