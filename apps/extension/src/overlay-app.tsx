@@ -1783,17 +1783,20 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			: [];
 	const participantCount = participants.length || (participant ? 1 : 0);
 	const roomParticipantLimit = roomCapabilities?.maxParticipants ?? 4;
-	const mediaV2 = Boolean(roomCapabilities && "mediaProtocolVersion" in roomCapabilities);
-	const currentMediaSnapshot = roomMediaSnapshot?.roomId === roomId ? roomMediaSnapshot : null;
-	const mediaReady = mediaV2 && Boolean(currentMediaSnapshot);
+	const mediaProtocolVersion = roomCapabilities && "mediaProtocolVersion" in roomCapabilities ? roomCapabilities.mediaProtocolVersion : 1;
+	const versionedMedia = mediaProtocolVersion !== 1;
+	const mediaV3 = mediaProtocolVersion === 3;
+	const currentMediaSnapshot = roomMediaSnapshot?.roomId === roomId && roomMediaSnapshot.roomGeneration === roomGeneration ? roomMediaSnapshot : null;
+	const mediaReady = versionedMedia && Boolean(currentMediaSnapshot);
 	const roomMediaSeatLimit = roomCapabilities && "maxMediaSeats" in roomCapabilities ? roomCapabilities.maxMediaSeats : 4;
-	const cameraAuthorized = !mediaV2 || Boolean(mediaReady && clientRef.current.media?.canCapture("camera"));
-	const microphoneAuthorized = !mediaV2 || Boolean(mediaReady && clientRef.current.media?.canCapture("microphone"));
-	const occupiedMediaSeatCount = visibleParticipants.filter(
+	const cameraAuthorized = !versionedMedia || Boolean(mediaReady && clientRef.current.media?.canCapture("camera"));
+	const microphoneAuthorized = !versionedMedia || Boolean(mediaReady && clientRef.current.media?.canCapture("microphone"));
+	const occupiedMediaSeatCount = mediaV3 ? currentMediaSnapshot?.participants.filter(p => "mediaSeatGranted" in p && p.mediaSeatGranted).length ?? 0 : visibleParticipants.filter(
 		(item) => item.mediaSeat === "joined",
 	).length;
 	const localMediaSeatState = currentParticipant?.mediaSeat ?? "none";
-	const localHasMediaSeat = mediaV2 ? mediaReady : localMediaSeatState === "joined";
+	const localHasMediaSeat = versionedMedia ? mediaReady && (!mediaV3 || Boolean(clientRef.current.media?.hasSeat())) : localMediaSeatState === "joined";
+	const camerasFull = (currentMediaSnapshot?.participants.filter(p => p.cameraGranted).length ?? 0) >= 4;
 	const localTryingMedia = Boolean(
 		camsEnabled && currentParticipant && localHasMediaSeat,
 	);
@@ -1803,17 +1806,17 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const displayedCameraParticipants = currentParticipant
 		? visibleParticipants.filter(
 				(item) =>
-					((mediaV2 || item.mediaSeat === "joined") && item.connected !== false && item.cameraEnabled) ||
+					((versionedMedia || item.mediaSeat === "joined") && item.connected !== false && item.cameraEnabled) ||
 					(localTryingMedia && item.id === currentParticipant.id),
 			)
 		: [];
-	const liveMediaAvailable = roomMediaSeatLimit > 0 && localHasMediaSeat;
+	const liveMediaAvailable = roomMediaSeatLimit > 0 && localHasMediaSeat && !(mediaV3 && !camsEnabled && camerasFull);
 	const mediaSeatText =
-		mediaV2 ? `${currentMediaSnapshot?.participants.filter(p => p.cameraGranted).length ?? 0}/${currentMediaSnapshot?.capabilities.maxCameras ?? 4} cameras · ${currentMediaSnapshot?.participants.filter(p => p.microphoneGranted).length ?? 0}/${currentMediaSnapshot?.capabilities.maxMicrophones ?? (roomCapabilities && "maxMicrophones" in roomCapabilities ? roomCapabilities.maxMicrophones : 0)} microphones` : roomMediaSeatLimit > 0
+		mediaV3 ? `${occupiedMediaSeatCount}/${roomMediaSeatLimit} media seats · ${currentMediaSnapshot?.participants.filter(p => p.cameraGranted).length ?? 0}/4 cameras` : versionedMedia ? `${currentMediaSnapshot?.participants.filter(p => p.cameraGranted).length ?? 0}/${currentMediaSnapshot?.capabilities.maxCameras ?? 4} cameras · ${currentMediaSnapshot?.participants.filter(p => p.microphoneGranted).length ?? 0}/${roomCapabilities && "maxMicrophones" in roomCapabilities ? roomCapabilities.maxMicrophones : 0} microphones` : roomMediaSeatLimit > 0
 			? `${Math.min(occupiedMediaSeatCount, roomMediaSeatLimit)}/${roomMediaSeatLimit} media seats`
 			: "No live media";
 	const mediaSeatSummaryText =
-		mediaV2 ? mediaSeatText : roomMediaSeatLimit > 0
+		versionedMedia ? mediaSeatText : roomMediaSeatLimit > 0
 			? `${Math.min(occupiedMediaSeatCount, roomMediaSeatLimit)}/${roomMediaSeatLimit} media seats`
 			: "No media seats";
 	const roomPeopleCountText = `${participantCount}/${roomParticipantLimit} in room`;
@@ -1867,7 +1870,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	}, [voiceSession.pushToTalkHeld]);
 	const { p2pSessionActive } = getP2PMediaSessionState({
 		localHasMediaSeat,
-		mediaProtocolVersion: mediaV2 ? 2 : 1,
+		mediaProtocolVersion,
 		participantId: currentParticipant?.id ?? null,
 		roomId,
 		roomMediaSeatLimit,
@@ -1887,7 +1890,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		return storedRoomSession;
 	}, [currentParticipant, roomId, storedRoomSession]);
 	useEffect(() => {
-		if (mediaV2 || !activeVoiceRoomSession) {
+		if (versionedMedia || !activeVoiceRoomSession) {
 			hydratedVoiceParticipantSessionRef.current = null;
 			hydratingVoiceModeRef.current = null;
 			return;
@@ -1908,7 +1911,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			type: "mode",
 			mode: activeVoiceRoomSession.voiceMode,
 		});
-	}, [activeVoiceRoomSession, p2pSessionActive, mediaV2]);
+	}, [activeVoiceRoomSession, p2pSessionActive, versionedMedia]);
 
 	const enqueueRoomVoiceModePersistence = useCallback(
 		(
@@ -2132,11 +2135,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	// the display moving between snapshots while host and guest are both live.
 	const quotaMeteringActive =
 		isConnected && isHost && roomQuota !== null &&
-    (mediaV2 ? authoritativeQuota?.quota.metering === true : participantCount > 1);
+    (versionedMedia ? authoritativeQuota?.quota.metering === true : participantCount > 1);
 	const quotaRemainingSeconds = useMemo(() => {
 		if (!roomQuota) return null;
-    if (mediaV2 && !roomSnapshotReady) return null;
-    if (mediaV2) return authoritativeQuotaRemainingSeconds(authoritativeQuota?.quota ?? null, quotaMeteredMsRef.current);
+    if (versionedMedia && !roomSnapshotReady) return null;
+    if (versionedMedia) return authoritativeQuotaRemainingSeconds(authoritativeQuota?.quota ?? null, quotaMeteredMsRef.current);
 		// quotaDisplayTick advances once per second while metering is active so the
 		// countdown re-renders even though the elapsed time lives in a ref.
 		return roomQuotaRemainingSeconds({
@@ -2145,7 +2148,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			roomUsage,
 			localMeteredMs: quotaMeteredMsRef.current,
 		});
-	}, [roomQuota, roomUsage, quotaDisplayTick, mediaV2, authoritativeQuota, roomSnapshotReady]);
+	}, [roomQuota, roomUsage, quotaDisplayTick, versionedMedia, authoritativeQuota, roomSnapshotReady]);
 	const cameraStackVisible = shouldShowCameraStack({
 		cameraParticipantCount: displayedCameraParticipants.length,
 		p2pSessionActive,
@@ -2154,7 +2157,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		chatDisplayMode === "history" ? chatHistoryMessages : liveChatMessages;
 	const liveChatVisible = displayedChatMessages.length > 0;
 	useEffect(() => {
-		if (mediaV2 || !roomId || !roomSnapshotReady || !camsEnabled) {
+		if (versionedMedia || !roomId || !roomSnapshotReady || !camsEnabled) {
 			return;
 		}
 
@@ -2829,7 +2832,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 	const handleGhostCamToggle = useCallback(() => {
 		const nextEnabled = !camsEnabled;
-		if (mediaV2) {
+		if (versionedMedia) {
+			if (mediaV3 && nextEnabled && (!localHasMediaSeat || camerasFull)) {
+				showTransientPanelNotice(!localHasMediaSeat ? "Media seat required" : "All 4 cameras are in use");
+				return;
+			}
 			if (clientRef.current.setMediaIntent("camera", nextEnabled) === "dropped") return;
 			setCamsEnabled(nextEnabled);
 			setMediaRevision(n => n + 1);
@@ -2858,7 +2865,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		});
 	}, [
 		camsEnabled,
-		mediaV2,
+		versionedMedia,
+		mediaV3,
+		camerasFull,
 		clearTransientPanelNotice,
 		enqueueRoomCameraEnabledPersistence,
 		localHasMediaSeat,
@@ -2868,7 +2877,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	]);
 
 	const ghostCamSession = useGhostCam({
-		captureIntents: mediaV2 ? {
+		captureIntents: versionedMedia ? {
 			camera: clientRef.current.media?.captureIntent("camera"),
 			microphone: clientRef.current.media?.captureIntent("microphone"),
 		} : undefined,
@@ -2882,7 +2891,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			setMediaRevision(n => n + 1);
 		},
 		cameraEnabled: camsEnabled && cameraAuthorized,
-		mediaSnapshot: mediaV2 ? currentMediaSnapshot : undefined,
+		mediaSnapshot: versionedMedia ? currentMediaSnapshot : undefined,
 		cameraAuthorized,
 		microphoneAuthorized,
 		connected: p2pSessionActive,
@@ -2903,10 +2912,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	});
 	const handleVoiceModeChange = useCallback(
 		(mode: "open-mic" | "push-to-talk") => {
-			if (mediaV2 && mode === "open-mic" && !clientRef.current.media?.canCapture("microphone")) {
-				if (clientRef.current.setMediaIntent("microphone", true) === "dropped") return;
-				setMediaRevision(n => n + 1);
-			}
 			if (
 				mode === "open-mic" &&
 				(!roomId || !localHasMediaSeat || !p2pSessionActive)
@@ -2920,6 +2925,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				);
 				return;
 			}
+			if (versionedMedia && mode === "open-mic" && !clientRef.current.media?.wants("microphone")) {
+				if (clientRef.current.setMediaIntent("microphone", true) === "dropped") return;
+				setMediaRevision(n => n + 1);
+			} else if (mediaV3 && mode === "push-to-talk" && clientRef.current.media?.wants("microphone")) {
+				clientRef.current.setMediaIntent("microphone", false);
+				ghostCamSession.reconcileMediaAuthority(cameraAuthorized, false);
+				setMediaRevision(n => n + 1);
+			}
 
 			clearTransientPanelNotice();
 			pushToTalkHeldRef.current = false;
@@ -2931,7 +2944,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		[
 			clearTransientPanelNotice,
 			enqueueRoomVoiceModePersistence,
-			mediaV2,
+			versionedMedia,
+			mediaV3,
+			cameraAuthorized,
+			ghostCamSession.reconcileMediaAuthority,
 			localHasMediaSeat,
 			localMediaSeatState,
 			p2pSessionActive,
@@ -3122,6 +3138,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		[appliedOverlayLayout, overlayLayoutRuntimeContext, previewOverlayLayout],
 	);
 	const cameraControlDisabledReason =
+		mediaV3 && localHasMediaSeat && camerasFull && !camsEnabled ? "All 4 cameras are in use" :
 		roomMediaSeatLimit <= 0
 			? "Live media is not available in this room"
 			: localMediaSeatState === "requested"
@@ -3279,6 +3296,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			});
 
 			switch (event.type) {
+				case "MEDIA_SEAT_RESULT":
 				case "ROOM_MEDIA_SNAPSHOT":
 				case "MEDIA_INTENT_ACK":
 				case "MEDIA_INTENT_ERROR": {
@@ -3385,7 +3403,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
             }
             // The helper exists for legacy rooms too. Use negotiated or already
             // accepted v2 capabilities; an absent Free budget is still v2.
-            if (!mediaV2 && clientRef.current.media?.snapshot?.capabilities.mediaProtocolVersion !== 2) {
+            if (!versionedMedia && !clientRef.current.media?.snapshot) {
               updateRoomUsage(event.roomUsage);
             }
           }
@@ -3644,7 +3662,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			terminateRoomSession,
 			ghostCamSession.reconcileMediaAuthority,
 			triggerFlameBurst,
-      mediaV2,
+      versionedMedia,
 			updateRoomUsage,
 		],
 	);
@@ -4165,7 +4183,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	// a display estimate: the Worker alone sends the authoritative room end.
 	useEffect(() => {
 		if (
-      mediaV2 ||
+      versionedMedia ||
 			!quotaMeteringActive ||
 			quotaRemainingSeconds === null ||
 			quotaRemainingSeconds > 0
@@ -4199,7 +4217,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		}
 		terminateRoomSession(quotaExhaustedMessage(roomQuota?.resetAt));
 	}, [
-    mediaV2,
+    versionedMedia,
 		quotaMeteringActive,
 		quotaRemainingSeconds,
 		privilegedRoomContext,
@@ -5398,10 +5416,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		if (voiceSession.mode !== "push-to-talk" || !roomId) {
 			return;
 		}
-		if (mediaV2 && !clientRef.current.media?.canCapture("microphone")) {
-			if (clientRef.current.setMediaIntent("microphone", true) === "dropped") return;
-			setMediaRevision(n => n + 1);
-		}
 		if (!localHasMediaSeat) {
 			setAuthMessage(
 				localMediaSeatState === "requested"
@@ -5411,16 +5425,28 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			setPanelOpen(true);
 			return;
 		}
+		if (versionedMedia && !clientRef.current.media?.wants("microphone")) {
+			if (clientRef.current.setMediaIntent("microphone", true) === "dropped") return;
+			setMediaRevision(n => n + 1);
+		}
 
 		pushToTalkHeldRef.current = true;
 		dispatchVoiceSession({ type: "push-to-talk", held: true });
-	}, [localHasMediaSeat, localMediaSeatState, roomId, voiceSession.mode, mediaV2]);
+	}, [localHasMediaSeat, localMediaSeatState, roomId, voiceSession.mode, versionedMedia]);
 
 	const stopPushToTalk = useCallback(() => {
+		if (voiceSession.mode !== "push-to-talk") return;
 		pushToTalkHeldRef.current = false;
+		// Cancel an unacknowledged first press. An acknowledged PTT microphone
+		// retains the existing short, disabled warm-track reuse between presses.
+		if (mediaV3 && clientRef.current.media?.wants("microphone") && !clientRef.current.media.canCapture("microphone")) {
+			clientRef.current.setMediaIntent("microphone", false);
+			ghostCamSession.reconcileMediaAuthority(cameraAuthorized, false);
+			setMediaRevision(n => n + 1);
+		}
 		void ghostCamSession.setMicrophonePublishing(false, "warm");
 		dispatchVoiceSession({ type: "push-to-talk", held: false });
-	}, [ghostCamSession.setMicrophonePublishing]);
+	}, [ghostCamSession.setMicrophonePublishing, ghostCamSession.reconcileMediaAuthority, cameraAuthorized, mediaV3, voiceSession.mode]);
 
 	const stopMicrophoneForUnmount = useCallback(() => {
 		pushToTalkHeldRef.current = false;
@@ -5930,7 +5956,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 										authAuthenticated && accountUser ? accountUser.plan : null
 									}
 								/>
-								{roomId ? (
+								{roomId && !mediaV3 ? (
 									<div className="panel-room-summary">
 										<span>{mediaSeatSummaryText}</span>
 									</div>
@@ -6297,8 +6323,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 					{roomId && visibleParticipants.length ? (
 						<RoomPeopleSection
-							mediaSnapshot={mediaV2 ? currentMediaSnapshot : undefined}
-							microphoneReady={microphoneAuthorized && mediaV2}
+							mediaSnapshot={versionedMedia ? currentMediaSnapshot : undefined}
+							mediaProtocolVersion={mediaProtocolVersion === 1 ? undefined : mediaProtocolVersion}
+							onSetMediaSeat={(userId, enabled) => { clientRef.current.setMediaSeat(userId, enabled); setMediaRevision(n => n + 1); }}
+							seatControls={clientRef.current.media?.seatControls}
+							microphoneReady={microphoneAuthorized && versionedMedia}
 							onMicrophoneReadyChange={(enabled) => {
 								clientRef.current.setMediaIntent("microphone", enabled);
 								if (!enabled) {

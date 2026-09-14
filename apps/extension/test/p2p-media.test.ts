@@ -963,6 +963,41 @@ describe("P2P initial negotiation ownership", () => {
     harness.controller.disconnect();
   });
 
+  it.each([false, true])("coalesces delayed negotiationneeded while preserving newer media drift (%s)", async (newerDrift) => {
+    const harness = createP2PControllerHarness(participant("guest"));
+    harness.controller.updateParticipants([participant("host", false)]);
+    const pc = FakeRtcPeerConnection.instances[0]!;
+    const offerGate = deferred<void>();
+    pc.createOffer.mockImplementationOnce(async () => {
+      await offerGate.promise;
+      return { type: "offer", sdp: "v=0\r\no=first-offer\r\n" };
+    });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(pc.createOffer).toHaveBeenCalledTimes(1);
+    // Browser dispatches this task after our explicit sync already starts an
+    // offer. It describes that same change, not a request for another offer.
+    pc.dispatchEvent(new Event("negotiationneeded"));
+    if (newerDrift) {
+      installFakeMediaDevices({
+        addEventListener: vi.fn(), removeEventListener: vi.fn(),
+        getUserMedia: vi.fn().mockResolvedValue(fakeVideoStream(new FakeVideoTrack("new-camera"))),
+      } as unknown as MediaDevices);
+      await harness.controller.setCameraEnabled(true);
+    }
+    harness.controller.updateParticipants([participant("host", false)]);
+    await vi.advanceTimersByTimeAsync(0);
+    offerGate.resolve();
+    await vi.advanceTimersByTimeAsync(0);
+    await harness.controller.handleSignal("host", {
+      kind: "answer", sdp: { type: "answer", sdp: "v=0\r\no=first-answer\r\n" },
+    });
+    pc.dispatchEvent(new Event("signalingstatechange"));
+    await vi.advanceTimersByTimeAsync(0);
+    expect(pc.createOffer).toHaveBeenCalledTimes(newerDrift ? 2 : 1);
+    expect(FakeRtcPeerConnection.instances).toHaveLength(1);
+    harness.controller.disconnect();
+  });
+
   it("serializes overlapping media sync before draining negotiation", async () => {
     const harness = createP2PControllerHarness(participant("guest"));
 
@@ -3807,14 +3842,14 @@ describe("versioned receive-only topology", () => {
     await h.controller.setCameraEnabled(true);await h.controller.setMicrophonePublishing(true,"immediate");
     expect(h.mediaFailures.map(f=>f.intent)).toEqual([camera,microphone]);h.controller.disconnect();
   });
-  it("actual controller creates all publisher pairs with zero receiver capture and disposes revoked async capture", async () => {
+  it.each([2, 3] as const)("v%s controller receives all publishers without capture and disposes revoked async capture", async (version) => {
     const pending = deferred<MediaStream>(); const track = new FakeAudioTrack("revoked-pending");
     const getUserMedia = vi.fn().mockReturnValue(pending.promise);
     installFakeMediaDevices({ addEventListener: vi.fn(), removeEventListener: vi.fn(), getUserMedia } as unknown as MediaDevices);
     const { controller } = createP2PControllerHarness(roster[14]);
-    controller.setCaptureAuthority(false, false); controller.updateParticipants(roster, undefined, media);
+    controller.setCaptureAuthority(false, false); controller.updateParticipants(roster, undefined, version === 3 ? mediaV3 : media);
     await vi.advanceTimersByTimeAsync(0);
-    expect(FakeRtcPeerConnection.instances).toHaveLength(12);
+    expect(FakeRtcPeerConnection.instances).toHaveLength(version === 3 ? 8 : 12);
     await controller.setCameraEnabled(true); await controller.setMicrophonePublishing(true, "warm");
     expect(getUserMedia).not.toHaveBeenCalled();
     controller.setCaptureAuthority(false, true);
@@ -3831,10 +3866,14 @@ describe("versioned receive-only topology", () => {
     capabilities: { mediaProtocolVersion: 2, hostPlanCode: "pro", maxParticipants: 15, maxCameras: 4, maxMicrophones: 8, capabilityRevision: 1, capabilitiesValidUntil: "2026-09-08T20:00:00Z" }, closingAt: null,
     participants: roster.map((p, i) => ({ participantSessionId: p.participantSessionId, cameraGranted: i < 4, microphoneGranted: i >= 4 && i < 12, cameraIntentSequence: 1, microphoneIntentSequence: 1, cameraRevocationEpoch: 0, microphoneRevocationEpoch: 0 })),
   } as import("@anidachi/protocol").RoomMediaSnapshot;
-  it("queues a v2 remote media change behind an in-flight offer without rebuilding the peer", async () => {
+  const mediaV3: import("@anidachi/protocol").RoomMediaV3Snapshot = {...media,
+    capabilities: {mediaProtocolVersion: 3, hostPlanCode: "pro", maxParticipants: 15, maxMediaSeats: 8, maxCameras: 4, capabilityRevision: 1, capabilitiesValidUntil: "2026-09-15T12:30:00Z"},
+    participants: media.participants.map((p, i) => ({...p, mediaSeatGranted: i < 8, seatRevision: 0, cameraGranted: i < 4, microphoneGranted: i < 8})),
+  };
+  it.each([2, 3] as const)("queues a v%s remote media change behind an in-flight offer without rebuilding the peer", async (version) => {
     const harness = createP2PControllerHarness(roster[0]);
     harness.controller.setCaptureAuthority(false, false);
-    harness.controller.updateParticipants([roster[0], roster[14]], undefined, media);
+    harness.controller.updateParticipants([roster[0], roster[14]], undefined, version === 3 ? mediaV3 : media);
     await vi.advanceTimersByTimeAsync(0);
     const peer = FakeRtcPeerConnection.instances[0];
     expect(peer.signalingState).toBe("have-local-offer");
@@ -3842,6 +3881,14 @@ describe("versioned receive-only topology", () => {
     expect(peer.close).not.toHaveBeenCalled();
     expect(FakeRtcPeerConnection.instances).toHaveLength(1);
     expect(harness.signals.filter(s => s.signal.kind === "offer")).toHaveLength(1);
+    await harness.controller.handleSignal("p14", {
+      kind: "answer", sdp: { type: "answer", sdp: "v=0\r\no=recovery-answer\r\n" },
+    });
+    peer.dispatchEvent(new Event("signalingstatechange"));
+    await vi.advanceTimersByTimeAsync(0);
+    // Explicit remote recovery must survive even with no local media drift.
+    expect(harness.signals.filter(s => s.signal.kind === "offer")).toHaveLength(2);
+    expect(FakeRtcPeerConnection.instances).toHaveLength(1);
     harness.controller.disconnect();
   });
 

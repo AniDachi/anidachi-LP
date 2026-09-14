@@ -2454,6 +2454,36 @@ ${extensionThemeTokens}
     align-self: center;
   }
 
+  .room-media-seat-control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 30px;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.035);
+    color: rgba(255, 255, 255, 0.38);
+    transition: background-color 170ms ease, color 170ms ease, border-color 170ms ease;
+  }
+
+  .room-media-seat-control.active {
+    background: #f4efe7;
+    border-color: #f4efe7;
+    color: #24211e;
+  }
+
+  button.room-media-seat-control:not(:disabled) { cursor: pointer; }
+  button.room-media-seat-control:disabled { cursor: default; }
+  button.room-media-seat-control:focus-visible { outline: 2px solid #ffad70; outline-offset: 3px; }
+  .room-media-seat-notice { margin: 4px 0 8px; color: rgba(255, 255, 255, 0.6); font-size: 10px; line-height: 1.4; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .room-media-seat-control { transition: none; }
+  }
+
   .room-people-action {
     flex: 0 0 auto;
     min-width: 0;
