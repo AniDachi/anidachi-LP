@@ -25,9 +25,15 @@ for all three plans, and the staging artifact was built and validated.
 Whole-branch review and the scoped persistence-error correction are approved.
 Staging Web, compatible Worker and all 62 migrations are deployed. Staging CI,
 room/P2P suites, Web/Worker smoke and hosted runtime-role create/renew/claim
-checks passed. The staging artifact is ready; exact loaded-extension and
-physical two-device acceptance remain pending. Main remains `f9e6b964`;
-this entry does not claim a production release or authorize a new public ZIP.
+checks passed. On September 14 the owner explicitly requested production
+promotion and chose to perform exact loaded-extension and physical two-device
+acceptance there. These manual checks remain pending; they are not a completed
+staging acceptance. Production delivery uses compatible prerequisites in
+[#320](https://github.com/AniDachi/anidachi-LP/pull/320), then Web activation in
+[#317](https://github.com/AniDachi/anidachi-LP/pull/317). The promotion PR records
+actual production deployment, hosted-check and final-main ZIP receipts. Only a
+private tester ZIP is authorized; public website download and Store publication
+remain outside this release. `f9e6b964` is the production base before this release.
 See the [delivery and verification record](releases/room-media-seats/2026-09-14-delivery.md)
 for exact evidence, rollout ordering and remaining acceptance.
 
