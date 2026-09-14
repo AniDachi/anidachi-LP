@@ -274,7 +274,8 @@ describe("overlay layout pointer surfaces", () => {
 		const row = getRule(".room-defaults-control");
 		expect(row).toContain("box-sizing: border-box");
 		expect(row).toContain("width: 100%");
-		expect(row).toContain("grid-template-columns: 82px minmax(0, 1fr)");
+		expect(row).toContain("display: flex");
+		expect(row).toContain("flex-wrap: wrap");
 		expect(row).toContain("gap: 8px");
 		expect(row).not.toContain("minmax(210px");
 		expect(row).not.toContain("border-bottom");
@@ -318,69 +319,23 @@ describe("overlay layout pointer surfaces", () => {
 		);
 	});
 
-	it("uses a full-width low-contrast Chat content switcher", () => {
-		const segmented = getRule(".layout-chat-mode-segmented-v2");
+	it("shares the account-style selected pill across the settings controls", () => {
+		const selector = ":is(.layout-chat-mode-segmented-v2, .voice-mode-control, .room-defaults-segmented, .interface-settings-segmented)";
+		const segmented = getRule(selector);
 		expect(segmented).toContain("position: relative");
 		expect(segmented).toContain("width: 100%");
-		expect(segmented).toContain("height: 32px");
-		expect(segmented).toContain("padding: 2px");
-		expect(segmented).toContain("border-radius: 8px");
-		expect(segmented).toContain("background: rgba(255, 255, 255, 0.025)");
-		expect(segmented).toContain(
-			"grid-template-columns: repeat(2, minmax(0, 1fr))",
-		);
-
-		const activePill = getRule(".layout-chat-mode-segmented-v2::before");
-		expect(activePill).toContain("border-radius: 6px");
-		expect(activePill).toContain("background: rgba(255, 255, 255, 0.075)");
-		expect(activePill).not.toContain("171, 73, 28");
-
-		const historyPill = getRule(
-			'.layout-chat-mode-segmented-v2[data-state="history"]::before',
-		);
-		expect(historyPill).toContain("transform: translateX(calc(100% + 2px))");
-
-		const option = getRule(".layout-chat-mode-segmented-v2 button");
-		expect(option).toContain("background: transparent");
-		expect(option).toContain("z-index: 1");
-	});
-
-	it("uses the same low-contrast segmented pattern for Interface modes", () => {
-		const segmented = getRule(".interface-settings-segmented");
-		expect(segmented).toContain("position: relative");
-		expect(segmented).toContain("height: 32px");
-		expect(segmented).toContain("padding: 2px");
-		expect(segmented).toContain("border-radius: 8px");
-		expect(segmented).toContain("background: rgba(255, 255, 255, 0.025)");
-
-		const activePill = getRule(".interface-settings-segmented::before");
-		expect(activePill).toContain("border-radius: 6px");
-		expect(activePill).toContain("background: rgba(255, 255, 255, 0.075)");
+		expect(segmented).toContain("height: 34px");
+		expect(segmented).toContain("border-radius: 999px");
+		expect(segmented).toContain("background: transparent");
+		const activePill = getRule(`${selector}::before`);
+		expect(activePill).toContain("pointer-events: none");
+		expect(activePill).toContain("background: #eee5d9");
+		expect(activePill).toContain("border-radius: 999px");
+		expect(activePill).toContain("transform 180ms");
+		expect(getRule(`${selector} button`)).toContain("z-index: 1");
 		expect(
-			getRule('.interface-settings-segmented[data-state="second"]::before'),
+			getRule('.layout-chat-mode-segmented-v2[data-state="history"]::before'),
 		).toContain("transform: translateX(calc(100% + 2px))");
-
-		const selected = getRule(".interface-settings-segmented button.selected");
-		expect(selected).toContain("background: transparent");
-	});
-
-	it("uses the same low-contrast segmented pattern for Voice modes", () => {
-		const segmented = getRule(".voice-mode-control");
-		expect(segmented).toContain("position: relative");
-		expect(segmented).toContain("height: 32px");
-		expect(segmented).toContain("padding: 2px");
-		expect(segmented).toContain("border-radius: 8px");
-		expect(segmented).toContain("background: rgba(255, 255, 255, 0.025)");
-
-		const activePill = getRule(".voice-mode-control::before");
-		expect(activePill).toContain("border-radius: 6px");
-		expect(activePill).toContain("background: rgba(255, 255, 255, 0.075)");
-		expect(
-			getRule('.voice-mode-control[data-state="second"]::before'),
-		).toContain("transform: translateX(calc(100% + 2px))");
-
-		const selected = getRule(".voice-mode-control button.selected");
-		expect(selected).toContain("background: transparent");
 	});
 
 	it("separates structural headings from interactive accents", () => {
