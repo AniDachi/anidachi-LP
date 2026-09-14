@@ -19,6 +19,17 @@
 
 ---
 
+## Follow-up: room defaults with media seats, 2026-09-14
+
+The private tester correction restores saved microphone/camera defaults after
+initial authoritative media admission and fixes Last used writes in the
+versioned overlay. A host grant never starts devices; revoke and capture cleanup
+preserve the future-room preference while clearing the current room intent.
+The existing v2/v3 protocol and Worker remain unchanged. Details and verification
+are in the [correction record](../../releases/room-media-seats/2026-09-14-room-defaults-fix.md).
+Exact ZIP and physical-device acceptance follow the owner's private production
+testing flow and must not be described as passed by local Chromium evidence.
+
 ## Service Level Objectives
 
 Every block below is accepted only if these numbers hold (measured by the harness in Block 1 and staging telemetry):

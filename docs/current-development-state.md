@@ -8,6 +8,15 @@ contain old paths, old domains, or old decisions. When release channels,
 endpoints, branch protection, or store workflow changes, update this document in
 the same PR.
 
+## Room defaults correction, 2026-09-14
+
+Private testing reported that saved microphone/camera defaults were not applied
+in new media-seat rooms. The extension correction restores initial admission
+intent and Last used persistence, waits for media authority, and keeps host
+regrant silent. It needs no server or database change. See the
+[room-defaults correction](releases/room-media-seats/2026-09-14-room-defaults-fix.md)
+for the cause, behavior, verification and private tester acceptance boundary.
+
 ## Host-managed media seats, 2026-09-14
 
 The owner-approved [media-seat plan](superpowers/plans/2026-09-14-host-managed-media-seats.md)
