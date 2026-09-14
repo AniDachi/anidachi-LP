@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { BookOpen, CreditCard, CircleHelp, Lightbulb, Menu, Users, X } from "lucide-react";
+import { BookOpen, Bug, CreditCard, CircleHelp, Lightbulb, Menu, Users, X } from "lucide-react";
 
 const PRIMARY = [
   { href: "/account/watch-library", label: "Watch Library", icon: BookOpen },
@@ -11,6 +11,7 @@ const PRIMARY = [
   { href: "/account/billing", label: "Subscription", icon: CreditCard },
 ] as const;
 const SECONDARY = [
+  { href: "/account/bug-report", label: "Report a bug", icon: Bug },
   { href: "/account/feature-requests", label: "Share an idea", icon: Lightbulb },
   { href: "/account/help", label: "Help", icon: CircleHelp },
 ] as const;

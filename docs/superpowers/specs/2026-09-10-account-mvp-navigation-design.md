@@ -8,8 +8,8 @@ earlier account library plan; it does not change personal history ownership.
 ## Surface and interaction
 
 - `/account` redirects to `/account/watch-library`. Primary navigation contains
-  Watch Library, Friends & Groups, Subscription, in that order. Share an idea
-  and Help remain visible secondary links. Profile is accessible from the avatar.
+  Watch Library, Friends & Groups, Subscription, in that order. Report a bug,
+  Share an idea and Help are visible secondary links. Profile is accessible from the avatar.
 - Preserve the cover library and season/special dropdown editor. Save/Discard/Stay
   protects progress edits on route changes, sign-out and notification Join.
   Opening/closing notifications must leave the inspector and draft mounted.
@@ -37,6 +37,12 @@ earlier account library plan; it does not change personal history ownership.
   failed saves and make successful saves reflected in the account identity.
 - Subscription retains existing plan, period-end cancellation, portal and
   entitlement behavior. Share an idea retains the existing CRM form and contacts.
+  The September 14 owner-requested bug-report restoration adds a compact
+  `/account/bug-report` form using existing contact storage, category `support`
+  and a `[Bug report]` subject prefix. Account contact details are prefilled and
+  editable. Failed sends preserve the draft; pending sends disable editing and
+  duplicate submission; acknowledged success keeps contact details for the next
+  report. Help and Share an idea link directly to the bug-report page.
   Help provides concise getting-started guidance and existing support links.
   Existing waitlist/referral access is retained in Profile where applicable.
 
