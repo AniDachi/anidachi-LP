@@ -660,3 +660,13 @@ test("production departure routes derive identity and role from active assignmen
   assert.match(internalRoute, /handleInternalRoomDepartureCallback/);
   assert.match(internalRoute, /releaseActiveRoomSession/);
 });
+
+test("connect rejects unsupported durable media before active session claim", () => {
+  const connect = readFileSync(new URL("../../app/api/rooms/[roomId]/connect/route.ts", import.meta.url), "utf8");
+  assert.ok(connect.indexOf("negotiateRoomMediaLease(room.media_lease, mediaProtocolVersion)") < connect.indexOf("await claimActiveRoomSession("));
+  assert.match(connect, /claimActiveRoomSession\(\{[\s\S]*mediaProtocolVersion,/);
+  assert.match(connect, /error.message === "ROOM_UPDATE_REQUIRED"/);
+  const create = readFileSync(new URL("../../app/api/rooms/route.ts", import.meta.url), "utf8");
+  assert.match(create, /clientMediaProtocolVersion\(request.headers.get\("x-anidachi-media-protocol"\)\)/);
+  assert.match(create, /createRoomWithActiveSession\(\{[\s\S]*mediaProtocolVersion,/);
+});
