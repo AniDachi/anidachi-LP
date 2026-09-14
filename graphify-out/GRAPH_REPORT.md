@@ -1,16 +1,16 @@
-# Graph Report - room-media-seats-v3  (2026-09-14)
+# Graph Report - room-media-seats-v3  (2026-09-15)
 
 ## Corpus Check
-- 8 files · ~0 words
+- 3 files · ~0 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 12779 nodes · 27540 edges · 796 communities (465 shown, 288 thin omitted)
+- 12779 nodes · 27539 edges · 796 communities (465 shown, 288 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 452 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `e285785b`
+- Built from commit: `187066b7`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -212,7 +212,6 @@
 - protocol src index ts
 - crunchyroll content ts
 - Dev Check
-- Popup Styles
 - ghost cam size ts
 - overlay layout editor test tsx
 - internal link audit ts
@@ -247,6 +246,7 @@
 - createWatchHistoryClient Contracts
 - send connection requests mjs
 - P2PMediaController Contracts
+- Account feedback
 - Watch History Crunchyroll Catalog Progress
 - Account Data Watch History Social
 - Room Flow And P2 P
@@ -259,6 +259,8 @@
 - Invitation Delivery Reliability Implementation Plan
 - Shared Watch Progress Tracker
 - Crunchyroll Adapter Notes
+- Maintenance Admission
+- Production 35 To 60 Transition
 - Mvp Plan Pricing
 - Participant Session Identity
 - Account Data Watch History Social
@@ -272,12 +274,15 @@
 - Filter Before Pagination
 - Existing You Tube Preference Authority
 - Historical Group Provenance
+- Free hosted 35 to 60
 - Network Security And Cost Guardrails
 - Explicit Specials Identity
 - Local Calendar Utc Boundaries
 - Local Versus Staging Evidence
 - Unified Personal Target Amendment
 - Room Invitation Return
+- Account Runtime And Acceptance
+- Production 35 To 60 Transition
 - Scripts Module
 - Dev Dependencies
 - Include Module
@@ -317,6 +322,7 @@
 - Open Claw You Tube Shorts
 - Compiler Options
 - api package json
+- Popup Styles
 - Public Module
 - Agents Module
 - demo package json
@@ -465,7 +471,6 @@
 - Public Module
 - Public Module
 - Public Module
-- Free hosted 35 to 60
 - Graphify Module
 - Prepare Module
 - Public Module
@@ -473,6 +478,7 @@
 - Real Web Rtc Two Browser
 - Real Web Rtc Two Browser
 - Real Web Rtc Two Browser
+- Friends And Groups Link First
 - Task 1 Shared Session And
 - Ux Handoff Plan
 - Ani Dachi Pre Release Security
@@ -480,10 +486,8 @@
 - Deferred Together Together Mvp Revision
 - Kreatli Crm Data Schema
 - Media Protocol v3 Seat Authority
-- Friends And Groups Link First
 - Ani Dachi Extension Icon 48Px
 - Account Data History Social And
-- Maintenance Admission
 - Temporary Free project rehearsal window
 - Watch History Local Read Implementation
 - Invitation Delivery Reliability Implementation Plan
@@ -492,7 +496,6 @@
 - Personal History Mvp Design
 - Two Phase Production Promotion
 - Waitlist And Crm Durable Storage
-- Production 35 To 60 Transition
 - September 12 Prelaunch Remediation Verification
 - One Canonical Personal Episode Progress
 - Personal History Mvp Staging Delivery
@@ -725,7 +728,6 @@
 - Allowed Native Build Dependencies
 - Minimum Release Age Exclusion
 - Room Defaults And Admission
-- Production 35 To 60 Transition
 - Shared Pure Visibility Policy
 - Shared Pure Visibility Policy
 - Global Constraints
@@ -766,8 +768,6 @@
 - Apps Web App Globals Css
 - Apps Web Lib Google Ads
 - Apps Web Lib Kreatli Crm
-- Account feedback
-- Account Runtime And Acceptance
 
 ## God Nodes (most connected - your core abstractions)
 1. `.next/**` - 177 edges
@@ -775,7 +775,7 @@
 3. `vitest` - 173 edges
 4. `SeoPageLayout()` - 146 edges
 5. `TocHeading` - 143 edges
-6. `react` - 136 edges
+6. `react` - 137 edges
 7. `next/server` - 125 edges
 8. `getGuideLinks()` - 122 edges
 9. `node:assert/strict` - 119 edges
@@ -968,7 +968,7 @@ Nodes (61): TocHeading, formatIsoDate(), SeoPageLayout(), faq, headings, metadat
 
 ### Community 131 - "contact messages ts"
 Cohesion: 0.12
-Nodes (25): ContactCategory, ContactMessageRecord, ContactPostDependencies, POST(), isContactCategory(), appendContactMessage(), appendLocal(), buildNote() (+17 more)
+Nodes (25): ContactCategory, ContactMessageRecord, ContactPostDependencies, POST(), ContactForm(), mount(), isContactCategory(), appendContactMessage() (+17 more)
 
 ### Community 134 - "Ice Servers"
 Cohesion: 0.11
@@ -1139,8 +1139,8 @@ Cohesion: 0.21
 Nodes (16): HotkeyAction, HotkeyEventLike, getEmojiHotkey(), getHotkeyAction(), hasBlockedModifier(), isEditableElement(), isEditableEventTarget(), isFireReactionReleaseEvent() (+8 more)
 
 ### Community 219 - "VoiceMode Contracts"
-Cohesion: 0.15
-Nodes (14): HotkeyState, VoiceMode, VoiceModeButtonProps, VoiceSettingsPanelProps, StorageAreaLike, VoiceModePreferenceRecord, getNextVoiceMode(), VoiceSettingsPanel() (+6 more)
+Cohesion: 0.14
+Nodes (14): HotkeyState, VoiceMode, StorageAreaLike, VoiceModePreferenceRecord, loadVoiceModePreference(), parseVoiceModePreference(), persistVoiceModePreference(), voiceModePreferenceStorageKeyForUser() (+6 more)
 
 ### Community 22 - "Room Durable Object"
 Cohesion: 0.09
@@ -1622,10 +1622,6 @@ Nodes (19): clampMediaTime(), findCapturedBitmovinPlayer(), getBitmovinContainer
 Cohesion: 0.15
 Nodes (17): changedFiles(), classify(), dedupe(), fail(), isDocs(), isRoomOrP2P(), isSharedTooling(), printCommands() (+9 more)
 
-### Community 238 - "Popup Styles"
-Cohesion: 0.21
-Nodes (8): getNumericProperty(), getRule(), extensionThemeTokens, popupInboxStyles, popupPeopleStyles, popupStyles, popupWatchHistoryStyles, overlayStyles
-
 ### Community 239 - "ghost cam size ts"
 Cohesion: 0.21
 Nodes (15): clamp01(), getAdaptiveGhostCamMaxPx(), getCameraStackWidthShare(), getGhostCamGapPx(), getGhostCamSizeLabel(), getGhostCamSizePx(), getResponsiveGhostCamSizePx(), isUsefulDimension() (+7 more)
@@ -1688,7 +1684,7 @@ Nodes (10): assertHeaderIncludes(), assertStatus(), assertTextIncludes(), extrac
 
 ### Community 320 - "account navigation client test ts"
 Cohesion: 0.25
-Nodes (9): dialog(), mount(), open(), render(), trigger(), dom, navigations, router (+1 more)
+Nodes (9): AccountNav(), dialog(), mount(), open(), render(), trigger(), dom, navigations (+1 more)
 
 ### Community 329 - "P2P Scorecard"
 Cohesion: 0.29
@@ -1754,6 +1750,10 @@ Nodes (53): batchLabel(), clickActionsButton(), closeOpenOverlays(), confirmBatc
 Cohesion: 0.10
 Nodes (13): logDebug(), createP2PRtcConfiguration(), createVideoElement(), getCandidateProtocol(), getCandidateType(), mediaElementUsesTrack(), prepareP2PLocalDescription(), reconcilePeerAction() (+5 more)
 
+### Community 795 - "Account feedback"
+Cohesion: 0.04
+Nodes (5): field(), fill(), metadata, contact, dom
+
 ### Community 105 - "Watch History Crunchyroll Catalog Progress"
 Cohesion: 0.10
 Nodes (38): Canonical Logical Identity, Canonical Progress Model, Canonical Progress Semantics, Canonical Reads And Deletion, Catalog Begin And Apply, Catalog Completeness Contract, Catalog Resource Bounds, Coalesced Cache Invalidation (+30 more)
@@ -1802,6 +1802,14 @@ Nodes (20): Canonical Episode Resume, Canonical Title Projection, Crunchyroll Ob
 Cohesion: 0.14
 Nodes (18): Active Player And Detail Page States, Bounded MAIN World Metadata Bridge, Catalog Revision And Context Fences, Current Object Identity Resolution, Katamari Player Control, Participant Control Capabilities, Pure Catalog Normalizer, SPA Media Lifecycle Signal (+10 more)
 
+### Community 232 - "Maintenance Admission"
+Cohesion: 0.12
+Nodes (18): Default-open Web and Worker maintenance admission, Historical: Task 3 executable delivery traffic and job controls, Server-only ANIDACHI_MAINTENANCE_MODE, Shared protocol maintenance parser, In-flight work and existing socket/job boundary, Website HTTP failure retains owner-guarded editor state, Existing Web asset and metadata exclusions, Retained unacknowledged extension history entries (+10 more)
+
+### Community 297 - "Production 35 To 60 Transition"
+Cohesion: 0.22
+Nodes (13): Historical: Hosted interrupted prefix 37 recovery, Historical: Local CLI prefix atomicity receipt passed, Historical: Manual Free-plan hosted rehearsal path, Historical: Local CLI atomicity gate completed with hosted acceptance tracked separately, Historical: Prefix resume decision requires exact rollback evidence, Fixed-case offline prefix proof checker, Local native CLI atomicity receipt, Failure recovery requires effect proof before suffix resume (+5 more)
+
 ### Community 338 - "Mvp Plan Pricing"
 Cohesion: 0.20
 Nodes (10): MVP Plan Pricing, All Supported Platforms, D01 Retained History, Free Host Time, Free Plus Pro Limits, Independent Media Publication, Media Claims Release Gate, Own Plan History Access (+2 more)
@@ -1846,9 +1854,21 @@ Nodes (3): Room Lifecycle Block, Orphan Room Policy, Durable Room Lifecycle and 
 Cohesion: 0.67
 Nodes (3): Filter Before Pagination, Filter Reset Preserves Search, Nonmodal Filter Focus Contract
 
+### Community 61 - "Free hosted 35 to 60"
+Cohesion: 0.06
+Nodes (54): Historical: First hosted recovery acceptance failed after row equality, Historical: Second hosted application recovery accepted while production prerequisites remain open, Historical: Conditional managed-role policy measured and accepted on second recovery, Historical: ACL correction and conditional role recovery verified on second target, Historical: Managed-role capture-source review and second-target execution accepted, Historical: Managed-role origin policy and second-target measurements accepted, Accepted interrupted prefix 37, 2026-09-12, PostgreSQL ACL normalization REVOKE and platform role references (+46 more)
+
 ### Community 794 - "Room Invitation Return"
 Cohesion: 0.07
-Nodes (24): Room Invitation Return and Reinvitation, Room Invitation Return Follow-up, Accepted Return Recovery, Atomic Database Lifecycle, Durable Assignment Resend Fence, Extension Host and Inbox, Fresh Reinvitation Identity, Implementation Progress (+16 more)
+Nodes (24): Room Invitation Return and Reinvitation, Invite Return Additive Rollout, Room Invitation Return Correction, Room Invitation Return Follow-up, Accepted Return Recovery, Atomic Database Lifecycle, Durable Assignment Resend Fence, Extension Host and Inbox (+16 more)
+
+### Community 82 - "Account Runtime And Acceptance"
+Cohesion: 0.05
+Nodes (46): Provider-pinned monotonic durable room source, Durable Object hibernation and atomic Free usage finalization, Trusted UI actions and exact room/account authority, Independent microphone camera and participant audio controls, Canonical operational source of truth, Watch Library account workspace, Versioned owner-bound account read contracts, Account library manual progress editor (+38 more)
+
+### Community 95 - "Production 35 To 60 Transition"
+Cohesion: 0.06
+Nodes (40): Schema 3 durable canonical episode authority, Historical: Production 35-to-60 preservation prerequisite, Historical: Local application ACL correction and independent source review passed, Historical: 2026 09 12 Production Promotion Preparation, Historical: Official Supabase backup restore and clone limitations, Historical: Failure decisions preserve maintenance and matching DB/runtime recovery, Historical: Staging-first personal-history preservation and separate acceptance, Historical: Task 1 deployed reader and runtime source checks (+32 more)
 
 ### Community 109 - "Scripts Module"
 Cohesion: 0.05
@@ -2005,6 +2025,10 @@ Nodes (17): compilerOptions, allowSyntheticDefaultImports, exactOptionalProperty
 ### Community 237 - "api package json"
 Cohesion: 0.12
 Nodes (16): dependencies, @anidachi/protocol, hono, jose, name, private, scripts, build (+8 more)
+
+### Community 238 - "Popup Styles"
+Cohesion: 0.21
+Nodes (8): extensionThemeTokens, popupInboxStyles, popupPeopleStyles, popupStyles, popupWatchHistoryStyles, overlayStyles, getRule(), getNumericProperty()
 
 ### Community 244 - "Public Module"
 Cohesion: 0.13
@@ -2426,13 +2450,13 @@ Nodes (4): Sampling Cost, Speech Classification, Transport Flow Classification, 
 Cohesion: 0.83
 Nodes (3): port_in_use(), print_port_conflict_help(), launch-chrome.sh script
 
-### Community 61 - "Free hosted 35 to 60"
-Cohesion: 0.06
-Nodes (54): Historical: ACL correction and conditional role recovery verified on second target, Historical: Managed-role capture-source review and second-target execution accepted, Historical: Managed-role origin policy and second-target measurements accepted, Accepted interrupted prefix 37, 2026-09-12, PostgreSQL ACL normalization REVOKE and platform role references, Historical first recovery failure remains separate from later accepted targets, Reviewed read-only managed-role receipt SELECT, Historical first recovery residual supabase_functions_admin role (+46 more)
-
 ### Community 69 - "Graphify Module"
 Cohesion: 0.04
 Nodes (48): For /graphify add and --watch, For /graphify query, For the commit hook and native CLAUDE.md integration, For --update and --cluster-only, /graphify, Honesty Rules, Interpreter guard for subcommands, Part A - Structural extraction for code files (+40 more)
+
+### Community 206 - "Friends And Groups Link First"
+Cohesion: 0.15
+Nodes (24): Account bug report contact contract, Report a bug secondary navigation, Bug report submission lifecycle, Watch Library Friends Groups Subscription primary navigation, Atomic private group modal with retained drafts, Loaded staging People artifact 6dd848dc read only smoke, Real group save and two account link acceptance remain open, Real two account friendship acceptance separate from deployment (+16 more)
 
 ### Community 115 - "Task 1 Shared Session And"
 Cohesion: 0.06
@@ -2460,11 +2484,7 @@ Nodes (22): CRM CLI Workflow, Personal Outreach Source of Truth, UTC Queue Inter
 
 ### Community 193 - "Media Protocol v3 Seat Authority"
 Cohesion: 0.11
-Nodes (22): Failed Seat Command Correction 18c105e3, Local Media Seats Verification Complete, Media Seats Staging Artifact 18c105e3, Durable Room Version Lease, Four-camera Slot Authority, Media Protocol v3 Seat Authority, Server-accepted Media Seat Allocation, Single Host Media Seat Control (+14 more)
-
-### Community 206 - "Friends And Groups Link First"
-Cohesion: 0.15
-Nodes (24): Atomic private group modal with retained drafts, Loaded staging People artifact 6dd848dc read only smoke, Real group save and two account link acceptance remain open, Real two account friendship acceptance separate from deployment, Social SQL concurrency and rollback local verification, Staging atomic social migration PR 296 before web consumer, Extension People MVP plan, Friends and groups link first MVP plan (+16 more)
+Nodes (22): Host-managed Media Seats Current Status, Failed Seat Command Correction 18c105e3, Local Media Seats Verification Complete, Media Seats Staging Artifact 18c105e3, Durable Room Version Lease, Four-camera Slot Authority, Media Protocol v3 Seat Authority, Server-accepted Media Seat Allocation (+14 more)
 
 ### Community 209 - "Ani Dachi Extension Icon 48Px"
 Cohesion: 0.13
@@ -2473,10 +2493,6 @@ Nodes (20): Browser Extension Brand Identity, White Stylized A Brand Mark, Exten
 ### Community 216 - "Account Data History Social And"
 Cohesion: 0.22
 Nodes (19): Atomic room invite recipient snapshots and stable action retry, Chrome FCM push allowlist and five installations per account, Historical 12 hour expires_at runtime bridge, Historical compact self written history outbox and reconcile, Room lifecycle actionability and 24 hour Missed retention, September 11 People Friends Groups modal amendment, Account Data History Social And Inbox Foundation Design, Account owned cache outbox cursor and request generation (+11 more)
-
-### Community 232 - "Maintenance Admission"
-Cohesion: 0.12
-Nodes (18): Historical: Task 3 executable delivery traffic and job controls, Server-only ANIDACHI_MAINTENANCE_MODE, Shared protocol maintenance parser, In-flight work and existing socket/job boundary, Website HTTP failure retains owner-guarded editor state, Existing Web asset and metadata exclusions, Retained unacknowledged extension history entries, Local maintenance contract and consumer verification (+10 more)
 
 ### Community 245 - "Temporary Free project rehearsal window"
 Cohesion: 0.13
@@ -2509,10 +2525,6 @@ Nodes (14): Frozen Staging Candidate, Staging and Main Git Convergence, Migratio
 ### Community 285 - "Waitlist And Crm Durable Storage"
 Cohesion: 0.23
 Nodes (14): Conflict-Safe CRM Mutations, CRM-Specific Blob Runtime Authority, Canonical Docs Environment Contract And Graphify Closeout, Interim Staging Data Acceptance, Legacy Public CRM Rollback Source, Lossless CRM Reconciliation Tool, Optimistic ETag Blob Mutation, Preview CRM Credential Configuration (+6 more)
-
-### Community 297 - "Production 35 To 60 Transition"
-Cohesion: 0.22
-Nodes (13): Historical: Local CLI atomicity gate completed with hosted acceptance tracked separately, Historical: Prefix resume decision requires exact rollback evidence, Fixed-case offline prefix proof checker, Local native CLI atomicity receipt, Failure recovery requires effect proof before suffix resume, Synthetic event-trigger rehearsal does not prove history-insert atomicity, Authored COMMIT before migration history insertion, Prefixes 37 and 38 require full baseline recovery (+5 more)
 
 ### Community 299 - "September 12 Prelaunch Remediation Verification"
 Cohesion: 0.27
@@ -2694,10 +2706,6 @@ Nodes (3): Extension Channel, Release Ref Validation, Build Extension Workflow
 Cohesion: 0.17
 Nodes (16): Last Used, Mounted Overlay Regression Verification, Synthetic Pro WebRTC Verification, Room Defaults With Media Seats, Account Scoped Next Room Defaults, Capture Authority Gate, Immutable Tester ZIP Rollback, Initial Authoritative Admission Once (+8 more)
 
-### Community 95 - "Production 35 To 60 Transition"
-Cohesion: 0.06
-Nodes (40): Historical: 2026 09 12 Production Promotion Preparation, Historical: Official Supabase backup restore and clone limitations, Historical: Failure decisions preserve maintenance and matching DB/runtime recovery, Historical: Staging-first personal-history preservation and separate acceptance, Historical: Task 1 deployed reader and runtime source checks, Historical: Task 2 recoverable artifact and operator restore capability, Historical: Hosted prefix 37 acceptance, Historical: First executed Free rehearsal remains failed recovery (+32 more)
-
 ### Community 303 - "Shared Pure Visibility Policy"
 Cohesion: 0.21
 Nodes (13): Accessible Interface Settings View, Main-Control Preference Integration, Versioned Interface Preference Model, Interface Accessibility Contract, Finite Policy-Driven Preview, Shared Pure Visibility Policy, Serialized Preference Persistence, Immediate Apply with Persistence Rollback (+5 more)
@@ -2718,14 +2726,6 @@ Nodes (6): Persistent Compact Participant Rail Integration, Smart Participant Pi
 Cohesion: 0.67
 Nodes (3): Main Control Always Visible, Main Control Auto Hide, Panel Access and Focus Overrides
 
-### Community 795 - "Account feedback"
-Cohesion: 0.04
-Nodes (5): metadata, dom, contact, field(), fill()
-
-### Community 82 - "Account Runtime And Acceptance"
-Cohesion: 0.05
-Nodes (46): Provider-pinned monotonic durable room source, Durable Object hibernation and atomic Free usage finalization, Trusted UI actions and exact room/account authority, Independent microphone camera and participant audio controls, Canonical operational source of truth, Watch Library account workspace, Versioned owner-bound account read contracts, Account library manual progress editor (+38 more)
-
 ## Ambiguous Edges - Review These
 - `Historical 12 hour expires_at runtime bridge` → `Room lifecycle actionability and 24 hour Missed retention`  [AMBIGUOUS]
   docs/superpowers/specs/2026-08-06-account-data-history-social-inbox-design.md · relation: conceptually_related_to
@@ -2737,8 +2737,8 @@ Nodes (46): Provider-pinned monotonic durable room source, Durable Object hibern
   docs/superpowers/plans/2026-07-30-interface-visibility-settings.md · relation: implements
 
 ## Knowledge Gaps
-- **3733 isolated node(s):** `SeoGuideOption`, `SeoGuideRelatedLink`, `SeoGuideStep`, `AuthCommand`, `AuthMessage` (+3728 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 5196 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **3735 isolated node(s):** `SeoGuideOption`, `SeoGuideRelatedLink`, `SeoGuideStep`, `AuthCommand`, `AuthMessage` (+3730 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 5198 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **288 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
@@ -2752,12 +2752,12 @@ _Questions this graph is uniquely positioned to answer:_
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **What is the exact relationship between `Codex-Hosted Semantic Extraction` and `Automated Verification and Staging Artifact Evidence`?**
   _Edge tagged AMBIGUOUS (relation: implements) - confidence is low._
+- **Why does `react` connect `react Contracts` to `SEO Guide Content`, `contact messages ts`, `account menu client test ts`, `Overlay Controls And Feedback`, `popup watch history test tsx`, `Landing Layout And Checkout`, `app layout tsx`, `Extension Watch Drawer`, `Account Social Sections`, `Privileged Overlay Wiring Test`, `watch history storage ts`, `contact messages ts`, `watch library client tsx`, `Page Module`, `roomId page tsx`, `crm client tsx`, `popup watch drawer tsx`, `Reaction Pop`, `Reaction Pop`, `content tsx`, `Use Camera Interaction Lock`, `playback sync controller ts`, `overlay interaction boundary ts`, `room media defaults ts`, `Popup App`, `chrome extension demo async overlay`, `billing ts`, `account navigation client test ts`, `interface preferences ts`, `account inbox cache ts`, `Popup App`, `reaction shortcuts ts`, `Overlay Room Rail`, `room media defaults ts`, `protocol src index ts`, `pricing tsx`, `overlay layout editor tsx`, `Panel Account Title`, `Overlay Layout Ghost Preview`, `Participant Contracts`, `node fs`, `VoiceMode Contracts`, `lucide react`, `ghost cam ts`, `popup watch drawer tsx`, `connect client tsx`, `pricing tsx`, `overlay layout editor test tsx`, `gtag ts`, `Popup App`, `Overlay Room Rail`?**
+  _High betweenness centrality (0.095) - this node is a cross-community bridge._
 - **Why does `next/server` connect `next server` to `public media blob test ts`, `contact messages ts`, `next server`, `Durable Room Sessions`, `post status route ts`, `Account APIs And Notifications`, `contact messages ts`, `db ts`, `stripe subscription sync ts`, `anidachi auth watch history browse`, `oauth transaction ts`, `video prepare route ts`, `node crypto`, `youtube storage ts`, `plan entitlements ts`, `gmail ts`, `youtube storage ts`, `billing ts`, `private integration blob ts`, `db ts`, `watch history v3 ts`, `device push ts`, `anidachi auth watch history editor`, `getApiSession Contracts`, `survey lead ts`, `next server`, `gmail ts`, `verifyKreatliCrmSession Contracts`, `watch history v3 routes ts`, `node fs`, `anidachi auth watch history grid`, `room session ts`, `anidachi auth watch history editor`, `watch library routes test ts`, `watch history v3 ts`, `anidachi auth watch history editor`, `middleware ts`, `youtube storage ts`, `room source ts`, `youtube storage ts`, `room source ts`?**
-  _High betweenness centrality (0.083) - this node is a cross-community bridge._
-- **Why does `react` connect `react Contracts` to `SEO Guide Content`, `contact messages ts`, `account menu client test ts`, `Overlay Controls And Feedback`, `popup watch history test tsx`, `Landing Layout And Checkout`, `app layout tsx`, `Extension Watch Drawer`, `Account Social Sections`, `Privileged Overlay Wiring Test`, `watch history storage ts`, `contact messages ts`, `watch library client tsx`, `Page Module`, `roomId page tsx`, `crm client tsx`, `popup watch drawer tsx`, `Reaction Pop`, `Reaction Pop`, `content tsx`, `Use Camera Interaction Lock`, `playback sync controller ts`, `overlay interaction boundary ts`, `room media defaults ts`, `Popup App`, `chrome extension demo async overlay`, `billing ts`, `account navigation client test ts`, `interface preferences ts`, `account inbox cache ts`, `Popup App`, `reaction shortcuts ts`, `Overlay Room Rail`, `room media defaults ts`, `protocol src index ts`, `pricing tsx`, `overlay layout editor tsx`, `Panel Account Title`, `Overlay Layout Ghost Preview`, `Participant Contracts`, `node fs`, `lucide react`, `ghost cam ts`, `popup watch drawer tsx`, `connect client tsx`, `pricing tsx`, `overlay layout editor test tsx`, `gtag ts`, `Popup App`, `Overlay Room Rail`?**
-  _High betweenness centrality (0.082) - this node is a cross-community bridge._
+  _High betweenness centrality (0.072) - this node is a cross-community bridge._
 - **Why does `Account bug report restoration` connect `Account Runtime And Acceptance` to `contact messages ts`, `Friends And Groups Link First`?**
-  _High betweenness centrality (0.064) - this node is a cross-community bridge._
-## Account bug-report update verification
+  _High betweenness centrality (0.072) - this node is a cross-community bridge._
+## Settings controls update verification
 
-Bounded refresh: six code files and two document fragments. All prior document concepts and unrelated nodes/edges were retained. Existing community identities and inherited origin tags were preserved. No dangling edges or self-loops. Semantic token usage was not measured; zero counters are placeholders, not zero model work.
+After the standard AST-only command, only the three changed extension code files were merged into the curated baseline. Unrelated nodes, edges, documentation concepts and community identities were retained. No semantic extraction or model token use.

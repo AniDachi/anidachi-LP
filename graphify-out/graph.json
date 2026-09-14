@@ -5419,7 +5419,7 @@
       "file_type": "code",
       "norm_label": "voicemodebuttonprops",
       "source_file": "apps/extension/src/overlay-voice-controls.tsx",
-      "source_location": "L62"
+      "source_location": "L88"
     },
     {
       "id": "apps_extension_src_overlay_voice_controls_voicesettingspanelprops",
@@ -5432,7 +5432,7 @@
       "file_type": "code",
       "norm_label": "voicesettingspanelprops",
       "source_file": "apps/extension/src/overlay-voice-controls.tsx",
-      "source_location": "L4"
+      "source_location": "L6"
     },
     {
       "id": "apps_extension_src_voice_mode_preference_storagearealike",
@@ -37303,7 +37303,7 @@
       "file_type": "code",
       "norm_label": "getnextvoicemode()",
       "source_file": "apps/extension/src/overlay-voice-controls.tsx",
-      "source_location": "L95"
+      "source_location": "L121"
     },
     {
       "id": "apps_extension_src_overlay_voice_controls_voicemodebutton",
@@ -37315,7 +37315,7 @@
       "file_type": "code",
       "norm_label": "voicemodebutton()",
       "source_file": "apps/extension/src/overlay-voice-controls.tsx",
-      "source_location": "L69"
+      "source_location": "L95"
     },
     {
       "id": "apps_extension_src_overlay_voice_controls_voicesettingspanel",
@@ -37327,7 +37327,7 @@
       "file_type": "code",
       "norm_label": "voicesettingspanel()",
       "source_file": "apps/extension/src/overlay-voice-controls.tsx",
-      "source_location": "L10"
+      "source_location": "L12"
     },
     {
       "id": "apps_extension_src_voice_mode_preference_loadvoicemodepreference",
@@ -39727,7 +39727,7 @@
       "file_type": "code",
       "norm_label": "getcomputedroomrailliststyles()",
       "source_file": "apps/extension/test/overlay-layout-styles.test.ts",
-      "source_location": "L819"
+      "source_location": "L774"
     },
     {
       "id": "apps_extension_test_overlay_layout_styles_test_getnumericproperty",
@@ -39739,7 +39739,7 @@
       "file_type": "code",
       "norm_label": "getnumericproperty()",
       "source_file": "apps/extension/test/overlay-layout-styles.test.ts",
-      "source_location": "L810"
+      "source_location": "L765"
     },
     {
       "id": "apps_extension_test_overlay_layout_styles_test_getrule",
@@ -39751,7 +39751,7 @@
       "file_type": "code",
       "norm_label": "getrule()",
       "source_file": "apps/extension/test/overlay-layout-styles.test.ts",
-      "source_location": "L798"
+      "source_location": "L753"
     },
     {
       "id": "apps_extension_src_ghost_cam_size_clamp01",
@@ -168919,7 +168919,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/overlay-voice-controls.tsx",
-      "source_location": "L25",
+      "source_location": "L31",
       "weight": 1.0
     },
     {
@@ -194155,7 +194155,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/test/overlay-layout-styles.test.ts",
-      "source_location": "L811",
+      "source_location": "L766",
       "weight": 1.0
     },
     {
@@ -227918,30 +227918,6 @@
       "weight": 1.0
     },
     {
-      "source": "apps_extension_src_overlay_voice_controls_voicemodebuttonprops",
-      "target": "apps_extension_src_media_types_voicemode",
-      "relation": "references",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "field",
-      "source_file": "apps/extension/src/overlay-voice-controls.tsx",
-      "source_location": "L65",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_overlay_voice_controls_voicesettingspanelprops",
-      "target": "apps_extension_src_media_types_voicemode",
-      "relation": "references",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "field",
-      "source_file": "apps/extension/src/overlay-voice-controls.tsx",
-      "source_location": "L6",
-      "weight": 1.0
-    },
-    {
       "source": "apps_extension_src_overlay_voice_session_voicesessionstate",
       "target": "apps_extension_src_media_types_voicemode",
       "relation": "references",
@@ -238837,7 +238813,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/src/overlay-voice-controls.tsx",
-      "source_location": "L1",
+      "source_location": "L3",
       "weight": 1.0
     },
     {
@@ -238849,7 +238825,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/src/overlay-voice-controls.tsx",
-      "source_location": "L2",
+      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -297063,6 +297039,18 @@
     },
     {
       "source": "apps_extension_src_overlay_voice_controls",
+      "target": "ref_react",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/extension/src/overlay-voice-controls.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_voice_controls",
       "target": "apps_extension_src_media_types",
       "relation": "imports_from",
       "_origin": "ast",
@@ -297070,7 +297058,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/src/overlay-voice-controls.tsx",
-      "source_location": "L1",
+      "source_location": "L3",
       "type_only": true,
       "weight": 1.0
     },
@@ -297083,7 +297071,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/src/overlay-voice-controls.tsx",
-      "source_location": "L2",
+      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -356908,7 +356896,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-voice-controls.tsx",
-      "source_location": "L10",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_voice_controls",
+      "target": "apps_extension_src_overlay_voice_controls_getnextvoicemode",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/src/overlay-voice-controls.tsx",
+      "source_location": "L121",
       "weight": 1.0
     },
     {
@@ -356919,7 +356918,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-voice-controls.tsx",
-      "source_location": "L4",
+      "source_location": "L6",
       "weight": 1.0
     },
     {
@@ -356930,23 +356929,12 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-voice-controls.tsx",
-      "source_location": "L62",
+      "source_location": "L88",
       "weight": 1.0
     },
     {
       "source": "apps_extension_src_overlay_voice_controls",
       "target": "apps_extension_src_overlay_voice_controls_voicemodebutton",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/overlay-voice-controls.tsx",
-      "source_location": "L69",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_overlay_voice_controls",
-      "target": "apps_extension_src_overlay_voice_controls_getnextvoicemode",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -374266,7 +374254,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/overlay-layout-styles.test.ts",
-      "source_location": "L798",
+      "source_location": "L753",
       "weight": 1.0
     },
     {
@@ -374277,7 +374265,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/overlay-layout-styles.test.ts",
-      "source_location": "L810",
+      "source_location": "L765",
       "weight": 1.0
     },
     {
@@ -374288,7 +374276,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/overlay-layout-styles.test.ts",
-      "source_location": "L819",
+      "source_location": "L774",
       "weight": 1.0
     },
     {
@@ -476671,5 +476659,5 @@
       "source_file": "docs/superpowers/specs/2026-08-23-single-active-room-session-design.md"
     }
   ],
-  "built_at_commit": "e285785bb982be91395973f272e8d94d445a9592"
+  "built_at_commit": "187066b7c33cc98ca028f5b8eda0cea71a580ff1"
 }

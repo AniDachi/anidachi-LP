@@ -1005,85 +1005,6 @@ ${extensionThemeTokens}
     gap: 10px;
   }
 
-  .layout-chat-mode-segmented-v2 {
-    position: relative;
-    box-sizing: border-box;
-    width: 100%;
-    height: 32px;
-    margin: 2px 0 4px;
-    padding: 2px;
-    border: 1px solid rgba(255, 255, 255, 0.075);
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.025);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: center;
-    gap: 2px;
-  }
-
-  .layout-chat-mode-segmented-v2::before {
-    content: "";
-    position: absolute;
-    top: 2px;
-    bottom: 2px;
-    left: 2px;
-    box-sizing: border-box;
-    width: calc((100% - 6px) / 2);
-    border: 1px solid rgba(255, 255, 255, 0.09);
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.075);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.035),
-      0 1px 3px rgba(0, 0, 0, 0.16);
-    pointer-events: none;
-    transform: translateX(0);
-    transition:
-      background 160ms ease,
-      border-color 160ms ease,
-      transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  .layout-chat-mode-segmented-v2[data-state="history"]::before {
-    transform: translateX(calc(100% + 2px));
-  }
-
-  .layout-chat-mode-segmented-v2 button {
-    position: relative;
-    z-index: 1;
-    min-width: 0;
-    height: 26px;
-    padding: 0 7px;
-    border: 0;
-    border-radius: 7px;
-    background: transparent;
-    color: rgba(255, 255, 255, 0.44);
-    cursor: pointer;
-    font: inherit;
-    font-size: 10.5px;
-    font-weight: 700;
-    line-height: 1;
-    transition: color 150ms ease;
-  }
-
-  .layout-chat-mode-segmented-v2 button:hover {
-    color: rgba(255, 255, 255, 0.72);
-  }
-
-  .layout-chat-mode-segmented-v2 button[aria-pressed="true"] {
-    color: rgba(255, 247, 241, 0.92);
-  }
-
-  .layout-chat-mode-segmented-v2 button:focus-visible {
-    outline: 2px solid rgba(255, 184, 122, 0.66);
-    outline-offset: -2px;
-  }
-
-  .layout-chat-mode-segmented-v2 button:disabled {
-    cursor: not-allowed;
-    opacity: 0.42;
-  }
-
   .layout-controls-v2 > button {
     min-width: 0;
     min-height: 36px;
@@ -1416,8 +1337,7 @@ ${extensionThemeTokens}
     padding: 2px;
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.09);
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.24);
+    background: transparent;
     display: inline-flex;
     align-items: center;
     transition:
@@ -1430,8 +1350,7 @@ ${extensionThemeTokens}
     width: 14px;
     height: 14px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.82);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.38);
+    background: #96938f;
     transform: translateX(0);
     transition:
       background 160ms ease,
@@ -1439,15 +1358,12 @@ ${extensionThemeTokens}
   }
 
   .settings-toggle-switch[data-state="on"] .settings-toggle-switch-track {
-    border-color: rgba(255, 166, 92, 0.54);
-    background: rgba(249, 115, 22, 0.9);
-    box-shadow:
-      inset 0 1px 1px rgba(255, 255, 255, 0.15),
-      0 0 10px rgba(249, 115, 22, 0.13);
+    border-color: #eee5d9;
+    background: #eee5d9;
   }
 
   .settings-toggle-switch[data-state="on"] .settings-toggle-switch-thumb {
-    background: rgba(255, 250, 246, 0.98);
+    background: #181511;
     transform: translateX(14px);
   }
 
@@ -2710,56 +2626,61 @@ ${extensionThemeTokens}
     gap: 9px;
   }
 
-  .voice-mode-control {
+  /* Shared account-style controls; the existing data-state drives the sliding pill. */
+  :is(.layout-chat-mode-segmented-v2, .voice-mode-control, .room-defaults-segmented, .interface-settings-segmented) {
+    --settings-segment-width: calc((100% - 8px) / 2);
     position: relative;
     box-sizing: border-box;
     width: 100%;
     min-width: 0;
-    height: 32px;
-    padding: 2px;
-    border: 1px solid rgba(255, 255, 255, 0.075);
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.025);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+    height: 34px;
+    padding: 3px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 999px;
+    background: transparent;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: center;
+    gap: 2px;
   }
 
-  .voice-mode-control::before {
+  :is(.layout-chat-mode-segmented-v2, .voice-mode-control, .room-defaults-segmented, .interface-settings-segmented)::before {
     content: "";
     position: absolute;
-    top: 2px;
-    bottom: 2px;
-    left: 2px;
+    top: 3px;
+    bottom: 3px;
+    left: 3px;
     box-sizing: border-box;
-    width: calc((100% - 6px) / 2);
-    border: 1px solid rgba(255, 255, 255, 0.09);
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.075);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.035),
-      0 1px 3px rgba(0, 0, 0, 0.16);
+    width: var(--settings-segment-width);
+    border: 0;
+    border-radius: 999px;
+    background: #eee5d9;
     pointer-events: none;
     transform: translateX(0);
-    transition:
-      background 160ms ease,
-      border-color 160ms ease,
-      transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  .voice-mode-control[data-state="second"]::before {
+  :is(.voice-mode-control, .room-defaults-segmented, .interface-settings-segmented)[data-state="second"]::before,
+  .layout-chat-mode-segmented-v2[data-state="history"]::before {
     transform: translateX(calc(100% + 2px));
   }
 
-  .voice-mode-control button {
+  .room-defaults-segmented[data-state="third"]::before {
+    transform: translateX(calc(200% + 4px));
+  }
+
+  :is(.layout-chat-mode-segmented-v2, .voice-mode-control, .room-defaults-segmented, .interface-settings-segmented) button {
     position: relative;
     z-index: 1;
     min-width: 0;
     height: 26px;
     padding: 0 7px;
     border: 0;
-    border-radius: 7px;
+    border-radius: 999px;
     background: transparent;
-    color: rgba(255, 255, 255, 0.44);
+    color: #96938f;
+    cursor: pointer;
+    font: inherit;
     font-size: 10.5px;
     font-weight: 700;
     line-height: 1;
@@ -2767,18 +2688,91 @@ ${extensionThemeTokens}
     transition: color 150ms ease;
   }
 
-  .voice-mode-control button:hover {
-    color: rgba(255, 255, 255, 0.72);
+  :is(.layout-chat-mode-segmented-v2, .voice-mode-control, .room-defaults-segmented, .interface-settings-segmented) button:hover:not(:disabled):not(.selected):not([aria-pressed="true"]) {
+    color: #eee5d9;
   }
 
-  .voice-mode-control button.selected {
+  :is(.voice-mode-control, .room-defaults-segmented, .interface-settings-segmented) button.selected,
+  .layout-chat-mode-segmented-v2 button[aria-pressed="true"] {
     background: transparent;
-    color: rgba(255, 247, 241, 0.92);
+    color: #181511;
   }
 
-  .voice-mode-control button:focus-visible {
-    outline: 2px solid rgba(255, 184, 122, 0.66);
+  :is(.layout-chat-mode-segmented-v2, .voice-mode-control, .room-defaults-segmented, .interface-settings-segmented) button:disabled {
+    cursor: default;
+    opacity: 0.48;
+  }
+
+  :is(.room-defaults-segmented, .interface-settings-segmented):has(button:disabled)::before {
+    opacity: 0.48;
+  }
+
+  :is(.layout-chat-mode-segmented-v2, .voice-mode-control, .room-defaults-segmented, .interface-settings-segmented) button:focus-visible {
+    outline: 2px solid #f5914e;
     outline-offset: -2px;
+  }
+
+  .layout-chat-mode-segmented-v2 {
+    margin: 2px 0 4px;
+  }
+
+  .voice-mode-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 9px 2px 3px;
+    min-width: 0;
+  }
+
+  .voice-shortcut-key,
+  .voice-mode-hint-icon {
+    box-sizing: border-box;
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+  }
+
+  .voice-shortcut-key {
+    border: 1px solid rgba(238, 229, 217, 0.28);
+    border-bottom-width: 3px;
+    border-radius: 9px;
+    background: rgba(238, 229, 217, 0.07);
+    color: #eee5d9;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .voice-mode-hint-icon {
+    color: #96938f;
+  }
+
+  .voice-mode-hint-copy {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+  }
+
+  .voice-mode-hint-title,
+  .voice-mode-hint-description {
+    margin: 0;
+  }
+
+  .voice-mode-hint-title {
+    color: #eee5d9;
+    font-size: 11px;
+    font-weight: 650;
+    line-height: 1.4;
+  }
+
+  .voice-mode-hint-description {
+    color: #96938f;
+    font-size: 10.5px;
+    line-height: 1.5;
+    overflow-wrap: break-word;
   }
 
   .voice-settings-feedback {
@@ -2833,13 +2827,14 @@ ${extensionThemeTokens}
     min-width: 0;
     min-height: 40px;
     padding: 2px 0;
-    display: grid;
-    grid-template-columns: 82px minmax(0, 1fr);
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 8px;
   }
 
   .room-defaults-control-label {
+    flex: 0 0 82px;
     min-width: 0;
     color: rgba(255, 255, 255, 0.82);
     font-size: 11px;
@@ -2848,86 +2843,14 @@ ${extensionThemeTokens}
   }
 
   .room-defaults-segmented {
-    position: relative;
-    box-sizing: border-box;
-    width: 100%;
-    min-width: 0;
-    height: 32px;
-    padding: 2px;
-    border: 1px solid rgba(255, 255, 255, 0.075);
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.025);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
-    display: grid;
+    --settings-segment-width: calc((100% - 10px) / 3);
+    flex: 1 0 204px;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    align-items: center;
-    gap: 2px;
-  }
-
-  .room-defaults-segmented::before {
-    content: "";
-    position: absolute;
-    top: 2px;
-    bottom: 2px;
-    left: 2px;
-    box-sizing: border-box;
-    width: calc((100% - 8px) / 3);
-    border: 1px solid rgba(255, 255, 255, 0.09);
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.075);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.035),
-      0 1px 3px rgba(0, 0, 0, 0.16);
-    pointer-events: none;
-    transform: translateX(0);
-    transition:
-      background 160ms ease,
-      border-color 160ms ease,
-      transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  .room-defaults-segmented[data-state="second"]::before {
-    transform: translateX(calc(100% + 2px));
-  }
-
-  .room-defaults-segmented[data-state="third"]::before {
-    transform: translateX(calc(200% + 4px));
   }
 
   .room-defaults-segmented button {
-    position: relative;
-    z-index: 1;
-    min-width: 0;
-    height: 26px;
     padding: 0 5px;
-    border: 0;
-    border-radius: 7px;
-    background: transparent;
-    color: rgba(255, 255, 255, 0.44);
     font-size: 9.5px;
-    font-weight: 700;
-    line-height: 1;
-    white-space: nowrap;
-    transition: color 150ms ease;
-  }
-
-  .room-defaults-segmented button:hover {
-    color: rgba(255, 255, 255, 0.72);
-  }
-
-  .room-defaults-segmented button.selected {
-    background: transparent;
-    color: rgba(255, 247, 241, 0.92);
-  }
-
-  .room-defaults-segmented button:disabled {
-    cursor: default;
-    opacity: 0.48;
-  }
-
-  .room-defaults-segmented button:focus-visible {
-    outline: 2px solid rgba(255, 184, 122, 0.66);
-    outline-offset: -2px;
   }
 
   .room-defaults-feedback {
@@ -3281,13 +3204,14 @@ ${extensionThemeTokens}
     min-height: 48px;
     padding: 6px 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    display: grid;
-    grid-template-columns: minmax(92px, 0.7fr) minmax(164px, 1.3fr);
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 10px;
   }
 
   .interface-settings-control-label {
+    flex: 0.7 0 92px;
     min-width: 0;
     color: rgba(255, 255, 255, 0.82);
     font-size: 11px;
@@ -3296,82 +3220,7 @@ ${extensionThemeTokens}
   }
 
   .interface-settings-segmented {
-    position: relative;
-    box-sizing: border-box;
-    width: 100%;
-    min-width: 0;
-    height: 32px;
-    padding: 2px;
-    border: 1px solid rgba(255, 255, 255, 0.075);
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.025);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: center;
-    gap: 2px;
-  }
-
-  .interface-settings-segmented::before {
-    content: "";
-    position: absolute;
-    top: 2px;
-    bottom: 2px;
-    left: 2px;
-    box-sizing: border-box;
-    width: calc((100% - 6px) / 2);
-    border: 1px solid rgba(255, 255, 255, 0.09);
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.075);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.035),
-      0 1px 3px rgba(0, 0, 0, 0.16);
-    pointer-events: none;
-    transform: translateX(0);
-    transition:
-      background 160ms ease,
-      border-color 160ms ease,
-      transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  .interface-settings-segmented[data-state="second"]::before {
-    transform: translateX(calc(100% + 2px));
-  }
-
-  .interface-settings-segmented button {
-    position: relative;
-    z-index: 1;
-    min-width: 0;
-    height: 26px;
-    padding: 0 7px;
-    border: 0;
-    border-radius: 7px;
-    background: transparent;
-    color: rgba(255, 255, 255, 0.44);
-    font-size: 10.5px;
-    font-weight: 700;
-    line-height: 1;
-    white-space: nowrap;
-    transition: color 150ms ease;
-  }
-
-  .interface-settings-segmented button:hover {
-    color: rgba(255, 255, 255, 0.72);
-  }
-
-  .interface-settings-segmented button.selected {
-    background: transparent;
-    color: rgba(255, 247, 241, 0.92);
-  }
-
-  .interface-settings-segmented button:disabled {
-    cursor: default;
-    opacity: 0.48;
-  }
-
-  .interface-settings-segmented button:focus-visible {
-    outline: 2px solid rgba(255, 184, 122, 0.66);
-    outline-offset: -2px;
+    flex: 1.3 0 176px;
   }
 
   .interface-settings-feedback {
@@ -5137,6 +4986,11 @@ ${extensionThemeTokens}
     .interface-settings-edge-glow,
     .interface-settings-participant-pill,
     .interface-settings-demo-cursor,
+    .layout-chat-mode-segmented-v2::before,
+    .layout-chat-mode-segmented-v2 button,
+    .voice-mode-control::before,
+    .voice-mode-control button,
+    .interface-settings-segmented::before,
     .interface-settings-segmented button,
     .room-defaults-segmented::before,
     .room-defaults-segmented button,

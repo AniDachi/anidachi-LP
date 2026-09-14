@@ -1,3 +1,5 @@
+import { Mic } from "lucide-react";
+import { useId } from "react";
 import type { VoiceMode } from "./media-types";
 import { overlayHotkeyBoundaryProps } from "./overlay-interaction-boundary";
 
@@ -12,12 +14,16 @@ export function VoiceSettingsPanel({
 	mode,
 	onModeChange,
 }: VoiceSettingsPanelProps) {
+	const hintId = useId();
+	const pushToTalk = mode === "push-to-talk";
+
 	return (
 		<div
 			{...overlayHotkeyBoundaryProps}
 			className="settings-panel-stack voice-settings-panel"
 		>
 			<div
+				aria-describedby={hintId}
 				aria-label="Microphone mode"
 				className="segmented-control voice-mode-control"
 				data-state={mode === "open-mic" ? "second" : "first"}
@@ -48,6 +54,26 @@ export function VoiceSettingsPanel({
 					mode="open-mic"
 					onSelect={() => onModeChange("open-mic")}
 				/>
+			</div>
+
+			<div className="voice-mode-hint" id={hintId}>
+				{pushToTalk ? (
+					<kbd className="voice-shortcut-key">V</kbd>
+				) : (
+					<span className="voice-mode-hint-icon" aria-hidden="true">
+						<Mic size={18} />
+					</span>
+				)}
+				<div className="voice-mode-hint-copy">
+					<p className="voice-mode-hint-title">
+						{pushToTalk ? "Hold V to talk" : "Talk without holding a key"}
+					</p>
+					<p className="voice-mode-hint-description">
+						{pushToTalk
+							? "Release to mute. Click outside settings to use the shortcut."
+							: "Switch to Push to talk when you want your microphone quiet between turns."}
+					</p>
+				</div>
 			</div>
 
 			{feedback ? (
