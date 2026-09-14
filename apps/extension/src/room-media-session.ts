@@ -92,6 +92,13 @@ export class RoomMediaSession {
 		this.reconciled.clear();
 	}
 
+	/** An Off already sent on this socket needs no snapshot-triggered replay. */
+	markIntentSent(intent: MediaIntent): void {
+		if (!intent.enabled && this.current.get(intent.media)?.requestId === intent.requestId) {
+			this.reconciled.set(intent.media, intent.requestId);
+		}
+	}
+
 	/** At most one replay per current off intent per transport; no snapshot loop. */
 	releaseRestoredGrants(): MediaIntent[] {
 		if (!this.state) return [];
@@ -153,6 +160,8 @@ export class RoomMediaSession {
 	}
 
 	consume(event: ServerEvent): boolean {
+		// Feedback belongs to this event, not to every subsequent room update.
+		this.error = null;
 		if (event.type === "ROOM_SNAPSHOT") {
 			if (event.roomId !== this.roomId || !event.participants.some(p => p.participantSessionId === this.participantSessionId)) return false;
 			return this.bindRoomGeneration(event.roomGeneration);
@@ -215,13 +224,25 @@ export class RoomMediaSession {
 		)
 			return true;
 		if (event.type === "MEDIA_INTENT_ERROR") {
+			// A duplicate can be rejected after the original command committed.
+			// Only the exact authoritative sequence/epoch and requested grant
+			// count as success; a revoked or superseded intent stays rejected.
+			if (event.code === "MEDIA_STALE_INTENT" &&
+				intent.revocationEpoch === event.state[`${event.media}RevocationEpoch`] &&
+				intent.intentSequence === event.state[`${event.media}IntentSequence`] &&
+				intent.enabled === event.state[`${event.media}Granted`]) {
+				this.accepted.set(event.media, intent.intentSequence);
+				return true;
+			}
 			this.current.delete(event.media);
 			this.accepted.delete(event.media);
 			this.error =
 				event.code === "MEDIA_LIMIT_REACHED"
 					? event.media === "camera" ? "All 4 cameras are in use" : "All microphone places are occupied. Try again when one is free."
 					: event.code === "MEDIA_SEAT_REQUIRED" ? "Media seat required"
-					: "Media request expired. Try again.";
+					: event.code === "MEDIA_CAPABILITY_EXPIRED" ? "Media access expired. Rejoin the room."
+					: event.code === "MEDIA_STALE_INTENT" ? "Media state changed. Try again."
+					: "Could not update media. Try again.";
 		} else if (
 			intent.revocationEpoch === event.state[`${event.media}RevocationEpoch`] &&
 			event.state[`${event.media}IntentSequence`] === intent.intentSequence
@@ -263,6 +284,7 @@ export class RoomMediaSession {
 	}
 
 	reset(): void {
+		this.error = null;
 		this.snapshot = null;
 		this.state = null;
 		this.sequence = -1;

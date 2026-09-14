@@ -14,6 +14,21 @@
 
 ## Global Constraints
 
+### Follow-up: transient media request feedback, 2026-09-15
+
+Private testing reported a persistent “Media request expired” notice, including
+a solo host shortly after room creation. Regression tests reproduce a duplicate
+Off when an enable snapshot arrives after local capture failure has sent Off.
+Record successful sends per transport; reconnect may still replay an interrupted
+Off once. A duplicate stale reply is settled only when the current request and
+authoritative grant, sequence and revocation epoch agree. Other rejections retain
+their fences and use transient feedback, cleared on later events/session reset.
+Protocol, Worker, seat allocation, capture permissions and future-room defaults
+remain unchanged. Local extension checks/tests pass; release receipts and the
+remaining physical-device check belong to the private production test PR.
+
+### Existing constraints
+
 - Работа: `codex/* -> PR -> staging -> приемка -> promotion PR -> main`. Никакого прямого push в main.
 - Node `22.23.1`, pnpm `11.2.2`. В несогласованной shell-среде запускать команды через `fnm exec --using=22.23.1`.
 - Меняем управление медиа, не численные лимиты тарифов, биллинг, историю, инвайты, синхронизацию видео или разрешения расширения.

@@ -2081,6 +2081,25 @@ describe("privileged overlay wiring", () => {
 		},
 	);
 
+	it("dismisses media rejection feedback without replaying it on room snapshots", async () => {
+		const runtime = installRoomDefaultsRuntime(3, {cameraEnabled: true});
+		const timers = vi.spyOn(window, "setTimeout");
+		const view = await renderOverlay();
+		try {
+			await click(button(view.container, "Open Anidachi controls"));
+			await click(button(view.container, "Create room"));
+			await runtime.roomSnapshot(); await runtime.mediaSnapshot();
+			const before = timers.mock.calls.length;
+			await runtime.reject("camera");
+			expect(view.container.querySelector(".panel-action-notice")?.textContent).toContain("All 4 cameras are in use");
+			const dismiss = timers.mock.calls.slice(before).find(([, delay]) => delay === overlayApp.TRANSIENT_PANEL_NOTICE_DURATION_MS)?.[0];
+			if (typeof dismiss !== "function") throw new Error("Missing media notice dismissal");
+			await act(async () => { dismiss(); });
+			await runtime.mediaSnapshot();
+			expect(view.container.textContent).not.toContain("All 4 cameras are in use");
+		} finally { await unmount(view.root); }
+	});
+
 	it.each([2, 3] as const)("applies saved room defaults only after v%s media admission and capture ACK", async (version) => {
 		const runtime = installRoomDefaultsRuntime(version, {voiceMode: "open-mic", cameraEnabled: true});
 		const view = await renderOverlay();
@@ -3358,6 +3377,12 @@ function installRoomDefaultsRuntime(version: 2 | 3, defaults: Partial<RoomSessio
 			snapshot = {type: "ROOM_MEDIA_SNAPSHOT", roomId: "room-a", roomGeneration: 1, snapshotSequence: ++sequence, closingAt: null, capabilities,
 				participants: [local, ...Array.from({length: remoteCameras}, (_, index) => ({...local, participantSessionId: `remote-${index}`, cameraGranted: true}))]} as import("@anidachi/protocol").RoomMediaSnapshot;
 			await emit(snapshot);
+		},
+		async reject(kind: "camera" | "microphone") {
+			const intent = enabledIntents().filter(intent => intent.media === kind).at(-1)!;
+			const state = {...snapshot!.participants[0], [`${kind}Granted`]: false, [`${kind}IntentSequence`]: intent.intentSequence};
+			snapshot = {...snapshot, participants: [state]} as import("@anidachi/protocol").RoomMediaSnapshot;
+			await emit({...intent, type: "MEDIA_INTENT_ERROR", code: "MEDIA_LIMIT_REACHED", snapshotSequence: ++sequence, state});
 		},
 		async ack(kind: "camera" | "microphone") {
 			const intent = enabledIntents().filter(intent => intent.media === kind).at(-1);
