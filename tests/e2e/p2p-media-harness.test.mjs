@@ -64,6 +64,28 @@ test("harness room-token fixtures cross the actual Worker verifier boundary", as
 	}
 });
 
+test("v3 harness leases cross the actual Worker verifier with plan seat limits", async () => {
+	const { module, cleanup } = await loadActualWorkerVerifier();
+	try {
+		for (const [size, seats] of [[4, 4], [6, 6], [15, 8]]) {
+			const token = createHarnessRoomToken({
+				...getHarnessHostIdentity(size),
+				role: "host", roomId: ROOM_ID, secret: SECRET,
+				mediaV2Size: size, mediaProtocolVersion: 3,
+			});
+			const verified = await module.verifyRoomToken(token, ROOM_ID, {
+				ANIDACHI_JWT_SECRET: SECRET,
+			});
+			assert.equal(verified?.mediaLease?.capabilities.mediaProtocolVersion, 3);
+			assert.equal(verified?.mediaLease?.capabilities.maxMediaSeats, seats);
+			assert.equal(verified?.mediaLease?.capabilities.maxParticipants, size);
+			assert.equal(verified?.mediaLease?.capabilities.maxMicrophones, undefined);
+		}
+	} finally {
+		await cleanup();
+	}
+});
+
 test("actual Worker rejects the former v2 ICE host fixture but accepts legacy", async () => {
 	const { module, cleanup } = await loadActualWorkerVerifier();
 	try {
@@ -167,7 +189,7 @@ test("uplink byte measurement excludes delayed candidate sampling in the actual 
     pages: Array.from({ length: 2 }, (_, i) => ({ evaluate: async () => ({
       ...snapshot(1_000, ++snapshots > 2), videoTtfm: i ? { p0: 100 } : {},
     }) })),
-    cameras: 1, microphones: 0, MEDIA_V2_SIZE: 2, HARNESS_FORCE_RELAY: false,
+    cameras: 1, microphones: 0, MEDIA_SIZE: 2, HARNESS_FORCE_RELAY: false,
     process: { pid: 42 }, execFileSync: () => "42 1 0 0",
     Date: { now: () => clock }, sleep: async ms => { clock += ms; },
     summarizeSelectedCandidatePairs, getP95, TTFM_P95_BUDGET_MS,
