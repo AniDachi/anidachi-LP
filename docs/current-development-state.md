@@ -8,6 +8,21 @@ contain old paths, old domains, or old decisions. When release channels,
 endpoints, branch protection, or store workflow changes, update this document in
 the same PR.
 
+## Room invitation return correction, 2026-09-14
+
+The approved [invitation return plan](superpowers/plans/2026-09-14-room-invite-return.md)
+replaces permanent same-room deduplication for accepted participants who leave.
+The host uses the ordinary **Invite** action; pending, in-room and declined
+targets remain protected against duplicate delivery. Accepted guests retain a
+seen **Return** card while the room and friendship are active. Return uses normal
+admission and does not alter media-seat or camera/microphone defaults.
+
+The additive migration must deploy before the web runtime. New Inbox clients
+opt in to v3; existing clients retain v2 responses. SQL, web and extension evidence
+and actual staging/main delivery receipts belong to the plan and release PRs.
+Private tester delivery is authorized; physical two-account acceptance remains
+separate from automated tests. Public ZIP/Store publication remains excluded.
+
 ## Room defaults correction, 2026-09-14
 
 Private testing reported that saved microphone/camera defaults were not applied
