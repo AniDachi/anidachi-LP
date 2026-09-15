@@ -59,8 +59,10 @@ export function useFreeQuotaNotice(options: {
     };
 
     async function refresh() {
-      if (!alive || pending || document.visibilityState === "hidden") return;
+      if (!alive || document.visibilityState === "hidden") return;
+      if (pending) { refreshQueued = true; return; }
       const monotonic = performance.now();
+      const requestWall = Date.now();
       if (monotonic - lastAttempt < 5_000) { refreshQueued = true; return; }
       refreshQueued = false;
       pending = true;
@@ -71,6 +73,14 @@ export function useFreeQuotaNotice(options: {
         const result = await request(ownerUserId!, accessToken!);
         if (!alive) return;
         if (result.ownerUserId !== ownerUserId) throw new Error("Quota owner changed");
+        const elapsed = Math.max(0, performance.now() - monotonic);
+        if (Math.abs((Date.now() - requestWall) - elapsed) > 2_000) {
+          // An in-flight response can predate sleep even when performance paused.
+          // Discard all of it, including a stale positive quota, and read again.
+          refreshQueued = true;
+          if (context!.exhausted) show("checking");
+          return;
+        }
         const serverMs = Date.parse(result.serverTime);
         const quota = result.quota;
         // A just-ended room can reach this read before final usage settles.
@@ -79,9 +89,13 @@ export function useFreeQuotaNotice(options: {
         if (quota && (quota.remainingSeconds === 0 || stillExhaustedDay)) {
           context!.exhausted = true;
           context!.resetAt = Date.parse(quota.resetAt);
-          anchor = { serverMs, monotonicMs: performance.now(), resetMs: context!.resetAt };
+          // Reception time is paired with request start: network overhead can
+          // make zero slightly early, but only another server read can confirm it.
+          anchor = { serverMs, monotonicMs: monotonic, resetMs: context!.resetAt };
           checkedZero = false;
-          show("exhausted", Math.max(0, Math.ceil((anchor.resetMs - serverMs) / 1000)));
+          const remaining = Math.max(0, Math.ceil((anchor.resetMs - serverMs - elapsed) / 1000));
+          if (remaining === 0) { show("checking"); refreshQueued = true; }
+          else show("exhausted", remaining);
         } else {
           anchor = null;
           if (context!.exhausted) show("ready");

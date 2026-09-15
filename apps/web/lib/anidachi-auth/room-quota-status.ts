@@ -13,6 +13,9 @@ export function createRoomQuotaStatusHandler(deps = {
   now: () => new Date(),
 }) {
   return async (request: NextRequest) => {
+    // Stamp reception, so the client can include the request's elapsed time.
+    // All quota dates in this response describe this same server UTC instant.
+    const now = deps.now();
     try {
       const session = await deps.getSession(request);
       if (!session) return NextResponse.json({ code: "UNAUTHORIZED" }, { status: 401, headers: PRIVATE_HEADERS });
@@ -20,8 +23,7 @@ export function createRoomQuotaStatusHandler(deps = {
         return NextResponse.json({ code: "QUOTA_OWNER_CHANGED" }, { status: 409, headers: PRIVATE_HEADERS });
       }
       // Resolve current paid access rather than trusting a stale plan in a token.
-      const access = await deps.resolve(session.userId, deps.now());
-      const now = deps.now();
+      const access = await deps.resolve(session.userId, now);
       const view = await deps.getQuota(session.userId, access.policy.planCode, now);
       const body = RoomQuotaStatusSchema.parse({
         schemaVersion: 1, ownerUserId: session.userId, serverTime: now.toISOString(),

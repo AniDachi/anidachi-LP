@@ -39,6 +39,19 @@ test("quota status rejects anonymous and mismatched owners before reading usage"
   assert.equal((await createRoomQuotaStatusHandler(h.deps)(h.request())).status, 401);
   assert.equal(h.readCount(), 0);
 });
+test("quota timestamps describe request reception even when authentication crosses midnight", async () => {
+  const h = harness();
+  const getSession = h.deps.getSession;
+  h.deps.getSession = async request => {
+    h.set("2026-09-16T00:00:01Z", "free", 1800);
+    return getSession(request);
+  };
+  const response = await createRoomQuotaStatusHandler(h.deps)(h.request());
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.serverTime, "2026-09-15T23:59:59.000Z");
+  assert.equal(body.quota.resetAt, "2026-09-16T00:00:00.000Z");
+});
 test("quota status fails closed on unavailable authority or usage", async () => {
   const h = harness(); h.deps.getQuota = async () => { throw new Error("unavailable"); };
   const response = await createRoomQuotaStatusHandler(h.deps)(h.request());

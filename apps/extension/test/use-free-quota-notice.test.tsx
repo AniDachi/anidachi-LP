@@ -53,6 +53,36 @@ describe("Free quota countdown", () => {
     await render({ request }); await advance(10_000);
     expect(request).toHaveBeenCalledTimes(2); expect(current.state?.kind).toBe("ready");
   });
+  it("counts request time instead of delaying the midnight check by response latency", async () => {
+    let resolve!: (value: RoomQuotaStatus) => void;
+    const request = vi.fn().mockImplementationOnce(() => new Promise<RoomQuotaStatus>(r => { resolve = r; }))
+      .mockResolvedValue({ ...status("2026-09-16T00:00:00Z", 1800), quota: { remainingSeconds: 1800, resetAt: "2026-09-17T00:00:00Z" } });
+    await render({ request }); await advance(5000);
+    await act(async () => resolve(status()));
+    expect(current.state).toMatchObject({ kind: "exhausted", remainingSeconds: 5 });
+    await advance(5000);
+    expect(request).toHaveBeenCalledTimes(2); expect(current.state?.kind).toBe("ready");
+  });
+  it("discards a response that was in flight while the device slept", async () => {
+    let resolve!: (value: RoomQuotaStatus) => void;
+    const request = vi.fn().mockImplementationOnce(() => new Promise<RoomQuotaStatus>(r => { resolve = r; }))
+      .mockResolvedValue({ ...status("2026-09-16T06:00:00Z", 1800), quota: { remainingSeconds: 1800, resetAt: "2026-09-17T00:00:00Z" } });
+    await render({ request, exhaustion: { ownerUserId: owner, resetAt: "2026-09-16T00:00:00Z" } });
+    vi.setSystemTime(new Date("2040-01-02T00:00:00Z"));
+    await act(async () => resolve(status()));
+    expect(current.state?.kind).toBe("checking");
+    await advance(5000);
+    expect(request).toHaveBeenCalledTimes(2); expect(current.state?.kind).toBe("ready");
+  });
+  it("shows checking immediately when the response arrives beyond its reset", async () => {
+    let resolve!: (value: RoomQuotaStatus) => void;
+    const request = vi.fn().mockImplementationOnce(() => new Promise<RoomQuotaStatus>(r => { resolve = r; }))
+      .mockResolvedValue({ ...status("2026-09-16T00:00:01Z", 1800), quota: { remainingSeconds: 1800, resetAt: "2026-09-17T00:00:00Z" } });
+    await render({ request, exhaustion: { ownerUserId: owner, resetAt: "2026-09-16T00:00:00Z" } });
+    await advance(11_000); await act(async () => resolve(status()));
+    expect(current.state?.kind).toBe("checking");
+    await advance(1000); expect(current.state?.kind).toBe("ready");
+  });
   it("recognizes a paid upgrade immediately even before the Free reset", async () => {
     await render(); await advance(5000);
     vi.mocked(options.request!).mockResolvedValue({ ...status(), quota: null });
