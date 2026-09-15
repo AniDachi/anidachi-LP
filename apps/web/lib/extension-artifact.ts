@@ -20,14 +20,14 @@ function parsePositiveInt(value: string | undefined): number | null {
 function parseVersion(value: string | undefined): string | null {
   const trimmed = value?.trim() ?? "";
   if (trimmed.length > 80) return null;
-  return /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z]+(?:\.[0-9A-Za-z]+)*)?(?:\+[0-9A-Za-z]+(?:\.[0-9A-Za-z]+)*)?$/.test(trimmed)
-    ? trimmed
-    : null;
+  const match = /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/.exec(trimmed);
+  if (!match || match[1]?.split(".").some((part) => /^0\d+$/.test(part))) return null;
+  return trimmed;
 }
 
 function parseSourceUrl(value: string | undefined): string | null {
   const trimmed = value?.trim() ?? "";
-  if (!/^https:\/\//i.test(trimmed) || /[\u0000-\u0020\u007f\\]/.test(trimmed)) return null;
+  if (!/^https:\/\//i.test(trimmed) || /[\u0000-\u0020\u007f\\#]/.test(trimmed)) return null;
   try {
     const url = new URL(trimmed);
     if (url.protocol !== "https:" || url.username || url.password || url.hash) return null;

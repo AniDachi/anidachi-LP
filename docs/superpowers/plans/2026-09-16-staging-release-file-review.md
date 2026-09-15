@@ -179,7 +179,7 @@ responsive-доступа и защиты выхода проверяется о
 | открыто | A | T | `apps/web/lib/amplitude-server.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | M | T | `apps/web/lib/amplitude.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | M | T | `apps/web/lib/conversion-events.ts` | Этап 1 убирает только extension_detected; остальной analytics diff требует отдельного ревью. |
-| исправлено локально; staging pending | A | I | `apps/web/lib/extension-artifact.ts` | Этап 3: один URL; проверка схемы/credentials/version/SHA/целого размера, отсутствие legacy path. 18 целевых/compatibility проверок passed; hosted bytes — этап 6. |
+| исправлено локально; staging pending | A | I | `apps/web/lib/extension-artifact.ts` | Этап 3: один URL; проверка схемы/credentials/version/SHA/целого размера, отсутствие legacy path. 19 целевых/compatibility проверок passed после двух review fixes; hosted bytes — этап 6. |
 | открыто | A | I | `apps/web/lib/extension-install-faq.ts` | F13 |
 | исключено | A | I | `apps/web/lib/extension-presence.ts` | Этап 1: удалено после проверки callers; сайт не определяет установку. SuccessInstallNext не был подключен к payment page. |
 | открыто | A | C | `apps/web/lib/extension-using-guide.ts` | Полное diff-review еще не зафиксировано. |

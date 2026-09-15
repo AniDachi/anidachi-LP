@@ -49,6 +49,7 @@ test("only an absolute HTTPS URL without credentials, fragments or control chara
     "https://user:password@downloads.example/file.zip",
     "https://user@downloads.example/file.zip",
     "https://downloads.example/file.zip#fragment",
+    "https://downloads.example/file.zip#",
     "https://downloads.example/fi\nle.zip", "https://downloads.example/fi\tle.zip",
     "https://downloads.example/some file.zip", "https://downloads.example\\file.zip",
   ]) {
@@ -79,11 +80,22 @@ test("size must be an exact positive safe integer, not a partially parsed value"
 });
 
 test("release version cannot inject a path or header into the filename", () => {
-  for (const value of ["../old", "latest", "0.1", "0.1.0/../../file", "0.1.0\r\nX-Test: yes", "a".repeat(100)]) {
+  for (const value of ["../old", "latest", "0.1", "0.1.0-01", "0.1.0/../../file", "0.1.0\r\nX-Test: yes", "a".repeat(100)]) {
     process.env.EXTENSION_ZIP_VERSION = value;
     const artifact = getExtensionArtifact();
     assert.equal(artifact.available, false, value);
     assert.equal(artifact.filename, "anidachi-chrome-extension-0.1.0.zip");
+  }
+});
+
+test("valid SemVer identifiers and an encoded URL hash remain supported", () => {
+  process.env.EXTENSION_ZIP_URL = "https://downloads.example/release%23archive.zip";
+  for (const version of ["1.2.3-beta-feature", "1.2.3+build-prod", "1.2.3-alpha.0", "1.2.3-0", "1.2.3+01"]) {
+    process.env.EXTENSION_ZIP_VERSION = version;
+    const artifact = getExtensionArtifact();
+    assert.equal(artifact.available, true, version);
+    assert.equal(artifact.version, version);
+    assert.equal(artifact.sourceUrl, process.env.EXTENSION_ZIP_URL);
   }
 });
 
