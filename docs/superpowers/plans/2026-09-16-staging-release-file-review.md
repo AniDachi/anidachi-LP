@@ -19,7 +19,12 @@ runtime-потребителей, отмечает намеренность из
 предложенного изменения по решению владельца; `исключено` — удаление новой
 непринятой части. Реестр исходных 164 файлов сохранен, остальные строки не считаются
 принятыми. Подробные команды и ограничения находятся в журнале этапа 1 плана,
-CI receipts — в [PR #349](https://github.com/AniDachi/anidachi-LP/pull/349), код исправления `b71b1b91`; staging/main пока не обновлены.
+CI receipts — в [PR #349](https://github.com/AniDachi/anidachi-LP/pull/349), код исправления `b71b1b91`, принятый staging merge `bcd00c7d`; main остается `4b4ff883`.
+
+Этап 2 согласован отдельно: восстановить нашу шторку аккаунта и ее оформление
+из main, сохранив остальные новые элементы шапки. Восстановление общего меню,
+responsive-доступа и защиты выхода проверяется отдельным файловым срезом;
+остальные строки исходного редизайна остаются открытыми.
 
 | Группа | Проверка |
 | --- | --- |
@@ -146,7 +151,7 @@ CI receipts — в [PR #349](https://github.com/AniDachi/anidachi-LP/pull/349), 
 | открыто | M | C | `apps/web/components/join-discord-button.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/components/json-ld.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/components/main-app-features.tsx` | Полное diff-review еще не зафиксировано. |
-| открыто | M | A | `apps/web/components/nav-bar-client.tsx` | F04, F05, F06 |
+| исправлено локально; staging pending | M | A | `apps/web/components/nav-bar-client.tsx` | F04/F05/F06: общий production UserMenu и CSS подключены обратно; восстановлены account shortcuts, единый responsive breakpoint и cleanup drawer. Watch/Contact/Pricing/install сохранены. Проверены runtime consumers и 34 целевых сценария; живая приемка остается в PR этапа 2. |
 | открыто | M | C | `apps/web/components/nav-pricing-button.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/components/nav-pricing-link.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | A | C | `apps/web/components/overlay-interface-preview.tsx` | Полное diff-review еще не зафиксировано. |
@@ -204,3 +209,22 @@ CI receipts — в [PR #349](https://github.com/AniDachi/anidachi-LP/pull/349), 
 | открыто | M | D | `docs/environment-and-secrets-matrix.md` | Полное diff-review еще не зафиксировано. |
 | возвращено к main | M | D | `package.json` | По решению владельца этапа 1: diff с main 4b4ff883 пустой; новые extension/tooling изменения исключены. |
 | возвращено к main | M | I | `scripts/validate-extension-artifact.mjs` | По решению владельца этапа 1: diff с main 4b4ff883 пустой; новые extension/tooling изменения исключены. |
+
+## Дополнительный срез этапа 2
+
+Runtime commit `185ac1ae`; база `bcd00c7d`. Эти файлы и потребители проверяются
+в дополнение к исходному реестру 164 файлов. Остальные открытые строки не приняты.
+
+| Файл / потребитель | Что проверено |
+| --- | --- |
+| `components/account-menu.tsx` | Восстановлен прежний потребитель. Единственная правка общего меню — синхронный in-flight guard и одноразовый callback: тесты воспроизвели повторные запросы и подтвердили исправление, включая ошибку и повторную попытку. |
+| `components/account-menu.css` | Byte-identical с main `4b4ff883`; новый дизайн меню не добавлялся. |
+| `app/account/layout.tsx` | Прежний импорт `UserMenu` из navbar теперь получает общий компонент через совместимый re-export. Сам layout не изменен. |
+| `app/account/profile/profile-client.tsx` | Native confirmation несохраненного профиля снова перехватывает выход; отказ не вызывает logout. PATCH/API не изменены. |
+| `app/account/watch-library/history-browser.tsx` | Настоящий редактор проверен вместе с меню: Stay / Discard / Save & leave, ожидание успешного Save и сохранение черновика при ошибке. Алгоритмы и endpoints не изменены. |
+| `lib/use-body-scroll-lock.ts` | Hook не изменен; navbar закрывает drawer при переходе на desktop, route change, Escape и unmount. Проверено освобождение wheel/touch/key, а не только CSS display. |
+| `lib/account-menu-client.test.ts`, `lib/nav-bar-client.test.ts`, `lib/test-helpers/account-client-dom.ts` | 34 целевые проверки реальных компонентов; DOM harness не выдается за пиксельную/браузерную приемку. |
+
+Полный web suite: 617 passed, 6 skipped, 0 failed; typecheck и Next build passed.
+`pnpm dev:check` — web/docs profiles. Фактический staging SHA, review и ручные
+проверки записываются в PR этого блока. Production promotion не выполняется.
