@@ -1653,10 +1653,10 @@ describe("negotiated media transport", () => {
   expect(client.setMediaSeat("guest",true)).toBe("sent");
   const command=JSON.parse(ws.sent.at(-1)!);
   expect(command).toMatchObject({type:"SET_MEDIA_SEAT",targetUserId:"guest",targetParticipantSessionId:"guest-session",expectedSeatRevision:7,enabled:true,roomGeneration:1});
-  expect(client.media!.seatControls.get("guest")).toEqual({pending:true});
+  expect(client.media!.seatControls.get("guest")).toEqual({pending:true,requestId:command.requestId});
   expect(client.media!.snapshot!.participants[1]).toMatchObject({mediaSeatGranted:false});
   ws.message({type:"MEDIA_SEAT_RESULT",requestId:"unrelated",targetParticipantSessionId:"guest-session",code:"OK",snapshot});
-  expect(client.media!.seatControls.get("guest")).toEqual({pending:true});
+  expect(client.media!.seatControls.get("guest")).toEqual({pending:true,requestId:command.requestId});
   ws.message({type:"MEDIA_SEAT_RESULT",requestId:command.requestId,targetParticipantSessionId:"guest-session",code:"OK",snapshot:{...snapshot,snapshotSequence:2,participants:[state,{...snapshot.participants[1],mediaSeatGranted:true,seatRevision:8}]}});
   expect(client.media!.seatControls.get("guest")).toEqual({pending:false});
   expect(client.media!.snapshot!.participants[1]).toMatchObject({mediaSeatGranted:true,seatRevision:8});
@@ -1703,7 +1703,7 @@ describe("negotiated media transport", () => {
     {...failure,snapshot:{...restored,roomGeneration:0}},
   ]) {
     ws.message(invalid);
-    expect(client.media!.seatControls.get("guest")).toEqual({pending:true});
+    expect(client.media!.seatControls.get("guest")).toEqual({pending:true,requestId:command.requestId});
   }
   onEvent.mockClear();
   ws.message(failure);
@@ -1722,7 +1722,7 @@ describe("negotiated media transport", () => {
   ws.message(newer);
   ws.message(failure);
   expect(client.media!.snapshot!.snapshotSequence).toBe(4);
-  expect(client.media!.seatControls.get("guest")).toEqual({pending:true});
+  expect(client.media!.seatControls.get("guest")).toEqual({pending:true,requestId:retry.requestId});
   // A correlated failure can settle even when its snapshot is now stale.
   ws.message({...failure,requestId:retry.requestId});
   expect(client.media!.seatControls.get("guest")).toMatchObject({pending:false,error:expect.any(String)});
