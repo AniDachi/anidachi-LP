@@ -33,11 +33,13 @@ and restore account access and scroll cleanup across responsive layouts. Keep
 the redesigned site's other navigation and installation CTA. This is a scoped
 web change; history, profile and billing APIs and the extension stay unchanged.
 Stage 2 runtime is implemented in `185ac1ae`: the shared menu is restored and
-duplicate logout callbacks are guarded without changing the menu CSS. The 34
-focused checks, web typecheck, full web suite (617 passed, 6 skipped) and Next
-build passed locally. Independent review and deployed acceptance are still
-required; the release PR records their receipt. Main promotion remains a
-separate decision.
+duplicate logout callbacks are guarded without changing the menu CSS. Review
+found a Space-key activation conflict with the drawer scroll lock; `20dc0692`
+fixes it locally without changing the shared hook. Follow-up review found no
+blocking findings. Final focused checks (36/36), web typecheck, full web suite
+(619 passed, 6 skipped) and Next build passed. Deployed acceptance is still
+required; the release PR records its receipt. Main promotion remains a separate
+decision.
 
 ## Free quota reset notice, 2026-09-15
 

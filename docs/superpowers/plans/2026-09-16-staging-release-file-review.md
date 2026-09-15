@@ -228,3 +228,8 @@ Runtime commit `185ac1ae`; база `bcd00c7d`. Эти файлы и потре�
 Полный web suite: 617 passed, 6 skipped, 0 failed; typecheck и Next build passed.
 `pnpm dev:check` — web/docs profiles. Фактический staging SHA, review и ручные
 проверки записываются в PR этого блока. Production promotion не выполняется.
+
+Повторное ревью выявило и проверило исправление Space activation при открытом
+drawer (`20dc0692`); scroll-lock hook и CSS не меняются. Итоговые проверки:
+36/36 целевых, полный web suite 619 passed / 6 skipped, web check и Next build
+passed. Блокирующих замечаний повторного ревью нет; браузерная приемка pending.

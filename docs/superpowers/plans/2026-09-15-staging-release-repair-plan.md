@@ -189,6 +189,13 @@
 - [x] Выполнить целевые тесты: 34/34 passed; web check passed; полный web test: 617 passed, 6 skipped, 0 failed. `next build` прошел с предупреждениями в неизмененных файлах и о вложенном worktree; catalog-cache pre-script не запускался. Runtime commit `185ac1ae` — `fix(web): restore account navigation and guarded sign out`.
 - [ ] Независимое ревью, отдельный PR в staging и приемка меню с черновиком истории и профиля; точные CI/deployment receipts записать в PR.
 
+Ревью нашло конфликт Space на кнопках шапки с document scroll lock. В `20dc0692`
+добавлено узкое исключение propagation для native button activation при открытом
+drawer: hook, wheel/touch и фоновые клавиши не меняются. Два теста сначала падали,
+после исправления 36/36 целевых проверок прошли. Повторные web check, полный web
+test (619 passed / 6 skipped) и Next build passed; повторное ревью без блокирующих
+замечаний. Физическое нажатие Space в браузере остается частью staging-приемки.
+
 **Приемка:** наша прежняя шторка восстановлена, остальной новый дизайн шапки сохранен; кабинет доступен со всех размеров сайта, unsaved guard перехватывает настоящий logout до отзыва сессии. История и billing API не изменены.
 
 ## Этап 3. Согласовать установку, обновление и источник ZIP
