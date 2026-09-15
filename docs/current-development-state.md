@@ -1,12 +1,30 @@
 # Current Development State
 
-Last updated: 2026-09-14.
+Last updated: 2026-09-15.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
 contain old paths, old domains, or old decisions. When release channels,
 endpoints, branch protection, or store workflow changes, update this document in
 the same PR.
+
+## Free quota reset notice, 2026-09-15
+
+The drawer shows a compact countdown after the host's daily Free budget is used
+up, including after reopening it. The authenticated, read-only
+`GET /api/me/room-quota` returns current entitlements, committed usage, server time
+and the next UTC midnight; responses are private and not cached. The extension
+uses server time plus monotonic elapsed time. A clock jump or resume triggers a
+new server read, and zero never grants permission or starts a room. Guests see
+that the host's time ended, rather than being assigned the host's exhausted quota.
+
+This adds an HTTP metadata contract and presentation only. Existing Worker
+metering, room admission, the Free allowance, SQL and media behavior stay intact.
+The endpoint deploys before delivery of the new private production ZIP. Local
+tests cover clock changes, sleep, UTC rollover, offline status, refresh and account
+changes; isolated browser checks cover narrow layouts and keyboard retry. Exact
+release receipts and remaining installed-extension acceptance belong to the PR.
+See the [quota follow-up](superpowers/plans/2026-09-08-personal-history-and-plans-mvp.md#free-quota-countdown-follow-up-2026-09-15).
 
 ## Extension visibility and compact People, 2026-09-15
 

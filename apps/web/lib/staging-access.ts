@@ -105,6 +105,7 @@ function canBearerBypassStagingGate(pathname: string, method: string): boolean {
   // These metadata endpoints verify the extension bearer in their route handler.
   if (method === "GET" && [
     "/api/me/entitlements",
+    "/api/me/room-quota",
     "/api/watch-history/v3/access",
     "/api/watch-history/v3/capacity",
   ].includes(pathname)) return true;

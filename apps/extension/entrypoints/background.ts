@@ -1,5 +1,6 @@
 import "../src/zod-csp";
 import { defineBackground } from "wxt/utils/define-background";
+import { handleRoomQuotaStatusMessage, isRoomQuotaStatusMessage } from "../src/room-quota-status-client";
 import {
   handleAccountInboxHttpMessage,
   isAccountInboxHttpMessage,
@@ -279,6 +280,11 @@ export default defineBackground(() => {
 
     if (isAuthMessage(message)) {
       void handleAuthMessage(message).then(sendResponse);
+      return true;
+    }
+
+    if (isRoomQuotaStatusMessage(message)) {
+      void handleRoomQuotaStatusMessage(message).then(sendResponse);
       return true;
     }
 

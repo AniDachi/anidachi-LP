@@ -203,6 +203,8 @@ import {
 	roomInviteTargetStatuses,
 	roomInviteTargetStatusLabel,
 } from "./room-invite-target-status";
+import { FreeQuotaNotice } from "./free-quota-notice";
+import { useFreeQuotaNotice, type QuotaExhaustion } from "./use-free-quota-notice";
 import {
 	applyRoomUsageSnapshot,
   acceptAuthoritativeQuota,
@@ -805,6 +807,24 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const [expandedPeopleRoomId, setExpandedPeopleRoomId] = useState<string | null>(null);
 	const interfacePreferences = useInterfacePreferences();
 	const roomJoinDefaults = useRoomJoinDefaults(accountUser?.id ?? null);
+	const [quotaExhaustion, setQuotaExhaustion] = useState<QuotaExhaustion | null>(null);
+	const freeQuotaNotice = useFreeQuotaNotice({
+		ownerUserId: authAuthenticated && !roomId ? accountUser?.id ?? null : null,
+		accessToken: authAccessToken,
+		visible: panelOpen && !roomId,
+		isFree: accountUser?.plan === "free",
+		exhaustion: quotaExhaustion,
+	});
+	const showFreeQuotaNotice = useCallback((resetAt?: string) => {
+		const ownerUserId = authUserIdRef.current;
+		if (ownerUserId) setQuotaExhaustion({ ownerUserId, resetAt });
+		setAuthMessage(null);
+		setPanelOpen(true);
+	}, []);
+	useEffect(() => {
+		if (roomId || (quotaExhaustion && quotaExhaustion.ownerUserId !== accountUser?.id)) setQuotaExhaustion(null);
+	}, [roomId, accountUser?.id, quotaExhaustion]);
+
 	const reactionShortcuts = useReactionShortcuts();
 	const topBubbleReveal = useTopBubbleReveal({
 		bubbleRef: topBubbleRef,
@@ -3439,9 +3459,20 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					if (event.type === "MEDIA_SEAT_RESULT") void restoreSelfSeatDefaults(event);
 					return;
 				}
-				case "ROOM_ENDED":
-					terminateRoomSession("Watch room ended.");
+				case "ROOM_ENDED": {
+					if (event.roomId !== roomIdRef.current) return;
+					if (event.reason === "quota_exhausted") {
+						if (isCurrentHost()) {
+							const ended = new Date(event.endedAt);
+							const resetAt = new Date(Date.UTC(ended.getUTCFullYear(), ended.getUTCMonth(), ended.getUTCDate() + 1)).toISOString();
+							showFreeQuotaNotice(resetAt);
+							terminateRoomSession("");
+						} else {
+							terminateRoomSession("The host's Free time is used up. You can join another room or create your own.");
+						}
+					} else terminateRoomSession("Watch room ended.");
 					return;
+				}
 				case "ROOM_SNAPSHOT": {
           if (event.quota) {
             const session = storedRoomSessionRef.current;
@@ -4179,7 +4210,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 								roomId: reconnectRoomId,
 								resetAt: error.resetAt,
 							});
-							terminateRoomSession(quotaExhaustedMessage(error.resetAt));
+							showFreeQuotaNotice(error.resetAt);
+							terminateRoomSession("");
 							return;
 						}
 
@@ -4344,7 +4376,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				}
 			})();
 		}
-		terminateRoomSession(quotaExhaustedMessage(roomQuota?.resetAt));
+		showFreeQuotaNotice(roomQuota?.resetAt);
+		terminateRoomSession("");
 	}, [
     versionedMedia,
 		quotaMeteringActive,
@@ -4813,7 +4846,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					});
 					clearStoredRoomSession();
 					clearRoomHash();
-					setAuthMessage(quotaExhaustedMessage(error.resetAt));
+					showFreeQuotaNotice(error.resetAt);
 					setPanelOpen(true);
 					return;
 				}
@@ -4895,7 +4928,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				logDebug("overlay.room", "create blocked by quota", {
 					resetAt: error.resetAt,
 				});
-				setAuthMessage(quotaExhaustedMessage(error.resetAt));
+				showFreeQuotaNotice(error.resetAt);
 				return;
 			}
 
@@ -6267,6 +6300,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							<span>{transientPanelNotice}</span>
 						</div>
 					) : null}
+					{!roomId && freeQuotaNotice.state ? <FreeQuotaNotice state={freeQuotaNotice.state} onRetry={freeQuotaNotice.retry} /> : null}
 					{authMessage ? (
 						<div className="auth-notice">
 							<span>{authMessage}</span>
@@ -7332,21 +7366,6 @@ function clearRoomHash(): void {
 		"",
 		`${location.pathname}${location.search}${hash ? `#${hash}` : ""}`,
 	);
-}
-
-function quotaExhaustedMessage(resetAt: string | undefined): string {
-	if (resetAt) {
-		const reset = new Date(resetAt);
-		if (!Number.isNaN(reset.getTime())) {
-			const label = reset.toLocaleTimeString([], {
-				hour: "2-digit",
-				minute: "2-digit",
-			});
-			return `Daily free watch-party time is used up. It resets at ${label}.`;
-		}
-	}
-
-	return "Daily free watch-party time is used up. It resets at midnight UTC.";
 }
 
 function roomJoinUnavailableMessage(error: { status?: number }): string {
