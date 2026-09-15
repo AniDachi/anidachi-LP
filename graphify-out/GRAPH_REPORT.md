@@ -1,5 +1,15 @@
 # Graph Report - room-media-seats-v3  (2026-09-15)
 
+## Scoped Incremental Update - Server-Anchored Free Quota Reset (2026-09-15)
+
+- Scope: seventeen changed code/test files and only the changed sections of three docs; source `d7b0afd776622256ccf4cb1dcd09d8d31145b951..d8738eaf947b1b31e101783a46767a85487397ac`. AST extraction used Graphify's installed API: 159 nodes / 892 raw edges, with no failed sources. The Codex semantic fragment adds nine documented concepts and twenty-four source-cited relationships.
+- The authenticated, private, uncached `GET /api/me/room-quota` resolves current entitlements and returns an owner-bound quota view with server request-reception time and next UTC midnight. The extension includes request latency in its monotonic countdown, uses wall time only for discontinuity detection, discards sleep-spanning responses, fences accounts and stale room creation, and rechecks the server on resume and zero. Hosts see the reset card; guests see the host-limit explanation. Worker metering, admission policy, SQL and media remain unchanged.
+- Current graph: 12859 nodes / 27922 edges. Delta: +49 nodes, -1 node, 96 modified nodes; +149 edges, -2 edges, 470 modified edges. The removed node and its two edges are the deleted `quotaExhaustedMessage()` helper.
+- Existing community assignments, unrelated graph objects, all hyperedges and unscoped manifest rows are preserved. No whole-corpus rescan or reclustering ran; the community/cohesion analysis below remains the prior snapshot. Repeated AST relationships use the existing simple-graph endpoint-pair representation. One unchanged interface-field reference omitted by incremental AST resolution was preserved after direct source verification at `apps/extension/entrypoints/background.ts:L84`.
+- Integrity: no missing/dangling endpoints, duplicate endpoint pairs or self-loops. All twenty scoped manifest entries match final source content. Graph refresh does not establish installed-extension or deployment acceptance.
+- Semantic extraction used the active Codex session and one subagent. Token usage counts were unavailable from the collaboration tool; historical token figures below are not the cost of this update.
+- Query evidence: `graphify explain "Server UTC Monotonic Countdown"` links the cited decision at `docs/superpowers/plans/2026-09-08-personal-history-and-plans-mvp.md:L689-L696` to `useFreeQuotaNotice()`, the authenticated view, the fenced recheck and server-confirmed renewal. `graphify path "requestRoomQuotaStatus" "Authenticated Room Quota View"` resolves a three-hop directed path through `handleRoomQuotaStatusMessage()` and `GET`.
+
 ## Scoped Incremental Update - Visibility Defaults and Compact People (2026-09-15)
 
 - Scope: eight changed extension code/test files and the changed sections of two docs; source `0b7a0fffd66949322217f5835295e7cfeecff01f`.
