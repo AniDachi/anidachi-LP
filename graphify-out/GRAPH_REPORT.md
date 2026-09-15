@@ -1,5 +1,15 @@
 # Graph Report - room-media-seats-v3  (2026-09-15)
 
+## Scoped Incremental Update - Explicit Own Seat Defaults (2026-09-15)
+
+- Scope: six changed extension code/test files and the changed sections of four docs; source `addabc0a19476aa18479c7b2c8e64ee441c86047`, including the `room-client-auth.test.ts` request-ID expectation update.
+- Host own-seat restoration now links saved account Room defaults and Last used to the matching successful seat result; passive and other-user grants stay silent, and capture remains separately ACK-gated.
+- Current graph: 12808 nodes / 27765 edges. Delta: +2 nodes, -0 nodes, 112 modified nodes; +148 edges, -0 edges, 272 modified edges.
+- Existing community assignments, unrelated graph objects and hyperedges are preserved. The community/cohesion analysis below is the prior clustering snapshot, not a new whole-corpus analysis.
+- Integrity: no new missing/dangling endpoints, collapsed pairs or self-loops.
+- Semantic extraction used the active Codex session and one subagent. Usage counts were unavailable from the collaboration tool; historical token figures below are not this update's cost.
+- Useful query: `graphify explain "Explicit Own Seat Restoration"`.
+
 ## Corpus Check
 - 47 files · ~1,365,837 words
 - Verdict: corpus is large enough that graph structure adds value.

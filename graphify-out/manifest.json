@@ -342,10 +342,10 @@
     "semantic_hash": "46aa97bae6145c0f0a59e3c51cbf50c7"
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1789411369.5547771,
-    "seen": 1789411864.705316,
-    "ast_hash": "3ab5912c20f18ee9380b130471669a01",
-    "semantic_hash": "3ab5912c20f18ee9380b130471669a01"
+    "mtime": 1789467475.0450094,
+    "seen": 1789468350.4669352,
+    "ast_hash": "d26fff1c0a740a9cb3a428cd19064df1",
+    "semantic_hash": "d26fff1c0a740a9cb3a428cd19064df1"
   },
   "apps/extension/src/overlay-layout.ts": {
     "mtime": 1789366502.820302,
@@ -426,10 +426,10 @@
     "semantic_hash": "52e3c8b5a15573ae44906f7b91906743"
   },
   "apps/extension/src/room-session-storage.ts": {
-    "mtime": 1789366502.8295772,
-    "seen": 1789374356.2371268,
-    "ast_hash": "248a28753acbfcc3765c918f1c495e40",
-    "semantic_hash": "248a28753acbfcc3765c918f1c495e40"
+    "mtime": 1789467362.0263805,
+    "seen": 1789468350.466939,
+    "ast_hash": "82ff5b87de3a9583b816c435d71b5004",
+    "semantic_hash": "82ff5b87de3a9583b816c435d71b5004"
   },
   "apps/extension/src/room-tab-lock.ts": {
     "mtime": 1789366502.8296516,
@@ -564,10 +564,10 @@
     "semantic_hash": "6880c590956fc235cf8f9b0915dbef78"
   },
   "apps/extension/test/room-client-auth.test.ts": {
-    "mtime": 1789411262.284381,
-    "seen": 1789411864.7054331,
-    "ast_hash": "dc0ad47beeacf403676f85aaf9d52914",
-    "semantic_hash": "dc0ad47beeacf403676f85aaf9d52914"
+    "mtime": 1789467746.111031,
+    "seen": 1789468350.46694,
+    "ast_hash": "5f80944b1e9251d39a46843f898012b2",
+    "semantic_hash": "5f80944b1e9251d39a46843f898012b2"
   },
   "apps/extension/test/room-quota-display.test.ts": {
     "mtime": 1789366502.8496685,
@@ -3606,10 +3606,10 @@
     "semantic_hash": "773034b218ba95d0712867ff35698f20"
   },
   "docs/current-development-state.md": {
-    "mtime": 1789404544.836034,
-    "seen": 1789404982.9597719,
+    "mtime": 1789467633.16081,
+    "seen": 1789468350.5064352,
     "ast_hash": "ccda832776055fcc9b51806280a59c5a",
-    "semantic_hash": "9520ca7b7b369d79070b1e3a646cc030"
+    "semantic_hash": "73e8e81c088811ef0b05b8b35550ab4e"
   },
   "docs/development-environments.md": {
     "mtime": 1788807642.3055499,
@@ -3738,10 +3738,10 @@
     "semantic_hash": "1a64e025a5001eede8fbb97c9ba09961"
   },
   "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md": {
-    "mtime": 1789400307.2239952,
-    "seen": 1789401382.683188,
+    "mtime": 1789467592.461211,
+    "seen": 1789468350.506437,
     "ast_hash": "b98ff8403005a3b099a8bd81c066cd1e",
-    "semantic_hash": "0cd80976e3b52a5ddd696abf5c0b8d81"
+    "semantic_hash": "d774dcdbfa1a059717121aa3751c90bc"
   },
   "docs/superpowers/plans/2026-06-17-development-flow-quality-system-plan.md": {
     "mtime": 1788807642.3083527,
@@ -5826,10 +5826,10 @@
     "semantic_hash": "e10eabda789cf1436be998f1322db8e4"
   },
   "apps/extension/test/privileged-overlay-wiring.test.tsx": {
-    "mtime": 1789411262.36463,
-    "seen": 1789411864.705431,
-    "ast_hash": "bdb506bd1241e8852f5d1544bdd71850",
-    "semantic_hash": "bdb506bd1241e8852f5d1544bdd71850"
+    "mtime": 1789467500.9920092,
+    "seen": 1789468350.46694,
+    "ast_hash": "82c5bc06d4478e353723c292659c301b",
+    "semantic_hash": "82c5bc06d4478e353723c292659c301b"
   },
   "scripts/graphify-code-update.mjs": {
     "mtime": 1789366503.0354874,
@@ -6990,10 +6990,10 @@
     "semantic_hash": "5a7163c0b50980cc15e0c33dd21baccb"
   },
   "apps/extension/src/room-media-session.ts": {
-    "mtime": 1789411357.9311893,
-    "seen": 1789411864.7053518,
-    "ast_hash": "571541adb853c22153f885fea133d026",
-    "semantic_hash": "571541adb853c22153f885fea133d026"
+    "mtime": 1789467361.9540799,
+    "seen": 1789468350.466938,
+    "ast_hash": "0529713475b59c660ee4e4db7aa2a4ec",
+    "semantic_hash": "0529713475b59c660ee4e4db7aa2a4ec"
   },
   "apps/extension/src/watch-history-access.ts": {
     "mtime": 1789366502.8351357,
@@ -8076,10 +8076,10 @@
     "semantic_hash": "59ded9a8a453e42ee87b287c9ea67b85"
   },
   "apps/extension/test/room-media-seats-client.test.ts": {
-    "mtime": 1789368972.1739695,
-    "seen": 1789374356.2371972,
-    "ast_hash": "77439cc408c30c7a206bf6f4fc722d12",
-    "semantic_hash": "77439cc408c30c7a206bf6f4fc722d12"
+    "mtime": 1789467500.928734,
+    "seen": 1789468350.4669409,
+    "ast_hash": "62b04aa0bf73c4fb69ad8f04bbdd802f",
+    "semantic_hash": "62b04aa0bf73c4fb69ad8f04bbdd802f"
   },
   "apps/extension/test/zod-csp.test.ts": {
     "mtime": 1789366502.8551364,
@@ -8148,16 +8148,16 @@
     "semantic_hash": "569038087663f0c9f7cb48f777d8de8c"
   },
   "docs/superpowers/plans/2026-09-14-host-managed-media-seats.md": {
-    "mtime": 1789411510.689825,
-    "seen": 1789411864.705909,
+    "mtime": 1789467592.46078,
+    "seen": 1789468350.506437,
     "ast_hash": "7f80f07cd028e9ff13d2edc1b2ed32f4",
-    "semantic_hash": "7f80f07cd028e9ff13d2edc1b2ed32f4"
+    "semantic_hash": "34a61ef9531ff3ef039f9813ef3c8b82"
   },
   "docs/releases/room-media-seats/2026-09-14-room-defaults-fix.md": {
-    "mtime": 1789388077.1349547,
-    "seen": 1789388760.1660411,
+    "mtime": 1789467592.4599714,
+    "seen": 1789468350.506436,
     "ast_hash": "22ff71e7b95668e2a5c86f2bdbb687b0",
-    "semantic_hash": "22ff71e7b95668e2a5c86f2bdbb687b0"
+    "semantic_hash": "c067fa1da18b70be9571338d1b69bfb2"
   },
   "apps/web/lib/anidachi-auth/account-inbox-rpc.test.ts": {
     "mtime": 1789399877.7081816,
