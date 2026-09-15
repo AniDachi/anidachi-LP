@@ -10,6 +10,7 @@ import { shouldApplyRoomMediaSnapshot } from "@anidachi/protocol";
 
 export interface MediaSeatControlState {
 	pending: boolean;
+	requestId?: string;
 	error?: string;
 }
 
@@ -53,7 +54,7 @@ export class RoomMediaSession {
 			roomGeneration: snapshot.roomGeneration, targetUserId, targetParticipantSessionId,
 			expectedSeatRevision: state.seatRevision, enabled, requestId: crypto.randomUUID()};
 		this.seatRequests.set(targetUserId, command);
-		this.seatControls.set(targetUserId, {pending: true});
+		this.seatControls.set(targetUserId, {pending: true, requestId: command.requestId});
 		return command;
 	}
 

@@ -35,8 +35,10 @@ Physical two-account acceptance follows the owner's private production test flow
 
 The private tester correction restores saved microphone/camera defaults after
 initial authoritative media admission and fixes Last used writes in the
-versioned overlay. A host grant never starts devices; revoke and capture cleanup
+versioned overlay. A host grant to another participant never starts devices; revoke and capture cleanup
 preserve the future-room preference while clearing the current room intent.
+The September 15 follow-up reapplies Room defaults only after the matching
+confirmed explicit own-seat grant; interrupted operations stay canceled.
 The existing v2/v3 protocol and Worker remain unchanged. Details and verification
 are in the [correction record](../../releases/room-media-seats/2026-09-14-room-defaults-fix.md).
 Exact ZIP and physical-device acceptance follow the owner's private production

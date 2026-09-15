@@ -15,7 +15,8 @@ import {
 } from "../src/reaction-shortcuts";
 import { RoomClient } from "../src/room-client";
 import { RoomMediaSession } from "../src/room-media-session";
-import { roomJoinDefaultsStorageKeyForUser } from "../src/room-media-defaults";
+import { cameraEnabledPreferenceStorageKeyForUser, roomJoinDefaultsStorageKeyForUser } from "../src/room-media-defaults";
+import { voiceModePreferenceStorageKeyForUser } from "../src/voice-mode-preference";
 import type { RoomSessionRecord } from "../src/room-session-storage";
 import {
 	createRoomInvite,
@@ -2196,6 +2197,110 @@ describe("privileged overlay wiring", () => {
 		} finally { await unmount(view.root); }
 	});
 
+	it.each([
+		{microphoneOnJoin: "open-mic", cameraOnJoin: "on", remoteCameras: 0, expected: ["camera", "microphone"]},
+		{microphoneOnJoin: "last-used", cameraOnJoin: "last-used", remoteCameras: 0, expected: ["camera", "microphone"]},
+		{microphoneOnJoin: "push-to-talk", cameraOnJoin: "off", remoteCameras: 0, expected: []},
+		{microphoneOnJoin: "open-mic", cameraOnJoin: "on", remoteCameras: 4, expected: ["microphone"]},
+	] as const)("restores Room defaults after own seat confirmation: $microphoneOnJoin / $cameraOnJoin / $remoteCameras cameras", async ({microphoneOnJoin, cameraOnJoin, remoteCameras, expected}) => {
+		const runtime = installRoomDefaultsRuntime(3, {voiceMode: "open-mic", cameraEnabled: true});
+		const view = await renderOverlay();
+		try {
+			await click(button(view.container, "Open Anidachi controls"));
+			await click(button(view.container, "Create room"));
+			await runtime.roomSnapshot(); await runtime.mediaSnapshot();
+			await runtime.ack("microphone"); await runtime.ack("camera");
+			await click(button(view.container, "Revoke media seat: User"));
+			await runtime.mediaSnapshot({seat: false, seatRevision: 1, epoch: 1});
+			await runtime.seatResult();
+			expect(runtime.record()).toMatchObject({voiceMode: "push-to-talk", cameraEnabled: false});
+			extensionStorage.values.set(`local:${roomJoinDefaultsStorageKeyForUser("user-a")}`, {version: 1, microphoneOnJoin, cameraOnJoin});
+			extensionStorage.values.set(`local:${voiceModePreferenceStorageKeyForUser("user-a")}`, {version: 1, mode: "open-mic"});
+			extensionStorage.values.set(`local:${cameraEnabledPreferenceStorageKeyForUser("user-a")}`, {version: 1, enabled: true});
+			const before = runtime.enabledIntents().length;
+			await click(button(view.container, "Grant media seat: User"));
+			await runtime.mediaSnapshot({seat: true, seatRevision: 2, epoch: 1, remoteCameras});
+			// A seat broadcast alone is not confirmation of this local action.
+			expect(runtime.enabledIntents()).toHaveLength(before);
+			await runtime.seatResult();
+			expect(runtime.enabledIntents().slice(before).map(intent => intent.media).sort()).toEqual(expected);
+			expect(runtime.microphone.mock.calls.at(-1)?.[0]).toBe(false);
+			expect(runtime.camera.mock.calls.at(-1)?.[0] ?? false).toBe(false);
+			for (const kind of expected) await runtime.ack(kind);
+			if (expected.some(kind => kind === "microphone")) expect(runtime.microphone).toHaveBeenLastCalledWith(true, "warm", "open-mic");
+			if (expected.some(kind => kind === "camera")) expect(runtime.camera).toHaveBeenLastCalledWith(true);
+			await runtime.seatResult();
+			expect(runtime.enabledIntents()).toHaveLength(before + expected.length);
+			expect(runtime.storageWrites().some(message => message.rememberPreference)).toBe(false);
+		} finally { await unmount(view.root); }
+	});
+
+	it("does not restore defaults after a failed own-seat grant followed by a later seat broadcast", async () => {
+		const runtime = installRoomDefaultsRuntime(3, {voiceMode: "open-mic", cameraEnabled: true});
+		const view = await renderOverlay();
+		try {
+			await click(button(view.container, "Open Anidachi controls"));
+			await click(button(view.container, "Create room"));
+			await runtime.roomSnapshot(); await runtime.mediaSnapshot({seat: false, seatRevision: 1, epoch: 1});
+			await click(button(view.container, "Grant media seat: User"));
+			await runtime.seatResult("MEDIA_LIMIT_REACHED");
+			await runtime.mediaSnapshot({seat: true, seatRevision: 2, epoch: 1});
+			expect(runtime.enabledIntents()).toEqual([]);
+		} finally { await unmount(view.root); }
+	});
+
+	it.each(["revoke", "disconnect", "manual mode", "unmount"] as const)("cancels own-seat defaults if %s happens while preferences load", async (interruption) => {
+		const runtime = installRoomDefaultsRuntime(3);
+		const view = await renderOverlay();
+		let mounted = true;
+		const pendingRead = deferred<Record<string, unknown>>();
+		try {
+			await click(button(view.container, "Open Anidachi controls"));
+			await click(button(view.container, "Create room"));
+			await runtime.roomSnapshot(); await runtime.mediaSnapshot({seat: false, seatRevision: 1, epoch: 1});
+			vi.mocked(chrome.storage.local.get).mockImplementation(() => pendingRead.promise);
+			await click(button(view.container, "Grant media seat: User"));
+			await runtime.mediaSnapshot({seat: true, seatRevision: 2, epoch: 1});
+			await runtime.seatResult();
+			expect(chrome.storage.local.get).toHaveBeenCalled();
+			if (interruption === "revoke") {
+				await runtime.mediaSnapshot({seat: false, seatRevision: 3, epoch: 2});
+				await runtime.mediaSnapshot({seat: true, seatRevision: 4, epoch: 2});
+			} else if (interruption === "disconnect") {
+				await runtime.status("closed"); await runtime.status("connected");
+			} else if (interruption === "manual mode") {
+				await click(button(view.container, "Voice"));
+				await click(button(view.container, "Open mic"));
+				await click(button(view.container, "Push to talk"));
+			} else {
+				await unmount(view.root); mounted = false;
+			}
+			await act(async () => pendingRead.resolve({
+				[roomJoinDefaultsStorageKeyForUser("user-a")]: {version: 1, microphoneOnJoin: "open-mic", cameraOnJoin: "on"},
+			}));
+			await flushMountedWork();
+			expect(runtime.enabledIntents().map(intent => intent.media)).toEqual(interruption === "manual mode" ? ["microphone"] : []);
+		} finally { if (mounted) await unmount(view.root); }
+	});
+
+	it("requires the matching own-seat result before restoring and ignores a stale successful result", async () => {
+		const runtime = installRoomDefaultsRuntime(3);
+		const view = await renderOverlay();
+		try {
+			extensionStorage.values.set(`local:${roomJoinDefaultsStorageKeyForUser("user-a")}`, {version: 1, microphoneOnJoin: "open-mic", cameraOnJoin: "on"});
+			await click(button(view.container, "Open Anidachi controls"));
+			await click(button(view.container, "Create room"));
+			await runtime.roomSnapshot(); await runtime.mediaSnapshot({seat: false, seatRevision: 1, epoch: 1});
+			await click(button(view.container, "Grant media seat: User"));
+			await runtime.mediaSnapshot({seat: true, seatRevision: 2, epoch: 1});
+			await runtime.seatResult("OK", "unrelated-request");
+			expect(runtime.enabledIntents()).toEqual([]);
+			await runtime.mediaSnapshot({seat: false, seatRevision: 3, epoch: 2});
+			await runtime.seatResult();
+			expect(runtime.enabledIntents()).toEqual([]);
+		} finally { await unmount(view.root); }
+	});
+
 	it("marks a user-selected Voice mode as the preference for future rooms", async () => {
 		let storedRoomSession: RoomSessionRecord = confirmedRoomSession();
 		const sendMessage = vi.fn(
@@ -3322,6 +3427,9 @@ function installActiveHostRoomRuntime(
 // the background HTTP/storage boundary and physical devices are replaced.
 function installRoomDefaultsRuntime(version: 2 | 3, defaults: Partial<RoomSessionRecord> = {}) {
 	installActiveHostRoomRuntime();
+	Object.defineProperty(chrome.storage, "local", {value: {
+		get: vi.fn(async (key: string) => ({[key]: extensionStorage.values.get(`local:${key}`)})),
+	}, configurable: true});
 	let record: RoomSessionRecord = {...confirmedRoomSession(), ...defaults};
 	const common = {hostPlanCode: "pro" as const, maxParticipants: 15 as const, maxCameras: 4 as const, capabilityRevision: 1, capabilitiesValidUntil: "2026-09-15T20:00:00Z"};
 	const capabilities = version === 3
@@ -3347,6 +3455,12 @@ function installRoomDefaultsRuntime(version: 2 | 3, defaults: Partial<RoomSessio
 	let snapshot: import("@anidachi/protocol").RoomMediaSnapshot | undefined;
 	let sequence = 0;
 	const send = vi.spyOn(RoomClient.prototype, "send").mockReturnValue("sent");
+	// connect is replaced at the transport boundary, so its participant map is
+	// unavailable. Keep real command creation, correlation and media authority.
+	vi.spyOn(RoomClient.prototype, "setMediaSeat").mockImplementation(function (this: RoomClient, userId, enabled) {
+		const command = this.media?.setMediaSeat(userId, options.participantSessionId!, enabled);
+		return command ? this.send(command) : "dropped";
+	});
 	const camera = vi.spyOn(P2PMediaController.prototype, "setCameraEnabled").mockResolvedValue();
 	const microphone = vi.spyOn(P2PMediaController.prototype, "setMicrophonePublishing").mockResolvedValue();
 	vi.mocked(RoomClient.prototype.connect).mockImplementation(function (this: RoomClient, next) {
@@ -3361,6 +3475,16 @@ function installRoomDefaultsRuntime(version: 2 | 3, defaults: Partial<RoomSessio
 	};
 	return {
 		record: () => record, camera, microphone, enabledIntents,
+		async status(status: "connected" | "closed") {
+			await act(async () => options.onStatus(status));
+		},
+		async seatResult(code: "OK" | "MEDIA_LIMIT_REACHED" = "OK", requestId?: string) {
+			const command = send.mock.calls.map(([event]) => event).filter(event => event.type === "SET_MEDIA_SEAT").at(-1)!;
+			expect(command).toBeDefined();
+			await emit({type: "MEDIA_SEAT_RESULT", requestId: requestId ?? command.requestId,
+				targetParticipantSessionId: command.targetParticipantSessionId, code,
+				snapshot: snapshot as Extract<import("@anidachi/protocol").ServerEvent, {type: "MEDIA_SEAT_RESULT"}>["snapshot"]});
+		},
 		storageWrites: () => background.mock.calls.map(([message]: any) => message).filter(message => message.type === "ANIDACHI_ROOM_SESSION_STORAGE" && message.command.startsWith("set-")),
 		async roomSnapshot() {
 			await vi.waitFor(() => expect(options).toBeDefined());

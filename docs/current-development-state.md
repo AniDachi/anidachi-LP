@@ -27,8 +27,9 @@ separate from automated tests. Public ZIP/Store publication remains excluded.
 
 Private testing reported that saved microphone/camera defaults were not applied
 in new media-seat rooms. The extension correction restores initial admission
-intent and Last used persistence, waits for media authority, and keeps host
-regrant silent. It needs no server or database change. See the
+intent and Last used persistence and waits for media authority. The September 15
+follow-up applies saved defaults after a confirmed explicit grant of the host's
+own seat. Grants to other participants and passive regrants remain silent. It needs no server or database change. See the
 [room-defaults correction](releases/room-media-seats/2026-09-14-room-defaults-fix.md)
 for the cause, behavior, verification and private tester acceptance boundary.
 
@@ -39,7 +40,7 @@ was delivered to staging through PRs [#316](https://github.com/AniDachi/anidachi
 and [#318](https://github.com/AniDachi/anidachi-LP/pull/318), source `293da9f1`. New media-v3 rooms use
 4/6/8 host-managed seats for Free/Plus/Pro, within the existing 4/6/15-person
 and four-camera limits. A seat permits microphone use and requesting a camera
-slot; granting it never activates a device. Revocation stops both publications
+slot; granting it never activates another participant's device. Revocation stops both publications
 while incoming media continues. Existing v2 rooms keep their original contract.
 
 Protocol, Web/SQL, Worker and extension changes have scoped reviews and local

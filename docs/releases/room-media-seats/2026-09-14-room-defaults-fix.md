@@ -24,11 +24,11 @@ write. Thus Last used and applying new-room defaults both appeared broken.
   presses the existing PTT control.
 - No media seat means listening with devices off. Four occupied camera slots
   suppress the camera only; Open mic remains available with a seat. Freeing a
-  slot or granting a seat later never queues an automatic device start.
+  slot or granting a seat to another participant later never queues an automatic device start.
 - Explicit device choices update Last used. Revocation, rejected startup and
   capture cleanup change the current room state without overwriting that saved
   preference. A new room can therefore use the preferred setup again.
-- Defaults are not replayed during a same-document reconnect. After a host seat
+- Defaults are not replayed during a same-document reconnect. After a remote host seat
   change or device revocation, a new document also requires its own device
   action, even if its old local record still says On. This conservative v2/v3
   restoration boundary avoids reviving a revoke missed while disconnected.
@@ -55,3 +55,30 @@ room, then repeat with Last used and host revoke/regrant. Use the existing
 private-testing flow; website ZIP publication and Store submission are excluded.
 Rollback is to reinstall the prior immutable `6a144ed1` tester ZIP. There is no
 server migration or account-data rollback for this correction.
+
+## Follow-up: explicit own-seat restoration, 2026-09-15
+
+Testing found that the silent administrative regrant rule also blocked the host
+when explicitly returning their own seat. Revocation correctly stopped devices
+and preserved Last used, but initial defaults had already been consumed. The
+People button only sent a seat command and never reapplied the saved setup.
+
+The host's explicit own-seat grant now reapplies Room defaults after the matching
+successful seat result. It reads the existing account-scoped defaults and Last
+used preferences, not the revoked room's Off/PTT cleanup state. Open mic and
+Camera on still require separate accepted media intents before capture. PTT
+stays silent; a full camera limit suppresses only the camera, without a queue.
+
+A grant to someone else, an unsolicited snapshot, duplicate/failed/stale result,
+reconnect or document restoration never triggers this path. A new revoke, local
+device choice, disconnect, account/session change or unmount cancels delayed
+preference application. The server, protocol, quotas and capture permissions are
+unchanged. This clarifies the earlier silent-regrant wording for an explicit
+action on one's own seat; it does not let the host activate another user's media.
+
+Verification: mounted real-overlay regressions first reproduced missing camera
+and microphone intents for Open mic and Last used. The covering suite also
+checks ACK gating, PTT/Off, camera capacity, duplicate/unrelated results and
+interrupted preference reads. Full-check, harness, staging/main and private ZIP
+receipts are recorded in the delivery PR. Real-device acceptance requires the
+updated extension; no server deployment alone can replace the installed ZIP.
