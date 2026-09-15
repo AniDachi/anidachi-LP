@@ -3,7 +3,7 @@ import {
   ExtensionPushSubscriptionRequestSchema,
 } from "@anidachi/protocol";
 import { type NextRequest, NextResponse } from "next/server";
-import { getApiSession } from "@/lib/anidachi-auth/api-session";
+import { getExtensionSessionFromAuthorization } from "@/lib/anidachi-auth/extension-session";
 import {
   registerDevicePushSubscription,
   devicePushErrorResponse,
@@ -13,12 +13,10 @@ import { readJsonBody } from "@/lib/anidachi-auth/social-routes";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
-  const session = await getApiSession(request);
+  // Chrome may attach website cookies; push ownership comes only from the extension.
+  const session = await getExtensionSessionFromAuthorization(request.headers.get("authorization"));
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  if (session.source !== "extension") {
-    return NextResponse.json({ error: "Extension authentication required" }, { status: 403 });
   }
 
   const payload = ExtensionPushSubscriptionRequestSchema.safeParse(
@@ -30,7 +28,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const response = await registerDevicePushSubscription({
-      ownerUserId: session.userId,
+      ownerUserId: session.sub,
       subscription: payload.data,
     });
     return NextResponse.json(DevicePushSubscriptionResponseSchema.parse(response));

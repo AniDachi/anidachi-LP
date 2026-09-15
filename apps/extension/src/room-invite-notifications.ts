@@ -719,6 +719,7 @@ async function registerPushSubscriptionFromApi(
   return withInvitationHttpDeadline(async (signal) => {
     const response = await fetch(new URL("/api/devices/push-subscription", WEB_HTTP_BASE), {
       method: "POST",
+      credentials: "omit",
       headers: createWebsiteRoomHeaders(accessToken),
       body: JSON.stringify(request),
       signal,
@@ -732,7 +733,7 @@ async function revokePushSubscriptionFromApi(accessToken: string, deviceId: stri
   await withInvitationHttpDeadline(async (signal) => {
     const response = await fetch(
       new URL(`/api/devices/${encodeURIComponent(deviceId)}/push-subscription`, WEB_HTTP_BASE),
-      { method: "DELETE", headers: createWebsiteRoomHeaders(accessToken), signal },
+      { method: "DELETE", credentials: "omit", headers: createWebsiteRoomHeaders(accessToken), signal },
     );
     if (!response.ok && response.status !== 404) {
       throw await pushHttpError(response, "Failed to disable notifications");
