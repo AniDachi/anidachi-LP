@@ -50,13 +50,13 @@ const extensionChannel = resolveExtensionChannel(process.env.WXT_EXTENSION_CHANN
 const extensionManifestKey = getExtensionManifestKey(extensionChannel);
 const extensionName =
   extensionChannel === "production"
-    ? "Anidachi"
+    ? "AniDachi"
     : extensionChannel === "staging"
-      ? "Anidachi Staging"
-      : "Anidachi Local MVP";
+      ? "AniDachi Staging"
+      : "AniDachi Local MVP";
 const extensionShortName =
   extensionChannel === "production"
-    ? "Anidachi"
+    ? "AniDachi"
     : extensionChannel === "staging"
       ? "AD Staging"
       : "AD Local";
@@ -67,7 +67,6 @@ const extensionDescription =
       ? "Internal Anidachi staging build for testing watch rooms before production."
       : "Ambient watch-party overlay for local Anidachi MVP testing.";
 const extensionVersion = process.env.WXT_EXTENSION_VERSION ?? extensionPackage.version;
-const buildId = process.env.WXT_BUILD_ID?.trim();
 const chromeProfileDir = process.env.WXT_CHROME_PROFILE_DIR?.trim() ?? "./.wxt/chrome-data";
 const disableAutoBrowser = process.env.WXT_DISABLE_WEB_EXT === "true";
 const useBroadHostPermissions =
@@ -119,7 +118,6 @@ export default defineConfig({
     version: extensionVersion,
     ...(extensionManifestKey ? { key: extensionManifestKey } : {}),
     minimum_chrome_version: "121",
-    ...(buildId ? { version_name: buildId } : {}),
     permissions: unique([
       "storage",
       "alarms",
