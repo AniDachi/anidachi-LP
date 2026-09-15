@@ -1,6 +1,6 @@
 # Anidachi Extension Release Channels
 
-Last updated: 2026-09-13.
+Last updated: 2026-09-15.
 
 This document describes the current Chrome extension release setup. Treat it as the
 source of truth for the current implementation, not as a permanent product contract.
@@ -13,9 +13,9 @@ Anidachi uses three extension channels.
 
 | Channel | Extension name | Main purpose | Web app | API/WS |
 | --- | --- | --- | --- | --- |
-| `local` | `Anidachi Local MVP` | Local development and broad site experiments | `http://localhost:3003` by default | `http://127.0.0.1:8787` / `ws://127.0.0.1:8787` by default |
-| `staging` | `Anidachi Staging` | Stable unpacked artifact for founders/testers | `https://staging.anidachi.app` | `https://anidachi-api-staging.vladislav-gul7.workers.dev` / `wss://anidachi-api-staging.vladislav-gul7.workers.dev` |
-| `production` | `Anidachi` | Production ZIP for owner testing and the approved store identity | `https://www.anidachi.app` | `https://anidachi-api-production.vladislav-gul7.workers.dev` / `wss://anidachi-api-production.vladislav-gul7.workers.dev` |
+| `local` | `AniDachi Local MVP` | Local development and broad site experiments | `http://localhost:3003` by default | `http://127.0.0.1:8787` / `ws://127.0.0.1:8787` by default |
+| `staging` | `AniDachi Staging` | Stable unpacked artifact for founders/testers | `https://staging.anidachi.app` | `https://anidachi-api-staging.vladislav-gul7.workers.dev` / `wss://anidachi-api-staging.vladislav-gul7.workers.dev` |
+| `production` | `AniDachi` | Production ZIP for owner testing and the approved store identity | `https://www.anidachi.app` | `https://anidachi-api-production.vladislav-gul7.workers.dev` / `wss://anidachi-api-production.vladislav-gul7.workers.dev` |
 
 The channel is selected with `WXT_EXTENSION_CHANNEL`.
 
@@ -188,7 +188,7 @@ Do not distribute the broad staging build as a tester or release artifact.
 
 1. Develop locally using the local WXT dev build.
 2. Open a feature branch and PR into `staging`.
-3. Build and validate `Anidachi Staging` as an unpacked tester artifact.
+3. Build and validate `AniDachi Staging` as an unpacked tester artifact.
 4. Test that exact artifact with founders/testers against staging web/API infrastructure.
 5. If staging is accepted, merge/promote the same code path to `main`.
 6. Do not enable production extension auth until a separate production identity
@@ -202,16 +202,20 @@ Staging and production must not share runtime endpoints accidentally.
 
 Before distributing an artifact, inspect `manifest.json` and the debug panel build id:
 
-- Staging should show `Anidachi Staging` and `*-staging-*`.
-- Production should show `Anidachi` and `*-production-*`.
+- Chrome shows `AniDachi Staging` or `AniDachi`, followed by the release version
+  (currently `0.1.0`). `version_name` is omitted so internal build identifiers
+  cannot crowd out the extension name.
+- Diagnostics retain the full `WXT_BUILD_ID`: `*-staging-*` for staging and
+  `*-production-*` for production.
 
 Pre-upload checklist:
 
 - `manifest.name` matches the channel.
 - Every release `manifest.key` derives the exact channel ID above.
 - Production web auth is configured for its exact ID on the deployed environment.
-- `manifest.version_name` contains the current git SHA, channel name, and CI run
-  number or build timestamp.
+- `manifest.version_name` is absent. The diagnostic build ID contains the current
+  git SHA, channel name, and CI run number or build timestamp; the artifact
+  validator checks its channel in the background bundle.
 - `host_permissions` does not contain `http://*/*`, `https://*/*`, `file:///*`,
   or `<all_urls>`.
 - `content_scripts.matches` does not contain broad patterns.
