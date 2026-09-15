@@ -1,12 +1,29 @@
 # Current Development State
 
-Last updated: 2026-09-15.
+Last updated: 2026-09-16.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
 contain old paths, old domains, or old decisions. When release channels,
 endpoints, branch protection, or store workflow changes, update this document in
 the same PR.
+
+## Website redesign candidate boundary, 2026-09-16
+
+The owner approved preserving the complete `apps/extension` tree, root
+`package.json` and extension artifact validator exactly as production main
+`4b4ff88380d0a64e5216d2770d360440d3f8852b`. The redesign's website-presence
+responder and permanent manual-update note are excluded. Extension identities,
+permissions, room/media/history behavior and build channels remain unchanged.
+
+The website candidate keeps its new installation guide and download flow without
+trying to detect an installed extension. Room-page installation help is neutral;
+it does not control admission. Join/auth APIs and the payment confirmation page
+are unchanged. This is a candidate change, not a staging or production deployment.
+PR #349 carries this candidate; #348 is closed without merging and its branch
+is retained. Other website repair stages need
+their own scope discussion before implementation. See the
+[approved repair plan](superpowers/plans/2026-09-15-staging-release-repair-plan.md).
 
 ## Free quota reset notice, 2026-09-15
 
