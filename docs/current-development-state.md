@@ -8,6 +8,18 @@ contain old paths, old domains, or old decisions. When release channels,
 endpoints, branch protection, or store workflow changes, update this document in
 the same PR.
 
+## Extension visibility and compact People, 2026-09-15
+
+The owner requested discoverable first-install controls and a shorter room panel.
+Main control and participant pills now default to Always visible for an
+unconfigured installation; valid stored choices remain unchanged. People shows
+two rows with a Show N more / Show less disclosure for the remaining participants,
+a bounded inner scroll area and expansion retained when reopening the same room.
+This is local presentation only: room authority and media behavior are unchanged.
+See the [interface visibility design](superpowers/specs/2026-07-30-interface-visibility-settings-design.md).
+Verification and private production ZIP receipts belong to the release PR;
+public ZIP/Store publication remains excluded.
+
 ## Room invitation return correction, 2026-09-14
 
 The approved [invitation return plan](superpowers/plans/2026-09-14-room-invite-return.md)

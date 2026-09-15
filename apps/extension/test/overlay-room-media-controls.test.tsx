@@ -1,5 +1,5 @@
 import type { Participant } from "@anidachi/protocol";
-import { act } from "react";
+import { act, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
@@ -156,6 +156,38 @@ describe("RoomPeopleSection", () => {
 		await unmount(view.root);
 	});
 
+	it("reveals extra participants without changing their media seats", async () => {
+		const host = participant("host", "Host", "host", "joined", false);
+		const others = ["One", "Two", "Three"].map(name => participant(name, name, "viewer", "none", false));
+		const onGrantMediaSeat = vi.fn();
+		const view = await renderPeople({ currentParticipantId: "host", participants: [host, ...others], onGrantMediaSeat });
+		try {
+			const toggle = getButton(view.container, "Show 2 more participants");
+			const extra = view.container.querySelector(".room-people-extra");
+			expect(toggle.getAttribute("aria-expanded")).toBe("false");
+			expect(toggle.getAttribute("aria-controls")).toBe(extra?.id);
+			expect(extra?.getAttribute("aria-hidden")).toBe("true");
+			expect(extra?.hasAttribute("inert")).toBe(true);
+			expect(view.container.querySelectorAll(".room-people-list > .room-people-entry")).toHaveLength(2);
+			await click(toggle);
+			expect(toggle.getAttribute("aria-expanded")).toBe("true");
+			expect(extra?.getAttribute("aria-hidden")).toBe("false");
+			expect(extra?.hasAttribute("inert")).toBe(false);
+			expect(onGrantMediaSeat).not.toHaveBeenCalled();
+			await click(getButton(extra as HTMLElement, "Give seat"));
+			expect(onGrantMediaSeat).toHaveBeenCalledWith("Two");
+			await click(getButton(view.container, "Show fewer participants"));
+			expect(extra?.getAttribute("aria-hidden")).toBe("true");
+			expect(extra?.hasAttribute("inert")).toBe(true);
+		} finally { await unmount(view.root); }
+	});
+
+	it.each([1, 2])("shows %i participants without an unnecessary disclosure", async (count) => {
+		const view = await renderPeople({ participants: Array.from({length: count}, (_, i) => participant(String(i), `User ${i}`, "viewer", "none", false)) });
+		try { expect(view.container.querySelector(".room-people-toggle")).toBeNull(); }
+		finally { await unmount(view.root); }
+	});
+
 	it("keeps speaking feedback local to the participant identity", async () => {
 		const host = participant("host", "Host User", "host", "joined", true);
 		const view = await renderPeople({
@@ -280,6 +312,8 @@ describe("RoomPeopleSection", () => {
 });
 
 const defaultPeopleProps = {
+	expanded: false,
+	onExpandedChange: vi.fn(),
 	currentParticipantId: "self",
 	liveVoiceActiveSpeakerIds: [] as string[],
 	maxMediaSeats: 4,
@@ -295,7 +329,12 @@ const defaultPeopleProps = {
 async function renderPeople(
 	props: Partial<React.ComponentProps<typeof RoomPeopleSection>>,
 ): Promise<RenderedView> {
-	return render(<RoomPeopleSection {...defaultPeopleProps} {...props} />);
+	return render(<PeopleHarness {...props} />);
+}
+
+function PeopleHarness(props: Partial<React.ComponentProps<typeof RoomPeopleSection>>) {
+	const [expanded, setExpanded] = useState(false);
+	return <RoomPeopleSection {...defaultPeopleProps} {...props} expanded={expanded} onExpandedChange={setExpanded} />;
 }
 
 function participant(
