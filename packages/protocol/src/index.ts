@@ -20,3 +20,4 @@ export * from "./watch-history-capacity";
 export * from "./watch-history-editor";
 
 export * from "./maintenance";
+export * from "./room-quota-status";

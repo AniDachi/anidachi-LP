@@ -1877,7 +1877,65 @@ describe("privileged overlay wiring", () => {
       const close=vi.spyOn(RoomClient.prototype,"close");close.mockClear();
       await act(async()=>options.onEvent({type:"ROOM_ENDED",roomId:"room-a",endedAt:Date.now(),reason:"quota_exhausted"}));
       expect(close).toHaveBeenCalled();
+      expect(view.container.textContent).toContain("Free time used up");
     } finally {vi.useRealTimers();await unmount(view.root);}
+  });
+  it("explains the host limit to guests without claiming their own quota was exhausted", async () => {
+    installActiveHostRoomRuntime();
+    let connection!: Parameters<RoomClient["connect"]>[0];
+    vi.mocked(RoomClient.prototype.connect).mockImplementation(options => {
+      connection = options; options.onStatus("connected");
+      options.onEvent({type:"ROOM_SNAPSHOT",roomId:"room-a",roomGeneration:1,sourceGeneration:1,serverSeq:1,
+        participants:[{...hostParticipant(), role:"viewer"},{...guestParticipant(),role:"host"}]});
+    });
+    const view = await renderOverlay();
+    try {
+      await click(button(view.container, "Open Anidachi controls"));
+      await click(button(view.container, "Create room")); await flushRoomActionWork();
+      await act(async () => connection.onEvent({type:"ROOM_ENDED",roomId:"room-a",endedAt:Date.parse("2026-09-15T12:00:00Z"),reason:"quota_exhausted"}));
+      expect(view.container.textContent).toContain("The host's Free time is used up");
+      expect(view.container.querySelector(".free-quota-notice")).toBeNull();
+    } finally { await unmount(view.root); }
+  });
+  it("shows the quota recovery card when creating a room is denied by the server", async () => {
+    installActiveHostRoomRuntime();
+    const original = chrome.runtime.sendMessage;
+    chrome.runtime.sendMessage = vi.fn(async (message: any) => {
+      if (message.type === "ANIDACHI_ROOM_HTTP" && message.command === "create-room") return {
+        ok:false,code:"QUOTA_EXHAUSTED",error:"Daily free watch-party time is used up",status:403,resetAt:"2026-09-16T00:00:00Z"
+      };
+      return original(message);
+    }) as typeof chrome.runtime.sendMessage;
+    const view = await renderOverlay();
+    try {
+      await click(button(view.container, "Open Anidachi controls"));
+      await click(button(view.container, "Create room")); await flushRoomActionWork();
+      expect(view.container.textContent).toContain("Free time used up");
+      expect(view.container.textContent).not.toContain("It resets at");
+      expect(RoomClient.prototype.connect).not.toHaveBeenCalled();
+    } finally { await unmount(view.root); }
+  });
+  it("does not assign an old account's delayed create denial to the next account", async () => {
+    let currentSession = sessionFor("user-a");
+    installActiveHostRoomRuntime({ getSession: () => currentSession });
+    const pending = deferred<unknown>();
+    const original = chrome.runtime.sendMessage;
+    chrome.runtime.sendMessage = vi.fn(async (message: any) => {
+      if (message.type === "ANIDACHI_ROOM_HTTP" && message.command === "create-room") return pending.promise;
+      return original(message);
+    }) as typeof chrome.runtime.sendMessage;
+    const view = await renderOverlay();
+    try {
+      await click(button(view.container, "Open Anidachi controls"));
+      await click(button(view.container, "Create room")); await flushRoomActionWork();
+      currentSession = sessionFor("user-b");
+      await act(async () => extensionStorage.storage.setItem(AUTH_TOKENS_KEY, currentSession));
+      await flushMountedWork();
+      await act(async () => pending.resolve({ ok:false,code:"QUOTA_EXHAUSTED",error:"Daily free watch-party time is used up",status:403,resetAt:"2026-09-16T00:00:00Z" }));
+      await flushMountedWork();
+      expect(view.container.querySelector(".free-quota-notice")).toBeNull();
+      expect(RoomClient.prototype.connect).not.toHaveBeenCalled();
+    } finally { await unmount(view.root); }
   });
   it("uses the first v3 PTT press and cancels publication when released before ACK", async () => {
     installActiveHostRoomRuntime();

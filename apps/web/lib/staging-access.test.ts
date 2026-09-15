@@ -10,6 +10,13 @@ import {
   sha256Hex,
 } from "./staging-access";
 
+test("room quota only bypasses staging for authenticated GET", () => {
+  const pathname = "/api/me/room-quota";
+  assert.equal(canBypassStagingGate({ pathname, method: "GET", authorization: "Bearer token" }), true);
+  assert.equal(canBypassStagingGate({ pathname, method: "GET" }), false);
+  assert.equal(canBypassStagingGate({ pathname, method: "POST", authorization: "Bearer token" }), false);
+});
+
 test("capacity metadata only bypasses staging for authenticated GET", () => {
   const pathname = "/api/watch-history/v3/capacity";
   assert.equal(canBypassStagingGate({ pathname, method: "GET", authorization: "Bearer token" }), true);

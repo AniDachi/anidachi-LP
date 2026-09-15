@@ -19,6 +19,18 @@
 
 ---
 
+## Follow-up: Free quota reset notice, 2026-09-15
+
+The overlay now consumes `ROOM_ENDED.reason` to distinguish host quota exhaustion
+from ordinary closure. Only the host gets the reset countdown; guests get a
+host-limit explanation. A new authenticated read-only quota view anchors the
+countdown to server UTC and monotonic elapsed time, rechecks after sleep/clock
+changes, and requires server confirmation at zero. The existing Worker and room
+admission remain authoritative. No media, SQL or live protocol changes are needed.
+See the [quota follow-up](2026-09-08-personal-history-and-plans-mvp.md#free-quota-countdown-follow-up-2026-09-15)
+for request/account fences, offline behavior and rollback. Private installed-ZIP
+acceptance remains separate from automated lifecycle and isolated browser tests.
+
 ## Follow-up: room invitation return, 2026-09-14
 
 Private testing found that permanent recipient deduplication blocked inviting an
