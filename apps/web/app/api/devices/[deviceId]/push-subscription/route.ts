@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { getApiSession } from "@/lib/anidachi-auth/api-session";
+import { getExtensionSessionFromAuthorization } from "@/lib/anidachi-auth/extension-session";
 import {
   revokeDevicePushSubscription,
   devicePushErrorResponse,
@@ -12,12 +12,9 @@ export async function DELETE(
   request: NextRequest,
   context: { params: Promise<{ deviceId: string }> },
 ) {
-  const session = await getApiSession(request);
+  const session = await getExtensionSessionFromAuthorization(request.headers.get("authorization"));
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  if (session.source !== "extension") {
-    return NextResponse.json({ error: "Extension authentication required" }, { status: 403 });
   }
 
   const deviceId = (await context.params).deviceId;
@@ -27,7 +24,7 @@ export async function DELETE(
 
   try {
     await revokeDevicePushSubscription({
-      ownerUserId: session.userId,
+      ownerUserId: session.sub,
       deviceId,
     });
     return NextResponse.json({ ok: true });
