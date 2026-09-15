@@ -20,7 +20,8 @@ The website candidate keeps its new installation guide and download flow without
 trying to detect an installed extension. Room-page installation help is neutral;
 it does not control admission. Join/auth APIs and the payment confirmation page
 are unchanged. This is a candidate change, not a staging or production deployment.
-PR #348 is superseded and must not be merged. Other website repair stages need
+PR #349 carries this candidate; #348 is closed without merging and its branch
+is retained. Other website repair stages need
 their own scope discussion before implementation. See the
 [approved repair plan](superpowers/plans/2026-09-15-staging-release-repair-plan.md).
 
