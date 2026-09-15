@@ -1,20 +1,20 @@
 "use client";
 
+import Link from "next/link";
 import {
   inferPageTemplateFromPath,
   trackConversion,
 } from "@/lib/conversion-events";
-import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
+import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
 
 export function NavPricingLink({
-  className = "text-foreground/70 hover:text-brand-orange-bright transition-colors",
+  className = "text-ani-muted transition-colors hover:text-ani-text",
 }: {
   className?: string;
 }) {
-  const { openSurvey } = usePlanSurvey();
   return (
-    <button
-      type="button"
+    <Link
+      href={INSTALL_HUB_PATH}
       className={className}
       onClick={() => {
         if (typeof window === "undefined") return;
@@ -23,12 +23,11 @@ export function NavPricingLink({
           page_path: path,
           page_template: inferPageTemplateFromPath(path),
           placement: "nav",
-          cta_variant: "nav_pricing",
+          cta_variant: "nav_install",
         });
-        openSurvey({ placement: "nav", ctaVariant: "nav_pricing" });
       }}
     >
-      Get early access
-    </button>
+      {INSTALL_CTA_LABEL}
+    </Link>
   );
 }

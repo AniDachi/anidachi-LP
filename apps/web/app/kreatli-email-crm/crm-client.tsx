@@ -721,7 +721,7 @@ export function CrmClient({
             </p>
           ) : activeTab === "survey_leads" ? (
             <p className="text-sm text-foreground/70">
-              Homepage plan survey leads — review, filter, and export.
+              Historical survey signups — review, filter, and export.
             </p>
           ) : activeTab === "contact_forms" ? (
             <p className="text-sm text-foreground/70">
@@ -842,7 +842,7 @@ export function CrmClient({
             resetSurveyTabState();
           }}
         >
-          Survey leads ({surveyLeads.length})
+            Signups ({surveyLeads.length})
         </button>
         <button
           type="button"
@@ -1154,14 +1154,14 @@ export function CrmClient({
                 id="survey-leads-heading"
                 className="text-lg font-semibold text-foreground"
               >
-                Survey leads ({sortedSurveyLeads.length}
+                Signups ({sortedSurveyLeads.length}
                 {sortedSurveyLeads.length !== surveyLeads.length
                   ? ` of ${surveyLeads.length}`
                   : ""}
                 )
               </h2>
               <p className="mt-1 text-sm text-foreground/70">
-                Homepage plan survey captures — kept separate from outreach
+                Historical survey captures — kept separate from outreach
                 contacts.
               </p>
             </div>
@@ -1187,7 +1187,7 @@ export function CrmClient({
           <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <div className="lg:col-span-2">
               <label className="mb-1 block text-xs font-medium text-foreground/80">
-                Search email or survey answers
+                Search email or answers
               </label>
               <input
                 type="search"
@@ -1287,14 +1287,8 @@ export function CrmClient({
             <div className="rounded-xl border border-brand-border bg-brand-surface p-6 text-sm text-foreground/60">
               {surveyLeads.length === 0 ? (
                 <>
-                  No survey leads yet. They appear here when someone saves their
-                  plan in the homepage survey.{" "}
-                  <Link
-                    href="/#pick-a-plan"
-                    className="font-medium text-brand-orange/80 underline hover:text-foreground/80"
-                  >
-                    Test the survey
-                  </Link>
+                  No historical survey signups yet. Past captures appear
+                  here.
                 </>
               ) : (
                 "No leads match your filters. Clear search or filters to see all leads."

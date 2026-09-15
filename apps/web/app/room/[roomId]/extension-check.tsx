@@ -2,6 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Copy, Share2 } from "lucide-react";
+import {
+  INSTALL_CTA_LABEL,
+  INSTALL_HUB_PATH,
+  installHubHref,
+} from "@/lib/install-cta";
 import { shareOrCopyUrl, useMobileDevice } from "@/lib/use-mobile-device";
 
 const EXTENSION_HANDSHAKE_TIMEOUT_MS = 1500;
@@ -13,7 +18,12 @@ const EXTENSION_HANDSHAKE_TIMEOUT_MS = 1500;
 export function ExtensionCheck() {
   const [detected, setDetected] = useState<boolean | null>(null);
   const [linkStatus, setLinkStatus] = useState<"idle" | "shared" | "copied">("idle");
+  const [installHref, setInstallHref] = useState(INSTALL_HUB_PATH);
   const isMobile = useMobileDevice();
+
+  useEffect(() => {
+    setInstallHref(installHubHref(window.location.pathname));
+  }, []);
 
   useEffect(() => {
     let resolved = false;
@@ -74,19 +84,23 @@ export function ExtensionCheck() {
             {isMobile ? (
               <>
                 You&apos;re on mobile. AniDachi playback requires the Chrome extension on a
-                desktop. Copy this link and open it on your computer, then install the extension
-                from the Chrome Web Store if needed.
+                desktop. Copy this link and open it on your computer, then{" "}
+                <a
+                  href={installHref}
+                  className="font-semibold underline underline-offset-2 hover:text-amber-100"
+                >
+                  install from the AniDachi install page
+                </a>{" "}
+                if needed.
               </>
             ) : (
               <>
                 You need the AniDachi extension to join the live session.{" "}
                 <a
-                  href="https://chrome.google.com/webstore"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={installHref}
                   className="font-semibold underline underline-offset-2 hover:text-amber-100"
                 >
-                  Install from Chrome Web Store
+                  {INSTALL_CTA_LABEL}
                 </a>
               </>
             )}

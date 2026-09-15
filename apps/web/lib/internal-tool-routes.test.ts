@@ -25,7 +25,7 @@ describe("internal-tool-routes", () => {
   it("does not match public marketing routes", () => {
     assert.equal(isInternalToolPath("/"), false);
     assert.equal(isInternalToolPath("/guides/foo"), false);
-    assert.equal(isInternalToolPath("/api/subscribe-interest"), false);
+    assert.equal(isInternalToolPath("/api/waitlist-stats"), false);
   });
 
   it("exports stable robots disallow prefixes", () => {

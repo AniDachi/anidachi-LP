@@ -140,8 +140,8 @@ export default function BestAnimeWithFriendsPage() {
         the right show turns a viewing session into a shared memory. Here are
         115+ good anime to watch with friends, sorted by vibe — then host them in
         an AniDachi Crunchyroll watchroom from{" "}
-        <Link href="/pricing" className="text-brand-orange hover:underline">
-          pricing / early access
+        <Link href="/extension" className="text-brand-orange hover:underline">
+          the AniDachi install page
         </Link>
         .
       </p>

@@ -6,7 +6,8 @@ import { getGuideLinks } from "@/lib/guide-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 import {
   PRICING_COMPARE_OVERVIEW,
-  PRICING_EARLY_ACCESS_PRICE,
+  PRICING_PLUS_SHORT,
+  PRICING_PRO_SHORT,
   PRICING_FREE_TIER_TABLE,
 } from "@/lib/pricing-copy";
 
@@ -139,8 +140,8 @@ export default function CrunchyrollPartyAlternativePage() {
       <p className="text-foreground/80 leading-relaxed mb-4">
         Watchrooms with live sync and async catch-up, auto anime detection, chat
         tied to the room, and host entitlements that scale from Free limited
-        hosting to Plus/Pro ({PRICING_EARLY_ACCESS_PRICE} for Plus during
-        pre-launch). Guests can stay Free while the host upgrades.
+        hosting to Plus ({PRICING_PLUS_SHORT}) or Pro ({PRICING_PRO_SHORT}).
+        Guests can stay Free while the host upgrades.
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
         Review plans on{" "}

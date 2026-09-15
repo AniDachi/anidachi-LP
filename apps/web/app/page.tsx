@@ -10,7 +10,7 @@ import { homeFAQ } from "@/lib/home-faq";
 export default function Home() {
   return (
     <>
-      <HomeClient waitlistCount={null} />
+      <HomeClient />
       <SoftwareApplicationJsonLd />
       <FAQPageJsonLd questions={homeFAQ} />
       <HowToJsonLd

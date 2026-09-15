@@ -2,18 +2,28 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { AnidachiLogoLink } from "@/components/anidachi-logo";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X, LogOut, ChevronDown, Users, User } from "lucide-react";
 import { NavPricingButton } from "@/components/nav-pricing-button";
 import { NavPricingLink } from "@/components/nav-pricing-link";
 import { JoinDiscordButton } from "@/components/join-discord-button";
-import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
 import { cn } from "@/lib/utils";
 import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
-import { AccountEntryLink, UserMenu, type NavUser } from "./account-menu";
-import "./account-menu.css";
-export { UserMenu } from "./account-menu";
+
+type NavUser = {
+  displayName: string;
+  avatarUrl: string | null;
+  email: string;
+  plan: string;
+};
+
+const PLAN_LABELS: Record<string, string> = {
+  free: "Free",
+  plus: "Plus",
+  pro: "Pro",
+};
 
 type MeResponse = {
   user?: {
@@ -50,6 +60,132 @@ async function fetchNavUser(): Promise<NavUser | null> {
     email: user.email,
     plan: user.plan,
   };
+}
+
+export function UserMenu({ user }: { user: NavUser }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    if (open) document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [open]);
+
+  async function handleSignOut() {
+    setOpen(false);
+    await fetch("/api/auth/logout", { method: "POST" });
+    window.location.href = "/";
+  }
+
+  const initials = user.displayName
+    .split(" ")
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-label="Account menu"
+        className="flex min-h-11 items-center gap-2 rounded-full border border-ani-line bg-ani-panel py-1 pl-1 pr-3 text-sm font-medium text-ani-text transition-colors hover:border-ani-control-border-hover hover:bg-ani-hover"
+      >
+        {user.avatarUrl ? (
+          <Image
+            src={user.avatarUrl}
+            alt={user.displayName}
+            width={28}
+            height={28}
+            className="h-7 w-7 rounded-full object-cover"
+          />
+        ) : (
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ani-primary text-xs font-bold text-ani-on-primary">
+            {initials}
+          </span>
+        )}
+        <span className="max-w-[120px] truncate">{user.displayName}</span>
+        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")} aria-hidden />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full z-[100] mt-2.5 w-[336px] max-w-[calc(100vw-2rem)] rounded-[20px] border border-ani-line bg-ani-panel p-2 shadow-[0_18px_60px_#0008]">
+          {/* User info */}
+          <div className="flex items-center gap-3 border-b border-ani-line px-4 py-3">
+            {user.avatarUrl ? (
+              <Image
+                src={user.avatarUrl}
+                alt={user.displayName}
+                width={40}
+                height={40}
+                className="h-10 w-10 rounded-full object-cover"
+              />
+            ) : (
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-ani-primary text-sm font-bold text-ani-on-primary">
+                {initials}
+              </span>
+            )}
+            <div className="min-w-0">
+              <p className="truncate font-semibold text-ani-text">{user.displayName}</p>
+              <p className="truncate text-xs text-ani-muted">{user.email}</p>
+            </div>
+          </div>
+
+          {/* Plan badge */}
+          <div className="px-4 py-2.5">
+            <span className="inline-block rounded-full border border-ani-control-border px-2.5 py-0.5 text-xs font-medium text-ani-menu-accent">
+              {PLAN_LABELS[user.plan] ?? user.plan}
+            </span>
+          </div>
+
+          {/* Actions */}
+          <div className="border-t border-ani-line px-2 py-2">
+            <Link
+              href="/account/friends"
+              onClick={() => setOpen(false)}
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-ani-muted transition-colors hover:bg-ani-hover hover:text-ani-text"
+            >
+              <Users className="h-4 w-4" aria-hidden />
+              Friends
+            </Link>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-ani-muted transition-colors hover:bg-ani-hover hover:text-ani-text"
+            >
+              <LogOut className="h-4 w-4" aria-hidden />
+              Sign out
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MobileSignOut({ onDone }: { onDone: () => void }) {
+  async function handleSignOut() {
+    onDone();
+    await fetch("/api/auth/logout", { method: "POST" });
+    window.location.href = "/";
+  }
+  return (
+    <button
+      type="button"
+      onClick={handleSignOut}
+      className="flex min-h-11 w-full items-center gap-2.5 rounded-lg px-3 text-base text-ani-muted transition-colors hover:bg-ani-hover hover:text-ani-text"
+    >
+      <LogOut className="h-4 w-4" aria-hidden />
+      Sign out
+    </button>
+  );
 }
 
 /** Sibling hubs under Watch — platforms are peers of the anime vertical (not nested under anime). */
@@ -151,7 +287,7 @@ function ContactNavMenu({
       <li>
         <p
           id="mobile-contact-nav-label"
-          className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wide text-foreground/40"
+          className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wide text-ani-muted"
         >
           Contact
         </p>
@@ -164,10 +300,10 @@ function ContactNavMenu({
               <Link
                 href={link.href}
                 className={cn(
-                  "flex min-h-11 items-center rounded-lg px-3 text-base transition-colors hover:bg-brand-orange hover:text-primary-foreground",
+                  "flex min-h-11 items-center rounded-lg px-3 text-base transition-colors hover:bg-ani-hover hover:text-ani-text",
                   pathname === link.href
-                    ? "text-brand-orange-bright"
-                    : "text-foreground/70",
+                    ? "text-ani-text"
+                    : "text-ani-muted",
                 )}
                 onClick={onNavigate}
               >
@@ -193,8 +329,8 @@ function ContactNavMenu({
         aria-haspopup="menu"
         aria-controls={menuId}
         className={cn(
-          "inline-flex min-h-11 items-center gap-1 transition-colors hover:text-brand-orange-bright",
-          active || open ? "text-brand-orange-bright" : "text-foreground/70",
+          "inline-flex min-h-11 items-center gap-1 transition-colors hover:text-ani-text",
+          active || open ? "text-ani-text" : "text-ani-muted",
         )}
         onClick={() => setOpen((o) => !o)}
         onFocus={() => setOpen(true)}
@@ -212,16 +348,16 @@ function ContactNavMenu({
           aria-label="Contact options"
           className="absolute left-0 top-full z-[100] w-72 pt-2"
         >
-          <div className="rounded-xl border border-brand-border bg-brand-surface p-2 shadow-2xl">
+          <div className="rounded-[20px] border border-ani-line bg-ani-panel p-2 shadow-[0_18px_60px_#0008]">
             {links.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 role="menuitem"
                 className={cn(
-                  "flex flex-col rounded-lg px-3 py-2.5 transition-colors hover:bg-brand-orange hover:text-primary-foreground",
+                  "flex flex-col rounded-lg px-3 py-2.5 transition-colors hover:bg-ani-hover hover:text-ani-text",
                   pathname === link.href &&
-                    "bg-brand-orange/10 text-brand-orange-bright",
+                    "bg-ani-selected-quiet text-ani-text",
                 )}
                 onClick={() => {
                   setOpen(false);
@@ -277,7 +413,7 @@ function WatchNavMenu({
       <li>
         <p
           id="mobile-watch-nav-label"
-          className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wide text-foreground/40"
+          className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wide text-ani-muted"
         >
           Watch
         </p>
@@ -290,10 +426,10 @@ function WatchNavMenu({
               <Link
                 href={hub.href}
                 className={cn(
-                  "flex min-h-11 items-center rounded-lg px-3 text-base transition-colors hover:bg-brand-orange hover:text-primary-foreground",
+                  "flex min-h-11 items-center rounded-lg px-3 text-base transition-colors hover:bg-ani-hover hover:text-ani-text",
                   pathname === hub.href
-                    ? "text-brand-orange-bright"
-                    : "text-foreground/70",
+                    ? "text-ani-text"
+                    : "text-ani-muted",
                 )}
                 onClick={onNavigate}
               >
@@ -319,8 +455,8 @@ function WatchNavMenu({
         aria-haspopup="menu"
         aria-controls={menuId}
         className={cn(
-          "inline-flex min-h-11 items-center gap-1 transition-colors hover:text-brand-orange-bright",
-          active || open ? "text-brand-orange-bright" : "text-foreground/70",
+          "inline-flex min-h-11 items-center gap-1 transition-colors hover:text-ani-text",
+          active || open ? "text-ani-text" : "text-ani-muted",
         )}
         onClick={() => setOpen((o) => !o)}
         onFocus={() => setOpen(true)}
@@ -338,16 +474,16 @@ function WatchNavMenu({
           aria-label="Watch hubs"
           className="absolute left-0 top-full z-[100] w-72 pt-2"
         >
-          <div className="rounded-xl border border-brand-border bg-brand-surface p-2 shadow-2xl glow-orange-sm">
+          <div className="rounded-[20px] border border-ani-line bg-ani-panel p-2 shadow-[0_18px_60px_#0008]">
             {watchHubLinks.map((hub) => (
               <Link
                 key={hub.href}
                 href={hub.href}
                 role="menuitem"
                 className={cn(
-                  "flex flex-col rounded-lg px-3 py-2.5 transition-colors hover:bg-brand-orange hover:text-primary-foreground",
+                  "flex flex-col rounded-lg px-3 py-2.5 transition-colors hover:bg-ani-hover hover:text-ani-text",
                   pathname === hub.href &&
-                    "bg-brand-orange/10 text-brand-orange-bright",
+                    "bg-ani-selected-quiet text-ani-text",
                 )}
                 onClick={() => {
                   setOpen(false);
@@ -368,7 +504,6 @@ function WatchNavMenu({
 export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState<NavUser | null>(initialUser ?? null);
-  const { isOpen: surveyOpen } = usePlanSurvey();
 
   useEffect(() => {
     if (initialUser !== undefined) {
@@ -386,10 +521,6 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
   }, [initialUser]);
 
   useEffect(() => {
-    if (surveyOpen) setMenuOpen(false);
-  }, [surveyOpen]);
-
-  useEffect(() => {
     if (!menuOpen) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") setMenuOpen(false);
@@ -398,48 +529,40 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [menuOpen]);
 
-  useEffect(() => {
-    const desktop = window.matchMedia("(min-width: 1280px)");
-    const closeOnDesktop = () => { if (desktop.matches) setMenuOpen(false); };
-    desktop.addEventListener("change", closeOnDesktop);
-    return () => desktop.removeEventListener("change", closeOnDesktop);
-  }, []);
-
   useBodyScrollLock(menuOpen);
 
   return (
     <nav
       aria-label="Main navigation"
       className={cn(
-        "top-0 z-[90] flex min-h-14 w-full items-center border-b border-brand-border bg-background/80 pt-safe-top backdrop-blur-xl",
-        surveyOpen ? "fixed left-0 right-0" : "sticky",
+        "sticky top-0 z-[90] flex min-h-14 w-full items-center border-b border-ani-line bg-ani-canvas pt-safe-top",
       )}
     >
       <div className="container mx-auto flex w-full items-center justify-between gap-2 px-4 py-3">
         <AnidachiLogoLink
           size={28}
-          wordmarkClassName="hidden min-[400px]:inline text-white"
+          wordmarkClassName="text-ani-text"
           className="min-h-11"
           priority
         />
 
         {/* Desktop inline nav */}
-        <ul className="hidden items-center gap-5 text-sm xl:flex">
+        <ul className="hidden items-center gap-4 text-sm md:flex md:gap-6">
           <li>
             <Link
-              href="/#how-it-works"
-              className="inline-flex min-h-11 items-center text-foreground/70 transition-colors hover:text-brand-orange-bright"
+              href="/pricing"
+              className="inline-flex min-h-11 items-center text-ani-muted transition-colors hover:text-ani-text"
             >
-              How It Works
+              Pricing
             </Link>
           </li>
           <WatchNavMenu variant="desktop" />
           <ContactNavMenu variant="desktop" />
           <li>
-            <JoinDiscordButton variant="nav" placement="nav" className="min-h-11 rounded-xl px-4" />
+            <JoinDiscordButton variant="nav" placement="nav" />
           </li>
           <li>
-            {user ? <AccountEntryLink /> : <NavPricingButton />}
+            <NavPricingButton />
           </li>
           <li>
             {user ? (
@@ -447,7 +570,7 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
             ) : (
               <Link
                 href="/login"
-                className="inline-flex min-h-9 items-center rounded-full border border-brand-border px-4 text-sm font-semibold text-foreground transition-colors hover:border-brand-orange/50 hover:text-brand-orange-bright"
+                className="inline-flex min-h-9 items-center rounded-full border border-ani-line px-4 text-sm font-semibold text-ani-text transition-colors hover:border-ani-control-border-hover hover:text-ani-text"
               >
                 Sign in
               </Link>
@@ -455,26 +578,64 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
           </li>
         </ul>
 
-        {/* Keep account access visible on phones and tablets. */}
-        <div className="flex items-center gap-2 xl:hidden">
-          {user ? <AccountEntryLink onClick={() => setMenuOpen(false)} /> : (
-            <>
-              <NavPricingLink className="inline-flex min-h-11 items-center rounded-full border border-brand-orange/30 bg-brand-orange/15 px-3 text-sm font-semibold text-brand-orange-bright" />
-              <Link href="/login" className="inline-flex min-h-11 items-center rounded-full border border-brand-border px-3 text-xs font-semibold text-foreground">Sign in</Link>
-            </>
-          )}
+        {/* Mobile-only: pricing + sign in + hamburger (hidden from sm up — tablet uses inline strip) */}
+        <div className="flex items-center gap-1 sm:hidden">
+          <span className="inline-flex min-h-11 min-w-11 items-center justify-center">
+            <NavPricingLink className="inline-flex min-h-11 items-center rounded-full border border-ani-control-border px-3 text-sm font-semibold text-ani-text transition-colors hover:bg-ani-hover" />
+          </span>
+          {!user ? (
+            <Link
+              href="/login"
+              className="inline-flex min-h-11 items-center rounded-full border border-ani-line px-3 text-xs font-semibold text-ani-text transition-colors hover:border-ani-control-border-hover hover:text-ani-text"
+            >
+              Sign in
+            </Link>
+          ) : null}
           <button
             type="button"
-            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full text-foreground transition-colors hover:bg-white/5"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-ani-text transition-colors hover:bg-ani-hover hover:text-ani-text"
             aria-expanded={menuOpen}
             aria-controls="mobile-nav-menu"
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             onClick={() => setMenuOpen((o) => !o)}
           >
-            {menuOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
+            {menuOpen ? (
+              <X className="h-6 w-6" aria-hidden="true" />
+            ) : (
+              <Menu className="h-6 w-6" aria-hidden="true" />
+            )}
           </button>
-          {user && <UserMenu user={user} compact onOpen={() => setMenuOpen(false)} />}
         </div>
+
+        {/* Tablet: inline nav + pricing (no hamburger) */}
+        <ul className="hidden items-center gap-4 text-sm sm:flex md:hidden">
+          <li>
+            <Link
+              href="/pricing"
+              className="inline-flex min-h-11 items-center text-ani-muted transition-colors hover:text-ani-text"
+            >
+              Pricing
+            </Link>
+          </li>
+          <WatchNavMenu variant="tablet" />
+          <ContactNavMenu variant="tablet" />
+          <li>
+            <JoinDiscordButton variant="nav" placement="nav_tablet" />
+          </li>
+          <li className="hidden sm:block">
+            <NavPricingLink className="inline-flex min-h-11 items-center font-semibold text-ani-text transition-colors hover:text-ani-muted" />
+          </li>
+          {!user ? (
+            <li>
+              <Link
+                href="/login"
+                className="inline-flex min-h-11 items-center rounded-full border border-ani-line px-4 text-sm font-semibold text-ani-text transition-colors hover:border-ani-control-border-hover hover:text-ani-text"
+              >
+                Sign in
+              </Link>
+            </li>
+          ) : null}
+        </ul>
       </div>
 
       {/* Mobile drawer */}
@@ -482,14 +643,14 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
         <>
           <button
             type="button"
-            className="fixed inset-0 z-[45] bg-black/50 xl:hidden touch-none"
+            className="fixed inset-0 z-[45] bg-black/50 sm:hidden touch-none"
             aria-label="Close menu"
             onClick={() => setMenuOpen(false)}
           />
           <div
             id="mobile-nav-menu"
             data-scroll-lock-scrollable
-            className="absolute inset-x-0 top-full z-[46] max-h-[min(70dvh,calc(100dvh-3.5rem-var(--safe-top)))] overflow-y-auto overscroll-contain border-b border-brand-border bg-background/95 backdrop-blur-xl px-4 py-4 shadow-lg xl:hidden"
+            className="fixed inset-x-0 top-[calc(3.5rem+var(--safe-top))] z-[46] max-h-[min(70dvh,calc(100dvh-3.5rem-var(--safe-top)))] overflow-y-auto overscroll-contain border-b border-ani-line bg-ani-canvas px-4 py-4 sm:hidden"
             role="dialog"
             aria-modal="true"
             aria-label="Mobile navigation menu"
@@ -497,11 +658,11 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
             <ul className="flex flex-col gap-1">
               <li>
                 <Link
-                  href="/#how-it-works"
-                  className="flex min-h-11 items-center rounded-lg px-3 text-base text-foreground/70 transition-colors hover:bg-brand-orange hover:text-primary-foreground"
+                  href="/pricing"
+                  className="flex min-h-11 items-center rounded-lg px-3 text-base text-ani-muted transition-colors hover:bg-ani-hover hover:text-ani-text"
                   onClick={() => setMenuOpen(false)}
                 >
-                  How It Works
+                  Pricing
                 </Link>
               </li>
               <WatchNavMenu
@@ -524,20 +685,71 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
               <li>
                   <Link
                   href="/#faq"
-                  className="flex min-h-11 items-center rounded-lg px-3 text-base text-foreground/70 transition-colors hover:bg-brand-orange hover:text-primary-foreground"
+                  className="flex min-h-11 items-center rounded-lg px-3 text-base text-ani-muted transition-colors hover:bg-ani-hover hover:text-ani-text"
                   onClick={() => setMenuOpen(false)}
                 >
                   FAQ
                 </Link>
               </li>
-              {!user && (
+              <li className="pt-2" onClick={() => setMenuOpen(false)}>
+                <NavPricingButton />
+              </li>
+              {user ? (
                 <>
-                  <li className="pt-2" onClick={() => setMenuOpen(false)}><NavPricingButton /></li>
-                  <li className="mt-2 border-t border-brand-border pt-2">
-                    <Link href="/login" onClick={() => setMenuOpen(false)}
-                      className="flex min-h-11 items-center rounded-lg px-3 text-base font-semibold text-foreground">Sign in</Link>
+                  <li className="mt-3 border-t border-ani-line pt-3">
+                    <div className="flex items-center gap-3 px-3 py-1">
+                      {user.avatarUrl ? (
+                        <Image
+                          src={user.avatarUrl}
+                          alt={user.displayName}
+                          width={36}
+                          height={36}
+                          className="h-9 w-9 rounded-full object-cover"
+                        />
+                      ) : (
+                        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ani-primary text-sm font-bold text-ani-on-primary">
+                          {user.displayName.slice(0, 2).toUpperCase()}
+                        </span>
+                      )}
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-ani-text">{user.displayName}</p>
+                        <p className="truncate text-xs text-ani-muted">{user.email}</p>
+                      </div>
+                    </div>
+                  </li>
+                  <li>
+                    <Link
+                      href="/account"
+                      className="flex min-h-11 items-center gap-2.5 rounded-lg px-3 text-base text-ani-muted transition-colors hover:bg-ani-hover hover:text-ani-text"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <User className="h-4 w-4" aria-hidden />
+                      Account
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/account/friends"
+                      className="flex min-h-11 items-center gap-2.5 rounded-lg px-3 text-base text-ani-muted transition-colors hover:bg-ani-hover hover:text-ani-text"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <Users className="h-4 w-4" aria-hidden />
+                      Friends
+                    </Link>
+                  </li>
+                  <li>
+                    <MobileSignOut onDone={() => setMenuOpen(false)} />
                   </li>
                 </>
+              ) : (
+                <li className="mt-2 border-t border-ani-line pt-2" onClick={() => setMenuOpen(false)}>
+                  <Link
+                    href="/login"
+                    className="flex min-h-11 items-center rounded-lg px-3 text-base font-semibold text-ani-text transition-colors hover:bg-ani-hover hover:text-ani-text"
+                  >
+                    Sign in
+                  </Link>
+                </li>
               )}
             </ul>
           </div>

@@ -7,6 +7,12 @@ import { getSeoAttributionFields } from "@/lib/seo-landing-path";
 export type ConversionFunnelEvent =
   | "cta_impression"
   | "cta_click"
+  | "install_hub_view"
+  | "extension_zip_download"
+  | "install_step_viewed"
+  | "desktop_install_link_copied"
+  | "desktop_install_link_emailed"
+  | "extension_detected"
   | "checkout_session_started"
   | "checkout_redirect_success"
   | "checkout_error";
@@ -19,7 +25,8 @@ export type PageTemplateId =
   | "anime"
   | "listicle"
   | "glossary"
-  | "pillar";
+  | "pillar"
+  | "install";
 
 export function getExperimentVariant(): string {
   if (typeof process === "undefined") return "control";
@@ -57,6 +64,9 @@ export function inferPageTemplateFromPath(path: string): PageTemplateId {
   }
   if (path === "/pricing") {
     return "default";
+  }
+  if (path === "/extension") {
+    return "install";
   }
   return "default";
 }

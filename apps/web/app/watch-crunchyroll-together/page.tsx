@@ -16,7 +16,7 @@ import { getGuideLinks } from "@/lib/guide-links";
 import {
   PRICING_ASYNC_HOST_SNIPPET,
   PRICING_CRUNCHYROLL_GUIDE_PAID_MENTION,
-  PRICING_EARLY_ACCESS_PRICE,
+  PRICING_FREE_TIER_TABLE,
 } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
@@ -136,7 +136,7 @@ const tocHeadings: TocHeading[] = [
 ];
 
 const howToSteps = [
-  { name: "Get AniDachi", text: "Open AniDachi pricing / early access and install the Chrome extension from there. Takes seconds." },
+  { name: "Get AniDachi", text: "Open /extension, download the official AniDachi zip, unzip it, then choose Load unpacked in Chrome Developer mode. Takes seconds." },
   { name: "Navigate to any Crunchyroll anime", text: "Open any episode on Crunchyroll and click 'Detect Anime' in the AniDachi toolbar." },
   { name: "Create a watchroom", text: "Click 'Create Room' in AniDachi. The room is linked to the detected anime and episode." },
   { name: "Share the invite link", text: "Copy the invite link and share it with friends via Discord, text, or email." },
@@ -188,7 +188,8 @@ export default function WatchCrunchyrollTogetherPage() {
         <Link href="/guides/how-to-watch-crunchyroll-with-friends">
           how to watch Crunchyroll with friends
         </Link>
-        . Start from <Link href="/pricing">AniDachi pricing / early access</Link>
+        . Start from the{" "}
+        <Link href="/extension">AniDachi install page</Link>
         .
       </SeoGuideAnswer>
 
@@ -222,8 +223,8 @@ export default function WatchCrunchyrollTogetherPage() {
             name: "Install the AniDachi Chrome extension",
             text: (
               <>
-                Get it from{" "}
-                <Link href="/pricing">AniDachi pricing / early access</Link>. It
+                Get it from the{" "}
+                <Link href="/extension">AniDachi install page</Link>. It
                 takes seconds.
               </>
             ),
@@ -289,7 +290,7 @@ export default function WatchCrunchyrollTogetherPage() {
           {
             feature: "Free",
             values: {
-              anidachi: PRICING_EARLY_ACCESS_PRICE,
+              anidachi: PRICING_FREE_TIER_TABLE,
               "crunchyroll-party": "Free",
               teleparty: "Freemium",
               discord: "Free",

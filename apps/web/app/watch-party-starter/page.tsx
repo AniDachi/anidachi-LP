@@ -32,7 +32,7 @@ const faq = [
   {
     question: "Is this the same signup path as the homepage?",
     answer:
-      "Yes. This page funnels the same early-access pricing and Chrome extension flow as the main site, with less scrolling—useful when you share a direct link in chat before a premiere.",
+      "Yes. This page funnels the same Chrome extension install and Plus/Pro pricing flow as the main site, with less scrolling—useful when you share a direct link in chat before a premiere.",
   },
   {
     question: "Does AniDachi work without everyone being online at once?",

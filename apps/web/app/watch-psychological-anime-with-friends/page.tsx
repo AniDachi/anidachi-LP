@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getAnimeByGenre } from "@/lib/anime-data";
+import { PRICING_ROOM_SIZE_RANGE } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
   title: "Watch Psychological Anime With Friends (2026) | AniDachi",
@@ -122,8 +123,8 @@ export default function WatchPsychologicalAnimeWithFriendsPage() {
         <strong>
           Yes, you can watch psychological anime with friends using AniDachi&apos;s
           watchroom on Crunchyroll. Sync playback so everyone hits twists at the
-          same moment, then theorize together in real time. Works for 2–10 people
-          across different time zones, all streaming on Crunchyroll.
+          same moment, then theorize together in real time. Works for{" "}
+          {PRICING_ROOM_SIZE_RANGE}, all streaming on Crunchyroll.
         </strong>
       </p>
 

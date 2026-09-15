@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getAnimeByGenre } from "@/lib/anime-data";
+import { PRICING_ROOM_SIZE_RANGE } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
   title: "Watch Mecha Anime With Friends (2026) | AniDachi",
@@ -111,7 +112,7 @@ export default function WatchMechaAnimeWithFriendsPage() {
           Yes, you can watch mecha anime with friends using AniDachi&apos;s
           watchroom on Crunchyroll. Sync robot battles and war-turning moments
           in real time, then break down every tactical decision together.
-          Works for 2–10 people across different time zones, all on Crunchyroll.
+          Works for {PRICING_ROOM_SIZE_RANGE}, all on Crunchyroll.
         </strong>
       </p>
 

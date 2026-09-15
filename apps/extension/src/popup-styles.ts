@@ -159,6 +159,24 @@ ${extensionThemeTokens}
     background: #ff9b55;
   }
 
+  .popup-local-settings-note {
+    margin: 10px 2px 0;
+    font-size: 11px;
+    line-height: 1.45;
+    color: rgba(255, 255, 255, 0.62);
+  }
+
+  .popup-local-settings-link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: #ff9b55;
+    font: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+  }
+
   .popup-local-settings-error {
     margin: 8px 2px 0;
     font-size: 10px;

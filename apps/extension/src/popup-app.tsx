@@ -907,6 +907,21 @@ export function PopupApp() {
               <span />
             </span>
           </button>
+          <p className="popup-local-settings-note">
+            Unpacked installs do not auto-update. Check{" "}
+            <button
+              className="popup-local-settings-link"
+              type="button"
+              onClick={() => {
+                void chrome.tabs.create({
+                  url: new URL("/extension", WEB_HTTP_BASE).toString(),
+                });
+              }}
+            >
+              anidachi.app/extension
+            </button>{" "}
+            for a new zip until the Chrome Web Store listing is live.
+          </p>
           {notificationSettingsError ? (
             <p className="popup-local-settings-error">{notificationSettingsError}</p>
           ) : null}

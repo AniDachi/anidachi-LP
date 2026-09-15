@@ -89,6 +89,12 @@ const hostPermissions =
         apiHttpHostPermission,
         apiWsHostPermission,
       ]);
+
+// Production-only packed public key. Keeps the unpacked sideload ID stable.
+// Private PEM lives at apps/extension/.keys/production-sideload-private.pem (gitignored).
+// Do not rotate without migrating OAuth chromiumapp.org redirect URIs and user installs.
+const PRODUCTION_EXTENSION_PUBLIC_KEY =
+  "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAln4D/vW2dN/YyBiPuwrPLpEs99SQp50fZzckQSeL9kjh9Sml/XUqEBni+nHIVXZt1kDzgThIq9QWDaGjxUzq6DmGPitiYB//a7tGjROjcRuxE2/ooZekZIVJ5U9u5TFrX09rnTl4P0ADuJDy0gpuNKPQeljIrpVXHiZTAsfi2fBtWARbQofQWTeqhVP/o0SLghI/LSA2v/z2gD22T8l+s5En/8QgVPUk6ZnDMPPWqhHX70GwptSPn0W8/8VH2KMcDKWxUT4sYC+tCWpAbNcI+gyzkxhhCIe3J0evnU8UKymJY2dbyo26zw10piVwgRxRR6gZoWwcaKDOMwpBABZCrQIDAQAB";
 const extensionIcons = {
   16: "icons/icon-16.png",
   32: "icons/icon-32.png",
@@ -120,6 +126,9 @@ export default defineConfig({
     ...(extensionManifestKey ? { key: extensionManifestKey } : {}),
     minimum_chrome_version: "121",
     ...(buildId ? { version_name: buildId } : {}),
+    ...(extensionChannel === "production"
+      ? { key: PRODUCTION_EXTENSION_PUBLIC_KEY }
+      : {}),
     permissions: unique([
       "storage",
       "alarms",

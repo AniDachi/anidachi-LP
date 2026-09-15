@@ -30,7 +30,7 @@ export default function SecurityPage() {
         <h1 className="text-4xl font-bold text-foreground mb-2">
           Security &amp; extension permissions
         </h1>
-        <p className="text-sm text-foreground/50 mb-10">Last updated: July 28, 2026</p>
+        <p className="text-sm text-foreground/50 mb-10">Last updated: September 15, 2026</p>
 
         <div className="space-y-8 text-foreground/80 leading-relaxed">
           <section>
@@ -72,6 +72,15 @@ export default function SecurityPage() {
               Chrome extension
             </h2>
             <p>
+              Until a Chrome Web Store listing is live, the official install path
+              is the{" "}
+              <Link href="/extension" className="text-brand-orange hover:underline">
+                AniDachi install page
+              </Link>
+              : download the zip from this site and Load unpacked in Chrome
+              Developer mode. Prefer that page over third-party mirrors.
+            </p>
+            <p className="mt-4">
               The extension overlays watchroom controls on supported pages and
               detects playback so friends can stay in sync. Store builds use
               narrow host permissions for YouTube, Crunchyroll, AniDachi web,

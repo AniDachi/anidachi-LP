@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getAnimeByGenre } from "@/lib/anime-data";
+import { PRICING_ROOM_SIZE_RANGE } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
   title: "Watch Fantasy Anime With Friends (2026) | AniDachi",
@@ -105,10 +106,10 @@ export default function WatchFantasyAnimeWithFriendsPage() {
       <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           Yes, you can watch fantasy anime with friends using AniDachi&apos;s
-          watchroom on Crunchyroll. Sync playback in real time or use async
-          catch-up so members who binge ahead don&apos;t spoil the next kingdom
-          reveal for everyone else. Works for 2–10 people across different time
-          zones, all on Crunchyroll.
+          watchroom on Crunchyroll. Sync playback in real time today; async
+          catch-up is coming soon in a later batch so members who binge ahead
+          don&apos;t spoil the next kingdom reveal for everyone else. Works for{" "}
+          {PRICING_ROOM_SIZE_RANGE}, all on Crunchyroll.
         </strong>
       </p>
 

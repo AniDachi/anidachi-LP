@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./ani-tokens.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -47,6 +48,24 @@
   --color-brand-orange-deep: var(--brand-orange-deep);
   --color-brand-surface: var(--brand-surface);
   --color-brand-border: var(--brand-border);
+  /* Account visual language — opt-in via data-ani-theme="account". Does not rewrite --primary. */
+  --color-ani-canvas: var(--ani-canvas);
+  --color-ani-panel: var(--ani-panel);
+  --color-ani-dialog: var(--ani-dialog);
+  --color-ani-text: var(--ani-text);
+  --color-ani-muted: var(--ani-muted);
+  --color-ani-on-primary: var(--ani-on-primary);
+  --color-ani-primary: var(--ani-primary);
+  --color-ani-primary-hover: var(--ani-primary-hover);
+  --color-ani-line: var(--ani-line);
+  --color-ani-control-border: var(--ani-control-border);
+  --color-ani-control-border-hover: var(--ani-control-border-hover);
+  --color-ani-hover: var(--ani-hover);
+  --color-ani-selected-quiet: var(--ani-selected-quiet);
+  --color-ani-focus: var(--ani-focus);
+  --color-ani-progress: var(--ani-progress);
+  --color-ani-menu-accent: var(--ani-menu-accent);
+  --color-ani-error-text: var(--ani-error-text);
 }
 
 :root {
@@ -154,24 +173,24 @@
   }
 
   .seo-prose h1 {
-    @apply mb-5 text-balance text-4xl font-bold tracking-[-0.03em] text-foreground md:mb-8 md:text-5xl md:leading-[1.08];
+    @apply mb-5 text-balance text-4xl font-bold tracking-[-0.03em] text-ani-text md:mb-8 md:text-5xl md:leading-[1.08];
   }
 
   .seo-prose h2 {
-    @apply mb-4 mt-10 scroll-mt-24 text-2xl font-bold tracking-[-0.02em] text-foreground;
+    @apply mb-4 mt-10 scroll-mt-24 text-2xl font-semibold tracking-[-0.02em] text-ani-text;
   }
 
   .seo-prose h3 {
-    @apply mb-2 mt-6 scroll-mt-24 text-xl font-semibold text-foreground;
+    @apply mb-2 mt-6 scroll-mt-24 text-xl font-semibold text-ani-text;
   }
 
   .seo-prose p {
-    @apply mb-4 leading-relaxed text-foreground/80;
+    @apply mb-4 leading-relaxed text-ani-muted;
   }
 
   .seo-prose ul,
   .seo-prose ol {
-    @apply mb-4 space-y-2 text-foreground/80;
+    @apply mb-4 space-y-2 text-ani-muted;
   }
 
   .seo-prose li {
@@ -179,11 +198,11 @@
   }
 
   .seo-prose a:not([class]) {
-    @apply text-brand-orange underline-offset-2 hover:text-brand-orange-bright hover:underline;
+    @apply text-ani-text underline decoration-ani-line underline-offset-2 hover:text-ani-primary hover:decoration-ani-muted;
   }
 
   .seo-prose strong {
-    @apply font-semibold text-foreground;
+    @apply font-semibold text-ani-text;
   }
 }
 
@@ -220,18 +239,6 @@
   .pb-mobile-sticky-bar {
     padding-bottom: calc(var(--mobile-sticky-bar-h) + var(--safe-bottom));
   }
-
-  .animated-gradient-border {
-    background: linear-gradient(
-      90deg,
-      var(--brand-orange),
-      var(--brand-orange-bright),
-      var(--brand-orange-deep),
-      var(--brand-orange)
-    );
-    background-size: 300% 100%;
-    animation: gradient-border-shift 4s ease infinite;
-  }
 }
 
 @keyframes fade-in-up {
@@ -245,24 +252,10 @@
   }
 }
 
-@keyframes gradient-border-shift {
-  0%,
-  100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in-up {
     animation: none;
     opacity: 1;
     transform: none;
-  }
-
-  .animated-gradient-border {
-    animation: none;
   }
 }

@@ -45,6 +45,13 @@ Project: Anidachi web app.
 | `STRIPE_PRICE_ID_PLUS_LIVE` / `STRIPE_PRICE_ID_PRO_LIVE` | Production | Stripe live prices for AniDachi Plus/Pro | Live checkout writes `plus`/`pro` subscription state |
 | OAuth client vars | Production / Preview | Google/Discord web auth | Login smoke on matching environment |
 | Supabase public vars | Production / Preview | Browser-safe Supabase project config | `/api/me` and room APIs work |
+| `NEXT_PUBLIC_AMPLITUDE_API_KEY` | Production (Preview optional) | Browser Amplitude project key | Client `trackConversion` events reach AniDachi Amplitude |
+| `AMPLITUDE_API_KEY` | Production (optional; falls back to public key) | Server Amplitude HTTP key for zip downloads | `/api/extension/download` records `extension_zip_download` |
+| `EXTENSION_ZIP_PATH` | Development (optional Preview) | Absolute/relative path to the official sideload zip | `/api/extension/download` streams the file; `/extension` shows version |
+| `EXTENSION_ZIP_URL` | Production (Preview optional) | Private-to-us Blob/CDN URL of the official sideload zip | `/api/extension/download` 302s when no local path; `/extension` shows version |
+| `EXTENSION_ZIP_VERSION` | Same as zip URL | Semver shown on `/extension` | Hub version matches the built artifact |
+| `EXTENSION_ZIP_SHA256` | Same as zip URL | 64 hex SHA-256 of the zip bytes | Hash on `/extension` matches downloaded zip |
+| `EXTENSION_ZIP_BYTES` | Same as zip URL | Zip size in bytes for hub copy | Size on `/extension` is honest |
 
 `PRIVATE_INTEGRATION_BLOB_*` is a separate shared integration boundary. It must
 not be added to production merely to enable the waitlist because doing so would
@@ -133,7 +140,9 @@ Maintain separate entries for:
 - Staging extension `chromiumapp.org` redirect URI.
 
 Changing extension IDs changes required redirect URIs. Verify Google and Discord
-separately after any auth or extension-channel change.
+separately after any auth or extension-channel change. The production packed
+`key` exists so unpacked sideload IDs (and those redirect URIs) stay stable —
+do not rotate it.
 
 ## Supabase
 

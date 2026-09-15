@@ -66,7 +66,7 @@ const howToSteps = [
   },
   {
     name: "Install AniDachi",
-    text: "Open /pricing for early access and install the AniDachi Chrome extension on the host machine.",
+    text: "Open /extension, download the official zip, then Load unpacked in Chrome on the host machine.",
   },
   {
     name: "Detect the anime",
@@ -153,10 +153,10 @@ export default function HowToCreateAnimeWatchPartyPage() {
           </a>{" "}
           links with first-timers so they fix subscription issues before the
           countdown. Ask guests to install via{" "}
-          <Link href="/pricing" className="text-brand-orange hover:underline">
-            AniDachi pricing / early access
+          <Link href="/extension" className="text-brand-orange hover:underline">
+            the AniDachi install page
           </Link>{" "}
-          so everyone runs compatible builds during soft launch.
+          so everyone loads the same official zip.
         </p>
 
         <h2
@@ -191,13 +191,11 @@ export default function HowToCreateAnimeWatchPartyPage() {
           Step-by-step with AniDachi
         </h2>
         <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
-          <li>Decide the series and episode with your co-hosts.</li>
-          <li>Open that episode on Crunchyroll while signed in.</li>
-          <li>Launch AniDachi and run anime detection.</li>
-          <li>Create a new watchroom from the extension panel.</li>
-          <li>Copy the invite URL and paste it into your group chat.</li>
-          <li>Remind guests to install AniDachi and log into Crunchyroll first.</li>
-          <li>Start playback when the quorum is ready—or enable async pacing.</li>
+          {howToSteps.map((step) => (
+            <li key={step.name}>
+              <strong>{step.name}.</strong> {step.text}
+            </li>
+          ))}
         </ol>
 
         <h2

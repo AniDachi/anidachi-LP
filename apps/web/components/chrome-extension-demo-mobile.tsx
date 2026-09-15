@@ -21,13 +21,13 @@ const POSTER_SRC = "/demo/anidachi-demo-mobile-poster.jpg";
 
 const LIVE_CAPTION_PHASES = [
   { label: "Bubble", maxStep: 1 },
-  { label: "Room", maxStep: 3 },
-  { label: "Together", maxStep: 5 },
+  { label: "Room", maxStep: 4 },
+  { label: "Together", maxStep: 6 },
 ] as const;
 
 function liveCaptionPhaseIndex(currentStep: number): number {
   if (currentStep <= 1) return 0;
-  if (currentStep <= 3) return 1;
+  if (currentStep <= 4) return 1;
   return 2;
 }
 

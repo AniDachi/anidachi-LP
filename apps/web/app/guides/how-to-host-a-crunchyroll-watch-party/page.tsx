@@ -170,7 +170,7 @@ export default function HowToHostACrunchyrollWatchPartyPage() {
         <p className="text-foreground/80 leading-relaxed mb-8">
           Free hosting is capped (about 30 minutes/day and smaller rooms). Weekly
           club hosts usually move to Plus ({PRICING_PLUS_SHORT}) or Pro (
-          {PRICING_PRO_SHORT}) during pre-launch.
+          {PRICING_PRO_SHORT}).
         </p>
 
         <h2

@@ -24,6 +24,7 @@ const LIVE_STEP_LABELS = [
   "Bubble",
   "Open panel",
   "Create room",
+  "Layout",
   "Friends join",
   "Reactions",
   "Sync",
@@ -36,9 +37,9 @@ const SECTION_COPY: Record<DemoMode, { headline: string; subcopy: string }> = {
       "The overlay sits on any Crunchyroll or YouTube player. Create a room, share the link, you're in.",
   },
   async: {
-    headline: "Catch up without losing the moment",
+    headline: "Async catch-up — coming soon",
     subcopy:
-      "Comments and reactions pin to episode timestamps — not a live chat log.",
+      "Preview of a later batch: comments and reactions pin to episode timestamps — not a live chat log. Live sync is available now.",
   },
 };
 
@@ -58,13 +59,13 @@ function StepIndicator({
           <div key={label} className="flex items-center gap-1">
             <div className="flex flex-col items-center gap-1">
               <div
-                className={`w-2 h-2 rounded-full transition-all duration-500 ${
-                  active ? "bg-brand-orange scale-125" : done ? "bg-brand-orange-deep" : "bg-brand-border"
+                className={`h-2 w-2 rounded-full motion-safe:transition-colors motion-safe:duration-[200ms] ${
+                  active ? "bg-ani-progress" : done ? "bg-ani-progress/60" : "bg-ani-control-border"
                 }`}
               />
               <span
-                className={`text-[9px] font-semibold tracking-wide uppercase transition-colors duration-500 leading-none ${
-                  active ? "text-brand-orange" : done ? "text-brand-orange-deep" : "text-foreground/30"
+                className={`text-xs font-medium leading-none motion-safe:transition-colors motion-safe:duration-[200ms] ${
+                  active ? "text-ani-text" : done ? "text-ani-muted" : "text-ani-muted/70"
                 }`}
               >
                 {label}
@@ -72,8 +73,8 @@ function StepIndicator({
             </div>
             {i < labels.length - 1 && (
               <div
-                className={`w-6 h-px mb-3 transition-colors duration-500 ${
-                  done ? "bg-brand-orange-deep" : "bg-brand-border"
+                className={`mb-3 h-px w-6 motion-safe:transition-colors motion-safe:duration-[200ms] ${
+                  done ? "bg-ani-progress/60" : "bg-ani-line"
                 }`}
               />
             )}
@@ -93,7 +94,7 @@ function DemoModeToggle({
 }) {
   const options: { id: DemoMode; label: string }[] = [
     { id: "live", label: "Live" },
-    { id: "async", label: "Async" },
+    { id: "async", label: "Async · Coming soon" },
   ];
 
   return (
@@ -102,7 +103,7 @@ function DemoModeToggle({
       role="tablist"
       aria-label="Demo mode"
     >
-      <div className="inline-flex rounded-full border border-brand-border bg-brand-surface p-1">
+      <div className="inline-flex rounded-full border border-ani-control-border p-1">
         {options.map((option) => {
           const selected = mode === option.id;
           return (
@@ -111,10 +112,10 @@ function DemoModeToggle({
               type="button"
               role="tab"
               aria-selected={selected}
-              className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
+              className={`min-h-11 rounded-full px-5 text-[13px] font-semibold motion-safe:transition-colors motion-safe:duration-[200ms] ${
                 selected
-                  ? "border border-brand-orange bg-brand-orange/10 text-brand-orange"
-                  : "border border-transparent text-foreground/60 hover:text-foreground"
+                  ? "bg-ani-primary text-ani-on-primary"
+                  : "text-ani-muted hover:text-ani-text"
               }`}
               onClick={() => {
                 if (option.id !== mode) {
@@ -142,7 +143,7 @@ function ChromeExtensionDemoDesktopLive({ visible }: { visible: boolean }) {
     <>
       <DemoOverlayKeyframes />
       <StepIndicator labels={LIVE_STEP_LABELS} current={demo.currentStep} />
-      <div className="mx-auto w-full max-w-6xl overflow-hidden rounded-2xl border border-brand-border/80 bg-black shadow-[0_24px_80px_-32px_oklch(0.71_0.20_45_/_0.35)]">
+      <div className="mx-auto w-full max-w-6xl overflow-hidden rounded-[20px] border border-ani-line bg-black">
         <div className="relative aspect-video bg-black">
           <iframe
             src={YT_EMBED_SRC}
@@ -152,8 +153,8 @@ function ChromeExtensionDemoDesktopLive({ visible }: { visible: boolean }) {
           />
           <DemoOverlayLayer demo={demo} />
         </div>
-        <div className="border-t border-brand-border bg-background/90 px-5 py-4">
-          <p className="min-h-[1.25rem] text-center text-sm text-foreground/60">
+        <div className="border-t border-ani-line bg-ani-canvas px-5 py-4">
+          <p className="min-h-[1.25rem] text-center text-sm text-ani-muted">
             {demo.caption}
           </p>
         </div>
@@ -169,7 +170,7 @@ function ChromeExtensionDemoDesktopAsync({ visible }: { visible: boolean }) {
     <>
       <AsyncDemoOverlayKeyframes />
       <StepIndicator labels={ASYNC_STEP_LABELS} current={demo.stepIndicatorIndex} />
-      <div className="mx-auto w-full max-w-6xl overflow-hidden rounded-2xl border border-brand-border/80 bg-black shadow-[0_24px_80px_-32px_oklch(0.71_0.20_45_/_0.35)]">
+      <div className="mx-auto w-full max-w-6xl overflow-hidden rounded-[20px] border border-ani-line bg-black">
         <div
           className={`relative aspect-video bg-black transition-[filter] duration-700 ${
             demo.dimVideo ? "brightness-[0.55]" : "brightness-100"
@@ -184,8 +185,8 @@ function ChromeExtensionDemoDesktopAsync({ visible }: { visible: boolean }) {
           />
           <AsyncDemoOverlayLayer demo={demo} platformLabel="Crunchyroll" />
         </div>
-        <div className="border-t border-brand-border bg-background/90 px-5 py-4">
-          <p className="min-h-[1.25rem] text-center text-sm text-foreground/60">
+        <div className="border-t border-ani-line bg-ani-canvas px-5 py-4">
+          <p className="min-h-[1.25rem] text-center text-sm text-ani-muted">
             {demo.caption}
           </p>
         </div>
@@ -229,7 +230,7 @@ export function ChromeExtensionDemo() {
   return (
     <section
       id="demo"
-      className="overflow-hidden bg-background pb-16 pt-2 text-foreground md:pt-4 lg:pb-20"
+      className="overflow-hidden bg-ani-canvas pb-16 pt-2 text-ani-text md:pt-4 lg:pb-20"
     >
       <div className="container mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
         <HomeSectionHeader title={copy.headline} description={copy.subcopy} />

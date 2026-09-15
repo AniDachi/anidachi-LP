@@ -113,8 +113,8 @@ export default function NetflixPartyForYoutubePage() {
         </strong>{" "}
         AniDachi does not sync Netflix. It does host full YouTube and Crunchyroll
         watchrooms. Start at{" "}
-        <Link href="/pricing" className="text-brand-orange hover:underline">
-          pricing / early access
+        <Link href="/extension" className="text-brand-orange hover:underline">
+          the AniDachi install page
         </Link>
         .
       </p>

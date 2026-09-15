@@ -216,9 +216,9 @@ export default function TelepartyNotWorkingYoutubePage() {
           >
             best Teleparty alternatives for YouTube
           </Link>
-          . Early access:{" "}
-          <Link href="/pricing" className="text-brand-orange hover:underline">
-            /pricing
+          . Install:{" "}
+          <Link href="/extension" className="text-brand-orange hover:underline">
+            the AniDachi install page
           </Link>
           .
         </p>

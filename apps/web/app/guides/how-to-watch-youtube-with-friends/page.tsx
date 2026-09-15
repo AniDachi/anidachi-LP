@@ -82,7 +82,7 @@ const tocHeadings: TocHeading[] = [
 const howToSteps = [
   {
     name: "Get AniDachi",
-    text: "Open /pricing for early access and install the AniDachi Chrome extension.",
+    text: "Open /extension, download the official zip, then Load unpacked in Chrome.",
   },
   {
     name: "Open the video",
@@ -153,9 +153,9 @@ export default function HowToWatchYoutubeWithFriendsPage() {
           >
             YouTube watch party
           </Link>
-          . Checkout:{" "}
-          <Link href="/pricing">
-            pricing / early access
+          . Install from{" "}
+          <Link href="/extension">
+            the AniDachi install page
           </Link>
           .
         

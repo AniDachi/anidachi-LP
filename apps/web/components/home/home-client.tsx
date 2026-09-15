@@ -6,36 +6,19 @@ import { HowItWorks } from "@/components/how-it-works";
 import { MainAppFeatures } from "@/components/main-app-features";
 import { ChromeExtensionDemo } from "@/components/chrome-extension-demo";
 import { CompareTable } from "@/components/compare-table";
-import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { SocialProof } from "@/components/social-proof";
 import { FAQSection } from "@/components/faq-section";
 import { homeFAQ } from "@/lib/home-faq";
-import { pricingCtaLabelForTier } from "@/lib/home-survey";
-import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
 
-export function HomeClient({ waitlistCount }: { waitlistCount: number | null }) {
-  const { survey, recommendedTier } = usePlanSurvey();
-
+export function HomeClient() {
   return (
-    <main id="main-content" className="min-h-screen bg-background">
-      <Hero waitlistCount={waitlistCount} />
+    <main id="main-content" className="min-h-screen bg-ani-canvas">
+      <Hero />
       <ChromeExtensionDemo />
       <HowItWorks />
       <CompareTable />
       <MainAppFeatures />
-      <div className="container mx-auto mb-10 px-4 md:mb-12">
-        <PrimaryCheckoutCta
-          pagePath="/"
-          pageTemplate="home"
-          placement="content_mid"
-          ctaVariant="home_pre_pricing"
-        />
-      </div>
-      <Pricing
-        survey={survey}
-        recommendedTier={recommendedTier}
-        getCtaLabelForTier={(tier) => pricingCtaLabelForTier({ tier, survey })}
-      />
+      <Pricing />
       <SocialProof />
       <FAQSection questions={homeFAQ} defaultOpenIndexes={[0]} />
     </main>

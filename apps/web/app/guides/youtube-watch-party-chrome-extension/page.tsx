@@ -22,7 +22,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "YouTube Watch Party Chrome Extension (2026) | AniDachi",
   description:
-    "Best YouTube watch party Chrome extension for 2026: AniDachi syncs full youtube.com/watch pages with chat and async catch-up. Soft-launch via /pricing — not a fake Store listing.",
+    "Best YouTube watch party Chrome extension for 2026: AniDachi syncs full youtube.com/watch pages with chat and async catch-up. Install from /extension (zip + Load unpacked) — not a fake Store listing.",
   alternates: {
     canonical: "/guides/youtube-watch-party-chrome-extension",
   },
@@ -58,12 +58,12 @@ const faq = [
   {
     question: "What is the best YouTube watch party Chrome extension?",
     answer:
-      "For groups that want live sync plus async catch-up on full YouTube watch pages, AniDachi is the strongest fit. Teleparty wins if you already use it for Netflix nights and only need live YouTube. Soft-launch install path: /pricing.",
+      "For groups that want live sync plus async catch-up on full YouTube watch pages, AniDachi is the strongest fit. Teleparty wins if you already use it for Netflix nights and only need live YouTube. Install path: /extension (download the zip, then Load unpacked).",
   },
   {
     question: "Where do I install the AniDachi extension?",
     answer:
-      "During soft launch, start from AniDachi pricing / early access (/pricing) for install instructions. Do not assume a public Chrome Web Store listing until it is live.",
+      "Open /extension, download the official zip, then Load unpacked in Chrome. AniDachi is not on the Chrome Web Store yet.",
   },
   {
     question: "Does the extension work on YouTube Shorts?",
@@ -87,8 +87,8 @@ const tocHeadings: TocHeading[] = [
 
 const howToSteps = [
   {
-    name: "Open early access",
-    text: "Go to /pricing and follow the current soft-launch install path for the AniDachi Chrome extension.",
+    name: "Install the AniDachi Chrome extension",
+    text: "Open /extension, download the official zip, then Load unpacked in Chrome.",
   },
   {
     name: "Pin the extension",
@@ -148,11 +148,11 @@ export default function YoutubeWatchPartyChromeExtensionPage() {
             AniDachi is a YouTube watch party Chrome extension: open a full watch
             page, create a watchroom, and sync with friends — live or async.
           </strong>{" "}
-          Soft launch starts at{" "}
-          <Link href="/pricing">
-            pricing / early access
+          Install from{" "}
+          <Link href="/extension">
+            the AniDachi install page
           </Link>
-          , not a fabricated Store badge. Hub:{" "}
+          — download the zip and Load unpacked, not a fabricated Store badge. Hub:{" "}
           <Link
             href="/watch-youtube-together"
           >

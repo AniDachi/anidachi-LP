@@ -17,6 +17,10 @@ P2P media, push-to-talk, and staging/public extension artifacts.
 
 - Keep Chrome Store permissions narrow. Broad host permissions are local-only or
   explicit staging-test artifacts.
+- Production packed `key` in `wxt.config.ts` must stay stable; never commit the
+  matching `.pem` under `.keys/`.
+- Site presence on `anidachi.app` is a dedicated content script. Do not add
+  AniDachi marketing pages to overlay `content.tsx` matches.
 - Do not put service-role keys, OAuth secrets, JWT signing secrets, Stripe
   secrets, Cloudflare tokens, or TURN secrets into the extension.
 - Keep auth/session UI honest during refreshes and account switches; local

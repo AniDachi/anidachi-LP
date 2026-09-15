@@ -91,15 +91,15 @@ export function CheckoutSessionSync({
     <div
       className={`rounded-lg border p-4 text-sm ${
         isSynced
-          ? "border-brand-orange/35 bg-brand-orange/10 text-foreground"
+          ? "border-ani-line bg-ani-selected-quiet text-ani-text"
           : isError
             ? "border-destructive/30 bg-destructive/10 text-destructive"
-            : "border-brand-border bg-brand-surface text-foreground/80"
+            : "border-ani-line bg-ani-panel text-ani-muted"
       }`}
     >
       <div className="flex items-start gap-3">
         {isSynced ? (
-          <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-brand-orange" aria-hidden="true" />
+          <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-ani-progress" aria-hidden="true" />
         ) : isError ? (
           <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
         ) : (
@@ -117,11 +117,11 @@ export function CheckoutSessionSync({
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        <Button asChild className="bg-brand-orange text-primary-foreground hover:bg-brand-orange-deep">
-          <Link href="/account">Open account</Link>
+        <Button asChild variant="cream" size="control">
+          <Link href="/extension">Download for Chrome</Link>
         </Button>
         <Button asChild variant="outline" className="bg-transparent">
-          <Link href="/#pricing">Back to plans</Link>
+          <Link href="/account">Open account</Link>
         </Button>
       </div>
     </div>

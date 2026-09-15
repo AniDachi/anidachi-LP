@@ -69,7 +69,7 @@ const howToSteps = [
   },
   {
     name: "Install AniDachi",
-    text: "Open /pricing for early access and install the AniDachi Chrome extension for every member who watches on desktop.",
+    text: "Open /extension, download the official zip, then Load unpacked in Chrome for every member who watches on desktop.",
   },
   {
     name: "Agree on pacing",
@@ -151,11 +151,10 @@ export default function HowToWatchAnimeFriendsTimeZonesPage() {
             Crunchyroll Help
           </a>
           . Install AniDachi from{" "}
-          <Link href="/pricing" className="text-brand-orange hover:underline">
-            pricing / early access
+          <Link href="/extension" className="text-brand-orange hover:underline">
+            the AniDachi install page
           </Link>{" "}
-          so permissions stay predictable for international members during soft
-          launch.
+          so everyone loads the same official zip.
         </p>
 
         <h2
@@ -192,12 +191,11 @@ export default function HowToWatchAnimeFriendsTimeZonesPage() {
           Step-by-step with AniDachi
         </h2>
         <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
-          <li>Confirm each member can access the show in their region.</li>
-          <li>Install AniDachi on Chrome for desktop viewing.</li>
-          <li>Open the agreed episode on Crunchyroll and run anime detection.</li>
-          <li>Create one watchroom for the entire season.</li>
-          <li>Share the invite in a pinned message with time zone context.</li>
-          <li>Encourage episode-tagged chat so spoilers stay controlled.</li>
+          {howToSteps.map((step) => (
+            <li key={step.name}>
+              <strong>{step.name}.</strong> {step.text}
+            </li>
+          ))}
         </ol>
 
         <h2

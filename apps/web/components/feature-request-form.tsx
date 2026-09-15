@@ -16,6 +16,9 @@ const CATEGORY_LABELS: Record<FeatureRequestCategory, string> = {
   other: "Other",
 };
 
+const fieldClassName =
+  "w-full rounded-xl border border-ani-control-border bg-ani-canvas px-3.5 py-2.5 text-ani-text outline-none transition-colors placeholder:text-ani-muted focus:border-ani-focus focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ani-focus";
+
 export function FeatureRequestForm({
   variant = "public",
   initialContact,
@@ -81,14 +84,14 @@ export function FeatureRequestForm({
         className={
           variant === "account"
             ? "ac-empty ac-form-success"
-            : "rounded-2xl border border-brand-border/80 bg-brand-surface px-6 py-8 text-center"
+            : "rounded-[20px] border border-ani-line bg-ani-panel px-6 py-8 text-center"
         }
         role="status"
       >
-        <p className="text-lg font-semibold tracking-[-0.01em] text-foreground">
+        <p className="text-lg font-semibold tracking-[-0.01em] text-ani-text">
           Thanks — we got your request.
         </p>
-        <p className="mt-2 text-sm leading-relaxed text-foreground/65">
+        <p className="mt-2 text-sm leading-relaxed text-ani-muted">
           We read every submission. If we need more detail, we will reply to the
           email you shared.
         </p>
@@ -98,7 +101,7 @@ export function FeatureRequestForm({
           className={
             variant === "account"
               ? "ac-button mt-6"
-              : "mt-6 border border-brand-border"
+              : "mt-6 border border-ani-line"
           }
           onClick={() => setStatus("idle")}
         >
@@ -111,25 +114,25 @@ export function FeatureRequestForm({
   const contactFields = (
     <div className="grid gap-5 sm:grid-cols-2">
       <label className="block text-sm">
-        <span className="mb-1.5 block font-medium text-foreground">Name</span>
+        <span className="mb-1.5 block font-medium text-ani-text">Name</span>
         <input
           required
           maxLength={120}
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full rounded-xl border border-brand-border bg-background px-3.5 py-2.5 text-foreground outline-none transition-colors focus:border-brand-orange"
+          className={fieldClassName}
           autoComplete="name"
         />
       </label>
       <label className="block text-sm">
-        <span className="mb-1.5 block font-medium text-foreground">Email</span>
+        <span className="mb-1.5 block font-medium text-ani-text">Email</span>
         <input
           required
           type="email"
           maxLength={254}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-xl border border-brand-border bg-background px-3.5 py-2.5 text-foreground outline-none transition-colors focus:border-brand-orange"
+          className={fieldClassName}
           autoComplete="email"
         />
       </label>
@@ -149,15 +152,13 @@ export function FeatureRequestForm({
       {variant !== "account" ? contactFields : null}
 
       <label className="block text-sm">
-        <span className="mb-1.5 block font-medium text-foreground">
-          Category
-        </span>
+        <span className="mb-1.5 block font-medium text-ani-text">Category</span>
         <select
           value={category}
           onChange={(e) =>
             setCategory(e.target.value as FeatureRequestCategory)
           }
-          className="w-full rounded-xl border border-brand-border bg-background px-3.5 py-2.5 text-foreground outline-none transition-colors focus:border-brand-orange"
+          className={fieldClassName}
         >
           {FEATURE_REQUEST_CATEGORIES.map((value) => (
             <option key={value} value={value}>
@@ -168,7 +169,7 @@ export function FeatureRequestForm({
       </label>
 
       <label className="block text-sm">
-        <span className="mb-1.5 block font-medium text-foreground">
+        <span className="mb-1.5 block font-medium text-ani-text">
           Short title
         </span>
         <input
@@ -177,12 +178,12 @@ export function FeatureRequestForm({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g. Episode progress for YouTube playlists"
-          className="w-full rounded-xl border border-brand-border bg-background px-3.5 py-2.5 text-foreground outline-none transition-colors focus:border-brand-orange placeholder:text-foreground/35"
+          className={fieldClassName}
         />
       </label>
 
       <label className="block text-sm">
-        <span className="mb-1.5 block font-medium text-foreground">
+        <span className="mb-1.5 block font-medium text-ani-text">
           Describe the request
         </span>
         <textarea
@@ -192,7 +193,7 @@ export function FeatureRequestForm({
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="What problem does this solve for your watch group?"
-          className="w-full resize-y rounded-xl border border-brand-border bg-background px-3.5 py-2.5 text-foreground outline-none transition-colors focus:border-brand-orange placeholder:text-foreground/35"
+          className={fieldClassName + " resize-y"}
         />
       </label>
 
@@ -228,13 +229,12 @@ export function FeatureRequestForm({
 
       <Button
         type="submit"
-        size="touch"
         disabled={status === "submitting"}
         className={
-          variant === "account"
-            ? "ac-button ac-button-primary"
-            : "w-full bg-brand-orange font-semibold text-primary-foreground transition-[transform,background-color] duration-200 hover:bg-brand-orange-deep active:scale-[0.98] sm:w-auto"
+          variant === "account" ? "ac-button ac-button-primary" : "w-full sm:w-auto"
         }
+        variant={variant === "account" ? "default" : "cream"}
+        size={variant === "account" ? "touch" : "control"}
       >
         {status === "submitting" ? "Sending…" : "Submit feature request"}
       </Button>

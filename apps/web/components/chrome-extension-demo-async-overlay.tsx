@@ -526,24 +526,35 @@ function PlaybackClock({
 function AsyncTopBubble({ count, compact = false }: { count: number; compact?: boolean }) {
   return (
     <div
-      className={`flex items-center gap-1 rounded-full border border-white/[0.16] shadow-[0_10px_30px_rgba(0,0,0,0.24)] pointer-events-none ${
-        compact
-          ? "h-8 px-2.5 bg-[rgba(10,10,18,0.82)]"
-          : "h-[30px] px-2 gap-1.5 bg-[rgba(10,10,18,0.38)] backdrop-blur-lg"
+      className={`flex items-center rounded-full pointer-events-none ${
+        compact ? "h-7 gap-1.5 px-2" : "h-8 gap-[7px] px-2.5"
       }`}
+      style={{
+        border: "1px solid rgba(255,255,255,0.18)",
+        background: compact ? "rgba(9,9,11,0.78)" : "rgba(9,9,11,0.68)",
+        backdropFilter: compact ? undefined : "blur(22px) saturate(1.12)",
+        boxShadow:
+          "0 14px 34px rgba(0,0,0,0.34), inset 0 1px 0 rgba(255,255,255,0.08)",
+      }}
       aria-hidden
     >
       <AnidachiLogo
-        size={compact ? 18 : 20}
+        size={compact ? 18 : 24}
         alt=""
-        className={compact ? "w-[18px] h-[18px] shrink-0" : "w-5 h-5 shrink-0"}
+        className={
+          compact
+            ? "w-[18px] h-[18px] shrink-0 rounded-full"
+            : "w-6 h-6 shrink-0 rounded-full"
+        }
         aria-hidden
       />
-      <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-orange" />
       <span
-        className={`font-semibold text-white/90 leading-none ${
-          compact ? "text-[12px]" : "text-[12px]"
-        }`}
+        className="inline-flex rounded-full"
+        style={{ width: 6, height: 6, background: "#7dd3a7" }}
+      />
+      <span
+        className="font-semibold text-white/[0.93] leading-none"
+        style={{ fontSize: compact ? 11 : 12, fontWeight: 650 }}
       >
         {count}
       </span>

@@ -182,7 +182,7 @@ export function buildWatchHowToSteps(anime: AnimeEntry): {
   return [
     {
       name: "Install AniDachi",
-      text: "Add the AniDachi Chrome extension from AniDachi pricing / early access (/pricing) on each device your watch group uses.",
+      text: "Open /extension, download the official AniDachi zip, unzip it, then choose Load unpacked in Chrome Developer mode on each device your watch group uses.",
     },
     {
       name: "Open the anime on Crunchyroll",

@@ -12,7 +12,7 @@ import {
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
-import { PRICING_EARLY_ACCESS_PRICE } from "@/lib/pricing-copy";
+import { PRICING_PLUS_PRICE_LINE } from "@/lib/pricing-copy";
 
 const SITE_URL = getResolvedSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
@@ -42,7 +42,7 @@ const faq = [
   {
     question: "Is Crunchyroll Party free compared to AniDachi?",
     answer:
-      "Crunchyroll Party is a free Chrome extension for live, synchronized watching. AniDachi has a Free tier for joining rooms and Plus/Pro tiers for hosts during early access, with Crunchyroll-first watchrooms, async catch-up, auto anime detection, and per-person progress tracking.",
+      "Crunchyroll Party is a free Chrome extension for live, synchronized watching. AniDachi has a Free tier for joining rooms and Plus/Pro tiers for hosts, with Crunchyroll-first watchrooms, async catch-up, auto anime detection, and per-person progress tracking.",
   },
   {
     question: "Do we still need Crunchyroll accounts for both tools?",
@@ -139,7 +139,7 @@ export default function AniDachiVsCrunchyrollPartyPage() {
           {
             feature: "Pricing",
             values: {
-              anidachi: PRICING_EARLY_ACCESS_PRICE,
+              anidachi: PRICING_PLUS_PRICE_LINE,
               crunchyrollParty: "Free",
             },
           },

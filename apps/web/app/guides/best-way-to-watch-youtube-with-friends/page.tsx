@@ -65,7 +65,7 @@ const faq = [
   {
     question: "Is this the same as how to watch YouTube with friends?",
     answer:
-      "No. That how-to walks setup steps. This page is a method verdict — which approach to choose — then points you to pricing and deeper guides once you decide.",
+      "No. That how-to walks setup steps. This page is a method verdict — which approach to choose — then points you to the install page and deeper guides once you decide.",
   },
   {
     question: "Is AniDachi free?",
@@ -211,12 +211,12 @@ export default function BestWayToWatchYoutubeWithFriendsPage() {
       <SeoGuideSteps
         steps={[
           {
-            name: "Open pricing / early access",
+            name: "Install the AniDachi Chrome extension",
             text: (
               <>
                 Start at{" "}
-                <Link href="/pricing">AniDachi pricing / early access</Link> and
-                install the Chrome extension.
+                <Link href="/extension">the AniDachi install page</Link>, download
+                the official zip, then Load unpacked in Chrome.
               </>
             ),
           },

@@ -6,9 +6,10 @@ import { getGuideLinks } from "@/lib/guide-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 import {
   PRICING_COMPARE_OVERVIEW,
-  PRICING_EARLY_ACCESS_PRICE,
+  PRICING_PLUS_PRICE_LINE,
   PRICING_IS_ANIDACHI_FREE_YOUTUBE_ANSWER,
 } from "@/lib/pricing-copy";
+import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
 
 const SITE_URL = getResolvedSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
@@ -174,7 +175,7 @@ export default function BestAppsToWatchYoutubeTogetherPage() {
           {
             feature: "Pricing",
             values: {
-              anidachi: PRICING_EARLY_ACCESS_PRICE,
+              anidachi: PRICING_PLUS_PRICE_LINE,
               w2g: "Free + paid",
               teleparty: "Freemium",
               discord: "Free",
@@ -192,8 +193,8 @@ export default function BestAppsToWatchYoutubeTogetherPage() {
       <ol className="list-decimal pl-6 space-y-3 text-foreground/80 mb-8">
         <li>
           <strong>#1 AniDachi</strong> — YouTube + Crunchyroll watchrooms, async.
-          <Link href="/pricing" className="text-brand-orange hover:underline ml-1">
-            Get early access
+          <Link href={INSTALL_HUB_PATH} className="text-brand-orange hover:underline ml-1">
+            {INSTALL_CTA_LABEL}
           </Link>
           .
         </li>

@@ -172,7 +172,7 @@ export default function WatchAnimeTogetherPage() {
         <Link href="/pricing" className="text-brand-orange font-medium hover:underline">
           See AniDachi pricing — Free limited hosting, Plus unlimited
         </Link>{" "}
-        — early-access pricing with a clear refund path, then create your first
+        — with a clear refund path, then create your first
         watchroom in minutes.
       </p>
 

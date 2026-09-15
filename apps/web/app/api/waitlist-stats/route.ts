@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
-import { readContacts } from "@/lib/kreatli-crm/store";
-import { countSurveyLeads } from "@/lib/kreatli-crm/survey-lead-shared";
+import { getPublicSignupCount } from "@/lib/kreatli-crm/public-signup-count";
 
 export async function GET() {
   try {
-    const contacts = await readContacts();
-    const count = countSurveyLeads(contacts);
+    const count = await getPublicSignupCount();
     return NextResponse.json(
       { count },
       {

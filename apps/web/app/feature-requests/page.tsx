@@ -31,33 +31,27 @@ export default function FeatureRequestsPage() {
       <article className="container mx-auto max-w-2xl px-4 py-14 lg:py-20">
         <div className="mb-8 flex items-center gap-3">
           <AnidachiLogo size={40} priority />
-          <p className="text-xl font-bold tracking-[-0.03em] text-foreground">
+          <p className="text-xl font-semibold tracking-[-0.03em] text-ani-text">
             AniDachi
           </p>
         </div>
 
-        <h1 className="mb-4 text-balance text-4xl font-bold tracking-[-0.03em] text-foreground md:text-5xl md:leading-[1.08]">
+        <h1 className="mb-4 text-balance text-4xl font-semibold tracking-[-0.03em] text-ani-text md:text-5xl md:leading-[1.08]">
           Feature requests
         </h1>
-        <p className="mb-10 max-w-xl text-pretty text-lg leading-relaxed text-foreground/70">
+        <p className="mb-10 max-w-xl text-pretty text-lg leading-relaxed text-ani-muted">
           Tell us what would make Crunchyroll or YouTube watchrooms better for
           your group. We read every submission — this is not a support ticket
           queue.
         </p>
 
-        <div className="relative mb-10 overflow-hidden rounded-2xl border border-brand-border/80 bg-brand-surface px-5 py-6 sm:px-7">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_0%_0%,oklch(0.71_0.20_45_/_0.12),transparent_55%)]"
-          />
-          <div className="relative">
-            <FeatureRequestForm />
-          </div>
+        <div className="relative mb-10 overflow-hidden rounded-[20px] border border-ani-line bg-ani-panel px-5 py-6 sm:px-7">
+          <FeatureRequestForm />
         </div>
 
-        <p className="text-sm leading-relaxed text-foreground/50">
+        <p className="text-sm leading-relaxed text-ani-muted">
           Need help with billing, install, or a bug? Use{" "}
-          <Link href="/contact" className="text-brand-orange hover:underline">
+          <Link href="/contact" className="text-ani-text underline decoration-ani-line underline-offset-2 hover:text-ani-primary">
             Contact
           </Link>{" "}
           instead.

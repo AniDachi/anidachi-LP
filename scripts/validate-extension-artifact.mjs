@@ -197,6 +197,16 @@ if (optionalPermissions.includes("notifications")) {
   throw new Error("Notifications must not be duplicated in optional permissions");
 }
 
+if (channel === "production") {
+  if (!manifest.key) {
+    throw new Error(
+      "Production artifact must include packed `key` so unpacked sideload IDs stay stable",
+    );
+  }
+} else if (manifest.key) {
+  throw new Error("Staging artifact must not reuse the production packed key");
+}
+
 if (Number.parseInt(manifest.minimum_chrome_version ?? "0", 10) < 121) {
   throw new Error("minimum_chrome_version must support extension Web Push");
 }
