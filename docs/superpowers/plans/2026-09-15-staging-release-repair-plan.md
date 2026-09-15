@@ -10,9 +10,15 @@
 
 **Spec:** [Текущее состояние](../../current-development-state.md), [каналы расширения](../../extension-release-channels.md), [личная история и тарифы, уточнение D01](2026-09-08-personal-history-and-plans-mvp.md), [навигация кабинета](../specs/2026-09-10-account-mvp-navigation-design.md) и реестр подтвержденных отклонений ниже. Этот план восстанавливает согласованные контракты, а не вводит новую модель продукта.
 
-**Дата:** 2026-09-15. **Статус:** повторная проверка завершена; реализация этапов не начата. Запись плана не означает разрешение на merge, отправку писем или публикацию ZIP.
+**Дата:** 2026-09-15; обновлено 2026-09-16. **Статус:** пересогласованный этап 1 реализован локально и проходит проверку; остальные этапы не начаты. Запись плана не означает разрешение на merge, отправку писем или публикацию ZIP.
 
 **Уточнение 2026-09-16:** по просьбе пользователя добавлены полный реестр измененных файлов и обязательная проверка их влияния. Повторная проверка известных замечаний завершена; полное построчное ревью всех 164 файлов и финальная регрессия еще не завершены и не считаются выполненными по наличию этого плана.
+
+## Решение владельца 2026-09-16
+
+Сохраняем всю папку `apps/extension`, `package.json` и release-валидатор точно как в main `4b4ff88380d0a64e5216d2770d360440d3f8852b`. Новый site-presence и постоянная ZIP-подсказка не принимаются. Сайт остается с новым дизайном, но без проверки установленного расширения. На странице комнаты прежний detector заменяется нейтральной справкой; join/auth/backend не меняются.
+
+Это решение заменяет первоначальный этап 1 и предложения presence/retry в этапе 3. Предыдущий PR [#348](https://github.com/AniDachi/anidachi-LP/pull/348), `f2112110`, был подготовлен и проверен, но не слит; его код не переносится в новый вариант. После готовности замены старый PR закрывается без удаления ветки/истории. Остальные блоки сайта сначала разбираются с владельцем и не реализуются автоматически.
 
 ## Global Constraints
 
@@ -22,7 +28,7 @@
 - Не push напрямую в main, не force-push, не сбрасывать и не откатывать чужие изменения. При обновлении веток сохранять обе стороны обычным merge с проверкой результата.
 - Не менять комнаты, протокол, медиаместа, defaults, голос, историю, Stripe-объекты, Supabase-данные и rollout-флаги для решения ошибок сайта. Новая необходимость в этих областях требует отдельного описания причины и проверок.
 - Production extension ID: `gpkolofebdhfpapbbgdkdkmlmjfidgmn`; staging: `ndkfphbchhfephdodcpehdcoclojagje`; local: `nkinhhgigcflmfhilmcakbkongcpkfnl`. Стабильные публичные ключи сохраняются.
-- Release builds: узкие разрешения; `site-presence` отдельно от overlay. Логотип в `web_accessible_resources` доступен только видеоплатформам. Не добавлять `unsafe-eval` и не возвращать динамическую компиляцию Zod.
+- Release builds: узкие разрешения; новый `site-presence` исключен, runtime расширения совпадает с main. Логотип в `web_accessible_resources` доступен только видеоплатформам. Не добавлять `unsafe-eval` и не возвращать динамическую компиляцию Zod.
 - Free: 30 минут своего хостинга в день; комната до 4 человек. Plus: 6 человек / 4 камеры / 6 микрофонов. Pro: 15 / 4 / 8. Доступ к поддерживаемым платформам общий; лимиты комнаты определяются хостом.
 - Free сохраняет чтение, Resume и удаление уже записанной личной истории; запись и редактирование прогресса требуют Plus/Pro. История YouTube — 100 видео, Crunchyroll — 200 тайтлов; при заполнении блокируются новые записи, существующие обновляются при наличии платного доступа.
 - Staging остается под парольной защитой и `noindex`; staging-ссылки и тестовые идентификаторы не попадают в production ZIP/SEO.
@@ -54,14 +60,14 @@
 
 | ID | Приоритет и доказательство | Что требуется | Этап |
 | --- | --- | --- | --- |
-| F01 | P1, CI и исходник: новый `site-presence.content.ts` добавляет сайт, валидатор/тесты ожидают только видео | Проверять каждый content script по его назначению; не расширять overlay или WAR | 1 |
-| F02 | P1, исходник: валидатор сначала требует staging `manifest.key`, затем отвергает любой ключ | Сохранить стабильный staging ID, отклонять чужой ключ. Текущий CI падает раньше этой проверки | 1 |
+| F01 | P1, CI и исходник: новый `site-presence.content.ts` добавляет сайт, валидатор/тесты ожидают только видео | Исключить новый site-presence и вернуть прежние release checks из main | 1 |
+| F02 | P1, исходник: валидатор сначала требует staging `manifest.key`, затем отвергает любой ключ | Вернуть validator из main: стабильные ID проверяются без добавленного противоречия | 1 |
 | F03 | P1, команды: удален `build:extension:staging:local-broad`; новая broad-команда передает env, который скрипт сбрасывает | Восстановить команду и настоящий `--broad`, отдельную папку local-broad | 1 |
 | F04 | P2, исходник и импорты: desktop/mobile logout обходят `anidachi:before-sign-out`, не проверяют `response.ok` | Защита Save / Discard / Stay до запроса logout; ошибка выхода не уводит со страницы | 2 |
 | F05 | P2, повторно подтверждено живым `/extension`: меню содержит только Friends и Sign out | Вернуть быстрый вход в кабинет, историю, подписку, профиль и помощь | 2 |
 | F06 | P2, live DOM и CSS: при 700 px нет доступа к аккаунту; исходник оставляет scroll lock после скрытия mobile drawer | Непрерывная навигация на границах 640/768 px; закрытие и снятие блокировки при смене режима | 2 |
 | F07 | P1 для публичной установки, live: ZIP-кнопка disabled. Код расходится: `available` по env, download дополнительно ищет файлы | Согласовать метаданные, реальный источник ZIP и публичную выдачу, проверить байты | 3, 6 |
-| F08 | P2, исходник: installed-ветка скрывает download, хотя popup ведет туда обновляться; старый ZIP не имеет presence | Скачать/обновить можно независимо от обнаружения. Отсутствие ответа не доказывает отсутствие расширения | 3 |
+| F08 | P2, исходник: installed-ветка скрывает download, хотя popup ведет туда обновляться; старый ZIP не имеет presence | Убрать installed-ветку и всю проверку установки; download определяется только доступностью ZIP | 1, 3 |
 | F09 | P2, исходник: CRM read-modify-write сохраняет старый снимок контактов | Использовать существующий `mutateContacts`, проверить конфликт с параллельной правкой | 4A |
 | F10 | P2, исходник: публичная отправка Gmail без cooldown/dedupe/ограничения по источнику и получателю | Прикладная защита с атомарным состоянием, без зависимости от непроверенного firewall | 4B |
 | F11 | P2, исходник: полный отказ CRM + Gmail выглядит `Saved`; чтение Gmail tokens вне обработчика ошибки | Правдивый результат доставки; контролируемые JSON-ошибки; не обещать несуществующую очередь | 4C |
@@ -120,60 +126,30 @@
 
 Ревью файлов и проверки сценариев дополняют друг друга. Полные тяжелые проверки выполняются на согласованном кандидате; после маленькой правки повторяются ее затронутые сценарии. Главная приемка относится к итоговому merge tree с актуальным main, затем проверяется развернутый production и реально скачиваемый ZIP. Буквальная гарантия отсутствия всех ошибок невозможна; известные дефекты и незакрытые обязательные проверки не допускают выпуск.
 
-## Этап 1. Восстановить выпуск расширения
+## Этап 1. Сохранить production-расширение и убрать зависимость сайта от presence
 
-**Files — Modify:** `scripts/validate-extension-artifact.mjs`, `apps/extension/test/release-channel-build.test.ts`, `package.json`, `docs/extension-release-channels.md`. Проверить потребителей в `apps/extension/wxt.config.ts`, `apps/extension/entrypoints/content.tsx`, `apps/extension/entrypoints/site-presence.content.ts`, `scripts/build-extension-staging.sh`, `scripts/build-extension-public.sh`; менять их только при доказанном расхождении контракта.
+**База:** staging `391fb5c9`. **Эталон:** main `4b4ff883`. **Ветка:** `codex/preserve-production-extension`. Документы плана перенесены отдельно; fix `f2112110` из PR #348 не применяется.
 
-**Interfaces:** вход валидатора остается `--channel staging|production --dir <artifact>`; успех — exit 0, ошибка — nonzero с конкретным нарушением. Production/staging build scripts принудительно задают свои endpoints и permissions. Результат нужен этапам 3 и 6.
+**Restore exactly from main:** вся `apps/extension`, `package.json`, `scripts/validate-extension-artifact.mjs`. Это отменяет шесть файлов extension diff и изменения build/Graphify aliases; существующие manifest keys, IDs, permissions, зависимости, rooms/history/media остаются прежними. Удаляется только tracked `.keys/README.md`, никакие private keys не читаются и не меняются.
 
-- [ ] Дополнить fixtures: отдельные `content-scripts/content.js` и `content-scripts/site-presence.js`, корректные matches обоих каналов. Отрицательные случаи: overlay на сайте, presence на чужом домене, production с staging key, staging с production key, лишний WAR/широкий wildcard. Фикстура staging со своим ключом обязана проходить.
-- [ ] Проверять роли скриптов, а не только объединение доменов. Контракт:
+**Web — Modify:** `apps/web/components/extension-install-hub.tsx`, `apps/web/app/room/[roomId]/extension-check.tsx`, `apps/web/lib/conversion-events.ts`, `apps/web/docs/CONVERSION_METRICS.md`. **Delete:** `apps/web/lib/extension-presence.ts`, `apps/web/app/success/success-install-next.tsx` (не был подключен к странице оплаты). **Create:** `apps/web/lib/extension-install-compatibility.test.ts`.
 
-  ```js
-  const siteMatches = channel === "production"
-    ? ["https://www.anidachi.app/*", "https://anidachi.app/*"]
-    : ["https://staging.anidachi.app/*"];
-  const roles = new Map([
-    ["content-scripts/content.js", { matches: videoHosts, allFrames: true }],
-    ["content-scripts/site-presence.js", { matches: siteMatches, allFrames: false }],
-  ]);
-  const observed = new Set();
-  for (const script of manifest.content_scripts ?? []) {
-    const entry = script.js?.[0];
-    const role = roles.get(entry);
-    if (!role || script.js.length !== 1 || observed.has(entry)) {
-      throw new Error("Unexpected or duplicate content script");
-    }
-    const actual = [...(script.matches ?? [])].sort();
-    if (JSON.stringify(actual) !== JSON.stringify([...role.matches].sort()) ||
-        (script.all_frames ?? false) !== role.allFrames ||
-        script.run_at !== "document_start") {
-      throw new Error(`Unexpected content script scope: ${entry}`);
-    }
-    observed.add(entry);
-  }
-  if (observed.size !== roles.size) throw new Error("Missing content script");
-  ```
+- [x] Проверить полный исходный extension diff, callers presence и current main/staging; сохранить предыдущий PR и историю.
+- [x] Добавить регрессии до правки: нет запросов к расширению; даже presence reply не скрывает ZIP/инструкцию и не заменяет missing-artifact state; безопасный room next; немедленная нейтральная room help; mobile copy. На прежнем коде 5 failed / 1 passed по ожидаемым причинам.
+- [x] Вернуть согласованные extension/tooling paths из main. `git diff --exit-code origin/main -- apps/extension package.json scripts/validate-extension-artifact.mjs` должен быть пустым.
+- [x] Удалить detector, installed branch и analytics event; сохранить mobile/install guide, source availability и возврат `/room/...`.
+- [x] Заменить прежнюю room-проверку нейтральной подсказкой с установочной ссылкой и mobile share/copy. `page.tsx`, form action, join API, auth и существующие backend-проверки не меняются. Отсутствие ответа расширения не используется как состояние пользователя.
+- [x] Новые регрессии: 6/6 passed. Typecheck: 6/6 задач passed.
+- [x] `pnpm check`: 6 задач passed. `pnpm test`: web 594 passed / 6 pre-existing skips, extension 2039 passed; API 235 и protocol 201 passed из неизмененного Turbo cache. Extension и web выполнены заново; extension release tests построили staging/production artifacts, оба validator passed. Web lint passed с прежними предупреждениями; новый unused import удален. Workers runtime 75/75 passed, Worker staging dry-run passed; деплоя не было.
+- [x] Playwright на `127.0.0.1:4192`: desktop 1440×1000 и mobile 390×844; реальный `/extension?next=/room/test-room` сохраняет guide/download после presence reply, ссылка возврата указывает на комнату. Unavailable и room help проверены в изолированном harness из реальных компонентов/CSS; copy дает правильную ссылку, нет ping/overflow/framework overlay. Native share, реальный ZIP download, email и join/admission не выполнялись. В анонимной странице ожидаемые 401 `/api/me` и `/api/auth/refresh`; runtime JS errors не обнаружены. Browser plugin absent, использован существующий Playwright. Снимки/скрипт/results сохранены вне репозитория в `/private/tmp/anidachi-preserve-*`.
+- [x] Обновить docs/реестр, независимое ревью, `pnpm dev:check`. Reviewer подтвердил точное совпадение 317 extension files + tooling с main, отсутствие runtime consumers detector и изменений join/auth/API; actionable findings нет. Все 6 regression tests повторно passed после cleanup.
+- [ ] Commit/PR только в staging. Новый PR заменяет #348; закрыть #348 без merge после появления готовой замены. Проверить CI точного commit; записать удаленные receipts в PR, не выдавая feature preview за принятый staging.
 
-  `videoHosts` — существующий точный список валидатора; production/staging host permissions и WAR проверяются независимо и не расширяются этим кодом.
+**Приемка:** исходники extension и tooling равны main; установленное production-расширение не получает новых функций. Новый сайт не обнаруживает установку и не скрывает загрузку по этому признаку. ZIP availability и фактическая публикация — отдельная задача F07 этапов 3/6; не выдавать артефакты с тестовым VAPID за пользовательский релиз. Staging/main merge этим блоком не выполняется.
 
-- [ ] Заменить поздний запрет любого staging key на единую проверку точного channel ID. Не удалять публичные ключи и не добавлять site-домены в overlay/WAR ради прохождения проверки.
-- [ ] Восстановить команды; broad-алиас не должен перезаписывать обычный staging:
+**Объем проверок:** `dev:check` предлагает room/P2P profile по пути room-help. Контракт комнаты, admission и media не меняются; реальный P2P/harness/двухпрофильный smoke для этого блока не повторяется. Это ограничение проверок записать в PR; живую staging-навигацию проверить после отдельного разрешения на merge.
 
-  ```json
-  {
-    "build:extension:staging:local-broad": "bash scripts/build-extension-staging.sh --broad",
-    "build:extension:staging:broad": "pnpm build:extension:staging:local-broad",
-    "graph:baseline": "pnpm graph:update:code",
-    "graph:update": "pnpm graph:update:code",
-    "graph:update:code": "node scripts/graphify-code-update.mjs"
-  }
-  ```
-
-- [ ] Выполнить `pnpm --filter @anidachi/extension exec vitest run test/release-channel-build.test.ts`, затем extension check/test и build/validate staging и production. Tests вызывают реальные сборки: не запускать их одновременно с ручным build в той же папке.
-- [ ] Запустить `pnpm dev:check`, записать docs/Graphify/rollback; commit `fix(extension): restore channel artifact validation`, PR только в staging. Проверить новый CI целиком, включая ранее пропущенные шаги. Новые ошибки CI сначала диагностировать отдельным пунктом; не маскировать skip/ослаблением assertions.
-
-**Приемка:** оба узких артефакта валидны; local-broad остается отдельным локальным артефактом; стабильные ID, `jitless`, production React, icons и endpoints сохранены. Сайт не получает overlay, видеоплатформы продолжают получать его. Ничего не публиковать пользователям из feature/staging как окончательный production ZIP.
+**Rollback:** отдельный revert PR в staging. Он вернет исключенные presence/UI изменения и известные ошибки старого release gate; данные, ID и серверы не затрагиваются. Прямой reset/force-push исключен.
 
 ## Этап 2. Вернуть вход в кабинет и защиту редактирования
 
@@ -212,28 +188,19 @@
 
 ## Этап 3. Согласовать установку, обновление и источник ZIP
 
-**Files — Modify:** `apps/web/lib/extension-artifact.ts`, `apps/web/app/api/extension/latest/route.ts`, `apps/web/app/api/extension/download/route.ts`, `apps/web/app/extension/page.tsx`, `apps/web/components/extension-install-hub.tsx`, `apps/web/lib/extension-presence.ts`, `docs/environment-and-secrets-matrix.md`. **Create:** `apps/web/lib/extension-artifact.test.ts`, `apps/web/lib/extension-install-hub-client.test.ts`. Проверить `apps/extension/src/popup-app.tsx` и `apps/web/lib/install-cta.ts` как потребителей.
+**Files — Modify:** `apps/web/lib/extension-artifact.ts`, `apps/web/app/api/extension/latest/route.ts`, `apps/web/app/api/extension/download/route.ts`, `apps/web/app/extension/page.tsx`, `apps/web/components/extension-install-hub.tsx`, `docs/environment-and-secrets-matrix.md`. **Create:** `apps/web/lib/extension-artifact.test.ts`, `apps/web/lib/extension-install-hub-client.test.ts`. Проверить `apps/extension/src/popup-app.tsx` и `apps/web/lib/install-cta.ts` как потребителей.
 
-**Interfaces:** сохранить `getExtensionArtifact(): ExtensionArtifact`, `toPublicExtensionArtifact(): PublicExtensionArtifact` и существующие поля/маршруты. `available` означает корректно настроенную выдачу; успешность текущей доставки отдельно проверяется HTTP/байтами. Presence — только подсказка UX, не доказательство авторизации, версии или entitlement.
+**Interfaces:** сохранить `getExtensionArtifact(): ExtensionArtifact`, `toPublicExtensionArtifact(): PublicExtensionArtifact` и существующие поля/маршруты. `available` означает корректно настроенную выдачу; успешность текущей доставки отдельно проверяется HTTP/байтами. Presence исключен решением владельца: сайт не определяет установку или версию расширения.
 
 - [ ] Зафиксировать одну политику: production получает immutable публичный HTTPS ZIP по `EXTENSION_ZIP_URL`; локальный путь — только явно настроенный dev/preview источник. Удалить неявный поиск ZIP по разным папкам. Локальную доступность проверять по regular file; отсутствие/невалидность source, version, SHA-256, bytes дает `available:false` и download 503. Не делать внешнюю загрузку/хеширование ZIP при каждом SSR.
 - [ ] Метаданные `/latest`, страницы и `/download` берутся из одного resolver. URL только HTTPS без embedded credentials; public JSON не содержит локальных путей и auth-данных. Исправить комментарий о секретности URL: адрес публичного ZIP виден при 302, и это ожидаемо. Не использовать долгоживущие секреты/подписанные временные ссылки как источник публичной раздачи.
 - [ ] Добавить metadata tests: отсутствующий источник, URL с credentials/неверной схемой, нечисловой размер, неправильный hash/version, несуществующий local file, корректный источник, отсутствие server-only полей в public JSON. Проверять фактический ответ download отдельно, а не только `available`.
-- [ ] Сделать общий блок загрузки вне ветвления `detected === true`. Заголовок может быть `Download update` для обнаруженного расширения; href всегда `/api/extension/download`. При unavailable — понятный disabled state. Пример ожидаемого общего контроля:
-
-  ```tsx
-  <a href="/api/extension/download">
-    {detected === true ? "Download update" : "Download for Chrome"}
-  </a>
-  ```
-
-  Render этого фрагмента только при `artifact.available`; disabled state — отдельный button, а не неработающая ссылка.
-
-- [ ] Сохранить путь продолжения `/room/...` и ручное `I already installed it`/повтор проверки: старый выданный ZIP не отвечает presence. Не показывать ложное `not installed` как факт. Проверить pending, timeout, поздний ответ, detected; installed state не прячет version/hash/инструкцию обновления.
+- [x] Зависимость download/guide/room next от presence убрана в пересогласованном этапе 1. Не возвращать installed state, retry detection или ручное подтверждение установки. Сохранять download при `artifact.available`, иначе понятный disabled state.
+- [ ] При изменении metadata resolver повторить `lib/extension-install-compatibility.test.ts`: обычный download, unavailable и безопасный room next сохраняются независимо от сообщений расширения.
 - [ ] В инструкции обновления: сохранить папку и ID расширения, заменить файлы новой распакованной сборкой, нажать Reload в `chrome://extensions`, обновить открытые вкладки видео. Не советовать Remove/reinstall как обычное обновление. Не вводить автоматическое обновление sideload.
 - [ ] Выполнить `pnpm --filter @anidachi/web exec tsx --test lib/extension-artifact.test.ts lib/extension-install-hub-client.test.ts`, web check/test и проверить UI desktop/mobile. Commit `fix(web): keep extension downloads available for installs and updates`, PR в staging. Настройку реального hosted ZIP выполнить отдельно на этапе 6.
 
-**Приемка:** download доступен новому и существующему пользователю независимо от presence; корректный room next сохраняется, внешние/ненормализованные обходные next не принимаются. Несконфигурированный ZIP не объявляется опубликованным.
+**Приемка:** download доступен новому и существующему пользователю без определения установки; корректный room next сохраняется, внешние/ненормализованные обходные next не принимаются. Несконфигурированный ZIP не объявляется опубликованным.
 
 ## Этап 4A. Убрать риск потери CRM-изменений
 
@@ -335,7 +302,7 @@ type InstallEmailResult =
   unzip -p <downloaded-zip> manifest.json
   ```
 
-- [ ] Chrome AniDachi Test: fresh install и update существующей папки; вход, неизмененный ID, presence, кнопка повторной загрузки; refresh уже открытого YouTube/Crunchyroll. Старый production ZIP без presence имеет понятный ручной путь продолжения/обновления.
+- [ ] Chrome AniDachi Test: fresh install и update существующей папки; вход, неизмененный ID, доступная повторная загрузка; refresh уже открытого YouTube/Crunchyroll. Сайт не проверяет установку: старый production ZIP поддерживает тот же путь продолжения/обновления, что и новый.
 - [ ] Кабинет: login, меню на mobile/tablet/desktop, история обеих платформ, выбор сезона/серий, Cancel, Save в тестовой записи; сайт/шторка показывают один результат. Save / Discard / Stay при реальном выходе, HTTP error через локальную заглушку; profile navigation и возврат из `/extension?next=/room/...`.
 - [ ] Billing: отображение тарифа и отмены на staging; pending/failed checkout sync не объявлен успехом новой UI-логикой. Полный sandbox checkout/cancel/restore повторять при изменении billing/auth поведения; если diff только стили/навигация, записать исключение и текущую UI-проверку. Реальные списания/отмены production не делать.
 - [ ] Короткая регрессия extension: defaults после выдачи/отзыва места; room reinvite; first-install controls; список People; Free countdown не меняет серверную границу. Worker/P2P код неизменен — не повторять тяжелый harness после каждой правки текста. После final extension build провести один реальный room/media smoke с двумя участниками; расширить до harness при симптоме или изменении media plane.
@@ -359,7 +326,7 @@ type InstallEmailResult =
 
 ## Документы, Graphify и журнал исполнения
 
-Graphify использован для навигации, важные связи перепроверены исходниками. Этот planning-only файл не меняет runtime/архитектуру. В соответствии с просьбой пользователя не запускать тяжелое обновление графа после мелких итераций, полный refresh при записи черновика не выполняется; это явное исключение только для данного документа. При существенных изменениях кода/контрактов выполнять нужный code/semantic update по [quality gates](../../development-quality-gates.md), фиксируя его отдельно от чужих graph changes. Не запускать полный re-extract лишь потому, что восстановлена команда `graph:update:code`.
+Graphify использован для навигации, важные связи перепроверены исходниками. По просьбе пользователя не запускать тяжелое обновление графа после мелких итераций refresh для черновика и пересогласованного этапа 1 не выполняется. Этап 1 возвращает известный production extension/tooling и удаляет зависимость UI сайта; нового контракта нет. Исключение записывается в PR, граф используется только как навигация и не объявляется обновленным. При существенных изменениях кода/контрактов выполнять нужный code/semantic update по [quality gates](../../development-quality-gates.md), фиксируя его отдельно от чужих graph changes. Не запускать полный re-extract лишь потому, что восстановлена команда `graph:update:code`.
 
 Для каждого блока дописывать одну запись: дата; branch/PR/commit; закрытые F-ID; выполненные команды и результат; staging SHA/ручная приемка; docs/Graphify status; rollback. Не переносить исторические результаты на новый SHA без проверки diff.
 
@@ -368,3 +335,5 @@ Graphify использован для навигации, важные связ
 | 2026-09-15 | Планирование | Повторно сверены исходники, refs, CI и живой staging. Создан отдельный worktree `codex/staging-release-repair-plan`. Продуктовый код, production, подписки, история, письма, merge/push/deploy не изменялись. Первое действие реализации — этап 1. |
 | 2026-09-15 | Проверка документа | Все существующие source paths и относительные ссылки проверены; новые файлы перечислены как Create. Штатный `scripts/dev-check.mjs` выполнен под Node 22.23.1: только docs profile. Запуск через pnpm попытался автоматически установить зависимости в новом worktree и был остановлен после сетевой ошибки; runtime tests/builds не выполнялись. Tracked lockfile и продуктовый код не изменены. |
 | 2026-09-16 | Полное покрытие | `git ls-remote` повторно подтвердил прежние main/staging SHA. Добавлен реестр всех 164 файлов и сквозная матрица. Известные замечания не выданы за завершенное полное ревью; открытые файловые строки должны быть приняты до promotion. |
+
+| 2026-09-16 | Пересогласование этапа 1 | Владелец одобрил точечную отмену extension-изменений и связанных web detectors. Создана ветка `codex/preserve-production-extension` от прежнего staging; предыдущий PR #348 не слит. Новые client regression tests воспроизвели 5 отклонений и прошли после исправления; полные локальные проверки, оба release validators и desktop/mobile UI review прошли. Новая ветка сохраняет production extension полностью; новый PR/CI оформляются отдельно. |

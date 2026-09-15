@@ -1,11 +1,25 @@
 # Anidachi Extension Release Channels
 
-Last updated: 2026-09-15.
+Last updated: 2026-09-16.
 
 This document describes the current Chrome extension release setup. Treat it as the
 source of truth for the current implementation, not as a permanent product contract.
 If build scripts, domains, or backend routing change, update this document in the
 same PR.
+
+## Website redesign compatibility, 2026-09-16
+
+The approved website candidate preserves the complete production extension from
+main `4b4ff88380d0a64e5216d2770d360440d3f8852b`, including build commands and
+artifact validation. It excludes the proposed website-presence content script
+and permanent ZIP-update note. The website provides installation help and ZIP
+access without detecting installation; no new extension version is required for
+that website behavior. Existing AniDachi host permissions remain needed for
+auth/API access and do not imply a website-presence content script.
+
+The keys and IDs below remain unchanged. This repair does not publish a new ZIP
+or promote staging to production; downloadable artifact publication is a separate
+acceptance step in the [repair plan](superpowers/plans/2026-09-15-staging-release-repair-plan.md).
 
 ## Channels
 

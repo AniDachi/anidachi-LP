@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState, type FormEvent, type MouseEvent, type Rea
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
-  Check,
   Chrome,
   Copy,
   Download,
@@ -19,7 +18,6 @@ import {
   type PublicExtensionArtifact,
 } from "@/lib/extension-artifact";
 import { extensionInstallFaq } from "@/lib/extension-install-faq";
-import { useExtensionPresence } from "@/lib/extension-presence";
 import {
   CHROME_EXTENSIONS_PAGE,
   CWS_PENDING_LINE,
@@ -290,7 +288,6 @@ export function ExtensionInstallHub({
 }) {
   const searchParams = useSearchParams();
   const nextPath = isSafeInstallNextPath(searchParams.get("next"));
-  const detected = useExtensionPresence();
   const [isMobile, setIsMobile] = useState(false);
   const [browser, setBrowser] = useState<BrowserKind>("chrome");
   const [copiedChrome, setCopiedChrome] = useState(false);
@@ -323,16 +320,6 @@ export function ExtensionInstallHub({
       zip_available: artifact.available,
     });
   }, [artifact.available]);
-
-  useEffect(() => {
-    if (detected !== true) return;
-    trackConversion("extension_detected", {
-      page_path: INSTALL_HUB_PATH,
-      page_template: "install",
-      placement: "install_hub",
-      cta_variant: "presence_ping",
-    });
-  }, [detected]);
 
   async function copyChromeExtensions() {
     try {
@@ -442,44 +429,6 @@ export function ExtensionInstallHub({
     ]).finally(() => {
       window.location.assign(url.toString());
     });
-  }
-
-  if (detected === true) {
-    return (
-      <div className="mx-auto max-w-xl">
-        <div className="text-center">
-        <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-ani-line bg-ani-selected-quiet px-3 py-1 text-sm font-medium text-ani-text">
-          <Check className="h-4 w-4" aria-hidden="true" />
-          AniDachi is installed
-        </p>
-        <h1 className="text-balance text-4xl font-semibold tracking-[-0.035em] text-ani-text md:text-5xl md:leading-[1.08]">
-          You&apos;re set. Open Crunchyroll or YouTube.
-        </h1>
-        <p className="mt-4 text-pretty text-ani-muted">
-          Sign in from the AniDachi menu on the video, then create or join a
-          watchroom. Pin the puzzle-piece icon so it stays one click away.
-        </p>
-        <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
-          {nextPath ? (
-            <Button asChild size="control" variant="cream">
-              <Link href={nextPath}>Return to your watchroom</Link>
-            </Button>
-          ) : null}
-          <Button asChild size="control" variant={nextPath ? "creamOutline" : "cream"}>
-            <a href="https://www.crunchyroll.com" rel="noopener noreferrer">
-              Open Crunchyroll
-            </a>
-          </Button>
-          <Button asChild size="control" variant="creamOutline">
-            <a href="https://www.youtube.com" rel="noopener noreferrer">
-              Open YouTube
-            </a>
-          </Button>
-        </div>
-        </div>
-        <OverlayUsingGuide />
-      </div>
-    );
   }
 
   if (isMobile) {

@@ -15,12 +15,18 @@ runtime-потребителей, отмечает намеренность из
 только со ссылкой на проверенный commit/test/manual receipt. Если файл менялся
 после ревью, его проверку пересмотреть по новому diff. Удаленные файлы не пропускать.
 
+Этап 1 пересогласован 2026-09-16: `возвращено к main` означает полное исключение
+предложенного изменения по решению владельца; `исключено` — удаление новой
+непринятой части. Реестр исходных 164 файлов сохранен, остальные строки не считаются
+принятыми. Подробные команды и ограничения находятся в журнале этапа 1 плана,
+удаленные CI receipts — в заменяющем PR; staging/main пока не обновлены.
+
 | Группа | Проверка |
 | --- | --- |
 | E | Extension: runtime, channels, разрешения, совместимость старого ZIP |
 | S | Shared UI: CSS/tokens/layout/Button и все классы его потребителей |
 | A | Account/auth/billing UI: доступ, черновики, owner isolation, ошибки, переходы |
-| I | Install: ZIP/API/presence/room next, отсутствие ложной готовности |
+| I | Install: ZIP/API/room next, отсутствие ложной готовности; presence исключен |
 | F | Forms/CRM/retired routes: атомарность, failures, злоупотребления, старые ссылки |
 | T | Telemetry: события не блокируют действие; нет лишних PII/дублей/ложного успеха |
 | C | Content/SEO: ссылки, действия, metadata/schema, честные обещания, Terms/Privacy |
@@ -36,12 +42,12 @@ runtime-потребителей, отмечает намеренность из
 | --- | --- | --- | --- | --- |
 | открыто | M | D | `.cursor/agents/anidachi-seo-aeo-pages.md` | Полное diff-review еще не зафиксировано. |
 | открыто | M | D | `.cursor/scratchpad.md` | Полное diff-review еще не зафиксировано. |
-| открыто | A | E | `apps/extension/.keys/README.md` | Полное diff-review еще не зафиксировано. |
-| открыто | M | E | `apps/extension/AGENTS.md` | Полное diff-review еще не зафиксировано. |
-| открыто | A | E | `apps/extension/entrypoints/site-presence.content.ts` | F01, F08 |
-| открыто | M | E | `apps/extension/src/popup-app.tsx` | Полное diff-review еще не зафиксировано. |
-| открыто | M | E | `apps/extension/src/popup-styles.ts` | Полное diff-review еще не зафиксировано. |
-| открыто | A | E | `apps/extension/src/site-presence.ts` | Полное diff-review еще не зафиксировано. |
+| возвращено к main | A | E | `apps/extension/.keys/README.md` | По решению владельца этапа 1: diff с main 4b4ff883 пустой; новые extension/tooling изменения исключены. |
+| возвращено к main | M | E | `apps/extension/AGENTS.md` | По решению владельца этапа 1: diff с main 4b4ff883 пустой; новые extension/tooling изменения исключены. |
+| возвращено к main | A | E | `apps/extension/entrypoints/site-presence.content.ts` | По решению владельца этапа 1: diff с main 4b4ff883 пустой; новые extension/tooling изменения исключены. |
+| возвращено к main | M | E | `apps/extension/src/popup-app.tsx` | По решению владельца этапа 1: diff с main 4b4ff883 пустой; новые extension/tooling изменения исключены. |
+| возвращено к main | M | E | `apps/extension/src/popup-styles.ts` | По решению владельца этапа 1: diff с main 4b4ff883 пустой; новые extension/tooling изменения исключены. |
+| возвращено к main | A | E | `apps/extension/src/site-presence.ts` | По решению владельца этапа 1: diff с main 4b4ff883 пустой; новые extension/tooling изменения исключены. |
 | открыто | M | D | `apps/web/.env.example` | Полное diff-review еще не зафиксировано. |
 | открыто | M | A | `apps/web/app/account/account.css` | Полное diff-review еще не зафиксировано. |
 | открыто | M | A | `apps/web/app/account/help/page.tsx` | Полное diff-review еще не зафиксировано. |
@@ -100,11 +106,11 @@ runtime-потребителей, отмечает намеренность из
 | открыто | M | C | `apps/web/app/page.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/app/pricing/page.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/app/privacy/page.tsx` | Полное diff-review еще не зафиксировано. |
-| открыто | M | I | `apps/web/app/room/[roomId]/extension-check.tsx` | Полное diff-review еще не зафиксировано. |
+| проверено локально | M | I | `apps/web/app/room/[roomId]/extension-check.tsx` | Этап 1: нейтральная справка, safe next/mobile copy; 6 client tests и desktop/mobile harness passed, независимое ревью без замечаний. Join page/API неизменны; живой staging еще не обновлялся. |
 | открыто | M | C | `apps/web/app/security/page.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | A | `apps/web/app/success/checkout-session-sync.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | A | `apps/web/app/success/page.tsx` | Полное diff-review еще не зафиксировано. |
-| открыто | A | A | `apps/web/app/success/success-install-next.tsx` | Полное diff-review еще не зафиксировано. |
+| исключено | A | A | `apps/web/app/success/success-install-next.tsx` | Этап 1: удалено после проверки callers; сайт не определяет установку. SuccessInstallNext не был подключен к payment page. |
 | открыто | M | C | `apps/web/app/terms/page.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/app/watch-anime-together/page.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/app/watch-crunchyroll-together-long-distance/page.tsx` | Полное diff-review еще не зафиксировано. |
@@ -129,7 +135,7 @@ runtime-потребителей, отмечает намеренность из
 | открыто | M | C | `apps/web/components/compare-table.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | F | `apps/web/components/contact-form.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | F | `apps/web/components/discord-credentials-form.tsx` | Полное diff-review еще не зафиксировано. |
-| открыто | A | I | `apps/web/components/extension-install-hub.tsx` | F07, F08, F11 |
+| открыто | A | I | `apps/web/components/extension-install-hub.tsx` | F08 устранен в этапе 1: presence исключен; tests passed. F07, F11 и остальная часть полного diff остаются открытыми. |
 | открыто | M | C | `apps/web/components/faq-section.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | F | `apps/web/components/feature-request-form.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/components/footer.tsx` | Полное diff-review еще не зафиксировано. |
@@ -162,15 +168,15 @@ runtime-потребителей, отмечает намеренность из
 | открыто | M | C | `apps/web/components/table-of-contents.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | S | `apps/web/components/ui/button.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | A | F | `apps/web/components/watching-together-count.tsx` | Полное diff-review еще не зафиксировано. |
-| открыто | M | T | `apps/web/docs/CONVERSION_METRICS.md` | Полное diff-review еще не зафиксировано. |
+| открыто | M | T | `apps/web/docs/CONVERSION_METRICS.md` | Этап 1 убирает только extension_detected; остальной analytics diff требует отдельного ревью. |
 | открыто | M | A | `apps/web/lib/account-profile-client.test.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | A | T | `apps/web/lib/amplitude-ids.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | A | T | `apps/web/lib/amplitude-server.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | M | T | `apps/web/lib/amplitude.ts` | Полное diff-review еще не зафиксировано. |
-| открыто | M | T | `apps/web/lib/conversion-events.ts` | Полное diff-review еще не зафиксировано. |
+| открыто | M | T | `apps/web/lib/conversion-events.ts` | Этап 1 убирает только extension_detected; остальной analytics diff требует отдельного ревью. |
 | открыто | A | I | `apps/web/lib/extension-artifact.ts` | F07 |
 | открыто | A | I | `apps/web/lib/extension-install-faq.ts` | F13 |
-| открыто | A | I | `apps/web/lib/extension-presence.ts` | Полное diff-review еще не зафиксировано. |
+| исключено | A | I | `apps/web/lib/extension-presence.ts` | Этап 1: удалено после проверки callers; сайт не определяет установку. SuccessInstallNext не был подключен к payment page. |
 | открыто | A | C | `apps/web/lib/extension-using-guide.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/lib/founder-discord.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | M | T | `apps/web/lib/gtag.ts` | Полное diff-review еще не зафиксировано. |
@@ -196,5 +202,5 @@ runtime-потребителей, отмечает намеренность из
 | открыто | A | S | `apps/web/lib/use-in-view.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/lib/watch-page-rich-content.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | M | D | `docs/environment-and-secrets-matrix.md` | Полное diff-review еще не зафиксировано. |
-| открыто | M | D | `package.json` | F03, F14 |
-| открыто | M | I | `scripts/validate-extension-artifact.mjs` | F01, F02 |
+| возвращено к main | M | D | `package.json` | По решению владельца этапа 1: diff с main 4b4ff883 пустой; новые extension/tooling изменения исключены. |
+| возвращено к main | M | I | `scripts/validate-extension-artifact.mjs` | По решению владельца этапа 1: diff с main 4b4ff883 пустой; новые extension/tooling изменения исключены. |
