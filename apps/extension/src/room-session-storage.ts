@@ -1648,7 +1648,7 @@ function isVoiceMode(value: unknown): value is VoiceMode {
   return value === "push-to-talk" || value === "open-mic";
 }
 
-async function loadRoomMediaDefaults(
+export async function loadRoomMediaDefaults(
   localStorage: StorageAreaLike,
   ownerUserId: string,
 ): Promise<{ cameraEnabled: boolean; voiceMode: VoiceMode }> {

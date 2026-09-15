@@ -92,7 +92,7 @@ for (const value of [...hostPermissions, ...contentMatches]) {
 
 const expectedByChannel = {
   staging: {
-    name: "Anidachi Staging",
+    name: "AniDachi Staging",
     web: "https://staging.anidachi.app/*",
     api: "https://anidachi-api-staging.vladislav-gul7.workers.dev/*",
     hostPermissions: [
@@ -105,7 +105,7 @@ const expectedByChannel = {
     extensionId: "ndkfphbchhfephdodcpehdcoclojagje",
   },
   production: {
-    name: "Anidachi",
+    name: "AniDachi",
     web: "https://www.anidachi.app/*",
     api: "https://anidachi-api-production.vladislav-gul7.workers.dev/*",
     hostPermissions: [
@@ -142,10 +142,8 @@ if (manifest.name !== expected.name) {
   throw new Error(`Expected manifest.name ${expected.name}, got ${manifest.name}`);
 }
 
-if (!manifest.version_name?.includes(expected.buildIdPart)) {
-  throw new Error(
-    `Expected version_name to include ${expected.buildIdPart}, got ${manifest.version_name}`,
-  );
+if (manifest.version_name !== undefined) {
+  throw new Error("Omit version_name so Chrome displays the release version instead of the diagnostic build ID");
 }
 
 if (!manifest.key) {
@@ -209,6 +207,11 @@ if (channel === "production") {
 
 if (Number.parseInt(manifest.minimum_chrome_version ?? "0", 10) < 121) {
   throw new Error("minimum_chrome_version must support extension Web Push");
+}
+
+const background = fs.readFileSync(path.join(dir, manifest.background.service_worker), "utf8");
+if (!background.includes(expected.buildIdPart)) {
+  throw new Error(`Expected diagnostic build ID to include ${expected.buildIdPart} in the background bundle`);
 }
 
 console.log(`Validated ${channel} extension artifact at ${manifestPath}`);

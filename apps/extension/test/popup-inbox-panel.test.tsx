@@ -119,6 +119,21 @@ describe("Inbox presentation", () => {
 		expect(container.querySelector("time")?.dateTime).toBe(now);
 	});
 
+	it("renders a seen Return card with the ordinary join action and no decline action", async () => {
+		const returning = {
+			...room,
+			state: "returnable" as const,
+			seenAt: now,
+		};
+		const p = props(response([returning]));
+		await render(p);
+
+		expect(container.textContent).toContain("Return");
+		expect(container.textContent).not.toContain("Decline");
+		await act(async () => button("Return to room").click());
+		expect(p.onAcceptInvite).toHaveBeenCalledWith(room.inviteId);
+	});
+
 	it.each([
 		"join",
 		"decline",

@@ -198,10 +198,13 @@ import {
 import {
 	mergeRoomInviteTargetStatus,
 	type RoomInviteTargetStatus,
+	roomInviteEligibleRecipientIds,
 	roomInviteGroupStatus,
 	roomInviteTargetStatuses,
 	roomInviteTargetStatusLabel,
 } from "./room-invite-target-status";
+import { FreeQuotaNotice } from "./free-quota-notice";
+import { useFreeQuotaNotice, type QuotaExhaustion } from "./use-free-quota-notice";
 import {
 	applyRoomUsageSnapshot,
   acceptAuthoritativeQuota,
@@ -220,6 +223,7 @@ import {
 	clearRoomSession,
 	clearRoomSessionDepartureIfMatch,
 	discardPreparedRoomSession,
+	loadRoomMediaDefaults,
 	migrateLegacyRoomSession,
 	prepareRoomSession,
 	rememberRoomSessionRecoveryHint,
@@ -552,6 +556,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		useRef<PointerWakePoint | null>(null);
 	const authUserIdRef = useRef<string | null>(null);
 	const authUserIdInitializedRef = useRef(false);
+	const authGenerationRef = useRef(0);
 	const suppressSilentSignInUntilRef = useRef(0);
 	const [participant, setParticipant] = useState<Participant | null>(null);
 	const [identityLoaded, setIdentityLoaded] = useState(false);
@@ -658,7 +663,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const inviteStatusRequestEpochRef = useRef(0);
 	const inviteStatusMembershipRef = useRef({
 		roomId: null as string | null,
-		participantCount: 0,
+		userIdentity: "",
+		ready: false,
 	});
 	const [messageComposerGuardActive, setMessageComposerGuardActive] =
 		useState(false);
@@ -798,12 +804,31 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			roomId: null,
 		}),
 	);
+	const [expandedPeopleRoomId, setExpandedPeopleRoomId] = useState<string | null>(null);
 	const interfacePreferences = useInterfacePreferences();
 	const roomJoinDefaults = useRoomJoinDefaults(accountUser?.id ?? null);
+	const [quotaExhaustion, setQuotaExhaustion] = useState<QuotaExhaustion | null>(null);
+	const freeQuotaNotice = useFreeQuotaNotice({
+		ownerUserId: authAuthenticated && !roomId ? accountUser?.id ?? null : null,
+		accessToken: authAccessToken,
+		visible: panelOpen && !roomId,
+		isFree: accountUser?.plan === "free",
+		exhaustion: quotaExhaustion,
+	});
+	const showFreeQuotaNotice = useCallback((resetAt?: string) => {
+		const ownerUserId = authUserIdRef.current;
+		if (ownerUserId) setQuotaExhaustion({ ownerUserId, resetAt });
+		setAuthMessage(null);
+		setPanelOpen(true);
+	}, []);
+	useEffect(() => {
+		if (roomId || (quotaExhaustion && quotaExhaustion.ownerUserId !== accountUser?.id)) setQuotaExhaustion(null);
+	}, [roomId, accountUser?.id, quotaExhaustion]);
+
 	const reactionShortcuts = useReactionShortcuts();
 	const topBubbleReveal = useTopBubbleReveal({
 		bubbleRef: topBubbleRef,
-		mode: interfacePreferences.preferences.mainControlVisibility,
+		mode: interfacePreferences.ready ? interfacePreferences.preferences.mainControlVisibility : "auto-hide",
 		overlayRef: overlayRootRef,
 		panelOpen,
 	});
@@ -830,6 +855,15 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const authAccessTokenRef = useRef<string | null>(null);
 	const storedRoomSessionRef = useRef<RoomSessionRecord | null>(null);
 	const hydratedVoiceParticipantSessionRef = useRef<string | null>(null);
+	const appliedMediaDefaultsSessionRef = useRef<string | null>(null);
+	const selfSeatDefaultsRef = useRef<{
+		media: NonNullable<RoomClient["media"]>;
+		requestId: string;
+		session: RoomSessionRecord;
+		roomGeneration: number;
+		seatRevision: number;
+		confirmed: boolean;
+	} | null>(null);
 	const hydratingVoiceModeRef = useRef<"open-mic" | "push-to-talk" | null>(
 		null,
 	);
@@ -1644,6 +1678,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			}
 
 			authUserIdRef.current = nextAuthUserId;
+			authGenerationRef.current += 1;
+			inviteStatusRequestEpochRef.current += 1;
+			inviteActionIdsRef.current.clear();
+			setInviteTargets(null);
+			setInviteTargetsLoading(false);
+			setInviteSendingTarget(null);
+			setInviteTargetStatuses(new Map());
+			clearInviteNotice();
 			if (!wasInitialized || previousAuthUserId === null) {
 				return;
 			}
@@ -1657,7 +1699,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			});
 			resetLocalRoomSession(undefined, false);
 		},
-		[resetLocalRoomSession],
+		[clearInviteNotice, resetLocalRoomSession],
 	);
 
 	const refreshRoomActionIdentity = useCallback(async (reason: string) => {
@@ -1690,9 +1732,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 		return {
 			accessToken: result.tokens?.accessToken ?? null,
+			accountGeneration: authGenerationRef.current,
+			ownerUserId: result.tokens?.user.id ?? null,
 			participant: result.participant,
 		};
-	}, []);
+	}, [syncAuthUserScopedState]);
 
 	const getFreshAuthAccessToken = useCallback(
 		async (reason: string): Promise<string | null> => {
@@ -1782,18 +1826,23 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			? [participant]
 			: [];
 	const participantCount = participants.length || (participant ? 1 : 0);
+	const inviteMembershipReady = roomSnapshotReady || participants.length > 0;
 	const roomParticipantLimit = roomCapabilities?.maxParticipants ?? 4;
-	const mediaV2 = Boolean(roomCapabilities && "mediaProtocolVersion" in roomCapabilities);
-	const currentMediaSnapshot = roomMediaSnapshot?.roomId === roomId ? roomMediaSnapshot : null;
-	const mediaReady = mediaV2 && Boolean(currentMediaSnapshot);
+	const mediaProtocolVersion = roomCapabilities && "mediaProtocolVersion" in roomCapabilities ? roomCapabilities.mediaProtocolVersion : 1;
+	const versionedMedia = mediaProtocolVersion !== 1;
+	const mediaV3 = mediaProtocolVersion === 3;
+	const currentMediaSnapshot = roomMediaSnapshot?.roomId === roomId && roomMediaSnapshot.roomGeneration === roomGeneration ? roomMediaSnapshot : null;
+	const mediaReady = versionedMedia && Boolean(currentMediaSnapshot);
 	const roomMediaSeatLimit = roomCapabilities && "maxMediaSeats" in roomCapabilities ? roomCapabilities.maxMediaSeats : 4;
-	const cameraAuthorized = !mediaV2 || Boolean(mediaReady && clientRef.current.media?.canCapture("camera"));
-	const microphoneAuthorized = !mediaV2 || Boolean(mediaReady && clientRef.current.media?.canCapture("microphone"));
-	const occupiedMediaSeatCount = visibleParticipants.filter(
+	const cameraAuthorized = !versionedMedia || Boolean(mediaReady && clientRef.current.media?.canCapture("camera"));
+	const microphoneAuthorized = !versionedMedia || Boolean(mediaReady && clientRef.current.media?.canCapture("microphone"));
+	const occupiedMediaSeatCount = mediaV3 ? currentMediaSnapshot?.participants.filter(p => "mediaSeatGranted" in p && p.mediaSeatGranted).length ?? 0 : visibleParticipants.filter(
 		(item) => item.mediaSeat === "joined",
 	).length;
 	const localMediaSeatState = currentParticipant?.mediaSeat ?? "none";
-	const localHasMediaSeat = mediaV2 ? mediaReady : localMediaSeatState === "joined";
+	const localHasMediaSeat = versionedMedia ? mediaReady && (!mediaV3 || Boolean(clientRef.current.media?.hasSeat())) : localMediaSeatState === "joined";
+	const camerasFull = (currentMediaSnapshot?.participants.filter(p => p.cameraGranted).length ?? 0) >= 4;
+	const mediaSeatAuthoritative = !roomId || (roomSnapshotReady && (!versionedMedia || mediaReady));
 	const localTryingMedia = Boolean(
 		camsEnabled && currentParticipant && localHasMediaSeat,
 	);
@@ -1803,17 +1852,17 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const displayedCameraParticipants = currentParticipant
 		? visibleParticipants.filter(
 				(item) =>
-					((mediaV2 || item.mediaSeat === "joined") && item.connected !== false && item.cameraEnabled) ||
+					((versionedMedia || item.mediaSeat === "joined") && item.connected !== false && item.cameraEnabled) ||
 					(localTryingMedia && item.id === currentParticipant.id),
 			)
 		: [];
-	const liveMediaAvailable = roomMediaSeatLimit > 0 && localHasMediaSeat;
+	const liveMediaAvailable = roomMediaSeatLimit > 0 && localHasMediaSeat && !(mediaV3 && !camsEnabled && camerasFull);
 	const mediaSeatText =
-		mediaV2 ? `${currentMediaSnapshot?.participants.filter(p => p.cameraGranted).length ?? 0}/${currentMediaSnapshot?.capabilities.maxCameras ?? 4} cameras · ${currentMediaSnapshot?.participants.filter(p => p.microphoneGranted).length ?? 0}/${currentMediaSnapshot?.capabilities.maxMicrophones ?? (roomCapabilities && "maxMicrophones" in roomCapabilities ? roomCapabilities.maxMicrophones : 0)} microphones` : roomMediaSeatLimit > 0
+		mediaV3 ? `${occupiedMediaSeatCount}/${roomMediaSeatLimit} media seats · ${currentMediaSnapshot?.participants.filter(p => p.cameraGranted).length ?? 0}/4 cameras` : versionedMedia ? `${currentMediaSnapshot?.participants.filter(p => p.cameraGranted).length ?? 0}/${currentMediaSnapshot?.capabilities.maxCameras ?? 4} cameras · ${currentMediaSnapshot?.participants.filter(p => p.microphoneGranted).length ?? 0}/${roomCapabilities && "maxMicrophones" in roomCapabilities ? roomCapabilities.maxMicrophones : 0} microphones` : roomMediaSeatLimit > 0
 			? `${Math.min(occupiedMediaSeatCount, roomMediaSeatLimit)}/${roomMediaSeatLimit} media seats`
 			: "No live media";
 	const mediaSeatSummaryText =
-		mediaV2 ? mediaSeatText : roomMediaSeatLimit > 0
+		versionedMedia ? mediaSeatText : roomMediaSeatLimit > 0
 			? `${Math.min(occupiedMediaSeatCount, roomMediaSeatLimit)}/${roomMediaSeatLimit} media seats`
 			: "No media seats";
 	const roomPeopleCountText = `${participantCount}/${roomParticipantLimit} in room`;
@@ -1853,21 +1902,21 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			type: "context",
 			listenerScope: participantAudioPreferenceScope,
 			localHasMediaSeat,
-			localMediaSeatAuthoritative: !roomId || roomSnapshotReady,
+			localMediaSeatAuthoritative: mediaSeatAuthoritative,
 			roomId,
 		});
 	}, [
 		localHasMediaSeat,
+		mediaSeatAuthoritative,
 		participantAudioPreferenceScope,
 		roomId,
-		roomSnapshotReady,
 	]);
 	useEffect(() => {
 		pushToTalkHeldRef.current = voiceSession.pushToTalkHeld;
 	}, [voiceSession.pushToTalkHeld]);
 	const { p2pSessionActive } = getP2PMediaSessionState({
 		localHasMediaSeat,
-		mediaProtocolVersion: mediaV2 ? 2 : 1,
+		mediaProtocolVersion,
 		participantId: currentParticipant?.id ?? null,
 		roomId,
 		roomMediaSeatLimit,
@@ -1886,29 +1935,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		}
 		return storedRoomSession;
 	}, [currentParticipant, roomId, storedRoomSession]);
-	useEffect(() => {
-		if (mediaV2 || !activeVoiceRoomSession) {
-			hydratedVoiceParticipantSessionRef.current = null;
-			hydratingVoiceModeRef.current = null;
-			return;
-		}
-		if (
-			!p2pSessionActive ||
-			hydratedVoiceParticipantSessionRef.current ===
-				activeVoiceRoomSession.participantSessionId
-		) {
-			return;
-		}
-
-		hydratedVoiceParticipantSessionRef.current =
-			activeVoiceRoomSession.participantSessionId;
-		hydratingVoiceModeRef.current = activeVoiceRoomSession.voiceMode;
-		pushToTalkHeldRef.current = false;
-		dispatchVoiceSession({
-			type: "mode",
-			mode: activeVoiceRoomSession.voiceMode,
-		});
-	}, [activeVoiceRoomSession, p2pSessionActive, mediaV2]);
 
 	const enqueueRoomVoiceModePersistence = useCallback(
 		(
@@ -2065,6 +2091,117 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		},
 		[],
 	);
+	const handleSetMediaSeat = useCallback((userId: string, enabled: boolean) => {
+		const client = clientRef.current;
+		const media = client.media;
+		const session = storedRoomSessionRef.current;
+		const isSelf = userId === participantRef.current?.id;
+		if (isSelf) selfSeatDefaultsRef.current = null;
+		const state = media?.snapshot?.participants.find(p => p.participantSessionId === session?.participantSessionId);
+		const disposition = client.setMediaSeat(userId, enabled);
+		const requestId = media?.seatControls.get(userId)?.requestId;
+		if (disposition === "sent" && enabled && isSelf && session && media?.snapshot && requestId &&
+			state && "mediaSeatGranted" in state && !state.mediaSeatGranted && "seatRevision" in state && typeof state.seatRevision === "number" &&
+			participantsRef.current.some(p => p.id === userId && p.role === "host")) {
+			selfSeatDefaultsRef.current = {media, requestId, session,
+				roomGeneration: media.snapshot.roomGeneration, seatRevision: state.seatRevision + 1, confirmed: false};
+		}
+		setMediaRevision(n => n + 1);
+	}, []);
+
+	const restoreSelfSeatDefaults = useCallback(async (event: Extract<ServerEvent, {type: "MEDIA_SEAT_RESULT"}>) => {
+		const operation = selfSeatDefaultsRef.current;
+		if (!operation || operation.confirmed || operation.requestId !== event.requestId) return;
+		if (event.code !== "OK" || event.targetParticipantSessionId !== operation.session.participantSessionId) {
+			selfSeatDefaultsRef.current = null;
+			return;
+		}
+		operation.confirmed = true;
+		const stillCurrent = () => {
+			const session = storedRoomSessionRef.current;
+			const snapshot = operation.media.snapshot;
+			const state = snapshot?.participants.find(p => p.participantSessionId === operation.session.participantSessionId);
+			return selfSeatDefaultsRef.current === operation && statusRef.current === "connected" && clientRef.current.media === operation.media &&
+				Boolean(session && roomSessionIdentityMatches(session, operation.session)) &&
+				roomIdRef.current === operation.session.roomId && participantRef.current?.id === operation.session.ownerUserId &&
+				snapshot?.roomGeneration === operation.roomGeneration && state && "mediaSeatGranted" in state &&
+				state.mediaSeatGranted && "seatRevision" in state && state.seatRevision === operation.seatRevision;
+		};
+		try {
+			// Revocation persists Off for this room, but Last used is a separate
+			// account preference. Let earlier explicit preference writes settle.
+			await Promise.all([voiceModePersistenceQueueRef.current, cameraEnabledPersistenceQueueRef.current]);
+			if (!stillCurrent()) return;
+			const defaults = await loadRoomMediaDefaults(chrome.storage.local, operation.session.ownerUserId);
+			if (!stillCurrent()) return;
+			selfSeatDefaultsRef.current = null;
+			const snapshot = operation.media.snapshot!;
+			const cameraAvailable = snapshot.participants.filter(p => p.cameraGranted).length < snapshot.capabilities.maxCameras;
+			const mode = defaults.voiceMode === "open-mic" && clientRef.current.setMediaIntent("microphone", true) !== "dropped"
+				? "open-mic" : "push-to-talk";
+			const cameraEnabled = defaults.cameraEnabled && cameraAvailable && clientRef.current.setMediaIntent("camera", true) !== "dropped";
+			// These are only local intents. Existing server ACK/epoch checks still
+			// gate capture, and a full camera limit never queues a later start.
+			pushToTalkHeldRef.current = false;
+			hydratingVoiceModeRef.current = mode;
+			dispatchVoiceSession({type: "mode", mode});
+			setCamsEnabled(cameraEnabled);
+			enqueueRoomVoiceModePersistence(mode);
+			enqueueRoomCameraEnabledPersistence(cameraEnabled);
+			setMediaRevision(n => n + 1);
+		} catch {
+			// A failed local read/write cannot authorize device activation.
+		} finally {
+			if (selfSeatDefaultsRef.current === operation) selfSeatDefaultsRef.current = null;
+		}
+	}, [enqueueRoomCameraEnabledPersistence, enqueueRoomVoiceModePersistence]);
+
+	useEffect(() => () => { selfSeatDefaultsRef.current = null; }, []);
+	useEffect(() => {
+		if (!activeVoiceRoomSession) {
+			selfSeatDefaultsRef.current = null;
+			hydratedVoiceParticipantSessionRef.current = null;
+			appliedMediaDefaultsSessionRef.current = null;
+			hydratingVoiceModeRef.current = null;
+			return;
+		}
+		if (!p2pSessionActive) return;
+		const sessionId = activeVoiceRoomSession.participantSessionId;
+		let mode = activeVoiceRoomSession.voiceMode;
+		if (versionedMedia) {
+			// Room admission precedes the media snapshot. Neither an unknown seat
+			// nor a reconnect is permission to clear or replay the user's defaults.
+			if (!isConnected || !roomSnapshotReady || !mediaReady) return;
+			if (appliedMediaDefaultsSessionRef.current === sessionId) return;
+			const state = currentMediaSnapshot?.participants.find(p => p.participantSessionId === sessionId);
+			if (!state) return;
+			appliedMediaDefaultsSessionRef.current = sessionId;
+			hydratedVoiceParticipantSessionRef.current = sessionId;
+			// A host grant/regrant must not launch devices, including after this
+			// document missed a revoke while disconnected. A fresh room starts at 0.
+			const initialSeat = localHasMediaSeat && (!("seatRevision" in state) || state.seatRevision === 0);
+			const microphoneOn = initialSeat && state.microphoneRevocationEpoch === 0 && mode === "open-mic";
+			const cameraOn = initialSeat && state.cameraRevocationEpoch === 0 && activeVoiceRoomSession.cameraEnabled && (!camerasFull || state.cameraGranted);
+			mode = microphoneOn && clientRef.current.setMediaIntent("microphone", true) !== "dropped" ? "open-mic" : "push-to-talk";
+			const cameraEnabled = cameraOn && clientRef.current.setMediaIntent("camera", true) !== "dropped";
+			setCamsEnabled(cameraEnabled);
+			setMediaRevision(n => n + 1);
+			// Admission limits affect this room only, never the saved Last used choice.
+			enqueueRoomCameraEnabledPersistence(cameraEnabled);
+			enqueueRoomVoiceModePersistence(mode);
+		} else {
+			if (hydratedVoiceParticipantSessionRef.current === sessionId) return;
+			hydratedVoiceParticipantSessionRef.current = sessionId;
+		}
+		hydratingVoiceModeRef.current = mode;
+		pushToTalkHeldRef.current = false;
+		dispatchVoiceSession({type: "mode", mode});
+	}, [
+		activeVoiceRoomSession, camerasFull, currentMediaSnapshot,
+		enqueueRoomCameraEnabledPersistence, enqueueRoomVoiceModePersistence,
+		isConnected, localHasMediaSeat, mediaReady, p2pSessionActive,
+		roomSnapshotReady, versionedMedia,
+	]);
 	useEffect(() => {
 		if (
 			!activeVoiceRoomSession ||
@@ -2095,7 +2232,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				localHasMediaSeat,
 				persistedVoiceMode: activeVoiceRoomSession.voiceMode,
 				roomId,
-				roomSnapshotReady,
+				roomSnapshotReady: mediaSeatAuthoritative,
 			})
 		) {
 			return;
@@ -2114,8 +2251,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		activeVoiceRoomSession,
 		enqueueRoomVoiceModePersistence,
 		localHasMediaSeat,
+		mediaSeatAuthoritative,
 		roomId,
-		roomSnapshotReady,
 	]);
 	const messageComposerShieldVisible =
 		messageComposerOpen || messageComposerShieldActive;
@@ -2132,11 +2269,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	// the display moving between snapshots while host and guest are both live.
 	const quotaMeteringActive =
 		isConnected && isHost && roomQuota !== null &&
-    (mediaV2 ? authoritativeQuota?.quota.metering === true : participantCount > 1);
+    (versionedMedia ? authoritativeQuota?.quota.metering === true : participantCount > 1);
 	const quotaRemainingSeconds = useMemo(() => {
 		if (!roomQuota) return null;
-    if (mediaV2 && !roomSnapshotReady) return null;
-    if (mediaV2) return authoritativeQuotaRemainingSeconds(authoritativeQuota?.quota ?? null, quotaMeteredMsRef.current);
+    if (versionedMedia && !roomSnapshotReady) return null;
+    if (versionedMedia) return authoritativeQuotaRemainingSeconds(authoritativeQuota?.quota ?? null, quotaMeteredMsRef.current);
 		// quotaDisplayTick advances once per second while metering is active so the
 		// countdown re-renders even though the elapsed time lives in a ref.
 		return roomQuotaRemainingSeconds({
@@ -2145,7 +2282,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			roomUsage,
 			localMeteredMs: quotaMeteredMsRef.current,
 		});
-	}, [roomQuota, roomUsage, quotaDisplayTick, mediaV2, authoritativeQuota, roomSnapshotReady]);
+	}, [roomQuota, roomUsage, quotaDisplayTick, versionedMedia, authoritativeQuota, roomSnapshotReady]);
 	const cameraStackVisible = shouldShowCameraStack({
 		cameraParticipantCount: displayedCameraParticipants.length,
 		p2pSessionActive,
@@ -2154,7 +2291,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		chatDisplayMode === "history" ? chatHistoryMessages : liveChatMessages;
 	const liveChatVisible = displayedChatMessages.length > 0;
 	useEffect(() => {
-		if (mediaV2 || !roomId || !roomSnapshotReady || !camsEnabled) {
+		if (versionedMedia || !roomId || !roomSnapshotReady || !camsEnabled) {
 			return;
 		}
 
@@ -2188,6 +2325,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			if (nextStatus === "connected" && previousStatus !== "connected") {
 				connectionGenerationRef.current += 1;
 			}
+			if (nextStatus !== "connected") selfSeatDefaultsRef.current = null;
 			statusRef.current = nextStatus;
 			setStatus(nextStatus);
 			if (nextStatus === "connected") {
@@ -2828,10 +2966,16 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	);
 
 	const handleGhostCamToggle = useCallback(() => {
+		selfSeatDefaultsRef.current = null;
 		const nextEnabled = !camsEnabled;
-		if (mediaV2) {
+		if (versionedMedia) {
+			if (mediaV3 && nextEnabled && (!localHasMediaSeat || camerasFull)) {
+				showTransientPanelNotice(!localHasMediaSeat ? "Media seat required" : "All 4 cameras are in use");
+				return;
+			}
 			if (clientRef.current.setMediaIntent("camera", nextEnabled) === "dropped") return;
 			setCamsEnabled(nextEnabled);
+			enqueueRoomCameraEnabledPersistence(nextEnabled, {rememberPreference: true});
 			setMediaRevision(n => n + 1);
 			return;
 		}
@@ -2858,7 +3002,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		});
 	}, [
 		camsEnabled,
-		mediaV2,
+		versionedMedia,
+		mediaV3,
+		camerasFull,
 		clearTransientPanelNotice,
 		enqueueRoomCameraEnabledPersistence,
 		localHasMediaSeat,
@@ -2868,13 +3014,16 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	]);
 
 	const ghostCamSession = useGhostCam({
-		captureIntents: mediaV2 ? {
+		captureIntents: versionedMedia ? {
 			camera: clientRef.current.media?.captureIntent("camera"),
 			microphone: clientRef.current.media?.captureIntent("microphone"),
 		} : undefined,
 		onMediaTerminalFailure: (failure) => {
 			if (!clientRef.current.releaseFailedMedia(failure.intent)) return;
-			if (failure.media === "camera") setCamsEnabled(false);
+			if (failure.media === "camera") {
+				setCamsEnabled(false);
+				enqueueRoomCameraEnabledPersistence(false);
+			}
 			else {
 				pushToTalkHeldRef.current = false;
 				dispatchVoiceSession({ type: "terminal-failure" });
@@ -2882,7 +3031,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			setMediaRevision(n => n + 1);
 		},
 		cameraEnabled: camsEnabled && cameraAuthorized,
-		mediaSnapshot: mediaV2 ? currentMediaSnapshot : undefined,
+		mediaSnapshot: versionedMedia ? currentMediaSnapshot : undefined,
 		cameraAuthorized,
 		microphoneAuthorized,
 		connected: p2pSessionActive,
@@ -2903,10 +3052,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	});
 	const handleVoiceModeChange = useCallback(
 		(mode: "open-mic" | "push-to-talk") => {
-			if (mediaV2 && mode === "open-mic" && !clientRef.current.media?.canCapture("microphone")) {
-				if (clientRef.current.setMediaIntent("microphone", true) === "dropped") return;
-				setMediaRevision(n => n + 1);
-			}
+			selfSeatDefaultsRef.current = null;
 			if (
 				mode === "open-mic" &&
 				(!roomId || !localHasMediaSeat || !p2pSessionActive)
@@ -2920,6 +3066,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				);
 				return;
 			}
+			if (versionedMedia && mode === "open-mic" && !clientRef.current.media?.wants("microphone")) {
+				if (clientRef.current.setMediaIntent("microphone", true) === "dropped") return;
+				setMediaRevision(n => n + 1);
+			} else if (mediaV3 && mode === "push-to-talk" && clientRef.current.media?.wants("microphone")) {
+				clientRef.current.setMediaIntent("microphone", false);
+				ghostCamSession.reconcileMediaAuthority(cameraAuthorized, false);
+				setMediaRevision(n => n + 1);
+			}
 
 			clearTransientPanelNotice();
 			pushToTalkHeldRef.current = false;
@@ -2931,7 +3085,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		[
 			clearTransientPanelNotice,
 			enqueueRoomVoiceModePersistence,
-			mediaV2,
+			versionedMedia,
+			mediaV3,
+			cameraAuthorized,
+			ghostCamSession.reconcileMediaAuthority,
 			localHasMediaSeat,
 			localMediaSeatState,
 			p2pSessionActive,
@@ -3122,6 +3279,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		[appliedOverlayLayout, overlayLayoutRuntimeContext, previewOverlayLayout],
 	);
 	const cameraControlDisabledReason =
+		mediaV3 && localHasMediaSeat && camerasFull && !camsEnabled ? "All 4 cameras are in use" :
 		roomMediaSeatLimit <= 0
 			? "Live media is not available in this room"
 			: localMediaSeatState === "requested"
@@ -3279,24 +3437,42 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			});
 
 			switch (event.type) {
+				case "MEDIA_SEAT_RESULT":
 				case "ROOM_MEDIA_SNAPSHOT":
 				case "MEDIA_INTENT_ACK":
 				case "MEDIA_INTENT_ERROR": {
 					const media = clientRef.current.media;
 					if (media?.snapshot) {
-						ghostCamSession.reconcileMediaAuthority(media.canCapture("camera"), media.canCapture("microphone"));
+						if (media.error) showTransientPanelNotice(media.error);
+						ghostCamSession.reconcileMediaAuthority(media.canCapture("camera"), media.canCapture("microphone"), media.snapshot);
 						setRoomMediaSnapshot(media.snapshot);
 						setRoomCapabilities(media.snapshot.capabilities);
 						setMediaRevision(n => n + 1);
-						if (media.error) setAuthMessage(media.error);
-						if (!media.wants("camera")) setCamsEnabled(false);
+						if (!media.wants("camera")) {
+							setCamsEnabled(false);
+							if (appliedMediaDefaultsSessionRef.current === storedRoomSessionRef.current?.participantSessionId) {
+								enqueueRoomCameraEnabledPersistence(false);
+							}
+						}
 						if (!media.wants("microphone")) { pushToTalkHeldRef.current = false; dispatchVoiceSession({ type: "terminal-failure" }); }
 					}
+					if (event.type === "MEDIA_SEAT_RESULT") void restoreSelfSeatDefaults(event);
 					return;
 				}
-				case "ROOM_ENDED":
-					terminateRoomSession("Watch room ended.");
+				case "ROOM_ENDED": {
+					if (event.roomId !== roomIdRef.current) return;
+					if (event.reason === "quota_exhausted") {
+						if (isCurrentHost()) {
+							const ended = new Date(event.endedAt);
+							const resetAt = new Date(Date.UTC(ended.getUTCFullYear(), ended.getUTCMonth(), ended.getUTCDate() + 1)).toISOString();
+							showFreeQuotaNotice(resetAt);
+							terminateRoomSession("");
+						} else {
+							terminateRoomSession("The host's Free time is used up. You can join another room or create your own.");
+						}
+					} else terminateRoomSession("Watch room ended.");
 					return;
+				}
 				case "ROOM_SNAPSHOT": {
           if (event.quota) {
             const session = storedRoomSessionRef.current;
@@ -3385,7 +3561,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
             }
             // The helper exists for legacy rooms too. Use negotiated or already
             // accepted v2 capabilities; an absent Free budget is still v2.
-            if (!mediaV2 && clientRef.current.media?.snapshot?.capabilities.mediaProtocolVersion !== 2) {
+            if (!versionedMedia && !clientRef.current.media?.snapshot) {
               updateRoomUsage(event.roomUsage);
             }
           }
@@ -3640,11 +3816,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			experimentalSuperReactionsEnabled,
 			playbackSyncController,
 			recordChatHistoryMessage,
+			restoreSelfSeatDefaults,
 			reactionsEnabled,
+			showTransientPanelNotice,
 			terminateRoomSession,
 			ghostCamSession.reconcileMediaAuthority,
 			triggerFlameBurst,
-      mediaV2,
+      versionedMedia,
 			updateRoomUsage,
 		],
 	);
@@ -4032,7 +4210,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 								roomId: reconnectRoomId,
 								resetAt: error.resetAt,
 							});
-							terminateRoomSession(quotaExhaustedMessage(error.resetAt));
+							showFreeQuotaNotice(error.resetAt);
+							terminateRoomSession("");
 							return;
 						}
 
@@ -4165,7 +4344,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	// a display estimate: the Worker alone sends the authoritative room end.
 	useEffect(() => {
 		if (
-      mediaV2 ||
+      versionedMedia ||
 			!quotaMeteringActive ||
 			quotaRemainingSeconds === null ||
 			quotaRemainingSeconds > 0
@@ -4197,9 +4376,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				}
 			})();
 		}
-		terminateRoomSession(quotaExhaustedMessage(roomQuota?.resetAt));
+		showFreeQuotaNotice(roomQuota?.resetAt);
+		terminateRoomSession("");
 	}, [
-    mediaV2,
+    versionedMedia,
 		quotaMeteringActive,
 		quotaRemainingSeconds,
 		privilegedRoomContext,
@@ -4498,9 +4678,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						() => undefined,
 					);
 				}
-				if (isCurrentCreate()) {
-					releaseRoomTabLock();
-				}
+				// Account changes and superseding joins retire this operation's errors too.
+				if (!isCurrentCreate()) return null;
+				releaseRoomTabLock();
 				throw error;
 			}
 			createRequestIdRef.current = null;
@@ -4666,7 +4846,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					});
 					clearStoredRoomSession();
 					clearRoomHash();
-					setAuthMessage(quotaExhaustedMessage(error.resetAt));
+					showFreeQuotaNotice(error.resetAt);
 					setPanelOpen(true);
 					return;
 				}
@@ -4748,7 +4928,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				logDebug("overlay.room", "create blocked by quota", {
 					resetAt: error.resetAt,
 				});
-				setAuthMessage(quotaExhaustedMessage(error.resetAt));
+				showFreeQuotaNotice(error.resetAt);
 				return;
 			}
 
@@ -4963,25 +5143,41 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			return;
 		}
 		const statusRequestEpoch = ++inviteStatusRequestEpochRef.current;
+		let requestOwnerUserId = authUserIdRef.current;
+		let requestAccountGeneration = authGenerationRef.current;
+		const isCurrentAccount = () =>
+			requestOwnerUserId !== null &&
+			authUserIdRef.current === requestOwnerUserId &&
+			authGenerationRef.current === requestAccountGeneration;
 
 		try {
-			const accessToken = await getFreshAuthAccessToken("invite-targets");
+			const refreshed = await refreshRoomActionIdentity("invite-targets");
+			const { accessToken, accountGeneration, ownerUserId } = refreshed;
+			requestOwnerUserId = ownerUserId;
+			requestAccountGeneration = accountGeneration;
+			const isCurrent = () =>
+				isCurrentAccount() &&
+				roomIdRef.current === activeRoomId;
 			if (!accessToken) {
-				showInviteNotice("Sign in to invite friends.", "error");
+				if (roomIdRef.current === activeRoomId && authGenerationRef.current === accountGeneration) {
+					showInviteNotice("Sign in to invite friends.", "error");
+					setInviteTargetsLoading(false);
+				}
 				return;
 			}
-			if (roomIdRef.current !== activeRoomId) return;
+			if (!isCurrent()) return;
 
 			const [targets, inviteResult] = await Promise.all([
 				listInviteTargets(accessToken),
-				listRoomInvites(accessToken)
+				listRoomInvites(accessToken, activeRoomId)
 					.then((invites) => ({ ok: true as const, invites }))
 					.catch((error: unknown) => ({ ok: false as const, error })),
 			]);
-			if (roomIdRef.current !== activeRoomId) return;
+			if (!isCurrent()) return;
 			setInviteTargets(targets);
 			if (
 				inviteResult.ok &&
+				isCurrent() &&
 				inviteStatusRequestEpochRef.current === statusRequestEpoch
 			) {
 				setInviteTargetStatuses(
@@ -4989,6 +5185,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				);
 			} else if (
 				!inviteResult.ok &&
+				isCurrent() &&
 				inviteStatusRequestEpochRef.current === statusRequestEpoch
 			) {
 				showInviteNotice(
@@ -5008,46 +5205,52 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				groupCount: targets.groups.length,
 			});
 		} catch (error) {
-			if (roomIdRef.current !== activeRoomId) return;
+			if (!isCurrentAccount() || roomIdRef.current !== activeRoomId) return;
 			const message = authErrorMessage(error, "Failed to load invite targets");
 			showInviteNotice(message, "error");
 			logDebug("overlay.invite", "targets failed", { message });
 		} finally {
-			if (roomIdRef.current === activeRoomId) {
+			if (isCurrentAccount() && roomIdRef.current === activeRoomId) {
 				setInviteTargetsLoading(false);
 			}
 		}
-	}, [clearInviteNotice, getFreshAuthAccessToken, showInviteNotice]);
+	}, [clearInviteNotice, refreshRoomActionIdentity, showInviteNotice]);
 
 	const refreshInviteStatusesForRoom = useCallback(async () => {
 		const activeRoomId = roomIdRef.current;
 		if (!activeRoomId) return;
 		const statusRequestEpoch = ++inviteStatusRequestEpochRef.current;
-		const accessToken = await getFreshAuthAccessToken(
+		const refreshed = await refreshRoomActionIdentity(
 			"invite-status-membership-change",
 		);
-		if (!accessToken || roomIdRef.current !== activeRoomId) return;
+		const { accessToken, accountGeneration, ownerUserId } = refreshed;
+		const isCurrent = () =>
+			ownerUserId !== null &&
+			authUserIdRef.current === ownerUserId &&
+			authGenerationRef.current === accountGeneration &&
+			roomIdRef.current === activeRoomId;
+		if (!accessToken || !isCurrent()) return;
 
 		try {
-			const invites = await listRoomInvites(accessToken);
+			const invites = await listRoomInvites(accessToken, activeRoomId);
 			if (
-				roomIdRef.current !== activeRoomId ||
+				!isCurrent() ||
 				inviteStatusRequestEpochRef.current !== statusRequestEpoch
 			)
 				return;
 			setInviteTargetStatuses(
 				roomInviteTargetStatuses(invites.sent, activeRoomId),
 			);
-			logDebug("overlay.invite", "status refreshed after participant joined", {
+		logDebug("overlay.invite", "status refreshed after membership changed", {
 				roomId: activeRoomId,
 			});
 		} catch (error) {
-			logDebug("overlay.invite", "participant-join status refresh failed", {
+			logDebug("overlay.invite", "membership status refresh failed", {
 				roomId: activeRoomId,
 				message: authErrorMessage(error, "Failed to refresh invite status"),
 			});
 		}
-	}, [getFreshAuthAccessToken]);
+	}, [refreshRoomActionIdentity]);
 
 	const toggleInvitePanel = useCallback(() => {
 		if (invitePanelOpen) {
@@ -5061,7 +5264,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 	useEffect(() => {
 		const previous = inviteStatusMembershipRef.current;
-		const current = { roomId, participantCount };
+		const current = {
+			roomId,
+			ready: roomSnapshotReady,
+			userIdentity: participants.map((participant) => participant.id).sort().join("\u0000"),
+		};
 
 		if (previous.roomId !== roomId) {
 			inviteStatusMembershipRef.current = current;
@@ -5071,7 +5278,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		if (!invitePanelOpen) return;
 		inviteStatusMembershipRef.current = current;
 
-		if (!isHost || !roomId || participantCount <= previous.participantCount) {
+		if (!isHost || !roomId || current.userIdentity === previous.userIdentity) {
 			return;
 		}
 
@@ -5079,9 +5286,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	}, [
 		invitePanelOpen,
 		isHost,
-		participantCount,
+		participants,
 		refreshInviteStatusesForRoom,
 		roomId,
+		roomSnapshotReady,
 	]);
 
 	const sendInviteToTarget = useCallback(
@@ -5091,19 +5299,25 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			input: Pick<CreateRoomInviteInput, "recipientUserIds" | "groupId">,
 		) => {
 			const activeRoomId = roomIdRef.current;
-			const accessToken = await getFreshAuthAccessToken("send-invite");
+			const refreshed = await refreshRoomActionIdentity("send-invite");
+			const { accessToken, accountGeneration, ownerUserId } = refreshed;
+			const isCurrent = () =>
+				ownerUserId !== null &&
+				authUserIdRef.current === ownerUserId &&
+				authGenerationRef.current === accountGeneration &&
+				roomIdRef.current === activeRoomId;
 			if (!activeRoomId || !accessToken) {
-				showInviteNotice(
+				if (roomIdRef.current === activeRoomId && authGenerationRef.current === accountGeneration) showInviteNotice(
 					"Create a room and sign in before inviting friends.",
 					"error",
 				);
 				return;
 			}
-			if (roomIdRef.current !== activeRoomId) return;
+			if (!isCurrent()) return;
 
 			setInviteSendingTarget(targetKey);
 			clearInviteNotice();
-			const requestKey = `${activeRoomId}:${targetKey}`;
+			const requestKey = `${ownerUserId}:${activeRoomId}:${targetKey}`;
 			const clientActionId =
 				inviteActionIdsRef.current.get(requestKey) ?? crypto.randomUUID();
 			inviteActionIdsRef.current.set(requestKey, clientActionId);
@@ -5113,7 +5327,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					clientActionId,
 					...input,
 				});
-				if (roomIdRef.current !== activeRoomId) return;
+				if (!isCurrent()) return;
 				if (inviteActionIdsRef.current.get(requestKey) === clientActionId) {
 					inviteActionIdsRef.current.delete(requestKey);
 				}
@@ -5121,6 +5335,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				setInviteTargetStatuses((current) =>
 					mergeRoomInviteTargetStatus(current, targetKey, result.invite),
 				);
+				void refreshInviteStatusesForRoom();
 				showInviteNotice(
 					result.created
 						? `Invite sent to ${label}. Waiting for a response.`
@@ -5134,6 +5349,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					created: result.created,
 				});
 			} catch (error) {
+				if (!isCurrent()) return;
 				const message = authErrorMessage(error, "Failed to send invite");
 				showInviteNotice(message, "error");
 				logDebug("overlay.invite", "send failed", {
@@ -5142,12 +5358,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					message,
 				});
 			} finally {
-				if (roomIdRef.current === activeRoomId) {
+				if (isCurrent()) {
 					setInviteSendingTarget(null);
 				}
 			}
 		},
-		[clearInviteNotice, getFreshAuthAccessToken, showInviteNotice],
+		[clearInviteNotice, refreshInviteStatusesForRoom, refreshRoomActionIdentity, showInviteNotice],
 	);
 
 	const sendDirectInvite = useCallback(
@@ -5395,12 +5611,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	);
 
 	const startPushToTalk = useCallback(() => {
+		selfSeatDefaultsRef.current = null;
 		if (voiceSession.mode !== "push-to-talk" || !roomId) {
 			return;
-		}
-		if (mediaV2 && !clientRef.current.media?.canCapture("microphone")) {
-			if (clientRef.current.setMediaIntent("microphone", true) === "dropped") return;
-			setMediaRevision(n => n + 1);
 		}
 		if (!localHasMediaSeat) {
 			setAuthMessage(
@@ -5411,16 +5624,28 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			setPanelOpen(true);
 			return;
 		}
+		if (versionedMedia && !clientRef.current.media?.wants("microphone")) {
+			if (clientRef.current.setMediaIntent("microphone", true) === "dropped") return;
+			setMediaRevision(n => n + 1);
+		}
 
 		pushToTalkHeldRef.current = true;
 		dispatchVoiceSession({ type: "push-to-talk", held: true });
-	}, [localHasMediaSeat, localMediaSeatState, roomId, voiceSession.mode, mediaV2]);
+	}, [localHasMediaSeat, localMediaSeatState, roomId, voiceSession.mode, versionedMedia]);
 
 	const stopPushToTalk = useCallback(() => {
+		if (voiceSession.mode !== "push-to-talk") return;
 		pushToTalkHeldRef.current = false;
+		// Cancel an unacknowledged first press. An acknowledged PTT microphone
+		// retains the existing short, disabled warm-track reuse between presses.
+		if (mediaV3 && clientRef.current.media?.wants("microphone") && !clientRef.current.media.canCapture("microphone")) {
+			clientRef.current.setMediaIntent("microphone", false);
+			ghostCamSession.reconcileMediaAuthority(cameraAuthorized, false);
+			setMediaRevision(n => n + 1);
+		}
 		void ghostCamSession.setMicrophonePublishing(false, "warm");
 		dispatchVoiceSession({ type: "push-to-talk", held: false });
-	}, [ghostCamSession.setMicrophonePublishing]);
+	}, [ghostCamSession.setMicrophonePublishing, ghostCamSession.reconcileMediaAuthority, cameraAuthorized, mediaV3, voiceSession.mode]);
 
 	const stopMicrophoneForUnmount = useCallback(() => {
 		pushToTalkHeldRef.current = false;
@@ -5930,7 +6155,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 										authAuthenticated && accountUser ? accountUser.plan : null
 									}
 								/>
-								{roomId ? (
+								{roomId && !mediaV3 ? (
 									<div className="panel-room-summary">
 										<span>{mediaSeatSummaryText}</span>
 									</div>
@@ -6075,6 +6300,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							<span>{transientPanelNotice}</span>
 						</div>
 					) : null}
+					{!roomId && freeQuotaNotice.state ? <FreeQuotaNotice state={freeQuotaNotice.state} onRetry={freeQuotaNotice.retry} /> : null}
 					{authMessage ? (
 						<div className="auth-notice">
 							<span>{authMessage}</span>
@@ -6162,12 +6388,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 											inviteTargetStatuses,
 											group.members.map((member) => member.user.userId),
 										);
-										const invitedMemberCount =
-											targetStatus?.recipientStatuses.size ?? 0;
-										const uninvitedMemberCount = Math.max(
-											0,
-											group.members.length - invitedMemberCount,
-										);
+										const currentRoomUserIds = new Set(participants.map((participant) => participant.id));
+										const eligibleMemberCount = inviteMembershipReady
+											? roomInviteEligibleRecipientIds(
+												group.members.map((member) => member.user.userId),
+												inviteTargetStatuses,
+												currentRoomUserIds,
+											).length
+											: 0;
 										const statusLabel = targetStatus
 											? roomInviteTargetStatusLabel(targetStatus)
 											: null;
@@ -6195,7 +6423,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 													disabled={
 														inviteSendingTarget !== null ||
 														group.members.length === 0 ||
-														uninvitedMemberCount === 0
+														!inviteMembershipReady || eligibleMemberCount === 0
 													}
 													onClick={() => sendGroupInvite(group)}
 													type="button"
@@ -6204,10 +6432,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 														? "Sending…"
 														: group.members.length === 0
 															? "No members"
-															: targetStatus && uninvitedMemberCount === 0
+													: targetStatus && eligibleMemberCount === 0
 																? roomInviteTargetStatusLabel(targetStatus)
 																: targetStatus
-																	? `Invite ${uninvitedMemberCount} new`
+															? `Invite ${eligibleMemberCount}`
 																	: "Invite"}
 												</button>
 											</div>
@@ -6224,6 +6452,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 									{inviteTargets.friends.map((friend) => {
 										const targetKey = `friend:${friend.user.userId}`;
 										const targetStatus = inviteTargetStatuses.get(targetKey);
+										const inRoom = inviteMembershipReady && participants.some((participant) => participant.id === friend.user.userId);
+										const eligible = inviteMembershipReady && roomInviteEligibleRecipientIds(
+											[friend.user.userId], inviteTargetStatuses,
+											new Set(participants.map((participant) => participant.id)),
+										).length === 1;
 										return (
 											<div
 												className="invite-target-row"
@@ -6247,15 +6480,19 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 													data-state={targetStatus?.state ?? "idle"}
 													disabled={
 														inviteSendingTarget !== null ||
-														Boolean(targetStatus)
+														!eligible
 													}
 													onClick={() => sendDirectInvite(friend)}
 													type="button"
 												>
 													{inviteSendingTarget === targetKey
 														? "Sending…"
-														: targetStatus
-															? roomInviteTargetStatusLabel(targetStatus)
+													: inRoom
+														? "In room"
+														: eligible
+															? "Invite"
+															: targetStatus
+														? roomInviteTargetStatusLabel(targetStatus)
 															: "Invite"}
 												</button>
 											</div>
@@ -6297,8 +6534,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 					{roomId && visibleParticipants.length ? (
 						<RoomPeopleSection
-							mediaSnapshot={mediaV2 ? currentMediaSnapshot : undefined}
-							microphoneReady={microphoneAuthorized && mediaV2}
+							expanded={expandedPeopleRoomId === roomId}
+							onExpandedChange={(expanded) => setExpandedPeopleRoomId(expanded ? roomId : null)}
+							mediaSnapshot={versionedMedia ? currentMediaSnapshot : undefined}
+							mediaProtocolVersion={mediaProtocolVersion === 1 ? undefined : mediaProtocolVersion}
+							onSetMediaSeat={handleSetMediaSeat}
+							seatControls={clientRef.current.media?.seatControls}
+							microphoneReady={microphoneAuthorized && versionedMedia}
 							onMicrophoneReadyChange={(enabled) => {
 								clientRef.current.setMediaIntent("microphone", enabled);
 								if (!enabled) {
@@ -6704,7 +6946,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							reactionCueParticipantIds={reactionCueParticipantIds}
 							speakingParticipantIds={voiceIndicatorParticipantIds}
 							visibilityMode={
-								interfacePreferences.preferences.participantPillVisibility
+								interfacePreferences.ready ? interfacePreferences.preferences.participantPillVisibility : "smart"
 							}
 						/>
 					) : null}
@@ -7124,21 +7366,6 @@ function clearRoomHash(): void {
 		"",
 		`${location.pathname}${location.search}${hash ? `#${hash}` : ""}`,
 	);
-}
-
-function quotaExhaustedMessage(resetAt: string | undefined): string {
-	if (resetAt) {
-		const reset = new Date(resetAt);
-		if (!Number.isNaN(reset.getTime())) {
-			const label = reset.toLocaleTimeString([], {
-				hour: "2-digit",
-				minute: "2-digit",
-			});
-			return `Daily free watch-party time is used up. It resets at ${label}.`;
-		}
-	}
-
-	return "Daily free watch-party time is used up. It resets at midnight UTC.";
 }
 
 function roomJoinUnavailableMessage(error: { status?: number }): string {

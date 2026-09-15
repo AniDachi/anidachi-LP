@@ -19,6 +19,43 @@
 
 ---
 
+## Follow-up: Free quota reset notice, 2026-09-15
+
+The overlay now consumes `ROOM_ENDED.reason` to distinguish host quota exhaustion
+from ordinary closure. Only the host gets the reset countdown; guests get a
+host-limit explanation. A new authenticated read-only quota view anchors the
+countdown to server UTC and monotonic elapsed time, rechecks after sleep/clock
+changes, and requires server confirmation at zero. The existing Worker and room
+admission remain authoritative. No media, SQL or live protocol changes are needed.
+See the [quota follow-up](2026-09-08-personal-history-and-plans-mvp.md#free-quota-countdown-follow-up-2026-09-15)
+for request/account fences, offline behavior and rollback. Private installed-ZIP
+acceptance remains separate from automated lifecycle and isolated browser tests.
+
+## Follow-up: room invitation return, 2026-09-14
+
+Private testing found that permanent recipient deduplication blocked inviting an
+accepted guest after departure. The [return correction](2026-09-14-room-invite-return.md)
+allows a fresh invitation only after the active assignment has been released,
+and keeps accepted active-room invitations available through a seen Return card.
+The host button remains Invite. Pending/declined recipients and current room
+participants do not receive repeat invitations. Room-first SQL lock ordering and
+fresh identities protect concurrent response, resend and notification delivery.
+The existing admission path, Worker, P2P and media defaults remain unchanged.
+Physical two-account acceptance follows the owner's private production test flow.
+
+## Follow-up: room defaults with media seats, 2026-09-14
+
+The private tester correction restores saved microphone/camera defaults after
+initial authoritative media admission and fixes Last used writes in the
+versioned overlay. A host grant to another participant never starts devices; revoke and capture cleanup
+preserve the future-room preference while clearing the current room intent.
+The September 15 follow-up reapplies Room defaults only after the matching
+confirmed explicit own-seat grant; interrupted operations stay canceled.
+The existing v2/v3 protocol and Worker remain unchanged. Details and verification
+are in the [correction record](../../releases/room-media-seats/2026-09-14-room-defaults-fix.md).
+Exact ZIP and physical-device acceptance follow the owner's private production
+testing flow and must not be described as passed by local Chromium evidence.
+
 ## Service Level Objectives
 
 Every block below is accepted only if these numbers hold (measured by the harness in Block 1 and staging telemetry):
@@ -257,6 +294,16 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
 - Roadmap Progress Log and `current-development-state.md` reflect reality.
 
 ## Progress Log
+
+- 2026-09-14 — The approved [host-managed-seat plan](2026-09-14-host-managed-media-seats.md)
+  adds negotiated v3 rooms without changing frozen plan capacities, room
+  lifecycle, quota, invite flow or the existing v2 contract. Seat authority and
+  device intent are separate; host revocation stops outgoing media while
+  receiving continues. Cross-plane implementation and scoped reviews are local;
+  the [delivery record](../../releases/room-media-seats/2026-09-14-delivery.md)
+  tracks final WebRTC checks, compatible rollout and staging acceptance. The
+  June four-person topology target remains historical, as superseded by the
+  approved September limits; media quality and network acceptance gates remain.
 
 - 2026-09-08 — `codex/personal-history-mvp`, committed runtime source
   `8e4dd284`: accepted personal-history MVP supersedes the legacy four-person

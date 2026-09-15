@@ -183,7 +183,8 @@ describe.sequential("extension release channel builds", () => {
     expectSuccessfulBuild(result);
 
     const manifest = manifestAt("anidachi-extension-public/manifest.json");
-    expect(manifest.name).toBe("Anidachi");
+    expect(manifest.name).toBe("AniDachi");
+    expect(manifest.version_name).toBeUndefined();
     expect(manifest.key).toBeTypeOf("string");
     expect(deriveId(manifest.key ?? "")).toBe(productionId);
     expect(manifest.permissions ?? []).not.toContain("downloads");
@@ -208,7 +209,8 @@ describe.sequential("extension release channel builds", () => {
     expectSuccessfulBuild(result);
 
     const manifest = manifestAt("anidachi-extension-staging/manifest.json");
-    expect(manifest.name).toBe("Anidachi Staging");
+    expect(manifest.name).toBe("AniDachi Staging");
+    expect(manifest.version_name).toBeUndefined();
     expect(manifest.key).toBeTypeOf("string");
     expect(deriveId(manifest.key ?? "")).toBe(stagingId);
     expectExact(manifest.host_permissions, [
@@ -249,7 +251,7 @@ describe.sequential("extension release channel builds", () => {
     const manifest = manifestAt(
       "anidachi-extension-staging-local-broad/manifest.json",
     );
-    expect(manifest.name).toBe("Anidachi Staging");
+    expect(manifest.name).toBe("AniDachi Staging");
     expectExact(manifest.host_permissions, localHostPermissions);
     expectExact(contentMatches(manifest), [
       ...localHostPermissions,

@@ -15,7 +15,8 @@ import {
 } from "../src/reaction-shortcuts";
 import { RoomClient } from "../src/room-client";
 import { RoomMediaSession } from "../src/room-media-session";
-import { roomJoinDefaultsStorageKeyForUser } from "../src/room-media-defaults";
+import { cameraEnabledPreferenceStorageKeyForUser, roomJoinDefaultsStorageKeyForUser } from "../src/room-media-defaults";
+import { voiceModePreferenceStorageKeyForUser } from "../src/voice-mode-preference";
 import type { RoomSessionRecord } from "../src/room-session-storage";
 import {
 	createRoomInvite,
@@ -399,6 +400,14 @@ describe("privileged overlay wiring", () => {
 		).toBe(false);
 
 		await unmount(view.root);
+		const reopened = await renderOverlay();
+		try {
+			await click(button(reopened.container, "Open Anidachi controls"));
+			await flushMountedWork();
+			await click(button(reopened.container, "Room"));
+			expect(button(reopened.container, "Open mic").getAttribute("aria-checked")).toBe("true");
+			expect(button(reopened.container, "On").getAttribute("aria-checked")).toBe("true");
+		} finally { await unmount(reopened.root); }
 	});
 
 	it("dismisses unavailable live-media guidance after a short delay", async () => {
@@ -1564,7 +1573,7 @@ describe("privileged overlay wiring", () => {
 		await unmount(view.root);
 	});
 
-	it("refreshes an open invite panel when an invited participant joins", async () => {
+	it("uses snapshot member identities to disable an in-room friend and re-enable Return after same-count replacement", async () => {
 		const sendMessage = vi.fn(
 			async (message: { type?: string; command?: string }) => {
 				if (message.type === "ANIDACHI_AUTH")
@@ -1600,6 +1609,7 @@ describe("privileged overlay wiring", () => {
 		});
 		vi.mocked(listRoomInvites)
 			.mockResolvedValueOnce(invitesResponse("pending"))
+			.mockResolvedValueOnce(invitesResponse("accepted"))
 			.mockResolvedValueOnce(invitesResponse("accepted"));
 
 		let roomConnectionOptions: Parameters<RoomClient["connect"]>[0] | null =
@@ -1638,9 +1648,23 @@ describe("privileged overlay wiring", () => {
 		await flushMountedWork();
 
 		expect(listRoomInvites).toHaveBeenCalledTimes(2);
-		expect(button(view.container, "Accepted")).toBeInstanceOf(
+		expect(button(view.container, "In room")).toBeInstanceOf(
 			HTMLButtonElement,
 		);
+		await act(async () => {
+			roomConnectionOptions?.onEvent({
+				type: "PARTICIPANT_LEFT",
+				participant: guestParticipant(),
+			});
+			roomConnectionOptions?.onEvent({
+				type: "PARTICIPANT_JOINED",
+				participant: { ...guestParticipant(), id: "replacement-user", displayName: "Replacement" },
+			});
+			await Promise.resolve();
+		});
+		await flushMountedWork();
+		expect(listRoomInvites).toHaveBeenCalledTimes(3);
+		expect(button(view.container, "Invite").disabled).toBe(false);
 		await unmount(view.root);
 	});
 
@@ -1678,6 +1702,67 @@ describe("privileged overlay wiring", () => {
 		expect(loadingVisibleBeforeLoad).toBe(true);
 		expect(closeButtonBeforeLoad).toBeInstanceOf(HTMLButtonElement);
 		expect((closeButtonBeforeLoad as HTMLButtonElement).disabled).toBe(false);
+	});
+
+	it("drops a deferred account A target response after account B replaces it in the same room", async () => {
+		let currentSession = sessionFor("user-a");
+		installActiveHostRoomRuntime({ getSession: () => currentSession });
+		const targets = deferred<Awaited<ReturnType<typeof listInviteTargets>>>();
+		vi.mocked(listInviteTargets).mockReturnValue(targets.promise);
+		vi.mocked(listRoomInvites).mockResolvedValue({
+			meta: { serverTime: "2026-08-22T08:01:00.000Z", schemaVersion: 1 },
+			inbox: [],
+			sent: [],
+		});
+		const view = await renderOverlay();
+
+		await click(button(view.container, "Open Anidachi controls"));
+		await click(button(view.container, "Create room"));
+		await click(await waitForButton(view.container, "Invite friends and groups"));
+		await flushMountedWork();
+
+		currentSession = sessionFor("user-b");
+		await extensionStorage.storage.setItem(AUTH_TOKENS_KEY, currentSession);
+		await flushMountedWork();
+		targets.resolve({ friends: [inviteFriend()], groups: [] });
+		await flushMountedWork();
+
+		expect(view.container.textContent).not.toContain("Ads Mag");
+		expect(view.container.textContent).not.toContain("1 available");
+		await unmount(view.root);
+	});
+
+	it("drops a deferred account A send result after account B replaces it in the same room", async () => {
+		let currentSession = sessionFor("user-a");
+		installActiveHostRoomRuntime({ getSession: () => currentSession });
+		vi.mocked(listInviteTargets).mockResolvedValue({ friends: [inviteFriend()], groups: [] });
+		vi.mocked(listRoomInvites).mockResolvedValue({
+			meta: { serverTime: "2026-08-22T08:01:00.000Z", schemaVersion: 1 },
+			inbox: [],
+			sent: [],
+		});
+		const sent = deferred<Awaited<ReturnType<typeof createRoomInvite>>>();
+		vi.mocked(createRoomInvite).mockReturnValue(sent.promise);
+		const view = await renderOverlay();
+
+		await click(button(view.container, "Open Anidachi controls"));
+		await click(button(view.container, "Create room"));
+		await click(await waitForButton(view.container, "Invite friends and groups"));
+		await flushMountedWork();
+		await click(button(view.container, "Invite"));
+		await flushMountedWork();
+
+		currentSession = sessionFor("user-b");
+		await extensionStorage.storage.setItem(AUTH_TOKENS_KEY, currentSession);
+		await flushMountedWork();
+		const pendingInvite = invitesResponse("pending").sent[0];
+		if (!pendingInvite) throw new Error("Missing pending invite fixture");
+		sent.resolve({ created: true, invite: pendingInvite });
+		await flushMountedWork();
+
+		expect(view.container.textContent).not.toContain("Invite sent to Ads Mag");
+		expect(view.container.textContent).not.toContain("Pending");
+		await unmount(view.root);
 	});
 
 
@@ -1792,8 +1877,148 @@ describe("privileged overlay wiring", () => {
       const close=vi.spyOn(RoomClient.prototype,"close");close.mockClear();
       await act(async()=>options.onEvent({type:"ROOM_ENDED",roomId:"room-a",endedAt:Date.now(),reason:"quota_exhausted"}));
       expect(close).toHaveBeenCalled();
+      expect(view.container.textContent).toContain("Free time used up");
     } finally {vi.useRealTimers();await unmount(view.root);}
   });
+  it("explains the host limit to guests without claiming their own quota was exhausted", async () => {
+    installActiveHostRoomRuntime();
+    let connection!: Parameters<RoomClient["connect"]>[0];
+    vi.mocked(RoomClient.prototype.connect).mockImplementation(options => {
+      connection = options; options.onStatus("connected");
+      options.onEvent({type:"ROOM_SNAPSHOT",roomId:"room-a",roomGeneration:1,sourceGeneration:1,serverSeq:1,
+        participants:[{...hostParticipant(), role:"viewer"},{...guestParticipant(),role:"host"}]});
+    });
+    const view = await renderOverlay();
+    try {
+      await click(button(view.container, "Open Anidachi controls"));
+      await click(button(view.container, "Create room")); await flushRoomActionWork();
+      await act(async () => connection.onEvent({type:"ROOM_ENDED",roomId:"room-a",endedAt:Date.parse("2026-09-15T12:00:00Z"),reason:"quota_exhausted"}));
+      expect(view.container.textContent).toContain("The host's Free time is used up");
+      expect(view.container.querySelector(".free-quota-notice")).toBeNull();
+    } finally { await unmount(view.root); }
+  });
+  it("shows the quota recovery card when creating a room is denied by the server", async () => {
+    installActiveHostRoomRuntime();
+    const original = chrome.runtime.sendMessage;
+    chrome.runtime.sendMessage = vi.fn(async (message: any) => {
+      if (message.type === "ANIDACHI_ROOM_HTTP" && message.command === "create-room") return {
+        ok:false,code:"QUOTA_EXHAUSTED",error:"Daily free watch-party time is used up",status:403,resetAt:"2026-09-16T00:00:00Z"
+      };
+      return original(message);
+    }) as typeof chrome.runtime.sendMessage;
+    const view = await renderOverlay();
+    try {
+      await click(button(view.container, "Open Anidachi controls"));
+      await click(button(view.container, "Create room")); await flushRoomActionWork();
+      expect(view.container.textContent).toContain("Free time used up");
+      expect(view.container.textContent).not.toContain("It resets at");
+      expect(RoomClient.prototype.connect).not.toHaveBeenCalled();
+    } finally { await unmount(view.root); }
+  });
+  it("does not assign an old account's delayed create denial to the next account", async () => {
+    let currentSession = sessionFor("user-a");
+    installActiveHostRoomRuntime({ getSession: () => currentSession });
+    const pending = deferred<unknown>();
+    const original = chrome.runtime.sendMessage;
+    chrome.runtime.sendMessage = vi.fn(async (message: any) => {
+      if (message.type === "ANIDACHI_ROOM_HTTP" && message.command === "create-room") return pending.promise;
+      return original(message);
+    }) as typeof chrome.runtime.sendMessage;
+    const view = await renderOverlay();
+    try {
+      await click(button(view.container, "Open Anidachi controls"));
+      await click(button(view.container, "Create room")); await flushRoomActionWork();
+      currentSession = sessionFor("user-b");
+      await act(async () => extensionStorage.storage.setItem(AUTH_TOKENS_KEY, currentSession));
+      await flushMountedWork();
+      await act(async () => pending.resolve({ ok:false,code:"QUOTA_EXHAUSTED",error:"Daily free watch-party time is used up",status:403,resetAt:"2026-09-16T00:00:00Z" }));
+      await flushMountedWork();
+      expect(view.container.querySelector(".free-quota-notice")).toBeNull();
+      expect(RoomClient.prototype.connect).not.toHaveBeenCalled();
+    } finally { await unmount(view.root); }
+  });
+  it("uses the first v3 PTT press and cancels publication when released before ACK", async () => {
+    installActiveHostRoomRuntime();
+    const publication = vi.spyOn(P2PMediaController.prototype, "setMicrophonePublishing").mockResolvedValue();
+    const send = vi.spyOn(RoomClient.prototype, "send").mockReturnValue("sent");
+    let client!: RoomClient;
+    let options!: Parameters<RoomClient["connect"]>[0];
+    let media!: import("@anidachi/protocol").RoomMediaV3Snapshot;
+    vi.mocked(RoomClient.prototype.connect).mockImplementation(function(this: RoomClient, next) {
+      client = this; options = next;
+      this.media = new RoomMediaSession(next.roomId, next.participantSessionId);
+      this.media.bindRoomGeneration(1);
+      media = {type: "ROOM_MEDIA_SNAPSHOT", roomId: "room-a", roomGeneration: 1, snapshotSequence: 1, closingAt: null,
+        capabilities: {mediaProtocolVersion: 3, hostPlanCode: "free", maxParticipants: 4, maxMediaSeats: 4, maxCameras: 4, capabilityRevision: 1, capabilitiesValidUntil: "2026-09-15T12:30:00Z"},
+        participants: [{participantSessionId: next.participantSessionId, mediaSeatGranted: true, seatRevision: 0, cameraGranted: false, microphoneGranted: false, cameraIntentSequence: 0, microphoneIntentSequence: 0, cameraRevocationEpoch: 0, microphoneRevocationEpoch: 0}]};
+      next.onStatus("connected");
+      next.onEvent({type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1, participants: [{...hostParticipant(), participantSessionId: next.participantSessionId, connected: true, mediaSeat: "none"}]});
+      this.media.consume(media); next.onEvent(media);
+    });
+    const view = await renderOverlay();
+    try {
+      await click(button(view.container, "Open Anidachi controls"));
+      await click(button(view.container, "Create room"));
+      await vi.waitFor(() => expect(options).toBeDefined());
+      await act(async () => {options.onEvent({type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 2, participants: [{...hostParticipant(), participantSessionId: options.participantSessionId, connected: true, mediaSeat: "none"}]}); options.onEvent(media);});
+      await flushMountedWork();
+      expect(view.container.textContent).not.toContain("Enable microphone");
+      expect(publication.mock.calls.some(([enabled]) => enabled)).toBe(false);
+      await act(async () => {window.dispatchEvent(new KeyboardEvent("keydown", {key: "v", code: "KeyV", bubbles: true}));});
+      const intent = send.mock.calls.map(([event]) => event).find(event => event.type === "SET_MEDIA_INTENT" && event.media === "microphone" && event.enabled);
+      expect(intent?.type).toBe("SET_MEDIA_INTENT");
+      if (intent?.type !== "SET_MEDIA_INTENT") throw new Error("First PTT press did not request microphone");
+      expect(publication.mock.calls.some(([enabled]) => enabled)).toBe(false);
+      await act(async () => {window.dispatchEvent(new KeyboardEvent("keyup", {key: "v", code: "KeyV", bubbles: true}));});
+      expect(client.media!.wants("microphone")).toBe(false);
+      await act(async () => {const ack = {...intent, type: "MEDIA_INTENT_ACK" as const, snapshotSequence: 2, state: {...media.participants[0], microphoneGranted: true, microphoneIntentSequence: intent.intentSequence}}; client.media!.consume(ack); options.onEvent(ack);});
+      expect(publication.mock.calls.some(([enabled]) => enabled)).toBe(false);
+      expect(client.media!.hasSeat()).toBe(true);
+      await click(button(view.container, "Voice")); await click(button(view.container, "Open mic"));
+      const openMic = send.mock.calls.map(([event]) => event).filter(event => event.type === "SET_MEDIA_INTENT" && event.media === "microphone" && event.enabled).at(-1);
+      if (openMic?.type !== "SET_MEDIA_INTENT") throw new Error("Missing own Open mic intent");
+      await act(async () => {const ack = {...openMic, type: "MEDIA_INTENT_ACK" as const, snapshotSequence: 3, state: {...media.participants[0], microphoneGranted: true, microphoneIntentSequence: openMic.intentSequence}}; client.media!.consume(ack); options.onEvent(ack);});
+      await flushMountedWork();
+      expect(publication).toHaveBeenLastCalledWith(true, "warm", "open-mic");
+      const disconnect = vi.spyOn(P2PMediaController.prototype, "disconnect"); disconnect.mockClear();
+      await act(async () => {media = {...media, snapshotSequence: 4, participants: [{...media.participants[0], mediaSeatGranted: false, seatRevision: 1, cameraRevocationEpoch: 1, microphoneRevocationEpoch: 1}]}; client.media!.consume(media); options.onEvent(media);});
+      expect(publication.mock.calls.at(-1)?.[0]).toBe(false);
+      expect(disconnect).not.toHaveBeenCalled();
+      publication.mockClear();
+      await act(async () => {media = {...media, snapshotSequence: 5, participants: [{...media.participants[0], mediaSeatGranted: true, seatRevision: 2}]}; client.media!.consume(media); options.onEvent(media);});
+      expect(publication.mock.calls.some(([enabled]) => enabled)).toBe(false);
+      expect(disconnect).not.toHaveBeenCalled();
+      // Three remote cameras leave the fourth slot for this user's own action.
+      vi.spyOn(P2PMediaController.prototype, "setCameraEnabled").mockResolvedValue();
+      const remoteCameras = ["camera-1", "camera-2", "camera-3"].map(participantSessionId => ({...media.participants[0], participantSessionId, cameraGranted: true}));
+      await act(async () => {media = {...media, snapshotSequence: 6, participants: [media.participants[0], ...remoteCameras]}; client.media!.consume(media); options.onEvent(media);});
+      await click(button(view.container, "Turn camera on"));
+      const camera = send.mock.calls.map(([event]) => event).filter(event => event.type === "SET_MEDIA_INTENT" && event.media === "camera" && event.enabled).at(-1);
+      if (camera?.type !== "SET_MEDIA_INTENT") throw new Error("Missing own camera intent");
+      await act(async () => {media = {...media, snapshotSequence: 7, participants: [{...media.participants[0], cameraGranted: true, cameraIntentSequence: camera.intentSequence}, ...remoteCameras]}; client.media!.consume(media); options.onEvent(media);});
+      expect((button(view.container, "Turn camera off") as HTMLButtonElement).disabled).toBe(false);
+      const seatCommand = client.media!.setMediaSeat("camera-user-1", "camera-1", false)!;
+      expect(seatCommand).not.toBeNull();
+      const ownCameraIntent = client.media!.captureIntent("camera");
+      expect(ownCameraIntent).toBeDefined();
+      await act(async () => {
+        const failure = {type: "MEDIA_SEAT_RESULT" as const, requestId: seatCommand.requestId,
+          targetParticipantSessionId: seatCommand.targetParticipantSessionId, code: "MEDIA_UNAVAILABLE" as const, snapshot: media};
+        client.media!.consume(failure);
+        options.onEvent(failure);
+      });
+      await flushMountedWork();
+      expect(client.media!.seatControls.get("camera-user-1")).toMatchObject({pending: false, error: expect.any(String)});
+      expect(client.media!.captureIntent("camera")).toEqual(ownCameraIntent);
+      expect((button(view.container, "Turn camera off") as HTMLButtonElement).disabled).toBe(false);
+      await click(button(view.container, "Turn camera off"));
+      // Until the server confirms release, all four reservations remain occupied.
+      const unavailable = button(view.container, "Camera unavailable") as HTMLButtonElement;
+      expect(unavailable.disabled).toBe(true);
+      expect(unavailable.title).toBe("All 4 cameras are in use");
+    } finally {await unmount(view.root);}
+  });
+
   it("wires v2 explicit mic intent, revocation and terminal teardown through the actual overlay", async () => {
     installActiveHostRoomRuntime();
     const publication = vi.spyOn(P2PMediaController.prototype, "setMicrophonePublishing").mockResolvedValue();
@@ -1801,11 +2026,12 @@ describe("privileged overlay wiring", () => {
     const disconnect = vi.spyOn(P2PMediaController.prototype, "disconnect");
     let client!: RoomClient;
     let options!: Parameters<RoomClient["connect"]>[0];
-    let media!: import("@anidachi/protocol").RoomMediaSnapshot;
+    let media!: import("@anidachi/protocol").RoomMediaV2Snapshot;
     vi.spyOn(RoomClient.prototype, "send").mockReturnValue("sent");
     vi.mocked(RoomClient.prototype.connect).mockImplementation(function (this: RoomClient, next) {
       client = this; options = next;
       this.media = new RoomMediaSession(next.roomId, next.participantSessionId!);
+      this.media.bindRoomGeneration(1);
       media = { type: "ROOM_MEDIA_SNAPSHOT", roomId: "room-a", roomGeneration: 1, snapshotSequence: 1,
         capabilities: { mediaProtocolVersion: 2, hostPlanCode: "free", maxParticipants: 4, maxCameras: 4, maxMicrophones: 4, capabilityRevision: 1, capabilitiesValidUntil: "2026-09-08T20:00:00Z" }, closingAt: null,
         participants: [{ participantSessionId: next.participantSessionId!, cameraGranted: false, microphoneGranted: false, cameraIntentSequence: 0, microphoneIntentSequence: 0, cameraRevocationEpoch: 0, microphoneRevocationEpoch: 0 }] };
@@ -1848,6 +2074,61 @@ describe("privileged overlay wiring", () => {
       expect(disconnect).toHaveBeenCalled();
     } finally { await unmount(view.root); }
   });
+	it("does not flash Always visible while loading a saved Auto hide preference", async () => {
+		const read = deferred<unknown>();
+		const originalRead = extensionStorage.storage.getItem.bind(extensionStorage.storage);
+		vi.spyOn(extensionStorage.storage, "getItem").mockImplementation((key) => key === INTERFACE_PREFERENCES_STORAGE_KEY ? read.promise as Promise<never> : originalRead(key));
+		installActiveHostRoomRuntime();
+		const view = await renderOverlay();
+		try {
+			expect(view.container.querySelector(".top-bubble-reveal")?.classList.contains("bubble-visible")).toBe(false);
+			read.resolve({ version: 1, mainControlVisibility: "auto-hide", participantPillVisibility: "smart" });
+			await flushMountedWork();
+			expect(view.container.querySelector(".top-bubble-reveal")?.classList.contains("bubble-visible")).toBe(false);
+		} finally { await unmount(view.root); }
+	});
+
+	it("keeps the participant disclosure open when the same room panel is reopened", async () => {
+		installActiveHostRoomRuntime();
+		vi.mocked(RoomClient.prototype.connect).mockImplementation(options => {
+			options.onStatus("connected");
+			options.onEvent({ type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1,
+				participants: [hostParticipant(), ...[1, 2, 3].map(i => ({ ...hostParticipant(), id: `guest-${i}`, displayName: `Guest ${i}`, role: "viewer" as const }))] });
+		});
+		const view = await renderOverlay();
+		try {
+			await click(button(view.container, "Open Anidachi controls"));
+			await click(button(view.container, "Create room"));
+			await flushMountedWork();
+			await flushRoomActionWork();
+			expect(primaryRoomAction(view.container).disabled).toBe(false);
+			await click(button(view.container, "Show 2 more participants"));
+			await click(button(view.container, "Close Anidachi controls"));
+			await click(button(view.container, "Open Anidachi controls"));
+			expect(button(view.container, "Show fewer participants").getAttribute("aria-expanded")).toBe("true");
+		} finally { await unmount(view.root); }
+	});
+
+	it("shows the launcher and quiet participant pills for a fresh installation", async () => {
+		installActiveHostRoomRuntime({ mediaSeat: "joined" });
+		const view = await renderOverlay();
+		try {
+			await flushMountedWork();
+			expect(view.container.querySelector(".top-bubble-reveal")?.classList.contains("bubble-visible")).toBe(true);
+			expect(view.container.querySelector(".room-rail")).toBeNull();
+			await click(button(view.container, "Open Anidachi controls"));
+			await click(button(view.container, "Create room"));
+			await flushMountedWork();
+			await flushRoomActionWork();
+			expect(primaryRoomAction(view.container).disabled).toBe(false);
+			await click(button(view.container, "Close Anidachi controls"));
+			await flushMountedWork();
+			expect(view.container.querySelector(".room-rail")?.getAttribute("data-visibility-mode")).toBe("always-visible");
+			expect(view.container.querySelectorAll('.room-rail-slot[data-presentation="compact"]').length).toBeGreaterThan(0);
+			expect(extensionStorage.values.has(INTERFACE_PREFERENCES_STORAGE_KEY)).toBe(false);
+		} finally { await unmount(view.root); }
+	});
+
 	it.each(["auto-hide", "always-visible"] as const)(
 		"keeps the main control independent of Open mic in %s mode",
 		async (mainControlVisibility) => {
@@ -1913,6 +2194,225 @@ describe("privileged overlay wiring", () => {
 			}
 		},
 	);
+
+	it("dismisses media rejection feedback without replaying it on room snapshots", async () => {
+		const runtime = installRoomDefaultsRuntime(3, {cameraEnabled: true});
+		const timers = vi.spyOn(window, "setTimeout");
+		const view = await renderOverlay();
+		try {
+			await click(button(view.container, "Open Anidachi controls"));
+			await click(button(view.container, "Create room"));
+			await runtime.roomSnapshot(); await runtime.mediaSnapshot();
+			const before = timers.mock.calls.length;
+			await runtime.reject("camera");
+			expect(view.container.querySelector(".panel-action-notice")?.textContent).toContain("All 4 cameras are in use");
+			const dismiss = timers.mock.calls.slice(before).find(([, delay]) => delay === overlayApp.TRANSIENT_PANEL_NOTICE_DURATION_MS)?.[0];
+			if (typeof dismiss !== "function") throw new Error("Missing media notice dismissal");
+			await act(async () => { dismiss(); });
+			await runtime.mediaSnapshot();
+			expect(view.container.textContent).not.toContain("All 4 cameras are in use");
+		} finally { await unmount(view.root); }
+	});
+
+	it.each([2, 3] as const)("applies saved room defaults only after v%s media admission and capture ACK", async (version) => {
+		const runtime = installRoomDefaultsRuntime(version, {voiceMode: "open-mic", cameraEnabled: true});
+		const view = await renderOverlay();
+		try {
+			await click(button(view.container, "Open Anidachi controls"));
+			await click(button(view.container, "Create room"));
+			await runtime.roomSnapshot();
+			// A room snapshot alone does not confirm a media seat or revoke defaults.
+			expect(runtime.record()).toMatchObject({voiceMode: "open-mic", cameraEnabled: true});
+			expect(runtime.enabledIntents()).toEqual([]);
+			expect(runtime.microphone.mock.calls.some(([enabled]) => enabled)).toBe(false);
+			expect(runtime.camera.mock.calls.some(([enabled]) => enabled)).toBe(false);
+			await runtime.mediaSnapshot();
+			expect(runtime.enabledIntents().map(intent => intent.media).sort()).toEqual(["camera", "microphone"]);
+			expect(runtime.microphone.mock.calls.some(([enabled]) => enabled)).toBe(false);
+			expect(runtime.camera.mock.calls.some(([enabled]) => enabled)).toBe(false);
+			await runtime.ack("camera");
+			await runtime.ack("microphone");
+			expect(runtime.microphone).toHaveBeenLastCalledWith(true, "warm", "open-mic");
+			expect(runtime.camera).toHaveBeenLastCalledWith(true);
+			await runtime.mediaSnapshot();
+			expect(runtime.enabledIntents()).toHaveLength(2);
+		} finally { await unmount(view.root); }
+	});
+
+	it.each([2, 3] as const)("remembers explicit microphone and camera choices in a v%s room", async (version) => {
+		const runtime = installRoomDefaultsRuntime(version);
+		const view = await renderOverlay();
+		try {
+			await click(button(view.container, "Open Anidachi controls"));
+			await click(button(view.container, "Create room"));
+			await runtime.roomSnapshot(); await runtime.mediaSnapshot();
+			await click(button(view.container, "Voice"));
+			await click(button(view.container, "Open mic"));
+			await click(button(view.container, "Turn camera on"));
+			await flushMountedWork();
+			expect(runtime.record()).toMatchObject({voiceMode: "open-mic", cameraEnabled: true});
+			const remembered = runtime.storageWrites().filter(message => message.rememberPreference);
+			expect(remembered).toEqual(expect.arrayContaining([
+				expect.objectContaining({command: "set-voice-mode", mode: "open-mic"}),
+				expect.objectContaining({command: "set-camera-enabled", enabled: true}),
+			]));
+		} finally { await unmount(view.root); }
+	});
+
+	it.each(["no seat", "cameras full"] as const)("does not queue saved camera defaults when joining with %s", async (limitation) => {
+		const runtime = installRoomDefaultsRuntime(3, {voiceMode: "open-mic", cameraEnabled: true});
+		const view = await renderOverlay();
+		try {
+			await click(button(view.container, "Open Anidachi controls"));
+			await click(button(view.container, "Create room"));
+			await runtime.roomSnapshot();
+			await runtime.mediaSnapshot({seat: limitation !== "no seat", remoteCameras: limitation === "cameras full" ? 4 : 0});
+			expect(runtime.enabledIntents().map(intent => intent.media)).toEqual(limitation === "no seat" ? [] : ["microphone"]);
+			expect(runtime.record()).toMatchObject({cameraEnabled: false, voiceMode: limitation === "no seat" ? "push-to-talk" : "open-mic"});
+			await runtime.mediaSnapshot({seat: true, seatRevision: 1, remoteCameras: 0});
+			expect(runtime.enabledIntents().map(intent => intent.media)).toEqual(limitation === "no seat" ? [] : ["microphone"]);
+			expect(runtime.storageWrites().some(message => message.rememberPreference)).toBe(false);
+		} finally { await unmount(view.root); }
+	});
+
+	it.each([true, false])("persists a v3 seat revoke without replay or preference loss (capture acknowledged: %s)", async (acknowledged) => {
+		const runtime = installRoomDefaultsRuntime(3, {voiceMode: "open-mic", cameraEnabled: true});
+		const view = await renderOverlay();
+		try {
+			await click(button(view.container, "Open Anidachi controls"));
+			await click(button(view.container, "Create room"));
+			await runtime.roomSnapshot(); await runtime.mediaSnapshot();
+			if (acknowledged) { await runtime.ack("camera"); await runtime.ack("microphone"); }
+			await runtime.mediaSnapshot({seat: false, seatRevision: 1, epoch: 1});
+			expect(runtime.record()).toMatchObject({voiceMode: "push-to-talk", cameraEnabled: false});
+			expect(runtime.microphone.mock.calls.at(-1)?.[0]).toBe(false);
+			expect(runtime.camera.mock.calls.at(-1)?.[0] ?? false).toBe(false);
+			await runtime.mediaSnapshot({seat: true, seatRevision: 2, epoch: 1});
+			expect(runtime.enabledIntents()).toHaveLength(2);
+			expect(runtime.storageWrites().some(message => message.rememberPreference)).toBe(false);
+		} finally { await unmount(view.root); }
+	});
+
+	it("does not revive saved devices after a host regrant that happened while the document was absent", async () => {
+		const runtime = installRoomDefaultsRuntime(3, {voiceMode: "open-mic", cameraEnabled: true});
+		const view = await renderOverlay();
+		try {
+			await click(button(view.container, "Open Anidachi controls"));
+			await click(button(view.container, "Create room"));
+			await runtime.roomSnapshot();
+			await runtime.mediaSnapshot({seat: true, seatRevision: 2, epoch: 1});
+			expect(runtime.enabledIntents()).toEqual([]);
+			expect(runtime.record()).toMatchObject({voiceMode: "push-to-talk", cameraEnabled: false});
+			await click(button(view.container, "Voice"));
+			await click(button(view.container, "Open mic"));
+			await click(button(view.container, "Turn camera on"));
+			expect(runtime.enabledIntents().map(intent => intent.media).sort()).toEqual(["camera", "microphone"]);
+		} finally { await unmount(view.root); }
+	});
+
+	it.each([
+		{microphoneOnJoin: "open-mic", cameraOnJoin: "on", remoteCameras: 0, expected: ["camera", "microphone"]},
+		{microphoneOnJoin: "last-used", cameraOnJoin: "last-used", remoteCameras: 0, expected: ["camera", "microphone"]},
+		{microphoneOnJoin: "push-to-talk", cameraOnJoin: "off", remoteCameras: 0, expected: []},
+		{microphoneOnJoin: "open-mic", cameraOnJoin: "on", remoteCameras: 4, expected: ["microphone"]},
+	] as const)("restores Room defaults after own seat confirmation: $microphoneOnJoin / $cameraOnJoin / $remoteCameras cameras", async ({microphoneOnJoin, cameraOnJoin, remoteCameras, expected}) => {
+		const runtime = installRoomDefaultsRuntime(3, {voiceMode: "open-mic", cameraEnabled: true});
+		const view = await renderOverlay();
+		try {
+			await click(button(view.container, "Open Anidachi controls"));
+			await click(button(view.container, "Create room"));
+			await runtime.roomSnapshot(); await runtime.mediaSnapshot();
+			await runtime.ack("microphone"); await runtime.ack("camera");
+			await click(button(view.container, "Revoke media seat: User"));
+			await runtime.mediaSnapshot({seat: false, seatRevision: 1, epoch: 1});
+			await runtime.seatResult();
+			expect(runtime.record()).toMatchObject({voiceMode: "push-to-talk", cameraEnabled: false});
+			extensionStorage.values.set(`local:${roomJoinDefaultsStorageKeyForUser("user-a")}`, {version: 1, microphoneOnJoin, cameraOnJoin});
+			extensionStorage.values.set(`local:${voiceModePreferenceStorageKeyForUser("user-a")}`, {version: 1, mode: "open-mic"});
+			extensionStorage.values.set(`local:${cameraEnabledPreferenceStorageKeyForUser("user-a")}`, {version: 1, enabled: true});
+			const before = runtime.enabledIntents().length;
+			await click(button(view.container, "Grant media seat: User"));
+			await runtime.mediaSnapshot({seat: true, seatRevision: 2, epoch: 1, remoteCameras});
+			// A seat broadcast alone is not confirmation of this local action.
+			expect(runtime.enabledIntents()).toHaveLength(before);
+			await runtime.seatResult();
+			expect(runtime.enabledIntents().slice(before).map(intent => intent.media).sort()).toEqual(expected);
+			expect(runtime.microphone.mock.calls.at(-1)?.[0]).toBe(false);
+			expect(runtime.camera.mock.calls.at(-1)?.[0] ?? false).toBe(false);
+			for (const kind of expected) await runtime.ack(kind);
+			if (expected.some(kind => kind === "microphone")) expect(runtime.microphone).toHaveBeenLastCalledWith(true, "warm", "open-mic");
+			if (expected.some(kind => kind === "camera")) expect(runtime.camera).toHaveBeenLastCalledWith(true);
+			await runtime.seatResult();
+			expect(runtime.enabledIntents()).toHaveLength(before + expected.length);
+			expect(runtime.storageWrites().some(message => message.rememberPreference)).toBe(false);
+		} finally { await unmount(view.root); }
+	});
+
+	it("does not restore defaults after a failed own-seat grant followed by a later seat broadcast", async () => {
+		const runtime = installRoomDefaultsRuntime(3, {voiceMode: "open-mic", cameraEnabled: true});
+		const view = await renderOverlay();
+		try {
+			await click(button(view.container, "Open Anidachi controls"));
+			await click(button(view.container, "Create room"));
+			await runtime.roomSnapshot(); await runtime.mediaSnapshot({seat: false, seatRevision: 1, epoch: 1});
+			await click(button(view.container, "Grant media seat: User"));
+			await runtime.seatResult("MEDIA_LIMIT_REACHED");
+			await runtime.mediaSnapshot({seat: true, seatRevision: 2, epoch: 1});
+			expect(runtime.enabledIntents()).toEqual([]);
+		} finally { await unmount(view.root); }
+	});
+
+	it.each(["revoke", "disconnect", "manual mode", "unmount"] as const)("cancels own-seat defaults if %s happens while preferences load", async (interruption) => {
+		const runtime = installRoomDefaultsRuntime(3);
+		const view = await renderOverlay();
+		let mounted = true;
+		const pendingRead = deferred<Record<string, unknown>>();
+		try {
+			await click(button(view.container, "Open Anidachi controls"));
+			await click(button(view.container, "Create room"));
+			await runtime.roomSnapshot(); await runtime.mediaSnapshot({seat: false, seatRevision: 1, epoch: 1});
+			vi.mocked(chrome.storage.local.get).mockImplementation(() => pendingRead.promise);
+			await click(button(view.container, "Grant media seat: User"));
+			await runtime.mediaSnapshot({seat: true, seatRevision: 2, epoch: 1});
+			await runtime.seatResult();
+			expect(chrome.storage.local.get).toHaveBeenCalled();
+			if (interruption === "revoke") {
+				await runtime.mediaSnapshot({seat: false, seatRevision: 3, epoch: 2});
+				await runtime.mediaSnapshot({seat: true, seatRevision: 4, epoch: 2});
+			} else if (interruption === "disconnect") {
+				await runtime.status("closed"); await runtime.status("connected");
+			} else if (interruption === "manual mode") {
+				await click(button(view.container, "Voice"));
+				await click(button(view.container, "Open mic"));
+				await click(button(view.container, "Push to talk"));
+			} else {
+				await unmount(view.root); mounted = false;
+			}
+			await act(async () => pendingRead.resolve({
+				[roomJoinDefaultsStorageKeyForUser("user-a")]: {version: 1, microphoneOnJoin: "open-mic", cameraOnJoin: "on"},
+			}));
+			await flushMountedWork();
+			expect(runtime.enabledIntents().map(intent => intent.media)).toEqual(interruption === "manual mode" ? ["microphone"] : []);
+		} finally { if (mounted) await unmount(view.root); }
+	});
+
+	it("requires the matching own-seat result before restoring and ignores a stale successful result", async () => {
+		const runtime = installRoomDefaultsRuntime(3);
+		const view = await renderOverlay();
+		try {
+			extensionStorage.values.set(`local:${roomJoinDefaultsStorageKeyForUser("user-a")}`, {version: 1, microphoneOnJoin: "open-mic", cameraOnJoin: "on"});
+			await click(button(view.container, "Open Anidachi controls"));
+			await click(button(view.container, "Create room"));
+			await runtime.roomSnapshot(); await runtime.mediaSnapshot({seat: false, seatRevision: 1, epoch: 1});
+			await click(button(view.container, "Grant media seat: User"));
+			await runtime.mediaSnapshot({seat: true, seatRevision: 2, epoch: 1});
+			await runtime.seatResult("OK", "unrelated-request");
+			expect(runtime.enabledIntents()).toEqual([]);
+			await runtime.mediaSnapshot({seat: false, seatRevision: 3, epoch: 2});
+			await runtime.seatResult();
+			expect(runtime.enabledIntents()).toEqual([]);
+		} finally { await unmount(view.root); }
+	});
 
 	it("marks a user-selected Voice mode as the preference for future rooms", async () => {
 		let storedRoomSession: RoomSessionRecord = confirmedRoomSession();
@@ -2405,14 +2905,14 @@ describe("privileged overlay wiring", () => {
 		await click(button(view.container, "Invite friends and groups"));
 		await flushMountedWork();
 
-		expect(button(view.container, "Accepted")).toBeInstanceOf(
+		expect(button(view.container, "Invite")).toBeInstanceOf(
 			HTMLButtonElement,
 		);
 
 		olderInvites.resolve(invitesResponse("pending"));
 		await flushMountedWork();
 
-		expect(button(view.container, "Accepted")).toBeInstanceOf(
+		expect(button(view.container, "Invite")).toBeInstanceOf(
 			HTMLButtonElement,
 		);
 		await unmount(view.root);
@@ -2482,7 +2982,7 @@ describe("privileged overlay wiring", () => {
 			await waitForButton(view.container, "Invite friends and groups"),
 		);
 		await flushMountedWork();
-		expect(button(view.container, "Accepted")).toBeInstanceOf(
+		expect(button(view.container, "Invite")).toBeInstanceOf(
 			HTMLButtonElement,
 		);
 
@@ -2498,13 +2998,13 @@ describe("privileged overlay wiring", () => {
 		await click(button(view.container, "Invite friends and groups"));
 		await flushMountedWork();
 
-		const keptAcceptedStatus = [
+		const keptReturnEligibility = [
 			...view.container.querySelectorAll("button"),
-		].some((candidate) => candidate.textContent?.trim() === "Accepted");
+		].some((candidate) => candidate.textContent?.trim() === "Invite");
 		const message = view.container.textContent;
 		await unmount(view.root);
 
-		expect(keptAcceptedStatus).toBe(true);
+		expect(keptReturnEligibility).toBe(true);
 		expect(message).toContain(
 			"Could not refresh invite status. Showing the latest available status.",
 		);
@@ -2964,7 +3464,10 @@ function invitesResponse(status: RoomInvite["recipients"][number]["status"]) {
 }
 
 function installActiveHostRoomRuntime(
-	runtimeOptions: { mediaSeat?: "none" | "joined" } = {},
+	runtimeOptions: {
+		mediaSeat?: "none" | "joined";
+		getSession?: () => ReturnType<typeof sessionFor> | null;
+	} = {},
 ): void {
 	const sendMessage = vi.fn(
 		async (message: {
@@ -2974,7 +3477,12 @@ function installActiveHostRoomRuntime(
 			record?: RoomSessionRecord;
 		}) => {
 			if (message.type === "ANIDACHI_AUTH") {
-				return { ok: true, tokens: sessionFor("user-a") };
+				return {
+					ok: true,
+					tokens: runtimeOptions.getSession
+						? runtimeOptions.getSession()
+						: sessionFor("user-a"),
+				};
 			}
 			if (
 				message.type === "ANIDACHI_ROOM_HTTP" &&
@@ -3026,6 +3534,102 @@ function installActiveHostRoomRuntime(
 			],
 		});
 	});
+}
+
+// Keep the real overlay, persistence client and media-intent authority. Only
+// the background HTTP/storage boundary and physical devices are replaced.
+function installRoomDefaultsRuntime(version: 2 | 3, defaults: Partial<RoomSessionRecord> = {}) {
+	installActiveHostRoomRuntime();
+	Object.defineProperty(chrome.storage, "local", {value: {
+		get: vi.fn(async (key: string) => ({[key]: extensionStorage.values.get(`local:${key}`)})),
+	}, configurable: true});
+	let record: RoomSessionRecord = {...confirmedRoomSession(), ...defaults};
+	const common = {hostPlanCode: "pro" as const, maxParticipants: 15 as const, maxCameras: 4 as const, capabilityRevision: 1, capabilitiesValidUntil: "2026-09-15T20:00:00Z"};
+	const capabilities = version === 3
+		? {...common, mediaProtocolVersion: 3 as const, maxMediaSeats: 8 as const}
+		: {...common, mediaProtocolVersion: 2 as const, maxMicrophones: 8 as const};
+	const background = vi.mocked(chrome.runtime.sendMessage);
+	const original = background.getMockImplementation()!;
+	background.mockImplementation(async (...args: any[]) => {
+		const message = args[0];
+		if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE" && ["set-camera-enabled", "set-voice-mode"].includes(message.command)) {
+			if (message.record.revision === record.revision) {
+				record = {...record, revision: record.revision + 1,
+					...(message.command === "set-camera-enabled" ? {cameraEnabled: message.enabled} : {voiceMode: message.mode})};
+			}
+			return {ok: true, record};
+		}
+		const response = await (original as any)(...args);
+		if (message.command === "create-room") return {...response, room: {...response.room, capabilities, roomSession: record}};
+		return response;
+	});
+	let client!: RoomClient;
+	let options!: Parameters<RoomClient["connect"]>[0];
+	let snapshot: import("@anidachi/protocol").RoomMediaSnapshot | undefined;
+	let sequence = 0;
+	const send = vi.spyOn(RoomClient.prototype, "send").mockReturnValue("sent");
+	// connect is replaced at the transport boundary, so its participant map is
+	// unavailable. Keep real command creation, correlation and media authority.
+	vi.spyOn(RoomClient.prototype, "setMediaSeat").mockImplementation(function (this: RoomClient, userId, enabled) {
+		const command = this.media?.setMediaSeat(userId, options.participantSessionId!, enabled);
+		return command ? this.send(command) : "dropped";
+	});
+	const camera = vi.spyOn(P2PMediaController.prototype, "setCameraEnabled").mockResolvedValue();
+	const microphone = vi.spyOn(P2PMediaController.prototype, "setMicrophonePublishing").mockResolvedValue();
+	vi.mocked(RoomClient.prototype.connect).mockImplementation(function (this: RoomClient, next) {
+		client = this; options = next;
+		this.media = new RoomMediaSession(next.roomId, next.participantSessionId!);
+		next.onStatus("connected");
+	});
+	const enabledIntents = () => send.mock.calls.map(([event]) => event).filter((event): event is import("@anidachi/protocol").MediaIntent => event.type === "SET_MEDIA_INTENT" && event.enabled);
+	const emit = async (event: import("@anidachi/protocol").ServerEvent) => {
+		await act(async () => { if (client.media!.consume(event)) options.onEvent(event); });
+		await flushMountedWork();
+	};
+	return {
+		record: () => record, camera, microphone, enabledIntents,
+		async status(status: "connected" | "closed") {
+			await act(async () => options.onStatus(status));
+		},
+		async seatResult(code: "OK" | "MEDIA_LIMIT_REACHED" = "OK", requestId?: string) {
+			const command = send.mock.calls.map(([event]) => event).filter(event => event.type === "SET_MEDIA_SEAT").at(-1)!;
+			expect(command).toBeDefined();
+			await emit({type: "MEDIA_SEAT_RESULT", requestId: requestId ?? command.requestId,
+				targetParticipantSessionId: command.targetParticipantSessionId, code,
+				snapshot: snapshot as Extract<import("@anidachi/protocol").ServerEvent, {type: "MEDIA_SEAT_RESULT"}>["snapshot"]});
+		},
+		storageWrites: () => background.mock.calls.map(([message]: any) => message).filter(message => message.type === "ANIDACHI_ROOM_SESSION_STORAGE" && message.command.startsWith("set-")),
+		async roomSnapshot() {
+			await vi.waitFor(() => expect(options).toBeDefined());
+			await emit({type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1,
+				participants: [{...hostParticipant(), participantSessionId: options.participantSessionId, connected: true}]});
+		},
+		async mediaSnapshot({seat = true, seatRevision = 0, remoteCameras = 0, epoch = 0} = {}) {
+			const previous = snapshot?.participants[0];
+			const local = {participantSessionId: options.participantSessionId!, cameraGranted: false, microphoneGranted: false, cameraIntentSequence: 0, microphoneIntentSequence: 0,
+				...previous,
+				...(!seat || (previous && previous.cameraRevocationEpoch !== epoch) ? {cameraGranted: false, microphoneGranted: false} : {}),
+				cameraRevocationEpoch: epoch, microphoneRevocationEpoch: epoch,
+				...(version === 3 ? {mediaSeatGranted: seat, seatRevision} : {})};
+			snapshot = {type: "ROOM_MEDIA_SNAPSHOT", roomId: "room-a", roomGeneration: 1, snapshotSequence: ++sequence, closingAt: null, capabilities,
+				participants: [local, ...Array.from({length: remoteCameras}, (_, index) => ({...local, participantSessionId: `remote-${index}`, cameraGranted: true}))]} as import("@anidachi/protocol").RoomMediaSnapshot;
+			await emit(snapshot);
+		},
+		async reject(kind: "camera" | "microphone") {
+			const intent = enabledIntents().filter(intent => intent.media === kind).at(-1)!;
+			const state = {...snapshot!.participants[0], [`${kind}Granted`]: false, [`${kind}IntentSequence`]: intent.intentSequence};
+			snapshot = {...snapshot, participants: [state]} as import("@anidachi/protocol").RoomMediaSnapshot;
+			await emit({...intent, type: "MEDIA_INTENT_ERROR", code: "MEDIA_LIMIT_REACHED", snapshotSequence: ++sequence, state});
+		},
+		async ack(kind: "camera" | "microphone") {
+			const intent = enabledIntents().filter(intent => intent.media === kind).at(-1);
+			expect(intent, `Missing saved ${kind} intent`).toBeDefined();
+			const local = snapshot!.participants[0];
+			const state = {...local, [`${kind}Granted`]: true, [`${kind}IntentSequence`]: intent!.intentSequence};
+			snapshot = {...snapshot, participants: [state]} as import("@anidachi/protocol").RoomMediaSnapshot;
+			await emit({...intent!, type: "MEDIA_INTENT_ACK", snapshotSequence: ++sequence, state});
+		},
+	};
 }
 
 function deferred<T>(): {

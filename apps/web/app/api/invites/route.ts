@@ -25,7 +25,10 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const data = await listRoomInvites(session.userId);
+    const data = await listRoomInvites(
+      session.userId,
+      request.nextUrl.searchParams.get("roomId") ?? undefined,
+    );
     const response: RoomInvitesResponse = {
       meta: createAccountResponseMeta(),
       ...data,

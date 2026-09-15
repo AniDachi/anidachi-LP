@@ -2,6 +2,7 @@ import type { RoomInvite } from "@anidachi/protocol";
 import { describe, expect, it } from "vitest";
 import {
 	mergeRoomInviteTargetStatus,
+	roomInviteEligibleRecipientIds,
 	roomInviteGroupStatus,
 	roomInviteTargetStatuses,
 	roomInviteTargetStatusLabel,
@@ -12,6 +13,20 @@ const FRIEND_ID = "11111111-1111-4111-8111-111111111111";
 const GROUP_ID = "22222222-2222-4222-8222-222222222222";
 
 describe("room invite target status", () => {
+	it("allows accepted absent and new recipients while excluding current, pending, declined, and expired recipients", () => {
+		const statuses = roomInviteTargetStatuses([
+			invite("direct", "accepted"),
+			inviteFor("pending-friend", "pending"),
+			inviteFor("declined-friend", "declined"),
+			inviteFor("expired-friend", "expired"),
+		], ROOM_ID);
+
+		expect(roomInviteEligibleRecipientIds(
+			[FRIEND_ID, "new-friend", "pending-friend", "declined-friend", "expired-friend", "in-room"],
+			statuses,
+			new Set(["in-room"]),
+		)).toEqual([FRIEND_ID, "new-friend"]);
+	});
 	it("restores pending and accepted target state from canonical sent invites", () => {
 		const statuses = roomInviteTargetStatuses(
 			[
@@ -99,6 +114,17 @@ describe("room invite target status", () => {
 		expect(current.get(`friend:${FRIEND_ID}`)?.state).toBe("declined");
 	});
 });
+
+function inviteFor(
+	userId: string,
+	status: RoomInvite["recipients"][number]["status"],
+): RoomInvite {
+	const value = invite("direct", status);
+	return {
+		...value,
+		recipients: [{ ...value.recipients[0]!, user: { ...value.recipients[0]!.user, userId } }],
+	};
+}
 
 function requireValue<T>(value: T | null | undefined, label: string): T {
 	if (value === null || value === undefined) {

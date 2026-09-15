@@ -1,12 +1,96 @@
 # Current Development State
 
-Last updated: 2026-09-13.
+Last updated: 2026-09-15.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
 contain old paths, old domains, or old decisions. When release channels,
 endpoints, branch protection, or store workflow changes, update this document in
 the same PR.
+
+## Free quota reset notice, 2026-09-15
+
+The drawer shows a compact countdown after the host's daily Free budget is used
+up, including after reopening it. The authenticated, read-only
+`GET /api/me/room-quota` returns current entitlements, committed usage, server time
+and the next UTC midnight; responses are private and not cached. The extension
+uses server time plus monotonic elapsed time. A clock jump or resume triggers a
+new server read, and zero never grants permission or starts a room. Guests see
+that the host's time ended, rather than being assigned the host's exhausted quota.
+
+This adds an HTTP metadata contract and presentation only. Existing Worker
+metering, room admission, the Free allowance, SQL and media behavior stay intact.
+The endpoint deploys before delivery of the new private production ZIP. Local
+tests cover clock changes, sleep, UTC rollover, offline status, refresh and account
+changes; isolated browser checks cover narrow layouts and keyboard retry. Exact
+release receipts and remaining installed-extension acceptance belong to the PR.
+See the [quota follow-up](superpowers/plans/2026-09-08-personal-history-and-plans-mvp.md#free-quota-countdown-follow-up-2026-09-15).
+
+## Extension visibility and compact People, 2026-09-15
+
+The owner requested discoverable first-install controls and a shorter room panel.
+Main control and participant pills now default to Always visible for an
+unconfigured installation; valid stored choices remain unchanged. People shows
+two rows with a Show N more / Show less disclosure for the remaining participants,
+a bounded inner scroll area and expansion retained when reopening the same room.
+This is local presentation only: room authority and media behavior are unchanged.
+See the [interface visibility design](superpowers/specs/2026-07-30-interface-visibility-settings-design.md).
+Verification and private production ZIP receipts belong to the release PR;
+public ZIP/Store publication remains excluded.
+
+## Room invitation return correction, 2026-09-14
+
+The approved [invitation return plan](superpowers/plans/2026-09-14-room-invite-return.md)
+replaces permanent same-room deduplication for accepted participants who leave.
+The host uses the ordinary **Invite** action; pending, in-room and declined
+targets remain protected against duplicate delivery. Accepted guests retain a
+seen **Return** card while the room and friendship are active. Return uses normal
+admission and does not alter media-seat or camera/microphone defaults.
+
+The additive migration must deploy before the web runtime. New Inbox clients
+opt in to v3; existing clients retain v2 responses. SQL, web and extension evidence
+and actual staging/main delivery receipts belong to the plan and release PRs.
+Private tester delivery is authorized; physical two-account acceptance remains
+separate from automated tests. Public ZIP/Store publication remains excluded.
+
+## Room defaults correction, 2026-09-14
+
+Private testing reported that saved microphone/camera defaults were not applied
+in new media-seat rooms. The extension correction restores initial admission
+intent and Last used persistence and waits for media authority. The September 15
+follow-up applies saved defaults after a confirmed explicit grant of the host's
+own seat. Grants to other participants and passive regrants remain silent. It needs no server or database change. See the
+[room-defaults correction](releases/room-media-seats/2026-09-14-room-defaults-fix.md)
+for the cause, behavior, verification and private tester acceptance boundary.
+
+## Host-managed media seats, 2026-09-14
+
+The owner-approved [media-seat plan](superpowers/plans/2026-09-14-host-managed-media-seats.md)
+was delivered to staging through PRs [#316](https://github.com/AniDachi/anidachi-LP/pull/316)
+and [#318](https://github.com/AniDachi/anidachi-LP/pull/318), source `293da9f1`. New media-v3 rooms use
+4/6/8 host-managed seats for Free/Plus/Pro, within the existing 4/6/15-person
+and four-camera limits. A seat permits microphone use and requesting a camera
+slot; granting it never activates another participant's device. Revocation stops both publications
+while incoming media continues. Existing v2 rooms keep their original contract.
+
+Protocol, Web/SQL, Worker and extension changes have scoped reviews and local
+regression evidence. Full local SQL verification passed 1087 assertions;
+the final extension suite passed 1967 tests. Real-browser v3 scenarios passed
+for all three plans, and the staging artifact was built and validated.
+Whole-branch review and the scoped persistence-error correction are approved.
+Staging Web, compatible Worker and all 62 migrations are deployed. Staging CI,
+room/P2P suites, Web/Worker smoke and hosted runtime-role create/renew/claim
+checks passed. On September 14 the owner explicitly requested production
+promotion and chose to perform exact loaded-extension and physical two-device
+acceptance there. These manual checks remain pending; they are not a completed
+staging acceptance. Production delivery uses compatible prerequisites in
+[#320](https://github.com/AniDachi/anidachi-LP/pull/320), then Web activation in
+[#317](https://github.com/AniDachi/anidachi-LP/pull/317). The promotion PR records
+actual production deployment, hosted-check and final-main ZIP receipts. Only a
+private tester ZIP is authorized; public website download and Store publication
+remain outside this release. `f9e6b964` is the production base before this release.
+See the [delivery and verification record](releases/room-media-seats/2026-09-14-delivery.md)
+for exact evidence, rollout ordering and remaining acceptance.
 
 ## Room renewal correction, 2026-09-13
 
@@ -282,12 +366,19 @@ Local verification and loaded-artifact evidence are recorded in the plan/PR.
 
 The [approved account workspace](superpowers/specs/2026-09-10-account-mvp-navigation-design.md)
 replaces Overview with Watch Library as the default landing. Primary navigation
-is Watch Library, Friends & Groups and Subscription; Share an idea and Help are
-secondary links, and Profile opens from the avatar. Notifications use a header
+is Watch Library, Friends & Groups and Subscription; Report a bug, Share an idea
+and Help are secondary links, and Profile opens from the avatar. Notifications use a header
 dialog backed by the existing account inbox; the old `/account/invites` URL
 remains compatible. The website checks counts only while visible, on focus and
 on a one-minute timer; it does not acknowledge unseen items until opened.
 Extension push/notification delivery remains unchanged.
+
+The September 14 feedback correction restores `/account/bug-report` with a compact
+form and prefilled account contact details. It reuses `/api/contact` with category
+`support` and a `[Bug report]` subject prefix; suggestions keep their separate
+existing form. Failed submissions retain the draft and success requires the
+existing durable-storage acknowledgement. No new storage, endpoint contract,
+notification channel or extension build is needed.
 
 Friends uses two switches, inline requests and an Add friend dialog. Transient
 view controls stay in the mounted owner-keyed account workspace; canonical data

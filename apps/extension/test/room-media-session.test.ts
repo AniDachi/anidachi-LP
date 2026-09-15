@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { RoomMediaSession } from "../src/room-media-session";
-import type { RoomMediaSnapshot } from "@anidachi/protocol";
-const snapshot = (seq = 1, epoch = 0): RoomMediaSnapshot => ({
+import type { RoomMediaV2Snapshot } from "@anidachi/protocol";
+const snapshot = (seq = 1, epoch = 0): RoomMediaV2Snapshot => ({
 	type: "ROOM_MEDIA_SNAPSHOT",
 	roomId: "room",
 	roomGeneration: 1,
@@ -29,8 +29,58 @@ const snapshot = (seq = 1, epoch = 0): RoomMediaSnapshot => ({
 	closingAt: null,
 });
 describe("independent media session", () => {
+	it.each([[true, true], [false, true], [true, false], [false, false]])("keeps a settled enabled=%s intent after a duplicate (ACK received=%s)", (enabled, acknowledged) => {
+		const s = new RoomMediaSession("room", "session");
+		s.bindRoomGeneration(1);
+		s.consume(snapshot());
+		const intent = s.intent("microphone", enabled)!;
+		const state = {...snapshot().participants[0], microphoneGranted: enabled, microphoneIntentSequence: intent.intentSequence};
+		if (acknowledged) s.consume({...intent, type: "MEDIA_INTENT_ACK", snapshotSequence: 2, state});
+		s.consume({...intent, type: "MEDIA_INTENT_ERROR", code: "MEDIA_STALE_INTENT", snapshotSequence: 2, state});
+		expect(s.error).toBeNull();
+		expect(s.wants("microphone")).toBe(enabled);
+		expect(s.canCapture("microphone")).toBe(enabled);
+	});
+
+	it.each(["MEDIA_STALE_INTENT", "MEDIA_CAPABILITY_EXPIRED"] as const)("never grants capture from a rejected enable with code %s", (code) => {
+		const s = new RoomMediaSession("room", "session");
+		s.bindRoomGeneration(1);
+		s.consume(snapshot());
+		const intent = s.intent("camera", true)!;
+		s.consume({...intent, type: "MEDIA_INTENT_ERROR", code, snapshotSequence: 2,
+			state: {...snapshot().participants[0], cameraIntentSequence: intent.intentSequence}});
+		expect(s.canCapture("camera")).toBe(false);
+		expect(s.wants("camera")).toBe(false);
+		expect(s.error).not.toBeNull();
+	});
+
+	it.each(["snapshot", "reset"] as const)("does not retain an earlier media error after %s", (next) => {
+		const s = new RoomMediaSession("room", "session");
+		s.bindRoomGeneration(1);
+		s.consume(snapshot());
+		const intent = s.intent("camera", true)!;
+		s.consume({...intent, type: "MEDIA_INTENT_ERROR", code: "MEDIA_LIMIT_REACHED", snapshotSequence: 2,
+			state: {...snapshot().participants[0], cameraIntentSequence: intent.intentSequence}});
+		expect(s.error).toBe("All 4 cameras are in use");
+		if (next === "reset") s.reset(); else s.consume(snapshot(3));
+		expect(s.error).toBeNull();
+	});
+
+	it("does not interpret a rejected request as an elapsed media lease", () => {
+		const s = new RoomMediaSession("room", "session");
+		s.bindRoomGeneration(1);
+		s.consume(snapshot());
+		const intent = s.intent("microphone", true)!;
+		s.consume({...intent, type: "MEDIA_INTENT_ERROR", code: "MEDIA_STALE_INTENT", snapshotSequence: 2,
+			state: {...snapshot().participants[0], microphoneIntentSequence: intent.intentSequence + 1}});
+		expect(s.canCapture("microphone")).toBe(false);
+		expect(s.wants("microphone")).toBe(false);
+		expect(s.error).toBe("Media state changed. Try again.");
+	});
+
 	it("never captures on join/restored grants, requires matching explicit current intent", () => {
 		const s = new RoomMediaSession("room", "session");
+    s.bindRoomGeneration(1);
 		const first = snapshot();
 		first.participants[0].cameraGranted = true;
 		s.consume(first);
@@ -57,6 +107,7 @@ describe("independent media session", () => {
 	});
 	it("revoke epoch stops capture and late high-sequence ACK cannot revive intent", () => {
 		const s = new RoomMediaSession("room", "session");
+    s.bindRoomGeneration(1);
 		s.consume(snapshot());
 		const i = s.intent("camera", true)!;
 		const revoked = snapshot(3, 1);
@@ -76,6 +127,7 @@ describe("independent media session", () => {
 	});
 	it("disable while an enable is in flight wins, and replacement/generation cannot reuse intent", () => {
 		const s = new RoomMediaSession("room", "session");
+    s.bindRoomGeneration(1);
 		s.consume(snapshot());
 		const i = s.intent("microphone", true)!;
 		s.intent("microphone", false);
@@ -92,12 +144,14 @@ describe("independent media session", () => {
 		expect(s.canCapture("microphone")).toBe(false);
 		const next = snapshot(4);
 		next.roomGeneration = 2;
+    s.bindRoomGeneration(2);
 		next.participants[0].microphoneGranted = true;
 		s.consume(next);
 		expect(s.canCapture("microphone")).toBe(false);
 	});
 	it("releases restored grants once without capture and fences a newer explicit enable", () => {
 		const s = new RoomMediaSession("room", "session");
+    s.bindRoomGeneration(1);
 		const restored = snapshot(4, 2);
 		restored.participants[0].cameraGranted = true;
 		restored.participants[0].cameraIntentSequence = 7;
@@ -134,6 +188,7 @@ describe("independent media session", () => {
 	});
 	it("reconciles interrupted off once per transport without releasing new intent or epoch", () => {
 		const s = new RoomMediaSession("room", "session");
+    s.bindRoomGeneration(1);
 		s.consume(snapshot());
 		s.releaseRestoredGrants();
 		const on = s.intent("camera", true)!;
@@ -179,6 +234,7 @@ describe("independent media session", () => {
 	});
 	it("does not retry a committed off with a lost ACK", () => {
 		const s = new RoomMediaSession("room", "session");
+    s.bindRoomGeneration(1);
 		s.consume(snapshot());
 		s.releaseRestoredGrants();
 		const off = s.intent("camera", false)!;
@@ -192,6 +248,7 @@ describe("independent media session", () => {
 
 	it("releases only a terminal failure's exact current enabled owner", () => {
 		const s = new RoomMediaSession("room", "session");
+    s.bindRoomGeneration(1);
 		s.consume(snapshot());
 		const camera = s.intent("camera", true)!;
 		const mic = s.intent("microphone", true)!;

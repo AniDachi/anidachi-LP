@@ -16,9 +16,21 @@ const CATEGORY_LABELS: Record<ContactCategory, string> = {
   other: "Other",
 };
 
-export function ContactForm() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+const BUG_REPORT_SUBJECT_PREFIX = "[Bug report] ";
+
+const publicFieldClass =
+  "w-full rounded-xl border border-ani-control-border bg-ani-canvas px-3.5 py-2.5 text-ani-text outline-none transition-colors focus:border-ani-focus focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ani-focus";
+
+export function ContactForm({
+  variant = "public",
+  initialContact,
+}: {
+  variant?: "public" | "bug-report";
+  initialContact?: { name: string; email: string };
+}) {
+  const isBugReport = variant === "bug-report";
+  const [name, setName] = useState(initialContact?.name ?? "");
+  const [email, setEmail] = useState(initialContact?.email ?? "");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [category, setCategory] = useState<ContactCategory>("support");
@@ -28,8 +40,20 @@ export function ContactForm() {
   >("idle");
   const [error, setError] = useState<string | null>(null);
 
+  const fieldClass = isBugReport
+    ? "w-full rounded-xl border border-brand-border bg-background px-3.5 py-2.5 text-foreground outline-none transition-colors focus:border-brand-orange"
+    : publicFieldClass;
+  const labelClass = isBugReport
+    ? "mb-1.5 block font-medium text-foreground"
+    : "mb-1.5 block font-medium text-ani-text";
+
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (status === "submitting") return;
+    if (isBugReport && !subject.trim()) {
+      setError("Add a short title for the problem.");
+      return;
+    }
     setStatus("submitting");
     setError(null);
 
@@ -40,9 +64,11 @@ export function ContactForm() {
         body: JSON.stringify({
           name,
           email,
-          subject,
+          subject: isBugReport
+            ? `${BUG_REPORT_SUBJECT_PREFIX}${subject.trim()}`
+            : subject,
           message,
-          category,
+          category: isBugReport ? "support" : category,
           company_website: honeypot,
         }),
       });
@@ -53,8 +79,10 @@ export function ContactForm() {
         return;
       }
       setStatus("success");
-      setName("");
-      setEmail("");
+      if (!isBugReport) {
+        setName("");
+        setEmail("");
+      }
       setSubject("");
       setMessage("");
       setCategory("support");
@@ -68,96 +96,162 @@ export function ContactForm() {
   if (status === "success") {
     return (
       <div
-        className="rounded-[20px] border border-ani-line bg-ani-panel px-6 py-8 text-center"
+        className={
+          isBugReport
+            ? "ac-empty ac-form-success"
+            : "rounded-[20px] border border-ani-line bg-ani-panel px-6 py-8 text-center"
+        }
         role="status"
       >
-        <p className="text-lg font-semibold tracking-[-0.01em] text-ani-text">
-          Message sent
+        <p
+          className={
+            isBugReport
+              ? "text-lg font-semibold tracking-[-0.01em] text-foreground"
+              : "text-lg font-semibold tracking-[-0.01em] text-ani-text"
+          }
+        >
+          {isBugReport ? "Bug report sent" : "Message sent"}
         </p>
-        <p className="mt-2 text-sm leading-relaxed text-ani-muted">
-          We typically reply within a few business days. Urgent billing issues —
-          put “Billing” in the subject next time.
+        <p
+          className={
+            isBugReport
+              ? "mt-2 text-sm leading-relaxed text-foreground/65"
+              : "mt-2 text-sm leading-relaxed text-ani-muted"
+          }
+        >
+          {isBugReport
+            ? "Thanks for helping us improve AniDachi. We will reply to your email if we need more details."
+            : "We typically reply within a few business days. Urgent billing issues — put “Billing” in the subject next time."}
         </p>
         <Button
           type="button"
           variant="ghost"
-          className="mt-6 border border-ani-line"
+          className={
+            isBugReport ? "ac-button mt-6" : "mt-6 border border-ani-line"
+          }
           onClick={() => setStatus("idle")}
         >
-          Send another message
+          {isBugReport ? "Report another bug" : "Send another message"}
         </Button>
       </div>
     );
   }
 
-  return (
-    <form onSubmit={onSubmit} className="relative space-y-5" noValidate>
-      <div className="grid gap-5 sm:grid-cols-2">
-        <label className="block text-sm">
-          <span className="mb-1.5 block font-medium text-ani-text">Name</span>
-          <input
-            required
-            maxLength={120}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-xl border border-ani-control-border bg-ani-canvas px-3.5 py-2.5 text-ani-text outline-none transition-colors focus:border-ani-focus focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ani-focus"
-            autoComplete="name"
-          />
-        </label>
-        <label className="block text-sm">
-          <span className="mb-1.5 block font-medium text-ani-text">Email</span>
-          <input
-            required
-            type="email"
-            maxLength={254}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-xl border border-ani-control-border bg-ani-canvas px-3.5 py-2.5 text-ani-text outline-none transition-colors focus:border-ani-focus focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ani-focus"
-            autoComplete="email"
-          />
-        </label>
-      </div>
-
+  const contactFields = (
+    <div className="grid gap-5 sm:grid-cols-2">
       <label className="block text-sm">
-        <span className="mb-1.5 block font-medium text-ani-text">Topic</span>
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value as ContactCategory)}
-          className="w-full rounded-xl border border-ani-control-border bg-ani-canvas px-3.5 py-2.5 text-ani-text outline-none transition-colors focus:border-ani-focus focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ani-focus"
-        >
-          {CONTACT_CATEGORIES.map((value) => (
-            <option key={value} value={value}>
-              {CATEGORY_LABELS[value]}
-            </option>
-          ))}
-        </select>
+        <span className={labelClass}>Name</span>
+        <input
+          disabled={status === "submitting"}
+          required
+          maxLength={120}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className={fieldClass}
+          autoComplete="name"
+        />
       </label>
+      <label className="block text-sm">
+        <span className={labelClass}>Email</span>
+        <input
+          disabled={status === "submitting"}
+          required
+          type="email"
+          maxLength={254}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className={fieldClass}
+          autoComplete="email"
+        />
+      </label>
+    </div>
+  );
+
+  return (
+    <form
+      onSubmit={onSubmit}
+      className={
+        isBugReport
+          ? "ac-request-form relative space-y-5"
+          : "relative space-y-5"
+      }
+      noValidate={!isBugReport}
+    >
+      {!isBugReport ? contactFields : null}
+
+      {!isBugReport ? (
+        <label className="block text-sm">
+          <span className={labelClass}>Topic</span>
+          <select
+            disabled={status === "submitting"}
+            value={category}
+            onChange={(e) => setCategory(e.target.value as ContactCategory)}
+            className={fieldClass}
+          >
+            {CONTACT_CATEGORIES.map((value) => (
+              <option key={value} value={value}>
+                {CATEGORY_LABELS[value]}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
 
       <label className="block text-sm">
-        <span className="mb-1.5 block font-medium text-ani-text">Subject</span>
+        <span className={labelClass}>
+          {isBugReport ? "Short title" : "Subject"}
+        </span>
         <input
           required
-          maxLength={160}
+          disabled={status === "submitting"}
+          maxLength={isBugReport ? 160 - BUG_REPORT_SUBJECT_PREFIX.length : 160}
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
-          className="w-full rounded-xl border border-ani-control-border bg-ani-canvas px-3.5 py-2.5 text-ani-text outline-none transition-colors focus:border-ani-focus focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ani-focus"
+          placeholder={
+            isBugReport ? "e.g. Microphone stays muted" : undefined
+          }
+          className={fieldClass}
         />
       </label>
 
       <label className="block text-sm">
-        <span className="mb-1.5 block font-medium text-ani-text">Message</span>
+        <span className={labelClass}>
+          {isBugReport ? "What happened?" : "Message"}
+        </span>
         <textarea
           required
+          disabled={status === "submitting"}
           maxLength={4000}
           rows={6}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Include the page URL, browser, and extension version when relevant."
-          className="w-full resize-y rounded-xl border border-ani-control-border bg-ani-canvas px-3.5 py-2.5 text-ani-text outline-none transition-colors placeholder:text-ani-muted focus:border-ani-focus focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ani-focus"
+          placeholder={
+            isBugReport
+              ? "What were you doing, what did you expect, and what happened instead?"
+              : "Include the page URL, browser, and extension version when relevant."
+          }
+          className={
+            isBugReport
+              ? `resize-y ${fieldClass}`
+              : "w-full resize-y rounded-xl border border-ani-control-border bg-ani-canvas px-3.5 py-2.5 text-ani-text outline-none transition-colors placeholder:text-ani-muted focus:border-ani-focus focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ani-focus"
+          }
         />
       </label>
 
-      <div className="absolute -left-[9999px] h-0 w-0 overflow-hidden" aria-hidden>
+      {isBugReport ? (
+        <>
+          <div className="ac-form-contact-heading">
+            <h2>Your contact details</h2>
+            <p>We will use this email if we need to follow up.</p>
+          </div>
+          {contactFields}
+        </>
+      ) : null}
+
+      <div
+        className="absolute -left-[9999px] h-0 w-0 overflow-hidden"
+        aria-hidden
+      >
         <label>
           Company website
           <input
@@ -178,11 +272,19 @@ export function ContactForm() {
       <Button
         type="submit"
         disabled={status === "submitting"}
-        className="w-full sm:w-auto"
-        variant="cream"
-        size="control"
+        className={
+          isBugReport
+            ? "ac-button ac-button-primary"
+            : "w-full sm:w-auto"
+        }
+        variant={isBugReport ? undefined : "cream"}
+        size={isBugReport ? undefined : "control"}
       >
-        {status === "submitting" ? "Sending…" : "Send message"}
+        {status === "submitting"
+          ? "Sending…"
+          : isBugReport
+            ? "Send bug report"
+            : "Send message"}
       </Button>
     </form>
   );

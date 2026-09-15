@@ -12,7 +12,10 @@ import {
 } from "@/lib/anidachi-auth/db";
 import { getExtensionSessionFromAuthorization } from "@/lib/anidachi-auth/extension-session";
 import { resolveAccountEntitlements } from "@/lib/anidachi-auth/account-entitlements";
-import { roomMediaLease } from "@/lib/anidachi-auth/room-capability";
+import {
+  clientMediaProtocolVersion,
+  negotiateRoomMediaLease,
+} from "@/lib/anidachi-auth/room-media-negotiation";
 import { signRoomToken } from "@/lib/anidachi-auth/jwt";
 import {
   getHostQuotaView,
@@ -99,9 +102,15 @@ export async function POST(
 			{ status: 503 },
 		);
 	}
-	const mediaLease = roomMediaLease(room);
-	if (mediaLease && request.headers.get("x-anidachi-media-protocol") !== "2")
-		return NextResponse.json({ code: "ROOM_UPDATE_REQUIRED" }, { status: 426 });
+	const mediaProtocolVersion = clientMediaProtocolVersion(request.headers.get("x-anidachi-media-protocol"));
+  if (mediaProtocolVersion === null)
+    return NextResponse.json({ code: "ROOM_UPDATE_REQUIRED" }, { status: 426 });
+  let mediaLease;
+  try {
+    mediaLease = negotiateRoomMediaLease(room.media_lease, mediaProtocolVersion);
+  } catch {
+    return NextResponse.json({ code: "ROOM_UPDATE_REQUIRED" }, { status: 426 });
+  }
 	const userPlan = room.host_plan_code;
   const capabilities = roomCapabilitiesFromRoom(room);
   let tokenTtlSeconds = ROOM_TOKEN_TTL_SECONDS;
@@ -121,14 +130,20 @@ export async function POST(
   }
 
   const role = isHost ? "host" : "member";
-  const admission = await claimActiveRoomSession({
-    userId: session.userId,
-		mediaProtocolVersion:
-			request.headers.get("x-anidachi-media-protocol") === "2" ? 2 : 1,
-    roomId,
-    role,
-    participantSessionId: admissionInput.data.participantSessionId,
-  });
+  let admission;
+  try {
+    admission = await claimActiveRoomSession({
+      userId: session.userId,
+      mediaProtocolVersion,
+      roomId,
+      role,
+      participantSessionId: admissionInput.data.participantSessionId,
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message === "ROOM_UPDATE_REQUIRED")
+      return NextResponse.json({ code: "ROOM_UPDATE_REQUIRED" }, { status: 426 });
+    throw error;
+  }
   if (admission.outcome === "conflict") {
 		return NextResponse.json(activeRoomConflictResponse(admission.activeRoom), {
 			status: 409,

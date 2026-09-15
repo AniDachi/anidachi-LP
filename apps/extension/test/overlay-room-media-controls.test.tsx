@@ -1,5 +1,5 @@
 import type { Participant } from "@anidachi/protocol";
-import { act } from "react";
+import { act, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
@@ -156,6 +156,38 @@ describe("RoomPeopleSection", () => {
 		await unmount(view.root);
 	});
 
+	it("reveals extra participants without changing their media seats", async () => {
+		const host = participant("host", "Host", "host", "joined", false);
+		const others = ["One", "Two", "Three"].map(name => participant(name, name, "viewer", "none", false));
+		const onGrantMediaSeat = vi.fn();
+		const view = await renderPeople({ currentParticipantId: "host", participants: [host, ...others], onGrantMediaSeat });
+		try {
+			const toggle = getButton(view.container, "Show 2 more participants");
+			const extra = view.container.querySelector(".room-people-extra");
+			expect(toggle.getAttribute("aria-expanded")).toBe("false");
+			expect(toggle.getAttribute("aria-controls")).toBe(extra?.id);
+			expect(extra?.getAttribute("aria-hidden")).toBe("true");
+			expect(extra?.hasAttribute("inert")).toBe(true);
+			expect(view.container.querySelectorAll(".room-people-list > .room-people-entry")).toHaveLength(2);
+			await click(toggle);
+			expect(toggle.getAttribute("aria-expanded")).toBe("true");
+			expect(extra?.getAttribute("aria-hidden")).toBe("false");
+			expect(extra?.hasAttribute("inert")).toBe(false);
+			expect(onGrantMediaSeat).not.toHaveBeenCalled();
+			await click(getButton(extra as HTMLElement, "Give seat"));
+			expect(onGrantMediaSeat).toHaveBeenCalledWith("Two");
+			await click(getButton(view.container, "Show fewer participants"));
+			expect(extra?.getAttribute("aria-hidden")).toBe("true");
+			expect(extra?.hasAttribute("inert")).toBe(true);
+		} finally { await unmount(view.root); }
+	});
+
+	it.each([1, 2])("shows %i participants without an unnecessary disclosure", async (count) => {
+		const view = await renderPeople({ participants: Array.from({length: count}, (_, i) => participant(String(i), `User ${i}`, "viewer", "none", false)) });
+		try { expect(view.container.querySelector(".room-people-toggle")).toBeNull(); }
+		finally { await unmount(view.root); }
+	});
+
 	it("keeps speaking feedback local to the participant identity", async () => {
 		const host = participant("host", "Host User", "host", "joined", true);
 		const view = await renderPeople({
@@ -280,6 +312,8 @@ describe("RoomPeopleSection", () => {
 });
 
 const defaultPeopleProps = {
+	expanded: false,
+	onExpandedChange: vi.fn(),
 	currentParticipantId: "self",
 	liveVoiceActiveSpeakerIds: [] as string[],
 	maxMediaSeats: 4,
@@ -295,7 +329,12 @@ const defaultPeopleProps = {
 async function renderPeople(
 	props: Partial<React.ComponentProps<typeof RoomPeopleSection>>,
 ): Promise<RenderedView> {
-	return render(<RoomPeopleSection {...defaultPeopleProps} {...props} />);
+	return render(<PeopleHarness {...props} />);
+}
+
+function PeopleHarness(props: Partial<React.ComponentProps<typeof RoomPeopleSection>>) {
+	const [expanded, setExpanded] = useState(false);
+	return <RoomPeopleSection {...defaultPeopleProps} {...props} expanded={expanded} onExpandedChange={setExpanded} />;
 }
 
 function participant(
@@ -374,5 +413,57 @@ describe("independent room media controls", () => {
  it("pending v2 presents no legacy seat request or capture action", async () => {
   const view=await renderPeople({mediaSnapshot:null}); expect(getButton(view.container,"Enable microphone").disabled).toBe(true);
   expect(view.container.textContent).toContain("Waiting for room media permissions"); await unmount(view.root);
+ });
+});
+
+describe("v3 host media-seat controls", () => {
+ const participants = [
+  {...participant("host", "A host with a long display name", "host", "none", false), participantSessionId: "host-session"},
+  {...participant("guest", "Guest", "viewer", "none", false), participantSessionId: "guest-session"},
+ ];
+ const snapshot: import("@anidachi/protocol").RoomMediaV3Snapshot = {
+  type: "ROOM_MEDIA_SNAPSHOT", roomId: "room", roomGeneration: 1, snapshotSequence: 1, closingAt: null,
+  capabilities: {mediaProtocolVersion: 3, hostPlanCode: "free", maxParticipants: 4, maxMediaSeats: 4, maxCameras: 4, capabilityRevision: 1, capabilitiesValidUntil: "2026-09-15T12:30:00Z"},
+  participants: participants.map((p, i) => ({participantSessionId: p.participantSessionId, mediaSeatGranted: i === 0, seatRevision: 0, cameraGranted: false, microphoneGranted: false, cameraIntentSequence: 0, microphoneIntentSequence: 0, cameraRevocationEpoch: 0, microphoneRevocationEpoch: 0})),
+ };
+ it("offers one confirmed seat action per row including the host's own seat", async () => {
+  const onSetMediaSeat = vi.fn();
+  const view = await renderPeople({participants, mediaSnapshot: snapshot, currentParticipantId: "host", onSetMediaSeat});
+  try {
+   expect(view.container.textContent).toContain("1/4 media seats · 0/4 cameras");
+   expect(view.container.textContent).not.toMatch(/Enable microphone|Disable microphone|Revoke microphone|Revoke camera/);
+   const revoke = getButton(view.container, "Revoke media seat: A host with a long display name");
+   expect(revoke.getAttribute("aria-pressed")).toBe("true");
+   expect(revoke.querySelector(".lucide-radio")).not.toBeNull();
+   await click(revoke); expect(onSetMediaSeat).toHaveBeenCalledWith("host", false);
+   expect(revoke.getAttribute("aria-pressed")).toBe("true");
+   await click(getButton(view.container, "Grant media seat: Guest"));
+   expect(onSetMediaSeat).toHaveBeenLastCalledWith("guest", true);
+  } finally {await unmount(view.root);}
+ });
+ it("shows passive seat indicators to guests", async () => {
+  const view = await renderPeople({participants, mediaSnapshot: snapshot, currentParticipantId: "guest"});
+  try {expect(view.container.querySelectorAll("button")).toHaveLength(0); expect(view.container.querySelectorAll(".room-media-seat-control")).toHaveLength(2);}
+  finally {await unmount(view.root);}
+ });
+ it("keeps full-capacity and row-specific pending/error reasons accessible", async () => {
+  const full = {...snapshot, capabilities: {...snapshot.capabilities, hostPlanCode: "pro" as const, maxParticipants: 15 as const, maxMediaSeats: 8 as const}, participants: [...snapshot.participants, ...Array.from({length: 7}, (_, i) => ({...snapshot.participants[0], participantSessionId: `extra-${i}`}))]};
+  const view = await renderPeople({participants, mediaSnapshot: full, currentParticipantId: "host", seatControls: new Map([["host", {pending: true}], ["guest", {pending: false, error: "Participant reconnected. Try again."}]])});
+  try {
+   expect(getButton(view.container, "Grant media seat: Guest").disabled).toBe(true);
+   expect(getButton(view.container, "Revoke media seat: A host with a long display name").disabled).toBe(true);
+   expect(view.container.textContent).toContain("All media seats are in use. Free a seat first.");
+   expect(view.container.querySelector('[role="alert"]')?.closest(".room-people-entry")?.textContent).toContain("Guest");
+  } finally {await unmount(view.root);}
+ });
+ it("omits the full-seat warning when all current members already have seats", async () => {
+  const allParticipants = [...participants, ...["third", "fourth"].map(id => ({...participant(id, id, "viewer", "none", false), participantSessionId: `${id}-session`}))];
+  const allSeated = {...snapshot, participants: allParticipants.map(p => ({...snapshot.participants[0], participantSessionId: p.participantSessionId, mediaSeatGranted: true}))};
+  const view = await renderPeople({participants: allParticipants, mediaSnapshot: allSeated, currentParticipantId: "host"});
+  try {
+   expect(view.container.textContent).toContain("4/4 media seats");
+   expect(view.container.textContent).not.toContain("All media seats are in use");
+   expect([...view.container.querySelectorAll("button")].every(button => !button.disabled)).toBe(true);
+  } finally {await unmount(view.root);}
  });
 });

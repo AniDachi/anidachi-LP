@@ -32,7 +32,7 @@ import { requestAccountNavigation } from "@/components/account/account-workspace
 type AccountInboxItem = AccountInboxResponse["items"][number];
 type ActiveRoomInvite = Extract<
   AccountInboxItem,
-  { kind: "room-invite"; state: "active" }
+  { kind: "room-invite"; state: "active" | "returnable" }
 >;
 type MissedRoomInvite = Extract<
   AccountInboxItem,
@@ -142,7 +142,7 @@ async function acknowledgeInboxPageSeen(
   const unseenItems = accountInboxSeenItems(page);
   if (unseenItems.length === 0) return page;
 
-  const payload = await api<unknown>("/api/account/inbox/seen?limit=100", {
+  const payload = await api<unknown>("/api/account/inbox/seen?includeReturnable=true&limit=100", {
     method: "POST",
     body: JSON.stringify({ items: unseenItems }),
   });
@@ -186,7 +186,7 @@ export function InvitesClient({ ownerUserId, embedded = false, active = true, on
     () =>
       inbox?.items.filter(
         (item): item is ActiveRoomInvite =>
-          item.kind === "room-invite" && item.state === "active",
+          item.kind === "room-invite" && (item.state === "active" || item.state === "returnable"),
       ) ?? [],
     [inbox],
   );
@@ -207,7 +207,7 @@ export function InvitesClient({ ownerUserId, embedded = false, active = true, on
     setNotice(null);
     try {
       const [inboxResult, invitesResult] = await Promise.allSettled([
-        api<unknown>("/api/account/inbox?limit=100"),
+        api<unknown>("/api/account/inbox?includeReturnable=true&limit=100"),
         api<unknown>("/api/invites"),
       ]);
       if (!isCurrent()) return;
@@ -252,7 +252,7 @@ export function InvitesClient({ ownerUserId, embedded = false, active = true, on
     setNotice(null);
     try {
       const pagePayload = await api<unknown>(
-        `/api/account/inbox?limit=100&cursor=${encodeURIComponent(cursor)}`,
+        `/api/account/inbox?includeReturnable=true&limit=100&cursor=${encodeURIComponent(cursor)}`,
       );
       let page = parseOwnedAccountInboxResponse(pagePayload, ownerUserId);
       try {
@@ -265,9 +265,7 @@ export function InvitesClient({ ownerUserId, embedded = false, active = true, on
         });
       }
       if (!isCurrent()) return;
-      setInbox((current) =>
-        current ? appendAccountInboxPage(current, page) : page,
-      );
+      setInbox((current) => (current ? appendAccountInboxPage(current, page) : page));
       onCountsRef.current?.(page.counts);
     } catch (error) {
       if (!isCurrent()) return;
@@ -536,7 +534,11 @@ export function InvitesClient({ ownerUserId, embedded = false, active = true, on
         </div>
       ) : (
         <div aria-label="Sent invitations" aria-busy={loading}>
-          {sentError ? <p className="ac-notice ac-notice-error" role="alert">{sentError}</p> : null}
+          {sentError ? (
+            <p className="ac-notice ac-notice-error" role="alert">
+              {sentError}
+            </p>
+          ) : null}
           {loading && !inbox ? (
             <p role="status" className="ac-loading">
               Loading invitations…
@@ -649,6 +651,7 @@ function InboxInviteRow({
   onDecline: () => void;
 }) {
   const disabled = busyKey !== null;
+  const returning = invite.state === "returnable";
 
   return (
     <div className="ac-invite-row">
@@ -657,18 +660,14 @@ function InboxInviteRow({
           <Avatar user={invite.sender} />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="ac-invite-title">
-                {invite.roomTitle ?? "Watch room invite"}
-              </h3>
+              <h3 className="ac-invite-title">{invite.roomTitle ?? "Watch room invite"}</h3>
               <span className="ac-live-label">active</span>
             </div>
             <p className="mt-1 text-sm text-foreground/50">
               {invite.targetGroupName ? `${invite.targetGroupName} · ` : ""}
               From {invite.sender.displayName} · {formatDate(invite.activityAt)}
             </p>
-            {invite.message ? (
-              <p className="ac-invite-message">{invite.message}</p>
-            ) : null}
+            {invite.message ? <p className="ac-invite-message">{invite.message}</p> : null}
           </div>
         </div>
         <div className="ac-invite-actions">
@@ -676,19 +675,21 @@ function InboxInviteRow({
             disabled={disabled}
             icon={<Check className="h-4 w-4" aria-hidden />}
             onClick={onAccept}
-            title="Join room"
+            title={returning ? "Return to room" : "Join room"}
             tone="primary"
           >
-            Join
+            {returning ? "Return" : "Join"}
           </IconButton>
-          <IconButton
-            disabled={disabled}
-            icon={<X className="h-4 w-4" aria-hidden />}
-            onClick={onDecline}
-            title="Decline invite"
-          >
-            Decline
-          </IconButton>
+          {!returning ? (
+            <IconButton
+              disabled={disabled}
+              icon={<X className="h-4 w-4" aria-hidden />}
+              onClick={onDecline}
+              title="Decline invite"
+            >
+              Decline
+            </IconButton>
+          ) : null}
         </div>
       </div>
     </div>

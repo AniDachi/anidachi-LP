@@ -25,3 +25,9 @@ export function accountInboxPageLimit(
 	}
 	return limit;
 }
+
+export function accountInboxIncludeReturnable(value: string | null): boolean {
+	if (value === null || value === "false") return false;
+	if (value === "true") return true;
+	throw new AccountInboxApiError(400, "Invalid inbox projection");
+}

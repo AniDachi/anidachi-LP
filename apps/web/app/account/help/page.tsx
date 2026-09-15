@@ -64,6 +64,7 @@ export default function AccountHelpPage() {
           </p>
         </div>
         <div className="help-actions">
+          <Link href="/account/bug-report">Report a bug</Link>
           <Link href="/contact">Contact support</Link>
           <Link href="/account/feature-requests">Share an idea</Link>
         </div>

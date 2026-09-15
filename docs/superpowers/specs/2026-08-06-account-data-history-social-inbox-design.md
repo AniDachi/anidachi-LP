@@ -434,29 +434,38 @@ Creation uses one transactional RPC that:
 7. returns the canonical invite.
 
 Accept and decline are conditional transitions from persisted `pending` state.
-Only one concurrent response can win.
+Only one concurrent response can win. Accepted invitations can be used again
+through **Return** while their room and friendship remain active.
 
 Before accept:
 
-- the recipient must still be pending;
+- the invitation must be current and pending, or already accepted for Return;
 - current friendship is checked;
 - room existence and ended state are checked;
 - room capacity is checked by the existing room admission path.
 
-An ended room changes the recipient state to `expired`, which clients present
-as `Missed` for 24 hours. A temporarily full room returns a clear `ROOM_FULL`
-result without converting the pending invite. An accepted invite returns the
-canonical join target but does not bypass normal room admission.
+An ended room changes an unanswered recipient state to `expired`, which clients
+present as `Missed` for 24 hours. Accepted history remains accepted and its Return
+action disappears when the room ends. A temporarily full room returns a clear
+`ROOM_FULL` result through ordinary admission. Accepting records consent before
+admission, so a failed join can still be retried with Return. Neither accepting
+nor returning bypasses capacity, active-room switching or host media decisions.
 
-Only one semantic invitation may exist for the same recipient and room.
-Overlapping direct and group targeting, retries, and repeated host actions
-return the existing recipient state and never create another notification. A
-recipient who declines cannot be invited to that same room again, but can be
+Only one current invitation may exist for the same recipient and room.
+Overlapping direct and group targeting, retries and concurrent host actions
+deduplicate pending invitations. After an accepted participant leaves, the host
+can send a fresh invitation. It atomically supersedes the old accepted recipient
+and creates a new identity with one new unread notification. Old request replay
+and old responses cannot create or resolve this replacement. An existing durable
+room assignment, including admission/reconnect in progress, blocks a resend.
+A recipient who declines cannot be invited to that same room again, but can be
 invited normally to a future room.
 
-The host invite panel reads the same canonical sent-invite state when it opens.
-Targets already invited to the active room remain visibly labeled `Pending`,
-`Accepted`, or `Invited` instead of returning to an ambiguous `Invite` action.
+The host invite panel combines canonical sent invitations with user identities
+in its authoritative room snapshot. Present people show **In room**, unanswered
+invitations show **Pending**, and an accepted person who left gets **Invite**.
+The label is never **Invite again**. Group actions send only to eligible people;
+they skip current participants and existing pending/declined invitations.
 The create response also reports whether the transactional RPC created a new
 recipient snapshot, so a retry can say that an invite already exists rather
 than claiming another delivery. During the additive deployment bridge, clients
@@ -467,9 +476,17 @@ The implemented MVP bound is 100 resolved recipients per request and 20 new
 invite actions per sender per minute. New extension clients keep one UUID
 `clientActionId` for a failed request retry; the web API generates a fallback
 UUID for older extension builds. The database still performs room-recipient
-deduplication, so a legacy retry cannot create or notify a second semantic
-invite. Push invalidation is scheduled only when the RPC creates at least one
-new recipient snapshot.
+deduplication, so a legacy retry cannot duplicate an unanswered invitation.
+Push invalidation is scheduled only when the RPC creates at least one new
+recipient snapshot.
+
+New Inbox clients explicitly request `includeReturnable=true` for both list and
+mark-seen requests. They show one current card per room, with **Return** and no
+Decline for accepted invitations. These cards are already seen and contribute
+nothing to unread, actionable or active-invite counters. A fresh invitation
+replaces the older Return card. Default responses keep the v2 states so older
+extension builds remain compatible. The additive implementation and verification
+are tracked in [the return plan](../plans/2026-09-14-room-invite-return.md).
 
 ### Compatibility With The Invite Runtime
 

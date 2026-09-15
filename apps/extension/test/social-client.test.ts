@@ -418,8 +418,23 @@ describe("extension social HTTP bridge", () => {
     });
   });
 
+	it("scopes sent invitation status to one room at the HTTP boundary", async () => {
+		const fetchMock = vi.fn().mockResolvedValue(jsonResponse({
+			meta: { serverTime: NOW, schemaVersion: 1 }, inbox: [], sent: [],
+		}));
+		vi.stubGlobal("fetch", fetchMock);
+
+		await listRoomInvitesFromApi("access-1", "room-a");
+
+		const requestUrl = new URL(fetchMock.mock.calls[0]![0]);
+		expect(requestUrl.pathname).toBe("/api/invites");
+		expect(requestUrl.searchParams.get("roomId")).toBe("room-a");
+	});
+
   it("accepts list invite target messages", () => {
     expect(isSocialHttpMessage(listInviteTargetsHttpMessage("access-1"))).toBe(true);
+		expect(isSocialHttpMessage(listInvitesHttpMessage("access-1", "room-a"))).toBe(true);
+		expect(isSocialHttpMessage({ ...listInvitesHttpMessage("access-1"), roomId: 42 })).toBe(false);
   });
 
   it("accepts create invite messages with direct recipients", () => {

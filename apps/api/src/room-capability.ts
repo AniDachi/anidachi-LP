@@ -53,6 +53,11 @@ export function renewRoomPolicy(
 		lease.roomId !== old.roomId ||
 		lease.roomGeneration !== old.roomGeneration ||
 		lease.capabilities.hostPlanCode !== old.capabilities.hostPlanCode ||
+ lease.capabilities.mediaProtocolVersion !== old.capabilities.mediaProtocolVersion ||
+ lease.capabilities.maxParticipants !== old.capabilities.maxParticipants ||
+ lease.capabilities.maxCameras !== old.capabilities.maxCameras ||
+ (lease.capabilities.mediaProtocolVersion === 3 ? lease.capabilities.maxMediaSeats : lease.capabilities.maxMicrophones) !==
+ (old.capabilities.mediaProtocolVersion === 3 ? old.capabilities.maxMediaSeats : old.capabilities.maxMicrophones) ||
 		lease.capabilities.capabilityRevision <= old.capabilities.capabilityRevision
 	)
 		return state;

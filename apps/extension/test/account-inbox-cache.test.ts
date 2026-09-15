@@ -161,6 +161,38 @@ describe("account inbox cache", () => {
     expect((await getCachedAccountInboxForUser(USER_A))?.data.counts.unseen).toBe(1);
   });
 
+	it("keeps a newer same-room invitation when an old Return list or mark-seen response arrives later", async () => {
+		const oldReturn = roomInviteItem(
+			"00000000-0000-4000-8000-000000000010",
+			"returnable",
+			NOW,
+		);
+		const replacement = roomInviteItem(
+			"00000000-0000-4000-8000-000000000011",
+			"active",
+			"2026-08-09T12:00:02.000Z",
+		);
+		const oldSnapshot = inboxWithItems("2026-08-09T12:00:01.000Z", [oldReturn]);
+		const replacementSnapshot = inboxWithItems("2026-08-09T12:00:03.000Z", [replacement]);
+
+		await setCachedAccountInboxForUser(USER_A, oldSnapshot);
+		await setCachedAccountInboxForUser(USER_A, replacementSnapshot);
+		await setCachedAccountInboxForUser(USER_A, oldSnapshot);
+		expect((await getCachedAccountInboxForUser(USER_A))?.data.items.map(accountInboxItemId)).toEqual([
+			replacement.inviteId,
+		]);
+
+		const published = await publishAccountInboxForUser(USER_A, oldSnapshot, {
+			isCurrent: () => true,
+			reread: async () => replacementSnapshot,
+			seenItems: [oldReturn],
+		});
+		expect(published?.items.map(accountInboxItemId)).toEqual([replacement.inviteId]);
+		expect((await getCachedAccountInboxForUser(USER_A))?.data.items.map(accountInboxItemId)).toEqual([
+			replacement.inviteId,
+		]);
+	});
+
   it("serializes read/merge/write across separate module instances with one account-specific Web Lock", async () => {
     const tails = new Map<string, Promise<unknown>>();
     const names: string[] = [];
@@ -299,4 +331,50 @@ function withRequest(serverTime: string, seenAt: string | null = null): AccountI
       sender: { userId: USER_B, displayName: "Friend", avatarUrl: null, handle: null },
       state: "pending", createdAt: NOW, activityAt: NOW, seenAt }],
     counts: { unseen: seenAt ? 0 : 1, actionable: 1, activeRoomInvites: 0, pendingFriendRequests: 1 } };
+}
+
+function inboxWithItems(
+	serverTime: string,
+	items: AccountInboxResponse["items"],
+): AccountInboxResponse {
+	return {
+		...inbox(USER_A),
+		meta: { ownerUserId: USER_A, schemaVersion: 1, serverTime },
+		items,
+		counts: {
+			unseen: items.filter((item) => item.seenAt === null).length,
+			actionable: items.filter((item) => item.state === "active").length,
+			activeRoomInvites: items.filter((item) => item.kind === "room-invite" && item.state === "active").length,
+			pendingFriendRequests: 0,
+		},
+	};
+}
+
+function roomInviteItem(
+	inviteId: string,
+	state: "active" | "returnable",
+	createdAt: string,
+): Extract<AccountInboxResponse["items"][number], { kind: "room-invite" }> {
+	const item = {
+		kind: "room-invite",
+		inviteId,
+		roomId: "same-room",
+		sender: { userId: USER_B, displayName: "Host", avatarUrl: null, handle: null },
+		targetKind: "direct",
+		targetGroupId: null,
+		targetGroupName: null,
+		message: null,
+		roomTitle: "Watch together",
+		sourceUrl: null,
+		videoFingerprint: null,
+		createdAt,
+		activityAt: createdAt,
+	} as const;
+	return state === "returnable"
+		? { ...item, state, seenAt: createdAt, missedAt: null }
+		: { ...item, state, seenAt: null, missedAt: null };
+}
+
+function accountInboxItemId(item: AccountInboxResponse["items"][number]): string {
+	return item.kind === "room-invite" ? item.inviteId : item.friendshipId;
 }
