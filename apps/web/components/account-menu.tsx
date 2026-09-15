@@ -31,6 +31,7 @@ export function UserMenu({ user, compact = false, onOpen }: {
 }) {
   const [open, setOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const signOutInFlight = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -60,8 +61,12 @@ export function UserMenu({ user, compact = false, onOpen }: {
   }, [open]);
 
   async function handleSignOut() {
-    if (signingOut) return;
+    if (signOutInFlight.current) return;
+    let accepted = false;
     const proceed = async () => {
+      if (accepted || signOutInFlight.current) return;
+      accepted = true;
+      signOutInFlight.current = true;
       setSigningOut(true);
       setError(null);
       try {
@@ -71,7 +76,7 @@ export function UserMenu({ user, compact = false, onOpen }: {
       } catch {
         setOpen(true);
         setError("Could not sign out. Please try again.");
-      } finally { setSigningOut(false); }
+      } finally { signOutInFlight.current = false; setSigningOut(false); }
     };
     // Preserve the account editor's Save / Discard / Stay interception.
     const intent = new CustomEvent("anidachi:before-sign-out", { cancelable: true, detail: proceed });
