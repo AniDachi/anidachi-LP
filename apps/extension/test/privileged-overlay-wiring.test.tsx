@@ -1915,6 +1915,28 @@ describe("privileged overlay wiring", () => {
       expect(RoomClient.prototype.connect).not.toHaveBeenCalled();
     } finally { await unmount(view.root); }
   });
+  it("does not assign an old account's delayed create denial to the next account", async () => {
+    let currentSession = sessionFor("user-a");
+    installActiveHostRoomRuntime({ getSession: () => currentSession });
+    const pending = deferred<unknown>();
+    const original = chrome.runtime.sendMessage;
+    chrome.runtime.sendMessage = vi.fn(async (message: any) => {
+      if (message.type === "ANIDACHI_ROOM_HTTP" && message.command === "create-room") return pending.promise;
+      return original(message);
+    }) as typeof chrome.runtime.sendMessage;
+    const view = await renderOverlay();
+    try {
+      await click(button(view.container, "Open Anidachi controls"));
+      await click(button(view.container, "Create room")); await flushRoomActionWork();
+      currentSession = sessionFor("user-b");
+      await act(async () => extensionStorage.storage.setItem(AUTH_TOKENS_KEY, currentSession));
+      await flushMountedWork();
+      await act(async () => pending.resolve({ ok:false,code:"QUOTA_EXHAUSTED",error:"Daily free watch-party time is used up",status:403,resetAt:"2026-09-16T00:00:00Z" }));
+      await flushMountedWork();
+      expect(view.container.querySelector(".free-quota-notice")).toBeNull();
+      expect(RoomClient.prototype.connect).not.toHaveBeenCalled();
+    } finally { await unmount(view.root); }
+  });
   it("uses the first v3 PTT press and cancels publication when released before ACK", async () => {
     installActiveHostRoomRuntime();
     const publication = vi.spyOn(P2PMediaController.prototype, "setMicrophonePublishing").mockResolvedValue();

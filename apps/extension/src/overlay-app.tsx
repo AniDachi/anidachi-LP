@@ -4678,9 +4678,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						() => undefined,
 					);
 				}
-				if (isCurrentCreate()) {
-					releaseRoomTabLock();
-				}
+				// Account changes and superseding joins retire this operation's errors too.
+				if (!isCurrentCreate()) return null;
+				releaseRoomTabLock();
 				throw error;
 			}
 			createRequestIdRef.current = null;
