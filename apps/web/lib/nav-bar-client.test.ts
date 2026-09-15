@@ -4,6 +4,7 @@ import { afterEach, test } from "node:test";
 import * as React from "react";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { Window } from "happy-dom";
 import { PathnameContext } from "next/dist/shared/lib/hooks-client-context.shared-runtime";
 import { RouterContext } from "next/dist/shared/lib/router-context.shared-runtime";
 import { NavBarClient } from "../components/nav-bar-client";
@@ -187,3 +188,38 @@ test("unmounting an open drawer removes wheel, touch and keyboard prevention", a
   await act(async () => root!.unmount()); root = null;
   assertScrollLocked(false);
 });
+
+for (const control of ["Account menu", "Close menu"]) {
+  test(`Space is not canceled for ${control} when React delegates events at document`, async () => {
+    // Next's app router mounts its React root at document. A fresh DOM is needed:
+    // React keeps a listener marker on the document of earlier element roots.
+    const page = new Window({ url: "http://localhost/", width: 390 });
+    const previous = new Map<string, PropertyDescriptor | undefined>();
+    for (const [key, value] of Object.entries({ window: page, self: page, document: page.document,
+      navigator: page.navigator, Node: page.Node, Element: page.Element, HTMLElement: page.HTMLElement,
+      Event: page.Event, CustomEvent: page.CustomEvent })) {
+      previous.set(key, Object.getOwnPropertyDescriptor(globalThis, key));
+      Object.defineProperty(globalThis, key, { value, writable: true, configurable: true });
+    }
+    const documentRoot = createRoot(document);
+    try {
+      await act(async () => documentRoot.render(React.createElement("html", null,
+        React.createElement("head"), React.createElement("body", null, render("/")))));
+      const hamburger = document.querySelector<HTMLButtonElement>('button[aria-controls="mobile-nav-menu"]')!;
+      await act(async () => { hamburger.focus(); hamburger.click(); });
+      const target = control === "Close menu" ? hamburger
+        : document.querySelector<HTMLButtonElement>('button[aria-label="Account menu"]')!;
+      await act(async () => target.focus());
+      const space = new page.KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true });
+      await act(async () => target.dispatchEvent(space as unknown as Event));
+      assert.equal(space.defaultPrevented, false, "A later document scroll-lock listener must not cancel native activation");
+      const wheel = new page.WheelEvent("wheel", { bubbles: true, cancelable: true });
+      target.dispatchEvent(wheel as unknown as Event);
+      assert.equal(wheel.defaultPrevented, true, "Header wheel scrolling stays locked");
+    } finally {
+      await act(async () => documentRoot.unmount());
+      for (const [key, descriptor] of previous) Object.defineProperty(globalThis, key, descriptor!);
+      await page.happyDOM.abort();
+    }
+  });
+}
