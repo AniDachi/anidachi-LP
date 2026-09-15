@@ -6,10 +6,10 @@ Status: Implemented; staging visual acceptance pending
 
 Add an `Interface` settings section to the extension panel for controlling the
 visibility behavior of the main AniDachi control and the side participant
-pills. The section keeps the current low-obstruction behavior as its default,
-adds an explicit always-visible option for users who prefer persistent access,
-and includes a compact animated preview that uses the same presentation policy
-as the live overlay.
+pills. Following the September 15 onboarding correction, both controls default
+to Always visible when no valid preference is stored. Saved Auto hide / Smart
+choices remain unchanged. The compact animated preview uses the same
+presentation policy as the live overlay.
 
 This work changes extension-local presentation and local preferences only. It
 does not change room state, media seats, microphone or camera publication,
@@ -111,7 +111,7 @@ duplicate side pill. The existing rendered-video readiness rule remains the
 source of truth, so a participant returns to the rail if their video surface
 disappears.
 
-`Smart` is the default and preserves the low-obstruction intent:
+`Smart` remains an opt-in low-obstruction mode:
 
 - quiet participants remain hidden;
 - a speaking no-video participant automatically appears as a compact pill;
@@ -143,6 +143,22 @@ While a remote participant is expanded:
 Opening the main AniDachi panel hides the side rail in both modes. The panel's
 `People` section is the participant surface while the panel is open, and the
 rail must not compete with or cover it.
+
+## Compact People List, September 15 Follow-up
+
+Inside the room panel, one or two participants are shown directly. With more
+than two, the first two rows remain visible in the existing host-first / self-next
+order; a full-width **Show N more** footer expands the remaining rows within the
+same list. **Show less** collapses them. The extra list scrolls internally after
+four additional rows (204 px), keeping the footer and first two participants in
+place. Counts and media-seat controls continue to use the complete live roster.
+
+Expansion is local presentation state retained while reopening the same room
+panel; a different room starts collapsed. It sends no room/media messages and
+never changes media grants, camera/microphone state or participant ordering.
+Hidden rows are inert and excluded from the accessibility tree; the real button
+supports Enter/Space, aria-expanded/aria-controls and reduced-motion preferences.
+Long names retain their existing truncation and full-name tooltip.
 
 ## Preview
 
@@ -195,14 +211,17 @@ The immutable defaults are:
 ```ts
 {
   version: 1,
-  mainControlVisibility: "auto-hide",
-  participantPillVisibility: "smart"
+  mainControlVisibility: "always-visible",
+  participantPillVisibility: "always-visible"
 }
 ```
 
-These defaults reproduce current behavior for existing users. The preference is
-device/profile-local rather than account-scoped because it describes how this
-browser's overlay should behave and must also work before sign-in.
+These defaults make the player interface discoverable for an unconfigured
+installation. Valid stored choices are neither replaced nor rewritten on load.
+The overlay waits for preference hydration before pinning either surface, so a
+saved Auto hide / Smart choice does not briefly flash the new defaults. The
+preference is device/profile-local rather than account-scoped and works before
+sign-in. Participant pills still require an active room and eligible participants.
 
 The parser accepts only version 1 and known enum values. Missing or invalid
 fields fall back independently to their defaults. Unknown versions fall back
@@ -291,7 +310,8 @@ provider-specific policy.
 
 Verify on both Crunchyroll and YouTube in normal, theater, and fullscreen modes:
 
-- defaults match the current launcher and rail behavior;
+- an unconfigured installation shows the launcher immediately and quiet eligible
+  pills in a room; saved Auto hide / Smart choices remain unchanged;
 - main-control `Always visible` stays present without an edge glow;
 - Auto hide still uses deliberate edge intent and does not flicker;
 - Open mic does not pin the main control in Auto hide mode; participant voice

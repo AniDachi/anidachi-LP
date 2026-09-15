@@ -1,5 +1,15 @@
 # Graph Report - room-media-seats-v3  (2026-09-15)
 
+## Scoped Incremental Update - Visibility Defaults and Compact People (2026-09-15)
+
+- Scope: eight changed extension code/test files and the changed sections of two docs; source `0b7a0fffd66949322217f5835295e7cfeecff01f`.
+- Unconfigured controls now default to Always visible. Valid saved choices remain intact and preference hydration prevents a default flash. People keeps the first two rows with an accessible disclosure and bounded additional rows; expansion belongs to the current room. Room/media authority is unchanged.
+- Current graph: 12811 nodes / 27775 edges. Delta: +3 nodes, -0 nodes, 96 modified nodes; +10 edges, -0 edges, 278 modified edges.
+- Existing community assignments, unrelated graph objects and hyperedges are preserved. The community/cohesion analysis below retains the prior clustering snapshot.
+- Integrity: no new missing/dangling endpoints, collapsed pairs or self-loops.
+- Semantic extraction used the active Codex session and one subagent. Usage counts were unavailable; historical token figures below are not the cost of this update.
+- Useful query: `graphify explain "Profile-Local Versioned Interface Preferences"`.
+
 ## Scoped Incremental Update - Explicit Own Seat Defaults (2026-09-15)
 
 - Scope: six changed extension code/test files and the changed sections of four docs; source `addabc0a19476aa18479c7b2c8e64ee441c86047`, including the `room-client-auth.test.ts` request-ID expectation update.

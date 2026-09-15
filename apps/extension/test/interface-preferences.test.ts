@@ -6,25 +6,25 @@ import {
 } from "../src/interface-preferences";
 
 describe("interface preferences", () => {
-  it("uses the existing behavior as the default", () => {
+  it("keeps both controls visible for an unconfigured installation", () => {
     expect(getDefaultInterfacePreferences()).toEqual({
-      version: 1,
-      mainControlVisibility: "auto-hide",
-      participantPillVisibility: "smart",
-    });
-  });
-
-  it("preserves a complete valid payload", () => {
-    expect(
-      parseInterfacePreferences({
-        version: 1,
-        mainControlVisibility: "always-visible",
-        participantPillVisibility: "always-visible",
-      }),
-    ).toEqual({
       version: 1,
       mainControlVisibility: "always-visible",
       participantPillVisibility: "always-visible",
+    });
+  });
+
+  it.each(["auto-hide", "always-visible"] as const)("preserves a saved %s choice", (mainControlVisibility) => {
+    expect(
+      parseInterfacePreferences({
+        version: 1,
+        mainControlVisibility,
+        participantPillVisibility: "smart",
+      }),
+    ).toEqual({
+      version: 1,
+      mainControlVisibility,
+      participantPillVisibility: "smart",
     });
   });
 
@@ -32,7 +32,7 @@ describe("interface preferences", () => {
     {
       expected: {
         version: 1,
-        mainControlVisibility: "auto-hide",
+        mainControlVisibility: "always-visible",
         participantPillVisibility: "always-visible",
       },
       name: "main control visibility",
@@ -46,7 +46,7 @@ describe("interface preferences", () => {
       expected: {
         version: 1,
         mainControlVisibility: "always-visible",
-        participantPillVisibility: "smart",
+        participantPillVisibility: "always-visible",
       },
       name: "participant pill visibility",
       value: {
@@ -68,7 +68,7 @@ describe("interface preferences", () => {
     {
       version: 2,
       mainControlVisibility: "always-visible",
-      participantPillVisibility: "always-visible",
+      participantPillVisibility: "smart",
     },
   ])("returns defaults for unsupported input %#", (value) => {
     expect(parseInterfacePreferences(value)).toEqual(getDefaultInterfacePreferences());
@@ -77,16 +77,16 @@ describe("interface preferences", () => {
   it("normalizes patches without mutating the current object", () => {
     const current = getDefaultInterfacePreferences();
     const next = updateInterfacePreferences(current, {
-      participantPillVisibility: "always-visible",
+      participantPillVisibility: "smart",
     });
 
     expect(next).toEqual({
       version: 1,
-      mainControlVisibility: "auto-hide",
-      participantPillVisibility: "always-visible",
+      mainControlVisibility: "always-visible",
+      participantPillVisibility: "smart",
     });
     expect(next).not.toBe(current);
-    expect(current.participantPillVisibility).toBe("smart");
+    expect(current.participantPillVisibility).toBe("always-visible");
   });
 
   it("returns independent default objects", () => {

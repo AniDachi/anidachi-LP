@@ -21,8 +21,8 @@ export type InterfacePreferencesPatch = Partial<
 export function getDefaultInterfacePreferences(): InterfacePreferencesV1 {
   return {
     version: INTERFACE_PREFERENCES_VERSION,
-    mainControlVisibility: "auto-hide",
-    participantPillVisibility: "smart",
+    mainControlVisibility: "always-visible",
+    participantPillVisibility: "always-visible",
   };
 }
 
