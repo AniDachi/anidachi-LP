@@ -233,3 +233,8 @@ Runtime commit `185ac1ae`; база `bcd00c7d`. Эти файлы и потре�
 drawer (`20dc0692`); scroll-lock hook и CSS не меняются. Итоговые проверки:
 36/36 целевых, полный web suite 619 passed / 6 skipped, web check и Next build
 passed. Блокирующих замечаний повторного ревью нет; браузерная приемка pending.
+
+Браузерная проверка preview дополнила этот результат: повторный Space оставался
+заблокирован при React delegation на `document`. В `4aa7d2dd` исправлен порядок
+native listeners; новые document-root тесты сначала падали, итог 38/38 и web check
+passed. Повторное ревью без замечаний; точный head и окончательная приемка в #350.

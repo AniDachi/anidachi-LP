@@ -34,12 +34,14 @@ the redesigned site's other navigation and installation CTA. This is a scoped
 web change; history, profile and billing APIs and the extension stay unchanged.
 Stage 2 runtime is implemented in `185ac1ae`: the shared menu is restored and
 duplicate logout callbacks are guarded without changing the menu CSS. Review
-found a Space-key activation conflict with the drawer scroll lock; `20dc0692`
-fixes it locally without changing the shared hook. Follow-up review found no
-blocking findings. Final focused checks (36/36), web typecheck, full web suite
-(619 passed, 6 skipped) and Next build passed. Deployed acceptance is still
-required; the release PR records its receipt. Main promotion remains a separate
-decision.
+found a Space-key activation conflict with the drawer scroll lock; the initial
+`20dc0692` fix passed element-root tests but failed actual preview activation.
+`4aa7d2dd` handles Next's document-root event ordering without changing the shared
+hook. Fresh document-root tests reproduce the failure; all 38 focused checks and
+web typecheck pass. Follow-up review found no blocking findings. Full web tests
+and build passed before this last narrow event fix (619 passed, 6 skipped);
+[PR #350](https://github.com/AniDachi/anidachi-LP/pull/350) records final CI and
+deployed acceptance. Main promotion remains a separate decision.
 
 ## Free quota reset notice, 2026-09-15
 
