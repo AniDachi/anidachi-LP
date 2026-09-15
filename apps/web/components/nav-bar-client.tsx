@@ -428,7 +428,12 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
           priority
         />
 
-        <div className="flex min-w-0 items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2" onKeyDown={(event) => {
+          if (menuOpen && event.key === " " && event.target instanceof Element && event.target.tagName === "BUTTON") {
+            // Keep native Space activation out of the document's page-scroll lock.
+            event.stopPropagation();
+          }
+        }}>
           {/* Keep the complete inline navigation at widths where it fits. */}
           <ul className="hidden items-center gap-4 text-sm xl:flex">
             <li>

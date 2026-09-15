@@ -147,6 +147,41 @@ test("account shortcuts and the hamburger drawer replace one another without lea
   assertScrollLocked(true);
 });
 
+for (const control of ["account", "hamburger"] as const) {
+  test(`Space preserves native activation of the ${control} button while the drawer locks page scrolling`, async () => {
+    await mount(); await openDrawer();
+    const target = control === "account" ? accountTrigger()! : toggle();
+    await act(async () => target.focus());
+    for (const key of [" ", "Enter"]) {
+      const event = new dom.KeyboardEvent("keydown", { key, bubbles: true, cancelable: true });
+      await act(async () => target.dispatchEvent(event as unknown as Event));
+      // happy-dom does not synthesize native button activation from key events.
+      // Canceling keydown would suppress that activation in the real browser.
+      assert.equal(event.defaultPrevented, false, `${key === " " ? "Space" : key} must remain available for native button activation`);
+    }
+    for (const event of [new dom.WheelEvent("wheel", { bubbles: true, cancelable: true }),
+      new dom.Event("touchmove", { bubbles: true, cancelable: true }),
+      new dom.KeyboardEvent("keydown", { key: "PageDown", bubbles: true, cancelable: true })]) {
+      target.dispatchEvent(event as unknown as Event);
+      assert.equal(event.defaultPrevented, true, `${event.type} on the header must not scroll the page`);
+    }
+    const pageSpace = new dom.KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true });
+    dom.document.body.dispatchEvent(pageSpace);
+    assert.equal(pageSpace.defaultPrevented, true, "Space outside a header button must still be locked");
+    const installLink = [...container.querySelectorAll<HTMLAnchorElement>('a[href="/extension"]')].find(visible)!;
+    const linkSpace = new dom.KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true });
+    await act(async () => { installLink.focus(); installLink.dispatchEvent(linkSpace as unknown as Event); });
+    assert.equal(linkSpace.defaultPrevented, true, "Space on a header link must still be locked");
+    await act(async () => target.focus());
+    await act(async () => target.dispatchEvent(new dom.KeyboardEvent("keydown", {
+      key: "Escape", bubbles: true, cancelable: true,
+    }) as unknown as Event));
+    assert.ok(drawer() === null, "Escape still closes the drawer");
+    assert.ok(document.activeElement === toggle(), "Escape still returns focus to the toggle");
+    assertScrollLocked(false);
+  });
+}
+
 test("unmounting an open drawer removes wheel, touch and keyboard prevention", async () => {
   await mount(); await openDrawer(); assertScrollLocked(true);
   await act(async () => root!.unmount()); root = null;
