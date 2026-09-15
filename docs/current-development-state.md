@@ -19,11 +19,29 @@ permissions, room/media/history behavior and build channels remain unchanged.
 The website candidate keeps its new installation guide and download flow without
 trying to detect an installed extension. Room-page installation help is neutral;
 it does not control admission. Join/auth APIs and the payment confirmation page
-are unchanged. This is a candidate change, not a staging or production deployment.
-PR #349 carries this candidate; #348 is closed without merging and its branch
-is retained. Other website repair stages need
+are unchanged. PR #349 was merged into staging at `bcd00c7d`; CI, the extension
+build, post-deployment smoke and the staging Vercel alias were verified. Its PR
+receipt records the remaining real-room/manual limitations. Main remains
+`4b4ff883`. PR #348 is closed without merging and its branch is retained.
+Other website repair stages need
 their own scope discussion before implementation. See the
 [approved repair plan](superpowers/plans/2026-09-15-staging-release-repair-plan.md).
+
+The owner approved Stage 2 separately: restore the production account dropdown
+with its existing design and guarded sign-out, remove the duplicate replacement,
+and restore account access and scroll cleanup across responsive layouts. Keep
+the redesigned site's other navigation and installation CTA. This is a scoped
+web change; history, profile and billing APIs and the extension stay unchanged.
+Stage 2 runtime is implemented in `185ac1ae`: the shared menu is restored and
+duplicate logout callbacks are guarded without changing the menu CSS. Review
+found a Space-key activation conflict with the drawer scroll lock; the initial
+`20dc0692` fix passed element-root tests but failed actual preview activation.
+`4aa7d2dd` handles Next's document-root event ordering without changing the shared
+hook. Fresh document-root tests reproduce the failure; all 38 focused checks and
+web typecheck pass. Follow-up review found no blocking findings. Full web tests
+and build passed before this last narrow event fix (619 passed, 6 skipped);
+[PR #350](https://github.com/AniDachi/anidachi-LP/pull/350) records final CI and
+deployed acceptance. Main promotion remains a separate decision.
 
 ## Free quota reset notice, 2026-09-15
 
