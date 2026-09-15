@@ -172,10 +172,10 @@ export default function CanYouScreenShareYoutubeOnDiscordPage() {
       <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
         <li>
           Start from{" "}
-          <Link href="/pricing" className="text-brand-orange hover:underline">
-            /pricing
-          </Link>{" "}
-          for AniDachi early access.
+          <Link href="/extension" className="text-brand-orange hover:underline">
+            the AniDachi install page
+          </Link>
+          : download the official zip, then Load unpacked in Chrome.
         </li>
         <li>Open the same full youtube.com/watch page on every device (not Shorts or embeds).</li>
         <li>Create a watchroom and share the invite.</li>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getAnimeByGenre } from "@/lib/anime-data";
+import { PRICING_ROOM_SIZE_RANGE } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
   title: "Watch Horror Anime With Friends (2026) | AniDachi",
@@ -111,7 +112,7 @@ export default function WatchHorrorAnimeWithFriendsPage() {
           Yes, you can watch horror anime with friends using AniDachi&apos;s
           watchroom on Crunchyroll. Sync playback so everyone experiences jumps
           and reveals at the same moment, then react together in real time.
-          Works for 2–10 people across different time zones — all on Crunchyroll.
+          Works for {PRICING_ROOM_SIZE_RANGE} — all on Crunchyroll.
         </strong>
       </p>
 

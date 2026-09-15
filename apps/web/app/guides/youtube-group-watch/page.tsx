@@ -41,7 +41,7 @@ export const metadata: Metadata = {
 const howToSteps = [
   {
     name: "Get AniDachi",
-    text: "Open /pricing for early access and install the Chrome extension.",
+    text: "Open /extension, download the official zip, then Load unpacked in Chrome.",
   },
   {
     name: "Open the video",

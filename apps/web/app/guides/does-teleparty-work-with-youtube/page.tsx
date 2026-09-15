@@ -192,7 +192,7 @@ export default function DoesTelepartyWorkWithYoutubePage() {
         </Link>
         . Pricing:{" "}
         <Link href="/pricing" className="text-brand-orange hover:underline">
-          pricing / early access
+          AniDachi pricing
         </Link>
         .
       </p>

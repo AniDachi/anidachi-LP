@@ -10,7 +10,6 @@ import {
 } from "@/components/conditional-site-chrome";
 import { AnalyticsEvents } from "@/components/analytics-events";
 import { OrganizationJsonLd } from "@/components/json-ld";
-import { PlanSurveyProvider } from "@/components/plan-survey/plan-survey-provider";
 import { GA_MEASUREMENT_ID } from "@/lib/gtag";
 import {
   ANIDACHI_OG_IMAGE_ALT,
@@ -41,14 +40,14 @@ export const metadata: Metadata = {
     template: "%s | AniDachi",
   },
   description:
-    "AniDachi lets you watch together with friends on Crunchyroll and YouTube. Create watchrooms, sync playback, chat in real-time, and catch up asynchronously.",
+    "AniDachi lets you watch together with friends on Crunchyroll and YouTube. Create watchrooms, sync playback, and chat in real-time. Async catch-up is coming soon in a later batch.",
   metadataBase: new URL(getResolvedSiteOrigin()),
   alternates: { canonical: "/" },
   openGraph: {
     title:
       "AniDachi – Watch Together | Sync Crunchyroll & YouTube with Friends",
     description:
-      "Create watchrooms for Crunchyroll and YouTube, sync with friends, chat in real-time, and track progress — even asynchronously.",
+      "Create watchrooms for Crunchyroll and YouTube, sync with friends, and chat in real-time. Async catch-up is coming soon.",
     type: "website",
     siteName: "AniDachi",
     images: [
@@ -64,7 +63,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "AniDachi – Watch Anime Together",
     description:
-      "Watchrooms for Crunchyroll and YouTube — sync, chat, and async catch-up in desktop Chrome.",
+      "Watchrooms for Crunchyroll and YouTube — live sync and chat in desktop Chrome. Async catch-up coming soon.",
     images: [ANIDACHI_OG_IMAGE_PATH],
   },
   robots: {
@@ -85,13 +84,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark scroll-smooth">
+    <html lang="en" className="dark scroll-smooth" data-ani-theme="account">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-brand-orange focus:text-primary-foreground focus:px-4 focus:py-2 focus:rounded"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:rounded-full focus:bg-ani-primary focus:px-4 focus:py-2 focus:text-ani-on-primary focus:outline-2 focus:outline-offset-4 focus:outline-ani-focus"
         >
           Skip to main content
         </a>
@@ -107,13 +106,11 @@ export default function RootLayout({
             gtag('config', '${GA_MEASUREMENT_ID}');
           `}
         </Script>
-        <PlanSurveyProvider>
-          <ConditionalNav marketingNav={<NavBar />} />
-          {children}
-          <ConditionalFooter marketingFooter={<Footer />} />
-          <OrganizationJsonLd />
-          <AnalyticsEvents />
-        </PlanSurveyProvider>
+        <ConditionalNav marketingNav={<NavBar />} />
+        {children}
+        <ConditionalFooter marketingFooter={<Footer />} />
+        <OrganizationJsonLd />
+        <AnalyticsEvents />
       </body>
     </html>
   );

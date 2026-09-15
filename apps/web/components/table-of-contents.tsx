@@ -56,8 +56,8 @@ export function TableOfContents({ headings }: { headings: TocHeading[] }) {
 
   const list = (
     <nav aria-label="On this page" className="text-sm">
-      <p className="mb-2 font-semibold text-foreground">On this page</p>
-      <ul className="space-y-1.5 border-l-2 border-brand-border pl-3">
+      <p className="mb-2 font-semibold text-ani-text">On this page</p>
+      <ul className="space-y-1.5 border-l-2 border-ani-line pl-3">
         {headings.map((h) => (
           <li
             key={h.id}
@@ -67,7 +67,7 @@ export function TableOfContents({ headings }: { headings: TocHeading[] }) {
             )}
             style={{
               borderLeftColor:
-                active === h.id ? "oklch(0.71 0.20 45)" : "transparent",
+                active === h.id ? "var(--ani-progress)" : "transparent",
             }}
           >
             <button
@@ -78,8 +78,8 @@ export function TableOfContents({ headings }: { headings: TocHeading[] }) {
                 setOpen(false);
               }}
               className={cn(
-                "text-left w-full hover:text-brand-orange transition-colors",
-                active === h.id ? "text-brand-orange font-medium" : "text-foreground/60"
+                "w-full text-left transition-colors hover:text-ani-text",
+                active === h.id ? "font-medium text-ani-text" : "text-ani-muted"
               )}
             >
               {h.label}
@@ -92,30 +92,30 @@ export function TableOfContents({ headings }: { headings: TocHeading[] }) {
 
   return (
     <>
-      <div className="mb-6 overflow-hidden rounded-lg border border-brand-border border-l-2 border-l-brand-orange/50 bg-brand-surface/80 lg:hidden">
+      <div className="mb-6 overflow-hidden rounded-[12px] border border-ani-line bg-ani-panel lg:hidden">
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
-          className="flex min-h-11 w-full items-center justify-between gap-2 px-4 py-3 text-left font-medium text-foreground"
+          className="flex min-h-11 w-full items-center justify-between gap-2 px-4 py-3 text-left font-medium text-ani-text"
           aria-expanded={open}
         >
           <span className="inline-flex items-center gap-2">
-            <List className="h-4 w-4 text-brand-orange/70" aria-hidden="true" />
+            <List className="h-4 w-4 text-ani-muted" aria-hidden="true" />
             Contents
           </span>
           <ChevronDown
             className={cn(
-              "h-5 w-5 text-foreground/50 transition-transform",
+              "h-5 w-5 text-ani-muted transition-transform",
               open && "rotate-180"
             )}
             aria-hidden="true"
           />
         </button>
-        {open && <div className="border-t border-brand-border bg-brand-surface px-4 py-3">{list}</div>}
+        {open && <div className="border-t border-ani-line bg-ani-canvas px-4 py-3">{list}</div>}
       </div>
 
       <div className="hidden lg:block">
-        <div className="sticky top-24 max-h-[min(80vh,32rem)] overflow-y-auto rounded-lg border border-brand-border border-l-2 border-l-brand-orange/40 bg-brand-surface/40 py-3 pr-1 pl-1">
+        <div className="sticky top-24 max-h-[min(80vh,32rem)] overflow-y-auto rounded-[12px] border border-ani-line bg-ani-panel/80 py-3 pr-1 pl-1">
           {list}
         </div>
       </div>

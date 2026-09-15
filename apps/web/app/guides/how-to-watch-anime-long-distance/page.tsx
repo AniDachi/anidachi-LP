@@ -77,7 +77,7 @@ const howToSteps = [
   },
   {
     name: "Install AniDachi",
-    text: "Open /pricing for early access and install the AniDachi Chrome extension on each participant's laptop.",
+    text: "Open /extension, download the official zip, then Load unpacked in Chrome on each participant's laptop.",
   },
   {
     name: "Create a shared watchroom",
@@ -161,10 +161,10 @@ export default function HowToWatchAnimeLongDistancePage() {
           </a>{" "}
           articles if they need account or playback troubleshooting. Install
           AniDachi from{" "}
-          <Link href="/pricing" className="text-brand-orange hover:underline">
-            pricing / early access
+          <Link href="/extension" className="text-brand-orange hover:underline">
+            the AniDachi install page
           </Link>{" "}
-          so everyone runs the same build during soft launch.
+          so everyone loads the same official zip.
         </p>
 
         <h2
@@ -200,12 +200,11 @@ export default function HowToWatchAnimeLongDistancePage() {
           Step-by-step with AniDachi
         </h2>
         <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
-          <li>Confirm everyone has access to the same Crunchyroll series.</li>
-          <li>Install AniDachi in Chrome for each participant.</li>
-          <li>Open episode one (or your agreed checkpoint) while signed in.</li>
-          <li>Run anime detection so metadata matches the correct title.</li>
-          <li>Create a watchroom and send the invite across time zones.</li>
-          <li>Use chat for reactions; pace episodes async when schedules slip.</li>
+          {howToSteps.map((step) => (
+            <li key={step.name}>
+              <strong>{step.name}.</strong> {step.text}
+            </li>
+          ))}
         </ol>
 
         <h2

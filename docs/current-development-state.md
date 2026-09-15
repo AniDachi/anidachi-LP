@@ -1,12 +1,65 @@
 # Current Development State
 
-Last updated: 2026-09-15.
+Last updated: 2026-09-16.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
 contain old paths, old domains, or old decisions. When release channels,
 endpoints, branch protection, or store workflow changes, update this document in
 the same PR.
+
+## Website redesign candidate boundary, 2026-09-16
+
+The owner approved preserving the complete `apps/extension` tree, root
+`package.json` and extension artifact validator exactly as production main
+`4b4ff88380d0a64e5216d2770d360440d3f8852b`. The redesign's website-presence
+responder and permanent manual-update note are excluded. Extension identities,
+permissions, room/media/history behavior and build channels remain unchanged.
+
+The website candidate keeps its new installation guide and download flow without
+trying to detect an installed extension. Room-page installation help is neutral;
+it does not control admission. Join/auth APIs and the payment confirmation page
+are unchanged. PR #349 was merged into staging at `bcd00c7d`; CI, the extension
+build, post-deployment smoke and the staging Vercel alias were verified. Its PR
+receipt records the remaining real-room/manual limitations. Main remains
+`4b4ff883`. PR #348 is closed without merging and its branch is retained.
+Other website repair stages need
+their own scope discussion before implementation. See the
+[approved repair plan](superpowers/plans/2026-09-15-staging-release-repair-plan.md).
+
+The owner approved Stage 2 separately: restore the production account dropdown
+with its existing design and guarded sign-out, remove the duplicate replacement,
+and restore account access and scroll cleanup across responsive layouts. Keep
+the redesigned site's other navigation and installation CTA. This is a scoped
+web change; history, profile and billing APIs and the extension stay unchanged.
+Stage 2 runtime is implemented in `185ac1ae`: the shared menu is restored and
+duplicate logout callbacks are guarded without changing the menu CSS. Review
+found a Space-key activation conflict with the drawer scroll lock; the initial
+`20dc0692` fix passed element-root tests but failed actual preview activation.
+`4aa7d2dd` handles Next's document-root event ordering without changing the shared
+hook. Fresh document-root tests reproduce the failure; all 38 focused checks and
+web typecheck pass. Follow-up review found no blocking findings. Full web tests
+and build passed before this last narrow event fix (619 passed, 6 skipped);
+[PR #350](https://github.com/AniDachi/anidachi-LP/pull/350) records final CI and
+deployed acceptance. Main promotion remains a separate decision.
+
+## Website ZIP download source, 2026-09-16
+
+The owner narrowed Stage 3 to the download button and its server-side source.
+The candidate uses only `EXTENSION_ZIP_URL`: an explicitly configured public
+HTTPS archive with valid version, SHA-256 and byte-count metadata. Local paths
+and implicit searches through artifact folders are removed in all environments.
+The page, `/api/extension/latest` and `/api/extension/download` share readiness;
+incomplete configuration disables the button and returns 503 without a fallback.
+The metadata and redirect responses are not cached. Actual hosted bytes and
+download headers still need separate acceptance when an archive is published.
+
+This scoped correction is on `codex/single-zip-download`; its PR records final
+CI and staging delivery. The install page design, instructions, FAQ, extension,
+identity and runtime behavior are unchanged. Public ZIP upload, cloud environment
+changes and main promotion remain separate; the current staging download is
+intentionally unconfigured. See Stage 3 of the
+[repair plan](superpowers/plans/2026-09-15-staging-release-repair-plan.md).
 
 ## Free quota reset notice, 2026-09-15
 

@@ -15,6 +15,7 @@ describe("middleware-routes", () => {
     assert.equal(isPublicMarketingPath("/watch-anime-together"), true);
     assert.equal(isPublicMarketingPath("/privacy"), true);
     assert.equal(isPublicMarketingPath("/terms"), true);
+    assert.equal(isPublicMarketingPath("/extension"), true);
   });
 
   it("requires session middleware for auth and product routes", () => {

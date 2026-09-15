@@ -31,35 +31,29 @@ export default function ContactPage() {
       <article className="container mx-auto max-w-2xl px-4 py-14 lg:py-20">
         <div className="mb-8 flex items-center gap-3">
           <AnidachiLogo size={40} priority />
-          <p className="text-xl font-bold tracking-[-0.03em] text-foreground">
+          <p className="text-xl font-semibold tracking-[-0.03em] text-ani-text">
             AniDachi
           </p>
         </div>
 
-        <h1 className="mb-4 text-balance text-4xl font-bold tracking-[-0.03em] text-foreground md:text-5xl md:leading-[1.08]">
+        <h1 className="mb-4 text-balance text-4xl font-semibold tracking-[-0.03em] text-ani-text md:text-5xl md:leading-[1.08]">
           Contact
         </h1>
-        <p className="mb-10 max-w-xl text-pretty text-lg leading-relaxed text-foreground/70">
+        <p className="mb-10 max-w-xl text-pretty text-lg leading-relaxed text-ani-muted">
           We are a small team. Send a message below — include the page URL,
           browser, and extension version when it helps.
         </p>
 
-        <div className="relative mb-10 overflow-hidden rounded-2xl border border-brand-border/80 bg-brand-surface px-5 py-6 sm:px-7">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_0%_0%,oklch(0.71_0.20_45_/_0.12),transparent_55%)]"
-          />
-          <div className="relative">
-            <ContactForm />
-          </div>
+        <div className="relative mb-10 overflow-hidden rounded-[20px] border border-ani-line bg-ani-panel px-5 py-6 sm:px-7">
+          <ContactForm />
         </div>
 
-        <div className="space-y-3 text-sm leading-relaxed text-foreground/55">
+        <div className="space-y-3 text-sm leading-relaxed text-ani-muted">
           <p>
             Product ideas?{" "}
             <Link
               href="/feature-requests"
-              className="text-brand-orange hover:underline"
+              className="text-ani-text underline decoration-ani-line underline-offset-2 hover:text-ani-primary"
             >
               Submit a feature request
             </Link>
@@ -67,17 +61,17 @@ export default function ContactPage() {
           </p>
           <p>
             Privacy details:{" "}
-            <Link href="/privacy" className="text-brand-orange hover:underline">
+            <Link href="/privacy" className="text-ani-text underline decoration-ani-line underline-offset-2 hover:text-ani-primary">
               Privacy Policy
             </Link>
             . Security notes:{" "}
-            <Link href="/security" className="text-brand-orange hover:underline">
+            <Link href="/security" className="text-ani-text underline decoration-ani-line underline-offset-2 hover:text-ani-primary">
               Security &amp; permissions
             </Link>
             . Editorial process:{" "}
             <Link
               href="/editorial-policy"
-              className="text-brand-orange hover:underline"
+              className="text-ani-text underline decoration-ani-line underline-offset-2 hover:text-ani-primary"
             >
               Editorial Policy
             </Link>

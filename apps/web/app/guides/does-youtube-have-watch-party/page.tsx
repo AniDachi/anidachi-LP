@@ -150,8 +150,8 @@ export default function DoesYoutubeHaveWatchPartyPage() {
         <li>
           <strong>AniDachi:</strong> YouTube + Crunchyroll watchrooms, live sync, async
           reactions — start from{" "}
-          <Link href="/pricing" className="text-brand-orange hover:underline">
-            pricing / early access
+          <Link href="/extension" className="text-brand-orange hover:underline">
+            the AniDachi install page
           </Link>
           .
         </li>
@@ -181,7 +181,7 @@ export default function DoesYoutubeHaveWatchPartyPage() {
         Quick AniDachi Setup
       </h2>
       <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
-        <li>Get early access and the Chrome extension from /pricing.</li>
+        <li>Open /extension, download the official zip, then Load unpacked in Chrome.</li>
         <li>Open the full YouTube video everyone agreed on.</li>
         <li>Create a watchroom and share the invite link.</li>
         <li>Keep Discord for voice; let AniDachi own playback sync.</li>

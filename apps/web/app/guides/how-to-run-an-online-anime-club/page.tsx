@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
+import {
+  ASYNC_COMING_SOON,
+  PRICING_ROOM_SIZE_RANGE,
+} from "@/lib/pricing-copy";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 
 const SITE_URL = getResolvedSiteOrigin();
@@ -37,7 +41,7 @@ const faq = [
   {
     question: "How many members can an online anime club have?",
     answer:
-      "AniDachi watchrooms work well for 2–10 active watchers per session. Larger clubs can split into sub-groups by timezone or genre preference, or rotate who picks the weekly show. Async mode lets bigger clubs stay connected without requiring everyone online simultaneously.",
+      `AniDachi watchrooms work well for ${PRICING_ROOM_SIZE_RANGE} per session. Larger clubs can split into sub-groups by timezone or genre preference, or rotate who picks the weekly show. ${ASYNC_COMING_SOON} — that will help bigger clubs stay connected without requiring everyone online simultaneously.`,
   },
   {
     question: "What shows should an anime club watch first?",

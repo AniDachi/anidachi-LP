@@ -99,7 +99,7 @@ const howToSteps = [
   },
   {
     name: "Optional: add synced playback",
-    text: "If manual syncing feels messy, move playback to an AniDachi Crunchyroll watchroom from pricing / early access and keep Discord open for voice.",
+    text: "If manual syncing feels messy, move playback to an AniDachi Crunchyroll watchroom from the install page (/extension) and keep Discord open for voice.",
   },
 ];
 
@@ -147,8 +147,8 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
           </strong>{" "}
           This guide covers Go Live setup, voice countdown sync, and the hybrid
           stack that fixes screen-share pain. Start at{" "}
-          <Link href="/pricing" className="text-brand-orange hover:underline">
-            AniDachi pricing / early access
+          <Link href="/extension" className="text-brand-orange hover:underline">
+            the AniDachi install page
           </Link>{" "}
           or the{" "}
           <Link
@@ -229,8 +229,8 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
           person&apos;s stream and keep chat tied to progress — helpful when half
           the crew watches live and the rest catches up later without spoiling
           the thread. Get the extension from{" "}
-          <Link href="/pricing" className="text-brand-orange hover:underline">
-            AniDachi pricing / early access
+          <Link href="/extension" className="text-brand-orange hover:underline">
+            the AniDachi install page
           </Link>
           .
         </p>
@@ -289,16 +289,11 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
           Quick setup checklist
         </h2>
         <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
-          <li>Create or choose a server and a dedicated voice lounge.</li>
-          <li>Add a text channel for schedules and non-spoiler reactions.</li>
-          <li>Agree on screen share vs solo streams before episode one starts.</li>
-          <li>
-            If using solo streams, rehearse a three-second countdown in voice.
-          </li>
-          <li>
-            If drift or spoilers pile up, switch playback to synced watchrooms and
-            keep Discord audio open.
-          </li>
+          {howToSteps.map((step) => (
+            <li key={step.name}>
+              <strong>{step.name}.</strong> {step.text}
+            </li>
+          ))}
         </ol>
 
         <h2
@@ -319,8 +314,8 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
             </Link>
           </li>
           <li>
-            <Link href="/pricing" className="hover:underline">
-              AniDachi pricing / early access
+            <Link href="/extension" className="hover:underline">
+              AniDachi install page
             </Link>
           </li>
           <li>

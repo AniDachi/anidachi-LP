@@ -18,6 +18,9 @@ const CATEGORY_LABELS: Record<ContactCategory, string> = {
 
 const BUG_REPORT_SUBJECT_PREFIX = "[Bug report] ";
 
+const publicFieldClass =
+  "w-full rounded-xl border border-ani-control-border bg-ani-canvas px-3.5 py-2.5 text-ani-text outline-none transition-colors focus:border-ani-focus focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ani-focus";
+
 export function ContactForm({
   variant = "public",
   initialContact,
@@ -36,6 +39,13 @@ export function ContactForm({
     "idle" | "submitting" | "success" | "error"
   >("idle");
   const [error, setError] = useState<string | null>(null);
+
+  const fieldClass = isBugReport
+    ? "w-full rounded-xl border border-brand-border bg-background px-3.5 py-2.5 text-foreground outline-none transition-colors focus:border-brand-orange"
+    : publicFieldClass;
+  const labelClass = isBugReport
+    ? "mb-1.5 block font-medium text-foreground"
+    : "mb-1.5 block font-medium text-ani-text";
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -89,14 +99,26 @@ export function ContactForm({
         className={
           isBugReport
             ? "ac-empty ac-form-success"
-            : "rounded-2xl border border-brand-border/80 bg-brand-surface px-6 py-8 text-center"
+            : "rounded-[20px] border border-ani-line bg-ani-panel px-6 py-8 text-center"
         }
         role="status"
       >
-        <p className="text-lg font-semibold tracking-[-0.01em] text-foreground">
+        <p
+          className={
+            isBugReport
+              ? "text-lg font-semibold tracking-[-0.01em] text-foreground"
+              : "text-lg font-semibold tracking-[-0.01em] text-ani-text"
+          }
+        >
           {isBugReport ? "Bug report sent" : "Message sent"}
         </p>
-        <p className="mt-2 text-sm leading-relaxed text-foreground/65">
+        <p
+          className={
+            isBugReport
+              ? "mt-2 text-sm leading-relaxed text-foreground/65"
+              : "mt-2 text-sm leading-relaxed text-ani-muted"
+          }
+        >
           {isBugReport
             ? "Thanks for helping us improve AniDachi. We will reply to your email if we need more details."
             : "We typically reply within a few business days. Urgent billing issues — put “Billing” in the subject next time."}
@@ -105,7 +127,7 @@ export function ContactForm({
           type="button"
           variant="ghost"
           className={
-            isBugReport ? "ac-button mt-6" : "mt-6 border border-brand-border"
+            isBugReport ? "ac-button mt-6" : "mt-6 border border-ani-line"
           }
           onClick={() => setStatus("idle")}
         >
@@ -118,19 +140,19 @@ export function ContactForm({
   const contactFields = (
     <div className="grid gap-5 sm:grid-cols-2">
       <label className="block text-sm">
-        <span className="mb-1.5 block font-medium text-foreground">Name</span>
+        <span className={labelClass}>Name</span>
         <input
           disabled={status === "submitting"}
           required
           maxLength={120}
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full rounded-xl border border-brand-border bg-background px-3.5 py-2.5 text-foreground outline-none transition-colors focus:border-brand-orange"
+          className={fieldClass}
           autoComplete="name"
         />
       </label>
       <label className="block text-sm">
-        <span className="mb-1.5 block font-medium text-foreground">Email</span>
+        <span className={labelClass}>Email</span>
         <input
           disabled={status === "submitting"}
           required
@@ -138,7 +160,7 @@ export function ContactForm({
           maxLength={254}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-xl border border-brand-border bg-background px-3.5 py-2.5 text-foreground outline-none transition-colors focus:border-brand-orange"
+          className={fieldClass}
           autoComplete="email"
         />
       </label>
@@ -159,14 +181,12 @@ export function ContactForm({
 
       {!isBugReport ? (
         <label className="block text-sm">
-          <span className="mb-1.5 block font-medium text-foreground">
-            Topic
-          </span>
+          <span className={labelClass}>Topic</span>
           <select
             disabled={status === "submitting"}
             value={category}
             onChange={(e) => setCategory(e.target.value as ContactCategory)}
-            className="w-full rounded-xl border border-brand-border bg-background px-3.5 py-2.5 text-foreground outline-none transition-colors focus:border-brand-orange"
+            className={fieldClass}
           >
             {CONTACT_CATEGORIES.map((value) => (
               <option key={value} value={value}>
@@ -178,7 +198,7 @@ export function ContactForm({
       ) : null}
 
       <label className="block text-sm">
-        <span className="mb-1.5 block font-medium text-foreground">
+        <span className={labelClass}>
           {isBugReport ? "Short title" : "Subject"}
         </span>
         <input
@@ -188,16 +208,14 @@ export function ContactForm({
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
           placeholder={
-            isBugReport
-              ? "e.g. Microphone stays muted"
-              : undefined
+            isBugReport ? "e.g. Microphone stays muted" : undefined
           }
-          className="w-full rounded-xl border border-brand-border bg-background px-3.5 py-2.5 text-foreground outline-none transition-colors focus:border-brand-orange"
+          className={fieldClass}
         />
       </label>
 
       <label className="block text-sm">
-        <span className="mb-1.5 block font-medium text-foreground">
+        <span className={labelClass}>
           {isBugReport ? "What happened?" : "Message"}
         </span>
         <textarea
@@ -212,7 +230,11 @@ export function ContactForm({
               ? "What were you doing, what did you expect, and what happened instead?"
               : "Include the page URL, browser, and extension version when relevant."
           }
-          className="w-full resize-y rounded-xl border border-brand-border bg-background px-3.5 py-2.5 text-foreground outline-none transition-colors focus:border-brand-orange placeholder:text-foreground/35"
+          className={
+            isBugReport
+              ? `resize-y ${fieldClass}`
+              : "w-full resize-y rounded-xl border border-ani-control-border bg-ani-canvas px-3.5 py-2.5 text-ani-text outline-none transition-colors placeholder:text-ani-muted focus:border-ani-focus focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ani-focus"
+          }
         />
       </label>
 
@@ -249,13 +271,14 @@ export function ContactForm({
 
       <Button
         type="submit"
-        size="touch"
         disabled={status === "submitting"}
         className={
           isBugReport
             ? "ac-button ac-button-primary"
-            : "w-full bg-brand-orange font-semibold text-primary-foreground transition-[transform,background-color] duration-200 hover:bg-brand-orange-deep active:scale-[0.98] sm:w-auto"
+            : "w-full sm:w-auto"
         }
+        variant={isBugReport ? undefined : "cream"}
+        size={isBugReport ? undefined : "control"}
       >
         {status === "submitting"
           ? "Sending…"

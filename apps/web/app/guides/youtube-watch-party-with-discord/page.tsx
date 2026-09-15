@@ -140,8 +140,8 @@ export default function YoutubeWatchPartyWithDiscordPage() {
           </strong>{" "}
           Full quality on each person’s YouTube tab, conversation in Discord.
           Start at{" "}
-          <Link href="/pricing" className="text-brand-orange hover:underline">
-            pricing / early access
+          <Link href="/extension" className="text-brand-orange hover:underline">
+            the AniDachi install page
           </Link>
           .
         </p>

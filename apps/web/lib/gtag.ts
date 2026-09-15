@@ -11,10 +11,11 @@ export function trackEvent(
   action: string,
   params?: Record<string, unknown>
 ) {
-  if (typeof window !== "undefined" && typeof window.gtag === "function") {
+  if (typeof window === "undefined") return;
+  if (typeof window.gtag === "function") {
     window.gtag("event", action, params);
-    void import("@/lib/amplitude").then((m) =>
-      m.trackAmplitudeEvent(action, params).catch(() => {})
-    );
   }
+  void import("@/lib/amplitude").then((m) =>
+    m.trackAmplitudeEvent(action, params).catch(() => {})
+  );
 }

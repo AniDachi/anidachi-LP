@@ -25,7 +25,7 @@ export function HomeSectionHeader({
     >
       <TitleTag
         className={cn(
-          "text-balance text-3xl font-bold tracking-[-0.03em] text-foreground md:text-4xl md:leading-[1.1]",
+          "text-balance text-3xl font-semibold tracking-[-0.03em] text-ani-text md:text-4xl md:leading-[1.1]",
           description ? "mb-4" : null,
         )}
       >
@@ -34,7 +34,7 @@ export function HomeSectionHeader({
       {description ? (
         <p
           className={cn(
-            "text-pretty text-base leading-relaxed text-foreground/70 md:text-lg",
+            "text-pretty text-base leading-relaxed text-ani-muted md:text-lg",
             align === "center" ? "mx-auto" : null,
           )}
         >

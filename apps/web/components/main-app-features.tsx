@@ -1,36 +1,41 @@
 "use client";
 
-import { Users, MessageSquare, History, ArrowRight } from "lucide-react";
+import { History, LayoutGrid, Play } from "lucide-react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { HomeSectionHeader } from "@/components/home-section-header";
+import { trackConversion } from "@/lib/conversion-events";
+import {
+  INSTALL_CTA_LABEL,
+  INSTALL_HUB_PATH,
+} from "@/lib/install-cta";
 
 const features = [
   {
-    id: "async-watching",
-    icon: Users,
-    title: "Asynchronous group watching",
-    benefit: "Never miss watching with friends again",
+    id: "live-sync",
+    icon: Play,
+    title: "Live sync on your player",
+    benefit: "Same episode, same moment — on your own stream",
     description:
-      "Create watchrooms and invite friends even when you're not online together. Everyone watches at their own pace — AniDachi tracks progress so no one falls behind.",
-    link: "/guides/asynchronous-vs-live-watch-party",
-    showLearnMore: true,
+      "AniDachi detects the Crunchyroll or YouTube title, you create a room, and friends join on their own player. Playback stays synced without screen share.",
     featured: true,
+    showInstallCta: true,
   },
   {
-    id: "chat",
-    icon: MessageSquare,
-    title: "Integrated chat and discussions",
-    benefit: "Share every epic moment instantly",
+    id: "overlay",
+    icon: LayoutGrid,
+    title: "Overlay chat, reactions, and layout",
+    benefit: "Everything stays on the video",
     description:
-      "React to plot twists and leave time-stamped comments your friends see when they catch up — every conversation stays on the episode.",
+      "Chat and reactions sit on the player. Drag cameras and chat where you want them — no Discord window dance beside a compressed share.",
   },
   {
     id: "history",
     icon: History,
-    title: "Personalized watch history",
+    title: "Watch history that sticks",
     benefit: "Always know where you left off",
     description:
-      "Track watch history across every room. See what friends have finished and pick up the right episode every time.",
+      "Personal watch history and Resume keep your place across rooms — pick up the right episode next time, whether you host or join.",
   },
 ] as const;
 
@@ -39,49 +44,53 @@ export function MainAppFeatures() {
   const secondary = features.filter((f) => !("featured" in f && f.featured));
 
   return (
-    <section id="features" className="bg-background py-16 lg:py-24">
+    <section id="features" className="bg-ani-canvas py-16 lg:py-24">
       <div className="container mx-auto px-4">
         <HomeSectionHeader
           title="Your watchroom hub"
-          description="Crunchyroll anime nights and YouTube hangs — sync, chat, and progress on your schedule."
+          description="Crunchyroll anime nights and YouTube hangs — synced playback, overlay chat, cameras, and push-to-talk on your real player."
         />
 
         <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-12 lg:gap-6">
           <article
             id={featured.id}
-            className="relative overflow-hidden rounded-2xl border border-brand-border/80 bg-brand-surface p-6 sm:p-8 lg:col-span-7 lg:p-10"
+            className="rounded-[20px] border border-ani-line bg-ani-panel p-6 sm:p-8 lg:col-span-7 lg:p-10"
           >
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 bg-[radial-gradient(90%_70%_at_0%_0%,oklch(0.71_0.20_45_/_0.12),transparent_55%)]"
+            <featured.icon
+              className="mb-5 h-7 w-7 text-ani-progress"
+              aria-hidden="true"
             />
-            <div className="relative">
-              <featured.icon
-                className="mb-5 h-7 w-7 text-brand-orange"
-                aria-hidden="true"
-              />
-              <h3 className="mb-2 text-2xl font-bold tracking-[-0.02em] text-foreground md:text-3xl">
-                {featured.title}
-              </h3>
-              <p className="mb-3 text-sm font-medium text-brand-orange-bright">
-                {featured.benefit}
-              </p>
-              <p className="max-w-xl text-[0.95rem] leading-relaxed text-foreground/70 md:text-base">
-                {featured.description}
-              </p>
-              {"showLearnMore" in featured && featured.showLearnMore ? (
+            <h3 className="mb-2 text-2xl font-semibold tracking-[-0.02em] text-ani-text md:text-3xl">
+              {featured.title}
+            </h3>
+            <p className="mb-3 text-sm font-medium text-ani-muted">
+              {featured.benefit}
+            </p>
+            <p className="max-w-xl text-[0.95rem] leading-relaxed text-ani-muted md:text-base">
+              {featured.description}
+            </p>
+            {"showInstallCta" in featured && featured.showInstallCta ? (
+              <Button
+                variant="cream"
+                size="control"
+                className="mt-6 w-full px-8 text-sm sm:w-auto"
+                asChild
+              >
                 <Link
-                  href={featured.link}
-                  className="group/btn mt-6 inline-flex items-center text-sm font-medium text-brand-orange transition-colors hover:text-brand-orange-bright"
+                  href={INSTALL_HUB_PATH}
+                  onClick={() => {
+                    trackConversion("cta_click", {
+                      page_path: "/",
+                      page_template: "home",
+                      placement: "home_features",
+                      cta_variant: "features_install",
+                    });
+                  }}
                 >
-                  Learn more
-                  <ArrowRight
-                    className="ml-1 h-4 w-4 transition-transform duration-200 ease-out group-hover/btn:translate-x-1"
-                    aria-hidden="true"
-                  />
+                  {INSTALL_CTA_LABEL}
                 </Link>
-              ) : null}
-            </div>
+              </Button>
+            ) : null}
           </article>
 
           <div className="flex flex-col gap-5 lg:col-span-5">
@@ -89,19 +98,19 @@ export function MainAppFeatures() {
               <article
                 key={feature.id}
                 id={feature.id}
-                className="rounded-2xl border border-brand-border/70 bg-brand-surface/60 p-6 transition-[border-color,background-color] duration-200 hover:border-brand-border hover:bg-brand-surface"
+                className="rounded-[20px] border border-ani-line p-6"
               >
                 <feature.icon
-                  className="mb-3 h-5 w-5 text-brand-orange/90"
+                  className="mb-3 h-5 w-5 text-ani-progress"
                   aria-hidden="true"
                 />
-                <h3 className="mb-1 text-lg font-semibold tracking-[-0.01em] text-foreground">
+                <h3 className="mb-1 text-lg font-semibold tracking-[-0.02em] text-ani-text">
                   {feature.title}
                 </h3>
-                <p className="mb-2 text-sm font-medium text-foreground/55">
+                <p className="mb-2 text-sm font-medium text-ani-muted">
                   {feature.benefit}
                 </p>
-                <p className="text-sm leading-relaxed text-foreground/70">
+                <p className="text-sm leading-relaxed text-ani-muted">
                   {feature.description}
                 </p>
               </article>

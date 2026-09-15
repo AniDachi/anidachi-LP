@@ -3,7 +3,7 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { HowToJsonLd } from "@/components/json-ld";
-import { PRICING_EARLY_ACCESS_PRICE } from "@/lib/pricing-copy";
+import { PRICING_PLUS_PRICE_LINE } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
   title: "Watch Crunchyroll Together Long Distance (2026) | AniDachi",
@@ -271,7 +271,7 @@ export default function WatchCrunchyrollTogetherLongDistancePage() {
             {
               feature: "Cost",
               values: {
-                anidachi: PRICING_EARLY_ACCESS_PRICE,
+                anidachi: PRICING_PLUS_PRICE_LINE,
                 teleparty: "Freemium",
                 discord: "Free",
                 "press-play": "Free",

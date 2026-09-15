@@ -15,12 +15,12 @@ export type CompareTableRow = {
 
 function CellIcon({ value }: { value: CompareCellValue }) {
   if (value === "yes")
-    return <Check className="h-5 w-5 shrink-0 text-brand-orange" aria-label="Yes" />;
+    return <Check className="h-5 w-5 shrink-0 text-ani-progress" aria-label="Yes" />;
   if (value === "no")
-    return <X className="h-5 w-5 text-red-400 shrink-0" aria-label="No" />;
+    return <X className="h-5 w-5 shrink-0 text-ani-muted" aria-label="No" />;
   if (value === "partial")
-    return <Minus className="h-5 w-5 text-amber-500 shrink-0" aria-label="Partial" />;
-  return <span className="text-sm text-foreground/70 text-right">{value}</span>;
+    return <Minus className="h-5 w-5 shrink-0 text-ani-muted" aria-label="Partial" />;
+  return <span className="text-right text-sm text-ani-muted">{value}</span>;
 }
 
 function displayValue(value: CompareCellValue): CompareCellValue {
@@ -40,29 +40,25 @@ export function ResponsiveCompareTable({
   return (
     <div className={className}>
       <div className="space-y-3 md:hidden">
-        {rows.map((row, i) => (
+        {rows.map((row) => (
           <div
             key={row.feature}
-            className={`rounded-xl border border-brand-border bg-brand-surface p-4 ${
-              i % 2 === 1 ? "bg-brand-surface/80" : ""
-            }`}
+            className="rounded-[12px] border border-ani-line p-4"
           >
-            <p className="font-semibold text-foreground mb-3">{row.feature}</p>
+            <p className="mb-3 font-semibold text-ani-text">{row.feature}</p>
             <div className="space-y-2">
               {columns.map((col) => (
                 <div
                   key={col.id}
-                  className={`flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm ${
-                    col.highlight
-                      ? "bg-brand-orange/10 border border-brand-orange/20"
-                      : "bg-background"
+                  className={`flex items-center justify-between gap-3 rounded-[10px] px-3 py-2 text-sm ${
+                    col.highlight ? "bg-ani-selected-quiet" : ""
                   }`}
                 >
                   <span
                     className={
                       col.highlight
-                        ? "font-medium text-brand-orange"
-                        : "text-foreground/60"
+                        ? "font-medium text-ani-text"
+                        : "text-ani-muted"
                     }
                   >
                     {col.label}
@@ -75,18 +71,18 @@ export function ResponsiveCompareTable({
         ))}
       </div>
 
-      <div className="hidden md:block overflow-x-auto">
-        <table className="w-full text-sm border-collapse border border-brand-border">
+      <div className="hidden overflow-x-auto md:block">
+        <table className="w-full border-collapse text-sm">
           <thead>
-            <tr className="bg-brand-surface">
-              <th className="border border-brand-border px-4 py-2 text-left">
+            <tr className="border-b border-ani-line">
+              <th className="px-4 py-3 text-left font-medium text-ani-muted">
                 Feature
               </th>
               {columns.map((col) => (
                 <th
                   key={col.id}
-                  className={`border border-brand-border px-4 py-2 text-left ${
-                    col.highlight ? "text-brand-orange" : ""
+                  className={`px-4 py-3 text-left font-medium ${
+                    col.highlight ? "text-ani-text" : "text-ani-muted"
                   }`}
                 >
                   {col.label}
@@ -94,12 +90,10 @@ export function ResponsiveCompareTable({
               ))}
             </tr>
           </thead>
-          <tbody className="text-foreground/70">
-            {rows.map((row, i) => (
-              <tr key={row.feature} className={i % 2 === 1 ? "bg-brand-surface/50" : ""}>
-                <td className="border border-brand-border px-4 py-2">
-                  {row.feature}
-                </td>
+          <tbody className="text-ani-muted">
+            {rows.map((row) => (
+              <tr key={row.feature} className="border-b border-ani-line">
+                <td className="px-4 py-3 text-ani-text">{row.feature}</td>
                 {columns.map((col) => {
                   const v = row.values[col.id] ?? "";
                   const isIcon =
@@ -107,17 +101,15 @@ export function ResponsiveCompareTable({
                   return (
                     <td
                       key={col.id}
-                      className={`border border-brand-border px-4 py-2 ${
+                      className={`px-4 py-3 ${
                         col.highlight && !isIcon
-                          ? "font-medium text-brand-orange"
+                          ? "font-medium text-ani-text"
                           : ""
-                      } ${isIcon ? "text-center" : ""}`}
+                      } ${isIcon ? "text-center" : ""} ${
+                        col.highlight ? "bg-ani-selected-quiet" : ""
+                      }`}
                     >
-                      {isIcon ? (
-                        <CellIcon value={v} />
-                      ) : (
-                        v
-                      )}
+                      {isIcon ? <CellIcon value={v} /> : v}
                     </td>
                   );
                 })}

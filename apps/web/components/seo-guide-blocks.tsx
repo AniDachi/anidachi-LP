@@ -14,7 +14,7 @@ export function SeoGuideTitle({
   return (
     <h1
       className={cn(
-        "mb-6 max-w-[22ch] text-balance text-4xl font-bold tracking-[-0.03em] text-foreground md:mb-8 md:max-w-none md:text-5xl md:leading-[1.08]",
+        "mb-6 max-w-[22ch] text-balance text-4xl font-bold tracking-[-0.03em] text-ani-text md:mb-8 md:max-w-none md:text-5xl md:leading-[1.08]",
         className,
       )}
     >
@@ -25,7 +25,6 @@ export function SeoGuideTitle({
 
 /**
  * Short-answer / verdict plane. One surface, not a card grid.
- * Soft warm wash from brand orange — no thick accent borders.
  */
 export function SeoGuideAnswer({
   children,
@@ -37,15 +36,11 @@ export function SeoGuideAnswer({
   return (
     <div
       className={cn(
-        "not-prose relative mb-10 overflow-hidden rounded-2xl border border-brand-border/80 bg-brand-surface px-5 py-5 sm:px-7 sm:py-6",
+        "not-prose relative mb-10 overflow-hidden rounded-[20px] border border-ani-line bg-ani-panel px-5 py-5 sm:px-7 sm:py-6",
         className,
       )}
     >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_0%_0%,oklch(0.71_0.20_45_/_0.14),transparent_55%)]"
-      />
-      <div className="relative text-lg leading-relaxed text-foreground/85 sm:text-xl sm:leading-relaxed [&_a]:font-medium [&_a]:text-brand-orange [&_a]:underline-offset-2 hover:[&_a]:text-brand-orange-bright hover:[&_a]:underline [&_strong]:font-semibold [&_strong]:text-foreground">
+      <div className="relative text-lg leading-relaxed text-ani-muted sm:text-xl sm:leading-relaxed [&_a]:font-medium [&_a]:text-ani-text [&_a]:underline [&_a]:decoration-ani-line [&_a]:underline-offset-2 hover:[&_a]:text-ani-primary [&_strong]:font-semibold [&_strong]:text-ani-text">
         {children}
       </div>
     </div>
@@ -73,16 +68,16 @@ export function SeoGuideOptions({
         <li
           key={option.title}
           className={cn(
-            "rounded-xl border px-4 py-4 transition-[transform,border-color,background-color] duration-200 ease-out sm:px-5",
+            "rounded-[12px] border px-4 py-4 transition-[transform,border-color,background-color] duration-200 ease-out sm:px-5",
             option.highlight
-              ? "border-brand-orange/35 bg-brand-orange/[0.06]"
-              : "border-brand-border/70 bg-background/40 hover:border-brand-border hover:bg-brand-surface/60",
+              ? "border-ani-control-border bg-ani-selected-quiet"
+              : "border-ani-line bg-transparent hover:border-ani-control-border hover:bg-ani-hover",
           )}
         >
-          <p className="text-[0.95rem] font-semibold tracking-[-0.01em] text-foreground sm:text-base">
+          <p className="text-[0.95rem] font-semibold tracking-[-0.01em] text-ani-text sm:text-base">
             {option.title}
           </p>
-          <div className="mt-1.5 text-[0.95rem] leading-relaxed text-foreground/75 [&_a]:font-medium [&_a]:text-brand-orange [&_a]:underline-offset-2 hover:[&_a]:underline">
+          <div className="mt-1.5 text-[0.95rem] leading-relaxed text-ani-muted [&_a]:font-medium [&_a]:text-ani-text [&_a]:underline [&_a]:decoration-ani-line [&_a]:underline-offset-2 hover:[&_a]:underline">
             {option.body}
           </div>
         </li>
@@ -109,16 +104,16 @@ export function SeoGuideSteps({
       {steps.map((step, index) => (
         <li key={step.name} className="flex gap-4 sm:gap-5">
           <span
-            className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-orange/15 font-mono text-sm font-semibold tabular-nums text-brand-orange-bright"
+            className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-ani-line bg-ani-hover font-mono text-sm font-semibold tabular-nums text-ani-text"
             aria-hidden
           >
             {index + 1}
           </span>
           <div className="min-w-0 pt-0.5">
-            <p className="font-semibold tracking-[-0.01em] text-foreground">
+            <p className="font-semibold tracking-[-0.01em] text-ani-text">
               {step.name}
             </p>
-            <div className="mt-1 text-[0.95rem] leading-relaxed text-foreground/75 [&_a]:font-medium [&_a]:text-brand-orange [&_a]:underline-offset-2 hover:[&_a]:underline">
+            <div className="mt-1 text-[0.95rem] leading-relaxed text-ani-muted [&_a]:font-medium [&_a]:text-ani-text [&_a]:underline [&_a]:decoration-ani-line [&_a]:underline-offset-2 hover:[&_a]:underline">
               {step.text}
             </div>
           </div>
@@ -141,15 +136,15 @@ export function SeoGuideBulletList({
       {items.map((item, i) => (
         <li
           key={item.title ?? i}
-          className="grid grid-cols-[auto_1fr] gap-x-3 text-[0.95rem] leading-relaxed text-foreground/75"
+          className="grid grid-cols-[auto_1fr] gap-x-3 text-[0.95rem] leading-relaxed text-ani-muted"
         >
           <span
-            className="mt-[0.55rem] h-1.5 w-1.5 shrink-0 rounded-full bg-brand-orange/70"
+            className="mt-[0.55rem] h-1.5 w-1.5 shrink-0 rounded-full bg-ani-progress"
             aria-hidden
           />
           <span>
             {item.title ? (
-              <strong className="font-semibold text-foreground">
+              <strong className="font-semibold text-ani-text">
                 {item.title}
               </strong>
             ) : null}
@@ -173,7 +168,7 @@ export function SeoGuideNote({
   return (
     <aside
       className={cn(
-        "not-prose mb-10 rounded-xl border border-brand-border/60 bg-muted/40 px-5 py-4 text-[0.95rem] leading-relaxed text-foreground/75 [&_a]:font-medium [&_a]:text-brand-orange [&_a]:underline-offset-2 hover:[&_a]:underline",
+        "not-prose mb-10 rounded-[12px] border border-ani-line bg-ani-hover px-5 py-4 text-[0.95rem] leading-relaxed text-ani-muted [&_a]:font-medium [&_a]:text-ani-text [&_a]:underline [&_a]:decoration-ani-line [&_a]:underline-offset-2 hover:[&_a]:underline",
         className,
       )}
     >
@@ -196,16 +191,16 @@ export function SeoGuideRelated({
   className?: string;
 }) {
   return (
-    <ul className={cn("not-prose mb-2 divide-y divide-brand-border/50", className)}>
+    <ul className={cn("not-prose mb-2 divide-y divide-ani-line", className)}>
       {links.map((link) => (
         <li key={link.href}>
           <Link
             href={link.href}
-            className="group flex items-center justify-between gap-4 py-3.5 text-[0.95rem] font-medium text-foreground transition-colors duration-200 hover:text-brand-orange-bright"
+            className="group flex items-center justify-between gap-4 py-3.5 text-[0.95rem] font-medium text-ani-text transition-colors duration-200 hover:text-ani-primary"
           >
             <span className="text-pretty">{link.label}</span>
             <ArrowUpRight
-              className="h-4 w-4 shrink-0 text-brand-orange/70 transition-transform duration-200 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-brand-orange-bright"
+              className="h-4 w-4 shrink-0 text-ani-muted transition-transform duration-200 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-ani-text"
               aria-hidden
             />
           </Link>

@@ -16,7 +16,7 @@ import { getGuideLinks } from "@/lib/guide-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 import {
   PRICING_ASYNC_HOST_SNIPPET,
-  PRICING_EARLY_ACCESS_PRICE,
+  PRICING_PLUS_PRICE_LINE,
   PRICING_IS_ANIDACHI_FREE_YOUTUBE_ANSWER,
 } from "@/lib/pricing-copy";
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
@@ -128,7 +128,7 @@ const startHereItemList = [
 const howToSteps = [
   {
     name: "Install AniDachi",
-    text: "Add the AniDachi Chrome extension and start early access from pricing if you are not already set up.",
+    text: "Open /extension, download the official AniDachi zip, unzip it, then choose Load unpacked in Chrome Developer mode.",
   },
   {
     name: "Open a YouTube watch page",
@@ -245,8 +245,8 @@ export default function WatchYoutubeTogetherPage() {
             creates watchrooms on full YouTube videos with synced playback, chat,
             and async catch-up.
           </strong>{" "}
-          YouTube has no native co-watching feature. Start from{" "}
-          <Link href="/pricing">pricing / early access</Link>. Extension details:{" "}
+          YouTube has no native co-watching feature. Start from the{" "}
+          <Link href="/extension">AniDachi install page</Link>. Extension details:{" "}
           <Link href="/guides/youtube-watch-party-chrome-extension">
             YouTube watch party Chrome extension
           </Link>
@@ -370,7 +370,7 @@ export default function WatchYoutubeTogetherPage() {
             {
               feature: "Pricing",
               values: {
-                anidachi: PRICING_EARLY_ACCESS_PRICE,
+                anidachi: PRICING_PLUS_PRICE_LINE,
                 w2g: "Free + paid",
                 teleparty: "Freemium",
                 discord: "Free",
@@ -411,7 +411,7 @@ export default function WatchYoutubeTogetherPage() {
         <p className="text-foreground/80 leading-relaxed mb-8">
           {PRICING_ASYNC_HOST_SNIPPET} Details on{" "}
           <Link href="/pricing" className="text-brand-orange hover:underline">
-            pricing / early access
+            pricing
           </Link>
           .
         </p>

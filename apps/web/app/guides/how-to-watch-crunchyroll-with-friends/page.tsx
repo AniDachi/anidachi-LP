@@ -21,7 +21,7 @@ import {
 export const metadata: Metadata = {
   title: "How to Watch Crunchyroll with Friends — AniDachi Sync Guide (2026)",
   description:
-    "How to watch Crunchyroll with friends — two people or a group, same time or async. AniDachi syncs each Crunchyroll tab; Discord voice stays optional. Start at pricing.",
+    "How to watch Crunchyroll with friends — two people or a group, same time or async. AniDachi syncs each Crunchyroll tab; Discord voice stays optional. Start at /extension.",
   alternates: { canonical: "/guides/how-to-watch-crunchyroll-with-friends" },
   openGraph: {
     images: [
@@ -49,7 +49,7 @@ const faq = [
   {
     question: "How do I watch Crunchyroll with friends online?",
     answer:
-      "Open /pricing for AniDachi early access, install the Chrome extension, open any anime on Crunchyroll, detect the show, and create a watchroom. Share the invite link so each friend joins on their own Crunchyroll account.",
+      "Open /extension, download the official zip, then Load unpacked in Chrome. Open any anime on Crunchyroll, detect the show, and create a watchroom. Share the invite link so each friend joins on their own Crunchyroll account.",
   },
   {
     question: "How do two people watch Crunchyroll at the same time?",
@@ -90,7 +90,7 @@ const tocHeadings: TocHeading[] = [
 const howToSteps = [
   {
     name: "Get AniDachi",
-    text: "Open AniDachi pricing / early access and install the Chrome extension from there — not a generic Chrome Web Store listing.",
+    text: "Open /extension, download the official zip, then Load unpacked in Chrome. AniDachi is not on the Chrome Web Store yet.",
   },
   {
     name: "Open Crunchyroll",
@@ -162,8 +162,8 @@ export default function HowToWatchWithFriendsPage() {
             Watch Crunchyroll Together
           </Link>
           . Get the extension from{" "}
-          <Link href="/pricing">
-            AniDachi pricing / early access
+          <Link href="/extension">
+            the AniDachi install page
           </Link>
           — not a fake Chrome Web Store install link.
         
@@ -189,9 +189,10 @@ export default function HowToWatchWithFriendsPage() {
                   name: step.name,
                   text: (
                     <>
-                      Open <Link href="/pricing">AniDachi pricing / early access</Link>{" "}
-                      and install the Chrome extension from there — not a generic
-                      Chrome Web Store listing.
+                      Open{" "}
+                      <Link href="/extension">the AniDachi install page</Link>,
+                      download the official zip, then Load unpacked in Chrome.
+                      AniDachi is not on the Chrome Web Store yet.
                     </>
                   ),
                 }

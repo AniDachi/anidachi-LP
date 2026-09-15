@@ -79,20 +79,20 @@ export function SeoPageLayout({
   const showStickyBar = Boolean(aboveFoldCta || hasToc || (faq && faq.length > 0));
 
   const editorialByline = showEditorialByline ? (
-    <p className="not-prose mt-8 border-t border-brand-border pt-4 text-xs text-foreground/45 leading-relaxed">
+    <p className="not-prose mt-8 border-t border-ani-line pt-4 text-xs leading-relaxed text-ani-muted">
       Published {formatIsoDate(datePublished)}
       {dateModified !== datePublished
         ? ` · Updated ${formatIsoDate(dateModified)}`
         : null}
       {" · "}
       By{" "}
-      <Link href="/about" className="text-brand-orange hover:underline">
+      <Link href="/about" className="text-ani-text underline decoration-ani-line underline-offset-2 hover:text-ani-primary">
         AniDachi
       </Link>
       {" · "}
       <Link
         href="/editorial-policy"
-        className="text-brand-orange hover:underline"
+        className="text-ani-text underline decoration-ani-line underline-offset-2 hover:text-ani-primary"
       >
         Editorial policy
       </Link>
@@ -125,32 +125,32 @@ export function SeoPageLayout({
       <main
         id="main-content"
         className={cn(
-          "min-h-screen bg-background",
+          "min-h-screen bg-ani-canvas",
           showStickyBar && "pb-mobile-sticky-bar md:pb-0",
         )}
       >
         <nav
           aria-label="Breadcrumb"
-          className="border-b border-brand-border/80 bg-brand-surface/80"
+          className="border-b border-ani-line bg-ani-canvas"
         >
           <div className="container mx-auto px-4 py-3.5">
-            <ol className="flex flex-wrap items-center gap-2 text-sm tracking-[-0.01em] text-foreground/50">
+            <ol className="flex flex-wrap items-center gap-2 text-sm tracking-[-0.01em] text-ani-muted">
               {breadcrumbs.map((crumb, i) => (
                 <li key={crumb.url} className="flex items-center gap-2">
                   {i > 0 && (
-                    <span className="text-foreground/30" aria-hidden="true">
+                    <span className="text-ani-line" aria-hidden="true">
                       /
                     </span>
                   )}
                   {i < breadcrumbs.length - 1 ? (
                     <Link
                       href={crumb.url}
-                      className="transition-colors duration-200 hover:text-brand-orange-bright"
+                      className="transition-colors duration-200 hover:text-ani-text"
                     >
                       {crumb.name}
                     </Link>
                   ) : (
-                    <span className="max-w-[min(100%,12rem)] truncate font-medium text-foreground sm:max-w-xs md:max-w-md">
+                    <span className="max-w-[min(100%,12rem)] truncate font-medium text-ani-text sm:max-w-xs md:max-w-md">
                       {crumb.name}
                     </span>
                   )}

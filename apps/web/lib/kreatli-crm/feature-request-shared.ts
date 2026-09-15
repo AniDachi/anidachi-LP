@@ -1,6 +1,6 @@
 export const FEATURE_REQUEST_SEGMENT = "feature_request";
 
-/** CRM Survey leads tab includes these (without polluting waitlist `survey_lead`). */
+/** CRM Signups tab includes these (without polluting `survey_lead`). */
 export function hasFeatureRequestSegment(segments: string[]): boolean {
   return segments.includes(FEATURE_REQUEST_SEGMENT);
 }

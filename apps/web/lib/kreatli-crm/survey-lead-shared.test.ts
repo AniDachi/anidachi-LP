@@ -1,14 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  REFERRAL_BUMP_SPOTS,
-  buildReferralJoinUrl,
-  effectiveWaitlistPositionForEmail,
-  generateRefCode,
-  getReferralCount,
-  setReferralCount,
-  waitlistPositionForEmail,
-  withRefCodeSegment,
+  countSurveyLeads,
+  findSurveyLeadByEmail,
+  isSurveyLead,
+  listSurveyLeads,
+  parseSurveyTags,
+  recommendedPlanLabelForTags,
+  surveyLeadsToDelimited,
 } from "./survey-lead-shared";
 import type { Contact } from "./types";
 
@@ -32,57 +31,59 @@ function makeLead(
   };
 }
 
-test("generateRefCode is stable and lowercase", () => {
-  const id = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
-  assert.equal(generateRefCode(id), "a1b2c3d4");
+test("isSurveyLead requires survey_lead segment", () => {
+  assert.equal(isSurveyLead(makeLead("a@example.com", "1")), true);
+  assert.equal(
+    isSurveyLead({
+      ...makeLead("b@example.com", "2"),
+      segments: ["outreach"],
+    }),
+    false,
+  );
 });
 
-test("withRefCodeSegment adds ref_code once", () => {
-  const id = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
-  const once = withRefCodeSegment(["survey_lead"], id);
-  const twice = withRefCodeSegment(once, id);
-  assert.equal(once.filter((s) => s.startsWith("ref_code:")).length, 1);
-  assert.deepEqual(once, twice);
-});
-
-test("effective position drops 10 spots per referral", () => {
+test("listSurveyLeads orders by created_at", () => {
   const contacts = [
+    makeLead("second@example.com", "2026-01-02T00:00:00.000Z"),
     makeLead("first@example.com", "2026-01-01T00:00:00.000Z"),
-    makeLead("second@example.com", "2026-01-02T00:00:00.000Z", [
-      "ref_code:abc12345",
-      "referrals:1",
-    ]),
-    makeLead("third@example.com", "2026-01-03T00:00:00.000Z"),
   ];
-
-  assert.equal(waitlistPositionForEmail(contacts, "second@example.com"), 2);
-  assert.equal(
-    effectiveWaitlistPositionForEmail(contacts, "second@example.com"),
-    Math.max(1, 2 - REFERRAL_BUMP_SPOTS),
+  assert.deepEqual(
+    listSurveyLeads(contacts).map((c) => c.email),
+    ["first@example.com", "second@example.com"],
   );
+  assert.equal(countSurveyLeads(contacts), 2);
 });
 
-test("effective position floors at 1", () => {
-  const contacts = [
-    makeLead("late@example.com", "2026-06-01T00:00:00.000Z", [
-      "ref_code:zzz99999",
-      `referrals:20`,
-    ]),
-  ];
+test("findSurveyLeadByEmail is case-insensitive", () => {
+  const contacts = [makeLead("Host@Example.com", "2026-01-01T00:00:00.000Z")];
   assert.equal(
-    effectiveWaitlistPositionForEmail(contacts, "late@example.com"),
-    1,
+    findSurveyLeadByEmail(contacts, "host@example.com")?.email,
+    "Host@Example.com",
   );
+  assert.equal(findSurveyLeadByEmail(contacts, "missing@example.com"), null);
 });
 
-test("setReferralCount replaces prior value", () => {
-  assert.deepEqual(setReferralCount(["referrals:1"], 2), [
-    "referrals:2",
+test("parseSurveyTags extracts known fields", () => {
+  const tags = parseSurveyTags([
+    "survey_lead",
+    "segment:Friend_group_host",
+    "priority:sync_and_no_spoilers",
+    "noise:ignored",
   ]);
-  assert.equal(getReferralCount(["referrals:3"]), 3);
+  assert.deepEqual(tags, {
+    segment: "Friend_group_host",
+    priority: "sync_and_no_spoilers",
+  });
+  assert.equal(recommendedPlanLabelForTags(tags), "Plus");
 });
 
-test("buildReferralJoinUrl uses join path and ref query", () => {
-  const url = buildReferralJoinUrl("https://www.anidachi.app", "abc12def");
-  assert.equal(url, "https://www.anidachi.app/join?ref=abc12def");
+test("surveyLeadsToDelimited exports CSV header and rows", () => {
+  const csv = surveyLeadsToDelimited([
+    makeLead("a@example.com", "2026-01-01T00:00:00.000Z", [
+      "segment:Friend_group_host",
+    ]),
+  ]);
+  assert.match(csv, /^email,captured_at,status,/);
+  assert.match(csv, /a@example\.com/);
+  assert.match(csv, /Friend group/);
 });

@@ -8,12 +8,13 @@ import { Menu, X, ChevronDown } from "lucide-react";
 import { NavPricingButton } from "@/components/nav-pricing-button";
 import { NavPricingLink } from "@/components/nav-pricing-link";
 import { JoinDiscordButton } from "@/components/join-discord-button";
-import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
 import { cn } from "@/lib/utils";
 import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
-import { AccountEntryLink, UserMenu, type NavUser } from "./account-menu";
+
+import { AccountEntryLink, UserMenu, type NavUser } from "@/components/account-menu";
 import "./account-menu.css";
-export { UserMenu } from "./account-menu";
+
+export { AccountEntryLink, UserMenu, type NavUser } from "@/components/account-menu";
 
 type MeResponse = {
   user?: {
@@ -151,7 +152,7 @@ function ContactNavMenu({
       <li>
         <p
           id="mobile-contact-nav-label"
-          className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wide text-foreground/40"
+          className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wide text-ani-muted"
         >
           Contact
         </p>
@@ -164,10 +165,10 @@ function ContactNavMenu({
               <Link
                 href={link.href}
                 className={cn(
-                  "flex min-h-11 items-center rounded-lg px-3 text-base transition-colors hover:bg-brand-orange hover:text-primary-foreground",
+                  "flex min-h-11 items-center rounded-lg px-3 text-base transition-colors hover:bg-ani-hover hover:text-ani-text",
                   pathname === link.href
-                    ? "text-brand-orange-bright"
-                    : "text-foreground/70",
+                    ? "text-ani-text"
+                    : "text-ani-muted",
                 )}
                 onClick={onNavigate}
               >
@@ -193,8 +194,8 @@ function ContactNavMenu({
         aria-haspopup="menu"
         aria-controls={menuId}
         className={cn(
-          "inline-flex min-h-11 items-center gap-1 transition-colors hover:text-brand-orange-bright",
-          active || open ? "text-brand-orange-bright" : "text-foreground/70",
+          "inline-flex min-h-11 items-center gap-1 transition-colors hover:text-ani-text",
+          active || open ? "text-ani-text" : "text-ani-muted",
         )}
         onClick={() => setOpen((o) => !o)}
         onFocus={() => setOpen(true)}
@@ -212,16 +213,16 @@ function ContactNavMenu({
           aria-label="Contact options"
           className="absolute left-0 top-full z-[100] w-72 pt-2"
         >
-          <div className="rounded-xl border border-brand-border bg-brand-surface p-2 shadow-2xl">
+          <div className="rounded-[20px] border border-ani-line bg-ani-panel p-2 shadow-[0_18px_60px_#0008]">
             {links.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 role="menuitem"
                 className={cn(
-                  "flex flex-col rounded-lg px-3 py-2.5 transition-colors hover:bg-brand-orange hover:text-primary-foreground",
+                  "flex flex-col rounded-lg px-3 py-2.5 transition-colors hover:bg-ani-hover hover:text-ani-text",
                   pathname === link.href &&
-                    "bg-brand-orange/10 text-brand-orange-bright",
+                    "bg-ani-selected-quiet text-ani-text",
                 )}
                 onClick={() => {
                   setOpen(false);
@@ -277,7 +278,7 @@ function WatchNavMenu({
       <li>
         <p
           id="mobile-watch-nav-label"
-          className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wide text-foreground/40"
+          className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wide text-ani-muted"
         >
           Watch
         </p>
@@ -290,10 +291,10 @@ function WatchNavMenu({
               <Link
                 href={hub.href}
                 className={cn(
-                  "flex min-h-11 items-center rounded-lg px-3 text-base transition-colors hover:bg-brand-orange hover:text-primary-foreground",
+                  "flex min-h-11 items-center rounded-lg px-3 text-base transition-colors hover:bg-ani-hover hover:text-ani-text",
                   pathname === hub.href
-                    ? "text-brand-orange-bright"
-                    : "text-foreground/70",
+                    ? "text-ani-text"
+                    : "text-ani-muted",
                 )}
                 onClick={onNavigate}
               >
@@ -319,8 +320,8 @@ function WatchNavMenu({
         aria-haspopup="menu"
         aria-controls={menuId}
         className={cn(
-          "inline-flex min-h-11 items-center gap-1 transition-colors hover:text-brand-orange-bright",
-          active || open ? "text-brand-orange-bright" : "text-foreground/70",
+          "inline-flex min-h-11 items-center gap-1 transition-colors hover:text-ani-text",
+          active || open ? "text-ani-text" : "text-ani-muted",
         )}
         onClick={() => setOpen((o) => !o)}
         onFocus={() => setOpen(true)}
@@ -338,16 +339,16 @@ function WatchNavMenu({
           aria-label="Watch hubs"
           className="absolute left-0 top-full z-[100] w-72 pt-2"
         >
-          <div className="rounded-xl border border-brand-border bg-brand-surface p-2 shadow-2xl glow-orange-sm">
+          <div className="rounded-[20px] border border-ani-line bg-ani-panel p-2 shadow-[0_18px_60px_#0008]">
             {watchHubLinks.map((hub) => (
               <Link
                 key={hub.href}
                 href={hub.href}
                 role="menuitem"
                 className={cn(
-                  "flex flex-col rounded-lg px-3 py-2.5 transition-colors hover:bg-brand-orange hover:text-primary-foreground",
+                  "flex flex-col rounded-lg px-3 py-2.5 transition-colors hover:bg-ani-hover hover:text-ani-text",
                   pathname === hub.href &&
-                    "bg-brand-orange/10 text-brand-orange-bright",
+                    "bg-ani-selected-quiet text-ani-text",
                 )}
                 onClick={() => {
                   setOpen(false);
@@ -366,9 +367,11 @@ function WatchNavMenu({
 }
 
 export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
+  const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [desktop, setDesktop] = useState(false);
   const [user, setUser] = useState<NavUser | null>(initialUser ?? null);
-  const { isOpen: surveyOpen } = usePlanSurvey();
+  const menuToggle = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (initialUser !== undefined) {
@@ -385,100 +388,104 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
     };
   }, [initialUser]);
 
+  useEffect(() => { setMenuOpen(false); }, [pathname]);
+
   useEffect(() => {
-    if (surveyOpen) setMenuOpen(false);
-  }, [surveyOpen]);
+    const media = window.matchMedia("(min-width: 1280px)");
+    const update = () => {
+      setDesktop(media.matches);
+      if (media.matches) setMenuOpen(false);
+    };
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
 
   useEffect(() => {
     if (!menuOpen) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMenuOpen(false);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      event.preventDefault();
+      setMenuOpen(false);
+      menuToggle.current?.focus();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [menuOpen]);
 
-  useEffect(() => {
-    const desktop = window.matchMedia("(min-width: 1280px)");
-    const closeOnDesktop = () => { if (desktop.matches) setMenuOpen(false); };
-    desktop.addEventListener("change", closeOnDesktop);
-    return () => desktop.removeEventListener("change", closeOnDesktop);
-  }, []);
-
-  useBodyScrollLock(menuOpen);
+  useBodyScrollLock(menuOpen && !desktop);
 
   return (
     <nav
       aria-label="Main navigation"
-      className={cn(
-        "top-0 z-[90] flex min-h-14 w-full items-center border-b border-brand-border bg-background/80 pt-safe-top backdrop-blur-xl",
-        surveyOpen ? "fixed left-0 right-0" : "sticky",
-      )}
+      className="sticky top-0 z-[90] flex min-h-14 w-full items-center border-b border-ani-line bg-ani-canvas pt-safe-top"
     >
-      <div className="container mx-auto flex w-full items-center justify-between gap-2 px-4 py-3">
+      <div className="container relative z-50 mx-auto flex w-full items-center justify-between gap-2 px-4 py-3">
         <AnidachiLogoLink
           size={28}
-          wordmarkClassName="hidden min-[400px]:inline text-white"
+          wordmarkClassName="text-ani-text"
           className="min-h-11"
           priority
         />
 
-        {/* Desktop inline nav */}
-        <ul className="hidden items-center gap-5 text-sm xl:flex">
-          <li>
-            <Link
-              href="/#how-it-works"
-              className="inline-flex min-h-11 items-center text-foreground/70 transition-colors hover:text-brand-orange-bright"
-            >
-              How It Works
-            </Link>
-          </li>
-          <WatchNavMenu variant="desktop" />
-          <ContactNavMenu variant="desktop" />
-          <li>
-            <JoinDiscordButton variant="nav" placement="nav" className="min-h-11 rounded-xl px-4" />
-          </li>
-          <li>
-            {user ? <AccountEntryLink /> : <NavPricingButton />}
-          </li>
-          <li>
-            {user ? (
-              <UserMenu user={user} />
-            ) : (
-              <Link
-                href="/login"
-                className="inline-flex min-h-9 items-center rounded-full border border-brand-border px-4 text-sm font-semibold text-foreground transition-colors hover:border-brand-orange/50 hover:text-brand-orange-bright"
-              >
+        <div className="flex min-w-0 items-center gap-2" onKeyDown={(event) => {
+          if (menuOpen && event.key === " " && event.target instanceof Element && event.target.tagName === "BUTTON") {
+            // Next delegates at document, alongside the page-scroll lock listener.
+            event.stopPropagation();
+            event.nativeEvent.stopImmediatePropagation();
+          }
+        }}>
+          {/* Keep the complete inline navigation at widths where it fits. */}
+          <ul className="hidden items-center gap-4 text-sm xl:flex">
+            <li>
+              <Link href="/pricing" className="inline-flex min-h-11 items-center text-ani-muted transition-colors hover:text-ani-text">
+                Pricing
+              </Link>
+            </li>
+            <WatchNavMenu variant="desktop" />
+            <ContactNavMenu variant="desktop" />
+            <li><JoinDiscordButton variant="nav" placement="nav" /></li>
+            <li><NavPricingButton /></li>
+            <li>
+              {user ? <AccountEntryLink /> : (
+                <Link href="/login" className="inline-flex min-h-9 items-center rounded-full border border-ani-line px-4 text-sm font-semibold text-ani-text transition-colors hover:border-ani-control-border-hover hover:text-ani-text">
+                  Sign in
+                </Link>
+              )}
+            </li>
+          </ul>
+
+          {/* Mobile and tablet share one drawer and one breakpoint. */}
+          <div className="flex items-center gap-1 xl:hidden">
+            <span className="inline-flex min-h-11 min-w-11 items-center justify-center">
+              <NavPricingLink className="inline-flex min-h-11 items-center rounded-full border border-ani-control-border px-3 text-sm font-semibold text-ani-text transition-colors hover:bg-ani-hover" />
+            </span>
+            {!user && (
+              <Link href="/login" className="inline-flex min-h-11 items-center rounded-full border border-ani-line px-3 text-xs font-semibold text-ani-text transition-colors hover:border-ani-control-border-hover hover:text-ani-text">
                 Sign in
               </Link>
             )}
-          </li>
-        </ul>
-
-        {/* Keep account access visible on phones and tablets. */}
-        <div className="flex items-center gap-2 xl:hidden">
-          {user ? <AccountEntryLink onClick={() => setMenuOpen(false)} /> : (
-            <>
-              <NavPricingLink className="inline-flex min-h-11 items-center rounded-full border border-brand-orange/30 bg-brand-orange/15 px-3 text-sm font-semibold text-brand-orange-bright" />
-              <Link href="/login" className="inline-flex min-h-11 items-center rounded-full border border-brand-border px-3 text-xs font-semibold text-foreground">Sign in</Link>
-            </>
-          )}
-          <button
-            type="button"
-            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full text-foreground transition-colors hover:bg-white/5"
-            aria-expanded={menuOpen}
-            aria-controls="mobile-nav-menu"
-            aria-label={menuOpen ? "Close menu" : "Open menu"}
-            onClick={() => setMenuOpen((o) => !o)}
-          >
-            {menuOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
-          </button>
-          {user && <UserMenu user={user} compact onOpen={() => setMenuOpen(false)} />}
+            <button
+              ref={menuToggle}
+              type="button"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-ani-text transition-colors hover:bg-ani-hover hover:text-ani-text"
+              aria-expanded={menuOpen}
+              aria-controls="mobile-nav-menu"
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              onClick={(event) => {
+                // Move focus out of the account disclosure before opening the drawer.
+                event.currentTarget.focus();
+                setMenuOpen((open) => !open);
+              }}
+            >
+              {menuOpen ? <X className="h-6 w-6" aria-hidden="true" /> : <Menu className="h-6 w-6" aria-hidden="true" />}
+            </button>
+          </div>
+          {user && <UserMenu user={user} compact={!desktop} onOpen={() => setMenuOpen(false)} />}
         </div>
       </div>
 
-      {/* Mobile drawer */}
-      {menuOpen && (
+      {menuOpen && !desktop && (
         <>
           <button
             type="button"
@@ -489,56 +496,35 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
           <div
             id="mobile-nav-menu"
             data-scroll-lock-scrollable
-            className="absolute inset-x-0 top-full z-[46] max-h-[min(70dvh,calc(100dvh-3.5rem-var(--safe-top)))] overflow-y-auto overscroll-contain border-b border-brand-border bg-background/95 backdrop-blur-xl px-4 py-4 shadow-lg xl:hidden"
+            className="fixed inset-x-0 top-[calc(4.25rem+var(--safe-top))] z-[46] max-h-[min(70dvh,calc(100dvh-4.25rem-var(--safe-top)))] overflow-y-auto overscroll-contain border-b border-ani-line bg-ani-canvas px-4 py-4 xl:hidden"
             role="dialog"
             aria-modal="true"
             aria-label="Mobile navigation menu"
           >
             <ul className="flex flex-col gap-1">
               <li>
-                <Link
-                  href="/#how-it-works"
-                  className="flex min-h-11 items-center rounded-lg px-3 text-base text-foreground/70 transition-colors hover:bg-brand-orange hover:text-primary-foreground"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  How It Works
+                <Link href="/pricing" className="flex min-h-11 items-center rounded-lg px-3 text-base text-ani-muted transition-colors hover:bg-ani-hover hover:text-ani-text" onClick={() => setMenuOpen(false)}>
+                  Pricing
                 </Link>
               </li>
-              <WatchNavMenu
-                variant="mobile"
-                onNavigate={() => setMenuOpen(false)}
-              />
-              <ContactNavMenu
-                variant="mobile"
-                onNavigate={() => setMenuOpen(false)}
-              />
+              <WatchNavMenu variant="mobile" onNavigate={() => setMenuOpen(false)} />
+              <ContactNavMenu variant="mobile" onNavigate={() => setMenuOpen(false)} />
               <li>
-                <JoinDiscordButton
-                  variant="nav"
-                  placement="nav_mobile"
-                  touchTarget
-                  className="w-full"
-                  onClick={() => setMenuOpen(false)}
-                />
+                <JoinDiscordButton variant="nav" placement="nav_mobile" touchTarget className="w-full" onClick={() => setMenuOpen(false)} />
               </li>
               <li>
-                  <Link
-                  href="/#faq"
-                  className="flex min-h-11 items-center rounded-lg px-3 text-base text-foreground/70 transition-colors hover:bg-brand-orange hover:text-primary-foreground"
-                  onClick={() => setMenuOpen(false)}
-                >
+                <Link href="/#faq" className="flex min-h-11 items-center rounded-lg px-3 text-base text-ani-muted transition-colors hover:bg-ani-hover hover:text-ani-text" onClick={() => setMenuOpen(false)}>
                   FAQ
                 </Link>
               </li>
-              {!user && (
-                <>
-                  <li className="pt-2" onClick={() => setMenuOpen(false)}><NavPricingButton /></li>
-                  <li className="mt-2 border-t border-brand-border pt-2">
-                    <Link href="/login" onClick={() => setMenuOpen(false)}
-                      className="flex min-h-11 items-center rounded-lg px-3 text-base font-semibold text-foreground">Sign in</Link>
-                  </li>
-                </>
-              )}
+              <li className="pt-2" onClick={() => setMenuOpen(false)}><NavPricingButton /></li>
+              <li className="mt-2 border-t border-ani-line pt-2">
+                {user ? <AccountEntryLink onClick={() => setMenuOpen(false)} /> : (
+                  <Link href="/login" className="flex min-h-11 items-center rounded-lg px-3 text-base font-semibold text-ani-text transition-colors hover:bg-ani-hover hover:text-ani-text" onClick={() => setMenuOpen(false)}>
+                    Sign in
+                  </Link>
+                )}
+              </li>
             </ul>
           </div>
         </>

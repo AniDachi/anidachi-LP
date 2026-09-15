@@ -31,7 +31,7 @@ export default function TermsPage() {
             Terms of Service
           </h1>
           <p className="text-sm text-foreground/50 mb-10">
-            Last updated: April 23, 2026
+            Last updated: September 15, 2026
           </p>
 
           <div className="prose prose-gray max-w-none space-y-8 text-foreground/80 leading-relaxed">
@@ -56,24 +56,35 @@ export default function TermsPage() {
                 2. Description of Service
               </h2>
               <p>
-                AniDachi provides a platform for watching together through
-                watchrooms, real-time chat, playback synchronization, and a
-                Chrome extension that works on supported streaming platforms
-                (Crunchyroll and YouTube). Free accounts can join
-                friends&apos; watchrooms; Plus and Pro subscriptions unlock
-                hosting without daily limits and larger room capacity.
+                AniDachi provides watchrooms for synchronized viewing on
+                supported platforms (Crunchyroll and YouTube), with chat,
+                reactions, and related social features through a Chrome
+                extension and website. Free accounts can join friends&apos;
+                rooms and host with daily limits. Plus and Pro remove the Free
+                daily host limit, raise room capacity, and unlock personal watch
+                history and Resume for entitled accounts. Planned features may
+                be described as coming soon and are not guaranteed until they
+                ship.
+              </p>
+              <p className="mt-4">
+                Until a Chrome Web Store listing is published, you may install
+                the extension from our official{" "}
+                <Link href="/extension" className="text-brand-orange hover:underline">
+                  install page
+                </Link>{" "}
+                (zip + Load unpacked in Chrome Developer mode). Download only
+                from AniDachi.
               </p>
             </section>
 
             <section>
               <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
-                3. Early Access & Platform Status
+                3. Platform Status
               </h2>
               <p>
-                AniDachi is currently in <strong>early access</strong>. Features
-                may be incomplete, change without notice, or experience downtime.
-                By subscribing during early access, you acknowledge this and
-                agree that the platform is provided &quot;as is.&quot;
+                AniDachi is a live product. Features may change without notice
+                or experience downtime. By using the Service, you acknowledge
+                this and agree that the platform is provided &quot;as is.&quot;
               </p>
             </section>
 
@@ -95,20 +106,21 @@ export default function TermsPage() {
               </h2>
               <p>
                 Paid Plus and Pro subscriptions are billed monthly through Stripe.
-                Free accounts are available at no charge. Prices are listed on
-                our{" "}
-                <Link href="/#pricing" className="text-brand-orange hover:underline">
+                Free accounts are available at no charge. Prices and plan limits
+                are listed on our{" "}
+                <Link href="/pricing" className="text-brand-orange hover:underline">
                   pricing page
                 </Link>
-                . All subscriptions are refundable — if you want a refund or to
-                cancel, email us at{" "}
+                . You can cancel renewal from Account → Subscription; paid
+                access continues until the end of the billing period. For refund
+                requests, email{" "}
                 <a
                   href="mailto:anidachi.app@gmail.com"
                   className="text-brand-orange hover:underline"
                 >
                   anidachi.app@gmail.com
-                </a>{" "}
-                and we will process it promptly.
+                </a>
+                .
               </p>
             </section>
 
@@ -146,7 +158,7 @@ export default function TermsPage() {
                 You retain ownership of any content you create (e.g., chat
                 messages). By posting content, you grant us a license to display
                 it within the Service. AniDachi is not affiliated with
-                Crunchyroll, Sony, or any streaming platform.
+                Crunchyroll, Sony, YouTube, Google, or any streaming platform.
               </p>
             </section>
 
@@ -223,6 +235,13 @@ export default function TermsPage() {
                   className="text-brand-orange hover:underline"
                 >
                   Privacy Policy
+                </Link>
+                {" · "}
+                <Link
+                  href="/security"
+                  className="text-brand-orange hover:underline"
+                >
+                  Security
                 </Link>
               </p>
             </section>

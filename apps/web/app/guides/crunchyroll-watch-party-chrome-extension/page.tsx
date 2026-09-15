@@ -5,7 +5,7 @@ import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getGuideLinks } from "@/lib/guide-links";
 import {
   PRICING_ASYNC_HOST_SNIPPET,
-  PRICING_EARLY_ACCESS_PRICE,
+  PRICING_PLUS_PRICE_LINE,
 } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
@@ -39,7 +39,7 @@ const faq = [
   {
     question: "Are Crunchyroll watch party extensions safe?",
     answer:
-      "During soft launch, start from AniDachi pricing / early access (/pricing) for install instructions. Do not assume a public Chrome Web Store listing until it is live. Always check permissions and publisher info before installing any extension.",
+      "Start from the AniDachi install page (/extension): download the official zip and Load unpacked in Chrome. AniDachi is not on the Chrome Web Store yet. Always check permissions and publisher info before installing any extension.",
   },
   {
     question: "Do watch party extensions work with Crunchyroll ads?",
@@ -169,7 +169,7 @@ export default function CrunchyrollExtensionsPage() {
           {
             feature: "Price",
             values: {
-              anidachi: PRICING_EARLY_ACCESS_PRICE,
+              anidachi: PRICING_PLUS_PRICE_LINE,
               "cr-party": "Free",
               teleparty: "Freemium",
               "roll-together": "Free",
