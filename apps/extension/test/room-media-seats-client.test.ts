@@ -79,7 +79,7 @@ describe("host-managed media seats client", () => {
     media.bindRoomGeneration(1); media.consume(snapshot());
     const command = media.setMediaSeat("user", "session", false)!;
     expect(command).toMatchObject({type: "SET_MEDIA_SEAT", targetUserId: "user", targetParticipantSessionId: "session", expectedSeatRevision: 0, enabled: false, roomGeneration: 1});
-    expect(media.seatControls.get("user")).toEqual({pending: true});
+    expect(media.seatControls.get("user")).toEqual({pending: true, requestId: command.requestId});
     expect(media.snapshot?.participants[0]).toMatchObject({mediaSeatGranted: true});
     expect(media.consume({type: "MEDIA_SEAT_RESULT", requestId: command.requestId, targetParticipantSessionId: "session", code: "OK", snapshot: {...snapshot(99, false), roomGeneration: 2}})).toBe(false);
     expect(media.seatControls.get("user")?.pending).toBe(true);

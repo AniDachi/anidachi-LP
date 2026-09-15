@@ -221,6 +221,7 @@ import {
 	clearRoomSession,
 	clearRoomSessionDepartureIfMatch,
 	discardPreparedRoomSession,
+	loadRoomMediaDefaults,
 	migrateLegacyRoomSession,
 	prepareRoomSession,
 	rememberRoomSessionRecoveryHint,
@@ -834,6 +835,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const storedRoomSessionRef = useRef<RoomSessionRecord | null>(null);
 	const hydratedVoiceParticipantSessionRef = useRef<string | null>(null);
 	const appliedMediaDefaultsSessionRef = useRef<string | null>(null);
+	const selfSeatDefaultsRef = useRef<{
+		media: NonNullable<RoomClient["media"]>;
+		requestId: string;
+		session: RoomSessionRecord;
+		roomGeneration: number;
+		seatRevision: number;
+		confirmed: boolean;
+	} | null>(null);
 	const hydratingVoiceModeRef = useRef<"open-mic" | "push-to-talk" | null>(
 		null,
 	);
@@ -2061,8 +2070,75 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		},
 		[],
 	);
+	const handleSetMediaSeat = useCallback((userId: string, enabled: boolean) => {
+		const client = clientRef.current;
+		const media = client.media;
+		const session = storedRoomSessionRef.current;
+		const isSelf = userId === participantRef.current?.id;
+		if (isSelf) selfSeatDefaultsRef.current = null;
+		const state = media?.snapshot?.participants.find(p => p.participantSessionId === session?.participantSessionId);
+		const disposition = client.setMediaSeat(userId, enabled);
+		const requestId = media?.seatControls.get(userId)?.requestId;
+		if (disposition === "sent" && enabled && isSelf && session && media?.snapshot && requestId &&
+			state && "mediaSeatGranted" in state && !state.mediaSeatGranted && "seatRevision" in state && typeof state.seatRevision === "number" &&
+			participantsRef.current.some(p => p.id === userId && p.role === "host")) {
+			selfSeatDefaultsRef.current = {media, requestId, session,
+				roomGeneration: media.snapshot.roomGeneration, seatRevision: state.seatRevision + 1, confirmed: false};
+		}
+		setMediaRevision(n => n + 1);
+	}, []);
+
+	const restoreSelfSeatDefaults = useCallback(async (event: Extract<ServerEvent, {type: "MEDIA_SEAT_RESULT"}>) => {
+		const operation = selfSeatDefaultsRef.current;
+		if (!operation || operation.confirmed || operation.requestId !== event.requestId) return;
+		if (event.code !== "OK" || event.targetParticipantSessionId !== operation.session.participantSessionId) {
+			selfSeatDefaultsRef.current = null;
+			return;
+		}
+		operation.confirmed = true;
+		const stillCurrent = () => {
+			const session = storedRoomSessionRef.current;
+			const snapshot = operation.media.snapshot;
+			const state = snapshot?.participants.find(p => p.participantSessionId === operation.session.participantSessionId);
+			return selfSeatDefaultsRef.current === operation && statusRef.current === "connected" && clientRef.current.media === operation.media &&
+				Boolean(session && roomSessionIdentityMatches(session, operation.session)) &&
+				roomIdRef.current === operation.session.roomId && participantRef.current?.id === operation.session.ownerUserId &&
+				snapshot?.roomGeneration === operation.roomGeneration && state && "mediaSeatGranted" in state &&
+				state.mediaSeatGranted && "seatRevision" in state && state.seatRevision === operation.seatRevision;
+		};
+		try {
+			// Revocation persists Off for this room, but Last used is a separate
+			// account preference. Let earlier explicit preference writes settle.
+			await Promise.all([voiceModePersistenceQueueRef.current, cameraEnabledPersistenceQueueRef.current]);
+			if (!stillCurrent()) return;
+			const defaults = await loadRoomMediaDefaults(chrome.storage.local, operation.session.ownerUserId);
+			if (!stillCurrent()) return;
+			selfSeatDefaultsRef.current = null;
+			const snapshot = operation.media.snapshot!;
+			const cameraAvailable = snapshot.participants.filter(p => p.cameraGranted).length < snapshot.capabilities.maxCameras;
+			const mode = defaults.voiceMode === "open-mic" && clientRef.current.setMediaIntent("microphone", true) !== "dropped"
+				? "open-mic" : "push-to-talk";
+			const cameraEnabled = defaults.cameraEnabled && cameraAvailable && clientRef.current.setMediaIntent("camera", true) !== "dropped";
+			// These are only local intents. Existing server ACK/epoch checks still
+			// gate capture, and a full camera limit never queues a later start.
+			pushToTalkHeldRef.current = false;
+			hydratingVoiceModeRef.current = mode;
+			dispatchVoiceSession({type: "mode", mode});
+			setCamsEnabled(cameraEnabled);
+			enqueueRoomVoiceModePersistence(mode);
+			enqueueRoomCameraEnabledPersistence(cameraEnabled);
+			setMediaRevision(n => n + 1);
+		} catch {
+			// A failed local read/write cannot authorize device activation.
+		} finally {
+			if (selfSeatDefaultsRef.current === operation) selfSeatDefaultsRef.current = null;
+		}
+	}, [enqueueRoomCameraEnabledPersistence, enqueueRoomVoiceModePersistence]);
+
+	useEffect(() => () => { selfSeatDefaultsRef.current = null; }, []);
 	useEffect(() => {
 		if (!activeVoiceRoomSession) {
+			selfSeatDefaultsRef.current = null;
 			hydratedVoiceParticipantSessionRef.current = null;
 			appliedMediaDefaultsSessionRef.current = null;
 			hydratingVoiceModeRef.current = null;
@@ -2228,6 +2304,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			if (nextStatus === "connected" && previousStatus !== "connected") {
 				connectionGenerationRef.current += 1;
 			}
+			if (nextStatus !== "connected") selfSeatDefaultsRef.current = null;
 			statusRef.current = nextStatus;
 			setStatus(nextStatus);
 			if (nextStatus === "connected") {
@@ -2868,6 +2945,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	);
 
 	const handleGhostCamToggle = useCallback(() => {
+		selfSeatDefaultsRef.current = null;
 		const nextEnabled = !camsEnabled;
 		if (versionedMedia) {
 			if (mediaV3 && nextEnabled && (!localHasMediaSeat || camerasFull)) {
@@ -2953,6 +3031,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	});
 	const handleVoiceModeChange = useCallback(
 		(mode: "open-mic" | "push-to-talk") => {
+			selfSeatDefaultsRef.current = null;
 			if (
 				mode === "open-mic" &&
 				(!roomId || !localHasMediaSeat || !p2pSessionActive)
@@ -3356,6 +3435,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						}
 						if (!media.wants("microphone")) { pushToTalkHeldRef.current = false; dispatchVoiceSession({ type: "terminal-failure" }); }
 					}
+					if (event.type === "MEDIA_SEAT_RESULT") void restoreSelfSeatDefaults(event);
 					return;
 				}
 				case "ROOM_ENDED":
@@ -3704,6 +3784,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			experimentalSuperReactionsEnabled,
 			playbackSyncController,
 			recordChatHistoryMessage,
+			restoreSelfSeatDefaults,
 			reactionsEnabled,
 			showTransientPanelNotice,
 			terminateRoomSession,
@@ -5496,6 +5577,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	);
 
 	const startPushToTalk = useCallback(() => {
+		selfSeatDefaultsRef.current = null;
 		if (voiceSession.mode !== "push-to-talk" || !roomId) {
 			return;
 		}
@@ -6419,7 +6501,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						<RoomPeopleSection
 							mediaSnapshot={versionedMedia ? currentMediaSnapshot : undefined}
 							mediaProtocolVersion={mediaProtocolVersion === 1 ? undefined : mediaProtocolVersion}
-							onSetMediaSeat={(userId, enabled) => { clientRef.current.setMediaSeat(userId, enabled); setMediaRevision(n => n + 1); }}
+							onSetMediaSeat={handleSetMediaSeat}
 							seatControls={clientRef.current.media?.seatControls}
 							microphoneReady={microphoneAuthorized && versionedMedia}
 							onMicrophoneReadyChange={(enabled) => {
