@@ -1,6 +1,6 @@
 # Anidachi Extension Release Channels
 
-Last updated: 2026-09-15.
+Last updated: 2026-09-16.
 
 This document describes the current Chrome extension release setup. Treat it as the
 source of truth for the current implementation, not as a permanent product contract.
@@ -87,8 +87,22 @@ the product decision is explicit.
 
 `pnpm validate:extension:staging` and
 `pnpm validate:extension:production` compare the complete host-permission and
-content-script match sets without depending on order. Missing and extra values
-both fail validation.
+per-script match sets without depending on order. Missing and extra values
+both fail validation. There are three distinct content-script roles:
+
+| Entry | Matches | Frames / execution world |
+| --- | --- | --- |
+| `content-scripts/content.js` | Supported video origins above | All frames / `ISOLATED` |
+| `content-scripts/crunchyroll.js` | `https://*.crunchyroll.com/*` | Top frame / `MAIN` |
+| `content-scripts/site-presence.js` | Production: `https://www.anidachi.app/*`, `https://anidachi.app/*`; staging: `https://staging.anidachi.app/*` | Top frame / `ISOLATED` |
+
+All three run at `document_start`. The existing Crunchyroll page bridge remains
+in `MAIN` for player/catalog integration. Site presence does not move the overlay
+onto marketing pages. Unknown, duplicate, missing or mixed script entries,
+changed execution scope, and fallback injection into blank/origin-derived frames
+fail validation. Each release channel must retain its own stable public manifest
+key; the validator rejects missing or cross-channel keys rather than rejecting
+all staging keys.
 
 The logo's `web_accessible_resources` entry uses the same supported video
 origins in narrow builds; unrelated sites cannot request it. The validator also
@@ -122,6 +136,10 @@ For an explicit local testing artifact with broad page access, use only:
 ```bash
 pnpm build:extension:staging:local-broad
 ```
+
+`pnpm build:extension:staging:broad` is a compatibility alias for the same command.
+Both explicitly pass `--broad`; setting an inherited environment variable alone
+does not broaden a named release build.
 
 That command passes the script's dedicated `--broad` mode. It is not a narrow
 staging release artifact, writes only to the separate local-broad paths below,

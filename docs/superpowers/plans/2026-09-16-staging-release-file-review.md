@@ -9,6 +9,10 @@
 полное ревью. Найденные ранее ошибки отмечены F-ID. Статус «открыто» означает,
 что приемка полного изменения файла и его влияния еще не зафиксирована.
 
+Статус «локально проверено» фиксирует прочитанный полный diff и локальные доказательства
+в [этапе 1 плана](2026-09-15-staging-release-repair-plan.md#локальная-проверка-этапа-1--2026-09-16).
+Он не заменяет удаленный CI и приемку итогового staging-кандидата.
+
 Для каждой строки исполнитель читает diff целиком, проверяет импортирующих и
 runtime-потребителей, отмечает намеренность изменения поведения и записывает
 результат/доказательство в последней колонке. После исправлений статус закрывается
@@ -36,12 +40,12 @@ runtime-потребителей, отмечает намеренность из
 | --- | --- | --- | --- | --- |
 | открыто | M | D | `.cursor/agents/anidachi-seo-aeo-pages.md` | Полное diff-review еще не зафиксировано. |
 | открыто | M | D | `.cursor/scratchpad.md` | Полное diff-review еще не зафиксировано. |
-| открыто | A | E | `apps/extension/.keys/README.md` | Полное diff-review еще не зафиксировано. |
-| открыто | M | E | `apps/extension/AGENTS.md` | Полное diff-review еще не зафиксировано. |
-| открыто | A | E | `apps/extension/entrypoints/site-presence.content.ts` | F01, F08 |
-| открыто | M | E | `apps/extension/src/popup-app.tsx` | Полное diff-review еще не зафиксировано. |
-| открыто | M | E | `apps/extension/src/popup-styles.ts` | Полное diff-review еще не зафиксировано. |
-| открыто | A | E | `apps/extension/src/site-presence.ts` | Полное diff-review еще не зафиксировано. |
+| локально проверено | A | E | `apps/extension/.keys/README.md` | Полный diff прочитан; запрещает production key в иных каналах и private PEM в Git. Сверено с wxt.config.ts и реальными build/ID tests; приватный ключ не читался. |
+| локально проверено | M | E | `apps/extension/AGENTS.md` | Полный diff прочитан; узкие разрешения, стабильный production key и отдельный site presence соответствуют исходникам и stage-1 tests. |
+| открыто | A | E | `apps/extension/entrypoints/site-presence.content.ts` | Полный diff прочитан; F01 покрыт role/build tests. F08 и браузерная совместимость сайта/старого ZIP остаются этапу 3. |
+| открыто | M | E | `apps/extension/src/popup-app.tsx` | Полный diff прочитан: только ZIP update note и ссылка через WEB_HTTP_BASE на /extension. Runtime комнат/истории не затронут; тексты и доступность загрузки проверить в этапах 3/5. |
+| открыто | M | E | `apps/extension/src/popup-styles.ts` | Полный diff прочитан: стили только новых note/link. Визуальная приемка соответствующего popup остается вместе с этапом 3. |
+| открыто | A | E | `apps/extension/src/site-presence.ts` | Полный diff прочитан: только message constants и проверка типа ping. UX handshake и его ограничений проверяется вместе с web consumer в этапе 3. |
 | открыто | M | D | `apps/web/.env.example` | Полное diff-review еще не зафиксировано. |
 | открыто | M | A | `apps/web/app/account/account.css` | Полное diff-review еще не зафиксировано. |
 | открыто | M | A | `apps/web/app/account/help/page.tsx` | Полное diff-review еще не зафиксировано. |
@@ -196,5 +200,5 @@ runtime-потребителей, отмечает намеренность из
 | открыто | A | S | `apps/web/lib/use-in-view.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/lib/watch-page-rich-content.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | M | D | `docs/environment-and-secrets-matrix.md` | Полное diff-review еще не зафиксировано. |
-| открыто | M | D | `package.json` | F03, F14 |
-| открыто | M | I | `scripts/validate-extension-artifact.mjs` | F01, F02 |
+| локально проверено | M | D | `package.json` | Полный исходный diff и исправление прочитаны: F03/F14. Оба broad aliases реально собраны отдельно; staging не перезаписан. Graphify aliases снова используют прежний wrapper; зависимости не менялись. |
+| локально проверено | M | I | `scripts/validate-extension-artifact.mjs` | Полный diff и неизмененные build/config/entrypoint consumers проверены: F01/F02. 29 role/key/permissions/build tests, два real-artifact validators, независимое статическое ревью. Удаленный gate еще обязателен. |

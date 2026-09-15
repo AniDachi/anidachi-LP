@@ -100,7 +100,7 @@ const expectedByChannel = {
       "https://staging.anidachi.app/*",
       "https://anidachi-api-staging.vladislav-gul7.workers.dev/*",
     ],
-    contentMatches: videoHosts,
+    siteMatches: ["https://staging.anidachi.app/*"],
     buildIdPart: "-staging-",
     extensionId: "ndkfphbchhfephdodcpehdcoclojagje",
   },
@@ -113,7 +113,7 @@ const expectedByChannel = {
       "https://www.anidachi.app/*",
       "https://anidachi-api-production.vladislav-gul7.workers.dev/*",
     ],
-    contentMatches: videoHosts,
+    siteMatches: ["https://www.anidachi.app/*", "https://anidachi.app/*"],
     buildIdPart: "-production-",
     extensionId: "gpkolofebdhfpapbbgdkdkmlmjfidgmn",
   },
@@ -125,11 +125,7 @@ assertExactAllowlist(
   hostPermissions,
   expected.hostPermissions,
 );
-assertExactAllowlist(
-  "content-script match",
-  contentMatches,
-  expected.contentMatches,
-);
+assertContentScriptRoles(manifest.content_scripts ?? [], expected.siteMatches);
 
 const publicResources = manifest.web_accessible_resources ?? [];
 if (publicResources.length !== 1 || publicResources[0].extension_ids?.length) {
@@ -177,6 +173,43 @@ function assertExactAllowlist(label, actualValues, expectedValues) {
   }
 }
 
+function assertContentScriptRoles(scripts, siteMatches) {
+  const roles = new Map([
+    ["content-scripts/content.js", {
+      name: "overlay", matches: videoHosts, allFrames: true, world: "ISOLATED",
+    }],
+    ["content-scripts/crunchyroll.js", {
+      name: "crunchyroll", matches: ["https://*.crunchyroll.com/*"], allFrames: false, world: "MAIN",
+    }],
+    ["content-scripts/site-presence.js", {
+      name: "site-presence", matches: siteMatches, allFrames: false, world: "ISOLATED",
+    }],
+  ]);
+  const remaining = new Set(roles.keys());
+  for (const script of scripts) {
+    if (!Array.isArray(script.js) || script.js.length !== 1) {
+      throw new Error("Expected exactly one JavaScript file per content script");
+    }
+    const entry = script.js[0];
+    const role = roles.get(entry);
+    if (!role) throw new Error(`Unexpected content script: ${entry}`);
+    if (!remaining.delete(entry)) throw new Error(`Duplicate content script: ${entry}`);
+    assertExactAllowlist(`${role.name} content-script match`, script.matches ?? [], role.matches);
+    if (
+      (script.all_frames ?? false) !== role.allFrames ||
+      script.run_at !== "document_start" ||
+      (script.world ?? "ISOLATED") !== role.world ||
+      (script.match_about_blank ?? false) !== false ||
+      (script.match_origin_as_fallback ?? false) !== false
+    ) {
+      throw new Error(`Invalid execution scope for ${role.name} content script`);
+    }
+  }
+  if (remaining.size > 0) {
+    throw new Error(`Missing required content script: ${[...remaining].join(", ")}`);
+  }
+}
+
 for (const size of ["16", "32", "48", "128"]) {
   if (!manifest.icons?.[size]) {
     throw new Error(`Missing icon size ${size}`);
@@ -193,16 +226,6 @@ if (!permissions.includes("notifications")) {
 
 if (optionalPermissions.includes("notifications")) {
   throw new Error("Notifications must not be duplicated in optional permissions");
-}
-
-if (channel === "production") {
-  if (!manifest.key) {
-    throw new Error(
-      "Production artifact must include packed `key` so unpacked sideload IDs stay stable",
-    );
-  }
-} else if (manifest.key) {
-  throw new Error("Staging artifact must not reuse the production packed key");
 }
 
 if (Number.parseInt(manifest.minimum_chrome_version ?? "0", 10) < 121) {

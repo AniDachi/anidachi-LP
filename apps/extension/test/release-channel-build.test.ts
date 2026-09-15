@@ -39,6 +39,11 @@ const productionHostPermissions = [
   "https://www.anidachi.app/*",
   "https://anidachi-api-production.vladislav-gul7.workers.dev/*",
 ];
+const productionSiteMatches = [
+  "https://www.anidachi.app/*",
+  "https://anidachi.app/*",
+];
+const stagingSiteMatches = ["https://staging.anidachi.app/*"];
 const hostileEnvironment = {
   NODE_ENV: "test",
   WXT_WEB_HTTP_BASE: "https://evil-web.example",
@@ -49,13 +54,23 @@ const hostileEnvironment = {
 const testVapidPublicKey =
   "BMmz4hkjcP6LhcnVsnYhWVsod_g59o0qr06JXtMfb5nUXpJTp-Khted46CXdnmVDBTOS8sOcKC-wXHSzk4nStRw";
 
+type ContentScript = {
+  js?: string[];
+  matches?: string[];
+  all_frames?: boolean;
+  run_at?: string;
+  match_about_blank?: boolean;
+  match_origin_as_fallback?: boolean;
+  world?: string;
+};
+
 type Manifest = {
   name: string;
   key?: string;
   permissions?: string[];
   host_permissions?: string[];
   web_accessible_resources?: Array<{ resources?: string[]; matches?: string[] }>;
-  content_scripts?: Array<{ matches?: string[] }>;
+  content_scripts?: ContentScript[];
   [key: string]: unknown;
 };
 
@@ -93,16 +108,36 @@ function expectNarrow(manifest: Manifest) {
   }
 }
 
-function expectExact(actual: string[] | undefined, expected: string[]) {
+function expectExact(actual: readonly string[] | undefined, expected: readonly string[]) {
   expect([...(actual ?? [])].sort()).toEqual([...expected].sort());
 }
 
-function contentMatches(manifest: Manifest): string[] {
-  return [
-    ...new Set(
-      (manifest.content_scripts ?? []).flatMap((script) => script.matches ?? []),
-    ),
-  ];
+function contentScript(manifest: Manifest, name: "content" | "crunchyroll" | "site-presence") {
+  const script = manifest.content_scripts?.find((entry) =>
+    entry.js?.includes(`content-scripts/${name}.js`),
+  );
+  expect(script, `Missing ${name} content script`).toBeDefined();
+  return script!;
+}
+
+function expectContentScriptRoles(
+  manifest: Manifest,
+  overlayMatches: string[],
+  siteMatches: string[],
+) {
+  expect(manifest.content_scripts).toHaveLength(3);
+  for (const [name, matches, allFrames, world] of [
+    ["content", overlayMatches, true, "ISOLATED"],
+    ["crunchyroll", ["https://*.crunchyroll.com/*"], false, "MAIN"],
+    ["site-presence", siteMatches, false, "ISOLATED"],
+  ] as const) {
+    const script = contentScript(manifest, name);
+    expect(script.js).toEqual([`content-scripts/${name}.js`]);
+    expectExact(script.matches, matches);
+    expect(script.all_frames ?? false).toBe(allFrames);
+    expect(script.run_at).toBe("document_start");
+    expect(script.world ?? "ISOLATED").toBe(world);
+  }
 }
 
 function artifactText(relativePath: string): string {
@@ -133,7 +168,11 @@ function expectCanonicalRuntime(
   expect(text).not.toContain("Static children should always be an array");
 }
 
-function validateFixture(manifest: Manifest, javascript?: string) {
+function validateFixture(
+  manifest: Manifest,
+  javascript?: string,
+  channel: "production" | "staging" = "production",
+) {
   const fixture = mkdtempSync(join(tmpdir(), "anidachi-extension-validator-"));
   writeFileSync(join(fixture, "manifest.json"), JSON.stringify(manifest));
   if (javascript) {
@@ -147,7 +186,7 @@ function validateFixture(manifest: Manifest, javascript?: string) {
       [
         "scripts/validate-extension-artifact.mjs",
         "--channel",
-        "production",
+        channel,
         "--dir",
         fixture,
       ],
@@ -189,7 +228,7 @@ describe.sequential("extension release channel builds", () => {
     expect(deriveId(manifest.key ?? "")).toBe(productionId);
     expect(manifest.permissions ?? []).not.toContain("downloads");
     expectExact(manifest.host_permissions, productionHostPermissions);
-    expectExact(contentMatches(manifest), videoHosts);
+    expectContentScriptRoles(manifest, videoHosts, productionSiteMatches);
     expectExact(manifest.web_accessible_resources?.[0]?.matches, videoHosts);
     expectNarrow(manifest);
     expectCanonicalRuntime("anidachi-extension-public", {
@@ -218,7 +257,7 @@ describe.sequential("extension release channel builds", () => {
       "https://staging.anidachi.app/*",
       "https://anidachi-api-staging.vladislav-gul7.workers.dev/*",
     ]);
-    expectExact(contentMatches(manifest), videoHosts);
+    expectContentScriptRoles(manifest, videoHosts, stagingSiteMatches);
     expectExact(manifest.web_accessible_resources?.[0]?.matches, videoHosts);
     expectNarrow(manifest);
     expectCanonicalRuntime("anidachi-extension-staging", {
@@ -228,14 +267,17 @@ describe.sequential("extension release channel builds", () => {
     });
   });
 
-  it("keeps broad staging available only through the explicit broad command", {
+  it.each([
+    "build:extension:staging:local-broad",
+    "build:extension:staging:broad",
+  ])("keeps %s separate from the narrow staging artifact", {
     timeout: BUILD_TEST_TIMEOUT_MS,
-  }, () => {
+  }, (command) => {
     const narrowManifestBefore = readFileSync(
       `${repoRoot}/anidachi-extension-staging/manifest.json`,
       "utf8",
     );
-    const result = run("pnpm", ["build:extension:staging:local-broad"], {
+    const result = run("pnpm", [command], {
       ...hostileEnvironment,
       WXT_BROAD_HOST_PERMISSIONS: "false",
     });
@@ -253,10 +295,7 @@ describe.sequential("extension release channel builds", () => {
     );
     expect(manifest.name).toBe("AniDachi Staging");
     expectExact(manifest.host_permissions, localHostPermissions);
-    expectExact(contentMatches(manifest), [
-      ...localHostPermissions,
-      "https://*.crunchyroll.com/*",
-    ]);
+    expectContentScriptRoles(manifest, localHostPermissions, stagingSiteMatches);
     expectCanonicalRuntime("anidachi-extension-staging-local-broad", {
       web: "https://staging.anidachi.app",
       api: "https://anidachi-api-staging.vladislav-gul7.workers.dev",
@@ -273,6 +312,16 @@ describe.sequential("extension release channel builds", () => {
       {},
     );
     expect(ignoreCheck.status, ignoreCheck.stderr).toBe(0);
+  });
+
+  it.each([
+    ["production", "anidachi-extension-public"],
+    ["staging", "anidachi-extension-staging"],
+  ])("validates the real %s artifact with its own stable identity", (channel, dir) => {
+    const result = run("node", [
+      "scripts/validate-extension-artifact.mjs", "--channel", channel, "--dir", dir,
+    ], {});
+    expectSuccessfulBuild(result);
   });
 
   it("rejects a production artifact without its approved public key", () => {
@@ -297,6 +346,26 @@ describe.sequential("extension release channel builds", () => {
     );
   });
 
+  it("rejects a staging artifact carrying the production identity", () => {
+    const manifest = manifestAt("anidachi-extension-staging/manifest.json");
+    manifest.key = manifestAt("anidachi-extension-public/manifest.json").key;
+    const result = validateFixture(manifest, undefined, "staging");
+    expect(result.status).not.toBe(0);
+    expect(`${result.stdout}\n${result.stderr}`).toContain(
+      `Expected staging extension ID ${stagingId}, got ${productionId}`,
+    );
+  });
+
+  it("rejects a staging artifact without its stable key", () => {
+    const manifest = manifestAt("anidachi-extension-staging/manifest.json");
+    delete manifest.key;
+    const result = validateFixture(manifest, undefined, "staging");
+    expect(result.status).not.toBe(0);
+    expect(`${result.stdout}\n${result.stderr}`).toContain(
+      "staging artifact is missing its stable public manifest key",
+    );
+  });
+
   it("rejects an otherwise valid production artifact with an extra host", () => {
     const manifest = manifestAt("anidachi-extension-public/manifest.json");
     manifest.host_permissions = [
@@ -313,17 +382,75 @@ describe.sequential("extension release channel builds", () => {
 
   it("rejects an otherwise valid production artifact with an extra content match", () => {
     const manifest = manifestAt("anidachi-extension-public/manifest.json");
-    manifest.host_permissions = productionHostPermissions;
-    manifest.content_scripts = [
-      ...(manifest.content_scripts ?? []),
-      { matches: ["https://evil-extra.example/*"] },
-    ];
+    contentScript(manifest, "content").matches!.push("https://evil-extra.example/*");
 
     const result = validateFixture(manifest);
     expect(result.status).not.toBe(0);
     expect(`${result.stdout}\n${result.stderr}`).toContain(
-      "Unexpected content-script match: https://evil-extra.example/*",
+      "Unexpected overlay content-script match: https://evil-extra.example/*",
     );
+  });
+
+  it("rejects swapped script scopes even when the combined allowlist stays the same", () => {
+    const manifest = manifestAt("anidachi-extension-public/manifest.json");
+    const overlay = contentScript(manifest, "content");
+    const presence = contentScript(manifest, "site-presence");
+    [overlay.matches, presence.matches] = [presence.matches, overlay.matches];
+    const result = validateFixture(manifest);
+    expect(result.status).not.toBe(0);
+    expect(`${result.stdout}\n${result.stderr}`).toContain("Unexpected overlay content-script match");
+  });
+
+  it.each(["content", "site-presence"] as const)(
+    "rejects mixed scripts in the %s scope", (name) => {
+      const manifest = manifestAt("anidachi-extension-public/manifest.json");
+      contentScript(manifest, name).js!.push("content-scripts/unapproved.js");
+      const result = validateFixture(manifest);
+      expect(result.status).not.toBe(0);
+      expect(`${result.stdout}\n${result.stderr}`).toContain("Expected exactly one JavaScript file per content script");
+    },
+  );
+
+  it.each([
+    ["missing", (manifest: Manifest) => manifest.content_scripts!.pop()],
+    ["duplicate", (manifest: Manifest) => manifest.content_scripts!.push(contentScript(manifest, "content"))],
+    ["unknown", (manifest: Manifest) => { contentScript(manifest, "site-presence").js = ["content-scripts/unknown.js"]; }],
+  ])("rejects a %s script role", (_name, mutate) => {
+    const manifest = manifestAt("anidachi-extension-public/manifest.json");
+    mutate(manifest);
+    const result = validateFixture(manifest);
+    expect(result.status).not.toBe(0);
+    expect(`${result.stdout}\n${result.stderr}`).toMatch(/Missing required content script|Duplicate content script|Unexpected content script/);
+  });
+
+  it("rejects production presence on the staging site", () => {
+    const manifest = manifestAt("anidachi-extension-public/manifest.json");
+    contentScript(manifest, "site-presence").matches!.push(...stagingSiteMatches);
+    const result = validateFixture(manifest);
+    expect(result.status).not.toBe(0);
+    expect(`${result.stdout}\n${result.stderr}`).toContain("Unexpected site-presence content-script match");
+  });
+
+  it("preserves the Crunchyroll page bridge in its required main world", () => {
+    const manifest = manifestAt("anidachi-extension-public/manifest.json");
+    contentScript(manifest, "crunchyroll").world = "ISOLATED";
+    const result = validateFixture(manifest);
+    expect(result.status).not.toBe(0);
+    expect(`${result.stdout}\n${result.stderr}`).toContain("Invalid execution scope for crunchyroll content script");
+  });
+
+  it.each([
+    ["all_frames", true],
+    ["run_at", "document_idle"],
+    ["match_about_blank", true],
+    ["match_origin_as_fallback", true],
+    ["world", "MAIN"],
+  ])("rejects changed presence execution scope %s", (key, value) => {
+    const manifest = manifestAt("anidachi-extension-public/manifest.json");
+    Object.assign(contentScript(manifest, "site-presence"), { [key]: value });
+    const result = validateFixture(manifest);
+    expect(result.status).not.toBe(0);
+    expect(`${result.stdout}\n${result.stderr}`).toContain("Invalid execution scope for site-presence content script");
   });
 
   it("rejects a public logo accessible from unrelated sites", () => {

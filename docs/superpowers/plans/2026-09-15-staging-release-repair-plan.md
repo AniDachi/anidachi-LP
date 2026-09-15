@@ -10,7 +10,7 @@
 
 **Spec:** [Текущее состояние](../../current-development-state.md), [каналы расширения](../../extension-release-channels.md), [личная история и тарифы, уточнение D01](2026-09-08-personal-history-and-plans-mvp.md), [навигация кабинета](../specs/2026-09-10-account-mvp-navigation-design.md) и реестр подтвержденных отклонений ниже. Этот план восстанавливает согласованные контракты, а не вводит новую модель продукта.
 
-**Дата:** 2026-09-15. **Статус:** повторная проверка завершена; реализация этапов не начата. Запись плана не означает разрешение на merge, отправку писем или публикацию ZIP.
+**Дата:** 2026-09-15. **Статус:** повторная проверка известных замечаний завершена; этап 1 в работе с 2026-09-16. Запись плана не означает разрешение на merge, отправку писем или публикацию ZIP.
 
 **Уточнение 2026-09-16:** по просьбе пользователя добавлены полный реестр измененных файлов и обязательная проверка их влияния. Повторная проверка известных замечаний завершена; полное построчное ревью всех 164 файлов и финальная регрессия еще не завершены и не считаются выполненными по наличию этого плана.
 
@@ -122,20 +122,21 @@
 
 ## Этап 1. Восстановить выпуск расширения
 
-**Files — Modify:** `scripts/validate-extension-artifact.mjs`, `apps/extension/test/release-channel-build.test.ts`, `package.json`, `docs/extension-release-channels.md`. Проверить потребителей в `apps/extension/wxt.config.ts`, `apps/extension/entrypoints/content.tsx`, `apps/extension/entrypoints/site-presence.content.ts`, `scripts/build-extension-staging.sh`, `scripts/build-extension-public.sh`; менять их только при доказанном расхождении контракта.
+**Files — Modify:** `scripts/validate-extension-artifact.mjs`, `apps/extension/test/release-channel-build.test.ts`, `package.json`, `docs/extension-release-channels.md`. Проверить потребителей в `apps/extension/wxt.config.ts`, `apps/extension/entrypoints/content.tsx`, `apps/extension/entrypoints/crunchyroll.content.ts`, `apps/extension/entrypoints/site-presence.content.ts`, `scripts/build-extension-staging.sh`, `scripts/build-extension-public.sh`; менять их только при доказанном расхождении контракта.
 
 **Interfaces:** вход валидатора остается `--channel staging|production --dir <artifact>`; успех — exit 0, ошибка — nonzero с конкретным нарушением. Production/staging build scripts принудительно задают свои endpoints и permissions. Результат нужен этапам 3 и 6.
 
-- [ ] Дополнить fixtures: отдельные `content-scripts/content.js` и `content-scripts/site-presence.js`, корректные matches обоих каналов. Отрицательные случаи: overlay на сайте, presence на чужом домене, production с staging key, staging с production key, лишний WAR/широкий wildcard. Фикстура staging со своим ключом обязана проходить.
-- [ ] Проверять роли скриптов, а не только объединение доменов. Контракт:
+- [x] Дополнить fixtures: отдельные `content-scripts/content.js`, прежний `content-scripts/crunchyroll.js` и `content-scripts/site-presence.js`, корректные matches обоих каналов. Отрицательные случаи: overlay на сайте, presence на чужом домене, измененный MAIN world Crunchyroll bridge, production с staging key, staging с production key, лишний WAR/широкий wildcard. Реальный staging-артефакт со своим ключом обязан проходить.
+- [x] Проверять роли скриптов, а не только объединение доменов. Контракт:
 
   ```js
   const siteMatches = channel === "production"
     ? ["https://www.anidachi.app/*", "https://anidachi.app/*"]
     : ["https://staging.anidachi.app/*"];
   const roles = new Map([
-    ["content-scripts/content.js", { matches: videoHosts, allFrames: true }],
-    ["content-scripts/site-presence.js", { matches: siteMatches, allFrames: false }],
+    ["content-scripts/content.js", { matches: videoHosts, allFrames: true, world: "ISOLATED" }],
+    ["content-scripts/crunchyroll.js", { matches: ["https://*.crunchyroll.com/*"], allFrames: false, world: "MAIN" }],
+    ["content-scripts/site-presence.js", { matches: siteMatches, allFrames: false, world: "ISOLATED" }],
   ]);
   const observed = new Set();
   for (const script of manifest.content_scripts ?? []) {
@@ -147,7 +148,9 @@
     const actual = [...(script.matches ?? [])].sort();
     if (JSON.stringify(actual) !== JSON.stringify([...role.matches].sort()) ||
         (script.all_frames ?? false) !== role.allFrames ||
-        script.run_at !== "document_start") {
+        script.run_at !== "document_start" ||
+        (script.world ?? "ISOLATED") !== role.world ||
+        script.match_about_blank === true || script.match_origin_as_fallback === true) {
       throw new Error(`Unexpected content script scope: ${entry}`);
     }
     observed.add(entry);
@@ -157,8 +160,8 @@
 
   `videoHosts` — существующий точный список валидатора; production/staging host permissions и WAR проверяются независимо и не расширяются этим кодом.
 
-- [ ] Заменить поздний запрет любого staging key на единую проверку точного channel ID. Не удалять публичные ключи и не добавлять site-домены в overlay/WAR ради прохождения проверки.
-- [ ] Восстановить команды; broad-алиас не должен перезаписывать обычный staging:
+- [x] Заменить поздний запрет любого staging key на единую проверку точного channel ID. Не удалять публичные ключи и не добавлять site-домены в overlay/WAR ради прохождения проверки.
+- [x] Восстановить команды; broad-алиас не должен перезаписывать обычный staging:
 
   ```json
   {
@@ -170,10 +173,36 @@
   }
   ```
 
-- [ ] Выполнить `pnpm --filter @anidachi/extension exec vitest run test/release-channel-build.test.ts`, затем extension check/test и build/validate staging и production. Tests вызывают реальные сборки: не запускать их одновременно с ручным build в той же папке.
-- [ ] Запустить `pnpm dev:check`, записать docs/Graphify/rollback; commit `fix(extension): restore channel artifact validation`, PR только в staging. Проверить новый CI целиком, включая ранее пропущенные шаги. Новые ошибки CI сначала диагностировать отдельным пунктом; не маскировать skip/ослаблением assertions.
+- [x] Выполнить целевой `test/release-channel-build.test.ts`, затем extension check/test и build/validate staging и production. Tests вызывают реальные сборки: не запускать их одновременно с ручным build в той же папке.
+- [x] Запустить `pnpm dev:check`, полный локальный CI gate и записать docs/Graphify/rollback.
+- [ ] Commit `fix(extension): restore channel artifact validation`, PR только в staging. Проверить новый CI целиком, включая ранее пропущенные шаги. Новые ошибки CI сначала диагностировать отдельным пунктом; не маскировать skip/ослаблением assertions.
 
 **Приемка:** оба узких артефакта валидны; local-broad остается отдельным локальным артефактом; стабильные ID, `jitless`, production React, icons и endpoints сохранены. Сайт не получает overlay, видеоплатформы продолжают получать его. Ничего не публиковать пользователям из feature/staging как окончательный production ZIP.
+
+### Локальная проверка этапа 1 — 2026-09-16
+
+Ветка `codex/extension-release-validation-repair`, исходный HEAD `5c8bd50c` поверх staging `391fb5c9`. F01/F02/F03/F14 исправлены локально; удаленный CI и приемка staging еще не закрыты. Diff runtime расширения, Worker, протокола, web и зависимостей в этом исправлении отсутствует.
+
+При реализации подтверждены три роли скриптов: существующий Crunchyroll bridge в `MAIN` обязателен наряду с overlay и новым site presence. Первоначальный двухролевой пример плана уточнен по реальному manifest; entrypoints не изменены.
+
+| Проверка | Результат |
+| --- | --- |
+| Целевые проверки release channel | 29/29; до исправления 23 ожидаемых падения, после исправления все прошли |
+| `pnpm check` | 6/6 задач; включает extension `wxt prepare` и TypeScript |
+| `pnpm test` | extension 2057, web 588, API 235, protocol 201 passed; 6 прежних web RPC/evidence tests skipped из-за отсутствия внешних fixture JSON |
+| `pnpm --filter @anidachi/api test:runtime` | 75/75 |
+| `pnpm --filter @anidachi/web lint` | exit 0; прежние warnings остаются, файлы сайта в этом блоке не изменены |
+| Worker `wrangler deploy --env staging --dry-run` | exit 0, только локальная сборка |
+| `pnpm harness:rooms` | 39/39 локальных сценариев |
+| Staging/public build и validator | Обе реальные сборки в channel tests и обе отдельные команды `validate:extension:*` прошли; проверены ID, точные роли/домены/WAR, endpoints и production React |
+| ZIP integrity | Оба ZIP проходят CRC, каждый из 12 файлов совпадает с соответствующей проверенной папкой; нет env/private-key/source-map файлов |
+| Независимое статическое ревью | Блокирующих замечаний нет; дополнительная проверка неиспользуемых сейчас exclude/include globs предложена как необязательное усиление, runtime не менялся |
+
+ZIP из channel tests использует тестовый публичный VAPID key и **не предназначен для пользователей**. Финальный артефакт с конфигурацией релизного канала и браузерная приемка нового site presence остаются отдельными gates этапов 3/6. Существующие пропуски web tests не выданы за live SQL-проверку. Первый запуск полного набора уперся в sandbox IPC `EPERM`; повтор с разрешенным локальным сокетом прошел без изменения тестов.
+
+Документация каналов и файловый реестр уточнены. Graphify использован для навигации (`Extension release channel artifact validator stable manifest keys and build scripts`), связи подтверждены исходниками. По просьбе пользователя не обновлять граф на каждой небольшой итерации для этого блока записано исключение: меняются проверки выпуска и aliases, а не runtime-архитектура; полный semantic refresh откладывается до согласованного итогового среза. Восстановление команды само по себе не запускает re-extract.
+
+Rollback этапа 1: revert только fix-commit через отдельный PR в staging. Это вернет известные ошибки release gate, но не меняет ID, данные, серверы и установленные расширения. Продвижение всего staging в main этим блоком не разрешается.
 
 ## Этап 2. Вернуть вход в кабинет и защиту редактирования
 
