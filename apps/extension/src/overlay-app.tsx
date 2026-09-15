@@ -802,12 +802,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			roomId: null,
 		}),
 	);
+	const [expandedPeopleRoomId, setExpandedPeopleRoomId] = useState<string | null>(null);
 	const interfacePreferences = useInterfacePreferences();
 	const roomJoinDefaults = useRoomJoinDefaults(accountUser?.id ?? null);
 	const reactionShortcuts = useReactionShortcuts();
 	const topBubbleReveal = useTopBubbleReveal({
 		bubbleRef: topBubbleRef,
-		mode: interfacePreferences.preferences.mainControlVisibility,
+		mode: interfacePreferences.ready ? interfacePreferences.preferences.mainControlVisibility : "auto-hide",
 		overlayRef: overlayRootRef,
 		panelOpen,
 	});
@@ -6499,6 +6500,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 					{roomId && visibleParticipants.length ? (
 						<RoomPeopleSection
+							expanded={expandedPeopleRoomId === roomId}
+							onExpandedChange={(expanded) => setExpandedPeopleRoomId(expanded ? roomId : null)}
 							mediaSnapshot={versionedMedia ? currentMediaSnapshot : undefined}
 							mediaProtocolVersion={mediaProtocolVersion === 1 ? undefined : mediaProtocolVersion}
 							onSetMediaSeat={handleSetMediaSeat}
@@ -6909,7 +6912,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							reactionCueParticipantIds={reactionCueParticipantIds}
 							speakingParticipantIds={voiceIndicatorParticipantIds}
 							visibilityMode={
-								interfacePreferences.preferences.participantPillVisibility
+								interfacePreferences.ready ? interfacePreferences.preferences.participantPillVisibility : "smart"
 							}
 						/>
 					) : null}

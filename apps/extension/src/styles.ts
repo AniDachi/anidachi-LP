@@ -2202,6 +2202,84 @@ ${extensionThemeTokens}
     background: rgba(255, 255, 255, 0.018);
   }
 
+  .room-people-extra {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    visibility: hidden;
+    transition: grid-template-rows 200ms ease, opacity 150ms ease, visibility 0s 200ms;
+  }
+
+  .room-people-extra[data-expanded="true"] {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+
+  .room-people-extra-scroll {
+    min-height: 0;
+    max-height: 204px;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  .room-people-extra-scroll:hover,
+  .room-people-extra-scroll:focus-within {
+    scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+  }
+
+  .room-people-extra-scroll:focus-visible {
+    outline: 1px solid var(--ad-accent);
+    outline-offset: -2px;
+  }
+
+  .room-people-extra-scroll > .room-people-entry:first-child {
+    border-top: 1px solid rgba(255, 255, 255, 0.055);
+  }
+
+  .room-people-toggle {
+    width: 100%;
+    min-height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 7px 12px;
+    border: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.055);
+    background: transparent;
+    color: rgba(239, 229, 217, 0.7);
+    font: inherit;
+    font-size: 11px;
+    font-weight: 650;
+    cursor: pointer;
+    transition: background 150ms ease, color 150ms ease;
+  }
+
+  .room-people-toggle:hover,
+  .room-people-toggle:focus-visible {
+    background: rgba(239, 229, 217, 0.055);
+    color: #efe5d9;
+  }
+
+  .room-people-toggle:focus-visible {
+    outline: 1px solid var(--ad-accent);
+    outline-offset: -3px;
+    border-radius: 5px;
+  }
+
+  .room-people-toggle svg { transition: transform 200ms ease; }
+  .room-people-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .room-people-extra,
+    .room-people-toggle,
+    .room-people-toggle svg { transition: none; }
+  }
+
   .room-people-entry + .room-people-entry {
     border-top: 1px solid rgba(255, 255, 255, 0.055);
   }

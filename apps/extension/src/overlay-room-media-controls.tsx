@@ -4,6 +4,7 @@ import type {
 	RoomMediaKind,
 } from "@anidachi/protocol";
 import {
+	ChevronDown,
 	CircleCheck,
 	CircleMinus,
 	CirclePlus,
@@ -60,6 +61,8 @@ export function PanelCameraControl({
 }
 
 export interface RoomPeopleSectionProps {
+	expanded: boolean;
+	onExpandedChange: (expanded: boolean) => void;
 	mediaSnapshot?: RoomMediaSnapshot | null;
 	mediaProtocolVersion?: 2 | 3;
 	onSetMediaSeat?: (userId: string, enabled: boolean) => void;
@@ -80,6 +83,8 @@ export interface RoomPeopleSectionProps {
 }
 
 export function RoomPeopleSection({
+	expanded,
+	onExpandedChange,
 	mediaSnapshot,
 	mediaProtocolVersion,
 	onSetMediaSeat,
@@ -114,6 +119,114 @@ export function RoomPeopleSection({
 		!mediaSnapshot?.participants.some(p => p.participantSessionId === item.participantSessionId && "mediaSeatGranted" in p && p.mediaSeatGranted),
 	);
 	const fullReasonId = useId();
+	const extraParticipantsId = useId();
+	const extraCount = Math.max(0, orderedParticipants.length - 2);
+	const hasMore = extraCount > 0;
+	const participantRows = orderedParticipants.map((item) => {
+		const isSpeaking = liveVoiceActiveSpeakerIds.includes(item.id);
+		const isSelf = item.id === currentParticipantId;
+		const isHost = item.role === "host";
+		const identityLabel = isHost ? (
+			<span className="room-people-role">Host</span>
+		) : isSelf ? (
+			<span className="room-people-you">You</span>
+		) : null;
+		const grant = mediaSnapshot?.participants.find(
+			(p) => p.participantSessionId === item.participantSessionId,
+		);
+		const hasSeat = Boolean(grant && "mediaSeatGranted" in grant && grant.mediaSeatGranted);
+		const seatControl = seatControls?.get(item.id);
+		const mediaAction =
+			mediaV3 ? (
+				currentUserIsHost ? <button
+					className={`room-media-seat-control ${hasSeat ? "active" : "inactive"}`}
+					type="button"
+					aria-pressed={hasSeat}
+					aria-label={`${hasSeat ? "Revoke" : "Grant"} media seat: ${item.displayName}`}
+					title={`${hasSeat ? "Revoke" : "Grant"} media seat`}
+					aria-describedby={!hasSeat && mediaSeatsFull ? fullReasonId : undefined}
+					disabled={!grant || seatControl?.pending || (!hasSeat && mediaSeatsFull)}
+					onClick={() => onSetMediaSeat?.(item.id, !hasSeat)}
+				><Radio aria-hidden="true" size={15} /></button> :
+				<span className={`room-media-seat-control ${hasSeat ? "active" : "inactive"}`} role="img" aria-label={`${hasSeat ? "Media seat" : "Listener"}: ${item.displayName}`}><Radio aria-hidden="true" size={15} /></span>
+			) : mediaSnapshot !== undefined ? (
+				currentUserIsHost && grant ? (
+					<span>
+						{(["camera", "microphone"] as const).map((media) =>
+							grant[`${media}Granted`] ? (
+								<button
+									className="button secondary"
+									key={media}
+									type="button"
+									onClick={() =>
+										onRevokeGrant?.(grant.participantSessionId, media)
+									}
+								>
+									Revoke {media}
+								</button>
+							) : null,
+						)}
+					</span>
+				) : null
+			) : (
+				getMediaAction({
+					currentUserIsHost,
+					isSelf,
+					item,
+					maxMediaSeats,
+					mediaSeatsFull,
+					onCancelMediaSeatRequest,
+					onGrantMediaSeat,
+					onRequestMediaSeat,
+					onRevokeMediaSeat,
+				})
+			);
+
+		return (
+			<div className="room-people-entry" key={item.id}>
+				<div
+					className={[
+						"room-people-row",
+						isHost ? "host" : "",
+						isSelf ? "self" : "",
+						isSpeaking ? "speaking" : "",
+					]
+						.filter(Boolean)
+						.join(" ")}
+				>
+					<div className="room-people-main">
+						<span className="mini-avatar room-people-avatar">
+							{participantInitials(item.displayName)}
+						</span>
+						<span className="room-people-copy">
+							<span className="room-people-name-row">
+								<span className="room-people-name" title={item.displayName}>
+									{item.displayName}
+								</span>
+								{mediaV3 ? identityLabel : null}
+							</span>
+							<span className="room-people-status" role={mediaV3 && seatControl?.error ? "alert" : mediaV3 && seatControl?.pending ? "status" : undefined} title={seatControl?.error}>
+								{mediaV3 && seatControl?.error ? seatControl.error : mediaV3 && seatControl?.pending ? "Updating media seat…" : item.connected === false
+									? "Reconnecting — places reserved"
+									: mediaV3 ? `${hasSeat ? "Media seat" : "Listening"}${isSpeaking ? " · Speaking" : item.cameraEnabled ? " · Camera on" : ""}`
+									: mediaSnapshot !== undefined
+										? `${item.cameraEnabled ? "Camera on" : grant?.cameraGranted ? "Camera granted, off" : "Camera off"} · ${isSpeaking ? "Speaking" : grant?.microphoneGranted ? "Microphone ready" : "Listening"}`
+										: participantMediaStatus(item)}
+							</span>
+						</span>
+					</div>
+					{identityLabel || mediaAction ? (
+						<div
+							className={`room-people-side ${!mediaV3 && identityLabel ? "identity" : "action"}`}
+						>
+							{!mediaV3 ? identityLabel : null}
+							{mediaAction}
+						</div>
+					) : null}
+				</div>
+			</div>
+		);
+	});
 
 	return (
 		<section className="room-people-section" aria-label="Room participants">
@@ -161,111 +274,33 @@ export function RoomPeopleSection({
 				</div>
 			) : null}
 			<div className="room-people-list">
-				{orderedParticipants.map((item) => {
-					const isSpeaking = liveVoiceActiveSpeakerIds.includes(item.id);
-					const isSelf = item.id === currentParticipantId;
-					const isHost = item.role === "host";
-					const identityLabel = isHost ? (
-						<span className="room-people-role">Host</span>
-					) : isSelf ? (
-						<span className="room-people-you">You</span>
-					) : null;
-					const grant = mediaSnapshot?.participants.find(
-						(p) => p.participantSessionId === item.participantSessionId,
-					);
-					const hasSeat = Boolean(grant && "mediaSeatGranted" in grant && grant.mediaSeatGranted);
-					const seatControl = seatControls?.get(item.id);
-					const mediaAction =
-						mediaV3 ? (
-							currentUserIsHost ? <button
-								className={`room-media-seat-control ${hasSeat ? "active" : "inactive"}`}
-								type="button"
-								aria-pressed={hasSeat}
-								aria-label={`${hasSeat ? "Revoke" : "Grant"} media seat: ${item.displayName}`}
-								title={`${hasSeat ? "Revoke" : "Grant"} media seat`}
-								aria-describedby={!hasSeat && mediaSeatsFull ? fullReasonId : undefined}
-								disabled={!grant || seatControl?.pending || (!hasSeat && mediaSeatsFull)}
-								onClick={() => onSetMediaSeat?.(item.id, !hasSeat)}
-							><Radio aria-hidden="true" size={15} /></button> :
-							<span className={`room-media-seat-control ${hasSeat ? "active" : "inactive"}`} role="img" aria-label={`${hasSeat ? "Media seat" : "Listener"}: ${item.displayName}`}><Radio aria-hidden="true" size={15} /></span>
-						) : mediaSnapshot !== undefined ? (
-							currentUserIsHost && grant ? (
-								<span>
-									{(["camera", "microphone"] as const).map((media) =>
-										grant[`${media}Granted`] ? (
-											<button
-												className="button secondary"
-												key={media}
-												type="button"
-												onClick={() =>
-													onRevokeGrant?.(grant.participantSessionId, media)
-												}
-											>
-												Revoke {media}
-											</button>
-										) : null,
-									)}
-								</span>
-							) : null
-						) : (
-							getMediaAction({
-								currentUserIsHost,
-								isSelf,
-								item,
-								maxMediaSeats,
-								mediaSeatsFull,
-								onCancelMediaSeatRequest,
-								onGrantMediaSeat,
-								onRequestMediaSeat,
-								onRevokeMediaSeat,
-							})
-						);
-
-					return (
-						<div className="room-people-entry" key={item.id}>
-							<div
-								className={[
-									"room-people-row",
-									isHost ? "host" : "",
-									isSelf ? "self" : "",
-									isSpeaking ? "speaking" : "",
-								]
-									.filter(Boolean)
-									.join(" ")}
-							>
-								<div className="room-people-main">
-									<span className="mini-avatar room-people-avatar">
-										{participantInitials(item.displayName)}
-									</span>
-									<span className="room-people-copy">
-										<span className="room-people-name-row">
-											<span className="room-people-name" title={item.displayName}>
-												{item.displayName}
-											</span>
-											{mediaV3 ? identityLabel : null}
-										</span>
-										<span className="room-people-status" role={mediaV3 && seatControl?.error ? "alert" : mediaV3 && seatControl?.pending ? "status" : undefined} title={seatControl?.error}>
-											{mediaV3 && seatControl?.error ? seatControl.error : mediaV3 && seatControl?.pending ? "Updating media seat…" : item.connected === false
-												? "Reconnecting — places reserved"
-												: mediaV3 ? `${hasSeat ? "Media seat" : "Listening"}${isSpeaking ? " · Speaking" : item.cameraEnabled ? " · Camera on" : ""}`
-												: mediaSnapshot !== undefined
-													? `${item.cameraEnabled ? "Camera on" : grant?.cameraGranted ? "Camera granted, off" : "Camera off"} · ${isSpeaking ? "Speaking" : grant?.microphoneGranted ? "Microphone ready" : "Listening"}`
-													: participantMediaStatus(item)}
-										</span>
-									</span>
-								</div>
-								{identityLabel || mediaAction ? (
-									<div
-										className={`room-people-side ${!mediaV3 && identityLabel ? "identity" : "action"}`}
-									>
-										{!mediaV3 ? identityLabel : null}
-										{mediaAction}
-									</div>
-								) : null}
-							</div>
+				{participantRows.slice(0, 2)}
+				{hasMore ? (
+					<div
+						className="room-people-extra"
+						id={extraParticipantsId}
+						data-expanded={expanded}
+						aria-hidden={!expanded}
+						inert={!expanded}
+					>
+						<div className="room-people-extra-scroll" tabIndex={expanded ? 0 : -1} aria-label="More room participants">
+							{participantRows.slice(2)}
 						</div>
-					);
-				})}
+					</div>
+				) : null}
+				{hasMore ? (
+					<button
+						className="room-people-toggle"
+						type="button"
+						aria-expanded={expanded}
+						aria-controls={extraParticipantsId}
+						aria-label={expanded ? "Show fewer participants" : `Show ${extraCount} more participants`}
+						onClick={() => onExpandedChange(!expanded)}
+					>
+						<span>{expanded ? "Show less" : `Show ${extraCount} more`}</span>
+						<ChevronDown aria-hidden="true" size={14} />
+					</button>
+				) : null}
 			</div>
 		</section>
 	);

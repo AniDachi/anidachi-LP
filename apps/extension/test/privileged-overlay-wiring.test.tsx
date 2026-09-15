@@ -2016,6 +2016,61 @@ describe("privileged overlay wiring", () => {
       expect(disconnect).toHaveBeenCalled();
     } finally { await unmount(view.root); }
   });
+	it("does not flash Always visible while loading a saved Auto hide preference", async () => {
+		const read = deferred<unknown>();
+		const originalRead = extensionStorage.storage.getItem.bind(extensionStorage.storage);
+		vi.spyOn(extensionStorage.storage, "getItem").mockImplementation((key) => key === INTERFACE_PREFERENCES_STORAGE_KEY ? read.promise as Promise<never> : originalRead(key));
+		installActiveHostRoomRuntime();
+		const view = await renderOverlay();
+		try {
+			expect(view.container.querySelector(".top-bubble-reveal")?.classList.contains("bubble-visible")).toBe(false);
+			read.resolve({ version: 1, mainControlVisibility: "auto-hide", participantPillVisibility: "smart" });
+			await flushMountedWork();
+			expect(view.container.querySelector(".top-bubble-reveal")?.classList.contains("bubble-visible")).toBe(false);
+		} finally { await unmount(view.root); }
+	});
+
+	it("keeps the participant disclosure open when the same room panel is reopened", async () => {
+		installActiveHostRoomRuntime();
+		vi.mocked(RoomClient.prototype.connect).mockImplementation(options => {
+			options.onStatus("connected");
+			options.onEvent({ type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1,
+				participants: [hostParticipant(), ...[1, 2, 3].map(i => ({ ...hostParticipant(), id: `guest-${i}`, displayName: `Guest ${i}`, role: "viewer" as const }))] });
+		});
+		const view = await renderOverlay();
+		try {
+			await click(button(view.container, "Open Anidachi controls"));
+			await click(button(view.container, "Create room"));
+			await flushMountedWork();
+			await flushRoomActionWork();
+			expect(primaryRoomAction(view.container).disabled).toBe(false);
+			await click(button(view.container, "Show 2 more participants"));
+			await click(button(view.container, "Close Anidachi controls"));
+			await click(button(view.container, "Open Anidachi controls"));
+			expect(button(view.container, "Show fewer participants").getAttribute("aria-expanded")).toBe("true");
+		} finally { await unmount(view.root); }
+	});
+
+	it("shows the launcher and quiet participant pills for a fresh installation", async () => {
+		installActiveHostRoomRuntime({ mediaSeat: "joined" });
+		const view = await renderOverlay();
+		try {
+			await flushMountedWork();
+			expect(view.container.querySelector(".top-bubble-reveal")?.classList.contains("bubble-visible")).toBe(true);
+			expect(view.container.querySelector(".room-rail")).toBeNull();
+			await click(button(view.container, "Open Anidachi controls"));
+			await click(button(view.container, "Create room"));
+			await flushMountedWork();
+			await flushRoomActionWork();
+			expect(primaryRoomAction(view.container).disabled).toBe(false);
+			await click(button(view.container, "Close Anidachi controls"));
+			await flushMountedWork();
+			expect(view.container.querySelector(".room-rail")?.getAttribute("data-visibility-mode")).toBe("always-visible");
+			expect(view.container.querySelectorAll('.room-rail-slot[data-presentation="compact"]').length).toBeGreaterThan(0);
+			expect(extensionStorage.values.has(INTERFACE_PREFERENCES_STORAGE_KEY)).toBe(false);
+		} finally { await unmount(view.root); }
+	});
+
 	it.each(["auto-hide", "always-visible"] as const)(
 		"keeps the main control independent of Open mic in %s mode",
 		async (mainControlVisibility) => {

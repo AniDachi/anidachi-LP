@@ -32,6 +32,20 @@ describe("useInterfacePreferences", () => {
     await unmount(view.root);
   });
 
+  it.each([undefined, { version: 1, mainControlVisibility: "auto-hide", participantPillVisibility: "smart" }])(
+    "loads first-install defaults or saved user choices without writing them back (%#)",
+    async (stored) => {
+      const storage = createStorage(stored);
+      const view = await render(<Harness storage={storage} />);
+      await flush();
+      expect(readPreferences(view.container)).toEqual(stored ?? {
+        version: 1, mainControlVisibility: "always-visible", participantPillVisibility: "always-visible",
+      });
+      expect(storage.write).not.toHaveBeenCalled();
+      await unmount(view.root);
+    },
+  );
+
   it("uses defaults when stored data is invalid", async () => {
     const view = await render(
       <Harness
@@ -46,8 +60,8 @@ describe("useInterfacePreferences", () => {
 
     expect(readPreferences(view.container)).toEqual({
       version: 1,
-      mainControlVisibility: "auto-hide",
-      participantPillVisibility: "smart",
+      mainControlVisibility: "always-visible",
+      participantPillVisibility: "always-visible",
     });
 
     await unmount(view.root);
@@ -60,7 +74,7 @@ describe("useInterfacePreferences", () => {
       .fn<InterfacePreferencesStorage["write"]>()
       .mockImplementationOnce(() => firstWrite.promise)
       .mockImplementationOnce(() => secondWrite.promise);
-    const storage = createStorage(undefined, write);
+    const storage = createStorage({ version: 1, mainControlVisibility: "auto-hide", participantPillVisibility: "smart" }, write);
     const view = await render(<Harness storage={storage} />);
     await flush();
 
@@ -97,7 +111,7 @@ describe("useInterfacePreferences", () => {
       .fn<InterfacePreferencesStorage["write"]>()
       .mockImplementationOnce(() => firstWrite.promise)
       .mockImplementationOnce(() => secondWrite.promise);
-    const view = await render(<Harness storage={createStorage(undefined, write)} />);
+    const view = await render(<Harness storage={createStorage({ version: 1, mainControlVisibility: "auto-hide", participantPillVisibility: "smart" }, write)} />);
     await flush();
 
     await click(getButton(view.container, "Pin main control"));
