@@ -8,5 +8,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const artifact = getExtensionArtifact();
-  return NextResponse.json(toPublicExtensionArtifact(artifact));
+  return NextResponse.json(toPublicExtensionArtifact(artifact), {
+    headers: { "Cache-Control": "no-store" },
+  });
 }

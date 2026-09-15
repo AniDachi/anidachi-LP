@@ -43,6 +43,24 @@ and build passed before this last narrow event fix (619 passed, 6 skipped);
 [PR #350](https://github.com/AniDachi/anidachi-LP/pull/350) records final CI and
 deployed acceptance. Main promotion remains a separate decision.
 
+## Website ZIP download source, 2026-09-16
+
+The owner narrowed Stage 3 to the download button and its server-side source.
+The candidate uses only `EXTENSION_ZIP_URL`: an explicitly configured public
+HTTPS archive with valid version, SHA-256 and byte-count metadata. Local paths
+and implicit searches through artifact folders are removed in all environments.
+The page, `/api/extension/latest` and `/api/extension/download` share readiness;
+incomplete configuration disables the button and returns 503 without a fallback.
+The metadata and redirect responses are not cached. Actual hosted bytes and
+download headers still need separate acceptance when an archive is published.
+
+This scoped correction is on `codex/single-zip-download`; its PR records final
+CI and staging delivery. The install page design, instructions, FAQ, extension,
+identity and runtime behavior are unchanged. Public ZIP upload, cloud environment
+changes and main promotion remain separate; the current staging download is
+intentionally unconfigured. See Stage 3 of the
+[repair plan](superpowers/plans/2026-09-15-staging-release-repair-plan.md).
+
 ## Free quota reset notice, 2026-09-15
 
 The drawer shows a compact countdown after the host's daily Free budget is used

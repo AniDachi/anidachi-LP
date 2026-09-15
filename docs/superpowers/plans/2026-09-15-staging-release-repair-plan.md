@@ -10,7 +10,7 @@
 
 **Spec:** [Текущее состояние](../../current-development-state.md), [каналы расширения](../../extension-release-channels.md), [личная история и тарифы, уточнение D01](2026-09-08-personal-history-and-plans-mvp.md), [навигация кабинета](../specs/2026-09-10-account-mvp-navigation-design.md) и реестр подтвержденных отклонений ниже. Этот план восстанавливает согласованные контракты, а не вводит новую модель продукта.
 
-**Дата:** 2026-09-15; обновлено 2026-09-16. **Статус:** этап 1 принят на staging через PR #349 (`bcd00c7d`); этап 2 согласован и выполняется отдельной веткой. Остальные этапы не начаты. Main остается `4b4ff883`; отправка писем и публикация ZIP не выполняются.
+**Дата:** 2026-09-15; обновлено 2026-09-16. **Статус:** этапы 1 и 2 приняты на staging через PR #349 (`bcd00c7d`) и #350 (`5a7aa839`). Владелец отдельно согласовал узкий этап 3: одна ссылка для скачивания ZIP, без локального поиска и без изменений инструкции/расширения. Остальные этапы не начаты. Main остается `4b4ff883`; отправка писем и публикация ZIP не выполняются.
 
 **Уточнение 2026-09-16:** по просьбе пользователя добавлены полный реестр измененных файлов и обязательная проверка их влияния. Повторная проверка известных замечаний завершена; полное построчное ревью всех 164 файлов и финальная регрессия еще не завершены и не считаются выполненными по наличию этого плана.
 
@@ -207,21 +207,24 @@ activation. Два новых document-root теста воспроизвели 
 
 **Приемка:** наша прежняя шторка восстановлена, остальной новый дизайн шапки сохранен; кабинет доступен со всех размеров сайта, unsaved guard перехватывает настоящий logout до отзыва сессии. История и billing API не изменены.
 
-## Этап 3. Согласовать установку, обновление и источник ZIP
+## Этап 3. Один явно настроенный источник скачивания ZIP
 
-**Files — Modify:** `apps/web/lib/extension-artifact.ts`, `apps/web/app/api/extension/latest/route.ts`, `apps/web/app/api/extension/download/route.ts`, `apps/web/app/extension/page.tsx`, `apps/web/components/extension-install-hub.tsx`, `docs/environment-and-secrets-matrix.md`. **Create:** `apps/web/lib/extension-artifact.test.ts`, `apps/web/lib/extension-install-hub-client.test.ts`. Проверить `apps/extension/src/popup-app.tsx` и `apps/web/lib/install-cta.ts` как потребителей.
+**Уточнение владельца:** исправляем только выдачу ZIP. Никаких локальных источников, поиска по папкам, изменений инструкции установки/обновления или кода расширения. Публикация файла и перенос в main выполняются отдельно. Это заменяет прежний вариант этапа 3 с dev/preview path и переработкой инструкции.
 
-**Interfaces:** сохранить `getExtensionArtifact(): ExtensionArtifact`, `toPublicExtensionArtifact(): PublicExtensionArtifact` и существующие поля/маршруты. `available` означает корректно настроенную выдачу; успешность текущей доставки отдельно проверяется HTTP/байтами. Presence исключен решением владельца: сайт не определяет установку или версию расширения.
+**Files — Modify:** `apps/web/lib/extension-artifact.ts`, `apps/web/app/api/extension/latest/route.ts`, `apps/web/app/api/extension/download/route.ts`, `apps/web/.env.example`, `docs/environment-and-secrets-matrix.md`. **Create:** `apps/web/lib/extension-artifact.test.ts`, `apps/web/lib/extension-download-routes.test.ts`. Неизмененные потребители: `apps/web/app/extension/page.tsx`, `apps/web/components/extension-install-hub.tsx`, `apps/web/lib/install-cta.ts`; повторить существующие compatibility tests. По исходникам extension не обращается к download/latest API.
 
-- [ ] Зафиксировать одну политику: production получает immutable публичный HTTPS ZIP по `EXTENSION_ZIP_URL`; локальный путь — только явно настроенный dev/preview источник. Удалить неявный поиск ZIP по разным папкам. Локальную доступность проверять по regular file; отсутствие/невалидность source, version, SHA-256, bytes дает `available:false` и download 503. Не делать внешнюю загрузку/хеширование ZIP при каждом SSR.
-- [ ] Метаданные `/latest`, страницы и `/download` берутся из одного resolver. URL только HTTPS без embedded credentials; public JSON не содержит локальных путей и auth-данных. Исправить комментарий о секретности URL: адрес публичного ZIP виден при 302, и это ожидаемо. Не использовать долгоживущие секреты/подписанные временные ссылки как источник публичной раздачи.
-- [ ] Добавить metadata tests: отсутствующий источник, URL с credentials/неверной схемой, нечисловой размер, неправильный hash/version, несуществующий local file, корректный источник, отсутствие server-only полей в public JSON. Проверять фактический ответ download отдельно, а не только `available`.
-- [x] Зависимость download/guide/room next от presence убрана в пересогласованном этапе 1. Не возвращать installed state, retry detection или ручное подтверждение установки. Сохранять download при `artifact.available`, иначе понятный disabled state.
-- [ ] При изменении metadata resolver повторить `lib/extension-install-compatibility.test.ts`: обычный download, unavailable и безопасный room next сохраняются независимо от сообщений расширения.
-- [ ] В инструкции обновления: сохранить папку и ID расширения, заменить файлы новой распакованной сборкой, нажать Reload в `chrome://extensions`, обновить открытые вкладки видео. Не советовать Remove/reinstall как обычное обновление. Не вводить автоматическое обновление sideload.
-- [ ] Выполнить `pnpm --filter @anidachi/web exec tsx --test lib/extension-artifact.test.ts lib/extension-install-hub-client.test.ts`, web check/test и проверить UI desktop/mobile. Commit `fix(web): keep extension downloads available for installs and updates`, PR в staging. Настройку реального hosted ZIP выполнить отдельно на этапе 6.
+**Interfaces:** сохранить функции `getExtensionArtifact()` / `toPublicExtensionArtifact()` и публичные поля/маршруты. Внутренний `zipPath` удаляется вместе с его единственным потребителем. `available` означает корректную конфигурацию; успешность реальной доставки проверяется HTTP/байтами на этапе публикации. Presence отсутствует; сайт не определяет установку или версию расширения.
 
-**Приемка:** download доступен новому и существующему пользователю без определения установки; корректный room next сохраняется, внешние/ненормализованные обходные next не принимаются. Несконфигурированный ZIP не объявляется опубликованным.
+- [x] Удалить локальную выдачу и неявный поиск. Единственный источник во всех средах — public HTTPS `EXTENSION_ZIP_URL`. Legacy `EXTENSION_ZIP_PATH` игнорируется. Некорректные URL, version, SHA-256 или bytes оставляют `available:false` и download 503. SSR не скачивает и не хеширует архив.
+- [x] Страница, `/latest` и `/download` используют общий resolver; URL без credentials, fragment, backslash и управляющих символов. В public JSON нет адреса источника; redirect ожидаемо раскрывает публичный URL. Отказ и метаданные не кешируются.
+- [x] Добавить проверки реальных route exports: локальные архивы не перехватывают выдачу и не включают ее без URL; request query не заменяет настроенную ссылку; GET/HEAD используют одну конфигурацию; отсутствующая/ошибочная конфигурация не регистрирует успешное скачивание. Сеть и analytics подменены в тестах.
+- [x] Повторить `lib/extension-install-compatibility.test.ts`: прежняя кнопка, disabled state, отсутствие presence и возврат к комнате сохранены. Базовые 6/6 passed; новые проверки до правки — 3 passed / 9 failed, после review fixes — 19/19 вместе с compatibility. Web typecheck passed. Независимое ревью выявило два узких случая: SemVer identifiers и пустой fragment `#`; оба исправлены и покрыты регрессиями.
+- [x] Полный web suite: 634 passed / 6 fixture-dependent skipped / 0 failed. Next production build, web typecheck и `pnpm dev:check` (web/docs) passed.
+- [ ] Независимое ревью, отдельный PR в staging и приемка точного deployment. Итоговые CI/manual receipts фиксировать в PR. Публикация архива и изменение облачных env не входят в этот шаг.
+
+**Приемка:** все входы согласны о доступности одного заданного источника. Неподключенный ZIP остается недоступным, даже если в файловой системе лежат старые архивы. Дизайн, инструкция, FAQ, email и extension не меняются. Проверка реального hosted ZIP, его Content-Disposition, bytes, SHA и production identity остается на этапе 6; она не считается пройденной по unit-тестам.
+
+**Graphify:** существующий граф запрошен для download/latest/resolver, связи подтверждены imports/source. Refresh отложен до общей приемки редизайна по просьбе владельца не выполнять тяжелое обновление после мелких правок. Этот этап удаляет local-file fallback без нового межплоскостного контракта; исключение и оставшаяся актуализация графа записываются в PR, старый граф не объявляется обновленным.
 
 ## Этап 4A. Убрать риск потери CRM-изменений
 

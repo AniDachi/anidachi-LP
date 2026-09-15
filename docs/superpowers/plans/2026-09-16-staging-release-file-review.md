@@ -53,7 +53,7 @@ responsive-доступа и защиты выхода проверяется о
 | возвращено к main | M | E | `apps/extension/src/popup-app.tsx` | По решению владельца этапа 1: diff с main 4b4ff883 пустой; новые extension/tooling изменения исключены. |
 | возвращено к main | M | E | `apps/extension/src/popup-styles.ts` | По решению владельца этапа 1: diff с main 4b4ff883 пустой; новые extension/tooling изменения исключены. |
 | возвращено к main | A | E | `apps/extension/src/site-presence.ts` | По решению владельца этапа 1: diff с main 4b4ff883 пустой; новые extension/tooling изменения исключены. |
-| открыто | M | D | `apps/web/.env.example` | Полное diff-review еще не зафиксировано. |
+| открыто | M | D | `apps/web/.env.example` | Этап 3 исправляет только ZIP: один public HTTPS URL с полными метаданными, локальный path больше не поддерживается. Остальной diff требует отдельного ревью. |
 | открыто | M | A | `apps/web/app/account/account.css` | Полное diff-review еще не зафиксировано. |
 | открыто | M | A | `apps/web/app/account/help/page.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | A | `apps/web/app/account/profile/page.tsx` | Полное diff-review еще не зафиксировано. |
@@ -62,9 +62,9 @@ responsive-доступа и защиты выхода проверяется о
 | открыто | M | A | `apps/web/app/account/watch-library/watch-library-client.test.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | A | `apps/web/app/account/watch-library/watch-library-client.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | A | S | `apps/web/app/ani-tokens.css` | Полное diff-review еще не зафиксировано. |
-| открыто | A | I | `apps/web/app/api/extension/download/route.ts` | F07 |
+| исправлено локально; staging pending | A | I | `apps/web/app/api/extension/download/route.ts` | Узкий этап 3: только настроенный HTTPS URL, без filesystem fallback; реальные GET/HEAD проверены с локальными файлами и ошибками конфигурации. F07: фактическая публикация/bytes остаются этапу 6. |
 | открыто | A | I | `apps/web/app/api/extension/email-install-link/route.ts` | F10, F11, F13 |
-| открыто | A | I | `apps/web/app/api/extension/latest/route.ts` | Полное diff-review еще не зафиксировано. |
+| исправлено локально; staging pending | A | I | `apps/web/app/api/extension/latest/route.ts` | Этап 3: общий resolver страницы/download, no-store, сохранены публичные поля без server-only source. Проверен реальный GET. |
 | открыто | D | F | `apps/web/app/api/subscribe-interest/route.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | D | F | `apps/web/app/api/waitlist-position/route.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | M | F | `apps/web/app/api/waitlist-stats/route.ts` | Полное diff-review еще не зафиксировано. |
@@ -179,7 +179,7 @@ responsive-доступа и защиты выхода проверяется о
 | открыто | A | T | `apps/web/lib/amplitude-server.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | M | T | `apps/web/lib/amplitude.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | M | T | `apps/web/lib/conversion-events.ts` | Этап 1 убирает только extension_detected; остальной analytics diff требует отдельного ревью. |
-| открыто | A | I | `apps/web/lib/extension-artifact.ts` | F07 |
+| исправлено локально; staging pending | A | I | `apps/web/lib/extension-artifact.ts` | Этап 3: один URL; проверка схемы/credentials/version/SHA/целого размера, отсутствие legacy path. 19 целевых/compatibility проверок passed после двух review fixes; hosted bytes — этап 6. |
 | открыто | A | I | `apps/web/lib/extension-install-faq.ts` | F13 |
 | исключено | A | I | `apps/web/lib/extension-presence.ts` | Этап 1: удалено после проверки callers; сайт не определяет установку. SuccessInstallNext не был подключен к payment page. |
 | открыто | A | C | `apps/web/lib/extension-using-guide.ts` | Полное diff-review еще не зафиксировано. |
@@ -206,7 +206,7 @@ responsive-доступа и защиты выхода проверяется о
 | открыто | M | C | `apps/web/lib/sitemap-discovery.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | A | S | `apps/web/lib/use-in-view.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/lib/watch-page-rich-content.ts` | Полное diff-review еще не зафиксировано. |
-| открыто | M | D | `docs/environment-and-secrets-matrix.md` | Полное diff-review еще не зафиксировано. |
+| открыто | M | D | `docs/environment-and-secrets-matrix.md` | Этап 3 уточняет ZIP source, обязательные metadata, публичность redirect и отдельную проверку bytes при публикации. Analytics и остальные изменения не приняты этим блоком. |
 | возвращено к main | M | D | `package.json` | По решению владельца этапа 1: diff с main 4b4ff883 пустой; новые extension/tooling изменения исключены. |
 | возвращено к main | M | I | `scripts/validate-extension-artifact.mjs` | По решению владельца этапа 1: diff с main 4b4ff883 пустой; новые extension/tooling изменения исключены. |
 
