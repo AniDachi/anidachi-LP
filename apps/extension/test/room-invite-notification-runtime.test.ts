@@ -93,6 +93,35 @@ beforeEach(async () => {
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
 
 describe("invitation notification runtime", () => {
+  it("registers with the extension bearer without sending the website session", async () => {
+    state.map.delete(REGISTRATION);
+    const original = http.getMockImplementation()!;
+    http.mockImplementation(async (url, init) => {
+      if (url.pathname !== "/api/devices/push-subscription") return original(url, init);
+      // Chrome host permissions allow website cookies on the default fetch mode.
+      if (init?.credentials !== "omit") return json({ error: "Extension authentication required" }, 403);
+      return new Headers(init.headers).get("Authorization") === "Bearer access-1"
+        ? registered() : json({ error: "Unauthorized" }, 401);
+    });
+    await runtime.reconcileRoomInviteNotifications({ notify: false });
+    expect(state.map.get(REGISTRATION)).toMatchObject({ userId: A, deviceId: B, verifiedAt: expect.any(Number) });
+    expect(state.map.has(RETRY)).toBe(false);
+  });
+
+  it("revokes the server registration without sending the website session", async () => {
+    let serverSubscriptionEnabled = true;
+    http.mockImplementation(async (url, init) => {
+      if (url.pathname !== `/api/devices/${B}/push-subscription`) throw new Error("Unexpected request");
+      if (init?.credentials !== "omit") return json({ error: "Extension authentication required" }, 403);
+      if (new Headers(init.headers).get("Authorization") !== "Bearer access-1") return json({ error: "Unauthorized" }, 401);
+      serverSubscriptionEnabled = false;
+      return json({ ok: true });
+    });
+    await runtime.disableRoomInviteNotifications(tokens());
+    expect(serverSubscriptionEnabled).toBe(false);
+    expect(state.map.has(REGISTRATION)).toBe(false);
+  });
+
   it("records aggregate reconcile and notification-create timing without private payloads", async () => {
     await runtime.reconcileRoomInviteNotifications({ notify: true });
     expect(diagnostic).toHaveBeenCalledWith("account.inbox", "notification creation", {
