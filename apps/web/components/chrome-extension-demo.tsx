@@ -9,26 +9,12 @@ import {
   type DemoMode,
   useAsyncDemoOverlaySequence,
 } from "@/components/chrome-extension-demo-async-overlay";
-import {
-  DemoOverlayKeyframes,
-  DemoOverlayLayer,
-  useDemoOverlaySequence,
-} from "@/components/chrome-extension-demo-overlay";
+import { ChromeExtensionRoomDemo } from "@/components/chrome-extension-room-demo";
 import { HomeSectionHeader } from "@/components/home-section-header";
 import { trackEvent } from "@/lib/gtag";
 
 const YT_VIDEO_ID = "M_OauHnAFc8";
 const YT_EMBED_SRC = `https://www.youtube-nocookie.com/embed/${YT_VIDEO_ID}?autoplay=1&mute=1&loop=1&playlist=${YT_VIDEO_ID}&controls=0&modestbranding=1&rel=0&iv_load_policy=3`;
-
-const LIVE_STEP_LABELS = [
-  "Bubble",
-  "Open panel",
-  "Create room",
-  "Layout",
-  "Friends join",
-  "Reactions",
-  "Sync",
-];
 
 const SECTION_COPY: Record<DemoMode, { headline: string; subcopy: string }> = {
   live: {
@@ -136,33 +122,6 @@ function DemoModeToggle({
   );
 }
 
-function ChromeExtensionDemoDesktopLive({ visible }: { visible: boolean }) {
-  const demo = useDemoOverlaySequence(visible);
-
-  return (
-    <>
-      <DemoOverlayKeyframes />
-      <StepIndicator labels={LIVE_STEP_LABELS} current={demo.currentStep} />
-      <div className="mx-auto w-full max-w-6xl overflow-hidden rounded-[20px] border border-ani-line bg-black">
-        <div className="relative aspect-video bg-black">
-          <iframe
-            src={YT_EMBED_SRC}
-            title="Anidachi live demo background video"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            className="pointer-events-none absolute inset-0 h-full w-full border-0"
-          />
-          <DemoOverlayLayer demo={demo} />
-        </div>
-        <div className="border-t border-ani-line bg-ani-canvas px-5 py-4">
-          <p className="min-h-[1.25rem] text-center text-sm text-ani-muted">
-            {demo.caption}
-          </p>
-        </div>
-      </div>
-    </>
-  );
-}
-
 function ChromeExtensionDemoDesktopAsync({ visible }: { visible: boolean }) {
   const demo = useAsyncDemoOverlaySequence(visible);
 
@@ -195,7 +154,7 @@ function ChromeExtensionDemoDesktopAsync({ visible }: { visible: boolean }) {
   );
 }
 
-function ChromeExtensionDemoDesktop({ mode }: { mode: DemoMode }) {
+function ChromeExtensionDemoDesktop() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -214,11 +173,7 @@ function ChromeExtensionDemoDesktop({ mode }: { mode: DemoMode }) {
 
   return (
     <div ref={sectionRef} className="hidden md:block max-w-7xl mx-auto w-full">
-      {mode === "live" ? (
-        <ChromeExtensionDemoDesktopLive key="live" visible={visible} />
-      ) : (
-        <ChromeExtensionDemoDesktopAsync key="async" visible={visible} />
-      )}
+      <ChromeExtensionDemoDesktopAsync visible={visible} />
     </div>
   );
 }
@@ -237,8 +192,14 @@ export function ChromeExtensionDemo() {
 
         <DemoModeToggle mode={mode} onChange={setMode} />
 
-        <ChromeExtensionDemoMobile key={mode} mode={mode} />
-        <ChromeExtensionDemoDesktop mode={mode} />
+        {mode === "live" ? (
+          <ChromeExtensionRoomDemo />
+        ) : (
+          <>
+            <ChromeExtensionDemoMobile mode="async" />
+            <ChromeExtensionDemoDesktop />
+          </>
+        )}
       </div>
     </section>
   );
