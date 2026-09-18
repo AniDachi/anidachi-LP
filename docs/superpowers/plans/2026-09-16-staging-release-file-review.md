@@ -1,6 +1,6 @@
 # Реестр проверки файлов staging перед production
 
-**Дата:** 2026-09-16. **План:** [Staging Release Repair](2026-09-15-staging-release-repair-plan.md).
+**Дата:** 2026-09-16; обновлено 2026-09-18. **План:** [Staging Release Repair](2026-09-15-staging-release-repair-plan.md).
 
 **Main:** `4b4ff88380d0a64e5216d2770d360440d3f8852b`. **Candidate staging:** `391fb5c97a09298080c32f354eaab63d9115f22a`.
 
@@ -62,9 +62,9 @@ responsive-доступа и защиты выхода проверяется о
 | открыто | M | A | `apps/web/app/account/watch-library/watch-library-client.test.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | A | `apps/web/app/account/watch-library/watch-library-client.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | A | S | `apps/web/app/ani-tokens.css` | Полное diff-review еще не зафиксировано. |
-| исправлено локально; staging pending | A | I | `apps/web/app/api/extension/download/route.ts` | Узкий этап 3: только настроенный HTTPS URL, без filesystem fallback; реальные GET/HEAD проверены с локальными файлами и ошибками конфигурации. F07: фактическая публикация/bytes остаются этапу 6. |
+| принято на staging | A | I | `apps/web/app/api/extension/download/route.ts` | PR #351, merge `876b9e94`: только настроенный HTTPS URL; GET/HEAD проверены локально и на staging. F07: фактическая публикация/bytes остаются этапу 6. |
 | открыто | A | I | `apps/web/app/api/extension/email-install-link/route.ts` | F10, F11, F13 |
-| исправлено локально; staging pending | A | I | `apps/web/app/api/extension/latest/route.ts` | Этап 3: общий resolver страницы/download, no-store, сохранены публичные поля без server-only source. Проверен реальный GET. |
+| принято на staging | A | I | `apps/web/app/api/extension/latest/route.ts` | PR #351, merge `876b9e94`: общий resolver, no-store, публичные поля сохранены; реальный GET принят на staging. |
 | открыто | D | F | `apps/web/app/api/subscribe-interest/route.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | D | F | `apps/web/app/api/waitlist-position/route.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | M | F | `apps/web/app/api/waitlist-stats/route.ts` | Полное diff-review еще не зафиксировано. |
@@ -179,7 +179,7 @@ responsive-доступа и защиты выхода проверяется о
 | открыто | A | T | `apps/web/lib/amplitude-server.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | M | T | `apps/web/lib/amplitude.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | M | T | `apps/web/lib/conversion-events.ts` | Этап 1 убирает только extension_detected; остальной analytics diff требует отдельного ревью. |
-| исправлено локально; staging pending | A | I | `apps/web/lib/extension-artifact.ts` | Этап 3: один URL; проверка схемы/credentials/version/SHA/целого размера, отсутствие legacy path. 19 целевых/compatibility проверок passed после двух review fixes; hosted bytes — этап 6. |
+| принято на staging | A | I | `apps/web/lib/extension-artifact.ts` | PR #351, merge `876b9e94`: один URL, 19 focused/compatibility tests, CI/review/smoke passed. Hosted bytes — этап 6. |
 | открыто | A | I | `apps/web/lib/extension-install-faq.ts` | F13 |
 | исключено | A | I | `apps/web/lib/extension-presence.ts` | Этап 1: удалено после проверки callers; сайт не определяет установку. SuccessInstallNext не был подключен к payment page. |
 | открыто | A | C | `apps/web/lib/extension-using-guide.ts` | Полное diff-review еще не зафиксировано. |
@@ -189,7 +189,7 @@ responsive-доступа и защиты выхода проверяется о
 | открыто | M | F | `apps/web/lib/home-survey.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | A | I | `apps/web/lib/install-cta.ts` | F13 |
 | открыто | M | C | `apps/web/lib/internal-tool-routes.test.ts` | Полное diff-review еще не зафиксировано. |
-| открыто | A | F | `apps/web/lib/kreatli-crm/desktop-install-lead.ts` | F09 |
+| исправлено локально; staging pending | A | F | `apps/web/lib/kreatli-crm/desktop-install-lead.ts` | F09: весь upsert внутри существующего mutateContacts, стабильные ID/time при retry, сохранение свежих notes/status/полей, controlled storage_failed. 11 новых проверок через реальный store/SDK с fake HTTP; email endpoint остается 4B/4C. |
 | открыто | M | F | `apps/web/lib/kreatli-crm/feature-request-shared.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | A | F | `apps/web/lib/kreatli-crm/public-signup-count.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | D | F | `apps/web/lib/kreatli-crm/subscribe-interest-route.test.ts` | Полное diff-review еще не зафиксировано. |
