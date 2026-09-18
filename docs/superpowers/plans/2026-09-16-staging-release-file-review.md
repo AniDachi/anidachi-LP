@@ -73,7 +73,7 @@ responsive-доступа и защиты выхода проверяется о
 | открыто | D | F | `apps/web/app/api/waitlist-position/route.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | M | F | `apps/web/app/api/waitlist-stats/route.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | D | F | `apps/web/app/api/waitlist/join/route.ts` | Полное diff-review еще не зафиксировано. |
-| открыто | M | C | `apps/web/app/compare/anidachi-vs-crunchyroll-party/page.tsx` | Полное diff-review еще не зафиксировано. |
+| открыто; 5B scoped fix | M | C | `apps/web/app/compare/anidachi-vs-crunchyroll-party/page.tsx` | Прочитан полный diff/страница; 5B согласует только обещания AniDachi с live/personal MVP во всех текстах и metadata. FAQ передается и в UI, и в JSON-LD через прежний SeoPageLayout. Проверки/приемка фиксируются в PR 5B; утверждения о конкуренте не приняты целиком. |
 | открыто | M | C | `apps/web/app/contact/page.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/app/editorial-policy/page.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | A | I | `apps/web/app/extension/page.tsx` | Полное diff-review еще не зафиксировано. |
@@ -113,14 +113,14 @@ responsive-доступа и защиты выхода проверяется о
 | открыто | M | S | `apps/web/app/layout.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | A | `apps/web/app/login/page.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/app/page.tsx` | Полное diff-review еще не зафиксировано. |
-| исправлено локально; staging pending | M | C | `apps/web/app/pricing/page.tsx` | 5A: полный diff просмотрен; metadata/FAQ используют действующую модель истории, вопрос отмены соответствует ответу, ссылки и CTA сохранены. Web check/test/build и /pricing desktop/mobile passed; финальная приемка в PR 5A. |
+| принято на staging | M | C | `apps/web/app/pricing/page.tsx` | PR #353, merge `0616b0b8`: полный diff, metadata/FAQ, ссылки и CTA проверены; web checks, CI/build, deployed desktop/mobile и раскрытие FAQ прошли. |
 | открыто | M | C | `apps/web/app/privacy/page.tsx` | Полное diff-review еще не зафиксировано. |
 | принято на staging | M | I | `apps/web/app/room/[roomId]/extension-check.tsx` | PR #349, merge `bcd00c7d`: нейтральная справка, safe next/mobile copy; 6 client tests, desktop/mobile harness и staging receipts приняты. Join page/API неизменны. |
 | открыто | M | C | `apps/web/app/security/page.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | A | `apps/web/app/success/checkout-session-sync.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | A | `apps/web/app/success/page.tsx` | Полное diff-review еще не зафиксировано. |
 | исключено | A | A | `apps/web/app/success/success-install-next.tsx` | Этап 1: удалено после проверки callers; сайт не определяет установку. SuccessInstallNext не был подключен к payment page. |
-| открыто | M | C | `apps/web/app/terms/page.tsx` | Полное diff-review еще не зафиксировано. |
+| открыто; 5B scoped fix | M | C | `apps/web/app/terms/page.tsx` | Полный diff прочитан; 5B уточняет только право записи/редактирования против чтения/Resume и дату. Отмена/возвраты и CWS-текст сохранены. Проверки/приемка фиксируются в PR 5B; это не юридическое заключение по всему документу. |
 | открыто | M | C | `apps/web/app/watch-anime-together/page.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/app/watch-crunchyroll-together-long-distance/page.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/app/watch-crunchyroll-together/page.tsx` | Полное diff-review еще не зафиксировано. |

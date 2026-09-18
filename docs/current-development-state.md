@@ -93,7 +93,9 @@ matching its existing cancellation answer. Prices, entitlements and checkout
 behavior are unchanged. Three marketing-matrix tests cover the access distinction,
 plan limits, platforms and prices; local web checks, all 648 passing web tests
 (6 existing skips), production build and desktop/mobile rendering passed.
-Staging delivery and its exact receipts belong in the scoped PR.
+Staging acceptance is recorded in [PR #353](https://github.com/AniDachi/anidachi-LP/pull/353)
+at merge `0616b0b8`: CI, deployment and desktop/mobile checks passed. Main remains
+`4b4ff883` and the promotion PR has auto-merge disabled.
 
 The owner rejected the redesign's custom pricing promise for groups of 8+ on
 2026-09-18. Its three mentions are removed from the Pro card, plan comparison
@@ -103,6 +105,22 @@ that removal, for PR #353 and staging delivery after checks. Main promotion
 remains a separate decision; exact staging acceptance receipts belong in the PR.
 Other comparison claims, installation copy and legal pages still need their own
 review; Stage 5 is not fully accepted.
+
+## Scoped launch-copy follow-up, 2026-09-18
+
+The owner approved Stage 5B for two pages only. Terms clarify that recording and
+editing require the viewer's own Plus/Pro, while saved history and Resume remain
+available on Free. The Crunchyroll Party comparison describes current live rooms
+and personal progress; async catch-up is explicitly planned, not available today.
+Its page text, FAQ/structured data and search/social descriptions no longer sell
+shared progress, persistent room context or replayed reactions as current features.
+This is a copy correction, not a new history or room capability. Staging acceptance
+and its exact SHA belong in the scoped PR; other comparison claims remain open.
+
+The owner explicitly retained existing Chrome Web Store wording because submission
+is planned alongside the eventual main release. This is an accepted publication
+plan, not evidence that submission has already happened. Installation/Store copy,
+the ZIP, email runtime and production remain outside Stage 5B.
 
 ## Free quota reset notice, 2026-09-15
 
