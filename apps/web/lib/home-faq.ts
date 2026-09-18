@@ -18,7 +18,7 @@ export const homeFAQ = [
   {
     question: "How do I watch Crunchyroll with friends using AniDachi?",
     answer:
-      "Install the AniDachi Chrome extension, navigate to any anime on Crunchyroll, click 'Detect Anime,' then create a watchroom. Share the invite link with friends — everyone watches in sync with built-in chat.",
+      "Install AniDachi in desktop Chrome and open an episode on Crunchyroll. AniDachi detects the title automatically. Open the AniDachi panel, click 'Create room,' and share the invite link. Each friend needs the extension and access to the episode on their own Crunchyroll account.",
   },
   {
     question: "Can I watch YouTube together with AniDachi?",
@@ -55,6 +55,6 @@ export const homeFAQ = [
   {
     question: "Does AniDachi work on mobile?",
     answer:
-      "The Chrome extension requires a desktop browser. The watchroom chat and progress tracking will be accessible on mobile via the web app in a future update.",
+      "You can access your account and manage saved watch history on the website from your phone. Live watchrooms require desktop Chrome with the AniDachi extension installed.",
   },
 ];

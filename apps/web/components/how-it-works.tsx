@@ -20,13 +20,13 @@ const steps = [
     icon: Users,
     title: "Create a Watchroom",
     description:
-      "One click creates a shared room. Share the invite link — friends join from any device.",
+      "Create a room and share the invite link. Each friend joins in desktop Chrome with the AniDachi extension installed.",
   },
   {
     icon: MessageSquare,
-    title: "Track Progress & Chat Async",
+    title: "Watch together",
     description:
-      "Coming soon in a later batch: mark episodes at your pace, leave reactions, and chat so friends can catch up on their schedule. Live sync is available now.",
+      "Watch in sync, chat, and send reactions while everyone is in the room together.",
   },
 ];
 
@@ -87,6 +87,28 @@ export function HowItWorks() {
             </li>
           ))}
         </ol>
+
+        <aside
+          aria-labelledby="async-coming-soon"
+          className="mx-auto mt-8 max-w-2xl border-t border-ani-line pt-6"
+        >
+          <div className="pl-[3.25rem] sm:pl-14">
+            <span className="mb-2 inline-flex rounded-full border border-ani-control-border px-2.5 py-1 text-xs font-medium text-ani-muted">
+              Coming soon
+            </span>
+            <h3
+              id="async-coming-soon"
+              className="text-lg font-semibold tracking-[-0.02em] text-ani-text"
+            >
+              Async catch-up
+            </h3>
+            <p className="mt-1.5 text-[0.95rem] leading-relaxed text-ani-muted">
+              Planned for a future update: watch at your own pace, leave
+              reactions and messages, and let friends catch up when they have
+              time — without everyone being online together.
+            </p>
+          </div>
+        </aside>
       </div>
     </section>
   );
