@@ -122,6 +122,21 @@ is planned alongside the eventual main release. This is an accepted publication
 plan, not evidence that submission has already happened. Installation/Store copy,
 the ZIP, email runtime and production remain outside Stage 5B.
 
+## Checkout confirmation display correction, 2026-09-18
+
+The owner approved correcting the existing `/success` page's unconditional success
+message. The heading, badge and status message now follow the same checkout-sync
+state: checking, confirmed paid access, error, no checkout, or confirmed Free status.
+Opening the page without a checkout does not call the sync endpoint or claim a new
+subscription. Pending/error states and neutral next steps do not claim payment was
+completed. Missing/unknown plan data is treated as an unconfirmed response.
+
+The POST endpoint, body, Stripe verification, webhook, entitlement policy, account
+refresh and navigation destinations are unchanged. No Stripe, account, env or
+extension mutation is part of verification. Regression tests use the real component
+with controlled responses; deployment and browser receipts belong in the scoped PR.
+Main promotion remains a separate decision.
+
 ## Free quota reset notice, 2026-09-15
 
 The drawer shows a compact countdown after the host's daily Free budget is used
