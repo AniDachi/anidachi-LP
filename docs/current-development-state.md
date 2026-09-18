@@ -98,8 +98,9 @@ Staging delivery and its exact receipts belong in the scoped PR.
 The owner rejected the redesign's custom pricing promise for groups of 8+ on
 2026-09-18. Its three mentions are removed from the Pro card, plan comparison
 and shared pricing FAQ. Standard prices, room limits and priority support are
-unchanged. This explicit decision covers that removal; the broader Stage 5A
-PR #353 remains unmerged, with further staging delivery awaiting owner approval.
+unchanged. The owner subsequently approved the full Stage 5A block, including
+that removal, for PR #353 and staging delivery after checks. Main promotion
+remains a separate decision; exact staging acceptance receipts belong in the PR.
 Other comparison claims, installation copy and legal pages still need their own
 review; Stage 5 is not fully accepted.
 
