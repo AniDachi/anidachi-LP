@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-09-16.
+Last updated: 2026-09-18.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -54,12 +54,31 @@ incomplete configuration disables the button and returns 503 without a fallback.
 The metadata and redirect responses are not cached. Actual hosted bytes and
 download headers still need separate acceptance when an archive is published.
 
-This scoped correction is on `codex/single-zip-download`; its PR records final
-CI and staging delivery. The install page design, instructions, FAQ, extension,
+This scoped correction was accepted on staging at `876b9e94` through
+[PR #351](https://github.com/AniDachi/anidachi-LP/pull/351), which records final
+CI and deployed acceptance. The install page design, instructions, FAQ, extension,
 identity and runtime behavior are unchanged. Public ZIP upload, cloud environment
 changes and main promotion remain separate; the current staging download is
 intentionally unconfigured. See Stage 3 of the
 [repair plan](superpowers/plans/2026-09-15-staging-release-repair-plan.md).
+
+## Installation contact concurrency correction, 2026-09-18
+
+Stage 4A uses the existing `mutateContacts` operation for desktop installation
+requests instead of saving a previously read contacts snapshot. The entire
+lookup and change is reapplied to fresh data after a conditional-write conflict.
+One request keeps its generated ID and timestamp across retries. Existing
+contact fields, notes, segments and do-not-contact status are preserved.
+Read, parse, write and exhausted-conflict failures return `saved:false` with
+`storage_failed`; the helper no longer logs raw storage exceptions.
+
+The implementation is isolated on `codex/install-contact-concurrency`; its PR
+records review, CI and staging delivery. Tests exercise the real helper, store,
+conditional-write loop and installed Blob SDK with an in-memory HTTP transport;
+they do not create real contacts or send email. No CRM schema, storage authority,
+email endpoint/UI, extension or production settings change. Email rate limits,
+delivery-result handling and a real end-to-end send remain separate stages 4B,
+4C and 6. Main promotion and ZIP publication remain held.
 
 ## Free quota reset notice, 2026-09-15
 

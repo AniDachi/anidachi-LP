@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { readContacts, writeContacts } from "@/lib/kreatli-crm/store";
+import { mutateContacts } from "@/lib/kreatli-crm/store";
 import type { Contact } from "@/lib/kreatli-crm/types";
 import { isValidEmail, normalizeEmail } from "@/lib/kreatli-crm/validation";
 
@@ -17,43 +17,41 @@ export async function upsertDesktopInstallLead(
     return { saved: false, reason: "invalid_email" };
   }
 
-  const contacts = await readContacts();
+  // The mutation may be replayed against fresh data after a concurrent write.
+  const id = randomUUID();
   const now = new Date().toISOString();
   const note = `Requested desktop install link.\nCaptured: ${now}`;
-  const idx = contacts.findIndex((c) => normalizeEmail(c.email) === normalized);
-
-  if (idx === -1) {
-    const contact: Contact = {
-      id: randomUUID(),
-      email: normalized,
-      company: "",
-      first_name: "",
-      segments: [DESKTOP_INSTALL_LINK_SEGMENT],
-      notes: note,
-      status: "active",
-      next_action_date: null,
-      created_at: now,
-      updated_at: now,
-    };
-    contacts.push(contact);
-  } else {
-    const cur = contacts[idx]!;
-    const mergedNotes = cur.notes.trim()
-      ? `${cur.notes.trim()}\n\n---\n${note}`
-      : note;
-    contacts[idx] = {
-      ...cur,
-      segments: mergeSegments(cur.segments, [DESKTOP_INSTALL_LINK_SEGMENT]),
-      notes: mergedNotes,
-      updated_at: now,
-    };
-  }
 
   try {
-    await writeContacts(contacts);
-    return { saved: true };
-  } catch (error) {
-    console.error("[desktop-install-lead] Failed to write contacts:", error);
-    return { saved: false, reason: "write_failed" };
+    const outcome = await mutateContacts((contacts) => {
+      const idx = contacts.findIndex((c) => normalizeEmail(c.email) === normalized);
+      if (idx === -1) {
+        const contact: Contact = {
+          id,
+          email: normalized,
+          company: "",
+          first_name: "",
+          segments: [DESKTOP_INSTALL_LINK_SEGMENT],
+          notes: note,
+          status: "active",
+          next_action_date: null,
+          created_at: now,
+          updated_at: now,
+        };
+        contacts.push(contact);
+      } else {
+        const cur = contacts[idx]!;
+        contacts[idx] = {
+          ...cur,
+          segments: mergeSegments(cur.segments, [DESKTOP_INSTALL_LINK_SEGMENT]),
+          notes: cur.notes.trim() ? `${cur.notes.trim()}\n\n---\n${note}` : note,
+          updated_at: now,
+        };
+      }
+      return { changed: true, value: { saved: true } };
+    });
+    return outcome.value;
+  } catch {
+    return { saved: false, reason: "storage_failed" };
   }
 }
