@@ -31,7 +31,7 @@ export default function TermsPage() {
             Terms of Service
           </h1>
           <p className="text-sm text-foreground/50 mb-10">
-            Last updated: September 15, 2026
+            Last updated: September 18, 2026
           </p>
 
           <div className="prose prose-gray max-w-none space-y-8 text-foreground/80 leading-relaxed">
@@ -61,10 +61,11 @@ export default function TermsPage() {
                 reactions, and related social features through a Chrome
                 extension and website. Free accounts can join friends&apos;
                 rooms and host with daily limits. Plus and Pro remove the Free
-                daily host limit, raise room capacity, and unlock personal watch
-                history and Resume for entitled accounts. Planned features may
-                be described as coming soon and are not guaranteed until they
-                ship.
+                daily host limit and raise room capacity. Recording and editing
+                personal watch progress require each viewer&apos;s own Plus or
+                Pro subscription. Saved history and Resume remain available on
+                Free. Planned features may be described as coming soon and are
+                not guaranteed until they ship.
               </p>
               <p className="mt-4">
                 Until a Chrome Web Store listing is published, you may install
