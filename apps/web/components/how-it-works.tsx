@@ -92,20 +92,26 @@ export function HowItWorks() {
           aria-labelledby="async-coming-soon"
           className="mx-auto mt-8 max-w-2xl border-t border-ani-line pt-6"
         >
-          <div className="pl-[3.25rem] sm:pl-14">
-            <span className="mb-2 inline-flex rounded-full border border-ani-control-border px-2.5 py-1 text-xs font-medium text-ani-muted">
+          <div className="grid grid-cols-[2.25rem_minmax(0,1fr)] items-center gap-x-4 sm:gap-x-5">
+            <span className="col-start-2 mb-2 inline-flex justify-self-start rounded-full border border-ani-control-border px-2.5 py-1 text-xs font-medium text-ani-muted">
               Coming soon
+            </span>
+            <span
+              aria-hidden="true"
+              className="col-start-1 row-start-2 flex h-9 w-9 items-center justify-center rounded-full border border-dashed border-ani-control-border text-sm font-semibold tabular-nums text-ani-muted"
+            >
+              5
             </span>
             <h3
               id="async-coming-soon"
-              className="text-lg font-semibold tracking-[-0.02em] text-ani-text"
+              className="col-start-2 row-start-2 text-lg font-semibold tracking-[-0.02em] text-ani-text"
             >
               Async catch-up
             </h3>
-            <p className="mt-1.5 text-[0.95rem] leading-relaxed text-ani-muted">
-              Planned for a future update: watch at your own pace, leave
-              reactions and messages, and let friends catch up when they have
-              time — without everyone being online together.
+            <p className="col-start-2 mt-1.5 text-[0.95rem] leading-relaxed text-ani-muted">
+              Coming soon in a later batch: mark episodes at your pace, leave
+              reactions, and chat so friends can catch up on their schedule.
+              Live sync is available now.
             </p>
           </div>
         </aside>
