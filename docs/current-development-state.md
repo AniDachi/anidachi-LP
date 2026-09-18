@@ -72,13 +72,37 @@ contact fields, notes, segments and do-not-contact status are preserved.
 Read, parse, write and exhausted-conflict failures return `saved:false` with
 `storage_failed`; the helper no longer logs raw storage exceptions.
 
-The implementation is isolated on `codex/install-contact-concurrency`; its PR
-records review, CI and staging delivery. Tests exercise the real helper, store,
+The correction was accepted on staging at `f2567844` through
+[PR #352](https://github.com/AniDachi/anidachi-LP/pull/352), which records review,
+CI, staging smoke and the verified Vercel deployment. Tests exercise the real helper, store,
 conditional-write loop and installed Blob SDK with an in-memory HTTP transport;
 they do not create real contacts or send email. No CRM schema, storage authority,
 email endpoint/UI, extension or production settings change. Email rate limits,
 delivery-result handling and a real end-to-end send remain separate stages 4B,
-4C and 6. Main promotion and ZIP publication remain held.
+4C and 6. The owner deferred the remaining email work on 2026-09-18 to continue
+the sequential website review; this is not acceptance of the public email flow.
+Main promotion and ZIP publication remain held.
+
+## Pricing history wording correction, 2026-09-18
+
+Stage 5A separates recording/editing progress (each viewer's own Plus or Pro)
+from viewing saved history and resuming it (including Free). The plan cards,
+comparison matrix, homepage comparison and shared FAQ wording reflect the
+existing runtime policy. The pricing FAQ again asks how to cancel a subscription,
+matching its existing cancellation answer. Prices, entitlements and checkout
+behavior are unchanged. Three marketing-matrix tests cover the access distinction,
+plan limits, platforms and prices; local web checks, all 648 passing web tests
+(6 existing skips), production build and desktop/mobile rendering passed.
+Staging delivery and its exact receipts belong in the scoped PR.
+
+The owner rejected the redesign's custom pricing promise for groups of 8+ on
+2026-09-18. Its three mentions are removed from the Pro card, plan comparison
+and shared pricing FAQ. Standard prices, room limits and priority support are
+unchanged. The owner subsequently approved the full Stage 5A block, including
+that removal, for PR #353 and staging delivery after checks. Main promotion
+remains a separate decision; exact staging acceptance receipts belong in the PR.
+Other comparison claims, installation copy and legal pages still need their own
+review; Stage 5 is not fully accepted.
 
 ## Free quota reset notice, 2026-09-15
 

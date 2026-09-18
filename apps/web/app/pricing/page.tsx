@@ -15,7 +15,7 @@ import {
 export const metadata: Metadata = {
   title: "AniDachi Pricing — Free, Plus & Pro Plans (2026)",
   description:
-    "AniDachi pricing for Crunchyroll and YouTube watchrooms. Free to join. Plus and Pro raise host limits and unlock personal history. Subscribe now and keep this rate.",
+    "AniDachi pricing for Crunchyroll and YouTube watchrooms. Free to join. Plus and Pro raise host limits and unlock history recording. Subscribe now and keep this rate.",
   alternates: { canonical: "/pricing" },
   openGraph: {
     images: [
@@ -58,13 +58,13 @@ const faq = [
     answer: PRICING_PLUS_VS_PRO_ANSWER,
   },
   {
-    question: "Can I get a refund?",
+    question: "How do I cancel my subscription?",
     answer: PRICING_CANCELLATION_NOTE,
   },
   {
     question: "Do I still need Crunchyroll or YouTube?",
     answer:
-      "Yes. Each person streams under their own Crunchyroll or YouTube account. AniDachi adds watchrooms, sync, chat, and personal history on paid plans — it does not replace a streaming subscription.",
+      "Yes. Each person streams under their own Crunchyroll or YouTube account. AniDachi adds watchrooms, sync, and chat, plus history recording on paid plans — it does not replace a streaming subscription.",
   },
 ];
 

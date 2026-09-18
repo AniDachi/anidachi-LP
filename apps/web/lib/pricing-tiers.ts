@@ -95,7 +95,7 @@ export const PRICING_PLAN_MATRIX_ROWS: CompareTableRow[] = [
     },
   },
   {
-    feature: "Personal history & progress",
+    feature: "Record & edit progress",
     values: {
       free: "no",
       plus: "Yes — both platforms",
@@ -103,9 +103,9 @@ export const PRICING_PLAN_MATRIX_ROWS: CompareTableRow[] = [
     },
   },
   {
-    feature: "Resume from saved spot",
+    feature: "View saved history & resume",
     values: {
-      free: "no",
+      free: "yes",
       plus: "yes",
       pro: "yes",
     },
@@ -142,14 +142,6 @@ export const PRICING_PLAN_MATRIX_ROWS: CompareTableRow[] = [
       pro: "yes",
     },
   },
-  {
-    feature: "Custom pricing (8+ groups)",
-    values: {
-      free: "no",
-      plus: "no",
-      pro: "Negotiable",
-    },
-  },
 ];
 
 export const PRICING_TIERS: PricingTierMarketing[] = [
@@ -168,7 +160,8 @@ export const PRICING_TIERS: PricingTierMarketing[] = [
       "Join friends' rooms",
       "Sync, chat & reactions",
       "Friends, groups & invites",
-      "No personal history or Resume",
+      "View saved history & resume",
+      "Recording & editing require Plus or Pro",
     ],
   },
   {
@@ -177,13 +170,13 @@ export const PRICING_TIERS: PricingTierMarketing[] = [
     priceDisplay: PRICING_PLUS_LABEL,
     priceSuffix: "/month",
     audience: "Regular watch nights and your personal watch progress",
-    summary: "No daily host limit — personal history on both platforms",
+    summary: "No daily host limit — record progress on both platforms",
     features: [
       "Crunchyroll + YouTube",
       "Host your own room: no daily limit",
       `Up to ${plusPolicy.maxParticipants} people (incl. host)`,
       `Up to ${plusPolicy.maxCameras} cameras & ${plusPolicy.maxMicrophones} mics`,
-      "Personal history & progress (both platforms)",
+      "Record & edit progress on both platforms",
       "Resume from saved spot",
       "Join friends' rooms",
       "Sync, chat & reactions",
@@ -202,7 +195,6 @@ export const PRICING_TIERS: PricingTierMarketing[] = [
       `Up to ${proPolicy.maxParticipants} people (incl. host)`,
       `Up to ${proPolicy.maxCameras} cameras & ${proPolicy.maxMicrophones} mics`,
       "Priority support",
-      "Custom pricing for 8+ person groups",
     ],
   },
 ];

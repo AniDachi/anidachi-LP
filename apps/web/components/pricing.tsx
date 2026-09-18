@@ -210,7 +210,7 @@ export function Pricing({
         <HomeSectionHeader
           titleAs={headingLevel === 1 ? "h1" : "h2"}
           title="Host more. Install is free."
-          description="Download the Chrome extension first. Free joins any room. Plus and Pro raise your host limits and unlock personal history."
+          description="Download the Chrome extension first. Free joins any room. Plus and Pro raise your host limits and unlock history recording."
         />
 
         {checkoutError ? (

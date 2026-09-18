@@ -78,7 +78,7 @@ const rows: CompareTableRow[] = [
   {
     feature: "Watch history & Resume",
     values: {
-      anidachi: "Personal history (Plus/Pro)",
+      anidachi: "Record on Plus/Pro; saved history & Resume on all plans",
       teleparty: "no",
       crunchyrollParty: "no",
       discord: "no",

@@ -24,7 +24,7 @@ export const ASYNC_COMING_SOON =
 
 /** Paid plans upgrade the host's room limits; guests can stay on Free. */
 export const PRICING_HOST_MODEL =
-  "Free hosts can start limited rooms; Plus and Pro upgrade the host's room limits while friends can join on Free accounts. Personal watch history requires each viewer’s own Plus or Pro plan; Free does not record history. Crunchyroll and YouTube are available on every plan.";
+  "Free hosts can start limited rooms; Plus and Pro upgrade the host's room limits while friends can join on Free accounts. Recording and editing personal progress require each viewer’s own Plus or Pro plan. Saved history and Resume remain available on Free. Crunchyroll and YouTube are available on every plan.";
 
 export const PRICING_CANCELLATION_NOTE =
   "Cancel renewal from Account → Subscription. Paid access continues until the end of your billing period.";
@@ -36,7 +36,7 @@ export const PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER =
   `No. ${PRICING_HOST_MODEL} Each person still needs their own Crunchyroll account to stream the video.`;
 
 export const PRICING_PLUS_VS_PRO_ANSWER =
-  `Plus (${PRICING_PLUS_SHORT}) removes the Free daily host limit, raises the room to ${plusPolicy.maxParticipants} people and ${plusPolicy.maxMicrophones} mics, and unlocks personal watch history and Resume on Crunchyroll and YouTube. Pro (${PRICING_PRO_SHORT}) is the same features with up to ${proPolicy.maxParticipants} people and ${proPolicy.maxMicrophones} mics, plus priority support and the option to negotiate custom pricing for 8+ person groups. Friends can join any host on Free. ${ASYNC_COMING_SOON} — it is not part of Plus or Pro today.`;
+  `Plus (${PRICING_PLUS_SHORT}) removes the Free daily host limit, raises the room to ${plusPolicy.maxParticipants} people and ${plusPolicy.maxMicrophones} mics, and lets you record and edit personal progress on Crunchyroll and YouTube. Saved history and Resume remain available on Free. Pro (${PRICING_PRO_SHORT}) is the same features with up to ${proPolicy.maxParticipants} people and ${proPolicy.maxMicrophones} mics, plus priority support. Friends can join any host on Free. ${ASYNC_COMING_SOON} — it is not part of Plus or Pro today.`;
 
 export function pricingWatchPageFaqAnswer(animeTitle: string): string {
   return `AniDachi has a Free tier for joining friends' rooms and hosting limited rooms. When you want to host without limits, Plus starts at ${PRICING_STARTING_AT} and Pro at ${PRICING_PRO_SHORT.replace("/mo", "/month")} — see homepage pricing and checkout. You still need individual Crunchyroll access for ${animeTitle}; AniDachi provides the watchroom, sync, and chat layer on top of each person's stream.`;

@@ -24,7 +24,11 @@ CI receipts — в [PR #349](https://github.com/AniDachi/anidachi-LP/pull/349), 
 Этап 2 согласован отдельно: восстановить нашу шторку аккаунта и ее оформление
 из main, сохранив остальные новые элементы шапки. Восстановление общего меню,
 responsive-доступа и защиты выхода проверяется отдельным файловым срезом;
-остальные строки исходного редизайна остаются открытыми.
+остальные строки исходного редизайна остаются открытыми. Приемка этапов 2 и 4A
+подтверждена PR #350 (`5a7aa839`) и #352 (`f2567844`). Перед этапом 5A закрыты
+16 из 164 исходных файлов: 6 приняты после исправления, 10 возвращены/исключены.
+Остальные 148 требуют полного завершения проверки, даже если часть замечаний
+уже исправлена. Созданные нами тесты и журнал не увеличивают знаменатель 164.
 
 | Группа | Проверка |
 | --- | --- |
@@ -109,9 +113,9 @@ responsive-доступа и защиты выхода проверяется о
 | открыто | M | S | `apps/web/app/layout.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | A | `apps/web/app/login/page.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/app/page.tsx` | Полное diff-review еще не зафиксировано. |
-| открыто | M | C | `apps/web/app/pricing/page.tsx` | Полное diff-review еще не зафиксировано. |
+| исправлено локально; staging pending | M | C | `apps/web/app/pricing/page.tsx` | 5A: полный diff просмотрен; metadata/FAQ используют действующую модель истории, вопрос отмены соответствует ответу, ссылки и CTA сохранены. Web check/test/build и /pricing desktop/mobile passed; финальная приемка в PR 5A. |
 | открыто | M | C | `apps/web/app/privacy/page.tsx` | Полное diff-review еще не зафиксировано. |
-| проверено локально | M | I | `apps/web/app/room/[roomId]/extension-check.tsx` | Этап 1: нейтральная справка, safe next/mobile copy; 6 client tests и desktop/mobile harness passed, независимое ревью без замечаний. Join page/API неизменны; живой staging еще не обновлялся. |
+| принято на staging | M | I | `apps/web/app/room/[roomId]/extension-check.tsx` | PR #349, merge `bcd00c7d`: нейтральная справка, safe next/mobile copy; 6 client tests, desktop/mobile harness и staging receipts приняты. Join page/API неизменны. |
 | открыто | M | C | `apps/web/app/security/page.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | A | `apps/web/app/success/checkout-session-sync.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | A | `apps/web/app/success/page.tsx` | Полное diff-review еще не зафиксировано. |
@@ -137,7 +141,7 @@ responsive-доступа и защиты выхода проверяется о
 | открыто | M | C | `apps/web/components/chrome-extension-demo-overlay.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/components/chrome-extension-demo.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/components/chrome-extension-features.tsx` | Полное diff-review еще не зафиксировано. |
-| открыто | M | C | `apps/web/components/compare-table.tsx` | Полное diff-review еще не зафиксировано. |
+| открыто | M | C | `apps/web/components/compare-table.tsx` | 5A: строка AniDachi разделяет запись Plus/Pro и сохраненную историю/Resume на всех планах; /#compare проверен desktop/mobile. Остальные продуктовые/конкурентные утверждения требуют отдельной проверки; файл целиком не принят. |
 | открыто | M | F | `apps/web/components/contact-form.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | F | `apps/web/components/discord-credentials-form.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | A | I | `apps/web/components/extension-install-hub.tsx` | F08 устранен в этапе 1: presence исключен; tests passed. F07, F11 и остальная часть полного diff остаются открытыми. |
@@ -151,7 +155,7 @@ responsive-доступа и защиты выхода проверяется о
 | открыто | M | C | `apps/web/components/join-discord-button.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/components/json-ld.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/components/main-app-features.tsx` | Полное diff-review еще не зафиксировано. |
-| исправлено локально; staging pending | M | A | `apps/web/components/nav-bar-client.tsx` | F04/F05/F06: общий production UserMenu и CSS подключены обратно; восстановлены account shortcuts, единый responsive breakpoint и cleanup drawer. Watch/Contact/Pricing/install сохранены. Проверены runtime consumers и 34 целевых сценария; живая приемка остается в PR этапа 2. |
+| принято на staging | M | A | `apps/web/components/nav-bar-client.tsx` | PR #350, merge `5a7aa839`: production UserMenu/CSS, account shortcuts, responsive доступ, cleanup и guarded logout восстановлены. 38 целевых проверок; Space на реальном document-root и ручной Cancel приняты, CI/staging receipts в PR. |
 | открыто | M | C | `apps/web/components/nav-pricing-button.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/components/nav-pricing-link.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | A | C | `apps/web/components/overlay-interface-preview.tsx` | Полное diff-review еще не зафиксировано. |
@@ -163,7 +167,7 @@ responsive-доступа и защиты выхода проверяется о
 | открыто | D | F | `apps/web/components/plan-survey/waitlist-referral-card.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | D | F | `apps/web/components/pre-purchase-discord-walkthrough.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | D | F | `apps/web/components/pricing-survey-link.tsx` | Полное diff-review еще не зафиксировано. |
-| открыто | M | C | `apps/web/components/pricing.tsx` | Полное diff-review еще не зафиксировано. |
+| исправлено локально; staging pending | M | C | `apps/web/components/pricing.tsx` | 5A: полный diff просмотрен; исправлено описание записи истории, Free CTA ведет /extension, Plus/Pro сохраняют planCode и checkout/error handling. Сняты старые survey props; импортирующие потребители прошли check/build. Карточки и таблица проверены desktop/mobile; приемка в PR 5A. |
 | открыто | M | C | `apps/web/components/primary-checkout-cta.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/components/responsive-compare-table.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/components/seo-guide-blocks.tsx` | Полное diff-review еще не зафиксировано. |
@@ -189,7 +193,7 @@ responsive-доступа и защиты выхода проверяется о
 | открыто | M | F | `apps/web/lib/home-survey.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | A | I | `apps/web/lib/install-cta.ts` | F13 |
 | открыто | M | C | `apps/web/lib/internal-tool-routes.test.ts` | Полное diff-review еще не зафиксировано. |
-| исправлено локально; staging pending | A | F | `apps/web/lib/kreatli-crm/desktop-install-lead.ts` | F09: весь upsert внутри существующего mutateContacts, стабильные ID/time при retry, сохранение свежих notes/status/полей, controlled storage_failed. 11 новых проверок через реальный store/SDK с fake HTTP; email endpoint остается 4B/4C. |
+| принято на staging | A | F | `apps/web/lib/kreatli-crm/desktop-install-lead.ts` | PR #352, merge `f2567844`: атомарный mutateContacts, стабильные ID/time, сохранение свежих notes/status, controlled storage_failed. 11 проверок реального store/SDK, независимое ревью, CI и staging smoke приняты; реальных контактов/писем не создавали. Endpoint остается 4B/4C. |
 | открыто | M | F | `apps/web/lib/kreatli-crm/feature-request-shared.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | A | F | `apps/web/lib/kreatli-crm/public-signup-count.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | D | F | `apps/web/lib/kreatli-crm/subscribe-interest-route.test.ts` | Полное diff-review еще не зафиксировано. |
@@ -201,8 +205,8 @@ responsive-доступа и защиты выхода проверяется о
 | открыто | D | F | `apps/web/lib/kreatli-crm/waitlist-join-route.test.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | D | F | `apps/web/lib/kreatli-crm/waitlist-join-route.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/lib/middleware-routes.test.ts` | Полное diff-review еще не зафиксировано. |
-| открыто | M | C | `apps/web/lib/pricing-copy.ts` | Полное diff-review еще не зафиксировано. |
-| открыто | M | C | `apps/web/lib/pricing-tiers.ts` | F12 |
+| открыто | M | C | `apps/web/lib/pricing-copy.ts` | 5A: общие FAQ разделяют запись/редактирование и сохраненную историю/Resume. По решению владельца 2026-09-18 обещание индивидуальной цены 8+ удалено; прочие compare/SEO claims требуют проверки. Блок 5A согласован для staging через PR #353; нужен deployment receipt. |
+| открыто | M | C | `apps/web/lib/pricing-tiers.ts` | 5A исправляет F12, 3 semantic matrix tests passed; лимиты сверены с getPlanPolicy, цены прежние. По решению владельца 2026-09-18 обещание индивидуальной цены 8+ удалено из карточки и таблицы. PR #353 согласован для staging; приемка deployment еще открыта. |
 | открыто | M | C | `apps/web/lib/sitemap-discovery.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | A | S | `apps/web/lib/use-in-view.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/lib/watch-page-rich-content.ts` | Полное diff-review еще не зафиксировано. |
