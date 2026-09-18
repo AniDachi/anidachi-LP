@@ -1,4 +1,4 @@
-import { Chrome, Search, Users, MessageSquare } from "lucide-react";
+import { Chrome, Search, Users, MessageSquare, Clock3 } from "lucide-react";
 import Link from "next/link";
 import { HomeSectionHeader } from "@/components/home-section-header";
 import { INSTALL_HUB_PATH } from "@/lib/install-cta";
@@ -93,21 +93,27 @@ export function HowItWorks() {
           className="mx-auto mt-8 max-w-2xl border-t border-ani-line pt-6"
         >
           <div className="grid grid-cols-[2.25rem_minmax(0,1fr)] items-center gap-x-4 sm:gap-x-5">
-            <span className="col-start-2 mb-2 inline-flex justify-self-start rounded-full border border-ani-control-border px-2.5 py-1 text-xs font-medium text-ani-muted">
-              Coming soon
-            </span>
             <span
               aria-hidden="true"
-              className="col-start-1 row-start-2 flex h-9 w-9 items-center justify-center rounded-full border border-dashed border-ani-control-border text-sm font-semibold tabular-nums text-ani-muted"
+              className="col-start-1 row-start-1 flex h-9 w-9 items-center justify-center rounded-full border border-ani-control-border font-semibold tabular-nums text-sm text-ani-text"
             >
               5
             </span>
-            <h3
-              id="async-coming-soon"
-              className="col-start-2 row-start-2 text-lg font-semibold tracking-[-0.02em] text-ani-text"
-            >
-              Async catch-up
-            </h3>
+            <div className="col-start-2 row-start-1 flex min-w-0 items-center gap-2.5">
+              <Clock3
+                className="h-4 w-4 shrink-0 text-ani-progress"
+                aria-hidden="true"
+              />
+              <h3
+                id="async-coming-soon"
+                className="min-w-0 text-lg font-semibold tracking-[-0.02em] text-ani-text"
+              >
+                Async catch-up
+              </h3>
+              <span className="inline-flex shrink-0 whitespace-nowrap rounded-full border border-ani-control-border px-2.5 py-1 text-xs font-medium text-ani-muted">
+                Coming soon
+              </span>
+            </div>
             <p className="col-start-2 mt-1.5 text-[0.95rem] leading-relaxed text-ani-muted">
               Coming soon in a later batch: mark episodes at your pace, leave
               reactions, and chat so friends can catch up on their schedule.
