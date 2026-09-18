@@ -142,14 +142,6 @@ export const PRICING_PLAN_MATRIX_ROWS: CompareTableRow[] = [
       pro: "yes",
     },
   },
-  {
-    feature: "Custom pricing (8+ groups)",
-    values: {
-      free: "no",
-      plus: "no",
-      pro: "Negotiable",
-    },
-  },
 ];
 
 export const PRICING_TIERS: PricingTierMarketing[] = [
@@ -203,7 +195,6 @@ export const PRICING_TIERS: PricingTierMarketing[] = [
       `Up to ${proPolicy.maxParticipants} people (incl. host)`,
       `Up to ${proPolicy.maxCameras} cameras & ${proPolicy.maxMicrophones} mics`,
       "Priority support",
-      "Custom pricing for 8+ person groups",
     ],
   },
 ];

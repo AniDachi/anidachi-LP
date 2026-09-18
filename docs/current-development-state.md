@@ -95,9 +95,13 @@ plan limits, platforms and prices; local web checks, all 648 passing web tests
 (6 existing skips), production build and desktop/mobile rendering passed.
 Staging delivery and its exact receipts belong in the scoped PR.
 
-The redesign's custom pricing promise for groups of 8+ needs an owner decision
-and remains unchanged pending that answer. Other comparison claims, installation
-copy and legal pages still need their own review; Stage 5 is not fully accepted.
+The owner rejected the redesign's custom pricing promise for groups of 8+ on
+2026-09-18. Its three mentions are removed from the Pro card, plan comparison
+and shared pricing FAQ. Standard prices, room limits and priority support are
+unchanged. This explicit decision covers that removal; the broader Stage 5A
+PR #353 remains unmerged, with further staging delivery awaiting owner approval.
+Other comparison claims, installation copy and legal pages still need their own
+review; Stage 5 is not fully accepted.
 
 ## Free quota reset notice, 2026-09-15
 

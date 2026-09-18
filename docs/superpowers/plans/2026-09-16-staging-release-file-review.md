@@ -205,8 +205,8 @@ responsive-доступа и защиты выхода проверяется о
 | открыто | D | F | `apps/web/lib/kreatli-crm/waitlist-join-route.test.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | D | F | `apps/web/lib/kreatli-crm/waitlist-join-route.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/lib/middleware-routes.test.ts` | Полное diff-review еще не зафиксировано. |
-| открыто | M | C | `apps/web/lib/pricing-copy.ts` | 5A: общие FAQ теперь разделяют запись/редактирование и сохраненную историю/Resume. Индивидуальная цена 8+ ожидает решения владельца; прочие compare/SEO claims требуют проверки. |
-| открыто | M | C | `apps/web/lib/pricing-tiers.ts` | 5A исправляет F12, 3 semantic matrix tests passed; лимиты сверены с getPlanPolicy, цены прежние. Индивидуальная цена 8+ остается открытым решением, поэтому полная приемка файла не заявляется. |
+| открыто | M | C | `apps/web/lib/pricing-copy.ts` | 5A: общие FAQ разделяют запись/редактирование и сохраненную историю/Resume. По решению владельца 2026-09-18 обещание индивидуальной цены 8+ удалено; прочие compare/SEO claims требуют проверки. PR #353 ожидает согласования. |
+| открыто | M | C | `apps/web/lib/pricing-tiers.ts` | 5A исправляет F12, 3 semantic matrix tests passed; лимиты сверены с getPlanPolicy, цены прежние. По решению владельца 2026-09-18 обещание индивидуальной цены 8+ удалено из карточки и таблицы. Приемка staging остается открытой до согласования PR #353. |
 | открыто | M | C | `apps/web/lib/sitemap-discovery.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | A | S | `apps/web/lib/use-in-view.ts` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/lib/watch-page-rich-content.ts` | Полное diff-review еще не зафиксировано. |
