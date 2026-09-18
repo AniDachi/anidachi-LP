@@ -25,13 +25,13 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   return (
     <>
-      <main className="min-h-screen bg-background">
+      <main id="main-content" className="min-h-screen bg-background">
         <article className="container mx-auto max-w-3xl px-4 py-16">
           <h1 className="text-4xl font-bold text-foreground mb-2">
             Privacy Policy
           </h1>
           <p className="text-sm text-foreground/50 mb-10">
-            Last updated: September 15, 2026
+            Last updated: September 18, 2026
           </p>
 
           <div className="prose prose-gray max-w-none space-y-8 text-foreground/80 leading-relaxed">
@@ -65,11 +65,12 @@ export default function PrivacyPage() {
                 <li><strong>Stripe</strong> processes payments and subscription changes. We keep billing identifiers and subscription status; Stripe handles full payment-card details.</li>
                 <li><strong>Google and Discord</strong> provide the sign-in method you select. Browser push services deliver notifications to your browser.</li>
                 <li><strong>Google Analytics and Amplitude</strong> process website usage events, device/browser information and performance measurements where configured. These identifiers are not necessarily anonymous. Our website does not enable Amplitude Session Replay. These analytics SDKs are not installed in the extension.</li>
-                <li><strong>Gmail (Google)</strong> may send transactional messages you request, such as a desktop install link from the{" "}
-                  <Link href="/extension" className="text-brand-orange hover:underline">install page</Link>.</li>
+                <li><strong>Gmail (Google)</strong> may send the desktop install link you request from the{" "}
+                  <Link href="/extension" className="text-brand-orange hover:underline">install page</Link>
+                  {" "}and deliver copies of contact and feature-request submissions to our team.</li>
               </ul>
               <p className="mt-4">
-                If you submit an email on the install page to receive a desktop install link, or use our contact or feature-request forms, we store that email and message content to fulfill the request and for related product follow-up. These leads are kept in our internal CRM tooling on the same hosting stack.
+                If you request a desktop install link, we store your email address, the request type and time. Contact and feature-request forms also store the name, subject or title, category and message you submit. We keep these records in our internal CRM tools on private Vercel storage to fulfill your request and handle replies or follow-up about it.
               </p>
               <p>We do not sell extension user data or use it for advertising, creditworthiness or lending decisions. We use it for the disclosed product features and their security and reliability, and share it with providers only as needed to deliver those purposes. Human access is limited to your explicit consent for a specific purpose, necessary security or legal handling, or aggregated data that cannot identify you.</p>
               <p>AniDachi&apos;s use of information received from Chrome APIs follows the <a href="https://developer.chrome.com/docs/webstore/program-policies/limited-use" className="text-brand-orange hover:underline">Chrome Web Store User Data Policy, including its Limited Use requirements</a>.</p>
