@@ -1,6 +1,6 @@
 # Реестр проверки файлов staging перед production
 
-**Дата:** 2026-09-16; обновлено 2026-09-18. **План:** [Staging Release Repair](2026-09-15-staging-release-repair-plan.md).
+**Дата:** 2026-09-16; обновлено 2026-09-19. **План:** [Staging Release Repair](2026-09-15-staging-release-repair-plan.md).
 
 **Main:** `4b4ff88380d0a64e5216d2770d360440d3f8852b`. **Candidate staging:** `391fb5c97a09298080c32f354eaab63d9115f22a`.
 
@@ -112,7 +112,7 @@ responsive-доступа и защиты выхода проверяется о
 | открыто | M | F | `apps/web/app/kreatli-email-crm/crm-client.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | S | `apps/web/app/layout.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | A | `apps/web/app/login/page.tsx` | Полное diff-review еще не зафиксировано. |
-| принято локально; staging pending | M | C | `apps/web/app/page.tsx` | 2026-09-19: полный исходный diff проверен — удален прежний waitlistCount prop, актуальный HomeClient его не принимает. Описание HowTo согласовано с текущим содержанием без жесткого числа шагов; запись личной истории обозначена как Plus/Pro. В браузере пять HowToStep совпадают с видимыми шагами; будущий Async не включен в доступные действия. Web typecheck и dev:check прошли; правка только текста, полный suite не повторялся. |
+| принято на staging | M | C | `apps/web/app/page.tsx` | PR #360, merge `1542ae14`: полный исходный diff проверен — удален прежний waitlistCount prop, актуальный HomeClient его не принимает. Описание HowTo согласовано с текущим содержанием без жесткого числа шагов; запись личной истории обозначена как Plus/Pro. В браузере пять HowToStep совпадают с видимыми шагами; будущий Async не включен в доступные действия. Typecheck, CI/build и staging receipt записаны ниже. |
 | принято на staging | M | C | `apps/web/app/pricing/page.tsx` | PR #353, merge `0616b0b8`: полный diff, metadata/FAQ, ссылки и CTA проверены; web checks, CI/build, deployed desktop/mobile и раскрытие FAQ прошли. |
 | открыто | M | C | `apps/web/app/privacy/page.tsx` | Полное diff-review еще не зафиксировано. |
 | принято на staging | M | I | `apps/web/app/room/[roomId]/extension-check.tsx` | PR #349, merge `bcd00c7d`: нейтральная справка, safe next/mobile copy; 6 client tests, desktop/mobile harness и staging receipts приняты. Join page/API неизменны. |
@@ -136,10 +136,10 @@ responsive-доступа и защиты выхода проверяется о
 | открыто | M | A | `apps/web/components/account/account-overview.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | D | A | `apps/web/components/account/account-waitlist-card.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | A | `apps/web/components/auth-page-shell.tsx` | Полное diff-review еще не зафиксировано. |
-| удалено локально; staging pending | M | C | `apps/web/components/chrome-extension-demo-async-overlay.tsx` | Согласованное удаление устаревшей демонстрации: единственный потребитель — старый mobile-компонент, также удален. Проверки и границы блока ниже. |
-| удалено локально; staging pending | M | C | `apps/web/components/chrome-extension-demo-mobile.tsx` | Согласованное удаление устаревшей демонстрации: действующих импортов нет; текущие режимы используют новые адаптивные компоненты. Проверки и границы блока ниже. |
-| удалено локально; staging pending | M | C | `apps/web/components/chrome-extension-demo-overlay.tsx` | Согласованное удаление устаревшей демонстрации: использовался только двумя удаленными компонентами. Проверки и границы блока ниже. |
-| открыто | M | C | `apps/web/components/chrome-extension-demo.tsx` | Полное diff-review еще не зафиксировано. |
+| удалено; принято на staging | M | C | `apps/web/components/chrome-extension-demo-async-overlay.tsx` | PR #360, merge `1542ae14`: согласованное удаление устаревшей демонстрации; единственный потребитель — старый mobile-компонент, также удален. Проверки и границы блока ниже. |
+| удалено; принято на staging | M | C | `apps/web/components/chrome-extension-demo-mobile.tsx` | PR #360, merge `1542ae14`: согласованное удаление устаревшей демонстрации; действующих импортов нет, текущие режимы используют новые адаптивные компоненты. Проверки и границы блока ниже. |
+| удалено; принято на staging | M | C | `apps/web/components/chrome-extension-demo-overlay.tsx` | PR #360, merge `1542ae14`: согласованное удаление устаревшей демонстрации; использовался только двумя удаленными компонентами. Проверки и границы блока ниже. |
+| принято на staging | M | C | `apps/web/components/chrome-extension-demo.tsx` | PR #360, merge `1542ae14`: приняты новые автоматические Live/History/Async, подписи, переключатель и адаптивная композиция. Локальная приемка, CI/build и staging receipt записаны ниже; реальная логика расширения не менялась. |
 | открыто | M | C | `apps/web/components/chrome-extension-features.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/components/compare-table.tsx` | 5A: строка AniDachi разделяет запись Plus/Pro и сохраненную историю/Resume на всех планах; /#compare проверен desktop/mobile. Остальные продуктовые/конкурентные утверждения требуют отдельной проверки; файл целиком не принят. |
 | открыто | M | F | `apps/web/components/contact-form.tsx` | Полное diff-review еще не зафиксировано. |
@@ -150,8 +150,8 @@ responsive-доступа и защиты выхода проверяется о
 | открыто | M | C | `apps/web/components/footer.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/components/hero.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/components/home-section-header.tsx` | Полное diff-review еще не зафиксировано. |
-| открыто | M | C | `apps/web/components/home/home-client.tsx` | Полное diff-review еще не зафиксировано. |
-| открыто | M | C | `apps/web/components/how-it-works.tsx` | Полное diff-review еще не зафиксировано. |
+| открыто; блок главной принят на staging | M | C | `apps/web/components/home/home-client.tsx` | PR #360, merge `1542ae14`: приняты подключение мягкой прокрутки и закрытый FAQ по умолчанию. Это приемка данного среза; остальные изменения исходного редизайна не закрываются автоматически. |
+| согласованный срез принят на staging | M | C | `apps/web/components/how-it-works.tsx` | PR #360, merge `1542ae14`: приняты описание личной истории в шаге 5 и оформление будущего Async шагом 6 с Coming soon. Проверки и границы блока ниже; приемка относится к согласованным изменениям этого блока. |
 | открыто | M | C | `apps/web/components/join-discord-button.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/components/json-ld.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/components/main-app-features.tsx` | Полное diff-review еще не зафиксировано. |
@@ -243,12 +243,23 @@ passed. Блокирующих замечаний повторного ревь�
 native listeners; новые document-root тесты сначала падали, итог 38/38 и web check
 passed. Повторное ревью без замечаний; точный head и окончательная приемка в #350.
 
-## Локальная приемка главной страницы, 2026-09-19
+## Главная страница: принято на staging, 2026-09-19
 
-Владелец принял накопленные изменения и разрешил их фиксацию в ветке
-`codex/demo-room-first-scene` после `9623c088`. Это локальная приемка;
-push, PR, staging и main этим шагом не выполняются. Старые статусы исходного
-реестра выше не являются актуальным счетчиком всей выполненной работы.
+Владелец принял накопленные изменения в ветке `codex/demo-room-first-scene`,
+затем согласовал перенос всего блока на staging. [PR #360](https://github.com/AniDachi/anidachi-LP/pull/360)
+слит как `1542ae14ad0463ec71136521a694c09abab6e14c`; дерево слияния точно совпало
+с проверенным head `a3e97b9c`. Перечисленный ниже блок закрыт как проверенный
+и принятый на staging. Это не приемка всех файлов главной страницы или всего
+редизайна. Старые статусы остальных строк не являются актуальным счетчиком всей
+выполненной работы; их приемка требует собственных доказательств.
+
+Vercel deployment `dpl_4sf9o13LbcwJWCC4EtbNcZJVRVwf` — Ready, alias
+`staging.anidachi.app` подтвержден. CI `35430609678` / `35430611356` и
+post-deploy Staging Smoke `35430718334` прошли. На развернутой странице
+подтверждены три режима, описание истории, закрытый FAQ и загрузка видео без
+ошибок. Повторный прогон адаптивности не выполнялся по просьбе владельца;
+сохраняется локальная приемка ниже. Main остается `4b4ff883`, promotion #347
+без auto-merge; production не входит в этот статус.
 
 | Срез | Принятый результат / проверка |
 | --- | --- |
@@ -264,13 +275,13 @@ push, PR, staging и main этим шагом не выполняются. Ст�
 apps/extension apps/api packages/protocol` пустой; room/P2P harness и сборка
 расширения для этого блока не повторяются. Проверки браузера: desktop 1280x720,
 mobile 390x844, ручное раскрытие FAQ, длинный блок тарифов, три режима демо;
-ошибок страницы не обнаружено. Production build и развернутая приемка этого
-полного набора остаются перед публикацией ветки.
+ошибок страницы не обнаружено. Production build выполнен Vercel при публикации
+PR; последующая развернутая приемка staging завершена, результаты указаны выше.
 
 Graphify использован для навигации; связи перепроверены импортами. Полный refresh
 семантического графа после локальных итераций остается отложен согласно решению
 владельца в основном плане. Блок не объявляет принятыми остальные файлы редизайна.
-Откат локального блока — revert его коммита; миграций, env и облачных изменений нет.
+Откат — отдельный revert PR #360 в staging; продуктовых миграций и env-изменений нет.
 
 ### Удаление неиспользуемой старой демонстрации, 2026-09-19
 
@@ -290,7 +301,8 @@ overlay, async-overlay импортировал overlay; внешних потр
 отображаются, видео загружено (`readyState = 4`, media error отсутствует).
 Ошибок browser console не обнаружено; есть предупреждение Next.js о будущем
 поведении `scroll-behavior`, не связанное с удаленными компонентами. Страница
-установки также открывается со своими превью. Это локальная приемка удаления,
-а не production build или staging acceptance. Graphify refresh остается
-отложен вместе с общим блоком выше. Push, PR и deploy не выполнялись;
-откат — revert отдельного коммита удаления.
+установки также открывается со своими превью. После этой локальной проверки
+удаление принято на staging вместе с PR #360; CI/build и deployment receipt
+указаны выше. Graphify refresh остается отложен вместе с общим блоком.
+Откат удаления отдельно от остальных изменений — revert коммита `a3e97b9c`
+через PR в staging.
