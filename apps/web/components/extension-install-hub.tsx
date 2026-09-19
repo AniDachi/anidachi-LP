@@ -32,6 +32,7 @@ import {
   OverlayInterfaceMock,
   OverlayInviteMock,
   OverlayLayoutMock,
+  OverlayMessageMock,
   OverlayReactionsMock,
   OverlayRoomMock,
   OverlaySeatsMock,
@@ -77,18 +78,8 @@ function ChromeExtensionsMock({
           }`}
         >
           Developer mode
-          <span
-            className={`relative h-4 w-7 rounded-full ${
-              highlight === "developer" ? "bg-ani-primary" : "bg-ani-hover"
-            }`}
-          >
-            <span
-              className={`absolute top-0.5 h-3 w-3 rounded-full ${
-                highlight === "developer"
-                  ? "right-0.5 bg-ani-on-primary"
-                  : "left-0.5 bg-ani-muted"
-              }`}
-            />
+          <span className="relative h-4 w-7 rounded-full bg-[#8ab4f8]">
+            <span className="absolute right-0.5 top-0.5 h-3 w-3 rounded-full bg-[#202124]" />
           </span>
         </span>
       </div>
@@ -166,7 +157,7 @@ function OverlayUsingGuide() {
         How to Watch Together
       </h2>
       <p className="mt-3 text-sm text-ani-muted">
-        After install. Live sync on Crunchyroll or YouTube.
+        Live sync on Crunchyroll or YouTube. Try the settings below — changes stay in these examples.
       </p>
       <ol className="mt-6 space-y-8">
         <InstallStep n={1} title="Open the bubble">
@@ -184,7 +175,7 @@ function OverlayUsingGuide() {
             AniDachi detects the title. Click{" "}
             <span className="text-ani-text">Create room</span> — the orange
             button under your name. After the room starts, click the{" "}
-            <span className="text-ani-text">copy</span> icon next to Leave room
+            <span className="text-ani-text">copy</span> icon next to End room
             and send that invite. Friends open it on their own player.
           </p>
           <div className="mt-3">
@@ -193,7 +184,7 @@ function OverlayUsingGuide() {
         </InstallStep>
         <InstallStep n={3} title="Invite a friend">
           <p className="mt-1 text-sm leading-relaxed text-ani-muted">
-            Next to Leave room, click the{" "}
+            Next to End room, click the{" "}
             <span className="text-ani-text">person-plus</span> icon.{" "}
             <span className="text-ani-text">Friends & groups</span> opens —
             tap <span className="text-ani-text">Invite</span> on a friend or a
@@ -208,8 +199,9 @@ function OverlayUsingGuide() {
             In <span className="text-ani-text">People</span>, hosts tap the
             round <span className="text-ani-text">radio</span> button on a
             person. <span className="text-ani-text">White</span> means they have
-            a media seat (camera and mic). Outline means chat-only — tap it to
-            give a seat. Tap white again to take the seat back.
+            a media seat for microphone and camera access. Grey means listening
+            and chat only. Tap to give or take a seat. Up to four cameras
+            can be on at once.
           </p>
           <div className="mt-3">
             <OverlaySeatsMock />
@@ -227,10 +219,18 @@ function OverlayUsingGuide() {
             <OverlayReactionsMock />
           </div>
         </InstallStep>
-        <InstallStep n={6} title="Layout">
+        <InstallStep n={6} title="Send a message">
+          <p className="mt-1 text-sm leading-relaxed text-ani-muted">
+            While watching in a room, press <kbd className="font-semibold text-ani-text">Enter</kbd>{" "}
+            to open the message field. Type your message, then press{" "}
+            <kbd className="font-semibold text-ani-text">Enter</kbd> again to send it.
+          </p>
+          <div className="mt-3"><OverlayMessageMock /></div>
+        </InstallStep>
+        <InstallStep n={7} title="Layout">
           <p className="mt-1 text-sm leading-relaxed text-ani-muted">
             Open Settings → <span className="text-ani-text">Layout</span>.
-            Watch the preview: drag cameras, then chat on the grid. Under{" "}
+            Drag cameras or chat in the preview to reposition them. Under{" "}
             <span className="text-ani-text">Video</span>, enlarge{" "}
             <span className="text-ani-text">Camera size</span>, then{" "}
             <span className="text-ani-text">Apply</span>.
@@ -239,7 +239,7 @@ function OverlayUsingGuide() {
             <OverlayLayoutMock />
           </div>
         </InstallStep>
-        <InstallStep n={7} title="Voice">
+        <InstallStep n={8} title="Voice">
           <p className="mt-1 text-sm leading-relaxed text-ani-muted">
             Open Settings → <span className="text-ani-text">Voice</span>. Leave{" "}
             <span className="text-ani-text">Push to talk</span> selected on the
@@ -250,22 +250,20 @@ function OverlayUsingGuide() {
             <OverlayVoiceMock />
           </div>
         </InstallStep>
-        <InstallStep n={8} title="Interface">
+        <InstallStep n={9} title="Interface">
           <p className="mt-1 text-sm leading-relaxed text-ani-muted">
-            Open Settings → <span className="text-ani-text">Interface</span>.
-            Watch the preview: cursor to the top-right edge reveals the bubble
-            when <span className="text-ani-text">Main control</span> is{" "}
-            <span className="text-ani-text">Auto hide</span>.{" "}
-            <span className="text-ani-text">Participant pills</span>{" "}
-            <span className="text-ani-text">Smart</span> shows names when
-            someone speaks or you hover the right edge. Tap the options below
-            the preview to try them.
+            Open Settings → <span className="text-ani-text">Interface</span>.{" "}
+            Both controls are visible by default. Choose{" "}
+            <span className="text-ani-text">Auto hide</span> to reveal the main
+            control near the player edge, or <span className="text-ani-text">Smart</span>{" "}
+            for participant pills that appear when someone speaks or you hover
+            the edge. Try the options below the preview.
           </p>
           <div className="mt-3">
             <OverlayInterfaceMock />
           </div>
         </InstallStep>
-        <InstallStep n={9} title="Room">
+        <InstallStep n={10} title="Room">
           <p className="mt-1 text-sm leading-relaxed text-ani-muted">
             Open Settings → <span className="text-ani-text">Room</span>.{" "}
             <span className="text-ani-text">Room defaults</span> are your
@@ -552,10 +550,9 @@ export function ExtensionInstallHub({
           </p>
         </InstallStep>
         <InstallStep n={3} title="Open Chrome extensions">
+          <p className="mt-1 text-sm text-ani-muted">Copy this address, paste it into Chrome’s address bar, then press Enter.</p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <Button asChild size="control" variant="creamOutline">
-              <a href={CHROME_EXTENSIONS_PAGE}>{CHROME_EXTENSIONS_PAGE}</a>
-            </Button>
+            <code className="rounded-full border border-ani-line px-4 py-2 text-sm text-ani-text">{CHROME_EXTENSIONS_PAGE}</code>
             <Button
               type="button"
               size="control"

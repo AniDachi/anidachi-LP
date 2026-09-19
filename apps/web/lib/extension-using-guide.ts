@@ -8,23 +8,27 @@ export const extensionUsingSteps = [
   },
   {
     name: "Create a room",
-    text: "AniDachi detects the title. Click Create room — the orange button under your name. After the room starts, click the copy icon next to Leave room and send that invite. Friends open it on their own player.",
+    text: "AniDachi detects the title. Click Create room — the orange button under your name. After the room starts, click the copy icon next to End room and send that invite. Friends open it on their own player.",
   },
   {
     name: "Invite a friend",
-    text: "Next to Leave room, click the person-plus icon. Friends & groups opens — Invite a friend or a group from the list. Copy invite still works for one-off links.",
+    text: "Next to End room, click the person-plus icon. Friends & groups opens — Invite a friend or a group from the list. Copy invite still works for one-off links.",
   },
   {
     name: "Media seats",
-    text: "In People, hosts tap the round radio button on a person. White means they have a media seat (camera and mic). Outline means chat-only — tap it to give a seat. Tap white again to take the seat back.",
+    text: "In People, hosts tap the round radio button on a person. White means they have microphone and camera access. Grey means listening and chat only. Tap to give or take a seat. Up to four cameras can be on at once.",
   },
   {
     name: "Reactions",
     text: "Open Settings → Reactions. Turn Quick reactions on. Keys 1–0 each map to an emoji — click a slot to change it. In a room, press that number to send it.",
   },
   {
+    name: "Send a message",
+    text: "While watching in a room, press Enter to open the message field. Type your message, then press Enter again to send it.",
+  },
+  {
     name: "Layout",
-    text: "Open Settings → Layout. Watch the preview: drag cameras, then chat on the grid. Under Video, enlarge Camera size, then Apply.",
+    text: "Open Settings → Layout. Drag cameras or chat in the preview to reposition them. Under Video, enlarge Camera size, then Apply.",
   },
   {
     name: "Voice",
@@ -32,7 +36,7 @@ export const extensionUsingSteps = [
   },
   {
     name: "Interface",
-    text: "Open Settings → Interface. Watch the preview: cursor to the top-right edge reveals the bubble when Main control is Auto hide. Participant pills Smart shows names when someone speaks or you hover the right edge.",
+    text: "Open Settings → Interface. Both controls are visible by default. Choose Auto hide to reveal the main control near the player edge, or Smart for participant pills that appear when someone speaks or you hover the edge.",
   },
   {
     name: "Room",
