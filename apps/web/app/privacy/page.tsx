@@ -31,7 +31,7 @@ export default function PrivacyPage() {
             Privacy Policy
           </h1>
           <p className="text-sm text-foreground/50 mb-10">
-            Last updated: September 18, 2026
+            Last updated: September 19, 2026
           </p>
 
           <div className="prose prose-gray max-w-none space-y-8 text-foreground/80 leading-relaxed">
@@ -64,7 +64,7 @@ export default function PrivacyPage() {
                 <li><strong>Vercel</strong> hosts the website and server endpoints.</li>
                 <li><strong>Stripe</strong> processes payments and subscription changes. We keep billing identifiers and subscription status; Stripe handles full payment-card details.</li>
                 <li><strong>Google and Discord</strong> provide the sign-in method you select. Browser push services deliver notifications to your browser.</li>
-                <li><strong>Google Analytics and Amplitude</strong> process website usage events, device/browser information and performance measurements where configured. These identifiers are not necessarily anonymous. Our website does not enable Amplitude Session Replay. These analytics SDKs are not installed in the extension.</li>
+                <li><strong>Google Analytics and Amplitude</strong> process website usage events, device/browser information and performance measurements where configured. These identifiers are not necessarily anonymous. When you are signed in on the website, Amplitude may also store your account id, display name, email and plan so sessions can be matched to your account. Amplitude Session Replay may record public website sessions (page layout, clicks and navigation). These analytics SDKs are not installed in the extension.</li>
                 <li><strong>Gmail (Google)</strong> may deliver copies of contact and feature-request submissions to our team.</li>
               </ul>
               <p className="mt-4">

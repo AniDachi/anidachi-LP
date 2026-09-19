@@ -286,6 +286,8 @@ Success: first GSC impressions on `youtube watch party` / `watch youtube togethe
 
 ## Executor's Feedback or Assistance Requests
 
+- **Executor (2026-09-19 Session Replay):** Re-enabled via `initAll()` with `sessionReplay.sampleRate: 1` in `apps/web/lib/amplitude.ts`. Privacy copy updated. Local test needs `NEXT_PUBLIC_AMPLITUDE_API_KEY` in `apps/web/.env.local`. Please restart `pnpm dev:web`, open http://localhost:3003/, click around, then check Amplitude Session Replay (allow a few minutes). Look for `sr-client-cfg.amplitude.com` plus replay upload traffic, not only `api2.amplitude.com`.
+
 - **Executor (2026-09-15 Amplitude zip download):** Click handler existed (`extension_zip_download`) but Amplitude never ingested it (taxonomy only had `extension_clicked`). Wired server HTTP on `/api/extension/download`, flush-on-click with shared `insert_id`, and Amplitude no longer gated on gtag. Needs `NEXT_PUBLIC_AMPLITUDE_API_KEY` (or `AMPLITUDE_API_KEY`) on the host. Please click **Download AniDachi (.zip)** on `/extension` then check Amplitude Live for `extension_zip_download`.
 
 - **Executor (2026-09-15 zip download):** Placed owner `AniDachi-0.1.0.zip` at gitignored `artifacts/anidachi-chrome-extension-0.1.0.zip` (687 KB). `/api/extension/download` streams it locally; same bytes uploaded to Vercel Blob. Local `/extension` now shows **Download AniDachi (.zip)** instead of “publishing shortly”. Zip is **not** in git. Production still needs `EXTENSION_ZIP_*` on Vercel. Please hard-refresh http://localhost:3003/extension and click the zip button.

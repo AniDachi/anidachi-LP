@@ -1,10 +1,8 @@
 "use client";
 
-import { createInstance } from "@amplitude/unified";
+import { createInstance, Identify } from "@amplitude/unified";
 import { AMPLITUDE_DEVICE_COOKIE } from "@/lib/amplitude-ids";
 
-// Initialize analytics only. initAll also installs Session Replay, which must
-// never record the account/history interface or authentication screens.
 const amplitude = createInstance();
 const ANALYTICS_OPTIONS = {
   fetchRemoteConfig: false,
@@ -31,15 +29,18 @@ function startInit(): void {
   if (!apiKey) return;
   if (initPromise === null) {
     initPromise = amplitude
-      .init(apiKey, ANALYTICS_OPTIONS)
-      .promise.then(() => {
+      .initAll(apiKey, {
+        analytics: ANALYTICS_OPTIONS,
+        sessionReplay: { sampleRate: 1 },
+      })
+      .then(() => {
         persistDeviceId();
       });
   }
 }
 
 /**
- * Initialize explicit Amplitude analytics events once, without Session Replay.
+ * Initialize Amplitude analytics plus Session Replay.
  * Only runs in the browser when `NEXT_PUBLIC_AMPLITUDE_API_KEY` is set.
  */
 export function initAmplitudeClient(): void {
@@ -81,4 +82,41 @@ export async function flushAmplitude(): Promise<void> {
   if (!(await ensureReady())) return;
   const result = amplitude.flush();
   await (result && "promise" in result ? result.promise : result);
+}
+
+export type AmplitudeUserProfile = {
+  userId: string;
+  email?: string;
+  displayName?: string;
+  plan?: string;
+};
+
+let identifiedUserId: string | null = null;
+
+/**
+ * Attach the signed-in AniDachi account to Amplitude so User Look-Up and
+ * Session Replay show a real profile instead of an anonymous device.
+ */
+export async function identifyAmplitudeUser(
+  profile: AmplitudeUserProfile,
+): Promise<void> {
+  const userId = profile.userId.trim();
+  if (!userId) return;
+  if (!(await ensureReady())) return;
+  amplitude.setUserId(userId);
+  const identifyEvent = new Identify();
+  if (profile.plan) identifyEvent.set("plan", profile.plan);
+  if (profile.displayName) identifyEvent.set("display_name", profile.displayName);
+  if (profile.email) identifyEvent.set("email", profile.email);
+  amplitude.identify(identifyEvent);
+  identifiedUserId = userId;
+  persistDeviceId();
+}
+
+export async function resetAmplitudeUser(): Promise<void> {
+  if (!identifiedUserId) return;
+  if (!(await ensureReady())) return;
+  amplitude.reset();
+  identifiedUserId = null;
+  persistDeviceId();
 }

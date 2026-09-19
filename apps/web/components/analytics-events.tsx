@@ -2,10 +2,50 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { initAmplitudeClient } from "@/lib/amplitude";
+import {
+  identifyAmplitudeUser,
+  initAmplitudeClient,
+  resetAmplitudeUser,
+} from "@/lib/amplitude";
 import { trackEvent } from "@/lib/gtag";
 import { captureFirstLandingPath } from "@/lib/seo-landing-path";
 import { initWebVitalsReporting } from "@/lib/web-vitals-report";
+
+type MeResponse = {
+  user?: {
+    id?: string;
+    email?: string;
+    displayName?: string;
+    plan?: string;
+  };
+};
+
+async function syncAmplitudeUserFromSession(signal: AbortSignal): Promise<void> {
+  try {
+    // Analytics observes the current account. Only the site's auth flow may
+    // refresh or clear website credentials; never retry a 401 through refresh.
+    const response = await fetch("/api/me", { signal, cache: "no-store" });
+    if (signal.aborted) return;
+    if (response.status === 401) {
+      await resetAmplitudeUser();
+      return;
+    }
+    // Temporary failures are not evidence of sign-out.
+    if (!response.ok) return;
+    const data = (await response.json().catch(() => null)) as MeResponse | null;
+    if (signal.aborted) return;
+    const user = data?.user;
+    if (typeof user?.id !== "string" || !user.id.trim()) return;
+    await identifyAmplitudeUser({
+      userId: user.id,
+      email: user.email,
+      displayName: user.displayName,
+      plan: user.plan,
+    });
+  } catch {
+    // Analytics must not break the page.
+  }
+}
 
 export function AnalyticsEvents() {
   const pathname = usePathname();
@@ -14,6 +54,9 @@ export function AnalyticsEvents() {
   // Idempotent once a marketing path is stored for the session.
   useEffect(() => {
     captureFirstLandingPath();
+    const controller = new AbortController();
+    void syncAmplitudeUserFromSession(controller.signal);
+    return () => controller.abort();
   }, [pathname]);
 
   useEffect(() => {
