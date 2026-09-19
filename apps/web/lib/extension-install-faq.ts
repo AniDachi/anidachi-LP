@@ -12,7 +12,7 @@ export const extensionInstallFaq = [
   {
     question: "Chrome asked me to disable developer extensions. What do I do?",
     answer:
-      "Click Cancel. Chrome shows that warning on restart for unpacked extensions. It goes away once AniDachi is installed from the Chrome Web Store. If you click Disable, you will need to Load unpacked again.",
+      "Click Cancel. Chrome shows that warning on restart for unpacked extensions. It goes away once AniDachi is installed from the Chrome Web Store. If you turned AniDachi off, open chrome://extensions and turn its switch back on.",
   },
   {
     question: "Which browsers work?",
@@ -22,7 +22,7 @@ export const extensionInstallFaq = [
   {
     question: "Will the extension update itself?",
     answer:
-      "Not while it is loaded unpacked. Chrome Web Store updates are not available yet. Check /extension or Discord when we publish a new zip, then Load unpacked again on the new folder. Your AniDachi account stays the same.",
+      "Not while it is loaded unpacked. Chrome Web Store updates are not available yet. Check /extension or Discord when we publish a new zip, then Load unpacked again on the new folder. Refresh any open YouTube or Crunchyroll video pages to use the updated extension. Your AniDachi account stays the same.",
   },
   {
     question: "What permissions does AniDachi ask for?",

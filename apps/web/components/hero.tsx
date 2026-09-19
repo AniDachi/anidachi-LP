@@ -83,7 +83,7 @@ export function Hero() {
           <WatchingTogetherCount className="mb-3" />
           <p className="mb-4 max-w-md text-sm text-ani-muted md:hidden">
             Watch parties run in desktop Chrome — open the install page on your
-            computer, or email yourself the link.
+            computer, or copy the link to open it there.
           </p>
 
           <JoinDiscordButton

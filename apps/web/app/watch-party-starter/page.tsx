@@ -11,12 +11,12 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "Anime Watch Party Starter — Create a Crunchyroll Room",
   description:
-    "Short path from “we should watch together” to a synced or async Crunchyroll watchroom. Pricing, install, and hub links in one place.",
+    "Short path from “we should watch together” to a synced live Crunchyroll watchroom. Pricing, install, and hub links in one place.",
   alternates: { canonical: "/watch-party-starter" },
   openGraph: {
     title: "Anime Watch Party Starter — AniDachi",
     description:
-      "Spin up a Crunchyroll-first watchroom with chat, sync, or async pacing.",
+      "Spin up a Crunchyroll-first watchroom with live chat and playback sync.",
     url: "/watch-party-starter",
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi logo" }],
   },
@@ -37,7 +37,7 @@ const faq = [
   {
     question: "Does AniDachi work without everyone being online at once?",
     answer:
-      "Yes. AniDachi watchrooms support asynchronous watching so friends can catch up on different schedules while keeping episode-scoped chat coherent.",
+      "Not yet. AniDachi supports live rooms today. Async catch-up is planned; personal history records your own progress separately.",
   },
 ];
 
@@ -64,8 +64,7 @@ export default function WatchPartyStarterPage() {
       <p className="text-xl text-foreground/80 leading-relaxed mb-6">
         <strong>
           Grab your crew, confirm everyone can open the same series on Crunchyroll,
-          then use AniDachi for the watchroom layer—synced frames, chat, and async
-          catch-up when schedules slip.
+          then use AniDachi for live playback sync, chat, and reactions. Async catch-up is planned.
         </strong>
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">

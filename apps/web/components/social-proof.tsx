@@ -6,7 +6,7 @@ const trustItems = [
     icon: CheckCircle2,
     label: "Everyone keeps their own Crunchyroll or YouTube login",
   },
-  { icon: Sparkles, label: "Subscribe now and keep this rate" },
+  { icon: Sparkles, label: "Cancel renewal from your account" },
 ];
 
 export function SocialProof() {

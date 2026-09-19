@@ -21,7 +21,7 @@ import {
 export const metadata: Metadata = {
   title: "How to Watch Crunchyroll with Friends — AniDachi Sync Guide (2026)",
   description:
-    "How to watch Crunchyroll with friends — two people or a group, same time or async. AniDachi syncs each Crunchyroll tab; Discord voice stays optional. Start at /extension.",
+    "How to watch Crunchyroll with friends — two people or a group, in a live room. AniDachi syncs each Crunchyroll tab; Discord voice stays optional. Start at /extension.",
   alternates: { canonical: "/guides/how-to-watch-crunchyroll-with-friends" },
   openGraph: {
     images: [
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
 
     title: "How to Watch Crunchyroll with Friends — AniDachi Sync Guide (2026)",
     description:
-      "Step-by-step: watch Crunchyroll together with friends — live sync, Discord hybrid, or async catch-up.",
+      "Step-by-step: watch Crunchyroll together with friends — live sync, optional Discord voice, and personal history.",
     url: "/guides/how-to-watch-crunchyroll-with-friends",
   },
 };
@@ -105,8 +105,8 @@ const howToSteps = [
     text: "Share the invite link so each friend joins on their own Crunchyroll account.",
   },
   {
-    name: "Watch live or async",
-    text: "Sync for a live hang, or leave reactions when someone watches later.",
+    name: "Watch live together",
+    text: "Watch live with synced playback, chat, and reactions. Async catch-up is planned, not available today.",
   },
 ];
 
@@ -121,7 +121,7 @@ export default function HowToWatchWithFriendsPage() {
     <>
       <HowToJsonLd
         name="How to watch Crunchyroll with friends"
-        description="Set up an AniDachi Crunchyroll watchroom for synced or async co-watching."
+        description="Set up an AniDachi Crunchyroll watchroom for synced live co-watching."
         steps={howToSteps}
       />
       <SeoPageLayout
@@ -152,8 +152,7 @@ export default function HowToWatchWithFriendsPage() {
           <strong>
             How to watch Crunchyroll with friends: create an AniDachi watchroom,
             share the invite, and watch on each person&apos;s own Crunchyroll tab
-            — synced for two people or a group live, async when schedules
-            conflict.
+            with live playback sync for two people or a group.
           </strong>{" "}
           Full hub for party nouns (does/can/is-there):{" "}
           <Link
@@ -233,8 +232,7 @@ export default function HowToWatchWithFriendsPage() {
         </h2>
         <p className="text-foreground/80 leading-relaxed mb-4">
           Crunchyroll Party syncs live playback on each person&apos;s account
-          with basic chat. It lacks async catch-up and host room upgrades —
-          fine for same-time nights; upgrade path when schedules drift is AniDachi.
+          with basic chat. AniDachi also supports live sync, plus cameras, microphones, and personal history on Plus or Pro. Async catch-up is planned.
         </p>
 
         <h2
@@ -245,7 +243,7 @@ export default function HowToWatchWithFriendsPage() {
         </h2>
         <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>
-            <strong>For async groups across time zones:</strong> AniDachi
+            <strong>For live rooms with personal history:</strong> AniDachi
           </li>
           <li>
             <strong>For free one-off sessions:</strong> Discord voice + free sync

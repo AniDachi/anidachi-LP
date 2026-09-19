@@ -18,12 +18,12 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "Crunchyroll Party Alternative — Upgrade to AniDachi (2026)",
   description:
-    "Outgrew free Crunchyroll Party live sync? AniDachi adds async watchrooms, anime detection, and host entitlements. Compare and upgrade path.",
+    "Outgrew free Crunchyroll Party live sync? AniDachi offers live rooms, personal watch history, and host controls. Compare and upgrade path.",
   alternates: { canonical: "/guides/crunchyroll-party-alternative" },
   openGraph: {
     title: "Crunchyroll Party Alternative — AniDachi",
     description:
-      "Upgrade narrative from free CR Party limits to AniDachi async watchrooms.",
+      "Upgrade narrative from free CR Party limits to AniDachi live watchrooms.",
     url: "/guides/crunchyroll-party-alternative",
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
@@ -39,12 +39,12 @@ const faq = [
   {
     question: "What is the best Crunchyroll Party alternative?",
     answer:
-      "AniDachi is the strongest upgrade path for anime groups that outgrew free live-only sync — especially when friends need async catch-up, per-person progress, and auto anime detection on Crunchyroll.",
+      "AniDachi is the strongest upgrade path for anime groups that outgrew free live-only sync — especially when friends want cameras, microphones, host controls, and personal history alongside live Crunchyroll sync.",
   },
   {
     question: "Is Crunchyroll Party free forever?",
     answer:
-      "Crunchyroll Party is commonly used as a free live-sync Chrome extension. Free tools can still hit practical limits: everyone must be online together, and anime-specific workflows (async, progress, host controls) are thin compared with AniDachi.",
+      "Crunchyroll Party is commonly used as a free live-sync Chrome extension. Free tools can still hit practical limits: check the current feature list for each extension. AniDachi also requires everyone online for live sync; personal history is available on Plus or Pro.",
   },
   {
     question: "How does AniDachi pricing work if we leave Crunchyroll Party?",
@@ -84,7 +84,7 @@ export default function CrunchyrollPartyAlternativePage() {
         },
       ]}
       title="Crunchyroll Party alternative"
-      description="Upgrade from free Crunchyroll Party live sync to AniDachi async watchrooms."
+      description="Upgrade from free Crunchyroll Party live sync to AniDachi live watchrooms."
       url="/guides/crunchyroll-party-alternative"
       datePublished="2026-07-19"
       dateModified="2026-08-11"
@@ -106,7 +106,7 @@ export default function CrunchyrollPartyAlternativePage() {
       <p className="text-xl text-foreground/80 leading-relaxed mb-6">
         <strong>
           If free Crunchyroll Party live sync still works for same-time nights,
-          keep it. When schedules fracture — or you need async catch-up, progress
+          keep it. If you want personal progress
           tracking, and anime-aware rooms — AniDachi is the upgrade.
         </strong>{" "}
         AniDachi is not affiliated with Crunchyroll. Full matrix:{" "}
@@ -138,7 +138,7 @@ export default function CrunchyrollPartyAlternativePage() {
         What AniDachi adds
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
-        Watchrooms with live sync and async catch-up, auto anime detection, chat
+        Watchrooms with live sync and personal history, auto anime detection, chat
         tied to the room, and host entitlements that scale from Free limited
         hosting to Plus ({PRICING_PLUS_SHORT}) or Pro ({PRICING_PRO_SHORT}).
         Guests can stay Free while the host upgrades.
@@ -169,7 +169,7 @@ export default function CrunchyrollPartyAlternativePage() {
           },
           {
             feature: "Async catch-up",
-            values: { anidachi: "yes", crparty: "no" },
+            values: { anidachi: "Planned", crparty: "no" },
           },
           {
             feature: "Auto anime detection",

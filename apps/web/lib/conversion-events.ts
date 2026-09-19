@@ -11,7 +11,6 @@ export type ConversionFunnelEvent =
   | "extension_zip_download"
   | "install_step_viewed"
   | "desktop_install_link_copied"
-  | "desktop_install_link_emailed"
   | "checkout_session_started"
   | "checkout_redirect_success"
   | "checkout_error";

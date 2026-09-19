@@ -30,7 +30,7 @@ export const PRICING_CANCELLATION_NOTE =
   "Cancel renewal from Account → Subscription. Paid access continues until the end of your billing period.";
 
 export const PRICING_IS_ANIDACHI_FREE_ANSWER =
-  `Yes — friends can join watchrooms on a Free account. When you want to host your own rooms without the 30-minute daily limit, Plus starts at ${PRICING_STARTING_AT} and Pro at ${PRICING_PRO_SHORT.replace("/mo", "/month")}. Subscribe now and keep this rate. ${PRICING_HOST_MODEL} ${PRICING_CANCELLATION_NOTE}`;
+  `Yes — friends can join watchrooms on a Free account. When you want to host your own rooms without the 30-minute daily limit, Plus starts at ${PRICING_STARTING_AT} and Pro at ${PRICING_PRO_SHORT.replace("/mo", "/month")}. Cancel renewal from your account. ${PRICING_HOST_MODEL} ${PRICING_CANCELLATION_NOTE}`;
 
 export const PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER =
   `No. ${PRICING_HOST_MODEL} Each person still needs their own Crunchyroll account to stream the video.`;
@@ -43,23 +43,23 @@ export function pricingWatchPageFaqAnswer(animeTitle: string): string {
 }
 
 export const PRICING_COMPARE_OVERVIEW =
-  `AniDachi has a Free tier for joining and hosting limited rooms. Hosts who need unlimited watchrooms, auto anime detection, and progress tracking can upgrade to Plus (${PRICING_PLUS_SHORT}) or Pro (${PRICING_PRO_SHORT}). ${ASYNC_COMING_SOON}.`;
+  `AniDachi has a Free tier for joining and hosting limited rooms. Hosts who need unlimited hosting and viewers who want personal history can upgrade to Plus (${PRICING_PLUS_SHORT}) or Pro (${PRICING_PRO_SHORT}). ${ASYNC_COMING_SOON}.`;
 
 export const PRICING_ASYNC_HOST_SNIPPET =
   `${ASYNC_COMING_SOON}. Today: live watchrooms and progress tracking on paid plans — Free includes limited hosting; Plus starts at ${PRICING_STARTING_AT} — manage your subscription from your account.`;
 
 export const PRICING_TELEPARTY_COMPARE_FAQ =
-  `Teleparty has a free tier for basic live sync, plus a premium tier. AniDachi has a Free tier for joining and limited hosting, with Plus/Pro tiers for higher host limits, anime detection, and personal progress on Crunchyroll. ${ASYNC_COMING_SOON}.`;
+  `Teleparty has a free tier for basic live sync, plus a premium tier. AniDachi has a Free tier for joining and limited hosting, with Plus/Pro tiers for higher host limits and personal progress on Crunchyroll and YouTube. ${ASYNC_COMING_SOON}.`;
 
 export const PRICING_RAVE_COMPARE_FAQ =
-  `Rave offers a free tier with basic sync and chat. AniDachi has a Free tier for joining and limited hosting; Plus starts at ${PRICING_PLUS_SHORT} and Pro at ${PRICING_PRO_SHORT} for hosts who need unlimited rooms, auto anime detection, and per-person progress tracking. ${ASYNC_COMING_SOON}.`;
+  `Rave offers a free tier with basic sync and chat. AniDachi has a Free tier for joining and limited hosting; Plus starts at ${PRICING_PLUS_SHORT} and Pro at ${PRICING_PRO_SHORT} for hosts who need unlimited hosting and personal history. ${ASYNC_COMING_SOON}.`;
 
 export const PRICING_DISCORD_COMPARE_FAQ =
-  `Discord screen sharing is bundled with their app, but you still need individual Crunchyroll access for everyone to watch legally unless one person hosts a single stream. AniDachi adds watchrooms, anime detection, and live sync on top of personal Crunchyroll streams — Free for limited rooms; Plus and Pro for higher host limits. ${ASYNC_COMING_SOON}.`;
+  `Discord offers screen sharing, but protected players may restrict capture. With AniDachi, each viewer needs their own access to the title on Crunchyroll. AniDachi adds watchrooms, anime detection, and live sync on top of personal Crunchyroll streams — Free for limited rooms; Plus and Pro for higher host limits. ${ASYNC_COMING_SOON}.`;
 
 /** YouTube cluster — do not reuse Crunchyroll-only pricing FAQs on YT pages. */
 export const PRICING_IS_ANIDACHI_FREE_YOUTUBE_ANSWER =
-  `Yes — friends can join YouTube watchrooms on a Free account. When you want to host without the 30-minute daily limit, Plus starts at ${PRICING_STARTING_AT} and Pro at ${PRICING_PRO_SHORT.replace("/mo", "/month")}. Subscribe now and keep this rate. ${PRICING_HOST_MODEL} ${PRICING_CANCELLATION_NOTE}`;
+  `Yes — friends can join YouTube watchrooms on a Free account. When you want to host without the 30-minute daily limit, Plus starts at ${PRICING_STARTING_AT} and Pro at ${PRICING_PRO_SHORT.replace("/mo", "/month")}. Cancel renewal from your account. ${PRICING_HOST_MODEL} ${PRICING_CANCELLATION_NOTE}`;
 
 export const PRICING_FRIENDS_NEED_YOUTUBE_ANSWER =
   `No. ${PRICING_HOST_MODEL} Each person opens the same full YouTube watch page in their own browser — AniDachi syncs the room; it does not re-stream the video.`;

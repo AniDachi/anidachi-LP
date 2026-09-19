@@ -16,9 +16,9 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Best Apps to Watch YouTube Together (2026 Ranked) | AniDachi",
+  title: "Best Apps to Watch YouTube Together (2026 Ranked)",
   description:
-    "Best apps to watch YouTube together: AniDachi (#1 for watchrooms + async), Watch2Gether (free live), Teleparty (multi-platform), Discord (voice only).",
+    "Best apps to watch YouTube together: AniDachi (live watchrooms and personal history), Watch2Gether (free live), Teleparty (multi-platform), Discord (voice only).",
   alternates: {
     canonical: "/guides/best-apps-to-watch-youtube-together",
   },
@@ -49,7 +49,7 @@ const faq = [
   {
     question: "What is the best app to watch YouTube together?",
     answer:
-      "AniDachi ranks first for groups that want Chrome extension watchrooms with live sync and async catch-up. Watch2Gether is the best free live-only browser room. Teleparty fits multi-platform live nights.",
+      "AniDachi ranks first for groups that want Chrome extension watchrooms with live sync and personal history. Watch2Gether is the best free live-only browser room. Teleparty fits multi-platform live nights.",
   },
   {
     question: "Is there a free app to watch YouTube together?",
@@ -110,7 +110,7 @@ export default function BestAppsToWatchYoutubeTogetherPage() {
       <p className="text-xl text-foreground/80 leading-relaxed mb-6">
         <strong>
           The best app for most recurring YouTube groups is AniDachi — watchrooms
-          with sync, chat, and async catch-up on full YouTube videos.
+          with live sync, chat, and personal history on full YouTube videos.
         </strong>{" "}
         {PRICING_COMPARE_OVERVIEW} Hub:{" "}
         <Link
@@ -148,7 +148,7 @@ export default function BestAppsToWatchYoutubeTogetherPage() {
           {
             feature: "Async",
             values: {
-              anidachi: "yes",
+              anidachi: "Planned",
               w2g: "no",
               teleparty: "no",
               discord: "no",
@@ -192,7 +192,7 @@ export default function BestAppsToWatchYoutubeTogetherPage() {
       </h2>
       <ol className="list-decimal pl-6 space-y-3 text-foreground/80 mb-8">
         <li>
-          <strong>#1 AniDachi</strong> — YouTube + Crunchyroll watchrooms, async.
+          <strong>#1 AniDachi</strong> — YouTube + Crunchyroll live watchrooms.
           <Link href={INSTALL_HUB_PATH} className="text-brand-orange hover:underline ml-1">
             {INSTALL_CTA_LABEL}
           </Link>

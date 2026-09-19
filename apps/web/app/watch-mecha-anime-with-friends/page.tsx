@@ -5,9 +5,9 @@ import { getAnimeByGenre } from "@/lib/anime-data";
 import { PRICING_ROOM_SIZE_RANGE } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
-  title: "Watch Mecha Anime With Friends (2026) | AniDachi",
+  title: "Watch Mecha Anime With Friends (2026)",
   description:
-    "Watch mecha anime battles with friends in real-time sync or async on Crunchyroll. AniDachi watchrooms keep everyone at the same robot reveal. Gurren Lagann, Evangelion, Code Geass, and more.",
+    "Watch mecha anime battles with friends in real-time sync on Crunchyroll. AniDachi watchrooms keep everyone at the same robot reveal. Gurren Lagann, Evangelion, Code Geass, and more.",
   alternates: { canonical: "/watch-mecha-anime-with-friends" },
   openGraph: {
     images: [
@@ -134,10 +134,7 @@ export default function WatchMechaAnimeWithFriendsPage() {
       <p className="text-foreground/80 leading-relaxed mb-8">
         Mecha series also carry some of the highest lore density in anime — world
         rules, political systems, and piloting philosophies that deepen on rewatch
-        and generate long post-episode discussions. AniDachi watchrooms support
-        both live synchronized battle sessions and async lore-discussion threads
-        between episodes, so groups can watch at their own pace without losing
-        the conversation.
+        and generate long post-episode discussions. AniDachi watchrooms support live synchronized sessions and chat. Use a separate group chat for lore discussions between meetings; Async catch-up is planned.
       </p>
 
       <h2
@@ -196,11 +193,10 @@ export default function WatchMechaAnimeWithFriendsPage() {
         </li>
         <li>
           <span className="font-medium text-foreground">
-            Pin your spoiler boundary.
+            Agree on a spoiler boundary.
           </span>{" "}
           Character deaths in mecha anime (especially Gurren Lagann and Gundam:
-          IBO) carry enormous weight — protect them with a hard episode cap in
-          the room settings.
+          IBO) carry enormous weight — agree on a safe episode number before talking about later events. AniDachi does not automatically hide spoilers.
         </li>
       </ol>
 

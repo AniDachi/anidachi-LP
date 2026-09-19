@@ -1,12 +1,43 @@
 # Current Development State
 
-Last updated: 2026-09-18.
+Last updated: 2026-09-19.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
 contain old paths, old domains, or old decisions. When release channels,
 endpoints, branch protection, or store workflow changes, update this document in
 the same PR.
+
+## Website review closeout and install-email retirement, 2026-09-19
+
+The owner reaffirmed that installation links will not be sent by email. The
+local candidate removes the mobile form, `/api/extension/email-install-link`,
+its now-unused desktop-install-lead helper/test, the email conversion event and
+related Hero/Privacy promises. Copy/share of the installation URL, including a
+safe room return path, stays available. Shared CRM/Gmail/contact/feature-request
+code and existing records are unchanged. The earlier Stage 4A concurrency fix is
+historical; planned email Stages 4B/4C and real-send acceptance are canceled.
+
+All 164 paths in the original second-developer diff have a recorded review
+outcome. Watch Library remains accepted with 37 earlier component checks; its
+behavior is unchanged. F15–F18 are resolved in the authorized closeout: accurate
+live/personal-history SEO copy, collapse-before-scroll in mobile Contents, CTA
+after the complete Short Answer, and one brand suffix per browser title.
+Analytics, the signup count and internal CRM remain as requested by the owner.
+
+Closeout checks: web typecheck, 677 main-suite tests passed with 6 existing skips,
+including 3 real-component SEO regressions. Local browser confirms CTA placement
+and the mobile target heading at 88 px after Contents closes. Independent review
+found remaining stale copy, now corrected, and no additional runtime regression.
+The associated staging PR records final build/CI/deployment acceptance. Original
+review is complete; production/ZIP acceptance in Stage 6 is not thereby complete.
+
+Scope: deliver accepted installation examples, retire install-link email, and
+resolve the final SEO findings through a feature PR to staging. No PostHog, main
+promotion, public ZIP publication, env/data change, or extension/Worker/protocol
+runtime change. PostHog is a later discussion; production follows separately.
+See [L04](superpowers/plans/2026-09-16-staging-release-file-review.md#l04--закрытие-замечаний-и-доставка-в-staging-2026-09-19)
+and the [repair plan](superpowers/plans/2026-09-15-staging-release-repair-plan.md).
 
 ## Website redesign candidate boundary, 2026-09-16
 
@@ -64,6 +95,9 @@ intentionally unconfigured. See Stage 3 of the
 
 ## Installation contact concurrency correction, 2026-09-18
 
+Historical receipt: the owner retired the entire installation-email feature on
+2026-09-19. The local removal above supersedes the former follow-up tasks below.
+
 Stage 4A uses the existing `mutateContacts` operation for desktop installation
 requests instead of saving a previously read contacts snapshot. The entire
 lookup and change is reapplied to fresh data after a conditional-write conflict.
@@ -77,10 +111,10 @@ The correction was accepted on staging at `f2567844` through
 CI, staging smoke and the verified Vercel deployment. Tests exercise the real helper, store,
 conditional-write loop and installed Blob SDK with an in-memory HTTP transport;
 they do not create real contacts or send email. No CRM schema, storage authority,
-email endpoint/UI, extension or production settings change. Email rate limits,
-delivery-result handling and a real end-to-end send remain separate stages 4B,
-4C and 6. The owner deferred the remaining email work on 2026-09-18 to continue
-the sequential website review; this is not acceptance of the public email flow.
+email endpoint/UI, extension or production settings changed in that stage. The
+then-planned rate-limit/delivery/send stages were initially deferred and are now
+canceled by the explicit retirement decision; they must not be resumed as pending
+implementation tasks.
 Main promotion and ZIP publication remain held.
 
 ## Pricing history wording correction, 2026-09-18

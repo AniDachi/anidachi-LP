@@ -5,9 +5,9 @@ import { getAnimeByGenre } from "@/lib/anime-data";
 import { PRICING_ROOM_SIZE_RANGE } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
-  title: "Watch Psychological Anime With Friends (2026) | AniDachi",
+  title: "Watch Psychological Anime With Friends (2026)",
   description:
-    "Watch psychological anime twists with friends in real-time using AniDachi on Crunchyroll. Synced reveals, spoiler-safe chat, and async catch-up. Death Note, Paranoia Agent, Psycho-Pass, and more.",
+    "Watch psychological anime twists with friends in real-time using AniDachi on Crunchyroll. Synced reveals and live chat. Async catch-up is planned. Death Note, Paranoia Agent, Psycho-Pass, and more.",
   alternates: { canonical: "/watch-psychological-anime-with-friends" },
   openGraph: {
     images: [
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 
     title: "Watch Psychological Anime With Friends (2026) | AniDachi",
     description:
-      "Group watchroom guides for psychological anime on Crunchyroll — synced playback, theory-tracking chat, and spoiler-safe async for mind-bending series.",
+      "Group watchroom guides for psychological anime on Crunchyroll — synced playback and live theory discussions for mind-bending series.",
     url: "/watch-psychological-anime-with-friends",
   },
 };
@@ -35,7 +35,7 @@ const faq = [
   {
     question: "How do I watch psychological anime with friends online?",
     answer:
-      "Install AniDachi's Chrome extension, open your chosen series on Crunchyroll, and create a watchroom. Share the invite link with your group. AniDachi syncs playback across all members so nobody accidentally plays through a twist reveal while others are still reading the title card. Psychological anime benefits especially from the episode-scoped chat so theory threads stay tied to the correct reveal.",
+      "Install AniDachi's Chrome extension, open your chosen series on Crunchyroll, and create a watchroom. Share the invite link with your group. AniDachi syncs playback across all members so nobody accidentally plays through a twist reveal while others are still reading the title card. Agree on a safe episode boundary before discussing theories; AniDachi live chat does not automatically hide spoilers.",
   },
   {
     question: "What makes psychological anime good for watch parties?",
@@ -57,7 +57,7 @@ const faq = [
   {
     question: "How do we manage theories and spoilers for psychological anime?",
     answer:
-      "Create a pinned theory thread per arc in your AniDachi watchroom where members post predictions before each session. React with only '✓ called it' or '✗ wrong' after watching — never write the actual answer in the main thread. For twists in Death Note Season 2 or the midpoint of Monster, use a separate spoiler-tagged thread so earlier-episode watchers can still participate in general theory discussion.",
+      "Create separate theory discussions in your group chat outside the live room, labeled by arc or episode. React with only '✓ called it' or '✗ wrong' after watching — never write the actual answer in the main thread. For twists in Death Note Season 2 or the midpoint of Monster, use a separate spoiler-tagged thread so earlier-episode watchers can still participate in general theory discussion.",
   },
 ];
 
@@ -146,11 +146,7 @@ export default function WatchPsychologicalAnimeWithFriendsPage() {
         intentional rather than disruptive.
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
-        The genre also rewards async watchrooms: psychological series typically
-        have 12–37 episodes with dense individual episodes, making two-per-week
-        sessions sustainable without burning out the group. AniDachi&apos;s
-        spoiler controls let binge-watchers flag how far they&apos;ve gone so
-        theory threads stay calibrated to the group&apos;s current progress.
+        Psychological series often suit two-episode weekly sessions. Agree on a shared episode boundary and keep later theories in a separate chat. AniDachi supports live rooms today; personal history is separate for each viewer, and Async catch-up is planned.
       </p>
 
       <h2
@@ -201,18 +197,18 @@ export default function WatchPsychologicalAnimeWithFriendsPage() {
         </li>
         <li>
           <span className="font-medium text-foreground">
-            Set up a theory thread before episode one.
+            Set up a separate group chat for theories.
           </span>{" "}
-          Pin a prediction post so each member writes down their theory before
+          In that separate chat, pin a prediction post so each member writes down their theory before
           the first watch — the callback when theories are confirmed or
           demolished is half the fun.
         </li>
         <li>
           <span className="font-medium text-foreground">
-            Pin your spoiler boundary.
+            Agree on a spoiler boundary.
           </span>{" "}
           Psychological series have twist endings that collapse 10+ episodes of
-          context — protect them with a hard episode cap in the room settings.
+          context — agree on a safe episode number before talking about later events. AniDachi does not automatically hide spoilers.
         </li>
       </ol>
 

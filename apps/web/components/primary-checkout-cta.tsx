@@ -28,7 +28,7 @@ const COPY = {
     body: "Get the Chrome extension first — Plus and Pro are optional upgrades after you host.",
   },
   glossary: {
-    body: "Install on desktop Chrome, then upgrade only if you need larger rooms.",
+    body: "Install on desktop Chrome, then upgrade for longer sessions, more participants, and watch history.",
   },
   pillar: {
     body: "Download the official zip from AniDachi, Load unpacked, then create a watchroom.",

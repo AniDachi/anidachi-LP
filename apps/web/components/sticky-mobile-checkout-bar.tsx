@@ -31,6 +31,7 @@ export function StickyMobileCheckoutBar({
       role="region"
       aria-label="Install AniDachi on desktop"
       aria-hidden={!visible}
+      inert={!visible}
       style={{ transform: visible ? "translateY(0)" : "translateY(100%)" }}
     >
       <Link

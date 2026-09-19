@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { flushSync } from "react-dom";
 import { cn } from "@/lib/utils";
 import { ChevronDown, List } from "lucide-react";
 
@@ -74,8 +75,9 @@ export function TableOfContents({ headings }: { headings: TocHeading[] }) {
               type="button"
               onClick={() => {
                 setActive(h.id);
+                // Collapse first: the mobile list changes the heading's position.
+                if (open) flushSync(() => setOpen(false));
                 scrollToId(h.id);
-                setOpen(false);
               }}
               className={cn(
                 "w-full text-left transition-colors hover:text-ani-text",

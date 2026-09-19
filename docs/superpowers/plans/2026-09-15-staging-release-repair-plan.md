@@ -4,15 +4,15 @@
 
 **Goal:** Исправить подтвержденные ошибки новой версии staging, сохранить работающий продукт и подготовить проверяемый выпуск сайта и ZIP через обычный PR в main.
 
-**Architecture:** Сохраняем новый дизайн и существующие владельцы состояния. Общий компонент меню снова отвечает за навигацию и безопасный выход; единый источник метаданных отвечает за установочный ZIP. Новая отправка ссылки использует существующие CRM/Gmail и атомарное хранилище, без новой очереди рассылок или отдельной платформы.
+**Architecture:** Сохраняем новый дизайн и существующие владельцы состояния. Общий компонент меню снова отвечает за навигацию и безопасный выход; единый источник метаданных отвечает за установочный ZIP. Ссылка установки копируется/передается через обычный Share; отправка install email исключена по решению владельца. Общие CRM/Gmail/contact функции сохраняются.
 
 **Tech Stack:** Node 22.23.1, pnpm 11.2.2, Next.js 15.5.23, React, WXT 0.20.26, Vitest, node:test/tsx, существующие Vercel Blob, Gmail, GitHub Actions, Vercel и Cloudflare.
 
 **Spec:** [Текущее состояние](../../current-development-state.md), [каналы расширения](../../extension-release-channels.md), [личная история и тарифы, уточнение D01](2026-09-08-personal-history-and-plans-mvp.md), [навигация кабинета](../specs/2026-09-10-account-mvp-navigation-design.md) и реестр подтвержденных отклонений ниже. Этот план восстанавливает согласованные контракты, а не вводит новую модель продукта.
 
-**Дата:** 2026-09-15; обновлено 2026-09-18. **Статус:** этапы 1–3 и 4A приняты на staging через PR #349 (`bcd00c7d`), #350 (`5a7aa839`), #351 (`876b9e94`) и #352 (`f2567844`). По решению владельца дальнейшая доработка email отложена; выполняется этап 5A — тексты тарифов и сохраненной истории. Этапы 4B/4C не реализованы и не считаются принятыми. Main остается `4b4ff883`; реальные письма, изменение контактов и публикация ZIP при проверках не выполняются.
+**Дата:** 2026-09-15; обновлено 2026-09-19. **Статус:** предыдущие scoped fixes и главная страница приняты на staging вплоть до PR #360 (`1542ae14`); точные receipts ниже. Локальные инструкция/CTA и удаление install email еще не опубликованы. Владелец подтвердил отказ от email-ссылки: этапы 4B/4C отменены, endpoint/helper/UI удалены локально. Все 164 исходных пути рассмотрены и учтены; история кабинета закрыта, SEO-замечания F15–F18 исправлены в L04; closeout PR проводит принятый локальный блок в staging. PostHog и main — отдельные последующие решения. Последняя подтвержденная main-база `4b4ff883`; свежей remote-проверки и promotion в этом проходе нет.
 
-**Уточнение 2026-09-16:** по просьбе пользователя добавлены полный реестр измененных файлов и обязательная проверка их влияния. Повторная проверка известных замечаний завершена; полное построчное ревью всех 164 файлов и финальная регрессия еще не завершены и не считаются выполненными по наличию этого плана.
+**Учет:** [файловый реестр](2026-09-16-staging-release-file-review.md#сводка-учета-на-2026-09-19) различает исходный review, локальные tests, прежнюю staging-приемку и оставшиеся замечания. Закрытие прохода не подменяет приемку финального кандидата/ZIP. Реальные письма, изменение контактов и публикация ZIP в проверках не выполняются.
 
 ## Решение владельца 2026-09-16
 
@@ -70,12 +70,16 @@
 | F06 | P2, live DOM и CSS: при 700 px нет доступа к аккаунту; исходник оставляет scroll lock после скрытия mobile drawer | Непрерывная навигация на границах 640/768 px; закрытие и снятие блокировки при смене режима | 2 |
 | F07 | P1 для публичной установки, live: ZIP-кнопка disabled. Код расходится: `available` по env, download дополнительно ищет файлы | Согласовать метаданные, реальный источник ZIP и публичную выдачу, проверить байты | 3, 6 |
 | F08 | P2, исходник: installed-ветка скрывает download, хотя popup ведет туда обновляться; старый ZIP не имеет presence | Убрать installed-ветку и всю проверку установки; download определяется только доступностью ZIP | 1, 3 |
-| F09 | P2, исходник: CRM read-modify-write сохраняет старый снимок контактов | Использовать существующий `mutateContacts`, проверить конфликт с параллельной правкой | 4A |
-| F10 | P2, исходник: публичная отправка Gmail без cooldown/dedupe/ограничения по источнику и получателю | Прикладная защита с атомарным состоянием, без зависимости от непроверенного firewall | 4B |
-| F11 | P2, исходник: полный отказ CRM + Gmail выглядит `Saved`; чтение Gmail tokens вне обработчика ошибки | Правдивый результат доставки; контролируемые JSON-ошибки; не обещать несуществующую очередь | 4C |
+| F09 | Исправлено в #352; в L03 сама функция install email исключена | Исторический CAS fix сохранен в журнале; неиспользуемый helper удален локально, существующие контакты сохранены | 4A, L03 |
+| F10 | Закрыто локальным исключением install email по решению владельца | Удален endpoint; лимитер и новые storage paths не создаются. До публикации удаления staging содержит прежнюю версию | L03 |
+| F11 | Закрыто локальным исключением install email по решению владельца | Удалены форма/результат доставки/событие и обещания письма; copy/share с room next сохранены | L03 |
 | F12 | P2, pricing и контракт D01: Free описан как `No personal history or Resume` | Отделить сохраненную историю от права новой записи/редактирования | 5 |
 | F13 | Согласованность: на части compare-страниц прежние обещания async; CWS-статус принят владельцем как текст для запланированной подачи при main-релизе | Недоступные функции явно будущие; CWS-тексты сохранить по решению 2026-09-18, фактическую подачу не считать выполненной | 5 |
 | F14 | Процесс: удален `graph:update:code`, изменены обходящие wrapper aliases; AGENTS и quality gates требуют прежний flow | Вернуть команду через существующий `scripts/graphify-code-update.mjs` и связанные aliases | 1 |
+| F15 | P2, SEO copy: унаследованные обещания доступного Async, слишком широкие claims о YouTube/конкурентах | Отдельно согласовать тексты/metadata/FAQ/HowTo, внешние факты сверить по первоисточникам; CWS copy не менять | Исправлено L04; staging receipts в closeout PR |
+| F16 | P2, mobile Contents: scroll рассчитан до сворачивания списка; заголовок уходит под header | Закрыть оглавление перед окончательным измерением; точечная mobile-проверка | Исправлено L04; staging receipts в closeout PR |
+| F17 | P2, общий SEO CTA: wrapper не распознает SeoGuideTitle, кнопка разрывает Short Answer | Исправить место вставки, сохранив принятую install кнопку | Исправлено L04; staging receipts в closeout PR |
+| F18 | P3, SEO title: AniDachi уже в title статьи и еще раз добавляется template | Убрать повторный бренд, сохранить canonical/URL | Исправлено L04; staging receipts в closeout PR |
 
 ### Что проверено и что еще не доказано
 
@@ -85,7 +89,7 @@
 - [x] `SuccessInstallNext` сейчас нигде не импортирован: его спорная фраза не считается действующей ошибкой checkout. Автоматически подключать компонент в рамках исправлений нельзя.
 - [ ] Реальный logout с несохраненным черновиком: пока подтвержден кодом, сессию пользователя при аудите не отзывали. Сначала компонентные тесты, затем контролируемая staging-приемка.
 - [x] До исправления воспроизведен scroll lock на staging `bcd00c7d`: открыть меню при 390 px, перейти на 700 px, PageUp не сдвигает страницу; после Escape PageUp работает. После этапа 2 нужна повторная проверка cleanup на его фактическом breakpoint.
-- [ ] Нельзя подтвердить установку/обновление новой сборки, доставку письма и bytes публичного ZIP до исправления сборки/настройки выдачи. Эти приемочные шаги не заменены зелеными unit-тестами.
+- [ ] Нельзя подтвердить установку/обновление новой сборки, bytes публичного ZIP до исправления сборки/настройки выдачи. Эти приемочные шаги не заменены зелеными unit-тестами.
 - [ ] Stripe checkout/cancel/restore, реальные комнаты и WebRTC в этом повторном аудите заново не выполнялись. Неизмененный код и прошлые тесты — основания для узкой приемки, не обещание отсутствия всех багов.
 - [ ] Terms/Privacy проверены на согласованность с продуктом. Юридическое заключение, статус Chrome Web Store и любые новые внешние требования этим планом не подтверждаются.
 
@@ -96,18 +100,18 @@
 | 1. Сборка | release-валидатор, тесты manifest, команды package.json, документация каналов | auth, UI кабинета, ключи/секреты, runtime комнат |
 | 2. Кабинет | общий account-menu, nav-bar-client, их реальные потребители и стили | алгоритмы истории, биллинг API, редизайн остальных страниц |
 | 3. Установка | metadata/source ZIP, download/latest, install hub, presence UX | автообновление/автоустановка, Chrome Store submission |
-| 4A–4C. Email | атомарность CRM; ограничение отправки; результат API/UI | массовая рассылка, новые CRM-сегменты сверх install, очередь писем |
+| 4. Email: исключен | Удаление install email UI/API/helper и обещаний письма | Общие CRM/Gmail/contact функции, исторические контакты; 4B/4C отменены |
 | 5. Тексты | pricing, install/FAQ/compare, согласованные документы | изменение цен, лимитов, договорных обязательств без решения владельца |
 | 6. Приемка staging | точный кандидат сайта + артефакт, проверка сценариев и конфигурации | production-публикация и изменения реальных подписок |
 | 7. Production | проверенный promotion, артефакт из принятого main, выдача и smoke | автоматический захват новых непроверенных коммитов |
 
-Блоки 4A, 4B, 4C — отдельные небольшие коммиты/PR, принимаемые последовательно. Остальные блоки также не объединять в один общий fix-PR. На старте каждого блока читать актуальный diff: если другой разработчик уже исправил пункт, проверить результат и снять задачу, не переписывать второй раз.
+Исторический 4A принят отдельно; 4B/4C отменены решением 2026-09-19. Остальные исправления также не объединять в один общий fix-PR. На старте каждого блока читать актуальный diff: если другой разработчик уже исправил пункт, проверить результат и снять задачу, не переписывать второй раз.
 
 ## Обязательное покрытие всего diff и регрессий
 
 [Реестр всех 164 файлов](2026-09-16-staging-release-file-review.md) получен из точных Git-объектов main/staging, включая добавления и удаления. Его наличие не означает, что 164 файла уже приняты. Закрывать строки по факту проверки, а не одной общей отметкой о зеленом CI.
 
-- [ ] Прочитать каждый diff целиком; отдельно определить перенос/форматирование, стиль, новое/измененное поведение и удаление. При большом форматирующем diff сравнить структуру/AST, но не считать CSS косметикой без влияния на focus/visibility/scroll.
+- [x] Исходный проход 164/164 завершен в L03 с отдельными замечаниями F15–F18. Прочитать каждый diff целиком; отдельно определить перенос/форматирование, стиль, новое/измененное поведение и удаление. При большом форматирующем diff сравнить структуру/AST, но не считать CSS косметикой без влияния на focus/visibility/scroll.
 - [ ] Для измененного общего компонента найти всех потребителей через imports/re-exports и runtime-события. Пример уже найденной связи: `nav-bar-client -> UserMenu -> before-sign-out -> profile/history editors`. Неизмененность файла редактора не доказывает сохранность этого сценария.
 - [ ] Проверить удаленные waitlist/survey endpoints и компоненты: отсутствие действующих клиентов, понятные переходы со старых `/join` URL, сохранность контактов и договоренных прав ранних пользователей. Не восстанавливать и не удалять продуктовую возможность автоматически: несогласованное изменение поведения вынести отдельным решением владельцу.
 - [ ] Проверить новые/измененные analytics, public signup count, формы, глобальные tokens/Button/layout, root providers, sitemap/schema и CTA. Это дополнительные зоны ревью; их не объявлять багами без воспроизведения или достаточного доказательства исходником.
@@ -228,6 +232,8 @@ activation. Два новых document-root теста воспроизвели 
 
 ## Этап 4A. Убрать риск потери CRM-изменений
 
+**Исторический этап:** принят в #352. Решение 2026-09-19 ниже исключает install email вместе с helper; код примера и старые receipts сохранены как история, не новая задача реализации.
+
 **Files — Modify:** `apps/web/lib/kreatli-crm/desktop-install-lead.ts`. **Create:** `apps/web/lib/kreatli-crm/desktop-install-lead.test.ts`. Использовать `apps/web/lib/kreatli-crm/store.ts` без нового snapshot writer.
 
 **Interfaces:** сохранить `upsertDesktopInstallLead(email): Promise<{saved:boolean; reason?:string}>`. Существующий `mutateContacts<T>((contacts) => {changed:boolean; value:T})` повторяет чистую операцию над свежими данными при CAS-конфликте.
@@ -266,47 +272,29 @@ activation. Два новых document-root теста воспроизвели 
 
 **Приемка и ограничения:** отдельный PR фиксирует точный SHA, ревью и staging receipts. Код email endpoint/UI, общий store и Blob client не меняются; текущие проблемы ограничения отправки и результата доставки остаются 4B/4C. Graphify query `mutate contacts kreatli` использован для навигации, imports и CAS проверены в исходниках; refresh отложен до общей приемки редизайна по ранее согласованному исключению для мелких блоков. Rollback — revert только PR 4A в staging, без отката данных/env. Реальная конкурентная запись в облако и отправка письма на этом этапе не выполняются.
 
-## Этап 4B. Ограничить публичную отправку
+## Вместо этапов 4B/4C: исключить install email (L03)
 
-**Статус 2026-09-18:** отложен по решению владельца. Исследование выполнено,
-код/конфигурация не изменялись. Этап 4C также остается открытым; продолжение
-проверки сайта не означает приемку отправки писем для production.
+**Решение владельца, 2026-09-19:** отправки ссылки по email не будет. Не строим
+лимитер, delivery-state или email queue. Удаляем только эту функцию; copy/share
+ссылки на desktop installation guide и возврат в комнату сохраняются.
 
-**Files — Create:** `apps/web/lib/extension-install-request-limit.ts`, `apps/web/lib/extension-install-request-limit.test.ts`. **Modify:** `apps/web/lib/private-integration-blob.ts`, `apps/web/lib/private-integration-blob.test.ts`, `apps/web/app/api/extension/email-install-link/route.ts`, `docs/environment-and-secrets-matrix.md`.
+- [x] Удалить email form/state/handler в `extension-install-hub.tsx`.
+- [x] Удалить `/api/extension/email-install-link` и его единственный install lead
+  helper/test; не менять общий CRM store, Gmail, обращения или имеющиеся данные.
+- [x] Удалить ненужное conversion event и обещания install email в Hero/Privacy.
+- [x] RED/GREEN реального mobile component: email form отсутствует, copy сохраняет
+  room next и показывает feedback; 7 focused checks проходят.
+- [x] Web typecheck, 674 passing web tests (6 existing skips), независимое source
+  review без замечаний; локальная приемка и hashes записаны в L03 реестра.
+- [ ] Опубликовать удаление отдельным согласованным блоком на staging и проверить
+  страницу/404 удаленного endpoint. Текущий локальный результат не выдается за deploy.
 
-**Interfaces:** `reserveInstallEmail({email:string, ip:string, nowMs:number}): Promise<{allowed:true} | {allowed:false; retryAfterSeconds:number}>`. Использовать существующий `updateKreatliCrmBlobText` с новым точным allowlisted private path `kreatli-crm/desktop-install-requests.json`. Не расширять доступ на произвольные Blob paths. Хранилище использует существующую CRM authority, новых секретов не требует.
-
-- [ ] Сначала добавить тесты атомарного reserve с fake clock и CAS storage. Два одновременных запроса одному получателю: только один получает разрешение; повтор API на другом инстансе не обходит cooldown. Ошибка storage не разрешает Gmail.
-- [ ] Операционные ограничения начального MVP: один запрос получателю в 10 минут, максимум 5 за 24 часа; источнику 10 за час; всему endpoint 100 за час. Это защита отправки, не тарифные лимиты продукта. Время только серверное; хранить hashes нормализованного адреса и trusted IP с timestamp, удалять записи старше 24 часов при mutation. Общий лимит ограничивает рост ledger максимум 2400 успешными reservations за сутки.
-- [ ] Внутри CAS сначала отфильтровать устаревшие записи, затем проверить все окна; при отказе не изменять состояние. При разрешении записать reservation, и только после commit выполнить Gmail один раз. Не отправлять из retry callback. При сбое доставки reservation остается до cooldown, чтобы отказ провайдера не открывал бесконечные повторы.
-- [ ] Проверять same-origin JSON, email не длиннее 254, body не больше 2 KiB по реально прочитанным байтам, `next` через существующий sanitizer. На Vercel использовать `x-vercel-forwarded-for`, проверяя единственный корректный IPv4/IPv6 через `node:net.isIP`; не доверять произвольному `Forwarded`/первому элементу клиентской цепочки. В local tests IP задается dependency injection. Нет валидного источника/доступного storage в production — контролируемая 503, без отправки.
-- [ ] Проверить путь запроса до Vercel: дополнительный reverse proxy может скрыть реальный IP клиента, поэтому не считать IP-лимит единственной защитой. Сохраняются получатель/global caps. Заголовки сверены через Context7 и [официальную документацию Vercel](https://vercel.com/docs/headers/request-headers#x-vercel-forwarded-for); доступ к пользовательским настройкам proxy при этом не изменялся.
-- [ ] `429` содержит `Retry-After`; UI показывает время ожидания без мгновенного повторного запроса. Проверить 400/403/413/415/429/503, смену IP, повтор после границы окна, malformed ledger и CAS conflict. Все tests используют заглушки; не отправлять письма для проверки лимита.
-- [ ] Выполнить `pnpm --filter @anidachi/web exec tsx --test lib/extension-install-request-limit.test.ts lib/private-integration-blob.test.ts`, web check/test. Commit `fix(web): bound public install email requests`, PR в staging. Проверить наличие нужной Blob authority по статусу, не печатая токены.
-
-## Этап 4C. Сделать результат email честным
-
-**Files — Modify:** `apps/web/app/api/extension/email-install-link/route.ts`, `apps/web/components/extension-install-hub.tsx`. **Create:** `apps/web/lib/extension-install-email.test.ts`. Дополнить `apps/web/lib/extension-install-hub-client.test.ts`.
-
-**Interfaces:** ответ остается JSON; успешная пользовательская операция означает отправленное письмо. `emailed` сохранить для совместимости; статус CRM не подменяет доставку:
-
-```ts
-type InstallEmailResult =
-  | { ok: true; emailed: true; saved: boolean; installUrl: string }
-  | { ok: false; emailed: false; saved: boolean; error: string; retryAfterSeconds?: number };
-```
-
-- [ ] Записать table-driven tests: CRM/Gmail success-success; success-failure; failure-success; failure-failure; нет Gmail refresh token; token storage throws; rate denied; ZIP unavailable. Gmail mock вызывается максимум один раз и только после успешного reserve. CRM не является очередью на доставку.
-- [ ] Чтение Gmail tokens и отправку поместить в контролируемый error path. Gmail success => 200, `emailed:true`; CRM failure при доставленном письме не ломает успех пользователя, но дает обезличенный серверный сигнал. Gmail unavailable => 503; send failure => 502, `ok:false`; `saved:true` допускается только после реального CRM commit и не рисуется как успех email.
-- [ ] Убрать UI `Saved` как fallback. Тексты: `Link sent. Check your inbox.` только после доставки; при отказе `Could not send the link. Try again or copy this page's address.` Никаких обещаний будущей отправки/очереди. ZIP не опубликован — форма не обещает установку сейчас, endpoint возвращает 503 до Gmail.
-- [ ] Не логировать raw email/body/tokens или полный Gmail error object, если в нем могут быть request headers. Использовать reason/code/request identifier. Формировать ссылку только из canonical origin и разрешенного room next.
-- [ ] Выполнить `pnpm --filter @anidachi/web exec tsx --test lib/extension-install-email.test.ts lib/extension-install-hub-client.test.ts`, web check/test. Commit `fix(web): report install email delivery accurately`, PR в staging.
-
-**Общая приемка email:** успешный toast соответствует отправке, отказ виден и повтор ограничен; параллельный запрос не теряет контакты; письма не зависят от предположения о внешнем firewall. Единственное реальное письмо на согласованный адрес — отдельный приемочный шаг этапа 6.
+Rollback — обратный scoped diff удаления, без отката данных/env и прежних UI-правок.
+Общий Graphify refresh остается в прежнем согласованном отложенном блоке.
 
 ## Этап 5. Согласовать тексты с работающим MVP
 
-**Files — Modify:** `apps/web/lib/pricing-tiers.ts`, `apps/web/lib/install-cta.ts`, `apps/web/lib/extension-install-faq.ts`, `apps/web/app/api/extension/email-install-link/route.ts`; точечные подтвержденные упоминания в `apps/web/app/compare/`. Проверить `apps/web/app/terms/page.tsx`, `apps/web/app/privacy/page.tsx`, `apps/web/app/account/billing/billing-client.tsx`, `docs/current-development-state.md`. **Create:** `apps/web/lib/pricing-tiers.test.ts` для тарифной матрицы, не для косметической пунктуации.
+**Files — Modify:** `apps/web/lib/pricing-tiers.ts`, `apps/web/lib/install-cta.ts`, `apps/web/lib/extension-install-faq.ts`; точечные подтвержденные упоминания в `apps/web/app/compare/`. Проверить `apps/web/app/terms/page.tsx`, `apps/web/app/privacy/page.tsx`, `apps/web/app/account/billing/billing-client.tsx`, `docs/current-development-state.md`. **Create:** `apps/web/lib/pricing-tiers.test.ts` для тарифной матрицы, не для косметической пунктуации.
 
 **Interfaces:** цены/entitlements и способы отмены остаются прежними. Разделить текстовые строки чтения и записи истории, данные лимитов брать из существующей политики.
 
@@ -368,7 +356,7 @@ type InstallEmailResult =
 
 **Files:** запись результатов в этом плане, `docs/staging-acceptance-checklist.md`, `docs/release-and-rollback-runbook.md`, `docs/environment-and-secrets-matrix.md`. Артефакты и screenshots хранить вне tracked source. Этот этап не добавляет продуктовый код.
 
-- [ ] Обновить refs; записать точный candidate SHA, перечень принятых PR и результат `git diff origin/main <candidate>`. Для закрытых F01–F14 должна быть ссылка на commit/test или явное согласованное исключение. Любой новый коммит после проверок требует оценки своего diff и соответствующего повторного gate.
+- [ ] Обновить refs; записать точный candidate SHA, перечень принятых PR и результат `git diff origin/main <candidate>`. Для закрытых F01–F18 должна быть ссылка на commit/test или явное согласованное исключение. Любой новый коммит после проверок требует оценки своего diff и соответствующего повторного gate.
 - [ ] Закрыть файловый реестр и матрицу регрессий выше на окончательном candidate. Прочитать все дополнительные fix-файлы, появившиеся после исходных 164, и повторно проверить связанные потребители.
 - [ ] CI и Build Extension на candidate зеленые целиком; Vercel staging READY на том же SHA; Worker/staging smoke проверен. Миграции/Worker/protocol/Stripe env не должны неожиданно появиться в diff. `pnpm dev:check` не подменяет выполнение выбранных проверок.
 - [ ] Собрать и валидировать staging ZIP для обычного тестирования; отдельно production-профиль того же candidate для проверки manifest/упаковки, пока без публичной раздачи. Страница staging не должна незаметно подключать тестера к production: staging source соответствует staging артефакту. Предрелизный production candidate используется только как явно обозначенный тест.
@@ -385,7 +373,7 @@ type InstallEmailResult =
 - [ ] Кабинет: login, меню на mobile/tablet/desktop, история обеих платформ, выбор сезона/серий, Cancel, Save в тестовой записи; сайт/шторка показывают один результат. Save / Discard / Stay при реальном выходе, HTTP error через локальную заглушку; profile navigation и возврат из `/extension?next=/room/...`.
 - [ ] Billing: отображение тарифа и отмены на staging; pending/failed checkout sync не объявлен успехом новой UI-логикой. Полный sandbox checkout/cancel/restore повторять при изменении billing/auth поведения; если diff только стили/навигация, записать исключение и текущую UI-проверку. Реальные списания/отмены production не делать.
 - [ ] Короткая регрессия extension: defaults после выдачи/отзыва места; room reinvite; first-install controls; список People; Free countdown не меняет серверную границу. Worker/P2P код неизменен — не повторять тяжелый harness после каждой правки текста. После final extension build провести один реальный room/media smoke с двумя участниками; расширить до harness при симптоме или изменении media plane.
-- [ ] Email: mock-сценарии полностью проходят; после согласования конкретного получателя отправить одно staging письмо, проверить домен ссылки, доставку, cooldown и отсутствие двойной CRM-записи. Не отправлять письма произвольным контактам из CRM.
+- [ ] Install email отсутствует: в опубликованном кандидате нет формы/обещаний письма, удаленный endpoint отвечает 404; copy/share сохраняют room next. Тестовую отправку не делать — функция отменена.
 - [ ] Проверить staging gate/noindex, production canonical ссылки, robots/sitemap, мобильный путь, отсутствующие ZIP/env/dependency ошибки в относящихся к проверке логах. Зафиксировать незакрытые ручные проверки честно; отсутствие новых ошибок за короткий smoke не означает гарантию под любой нагрузкой.
 
 **Условие перехода:** принят конкретный SHA и его сценарии. Ошибки ведут к отдельному узкому fix -> staging -> повтор затронутой проверки. Пока есть обязательный незакрытый пункт, полный promotion PR не мержить.
@@ -418,4 +406,9 @@ Graphify использован для навигации, важные связ
 | 2026-09-16 | Пересогласование этапа 1 | Владелец одобрил точечную отмену extension-изменений и связанных web detectors. Создана ветка `codex/preserve-production-extension` от прежнего staging; предыдущий PR #348 не слит. Новые client regression tests воспроизвели 5 отклонений и прошли после исправления; полные локальные проверки, оба release validators и desktop/mobile UI review прошли. Новая ветка сохраняет production extension полностью; код `b71b1b91`, PR #349 открыт в staging; #348 закрыт без merge. CI receipts текущего head — в #349. Main/staging deployment не выполнялся. |
 | 2026-09-16 | Приемка этапа 1 | После согласования #349 слит в staging `bcd00c7d`; CI, extension build, staging smoke и Vercel alias подтверждены. Подробная ручная приемка и ее ограничения в #349. Main `4b4ff883`, auto-merge promotion #347 выключен. |
 | 2026-09-16 | Реализация этапа 2 | Ветка `codex/restore-account-menu` от staging `bcd00c7d`, runtime `185ac1ae`. F04/F05/F06 исправлены локально; 24 красные целевые проверки до восстановления, 34/34 зеленые после него. Web check, полный web test (617 passed / 6 skipped), Next build и dev:check (web/docs) passed. CSS меню, редакторы и API, extension/tooling и протокол не изменены. Docs/реестр обновлены, Graphify refresh отложен по указанному исключению. Независимое ревью и staging receipt записываются в отдельном PR; rollback — revert только PR этапа 2 в staging, без DB/env действий. Main не меняется. |
-| 2026-09-19 | Локальная приемка главной и демонстраций | Владелец согласовал фиксацию накопленного блока в `codex/demo-room-first-scene`: Live/History/Async, локальные видео, описание истории, адаптивная композиция, мягкая прокрутка и закрытый FAQ. Повторены typecheck, 682 web tests passed / 6 skipped, dev:check; браузерные проверки описаны в дополнительном срезе файлового реестра. Production extension/API/protocol не изменены. Graphify refresh отложен; production build, PR/deploy и main promotion остаются отдельными шагами. Откат — revert коммита блока, без DB/env действий. |
+| 2026-09-19 | Главная и демонстрации — принято на staging | Согласованный блок `codex/demo-room-first-scene` закрыт через [PR #360](https://github.com/AniDachi/anidachi-LP/pull/360), merge `1542ae14`: Live/History/Async, локальные видео, описание истории, адаптивная композиция, мягкая прокрутка, закрытый FAQ и удаление трех неиспользуемых старых демо-компонентов. До публикации прошли typecheck, 682 web tests / 6 skips и dev:check; затем Vercel production build, CI `35430609678` / `35430611356` и Staging Smoke `35430718334`. Alias staging указывает на Ready deployment `dpl_4sf9o13LbcwJWCC4EtbNcZJVRVwf`; новый интерфейс и видео подтверждены на сайте. Дерево слияния совпадает с проверенным `a3e97b9c`; адаптивность повторно не прогонялась по просьбе владельца. Подробная приемка в реестре и PR; остальные файлы редизайна этим блоком не закрыты. Extension/API/protocol и main `4b4ff883` не менялись, auto-merge #347 выключен. Graphify refresh отложен. Откат — отдельный revert PR #360 в staging, без DB/env действий. |
+| 2026-09-19 | Сверка файлового учета | По просьбе владельца обновлены статусы и сводка в [реестре](2026-09-16-staging-release-file-review.md#сводка-учета-на-2026-09-19). Повторно прочитаны receipts PR #353–#356; staging pending снят только там, где приемка завершена. L01/L02 фиксируют локальную инструкцию, 10 UI-примеров, FAQ и четыре install CTA; hashes сохраняют проверенное содержимое. Частичные срезы и отложенные email/CRM/analytics/count блоки не выданы за закрытые. Код и существующие graph artifacts не изменяются; semantic refresh отложен по действующему исключению. Новых runtime-проверок, push/merge/deploy нет. Откат учета — только этот docs diff. |
+
+| 2026-09-19 | L03: завершение прохода и исключение install email | Все 164 исходных пути рассмотрены; статусы и границы в файловом реестре. Удалены только install email UI/API/helper/test/event и copy promises; CRM/Gmail/data сохранены. RED/GREEN: 7 install compatibility, web typecheck, 674 web tests passed (6 skips), 37 дополнительных Watch Library tests passed. Независимое ревью email delta без замечаний. История кабинета закрыта; F15–F18 отдельно записаны и не исправлены без согласования. Локально; push/PR/merge/deploy/ZIP нет. Graph artifacts сохранены, refresh не заявлен. Откат — scoped diff L03, не прежний WIP. |
+
+| 2026-09-19 | L04: review closeout | Согласованы и исправлены F15–F18; все 164 исходных пути рассмотрены, открытых замечаний исходного прохода нет. Сохранены L01–L03 и отмена install-email. Typecheck, 677 web tests / 6 skips, 3 RED/GREEN SEO component tests; mobile browser heading top 88 px. Независимое ревью и исправления остаточной SEO copy. Доставка через feature PR в staging; CI/build/deployment receipts в PR. PostHog, main и hosted ZIP отдельно; этап 6 целиком не закрыт. |

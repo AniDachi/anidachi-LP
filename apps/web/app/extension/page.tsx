@@ -53,8 +53,8 @@ const howToSteps = [
     text: "Download AniDachi from https://www.anidachi.app/extension only. Do not use a third-party file.",
   },
   {
-    name: "Unzip the folder",
-    text: "Unzip the file. Load unpacked must point at the folder that contains manifest.json, not the zip itself.",
+    name: "Unzip it",
+    text: "Unzip the downloaded ZIP file.",
   },
   {
     name: "Open Chrome extensions",
@@ -66,7 +66,7 @@ const howToSteps = [
   },
   {
     name: "Load unpacked",
-    text: "With Developer mode on, click Load unpacked — the first button on the left under the header (Load unpacked, Pack extension, Update). Select the unzipped folder that contains manifest.json, not the zip.",
+    text: "Click Load unpacked and select the unzipped AniDachi folder. The selected folder should contain manifest.json.",
   },
   {
     name: "Pin and open Crunchyroll or YouTube",

@@ -22,7 +22,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Best Way to Watch YouTube With Friends (2026 Verdict) | AniDachi",
+  title: "Best Way to Watch YouTube With Friends (2026 Verdict)",
   description:
     "Verdict: sync, async, or screen share? For most groups the best way to watch YouTube with friends is AniDachi watchrooms — not Discord Go Live.",
   alternates: {
@@ -55,12 +55,12 @@ const faq = [
   {
     question: "What is the best way to watch YouTube with friends?",
     answer:
-      "For most groups in 2026, the best way is a synced watchroom where everyone streams YouTube locally — AniDachi for live sync plus async catch-up. Screen share is a last resort; pure honor-system countdowns break on mid-video seeks.",
+      "For most groups in 2026, the best way is a synced watchroom where everyone streams YouTube locally — AniDachi for live sync and personal history. Screen share is a last resort; pure honor-system countdowns break on mid-video seeks.",
   },
   {
-    question: "Is live sync or async better for YouTube?",
+    question: "Is live sync better for YouTube?",
     answer:
-      "Live sync wins for premieres and reaction nights. Async wins when time zones or work schedules never overlap. AniDachi supports both in one watchroom so you do not pick a permanent camp.",
+      "Live sync wins for premieres and reaction nights. Async wins when time zones or work schedules never overlap. AniDachi supports live rooms today; Async catch-up is planned and not available yet.",
   },
   {
     question: "Is this the same as how to watch YouTube with friends?",
@@ -120,7 +120,7 @@ export default function BestWayToWatchYoutubeWithFriendsPage() {
         <strong>
           The best way for most groups is AniDachi: everyone streams a full
           youtube.com/watch page in their own browser while a watchroom handles
-          sync, chat, and optional async catch-up.
+          live sync, chat, and personal history.
         </strong>{" "}
         Screen share loses on quality. Live-only free tools are fine for
         same-time nights — until schedules diverge. This is a decision page, not
@@ -163,7 +163,7 @@ export default function BestWayToWatchYoutubeWithFriendsPage() {
             },
             {
               feature: "Async catch-up",
-              values: { anidachi: "yes", livefree: "no", screenshare: "no" },
+              values: { anidachi: "Planned", livefree: "no", screenshare: "no" },
             },
             {
               feature: "Everyone has own controls",
@@ -196,7 +196,7 @@ export default function BestWayToWatchYoutubeWithFriendsPage() {
           {
             title: "Someone always watches tomorrow?",
             highlight: true,
-            body: "Pick AniDachi async — do not rely on Discord Go Live recordings.",
+            body: "Watch separately and agree on a time to discuss it. AniDachi Async catch-up is planned, not available today.",
           },
           {
             title: "Only need voice + any video?",

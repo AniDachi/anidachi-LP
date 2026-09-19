@@ -20,9 +20,9 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "YouTube Watch Party Chrome Extension (2026) | AniDachi",
+  title: "YouTube Watch Party Chrome Extension (2026)",
   description:
-    "Best YouTube watch party Chrome extension for 2026: AniDachi syncs full youtube.com/watch pages with chat and async catch-up. Install from /extension (zip + Load unpacked) — not a fake Store listing.",
+    "Best YouTube watch party Chrome extension for 2026: AniDachi syncs full youtube.com/watch pages with live chat. Install from /extension (zip + Load unpacked) — not a fake Store listing.",
   alternates: {
     canonical: "/guides/youtube-watch-party-chrome-extension",
   },
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
 
     title: "YouTube Watch Party Chrome Extension",
     description:
-      "Chrome extension for YouTube watch parties — AniDachi sync + async on full watch pages.",
+      "Chrome extension for YouTube watch parties — AniDachi live sync and chat on full watch pages.",
     url: "/guides/youtube-watch-party-chrome-extension",
   },
   twitter: {
@@ -58,7 +58,7 @@ const faq = [
   {
     question: "What is the best YouTube watch party Chrome extension?",
     answer:
-      "For groups that want live sync plus async catch-up on full YouTube watch pages, AniDachi is the strongest fit. Teleparty wins if you already use it for Netflix nights and only need live YouTube. Install path: /extension (download the zip, then Load unpacked).",
+      "For groups that want live sync and personal history on full YouTube watch pages, AniDachi is the strongest fit. Teleparty wins if you already use it for Netflix nights and only need live YouTube. Install path: /extension (download the zip, then Load unpacked).",
   },
   {
     question: "Where do I install the AniDachi extension?",
@@ -146,7 +146,7 @@ export default function YoutubeWatchPartyChromeExtensionPage() {
 
           <strong>
             AniDachi is a YouTube watch party Chrome extension: open a full watch
-            page, create a watchroom, and sync with friends — live or async.
+            page, create a watchroom, and sync with friends — live together.
           </strong>{" "}
           Install from{" "}
           <Link href="/extension">
@@ -175,7 +175,7 @@ export default function YoutubeWatchPartyChromeExtensionPage() {
         </h2>
         <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>Provider-pinned YouTube watchrooms with sync and chat.</li>
-          <li>Async catch-up when schedules do not overlap.</li>
+          <li>Async catch-up is planned, not available today.</li>
           <li>
             Same product for{" "}
             <Link
