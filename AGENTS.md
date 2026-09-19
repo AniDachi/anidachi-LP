@@ -151,6 +151,26 @@ npm --prefix tests/e2e exec playwright install chromium
 npm --prefix tests/e2e run harness:p2p
 ```
 
+## Serena Code Navigation
+
+When Serena is available, use it for symbol definitions and references. Use
+Graphify for broad architecture and normal text search for filenames, text,
+configuration, and exact error messages. Neither replaces source review or tests.
+
+Before the first Serena code query in a task, and after changing worktrees:
+
+- Resolve the current checkout with `git rev-parse --show-toplevel`.
+- Read Serena's `initial_instructions`, activate that exact absolute path, and
+  verify the active project with `get_current_config`. Do not activate by the
+  shared project name or assume the main clone is the task's checkout.
+- Keep Serena limited to reading/navigation. Apply approved changes with normal
+  Codex editing tools. Do not run onboarding or create a second project memory.
+- If references look incomplete, check dependencies and TypeScript readiness,
+  then verify with source/text search. An empty result does not prove no callers.
+
+Portable settings live in `.serena/project.yml`; caches and local overrides are
+ignored. See `docs/serena-codex-setup.md` for host setup and verification.
+
 ## Knowledge Graph
 
 Graphify is the local project knowledge graph. Use it before broad

@@ -1,13 +1,19 @@
-# Graph Report - staging-release-repair-plan  (2026-09-19)
+# Graph Report - AniDachi  (2026-09-19)
 
 ## Corpus Check
-- 1408 files · ~1,407,686 words
+- 1411 files · ~1,411,086 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 13013 nodes · 29050 edges · 824 communities (448 shown, 332 thin omitted)
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 514 edges (avg confidence: 0.85)
-- Token cost: 0 input · 0 output
+- 13053 nodes · 29099 edges · 830 communities (452 shown, 334 thin omitted)
+- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 516 edges (avg confidence: 0.85)
+- Token cost: unavailable (Codex-hosted semantic extraction; token accounting was not supplied).
+
+## Incremental Update Scope
+- Refreshed `AGENTS.md`, `docs/serena-codex-setup.md`, and `.serena/project.yml`.
+- Preserved existing records and community assignments for unrelated sources; clustered new nodes only.
+- Remaining detected backlog outside this update: 102 code files, 13 documents, 3 images, and 3 videos.
+- Existing sensitive-name exclusion: `apps/web/app/ani-tokens.css`.
 
 ## Community Hubs (Navigation)
 - .next/**
@@ -790,6 +796,12 @@
 - apps web app globals css
 - apps web lib google ads tokens.ts
 - apps web lib kreatli crm gmail tokens.ts
+- Serena Code Navigation
+- Serena Project Settings
+- Serena Code Navigation
+- Serena Code Navigation
+- Serena Code Navigation
+- Serena Code Navigation
 
 ## God Nodes (most connected - your core abstractions)
 1. `next/link` - 182 edges
@@ -883,9 +895,10 @@
 - **Risk-Gated Staging Release System** — agents_git_release_flow, readme_development_workflow, docs_development_quality_gates_gate_matrix, docs_new_chat_project_context_git_and_release_flow [INFERRED 0.95]
 - **Safe CRM Cutover** — docs_superpowers_specs_2026_08_23_waitlist_crm_durable_storage_design_five_object_reconciliation, docs_superpowers_specs_2026_08_23_waitlist_crm_durable_storage_design_deployment_order, docs_superpowers_specs_2026_08_23_waitlist_crm_durable_storage_design_rollback_strategy, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_staging_acceptance, docs_superpowers_plans_2026_08_23_waitlist_crm_durable_storage_recovery_production_cutover [INFERRED 0.95]
 - **Schema 3 Staging Activation** — docs_superpowers_plans_2026_09_05_watch_history_crunchyroll_catalog_progress_plan_staging_activation_closeout, docs_superpowers_specs_2026_08_13_watch_history_catalog_progress_design_staging_activation_completion, docs_watch_history_v3_staging_verification_ordered_staging_activation [INFERRED 0.95]
+- **Serena Worktree Navigation Isolation** — docs_serena_codex_setup_absolute_checkout_activation, docs_serena_codex_setup_per_worktree_project_state, docs_serena_codex_setup_worktree_mcp_connection, docs_serena_codex_setup_typescript_subproject_loading [INFERRED 0.95]
 - **Single Active Room Cross-plane Authority** — docs_superpowers_specs_2026_08_23_single_active_room_session_design_durable_cross_room_assignment, docs_superpowers_specs_2026_08_23_single_active_room_session_design_live_room_state, docs_superpowers_specs_2026_08_23_single_active_room_session_design_session_binding [INFERRED 0.95]
 
-## Communities (824 total, 332 thin omitted)
+## Communities (830 total, 334 thin omitted)
 
 ### Community 0 - ".next/**"
 Cohesion: 0.01
@@ -1816,7 +1829,7 @@ Cohesion: 0.15
 Nodes (16): node:zlib, CHECK_ONLY, chunk(), crc32(), encodePng(), OUTPUT_DIR, paethPredictor(), PNG_SIGNATURE (+8 more)
 
 ### Community 233 - "AGENTS.md"
-Cohesion: 0.12
+Cohesion: 0.05
 Nodes (15): Commands, Done Means, Git Flow, graphify, Instruction Layers, Knowledge Graph, Quality Gates, Read First (+7 more)
 
 ### Community 234 - "demo/package.json"
@@ -2679,6 +2692,22 @@ Nodes (3): Build Extension Workflow, Extension Channel, Release Ref Validation
 Cohesion: 0.67
 Nodes (3): Media v3 Host-managed Seat Scenarios, Real-WebRTC Two-browser P2P Harness, Same-machine Evidence Boundary
 
+### Community 824 - "Serena Code Navigation"
+Cohesion: 0.12
+Nodes (16): Each task and worktree, Git and rollback, Host setup, Sources, Verification and limits, Dedicated Local Serena Home, Host Node and Timeouts, Optional Local Code Navigation (+8 more)
+
+### Community 825 - "Serena Project Settings"
+Cohesion: 0.20
+Nodes (10): Read-only No Activation Command, No Memory or Onboarding Modes, TypeScript Language Server Backend, Fixed Navigation Tool List, Six Navigation Tools, Tracked Portable Settings, Ignored Sensitive and Generated Paths, Pinned TypeScript Server Versions (+2 more)
+
+### Community 826 - "Serena Code Navigation"
+Cohesion: 0.40
+Nodes (5): Serena Symbol Navigation, Exact Checkout Activation, Serena Read-only Navigation, Serena Reference Verification, Absolute Checkout Activation
+
+### Community 827 - "Serena Code Navigation"
+Cohesion: 0.50
+Nodes (4): Symbol Smoke Examples, Reference Completeness Limits, TypeScript Subproject Loading, Four TypeScript Workspaces
+
 ## Ambiguous Edges - Review These
 - `Historical September 8 inactive staging delivery identities` → `Historical solo shared and Free history model superseded`  [AMBIGUOUS]
   docs/superpowers/specs/2026-08-06-account-data-history-social-inbox-design.md · relation: conceptually_related_to
@@ -2690,9 +2719,9 @@ Nodes (3): Media v3 Host-managed Seat Scenarios, Real-WebRTC Two-browser P2P Har
   docs/superpowers/plans/2026-07-30-interface-visibility-settings.md · relation: implements
 
 ## Knowledge Gaps
-- **3749 isolated node(s):** `SeoGuideOption`, `SeoGuideRelatedLink`, `SeoGuideStep`, `AccountRequestGate`, `AccountScopeToken` (+3744 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 5225 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **332 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **3764 isolated node(s):** `SeoGuideOption`, `SeoGuideRelatedLink`, `SeoGuideStep`, `ProfilePatchDependencies`, `ProfileUpdate` (+3759 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 5247 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **334 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
@@ -2705,11 +2734,9 @@ _Questions this graph is uniquely positioned to answer:_
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **What is the exact relationship between `Codex-Hosted Semantic Extraction` and `Automated Verification and Staging Artifact Evidence`?**
   _Edge tagged AMBIGUOUS (relation: implements) - confidence is low._
-- **Why does `Room Flow and P2P Flawless Execution Plan` connect `Room Flow and P2P Flawless Execution Plan` to `Explicit Own Seat Restoration`, `Account Data History Social And Inbox Foundation Design`, `Personal History MVP Design`, `Personal history MVP staging delivery packet`, `Production Room Realtime and P2P Hardening Roadmap`, `Host-managed media seats: delivery and verification`?**
-  _High betweenness centrality (0.108) - this node is a cross-community bridge._
+- **Why does `Room Flow and P2P Flawless Execution Plan` connect `Room Flow and P2P Flawless Execution Plan` to `Explicit Own Seat Restoration`, `Account Data History Social And Inbox Foundation Design`, `Personal history MVP staging delivery packet`, `Personal History MVP Design`, `Production Room Realtime and P2P Hardening Roadmap`, `Host-managed media seats: delivery and verification`?**
+  _High betweenness centrality (0.126) - this node is a cross-community bridge._
 - **Why does `react` connect `popup-watch-drawer.tsx` to `.next/**`, `popup-watch-history.test.tsx`, `react`, `chrome-extension-room-demo.tsx`, `extension/test/watch-history-browse.test.ts`, `room-media-defaults.ts`, `overlay-app.tsx`, `privileged-overlay-wiring.test.tsx`, `account-navigation-client.test.ts`, `session.ts`, `getSession`, `PrimaryCheckoutCta`, `invites-client.tsx`, `reaction-pop.tsx`, `invites-client.tsx`, `crm-client.tsx`, `extension-install-hub.tsx`, `[slug]/page.tsx`, `node:assert/strict`, `verifyKreatliCrmSession`, `overlay-unmount-cleanup.test.tsx`, `use-camera-interaction-lock.ts`, `use-room-join-defaults.test.tsx`, `reaction-shortcuts.ts`, `playback-sync-controller.ts`, `overlay-interface-settings.test.tsx`, `contact-messages.ts`, `overlay-room-defaults.tsx`, `popup-app.tsx`, `crunchyroll/player-chrome.ts`, `overlay-interface-settings.tsx`, `popup-people-panel.test.tsx`, `voice-audio-preferences.ts`, `overlay-layout-editor.test.tsx`, `Harness`, `popup-watch-drawer.tsx`, `feature-requests.ts`, `popup-people-panel.test.tsx`, `panel-account-title.tsx`, `overlay-layout-ghost-preview.tsx`, `history-recording-choice.ts`, `watch-library-client.tsx`, `billing.ts`, `watch-history-resume.ts`, `invites-client.tsx`, `invites-client.tsx`, `use-async-demo.test.ts`, `account-inbox-cache.ts`, `getSession`, `room-quota-status-client.ts`, `node:assert/strict`, `nav-bar-client.test.ts`, `overlay-layout-engine.test.ts`, `invites-client.tsx`, `overlay-layout-editor.tsx`, `overlay-using-mocks.tsx`, `watch-library-client.test.tsx`, `chrome-extension-history-demo.tsx`, `account-menu-client.test.ts`, `ghost-cam.ts`, `extension-install-hub.tsx`, `next/link`, `react`?**
-  _High betweenness centrality (0.075) - this node is a cross-community bridge._
-- **Why does `vitest` connect `watch-history-storage.ts` to `overlay-app.tsx`, `auth-client.ts`, `p2p-media.ts`, `room-session-storage.ts`, `diagnostic-log.ts`, `social-client.ts`, `room-invite-notifications.ts`, `content.tsx`, `core/types.ts`, `popup-watch-drawer.tsx`, `room-client.ts`, `room-persistence.ts`, `middleware.ts`, `account.ts`, `reaction-shortcuts.ts`, `playback-sync-controller.ts`, `crunchyroll.content.ts`, `overlay-interface-settings.test.tsx`, `core/types.ts`, `watch-history.ts`, `extension-codes.ts`, `popup-app.tsx`, `crunchyroll/player-chrome.ts`, `crunchyroll/progress.ts`, `overlay-interface-settings.tsx`, `room-departure-retry.ts`, `popup-people-panel.test.tsx`, `voice-audio-preferences.ts`, `Harness`, `api/src/index.ts`, `popup-watch-drawer.tsx`, `privileged-overlay-intent.ts`, `watch-history-controller.ts`, `room-media.ts`, `anidachi-auth/room-lifecycle.ts`, `popup-people-panel.test.tsx`, `history-recording-choice.ts`, `active-room-session-routes.ts`, `internal-web-client.ts`, `watch-history-resume.ts`, `watch-history.ts`, `RoomState`, `src/types.ts`, `room-hibernation-runtime.ts`, `room-departure.ts`, `account-inbox-cache.ts`, `youtube/player-chrome.ts`, `participant-disconnect.ts`, `room-quota-status-client.ts`, `src/types.ts`, `protocol/src/index.ts`, `youtube/adapter.ts`, `bridge-client.ts`, `anidachi-auth/watch-history-grid.ts`, `overlay-layout-editor.tsx`, `background.ts`, `p2p-media.test.ts`, `ghost-cam.ts`, `RoomMediaSession`, `p2p-ice.ts`, `ice-servers.ts`, `popup-watch-history.test.tsx`, `overlay-layout-model.ts`, `extension/test/watch-history-browse.test.ts`, `room-media-defaults.ts`, `catalog.ts`, `privileged-overlay-wiring.test.tsx`, `room-invite-notifications.ts`, `reaction-pop.tsx`, `user-identity.ts`, `use-camera-interaction-lock.ts`, `artwork-select.ts`, `overlay-layout-runtime.ts`, `RecentP2PSignalBuffer`, `room-socket-attachment.ts`, `RoomRateLimiter`, `overlay-room-defaults.tsx`, `api/src/index.ts`, `overlay-layout-editor.test.tsx`, `room-invite-target-status.ts`, `overlay-mount.ts`, `background-privileged-room-route.test.ts`, `release-channel-build.test.ts`, `room-socket-attachment.ts`, `room-state.ts`, `overlay-layout-engine.test.ts`, `ghost-cam-size.ts`, `popup-styles.ts`, `room-media.ts`, `api/src/index.ts`, `use-room-join-defaults.test.tsx`, `room-quota-display.ts`, `account-inbox-cache.ts`, `panel-account-title.tsx`, `overlay-layout-ghost-preview.tsx`, `room-tab-lock.ts`, `overlay-app.tsx`, `overlay-layout.ts`, `overlay-unmount-cleanup.test.tsx`, `node:path`?**
-  _High betweenness centrality (0.062) - this node is a cross-community bridge._
-
-Scoped Codex update: accepted closeout code and three canonical/review documents; historical corpus not fully refreshed. Semantic token usage unavailable.
+  _High betweenness centrality (0.094) - this node is a cross-community bridge._
+- **Why does `OverlayApp()` connect `overlay-app.tsx` to `overlay-layout-model.ts`, `room-media-defaults.ts`, `room-session-storage.ts`, `diagnostic-log.ts`, `social-client.ts`, `watch-history-client.ts`, `content.tsx`, `core/types.ts`, `popup-watch-drawer.tsx`, `user-identity.ts`, `room-client.ts`, `P2PMediaController`, `overlay-unmount-cleanup.test.tsx`, `use-camera-interaction-lock.ts`, `VideoAdapter`, `overlay-layout-runtime.ts`, `reaction-shortcuts.ts`, `playback-sync-controller.ts`, `room-quota-display.ts`, `overlay-interface-settings.test.tsx`, `core/types.ts`, `crunchyroll/player-chrome.ts`, `overlay-interface-settings.tsx`, `voice-audio-preferences.ts`, `watch-history-controller.ts`, `room-invite-target-status.ts`, `history-recording-choice.ts`, `Explicit Own Seat Restoration`, `watch-history-resume.ts`, `room-departure.ts`, `room-tab-lock.ts`, `overlay-app.tsx`, `room-quota-status-client.ts`, `overlay-layout-engine.ts`, `overlay-layout-engine.test.ts`, `RoomClient`, `overlay-layout.ts`?**
+  _High betweenness centrality (0.071) - this node is a cross-community bridge._
