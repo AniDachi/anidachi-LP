@@ -6,7 +6,7 @@ import { HowToJsonLd } from "@/components/json-ld";
 export const metadata: Metadata = {
   title: "How to Watch Anime With a Group — Host Tips for 2026",
   description:
-    "Watch anime together as a bigger crew without chaotic chat. Room caps, co-host duties, async vs live rules, and AniDachi watchrooms on Crunchyroll.",
+    "Watch anime together as a bigger crew with clear chat rules. Room caps, host duties, live session rules, and AniDachi watchrooms on Crunchyroll.",
   alternates: { canonical: "/guides/how-to-watch-anime-with-a-group" },
   openGraph: {
     images: [
@@ -41,7 +41,7 @@ const faq = [
   {
     question: "Should large anime groups watch live or async?",
     answer:
-      "Live works when most people share a start window. Async suites staggered schedules: everyone streams on their own time but keeps spoilers confined to episode-specific threads.",
+      "Live works when most people share a start window. For staggered schedules, watch independently and discuss in a separate labeled channel. AniDachi Async catch-up is planned, not available today.",
   },
   {
     question: "Do co-hosts help when watching anime together as a group?",
@@ -81,8 +81,8 @@ const howToSteps = [
     text: "Decide whether reactions stay in watchroom chat or move to Discord voice with fewer simultaneous speakers.",
   },
   {
-    name: "Start together or flip async",
-    text: "Either countdown live playback or switch to async pacing when attendance splits.",
+    name: "Start together",
+    text: "Start live playback together. Friends who miss a session can catch up independently before the next meeting.",
   },
 ];
 
@@ -167,9 +167,7 @@ export default function HowToWatchAnimeWithAGroupPage() {
           wakes up” plans.
         </p>
         <p className="text-foreground/80 leading-relaxed mb-4">
-          Async groups still benefit from a shared watchroom: reactions stack per
-          episode, late viewers avoid scrolling past spoilers, and hosts can post
-          recap prompts after credits without splitting into fifteen side threads.
+          AniDachi currently supports live rooms. If you watch independently, keep episode-labeled discussions in a separate group chat. Async catch-up with replayed reactions is planned, not available today.
         </p>
 
         <h2
@@ -198,7 +196,7 @@ export default function HowToWatchAnimeWithAGroupPage() {
           Step-by-step with AniDachi
         </h2>
         <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
-          <li>Install AniDachi from pricing / early access (/pricing) on laptops guests use.</li>
+          <li>Open /extension, download the official zip, then Load unpacked in Chrome on laptops guests use.</li>
           <li>Open the agreed Crunchyroll episode and detect the anime.</li>
           <li>Create a watchroom name your club recognizes across invites.</li>
           <li>

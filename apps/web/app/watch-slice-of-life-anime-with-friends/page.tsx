@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getAnimeByGenre } from "@/lib/anime-data";
+import { PRICING_ROOM_SIZE_RANGE } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
-  title: "Watch Slice of Life Anime With Friends (2026) | AniDachi",
+  title: "Watch Slice of Life Anime With Friends (2026)",
   description:
-    "Cozy up with slice of life anime and friends on Crunchyroll — sync live sessions or async watching with AniDachi. A-Silent-Voice, Toradora, Violet Evergarden, and more.",
+    "Cozy up with slice of life anime and friends on Crunchyroll — sync live sessions with AniDachi. A-Silent-Voice, Toradora, Violet Evergarden, and more.",
   alternates: { canonical: "/watch-slice-of-life-anime-with-friends" },
   openGraph: {
     images: [
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
 
     title: "Watch Slice of Life Anime With Friends (2026) | AniDachi",
     description:
-      "Group watchroom guides for slice of life anime on Crunchyroll — synced cozy sessions, low-pressure async catch-up, and shared moments that feel even warmer together.",
+      "Group watchroom guides for slice of life anime on Crunchyroll — synced cozy sessions, live chat, and shared moments that feel even warmer together.",
     url: "/watch-slice-of-life-anime-with-friends",
   },
 };
@@ -34,7 +35,7 @@ const faq = [
   {
     question: "How do I watch slice of life anime with friends online?",
     answer:
-      "Install AniDachi's Chrome extension, open your chosen series on Crunchyroll, and create a watchroom. Share the invite link so your group joins with synced playback. Slice of life anime is uniquely well-suited to async watchrooms — episodes are low-stakes, so members can catch up at their own pace without worrying about spoiling a major twist.",
+      "Install AniDachi's Chrome extension, open your chosen series on Crunchyroll, and create a watchroom. Share the invite link so your group joins with synced playback. Slice of life episodes also suit independent catch-up between live meetings. AniDachi Async catch-up is planned, not available today.",
   },
   {
     question: "What makes slice of life anime good for watch parties?",
@@ -120,9 +121,9 @@ export default function WatchSliceOfLifeAnimeWithFriendsPage() {
       <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           Yes, you can watch slice of life anime with friends using AniDachi&apos;s
-          watchroom on Crunchyroll. Sync cozy sessions in real time or use async
-          catch-up so members join whenever their schedule allows — no cliffhanger
-          pressure. Works for 2–10 people across different time zones, all on Crunchyroll.
+          watchroom on Crunchyroll. Sync cozy sessions in real time today.
+          Async catch-up is coming soon in a later batch for members on different
+          schedules. Works for {PRICING_ROOM_SIZE_RANGE}, all on Crunchyroll.
         </strong>
       </p>
 
@@ -145,9 +146,7 @@ export default function WatchSliceOfLifeAnimeWithFriendsPage() {
         The episodic format also makes slice of life the most async-friendly
         genre for group watching. Each 24-minute episode is largely self-contained,
         so members can catch up across two episodes before the next session
-        without missing any interconnected plot threads. AniDachi&apos;s async
-        mode is ideal here: members post timestamped reactions that let them
-        feel present in the watchroom even when schedules diverge.
+        without missing any interconnected plot threads. AniDachi Async catch-up with replayed reactions is planned. Until then, catch up independently and discuss in a separate chat before the next live session.
       </p>
 
       <h2
@@ -198,11 +197,9 @@ export default function WatchSliceOfLifeAnimeWithFriendsPage() {
         </li>
         <li>
           <span className="font-medium text-foreground">
-            Choose async over live for daily-life series.
+            Keep the schedule relaxed.
           </span>{" "}
-          Slice of life doesn&apos;t require synchronized viewing the way action
-          finales do — let members watch at their own pace and react asynchronously
-          for a low-pressure experience.
+          Meet for a live room when everyone is available, and let anyone who misses a session catch up independently. AniDachi Async catch-up is planned.
         </li>
         <li>
           <span className="font-medium text-foreground">

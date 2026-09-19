@@ -16,14 +16,17 @@ import {
   inferPageTemplateFromPath,
   trackConversion,
 } from "@/lib/conversion-events";
-import type { CheckoutTier, HomeSurveyAnswers } from "@/lib/home-survey";
-import { PRICING_CTA_LABEL } from "@/lib/home-survey";
 import {
+  pricingCheckoutCtaLabel,
+  PRICING_PLAN_MATRIX_COLUMNS,
+  PRICING_PLAN_MATRIX_ROWS,
   PRICING_TIERS,
+  type CheckoutTier,
   type PricingTierId,
 } from "@/lib/pricing-tiers";
-import { PricingSurveyLink } from "@/components/pricing-survey-link";
+import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
 import { HomeSectionHeader } from "@/components/home-section-header";
+import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getSeoAttributionFields } from "@/lib/seo-landing-path";
 
 function FeatureList({ features }: { features: string[] }) {
@@ -32,10 +35,10 @@ function FeatureList({ features }: { features: string[] }) {
       {features.map((feature) => (
         <li key={feature} className="flex items-start gap-3">
           <Check
-            className="mt-0.5 h-5 w-5 flex-shrink-0 text-brand-orange"
+            className="mt-0.5 h-5 w-5 flex-shrink-0 text-ani-progress"
             aria-hidden="true"
           />
-          <span className="text-sm text-foreground/80">{feature}</span>
+          <span className="text-sm text-ani-muted">{feature}</span>
         </li>
       ))}
     </ul>
@@ -43,16 +46,13 @@ function FeatureList({ features }: { features: string[] }) {
 }
 
 export function Pricing({
-  survey,
-  recommendedTier,
-  getCtaLabelForTier,
   headingLevel = 2,
+  showPlanMatrix = false,
 }: {
-  survey?: HomeSurveyAnswers;
-  recommendedTier?: CheckoutTier;
-  getCtaLabelForTier?: (tier: CheckoutTier) => string;
   /** Use 1 on the dedicated /pricing page so the page has a single H1. */
   headingLevel?: 1 | 2;
+  /** Full plan-limits table — keep on `/pricing`, omit from homepage `#pricing`. */
+  showPlanMatrix?: boolean;
 } = {}) {
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -110,9 +110,6 @@ export function Pricing({
       page_template: pageTemplate,
       placement: "pricing_subscribe",
       plan_tier: tier,
-      recommended_tier: recommendedTier ?? "unset",
-      segment: survey?.segment ?? "unset",
-      priority: survey?.priority ?? "unset",
     });
 
     setIsSubmitting(true);
@@ -201,31 +198,24 @@ export function Pricing({
     }
   };
 
-  const isRecommended = (tierId: PricingTierId) =>
-    tierId === "plus" && recommendedTier === "plus";
-
   const isHighlighted = (tierId: PricingTierId) => tierId === "plus";
 
   return (
     <section
       ref={sectionRef}
       id="pricing"
-      className="relative overflow-hidden bg-background py-16 lg:py-20"
+      className="relative overflow-hidden bg-ani-canvas py-16 lg:py-20"
     >
-      <div
-        className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 w-[600px] h-[400px] bg-brand-orange/8 blur-[100px]"
-        aria-hidden
-      />
       <div className="container relative mx-auto px-4">
         <HomeSectionHeader
           titleAs={headingLevel === 1 ? "h1" : "h2"}
-          title="Pre-launch pricing. Locked in forever."
-          description="Friends join free. Host Crunchyroll or YouTube watchrooms without limits — your pre-launch rate stays forever."
+          title="Host more. Install is free."
+          description="Download the Chrome extension first. Free joins any room. Plus and Pro raise your host limits and unlock history recording."
         />
 
         {checkoutError ? (
           <div
-            className="mx-auto mb-8 max-w-lg rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-center text-sm text-destructive"
+            className="mx-auto mb-8 max-w-lg rounded-[12px] border border-ani-error-text/30 bg-[var(--ani-error-bg)] px-4 py-3 text-center text-sm text-ani-error-text"
             role="alert"
           >
             {checkoutError}
@@ -233,54 +223,44 @@ export function Pricing({
         ) : null}
 
         <div className="mx-auto mb-12 grid max-w-6xl items-stretch gap-6 pt-2 md:grid-cols-3 lg:gap-8">
-          {PRICING_TIERS.map((tier, index) => {
+          {PRICING_TIERS.map((tier) => {
             const highlighted = isHighlighted(tier.id);
-            const recommended = isRecommended(tier.id);
             const paidTier = tier.id !== "free" ? tier.id : null;
 
             return (
-              <div
-                key={tier.id}
-                className="flex h-full flex-col animate-fade-in-up"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                {highlighted ? (
-                  <div className="flex flex-1 flex-col rounded-xl p-[2px] animated-gradient-border">
-                    <Card className="flex h-full flex-1 flex-col gap-0 border-0 bg-brand-surface p-6 shadow-xl rounded-[calc(var(--radius-xl)-2px)]">
-                      <TierCardBody
-                        tier={tier}
-                        recommended={recommended}
-                        highlighted={highlighted}
-                        isSubmitting={isSubmitting}
-                        submittingTier={submittingTier}
-                        paidTier={paidTier}
-                        getCtaLabelForTier={getCtaLabelForTier}
-                        onSubscribe={handleSubscribe}
-                      />
-                    </Card>
-                  </div>
-                ) : (
-                  <Card className="flex h-full flex-1 flex-col gap-0 border border-brand-border bg-brand-surface p-6 shadow-xl transition-all duration-300 hover:border-brand-orange/40 hover:shadow-lg">
-                    <TierCardBody
-                      tier={tier}
-                      recommended={recommended}
-                      highlighted={highlighted}
-                      isSubmitting={isSubmitting}
-                      submittingTier={submittingTier}
-                      paidTier={paidTier}
-                      getCtaLabelForTier={getCtaLabelForTier}
-                      onSubscribe={handleSubscribe}
-                    />
-                  </Card>
-                )}
+              <div key={tier.id} className="flex h-full flex-col">
+                <Card
+                  className={`flex h-full flex-1 flex-col gap-0 rounded-[20px] border bg-ani-panel p-6 shadow-none ${
+                    highlighted
+                      ? "border-ani-control-border"
+                      : "border-ani-line"
+                  }`}
+                >
+                  <TierCardBody
+                    tier={tier}
+                    highlighted={highlighted}
+                    isSubmitting={isSubmitting}
+                    submittingTier={submittingTier}
+                    paidTier={paidTier}
+                    onSubscribe={handleSubscribe}
+                  />
+                </Card>
               </div>
             );
           })}
         </div>
 
-        <p className="text-center mt-8">
-          <PricingSurveyLink />
-        </p>
+        {showPlanMatrix ? (
+          <div className="mx-auto max-w-4xl">
+            <h3 className="mb-4 text-center text-lg font-semibold tracking-[-0.02em] text-ani-text">
+              Plan limits at a glance
+            </h3>
+            <ResponsiveCompareTable
+              columns={[...PRICING_PLAN_MATRIX_COLUMNS]}
+              rows={PRICING_PLAN_MATRIX_ROWS}
+            />
+          </div>
+        ) : null}
       </div>
     </section>
   );
@@ -288,29 +268,20 @@ export function Pricing({
 
 function TierCardBody({
   tier,
-  recommended,
   highlighted,
   isSubmitting,
   submittingTier,
   paidTier,
-  getCtaLabelForTier,
   onSubscribe,
 }: {
   tier: (typeof PRICING_TIERS)[number];
-  recommended: boolean;
   highlighted: boolean;
   isSubmitting: boolean;
   submittingTier: CheckoutTier | null;
   paidTier: CheckoutTier | null;
-  getCtaLabelForTier?: (tier: CheckoutTier) => string;
   onSubscribe: (tier: CheckoutTier) => void;
 }) {
-  const badgeLabel =
-    tier.id === "plus"
-      ? recommended
-        ? "Recommended"
-        : "Most Popular"
-      : null;
+  const badgeLabel = tier.id === "plus" ? "Most Popular" : null;
 
   return (
     <>
@@ -324,8 +295,8 @@ function TierCardBody({
           <Badge
             className={`px-5 py-1.5 text-sm font-semibold ${
               highlighted
-                ? "bg-brand-orange text-primary-foreground shadow-md"
-                : "border border-brand-orange/40 bg-brand-orange/10 text-brand-orange"
+                ? "rounded-full border-transparent bg-ani-primary text-ani-on-primary shadow-none"
+                : "rounded-full border border-ani-control-border bg-transparent text-ani-text"
             }`}
           >
             {highlighted ? (
@@ -339,19 +310,19 @@ function TierCardBody({
       </div>
 
       <CardHeader className="space-y-2 p-0 pb-5 text-center">
-        <CardTitle className="text-2xl font-bold text-foreground">
+        <CardTitle className="text-2xl font-semibold text-ani-text">
           {tier.label}
         </CardTitle>
-        <p className="min-h-[4.5rem] text-sm font-medium leading-snug text-brand-orange-bright">
+        <p className="min-h-[4.5rem] text-sm font-medium leading-snug text-ani-muted">
           {tier.audience}
         </p>
         <div className="flex items-baseline justify-center pt-1">
-          <span className="text-5xl font-bold text-foreground">{tier.priceDisplay}</span>
+          <span className="text-5xl font-semibold text-ani-text">{tier.priceDisplay}</span>
           {tier.priceSuffix ? (
-            <span className="ml-1 text-lg text-foreground/60">{tier.priceSuffix}</span>
+            <span className="ml-1 text-lg text-ani-muted">{tier.priceSuffix}</span>
           ) : null}
         </div>
-        <CardDescription className="min-h-[4.5rem] text-base text-foreground/70">
+        <CardDescription className="min-h-[4.5rem] text-base text-ani-muted">
           {tier.summary}
         </CardDescription>
       </CardHeader>
@@ -362,36 +333,29 @@ function TierCardBody({
         <div className="mt-auto pt-2">
           {paidTier ? (
             <Button
-              className={`w-full py-4 text-lg font-semibold disabled:opacity-60 ${
-                tier.id === "plus"
-                  ? "bg-brand-orange text-primary-foreground shadow-lg glow-orange transition-all duration-300 hover:bg-brand-orange-deep hover:glow-orange-lg"
-                  : "border-brand-orange/50 text-brand-orange transition-all duration-300 hover:border-brand-orange hover:bg-brand-orange hover:text-primary-foreground"
-              }`}
-              variant={tier.id === "plus" ? "default" : "outline"}
+              className="w-full"
+              variant={tier.id === "plus" ? "cream" : "creamOutline"}
+              size="control"
               onClick={() => onSubscribe(paidTier)}
               disabled={isSubmitting}
             >
               {isSubmitting && submittingTier === paidTier
                 ? "Redirecting to Stripe…"
-                : (getCtaLabelForTier?.(paidTier) ?? PRICING_CTA_LABEL)}
+                : pricingCheckoutCtaLabel(paidTier)}
             </Button>
           ) : (
-            <Button
-              asChild
-              variant="outline"
-              className="w-full border-brand-border py-4 text-lg font-semibold text-foreground transition-all duration-300 hover:border-brand-orange hover:bg-brand-orange/10 hover:text-brand-orange"
-            >
-              <Link href="/login">Create free account</Link>
+            <Button asChild variant="cream" size="control" className="w-full">
+              <Link href={INSTALL_HUB_PATH}>{INSTALL_CTA_LABEL}</Link>
             </Button>
           )}
-          <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-foreground/50">
+          <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-ani-muted">
             {paidTier ? (
               <>
                 <Lock className="h-3.5 w-3.5" aria-hidden="true" />
                 Secured by Stripe
               </>
             ) : (
-              "No credit card required"
+              "Install the extension, then sign in"
             )}
           </p>
         </div>

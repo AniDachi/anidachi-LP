@@ -8,22 +8,15 @@ import {
   Users,
 } from "lucide-react";
 import { AccountPageHeader } from "./account-ui";
-import { AccountWaitlistCard } from "./account-waitlist-card";
 
 export function AccountOverview({
   friendCount,
   groupCount,
   inviteCount,
-  waitlist,
 }: {
   friendCount: number;
   groupCount: number;
   inviteCount: number;
-  waitlist: {
-    waitlistPosition: number;
-    referralLink: string;
-    referralCount: number;
-  } | null;
 }) {
   return (
     <div className="ac-page ac-overview">
@@ -99,19 +92,6 @@ export function AccountOverview({
           <ArrowRight aria-hidden />
         </Link>
       </div>
-      {waitlist ? (
-        <AccountWaitlistCard {...waitlist} />
-      ) : (
-        <section className="ac-referral">
-          <div>
-            <h2>Early access</h2>
-            <p>Join the waitlist and see your place in line.</p>
-          </div>
-          <Link href="/join" className="ac-button">
-            Join the waitlist <ArrowRight size={16} aria-hidden />
-          </Link>
-        </section>
-      )}
     </div>
   );
 }

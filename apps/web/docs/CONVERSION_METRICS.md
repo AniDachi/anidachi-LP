@@ -6,11 +6,16 @@
 |--------|------|
 | `cta_impression` | CTA block entered viewport (or hero on mount) |
 | `cta_click` | User clicked a CTA that routes to `/pricing` (or nav Pricing) |
+| `install_hub_view` | `/extension` loaded |
+| `extension_zip_download` | Official zip download. Client click + `/api/extension/download` GET (same `insert_id` so Amplitude dedupes). Also sent to Amplitude HTTP from the download route. |
 | `checkout_session_started` | User clicked “Start paid plan” on the paid tier; API request begins |
 | `checkout_redirect_success` | API returned a Stripe `url`; redirect is about to happen |
 | `checkout_error` | API error, missing URL, or network exception |
 
 Legacy `subscribe_click` was replaced by the events above for the primary checkout path.
+
+The site does not detect an installed extension. Downloads and clicks do not
+prove installation; the former `extension_detected` event is no longer emitted.
 
 ## Parameters (all string-friendly for GA4)
 

@@ -23,7 +23,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Can You Screen Share YouTube on Discord? Better Sync (2026) | AniDachi",
+  title: "Can You Screen Share YouTube on Discord? Better Sync (2026)",
   description:
     "Can you screen share YouTube on Discord? Yes — but sync a YouTube watch party instead. AniDachi keeps full watch pages aligned; Discord stays for voice. Start free at pricing.",
   alternates: {
@@ -68,7 +68,7 @@ const faq = [
   {
     question: "Does AniDachi replace Discord?",
     answer:
-      "No. Keep Discord for voice. AniDachi owns the YouTube watchroom — playback sync, chat, and optional async catch-up.",
+      "No. Keep Discord for voice. AniDachi owns the YouTube watchroom — playback live sync, chat, and personal history.",
   },
   {
     question: "How does AniDachi pricing compare to Discord screen share?",
@@ -172,10 +172,10 @@ export default function CanYouScreenShareYoutubeOnDiscordPage() {
       <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
         <li>
           Start from{" "}
-          <Link href="/pricing" className="text-brand-orange hover:underline">
-            /pricing
-          </Link>{" "}
-          for AniDachi early access.
+          <Link href="/extension" className="text-brand-orange hover:underline">
+            the AniDachi install page
+          </Link>
+          : download the official zip, then Load unpacked in Chrome.
         </li>
         <li>Open the same full youtube.com/watch page on every device (not Shorts or embeds).</li>
         <li>Create a watchroom and share the invite.</li>

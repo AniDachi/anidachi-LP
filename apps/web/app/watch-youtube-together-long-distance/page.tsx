@@ -9,9 +9,9 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "How to Watch YouTube Together Long Distance (2026) | AniDachi",
+  title: "How to Watch YouTube Together Long Distance (2026)",
   description:
-    "YouTube has no native watch party. Long-distance couples use AniDachi for synced YouTube watchrooms (live or async) — or Watch2Gether/Teleparty for free live-only sync.",
+    "For desktop Chrome watch parties, long-distance couples use AniDachi for synced YouTube watchrooms (live together) — or Watch2Gether/Teleparty for free live-only sync.",
   alternates: { canonical: "/watch-youtube-together-long-distance" },
   openGraph: {
     images: [
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 
     title: "How to Watch YouTube Together Long Distance | AniDachi",
     description:
-      "Sync YouTube with your long-distance partner — AniDachi watchrooms, free live tools, and async catch-up when schedules don’t match.",
+      "Sync YouTube with your long-distance partner — AniDachi watchrooms, other live tools, and scheduling tips.",
     url: "/watch-youtube-together-long-distance",
   },
   twitter: {
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Watch YouTube Together Long Distance",
     description:
-      "AniDachi YouTube watchrooms for LDR couples — live sync or async reactions.",
+      "AniDachi YouTube watchrooms for LDR couples — live sync reactions.",
   },
 };
 
@@ -41,22 +41,22 @@ const faq = [
   {
     question: "How do I watch YouTube together long distance?",
     answer:
-      "Install the AniDachi Chrome extension, open a YouTube watch page, create a watchroom, and share the invite link. Playback syncs for live nights; async mode lets each person watch when free and leave timestamped reactions. Watch2Gether and Teleparty remain free live-only options.",
+      "Install the AniDachi Chrome extension, open a YouTube watch page, create a watchroom, and share the invite link. Playback syncs for live nights. Async catch-up with replayed reactions is planned, not available today. Watch2Gether and Teleparty remain free live-only options.",
   },
   {
     question: "Does YouTube have a watch party or co-watching feature?",
     answer:
-      "No — as of 2026, YouTube does not have a native watch party or co-watching feature. You need a third-party tool like AniDachi, Watch2Gether, or Teleparty to keep playback aligned.",
+      "YouTube supports SharePlay on iPhone and iPad, started by a Premium member. For desktop Chrome, use a sync tool such as AniDachi, Watch2Gether, or Teleparty.",
   },
   {
     question: "Can long-distance couples watch YouTube asynchronously?",
     answer:
-      "Yes with AniDachi. Create a YouTube watchroom, watch on your own schedule, and leave reactions tied to the video so your partner isn’t spoiled. Most free YouTube sync tools (Watch2Gether, Teleparty) are live-only.",
+      "Not in AniDachi yet. Current rooms sync live playback; Async catch-up with replayed reactions is planned. For different schedules, watch independently and discuss later.",
   },
   {
     question: "What is the best free way to watch YouTube together long distance?",
     answer:
-      "Watch2Gether is the best free live-only option (paste a URL, share the room). For video calling alongside the watch, pair it with Discord voice or FaceTime. AniDachi adds async catch-up and a durable watchroom when you outgrow one-off rooms.",
+      "Watch2Gether is the best free live-only option (paste a URL, share the room). For video calling alongside the watch, pair it with Discord voice or FaceTime. AniDachi offers live rooms and personal history on Plus or Pro. Async catch-up is planned.",
   },
   {
     question: "Can we watch YouTube without an extension?",
@@ -81,7 +81,7 @@ const tocHeadings: TocHeading[] = [
 const howToSteps = [
   {
     name: "Install AniDachi",
-    text: "Add the AniDachi Chrome extension and open early access from /pricing if you are not already set up.",
+    text: "Open /extension, download the official zip, then Load unpacked in Chrome.",
   },
   {
     name: "Open a YouTube video",
@@ -96,8 +96,8 @@ const howToSteps = [
     text: "Send the link via text, Discord, or email so they join on their own YouTube session.",
   },
   {
-    name: "Watch live or async",
-    text: "Sync playback for a live date night, or use async mode to leave reactions when schedules don’t overlap.",
+    name: "Watch live together",
+    text: "Sync playback for a live date night. Arrange another meeting if schedules do not overlap; Async catch-up is planned.",
   },
 ];
 
@@ -106,7 +106,7 @@ export default function WatchYoutubeTogetherLongDistancePage() {
     <>
       <HowToJsonLd
         name="How to watch YouTube together long distance"
-        description="Set up an AniDachi YouTube watchroom for live sync or async catch-up with a long-distance partner."
+        description="Set up an AniDachi YouTube watchroom for live sync catch-up with a long-distance partner."
         steps={howToSteps}
       />
       <SeoPageLayout
@@ -119,7 +119,7 @@ export default function WatchYoutubeTogetherLongDistancePage() {
           },
         ]}
         title="How to Watch YouTube Together Long Distance"
-        description="Sync YouTube with your long-distance partner — AniDachi watchrooms, free live tools, and async catch-up."
+        description="Sync YouTube with your long-distance partner — AniDachi watchrooms, other live tools, and scheduling tips."
         url="/watch-youtube-together-long-distance"
         datePublished="2026-06-23"
         dateModified="2026-07-25"
@@ -141,8 +141,7 @@ export default function WatchYoutubeTogetherLongDistancePage() {
         <p className="text-xl text-foreground/80 leading-relaxed mb-8">
           <strong>
             YouTube has no built-in watch party. The best long-distance setup is
-            an AniDachi YouTube watchroom — live sync when you are both free,
-            or async reactions when time zones do not line up.
+            an AniDachi YouTube watchroom with live sync when you are both free. Async catch-up is planned.
           </strong>{" "}
           Watch2Gether and Teleparty remain solid free options for live-only
           nights. Pair any tool with Discord or FaceTime if you want voice.
@@ -156,14 +155,11 @@ export default function WatchYoutubeTogetherLongDistancePage() {
         </h2>
         <p className="text-foreground/80 leading-relaxed mb-4">
           AniDachi’s Chrome extension runs on full YouTube watch pages and creates
-          a shared watchroom with synced playback and chat. Unlike most free
-          YouTube party tools, you can also watch asynchronously: each person
-          finishes the video on their schedule and leaves reactions without
-          spoiling the other.
+          a shared watchroom with synced playback and chat. Each viewer watches from their own YouTube player. Personal history is available on Plus or Pro. Async catch-up with replayed reactions is planned, not available today.
         </p>
         <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>Works on youtube.com/watch pages (not Shorts, embeds, or feeds).</li>
-          <li>Live sync for date nights; async catch-up for staggered schedules.</li>
+          <li>Live sync for date nights; Async catch-up is planned.</li>
           <li>
             Same product you use for{" "}
             <Link
@@ -177,8 +173,8 @@ export default function WatchYoutubeTogetherLongDistancePage() {
         </ul>
         <p className="text-foreground/80 leading-relaxed mb-8">
           Start from{" "}
-          <Link href="/pricing" className="text-brand-orange hover:underline">
-            pricing / early access
+          <Link href="/extension" className="text-brand-orange hover:underline">
+            the AniDachi install page
           </Link>{" "}
           or the full{" "}
           <Link
@@ -214,7 +210,7 @@ export default function WatchYoutubeTogetherLongDistancePage() {
           Watch2Gether (w2g.tv) runs in the browser with no extension. Create a
           room, paste a YouTube URL, share the link, and playback stays aligned
           for live sessions. Text chat is built in; use Discord or FaceTime for
-          voice. It does not offer AniDachi-style async watchrooms.
+          voice. AniDachi also requires viewers to be online together for live sync.
         </p>
         <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
           <li>
@@ -264,10 +260,7 @@ export default function WatchYoutubeTogetherLongDistancePage() {
           Different time zones — async catch-up
         </h2>
         <p className="text-foreground/80 leading-relaxed mb-4">
-          Free YouTube party tools expect you online together. With AniDachi,
-          create the watchroom once, watch when you can, and leave reactions for
-          your partner. For anime series on Crunchyroll, the same async pattern
-          is covered in{" "}
+          AniDachi live rooms also need you online together. If schedules do not overlap, watch independently and discuss later. Async catch-up is planned. For scheduling advice, see{" "}
           <Link
             href="/timezone-friendly-anime-watch-parties"
             className="text-brand-orange hover:underline"
@@ -340,8 +333,8 @@ export default function WatchYoutubeTogetherLongDistancePage() {
             </Link>
           </li>
           <li>
-            <Link href="/pricing" className="hover:underline">
-              Pricing and early access
+            <Link href="/extension" className="hover:underline">
+              AniDachi install page
             </Link>
           </li>
         </ul>

@@ -11,9 +11,9 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Netflix Party for YouTube — Watch YouTube Together (2026) | AniDachi",
+  title: "Netflix Party for YouTube — Watch YouTube Together (2026)",
   description:
-    "Searching “Netflix Party YouTube”? Teleparty (formerly Netflix Party) can sync YouTube live. AniDachi adds YouTube watchrooms with async catch-up.",
+    "Searching “Netflix Party YouTube”? Teleparty (formerly Netflix Party) can sync YouTube live. AniDachi adds YouTube live watchrooms and personal history.",
   alternates: { canonical: "/guides/netflix-party-for-youtube" },
   openGraph: {
     images: [
@@ -47,12 +47,12 @@ const faq = [
   {
     question: "Does Netflix Party work on YouTube?",
     answer:
-      "Teleparty (the product formerly called Netflix Party) can sync YouTube when everyone is online together. It does not offer AniDachi-style async YouTube watchrooms.",
+      "Teleparty (the product formerly called Netflix Party) can sync YouTube when everyone is online together. AniDachi also offers live rooms today; Async catch-up is planned.",
   },
   {
     question: "What should I use instead of Netflix Party for YouTube?",
     answer:
-      "For live-only free sync, Teleparty or Watch2Gether. For YouTube watchrooms with async catch-up and the same tool you use for Crunchyroll, choose AniDachi.",
+      "For live-only free sync, Teleparty or Watch2Gether. For YouTube live watchrooms and personal history and the same tool you use for Crunchyroll, choose AniDachi.",
   },
   {
     question: "How does AniDachi pricing compare to Teleparty?",
@@ -113,8 +113,8 @@ export default function NetflixPartyForYoutubePage() {
         </strong>{" "}
         AniDachi does not sync Netflix. It does host full YouTube and Crunchyroll
         watchrooms. Start at{" "}
-        <Link href="/pricing" className="text-brand-orange hover:underline">
-          pricing / early access
+        <Link href="/extension" className="text-brand-orange hover:underline">
+          the AniDachi install page
         </Link>
         .
       </p>
@@ -146,8 +146,7 @@ export default function NetflixPartyForYoutubePage() {
       </h2>
       <ul className="list-disc pl-6 space-y-3 text-foreground/80 mb-8">
         <li>
-          <strong>AniDachi</strong> — YouTube watchrooms with live sync and async
-          catch-up; same extension as{" "}
+          <strong>AniDachi</strong> — YouTube watchrooms with live sync and personal history; same extension as{" "}
           <Link
             href="/watch-crunchyroll-together"
             className="text-brand-orange hover:underline"

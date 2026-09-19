@@ -8,7 +8,7 @@ export const homeFAQ = [
   {
     question: "What streaming services does AniDachi support?",
     answer:
-      "AniDachi’s Chrome extension supports full watchrooms on Crunchyroll and YouTube — synced playback, chat, and async catch-up on each person’s own stream. Shorts, embeds, and homepage feeds are not supported. Netflix, Disney+, and other services are not supported yet.",
+      "AniDachi’s Chrome extension supports full watchrooms on Crunchyroll and YouTube — live synced playback and chat on each person’s own stream today. Async catch-up is coming soon in a later batch. Shorts, embeds, and homepage feeds are not supported. Netflix, Disney+, and other services are not supported yet.",
   },
   {
     question: "Does Crunchyroll have a built-in watch party feature?",
@@ -18,17 +18,17 @@ export const homeFAQ = [
   {
     question: "How do I watch Crunchyroll with friends using AniDachi?",
     answer:
-      "Install the AniDachi Chrome extension, navigate to any anime on Crunchyroll, click 'Detect Anime,' then create a watchroom. Share the invite link with friends — everyone watches in sync with built-in chat.",
+      "Install AniDachi in desktop Chrome and open an episode on Crunchyroll. AniDachi detects the title automatically. Open the AniDachi panel, click 'Create room,' and share the invite link. Each friend needs the extension and access to the episode on their own Crunchyroll account.",
   },
   {
     question: "Can I watch YouTube together with AniDachi?",
     answer:
-      "Yes. Open a full youtube.com/watch page in desktop Chrome, create a YouTube watchroom, and share the invite. Friends join on their own YouTube sessions for live sync or async catch-up. Shorts, embeds, and the mobile apps are not supported.",
+      "Yes. Open a full youtube.com/watch page in desktop Chrome, create a YouTube watchroom, and share the invite. Friends join on their own YouTube sessions for live sync today. Async catch-up is coming soon in a later batch. Shorts, embeds, and the mobile apps are not supported.",
   },
   {
     question: "Can I watch anime with friends asynchronously?",
     answer:
-      "Yes! AniDachi is built for asynchronous group watching. Create a watchroom, mark episodes as you watch them, and leave reactions or comments for friends to see when they catch up — no need to be online at the same time.",
+      "Not yet — async catch-up is coming soon in a later batch. Today, AniDachi is built for live watchrooms: create a room, sync playback, and chat while everyone is online together. When async ships, you’ll be able to mark episodes and leave reactions for friends who catch up later.",
   },
   {
     question: "Do all my friends need a Crunchyroll account?",
@@ -50,11 +50,11 @@ export const homeFAQ = [
   {
     question: "How is AniDachi different from Teleparty or Crunchyroll Party?",
     answer:
-      "Unlike Teleparty or Crunchyroll Party, AniDachi supports asynchronous watching — friends don't need to be online at the same time. AniDachi also covers Crunchyroll and YouTube watchrooms, auto-detects titles, tracks individual watch progress, and lets you leave reactions and comments that friends see later.",
+      "AniDachi covers Crunchyroll and YouTube watchrooms, auto-detects titles, and tracks personal watch progress on paid plans. Unlike Teleparty or Crunchyroll Party, async catch-up is planned for a later batch so friends won’t need to be online at the same time when that ships. Live sync and on-player overlay are available now.",
   },
   {
     question: "Does AniDachi work on mobile?",
     answer:
-      "The Chrome extension requires a desktop browser. The watchroom chat and progress tracking will be accessible on mobile via the web app in a future update.",
+      "You can access your account and manage saved watch history on the website from your phone. Live watchrooms require desktop Chrome with the AniDachi extension installed.",
   },
 ];

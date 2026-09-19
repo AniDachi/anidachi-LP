@@ -20,6 +20,7 @@ const EXCLUDED_URL_PATHS = new Set([
   "/join/complete",
   "/friends",
   "/extension/connect",
+  "/extension",
 ]);
 
 function isDynamicSegment(segment: string): boolean {

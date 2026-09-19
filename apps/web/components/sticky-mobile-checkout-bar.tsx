@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { PRICING_CTA_LABEL } from "@/lib/home-survey";
+import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
 import { trackConversion, type PageTemplateId } from "@/lib/conversion-events";
-import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
 
 export function StickyMobileCheckoutBar({
   pagePath,
@@ -14,7 +13,6 @@ export function StickyMobileCheckoutBar({
   pagePath: string;
   pageTemplate: PageTemplateId;
 }) {
-  const { openSurvey, isOpen: surveyOpen } = usePlanSurvey();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -27,35 +25,29 @@ export function StickyMobileCheckoutBar({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  if (surveyOpen) return null;
-
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-brand-border bg-background/95 px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.3)] backdrop-blur-xl md:hidden pb-[max(0.75rem,env(safe-area-inset-bottom))] transition-transform duration-200"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-ani-line bg-ani-canvas px-4 py-3 motion-safe:transition-transform motion-safe:duration-[180ms] md:hidden pb-[max(0.75rem,env(safe-area-inset-bottom))]"
       role="region"
-      aria-label="Quick checkout"
+      aria-label="Install AniDachi on desktop"
       aria-hidden={!visible}
+      inert={!visible}
       style={{ transform: visible ? "translateY(0)" : "translateY(100%)" }}
     >
       <Link
-        href="/pricing"
-        className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-brand-orange px-4 text-base font-semibold text-primary-foreground transition-colors hover:bg-brand-orange-deep glow-orange"
-        onClick={(e) => {
-          e.preventDefault();
+        href={INSTALL_HUB_PATH}
+        className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-ani-primary px-4 text-[13px] font-semibold text-ani-on-primary transition-colors duration-[180ms] hover:bg-ani-primary-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ani-focus"
+        onClick={() => {
           trackConversion("cta_click", {
             page_path: pagePath,
             page_template: pageTemplate,
             placement: "content_mid",
             cta_variant: "sticky_mobile_bar",
           });
-          openSurvey({
-            placement: "content_mid",
-            ctaVariant: "sticky_mobile_bar",
-          });
         }}
       >
-        {PRICING_CTA_LABEL}
-        <ArrowRight className="h-5 w-5" aria-hidden="true" />
+        {INSTALL_CTA_LABEL}
+        <ArrowRight className="h-4 w-4" aria-hidden="true" />
       </Link>
     </div>
   );

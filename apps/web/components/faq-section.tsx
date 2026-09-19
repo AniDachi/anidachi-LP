@@ -13,16 +13,27 @@ export function FAQSection({
   title = "Frequently asked questions",
   questions,
   defaultOpenIndexes = [],
+  compact = false,
 }: {
   title?: string;
   questions: FAQItem[];
   defaultOpenIndexes?: number[];
+  compact?: boolean;
 }) {
   return (
-    <section id="faq" className="bg-background py-16 lg:py-24">
-      <div className="container mx-auto max-w-3xl px-4">
-        <HomeSectionHeader title={title} />
-        <div className="divide-y divide-brand-border/60 overflow-hidden rounded-2xl border border-brand-border/80 bg-brand-surface">
+    <section
+      id="faq"
+      className={compact ? "bg-ani-canvas pt-12" : "bg-ani-canvas py-16 lg:py-24"}
+    >
+      <div className={compact ? undefined : "container mx-auto max-w-3xl px-4"}>
+        {compact ? (
+          <h2 className="mb-4 text-lg font-semibold tracking-[-0.02em] text-ani-text">
+            {title}
+          </h2>
+        ) : (
+          <HomeSectionHeader title={title} />
+        )}
+        <div className="divide-y divide-ani-line overflow-hidden rounded-[20px] border border-ani-line">
           {questions.map((q, i) => (
             <FAQAccordion
               key={i}
@@ -47,20 +58,20 @@ function FAQAccordion({
   return (
     <div>
       <button
-        className="group flex min-h-12 w-full items-center justify-between gap-4 px-5 py-4 text-left font-medium tracking-[-0.01em] text-foreground transition-colors hover:bg-brand-orange/[0.06]"
+        className="group flex min-h-12 w-full items-center justify-between gap-4 px-5 py-4 text-left font-medium tracking-[-0.01em] text-ani-text motion-safe:transition-colors motion-safe:duration-[160ms] hover:bg-ani-hover"
         onClick={() => setOpen(!open)}
         aria-expanded={open}
       >
         <span className="text-pretty">{question}</span>
         <ChevronDown
-          className={`h-5 w-5 shrink-0 text-brand-orange transition-transform duration-200 ease-out ${
+          className={`h-5 w-5 shrink-0 text-ani-progress motion-safe:transition-transform motion-safe:duration-[180ms] ${
             open ? "rotate-180" : ""
           }`}
           aria-hidden="true"
         />
       </button>
       {open ? (
-        <div className="px-5 pb-5 text-sm leading-relaxed text-foreground/70">
+        <div className="px-5 pb-5 text-sm leading-relaxed text-ani-muted">
           {answer}
         </div>
       ) : null}

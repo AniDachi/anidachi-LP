@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getAnimeByGenre } from "@/lib/anime-data";
+import { PRICING_ROOM_SIZE_RANGE } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
-  title: "Watch Fantasy Anime With Friends (2026) | AniDachi",
+  title: "Watch Fantasy Anime With Friends (2026)",
   description:
-    "AniDachi lets you watch fantasy anime with friends on Crunchyroll in sync or async. Share every world-building reveal with your group. Frieren, Hunter x Hunter, Made in Abyss, and more.",
+    "AniDachi lets you watch fantasy anime with friends on Crunchyroll in live sync. Share every world-building reveal with your group. Frieren, Hunter x Hunter, Made in Abyss, and more.",
   alternates: { canonical: "/watch-fantasy-anime-with-friends" },
   openGraph: {
     images: [
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
 
     title: "Watch Fantasy Anime With Friends (2026) | AniDachi",
     description:
-      "Group watchroom guides for fantasy anime on Crunchyroll — synced playback, spoiler-safe reactions, and async catch-up for epic adventures.",
+      "Group watchroom guides for fantasy anime on Crunchyroll — synced playback and live reactions for epic adventures.",
     url: "/watch-fantasy-anime-with-friends",
   },
 };
@@ -34,12 +35,12 @@ const faq = [
   {
     question: "How do I watch fantasy anime with friends online?",
     answer:
-      "Install AniDachi's Chrome extension, open your chosen fantasy series on Crunchyroll, and create a watchroom. Share the invite link with your group for synced playback or async catch-up. Fantasy series often have dense lore — AniDachi's episode-scoped chat keeps theory threads organized without spoiling members who are behind.",
+      "Install AniDachi's Chrome extension, open your chosen fantasy series on Crunchyroll, and create a watchroom. Share the invite link for live synced playback. Fantasy series often have dense lore: agree on a safe episode boundary before discussing theories. Async catch-up is planned.",
   },
   {
     question: "What makes fantasy anime good for watch parties?",
     answer:
-      "Fantasy worlds introduce rules, magic systems, and geography that groups discover together — every new kingdom, spell, or prophecy becomes a shared theory thread. Unlike pure action, fantasy pacing often includes downtime for character bonding that works well in async watchrooms where members catch up at different speeds.",
+      "Fantasy worlds introduce rules, magic systems, and geography that groups discover together — every new kingdom, spell, or prophecy becomes a shared theory thread. Unlike pure action, fantasy pacing often includes downtime for character bonding that works well with independent catch-up between live sessions.",
   },
   {
     question: "Can I watch fantasy anime on Crunchyroll with friends?",
@@ -54,7 +55,7 @@ const faq = [
   {
     question: "How do we avoid spoilers watching fantasy anime as a group?",
     answer:
-      "Pin a safe episode number in your AniDachi watchroom so nobody posts reactions past the furthest-behind member. Fantasy series like Hunter x Hunter and Made in Abyss have major mid-arc reveals that lose impact when spoiled — use episode-scoped chat and react to feelings rather than plot outcomes.",
+      "Agree on a safe episode number before each live session. Fantasy series like Hunter x Hunter and Made in Abyss have major mid-arc reveals: keep later-episode theories in a separate chat. AniDachi does not automatically hide spoilers or create episode threads.",
   },
 ];
 
@@ -105,10 +106,10 @@ export default function WatchFantasyAnimeWithFriendsPage() {
       <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           Yes, you can watch fantasy anime with friends using AniDachi&apos;s
-          watchroom on Crunchyroll. Sync playback in real time or use async
-          catch-up so members who binge ahead don&apos;t spoil the next kingdom
-          reveal for everyone else. Works for 2–10 people across different time
-          zones, all on Crunchyroll.
+          watchroom on Crunchyroll. Sync playback in real time today; async
+          catch-up is coming soon in a later batch so members who binge ahead
+          don&apos;t spoil the next kingdom reveal for everyone else. Works for{" "}
+          {PRICING_ROOM_SIZE_RANGE}, all on Crunchyroll.
         </strong>
       </p>
 
@@ -181,16 +182,15 @@ export default function WatchFantasyAnimeWithFriendsPage() {
         </li>
         <li>
           <span className="font-medium text-foreground">
-            Agree on live or async pacing.
+            Choose a shared start time.
           </span>{" "}
-          Live for movie nights and arc finales; async for long epics like Hunter
-          x Hunter where members watch at different speeds.
+          Meet live for movie nights and arc finales. Let members catch up independently between sessions; AniDachi Async catch-up is planned.
         </li>
         <li>
           <span className="font-medium text-foreground">
-            Pin your spoiler boundary.
+            Agree on a spoiler boundary.
           </span>{" "}
-          Set the safe episode number so nobody spoils the next magic system
+          Agree on a safe episode number in your group chat before discussing the next magic system
           reveal or character twist.
         </li>
       </ol>

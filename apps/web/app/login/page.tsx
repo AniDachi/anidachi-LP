@@ -55,7 +55,7 @@ export default async function LoginPage({ searchParams }: Props) {
           </h1>
           <p className="mt-1.5 text-sm text-foreground/50">{loginContext.subtitle}</p>
           {loginContext.extensionNote ? (
-            <p className="mt-2 text-xs font-medium text-brand-orange">
+            <p className="mt-2 text-xs font-medium text-ani-muted">
               {loginContext.extensionNote}
             </p>
           ) : null}

@@ -23,6 +23,10 @@ import {
   ANIDACHI_OG_IMAGE_PATH,
 } from "@/lib/brand";
 import {
+  ASYNC_COMING_SOON,
+  PRICING_ROOM_SIZE_RANGE,
+} from "@/lib/pricing-copy";
+import {
   buildWatchHowToSteps,
   buildWatchPageFaq,
   buildWatchPageMetaDescription,
@@ -64,9 +68,9 @@ function buildTitleTag(anime: AnimeEntry, episodesDisplay: string): string {
       anime.slug
     );
   if (isLong) {
-    return `Watch ${anime.title} with Friends — Group Marathon, No Spoilers`;
+    return `Watch ${anime.title} with Friends — Group Marathon`;
   }
-  return `Watch ${anime.title} with Friends — AniDachi Watchroom`;
+  return `Watch ${anime.title} with Friends — Live Watchroom`;
 }
 
 export async function generateStaticParams() {
@@ -139,7 +143,7 @@ function buildToc(
     { id: "setup", label: "Step-by-step setup", level: 2 },
     {
       id: "watch-formats",
-      label: "Live, async, and hybrid watch nights",
+      label: "Live sessions and independent catch-up",
       level: 2,
     },
     {
@@ -223,7 +227,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
     <>
       <HowToJsonLd
         name={`How to watch ${anime.title} with friends on Crunchyroll`}
-        description={`Use AniDachi watchrooms to sync ${anime.title}, chat with your group, and catch up asynchronously without losing episode context.`}
+        description={`Use AniDachi watchrooms to sync ${anime.title} and chat with your group live. Personal history is available on Plus or Pro.`}
         steps={howToSteps}
       />
       {isMovie ? (
@@ -260,7 +264,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
         { name: "Watch Anime Together", url: "/watch-anime-together" },
         { name: anime.title, url: `/watch/${rawSlug}` },
       ]}
-      title={`Watch ${anime.title} with Friends — AniDachi Watchrooms`}
+      title={`Watch ${anime.title} with Friends — Live Watchrooms`}
       description={metaDescription}
       url={`/watch/${rawSlug}`}
       articleImage={posterUrl ?? undefined}
@@ -283,7 +287,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
       <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           {isMovie
-            ? `Yes — you can watch ${anime.title} with friends as a group movie night using AniDachi's watchroom on Crunchyroll. Set up a shared watch party in under 2 minutes: no screen-share, no spoiler risk, everyone streams in sync. Works for 2–10 people across different time zones, all on their own Crunchyroll account.`
+            ? `Yes — you can watch ${anime.title} with friends as a group movie night using AniDachi's watchroom on Crunchyroll. Set up a shared watch party in under 2 minutes: no screen-share, no spoiler risk, everyone streams in sync. Works for ${PRICING_ROOM_SIZE_RANGE}, all on their own Crunchyroll account.`
             : (() => {
                 const isLong =
                   /\+|1100|1000|\b720\b|\b700\b|seasons|multiple seasons|counting/i.test(
@@ -293,8 +297,8 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
                     anime.slug
                   );
                 return isLong
-                  ? `Yes — you can watch ${anime.title} with friends using AniDachi's watchroom on Crunchyroll. AniDachi's async mode lets members catch up at their own pace without spoilers, so your watch party doesn't stall when someone falls behind across ${episodesDisplay}. Works for 2–10 people on different schedules, all on Crunchyroll.`
-                  : `Yes — you can watch ${anime.title} with friends using AniDachi's watchroom on Crunchyroll. Sync playback in real time or use async catch-up so your watch party keeps moving even when schedules differ. Works for 2–10 people across different time zones, all on Crunchyroll.`;
+                  ? `Yes — you can watch ${anime.title} with friends using AniDachi's watchroom on Crunchyroll. Live sync keeps the room together across ${episodesDisplay}; ${ASYNC_COMING_SOON.toLowerCase()} for members who need to catch up at their own pace without spoilers. Works for ${PRICING_ROOM_SIZE_RANGE}, all on Crunchyroll.`
+                  : `Yes — you can watch ${anime.title} with friends using AniDachi's watchroom on Crunchyroll. Sync playback in real time today; ${ASYNC_COMING_SOON.toLowerCase()} when schedules differ. Works for ${PRICING_ROOM_SIZE_RANGE}, all on Crunchyroll.`;
               })()}
         </strong>
       </p>
@@ -403,7 +407,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
         id="watch-formats"
         className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
-        Live, Async, and Hybrid Watch Nights for {anime.title}
+        Live Sessions and Independent Catch-up for {anime.title}
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
         <strong>Live premiere energy.</strong> Pick a recurring window (Sunday
@@ -412,13 +416,10 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
         for seasonal drops or finale episodes you want to experience unmuted.
       </p>
       <p className="text-foreground/80 leading-relaxed mb-4">
-        <strong>Async with guardrails.</strong> When someone travels or pulls a
-        late shift, each viewer finishes {anime.title} on their own Crunchyroll
-        tab while reactions stack under the same episode index. Late arrivals read
-        backward chronologically so punchlines land in order.
+        <strong>Independent catch-up.</strong> When someone misses a session, let them watch {anime.title} separately before the next meeting. Personal history is individual, not shared group progress. Async catch-up with replayed reactions is planned, not available today.
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
-        <strong>Hybrid Discord workflow.</strong> Keep Discord or SMS for voice,
+        <strong>Hybrid Discord workflow.</strong> Use AniDachi microphones, or keep Discord for voice,
         but let each person render {anime.title} locally so bitrate stays crisp.
         Use AniDachi for the shared timeline — otherwise one streamer&apos;s upload
         becomes the bottleneck for everyone else.
@@ -433,7 +434,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
       <p className="text-foreground/80 leading-relaxed mb-4">
         {isMovie
           ? `${anime.title} is an excellent group watch — a self-contained story that fits a single evening and gives everyone the same shared experience to talk about right after the credits. The ${genreBits} tone makes it easy to react together to key moments without needing to coordinate across multiple sessions.`
-          : `With ${episodesDisplay} to work through, ${anime.title} rewards a watchroom that respects real life. The ${genreBits} mix means cliffhangers and emotional swings show up often enough that async chat stays lively — no one has to sit through a four-hour call to stay in sync.`}
+          : `With ${episodesDisplay} to work through, ${anime.title} rewards a watchroom that respects real life. The ${genreBits} mix means cliffhangers and emotional swings show up often enough that short live meetings leave plenty to discuss without requiring a four-hour call.`}
       </p>
       {extraWhyWatchParagraphs(anime).map((para, i) => (
         <p key={i} className="text-foreground/80 leading-relaxed mb-4">
@@ -454,7 +455,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
         <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>
             Pick a default cadence — one episode on weeknights, two on Fridays — and
-            pin it above your invite links so newcomers know what &quot;on
+            post it in your separate group chat alongside invite links so newcomers know what &quot;on
             schedule&quot; means.
           </li>
           <li>
@@ -462,8 +463,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
             so nobody accidentally reads finale chatter early.
           </li>
           <li>
-            When life happens, leave voice notes or short text reactions instead of
-            skipping entire arcs; the watchroom preserves where each person stopped.
+            When life happens, catch up independently before the next meeting. Personal history on Plus or Pro saves your own progress; it does not create a shared room history.
           </li>
         </ul>
       )}

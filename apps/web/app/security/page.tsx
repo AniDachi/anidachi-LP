@@ -30,7 +30,7 @@ export default function SecurityPage() {
         <h1 className="text-4xl font-bold text-foreground mb-2">
           Security &amp; extension permissions
         </h1>
-        <p className="text-sm text-foreground/50 mb-10">Last updated: July 28, 2026</p>
+        <p className="text-sm text-foreground/50 mb-10">Last updated: September 18, 2026</p>
 
         <div className="space-y-8 text-foreground/80 leading-relaxed">
           <section>
@@ -72,14 +72,26 @@ export default function SecurityPage() {
               Chrome extension
             </h2>
             <p>
+              Until a Chrome Web Store listing is live, the official install path
+              is the{" "}
+              <Link href="/extension" className="text-brand-orange hover:underline">
+                AniDachi install page
+              </Link>
+              : download the zip from this site and Load unpacked in Chrome
+              Developer mode. Prefer that page over third-party mirrors.
+            </p>
+            <p className="mt-4">
               The extension overlays watchroom controls on supported pages and
               detects playback so friends can stay in sync. Store builds use
               narrow host permissions for YouTube, Crunchyroll, AniDachi web,
               and our Worker hosts — not blanket access to every site.
             </p>
             <p className="mt-4">
-              Title/episode detection for watchrooms runs in your browser and is
-              only sent when you create or join a room. The extension must never
+              The extension reads title, episode and playback information on
+              supported pages to synchronize rooms. When you enable personal-history
+              recording and have your own Plus or Pro entitlement, it also sends
+              eligible progress to your AniDachi account during solo and room viewing.
+              YouTube history requires its separate switch in Settings. The extension must never
               receive service-role keys, OAuth client secrets, Stripe secrets, or
               TURN secrets.
             </p>

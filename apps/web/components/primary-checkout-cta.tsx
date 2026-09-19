@@ -3,36 +3,35 @@
 import { useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Lock } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import {
   trackConversion,
   type PageTemplateId,
   ctaCopyVariantForTemplate,
 } from "@/lib/conversion-events";
-import { PRICING_CTA_LABEL } from "@/lib/home-survey";
-import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
+import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
 
 const COPY = {
   default: {
-    body: "Lock in pre-launch pricing — watchrooms for Crunchyroll and YouTube.",
+    body: "Install the Chrome extension in about 2 minutes — Crunchyroll and YouTube watchrooms.",
   },
   guide: {
-    body: "Pre-launch rate locked forever — same Crunchyroll or YouTube account you already use.",
+    body: "Download AniDachi for Chrome, then host on the same Crunchyroll or YouTube account you already use.",
   },
   compare: {
-    body: "Prices go up at public launch. Secure checkout in under a minute.",
+    body: "Install the official zip while the Chrome Web Store listing goes through review.",
   },
   anime: {
-    body: "Start watchrooms on Crunchyroll or YouTube — each viewer keeps their own login.",
+    body: "Install AniDachi, open the title on Crunchyroll or YouTube, and start a watchroom.",
   },
   listicle: {
-    body: "Subscribe before launch and keep your rate forever.",
+    body: "Get the Chrome extension first — Plus and Pro are optional upgrades after you host.",
   },
   glossary: {
-    body: "Choose your plan and manage your subscription from your account.",
+    body: "Install on desktop Chrome, then upgrade for longer sessions, more participants, and watch history.",
   },
   pillar: {
-    body: "Lock in pre-launch pricing before we go public.",
+    body: "Download the official zip from AniDachi, Load unpacked, then create a watchroom.",
   },
 } as const;
 
@@ -61,12 +60,15 @@ export function PrimaryCheckoutCta({
   variant: variantProp,
   placement,
   className = "",
-  ctaVariant = "primary_checkout",
+  ctaVariant = "primary_install",
 }: PrimaryCheckoutCtaProps) {
-  const { openSurvey } = usePlanSurvey();
   const rootRef = useRef<HTMLDivElement>(null);
   const impressionFired = useRef(false);
-  const key = variantProp ?? ctaCopyVariantForTemplate(pageTemplate);
+  const key =
+    variantProp ??
+    (pageTemplate === "install"
+      ? "default"
+      : ctaCopyVariantForTemplate(pageTemplate));
   const copy = COPY[key] ?? COPY.default;
 
   const fireImpression = useCallback(() => {
@@ -108,45 +110,36 @@ export function PrimaryCheckoutCta({
   return (
     <div
       ref={rootRef}
-      className={`not-prose relative mx-auto w-full max-w-4xl overflow-hidden rounded-2xl border border-brand-border/80 bg-brand-surface px-5 py-5 sm:px-6 ${className}`.trim()}
+      className={`not-prose relative mx-auto w-full max-w-4xl overflow-hidden rounded-[20px] border border-ani-line bg-ani-panel px-5 py-5 sm:px-6 ${className}`.trim()}
     >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(100%_80%_at_0%_0%,oklch(0.71_0.20_45_/_0.12),transparent_55%)]"
-      />
       <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
         <div className="min-w-0 flex-1 text-left">
-          <p className="text-base font-semibold tracking-[-0.01em] text-foreground">
-            {PRICING_CTA_LABEL}
+          <p className="text-base font-semibold tracking-[-0.02em] text-ani-text">
+            {INSTALL_CTA_LABEL}
           </p>
-          <p className="mt-0.5 text-sm leading-snug text-foreground/60">
+          <p className="mt-0.5 text-sm leading-snug text-ani-muted">
             {copy.body}
-          </p>
-          <p className="mt-1.5 flex items-center gap-1 text-[11px] text-foreground/45">
-            <Lock className="h-3 w-3 shrink-0" aria-hidden="true" />
-            Secured by Stripe
           </p>
         </div>
 
         <Button
-          size="touch"
-          className="w-full shrink-0 bg-brand-orange px-5 text-sm font-semibold text-primary-foreground transition-[transform,background-color] duration-200 ease-out hover:bg-brand-orange-deep active:scale-[0.98] sm:w-auto"
+          variant="cream"
+          size="control"
+          className="w-full shrink-0 sm:w-auto"
           asChild
         >
           <Link
-            href="/pricing"
-            onClick={(e) => {
-              e.preventDefault();
+            href={INSTALL_HUB_PATH}
+            onClick={() => {
               trackConversion("cta_click", {
                 page_path: pagePath,
                 page_template: pageTemplate,
                 placement,
                 cta_variant: ctaVariant,
               });
-              openSurvey({ placement, ctaVariant });
             }}
           >
-            {PRICING_CTA_LABEL}
+            {INSTALL_CTA_LABEL}
             <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
           </Link>
         </Button>

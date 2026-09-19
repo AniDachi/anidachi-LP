@@ -20,7 +20,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Does Teleparty Work With YouTube? (2026 Answer) | AniDachi",
+  title: "Does Teleparty Work With YouTube? (2026 Answer)",
   description:
     "Does Teleparty work with YouTube in 2026? Yes for live sync — no async. Teleparty for YouTube vs AniDachi watchrooms compared. Start free at pricing.",
   alternates: { canonical: "/guides/does-teleparty-work-with-youtube" },
@@ -56,7 +56,7 @@ const faq = [
   {
     question: "Does Teleparty support YouTube watch parties?",
     answer:
-      "Yes for live parties. Each person opens the same YouTube video, joins the Teleparty session, and playback stays roughly aligned. Teleparty does not add async catch-up — AniDachi does if your group is staggered.",
+      "Yes for live parties. Each person opens the same YouTube video, joins the Teleparty session, and playback stays roughly aligned. Teleparty does not add async catch-up — AniDachi also offers live rooms today; its Async catch-up mode is planned.",
   },
   {
     question: "Is Teleparty free for YouTube watch parties?",
@@ -65,12 +65,12 @@ const faq = [
   {
     question: "Does Teleparty support async watching on YouTube?",
     answer:
-      "No. Teleparty is live-only. If a friend is in another time zone, there is no spoiler-safe catch-up layer. AniDachi adds async YouTube watchrooms for that use case.",
+      "No. Teleparty is live-only. If a friend is in another time zone, there is no spoiler-safe catch-up layer. AniDachi also requires everyone to be online for live sync. Its Async catch-up mode is planned.",
   },
   {
     question: "What is the best Teleparty alternative for YouTube?",
     answer:
-      "AniDachi for extension watchrooms with async catch-up; Watch2Gether for free browser-only live rooms. See Watch2Gether alternatives for YouTube for a ranked list.",
+      "AniDachi for extension live watchrooms and personal history; Watch2Gether for free browser-only live rooms. See Watch2Gether alternatives for YouTube for a ranked list.",
   },
 ];
 
@@ -122,8 +122,7 @@ export default function DoesTelepartyWorkWithYoutubePage() {
           parties when everyone is online together.
         </strong>{" "}
         It does not offer async catch-up or durable episode-style progress for
-        staggered schedules. If your group watches YouTube across time zones,
-        you will outgrow Teleparty for those nights — see{" "}
+        staggered schedules. AniDachi live rooms also require a shared time. For planning across time zones, see{" "}
         <Link
           href="/guides/best-teleparty-alternatives-for-youtube"
         >
@@ -182,7 +181,7 @@ export default function DoesTelepartyWorkWithYoutubePage() {
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-8">
         Stay on Teleparty if live Netflix/Disney+/YouTube nights already work.
-        Switch to AniDachi when you need async YouTube catch-up or also host
+        Choose AniDachi for live YouTube rooms and personal history, or when you also host
         Crunchyroll anime nights in one extension. Compare:{" "}
         <Link
           href="/compare/anidachi-vs-teleparty"
@@ -192,7 +191,7 @@ export default function DoesTelepartyWorkWithYoutubePage() {
         </Link>
         . Pricing:{" "}
         <Link href="/pricing" className="text-brand-orange hover:underline">
-          pricing / early access
+          AniDachi pricing
         </Link>
         .
       </p>

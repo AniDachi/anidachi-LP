@@ -15,7 +15,7 @@ import {
 export const metadata: Metadata = {
   title: "AniDachi Pricing — Free, Plus & Pro Plans (2026)",
   description:
-    "AniDachi pricing for Crunchyroll and YouTube watchrooms. Friends join free. Plus and Pro unlock unlimited hosting, async rooms, and larger groups — pre-launch rates locked forever.",
+    "AniDachi pricing for Crunchyroll and YouTube watchrooms. Free to join. Plus and Pro raise host limits and unlock history recording. Subscribe now and keep this rate.",
   alternates: { canonical: "/pricing" },
   openGraph: {
     images: [
@@ -26,13 +26,15 @@ export const metadata: Metadata = {
         alt: "AniDachi – watch anime together, in perfect sync",
       },
     ],
+
     title: "AniDachi Pricing — Free, Plus & Pro",
     description:
-      "Compare Free, Plus, and Pro for Crunchyroll and YouTube watchrooms. Pre-launch pricing locked forever.",
+      "Compare Free, Plus, and Pro for Crunchyroll and YouTube watchrooms. Subscribe now and keep this rate.",
     url: "/pricing",
   },
   twitter: {
     images: ["/opengraph-image.png"],
+
     card: "summary_large_image",
     title: "AniDachi Pricing — Free, Plus & Pro",
     description:
@@ -62,7 +64,7 @@ const faq = [
   {
     question: "Do I still need Crunchyroll or YouTube?",
     answer:
-      "Yes. Each person streams under their own Crunchyroll or YouTube account. AniDachi adds watchrooms, sync, chat, and async progress on top — it does not replace a streaming subscription.",
+      "Yes. Each person streams under their own Crunchyroll or YouTube account. AniDachi adds watchrooms, sync, and chat, plus history recording on paid plans — it does not replace a streaming subscription.",
   },
 ];
 
@@ -76,63 +78,56 @@ export default function PricingPage() {
         ]}
       />
       <FAQPageJsonLd questions={faq} />
-      <main className="min-h-screen bg-background">
+      <main className="min-h-screen bg-ani-canvas">
         <nav
           aria-label="Breadcrumb"
-          className="border-b border-brand-border/80 bg-brand-surface/80"
+          className="border-b border-ani-line bg-ani-canvas"
         >
-          <div className="container mx-auto px-4 py-3.5 text-sm tracking-[-0.01em] text-foreground/50">
+          <div className="container mx-auto px-4 py-3.5 text-sm tracking-[-0.01em] text-ani-muted">
             <ol className="flex flex-wrap items-center gap-2">
               <li>
                 <Link
                   href="/"
-                  className="transition-colors duration-200 hover:text-brand-orange-bright"
+                  className="transition-colors duration-200 hover:text-ani-text"
                 >
                   Home
                 </Link>
               </li>
-              <li className="text-foreground/30" aria-hidden="true">
+              <li className="text-ani-line" aria-hidden="true">
                 /
               </li>
-              <li className="font-medium text-foreground">Pricing</li>
+              <li className="font-medium text-ani-text">Pricing</li>
             </ol>
           </div>
         </nav>
 
-        <div className="container mx-auto max-w-3xl px-4 pb-2 pt-10 text-center lg:pt-14">
-          <p className="mx-auto max-w-2xl text-pretty text-base leading-relaxed text-foreground/70 md:text-lg">
-            Pre-launch rates for Crunchyroll anime nights and YouTube hangs —
-            friends join free while hosts unlock unlimited rooms.
-          </p>
-        </div>
-
-        <Pricing headingLevel={1} />
+        <Pricing headingLevel={1} showPlanMatrix />
         <SocialProof />
         <FAQSection
           title="Pricing FAQ"
           questions={faq}
           defaultOpenIndexes={[0]}
         />
-        <section className="container mx-auto max-w-3xl px-4 pb-16 text-center text-sm text-foreground/60">
+        <section className="container mx-auto max-w-3xl px-4 pb-16 text-center text-sm text-ani-muted">
           <p>
             Looking for how watch parties work? See{" "}
             <Link
               href="/watch-crunchyroll-together"
-              className="font-medium text-brand-orange hover:underline"
+              className="font-medium text-ani-text underline decoration-ani-line underline-offset-2 hover:text-ani-primary"
             >
               watch Crunchyroll together
             </Link>
             ,{" "}
             <Link
               href="/watch-youtube-together"
-              className="font-medium text-brand-orange hover:underline"
+              className="font-medium text-ani-text underline decoration-ani-line underline-offset-2 hover:text-ani-primary"
             >
               YouTube watch party
             </Link>
             , or{" "}
             <Link
               href="/guides/best-watch-party-apps-for-anime"
-              className="font-medium text-brand-orange hover:underline"
+              className="font-medium text-ani-text underline decoration-ani-line underline-offset-2 hover:text-ani-primary"
             >
               best watch party apps for anime
             </Link>

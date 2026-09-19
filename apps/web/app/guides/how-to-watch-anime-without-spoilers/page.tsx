@@ -66,7 +66,7 @@ const howToSteps = [
   },
   {
     name: "Install AniDachi",
-    text: "Install AniDachi from /pricing so everyone runs the same chat features during soft launch.",
+    text: "Open /extension, download the official zip, then Load unpacked in Chrome so everyone runs the same chat features.",
   },
   {
     name: "Create a dedicated room",
@@ -149,10 +149,10 @@ export default function HowToWatchAnimeWithoutSpoilersPage() {
           </a>{" "}
           before discussing plot points that might have been missed due to
           buffering. Install AniDachi from{" "}
-          <Link href="/pricing" className="text-brand-orange hover:underline">
-            pricing / early access
+          <Link href="/extension" className="text-brand-orange hover:underline">
+            the AniDachi install page
           </Link>{" "}
-          so you are not sideloading unsigned builds mid-season.
+          so everyone loads the same official zip.
         </p>
 
         <h2
@@ -187,12 +187,11 @@ export default function HowToWatchAnimeWithoutSpoilersPage() {
           Step-by-step with AniDachi
         </h2>
         <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
-          <li>Agree on how many episodes stay fair game each week.</li>
-          <li>Install AniDachi and keep Chrome updated.</li>
-          <li>Create a watchroom tied to the exact series you are watching.</li>
-          <li>Post the pacing rules in the first chat message and pin mentally.</li>
-          <li>Tag every detailed message with the episode number.</li>
-          <li>Mute notifications until you finish the assigned batch.</li>
+          {howToSteps.map((step) => (
+            <li key={step.name}>
+              <strong>{step.name}.</strong> {step.text}
+            </li>
+          ))}
         </ol>
 
         <h2

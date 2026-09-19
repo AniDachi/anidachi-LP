@@ -21,9 +21,9 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "How to Watch YouTube With Friends (2026 Guide) | AniDachi",
+  title: "How to Watch YouTube With Friends (2026 Guide)",
   description:
-    "Step-by-step: how to watch YouTube with friends (and how to watch YouTube together) using AniDachi watchrooms — live sync or async. Free alternatives included.",
+    "Step-by-step: how to watch YouTube with friends (and how to watch YouTube together) using AniDachi watchrooms — live sync. Free alternatives included.",
   alternates: { canonical: "/guides/how-to-watch-youtube-with-friends" },
   openGraph: {
     images: [
@@ -37,14 +37,14 @@ export const metadata: Metadata = {
 
     title: "How to Watch YouTube With Friends",
     description:
-      "Create a YouTube watchroom in minutes — synced playback, chat, and async catch-up.",
+      "Create a YouTube watchroom in minutes — synced playback and live chat.",
     url: "/guides/how-to-watch-youtube-with-friends",
   },
   twitter: {
     images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "How to Watch YouTube With Friends",
-    description: "Synced YouTube watchrooms with AniDachi — live or async.",
+    description: "Synced YouTube watchrooms with AniDachi — live together.",
   },
 };
 
@@ -57,12 +57,12 @@ const faq = [
   {
     question: "How do I watch YouTube together (same question)?",
     answer:
-      "“Watch YouTube together” and “watch YouTube with friends” are the same job: a third-party sync layer. Use AniDachi for watchrooms with optional async, or Watch2Gether for a free live-only browser room.",
+      "“Watch YouTube together” and “watch YouTube with friends” are the same job: a third-party sync layer. Use AniDachi for live watchrooms, or Watch2Gether for a free live-only browser room.",
   },
   {
     question: "Does YouTube have a built-in watch together feature?",
     answer:
-      "No. YouTube does not ship a native watch party. You need AniDachi, Watch2Gether, Teleparty, or a manual countdown on a video call.",
+      "YouTube supports SharePlay on iPhone and iPad, with a Premium member starting the session. For desktop Chrome, use a sync tool such as AniDachi, Watch2Gether, or Teleparty.",
   },
   {
     question: "Is AniDachi free?",
@@ -82,7 +82,7 @@ const tocHeadings: TocHeading[] = [
 const howToSteps = [
   {
     name: "Get AniDachi",
-    text: "Open /pricing for early access and install the AniDachi Chrome extension.",
+    text: "Open /extension, download the official zip, then Load unpacked in Chrome.",
   },
   {
     name: "Open the video",
@@ -97,8 +97,8 @@ const howToSteps = [
     text: "Share the link so each friend joins on their own YouTube account.",
   },
   {
-    name: "Watch live or async",
-    text: "Sync for a live hang, or leave reactions when someone watches later.",
+    name: "Watch live together",
+    text: "Watch live with synced playback, chat, and reactions. Async catch-up is planned, not available today.",
   },
 ];
 
@@ -113,7 +113,7 @@ export default function HowToWatchYoutubeWithFriendsPage() {
     <>
       <HowToJsonLd
         name="How to watch YouTube with friends"
-        description="Set up an AniDachi YouTube watchroom for synced or async co-watching."
+        description="Set up an AniDachi YouTube watchroom for synced live co-watching."
         steps={howToSteps}
       />
       <SeoPageLayout
@@ -126,7 +126,7 @@ export default function HowToWatchYoutubeWithFriendsPage() {
           },
         ]}
         title="How to watch YouTube with friends"
-        description="Step-by-step YouTube watchroom setup — live sync or async catch-up."
+        description="Step-by-step YouTube watchroom setup — live sync catch-up."
         url="/guides/how-to-watch-youtube-with-friends"
         datePublished="2026-07-25"
         dateModified="2026-08-12"
@@ -144,8 +144,7 @@ export default function HowToWatchYoutubeWithFriendsPage() {
 
           <strong>
             Create an AniDachi YouTube watchroom, share the invite, and watch on
-            each person’s own YouTube tab — synced for live hangs, async when
-            schedules conflict.
+            each person’s own YouTube tab with live playback sync.
           </strong>{" "}
           Full hub:{" "}
           <Link
@@ -153,9 +152,9 @@ export default function HowToWatchYoutubeWithFriendsPage() {
           >
             YouTube watch party
           </Link>
-          . Checkout:{" "}
-          <Link href="/pricing">
-            pricing / early access
+          . Install from{" "}
+          <Link href="/extension">
+            the AniDachi install page
           </Link>
           .
         

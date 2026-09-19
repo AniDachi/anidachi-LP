@@ -1,6 +1,20 @@
 ## Background and Motivation
 
-**(Active — 2026-08-11)** AniDachi SEO audit remediation (Addy Osmani skill + freeze Phase 2 + owner-approved 5 commercial guides). Plan: `anidachi_seo_audit_9d0fb571.plan.md`. Hard gate: no URL path/slug/redirect/canonical-retarget on ranked pages (new URLs only via owner exception).
+**(Active — 2026-09-14)** Owner asked how to teach overlay usage + important settings after install. Planner recommendation: do **not** add a new SEO URL. Add a short “Use it on the player” section on existing `/extension` (`#using`) plus rewrite homepage How it works step 4 away from async. In-overlay first-run tips later. Awaiting owner pick before Executor builds.
+
+**(Active — 2026-09-13)** Homepage live/async demo overlay restyle to match the current extension overlay (room rail, people rows, camera switch, reaction grid, composer). Marketing chrome from the account-language restyle stays. Executor implementing.
+
+**(Prior — 2026-09-13)** Landing page restyle to the account visual language (cream primary, sparse orange, no glow). Planner plan `landing_page_restyle`. Homepage + shared chrome; restyle in place; conversion copy/JSON-LD frozen. Executor implementing.
+
+**(Prior — 2026-08-20)** Domain ranking plan is two-part. Part 1: referring domains (CWS, Edge, PH, directories). Part 2 (owner): contest YouTube head terms (`youtube watch party` 880, `watch youtube together` 720, `watch videos together` 260, `watch youtube with friends` / how-to 210) on existing URLs. Owner excluded `netflix party youtube` and `teleparty youtube` from Part 2. Plan: `domain_ranking_levers_f395607f.plan.md`. Canvas: `anidachi-youtube-underserved-keywords.canvas.tsx`. URL freeze still in force.
+
+**(Prior — 2026-08-16)** GSC spike analysis (Planner → Executor): why Search clicks/impressions jumped. Window is late-May / June 2026, not August. Canvas: `anidachi-gsc-spike-analysis.canvas.tsx`. Measurement only; URL freeze still in force.
+
+**(Prior — 2026-08-14)** Pre-store Chrome sideload conversion: public `/extension` zip + Load unpacked; primary CTAs install-first; Stripe is upgrade-after-room. Executor completing remaining plan todos (extension-plane + analytics docs). Do not edit the plan file. SEO URL freeze still in force.
+
+**(Prior — 2026-08-14)** Homepage link-preview picture (Telegram/iMessage/Discord). Owner graphic now at `apps/web/app/opengraph-image.png` (1200×630); generated `opengraph-image.tsx` removed. Same URL; no title/canonical/path changes. Executor mode.
+
+**(Prior — 2026-08-11)** AniDachi SEO audit remediation (Addy Osmani skill + freeze Phase 2 + owner-approved 5 commercial guides). Plan: `anidachi_seo_audit_9d0fb571.plan.md`. Hard gate: no URL path/slug/redirect/canonical-retarget on ranked pages (new URLs only via owner exception).
 
 **(Prior — 2026-08-03)** Keyword enrichment **implementation** (Executor): FAQ/meta/snippet/internal-link enrich-in-place on approved batch. **No URL structure changes** (freeze). Awaiting user spot-check + Planner confirm.
 
@@ -13,6 +27,72 @@
 **(Prior — 2026-07-26)** SEO agent critical fixes (YT + CR parity) — completed, awaiting Planner confirm.
 
 ## High-level Task Breakdown
+
+### Overlay usage guide (Planner 2026-09-14)
+
+Do not ship a new `/guides/...` URL (SEO freeze; this is post-install help, not a ranking page).
+
+Owner chose **A** (2026-09-14): `/extension#using` only. Do not rewrite homepage How it works (that is B). Do not add in-overlay first-run tips (that is C).
+
+1. On `/extension`, after install steps, add `#using`: 4–5 short live-sync steps (bubble → detect/create → invite → Layout drag → Voice PTT). List only the settings that change the watch: Layout, Voice (PTT vs open mic), Interface auto-hide. Keep install steps as they are. **Executor shipped pointing mocks; awaiting owner spot-check.**
+2. Rewrite homepage How it works step 4 (currently async) to the overlay loop. Demo already shows Layout/Voice. **Out of scope for A.**
+
+Later (extension plane): 3 dismissable first-run tips in the overlay after first room. Highest leverage, more work.
+
+Not recommended: Discord-only pin; dumping every Interface toggle; a long PDF/manual.
+
+### Domain ranking + YouTube heads (Planner 2026-08-20)
+
+Plan file: `domain_ranking_levers_f395607f.plan.md`. Same freeze: no new marketing URLs.
+
+**Part 1 — referring domains**
+
+1. Baseline Ahrefs/Moz DR/DA + referring domains.
+2. Public Chrome Web Store listing; Website = `https://www.anidachi.app`; title/short description name YouTube watch party + Crunchyroll watch party.
+3. Microsoft Edge Add-ons (same Website).
+4. SaaSHub + AlternativeTo + Crunchbase.
+5. Product Hunt only after CWS one-click install.
+6. 5–10 editorial pitches (CR/anime → compare URLs; YouTube roundups → `/watch-youtube-together` with head-term anchors).
+
+**Part 2 — chart heads (owner 2026-08-20: take on Teleparty)**
+
+1. Enrich `/watch-youtube-together` as sole owner of `youtube watch party` (880), `watch youtube together` (720), `watch youtube with friends` (210).
+2. Enrich `/guides/how-to-watch-youtube-with-friends` for `how to watch youtube with friends` (210).
+3. Own `watch videos together` (260) on pillar + apps roundup; YouTube + Crunchyroll only.
+4. Recrawl pillar after CWS. Skip `netflix party youtube`, `teleparty youtube`, W2G brand vanity, movies/Prime, YT Music, Messenger, android/phone/YT TV/Shorts.
+
+Success: first GSC impressions on `youtube watch party` / `watch youtube together`, then clicks. Lags Part 1 by weeks.
+
+### GSC spike analysis (Executor 2026-08-16)
+
+1. Pull remaining GSC daily page overlay, brand/non-brand weekly, GA4 organic landings, URL Inspection, Amplitude sessions (include Feb–Apr GSC already pulled).
+   - Success: WAT/CR/OVA daily series, brand share, GA4 landings May–Jul, inspect 4 URLs, Amplitude DAU.
+2. Ship canvas `anidachi-gsc-spike-analysis.canvas.tsx` (weekly trend, two-engine split, query table, timeline).
+   - Success: canvas in managed canvases dir; no site/code mutations.
+3. Append findings + lessons to this scratchpad.
+   - Success: Background, status, executor note, Lessons updated.
+
+### Pre-store sideload conversion (Executor 2026-08-14)
+
+1. Artifact + `/extension` hub + download/email APIs.
+   - Success: hub renders; zip 503 until `EXTENSION_ZIP_URL` is set; no zip in git/public.
+2. Rewire primary CTAs to `/extension`; Stripe/survey demoted except `/pricing` paid cards.
+   - Success: hero/nav/sticky/free card go to install hub.
+3. Room /success /account /join /pricing activation copy.
+   - Success: no Store homepage; room uses `?next=/room/{id}`.
+4. Enrich-in-place HowTo/FAQ + SoftwareApplication + SEO agent CTA path.
+   - Success: install HowTos name `/extension`, not `/pricing`.
+5. Production packed `key`, site-presence ping script, popup update copy, release-channel docs.
+   - Success: production-only `key`; ping on anidachi.app; staging has no packed key; no broad matches.
+6. Conversion metrics + env/secrets for zip vars.
+   - Success: docs name install events; `.env.example` lists zip vars.
+
+### Homepage OG / link preview (Executor 2026-08-14)
+
+1. Restyle `apps/web/app/opengraph-image.tsx` to the dark homepage look (logo + wordmark, hero headline with orange “Fix that.”, CR + YouTube subcopy). Keep 1200×630 PNG.
+   - Success: no Crunchyroll-only claim; layout matches landing (dark, brand orange, logo row).
+2. Run `pnpm --filter @anidachi/web check`. Ask user to confirm the picture locally / after deploy (Telegram cache may need `@webpagebot`).
+   - Success: check passes; user says the preview looks right.
 
 ### AniDachi SEO audit (Planner → Executor 2026-08-11)
 
@@ -44,6 +124,104 @@
 
 ## Project Status Board
 
+### Overlay usage `#using` (Executor 2026-09-14 — owner chose A)
+
+- [x] Copy source `apps/web/lib/extension-using-guide.ts` (bubble → Create room → Layout → Voice V → Interface Auto hide)
+- [x] Render `OverlayUsingGuide` on desktop install, already-installed, and mobile `/extension`
+- [x] Quiet `#using` jump from pin step; second HowTo JSON-LD for overlay use
+- [x] Install-guide-level pointing mocks (cream hit rings on overlay glass: bubble, Create room, copy, Layout/Apply, Voice+V, Auto hide)
+- [x] Extra `#using` steps: Invite friends, People radio seat buttons, Reactions 1–0 (no emoji frame), Layout Video/Chat settings, Interface pills, Room defaults; orange tab underlines removed
+- [x] Interface step: animated showcase (cursor → edge glow → bubble / speaking pills) matching extension Interface preview; toggles drive the loop
+- [x] Layout step: animated showcase (drag cams → drag chat → enlarge Camera size → Apply pulse)
+- [x] Pause Layout + Interface preview loops when off-screen (`useInView`)
+- [ ] Owner spot-check `/extension#using` mocks — then Planner marks A complete
+
+### Homepage demo overlay = current extension (Executor 2026-09-13)
+
+- [x] Live overlay mock: bubble + mini-panel + people + settings + room rail + cams + chat + composer
+- [x] Layout editor beat (grid + Video/Chat + Apply) with player ghost preview
+- [x] Layout drag choreography (cameras then chat) + pointer-drag on the grid
+- [x] Async demo bubble matches overlay bubble
+- [ ] Web check + owner visual QA (`/#demo` desktop + 390) — check passed; owner will inspect locally; do not start the web server
+
+### Landing restyle to account language (Executor 2026-09-13)
+
+- [x] Opt-in `ani-tokens.css` + `data-ani-theme="account"` (no `--primary` rewrite)
+- [x] Cream pill CTA variant wired on nav/hero/sticky/mid-page/skip-link
+- [x] Home sections restyled in place (copy frozen, no glow)
+- [x] Nav + footer chrome
+- [x] Sitewide surfaces: shadcn/brand aliases, SEO layout/blocks, install hub, auth, forms, survey (no glow)
+- [x] Quiet leftover orange washes: `/pricing`, `/contact`, `/feature-requests`, `/join/complete`, `/success` (+ survey glow border)
+- [x] Remove public plan survey (pricing “Not sure yet?” + sitewide modal/APIs)
+- [x] Live-product copy: `/join` → `/login`; no waitlist/early-access/pre-launch/soft-launch in public copy; Start Plus/Pro; signup count rephrased
+- [x] Chrome Store pending note on `/extension` (review + publisher verification; calm tone)
+- [ ] Owner visual QA: `/`, `/pricing`, `/extension`, a CR + YT guide, leftover `/join` URLs → `/login`. Signup count only shows when CRM `waitlist-stats` count > 0 (local was 0).
+
+### Wipe waitlist / referral / Early access (Executor 2026-09-14)
+
+- [x] Confirm account overview has no Early access / Copy referral UI (`AccountWaitlistCard` already deleted)
+- [x] Remove `.ac-referral` CSS from `account.css`
+- [x] Delete `survey-lead.ts` + tests (upsert / getAccountWaitlistStatus / referral credit)
+- [x] Slim `survey-lead-shared.ts` (no ref codes, positions, referral URLs)
+- [x] Remove empty `app/api/waitlist/` dirs
+- [x] CRM tab labels: Waitlist → Signups / historical survey (keep lead read/export)
+- [x] Keep `GET /api/waitlist-stats` + hero signup count (not waitlist UX)
+- [ ] Owner hard-refresh `/account` — confirm Early access row is gone; Planner marks wipe complete
+
+### Scoped launch fixes (Executor 2026-09-14)
+
+- [x] Room `extension-check` → `/extension` (with `?next=/room/...` when safe), not Chrome Web Store
+- [x] Async kept, labeled coming soon (how-it-works, home FAQ, demo toggle, layout/footer/JSON-LD)
+- [x] Pricing-copy: async no longer a paid differentiator; `PRICING_ROOM_SIZE_RANGE` (Free 4 / Plus 6 / Pro 15)
+- [x] Watch slug + 5 genre hubs + anime-club FAQ: room size + async coming soon
+- [ ] Owner smoke: open a room without extension; homepage FAQ async answer; one `/watch/[slug]` lead
+
+
+### Domain ranking + YouTube heads (Planner 2026-08-20)
+
+- [x] Part 2 chart queries mapped to existing URLs (plan + canvas)
+- [ ] Part 1: Ahrefs/Moz baseline
+- [ ] Part 1: CWS listing (Website + YT/CR watch party copy)
+- [ ] Part 1: Edge Add-ons
+- [ ] Part 1: SaaSHub / AlternativeTo / Crunchbase
+- [ ] Part 1: Product Hunt after CWS
+- [ ] Part 1: 5–10 editorial pitches
+- [ ] Part 2: enrich YouTube pillar for 880/720/210 heads — Executor done, awaiting user QA (2026-08-20)
+- [ ] Part 2: enrich how-to head — Executor done, awaiting user QA (2026-08-20)
+- [ ] Part 2: watch videos together (pillar + apps roundup) — Executor done, awaiting user QA (2026-08-20)
+- [x] Part 2: Netflix Party YT + Teleparty YT hijacks — owner excluded (2026-08-20)
+- [ ] Planner mark complete after user review of plan
+
+### GSC spike analysis (Executor 2026-08-16)
+
+- [x] Remaining GSC/GA4/Amplitude slices + URL Inspection
+- [x] Canvas `anidachi-gsc-spike-analysis.canvas.tsx`
+- [x] Scratchpad notes
+- [ ] User review canvas + Planner confirm
+
+### Pre-store sideload conversion (Executor 2026-08-14)
+
+- [x] Artifact hub + download/latest/email routes (zip unpublished until Blob env)
+- [x] CTA rewire to `/extension` (survey intercept removed from marketing CTAs)
+- [x] Room/success/account/join/pricing activation surfaces
+- [x] Copy/schema/SEO agent install path
+- [x] Production packed key + site-presence content script + unpacked update copy/docs
+- [x] Analytics events already in hub; CONVERSION_METRICS + env/secrets updated
+- [ ] User manual QA (hero → `/extension`, zip 503 or download, room `?next=`, mobile copy/email)
+- [x] Local zip placed: `artifacts/anidachi-chrome-extension-0.1.0.zip` from owner `AniDachi-0.1.0.zip` (gitignored). `/api/extension/download` streams it. Blob copy uploaded for production env.
+- [ ] Owner: set `EXTENSION_ZIP_*` on Vercel production so www.anidachi.app serves the zip (local already works)
+- [ ] Planner mark complete after QA
+
+### Homepage OG image (Executor 2026-08-14)
+
+- [x] Restyle `opengraph-image.tsx` to match dark landing + Crunchyroll/YouTube
+- [x] Web `check` passes
+- [x] Replaced generated card with owner graphic (`public/opengraph-image.png`, 1200×630; served by `app/opengraph-image.tsx`)
+- [x] User visual confirm (2026-08-14) — owner saw local `/opengraph-image`
+- [x] Sitewide: guides/compare/pillars/trust pages use the same OG card; `/watch/[slug]` still uses anime posters (brand card if no poster)
+- [x] Commit/push on `staging` (`d856b93` — OG card only; sideload WIP left uncommitted)
+- [ ] Planner mark complete after deploy + Telegram `@webpagebot` refresh
+
 ### AniDachi SEO audit (Executor — awaiting Planner confirm)
 
 - [x] Install Addy Osmani seo skill (local `.agents/skills/seo`, untracked)
@@ -54,7 +232,12 @@
 - [x] Web `check` + `build` pass; no ranked URL rename/delete
 - [x] Home dual-platform from Compare onward (compare table, features, pricing, social proof, survey)
 - [x] **Owner-approved 5-page commercial batch (2026-08-11):** netflix-party-for-crunchyroll, best-way-to-watch-youtube-with-friends, teleparty-not-working-youtube, how-to-watch-crunchyroll-together-without-screen-share, does-rave-work-with-youtube + guide-links + parent inbounds
-- [ ] Planner/manual QA confirm
+- [x] **Visual redesign (2026-08-12 Executor):** shared `seo-guide-blocks` + applied to all 5; same URLs/SEO truth; `web check` + Impeccable detect clean
+- [x] **Landing redesign (2026-08-12 Executor):** brand-first hero, strip eyebrows, asymmetric features, cleaner how-to/FAQ/demo; product truth/IA preserved; `web check` + detect clean
+- [x] **Design rollout + feature requests (2026-08-12 Executor):** pillars + top 4 compares + commercial guides + SeoPageLayout/CTA/pricing chrome; `/feature-requests` page+API (CRM/Blob+email); footer/contact/freeze note; check + localhost smoke OK
+- [x] **CRM tab mapping (2026-08-12 Executor):** Contact form → Contacts; Feature requests → Survey leads (no waitlist pollution)
+- [x] **CRM dedicated tabs (2026-08-12 Executor):** added **Contact forms** + **Feature requests** tabs (Blob JSONL source of truth); Contacts/Survey leads restored to outreach vs survey_lead
+- [ ] Planner/manual QA confirm (design + content)
 
 ### Keyword Enrichment Implementation (2026-08-03) — Executor
 
@@ -103,6 +286,80 @@
 
 ## Executor's Feedback or Assistance Requests
 
+- **Executor (2026-09-15 Amplitude zip download):** Click handler existed (`extension_zip_download`) but Amplitude never ingested it (taxonomy only had `extension_clicked`). Wired server HTTP on `/api/extension/download`, flush-on-click with shared `insert_id`, and Amplitude no longer gated on gtag. Needs `NEXT_PUBLIC_AMPLITUDE_API_KEY` (or `AMPLITUDE_API_KEY`) on the host. Please click **Download AniDachi (.zip)** on `/extension` then check Amplitude Live for `extension_zip_download`.
+
+- **Executor (2026-09-15 zip download):** Placed owner `AniDachi-0.1.0.zip` at gitignored `artifacts/anidachi-chrome-extension-0.1.0.zip` (687 KB). `/api/extension/download` streams it locally; same bytes uploaded to Vercel Blob. Local `/extension` now shows **Download AniDachi (.zip)** instead of “publishing shortly”. Zip is **not** in git. Production still needs `EXTENSION_ZIP_*` on Vercel. Please hard-refresh http://localhost:3003/extension and click the zip button.
+
+- **Executor (2026-09-14 compare + hub rewrite):** Homepage `#compare` and `#features` are live-only now. Compare: own player, drag layout, overlay chat, hold V, media seats, title detection; Host lock dropped; install CTA + How to Watch Together link. Hub: live sync / overlay layout / PTT+seats; async featured card + guide link removed. Please QA http://localhost:3003/#compare and `/#features`.
+
+- **Executor (2026-09-14 Layout cams + wording):** Layout preview cams are now extension-style green circles (`rounded-full`, teal glass, orange selected border); chat uses blue layout-preview shell. Heading → **Watch on the player** (link: Then watch on the player). Please hard-refresh `#using` Layout.
+
+- **Executor (2026-09-14 Layout animated showcase):** Layout step now loops drag cameras → drag chat → enlarge Camera size (Normal→XL) → Apply pulse, same spirit as the Interface preview. `pnpm --filter @anidachi/web check` passed. Please hard-refresh http://localhost:3003/extension#using and scroll to Layout (step 6).
+
+- **Executor (2026-09-14 Interface animated showcase):** Interface step now embeds the looping preview from the extension (cursor to top-right → bubble reveal; Smart pills on speak/hover). Auto hide / Always visible and Smart / Always visible below the stage drive the animation. `pnpm --filter @anidachi/web check` passed. Please hard-refresh http://localhost:3003/extension#using and scroll to Interface.
+
+- **Executor (2026-09-14 overlay usage A — polish):** Media seats use white/outline radio buttons; emoji hit-ring removed; Layout shows Video (Camera size) + Chat (Live/History); new Invite a friend step (person-plus + Friends & groups). Please hard-refresh http://localhost:3003/extension#using.
+
+- **Executor (2026-09-14 overlay usage A):** `/extension` now has **Use it on the player** after the six install steps (`#using`). Live sync only: bubble → Create room → Layout drag → Voice (hold **V**) → Interface Auto hide. Same section on already-installed and mobile. Please open http://localhost:3003/extension#using and confirm before Planner marks this done. Homepage How it works is unchanged (that is B).
+
+- **Executor (2026-09-14 compare = live sync):** Homepage `#compare` no longer claims async. Rows are own player, drag layout, overlay chat, PTT, detection, host lock. Homepage FAQ still sells async — say if you want that stripped too.
+
+- **Executor (2026-09-14 pricing/extension copy):** Removed the two intro banners on `/pricing`. Distilled `/extension` to a short Store line + 5 scannable steps; FAQ collapsed. Please refresh both pages.
+
+- **Executor (2026-09-14 Pricing nav):** Nav Pricing now always goes to `/pricing` (desktop, tablet, mobile drawer) instead of homepage `/#pricing`. Terms “pricing page” link matches. Please click Pricing from `/`.
+
+- **Executor (2026-09-14 CWS pending note):** `/extension` now explains the Store gap as Chrome’s standard listing review plus publisher verification — not a warning. Same FAQ JSON-LD. Please refresh http://localhost:3003/extension and check the intro + first FAQ.
+
+- **Executor (2026-09-14 homepage follow-ups):** Hero count now shows the live CRM number (local empty store was hiding it; localhost falls back to production `waitlist-stats` → 828). Nav “How It Works” → **Pricing**. Compare table rewritten around async, overlay cams/PTT, episode-pinned chat, detection, history vs Teleparty/CR Party/Discord. `/extension` restyled to cream account language (logo row, ani tokens, no amber). `pnpm --filter @anidachi/web check` passed. Please refresh `/` and `/extension`.
+
+- **Executor (2026-09-14 survey prune):** Removed the public plan survey. `/pricing` no longer has “Not sure yet? Get early access”. Deleted modal/provider, `PricingSurveyLink`, `/api/subscribe-interest`, `/api/waitlist-position`, unused Discord walkthrough. `/join` waitlist + CRM waitlist tab remain (historical survey tags still parse). `pnpm --filter @anidachi/web check` passed. Please QA http://localhost:3003/pricing and `/` — Plus/Pro still say “Get early access” as Stripe checkout labels.
+
+- **Executor (2026-09-14 leftover washes):** Quieted orange washes on `/pricing` (install banner + footer links), `/contact` + `/feature-requests` (removed radial overlay; cream fields/CTAs), `/join/complete` + `/success` (quiet panels, numbered pills, Discord save). Survey step-7 glow border / recommended badge / refund wash also quiet. Checks stay sparse `ani-progress`. Overlay demo, CRM, Blou, account filled orange untouched. `pnpm --filter @anidachi/web check` passed. Please QA http://localhost:3003/pricing, `/contact`, `/feature-requests`, `/join/complete`, `/success`. Planner should not mark the restyle complete until you confirm.
+
+- **Executor (2026-09-13 sitewide brand):** Remaining marketing/product chrome now uses the account language (cream actions, canvas/panel/line, no glow orbs). Shared SEO layout + guide blocks, `/extension` hub, auth shell, contact/feature forms, plan survey, success/join CTAs. `--primary` still orange for CRM/Blou. Overlay demo unchanged. Typecheck passed. Please spot-check `/extension`, a guide, `/about`, `/pricing`, `/login`.
+
+- **Executor (2026-09-13 layout drag):** Layout beat now *shows* drag: cameras slide inward/up, then chat slides toward the top of the grid; dashed ghosts on the player follow. Cameras and chat are also pointer-draggable in the preview (grab cursor). Caption: “Drag cameras and chat on the grid…”. Typecheck passed. Refresh `http://localhost:3003/#demo` and watch the Layout step (or drag the green cameras / blue chat yourself).
+
+- **Executor (2026-09-13 layout setup):** Layout beat is in the live demo: Settings → Layout shows the 16:9 grid, Video/Chat toggle, camera-size slider, Revert/Apply, and dashed camera/chat ghosts on the player. People list hides while Layout is open so the editor stays on screen; the loop holds that beat ~3.6s. `pnpm --filter @anidachi/web check` passed. Owner will QA locally — do not start the web server. Spot-check `/#demo` Live: step rail includes Layout; after Create room the panel should show the grid editor + ghosts, then Friends join.
+
+- **Executor (2026-09-13 demo overlay):** Homepage live demo now matches the current extension overlay (account header + camera switch, People rows, Reactions/Layout/Interface/Voice tabs, reaction-key grid, right-edge room rail, cam stack, stacked live chat, composer). Async bubble uses the same overlay bubble. `pnpm --filter @anidachi/web check` passed. Please visually QA `/` demo (desktop + phone) at http://localhost:3003/#demo then Planner can mark complete.
+
+- **Executor (2026-09-13):** Landing restyle is in the working tree (not committed). `pnpm --filter @anidachi/web check` passed. Browser: `/` desktop cream hero + pricing cards; 390 stacked CTAs; `/extension` and `/pricing` pick up cream nav. Please visually QA `/` at http://localhost:3003 then Planner can mark complete.
+
+- **Executor (2026-08-20):** Part 2 enrich-in-place shipped locally (same URLs). Pages: `/watch-youtube-together`, `/guides/how-to-watch-youtube-with-friends`, `/guides/best-apps-to-watch-youtube-together`. `pnpm --filter @anidachi/web check` + `build` pass. Please spot-check titles, H1s, install CTAs (`/extension` not `/pricing`), and the “watch videos together” YouTube+Crunchyroll (not Netflix) notes. Then Planner can mark the three Part 2 tasks complete. Part 1 (CWS/Edge/directories) still owner ops. Recrawl the pillar after CWS is live.
+
+- **Executor (2026-08-20):** Owner said execute. Enriching Part 2 in place on existing URLs (pillar → how-to → apps roundup). No new paths. Part 1 (CWS/Edge/directories/PH/pitches) still owner ops. Please spot-check `/watch-youtube-together` after this wave before Planner marks the pillar task complete.
+
+- **Planner (2026-08-20):** Part 2 added to domain ranking plan. Owner: contest Keyword Planner product-true heads (`youtube watch party`, `watch youtube together`, `watch videos together`, `watch youtube with friends` / how-to). Owner excluded `netflix party youtube` and `teleparty youtube` from Part 2. Freeze unchanged (no new marketing URLs). Please review Part 2 before Executor enrich.
+
+- **Executor (2026-08-19 directories):** 20 free, relevant submit targets for AniDachi backlinks. Canvas: `anidachi-free-backlink-directories.canvas.tsx`. Website on every form: `https://www.anidachi.app`. Alternatives: Teleparty, Watch2Gether, Rave. Skipped Uneed (free queue closed 17 Aug 2026), AI dirs, spam farms, Chrome Web Store ($5 — still do it). Product Hunt: draft now, launch after CWS. Highest-leverage free listing is Microsoft Edge Add-ons. Please review the canvas; no site code changed.
+
+- **Executor (2026-08-25 Apollo ops):** Tuesday status check (~09:41 UTC). Mailbox **active** (80/day · 20/hour · 100s). Sequence **active**. **Mon Aug 24:** 79 sent + 5 failed. **Today:** 0 sent yet, **155 scheduled** (82 T1 / 42 T2 / 17 T3 / 14 T4) — **no enroll**. Due window **12:00–15:06 UTC**; Apollo should auto-drain to daily 80. Delay flags still present (`scheduled_window_closed` 56, `daily_limit_reached` 37, `step_limit_reached` 19). Step caps still **50/day per step** (UI). Overfill is fine; leftover rolls tomorrow.
+- **Executor (2026-08-20 Apollo ops):** Hourly was set to `0` and blocked all sends (`hourly_limit_reached`). User fixed to **20/hour**. Confirmed mailbox: **80/day · 20/hour · 100s delay**. Today **95** already queued (42 T1 / 15 T2 / 29 T3 / 9 T4) — **no enroll**. Due times pushed to **~17:02 UTC**; Apollo should auto-drain at ~20/hr. ~15 may roll past daily 80. Aug 19 likely sent **0** while hourly was broken.
+  - **Send window:** updated default schedule `Normal Business Hours` to **24/7** (`[0,24]` all days, `skip_holidays=false`, still uses contact timezone). Was Mon–Fri 8–17.
+- **Executor (2026-08-19 Apollo ops):** Mailbox limits raised to **80/day**, no hourly cap, 100s delay. Enrolled **+52** Email 1 from GSheet. Today **80/80** target: **28 follow-ups (T2+T3) + 52 new T1**. Removed `photography@bildcraft.de` + `jf@drehmoment-film.de`. **~118 eligible** remain in GSheet (~1.5 more days at 80/day new enrollments, but follow-ups will fill most of the cap).
+  - **Lesson:** added `photography@` to GENERIC_PREFIX blocklist. Apollo hourly=`0` means “send nothing,” not unlimited.
+- **Executor (2026-08-18 Apollo ops):** Enrolled +9 Email 1, then +22 on Mon Aug 17. Removed 2 contacts.
+
+- **Executor (2026-08-16):** GSC spike analysis complete (measurement only). Canvas: `anidachi-gsc-spike-analysis.canvas.tsx`.
+  - **Window:** week of 25 May → June. May 4.3 clicks/day + 113 imp/day → June 29.9 + 1,122. July 41.8 clicks/day; 1–14 Aug ~33/day (plateau). Discover = 0.
+  - **Why not sooner:** commercial spokes did not exist until 23 Apr (`11ff625`). Pre-April GSC is brand `anidachi` + quit-smoking/Blou noise. `watch anime together` had 1 impression.
+  - **Why late May:** confirmed May 2026 core update 21 May–2 Jun. WAT 36→230 imp on 29 May; CR pillar first impression that day. Site 55→133→429 imp 23–29 May.
+  - **Two engines:** OVA 0 May → 10,488 Jun impressions / 2 clicks. Click growth: WAT +274, home +244, CR +121, brand query 65→211 (share 49%→23%).
+  - **GA4:** organic sessions 234 → 956 → 1,417; organic share 29%→59%. Direct fell in June.
+  - **Inspect:** home/WAT Google-canonical apex; CR+OVA indexed on www with user canonical still apex. CR last crawl 29 Jun.
+  - Please open the canvas. Planner confirm after review. No URL/H1 changes recommended.
+
+- **Executor (2026-08-14):** Restored the live hero counter (same `/api/waitlist-stats` CRM count as pre-launch). Copy: “Join X people already watching together today.” Also under the `/extension` zip button. Please refresh homepage + `/extension`.
+- **Executor (2026-08-14 sideload):** Remaining plan todos (packed key, presence ping, analytics/env docs) are implemented. Checks: web `check` + `build`; extension `check` + 1016 tests; staging validate; production-channel validate (packed `key` present, no broad matches). Please QA: home “Download for Chrome” → `/extension`; zip button (503 until Blob env); room missing-ext → `/extension?next=/room/...`; phone copy/email. Do **not** Load unpacked a zip file — unzip first. Zip publishing is still an owner ops step (`pnpm build:extension:public`, Blob, `EXTENSION_ZIP_*`). Awaiting Planner confirm before marking the project complete.
+- **Executor (2026-08-14):** Owner OG graphic is now sitewide (guides, compare, pillars, pricing, about). `/watch/[slug]` still uses the anime poster. Pushed to **`staging`** as `d856b93` (OG only; sideload WIP left uncommitted). Follow-up `ef64ac7` removed duplicate `openGraph`/`twitter` `images` keys that broke `pnpm build`. After deploy, refresh Telegram with `@webpagebot`.
+- **Executor (2026-08-12):** Cleared CRM **Contacts** (outreach only), **Contact forms**, and **Feature requests** Blob archives; Survey leads kept. Hard-refresh `/kreatli-email-crm` to see zeros.
+- **Executor (2026-08-12):** Added CRM tabs **Contact forms** + **Feature requests** (reads Blob JSONL). Contacts/Survey leads back to outreach vs survey only. Hard-refresh `/kreatli-email-crm` — your earlier submissions should show in the new tabs.
+- **Executor (2026-08-12):** Submissions lived in Blob JSONL but CRM tabs missed them — `contacts.json` writes used private access on a public store. Fixed `BLOB_ACCESS` default to public, hardened JSONL append, restored contact into CRM. **Where to look:** `/kreatli-email-crm` → Contacts (contact form) + Survey leads (feature request). Restart local `pnpm dev:web` so env picks up. Hard-refresh CRM.
+- **Executor (2026-08-12):** CRM tabs wired — **Contact form → Contacts**, **Feature requests → Survey leads** (`feature_request` segment; waitlist still only `survey_lead`). Spot-check Kreatli CRM after a test submit of each form.
+- **Executor (2026-08-12):** Design rollout + `/feature-requests` shipped. Spot-check pillars, compares, `/pricing`, `/feature-requests` submit; then Planner confirm.
+- **Executor (2026-08-12):** Landing page redesign (preserve brand/IA). Spot-check http://localhost:3003/ — hero brand signal, demo continuity, features asymmetry, FAQ accordion, pricing header. Then Planner confirm.
+- **Executor (2026-08-12):** Redesigned the 5 commercial guides with shared blocks (`SeoGuideAnswer`, options, steps, related). Same URLs/H1 intent/FAQ/CTAs. Please spot-check visually on desktop + mobile, then Planner confirm. Optional follow-up: `$impeccable init` for PRODUCT.md.
 - **Executor (2026-08-11):** SEO audit + dual-platform home + 5 commercial guides committed. Please spot-check new URLs + home Compare→FAQ. Planner confirm when QA looks good.
 
 - **Executor (2026-08-03):** Keyword enrichment batch implemented (freeze-safe). No URL/canonical/H1 changes.
@@ -132,7 +389,13 @@
 
 ## Lessons
 
-- Composio session_id from latest `COMPOSIO_SEARCH_TOOLS` must be reused (`ants` for 2026-08-02 SEO analysis).
+- Public plan survey is gone: do not reintroduce `PlanSurveyProvider` or `/api/subscribe-interest`. Public waitlist is gone (`/join` redirects to `/login`). CRM waitlist tab can keep historical `survey_lead` rows. Plus/Pro cards say **Start Plus / Start Pro**. Signup social proof uses `/api/waitlist-stats` with “signed up on AniDachi” copy.
+- Quiet leftover orange on marketing pages: `border-ani-line` + `bg-ani-panel` / `bg-ani-selected-quiet`; keep checks as sparse `text-ani-progress`. Do not invent `PRICING_REFUND_NOTE` — `/pricing` FAQ uses `PRICING_CANCELLATION_NOTE`. `FeatureRequestForm` must keep `variant` / `initialContact` for `/account/feature-requests`.
+- YouTube head terms (`youtube watch party` 880, `watch youtube together` 720) are a fight on existing URLs, not a skip. Crunchyroll at pos ~6 proved a new site can rank a commercial query; YouTube needs CWS + referring domains + one hub. Do not ship a `/guides/youtube-watch-party` twin. Owner excluded `netflix party youtube` and `teleparty youtube` from Part 2. Still skip W2G brand vanity, movies/Prime, YT Music, Messenger, android/phone/YT TV/Shorts.
+- AniDachi GSC “sudden traffic” in May–June 2026 is publish (23 Apr spokes) + ~4 week crawl lag + May 2026 core update scoring — not Google finding a year-old homepage. Glossary OVA impressions are a separate vanity engine (0.02% CTR) and must not be mixed with commercial clicks.
+- AniDachi homepage link previews come from `apps/web/app/opengraph-image.tsx` serving `public/opengraph-image.png` (1200×630). A static `app/opengraph-image.png` 404s under Turbopack. Telegram caches the page forever until `@webpagebot` re-fetches; already-sent messages never update. Changing the OG image URL/hash (`?v=` + tsx content) is required when the bot still shows the old card.
+- AniDachi: **never create a feature branch** for normal web/SEO work — commit and push on **`staging`** only (user rule 2026-08-12).
+- Composio session_id from latest `COMPOSIO_SEARCH_TOOLS` must be reused (`knew` for 2026-08-16 GSC spike analysis; `ants` was 2026-08-02).
 - GA4 event params are not queryable as `customEvent:*` until registered as custom dimensions in GA4 Admin.
 - GSC sitemap `contents.indexed` often returns `0` even when pages are indexed — use URL Inspection + Coverage UI.
 - `seo:keywords` must compare against the **full** public route inventory, not only top GSC/GA4 pages, or it invents “untapped” intents that already have URLs.
@@ -140,6 +403,7 @@
 - **Owner constraint (2026-07-28):** Further SEO trust work must not impact core flows or current ranking/indexation. Additive/reversible only. No 301/noindex/URL removal, no force-index sitemap deletion while Coverage recovers, no footer/nav crawl-path shrinkage, no high-traffic H1/intent rewrites — without explicit owner approval + GSC evidence.
 - First-touch `captureFirstLandingPath` must re-run on `usePathname()` changes so `/login` → guide SPA hops still attribute correctly.
 - Do not commit `my-video/`, `apps/web/tmp/`, or incidental `anime-jikan-cache.json` churn from failed Jikan fetches during build.
+- Pre-store Chrome: never commit extension zips or `.pem`; public zip is Blob + `EXTENSION_ZIP_URL`. Production packed `key` is production-only so unpacked IDs stay stable. Site ping is a dedicated content script — do not add anidachi.app to overlay `content.tsx` matches. Unpacked installs do not auto-update.
 
 ## Background and Motivation (historical)
 
@@ -838,6 +1102,8 @@ The survey should do more than “collect answers” — it should:
 
 ### Executor's Feedback or Assistance Requests
 
+- **Manual QA (compare):** Refresh `/#compare` — new rows (Platforms, Own player, Live sync, Overlay, Reactions, Friends, History); secondary link “See Free, Plus & Pro limits” → `/pricing`.
+- **Manual QA (waitlist wipe):** Hard-refresh `/account` — Early access #N / Copy referral link must be gone. Confirm `/join` still redirects to `/login`. Hero “watching together” count may still appear (signup stats API, not waitlist).
 - **Manual QA (YouTube batch 2):** Spot-check `/guides/does-youtube-have-watch-party`, `/guides/rave-alternatives-for-youtube`, `/guides/best-teleparty-alternatives-for-youtube`, `/guides/can-you-screen-share-youtube-on-discord` — breadcrumbs under YouTube pillar (no Anime parent), FAQ, CTA → `/pricing`, related links.
 - **Manual QA (hero Live demo):** On homepage “See It In Action”, confirm Live sequence shows new panel chrome, green sync, chat/composer, cams with speaking ring (no duplicate rail); Async tab still works; check mobile width.
 - **Manual QA:** Open http://localhost:3003 — confirm Watch dropdown shows three siblings; check breadcrumbs on `/watch-youtube-together`, `/watch-crunchyroll-together`, `/guides/how-to-watch-youtube-with-friends`, `/guides/does-teleparty-work-with-crunchyroll`.
@@ -857,3 +1123,6 @@ The survey should do more than “collect answers” — it should:
 - Stale `.next/types` can fail `tsc` after deleting routes (e.g. `app/extension/page.tsx`); clearing `.next/types` before `pnpm check` fixes phantom module errors.
 - SEO agent: after adding a YouTube conversion/KP/anti-cannibal stack, ship the **Crunchyroll twin in the same playbook pass** — otherwise CR pages drift (mid-CTA, crumbs, CWS vs `/pricing`, “Crunchyroll-only” FAQs).
 - Never put agent jargon (`soft-pedal`, unexplained `provider-pinned`) in hard boundaries without an explicit “never publish” ban — agents copy it into FAQs.
+- `GET /api/waitlist-stats` can return `{ count: 0 }` on a local CRM. `WatchingTogetherCount` hides until count > 0 — that is intended, not a missing component. Confirm the live number on staging/production.
+- Next.js `permanentRedirect("/login")` is HTTP 308 and drops leftover `?ref=` waitlist query params.
+- Account Early access / referral UI was already removed from `account-overview.tsx` in the working tree; leftover `.ac-referral` CSS + dead `survey-lead` write/status APIs still needed deletion so nothing can wire it back.

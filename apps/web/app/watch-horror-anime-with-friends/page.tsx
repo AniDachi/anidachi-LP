@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getAnimeByGenre } from "@/lib/anime-data";
+import { PRICING_ROOM_SIZE_RANGE } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
-  title: "Watch Horror Anime With Friends (2026) | AniDachi",
+  title: "Watch Horror Anime With Friends (2026)",
   description:
     "Experience every jump scare and twist simultaneously — AniDachi syncs horror anime on Crunchyroll for your group. Higurashi, Elfen Lied, Junji Ito, and more.",
   alternates: { canonical: "/watch-horror-anime-with-friends" },
@@ -39,7 +40,7 @@ const faq = [
   {
     question: "What makes horror anime good for watch parties?",
     answer:
-      "Horror anime amplifies its impact through shared tension — jump-scare moments, grotesque reveals, and sudden character deaths land harder when someone else is reacting alongside you. The genre's episodic pacing creates natural check-in moments between episodes where groups debate who will die next, what the monster is, and whether the protagonist made the right choice. Series like Another and The Promised Neverland are structured around weekly mystery drops that make async watchrooms feel like collaborative detective sessions.",
+      "Horror anime amplifies its impact through shared tension — jump-scare moments, grotesque reveals, and sudden character deaths land harder when someone else is reacting alongside you. The genre's episodic pacing creates natural check-in moments between episodes where groups debate who will die next, what the monster is, and whether the protagonist made the right choice. Series like Another and The Promised Neverland are structured around weekly mystery drops that make episode-by-episode group discussions feel like collaborative detective sessions.",
   },
   {
     question: "Can I watch horror anime on Crunchyroll with friends?",
@@ -54,7 +55,7 @@ const faq = [
   {
     question: "How do we avoid spoilers watching horror anime with a group?",
     answer:
-      "Horror anime spoilers are particularly brutal because character deaths and monster reveals are the emotional payoffs the series builds toward for multiple episodes. In your AniDachi watchroom, pin the current safe episode and enforce a 'no outcome reactions' rule — react to tension and atmosphere rather than confirming who died or survived. For Another specifically, avoid any discussion of which student is 'the extra' until the group collectively finishes the final episode.",
+      "Horror anime spoilers are particularly brutal because character deaths and monster reveals are the emotional payoffs the series builds toward for multiple episodes. Before each AniDachi session, agree on a safe episode and a 'no outcome reactions' rule — react to tension and atmosphere rather than confirming who died or survived. For Another specifically, avoid any discussion of which student is 'the extra' until the group collectively finishes the final episode.",
   },
 ];
 
@@ -111,7 +112,7 @@ export default function WatchHorrorAnimeWithFriendsPage() {
           Yes, you can watch horror anime with friends using AniDachi&apos;s
           watchroom on Crunchyroll. Sync playback so everyone experiences jumps
           and reveals at the same moment, then react together in real time.
-          Works for 2–10 people across different time zones — all on Crunchyroll.
+          Works for {PRICING_ROOM_SIZE_RANGE} — all on Crunchyroll.
         </strong>
       </p>
 
@@ -193,7 +194,7 @@ export default function WatchHorrorAnimeWithFriendsPage() {
         </li>
         <li>
           <span className="font-medium text-foreground">
-            Pin your spoiler boundary.
+            Agree on a spoiler boundary.
           </span>{" "}
           Horror deaths and reveals lose all impact when spoiled — set the safe
           episode cap and enforce it before the first session.

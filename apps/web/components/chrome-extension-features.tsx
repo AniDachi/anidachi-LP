@@ -30,38 +30,36 @@ export function ChromeExtensionFeatures() {
   ];
 
   return (
-    <section id="extension" className="py-24 bg-brand-surface">
+    <section id="extension" className="bg-ani-canvas py-24">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 bg-brand-orange/15 border border-brand-orange/30 text-brand-orange px-4 py-1.5 rounded-full text-sm font-semibold mb-4 tracking-wide uppercase">
+        <div className="mb-16 text-center">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-ani-line px-4 py-1.5 text-sm font-semibold tracking-wide text-ani-muted">
             Extension
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h2 className="mb-4 text-3xl font-semibold tracking-[-0.03em] text-ani-text md:text-4xl">
             Anime Detection Chrome Extension
           </h2>
-          <div className="w-16 h-1 bg-gradient-to-r from-brand-orange to-brand-orange-bright mx-auto rounded-full mb-4" />
-          <p className="text-xl text-foreground/70 max-w-3xl mx-auto">
+          <p className="mx-auto max-w-3xl text-pretty text-lg text-ani-muted">
             Seamlessly detect anime on Crunchyroll and instantly create
             watchrooms. The best way to watch anime with friends online.
           </p>
         </div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-2 lg:grid-cols-3">
           {features.map((feature, index) => (
             <Card
               key={index}
-              className="group border border-brand-border shadow-lg hover:shadow-xl hover:border-brand-orange/40 hover:-translate-y-1 transition-all duration-300 bg-background p-6 animate-fade-in-up"
-              style={{ animationDelay: `${index * 100}ms` }}
+              className="border border-ani-line bg-ani-panel p-6 shadow-none"
             >
               <CardHeader className="p-0">
-                <div className="w-12 h-12 bg-brand-orange/15 rounded-xl flex items-center justify-center mb-2 transition-all duration-300 group-hover:bg-brand-orange group-hover:text-primary-foreground">
-                  <feature.icon className="h-6 w-6 text-brand-orange group-hover:text-primary-foreground transition-colors duration-300" aria-hidden="true" />
+                <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl border border-ani-line bg-ani-hover">
+                  <feature.icon className="h-6 w-6 text-ani-text" aria-hidden="true" />
                 </div>
-                <CardTitle className="text-xl font-semibold text-foreground mb-2">
+                <CardTitle className="mb-2 text-xl font-semibold text-ani-text">
                   {feature.title}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0 pt-4">
-                <CardDescription className="text-foreground/70 text-base leading-relaxed">
+                <CardDescription className="text-base leading-relaxed text-ani-muted">
                   {feature.description}
                 </CardDescription>
               </CardContent>

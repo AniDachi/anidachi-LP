@@ -1,3 +1,5 @@
+import type { CheckoutTier } from "@/lib/pricing-tiers";
+
 export type HomeSurveySegment =
   | "Friend_group_host"
   | "Long_distance_watch"
@@ -16,7 +18,7 @@ export type HomeSurveyDiscovery =
   | "friend"
   | "other";
 
-// "just_researching" kept for backwards-compat with stored surveys; new value is "planning_ahead"
+// "just_researching" kept for backwards-compat with stored CRM survey tags.
 export type HomeSurveyTiming = "today" | "this_week" | "planning_ahead" | "just_researching";
 
 export type HomeSurveyGroupSize = "2_3" | "4_8" | "9_plus";
@@ -37,75 +39,9 @@ export type HomeSurveyAnswers = {
   current_solution?: HomeSurveyCurrentSolution;
 };
 
-export type CheckoutTier = "plus" | "pro";
-
-export function defaultHomeSurveyAnswers(): HomeSurveyAnswers {
-  return {};
-}
-
 export function recommendedTierForSurvey(a: HomeSurveyAnswers): CheckoutTier {
-  // If someone explicitly wants host controls, they self-identify into the higher tier.
   if (a.priority === "host_controls") return "pro";
   if (a.segment === "Community_mod") return "pro";
   if (a.group_size === "9_plus") return "pro";
   return "plus";
-}
-
-export function primaryCtaLabelForSurvey(a: HomeSurveyAnswers): string {
-  if (a.segment === "Community_mod" || a.priority === "host_controls") {
-    return "See my host plan";
-  }
-  if (a.segment === "Long_distance_watch") {
-    return "See my plan for long-distance";
-  }
-  return "See my recommended plan";
-}
-
-export const PRICING_CTA_LABEL = "Get early access";
-
-export function pricingCtaLabelForTier(_opts: {
-  tier: CheckoutTier;
-  survey: HomeSurveyAnswers;
-}): string {
-  return PRICING_CTA_LABEL;
-}
-
-/**
- * Returns the priority-specific headline feature bullet for the recommendation step.
- * This is the first (highlighted) bullet that mirrors back what the user said they care about.
- */
-export function priorityFeatureBullet(priority: HomeSurveyPriority | undefined): string {
-  switch (priority) {
-    case "sync_and_no_spoilers":
-      return "No-spoiler sync lock — everyone stays on the same episode";
-    case "chat_and_reactions":
-      return "Live reactions that fire exactly when a moment hits";
-    case "async_progress":
-      return "Progress tracker so no one gets left behind";
-    case "host_controls":
-      return "Full host & mod controls to run your room";
-    default:
-      return "Sync, chat, and reactions built for anime";
-  }
-}
-
-/**
- * Returns an "upgrade from X" copy line if the user named a known alternative, or null.
- * Used to personalise the recommendation header for low-intent users.
- */
-export function currentSolutionUpgradeText(
-  solution: HomeSurveyCurrentSolution | undefined,
-): string | null {
-  switch (solution) {
-    case "discord_screen_share":
-      return "Upgrade from Discord screen share — no quality loss, no stream delay";
-    case "teleparty_watch2gether":
-      return "Upgrade from Teleparty — built for anime, not Netflix";
-    case "another_tool":
-      return "Switch to a platform built for anime watch-parties";
-    case "nothing_yet":
-    case "other":
-    default:
-      return null;
-  }
 }

@@ -62,7 +62,10 @@ function WatchLibraryOwnerClient({
   const mutationInFlight = useRef(false);
   const editorActive = useRef(false);
   const [editorDirty, setEditorDirty] = useState(false);
-  const onDraftChange = useCallback((active: boolean) => { editorActive.current = active; setEditorDirty(active); }, []);
+  const onDraftChange = useCallback((active: boolean) => {
+    editorActive.current = active;
+    setEditorDirty(active);
+  }, []);
   const mounted = useRef(true);
   const ownerUserId = initialHistory.meta.ownerUserId;
 
@@ -76,12 +79,25 @@ function WatchLibraryOwnerClient({
   }, []);
   const readAccess = useCallback(async () => {
     try {
-      const access = WatchHistoryAccessSchema.parse(await api<unknown>("/api/watch-history/v3/access", { headers: { [WATCH_HISTORY_OWNER_HEADER]: ownerUserId } }));
-      if (access.ownerUserId !== ownerUserId) throw new ApiError("History access changed during the request", "HISTORY_ACCESS_CHANGED", 409);
+      const access = WatchHistoryAccessSchema.parse(
+        await api<unknown>("/api/watch-history/v3/access", {
+          headers: { [WATCH_HISTORY_OWNER_HEADER]: ownerUserId },
+        }),
+      );
+      if (access.ownerUserId !== ownerUserId)
+        throw new ApiError(
+          "History access changed during the request",
+          "HISTORY_ACCESS_CHANGED",
+          409,
+        );
       return access;
     } catch (error) {
       if (historyAuthorityState(error)) throw error;
-      throw new ApiError("History access is temporarily unavailable", "HISTORY_ACCESS_UNAVAILABLE", 503);
+      throw new ApiError(
+        "History access is temporarily unavailable",
+        "HISTORY_ACCESS_UNAVAILABLE",
+        503,
+      );
     }
   }, [ownerUserId]);
   const hideInaccessible = useCallback((error: unknown) => {
@@ -93,19 +109,28 @@ function WatchLibraryOwnerClient({
     setLoadingMore(false);
     setBusyAction(null);
     setAccessState(state);
-    setHistory(value => ({ ...value, items: [], totalTitleCount: 0, nextCursor: null }));
+    setHistory((value) => ({
+      ...value,
+      items: [],
+      totalTitleCount: 0,
+      nextCursor: null,
+    }));
     return true;
   }, []);
   const captureDetailAccessFailure = useCallback(() => {
     const revision = operationRevision.current;
-    return (error: unknown) => mounted.current && operationRevision.current === revision &&
-      !mutationInFlight.current && hideInaccessible(error);
+    return (error: unknown) =>
+      mounted.current &&
+      operationRevision.current === revision &&
+      !mutationInFlight.current &&
+      hideInaccessible(error);
   }, [hideInaccessible]);
 
   const refresh = useCallback(async () => {
     if (mutationInFlight.current || editorActive.current) return;
     const revision = ++operationRevision.current;
-    const current = () => mounted.current && operationRevision.current === revision;
+    const current = () =>
+      mounted.current && operationRevision.current === revision;
     setLoadingMore(false);
     setLoading(true);
     setNotice(null);
@@ -120,23 +145,51 @@ function WatchLibraryOwnerClient({
       let nextHistory = parseOwnedHistory(historyValue, ownerUserId);
       // Refresh the already visible window, including a title selected on a later
       // page. Every retained card comes from the new canonical read.
-      while (nextHistory.nextCursor && nextHistory.items.length < loadedTitleCount.current && current()) {
-        const page = parseOwnedHistory(await api<unknown>(`/api/watch-history/v3?limit=24&cursor=${encodeURIComponent(nextHistory.nextCursor)}`), ownerUserId);
-        if (page.meta.accountGeneration !== nextHistory.meta.accountGeneration) throw new Error("Watch history generation changed");
+      while (
+        nextHistory.nextCursor &&
+        nextHistory.items.length < loadedTitleCount.current &&
+        current()
+      ) {
+        const page = parseOwnedHistory(
+          await api<unknown>(
+            `/api/watch-history/v3?limit=24&cursor=${encodeURIComponent(nextHistory.nextCursor)}`,
+          ),
+          ownerUserId,
+        );
+        if (page.meta.accountGeneration !== nextHistory.meta.accountGeneration)
+          throw new Error("Watch history generation changed");
         nextHistory = mergeWatchHistoryPages(nextHistory, page);
       }
-      const nextPreferences = parseOwnedPreferences(preferencesValue, ownerUserId);
-      if (nextHistory.meta.accountGeneration !== nextPreferences.meta.accountGeneration) {
+      const nextPreferences = parseOwnedPreferences(
+        preferencesValue,
+        ownerUserId,
+      );
+      if (
+        nextHistory.meta.accountGeneration !==
+        nextPreferences.meta.accountGeneration
+      ) {
         throw new Error("Watch history generation changed");
       }
       const finalAccess = await readAccess();
-      if (finalAccess.accountGeneration !== access.accountGeneration || finalAccess.accessEpoch !== access.accessEpoch || nextHistory.meta.accountGeneration !== finalAccess.accountGeneration) throw new ApiError("History access changed during the request", "HISTORY_ACCESS_CHANGED", 409);
+      if (
+        finalAccess.accountGeneration !== access.accountGeneration ||
+        finalAccess.accessEpoch !== access.accessEpoch ||
+        nextHistory.meta.accountGeneration !== finalAccess.accountGeneration
+      )
+        throw new ApiError(
+          "History access changed during the request",
+          "HISTORY_ACCESS_CHANGED",
+          409,
+        );
       if (!current()) return;
       setHistory(nextHistory);
     } catch (error) {
       if (current()) {
         hideInaccessible(error);
-        setNotice({ tone: "error", text: errorMessage(error, "Could not refresh watch history") });
+        setNotice({
+          tone: "error",
+          text: errorMessage(error, "Could not refresh watch history"),
+        });
       }
     } finally {
       if (current()) setLoading(false);
@@ -149,13 +202,16 @@ function WatchLibraryOwnerClient({
     if (!history.nextCursor || loadingMore || mutationInFlight.current) return;
     const revision = ++operationRevision.current;
     const expectedGeneration = history.meta.accountGeneration;
-    const current = () => mounted.current && operationRevision.current === revision;
+    const current = () =>
+      mounted.current && operationRevision.current === revision;
     setLoading(false);
     setLoadingMore(true);
     setNotice(null);
     try {
       const page = parseOwnedHistory(
-        await api<unknown>(`/api/watch-history/v3?limit=24&cursor=${encodeURIComponent(history.nextCursor)}`),
+        await api<unknown>(
+          `/api/watch-history/v3?limit=24&cursor=${encodeURIComponent(history.nextCursor)}`,
+        ),
         ownerUserId,
       );
       if (page.meta.accountGeneration !== expectedGeneration) {
@@ -164,130 +220,256 @@ function WatchLibraryOwnerClient({
       if (!current()) return;
       setHistory((currentHistory) =>
         currentHistory.meta.ownerUserId === ownerUserId &&
-          currentHistory.meta.accountGeneration === expectedGeneration
+        currentHistory.meta.accountGeneration === expectedGeneration
           ? mergeWatchHistoryPages(currentHistory, page)
           : currentHistory,
       );
     } catch (error) {
       if (current()) {
         hideInaccessible(error);
-        setNotice({ tone: "error", text: errorMessage(error, "Could not load more history") });
+        setNotice({
+          tone: "error",
+          text: errorMessage(error, "Could not load more history"),
+        });
       }
     } finally {
       if (current()) setLoadingMore(false);
     }
   }, [history, loadingMore, ownerUserId, hideInaccessible]);
 
-  const deleteHistory = useCallback(async (target: WatchHistoryDeleteScope) => {
-    if (busyAction || mutationInFlight.current || !window.confirm(deleteConfirmation(target))) return;
-    mutationInFlight.current = true;
-    const revision = ++operationRevision.current;
-    const expectedGeneration = history.meta.accountGeneration;
-    const current = () => mounted.current && operationRevision.current === revision;
-    const action = deleteScopeKey(target);
-    setLoading(false);
-    setLoadingMore(false);
-    setBusyAction(action);
-    setNotice(null);
-    try {
-      const acknowledgement = WatchHistoryDeletionAckSchema.parse(
-        await api<unknown>("/api/watch-history/v3/delete", {
-          method: "POST",
-          headers: { [WATCH_HISTORY_OWNER_HEADER]: ownerUserId },
-          body: JSON.stringify({
-            schemaVersion: 3,
-            clientMutationId: crypto.randomUUID(),
-            accountGeneration: expectedGeneration,
-            target,
-            requestedAt: new Date().toISOString(),
-          }),
-        }),
-      );
+  const deleteHistory = useCallback(
+    async (target: WatchHistoryDeleteScope) => {
       if (
-        acknowledgement.meta.ownerUserId !== ownerUserId ||
-        acknowledgement.accountGeneration < expectedGeneration
-      ) {
-        throw new Error("Watch history owner changed");
-      }
-      if (!current()) return;
-      setHistory((currentHistory) =>
-        currentHistory.meta.ownerUserId === ownerUserId &&
+        busyAction ||
+        mutationInFlight.current ||
+        !window.confirm(deleteConfirmation(target))
+      )
+        return;
+      mutationInFlight.current = true;
+      const revision = ++operationRevision.current;
+      const expectedGeneration = history.meta.accountGeneration;
+      const current = () =>
+        mounted.current && operationRevision.current === revision;
+      const action = deleteScopeKey(target);
+      setLoading(false);
+      setLoadingMore(false);
+      setBusyAction(action);
+      setNotice(null);
+      try {
+        const acknowledgement = WatchHistoryDeletionAckSchema.parse(
+          await api<unknown>("/api/watch-history/v3/delete", {
+            method: "POST",
+            headers: { [WATCH_HISTORY_OWNER_HEADER]: ownerUserId },
+            body: JSON.stringify({
+              schemaVersion: 3,
+              clientMutationId: crypto.randomUUID(),
+              accountGeneration: expectedGeneration,
+              target,
+              requestedAt: new Date().toISOString(),
+            }),
+          }),
+        );
+        if (
+          acknowledgement.meta.ownerUserId !== ownerUserId ||
+          acknowledgement.accountGeneration < expectedGeneration
+        ) {
+          throw new Error("Watch history owner changed");
+        }
+        if (!current()) return;
+        setHistory((currentHistory) =>
+          currentHistory.meta.ownerUserId === ownerUserId &&
           currentHistory.meta.accountGeneration === expectedGeneration
-          ? removeWatchHistoryTarget(
-              currentHistory,
-              acknowledgement.target,
-              acknowledgement.accountGeneration,
-            )
-          : currentHistory,
-      );
-      setNotice({ tone: "success", text: "Watch history updated." });
+            ? removeWatchHistoryTarget(
+                currentHistory,
+                acknowledgement.target,
+                acknowledgement.accountGeneration,
+              )
+            : currentHistory,
+        );
+        setNotice({ tone: "success", text: "Watch history updated." });
 
-      if (!canRead) return;
-      const canonical = parseOwnedHistory(
-        await api<unknown>("/api/watch-history/v3?limit=24"),
-        ownerUserId,
-      );
-      if (canonical.meta.accountGeneration < acknowledgement.accountGeneration) {
-        throw new Error("Watch history generation changed");
+        if (!canRead) return;
+        const canonical = parseOwnedHistory(
+          await api<unknown>("/api/watch-history/v3?limit=24"),
+          ownerUserId,
+        );
+        if (
+          canonical.meta.accountGeneration < acknowledgement.accountGeneration
+        ) {
+          throw new Error("Watch history generation changed");
+        }
+        if (current()) setHistory(canonical);
+      } catch (error) {
+        if (current()) {
+          hideInaccessible(error);
+          setNotice({
+            tone: "error",
+            text: errorMessage(error, "Could not delete watch history"),
+          });
+        }
+      } finally {
+        if (current()) {
+          mutationInFlight.current = false;
+          setBusyAction(null);
+        }
       }
-      if (current()) setHistory(canonical);
-    } catch (error) {
-      if (current()) {
-        hideInaccessible(error);
-        setNotice({ tone: "error", text: errorMessage(error, "Could not delete watch history") });
-      }
-    } finally {
-      if (current()) {
-        mutationInFlight.current = false;
-        setBusyAction(null);
-      }
-    }
-  }, [busyAction, history.meta.accountGeneration, ownerUserId, canRead, hideInaccessible]);
+    },
+    [
+      busyAction,
+      history.meta.accountGeneration,
+      ownerUserId,
+      canRead,
+      hideInaccessible,
+    ],
+  );
 
-  const resume = useCallback(async (provider: WatchHistoryItem["provider"], sourceUrl: string, currentTime: number) => {
-    if (busyAction || mutationInFlight.current || !canRead) return;
-    if (provider !== "crunchyroll" && provider !== "youtube") return;
-    const revision = operationRevision.current;
-    const generation = history.meta.accountGeneration;
-    const current = () => mounted.current && operationRevision.current === revision && !mutationInFlight.current;
-    setBusyAction("resume");
-    setNotice(null);
-    try {
-      const access = await readAccess();
-      if (!current()) return;
-      if (access.accountGeneration !== generation) throw new ApiError("History access changed during the request", "HISTORY_ACCESS_CHANGED", 409);
-      const url = await buildPersonalHistoryResumeUrl({ ownerUserId, accountGeneration: generation, provider, sourceUrl, currentTime });
-      if (current()) window.location.assign(url);
-    } catch (error) {
-      if (current()) { hideInaccessible(error); setNotice({ tone: "error", text: errorMessage(error, "Could not resume playback") }); }
-    } finally { if (mounted.current) setBusyAction(value => value === "resume" ? null : value); }
-  }, [busyAction, canRead, history.meta.accountGeneration, ownerUserId, readAccess, hideInaccessible]);
+  const resume = useCallback(
+    async (
+      provider: WatchHistoryItem["provider"],
+      sourceUrl: string,
+      currentTime: number,
+    ) => {
+      if (busyAction || mutationInFlight.current || !canRead) return;
+      if (provider !== "crunchyroll" && provider !== "youtube") return;
+      const revision = operationRevision.current;
+      const generation = history.meta.accountGeneration;
+      const current = () =>
+        mounted.current &&
+        operationRevision.current === revision &&
+        !mutationInFlight.current;
+      setBusyAction("resume");
+      setNotice(null);
+      try {
+        const access = await readAccess();
+        if (!current()) return;
+        if (access.accountGeneration !== generation)
+          throw new ApiError(
+            "History access changed during the request",
+            "HISTORY_ACCESS_CHANGED",
+            409,
+          );
+        const url = await buildPersonalHistoryResumeUrl({
+          ownerUserId,
+          accountGeneration: generation,
+          provider,
+          sourceUrl,
+          currentTime,
+        });
+        if (current()) window.location.assign(url);
+      } catch (error) {
+        if (current()) {
+          hideInaccessible(error);
+          setNotice({
+            tone: "error",
+            text: errorMessage(error, "Could not resume playback"),
+          });
+        }
+      } finally {
+        if (mounted.current)
+          setBusyAction((value) => (value === "resume" ? null : value));
+      }
+    },
+    [
+      busyAction,
+      canRead,
+      history.meta.accountGeneration,
+      ownerUserId,
+      readAccess,
+      hideInaccessible,
+    ],
+  );
 
   return (
     <div className="wh-page">
       <header className="wh-page-heading">
-        <div><h1>Watch Library</h1><p>Your progress, all in one place.</p></div>
+        <div>
+          <h1>Watch Library</h1>
+          <p>Your progress, all in one place.</p>
+        </div>
         <div className="wh-page-actions">
-          <button className="wh-icon" aria-label="Refresh history" disabled={loading || Boolean(busyAction) || editorDirty} onClick={() => void refresh()} type="button"><RefreshCw size={16} aria-hidden /></button>
-          <HistoryActions label="Library options" disabled={Boolean(busyAction) || editorDirty}>
-            <button className="wh-danger" disabled={Boolean(busyAction) || editorDirty} onClick={() => void deleteHistory({ scope: "all" })} type="button"><Trash2 size={15} aria-hidden />Clear all history</button>
+          <button
+            className="wh-icon"
+            aria-label="Refresh history"
+            disabled={loading || Boolean(busyAction) || editorDirty}
+            onClick={() => void refresh()}
+            type="button"
+          >
+            <RefreshCw size={16} aria-hidden />
+          </button>
+          <HistoryActions
+            label="Library options"
+            disabled={Boolean(busyAction) || editorDirty}
+          >
+            <button
+              className="wh-danger"
+              disabled={Boolean(busyAction) || editorDirty}
+              onClick={() => void deleteHistory({ scope: "all" })}
+              type="button"
+            >
+              <Trash2 size={15} aria-hidden />
+              Clear all history
+            </button>
           </HistoryActions>
         </div>
       </header>
-      {accessState === "plan_required" && <p className="wh-hint" role="status">Your saved history stays here. Plus or Pro unlocks recording and progress editing. <a href="/pricing" className="text-brand-orange">View plans</a></p>}
-      {notice && <div className={notice.tone === "error" ? "wh-error" : "wh-saved"} role="status">{notice.text}</div>}
-      {!canRead ? <section className="wh-error" role="status">{accessState === "upgrade-required" ? "Update AniDachi to use personal history." : "History access is temporarily unavailable. Please retry."}</section> : (
-        <HistoryBrowser key={`${ownerUserId}:${history.meta.accountGeneration}`} items={history.items} owner={ownerUserId} generation={history.meta.accountGeneration}
-          canEdit={accessState === "allowed"} busy={Boolean(busyAction)} nextCursor={history.nextCursor} loadingMore={loadingMore}
-          captureAccessFailure={captureDetailAccessFailure} onLoadMore={loadMore} onEdited={refresh} onDraftChange={onDraftChange} onDelete={deleteHistory} onResume={resume}
-          capacity={provider => <WatchLibraryCapacity provider={provider} ownerUserId={ownerUserId} accountGeneration={history.meta.accountGeneration}
-            revision={`${history.generatedAt}:${history.totalTitleCount}`} recordingAllowed={accessState === "allowed"} />} />
+      {accessState === "plan_required" && (
+        <p className="wh-hint" role="status">
+          Your saved history stays here. Plus or Pro unlocks recording and
+          progress editing.{" "}
+          <a href="/pricing" className="text-brand-orange">
+            View plans
+          </a>
+        </p>
+      )}
+      {notice && (
+        <div
+          className={notice.tone === "error" ? "wh-error" : "wh-saved"}
+          role="status"
+        >
+          {notice.text}
+        </div>
+      )}
+      {!canRead ? (
+        <section className="wh-error" role="status">
+          {accessState === "upgrade-required"
+            ? "Update AniDachi to use personal history."
+            : "History access is temporarily unavailable. Please retry."}
+        </section>
+      ) : (
+        <HistoryBrowser
+          key={`${ownerUserId}:${history.meta.accountGeneration}`}
+          items={history.items}
+          owner={ownerUserId}
+          generation={history.meta.accountGeneration}
+          canEdit={accessState === "allowed"}
+          busy={Boolean(busyAction)}
+          nextCursor={history.nextCursor}
+          loadingMore={loadingMore}
+          captureAccessFailure={captureDetailAccessFailure}
+          onLoadMore={loadMore}
+          onEdited={refresh}
+          onDraftChange={onDraftChange}
+          onDelete={deleteHistory}
+          onResume={resume}
+          capacity={(provider) => (
+            <WatchLibraryCapacity
+              provider={provider}
+              ownerUserId={ownerUserId}
+              accountGeneration={history.meta.accountGeneration}
+              revision={`${history.generatedAt}:${history.totalTitleCount}`}
+              recordingAllowed={accessState === "allowed"}
+            />
+          )}
+        />
       )}
     </div>
   );
 }
 
-type WatchHistoryRefreshEventTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
+type WatchHistoryRefreshEventTarget = Pick<
+  EventTarget,
+  "addEventListener" | "removeEventListener"
+>;
 
 export function bindWatchHistoryPageRefresh(options: {
   refresh: () => void | Promise<void>;
@@ -298,11 +480,14 @@ export function bindWatchHistoryPageRefresh(options: {
 }): () => void {
   const windowTarget = options.windowTarget ?? window;
   const documentTarget = options.documentTarget ?? document;
-  const getVisibilityState = options.getVisibilityState ?? (() => document.visibilityState);
-  const schedule = options.schedule ?? ((callback) => {
-    const timer = window.setTimeout(callback, 350);
-    return () => window.clearTimeout(timer);
-  });
+  const getVisibilityState =
+    options.getVisibilityState ?? (() => document.visibilityState);
+  const schedule =
+    options.schedule ??
+    ((callback) => {
+      const timer = window.setTimeout(callback, 350);
+      return () => window.clearTimeout(timer);
+    });
   let cancelScheduled: (() => void) | null = null;
   let disposed = false;
   const trigger = () => {
@@ -333,15 +518,27 @@ export function getWatchHistoryAggregateLabel(item: WatchHistoryItem): string {
     item.catalogState !== "complete" ||
     item.aggregate.availableEpisodes === null ||
     item.aggregate.progress === null
-  ) return `${observed} observed ${observed === 1 ? "episode" : "episodes"}`;
-  if (item.aggregate.availableEpisodes === 0) return `${item.completedEpisodeCount} watched · ${item.observedEpisodeCount} saved`;
+  )
+    return `${observed} observed ${observed === 1 ? "episode" : "episodes"}`;
+  if (item.aggregate.availableEpisodes === 0)
+    return `${item.completedEpisodeCount} watched · ${item.observedEpisodeCount} saved`;
   return `${item.aggregate.completedEpisodes} / ${item.aggregate.availableEpisodes} episodes · ${formatProgressPercent(item.aggregate.progress ?? 0)}%`;
 }
 
-export function mergeWatchHistoryPages(current: WatchHistoryResponse, page: WatchHistoryResponse): WatchHistoryResponse {
-  if (current.meta.ownerUserId !== page.meta.ownerUserId || current.meta.accountGeneration !== page.meta.accountGeneration) return page;
-  const items = new Map(current.items.map((item) => [`${item.provider}:${item.titleKey}`, item]));
-  for (const item of page.items) items.set(`${item.provider}:${item.titleKey}`, item);
+export function mergeWatchHistoryPages(
+  current: WatchHistoryResponse,
+  page: WatchHistoryResponse,
+): WatchHistoryResponse {
+  if (
+    current.meta.ownerUserId !== page.meta.ownerUserId ||
+    current.meta.accountGeneration !== page.meta.accountGeneration
+  )
+    return page;
+  const items = new Map(
+    current.items.map((item) => [`${item.provider}:${item.titleKey}`, item]),
+  );
+  for (const item of page.items)
+    items.set(`${item.provider}:${item.titleKey}`, item);
   return { ...page, items: Array.from(items.values()) };
 }
 
@@ -378,19 +575,25 @@ export function mergeWatchHistoryTitleEpisodePage(
   item: WatchHistoryItem,
   page: WatchHistoryTitleEpisodesResponse,
 ): WatchHistoryItem {
-  if (page.provider !== item.provider || page.titleKey !== item.titleKey) return item;
+  if (page.provider !== item.provider || page.titleKey !== item.titleKey)
+    return item;
   const episodesByKey = new Map(
-    item.seasons.flatMap((season) => season.episodes).map((episode) => [episode.episodeKey, episode]),
+    item.seasons
+      .flatMap((season) => season.episodes)
+      .map((episode) => [episode.episodeKey, episode]),
   );
   for (const episode of page.episodes) {
     episodesByKey.set(episode.episodeKey, episode);
   }
   const mergedEpisodes = Array.from(episodesByKey.values());
-  const exactCatalog = page.catalog.state === "complete" &&
-    page.catalog.title !== null && page.catalog.aggregate !== null;
+  const exactCatalog =
+    page.catalog.state === "complete" &&
+    page.catalog.title !== null &&
+    page.catalog.aggregate !== null;
   const seasons = exactCatalog
-    ? mergeExactCatalogSeasons(item, page.catalog.seasons, mergedEpisodes)
-        .sort((a, b) => a.order - b.order || a.seasonKey.localeCompare(b.seasonKey))
+    ? mergeExactCatalogSeasons(item, page.catalog.seasons, mergedEpisodes).sort(
+        (a, b) => a.order - b.order || a.seasonKey.localeCompare(b.seasonKey),
+      )
     : mergeObservedSeasons(item, mergedEpisodes, page.catalog.state);
   for (const season of seasons) {
     season.episodes.sort(
@@ -424,15 +627,20 @@ function mergeExactCatalogSeasons(
   catalogSeasons: WatchHistoryTitleEpisodesResponse["catalog"]["seasons"],
   episodes: WatchHistoryEpisode[],
 ): WatchHistoryItem["seasons"] {
-  type CatalogSeason = WatchHistoryTitleEpisodesResponse["catalog"]["seasons"][number];
-  const metadataByKey = new Map<string, WatchHistoryItem["seasons"][number] | CatalogSeason>(
-    item.seasons.map((season) => [season.seasonKey, season]),
-  );
-  for (const season of catalogSeasons) metadataByKey.set(season.seasonKey, season);
+  type CatalogSeason =
+    WatchHistoryTitleEpisodesResponse["catalog"]["seasons"][number];
+  const metadataByKey = new Map<
+    string,
+    WatchHistoryItem["seasons"][number] | CatalogSeason
+  >(item.seasons.map((season) => [season.seasonKey, season]));
+  for (const season of catalogSeasons)
+    metadataByKey.set(season.seasonKey, season);
   return Array.from(metadataByKey.values())
     .map((season) => ({
       ...season,
-      episodes: episodes.filter((episode) => episode.seasonKey === season.seasonKey),
+      episodes: episodes.filter(
+        (episode) => episode.seasonKey === season.seasonKey,
+      ),
     }))
     .filter((season) => season.episodes.length > 0);
 }
@@ -444,9 +652,10 @@ function mergeObservedSeasons(
 ): WatchHistoryItem["seasons"] {
   const seasons = item.seasons.map((season) => ({
     ...season,
-    aggregate: catalogState === item.catalogState
-      ? season.aggregate
-      : { completedEpisodes: 0, availableEpisodes: null, progress: null },
+    aggregate:
+      catalogState === item.catalogState
+        ? season.aggregate
+        : { completedEpisodes: 0, availableEpisodes: null, progress: null },
     episodes: episodes.filter(
       (episode) => (episode.seasonKey ?? "observed") === season.seasonKey,
     ),
@@ -460,7 +669,11 @@ function mergeObservedSeasons(
       seasonTitle: episode.seasonTitle ?? "Observed episodes",
       seasonNumber: episode.seasonNumber,
       order: seasons.length,
-      aggregate: { completedEpisodes: 0, availableEpisodes: null, progress: null },
+      aggregate: {
+        completedEpisodes: 0,
+        availableEpisodes: null,
+        progress: null,
+      },
       episodes: episodes.filter(
         (candidate) => (candidate.seasonKey ?? "observed") === seasonKey,
       ),
@@ -470,18 +683,49 @@ function mergeObservedSeasons(
   return seasons.filter((season) => season.episodes.length > 0);
 }
 
-export function removeWatchHistoryTarget(history: WatchHistoryResponse, target: WatchHistoryDeleteScope, accountGeneration = history.meta.accountGeneration): WatchHistoryResponse {
-  if (target.scope === "all") return { ...history, meta: { ...history.meta, accountGeneration }, items: [], totalTitleCount: 0, nextCursor: null };
+export function removeWatchHistoryTarget(
+  history: WatchHistoryResponse,
+  target: WatchHistoryDeleteScope,
+  accountGeneration = history.meta.accountGeneration,
+): WatchHistoryResponse {
+  if (target.scope === "all")
+    return {
+      ...history,
+      meta: { ...history.meta, accountGeneration },
+      items: [],
+      totalTitleCount: 0,
+      nextCursor: null,
+    };
   if (target.scope === "title") {
-    const items = history.items.filter((item) => item.provider !== target.provider || item.titleKey !== target.titleKey);
-    return { ...history, meta: { ...history.meta, accountGeneration }, items, totalTitleCount: Math.max(0, history.totalTitleCount - (items.length === history.items.length ? 0 : 1)) };
+    const items = history.items.filter(
+      (item) =>
+        item.provider !== target.provider || item.titleKey !== target.titleKey,
+    );
+    return {
+      ...history,
+      meta: { ...history.meta, accountGeneration },
+      items,
+      totalTitleCount: Math.max(
+        0,
+        history.totalTitleCount -
+          (items.length === history.items.length ? 0 : 1),
+      ),
+    };
   }
   const items = history.items.flatMap((item) => {
-    if (item.provider !== target.provider || item.titleKey !== target.titleKey) return [item];
+    if (item.provider !== target.provider || item.titleKey !== target.titleKey)
+      return [item];
     const removedEpisode = item.seasons
       .flatMap((season) => season.episodes)
       .find((episode) => episode.episodeKey === target.episodeKey);
-    const seasons = item.seasons.map((season) => ({ ...season, episodes: season.episodes.filter((episode) => episode.episodeKey !== target.episodeKey) })).filter((season) => season.episodes.length > 0);
+    const seasons = item.seasons
+      .map((season) => ({
+        ...season,
+        episodes: season.episodes.filter(
+          (episode) => episode.episodeKey !== target.episodeKey,
+        ),
+      }))
+      .filter((season) => season.episodes.length > 0);
     const observedEpisodeCount = Math.max(
       0,
       item.observedEpisodeCount - (removedEpisode ? 1 : 0),
@@ -491,37 +735,58 @@ export function removeWatchHistoryTarget(history: WatchHistoryResponse, target: 
       0,
       item.completedEpisodeCount - (removedEpisode?.completedAt ? 1 : 0),
     );
-    return [{
-      ...item,
-      observedEpisodeCount,
-      completedEpisodeCount,
-      seasons,
-    }];
+    return [
+      {
+        ...item,
+        observedEpisodeCount,
+        completedEpisodeCount,
+        seasons,
+      },
+    ];
   });
-  return { ...history, meta: { ...history.meta, accountGeneration }, items, totalTitleCount: Math.max(0, history.totalTitleCount - (items.length === history.items.length ? 0 : 1)) };
+  return {
+    ...history,
+    meta: { ...history.meta, accountGeneration },
+    items,
+    totalTitleCount: Math.max(
+      0,
+      history.totalTitleCount - (items.length === history.items.length ? 0 : 1),
+    ),
+  };
 }
 
-function parseOwnedHistory(value: unknown, ownerUserId: string): WatchHistoryResponse {
+function parseOwnedHistory(
+  value: unknown,
+  ownerUserId: string,
+): WatchHistoryResponse {
   const parsed = WatchHistoryResponseSchema.parse(value);
-  if (parsed.meta.ownerUserId !== ownerUserId) throw new Error("Watch history owner changed");
+  if (parsed.meta.ownerUserId !== ownerUserId)
+    throw new Error("Watch history owner changed");
   return parsed;
 }
 
-function parseOwnedPreferences(value: unknown, ownerUserId: string): WatchHistoryPreferencesResponse {
+function parseOwnedPreferences(
+  value: unknown,
+  ownerUserId: string,
+): WatchHistoryPreferencesResponse {
   const parsed = WatchHistoryPreferencesResponseSchema.parse(value);
-  if (parsed.meta.ownerUserId !== ownerUserId) throw new Error("Watch history owner changed");
+  if (parsed.meta.ownerUserId !== ownerUserId)
+    throw new Error("Watch history owner changed");
   return parsed;
 }
 
 function deleteScopeKey(target: WatchHistoryDeleteScope): string {
   if (target.scope === "all") return "delete:all";
-  if (target.scope === "title") return `delete:${target.provider}:${target.titleKey}`;
+  if (target.scope === "title")
+    return `delete:${target.provider}:${target.titleKey}`;
   return `delete:${target.provider}:${target.titleKey}:${target.episodeKey}`;
 }
 
 function deleteConfirmation(target: WatchHistoryDeleteScope): string {
-  if (target.scope === "all") return "Clear all your AniDachi watch history on YouTube and Crunchyroll? This cannot be undone.";
-  if (target.scope === "title") return "Delete this title from your watch history?";
+  if (target.scope === "all")
+    return "Clear all your AniDachi watch history on YouTube and Crunchyroll? This cannot be undone.";
+  if (target.scope === "title")
+    return "Delete this title from your watch history?";
   return "Delete this episode from your watch history?";
 }
 
@@ -537,15 +802,21 @@ function errorMessage(error: unknown, fallback: string): string {
   return error instanceof Error && error.message ? error.message : fallback;
 }
 
-function historyAuthorityState(error: unknown): "plan-required" | "upgrade-required" | "unavailable" | null {
+function historyAuthorityState(
+  error: unknown,
+): "plan-required" | "upgrade-required" | "unavailable" | null {
   if (!(error instanceof ApiError)) return null;
   switch (error.code) {
-    case "HISTORY_PLAN_REQUIRED": return "plan-required";
-    case "HISTORY_CLIENT_UPDATE_REQUIRED": return "upgrade-required";
+    case "HISTORY_PLAN_REQUIRED":
+      return "plan-required";
+    case "HISTORY_CLIENT_UPDATE_REQUIRED":
+      return "upgrade-required";
     case "OWNER_MISMATCH":
     case "GENERATION_MISMATCH":
     case "HISTORY_ACCESS_CHANGED":
-    case "HISTORY_ACCESS_UNAVAILABLE": return "unavailable";
-    default: return null;
+    case "HISTORY_ACCESS_UNAVAILABLE":
+      return "unavailable";
+    default:
+      return null;
   }
 }

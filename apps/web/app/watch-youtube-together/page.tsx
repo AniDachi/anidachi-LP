@@ -16,7 +16,7 @@ import { getGuideLinks } from "@/lib/guide-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 import {
   PRICING_ASYNC_HOST_SNIPPET,
-  PRICING_EARLY_ACCESS_PRICE,
+  PRICING_PLUS_PRICE_LINE,
   PRICING_IS_ANIDACHI_FREE_YOUTUBE_ANSWER,
 } from "@/lib/pricing-copy";
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
@@ -28,7 +28,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "YouTube Watch Party — Watch YouTube Together With Friends (2026)",
   description:
-    "YouTube watch party hub: sync full videos with friends via Chrome extension, Teleparty, or Discord — AniDachi adds async catch-up. Start free at pricing.",
+    "YouTube watch party hub: sync full videos with friends via Chrome extension, Teleparty, or Discord — AniDachi offers live sync and personal history. Start free at pricing.",
   alternates: { canonical: "/watch-youtube-together" },
   openGraph: {
     images: [
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
 
     title: "YouTube Watch Party — Watch YouTube Together",
     description:
-      "Create a YouTube watch party with sync, chat, and async. Start from pricing.",
+      "Create a YouTube watch party with live sync and chat. Start from pricing.",
     url: "/watch-youtube-together",
   },
   twitter: {
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "YouTube Watch Party — Watch YouTube Together",
     description:
-      "Synced YouTube watchrooms with AniDachi — live or async. Start free.",
+      "Synced YouTube watchrooms with AniDachi — live together. Start free.",
   },
 };
 
@@ -58,12 +58,12 @@ const faq = [
   {
     question: "Does YouTube have a watch party feature?",
     answer:
-      "No. As of 2026, YouTube does not offer a built-in watch party or co-watching feature. You need a third-party tool such as AniDachi, Watch2Gether, or Teleparty to keep playback aligned.",
+      "YouTube supports SharePlay on iPhone and iPad, with a Premium member starting the session. Desktop Chrome groups can use AniDachi, Watch2Gether, or Teleparty for live sync.",
   },
   {
     question: "What is the best YouTube watch party app?",
     answer:
-      "For groups that want a Chrome extension watchroom with live sync and async catch-up, AniDachi is the strongest fit. Watch2Gether wins for free browser-only live rooms. Teleparty works if you already use it for Netflix nights. Extension deep-dive: /guides/youtube-watch-party-chrome-extension.",
+      "For groups that want a Chrome extension watchroom with live sync and personal history, AniDachi is the strongest fit. Watch2Gether wins for free browser-only live rooms. Teleparty works if you already use it for Netflix nights. Extension deep-dive: /guides/youtube-watch-party-chrome-extension.",
   },
   {
     question: "How do I watch YouTube together with friends?",
@@ -73,7 +73,7 @@ const faq = [
   {
     question: "Can you watch YouTube together asynchronously?",
     answer:
-      "Yes with AniDachi. Friends can watch the same video on their own schedule and leave reactions without spoiling each other. Most free YouTube party tools are live-only.",
+      "You can watch independently and discuss the video later. AniDachi rooms currently sync live playback; Async catch-up with replayed reactions is planned.",
   },
   {
     question: "Is AniDachi free for YouTube watch parties?",
@@ -82,7 +82,7 @@ const faq = [
   {
     question: "Does Teleparty work with YouTube?",
     answer:
-      "Yes for live sync. Teleparty does not offer AniDachi-style async YouTube watchrooms. See /guides/does-teleparty-work-with-youtube for details.",
+      "Yes for live sync. AniDachi also supports live rooms today; Async catch-up is planned. See /guides/does-teleparty-work-with-youtube for details.",
   },
 ];
 
@@ -128,7 +128,7 @@ const startHereItemList = [
 const howToSteps = [
   {
     name: "Install AniDachi",
-    text: "Add the AniDachi Chrome extension and start early access from pricing if you are not already set up.",
+    text: "Open /extension, download the official AniDachi zip, unzip it, then choose Load unpacked in Chrome Developer mode.",
   },
   {
     name: "Open a YouTube watch page",
@@ -143,8 +143,8 @@ const howToSteps = [
     text: "Copy the invite and send it via Discord, text, or email so friends join on their own YouTube accounts.",
   },
   {
-    name: "Watch live or asynchronously",
-    text: "Sync playback for a live YouTube watch party, or use async mode to leave reactions when schedules do not overlap.",
+    name: "Watch live together",
+    text: "Sync playback for a live YouTube watch party. If schedules do not overlap, watch separately; Async catch-up is planned.",
   },
 ];
 
@@ -215,7 +215,7 @@ export default function WatchYoutubeTogetherPage() {
     <>
       <HowToJsonLd
         name="How to host a YouTube watch party with AniDachi"
-        description="Set up a YouTube watchroom with AniDachi for synced or async co-watching."
+        description="Set up a YouTube watchroom with AniDachi for synced live co-watching."
         steps={howToSteps}
       />
       <SeoPageLayout
@@ -224,7 +224,7 @@ export default function WatchYoutubeTogetherPage() {
           { name: "YouTube Watch Party", url: "/watch-youtube-together" },
         ]}
         title="YouTube Watch Party — Watch YouTube Together"
-        description="The complete guide to YouTube watch parties: sync, chat, async, and every alternative compared."
+        description="The complete guide to YouTube watch parties: live sync, chat, and every alternative compared."
         url="/watch-youtube-together"
         datePublished="2026-07-25"
         dateModified="2026-08-12"
@@ -242,11 +242,10 @@ export default function WatchYoutubeTogetherPage() {
         <SeoGuideAnswer>
           <strong>
             Host a YouTube watch party with AniDachi — a Chrome extension that
-            creates watchrooms on full YouTube videos with synced playback, chat,
-            and async catch-up.
+            creates watchrooms on full YouTube videos with synced playback and live chat.
           </strong>{" "}
-          YouTube has no native co-watching feature. Start from{" "}
-          <Link href="/pricing">pricing / early access</Link>. Extension details:{" "}
+          YouTube has no native co-watching feature. Start from the{" "}
+          <Link href="/extension">AniDachi install page</Link>. Extension details:{" "}
           <Link href="/guides/youtube-watch-party-chrome-extension">
             YouTube watch party Chrome extension
           </Link>
@@ -343,7 +342,7 @@ export default function WatchYoutubeTogetherPage() {
             {
               feature: "Async catch-up",
               values: {
-                anidachi: "yes",
+                anidachi: "Planned",
                 w2g: "no",
                 teleparty: "no",
                 discord: "no",
@@ -370,7 +369,7 @@ export default function WatchYoutubeTogetherPage() {
             {
               feature: "Pricing",
               values: {
-                anidachi: PRICING_EARLY_ACCESS_PRICE,
+                anidachi: PRICING_PLUS_PRICE_LINE,
                 w2g: "Free + paid",
                 teleparty: "Freemium",
                 discord: "Free",
@@ -403,15 +402,12 @@ export default function WatchYoutubeTogetherPage() {
           What Makes AniDachi Different for YouTube
         </h2>
         <p className="text-foreground/80 leading-relaxed mb-4">
-          Most YouTube party tools assume everyone is online at once. AniDachi
-          adds <strong>asynchronous watching</strong> — friends mark progress and
-          leave reactions when schedules conflict. The same extension also covers
-          Crunchyroll anime nights, so dual-platform groups stay in one product.
+          AniDachi supports live YouTube rooms and personal history on Plus or Pro. <strong>Async catch-up is planned</strong>, not available today. The same extension also covers Crunchyroll, so your group can use one product for both.
         </p>
         <p className="text-foreground/80 leading-relaxed mb-8">
           {PRICING_ASYNC_HOST_SNIPPET} Details on{" "}
           <Link href="/pricing" className="text-brand-orange hover:underline">
-            pricing / early access
+            pricing
           </Link>
           .
         </p>

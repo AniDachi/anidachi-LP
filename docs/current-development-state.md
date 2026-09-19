@@ -1,12 +1,175 @@
 # Current Development State
 
-Last updated: 2026-09-15.
+Last updated: 2026-09-19.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
 contain old paths, old domains, or old decisions. When release channels,
 endpoints, branch protection, or store workflow changes, update this document in
 the same PR.
+
+## Website review closeout and install-email retirement, 2026-09-19
+
+The owner reaffirmed that installation links will not be sent by email. The
+local candidate removes the mobile form, `/api/extension/email-install-link`,
+its now-unused desktop-install-lead helper/test, the email conversion event and
+related Hero/Privacy promises. Copy/share of the installation URL, including a
+safe room return path, stays available. Shared CRM/Gmail/contact/feature-request
+code and existing records are unchanged. The earlier Stage 4A concurrency fix is
+historical; planned email Stages 4B/4C and real-send acceptance are canceled.
+
+All 164 paths in the original second-developer diff have a recorded review
+outcome. Watch Library remains accepted with 37 earlier component checks; its
+behavior is unchanged. F15–F18 are resolved in the authorized closeout: accurate
+live/personal-history SEO copy, collapse-before-scroll in mobile Contents, CTA
+after the complete Short Answer, and one brand suffix per browser title.
+Analytics, the signup count and internal CRM remain as requested by the owner.
+
+Closeout checks: web typecheck, 677 main-suite tests passed with 6 existing skips,
+including 3 real-component SEO regressions. Local browser confirms CTA placement
+and the mobile target heading at 88 px after Contents closes. Independent review
+found remaining stale copy, now corrected, and no additional runtime regression.
+The associated staging PR records final build/CI/deployment acceptance. Original
+review is complete; production/ZIP acceptance in Stage 6 is not thereby complete.
+
+Scope: deliver accepted installation examples, retire install-link email, and
+resolve the final SEO findings through a feature PR to staging. No PostHog, main
+promotion, public ZIP publication, env/data change, or extension/Worker/protocol
+runtime change. PostHog is a later discussion; production follows separately.
+See [L04](superpowers/plans/2026-09-16-staging-release-file-review.md#l04--закрытие-замечаний-и-доставка-в-staging-2026-09-19)
+and the [repair plan](superpowers/plans/2026-09-15-staging-release-repair-plan.md).
+
+## Website redesign candidate boundary, 2026-09-16
+
+The owner approved preserving the complete `apps/extension` tree, root
+`package.json` and extension artifact validator exactly as production main
+`4b4ff88380d0a64e5216d2770d360440d3f8852b`. The redesign's website-presence
+responder and permanent manual-update note are excluded. Extension identities,
+permissions, room/media/history behavior and build channels remain unchanged.
+
+The website candidate keeps its new installation guide and download flow without
+trying to detect an installed extension. Room-page installation help is neutral;
+it does not control admission. Join/auth APIs and the payment confirmation page
+are unchanged. PR #349 was merged into staging at `bcd00c7d`; CI, the extension
+build, post-deployment smoke and the staging Vercel alias were verified. Its PR
+receipt records the remaining real-room/manual limitations. Main remains
+`4b4ff883`. PR #348 is closed without merging and its branch is retained.
+Other website repair stages need
+their own scope discussion before implementation. See the
+[approved repair plan](superpowers/plans/2026-09-15-staging-release-repair-plan.md).
+
+The owner approved Stage 2 separately: restore the production account dropdown
+with its existing design and guarded sign-out, remove the duplicate replacement,
+and restore account access and scroll cleanup across responsive layouts. Keep
+the redesigned site's other navigation and installation CTA. This is a scoped
+web change; history, profile and billing APIs and the extension stay unchanged.
+Stage 2 runtime is implemented in `185ac1ae`: the shared menu is restored and
+duplicate logout callbacks are guarded without changing the menu CSS. Review
+found a Space-key activation conflict with the drawer scroll lock; the initial
+`20dc0692` fix passed element-root tests but failed actual preview activation.
+`4aa7d2dd` handles Next's document-root event ordering without changing the shared
+hook. Fresh document-root tests reproduce the failure; all 38 focused checks and
+web typecheck pass. Follow-up review found no blocking findings. Full web tests
+and build passed before this last narrow event fix (619 passed, 6 skipped);
+[PR #350](https://github.com/AniDachi/anidachi-LP/pull/350) records final CI and
+deployed acceptance. Main promotion remains a separate decision.
+
+## Website ZIP download source, 2026-09-16
+
+The owner narrowed Stage 3 to the download button and its server-side source.
+The candidate uses only `EXTENSION_ZIP_URL`: an explicitly configured public
+HTTPS archive with valid version, SHA-256 and byte-count metadata. Local paths
+and implicit searches through artifact folders are removed in all environments.
+The page, `/api/extension/latest` and `/api/extension/download` share readiness;
+incomplete configuration disables the button and returns 503 without a fallback.
+The metadata and redirect responses are not cached. Actual hosted bytes and
+download headers still need separate acceptance when an archive is published.
+
+This scoped correction was accepted on staging at `876b9e94` through
+[PR #351](https://github.com/AniDachi/anidachi-LP/pull/351), which records final
+CI and deployed acceptance. The install page design, instructions, FAQ, extension,
+identity and runtime behavior are unchanged. Public ZIP upload, cloud environment
+changes and main promotion remain separate; the current staging download is
+intentionally unconfigured. See Stage 3 of the
+[repair plan](superpowers/plans/2026-09-15-staging-release-repair-plan.md).
+
+## Installation contact concurrency correction, 2026-09-18
+
+Historical receipt: the owner retired the entire installation-email feature on
+2026-09-19. The local removal above supersedes the former follow-up tasks below.
+
+Stage 4A uses the existing `mutateContacts` operation for desktop installation
+requests instead of saving a previously read contacts snapshot. The entire
+lookup and change is reapplied to fresh data after a conditional-write conflict.
+One request keeps its generated ID and timestamp across retries. Existing
+contact fields, notes, segments and do-not-contact status are preserved.
+Read, parse, write and exhausted-conflict failures return `saved:false` with
+`storage_failed`; the helper no longer logs raw storage exceptions.
+
+The correction was accepted on staging at `f2567844` through
+[PR #352](https://github.com/AniDachi/anidachi-LP/pull/352), which records review,
+CI, staging smoke and the verified Vercel deployment. Tests exercise the real helper, store,
+conditional-write loop and installed Blob SDK with an in-memory HTTP transport;
+they do not create real contacts or send email. No CRM schema, storage authority,
+email endpoint/UI, extension or production settings changed in that stage. The
+then-planned rate-limit/delivery/send stages were initially deferred and are now
+canceled by the explicit retirement decision; they must not be resumed as pending
+implementation tasks.
+Main promotion and ZIP publication remain held.
+
+## Pricing history wording correction, 2026-09-18
+
+Stage 5A separates recording/editing progress (each viewer's own Plus or Pro)
+from viewing saved history and resuming it (including Free). The plan cards,
+comparison matrix, homepage comparison and shared FAQ wording reflect the
+existing runtime policy. The pricing FAQ again asks how to cancel a subscription,
+matching its existing cancellation answer. Prices, entitlements and checkout
+behavior are unchanged. Three marketing-matrix tests cover the access distinction,
+plan limits, platforms and prices; local web checks, all 648 passing web tests
+(6 existing skips), production build and desktop/mobile rendering passed.
+Staging acceptance is recorded in [PR #353](https://github.com/AniDachi/anidachi-LP/pull/353)
+at merge `0616b0b8`: CI, deployment and desktop/mobile checks passed. Main remains
+`4b4ff883` and the promotion PR has auto-merge disabled.
+
+The owner rejected the redesign's custom pricing promise for groups of 8+ on
+2026-09-18. Its three mentions are removed from the Pro card, plan comparison
+and shared pricing FAQ. Standard prices, room limits and priority support are
+unchanged. The owner subsequently approved the full Stage 5A block, including
+that removal, for PR #353 and staging delivery after checks. Main promotion
+remains a separate decision; exact staging acceptance receipts belong in the PR.
+Other comparison claims, installation copy and legal pages still need their own
+review; Stage 5 is not fully accepted.
+
+## Scoped launch-copy follow-up, 2026-09-18
+
+The owner approved Stage 5B for two pages only. Terms clarify that recording and
+editing require the viewer's own Plus/Pro, while saved history and Resume remain
+available on Free. The Crunchyroll Party comparison describes current live rooms
+and personal progress; async catch-up is explicitly planned, not available today.
+Its page text, FAQ/structured data and search/social descriptions no longer sell
+shared progress, persistent room context or replayed reactions as current features.
+This is a copy correction, not a new history or room capability. Staging acceptance
+and its exact SHA belong in the scoped PR; other comparison claims remain open.
+
+The owner explicitly retained existing Chrome Web Store wording because submission
+is planned alongside the eventual main release. This is an accepted publication
+plan, not evidence that submission has already happened. Installation/Store copy,
+the ZIP, email runtime and production remain outside Stage 5B.
+
+## Checkout confirmation display correction, 2026-09-18
+
+The owner approved correcting the existing `/success` page's unconditional success
+message. The heading, badge and status message now follow the same checkout-sync
+state: checking, confirmed paid access, error, no checkout, or confirmed Free status.
+Opening the page without a checkout does not call the sync endpoint or claim a new
+subscription. Pending/error states and neutral next steps do not claim payment was
+completed. Missing/unknown plan data is treated as an unconfirmed response.
+
+The POST endpoint, body, Stripe verification, webhook, entitlement policy, account
+refresh and navigation destinations are unchanged. No Stripe, account, env or
+extension mutation is part of verification. Regression tests use the real component
+with controlled responses; deployment and browser receipts belong in the scoped PR.
+Main promotion remains a separate decision.
 
 ## Free quota reset notice, 2026-09-15
 

@@ -1,12 +1,14 @@
-import { Chrome, Search, Users, MessageSquare } from "lucide-react";
+import { Chrome, Search, Users, MessageSquare, History, Clock3 } from "lucide-react";
+import Link from "next/link";
 import { HomeSectionHeader } from "@/components/home-section-header";
+import { INSTALL_HUB_PATH } from "@/lib/install-cta";
 
 const steps = [
   {
     icon: Chrome,
     title: "Install the Chrome Extension",
     description:
-      "Add AniDachi to Chrome in seconds — works with your Crunchyroll or YouTube session.",
+      "Download the official zip from AniDachi (~2 minutes). Load unpacked in Chrome Developer mode — works with your Crunchyroll or YouTube session.",
   },
   {
     icon: Search,
@@ -18,19 +20,25 @@ const steps = [
     icon: Users,
     title: "Create a Watchroom",
     description:
-      "One click creates a shared room. Share the invite link — friends join from any device.",
+      "Create a room and share the invite link. Each friend joins in desktop Chrome with the AniDachi extension installed.",
   },
   {
     icon: MessageSquare,
-    title: "Track Progress & Chat Async",
+    title: "Watch together",
     description:
-      "Mark episodes at your pace, leave reactions, and chat — friends catch up on their schedule.",
+      "Watch in sync, chat, and send reactions while everyone is in the room together.",
+  },
+  {
+    icon: History,
+    title: "Keep your watch history",
+    description:
+      "With Plus or Pro, save your progress on Crunchyroll and YouTube as you watch. Resume from AniDachi’s menu in Chrome, or manage watched episodes in your account.",
   },
 ];
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="bg-brand-surface py-16 lg:py-24">
+    <section id="how-it-works" className="bg-ani-canvas py-16 lg:py-24">
       <div className="container mx-auto px-4">
         <HomeSectionHeader
           title="How AniDachi works"
@@ -41,12 +49,12 @@ export function HowItWorks() {
           {steps.map((step, i) => (
             <li key={step.title} className="flex gap-4 sm:gap-5">
               <div className="flex shrink-0 flex-col items-center">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-orange/15 font-mono text-sm font-semibold tabular-nums text-brand-orange-bright">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full border border-ani-control-border font-semibold tabular-nums text-sm text-ani-text">
                   {i + 1}
                 </span>
                 {i < steps.length - 1 ? (
                   <span
-                    className="my-1 w-px flex-1 bg-brand-border"
+                    className="my-1 w-px flex-1 bg-ani-line"
                     aria-hidden
                   />
                 ) : null}
@@ -57,26 +65,80 @@ export function HowItWorks() {
               >
                 <div className="mb-1.5 flex items-center gap-2.5">
                   <step.icon
-                    className="h-4 w-4 text-brand-orange/80"
+                    className="h-4 w-4 shrink-0 text-ani-progress"
                     aria-hidden="true"
                   />
-                  <h3 className="text-lg font-semibold tracking-[-0.01em] text-foreground">
+                  <h3 className="text-lg font-semibold tracking-[-0.02em] text-ani-text">
                     {step.title}
                   </h3>
                 </div>
-                <p className="text-[0.95rem] leading-relaxed text-foreground/70">
-                  {step.description}
+                <p className="text-[0.95rem] leading-relaxed text-ani-muted">
+                  {i === 0 ? (
+                    <>
+                      Download the official zip from{" "}
+                      <Link
+                        href={INSTALL_HUB_PATH}
+                        className="font-medium text-ani-progress underline-offset-4 hover:underline"
+                      >
+                        the install page
+                      </Link>{" "}
+                      (~2 minutes). Load unpacked in Chrome Developer mode —
+                      works with your Crunchyroll or YouTube session.
+                    </>
+                  ) : (
+                    step.description
+                  )}
                 </p>
               </div>
             </li>
           ))}
         </ol>
+
+        <aside
+          aria-labelledby="async-coming-soon"
+          className="mx-auto mt-8 max-w-2xl border-t border-ani-line pt-6"
+        >
+          <div className="grid grid-cols-[2.25rem_minmax(0,1fr)] items-center gap-x-4 sm:gap-x-5">
+            <span
+              aria-hidden="true"
+              className="col-start-1 row-start-1 flex h-9 w-9 items-center justify-center rounded-full border border-ani-control-border font-semibold tabular-nums text-sm text-ani-text"
+            >
+              {steps.length + 1}
+            </span>
+            <div className="col-start-2 row-start-1 flex min-w-0 items-center gap-2.5">
+              <Clock3
+                className="h-4 w-4 shrink-0 text-ani-progress"
+                aria-hidden="true"
+              />
+              <h3
+                id="async-coming-soon"
+                className="min-w-0 text-lg font-semibold tracking-[-0.02em] text-ani-text"
+              >
+                Async catch-up
+              </h3>
+              <span className="inline-flex shrink-0 whitespace-nowrap rounded-full border border-ani-control-border px-2.5 py-1 text-xs font-medium text-ani-muted">
+                Coming soon
+              </span>
+            </div>
+            <p className="col-start-2 mt-1.5 text-[0.95rem] leading-relaxed text-ani-muted">
+              Coming soon in a later batch: mark episodes at your pace, leave
+              reactions, and chat so friends can catch up on their schedule.
+              Live sync is available now.
+            </p>
+          </div>
+        </aside>
       </div>
     </section>
   );
 }
 
-export const howToSteps = steps.map((s) => ({
-  name: s.title,
-  text: s.description,
-}));
+export const howToSteps = [
+  {
+    name: steps[0].title,
+    text: "Open /extension, download the official zip, unzip it, and Load unpacked in Chrome Developer mode (~2 minutes).",
+  },
+  ...steps.slice(1).map((s) => ({
+    name: s.title,
+    text: s.description,
+  })),
+];

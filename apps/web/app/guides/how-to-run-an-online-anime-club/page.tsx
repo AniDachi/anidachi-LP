@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
+import {
+  ASYNC_COMING_SOON,
+  PRICING_ROOM_SIZE_RANGE,
+} from "@/lib/pricing-copy";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 
 const SITE_URL = getResolvedSiteOrigin();
@@ -37,7 +41,7 @@ const faq = [
   {
     question: "How many members can an online anime club have?",
     answer:
-      "AniDachi watchrooms work well for 2–10 active watchers per session. Larger clubs can split into sub-groups by timezone or genre preference, or rotate who picks the weekly show. Async mode lets bigger clubs stay connected without requiring everyone online simultaneously.",
+      `AniDachi watchrooms work well for ${PRICING_ROOM_SIZE_RANGE} per session. Larger clubs can split into sub-groups by timezone or genre preference, or rotate who picks the weekly show. ${ASYNC_COMING_SOON} — that will help bigger clubs stay connected without requiring everyone online simultaneously.`,
   },
   {
     question: "What shows should an anime club watch first?",
@@ -47,7 +51,7 @@ const faq = [
   {
     question: "How do anime clubs handle spoilers?",
     answer:
-      "Set a pinned safe episode number in your AniDachi watchroom after each sync. Use episode-scoped chat threads so early watchers can't spoil late members. Establish a club rule: react to feelings, not plot outcomes, until everyone has caught up.",
+      "Agree on a safe episode number before each session. Keep later-episode discussions in separate, clearly labeled channels outside the live room. AniDachi does not automatically hide spoilers.",
   },
 ];
 
@@ -70,12 +74,12 @@ const howToSteps = [
     text: "Vote on 1–2 starter series that are accessible and under 26 episodes. Confirm every member can stream them on Crunchyroll in their region.",
   },
   {
-    name: "Create a persistent watchroom",
-    text: "Install AniDachi, open the first episode on Crunchyroll, and create a watchroom. Keep the same room all season — chat history and progress accumulate.",
+    name: "Create a live watchroom",
+    text: "Install AniDachi, open the first episode on Crunchyroll, and create a watchroom. Create a fresh room for each session. Personal history is recorded separately for each viewer on Plus or Pro.",
   },
   {
     name: "Schedule recurring sync nights",
-    text: "Block a weekly time slot and post calendar invites. Live sync for premiere reactions; async for members who miss the session.",
+    text: "Block a weekly time slot and post calendar invites. Use live sync for premiere reactions; members who miss the session can catch up independently before the next meeting.",
   },
   {
     name: "Rotate leadership",
@@ -116,8 +120,7 @@ export default function HowToRunAnOnlineAnimeClubPage() {
           <strong>
             An online anime club is a recurring watch group — college societies,
             Discord communities, or friend circles that meet weekly to watch and
-            discuss anime together. AniDachi gives your club persistent watchrooms
-            with sync, async catch-up, and spoiler controls on Crunchyroll.
+            discuss anime together. AniDachi gives your club live rooms with playback sync, chat, and personal history on Crunchyroll. Agree on spoiler rules before watching.
           </strong>
         </p>
 
@@ -132,7 +135,7 @@ export default function HowToRunAnOnlineAnimeClubPage() {
           <li>AniDachi installed on every active member&apos;s Chrome browser</li>
           <li>Each member has their own Crunchyroll subscription</li>
           <li>A pinned watch schedule with timezone noted</li>
-          <li>Spoiler rules posted and enforced via watchroom episode pins</li>
+          <li>Spoiler rules agreed in your group chat before each session</li>
           <li>A vote system for picking the next show (polls, reactions, or rotation)</li>
         </ul>
 
@@ -160,8 +163,7 @@ export default function HowToRunAnOnlineAnimeClubPage() {
         <p className="text-foreground/80 leading-relaxed mb-8">
           Clubs with international members need a hybrid approach. Schedule one
           live sync per week at a rotating time so no region is always stuck at
-          3 AM. Between syncs, use AniDachi&apos;s async mode so members watch on
-          their own schedule without spoiling the group. See our{" "}
+          3 AM. Between sessions, let members catch up independently and keep later-episode discussions in a separate channel. AniDachi Async catch-up is planned, not available today. See our{" "}
           <Link
             href="/guides/how-to-watch-anime-with-friends-in-different-time-zones"
             className="text-brand-orange hover:underline"

@@ -1,5 +1,7 @@
 import { getPlanPolicy } from "@anidachi/protocol";
-import type { CheckoutTier } from "@/lib/home-survey";
+import type { CompareTableRow } from "@/components/responsive-compare-table";
+
+export type CheckoutTier = "plus" | "pro";
 
 export const PRICING_PLUS_MONTHLY = 7.99;
 export const PRICING_PRO_MONTHLY = 14.99;
@@ -7,6 +9,11 @@ export const PRICING_PRO_MONTHLY = 14.99;
 export const PRICING_PLUS_LABEL = `$${PRICING_PLUS_MONTHLY.toFixed(2)}`;
 export const PRICING_PRO_LABEL = `$${PRICING_PRO_MONTHLY.toFixed(2)}`;
 export const PRICING_STARTING_AT = `$${PRICING_PLUS_MONTHLY.toFixed(2)}/month`;
+
+export function pricingCheckoutCtaLabel(tier: CheckoutTier): string {
+  return tier === "pro" ? "Start Pro" : "Start Plus";
+}
+
 export const PRICING_PLUS_SHORT = "$7.99/mo";
 export const PRICING_PRO_SHORT = "$14.99/mo";
 
@@ -26,6 +33,117 @@ const freePolicy = getPlanPolicy("free");
 const plusPolicy = getPlanPolicy("plus");
 const proPolicy = getPlanPolicy("pro");
 
+const freeHostMins = freePolicy.dailyHostSeconds! / 60;
+
+/**
+ * Canonical Free / Plus / Pro marketing matrix (matches product policy).
+ * Use this for cards, the pricing comparison table, and sitewide pricing cells.
+ */
+export const PRICING_PLAN_MATRIX_COLUMNS = [
+  { id: "free", label: "Free" },
+  { id: "plus", label: "Plus", highlight: true },
+  { id: "pro", label: "Pro" },
+] as const;
+
+export const PRICING_PLAN_MATRIX_ROWS: CompareTableRow[] = [
+  {
+    feature: "Price",
+    values: {
+      free: "Free",
+      plus: `${PRICING_PLUS_LABEL}/month`,
+      pro: `${PRICING_PRO_LABEL}/month`,
+    },
+  },
+  {
+    feature: "Platforms",
+    values: {
+      free: "Crunchyroll + YouTube",
+      plus: "Crunchyroll + YouTube",
+      pro: "Crunchyroll + YouTube",
+    },
+  },
+  {
+    feature: "Host your own room",
+    values: {
+      free: `${freeHostMins} min/day`,
+      plus: "No daily limit",
+      pro: "No daily limit",
+    },
+  },
+  {
+    feature: "People in room (incl. host)",
+    values: {
+      free: `Up to ${freePolicy.maxParticipants}`,
+      plus: `Up to ${plusPolicy.maxParticipants}`,
+      pro: `Up to ${proPolicy.maxParticipants}`,
+    },
+  },
+  {
+    feature: "Cameras at once",
+    values: {
+      free: `Up to ${freePolicy.maxCameras}`,
+      plus: `Up to ${plusPolicy.maxCameras}`,
+      pro: `Up to ${proPolicy.maxCameras}`,
+    },
+  },
+  {
+    feature: "Mics at once",
+    values: {
+      free: `Up to ${freePolicy.maxMicrophones}`,
+      plus: `Up to ${plusPolicy.maxMicrophones}`,
+      pro: `Up to ${proPolicy.maxMicrophones}`,
+    },
+  },
+  {
+    feature: "Record & edit progress",
+    values: {
+      free: "no",
+      plus: "Yes — both platforms",
+      pro: "Yes — both platforms",
+    },
+  },
+  {
+    feature: "View saved history & resume",
+    values: {
+      free: "yes",
+      plus: "yes",
+      pro: "yes",
+    },
+  },
+  {
+    feature: "Join friends' rooms",
+    values: {
+      free: "yes",
+      plus: "yes",
+      pro: "yes",
+    },
+  },
+  {
+    feature: "Sync, chat & reactions",
+    values: {
+      free: "yes",
+      plus: "yes",
+      pro: "yes",
+    },
+  },
+  {
+    feature: "Friends, groups & invites",
+    values: {
+      free: "yes",
+      plus: "yes",
+      pro: "yes",
+    },
+  },
+  {
+    feature: "Priority support",
+    values: {
+      free: "no",
+      plus: "no",
+      pro: "yes",
+    },
+  },
+];
+
 export const PRICING_TIERS: PricingTierMarketing[] = [
   {
     id: "free",
@@ -33,17 +151,17 @@ export const PRICING_TIERS: PricingTierMarketing[] = [
     priceDisplay: "$0",
     priceSuffix: "/month",
     audience: "Try AniDachi and join friends in their rooms",
-    summary: "Join watchrooms, sync, and chat; upgrade for unlimited hosting and personal history",
+    summary: "Crunchyroll + YouTube — join free, host with a daily limit",
     features: [
-      "Crunchyroll & YouTube watchrooms",
-      "Join friends' watchrooms for free",
+      "Crunchyroll + YouTube",
+      `Host your own room: ${freeHostMins} min/day`,
+      `Up to ${freePolicy.maxParticipants} people (incl. host)`,
+      `Up to ${freePolicy.maxCameras} cameras & ${freePolicy.maxMicrophones} mics`,
+      "Join friends' rooms",
       "Sync, chat & reactions",
-      "Chrome extension access",
-      `Host up to ${freePolicy.dailyHostSeconds! / 60} min/day (UTC)`,
-      `Up to ${freePolicy.maxParticipants} people in your room`,
-      `Up to ${freePolicy.maxCameras} cameras & ${freePolicy.maxMicrophones} microphones`,
-      "1 friend group",
-      "No personal watch history",
+      "Friends, groups & invites",
+      "View saved history & resume",
+      "Recording & editing require Plus or Pro",
     ],
   },
   {
@@ -52,16 +170,17 @@ export const PRICING_TIERS: PricingTierMarketing[] = [
     priceDisplay: PRICING_PLUS_LABEL,
     priceSuffix: "/month",
     audience: "Regular watch nights and your personal watch progress",
-    summary: "Unlimited hosting and personal history, alone or in a room",
+    summary: "No daily host limit — record progress on both platforms",
     features: [
-      "Unlimited watchrooms",
-      `Up to ${plusPolicy.maxParticipants} people in your room`,
-      `Up to ${plusPolicy.maxCameras} cameras & ${plusPolicy.maxMicrophones} microphones`,
-      "Real-time chat & discussions",
-      "Cross-device playback sync",
-      "Personal watch history & Resume",
-      "Crunchyroll & YouTube",
-      "Priority support",
+      "Crunchyroll + YouTube",
+      "Host your own room: no daily limit",
+      `Up to ${plusPolicy.maxParticipants} people (incl. host)`,
+      `Up to ${plusPolicy.maxCameras} cameras & ${plusPolicy.maxMicrophones} mics`,
+      "Record & edit progress on both platforms",
+      "Resume from saved spot",
+      "Join friends' rooms",
+      "Sync, chat & reactions",
+      "Friends, groups & invites",
     ],
   },
   {
@@ -69,17 +188,13 @@ export const PRICING_TIERS: PricingTierMarketing[] = [
     label: "Pro",
     priceDisplay: PRICING_PRO_LABEL,
     priceSuffix: "/month",
-    audience: "Club hosts and bigger groups who need private rooms and moderator controls",
-    summary: "Bigger groups and personal watch history",
+    audience: "Bigger groups, clubs, and hosts who need priority support",
+    summary: `Same as Plus — up to ${proPolicy.maxParticipants} people and ${proPolicy.maxMicrophones} mics, plus priority support`,
     features: [
       "Everything in Plus",
-      `Up to ${proPolicy.maxParticipants} people in your room`,
-      `Up to ${proPolicy.maxCameras} cameras & ${proPolicy.maxMicrophones} microphones`,
-      "Invite-only rooms (private links + approval)",
-      "Host & moderator controls (kick/ban, lock playback)",
-      "Room personalization (name, cover, pinned notes)",
-      "Personal watch history & Resume",
-      "Founder badge + fast-track support",
+      `Up to ${proPolicy.maxParticipants} people (incl. host)`,
+      `Up to ${proPolicy.maxCameras} cameras & ${proPolicy.maxMicrophones} mics`,
+      "Priority support",
     ],
   },
 ];

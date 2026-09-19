@@ -30,7 +30,7 @@ export default function EditorialPolicyPage() {
         <h1 className="text-4xl font-bold text-foreground mb-2">
           Editorial Policy
         </h1>
-        <p className="text-sm text-foreground/50 mb-10">Last updated: July 28, 2026</p>
+        <p className="text-sm text-foreground/50 mb-10">Last updated: September 15, 2026</p>
 
         <div className="space-y-8 text-foreground/80 leading-relaxed">
           <section>
@@ -133,13 +133,18 @@ export default function EditorialPolicyPage() {
               Commercial disclosure
             </h2>
             <p>
-              AniDachi sells paid plans (Plus / Pro). Product pages and CTAs may
-              link to{" "}
+              AniDachi sells paid plans (Free / Plus / Pro). Product pages and
+              CTAs may link to the{" "}
+              <Link href="/extension" className="text-brand-orange hover:underline">
+                install guide
+              </Link>{" "}
+              and{" "}
               <Link href="/pricing" className="text-brand-orange hover:underline">
                 pricing
               </Link>
               . We do not accept paid placements that misrepresent competitors
-              or unsupported platforms.
+              or unsupported platforms. Planned features (for example async
+              catch-up) must be labeled as coming soon — not as shipped product.
             </p>
           </section>
 

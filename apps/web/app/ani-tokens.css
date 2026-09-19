@@ -1,0 +1,116 @@
+/* AniDachi account handoff — 2026-09-14.
+ * Source snapshot: 9d5a3737eea7a17f34a976ed4d2c4f2000c30119.
+ * Proposed semantic aliases for existing values, NOT an installed design system.
+ * Opt-in scope: no global overrides of the site's orange --primary token.
+ */
+[data-ani-theme="account"] {
+  --ani-canvas: #0d0d0f;
+  --ani-panel: #151516;
+  --ani-dialog: #171719;
+  --ani-notifications: #141416;
+
+  --ani-text: #eee5d9;
+  --ani-muted: #96938f;
+  --ani-on-primary: #181511;
+  --ani-primary: #eee5d9;
+  --ani-primary-hover: #fff7ec;
+
+  --ani-line: #ffffff12;
+  --ani-control-border: #ffffff1f;
+  --ani-control-border-hover: #ffffff40;
+  --ani-control-bg: #ffffff03;
+  --ani-hover: #ffffff08;
+  --ani-selected-quiet: #eee5d90a;
+
+  --ani-brand: oklch(0.71 0.20 45);
+  --ani-progress: #ff9143;
+  --ani-focus: #ffad6e;
+  --ani-menu-accent: #ff954d;
+  --ani-error-text: #e5b7ac;
+  --ani-error-line: #d89788;
+  --ani-error-bg: #d897880b;
+  --ani-danger-text: #dca49b;
+
+  --ani-font: var(--font-geist-sans, "Geist"), ui-sans-serif, system-ui, sans-serif;
+  --ani-text-page: clamp(24px, 2.4vw, 30px);
+  --ani-text-section: 16px;
+  --ani-text-body: 14px;
+  --ani-text-control: 13px;
+  --ani-text-meta: 12px;
+
+  --ani-space-1: 4px;
+  --ani-space-2: 8px;
+  --ani-space-3: 12px;
+  --ani-space-4: 16px;
+  --ani-space-6: 24px;
+  --ani-space-8: 32px;
+  --ani-space-12: 48px;
+
+  --ani-radius-cell: 9px;
+  --ani-radius-nav: 10px;
+  --ani-radius-field: 12px;
+  --ani-radius-group: 18px;
+  --ani-radius-panel: 20px;
+  --ani-radius-pill: 999px;
+
+  --ani-control-h: 44px;
+  --ani-compact-h: 36px;
+  --ani-field-h: 46px;
+  --ani-sidebar-w: 204px;
+  --ani-inspector-w: 360px;
+
+  --ani-motion-fast: 160ms;
+  --ani-motion-control: 180ms;
+  --ani-motion-segment: 200ms;
+  --ani-ease-segment: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ani-shadow-menu: 0 18px 60px #0008;
+  --ani-shadow-notification: 0 24px 80px #0008;
+
+  /* Align shadcn/brand surfaces with account language.
+   * --primary / --accent stay orange for CRM, Blou, and shadcn. */
+  --background: var(--ani-canvas);
+  --foreground: var(--ani-text);
+  --card: var(--ani-panel);
+  --card-foreground: var(--ani-text);
+  --popover: var(--ani-dialog);
+  --popover-foreground: var(--ani-text);
+  --secondary: var(--ani-panel);
+  --secondary-foreground: var(--ani-text);
+  --muted: var(--ani-notifications);
+  --muted-foreground: var(--ani-muted);
+  --border: var(--ani-line);
+  --input: var(--ani-control-border);
+  --ring: var(--ani-focus);
+  --brand-surface: var(--ani-panel);
+  --brand-border: var(--ani-line);
+}
+
+[data-ani-theme="account"] body {
+  background-color: var(--ani-canvas);
+  color: var(--ani-text);
+}
+
+[data-ani-theme="account"] a.text-brand-orange,
+[data-ani-theme="account"] a.text-brand-orange-bright {
+  color: var(--ani-text);
+}
+
+[data-ani-theme="account"] a.text-brand-orange:hover,
+[data-ani-theme="account"] a.text-brand-orange-bright:hover,
+[data-ani-theme="account"] a.hover\:text-brand-orange-bright:hover,
+[data-ani-theme="account"] a.hover\:text-brand-orange:hover {
+  color: var(--ani-primary);
+}
+
+[data-ani-theme="account"] ::selection {
+  background: color-mix(in srgb, var(--ani-progress) 40%, transparent);
+  color: var(--ani-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-ani-theme="account"] {
+    --ani-motion-fast: 0ms;
+    --ani-motion-control: 0ms;
+    --ani-motion-segment: 0ms;
+  }
+}

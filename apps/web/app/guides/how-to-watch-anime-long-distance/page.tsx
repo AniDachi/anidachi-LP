@@ -7,7 +7,7 @@ import { PRICING_COMPARE_OVERVIEW } from "@/lib/pricing-copy";
 export const metadata: Metadata = {
   title: "How to Watch Anime Long Distance — 2026",
   description:
-    "The easiest way is AniDachi async watchrooms on Crunchyroll. Keep chat and progress aligned when you are far apart. Takes under 2 minutes.",
+    "The easiest way is AniDachi live watchrooms on Crunchyroll. Keep chat and progress aligned when you are far apart. Takes under 2 minutes.",
   alternates: { canonical: "/guides/how-to-watch-anime-long-distance" },
   openGraph: {
     images: [
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 
     title: "How to Watch Anime Long Distance — 2026",
     description:
-      "Stay close to your watch group across cities with synced or async Crunchyroll watchrooms.",
+      "Stay close to your watch group across cities with synced live Crunchyroll watchrooms.",
     url: "/guides/how-to-watch-anime-long-distance",
   },
   twitter: {
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "How to Watch Anime Long Distance — 2026",
     description:
-      "AniDachi async watchrooms keep long-distance anime nights social without same-time pressure.",
+      "AniDachi live watchrooms keep long-distance anime nights social at an agreed start time.",
   },
 };
 
@@ -52,12 +52,12 @@ const faq = [
   {
     question: "What is the best app for long-distance couples watching anime?",
     answer:
-      "AniDachi is the best app for long-distance couples watching anime together on Crunchyroll. Its async watchroom means you don't need to be online at the same time — each person watches at their own pace and leaves reactions the other person sees after finishing the same episode.",
+      "AniDachi is the best app for long-distance couples watching anime together on Crunchyroll. Its live room syncs playback when you are online together. Async catch-up is planned; viewers can currently catch up independently and meet for the next live session.",
   },
   {
     question: "Can long-distance couples watch anime together for free?",
     answer:
-      `Yes — for free, Discord screen share works over any distance. For full video quality without one person's stream limiting the other, Crunchyroll Party (free) or AniDachi (Free limited hosting; Plus for unlimited hosting) give everyone independent full-quality streams. ${PRICING_COMPARE_OVERVIEW} AniDachi is the only option with async support when schedules don't align.`,
+      `Yes — for free, Discord screen share works over any distance. For full video quality without one person's stream limiting the other, Crunchyroll Party (free) or AniDachi (Free limited hosting; Plus for unlimited hosting) give everyone independent full-quality streams. ${PRICING_COMPARE_OVERVIEW} AniDachi Async catch-up is planned; current rooms are live.`,
   },
 ];
 
@@ -77,7 +77,7 @@ const howToSteps = [
   },
   {
     name: "Install AniDachi",
-    text: "Open /pricing for early access and install the AniDachi Chrome extension on each participant's laptop.",
+    text: "Open /extension, download the official zip, then Load unpacked in Chrome on each participant's laptop.",
   },
   {
     name: "Create a shared watchroom",
@@ -88,12 +88,12 @@ const howToSteps = [
     text: "Send the watchroom link through text, email, or Discord DMs.",
   },
   {
-    name: "Choose async or live",
-    text: "Use live sync when you share a start time; use async pacing when time zones diverge.",
+    name: "Choose a shared start time",
+    text: "Use live sync when you share a start time; if schedules differ, catch up independently before the next meeting.",
   },
   {
     name: "Chat episode by episode",
-    text: "Keep reactions in the watchroom thread so nobody skips ahead visually.",
+    text: "Use live chat during the session and agree on an episode boundary before discussing later events.",
   },
 ];
 
@@ -102,7 +102,7 @@ export default function HowToWatchAnimeLongDistancePage() {
     <>
       <HowToJsonLd
         name="How to watch anime long distance with AniDachi"
-        description="Set up a Crunchyroll watchroom that supports friends in different places with async-friendly progress."
+        description="Set up a Crunchyroll watchroom that supports friends in different places with live sync and personal progress."
         steps={howToSteps}
       />
       <SeoPageLayout
@@ -115,7 +115,7 @@ export default function HowToWatchAnimeLongDistancePage() {
           },
         ]}
         title="How to Watch Anime Long Distance"
-        description="Watch anime long distance with async watchrooms, Discord, or scheduled live sync."
+        description="Watch anime long distance with scheduled live watchrooms or Discord."
         url="/guides/how-to-watch-anime-long-distance"
         datePublished="2026-04-27"
         dateModified="2026-06-23"
@@ -130,9 +130,7 @@ export default function HowToWatchAnimeLongDistancePage() {
           <strong>
             Watching anime long distance is possible by streaming on each
             person&apos;s device with a shared chat layer, or by one-way screen
-            share. The easiest way is AniDachi because async watchrooms keep
-            everyone on the same emotional arc without forcing the same clock
-            time.
+            share. AniDachi syncs playback when everyone is online together. For different schedules, catch up independently before the next live meeting.
           </strong>
         </p>
 
@@ -140,15 +138,10 @@ export default function HowToWatchAnimeLongDistancePage() {
           id="method-anidachi"
           className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
-          Method 1: AniDachi (async-friendly distance watching)
+          Method 1: AniDachi (live watchrooms)
         </h2>
         <p className="text-foreground/80 leading-relaxed mb-4">
-          Long-distance groups usually fail when one person flies through a
-          cliffhanger night while another is still at work. AniDachi treats the
-          watchroom as the home base: chat stays attached to the series, and you
-          can lean on async pacing so reactions land when each friend actually
-          finishes the episode. When you do align for a premiere, flip back to
-          live-style watching without changing tools.
+          Choose a shared start time and open the same episode in your own Crunchyroll tabs. AniDachi syncs playback and live chat in the room. Personal history on Plus or Pro saves each viewer&apos;s progress separately. Async catch-up with replayed reactions is planned, not available today.
         </p>
         <p className="text-foreground/80 leading-relaxed mb-4">
           Point partners to official{" "}
@@ -161,10 +154,10 @@ export default function HowToWatchAnimeLongDistancePage() {
           </a>{" "}
           articles if they need account or playback troubleshooting. Install
           AniDachi from{" "}
-          <Link href="/pricing" className="text-brand-orange hover:underline">
-            pricing / early access
+          <Link href="/extension" className="text-brand-orange hover:underline">
+            the AniDachi install page
           </Link>{" "}
-          so everyone runs the same build during soft launch.
+          so everyone loads the same official zip.
         </p>
 
         <h2
@@ -200,12 +193,11 @@ export default function HowToWatchAnimeLongDistancePage() {
           Step-by-step with AniDachi
         </h2>
         <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
-          <li>Confirm everyone has access to the same Crunchyroll series.</li>
-          <li>Install AniDachi in Chrome for each participant.</li>
-          <li>Open episode one (or your agreed checkpoint) while signed in.</li>
-          <li>Run anime detection so metadata matches the correct title.</li>
-          <li>Create a watchroom and send the invite across time zones.</li>
-          <li>Use chat for reactions; pace episodes async when schedules slip.</li>
+          {howToSteps.map((step) => (
+            <li key={step.name}>
+              <strong>{step.name}.</strong> {step.text}
+            </li>
+          ))}
         </ol>
 
         <h2

@@ -45,7 +45,7 @@ const faq = [
   {
     question: "What is the best way to watch anime together online?",
     answer:
-      "The best method depends on your group. For Crunchyroll anime, AniDachi offers watchrooms with sync, chat, and async support (YouTube watchrooms are available for video nights). For cross-platform groups, Teleparty works across Netflix, Disney+, and Crunchyroll. For a free option, Discord screen sharing works in a pinch.",
+      "The best method depends on your group. For Crunchyroll anime, AniDachi offers watchrooms with live sync and chat (YouTube watchrooms are available for video nights). For cross-platform groups, Teleparty works across Netflix, Disney+, and Crunchyroll. For a free option, Discord screen sharing works in a pinch.",
   },
   {
     question: "How do you watch anime with friends online?",
@@ -70,7 +70,7 @@ const faq = [
   {
     question: "Can you watch anime together long distance for free?",
     answer:
-      "Yes — for free, Discord screen sharing works over any distance. For a more polished long-distance anime watch party, Crunchyroll Party (free) or AniDachi (Free limited hosting; Plus for unlimited hosting) give everyone full-quality streams and proper sync. AniDachi also supports async watching, so long-distance friends in different time zones never need to schedule. Dedicated hub: /best-apps-watch-anime-together-long-distance.",
+      "Yes — for free, Discord screen sharing works over any distance. For a more polished long-distance anime watch party, Crunchyroll Party (free) or AniDachi (Free limited hosting; Plus for unlimited hosting) give everyone playback on their own streaming accounts with live sync. AniDachi currently requires a shared start time for live rooms. Async catch-up is planned. Dedicated hub: /best-apps-watch-anime-together-long-distance.",
   },
   {
     question: "How do you stream anime together online?",
@@ -80,7 +80,7 @@ const faq = [
   {
     question: "Can you watch anime together without being online at the same time?",
     answer:
-      "Yes! AniDachi supports asynchronous watching. Create a watchroom, and each person watches episodes at their own pace. Mark episodes as watched, leave reactions, and read your friends' comments when you catch up.",
+      "Not yet. AniDachi rooms currently run live. Each viewer can keep personal progress with Plus or Pro; replaying friends' reactions through Async catch-up is planned.",
   },
   {
     question: "What anime are best to watch with friends?",
@@ -148,7 +148,7 @@ export default function WatchAnimeTogetherPage() {
         <strong>
           The best way to watch anime together online is with a dedicated
           watchroom tool like AniDachi that syncs playback, adds real-time chat,
-          and lets you watch asynchronously.
+          and lets you watch together in real time.
         </strong>{" "}
         This hub compares every method — live sync, free Discord nights, and
         long-distance setups — then routes you to the right platform pillar:{" "}
@@ -172,7 +172,7 @@ export default function WatchAnimeTogetherPage() {
         <Link href="/pricing" className="text-brand-orange font-medium hover:underline">
           See AniDachi pricing — Free limited hosting, Plus unlimited
         </Link>{" "}
-        — early-access pricing with a clear refund path, then create your first
+        — with a clear refund path, then create your first
         watchroom in minutes.
       </p>
 
@@ -202,7 +202,7 @@ export default function WatchAnimeTogetherPage() {
             highlight: true,
             body: (
               <>
-                Primary hub for synced and async anime watchrooms —{" "}
+                Primary hub for synced anime watchrooms —{" "}
                 <Link href="/watch-crunchyroll-together">open the Crunchyroll pillar</Link>.
               </>
             ),
@@ -254,7 +254,7 @@ export default function WatchAnimeTogetherPage() {
             body: (
               <>
                 Crunchyroll-focused watchrooms with live sync, real-time chat, and
-                unique async support. Each person streams on their own account in
+                personal history on Plus or Pro. Each person streams on their own account in
                 full quality. Free to join; Plus for hosts starts at {PRICING_STARTING_AT}.
               </>
             ),
@@ -296,8 +296,7 @@ export default function WatchAnimeTogetherPage() {
       <p className="text-foreground/80 leading-relaxed mb-4">
         Extensions like AniDachi, Crunchyroll Party, and Teleparty sync
         playback so everyone sees the same frame. Each person watches on their
-        own account in full quality. AniDachi uniquely supports async watching
-        — watch at different times and still share the experience.
+        own account in full quality. AniDachi supports live rooms and personal history. Async catch-up is planned, not available today.
       </p>
 
       <h3
@@ -349,11 +348,7 @@ export default function WatchAnimeTogetherPage() {
           Playback stays in sync automatically.
         </li>
         <li>
-          <strong>Async for time-zone gaps:</strong> If your friend is 8 hours
-          ahead, live sync is often impractical. AniDachi&apos;s async
-          watchrooms let each person watch at their own pace — episodes are
-          marked as watched, reactions appear in context, and nobody waits on a
-          schedule.
+          <strong>Async for time-zone gaps:</strong> If your friend is 8 hours ahead, find a shared window or catch up independently before discussing the episode. AniDachi Async catch-up with replayed reactions is planned, not available today.
         </li>
         <li>
           <strong>Free long-distance option:</strong> Discord screen sharing
@@ -387,8 +382,7 @@ export default function WatchAnimeTogetherPage() {
         <strong>Live watch parties</strong> require everyone to be online at the
         same time. Great for premieres and season finales, but hard to schedule.{" "}
         <strong>Asynchronous watch parties</strong> let everyone watch at their
-        own pace and share reactions afterwards. AniDachi is the only tool that
-        fully supports async anime watching. Read our{" "}
+        own pace and share reactions afterwards. AniDachi Async catch-up is planned, not available today. Read our{" "}
         <Link
           href="/guides/asynchronous-vs-live-watch-party"
           className="text-brand-orange hover:underline"

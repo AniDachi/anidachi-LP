@@ -1,2 +1,2 @@
-/** Founder Discord contact shown on /success and pre-purchase survey. */
+/** Founder Discord contact shown on /success. */
 export const FOUNDER_DISCORD_USERNAME = ".profun";

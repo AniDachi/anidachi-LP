@@ -18,7 +18,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "How to Host a Crunchyroll Watch Party (2026 Host Guide) | AniDachi",
+  title: "How to Host a Crunchyroll Watch Party (2026 Host Guide)",
   description:
     "Host framing: create a Crunchyroll watchroom, share invites, and understand who pays (hosts upgrade; guests Free). Plan limits + step-by-step HowTo.",
   alternates: { canonical: "/guides/how-to-host-a-crunchyroll-watch-party" },
@@ -52,7 +52,7 @@ const howToSteps = [
   },
   {
     name: "Create the watchroom as host",
-    text: "Generate the room from the extension, enable chat, and decide live vs async pacing before invites go out.",
+    text: "Create the room from the extension and agree on a shared start time before sending invitations.",
   },
   {
     name: "Share the invite with host notes",
@@ -60,7 +60,7 @@ const howToSteps = [
   },
   {
     name: "Start playback and moderate",
-    text: "Count down in chat for live nights, or leave async markers for late joiners. Upgrade to Pro if you need invite-only rooms and mods.",
+    text: "Start the live session together. The host manages the room; Plus and Pro provide longer hosting and larger room limits.",
   },
 ];
 
@@ -170,7 +170,7 @@ export default function HowToHostACrunchyrollWatchPartyPage() {
         <p className="text-foreground/80 leading-relaxed mb-8">
           Free hosting is capped (about 30 minutes/day and smaller rooms). Weekly
           club hosts usually move to Plus ({PRICING_PLUS_SHORT}) or Pro (
-          {PRICING_PRO_SHORT}) during pre-launch.
+          {PRICING_PRO_SHORT}).
         </p>
 
         <h2

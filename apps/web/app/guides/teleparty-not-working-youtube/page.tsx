@@ -19,7 +19,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Teleparty Not Working on YouTube? Fixes (2026) | AniDachi",
+  title: "Teleparty Not Working on YouTube? Fixes (2026)",
   description:
     "Fix Teleparty not working on YouTube: sync drift, extension updates, player detection failures, and when to switch to AniDachi watchrooms.",
   alternates: { canonical: "/guides/teleparty-not-working-youtube" },
@@ -57,7 +57,7 @@ const faq = [
   {
     question: "When should I switch from Teleparty to AniDachi?",
     answer:
-      "Switch when sync breaks every session, your group spans time zones and needs async catch-up, or you also host Crunchyroll anime nights in one extension. AniDachi is built for groups that outgrow live-only sync.",
+      "Consider AniDachi if you want live rooms for both YouTube and Crunchyroll, cameras and microphones, or personal history on Plus or Pro. Async catch-up is planned and is not available today.",
   },
   {
     question: "Is AniDachi free compared to Teleparty?",
@@ -98,7 +98,7 @@ const howToSteps = [
   },
   {
     name: "Switch to per-user YouTube sync",
-    text: "If Teleparty keeps failing every week, move to AniDachi so each person streams from their own YouTube player with a shared watchroom layer — optional async catch-up included.",
+    text: "If Teleparty keeps failing every week, move to AniDachi so each person streams from their own YouTube player with a shared watchroom layer — personal history available on Plus or Pro. Async catch-up is planned.",
   },
 ];
 
@@ -207,8 +207,7 @@ export default function TelepartyNotWorkingYoutubePage() {
           When to switch tools
         </h2>
         <p>
-          Stay on Teleparty if live multi-service nights already work. Switch to
-          AniDachi when you need async YouTube catch-up or also host Crunchyroll
+          Stay on Teleparty if live multi-service nights already work. Choose AniDachi for live YouTube rooms and personal history, or when you also host Crunchyroll
           anime nights in one extension. Ranked options:{" "}
           <Link
             href="/guides/best-teleparty-alternatives-for-youtube"
@@ -216,9 +215,9 @@ export default function TelepartyNotWorkingYoutubePage() {
           >
             best Teleparty alternatives for YouTube
           </Link>
-          . Early access:{" "}
-          <Link href="/pricing" className="text-brand-orange hover:underline">
-            /pricing
+          . Install:{" "}
+          <Link href="/extension" className="text-brand-orange hover:underline">
+            the AniDachi install page
           </Link>
           .
         </p>

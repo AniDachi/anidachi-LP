@@ -12,7 +12,7 @@ import {
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
-import { PRICING_EARLY_ACCESS_PRICE } from "@/lib/pricing-copy";
+import { PRICING_PLUS_PRICE_LINE } from "@/lib/pricing-copy";
 
 const SITE_URL = getResolvedSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
@@ -21,19 +21,19 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "AniDachi vs Crunchyroll Party — Which Is Better for Anime Nights? (2026)",
   description:
-    "Crunchyroll Party is the free live-sync option. AniDachi adds async watching, per-user progress, and auto anime detection. Full comparison to help you pick.",
+    "Compare Crunchyroll watch parties: live sync, on-player chat, voice and cameras, invitations, and personal watch history. See what AniDachi offers today.",
   alternates: { canonical: "/compare/anidachi-vs-crunchyroll-party" },
   openGraph: {
     title: "AniDachi vs Crunchyroll Party",
     description:
-      "Side-by-side comparison for Crunchyroll-first anime groups: live sync vs async watchrooms.",
+      "Compare live Crunchyroll watch parties, room features, and personal watch history.",
     url: "/compare/anidachi-vs-crunchyroll-party",
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "AniDachi vs Crunchyroll Party",
-    description: "When live sync is enough—and when groups need async watchrooms.",
+    description: "Compare live Crunchyroll rooms, invitations, and personal watch history.",
     images: [BRAND_OG_PATH],
   },
 };
@@ -42,7 +42,7 @@ const faq = [
   {
     question: "Is Crunchyroll Party free compared to AniDachi?",
     answer:
-      "Crunchyroll Party is a free Chrome extension for live, synchronized watching. AniDachi has a Free tier for joining rooms and Plus/Pro tiers for hosts during early access, with Crunchyroll-first watchrooms, async catch-up, auto anime detection, and per-person progress tracking.",
+      "Crunchyroll Party is a free Chrome extension for live, synchronized watching. AniDachi has a Free tier for joining and limited hosting. Plus and Pro raise the host's room limits and let each subscribed viewer record and edit personal watch progress. Saved history and Resume remain available on Free.",
   },
   {
     question: "Do we still need Crunchyroll accounts for both tools?",
@@ -52,7 +52,7 @@ const faq = [
   {
     question: "Which is better for friends in different time zones?",
     answer:
-      "If you can’t reliably watch at the same time, AniDachi is usually the better fit because reactions and progress stay tied to episodes even when people watch on different schedules.",
+      "AniDachi currently supports live rooms, so friends need to watch at the same time to stay in sync. Personal history helps each viewer resume their own viewing later; it is not a shared group progress record. Async catch-up is planned and is not available today.",
   },
 ];
 
@@ -82,7 +82,7 @@ export default function AniDachiVsCrunchyrollPartyPage() {
       description="Side-by-side comparison for Crunchyroll watch parties."
       url="/compare/anidachi-vs-crunchyroll-party"
       datePublished="2026-05-11"
-      dateModified="2026-08-12"
+      dateModified="2026-09-18"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -94,9 +94,9 @@ export default function AniDachiVsCrunchyrollPartyPage() {
       <SeoGuideAnswer>
 
         <strong>
-          Crunchyroll Party is great when everyone can watch live. AniDachi is built
-          for real friend groups: mixed schedules, time zones, and long-running
-          shows where progress and spoiler boundaries matter.
+          Both tools support live Crunchyroll watch parties. AniDachi adds
+          on-player chat, reactions, voice and cameras, friend and group
+          invitations, and personal progress recording on Plus and Pro.
         </strong>
       
       </SeoGuideAnswer>
@@ -106,9 +106,10 @@ export default function AniDachiVsCrunchyrollPartyPage() {
       </h2>
       <p className="text-foreground/80 mb-8">
         <strong>TL;DR:</strong> Use <strong>Crunchyroll Party</strong> for free, live
-        synchronized watching. Use <strong>AniDachi</strong> if your group wants one
-        persistent watchroom, per-person progress, and async catch-up without losing
-        where everyone is.
+        synchronized watching. Use <strong>AniDachi</strong> for live rooms with
+        on-player social controls and invitations. Each viewer with Plus or Pro
+        can record and edit their own progress; saved history and Resume remain
+        available on Free. Async catch-up is planned, not available today.
       </p>
 
       <h2
@@ -126,7 +127,7 @@ export default function AniDachiVsCrunchyrollPartyPage() {
           { feature: "Live sync", values: { anidachi: "yes", crunchyrollParty: "yes" } },
           {
             feature: "Asynchronous catch-up",
-            values: { anidachi: "yes", crunchyrollParty: "no" },
+            values: { anidachi: "Planned — not available yet", crunchyrollParty: "no" },
           },
           {
             feature: "Auto anime detection",
@@ -134,12 +135,15 @@ export default function AniDachiVsCrunchyrollPartyPage() {
           },
           {
             feature: "Per-person progress",
-            values: { anidachi: "yes", crunchyrollParty: "no" },
+            values: {
+              anidachi: "Record and edit on Plus/Pro; saved history and Resume on all plans",
+              crunchyrollParty: "no",
+            },
           },
           {
             feature: "Pricing",
             values: {
-              anidachi: PRICING_EARLY_ACCESS_PRICE,
+              anidachi: PRICING_PLUS_PRICE_LINE,
               crunchyrollParty: "Free",
             },
           },
@@ -165,9 +169,9 @@ export default function AniDachiVsCrunchyrollPartyPage() {
         When AniDachi wins
       </h2>
       <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
-        <li>You want async watching without losing the shared room context.</li>
-        <li>You want per-person progress and spoiler boundaries that stick.</li>
-        <li>You host long shows (or simulcasts) and need consistent pacing.</li>
+        <li>You want voice, cameras, chat, and reactions on the video player.</li>
+        <li>You want to invite friends or a saved group to a live room.</li>
+        <li>You want to record and edit your own viewing progress with Plus or Pro.</li>
       </ul>
 
       <h2
@@ -177,9 +181,10 @@ export default function AniDachiVsCrunchyrollPartyPage() {
         Migration path
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-8">
-        If your crew started on a free live-sync tool and it keeps breaking due to
-        scheduling, switch to a workflow where everyone streams locally and the
-        room tracks progress. Start with{" "}
+        Each person opens Crunchyroll in their own browser. Create a live room,
+        invite your friends, and watch in sync. Progress stays personal: each
+        viewer needs their own Plus or Pro subscription to record and edit it,
+        including when joining a paid host. Start with{" "}
         <Link href="/watch-crunchyroll-together" className="text-brand-orange hover:underline">
           Watch Crunchyroll Together
         </Link>{" "}
@@ -187,8 +192,7 @@ export default function AniDachiVsCrunchyrollPartyPage() {
         <Link href="/pricing" className="text-brand-orange font-medium hover:underline">
           AniDachi pricing
         </Link>
-        . For an upgrade-focused narrative (when free live sync is no longer
-        enough), see{" "}
+        . For another comparison, see{" "}
         <Link
           href="/guides/crunchyroll-party-alternative"
           className="text-brand-orange hover:underline"
@@ -213,4 +217,3 @@ export default function AniDachiVsCrunchyrollPartyPage() {
     </SeoPageLayout>
   );
 }
-
