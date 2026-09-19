@@ -1,0 +1,6 @@
+.narrative { width:calc(100% - 330px); }
+@media(max-width:900px) and (min-width:640px) { .narrative h3 { font-size:24px; } }
+/* Fade the previous caption out before the next one appears. */
+.caption > div { transition:opacity 160ms ease,transform 280ms ease,visibility 160ms; }
+.caption > div[data-active=true] { transition-duration:280ms,280ms,0ms; transition-delay:160ms; }
+@media(prefers-reduced-motion:reduce) { .caption > div { transition:none; } }
