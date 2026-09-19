@@ -20,23 +20,22 @@ type MeResponse = {
   };
 };
 
-async function syncAmplitudeUserFromSession(): Promise<void> {
+async function syncAmplitudeUserFromSession(signal: AbortSignal): Promise<void> {
   try {
-    let response = await fetch("/api/me");
+    // Analytics observes the current account. Only the site's auth flow may
+    // refresh or clear website credentials; never retry a 401 through refresh.
+    const response = await fetch("/api/me", { signal, cache: "no-store" });
+    if (signal.aborted) return;
     if (response.status === 401) {
-      const refreshResponse = await fetch("/api/auth/refresh", { method: "POST" });
-      if (refreshResponse.ok) response = await fetch("/api/me");
-    }
-    if (!response.ok) {
       await resetAmplitudeUser();
       return;
     }
+    // Temporary failures are not evidence of sign-out.
+    if (!response.ok) return;
     const data = (await response.json().catch(() => null)) as MeResponse | null;
+    if (signal.aborted) return;
     const user = data?.user;
-    if (!user?.id) {
-      await resetAmplitudeUser();
-      return;
-    }
+    if (typeof user?.id !== "string" || !user.id.trim()) return;
     await identifyAmplitudeUser({
       userId: user.id,
       email: user.email,
@@ -55,12 +54,13 @@ export function AnalyticsEvents() {
   // Idempotent once a marketing path is stored for the session.
   useEffect(() => {
     captureFirstLandingPath();
-    void syncAmplitudeUserFromSession();
+    const controller = new AbortController();
+    void syncAmplitudeUserFromSession(controller.signal);
+    return () => controller.abort();
   }, [pathname]);
 
   useEffect(() => {
     initAmplitudeClient();
-    void syncAmplitudeUserFromSession();
     const stopVitals = initWebVitalsReporting();
 
     let fired50 = false;
