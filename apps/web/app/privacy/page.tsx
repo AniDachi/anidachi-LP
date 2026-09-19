@@ -65,12 +65,10 @@ export default function PrivacyPage() {
                 <li><strong>Stripe</strong> processes payments and subscription changes. We keep billing identifiers and subscription status; Stripe handles full payment-card details.</li>
                 <li><strong>Google and Discord</strong> provide the sign-in method you select. Browser push services deliver notifications to your browser.</li>
                 <li><strong>Google Analytics and Amplitude</strong> process website usage events, device/browser information and performance measurements where configured. These identifiers are not necessarily anonymous. Our website does not enable Amplitude Session Replay. These analytics SDKs are not installed in the extension.</li>
-                <li><strong>Gmail (Google)</strong> may send the desktop install link you request from the{" "}
-                  <Link href="/extension" className="text-brand-orange hover:underline">install page</Link>
-                  {" "}and deliver copies of contact and feature-request submissions to our team.</li>
+                <li><strong>Gmail (Google)</strong> may deliver copies of contact and feature-request submissions to our team.</li>
               </ul>
               <p className="mt-4">
-                If you request a desktop install link, we store your email address, the request type and time. Contact and feature-request forms also store the name, subject or title, category and message you submit. We keep these records in our internal CRM tools on private Vercel storage to fulfill your request and handle replies or follow-up about it.
+                Contact and feature-request forms store your email address, name, subject or title, category and message, along with the request type and time. We keep these records in our internal CRM tools on private Vercel storage to fulfill your request and handle replies or follow-up about it.
               </p>
               <p>We do not sell extension user data or use it for advertising, creditworthiness or lending decisions. We use it for the disclosed product features and their security and reliability, and share it with providers only as needed to deliver those purposes. Human access is limited to your explicit consent for a specific purpose, necessary security or legal handling, or aggregated data that cannot identify you.</p>
               <p>AniDachi&apos;s use of information received from Chrome APIs follows the <a href="https://developer.chrome.com/docs/webstore/program-policies/limited-use" className="text-brand-orange hover:underline">Chrome Web Store User Data Policy, including its Limited Use requirements</a>.</p>

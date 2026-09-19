@@ -1,5 +1,6 @@
 import { Children, isValidElement, type ReactNode } from "react";
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
+import { SeoGuideAnswer, SeoGuideTitle } from "@/components/seo-guide-blocks";
 import type { PageTemplateId } from "@/lib/conversion-events";
 
 function isParagraphElement(child: ReactNode): boolean {
@@ -18,7 +19,7 @@ function isDateMetaParagraph(child: ReactNode): boolean {
   return className.includes("text-xs");
 }
 
-/** Inserts the above-fold checkout CTA after the first H1 and lede paragraph. */
+/** Keep the introduction or short-answer block together before the install CTA. */
 export function SeoBelowTitleCta({
   children,
   pagePath,
@@ -32,13 +33,16 @@ export function SeoBelowTitleCta({
   let insertAt = Math.min(2, arr.length);
 
   const h1Index = arr.findIndex(
-    (child) => isValidElement(child) && child.type === "h1"
+    (child) => isValidElement(child) && (child.type === "h1" || child.type === SeoGuideTitle)
   );
 
   if (h1Index >= 0) {
     for (let i = h1Index + 1; i < arr.length; i++) {
       const child = arr[i];
-      if (isParagraphElement(child) && !isDateMetaParagraph(child)) {
+      if (
+        (isValidElement(child) && child.type === SeoGuideAnswer) ||
+        (isParagraphElement(child) && !isDateMetaParagraph(child))
+      ) {
         insertAt = i + 1;
         break;
       }

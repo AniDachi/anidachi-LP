@@ -39,7 +39,7 @@ function RoomActions({ highlight }: { highlight: "copy" | "friends" }) {
 			>
 				End room
 			</button>
-			<div className="panel-secondary-actions">
+			<div className="panel-action-icons">
 				<button
 					type="button"
 					className={`panel-icon-action${highlight === "copy" ? " example-highlight" : ""}`}
@@ -70,17 +70,20 @@ export function OverlayBubbleMock() {
 	return (
 		<ExtensionExampleFrame label="Player bubble example">
 			<div className="example-stage example-static" inert aria-hidden="true">
-				<button type="button" className="top-bubble example-highlight">
-					<img
-						src="/Anidachi_logo.png"
-						alt=""
-						width={24}
-						height={24}
-						className="top-bubble-logo"
-					/>
-					<span className="sync-dot connected" />
-					<span className="bubble-count">1</span>
-				</button>
+				<div className="top-bubble-reveal bubble-visible">
+					<button type="button" className="top-bubble example-highlight">
+						<img
+							src="/Anidachi_logo.png"
+							alt=""
+							width={24}
+							height={24}
+							className="top-bubble-logo"
+						/>
+						<span className="sync-dot connected" />
+						<span className="bubble-count">1</span>
+					</button>
+				</div>
+				<span className="example-player-label">Video player</span>
 			</div>
 		</ExtensionExampleFrame>
 	);
@@ -182,7 +185,7 @@ const participants: Participant[] = [
 	{
 		id: "example-host",
 		participantSessionId: "example-host-session",
-		displayName: "John Doe",
+		displayName: "Heorhi Talochka",
 		role: "host",
 		cameraEnabled: false,
 		mediaSeat: "none",
@@ -314,11 +317,8 @@ export function OverlayReactionsMock() {
 
 export function OverlayMessageMock() {
 	return (
-		<ExtensionExampleFrame label="Message field example">
-			<div className="example-stage example-static" inert aria-hidden="true">
-				<p className="example-shortcut">
-					<kbd>Enter</kbd> to open · <kbd>Enter</kbd> to send
-				</p>
+		<ExtensionExampleFrame label="Message field example" width="composer">
+			<div className="example-composer example-static" inert aria-hidden="true">
 				<div className="message-composer">
 					<div className="message-composer-emoji">
 						<button
@@ -344,6 +344,9 @@ export function OverlayMessageMock() {
 						<SendHorizontal size={15} />
 					</button>
 				</div>
+				<p className="example-shortcut">
+					<kbd>Enter</kbd> to open · <kbd>Enter</kbd> to send
+				</p>
 			</div>
 		</ExtensionExampleFrame>
 	);

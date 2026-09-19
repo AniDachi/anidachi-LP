@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 
     title: "Best Anime to Watch with Friends (2026) — 115+ Group Watch Picks",
     description:
-      "Pick the right show for your group, then host an AniDachi Crunchyroll watchroom — synced or async.",
+      "Pick the right show for your group, then host an AniDachi Crunchyroll watchroom — synced live.",
     url: "/guides/best-anime-to-watch-with-friends",
   },
 };
@@ -70,7 +70,7 @@ const faq = [
   {
     question: "How do I host a watch party for one of these shows?",
     answer:
-      "Use AniDachi to create a Crunchyroll watchroom, share the invite link, and decide as a group whether you will watch live (everyone at the same time with synced playback) or async (each person at their own pace). Everyone needs their own Crunchyroll account to stream the video.",
+      "Use AniDachi to create a Crunchyroll watchroom, share the invite link, and agree on a shared start time for synced playback. Async catch-up is planned, not available today. Everyone needs their own Crunchyroll account to stream the video.",
   },
 ];
 
@@ -160,8 +160,7 @@ export default function BestAnimeWithFriendsPage() {
           <strong>How much time do you have?</strong> One night → films (A
           Silent Voice, Your Name., Spirited Away) or short series (Cyberpunk:
           Edgerunners, Madoka Magica). Ongoing → long-run shonen (One Piece,
-          Naruto, HxH) work best with AniDachi&apos;s async watchrooms so
-          everyone moves at their own pace.
+          Naruto, HxH) work well with a weekly episode target and live watch sessions. Leave time for independent catch-up between meetings.
         </li>
         <li>
           <strong>What does the group enjoy?</strong> Loud reactions and fights
@@ -352,16 +351,16 @@ export default function BestAnimeWithFriendsPage() {
         Best for Long Marathons
       </h2>
       <ul className="space-y-3 text-foreground/80 mb-8">
-        <li><strong><Link href="/watch/one-piece-with-friends" className="text-brand-orange hover:underline">One Piece</Link></strong> — The ultimate long-form group watch. Use AniDachi&apos;s async watchrooms so everyone goes at their own pace.</li>
+        <li><strong><Link href="/watch/one-piece-with-friends" className="text-brand-orange hover:underline">One Piece</Link></strong> — The ultimate long-form group watch. Set a weekly episode target and meet in a live room when everyone catches up.</li>
         <li><strong><Link href="/watch/naruto-with-friends" className="text-brand-orange hover:underline">Naruto</Link></strong> — 720 episodes of ninja action. Better with friends to skip filler together.</li>
-        <li><strong><Link href="/watch/boruto-with-friends" className="text-brand-orange hover:underline">Boruto: Naruto Next Generations</Link></strong> — 293 episodes continuing the Naruto saga. Async mode keeps next-gen spoilers from reaching friends still working through Shippuden.</li>
+        <li><strong><Link href="/watch/boruto-with-friends" className="text-brand-orange hover:underline">Boruto: Naruto Next Generations</Link></strong> — 293 episodes continuing the Naruto saga. Agree on an episode limit before discussing the story with friends still watching Shippuden.</li>
         <li><strong><Link href="/watch/hunter-x-hunter-with-friends" className="text-brand-orange hover:underline">Hunter x Hunter</Link></strong> — Each arc is a different genre. Always something new to discuss.</li>
-        <li><strong><Link href="/watch/inuyasha-with-friends" className="text-brand-orange hover:underline">Inuyasha</Link></strong> — Feudal fairy-tale quests across 160+ TV episodes; async threads keep shard-hunt discussions readable.</li>
-        <li><strong><Link href="/watch/fairy-tail-with-friends" className="text-brand-orange hover:underline">Fairy Tail</Link></strong> — Guild-sized cast and endlessly extending saga—async watchrooms keep arcs tagged per friend.</li>
+        <li><strong><Link href="/watch/inuyasha-with-friends" className="text-brand-orange hover:underline">Inuyasha</Link></strong> — Feudal fairy-tale quests across 160+ TV episodes; separate episode discussions keep shard-hunt theories readable.</li>
+        <li><strong><Link href="/watch/fairy-tail-with-friends" className="text-brand-orange hover:underline">Fairy Tail</Link></strong> — Guild-sized cast and endlessly extending saga—weekly live sessions keep the group moving through each arc.</li>
         <li><strong><Link href="/watch/slam-dunk-with-friends" className="text-brand-orange hover:underline">Slam Dunk</Link></strong> — Classic basketball training arcs and rivalry games; perfect for long, hype weekend marathons.</li>
-        <li><strong><Link href="/watch/hajime-no-ippo-with-friends" className="text-brand-orange hover:underline">Hajime no Ippo</Link></strong> — Training + fight-night arcs stack endlessly; async pacing keeps everyone aligned between rounds.</li>
-        <li><strong><Link href="/watch/kingdom-with-friends" className="text-brand-orange hover:underline">Kingdom</Link></strong> — Warring States sieges and generals-in-the-making; async watchrooms keep strategy debates readable across arcs.</li>
-        <li><strong><Link href="/watch/magi-the-labyrinth-of-magic-with-friends" className="text-brand-orange hover:underline">Magi: The Labyrinth of Magic</Link></strong> — Dungeon crawls and kingdom politics across long arcs; async tags keep floor clears readable.</li>
+        <li><strong><Link href="/watch/hajime-no-ippo-with-friends" className="text-brand-orange hover:underline">Hajime no Ippo</Link></strong> — Training + fight-night arcs stack endlessly; regular catch-up breaks help everyone stay aligned between rounds.</li>
+        <li><strong><Link href="/watch/kingdom-with-friends" className="text-brand-orange hover:underline">Kingdom</Link></strong> — Warring States sieges and generals-in-the-making; arc-by-arc discussions keep strategy debates readable.</li>
+        <li><strong><Link href="/watch/magi-the-labyrinth-of-magic-with-friends" className="text-brand-orange hover:underline">Magi: The Labyrinth of Magic</Link></strong> — Dungeon crawls and kingdom politics across long arcs; clear episode labels help avoid revealing later adventures.</li>
         <li><strong><Link href="/watch/highschool-dxd-with-friends" className="text-brand-orange hover:underline">High School DxD</Link></strong> — Devil factions and Rating Game brawls across multiple seasons; one of Crunchyroll&apos;s most-watched series and perfect for power-scale debates between arcs.</li>
         <li><strong><Link href="/watch/cardcaptor-sakura-with-friends" className="text-brand-orange hover:underline">Cardcaptor Sakura</Link></strong> — Seventy episodes of magical-card captures escalating into a heartfelt arc; the definitive nostalgic marathon for groups introducing magical girl anime for the first time.</li>
         <li><strong><Link href="/watch/date-a-live-with-friends" className="text-brand-orange hover:underline">Date A Live</Link></strong> — Spirit arcs with genre-shifting vibes across multiple seasons; groups split into best-girl factions fast and stay loud through every season finale.</li>

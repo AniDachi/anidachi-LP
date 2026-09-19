@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent, type MouseEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type MouseEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -290,11 +290,6 @@ export function ExtensionInstallHub({
   const [browser, setBrowser] = useState<BrowserKind>("chrome");
   const [copiedChrome, setCopiedChrome] = useState(false);
   const [linkStatus, setLinkStatus] = useState<"idle" | "copied" | "shared">("idle");
-  const [email, setEmail] = useState("");
-  const [emailState, setEmailState] = useState<
-    "idle" | "sending" | "sent" | "saved" | "error"
-  >("idle");
-  const [emailError, setEmailError] = useState<string | null>(null);
 
   const sizeLabel = formatZipBytes(artifact.bytes);
 
@@ -344,38 +339,6 @@ export function ExtensionInstallHub({
       });
     } catch {
       setLinkStatus("idle");
-    }
-  }
-
-  async function emailInstallLink(event: FormEvent) {
-    event.preventDefault();
-    setEmailState("sending");
-    setEmailError(null);
-    try {
-      const res = await fetch("/api/extension/email-install-link", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          next: nextPath ?? undefined,
-        }),
-      });
-      const data = (await res.json()) as { error?: string; emailed?: boolean };
-      if (!res.ok) {
-        setEmailState("error");
-        setEmailError(data.error ?? "Could not save that email.");
-        return;
-      }
-      setEmailState(data.emailed ? "sent" : "saved");
-      trackConversion("desktop_install_link_emailed", {
-        page_path: INSTALL_HUB_PATH,
-        page_template: "install",
-        placement: "install_hub_mobile",
-        cta_variant: data.emailed ? "emailed" : "saved_only",
-      });
-    } catch {
-      setEmailState("error");
-      setEmailError("Could not send the link. Copy it instead.");
     }
   }
 
@@ -461,39 +424,6 @@ export function ExtensionInstallHub({
                 : "Copy desktop install link"}
           </Button>
         </div>
-        <form className="mt-8 space-y-3" onSubmit={(e) => void emailInstallLink(e)}>
-          <label className="block text-sm font-medium text-ani-text" htmlFor="install-email">
-            Email me this page
-          </label>
-          <input
-            id="install-email"
-            type="email"
-            required
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@email.com"
-            className="h-11 w-full rounded-full border border-ani-control-border bg-ani-canvas px-3 text-sm text-ani-text outline-none placeholder:text-ani-muted focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ani-focus"
-          />
-          <Button
-            type="submit"
-            size="control"
-            variant="creamOutline"
-            className="w-full"
-            disabled={emailState === "sending"}
-          >
-            {emailState === "sending" ? "Sending…" : "Send install link"}
-          </Button>
-          {emailState === "sent" ? (
-            <p className="text-sm text-ani-muted">Sent. Open it on desktop Chrome.</p>
-          ) : null}
-          {emailState === "saved" ? (
-            <p className="text-sm text-ani-muted">
-              Saved. If the email does not arrive, paste the copied link on your computer.
-            </p>
-          ) : null}
-          {emailError ? <p className="text-sm text-destructive">{emailError}</p> : null}
-        </form>
         <OverlayUsingGuide />
       </div>
     );
@@ -545,8 +475,7 @@ export function ExtensionInstallHub({
         </InstallStep>
         <InstallStep n={2} title="Unzip it">
           <p className="mt-1 text-sm text-ani-muted">
-            Open the folder with <code className="text-ani-text">manifest.json</code>
-            , not the <code className="text-ani-text">.zip</code> file.
+            Unzip the downloaded ZIP file.
           </p>
         </InstallStep>
         <InstallStep n={3} title="Open Chrome extensions">
@@ -578,12 +507,12 @@ export function ExtensionInstallHub({
         </InstallStep>
         <InstallStep n={5} title="Load unpacked">
           <p className="mt-1 text-sm leading-relaxed text-ani-muted">
-            With Developer mode on, three buttons appear on the{" "}
-            <span className="text-ani-text">left</span>, under the header. Click{" "}
-            <span className="text-ani-text">Load unpacked</span> (the first
-            button). Choose the unzipped folder that contains{" "}
-            <code className="text-ani-text">manifest.json</code>, not the{" "}
-            <code className="text-ani-text">.zip</code> file.
+            Click <span className="text-ani-text">Load unpacked</span> and select
+            the unzipped AniDachi folder.
+          </p>
+          <p className="mt-2 text-xs leading-relaxed text-ani-muted">
+            The selected folder should contain{" "}
+            <code className="text-ani-text">manifest.json</code>.
           </p>
           <div className="mt-3">
             <ChromeExtensionsMock highlight="load" />

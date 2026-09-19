@@ -34,7 +34,7 @@ const faq = [
   {
     question: "What is the best Chrome extension for Crunchyroll watch parties?",
     answer:
-      "It depends on your needs. AniDachi is best for async groups and progress tracking. Crunchyroll Party is the most popular free option for live sync. Teleparty works across multiple streaming services but has limited Crunchyroll-specific features.",
+      "It depends on your needs. AniDachi offers live rooms and personal progress tracking. Crunchyroll Party is the most popular free option for live sync. Teleparty works across multiple streaming services but has limited Crunchyroll-specific features.",
   },
   {
     question: "Are Crunchyroll watch party extensions safe?",
@@ -86,28 +86,25 @@ export default function CrunchyrollExtensionsPage() {
       <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           The best Crunchyroll watch party Chrome extension depends on whether
-          you need live sync, async watching, or multi-platform support.
+          you need live sync, personal history, or multi-platform support.
         </strong>{" "}
-        We tested and compared every major option. Here&apos;s what we found.
+        Here are the main options and their current uses.
       </p>
 
       <h2
         id="anidachi"
         className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
-        1. AniDachi — Best for Async Group Watching
+        1. AniDachi — Live Rooms and Personal History
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
-        AniDachi auto-detects anime on Crunchyroll, creates one-click
-        watchrooms, and is the only extension that supports asynchronous
-        watching. Friends mark episodes as watched at their own pace and leave
-        reactions for others to see later. {PRICING_ASYNC_HOST_SNIPPET}
+        AniDachi detects the current title on Crunchyroll and lets you create a live room with chat, reactions, cameras, and microphones. Personal history on Plus or Pro helps each viewer resume their own progress. {PRICING_ASYNC_HOST_SNIPPET}
       </p>
       <ul className="list-disc pl-6 space-y-1 text-foreground/80 mb-6">
         <li>Auto anime detection</li>
-        <li>Async + live sync</li>
+        <li>Live sync; Async planned</li>
         <li>Per-user progress tracking</li>
-        <li>Real-time and asynchronous chat</li>
+        <li>Real-time chat</li>
       </ul>
 
       <h2
@@ -163,7 +160,7 @@ export default function CrunchyrollExtensionsPage() {
           { id: "roll-together", label: "Roll Together" },
         ]}
         rows={[
-          { feature: "Async", values: { anidachi: "yes", "cr-party": "no", teleparty: "no", "roll-together": "no" } },
+          { feature: "Async", values: { anidachi: "Planned", "cr-party": "no", teleparty: "no", "roll-together": "no" } },
           { feature: "Auto-detect", values: { anidachi: "yes", "cr-party": "no", teleparty: "no", "roll-together": "no" } },
           { feature: "Progress", values: { anidachi: "yes", "cr-party": "no", teleparty: "no", "roll-together": "no" } },
           {

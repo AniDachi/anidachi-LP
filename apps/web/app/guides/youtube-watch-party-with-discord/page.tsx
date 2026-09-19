@@ -12,7 +12,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "YouTube Watch Party With Discord (2026 Hybrid Guide) | AniDachi",
+  title: "YouTube Watch Party With Discord (2026 Hybrid Guide)",
   description:
     "Best setup: Discord for voice + AniDachi for YouTube sync — not Discord Go Live. How to watch YouTube together on Discord without crushed video quality.",
   alternates: {
@@ -138,7 +138,7 @@ export default function YoutubeWatchPartyWithDiscordPage() {
             Use Discord for voice and AniDachi for YouTube sync — not Discord Go
             Live as your video source.
           </strong>{" "}
-          Full quality on each person’s YouTube tab, conversation in Discord.
+          Your own stream on each person’s YouTube tab, conversation in Discord.
           Start at{" "}
           <Link href="/extension" className="text-brand-orange hover:underline">
             the AniDachi install page

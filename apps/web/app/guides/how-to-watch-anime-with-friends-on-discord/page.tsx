@@ -5,7 +5,7 @@ import { HowToJsonLd } from "@/components/json-ld";
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 
 export const metadata: Metadata = {
-  title: "Watch Anime on Discord Without Screen Share Pain | AniDachi",
+  title: "Watch Anime on Discord Without Screen Share Pain",
   description:
     "Stream anime on Discord without Go Live pain: keep Discord for voice, sync Crunchyroll in an AniDachi watchroom — full quality anime watch party. Start at pricing.",
   alternates: {
@@ -226,9 +226,7 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
           When your group wants sharper video{" "}
           <em>and</em> tighter playback alignment, keep Discord for voice and run
           playback through AniDachi on Crunchyroll. Watchrooms sync each
-          person&apos;s stream and keep chat tied to progress — helpful when half
-          the crew watches live and the rest catches up later without spoiling
-          the thread. Get the extension from{" "}
+          person&apos;s stream and offer live chat while everyone is online. Personal history on Plus or Pro helps each viewer resume their own progress; Async catch-up is planned. Get the extension from{" "}
           <Link href="/extension" className="text-brand-orange hover:underline">
             the AniDachi install page
           </Link>

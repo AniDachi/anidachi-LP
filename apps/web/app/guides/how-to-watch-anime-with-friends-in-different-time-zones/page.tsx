@@ -6,7 +6,7 @@ import { HowToJsonLd } from "@/components/json-ld";
 export const metadata: Metadata = {
   title: "How to Watch Anime With Friends, Different Time Zones — 2026",
   description:
-    "The easiest way is AniDachi async watchrooms so friends in different time zones stay on the same story. Takes under 2 minutes to set up.",
+    "The easiest way is AniDachi live watchrooms so friends in different time zones stay on the same story. Takes under 2 minutes to set up.",
   alternates: {
     canonical:
       "/guides/how-to-watch-anime-with-friends-in-different-time-zones",
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 
     title: "How to Watch Anime With Friends, Different Time Zones — 2026",
     description:
-      "Keep global anime clubs social with async-friendly Crunchyroll watchrooms and clear chat rules.",
+      "Keep global anime clubs social with live Crunchyroll watchrooms and clear chat rules.",
     url: "/guides/how-to-watch-anime-with-friends-in-different-time-zones",
   },
   twitter: {
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "How to Watch Anime With Friends, Different Time Zones — 2026",
     description:
-      "AniDachi async watchrooms help friends in different time zones watch the same anime without midnight calls.",
+      "AniDachi live watchrooms help friends in different time zones watch the same anime without midnight calls.",
   },
 };
 
@@ -39,7 +39,7 @@ const faq = [
   {
     question: "What is a fair release schedule for a multi-time-zone anime club?",
     answer:
-      "Pick a weekly episode cap everyone can hit within 48 hours, then keep voice or video calls optional. Async chat inside a watchroom reduces the need for a single global air time.",
+      "Pick a weekly episode cap everyone can hit within 48 hours, then keep voice or video calls optional. AniDachi live rooms need a shared time; use a separate group chat for discussions between sessions.",
   },
   {
     question: "How do we handle daylight saving changes across countries?",
@@ -49,7 +49,7 @@ const faq = [
   {
     question: "Can one person host a simulcast for multiple time zones?",
     answer:
-      "A host can stream, but viewers far away still depend on that host being online. Per-user streaming with async chat scales better unless everyone truly shares one simulcast window.",
+      "A host can stream, but viewers far away still depend on that host being online. Per-user streaming avoids relying on one person to rebroadcast the video. Live rooms still require a shared time.",
   },
 ];
 
@@ -94,7 +94,7 @@ export default function HowToWatchAnimeFriendsTimeZonesPage() {
     <>
       <HowToJsonLd
         name="How to watch anime with friends in different time zones using AniDachi"
-        description="Coordinate a Crunchyroll watchroom that supports async viewing and shared chat across regions."
+        description="Coordinate a Crunchyroll watchroom that supports live playback and chat across regions."
         steps={howToSteps}
       />
       <SeoPageLayout
@@ -107,7 +107,7 @@ export default function HowToWatchAnimeFriendsTimeZonesPage() {
           },
         ]}
         title="How to Watch Anime With Friends in Different Time Zones"
-        description="Watch anime across time zones with async watchrooms, Discord, or rotating live hosts."
+        description="Watch anime across time zones with scheduled live watchrooms, Discord, or rotating meeting times."
         url="/guides/how-to-watch-anime-with-friends-in-different-time-zones"
         datePublished="2026-04-27"
         dateModified="2026-04-27"
@@ -120,11 +120,7 @@ export default function HowToWatchAnimeFriendsTimeZonesPage() {
 
         <p className="text-xl text-foreground/80 leading-relaxed mb-8">
           <strong>
-            Watching anime with friends in different time zones is possible by
-            ditching a single global air time and using per-person playback with
-            shared chat. The easiest way is AniDachi because async watchrooms
-            let Asia-Pacific viewers and Americas viewers stay on the same story
-            beat without 3 a.m. calls.
+            For a live AniDachi room, find an overlapping time and rotate the schedule fairly. If no shared time works, watch independently and arrange a later discussion. Async catch-up is planned, not available today.
           </strong>
         </p>
 
@@ -132,14 +128,10 @@ export default function HowToWatchAnimeFriendsTimeZonesPage() {
           id="method-anidachi"
           className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
-          Method 1: AniDachi (async-first scheduling)
+          Method 1: AniDachi (scheduled live sessions)
         </h2>
         <p className="text-foreground/80 leading-relaxed mb-4">
-          Time zones punish tools that assume everyone presses play together.
-          AniDachi keeps the social layer alive: you still share a watchroom, but
-          each friend streams on their own schedule while chat accumulates around
-          the episode list. When two people overlap online, they can still react
-          live without resetting the room for the rest of the club.
+          AniDachi live rooms require participants to watch at the same time. Pick a shared window, create a room, and invite whoever is available. Each viewer can keep personal history with Plus or Pro; this does not create shared group progress or saved episode threads.
         </p>
         <p className="text-foreground/80 leading-relaxed mb-4">
           If someone hits a billing or playback snag, send them to{" "}

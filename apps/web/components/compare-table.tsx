@@ -33,9 +33,9 @@ const rows: CompareTableRow[] = [
   {
     feature: "Own player quality",
     values: {
-      anidachi: "Full stream quality",
-      teleparty: "Full quality",
-      crunchyrollParty: "Full quality",
+      anidachi: "Your own stream",
+      teleparty: "Your own stream",
+      crunchyrollParty: "Your own stream",
       discord: "Compressed share",
     },
   },
@@ -43,8 +43,8 @@ const rows: CompareTableRow[] = [
     feature: "Live sync",
     values: {
       anidachi: "Synced on each player",
-      teleparty: "Synced overlay",
-      crunchyrollParty: "Synced overlay",
+      teleparty: "Playback sync",
+      crunchyrollParty: "Playback sync",
       discord: "Screen share only",
     },
   },
@@ -52,8 +52,8 @@ const rows: CompareTableRow[] = [
     feature: "On-player overlay",
     values: {
       anidachi: "Drag chat, cams, layout",
-      teleparty: "Fixed overlay",
-      crunchyrollParty: "Fixed overlay",
+      teleparty: "Chat panel",
+      crunchyrollParty: "Chat panel",
       discord: "Separate windows",
     },
   },

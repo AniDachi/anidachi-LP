@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
     title: "How to Watch Anime With Friends Online — 2026",
     description:
-      "Watch anime with friends online: async watchrooms, live sync, and free alternatives.",
+      "Watch anime with friends online: live watchrooms and alternatives for your group.",
     url: "/guides/how-to-watch-anime-with-friends-online",
   },
   twitter: {
@@ -41,7 +41,7 @@ const faq = [
   {
     question: "What is the lowest-latency way to watch anime with friends online?",
     answer:
-      "Each person streaming the same episode on their own account with a sync extension usually beats one-way screen share for clarity. Pick a tool that matches whether your group can watch live or needs async progress.",
+      "With a sync extension, each person streams from their own account. AniDachi offers live rooms and personal history on Plus or Pro; Async catch-up is planned.",
   },
   {
     question: "Can we chat while watching anime together online?",
@@ -91,7 +91,7 @@ export default function HowToWatchAnimeWithFriendsOnlinePage() {
     <>
       <HowToJsonLd
         name="How to watch anime with friends online using AniDachi"
-        description="Create a Crunchyroll watchroom, invite friends, and chat while everyone streams in sync or async."
+        description="Create a Crunchyroll watchroom, invite friends, and chat while everyone streams in live sync."
         steps={howToSteps}
       />
       <SeoPageLayout
@@ -118,9 +118,7 @@ export default function HowToWatchAnimeWithFriendsOnlinePage() {
         <p className="text-xl text-foreground/80 leading-relaxed mb-8">
           <strong>
             Watching anime with friends online is possible by syncing playback
-            in everyone&apos;s browser or sharing one screen. The easiest way is
-            AniDachi because it combines Crunchyroll sync, chat, and async
-            watchrooms when your schedules do not line up.
+            in everyone&apos;s browser or sharing one screen. AniDachi combines live Crunchyroll sync, chat, and personal history on Plus or Pro. Async catch-up is planned.
           </strong>
         </p>
 
@@ -131,12 +129,7 @@ export default function HowToWatchAnimeWithFriendsOnlinePage() {
           Method 1: AniDachi (Crunchyroll watchrooms)
         </h2>
         <p className="text-foreground/80 leading-relaxed mb-4">
-          AniDachi is built for anime groups who live in different cities or
-          rarely share the same evening. It detects the show you are on, opens a
-          shared watchroom, and lets people catch up on their own time while
-          still reading the same chat thread. Live sessions feel like a normal
-          watch party; async mode removes the pressure to start the episode at
-          the exact same minute.
+          AniDachi lets friends in different cities meet in a live watchroom. Open the same title, create a room, and share its invite link. Playback, chat, and reactions run live; personal history saves each viewer&apos;s own progress. Async catch-up and replayed chat are planned.
         </p>
         <p className="text-foreground/80 leading-relaxed mb-4">
           Everyone keeps their own{" "}

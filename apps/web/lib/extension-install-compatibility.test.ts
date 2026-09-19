@@ -81,6 +81,28 @@ function downloadLink() {
   return container.querySelector<HTMLAnchorElement>('a[href="/api/extension/download"]');
 }
 
+test("mobile installation shares a room return link without collecting an email address", async () => {
+  Object.defineProperty(navigator, "userAgent", {
+    configurable: true, value: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Mobile/15E148",
+  });
+  window.history.replaceState(null, "", "/extension?next=%2Froom%2Ftest-room");
+  try {
+    await renderHub();
+    const button = [...container.querySelectorAll("button")].find(
+      (item) => item.textContent?.includes("Copy desktop install link"),
+    );
+    assert.ok(button);
+    await act(async () => button.click());
+    assert.deepEqual(copied, ["http://localhost/extension?next=%2Froom%2Ftest-room"]);
+    assert.match(button.textContent!, /Link copied/);
+    assert.equal(Boolean(container.querySelector('input[type="email"]')), false);
+    assert.equal(Boolean(container.querySelector("form")), false);
+    assert.doesNotMatch(container.textContent!, /Email me|Send install link/);
+  } finally {
+    window.history.replaceState(null, "", "/room/test-room");
+  }
+});
+
 test("the install guide and room return work without querying the installed extension", async () => {
   await renderHub();
   assert.ok(downloadLink());

@@ -6,7 +6,7 @@ import { HowToJsonLd } from "@/components/json-ld";
 import { PRICING_PLUS_PRICE_LINE } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
-  title: "Watch Crunchyroll Together Long Distance (2026) | AniDachi",
+  title: "Watch Crunchyroll Together Long Distance (2026)",
   description:
     "Short answer: Crunchyroll has no built-in watch party. Long-distance couples use AniDachi to sync Crunchyroll across devices, react in real time, and catch up on separate schedules without spoilers.",
   alternates: { canonical: "/watch-crunchyroll-together-long-distance" },
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 
     title: "Watch Crunchyroll Together Long Distance | AniDachi",
     description:
-      "Sync Crunchyroll with your long-distance partner — live when your schedules align, async when they don't.",
+      "Sync Crunchyroll with your long-distance partner — live when your schedules align. Async catch-up is planned.",
     url: "/watch-crunchyroll-together-long-distance",
   },
 };
@@ -31,7 +31,7 @@ const faq = [
   {
     question: "How do I watch Crunchyroll together long distance?",
     answer:
-      "Install AniDachi on both devices, open the same Crunchyroll episode, create a watchroom, and share the invite link. For live watching, AniDachi syncs playback in real time. For different schedules, async mode lets each person watch independently while reactions and progress stay shared in the room.",
+      "Install AniDachi on both devices, open the same Crunchyroll episode, create a watchroom, and share the invite link. For live watching, AniDachi syncs playback in real time. For different schedules, catch up independently before the next session. Async catch-up is planned; personal history is separate for each viewer.",
   },
   {
     question: "Can my long-distance girlfriend or boyfriend watch Crunchyroll with me?",
@@ -41,7 +41,7 @@ const faq = [
   {
     question: "Is Teleparty better than AniDachi for long distance?",
     answer:
-      "Teleparty supports Crunchyroll but requires everyone online at the same time. AniDachi is better for long-distance couples because it supports async watching — you can watch at different times and still share reactions episode by episode without spoiling each other.",
+      "Teleparty supports live Crunchyroll sync with a Premium host. AniDachi also offers live sync, with cameras, microphones, and personal history on Plus or Pro. Async catch-up is planned, not available today.",
   },
   {
     question: "Can we just call each other and press play at the same time?",
@@ -56,7 +56,7 @@ const faq = [
   {
     question: "What if we are in different time zones and can never watch at the same time?",
     answer:
-      "Use AniDachi's async mode. Each person watches when they can, marks episodes as done, and leaves timestamped reactions. Your partner sees those reactions when they finish the same episode. The watchroom persists the entire run of the series so nothing is lost between sessions.",
+      "Watch independently and discuss in a separate chat, or find a shared time for a live room. AniDachi Async catch-up with replayed reactions is planned, not available today.",
   },
 ];
 
@@ -89,12 +89,12 @@ const howToSteps = [
     text: "Send the link via text, WhatsApp, Discord DM, or email.",
   },
   {
-    name: "Choose live or async",
-    text: "For same-time watching, press play together. For different schedules, enable async mode — each person watches when available and leaves episode-tagged reactions.",
+    name: "Choose a shared start time",
+    text: "Press play in your live room when everyone is ready. Catch up independently between meetings if schedules differ.",
   },
   {
     name: "React episode by episode",
-    text: "Keep reactions in the watchroom thread. Timestamps pin each reaction to the correct episode so no one is spoiled.",
+    text: "Agree on a safe episode boundary before each meeting. Keep later-episode discussions in a separate chat.",
   },
 ];
 
@@ -103,7 +103,7 @@ export default function WatchCrunchyrollTogetherLongDistancePage() {
     <>
       <HowToJsonLd
         name="How to watch Crunchyroll together long distance"
-        description="Set up an AniDachi watchroom so long-distance couples can sync Crunchyroll with live or async support."
+        description="Set up an AniDachi watchroom so long-distance couples can sync Crunchyroll with live sync."
         steps={howToSteps}
       />
       <SeoPageLayout
@@ -113,7 +113,7 @@ export default function WatchCrunchyrollTogetherLongDistancePage() {
           { name: "Long Distance", url: "/watch-crunchyroll-together-long-distance" },
         ]}
         title="Watch Crunchyroll Together, Long Distance"
-        description="How long-distance couples sync Crunchyroll — live or async, no scheduling pressure."
+        description="How long-distance couples sync Crunchyroll live and plan around different schedules."
         url="/watch-crunchyroll-together-long-distance"
         datePublished="2026-06-23"
         dateModified="2026-06-23"
@@ -171,10 +171,7 @@ export default function WatchCrunchyrollTogetherLongDistancePage() {
           </li>
         </ul>
         <p className="text-foreground/80 leading-relaxed mb-8">
-          AniDachi solves all three: async mode removes the same-time
-          requirement, episode-tagged reactions prevent spoilers, and the
-          watchroom persists everything so you are both in the same shared
-          space regardless of when each of you watched.
+          AniDachi syncs live playback when you find a shared window. Personal history on Plus or Pro saves each viewer&apos;s own progress. It does not create shared group progress or automatically hide spoilers. Async catch-up is planned, not available today.
         </p>
 
         <h2
@@ -203,15 +200,14 @@ export default function WatchCrunchyrollTogetherLongDistancePage() {
           What to Do When Your Schedules Never Overlap
         </h2>
         <p className="text-foreground/80 leading-relaxed mb-4">
-          If a 7-hour time difference means there is no overlap at all, async
-          mode is the answer. Here is how it works in practice:
+          If a 7-hour time difference leaves no shared window, watch independently and discuss later in a separate chat. AniDachi Async catch-up is planned, not available today. The intended experience is:
         </p>
         <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>You watch episode 4 on Tuesday evening your time.</li>
           <li>You leave three reactions — timestamped to the exact moments that hit you hardest.</li>
           <li>Your partner watches episode 4 on Wednesday morning their time and sees your reactions when they hit the same moments.</li>
           <li>They reply with their own reactions. You read them the next time you open the watchroom.</li>
-          <li>Neither of you has seen episode 5 yet, so no spoilers exist in the room.</li>
+          <li>Agree on an episode boundary before discussing later events; no tool can guarantee that other viewers will not post spoilers.</li>
         </ul>
         <p className="text-foreground/80 leading-relaxed mb-8">
           The emotional experience of watching together survives the time
@@ -262,7 +258,7 @@ export default function WatchCrunchyrollTogetherLongDistancePage() {
             },
             {
               feature: "Async",
-              values: { anidachi: "yes", teleparty: "no", discord: "no", "press-play": "no" },
+              values: { anidachi: "Planned", teleparty: "no", discord: "no", "press-play": "no" },
             },
             {
               feature: "Spoiler control",

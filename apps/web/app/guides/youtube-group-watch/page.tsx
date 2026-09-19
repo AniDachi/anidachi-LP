@@ -11,9 +11,9 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "YouTube Group Watch — How to Watch YouTube Together (2026) | AniDachi",
+  title: "YouTube Group Watch — How to Watch YouTube Together (2026)",
   description:
-    "YouTube group watch without a native feature: run AniDachi watchrooms on full YouTube pages for synced playback, chat, and async catch-up.",
+    "YouTube group watch on desktop Chrome: run AniDachi watchrooms on full YouTube pages for synced playback and live chat.",
   alternates: { canonical: "/guides/youtube-group-watch" },
   openGraph: {
     images: [
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 
     title: "YouTube Group Watch",
     description:
-      "Set up a YouTube group watch with synced watchrooms — live or async.",
+      "Set up a YouTube group watch with synced watchrooms — live together.",
     url: "/guides/youtube-group-watch",
   },
   twitter: {
@@ -56,7 +56,7 @@ const howToSteps = [
     text: "Share the link so each friend joins on their own YouTube session.",
   },
   {
-    name: "Watch live or async",
+    name: "Watch live together",
     text: "Sync for a live hang, or leave reactions when schedules diverge.",
   },
 ];
@@ -112,7 +112,7 @@ export default function YoutubeGroupWatchPage() {
           { name: "YouTube group watch", url: "/guides/youtube-group-watch" },
         ]}
         title="YouTube group watch"
-        description="How to run a YouTube group watch with AniDachi watchrooms — live or async."
+        description="How to run a YouTube group watch with AniDachi watchrooms — live together."
         url="/guides/youtube-group-watch"
         datePublished="2026-07-26"
         dateModified="2026-07-26"
@@ -130,11 +130,9 @@ export default function YoutubeGroupWatchPage() {
         </h2>
         <p className="text-xl text-foreground/80 leading-relaxed mb-6">
           <strong>
-            A YouTube group watch needs a third-party watchroom — YouTube has no native
-            group-watch button.
+            For desktop Chrome, a sync extension creates a live YouTube watchroom. YouTube also supports SharePlay on iPhone and iPad, started by a Premium member.
           </strong>{" "}
-          AniDachi pins a room to a full YouTube watch page so friends sync live or catch
-          up async. Pillar overview:{" "}
+          AniDachi adds live playback sync and chat to full YouTube watch pages. Async catch-up is planned. Pillar overview:{" "}
           <Link href="/watch-youtube-together" className="text-brand-orange hover:underline">
             YouTube Watch Party
           </Link>

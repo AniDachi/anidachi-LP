@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
     title: "How to Create an Anime Watch Party — 2026",
     description:
-      "Host a Crunchyroll anime watch party with invites, chat, and optional async pacing.",
+      "Host a Crunchyroll anime watch party with invites, chat, and live playback sync.",
     url: "/guides/how-to-create-an-anime-watch-party",
   },
   twitter: {
@@ -86,7 +86,7 @@ const howToSteps = [
   },
   {
     name: "Start when ready",
-    text: "Count down in chat or use async mode if people arrive at different times.",
+    text: "Start live playback once your guests are ready; late joiners can join the current session.",
   },
 ];
 
