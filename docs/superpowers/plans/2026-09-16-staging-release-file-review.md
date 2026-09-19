@@ -136,9 +136,9 @@ responsive-доступа и защиты выхода проверяется о
 | открыто | M | A | `apps/web/components/account/account-overview.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | D | A | `apps/web/components/account/account-waitlist-card.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | A | `apps/web/components/auth-page-shell.tsx` | Полное diff-review еще не зафиксировано. |
-| открыто | M | C | `apps/web/components/chrome-extension-demo-async-overlay.tsx` | Полное diff-review еще не зафиксировано. |
-| открыто | M | C | `apps/web/components/chrome-extension-demo-mobile.tsx` | Полное diff-review еще не зафиксировано. |
-| открыто | M | C | `apps/web/components/chrome-extension-demo-overlay.tsx` | Полное diff-review еще не зафиксировано. |
+| удалено локально; staging pending | M | C | `apps/web/components/chrome-extension-demo-async-overlay.tsx` | Согласованное удаление устаревшей демонстрации: единственный потребитель — старый mobile-компонент, также удален. Проверки и границы блока ниже. |
+| удалено локально; staging pending | M | C | `apps/web/components/chrome-extension-demo-mobile.tsx` | Согласованное удаление устаревшей демонстрации: действующих импортов нет; текущие режимы используют новые адаптивные компоненты. Проверки и границы блока ниже. |
+| удалено локально; staging pending | M | C | `apps/web/components/chrome-extension-demo-overlay.tsx` | Согласованное удаление устаревшей демонстрации: использовался только двумя удаленными компонентами. Проверки и границы блока ниже. |
 | открыто | M | C | `apps/web/components/chrome-extension-demo.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/components/chrome-extension-features.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/components/compare-table.tsx` | 5A: строка AniDachi разделяет запись Plus/Pro и сохраненную историю/Resume на всех планах; /#compare проверен desktop/mobile. Остальные продуктовые/конкурентные утверждения требуют отдельной проверки; файл целиком не принят. |
@@ -271,3 +271,26 @@ Graphify использован для навигации; связи переп
 семантического графа после локальных итераций остается отложен согласно решению
 владельца в основном плане. Блок не объявляет принятыми остальные файлы редизайна.
 Откат локального блока — revert его коммита; миграций, env и облачных изменений нет.
+
+### Удаление неиспользуемой старой демонстрации, 2026-09-19
+
+После отдельного согласования удалены только три компонента
+`chrome-extension-demo-mobile.tsx`, `chrome-extension-demo-overlay.tsx` и
+`chrome-extension-demo-async-overlay.tsx`. Повторный поиск импортов в runtime,
+скриптах и тестах подтвердил изолированную цепочку: mobile импортировал оба
+overlay, async-overlay импортировал overlay; внешних потребителей не осталось.
+Текущий `chrome-extension-demo.tsx` использует новые Live / History / Async.
+Изображения и видео не удалялись. Превью `overlay-using-mocks`,
+`overlay-interface-preview` и `overlay-layout-preview` сохранены: они нужны
+странице установки расширения.
+
+После удаления: web typecheck passed, полный web suite **682 passed,
+6 skipped, 0 failed**, `git diff --check` passed. На локальном `4198` после
+перезагрузки проверены Live, History, Async и возврат в Live; новые сцены
+отображаются, видео загружено (`readyState = 4`, media error отсутствует).
+Ошибок browser console не обнаружено; есть предупреждение Next.js о будущем
+поведении `scroll-behavior`, не связанное с удаленными компонентами. Страница
+установки также открывается со своими превью. Это локальная приемка удаления,
+а не production build или staging acceptance. Graphify refresh остается
+отложен вместе с общим блоком выше. Push, PR и deploy не выполнялись;
+откат — revert отдельного коммита удаления.
