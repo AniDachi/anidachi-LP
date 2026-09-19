@@ -112,7 +112,7 @@ responsive-доступа и защиты выхода проверяется о
 | открыто | M | F | `apps/web/app/kreatli-email-crm/crm-client.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | S | `apps/web/app/layout.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | A | `apps/web/app/login/page.tsx` | Полное diff-review еще не зафиксировано. |
-| открыто | M | C | `apps/web/app/page.tsx` | Полное diff-review еще не зафиксировано. |
+| принято локально; staging pending | M | C | `apps/web/app/page.tsx` | 2026-09-19: полный исходный diff проверен — удален прежний waitlistCount prop, актуальный HomeClient его не принимает. Описание HowTo согласовано с текущим содержанием без жесткого числа шагов; запись личной истории обозначена как Plus/Pro. В браузере пять HowToStep совпадают с видимыми шагами; будущий Async не включен в доступные действия. Web typecheck и dev:check прошли; правка только текста, полный suite не повторялся. |
 | принято на staging | M | C | `apps/web/app/pricing/page.tsx` | PR #353, merge `0616b0b8`: полный diff, metadata/FAQ, ссылки и CTA проверены; web checks, CI/build, deployed desktop/mobile и раскрытие FAQ прошли. |
 | открыто | M | C | `apps/web/app/privacy/page.tsx` | Полное diff-review еще не зафиксировано. |
 | принято на staging | M | I | `apps/web/app/room/[roomId]/extension-check.tsx` | PR #349, merge `bcd00c7d`: нейтральная справка, safe next/mobile copy; 6 client tests, desktop/mobile harness и staging receipts приняты. Join page/API неизменны. |
