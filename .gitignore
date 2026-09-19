@@ -73,6 +73,8 @@ next-env.d.ts
 package-lock.json
 
 # local private runtime data
+.serena/*
+!.serena/project.yml
 .data/
 crm-data/
 apps/web/crm-data/
