@@ -1,0 +1,39 @@
+/* Opt in through the mounted homepage. Client navigation removes the scope
+   automatically, so account pages and other routes retain normal scrolling. */
+@media (min-width: 640px) and (min-height: 600px) and (hover: hover) and (pointer: fine) {
+  :global(html):has(.page) {
+    --home-nav-height: calc(4.25rem + 1px + var(--safe-top, 0px));
+    scroll-padding-block-start: var(--home-nav-height);
+  }
+
+  .page > section:not([aria-label="Trust and credibility"]) {
+    min-height: calc(100svh - var(--home-nav-height));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-block: clamp(24px, 4svh, 48px);
+    /* Header clearance belongs to the scroll container, not two offsets. */
+    scroll-margin-block: 0;
+  }
+
+  .page > section:not([aria-label="Trust and credibility"]) > div {
+    width: 100%;
+  }
+
+  .page > section:first-child > div {
+    padding-block: 24px;
+  }
+
+  /* The demo already budgets its height from the navigation and intro.
+     Keep its origin stable to avoid a resize/centering feedback loop. */
+  .page > section[id="demo"] {
+    justify-content: flex-start;
+    padding-block: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global(html):has(.page) {
+    scroll-behavior: auto;
+  }
+}

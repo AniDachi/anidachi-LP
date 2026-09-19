@@ -1,4 +1,4 @@
-import { Chrome, Search, Users, MessageSquare, Clock3 } from "lucide-react";
+import { Chrome, Search, Users, MessageSquare, History, Clock3 } from "lucide-react";
 import Link from "next/link";
 import { HomeSectionHeader } from "@/components/home-section-header";
 import { INSTALL_HUB_PATH } from "@/lib/install-cta";
@@ -27,6 +27,12 @@ const steps = [
     title: "Watch together",
     description:
       "Watch in sync, chat, and send reactions while everyone is in the room together.",
+  },
+  {
+    icon: History,
+    title: "Keep your watch history",
+    description:
+      "With Plus or Pro, save your progress on Crunchyroll and YouTube as you watch. Resume from AniDachi’s menu in Chrome, or manage watched episodes in your account.",
   },
 ];
 
@@ -59,7 +65,7 @@ export function HowItWorks() {
               >
                 <div className="mb-1.5 flex items-center gap-2.5">
                   <step.icon
-                    className="h-4 w-4 text-ani-progress"
+                    className="h-4 w-4 shrink-0 text-ani-progress"
                     aria-hidden="true"
                   />
                   <h3 className="text-lg font-semibold tracking-[-0.02em] text-ani-text">
@@ -97,7 +103,7 @@ export function HowItWorks() {
               aria-hidden="true"
               className="col-start-1 row-start-1 flex h-9 w-9 items-center justify-center rounded-full border border-ani-control-border font-semibold tabular-nums text-sm text-ani-text"
             >
-              5
+              {steps.length + 1}
             </span>
             <div className="col-start-2 row-start-1 flex min-w-0 items-center gap-2.5">
               <Clock3

@@ -15,7 +15,7 @@ export default function Home() {
       <FAQPageJsonLd questions={homeFAQ} />
       <HowToJsonLd
         name="How to Watch Together with AniDachi"
-        description="Set up shared watchrooms on Crunchyroll or YouTube in 4 easy steps."
+        description="Install AniDachi, create a room and watch together on Crunchyroll or YouTube. Save personal watch progress with Plus or Pro."
         steps={howToSteps}
       />
     </>

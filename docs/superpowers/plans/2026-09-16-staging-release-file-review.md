@@ -112,7 +112,7 @@ responsive-доступа и защиты выхода проверяется о
 | открыто | M | F | `apps/web/app/kreatli-email-crm/crm-client.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | S | `apps/web/app/layout.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | A | `apps/web/app/login/page.tsx` | Полное diff-review еще не зафиксировано. |
-| открыто | M | C | `apps/web/app/page.tsx` | Полное diff-review еще не зафиксировано. |
+| принято локально; staging pending | M | C | `apps/web/app/page.tsx` | 2026-09-19: полный исходный diff проверен — удален прежний waitlistCount prop, актуальный HomeClient его не принимает. Описание HowTo согласовано с текущим содержанием без жесткого числа шагов; запись личной истории обозначена как Plus/Pro. В браузере пять HowToStep совпадают с видимыми шагами; будущий Async не включен в доступные действия. Web typecheck и dev:check прошли; правка только текста, полный suite не повторялся. |
 | принято на staging | M | C | `apps/web/app/pricing/page.tsx` | PR #353, merge `0616b0b8`: полный diff, metadata/FAQ, ссылки и CTA проверены; web checks, CI/build, deployed desktop/mobile и раскрытие FAQ прошли. |
 | открыто | M | C | `apps/web/app/privacy/page.tsx` | Полное diff-review еще не зафиксировано. |
 | принято на staging | M | I | `apps/web/app/room/[roomId]/extension-check.tsx` | PR #349, merge `bcd00c7d`: нейтральная справка, safe next/mobile copy; 6 client tests, desktop/mobile harness и staging receipts приняты. Join page/API неизменны. |
@@ -136,9 +136,9 @@ responsive-доступа и защиты выхода проверяется о
 | открыто | M | A | `apps/web/components/account/account-overview.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | D | A | `apps/web/components/account/account-waitlist-card.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | A | `apps/web/components/auth-page-shell.tsx` | Полное diff-review еще не зафиксировано. |
-| открыто | M | C | `apps/web/components/chrome-extension-demo-async-overlay.tsx` | Полное diff-review еще не зафиксировано. |
-| открыто | M | C | `apps/web/components/chrome-extension-demo-mobile.tsx` | Полное diff-review еще не зафиксировано. |
-| открыто | M | C | `apps/web/components/chrome-extension-demo-overlay.tsx` | Полное diff-review еще не зафиксировано. |
+| удалено локально; staging pending | M | C | `apps/web/components/chrome-extension-demo-async-overlay.tsx` | Согласованное удаление устаревшей демонстрации: единственный потребитель — старый mobile-компонент, также удален. Проверки и границы блока ниже. |
+| удалено локально; staging pending | M | C | `apps/web/components/chrome-extension-demo-mobile.tsx` | Согласованное удаление устаревшей демонстрации: действующих импортов нет; текущие режимы используют новые адаптивные компоненты. Проверки и границы блока ниже. |
+| удалено локально; staging pending | M | C | `apps/web/components/chrome-extension-demo-overlay.tsx` | Согласованное удаление устаревшей демонстрации: использовался только двумя удаленными компонентами. Проверки и границы блока ниже. |
 | открыто | M | C | `apps/web/components/chrome-extension-demo.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/components/chrome-extension-features.tsx` | Полное diff-review еще не зафиксировано. |
 | открыто | M | C | `apps/web/components/compare-table.tsx` | 5A: строка AniDachi разделяет запись Plus/Pro и сохраненную историю/Resume на всех планах; /#compare проверен desktop/mobile. Остальные продуктовые/конкурентные утверждения требуют отдельной проверки; файл целиком не принят. |
@@ -242,3 +242,55 @@ passed. Блокирующих замечаний повторного ревь�
 заблокирован при React delegation на `document`. В `4aa7d2dd` исправлен порядок
 native listeners; новые document-root тесты сначала падали, итог 38/38 и web check
 passed. Повторное ревью без замечаний; точный head и окончательная приемка в #350.
+
+## Локальная приемка главной страницы, 2026-09-19
+
+Владелец принял накопленные изменения и разрешил их фиксацию в ветке
+`codex/demo-room-first-scene` после `9623c088`. Это локальная приемка;
+push, PR, staging и main этим шагом не выполняются. Старые статусы исходного
+реестра выше не являются актуальным счетчиком всей выполненной работы.
+
+| Срез | Принятый результат / проверка |
+| --- | --- |
+| `components/chrome-extension-demo.tsx`, `chrome-extension-room-demo.*`, `chrome-extension-async-demo.*`, `chrome-extension-async-scene.tsx`, `chrome-extension-history-demo.*` | Автоматические Live, History и будущий Async; общий адаптивный плеер, согласованные подписи/имена, приглашение по ссылке и через друзей, сообщения/реакции/микрофон, плавное изменение расположения, история в отдельном меню Chrome. Вымышленные данные; нет вызовов room/history/auth API, доступа к камере, микрофону или буферу обмена. |
+| `lib/use-room-demo.*`, `use-async-demo.*`, `use-history-demo.*` | Проверены последовательности, тайминги, cleanup таймеров, остановка вне видимой области и reduced motion. |
+| `components/home/home-client.tsx`, `home-sections.module.css`, `lib/home-scroll-assist.*`, `use-home-scroll-assist.*` | Мягкая помощь после остановки колесика рядом с началом раздела. Длинный раздел подтягивается только при движении вниз; внутри него свободная прокрутка. Новое действие отменяет анимацию; мобильная ширина/reduced motion отключают помощь, unmount убирает обработчики. FAQ закрыт по умолчанию. |
+| `components/how-it-works.tsx` | После Watch together добавлен шаг 5 про личную историю Plus/Pro, Resume через меню Chrome и управление в кабинете; Async остается будущим шагом 6. |
+| `public/demo/anidachi-demo-background*`, `public/demo/cameras/*`, оба `CREDITS.md` | Локальные согласованные видео/постеры; источники и лицензии записаны рядом. Это материалы иллюстрации, не записи пользователей. |
+
+Перед фиксацией повторены web typecheck и весь web suite: **682 passed,
+6 skipped, 0 failed**. `pnpm dev:check` выполнен; профиль rooms срабатывает
+на названии `room-demo`, но это иллюстрация сайта. `git diff 4b4ff883 --
+apps/extension apps/api packages/protocol` пустой; room/P2P harness и сборка
+расширения для этого блока не повторяются. Проверки браузера: desktop 1280x720,
+mobile 390x844, ручное раскрытие FAQ, длинный блок тарифов, три режима демо;
+ошибок страницы не обнаружено. Production build и развернутая приемка этого
+полного набора остаются перед публикацией ветки.
+
+Graphify использован для навигации; связи перепроверены импортами. Полный refresh
+семантического графа после локальных итераций остается отложен согласно решению
+владельца в основном плане. Блок не объявляет принятыми остальные файлы редизайна.
+Откат локального блока — revert его коммита; миграций, env и облачных изменений нет.
+
+### Удаление неиспользуемой старой демонстрации, 2026-09-19
+
+После отдельного согласования удалены только три компонента
+`chrome-extension-demo-mobile.tsx`, `chrome-extension-demo-overlay.tsx` и
+`chrome-extension-demo-async-overlay.tsx`. Повторный поиск импортов в runtime,
+скриптах и тестах подтвердил изолированную цепочку: mobile импортировал оба
+overlay, async-overlay импортировал overlay; внешних потребителей не осталось.
+Текущий `chrome-extension-demo.tsx` использует новые Live / History / Async.
+Изображения и видео не удалялись. Превью `overlay-using-mocks`,
+`overlay-interface-preview` и `overlay-layout-preview` сохранены: они нужны
+странице установки расширения.
+
+После удаления: web typecheck passed, полный web suite **682 passed,
+6 skipped, 0 failed**, `git diff --check` passed. На локальном `4198` после
+перезагрузки проверены Live, History, Async и возврат в Live; новые сцены
+отображаются, видео загружено (`readyState = 4`, media error отсутствует).
+Ошибок browser console не обнаружено; есть предупреждение Next.js о будущем
+поведении `scroll-behavior`, не связанное с удаленными компонентами. Страница
+установки также открывается со своими превью. Это локальная приемка удаления,
+а не production build или staging acceptance. Graphify refresh остается
+отложен вместе с общим блоком выше. Push, PR и deploy не выполнялись;
+откат — revert отдельного коммита удаления.
