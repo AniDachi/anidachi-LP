@@ -83,7 +83,7 @@ afterEach(async () => {
 });
 
 for (const viewport of [390, 639, 640, 700, 767, 768, 1280]) {
-  test(`signed-in account shortcuts and direct account entry are reachable at ${viewport}px`, async () => {
+  test(`signed-in account shortcuts are reachable without a duplicate account entry at ${viewport}px`, async () => {
     await mount(viewport);
     const trigger = accountTrigger();
     assert.ok(trigger, "A visible account control is required at every supported width");
@@ -93,7 +93,7 @@ for (const viewport of [390, 639, 640, 700, 767, 768, 1280]) {
     }
     await act(async () => dom.document.dispatchEvent(new dom.KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true })));
     if (viewport < 1280) await openDrawer();
-    assert.ok([...container.querySelectorAll<HTMLAnchorElement>('a[href="/account"]')].some(visible));
+    assert.equal(container.querySelector('a[href="/account"]'), null);
   });
 }
 

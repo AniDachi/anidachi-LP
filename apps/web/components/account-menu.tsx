@@ -20,10 +20,6 @@ const destinations = [
   { href: "/account/profile", label: "Profile", Icon: User },
 ];
 
-export function AccountEntryLink({ onClick }: { onClick?: () => void }) {
-  return <Link href="/account" onClick={onClick} className="site-account-entry">My account</Link>;
-}
-
 export function UserMenu({ user, compact = false, onOpen }: {
   user: NavUser;
   compact?: boolean;

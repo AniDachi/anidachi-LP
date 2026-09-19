@@ -11,10 +11,10 @@ import { JoinDiscordButton } from "@/components/join-discord-button";
 import { cn } from "@/lib/utils";
 import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
 
-import { AccountEntryLink, UserMenu, type NavUser } from "@/components/account-menu";
+import { UserMenu, type NavUser } from "@/components/account-menu";
 import "./account-menu.css";
 
-export { AccountEntryLink, UserMenu, type NavUser } from "@/components/account-menu";
+export { UserMenu, type NavUser } from "@/components/account-menu";
 
 type MeResponse = {
   user?: {
@@ -446,13 +446,13 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
             <ContactNavMenu variant="desktop" />
             <li><JoinDiscordButton variant="nav" placement="nav" /></li>
             <li><NavPricingButton /></li>
-            <li>
-              {user ? <AccountEntryLink /> : (
+            {!user && (
+              <li>
                 <Link href="/login" className="inline-flex min-h-9 items-center rounded-full border border-ani-line px-4 text-sm font-semibold text-ani-text transition-colors hover:border-ani-control-border-hover hover:text-ani-text">
                   Sign in
                 </Link>
-              )}
-            </li>
+              </li>
+            )}
           </ul>
 
           {/* Mobile and tablet share one drawer and one breakpoint. */}
@@ -518,13 +518,13 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
                 </Link>
               </li>
               <li className="pt-2" onClick={() => setMenuOpen(false)}><NavPricingButton /></li>
-              <li className="mt-2 border-t border-ani-line pt-2">
-                {user ? <AccountEntryLink onClick={() => setMenuOpen(false)} /> : (
+              {!user && (
+                <li className="mt-2 border-t border-ani-line pt-2">
                   <Link href="/login" className="flex min-h-11 items-center rounded-lg px-3 text-base font-semibold text-ani-text transition-colors hover:bg-ani-hover hover:text-ani-text" onClick={() => setMenuOpen(false)}>
                     Sign in
                   </Link>
-                )}
-              </li>
+                </li>
+              )}
             </ul>
           </div>
         </>

@@ -8,7 +8,6 @@ import { PathnameContext } from "next/dist/shared/lib/hooks-client-context.share
 import { RouterContext } from "next/dist/shared/lib/router-context.shared-runtime";
 import { AppRouterContext } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import type { WatchHistoryEditorResponse, WatchHistoryItem } from "@anidachi/protocol";
-import { AccountEntryLink } from "../components/account-menu";
 // This is the export used by both the site navbar and app/account/layout.tsx.
 import { UserMenu } from "../components/nav-bar-client";
 import { ProfileClient } from "../app/account/profile/profile-client";
@@ -28,7 +27,7 @@ function render(pathname: string, editor?: React.ReactNode) {
   return React.createElement(RouterContext.Provider, { value: router as unknown as React.ContextType<typeof RouterContext> },
     React.createElement(AppRouterContext.Provider, { value: router },
       React.createElement(PathnameContext.Provider, { value: pathname },
-        React.createElement(AccountEntryLink), React.createElement(UserMenu, { user }), editor)));
+        React.createElement(UserMenu, { user }), editor)));
 }
 async function mount(editor?: React.ReactNode) {
   container = document.createElement("div"); document.body.append(container); root = createRoot(container);
@@ -50,9 +49,8 @@ afterEach(async () => {
   dom.happyDOM.setURL(startUrl); navigations.length = 0;
 });
 
-test("the account layout export offers the account entry and every account shortcut", async () => {
+test("the account layout export offers every account shortcut", async () => {
   await mount(); await open();
-  assert.equal(container.querySelector("a")?.getAttribute("href"), "/account");
   const links = [...container.querySelectorAll("nav a")];
   assert.deepEqual(links.map(a => [a.textContent, a.getAttribute("href")]), [
     ["Watch Library", "/account/watch-library"], ["Friends & Groups", "/account/friends"],
@@ -75,7 +73,9 @@ test("moving focus or tapping outside closes the disclosure", async () => {
   await act(async () => dom.document.dispatchEvent(new dom.PointerEvent("pointerdown", { bubbles: true })));
   assert.equal(trigger().getAttribute("aria-expanded"), "false");
   await open();
-  await act(async () => container.querySelector<HTMLAnchorElement>('a[href="/account"]')!.focus());
+  const outside = document.createElement("button");
+  document.body.append(outside);
+  await act(async () => outside.focus());
   assert.equal(trigger().getAttribute("aria-expanded"), "false");
 });
 
