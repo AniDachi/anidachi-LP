@@ -61,6 +61,11 @@ const faq = [
     question: "How does AniDachi pricing compare to Discord?",
     answer: PRICING_DISCORD_COMPARE_FAQ,
   },
+  {
+    question: "Does Discord have Watch Together for YouTube?",
+    answer:
+      "Discord Activities do not replace a full youtube.com/watch party. Keep voice in Discord; Add AniDachi from the Chrome Web Store and sync each person's YouTube tab. Companion, not a competitor: /compare/anidachi-vs-discord-screen-share.",
+  },
 ];
 
 const tocHeadings: TocHeading[] = [
@@ -117,7 +122,7 @@ export default function YoutubeWatchPartyWithDiscordPage() {
         description="Discord voice + AniDachi YouTube sync — hybrid co-watch without Go Live."
         url="/guides/youtube-watch-party-with-discord"
         datePublished="2026-07-25"
-        dateModified="2026-08-11"
+        dateModified="2026-09-21"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
@@ -204,6 +209,14 @@ export default function YoutubeWatchPartyWithDiscordPage() {
               className="hover:underline"
             >
               How to watch YouTube with friends
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/guides/can-you-screen-share-youtube-on-discord"
+              className="hover:underline"
+            >
+              Can you screen share YouTube on Discord?
             </Link>
           </li>
           <li>

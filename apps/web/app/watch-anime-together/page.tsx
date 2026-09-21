@@ -22,7 +22,7 @@ import {
 export const metadata: Metadata = {
   title: "Watch Anime Together Online — Methods, Sync & Genre Guides (2026)",
   description:
-    "How to watch anime with friends online — websites and apps compared. AniDachi watchrooms, free Discord and Crunchyroll Party options, long-distance tips, and genre guides.",
+    "How to watch anime with friends online — websites and apps compared. Add AniDachi from the Chrome Web Store for Crunchyroll or YouTube rooms; Discord and Crunchyroll Party stay as free fallbacks.",
   alternates: { canonical: "/watch-anime-together" },
   openGraph: {
     images: [
@@ -97,6 +97,16 @@ const faq = [
     answer:
       "For anime on Crunchyroll, yes — each person needs their own Crunchyroll account to stream. For YouTube watchrooms, each person uses their own YouTube session instead. AniDachi provides the watchroom, sync, and chat layer on top of whichever platform you’re watching.",
   },
+  {
+    question: "Is there a watch anime together website?",
+    answer:
+      "There is no single licensed 'watch anime together website' that replaces Crunchyroll. Browser rooms like Watch2Gether fit public YouTube links. For catalog anime, use a Chrome watchroom (AniDachi) on each person's Crunchyroll tab, or a YouTube watch party on youtube.com/watch pages. Hub: /watch-crunchyroll-together and /watch-youtube-together.",
+  },
+  {
+    question: "What does 'anime together' mean?",
+    answer:
+      "People searching 'anime together' usually want a way to watch anime together online — live sync on Crunchyroll or YouTube, not a new streaming catalog. AniDachi is the Chrome Web Store watch party for those two platforms.",
+  },
 ];
 
 const tocHeadings: TocHeading[] = [
@@ -132,7 +142,7 @@ export default function WatchAnimeTogetherPage() {
       description="Compare every way to watch anime together online — AniDachi watchrooms, free options, long-distance tips, and genre hubs."
       url="/watch-anime-together"
       datePublished="2026-04-23"
-      dateModified="2026-08-12"
+      dateModified="2026-09-21"
       faq={faq}
       headings={tocHeadings}
       itemList={genreHubItemList(1)}

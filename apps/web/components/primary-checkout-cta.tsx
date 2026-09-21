@@ -19,7 +19,7 @@ const COPY = {
     body: "Download AniDachi for Chrome, then host on the same Crunchyroll or YouTube account you already use.",
   },
   compare: {
-    body: "Install the official zip while the Chrome Web Store listing goes through review.",
+    body: "Add AniDachi from the Chrome Web Store, then compare Crunchyroll and YouTube watchrooms.",
   },
   anime: {
     body: "Install AniDachi, open the title on Crunchyroll or YouTube, and start a watchroom.",
@@ -31,7 +31,7 @@ const COPY = {
     body: "Install on desktop Chrome, then upgrade for longer sessions, more participants, and watch history.",
   },
   pillar: {
-    body: "Download the official zip from AniDachi, Load unpacked, then create a watchroom.",
+    body: "Add AniDachi from the Chrome Web Store, then create a watchroom.",
   },
 } as const;
 

@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
+import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { PRICING_PRICE_TABLE, PRICING_CANCELLATION_NOTE } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
   title: "7 Best Apps to Watch Anime Together Long Distance (2026) | AniDachi",
   description:
-    "Best apps to watch anime together long distance: AniDachi (Crunchyroll + async), Teleparty, Rave, Scener, and Discord screen share — compared by LDR couple needs.",
+    "Best apps to watch anime together long distance: AniDachi (Crunchyroll + YouTube live sync, personal history), Teleparty, Rave, and Discord voice — compared for LDR couples.",
   alternates: { canonical: "/best-apps-watch-anime-together-long-distance" },
   openGraph: {
     images: [
@@ -30,7 +31,7 @@ const faq = [
   {
     question: "What is the best app to watch anime together long distance?",
     answer:
-      "AniDachi is the best app for long-distance couples watching Crunchyroll anime because it supports both live sync and async watching. Async means each person can watch at their own pace and still share reactions episode by episode — no need to be online at the same time.",
+      "AniDachi is the best app for long-distance couples watching Crunchyroll or YouTube because each person streams full quality on their own tab while playback stays in sync. Live rooms need a shared start time today; Async catch-up is planned. Discord stays useful for voice.",
   },
   {
     question: "Does Teleparty work for long-distance anime watching?",
@@ -40,7 +41,7 @@ const faq = [
   {
     question: "Is Teleparty better than AniDachi for long distance?",
     answer:
-      "For live watching sessions, Teleparty is comparable. For long-distance couples who can't always sync schedules, AniDachi is better because async mode lets each person watch when available while still sharing a connected experience.",
+      "For live watching sessions, Teleparty is comparable across more brands. For Crunchyroll-first or YouTube-first couples, AniDachi is the better pick: Chrome Web Store install, full-quality tabs, and personal history. Async catch-up is planned, not available today.",
   },
   {
     question: "Can we just use Discord screen share to watch anime long distance?",
@@ -90,7 +91,7 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
       description="Every watch-together app compared for long-distance anime couples."
       url="/best-apps-watch-anime-together-long-distance"
       datePublished="2026-06-23"
-      dateModified="2026-06-23"
+      dateModified="2026-09-21"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -109,13 +110,13 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
       <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           The best app for long-distance anime watching is AniDachi if you
-          watch on Crunchyroll — it is the only option with async mode, which
-          means you can still share the experience even when your schedules
-          never overlap.
+          watch on Crunchyroll or YouTube — each person keeps full-quality
+          playback on their own tab while AniDachi syncs the room.
         </strong>{" "}
-        If you need multi-platform support (Netflix, Disney+, etc.) or want
-        a free option, Teleparty and Rave are the next best alternatives for
-        live sync sessions.
+        Live rooms still need a shared start time. Async catch-up is planned,
+        not available today. If you need Netflix or Disney+ in the same tool,
+        Teleparty or Rave are the next live-only alternatives. Keep Discord for
+        voice; do not screen-share Crunchyroll.
       </p>
 
       <h2
@@ -139,7 +140,7 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
           },
           {
             feature: "Async watching (different times)",
-            values: { anidachi: "yes", teleparty: "no", rave: "no", discord: "no", "crunchyroll-party": "no" },
+            values: { anidachi: "Planned", teleparty: "no", rave: "no", discord: "no", "crunchyroll-party": "no" },
           },
           {
             feature: "Live sync",
@@ -160,6 +161,13 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
         ]}
       />
 
+      <PrimaryCheckoutCta
+        pagePath="/best-apps-watch-anime-together-long-distance"
+        pageTemplate="listicle"
+        placement="content_mid"
+        className="my-10"
+      />
+
       <h2
         id="anidachi"
         className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
@@ -167,15 +175,14 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
         1. AniDachi — Best for Long-Distance Crunchyroll Couples
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
-        AniDachi is the only anime watch-party tool built specifically for
-        Crunchyroll with <strong>async watching support</strong>. This is the
-        key differentiator for long-distance couples: when your time zones or
-        schedules never overlap, async mode lets each person watch
-        independently while reactions, progress, and watchroom chat remain
-        fully shared. No other tool on this list does this.
+        AniDachi is the Crunchyroll- and YouTube-first watch-party Chrome
+        extension: Add to Chrome, open your own tab, share one invite.{" "}
+        <strong>Async catch-up is planned</strong> and is not available yet —
+        live rooms still need everyone online together. Personal history on Plus
+        or Pro is what you get today for catching up between sessions.
       </p>
       <ul className="list-disc pl-6 space-y-1 text-foreground/80 mb-6">
-        <li>Live sync + async mode</li>
+        <li>Live sync on Crunchyroll and YouTube (async planned)</li>
         <li>Auto anime detection on Crunchyroll</li>
         <li>Episode-level spoiler control</li>
         <li>Per-person progress tracking</li>

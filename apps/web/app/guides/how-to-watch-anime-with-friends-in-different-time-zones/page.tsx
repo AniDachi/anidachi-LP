@@ -69,7 +69,7 @@ const howToSteps = [
   },
   {
     name: "Install AniDachi",
-    text: "Open /extension, download the official zip, then Load unpacked in Chrome for every member who watches on desktop.",
+    text: "Open /extension, then choose Add to Chrome from the official AniDachi Chrome Web Store listing for every member who watches on desktop.",
   },
   {
     name: "Agree on pacing",
@@ -146,7 +146,7 @@ export default function HowToWatchAnimeFriendsTimeZonesPage() {
           <Link href="/extension" className="text-brand-orange hover:underline">
             the AniDachi install page
           </Link>{" "}
-          so everyone loads the same official zip.
+          so everyone installs from the same Chrome Web Store listing.
         </p>
 
         <h2

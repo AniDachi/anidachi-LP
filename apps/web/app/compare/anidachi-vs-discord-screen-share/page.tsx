@@ -20,22 +20,22 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Crunchyroll vs Discord Screen Share — Which Is Better for Anime Watch Parties? (2026)",
+  title: "Don't Screen Share Crunchyroll on Discord — Watch in Sync Instead",
   description:
-    "Discord screen share is free but degrades video quality. AniDachi watchrooms give everyone full-quality Crunchyroll playback. When to use each — compared.",
+    "Discord black-screens Crunchyroll. AniDachi lets everyone stream full quality on their own tab while you keep Discord for voice.",
   alternates: { canonical: "/compare/anidachi-vs-discord-screen-share" },
   openGraph: {
-    title: "Crunchyroll vs Discord Screen Share for Anime Watch Parties",
+    title: "Don't Screen Share Crunchyroll on Discord — Watch in Sync",
     description:
-      "Discord screen share vs Crunchyroll watchrooms: quality, sync, and which wins for anime groups.",
+      "Discord black-screens Crunchyroll. AniDachi syncs each person's own tab so you keep full quality.",
     url: "/compare/anidachi-vs-discord-screen-share",
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Crunchyroll vs Discord Screen Share — Anime Watch Party",
+    title: "Don't Screen Share Crunchyroll on Discord — Watch in Sync",
     description:
-      "Discord screen share vs Crunchyroll watchrooms: quality and sync compared.",
+      "Discord black-screens Crunchyroll. Keep Discord for voice; AniDachi syncs each tab.",
     images: [BRAND_OG_PATH],
   },
 };
@@ -78,7 +78,7 @@ export default function AnidachiVsDiscordScreenSharePage() {
       description="Compare Discord Go Live setups with synced Crunchyroll watchrooms."
       url="/compare/anidachi-vs-discord-screen-share"
       datePublished="2026-05-08"
-      dateModified="2026-08-12"
+      dateModified="2026-09-21"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -90,9 +90,10 @@ export default function AnidachiVsDiscordScreenSharePage() {
       <SeoGuideAnswer>
 
         <strong>
-          Discord is unbeatable for cozy voice chats; screen share is unbeatable for a
-          two-minute peek. Serious weekly anime nights usually outgrow bandwidth caps
-          and drift issues—then synced per-user playback wins.
+          Discord is the voice layer; AniDachi is the video layer. Keep Discord
+          for talk. Do not Go Live a Crunchyroll tab — DRM black-screens it.
+          Each person streams full quality on their own tab while AniDachi
+          keeps playback in sync.
         </strong>
       
       </SeoGuideAnswer>
@@ -104,7 +105,7 @@ export default function AnidachiVsDiscordScreenSharePage() {
         <strong>Discord screen share:</strong> one stream, quickest setup, weakest
         video fidelity.{" "}
         <strong>AniDachi:</strong> every viewer opens Crunchyroll locally—higher bitrate,
-        easier spoiler hygiene, optional async pacing.
+        easier spoiler hygiene. Async catch-up is planned.
       </p>
 
       <h2 id="when-discord" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">

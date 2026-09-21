@@ -25,7 +25,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "Can You Screen Share YouTube on Discord? Better Sync (2026)",
   description:
-    "Can you screen share YouTube on Discord? Yes — but sync a YouTube watch party instead. AniDachi keeps full watch pages aligned; Discord stays for voice. Start free at pricing.",
+    "Can you screen share YouTube on Discord? Yes — but sync a YouTube watch party instead. Keep Discord for voice; AniDachi aligns full watch pages. Start from /extension.",
   alternates: {
     canonical: "/guides/can-you-screen-share-youtube-on-discord",
   },
@@ -105,7 +105,7 @@ export default function CanYouScreenShareYoutubeOnDiscordPage() {
       description="Yes, but quality suffers. Sync YouTube watchrooms and keep Discord for voice."
       url="/guides/can-you-screen-share-youtube-on-discord"
       datePublished="2026-07-26"
-      dateModified="2026-08-12"
+      dateModified="2026-09-21"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
@@ -175,7 +175,7 @@ export default function CanYouScreenShareYoutubeOnDiscordPage() {
           <Link href="/extension" className="text-brand-orange hover:underline">
             the AniDachi install page
           </Link>
-          : download the official zip, then Load unpacked in Chrome.
+          : then choose Add to Chrome from the official listing.
         </li>
         <li>Open the same full youtube.com/watch page on every device (not Shorts or embeds).</li>
         <li>Create a watchroom and share the invite.</li>

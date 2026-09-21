@@ -215,8 +215,8 @@ export default function BestWayToWatchYoutubeWithFriendsPage() {
             text: (
               <>
                 Start at{" "}
-                <Link href="/extension">the AniDachi install page</Link>, download
-                the official zip, then Load unpacked in Chrome.
+                <Link href="/extension">the AniDachi install page</Link> and
+                choose Add to Chrome from the official listing.
               </>
             ),
           },

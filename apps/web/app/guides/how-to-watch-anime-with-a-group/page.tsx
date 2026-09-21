@@ -196,7 +196,7 @@ export default function HowToWatchAnimeWithAGroupPage() {
           Step-by-step with AniDachi
         </h2>
         <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
-          <li>Open /extension, download the official zip, then Load unpacked in Chrome on laptops guests use.</li>
+          <li>Open /extension, then choose Add to Chrome from the official AniDachi Chrome Web Store listing on laptops guests use.</li>
           <li>Open the agreed Crunchyroll episode and detect the anime.</li>
           <li>Create a watchroom name your club recognizes across invites.</li>
           <li>

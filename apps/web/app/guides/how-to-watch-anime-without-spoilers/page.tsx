@@ -66,7 +66,7 @@ const howToSteps = [
   },
   {
     name: "Install AniDachi",
-    text: "Open /extension, download the official zip, then Load unpacked in Chrome so everyone runs the same chat features.",
+    text: "Open /extension, then choose Add to Chrome from the official AniDachi Chrome Web Store listing so everyone runs the same chat features.",
   },
   {
     name: "Create a dedicated room",
@@ -152,7 +152,7 @@ export default function HowToWatchAnimeWithoutSpoilersPage() {
           <Link href="/extension" className="text-brand-orange hover:underline">
             the AniDachi install page
           </Link>{" "}
-          so everyone loads the same official zip.
+          so everyone installs from the same Chrome Web Store listing.
         </p>
 
         <h2

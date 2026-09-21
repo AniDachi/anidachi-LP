@@ -40,7 +40,7 @@ const howToSteps = [
   },
   {
     name: "Install AniDachi on every machine",
-    text: "Each person adds the Chrome extension and signs into their own Crunchyroll account before join night.",
+    text: "Each person opens /extension, chooses Add to Chrome from the official Store listing, and signs into their own Crunchyroll account before join night.",
   },
   {
     name: "Host creates a watchroom",
@@ -55,8 +55,8 @@ const howToSteps = [
     text: "Friends click the invite, open the same episode, and confirm sync — Discord stays for voice only.",
   },
   {
-    name: "Optional: enable async for stragglers",
-    text: "If someone misses the live start, leave the room in async-friendly mode so they catch up without spoilers.",
+    name: "If someone is late",
+    text: "Live rooms still need a shared start. Let late friends catch up on their own Crunchyroll progress, then rejoin the next episode. Async catch-up is planned, not available today.",
   },
 ];
 
@@ -117,7 +117,7 @@ export default function SwitchFromDiscordScreenSharePage() {
         description="Migration playbook: keep Discord voice, replace Go Live with AniDachi watchrooms."
         url="/guides/switch-from-discord-screen-share"
         datePublished="2026-07-19"
-        dateModified="2026-07-19"
+        dateModified="2026-09-21"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}

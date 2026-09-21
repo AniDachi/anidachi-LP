@@ -28,7 +28,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "YouTube Watch Party — Watch YouTube Together With Friends (2026)",
   description:
-    "YouTube watch party hub: sync full videos with friends via Chrome extension, Teleparty, or Discord — AniDachi offers live sync and personal history. Start free at pricing.",
+    "YouTube watch party hub: Add AniDachi from the Chrome Web Store, open a full youtube.com/watch page, and sync with friends. Teleparty and Discord compared.",
   alternates: { canonical: "/watch-youtube-together" },
   openGraph: {
     images: [
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
 
     title: "YouTube Watch Party — Watch YouTube Together",
     description:
-      "Create a YouTube watch party with live sync and chat. Start from pricing.",
+      "Create a YouTube watch party from the Chrome Web Store. Live sync on full videos.",
     url: "/watch-youtube-together",
   },
   twitter: {
@@ -78,6 +78,16 @@ const faq = [
   {
     question: "Is AniDachi free for YouTube watch parties?",
     answer: PRICING_IS_ANIDACHI_FREE_YOUTUBE_ANSWER,
+  },
+  {
+    question: "Is there an app to watch YouTube together / watch videos together?",
+    answer:
+      "Yes. AniDachi is a Chrome Web Store watch-party extension for YouTube and Crunchyroll. Watch2Gether is a free browser room for public links. Teleparty covers live multi-platform nights. This hub owns YouTube watch party and watch YouTube together.",
+  },
+  {
+    question: "Is there a YouTube watch party extension?",
+    answer:
+      "Yes. Add AniDachi from the Chrome Web Store via /extension. It syncs full youtube.com/watch pages — not Shorts, embeds, or the homepage feed. Deep-dive: /guides/youtube-watch-party-chrome-extension.",
   },
   {
     question: "Does Teleparty work with YouTube?",
@@ -128,7 +138,7 @@ const startHereItemList = [
 const howToSteps = [
   {
     name: "Install AniDachi",
-    text: "Open /extension, download the official AniDachi zip, unzip it, then choose Load unpacked in Chrome Developer mode.",
+    text: "Open /extension, then choose Add to Chrome from the official AniDachi Chrome Web Store listing.",
   },
   {
     name: "Open a YouTube watch page",
@@ -227,7 +237,7 @@ export default function WatchYoutubeTogetherPage() {
         description="The complete guide to YouTube watch parties: live sync, chat, and every alternative compared."
         url="/watch-youtube-together"
         datePublished="2026-07-25"
-        dateModified="2026-08-12"
+        dateModified="2026-09-21"
         faq={faq}
         headings={tocHeadings}
         itemList={startHereItemList}
@@ -241,8 +251,9 @@ export default function WatchYoutubeTogetherPage() {
         </h2>
         <SeoGuideAnswer>
           <strong>
-            Host a YouTube watch party with AniDachi — a Chrome extension that
-            creates watchrooms on full YouTube videos with synced playback and live chat.
+            Host a YouTube watch party with AniDachi — Add to Chrome from the
+            official Store listing, then create a watchroom on a full YouTube
+            video with synced playback and live chat.
           </strong>{" "}
           YouTube has no native co-watching feature. Start from the{" "}
           <Link href="/extension">AniDachi install page</Link>. Extension details:{" "}

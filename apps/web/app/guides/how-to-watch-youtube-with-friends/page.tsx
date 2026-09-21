@@ -23,7 +23,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "How to Watch YouTube With Friends (2026 Guide)",
   description:
-    "Step-by-step: how to watch YouTube with friends (and how to watch YouTube together) using AniDachi watchrooms — live sync. Free alternatives included.",
+    "Step-by-step: how to watch YouTube with friends. Add AniDachi from the Chrome Web Store, open a full video, share a link — live sync. Free alternatives included.",
   alternates: { canonical: "/guides/how-to-watch-youtube-with-friends" },
   openGraph: {
     images: [
@@ -68,6 +68,11 @@ const faq = [
     question: "Is AniDachi free?",
     answer: PRICING_IS_ANIDACHI_FREE_YOUTUBE_ANSWER,
   },
+  {
+    question: "How do I watch YouTube together?",
+    answer:
+      "Same flow as watching with friends: Add AniDachi from the Chrome Web Store via /extension, open a full youtube.com/watch page, create a watchroom, and share the invite. Hub: /watch-youtube-together.",
+  },
 ];
 
 const tocHeadings: TocHeading[] = [
@@ -82,7 +87,7 @@ const tocHeadings: TocHeading[] = [
 const howToSteps = [
   {
     name: "Get AniDachi",
-    text: "Open /extension, download the official zip, then Load unpacked in Chrome.",
+    text: "Open /extension, then choose Add to Chrome from the official AniDachi Chrome Web Store listing.",
   },
   {
     name: "Open the video",
@@ -129,7 +134,7 @@ export default function HowToWatchYoutubeWithFriendsPage() {
         description="Step-by-step YouTube watchroom setup — live sync catch-up."
         url="/guides/how-to-watch-youtube-with-friends"
         datePublished="2026-07-25"
-        dateModified="2026-08-12"
+        dateModified="2026-09-21"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
@@ -143,8 +148,9 @@ export default function HowToWatchYoutubeWithFriendsPage() {
       <SeoGuideAnswer>
 
           <strong>
-            Create an AniDachi YouTube watchroom, share the invite, and watch on
-            each person’s own YouTube tab with live playback sync.
+            How to watch YouTube with friends: Add AniDachi from the Chrome Web
+            Store, open a full youtube.com/watch page, share the invite, and
+            watch on each person&apos;s own tab with live playback sync.
           </strong>{" "}
           Full hub:{" "}
           <Link
@@ -152,7 +158,7 @@ export default function HowToWatchYoutubeWithFriendsPage() {
           >
             YouTube watch party
           </Link>
-          . Install from{" "}
+          . Start from{" "}
           <Link href="/extension">
             the AniDachi install page
           </Link>

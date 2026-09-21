@@ -18,9 +18,9 @@ import {
 } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
-  title: "AniDachi vs Teleparty: Which Is Better for Anime Watch Parties? (2026)",
+  title: "AniDachi vs Teleparty — Crunchyroll & YouTube Watch Party (2026)",
   description:
-    "Does Teleparty work with Crunchyroll? Yes for live sync. AniDachi is better for Crunchyroll anime groups who need async. Full AniDachi vs Teleparty comparison.",
+    "Teleparty alternative for Crunchyroll and YouTube. AniDachi syncs each person's own tab — Add to Chrome free. Compare live sync, chat, and anime rooms.",
   alternates: { canonical: "/compare/anidachi-vs-teleparty" },
   openGraph: {
     images: [
@@ -32,9 +32,9 @@ export const metadata: Metadata = {
       },
     ],
 
-    title: "AniDachi vs Teleparty — Anime Watch Party Comparison",
+    title: "AniDachi vs Teleparty — Crunchyroll & YouTube Watch Party",
     description:
-      "Teleparty for Crunchyroll vs AniDachi: live multi-platform sync vs async anime watchrooms.",
+      "Teleparty alternative for Crunchyroll and YouTube. AniDachi syncs each person's own tab — Add to Chrome free.",
     url: "/compare/anidachi-vs-teleparty",
   },
 };
@@ -58,17 +58,22 @@ const faq = [
   {
     question: "Can I switch from Teleparty to AniDachi?",
     answer:
-      "Yes. Install AniDachi, have everyone use their own Crunchyroll tab, and create a new AniDachi watchroom for the show. You are not locked into one tool; pick the one that matches how your group actually watches.",
+      "Yes. Install AniDachi from the Chrome Web Store via /extension, have everyone use their own Crunchyroll or YouTube tab, and create a new AniDachi watchroom. You are not locked into one tool.",
   },
   {
     question: "Which is better for long-distance couples watching Crunchyroll — AniDachi or Teleparty?",
     answer:
-      "AniDachi is better for long-distance couples because of async mode. If your schedules or time zones don't overlap, async mode lets each person watch when available and leaves episode-tagged reactions the other person sees after finishing the same episode. Teleparty has no async feature.",
+      "AniDachi is the better Crunchyroll- and YouTube-first pick: full-quality tabs, live sync, personal history. Live rooms still need a shared start time. Async catch-up is planned. Teleparty is live-only and covers more streaming brands.",
   },
   {
     question: "Does AniDachi or Teleparty work better for anime friend groups in different time zones?",
     answer:
-      "AniDachi is the better choice for groups across time zones. Async watchrooms mean members don't need to schedule a single watch time — each person catches up at their own pace with spoiler-controlled reactions. Teleparty requires everyone online simultaneously.",
+      "For groups that can meet live, both work. AniDachi is Crunchyroll- and YouTube-first with personal history. Teleparty is live-only across more platforms. Async catch-up on AniDachi is planned, not available today — both tools still need everyone online together for a party.",
+  },
+  {
+    question: "Is AniDachi a Teleparty alternative / watch party app?",
+    answer:
+      "Yes. AniDachi is a Chrome Web Store watch-party extension for Crunchyroll and YouTube — a Teleparty alternative when you do not need Netflix or Disney+. Friends join from /extension with Add to Chrome.",
   },
 ];
 
@@ -100,7 +105,7 @@ export default function AniDachiVsTelepartyPage() {
       description="Side-by-side comparison for anime watch parties."
       url="/compare/anidachi-vs-teleparty"
       datePublished="2026-04-23"
-      dateModified="2026-08-12"
+        dateModified="2026-09-21"
       faq={faq}
       headings={headings}
     >
@@ -112,9 +117,9 @@ export default function AniDachiVsTelepartyPage() {
 
         <strong>
           Teleparty works with Crunchyroll for live sync — but AniDachi is
-          purpose-built for anime fans who want async watchrooms and progress
-          tracking on Crunchyroll. Teleparty is a general-purpose watch party
-          tool that works across many streaming services.
+          purpose-built for Crunchyroll and YouTube watchrooms with live chat
+          and personal history. Async catch-up is planned. Teleparty is a
+          general-purpose live watch party across more streaming brands.
         </strong>{" "}
         Here&apos;s a detailed comparison to help you decide.
       
@@ -127,9 +132,9 @@ export default function AniDachiVsTelepartyPage() {
         At a glance
       </h2>
       <p className="text-foreground/80 mb-6">
-        <strong>TL;DR:</strong> Choose AniDachi for Crunchyroll-first, async-friendly
-        group watching. Choose Teleparty if you need many streaming apps in one
-        place and can always watch live.
+        <strong>TL;DR:</strong> Choose AniDachi for Crunchyroll- and YouTube-first
+        live watchrooms. Choose Teleparty if you need many streaming apps in one
+        place and can always watch live. Async catch-up on AniDachi is planned.
       </p>
 
       <h2
@@ -152,7 +157,7 @@ export default function AniDachiVsTelepartyPage() {
           },
           {
             feature: "Asynchronous watching",
-            values: { anidachi: "yes", teleparty: "no" },
+            values: { anidachi: "Planned", teleparty: "no" },
           },
           {
             feature: "Auto anime detection",
@@ -182,7 +187,7 @@ export default function AniDachiVsTelepartyPage() {
       </h2>
       <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-6">
         <li>Your friend group watches primarily on Crunchyroll.</li>
-        <li>You need async watching — different schedules or time zones.</li>
+        <li>You want individual episode progress tracking (Plus/Pro history).</li>
         <li>You want individual episode progress tracking.</li>
         <li>You value auto anime detection over manual room setup.</li>
       </ul>

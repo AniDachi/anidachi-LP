@@ -66,6 +66,11 @@ const faq = [
     answer:
       "Discord does not natively sync multiple viewers' browsers. You manually coordinate pause and resume in voice, or use a dedicated watch party extension with chat while Discord handles voice.",
   },
+  {
+    question: "Does Discord have Watch Together for Crunchyroll or YouTube?",
+    answer:
+      "Discord's built-in Watch Together / activities do not play licensed Crunchyroll episodes, and YouTube activities are limited. For a Discord watch together night: keep voice in Discord, add AniDachi from the Chrome Web Store, and sync each person's Crunchyroll or YouTube tab. Why Go Live fails: /guides/can-you-screen-share-crunchyroll-on-discord.",
+  },
 ];
 
 const tocHeadings: TocHeading[] = [
@@ -124,7 +129,7 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
         description="Discord anime watch parties with voice, screen share, and AniDachi sync when Go Live lags."
         url="/guides/how-to-watch-anime-with-friends-on-discord"
         datePublished="2026-05-01"
-        dateModified="2026-08-03"
+        dateModified="2026-09-21"
         faq={faq}
         headings={tocHeadings}
         aboveFoldCta

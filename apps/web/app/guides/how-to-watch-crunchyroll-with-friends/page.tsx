@@ -19,9 +19,9 @@ import {
 } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
-  title: "How to Watch Crunchyroll with Friends — AniDachi Sync Guide (2026)",
+  title: "How to Watch Crunchyroll with Friends (2026) — 2-Minute Watch Party",
   description:
-    "How to watch Crunchyroll with friends — two people or a group, in a live room. AniDachi syncs each Crunchyroll tab; Discord voice stays optional. Start at /extension.",
+    "How to watch Crunchyroll with friends: Add to Chrome, open your own tab, share a link. Two people or a group — Discord voice optional. No account sharing.",
   alternates: { canonical: "/guides/how-to-watch-crunchyroll-with-friends" },
   openGraph: {
     images: [
@@ -33,9 +33,9 @@ export const metadata: Metadata = {
       },
     ],
 
-    title: "How to Watch Crunchyroll with Friends — AniDachi Sync Guide (2026)",
+    title: "How to Watch Crunchyroll with Friends — 2-Minute Watch Party",
     description:
-      "Step-by-step: watch Crunchyroll together with friends — live sync, optional Discord voice, and personal history.",
+      "Add AniDachi from the Chrome Web Store, open your own Crunchyroll tab, share a link. Discord voice optional.",
     url: "/guides/how-to-watch-crunchyroll-with-friends",
   },
 };
@@ -49,7 +49,7 @@ const faq = [
   {
     question: "How do I watch Crunchyroll with friends online?",
     answer:
-      "Open /extension, download the official zip, then Load unpacked in Chrome. Open any anime on Crunchyroll, detect the show, and create a watchroom. Share the invite link so each friend joins on their own Crunchyroll account.",
+      "Open /extension, then choose Add to Chrome from the official AniDachi Chrome Web Store listing. Open any anime on Crunchyroll, detect the show, and create a watchroom. Share the invite link so each friend joins on their own Crunchyroll account.",
   },
   {
     question: "How do two people watch Crunchyroll at the same time?",
@@ -75,12 +75,18 @@ const faq = [
     question: "Is AniDachi free for Crunchyroll watch parties?",
     answer: PRICING_CR_PRICING_SNIPPET,
   },
+  {
+    question: "Can two people watch Crunchyroll on one account?",
+    answer:
+      "No — not for a real watch party. Crunchyroll limits concurrent streams, so two people should each use their own login. AniDachi syncs the two tabs; it does not share one stream. Dedicated guide: /guides/how-to-watch-crunchyroll-with-friends-without-account-sharing.",
+  },
 ];
 
 const tocHeadings: TocHeading[] = [
   { id: "answer", label: "Short answer", level: 2 },
   { id: "steps", label: "Step-by-step (AniDachi)", level: 2 },
   { id: "method-discord", label: "Discord alternative", level: 2 },
+  { id: "two-accounts", label: "Two people, one account?", level: 2 },
   { id: "method-cr-party", label: "Crunchyroll Party", level: 2 },
   { id: "which-method", label: "Which method to choose", level: 2 },
   { id: "related", label: "Related guides", level: 2 },
@@ -90,7 +96,7 @@ const tocHeadings: TocHeading[] = [
 const howToSteps = [
   {
     name: "Get AniDachi",
-    text: "Open /extension, download the official zip, then Load unpacked in Chrome. AniDachi is not on the Chrome Web Store yet.",
+    text: "Open /extension, then choose Add to Chrome from the official AniDachi Chrome Web Store listing.",
   },
   {
     name: "Open Crunchyroll",
@@ -137,7 +143,7 @@ export default function HowToWatchWithFriendsPage() {
         description="Every method to watch Crunchyroll together, compared and explained."
         url="/guides/how-to-watch-crunchyroll-with-friends"
         datePublished="2026-04-23"
-        dateModified="2026-08-12"
+        dateModified="2026-09-21"
         faq={faq}
         headings={tocHeadings}
         aboveFoldCta
@@ -164,7 +170,7 @@ export default function HowToWatchWithFriendsPage() {
           <Link href="/extension">
             the AniDachi install page
           </Link>
-          — not a fake Chrome Web Store install link.
+          — Add to Chrome from the official listing.
         
       </SeoGuideAnswer>
 
@@ -190,14 +196,22 @@ export default function HowToWatchWithFriendsPage() {
                     <>
                       Open{" "}
                       <Link href="/extension">the AniDachi install page</Link>,
-                      download the official zip, then Load unpacked in Chrome.
-                      AniDachi is not on the Chrome Web Store yet.
+                      then choose Add to Chrome from the official listing.
                     </>
                   ),
                 }
               : step,
           )}
         />
+
+        <p className="text-foreground/80 leading-relaxed mb-8">
+          Need pictures of the overlay? The install hub walks the same live
+          controls with pointing mocks — bubble, Create room, Layout, Voice.{" "}
+          <Link href="/extension#using" className="text-brand-orange hover:underline">
+            Use it on the player
+          </Link>
+          .
+        </p>
 
         <h2
           id="method-discord"
@@ -220,6 +234,26 @@ export default function HowToWatchWithFriendsPage() {
             className="text-brand-orange hover:underline"
           >
             how to watch anime with friends on Discord
+          </Link>
+          .
+        </p>
+
+        <h2
+          id="two-accounts"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
+        >
+          Two people, one Crunchyroll account?
+        </h2>
+        <p className="text-foreground/80 leading-relaxed mb-4">
+          Do not share one login for a watch party. Crunchyroll caps concurrent
+          streams, so the second person gets kicked or a black screen. Each
+          friend opens the same episode on their own account; AniDachi only
+          keeps those tabs in sync. Full note:{" "}
+          <Link
+            href="/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing"
+            className="text-brand-orange hover:underline"
+          >
+            watch Crunchyroll without account sharing
           </Link>
           .
         </p>
@@ -259,7 +293,8 @@ export default function HowToWatchWithFriendsPage() {
       </h2>
       <SeoGuideRelated
         links={[
-          { href: "/watch-crunchyroll-together", label: "Watch Crunchyroll Together (Pillar Guide)" },
+          { href: "/watch-crunchyroll-together", label: "Crunchyroll watch party (start here)" },
+                    { href: "/guides/can-you-screen-share-crunchyroll-on-discord", label: "Can you screen share Crunchyroll on Discord?" },
                     { href: "/guides/crunchyroll-watch-party-free", label: "Free Crunchyroll watch party options" },
                     { href: "/pricing", label: "AniDachi pricing" },
                     ...relatedGuideLinks.map((g) => ({ href: g.href, label: g.label }))

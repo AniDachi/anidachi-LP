@@ -39,7 +39,7 @@ const faq = [
   {
     question: "Are Crunchyroll watch party extensions safe?",
     answer:
-      "Start from the AniDachi install page (/extension): download the official zip and Load unpacked in Chrome. AniDachi is not on the Chrome Web Store yet. Always check permissions and publisher info before installing any extension.",
+      "Start from the AniDachi install page (/extension) and choose Add to Chrome from the official listing. Always check permissions and publisher info before installing any extension.",
   },
   {
     question: "Do watch party extensions work with Crunchyroll ads?",
