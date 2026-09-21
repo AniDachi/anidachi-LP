@@ -20,7 +20,9 @@ Differentiators: sync + async catch-up, chat, progress. Each person uses their o
 **Not supported:** Netflix, Disney+, Hulu, Amazon Prime Video sync.  
 **Not affiliated** with Crunchyroll, Sony, YouTube, or Google.
 
-Primary conversion path: **`/pricing`** until a real Chrome Web Store listing is live. Install how-tos must not invent generic `chromewebstore.google.com` “Add to Chrome” CTAs. Prefer linking the install hub when `/extension` is the live download/store path.
+Primary conversion path: the official Chrome Web Store listing linked from
+**`/extension`**. Install how-tos should link that listing or the install hub;
+do not invent a different `chromewebstore.google.com` item URL.
 
 ---
 

@@ -1,4 +1,4 @@
-/** Public install hub until a Chrome Web Store listing exists. */
+/** Public install hub and the canonical Chrome Web Store destination. */
 export const INSTALL_HUB_PATH = "/extension";
 
 export const INSTALL_CTA_LABEL = "Download for Chrome";
@@ -7,22 +7,24 @@ export const INSTALL_ZIP_CTA_LABEL = "Download AniDachi (.zip)";
 
 export const EXTENSION_DOWNLOAD_PATH = "/api/extension/download";
 
+export const CHROME_WEB_STORE_URL =
+  "https://chromewebstore.google.com/detail/gpkolofebdhfpapbbgdkdkmlmjfidgmn?utm_source=item-share-cb";
+
 export const CHROME_EXTENSIONS_PAGE = "chrome://extensions";
 
 export type ExtensionInstallMode = "sideload" | "cws";
 
-/** Flip to `cws` when a real Chrome Web Store item URL exists. */
-export const EXTENSION_INSTALL_MODE: ExtensionInstallMode = "sideload";
+export const EXTENSION_INSTALL_MODE: ExtensionInstallMode = "cws";
 
 export const INSTALL_HOWTO_STEP_TEXT =
-  "Open /extension, download the official AniDachi zip from this site, unzip it, then choose Load unpacked in Chrome Developer mode. The Chrome Web Store listing is in the standard review queue, including publisher verification.";
+  "Open the official AniDachi Chrome Web Store listing and choose Add to Chrome.";
 
-/** Calm Store-status copy. Do not imply rejection, risk, or a workaround. */
-export const CWS_PENDING_LINE =
-  "Not on the Chrome Web Store yet — listing review and publisher verification are in progress.";
+/** Store-status copy shared by the install hub and its metadata. */
+export const CWS_STATUS_LINE =
+  "Available now in the Chrome Web Store.";
 
-export const CWS_PENDING_DISCLAIMER =
-  "Chrome reviews every new listing before it goes live, including a publisher verification step. AniDachi is in that queue. Until Chrome publishes the Store page, this is the official download.";
+export const CWS_STATUS_DISCLAIMER =
+  "Install AniDachi from the official Chrome Web Store listing.";
 
 export const INSTALL_HOWTO_STEP_NAME = "Install the AniDachi Chrome extension";
 
