@@ -1,14 +1,19 @@
 import { Chrome, Search, Users, MessageSquare, History, Clock3 } from "lucide-react";
 import Link from "next/link";
 import { HomeSectionHeader } from "@/components/home-section-header";
-import { INSTALL_HOWTO_STEP_TEXT, INSTALL_HUB_PATH } from "@/lib/install-cta";
+import {
+  INSTALL_HOWTO_STEP_TEXT_VIA_HUB,
+  INSTALL_HUB_PATH,
+} from "@/lib/install-cta";
+
+const INSTALL_STEP_TAIL =
+  "(~2 minutes) — works with your Crunchyroll or YouTube session.";
 
 const steps = [
   {
     icon: Chrome,
     title: "Install the Chrome Extension",
-    description:
-      "Add AniDachi from the Chrome Web Store (~2 minutes) — works with your Crunchyroll or YouTube session.",
+    description: `${INSTALL_HOWTO_STEP_TEXT_VIA_HUB} ${INSTALL_STEP_TAIL}`,
   },
   {
     icon: Search,
@@ -75,15 +80,15 @@ export function HowItWorks() {
                 <p className="text-[0.95rem] leading-relaxed text-ani-muted">
                   {i === 0 ? (
                     <>
-                      Add AniDachi from the Chrome Web Store via{" "}
+                      Open{" "}
                       <Link
                         href={INSTALL_HUB_PATH}
                         className="font-medium text-ani-progress underline-offset-4 hover:underline"
                       >
-                        the install page
-                      </Link>{" "}
-                      (~2 minutes) — works with your Crunchyroll or YouTube
-                      session.
+                        /extension
+                      </Link>
+                      , then choose Add to Chrome from the official AniDachi
+                      Chrome Web Store listing. {INSTALL_STEP_TAIL}
                     </>
                   ) : (
                     step.description
@@ -132,13 +137,7 @@ export function HowItWorks() {
   );
 }
 
-export const howToSteps = [
-  {
-    name: steps[0].title,
-    text: `${INSTALL_HOWTO_STEP_TEXT} (~2 minutes).`,
-  },
-  ...steps.slice(1).map((s) => ({
-    name: s.title,
-    text: s.description,
-  })),
-];
+export const howToSteps = steps.map((s) => ({
+  name: s.title,
+  text: s.description,
+}));

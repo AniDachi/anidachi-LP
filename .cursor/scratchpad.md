@@ -138,6 +138,7 @@ Success: first GSC impressions on `youtube watch party` / `watch youtube togethe
 - [x] 2d watch-party-app aliases on YT apps roundup
 - [x] 2f paste pack in `docs/current-development-state.md` + `CWS_LISTING_TITLE` / short description constants
 - [x] Ops: local `GOOGLE_ADS_CUSTOMER_ID=8078204641` (was 5723352650)
+- [x] Fix homepage HowTo step 1 UI ↔ `howToSteps` mismatch (`how-it-works.tsx`)
 - [ ] Owner: rotate leaked Blob token, then persist `PRIVATE_INTEGRATION_BLOB_READ_WRITE_TOKEN`
 - [ ] Owner: CWS listing fields, Product Hunt, Edge, directories, editorial pitches
 - [ ] After production deploy: Search Console Request indexing
@@ -304,6 +305,8 @@ Success: first GSC impressions on `youtube watch party` / `watch youtube togethe
 - [x] CWS → `/pricing` on CR pillar + key how-tos
 
 ## Executor's Feedback or Assistance Requests
+
+- **Executor (2026-09-21 how-it-works HowTo mismatch):** Confirmed Bug 1. Homepage visible step 1 said “via the install page” while `howToSteps` JSON-LD used `INSTALL_HOWTO_STEP_TEXT` only. Aligned both to `INSTALL_HOWTO_STEP_TEXT_VIA_HUB` + CR/YT session note; UI links `/extension`; `howToSteps` maps from `steps`. `pnpm --filter @anidachi/web check` passed. Please spot-check `/#how-it-works` and view-source HowTo step 1 before commit.
 
 - **Executor (2026-09-21 SEO rank+expand, full pass):** On-site Parts 1a–1d and 2a–2d are in the working tree. 2f paste pack is in `docs/current-development-state.md` (Store title/short description, PH/Edge/directory/pitch instructions). Local Ads customer set to `8078204641`. Did **not** persist the leaked Blob token — rotate it first. 2e new URLs not shipped (freeze). Indexing and 28d re-measure wait on production. Please spot-check then say if I should commit on `staging`.
 
