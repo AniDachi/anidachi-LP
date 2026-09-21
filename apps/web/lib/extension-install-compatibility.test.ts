@@ -8,6 +8,7 @@ import { SearchParamsContext } from "next/dist/shared/lib/hooks-client-context.s
 import { ExtensionInstallHub } from "../components/extension-install-hub";
 import { ExtensionCheck } from "../app/room/[roomId]/extension-check";
 import type { PublicExtensionArtifact } from "./extension-artifact";
+import { CHROME_WEB_STORE_URL } from "./install-cta";
 
 (globalThis as { React?: typeof React }).React = React;
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -77,8 +78,8 @@ async function sendPresenceReply() {
   })));
 }
 
-function downloadLink() {
-  return container.querySelector<HTMLAnchorElement>('a[href="/api/extension/download"]');
+function storeLink() {
+  return container.querySelector<HTMLAnchorElement>(`a[href="${CHROME_WEB_STORE_URL}"]`);
 }
 
 test("mobile installation shares a room return link without collecting an email address", async () => {
@@ -103,37 +104,39 @@ test("mobile installation shares a room return link without collecting an email 
   }
 });
 
-test("the install guide and room return work without querying the installed extension", async () => {
+test("the Chrome Web Store install link and room return work without querying the installed extension", async () => {
   await renderHub();
-  assert.ok(downloadLink());
+  const link = storeLink();
+  assert.ok(link);
+  assert.equal(link.target, "_blank");
+  assert.equal(link.rel, "noopener noreferrer");
   assert.ok(container.querySelector('a[href="/room/test-room"]'));
-  assert.match(container.textContent!, /Load unpacked/);
+  assert.match(container.textContent!, /Install from Chrome Web Store/);
+  assert.doesNotMatch(container.textContent!, /Load unpacked/);
   assert.deepEqual(messages, []);
 });
 
-test("a presence reply cannot replace the guide or hide the ZIP download", async () => {
+test("a presence reply cannot replace the guide or hide the Store install link", async () => {
   await renderHub();
   await sendPresenceReply();
-  assert.ok(downloadLink());
+  assert.ok(storeLink());
   assert.ok(container.querySelector('a[href="/room/test-room"]'));
-  assert.match(container.textContent!, /Load unpacked/);
+  assert.match(container.textContent!, /Install from Chrome Web Store/);
   assert.doesNotMatch(container.textContent!, /AniDachi is installed/);
   assert.equal(analytics.some((event) => event[1] === "extension_detected"), false);
 });
 
-test("missing ZIP remains unavailable regardless of a claimed extension installation", async () => {
+test("the Store install link remains available when ZIP metadata is missing", async () => {
   await renderHub({ ...artifact, available: false });
   await sendPresenceReply();
-  assert.equal(downloadLink(), null);
-  assert.ok([...container.querySelectorAll("button")].some(
-    (button) => button.disabled && button.textContent?.includes("Zip publishing"),
-  ));
+  assert.ok(storeLink());
+  assert.equal([...container.querySelectorAll("button")].some((button) => button.disabled), false);
   assert.doesNotMatch(container.textContent!, /AniDachi is installed/);
 });
 
 test("the retained room return does not accept an external destination", async () => {
   await renderHub(artifact, "//untrusted.example/room/test-room");
-  assert.ok(downloadLink());
+  assert.ok(storeLink());
   assert.equal(container.querySelector('a[href*="untrusted.example"]'), null);
   assert.equal(container.querySelector('a[href="/room/test-room"]'), null);
 });

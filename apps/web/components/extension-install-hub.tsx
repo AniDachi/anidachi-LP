@@ -20,8 +20,10 @@ import {
 import { extensionInstallFaq } from "@/lib/extension-install-faq";
 import {
   CHROME_EXTENSIONS_PAGE,
-  CWS_PENDING_LINE,
+  CHROME_WEB_STORE_URL,
+  CWS_STATUS_LINE,
   EXTENSION_DOWNLOAD_PATH,
+  EXTENSION_INSTALL_MODE,
   INSTALL_HUB_PATH,
   INSTALL_ZIP_CTA_LABEL,
   isSafeInstallNextPath,
@@ -392,6 +394,15 @@ export function ExtensionInstallHub({
     });
   }
 
+  function onStoreClick() {
+    trackConversion("cta_click", {
+      page_path: INSTALL_HUB_PATH,
+      page_template: "install",
+      placement: "install_hub",
+      cta_variant: "chrome_web_store",
+    });
+  }
+
   if (isMobile) {
     return (
       <div className="mx-auto max-w-lg">
@@ -408,7 +419,7 @@ export function ExtensionInstallHub({
           Watch parties need desktop Chrome. Copy this page and open it on your
           computer.
         </p>
-        <p className="mt-2 text-sm text-ani-muted">{CWS_PENDING_LINE}</p>
+        <p className="mt-2 text-sm text-ani-muted">{CWS_STATUS_LINE}</p>
         <div className="mt-8 flex flex-col gap-3">
           <Button
             type="button"
@@ -442,7 +453,7 @@ export function ExtensionInstallHub({
       <h1 className="text-balance text-4xl font-semibold tracking-[-0.035em] text-ani-text md:text-[2.75rem] md:leading-[1.08]">
         Install AniDachi on Chrome
       </h1>
-      <p className="mt-3 text-sm text-ani-muted">{CWS_PENDING_LINE}</p>
+      <p className="mt-3 text-sm text-ani-muted">{CWS_STATUS_LINE}</p>
 
       {showBrowserNote ? (
         <p className="mt-4 rounded-[12px] border border-ani-line bg-ani-panel px-4 py-3 text-sm text-ani-text">
@@ -451,7 +462,19 @@ export function ExtensionInstallHub({
       ) : null}
 
       <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
-        {artifact.available ? (
+        {EXTENSION_INSTALL_MODE === "cws" ? (
+          <Button asChild size="control" variant="cream">
+            <a
+              href={CHROME_WEB_STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={onStoreClick}
+            >
+              <Chrome className="h-4 w-4" aria-hidden="true" />
+              Install from Chrome Web Store
+            </a>
+          </Button>
+        ) : artifact.available ? (
           <Button asChild size="control" variant="cream">
             <a href={EXTENSION_DOWNLOAD_PATH} onClick={onDownloadClick}>
               <Download className="h-4 w-4" aria-hidden="true" />
@@ -463,12 +486,30 @@ export function ExtensionInstallHub({
             Zip publishing shortly
           </Button>
         )}
-        <p className="text-sm text-ani-muted">
-          v{artifact.version}
-          {sizeLabel ? ` · ${sizeLabel}` : ""}
-        </p>
+        {EXTENSION_INSTALL_MODE === "cws" ? (
+          <p className="text-sm text-ani-muted">Install directly from Chrome.</p>
+        ) : (
+          <p className="text-sm text-ani-muted">
+            v{artifact.version}
+            {sizeLabel ? ` · ${sizeLabel}` : ""}
+          </p>
+        )}
       </div>
 
+      {EXTENSION_INSTALL_MODE === "cws" ? (
+        <div className="mt-10 rounded-xl border border-ani-line bg-ani-panel px-4 py-3 text-sm leading-relaxed text-ani-muted">
+          <p>
+            Chrome will install AniDachi and keep it updated automatically. After
+            installation, pin it from the extensions menu and open Crunchyroll or
+            YouTube to start a watchroom.
+          </p>
+          {nextPath ? (
+            <Button asChild size="control" variant="cream" className="mt-3">
+              <Link href={nextPath}>Open the watchroom</Link>
+            </Button>
+          ) : null}
+        </div>
+      ) : (
       <ol className="mt-10 space-y-6">
         <InstallStep n={1} title="Download the zip">
           <p className="mt-1 text-sm text-ani-muted">Use the button above.</p>
@@ -559,6 +600,7 @@ export function ExtensionInstallHub({
           </p>
         </InstallStep>
       </ol>
+      )}
 
       <OverlayUsingGuide />
 
