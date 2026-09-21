@@ -19,12 +19,23 @@ export const EXTENSION_INSTALL_MODE: ExtensionInstallMode = "cws";
 export const INSTALL_HOWTO_STEP_TEXT =
   "Open the official AniDachi Chrome Web Store listing and choose Add to Chrome.";
 
+/** HowTo / FAQ variant that still names the install hub as the on-site CTA. */
+export const INSTALL_HOWTO_STEP_TEXT_VIA_HUB =
+  "Open /extension, then choose Add to Chrome from the official AniDachi Chrome Web Store listing.";
+
 /** Store-status copy shared by the install hub and its metadata. */
 export const CWS_STATUS_LINE =
   "Available now in the Chrome Web Store.";
 
 export const CWS_STATUS_DISCLAIMER =
   "Install AniDachi from the official Chrome Web Store listing.";
+
+/** Paste into Chrome Web Store listing fields (title ≤45 chars). */
+export const CWS_LISTING_TITLE = "AniDachi: YouTube & Crunchyroll Watch Party";
+
+/** Paste into Chrome Web Store short description (≤132 chars). */
+export const CWS_LISTING_SHORT_DESCRIPTION =
+  "Watch YouTube together and host a Crunchyroll watch party. Live sync on each person's own tab — Add to Chrome.";
 
 export const INSTALL_HOWTO_STEP_NAME = "Install the AniDachi Chrome extension";
 

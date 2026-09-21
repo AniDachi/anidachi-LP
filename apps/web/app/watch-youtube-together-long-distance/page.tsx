@@ -39,9 +39,9 @@ export const metadata: Metadata = {
 
 const faq = [
   {
-    question: "How do I watch YouTube together long distance?",
+    question:     "How do I watch YouTube together long distance?",
     answer:
-      "Install the AniDachi Chrome extension, open a YouTube watch page, create a watchroom, and share the invite link. Playback syncs for live nights. Async catch-up with replayed reactions is planned, not available today. Watch2Gether and Teleparty remain free live-only options.",
+      "Add AniDachi from the Chrome Web Store via /extension, open a YouTube watch page, create a watchroom, and share the invite. Playback syncs for live nights. Async catch-up is planned. Watch2Gether and Teleparty remain free live-only options.",
   },
   {
     question: "Does YouTube have a watch party or co-watching feature?",
@@ -81,7 +81,7 @@ const tocHeadings: TocHeading[] = [
 const howToSteps = [
   {
     name: "Install AniDachi",
-    text: "Open /extension, download the official zip, then Load unpacked in Chrome.",
+    text: "Open /extension, then choose Add to Chrome from the official AniDachi Chrome Web Store listing.",
   },
   {
     name: "Open a YouTube video",
@@ -122,7 +122,7 @@ export default function WatchYoutubeTogetherLongDistancePage() {
         description="Sync YouTube with your long-distance partner — AniDachi watchrooms, other live tools, and scheduling tips."
         url="/watch-youtube-together-long-distance"
         datePublished="2026-06-23"
-        dateModified="2026-07-25"
+        dateModified="2026-09-21"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}

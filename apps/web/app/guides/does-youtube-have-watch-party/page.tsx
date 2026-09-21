@@ -12,7 +12,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "Does YouTube Have a Watch Party? No — Watch Together (2026)",
   description:
-    "YouTube offers SharePlay on iPhone and iPad; desktop Chrome groups can use a sync extension. Sync full videos with AniDachi watchrooms (live together) and start free at pricing.",
+    "YouTube offers SharePlay on iPhone and iPad; desktop Chrome groups Add to Chrome and sync full videos with AniDachi. Start from /extension.",
   alternates: { canonical: "/guides/does-youtube-have-watch-party" },
   openGraph: {
     images: [
@@ -94,7 +94,7 @@ export default function DoesYoutubeHaveWatchPartyPage() {
       description="Compare YouTube SharePlay on iPhone and iPad with desktop watchrooms for watching together."
       url="/guides/does-youtube-have-watch-party"
       datePublished="2026-07-26"
-      dateModified="2026-07-26"
+      dateModified="2026-09-21"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
@@ -176,7 +176,7 @@ export default function DoesYoutubeHaveWatchPartyPage() {
         Quick AniDachi Setup
       </h2>
       <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
-        <li>Open /extension, download the official zip, then Load unpacked in Chrome.</li>
+        <li>Open /extension, then choose Add to Chrome from the official AniDachi Chrome Web Store listing.</li>
         <li>Open the full YouTube video everyone agreed on.</li>
         <li>Create a watchroom and share the invite link.</li>
         <li>Keep Discord for voice; let AniDachi own playback sync.</li>

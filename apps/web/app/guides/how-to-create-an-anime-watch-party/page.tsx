@@ -66,7 +66,7 @@ const howToSteps = [
   },
   {
     name: "Install AniDachi",
-    text: "Open /extension, download the official zip, then Load unpacked in Chrome on the host machine.",
+    text: "Open /extension, then choose Add to Chrome from the official AniDachi Chrome Web Store listing on the host machine.",
   },
   {
     name: "Detect the anime",
@@ -156,7 +156,7 @@ export default function HowToCreateAnimeWatchPartyPage() {
           <Link href="/extension" className="text-brand-orange hover:underline">
             the AniDachi install page
           </Link>{" "}
-          so everyone loads the same official zip.
+          so everyone installs from the same Chrome Web Store listing.
         </p>
 
         <h2

@@ -1,5 +1,7 @@
 ## Background and Motivation
 
+**(Active — 2026-09-21)** Owner said **execute** on the SEO rank + expand plan (`seo_rank_expand_plan_50af6223`). CWS is live. Executor shipping freeze-safe enrich-in-place on `staging`: Part 1a CWS truth, 1b CTR titles, 1c CR stack, 1d anime/listicle, 2a screenshare cluster, 2b/2c/2d alias coverage. No new URLs. Do not commit unless asked.
+
 **(Active — 2026-09-14)** Owner asked how to teach overlay usage + important settings after install. Planner recommendation: do **not** add a new SEO URL. Add a short “Use it on the player” section on existing `/extension` (`#using`) plus rewrite homepage How it works step 4 away from async. In-overlay first-run tips later. Awaiting owner pick before Executor builds.
 
 **(Active — 2026-09-13)** Homepage live/async demo overlay restyle to match the current extension overlay (room rail, people rows, camera switch, reaction grid, composer). Marketing chrome from the account-language restyle stays. Executor implementing.
@@ -123,6 +125,24 @@ Success: first GSC impressions on `youtube watch party` / `watch youtube togethe
 6. Rewrite SEO agent + guidelines.
 
 ## Project Status Board
+
+### SEO rank + expand execute (Executor 2026-09-21)
+
+- [x] 1a CWS truth pass (public HowTo/body/security/terms/agent; hub sideload UI left)
+- [x] 1b title/meta on teleparty compare, watch-party-starter, pricing, Discord SS compare
+- [x] 1c CR pillar + CR how-to (does/can answers, Teleparty inline, two-account FAQ, dateModified)
+- [x] 1d anime pillar FAQ aliases, LDR verdict+CTA (async labeled planned), listicle start-here strip
+- [x] 2a CR screenshare cluster owner page (DRM, black-screen FAQ, HowTo workaround, inbound links)
+- [x] 2b YouTube how-to + apps roundup + does-YT / group-watch / LDR dateModified + aliases
+- [x] 2c Discord companion on remaining Discord guides (CR+YT hybrid, switch-from-Go-Live, YT screenshare)
+- [x] 2d watch-party-app aliases on YT apps roundup
+- [x] 2f paste pack in `docs/current-development-state.md` + `CWS_LISTING_TITLE` / short description constants
+- [x] Ops: local `GOOGLE_ADS_CUSTOMER_ID=8078204641` (was 5723352650)
+- [x] Fix homepage HowTo step 1 UI ↔ `howToSteps` mismatch (`how-it-works.tsx`)
+- [ ] Owner: rotate leaked Blob token, then persist `PRIVATE_INTEGRATION_BLOB_READ_WRITE_TOKEN`
+- [ ] Owner: CWS listing fields, Product Hunt, Edge, directories, editorial pitches
+- [ ] After production deploy: Search Console Request indexing
+- [ ] Re-measure GSC + Amplitude 28d after ship
 
 ### Overlay usage `#using` (Executor 2026-09-14 — owner chose A)
 
@@ -286,6 +306,10 @@ Success: first GSC impressions on `youtube watch party` / `watch youtube togethe
 
 ## Executor's Feedback or Assistance Requests
 
+- **Executor (2026-09-21 how-it-works HowTo mismatch):** Confirmed Bug 1. Homepage visible step 1 said “via the install page” while `howToSteps` JSON-LD used `INSTALL_HOWTO_STEP_TEXT` only. Aligned both to `INSTALL_HOWTO_STEP_TEXT_VIA_HUB` + CR/YT session note; UI links `/extension`; `howToSteps` maps from `steps`. `pnpm --filter @anidachi/web check` passed. Please spot-check `/#how-it-works` and view-source HowTo step 1 before commit.
+
+- **Executor (2026-09-21 SEO rank+expand, full pass):** On-site Parts 1a–1d and 2a–2d are in the working tree. 2f paste pack is in `docs/current-development-state.md` (Store title/short description, PH/Edge/directory/pitch instructions). Local Ads customer set to `8078204641`. Did **not** persist the leaked Blob token — rotate it first. 2e new URLs not shipped (freeze). Indexing and 28d re-measure wait on production. Please spot-check then say if I should commit on `staging`.
+
 - **Executor (2026-09-19 Session Replay):** Re-enabled via `initAll()` with `sessionReplay.sampleRate: 1` in `apps/web/lib/amplitude.ts`. Privacy copy updated. Local test needs `NEXT_PUBLIC_AMPLITUDE_API_KEY` in `apps/web/.env.local`. Please restart `pnpm dev:web`, open http://localhost:3003/, click around, then check Amplitude Session Replay (allow a few minutes). Look for `sr-client-cfg.amplitude.com` plus replay upload traffic, not only `api2.amplitude.com`.
 
 - **Executor (2026-09-15 Amplitude zip download):** Click handler existed (`extension_zip_download`) but Amplitude never ingested it (taxonomy only had `extension_clicked`). Wired server HTTP on `/api/extension/download`, flush-on-click with shared `insert_id`, and Amplitude no longer gated on gtag. Needs `NEXT_PUBLIC_AMPLITUDE_API_KEY` (or `AMPLITUDE_API_KEY`) on the host. Please click **Download AniDachi (.zip)** on `/extension` then check Amplitude Live for `extension_zip_download`.
@@ -406,6 +430,7 @@ Success: first GSC impressions on `youtube watch party` / `watch youtube togethe
 - First-touch `captureFirstLandingPath` must re-run on `usePathname()` changes so `/login` → guide SPA hops still attribute correctly.
 - Do not commit `my-video/`, `apps/web/tmp/`, or incidental `anime-jikan-cache.json` churn from failed Jikan fetches during build.
 - Pre-store Chrome: never commit extension zips or `.pem`; public zip is Blob + `EXTENSION_ZIP_URL`. Production packed `key` is production-only so unpacked IDs stay stable. Site ping is a dedicated content script — do not add anidachi.app to overlay `content.tsx` matches. Unpacked installs do not auto-update.
+- **CWS live (2026-09-21):** Public SEO HowTo/body must use `INSTALL_HOWTO_STEP_TEXT` (Add to Chrome). Keep `/extension` as CTA. Leave Load unpacked only on the install hub sideload branch. Do not claim async is live — label Planned. Title/meta only on ranked pages; freeze H1/path/canonical. CTR trap: do not answer the query in the meta description (Teleparty compare previously started with “Does Teleparty work with Crunchyroll? Yes”).
 
 ## Background and Motivation (historical)
 

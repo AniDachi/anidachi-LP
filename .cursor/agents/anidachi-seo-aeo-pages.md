@@ -134,7 +134,7 @@ Tie searcher intent to the templates surfaced by **`inferPageTemplateFromPath`**
 - Apps → `/guides/best-apps-to-watch-youtube-together`
 - LDR → rewrite existing `/watch-youtube-together-long-distance` in place (no `/guides/` duplicate)
 
-**CTA path (global, both platforms):** Primary action is **`/extension`** (official zip + Load unpacked) until a real Chrome Web Store listing is live. HowTo install steps must say “from the AniDachi install page (`/extension`),” **not** `/pricing` and **not** a generic `chromewebstore.google.com` link. Do not invent “Add to Chrome” CTAs. `/pricing` is Plus/Pro after they can host. **Never** write waitlist, early access, pre-launch, or soft launch in public copy. The product is live; anyone can download and start.
+**CTA path (global, both platforms):** Primary action is **`/extension`**, which links to the live Chrome Web Store listing. HowTo install steps must use `INSTALL_HOWTO_STEP_TEXT` / `INSTALL_HOWTO_STEP_TEXT_VIA_HUB` from `apps/web/lib/install-cta.ts` (“Open the official AniDachi Chrome Web Store listing and choose Add to Chrome”). Do **not** instruct zip + Load unpacked on public SEO pages. `/pricing` is Plus/Pro after they can host. **Never** write waitlist, early access, pre-launch, or soft launch in public copy. The product is live; anyone can add it from the Store and start.
 
 **YouTube pillar checklist:** Mirror CR pillar patterns (`SeoPageLayout`, `aboveFoldCta`, FAQ ↔ FAQPageJsonLd, HowToJsonLd) but keep YouTube as a **sibling platform cluster** — breadcrumbs must **not** parent under `/watch-anime-together`. Soft-link `/watch-crunchyroll-together` and `/watch-anime-together` for dual-platform users. Sitemap priority ~0.9, `inferPageTemplateFromPath` → `pillar`. Entry tags may include `youtube` / `pillar-watch-youtube`; **related lists** on YT spokes use `includeTags: ["pillar-watch-youtube"]` only.
 
@@ -349,7 +349,7 @@ There is **one** page component for every `/watch/{slug}-with-friends` URL (no p
 - **FAQs**: Use **`buildWatchPageFaq(anime, episodesDisplay)`**—do **not** inline a static 7-question array in the page file. Slots vary by movie vs series, episode count, and genre.
 - **Question-format H2s** (PAA): e.g. `Is {title} Good to Watch With a Group?`, `How Do You Avoid Spoilers Watching {title} With Friends?`—mirror in TOC `headings`.
 - **Rich sections**: Templated “why watch / pacing / genre tips” live in **`extraWhyWatchParagraphs`**, **`genreDiscussionTips`**, **`pacingLeadParagraph`**—tune uniqueness there rather than branching per slug in the page file.
-- **CTAs on watch pages**: Set **`aboveFoldCta`** on `SeoPageLayout` for high-intent anime landing. **Do not** add a second **`PrimaryCheckoutCta`** inside page children (layout already renders fold + bottom checkout). Prefer a short **contextual paragraph after the HowTo list** with an **`/extension`** link when you need a mid-page conversion nudge tied to “ready to host.” **Do not** add Chrome Web Store / “Add to Chrome” install links until a real extension listing exists — HowTo steps point to AniDachi `/extension`.
+- **CTAs on watch pages**: Set **`aboveFoldCta`** on `SeoPageLayout` for high-intent anime landing. **Do not** add a second **`PrimaryCheckoutCta`** inside page children (layout already renders fold + bottom checkout). Prefer a short **contextual paragraph after the HowTo list** with an **`/extension`** link when you need a mid-page conversion nudge tied to “ready to host.” HowTo install steps name Add to Chrome / the official Store listing via `INSTALL_HOWTO_STEP_TEXT`.
 
 ### Genre hub pages (`/watch-{genre}-anime-with-friends`)
 
@@ -471,7 +471,7 @@ When in doubt, mirror structure and metadata density of these:
 4. If the task changes **programmatic watch** templated copy, HowTo steps, meta descriptions, hub **`itemList`**, or genre/pacing blocks, edit **`lib/watch-page-rich-content.ts`** first (and **`app/watch/[slug]/page.tsx`** only when wiring, imports, or layout props must change).
 5. Apply the checklist above in minimal diffs. Prefer enriching existing winners over shipping thin spokes.
 6. Mention touched files by path; run `pnpm --filter @anidachi/web check` when code changed.
-7. **Spot-check before done**: Canonical matches rendered path; FAQ body text ↔ `FAQPageJsonLd` source array; no accidental `noindex` on marketing routes; `conversionTemplate` correct for new URL shapes; CTA still `/extension` until a real Chrome Web Store listing exists.
+7. **Spot-check before done**: Canonical matches rendered path; FAQ body text ↔ `FAQPageJsonLd` source array; no accidental `noindex` on marketing routes; `conversionTemplate` correct for new URL shapes; CTA still `/extension`; HowTo steps name Add to Chrome / the official Store listing.
 8. **Measurement mindset**: Note the primary **query bucket**; expect **impressions before clicks** for new URLs. Track conversion by `seo_landing_path`. Prefer enriching winners over more thin spokes.
 9. **Do not** ship **doorway** patterns—near-duplicate pages without distinct product value.
 10. **Search Console**: For any approved batch of 5+ new URLs, note Coverage → **Discovered (not indexed)** as the early warning. Recommend checking Coverage ~4 weeks later. Do not invent “force-index” tactics.

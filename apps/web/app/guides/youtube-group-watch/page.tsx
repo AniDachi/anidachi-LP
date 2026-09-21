@@ -41,7 +41,7 @@ export const metadata: Metadata = {
 const howToSteps = [
   {
     name: "Get AniDachi",
-    text: "Open /extension, download the official zip, then Load unpacked in Chrome.",
+    text: "Open /extension, then choose Add to Chrome from the official AniDachi Chrome Web Store listing.",
   },
   {
     name: "Open the video",
@@ -81,6 +81,11 @@ const faq = [
     answer:
       "AniDachi YouTube rooms work on full youtube.com/watch pages in desktop Chrome — not Shorts, embeds, or the native mobile app.",
   },
+  {
+    question: "Is this the same as a YouTube watch party / watch YouTube together?",
+    answer:
+      "Yes. YouTube group watch, YouTube watch party, and watch YouTube together are the same job. This page is the group-watch phrasing; the hub is /watch-youtube-together.",
+  },
 ];
 
 const tocHeadings: TocHeading[] = [
@@ -115,7 +120,7 @@ export default function YoutubeGroupWatchPage() {
         description="How to run a YouTube group watch with AniDachi watchrooms — live together."
         url="/guides/youtube-group-watch"
         datePublished="2026-07-26"
-        dateModified="2026-07-26"
+        dateModified="2026-09-21"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}

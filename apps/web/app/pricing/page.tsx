@@ -13,9 +13,9 @@ import {
 } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
-  title: "AniDachi Pricing — Free, Plus & Pro Plans (2026)",
+  title: "AniDachi Pricing — Free Chrome Watch Party for Crunchyroll & YouTube",
   description:
-    "AniDachi pricing for Crunchyroll and YouTube watchrooms. Free to join. Plus and Pro raise host limits and unlock history recording. Subscribe now and keep this rate.",
+    "Add AniDachi from the Chrome Web Store for free. Plus and Pro raise host limits after you start a Crunchyroll or YouTube watchroom.",
   alternates: { canonical: "/pricing" },
   openGraph: {
     images: [
@@ -27,18 +27,18 @@ export const metadata: Metadata = {
       },
     ],
 
-    title: "AniDachi Pricing — Free, Plus & Pro",
+    title: "AniDachi Pricing — Free Chrome Watch Party",
     description:
-      "Compare Free, Plus, and Pro for Crunchyroll and YouTube watchrooms. Subscribe now and keep this rate.",
+      "Add AniDachi from the Chrome Web Store for free. Plus and Pro raise host limits for Crunchyroll and YouTube rooms.",
     url: "/pricing",
   },
   twitter: {
     images: ["/opengraph-image.png"],
 
     card: "summary_large_image",
-    title: "AniDachi Pricing — Free, Plus & Pro",
+    title: "AniDachi Pricing — Free Chrome Watch Party",
     description:
-      "Friends join free. Hosts upgrade for unlimited Crunchyroll or YouTube watchrooms starting at " +
+      "Add AniDachi from the Chrome Web Store for free. Plus and Pro raise host limits starting at " +
       PRICING_STARTING_AT +
       ".",
   },

@@ -7,7 +7,7 @@ import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 export const metadata: Metadata = {
   title: "Best Anime to Watch with Friends (2026) — 115+ Group Watch Picks",
   description:
-    "115+ best anime to watch with friends, sorted by vibe — then host a synced Crunchyroll watchroom with AniDachi. Reactions, comedy, theory nights, and marathons. Start at pricing.",
+    "115+ best anime to watch with friends, sorted by vibe — then host a synced Crunchyroll or YouTube watchroom with AniDachi. Start from /extension.",
   alternates: { canonical: "/guides/best-anime-to-watch-with-friends" },
   openGraph: {
     images: [
@@ -120,7 +120,7 @@ export default function BestAnimeWithFriendsPage() {
       description="115+ best anime to watch with friends, sorted by vibe — then host a synced AniDachi Crunchyroll watchroom."
       url="/guides/best-anime-to-watch-with-friends"
       datePublished="2026-04-23"
-      dateModified="2026-07-28"
+      dateModified="2026-09-21"
       faq={faq}
       headings={headings}
       itemList={itemList}
@@ -144,6 +144,23 @@ export default function BestAnimeWithFriendsPage() {
           the AniDachi install page
         </Link>
         .
+      </p>
+
+      <p className="rounded-[12px] border border-ani-line bg-ani-panel px-5 py-4 text-foreground/80 leading-relaxed mb-8">
+        <strong className="text-ani-text">Start a watch party for any pick:</strong>{" "}
+        Add AniDachi from the{" "}
+        <Link href="/extension" className="text-brand-orange hover:underline">
+          install page
+        </Link>
+        , then open the show on{" "}
+        <Link href="/watch-crunchyroll-together" className="text-brand-orange hover:underline">
+          Crunchyroll
+        </Link>{" "}
+        or a full{" "}
+        <Link href="/watch-youtube-together" className="text-brand-orange hover:underline">
+          YouTube
+        </Link>{" "}
+        watch page. Share one invite. Everyone keeps their own tab.
       </p>
 
       <h2
@@ -391,7 +408,8 @@ export default function BestAnimeWithFriendsPage() {
           </Link>
         </li>
         <li><Link href="/guides/anime-watch-party-ideas" className="hover:underline">Anime Watch Party Ideas</Link></li>
-        <li><Link href="/watch-crunchyroll-together" className="hover:underline">Watch Crunchyroll Together</Link></li>
+        <li><Link href="/watch-crunchyroll-together" className="hover:underline">Crunchyroll watch party</Link></li>
+        <li><Link href="/watch-youtube-together" className="hover:underline">YouTube watch party</Link></li>
         <li><Link href="/guides/best-shonen-anime-to-watch-with-friends" className="hover:underline">Best Shonen Anime to Watch With Friends</Link></li>
         <li><Link href="/guides/best-classic-anime-to-watch-with-friends" className="hover:underline">Best Classic Anime to Watch With Friends</Link></li>
         <li><Link href="/guides/best-anime-to-binge-with-friends-this-weekend" className="hover:underline">Best Anime to Binge With Friends This Weekend</Link></li>

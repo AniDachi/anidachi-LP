@@ -62,7 +62,7 @@ const tocHeadings: TocHeading[] = [
 const howToSteps = [
   {
     name: "Install AniDachi",
-    text: "Open /extension, download the official zip, then Load unpacked in Chrome, and pin the extension for quick access.",
+    text: "Open /extension, then choose Add to Chrome from the official AniDachi Chrome Web Store listing, and pin the extension for quick access.",
   },
   {
     name: "Open Crunchyroll",

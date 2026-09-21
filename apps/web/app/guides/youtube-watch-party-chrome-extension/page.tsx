@@ -22,7 +22,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "YouTube Watch Party Chrome Extension (2026)",
   description:
-    "Best YouTube watch party Chrome extension for 2026: AniDachi syncs full youtube.com/watch pages with live chat. Install from /extension (zip + Load unpacked) — not a fake Store listing.",
+    "Best YouTube watch party Chrome extension for 2026: AniDachi syncs full youtube.com/watch pages with live chat. Install from the official Chrome Web Store listing via /extension.",
   alternates: {
     canonical: "/guides/youtube-watch-party-chrome-extension",
   },
@@ -58,12 +58,12 @@ const faq = [
   {
     question: "What is the best YouTube watch party Chrome extension?",
     answer:
-      "For groups that want live sync and personal history on full YouTube watch pages, AniDachi is the strongest fit. Teleparty wins if you already use it for Netflix nights and only need live YouTube. Install path: /extension (download the zip, then Load unpacked).",
+      "For groups that want live sync and personal history on full YouTube watch pages, AniDachi is the strongest fit. Teleparty wins if you already use it for Netflix nights and only need live YouTube. Install from the official Chrome Web Store listing via /extension.",
   },
   {
     question: "Where do I install the AniDachi extension?",
     answer:
-      "Open /extension, download the official zip, then Load unpacked in Chrome. AniDachi is not on the Chrome Web Store yet.",
+      "Open /extension, then choose Add to Chrome from the official AniDachi Chrome Web Store listing.",
   },
   {
     question: "Does the extension work on YouTube Shorts?",
@@ -88,7 +88,7 @@ const tocHeadings: TocHeading[] = [
 const howToSteps = [
   {
     name: "Install the AniDachi Chrome extension",
-    text: "Open /extension, download the official zip, then Load unpacked in Chrome.",
+    text: "Open /extension, then choose Add to Chrome from the official AniDachi Chrome Web Store listing.",
   },
   {
     name: "Pin the extension",
@@ -131,7 +131,7 @@ export default function YoutubeWatchPartyChromeExtensionPage() {
         description="AniDachi’s Chrome extension for YouTube watchrooms — install path and limits."
         url="/guides/youtube-watch-party-chrome-extension"
         datePublished="2026-07-25"
-        dateModified="2026-08-12"
+        dateModified="2026-09-21"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
@@ -152,7 +152,7 @@ export default function YoutubeWatchPartyChromeExtensionPage() {
           <Link href="/extension">
             the AniDachi install page
           </Link>
-          — download the zip and Load unpacked, not a fabricated Store badge. Hub:{" "}
+          — Add to Chrome from the official listing. Hub:{" "}
           <Link
             href="/watch-youtube-together"
           >

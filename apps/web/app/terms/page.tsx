@@ -68,13 +68,12 @@ export default function TermsPage() {
                 not guaranteed until they ship.
               </p>
               <p className="mt-4">
-                Until a Chrome Web Store listing is published, you may install
-                the extension from our official{" "}
+                Install the extension from the official Chrome Web Store listing
+                via our{" "}
                 <Link href="/extension" className="text-brand-orange hover:underline">
                   install page
-                </Link>{" "}
-                (zip + Load unpacked in Chrome Developer mode). Download only
-                from AniDachi.
+                </Link>
+                . Download only from AniDachi or that listing.
               </p>
             </section>
 

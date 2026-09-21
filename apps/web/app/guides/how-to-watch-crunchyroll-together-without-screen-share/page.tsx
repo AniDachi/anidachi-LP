@@ -51,7 +51,7 @@ export const metadata: Metadata = {
 const howToStepsPlain = [
   {
     name: "Install the AniDachi Chrome extension",
-    text: "Open /extension, download the official zip, then Load unpacked in Chrome. AniDachi is not on the Chrome Web Store yet.",
+    text: "Open /extension, then choose Add to Chrome from the official AniDachi Chrome Web Store listing.",
   },
   {
     name: "Open Crunchyroll",
@@ -76,9 +76,8 @@ const howToSteps = [
     name: howToStepsPlain[0].name,
     text: (
       <>
-        Open <Link href="/extension">the AniDachi install page</Link>, download
-        the official zip, then Load unpacked in Chrome. AniDachi is not on the
-        Chrome Web Store yet.
+        Open <Link href="/extension">the AniDachi install page</Link>, then
+        choose Add to Chrome from the official listing.
       </>
     ),
   },

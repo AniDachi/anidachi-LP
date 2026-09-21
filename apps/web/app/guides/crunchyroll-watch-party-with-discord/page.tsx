@@ -51,6 +51,11 @@ const faq = [
     question: "Is this setup free?",
     answer: PRICING_DISCORD_COMPARE_FAQ,
   },
+  {
+    question: "Why is Crunchyroll a black screen on Discord?",
+    answer:
+      "DRM. Discord Go Live captures the window, not a licensed decode path. Keep Discord for voice and sync Crunchyroll in AniDachi. Full answer: /guides/can-you-screen-share-crunchyroll-on-discord.",
+  },
 ];
 
 const tocHeadings: TocHeading[] = [
@@ -112,7 +117,7 @@ export default function CrunchyrollWatchPartyWithDiscordPage() {
         description="Discord voice + AniDachi sync — the hybrid setup anime groups prefer over Go Live."
         url="/guides/crunchyroll-watch-party-with-discord"
         datePublished="2026-07-22"
-        dateModified="2026-08-11"
+        dateModified="2026-09-21"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
@@ -238,6 +243,14 @@ export default function CrunchyrollWatchPartyWithDiscordPage() {
           Related guides
         </h2>
         <ul className="space-y-2 text-brand-orange mb-8">
+          <li>
+            <Link
+              href="/guides/can-you-screen-share-crunchyroll-on-discord"
+              className="hover:underline"
+            >
+              Can you screen share Crunchyroll on Discord? (black screen)
+            </Link>
+          </li>
           <li>
             <Link
               href="/guides/how-to-watch-anime-with-friends-on-discord"

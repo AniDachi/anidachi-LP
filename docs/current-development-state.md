@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-09-19.
+Last updated: 2026-09-21.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -16,6 +16,24 @@ official AniDachi Chrome Web Store listing:
 The page keeps the `/extension?next=/room/...` return path for users arriving
 from a watchroom. The legacy ZIP endpoint remains available for the sideload
 fallback, but it is no longer the primary install action.
+
+Paste-ready Store listing fields (also in `apps/web/lib/install-cta.ts`):
+
+- Title (≤45): `AniDachi: YouTube & Crunchyroll Watch Party`
+- Short description: `Watch YouTube together and host a Crunchyroll watch party. Live sync on each person's own tab — Add to Chrome.`
+- Website field: `https://www.anidachi.app`
+
+CWS-unlocked authority work that still needs an owner login (not shippable from
+this repo): Product Hunt launch after one-click install; Microsoft Edge Add-ons
+with the same Website URL; SaaSHub / AlternativeTo / Crunchbase profiles citing
+the Store listing; 5–10 editorial pitches (CR/anime → compare URLs; YouTube
+roundups → `/watch-youtube-together` with anchors “youtube watch party” /
+“watch youtube together”). Indexing for enriched URLs is Search Console → URL
+Inspection → Request indexing after production deploy.
+
+Keyword Planner local config: `GOOGLE_ADS_CUSTOMER_ID=8078204641`. Do not use
+`5723352650` (403). Rotate any Blob token that was pasted in chat before
+persisting `PRIVATE_INTEGRATION_BLOB_READ_WRITE_TOKEN` locally.
 
 ## Website review closeout and install-email retirement, 2026-09-19
 

@@ -72,13 +72,12 @@ export default function SecurityPage() {
               Chrome extension
             </h2>
             <p>
-              Until a Chrome Web Store listing is live, the official install path
-              is the{" "}
+              The official install path is the{" "}
               <Link href="/extension" className="text-brand-orange hover:underline">
                 AniDachi install page
               </Link>
-              : download the zip from this site and Load unpacked in Chrome
-              Developer mode. Prefer that page over third-party mirrors.
+              , which links to our Chrome Web Store listing. Prefer that listing
+              over third-party mirrors.
             </p>
             <p className="mt-4">
               The extension overlays watchroom controls on supported pages and
