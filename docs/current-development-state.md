@@ -8,6 +8,15 @@ contain old paths, old domains, or old decisions. When release channels,
 endpoints, branch protection, or store workflow changes, update this document in
 the same PR.
 
+## Chrome Web Store install CTA, 2026-09-21
+
+The `/extension` install hub now sends its primary install button to the
+official AniDachi Chrome Web Store listing:
+`https://chromewebstore.google.com/detail/gpkolofebdhfpapbbgdkdkmlmjfidgmn`.
+The page keeps the `/extension?next=/room/...` return path for users arriving
+from a watchroom. The legacy ZIP endpoint remains available for the sideload
+fallback, but it is no longer the primary install action.
+
 ## Website review closeout and install-email retirement, 2026-09-19
 
 The owner reaffirmed that installation links will not be sent by email. The

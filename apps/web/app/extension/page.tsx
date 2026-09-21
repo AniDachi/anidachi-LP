@@ -13,14 +13,14 @@ import {
 } from "@/lib/extension-artifact";
 import { extensionInstallFaq } from "@/lib/extension-install-faq";
 import { extensionUsingSteps } from "@/lib/extension-using-guide";
-import { CHROME_EXTENSIONS_PAGE, INSTALL_HUB_PATH } from "@/lib/install-cta";
+import { INSTALL_HUB_PATH } from "@/lib/install-cta";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Install AniDachi Chrome Extension (Manual Download)",
+  title: "Install AniDachi Chrome Extension",
   description:
-    "Download the official AniDachi Chrome extension zip and Load unpacked in Developer mode. Crunchyroll and YouTube watchrooms. Chrome Web Store listing is in review, including publisher verification.",
+    "Install the official AniDachi Chrome extension from the Chrome Web Store for Crunchyroll and YouTube watchrooms.",
   alternates: { canonical: INSTALL_HUB_PATH },
   openGraph: {
     images: [
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
 
     title: "Install AniDachi on Chrome",
     description:
-      "Official zip from anidachi.app. Load unpacked in Chrome while the Web Store listing goes through Chrome’s standard review, including publisher verification.",
+      "Install the official AniDachi Chrome extension from the Chrome Web Store for Crunchyroll and YouTube watchrooms.",
     url: INSTALL_HUB_PATH,
   },
   twitter: {
@@ -43,34 +43,18 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Install AniDachi on Chrome",
     description:
-      "Download the official zip and Load unpacked in desktop Chrome. Crunchyroll and YouTube watchrooms.",
+      "Install the official AniDachi Chrome extension from the Chrome Web Store for Crunchyroll and YouTube watchrooms.",
   },
 };
 
 const howToSteps = [
   {
-    name: "Download the official zip",
-    text: "Download AniDachi from https://www.anidachi.app/extension only. Do not use a third-party file.",
-  },
-  {
-    name: "Unzip it",
-    text: "Unzip the downloaded ZIP file.",
-  },
-  {
-    name: "Open Chrome extensions",
-    text: `In Chrome, open ${CHROME_EXTENSIONS_PAGE} (paste it in the address bar).`,
-  },
-  {
-    name: "Turn on Developer mode",
-    text: "On the Extensions page, the Developer mode toggle is in the top-right, to the right of the search bar. Turn it on (it turns blue).",
-  },
-  {
-    name: "Load unpacked",
-    text: "Click Load unpacked and select the unzipped AniDachi folder. The selected folder should contain manifest.json.",
+    name: "Install from the Chrome Web Store",
+    text: "Open the official AniDachi Chrome Web Store listing and choose Add to Chrome.",
   },
   {
     name: "Pin and open Crunchyroll or YouTube",
-    text: "Click the puzzle-piece icon in Chrome’s toolbar (top-right, next to your profile). Find AniDachi and click the pin on the right of that row so it stays in the toolbar. Then open a Crunchyroll title or a full YouTube watch page and sign in when the extension asks.",
+    text: "Click the puzzle-piece icon in Chrome’s toolbar, find AniDachi, and pin it. Then open a Crunchyroll title or a full YouTube watch page and sign in when the extension asks.",
   },
 ];
 
@@ -88,7 +72,7 @@ export default function ExtensionInstallPage() {
       <FAQPageJsonLd questions={extensionInstallFaq} />
       <HowToJsonLd
         name="How to install the AniDachi Chrome extension"
-        description="Download the official zip from AniDachi and Load unpacked in Chrome Developer mode while the Chrome Web Store listing goes through standard review, including publisher verification."
+        description="Install the official AniDachi Chrome extension from the Chrome Web Store, then open a Crunchyroll or YouTube watch page."
         steps={howToSteps}
       />
       <HowToJsonLd

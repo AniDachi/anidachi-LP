@@ -3420,10 +3420,10 @@
     "semantic_hash": "c8e7373108449d6a2b49ada3464d8681"
   },
   "AGENTS.md": {
-    "mtime": 1789490458.8679247,
-    "seen": 1789807056.437631,
-    "ast_hash": "efa681fb8cf06be13c48275e6759b1a1",
-    "semantic_hash": "efa681fb8cf06be13c48275e6759b1a1"
+    "mtime": 1789828968.0937583,
+    "seen": 1789829519.034954,
+    "ast_hash": "3763fa1704f2d3b50d77d31fa6cf45c2",
+    "semantic_hash": "3763fa1704f2d3b50d77d31fa6cf45c2"
   },
   "README.md": {
     "mtime": 1789490458.8679845,
@@ -8446,5 +8446,17 @@
     "seen": 1789813977.0608199,
     "ast_hash": "f677c26135e1276d603f9232d01e19fe",
     "semantic_hash": "f677c26135e1276d603f9232d01e19fe"
+  },
+  ".serena/project.yml": {
+    "mtime": 1789829321.4067993,
+    "seen": 1789829395.596378,
+    "ast_hash": "",
+    "semantic_hash": "f67d735edb870b4b8464cf329ae9f79a"
+  },
+  "docs/serena-codex-setup.md": {
+    "mtime": 1789828968.0949507,
+    "seen": 1789829519.0349572,
+    "ast_hash": "55457a73c554407229310902f84cddf9",
+    "semantic_hash": "55457a73c554407229310902f84cddf9"
   }
 }
