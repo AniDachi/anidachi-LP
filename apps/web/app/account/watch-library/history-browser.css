@@ -143,7 +143,6 @@ html:has(.account-workspace) { scrollbar-gutter: stable; }
 .wh-start li span { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; border: 1px solid #ffffff22; color: #eee5d9; font-size: 12px; font-variant-numeric: tabular-nums; }
 .wh-start-actions { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; margin-top: 22px; }
 .wh-start-actions a { text-decoration: none; }
-.wh-page-actions .watch-platform-links { display: flex; flex-wrap: wrap; gap: 8px; }
 .wh-load-more { display: flex; margin: 28px auto 0; }
 .wh-confirm { position: fixed; inset: 0; margin: auto; width: min(440px,calc(100vw - 32px)); max-height: calc(100dvh - 40px); overflow: auto; border: 1px solid #ffffff30; border-radius: 18px; padding: 24px; background: #171719; color: #ede6de; }
 .wh-confirm h2 { font-size: 20px; font-weight: 600; margin-bottom: 12px; }
