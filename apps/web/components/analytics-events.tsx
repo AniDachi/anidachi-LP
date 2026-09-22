@@ -20,30 +20,37 @@ type MeResponse = {
   };
 };
 
+let amplitudeSyncId = 0;
+
 async function syncAmplitudeUserFromSession(signal: AbortSignal): Promise<void> {
+  const syncId = ++amplitudeSyncId;
+  const stillCurrent = () => syncId === amplitudeSyncId && !signal.aborted;
   try {
     // Analytics observes the current account. Only the site's auth flow may
     // refresh or clear website credentials; never retry a 401 through refresh.
     const response = await fetch("/api/me", { signal, cache: "no-store" });
-    if (signal.aborted) return;
+    if (!stillCurrent()) return;
     if (response.status === 401) {
-      await resetAmplitudeUser();
+      await resetAmplitudeUser(stillCurrent);
       return;
     }
     // Temporary failures are not evidence of sign-out.
     if (!response.ok) return;
     const data = (await response.json().catch(() => null)) as MeResponse | null;
-    if (signal.aborted) return;
+    if (!stillCurrent()) return;
     const user = data?.user;
     if (typeof user?.id !== "string" || !user.id.trim()) return;
-    await identifyAmplitudeUser({
-      userId: user.id,
-      email: user.email,
-      displayName: user.displayName,
-      plan: user.plan,
-    });
+    await identifyAmplitudeUser(
+      {
+        userId: user.id,
+        email: user.email,
+        displayName: user.displayName,
+        plan: user.plan,
+      },
+      stillCurrent,
+    );
   } catch {
-    // Analytics must not break the page.
+    // Analytics must not break the page. Navigation aborts this request.
   }
 }
 
@@ -56,7 +63,9 @@ export function AnalyticsEvents() {
     captureFirstLandingPath();
     const controller = new AbortController();
     void syncAmplitudeUserFromSession(controller.signal);
-    return () => controller.abort();
+    // A bare abort() becomes "signal is aborted without reason", which the
+    // Next.js dev overlay reports as a crash. A string reason stays a cancel.
+    return () => controller.abort("analytics-cancelled");
   }, [pathname]);
 
   useEffect(() => {

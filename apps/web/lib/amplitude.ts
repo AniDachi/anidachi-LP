@@ -99,10 +99,13 @@ let identifiedUserId: string | null = null;
  */
 export async function identifyAmplitudeUser(
   profile: AmplitudeUserProfile,
+  stillCurrent: () => boolean = () => true,
 ): Promise<void> {
   const userId = profile.userId.trim();
   if (!userId) return;
   if (!(await ensureReady())) return;
+  // Ready is async. A newer navigation may already own the session.
+  if (!stillCurrent()) return;
   amplitude.setUserId(userId);
   const identifyEvent = new Identify();
   if (profile.plan) identifyEvent.set("plan", profile.plan);
@@ -113,9 +116,12 @@ export async function identifyAmplitudeUser(
   persistDeviceId();
 }
 
-export async function resetAmplitudeUser(): Promise<void> {
+export async function resetAmplitudeUser(
+  stillCurrent: () => boolean = () => true,
+): Promise<void> {
   if (!identifiedUserId) return;
   if (!(await ensureReady())) return;
+  if (!stillCurrent()) return;
   amplitude.reset();
   identifiedUserId = null;
   persistDeviceId();

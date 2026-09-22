@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Copy, Monitor, Share2 } from "lucide-react";
-import { shareOrCopyUrl, useMobileDevice } from "@/lib/use-mobile-device";
+import { isMobileUserAgent } from "@/lib/mobile-user-agent";
+import { shareOrCopyUrl } from "@/lib/use-mobile-device";
 
 type RoomMobileHandoffProps = {
   variant: "waiting" | "ready" | "joined";
+  initialMobile?: boolean;
 };
 
 const COPY: Record<RoomMobileHandoffProps["variant"], { title: string; body: string }> = {
@@ -23,8 +25,12 @@ const COPY: Record<RoomMobileHandoffProps["variant"], { title: string; body: str
   },
 };
 
-export function RoomMobileHandoff({ variant }: RoomMobileHandoffProps) {
-  const isMobile = useMobileDevice();
+export function RoomMobileHandoff({ variant, initialMobile = false }: RoomMobileHandoffProps) {
+  const [isMobile, setIsMobile] = useState(initialMobile);
+
+  useEffect(() => {
+    setIsMobile(isMobileUserAgent(navigator.userAgent));
+  }, []);
   const [status, setStatus] = useState<"idle" | "shared" | "copied">("idle");
 
   const handleShare = useCallback(async () => {

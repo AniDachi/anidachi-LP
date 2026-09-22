@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Check, ChevronLeft, Ellipsis, Film, LockKeyhole, Pencil, Play, RotateCcw, Search, Trash2, Undo2, X } from "lucide-react";
 import {
@@ -10,6 +11,8 @@ import {
 import { api, ApiError } from "@/lib/client-api";
 import { WATCH_HISTORY_OWNER_HEADER } from "@/lib/watch-history-owner";
 import { useAccountScrollRestoration, useAccountViewState } from "@/components/account/account-workspace-state";
+import { EXTENSION_USING_HASH } from "@/lib/extension-using-guide";
+import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
 
 export type HistoryPlatform = "all" | WatchHistoryItem["provider"];
 type Props = {
@@ -69,7 +72,7 @@ export function HistoryBrowser(props: Props) {
           <span className={`wh-provider wh-provider-${item.provider}`}>{item.provider === "youtube" ? "YouTube" : "Crunchyroll"}</span>
         </button>)}
       </div>
-      {!filtered.length && <p className="wh-empty" role="status">{props.nextCursor && (query || provider !== "all" || status !== "all") ? (props.loadingMore ? "Searching your library…" : "No matches in loaded titles. Load more to continue searching.") : !props.items.length ? (props.canEdit ? "Watch something with the AniDachi extension. Your titles will appear here." : "No saved history yet. Plus or Pro records your viewing progress.") : "No titles match these filters."}</p>}
+      {!filtered.length && (props.nextCursor && (query || provider !== "all" || status !== "all") ? <p className="wh-empty" role="status">{props.loadingMore ? "Searching your library…" : "No matches in loaded titles. Load more to continue searching."}</p> : !props.items.length ? <LibraryFirstWatch canEdit={props.canEdit} /> : <p className="wh-empty" role="status">No titles match these filters.</p>)}
       {props.nextCursor && <button className="wh-button wh-load-more" disabled={props.loadingMore || props.busy} onClick={props.onLoadMore} type="button">{props.loadingMore ? "Loading…" : "Load more titles"}</button>}
     </section>
     {selectedItem && <TitleInspector key={`${props.owner}:${props.generation}:${selected}`} item={selectedItem} {...props}
@@ -83,6 +86,42 @@ export function HistoryBrowser(props: Props) {
       </div>
     </ConfirmDialog>}
   </div>;
+}
+
+const FIRST_WATCH_STEPS = [
+  "Install AniDachi in desktop Chrome.",
+  "Open a Crunchyroll title or a full youtube.com/watch page.",
+  "Create a room and copy the invite.",
+] as const;
+
+function LibraryFirstWatch({ canEdit }: { canEdit: boolean }) {
+  return (
+    <div className="wh-start">
+      <p role="status">
+        {canEdit
+          ? "Watch something with the AniDachi extension. Your titles will appear here."
+          : "No saved history yet. Plus or Pro records your viewing progress."}
+      </p>
+      <ol>
+        {FIRST_WATCH_STEPS.map((step, index) => (
+          <li key={step}>
+            <span>{index + 1}</span>
+            {step}
+          </li>
+        ))}
+      </ol>
+      <div className="wh-start-actions">
+        <Link className="wh-primary" href={`${INSTALL_HUB_PATH}#${EXTENSION_USING_HASH}`}>
+          {INSTALL_CTA_LABEL}
+        </Link>
+        {!canEdit && (
+          <Link className="wh-button" href="/pricing">
+            View plans
+          </Link>
+        )}
+      </div>
+    </div>
+  );
 }
 
 const historyPlatforms = [

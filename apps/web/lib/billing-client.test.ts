@@ -136,11 +136,39 @@ test("Free account without billing has no cancellation action", async () => {
 			subscriptions: [],
 		});
 	await mount();
-	assert.match(container.textContent ?? "", /No recurring subscription/);
+	assert.match(container.textContent ?? "", /30 minutes a day/);
+	assert.match(container.textContent ?? "", /Up to 4 people/);
+	assert.equal(
+		container.querySelector('a[href="/extension#using"]')?.textContent?.trim(),
+		"Download for Chrome",
+	);
 	assert.equal(
 		container.querySelector('a[href="/pricing"]')?.textContent?.trim(),
 		"View plans",
 	);
+	assert.doesNotMatch(container.textContent ?? "", /Cancel subscription/);
+});
+
+test("Free account with a canceled subscription still shows host limits", async () => {
+	globalThis.fetch = async () =>
+		Response.json({
+			ownerUserId: "owner",
+			planCode: "free",
+			subscriptions: [
+				{
+					id: "ended-sub",
+					planCode: "plus",
+					status: "canceled",
+					currentPeriodEnd: "2020-02-01T12:00:00.000Z",
+					cancelAtPeriodEnd: true,
+					canCancel: false,
+				},
+			],
+		});
+	await mount();
+	assert.match(container.textContent ?? "", /30 minutes a day/);
+	assert.match(container.textContent ?? "", /Plus subscription/);
+	assert.doesNotMatch(container.textContent ?? "", /No recurring subscription/);
 	assert.doesNotMatch(container.textContent ?? "", /Cancel subscription/);
 });
 

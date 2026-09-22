@@ -17,6 +17,7 @@ import {
   type WatchHistoryTitleEpisodesResponse,
 } from "@anidachi/protocol";
 import { RefreshCw, Trash2 } from "lucide-react";
+import { WatchPlatformLinks } from "@/components/watch-platform-links";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ApiError } from "@/lib/client-api";
 import { WatchLibraryCapacity } from "./watch-library-capacity";
@@ -387,6 +388,7 @@ function WatchLibraryOwnerClient({
           <p>Your progress, all in one place.</p>
         </div>
         <div className="wh-page-actions">
+          <WatchPlatformLinks />
           <button
             className="wh-icon"
             aria-label="Refresh history"

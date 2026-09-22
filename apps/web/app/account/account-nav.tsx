@@ -11,9 +11,9 @@ const PRIMARY = [
   { href: "/account/billing", label: "Subscription", icon: CreditCard },
 ] as const;
 const SECONDARY = [
+  { href: "/account/help", label: "Help", icon: CircleHelp },
   { href: "/account/bug-report", label: "Report a bug", icon: Bug },
   { href: "/account/feature-requests", label: "Share an idea", icon: Lightbulb },
-  { href: "/account/help", label: "Help", icon: CircleHelp },
 ] as const;
 
 export function AccountNav() {
