@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   useCallback,
   useEffect,
@@ -714,10 +715,27 @@ function FriendsWorkspace({ currentUser }: { currentUser: CurrentUser }) {
                 title={
                   query ? "No matching friends" : "Bring your people along"
                 }
+                action={
+                  query ? undefined : (
+                    <div className="ac-empty-actions">
+                      <Button
+                        primary
+                        disabled={busy}
+                        icon={<Link2 size={18} />}
+                        onClick={() => openModal({ type: "invite" })}
+                      >
+                        Invite a friend
+                      </Button>
+                      <Link href="/account/help" className="people-button">
+                        How to start a room
+                      </Link>
+                    </div>
+                  )
+                }
               >
                 {query
                   ? "Try another name or handle."
-                  : "Share a private invite link. Once accepted, you can invite your friend from the player."}
+                  : "Share a private invite link. Once accepted, you can invite your friend from the player. A room link from the player also works before anyone is a friend."}
               </AccountEmptyState>
             )}
             {!!directory.outgoingRequests.length && (

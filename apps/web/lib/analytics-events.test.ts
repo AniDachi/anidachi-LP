@@ -75,6 +75,7 @@ test("navigation and unmount cancel pending account reads", async () => {
   assert.equal(first.aborted, false);
   await render("/pricing");
   assert.equal(first.aborted, true);
+  assert.equal(first.reason, "analytics-cancelled");
   assert.equal(requests[1].signal?.aborted, false);
   await act(async () => root!.unmount());
   root = null;

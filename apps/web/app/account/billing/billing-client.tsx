@@ -11,6 +11,8 @@ import {
 } from "@/lib/billing-view";
 import { AccountPageHeader } from "@/components/account/account-ui";
 import { api } from "@/lib/client-api";
+import { EXTENSION_USING_HASH } from "@/lib/extension-using-guide";
+import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
 
 const PLAN_NAMES = { free: "Free", plus: "Plus", pro: "Pro" };
 
@@ -156,12 +158,37 @@ export function BillingClient({
 								</h2>
 							</div>
 							{overview.planCode === "free" ? (
-								<Link href="/pricing" className="ac-button ac-button-primary">
-									View plans <ArrowRight size={16} aria-hidden />
-								</Link>
+								<div className="ac-plan-actions">
+									<Link
+										href={`${INSTALL_HUB_PATH}#${EXTENSION_USING_HASH}`}
+										className="ac-button ac-button-primary"
+									>
+										{INSTALL_CTA_LABEL}
+									</Link>
+									<Link href="/pricing" className="ac-button">
+										View plans <ArrowRight size={16} aria-hidden />
+									</Link>
+								</div>
 							) : null}
 						</div>
-						{overview.subscriptions.length === 0 ? (
+						{overview.planCode === "free" ? (
+							<ul className="ac-plan-limits">
+								<li>
+									Host for 30 minutes a day once a guest joins. Waiting alone
+									does not use that time, and pausing the video does not stop
+									it. A warning appears with five minutes left.
+								</li>
+								<li>Up to 4 people in a room, including you.</li>
+								<li>
+									No new watch history. You can still view and delete anything
+									already saved.
+								</li>
+								<li>
+									Invite by link. Push invites, room names, and more than one
+									group need Plus or Pro.
+								</li>
+							</ul>
+						) : overview.subscriptions.length === 0 ? (
 							<p className="ac-plan-empty">
 								No recurring subscription is linked to this account.
 							</p>

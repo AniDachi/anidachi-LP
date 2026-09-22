@@ -7,16 +7,18 @@ import {
   INSTALL_HUB_PATH,
   installHubHref,
 } from "@/lib/install-cta";
-import { shareOrCopyUrl, useMobileDevice } from "@/lib/use-mobile-device";
+import { isMobileUserAgent } from "@/lib/mobile-user-agent";
+import { shareOrCopyUrl } from "@/lib/use-mobile-device";
 
 /** Installation help; room admission does not depend on an extension handshake. */
-export function ExtensionCheck() {
+export function ExtensionCheck({ initialMobile = false }: { initialMobile?: boolean }) {
   const [linkStatus, setLinkStatus] = useState<"idle" | "shared" | "copied">("idle");
   const [installHref, setInstallHref] = useState(INSTALL_HUB_PATH);
-  const isMobile = useMobileDevice();
+  const [isMobile, setIsMobile] = useState(initialMobile);
 
   useEffect(() => {
     setInstallHref(installHubHref(window.location.pathname));
+    setIsMobile(isMobileUserAgent(navigator.userAgent));
   }, []);
 
   const copyRoomLink = useCallback(async () => {
@@ -40,7 +42,7 @@ export function ExtensionCheck() {
     >
       <div className="flex items-start gap-3">
         <Info aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0" />
-        <span>
+        <div className="min-w-0">
           {isMobile ? (
             <>
               You&apos;re on mobile. AniDachi playback requires the Chrome extension on a
@@ -63,9 +65,18 @@ export function ExtensionCheck() {
                 {INSTALL_CTA_LABEL}
               </a>{" "}
               if you haven&apos;t installed it yet.
+              <ol className="mt-3 list-decimal space-y-1 pl-5">
+                <li>Use desktop Chrome with the extension installed.</li>
+                <li>Sign in to Crunchyroll or YouTube with your own account.</li>
+                <li>Open the same episode the host is watching.</li>
+                <li>
+                  Click the AniDachi bubble. If playback is blocked, click Resume
+                  sync.
+                </li>
+              </ol>
             </>
           )}
-        </span>
+        </div>
       </div>
       {isMobile ? (
         <button

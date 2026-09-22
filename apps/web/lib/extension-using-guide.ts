@@ -1,5 +1,20 @@
+import { INSTALL_HUB_PATH } from "./install-cta";
+
 /** Post-install overlay usage on /extension#using. Live sync only. */
 export const EXTENSION_USING_HASH = "using";
+
+/** Anchor for one overlay step, shared by the install hub and account Help. */
+export function extensionUsingStepAnchor(name: string) {
+  const slug = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  return `${EXTENSION_USING_HASH}-${slug}`;
+}
+
+export function extensionUsingStepHref(name: string) {
+  return `${INSTALL_HUB_PATH}#${extensionUsingStepAnchor(name)}`;
+}
 
 export const extensionUsingSteps = [
   {

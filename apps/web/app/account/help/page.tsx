@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Puzzle, Users } from "lucide-react";
-import { INSTALL_HUB_PATH } from "@/lib/install-cta";
+import { OverlayUsingGuide } from "@/components/overlay-using-guide";
 import "../profile/profile.css";
 
 export const metadata: Metadata = {
@@ -16,45 +15,26 @@ export default function AccountHelpPage() {
         <p className="profile-eyebrow">HELP</p>
         <h1>Get started with AniDachi</h1>
         <p>
-          Quick paths for setting up a watch night and keeping your group
-          organized.
+          A watch party runs in the Chrome extension, on each person’s own
+          Crunchyroll or YouTube tab. Open a title, then use the same controls
+          shown below.
         </p>
       </header>
-      <div className="help-grid">
-        <section>
-          <Puzzle aria-hidden />
-          <h2>Set up the extension</h2>
-          <p>
-            Install AniDachi in desktop Chrome, open a supported Crunchyroll or
-            YouTube watch page, then create a room.
-          </p>
-          <Link href={INSTALL_HUB_PATH}>
-            Open the install guide <ArrowRight size={15} aria-hidden />
-          </Link>
-        </section>
-        <section>
-          <BookOpen aria-hidden />
-          <h2>Manage watch history</h2>
-          <p>
-            Resume saved titles, filter your library, and update episode
-            progress from your account.
-          </p>
-          <Link href="/account/watch-library">
-            Open Watch Library <ArrowRight size={15} aria-hidden />
-          </Link>
-        </section>
-        <section>
-          <Users aria-hidden />
-          <h2>Watch with your group</h2>
-          <p>
-            Add friends, organize private groups, and use room invitations for
-            each watch session.
-          </p>
-          <Link href="/account/friends">
-            Open Friends &amp; Groups <ArrowRight size={15} aria-hidden />
-          </Link>
-        </section>
-      </div>
+      <section className="help-block">
+        <h2>Before the room starts</h2>
+        <ul className="help-facts">
+          <li>Sign in on Crunchyroll or YouTube with your own account. AniDachi does not share logins.</li>
+          <li>Use a Crunchyroll title or a full youtube.com/watch page. Shorts, embeds, and the homepage do not sync.</li>
+          <li>If the browser blocked autoplay, or an ad paused sync, click Resume sync in the player.</li>
+          <li>On Free, a room you host lasts 30 minutes a day once a guest joins. Waiting alone does not use that time. Pausing the video does not stop it. A warning appears with five minutes left.</li>
+        </ul>
+        <div className="help-links">
+          <Link href="/account/friends">Friends &amp; Groups</Link>
+          <Link href="/account/billing">Subscription</Link>
+          <Link href="/account/watch-library">Watch Library</Link>
+        </div>
+      </section>
+      <OverlayUsingGuide compact />
       <section className="help-support">
         <div>
           <h2>Still need help?</h2>

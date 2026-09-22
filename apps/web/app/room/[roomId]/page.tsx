@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { getSession, requireAuth } from "@/lib/anidachi-auth/session";
 import {
   getRoomById,
@@ -15,6 +16,7 @@ import {
   buildRoomSourceLaunchUrl,
   deriveDurableRoomSource,
 } from "@/lib/anidachi-auth/room-source";
+import { isMobileUserAgent } from "@/lib/mobile-user-agent";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +49,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 export default async function RoomPage({ params, searchParams }: Props) {
   const { roomId } = await params;
   const { joined } = await searchParams;
+  const initialMobile = isMobileUserAgent((await headers()).get("user-agent"));
 
   await requireAuth(`/room/${roomId}`);
   const session = await getSession();
@@ -122,8 +125,8 @@ export default async function RoomPage({ params, searchParams }: Props) {
             Members: <span className="font-medium text-foreground/80">{memberCount}</span>
           </span>
         </div>
-        <ExtensionCheck />
-        <RoomMobileHandoff variant="waiting" />
+        <ExtensionCheck initialMobile={initialMobile} />
+        <RoomMobileHandoff variant="waiting" initialMobile={initialMobile} />
         <WaitingRefresh roomId={roomId} />
       </Shell>
     );
@@ -167,7 +170,10 @@ export default async function RoomPage({ params, searchParams }: Props) {
         </button>
       </form>
 
-      <RoomMobileHandoff variant={isParticipant && launchUrl ? "joined" : "ready"} />
+      <RoomMobileHandoff
+        variant={isParticipant && launchUrl ? "joined" : "ready"}
+        initialMobile={initialMobile}
+      />
 
       {isParticipant && launchUrl && (
         <p className="mt-3 text-center text-xs text-foreground/45">
@@ -175,7 +181,7 @@ export default async function RoomPage({ params, searchParams }: Props) {
         </p>
       )}
 
-      <ExtensionCheck />
+      <ExtensionCheck initialMobile={initialMobile} />
     </Shell>
   );
 }

@@ -7,6 +7,7 @@ import {
   RoomInvitesResponseSchema,
 } from "@anidachi/protocol";
 import { Check, Inbox, RefreshCw, Send, User, Users, X } from "lucide-react";
+import Link from "next/link";
 import {
   type ReactNode,
   useCallback,
@@ -555,8 +556,15 @@ export function InvitesClient({ ownerUserId, embedded = false, active = true, on
               <AccountEmptyState
                 icon={<Send />}
                 title="No sent invitations yet"
+                action={
+                  <Link href="/account/help" className="ac-button ac-button-primary">
+                    Open Help
+                  </Link>
+                }
               >
-                Invite friends or a group from the room controls in your player.
+                Copy a room link from the player and send it yourself. Push invites
+                to a friend or a group need Plus or Pro. Help walks through
+                install, creating a room, and copying that link.
               </AccountEmptyState>
             ) : null
           ) : null}
