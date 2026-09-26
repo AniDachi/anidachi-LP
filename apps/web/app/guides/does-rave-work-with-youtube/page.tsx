@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import {
   SeoGuideAnswer,
   SeoGuideBulletList,
@@ -146,12 +145,6 @@ export default function DoesRaveWorkWithYoutubePage() {
         ]}
       />
 
-      <PrimaryCheckoutCta
-        pagePath="/guides/does-rave-work-with-youtube"
-        pageTemplate="guide"
-        placement="content_mid"
-        className="my-10"
-      />
 
       <h2 id="when-to-switch" className="scroll-mt-24">
         When to switch tools

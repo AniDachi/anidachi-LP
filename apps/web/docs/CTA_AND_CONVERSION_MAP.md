@@ -25,9 +25,9 @@ Quick audit reference for the sitewide paid checkout rollout.
 
 ## Placements
 
-- `content_above_fold` — first CTA block on SEO pages (listicle `aboveFoldCta`)
-- `content_bottom` — default end-of-article CTA in `SeoPageLayout`
-- `content_mid` — optional in-page (e.g. after lede on anime title pages)
+- `content_above_fold` — first install card, inserted when `aboveFoldCta` is set
+- `content_bottom` — end-of-article install card in `SeoPageLayout`
+- Cap: those two cards only. Do not add `content_mid` on marketing pages.
 - `hero` — home hero button
 - `home_features` — `MainAppFeatures` CTA
 - `nav` — top nav “Pricing”

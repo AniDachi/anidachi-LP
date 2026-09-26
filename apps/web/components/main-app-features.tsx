@@ -1,14 +1,7 @@
 "use client";
 
 import { History, LayoutGrid, Play } from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { HomeSectionHeader } from "@/components/home-section-header";
-import { trackConversion } from "@/lib/conversion-events";
-import {
-  INSTALL_CTA_LABEL,
-  INSTALL_HUB_PATH,
-} from "@/lib/install-cta";
 
 const features = [
   {
@@ -19,7 +12,6 @@ const features = [
     description:
       "AniDachi detects the Crunchyroll or YouTube title, you create a room, and friends join on their own player. Playback stays synced without screen share.",
     featured: true,
-    showInstallCta: true,
   },
   {
     id: "overlay",
@@ -69,28 +61,6 @@ export function MainAppFeatures() {
             <p className="max-w-xl text-[0.95rem] leading-relaxed text-ani-muted md:text-base">
               {featured.description}
             </p>
-            {"showInstallCta" in featured && featured.showInstallCta ? (
-              <Button
-                variant="cream"
-                size="control"
-                className="mt-6 w-full px-8 text-sm sm:w-auto"
-                asChild
-              >
-                <Link
-                  href={INSTALL_HUB_PATH}
-                  onClick={() => {
-                    trackConversion("cta_click", {
-                      page_path: "/",
-                      page_template: "home",
-                      placement: "home_features",
-                      cta_variant: "features_install",
-                    });
-                  }}
-                >
-                  {INSTALL_CTA_LABEL}
-                </Link>
-              </Button>
-            ) : null}
           </article>
 
           <div className="flex flex-col gap-5 lg:col-span-5">

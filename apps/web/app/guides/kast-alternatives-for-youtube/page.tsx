@@ -8,7 +8,6 @@ import {
   PRICING_COMPARE_OVERVIEW_YOUTUBE,
   PRICING_FREE_TIER_TABLE,
 } from "@/lib/pricing-copy";
-import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 
 const SITE_URL = getResolvedSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
@@ -120,12 +119,6 @@ export default function KastAlternativesForYoutubePage() {
         not Shorts or embeds.
       </p>
 
-      <PrimaryCheckoutCta
-        pagePath="/guides/kast-alternatives-for-youtube"
-        pageTemplate="guide"
-        placement="content_mid"
-        className="my-10"
-      />
 
       <h2
         id="alternatives"

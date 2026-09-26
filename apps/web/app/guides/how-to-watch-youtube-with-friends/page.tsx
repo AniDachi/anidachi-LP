@@ -9,7 +9,6 @@ import {
   SeoGuideNote,
   SeoGuideTitle,
 } from "@/components/seo-guide-blocks";
-import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
 import { getGuideLinks } from "@/lib/guide-links";
@@ -174,12 +173,6 @@ export default function HowToWatchYoutubeWithFriendsPage() {
         </h2>
       <SeoGuideSteps steps={howToSteps} />
 
-        <PrimaryCheckoutCta
-          pagePath="/guides/how-to-watch-youtube-with-friends"
-          pageTemplate="guide"
-          placement="content_mid"
-          className="my-10"
-        />
 
         <h2
           id="together"

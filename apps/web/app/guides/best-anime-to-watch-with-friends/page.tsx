@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveDataTable } from "@/components/responsive-data-table";
-import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 
 export const metadata: Metadata = {
   title: "Best Anime to Watch with Friends (2026) — 115+ Group Watch Picks",
@@ -193,12 +192,6 @@ export default function BestAnimeWithFriendsPage() {
         </li>
       </ul>
 
-      <PrimaryCheckoutCta
-        pagePath="/guides/best-anime-to-watch-with-friends"
-        pageTemplate="listicle"
-        placement="content_mid"
-        className="my-10"
-      />
 
       <h2
         id="quick-picks"

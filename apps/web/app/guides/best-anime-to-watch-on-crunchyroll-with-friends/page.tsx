@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
-import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 
 const SITE_URL = getResolvedSiteOrigin();
@@ -84,6 +83,7 @@ const itemList = [
 export default function BestAnimeOnCrunchyrollWithFriendsPage() {
   return (
     <SeoPageLayout
+      aboveFoldCta
       breadcrumbs={[
         { name: "Home", url: "/" },
         { name: "Watch Anime Together", url: "/watch-anime-together" },
@@ -185,12 +185,6 @@ export default function BestAnimeOnCrunchyrollWithFriendsPage() {
         </li>
       </ul>
 
-      <PrimaryCheckoutCta
-        pagePath="/guides/best-anime-to-watch-on-crunchyroll-with-friends"
-        pageTemplate="listicle"
-        placement="content_mid"
-        className="my-10"
-      />
 
       {/* ── LONG SERIES ──────────────────────────────────── */}
       <h2

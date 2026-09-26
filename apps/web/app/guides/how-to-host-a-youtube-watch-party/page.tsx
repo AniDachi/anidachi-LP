@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
 import { getGuideLinks } from "@/lib/guide-links";
@@ -163,12 +162,6 @@ export default function HowToHostAYoutubeWatchPartyPage() {
           ))}
         </ol>
 
-        <PrimaryCheckoutCta
-          pagePath="/guides/how-to-host-a-youtube-watch-party"
-          pageTemplate="guide"
-          placement="content_mid"
-          className="my-10"
-        />
 
         <h2 id="related" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
           Related Guides

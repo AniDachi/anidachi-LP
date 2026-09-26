@@ -86,7 +86,7 @@ export const FORCE_INDEX_URL_PATHS = [
   "/watch-movies-together-long-distance",
   "/watch-mystery-anime-with-friends",
   "/watch-netflix-together-long-distance",
-  "/watch-party-starter",
+  "/watch-party-app",
   "/watch-psychological-anime-with-friends",
   "/watch-romance-anime-with-friends",
   "/watch-sci-fi-anime-with-friends",

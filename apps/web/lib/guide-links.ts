@@ -810,6 +810,36 @@ export const guideLinks: GuideLinkItem[] = [
 		label: "Does Rave Work With YouTube?",
 		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
 	},
+	{
+		href: "/guides/animes-to-watch-list",
+		label: "Animes to Watch List",
+		tags: ["template-c", "how-to-core", "pillar-anime-tracker"],
+	},
+	{
+		href: "/guides/how-to-screen-share-on-discord",
+		label: "How to Screen Share on Discord",
+		tags: ["template-c", "how-to-core", "discord", "pillar-discord-watch-party"],
+	},
+	{
+		href: "/guides/dubbed-anime-on-crunchyroll",
+		label: "Dubbed Anime on Crunchyroll",
+		tags: ["template-c", "crunchyroll", "pillar-sub-vs-dub"],
+	},
+	{
+		href: "/guides/long-distance-date-ideas",
+		label: "Long Distance Date Ideas",
+		tags: ["template-c", "long-distance", "pillar-long-distance"],
+	},
+	{
+		href: "/guides/apps-for-long-distance-couples",
+		label: "Apps for Long Distance Couples",
+		tags: ["template-c", "long-distance", "pillar-long-distance"],
+	},
+	{
+		href: "/guides/watch-movies-together-online",
+		label: "Watch Movies Together Online",
+		tags: ["template-c", "watch-party", "pillar-watch-party-app"],
+	},
 ];
 
 export function getGuideLinks({

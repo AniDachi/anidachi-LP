@@ -85,12 +85,13 @@ function inferSitemapMeta(urlPath: string): {
     urlPath === "/watch-youtube-together" ||
     urlPath === "/anime-watch-party-toolkit" ||
     urlPath === "/anime-watch-party" ||
+    urlPath === "/anime-tracker" ||
+    urlPath === "/discord-watch-party" ||
+    urlPath === "/sub-vs-dub" ||
+    urlPath === "/watch-party-app" ||
     urlPath === "/pricing"
   ) {
     return { changeFrequency: "weekly", priority: 0.9 };
-  }
-  if (urlPath === "/watch-party-starter") {
-    return { changeFrequency: "weekly", priority: 0.88 };
   }
   if (
     urlPath === "/watch-action-anime-with-friends" ||

@@ -12,7 +12,6 @@ import {
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { HowToJsonLd } from "@/components/json-ld";
-import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { getGuideLinks } from "@/lib/guide-links";
 import {
   PRICING_ASYNC_HOST_SNIPPET,
@@ -265,12 +264,6 @@ export default function WatchCrunchyrollTogetherPage() {
         and Crunchyroll Party, or screen sharing via Discord.
       </p>
 
-      <PrimaryCheckoutCta
-        pagePath="/watch-crunchyroll-together"
-        pageTemplate="pillar"
-        placement="content_mid"
-        className="my-10"
-      />
 
       <h2 id="step-by-step" className="scroll-mt-24">
         How to Watch Crunchyroll Together (Step by Step)

@@ -19,7 +19,6 @@ import {
   PRICING_PLUS_PRICE_LINE,
   PRICING_IS_ANIDACHI_FREE_YOUTUBE_ANSWER,
 } from "@/lib/pricing-copy";
-import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 
 const SITE_URL = getResolvedSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
@@ -281,12 +280,6 @@ export default function WatchYoutubeTogetherPage() {
           }))}
         />
 
-        <PrimaryCheckoutCta
-          pagePath="/watch-youtube-together"
-          pageTemplate="pillar"
-          placement="content_mid"
-          className="my-10"
-        />
 
         <h2
           id="no-native"

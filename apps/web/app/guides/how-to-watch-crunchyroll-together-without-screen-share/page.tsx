@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import {
   SeoGuideAnswer,
   SeoGuideNote,
@@ -176,12 +175,6 @@ export default function HowToWatchCrunchyrollTogetherWithoutScreenSharePage() {
         </h2>
         <SeoGuideSteps steps={howToSteps} />
 
-        <PrimaryCheckoutCta
-          pagePath="/guides/how-to-watch-crunchyroll-together-without-screen-share"
-          pageTemplate="guide"
-          placement="content_mid"
-          className="my-10"
-        />
 
         <h2 id="discord" className="scroll-mt-24">
           Discord voice note

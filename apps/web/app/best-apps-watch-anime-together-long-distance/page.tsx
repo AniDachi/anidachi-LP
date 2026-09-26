@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
-import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { PRICING_PRICE_TABLE, PRICING_CANCELLATION_NOTE } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
@@ -161,12 +160,6 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
         ]}
       />
 
-      <PrimaryCheckoutCta
-        pagePath="/best-apps-watch-anime-together-long-distance"
-        pageTemplate="listicle"
-        placement="content_mid"
-        className="my-10"
-      />
 
       <h2
         id="anidachi"

@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
         destination: "https://www.anidachi.app/:path*",
         permanent: true,
       },
+      {
+        source: "/watch-party-starter",
+        destination: "/watch-party-app",
+        permanent: true,
+      },
     ];
   },
   images: {

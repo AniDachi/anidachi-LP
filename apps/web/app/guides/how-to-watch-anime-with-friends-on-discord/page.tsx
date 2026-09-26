@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
-import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 
 export const metadata: Metadata = {
   title: "Watch Anime on Discord Without Screen Share Pain",
@@ -165,12 +164,6 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
           .
         </p>
 
-        <PrimaryCheckoutCta
-          pagePath="/guides/how-to-watch-anime-with-friends-on-discord"
-          pageTemplate="guide"
-          placement="content_mid"
-          className="my-10"
-        />
 
         <h2
           id="why-discord"

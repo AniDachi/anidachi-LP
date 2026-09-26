@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import {
   SeoGuideAnswer,
   SeoGuideBulletList,
@@ -186,12 +185,6 @@ export default function TelepartyNotWorkingYoutubePage() {
         </h2>
         <SeoGuideSteps steps={howToSteps} />
 
-        <PrimaryCheckoutCta
-          pagePath="/guides/teleparty-not-working-youtube"
-          pageTemplate="guide"
-          placement="content_mid"
-          className="my-10"
-        />
 
         <h2 id="updates" className="scroll-mt-24">
           Extension and player updates

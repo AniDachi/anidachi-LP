@@ -134,10 +134,34 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/watch-party-starter"
+                  href="/watch-party-app"
                   className="hover:text-ani-text transition-colors"
                 >
-                  Watch Party Starter
+                  Watch Party App
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/anime-tracker"
+                  className="hover:text-ani-text transition-colors"
+                >
+                  Anime Tracker
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/discord-watch-party"
+                  className="hover:text-ani-text transition-colors"
+                >
+                  Discord Watch Party
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/sub-vs-dub"
+                  className="hover:text-ani-text transition-colors"
+                >
+                  Sub vs Dub
                 </Link>
               </li>
               <li>

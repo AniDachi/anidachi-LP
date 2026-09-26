@@ -11,7 +11,6 @@ import {
 } from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
-import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { getGuideLinks } from "@/lib/guide-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 import {
@@ -124,13 +123,6 @@ export default function BestTelepartyAlternativesForAnimePage() {
       
       </SeoGuideAnswer>
 
-      <PrimaryCheckoutCta
-        pagePath="/guides/best-teleparty-alternatives-for-anime"
-        pageTemplate="guide"
-        placement="content_mid"
-        className="my-10"
-      />
-
       <h2
         id="ranked"
         className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
@@ -170,6 +162,7 @@ export default function BestTelepartyAlternativesForAnimePage() {
           owns files, not for official streams.
         </li>
       </ol>
+
 
       <h2
         id="comparison"

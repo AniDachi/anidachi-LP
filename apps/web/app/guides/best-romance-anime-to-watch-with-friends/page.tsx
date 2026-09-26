@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
-import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 
 const SITE_URL = getResolvedSiteOrigin();
@@ -79,6 +78,7 @@ const itemList = [
 export default function BestRomanceAnimeWithFriendsPage() {
   return (
     <SeoPageLayout
+      aboveFoldCta
       breadcrumbs={[
         { name: "Home", url: "/" },
         { name: "Watch Anime Together", url: "/watch-anime-together" },
@@ -169,12 +169,6 @@ export default function BestRomanceAnimeWithFriendsPage() {
         </li>
       </ul>
 
-      <PrimaryCheckoutCta
-        pagePath="/guides/best-romance-anime-to-watch-with-friends"
-        pageTemplate="listicle"
-        placement="content_mid"
-        className="my-10"
-      />
 
       {/* ── EMOTIONAL ────────────────────────────────────── */}
       <h2
