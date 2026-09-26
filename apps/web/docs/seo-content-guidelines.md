@@ -113,7 +113,7 @@ Use existing gold-standard pages in the agent file. Do **not** treat “do not m
 
 ### Guides / compare / listicles
 
-- Answer-first; commercial pages: fold CTA + mid `PrimaryCheckoutCta`
+- Answer-first; commercial pages: `aboveFoldCta` plus the layout end card. Two install cards maximum. Do not add a mid `PrimaryCheckoutCta`.
 - Compare pages: fair tables + primary sources for competitor claims
 - CTA destination: `/pricing` (not `/#pricing` alone)
 

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
@@ -170,12 +169,6 @@ export default function NetflixPartyForYoutubePage() {
         </li>
       </ul>
 
-      <PrimaryCheckoutCta
-        pagePath="/guides/netflix-party-for-youtube"
-        pageTemplate="guide"
-        placement="content_mid"
-        className="my-10"
-      />
 
       <h2
         id="related"

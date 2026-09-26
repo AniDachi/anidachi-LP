@@ -10,7 +10,6 @@ import {
   SeoGuideTitle,
 } from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
-import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { getGuideLinks } from "@/lib/guide-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 import {
@@ -156,12 +155,6 @@ export default function CanYouScreenShareYoutubeOnDiscordPage() {
         </li>
       </ul>
 
-      <PrimaryCheckoutCta
-        pagePath="/guides/can-you-screen-share-youtube-on-discord"
-        pageTemplate="guide"
-        placement="content_mid"
-        className="my-10"
-      />
 
       <h2
         id="better-path"

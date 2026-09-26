@@ -8,7 +8,6 @@ import {
 } from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
-import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { getGuideLinks } from "@/lib/guide-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 import { PRICING_DISCORD_COMPARE_FAQ } from "@/lib/pricing-copy";
@@ -168,13 +167,6 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
       
       </SeoGuideAnswer>
 
-      <PrimaryCheckoutCta
-        pagePath="/guides/can-you-screen-share-crunchyroll-on-discord"
-        pageTemplate="guide"
-        placement="content_mid"
-        className="my-10"
-      />
-
       <h2
         id="why-it-fails"
         className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
@@ -202,6 +194,7 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
           trying.
         </li>
         </ul>
+
 
       <h2
         id="workaround"

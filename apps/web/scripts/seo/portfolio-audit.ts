@@ -144,7 +144,10 @@ function inferCluster(pathname: string): string {
     pathname === "/watch-anime-together" ||
     pathname === "/anime-watch-party" ||
     pathname === "/anime-watch-party-toolkit" ||
-    pathname === "/watch-party-starter"
+    pathname === "/watch-party-app" ||
+    pathname === "/anime-tracker" ||
+    pathname === "/discord-watch-party" ||
+    pathname === "/sub-vs-dub"
   ) {
     return "anime-pillar";
   }

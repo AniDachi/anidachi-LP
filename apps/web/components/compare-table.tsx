@@ -1,17 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import {
   ResponsiveCompareTable,
   type CompareTableRow,
 } from "@/components/responsive-compare-table";
 import { HomeSectionHeader } from "@/components/home-section-header";
 import { trackConversion } from "@/lib/conversion-events";
-import {
-  INSTALL_CTA_LABEL,
-  INSTALL_HUB_PATH,
-} from "@/lib/install-cta";
 
 const columns = [
   { id: "anidachi", label: "AniDachi", highlight: true },
@@ -96,27 +91,7 @@ export function CompareTable() {
         />
         <div className="mx-auto max-w-4xl">
           <ResponsiveCompareTable columns={columns} rows={rows} />
-          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Button
-              variant="cream"
-              size="control"
-              className="w-full px-8 text-sm sm:w-auto"
-              asChild
-            >
-              <Link
-                href={INSTALL_HUB_PATH}
-                onClick={() => {
-                  trackConversion("cta_click", {
-                    page_path: "/",
-                    page_template: "home",
-                    placement: "home_compare",
-                    cta_variant: "compare_install",
-                  });
-                }}
-              >
-                {INSTALL_CTA_LABEL}
-              </Link>
-            </Button>
+          <div className="mt-8 flex justify-center">
             <Link
               href="/pricing"
               className="text-sm text-ani-muted underline-offset-4 hover:text-ani-text hover:underline"

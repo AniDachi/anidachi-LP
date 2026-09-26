@@ -69,7 +69,7 @@ Inventories every public sitemap route, joins GSC page/query data with GA4 sessi
 2. Home: pricing card → Stripe URL (or error banner on failed API).
 3. Land on a guide first, then checkout from `/pricing`: GA4 `checkout_session_started` and Stripe metadata include `seo_landing_path` / `seoLandingPath` = the guide path.
 4. Any guide: two CTA blocks fire `cta_impression` when scrolled into view; bottom block `placement: content_bottom`.
-5. `/watch/...-with-friends`: mid CTA after lede has `placement: content_mid`.
+5. `/watch/...-with-friends`: `aboveFoldCta` fires `content_above_fold`; the layout end card fires `content_bottom`. No third install card.
 6. Nav “Pricing” from a guide: `cta_click` with `placement: nav` and correct `page_path`.
 
 ## Next test hypotheses

@@ -11,7 +11,6 @@ import {
 } from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
-import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { getGuideLinks } from "@/lib/guide-links";
 import {
   PRICING_CR_PRICING_SNIPPET,
@@ -174,13 +173,6 @@ export default function HowToWatchWithFriendsPage() {
         
       </SeoGuideAnswer>
 
-        <PrimaryCheckoutCta
-          pagePath="/guides/how-to-watch-crunchyroll-with-friends"
-          pageTemplate="guide"
-          placement="content_mid"
-          className="my-10"
-        />
-
         <h2
           id="steps"
           className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
@@ -203,6 +195,7 @@ export default function HowToWatchWithFriendsPage() {
               : step,
           )}
         />
+
 
         <p className="text-foreground/80 leading-relaxed mb-8">
           Need pictures of the overlay? The install hub walks the same live

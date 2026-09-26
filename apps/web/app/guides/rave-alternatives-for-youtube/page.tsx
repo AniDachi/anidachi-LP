@@ -8,7 +8,6 @@ import {
   PRICING_FREE_TIER_TABLE,
   PRICING_RAVE_COMPARE_YOUTUBE_FAQ,
 } from "@/lib/pricing-copy";
-import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 
 const SITE_URL = getResolvedSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
@@ -121,12 +120,6 @@ export default function RaveAlternativesForYoutubePage() {
         and Crunchyroll rooms on full watch pages — not Shorts or embeds.
       </p>
 
-      <PrimaryCheckoutCta
-        pagePath="/guides/rave-alternatives-for-youtube"
-        pageTemplate="guide"
-        placement="content_mid"
-        className="my-10"
-      />
 
       <h2
         id="alternatives"

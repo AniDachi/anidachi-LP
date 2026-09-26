@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getGuideLinks } from "@/lib/guide-links";
@@ -196,12 +195,6 @@ export default function BestAppsToWatchYoutubeTogetherPage() {
         ]}
       />
 
-      <PrimaryCheckoutCta
-        pagePath="/guides/best-apps-to-watch-youtube-together"
-        pageTemplate="guide"
-        placement="content_mid"
-        className="my-10"
-      />
 
       <h2
         id="ranked"

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
-import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 
 const SITE_URL = getResolvedSiteOrigin();
@@ -89,6 +88,7 @@ const itemList = [
 export default function BestAnimeToBingeWithFriendsPage() {
   return (
     <SeoPageLayout
+      aboveFoldCta
       breadcrumbs={[
         { name: "Home", url: "/" },
         { name: "Watch Anime Together", url: "/watch-anime-together" },
@@ -332,12 +332,6 @@ export default function BestAnimeToBingeWithFriendsPage() {
         </li>
       </ul>
 
-      <PrimaryCheckoutCta
-        pagePath="/guides/best-anime-to-binge-with-friends-this-weekend"
-        pageTemplate="listicle"
-        placement="content_mid"
-        className="my-10"
-      />
 
       {/* ── SECTION 3: FILM MARATHONS ────────────────────── */}
       <h2

@@ -9,7 +9,6 @@ import {
   SeoGuideSteps,
   SeoGuideTitle,
 } from "@/components/seo-guide-blocks";
-import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
 import { animeList } from "@/lib/anime-data";
@@ -186,12 +185,6 @@ export default function WatchAnimeTogetherPage() {
         watchroom in minutes.
       </p>
 
-      <PrimaryCheckoutCta
-        pagePath="/watch-anime-together"
-        pageTemplate="pillar"
-        placement="content_mid"
-        className="my-10"
-      />
 
       <h2
         id="platform-hubs"

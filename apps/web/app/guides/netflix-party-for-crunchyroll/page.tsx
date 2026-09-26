@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import {
   SeoGuideAnswer,
   SeoGuideOptions,
@@ -185,12 +184,6 @@ export default function NetflixPartyForCrunchyrollPage() {
         ]}
       />
 
-      <PrimaryCheckoutCta
-        pagePath="/guides/netflix-party-for-crunchyroll"
-        pageTemplate="guide"
-        placement="content_mid"
-        className="my-10"
-      />
 
       <h2 id="related" className="scroll-mt-24">
         Related

@@ -17,7 +17,6 @@ import {
   PRICING_COMPARE_OVERVIEW_YOUTUBE,
   PRICING_FREE_TIER_TABLE,
 } from "@/lib/pricing-copy";
-import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 
 const SITE_URL = getResolvedSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
@@ -131,13 +130,6 @@ export default function BestTelepartyAlternativesForYoutubePage() {
       
       </SeoGuideAnswer>
 
-      <PrimaryCheckoutCta
-        pagePath="/guides/best-teleparty-alternatives-for-youtube"
-        pageTemplate="guide"
-        placement="content_mid"
-        className="my-10"
-      />
-
       <h2 id="ranked" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
         Ranked Alternatives
       </h2>
@@ -172,6 +164,7 @@ export default function BestTelepartyAlternativesForYoutubePage() {
           long videos.
         </li>
       </ol>
+
 
       <h2
         id="comparison"

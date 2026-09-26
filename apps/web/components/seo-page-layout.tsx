@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 import { FAQSection, type FAQItem } from "@/components/faq-section";
 import {
   BreadcrumbJsonLd,
@@ -12,7 +11,6 @@ import { TableOfContents, type TocHeading } from "@/components/table-of-contents
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { SeoBelowTitleCta } from "@/components/seo-below-title-cta";
 import { SocialProof } from "@/components/social-proof";
-import { StickyMobileCheckoutBar } from "@/components/sticky-mobile-checkout-bar";
 import type { PageTemplateId } from "@/lib/conversion-events";
 import { inferPageTemplateFromPath } from "@/lib/conversion-events";
 
@@ -76,7 +74,6 @@ export function SeoPageLayout({
 }: SeoPageLayoutProps) {
   const hasToc = headings && headings.length > 0;
   const pageTemplate = conversionTemplate ?? inferPageTemplateFromPath(url);
-  const showStickyBar = Boolean(aboveFoldCta || hasToc || (faq && faq.length > 0));
 
   const editorialByline = showEditorialByline ? (
     <p className="not-prose mt-8 border-t border-ani-line pt-4 text-xs leading-relaxed text-ani-muted">
@@ -124,10 +121,7 @@ export function SeoPageLayout({
     <>
       <main
         id="main-content"
-        className={cn(
-          "min-h-screen bg-ani-canvas",
-          showStickyBar && "pb-mobile-sticky-bar md:pb-0",
-        )}
+        className="min-h-screen bg-ani-canvas"
       >
         <nav
           aria-label="Breadcrumb"
@@ -190,10 +184,6 @@ export function SeoPageLayout({
           </>
         )}
       </main>
-      {showStickyBar && (
-        <StickyMobileCheckoutBar pagePath={url} pageTemplate={pageTemplate} />
-      )}
-
       <BreadcrumbJsonLd items={breadcrumbs} />
       <ArticleJsonLd
         title={title}
