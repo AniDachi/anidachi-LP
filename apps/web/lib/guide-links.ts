@@ -840,6 +840,46 @@ export const guideLinks: GuideLinkItem[] = [
 		label: "Watch Movies Together Online",
 		tags: ["template-c", "watch-party", "pillar-watch-party-app"],
 	},
+	{
+		href: "/guides/anime-diary",
+		label: "Anime Diary",
+		tags: ["template-c", "how-to-core", "pillar-anime-tracker"],
+	},
+	{
+		href: "/guides/anime-checklist",
+		label: "Anime Checklist",
+		tags: ["template-c", "how-to-core", "pillar-anime-tracker"],
+	},
+	{
+		href: "/guides/can-you-stream-crunchyroll-on-discord",
+		label: "Can You Stream Crunchyroll on Discord?",
+		tags: ["template-c", "how-to-core", "discord", "crunchyroll", "pillar-discord-watch-party"],
+	},
+	{
+		href: "/guides/discord-watch-together",
+		label: "Discord Watch Together",
+		tags: ["template-c", "discord", "pillar-discord-watch-party"],
+	},
+	{
+		href: "/guides/watch-anime-dub",
+		label: "Watch Anime Dub",
+		tags: ["template-c", "how-to-core", "crunchyroll", "pillar-sub-vs-dub"],
+	},
+	{
+		href: "/guides/english-dubbed-anime",
+		label: "English Dubbed Anime",
+		tags: ["template-c", "pillar-sub-vs-dub"],
+	},
+	{
+		href: "/guides/virtual-date-ideas",
+		label: "Virtual Date Ideas",
+		tags: ["template-c", "long-distance", "pillar-long-distance"],
+	},
+	{
+		href: "/guides/things-to-do-long-distance",
+		label: "Things to Do Long Distance",
+		tags: ["template-c", "long-distance", "pillar-long-distance"],
+	},
 ];
 
 export function getGuideLinks({

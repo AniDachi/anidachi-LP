@@ -66,7 +66,7 @@ export default function DiscordWatchPartyPage() {
       description="Discord voice plus synced Crunchyroll or YouTube."
       url="/discord-watch-party"
       datePublished="2026-09-26"
-      dateModified="2026-09-26"
+      dateModified="2026-09-27"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImage}
@@ -78,9 +78,14 @@ export default function DiscordWatchPartyPage() {
           position: 1,
         },
         {
-          name: "Watch Crunchyroll together",
-          url: "/watch-crunchyroll-together",
+          name: "Stream Crunchyroll on Discord",
+          url: "/guides/can-you-stream-crunchyroll-on-discord",
           position: 2,
+        },
+        {
+          name: "Discord watch together",
+          url: "/guides/discord-watch-together",
+          position: 3,
         },
       ]}
     >
@@ -134,7 +139,22 @@ export default function DiscordWatchPartyPage() {
         <Link href="/extension" className="text-brand-orange hover:underline">
           /extension
         </Link>
-        . YouTube works the same way on a full watch page, not Shorts.
+        . YouTube works the same way on a full watch page, not Shorts. The
+        Crunchyroll question is on{" "}
+        <Link
+          href="/guides/can-you-stream-crunchyroll-on-discord"
+          className="text-brand-orange hover:underline"
+        >
+          can you stream Crunchyroll on Discord
+        </Link>
+        . Keeping the call up is{" "}
+        <Link
+          href="/guides/discord-watch-together"
+          className="text-brand-orange hover:underline"
+        >
+          Discord watch together
+        </Link>
+        .
       </p>
       <SeoGuideRelated
         links={[

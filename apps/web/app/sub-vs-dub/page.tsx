@@ -66,7 +66,7 @@ export default function SubVsDubPage() {
       description="Pick one audio version, then watch it together."
       url="/sub-vs-dub"
       datePublished="2026-09-26"
-      dateModified="2026-09-26"
+      dateModified="2026-09-27"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImage}
@@ -152,6 +152,14 @@ export default function SubVsDubPage() {
           {
             href: "/guides/dubbed-anime-on-crunchyroll",
             label: "Dubbed anime on Crunchyroll",
+          },
+          {
+            href: "/guides/watch-anime-dub",
+            label: "Watch anime dub",
+          },
+          {
+            href: "/guides/english-dubbed-anime",
+            label: "English dubbed anime",
           },
           {
             href: "/glossary/dub-vs-sub-watch-party",
