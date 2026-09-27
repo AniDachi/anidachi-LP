@@ -249,6 +249,16 @@ export default function WatchMoviesTogetherLongDistancePage() {
       </h2>
       <ul className="space-y-2 text-brand-orange">
         <li>
+          <Link href="/guides/virtual-date-ideas" className="hover:underline">
+            Virtual date ideas
+          </Link>
+        </li>
+        <li>
+          <Link href="/guides/things-to-do-long-distance" className="hover:underline">
+            Things to do long distance
+          </Link>
+        </li>
+        <li>
           <Link href="/watch-crunchyroll-together-long-distance" className="hover:underline">
             How to watch Crunchyroll together long distance
           </Link>

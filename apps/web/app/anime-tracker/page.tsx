@@ -73,7 +73,7 @@ export default function AnimeTrackerPage() {
       description="Personal Crunchyroll and YouTube progress with AniDachi."
       url="/anime-tracker"
       datePublished="2026-09-26"
-      dateModified="2026-09-26"
+      dateModified="2026-09-27"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImage}
@@ -85,9 +85,14 @@ export default function AnimeTrackerPage() {
           position: 1,
         },
         {
-          name: "Watch anime together",
-          url: "/watch-anime-together",
+          name: "Anime diary",
+          url: "/guides/anime-diary",
           position: 2,
+        },
+        {
+          name: "Anime checklist",
+          url: "/guides/anime-checklist",
+          position: 3,
         },
       ]}
     >
@@ -145,7 +150,18 @@ export default function AnimeTrackerPage() {
         >
           animes to watch list
         </Link>
-        , then open the title on Crunchyroll or YouTube and install AniDachi
+        . After you have watched, keep an{" "}
+        <Link href="/guides/anime-diary" className="text-brand-orange hover:underline">
+          anime diary
+        </Link>{" "}
+        or check titles off on the{" "}
+        <Link
+          href="/guides/anime-checklist"
+          className="text-brand-orange hover:underline"
+        >
+          anime checklist
+        </Link>
+        . Open the title on Crunchyroll or YouTube and install AniDachi
         from{" "}
         <Link href="/extension" className="text-brand-orange hover:underline">
           the Chrome extension page
