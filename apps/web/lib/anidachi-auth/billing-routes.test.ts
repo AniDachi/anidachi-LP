@@ -52,7 +52,7 @@ function request(
 test("cookie billing mutations reject cross-site, sibling origins, missing Origin and non-JSON bodies", async () => {
 	const invalidHeaders: Record<string, string>[] = [
 		{ origin: "https://evil.example" },
-		{ origin: "https://www.anidachi.app" },
+		{ origin: "https://anidachi.app" },
 		{ origin: "" },
 		{ "sec-fetch-site": "cross-site" },
 		{ "content-type": "text/plain" },

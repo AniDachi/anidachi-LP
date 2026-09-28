@@ -65,7 +65,7 @@ for (const mode of ["closed", "invalid", "OPEN"]) {
 
 test("documents get a self-contained noindex 503; RSC and POST remain retryable JSON", async () => {
   process.env = { NODE_ENV: "test", ANIDACHI_MAINTENANCE_MODE: "closed" };
-  const doc = await middleware(new NextRequest("https://www.anidachi.app/extension/connect?next=reflected-secret", { headers: { accept: "text/html", "sec-fetch-dest": "document" } }));
+  const doc = await middleware(new NextRequest("https://anidachi.app/extension/connect?next=reflected-secret", { headers: { accept: "text/html", "sec-fetch-dest": "document" } }));
   assert.equal(doc.status, 503);
   assert.match(doc.headers.get("Content-Type")!, /text\/html/);
   assert.equal(doc.headers.get("X-Robots-Tag"), "noindex, nofollow");
@@ -74,7 +74,7 @@ test("documents get a self-contained noindex 503; RSC and POST remain retryable 
   assert.doesNotMatch(html, /reflected-secret|<script|<form|<img|<link/);
   const nonDocuments: { method?: string; headers: Record<string, string> }[] = [{ method: "POST", headers: { accept: "text/html" } }, { headers: { accept: "text/html", RSC: "1" } }, { headers: { accept: "application/json" } }];
   for (const options of nonDocuments) {
-    const response = await middleware(new NextRequest("https://www.anidachi.app/account", options));
+    const response = await middleware(new NextRequest("https://anidachi.app/account", options));
     assert.equal(response.status, 503);
     assert.equal((await response.json()).error, "MAINTENANCE");
   }
@@ -83,9 +83,9 @@ test("documents get a self-contained noindex 503; RSC and POST remain retryable 
 test("open modes preserve marketing, session refresh and staging gate behavior", async () => {
   for (const mode of [undefined, "", "open"]) {
     process.env = { NODE_ENV: "test", ...(mode === undefined ? {} : { ANIDACHI_MAINTENANCE_MODE: mode }) };
-    const marketing = await middleware(new NextRequest("https://www.anidachi.app/"));
+    const marketing = await middleware(new NextRequest("https://anidachi.app/"));
     assert.equal(marketing.headers.get("x-middleware-next"), "1");
-    const refresh = await middleware(new NextRequest("https://www.anidachi.app/account", { headers: { cookie: `${REFRESH_TOKEN_COOKIE}=existing-refresh` } }));
+    const refresh = await middleware(new NextRequest("https://anidachi.app/account", { headers: { cookie: `${REFRESH_TOKEN_COOKIE}=existing-refresh` } }));
     assert.equal(refresh.status, 307);
     assert.match(refresh.headers.get("location")!, /\/api\/auth\/refresh\?next=/);
     process.env.ANIDACHI_STAGING_GATE_ENABLED = "true";

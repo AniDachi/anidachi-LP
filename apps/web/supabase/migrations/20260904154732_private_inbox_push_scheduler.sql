@@ -99,7 +99,7 @@ begin
   end if;
   drain_url := case config.environment
     when 'staging' then 'https://staging.anidachi.app/api/internal/notifications/drain'
-    when 'production' then 'https://www.anidachi.app/api/internal/notifications/drain'
+    when 'production' then 'https://anidachi.app/api/internal/notifications/drain'
   end;
   -- pg_net may follow redirects and buffers the body. This is NOT transport
   -- equivalence with the old Worker: fixed owned URL + narrow secret + timeout

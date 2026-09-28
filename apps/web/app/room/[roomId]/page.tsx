@@ -72,7 +72,7 @@ export default async function RoomPage({ params, searchParams }: Props) {
           watch party from the AniDachi extension on any supported video page.
         </p>
         <a
-          href="https://www.anidachi.app"
+          href="https://anidachi.app"
           className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand-surface px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-brand-orange/20"
         >
           Back to AniDachi

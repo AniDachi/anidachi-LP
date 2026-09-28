@@ -1,11 +1,11 @@
 # AniDachi SEO Content Guidelines
 
-**Single source of truth** for public marketing SEO on [www.anidachi.app](https://www.anidachi.app) (apex redirects to www).  
+**Single source of truth** for public marketing SEO on [anidachi.app](https://anidachi.app).  
 Dated keyword volumes and batch plans live in separate plan docs — re-pull Keyword Planner before treating any number as current.
 
 Operational agent: [`.cursor/agents/anidachi-seo-aeo-pages.md`](../../../.cursor/agents/anidachi-seo-aeo-pages.md)  
 Portfolio freeze / safety: [`seo-portfolio-freeze.md`](./seo-portfolio-freeze.md)  
-Editorial standards: [`/editorial-policy`](https://www.anidachi.app/editorial-policy)
+Editorial standards: [`/editorial-policy`](https://anidachi.app/editorial-policy)
 
 ---
 

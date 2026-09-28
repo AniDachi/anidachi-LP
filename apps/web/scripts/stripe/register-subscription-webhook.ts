@@ -14,7 +14,7 @@ const EVENTS = [
   "entitlements.active_entitlement_summary.updated",
 ] as const;
 const PATH = "/api/stripe/webhook";
-const DEFAULT_LIVE_URL = `https://www.anidachi.app${PATH}`;
+const DEFAULT_LIVE_URL = `https://anidachi.app${PATH}`;
 const DEFAULT_TEST_URL = `https://staging.anidachi.app${PATH}`;
 
 function normalizeWebhookUrl(raw: string): string {

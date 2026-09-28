@@ -128,7 +128,7 @@ delete from net.http_request_queue where id=(select last_request_id from anidach
 update anidachi_private.inbox_push_scheduler set last_request_id=null,last_attempt_at=null,environment='production';
 update public.account_inbox_push_outbox set next_attempt_at=now() where user_id='95100000-0000-4000-8000-000000000001';
 select anidachi_private.tick_inbox_push_scheduler();
-select is((select url from net.http_request_queue where id=(select last_request_id from anidachi_private.inbox_push_scheduler)), 'https://www.anidachi.app/api/internal/notifications/drain','production destination is canonical');
+select is((select url from net.http_request_queue where id=(select last_request_id from anidachi_private.inbox_push_scheduler)), 'https://anidachi.app/api/internal/notifications/drain','production destination is canonical');
 delete from net.http_request_queue where id=(select last_request_id from anidachi_private.inbox_push_scheduler);
 update anidachi_private.inbox_push_scheduler set last_request_id=null,last_attempt_at=null;
 update public.account_inbox_push_outbox set next_attempt_at=now()+interval '1 hour',cooldown_until=now()+interval '1 hour',expires_at=now()-interval '1 second' where user_id='95100000-0000-4000-8000-000000000001';

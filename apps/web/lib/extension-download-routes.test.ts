@@ -53,7 +53,7 @@ function placeLegacyFiles() {
 
 test("GET redirects to exactly the configured URL despite legacy files or request parameters", async () => {
   placeLegacyFiles();
-  const response = await download(new NextRequest("https://www.anidachi.app/api/extension/download?url=https://other.example/wrong.zip"));
+  const response = await download(new NextRequest("https://anidachi.app/api/extension/download?url=https://other.example/wrong.zip"));
   assert.equal(response.status, 302);
   assert.equal(response.headers.get("location"), source);
   assert.equal(response.headers.get("cache-control"), "no-store");
@@ -65,7 +65,7 @@ test("without a URL even an existing explicit local file leaves both endpoints u
   delete process.env.EXTENSION_ZIP_URL;
   const metadata = await latest();
   assert.equal((await metadata.json()).available, false);
-  const response = await download(new NextRequest("https://www.anidachi.app/api/extension/download"));
+  const response = await download(new NextRequest("https://anidachi.app/api/extension/download"));
   assert.equal(response.status, 503);
   assert.equal(response.headers.get("location"), null);
   assert.equal(response.headers.get("cache-control"), "no-store");
@@ -82,7 +82,7 @@ test("invalid URL or incomplete metadata fails before redirecting or tracking a 
   ] as const) {
     const previous = process.env[key];
     process.env[key] = value;
-    const response = await download(new NextRequest("https://www.anidachi.app/api/extension/download"));
+    const response = await download(new NextRequest("https://anidachi.app/api/extension/download"));
     assert.equal(response.status, 503, key);
     assert.equal(response.headers.get("location"), null);
     assert.equal((await (await latest()).json()).available, false);
