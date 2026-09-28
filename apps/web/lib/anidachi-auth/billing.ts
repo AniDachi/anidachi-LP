@@ -1,6 +1,15 @@
-import type { BillingOverview, BillingSubscription } from "../billing-view";
+import type {
+	BillingOverview,
+	BillingSubscription,
+	BillingTrial,
+} from "../billing-view";
 import { resolveAccountEntitlements } from "./account-entitlements";
-import { getBillingCustomerByUserId, listSubscriptionsForUser } from "./db";
+import {
+	getBillingCustomerByUserId,
+	getSubscriptionTrial,
+	listSubscriptionsForUser,
+} from "./db";
+import { readBillingPrice } from "./billing-price";
 import { createStripeClient, resolveStripeMode } from "./stripe-env";
 import { syncStripeSubscriptionById } from "./stripe-subscription-sync";
 
@@ -37,6 +46,8 @@ type BillingDeps = {
 	createStripe: typeof createStripeClient;
 	sync: typeof syncStripeSubscriptionById;
 	mode: typeof resolveStripeMode;
+	readTrial: typeof getSubscriptionTrial;
+	readPrice: typeof readBillingPrice;
 };
 
 const defaultDeps: BillingDeps = {
@@ -46,6 +57,8 @@ const defaultDeps: BillingDeps = {
 	createStripe: createStripeClient,
 	sync: syncStripeSubscriptionById,
 	mode: resolveStripeMode,
+	readTrial: getSubscriptionTrial,
+	readPrice: readBillingPrice,
 };
 
 export function createBillingService(deps: BillingDeps = defaultDeps) {
@@ -66,23 +79,74 @@ export function createBillingService(deps: BillingDeps = defaultDeps) {
 				ownedSubscriptions(userId),
 				deps.resolveEntitlements(userId, new Date()),
 			]);
-			const subscriptions: BillingSubscription[] = rows
-				.sort((a, b) => b.created_at.localeCompare(a.created_at))
-				.map((row) => ({
-					id: row.id,
-					planCode: row.plan_code,
-					status: row.status,
-					currentPeriodEnd: row.current_period_end,
-					cancelAtPeriodEnd: row.cancel_at_period_end,
-					canCancel: canCancelSubscription(
-						row.status,
-						row.cancel_at_period_end,
-					),
-				}));
+			const subscriptions: BillingSubscription[] = await Promise.all(
+				rows
+					.sort((a, b) => b.created_at.localeCompare(a.created_at))
+					.map(async (row) => {
+						const [record, monthlyPrice] = await Promise.all([
+							access.hosting?.trialEndsAt
+								? deps.readTrial(row.stripe_subscription_id)
+								: null,
+							deps.readPrice(row.stripe_price_id).catch(() => null),
+						]);
+						let trial: BillingTrial | undefined;
+						if (record) {
+							if (
+								record.user_id !== userId ||
+								record.stripe_subscription_id !== row.stripe_subscription_id
+							)
+								throw new BillingError(
+									503,
+									"Trial ownership could not be verified.",
+								);
+							const now = Date.parse(access.history.serverTime);
+							const end = Date.parse(record.trial_ends_at);
+							if (!Number.isFinite(now) || !Number.isFinite(end))
+								throw new BillingError(503, "Trial timing unavailable.");
+							const live = row.status === "active" || row.status === "trialing";
+							trial = {
+								endsAt: record.trial_ends_at,
+								pendingUntil: new Date(end + 2 * 3600_000).toISOString(),
+								stage:
+									record.first_payment_state === "paid"
+										? "paid"
+										: live && now < end
+											? "trial"
+											: ["failed", "action_required"].includes(
+														record.first_payment_state,
+													)
+												? "payment_required"
+												: live &&
+														!row.cancel_at_period_end &&
+														now < end + 2 * 3600_000
+													? "processing"
+													: "ended",
+							};
+						}
+						return {
+							id: row.id,
+							planCode: row.plan_code,
+							status: row.status,
+							currentPeriodEnd: row.current_period_end,
+							cancelAtPeriodEnd: row.cancel_at_period_end,
+							canCancel: canCancelSubscription(
+								row.status,
+								row.cancel_at_period_end,
+							),
+							monthlyPrice,
+							...(trial ? { trial } : {}),
+							canChangeTrialPlan:
+								trial?.stage === "trial" && row.status === "trialing",
+						};
+					}),
+			);
 			return {
 				ownerUserId: userId,
 				planCode: access.policy.planCode,
 				subscriptions,
+				...(access.hosting ? { hosting: access.hosting } : {}),
+				serverTime: access.history?.serverTime,
+				selectedPlanExpiresAt: access.selectedPlanExpiresAt,
 			};
 		},
 

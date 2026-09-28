@@ -16,6 +16,10 @@ import {
 	type ActiveRoomAssignment,
 } from "./active-room-session";
 import type { PlanCode, RoomCapabilities } from "./plan-entitlements";
+import type {
+	StripeTrialSnapshot,
+	SubscriptionTrialRecord,
+} from "./stripe-trial-state";
 import {
   parseRoomSourcePersistenceRpcResult,
   roomSourceCreationColumns,
@@ -512,7 +516,20 @@ export type StripeSubscriptionCommit = {
 	status: string;
 	currentPeriodEnd: string | null;
 	cancelAtPeriodEnd: boolean;
+	trial?: StripeTrialSnapshot | null;
 };
+export async function getSubscriptionTrial(
+	subscriptionId: string,
+): Promise<SubscriptionTrialRecord | null> {
+	const { data, error } = await db()
+		.from("account_subscription_trials")
+		.select("user_id,stripe_subscription_id,trial_started_at,trial_ends_at,first_invoice_id,first_payment_state,first_paid_at")
+		.eq("stripe_subscription_id", subscriptionId)
+		.abortSignal(AbortSignal.timeout(10_000))
+		.maybeSingle();
+	if (error) throw new Error("Trial ledger unavailable");
+	return data as SubscriptionTrialRecord | null;
+}
 export async function beginStripeSubscriptionRefresh(
 	subscriptionId: string,
 ): Promise<StripeRefreshLease | null> {
@@ -549,7 +566,7 @@ export async function commitStripeSubscriptionRefresh(
 	lease: StripeRefreshLease,
 ): Promise<PlanCode> {
 	const { data, error } = await db()
-		.rpc("commit_stripe_subscription_refresh_v1", {
+		.rpc("commit_stripe_subscription_refresh_v2", {
 			p_subscription_id: params.stripeSubscriptionId,
 			p_fence: lease.fence,
 			p_token: lease.token,
@@ -560,6 +577,7 @@ export async function commitStripeSubscriptionRefresh(
 			p_status: params.status,
 			p_period_end: params.currentPeriodEnd,
 			p_cancel_at_period_end: params.cancelAtPeriodEnd,
+			p_trial: params.trial ?? null,
 		})
 		.abortSignal(AbortSignal.timeout(10_000));
 	if (error || !data || !["free", "plus", "pro"].includes(data.planCode))
@@ -641,6 +659,10 @@ export async function createRoomWithActiveSession(params: {
     p_can_send_push_invites: params.capabilities.canSendPushInvites,
   });
   if (result.error) {
+		if (result.error.message.includes("HOST_SUBSCRIPTION_REQUIRED"))
+			throw new Error("HOST_SUBSCRIPTION_REQUIRED");
+		if (result.error.message.includes("HISTORY_ACCESS_UNAVAILABLE") || ["55P03","57014"].includes(result.error.code))
+			throw new Error("ROOM_AUTHORITY_UNAVAILABLE");
 		if (result.error.message.includes("ROOM_UPDATE_REQUIRED"))
 			throw new Error("ROOM_UPDATE_REQUIRED");
     throw new Error(`Failed to create active room: ${result.error.message}`);
@@ -668,6 +690,10 @@ export async function claimActiveRoomSession(params: {
     p_participant_session_id: params.participantSessionId,
   });
   if (result.error) {
+		if (result.error.message.includes("HOST_SUBSCRIPTION_REQUIRED"))
+			throw new Error("HOST_SUBSCRIPTION_REQUIRED");
+		if (result.error.message.includes("HISTORY_ACCESS_UNAVAILABLE") || ["55P03","57014"].includes(result.error.code))
+			throw new Error("ROOM_AUTHORITY_UNAVAILABLE");
     if (result.error.message.includes("ROOM_UPDATE_REQUIRED"))
       throw new Error("ROOM_UPDATE_REQUIRED");
     throw new Error(`Failed to claim active room: ${result.error.message}`);
@@ -825,12 +851,18 @@ export async function updateRoom(
 			"status" | "last_active_at" | "ended_at" | "host_connected_at"
   >
 	>,
-): Promise<void> {
-	const { error } = await db()
+): Promise<boolean> {
+	// A delayed connect/join must not revive or touch a finalized room.
+	// Filter and mutation run in the same PostgreSQL statement.
+	const { data, error } = await db()
 		.from("rooms")
 		.update(fields)
-		.eq("room_id", roomId);
+		.eq("room_id", roomId)
+		.neq("status", "ended")
+		.select("room_id")
+		.maybeSingle();
   if (error) throw new Error(`Failed to update room: ${error.message}`);
+	return data !== null;
 }
 
 export async function finalizeRoomUsage(

@@ -35,6 +35,7 @@ let container: HTMLDivElement;
 const active: BillingOverview = {
 	ownerUserId: "owner",
 	planCode: "plus",
+	serverTime: "2030-01-01T00:00:00Z",
 	subscriptions: [
 		{
 			id: "local-sub",
@@ -46,6 +47,46 @@ const active: BillingOverview = {
 		},
 	],
 };
+for (const stage of ["trial", "processing"] as const) {
+	test(`a focused billing tab retires ${stage} claims at the server boundary`, async (t) => {
+		t.mock.timers.enable({ apis: ["setTimeout", "Date"] });
+		let requests = 0;
+		globalThis.fetch = async () =>
+			Response.json(
+				++requests === 1
+					? {
+							...active,
+							selectedPlanExpiresAt: "2030-01-01T00:00:01Z",
+							subscriptions: [
+								{
+									...active.subscriptions[0],
+									canChangeTrialPlan: stage === "trial",
+									trial: {
+										stage,
+										endsAt:
+											stage === "trial"
+												? "2030-01-01T00:00:01Z"
+												: "2029-12-31T22:00:01Z",
+										pendingUntil: "2030-01-01T00:00:01Z",
+									},
+								},
+							],
+						}
+					: { ...active, planCode: "free", subscriptions: [] },
+			);
+		await mount();
+		assert.match(
+			container.textContent!,
+			stage === "trial" ? /Free trial/ : /First payment processing/,
+		);
+		await act(async () => t.mock.timers.tick(1000));
+		assert.equal(requests, 2);
+		assert.doesNotMatch(
+			container.textContent!,
+			/Free trial|First payment processing|Switch to Pro/,
+		);
+	});
+}
 async function mount(returnedFromPortal = false) {
 	container = document.createElement("div");
 	document.body.appendChild(container);
@@ -64,6 +105,91 @@ afterEach(async () => {
 	root = null;
 	document.body.innerHTML = "";
 	globalThis.fetch = originalFetch;
+});
+
+test("trial shows original deadline and reviewed plan change before confirming", async () => {
+	const actions: string[] = [];
+	globalThis.fetch = async (path, init) => {
+		if (String(path).endsWith("trial-plan")) {
+			const body = JSON.parse(String(init?.body));
+			actions.push(body.action);
+			assert.equal(
+				new Headers(init?.headers).get(BILLING_OWNER_HEADER),
+				"owner",
+			);
+			if (body.action === "quote")
+				return Response.json({
+					ownerUserId: "owner",
+					quote: {
+						planCode: "pro",
+						currentPlanCode: "plus",
+						unitAmount: 1499,
+						currency: "usd",
+						trialEndsAt: "2030-02-01T12:00:00.000Z",
+						renewalCanceled: true,
+					},
+				});
+			return Response.json({ ownerUserId: "owner", planCode: "pro" });
+		}
+		return Response.json({
+			...active,
+			subscriptions: [
+				{
+					...active.subscriptions[0],
+					status: "trialing",
+					cancelAtPeriodEnd: true,
+					canCancel: false,
+					canChangeTrialPlan: true,
+					monthlyPrice: { unitAmount: 799, currency: "usd" },
+					trial: {
+						endsAt: "2030-02-01T12:00:00.000Z",
+						stage: "trial",
+						pendingUntil: "2030-02-01T14:00:00.000Z",
+					},
+				},
+			],
+		});
+	};
+	await mount();
+	const change = [...container.querySelectorAll("button")].find((b) =>
+		b.textContent?.includes("Switch to Pro"),
+	);
+	assert.ok(change);
+	await act(async () => change.click());
+	assert.deepEqual(actions, ["quote"]);
+	assert.match(container.textContent!, /14.99/);
+	assert.match(container.textContent!, /renewal stays canceled/i);
+	const confirm = [...container.querySelectorAll("button")].find((b) =>
+		b.textContent?.includes("Confirm plan change"),
+	);
+	assert.ok(confirm);
+	await act(async () => confirm.click());
+	assert.deepEqual(actions, ["quote", "confirm"]);
+});
+test("post-cutover Free and pending payment do not advertise free hosting or paid success", async () => {
+	globalThis.fetch = async () =>
+		Response.json({
+			...active,
+			planCode: "free",
+			serverTime: "2030-02-01T13:00:00Z",
+			hosting: {
+				hostingActivationAt: "2029-01-01T00:00:00Z",
+				trialEligibility: "used",
+			},
+			subscriptions: [
+				{
+					...active.subscriptions[0],
+					trial: {
+						stage: "processing",
+						endsAt: "2030-02-01T12:00:00Z",
+						pendingUntil: "2030-02-01T14:00:00Z",
+					},
+				},
+			],
+		});
+	await mount();
+	assert.doesNotMatch(container.textContent!, /30 minutes|4 people/);
+	assert.match(container.textContent!, /First payment processing/);
 });
 
 test("active subscription shows renewal date and explicit cancellation with owner-bound request", async () => {
@@ -133,6 +259,8 @@ test("Free account without billing has no cancellation action", async () => {
 		Response.json({
 			ownerUserId: "owner",
 			planCode: "free",
+			serverTime: "2030-01-01T00:00:00Z",
+			hosting: { hostingActivationAt: null },
 			subscriptions: [],
 		});
 	await mount();
@@ -154,6 +282,8 @@ test("Free account with a canceled subscription still shows host limits", async 
 		Response.json({
 			ownerUserId: "owner",
 			planCode: "free",
+			serverTime: "2030-01-01T00:00:00Z",
+			hosting: { hostingActivationAt: null },
 			subscriptions: [
 				{
 					id: "ended-sub",

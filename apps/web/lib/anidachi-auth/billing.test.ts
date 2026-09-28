@@ -35,6 +35,71 @@ const result: StripeSubscriptionSyncResult = {
 	cancelAtPeriodEnd: false,
 };
 const returnUrl = "https://staging.anidachi.app/account/billing?billing=return";
+const trialRecord = {
+	user_id: "owner",
+	stripe_subscription_id: "sub_owner",
+	trial_started_at: "2030-01-01T00:00:00.000Z",
+	trial_ends_at: "2030-01-04T00:00:00.000Z",
+	first_invoice_id: null,
+	first_payment_state: "awaiting" as const,
+	first_paid_at: null,
+};
+function trialAccess(serverTime: string, planCode = "plus") {
+	return {
+		policy: { planCode },
+		history: { serverTime },
+		selectedPlanExpiresAt: "2030-01-04T02:00:00.000Z",
+		hosting: {
+			hostingPolicyVersion: 2,
+			hostingActivationAt: "2029-01-01T00:00:00.000Z",
+			canHost: planCode !== "free",
+			trialEligibility: "used",
+			trialEndsAt: trialRecord.trial_ends_at,
+		},
+	} as AccountEntitlements;
+}
+for (const [time, payment, canceled, status, want] of [
+	["2030-01-03T00:00:00.000Z", "awaiting", false, "trialing", "trial"],
+	["2030-01-04T01:00:00.000Z", "awaiting", false, "active", "processing"],
+	["2030-01-04T02:00:00.000Z", "awaiting", false, "active", "ended"],
+	["2030-01-04T01:00:00.000Z", "failed", false, "past_due", "payment_required"],
+	[
+		"2030-01-04T01:00:00.000Z",
+		"action_required",
+		false,
+		"active",
+		"payment_required",
+	],
+	["2030-01-04T01:00:00.000Z", "awaiting", true, "active", "ended"],
+	["2030-01-04T03:00:00.000Z", "paid", false, "active", "paid"],
+] as const) {
+	test(`billing distinguishes ${want} at ${time} (${payment}, canceled=${canceled})`, async () => {
+		const { service } = fixture({
+			access: trialAccess(time),
+			rows: [{ ...row, status, cancel_at_period_end: canceled }],
+			trial: {
+				...trialRecord,
+				first_payment_state: payment,
+				first_paid_at: payment === "paid" ? time : null,
+			},
+		});
+		const view = await service.overview("owner");
+		assert.equal(view.subscriptions[0].trial?.stage, want);
+		assert.equal(
+			view.subscriptions[0].trial?.endsAt,
+			"2030-01-04T00:00:00.000Z",
+		);
+		assert.equal(view.subscriptions[0].canChangeTrialPlan, want === "trial");
+		assert.doesNotMatch(JSON.stringify(view), /sub_owner|cus_owner|price_plus/);
+	});
+}
+test("billing rejects another owner's trial ledger", async () => {
+	const { service } = fixture({
+		access: trialAccess("2030-01-03T00:00:00Z"),
+		trial: { ...trialRecord, user_id: "foreign" },
+	});
+	await assert.rejects(service.overview("owner"), /ownership/);
+});
 function fixture(
 	options: {
 		rows?: SubscriptionRow[];
@@ -44,6 +109,8 @@ function fixture(
 		mode?: "live" | "test";
 		config?: Record<string, unknown> | null;
 		syncFailure?: boolean;
+		access?: AccountEntitlements;
+		trial?: import("./stripe-trial-state").SubscriptionTrialRecord | null;
 	} = {},
 ) {
 	const calls: string[] = [];
@@ -101,7 +168,10 @@ function fixture(
 			updated_at: "",
 		}),
 		resolveEntitlements: async () =>
-			({ policy: { planCode: "free" } }) as AccountEntitlements,
+			options.access ??
+			({ policy: { planCode: "free" } } as AccountEntitlements),
+		readTrial: async () => options.trial ?? null,
+		readPrice: async () => ({ unitAmount: 799, currency: "usd" }),
 		createStripe: () => {
 			calls.push("client");
 			return stripe;

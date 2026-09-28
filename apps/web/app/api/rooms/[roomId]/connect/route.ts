@@ -12,6 +12,7 @@ import {
 } from "@/lib/anidachi-auth/db";
 import { getExtensionSessionFromAuthorization } from "@/lib/anidachi-auth/extension-session";
 import { resolveAccountEntitlements } from "@/lib/anidachi-auth/account-entitlements";
+import { hostingDeniedResponse } from "@/lib/anidachi-auth/hosting-denial";
 import {
   clientMediaProtocolVersion,
   negotiateRoomMediaLease,
@@ -94,12 +95,24 @@ export async function POST(
 
   const now = new Date();
   const user = await getUserById(session.userId);
+	let accountAccess;
 	try {
-		await resolveAccountEntitlements(session.userId, now);
+		accountAccess = await resolveAccountEntitlements(session.userId, now);
 	} catch {
 		return NextResponse.json(
 			{ code: "ROOM_AUTHORITY_UNAVAILABLE" },
 			{ status: 503 },
+		);
+	}
+	// A room's Free capacity is frozen even if its host has since upgraded.
+	// After T, its denial takes precedence over the retired daily quota while
+	// cutover delivery catches up. SQL admission still rechecks under locks.
+	const activationAt = accountAccess.hosting?.hostingActivationAt;
+	if (room.host_plan_code === "free" && activationAt &&
+		Date.parse(activationAt) <= Date.parse(accountAccess.history.serverTime)) {
+		return NextResponse.json(
+			hostingDeniedResponse(new URL("/pricing", request.nextUrl.origin).toString(), isHost),
+			{ status: 403 },
 		);
 	}
 	const mediaProtocolVersion = clientMediaProtocolVersion(request.headers.get("x-anidachi-media-protocol"));
@@ -140,6 +153,13 @@ export async function POST(
       participantSessionId: admissionInput.data.participantSessionId,
     });
   } catch (error) {
+    if (error instanceof Error && error.message === "HOST_SUBSCRIPTION_REQUIRED")
+      return NextResponse.json(
+        hostingDeniedResponse(new URL("/pricing", request.nextUrl.origin).toString(), isHost),
+        { status: 403 },
+      );
+    if (error instanceof Error && error.message === "ROOM_AUTHORITY_UNAVAILABLE")
+      return NextResponse.json({ code: "ROOM_AUTHORITY_UNAVAILABLE" }, { status: 503 });
     if (error instanceof Error && error.message === "ROOM_UPDATE_REQUIRED")
       return NextResponse.json({ code: "ROOM_UPDATE_REQUIRED" }, { status: 426 });
     throw error;
@@ -149,14 +169,15 @@ export async function POST(
 			status: 409,
 		});
   }
-  if (isHost) {
-    await updateRoom(roomId, {
+  const touched = isHost
+    ? await updateRoom(roomId, {
       host_connected_at: now.toISOString(),
       last_active_at: now.toISOString(),
       ...(room.status === "lobby" ? { status: "live" as const } : {}),
-    });
-  } else {
-    await updateRoom(roomId, { last_active_at: now.toISOString() });
+    })
+    : await updateRoom(roomId, { last_active_at: now.toISOString() });
+  if (!touched) {
+    return NextResponse.json({ error: "Room not found" }, { status: 404 });
   }
   const roomToken = await signRoomToken(
     {

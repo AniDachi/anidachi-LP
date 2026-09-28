@@ -7,6 +7,11 @@ import {
 } from "./billing";
 import { REFRESH_TOKEN_COOKIE } from "./cookies";
 import { resolveWebsiteSession } from "./website-session";
+import { paymentRecoveryLink } from "./payment-recovery";
+import {
+	createTrialPlanChangeService,
+	type TrialPlanChangeService,
+} from "./trial-plan-change";
 
 const PRIVATE_HEADERS = {
 	"Cache-Control": "private, no-store",
@@ -16,10 +21,13 @@ const PRIVATE_HEADERS = {
 export function createBillingHandlers(
 	deps: {
 		service?: BillingService;
+		trialPlans?: TrialPlanChangeService;
 		getUser?: (request: NextRequest) => Promise<{ id: string } | null>;
+		paymentLink?: typeof paymentRecoveryLink;
 	} = {},
 ) {
 	const service = deps.service ?? createBillingService();
+	const trialPlans = deps.trialPlans ?? createTrialPlanChangeService();
 	const getUser =
 		deps.getUser ??
 		((request: NextRequest) =>
@@ -27,7 +35,7 @@ export function createBillingHandlers(
 
 	async function handle(
 		request: NextRequest,
-		action: "overview" | "refresh" | "cancel",
+		action: "overview" | "refresh" | "cancel" | "trial-plan" | "payment",
 	) {
 		try {
 			if (
@@ -50,7 +58,11 @@ export function createBillingHandlers(
 					"Your signed-in account changed. Reload this page.",
 				);
 			}
-			if (action === "cancel") {
+			if (
+				action === "cancel" ||
+				action === "trial-plan" ||
+				action === "payment"
+			) {
 				const body = await request.json().catch(() => null);
 				if (
 					typeof body?.subscriptionId !== "string" ||
@@ -61,6 +73,49 @@ export function createBillingHandlers(
 						400,
 						"Select a subscription from your account.",
 					);
+				}
+				if (action === "payment") {
+					const url = await (deps.paymentLink ?? paymentRecoveryLink)(
+						user.id,
+						body.subscriptionId,
+					);
+					return NextResponse.json(
+						{ url, ownerUserId: user.id },
+						{ headers: PRIVATE_HEADERS },
+					);
+				}
+				if (action === "trial-plan") {
+					if (
+						(body.action !== "quote" && body.action !== "confirm") ||
+						(body.planCode !== "plus" && body.planCode !== "pro") ||
+						(body.action === "confirm" &&
+							(!body.quote ||
+								typeof body.quote !== "object" ||
+								typeof body.requestId !== "string" ||
+								body.requestId.length > 100))
+					)
+						throw new BillingError(
+							400,
+							"Review a valid trial plan change first.",
+						);
+					const result =
+						body.action === "quote"
+							? {
+									ownerUserId: user.id,
+									quote: await trialPlans.quote(
+										user.id,
+										body.subscriptionId,
+										body.planCode,
+									),
+								}
+							: await trialPlans.confirm(
+									user.id,
+									body.subscriptionId,
+									body.planCode,
+									body.quote,
+									body.requestId,
+								);
+					return NextResponse.json(result, { headers: PRIVATE_HEADERS });
 				}
 				const returnUrl = new URL(
 					"/account/billing?billing=return",
@@ -99,5 +154,7 @@ export function createBillingHandlers(
 		getOverview: (request: NextRequest) => handle(request, "overview"),
 		refresh: (request: NextRequest) => handle(request, "refresh"),
 		cancellationPortal: (request: NextRequest) => handle(request, "cancel"),
+		trialPlan: (request: NextRequest) => handle(request, "trial-plan"),
+		paymentLink: (request: NextRequest) => handle(request, "payment"),
 	};
 }

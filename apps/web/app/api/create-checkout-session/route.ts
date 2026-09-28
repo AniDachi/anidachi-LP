@@ -1,167 +1,182 @@
+import { randomUUID } from "node:crypto";
 import { type NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-import {
-  getBillingCustomerByUserId,
-  upsertBillingCustomer,
-} from "@/lib/anidachi-auth/db";
+import { subscriptionCheckoutService } from "@/lib/anidachi-auth/subscription-checkout-server";
+import { SubscriptionCheckoutError } from "@/lib/anidachi-auth/subscription-trial";
 import { getSession } from "@/lib/anidachi-auth/session";
 import {
-  checkoutInputToPaidPlanCode,
-  type LegacyCheckoutTier,
-  type PaidPlanCode,
+	checkoutInputToPaidPlanCode,
+	type LegacyCheckoutTier,
 } from "@/lib/anidachi-auth/plan-entitlements";
 import { stripePriceIdForPlanCode } from "@/lib/anidachi-auth/stripe-plans";
 import { createStripeClient } from "@/lib/anidachi-auth/stripe-env";
 
 function loginUrlForRequest(request: NextRequest): string {
-  let next = "/";
-  const referer = request.headers.get("referer");
-  if (referer) {
-    try {
-      const refererUrl = new URL(referer);
-      if (refererUrl.origin === request.nextUrl.origin) {
-        next = `${refererUrl.pathname}${refererUrl.search}`;
-      }
-    } catch {
-      next = "/";
-    }
-  }
-  return `/login?next=${encodeURIComponent(next)}`;
+	let next = "/";
+	const referer = request.headers.get("referer");
+	if (referer) {
+		try {
+			const refererUrl = new URL(referer);
+			if (refererUrl.origin === request.nextUrl.origin) {
+				next = `${refererUrl.pathname}${refererUrl.search}`;
+			}
+		} catch {
+			next = "/";
+		}
+	}
+	return `/login?next=${encodeURIComponent(next)}`;
 }
 
 export type CheckoutTier = LegacyCheckoutTier;
 
-async function getOrCreateStripeCustomer(params: {
-  stripe: Stripe;
-  userId: string;
-  email: string;
-}): Promise<string> {
-  const existing = await getBillingCustomerByUserId(params.userId);
-  if (existing) return existing.stripe_customer_id;
-
-  const customer = await params.stripe.customers.create({
-    email: params.email,
-    metadata: {
-      userId: params.userId,
-    },
-  });
-  await upsertBillingCustomer({
-    userId: params.userId,
-    stripeCustomerId: customer.id,
-  });
-  return customer.id;
-}
-
 export async function POST(request: NextRequest) {
-  try {
-    const authSession = await getSession();
-    if (!authSession) {
-      return NextResponse.json(
-        {
-          error: "Sign in required before starting checkout",
-          loginUrl: loginUrlForRequest(request),
-        },
-        { status: 401 }
-      );
-    }
+	try {
+		const authSession = await getSession();
+		if (!authSession) {
+			return NextResponse.json(
+				{
+					error: "Sign in required before starting checkout",
+					loginUrl: loginUrlForRequest(request),
+				},
+				{ status: 401 },
+			);
+		}
 
-    let stripe: Stripe;
-    try {
-      stripe = createStripeClient();
-    } catch (error) {
-      // Fail closed on missing/mismatched keys (e.g. a live key in a test env).
-      console.error("[create-checkout-session] Stripe is not configured:", error);
-      return NextResponse.json(
-        { error: "Stripe checkout is not configured" },
-        { status: 500 }
-      );
-    }
+		let stripe: Stripe;
+		try {
+			stripe = createStripeClient();
+		} catch (error) {
+			// Fail closed on missing/mismatched keys (e.g. a live key in a test env).
+			console.error(
+				"[create-checkout-session] Stripe is not configured:",
+				error,
+			);
+			return NextResponse.json(
+				{ error: "Stripe checkout is not configured" },
+				{ status: 500 },
+			);
+		}
 
-    const body = (await request.json()) as {
-      tier?: CheckoutTier;
-      planCode?: unknown;
-      /** First-touch SEO/acquisition landing path (session-scoped). */
-      seoLandingPath?: unknown;
-      /** Path where checkout was started. */
-      checkoutPagePath?: unknown;
-      seoReferrer?: unknown;
-      seoUtm?: unknown;
-    };
+		const body = (await request.json()) as {
+			tier?: CheckoutTier;
+			planCode?: unknown;
+			requestId?: unknown;
+			expectedOwnerUserId?: unknown;
+			expectedTrialOffered?: unknown;
+			/** First-touch SEO/acquisition landing path (session-scoped). */
+			seoLandingPath?: unknown;
+			/** Path where checkout was started. */
+			checkoutPagePath?: unknown;
+			seoReferrer?: unknown;
+			seoUtm?: unknown;
+		};
+		if (
+			body.expectedOwnerUserId !== undefined &&
+			body.expectedOwnerUserId !== authSession.userId
+		) {
+			return NextResponse.json(
+				{
+					error:
+						"Your signed-in account changed. Reload the plans before continuing.",
+				},
+				{ status: 409 },
+			);
+		}
 
-    const planCode = checkoutInputToPaidPlanCode(body);
-    if (!planCode) {
-      return NextResponse.json(
-        { error: "Missing paid plan (expected planCode or tier)" },
-        { status: 400 }
-      );
-    }
+		const planCode = checkoutInputToPaidPlanCode(body);
+		if (!planCode) {
+			return NextResponse.json(
+				{ error: "Missing paid plan (expected planCode or tier)" },
+				{ status: 400 },
+			);
+		}
 
-    const priceId = stripePriceIdForPlanCode(planCode);
-    if (!priceId) {
-      return NextResponse.json(
-        { error: "This plan is not configured for checkout yet." },
-        { status: 400 }
-      );
-    }
+		const priceId = stripePriceIdForPlanCode(planCode);
+		if (!priceId) {
+			return NextResponse.json(
+				{ error: "This plan is not configured for checkout yet." },
+				{ status: 400 },
+			);
+		}
 
-    const customerId = await getOrCreateStripeCustomer({
-      stripe,
-      userId: authSession.userId,
-      email: authSession.email,
-    });
+		if (
+			body.requestId !== undefined &&
+			(typeof body.requestId !== "string" ||
+				!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+					body.requestId,
+				))
+		) {
+			return NextResponse.json(
+				{ error: "Invalid checkout request ID" },
+				{ status: 400 },
+			);
+		}
 
-    const seoLandingPath =
-      typeof body.seoLandingPath === "string"
-        ? body.seoLandingPath.slice(0, 200)
-        : undefined;
-    const checkoutPagePath =
-      typeof body.checkoutPagePath === "string"
-        ? body.checkoutPagePath.slice(0, 200)
-        : undefined;
-    const seoReferrer =
-      typeof body.seoReferrer === "string"
-        ? body.seoReferrer.slice(0, 500)
-        : undefined;
-    const seoUtm =
-      typeof body.seoUtm === "string" ? body.seoUtm.slice(0, 400) : undefined;
+		const seoLandingPath =
+			typeof body.seoLandingPath === "string"
+				? body.seoLandingPath.slice(0, 200)
+				: undefined;
+		const checkoutPagePath =
+			typeof body.checkoutPagePath === "string"
+				? body.checkoutPagePath.slice(0, 200)
+				: undefined;
+		const seoReferrer =
+			typeof body.seoReferrer === "string"
+				? body.seoReferrer.slice(0, 500)
+				: undefined;
+		const seoUtm =
+			typeof body.seoUtm === "string" ? body.seoUtm.slice(0, 400) : undefined;
 
-    const attributionMeta: Record<string, string> = {
-      userId: authSession.userId,
-      planCode,
-    };
-    if (seoLandingPath) attributionMeta.seoLandingPath = seoLandingPath;
-    if (checkoutPagePath) attributionMeta.checkoutPagePath = checkoutPagePath;
-    if (seoReferrer) attributionMeta.seoReferrer = seoReferrer;
-    if (seoUtm) attributionMeta.seoUtm = seoUtm;
+		const attributionMeta: Record<string, string> = {
+			userId: authSession.userId,
+			planCode,
+		};
+		if (seoLandingPath) attributionMeta.seoLandingPath = seoLandingPath;
+		if (checkoutPagePath) attributionMeta.checkoutPagePath = checkoutPagePath;
+		if (seoReferrer) attributionMeta.seoReferrer = seoReferrer;
+		if (seoUtm) attributionMeta.seoUtm = seoUtm;
 
-    const checkoutSession = await stripe.checkout.sessions.create({
-      mode: "subscription",
-      customer: customerId,
-      client_reference_id: authSession.userId,
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
-      success_url: `${request.nextUrl.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${request.nextUrl.origin}/`,
-      allow_promotion_codes: true,
-      billing_address_collection: "required",
-      metadata: attributionMeta,
-      subscription_data: {
-        metadata: attributionMeta,
-      },
-    });
-
-    return NextResponse.json({ url: checkoutSession.url, planCode });
-  } catch (error) {
-    console.error("Error creating checkout session:", error);
-    const message =
-      error instanceof Stripe.errors.StripeInvalidRequestError
-        ? error.message
-        : "Error creating checkout session";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+		const result = await subscriptionCheckoutService(
+			stripe,
+		).prepareSubscriptionCheckout({
+			userId: authSession.userId,
+			email: authSession.email,
+			planCode,
+			priceId,
+			origin: request.nextUrl.origin,
+			requestId:
+				typeof body.requestId === "string" ? body.requestId : randomUUID(),
+			attribution: attributionMeta,
+		});
+		if (
+			typeof body.expectedTrialOffered === "boolean" &&
+			result.kind === "checkout" &&
+			result.trialOffered !== body.expectedTrialOffered
+		) {
+			return NextResponse.json(
+				{
+					error:
+						"Your trial availability changed. Reload the plans and review the current offer.",
+				},
+				{ status: 409 },
+			);
+		}
+		return NextResponse.json(result);
+	} catch (error) {
+		console.error("Error creating checkout session:", error);
+		if (error instanceof SubscriptionCheckoutError) {
+			return NextResponse.json(
+				{
+					error:
+						"We could not confirm your checkout yet. Please retry; an existing checkout will be reused.",
+				},
+				{ status: error.status },
+			);
+		}
+		const message =
+			error instanceof Stripe.errors.StripeInvalidRequestError
+				? error.message
+				: "Error creating checkout session";
+		return NextResponse.json({ error: message }, { status: 500 });
+	}
 }

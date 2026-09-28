@@ -11,6 +11,7 @@ const EVENTS = [
   "customer.subscription.deleted",
   "invoice.paid",
   "invoice.payment_failed",
+  "invoice.payment_action_required",
   "entitlements.active_entitlement_summary.updated",
 ] as const;
 const PATH = "/api/stripe/webhook";

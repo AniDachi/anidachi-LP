@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getAccountAccessSession } from "./watch-history-access";
 import { resolveAccountEntitlements } from "./account-entitlements";
 import { getHostQuotaView, quotaSummaryForResponse } from "./room-usage";
+import { hostingDeniedResponse } from "./hosting-denial";
 
 const PRIVATE_HEADERS = { "Cache-Control": "private, no-store", Vary: "Cookie, Authorization" };
 
@@ -24,6 +25,13 @@ export function createRoomQuotaStatusHandler(deps = {
       }
       // Resolve current paid access rather than trusting a stale plan in a token.
       const access = await deps.resolve(session.userId, now);
+      // A retired Free hosting allowance is not an unlimited (null) quota or
+      // another UTC reset. Leave the successful v1 payload unchanged for old clients.
+      if (access.hosting?.canHost === false) {
+        return NextResponse.json(hostingDeniedResponse(new URL("/pricing", request.url).href), {
+          status: 403, headers: PRIVATE_HEADERS,
+        });
+      }
       const view = await deps.getQuota(session.userId, access.policy.planCode, now);
       const body = RoomQuotaStatusSchema.parse({
         schemaVersion: 1, ownerUserId: session.userId, serverTime: now.toISOString(),

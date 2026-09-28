@@ -1,5 +1,7 @@
 import {
 	getPlanPolicy,
+	HostingAccessSchema,
+	type HostingAccess,
 	PlanCodeSchema,
 	WatchHistoryAccessSchema,
 	type PlanPolicy,
@@ -23,6 +25,7 @@ export class HistoryAccessError extends Error {
 export type AccountEntitlements = {
 	policy: PlanPolicy;
 	history: WatchHistoryAccess;
+	hosting?: HostingAccess;
 	/** Expiry of the winning plan, distinct from any-paid history continuity. */
 	selectedPlanExpiresAt: string | null;
 };
@@ -39,6 +42,22 @@ export async function resolveAccountEntitlements(
 		const plan = PlanCodeSchema.parse(value.planCode);
 		const history = WatchHistoryAccessSchema.parse(value.history);
 		const policy = getPlanPolicy(plan);
+		const hosting =
+			value.hosting === undefined
+				? undefined
+				: HostingAccessSchema.parse(value.hosting);
+		if (hosting) {
+			const active =
+				hosting.hostingActivationAt !== null &&
+				Date.parse(hosting.hostingActivationAt) <=
+					Date.parse(history.serverTime);
+			if (
+				hosting.canHost !== (!active || plan !== "free") ||
+				(hosting.trialEligibility === "eligible" &&
+					(!active || plan !== "free" || hosting.trialEndsAt !== null))
+			)
+				throw new Error("Hosting authority mismatch");
+		}
 		if (
 			history.ownerUserId !== userId ||
 			policy.historyEnabled !== (history.state === "allowed")
@@ -68,6 +87,7 @@ export async function resolveAccountEntitlements(
 		return {
 			policy,
 			history,
+			...(hosting ? { hosting } : {}),
 			selectedPlanExpiresAt: value.selectedPlanExpiresAt as string | null,
 		};
 	} catch {
