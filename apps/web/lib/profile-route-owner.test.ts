@@ -16,7 +16,7 @@ test("profile PATCH rejects a present mismatched owner before reading or mutatin
     updateProfile: async () => { mutations += 1; throw new Error("must not mutate"); },
     errorResponse: () => NextResponse.json({ error: "unexpected" }, { status: 500 }),
   });
-  const request = new NextRequest("https://anidachi.app/api/me/profile", {
+  const request = new NextRequest("https://www.anidachi.app/api/me/profile", {
     method: "PATCH",
     headers: { [PROFILE_OWNER_HEADER]: otherOwner },
   });
@@ -39,7 +39,7 @@ test("profile PATCH keeps missing owner header compatibility", async () => {
     },
     errorResponse: () => NextResponse.json({ error: "unexpected" }, { status: 500 }),
   });
-  const response = await patch(new NextRequest("https://anidachi.app/api/me/profile", { method: "PATCH" }));
+  const response = await patch(new NextRequest("https://www.anidachi.app/api/me/profile", { method: "PATCH" }));
   assert.equal(response.status, 200);
   assert.equal(mutations, 1);
   assert.deepEqual(await response.json(), { profile: { userId: owner, displayName: "Alex", handle: null, avatarUrl: null } });

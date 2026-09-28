@@ -14,7 +14,7 @@ test("contact form remains successful when optional Gmail token lookup fails", a
     }
   ).handleContactPost;
   const response = await handler(
-    new Request("https://anidachi.app/api/contact", {
+    new Request("https://www.anidachi.app/api/contact", {
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -37,8 +37,8 @@ test("contact form remains successful when optional Gmail token lookup fails", a
         throw new Error("notification unavailable");
       },
       sendPlaintextEmail: async () => undefined,
-      getGmailRedirectUri: () => "https://anidachi.app/callback",
-      getSiteOrigin: () => "https://anidachi.app",
+      getGmailRedirectUri: () => "https://www.anidachi.app/callback",
+      getSiteOrigin: () => "https://www.anidachi.app",
       notifyEmails: "owner@example.com",
     },
   );
@@ -59,7 +59,7 @@ test("feature request remains successful when optional Gmail token lookup fails"
     }
   ).handleFeatureRequestPost;
   const response = await handler(
-    new Request("https://anidachi.app/api/feature-requests", {
+    new Request("https://www.anidachi.app/api/feature-requests", {
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -82,8 +82,8 @@ test("feature request remains successful when optional Gmail token lookup fails"
         throw new Error("notification unavailable");
       },
       sendPlaintextEmail: async () => undefined,
-      getGmailRedirectUri: () => "https://anidachi.app/callback",
-      getSiteOrigin: () => "https://anidachi.app",
+      getGmailRedirectUri: () => "https://www.anidachi.app/callback",
+      getSiteOrigin: () => "https://www.anidachi.app",
       notifyEmails: "owner@example.com",
     },
   );

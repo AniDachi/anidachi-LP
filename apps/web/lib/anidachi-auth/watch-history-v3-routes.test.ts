@@ -17,7 +17,7 @@ const EVENT_ID = "22222222-2222-4222-8222-222222222222";
 const NOW = "2026-08-14T12:00:00.000Z";
 
 function request(path: string, init?: ConstructorParameters<typeof NextRequest>[1]) {
-  return new NextRequest(`https://anidachi.app${path}`, init);
+  return new NextRequest(`https://www.anidachi.app${path}`, init);
 }
 
 function progressBody() {
@@ -217,7 +217,7 @@ function dependencies(overrides: Partial<WatchHistoryV3RouteDependencies> = {}) 
     createRoomFromSession: async () => ({
       roomId: "room-one",
       roomToken: "opaque-room-token",
-      shareableLink: "https://anidachi.app/room/room-one",
+      shareableLink: "https://www.anidachi.app/room/room-one",
       reused: false,
       capabilities: {
         hostPlanCode: "free" as const,

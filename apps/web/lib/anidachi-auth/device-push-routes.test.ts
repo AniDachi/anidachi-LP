@@ -66,7 +66,7 @@ async function withAuthority(run: (writes: Array<{ owner: string | null; enabled
 
 async function invoke(method: "POST" | "DELETE", bearer: string | null, cookie: string, body: unknown = subscription) {
   const path = method === "POST" ? "/api/devices/push-subscription" : `/api/devices/${DEVICE}/push-subscription`;
-  const request = new NextRequest(`https://anidachi.app${path}`, {
+  const request = new NextRequest(`https://www.anidachi.app${path}`, {
     method,
     headers: {
       "content-type": "application/json",

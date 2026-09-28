@@ -3,8 +3,8 @@
  * Used by metadataBase, sitemap, robots, JSON-LD, and absolute OG/article image URLs.
  */
 
-/** Production primary host (bare domain, all signals canonicalize here). */
-const DEFAULT_ORIGIN = "https://anidachi.app";
+/** Production primary host (Vercel redirects apex → www). */
+const DEFAULT_ORIGIN = "https://www.anidachi.app";
 
 function normalizeToOrigin(raw: string): string {
   let s = raw.trim();
@@ -25,7 +25,7 @@ function normalizeToOrigin(raw: string): string {
  * Resolved origin for this deployment.
  * - Uses `NEXT_PUBLIC_SITE_URL` when set (trimmed, trailing slashes stripped, protocol added if missing).
  * - Else uses `VERCEL_URL` on Vercel (preview/production hostname).
- * - Else production default `https://anidachi.app`.
+ * - Else production default `https://www.anidachi.app`.
  */
 export function getResolvedSiteOrigin(): string {
   const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();

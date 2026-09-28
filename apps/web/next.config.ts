@@ -3,11 +3,11 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   async redirects() {
     return [
-      // Canonicalize www → bare domain to consolidate PageRank
+      // Canonicalize non-www → www to consolidate PageRank
       {
         source: "/:path*",
-        has: [{ type: "host", value: "www.anidachi.app" }],
-        destination: "https://anidachi.app/:path*",
+        has: [{ type: "host", value: "anidachi.app" }],
+        destination: "https://www.anidachi.app/:path*",
         permanent: true,
       },
       {

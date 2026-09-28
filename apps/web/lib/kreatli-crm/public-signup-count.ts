@@ -1,7 +1,7 @@
 import { readContacts } from "@/lib/kreatli-crm/store";
 import { countSurveyLeads } from "@/lib/kreatli-crm/survey-lead-shared";
 
-const PRODUCTION_WAITLIST_STATS = "https://anidachi.app/api/waitlist-stats";
+const PRODUCTION_WAITLIST_STATS = "https://www.anidachi.app/api/waitlist-stats";
 
 /**
  * Public social-proof count (CRM survey / signup leads).
