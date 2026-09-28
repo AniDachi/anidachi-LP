@@ -46,8 +46,14 @@ function fixture(trial = true) {
 	let legacySessions: unknown[] = [];
 	let expirationOutcome = "expired";
 	let syncCalls = 0;
+	let subscriptionStatus = "active";
+	let syncedStatus = "active";
+	let syncFailure = false;
 	let trialEligibility = trial ? "eligible" : "used";
-	const createdRequests: { params: Stripe.Checkout.SessionCreateParams; key: string | undefined }[] = [];
+	const createdRequests: {
+		params: Stripe.Checkout.SessionCreateParams;
+		key: string | undefined;
+	}[] = [];
 	const expiredSessions: string[] = [];
 	const session = {
 		id: "cs_new",
@@ -66,7 +72,11 @@ function fixture(trial = true) {
 			},
 		},
 		subscriptions: {
-			list: async () => ({ data: ++subscriptionReads >= subscriptionVisibleAt ? subscriptionRows : [], has_more: false }),
+			list: async () => ({
+				data:
+					++subscriptionReads >= subscriptionVisibleAt ? subscriptionRows : [],
+				has_more: false,
+			}),
 		},
 		checkout: {
 			sessions: {
@@ -90,7 +100,10 @@ function fixture(trial = true) {
 					params = p;
 					options = o;
 					createCalls++;
-					createdRequests.push({ params: structuredClone(p), key: o.idempotencyKey });
+					createdRequests.push({
+						params: structuredClone(p),
+						key: o.idempotencyKey,
+					});
 					if (uncertain) {
 						uncertain = false;
 						throw Error("response lost after Stripe commit");
@@ -112,12 +125,20 @@ function fixture(trial = true) {
 		now: () => clock,
 		reserve: async () => {
 			if (!reserved) {
-				reservation.created_at = new Date(Date.parse(reservation.created_at) + clock - now).toISOString();
+				reservation.created_at = new Date(
+					Date.parse(reservation.created_at) + clock - now,
+				).toISOString();
 				reserved = true;
 			}
-			if (reservation.state === "expired") {
+			if (
+				reservation.state === "expired" ||
+				(reservation.state === "complete" &&
+					["canceled", "incomplete_expired"].includes(syncedStatus))
+			) {
 				Object.assign(reservation, {
 					id: "33333333-3333-4333-8333-333333333333",
+					created_at: new Date(clock).toISOString(),
+					stripe_subscription_id: null,
 					state: "pending",
 					stripe_session_id: null,
 					trial_offered: trialEligibility === "eligible",
@@ -125,16 +146,22 @@ function fixture(trial = true) {
 				Object.assign(session, {
 					id: "cs_replacement",
 					status: "open",
+					subscription: null,
 					url: "https://checkout.stripe.com/c/pay/cs_replacement",
-					metadata: { userId: input.userId, checkoutReservationId: reservation.id },
+					metadata: {
+						userId: input.userId,
+						checkoutReservationId: reservation.id,
+					},
 				});
 			}
 			return reservation;
 		},
-		finish: async (_r, s, state) => {
+		finish: async (_r, s, state, subscriptionId) => {
 			finishCalls++;
 			reservation.stripe_session_id = s;
 			reservation.state = state;
+			if (state === "complete")
+				reservation.stripe_subscription_id = subscriptionId ?? null;
 		},
 		getCustomer: async () => ({
 			user_id: input.userId,
@@ -147,6 +174,9 @@ function fixture(trial = true) {
 		}),
 		sync: async () => {
 			syncCalls++;
+			if (syncFailure) throw new Error("fresh subscription unavailable");
+			syncedStatus = subscriptionStatus;
+			return { status: subscriptionStatus };
 		},
 	});
 	return {
@@ -173,7 +203,18 @@ function fixture(trial = true) {
 		get syncCalls() {
 			return syncCalls;
 		},
-		get reserved() { return reserved; },
+		get reserved() {
+			return reserved;
+		},
+		failSync() {
+			syncFailure = true;
+		},
+		completedSubscriptionEnds(status = "canceled") {
+			clock += 4 * 24 * 60 * 60 * 1000;
+			subscriptionStatus = status;
+			trialEligibility = "used";
+			Object.assign(session, { status: "complete", subscription: "sub_ended" });
+		},
 		cancelSubscriptionAfterTwoDays() {
 			clock += 2 * 24 * 60 * 60 * 1000;
 			subscriptionRows = [];
@@ -263,9 +304,19 @@ for (const existing of ["subscription", "legacy-completion"] as const) {
 	test(`managing ${existing} leaves resubscription available after cancellation beyond the replay window`, async () => {
 		const f = fixture();
 		if (existing === "subscription") f.activeSubscription();
-		else { f.legacyCheckout(); f.expirationBecomes("complete"); }
-		assert.equal((await f.service.prepareSubscriptionCheckout(input)).kind, "manage_subscription");
-		assert.equal(f.reserved, false, "management must not reserve a checkout that will never be created");
+		else {
+			f.legacyCheckout();
+			f.expirationBecomes("complete");
+		}
+		assert.equal(
+			(await f.service.prepareSubscriptionCheckout(input)).kind,
+			"manage_subscription",
+		);
+		assert.equal(
+			f.reserved,
+			false,
+			"management must not reserve a checkout that will never be created",
+		);
 		f.cancelSubscriptionAfterTwoDays();
 		const result = await f.service.prepareSubscriptionCheckout(input);
 		assert.equal(result.kind, "checkout");
@@ -279,9 +330,15 @@ for (const outcome of ["expired", "complete", "open"] as const) {
 		f.activeSubscription(2);
 		f.expirationBecomes(outcome);
 		if (outcome === "open") {
-			await assert.rejects(f.service.prepareSubscriptionCheckout(input), /still open/i);
+			await assert.rejects(
+				f.service.prepareSubscriptionCheckout(input),
+				/still open/i,
+			);
 		} else {
-			assert.equal((await f.service.prepareSubscriptionCheckout(input)).kind, "manage_subscription");
+			assert.equal(
+				(await f.service.prepareSubscriptionCheckout(input)).kind,
+				"manage_subscription",
+			);
 		}
 		assert.deepEqual(f.expiredSessions, ["cs_new"]);
 		assert.equal(f.reservation.state, outcome);
@@ -386,8 +443,14 @@ test("unknown old checkout creation is reconciled with its original terms before
 	const result = await f.service.prepareSubscriptionCheckout(input);
 	assert.equal(result.trialOffered, true);
 	assert.deepEqual(f.createdRequests[1], f.createdRequests[0]);
-	assert.equal(f.createdRequests[0].params.subscription_data?.trial_period_days, undefined);
-	assert.equal(f.createdRequests[2].params.subscription_data?.trial_period_days, 3);
+	assert.equal(
+		f.createdRequests[0].params.subscription_data?.trial_period_days,
+		undefined,
+	);
+	assert.equal(
+		f.createdRequests[2].params.subscription_data?.trial_period_days,
+		3,
+	);
 	assert.deepEqual(f.expiredSessions, ["cs_new"]);
 });
 test("completion of the old nontrial checkout wins over newly eligible trial", async () => {
@@ -406,7 +469,10 @@ test("uncertain expiration of a nontrial checkout cannot expose its old offer or
 	await f.service.prepareSubscriptionCheckout(input);
 	f.setTrialEligibility("eligible");
 	f.expirationBecomes("open");
-	await assert.rejects(f.service.prepareSubscriptionCheckout(input), /open|reconcil/i);
+	await assert.rejects(
+		f.service.prepareSubscriptionCheckout(input),
+		/open|reconcil/i,
+	);
 	assert.equal(f.createCalls, 1);
 	assert.equal(f.reservation.state, "open");
 });
@@ -422,3 +488,55 @@ test("reservation parser rejects incomplete or inconsistent database authority",
 	])
 		assert.throws(() => parseCheckoutReservation(bad), /reservation/i);
 });
+
+for (const trial of [true, false]) {
+	for (const status of ["canceled", "incomplete_expired"]) {
+		test(`first resubscribe after a completed ${trial ? "trial" : "paid"} checkout with ${status} subscription opens payment immediately`, async () => {
+			const f = fixture(trial);
+			await f.service.prepareSubscriptionCheckout(input);
+			assert.equal(f.reservation.state, "open");
+			f.completedSubscriptionEnds(status);
+			const next = await f.service.prepareSubscriptionCheckout(input);
+			assert.equal(next.kind, "checkout");
+			assert.equal(
+				next.url,
+				"https://checkout.stripe.com/c/pay/cs_replacement",
+			);
+			assert.equal(next.trialOffered, false);
+			assert.equal(f.createCalls, 2);
+			assert.notEqual(f.createdRequests[0].key, f.createdRequests[1].key);
+			assert.equal(f.params?.subscription_data?.trial_period_days, undefined);
+		});
+	}
+}
+test("resubscribe cannot release a completed session without fresh subscription authority", async () => {
+	const f = fixture();
+	await f.service.prepareSubscriptionCheckout(input);
+	f.completedSubscriptionEnds();
+	f.failSync();
+	await assert.rejects(
+		f.service.prepareSubscriptionCheckout(input),
+		/fresh subscription unavailable/,
+	);
+	assert.equal(f.createCalls, 1);
+	assert.equal(f.reservation.state, "open");
+});
+for (const status of [
+	"active",
+	"trialing",
+	"past_due",
+	"unpaid",
+	"paused",
+	"incomplete",
+]) {
+	test(`a completed checkout with nonterminal ${status} subscription never starts another purchase`, async () => {
+		const f = fixture();
+		await f.service.prepareSubscriptionCheckout(input);
+		f.completedSubscriptionEnds(status);
+		assert.equal(
+			(await f.service.prepareSubscriptionCheckout(input)).kind,
+			"manage_subscription",
+		);
+		assert.equal(f.createCalls, 1);
+	});
+}

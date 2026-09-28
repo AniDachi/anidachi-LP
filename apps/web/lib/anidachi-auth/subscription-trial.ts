@@ -48,7 +48,7 @@ export type CheckoutDeps = {
 	access: (
 		userId: string,
 	) => Promise<{ hostingPolicyVersion: number; trialEligibility: string }>;
-	sync: (subscriptionId: string, userId: string) => Promise<void>;
+	sync: (subscriptionId: string, userId: string) => Promise<{ status: string }>;
 };
 export class SubscriptionCheckoutError extends Error {
 	constructor(
@@ -221,7 +221,10 @@ export function createSubscriptionCheckoutService(deps: CheckoutDeps) {
 			throw new SubscriptionCheckoutError("Previous checkout owner mismatch.");
 		return outcome;
 	}
-	async function retireLegacyCheckouts(customerId: string, input: CheckoutInput) {
+	async function retireLegacyCheckouts(
+		customerId: string,
+		input: CheckoutInput,
+	) {
 		// Older deployments issued unreserved sessions. Retire their URLs before
 		// preparing a new offer; a concurrently completed one must be synchronized.
 		const open = await stripe.checkout.sessions.list(
@@ -229,20 +232,14 @@ export function createSubscriptionCheckoutService(deps: CheckoutDeps) {
 			REQUEST,
 		);
 		if (open.has_more)
-			throw new SubscriptionCheckoutError(
-				"Checkout reconciliation required.",
-			);
+			throw new SubscriptionCheckoutError("Checkout reconciliation required.");
 		for (const previous of open.data) {
 			if (
 				previous.mode !== "subscription" ||
 				previous.metadata?.checkoutReservationId
 			)
 				continue;
-			const outcome = await expireAndRead(
-				previous,
-				customerId,
-				input.userId,
-			);
+			const outcome = await expireAndRead(previous, customerId, input.userId);
 			if (outcome.status === "complete") {
 				const subId = id(outcome.subscription);
 				if (!subId)
@@ -387,8 +384,12 @@ export function createSubscriptionCheckoutService(deps: CheckoutDeps) {
 						throw new SubscriptionCheckoutError(
 							"Completed checkout awaits subscription reconciliation.",
 						);
-					await deps.sync(subscriptionId, input.userId);
+					const synced = await deps.sync(subscriptionId, input.userId);
 					await deps.finish(r, session.id, "complete", subscriptionId);
+					// A finished checkout can belong to a subscription that has since
+					// ended. Only fresh terminal status permits a new reservation.
+					if (["canceled", "incomplete_expired"].includes(synced.status))
+						continue;
 					return portal(customerId, input);
 				}
 				if (session.status === "expired") {
@@ -422,8 +423,10 @@ export function createSubscriptionCheckoutService(deps: CheckoutDeps) {
 							throw new SubscriptionCheckoutError(
 								"Checkout reconciliation required.",
 							);
-						await deps.sync(subscriptionId, input.userId);
+						const synced = await deps.sync(subscriptionId, input.userId);
 						await deps.finish(r, outcome.id, "complete", subscriptionId);
+						if (["canceled", "incomplete_expired"].includes(synced.status))
+							continue;
 						return portal(customerId, input);
 					}
 					throw new SubscriptionCheckoutError(

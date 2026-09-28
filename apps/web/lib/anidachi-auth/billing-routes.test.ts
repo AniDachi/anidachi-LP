@@ -25,6 +25,15 @@ function fixture(user: { id: string } | null = { id: "owner" }, fail = false) {
 			if (fail) throw new Error("secret_upstream_payload");
 			return "https://billing.stripe.com/p/session/test_fixture";
 		},
+		renewalPortal: async (id, row, returnUrl) => {
+			calls.push(`restore:${id}:${row}`);
+			assert.equal(
+				returnUrl,
+				"https://staging.anidachi.app/account/billing?billing=return",
+			);
+			if (fail) throw new Error("secret_upstream_payload");
+			return "https://billing.stripe.com/p/session/test_fixture";
+		},
 	};
 	const trialPlans: TrialPlanChangeService = {
 		quote: async (userId, rowId, plan) => {
@@ -96,6 +105,10 @@ test("cookie billing mutations reject cross-site, sibling origins, missing Origi
 		assert.equal((await f.handlers.refresh(request(headers))).status, 403);
 		assert.equal((await f.handlers.trialPlan(request(headers))).status, 403);
 		assert.equal((await f.handlers.paymentLink(request(headers))).status, 403);
+		assert.equal(
+			(await f.handlers.renewalPortal(request(headers))).status,
+			403,
+		);
 	}
 });
 
@@ -123,6 +136,7 @@ test("revoked sessions and changed account tabs cannot read, sync, or open cance
 		const f = fixture(user);
 		for (const handler of [
 			f.handlers.cancellationPortal,
+			f.handlers.renewalPortal,
 			f.handlers.refresh,
 			f.handlers.getOverview,
 			f.handlers.trialPlan,
@@ -224,4 +238,40 @@ test("portal return refreshes authority before returning overview and never assu
 		planCode: "free",
 		subscriptions: [],
 	});
+});
+
+test("renewal portal uses an authenticated local selection and fixed return URL", async () => {
+	const f = fixture();
+	const response = await f.handlers.renewalPortal(
+		request(
+			{},
+			{
+				subscriptionId: "local-id",
+				customerId: "cus_foreign",
+				returnUrl: "https://evil.example",
+			},
+		),
+	);
+	assert.equal(response.status, 200);
+	assert.equal(response.headers.get("cache-control"), "private, no-store");
+	assert.deepEqual(f.calls, ["restore:owner:local-id"]);
+	assert.equal((await response.json()).ownerUserId, "owner");
+	for (const body of [
+		null,
+		{},
+		{ subscriptionId: 42 },
+		{ subscriptionId: "x".repeat(101) },
+	]) {
+		const invalid = fixture();
+		assert.equal(
+			(await invalid.handlers.renewalPortal(request({}, body))).status,
+			400,
+		);
+		assert.deepEqual(invalid.calls, []);
+	}
+	const failure = await fixture({ id: "owner" }, true).handlers.renewalPortal(
+		request(),
+	);
+	assert.equal(failure.status, 503);
+	assert.doesNotMatch(await failure.text(), /secret_upstream_payload/);
 });

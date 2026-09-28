@@ -160,7 +160,10 @@ export function BillingClient({
 		}
 	}
 
-	async function cancel(subscriptionId: string, payment = false) {
+	async function openStripe(
+		subscriptionId: string,
+		action: "cancel" | "payment" | "restore",
+	) {
 		if (actionLock.current) return;
 		actionLock.current = true;
 		const current = ++version.current;
@@ -169,9 +172,11 @@ export function BillingClient({
 		setNotice(null);
 		try {
 			const result = await api<{ url: string; ownerUserId: string }>(
-				payment
-					? "/api/billing/payment-link"
-					: "/api/billing/cancellation-portal",
+				{
+					payment: "/api/billing/payment-link",
+					cancel: "/api/billing/cancellation-portal",
+					restore: "/api/billing/renewal-portal",
+				}[action],
 				{
 					method: "POST",
 					headers: { [BILLING_OWNER_HEADER]: ownerUserId },
@@ -187,7 +192,7 @@ export function BillingClient({
 			setError(
 				failure instanceof Error
 					? failure.message
-					: "Could not open cancellation. Please try again.",
+					: "Could not open Stripe. Please try again.",
 			);
 			setBusy(false);
 		} finally {
@@ -365,7 +370,7 @@ export function BillingClient({
 										type="button"
 										className="ac-button"
 										disabled={busy}
-										onClick={() => void cancel(subscription.id, true)}
+										onClick={() => void openStripe(subscription.id, "payment")}
 									>
 										Complete payment in Stripe{" "}
 										<ExternalLink size={15} aria-hidden />
@@ -466,10 +471,29 @@ export function BillingClient({
 										<button
 											type="button"
 											disabled={busy}
-											onClick={() => void cancel(subscription.id)}
+											onClick={() => void openStripe(subscription.id, "cancel")}
 											className="ac-button"
 										>
 											Cancel subscription <ExternalLink size={15} aria-hidden />
+										</button>
+									</div>
+								) : null}
+								{subscription.canRestoreRenewal ? (
+									<div className="ac-renewal-action">
+										<p>
+											Confirm renewal in Stripe before the end date shown. Your
+											current trial or paid period keeps its original end date;
+											future payments resume automatically. No extra trial days.
+										</p>
+										<button
+											type="button"
+											className="ac-button"
+											disabled={busy}
+											onClick={() =>
+												void openStripe(subscription.id, "restore")
+											}
+										>
+											Restore renewal <ExternalLink size={15} aria-hidden />
 										</button>
 									</div>
 								) : null}

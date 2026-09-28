@@ -28,6 +28,7 @@ export type BillingSubscription = {
 	currentPeriodEnd: string | null;
 	cancelAtPeriodEnd: boolean;
 	canCancel: boolean;
+	canRestoreRenewal?: boolean;
 	trial?: BillingTrial;
 	canChangeTrialPlan?: boolean;
 	monthlyPrice?: MonthlyPrice | null;
@@ -52,6 +53,8 @@ export function billingDisplayValidityMs(overview: BillingOverview): number {
 	if (overview.planCode !== "free" && overview.selectedPlanExpiresAt)
 		deadlines.push(Date.parse(overview.selectedPlanExpiresAt));
 	for (const subscription of overview.subscriptions) {
+		if (subscription.canRestoreRenewal)
+			deadlines.push(Date.parse(subscription.currentPeriodEnd ?? ""));
 		if (subscription.trial?.stage === "trial")
 			deadlines.push(Date.parse(subscription.trial.endsAt));
 		if (subscription.trial?.stage === "processing")

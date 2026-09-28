@@ -75,6 +75,7 @@ export function subscriptionCheckoutService(stripe: Stripe) {
 				throw new SubscriptionCheckoutError(
 					"Subscription reconciliation required.",
 				);
+			return { status: result.status };
 		},
 	});
 }

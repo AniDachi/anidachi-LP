@@ -312,3 +312,108 @@ test("response for another owner never displays their billing state", async () =
 	);
 	assert.doesNotMatch(container.textContent ?? "", /Plus subscription/);
 });
+
+test("canceled renewal offers restoration through an owner-bound request", async () => {
+	const requests: { path: string; init?: RequestInit }[] = [];
+	globalThis.fetch = async (path, init) => {
+		requests.push({ path: String(path), init });
+		if (String(path).endsWith("renewal-portal"))
+			return Response.json(
+				{ error: "Renewal management is temporarily unavailable." },
+				{ status: 503 },
+			);
+		return Response.json({
+			...active,
+			subscriptions: [
+				{
+					...active.subscriptions[0],
+					cancelAtPeriodEnd: true,
+					canCancel: false,
+					canRestoreRenewal: true,
+				},
+			],
+		});
+	};
+	await mount();
+	const button = [...container.querySelectorAll("button")].find((b) =>
+		b.textContent?.includes("Restore renewal"),
+	);
+	assert.ok(button);
+	await act(async () => button.click());
+	assert.equal(requests[1]?.path, "/api/billing/renewal-portal");
+	assert.equal(
+		new Headers(requests[1]?.init?.headers).get(BILLING_OWNER_HEADER),
+		"owner",
+	);
+	assert.equal(
+		requests[1]?.init?.body,
+		JSON.stringify({ subscriptionId: "local-sub" }),
+	);
+	assert.match(
+		container.querySelector('[role="alert"]')?.textContent ?? "",
+		/temporarily unavailable/,
+	);
+	assert.equal(button.disabled, false);
+});
+
+test("restoration eligibility disappears at its own deadline even with another longer access grant", async (t) => {
+	t.mock.timers.enable({ apis: ["setTimeout", "Date"] });
+	let requests = 0;
+	globalThis.fetch = async () =>
+		Response.json(
+			++requests === 1
+				? {
+						...active,
+						selectedPlanExpiresAt: "2030-02-01T00:00:00Z",
+						subscriptions: [
+							{
+								...active.subscriptions[0],
+								currentPeriodEnd: "2030-01-01T00:00:01Z",
+								cancelAtPeriodEnd: true,
+								canCancel: false,
+								canRestoreRenewal: true,
+							},
+						],
+					}
+				: { ...active, subscriptions: [] },
+		);
+	await mount();
+	assert.match(container.textContent!, /Restore renewal/);
+	await act(async () => t.mock.timers.tick(1000));
+	assert.equal(requests, 2);
+	assert.doesNotMatch(container.textContent!, /Restore renewal/);
+});
+
+test("return from renewal restoration rereads Stripe and retains the original trial deadline", async () => {
+	let requestedPath: string | undefined;
+	let method: string | undefined;
+	globalThis.fetch = async (path, init) => {
+		requestedPath = String(path);
+		method = init?.method;
+		return Response.json({
+			...active,
+			subscriptions: [
+				{
+					...active.subscriptions[0],
+					status: "trialing",
+					canRestoreRenewal: false,
+					trial: {
+						stage: "trial",
+						endsAt: "2030-02-01T12:00:00Z",
+						pendingUntil: "2030-02-01T14:00:00Z",
+					},
+				},
+			],
+		});
+	};
+	await mount(true);
+	assert.equal(requestedPath, "/api/billing/refresh");
+	assert.equal(method, "POST");
+	assert.match(container.textContent!, /Free trial/);
+	assert.match(container.textContent!, /first monthly payment is scheduled/);
+	assert.equal(container.querySelector("dd")?.textContent, "February 1, 2030");
+	assert.doesNotMatch(
+		container.textContent!,
+		/Restore renewal|Renewal canceled/,
+	);
+});
