@@ -35,7 +35,13 @@ export function createBillingHandlers(
 
 	async function handle(
 		request: NextRequest,
-		action: "overview" | "refresh" | "cancel" | "trial-plan" | "payment",
+		action:
+			| "overview"
+			| "refresh"
+			| "cancel"
+			| "restore"
+			| "trial-plan"
+			| "payment",
 	) {
 		try {
 			if (
@@ -60,6 +66,7 @@ export function createBillingHandlers(
 			}
 			if (
 				action === "cancel" ||
+				action === "restore" ||
 				action === "trial-plan" ||
 				action === "payment"
 			) {
@@ -121,11 +128,11 @@ export function createBillingHandlers(
 					"/account/billing?billing=return",
 					request.nextUrl.origin,
 				).toString();
-				const url = await service.cancellationPortal(
-					user.id,
-					body.subscriptionId,
-					returnUrl,
-				);
+				const portal =
+					action === "restore"
+						? service.renewalPortal
+						: service.cancellationPortal;
+				const url = await portal(user.id, body.subscriptionId, returnUrl);
 				return NextResponse.json(
 					{ url, ownerUserId: user.id },
 					{ headers: PRIVATE_HEADERS },
@@ -154,6 +161,7 @@ export function createBillingHandlers(
 		getOverview: (request: NextRequest) => handle(request, "overview"),
 		refresh: (request: NextRequest) => handle(request, "refresh"),
 		cancellationPortal: (request: NextRequest) => handle(request, "cancel"),
+		renewalPortal: (request: NextRequest) => handle(request, "restore"),
 		trialPlan: (request: NextRequest) => handle(request, "trial-plan"),
 		paymentLink: (request: NextRequest) => handle(request, "payment"),
 	};

@@ -111,6 +111,8 @@ function fixture(
 		syncFailure?: boolean;
 		access?: AccountEntitlements;
 		trial?: import("./stripe-trial-state").SubscriptionTrialRecord | null;
+		now?: number;
+		portalUrl?: string;
 	} = {},
 ) {
 	const calls: string[] = [];
@@ -136,6 +138,7 @@ function fixture(
 											is_default: true,
 											livemode: false,
 											features: {
+												subscription_update: { enabled: false },
 												subscription_cancel: {
 													enabled: true,
 													mode: "at_period_end",
@@ -151,12 +154,17 @@ function fixture(
 				create: async (params: Stripe.BillingPortal.SessionCreateParams) => {
 					calls.push("portal");
 					portalParams = params;
-					return { url: "https://billing.stripe.com/p/session/test_fixture" };
+					return {
+						url:
+							options.portalUrl ??
+							"https://billing.stripe.com/p/session/test_fixture",
+					};
 				},
 			},
 		},
 	} as unknown as Stripe;
 	const service = createBillingService({
+		now: () => options.now ?? Date.parse("2029-12-31T00:00:00Z"),
 		listSubscriptions: async (userId) => {
 			assert.equal(userId, "owner");
 			return options.rows ?? [{ ...row }];
@@ -205,6 +213,163 @@ test("cancellation refreshes owned subscription before creating the verified end
 			},
 		},
 	});
+});
+
+for (const status of ["active", "trialing"]) {
+	test(`restoring ${status} renewal opens the owned portal without changing subscription dates`, async () => {
+		const f = fixture({
+			syncResult: { ...result, status, cancelAtPeriodEnd: true },
+		});
+		await f.service.renewalPortal("owner", row.id, returnUrl);
+		assert.deepEqual(f.calls, ["client", "sync", "config", "portal"]);
+		assert.deepEqual(f.params(), {
+			configuration: "bpc_default",
+			customer: "cus_owner",
+			return_url: returnUrl,
+		});
+	});
+}
+
+test("restoring renewal requires fresh pending cancellation before the current period ends", async () => {
+	for (const syncResult of [
+		result,
+		...[
+			"canceled",
+			"incomplete_expired",
+			"past_due",
+			"unpaid",
+			"paused",
+			"incomplete",
+		].map((status) => ({ ...result, status, cancelAtPeriodEnd: true })),
+		{ ...result, cancelAtPeriodEnd: true, currentPeriodEnd: null },
+		{ ...result, cancelAtPeriodEnd: true, currentPeriodEnd: "invalid" },
+		{
+			...result,
+			cancelAtPeriodEnd: true,
+			currentPeriodEnd: "2029-12-31T00:00:00Z",
+		},
+	]) {
+		const f = fixture({
+			rows: [{ ...row, cancel_at_period_end: true }],
+			syncResult,
+		});
+		await assert.rejects(
+			f.service.renewalPortal("owner", row.id, returnUrl),
+			(error: unknown) => error instanceof BillingError && error.status === 409,
+		);
+		assert.ok(!f.calls.includes("portal"));
+	}
+});
+
+test("restoring renewal cannot expose generic Portal plan updates or unknown configuration", async () => {
+	for (const subscription_update of [{ enabled: true }, undefined]) {
+		const f = fixture({
+			syncResult: { ...result, status: "trialing", cancelAtPeriodEnd: true },
+			config: {
+				features: {
+					subscription_cancel: { enabled: true, mode: "at_period_end" },
+					subscription_update,
+				},
+			},
+		});
+		await assert.rejects(
+			f.service.renewalPortal("owner", row.id, returnUrl),
+			/temporarily unavailable/,
+		);
+		assert.ok(!f.calls.includes("portal"));
+	}
+});
+
+test("renewal restoration display expires at the server's period boundary", async () => {
+	for (const [serverTime, expected] of [
+		["2029-12-31T23:59:59Z", true],
+		[row.current_period_end!, false],
+	] as const) {
+		const { service } = fixture({
+			rows: [{ ...row, cancel_at_period_end: true }],
+			access: {
+				policy: { planCode: "plus" },
+				history: { serverTime },
+			} as AccountEntitlements,
+		});
+		assert.equal(
+			(await service.overview("owner")).subscriptions[0].canRestoreRenewal,
+			expected,
+		);
+	}
+});
+
+test("restoration rejects foreign selections, changed ownership and failed refresh before opening Stripe", async () => {
+	for (const options of [
+		{ rows: [] },
+		{ rows: [{ ...row, user_id: "foreign" }] },
+		{ customerOwner: "foreign" },
+		{ customerId: "cus_foreign" },
+		{ syncResult: { ...result, userId: "foreign", cancelAtPeriodEnd: true } },
+		{
+			syncResult: {
+				...result,
+				stripeCustomerId: "cus_foreign",
+				cancelAtPeriodEnd: true,
+			},
+		},
+		{
+			syncResult: {
+				...result,
+				stripeSubscriptionId: "sub_foreign",
+				cancelAtPeriodEnd: true,
+			},
+		},
+		{ syncFailure: true },
+	]) {
+		const f = fixture({
+			syncResult: { ...result, cancelAtPeriodEnd: true },
+			...options,
+		});
+		await assert.rejects(f.service.renewalPortal("owner", row.id, returnUrl));
+		assert.ok(!f.calls.includes("portal"));
+	}
+	for (const options of [
+		{ config: null },
+		{ config: { active: false } },
+		{ config: { is_default: false } },
+		{ config: { livemode: true } },
+		{
+			config: {
+				features: {
+					subscription_update: { enabled: false },
+					subscription_cancel: { enabled: true, mode: "immediately" },
+				},
+			},
+		},
+	]) {
+		const f = fixture({
+			syncResult: { ...result, cancelAtPeriodEnd: true },
+			...options,
+		});
+		await assert.rejects(
+			f.service.renewalPortal("owner", row.id, returnUrl),
+			/temporarily unavailable/,
+		);
+		assert.ok(!f.calls.includes("portal"));
+	}
+});
+
+test("renewal management never returns an untrusted Stripe redirect", async () => {
+	for (const portalUrl of [
+		"http://billing.stripe.com/p/test",
+		"https://billing.stripe.com.evil.example/p/test",
+		"https://user@billing.stripe.com/p/test",
+	]) {
+		const f = fixture({
+			syncResult: { ...result, cancelAtPeriodEnd: true },
+			portalUrl,
+		});
+		await assert.rejects(
+			f.service.renewalPortal("owner", row.id, returnUrl),
+			/invalid subscription portal/,
+		);
+	}
 });
 
 test("foreign Stripe IDs and nonexistent local rows cannot select a subscription", async () => {
