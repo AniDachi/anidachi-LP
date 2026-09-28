@@ -1,4 +1,6 @@
 import type Stripe from "stripe";
+import { getPricingOffer } from "./pricing-offer";
+import { readBillingPrice } from "./billing-price";
 import { resolveAccountEntitlements } from "./account-entitlements";
 import { db, getBillingCustomerByUserId } from "./db";
 import { syncStripeSubscriptionById } from "./stripe-subscription-sync";
@@ -12,6 +14,15 @@ import {
 export function subscriptionCheckoutService(stripe: Stripe) {
 	return createSubscriptionCheckoutService({
 		stripe,
+		async offer(userId, priceId) {
+			const [offer, price] = await Promise.all([
+				getPricingOffer(userId),
+				// Checkout always validates the selected price directly with Stripe.
+				// Cached public catalog values only accelerate display.
+				readBillingPrice(priceId, true),
+			]);
+			return { action: offer.action, price };
+		},
 		getCustomer: getBillingCustomerByUserId,
 		async saveCustomer(userId, customerId) {
 			const { error } = await db()

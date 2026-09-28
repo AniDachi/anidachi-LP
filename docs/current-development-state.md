@@ -2,7 +2,16 @@
 
 Last updated: 2026-09-29.
 
-Latest local website checkpoint: `e0f8a21e` adds Stripe renewal restoration and
+Pricing loading correction, prepared from staging `9a8e4824`: homepage and
+/pricing receive public Stripe amounts in server HTML; private eligibility
+refreshes keep those amounts visible. Purchase sends one browser POST, which
+rechecks the displayed price and trial on the server before checkout writes.
+Timer refresh no longer discards a pending checkout redirect; account changes
+still retire it. Web check, 818 tests (six existing skips) and production build
+passed locally. This checkpoint does not establish deployed performance or owner
+checkout acceptance; see the [fix evidence](releases/paid-hosting-trial/pricing-loading-fix-2026-09-29.md).
+
+Previous website billing checkpoint: `e0f8a21e` adds Stripe renewal restoration and
 fixes first-click resubscription after an ended subscription. Web typecheck,
 807 tests plus six prior skips and changed-file lint pass. The old staging ZIP
 from `cb7f7a86` is built and validated for the owner's old-client transition test.

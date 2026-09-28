@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
 			requestId?: unknown;
 			expectedOwnerUserId?: unknown;
 			expectedTrialOffered?: unknown;
+			expectedPrice?: unknown;
 			/** First-touch SEO/acquisition landing path (session-scoped). */
 			seoLandingPath?: unknown;
 			/** Path where checkout was started. */
@@ -143,6 +144,14 @@ export async function POST(request: NextRequest) {
 			email: authSession.email,
 			planCode,
 			priceId,
+			...(body.expectedPrice !== undefined
+				? {
+						displayedOffer: {
+							trial: body.expectedTrialOffered,
+							price: body.expectedPrice,
+						},
+					}
+				: {}),
 			origin: request.nextUrl.origin,
 			requestId:
 				typeof body.requestId === "string" ? body.requestId : randomUUID(),
@@ -168,7 +177,11 @@ export async function POST(request: NextRequest) {
 			return NextResponse.json(
 				{
 					error:
-						"We could not confirm your checkout yet. Please retry; an existing checkout will be reused.",
+						error.status === 409
+							? "Your price or available offer changed. Review the current plans before continuing."
+							: error.status === 400
+								? "Invalid checkout offer. Reload the plans and try again."
+								: "We could not confirm your checkout yet. Please retry; an existing checkout will be reused.",
 				},
 				{ status: error.status },
 			);

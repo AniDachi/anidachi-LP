@@ -1,4 +1,5 @@
 import type Stripe from "stripe";
+import type { MonthlyPrice } from "../billing-view";
 import type { PaidPlanCode } from "./plan-entitlements";
 
 export type CheckoutReservation = {
@@ -17,6 +18,7 @@ export type CheckoutReservation = {
 	state: "pending" | "open" | "complete" | "expired";
 };
 export type CheckoutInput = {
+	displayedOffer?: { trial: unknown; price: unknown };
 	userId: string;
 	email: string;
 	planCode: PaidPlanCode;
@@ -33,6 +35,10 @@ export type CheckoutResult = {
 };
 export type CheckoutDeps = {
 	stripe: Stripe;
+	offer?: (
+		userId: string,
+		priceId: string,
+	) => Promise<{ action: string; price: MonthlyPrice }>;
 	now?: () => number;
 	reserve: (input: CheckoutInput) => Promise<CheckoutReservation>;
 	finish: (
@@ -260,6 +266,38 @@ export function createSubscriptionCheckoutService(deps: CheckoutDeps) {
 		async prepareSubscriptionCheckout(
 			input: CheckoutInput,
 		): Promise<CheckoutResult> {
+			// The browser sends only what was displayed. Recheck the account action
+			// and the configured Stripe price here, before any checkout side effect.
+			if (input.displayedOffer !== undefined) {
+				const { trial, price } = input.displayedOffer;
+				const shown = price as Partial<MonthlyPrice> | null;
+				if (
+					typeof trial !== "boolean" ||
+					!shown ||
+					typeof shown !== "object" ||
+					!Number.isSafeInteger(shown.unitAmount) ||
+					shown.unitAmount! < 0 ||
+					shown.currency !== "usd"
+				) {
+					throw new SubscriptionCheckoutError(
+						"Invalid displayed checkout offer.",
+						400,
+					);
+				}
+				if (!deps.offer)
+					throw new SubscriptionCheckoutError("Checkout offer unavailable.");
+				const current = await deps.offer(input.userId, input.priceId);
+				if (
+					current.action !== (trial ? "trial" : "subscribe") ||
+					current.price.unitAmount !== shown.unitAmount ||
+					current.price.currency !== shown.currency
+				) {
+					throw new SubscriptionCheckoutError(
+						"Displayed checkout offer changed.",
+						409,
+					);
+				}
+			}
 			// All values in input are supplied by the authenticated route, never arbitrary Stripe IDs from a client.
 			for (let attempt = 0; attempt < 3; attempt++) {
 				let customer = await deps.getCustomer(input.userId);

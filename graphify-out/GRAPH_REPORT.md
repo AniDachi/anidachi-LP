@@ -1,20 +1,30 @@
 # Graph Report - anidachi-LP-monorepo  (2026-09-29)
 
-## Corpus Check (retained from preceding AST scan)
-- 1437 files · ~1,457,740 words
+## Corpus Check (current detection; scoped extraction)
+- 1497 files · ~1,499,576 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 - Unclassified: 30 file(s) not represented in the graph (top: .css 12, (none) 11, .toml 2)
 
 ## Summary
-- 14050 nodes · 32385 edges · 851 communities (471 shown, 380 thin omitted)
-- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 1072 edges (avg confidence: 0.87)
+- 14074 nodes · 32450 edges · 851 retained communities (historical detailed analysis below)
+- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 1081 edges (avg confidence: 0.87)
 - Token accounting: AST uses no LLM; active Codex semantic subagent usage is unavailable.
 
 ## Graph Freshness
+- Latest scoped update: pricing loading correction from `9a8e4824`; 12 AST files, one full semantic document and two partial sections. The older global build marker and unrelated backlog are retained.
 - Built from commit: `80fefde3`
 - Includes the verified dormant staging runtime checkpoint50a054b3: schema375/Web377/runtime378,69migrations, configured Sandbox/drain, signed admission and technical CI/deploy/extension/smoke evidence. Owner acceptance/T/main/Store remain open. One full source and five partial sources including planTask7 technical checklist; no AST/full-corpus freshness. Exact six hashes/ranges are recorded in semantic_updates.
 - Run `graphify update .` after code changes (no API cost).
+
+## Pricing loading correction: local checkpoint — 2026-09-29
+
+- Prepared from staging `9a8e4824`: homepage and `/pricing` receive public Stripe amounts in server HTML. Public price caching is keyed by Stripe mode and Price ID with 300-second revalidation; it is not a maximum-age guarantee. Private offer expiry, focus and failures retain public amounts without claiming unverified trial or hosting rights.
+- One browser POST carries displayed price/trial expectations. The server checks the fresh private offer and directly reads the selected Stripe price before reservation/customer/session writes; changed conditions return 409 for renewed review. The timer preserves a pending checkout redirect; focus, account changes and unmount retain ownership fences. Existing reservation/idempotency/reconciliation and legacy clients remain compatible.
+- Source-reported local proof: nine RED regressions, 51 focused GREEN checks, web 818 passed with six prior skips, typecheck and production build; synthetic layout at 1470/1024/390/320 px. This graph task did not rerun product tests. Deployed SSR/latency, owner Sandbox purchase, webhook and room acceptance remain open. Trials/T remain off; no production or Store action.
+- Scope: 12 web TS/TSX files, 56 AST nodes / 253 raw edges / 240 normalized edges; seven omitted current-source-proven links retained and two obsolete direct price-reader links replaced. Semantic delta: 16 new and 0 updated concepts. New evidence document fully extracted/cached/stamped; current-state L1–23 and plan L84–95 only, with their old whole-file manifest hashes/backlog retained.
+- Integrity: 14074 nodes / 32450 links / 50 hyperedges; all 14,050 prior node IDs and unaffected directed pairs preserved, zero dangling/missing endpoints. 851 existing community identities retained; no reclustering. Standard whole-graph normalization was rejected after it tried to drop one unrelated historical media-seat node, so only the fresh fragment was normalized before an asserted scoped merge. Existing `directed: false` container metadata is unchanged; serialized source→target directions are preserved.
+- Freshness limitations: five SQL AST rows and 29 semantic/media files outside this task remain stale; two partial documents are not certified fully current. Graphify skips `apps/web/app/ani-tokens.css` by its sensitive-name heuristic. The existing 102 self-loop records remain; older corpus/community analytics below are historical. Token usage for active Codex semantic extraction is unavailable; AST required no LLM/provider key.
 
 ## Dormant staging delivery: verified runtime checkpoint — 2026-09-29
 

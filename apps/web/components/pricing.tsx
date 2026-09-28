@@ -27,7 +27,7 @@ import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
 import { HomeSectionHeader } from "@/components/home-section-header";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getSeoAttributionFields } from "@/lib/seo-landing-path";
-import type { PricingOffer } from "@/lib/pricing-offer";
+import type { PricingOffer, PricingPrices } from "@/lib/pricing-offer";
 import { formatMonthlyPrice } from "@/lib/billing-view";
 
 function FeatureList({ features }: { features: string[] }) {
@@ -49,11 +49,13 @@ function FeatureList({ features }: { features: string[] }) {
 export function Pricing({
 	headingLevel = 2,
 	showPlanMatrix = false,
+	initialPrices = null,
 }: {
 	/** Use 1 on the dedicated /pricing page so the page has a single H1. */
 	headingLevel?: 1 | 2;
 	/** Full plan-limits table — keep on `/pricing`, omit from homepage `#pricing`. */
 	showPlanMatrix?: boolean;
+	initialPrices?: PricingPrices | null;
 } = {}) {
 	const [checkoutError, setCheckoutError] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,21 +65,44 @@ export function Pricing({
 	const sectionRef = useRef<HTMLElement | null>(null);
 	const pricingViewFired = useRef(false);
 	const [offer, setOffer] = useState<PricingOffer | null>(null);
+	const [prices, setPrices] = useState<PricingPrices | null>(initialPrices);
+	const [checkingOffer, setCheckingOffer] = useState(true);
+	const checkingOfferRef = useRef(true);
+	const offerDeadline = useRef(0);
 	const offerVersion = useRef(0);
 	const [reload, setReload] = useState(0);
 	const checkoutLock = useRef(false);
 
 	useEffect(() => {
-		let timer: ReturnType<typeof setTimeout> | undefined;
-		async function loadOffer() {
-			clearTimeout(timer);
+		let refreshTimer: ReturnType<typeof setTimeout> | undefined;
+		let expiryTimer: ReturnType<typeof setTimeout> | undefined;
+		let controller: AbortController | undefined;
+		async function loadOffer(resetAccount = false) {
+			clearTimeout(refreshTimer);
+			// A scheduled refresh must not invalidate the explicit purchase already
+			// being checked by the server. Focus/account changes still retire it.
+			if (!resetAccount && checkoutLock.current) {
+				refreshTimer = setTimeout(() => void loadOffer(), 1000);
+				return;
+			}
+			controller?.abort();
+			controller = new AbortController();
 			const started = Date.now();
 			const version = ++offerVersion.current;
-			setOffer(null);
+			checkingOfferRef.current = true;
+			setCheckingOffer(true);
+			if (resetAccount) {
+				clearTimeout(expiryTimer);
+				offerDeadline.current = 0;
+				setOffer(null);
+			}
 			try {
 				const response = await fetch("/api/billing/offer", {
 					cache: "no-store",
-					signal: AbortSignal.timeout(15_000),
+					signal: AbortSignal.any([
+						controller.signal,
+						AbortSignal.timeout(15_000),
+					]),
 				});
 				if (!response.ok) throw new Error("Plans unavailable");
 				const next = (await response.json()) as PricingOffer;
@@ -85,22 +110,49 @@ export function Pricing({
 				const remaining =
 					Math.min(60_000, next.validForMs) - (Date.now() - started);
 				if (!(remaining > 0)) throw new Error("Offer expired");
+				setPrices(next.prices);
 				setOffer(next);
-				setCheckoutError(null);
-				timer = setTimeout(() => void loadOffer(), remaining);
+				setCheckoutError((error) =>
+					error?.startsWith("We could not load current plans") ? null : error,
+				);
+				offerDeadline.current = Date.now() + remaining;
+				clearTimeout(expiryTimer);
+				expiryTimer = setTimeout(() => {
+					offerDeadline.current = 0;
+					setOffer(null);
+				}, remaining);
+				// Refresh before expiry. A slow response may retire eligibility, but
+				// it never removes the public prices or changes the card structure.
+				refreshTimer = setTimeout(
+					() => void loadOffer(),
+					Math.max(remaining / 2, remaining - 5000),
+				);
 			} catch {
-				if (version === offerVersion.current)
+				if (version === offerVersion.current) {
+					offerDeadline.current = 0;
+					setOffer(null);
 					setCheckoutError(
 						"We could not load current plans. Please try again.",
 					);
+				}
+			} finally {
+				if (version === offerVersion.current) {
+					checkingOfferRef.current = false;
+					setCheckingOffer(false);
+				}
 			}
 		}
-		void loadOffer();
-		window.addEventListener("focus", loadOffer);
+		const onFocus = () => void loadOffer(true);
+		void loadOffer(true);
+		window.addEventListener("focus", onFocus);
 		return () => {
-			clearTimeout(timer);
+			clearTimeout(refreshTimer);
+			clearTimeout(expiryTimer);
+			controller?.abort();
+			// This is a request generation, not a DOM ref: retire the latest response.
+			// eslint-disable-next-line react-hooks/exhaustive-deps
 			++offerVersion.current;
-			window.removeEventListener("focus", loadOffer);
+			window.removeEventListener("focus", onFocus);
 		};
 	}, [reload]);
 
@@ -144,7 +196,12 @@ export function Pricing({
 	}, []);
 
 	const handleSubscribe = async (tier: CheckoutTier) => {
-		if (!offer || checkoutLock.current) return;
+		if (!offer || checkingOfferRef.current || checkoutLock.current) return;
+		if (offerDeadline.current <= Date.now()) {
+			setOffer(null);
+			setReload((n) => n + 1);
+			return;
+		}
 		if (offer.action === "manage") {
 			window.location.href = "/account/billing";
 			return;
@@ -170,33 +227,17 @@ export function Pricing({
 		setIsSubmitting(true);
 		setSubmittingTier(tier);
 		try {
-			const latestResponse = await fetch("/api/billing/offer", {
-				cache: "no-store",
-			});
-			if (!latestResponse.ok) throw new Error("Offer verification unavailable");
-			const latest = (await latestResponse.json()) as PricingOffer;
-			if (version !== offerVersion.current) return;
-			if (
-				latest.ownerUserId !== offer.ownerUserId ||
-				latest.action !== offer.action ||
-				JSON.stringify(latest.prices[tier]) !==
-					JSON.stringify(offer.prices[tier])
-			) {
-				setOffer(latest);
-				setCheckoutError(
-					"Your account or offer changed. Review the current plans before continuing.",
-				);
-				return;
-			}
 			const attribution = getSeoAttributionFields();
 			const response = await fetch("/api/create-checkout-session", {
 				method: "POST",
+				signal: AbortSignal.timeout(45_000),
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
 					planCode: tier,
 					requestId: crypto.randomUUID(),
 					expectedOwnerUserId: offer.ownerUserId,
 					expectedTrialOffered: offer.action === "trial",
+					expectedPrice: offer.prices[tier],
 					seoLandingPath: attribution.seo_landing_path,
 					checkoutPagePath: pagePath,
 					seoReferrer: attribution.seo_referrer,
@@ -210,7 +251,12 @@ export function Pricing({
 				loginUrl?: string;
 				kind?: "checkout" | "manage_subscription";
 			};
-			if (version !== offerVersion.current) return;
+			if (version !== offerVersion.current) {
+				setCheckoutError(
+					"Your account was refreshed. Please choose your plan again.",
+				);
+				return;
+			}
 
 			if (!response.ok) {
 				if (response.status === 401 && data.loginUrl) {
@@ -229,6 +275,7 @@ export function Pricing({
 					message,
 				});
 				setCheckoutError(message);
+				if (response.status === 409) setReload((n) => n + 1);
 				return;
 			}
 
@@ -352,6 +399,8 @@ export function Pricing({
 										paidTier={paidTier}
 										onSubscribe={handleSubscribe}
 										offer={offer}
+										prices={prices}
+										checkingOffer={checkingOffer}
 									/>
 								</Card>
 							</div>
@@ -372,11 +421,11 @@ export function Pricing({
 											...row,
 											values: {
 												...row.values,
-												plus: offer
-													? `${formatMonthlyPrice(offer.prices.plus)}/mo`
+												plus: prices
+													? `${formatMonthlyPrice(prices.plus)}/mo`
 													: "—",
-												pro: offer
-													? `${formatMonthlyPrice(offer.prices.pro)}/mo`
+												pro: prices
+													? `${formatMonthlyPrice(prices.pro)}/mo`
 													: "—",
 											},
 										}
@@ -417,6 +466,8 @@ function TierCardBody({
 	paidTier,
 	onSubscribe,
 	offer,
+	prices,
+	checkingOffer,
 }: {
 	tier: (typeof PRICING_TIERS)[number];
 	highlighted: boolean;
@@ -425,6 +476,8 @@ function TierCardBody({
 	paidTier: CheckoutTier | null;
 	onSubscribe: (tier: CheckoutTier) => void;
 	offer: PricingOffer | null;
+	prices: PricingPrices | null;
+	checkingOffer: boolean;
 }) {
 	const badgeLabel = tier.id === "plus" ? "Regular watch nights" : null;
 	const ctaLabel =
@@ -436,10 +489,10 @@ function TierCardBody({
 					? "Sign in to choose this plan"
 					: offer?.action === "subscribe"
 						? `Subscribe to ${tier.label}`
-						: "Checking availability…";
+						: `Choose ${tier.label}`;
 	const price =
-		paidTier && offer
-			? formatMonthlyPrice(offer.prices[paidTier])
+		paidTier && prices
+			? formatMonthlyPrice(prices[paidTier])
 			: paidTier
 				? "—"
 				: "$0";
@@ -500,7 +553,8 @@ function TierCardBody({
 							variant={tier.id === "plus" ? "cream" : "creamOutline"}
 							size="control"
 							onClick={() => onSubscribe(paidTier)}
-							disabled={isSubmitting || !offer}
+							disabled={isSubmitting || checkingOffer || !offer}
+							aria-busy={isSubmitting || checkingOffer}
 						>
 							{isSubmitting && submittingTier === paidTier
 								? "Redirecting to Stripe…"
@@ -521,16 +575,18 @@ function TierCardBody({
 							"Install the extension, then sign in"
 						)}
 					</p>
-					{paidTier && offer ? (
-						<p className="mt-3 min-h-16 text-center text-xs leading-relaxed text-ani-muted">
-							{offer.action === "trial"
-								? `Card required. 3 days free, then ${price}/month automatically. Cancel renewal in Account → Subscription before your trial ends to avoid the first charge.`
-								: offer.action === "manage"
-									? "Your existing subscription is managed in your account."
-									: offer.action === "sign_in"
-										? "Sign in to check your trial availability. Review the price and payment schedule before confirming in Stripe."
-										: `Billed monthly at ${price}. Cancel renewal in Account → Subscription. No new free trial is included.`}
-							{offer.action !== "manage"
+					{paidTier ? (
+						<p className="mt-3 min-h-32 text-center text-xs leading-relaxed text-ani-muted">
+							{!offer
+								? "Choose a plan. Your available options will appear here before checkout."
+								: offer.action === "trial"
+									? `Card required. 3 days free, then ${price}/month automatically. Cancel renewal in Account → Subscription before your trial ends to avoid the first charge.`
+									: offer.action === "manage"
+										? "Your existing subscription is managed in your account."
+										: offer.action === "sign_in"
+											? "Sign in to check your trial availability. Review the price and payment schedule before confirming in Stripe."
+											: `Billed monthly at ${price}. Cancel renewal in Account → Subscription. No new free trial is included.`}
+							{offer && offer.action !== "manage"
 								? " Final total and applicable taxes or discounts are shown in Stripe."
 								: ""}
 						</p>

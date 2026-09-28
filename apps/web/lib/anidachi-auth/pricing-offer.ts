@@ -1,11 +1,11 @@
 import type { PricingOffer } from "../pricing-offer";
 import { resolveAccountEntitlements } from "./account-entitlements";
-import { readBillingPrice } from "./billing-price";
+import { readPricingPrice } from "./pricing-catalog";
 import { db, listSubscriptionsForUser } from "./db";
 import { stripePriceIdForPlanCode } from "./stripe-plans";
 
 const defaults = {
-	readPrice: readBillingPrice,
+	readPrice: readPricingPrice,
 	priceId: stripePriceIdForPlanCode,
 	access: resolveAccountEntitlements,
 	subscriptions: listSubscriptionsForUser,

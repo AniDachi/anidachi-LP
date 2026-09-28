@@ -17,7 +17,13 @@ const input = {
 	attribution: {},
 };
 const now = Date.parse("2026-09-27T12:00:00Z");
-function fixture(trial = true) {
+function fixture(
+	trial = true,
+	readOffer = async () => ({
+		action: trial ? "trial" : "subscribe",
+		price: { unitAmount: 799, currency: "usd" },
+	}),
+) {
 	let clock = now;
 	let reserved = false;
 	const reservation: CheckoutReservation = {
@@ -122,6 +128,7 @@ function fixture(trial = true) {
 	} as unknown as Stripe;
 	const service = createSubscriptionCheckoutService({
 		stripe,
+		offer: readOffer,
 		now: () => clock,
 		reserve: async () => {
 			if (!reserved) {
@@ -540,3 +547,95 @@ for (const status of [
 		assert.equal(f.createCalls, 1);
 	});
 }
+
+test("a changed displayed price is rejected before reserving or creating checkout", async () => {
+	const f = fixture();
+	await assert.rejects(
+		f.service.prepareSubscriptionCheckout({
+			...input,
+			displayedOffer: {
+				trial: true,
+				price: { unitAmount: 599, currency: "usd" },
+			},
+		}),
+		{ status: 409 },
+	);
+	assert.equal(f.reserved, false);
+	assert.equal(f.createCalls, 0);
+});
+
+test("a displayed trial or subscription action is rechecked on the server before checkout", async () => {
+	for (const action of ["subscribe", "manage", "sign_in"]) {
+		const f = fixture(true, async () => ({
+			action,
+			price: { unitAmount: 799, currency: "usd" },
+		}));
+		await assert.rejects(
+			f.service.prepareSubscriptionCheckout({
+				...input,
+				displayedOffer: {
+					trial: true,
+					price: { unitAmount: 799, currency: "usd" },
+				},
+			}),
+			{ status: 409 },
+		);
+		assert.equal(f.reserved, false);
+		assert.equal(f.createCalls, 0);
+	}
+});
+
+test("malformed displayed prices cannot start checkout", async () => {
+	for (const price of [
+		null,
+		{},
+		{ unitAmount: -1, currency: "usd" },
+		{ unitAmount: 799.5, currency: "usd" },
+		{ unitAmount: 799, currency: "eur" },
+	]) {
+		const f = fixture();
+		await assert.rejects(
+			f.service.prepareSubscriptionCheckout({
+				...input,
+				displayedOffer: { trial: true, price },
+			}),
+			{ status: 400 },
+		);
+		assert.equal(f.reserved, false);
+		assert.equal(f.createCalls, 0);
+	}
+});
+
+test("an unavailable fresh checkout offer creates no reservation or Stripe session", async () => {
+	const f = fixture(true, async () => {
+		throw new Error("authority unavailable");
+	});
+	await assert.rejects(
+		f.service.prepareSubscriptionCheckout({
+			...input,
+			displayedOffer: {
+				trial: true,
+				price: { unitAmount: 799, currency: "usd" },
+			},
+		}),
+	);
+	assert.equal(f.reserved, false);
+	assert.equal(f.createCalls, 0);
+});
+
+test("a matching displayed offer uses the server-configured Stripe price and original trial rules", async () => {
+	const f = fixture();
+	const result = await f.service.prepareSubscriptionCheckout({
+		...input,
+		displayedOffer: {
+			trial: true,
+			price: { unitAmount: 799, currency: "usd" },
+		},
+	});
+	assert.equal(result.kind, "checkout");
+	assert.equal(result.trialOffered, true);
+	assert.deepEqual(f.params?.line_items, [
+		{ price: "price_plus", quantity: 1 },
+	]);
+	assert.equal(f.params?.subscription_data?.trial_period_days, 3);
+});
