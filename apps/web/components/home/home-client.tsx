@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { Pricing } from "@/components/pricing";
+import type { PricingPrices } from "@/lib/pricing-offer";
 import { Hero } from "@/components/hero";
 import { HowItWorks } from "@/components/how-it-works";
 import { MainAppFeatures } from "@/components/main-app-features";
@@ -13,7 +14,9 @@ import { homeFAQ } from "@/lib/home-faq";
 import { useHomeScrollAssist } from "@/lib/use-home-scroll-assist";
 import styles from "./home-sections.module.css";
 
-export function HomeClient() {
+export function HomeClient({ initialPrices }: {
+  initialPrices: PricingPrices | null;
+}) {
   const pageRef = useRef<HTMLElement>(null);
   useHomeScrollAssist(pageRef);
   return (
@@ -23,7 +26,7 @@ export function HomeClient() {
       <HowItWorks />
       <CompareTable />
       <MainAppFeatures />
-      <Pricing />
+      <Pricing initialPrices={initialPrices} />
       <SocialProof />
       <FAQSection questions={homeFAQ} />
     </main>

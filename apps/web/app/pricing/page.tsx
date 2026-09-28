@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
+import { initialPricingPrices } from "@/lib/anidachi-auth/pricing-catalog";
+
 import Link from "next/link";
 import { Pricing } from "@/components/pricing";
 import { FAQSection } from "@/components/faq-section";
 import { BreadcrumbJsonLd, FAQPageJsonLd } from "@/components/json-ld";
 import { SocialProof } from "@/components/social-proof";
 import { getPlanPolicy } from "@anidachi/protocol";
+
+export const revalidate = 300;
 
 export const metadata: Metadata = {
 	title: "AniDachi Pricing — Free Chrome Watch Party for Crunchyroll & YouTube",
@@ -68,7 +72,8 @@ const faq = [
 	},
 ];
 
-export default function PricingPage() {
+export default async function PricingPage() {
+	const prices = await initialPricingPrices();
 	return (
 		<>
 			<BreadcrumbJsonLd
@@ -101,7 +106,7 @@ export default function PricingPage() {
 					</div>
 				</nav>
 
-				<Pricing headingLevel={1} showPlanMatrix />
+				<Pricing headingLevel={1} showPlanMatrix initialPrices={prices} />
 				<SocialProof />
 				<FAQSection
 					title="Pricing FAQ"

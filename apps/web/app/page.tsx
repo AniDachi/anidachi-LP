@@ -6,11 +6,15 @@ import {
   HowToJsonLd,
 } from "@/components/json-ld";
 import { homeFAQ } from "@/lib/home-faq";
+import { initialPricingPrices } from "@/lib/anidachi-auth/pricing-catalog";
 
-export default function Home() {
+export const revalidate = 300;
+
+export default async function Home() {
+  const prices = await initialPricingPrices();
   return (
     <>
-      <HomeClient />
+      <HomeClient initialPrices={prices} />
       <SoftwareApplicationJsonLd />
       <FAQPageJsonLd questions={homeFAQ} />
       <HowToJsonLd
