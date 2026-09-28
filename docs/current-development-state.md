@@ -2,6 +2,14 @@
 
 Last updated: 2026-09-29.
 
+Latest local website checkpoint: `e0f8a21e` adds Stripe renewal restoration and
+fixes first-click resubscription after an ended subscription. Web typecheck,
+807 tests plus six prior skips and changed-file lint pass. The old staging ZIP
+from `cb7f7a86` is built and validated for the owner's old-client transition test.
+See [minimum website and owner test sequence](releases/paid-hosting-trial/minimum-website-2026-09-29.md).
+These are local implementation checks; Sandbox P11, staging delivery and owner
+acceptance are still pending. No remote writes or deployment occurred.
+
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
 contain old paths, old domains, or old decisions. When release channels,

@@ -18,6 +18,12 @@ Cloudflare Workers/Durable Objects, WXT/React, shared Zod protocol.
 
 **Spec:** [Согласованные правила и проект архитектуры](../specs/2026-09-27-paid-hosting-and-trial-design.md).
 
+**Последний локальный блок 2026-09-29:** владелец подтвердил минимальный сайт для
+полноценной проверки новой логики. `e0f8a21e` закрывает лишний переход при повторной
+покупке и добавляет восстановление продления через Stripe. Старый staging ZIP
+`cb7f7a86` собран/проверен. [Состав сайта, доказательства и порядок ручного теста](../../releases/paid-hosting-trial/minimum-website-2026-09-29.md).
+Задача 7 и реальный P11 остаются открытыми; staging еще не изменен.
+
 **Обновление 2026-09-29:** владелец выбрал ручную приемку на staging и разрешил
 подготовку/проверки перед отправкой. Подготовлены локальные последовательные
 ветки schema → Web/protocol → Worker/extension. Ревью всей ветки и исправления
@@ -74,6 +80,7 @@ Staging-приемка и production-выпуск остаются отдель�
 
 | Дата | Завершено | Доказательство / граница |
 | --- | --- | --- |
+| 2026-09-29 | Минимальный billing: повторная покупка с первого клика и Restore renewal; сохранен старый staging ZIP | `e0f8a21e`; web check, 807 passed/6 прежних skips, ESLint; regression RED→GREEN. Старый ZIP `cb7f7a86` build/validate. Ручной Sandbox/P11, staging и Store не приняты |
 | 2026-09-28 | Минимальный сайт для trial по согласованному референсу в дизайне AniDachi | От базы `9d0ba788`: pricing offer/реальные цены, return state, billing trial/quote-confirm/owned invoice recovery. Web check; 775 tests + 6 прежних skips. Scoped review, deadline regressions и pricing 1440/390 с synthetic offers. Обычный localhost offer возвращает 503; настоящая Stripe/app цепочка и staging не приняты |
 | 2026-09-28 | Убрано разделение trial по дате регистрации по решению владельца | Отдельная миграция, 27 SQL-сценариев единого правила, старый checkout заменяется после подтвержденного истечения; завершенная оплата сохраняется. Check/test 6/6; web 748 + 6 skips, extension 2105/137; narrow artifact проверен локально. SQL 1350/1351, единственное прежнее падение истории подтверждено на старом resolver |
 | 2026-09-28 | Первый локальный этап C: ошибки старого входа, сохранение причины отказа, Free-гость и личная история | Extension 2091/136, Overlay 85, web history UI 37; web/extension checks, narrow build/validate и загруженный артефакт с синтетическим HTTP. Полные C/F и реальные подписки/серверы остаются открыты |
@@ -695,6 +702,9 @@ Legacy quota schema/policy/display/Worker usage сохранены для раб
   dormant hosting schema еще отсутствует; TEST webhook и имена env/Worker secrets.
   Новое событие 3DS и dedicated drain/Vault secret остаются remote setup для F.
 - [x] Зафиксировать ZIP `59d6e80e`, SHA-256 и локальные PR-описания в receipt.
+- [x] По дополнительному согласованию завершить минимальный billing (`e0f8a21e`):
+  resubscribe и восстановление продления; web check/test807/6 и lint успешны.
+  Сохранить старый staging ZIP `cb7f7a86` для ручной проверки перехода.
 - [ ] Разрешение на отправку, последовательные PR/deployment checks и
   настройка TEST окружения; никаких одновременных merge всей feature-ветки.
 - [ ] Владелец проходит реальную матрицу ниже. Старый Store-клиент, P11

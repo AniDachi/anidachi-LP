@@ -7,16 +7,23 @@
 - Unclassified: 30 file(s) not represented in the graph (top: .css 12, (none) 11, .toml 2)
 
 ## Summary
-- 14027 nodes · 32330 edges · 851 communities (471 shown, 380 thin omitted)
-- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 1064 edges (avg confidence: 0.87)
+- 14041 nodes · 32367 edges · 851 communities (471 shown, 380 thin omitted)
+- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 1072 edges (avg confidence: 0.87)
 - Token accounting: AST uses no LLM; active Codex semantic subagent usage is unavailable.
 
 ## Graph Freshness
-- Built from commit: `59d6e80e`
-- Includes the local staging preflight:7 changed AST files, one full new document, and five explicitly partial doc scopes. Exact hashes/ranges are in semantic_updates and the ignored receipt. Local candidate checks are reported; remote staging still runs upstream and candidate delivery/manual acceptance remain pending.
+- Built from commit: `e0f8a21e`
+- Includes the minimum website e0f8a21e:11scoped web AST sources, one full111-line receipt and four partial docs. Exact source hashes/ranges are in semantic_updates; partial whole-file manifest/backlog is retained. Local implementation is verified in the source receipt; real Sandbox/P11/staging remains owner acceptance.
 - Run `graphify update .` after code changes (no API cost).
 
-## Staging preparation, local candidate — 2026-09-29
+## Minimum website: renewal and resubscription — 2026-09-29
+
+- Sourcee0f8a21e from314cecc1 adds same-request resubscription only after fresh canceled/incomplete_expired sync and finishes the old reservation. Restore renewal uses owner/same-origin/fresh Stripe identity and an unexpired subscription with correct Portal mode/config; generic plan updates disabled. Web-only server-time lease expires the action at its own period end despite longer other grants. Opening/returning from Portal does not prove renewal or alter trial dates.
+- Reported proof:2checkout+10renewal RED→GREEN regressions, web807passed/6prior skips, typecheck,11-file ESLint and Next build384pages. No new manual browser/Stripe/loaded-extension acceptance. Local Webb0f4188f/runtimef94d6590 product equality is recorded; no deploy.
+- Old stagingcb7f7a86 artifact SHA2563cee526995a41a421755765232187edf7dd2b3550a7997e21ad0680c7409a0d4 matches baseline source, not proven old Store bytes. Preserve its unpacked folder until owner check; new59d6e80eartifact remains unchanged. Real AniDachi SandboxP11/resubscribe, sequential staging delivery, owner old/new-client flow and remaining release gates stay open.
+- Scoped extraction:11web TS/TSX files,73AST definitions/230fresh edges;6new definitions and the proven old cancel callback/call removed after replacement by openStripe. Five omitted imports/calls retained with actual current-source proof. 9new semantic nodes/8updated meanings. Full new minimum receipt; currentL1-L11, planL19-L32/L79-L83/L689-L714, masterL1-L25, preflightL1-L24/L77-L98/L100-L140/L151-L176 only. Four old full-file manifests/cache/backlog and out-of-scope locations remain unchanged. Foreign nodes/edges, community identities,50hyperedges/history preserved; no full rebuild/recluster/provider/private-env/remote/product-test run.
+
+## Historical staging preparation, local candidate — 2026-09-29
 
 - Source59d6e80e fixes delayed connect revival of ended rooms, Portal-stranded empty checkout reservations and post-T frozen-Free quota precedence. Upstreamcb7f7a86 is merged locally. Reported checks include web785+6skips/lint, protocol203/API248/extension2109, workerd86/room39/WebRTC26, replay69 and SQL1360/34 with preservation/concurrency, Web build and narrow staging artifact. Graphify did not rerun these checks.
 - Separate local schema → Web/protocol → Worker/extension branches avoid independent deployment workflows racing. New Web/protocol with old Worker/extension has local check/test, runtime75 and dry-run proof; wait for each actual prerequisite deployment before the next phase. No push/PR/deploy/remote config or activation occurred. Existing upstream CI/READY Web/63remote migrations do not certify the unpublished candidate.

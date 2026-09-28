@@ -7242,9 +7242,9 @@
     "semantic_hash": "a1d73d29025f27ce30bcb29eabca2320"
   },
   "apps/web/app/account/billing/billing-client.tsx": {
-    "mtime": 1790605550.4183528,
-    "seen": 1790606404.279198,
-    "ast_hash": "721696397b35bc6a05f436adf796c908",
+    "mtime": 1790621650.5917819,
+    "seen": 1790622601.691506,
+    "ast_hash": "f277d3fa5a5e43d07f253246b75ee817",
     "semantic_hash": ""
   },
   "apps/web/app/account/billing/page.tsx": {
@@ -7284,27 +7284,27 @@
     "semantic_hash": "11430532f9449b5fc1f7efaa301fa178"
   },
   "apps/web/lib/anidachi-auth/billing-routes.test.ts": {
-    "mtime": 1790604875.2647214,
-    "seen": 1790606404.2792058,
-    "ast_hash": "514681271a85778c2971f2ddda639f22",
+    "mtime": 1790621650.59137,
+    "seen": 1790622601.69151,
+    "ast_hash": "77f21a9bb17825c95084672ff7d61ff1",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/billing-routes.ts": {
-    "mtime": 1790604875.2631996,
-    "seen": 1790606404.279207,
-    "ast_hash": "d1cc15c11c48e6e8119da1c9a2319c45",
+    "mtime": 1790621650.5908062,
+    "seen": 1790622601.6915112,
+    "ast_hash": "5c067690c0de04a2750128d4fdfd8034",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/billing.test.ts": {
-    "mtime": 1790604875.2655444,
-    "seen": 1790606404.279207,
-    "ast_hash": "f356ceb280e0a857baf39addb6cc4741",
+    "mtime": 1790621650.5911193,
+    "seen": 1790622601.691512,
+    "ast_hash": "06322925a0247c89d8460886265ef251",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/billing.ts": {
-    "mtime": 1790604875.2658417,
-    "seen": 1790606404.279207,
-    "ast_hash": "59fda604e8486b8af7d1b4caa9c64d8a",
+    "mtime": 1790621650.5909264,
+    "seen": 1790622601.691512,
+    "ast_hash": "15af9515761d48251b3703ee1b0ff1d9",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/watch-history-capacity.test.ts": {
@@ -7320,15 +7320,15 @@
     "semantic_hash": "403b20d1d8702d0824a47ceeddd56256"
   },
   "apps/web/lib/billing-client.test.ts": {
-    "mtime": 1790605550.4200678,
-    "seen": 1790606404.279209,
-    "ast_hash": "31ae2b54c5a3d7b4cf67d32ac95952de",
+    "mtime": 1790621650.5930972,
+    "seen": 1790622601.691515,
+    "ast_hash": "4844bbfb58f5142b4baa20d36e0d09d0",
     "semantic_hash": ""
   },
   "apps/web/lib/billing-view.ts": {
-    "mtime": 1790605550.4190748,
-    "seen": 1790606404.279209,
-    "ast_hash": "14d32562aaf7d28b467ac10f739fb81a",
+    "mtime": 1790621542.0143468,
+    "seen": 1790622601.691515,
+    "ast_hash": "6109e8a5e658174b1585cb30af8e929f",
     "semantic_hash": ""
   },
   "apps/web/supabase/contracts/watch_history_capacity_concurrency_contract.mjs": {
@@ -8682,21 +8682,21 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/subscription-checkout-server.ts": {
-    "mtime": 1790516669.8545213,
-    "seen": 1790527610.087513,
-    "ast_hash": "c7e1d1ff8a8a19114c28d69bda1249d5",
+    "mtime": 1790621282.0856988,
+    "seen": 1790622601.691513,
+    "ast_hash": "f24556e26d0751c5385d85163c2c2a55",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/subscription-trial.test.ts": {
-    "mtime": 1790617292.395415,
-    "seen": 1790618764.027528,
-    "ast_hash": "89ccff4047469cec82a0c458cc78c163",
+    "mtime": 1790621650.5919268,
+    "seen": 1790622601.691514,
+    "ast_hash": "0eb32b1ae4ae0f195ef71c91ebe1607e",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/subscription-trial.ts": {
-    "mtime": 1790617061.0982661,
-    "seen": 1790618764.027528,
-    "ast_hash": "1ce8092a30b0a95a2c4e4bdff8f74c7e",
+    "mtime": 1790621650.5910995,
+    "seen": 1790622601.691514,
+    "ast_hash": "11213958dc3b0d2371c817a49e22f74e",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/trial-plan-change.test.ts": {
@@ -8950,5 +8950,17 @@
     "seen": 1790618764.073044,
     "ast_hash": "",
     "semantic_hash": "bfb93adb46f5fcd8c367e2b100ff19dd"
+  },
+  "apps/web/app/api/billing/renewal-portal/route.ts": {
+    "mtime": 1790621542.1081295,
+    "seen": 1790622601.691509,
+    "ast_hash": "3ab6947f498cfbec0bc175a16cc800df",
+    "semantic_hash": ""
+  },
+  "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md": {
+    "mtime": 1790622118.9416375,
+    "seen": 1790622601.737349,
+    "ast_hash": "",
+    "semantic_hash": "48bc3b8e54199a15de77f0879ba0db24"
   }
 }

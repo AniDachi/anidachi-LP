@@ -4,10 +4,15 @@
 Ручную приемку сайта, Stripe и расширения проводит владелец. Этот документ
 фиксирует локальную готовность поставки, а не завершенную приемку новой модели.
 
+Последующий checkpoint сайта `e0f8a21e` добавляет путь P11 Restore renewal и
+исправляет повторную покупку с первого клика. Он также сохраняет старый staging
+ZIP `cb7f7a86` для проверки перехода. [Состав минимального сайта и свежие проверки](minimum-website-2026-09-29.md)
+дополняют результаты `59d6e80e` ниже; реальные P11 и staging не приняты.
+
 ## Проверенный исходник и границы
 
 - Основная ветка: `codex/paid-hosting-transition-plan`; проверенный продуктовый
-  коммит `59d6e80e`. Последующие изменения отчета/графа не меняют этот код.
+  коммит полного preflight `59d6e80e`, минимальное дополнение billing `e0f8a21e`.
 - Получен актуальный `origin/staging` `cb7f7a8642a3817c4cfe428fa63f78c6044fefe3`.
   Изменение домена `86912cb0` уже отменено этим upstream-коммитом. Локальный merge
   `432595ac` прошел без конфликтов и не изменил продуктовый код feature-ветки.
@@ -79,10 +84,10 @@ Workflow не менялся: подготовлены последовател�
 | Порядок | Ветка и исходный коммит этапа | Состав и условие перехода |
 | --- | --- | --- |
 | 1 | `codex/trial-stage-schema`, `2444815c` | 6 новых миграций, SQL tests/contracts; дождаться remote migration success, сверить 69 версий, `activation_at IS NULL`, trials off, scheduler disabled, отсутствие cutover operation/targets |
-| 2 | `codex/trial-stage-web`, `207bbf58` | Web billing/admission/drain и additive protocol; дождаться Vercel READY и проверить новые endpoints/authority. Из-за protocol path workflow повторно выкладывает прежний Worker; именно эта комбинация проверена локально |
-| 3 | `codex/trial-stage-runtime`, код `af9f8795` | Worker, extension, harnesses, затем текущие документы/граф. Выполнять только после работоспособности Web admission. Сверить Worker deployment и итоговый source; загрузить подготовленный ZIP для ручной приемки |
+| 2 | `codex/trial-stage-web`, `b0f4188f` (исходный `207bbf58`) | Web billing/admission/drain и additive protocol; включает минимальные billing fixes `e0f8a21e`. Дождаться Vercel READY и проверить новые endpoints/authority. Из-за protocol path workflow повторно выкладывает прежний Worker; эта комбинация проверена локально |
+| 3 | `codex/trial-stage-runtime`, код `af9f8795` + merge `f94d6590` | Worker, extension, harnesses, минимальный billing из фазы 2, затем текущие документы/граф. Выполнять только после работоспособности Web admission. Сверить Worker deployment и итоговый source; загрузить подготовленный ZIP для ручной приемки |
 
-Ветки складываются в проверенный продуктовый tree `59d6e80e`: сравнение всех
+Ветки складываются в проверенный продуктовый tree `e0f8a21e`: сравнение всех
 `apps`, `packages`, `scripts`, `tests`, зависимостей и workflows не дает отличий.
 Ветки 2/3 содержат предшествующие этапы, поэтому PR в staging открываются по
 очереди после принятия предыдущего. Перед каждым PR повторно проверить новый
@@ -110,13 +115,14 @@ PR-описания подготовлены локально по шаблон�
 - Worker staging доступен: GET `/` возвращает `ok:true`, `service:anidachi-api`.
   `/health` не является его health route. Имена JWT/internal/TURN secrets есть;
   значения не читались. Это не проверка авторизованного room flow кандидата.
-- Подключен правильный Stripe sandbox `acct_1RlmiIPQIEOqG7pr`, TEST.
+- Подключен правильный AniDachi Sandbox `acct_1RlmiIPQIEOqG7pr`, `livemode=false`.
+  Имена переменных `_TEST` относятся к этому Sandbox, не к другому Test mode.
   Endpoint `we_1Tkl14PQIEOqG7prAB0aLM7a` включен, URL
   `https://staging.anidachi.app/api/stripe/webhook`, API `2025-06-30.basil`.
 
 ## Что подготовить удаленно после разрешения на staging
 
-1. Добавить `invoice.payment_action_required` к существующему TEST webhook,
+1. Добавить `invoice.payment_action_required` к существующему webhook AniDachi Sandbox,
    сохранив остальные события. Локальный registration script уже содержит его;
    endpoint пока не менялся. Без этого нельзя принимать сценарий первого 3DS.
 2. Создать отдельный **staging** `ANIDACHI_HOSTING_CUTOVER_DRAIN_SECRET` в Vercel
@@ -127,7 +133,7 @@ PR-описания подготовлены локально по шаблон�
    private schema/ACL, фиксированный URL, pg_net и Cron при выключенной политике.
    Секреты и scheduler относятся к репетиции активации; отсутствие секрета не
    дает оснований включить политику или признать drain рабочим.
-4. Подтвердить TEST-account/price mapping действующего сайта, webhook signing,
+4. Подтвердить Sandbox account/price mapping действующего сайта, webhook signing,
    Portal cancellation, recovery и настройки trial email. Не включать Portal
    plan updates с `trial_update_behavior=end_trial` для согласованной смены плана.
 5. Сохранить версии/deployment IDs и только затем согласовать тестовую активацию.
@@ -145,14 +151,14 @@ PR-описания подготовлены локально по шаблон�
 ## Открытые условия приемки
 
 Владелец проходит [матрицу плана](../../superpowers/plans/2026-09-27-paid-hosting-and-trial-transition.md#задача-7-сквозная-приемка-staging)
-после доставки и подготовки TEST окружения. Обязательно проверить:
+после доставки и подготовки AniDachi Sandbox. Обязательно проверить:
 
 - Новый и существующий Free → один trial с картой → Plus/Pro → исходные 72 часа;
   повторная попытка не создает второй trial/подписку.
 - Оплата, отказ, 3DS, задержка/перестановка webhook, отмена и смена Plus↔Pro.
-  Для P11 «отмена → повторное включение продления» еще надо подтвердить доступный
-  пользовательский путь и сохранение исходного срока; текущий минимальный billing
-  UI не имеет отдельной кнопки повторного включения. Этот пункт не принят.
+  Для P11 «отмена → повторное включение продления» кнопка и серверный путь добавлены
+  локально в `e0f8a21e`; реальный Portal → возврат → сохранение исходного срока
+  должен подтвердить владелец. Этот пункт еще не принят.
 - Free join в paid/trial room, просмотр дольше 30 минут/UTC, отсутствие новой
   личной истории и сохранение read/Resume/delete прежней.
 - Две реальные учетные записи/профиля, точный старый опубликованный Store-клиент,

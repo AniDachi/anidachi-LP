@@ -13569,7 +13569,7 @@
       "file_type": "code",
       "norm_label": "billingdeps",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L42"
+      "source_location": "L55"
     },
     {
       "id": "apps_web_lib_anidachi_auth_billing_billingerror",
@@ -13595,7 +13595,7 @@
       "file_type": "code",
       "norm_label": "billingservice",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L268"
+      "source_location": "L315"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_subscriptionrow",
@@ -13634,7 +13634,7 @@
       "file_type": "code",
       "norm_label": "billingoverview",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L36"
+      "source_location": "L37"
     },
     {
       "id": "apps_web_lib_billing_view_billingsubscription",
@@ -68037,18 +68037,6 @@
       "source_location": "L30"
     },
     {
-      "id": "apps_web_app_account_billing_billing_client_billingclient_cancel",
-      "label": "cancel()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 75,
-      "community_name": "billing.ts",
-      "file_type": "code",
-      "norm_label": "cancel()",
-      "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L163"
-    },
-    {
       "id": "apps_web_app_account_billing_billing_client_formatdate",
       "label": "formatDate()",
       "_callable": true,
@@ -68094,7 +68082,7 @@
       "file_type": "code",
       "norm_label": "createbillingservice()",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L64"
+      "source_location": "L78"
     },
     {
       "id": "apps_web_lib_anidachi_auth_billing_createbillingservice_ownedsubscriptions",
@@ -68106,7 +68094,7 @@
       "file_type": "code",
       "norm_label": "ownedsubscriptions()",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L65"
+      "source_location": "L79"
     },
     {
       "id": "apps_web_lib_anidachi_auth_billing_routes_createbillinghandlers",
@@ -68154,7 +68142,7 @@
       "file_type": "code",
       "norm_label": "request()",
       "source_file": "apps/web/lib/anidachi-auth/billing-routes.test.ts",
-      "source_location": "L63"
+      "source_location": "L72"
     },
     {
       "id": "apps_web_lib_anidachi_auth_billing_test_fixture",
@@ -68202,7 +68190,7 @@
       "file_type": "code",
       "norm_label": "subscriptiondatelabel()",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L88"
+      "source_location": "L91"
     },
     {
       "id": "apps_web_lib_billing_view_subscriptionstatuslabel",
@@ -68214,7 +68202,7 @@
       "file_type": "code",
       "norm_label": "subscriptionstatuslabel()",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L63"
+      "source_location": "L66"
     },
     {
       "id": "apps_extension_src_watch_history_resume_applypersonalhistoryresume",
@@ -133980,7 +133968,7 @@
       "file_type": "code",
       "norm_label": "defaultdeps",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L53"
+      "source_location": "L67"
     },
     {
       "id": "apps_web_lib_anidachi_auth_billing_routes",
@@ -159071,7 +159059,7 @@
     },
     {
       "id": "docs_superpowers_plans_2026_09_27_paid_hosting_and_trial_transition_paid_hosting_trial_plan",
-      "label": "Plan preserves Free guest-only hosting and one unused three-day card trial across account ages. September29 Block E records current upstream, independent review and three59d6e80e fixes, local checks and staged schema/Web/runtime preparation. Six local preparation items checked; sending/remote setup and owner Task7 manual matrix remain open. No push/PR/deploy/config change/activation yet",
+      "label": "Latest approved minimum website checkpoint e0f8a21e adds Restore renewal and first-click resubscription, plus preserved old staging cb7f7a86 artifact. Sequential schema/Web/runtime delivery and owner manual matrix remain required; Task7 and real P11 are open, staging unchanged. Local web807+6skips/typecheck/lint supplement earlier preparation proof",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
@@ -159079,11 +159067,11 @@
       "community_name": "Trial transition plan",
       "contributor": null,
       "file_type": "document",
-      "norm_label": "plan preserves free guest-only hosting and one unused three-day card trial across account ages. september29 block e records current upstream, independent review and three59d6e80e fixes, local checks and staged schema/web/runtime preparation. six local preparation items checked; sending/remote setup and owner task7 manual matrix remain open. no push/pr/deploy/config change/activation yet",
+      "norm_label": "latest approved minimum website checkpoint e0f8a21e adds restore renewal and first-click resubscription, plus preserved old staging cb7f7a86 artifact. sequential schema/web/runtime delivery and owner manual matrix remain required; task7 and real p11 are open, staging unchanged. local web807+6skips/typecheck/lint supplement earlier preparation proof",
       "source_file": "docs/superpowers/plans/2026-09-27-paid-hosting-and-trial-transition.md",
-      "source_location": "L8-L26; L682-L704",
+      "source_location": "L19-L32; L79-L83; L705-L714",
       "source_url": null,
-      "status": "local_staging_candidate_prepared_not_delivered_manual_acceptance_pending"
+      "status": "minimum_website_locally_verified_sandbox_p11_staging_owner_acceptance_pending"
     },
     {
       "id": "docs_superpowers_plans_2026_09_27_paid_hosting_and_trial_transition_planning_acceptance_boundary",
@@ -171018,15 +171006,15 @@
     },
     {
       "id": "docs_releases_paid_hosting_trial_transition_master_plan_ru_master_plan",
-      "label": "AniDachi Russian transition master retains agreed rules and earlier dated proof; September29 preflight updates operational readiness with three local delivery branches, verified intermediate compatibility, three review fixes and exact ZIP. Remaining TEST setup and manual acceptance belong to the owner; nothing has been sent to staging",
-      "norm_label": "anidachi russian transition master retains agreed rules and earlier dated proof; september29 preflight updates operational readiness with three local delivery branches, verified intermediate compatibility, three review fixes and exact zip. remaining test setup and manual acceptance belong to the owner; nothing has been sent to staging",
+      "label": "Russian transition master retains its dated rules/evidence; e0f8a21e adds minimum billing for testing, Restore renewal and resubscription, and preserves old staging cb7f7a86 ZIP. New minimum-website receipt supplements the staging preflight; owner real P11 and full staging matrix remain unaccepted. No deployment/activation permission",
+      "norm_label": "russian transition master retains its dated rules/evidence; e0f8a21e adds minimum billing for testing, restore renewal and resubscription, and preserves old staging cb7f7a86 zip. new minimum-website receipt supplements the staging preflight; owner real p11 and full staging matrix remain unaccepted. no deployment/activation permission",
       "file_type": "document",
       "_origin": "semantic",
       "source_file": "docs/releases/paid-hosting-trial/transition-master-plan-ru.md",
       "source_location": "L1-L25",
       "community": 830,
       "community_name": "Trial transition plan",
-      "status": "local_staging_candidate_prepared_not_delivered_manual_acceptance_pending",
+      "status": "minimum_website_locally_verified_sandbox_p11_staging_owner_acceptance_pending",
       "language": "ru",
       "sections": 22,
       "acceptance_scenarios": 56,
@@ -171417,7 +171405,7 @@
       "label": "billingDisplayValidityMs()",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L46",
+      "source_location": "L47",
       "_callable": true,
       "_origin": "ast",
       "norm_label": "billingdisplayvalidityms()",
@@ -171844,28 +171832,28 @@
     },
     {
       "id": "docs_releases_paid_hosting_trial_staging_preflight_2026_09_29_manual_acceptance_and_recovery_gates",
-      "label": "Owner still must accept real card trial/payment/3DS/webhook order, cancellation and PlusPro, Free guest/history fences, two real profiles/exact old Store/newZIP, media cleanup, distributed drain/latency/retry/ACK, legacy terminal target exclusion or safe recovery, old URLs and data preservation. P11 renewal re-enable has no separate current UI button and is unaccepted. BeforeT keep additive schema; afterT preserve T/trial ledger/pending closures and never reopen Free rooms",
-      "norm_label": "owner still must accept real card trial/payment/3ds/webhook order, cancellation and pluspro, free guest/history fences, two real profiles/exact old store/newzip, media cleanup, distributed drain/latency/retry/ack, legacy terminal target exclusion or safe recovery, old urls and data preservation. p11 renewal re-enable has no separate current ui button and is unaccepted. beforet keep additive schema; aftert preserve t/trial ledger/pending closures and never reopen free rooms",
+      "label": "Owner still must accept real card trial/payment/3DS/webhook order, cancellation and PlusPro, Free guest/history fences, two real profiles/exact old Store/newZIP, media cleanup, distributed drain/latency/retry/ACK, legacy terminal target exclusion or safe recovery, old URLs and data preservation. P11 Restore renewal button/server path now exists locally at e0f8a21e; owner real Portal return and original-period preservation remain unaccepted. BeforeT keep additive schema; afterT preserve T/trial ledger/pending closures and never reopen Free rooms",
+      "norm_label": "owner still must accept real card trial/payment/3ds/webhook order, cancellation and pluspro, free guest/history fences, two real profiles/exact old store/newzip, media cleanup, distributed drain/latency/retry/ack, legacy terminal target exclusion or safe recovery, old urls and data preservation. p11 restore renewal button/server path now exists locally at e0f8a21e; owner real portal return and original-period preservation remain unaccepted. beforet keep additive schema; aftert preserve t/trial ledger/pending closures and never reopen free rooms",
       "file_type": "concept",
       "_origin": "semantic",
       "source_file": "docs/releases/paid-hosting-trial/staging-preflight-2026-09-29.md",
-      "source_location": "L145-L170",
+      "source_location": "L151-L176",
       "community": 830,
       "community_name": "Trial transition plan",
-      "status": "local_staging_candidate_prepared_not_delivered_manual_acceptance_pending",
+      "status": "minimum_website_locally_verified_sandbox_p11_staging_owner_acceptance_pending",
       "rationale": "Local automated checks and current-source harnesses do not close Task7, old-client or real staging acceptance; remaining marketing/SEO/Store promises precede productionT."
     },
     {
       "id": "docs_releases_paid_hosting_trial_staging_preflight_2026_09_29_sequential_delivery_branches",
-      "label": "Local delivery sequence: codex/trial-stage-schema2444815c → wait migrations69/dormant policy/no operations; codex/trial-stage-web207bbf58 → wait VercelREADY/new authority; codex/trial-stage-runtimeaf9f8795 → verify Worker and exact final source/load ZIP. Later branches include prerequisites; compare upstream before each sequential PR and preserve collaborator changes. Final product tree matches59d6e80e",
-      "norm_label": "local delivery sequence: codex/trial-stage-schema2444815c → wait migrations69/dormant policy/no operations; codex/trial-stage-web207bbf58 → wait vercelready/new authority; codex/trial-stage-runtimeaf9f8795 → verify worker and exact final source/load zip. later branches include prerequisites; compare upstream before each sequential pr and preserve collaborator changes. final product tree matches59d6e80e",
+      "label": "Sequential local branches: schema2444815c; Webb0f4188f including minimum billing e0f8a21e; runtimeaf9f8795 plus mergef94d6590 and current docs/graph. Final product tree equals e0f8a21e. Wait for actual schema/Vercel/admission/Worker prerequisite deployments, reread upstream before each PR and preserve collaborator changes; whole original feature cannot be merged at once",
+      "norm_label": "sequential local branches: schema2444815c; webb0f4188f including minimum billing e0f8a21e; runtimeaf9f8795 plus mergef94d6590 and current docs/graph. final product tree equals e0f8a21e. wait for actual schema/vercel/admission/worker prerequisite deployments, reread upstream before each pr and preserve collaborator changes; whole original feature cannot be merged at once",
       "file_type": "concept",
       "_origin": "semantic",
       "source_file": "docs/releases/paid-hosting-trial/staging-preflight-2026-09-29.md",
-      "source_location": "L72-L93",
+      "source_location": "L77-L98",
       "community": 830,
       "community_name": "Trial transition plan",
-      "status": "local_staging_candidate_prepared_not_delivered_manual_acceptance_pending",
+      "status": "minimum_website_locally_verified_sandbox_p11_staging_owner_acceptance_pending",
       "rationale": "Independent SQL/Worker workflows and Vercel Git deployments otherwise race. New Web depends on new schema, new Worker on live Web admission; never merge the original whole feature branch at once.",
       "delivery_branches": [
         "codex/trial-stage-schema",
@@ -171875,29 +171863,30 @@
     },
     {
       "id": "docs_releases_paid_hosting_trial_staging_preflight_2026_09_29_staging_preflight",
-      "label": "September29 staging preflight records local delivery readiness at59d6e80e after conflict-free432595ac merge of upstreamcb7f7a86, whose domain revert is already included. Preparation/checks authorized; owner retains manual acceptance. No push, PR, remote merge/migration/config, deploy, activation or Store publication",
-      "norm_label": "september29 staging preflight records local delivery readiness at59d6e80e after conflict-free432595ac merge of upstreamcb7f7a86, whose domain revert is already included. preparation/checks authorized; owner retains manual acceptance. no push, pr, remote merge/migration/config, deploy, activation or store publication",
+      "label": "Full staging preflight source59d6e80e is supplemented by minimum billing e0f8a21e: local Restore renewal and first-click resubscription, preserved cb7f7a86 artifact and fresh checks in the new receipt. Upstream merge/domain revert and full preflight proof remain dated; no remote delivery and real P11/staging unaccepted",
+      "norm_label": "full staging preflight source59d6e80e is supplemented by minimum billing e0f8a21e: local restore renewal and first-click resubscription, preserved cb7f7a86 artifact and fresh checks in the new receipt. upstream merge/domain revert and full preflight proof remain dated; no remote delivery and real p11/staging unaccepted",
       "file_type": "document",
       "_origin": "semantic",
       "source_file": "docs/releases/paid-hosting-trial/staging-preflight-2026-09-29.md",
-      "source_location": "L1-L19",
+      "source_location": "L1-L24",
       "community": 830,
       "community_name": "Trial transition plan",
-      "status": "local_staging_candidate_prepared_not_delivered_manual_acceptance_pending",
+      "status": "minimum_website_locally_verified_sandbox_p11_staging_owner_acceptance_pending",
       "source_product_commit": "59d6e80e",
-      "upstream_staging_commit": "cb7f7a8642a3817c4cfe428fa63f78c6044fefe3"
+      "upstream_staging_commit": "cb7f7a8642a3817c4cfe428fa63f78c6044fefe3",
+      "billing_product_commit": "e0f8a21e"
     },
     {
       "id": "docs_releases_paid_hosting_trial_staging_preflight_2026_09_29_staging_setup_dependencies",
-      "label": "After staging authorization add invoice.payment_action_required to existing TEST webhook and distinct matching staging cutover drain secret in Web/Vault; both drain values currently absent. Redeploy Web after env change; no Worker drain secret. Verify private ACL/fixedURL/Cron/pg_net/admission while dormant, TEST prices/signing/Portal/recovery/email, then separately agree activation. Preserve trial deadlines; no Portal end_trial shortcut",
-      "norm_label": "after staging authorization add invoice.payment_action_required to existing test webhook and distinct matching staging cutover drain secret in web/vault; both drain values currently absent. redeploy web after env change; no worker drain secret. verify private acl/fixedurl/cron/pg_net/admission while dormant, test prices/signing/portal/recovery/email, then separately agree activation. preserve trial deadlines; no portal end_trial shortcut",
+      "label": "After staging authorization add invoice.payment_action_required to existing AniDachi Sandbox webhook and distinct matching staging cutover drain secret in Web/Vault; both drain values currently absent. Redeploy Web after env change; no Worker drain secret. Verify private ACL/fixedURL/Cron/pg_net/admission while dormant, Sandbox account/prices/signing/Portal/recovery/email, then separately agree activation. Preserve trial deadlines; no Portal end_trial shortcut",
+      "norm_label": "after staging authorization add invoice.payment_action_required to existing anidachi sandbox webhook and distinct matching staging cutover drain secret in web/vault; both drain values currently absent. redeploy web after env change; no worker drain secret. verify private acl/fixedurl/cron/pg_net/admission while dormant, sandbox account/prices/signing/portal/recovery/email, then separately agree activation. preserve trial deadlines; no portal end_trial shortcut",
       "file_type": "concept",
       "_origin": "semantic",
       "source_file": "docs/releases/paid-hosting-trial/staging-preflight-2026-09-29.md",
-      "source_location": "L117-L134",
+      "source_location": "L123-L140",
       "community": 830,
       "community_name": "Trial transition plan",
-      "status": "local_staging_candidate_prepared_not_delivered_manual_acceptance_pending",
+      "status": "minimum_website_locally_verified_sandbox_p11_staging_owner_acceptance_pending",
       "remote_change_status": "planned_not_performed"
     },
     {
@@ -171914,29 +171903,228 @@
     },
     {
       "id": "docs_releases_paid_hosting_trial_staging_preflight_2026_09_29_upstream_read_only_snapshot",
-      "label": "NightSeptember29 local-time read-only snapshot: existing stagingcb7f7a86 CI/migrations/smoke green and VercelREADY/gated/noindex; Supabase healthy63 migrations with no new hosting policy/operation and personal history already active; Worker root health works. TEST webhook/account and env/secret names inspected, values/matches and authenticated candidate flow not proved. This is upstream evidence, not unpublished-candidate CI",
-      "norm_label": "nightseptember29 local-time read-only snapshot: existing stagingcb7f7a86 ci/migrations/smoke green and vercelready/gated/noindex; supabase healthy63 migrations with no new hosting policy/operation and personal history already active; worker root health works. test webhook/account and env/secret names inspected, values/matches and authenticated candidate flow not proved. this is upstream evidence, not unpublished-candidate ci",
+      "label": "NightSeptember29 local-time read-only snapshot: existing stagingcb7f7a86 CI/migrations/smoke green and VercelREADY/gated/noindex; Supabase healthy63 migrations with no new hosting policy/operation and personal history already active; Worker root health works. AniDachi Sandbox webhook/account livemode=false and env/secret names inspected, values/matches and authenticated candidate flow not proved. _TEST variables refer to this exact Sandbox, not another Test-mode account. This is upstream evidence, not unpublished-candidate CI",
+      "norm_label": "nightseptember29 local-time read-only snapshot: existing stagingcb7f7a86 ci/migrations/smoke green and vercelready/gated/noindex; supabase healthy63 migrations with no new hosting policy/operation and personal history already active; worker root health works. anidachi sandbox webhook/account livemode=false and env/secret names inspected, values/matches and authenticated candidate flow not proved. _test variables refer to this exact sandbox, not another test-mode account. this is upstream evidence, not unpublished-candidate ci",
       "file_type": "concept",
       "_origin": "semantic",
       "source_file": "docs/releases/paid-hosting-trial/staging-preflight-2026-09-29.md",
-      "source_location": "L95-L115",
+      "source_location": "L100-L121",
       "community": 830,
       "community_name": "Trial transition plan",
-      "status": "local_staging_candidate_prepared_not_delivered_manual_acceptance_pending",
+      "status": "minimum_website_locally_verified_sandbox_p11_staging_owner_acceptance_pending",
       "upstream_remote_migrations": 63,
       "external_verification": "source_reported_snapshot_not_reread_by_graph_agent"
     },
     {
       "id": "docs_superpowers_plans_2026_09_27_paid_hosting_and_trial_transition_block_e_staging_preparation",
-      "label": "Block E local preparation records six completed tasks: upstream merge, independent review/three fixes, local full checks/builds, phased branches/intermediate compatibility, read-only staging snapshot, exactZIP/descriptions. Permission to send and sequential deployment/config remain open, followed by owner real matrix including P11, old Store, terminal recovery and latency",
-      "norm_label": "block e local preparation records six completed tasks: upstream merge, independent review/three fixes, local full checks/builds, phased branches/intermediate compatibility, read-only staging snapshot, exactzip/descriptions. permission to send and sequential deployment/config remain open, followed by owner real matrix including p11, old store, terminal recovery and latency",
+      "label": "Block E retains six earlier local preparation checks and adds the owner-approved minimum billing checkpoint e0f8a21e: terminal resubscribe, Restore renewal, web807+6skips/check/lint and old staging artifact preservation. Sending/deployment/config permission and owner old-Store/P11/legacy/latency matrix remain unchecked",
+      "norm_label": "block e retains six earlier local preparation checks and adds the owner-approved minimum billing checkpoint e0f8a21e: terminal resubscribe, restore renewal, web807+6skips/check/lint and old staging artifact preservation. sending/deployment/config permission and owner old-store/p11/legacy/latency matrix remain unchecked",
       "file_type": "concept",
       "_origin": "semantic",
       "source_file": "docs/superpowers/plans/2026-09-27-paid-hosting-and-trial-transition.md",
-      "source_location": "L682-L704",
+      "source_location": "L689-L714",
       "community": 830,
       "community_name": "Trial transition plan",
-      "status": "local_staging_candidate_prepared_not_delivered_manual_acceptance_pending"
+      "status": "minimum_website_locally_verified_sandbox_p11_staging_owner_acceptance_pending"
+    },
+    {
+      "id": "apps_web_app_account_billing_billing_client_billingclient_openstripe",
+      "label": "openStripe()",
+      "file_type": "code",
+      "source_file": "apps/web/app/account/billing/billing-client.tsx",
+      "source_location": "L163",
+      "_callable": true,
+      "_origin": "ast",
+      "norm_label": "openstripe()",
+      "community": 75,
+      "community_name": "billing.ts"
+    },
+    {
+      "id": "apps_web_app_api_billing_renewal_portal_route",
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "apps/web/app/api/billing/renewal-portal/route.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "norm_label": "route.ts",
+      "community": 75,
+      "community_name": "billing.ts"
+    },
+    {
+      "id": "apps_web_app_api_billing_renewal_portal_route_dynamic",
+      "label": "dynamic",
+      "file_type": "code",
+      "source_file": "apps/web/app/api/billing/renewal-portal/route.ts",
+      "source_location": "L3",
+      "_origin": "ast",
+      "norm_label": "dynamic",
+      "community": 75,
+      "community_name": "billing.ts"
+    },
+    {
+      "id": "apps_web_app_api_billing_renewal_portal_route_post",
+      "label": "POST",
+      "file_type": "code",
+      "source_file": "apps/web/app/api/billing/renewal-portal/route.ts",
+      "source_location": "L4",
+      "_origin": "ast",
+      "norm_label": "post",
+      "community": 75,
+      "community_name": "billing.ts"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_billing_canrestorerenewal",
+      "label": "canRestoreRenewal()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/billing.ts",
+      "source_location": "L42",
+      "_callable": true,
+      "_origin": "ast",
+      "norm_label": "canrestorerenewal()",
+      "community": 75,
+      "community_name": "billing.ts"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_billing_createbillingservice_subscriptionportal",
+      "label": "subscriptionPortal()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/billing.ts",
+      "source_location": "L90",
+      "_callable": true,
+      "_origin": "ast",
+      "norm_label": "subscriptionportal()",
+      "community": 75,
+      "community_name": "billing.ts"
+    },
+    {
+      "id": "docs_current_development_state_minimum_website_checkpoint",
+      "label": "Latest local e0f8a21e website checkpoint adds renewal restoration/first-click resubscribe, web807+6skips/check/lint and validated old stagingcb7f7a86 artifact. Owner SandboxP11/staging delivery/acceptance remain pending; no remote writes/deployment",
+      "norm_label": "latest local e0f8a21e website checkpoint adds renewal restoration/first-click resubscribe, web807+6skips/check/lint and validated old stagingcb7f7a86 artifact. owner sandboxp11/staging delivery/acceptance remain pending; no remote writes/deployment",
+      "file_type": "concept",
+      "_origin": "semantic",
+      "source_file": "docs/current-development-state.md",
+      "source_location": "L5-L11",
+      "community": 831,
+      "community_name": "Planned trial billing",
+      "status": "minimum_website_locally_verified_sandbox_p11_staging_owner_acceptance_pending"
+    },
+    {
+      "id": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_fresh_terminal_resubscription",
+      "label": "Completed old Checkout now freshly synchronizes subscription, finishes its old reservation and retries reservation in the same request only for canceled or incomplete_expired. Other statuses and unknown Stripe outcomes cannot permit second purchase; consumed trial remains server-owned. First Subscribe no longer takes an extra management detour for a verified ended subscription",
+      "norm_label": "completed old checkout now freshly synchronizes subscription, finishes its old reservation and retries reservation in the same request only for canceled or incomplete_expired. other statuses and unknown stripe outcomes cannot permit second purchase; consumed trial remains server-owned. first subscribe no longer takes an extra management detour for a verified ended subscription",
+      "file_type": "concept",
+      "_origin": "semantic",
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L18; L28-L33",
+      "community": 831,
+      "community_name": "Planned trial billing",
+      "status": "minimum_website_locally_verified_sandbox_p11_staging_owner_acceptance_pending",
+      "rationale": "Completed Checkout status alone does not prove an active subscription or permit another one; a fresh terminal subscription result is required before replacing its reservation."
+    },
+    {
+      "id": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_local_web_verification",
+      "label": "Two resubscribe and ten missing-renewal regressions fail before fixes and pass afterward. Webcheck807passed/6prior skips/0failures, 11-file ESLint clean, diff/devcheck and Next production build384 pages pass. No browser/Stripe/loaded-extension flow rerun; API/Worker/extension/protocol/SQL source unchanged and earlier proof retains scope",
+      "norm_label": "two resubscribe and ten missing-renewal regressions fail before fixes and pass afterward. webcheck807passed/6prior skips/0failures, 11-file eslint clean, diff/devcheck and next production build384 pages pass. no browser/stripe/loaded-extension flow rerun; api/worker/extension/protocol/sql source unchanged and earlier proof retains scope",
+      "file_type": "concept",
+      "_origin": "semantic",
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L50-L65",
+      "community": 831,
+      "community_name": "Planned trial billing",
+      "status": "minimum_website_locally_verified_sandbox_p11_staging_owner_acceptance_pending",
+      "reported_tests": {
+        "web_passed": 807,
+        "web_existing_skips": 6,
+        "web_failures": 0,
+        "resubscribe_red": 2,
+        "renewal_red": 10,
+        "eslint_files": 11,
+        "next_pages": 384
+      },
+      "tests_not_rerun_by_graph_agent": true
+    },
+    {
+      "id": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_minimum_website_checkpoint",
+      "label": "Owner-approved minimum website checkpoint e0f8a21e from314cecc1 completes local renewal-restoration and first-click resubscription paths for testing, preserving existing pricing/return/billing flow. Further design/pages are separate; annual plans/people counters/platforms/history-consent changes excluded. No remote action or complete transition/main readiness claimed",
+      "norm_label": "owner-approved minimum website checkpoint e0f8a21e from314cecc1 completes local renewal-restoration and first-click resubscription paths for testing, preserving existing pricing/return/billing flow. further design/pages are separate; annual plans/people counters/platforms/history-consent changes excluded. no remote action or complete transition/main readiness claimed",
+      "file_type": "document",
+      "_origin": "semantic",
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L1-L24; L110-L111",
+      "community": 831,
+      "community_name": "Planned trial billing",
+      "status": "minimum_website_locally_verified_sandbox_p11_staging_owner_acceptance_pending",
+      "source_product_commit": "e0f8a21ed635da6c6493f7e42f8220e5eb335347"
+    },
+    {
+      "id": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_minimum_website_phase_equality",
+      "label": "Web staging phase b0f4188f contains e0f8a21e web source; runtime merge f94d6590 has identical final product files. Subsequent docs/graph commits do not alter tested code; these are local source-equality checks, not deployment evidence",
+      "norm_label": "web staging phase b0f4188f contains e0f8a21e web source; runtime merge f94d6590 has identical final product files. subsequent docs/graph commits do not alter tested code; these are local source-equality checks, not deployment evidence",
+      "file_type": "concept",
+      "_origin": "semantic",
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L67-L69",
+      "community": 831,
+      "community_name": "Planned trial billing",
+      "status": "minimum_website_locally_verified_sandbox_p11_staging_owner_acceptance_pending",
+      "phase_web": "b0f4188f",
+      "phase_runtime_merge": "f94d6590"
+    },
+    {
+      "id": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_old_new_artifact_proof_boundary",
+      "label": "Old narrow staging ZIP fromcb7f7a86 matches maina5a0134e extension/protocol/lockfile/build-script sources, not verified published Store ZIP bytes. Old703924byte/version0.1.0 artifact has SHA2563cee526995a41a421755765232187edf7dd2b3550a7997e21ad0680c7409a0d4; preserve unpacked folder until owner old-client test. New59d6e80e708726byte/f352982d artifact unchanged by website-only checkpoint",
+      "norm_label": "old narrow staging zip fromcb7f7a86 matches maina5a0134e extension/protocol/lockfile/build-script sources, not verified published store zip bytes. old703924byte/version0.1.0 artifact has sha2563cee526995a41a421755765232187edf7dd2b3550a7997e21ad0680c7409a0d4; preserve unpacked folder until owner old-client test. new59d6e80e708726byte/f352982d artifact unchanged by website-only checkpoint",
+      "file_type": "concept",
+      "_origin": "semantic",
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L75-L92",
+      "community": 831,
+      "community_name": "Planned trial billing",
+      "status": "minimum_website_locally_verified_sandbox_p11_staging_owner_acceptance_pending",
+      "old_artifact_sha256": "3cee526995a41a421755765232187edf7dd2b3550a7997e21ad0680c7409a0d4",
+      "new_artifact_sha256": "f352982d6b5749e047f2631c58c4e090a846b6c356a31c6376d6df986d55c7fe",
+      "old_store_byte_identity_verified": false
+    },
+    {
+      "id": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_owned_renewal_portal",
+      "label": "POST/api/billing/renewal-portal and Restore renewal UI check session/same-origin/owner local row, fresh Stripe customer/subscription and unexpired canceled-renewal period. Use mode-correct default active Portal config, end-of-period cancellation and disabled generic plan updates. Stripe confirms restoration; app neither changes trial dates nor treats Portal opening/return as success",
+      "norm_label": "post/api/billing/renewal-portal and restore renewal ui check session/same-origin/owner local row, fresh stripe customer/subscription and unexpired canceled-renewal period. use mode-correct default active portal config, end-of-period cancellation and disabled generic plan updates. stripe confirms restoration; app neither changes trial dates nor treats portal opening/return as success",
+      "file_type": "concept",
+      "_origin": "semantic",
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L17; L34-L46",
+      "community": 831,
+      "community_name": "Planned trial billing",
+      "status": "minimum_website_locally_verified_sandbox_p11_staging_owner_acceptance_pending",
+      "runtime_status": "locally_implemented_real_sandbox_P11_unverified"
+    },
+    {
+      "id": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_owner_old_new_client_acceptance",
+      "label": "Owner first installs/checks old staging build. After permission, prepare exact AniDachi Sandbox and dedicated drain secret, deliver schema→Web→Worker dormant, agree testT with old extension retained, check Free closure/create denial/paid-host guest entry, then replace unpacked build preserving profile/data and test full flow/P11/resubscribe. Manual unpacked replacement does not reproduce Store rollout; published old client, staging cutover and production remain separate gates",
+      "norm_label": "owner first installs/checks old staging build. after permission, prepare exact anidachi sandbox and dedicated drain secret, deliver schema→web→worker dormant, agree testt with old extension retained, check free closure/create denial/paid-host guest entry, then replace unpacked build preserving profile/data and test full flow/p11/resubscribe. manual unpacked replacement does not reproduce store rollout; published old client, staging cutover and production remain separate gates",
+      "file_type": "concept",
+      "_origin": "semantic",
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L94-L111",
+      "community": 831,
+      "community_name": "Planned trial billing",
+      "status": "minimum_website_locally_verified_sandbox_p11_staging_owner_acceptance_pending",
+      "real_sandbox_p11_accepted": false,
+      "staging_delivered": false,
+      "rationale": "Source-matched baseline build supports manual transition compatibility checks without claiming exact old Store package or automatic update distribution."
+    },
+    {
+      "id": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_renewal_server_time_lease",
+      "label": "canRestoreRenewal is web-billing-only and expires at the subscription original period boundary using server time, even when another grant gives longer aggregate access. Return/focus rereads status; button visibility and opened Portal grant no renewal or extra trial days. Room contracts and billing rules unchanged",
+      "norm_label": "canrestorerenewal is web-billing-only and expires at the subscription original period boundary using server time, even when another grant gives longer aggregate access. return/focus rereads status; button visibility and opened portal grant no renewal or extra trial days. room contracts and billing rules unchanged",
+      "file_type": "concept",
+      "_origin": "semantic",
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L39-L48",
+      "community": 831,
+      "community_name": "Planned trial billing",
+      "status": "minimum_website_locally_verified_sandbox_p11_staging_owner_acceptance_pending",
+      "rationale": "Account-level access can outlive one subscription; renewal action must be bounded by that specific subscription deadline."
     }
   ],
   "links": [
@@ -216337,7 +216525,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L311",
+      "source_location": "L316",
       "weight": 1.0
     },
     {
@@ -216349,7 +216537,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L378",
+      "source_location": "L383",
       "weight": 1.0
     },
     {
@@ -216361,7 +216549,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L379",
+      "source_location": "L384",
       "weight": 1.0
     },
     {
@@ -226789,7 +226977,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L68",
+      "source_location": "L82",
       "weight": 1.0
     },
     {
@@ -226825,7 +227013,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/billing-routes.ts",
-      "source_location": "L48",
+      "source_location": "L54",
       "weight": 1.0
     },
     {
@@ -226837,7 +227025,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/billing-routes.test.ts",
-      "source_location": "L52",
+      "source_location": "L61",
       "weight": 1.0
     },
     {
@@ -226849,7 +227037,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/billing.test.ts",
-      "source_location": "L159",
+      "source_location": "L166",
       "weight": 1.0
     },
     {
@@ -247769,18 +247957,6 @@
       "weight": 1.0
     },
     {
-      "source": "apps_web_app_account_billing_billing_client_billingclient",
-      "target": "apps_web_app_account_billing_billing_client_billingclient_cancel",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L368",
-      "weight": 1.0
-    },
-    {
       "source": "apps_web_app_friends_friends_client_friendsworkspace",
       "target": "apps_web_app_friends_friends_client_friendsworkspace_dismissmodal",
       "relation": "contains",
@@ -248053,7 +248229,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/billing-routes.ts",
-      "source_location": "L154",
+      "source_location": "L161",
       "weight": 1.0
     },
     {
@@ -417336,7 +417512,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L268",
+      "source_location": "L315",
       "weight": 1.0
     },
     {
@@ -417369,7 +417545,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L42",
+      "source_location": "L55",
       "weight": 1.0
     },
     {
@@ -417380,7 +417556,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L53",
+      "source_location": "L67",
       "weight": 1.0
     },
     {
@@ -417391,7 +417567,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L64",
+      "source_location": "L78",
       "weight": 1.0
     },
     {
@@ -417413,7 +417589,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L65",
+      "source_location": "L79",
       "weight": 1.0
     },
     {
@@ -417446,7 +417622,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/billing-routes.test.ts",
-      "source_location": "L92",
+      "source_location": "L101",
       "weight": 1.0,
       "context": "call"
     },
@@ -417458,7 +417634,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/billing-routes.test.ts",
-      "source_location": "L91",
+      "source_location": "L100",
       "weight": 1.0,
       "context": "call"
     },
@@ -425808,7 +425984,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L36",
+      "source_location": "L37",
       "weight": 1.0
     },
     {
@@ -425819,7 +425995,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L63",
+      "source_location": "L66",
       "weight": 1.0
     },
     {
@@ -425841,7 +426017,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L88",
+      "source_location": "L91",
       "weight": 1.0
     },
     {
@@ -479208,7 +479384,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L54",
+      "source_location": "L68",
       "weight": 1.0
     },
     {
@@ -479220,7 +479396,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L55",
+      "source_location": "L69",
       "weight": 1.0
     },
     {
@@ -479232,7 +479408,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L56",
+      "source_location": "L70",
       "weight": 1.0
     },
     {
@@ -479244,7 +479420,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L57",
+      "source_location": "L71",
       "weight": 1.0
     },
     {
@@ -479256,7 +479432,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L58",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -479268,7 +479444,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L59",
+      "source_location": "L73",
       "weight": 1.0
     },
     {
@@ -528004,13 +528180,13 @@
     {
       "source": "apps_web_lib_anidachi_auth_subscription_checkout_server_subscriptioncheckoutservice",
       "target": "apps_web_lib_anidachi_auth_db_getbillingcustomerbyuserid",
-      "relation": "calls",
+      "relation": "indirect_call",
       "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "context": "collection",
       "source_file": "apps/web/lib/anidachi-auth/subscription-checkout-server.ts",
-      "source_location": "L26",
+      "source_location": "L15",
       "weight": 1.0
     },
     {
@@ -528393,7 +528569,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.test.ts",
-      "source_location": "L214",
+      "source_location": "L255",
       "weight": 1.0
     },
     {
@@ -528464,7 +528640,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.test.ts",
-      "source_location": "L110",
+      "source_location": "L123",
       "weight": 1.0
     },
     {
@@ -545191,7 +545367,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L404",
+      "source_location": "L409",
       "weight": 1.0,
       "_origin": "ast",
       "confidence_score": 1.0
@@ -545215,7 +545391,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L317",
+      "source_location": "L322",
       "weight": 1.0,
       "_origin": "ast",
       "confidence_score": 1.0
@@ -545227,7 +545403,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L324",
+      "source_location": "L329",
       "weight": 1.0,
       "_origin": "ast",
       "confidence_score": 1.0
@@ -545729,7 +545905,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L61",
+      "source_location": "L75",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -545741,7 +545917,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L60",
+      "source_location": "L74",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -546440,7 +546616,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L46",
+      "source_location": "L47",
       "weight": 1.0,
       "_origin": "ast",
       "confidence_score": 1.0
@@ -547402,7 +547578,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L241",
+      "source_location": "L242",
       "weight": 1.0,
       "_origin": "ast",
       "confidence_score": 1.0
@@ -547414,7 +547590,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L232",
+      "source_location": "L235",
       "weight": 1.0,
       "_origin": "ast",
       "confidence_score": 1.0
@@ -547732,6 +547908,412 @@
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-09-27-paid-hosting-and-trial-transition.md",
       "source_location": "L21-L26; L682-L704",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_account_billing_billing_client_billingclient",
+      "target": "apps_web_app_account_billing_billing_client_billingclient_openstripe",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/billing-client.tsx",
+      "source_location": "L373",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "apps_web_app_api_billing_renewal_portal_route",
+      "target": "apps_web_app_api_billing_renewal_portal_route_dynamic",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/billing/renewal-portal/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "apps_web_app_api_billing_renewal_portal_route",
+      "target": "apps_web_app_api_billing_renewal_portal_route_post",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/billing/renewal-portal/route.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "apps_web_app_api_billing_renewal_portal_route",
+      "target": "apps_web_lib_anidachi_auth_billing_routes",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/billing/renewal-portal/route.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "apps_web_app_api_billing_renewal_portal_route",
+      "target": "apps_web_lib_anidachi_auth_billing_routes_createbillinghandlers",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/billing/renewal-portal/route.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_billing",
+      "target": "apps_web_lib_anidachi_auth_billing_canrestorerenewal",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/billing.ts",
+      "source_location": "L42",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_billing_createbillingservice",
+      "target": "apps_web_lib_anidachi_auth_billing_createbillingservice_subscriptionportal",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/billing.ts",
+      "source_location": "L309",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_billing_createbillingservice_subscriptionportal",
+      "target": "apps_web_lib_anidachi_auth_billing_billingerror",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/billing.ts",
+      "source_location": "L103",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_billing_createbillingservice_subscriptionportal",
+      "target": "apps_web_lib_anidachi_auth_billing_cancancelsubscription",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/billing.ts",
+      "source_location": "L137",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_billing_createbillingservice_subscriptionportal",
+      "target": "apps_web_lib_anidachi_auth_billing_canrestorerenewal",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/billing.ts",
+      "source_location": "L131",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_billing_createbillingservice_subscriptionportal",
+      "target": "apps_web_lib_anidachi_auth_billing_createbillingservice_ownedsubscriptions",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/billing.ts",
+      "source_location": "L97",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "docs_current_development_state_minimum_website_checkpoint",
+      "target": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_minimum_website_checkpoint",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-development-state.md",
+      "source_location": "L5-L11",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_fresh_terminal_resubscription",
+      "target": "apps_web_lib_anidachi_auth_subscription_checkout_server_subscriptioncheckoutservice",
+      "relation": "implemented_by",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L28-L33",
+      "weight": 1.0,
+      "rationale": "Documented behavior matched to current scoped AST/source diff; no external acceptance implied."
+    },
+    {
+      "source": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_fresh_terminal_resubscription",
+      "target": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice",
+      "relation": "implemented_by",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L28-L33",
+      "weight": 1.0,
+      "rationale": "Documented behavior matched to current scoped AST/source diff; no external acceptance implied."
+    },
+    {
+      "source": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_fresh_terminal_resubscription",
+      "target": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_local_web_verification",
+      "relation": "locally_verified_by",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L52-L55",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_minimum_website_checkpoint",
+      "target": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_fresh_terminal_resubscription",
+      "relation": "records",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L18; L28-L33",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_minimum_website_checkpoint",
+      "target": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_local_web_verification",
+      "relation": "records",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L50-L65",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_minimum_website_checkpoint",
+      "target": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_minimum_website_phase_equality",
+      "relation": "records",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L67-L69",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_minimum_website_checkpoint",
+      "target": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_old_new_artifact_proof_boundary",
+      "relation": "records",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L75-L92",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_minimum_website_checkpoint",
+      "target": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_owned_renewal_portal",
+      "relation": "records",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L17; L34-L46",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_minimum_website_checkpoint",
+      "target": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_owner_old_new_client_acceptance",
+      "relation": "records",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L94-L111",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_minimum_website_checkpoint",
+      "target": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_renewal_server_time_lease",
+      "relation": "records",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L39-L48",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_minimum_website_phase_equality",
+      "target": "docs_releases_paid_hosting_trial_staging_preflight_2026_09_29_sequential_delivery_branches",
+      "relation": "updates_local_phase_sources",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L67-L69",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_old_new_artifact_proof_boundary",
+      "target": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_owner_old_new_client_acceptance",
+      "relation": "supports_bounded_owner_test",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L75-L108",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_owned_renewal_portal",
+      "target": "apps_web_app_account_billing_billing_client_billingclient_openstripe",
+      "relation": "implemented_by",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L34-L41",
+      "weight": 1.0,
+      "rationale": "Documented behavior matched to current scoped AST/source diff; no external acceptance implied."
+    },
+    {
+      "source": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_owned_renewal_portal",
+      "target": "apps_web_app_api_billing_renewal_portal_route_post",
+      "relation": "implemented_by",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L34-L41",
+      "weight": 1.0,
+      "rationale": "Documented behavior matched to current scoped AST/source diff; no external acceptance implied."
+    },
+    {
+      "source": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_owned_renewal_portal",
+      "target": "apps_web_lib_anidachi_auth_billing_createbillingservice_subscriptionportal",
+      "relation": "implemented_by",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L34-L41",
+      "weight": 1.0,
+      "rationale": "Documented behavior matched to current scoped AST/source diff; no external acceptance implied."
+    },
+    {
+      "source": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_owned_renewal_portal",
+      "target": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_local_web_verification",
+      "relation": "locally_verified_by",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L52-L65",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_owned_renewal_portal",
+      "target": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_owner_old_new_client_acceptance",
+      "relation": "requires_real_P11",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L17; L94-L108",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_owned_renewal_portal",
+      "target": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_renewal_server_time_lease",
+      "relation": "bounded_by",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L39-L48",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_renewal_server_time_lease",
+      "target": "apps_web_lib_anidachi_auth_billing_canrestorerenewal",
+      "relation": "implemented_by",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L39-L48",
+      "weight": 1.0,
+      "rationale": "Documented behavior matched to current scoped AST/source diff; no external acceptance implied."
+    },
+    {
+      "source": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_renewal_server_time_lease",
+      "target": "apps_web_lib_billing_view_billingdisplayvalidityms",
+      "relation": "implemented_by",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
+      "source_location": "L39-L48",
+      "weight": 1.0,
+      "rationale": "Documented behavior matched to current scoped AST/source diff; no external acceptance implied."
+    },
+    {
+      "source": "docs_releases_paid_hosting_trial_staging_preflight_2026_09_29_manual_acceptance_and_recovery_gates",
+      "target": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_owned_renewal_portal",
+      "relation": "records_local_P11_path_only",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/paid-hosting-trial/staging-preflight-2026-09-29.md",
+      "source_location": "L159-L161",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_paid_hosting_trial_staging_preflight_2026_09_29_staging_preflight",
+      "target": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_minimum_website_checkpoint",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/paid-hosting-trial/staging-preflight-2026-09-29.md",
+      "source_location": "L7-L10",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_releases_paid_hosting_trial_transition_master_plan_ru_master_plan",
+      "target": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_minimum_website_checkpoint",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/paid-hosting-trial/transition-master-plan-ru.md",
+      "source_location": "L16-L19",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_09_27_paid_hosting_and_trial_transition_block_e_staging_preparation",
+      "target": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_local_web_verification",
+      "relation": "records_completed_local_checks",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-09-27-paid-hosting-and-trial-transition.md",
+      "source_location": "L705-L707",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_09_27_paid_hosting_and_trial_transition_block_e_staging_preparation",
+      "target": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_minimum_website_checkpoint",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-09-27-paid-hosting-and-trial-transition.md",
+      "source_location": "L705-L707",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_09_27_paid_hosting_and_trial_transition_paid_hosting_trial_plan",
+      "target": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_minimum_website_checkpoint",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-09-27-paid-hosting-and-trial-transition.md",
+      "source_location": "L21-L25",
       "weight": 1.0
     }
   ],
@@ -548458,7 +549040,7 @@
       "source_file": "docs/superpowers/specs/2026-09-27-paid-hosting-and-trial-design.md"
     }
   ],
-  "built_at_commit": "59d6e80e7672497780cc3d6c97019b15eaf6346d",
+  "built_at_commit": "e0f8a21ed635da6c6493f7e42f8220e5eb335347",
   "semantic_updates": [
     {
       "date": "2026-09-27",
@@ -549846,6 +550428,205 @@
         "broader marketing/Store copy and production promotion/activation"
       ],
       "token_accounting": "active Codex semantic subagent usage unavailable; deterministic AST, no external provider"
+    },
+    {
+      "date": "2026-09-29",
+      "mode": "codex_subagent_scoped_semantic_plus_incremental_code_ast",
+      "operation": "minimum_website_renewal_and_resubscription",
+      "base_commit": "e0f8a21ed635da6c6493f7e42f8220e5eb335347",
+      "code_diff_base": "314cecc1d3971ebcabab808dc91419093085383e",
+      "code_sources": [
+        "apps/web/app/account/billing/billing-client.tsx",
+        "apps/web/app/api/billing/renewal-portal/route.ts",
+        "apps/web/lib/anidachi-auth/billing-routes.test.ts",
+        "apps/web/lib/anidachi-auth/billing-routes.ts",
+        "apps/web/lib/anidachi-auth/billing.test.ts",
+        "apps/web/lib/anidachi-auth/billing.ts",
+        "apps/web/lib/anidachi-auth/subscription-checkout-server.ts",
+        "apps/web/lib/anidachi-auth/subscription-trial.test.ts",
+        "apps/web/lib/anidachi-auth/subscription-trial.ts",
+        "apps/web/lib/billing-client.test.ts",
+        "apps/web/lib/billing-view.ts"
+      ],
+      "full_sources": [
+        "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md"
+      ],
+      "partial_sources": {
+        "docs/current-development-state.md": "L1-L11 only; old whole-file hash/cache/backlog preserved",
+        "docs/superpowers/plans/2026-09-27-paid-hosting-and-trial-transition.md": "L19-L32; L79-L83; L689-L714 only; old whole-file hash/cache/backlog preserved",
+        "docs/releases/paid-hosting-trial/transition-master-plan-ru.md": "L1-L25 only; old whole-file hash/cache/backlog preserved",
+        "docs/releases/paid-hosting-trial/staging-preflight-2026-09-29.md": "L1-L24; L77-L98; L100-L140; L151-L176 only; old whole-file hash/cache/backlog preserved"
+      },
+      "source_sha256": {
+        "apps/web/app/account/billing/billing-client.tsx": "11df648ab9b1932992da8f4e9f96f543cc7405890c5a45726b5e0527355880cc",
+        "apps/web/app/api/billing/renewal-portal/route.ts": "7545fa1c7ce19e50bc40176a815f0f4db1b55906b471d5f60e2fc98440846557",
+        "apps/web/lib/anidachi-auth/billing-routes.test.ts": "14a3567e9a132b6600a953b9a10be735845d032dc950b121eaaf4aeffef17c7e",
+        "apps/web/lib/anidachi-auth/billing-routes.ts": "ae280d35dba3b563b05cc4b945f00b21621b06952e95bc754ff687a2424fb1fd",
+        "apps/web/lib/anidachi-auth/billing.test.ts": "6d01008df44874525f46d56970a412831598515b2a668e675cfd02e0e00bbe40",
+        "apps/web/lib/anidachi-auth/billing.ts": "3868ad7a71bb6857ad44b56491e0d88ec8ebf80b2618ccf865ebb0a401a60305",
+        "apps/web/lib/anidachi-auth/subscription-checkout-server.ts": "d287eeb0428a363880a6a65ef90eeed5b30016f8da5ec5a70631b46d1d162e4f",
+        "apps/web/lib/anidachi-auth/subscription-trial.test.ts": "04ff371a3f683b907a84c7d18c1319ae6be874f21a8f24da30c6422442a9b076",
+        "apps/web/lib/anidachi-auth/subscription-trial.ts": "dda3c1978c782425af481e2eb60438f05c7c03eecdeb33de16001c1b04146bac",
+        "apps/web/lib/billing-client.test.ts": "22ff94f6209254c0417c6ba97f6c72f5964489cb0e5b98057be19eb9e31c915a",
+        "apps/web/lib/billing-view.ts": "c165a67d0bd1e3bbfd08a513a55f05f6ab71b366255664441dbef7c8e6b3f627",
+        "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md": "f456f8192738f50f72befee1f896ff4bf89eec85ce3c7bf594d9061a9be18729",
+        "docs/current-development-state.md": "5abc56f73dc571d1831c4e70fe48c2e9819d13c0d141f62228dd91dd1a179b6b",
+        "docs/superpowers/plans/2026-09-27-paid-hosting-and-trial-transition.md": "bd8636bb93c6dfd9234b1280d63aa0936442ba5dfeb39708a459aff148b8111d",
+        "docs/releases/paid-hosting-trial/transition-master-plan-ru.md": "386a706981c6a35387037a9177fce56ba502e92e569bebbb59044fcd71b95811",
+        "docs/releases/paid-hosting-trial/staging-preflight-2026-09-29.md": "faa5173edc66fb0555db7f84a17407f604584dd1ced0d639d047a6696ae226e7"
+      },
+      "partial_section_sha256": {
+        "docs/current-development-state.md": {
+          "L1-L11": "41010e93525918e266460c322c2bbb5edc0075a558fd3e4fda9def2560c6414c"
+        },
+        "docs/superpowers/plans/2026-09-27-paid-hosting-and-trial-transition.md": {
+          "L19-L32": "128ac7730b56c88861e62e7c8b51b9f942549cb689b38f7309e5bed541eef87a",
+          "L79-L83": "c943ae5c75b23cb40ede418321d8b3159312ce3d176403e1b5706d402c8b468a",
+          "L689-L714": "9f9e799a72682550e2805a3b1be75bface0bdd51fcff3695eb90a6abba7cb9cd"
+        },
+        "docs/releases/paid-hosting-trial/transition-master-plan-ru.md": {
+          "L1-L25": "adf3e01ca38e80ec849b7ac75df36cbcb6c1d17a3498a40aaec62b5e5db6eb28"
+        },
+        "docs/releases/paid-hosting-trial/staging-preflight-2026-09-29.md": {
+          "L1-L24": "92cce7c40ad658ea5a1334f05c09097e06fc9e064125c2eab3cc4ef7b2bd8039",
+          "L77-L98": "1484fbad3faf49ac074daedf855c2e4d8f0c529a1976a61a8fe2ca5135b51374",
+          "L100-L140": "33b20f336259f2d1545ca712fe1beb26d230fabb573d6bcb6f9dd0650a84fe88",
+          "L151-L176": "806c8edf2f30bf4bfc53ed5575ff99c5726ba885ec6fb408bf81fe97619c3ee1"
+        }
+      },
+      "status": "MINIMUM WEBSITE LOCALLY VERIFIED; owner real Sandbox/P11/staging pending",
+      "ast_status": "Exactly11changed web TS/TSX sources,73AST definitions/230fresh edges. Six added definitions and one source-proven removed BillingClient.cancel replaced by openStripe; one obsolete call removed. Five omitted relationships retained against actual source/barrel/call proof.",
+      "semantic_status": "Full111-line minimum-website receipt and four bounded partial docs. Existing semantic history/unrelated graph preserved; partial wholefile manifests not stamped. Earlier wider source locations remain historical.",
+      "added_semantic_nodes": 9,
+      "updated_semantic_meanings": 8,
+      "removed_ast_definitions": [
+        {
+          "node": {
+            "id": "apps_web_app_account_billing_billing_client_billingclient_cancel",
+            "label": "cancel()",
+            "_callable": true,
+            "_origin": "ast",
+            "community": 75,
+            "community_name": "billing.ts",
+            "file_type": "code",
+            "norm_label": "cancel()",
+            "source_file": "apps/web/app/account/billing/billing-client.tsx",
+            "source_location": "L163"
+          },
+          "proof": "Named callback cancel was replaced by openStripe with explicit cancel/payment/restore action; no remaining current definition/call/foreign reference."
+        }
+      ],
+      "removed_ast_relationships": [
+        {
+          "edge": {
+            "source": "apps_web_app_account_billing_billing_client_billingclient",
+            "target": "apps_web_app_account_billing_billing_client_billingclient_cancel",
+            "relation": "calls",
+            "_origin": "ast",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "context": "call",
+            "source_file": "apps/web/app/account/billing/billing-client.tsx",
+            "source_location": "L368",
+            "weight": 1.0
+          },
+          "proof": "Current BillingClient has openStripe(action) and its new call; old cancel declaration and all cancel(...) calls absent. No foreign edge or hyperedge references removed node."
+        }
+      ],
+      "retained_ast_relationships": [
+        {
+          "edge": {
+            "source": "apps_web_lib_anidachi_auth_subscription_checkout_server_subscriptioncheckoutservice",
+            "target": "apps_web_lib_anidachi_auth_account_entitlements_resolveaccountentitlements",
+            "relation": "calls",
+            "_origin": "ast",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "context": "call",
+            "source_file": "apps/web/lib/anidachi-auth/subscription-checkout-server.ts",
+            "source_location": "L65",
+            "weight": 1.0
+          },
+          "proof": "Actual current factory callback calls resolveAccountEntitlements at L65; saveCustomer/access/sync remain inside subscriptionCheckoutService and were not moved to another named helper."
+        },
+        {
+          "edge": {
+            "source": "apps_web_lib_anidachi_auth_subscription_checkout_server_subscriptioncheckoutservice",
+            "target": "apps_web_lib_anidachi_auth_db_db",
+            "relation": "calls",
+            "_origin": "ast",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "context": "call",
+            "source_file": "apps/web/lib/anidachi-auth/subscription-checkout-server.ts",
+            "source_location": "L17",
+            "weight": 1.0
+          },
+          "proof": "Actual current factory callback calls db at L17; saveCustomer/access/sync remain inside subscriptionCheckoutService and were not moved to another named helper."
+        },
+        {
+          "edge": {
+            "source": "apps_web_lib_anidachi_auth_subscription_checkout_server_subscriptioncheckoutservice",
+            "target": "apps_web_lib_anidachi_auth_stripe_subscription_sync_syncstripesubscriptionbyid",
+            "relation": "calls",
+            "_origin": "ast",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "context": "call",
+            "source_file": "apps/web/lib/anidachi-auth/subscription-checkout-server.ts",
+            "source_location": "L71",
+            "weight": 1.0
+          },
+          "proof": "Actual current factory callback calls syncStripeSubscriptionById at L71; saveCustomer/access/sync remain inside subscriptionCheckoutService and were not moved to another named helper."
+        },
+        {
+          "edge": {
+            "source": "apps_web_lib_anidachi_auth_subscription_trial",
+            "target": "apps_web_lib_anidachi_auth_plan_codes_paidplancode",
+            "relation": "imports",
+            "_origin": "ast",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "context": "import",
+            "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
+            "source_location": "L2",
+            "weight": 1.0
+          },
+          "proof": "Current import PaidPlanCode from ./plan-entitlements, explicit public barrel and target declaration verified; unchanged manifest is not used as sole proof."
+        },
+        {
+          "edge": {
+            "source": "apps_web_lib_billing_view",
+            "target": "packages_protocol_src_commercial_policy_plancode",
+            "relation": "imports",
+            "_origin": "ast",
+            "confidence": "EXTRACTED",
+            "confidence_score": 1.0,
+            "context": "import",
+            "source_file": "apps/web/lib/billing-view.ts",
+            "source_location": "L1",
+            "weight": 1.0
+          },
+          "proof": "Current import PlanCode from @anidachi/protocol, explicit public barrel and target declaration verified; unchanged manifest is not used as sole proof."
+        }
+      ],
+      "verification_reported": {
+        "web_passed": 807,
+        "web_existing_skips": 6,
+        "web_failures": 0,
+        "resubscribe_red": 2,
+        "renewal_red": 10,
+        "eslint_files": 11,
+        "next_pages": 384
+      },
+      "artifact_proof_boundary": "Oldcb7f7a86source comparison and localbuild do not establish old publishedStore bytes; current59d6e80eextension unchanged",
+      "remaining_gates": [
+        "real AniDachiSandbox PortalP11 and resubscription/application flow",
+        "authorized sequential staging setup/delivery and owner matrix",
+        "exact old Store/mixed clients/cutover latency/legacy terminal recovery",
+        "broader design/copy and production/main/activation"
+      ],
+      "token_accounting": "active Codex semantic subagent usage unavailable; deterministic AST, no provider API"
     }
   ]
 }
