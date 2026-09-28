@@ -267,8 +267,8 @@ export function RoomPeopleSection({
 					{showFullSeatReason ? <p className="room-media-seat-notice" id={fullReasonId}>All media seats are in use. Free a seat first.</p> : null}
 					{mediaSnapshot?.closingAt ? (
 						<p role="status">
-							Room closes at{" "}
-							{new Date(mediaSnapshot.closingAt).toLocaleTimeString()}.
+							Room access could not be renewed. This room is scheduled to close at{" "}
+							<time dateTime={new Date(mediaSnapshot.closingAt).toISOString()}>{new Date(mediaSnapshot.closingAt).toLocaleTimeString()}</time>.
 						</p>
 					) : null}
 				</div>

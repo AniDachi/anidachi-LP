@@ -562,6 +562,12 @@ async function main() {
 		await writeFile(silentAudioPath, createVoiceTestWav());
 		const html = `<!doctype html><html><head><meta charset="utf-8"></head><body><script>${bundle}</script></body></html>`;
 		server = createServer(async (_req, res) => {
+            if (_req.method === "POST" && _req.url === `/api/internal/rooms/${encodeURIComponent(ROOM_ID)}/admission`) {
+              if (_req.headers.authorization !== "Bearer owned-media-harness") { res.writeHead(401); res.end(); return; }
+              _req.resume();
+              res.writeHead(200, { "Content-Type": "application/json" });
+              res.end(JSON.stringify({ roomId: ROOM_ID, roomGeneration: 1, allowed: true })); return;
+            }
             if (MEDIA_SIZE && _req.method === "POST") {
               let raw = ""; for await (const chunk of _req) raw += chunk;
               const body = JSON.parse(raw); mediaCapabilityRevision++;
@@ -583,7 +589,7 @@ async function main() {
 
 		const iceMode = HARNESS_FORCE_RELAY ? "relay-only" : "direct-first";
 		console.log(`booting wrangler dev on :${WORKER_PORT} (${iceMode}) ...`);
-		worker = spawn("pnpm", [...buildWorkerArgs(), ...(MEDIA_SIZE ? ["--var", `ANIDACHI_WEB_INTERNAL_BASE_URL:${pageUrl}`, "--var", "ANIDACHI_INTERNAL_API_SECRET:owned-media-harness"] : [])], {
+		worker = spawn("pnpm", [...buildWorkerArgs(), "--var", `ANIDACHI_WEB_INTERNAL_BASE_URL:${pageUrl}`, "--var", "ANIDACHI_INTERNAL_API_SECRET:owned-media-harness"], {
 			cwd: API_DIR,
 			stdio: ["ignore", "pipe", "pipe"],
 		});

@@ -3,6 +3,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { RoomQuotaStatus } from "@anidachi/protocol";
 import { useFreeQuotaNotice } from "../src/use-free-quota-notice";
+import { HostingQuotaRetiredError } from "../src/room-quota-status-client";
 
 const owner = "11111111-1111-4111-8111-111111111111";
 const now = "2026-09-15T23:59:50Z";
@@ -24,7 +25,7 @@ describe("Free quota countdown", () => {
     vi.useFakeTimers({ toFake: ["Date", "performance", "setInterval", "clearInterval", "setTimeout", "clearTimeout"] });
     vi.setSystemTime(new Date("2040-01-01T00:00:00Z"));
     host = document.createElement("div"); document.body.append(host); root = createRoot(host);
-    options = { ownerUserId: owner, accessToken: "test-token", visible: true, isFree: true, exhaustion: null, request: vi.fn().mockResolvedValue(status()) };
+    options = { ownerUserId: owner, accessToken: "test-token", sessionKey: "login-a", visible: true, isFree: true, policyMode: "legacy", exhaustion: null, request: vi.fn().mockResolvedValue(status()) };
   });
   afterEach(async () => { await act(async () => root.unmount()); host.remove(); vi.useRealTimers(); vi.restoreAllMocks(); });
 
@@ -32,6 +33,29 @@ describe("Free quota countdown", () => {
     await render(); expect(current.state).toMatchObject({ kind: "exhausted", remainingSeconds: 10 });
     await advance(3000); expect(current.state?.remainingSeconds).toBe(7);
     expect(options.request).toHaveBeenCalledTimes(1);
+  });
+  it.each(["paid-hosting", "unknown"] as const)("does not read or revive old exhaustion when policy is %s", async policyMode => {
+    await render({ policyMode, exhaustion: { ownerUserId: owner, resetAt: "2026-09-16T00:00:00Z" } });
+    await advance(1_860_000);
+    expect(current.state).toBeNull(); expect(options.request).not.toHaveBeenCalled();
+  });
+  it("retires an in-flight reset answer when activation arrives", async () => {
+    let resolve!: (value: RoomQuotaStatus) => void;
+    const request = vi.fn().mockImplementation(() => new Promise<RoomQuotaStatus>(r => { resolve = r; }));
+    await render({ request, exhaustion: { ownerUserId: owner } });
+    await render({ policyMode: "paid-hosting" });
+    await act(async () => resolve({ ...status(), quota: null }));
+    await advance(60_000);
+    expect(current.state).toBeNull(); expect(request).toHaveBeenCalledTimes(1);
+  });
+  it("a hosting denial clears the countdown and rechecks shared access once, without renewal or polling", async () => {
+    const request = vi.fn().mockResolvedValueOnce(status()).mockRejectedValue(new HostingQuotaRetiredError());
+    const onQuotaRetired = vi.fn();
+    await render({ request, onQuotaRetired }); await advance(10_000);
+    expect(current.state).toBeNull(); expect(onQuotaRetired).toHaveBeenCalledTimes(1);
+    await advance(1_860_000);
+    await act(async () => window.dispatchEvent(new Event("focus")));
+    expect(request).toHaveBeenCalledTimes(2); expect(onQuotaRetired).toHaveBeenCalledTimes(1);
   });
   it.each(["2000-01-01T00:00:00Z", "2099-01-01T00:00:00Z"])("never grants time from a manual clock jump to %s", async date => {
     await render(); await advance(1000);
@@ -105,6 +129,15 @@ describe("Free quota countdown", () => {
     await render({ request });
     await render({ ownerUserId: null, accessToken: null });
     await act(async () => resolve(status())); expect(current.state).toBeNull();
+  });
+  it("retires a prior login even when the same owner's access token is identical", async () => {
+    let oldResolve!: (value: RoomQuotaStatus) => void;
+    const request = vi.fn().mockImplementationOnce(() => new Promise<RoomQuotaStatus>(r => { oldResolve = r; }))
+      .mockResolvedValue(status(now, 1800));
+    await render({ request }); await render({ sessionKey: "login-b" });
+    await act(async () => oldResolve(status()));
+    expect(current.state).toBeNull();
+    expect(request).toHaveBeenCalledTimes(2);
   });
   it("does not contact the server while closed and checks fresh after reopening", async () => {
     await render({ visible: false }); expect(options.request).not.toHaveBeenCalled();

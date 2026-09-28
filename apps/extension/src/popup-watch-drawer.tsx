@@ -734,7 +734,7 @@ function WatchDrawer({
 					{accessStatus === "checking"
 						? "Checking history access..."
 						: accessStatus === "plan-required"
-							? "Personal history is available with your own Plus or Pro plan. Your saved history is preserved."
+							? "Recording new progress needs your own Plus or Pro plan. Use Manage history to view, resume or delete your saved videos."
 							: accessStatus === "upgrade-required"
 								? "Update AniDachi to use personal history."
 								: "History access is temporarily unavailable. Please retry."}

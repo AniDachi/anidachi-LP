@@ -52,4 +52,36 @@ describe("quota status read bridge", () => {
     expect(await requestRoomQuotaStatus(owner, "test-token")).toEqual(status);
     await expect(requestRoomQuotaStatus("other-owner", "test-token")).rejects.toThrow("Quota owner changed");
   });
+  it("carries only the expected hosting denial to its owner without inventing a quota", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ code: "HOST_SUBSCRIPTION_REQUIRED" }), { status: 403 })));
+    const result = await handleRoomQuotaStatusMessage(message, sessionDeps());
+    expect(result).toEqual({ ok: false, code: "HOST_SUBSCRIPTION_REQUIRED", ownerUserId: owner });
+    vi.stubGlobal("chrome", { runtime: { sendMessage: vi.fn().mockResolvedValue(result) } });
+    await expect(requestRoomQuotaStatus(owner, "test-token")).rejects.toMatchObject({ code: "HOST_SUBSCRIPTION_REQUIRED" });
+    await expect(requestRoomQuotaStatus("other-owner", "test-token")).rejects.not.toHaveProperty("code");
+  });
+  it.each([200, 401, 503])("does not turn status %i with a denial-shaped body into a hosting decision", async httpStatus => {
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(async () => new Response(JSON.stringify({ code: "HOST_SUBSCRIPTION_REQUIRED" }), { status: httpStatus })));
+    expect(await handleRoomQuotaStatusMessage(message, sessionDeps())).toEqual({ ok: false });
+  });
+  it("an unrelated 403 stays unavailable and does not retire hosting quota", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ code: "FORBIDDEN" }), { status: 403 })));
+    expect(await handleRoomQuotaStatusMessage(message, sessionDeps())).toEqual({ ok: false });
+  });
+  it("bounds a stuck denial body as well as a stuck fetch", async () => {
+    vi.useFakeTimers();
+    try {
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ status: 403, json: () => new Promise(() => {}) }));
+      const pending = handleRoomQuotaStatusMessage(message, sessionDeps());
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(await pending).toEqual({ ok: false });
+    } finally { vi.useRealTimers(); }
+  });
+  it.each([200, 403, 401])("retires an old same-owner login before accepting or retrying status %i", async httpStatus => {
+    const deps = sessionDeps();
+    deps.getSession.mockResolvedValueOnce(storedSession).mockResolvedValue({ ...storedSession, refreshToken: "new-login" });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(httpStatus === 200 ? status : { code: "HOST_SUBSCRIPTION_REQUIRED" }), { status: httpStatus })));
+    expect(await handleRoomQuotaStatusMessage(message, deps)).toEqual({ ok: false });
+    expect(deps.refresh).not.toHaveBeenCalled();
+  });
 });

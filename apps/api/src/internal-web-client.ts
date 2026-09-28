@@ -1,4 +1,6 @@
 import {
+  RoomHostingAdmissionSchema,
+  type RoomHostingAdmission,
   RoomPresenceEvidenceSchema,
 	RoomUsageSummarySchema,
   RoomPresenceAcknowledgementSchema,
@@ -25,6 +27,34 @@ type RoomEndCallback = EndRoomCommand & {
   eventId?: string;
   usage?: RoomUsageSummary;
 };
+
+/** Recheck durable room authority even for tokens issued before a cutover. */
+export async function checkWebRoomAdmission(
+  env: InternalWebLifecycleEnv,
+  roomId: string,
+  userId: string,
+  fetchImplementation: typeof fetch = fetch,
+  timeoutMs = INTERNAL_WEB_CALLBACK_TIMEOUT_MS,
+): Promise<RoomHostingAdmission> {
+  const config = internalWebCallbackConfig(env);
+  const { response, body } = await fetchAndReadJsonWithBoundedTimeout(
+    fetchImplementation,
+    new URL(`/api/internal/rooms/${encodeURIComponent(roomId)}/admission`, config.baseUrl),
+    {
+      method: "POST",
+      // workerd supports manual/follow; reject redirects via the status check.
+      redirect: "manual",
+      headers: { Authorization: `Bearer ${config.secret}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ userId }),
+    },
+    timeoutMs,
+  );
+  const result = RoomHostingAdmissionSchema.safeParse(body);
+  if (response.status !== 200 || !result.success || result.data.roomId !== roomId) {
+    throw new Error("Room admission authority unavailable");
+  }
+  return result.data;
+}
 
 export async function notifyWebRoomEnded(
   env: InternalWebLifecycleEnv,

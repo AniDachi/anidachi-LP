@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { requestRoomQuotaStatus } from "./room-quota-status-client";
+import { HostingQuotaRetiredError, requestRoomQuotaStatus } from "./room-quota-status-client";
+import type { HostingPolicyMode } from "./use-hosting-access";
 
 export interface QuotaExhaustion {
   ownerUserId: string;
@@ -12,6 +13,8 @@ export interface FreeQuotaNoticeState {
 }
 type Context = {
   ownerUserId: string;
+  accessToken: string;
+  sessionKey: string;
   exhausted: boolean;
   resetAt?: number;
 };
@@ -20,24 +23,38 @@ type Context = {
 export function useFreeQuotaNotice(options: {
   ownerUserId: string | null;
   accessToken: string | null;
+  sessionKey: string | null;
   visible: boolean;
   isFree: boolean;
+  policyMode: HostingPolicyMode;
+  onQuotaRetired?(): void;
   exhaustion: QuotaExhaustion | null;
   request?: typeof requestRoomQuotaStatus;
 }) {
-  const { ownerUserId, accessToken, visible, isFree, exhaustion, request = requestRoomQuotaStatus } = options;
+  const { ownerUserId, accessToken, sessionKey, visible, isFree, policyMode, onQuotaRetired, exhaustion, request = requestRoomQuotaStatus } = options;
   const [state, setState] = useState<FreeQuotaNoticeState | null>(null);
+  const stateTokenRef = useRef<string | null>(null);
+  const stateSessionRef = useRef<string | null>(null);
+  const [retired, setRetired] = useState<{ ownerUserId: string; sessionKey: string } | null>(null);
+  const quotaRetired = retired?.ownerUserId === ownerUserId && retired?.sessionKey === sessionKey;
   const contextRef = useRef<Context | null>(null);
   const refreshRef = useRef<() => void>(() => {});
   const retry = useCallback(() => refreshRef.current(), []);
 
   useEffect(() => {
-    if (contextRef.current?.ownerUserId !== ownerUserId) {
-      contextRef.current = ownerUserId ? { ownerUserId, exhausted: false } : null;
+    if (policyMode !== "legacy" || quotaRetired) {
+      contextRef.current = null;
+      setState(null);
+      return;
+    }
+    if (contextRef.current?.ownerUserId !== ownerUserId || contextRef.current?.accessToken !== accessToken || contextRef.current?.sessionKey !== sessionKey) {
+      contextRef.current = ownerUserId && accessToken && sessionKey ? { ownerUserId, accessToken, sessionKey, exhausted: false } : null;
       setState(null);
     }
     const context = contextRef.current;
     if (!ownerUserId || !accessToken || !context) return;
+    stateTokenRef.current = accessToken;
+    stateSessionRef.current = sessionKey;
     if (exhaustion?.ownerUserId === ownerUserId) {
       context.exhausted = true;
       const reset = Date.parse(exhaustion.resetAt ?? "");
@@ -103,7 +120,17 @@ export function useFreeQuotaNotice(options: {
           context!.exhausted = false;
           context!.resetAt = undefined;
         }
-      } catch {
+      } catch (error) {
+        if (alive && error instanceof HostingQuotaRetiredError) {
+          alive = false;
+          anchor = null;
+          refreshQueued = false;
+          contextRef.current = null;
+          setState(null);
+          setRetired({ ownerUserId: ownerUserId!, sessionKey: sessionKey! });
+          onQuotaRetired?.();
+          return;
+        }
         if (alive && context!.exhausted) show("unavailable");
       } finally {
         pending = false;
@@ -114,6 +141,7 @@ export function useFreeQuotaNotice(options: {
     void refresh();
     const resume = () => { void refresh(); };
     const tick = () => {
+      if (!alive) return;
       const monotonic = performance.now();
       const wall = Date.now();
       const discontinuity = Math.abs((wall - lastWall) - (monotonic - lastMonotonic)) > 2_000;
@@ -146,7 +174,7 @@ export function useFreeQuotaNotice(options: {
       window.removeEventListener("pageshow", resume);
       window.removeEventListener("online", resume);
     };
-  }, [ownerUserId, accessToken, visible, isFree, exhaustion, request]);
+  }, [ownerUserId, accessToken, sessionKey, visible, isFree, exhaustion, request, policyMode, onQuotaRetired, quotaRetired]);
 
-  return { state: state?.ownerUserId === ownerUserId ? state : null, retry };
+  return { state: policyMode === "legacy" && !quotaRetired && stateTokenRef.current === accessToken && stateSessionRef.current === sessionKey && state?.ownerUserId === ownerUserId ? state : null, retry };
 }
