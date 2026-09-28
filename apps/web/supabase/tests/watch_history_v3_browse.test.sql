@@ -72,12 +72,34 @@ select pg_temp.watch('bbbbbbbb-1111-4111-8111-111111111111','NEWGEN',1,now(),'S'
 select pg_temp.watch('bbbbbbbb-2222-4222-8222-222222222222','NEWGEN',1,now(),'S',2);
 select is((select count(*) from public.watch_history_session_groups g join public.watch_sessions s on s.id=g.session_id where s.episode_key='crunchyroll:episode:NEWGEN'),0::bigint,'bound invitation cannot cross room generation');
 
--- Already accepted recipient stays deduplicated and cannot acquire a later
--- group association merely because the host sends another action.
+-- An accepted recipient who is still assigned stays deduplicated. room_members
+-- is durable history, not current occupancy; the Return flow uses assignments.
+insert into public.active_room_sessions(user_id,room_id,role,participant_session_id)
+values('bbbbbbbb-2222-4222-8222-222222222222','browse-room','member','browse-viewer-active');
+-- Another group action must not retroactively associate the existing viewing.
 insert into public.friend_groups(id,owner_user_id,name) values('aaaaaaaa-3333-4333-8333-333333333333','bbbbbbbb-1111-4111-8111-111111111111','Too late');
 insert into public.friend_group_members values('aaaaaaaa-3333-4333-8333-333333333333','bbbbbbbb-2222-4222-8222-222222222222',now());
 select * from public.create_room_invite_atomic('bbbbbbbb-1111-4111-8111-111111111111',gen_random_uuid(),'browse-room',null,'aaaaaaaa-3333-4333-8333-333333333333',null);
 select is((select count(*) from public.watch_history_group_invitation_contexts where group_id='aaaaaaaa-3333-4333-8333-333333333333'),0::bigint,'repeated accepted recipient has no retroactive action context');
+
+-- Since the September 14 Return flow, departure permits a NEW invitation.
+-- A pending context is not accepted viewing and must not relabel earlier history.
+select is((select outcome from public.release_active_room_session_v1('bbbbbbbb-2222-4222-8222-222222222222','browse-room','browse-viewer-active')),'released','actual departure releases the occupied recipient');
+create temporary table return_invitation as
+select * from public.create_room_invite_atomic('bbbbbbbb-1111-4111-8111-111111111111',gen_random_uuid(),'browse-room',null,'aaaaaaaa-3333-4333-8333-333333333333',null);
+select is((select outcome from return_invitation),'created','departed recipient receives a fresh invitation');
+select is((select count(*) from public.watch_history_group_invitation_contexts c join return_invitation i on i.invite_id=c.invite_id where c.group_id='aaaaaaaa-3333-4333-8333-333333333333' and c.accepted_at is null and c.room_generation is null),1::bigint,'fresh invitation has only unaccepted unbound provenance');
+select is(pg_temp.browse('{"mode":"shared","groupId":"aaaaaaaa-3333-4333-8333-333333333333"}')->>'totalTitleCount','0','pending replacement does not reattribute old viewing');
+select is((select outcome from public.respond_room_invite_v2('bbbbbbbb-2222-4222-8222-222222222222',(select invite_id from return_invitation),'accept',now())),'accepted','fresh invitation is accepted independently');
+select is(pg_temp.browse('{"mode":"shared","groupId":"aaaaaaaa-3333-4333-8333-333333333333"}')->>'totalTitleCount','0','acceptance alone cannot reattribute old viewing');
+-- Emulate separate earlier request clocks, then record genuine new overlap.
+update public.watch_history_group_invitation_contexts set action_at=now()-interval '10 seconds',accepted_at=now()-interval '5 seconds'
+where invite_id=(select invite_id from return_invitation);
+select pg_temp.watch('bbbbbbbb-1111-4111-8111-111111111111','RETURN',900,now(),'RETURN',2);
+select is(pg_temp.browse('{"mode":"shared","groupId":"aaaaaaaa-3333-4333-8333-333333333333"}')->>'totalTitleCount','0','host watching alone after acceptance still has no group viewing');
+select pg_temp.watch('bbbbbbbb-2222-4222-8222-222222222222','RETURN',900,now(),'RETURN',2);
+select is(pg_temp.browse('{"mode":"shared","groupId":"aaaaaaaa-3333-4333-8333-333333333333"}')->>'totalTitleCount','1','new overlapping viewing after accepted reinvitation establishes the group');
+select results_eq($$select s.episode_key from public.watch_history_session_groups g join public.watch_sessions s on s.id=g.session_id where g.group_id='aaaaaaaa-3333-4333-8333-333333333333'$$,$$select 'crunchyroll:episode:RETURN'::text$$,'only post-acceptance overlap is attributed to the replacement group');
 
 select pg_temp.watch('bbbbbbbb-1111-4111-8111-111111111111','OLD',30,now()-interval '50 seconds');
 select pg_temp.watch('bbbbbbbb-3333-4333-8333-333333333333','OLD',30,now()-interval '50 seconds');
