@@ -15,7 +15,7 @@ import {
 	createEmptyRoomEndEventId,
 } from "@anidachi/protocol";
 import { jwtVerify } from "jose";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { signRoomTokenForTest } from "../../src/auth";
 
 const TEST_SECRET_ENV = { ANIDACHI_JWT_SECRET: "anidachi-runtime-test-secret" };
@@ -25,6 +25,19 @@ const ROOM_SOURCE_ACKNOWLEDGED_GENERATION_KEY =
 	"room_source_acknowledged_generation_v1";
 const ROOM_SOURCE_PENDING_KEY = "room_source_pending_v1";
 const PARTICIPANT_DISCONNECT_KEY = "participant_disconnects_v1";
+const runtimeFetch = fetch;
+beforeEach(() => stubWebFetch(runtimeFetch));
+
+// These tests isolate existing lifecycle callbacks. Admission has dedicated
+// denial, timeout and cutover-race coverage in paid-hosting-transition-runtime.
+function stubWebFetch(callback: typeof fetch) {
+ vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
+  const url = new URL(String(input));
+  const match = url.pathname.match(/^\/api\/internal\/rooms\/([^/]+)\/admission$/);
+  if (url.origin === "https://web.internal" && match) return Response.json({ roomId: decodeURIComponent(match[1]!), roomGeneration: 1, allowed: true });
+  return callback(input, init);
+ });
+}
 
 function stubSuccessfulWebFinalization() {
 	const callbackFetch = vi.fn(
@@ -42,7 +55,7 @@ function stubSuccessfulWebFinalization() {
 		return Response.json({ ok: true, usageFinalized: true });
 		},
 	);
-	vi.stubGlobal("fetch", callbackFetch);
+	stubWebFetch(callbackFetch);
 	return callbackFetch;
 }
 
@@ -100,9 +113,7 @@ describe("RoomDurableObject independent presence", () => {
 			release = resolve;
 		});
 		let presenceCalls = 0;
-		vi.stubGlobal(
-			"fetch",
-			vi.fn(async (input: RequestInfo | URL) => {
+		stubWebFetch(vi.fn(async (input: RequestInfo | URL) => {
 				if (String(input).endsWith("/presence-evidence")) {
 					presenceCalls++;
 					await gate;
@@ -134,9 +145,7 @@ describe("RoomDurableObject independent presence", () => {
 		const stub = makeStub(roomId);
 		let fail = true;
 		let calls = 0;
-		vi.stubGlobal(
-			"fetch",
-			vi.fn(async (input: RequestInfo | URL) => {
+		stubWebFetch(vi.fn(async (input: RequestInfo | URL) => {
 				if (String(input).endsWith("/presence-evidence")) {
 					calls++;
 					if (fail) throw new Error("offline");
@@ -180,9 +189,7 @@ describe("RoomDurableObject independent presence", () => {
 		const roomId = `presence-live-${crypto.randomUUID()}`;
 		const stub = makeStub(roomId);
 		const bodies: unknown[] = [];
-		vi.stubGlobal(
-			"fetch",
-			vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+		stubWebFetch(vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
 				if (String(input).endsWith("/presence-evidence")) {
 					bodies.push(JSON.parse(String(init?.body)));
 					return Response.json({ accepted: true });
@@ -512,7 +519,7 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 			});
 			},
 		);
-		vi.stubGlobal("fetch", callbackFetch);
+		stubWebFetch(callbackFetch);
 		const host = await connectRoomClient(stub, {
 			roomId,
 			role: "host",
@@ -724,7 +731,7 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 			return Response.json({ ok: true, usageFinalized: true });
 			},
 		);
-		vi.stubGlobal("fetch", callbackFetch);
+		stubWebFetch(callbackFetch);
 		const host = await connectRoomClient(stub, {
 			roomId,
 			role: "host",
@@ -845,7 +852,7 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 			return Response.json({ ok: true, usageFinalized: true });
 			},
 		);
-		vi.stubGlobal("fetch", callbackFetch);
+		stubWebFetch(callbackFetch);
 		const host = await connectRoomClient(stub, {
 			roomId,
 			role: "host",
@@ -919,7 +926,7 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 			return Response.json({ ok: true, usageFinalized: true });
 			},
 		);
-		vi.stubGlobal("fetch", callbackFetch);
+		stubWebFetch(callbackFetch);
 		const host = await connectRoomClient(stub, {
 			roomId,
 			role: "host",
@@ -989,7 +996,7 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 			});
 			},
 		);
-		vi.stubGlobal("fetch", callbackFetch);
+		stubWebFetch(callbackFetch);
 		const host = await connectRoomClient(stub, {
 			roomId,
 			role: "host",
@@ -1229,7 +1236,7 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		const callbackFetch = vi.fn(async () =>
 			Response.json({ ok: true, usageFinalized: true }),
 		);
-		vi.stubGlobal("fetch", callbackFetch);
+		stubWebFetch(callbackFetch);
 		await runInDurableObject(stub, async (_instance, state) => {
 			await state.storage.setAlarm(Date.now() + 60_000);
 		});
@@ -1329,7 +1336,7 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 			}
 			return Response.json({ ok: true, usageFinalized: true });
 		});
-		vi.stubGlobal("fetch", callbackFetch);
+		stubWebFetch(callbackFetch);
 		await makeParticipantDisconnectDue(stub, "guest-user", "guest-session");
 		expect(await runDurableObjectAlarm(stub)).toBe(true);
 		expect(departureAttempts).toBe(1);
@@ -1874,7 +1881,7 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 				? Response.json({ ok: true, outcome: "departed" })
 				: Response.json({ ok: true, usageFinalized: true }),
 		);
-		vi.stubGlobal("fetch", callbackFetch);
+		stubWebFetch(callbackFetch);
 		const host = await connectRoomClient(stub, {
 			roomId,
 			role: "host",
@@ -1965,7 +1972,7 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		const callbackFetch = vi.fn(async () =>
 			Response.json({ ok: true, usageFinalized: true }),
 		);
-		vi.stubGlobal("fetch", callbackFetch);
+		stubWebFetch(callbackFetch);
 		expect(await runDurableObjectAlarm(stub)).toBe(true);
 		expect(callbackFetch).not.toHaveBeenCalled();
 		expect(await readRoomRuntime(stub)).toMatchObject({
@@ -2023,7 +2030,7 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 				});
 			},
 		);
-		vi.stubGlobal("fetch", callbackFetch);
+		stubWebFetch(callbackFetch);
 
 		expect(await runDurableObjectAlarm(stub)).toBe(true);
 		const ending = await readRoomRuntime(stub);
@@ -2143,7 +2150,7 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 				? Response.json({ error: "temporary" }, { status: 503 })
 				: Response.json({ ok: true, usageFinalized: true });
 		});
-		vi.stubGlobal("fetch", callbackFetch);
+		stubWebFetch(callbackFetch);
 
 		const first = await endRoom(stub, command);
 		expect(first.status).toBe(502);
@@ -2191,7 +2198,7 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 			await callbackGate;
 			return Response.json({ ok: true, usageFinalized: true });
 		});
-		vi.stubGlobal("fetch", callbackFetch);
+		stubWebFetch(callbackFetch);
 
 		const firstPromise = endRoom(stub, {
 			endedAt: 1_000,
@@ -3186,9 +3193,7 @@ describe("RoomDurableObject media v2", () => {
     let releaseSettlement: (()=>void) | null = null;
 		const ledger = new Map<string, number>();
 		const calls: unknown[] = [];
-		vi.stubGlobal(
-			"fetch",
-			vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+		stubWebFetch(vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
 				const body = JSON.parse(String(init?.body));
 				calls.push(body);
 				if (body.operation === "room_policy_v2") {
@@ -3768,6 +3773,7 @@ it.each([
 				(await state.storage.get<any>("room_policy_v2")).closingAt,
 		);
 		expect(closing).toBeGreaterThan(Date.now());
+		expect(closing).toBeLessThanOrEqual(Date.now() + 300_000);
 		await evictDurableObject(f.stub, { webSockets: "hibernate" });
 		const replacement = await f.join(0, "replacement-host");
 		await replacement.waitFor(
@@ -3792,6 +3798,7 @@ it.each([
 			(e) => e.type === "ROOM_ENDED" && e.reason === "capability_expired",
 			"terminal authority loss",
 		);
+		expect((await replacement.waitFor(e => e.type === "ROOM_ENDED", "terminal cause")) as object).not.toHaveProperty("hostingCutover");
 	});
 	it("meters only actual host+guest sockets, preserves acknowledged600s on renewal, and ACKs before quota end", async () => {
 		const f = await fixture("free");

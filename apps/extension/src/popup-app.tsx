@@ -48,6 +48,7 @@ import {
 import { WEB_HTTP_BASE } from "./constants";
 import { logDebug } from "./debug-log";
 import { PanelAccountTitle } from "./panel-account-title";
+import { useHostingAccess } from "./use-hosting-access";
 import {
   buildPopupInboxModel,
   type PopupInboxModel,
@@ -223,6 +224,12 @@ export function PopupApp() {
     return userId ? accountGateRef.current.capture(userId) : null;
   }, []);
   const accountUser = authSession.status === "ready" ? authSession.tokens.user : null;
+  const hostingDisplay = useHostingAccess({
+    ownerUserId: accountUser?.id ?? null,
+    sessionKey: tokens?.refreshToken ?? null,
+    enabled: Boolean(accountUser),
+  });
+  const currentPlan = hostingDisplay.state.access?.planCode ?? null;
   const [activeTab, setActiveTab] = usePopupNavigation(accountUser?.id ?? null, shellRef);
   const inboxModel = useMemo(() => buildPopupInboxModel(inboxState.data), [inboxState.data]);
   const peoplePresentationState = mapSocialStateToPeoplePresentation(socialState);
@@ -831,7 +838,7 @@ export function PopupApp() {
           </button>
           <span className="popup-profile-copy">
             {accountUser ? (
-              <PanelAccountTitle displayName={accountUser.displayName} plan={accountUser.plan} />
+              <PanelAccountTitle displayName={accountUser.displayName} plan={currentPlan} />
             ) : (
               <>
                 <span className="popup-profile-state-title">
@@ -916,7 +923,7 @@ export function PopupApp() {
       <PopupNavigation activeTab={activeTab} onSelect={setActiveTab} />
 
       <PopupRetainedPanel key={`${accountUser?.id}:resources`} active={activeTab === "resources"} tab="resources">
-        {!settingsOpen && <PopupHistoryRecordingChoice ownerUserId={accountUser?.id ?? null} paid={Boolean(accountUser && accountUser.plan !== "free")} />}
+        {!settingsOpen && <PopupHistoryRecordingChoice ownerUserId={accountUser?.id ?? null} paid={currentPlan === "plus" || currentPlan === "pro"} />}
         <PopupWatchHistoryPanel
           key={accountUser?.id ?? "signed-out"}
           ownerUserId={accountUser?.id ?? null}

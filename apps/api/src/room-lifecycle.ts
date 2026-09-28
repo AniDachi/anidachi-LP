@@ -2,6 +2,8 @@ import {
   EMPTY_ROOM_TIMEOUT_MS,
   RoomEndReasonSchema,
   RoomUsageSummarySchema,
+  RoomHostingCutoverSchema,
+  type RoomHostingCutover,
   isEmptyRoomEndEventId,
   type RoomEndReason,
   type RoomUsageSummary,
@@ -14,19 +16,22 @@ export const EMPTY_ROOM_RETRY_MAX_MS = 30 * 60 * 1_000;
 export interface EndRoomCommand {
   endedAt: number;
   reason: RoomEndReason;
+  cutover?: RoomHostingCutover;
 }
 
 export function parseEndRoomCommand(value: unknown): EndRoomCommand | null {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
   const command = value as Record<string, unknown>;
   const reason = RoomEndReasonSchema.safeParse(command.reason);
+  const cutover = command.cutover === undefined ? undefined : RoomHostingCutoverSchema.safeParse(command.cutover);
   if (
     typeof command.endedAt !== "number" ||
     !Number.isInteger(command.endedAt) ||
     command.endedAt < 0 ||
-    !reason.success
+    !reason.success ||
+    (cutover !== undefined && !cutover.success)
   ) return null;
-  return { endedAt: command.endedAt, reason: reason.data };
+  return { endedAt: command.endedAt, reason: reason.data, ...(cutover?.success ? { cutover: cutover.data } : {}) };
 }
 
 export interface EndedRoomTombstone extends EndRoomCommand {

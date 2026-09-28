@@ -1,12 +1,260 @@
 # Current Development State
 
-Last updated: 2026-09-21.
+Last updated: 2026-09-29.
+
+Latest local website checkpoint: `e0f8a21e` adds Stripe renewal restoration and
+fixes first-click resubscription after an ended subscription. Web typecheck,
+807 tests plus six prior skips and changed-file lint pass. The old staging ZIP
+from `cb7f7a86` is built and validated for the owner's old-client transition test.
+See [minimum website and owner test sequence](releases/paid-hosting-trial/minimum-website-2026-09-29.md).
+The prepared staging delivery is now partial: schema PR #375 and Web PR #377
+are merged; staging Web is f8a90d21 and all 69 migrations are applied. AniDachi
+Sandbox webhook and the separate staging drain secret are configured. Hosting
+and trials remain inactive. Authenticated Web admission is now verified: an
+one-off Vercel staging build used the existing bound credential and received the
+expected HTTP 200 without exporting or rotating the key. Phase 3 is ready for its
+reviewed staging PR; the new Worker is not deployed yet. See the [current staging delivery receipt](releases/paid-hosting-trial/staging-delivery-2026-09-29.md).
+Owner acceptance, P11, activation and production promotion remain open.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
 contain old paths, old domains, or old decisions. When release channels,
 endpoints, branch protection, or store workflow changes, update this document in
 the same PR.
+
+## Paid hosting and three-day trial planning, 2026-09-27
+
+The [consolidated Russian transition document](releases/paid-hosting-trial/transition-master-plan-ru.md)
+brings together the agreed rules, existing-user scenarios, local evidence, open
+acceptance gates and release/recovery sequence as of source `86896f33`.
+The September 28 minimal-website checkpoint below supersedes its original
+website-pending snapshot; it starts from `9d0ba788`.
+
+The owner requested a staged transition to paid-only room hosting: Free users
+can join Plus/Pro hosts but cannot create rooms or record personal history.
+The September 28 clarification gives every Free account with an unused trial
+the same three-day Plus/Pro card trial, regardless of registration date. It
+supersedes the original new-account-only rule; active paid subscriptions and
+consumed trials remain unchanged. In a
+September 27 clarification, the owner chose immediate closure of existing Free
+rooms at cutover T, without a warning or five-minute transition grace. T is
+coordinated with verified publication of the new Chrome Store version; it does
+not wait for every installation to update.
+
+The owner also confirmed one trial per account across Plus/Pro, cancellation
+with access until the original trial end, and no trial restart on plan changes.
+The first payment may remain pending for at most two hours from trial end;
+confirmed payment failure ends that wait early. Canceled renewal has no such
+waiting period. Buying a plan does not change an old Free room's T deadline;
+a new paid room follows the existing active-session rules. Ordinary loss of paid
+or trial rights still has its separate five-minute room closure grace.
+
+The [design](superpowers/specs/2026-09-27-paid-hosting-and-trial-design.md)
+and [transition plan](superpowers/plans/2026-09-27-paid-hosting-and-trial-transition.md)
+record the confirmed rules separately from unimplemented technical work and define
+staging acceptance, old-client compatibility, deferred Chrome Store publication,
+server activation and recovery. The owner authorized implementation. A local
+additive foundation now provides dormant hosting policy, immutable per-account
+trial identity, bounded first-payment access and optional hosting metadata in
+the existing account resolver. Local checkout preparation now uses a durable
+reservation, card-required trial parameters and reconciliation of uncertain
+Stripe outcomes. Fenced trial webhook ingestion, server-side trial plan changes
+and transactional room gates are also locally implemented. Task 5 now adds a
+local dormant activation/outbox, bounded Web delivery with private SQL recovery,
+fresh old-token admission and a Worker terminal intent independent of media
+policy. Fence, Web finalization and local cleanup survive retries separately.
+Local proof: SQL 394 assertions plus 12 real concurrency assertions, API 244,
+Worker runtime 86, web 741 with six existing skips, protocol 202, all six typecheck
+tasks, room harness 39/39 and current-source WebRTC harness 26/26.
+An unproven legacy terminal tombstone stays closed with an explicit unresolved
+cutover error; safe recovery or target exclusion is an acceptance gate.
+Task 5 local checkpoint is `488f2d64`. On September 28, the extension part of
+Task 6 adds the ordinary create-button plan offer after an authoritative hosting
+denial. The account-bound read offers a trial only for verified eligibility;
+close/Escape do not start checkout or create a room, and returning from checkout
+refreshes display access without automatically creating a room. That initial
+checkpoint's age-based paid-only copy is superseded by the unified rule below;
+unavailable authority never promises a trial. Account changes retire the offer
+and its pending response. Extension
+typecheck, all 2058 tests, narrow staging build/validation and local Chromium
+component checks passed. This is not loaded-artifact/staging acceptance.
+The subsequent September 28 Block B locally retires post-T Free quota reads,
+live/reset counters and renewed-time messages. The quota endpoint returns 403
+without reading usage; successful legacy/paid v1 payloads remain unchanged.
+One owner/session-bound hosting display hook serves the offer and quota UI;
+unknown authority promises neither minutes nor trial, and superseded responses
+cannot revive old state. Pre-T quota accounting remains, including the shared
+1800-second policy. Source tests cover stale room payloads beyond 30 minutes and
+UTC renewal; a loaded narrow staging artifact is checked with synthetic authority
+in isolated Chromium. This is not deployed staging or old Store-client acceptance.
+The first local Block C checkpoint then fixes delayed create failures crossing a
+same-owner login and terminal room explanations being erased by auth refresh.
+Prepared-session cleanup, Web Lock release and explicit retry are verified.
+Component tests restore/reconnect a Free guest through paid-room admission across
+31 minutes and UTC, and prove personal capture stops on lost/expired access
+without backfilling after renewal. Extension 2091 tests and web history UI 37 pass;
+the latter needed only a missing Happy DOM self fixture. Web/extension checks,
+narrow build/validate and synthetic loaded-artifact browser checks pass.
+The next local C checkpoint makes overlay and popup plan badges consume the
+same owner/login-bound server entitlements as the offer, removing stale cached
+login-plan claims on pending/error. The recording invitation uses that display
+plan without changing capture authority or consent. Free history read/Resume
+and the existing Manage history path are verified locally; fallback copy now
+restricts recording rather than all saved history. Extension 2098/137, typecheck,
+narrow build/validate and compiled-artifact synthetic browser checks pass.
+These checks verify effective-plan display, not the Stripe lifecycle itself.
+The local room-end checkpoint now carries an additive cutover explanation while
+retaining the existing terminal reason for legacy parsers. The Worker derives it
+from durable closure metadata; earlier closures retain their original cause.
+The overlay distinguishes Free cutover from ordinary room-authority expiry,
+without calling an authority outage a failed payment. An accepted closingAt
+snapshot surfaces the original deadline once; repeated snapshots do not reopen
+the panel or restart the deadline. Terminal cleanup and close-only 4004 remain
+final, with no automatic checkout/create/reconnect. Root check/test pass
+(protocol203/API248/extension2104), final schema-checked Overlay92, Worker runtime86,
+room39 and WebRTC26 pass. Narrow build/validate and synthetic loaded-artifact
+checks at1100/390 pass; actual staging and published Store compatibility remain open.
+The remaining full entrypoint/subscription matrix, real checkout/server/restart
+and Store-client acceptance stay open in C/F;
+the extension as a whole is not declared complete.
+At that extension checkpoint, web pricing, billing, success and marketing copy
+were still pending. The minimal website implementation is recorded below; staging
+acceptance, published old-Store-client cleanup and actual distributed cutover
+latency. Web admission must be deployed and verified
+before the Worker; see the [cutover operations notes](releases/paid-hosting-trial/cutover-operations.md).
+Deployed Free hosting and ordinary checkout are unchanged.
+Annual billing, people counters, history-consent removal and new platforms are
+outside this transition. Runtime, Stripe LIVE, Store artifact and deployment
+acceptance remain future work; historical prelaunch reset permissions do not apply.
+Task 1 is locally verified, including populated-data preservation and concurrent
+runtime-role trial inserts. Task 2 has local checkout/SQL concurrency evidence and
+an uncompleted TEST Checkout parameter check. The correct AniDachi sandbox also
+verified trial end, successful/declined first payments, Portal cancellation and
+plan changes preserving the original trial end. These Stripe checks do not prove
+the undeployed application flow. Local SQL room admission now uses T for frozen
+Free rooms; 22 room assertions and 312 prior SQL assertions passed, including the
+unchanged separate paid-access-loss grace. Full migration replay preserved
+existing users, rooms and memberships in a disposable rollback transaction.
+No migration or runtime was deployed by this work.
+The plan contains a
+progress log and requires checking actual source/runtime before each work block;
+code, local tests, staging acceptance and production evidence remain distinct.
+
+September 28 unified-trial correction: additive migration
+`20260928083738_unified_free_trial_eligibility.sql` removes the registration-date
+predicate from the shared server resolver. Dormant/future/disabled trial policy,
+used-trial ledger, paid/manual rights and history fences are unchanged. Old and
+new Free checkout reservations offer the same unused trial. Existing checkout
+reconciliation retires outdated open nontrial sessions before offering a trial;
+completion wins over replacement, and uncertain expiration stays blocked.
+The extension no longer denies a trial by account age; legacy `existing_account`
+metadata remains readable but only suggests checking current availability.
+
+Local checks: root check/test six tasks passed; web 748 + six existing skips,
+extension 2105/137, focused checkout 17, new SQL eligibility matrix 27. Full
+additive replay preserves populated users/subscriptions/history/fences and keeps
+policy dormant. Narrow staging artifact build/validation and isolated loaded
+Chromium offer/badge/auth-fence checks passed with synthetic HTTP.
+That checkpoint's expanded SQL run had one failing browse-history assertion.
+The following local checkpoint traced it to a stale fixture: accepted durable
+membership did not establish active occupancy after the September 14 Return
+change. Adding the missing active assignment preserves the original assertion;
+nine regressions also protect departed-recipient re-invites and prevent
+retroactive history attribution. **1360/1360 SQL assertions in 34 files now pass**.
+No database/product runtime change was needed. Extension typecheck, 450 targeted
+extension tests and 43 related web endpoint tests pass; four new bridge cases
+cover retired history-room recreation for Free/Plus and transient outages.
+The [local extension acceptance map](releases/paid-hosting-trial/extension-local-acceptance.md)
+records entrypoints, authority and state coverage separately from real-server,
+browser-restart and published-Store gaps. Website changes now require the owner's
+agreement on the concrete scope; local extension work does not authorize them.
+No remote migration, activation, push, deployment or Store publication occurred.
+Remaining C acceptance, website D, whole-branch review E and staging/Store F
+remain open; this correction does not complete the migration.
+
+The subsequent local browser-restart check used source `6c6d9e9f` and the same
+unchanged artifact in four distinct Chromium processes with one persisted test
+profile. Pre-T room/quota state, post-T old-room denial and explicit offer,
+saved-history Resume, 65 seconds of Free playback without recording, paid-room
+guest re-admission and an authority-outage restart passed against local HTTP/WS
+fixtures. No post-T quota reads or history uploads occurred. This closes the
+local process-restart check, not an installed Store upgrade, actual billing,
+real server/two-profile staging or every browser session-restore policy. See
+the [restart evidence](releases/paid-hosting-trial/extension-local-acceptance.md#full-browser-process-restart-2026-09-28).
+Runtime/website code and external environments are unchanged; no push or staging
+change is authorized by this checkpoint.
+
+### Minimal trial website, local checkpoint, 2026-09-28
+
+The owner approved minimal pricing/checkout-return/account-billing adaptation,
+using the reference's card hierarchy with existing AniDachi styling, before
+further visual polish. From base `9d0ba788`, pricing now reads mode-aware Stripe
+monthly prices and server-owned offer eligibility. The shared homepage pricing
+block and /pricing distinguish sign-in, trial, ordinary purchase and existing
+subscription management. Pre-T hosting copy is retained only with known policy;
+unknown authority disables checkout without promising eligibility or minutes.
+The touched pricing FAQ and structured FAQ match this minimal flow.
+
+Billing exposes the original trial end, bounded first-payment processing,
+payment failure, cancellation and quote/confirm Plus↔Pro change. Recovery opens
+only an owned, open Stripe hosted invoice after customer/subscription/mode/URL
+validation. Success identifies the exact checkout subscription, independently
+of other account grants. UI displays expire at known server deadlines and are
+reread within at most 60 seconds; the client never grants access on a timer.
+Owner fences and fresh checkout-offer checks retire stale account responses.
+
+Local web typecheck and 775 tests pass, with six existing skips. One scoped
+review found stale deadline displays and an aggregate-plan trial label; both
+were corrected with failing-then-passing regressions. Pricing was visually
+inspected at 1440/390 with synthetic local offer responses. Ordinary localhost
+/api/billing/offer returns 503, so real local Checkout and authenticated
+billing/browser acceptance are not claimed. Test interception was removed.
+No new env variables, schema changes, extension rebuild, remote writes or deploy.
+Broader account/help, marketing/SEO, Store copy, real payment-to-extension flow,
+whole-branch review and staging acceptance remain open. See
+[website evidence](releases/paid-hosting-trial/implementation-evidence.md#minimal-trial-website-local-checkpoint-2026-09-28).
+
+Local integration follow-up: the 503 was traced to absent runtime configuration,
+not a localhost restriction: no Stripe secret, Plus/Pro price IDs or Supabase
+URL/service key were loaded. Correct sandbox prices were reverified read-only.
+A separate local PostgreSQL/PostgREST instance now has all 69 current migrations;
+real service-role HTTP reads pass, anonymous policy access is denied, and the
+commercial policy remains dormant. Local credentials and transport are ignored
+development artifacts. At that initial checkpoint, the Stripe TEST key and local
+webhook secret were unset; the offer returned 503 and Checkout remained unverified.
+Temporary source diagnostics were removed. No remote environment changed. See
+the [local setup evidence](releases/paid-hosting-trial/implementation-evidence.md#local-billing-environment-diagnosis-and-preparation-2026-09-28).
+
+### Staging preparation, 2026-09-29
+
+The owner chose staging for manual acceptance and authorized preparation/checks
+before sending. Manual login/Checkout/subscription/room acceptance stays with
+the owner. Further local OAuth/listener setup is no longer the next step.
+No push, PR, remote migration/config write, deploy or activation has occurred.
+
+The [staging preflight receipt](releases/paid-hosting-trial/staging-preflight-2026-09-29.md)
+supersedes earlier delivery-readiness snapshots. Upstream staging `cb7f7a86`
+was fetched and merged locally without a product delta (`432595ac`); it already
+reverts the collaborator's `86912cb0` domain change. Whole-branch review found
+three defects, fixed in `59d6e80e`: a delayed connect reviving an ended durable
+room, an uncreated checkout reservation stranded by Portal management, and a
+post-T Free quota denial masking the hosting denial. Red/green regressions pass.
+Web typecheck, 785 tests plus six existing skips and lint pass. Full SQL replay,
+populated-data preservation, 1360 assertions/34 files, checkout/room concurrency,
+Workers runtime86, room39 and WebRTC26 pass. Web production build and narrow
+staging build/validation pass; the exact ZIP/hash is in the receipt.
+
+Delivery is split into local schema, Web/protocol and Worker/extension branches:
+the current DB, Vercel and Worker workflows otherwise race. The intermediate
+new Web/protocol with old Worker/extension passes check/test, old runtime75 and
+Worker bundle checks. Final product files match the tested feature tree.
+Remote staging remains on its existing 63 migrations and READY Web deployment;
+current CI/smoke are green for that upstream, not for the unpublished candidate.
+Before activation acceptance, provision the absent staging cutover drain/Vault
+secret and add `invoice.payment_action_required` to the existing TEST webhook.
+Remote values/real flows, old Store-client compatibility, closure latency and
+legacy terminal recovery remain explicit acceptance gates. Broader website/Store
+copy and production promotion remain open; this is not launch readiness.
 
 ## Chrome Web Store install CTA, 2026-09-21
 

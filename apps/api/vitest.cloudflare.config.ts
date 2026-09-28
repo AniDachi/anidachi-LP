@@ -11,6 +11,12 @@ export default defineConfig({
 			wrangler: { configPath: "./wrangler.toml" },
 			miniflare: {
 				outboundService: async (request: { url: string }) => {
+          const url = new URL(request.url);
+          const admission = url.pathname.match(/^\/api\/internal\/rooms\/([^/]+)\/admission$/);
+          if (url.origin === "https://web.internal" && admission) {
+            if (admission[1] === "redirect-room") return new Response(null, { status: 302, headers: { Location: "https://redirect.invalid/drain" } });
+            return Response.json({ roomId: decodeURIComponent(admission[1]!), roomGeneration: 1, allowed: true });
+          }
 					if (request.url === "http://127.0.0.1:3003/api/internal/notifications/drain") {
 						schedulerRequests++;
 						return new Response(null, { status: 302, headers: { Location: "https://redirect.invalid/drain" } });

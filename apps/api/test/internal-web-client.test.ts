@@ -5,6 +5,21 @@ import type {
 } from "@anidachi/protocol";
 import * as internalWebClient from "../src/internal-web-client";
 
+describe("fresh room admission authority", () => {
+ const env = { ANIDACHI_INTERNAL_API_SECRET: "secret", ANIDACHI_WEB_INTERNAL_BASE_URL: "https://web.internal" };
+ it("requires an exact room decision even when the server returns HTTP 200", async () => {
+  for (const body of [{ ok: true }, { roomId: "other", roomGeneration: 1, allowed: true },
+   { roomId: "room-1", roomGeneration: 1, allowed: true, code: "HOST_SUBSCRIPTION_REQUIRED" }]) {
+   await expect(internalWebClient.checkWebRoomAdmission(env, "room-1", "user", async () => Response.json(body))).rejects.toThrow();
+  }
+ });
+ it("bounds an admission response whose body never finishes", async () => {
+  const { fetchImplementation, observedAbort, observedCancel } = stallingJsonBodyFetch();
+  await expect(internalWebClient.checkWebRoomAdmission(env, "room-1", "user", fetchImplementation, 5)).rejects.toThrow();
+  expect(observedAbort()).toBe(true); expect(observedCancel()).toBe(true);
+ });
+});
+
 const clientApi = internalWebClient as typeof internalWebClient & {
   notifyWebRoomEnded?: (
     env: {

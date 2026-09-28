@@ -580,6 +580,9 @@ describe("production watch browsing", () => {
     await click("Upgrade to Plus or Pro");
     const pricingUrl = vi.mocked(client.openUrl).mock.calls[1]![0];
     expect(new URL(pricingUrl).pathname).toBe("/pricing");
+    await click("Manage history");
+    expect(new URL(vi.mocked(client.openUrl).mock.calls[2]![0]).pathname).toBe("/account/watch-library");
+    expect(client.request.mock.calls.some(([message]) => message.command === "create-room")).toBe(false);
   });
   it("real background retains only canonical Free history across reads, renewals, and Resume claims", async () => {
     const calls: string[] = [];

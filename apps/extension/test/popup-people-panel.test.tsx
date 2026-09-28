@@ -636,6 +636,10 @@ describe("PopupApp social mutations", () => {
 
   it("shows the active account identity in the compact Popup header", async () => {
     vi.mocked(listSocialDirectory).mockResolvedValue(directory());
+    // The login profile is identity; the badge now reads current server access.
+    chrome.runtime = { sendMessage: vi.fn(async () => ({ ok: true, access: {
+      entitlementsVersion: 1, ownerUserId: TOKENS.user.id, serverTime: NOW, planCode: "plus",
+    } })) } as unknown as typeof chrome.runtime;
     const view = await renderPopupApp();
     root = view.root;
 

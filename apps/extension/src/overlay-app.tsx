@@ -182,6 +182,7 @@ import {
 	connectWebsiteRoom,
 	createRoom,
 	isActiveRoomConflictError,
+	isHostingSubscriptionRequiredError,
 	isQuotaExhaustedError,
 	isTerminalRoomJoinError,
 	ROOM_FULL_CLOSE_CODE,
@@ -204,6 +205,8 @@ import {
 	roomInviteTargetStatusLabel,
 } from "./room-invite-target-status";
 import { FreeQuotaNotice } from "./free-quota-notice";
+import { HostingPaywall } from "./hosting-paywall";
+import { useHostingAccess } from "./use-hosting-access";
 import { useFreeQuotaNotice, type QuotaExhaustion } from "./use-free-quota-notice";
 import {
 	applyRoomUsageSnapshot,
@@ -557,11 +560,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const authUserIdRef = useRef<string | null>(null);
 	const authUserIdInitializedRef = useRef(false);
 	const authGenerationRef = useRef(0);
+	const authSessionKeyRef = useRef<string | null>(null);
 	const suppressSilentSignInUntilRef = useRef(0);
 	const [participant, setParticipant] = useState<Participant | null>(null);
 	const [identityLoaded, setIdentityLoaded] = useState(false);
 	const [authAuthenticated, setAuthAuthenticated] = useState(false);
 	const [authAccessToken, setAuthAccessToken] = useState<string | null>(null);
+	const [authSessionKey, setAuthSessionKey] = useState<string | null>(null);
 	const [accountUser, setAccountUser] = useState<AuthenticatedUser | null>(
 		null,
 	);
@@ -581,6 +586,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const voiceAudioPreferencesWriteTimerRef = useRef<number | null>(null);
 	const [authBusy, setAuthBusy] = useState(false);
 	const [authMessage, setAuthMessage] = useState<string | null>(null);
+	const [roomTerminalMessage, setRoomTerminalMessage] = useState<string | null>(null);
+	const roomActionMessage = authMessage ?? roomTerminalMessage;
+	const [hostingRequiredOwner, setHostingRequiredOwner] = useState<string | null>(null);
+	const [hostingPaywallOpen, setHostingPaywallOpen] = useState(false);
 	const [transientPanelNotice, setTransientPanelNotice] = useState<
 		string | null
 	>(null);
@@ -608,6 +617,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const [roomCapabilities, setRoomCapabilities] =
 		useState<RoomCapabilities | RoomMediaCapabilities | null>(null);
 	const [roomMediaSnapshot, setRoomMediaSnapshot] = useState<RoomMediaSnapshot | null>(null);
+	const announcedRoomClosingRef = useRef<string | null>(null);
 	const [, setMediaRevision] = useState(0);
 	const [quotaDisplayTick, setQuotaDisplayTick] = useState(0);
 	const quotaMeteredMsRef = useRef(0);
@@ -808,11 +818,22 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const interfacePreferences = useInterfacePreferences();
 	const roomJoinDefaults = useRoomJoinDefaults(accountUser?.id ?? null);
 	const [quotaExhaustion, setQuotaExhaustion] = useState<QuotaExhaustion | null>(null);
+	const hostingDisplay = useHostingAccess({
+		ownerUserId: authAuthenticated ? accountUser?.id ?? null : null,
+		sessionKey: authSessionKey,
+		enabled: panelOpen || roomId !== null,
+	});
+	const legacyQuotaEnabled = hostingDisplay.state.mode === "legacy";
+	const hostingPolicyModeRef = useRef(hostingDisplay.state.mode);
+	hostingPolicyModeRef.current = hostingDisplay.state.mode;
 	const freeQuotaNotice = useFreeQuotaNotice({
 		ownerUserId: authAuthenticated && !roomId ? accountUser?.id ?? null : null,
 		accessToken: authAccessToken,
+		sessionKey: authSessionKey,
 		visible: panelOpen && !roomId,
-		isFree: accountUser?.plan === "free",
+		isFree: hostingDisplay.state.access?.planCode === "free",
+		policyMode: hostingDisplay.state.mode,
+		onQuotaRetired: hostingDisplay.invalidate,
 		exhaustion: quotaExhaustion,
 	});
 	const showFreeQuotaNotice = useCallback((resetAt?: string) => {
@@ -1678,6 +1699,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			}
 
 			authUserIdRef.current = nextAuthUserId;
+			setRoomTerminalMessage(null);
+			setHostingRequiredOwner(null);
+			setHostingPaywallOpen(false);
 			authGenerationRef.current += 1;
 			inviteStatusRequestEpochRef.current += 1;
 			inviteActionIdsRef.current.clear();
@@ -1703,13 +1727,16 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	);
 
 	const refreshRoomActionIdentity = useCallback(async (reason: string) => {
+		setRoomTerminalMessage(null);
 		const result = await createCurrentParticipant();
 		syncAuthUserScopedState(result.tokens?.user.id ?? null, reason);
+		authSessionKeyRef.current = result.tokens?.refreshToken ?? null;
 		authAccessTokenRef.current = result.tokens?.accessToken ?? null;
 		participantRef.current = result.participant;
 		setParticipant(result.participant);
 		setAuthAuthenticated(result.authenticated);
 		setAuthAccessToken(result.tokens?.accessToken ?? null);
+		setAuthSessionKey(result.tokens?.refreshToken ?? null);
 		setAccountUser(result.tokens?.user ?? null);
 		setExtensionContextInvalidated(Boolean(result.requiresPageReload));
 		setAuthMessage(result.message ?? null);
@@ -1732,6 +1759,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 		return {
 			accessToken: result.tokens?.accessToken ?? null,
+			sessionKey: result.tokens?.refreshToken ?? null,
 			accountGeneration: authGenerationRef.current,
 			ownerUserId: result.tokens?.user.id ?? null,
 			participant: result.participant,
@@ -2268,10 +2296,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	// Worker snapshots own accumulated room usage. The local interval only keeps
 	// the display moving between snapshots while host and guest are both live.
 	const quotaMeteringActive =
-		isConnected && isHost && roomQuota !== null &&
+		legacyQuotaEnabled && isConnected && isHost && roomQuota !== null &&
     (versionedMedia ? authoritativeQuota?.quota.metering === true : participantCount > 1);
 	const quotaRemainingSeconds = useMemo(() => {
-		if (!roomQuota) return null;
+		if (!legacyQuotaEnabled || !roomQuota) return null;
     if (versionedMedia && !roomSnapshotReady) return null;
     if (versionedMedia) return authoritativeQuotaRemainingSeconds(authoritativeQuota?.quota ?? null, quotaMeteredMsRef.current);
 		// quotaDisplayTick advances once per second while metering is active so the
@@ -2282,7 +2310,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			roomUsage,
 			localMeteredMs: quotaMeteredMsRef.current,
 		});
-	}, [roomQuota, roomUsage, quotaDisplayTick, versionedMedia, authoritativeQuota, roomSnapshotReady]);
+	}, [legacyQuotaEnabled, roomQuota, roomUsage, quotaDisplayTick, versionedMedia, authoritativeQuota, roomSnapshotReady]);
 	const cameraStackVisible = shouldShowCameraStack({
 		cameraParticipantCount: displayedCameraParticipants.length,
 		p2pSessionActive,
@@ -3421,7 +3449,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			setRoomCapabilities(null);
 			clearStoredRoomSession();
 			clearRoomHash();
-			setAuthMessage(message);
+			setAuthMessage(null);
+			setRoomTerminalMessage(message || null);
+			announcedRoomClosingRef.current = null;
 			setPanelOpen(true);
 		},
 		[clearRoomQuotaDisplay, clearStoredRoomSession, ghostCamSession.stop],
@@ -3446,6 +3476,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						if (media.error) showTransientPanelNotice(media.error);
 						ghostCamSession.reconcileMediaAuthority(media.canCapture("camera"), media.canCapture("microphone"), media.snapshot);
 						setRoomMediaSnapshot(media.snapshot);
+						if (media.snapshot.closingAt !== null) {
+							const notice = JSON.stringify([authUserIdRef.current, media.snapshot.roomId, media.snapshot.roomGeneration, media.snapshot.closingAt]);
+							if (announcedRoomClosingRef.current !== notice) {
+								announcedRoomClosingRef.current = notice;
+								setPanelOpen(true);
+							}
+						}
 						setRoomCapabilities(media.snapshot.capabilities);
 						setMediaRevision(n => n + 1);
 						if (!media.wants("camera")) {
@@ -3461,7 +3498,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				}
 				case "ROOM_ENDED": {
 					if (event.roomId !== roomIdRef.current) return;
-					if (event.reason === "quota_exhausted") {
+					if (event.reason === "quota_exhausted" && hostingPolicyModeRef.current === "legacy") {
 						if (isCurrentHost()) {
 							const ended = new Date(event.endedAt);
 							const resetAt = new Date(Date.UTC(ended.getUTCFullYear(), ended.getUTCMonth(), ended.getUTCDate() + 1)).toISOString();
@@ -3470,6 +3507,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						} else {
 							terminateRoomSession("The host's Free time is used up. You can join another room or create your own.");
 						}
+					} else if (event.reason === "capability_expired") {
+						terminateRoomSession(event.hostingCutover
+							? "This Free room closed because creating rooms now requires Plus or Pro. You can still join rooms for free."
+							: "This room closed because the host's room access could not be renewed. You can still join rooms for free.");
 					} else terminateRoomSession("Watch room ended.");
 					return;
 				}
@@ -4395,11 +4436,16 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		) => {
 			const activeRoomId = roomIdRef.current;
 			syncAuthUserScopedState(result.tokens?.user.id ?? null, reason);
+			if (authSessionKeyRef.current !== (result.tokens?.refreshToken ?? null)) {
+				setRoomTerminalMessage(null);
+			}
+			authSessionKeyRef.current = result.tokens?.refreshToken ?? null;
 			authAccessTokenRef.current = result.tokens?.accessToken ?? null;
 			participantRef.current = result.participant;
 			setParticipant(result.participant);
 			setAuthAuthenticated(result.authenticated);
 			setAuthAccessToken(result.tokens?.accessToken ?? null);
+			setAuthSessionKey(result.tokens?.refreshToken ?? null);
 			setAccountUser(result.tokens?.user ?? null);
 			setExtensionContextInvalidated(Boolean(result.requiresPageReload));
 			setAuthMessage(result.message ?? null);
@@ -4629,6 +4675,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			}
 			const activeParticipant = refreshed.participant;
 			const activeAccessToken = refreshed.accessToken;
+			setHostingPaywallOpen(false);
 			if (!activeParticipant || !activeAccessToken) {
 				setPanelOpen(true);
 				setAuthMessage("Sign in to create Anidachi rooms.");
@@ -4681,6 +4728,17 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				// Account changes and superseding joins retire this operation's errors too.
 				if (!isCurrentCreate()) return null;
 				releaseRoomTabLock();
+				// A delayed failure belongs to the login that made the request.
+				// Keep cleanup above, but do not apply its offer/quota/error to a new login.
+				if (authSessionKeyRef.current !== refreshed.sessionKey) return null;
+				if (isHostingSubscriptionRequiredError(error)) {
+					hostingDisplay.invalidate();
+					setHostingRequiredOwner(activeParticipant.id);
+					setHostingPaywallOpen(true);
+					setPanelOpen(true);
+					setAuthMessage(null);
+					return null;
+				}
 				throw error;
 			}
 			createRequestIdRef.current = null;
@@ -4860,7 +4918,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					clearStoredRoomSession();
 					clearRoomHash();
 					releaseRoomTabLock();
-					setAuthMessage(roomJoinUnavailableMessage(error));
+					setAuthMessage(null);
+					setRoomTerminalMessage(roomJoinUnavailableMessage(error));
 					setPanelOpen(true);
 					return;
 				}
@@ -6152,7 +6211,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 								<PanelAccountTitle
 									displayName={accountDisplayName}
 									plan={
-										authAuthenticated && accountUser ? accountUser.plan : null
+										authAuthenticated ? hostingDisplay.state.access?.planCode ?? null : null
 									}
 								/>
 								{roomId && !mediaV3 ? (
@@ -6300,10 +6359,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							<span>{transientPanelNotice}</span>
 						</div>
 					) : null}
-					{!roomId && freeQuotaNotice.state ? <FreeQuotaNotice state={freeQuotaNotice.state} onRetry={freeQuotaNotice.retry} /> : null}
-					{authMessage ? (
+					{!roomId && panelOpen && hostingPaywallOpen && hostingRequiredOwner === accountUser?.id ? (
+						<HostingPaywall key={`${hostingRequiredOwner}:${authGenerationRef.current}`} state={hostingDisplay.state} onRefresh={hostingDisplay.refresh} onClose={() => setHostingPaywallOpen(false)} />
+					) : null}
+					{!roomId && hostingRequiredOwner !== accountUser?.id && freeQuotaNotice.state ? <FreeQuotaNotice state={freeQuotaNotice.state} onRetry={freeQuotaNotice.retry} /> : null}
+					{roomActionMessage ? (
 						<div className="auth-notice">
-							<span>{authMessage}</span>
+							<span>{roomActionMessage}</span>
 							{extensionContextInvalidated ? (
 								<button
 									className="button compact"
@@ -6315,7 +6377,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							) : null}
 						</div>
 					) : null}
-					{roomQuota ? (
+					{legacyQuotaEnabled && roomQuota ? (
 						<div className="quota-note">
 							<span>Free watch-party time today</span>
 							<strong>
@@ -7369,6 +7431,9 @@ function clearRoomHash(): void {
 }
 
 function roomJoinUnavailableMessage(error: { status?: number }): string {
+  if (isHostingSubscriptionRequiredError(error)) {
+    return "This room needs a host with Plus or Pro. You can join another paid host’s room for free.";
+  }
   if (error.status === 426) return "Update Anidachi to join this room.";
 	if (error.status === 404) {
 		return "This watch room is no longer available.";

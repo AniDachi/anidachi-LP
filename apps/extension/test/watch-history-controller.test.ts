@@ -19,6 +19,53 @@ import {
 import { paidHistoryLease } from "./watch-history-personal-fixtures";
 
 describe("watch history meaningful-progress controller", () => {
+  it.each(["expired lease", "confirmed Free"] as const)(
+    "stops a paid-room guest's personal recording on %s and never backfills the Free interval",
+    async loss => {
+      const owner = "00000000-0000-4000-8000-000000000001";
+      const start = 1_700_000_000_000;
+      let current: Awaited<ReturnType<WatchHistoryControllerDependencies["loadPreferences"]>> = {
+        ownerUserId: owner, accountGeneration: 1,
+        accessLease: paidHistoryLease(owner, start),
+        preferences: { youtubeHistoryEnabled: true },
+      };
+      const fixture = createFixture({ roomActive: true, loadPreferences: async () => current });
+      await fixture.controller.start();
+      await fixture.controller.setRoomHistoryAuthority(roomAuthority());
+      fixture.setTime(11);
+      await fixture.controller.observe("heartbeat");
+      const before = fixture.local.length;
+      fixture.advance(300_001);
+      if (loss === "confirmed Free") {
+        current = { ...current!, accessLease: {
+          ...paidHistoryLease(owner, start + 300_001),
+          access: { ...paidHistoryLease(owner, start + 300_001).access, state: "plan_required", accessEpoch: 2 },
+        } };
+        await fixture.controller.refreshAuthority();
+      } else {
+        current = null; // The old permission must expire even if refresh is unavailable.
+      }
+      // Reissued room authority belongs to the host; it cannot renew the guest's history lease.
+      await fixture.controller.setRoomHistoryAuthority(roomAuthority(2));
+      fixture.setTime(16);
+      await fixture.controller.observe("heartbeat");
+      await fixture.controller.observe("ended");
+      expect(fixture.local).toHaveLength(before);
+      expect(fixture.enqueued.some(event => event.currentTime === 16)).toBe(false);
+
+      const renewed = paidHistoryLease(owner, start + 300_001);
+      current = { ownerUserId: owner, accountGeneration: 1,
+        preferences: { youtubeHistoryEnabled: true },
+        accessLease: { ...renewed, access: { ...renewed.access, accessEpoch: 3 } },
+      };
+      await fixture.controller.refreshAuthority();
+      fixture.setTime(17); await fixture.controller.observe("heartbeat");
+      fixture.setTime(18); await fixture.controller.observe("pause");
+      expect(fixture.enqueued.map(event => event.currentTime)).toEqual([11, 18]);
+      await fixture.controller.dispose();
+    },
+  );
+
   it.each(["crunchyroll", "youtube"] as const)("invalidates %s capture immediately even while an older refresh is stalled", async (provider) => {
     const authority = { ownerUserId: "00000000-0000-4000-8000-000000000001", accountGeneration: 1,
       accessLease: paidHistoryLease(undefined, 1_700_000_000_000), preferences: { youtubeHistoryEnabled: true } };

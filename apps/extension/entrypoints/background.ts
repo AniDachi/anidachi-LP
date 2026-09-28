@@ -1,4 +1,5 @@
 import "../src/zod-csp";
+import { handleHostingAccessMessage, isHostingAccessMessage } from "../src/hosting-access-client";
 import { defineBackground } from "wxt/utils/define-background";
 import { handleRoomQuotaStatusMessage, isRoomQuotaStatusMessage } from "../src/room-quota-status-client";
 import {
@@ -285,6 +286,11 @@ export default defineBackground(() => {
 
     if (isRoomQuotaStatusMessage(message)) {
       void handleRoomQuotaStatusMessage(message).then(sendResponse);
+      return true;
+    }
+
+    if (isHostingAccessMessage(message)) {
+      void handleHostingAccessMessage(message).then(sendResponse);
       return true;
     }
 

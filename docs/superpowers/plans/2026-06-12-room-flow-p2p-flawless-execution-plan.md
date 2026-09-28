@@ -295,6 +295,15 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
 
 ## Progress Log
 
+- 2026-09-28 — `codex/paid-hosting-transition-plan`, local room-end checkpoint
+  from `30b92d3e`: compatible cutover display context and original-deadline warning
+  in the extension, no lifecycle/media-policy change. Root check/test, API248,
+  protocol203, extension2104 (final Overlay92), runtime86, room39/WebRTC26 and
+  narrow build/validate pass. Isolated compiled-artifact checks prove parser,
+  terminal cleanup and warning at1100/390 with synthetic boundaries. Exact Store,
+  live staging/restart and legacy-terminal recovery gates remain; see
+  [the room-end evidence](../../releases/paid-hosting-trial/implementation-evidence.md#block-c-room-end-causes-and-warning-2026-09-28).
+
 - 2026-09-14 — The approved [host-managed-seat plan](2026-09-14-host-managed-media-seats.md)
   adds negotiated v3 rooms without changing frozen plan capacities, room
   lifecycle, quota, invite flow or the existing v2 contract. Seat authority and

@@ -1,6 +1,7 @@
 import {
   ActiveRoomConflictResponseSchema,
   ClientEventSchema,
+  HOST_SUBSCRIPTION_REQUIRED,
   ROOM_CONNECT_REQUEST_TIMEOUT_MS,
   RoomSessionAdmissionInputSchema,
   RoomCapabilitiesSchema,
@@ -315,6 +316,10 @@ export class RoomApiError extends Error {
 
 export function isQuotaExhaustedError(error: unknown): error is RoomApiError {
   return error instanceof RoomApiError && error.code === "QUOTA_EXHAUSTED";
+}
+
+export function isHostingSubscriptionRequiredError(error: unknown): error is RoomApiError {
+  return error instanceof RoomApiError && error.status === 403 && error.code === HOST_SUBSCRIPTION_REQUIRED;
 }
 
 export function isActiveRoomConflictError(error: unknown): error is RoomApiError & {
