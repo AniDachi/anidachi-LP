@@ -840,9 +840,9 @@
     "semantic_hash": "9e1777df77b03e145eaa0522d3c7c00b"
   },
   "apps/web/app/api/create-checkout-session/route.ts": {
-    "mtime": 1790604875.2629385,
-    "seen": 1790606404.2792032,
-    "ast_hash": "54402ae465abf5491231cf9100f86526",
+    "mtime": 1790632096.9985178,
+    "seen": 1790634955.289073,
+    "ast_hash": "917c39b58de89b24ff14648b0babc90f",
     "semantic_hash": ""
   },
   "apps/web/app/api/extension/auth/exchange/route.ts": {
@@ -1770,9 +1770,9 @@
     "semantic_hash": "11ea8eacc8bbc5fa661a0c01bd11192f"
   },
   "apps/web/app/page.tsx": {
-    "mtime": 1789803335.973474,
-    "seen": 1789807056.4368699,
-    "ast_hash": "1e951cef2543e8823bc5c360f6e1cad0",
+    "mtime": 1790632033.3558125,
+    "seen": 1790634955.289075,
+    "ast_hash": "1ad8f8565fdf9ea042a164e5ddbf3b28",
     "semantic_hash": ""
   },
   "apps/web/app/privacy/page.tsx": {
@@ -2088,9 +2088,9 @@
     "semantic_hash": "2b87f668dc144b5475f61509c9e9d8bc"
   },
   "apps/web/components/home/home-client.tsx": {
-    "mtime": 1789802169.4456003,
-    "seen": 1789807056.436974,
-    "ast_hash": "928e52620b06f8e98192bd685539cb55",
+    "mtime": 1790634129.3602421,
+    "seen": 1790634955.289077,
+    "ast_hash": "32c2f7dd46c6de181a673e5c9fa7f068",
     "semantic_hash": ""
   },
   "apps/web/components/how-it-works.tsx": {
@@ -2142,9 +2142,9 @@
     "semantic_hash": ""
   },
   "apps/web/components/pricing.tsx": {
-    "mtime": 1790605660.5103397,
-    "seen": 1790606404.279205,
-    "ast_hash": "722d4598e37d66de5e1f69abe1c811dc",
+    "mtime": 1790634129.359472,
+    "seen": 1790634955.289078,
+    "ast_hash": "6348dcdf15c55e55269d3c41fe25f91f",
     "semantic_hash": ""
   },
   "apps/web/components/primary-checkout-cta.tsx": {
@@ -4260,9 +4260,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/pricing/page.tsx": {
-    "mtime": 1790605550.4170756,
-    "seen": 1790606404.2792041,
-    "ast_hash": "f5b9752b038eb2568d5af4d424ac30b8",
+    "mtime": 1790634129.3598678,
+    "seen": 1790634955.289077,
+    "ast_hash": "35fd035e8989af26a518313ac8d2f365",
     "semantic_hash": ""
   },
   "apps/web/lib/force-index-urls.ts": {
@@ -8682,21 +8682,21 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/subscription-checkout-server.ts": {
-    "mtime": 1790621282.0856988,
-    "seen": 1790622601.691513,
-    "ast_hash": "f24556e26d0751c5385d85163c2c2a55",
+    "mtime": 1790632033.3550289,
+    "seen": 1790634955.289079,
+    "ast_hash": "e36335bbc6cbc6d77c77bec8da084363",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/subscription-trial.test.ts": {
-    "mtime": 1790621650.5919268,
-    "seen": 1790622601.691514,
-    "ast_hash": "0eb32b1ae4ae0f195ef71c91ebe1607e",
+    "mtime": 1790632096.9999895,
+    "seen": 1790634955.2890801,
+    "ast_hash": "826fca567ecfd81158df72fb802915ea",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/subscription-trial.ts": {
-    "mtime": 1790621650.5910995,
-    "seen": 1790622601.691514,
-    "ast_hash": "11213958dc3b0d2371c817a49e22f74e",
+    "mtime": 1790632096.9998026,
+    "seen": 1790634955.2890801,
+    "ast_hash": "8080a3dbd147bd2bc1452191c63462ef",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/trial-plan-change.test.ts": {
@@ -8922,21 +8922,21 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/pricing-offer.ts": {
-    "mtime": 1790605550.4188204,
-    "seen": 1790606404.279209,
-    "ast_hash": "6d7b664e2fa3ae7e304bdd54e1062de1",
+    "mtime": 1790632033.3556209,
+    "seen": 1790634955.289078,
+    "ast_hash": "5cd9f10bb1f72c42b23ae5d7f83f1c4c",
     "semantic_hash": ""
   },
   "apps/web/lib/pricing-client.test.ts": {
-    "mtime": 1790605550.4172254,
-    "seen": 1790606404.27921,
-    "ast_hash": "ff2a103ff4e7d0721ca226b2e28d3b01",
+    "mtime": 1790632096.998894,
+    "seen": 1790634955.2890801,
+    "ast_hash": "28f87e94ada7ec0bafb6506ff431465d",
     "semantic_hash": ""
   },
   "apps/web/lib/pricing-offer.ts": {
-    "mtime": 1790605464.477123,
-    "seen": 1790606404.279211,
-    "ast_hash": "be261009836b5608b29faf53026b2aee",
+    "mtime": 1790631761.0435176,
+    "seen": 1790634955.289081,
+    "ast_hash": "6db6d17f6279ab7cea3535095d938a31",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/room-connect-route.test.ts": {
@@ -8968,5 +8968,17 @@
     "seen": 1790629092.5764081,
     "ast_hash": "",
     "semantic_hash": "6005383f2c2d5234fa518618386caec1"
+  },
+  "apps/web/lib/anidachi-auth/pricing-catalog.ts": {
+    "mtime": 1790632096.9981484,
+    "seen": 1790634955.289082,
+    "ast_hash": "1ddb854c5c2067504c5c5a5cbbad30f2",
+    "semantic_hash": ""
+  },
+  "docs/releases/paid-hosting-trial/pricing-loading-fix-2026-09-29.md": {
+    "mtime": 1790634129.3616054,
+    "seen": 1790634955.33395,
+    "ast_hash": "",
+    "semantic_hash": "c227ebbd327c9e097474a307b37e3d10"
   }
 }
