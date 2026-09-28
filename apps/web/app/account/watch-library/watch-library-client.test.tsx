@@ -68,6 +68,7 @@ testWindow.confirm = () => false;
 const originalFetch = globalThis.fetch;
 for (const [name, value] of Object.entries({
   window: testWindow,
+  self: testWindow,
   document: testWindow.document,
   navigator: testWindow.navigator,
   HTMLElement: testWindow.HTMLElement,

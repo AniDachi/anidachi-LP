@@ -7,6 +7,35 @@ import {
 import * as roomLifecycle from "./room-lifecycle";
 import { completeHostRoomEnd, syncRoomEndToWorker } from "./room-lifecycle";
 
+test("cutover delivery retains separate durable fence and finalization receipts", async () => {
+  const cutover = { revision: 2, roomId: "cutover-receipt", roomGeneration: 1, closingAt: 1000 };
+  const command = { endedAt: 1000, reason: "capability_expired" as const, cutover };
+  const receipt = { cutover, fencedAt: 1100, finalizedAt: 1200, webFinalized: true };
+  assert.deepEqual(await syncRoomEndToWorker(cutover.roomId, command, {
+    baseUrl: "https://worker.test", secret: "synthetic-key",
+    fetch: async () => Response.json({ ok: true, ...receipt }),
+  }), receipt);
+});
+
+test("cutover partial failure retains the fence proof but never claims finalization", async () => {
+  const cutover = { revision: 2, roomId: "cutover-partial", roomGeneration: 1, closingAt: 1000 };
+  const receipt = { cutover, fencedAt: 1100, finalizedAt: null, webFinalized: false };
+  assert.deepEqual(await syncRoomEndToWorker(cutover.roomId, { endedAt: 1000, reason: "capability_expired", cutover }, {
+    baseUrl: "https://worker.test", secret: "synthetic-key",
+    fetch: async () => Response.json({ error: "ROOM_END_CALLBACK_FAILED", ...receipt }, { status: 502 }),
+  }), receipt);
+});
+
+test("cutover ACK must identify the exact room, generation, revision and deadline", async () => {
+  const cutover = { revision: 2, roomId: "cutover-identity", roomGeneration: 1, closingAt: 1000 };
+  for (const changed of [{ roomId: "different" }, { roomGeneration: 2 }, { revision: 3 }, { closingAt: 2000 }]) {
+    await assert.rejects(syncRoomEndToWorker(cutover.roomId, { endedAt: 1000, reason: "capability_expired", cutover }, {
+      baseUrl: "https://worker.test", secret: "synthetic-key",
+      fetch: async () => Response.json({ ok: true, cutover: { ...cutover, ...changed }, fencedAt: 1100, finalizedAt: 1200, webFinalized: true }),
+    }));
+  }
+});
+
 const lifecycleApi = roomLifecycle as typeof roomLifecycle & {
   completeInternalRoomEnd?: (params: {
     alreadyEnded: boolean;

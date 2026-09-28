@@ -6,6 +6,8 @@ import {
   RoomDetachAcknowledgementSchema,
   RoomDepartureAcknowledgementSchema,
   RoomUsageSummarySchema,
+  RoomHostingCutoverReceiptSchema,
+  type RoomHostingCutover,
   createEmptyRoomEndEventId,
   type RoomEndReason,
   type InternalRoomDetachCommand,
@@ -20,6 +22,7 @@ const PARTICIPANT_DETACH_TIMEOUT_MS = 1_000;
 export interface EndRoomCommand {
 	endedAt: number;
 	reason: RoomEndReason;
+  cutover?: RoomHostingCutover;
 }
 export interface InternalRoomEndCommand extends EndRoomCommand {
   eventId?: string;
@@ -29,6 +32,9 @@ export interface InternalRoomEndCommand extends EndRoomCommand {
 export interface RoomEndSyncResult {
   usage?: RoomUsageSummary;
   webFinalized?: boolean;
+  cutover?: RoomHostingCutover;
+  fencedAt?: number;
+  finalizedAt?: number | null;
 }
 
 export class RoomLifecycleSyncError extends Error {
@@ -115,6 +121,7 @@ export async function syncRoomEndToWorker(
     baseUrl?: string;
     secret?: string;
     fetch?: typeof fetch;
+    signal?: AbortSignal;
   } = {},
 ): Promise<RoomEndSyncResult> {
   const baseUrl = options.baseUrl ?? process.env.ANIDACHI_API_INTERNAL_BASE_URL;
@@ -130,11 +137,25 @@ export async function syncRoomEndToWorker(
         "Content-Type": "application/json",
       },
       body: JSON.stringify(command),
+      signal: options.signal,
+      redirect: "error",
     },
   );
+  const body = await response.json().catch(() => null);
+  if (command.cutover) {
+    const receipt = RoomHostingCutoverReceiptSchema.safeParse(body);
+    if (![200, 502, 503].includes(response.status) || !receipt.success
+      || receipt.data.cutover.roomId !== roomId
+      || receipt.data.cutover.revision !== command.cutover.revision
+      || receipt.data.cutover.roomGeneration !== command.cutover.roomGeneration
+      || receipt.data.cutover.closingAt !== command.cutover.closingAt
+      || (response.status === 200 && (!isRecord(body) || body.ok !== true))) {
+      throw new Error("Worker cutover returned an invalid acknowledgement");
+    }
+    return receipt.data;
+  }
 	if (!response.ok)
 		throw new Error(`Worker room end failed (${response.status})`);
-  const body = await response.json().catch(() => null);
   if (!isRecord(body) || body.ok !== true) {
     throw new Error("Worker room end returned an invalid response");
   }

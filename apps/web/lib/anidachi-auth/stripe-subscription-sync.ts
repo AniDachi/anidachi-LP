@@ -4,6 +4,7 @@ import {
 	beginStripeSubscriptionRefresh,
 	commitStripeSubscriptionRefresh,
 	getSubscriptionOwner,
+	getSubscriptionTrial,
 	getUserIdByStripeCustomerId,
 	releaseStripeSubscriptionRefresh,
 	type StripeRefreshLease,
@@ -15,6 +16,10 @@ import {
 	paidPlanCodeFromStripeSubscription,
 	stripeSubscriptionCancellationScheduled,
 } from "./stripe-plans";
+import {
+	resolveStripeTrialSnapshot,
+	type SubscriptionTrialRecord,
+} from "./stripe-trial-state";
 
 export class StripeSubscriptionSyncError extends Error {
 	constructor(message: string) {
@@ -70,6 +75,9 @@ export function resolveStripeSubscriptionPlan(
 }
 
 export type SyncStripeSubscriptionDeps = {
+	readTrial?: (
+		subscriptionId: string,
+	) => Promise<SubscriptionTrialRecord | null>;
 	resolveUserId?: (stripeCustomerId: string) => Promise<string | null>;
 	resolveSubscriptionOwner?: (subscriptionId: string) => Promise<string | null>;
 	begin?: (subscriptionId: string) => Promise<StripeRefreshLease | null>;
@@ -98,6 +106,15 @@ export async function syncStripeSubscriptionById(
 		throw new StripeSubscriptionSyncError(
 			"Stripe refresh busy; retry delivery",
 		);
+	const snapshotDeadline = Date.now() + 22_000;
+	const requestOptions = () => {
+		const remaining = snapshotDeadline - Date.now();
+		if (remaining <= 0)
+			throw new StripeSubscriptionSyncError(
+				"Stripe snapshot deadline exceeded; retry delivery",
+			);
+		return { timeout: Math.min(8000, remaining), maxNetworkRetries: 0 };
+	};
 	try {
 		// Finite request deadline stays below the 30s DB lease. No SDK retry can
 		// retain an expired snapshot; retries must reacquire and retrieve anew.
@@ -111,9 +128,10 @@ export async function syncStripeSubscriptionById(
 		const stripeCustomerId = stripeCustomerIdFrom(subscription.customer);
 		if (!stripeCustomerId)
 			throw new StripeSubscriptionSyncError("Subscription missing customer");
-		const [customerOwner, subscriptionOwner] = await Promise.all([
+		const [customerOwner, subscriptionOwner, priorTrial] = await Promise.all([
 			(deps.resolveUserId ?? getUserIdByStripeCustomerId)(stripeCustomerId),
 			(deps.resolveSubscriptionOwner ?? getSubscriptionOwner)(subscriptionId),
+			(deps.readTrial ?? getSubscriptionTrial)(subscriptionId),
 		]);
 		const metadataOwner = subscription.metadata.userId;
 		const owners = [
@@ -121,6 +139,7 @@ export async function syncStripeSubscriptionById(
 			subscriptionOwner,
 			metadataOwner,
 			deps.expectedUserId,
+			priorTrial?.user_id,
 		].filter(Boolean);
 		if (new Set(owners).size > 1)
 			throw new StripeSubscriptionSyncError("Subscription owner mismatch");
@@ -128,6 +147,12 @@ export async function syncStripeSubscriptionById(
 		if (!userId) return null; // Untracked Stripe customer; no mirror to mutate.
 		const { planCode, stripePriceId } =
 			resolveStripeSubscriptionPlan(subscription);
+		const trial = await resolveStripeTrialSnapshot(
+			stripe,
+			subscription,
+			priorTrial,
+			requestOptions,
+		);
 		const effectivePlan = await (
 			deps.commit ?? commitStripeSubscriptionRefresh
 		)(
@@ -142,6 +167,7 @@ export async function syncStripeSubscriptionById(
 				// The existing mirror flag represents scheduled renewal cancellation in both billing modes.
 				cancelAtPeriodEnd:
 					stripeSubscriptionCancellationScheduled(subscription),
+				trial,
 			},
 			lease,
 		);
