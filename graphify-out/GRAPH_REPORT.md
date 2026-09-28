@@ -7,16 +7,23 @@
 - Unclassified: 30 file(s) not represented in the graph (top: .css 12, (none) 11, .toml 2)
 
 ## Summary
-- 14041 nodes · 32367 edges · 851 communities (471 shown, 380 thin omitted)
+- 14050 nodes · 32385 edges · 851 communities (471 shown, 380 thin omitted)
 - Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 1072 edges (avg confidence: 0.87)
 - Token accounting: AST uses no LLM; active Codex semantic subagent usage is unavailable.
 
 ## Graph Freshness
-- Built from commit: `e0f8a21e`
-- Includes the minimum website e0f8a21e:11scoped web AST sources, one full111-line receipt and four partial docs. Exact source hashes/ranges are in semantic_updates; partial whole-file manifest/backlog is retained. Local implementation is verified in the source receipt; real Sandbox/P11/staging remains owner acceptance.
+- Built from commit: `80fefde3`
+- Includes the subsequent staging delivery receipt: schema375/Web377 deployed with69migrations and configured Sandbox/drain; signed admission now verified, new Worker still not deployed. One full document and five top partial scopes; no AST/full-corpus freshness. Exact six input hashes and partial boundaries are recorded in semantic_updates.
 - Run `graphify update .` after code changes (no API cost).
 
-## Minimum website: renewal and resubscription — 2026-09-29
+## Partial staging delivery: admission verified, runtime pending — 2026-09-29
+
+- Delivery source reports merged schemaPR375/all69migrations and WebPR377/stagingf8a90d21 READY. Diagnostic8ZT redeploy is also READY and now owns the staging alias on the identical f8a90d21 source; initialAKc deployment remains recorded. Expected old compatible Worker was redeployed; new Worker/phase3 is prepared for reviewed runtime PR after positive signed admission; not deployed yet. Exact AniDachi Sandbox webhook action-required and separate staging Vault/Vercel drain credential configured. Maina5a0134e unchanged; automatic promotionPR376 remains unmerged with auto-merge off.
+- Remote count equality and RLS/RPC ACL checks retain their limits. Actual empty pg_net→Web drain returns exact HTTP200 {"ok":true}, proving key/transport/gate/Web-RPC access, not room closure or Worker completion. activation_atNULL/trialsfalse/schedulerdisabled and zero operation/outbox/trial rows; no room closed.
+- Signed Web admission is verified: one-off Vercel build of current stagingf8a90d21 (dpl_8ZTqRaH3ZETgwf2vH7Qkoac2tEpt) uses existing bound credential, returns HTTP200 exact ROOM_ENDED payload at2026-09-28T20:29:11.373Z in about3.35s within8s. No secret export/rotation, auth weakening or project-setting/source change. This proves service authorization/Web→Supabase, not new Worker/liveWebSocket/user-room behavior. Runtime deploy/smoke, ownerP11/Task7, separateT and production/Store remain open.
+- Docs-only extraction: one full99-line delivery source; currentL1-L17, planL19-L38, masterL9-L24 and preflight/minimumL1-L7 only. Initial delivery added9concepts/18links; this correction adds no nodes/edges and preserves all IDs/directed pairs, old communities and50hyperedges/history. Only the full delivery manifest is refreshed; five partial whole-file rows stay unchanged. Partial whole-file hash/cache/backlog and out-of-scope locations remain historical. No AST/product/test/remote/private-secret access by Graphify; service facts are source-reported.
+
+## Historical minimum website: renewal and resubscription — 2026-09-29
 
 - Sourcee0f8a21e from314cecc1 adds same-request resubscription only after fresh canceled/incomplete_expired sync and finishes the old reservation. Restore renewal uses owner/same-origin/fresh Stripe identity and an unexpired subscription with correct Portal mode/config; generic plan updates disabled. Web-only server-time lease expires the action at its own period end despite longer other grants. Opening/returning from Portal does not prove renewal or alter trial dates.
 - Reported proof:2checkout+10renewal RED→GREEN regressions, web807passed/6prior skips, typecheck,11-file ESLint and Next build384pages. No new manual browser/Stripe/loaded-extension acceptance. Local Webb0f4188f/runtimef94d6590 product equality is recorded; no deploy.
