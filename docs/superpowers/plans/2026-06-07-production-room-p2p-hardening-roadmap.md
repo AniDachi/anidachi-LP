@@ -31,6 +31,24 @@
 
 ## Progress Log
 
+- 2026-09-28 — `codex/paid-hosting-transition-plan`, local room-end checkpoint
+  from `30b92d3e`: compatible cutover display context and original-deadline warning
+  in the extension, no lifecycle/media-policy change. Root check/test, API248,
+  protocol203, extension2104 (final Overlay92), runtime86, room39/WebRTC26 and
+  narrow build/validate pass. Isolated compiled-artifact checks prove parser,
+  terminal cleanup and warning at1100/390 with synthetic boundaries. Exact Store,
+  live staging/restart and legacy-terminal recovery gates remain; see
+  [the room-end evidence](../../releases/paid-hosting-trial/implementation-evidence.md#block-c-room-end-causes-and-warning-2026-09-28).
+
+- 2026-09-27 — `codex/paid-hosting-transition-plan`, local Task 5 checkpoint:
+  added independent durable terminal intent and fresh Web admission for signed
+  legacy tokens. Fence, callback finalization and runtime cleanup have separate
+  recovery evidence; policy-independent alarm retries survive hibernation and
+  eight failures. API unit244/runtime86, SQL394 plus concurrency12, room harness
+  39/39 and current-source WebRTC26/26 passed. Deployment, all-target cutover
+  latency and published old-Store-client teardown remain unverified; see
+  [the transition evidence](../../releases/paid-hosting-trial/implementation-evidence.md#task-5-durable-cutover-and-worker-authority).
+
 - 2026-09-13 — `codex/room-policy-renewal`: reproduced the production renewal
   failure under `service_role` (42501), unlike prior administrator-role smoke.
   Added a bounded policy-lock delegation fix and rollback-only runtime-role
