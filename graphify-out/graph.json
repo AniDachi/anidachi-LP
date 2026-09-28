@@ -159059,7 +159059,7 @@
     },
     {
       "id": "docs_superpowers_plans_2026_09_27_paid_hosting_and_trial_transition_paid_hosting_trial_plan",
-      "label": "Minimum website and old staging artifact retain local proof; schema375/Web377 now deployed. Existing-key signed admission HTTP200 was verified inside a staging Vercel build without credential export/rotation; phase3 prerequisite satisfied, new Worker not deployed. Trials/T off, production unchanged; historical preflight and actual manualTask7/P11 retain separate boundaries",
+      "label": "Minimum website and old artifact retain local proof. Schema375/Web377/runtime378 staging checkpoint50a054b3 has verified admission, Web/Worker deployment, CI/extension/smoke. Task7 technical checks and release evidence are checked; real two-profile/exact-old-client matrix, manual Sandbox/subscription/rooms/P11 and T/recovery rehearsal remain unchecked. Trials/T off, production unchanged",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
@@ -159067,11 +159067,15 @@
       "community_name": "Trial transition plan",
       "contributor": null,
       "file_type": "document",
-      "norm_label": "minimum website and old staging artifact retain local proof; schema375/web377 now deployed. existing-key signed admission http200 was verified inside a staging vercel build without credential export/rotation; phase3 prerequisite satisfied, new worker not deployed. trials/t off, production unchanged; historical preflight and actual manualtask7/p11 retain separate boundaries",
+      "norm_label": "minimum website and old artifact retain local proof. schema375/web377/runtime378 staging checkpoint50a054b3 has verified admission, web/worker deployment, ci/extension/smoke. task7 technical checks and release evidence are checked; real two-profile/exact-old-client matrix, manual sandbox/subscription/rooms/p11 and t/recovery rehearsal remain unchecked. trials/t off, production unchanged",
       "source_file": "docs/superpowers/plans/2026-09-27-paid-hosting-and-trial-transition.md",
-      "source_location": "L19-L38",
+      "source_location": "L19-L39; L741-L752",
       "source_url": null,
-      "status": "staging_schema_web_and_signed_admission_verified_runtime_not_deployed_policy_off"
+      "status": "staging_schema_web_runtime_technical_delivery_verified_policy_off_manual_pending",
+      "task7_technical_checks_complete": true,
+      "task7_release_evidence_recorded": true,
+      "task7_owner_matrix_complete": false,
+      "task7_activation_rehearsal_complete": false
     },
     {
       "id": "docs_superpowers_plans_2026_09_27_paid_hosting_and_trial_transition_planning_acceptance_boundary",
@@ -171006,15 +171010,15 @@
     },
     {
       "id": "docs_releases_paid_hosting_trial_transition_master_plan_ru_master_plan",
-      "label": "Russian master retains agreed rules and dated local/preflight evidence; schema375/Web377 deployed with modeloff. Existing bound credential produced admissionHTTP200 inside staging Vercel build without export/rotation; phase3 prepared, new Worker not deployed. Current delivery receipt governs status; ownerP11/full staging acceptance remains open",
-      "norm_label": "russian master retains agreed rules and dated local/preflight evidence; schema375/web377 deployed with modeloff. existing bound credential produced admissionhttp200 inside staging vercel build without export/rotation; phase3 prepared, new worker not deployed. current delivery receipt governs status; ownerp11/full staging acceptance remains open",
+      "label": "Russian master retains agreed rules and dated local/preflight evidence. Schema375/Web377/runtime378 staging checkpoint50a054b3 has model off and verified admission/deployments/CI/extension/technical smoke. Delivery receipt governs status; owner manual/P11/full staging matrix and separate T remain open",
+      "norm_label": "russian master retains agreed rules and dated local/preflight evidence. schema375/web377/runtime378 staging checkpoint50a054b3 has model off and verified admission/deployments/ci/extension/technical smoke. delivery receipt governs status; owner manual/p11/full staging matrix and separate t remain open",
       "file_type": "document",
       "_origin": "semantic",
       "source_file": "docs/releases/paid-hosting-trial/transition-master-plan-ru.md",
       "source_location": "L9-L24",
       "community": 830,
       "community_name": "Trial transition plan",
-      "status": "staging_schema_web_and_signed_admission_verified_runtime_not_deployed_policy_off",
+      "status": "staging_schema_web_runtime_technical_delivery_verified_policy_off_manual_pending",
       "language": "ru",
       "sections": 22,
       "acceptance_scenarios": 56,
@@ -171863,15 +171867,15 @@
     },
     {
       "id": "docs_releases_paid_hosting_trial_staging_preflight_2026_09_29_staging_preflight",
-      "label": "Historical local checkpoint is supplemented by schema375/Web377 staging delivery with trial/T off. Signed admission succeeded inside staging Vercel build; phase3 prerequisite satisfied, new Worker not deployed. Current delivery receipt governs state and owner manual acceptance remains open",
-      "norm_label": "historical local checkpoint is supplemented by schema375/web377 staging delivery with trial/t off. signed admission succeeded inside staging vercel build; phase3 prerequisite satisfied, new worker not deployed. current delivery receipt governs state and owner manual acceptance remains open",
+      "label": "Historical local checkpoint is supplemented by schema375/Web377/runtime378 staging checkpoint50a054b3 with trial/T off. Admission, deployments, CI, extension build and technical smoke verified; current delivery receipt governs state and owner manual acceptance remains open",
+      "norm_label": "historical local checkpoint is supplemented by schema375/web377/runtime378 staging checkpoint50a054b3 with trial/t off. admission, deployments, ci, extension build and technical smoke verified; current delivery receipt governs state and owner manual acceptance remains open",
       "file_type": "document",
       "_origin": "semantic",
       "source_file": "docs/releases/paid-hosting-trial/staging-preflight-2026-09-29.md",
       "source_location": "L1-L7",
       "community": 830,
       "community_name": "Trial transition plan",
-      "status": "staging_schema_web_and_signed_admission_verified_runtime_not_deployed_policy_off",
+      "status": "staging_schema_web_runtime_technical_delivery_verified_policy_off_manual_pending",
       "source_product_commit": "59d6e80e",
       "upstream_staging_commit": "cb7f7a8642a3817c4cfe428fa63f78c6044fefe3",
       "billing_product_commit": "e0f8a21e"
@@ -171998,15 +172002,15 @@
     },
     {
       "id": "docs_current_development_state_minimum_website_checkpoint",
-      "label": "Minimum website e0f8a21e retains local web807+6skips and baseline artifact proof. Subsequent schema375/Web377 staging delivery has69migrations, Sandbox webhook/dedicated drain configured and hosting/trials inactive. Real signed Web admission now returns expectedHTTP200 using existing bound Vercel credential without export/rotation. Phase3 ready for reviewed runtime PR; new Worker, ownerP11/activation/production remain pending",
-      "norm_label": "minimum website e0f8a21e retains local web807+6skips and baseline artifact proof. subsequent schema375/web377 staging delivery has69migrations, sandbox webhook/dedicated drain configured and hosting/trials inactive. real signed web admission now returns expectedhttp200 using existing bound vercel credential without export/rotation. phase3 ready for reviewed runtime pr; new worker, ownerp11/activation/production remain pending",
+      "label": "Minimum website e0f8a21e retains local web807 plus6skips and old artifact proof. Verified dormant staging checkpoint50a054b3 includes schema375/Web377/runtime378,69migrations, READY Web and new Worker, CI/signaling/P2P/extension build/staging smoke. Sandbox webhook, dedicated drain and existing-key admission verified. Hosting/trials/scheduler off; owner/P11/T/production remain open. Deployment IDs describe this checkpoint, not later documentation rebuilds",
+      "norm_label": "minimum website e0f8a21e retains local web807 plus6skips and old artifact proof. verified dormant staging checkpoint50a054b3 includes schema375/web377/runtime378,69migrations, ready web and new worker, ci/signaling/p2p/extension build/staging smoke. sandbox webhook, dedicated drain and existing-key admission verified. hosting/trials/scheduler off; owner/p11/t/production remain open. deployment ids describe this checkpoint, not later documentation rebuilds",
       "file_type": "concept",
       "_origin": "semantic",
       "source_file": "docs/current-development-state.md",
-      "source_location": "L5-L17",
+      "source_location": "L5-L19",
       "community": 831,
       "community_name": "Planned trial billing",
-      "status": "staging_schema_web_and_signed_admission_verified_runtime_not_deployed_policy_off"
+      "status": "staging_schema_web_runtime_technical_delivery_verified_policy_off_manual_pending"
     },
     {
       "id": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_fresh_terminal_resubscription",
@@ -172045,15 +172049,15 @@
     },
     {
       "id": "docs_releases_paid_hosting_trial_minimum_website_2026_09_29_minimum_website_checkpoint",
-      "label": "Historical local checkpoint is supplemented by schema375/Web377 staging delivery with trial/T off. Signed admission succeeded inside staging Vercel build; phase3 prerequisite satisfied, new Worker not deployed. Current delivery receipt governs state and owner manual acceptance remains open",
-      "norm_label": "historical local checkpoint is supplemented by schema375/web377 staging delivery with trial/t off. signed admission succeeded inside staging vercel build; phase3 prerequisite satisfied, new worker not deployed. current delivery receipt governs state and owner manual acceptance remains open",
+      "label": "Historical local checkpoint is supplemented by schema375/Web377/runtime378 staging checkpoint50a054b3 with trial/T off. Admission, deployments, CI, extension build and technical smoke verified; current delivery receipt governs state and owner manual acceptance remains open",
+      "norm_label": "historical local checkpoint is supplemented by schema375/web377/runtime378 staging checkpoint50a054b3 with trial/t off. admission, deployments, ci, extension build and technical smoke verified; current delivery receipt governs state and owner manual acceptance remains open",
       "file_type": "document",
       "_origin": "semantic",
       "source_file": "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md",
       "source_location": "L1-L7",
       "community": 831,
       "community_name": "Planned trial billing",
-      "status": "staging_schema_web_and_signed_admission_verified_runtime_not_deployed_policy_off",
+      "status": "staging_schema_web_runtime_technical_delivery_verified_policy_off_manual_pending",
       "source_product_commit": "e0f8a21ed635da6c6493f7e42f8220e5eb335347"
     },
     {
@@ -172128,30 +172132,35 @@
     },
     {
       "id": "docs_releases_paid_hosting_trial_staging_delivery_2026_09_29_staging_delivery",
-      "label": "Authorized staging/Sandbox delivery has schemaPR375 and WebPR377 plus compatible old Worker redeployment. Positive signed Web admission now confirmed with existing credential; phase3 prepared for reviewed runtime PR, new Worker not deployed. Product rules unchanged; no T activation, production/main promotion, Store publication or owner manual acceptance",
-      "norm_label": "authorized staging/sandbox delivery has schemapr375 and webpr377 plus compatible old worker redeployment. positive signed web admission now confirmed with existing credential; phase3 prepared for reviewed runtime pr, new worker not deployed. product rules unchanged; no t activation, production/main promotion, store publication or owner manual acceptance",
+      "label": "Authorized dormant staging delivery checkpoint50a054b3 includes schema375/Web377/runtime378, deployed new Worker and READY Web; CI, extension build and technical smoke passed. Deployment IDs identify these verified phases, not later documentation rebuilds. No T activation, owner manual acceptance, Store publication or production/main promotion",
+      "norm_label": "authorized dormant staging delivery checkpoint50a054b3 includes schema375/web377/runtime378, deployed new worker and ready web; ci, extension build and technical smoke passed. deployment ids identify these verified phases, not later documentation rebuilds. no t activation, owner manual acceptance, store publication or production/main promotion",
       "file_type": "document",
       "_origin": "semantic",
       "source_file": "docs/releases/paid-hosting-trial/staging-delivery-2026-09-29.md",
-      "source_location": "L1-L20",
+      "source_location": "L1-L24; L87-L121",
       "community": 830,
       "community_name": "Trial transition plan",
-      "status": "staging_schema_web_and_signed_admission_verified_runtime_not_deployed_policy_off",
+      "status": "staging_schema_web_runtime_technical_delivery_verified_policy_off_manual_pending",
       "reported_schema_pr": 375,
       "reported_web_pr": 377,
-      "reported_staging_commit": "f8a90d219649ab8918d322e40b627390656a7d9e"
+      "reported_staging_commit": "50a054b340dd81607e2e0dc502a760f724f65d95",
+      "reported_runtime_pr": 378,
+      "new_worker_deployed": true,
+      "technical_delivery_complete": true,
+      "owner_manual_acceptance_complete": false,
+      "deployment_ids_scope": "verified_runtime_delivery_checkpoint_not_future_docs_rebuilds"
     },
     {
       "id": "docs_releases_paid_hosting_trial_staging_delivery_2026_09_29_schema_and_preservation_evidence",
-      "label": "Schema375 merge4ffdc7c8/migration run36475524072 installs all69versions including six new migrations. Remote before/after counts remain62users/6subscriptions/503rooms/113history titles/247history sessions/0receipts; personal history stays active. Counts do not prove byte preservation. Six new tables have RLS/no direct user SELECT; admission service-role only, activation forbidden even to service_role. Nonexistent-room RPC yields allowedfalse/ROOM_ENDED without creating data",
-      "norm_label": "schema375 merge4ffdc7c8/migration run36475524072 installs all69versions including six new migrations. remote before/after counts remain62users/6subscriptions/503rooms/113history titles/247history sessions/0receipts; personal history stays active. counts do not prove byte preservation. six new tables have rls/no direct user select; admission service-role only, activation forbidden even to service_role. nonexistent-room rpc yields allowedfalse/room_ended without creating data",
+      "label": "Schema375 installs69versions including6new migrations. Migration-time counts matched62users/6subscriptions/503rooms/113history titles/247sessions/0receipts; personal history active, RLS/RPC access verified. Count equality is not byte preservation. Later runtime readback has504rooms: added room created/ended before new Worker deployment, not a migration discrepancy; technical probes created no product records",
+      "norm_label": "schema375 installs69versions including6new migrations. migration-time counts matched62users/6subscriptions/503rooms/113history titles/247sessions/0receipts; personal history active, rls/rpc access verified. count equality is not byte preservation. later runtime readback has504rooms: added room created/ended before new worker deployment, not a migration discrepancy; technical probes created no product records",
       "file_type": "concept",
       "_origin": "semantic",
       "source_file": "docs/releases/paid-hosting-trial/staging-delivery-2026-09-29.md",
-      "source_location": "L15; L24-L37",
+      "source_location": "L19; L28-L41; L107-L112",
       "community": 830,
       "community_name": "Trial transition plan",
-      "status": "staging_schema_web_and_signed_admission_verified_runtime_not_deployed_policy_off",
+      "status": "staging_schema_web_runtime_technical_delivery_verified_policy_off_manual_pending",
       "reported_remote_migrations": 69,
       "reported_counts": {
         "users": 62,
@@ -172161,7 +172170,13 @@
         "history_sessions": 247,
         "history_receipts": 0
       },
-      "rationale": "Keep remote count equality separate from earlier populated local replay and byte-level preservation; FOR SHARE RPC is not compatible with a formally read-only transaction."
+      "rationale": "Keep remote count equality separate from earlier populated local replay and byte-level preservation; FOR SHARE RPC is not compatible with a formally read-only transaction.",
+      "reported_migration_counts_scope": "before_and_after_schema_migrations",
+      "reported_post_runtime_counts": {
+        "users": 62,
+        "subscriptions": 6,
+        "rooms": 504
+      }
     },
     {
       "id": "docs_releases_paid_hosting_trial_staging_delivery_2026_09_29_sandbox_billing_configuration",
@@ -172170,39 +172185,44 @@
       "file_type": "concept",
       "_origin": "semantic",
       "source_file": "docs/releases/paid-hosting-trial/staging-delivery-2026-09-29.md",
-      "source_location": "L13; L83-L86",
+      "source_location": "L17; L117-L121",
       "community": 830,
       "community_name": "Trial transition plan",
-      "status": "staging_schema_web_and_signed_admission_verified_runtime_not_deployed_policy_off",
+      "status": "staging_schema_web_runtime_technical_delivery_verified_policy_off_manual_pending",
       "external_verification": "reported_in_delivery_source_not_reread_by_graph_agent"
     },
     {
       "id": "docs_releases_paid_hosting_trial_staging_delivery_2026_09_29_web_and_compatible_old_worker_delivery",
-      "label": "Web377 mergef8a90d21 initially deployed READY as dpl_AKcLbMFp5R4L3W2MzUru8PkgmYYg; later diagnostic redeploy dpl_8ZTqRaH3ZETgwf2vH7Qkoac2tEpt of the same SHA is also READY and now serves staging.anidachi.app. PR/staging CI/signaling/P2P/smoke pass. Old compatible Worker8125f458-2ba3-43b5-87f1-3946bf5eb32d remains; new Worker not deployed. Gated/noindex/robots-disallow/empty sitemap and unauthenticated401/unsigned-webhook400 boundaries remain.",
-      "norm_label": "web377 mergef8a90d21 initially deployed ready as dpl_akclbmfp5r4l3w2mzuru8pkgmyyg; later diagnostic redeploy dpl_8ztqrah3zetgwf2vh7qkoac2tept of the same sha is also ready and now serves staging.anidachi.app. pr/staging ci/signaling/p2p/smoke pass. old compatible worker8125f458-2ba3-43b5-87f1-3946bf5eb32d remains; new worker not deployed. gated/noindex/robots-disallow/empty sitemap and unauthenticated401/unsigned-webhook400 boundaries remain.",
+      "label": "Phase2 Web377/f8a90d21 initial AKc and diagnostic8ZT READY plus compatible Worker8125 are historical. Runtime378 checkpoint50a054b3 verifies Worker78e5de69-f2dc-42f6-b5d7-e44cc4b24f82 at100% staging and Web dpl_HPZFYmKPbFZKDHdGdg95V46dCKTk READY/staging alias with normal pnpm build. PR/postmerge CI/signaling/P2P/migrations/extension/staging and Worker smoke passed; gate and prior secrets preserved. IDs do not claim latest deployment after later docs rebuilds",
+      "norm_label": "phase2 web377/f8a90d21 initial akc and diagnostic8zt ready plus compatible worker8125 are historical. runtime378 checkpoint50a054b3 verifies worker78e5de69-f2dc-42f6-b5d7-e44cc4b24f82 at100% staging and web dpl_hpzfymkpbfzkdhdgdg95v46dcktk ready/staging alias with normal pnpm build. pr/postmerge ci/signaling/p2p/migrations/extension/staging and worker smoke passed; gate and prior secrets preserved. ids do not claim latest deployment after later docs rebuilds",
       "file_type": "concept",
       "_origin": "semantic",
       "source_file": "docs/releases/paid-hosting-trial/staging-delivery-2026-09-29.md",
-      "source_location": "L16-L18; L45-L48",
+      "source_location": "L11-L22; L49-L52; L89-L105",
       "community": 830,
       "community_name": "Trial transition plan",
-      "status": "staging_schema_web_and_signed_admission_verified_runtime_not_deployed_policy_off",
-      "reported_web_commit": "f8a90d219649ab8918d322e40b627390656a7d9e",
-      "new_worker_deployed": false,
-      "reported_current_web_deployment": "dpl_8ZTqRaH3ZETgwf2vH7Qkoac2tEpt",
-      "reported_current_web_alias": "staging.anidachi.app"
+      "status": "staging_schema_web_runtime_technical_delivery_verified_policy_off_manual_pending",
+      "reported_web_commit": "50a054b340dd81607e2e0dc502a760f724f65d95",
+      "new_worker_deployed": true,
+      "reported_current_web_deployment": "dpl_HPZFYmKPbFZKDHdGdg95V46dCKTk",
+      "reported_current_web_alias": "staging.anidachi.app",
+      "reported_phase2_web_commit": "f8a90d219649ab8918d322e40b627390656a7d9e",
+      "reported_current_worker_version": "78e5de69-f2dc-42f6-b5d7-e44cc4b24f82",
+      "reported_worker_traffic_percent": 100,
+      "reported_runtime_pr": 378,
+      "deployment_ids_scope": "verified_runtime_delivery_checkpoint_not_future_docs_rebuilds"
     },
     {
       "id": "docs_releases_paid_hosting_trial_staging_delivery_2026_09_29_dormant_policy_preserved",
-      "label": "Staging activation_atNULL, revision1, trials_enabledfalse; scheduler disabled and zero operation/outbox/trial rows. No room closed by this transition. Delivery of schema/Web does not activate the commercial model or authorizeT",
-      "norm_label": "staging activation_atnull, revision1, trials_enabledfalse; scheduler disabled and zero operation/outbox/trial rows. no room closed by this transition. delivery of schema/web does not activate the commercial model or authorizet",
+      "label": "After schema/Web/runtime delivery, staging activation_at NULL, revision1, trials_enabled false, scheduler disabled and zero operation/target/trial rows. No room closed by transition; technical delivery does not activate model or authorize T",
+      "norm_label": "after schema/web/runtime delivery, staging activation_at null, revision1, trials_enabled false, scheduler disabled and zero operation/target/trial rows. no room closed by transition; technical delivery does not activate model or authorize t",
       "file_type": "concept",
       "_origin": "semantic",
       "source_file": "docs/releases/paid-hosting-trial/staging-delivery-2026-09-29.md",
-      "source_location": "L5-L7; L19",
+      "source_location": "L5-L7; L23; L107-L112",
       "community": 830,
       "community_name": "Trial transition plan",
-      "status": "staging_schema_web_and_signed_admission_verified_runtime_not_deployed_policy_off",
+      "status": "staging_schema_web_runtime_technical_delivery_verified_policy_off_manual_pending",
       "activation_at": null,
       "revision": 1,
       "trials_enabled": false,
@@ -172215,10 +172235,10 @@
       "file_type": "concept",
       "_origin": "semantic",
       "source_file": "docs/releases/paid-hosting-trial/staging-delivery-2026-09-29.md",
-      "source_location": "L14; L39-L43",
+      "source_location": "L18; L43-L47",
       "community": 830,
       "community_name": "Trial transition plan",
-      "status": "staging_schema_web_and_signed_admission_verified_runtime_not_deployed_policy_off",
+      "status": "staging_schema_web_runtime_technical_delivery_verified_policy_off_manual_pending",
       "reported_http_status": 200,
       "reported_ack": {
         "ok": true
@@ -172228,16 +172248,16 @@
     },
     {
       "id": "docs_releases_paid_hosting_trial_staging_delivery_2026_09_29_positive_admission_hold",
-      "label": "Previous signed-admission hold is resolved: one-off Vercel build of already deployed f8a90d21 uses its existing bound staging service credential, receiving HTTP200 exact allowedfalse/ROOM_ENDED for a known nonexistent room at2026-09-28T20:29:11.373Z in about3.35s within8s. No key export/printing/rotation, auth weakening or project-setting/source change. This proves service authorization/no redirect/Web→Supabase admission; new Worker/liveWebSocket/user-room proof remains pending",
-      "norm_label": "previous signed-admission hold is resolved: one-off vercel build of already deployed f8a90d21 uses its existing bound staging service credential, receiving http200 exact allowedfalse/room_ended for a known nonexistent room at2026-09-28t20:29:11.373z in about3.35s within8s. no key export/printing/rotation, auth weakening or project-setting/source change. this proves service authorization/no redirect/web→supabase admission; new worker/livewebsocket/user-room proof remains pending",
+      "label": "Signed-admission hold resolved before runtime delivery: existing bound Vercel credential on f8a90d21 returned HTTP200 exact allowedfalse/ROOM_ENDED at2026-09-28T20:29:11.373Z in about3.35s within8s, without key export/rotation or weakened auth. Isolated probe proves service authorization/no redirect/Web-to-Supabase; later runtime deployment and technical smoke have separate evidence. Owner live-room/client acceptance remains open",
+      "norm_label": "signed-admission hold resolved before runtime delivery: existing bound vercel credential on f8a90d21 returned http200 exact allowedfalse/room_ended at2026-09-28t20:29:11.373z in about3.35s within8s, without key export/rotation or weakened auth. isolated probe proves service authorization/no redirect/web-to-supabase; later runtime deployment and technical smoke have separate evidence. owner live-room/client acceptance remains open",
       "file_type": "concept",
       "_origin": "semantic",
       "source_file": "docs/releases/paid-hosting-trial/staging-delivery-2026-09-29.md",
-      "source_location": "L50-L81",
+      "source_location": "L54-L85; L89-L105",
       "community": 830,
       "community_name": "Trial transition plan",
-      "status": "staging_schema_web_and_signed_admission_verified_runtime_not_deployed_policy_off",
-      "new_worker_phase": "prepared_for_reviewed_runtime_pr_not_deployed",
+      "status": "staging_schema_web_runtime_technical_delivery_verified_policy_off_manual_pending",
+      "new_worker_phase": "deployed_to_staging_after_verified_admission",
       "positive_http_admission_verified": true,
       "rationale": "Use the already bound server credential in its existing environment to verify admission without exporting it; prior local INVALID_ROOM_TOKEN was not staging evidence. Stable node ID preserves the resolved-hold history.",
       "reported_probe_deployment": "dpl_8ZTqRaH3ZETgwf2vH7Qkoac2tEpt",
@@ -172253,31 +172273,34 @@
     },
     {
       "id": "docs_releases_paid_hosting_trial_staging_delivery_2026_09_29_main_promotion_boundary",
-      "label": "Main remains a5a0134e1d661324061e10ef611dfb373cbe47bd. Automatically opened promotionPR376 has auto-merge off and remains unmerged; partial staging delivery is not production readiness or activation authority",
-      "norm_label": "main remains a5a0134e1d661324061e10ef611dfb373cbe47bd. automatically opened promotionpr376 has auto-merge off and remains unmerged; partial staging delivery is not production readiness or activation authority",
+      "label": "Verified delivery checkpoint retains maina5a0134e1d661324061e10ef611dfb373cbe47bd and production dpl_XTKdQCGK6YpQJsz1Zi5Awn5pzK2u READY on anidachi.app/www. Promotion376 unmerged with auto-merge off; dormant technical staging delivery is not production readiness or T authority",
+      "norm_label": "verified delivery checkpoint retains maina5a0134e1d661324061e10ef611dfb373cbe47bd and production dpl_xtkdqcgk6ypqjsz1zi5awn5pzk2u ready on anidachi.app/www. promotion376 unmerged with auto-merge off; dormant technical staging delivery is not production readiness or t authority",
       "file_type": "concept",
       "_origin": "semantic",
       "source_file": "docs/releases/paid-hosting-trial/staging-delivery-2026-09-29.md",
-      "source_location": "L3-L5; L20",
+      "source_location": "L3-L5; L24; L114-L121",
       "community": 830,
       "community_name": "Trial transition plan",
-      "status": "staging_schema_web_and_signed_admission_verified_runtime_not_deployed_policy_off",
+      "status": "staging_schema_web_runtime_technical_delivery_verified_policy_off_manual_pending",
       "reported_main_commit": "a5a0134e1d661324061e10ef611dfb373cbe47bd",
       "promotion_pr": 376,
-      "promotion_merged": false
+      "promotion_merged": false,
+      "reported_production_deployment": "dpl_XTKdQCGK6YpQJsz1Zi5Awn5pzK2u"
     },
     {
       "id": "docs_releases_paid_hosting_trial_staging_delivery_2026_09_29_remaining_admission_acceptance_and_recovery",
-      "label": "Signed admission prerequisite now satisfied. Next reviewed runtime PR, actual Worker deployment and technical smoke remain pending; T is separate and owner must accept Sandbox/subscription/rooms/P11/old-new clients/Task7. Preserve old cb7f7a86 unpacked artifact and new59d6e80eZIP; no Store publication proof. BeforeT retain additive schema/data during consumer rollback; afterT retain T/consumed trials/outbox via recovery runbook",
-      "norm_label": "signed admission prerequisite now satisfied. next reviewed runtime pr, actual worker deployment and technical smoke remain pending; t is separate and owner must accept sandbox/subscription/rooms/p11/old-new clients/task7. preserve old cb7f7a86 unpacked artifact and new59d6e80ezip; no store publication proof. beforet retain additive schema/data during consumer rollback; aftert retain t/consumed trials/outbox via recovery runbook",
+      "label": "Admission/runtime378/actual Worker-Web deployments/technical smoke complete. Next owner tests old extension with updated server under prior rules, then separately agreed T rehearsal. Manual Sandbox/subscription/rooms/P11/old-new-client Task7 open; no Store/production release. Preserve oldcb7f7a86 unpacked artifact and new59d6e80e candidate; beforeT retain additive schema/data, afterT retain originalT/consumed trials/outbox through recovery",
+      "norm_label": "admission/runtime378/actual worker-web deployments/technical smoke complete. next owner tests old extension with updated server under prior rules, then separately agreed t rehearsal. manual sandbox/subscription/rooms/p11/old-new-client task7 open; no store/production release. preserve oldcb7f7a86 unpacked artifact and new59d6e80e candidate; beforet retain additive schema/data, aftert retain originalt/consumed trials/outbox through recovery",
       "file_type": "concept",
       "_origin": "semantic",
       "source_file": "docs/releases/paid-hosting-trial/staging-delivery-2026-09-29.md",
-      "source_location": "L83-L96",
+      "source_location": "L87-L131",
       "community": 830,
       "community_name": "Trial transition plan",
-      "status": "staging_schema_web_and_signed_admission_verified_runtime_not_deployed_policy_off",
-      "owner_manual_acceptance_complete": false
+      "status": "staging_schema_web_runtime_technical_delivery_verified_policy_off_manual_pending",
+      "owner_manual_acceptance_complete": false,
+      "technical_delivery_complete": true,
+      "activation_rehearsal_complete": false
     }
   ],
   "links": [
@@ -548476,7 +548499,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/releases/paid-hosting-trial/staging-delivery-2026-09-29.md",
-      "source_location": "L15; L24-L37",
+      "source_location": "L19; L28-L41; L107-L112",
       "weight": 1.0
     },
     {
@@ -548486,7 +548509,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/releases/paid-hosting-trial/staging-delivery-2026-09-29.md",
-      "source_location": "L13; L83-L86",
+      "source_location": "L17; L117-L121",
       "weight": 1.0
     },
     {
@@ -548496,7 +548519,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/releases/paid-hosting-trial/staging-delivery-2026-09-29.md",
-      "source_location": "L16-L18; L45-L48",
+      "source_location": "L11-L22; L49-L52; L89-L105",
       "weight": 1.0
     },
     {
@@ -548506,7 +548529,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/releases/paid-hosting-trial/staging-delivery-2026-09-29.md",
-      "source_location": "L5-L7; L19",
+      "source_location": "L5-L7; L23; L107-L112",
       "weight": 1.0
     },
     {
@@ -548516,7 +548539,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/releases/paid-hosting-trial/staging-delivery-2026-09-29.md",
-      "source_location": "L14; L39-L43",
+      "source_location": "L18; L43-L47",
       "weight": 1.0
     },
     {
@@ -548526,7 +548549,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/releases/paid-hosting-trial/staging-delivery-2026-09-29.md",
-      "source_location": "L50-L81",
+      "source_location": "L54-L85; L89-L105",
       "weight": 1.0
     },
     {
@@ -548536,7 +548559,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/releases/paid-hosting-trial/staging-delivery-2026-09-29.md",
-      "source_location": "L3-L5; L20",
+      "source_location": "L3-L5; L24; L114-L121",
       "weight": 1.0
     },
     {
@@ -548546,7 +548569,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/releases/paid-hosting-trial/staging-delivery-2026-09-29.md",
-      "source_location": "L83-L96",
+      "source_location": "L87-L131",
       "weight": 1.0
     },
     {
@@ -548556,7 +548579,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/releases/paid-hosting-trial/staging-delivery-2026-09-29.md",
-      "source_location": "L39-L43",
+      "source_location": "L43-L47",
       "weight": 1.0
     },
     {
@@ -548566,7 +548589,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/releases/paid-hosting-trial/staging-delivery-2026-09-29.md",
-      "source_location": "L39-L43",
+      "source_location": "L43-L47",
       "weight": 1.0
     },
     {
@@ -548576,17 +548599,17 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/releases/paid-hosting-trial/staging-delivery-2026-09-29.md",
-      "source_location": "L52-L81",
+      "source_location": "L56-L85",
       "weight": 1.0
     },
     {
       "source": "docs_releases_paid_hosting_trial_staging_delivery_2026_09_29_positive_admission_hold",
       "target": "docs_releases_paid_hosting_trial_staging_delivery_2026_09_29_remaining_admission_acceptance_and_recovery",
-      "relation": "prerequisite_satisfied_runtime_acceptance_pending",
+      "relation": "technical_delivery_verified_owner_acceptance_pending",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/releases/paid-hosting-trial/staging-delivery-2026-09-29.md",
-      "source_location": "L78-L86",
+      "source_location": "L82-L121",
       "weight": 1.0
     },
     {
@@ -548596,7 +548619,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-development-state.md",
-      "source_location": "L10-L17",
+      "source_location": "L10-L19",
       "weight": 1.0
     },
     {
@@ -548606,7 +548629,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-09-27-paid-hosting-and-trial-transition.md",
-      "source_location": "L25-L38",
+      "source_location": "L25-L39; L741-L752",
       "weight": 1.0
     },
     {
@@ -548646,7 +548669,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/releases/paid-hosting-trial/staging-delivery-2026-09-29.md",
-      "source_location": "L94-L96",
+      "source_location": "L129-L131",
       "weight": 1.0
     }
   ],
@@ -551105,6 +551128,77 @@
         "separateT and production/main/Store"
       ],
       "token_accounting": "active Codex subagent usage unavailable; noAST/externalprovider"
+    },
+    {
+      "date": "2026-09-29",
+      "mode": "codex_subagent_scoped_semantic_only",
+      "operation": "staging_runtime_delivery_technical_checks_verified",
+      "base_commit": "fe4c753aa079c36edfeaec82a767c1ac3a41c32a",
+      "code_sources": [],
+      "full_sources": [
+        "docs/releases/paid-hosting-trial/staging-delivery-2026-09-29.md"
+      ],
+      "partial_sources": {
+        "docs/current-development-state.md": "L1-L19 only; old whole-file manifest/cache/backlog preserved",
+        "docs/superpowers/plans/2026-09-27-paid-hosting-and-trial-transition.md": "L19-L39; L741-L752 only; old whole-file manifest/cache/backlog preserved",
+        "docs/releases/paid-hosting-trial/transition-master-plan-ru.md": "L9-L24 only; old whole-file manifest/cache/backlog preserved",
+        "docs/releases/paid-hosting-trial/staging-preflight-2026-09-29.md": "L1-L7 only; old whole-file manifest/cache/backlog preserved",
+        "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md": "L1-L7 only; old whole-file manifest/cache/backlog preserved"
+      },
+      "source_sha256": {
+        "docs/releases/paid-hosting-trial/staging-delivery-2026-09-29.md": "dcd851d0ab26cc9ffbcabc8d7024312a12fd5069ea525227bd707ad4796fcf60",
+        "docs/current-development-state.md": "c6d411690e2ed5738bfc0851806624209a5ffb067e1aa0dafee8a5f1e76eafd9",
+        "docs/superpowers/plans/2026-09-27-paid-hosting-and-trial-transition.md": "2e2d39e79241d59500f50b5ddef5deea7cd4630cbb30cef6b886360d61a0e5b3",
+        "docs/releases/paid-hosting-trial/transition-master-plan-ru.md": "baeeb63e32d9796a900b1e240f9e45e0969b8f529a545fc1981f1f0b19c2bf29",
+        "docs/releases/paid-hosting-trial/staging-preflight-2026-09-29.md": "707f5fc7b535ee98fd216ec2d30b3005d91ab183316f2397313e8f6d5274dfd8",
+        "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md": "2caf07260cf1bab3ad05f41e7c109db78fd3bb534896aff575cbbf33559aa512"
+      },
+      "partial_section_sha256": {
+        "docs/current-development-state.md": {
+          "L1-L19": "9d647eae30edc254813b6aa195c158e88dde49aa7e8cec581f62b06e56a3fb1c"
+        },
+        "docs/superpowers/plans/2026-09-27-paid-hosting-and-trial-transition.md": {
+          "L19-L39": "6fcf93d76cd7d3b6bdfe63203c99f64632dac37b827c8b33c8d9cf26883de8cb",
+          "L741-L752": "b0ad55dedb666820fcf60942b1df4c69bb5f982f52daa49884c2d18e9a0d167a"
+        },
+        "docs/releases/paid-hosting-trial/transition-master-plan-ru.md": {
+          "L9-L24": "900bc0c07a4809feafd4b7bd663c5d2887c9e755bd882d8712bc480758118fef"
+        },
+        "docs/releases/paid-hosting-trial/staging-preflight-2026-09-29.md": {
+          "L1-L7": "cc9cbbae1be30d366d1e25cf1cc258bc6dfbfa4fcfda543447358097b39286fe"
+        },
+        "docs/releases/paid-hosting-trial/minimum-website-2026-09-29.md": {
+          "L1-L7": "86e0a7ee67d111e7eb5f4dccb5ea4e78976ec3eab6661635b0af700179c3be73"
+        }
+      },
+      "status": "VERIFIED DORMANT STAGING RUNTIME CHECKPOINT50a054b3; technical checks passed; manual/T/main/Store open",
+      "ast_status": "No AST/source/hash refresh",
+      "semantic_status": "Full134line delivery and five partial sources incl planTask7 technical checklist; service facts source-reported. Existing IDs/directions/communities/history preserved.",
+      "verification_reported": {
+        "runtime_pr": 378,
+        "staging_commit": "50a054b340dd81607e2e0dc502a760f724f65d95",
+        "worker_version": "78e5de69-f2dc-42f6-b5d7-e44cc4b24f82",
+        "worker_traffic_percent": 100,
+        "web_deployment": "dpl_HPZFYmKPbFZKDHdGdg95V46dCKTk",
+        "web_ready": true,
+        "ci_deploy_extension_build_smoke_passed": true,
+        "new_worker_deployed": true,
+        "task7_technical_checks_complete": true,
+        "task7_release_evidence_recorded": true,
+        "owner_manual_acceptance_complete": false,
+        "activation_done": false,
+        "trials_enabled": false,
+        "scheduler_enabled": false,
+        "main_promoted": false,
+        "store_published": false,
+        "deployment_ids_scope": "verified_runtime_checkpoint_not_future_docs_rebuilds"
+      },
+      "remaining_gates": [
+        "owner real old/new-client/Sandbox/subscription/rooms/P11 Task7",
+        "separately agreed stagingT/recovery rehearsal",
+        "production/main/Store"
+      ],
+      "token_accounting": "active Codex subagent usage unavailable; noAST/provider"
     }
   ]
 }

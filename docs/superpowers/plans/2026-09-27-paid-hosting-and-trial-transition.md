@@ -23,9 +23,10 @@ Cloudflare Workers/Durable Objects, WXT/React, shared Zod protocol.
 покупке и добавляет восстановление продления через Stripe. Старый staging ZIP
 `cb7f7a86` собран/проверен. [Состав сайта, доказательства и порядок ручного теста](../../releases/paid-hosting-trial/minimum-website-2026-09-29.md).
 Задача 7 и реальный P11 остаются открытыми. Последующая разрешенная поставка:
-schema #375 и Web #377 уже на staging; авторизованная admission-проба дала HTTP 200
-внутри staging-сборки Vercel, без выгрузки или ротации существующего ключа.
-Предварительное условие третьей фазы выполнено; новый Worker еще не развернут.
+schema #375, Web #377 и runtime #378 поставлены в staging, merge 50a054b3.
+Авторизованная admission-проба дала HTTP 200 внутри Vercel без выгрузки/ротации
+ключа. Фактические Web/Worker deployments, CI, build extension и технические smoke
+подтверждены; ручная приемка и репетиция T еще не выполнялись.
 [Фактический отчет поставки](../../releases/paid-hosting-trial/staging-delivery-2026-09-29.md).
 Trials/T выключены, production не менялся.
 
@@ -740,11 +741,13 @@ Legacy quota schema/policy/display/Worker usage сохранены для раб
 
 - [ ] Пройти матрицу с двумя реальными профилями, включая точную старую
   production-сборку; сохранить версии, SHA, скриншоты и server evidence.
-- [ ] Выполнить `pnpm dev:check` и рекомендованные измененными файлами checks;
-  Worker smoke на staging; настоящий room harness. При изменениях медиа/закрытия
-  P2P выполнить real-WebRTC harness, не подменяя им два реальных клиента.
-- [ ] Зафиксировать миграции, Web/Worker commit/deployment IDs, Stripe TEST
-  результаты, ZIP SHA-256 и оставшиеся ограничения в release receipt.
+- [x] Выполнить `pnpm dev:check`, соответствующие checks, room и real-WebRTC
+  harness; Worker smoke на фактически обновленном staging. Результаты локального
+  preflight и CI/runtime #378 зафиксированы; два реальных клиента этим не проверены.
+- [x] Зафиксировать 69 миграций, Web/Worker commit/deployment IDs, настройки
+  AniDachi Sandbox, ZIP SHA-256 и ограничения в [release receipt](../../releases/paid-hosting-trial/staging-delivery-2026-09-29.md).
+- [ ] Добавить фактические результаты ручных Stripe Sandbox/подписка/комнаты/P11
+  сценариев владельца; конфигурация и технические smoke не заменяют их.
 - [ ] Выполнить репетицию подготовки/активации/отмены/восстановления на staging.
   Получить приемку владельца перед production promotion.
 

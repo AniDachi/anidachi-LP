@@ -7,13 +7,15 @@ fixes first-click resubscription after an ended subscription. Web typecheck,
 807 tests plus six prior skips and changed-file lint pass. The old staging ZIP
 from `cb7f7a86` is built and validated for the owner's old-client transition test.
 See [minimum website and owner test sequence](releases/paid-hosting-trial/minimum-website-2026-09-29.md).
-The prepared staging delivery is now partial: schema PR #375 and Web PR #377
-are merged; staging Web is f8a90d21 and all 69 migrations are applied. AniDachi
-Sandbox webhook and the separate staging drain secret are configured. Hosting
-and trials remain inactive. Authenticated Web admission is now verified: an
-one-off Vercel staging build used the existing bound credential and received the
-expected HTTP 200 without exporting or rotating the key. Phase 3 is ready for its
-reviewed staging PR; the new Worker is not deployed yet. See the [current staging delivery receipt](releases/paid-hosting-trial/staging-delivery-2026-09-29.md).
+Dormant staging delivery is complete through schema PR #375, Web PR #377 and
+runtime PR #378, merge 50a054b3. All 69 migrations are applied. Runtime delivery
+verification recorded READY Vercel deployment dpl_HPZFYmKPbFZKDHdGdg95V46dCKTk
+with the staging alias and Worker version 78e5de69-f2dc-42f6-b5d7-e44cc4b24f82. CI, signaling/P2P harnesses,
+extension build, deployments and staging/Worker smoke passed. AniDachi Sandbox
+webhook and the separate staging drain secret are configured; authenticated Web
+admission passed using the existing credential inside Vercel, without exporting
+or rotating it. Hosting/trials and the cutover scheduler remain OFF, with no
+activation/outbox/trial rows. See the [current staging delivery receipt](releases/paid-hosting-trial/staging-delivery-2026-09-29.md).
 Owner acceptance, P11, activation and production promotion remain open.
 
 This is the short operational source of truth for the current Anidachi setup.

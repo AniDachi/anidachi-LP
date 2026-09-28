@@ -8,14 +8,18 @@
 
 ## Фактическое состояние
 
+Снимок runtime-поставки зафиксирован для merge 50a054b3. Последующие коммиты
+самого отчета и графа не меняют продуктовый код; deployment IDs ниже относятся
+к указанным проверенным фазам, а не к будущим пересборкам документации.
+
 | Этап | Результат |
 | --- | --- |
 | AniDachi Sandbox | Используется согласованный Sandbox, livemode false. В существующий staging webhook добавлен invoice.payment_action_required; прежние семь событий, URL, API version и enabled status сохранены. Plus $7.99/месяц и Pro $14.99/месяц проверены. Default Portal active, отмена at_period_end, смена плана в Portal выключена |
 | Отдельный ключ закрытия комнат | Новый случайный ключ помещен в staging Vault и sensitive-переменную Vercel только Preview/staging. Значение не записывалось в файлы и не выводилось. Совпадение Vault с отправленным значением проверено; последующая HTTP-проба подтвердила совпадение с Web |
 | База | [PR #375](https://github.com/AniDachi/anidachi-LP/pull/375), merge 4ffdc7c8a1bdcdcf72b764b48e80da0b828c80d4. [Миграции](https://github.com/AniDachi/anidachi-LP/actions/runs/36475524072) завершились успешно; 69 версий, включая все шесть новых |
-| Сайт и billing/admission API | [PR #377](https://github.com/AniDachi/anidachi-LP/pull/377), merge f8a90d219649ab8918d322e40b627390656a7d9e. Первый Vercel deployment dpl_AKcLbMFp5R4L3W2MzUru8PkgmYYg READY; последующая диагностическая пересборка того же SHA dpl_8ZTqRaH3ZETgwf2vH7Qkoac2tEpt также READY и обслуживает staging.anidachi.app. PR CI, room signaling, P2P, Vercel и staging smoke прошли; последующие staging CI и deploy также прошли |
-| Worker после второй фазы | Повторно развернут прежний совместимый Worker, version 8125f458-2ba3-43b5-87f1-3946bf5eb32d, [workflow](https://github.com/AniDachi/anidachi-LP/actions/runs/36476411540). Это ожидаемый эффект изменения packages/protocol; новый Worker еще не поставлен |
-| Третья фаза | Код Worker/extension подготовлен локально. Авторизованный Web admission уже подтвержден HTTP 200; предварительное условие runtime PR выполнено. Новый Worker еще не развернут |
+| Сайт и billing/admission API | [PR #377](https://github.com/AniDachi/anidachi-LP/pull/377), merge f8a90d219649ab8918d322e40b627390656a7d9e. Первый Vercel deployment dpl_AKcLbMFp5R4L3W2MzUru8PkgmYYg READY; последующая диагностическая пересборка того же SHA dpl_8ZTqRaH3ZETgwf2vH7Qkoac2tEpt также READY и обслуживала staging.anidachi.app до runtime-фазы. PR CI, room signaling, P2P, Vercel и staging smoke прошли; последующие staging CI и deploy также прошли |
+| Worker после второй фазы | Повторно развернут прежний совместимый Worker, version 8125f458-2ba3-43b5-87f1-3946bf5eb32d, [workflow](https://github.com/AniDachi/anidachi-LP/actions/runs/36476411540). Это исторический checkpoint второй фазы; затем заменен Worker из #378 |
+| Третья фаза | [PR #378](https://github.com/AniDachi/anidachi-LP/pull/378), merge 50a054b340dd81607e2e0dc502a760f724f65d95. Новый Worker 78e5de69-f2dc-42f6-b5d7-e44cc4b24f82 развернут на 100% staging; Vercel dpl_HPZFYmKPbFZKDHdGdg95V46dCKTk READY на staging.anidachi.app. CI, deployments, extension build и технические smoke прошли |
 | Новые правила | activation_at NULL, revision 1, trials_enabled false; scheduler disabled, без operation/outbox/trial rows. Никакая комната не закрывалась этим переходом |
 | Main | Остается a5a0134e1d661324061e10ef611dfb373cbe47bd. Автоматика открыла [promotion PR #376](https://github.com/AniDachi/anidachi-LP/pull/376); auto-merge выключен, PR не слит |
 
@@ -54,7 +58,7 @@ webhook возвращает 400 Missing stripe-signature. Сохраненны�
 подтверждено настоящим HTTP-запросом, а не только наличием endpoint и SQL.
 
 История настройки показала: 12 июля staging ANIDACHI_INTERNAL_API_SECRET был
-случайно создан, передан в Vercel и Cloudflare; временный файл удален. Запрашивать
+сгенерирован, передан в Vercel и Cloudflare; временный файл удален. Запрашивать
 его у владельца или считать отсутствие локальной копии поломкой не требуется.
 Write-only настройки и работающие ключи не менялись.
 
@@ -80,10 +84,41 @@ f8a90d219649ab8918d322e40b627390656a7d9e, Vercel
 живого WebSocket или пользовательской комнаты. Локальная прежняя JWT-проба
 вернула INVALID_ROOM_TOKEN и не использовалась как доказательство staging.
 
-Следующий шаг: проверенный runtime PR в staging, подтверждение фактического
-Worker deployment и технический smoke. T остается отдельным шагом. Ручные
-Sandbox/подписка/комнаты/P11/старый и новый клиент проверяет владелец;
-Task 7 остается открытой.
+## Завершенная третья фаза и оставшаяся приемка
+
+Runtime PR #378 прошла [CI](https://github.com/AniDachi/anidachi-LP/actions/runs/36480745753),
+[room signaling](https://github.com/AniDachi/anidachi-LP/actions/runs/36480745455),
+[P2P](https://github.com/AniDachi/anidachi-LP/actions/runs/36480745454), Vercel и
+[smoke](https://github.com/AniDachi/anidachi-LP/actions/runs/36481072811).
+Merge 50a054b3 выполнен 2026-09-28T20:43:51Z. После merge прошли:
+
+- [Staging CI](https://github.com/AniDachi/anidachi-LP/actions/runs/36481260147)
+  и дублирующая CI promotion-PR; room/P2P также успешны.
+- [Deploy Worker](https://github.com/AniDachi/anidachi-LP/actions/runs/36481260183),
+  version 78e5de69-f2dc-42f6-b5d7-e44cc4b24f82, 100% трафика staging.
+  Binding origin указывает staging.anidachi.app; прежние service/JWT secrets сохранены.
+- [Build Extension](https://github.com/AniDachi/anidachi-LP/actions/runs/36481260140)
+  и [migration workflow](https://github.com/AniDachi/anidachi-LP/actions/runs/36481260159).
+- Vercel dpl_HPZFYmKPbFZKDHdGdg95V46dCKTk READY, alias staging.anidachi.app,
+  точный SHA 50a054b3, обычная команда pnpm build без диагностического override.
+- [Staging smoke](https://github.com/AniDachi/anidachi-LP/actions/runs/36481610343)
+  и отдельный pnpm smoke:worker:staging против уже обновленного Worker.
+
+Повторный SQL readback: activation_at NULL, revision 1, trials_enabled false,
+scheduler false, operation/targets/trials 0; users 62, subscriptions 6. Rooms 504:
+последняя дополнительная комната создана 20:05:02Z и завершена 20:15:46Z,
+до новой версии Worker (20:45:08Z). Первоначальная проверка сохранения 503 rooms
+относится к фазе миграций; последующее изменение счетчика не выдается за удаление
+или миграцию данных. Технические пробы не создавали комнаты/аккаунты/подписки.
+
+Main остается a5a0134e; production dpl_XTKdQCGK6YpQJsz1Zi5Awn5pzK2u READY
+обслуживает anidachi.app/www.anidachi.app. Promotion PR #376 открыта без auto-merge.
+
+Техническая поставка завершена при выключенной модели. Следующий шаг — ручная
+проверка владельцем старого расширения с обновленным сервером при прежних правилах,
+затем отдельно согласованная репетиция активации T на staging. Ручные
+Sandbox/подписка/комнаты/P11/старый и новый клиент еще не приняты;
+Task 7 остается открытой. Store и production не выпускались.
 
 ## Артефакты и откат
 
