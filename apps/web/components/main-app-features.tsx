@@ -1,93 +1,164 @@
 "use client";
 
-import { History, LayoutGrid, Play } from "lucide-react";
-import { HomeSectionHeader } from "@/components/home-section-header";
+import { useState } from "react";
+import Image from "next/image";
+import { getPlanPolicy } from "@anidachi/protocol";
+import styles from "./main-app-features.module.css";
+import { ArrowDown, Check, Link2, UserRound } from "lucide-react";
 
-const features = [
-  {
-    id: "live-sync",
-    icon: Play,
-    title: "Live sync on your player",
-    benefit: "Same episode, same moment — on your own stream",
-    description:
-      "AniDachi detects the Crunchyroll or YouTube title, you create a room, and friends join on their own player. Playback stays synced without screen share.",
-    featured: true,
-  },
-  {
-    id: "overlay",
-    icon: LayoutGrid,
-    title: "Overlay chat, reactions, and layout",
-    benefit: "Everything stays on the video",
-    description:
-      "Chat and reactions sit on the player. Drag cameras and chat where you want them — no Discord window dance beside a compressed share.",
-  },
-  {
-    id: "history",
-    icon: History,
-    title: "Watch history that sticks",
-    benefit: "Always know where you left off",
-    description:
-      "Personal watch history and Resume keep your place across rooms — pick up the right episode next time, whether you host or join.",
-  },
+const roomPlans = [
+	{ id: "plus", label: "Plus", people: getPlanPolicy("plus").maxParticipants },
+	{ id: "pro", label: "Pro", people: getPlanPolicy("pro").maxParticipants },
 ] as const;
 
 export function MainAppFeatures() {
-  const featured = features.find((f) => "featured" in f && f.featured)!;
-  const secondary = features.filter((f) => !("featured" in f && f.featured));
+	const [roomPlan, setRoomPlan] = useState<"plus" | "pro">("plus");
+	const pro = roomPlan === "pro";
+	const plan = roomPlans.find((option) => option.id === roomPlan)!;
+	const guestCount = plan.people - 1;
+	const planName = plan.label;
 
-  return (
-    <section id="features" className="bg-ani-canvas py-16 lg:py-24">
-      <div className="container mx-auto px-4">
-        <HomeSectionHeader
-          title="Your watchroom hub"
-          description="Crunchyroll anime nights and YouTube hangs — synced playback, overlay chat, cameras, and push-to-talk on your real player."
-        />
+	return (
+		<section
+			className={styles.section}
+			id="features"
+			aria-labelledby="hosting-title"
+		>
+			<div className={styles.container}>
+				<div className={styles.main}>
+					<div className={styles.copy}>
+						<p className={styles.kicker}>YOUR ROOM. YOUR PEOPLE.</p>
+						<h2 id="hosting-title">
+							One subscription.
+							<br />
+							<span>Friends join free.</span>
+						</h2>
+						<p className={styles.description}>
+							Only the host needs Plus or Pro. Your friends can join your room
+							with a free AniDachi account.
+						</p>
+						<p className={styles.noGuestFees}>
+							<Check size={18} strokeWidth={2} aria-hidden="true" /> No extra
+							charge for each friend.
+						</p>
+						<a className={styles.planLink} href="#pricing">
+							Find your plan <ArrowDown size={17} aria-hidden="true" />
+						</a>
+						<p className={styles.trialNote}>
+							Friends join free during your 3-day trial, too.
+						</p>
+					</div>
 
-        <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-12 lg:gap-6">
-          <article
-            id={featured.id}
-            className="rounded-[20px] border border-ani-line bg-ani-panel p-6 sm:p-8 lg:col-span-7 lg:p-10"
-          >
-            <featured.icon
-              className="mb-5 h-7 w-7 text-ani-progress"
-              aria-hidden="true"
-            />
-            <h3 className="mb-2 text-2xl font-semibold tracking-[-0.02em] text-ani-text md:text-3xl">
-              {featured.title}
-            </h3>
-            <p className="mb-3 text-sm font-medium text-ani-muted">
-              {featured.benefit}
-            </p>
-            <p className="max-w-xl text-[0.95rem] leading-relaxed text-ani-muted md:text-base">
-              {featured.description}
-            </p>
-          </article>
+					<figure
+						className={styles.room}
+						aria-label="Explore a room with one host subscription and free guests"
+					>
+						<div className={styles.roomHeading}>
+							<div>
+								<Image src="/Anidachi_logo.png" width="24" height="24" alt="" />
+								<span>A room for your people</span>
+							</div>
+							<span className={styles.capacity}>
+								Up to {guestCount + 1} people
+							</span>
+						</div>
 
-          <div className="flex flex-col gap-5 lg:col-span-5">
-            {secondary.map((feature) => (
-              <article
-                key={feature.id}
-                id={feature.id}
-                className="rounded-[20px] border border-ani-line p-6"
-              >
-                <feature.icon
-                  className="mb-3 h-5 w-5 text-ani-progress"
-                  aria-hidden="true"
-                />
-                <h3 className="mb-1 text-lg font-semibold tracking-[-0.02em] text-ani-text">
-                  {feature.title}
-                </h3>
-                <p className="mb-2 text-sm font-medium text-ani-muted">
-                  {feature.benefit}
-                </p>
-                <p className="text-sm leading-relaxed text-ani-muted">
-                  {feature.description}
-                </p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
+						<div
+							className={styles.selector}
+							role="group"
+							aria-label="Explore room sizes"
+						>
+							{roomPlans.map((option) => (
+								<button
+									key={option.id}
+									type="button"
+									aria-pressed={roomPlan === option.id}
+									onClick={() => setRoomPlan(option.id)}
+								>
+									<strong>{option.label}</strong>
+									<span>You + {option.people - 1} friends</span>
+								</button>
+							))}
+						</div>
+
+						<div className={styles.host}>
+							<span className={styles.hostAvatar} aria-hidden="true">
+								<UserRound size={25} strokeWidth={1.6} />
+							</span>
+							<div className={styles.hostIdentity}>
+								<strong>You, the host</strong>
+								<span>Create the room & share the link</span>
+							</div>
+							<span className={styles.planTag}>{planName}</span>
+						</div>
+
+						<div className={styles.guests}>
+							<div className={styles.guestLabel}>
+								<Link2 size={15} aria-hidden="true" />
+								<span>Your friends join with Free accounts</span>
+							</div>
+							<div
+								className={`${styles.guestGrid} ${pro ? styles.proGrid : ""}`}
+								aria-hidden="true"
+								key={roomPlan}
+							>
+								{Array.from({ length: guestCount }, (_, i) => (
+									<div
+										className={styles.guest}
+										key={`guest-${i + 1}`}
+										style={{ animationDelay: `${i * 18}ms` }}
+									>
+										<span className={styles.guestAvatar}>
+											<UserRound size={21} strokeWidth={1.5} />
+										</span>
+										<span>Free</span>
+									</div>
+								))}
+							</div>
+						</div>
+
+						<figcaption
+							className={styles.caption}
+							aria-live="polite"
+							aria-atomic="true"
+						>
+							<Check size={16} aria-hidden="true" />
+							<span>
+								You + up to <strong>{guestCount} friends.</strong> One
+								subscription.
+							</span>
+						</figcaption>
+					</figure>
+				</div>
+
+				<ol className={styles.steps}>
+					<li>
+						<span className={styles.stepNumber}>01</span>
+						<div>
+							<h3>Create a room</h3>
+							<p>Choose Plus or Pro and pick a video.</p>
+						</div>
+					</li>
+					<li>
+						<span className={styles.stepNumber}>02</span>
+						<div>
+							<h3>Send the link</h3>
+							<p>Your friends join with Free accounts.</p>
+						</div>
+					</li>
+					<li>
+						<span className={styles.stepNumber}>03</span>
+						<div>
+							<h3>Watch together</h3>
+							<p>Stay in sync, chat, and use voice or video.</p>
+						</div>
+					</li>
+				</ol>
+				<p className={styles.accessNote}>
+					Everyone needs the AniDachi extension and their own access to the
+					video.
+				</p>
+			</div>
+		</section>
+	);
 }

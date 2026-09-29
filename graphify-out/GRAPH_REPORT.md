@@ -7,9 +7,15 @@
 - Unclassified: 30 file(s) not represented in the graph (top: .css 12, (none) 11, .toml 2)
 
 ## Summary
-- 14197 nodes · 32581 edges · 853 retained communities plus one scoped counter community (historical detailed analysis below)
+- 14198 nodes · 32585 edges · 853 retained communities plus one scoped counter community (historical detailed analysis below)
 - Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 1081 edges (avg confidence: 0.87)
 - Token accounting: AST uses no LLM; active Codex semantic subagent usage is unavailable.
+
+## Graph Freshness — homepage hosting explanation, 2026-09-30
+
+- Owner-approved local replacement of Your watchroom hub with One subscription / Friends join free, preserving homepage #features immediately before #pricing. Interactive Plus/Pro room sizes use getPlanPolicy, subtracting the host from 6/15 total participants. This is a presentation change; billing, entitlements and room admission are unchanged.
+- Standard AST update was run. Its unrelated global normalization/reclustering was excluded from this scoped receipt: retain all foreign nodes, links, communities, hyperedges and historical metadata. Replace only this component's 3 AST nodes / 5 outgoing edges with its 4 nodes / 9 edges, including the CSS import placeholder. Only its manifest row is refreshed; CSS is outside the AST graph corpus.
+- Source verification: web TypeScript passed; 821 web tests passed, six prior skips; dev-check passed. Local browser checked Plus/Pro, the preserved Features anchor, pricing link and responsive section. No staging/production deployment. No LLM extraction required.
 
 ## Graph Freshness — public community counter, 2026-09-30
 

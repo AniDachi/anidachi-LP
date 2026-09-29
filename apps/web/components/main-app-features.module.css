@@ -1,0 +1,529 @@
+/* One host subscription, free guests — the explanation before pricing. */
+.section {
+	background: var(--ani-canvas);
+	color: var(--ani-text);
+	padding: 64px 16px;
+	scroll-margin-top: 88px;
+}
+.container {
+	max-width: 1152px;
+	margin: 0 auto;
+}
+.main {
+	display: grid;
+	grid-template-columns: 1.06fr 1fr;
+	gap: 64px;
+	align-items: center;
+}
+.kicker {
+	color: var(--ani-muted);
+	font-size: 11px;
+	font-weight: 550;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	margin-bottom: 22px;
+}
+.copy h2 {
+	font-size: clamp(38px, 4.25vw, 54px);
+	font-weight: 550;
+	line-height: 1.1;
+	letter-spacing: -0.052em;
+}
+.copy h2 span {
+	color: var(--ani-progress);
+}
+.description {
+	font-size: 16px;
+	line-height: 1.8;
+	color: var(--ani-muted);
+	max-width: 440px;
+	margin-top: 23px;
+}
+.noGuestFees {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	font-size: 14px;
+	margin-top: 20px;
+}
+.noGuestFees svg {
+	color: var(--ani-progress);
+	flex-shrink: 0;
+}
+.planLink {
+	display: inline-flex;
+	align-items: center;
+	gap: 18px;
+	background: var(--ani-text);
+	color: #181511;
+	border-radius: 999px;
+	padding: 14px 22px;
+	font-size: 13px;
+	font-weight: 550;
+	margin-top: 30px;
+	min-height: 46px;
+	transition: background 160ms;
+}
+.planLink:hover {
+	background: #fff7ec;
+}
+.planLink svg {
+	transition: transform 160ms;
+}
+.planLink:hover svg {
+	transform: translateY(3px);
+}
+.trialNote {
+	font-size: 11px;
+	color: var(--ani-muted);
+	margin-top: 13px;
+	line-height: 1.6;
+}
+.room {
+	min-width: 0;
+	margin: 0;
+	background: var(--ani-panel);
+	border: 1px solid #ffffff16;
+	border-radius: 22px;
+	padding: 24px 26px 0;
+}
+.roomHeading {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	font-size: 12px;
+}
+.roomHeading > div {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.capacity {
+	font-size: 11px;
+	color: var(--ani-muted);
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
+}
+.selector {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 6px;
+	border: 1px solid var(--ani-line);
+	padding: 5px;
+	border-radius: 13px;
+	background: var(--ani-canvas);
+	margin-top: 22px;
+}
+.selector button {
+	min-height: 62px;
+	border: 1px solid transparent;
+	border-radius: 9px;
+	background: transparent;
+	text-align: left;
+	padding: 10px 14px;
+	cursor: pointer;
+	transition:
+		background 160ms,
+		border-color 160ms;
+}
+.selector button[aria-pressed="true"] {
+	background: #eee5d90d;
+	border-color: #eee5d94a;
+}
+.selector button:hover {
+	background: #ffffff09;
+}
+.selector strong {
+	font-size: 13px;
+	font-weight: 550;
+	display: block;
+}
+.selector button[aria-pressed="true"] strong {
+	color: var(--ani-progress);
+}
+.selector button > span {
+	display: block;
+	color: var(--ani-muted);
+	font-size: 11px;
+	margin-top: 5px;
+}
+.host {
+	display: flex;
+	align-items: center;
+	gap: 13px;
+	padding: 23px 1px;
+}
+.hostAvatar {
+	height: 46px;
+	width: 46px;
+	display: grid;
+	place-items: center;
+	border-radius: 50%;
+	background: var(--ani-text);
+	color: #211c16;
+	flex-shrink: 0;
+}
+.hostIdentity {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+.hostIdentity strong {
+	font-size: 13px;
+	font-weight: 550;
+}
+.hostIdentity > span {
+	font-size: 11px;
+	color: var(--ani-muted);
+}
+.planTag {
+	font-size: 10px;
+	font-weight: 550;
+	border-radius: 5px;
+	background: #eee5d913;
+	border: 1px solid #eee5d92e;
+	padding: 4px 8px;
+	margin-left: auto;
+}
+.guests {
+	border-top: 1px solid var(--ani-line);
+	padding: 19px 0 13px;
+}
+.guestLabel {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 7px;
+	font-size: 11px;
+	color: var(--ani-muted);
+}
+.guestLabel svg {
+	flex-shrink: 0;
+}
+.guestGrid {
+	display: grid;
+	grid-template-columns: repeat(5, minmax(0, 1fr));
+	gap: 15px 10px;
+	max-width: 330px;
+	margin: 18px auto 0;
+	min-height: 128px;
+	align-content: center;
+}
+.proGrid {
+	grid-template-columns: repeat(7, minmax(0, 1fr));
+	max-width: 390px;
+}
+.guest {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 7px;
+	animation: guestArrive 260ms backwards;
+}
+.guestAvatar {
+	width: 38px;
+	height: 38px;
+	border-radius: 50%;
+	background: #222225;
+	border: 1px solid #ffffff12;
+	display: grid;
+	place-items: center;
+	color: #b8b4ae;
+}
+.guest > span:last-child {
+	font-size: 10px;
+	color: #c2bdb5;
+}
+.caption {
+	margin: 0 -26px;
+	border-top: 1px solid var(--ani-line);
+	padding: 17px 12px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 7px;
+	font-size: 12px;
+	color: var(--ani-muted);
+	line-height: 1.5;
+}
+.caption strong {
+	font-weight: 500;
+	color: var(--ani-text);
+}
+.caption svg {
+	color: var(--ani-progress);
+	flex-shrink: 0;
+}
+.steps {
+	margin: 43px 0 0;
+	padding: 28px 0 0;
+	border-top: 1px solid var(--ani-line);
+	list-style: none;
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 40px;
+}
+.steps li {
+	display: flex;
+	gap: 14px;
+	align-items: flex-start;
+}
+.stepNumber {
+	font-size: 11px;
+	line-height: 20px;
+	color: var(--ani-progress);
+	font-variant-numeric: tabular-nums;
+}
+.steps h3 {
+	font-size: 14px;
+	font-weight: 500;
+	letter-spacing: -0.01em;
+}
+.steps p {
+	font-size: 12px;
+	line-height: 1.65;
+	color: var(--ani-muted);
+	margin-top: 7px;
+}
+.accessNote {
+	font-size: 11px;
+	line-height: 1.65;
+	color: var(--ani-muted);
+	text-align: center;
+	margin-top: 26px;
+}
+@keyframes guestArrive {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+@media (min-width: 1440px) {
+	.section {
+		padding-top: 80px;
+		padding-bottom: 40px;
+	}
+	.main {
+		gap: 90px;
+	}
+}
+@media (max-width: 1050px) {
+	.main {
+		gap: 36px;
+	}
+	.room {
+		padding: 22px 20px 0;
+	}
+	.roomHeading {
+		gap: 10px;
+	}
+	.roomHeading > div {
+		font-size: 11px;
+	}
+	.caption {
+		margin-inline: -20px;
+	}
+	.guestAvatar {
+		width: 32px;
+		height: 32px;
+	}
+	.guestGrid {
+		gap: 15px 7px;
+	}
+}
+@media (max-width: 850px) {
+	.section {
+		padding: 48px 24px 28px;
+	}
+	.main {
+		grid-template-columns: 1fr;
+		max-width: 560px;
+		margin: auto;
+		gap: 32px;
+	}
+	.copy h2 {
+		font-size: 48px;
+	}
+	.description {
+		max-width: 480px;
+	}
+	.room {
+		padding: 23px 26px 0;
+	}
+	.caption {
+		margin-inline: -26px;
+	}
+	.roomHeading > div {
+		font-size: 12px;
+	}
+	.guestAvatar {
+		width: 38px;
+		height: 38px;
+	}
+	.steps {
+		gap: 22px;
+		margin-top: 36px;
+	}
+	.steps li {
+		gap: 9px;
+	}
+	.steps p {
+		font-size: 11px;
+	}
+}
+@media (max-width: 580px) {
+	.section {
+		padding: 48px 20px;
+	}
+	.kicker {
+		font-size: 10px;
+		margin-bottom: 17px;
+	}
+	.copy h2 {
+		font-size: clamp(31px, 9.5vw, 42px);
+	}
+	.description {
+		font-size: 14px;
+		line-height: 1.75;
+		margin-top: 18px;
+	}
+	.noGuestFees {
+		font-size: 12px;
+		margin-top: 16px;
+	}
+	.planLink {
+		margin-top: 23px;
+	}
+	.trialNote {
+		font-size: 10px;
+	}
+	.room {
+		padding: 18px 17px 0;
+		border-radius: 18px;
+	}
+	.roomHeading {
+		gap: 8px;
+	}
+	.roomHeading > div {
+		font-size: 11px;
+		gap: 6px;
+	}
+	.roomHeading img {
+		width: 20px;
+		height: 20px;
+	}
+	.capacity {
+		font-size: 10px;
+	}
+	.selector {
+		margin-top: 17px;
+	}
+	.selector button {
+		padding: 10px 11px;
+		min-height: 60px;
+	}
+	.host {
+		padding: 20px 0;
+		gap: 10px;
+	}
+	.hostAvatar {
+		width: 41px;
+		height: 41px;
+	}
+	.hostIdentity strong {
+		font-size: 12px;
+	}
+	.hostIdentity > span {
+		font-size: 10px;
+	}
+	.planTag {
+		font-size: 9px;
+	}
+	.guestLabel {
+		font-size: 10px;
+		gap: 5px;
+	}
+	.guestGrid {
+		min-height: 118px;
+		gap: 14px 5px;
+	}
+	.guestAvatar {
+		width: 32px;
+		height: 32px;
+	}
+	.guestAvatar svg {
+		width: 18px;
+		height: 18px;
+	}
+	.guest > span:last-child {
+		font-size: 9px;
+	}
+	.caption {
+		margin-inline: -17px;
+		font-size: 11px;
+		padding: 15px 8px;
+	}
+	.steps {
+		grid-template-columns: 1fr;
+		gap: 22px;
+		padding-top: 25px;
+	}
+	.steps li {
+		gap: 14px;
+	}
+	.steps h3 {
+		font-size: 14px;
+	}
+	.steps p {
+		font-size: 12px;
+		margin-top: 5px;
+	}
+	.accessNote {
+		text-align: left;
+		font-size: 10px;
+		max-width: 280px;
+		margin-top: 22px;
+	}
+}
+@media (max-width: 360px) {
+	.proGrid .guestAvatar {
+		width: 27px;
+		height: 27px;
+	}
+	.roomHeading > div {
+		font-size: 10px;
+	}
+	.capacity {
+		font-size: 9px;
+	}
+	.hostIdentity > span {
+		font-size: 9px;
+	}
+	.caption {
+		font-size: 10px;
+	}
+}
+
+.planLink:focus-visible,
+.selector button:focus-visible {
+	outline: 2px solid var(--ani-focus);
+	outline-offset: 4px;
+}
+@media (prefers-reduced-motion: reduce) {
+	.guest {
+		animation: none;
+	}
+	.planLink,
+	.planLink svg,
+	.selector button {
+		transition: none;
+	}
+	.planLink:hover svg {
+		transform: none;
+	}
+}

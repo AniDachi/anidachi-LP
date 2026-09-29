@@ -33990,7 +33990,7 @@
       "file_type": "code",
       "norm_label": "mainappfeatures()",
       "source_file": "apps/web/components/main-app-features.tsx",
-      "source_location": "L34"
+      "source_location": "L14"
     },
     {
       "id": "apps_web_components_nav_bar_client_contactnavmenu",
@@ -100001,17 +100001,6 @@
       "norm_label": "main-app-features.tsx",
       "source_file": "apps/web/components/main-app-features.tsx",
       "source_location": "L1"
-    },
-    {
-      "id": "apps_web_components_main_app_features_features",
-      "label": "features",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "features",
-      "source_file": "apps/web/components/main-app-features.tsx",
-      "source_location": "L6"
     },
     {
       "id": "apps_web_components_nav_bar_client",
@@ -176494,6 +176483,28 @@
       "_origin": "semantic",
       "community": 854,
       "community_name": "Public Community Signup Counter"
+    },
+    {
+      "id": "apps_web_components_main_app_features_roomplans",
+      "label": "roomPlans",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "roomplans",
+      "source_file": "apps/web/components/main-app-features.tsx",
+      "source_location": "L9"
+    },
+    {
+      "id": "apps_web_components_main_app_features_module",
+      "label": "apps_web_components_main_app_features_module",
+      "community": 2,
+      "community_name": "react",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "apps_web_components_main_app_features_module",
+      "source_file": "",
+      "type": "external"
     }
   ],
   "links": [
@@ -296944,18 +296955,6 @@
       "weight": 1.0
     },
     {
-      "source": "apps_web_components_main_app_features",
-      "target": "apps_web_components_home_section_header_homesectionheader",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/components/main-app-features.tsx",
-      "source_location": "L4",
-      "weight": 1.0
-    },
-    {
       "source": "apps_web_components_nav_bar",
       "target": "apps_web_components_nav_bar_client_navbarclient",
       "relation": "imports",
@@ -342554,18 +342553,6 @@
       "context": "import",
       "source_file": "apps/web/components/json-ld.tsx",
       "source_location": "L2",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_components_main_app_features",
-      "target": "apps_web_components_home_section_header",
-      "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/components/main-app-features.tsx",
-      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -408390,28 +408377,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/components/json-ld.tsx",
       "source_location": "L55",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_components_main_app_features",
-      "target": "apps_web_components_main_app_features_features",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/components/main-app-features.tsx",
-      "source_location": "L6",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_components_main_app_features",
-      "target": "apps_web_components_main_app_features_mainappfeatures",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/components/main-app-features.tsx",
-      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -513516,18 +513481,6 @@
       "weight": 1.0
     },
     {
-      "source": "apps_web_components_main_app_features",
-      "target": "ref_lucide_react",
-      "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/components/main-app-features.tsx",
-      "source_location": "L3",
-      "weight": 1.0
-    },
-    {
       "source": "apps_web_components_nav_bar_client",
       "target": "ref_lucide_react",
       "relation": "imports_from",
@@ -553815,6 +553768,112 @@
       "_origin": "semantic",
       "source": "docs_current_development_state_local_website_counter_checkpoint",
       "target": "docs_public_community_count_public_community_signup_counter"
+    },
+    {
+      "source": "apps_web_components_main_app_features",
+      "target": "packages_protocol_src_commercial_policy_getplanpolicy",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/components/main-app-features.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_main_app_features",
+      "target": "packages_protocol_src_index_getplanpolicy",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/components/main-app-features.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_main_app_features",
+      "target": "ref_react",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/components/main-app-features.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_main_app_features",
+      "target": "ref_next",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/components/main-app-features.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_main_app_features",
+      "target": "packages_protocol_src_index",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/components/main-app-features.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_main_app_features",
+      "target": "apps_web_components_main_app_features_module",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/components/main-app-features.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_main_app_features",
+      "target": "ref_lucide_react",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/components/main-app-features.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_main_app_features",
+      "target": "apps_web_components_main_app_features_mainappfeatures",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/components/main-app-features.tsx",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_main_app_features",
+      "target": "apps_web_components_main_app_features_roomplans",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/components/main-app-features.tsx",
+      "source_location": "L9",
+      "weight": 1.0
     }
   ],
   "hyperedges": [
