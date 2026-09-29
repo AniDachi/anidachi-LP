@@ -5,9 +5,14 @@ Last updated: 2026-09-29.
 Latest owner decision: complete Durable Object write optimization, deliver it
 to staging and obtain the owner's manual acceptance **before resuming the trial
 transition/activation**. The [optimization design and checkpoint](superpowers/specs/2026-09-29-durable-object-write-optimization-design.md)
-preserve the completed trial work, dated Cloudflare baseline, proposed changes,
-compatibility, validation and rollback gates. Optimization is not implemented
-or deployed yet. Staging acceptance of this optimization does not close the
+preserve the completed trial work, dated Cloudflare baseline, compatibility,
+validation and rollback gates. Optimization is implemented in `5bed2e55`: real
+steady HOST_STATE profiles reduce SQLite rows by 75–80%, with unchanged policy
+and alarm writes removed. API check, 252 unit tests, 96 Workers runtime tests,
+203 protocol tests and 39 room harness scenarios pass. See the [implementation
+evidence and staging acceptance](releases/durable-object-write-optimization-2026-09-29.md)
+and [execution plan](superpowers/plans/2026-09-29-durable-object-write-optimization.md).
+Delivery and owner acceptance are separate gates. Staging acceptance does not close the
 remaining Sandbox/P11/old-client trial matrix or authorize main/Store/T.
 
 GitHub readback on September 29 confirms pricing PR #380 merged into staging

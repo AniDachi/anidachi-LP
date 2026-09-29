@@ -31,6 +31,13 @@
 
 ## Progress Log
 
+- 2026-09-29 — `codex/do-write-optimization-design`, `5bed2e55`: removed redundant
+  DO meter/policy/alarm/snapshot writes and made denial persistence incremental;
+  wake preserves overdue UTC quota before meter rollover. API252unit/96runtime,
+  protocol203, room39, legacyWebRTC26 and v3four-user checks pass; independent
+  review finds no runtime defect. [Evidence and owner acceptance](../../releases/durable-object-write-optimization-2026-09-29.md).
+  Staging delivery/manual acceptance remain distinct; trial/T/main/Store stay gated.
+
 - 2026-09-28 — `codex/paid-hosting-transition-plan`, local room-end checkpoint
   from `30b92d3e`: compatible cutover display context and original-deadline warning
   in the extension, no lifecycle/media-policy change. Root check/test, API248,

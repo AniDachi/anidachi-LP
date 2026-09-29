@@ -151,9 +151,9 @@ measurement proves that cache necessary. No storage format migration.
 **Files:** Evidence under `docs/releases/`, canonical docs, Graphify artifacts;
 no new runtime features in this task.
 
-- [ ] Run `pnpm dev:check`, API check/test/runtime, room harness and relevant
+- [x] Run `pnpm dev:check`, API check/test/runtime, room harness and relevant
   protocol checks; real-WebRTC harness for this shared room persistence path.
-- [ ] Verify compatibility reading old/new storage and preservation of dormant
+- [x] Verify compatibility reading old/new storage and preservation of dormant
   trial/terminal behavior. Review full branch with a fresh reviewer; fix confirmed
   defects with RED→GREEN evidence and rerun affected checks.
 - [ ] Update docs and Graphify via semantic skill for docs plus AST for changed
@@ -207,3 +207,9 @@ Recovery now preserves the old meter/deadline until policy enforcement, re-arms
 a missing alarm, and ends at the original timestamp. API types + 252 unit pass;
 95 runtime cases passed in the full run, and the remaining source fixture was
 corrected to include its required title (3/3 focused storage tests then pass).
+
+Task 5 local gate: full runtime96/96, API unit252/252 + types, protocol203/203 +
+types, rooms39/39, legacy WebRTC26/26 and v3 four-participant harness all pass.
+Fresh whole-branch review found no runtime defects; its stale-doc status note
+is addressed by the already planned canonical documentation update.
+[Acceptance and rollback evidence](../../releases/durable-object-write-optimization-2026-09-29.md).

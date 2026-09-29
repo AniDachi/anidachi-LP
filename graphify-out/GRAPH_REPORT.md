@@ -7,15 +7,22 @@
 - Unclassified: 30 file(s) not represented in the graph (top: .css 12, (none) 11, .toml 2)
 
 ## Summary
-- 14113 nodes · 32548 edges · 852 retained communities (historical detailed analysis below)
+- 14157 nodes · 32504 edges · 853 retained communities (historical detailed analysis below)
 - Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 1081 edges (avg confidence: 0.87)
 - Token accounting: AST uses no LLM; active Codex semantic subagent usage is unavailable.
 
 ## Graph Freshness
-- Latest scoped update: four complete documentation sources for DO write optimization before trial activation, from staging `1f4ad13f`. No AST/full-corpus refresh; older global build marker and unrelated backlog retained.
+- Latest scoped update: DO write optimization implementation5bed2e55; 15 changed TypeScript AST files + six complete documents. Staging/owner acceptance separate; older global build marker retained.
 - Built from commit: `80fefde3`
 - Includes the verified dormant staging runtime checkpoint50a054b3: schema375/Web377/runtime378,69migrations, configured Sandbox/drain, signed admission and technical CI/deploy/extension/smoke evidence. Owner acceptance/T/main/Store remain open. One full source and five partial sources including planTask7 technical checklist; no AST/full-corpus freshness. Exact six hashes/ranges are recorded in semantic_updates.
 - Run `graphify update .` after code changes (no API cost).
+
+## DO write optimization: implementation and local verification — 2026-09-29
+
+- Implementation5bed2e55 retains durable metering anchors, settles before external delivery, skips unchanged policy/alarm/snapshot writes and applies atomic denial differences. Wake preserves overdue previous-day quota before UTC rollover.
+- Real 20-frame HOST_STATE profiles: SQL100/80/100/100 ->20 for Free solo/Free pair/Plus pair/Pro pair; KV20->0 and alarm20->0 separately. SQLite reduction75–80% is not a daily billing forecast.
+- Local gates: API252unit+types,96Workersruntime,203protocol+types,39room scenarios,26legacy WebRTC and v3four-user harness. Fresh review found no runtime defect. Owner acceptance, trial/Sandbox/P11 and main/Store/T stay open; dated predeployment readback remains dormant.
+- Scope15 AST +6 semantic sources; unrelated graph/manifest retained, no global reclustering. Semantic detector still queues 341 sources, including the 15 code files refreshed structurally only (their AST hashes are current); the other 326 sources remain unrelated backlog. Zero missing/dangling endpoints; 102 historical selfloops and 3 undirected collapse warnings retained. Detailed sections below are dated historical checkpoints.
 
 ## DO write optimization prerequisite: design checkpoint — 2026-09-29
 
