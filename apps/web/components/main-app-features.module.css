@@ -6,13 +6,13 @@
 	scroll-margin-top: 88px;
 }
 .container {
-	max-width: 1184px;
+	max-width: 1144px;
 	margin: 0 auto;
 }
 .main {
 	display: grid;
-	grid-template-columns: 1.06fr 1fr;
-	gap: 76px;
+	grid-template-columns: 1.12fr 1fr;
+	gap: 84px;
 	align-items: center;
 }
 .copy {
@@ -21,8 +21,8 @@
 .copy h2 {
 	font-size: clamp(38px, 4.1vw, 58px);
 	font-weight: 550;
-	line-height: 1.06;
-	letter-spacing: -0.05em;
+	line-height: 1.09;
+	letter-spacing: -0.045em;
 }
 .copy h2 span {
 	color: var(--ani-progress);
@@ -32,14 +32,14 @@
 	line-height: 1.75;
 	text-wrap: balance;
 	color: #b6b0a8;
-	max-width: 400px;
-	margin-top: 28px;
+	max-width: 360px;
+	margin-top: 25px;
 }
 .planLink {
 	display: inline-flex;
 	align-items: center;
 	justify-content: space-between;
-	gap: 36px;
+	gap: 52px;
 	background: var(--ani-primary);
 	color: var(--ani-on-primary);
 	padding: 16px 22px;
@@ -54,22 +54,23 @@
 }
 .room {
 	min-width: 0;
+	width: 100%;
+	max-width: 440px;
+	justify-self: end;
 	margin: 0;
-	padding-left: 40px;
-	border-left: 1px solid #373532;
 }
 .selector {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	border-bottom: 1px solid #373532;
-	margin-top: 0;
+	display: flex;
+	justify-content: center;
+	gap: 28px;
 }
 .selector button {
-	min-height: 52px;
+	min-height: 46px;
+	min-width: 76px;
 	border-bottom: 2px solid transparent;
 	background: none;
-	text-align: left;
-	padding: 0 0 17px;
+	text-align: center;
+	padding: 0 8px 12px;
 	color: #a39d95;
 	cursor: pointer;
 	transition:
@@ -84,7 +85,7 @@
 	border-bottom-color: var(--ani-progress);
 }
 .selector strong {
-	font-size: 24px;
+	font-size: 20px;
 	font-weight: 500;
 	letter-spacing: -0.025em;
 	display: block;
@@ -92,16 +93,16 @@
 .equation {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) 32px minmax(0, 1fr);
-	gap: 23px 14px;
-	padding: 38px 0 0;
+	gap: 18px 14px;
+	padding: 36px 0 0;
 	align-items: center;
 	text-align: center;
 }
 .number {
 	grid-row: 1;
-	font-size: clamp(110px, 10.5vw, 152px);
+	font-size: clamp(110px, 11.5vw, 164px);
 	font-weight: 450;
-	letter-spacing: -0.085em;
+	letter-spacing: -0.07em;
 	line-height: 0.96;
 	font-variant-numeric: tabular-nums;
 }
@@ -112,6 +113,9 @@
 }
 .friendsLabel {
 	grid-column: 3;
+}
+.friendsLabel span {
+	color: var(--ani-progress);
 }
 .friendsCount {
 	color: var(--ani-progress);
@@ -125,10 +129,11 @@
 	color: #9e978d;
 }
 .accessNote {
-	font-size: 13px;
+	max-width: 340px;
+	font-size: 12px;
 	line-height: 1.65;
 	color: #a39d95;
-	margin-top: 48px;
+	margin-top: 24px;
 }
 .planLink:focus-visible,
 .selector button:focus-visible {
@@ -138,9 +143,6 @@
 @media (max-width: 1100px) {
 	.main {
 		gap: 40px;
-	}
-	.room {
-		padding-left: 28px;
 	}
 	.number {
 		font-size: 116px;
@@ -163,8 +165,7 @@
 		font-size: 54px;
 	}
 	.room {
-		padding: 0;
-		border-left: 0;
+		justify-self: center;
 	}
 	.equation {
 		grid-template-columns: minmax(0, 1fr) 40px minmax(0, 1fr);
@@ -190,14 +191,14 @@
 		margin-top: 26px;
 	}
 	.main {
-		gap: 45px;
+		gap: 38px;
 	}
 	.selector strong {
-		font-size: 22px;
+		font-size: 20px;
 	}
 	.equation {
 		grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr);
-		gap: 20px 12px;
+		gap: 16px 12px;
 		padding: 31px 0 0;
 	}
 	.number {

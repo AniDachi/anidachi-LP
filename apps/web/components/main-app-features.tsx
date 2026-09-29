@@ -36,6 +36,10 @@ export function MainAppFeatures() {
 						<a className={styles.planLink} href="#pricing">
 							Find your plan <ArrowDown size={17} aria-hidden="true" />
 						</a>
+						<p className={styles.accessNote}>
+							Everyone needs the AniDachi extension and their own access to the
+							video.
+						</p>
 					</div>
 
 					<figure
@@ -71,7 +75,7 @@ export function MainAppFeatures() {
 							</span>
 							<strong className={styles.countLabel}>Host</strong>
 							<strong className={`${styles.countLabel} ${styles.friendsLabel}`}>
-								Friends join free
+								Friends join <span>free</span>
 							</strong>
 						</div>
 
@@ -84,11 +88,6 @@ export function MainAppFeatures() {
 						</figcaption>
 					</figure>
 				</div>
-
-				<p className={styles.accessNote}>
-					Everyone needs the AniDachi extension and their own access to the
-					video.
-				</p>
 			</div>
 		</section>
 	);
