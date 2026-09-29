@@ -12,17 +12,23 @@
 - Token accounting: AST uses no LLM; active Codex semantic subagent usage is unavailable.
 
 ## Graph Freshness
-- Latest scoped update: DO write optimization implementation5bed2e55; 15 changed TypeScript AST files + six complete documents + two dated P2P progress entries (partial sources; full hashes not stamped). Staging/owner acceptance separate; older global build marker retained.
+- Latest scoped update: DO optimization delivered in staging1d50432c; one full receipt and changed ranges of seven partial sources. Owner acceptance remains open; older global build marker retained.
 - Built from commit: `80fefde3`
 - Includes the verified dormant staging runtime checkpoint50a054b3: schema375/Web377/runtime378,69migrations, configured Sandbox/drain, signed admission and technical CI/deploy/extension/smoke evidence. Owner acceptance/T/main/Store remain open. One full source and five partial sources including planTask7 technical checklist; no AST/full-corpus freshness. Exact six hashes/ranges are recorded in semantic_updates.
 - Run `graphify update .` after code changes (no API cost).
+
+## DO write optimization: verified staging delivery — 2026-09-29
+
+- PR381 merged1d50432c. DeployAPI36514058395 succeeded; Workerf7942d07-cb7a-473e-9484-c26768ea04c2 serves100% and Worker smoke passes. Verceldpl_BiPz6qKQbLcj3Zho2yRCm2mdR4pq READY with staging alias. PostmergeCI36514058487, rooms/P2P and Websmoke36514275763 succeed.
+- Supabase checkpoint stays dormant: T NULL/revision1/trials OFF/scheduler disabled/zero operation-target-trial rows. Rollback Worker78e5de69-f2dc-42f6-b5d7-e44cc4b24f82 retained. Owner old/new/mixed-client acceptance and daily cost remain open; O6 completed, O7/O8 open. Main/production/Store unchanged.
+- Scope: full release receipt read and changed ranges in seven existing documents, extracted by active Codex semantic agent. Updated node meanings; reference-only relationships and whole-file manifest/cache stamps retained. Existing IDs, directed pairs, communities, hyperedges and historical metadata preserved; zero missing/dangling endpoints,102 inherited selfloops/3 undirected collapse warnings unchanged. No new code/runtime check or full-corpus freshness claim. Exact source hashes and ranges are in semantic_updates. Following sections are dated historical checkpoints.
 
 ## DO write optimization: implementation and local verification — 2026-09-29
 
 - Implementation5bed2e55 retains durable metering anchors, settles before external delivery, skips unchanged policy/alarm/snapshot writes and applies atomic denial differences. Wake preserves overdue previous-day quota before UTC rollover.
 - Real 20-frame HOST_STATE profiles: SQL100/80/100/100 ->20 for Free solo/Free pair/Plus pair/Pro pair; KV20->0 and alarm20->0 separately. SQLite reduction75–80% is not a daily billing forecast.
 - Local gates: API252unit+types,96Workersruntime,203protocol+types,39room scenarios,26legacy WebRTC and v3four-user harness. Fresh review found no runtime defect. Owner acceptance, trial/Sandbox/P11 and main/Store/T stay open; dated predeployment readback remains dormant.
-- Scope15 AST +6 semantic sources; unrelated graph/manifest retained, no global reclustering. Semantic detector still queues 341 sources, including the 15 code files refreshed structurally only (their AST hashes are current); the other 326 sources remain unrelated backlog. Zero missing/dangling endpoints; 102 historical selfloops and 3 undirected collapse warnings retained. Detailed sections below are dated historical checkpoints.
+- Scope15 AST +6 semantic sources; unrelated graph/manifest retained, no global reclustering. Semantic detector still queues 341 sources, including the 15 code files refreshed structurally only (their AST hashes are current); the other 326 sources remain pending full semantic extraction, including partially updated P2P-plan sources. Zero missing/dangling endpoints; 102 historical selfloops and 3 undirected collapse warnings retained. Detailed sections below are dated historical checkpoints.
 
 ## DO write optimization prerequisite: design checkpoint — 2026-09-29
 

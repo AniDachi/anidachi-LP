@@ -300,6 +300,7 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
   atomic snapshot/denial writes and original quota deadlines after wake. Local
   API252unit/96runtime, protocol203, room39, legacyWebRTC26 and v3four-user checks
   pass. [Implementation and manual staging scenario](../../releases/durable-object-write-optimization-2026-09-29.md).
+  PR #381 delivered staging `1d50432c`; Worker deployment and smoke pass.
   Owner acceptance and real daily billing remain unverified; trial/T/main/Store gated.
 
 - 2026-09-28 — `codex/paid-hosting-transition-plan`, local room-end checkpoint

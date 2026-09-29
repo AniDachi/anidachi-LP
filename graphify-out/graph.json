@@ -158948,7 +158948,7 @@
     },
     {
       "id": "docs_current_development_state_paid_hosting_trial_planning",
-      "label": "Paid hosting trial foundation delivered dormant; DO optimization implemented at 5bed2e55 and locally verified before staging delivery and owner acceptance",
+      "label": "Paid-hosting foundation remains dormant; DO optimization5bed2e55 delivered to staging by PR3811d50432c with owner acceptance still open",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
@@ -158956,14 +158956,24 @@
       "community_name": "Trial transition plan",
       "contributor": null,
       "file_type": "concept",
-      "norm_label": "paid hosting trial foundation delivered dormant; do optimization implemented at 5bed2e55 and locally verified before staging delivery and owner acceptance",
+      "norm_label": "paid-hosting foundation remains dormant; do optimization5bed2e55 delivered to staging by pr3811d50432c with owner acceptance still open",
       "source_file": "docs/current-development-state.md",
-      "source_location": "L5-L8",
+      "source_location": "L5-L21",
       "source_url": null,
-      "status": "implemented_locally_verified_staging_delivery_and_owner_acceptance_pending",
+      "status": "staging_technical_delivery_verified_owner_acceptance_and_real_daily_cost_pending",
       "runtime_status": "local_candidate_prepared_not_deployed",
-      "rationale": "Any Free account with unused trial retains one 72-hour card-backed Plus/Pro trial after separately authorized activation. The optimization does not activate T or authorize main/Store. Completed dormant trial delivery and pricing merge remain dated evidence.",
-      "evidence_excerpt": "Latest owner decision: complete Durable Object write optimization, deliver it\nto staging and obtain the owner's manual acceptance **before resuming the trial\ntransition/activation**. The [optimization design and checkpoint](superpowers/specs/2026-09-29-durable-object-write-optimization-design.md)\npreserve the completed trial work, dated Cloudflare baseline, compatibility,"
+      "rationale": "Unused-trial product rules and prior dormant foundation are unchanged. Worker deployment/smoke and repeated Supabase readback prove technical delivery; owner trial/Sandbox/P11/old-client and main/Store/T gates remain.",
+      "evidence_excerpt": "Latest owner decision: complete Durable Object write optimization, deliver it\nto staging and obtain the owner's manual acceptance **before resuming the trial\ntransition/activation**. The [optimization design and checkpoint](superpowers/specs/2026-09-29-durable-object-write-optimization-design.md)\npreserve the completed trial work, dated Cloudflare baseline, compatibility,\nvalidation and rollback gates. Optimization is implemented in `5bed2e55`: real\nsteady HOST_STATE profiles reduce SQLite rows by 75–80%, with unchanged policy\nand alarm writes removed. API check, 252 unit tests, 96 Workers runtime tests,\n203 protocol tests and 39 room harness scenarios pass. See the [implementation\nevidence and staging acceptance](releases/durable-object-write-optimization-2026-09-29.md)\nand [execution plan](superpowers/plans/2026-09-29-durable-object-write-optimization.md).\nPR #381 delivered the optimization to staging at `1d50432c` on September 29,\n02:45 UTC. Deploy API succeeded; Worker `f7942d07-cb7a-473e-9484-c26768ea04c2`\nreceives 100% of staging traffic and Worker smoke passed. Read-only Supabase\nstill has T NULL, revision 1, trials/scheduler OFF and zero operation/target/trial\nrows. The receipt records exact deployment evidence and the rollback version.\nOwner manual acceptance remains open. Staging acceptance does not close the\nremaining Sandbox/P11/old-client trial matrix or authorize main/Store/T.",
+      "source_file_sha256": "874b804ad97ec01b3983d06fee8af90a8f037acb7aab3d014ff6250145d00cbf",
+      "extraction_scope": "partial_changed_status_ranges",
+      "extracted_ranges": [
+        {
+          "start": 5,
+          "end": 27,
+          "sha256": "69f0838bbe9a756bc6d576bc5a90233b428e0300dc00a93dd59664ea0aab4416"
+        }
+      ],
+      "full_file_freshness_claim": false
     },
     {
       "id": "docs_current_development_state_trial_acceptance_pending",
@@ -158977,12 +158987,22 @@
       "file_type": "concept",
       "norm_label": "owner acceptance of do optimization must precede resumed trial work; sandbox/p11/exact old store/mixed-client/legacy-recovery/latency and separate t rehearsal remain open",
       "source_file": "docs/current-development-state.md",
-      "source_location": "L15-L18",
+      "source_location": "L15-L21",
       "source_url": null,
       "status": "manual_trial_acceptance_pending_after_optimization_owner_acceptance",
       "runtime_status": "staging_manual_acceptance_pending_no_remote_changes",
-      "rationale": "Optimization local API252/runtime96/protocol203/rooms39 results are distinct from O6 deployment and O7 owner acceptance. Sandbox/P11/exact old Store/mixed-client/legacy recovery/latency and activation rehearsal stay open.",
-      "evidence_excerpt": "Delivery and owner acceptance are separate gates. Staging acceptance does not close the\nremaining Sandbox/P11/old-client trial matrix or authorize main/Store/T.\n\nGitHub readback on September 29 confirms pricing PR #380 merged into staging"
+      "rationale": "O6 technical staging delivery is complete with PR381 and new Worker smoke. Owner O7 acceptance, remaining Sandbox/P11/exact old Store/mixed-client/legacy recovery/latency and separate activation rehearsal remain open.",
+      "evidence_excerpt": "PR #381 delivered the optimization to staging at `1d50432c` on September 29,\n02:45 UTC. Deploy API succeeded; Worker `f7942d07-cb7a-473e-9484-c26768ea04c2`\nreceives 100% of staging traffic and Worker smoke passed. Read-only Supabase\nstill has T NULL, revision 1, trials/scheduler OFF and zero operation/target/trial\nrows. The receipt records exact deployment evidence and the rollback version.\nOwner manual acceptance remains open. Staging acceptance does not close the\nremaining Sandbox/P11/old-client trial matrix or authorize main/Store/T.",
+      "source_file_sha256": "874b804ad97ec01b3983d06fee8af90a8f037acb7aab3d014ff6250145d00cbf",
+      "extraction_scope": "partial_changed_status_ranges",
+      "extracted_ranges": [
+        {
+          "start": 5,
+          "end": 27,
+          "sha256": "69f0838bbe9a756bc6d576bc5a90233b428e0300dc00a93dd59664ea0aab4416"
+        }
+      ],
+      "full_file_freshness_claim": false
     },
     {
       "id": "docs_current_development_state_trial_confirmed_rules",
@@ -159083,7 +159103,7 @@
     },
     {
       "id": "docs_superpowers_plans_2026_09_27_paid_hosting_and_trial_transition_paid_hosting_trial_plan",
-      "label": "Trial transition plan: DO optimization implemented and locally verified at 5bed2e55; staging delivery and owner acceptance precede resumed trial work",
+      "label": "Trial plan records DO optimization staging delivery PR3811d50432c; owner acceptance remains before trial continuation",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
@@ -159091,17 +159111,27 @@
       "community_name": "Trial transition plan",
       "contributor": null,
       "file_type": "document",
-      "norm_label": "trial transition plan: do optimization implemented and locally verified at 5bed2e55; staging delivery and owner acceptance precede resumed trial work",
+      "norm_label": "trial plan records do optimization staging delivery pr3811d50432c; owner acceptance remains before trial continuation",
       "source_file": "docs/superpowers/plans/2026-09-27-paid-hosting-and-trial-transition.md",
-      "source_location": "L21-L24",
+      "source_location": "L21-L31",
       "source_url": null,
-      "status": "implemented_locally_verified_staging_delivery_and_owner_acceptance_pending",
+      "status": "staging_technical_delivery_verified_owner_acceptance_and_real_daily_cost_pending",
       "task7_technical_checks_complete": true,
       "task7_release_evidence_recorded": true,
       "task7_owner_matrix_complete": false,
       "task7_activation_rehearsal_complete": false,
-      "rationale": "Dormant schema375/Web377/runtime378 delivery and pricing correction remain retained. Optimization preserves product rules and does not complete trial Sandbox/P11/Store acceptance or activate T.",
-      "evidence_excerpt": "**Приоритетное дополнение 2026-09-29:** по решению владельца следующий блок —\nоптимизация расхода Durable Objects, затем ее доставка в staging и ручная\nприемка владельцем. Продолжение trial-перехода/активации следует после нее.\n[Проект оптимизации, этапы O1–O8 и сохраненный статус](../specs/2026-09-29-durable-object-write-optimization-design.md)"
+      "rationale": "Prior dormant schema/Web/Worker and pricing work remain. Optimization deployment/smoke and dormant readback do not activate policy or close Sandbox/P11/Store checks.",
+      "evidence_excerpt": "**Приоритетное дополнение 2026-09-29:** по решению владельца следующий блок —\nоптимизация расхода Durable Objects, затем ее доставка в staging и ручная\nприемка владельцем. Продолжение trial-перехода/активации следует после нее.\n[Проект оптимизации, этапы O1–O8 и сохраненный статус](../specs/2026-09-29-durable-object-write-optimization-design.md)\nне закрывают оставшиеся trial/Sandbox/P11/Store проверки. Оптимизация реализована\nи локально проверена в `5bed2e55`; [исполняемый план](2026-09-29-durable-object-write-optimization.md)\nи [доказательства/приемка](../../releases/durable-object-write-optimization-2026-09-29.md)\nфиксируют поставку PR #381 в staging (`1d50432c`), успешные Worker deployment/smoke\nи dormant readback. Ручная приемка владельцем еще открыта.\nУже доставленные schema/Web/Worker и исправление цен сохраняются;\nновые продуктовые правила не включаются вместе с оптимизацией.",
+      "source_file_sha256": "5d7508f3e400f007fb1a66deb3c5ebeba73bae46261572c7781ee9c4350206cd",
+      "extraction_scope": "partial_changed_status_ranges",
+      "extracted_ranges": [
+        {
+          "start": 21,
+          "end": 31,
+          "sha256": "257b0c7f7b81ce6260c2f4e54bdbba0886e351330de43f8e8d2fe7e95e0c9572"
+        }
+      ],
+      "full_file_freshness_claim": false
     },
     {
       "id": "docs_superpowers_plans_2026_09_27_paid_hosting_and_trial_transition_planning_acceptance_boundary",
@@ -159884,7 +159914,7 @@
     },
     {
       "id": "docs_superpowers_plans_2026_09_27_paid_hosting_and_trial_transition_evidence_based_progress_log",
-      "label": "Dated progress ledger preserves earlier trial checkpoints; DO optimization now implemented and locally verified while staging and owner gates remain open",
+      "label": "Dated trial progress retained; latest addendum records DO optimization staging delivery with owner acceptance open",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
@@ -159892,13 +159922,23 @@
       "community_name": "Trial transition plan",
       "contributor": null,
       "file_type": "concept",
-      "norm_label": "dated progress ledger preserves earlier trial checkpoints; do optimization now implemented and locally verified while staging and owner gates remain open",
+      "norm_label": "dated trial progress retained; latest addendum records do optimization staging delivery with owner acceptance open",
       "source_file": "docs/superpowers/plans/2026-09-27-paid-hosting-and-trial-transition.md",
-      "source_location": "L96-L99",
+      "source_location": "L21-L31",
       "source_url": null,
-      "status": "dated_evidence_with_implementation_addendum",
-      "rationale": "The historical journal entry saying optimization implementation is open describes the design checkpoint; the priority September 29 addendum and linked implementation receipt supersede that status. No historical tests are represented as fresh runs.",
-      "evidence_excerpt": "### Журнал решений и прогресса\n\n| Дата | Завершено | Доказательство / граница |\n| --- | --- | --- |"
+      "status": "dated_evidence_with_staging_delivery_addendum",
+      "rationale": "Earlier unimplemented/local-only journal entries retain historical dates. September29 priority addendum now records PR381 deployment/smoke and dormant readback; no historical test is recast as a fresh run.",
+      "evidence_excerpt": "**Приоритетное дополнение 2026-09-29:** по решению владельца следующий блок —\nоптимизация расхода Durable Objects, затем ее доставка в staging и ручная\nприемка владельцем. Продолжение trial-перехода/активации следует после нее.\n[Проект оптимизации, этапы O1–O8 и сохраненный статус](../specs/2026-09-29-durable-object-write-optimization-design.md)\nне закрывают оставшиеся trial/Sandbox/P11/Store проверки. Оптимизация реализована\nи локально проверена в `5bed2e55`; [исполняемый план](2026-09-29-durable-object-write-optimization.md)\nи [доказательства/приемка](../../releases/durable-object-write-optimization-2026-09-29.md)\nфиксируют поставку PR #381 в staging (`1d50432c`), успешные Worker deployment/smoke\nи dormant readback. Ручная приемка владельцем еще открыта.\nУже доставленные schema/Web/Worker и исправление цен сохраняются;\nновые продуктовые правила не включаются вместе с оптимизацией.",
+      "source_file_sha256": "5d7508f3e400f007fb1a66deb3c5ebeba73bae46261572c7781ee9c4350206cd",
+      "extraction_scope": "partial_changed_status_ranges",
+      "extracted_ranges": [
+        {
+          "start": 21,
+          "end": 31,
+          "sha256": "257b0c7f7b81ce6260c2f4e54bdbba0886e351330de43f8e8d2fe7e95e0c9572"
+        }
+      ],
+      "full_file_freshness_claim": false
     },
     {
       "id": "docs_superpowers_plans_2026_09_27_paid_hosting_and_trial_transition_product_rules_agreement_complete",
@@ -169890,21 +169930,31 @@
     },
     {
       "id": "docs_superpowers_plans_2026_09_27_paid_hosting_and_trial_transition_next_blocks_execution_order",
-      "label": "Historical A-G trial execution plan remains as detailed backlog; latest owner ordering inserts DO write optimization, staging delivery and owner manual acceptance before trial continuation, separate staging activation rehearsal and production/Store/T",
-      "norm_label": "historical a-g trial execution plan remains as detailed backlog; latest owner ordering inserts do write optimization, staging delivery and owner manual acceptance before trial continuation, separate staging activation rehearsal and production/store/t",
+      "label": "Historical A–G trial backlog retained; DO optimization staging delivered and owner acceptance precedes resumed trial matrix",
+      "norm_label": "historical a–g trial backlog retained; do optimization staging delivered and owner acceptance precedes resumed trial matrix",
       "file_type": "concept",
       "_origin": "semantic",
       "source_file": "docs/superpowers/plans/2026-09-27-paid-hosting-and-trial-transition.md",
-      "source_location": "L189-L192",
+      "source_location": "L21-L31",
       "community": 830,
       "community_name": "Trial transition plan",
-      "status": "optimization_locally_verified_then_staging_and_owner_before_trial_resume",
+      "status": "optimization_staging_complete_owner_acceptance_before_trial_resume",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "rationale": "Preserve completed schema/Web/Worker and pricing work. The owner acceptance of optimization does not close the remaining trial matrix.",
-      "evidence_excerpt": "## Ближайшие блоки и условия перехода, 2026-09-28\n\nЭто порядок исполнения существующих задач, а не новый объем. Сервер не объявлен\nзавершенным: его read-contract и оставшиеся условия задач 0/2–5 проверяются вместе"
+      "rationale": "Completed schema/Web/Worker/pricing and optimization PR381 are preserved. Latest sequence still requires owner acceptance before trial/Sandbox/P11/Store and activation rehearsal.",
+      "evidence_excerpt": "**Приоритетное дополнение 2026-09-29:** по решению владельца следующий блок —\nоптимизация расхода Durable Objects, затем ее доставка в staging и ручная\nприемка владельцем. Продолжение trial-перехода/активации следует после нее.\n[Проект оптимизации, этапы O1–O8 и сохраненный статус](../specs/2026-09-29-durable-object-write-optimization-design.md)\nне закрывают оставшиеся trial/Sandbox/P11/Store проверки. Оптимизация реализована\nи локально проверена в `5bed2e55`; [исполняемый план](2026-09-29-durable-object-write-optimization.md)\nи [доказательства/приемка](../../releases/durable-object-write-optimization-2026-09-29.md)\nфиксируют поставку PR #381 в staging (`1d50432c`), успешные Worker deployment/smoke\nи dormant readback. Ручная приемка владельцем еще открыта.\nУже доставленные schema/Web/Worker и исправление цен сохраняются;\nновые продуктовые правила не включаются вместе с оптимизацией.",
+      "source_file_sha256": "5d7508f3e400f007fb1a66deb3c5ebeba73bae46261572c7781ee9c4350206cd",
+      "extraction_scope": "partial_changed_status_ranges",
+      "extracted_ranges": [
+        {
+          "start": 21,
+          "end": 31,
+          "sha256": "257b0c7f7b81ce6260c2f4e54bdbba0886e351330de43f8e8d2fe7e95e0c9572"
+        }
+      ],
+      "full_file_freshness_claim": false
     },
     {
       "id": "docs_superpowers_plans_2026_09_27_paid_hosting_and_trial_transition_quota_v1_null_compatibility_trap",
@@ -171150,15 +171200,15 @@
     },
     {
       "id": "docs_releases_paid_hosting_trial_transition_master_plan_ru_master_plan",
-      "label": "Russian trial transition master: DO optimization implemented at 5bed2e55 with local 75–80% steady SQLite write reduction; staging delivery and owner acceptance remain ahead of trial continuation",
-      "norm_label": "russian trial transition master: do optimization implemented at 5bed2e55 with local 75–80% steady sqlite write reduction; staging delivery and owner acceptance remain ahead of trial continuation",
+      "label": "Russian trial master: DO optimization delivered to staging1d50432c; owner acceptance and trial continuation remain gated",
+      "norm_label": "russian trial master: do optimization delivered to staging1d50432c; owner acceptance and trial continuation remain gated",
       "file_type": "document",
       "_origin": "semantic",
       "source_file": "docs/releases/paid-hosting-trial/transition-master-plan-ru.md",
-      "source_location": "L3-L6",
+      "source_location": "L3-L16",
       "community": 830,
       "community_name": "Trial transition plan",
-      "status": "implemented_locally_verified_staging_delivery_and_owner_acceptance_pending",
+      "status": "staging_technical_delivery_verified_owner_acceptance_and_real_daily_cost_pending",
       "language": "ru",
       "sections": 22,
       "acceptance_scenarios": 56,
@@ -171167,26 +171217,46 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "rationale": "The priority September 29 update supersedes historical next-step T-rehearsal wording. Local SQLite reduction is not a forecast of daily charges. Completed dormant staging and pricing PR380 receipts remain separate from manual acceptance.",
-      "evidence_excerpt": "**Актуальный порядок, решение владельца 29 сентября:** сначала реализовать\nоптимизацию записей Durable Objects, поставить на staging и дождаться ручной\nприемки владельцем. Только после этого продолжать переход на trial и его\nактивацию. [Проект оптимизации и сохраненный checkpoint](../../superpowers/specs/2026-09-29-durable-object-write-optimization-design.md)"
+      "rationale": "Local75–80% SQLite reduction is not daily billing. PR381 Worker/smoke and dormant readback complete technical delivery; latest ordering still requires owner acceptance before remaining trial tests.",
+      "evidence_excerpt": "**Актуальный порядок, решение владельца 29 сентября:** сначала реализовать\nоптимизацию записей Durable Objects, поставить на staging и дождаться ручной\nприемки владельцем. Только после этого продолжать переход на trial и его\nактивацию. [Проект оптимизации и сохраненный checkpoint](../../superpowers/specs/2026-09-29-durable-object-write-optimization-design.md)\nсодержат причины, этапы, совместимость, проверки и откат. Оптимизация реализована\nв `5bed2e55`, локальные unit/runtime и room-проверки проходят. На четырех\nсценариях повторных HOST_STATE записи SQLite сократились на 75–80%; это не\nпрогноз суточного счета. PR #381 поставлен в staging (`1d50432c`), новый Worker\nи технический smoke подтверждены; trial/T/scheduler остаются выключены.\n[Проверки и ручная приемка](../durable-object-write-optimization-2026-09-29.md)\nфиксируют поставку, откат и еще открытую приемку владельцем. Эта последовательность имеет приоритет\nнад прежними формулировками «следующий шаг — репетиция T» в отчетах поставки.\nРучная trial-матрица, P11, Sandbox, старый Store-клиент и дальнейшие условия\nmain/Store/T остаются открытыми после приемки оптимизации.",
+      "source_file_sha256": "c49750f6f81cfa6f588170a9dd2a9a74c3856c6f7f0455a0a0761b3790b3446e",
+      "extraction_scope": "partial_changed_status_ranges",
+      "extracted_ranges": [
+        {
+          "start": 3,
+          "end": 20,
+          "sha256": "dd2978c94a68fd56a93064fe3f138844f3958a064e1e7af265d882a77de506fc"
+        }
+      ],
+      "full_file_freshness_claim": false
     },
     {
       "id": "docs_releases_paid_hosting_trial_transition_master_plan_ru_ordered_release_and_activation",
-      "label": "Release order: implemented and locally verified DO optimization must reach staging and owner manual acceptance before trial Sandbox/P11/old-client and separate activation rehearsal",
-      "norm_label": "release order: implemented and locally verified do optimization must reach staging and owner manual acceptance before trial sandbox/p11/old-client and separate activation rehearsal",
+      "label": "Release order: completed DO implementation and staging delivery precede owner acceptance then trial Sandbox P11 old-client and activation rehearsal",
+      "norm_label": "release order: completed do implementation and staging delivery precede owner acceptance then trial sandbox p11 old-client and activation rehearsal",
       "file_type": "concept",
       "_origin": "semantic",
       "source_file": "docs/releases/paid-hosting-trial/transition-master-plan-ru.md",
-      "source_location": "L969-L971",
+      "source_location": "L10-L16",
       "community": 832,
       "community_name": "Planned room cutover",
-      "status": "optimization_staging_and_owner_gates_open",
+      "status": "optimization_staging_complete_owner_acceptance_before_trial_resume",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "rationale": "Historical section 19 local-only sequencing is superseded by the top owner decision and dated staging delivery. Compatible production, verified Store publication and preserved operation/T retain separate gates.",
-      "evidence_excerpt": "## 19. Порядок дальнейшей работы и запуска\n\n### 19.1. Завершить согласованную локальную подготовку\n"
+      "rationale": "Historical local-only and T-next wording remains dated context. Compatible production, verified Store publication and preserved operation/T retain their separate gates.",
+      "evidence_excerpt": "прогноз суточного счета. PR #381 поставлен в staging (`1d50432c`), новый Worker\nи технический smoke подтверждены; trial/T/scheduler остаются выключены.\n[Проверки и ручная приемка](../durable-object-write-optimization-2026-09-29.md)\nфиксируют поставку, откат и еще открытую приемку владельцем. Эта последовательность имеет приоритет\nнад прежними формулировками «следующий шаг — репетиция T» в отчетах поставки.\nРучная trial-матрица, P11, Sandbox, старый Store-клиент и дальнейшие условия\nmain/Store/T остаются открытыми после приемки оптимизации.",
+      "source_file_sha256": "c49750f6f81cfa6f588170a9dd2a9a74c3856c6f7f0455a0a0761b3790b3446e",
+      "extraction_scope": "partial_changed_status_ranges",
+      "extracted_ranges": [
+        {
+          "start": 3,
+          "end": 20,
+          "sha256": "dd2978c94a68fd56a93064fe3f138844f3958a064e1e7af265d882a77de506fc"
+        }
+      ],
+      "full_file_freshness_claim": false
     },
     {
       "id": "docs_releases_paid_hosting_trial_transition_master_plan_ru_payment_events_and_trial_plan_change",
@@ -172832,37 +172902,68 @@
     },
     {
       "id": "docs_superpowers_specs_2026_09_29_durable_object_write_optimization_design_optimization_design",
-      "label": "Durable Object write optimization design implemented at 5bed2e55 and locally verified; staging and owner acceptance remain separate",
+      "label": "DO optimization implemented5bed2e55 and delivered to staging via PR3811d50432c; owner acceptance open",
       "file_type": "document",
       "source_file": "docs/superpowers/specs/2026-09-29-durable-object-write-optimization-design.md",
-      "source_location": "L3-L6",
+      "source_location": "L1-L6",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "rationale": "The design is based on staging 1f4ad13f and has an executable plan and implementation receipt. O1–O5 are complete; O6 deployment, O7 owner acceptance and O8 resumed trial remain open. No trial/main/Store authority follows from this document.",
-      "status": "implemented_locally_verified_staging_delivery_and_owner_acceptance_pending",
+      "rationale": "O1–O6 complete. O7 owner manual acceptance and real cost observation, then O8 remaining trial checks, remain open. Technical staging delivery is not trial/main/Store/T authority.",
+      "status": "staging_technical_delivery_verified_owner_acceptance_and_real_daily_cost_pending",
       "community": 852,
       "community_name": "DO write optimization design",
       "_origin": "semantic",
-      "evidence_excerpt": "Дата: **29 сентября 2026 года**. Статус: **решение реализовано и проверено\nлокально (`5bed2e55`); staging-поставка и ручная приемка — отдельные этапы**.\n[Исполняемый план](../plans/2026-09-29-durable-object-write-optimization.md),\n[результаты и ручной сценарий](../../releases/durable-object-write-optimization-2026-09-29.md).",
-      "norm_label": "durable object write optimization design implemented at 5bed2e55 and locally verified; staging and owner acceptance remain separate"
+      "evidence_excerpt": "# AniDachi: оптимизация записей Durable Objects перед включением trial\n\nДата: **29 сентября 2026 года**. Статус: **реализовано (`5bed2e55`) и поставлено\nв staging через PR #381 (`1d50432c`); ручная приемка владельцем открыта**.\n[Исполняемый план](../plans/2026-09-29-durable-object-write-optimization.md),\n[результаты и ручной сценарий](../../releases/durable-object-write-optimization-2026-09-29.md).",
+      "norm_label": "do optimization implemented5bed2e55 and delivered to staging via pr3811d50432c; owner acceptance open",
+      "source_file_sha256": "9ddd0b2f0cd5f78036c808d06a2b1b310c94130ef8c954ccb1445233424369a0",
+      "extraction_scope": "partial_changed_status_ranges",
+      "extracted_ranges": [
+        {
+          "start": 1,
+          "end": 6,
+          "sha256": "4375395b463b918e12127e6d7eeae8ed4a812c9ec8bf7c66cffafb271a9614de"
+        },
+        {
+          "start": 252,
+          "end": 274,
+          "sha256": "40904012b3915c92f6993429a4650ea88b1921dceee6c4796247d8312ed84f14"
+        }
+      ],
+      "full_file_freshness_claim": false
     },
     {
       "id": "docs_superpowers_specs_2026_09_29_durable_object_write_optimization_design_owner_sequence",
-      "label": "Optimization then staging then owner acceptance then trial continuation",
+      "label": "Optimization implementation and staging complete; owner acceptance remains before trial continuation",
       "file_type": "rationale",
       "source_file": "docs/superpowers/specs/2026-09-29-durable-object-write-optimization-design.md",
-      "source_location": null,
+      "source_location": "L268-L274",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "rationale": "The owner requires reducing DO write cost and manually accepting the staging result before resuming trial. This does not accept subscriptions or authorize main, Store or T.",
-      "status": "required_open",
+      "rationale": "Owner sequence unchanged; checked O6 advances it while O7/O8 remain open. Subscription acceptance and main/Store/T remain separate.",
+      "status": "staging_complete_owner_acceptance_required_before_trial",
       "community": 852,
       "community_name": "DO write optimization design",
-      "_origin": "semantic"
+      "_origin": "semantic",
+      "evidence_excerpt": "- [x] O5: выполнить весь функциональный набор, before/after cost profile,\n  проверку совместимости старого storage и отката; провести ревью полного diff.\n- [x] O6: PR в staging, CI, фактический deployment и smoke, подтверждение dormant\n  trial/policy; сохранить предыдущую Worker version и receipt новой поставки.\n- [ ] O7: владелец проходит ручной сценарий; записать его результат и расход.\n- [ ] O8: после принятой оптимизации вернуться к открытой trial-матрице и отдельно\n  согласованной staging-репетиции активации, затем к production/Store.",
+      "source_file_sha256": "9ddd0b2f0cd5f78036c808d06a2b1b310c94130ef8c954ccb1445233424369a0",
+      "extraction_scope": "partial_changed_status_ranges",
+      "extracted_ranges": [
+        {
+          "start": 1,
+          "end": 6,
+          "sha256": "4375395b463b918e12127e6d7eeae8ed4a812c9ec8bf7c66cffafb271a9614de"
+        },
+        {
+          "start": 252,
+          "end": 274,
+          "sha256": "40904012b3915c92f6993429a4650ea88b1921dceee6c4796247d8312ed84f14"
+        }
+      ],
+      "full_file_freshness_claim": false
     },
     {
       "id": "docs_superpowers_specs_2026_09_29_durable_object_write_optimization_design_dormant_trial_delivery",
@@ -173188,52 +173289,98 @@
       "label": "Accounting deadlines alarms hibernation concurrency snapshot mutation and old-client regression gates",
       "file_type": "concept",
       "source_file": "docs/superpowers/specs/2026-09-29-durable-object-write-optimization-design.md",
-      "source_location": "L246-L249",
+      "source_location": "L268-L274",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "rationale": "API252/runtime96/protocol203/rooms39 and legacy26/v3-four-participant WebRTC checks pass in the linked implementation receipt. UTC recovery, rollback/retry and earlier terminal/cutover/ACK tests are covered. Actual staging, owner old/new/mixed clients, TURN and physical devices remain separate.",
-      "status": "local_functional_and_webrtc_checks_passed_external_acceptance_pending",
+      "rationale": "API252/runtime96/protocol203/rooms39 and legacy26/v3-four-user local proof preserved. O6 actual staging smoke now checked; owner old/new/mixed-client, TURN, physical-device and real-cost acceptance unverified.",
+      "status": "local_functional_and_technical_staging_checks_passed_owner_acceptance_pending",
       "community": 852,
       "community_name": "DO write optimization design",
       "_origin": "semantic",
-      "evidence_excerpt": "Автоматические проверки после реализации: API check/test/test:runtime,\n`pnpm harness:rooms`, `pnpm dev:check` и назначенный им профиль. Для затронутого\nпорядка signaling/media — существующий real-WebRTC harness; contract consumers\nпроверяются по фактическому diff. Staging smoke обязателен после доставки.",
-      "norm_label": "accounting deadlines alarms hibernation concurrency snapshot mutation and old-client regression gates"
+      "evidence_excerpt": "- [x] O5: выполнить весь функциональный набор, before/after cost profile,\n  проверку совместимости старого storage и отката; провести ревью полного diff.\n- [x] O6: PR в staging, CI, фактический deployment и smoke, подтверждение dormant\n  trial/policy; сохранить предыдущую Worker version и receipt новой поставки.\n- [ ] O7: владелец проходит ручной сценарий; записать его результат и расход.\n- [ ] O8: после принятой оптимизации вернуться к открытой trial-матрице и отдельно\n  согласованной staging-репетиции активации, затем к production/Store.",
+      "norm_label": "accounting deadlines alarms hibernation concurrency snapshot mutation and old-client regression gates",
+      "source_file_sha256": "9ddd0b2f0cd5f78036c808d06a2b1b310c94130ef8c954ccb1445233424369a0",
+      "extraction_scope": "partial_changed_status_ranges",
+      "extracted_ranges": [
+        {
+          "start": 1,
+          "end": 6,
+          "sha256": "4375395b463b918e12127e6d7eeae8ed4a812c9ec8bf7c66cffafb271a9614de"
+        },
+        {
+          "start": 252,
+          "end": 274,
+          "sha256": "40904012b3915c92f6993429a4650ea88b1921dceee6c4796247d8312ed84f14"
+        }
+      ],
+      "full_file_freshness_claim": false
     },
     {
       "id": "docs_superpowers_specs_2026_09_29_durable_object_write_optimization_design_phased_execution_plan",
-      "label": "O1–O5 implementation and local proof complete; O6 staging delivery O7 owner acceptance and O8 trial resumption remain open",
+      "label": "O1–O6 implementation local proof and staging complete; O7 owner acceptance and O8 trial resumption pending",
       "file_type": "concept",
       "source_file": "docs/superpowers/specs/2026-09-29-durable-object-write-optimization-design.md",
-      "source_location": "L252-L255",
+      "source_location": "L260-L274",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "rationale": "Research, design review, reproducible baseline, semantic no-op persistence, stable intervals, snapshot/denial diffs and local functional/cost/compatibility review are checked. O6 requires actual PR/CI/deployment/smoke/dormant readback; O7 requires the owner result; O8 resumes separate trial acceptance.",
-      "status": "o1_to_o5_complete_o6_to_o8_pending",
+      "rationale": "O6 checks PR/CI/actual deployment/smoke/dormant readback with previous Worker and receipt. Owner outcome and real spending remain unverified; code, local proof, delivered and accepted remain distinct.",
+      "status": "o1_to_o6_complete_o7_o8_pending",
       "community": 852,
       "community_name": "DO write optimization design",
       "_origin": "semantic",
-      "evidence_excerpt": "## 8. Этапы и контрольные точки\n\n- [x] Исследовать расходы Cloudflare и проверить текущие пути записи в коде.\n- [x] Сверить официальные рекомендации по SQLite, hibernation, alarms и billing.",
-      "norm_label": "o1–o5 implementation and local proof complete; o6 staging delivery o7 owner acceptance and o8 trial resumption remain open"
+      "evidence_excerpt": "- [x] O1: воспроизводимые исходные измерения и падающие регрессии для лишних\n  записей; зафиксировать базовые функциональные результаты.\n- [x] O2: семантические no-op meter/policy и стабильные alarm. Проверить ранние\n  deadlines, повторные alarm и восстановление до дальнейшего рефакторинга.\n- [x] O3: убрать heartbeat stop/start, сохранив settlement до внешнего I/O,\n  accounting/ACK и все границы доступа.\n- [x] O4: убрать дубли snapshot, обновлять denials разницей; сохранить атомарность,\n  sequence, source/P2P и прежнюю доставку клиентских событий.\n- [x] O5: выполнить весь функциональный набор, before/after cost profile,\n  проверку совместимости старого storage и отката; провести ревью полного diff.\n- [x] O6: PR в staging, CI, фактический deployment и smoke, подтверждение dormant\n  trial/policy; сохранить предыдущую Worker version и receipt новой поставки.\n- [ ] O7: владелец проходит ручной сценарий; записать его результат и расход.\n- [ ] O8: после принятой оптимизации вернуться к открытой trial-матрице и отдельно\n  согласованной staging-репетиции активации, затем к production/Store.",
+      "norm_label": "o1–o6 implementation local proof and staging complete; o7 owner acceptance and o8 trial resumption pending",
+      "source_file_sha256": "9ddd0b2f0cd5f78036c808d06a2b1b310c94130ef8c954ccb1445233424369a0",
+      "extraction_scope": "partial_changed_status_ranges",
+      "extracted_ranges": [
+        {
+          "start": 1,
+          "end": 6,
+          "sha256": "4375395b463b918e12127e6d7eeae8ed4a812c9ec8bf7c66cffafb271a9614de"
+        },
+        {
+          "start": 252,
+          "end": 274,
+          "sha256": "40904012b3915c92f6993429a4650ea88b1921dceee6c4796247d8312ed84f14"
+        }
+      ],
+      "full_file_freshness_claim": false
     },
     {
       "id": "docs_superpowers_specs_2026_09_29_durable_object_write_optimization_design_staging_delivery_gate",
-      "label": "Optimization staging delivery requires separate PR CI actual deployment smoke and dormant trial readback",
+      "label": "O6 staging delivery gate satisfied with PR CI deployment smoke dormant readback and rollback receipt",
       "file_type": "rationale",
       "source_file": "docs/superpowers/specs/2026-09-29-durable-object-write-optimization-design.md",
-      "source_location": null,
+      "source_location": "L268-L274",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "rationale": "Branch from current staging, reconcile collaborator changes and retain dormant trial code. Save exact prior Worker version,SHA,nonsecret configuration,flags; verify no automatic main merge. Start with small probes because shared quota was near its limit.",
-      "status": "required_open",
+      "rationale": "Required technical delivery is checked. Owner manual acceptance and trial/production/Store/T remain separate.",
+      "status": "completed_dated_staging_delivery_checkpoint",
       "community": 852,
       "community_name": "DO write optimization design",
-      "_origin": "semantic"
+      "_origin": "semantic",
+      "evidence_excerpt": "- [x] O5: выполнить весь функциональный набор, before/after cost profile,\n  проверку совместимости старого storage и отката; провести ревью полного diff.\n- [x] O6: PR в staging, CI, фактический deployment и smoke, подтверждение dormant\n  trial/policy; сохранить предыдущую Worker version и receipt новой поставки.\n- [ ] O7: владелец проходит ручной сценарий; записать его результат и расход.\n- [ ] O8: после принятой оптимизации вернуться к открытой trial-матрице и отдельно\n  согласованной staging-репетиции активации, затем к production/Store.",
+      "source_file_sha256": "9ddd0b2f0cd5f78036c808d06a2b1b310c94130ef8c954ccb1445233424369a0",
+      "extraction_scope": "partial_changed_status_ranges",
+      "extracted_ranges": [
+        {
+          "start": 1,
+          "end": 6,
+          "sha256": "4375395b463b918e12127e6d7eeae8ed4a812c9ec8bf7c66cffafb271a9614de"
+        },
+        {
+          "start": 252,
+          "end": 274,
+          "sha256": "40904012b3915c92f6993429a4650ea88b1921dceee6c4796247d8312ed84f14"
+        }
+      ],
+      "full_file_freshness_claim": false
     },
     {
       "id": "docs_superpowers_specs_2026_09_29_durable_object_write_optimization_design_owner_manual_acceptance_gate",
@@ -173429,57 +173576,87 @@
     },
     {
       "id": "docs_current_development_state_do_optimization_owner_acceptance_gate",
-      "label": "Implemented DO optimization must be delivered to staging and manually accepted by owner before trial continuation",
+      "label": "DO optimization delivered to staging; owner manual acceptance still required before trial continuation",
       "file_type": "rationale",
       "source_file": "docs/current-development-state.md",
-      "source_location": "L5-L8",
+      "source_location": "L15-L21",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "rationale": "Optimization at 5bed2e55 is implemented and locally verified. Completed dormant trial staging and pricing PR380 merge remain. SQLite steady profiles improve 75–80%, not measured daily billing; trial Sandbox/P11/old-client and separate main/Store/T gates stay open.",
-      "status": "staging_delivery_and_owner_acceptance_pending",
+      "rationale": "Implementation5bed2e55 and PR381 staging1d50432c deployment/smoke are documented. Policy remains dormant. Owner acceptance, real daily cost and remaining trial/Sandbox/P11/old-client/main/Store/T remain separate.",
+      "status": "staging_technical_delivery_verified_owner_acceptance_and_real_daily_cost_pending",
       "community": 852,
       "community_name": "DO write optimization design",
       "_origin": "semantic",
-      "evidence_excerpt": "Latest owner decision: complete Durable Object write optimization, deliver it\nto staging and obtain the owner's manual acceptance **before resuming the trial\ntransition/activation**. The [optimization design and checkpoint](superpowers/specs/2026-09-29-durable-object-write-optimization-design.md)\npreserve the completed trial work, dated Cloudflare baseline, compatibility,",
-      "norm_label": "implemented do optimization must be delivered to staging and manually accepted by owner before trial continuation"
+      "evidence_excerpt": "PR #381 delivered the optimization to staging at `1d50432c` on September 29,\n02:45 UTC. Deploy API succeeded; Worker `f7942d07-cb7a-473e-9484-c26768ea04c2`\nreceives 100% of staging traffic and Worker smoke passed. Read-only Supabase\nstill has T NULL, revision 1, trials/scheduler OFF and zero operation/target/trial\nrows. The receipt records exact deployment evidence and the rollback version.\nOwner manual acceptance remains open. Staging acceptance does not close the\nremaining Sandbox/P11/old-client trial matrix or authorize main/Store/T.",
+      "norm_label": "do optimization delivered to staging; owner manual acceptance still required before trial continuation",
+      "source_file_sha256": "874b804ad97ec01b3983d06fee8af90a8f037acb7aab3d014ff6250145d00cbf",
+      "extraction_scope": "partial_changed_status_ranges",
+      "extracted_ranges": [
+        {
+          "start": 5,
+          "end": 27,
+          "sha256": "69f0838bbe9a756bc6d576bc5a90233b428e0300dc00a93dd59664ea0aab4416"
+        }
+      ],
+      "full_file_freshness_claim": false
     },
     {
       "id": "docs_releases_paid_hosting_trial_transition_master_plan_ru_do_optimization_owner_acceptance_gate",
-      "label": "Implemented DO optimization must be delivered to staging and manually accepted by owner before trial continuation",
+      "label": "DO optimization delivered to staging; owner manual acceptance still required before trial continuation",
       "file_type": "rationale",
       "source_file": "docs/releases/paid-hosting-trial/transition-master-plan-ru.md",
-      "source_location": "L3-L6",
+      "source_location": "L7-L16",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "rationale": "Optimization at 5bed2e55 is implemented and locally verified. Completed dormant trial staging and pricing PR380 merge remain. SQLite steady profiles improve 75–80%, not measured daily billing; trial Sandbox/P11/old-client and separate main/Store/T gates stay open.",
-      "status": "staging_delivery_and_owner_acceptance_pending",
+      "rationale": "Implementation5bed2e55 and PR381 staging1d50432c deployment/smoke are documented. Policy remains dormant. Owner acceptance, real daily cost and remaining trial/Sandbox/P11/old-client/main/Store/T remain separate.",
+      "status": "staging_technical_delivery_verified_owner_acceptance_and_real_daily_cost_pending",
       "community": 852,
       "community_name": "DO write optimization design",
       "_origin": "semantic",
-      "evidence_excerpt": "**Актуальный порядок, решение владельца 29 сентября:** сначала реализовать\nоптимизацию записей Durable Objects, поставить на staging и дождаться ручной\nприемки владельцем. Только после этого продолжать переход на trial и его\nактивацию. [Проект оптимизации и сохраненный checkpoint](../../superpowers/specs/2026-09-29-durable-object-write-optimization-design.md)",
-      "norm_label": "implemented do optimization must be delivered to staging and manually accepted by owner before trial continuation"
+      "evidence_excerpt": "содержат причины, этапы, совместимость, проверки и откат. Оптимизация реализована\nв `5bed2e55`, локальные unit/runtime и room-проверки проходят. На четырех\nсценариях повторных HOST_STATE записи SQLite сократились на 75–80%; это не\nпрогноз суточного счета. PR #381 поставлен в staging (`1d50432c`), новый Worker\nи технический smoke подтверждены; trial/T/scheduler остаются выключены.\n[Проверки и ручная приемка](../durable-object-write-optimization-2026-09-29.md)\nфиксируют поставку, откат и еще открытую приемку владельцем. Эта последовательность имеет приоритет\nнад прежними формулировками «следующий шаг — репетиция T» в отчетах поставки.\nРучная trial-матрица, P11, Sandbox, старый Store-клиент и дальнейшие условия\nmain/Store/T остаются открытыми после приемки оптимизации.",
+      "norm_label": "do optimization delivered to staging; owner manual acceptance still required before trial continuation",
+      "source_file_sha256": "c49750f6f81cfa6f588170a9dd2a9a74c3856c6f7f0455a0a0761b3790b3446e",
+      "extraction_scope": "partial_changed_status_ranges",
+      "extracted_ranges": [
+        {
+          "start": 3,
+          "end": 20,
+          "sha256": "dd2978c94a68fd56a93064fe3f138844f3958a064e1e7af265d882a77de506fc"
+        }
+      ],
+      "full_file_freshness_claim": false
     },
     {
       "id": "docs_superpowers_plans_2026_09_27_paid_hosting_and_trial_transition_do_optimization_owner_acceptance_gate",
-      "label": "Implemented DO optimization must be delivered to staging and manually accepted by owner before trial continuation",
+      "label": "DO optimization delivered to staging; owner manual acceptance still required before trial continuation",
       "file_type": "rationale",
       "source_file": "docs/superpowers/plans/2026-09-27-paid-hosting-and-trial-transition.md",
-      "source_location": "L21-L24",
+      "source_location": "L24-L31",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "rationale": "Optimization at 5bed2e55 is implemented and locally verified. Completed dormant trial staging and pricing PR380 merge remain. SQLite steady profiles improve 75–80%, not measured daily billing; trial Sandbox/P11/old-client and separate main/Store/T gates stay open.",
-      "status": "staging_delivery_and_owner_acceptance_pending",
+      "rationale": "Implementation5bed2e55 and PR381 staging1d50432c deployment/smoke are documented. Policy remains dormant. Owner acceptance, real daily cost and remaining trial/Sandbox/P11/old-client/main/Store/T remain separate.",
+      "status": "staging_technical_delivery_verified_owner_acceptance_and_real_daily_cost_pending",
       "community": 852,
       "community_name": "DO write optimization design",
       "_origin": "semantic",
-      "evidence_excerpt": "**Приоритетное дополнение 2026-09-29:** по решению владельца следующий блок —\nоптимизация расхода Durable Objects, затем ее доставка в staging и ручная\nприемка владельцем. Продолжение trial-перехода/активации следует после нее.\n[Проект оптимизации, этапы O1–O8 и сохраненный статус](../specs/2026-09-29-durable-object-write-optimization-design.md)",
-      "norm_label": "implemented do optimization must be delivered to staging and manually accepted by owner before trial continuation"
+      "evidence_excerpt": "[Проект оптимизации, этапы O1–O8 и сохраненный статус](../specs/2026-09-29-durable-object-write-optimization-design.md)\nне закрывают оставшиеся trial/Sandbox/P11/Store проверки. Оптимизация реализована\nи локально проверена в `5bed2e55`; [исполняемый план](2026-09-29-durable-object-write-optimization.md)\nи [доказательства/приемка](../../releases/durable-object-write-optimization-2026-09-29.md)\nфиксируют поставку PR #381 в staging (`1d50432c`), успешные Worker deployment/smoke\nи dormant readback. Ручная приемка владельцем еще открыта.\nУже доставленные schema/Web/Worker и исправление цен сохраняются;\nновые продуктовые правила не включаются вместе с оптимизацией.",
+      "norm_label": "do optimization delivered to staging; owner manual acceptance still required before trial continuation",
+      "source_file_sha256": "5d7508f3e400f007fb1a66deb3c5ebeba73bae46261572c7781ee9c4350206cd",
+      "extraction_scope": "partial_changed_status_ranges",
+      "extracted_ranges": [
+        {
+          "start": 21,
+          "end": 31,
+          "sha256": "257b0c7f7b81ce6260c2f4e54bdbba0886e351330de43f8e8d2fe7e95e0c9572"
+        }
+      ],
+      "full_file_freshness_claim": false
     },
     {
       "community": 853,
@@ -173635,21 +173812,39 @@
       "community": 853,
       "community_name": "DO write optimization implementation",
       "id": "docs_superpowers_plans_2026_09_29_durable_object_write_optimization_implementation_plan",
-      "label": "DO optimization execution plan from staging 1f4ad13f; Tasks 1–4 and local Task 5 proof complete",
+      "label": "DO optimization plan: local proof and Task5 staging delivery complete; owner acceptance remains open",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-09-29-durable-object-write-optimization.md",
-      "source_location": "L1-L4",
+      "source_location": "L218-L225",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "rationale": "Owner authorized implementation. Preserve one DO per room, existing schema and wire behavior; deliver to staging for owner acceptance before trial continuation.",
-      "status": "implemented_locally_verified_staging_delivery_and_owner_acceptance_pending",
+      "rationale": "Tasks1–4 and local proof are retained. Task5 docs/Graphify, PR381, exact Worker deployment/smoke/dormant readback and written manual scenario complete. Owner result and trial resumption remain unchecked.",
+      "status": "staging_technical_delivery_verified_owner_acceptance_and_real_daily_cost_pending",
       "_origin": "semantic",
-      "evidence_excerpt": "# Durable Object Write Optimization Implementation Plan\n\n> **For agentic workers:** Use `superpowers:executing-plans` inline, task by task,\n> with TDD and a fresh whole-branch review. Track completed steps and evidence.",
+      "evidence_excerpt": "Task 5 staging delivery: PR #381 merged as `1d50432cc215f05ab3123891bac7fd3b560e907d`\nat 2026-09-29 02:45:09 UTC after successful CI/rooms/P2P/preview checks.\nDeploy API36514058395 succeeded; Wrangler confirms Worker\n`f7942d07-cb7a-473e-9484-c26768ea04c2` at 100%, matching the deployment log.\nWorker smoke passes. Postdeployment Supabase still has activation_at NULL,\nrevision1, trials/scheduler OFF and zero operation/target/trial rows. Rollback\nversion `78e5de69-f2dc-42f6-b5d7-e44cc4b24f82` is retained. Owner acceptance and\ndaily cost comparison remain open; no main/Store/T action is part of this delivery.",
       "source_product_commit": "5bed2e55",
       "source_base_commit": "1f4ad13f",
-      "design_commit": "891f7b95"
+      "design_commit": "891f7b95",
+      "staging_merge_commit": "1d50432cc215f05ab3123891bac7fd3b560e907d",
+      "runtime_pr": 381,
+      "worker_version": "f7942d07-cb7a-473e-9484-c26768ea04c2",
+      "source_file_sha256": "a080349485a7525298f6f2a93fcec52df217013407f3efb4ee44b84702c2a901",
+      "extraction_scope": "partial_changed_status_ranges",
+      "extracted_ranges": [
+        {
+          "start": 149,
+          "end": 170,
+          "sha256": "6d2ffc666b05ed910392b96223f5332daadd596aa13a3a3be3f1b736f012b931"
+        },
+        {
+          "start": 218,
+          "end": 225,
+          "sha256": "0e1d3ba308aa5141ad0723825b0efb67916cf76969e2501764f70aa27dabf33e"
+        }
+      ],
+      "full_file_freshness_claim": false
     },
     {
       "community": 853,
@@ -173757,18 +173952,33 @@
       "community": 853,
       "community_name": "DO write optimization implementation",
       "id": "docs_superpowers_plans_2026_09_29_durable_object_write_optimization_task_five_handoff_gate",
-      "label": "Task 5 local tests and fresh review complete; docs graph PR deployment smoke and owner handoff remain staged work",
+      "label": "Task5 review docs Graphify PR381 staging and manual scenario complete; owner result and trial resumption pending",
       "file_type": "concept",
       "source_file": "docs/superpowers/plans/2026-09-29-durable-object-write-optimization.md",
-      "source_location": "L149-L152",
+      "source_location": "L149-L170",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "rationale": "The plan distinguishes local proof from exact staging Worker deployment and actual owner old/new/mixed-client results. Resume trial only after recorded owner acceptance.",
-      "status": "local_gate_complete_delivery_handoff_pending",
+      "rationale": "Technical delivery and provision of old/new/mixed-client scenario are checked separately from actual owner acceptance. Rollback version retained; no main/Store/T action included.",
+      "status": "technical_delivery_and_manual_scenario_complete_owner_result_pending",
       "_origin": "semantic",
-      "evidence_excerpt": "### Task 5: Review, staging delivery and owner handoff\n\n**Files:** Evidence under `docs/releases/`, canonical docs, Graphify artifacts;\nno new runtime features in this task."
+      "evidence_excerpt": "### Task 5: Review, staging delivery and owner handoff\n\n**Files:** Evidence under `docs/releases/`, canonical docs, Graphify artifacts;\nno new runtime features in this task.\n\n- [x] Run `pnpm dev:check`, API check/test/runtime, room harness and relevant\n  protocol checks; real-WebRTC harness for this shared room persistence path.\n- [x] Verify compatibility reading old/new storage and preservation of dormant\n  trial/terminal behavior. Review full branch with a fresh reviewer; fix confirmed\n  defects with RED→GREEN evidence and rerun affected checks.\n- [x] Update docs and Graphify via semantic skill for docs plus AST for changed\n  code. Preserve unrelated graph backlog and existing integrity caveats.\n- [x] Fetch upstream, open PR into staging, attach it to this task, inspect CI\n  and resolve relevant failures. Preserve main promotion gate.\n- [x] Before delivery capture current staging version/config/policy; after merge\n  verify exact Worker deployment and smoke, with T/trials still dormant. Record\n  rollback version and target-environment evidence; no production or Store action.\n- [x] Provide a concrete owner manual scenario with old ZIP, new candidate and\n  mixed clients in the linked acceptance receipt.\n- [ ] Record manual acceptance only after the owner's actual result.\n- [ ] Resume trial acceptance/activation only after that result; this remains an\n  external acceptance gate, not an unchecked task to silently mark complete.",
+      "source_file_sha256": "a080349485a7525298f6f2a93fcec52df217013407f3efb4ee44b84702c2a901",
+      "extraction_scope": "partial_changed_status_ranges",
+      "extracted_ranges": [
+        {
+          "start": 149,
+          "end": 170,
+          "sha256": "6d2ffc666b05ed910392b96223f5332daadd596aa13a3a3be3f1b736f012b931"
+        },
+        {
+          "start": 218,
+          "end": 225,
+          "sha256": "0e1d3ba308aa5141ad0723825b0efb67916cf76969e2501764f70aa27dabf33e"
+        }
+      ],
+      "full_file_freshness_claim": false
     },
     {
       "community": 853,
@@ -173861,18 +174071,18 @@
       "community": 853,
       "community_name": "DO write optimization implementation",
       "id": "docs_releases_durable_object_write_optimization_2026_09_29_implementation_receipt",
-      "label": "September 29 DO write optimization implementation and acceptance receipt at 5bed2e55",
+      "label": "September29 DO optimization implementation and completed staging delivery receipt for PR3811d50432c",
       "file_type": "document",
       "source_file": "docs/releases/durable-object-write-optimization-2026-09-29.md",
-      "source_location": "L1-L4",
+      "source_location": "L1-L10",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "rationale": "Commits 33ecea63 → 79f86963 → ef4537f6 → 5bed2e55 from staging 1f4ad13f. The receipt proves local implementation and defines delivery; owner acceptance and actual daily spending remain unconfirmed.",
-      "status": "implemented_locally_verified_staging_delivery_and_owner_acceptance_pending",
+      "rationale": "Implementation33ecea63→79f86963→ef4537f6→5bed2e55 from1f4ad13f retained. PR381 merge, exact Worker/Vercel and CI/smoke complete O6. Later documentation changes do not create a new Worker version. Owner acceptance and daily spending remain unconfirmed.",
+      "status": "staging_technical_delivery_verified_owner_acceptance_and_real_daily_cost_pending",
       "_origin": "semantic",
-      "evidence_excerpt": "# Оптимизация Durable Objects: реализация и приемка\n\n29 сентября 2026. Реализация `33ecea63` → `79f86963` → `ef4537f6` → `5bed2e55`,\nот staging `1f4ad13f`. [План](../superpowers/plans/2026-09-29-durable-object-write-optimization.md)",
+      "evidence_excerpt": "# Оптимизация Durable Objects: реализация и приемка\n\n29 сентября 2026. Реализация `33ecea63` → `79f86963` → `ef4537f6` → `5bed2e55`,\nот staging `1f4ad13f`. [План](../superpowers/plans/2026-09-29-durable-object-write-optimization.md)\nи [решение](../superpowers/specs/2026-09-29-durable-object-write-optimization-design.md).\nОптимизация поставлена в staging через [PR #381](https://github.com/AniDachi/anidachi-LP/pull/381),\nmerge `1d50432cc215f05ab3123891bac7fd3b560e907d`. Этот отчет фиксирует локальное\nдоказательство, фактическую поставку и откат. Ручная приемка владельца и реальный\nсуточный расход пока не подтверждены. Эта запись относится к runtime-поставке;\nпоследующие изменения документации не меняют указанную версию Worker.",
       "source_product_commit": "5bed2e55",
       "implementation_commits": [
         "33ecea63",
@@ -173880,7 +174090,24 @@
         "ef4537f6",
         "5bed2e55"
       ],
-      "base_commit": "1f4ad13f"
+      "base_commit": "1f4ad13f",
+      "runtime_pr": 381,
+      "staging_merge_commit": "1d50432cc215f05ab3123891bac7fd3b560e907d",
+      "technical_delivery_complete": true,
+      "owner_manual_acceptance_complete": false,
+      "real_daily_cost_measured": false,
+      "worker_version": "f7942d07-cb7a-473e-9484-c26768ea04c2",
+      "deployment_scope": "runtime_delivery_checkpoint_not_later_documentation_commits",
+      "source_file_sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128",
+      "extraction_scope": "full_document",
+      "extracted_ranges": [
+        {
+          "start": 1,
+          "end": 122,
+          "sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128"
+        }
+      ],
+      "full_file_freshness_claim": true
     },
     {
       "community": 853,
@@ -173889,15 +174116,25 @@
       "label": "Unchanged meter policy and actual alarm writes removed; required sequence snapshots remain durable",
       "file_type": "concept",
       "source_file": "docs/releases/durable-object-write-optimization-2026-09-29.md",
-      "source_location": "L9-L12",
+      "source_location": "L14-L26",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
       "rationale": "Keep activeSince for continuous viewing; materialize and sync usage before external requests. Snapshot ignores only updatedAt, denials use set differences in the same rollback-tested SQLite transaction.",
-      "status": "implemented_locally_verified",
+      "status": "implemented_and_delivered_to_staging_owner_acceptance_pending",
       "_origin": "semantic",
-      "evidence_excerpt": "## Изменения\n\n- Неизменившиеся meter, policy и фактический alarm больше не записываются повторно.\n- Непрерывный просмотр хранит исходный `activeSince`. Перед внешним запросом"
+      "evidence_excerpt": "- Неизменившиеся meter, policy и фактический alarm больше не записываются повторно.\n- Непрерывный просмотр хранит исходный `activeSince`. Перед внешним запросом\n  накопленное время материализуется, сохраняется и проходит `storage.sync()`.\n- Квота и предупреждение используют абсолютное время с точностью до миллисекунд.\n- Snapshot сравнивается с долговечным содержимым без служебного `updatedAt`;\n  изменение sequence по-прежнему сохраняется. Denials обновляются разницей множеств.\n  Обе записи остаются одной SQLite-транзакцией, с проверенным rollback/retry.\n- После hibernation сначала восстанавливается исходный alarm. Просроченный лимит\n  предыдущего дня проверяется до переноса meter в новые сутки; потерянный alarm\n  восстанавливается из уже сохраненных обязанностей.\n\nПротокол, частота доставки событий, схемы хранения, расширение, коммерческие\nправила, Stripe, Supabase migrations и секреты не менялись.",
+      "source_file_sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128",
+      "extraction_scope": "full_document",
+      "extracted_ranges": [
+        {
+          "start": 1,
+          "end": 122,
+          "sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128"
+        }
+      ],
+      "full_file_freshness_claim": true
     },
     {
       "community": 853,
@@ -173906,7 +174143,7 @@
       "label": "Four comparable real Workers runtime profiles use 20 signed-v3 HOST_STATE WebSocket messages at 1500ms",
       "file_type": "concept",
       "source_file": "docs/releases/durable-object-write-optimization-2026-09-29.md",
-      "source_location": "L27-L30",
+      "source_location": "L30-L33",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -173914,7 +174151,17 @@
       "rationale": "Measurement starts after JOIN and initial source persistence. Real SqlStorageCursor.rowsWritten is counted separately from KV/alarm calls; event delivery and sequence growth are checked.",
       "status": "local_measured_profile",
       "_origin": "semantic",
-      "evidence_excerpt": "Один сценарий: 20 принятых HOST_STATE каждые 1500 мс тестового времени, после\nJOIN и первоначального сохранения source. Настоящие WebSocket, signed v3 tokens,\nWorkers runtime и SQLite. Считаются реальные `SqlStorageCursor.rowsWritten`;\nKV/alarm вызовы учитываются отдельно. Проверяются доставка и рост sequence."
+      "evidence_excerpt": "Один сценарий: 20 принятых HOST_STATE каждые 1500 мс тестового времени, после\nJOIN и первоначального сохранения source. Настоящие WebSocket, signed v3 tokens,\nWorkers runtime и SQLite. Считаются реальные `SqlStorageCursor.rowsWritten`;\nKV/alarm вызовы учитываются отдельно. Проверяются доставка и рост sequence.",
+      "source_file_sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128",
+      "extraction_scope": "full_document",
+      "extracted_ranges": [
+        {
+          "start": 1,
+          "end": 122,
+          "sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128"
+        }
+      ],
+      "full_file_freshness_claim": true
     },
     {
       "community": 853,
@@ -173923,7 +174170,7 @@
       "label": "Steady HOST_STATE SQLite rows fall 75–80%: Free pair 80→20; Free solo Plus and Pro 100→20",
       "file_type": "concept",
       "source_file": "docs/releases/durable-object-write-optimization-2026-09-29.md",
-      "source_location": "L32-L35",
+      "source_location": "L35-L38",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -173953,7 +174200,17 @@
       "alarm_sets_before_after": [
         20,
         0
-      ]
+      ],
+      "source_file_sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128",
+      "extraction_scope": "full_document",
+      "extracted_ranges": [
+        {
+          "start": 1,
+          "end": 122,
+          "sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128"
+        }
+      ],
+      "full_file_freshness_claim": true
     },
     {
       "community": 853,
@@ -173962,7 +174219,7 @@
       "label": "Repeated snapshot with two unchanged media denials reduces SQL rows 7→0",
       "file_type": "concept",
       "source_file": "docs/releases/durable-object-write-optimization-2026-09-29.md",
-      "source_location": "L39-L42",
+      "source_location": "L42-L45",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -173974,7 +174231,17 @@
       "sqlite_rows_before_after": [
         7,
         0
-      ]
+      ],
+      "source_file_sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128",
+      "extraction_scope": "full_document",
+      "extracted_ranges": [
+        {
+          "start": 1,
+          "end": 122,
+          "sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128"
+        }
+      ],
+      "full_file_freshness_claim": true
     },
     {
       "community": 853,
@@ -173983,7 +174250,7 @@
       "label": "30–50 thousand daily writes remains a forecast; local 75–80% SQLite reduction is not production billing proof",
       "file_type": "rationale",
       "source_file": "docs/releases/durable-object-write-optimization-2026-09-29.md",
-      "source_location": "L39-L42",
+      "source_location": "L42-L45",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -173991,7 +174258,17 @@
       "rationale": "Diagnostic SQL/KV/alarm quantities cannot be summed as a precise Cloudflare bill. Real event proportions and comparable staging workload windows must be measured.",
       "status": "daily_cost_unmeasured",
       "_origin": "semantic",
-      "evidence_excerpt": "Все 20 необходимых snapshot-записей остаются. Повторный snapshot с двумя\nнеизменившимися denials: 7 записанных строк → 0. Эти счетчики нельзя складывать\nкак точную сумму биллинга. Замер не включает JOIN/LEAVE, refresh, source retries\nи реальное соотношение пользовательских событий. Оценка 30–50 тысяч записей"
+      "evidence_excerpt": "Все 20 необходимых snapshot-записей остаются. Повторный snapshot с двумя\nнеизменившимися denials: 7 записанных строк → 0. Эти счетчики нельзя складывать\nкак точную сумму биллинга. Замер не включает JOIN/LEAVE, refresh, source retries\nи реальное соотношение пользовательских событий. Оценка 30–50 тысяч записей",
+      "source_file_sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128",
+      "extraction_scope": "full_document",
+      "extracted_ranges": [
+        {
+          "start": 1,
+          "end": 122,
+          "sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128"
+        }
+      ],
+      "full_file_freshness_claim": true
     },
     {
       "community": 853,
@@ -174000,7 +174277,7 @@
       "label": "Local API252 runtime96 protocol203 rooms39 checks and fresh branch review pass",
       "file_type": "concept",
       "source_file": "docs/releases/durable-object-write-optimization-2026-09-29.md",
-      "source_location": "L45-L48",
+      "source_location": "L48-L51",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -174015,7 +174292,17 @@
         "protocol": 203,
         "room_harness": 39
       },
-      "tests_rerun_by_graph_agent": false
+      "tests_rerun_by_graph_agent": false,
+      "source_file_sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128",
+      "extraction_scope": "full_document",
+      "extracted_ranges": [
+        {
+          "start": 1,
+          "end": 122,
+          "sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128"
+        }
+      ],
+      "full_file_freshness_claim": true
     },
     {
       "community": 853,
@@ -174024,7 +174311,7 @@
       "label": "Legacy WebRTC26/26 and four-participant v3 12/12 streams pass; TURN and physical devices remain unproved",
       "file_type": "concept",
       "source_file": "docs/releases/durable-object-write-optimization-2026-09-29.md",
-      "source_location": "L49-L52",
+      "source_location": "L52-L55",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -174039,7 +174326,17 @@
       "v3_first_frame_p95_ms": 1559.5,
       "ice_pair": "host/host",
       "turn_proved": false,
-      "physical_devices_proved": false
+      "physical_devices_proved": false,
+      "source_file_sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128",
+      "extraction_scope": "full_document",
+      "extracted_ranges": [
+        {
+          "start": 1,
+          "end": 122,
+          "sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128"
+        }
+      ],
+      "full_file_freshness_claim": true
     },
     {
       "community": 853,
@@ -174048,7 +174345,7 @@
       "label": "RED→GREEN covers stable interval snapshot no-op SQLite rollback retry and hibernation across UTC with present or absent alarm",
       "file_type": "concept",
       "source_file": "docs/releases/durable-object-write-optimization-2026-09-29.md",
-      "source_location": "L56-L58",
+      "source_location": "L59-L62",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -174056,45 +174353,66 @@
       "rationale": "Recovery restores original alarm before normal rollover and checks overdue previous-day quota before changing usage day. Missing alarm derives from stored obligations.",
       "status": "local_regressions_passed",
       "_origin": "semantic",
-      "evidence_excerpt": "- RED → GREEN: лишние записи; стабильный interval anchor; snapshot no-op;\n  rollback SQLite и одинаковый retry; hibernation через UTC с присутствующим\n  и отсутствующим alarm. Старые terminal/cutover/ACK тесты сохранены.\n"
+      "evidence_excerpt": "- RED → GREEN: лишние записи; стабильный interval anchor; snapshot no-op;\n  rollback SQLite и одинаковый retry; hibernation через UTC с присутствующим\n  и отсутствующим alarm. Старые terminal/cutover/ACK тесты сохранены.",
+      "source_file_sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128",
+      "extraction_scope": "full_document",
+      "extracted_ranges": [
+        {
+          "start": 1,
+          "end": 122,
+          "sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128"
+        }
+      ],
+      "full_file_freshness_claim": true
     },
     {
       "community": 853,
       "community_name": "DO write optimization implementation",
       "id": "docs_releases_durable_object_write_optimization_2026_09_29_predelivery_worker_anchor",
-      "label": "Dated staging rollback Worker version 78e5de69-f2dc-42f6-b5d7-e44cc4b24f82 serves100% before optimization delivery",
+      "label": "Historical pre-delivery staging Worker78e5de69 retained as compatible optimization rollback version",
       "file_type": "concept",
       "source_file": "docs/releases/durable-object-write-optimization-2026-09-29.md",
-      "source_location": "L62-L65",
+      "source_location": "L65-L70",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "rationale": "Last API workflow for50a054b3 succeeded. This is the previous staging version, not proof that optimization has deployed; exact new merge/workflow/version must be recorded after delivery.",
-      "status": "dated_predelivery_readback",
+      "rationale": "Prior version served100% before optimization and50a054b3 workflow passed. PR381 subsequently delivered Workerf7942d07; old version remains rollback anchor, not current staging runtime.",
+      "status": "historical_predelivery_readback_retained_rollback_anchor",
       "_origin": "semantic",
-      "evidence_excerpt": "Перед поставкой 29 сентября: staging Worker на 100% использует\n`78e5de69-f2dc-42f6-b5d7-e44cc4b24f82`, последний API workflow для `50a054b3`\n[успешен](https://github.com/AniDachi/anidachi-LP/actions/runs/36481260183).\nRead-only Supabase staging: activation_at NULL, revision 1, trials_enabled false,",
+      "evidence_excerpt": "Перед поставкой 29 сентября: staging Worker на 100% использует\n`78e5de69-f2dc-42f6-b5d7-e44cc4b24f82`, последний API workflow для `50a054b3`\n[успешен](https://github.com/AniDachi/anidachi-LP/actions/runs/36481260183).\nRead-only Supabase staging: activation_at NULL, revision 1, trials_enabled false,\nscheduler disabled, operation/target/trial rows — 0. Promotion #376 открыт,\nauto-merge NULL. После staging deployment readback подтвердил те же значения.",
       "worker_version": "78e5de69-f2dc-42f6-b5d7-e44cc4b24f82",
       "traffic_percent": 100,
       "workflow_url": "https://github.com/AniDachi/anidachi-LP/actions/runs/36481260183",
-      "workflow_source_commit": "50a054b3"
+      "workflow_source_commit": "50a054b3",
+      "current_after_delivery": false,
+      "source_file_sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128",
+      "extraction_scope": "full_document",
+      "extracted_ranges": [
+        {
+          "start": 1,
+          "end": 122,
+          "sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128"
+        }
+      ],
+      "full_file_freshness_claim": true
     },
     {
       "community": 853,
       "community_name": "DO write optimization implementation",
       "id": "docs_releases_durable_object_write_optimization_2026_09_29_predelivery_dormant_readback",
-      "label": "Dated staging policy activation_at NULL revision1 trials false scheduler disabled and zero operation target trial rows",
+      "label": "Pre-delivery and repeated postdeployment readbacks confirm T NULL revision1 trials scheduler OFF and zero operation target trial rows",
       "file_type": "concept",
       "source_file": "docs/releases/durable-object-write-optimization-2026-09-29.md",
-      "source_location": "L65-L67",
+      "source_location": "L68-L70",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "rationale": "Promotion376 is open with auto-merge NULL. Reread these values after actual optimization deployment; the receipt does not grant T/main/Store authority.",
-      "status": "dated_predelivery_policy_dormant",
+      "rationale": "Promotion376 is open without auto-merge. Same dormant values verified after deployment; dated evidence does not activate T or promise future configuration.",
+      "status": "dated_pre_and_postdeployment_dormant_readbacks_verified",
       "_origin": "semantic",
-      "evidence_excerpt": "Read-only Supabase staging: activation_at NULL, revision 1, trials_enabled false,\nscheduler disabled, operation/target/trial rows — 0. Promotion #376 открыт,\nauto-merge NULL. Эти значения проверяются повторно после staging deployment.\n",
+      "evidence_excerpt": "Read-only Supabase staging: activation_at NULL, revision 1, trials_enabled false,\nscheduler disabled, operation/target/trial rows — 0. Promotion #376 открыт,\nauto-merge NULL. После staging deployment readback подтвердил те же значения.",
       "activation_at": null,
       "policy_revision": 1,
       "trials_enabled": false,
@@ -174103,24 +174421,73 @@
       "target_rows": 0,
       "trial_rows": 0,
       "promotion_pr": 376,
-      "auto_merge": null
+      "auto_merge": null,
+      "postdeployment_verified": true,
+      "source_file_sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128",
+      "extraction_scope": "full_document",
+      "extracted_ranges": [
+        {
+          "start": 1,
+          "end": 122,
+          "sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128"
+        }
+      ],
+      "full_file_freshness_claim": true
     },
     {
       "community": 853,
       "community_name": "DO write optimization implementation",
       "id": "docs_releases_durable_object_write_optimization_2026_09_29_staging_delivery_requirements",
-      "label": "O6 requires PR CI exact merge SHA successful Deploy API new Worker version smoke and repeat dormant readback",
+      "label": "O6 completed: PR3811d50432c exact Workerf7942d07 at100% READY staging Web and CI smoke passed",
       "file_type": "rationale",
       "source_file": "docs/releases/durable-object-write-optimization-2026-09-29.md",
-      "source_location": "L69-L72",
+      "source_location": "L72-L97",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "rationale": "Feature → PR → staging. Local tests do not replace deployment identity or runtime/environment evidence; actual receipts belong in the delivery PR.",
-      "status": "pending_staging_delivery",
+      "rationale": "PR/postmerge CI/rooms/P2P pass. CodeRabbit skipped staging review; independent source review is separate. DeployAPI and Wrangler agree on Worker; smoke passes; Vercel READY staging alias and repeated Supabase dormant readback verified. Main/production/Store unchanged; O7/O8 open.",
+      "status": "completed_staging_technical_delivery_owner_acceptance_pending",
       "_origin": "semantic",
-      "evidence_excerpt": "Поставка идет feature → PR → staging. Для завершения O6 нужны успешные PR CI,\nточный merge SHA, успешный Deploy API, новый Worker version ID, staging smoke\nи повторный dormant readback. Ссылки и фактическая версия записываются в PR\nпоставки; наличие локальных тестов не заменяет эти доказательства."
+      "evidence_excerpt": "Поставка завершена 29 сентября 2026 года:\n\n- PR #381 слит в staging в 02:45:09 UTC, точный merge SHA указан выше.\n- PR [CI](https://github.com/AniDachi/anidachi-LP/actions/runs/36513485683),\n  [room signaling](https://github.com/AniDachi/anidachi-LP/actions/runs/36513485720)\n  и [P2P](https://github.com/AniDachi/anidachi-LP/actions/runs/36513485666) прошли.\n  CodeRabbit пропустил ревью для staging; независимое ревью кода проведено отдельно.\n- [Deploy API](https://github.com/AniDachi/anidachi-LP/actions/runs/36514058395)\n  успешен. Версия `f7942d07-cb7a-473e-9484-c26768ea04c2` получает 100% staging\n  traffic с 02:46:23 UTC. Wrangler readback совпадает с version ID в workflow.\n- `pnpm smoke:worker:staging` прошел на новом Worker. Post-merge\n  [rooms](https://github.com/AniDachi/anidachi-LP/actions/runs/36514068494)\n  и [P2P](https://github.com/AniDachi/anidachi-LP/actions/runs/36514068601) прошли.\n- Vercel `dpl_BiPz6qKQbLcj3Zho2yRCm2mdR4pq` — READY для merge `1d50432c`,\n  alias `staging.anidachi.app`. Post-merge\n  [CI](https://github.com/AniDachi/anidachi-LP/actions/runs/36514058487) и\n  [staging Web smoke](https://github.com/AniDachi/anidachi-LP/actions/runs/36514275763)\n  прошли. Исходники сайта не менялись.\n- Supabase staging после поставки: T NULL, revision 1, trials_enabled false,\n  scheduler disabled, operation/target/trial rows — 0. Техническая поставка\n  не включает новую коммерческую модель и не заменяет ручную приемку.\n\nMain/production и Chrome Store не изменялись. O6 завершен; O7 (владелец) и O8\n(продолжение trial-проверок после приемки оптимизации) остаются открытыми.\n\nОткат Worker: вернуть указанную предыдущую staging-версию через штатный rollback,",
+      "runtime_pr": 381,
+      "staging_merge_commit": "1d50432cc215f05ab3123891bac7fd3b560e907d",
+      "merged_at": "2026-09-29T02:45:09Z",
+      "worker_version": "f7942d07-cb7a-473e-9484-c26768ea04c2",
+      "worker_traffic_percent": 100,
+      "worker_traffic_since": "2026-09-29T02:46:23Z",
+      "vercel_deployment_id": "dpl_BiPz6qKQbLcj3Zho2yRCm2mdR4pq",
+      "vercel_status": "READY",
+      "vercel_alias": "staging.anidachi.app",
+      "workflow_urls": {
+        "pr_ci": "https://github.com/AniDachi/anidachi-LP/actions/runs/36513485683",
+        "pr_rooms": "https://github.com/AniDachi/anidachi-LP/actions/runs/36513485720",
+        "pr_p2p": "https://github.com/AniDachi/anidachi-LP/actions/runs/36513485666",
+        "deploy_api": "https://github.com/AniDachi/anidachi-LP/actions/runs/36514058395",
+        "postmerge_rooms": "https://github.com/AniDachi/anidachi-LP/actions/runs/36514068494",
+        "postmerge_p2p": "https://github.com/AniDachi/anidachi-LP/actions/runs/36514068601",
+        "postmerge_ci": "https://github.com/AniDachi/anidachi-LP/actions/runs/36514058487",
+        "web_smoke": "https://github.com/AniDachi/anidachi-LP/actions/runs/36514275763"
+      },
+      "coderabbit_staging_review": "skipped",
+      "worker_smoke": "passed",
+      "activation_at": null,
+      "policy_revision": 1,
+      "trials_enabled": false,
+      "scheduler_enabled": false,
+      "operation_rows": 0,
+      "target_rows": 0,
+      "trial_rows": 0,
+      "source_file_sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128",
+      "extraction_scope": "full_document",
+      "extracted_ranges": [
+        {
+          "start": 1,
+          "end": 122,
+          "sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128"
+        }
+      ],
+      "full_file_freshness_claim": true
     },
     {
       "community": 853,
@@ -174129,7 +174496,7 @@
       "label": "Rollback to previous compatible staging Worker then revert PR; unchanged storage schema supports old Worker reads",
       "file_type": "rationale",
       "source_file": "docs/releases/durable-object-write-optimization-2026-09-29.md",
-      "source_location": "L74-L77",
+      "source_location": "L97-L100",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -174137,7 +174504,17 @@
       "rationale": "Health/smoke and room recovery follow rollback. Reverting also restores earlier cost and UTC recovery behavior. No DO/Supabase cleanup, key change or T activation is required.",
       "status": "prepared_not_executed",
       "_origin": "semantic",
-      "evidence_excerpt": "Откат Worker: вернуть указанную предыдущую staging-версию через штатный rollback,\nпроверить health/smoke и восстановление комнаты; затем revert PR в staging.\nStorage schema и migration tags не менялись, прежний Worker читает те же данные.\nОткат возвращает также прежний расход и прежнее поведение UTC recovery."
+      "evidence_excerpt": "Откат Worker: вернуть указанную предыдущую staging-версию через штатный rollback,\nпроверить health/smoke и восстановление комнаты; затем revert PR в staging.\nStorage schema и migration tags не менялись, прежний Worker читает те же данные.\nОткат возвращает также прежний расход и прежнее поведение UTC recovery.",
+      "source_file_sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128",
+      "extraction_scope": "full_document",
+      "extracted_ranges": [
+        {
+          "start": 1,
+          "end": 122,
+          "sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128"
+        }
+      ],
+      "full_file_freshness_claim": true
     },
     {
       "community": 853,
@@ -174146,18 +174523,28 @@
       "label": "Owner manually tests pre-T Free accounting room sync recovery paid media and old new mixed staging clients",
       "file_type": "rationale",
       "source_file": "docs/releases/durable-object-write-optimization-2026-09-29.md",
-      "source_location": "L80-L83",
+      "source_location": "L103-L106",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
       "rationale": "Use staging.anidachi.app with separate test profiles; preserve old cb7f7a86 and candidate59d6e80e ZIP/unpacked folders. Free solo pauses, guest starts/stops meter; play/pause/seek/source/reload/rejoin, Plus/Pro camera/mic/PTT and seat revoke/regrant; warning/exhaustion and normal closure retain previous Free policy.",
-      "status": "pending_owner_acceptance",
+      "status": "scenario_provided_owner_acceptance_pending",
       "_origin": "semantic",
       "evidence_excerpt": "## Ручной сценарий владельца после поставки\n\nИспользовать `staging.anidachi.app` и отдельные тестовые профили. Старый staging\nZIP `cb7f7a86` и новый кандидат `59d6e80e` уже сохранены: [артефакты и SHA](paid-hosting-trial/minimum-website-2026-09-29.md#две-сборки-расширения).",
       "old_staging_zip_source": "cb7f7a86",
       "new_candidate_source": "59d6e80e",
-      "new_zip_required_by_optimization": false
+      "new_zip_required_by_optimization": false,
+      "source_file_sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128",
+      "extraction_scope": "full_document",
+      "extracted_ranges": [
+        {
+          "start": 1,
+          "end": 122,
+          "sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128"
+        }
+      ],
+      "full_file_freshness_claim": true
     },
     {
       "community": 853,
@@ -174166,7 +174553,7 @@
       "label": "After comparable load compare staging Cloudflare rowsWritten errors and duration over equal normalized windows",
       "file_type": "rationale",
       "source_file": "docs/releases/durable-object-write-optimization-2026-09-29.md",
-      "source_location": "L94-L96",
+      "source_location": "L117-L120",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -174174,7 +174561,17 @@
       "rationale": "Keep staging separate from production; account for event count and room duration, and capture time/room ID on failure. Small sessions do not establish daily cost savings.",
       "status": "real_workload_measurement_pending",
       "_origin": "semantic",
-      "evidence_excerpt": "5. Сообщить результат и точное время/room ID при сбое. После сопоставимой\n   нагрузки сравнить Cloudflare staging rowsWritten/errors/duration за равные\n   окна, отдельно от production, с учетом числа событий и длительности комнат.\n"
+      "evidence_excerpt": "5. Сообщить результат и точное время/room ID при сбое. После сопоставимой\n   нагрузки сравнить Cloudflare staging rowsWritten/errors/duration за равные\n   окна, отдельно от production, с учетом числа событий и длительности комнат.",
+      "source_file_sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128",
+      "extraction_scope": "full_document",
+      "extracted_ranges": [
+        {
+          "start": 1,
+          "end": 122,
+          "sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128"
+        }
+      ],
+      "full_file_freshness_claim": true
     },
     {
       "community": 853,
@@ -174183,7 +174580,7 @@
       "label": "Trial activation remains paused pending owner optimization acceptance; Sandbox P11 old Store and main Store T are separate",
       "file_type": "rationale",
       "source_file": "docs/releases/durable-object-write-optimization-2026-09-29.md",
-      "source_location": "L98-L99",
+      "source_location": "L121-L122",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -174191,7 +174588,17 @@
       "rationale": "A successful optimization local suite or deployment does not complete trial/payment acceptance or authorize production, Store publication or activation.",
       "status": "trial_resumption_gated",
       "_origin": "semantic",
-      "evidence_excerpt": "До ручной приемки не возобновлять trial-активацию. После нее остаются отдельные\nSandbox/P11/старый Store-клиент и согласование main/Store/T."
+      "evidence_excerpt": "До ручной приемки не возобновлять trial-активацию. После нее остаются отдельные\nSandbox/P11/старый Store-клиент и согласование main/Store/T.",
+      "source_file_sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128",
+      "extraction_scope": "full_document",
+      "extracted_ranges": [
+        {
+          "start": 1,
+          "end": 122,
+          "sha256": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128"
+        }
+      ],
+      "full_file_freshness_claim": true
     },
     {
       "community": 853,
@@ -174200,15 +174607,15 @@
       "label": "DO optimization5bed2e55 locally passes API252 runtime96 protocol203 rooms39 with75–80% steady SQLite reduction",
       "file_type": "concept",
       "source_file": "docs/current-development-state.md",
-      "source_location": "L9-L12",
+      "source_location": "L9-L21",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "rationale": "Local measurements preserve normal HOST_STATE delivery. Staging deployment and owner acceptance remain separate; no claim of daily billing or trial/main/Store activation.",
-      "status": "implemented_locally_verified_staging_delivery_and_owner_acceptance_pending",
+      "rationale": "The local API252/runtime96/protocol203/rooms39 and75–80% SQLite measurements retain their scope. Subsequent PR381 technical staging deployment is verified; daily billing and owner trial/main/Store/T acceptance are not established.",
+      "status": "staging_technical_delivery_verified_owner_acceptance_and_real_daily_cost_pending",
       "_origin": "semantic",
-      "evidence_excerpt": "Optimization is implemented in `5bed2e55`: real\nsteady HOST_STATE profiles reduce SQLite rows by 75–80%, with unchanged policy\nand alarm writes removed. API check, 252 unit tests, 96 Workers runtime tests,\n203 protocol tests and 39 room harness scenarios pass. See the [implementation",
+      "evidence_excerpt": "validation and rollback gates. Optimization is implemented in `5bed2e55`: real\nsteady HOST_STATE profiles reduce SQLite rows by 75–80%, with unchanged policy\nand alarm writes removed. API check, 252 unit tests, 96 Workers runtime tests,\n203 protocol tests and 39 room harness scenarios pass. See the [implementation\nevidence and staging acceptance](releases/durable-object-write-optimization-2026-09-29.md)\nand [execution plan](superpowers/plans/2026-09-29-durable-object-write-optimization.md).\nPR #381 delivered the optimization to staging at `1d50432c` on September 29,\n02:45 UTC. Deploy API succeeded; Worker `f7942d07-cb7a-473e-9484-c26768ea04c2`\nreceives 100% of staging traffic and Worker smoke passed. Read-only Supabase\nstill has T NULL, revision 1, trials/scheduler OFF and zero operation/target/trial\nrows. The receipt records exact deployment evidence and the rollback version.\nOwner manual acceptance remains open. Staging acceptance does not close the\nremaining Sandbox/P11/old-client trial matrix or authorize main/Store/T.",
       "source_product_commit": "5bed2e55",
       "sqlite_reduction_percent_range": [
         75,
@@ -174219,7 +174626,17 @@
         "worker_runtime": 96,
         "protocol": 203,
         "room_harness": 39
-      }
+      },
+      "source_file_sha256": "874b804ad97ec01b3983d06fee8af90a8f037acb7aab3d014ff6250145d00cbf",
+      "extraction_scope": "partial_changed_status_ranges",
+      "extracted_ranges": [
+        {
+          "start": 5,
+          "end": 27,
+          "sha256": "69f0838bbe9a756bc6d576bc5a90233b428e0300dc00a93dd59664ea0aab4416"
+        }
+      ],
+      "full_file_freshness_claim": false
     },
     {
       "community": 853,
@@ -174228,51 +174645,83 @@
       "label": "Optimization5bed2e55 local four-scenario SQLite reduction75–80% does not forecast daily bill",
       "file_type": "concept",
       "source_file": "docs/releases/paid-hosting-trial/transition-master-plan-ru.md",
-      "source_location": "L7-L10",
+      "source_location": "L7-L16",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "rationale": "The master preserves completed trial work while ordering optimization staging delivery and owner acceptance ahead of the remaining trial matrix.",
-      "status": "implemented_locally_verified_staging_delivery_and_owner_acceptance_pending",
+      "rationale": "Four local profiles still report75–80% SQLite reduction without a daily forecast. PR381 staging Worker and smoke now verified with trial/T/scheduler disabled; owner acceptance remains pending.",
+      "status": "staging_technical_delivery_verified_owner_acceptance_and_real_daily_cost_pending",
       "_origin": "semantic",
-      "evidence_excerpt": "содержат причины, этапы, совместимость, проверки и откат. Оптимизация реализована\nв `5bed2e55`, локальные unit/runtime и room-проверки проходят. На четырех\nсценариях повторных HOST_STATE записи SQLite сократились на 75–80%; это не\nпрогноз суточного счета. [Проверки и ручная приемка](../durable-object-write-optimization-2026-09-29.md)"
+      "evidence_excerpt": "содержат причины, этапы, совместимость, проверки и откат. Оптимизация реализована\nв `5bed2e55`, локальные unit/runtime и room-проверки проходят. На четырех\nсценариях повторных HOST_STATE записи SQLite сократились на 75–80%; это не\nпрогноз суточного счета. PR #381 поставлен в staging (`1d50432c`), новый Worker\nи технический smoke подтверждены; trial/T/scheduler остаются выключены.\n[Проверки и ручная приемка](../durable-object-write-optimization-2026-09-29.md)\nфиксируют поставку, откат и еще открытую приемку владельцем. Эта последовательность имеет приоритет\nнад прежними формулировками «следующий шаг — репетиция T» в отчетах поставки.\nРучная trial-матрица, P11, Sandbox, старый Store-клиент и дальнейшие условия\nmain/Store/T остаются открытыми после приемки оптимизации.",
+      "source_file_sha256": "c49750f6f81cfa6f588170a9dd2a9a74c3856c6f7f0455a0a0761b3790b3446e",
+      "extraction_scope": "partial_changed_status_ranges",
+      "extracted_ranges": [
+        {
+          "start": 3,
+          "end": 20,
+          "sha256": "dd2978c94a68fd56a93064fe3f138844f3958a064e1e7af265d882a77de506fc"
+        }
+      ],
+      "full_file_freshness_claim": false
     },
     {
       "id": "docs_superpowers_plans_2026_06_07_production_room_p2p_hardening_roadmap_do_write_optimization_progress_2026_09_29",
       "label": "September 29 DO write optimization progress: redundant writes removed with overdue UTC quota recovery",
       "file_type": "concept",
       "source_file": "docs/superpowers/plans/2026-06-07-production-room-p2p-hardening-roadmap.md",
-      "source_location": "L34-L39",
+      "source_location": "L34-L40",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "rationale": "Local API252 unit/96 runtime, protocol203, rooms39, legacy WebRTC26 and four-user v3 checks pass; independent review found no runtime defect. Staging delivery and owner acceptance remain distinct; trial/T/main/Store stay gated.",
-      "status": "implemented_locally_verified_staging_owner_acceptance_pending",
+      "rationale": "Local API252 unit/96 runtime, protocol203, rooms39, legacy WebRTC26 and four-user v3 checks pass; independent review found no runtime defect. PR381 delivered staging1d50432c and Worker deployment/smoke pass; owner acceptance remains open; trial/T/main/Store stay gated.",
+      "status": "staging_technical_delivery_verified_owner_acceptance_and_real_daily_cost_pending",
       "source_product_commit": "5bed2e55",
-      "extraction_scope": "new_progress_bullet_only",
-      "evidence_excerpt": "- 2026-09-29 — `codex/do-write-optimization-design`, `5bed2e55`: removed redundant\n  DO meter/policy/alarm/snapshot writes and made denial persistence incremental;\n  wake preserves overdue UTC quota before meter rollover. API252unit/96runtime,\n  protocol203, room39, legacyWebRTC26 and v3four-user checks pass; independent\n  review finds no runtime defect. [Evidence and owner acceptance](../../releases/durable-object-write-optimization-2026-09-29.md).\n  Staging delivery/manual acceptance remain distinct; trial/T/main/Store stay gated.",
+      "extraction_scope": "partial_changed_status_ranges",
+      "evidence_excerpt": "- 2026-09-29 — `codex/do-write-optimization-design`, `5bed2e55`: removed redundant\n  DO meter/policy/alarm/snapshot writes and made denial persistence incremental;\n  wake preserves overdue UTC quota before meter rollover. API252unit/96runtime,\n  protocol203, room39, legacyWebRTC26 and v3four-user checks pass; independent\n  review finds no runtime defect. [Evidence and owner acceptance](../../releases/durable-object-write-optimization-2026-09-29.md).\n  PR #381 delivered staging `1d50432c`; Worker deployment and smoke pass.\n  Owner manual acceptance remains open; trial/T/main/Store stay gated.",
       "community": 853,
-      "community_name": "DO write optimization implementation"
+      "community_name": "DO write optimization implementation",
+      "runtime_pr": 381,
+      "staging_merge_commit": "1d50432cc215f05ab3123891bac7fd3b560e907d",
+      "source_file_sha256": "59a957b0f4a9560dd687aa7deb11be2d31265ce944d7f812c16925713c3e8400",
+      "extracted_ranges": [
+        {
+          "start": 34,
+          "end": 40,
+          "sha256": "57478fa2ebd41b6fb857d357ed88e1f1032394da0d562638766d75f2572c3950"
+        }
+      ],
+      "full_file_freshness_claim": false
     },
     {
       "id": "docs_superpowers_plans_2026_06_12_room_flow_p2p_flawless_execution_plan_do_write_optimization_progress_2026_09_29",
       "label": "September 29 server-only DO optimization preserves protocol intervals atomic persistence and wake deadlines",
       "file_type": "concept",
       "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
-      "source_location": "L298-L303",
+      "source_location": "L298-L304",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "rationale": "Local API252 unit/96 runtime, protocol203, rooms39, legacy WebRTC26 and four-user v3 checks pass. Owner acceptance and actual daily billing remain unverified; trial/T/main/Store remain gated.",
-      "status": "implemented_locally_verified_staging_owner_acceptance_pending",
+      "rationale": "PR381 delivered staging1d50432c and Worker deployment/smoke pass. Local API252 unit/96 runtime, protocol203, rooms39, legacy WebRTC26 and four-user v3 checks pass. Owner acceptance and actual daily billing remain unverified; trial/T/main/Store remain gated.",
+      "status": "staging_technical_delivery_verified_owner_acceptance_and_real_daily_cost_pending",
       "source_product_commit": "5bed2e55",
-      "extraction_scope": "new_progress_bullet_only",
-      "evidence_excerpt": "- 2026-09-29 — `codex/do-write-optimization-design`, `5bed2e55`: server-only DO\n  write optimization retains protocol/event frequency, durable interval accounting,\n  atomic snapshot/denial writes and original quota deadlines after wake. Local\n  API252unit/96runtime, protocol203, room39, legacyWebRTC26 and v3four-user checks\n  pass. [Implementation and manual staging scenario](../../releases/durable-object-write-optimization-2026-09-29.md).\n  Owner acceptance and real daily billing remain unverified; trial/T/main/Store gated.",
+      "extraction_scope": "partial_changed_status_ranges",
+      "evidence_excerpt": "- 2026-09-29 — `codex/do-write-optimization-design`, `5bed2e55`: server-only DO\n  write optimization retains protocol/event frequency, durable interval accounting,\n  atomic snapshot/denial writes and original quota deadlines after wake. Local\n  API252unit/96runtime, protocol203, room39, legacyWebRTC26 and v3four-user checks\n  pass. [Implementation and manual staging scenario](../../releases/durable-object-write-optimization-2026-09-29.md).\n  PR #381 delivered staging `1d50432c`; Worker deployment and smoke pass.\n  Owner acceptance and real daily billing remain unverified; trial/T/main/Store gated.",
       "community": 853,
-      "community_name": "DO write optimization implementation"
+      "community_name": "DO write optimization implementation",
+      "runtime_pr": 381,
+      "staging_merge_commit": "1d50432cc215f05ab3123891bac7fd3b560e907d",
+      "source_file_sha256": "536d5e21c90d16ecaa111e58cd1347f79c4b8fc3b7d0c520c86b0fabeaf43f90",
+      "extracted_ranges": [
+        {
+          "start": 298,
+          "end": 304,
+          "sha256": "2c6d944dc1d9c399726da209b1567cb8aff2b67445f25fbbbfb465cf28604d29"
+        }
+      ],
+      "full_file_freshness_claim": false
     }
   ],
   "links": [
@@ -553484,6 +553933,110 @@
           "range": "L298-L303"
         }
       }
+    },
+    {
+      "date": "2026-09-29",
+      "topic": "Verified DO optimization staging delivery",
+      "runtime_commit": "1d50432cc215f05ab3123891bac7fd3b560e907d",
+      "sources": {
+        "docs/current-development-state.md": "874b804ad97ec01b3983d06fee8af90a8f037acb7aab3d014ff6250145d00cbf",
+        "docs/releases/durable-object-write-optimization-2026-09-29.md": "f93cc74e1a040393ac767de99c26668d4bd1c585522197ad63910f170a520128",
+        "docs/releases/paid-hosting-trial/transition-master-plan-ru.md": "c49750f6f81cfa6f588170a9dd2a9a74c3856c6f7f0455a0a0761b3790b3446e",
+        "docs/superpowers/plans/2026-06-07-production-room-p2p-hardening-roadmap.md": "59a957b0f4a9560dd687aa7deb11be2d31265ce944d7f812c16925713c3e8400",
+        "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md": "536d5e21c90d16ecaa111e58cd1347f79c4b8fc3b7d0c520c86b0fabeaf43f90",
+        "docs/superpowers/plans/2026-09-27-paid-hosting-and-trial-transition.md": "5d7508f3e400f007fb1a66deb3c5ebeba73bae46261572c7781ee9c4350206cd",
+        "docs/superpowers/plans/2026-09-29-durable-object-write-optimization.md": "a080349485a7525298f6f2a93fcec52df217013407f3efb4ee44b84702c2a901",
+        "docs/superpowers/specs/2026-09-29-durable-object-write-optimization-design.md": "9ddd0b2f0cd5f78036c808d06a2b1b310c94130ef8c954ccb1445233424369a0"
+      },
+      "changed_ranges": {
+        "docs/current-development-state.md": [
+          [
+            15,
+            20
+          ],
+          [
+            23,
+            24
+          ]
+        ],
+        "docs/releases/durable-object-write-optimization-2026-09-29.md": [
+          [
+            6,
+            10
+          ],
+          [
+            70,
+            95
+          ]
+        ],
+        "docs/releases/paid-hosting-trial/transition-master-plan-ru.md": [
+          [
+            10,
+            13
+          ]
+        ],
+        "docs/superpowers/plans/2026-06-07-production-room-p2p-hardening-roadmap.md": [
+          [
+            39,
+            40
+          ]
+        ],
+        "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md": [
+          [
+            303,
+            303
+          ]
+        ],
+        "docs/superpowers/plans/2026-09-27-paid-hosting-and-trial-transition.md": [
+          [
+            28,
+            30
+          ]
+        ],
+        "docs/superpowers/plans/2026-09-29-durable-object-write-optimization.md": [
+          [
+            159,
+            159
+          ],
+          [
+            161,
+            161
+          ],
+          [
+            163,
+            163
+          ],
+          [
+            166,
+            168
+          ],
+          [
+            217,
+            225
+          ]
+        ],
+        "docs/superpowers/specs/2026-09-29-durable-object-write-optimization-design.md": [
+          [
+            3,
+            4
+          ],
+          [
+            270,
+            270
+          ]
+        ]
+      },
+      "full_source": "docs/releases/durable-object-write-optimization-2026-09-29.md",
+      "full_source_manifest_refreshed": false,
+      "scope": "One full receipt read plus changed status ranges in seven partial sources. Node meanings updated; reference-only historical relationships retained without new whole-source cache stamps. No AST, runtime tests or global freshness claim. Existing IDs, directed pairs, communities and unrelated manifest retained.",
+      "status": "PR381 staging delivered; Worker f7942d07-cb7a-473e-9484-c26768ea04c2 100%; CI/deploy/Web and Worker smokes passed; dormant Supabase unchanged. Owner acceptance, observed daily cost and trial/main/Store/T remain open.",
+      "health": {
+        "missing_endpoint_edges": 0,
+        "dangling_endpoint_edges": 0,
+        "self_loop_edges": 102,
+        "undirected_same_endpoint_collapsed_edges": 3
+      },
+      "token_accounting": "Active Codex semantic subagent usage unavailable."
     }
   ]
 }

@@ -3,8 +3,11 @@
 29 сентября 2026. Реализация `33ecea63` → `79f86963` → `ef4537f6` → `5bed2e55`,
 от staging `1f4ad13f`. [План](../superpowers/plans/2026-09-29-durable-object-write-optimization.md)
 и [решение](../superpowers/specs/2026-09-29-durable-object-write-optimization-design.md).
-Этот отчет фиксирует локальное доказательство и условия поставки. Ручная
-приемка владельца и реальный суточный расход пока не подтверждены.
+Оптимизация поставлена в staging через [PR #381](https://github.com/AniDachi/anidachi-LP/pull/381),
+merge `1d50432cc215f05ab3123891bac7fd3b560e907d`. Этот отчет фиксирует локальное
+доказательство, фактическую поставку и откат. Ручная приемка владельца и реальный
+суточный расход пока не подтверждены. Эта запись относится к runtime-поставке;
+последующие изменения документации не меняют указанную версию Worker.
 
 ## Изменения
 
@@ -64,12 +67,32 @@ KV/alarm вызовы учитываются отдельно. Проверяю�
 [успешен](https://github.com/AniDachi/anidachi-LP/actions/runs/36481260183).
 Read-only Supabase staging: activation_at NULL, revision 1, trials_enabled false,
 scheduler disabled, operation/target/trial rows — 0. Promotion #376 открыт,
-auto-merge NULL. Эти значения проверяются повторно после staging deployment.
+auto-merge NULL. После staging deployment readback подтвердил те же значения.
 
-Поставка идет feature → PR → staging. Для завершения O6 нужны успешные PR CI,
-точный merge SHA, успешный Deploy API, новый Worker version ID, staging smoke
-и повторный dormant readback. Ссылки и фактическая версия записываются в PR
-поставки; наличие локальных тестов не заменяет эти доказательства.
+Поставка завершена 29 сентября 2026 года:
+
+- PR #381 слит в staging в 02:45:09 UTC, точный merge SHA указан выше.
+- PR [CI](https://github.com/AniDachi/anidachi-LP/actions/runs/36513485683),
+  [room signaling](https://github.com/AniDachi/anidachi-LP/actions/runs/36513485720)
+  и [P2P](https://github.com/AniDachi/anidachi-LP/actions/runs/36513485666) прошли.
+  CodeRabbit пропустил ревью для staging; независимое ревью кода проведено отдельно.
+- [Deploy API](https://github.com/AniDachi/anidachi-LP/actions/runs/36514058395)
+  успешен. Версия `f7942d07-cb7a-473e-9484-c26768ea04c2` получает 100% staging
+  traffic с 02:46:23 UTC. Wrangler readback совпадает с version ID в workflow.
+- `pnpm smoke:worker:staging` прошел на новом Worker. Post-merge
+  [rooms](https://github.com/AniDachi/anidachi-LP/actions/runs/36514068494)
+  и [P2P](https://github.com/AniDachi/anidachi-LP/actions/runs/36514068601) прошли.
+- Vercel `dpl_BiPz6qKQbLcj3Zho2yRCm2mdR4pq` — READY для merge `1d50432c`,
+  alias `staging.anidachi.app`. Post-merge
+  [CI](https://github.com/AniDachi/anidachi-LP/actions/runs/36514058487) и
+  [staging Web smoke](https://github.com/AniDachi/anidachi-LP/actions/runs/36514275763)
+  прошли. Исходники сайта не менялись.
+- Supabase staging после поставки: T NULL, revision 1, trials_enabled false,
+  scheduler disabled, operation/target/trial rows — 0. Техническая поставка
+  не включает новую коммерческую модель и не заменяет ручную приемку.
+
+Main/production и Chrome Store не изменялись. O6 завершен; O7 (владелец) и O8
+(продолжение trial-проверок после приемки оптимизации) остаются открытыми.
 
 Откат Worker: вернуть указанную предыдущую staging-версию через штатный rollback,
 проверить health/smoke и восстановление комнаты; затем revert PR в staging.
