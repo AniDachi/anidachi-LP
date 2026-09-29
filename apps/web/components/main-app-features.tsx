@@ -60,19 +60,19 @@ export function MainAppFeatures() {
 						</div>
 
 						<div className={styles.equation}>
-							<div className={styles.personCount}>
-								<span className={styles.number}>1</span>
-								<strong>Host</strong>
-							</div>
+							<span className={styles.number}>1</span>
 							<Plus
 								className={styles.plusSign}
 								strokeWidth={1}
 								aria-hidden="true"
 							/>
-							<div className={`${styles.personCount} ${styles.friendsCount}`}>
-								<span className={styles.number}>{guestCount}</span>
-								<strong>Friends</strong>
-							</div>
+							<span className={`${styles.number} ${styles.friendsCount}`}>
+								{guestCount}
+							</span>
+							<strong className={styles.countLabel}>Host</strong>
+							<strong className={`${styles.countLabel} ${styles.friendsLabel}`}>
+								Friends join free
+							</strong>
 						</div>
 
 						<figcaption
