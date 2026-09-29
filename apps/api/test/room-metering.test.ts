@@ -7,6 +7,14 @@ import {
 } from "../src/room-metering";
 
 describe("room quota meter", () => {
+  it("retains the inactive checkpoint within a day without losing pending usage", () => {
+    const state = { ...reconcileRoomMeter(createRoomMeterState(), false, 1_000),
+      pending: [{ day: "1969-12-31", seconds: 7 }] };
+    expect(reconcileRoomMeter(state, false, 61_000)).toBe(state);
+    expect(reconcileRoomMeter(state, false, 86_400_000)).not.toBe(state);
+    expect(reconcileRoomMeter(state, true, 61_000).activeSince).toBe(61_000);
+    expect(reconcileRoomMeter(state, false, 61_000).pending).toEqual(state.pending);
+  });
   it("does not charge a solo host", () => {
     const state = reconcileRoomMeter(createRoomMeterState(), false, 1_000);
 

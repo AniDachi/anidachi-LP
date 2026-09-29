@@ -33,6 +33,8 @@ export function reconcileRoomMeter(
 ): RoomMeterState {
 	const safeNow = validTime(now) ? now : 0;
 	if (state.accountingBlocked) return state;
+	if (state.activeSince === null && !shouldMeter && utcDay(safeNow) === state.day)
+		return state;
 	if (
 		state.activeSince !== null &&
 		shouldMeter &&

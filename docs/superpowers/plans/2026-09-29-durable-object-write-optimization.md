@@ -91,17 +91,17 @@ active: boolean): number`; its single runtime caller passes the durable meter.
 Keep `reconcileStoredRoomAlarm(transaction, fallbackAt?, options?)` return value
 as the effective earliest scheduled timestamp or null.
 
-- [ ] RED: repeated inactive same-day reconcile returns the original state;
+- [x] RED: repeated inactive same-day reconcile returns the original state;
   active/inactive boundaries, pending usage and UTC changes remain meaningful.
-- [ ] RED: quota/warning deadlines remain identical at fractional elapsed
+- [x] RED: quota/warning deadlines remain identical at fractional elapsed
   seconds; preserve lease/closing/UTC precedence and already-due behavior.
-- [ ] RED: reconciling the same actual alarm does not write it; earlier/later
+- [x] RED: reconciling the same actual alarm does not write it; earlier/later
   obligations, removal, absent alarm and terminal/presence paths still schedule.
-- [ ] Implement minimal no-op checks and durable transaction comparisons;
+- [x] Implement minimal no-op checks and durable transaction comparisons;
   compare policy values rather than object identity; retain authority checks.
-- [ ] Run API check/test and focused runtime profile. Expected: unit suite green,
+- [x] Run API check/test and focused runtime profile. Expected: unit suite green,
   lower counters; remaining heartbeat/snapshot budget failures belong to Tasks 3/4.
-- [ ] Commit and record exact counts and remaining failures.
+- [x] Commit and record exact counts and remaining failures.
 
 ### Task 3: Preserve metering intervals between events
 
@@ -186,3 +186,7 @@ Task 1 baseline (real SQLite, 20 accepted HOST_STATE frames at 1500ms):
 Fixture passed all four scenarios before target budgets were added. All four
 budget assertions then failed on real redundant writes; no production source
 changed. SQL rows, KV calls and alarm calls are separate metrics, not a billing sum.
+
+Task 2: API types and all 252 unit tests pass. Runtime profile now has zero
+policy KV puts and alarm writes; SQL40 for Free solo/Plus/Pro, SQL80 for active
+Free. Four final-budget failures remain intentionally until Tasks 3–4.

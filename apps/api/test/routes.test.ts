@@ -680,6 +680,7 @@ describe("worker routes", () => {
     const clearAdmissionTimeout = vi.fn();
     const send = vi.fn();
     const lifecycleTransaction = {
+      getAlarm: async () => null,
       deleteAlarm: async () => undefined,
       get: async () => undefined,
       put: async () => undefined,
@@ -796,6 +797,7 @@ describe("worker routes", () => {
     ]);
     const sendRoomHistoryAuthority = vi.fn(async () => undefined);
     const lifecycleTransaction = {
+      getAlarm: async () => null,
       deleteAlarm: async () => undefined,
       get: async () => undefined,
       put: async () => undefined,
@@ -911,6 +913,7 @@ describe("worker routes", () => {
       [replacementSocket, verified],
     ]);
     const lifecycleTransaction = {
+      getAlarm: async () => null,
       deleteAlarm: async () => undefined,
       get: async () => undefined,
       put: async () => undefined,

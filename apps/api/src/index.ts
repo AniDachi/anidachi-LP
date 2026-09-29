@@ -909,11 +909,16 @@ export class RoomDurableObject {
 		this.roomPolicy.alarmAt = nextRoomPolicyAlarm(
 			this.roomPolicy,
 			now,
-			roomUsageSummary(this.roomMeter, now),
+			this.roomMeter,
 			this.shouldMeterRoom(),
 		);
 		await this.state.storage.transaction(async (transaction) => {
-			await transaction.put(ROOM_POLICY_STORAGE_KEY, this.roomPolicy!);
+			const stored = await transaction.get<RoomPolicyState>(ROOM_POLICY_STORAGE_KEY);
+			// Policy may change in place while awaiting storage. Never use an
+			// object-identity cache, or let background reconciliation revive terminal work.
+			if (!this.roomPolicy || this.endedTombstone || this.terminalIntent || this.roomPolicy.endingReason) return;
+			if (JSON.stringify(stored) !== JSON.stringify(this.roomPolicy))
+				await transaction.put(ROOM_POLICY_STORAGE_KEY, this.roomPolicy);
 			await reconcileStoredRoomAlarm(transaction);
 		});
 	}
