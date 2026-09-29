@@ -2112,9 +2112,9 @@
     "semantic_hash": ""
   },
   "apps/web/components/main-app-features.tsx": {
-    "mtime": 1790712977.7240725,
-    "seen": 1790713041.054097,
-    "ast_hash": "c7767feeeaba92c80073ef69c5a6bc34",
+    "mtime": 1790714010.3521237,
+    "seen": 1790714060.734645,
+    "ast_hash": "506b73fa23c1cb0e4657717e1ca39125",
     "semantic_hash": ""
   },
   "apps/web/components/nav-bar-client.tsx": {

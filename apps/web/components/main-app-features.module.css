@@ -18,13 +18,6 @@
 .copy {
 	min-width: 0;
 }
-.kicker {
-	color: #b6b0a8;
-	font-size: 11px;
-	font-weight: 500;
-	letter-spacing: 0.14em;
-	margin-bottom: 28px;
-}
 .copy h2 {
 	font-size: clamp(38px, 4.1vw, 58px);
 	font-weight: 550;
@@ -37,20 +30,10 @@
 .description {
 	font-size: 16px;
 	line-height: 1.75;
+	text-wrap: balance;
 	color: #b6b0a8;
 	max-width: 400px;
 	margin-top: 28px;
-}
-.noGuestFees {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	font-size: 14px;
-	margin-top: 19px;
-}
-.noGuestFees svg {
-	color: var(--ani-text);
-	flex-shrink: 0;
 }
 .planLink {
 	display: inline-flex;
@@ -69,39 +52,20 @@
 .planLink:hover {
 	background: var(--ani-primary-hover);
 }
-.trialNote {
-	font-size: 11px;
-	color: #a39d95;
-	margin-top: 15px;
-	line-height: 1.6;
-}
 .room {
 	min-width: 0;
 	margin: 0;
 	padding-left: 40px;
 	border-left: 1px solid #373532;
 }
-.roomHeading {
-	display: flex;
-	align-items: baseline;
-	justify-content: space-between;
-	gap: 16px;
-	font-size: 12px;
-	color: #b6b0a8;
-}
-.capacity {
-	font-size: 11px;
-	white-space: nowrap;
-	font-variant-numeric: tabular-nums;
-}
 .selector {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	border-bottom: 1px solid #373532;
-	margin-top: 25px;
+	margin-top: 0;
 }
 .selector button {
-	min-height: 72px;
+	min-height: 52px;
 	border-bottom: 2px solid transparent;
 	background: none;
 	text-align: left;
@@ -125,16 +89,11 @@
 	letter-spacing: -0.025em;
 	display: block;
 }
-.selector button > span {
-	display: block;
-	font-size: 11px;
-	margin-top: 6px;
-}
 .equation {
 	display: grid;
 	grid-template-columns: 1fr 32px 1.25fr;
 	gap: 14px;
-	padding: 37px 0 34px;
+	padding: 38px 0 0;
 	align-items: start;
 }
 .personCount {
@@ -154,12 +113,6 @@
 	font-size: 15px;
 	font-weight: 500;
 }
-.countDetail {
-	font-size: 11px;
-	color: #b6b0a8;
-	line-height: 1.6;
-	margin-top: 5px;
-}
 .friendsCount .number {
 	color: var(--ani-progress);
 }
@@ -169,53 +122,11 @@
 	margin-top: 52px;
 	color: #9e978d;
 }
-.caption {
-	border-top: 1px solid #373532;
-	padding-top: 20px;
-	font-size: 12px;
-	color: #b6b0a8;
-	line-height: 1.6;
-}
-.caption strong {
-	font-weight: 500;
-	color: var(--ani-text);
-}
-.steps {
-	margin: 60px 0 0;
-	padding: 28px 0 0;
-	border-top: 1px solid #373532;
-	list-style: none;
-	display: grid;
-	grid-template-columns: repeat(3, minmax(0, 1fr));
-	gap: 40px;
-}
-.steps li {
-	display: flex;
-	gap: 22px;
-	align-items: baseline;
-}
-.stepNumber {
-	flex-shrink: 0;
-	font-size: 12px;
-	color: #a39d95;
-	font-variant-numeric: tabular-nums;
-}
-.steps h3 {
-	font-size: 16px;
-	font-weight: 500;
-	letter-spacing: -0.015em;
-}
-.steps p {
-	font-size: 12px;
-	line-height: 1.65;
-	color: #a39d95;
-	margin-top: 8px;
-}
 .accessNote {
-	font-size: 11px;
+	font-size: 13px;
 	line-height: 1.65;
 	color: #a39d95;
-	margin-top: 29px;
+	margin-top: 48px;
 }
 .planLink:focus-visible,
 .selector button:focus-visible {
@@ -228,12 +139,6 @@
 	}
 	.room {
 		padding-left: 28px;
-	}
-	.roomHeading {
-		font-size: 11px;
-	}
-	.capacity {
-		font-size: 10px;
 	}
 	.number {
 		font-size: 116px;
@@ -262,12 +167,6 @@
 		padding: 0;
 		border-left: 0;
 	}
-	.roomHeading {
-		font-size: 12px;
-	}
-	.capacity {
-		font-size: 11px;
-	}
 	.equation {
 		grid-template-columns: 1fr 40px 1.25fr;
 		gap: 22px;
@@ -278,13 +177,6 @@
 	.plusSign {
 		margin-top: 54px;
 	}
-	.steps {
-		gap: 24px;
-		margin-top: 44px;
-	}
-	.steps li {
-		gap: 12px;
-	}
 }
 @media (max-width: 580px) {
 	.section {
@@ -293,36 +185,16 @@
 	.copy h2 {
 		font-size: clamp(30px, 9.3vw, 48px);
 	}
-	.kicker {
-		font-size: 10px;
-		margin-bottom: 22px;
-	}
 	.description {
 		font-size: 14px;
 		margin-top: 23px;
-	}
-	.noGuestFees {
-		font-size: 12px;
 	}
 	.planLink {
 		font-size: 13px;
 		margin-top: 26px;
 	}
-	.trialNote {
-		font-size: 10px;
-	}
 	.main {
 		gap: 45px;
-	}
-	.roomHeading {
-		gap: 8px;
-		font-size: 11px;
-	}
-	.capacity {
-		font-size: 10px;
-	}
-	.selector {
-		margin-top: 19px;
 	}
 	.selector strong {
 		font-size: 22px;
@@ -330,7 +202,7 @@
 	.equation {
 		grid-template-columns: 1fr 24px 1.25fr;
 		gap: 12px;
-		padding: 31px 0;
+		padding: 31px 0 0;
 	}
 	.number {
 		font-size: clamp(88px, 27vw, 144px);
@@ -344,28 +216,8 @@
 	.personCount strong {
 		font-size: 13px;
 	}
-	.countDetail {
-		font-size: 10px;
-	}
-	.caption {
-		font-size: 11px;
-	}
-	.steps {
-		grid-template-columns: 1fr;
-		gap: 25px;
-		margin-top: 35px;
-	}
-	.steps li {
-		gap: 22px;
-	}
-	.steps h3 {
-		font-size: 15px;
-	}
-	.steps p {
-		margin-top: 4px;
-	}
 	.accessNote {
-		font-size: 10px;
+		font-size: 12px;
 		max-width: 300px;
 	}
 }
