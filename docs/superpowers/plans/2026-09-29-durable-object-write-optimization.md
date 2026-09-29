@@ -133,18 +133,18 @@ only snapshot.updatedAt; atomically write changed snapshot and denial-set diff.
 Prefer reading existing SQLite state to an additional mutable cache unless
 measurement proves that cache necessary. No storage format migration.
 
-- [ ] RED: unchanged snapshot with later updatedAt writes zero rows; changed
+- [x] RED: unchanged snapshot with later updatedAt writes zero rows; changed
   serverSeq/capabilities/source/participants remains durable; unchanged denials
   are not deleted/reinserted; changed sets are exact and atomic.
-- [ ] RED: failed denial write rolls back snapshot and retries successfully;
+- [x] RED: failed denial write rolls back snapshot and retries successfully;
   constructor/wake retains original pending/earlier alarm and unchanged state.
-- [ ] Implement no-op snapshot and denial diff, preserving accepted HOST_STATE
+- [x] Implement no-op snapshot and denial diff, preserving accepted HOST_STATE
   persistence and output gates. Fix constructor scheduling only as evidence
   requires; preserve earliest durable obligations before ordinary traffic.
-- [ ] Run full API check/test/runtime; original and optimized cost profile.
+- [x] Run full API check/test/runtime; original and optimized cost profile.
   Expected: steady HOST_STATE has one necessary room snapshot write, no unchanged
   meter/policy/alarm/denial writes, and delivered/recovered state stays correct.
-- [ ] Commit; record before/after by metric without equating counters to billing.
+- [x] Commit; record before/after by metric without equating counters to billing.
 
 ### Task 5: Review, staging delivery and owner handoff
 
@@ -195,3 +195,15 @@ Task 3: runtime regression first reproduced activeSince moving 30 seconds on
 ordinary frames, then passed with a stable anchor and a 60-second durable
 checkpoint before the Web callback. All 87 functional runtime tests pass; four
 write budgets remain RED solely for duplicate snapshots (SQL40 in all profiles).
+
+Task 4: final profiles GREEN at SQL20 (one durable snapshot per accepted frame),
+zero meter/policy/alarm writes in the steady segment. SQL writes drop 75% for
+active Free and 80% for the other three fixtures; this is not a production
+daily-billing forecast. Unchanged two-user denial set: 7 rows -> 0.
+
+Real SQLite rollback/retry tests pass. Wake tests first reproduced a pre-existing
+UTC recovery flaw: constructor settlement erased an overdue previous-day quota.
+Recovery now preserves the old meter/deadline until policy enforcement, re-arms
+a missing alarm, and ends at the original timestamp. API types + 252 unit pass;
+95 runtime cases passed in the full run, and the remaining source fixture was
+corrected to include its required title (3/3 focused storage tests then pass).

@@ -626,7 +626,6 @@ export class RoomDurableObject {
 					null;
 				if (!!this.room.mediaSnapshot !== !!this.roomPolicy)
 					throw new Error("Missing durable room policy or media state");
-				if (this.roomPolicy && !this.terminalIntent) await this.persistRoomPolicyDeadline(Date.now());
         if (this.terminalIntent?.finalizedAt !== null && this.terminalIntent) {
           // Recovery after Web ACK/intent commit but before the SQL tombstone.
           await this.applyTerminalRoomState(endedRoomTombstone(this.terminalIntent, {
@@ -650,7 +649,14 @@ export class RoomDurableObject {
 				),
       );
         this.restoreWebSocketsFromAttachments();
-        this.reconcileRoomUsage(Date.now());
+        if (this.roomPolicy) {
+          // Preserve the durable interval and its original deadline until policy
+          // servicing checks overdue exhaustion before UTC rollover. Recovery
+          // also re-arms a missing alarm from the existing durable obligations.
+          await state.storage.transaction(t => reconcileStoredRoomAlarm(t));
+        } else {
+          this.reconcileRoomUsage(Date.now());
+        }
       }
     });
   }

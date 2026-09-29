@@ -119,10 +119,33 @@ export function writeStoredRoomState(
 ): void {
   const {mediaSeatDenials = [], ...roomSnapshot} = snapshot;
   storage.transactionSync(() => {
-    writeMeta(storage, ROOM_STATE_META_KEY, roomSnapshot, snapshot.updatedAt);
-    storage.sql.exec("DELETE FROM room_media_seat_denials");
-    for(const userId of mediaSeatDenials) storage.sql.exec("INSERT INTO room_media_seat_denials (user_id) VALUES (?)",userId);
+    const stored = storage.sql.exec<RoomMetaRow>(
+      "SELECT value_json, updated_at, key FROM room_meta WHERE key = ?", ROOM_STATE_META_KEY,
+    ).toArray()[0];
+    // Compare durable contents inside the transaction. A rollback must never
+    // leave an in-memory success cache that causes an identical retry to skip.
+    if (!sameRoomSnapshot(stored?.value_json, roomSnapshot))
+      writeMeta(storage, ROOM_STATE_META_KEY, roomSnapshot, snapshot.updatedAt);
+    const previousDenials = new Set(storage.sql.exec<{user_id: string}>(
+      "SELECT user_id FROM room_media_seat_denials",
+    ).toArray().map(row => row.user_id));
+    const nextDenials = new Set(mediaSeatDenials);
+    for (const userId of previousDenials)
+      if (!nextDenials.has(userId)) storage.sql.exec("DELETE FROM room_media_seat_denials WHERE user_id = ?", userId);
+    for (const userId of nextDenials)
+      if (!previousDenials.has(userId)) storage.sql.exec("INSERT INTO room_media_seat_denials (user_id) VALUES (?)", userId);
   });
+}
+
+function sameRoomSnapshot(stored: string | undefined, next: Omit<RoomStateSnapshot, "mediaSeatDenials">): boolean {
+  if (!stored) return false;
+  try {
+    const previous: unknown = JSON.parse(stored);
+    if (!isRecord(previous)) return false;
+    // updatedAt records a durable change, not a heartbeat. Every other field,
+    // including sequence-only changes and media authority, remains significant.
+    return JSON.stringify({ ...previous, updatedAt: 0 }) === JSON.stringify({ ...next, updatedAt: 0 });
+  } catch { return false; }
 }
 
 export function readStoredRoomMeter(

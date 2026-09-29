@@ -3394,6 +3394,43 @@ describe("RoomDurableObject media v2", () => {
     expect(f.ledger.get("2026-09-29")).toBe(60);
   });
 
+  it.each([true, false])("wake retains an overdue quota across UTC (alarm present: %s)", async (alarmPresent) => {
+    const midnight = Date.parse("2026-09-30T00:00:00Z");
+    const start = midnight - 120_000;
+    const due = midnight - 60_000;
+    const clock = vi.spyOn(Date, "now").mockReturnValue(start);
+    const f = await fixture("free", 3);
+    const host = await f.join(0);
+    await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "wake quota host");
+    const guest = await f.join(1);
+    await guest.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT" && e.participants.length === 2, "wake quota guest");
+    await runInDurableObject(f.stub, async (instance, state) => {
+      const room = instance as any;
+      room.roomPolicy.budget.allowedSeconds = 60;
+      room.roomPolicy.quotaWarnedDay = "2026-09-29";
+      room.roomPolicy.alarmAt = due;
+      await state.storage.put("room_policy_v2", room.roomPolicy);
+      if (alarmPresent) await state.storage.setAlarm(due);
+      else await state.storage.deleteAlarm();
+      await state.storage.sync();
+    });
+    clock.mockReturnValue(midnight + 30_000);
+    await evictDurableObject(f.stub, { webSockets: "hibernate" });
+    const restored = await runInDurableObject(f.stub, async (instance, state) => ({
+      meter: (instance as any).roomMeter,
+      policy: await state.storage.get<any>("room_policy_v2"),
+      alarm: await state.storage.getAlarm(),
+    }));
+    expect(restored.meter).toMatchObject({ day: "2026-09-29", activeSince: start, accumulatedMs: 0 });
+    expect(restored.policy.alarmAt).toBe(due);
+    expect(restored.alarm).toBe(due);
+    await runDurableObjectAlarm(f.stub);
+    const ended = await host.waitFor(e => e.type === "ROOM_ENDED", "original exhaustion after wake");
+    expect(ended).toMatchObject({ reason: "quota_exhausted", endedAt: due });
+    expect(f.ledger.get("2026-09-29")).toBe(60);
+    expect(f.ledger.get("2026-09-30") ?? 0).toBe(0);
+  });
+
 it("v3 durably fences revocation, receiver-only sessions and two grants for the last seat", async () => {
 	const f = await fixture("pro", 3);
 	const clients: RuntimeRoomClient[] = [];
