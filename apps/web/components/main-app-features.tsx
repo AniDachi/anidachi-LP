@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { getPlanPolicy } from "@anidachi/protocol";
 import styles from "./main-app-features.module.css";
-import { ArrowDown, Check, Link2, UserRound } from "lucide-react";
+import { ArrowDown, Check, Plus } from "lucide-react";
 
 const roomPlans = [
 	{ id: "plus", label: "Plus", people: getPlanPolicy("plus").maxParticipants },
@@ -13,7 +12,6 @@ const roomPlans = [
 
 export function MainAppFeatures() {
 	const [roomPlan, setRoomPlan] = useState<"plus" | "pro">("plus");
-	const pro = roomPlan === "pro";
 	const plan = roomPlans.find((option) => option.id === roomPlan)!;
 	const guestCount = plan.people - 1;
 	const planName = plan.label;
@@ -54,10 +52,7 @@ export function MainAppFeatures() {
 						aria-label="Explore a room with one host subscription and free guests"
 					>
 						<div className={styles.roomHeading}>
-							<div>
-								<Image src="/Anidachi_logo.png" width="24" height="24" alt="" />
-								<span>A room for your people</span>
-							</div>
+							<span>One room. Everyone together.</span>
 							<span className={styles.capacity}>
 								Up to {guestCount + 1} people
 							</span>
@@ -81,39 +76,25 @@ export function MainAppFeatures() {
 							))}
 						</div>
 
-						<div className={styles.host}>
-							<span className={styles.hostAvatar} aria-hidden="true">
-								<UserRound size={25} strokeWidth={1.6} />
-							</span>
-							<div className={styles.hostIdentity}>
+						<div className={styles.equation}>
+							<div className={styles.personCount}>
+								<span className={styles.number}>1</span>
 								<strong>You, the host</strong>
-								<span>Create the room & share the link</span>
+								<span className={styles.countDetail}>
+									{planName} subscription
+								</span>
 							</div>
-							<span className={styles.planTag}>{planName}</span>
-						</div>
-
-						<div className={styles.guests}>
-							<div className={styles.guestLabel}>
-								<Link2 size={15} aria-hidden="true" />
-								<span>Your friends join with Free accounts</span>
-							</div>
-							<div
-								className={`${styles.guestGrid} ${pro ? styles.proGrid : ""}`}
+							<Plus
+								className={styles.plusSign}
+								strokeWidth={1}
 								aria-hidden="true"
-								key={roomPlan}
-							>
-								{Array.from({ length: guestCount }, (_, i) => (
-									<div
-										className={styles.guest}
-										key={`guest-${i + 1}`}
-										style={{ animationDelay: `${i * 18}ms` }}
-									>
-										<span className={styles.guestAvatar}>
-											<UserRound size={21} strokeWidth={1.5} />
-										</span>
-										<span>Free</span>
-									</div>
-								))}
+							/>
+							<div className={`${styles.personCount} ${styles.friendsCount}`}>
+								<span className={styles.number}>{guestCount}</span>
+								<strong>Up to {guestCount} friends</strong>
+								<span className={styles.countDetail}>
+									Join with Free accounts
+								</span>
 							</div>
 						</div>
 
@@ -122,7 +103,6 @@ export function MainAppFeatures() {
 							aria-live="polite"
 							aria-atomic="true"
 						>
-							<Check size={16} aria-hidden="true" />
 							<span>
 								You + up to <strong>{guestCount} friends.</strong> One
 								subscription.

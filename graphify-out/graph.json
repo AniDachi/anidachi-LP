@@ -33990,7 +33990,7 @@
       "file_type": "code",
       "norm_label": "mainappfeatures()",
       "source_file": "apps/web/components/main-app-features.tsx",
-      "source_location": "L14"
+      "source_location": "L13"
     },
     {
       "id": "apps_web_components_nav_bar_client_contactnavmenu",
@@ -176493,7 +176493,7 @@
       "file_type": "code",
       "norm_label": "roomplans",
       "source_file": "apps/web/components/main-app-features.tsx",
-      "source_location": "L9"
+      "source_location": "L8"
     },
     {
       "id": "apps_web_components_main_app_features_module",
@@ -553778,7 +553778,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/components/main-app-features.tsx",
-      "source_location": "L5",
+      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -553790,7 +553790,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/components/main-app-features.tsx",
-      "source_location": "L5",
+      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -553807,7 +553807,7 @@
     },
     {
       "source": "apps_web_components_main_app_features",
-      "target": "ref_next",
+      "target": "packages_protocol_src_index",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -553819,7 +553819,7 @@
     },
     {
       "source": "apps_web_components_main_app_features",
-      "target": "packages_protocol_src_index",
+      "target": "apps_web_components_main_app_features_module",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -553831,7 +553831,7 @@
     },
     {
       "source": "apps_web_components_main_app_features",
-      "target": "apps_web_components_main_app_features_module",
+      "target": "ref_lucide_react",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -553843,25 +553843,13 @@
     },
     {
       "source": "apps_web_components_main_app_features",
-      "target": "ref_lucide_react",
-      "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/components/main-app-features.tsx",
-      "source_location": "L7",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_components_main_app_features",
       "target": "apps_web_components_main_app_features_mainappfeatures",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/main-app-features.tsx",
-      "source_location": "L14",
+      "source_location": "L13",
       "weight": 1.0
     },
     {
@@ -553872,7 +553860,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/main-app-features.tsx",
-      "source_location": "L9",
+      "source_location": "L8",
       "weight": 1.0
     }
   ],
