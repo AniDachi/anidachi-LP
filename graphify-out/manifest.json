@@ -8202,9 +8202,9 @@
     "semantic_hash": "190a3a77eddbaebb5fb3d20a4f8ce2e0"
   },
   "apps/web/components/watching-together-count.tsx": {
-    "mtime": 1789490458.959715,
-    "seen": 1789807056.437002,
-    "ast_hash": "83724ec0cb75770372ede224cf28129a",
+    "mtime": 1790705561.8954484,
+    "seen": 1790706098.03199,
+    "ast_hash": "6f5349bde4edde7fd3a497d1097f19ab",
     "semantic_hash": ""
   },
   "apps/web/lib/amplitude-ids.ts": {
@@ -9022,5 +9022,29 @@
     "seen": 1790701031.6318789,
     "ast_hash": "",
     "semantic_hash": "10d7fe23916a179312c3f37081eafaeb"
+  },
+  "apps/web/lib/public-community-count.ts": {
+    "mtime": 1790705561.824351,
+    "seen": 1790706098.031987,
+    "ast_hash": "898682e39ff82bef384972b91609ebc0",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/community-stats/route.ts": {
+    "mtime": 1790705561.8791318,
+    "seen": 1790706098.031988,
+    "ast_hash": "8a26ae6e450ec14168a710f6bbcad536",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/community-stats-route.test.ts": {
+    "mtime": 1790705494.4119723,
+    "seen": 1790706098.031991,
+    "ast_hash": "221a82bc4c5a8f9c56a1ee83e9b27a0c",
+    "semantic_hash": ""
+  },
+  "docs/public-community-count.md": {
+    "mtime": 1790705856.188676,
+    "seen": 1790706098.0884101,
+    "ast_hash": "",
+    "semantic_hash": "1cd4f9668f8903e75acd051557115564"
   }
 }

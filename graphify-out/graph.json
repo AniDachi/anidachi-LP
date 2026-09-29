@@ -34259,14 +34259,13 @@
     {
       "id": "apps_web_components_watching_together_count_watchingtogethercount",
       "label": "WatchingTogetherCount()",
+      "file_type": "code",
+      "source_file": "apps/web/components/watching-together-count.tsx",
+      "source_location": "L10",
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "watchingtogethercount()",
-      "source_file": "apps/web/components/watching-together-count.tsx",
-      "source_location": "L10"
+      "community_name": "react"
     },
     {
       "id": "apps_web_lib_conversion_events_ctacopyvariantfortemplate",
@@ -100160,13 +100159,12 @@
     {
       "id": "apps_web_components_watching_together_count",
       "label": "watching-together-count.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/components/watching-together-count.tsx",
+      "source_location": "L1",
       "_origin": "ast",
       "community": 2,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "watching-together-count.tsx",
-      "source_file": "apps/web/components/watching-together-count.tsx",
-      "source_location": "L1"
+      "community_name": "react"
     },
     {
       "id": "apps_web_lib_conversion_events",
@@ -176158,6 +176156,344 @@
           }
         }
       ]
+    },
+    {
+      "id": "apps_web_lib_public_community_count",
+      "label": "public-community-count.ts",
+      "file_type": "code",
+      "source_file": "apps/web/lib/public-community-count.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 854,
+      "community_name": "Public Community Signup Counter"
+    },
+    {
+      "id": "apps_web_lib_public_community_count_getpubliccommunitycount",
+      "label": "getPublicCommunityCount()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/public-community-count.ts",
+      "source_location": "L11",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 854,
+      "community_name": "Public Community Signup Counter"
+    },
+    {
+      "id": "apps_web_app_api_community_stats_route",
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "apps/web/app/api/community-stats/route.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 854,
+      "community_name": "Public Community Signup Counter"
+    },
+    {
+      "id": "apps_web_app_api_community_stats_route_get",
+      "label": "GET()",
+      "file_type": "code",
+      "source_file": "apps/web/app/api/community-stats/route.ts",
+      "source_location": "L4",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 854,
+      "community_name": "Public Community Signup Counter"
+    },
+    {
+      "id": "apps_web_lib_community_stats_route_test",
+      "label": "community-stats-route.test.ts",
+      "file_type": "code",
+      "source_file": "apps/web/lib/community-stats-route.test.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 854,
+      "community_name": "Public Community Signup Counter"
+    },
+    {
+      "id": "docs_public_community_count_public_community_signup_counter",
+      "label": "Public community signup counter",
+      "file_type": "document",
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L1-L67",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic",
+      "community": 854,
+      "community_name": "Public Community Signup Counter"
+    },
+    {
+      "id": "docs_public_community_count_historical_signup_baseline",
+      "label": "Historical signup baseline: 1409 from 555 production accounts and 854 waitlist records; overlap unchecked and test accounts not excluded",
+      "file_type": "concept",
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L3-L12",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The owner selected the historical signup figure without reconciling waitlist emails against account emails. The figure represents signups rather than unique people or active users.",
+      "_origin": "semantic",
+      "community": 854,
+      "community_name": "Public Community Signup Counter"
+    },
+    {
+      "id": "docs_public_community_count_fixed_measurement_boundary",
+      "label": "Fixed measurement boundary: 2026-09-29T18:03:46.456294Z, unchanged by deployment",
+      "file_type": "concept",
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L13-L15",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The boundary is the timestamp returned with the original production account count.",
+      "_origin": "semantic",
+      "community": 854,
+      "community_name": "Public Community Signup Counter"
+    },
+    {
+      "id": "docs_public_community_count_account_row_increment_semantics",
+      "label": "Count equals 1409 plus public.users rows created after the boundary, across all plans; separate accounts count separately",
+      "file_type": "rationale",
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L15-L18",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Repeat login, linking a provider to an existing account, another device, or purchasing a subscription does not create an additional count.",
+      "_origin": "semantic",
+      "community": 854,
+      "community_name": "Public Community Signup Counter"
+    },
+    {
+      "id": "docs_public_community_count_frozen_waitlist_contribution",
+      "label": "Frozen historical waitlist contribution; new submissions do not increment the public counter and CRM statistics retain existing behavior",
+      "file_type": "rationale",
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L19-L21",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic",
+      "community": 854,
+      "community_name": "Public Community Signup Counter"
+    },
+    {
+      "id": "docs_public_community_count_account_deletion_semantics",
+      "label": "Deleting a post-boundary account reduces the additional count; deleting an older account leaves the historical baseline unchanged",
+      "file_type": "rationale",
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L22-L23",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic",
+      "community": 854,
+      "community_name": "Public Community Signup Counter"
+    },
+    {
+      "id": "docs_public_community_count_aggregate_only_endpoint",
+      "label": "GET /api/community-stats exposes only count; existing service client performs an exact HEAD count without downloading account rows or emails",
+      "file_type": "rationale",
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L27-L30",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic",
+      "community": 854,
+      "community_name": "Public Community Signup Counter"
+    },
+    {
+      "id": "docs_public_community_count_environment_boundary",
+      "label": "Each deployment reads its configured Supabase database; staging uses staging registrations, production uses production registrations after the original boundary",
+      "file_type": "rationale",
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L32-L35",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Staging shares the display baseline but never reads production account data. Production includes registrations made after the original measurement even before release.",
+      "_origin": "semantic",
+      "community": 854,
+      "community_name": "Public Community Signup Counter"
+    },
+    {
+      "id": "docs_public_community_count_homepage_signup_display",
+      "label": "Homepage displays sign-ups to AniDachi and the waitlist through community-stats; waitlist-stats remains CRM-only",
+      "file_type": "rationale",
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L37-L38",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic",
+      "community": 854,
+      "community_name": "Public Community Signup Counter"
+    },
+    {
+      "id": "docs_public_community_count_cache_behavior",
+      "label": "Successful responses allow five minutes of shared cache and five minutes of stale revalidation; staging protection may override with no-store; no continuous browser polling",
+      "file_type": "rationale",
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L38-L41",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic",
+      "community": 854,
+      "community_name": "Public Community Signup Counter"
+    },
+    {
+      "id": "docs_public_community_count_error_behavior",
+      "label": "Database timeout is 2.5 seconds; failure or missing count returns 503 with count null and no-store; component hides invalid count",
+      "file_type": "rationale",
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L43-L46",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The historical baseline must not be presented as a successful fresh count during an outage.",
+      "_origin": "semantic",
+      "community": 854,
+      "community_name": "Public Community Signup Counter"
+    },
+    {
+      "id": "docs_public_community_count_local_delivery_boundary",
+      "label": "Implementation local on codex/staging-trial-rehearsal; no staging or production deployment included",
+      "file_type": "concept",
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L50-L51",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic",
+      "community": 854,
+      "community_name": "Public Community Signup Counter"
+    },
+    {
+      "id": "docs_public_community_count_release_acceptance_checks",
+      "label": "Required before release: verify a new account adds one, repeat login adds nothing, and the homepage displays the cached value",
+      "file_type": "rationale",
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L51-L52",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic",
+      "community": 854,
+      "community_name": "Public Community Signup Counter"
+    },
+    {
+      "id": "docs_public_community_count_website_rollback",
+      "label": "Website rollback restores the old waitlist-only homepage counter; no data migration requires reversal",
+      "file_type": "rationale",
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L53-L54",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic",
+      "community": 854,
+      "community_name": "Public Community Signup Counter"
+    },
+    {
+      "id": "docs_public_community_count_reported_local_web_checks",
+      "label": "Document-reported local verification: web TypeScript check passed and web suite passed 821 tests with six existing skips",
+      "file_type": "concept",
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L56-L57",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic",
+      "community": 854,
+      "community_name": "Public Community Signup Counter"
+    },
+    {
+      "id": "docs_public_community_count_reported_stubbed_route_checks",
+      "label": "Document-reported route tests use the real Supabase client with stubbed HTTP to check the fixed date filter, repeated reads and failure responses",
+      "file_type": "concept",
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L57-L58",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic",
+      "community": 854,
+      "community_name": "Public Community Signup Counter"
+    },
+    {
+      "id": "docs_public_community_count_reported_production_aggregate_check",
+      "label": "Document-reported read-only production SQL at September 29, 18:14:14 UTC: zero post-boundary accounts yields 1409; no accounts created or changed",
+      "file_type": "concept",
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L59-L61",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic",
+      "community": 854,
+      "community_name": "Public Community Signup Counter"
+    },
+    {
+      "id": "docs_public_community_count_reported_local_missing_credentials_check",
+      "label": "Document-reported local Next.js server without database credentials returns 503 and hides the counter",
+      "file_type": "concept",
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L63-L64",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic",
+      "community": 854,
+      "community_name": "Public Community Signup Counter"
+    },
+    {
+      "id": "docs_public_community_count_reported_mocked_rendering_check",
+      "label": "Document-reported desktop 1280px and mobile 390px rendering inspection used browser-local mocked count 1409; override removed; deployed end-to-end count remains unverified",
+      "file_type": "concept",
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L64-L67",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Browser-local mocking proves rendering. Real website/database acceptance remains a staging check.",
+      "_origin": "semantic",
+      "community": 854,
+      "community_name": "Public Community Signup Counter"
+    },
+    {
+      "id": "docs_current_development_state_local_website_counter_checkpoint",
+      "label": "Local website counter checkpoint, September 30, 2026: baseline 1409, post-boundary accounts, environment-local aggregate, separate CRM statistics, not deployed",
+      "file_type": "concept",
+      "source_file": "docs/current-development-state.md",
+      "source_location": "L3-L10",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic",
+      "community": 854,
+      "community_name": "Public Community Signup Counter"
     }
   ],
   "links": [
@@ -225407,18 +225743,6 @@
       "context": "call",
       "source_file": "apps/web/components/ui/card.tsx",
       "source_location": "L35",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_components_watching_together_count_watchingtogethercount",
-      "target": "apps_web_lib_utils_cn",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "apps/web/components/watching-together-count.tsx",
-      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -297664,18 +297988,6 @@
       "weight": 1.0
     },
     {
-      "source": "apps_web_components_watching_together_count",
-      "target": "apps_web_lib_utils_cn",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/components/watching-together-count.tsx",
-      "source_location": "L4",
-      "weight": 1.0
-    },
-    {
       "source": "apps_web_lib_account_menu_client_test",
       "target": "apps_web_lib_test_helpers_account_client_dom_dom",
       "relation": "imports",
@@ -343101,30 +343413,6 @@
       "context": "import",
       "source_file": "apps/web/components/ui/card.tsx",
       "source_location": "L3",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_components_watching_together_count",
-      "target": "ref_react",
-      "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/components/watching-together-count.tsx",
-      "source_location": "L3",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_components_watching_together_count",
-      "target": "apps_web_lib_utils",
-      "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/components/watching-together-count.tsx",
-      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -409026,17 +409314,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/components/ui/card.tsx",
       "source_location": "L74",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_components_watching_together_count",
-      "target": "apps_web_components_watching_together_count_watchingtogethercount",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/components/watching-together-count.tsx",
-      "source_location": "L10",
       "weight": 1.0
     },
     {
@@ -553000,6 +553277,544 @@
       "_origin": "semantic",
       "source": "docs_superpowers_plans_2026_09_29_durable_object_write_optimization_task_five_handoff_gate",
       "target": "docs_releases_paid_hosting_trial_staging_rehearsal_2026_09_29_rehearsal_receipt"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/public-community-count.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "apps_web_lib_public_community_count",
+      "target": "apps_web_lib_anidachi_auth_db"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/public-community-count.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "apps_web_lib_public_community_count",
+      "target": "apps_web_lib_anidachi_auth_db_db"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/public-community-count.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "apps_web_lib_public_community_count",
+      "target": "apps_web_lib_public_community_count_getpubliccommunitycount"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/public-community-count.ts",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "apps_web_lib_public_community_count_getpubliccommunitycount",
+      "target": "apps_web_lib_anidachi_auth_db_db"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/community-stats/route.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "apps_web_app_api_community_stats_route",
+      "target": "apps_web_app_api_community_stats_route_get"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/community-stats/route.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "apps_web_app_api_community_stats_route",
+      "target": "apps_web_lib_public_community_count"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/community-stats/route.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "apps_web_app_api_community_stats_route",
+      "target": "apps_web_lib_public_community_count_getpubliccommunitycount"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/community-stats/route.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "apps_web_app_api_community_stats_route",
+      "target": "ref_next"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/community-stats/route.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "apps_web_app_api_community_stats_route_get",
+      "target": "apps_web_lib_public_community_count_getpubliccommunitycount"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/watching-together-count.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "apps_web_components_watching_together_count",
+      "target": "apps_web_components_watching_together_count_watchingtogethercount"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/watching-together-count.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "apps_web_components_watching_together_count",
+      "target": "apps_web_lib_utils"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/watching-together-count.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "apps_web_components_watching_together_count",
+      "target": "apps_web_lib_utils_cn"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/watching-together-count.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "apps_web_components_watching_together_count",
+      "target": "ref_react"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/components/watching-together-count.tsx",
+      "source_location": "L39",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "apps_web_components_watching_together_count_watchingtogethercount",
+      "target": "apps_web_lib_utils_cn"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/community-stats-route.test.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "apps_web_lib_community_stats_route_test",
+      "target": "apps_web_app_api_community_stats_route"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/community-stats-route.test.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "apps_web_lib_community_stats_route_test",
+      "target": "apps_web_app_api_community_stats_route_get"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/community-stats-route.test.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "apps_web_lib_community_stats_route_test",
+      "target": "ref_node_assert"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/community-stats-route.test.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "apps_web_lib_community_stats_route_test",
+      "target": "ref_node_test"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L22-L23",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_public_community_signup_counter",
+      "target": "docs_public_community_count_account_deletion_semantics"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L15-L18",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_public_community_signup_counter",
+      "target": "docs_public_community_count_account_row_increment_semantics"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L27-L30",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_public_community_signup_counter",
+      "target": "docs_public_community_count_aggregate_only_endpoint"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L38-L41",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_public_community_signup_counter",
+      "target": "docs_public_community_count_cache_behavior"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L32-L35",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_public_community_signup_counter",
+      "target": "docs_public_community_count_environment_boundary"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L43-L46",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_public_community_signup_counter",
+      "target": "docs_public_community_count_error_behavior"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L13-L15",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_public_community_signup_counter",
+      "target": "docs_public_community_count_fixed_measurement_boundary"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L19-L21",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_public_community_signup_counter",
+      "target": "docs_public_community_count_frozen_waitlist_contribution"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L3-L12",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_public_community_signup_counter",
+      "target": "docs_public_community_count_historical_signup_baseline"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L37-L38",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_public_community_signup_counter",
+      "target": "docs_public_community_count_homepage_signup_display"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L50-L51",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_public_community_signup_counter",
+      "target": "docs_public_community_count_local_delivery_boundary"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L51-L52",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_public_community_signup_counter",
+      "target": "docs_public_community_count_release_acceptance_checks"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L63-L64",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_public_community_signup_counter",
+      "target": "docs_public_community_count_reported_local_missing_credentials_check"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L56-L57",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_public_community_signup_counter",
+      "target": "docs_public_community_count_reported_local_web_checks"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L64-L67",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_public_community_signup_counter",
+      "target": "docs_public_community_count_reported_mocked_rendering_check"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L59-L61",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_public_community_signup_counter",
+      "target": "docs_public_community_count_reported_production_aggregate_check"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L57-L58",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_public_community_signup_counter",
+      "target": "docs_public_community_count_reported_stubbed_route_checks"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L53-L54",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_public_community_signup_counter",
+      "target": "docs_public_community_count_website_rollback"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L27-L30",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_aggregate_only_endpoint",
+      "target": "apps_web_app_api_community_stats_route_get"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L27-L30",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_aggregate_only_endpoint",
+      "target": "apps_web_lib_public_community_count_getpubliccommunitycount"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L37-L38",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_homepage_signup_display",
+      "target": "apps_web_components_watching_together_count_watchingtogethercount"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L38-L40",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_cache_behavior",
+      "target": "apps_web_app_api_community_stats_route_get"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L43-L44",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_error_behavior",
+      "target": "apps_web_app_api_community_stats_route_get"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L44-L46",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_error_behavior",
+      "target": "apps_web_components_watching_together_count_watchingtogethercount"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L57-L58",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_reported_stubbed_route_checks",
+      "target": "docs_public_community_count_error_behavior"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L57-L58",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_reported_stubbed_route_checks",
+      "target": "docs_public_community_count_fixed_measurement_boundary"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L59-L61",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_reported_production_aggregate_check",
+      "target": "docs_public_community_count_account_row_increment_semantics"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L63-L64",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_reported_local_missing_credentials_check",
+      "target": "docs_public_community_count_error_behavior"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L64-L66",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_reported_mocked_rendering_check",
+      "target": "docs_public_community_count_homepage_signup_display"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/public-community-count.md",
+      "source_location": "L66-L67",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_public_community_count_reported_mocked_rendering_check",
+      "target": "docs_public_community_count_release_acceptance_checks"
+    },
+    {
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-development-state.md",
+      "source_location": "L9-L9",
+      "weight": 1.0,
+      "_origin": "semantic",
+      "source": "docs_current_development_state_local_website_counter_checkpoint",
+      "target": "docs_public_community_count_public_community_signup_counter"
     }
   ],
   "hyperedges": [
@@ -556144,6 +556959,55 @@
         "undirected_same_endpoint_collapsed_edges": 3
       },
       "token_accounting": "Active Codex semantic subagent usage unavailable."
+    },
+    {
+      "date": "2026-09-30",
+      "topic": "Local public community signup baseline and future account registrations",
+      "sources": {
+        "apps/web/lib/public-community-count.ts": "98170c036c8398bbcc7cdfdbb291a988e4458386798f9a5dff9c05915a086f7d",
+        "apps/web/app/api/community-stats/route.ts": "8f6ba828c65fd586ee7f010765e771c58c0a6c6c96b8f70e9c9ae1cf1f24dc04",
+        "apps/web/components/watching-together-count.tsx": "0c321e8cfad44c17a2105c284ba4bce8cbaf78e71e62d8076a3f1fb144b966c1",
+        "apps/web/lib/community-stats-route.test.ts": "c4ca27458cbd8d45e6263c984b476ba2d295fd1df97212439bf5c6d6c8cee3f6",
+        "docs/public-community-count.md": "a6a91ffb6fe628d648caefa6258f39b87e8377edb3c10b345cc7b2f01260a6ba",
+        "docs/current-development-state.md": "553afe49d4cf90819aa8a103f7034b28a570ee05efca48c92d8fec1d6714d971"
+      },
+      "extracted_ranges": {
+        "docs/public-community-count.md": [
+          [
+            1,
+            67
+          ]
+        ],
+        "docs/current-development-state.md": [
+          [
+            1,
+            11
+          ]
+        ]
+      },
+      "ast_sources": [
+        "apps/web/lib/public-community-count.ts",
+        "apps/web/app/api/community-stats/route.ts",
+        "apps/web/components/watching-together-count.tsx",
+        "apps/web/lib/community-stats-route.test.ts"
+      ],
+      "full_source": "docs/public-community-count.md",
+      "full_source_manifest_refreshed": true,
+      "partial_source_manifest_refreshed": false,
+      "nodes_added": 25,
+      "edges_added": 44,
+      "status": "Local only; source reports TypeScript and 821 tests with six prior skips. Read-only aggregate1409+0 and mocked desktop/mobile rendering do not establish deployed end-to-end acceptance. Staging account/login/cache acceptance remains open.",
+      "scope": "Four AST sources and one complete semantic source plus current-state L1-L11. Retain all prior node IDs, foreign directed links, communities, hyperedges, historical evidence and unrelated manifest rows. Normalize fresh fragments only: standard build_merge refused because it would drop one unrelated historical media-seats node. No reclustering, deployed data access, product tests or provider key.",
+      "health": {
+        "missing_endpoint_edges": 0,
+        "dangling_endpoint_edges": 0,
+        "self_loop_edges": 102,
+        "undirected_same_endpoint_collapsed_edges": 3
+      },
+      "token_accounting": {
+        "ast": "No LLM",
+        "semantic": "Active Codex subagent usage unavailable; not recorded as zero measured cost"
+      }
     }
   ]
 }

@@ -1,4 +1,4 @@
-# Graph Report - anidachi-LP-monorepo  (2026-09-29)
+# Graph Report - anidachi-LP-monorepo  (2026-09-30)
 
 ## Corpus Check (historical detection; latest extraction scoped)
 - 1497 files · ~1,499,576 words
@@ -7,11 +7,20 @@
 - Unclassified: 30 file(s) not represented in the graph (top: .css 12, (none) 11, .toml 2)
 
 ## Summary
-- 14172 nodes · 32537 edges · 853 retained communities (historical detailed analysis below)
+- 14197 nodes · 32581 edges · 853 retained communities plus one scoped counter community (historical detailed analysis below)
 - Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 1081 edges (avg confidence: 0.87)
 - Token accounting: AST uses no LLM; active Codex semantic subagent usage is unavailable.
 
-## Graph Freshness
+## Graph Freshness — public community counter, 2026-09-30
+
+- Owner-approved historical baseline 1,409 = 555 accounts + 854 waitlist records, without deduplication or test-account exclusion. Add only account rows with created_at after fixed 2026-09-29T18:03:46.456294Z; frozen waitlist contribution, all plans, repeat logins and subscription changes do not add rows. This is a signup figure, not unique or active people.
+- Server-only exact HEAD aggregate from each environment's own database reaches GET /api/community-stats as { count }. No account rows/emails, schema migration, auth, Worker or extension change. Homepage sign-up copy; five-minute shared cache plus five-minute stale revalidation; staging protection can impose no-store. Timeout/error/null count returns 503/no-store and hides the figure.
+- Source-reported verification: TypeScript and 821 tests passed with six existing skips; stubbed HTTP route tests cover filters/repeated reads/failure. Read-only production SQL at September 29, 18:14:14 UTC found 0 post-boundary accounts, yielding 1,409. No account writes. Local server lacks database credentials and hides its 503; browser-local mocked 1,409 renders at 1280px/390px, then override removed. This is rendering proof; deployed account/login/cache acceptance remains open. Local branch only, no staging/production deployment; website rollback restores the old counter with no migration undo.
+- Scope: four code files, 7 AST nodes/18 edges; full 67-line new domain document and only current-state L1–11. 25 added nodes/44 net links; all 14,172 prior IDs, foreign directed pairs, 853 communities, existing hyperedges and historical evidence retained. Only four AST rows and the full document semantic row stamped; current-state whole-file freshness and unrelated backlog remain unchanged. Prior out-of-scope line references remain recorded historical evidence.
+- Standard build_merge refused whole-graph normalization because it would drop an unrelated historical media-seats node. Fresh-fragment normalization and asserted scoped merge preserved it. No global reclustering or HTML export. Integrity: zero missing/dangling endpoints; inherited 102 selfloops and 3 undirected-pair warnings unchanged. Serialized source→target directions and directed:false container metadata retained.
+- Token accounting: AST requires no LLM; active Codex semantic subagent usage is unavailable. Source hashes and exact ranges are recorded in semantic_updates. Earlier sections below are dated historical checkpoints.
+
+## Historical Graph Freshness — through 2026-09-29
 - Latest scoped update: staging rehearsal activated revision 2 at 2026-09-29T15:48:48.800820Z. Owner confirmed Plus stayed and Free closed; full Sandbox/P11/media acceptance remains open. One full new receipt and added headers in four partial sources; older global build marker retained.
 - Built from commit: `80fefde3`
 - Historical evidence retained for the verified dormant staging runtime checkpoint50a054b3: schema375/Web377/runtime378,69migrations, configured Sandbox/drain, signed admission and technical CI/deploy/extension/smoke evidence. Owner acceptance/T/main/Store remain open. One full source and five partial sources including planTask7 technical checklist; no AST/full-corpus freshness. Exact six hashes/ranges are recorded in semantic_updates.
