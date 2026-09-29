@@ -12,11 +12,16 @@ and alarm writes removed. API check, 252 unit tests, 96 Workers runtime tests,
 203 protocol tests and 39 room harness scenarios pass. See the [implementation
 evidence and staging acceptance](releases/durable-object-write-optimization-2026-09-29.md)
 and [execution plan](superpowers/plans/2026-09-29-durable-object-write-optimization.md).
-Delivery and owner acceptance are separate gates. Staging acceptance does not close the
+PR #381 delivered the optimization to staging at `1d50432c` on September 29,
+02:45 UTC. Deploy API succeeded; Worker `f7942d07-cb7a-473e-9484-c26768ea04c2`
+receives 100% of staging traffic and Worker smoke passed. Read-only Supabase
+still has T NULL, revision 1, trials/scheduler OFF and zero operation/target/trial
+rows. The receipt records exact deployment evidence and the rollback version.
+Owner manual acceptance remains open. Staging acceptance does not close the
 remaining Sandbox/P11/old-client trial matrix or authorize main/Store/T.
 
-GitHub readback on September 29 confirms pricing PR #380 merged into staging
-as `1f4ad13f` (September 28, 22:43:41 UTC). Promotion PR #376 remains open without
+The earlier pricing PR #380 merged into staging as `1f4ad13f`
+(September 28, 22:43:41 UTC). Promotion PR #376 remains open without
 auto-merge. The earlier local pricing evidence below stays distinct from this
 merge and from owner checkout acceptance. Runtime/policy values in the delivery
 receipt are dated observations and must be rechecked before the next deployment.

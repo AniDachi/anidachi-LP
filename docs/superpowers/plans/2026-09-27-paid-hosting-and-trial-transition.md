@@ -25,7 +25,9 @@ Cloudflare Workers/Durable Objects, WXT/React, shared Zod protocol.
 не закрывают оставшиеся trial/Sandbox/P11/Store проверки. Оптимизация реализована
 и локально проверена в `5bed2e55`; [исполняемый план](2026-09-29-durable-object-write-optimization.md)
 и [доказательства/приемка](../../releases/durable-object-write-optimization-2026-09-29.md)
-разделяют реализацию, доставку и ручную приемку. Уже доставленные schema/Web/Worker и исправление цен сохраняются;
+фиксируют поставку PR #381 в staging (`1d50432c`), успешные Worker deployment/smoke
+и dormant readback. Ручная приемка владельцем еще открыта.
+Уже доставленные schema/Web/Worker и исправление цен сохраняются;
 новые продуктовые правила не включаются вместе с оптимизацией.
 
 **Последний локальный блок 2026-09-29:** владелец подтвердил минимальный сайт для

@@ -36,7 +36,8 @@
   wake preserves overdue UTC quota before meter rollover. API252unit/96runtime,
   protocol203, room39, legacyWebRTC26 and v3four-user checks pass; independent
   review finds no runtime defect. [Evidence and owner acceptance](../../releases/durable-object-write-optimization-2026-09-29.md).
-  Staging delivery/manual acceptance remain distinct; trial/T/main/Store stay gated.
+  PR #381 delivered staging `1d50432c`; Worker deployment and smoke pass.
+  Owner manual acceptance remains open; trial/T/main/Store stay gated.
 
 - 2026-09-28 — `codex/paid-hosting-transition-plan`, local room-end checkpoint
   from `30b92d3e`: compatible cutover display context and original-deadline warning

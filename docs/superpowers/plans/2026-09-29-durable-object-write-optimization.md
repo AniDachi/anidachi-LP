@@ -156,15 +156,16 @@ no new runtime features in this task.
 - [x] Verify compatibility reading old/new storage and preservation of dormant
   trial/terminal behavior. Review full branch with a fresh reviewer; fix confirmed
   defects with RED→GREEN evidence and rerun affected checks.
-- [ ] Update docs and Graphify via semantic skill for docs plus AST for changed
+- [x] Update docs and Graphify via semantic skill for docs plus AST for changed
   code. Preserve unrelated graph backlog and existing integrity caveats.
-- [ ] Fetch upstream, open PR into staging, attach it to this task, inspect CI
+- [x] Fetch upstream, open PR into staging, attach it to this task, inspect CI
   and resolve relevant failures. Preserve main promotion gate.
-- [ ] Before delivery capture current staging version/config/policy; after merge
+- [x] Before delivery capture current staging version/config/policy; after merge
   verify exact Worker deployment and smoke, with T/trials still dormant. Record
   rollback version and target-environment evidence; no production or Store action.
-- [ ] Provide owner a concrete manual scenario with old ZIP, new candidate and
-  mixed clients. Record manual acceptance only after the owner's actual result.
+- [x] Provide a concrete owner manual scenario with old ZIP, new candidate and
+  mixed clients in the linked acceptance receipt.
+- [ ] Record manual acceptance only after the owner's actual result.
 - [ ] Resume trial acceptance/activation only after that result; this remains an
   external acceptance gate, not an unchecked task to silently mark complete.
 
@@ -213,3 +214,12 @@ types, rooms39/39, legacy WebRTC26/26 and v3 four-participant harness all pass.
 Fresh whole-branch review found no runtime defects; its stale-doc status note
 is addressed by the already planned canonical documentation update.
 [Acceptance and rollback evidence](../../releases/durable-object-write-optimization-2026-09-29.md).
+
+Task 5 staging delivery: PR #381 merged as `1d50432cc215f05ab3123891bac7fd3b560e907d`
+at 2026-09-29 02:45:09 UTC after successful CI/rooms/P2P/preview checks.
+Deploy API36514058395 succeeded; Wrangler confirms Worker
+`f7942d07-cb7a-473e-9484-c26768ea04c2` at 100%, matching the deployment log.
+Worker smoke passes. Postdeployment Supabase still has activation_at NULL,
+revision1, trials/scheduler OFF and zero operation/target/trial rows. Rollback
+version `78e5de69-f2dc-42f6-b5d7-e44cc4b24f82` is retained. Owner acceptance and
+daily cost comparison remain open; no main/Store/T action is part of this delivery.
