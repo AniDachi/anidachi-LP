@@ -59,12 +59,14 @@
 	justify-self: end;
 	margin: 0;
 }
-.selector {
-	display: flex;
-	justify-content: center;
-	gap: clamp(48px, 6vw, 80px);
+.selector,
+.equation {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 32px minmax(0, 1fr);
+	column-gap: 14px;
 }
 .selector button {
+	justify-self: center;
 	min-height: 46px;
 	min-width: 76px;
 	border-bottom: 2px solid transparent;
@@ -76,6 +78,9 @@
 	transition:
 		color 140ms,
 		border-color 140ms;
+}
+.selector button:last-child {
+	grid-column: 3;
 }
 .selector button:hover {
 	color: var(--ani-text);
@@ -91,9 +96,7 @@
 	display: block;
 }
 .equation {
-	display: grid;
-	grid-template-columns: minmax(0, 1fr) 32px minmax(0, 1fr);
-	gap: 18px 14px;
+	row-gap: 18px;
 	padding: 36px 0 0;
 	align-items: center;
 	text-align: center;
@@ -147,6 +150,7 @@
 	.number {
 		font-size: 116px;
 	}
+	.selector,
 	.equation {
 		column-gap: 8px;
 	}
@@ -167,6 +171,7 @@
 	.room {
 		justify-self: center;
 	}
+	.selector,
 	.equation {
 		grid-template-columns: minmax(0, 1fr) 40px minmax(0, 1fr);
 		column-gap: 22px;
@@ -196,9 +201,13 @@
 	.selector strong {
 		font-size: 20px;
 	}
+	.selector,
 	.equation {
 		grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr);
-		gap: 16px 12px;
+		column-gap: 12px;
+	}
+	.equation {
+		row-gap: 16px;
 		padding: 31px 0 0;
 	}
 	.number {
