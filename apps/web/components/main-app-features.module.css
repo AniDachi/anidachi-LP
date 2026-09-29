@@ -67,16 +67,18 @@
 }
 .selector button {
 	justify-self: center;
-	min-height: 46px;
-	min-width: 76px;
-	border-bottom: 2px solid transparent;
-	background: none;
+	min-height: 44px;
+	min-width: 104px;
+	border: 1px solid var(--ani-control-border);
+	border-radius: 0;
+	background: var(--ani-canvas);
 	text-align: center;
-	padding: 0 8px 12px;
+	padding: 12px 20px;
 	color: #a39d95;
 	cursor: pointer;
 	transition:
 		color 140ms,
+		background-color 140ms,
 		border-color 140ms;
 }
 .selector button:last-child {
@@ -84,15 +86,22 @@
 }
 .selector button:hover {
 	color: var(--ani-text);
+	border-color: var(--ani-primary);
 }
 .selector button[aria-pressed="true"] {
-	color: var(--ani-text);
-	border-bottom-color: var(--ani-progress);
+	background: var(--ani-primary);
+	color: var(--ani-on-primary);
+	border-color: var(--ani-primary);
+}
+.selector button[aria-pressed="true"]:hover {
+	background: var(--ani-primary-hover);
 }
 .selector strong {
-	font-size: 20px;
-	font-weight: 500;
-	letter-spacing: -0.025em;
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 1;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
 	display: block;
 }
 .equation {
@@ -197,9 +206,6 @@
 	}
 	.main {
 		gap: 38px;
-	}
-	.selector strong {
-		font-size: 20px;
 	}
 	.selector,
 	.equation {
