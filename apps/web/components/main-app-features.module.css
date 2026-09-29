@@ -53,11 +53,16 @@
 	background: var(--ani-primary-hover);
 }
 .room {
+	--number-size: clamp(110px, 11.5vw, 164px);
+	--guest-caption-offset: 0.013;
 	min-width: 0;
 	width: 100%;
 	max-width: 440px;
 	justify-self: end;
 	margin: 0;
+}
+.room:has(.selector button:last-child[aria-pressed="true"]) {
+	--guest-caption-offset: 0.042;
 }
 .selector,
 .equation {
@@ -102,7 +107,7 @@
 }
 .number {
 	grid-row: 1;
-	font-size: clamp(110px, 11.5vw, 164px);
+	font-size: var(--number-size);
 	font-weight: 450;
 	letter-spacing: -0.07em;
 	padding-inline-end: 0.07em;
@@ -116,9 +121,12 @@
 	text-align: center;
 	font-size: 15px;
 	font-weight: 500;
+	/* Match visible numeral ink, including the font's asymmetric side bearings. */
+	transform: translateX(calc(var(--number-size) * -0.039));
 }
 .friendsLabel {
 	grid-column: 3;
+	transform: translateX(calc(var(--number-size) * var(--guest-caption-offset)));
 }
 .friendsLabel span {
 	color: var(--ani-progress);
@@ -150,8 +158,8 @@
 	.main {
 		gap: 40px;
 	}
-	.number {
-		font-size: 116px;
+	.room {
+		--number-size: 116px;
 	}
 	.selector,
 	.equation {
@@ -172,15 +180,13 @@
 		font-size: 54px;
 	}
 	.room {
+		--number-size: 152px;
 		justify-self: center;
 	}
 	.selector,
 	.equation {
 		grid-template-columns: minmax(0, 1fr) 40px minmax(0, 1fr);
 		column-gap: 22px;
-	}
-	.number {
-		font-size: 152px;
 	}
 }
 @media (max-width: 580px) {
@@ -216,8 +222,8 @@
 		row-gap: 16px;
 		padding: 31px 0 0;
 	}
-	.number {
-		font-size: clamp(88px, 27vw, 144px);
+	.room {
+		--number-size: clamp(88px, 27vw, 144px);
 	}
 	.plusSign {
 		width: 24px;
