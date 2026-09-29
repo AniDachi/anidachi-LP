@@ -1,19 +1,15 @@
 import { Chrome, Search, Users, MessageSquare, History, Clock3 } from "lucide-react";
-import Link from "next/link";
 import { HomeSectionHeader } from "@/components/home-section-header";
 import {
-  INSTALL_HOWTO_STEP_TEXT_VIA_HUB,
-  INSTALL_HUB_PATH,
+  CHROME_WEB_STORE_URL,
+  INSTALL_HOWTO_STEP_TEXT,
 } from "@/lib/install-cta";
-
-const INSTALL_STEP_TAIL =
-  "(~2 minutes) — works with your Crunchyroll or YouTube session.";
 
 const steps = [
   {
     icon: Chrome,
-    title: "Install the Chrome Extension",
-    description: `${INSTALL_HOWTO_STEP_TEXT_VIA_HUB} ${INSTALL_STEP_TAIL}`,
+    title: "Install from Chrome Web Store",
+    description: INSTALL_HOWTO_STEP_TEXT,
   },
   {
     icon: Search,
@@ -23,9 +19,9 @@ const steps = [
   },
   {
     icon: Users,
-    title: "Create a Watchroom",
+    title: "Create or join a room",
     description:
-      "Create a room and share the invite link. Each friend joins in desktop Chrome with the AniDachi extension installed.",
+      "Host with Plus or Pro and share the invite link. Joining a friend’s room is free.",
   },
   {
     icon: MessageSquare,
@@ -47,7 +43,7 @@ export function HowItWorks() {
       <div className="container mx-auto px-4">
         <HomeSectionHeader
           title="How AniDachi works"
-          description="From install to your first shared episode in under two minutes."
+          description="Install the extension. Open a video. Watch together."
         />
 
         <ol id="extension" className="mx-auto max-w-2xl space-y-0">
@@ -80,15 +76,16 @@ export function HowItWorks() {
                 <p className="text-[0.95rem] leading-relaxed text-ani-muted">
                   {i === 0 ? (
                     <>
-                      Open{" "}
-                      <Link
-                        href={INSTALL_HUB_PATH}
+                      Open the official AniDachi{" "}
+                      <a
+                        href={CHROME_WEB_STORE_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="font-medium text-ani-progress underline-offset-4 hover:underline"
                       >
-                        /extension
-                      </Link>
-                      , then choose Add to Chrome from the official AniDachi
-                      Chrome Web Store listing. {INSTALL_STEP_TAIL}
+                        Chrome Web Store
+                      </a>{" "}
+                      listing and choose Add to Chrome.
                     </>
                   ) : (
                     step.description

@@ -33942,7 +33942,7 @@
       "file_type": "code",
       "norm_label": "howitworks()",
       "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L44"
+      "source_location": "L40"
     },
     {
       "id": "apps_web_components_join_discord_button_joindiscordbutton",
@@ -99967,7 +99967,7 @@
       "file_type": "code",
       "norm_label": "howtosteps",
       "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L140"
+      "source_location": "L137"
     },
     {
       "id": "apps_web_components_how_it_works_steps",
@@ -99978,7 +99978,7 @@
       "file_type": "code",
       "norm_label": "steps",
       "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L12"
+      "source_location": "L8"
     },
     {
       "id": "apps_web_components_join_discord_button",
@@ -296823,30 +296823,6 @@
       "weight": 1.0
     },
     {
-      "source": "apps_web_components_how_it_works",
-      "target": "apps_web_components_home_section_header_homesectionheader",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L3",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_components_how_it_works",
-      "target": "apps_web_lib_install_cta_install_hub_path",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L4",
-      "weight": 1.0
-    },
-    {
       "source": "apps_web_components_join_discord_button",
       "target": "apps_web_lib_conversion_events_inferpagetemplatefrompath",
       "relation": "imports",
@@ -342433,30 +342409,6 @@
       "context": "import",
       "source_file": "apps/web/components/home-section-header.tsx",
       "source_location": "L2",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_components_how_it_works",
-      "target": "apps_web_components_home_section_header",
-      "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L3",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_components_how_it_works",
-      "target": "apps_web_lib_install_cta",
-      "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -408168,39 +408120,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/components/home-section-header.tsx",
       "source_location": "L5",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_components_how_it_works",
-      "target": "apps_web_components_how_it_works_howtosteps",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L140",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_components_how_it_works",
-      "target": "apps_web_components_how_it_works_howitworks",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L44",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_components_how_it_works",
-      "target": "apps_web_components_how_it_works_steps",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L12",
       "weight": 1.0
     },
     {
@@ -513445,42 +513364,6 @@
       "confidence_score": 1.0
     },
     {
-      "source": "apps_web_components_how_it_works",
-      "target": "apps_web_lib_install_cta_install_howto_step_text_via_hub",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L4",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_components_how_it_works",
-      "target": "ref_lucide_react",
-      "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L1",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_components_how_it_works",
-      "target": "ref_next",
-      "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L2",
-      "weight": 1.0
-    },
-    {
       "source": "apps_web_components_nav_bar_client",
       "target": "ref_lucide_react",
       "relation": "imports_from",
@@ -553860,6 +553743,111 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/main-app-features.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_how_it_works",
+      "target": "apps_web_components_home_section_header_homesectionheader",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/components/how-it-works.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_how_it_works",
+      "target": "apps_web_lib_install_cta_chrome_web_store_url",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/components/how-it-works.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_how_it_works",
+      "target": "apps_web_lib_install_cta_install_howto_step_text",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/components/how-it-works.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_how_it_works",
+      "target": "ref_lucide_react",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/components/how-it-works.tsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_how_it_works",
+      "target": "apps_web_components_home_section_header",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/components/how-it-works.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_how_it_works",
+      "target": "apps_web_lib_install_cta",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/components/how-it-works.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_how_it_works",
+      "target": "apps_web_components_how_it_works_howtosteps",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/components/how-it-works.tsx",
+      "source_location": "L137",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_how_it_works",
+      "target": "apps_web_components_how_it_works_howitworks",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/components/how-it-works.tsx",
+      "source_location": "L40",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_how_it_works",
+      "target": "apps_web_components_how_it_works_steps",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/components/how-it-works.tsx",
       "source_location": "L8",
       "weight": 1.0
     }
