@@ -67,41 +67,31 @@
 }
 .selector button {
 	justify-self: center;
-	min-height: 44px;
+	min-height: 56px;
 	min-width: 104px;
-	border: 1px solid var(--ani-control-border);
+	border: 0;
 	border-radius: 0;
-	background: var(--ani-canvas);
+	background: transparent;
 	text-align: center;
-	padding: 12px 20px;
-	color: #a39d95;
+	padding: 4px 8px;
+	color: var(--ani-text);
 	cursor: pointer;
-	transition:
-		color 140ms,
-		background-color 140ms,
-		border-color 140ms;
+	transition: color 140ms;
 }
 .selector button:last-child {
 	grid-column: 3;
 }
 .selector button:hover {
-	color: var(--ani-text);
-	border-color: var(--ani-primary);
+	color: var(--ani-progress);
 }
 .selector button[aria-pressed="true"] {
-	background: var(--ani-primary);
-	color: var(--ani-on-primary);
-	border-color: var(--ani-primary);
-}
-.selector button[aria-pressed="true"]:hover {
-	background: var(--ani-primary-hover);
+	color: var(--ani-progress);
 }
 .selector strong {
-	font-size: 13px;
-	font-weight: 600;
-	line-height: 1;
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
+	font-size: 44px;
+	font-weight: 550;
+	line-height: 1.1;
+	letter-spacing: -0.045em;
 	display: block;
 }
 .equation {
@@ -206,6 +196,12 @@
 	}
 	.main {
 		gap: 38px;
+	}
+	.selector button {
+		min-height: 48px;
+	}
+	.selector strong {
+		font-size: 32px;
 	}
 	.selector,
 	.equation {
