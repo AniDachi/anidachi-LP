@@ -62,7 +62,7 @@
 .selector {
 	display: flex;
 	justify-content: center;
-	gap: 28px;
+	gap: clamp(48px, 6vw, 80px);
 }
 .selector button {
 	min-height: 46px;
