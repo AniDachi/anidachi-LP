@@ -174237,6 +174237,42 @@
       "status": "implemented_locally_verified_staging_delivery_and_owner_acceptance_pending",
       "_origin": "semantic",
       "evidence_excerpt": "содержат причины, этапы, совместимость, проверки и откат. Оптимизация реализована\nв `5bed2e55`, локальные unit/runtime и room-проверки проходят. На четырех\nсценариях повторных HOST_STATE записи SQLite сократились на 75–80%; это не\nпрогноз суточного счета. [Проверки и ручная приемка](../durable-object-write-optimization-2026-09-29.md)"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_06_07_production_room_p2p_hardening_roadmap_do_write_optimization_progress_2026_09_29",
+      "label": "September 29 DO write optimization progress: redundant writes removed with overdue UTC quota recovery",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-06-07-production-room-p2p-hardening-roadmap.md",
+      "source_location": "L34-L39",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Local API252 unit/96 runtime, protocol203, rooms39, legacy WebRTC26 and four-user v3 checks pass; independent review found no runtime defect. Staging delivery and owner acceptance remain distinct; trial/T/main/Store stay gated.",
+      "status": "implemented_locally_verified_staging_owner_acceptance_pending",
+      "source_product_commit": "5bed2e55",
+      "extraction_scope": "new_progress_bullet_only",
+      "evidence_excerpt": "- 2026-09-29 — `codex/do-write-optimization-design`, `5bed2e55`: removed redundant\n  DO meter/policy/alarm/snapshot writes and made denial persistence incremental;\n  wake preserves overdue UTC quota before meter rollover. API252unit/96runtime,\n  protocol203, room39, legacyWebRTC26 and v3four-user checks pass; independent\n  review finds no runtime defect. [Evidence and owner acceptance](../../releases/durable-object-write-optimization-2026-09-29.md).\n  Staging delivery/manual acceptance remain distinct; trial/T/main/Store stay gated.",
+      "community": 853,
+      "community_name": "DO write optimization implementation"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_06_12_room_flow_p2p_flawless_execution_plan_do_write_optimization_progress_2026_09_29",
+      "label": "September 29 server-only DO optimization preserves protocol intervals atomic persistence and wake deadlines",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
+      "source_location": "L298-L303",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Local API252 unit/96 runtime, protocol203, rooms39, legacy WebRTC26 and four-user v3 checks pass. Owner acceptance and actual daily billing remain unverified; trial/T/main/Store remain gated.",
+      "status": "implemented_locally_verified_staging_owner_acceptance_pending",
+      "source_product_commit": "5bed2e55",
+      "extraction_scope": "new_progress_bullet_only",
+      "evidence_excerpt": "- 2026-09-29 — `codex/do-write-optimization-design`, `5bed2e55`: server-only DO\n  write optimization retains protocol/event frequency, durable interval accounting,\n  atomic snapshot/denial writes and original quota deadlines after wake. Local\n  API252unit/96runtime, protocol203, room39, legacyWebRTC26 and v3four-user checks\n  pass. [Implementation and manual staging scenario](../../releases/durable-object-write-optimization-2026-09-29.md).\n  Owner acceptance and real daily billing remain unverified; trial/T/main/Store gated.",
+      "community": 853,
+      "community_name": "DO write optimization implementation"
     }
   ],
   "links": [
@@ -550718,6 +550754,26 @@
       "weight": 1.0,
       "source": "docs_releases_paid_hosting_trial_transition_master_plan_ru_do_optimization_measured_checkpoint",
       "target": "docs_superpowers_plans_2026_09_29_durable_object_write_optimization_implementation_plan"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-06-07-production-room-p2p-hardening-roadmap.md",
+      "source_location": "L34-L39",
+      "weight": 1.0,
+      "source": "docs_superpowers_plans_2026_06_07_production_room_p2p_hardening_roadmap_do_write_optimization_progress_2026_09_29",
+      "target": "docs_releases_durable_object_write_optimization_2026_09_29_implementation_receipt"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md",
+      "source_location": "L298-L303",
+      "weight": 1.0,
+      "source": "docs_superpowers_plans_2026_06_12_room_flow_p2p_flawless_execution_plan_do_write_optimization_progress_2026_09_29",
+      "target": "docs_releases_durable_object_write_optimization_2026_09_29_implementation_receipt"
     }
   ],
   "hyperedges": [
@@ -553413,6 +553469,21 @@
         "undirected_same_endpoint_collapsed_edges": 3
       },
       "token_accounting": "AST no LLM; active Codex semantic usage unavailable."
+    },
+    {
+      "date": "2026-09-29",
+      "topic": "DO optimization entries in active P2P plans",
+      "scope": "Only the two added progress bullets; no full-file cache/manifest stamps. Historical plan graph retained.",
+      "sources": {
+        "docs/superpowers/plans/2026-06-07-production-room-p2p-hardening-roadmap.md": {
+          "sha256": "5d94a2ca97cd1fe5de25df002bb2412a2d4f58a2203e53d4320e69b0efa7597e",
+          "range": "L34-L39"
+        },
+        "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md": {
+          "sha256": "51f9994266021fde444d3c0e7c16a6d09f44613bd5cc59e04a80a9b4e0231d3d",
+          "range": "L298-L303"
+        }
+      }
     }
   ]
 }

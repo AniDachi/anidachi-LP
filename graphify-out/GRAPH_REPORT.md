@@ -7,12 +7,12 @@
 - Unclassified: 30 file(s) not represented in the graph (top: .css 12, (none) 11, .toml 2)
 
 ## Summary
-- 14157 nodes · 32504 edges · 853 retained communities (historical detailed analysis below)
+- 14159 nodes · 32506 edges · 853 retained communities (historical detailed analysis below)
 - Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 1081 edges (avg confidence: 0.87)
 - Token accounting: AST uses no LLM; active Codex semantic subagent usage is unavailable.
 
 ## Graph Freshness
-- Latest scoped update: DO write optimization implementation5bed2e55; 15 changed TypeScript AST files + six complete documents. Staging/owner acceptance separate; older global build marker retained.
+- Latest scoped update: DO write optimization implementation5bed2e55; 15 changed TypeScript AST files + six complete documents + two dated P2P progress entries (partial sources; full hashes not stamped). Staging/owner acceptance separate; older global build marker retained.
 - Built from commit: `80fefde3`
 - Includes the verified dormant staging runtime checkpoint50a054b3: schema375/Web377/runtime378,69migrations, configured Sandbox/drain, signed admission and technical CI/deploy/extension/smoke evidence. Owner acceptance/T/main/Store remain open. One full source and five partial sources including planTask7 technical checklist; no AST/full-corpus freshness. Exact six hashes/ranges are recorded in semantic_updates.
 - Run `graphify update .` after code changes (no API cost).
