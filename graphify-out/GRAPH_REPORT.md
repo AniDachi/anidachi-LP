@@ -1,21 +1,29 @@
 # Graph Report - anidachi-LP-monorepo  (2026-09-29)
 
-## Corpus Check (current detection; scoped extraction)
+## Corpus Check (historical detection; latest extraction scoped)
 - 1497 files · ~1,499,576 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 - Unclassified: 30 file(s) not represented in the graph (top: .css 12, (none) 11, .toml 2)
 
 ## Summary
-- 14159 nodes · 32506 edges · 853 retained communities (historical detailed analysis below)
+- 14172 nodes · 32537 edges · 853 retained communities (historical detailed analysis below)
 - Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 1081 edges (avg confidence: 0.87)
 - Token accounting: AST uses no LLM; active Codex semantic subagent usage is unavailable.
 
 ## Graph Freshness
-- Latest scoped update: DO optimization delivered in staging1d50432c; one full receipt and changed ranges of seven partial sources. Owner acceptance remains open; older global build marker retained.
+- Latest scoped update: staging rehearsal activated revision 2 at 2026-09-29T15:48:48.800820Z. Owner confirmed Plus stayed and Free closed; full Sandbox/P11/media acceptance remains open. One full new receipt and added headers in four partial sources; older global build marker retained.
 - Built from commit: `80fefde3`
-- Includes the verified dormant staging runtime checkpoint50a054b3: schema375/Web377/runtime378,69migrations, configured Sandbox/drain, signed admission and technical CI/deploy/extension/smoke evidence. Owner acceptance/T/main/Store remain open. One full source and five partial sources including planTask7 technical checklist; no AST/full-corpus freshness. Exact six hashes/ranges are recorded in semantic_updates.
+- Historical evidence retained for the verified dormant staging runtime checkpoint50a054b3: schema375/Web377/runtime378,69migrations, configured Sandbox/drain, signed admission and technical CI/deploy/extension/smoke evidence. Owner acceptance/T/main/Store remain open. One full source and five partial sources including planTask7 technical checklist; no AST/full-corpus freshness. Exact six hashes/ranges are recorded in semantic_updates.
 - Run `graphify update .` after code changes (no API cost).
+
+## Staging cutover rehearsal: activated with partial manual confirmation — 2026-09-29
+
+- T2026-09-29T15:48:48.800820Z, revision2, trials/scheduler ON in staging. Exact Web deployment dpl_4pPLCVC4CiK6x6TXhBvEQvTD62ww at source73ea22d5f021b4650ad2cb83acd24a91435f4b76 and Worker f7942d07-cb7a-473e-9484-c26768ea04c2 identify this receipt.
+- One remaining Free target fenced1.472180s/finalized3.702180s after T; one attempt, completed1/pending0, no active assignments. Another Free room ended before T and is excluded. Plus live and subscriptions/account distribution61Free/1Plus preserved; zero trial rows. Real pg_net → Web → Worker → Web/PostgREST chain acknowledged; a single measurement is not a latency guarantee.
+- Owner confirmed Plus stayed and Free closed on the old extension. Individual audio/video track cleanup, Free-create denial/Free-join, card-backed trial, new ZIP and full Sandbox/P11/history/payment/recovery remain open. Two pre-T Sandbox reservations reconciled without changing the paid subscription. Website design and annual plan are a separate future staging block. No code, ZIP, main/production or Store release; recovery preserves original T/operation and closed rooms.
+- Scope: full77-line new receipt and added headers only in four sources.13new nodes,12updated current meanings,31new directed links; prior node evidence retained in historical_versions. All prior14159nodes/32506links,853community identities and hyperedges preserved. Only the new full receipt receives a semantic manifest stamp; partial whole-file hashes/backlog unchanged. No AST, whole-corpus extraction/reclustering, runtime test or external verification. Active Codex semantic token usage unavailable.
+- Integrity: zero missing/dangling endpoints; inherited102selfloops and3undirected collapse warnings unchanged. Existing directed:false container metadata retained while every serialized source→target pair is preserved. Earlier sections below are historical checkpoints; their OFF/T-pending statements do not describe the current staging state. Exact source hashes and read ranges are in semantic_updates.
 
 ## DO write optimization: verified staging delivery — 2026-09-29
 

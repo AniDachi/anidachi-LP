@@ -1,5 +1,15 @@
 # Paid Hosting and Three-Day Trial Transition Implementation Plan
 
+**Текущий staging checkpoint, 29 сентября 15:48 UTC:** владелец подготовил
+Free/Plus-комнаты и отдельно разрешил репетицию. T зафиксирован в
+15:48:48.800820 UTC, revision 2, trials/scheduler ON. Одна оставшаяся открытая
+Free-комната закрыта; outbox 1/1, pending 0. Plus-комната и подписки сохранены.
+[Фактический отчет](../../releases/paid-hosting-trial/staging-rehearsal-2026-09-29.md)
+фиксирует также ответ владельца: Plus осталась, Free закрылись.
+Задача 7/P11 и полная ручная матрица остаются открытыми. Формулировки OFF/T
+впереди ниже относятся к предыдущим checkpoint. Дизайн и годовой план — следующий
+отдельно согласуемый блок staging, не часть этой операции.
+
 > **For agentic workers:** Use `superpowers:executing-plans` to implement this
 > plan task by task after review of the written design and implementation plan.
 > Subagent execution is optional and requires the applicable authorization.

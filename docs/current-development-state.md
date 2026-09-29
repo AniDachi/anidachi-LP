@@ -1,5 +1,19 @@
 # Current Development State
 
+## Latest checkpoint: staging model activated, 2026-09-29 15:48 UTC
+
+The owner explicitly authorized the staged transition rehearsal after the DO
+optimization delivery and a manual baseline room test. Staging activation committed
+at **15:48:48.800820 UTC**, revision 2, trials/scheduler ON. One still-open Free
+room was durably fenced in 1.472s and finalized in 3.702s; all targets completed.
+The Plus room remained live; account plan counts and subscription fingerprints
+were preserved. One other Free room ended before T and is excluded from this
+cutover result. The owner confirmed Plus remained and Free closed; full Sandbox/P11 acceptance remains open; this is not
+blanket acceptance of every optimization/media scenario. See the
+[staging rehearsal receipt](releases/paid-hosting-trial/staging-rehearsal-2026-09-29.md).
+The dormant/OFF states below are earlier dated checkpoints, superseded for staging
+by this rehearsal. Main/production and Store were not changed in this operation.
+
 Last updated: 2026-09-29.
 
 Latest owner decision: complete Durable Object write optimization, deliver it

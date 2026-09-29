@@ -1,5 +1,13 @@
 # Durable Object Write Optimization Implementation Plan
 
+**Later operational checkpoint, 2026-09-29 15:48 UTC:** after delivery and the
+owner's baseline room test, the owner explicitly requested a separate staging
+cutover rehearsal. It has now activated revision 2 and closed the remaining Free
+room, while preserving the Plus room and subscriptions. See the
+[rehearsal receipt](../../releases/paid-hosting-trial/staging-rehearsal-2026-09-29.md).
+This later authorization supersedes the earlier wait-to-resume status; it does not
+claim full manual media/quota acceptance or fold trial activation into optimization.
+
 > **For agentic workers:** Use `superpowers:executing-plans` inline, task by task,
 > with TDD and a fresh whole-branch review. Track completed steps and evidence.
 > The owner explicitly authorized implementation after reviewing the design and
