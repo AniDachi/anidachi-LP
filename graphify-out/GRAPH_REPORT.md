@@ -13,7 +13,7 @@
 
 ## Graph Freshness — concise homepage guide, 2026-09-30
 
-- HowItWorks presents five current actions: install from the canonical Chrome Web Store link, sign in, open a supported video, create/join a room, and watch together. Plus/Pro hosting and free guest admission remain explicit. History and the future async feature are outside this startup guide.
+- HowItWorks presents five current actions: install from the canonical Chrome Web Store link, sign in, open a supported video, create/join a room, and watch together. Plus/Pro hosting and free guest admission remain explicit. History is outside this startup guide. Async catch-up is retained as the separate sixth item with its Coming soon label and original description, restored after owner correction.
 - The same steps feed homepage HowToJsonLd, whose summary now matches this sequence. Browser inspection confirmed five visible steps match all five structured-data steps exactly. Local TypeScript passed.
 - Code-only extraction refreshed only HowItWorks and app/page.tsx nodes, outgoing edges and manifest entries. Removed the unused INSTALL_HOWTO_STEP_TEXT dependency; retained foreign graph data. No runtime, entitlement or deployment changes.
 

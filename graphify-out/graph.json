@@ -99967,7 +99967,7 @@
       "file_type": "code",
       "norm_label": "howtosteps",
       "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L94"
+      "source_location": "L127"
     },
     {
       "id": "apps_web_components_how_it_works_steps",
@@ -553666,30 +553666,6 @@
       "weight": 1.0
     },
     {
-      "source": "apps_web_components_how_it_works",
-      "target": "apps_web_components_home_section_header_homesectionheader",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L2",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_components_how_it_works",
-      "target": "apps_web_lib_install_cta_chrome_web_store_url",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L3",
-      "weight": 1.0
-    },
-    {
       "source": "apps_web_app_page",
       "target": "apps_web_components_how_it_works",
       "relation": "imports_from",
@@ -553750,6 +553726,52 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_app_page",
+      "target": "apps_web_app_page_revalidate",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_page",
+      "target": "apps_web_app_page_home",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_how_it_works",
+      "target": "apps_web_components_home_section_header_homesectionheader",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/components/how-it-works.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_how_it_works",
+      "target": "apps_web_lib_install_cta_chrome_web_store_url",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/components/how-it-works.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_components_how_it_works",
       "target": "ref_lucide_react",
       "relation": "imports_from",
@@ -553786,25 +553808,14 @@
       "weight": 1.0
     },
     {
-      "source": "apps_web_app_page",
-      "target": "apps_web_app_page_revalidate",
+      "source": "apps_web_components_how_it_works",
+      "target": "apps_web_components_how_it_works_howtosteps",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "apps/web/app/page.tsx",
-      "source_location": "L11",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_app_page",
-      "target": "apps_web_app_page_home",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/app/page.tsx",
-      "source_location": "L13",
+      "source_file": "apps/web/components/how-it-works.tsx",
+      "source_location": "L127",
       "weight": 1.0
     },
     {
@@ -553827,17 +553838,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/components/how-it-works.tsx",
       "source_location": "L5",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_components_how_it_works",
-      "target": "apps_web_components_how_it_works_howtosteps",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L94",
       "weight": 1.0
     }
   ],

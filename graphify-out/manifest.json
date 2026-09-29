@@ -2094,9 +2094,9 @@
     "semantic_hash": ""
   },
   "apps/web/components/how-it-works.tsx": {
-    "mtime": 1790716179.2214854,
-    "seen": 1790716219.971151,
-    "ast_hash": "b17c2de3f5e6a01950b316d653466fad",
+    "mtime": 1790718784.5199027,
+    "seen": 1790718808.171199,
+    "ast_hash": "539ecf7198c14242f0941415296c4922",
     "semantic_hash": ""
   },
   "apps/web/components/join-discord-button.tsx": {
