@@ -2,6 +2,20 @@
 
 Last updated: 2026-09-29.
 
+Latest owner decision: complete Durable Object write optimization, deliver it
+to staging and obtain the owner's manual acceptance **before resuming the trial
+transition/activation**. The [optimization design and checkpoint](superpowers/specs/2026-09-29-durable-object-write-optimization-design.md)
+preserve the completed trial work, dated Cloudflare baseline, proposed changes,
+compatibility, validation and rollback gates. Optimization is not implemented
+or deployed yet. Staging acceptance of this optimization does not close the
+remaining Sandbox/P11/old-client trial matrix or authorize main/Store/T.
+
+GitHub readback on September 29 confirms pricing PR #380 merged into staging
+as `1f4ad13f` (September 28, 22:43:41 UTC). Promotion PR #376 remains open without
+auto-merge. The earlier local pricing evidence below stays distinct from this
+merge and from owner checkout acceptance. Runtime/policy values in the delivery
+receipt are dated observations and must be rechecked before the next deployment.
+
 Pricing loading correction, prepared from staging `9a8e4824`: homepage and
 /pricing receive public Stripe amounts in server HTML; private eligibility
 refreshes keep those amounts visible. Purchase sends one browser POST, which

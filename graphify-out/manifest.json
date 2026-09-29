@@ -3504,10 +3504,10 @@
     "semantic_hash": "773034b218ba95d0712867ff35698f20"
   },
   "docs/current-development-state.md": {
-    "mtime": 1789813715.4425623,
-    "seen": 1789813977.060822,
+    "mtime": 1790644606.9958396,
+    "seen": 1790645246.088691,
     "ast_hash": "bd18f6e9e42a1dfbd1bd595407ee6e2c",
-    "semantic_hash": "bd18f6e9e42a1dfbd1bd595407ee6e2c"
+    "semantic_hash": "bf3afc93a64db659928d9e03dc2c4992"
   },
   "docs/development-environments.md": {
     "mtime": 1789490459.0048413,
@@ -8460,10 +8460,10 @@
     "semantic_hash": "6a85a67db03149fa346842c8c381e00f"
   },
   "docs/superpowers/plans/2026-09-27-paid-hosting-and-trial-transition.md": {
-    "mtime": 1790606051.6589534,
-    "seen": 1790606404.323491,
+    "mtime": 1790644607.0358317,
+    "seen": 1790645246.088695,
     "ast_hash": "4211b1ca62f9840490de4091a470404e",
-    "semantic_hash": "8a8a78eecd1d2a160f13bc85b791614f"
+    "semantic_hash": "ab58c1977aa6762ebb91e9d6db1a22f3"
   },
   "docs/releases/paid-hosting-trial/implementation-evidence.md": {
     "mtime": 1790610164.1369796,
@@ -8880,10 +8880,10 @@
     "semantic_hash": "17b72342dc857bed0e5577ddb2cb9232"
   },
   "docs/releases/paid-hosting-trial/transition-master-plan-ru.md": {
-    "mtime": 1790605820.3168666,
-    "seen": 1790606404.3234901,
+    "mtime": 1790644607.0173326,
+    "seen": 1790645246.088693,
     "ast_hash": "",
-    "semantic_hash": "13ce7cbe6a576260cf87cbc5178d923b"
+    "semantic_hash": "c251ab9ecfb6a5c74b7231a38e8c88cf"
   },
   "apps/web/app/api/billing/offer/route.ts": {
     "mtime": 1790604875.2621882,
@@ -8980,5 +8980,11 @@
     "seen": 1790634955.33395,
     "ast_hash": "",
     "semantic_hash": "c227ebbd327c9e097474a307b37e3d10"
+  },
+  "docs/superpowers/specs/2026-09-29-durable-object-write-optimization-design.md": {
+    "mtime": 1790644835.6329346,
+    "seen": 1790645246.088695,
+    "ast_hash": "",
+    "semantic_hash": "dfeadb7eb8725153b6dc580e11fa81f6"
   }
 }
