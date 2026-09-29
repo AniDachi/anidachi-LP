@@ -33942,7 +33942,7 @@
       "file_type": "code",
       "norm_label": "howitworks()",
       "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L40"
+      "source_location": "L34"
     },
     {
       "id": "apps_web_components_join_discord_button_joindiscordbutton",
@@ -99967,7 +99967,7 @@
       "file_type": "code",
       "norm_label": "howtosteps",
       "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L137"
+      "source_location": "L94"
     },
     {
       "id": "apps_web_components_how_it_works_steps",
@@ -99978,7 +99978,7 @@
       "file_type": "code",
       "norm_label": "steps",
       "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L8"
+      "source_location": "L5"
     },
     {
       "id": "apps_web_components_join_discord_button",
@@ -172858,12 +172858,13 @@
     {
       "id": "apps_web_app_page_revalidate",
       "label": "revalidate",
-      "file_type": "code",
-      "source_file": "apps/web/app/page.tsx",
-      "source_location": "L11",
       "_origin": "ast",
       "community": 2,
-      "community_name": "react"
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "revalidate",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L11"
     },
     {
       "id": "apps_web_app_pricing_page_revalidate",
@@ -293358,78 +293359,6 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "apps/web/app/page.tsx",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "apps_web_app_page",
-      "target": "apps_web_components_how_it_works_howtosteps",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/app/page.tsx",
-      "source_location": "L2",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "apps_web_app_page",
-      "target": "apps_web_components_home_home_client_homeclient",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/app/page.tsx",
-      "source_location": "L3",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "apps_web_app_page",
-      "target": "apps_web_components_json_ld_faqpagejsonld",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/app/page.tsx",
-      "source_location": "L3",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "apps_web_app_page",
-      "target": "apps_web_components_json_ld_howtojsonld",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/app/page.tsx",
-      "source_location": "L3",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "apps_web_app_page",
-      "target": "apps_web_components_json_ld_softwareapplicationjsonld",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/app/page.tsx",
-      "source_location": "L8",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "apps_web_app_page",
-      "target": "apps_web_lib_home_faq_homefaq",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
       "source_file": "apps/web/app/pricing/page.tsx",
       "source_location": "L5",
       "weight": 1.0,
@@ -339311,54 +339240,6 @@
       "source_file": "apps/web/app/opengraph-image.tsx",
       "source_location": "L2",
       "weight": 1.0
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/app/page.tsx",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "apps_web_app_page",
-      "target": "apps_web_components_how_it_works",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/app/page.tsx",
-      "source_location": "L2",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "apps_web_app_page",
-      "target": "apps_web_components_home_home_client",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/app/page.tsx",
-      "source_location": "L3",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "apps_web_app_page",
-      "target": "apps_web_components_json_ld",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/app/page.tsx",
-      "source_location": "L8",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "apps_web_app_page",
-      "target": "apps_web_lib_home_faq",
-      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -405371,17 +405252,6 @@
       "source_file": "apps/web/app/opengraph-image.tsx",
       "source_location": "L9",
       "weight": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/app/page.tsx",
-      "source_location": "L13",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "apps_web_app_page",
-      "target": "apps_web_app_page_home",
-      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -537047,53 +536917,6 @@
       "confidence_score": 1.0
     },
     {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/app/page.tsx",
-      "source_location": "L14",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "apps_web_app_page_home",
-      "target": "apps_web_lib_anidachi_auth_pricing_catalog_initialpricingprices",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/app/page.tsx",
-      "source_location": "L11",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "apps_web_app_page",
-      "target": "apps_web_app_page_revalidate",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/app/page.tsx",
-      "source_location": "L9",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "apps_web_app_page",
-      "target": "apps_web_lib_anidachi_auth_pricing_catalog",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/app/page.tsx",
-      "source_location": "L9",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "apps_web_app_page",
-      "target": "apps_web_lib_anidachi_auth_pricing_catalog_initialpricingprices",
-      "confidence_score": 1.0
-    },
-    {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -553747,6 +553570,102 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_app_page_home",
+      "target": "apps_web_lib_anidachi_auth_pricing_catalog_initialpricingprices",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_page",
+      "target": "apps_web_components_how_it_works_howtosteps",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_page",
+      "target": "apps_web_components_home_home_client_homeclient",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_page",
+      "target": "apps_web_components_json_ld_faqpagejsonld",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_page",
+      "target": "apps_web_components_json_ld_howtojsonld",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_page",
+      "target": "apps_web_components_json_ld_softwareapplicationjsonld",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_page",
+      "target": "apps_web_lib_home_faq_homefaq",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_page",
+      "target": "apps_web_lib_anidachi_auth_pricing_catalog_initialpricingprices",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_components_how_it_works",
       "target": "apps_web_components_home_section_header_homesectionheader",
       "relation": "imports",
@@ -553771,15 +553690,63 @@
       "weight": 1.0
     },
     {
-      "source": "apps_web_components_how_it_works",
-      "target": "apps_web_lib_install_cta_install_howto_step_text",
-      "relation": "imports",
+      "source": "apps_web_app_page",
+      "target": "apps_web_components_how_it_works",
+      "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "import",
-      "source_file": "apps/web/components/how-it-works.tsx",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_page",
+      "target": "apps_web_components_home_home_client",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_page",
+      "target": "apps_web_components_json_ld",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/app/page.tsx",
       "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_page",
+      "target": "apps_web_lib_home_faq",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_page",
+      "target": "apps_web_lib_anidachi_auth_pricing_catalog",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L9",
       "weight": 1.0
     },
     {
@@ -553819,14 +553786,25 @@
       "weight": 1.0
     },
     {
-      "source": "apps_web_components_how_it_works",
-      "target": "apps_web_components_how_it_works_howtosteps",
+      "source": "apps_web_app_page",
+      "target": "apps_web_app_page_revalidate",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L137",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_page",
+      "target": "apps_web_app_page_home",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L13",
       "weight": 1.0
     },
     {
@@ -553837,7 +553815,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L40",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -553848,7 +553826,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L8",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_how_it_works",
+      "target": "apps_web_components_how_it_works_howtosteps",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/components/how-it-works.tsx",
+      "source_location": "L94",
       "weight": 1.0
     }
   ],

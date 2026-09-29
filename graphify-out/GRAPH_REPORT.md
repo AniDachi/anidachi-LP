@@ -7,14 +7,15 @@
 - Unclassified: 30 file(s) not represented in the graph (top: .css 12, (none) 11, .toml 2)
 
 ## Summary
-- 14198 nodes · 32583 edges · 853 retained communities plus one scoped counter community (historical detailed analysis below)
+- 14198 nodes · 32582 edges · 853 retained communities plus one scoped counter community (historical detailed analysis below)
 - Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 1081 edges (avg confidence: 0.87)
 - Token accounting: AST uses no LLM; active Codex semantic subagent usage is unavailable.
 
-## Graph Freshness — homepage Store installation step, 2026-09-30
+## Graph Freshness — concise homepage guide, 2026-09-30
 
-- HowItWorks links directly to CHROME_WEB_STORE_URL and uses the shared INSTALL_HOWTO_STEP_TEXT for its exported HowTo steps. Removed the install-hub detour and timing estimate; hosting copy names Plus/Pro and free guest admission. Source consumers remain HomeClient and homepage HowToJsonLd.
-- Code-only extraction retained four component nodes and nine edges, preserving foreign graph data. Local TypeScript and browser inspection passed; visible and JSON-LD steps agree. No runtime, deployment or entitlement changes.
+- HowItWorks presents five current actions: install from the canonical Chrome Web Store link, sign in, open a supported video, create/join a room, and watch together. Plus/Pro hosting and free guest admission remain explicit. History and the future async feature are outside this startup guide.
+- The same steps feed homepage HowToJsonLd, whose summary now matches this sequence. Browser inspection confirmed five visible steps match all five structured-data steps exactly. Local TypeScript passed.
+- Code-only extraction refreshed only HowItWorks and app/page.tsx nodes, outgoing edges and manifest entries. Removed the unused INSTALL_HOWTO_STEP_TEXT dependency; retained foreign graph data. No runtime, entitlement or deployment changes.
 
 ## Graph Freshness — homepage hosting explanation, 2026-09-30
 

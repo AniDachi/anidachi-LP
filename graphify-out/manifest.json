@@ -1770,9 +1770,9 @@
     "semantic_hash": "11ea8eacc8bbc5fa661a0c01bd11192f"
   },
   "apps/web/app/page.tsx": {
-    "mtime": 1790632033.3558125,
-    "seen": 1790634955.289075,
-    "ast_hash": "1ad8f8565fdf9ea042a164e5ddbf3b28",
+    "mtime": 1790716179.2402558,
+    "seen": 1790716219.971118,
+    "ast_hash": "a775432e573ce8b5ab6784f1d70d62b1",
     "semantic_hash": ""
   },
   "apps/web/app/privacy/page.tsx": {
@@ -2094,9 +2094,9 @@
     "semantic_hash": ""
   },
   "apps/web/components/how-it-works.tsx": {
-    "mtime": 1790715095.687883,
-    "seen": 1790715144.435675,
-    "ast_hash": "9c64516792fc4e5292ee42d84a9995cf",
+    "mtime": 1790716179.2214854,
+    "seen": 1790716219.971151,
+    "ast_hash": "b17c2de3f5e6a01950b316d653466fad",
     "semantic_hash": ""
   },
   "apps/web/components/join-discord-button.tsx": {

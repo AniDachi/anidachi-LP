@@ -1,39 +1,33 @@
-import { Chrome, Search, Users, MessageSquare, History, Clock3 } from "lucide-react";
+import { Chrome, LogIn, Play, Users, MessageSquare } from "lucide-react";
 import { HomeSectionHeader } from "@/components/home-section-header";
-import {
-  CHROME_WEB_STORE_URL,
-  INSTALL_HOWTO_STEP_TEXT,
-} from "@/lib/install-cta";
+import { CHROME_WEB_STORE_URL } from "@/lib/install-cta";
 
 const steps = [
   {
     icon: Chrome,
-    title: "Install from Chrome Web Store",
-    description: INSTALL_HOWTO_STEP_TEXT,
+    title: "Install AniDachi",
+    description: "Get the extension from the Chrome Web Store.",
   },
   {
-    icon: Search,
-    title: "Detect What You’re Watching",
-    description:
-      "Open a Crunchyroll anime or a YouTube video and AniDachi identifies the title and episode (or video) for the room.",
+    icon: LogIn,
+    title: "Sign in",
+    description: "Open the extension and sign in to your AniDachi account.",
+  },
+  {
+    icon: Play,
+    title: "Open a video",
+    description: "Choose something to watch on YouTube or Crunchyroll.",
   },
   {
     icon: Users,
     title: "Create or join a room",
     description:
-      "Host with Plus or Pro and share the invite link. Joining a friend’s room is free.",
+      "Host with Plus or Pro and share the link. Friends join free.",
   },
   {
     icon: MessageSquare,
     title: "Watch together",
-    description:
-      "Watch in sync, chat, and send reactions while everyone is in the room together.",
-  },
-  {
-    icon: History,
-    title: "Keep your watch history",
-    description:
-      "With Plus or Pro, save your progress on Crunchyroll and YouTube as you watch. Resume from AniDachi’s menu in Chrome, or manage watched episodes in your account.",
+    description: "Watch in sync, chat and share reactions.",
   },
 ];
 
@@ -41,10 +35,7 @@ export function HowItWorks() {
   return (
     <section id="how-it-works" className="bg-ani-canvas py-16 lg:py-24">
       <div className="container mx-auto px-4">
-        <HomeSectionHeader
-          title="How AniDachi works"
-          description="Install the extension. Open a video. Watch together."
-        />
+        <HomeSectionHeader title="How AniDachi works" />
 
         <ol id="extension" className="mx-auto max-w-2xl space-y-0">
           {steps.map((step, i) => (
@@ -76,7 +67,7 @@ export function HowItWorks() {
                 <p className="text-[0.95rem] leading-relaxed text-ani-muted">
                   {i === 0 ? (
                     <>
-                      Open the official AniDachi{" "}
+                      Get the extension from the{" "}
                       <a
                         href={CHROME_WEB_STORE_URL}
                         target="_blank"
@@ -84,8 +75,7 @@ export function HowItWorks() {
                         className="font-medium text-ani-progress underline-offset-4 hover:underline"
                       >
                         Chrome Web Store
-                      </a>{" "}
-                      listing and choose Add to Chrome.
+                      </a>.
                     </>
                   ) : (
                     step.description
@@ -96,39 +86,6 @@ export function HowItWorks() {
           ))}
         </ol>
 
-        <aside
-          aria-labelledby="async-coming-soon"
-          className="mx-auto mt-8 max-w-2xl border-t border-ani-line pt-6"
-        >
-          <div className="grid grid-cols-[2.25rem_minmax(0,1fr)] items-center gap-x-4 sm:gap-x-5">
-            <span
-              aria-hidden="true"
-              className="col-start-1 row-start-1 flex h-9 w-9 items-center justify-center rounded-full border border-ani-control-border font-semibold tabular-nums text-sm text-ani-text"
-            >
-              {steps.length + 1}
-            </span>
-            <div className="col-start-2 row-start-1 flex min-w-0 items-center gap-2.5">
-              <Clock3
-                className="h-4 w-4 shrink-0 text-ani-progress"
-                aria-hidden="true"
-              />
-              <h3
-                id="async-coming-soon"
-                className="min-w-0 text-lg font-semibold tracking-[-0.02em] text-ani-text"
-              >
-                Async catch-up
-              </h3>
-              <span className="inline-flex shrink-0 whitespace-nowrap rounded-full border border-ani-control-border px-2.5 py-1 text-xs font-medium text-ani-muted">
-                Coming soon
-              </span>
-            </div>
-            <p className="col-start-2 mt-1.5 text-[0.95rem] leading-relaxed text-ani-muted">
-              Coming soon in a later batch: mark episodes at your pace, leave
-              reactions, and chat so friends can catch up on their schedule.
-              Live sync is available now.
-            </p>
-          </div>
-        </aside>
       </div>
     </section>
   );
