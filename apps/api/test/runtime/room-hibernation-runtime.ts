@@ -17,6 +17,9 @@ import {
 import { jwtVerify } from "jose";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { signRoomTokenForTest } from "../../src/auth";
+import { observeRoomStorage } from "../helpers/room-storage-profile";
+import { readStoredRoomMeter } from "../../src/room-persistence";
+import { roomUsageSummary } from "../../src/room-metering";
 
 const TEST_SECRET_ENV = { ANIDACHI_JWT_SECRET: "anidachi-runtime-test-secret" };
 const INTERNAL_SECRET = "anidachi-runtime-internal-secret";
@@ -60,6 +63,7 @@ function stubSuccessfulWebFinalization() {
 }
 
 afterEach(async () => {
+	vi.restoreAllMocks();
 	vi.unstubAllGlobals();
 	await reset();
 });
@@ -3196,6 +3200,9 @@ describe("RoomDurableObject media v2", () => {
 		stubWebFetch(vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
 				const body = JSON.parse(String(init?.body));
 				calls.push(body);
+				if (String(input).endsWith("/source")) {
+					return Response.json({ ok: true, outcome: "persisted", sourceGeneration: body.sourceGeneration });
+				}
 				if (body.operation === "room_policy_v2") {
           if(body.settleOnly && settlementGate) await settlementGate;
 					if (fail) return Response.json({ error: "outage" }, { status: 503 });
@@ -3282,6 +3289,147 @@ describe("RoomDurableObject media v2", () => {
 		};
 	}
 
+
+  it.each([
+    ["free", 1], ["free", 2], ["plus", 2], ["pro", 2],
+  ] as const)("storage write profile: %s with %i participants", async (plan, participants) => {
+    const f = await fixture(plan, 3);
+    const host = await f.join(0);
+    await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "profile host joined");
+    const observer = participants === 2 ? await f.join(1) : host;
+    await observer.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT" && e.participants.length === participants, "profile ready");
+    const initial = playbackState("crunchyroll|watch/storage-profile", "https://www.crunchyroll.com/watch/storage-profile");
+    host.send({ type: "HOST_STATE", roomId: f.roomId, state: { ...initial, hostTime: 0 },
+      source: sourceDescriptor(initial.videoFingerprint, "Storage profile", initial.sourceUrl) });
+    // Establish the source before measuring repeated playback state writes.
+    await host.waitFor(e => e.type === "SOURCE_CHANGED", "profile source established");
+    await runInDurableObject(f.stub, async (instance) => {
+      await (instance as any).runRoomSourceDeliveryExclusively(false);
+    });
+    let profile!: ReturnType<typeof observeRoomStorage>;
+    const before = await runInDurableObject(f.stub, (instance, state) => {
+      profile = observeRoomStorage(state.storage);
+      return (instance as any).room.serverSeq as number;
+    });
+    const start = Date.now();
+    const clock = vi.spyOn(Date, "now").mockReturnValue(start);
+    const frames = 20;
+    try {
+      for (let n = 1; n <= frames; n++) {
+        clock.mockReturnValue(start + n * 1500);
+        host.send({ type: "HOST_STATE", roomId: f.roomId, state: { ...initial, hostTime: n, updatedAt: start + n * 1500 } });
+        // Flush the actual WS handler; don't call the private playback method.
+        await runInDurableObject(f.stub, async (_instance, state) => { await state.storage.sync(); });
+        if (participants === 2) {
+          await observer.waitFor(e => e.type === "HOST_STATE" && e.state.hostTime === n, `profile frame ${n}`);
+        } else {
+          // A host does not receive its own HOST_STATE broadcast.
+          for (let retry = 0; retry < 100; retry++) {
+            const current = await runInDurableObject(f.stub, instance => (instance as any).room.serverSeq as number);
+            if (current === before + n) break;
+            await sleep(5);
+          }
+        }
+      }
+      const final = await runInDurableObject(f.stub, async (instance, state) => {
+        await state.storage.sync();
+        const room = instance as any;
+        return { seq: room.room.serverSeq, meter: room.roomMeter, counts: profile.snapshot() };
+      });
+      expect(final.seq).toBe(before + frames);
+      expect(final.meter.activeSince === null).toBe(plan !== "free" || participants === 1);
+      console.info("ROOM_STORAGE_PROFILE", JSON.stringify({ plan, participants, frames, ...final.counts }));
+      expect(final.counts, JSON.stringify({ plan, participants, frames, ...final.counts })).toMatchObject({
+        sqlRowsWritten: frames,
+        kvPuts: 0,
+        alarmSets: 0,
+        alarmDeletes: 0,
+      });
+    } finally {
+      profile.restore();
+      clock.mockRestore();
+    }
+  });
+
+  it("keeps the active anchor between frames and durably settles it before renewal", async () => {
+    const start = Date.parse("2026-09-29T12:00:00Z");
+    const clock = vi.spyOn(Date, "now").mockReturnValue(start);
+    const f = await fixture("free", 3);
+    const host = await f.join(0);
+    await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "meter host");
+    const guest = await f.join(1);
+    await guest.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT" && e.participants.length === 2, "meter guest");
+    const initial = playbackState("crunchyroll|watch/meter-profile", "https://www.crunchyroll.com/watch/meter-profile");
+    for (const elapsed of [1500, 30_000]) {
+      clock.mockReturnValue(start + elapsed);
+      host.send({ type: "HOST_STATE", roomId: f.roomId,
+        state: { ...initial, hostTime: elapsed / 1000 },
+        source: sourceDescriptor(initial.videoFingerprint, "Meter profile", initial.sourceUrl) });
+      await guest.waitFor(e => e.type === "HOST_STATE" && e.state.hostTime === elapsed / 1000, "meter frame");
+    }
+    let storage!: DurableObjectStorage;
+    const meter = await runInDurableObject(f.stub, (instance, state) => {
+      storage = state.storage;
+      return (instance as any).roomMeter;
+    });
+    expect(meter.activeSince).toBe(start);
+    expect(meter.accumulatedMs).toBe(0);
+    expect(roomUsageSummary(meter, start + 30_000).seconds).toBe(30);
+    const callback = fetch;
+    let durableAtDelivery: unknown;
+    vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (JSON.parse(String(init?.body ?? "{}")).operation === "room_policy_v2")
+        durableAtDelivery = readStoredRoomMeter(storage);
+      return callback(input, init);
+    });
+    clock.mockReturnValue(start + 60_000);
+    await runInDurableObject(f.stub, async instance => {
+      const room = instance as any;
+      room.roomPolicy.refreshAt = start + 60_000;
+      await room.serviceRoomPolicy(start + 60_000);
+    });
+    expect(durableAtDelivery).toMatchObject({ accumulatedMs: 60_000, activeSince: start + 60_000 });
+    expect(f.ledger.get("2026-09-29")).toBe(60);
+    await runInDurableObject(f.stub, async instance => { await (instance as any).serviceRoomPolicy(start + 60_000); });
+    expect(f.ledger.get("2026-09-29")).toBe(60);
+  });
+
+  it.each([true, false])("wake retains an overdue quota across UTC (alarm present: %s)", async (alarmPresent) => {
+    const midnight = Date.parse("2026-09-30T00:00:00Z");
+    const start = midnight - 120_000;
+    const due = midnight - 60_000;
+    const clock = vi.spyOn(Date, "now").mockReturnValue(start);
+    const f = await fixture("free", 3);
+    const host = await f.join(0);
+    await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "wake quota host");
+    const guest = await f.join(1);
+    await guest.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT" && e.participants.length === 2, "wake quota guest");
+    await runInDurableObject(f.stub, async (instance, state) => {
+      const room = instance as any;
+      room.roomPolicy.budget.allowedSeconds = 60;
+      room.roomPolicy.quotaWarnedDay = "2026-09-29";
+      room.roomPolicy.alarmAt = due;
+      await state.storage.put("room_policy_v2", room.roomPolicy);
+      if (alarmPresent) await state.storage.setAlarm(due);
+      else await state.storage.deleteAlarm();
+      await state.storage.sync();
+    });
+    clock.mockReturnValue(midnight + 30_000);
+    await evictDurableObject(f.stub, { webSockets: "hibernate" });
+    const restored = await runInDurableObject(f.stub, async (instance, state) => ({
+      meter: (instance as any).roomMeter,
+      policy: await state.storage.get<any>("room_policy_v2"),
+      alarm: await state.storage.getAlarm(),
+    }));
+    expect(restored.meter).toMatchObject({ day: "2026-09-29", activeSince: start, accumulatedMs: 0 });
+    expect(restored.policy.alarmAt).toBe(due);
+    expect(restored.alarm).toBe(due);
+    await runDurableObjectAlarm(f.stub);
+    const ended = await host.waitFor(e => e.type === "ROOM_ENDED", "original exhaustion after wake");
+    expect(ended).toMatchObject({ reason: "quota_exhausted", endedAt: due });
+    expect(f.ledger.get("2026-09-29")).toBe(60);
+    expect(f.ledger.get("2026-09-30") ?? 0).toBe(0);
+  });
 
 it("v3 durably fences revocation, receiver-only sessions and two grants for the last seat", async () => {
 	const f = await fixture("pro", 3);

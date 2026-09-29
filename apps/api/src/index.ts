@@ -626,7 +626,6 @@ export class RoomDurableObject {
 					null;
 				if (!!this.room.mediaSnapshot !== !!this.roomPolicy)
 					throw new Error("Missing durable room policy or media state");
-				if (this.roomPolicy && !this.terminalIntent) await this.persistRoomPolicyDeadline(Date.now());
         if (this.terminalIntent?.finalizedAt !== null && this.terminalIntent) {
           // Recovery after Web ACK/intent commit but before the SQL tombstone.
           await this.applyTerminalRoomState(endedRoomTombstone(this.terminalIntent, {
@@ -650,7 +649,14 @@ export class RoomDurableObject {
 				),
       );
         this.restoreWebSocketsFromAttachments();
-        this.reconcileRoomUsage(Date.now());
+        if (this.roomPolicy) {
+          // Preserve the durable interval and its original deadline until policy
+          // servicing checks overdue exhaustion before UTC rollover. Recovery
+          // also re-arms a missing alarm from the existing durable obligations.
+          await state.storage.transaction(t => reconcileStoredRoomAlarm(t));
+        } else {
+          this.reconcileRoomUsage(Date.now());
+        }
       }
     });
   }
@@ -909,11 +915,16 @@ export class RoomDurableObject {
 		this.roomPolicy.alarmAt = nextRoomPolicyAlarm(
 			this.roomPolicy,
 			now,
-			roomUsageSummary(this.roomMeter, now),
+			this.roomMeter,
 			this.shouldMeterRoom(),
 		);
 		await this.state.storage.transaction(async (transaction) => {
-			await transaction.put(ROOM_POLICY_STORAGE_KEY, this.roomPolicy!);
+			const stored = await transaction.get<RoomPolicyState>(ROOM_POLICY_STORAGE_KEY);
+			// Policy may change in place while awaiting storage. Never use an
+			// object-identity cache, or let background reconciliation revive terminal work.
+			if (!this.roomPolicy || this.endedTombstone || this.terminalIntent || this.roomPolicy.endingReason) return;
+			if (JSON.stringify(stored) !== JSON.stringify(this.roomPolicy))
+				await transaction.put(ROOM_POLICY_STORAGE_KEY, this.roomPolicy);
 			await reconcileStoredRoomAlarm(transaction);
 		});
 	}
@@ -979,12 +990,11 @@ export class RoomDurableObject {
 				return;
 			}
 		}
-		this.updateRoomMeter(reconcileRoomMeter(this.roomMeter, false, now), now);
-		const usage = roomUsageSummary(this.roomMeter, now);
 		this.updateRoomMeter(
       reconcileRoomMeter(this.roomMeter, this.shouldMeterRoom(), now),
       now,
     );
+		const usage = roomUsageSummary(this.roomMeter, now);
 		const leaseExpiry = Date.parse(
 			policy.lease.capabilities.capabilitiesValidUntil,
 		);
@@ -1004,6 +1014,10 @@ export class RoomDurableObject {
 		if (policy.closingAt === null && (now >= policy.refreshAt || needsBudget)) {
 			try {
 				// Cumulative usage is persisted locally before the bounded external call.
+				// Ordinary frames retain their durable activeSince anchor; only this
+				// delivery checkpoint materializes elapsed time into the usage buckets.
+				this.updateRoomMeter(reconcileRoomMeter(this.roomMeter, false, now), now);
+				this.updateRoomMeter(reconcileRoomMeter(this.roomMeter, this.shouldMeterRoom(), now), now);
 				await this.state.storage.sync();
 				const result = await notifyWebRoomPolicy(
 					this.env,

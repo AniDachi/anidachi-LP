@@ -301,6 +301,8 @@ class MemoryStorage {
     return this.values.delete(key);
   }
 
+  async getAlarm(): Promise<number | null> { return this.alarmAt; }
+
   async setAlarm(scheduledTime: number): Promise<void> {
     this.alarmAt = scheduledTime;
   }

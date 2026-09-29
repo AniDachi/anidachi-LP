@@ -236,7 +236,7 @@ export async function reconcileStoredRoomAlarm(
     const presenceAt = nextPresenceAlarm(await transaction.get(ROOM_PRESENCE_STORAGE_KEY));
     const next = terminal.runtimeFinalized === true ? null : terminal.nextAttemptAt;
     const at = next === null ? presenceAt : presenceAt === null ? next : Math.min(next, presenceAt);
-    if (at === null) await transaction.deleteAlarm(); else await transaction.setAlarm(at);
+    await writeChangedAlarm(transaction, at);
     return at;
   }
 	const [rawLifecycle, rawPendingSource, rawParticipantDisconnects] =
@@ -287,12 +287,16 @@ export async function reconcileStoredRoomAlarm(
     : fallbackAt === null
       ? logicalAlarmAt
       : Math.min(logicalAlarmAt, fallbackAt);
-  if (alarmAt === null) {
-    await transaction.deleteAlarm();
-  } else {
-    await transaction.setAlarm(alarmAt);
-  }
+  await writeChangedAlarm(transaction, alarmAt);
   return alarmAt;
+}
+
+async function writeChangedAlarm(transaction: DurableObjectTransaction, at: number | null): Promise<void> {
+  // getAlarm() is null inside an executing handler until its next alarm is set.
+  // Comparing the actual alarm also permits recovery to re-arm missing work.
+  if (await transaction.getAlarm() === at) return;
+  if (at === null) await transaction.deleteAlarm();
+  else await transaction.setAlarm(at);
 }
 
 function sameCallback(

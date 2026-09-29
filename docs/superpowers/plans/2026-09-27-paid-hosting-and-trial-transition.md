@@ -18,6 +18,16 @@ Cloudflare Workers/Durable Objects, WXT/React, shared Zod protocol.
 
 **Spec:** [Согласованные правила и проект архитектуры](../specs/2026-09-27-paid-hosting-and-trial-design.md).
 
+**Приоритетное дополнение 2026-09-29:** по решению владельца следующий блок —
+оптимизация расхода Durable Objects, затем ее доставка в staging и ручная
+приемка владельцем. Продолжение trial-перехода/активации следует после нее.
+[Проект оптимизации, этапы O1–O8 и сохраненный статус](../specs/2026-09-29-durable-object-write-optimization-design.md)
+не закрывают оставшиеся trial/Sandbox/P11/Store проверки. Оптимизация реализована
+и локально проверена в `5bed2e55`; [исполняемый план](2026-09-29-durable-object-write-optimization.md)
+и [доказательства/приемка](../../releases/durable-object-write-optimization-2026-09-29.md)
+разделяют реализацию, доставку и ручную приемку. Уже доставленные schema/Web/Worker и исправление цен сохраняются;
+новые продуктовые правила не включаются вместе с оптимизацией.
+
 **Последний локальный блок 2026-09-29:** владелец подтвердил минимальный сайт для
 полноценной проверки новой логики. `e0f8a21e` закрывает лишний переход при повторной
 покупке и добавляет восстановление продления через Stripe. Старый staging ZIP
@@ -87,6 +97,8 @@ Staging-приемка и production-выпуск остаются отдель�
 
 | Дата | Завершено | Доказательство / граница |
 | --- | --- | --- |
+| 2026-09-29 | Зафиксирован обязательный этап оптимизации DO перед продолжением trial | [Проект и чеклист](../specs/2026-09-29-durable-object-write-optimization-design.md): аудит расходов/кода/документации завершен, реализация и приемка оптимизации открыты; сначала staging и ручной тест владельцем, затем открытая trial-матрица |
+| 2026-09-29 | Сверен GitHub после исправления тарифов | #380 MERGED в staging `1f4ad13f`, время merge 2026-09-28 22:43:41 UTC; #376 OPEN без auto-merge. Это доказательство merge, не ручной приемки покупки |
 | 2026-09-29 | Исправление задержки и исчезновения цен на сайте подготовлено от staging `9a8e4824` | SSR публичных цен, один POST вместо GET+POST, свежая серверная проверка предложения до записи, защита pending checkout от таймера. RED→GREEN, web check/test818/6, production build. [Доказательства и границы](../../releases/paid-hosting-trial/pricing-loading-fix-2026-09-29.md); ручная покупка остается владельцу |
 | 2026-09-29 | Минимальный billing: повторная покупка с первого клика и Restore renewal; сохранен старый staging ZIP | `e0f8a21e`; web check, 807 passed/6 прежних skips, ESLint; regression RED→GREEN. Старый ZIP `cb7f7a86` build/validate. Ручной Sandbox/P11, staging и Store не приняты |
 | 2026-09-28 | Минимальный сайт для trial по согласованному референсу в дизайне AniDachi | От базы `9d0ba788`: pricing offer/реальные цены, return state, billing trial/quote-confirm/owned invoice recovery. Web check; 775 tests + 6 прежних skips. Scoped review, deadline regressions и pricing 1440/390 с synthetic offers. Обычный localhost offer возвращает 503; настоящая Stripe/app цепочка и staging не приняты |

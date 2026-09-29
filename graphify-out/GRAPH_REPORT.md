@@ -7,15 +7,31 @@
 - Unclassified: 30 file(s) not represented in the graph (top: .css 12, (none) 11, .toml 2)
 
 ## Summary
-- 14074 nodes · 32450 edges · 851 retained communities (historical detailed analysis below)
+- 14159 nodes · 32506 edges · 853 retained communities (historical detailed analysis below)
 - Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 1081 edges (avg confidence: 0.87)
 - Token accounting: AST uses no LLM; active Codex semantic subagent usage is unavailable.
 
 ## Graph Freshness
-- Latest scoped update: pricing loading correction from `9a8e4824`; 12 AST files, one full semantic document and two partial sections. The older global build marker and unrelated backlog are retained.
+- Latest scoped update: DO write optimization implementation5bed2e55; 15 changed TypeScript AST files + six complete documents + two dated P2P progress entries (partial sources; full hashes not stamped). Staging/owner acceptance separate; older global build marker retained.
 - Built from commit: `80fefde3`
 - Includes the verified dormant staging runtime checkpoint50a054b3: schema375/Web377/runtime378,69migrations, configured Sandbox/drain, signed admission and technical CI/deploy/extension/smoke evidence. Owner acceptance/T/main/Store remain open. One full source and five partial sources including planTask7 technical checklist; no AST/full-corpus freshness. Exact six hashes/ranges are recorded in semantic_updates.
 - Run `graphify update .` after code changes (no API cost).
+
+## DO write optimization: implementation and local verification — 2026-09-29
+
+- Implementation5bed2e55 retains durable metering anchors, settles before external delivery, skips unchanged policy/alarm/snapshot writes and applies atomic denial differences. Wake preserves overdue previous-day quota before UTC rollover.
+- Real 20-frame HOST_STATE profiles: SQL100/80/100/100 ->20 for Free solo/Free pair/Plus pair/Pro pair; KV20->0 and alarm20->0 separately. SQLite reduction75–80% is not a daily billing forecast.
+- Local gates: API252unit+types,96Workersruntime,203protocol+types,39room scenarios,26legacy WebRTC and v3four-user harness. Fresh review found no runtime defect. Owner acceptance, trial/Sandbox/P11 and main/Store/T stay open; dated predeployment readback remains dormant.
+- Scope15 AST +6 semantic sources; unrelated graph/manifest retained, no global reclustering. Semantic detector still queues 341 sources, including the 15 code files refreshed structurally only (their AST hashes are current); the other 326 sources remain unrelated backlog. Zero missing/dangling endpoints; 102 historical selfloops and 3 undirected collapse warnings retained. Detailed sections below are dated historical checkpoints.
+
+## DO write optimization prerequisite: design checkpoint — 2026-09-29
+
+- Required order: implement optimization, deliver to staging, owner manual acceptance, then resume the trial transition. Trial/Sandbox/P11/old-client acceptance and main/Store/T remain separate gates. Optimization is not implemented or deployed.
+- Existing trial delivery and local evidence are retained. GitHub readback confirms pricing PR380 merged into staging1f4ad13f; promotion376 is open without auto-merge. Dated deployment/policy readbacks must be reverified before rollout.
+- Proposed server-only changes: semantic no-op meter/policy persistence; durable interval anchors with settlement+sync before external delivery; stable earliest alarm across all work; conditional snapshots and atomic denial differences. Preserve protocol, old clients, sequence/replay, terminal fencing, exact logical deadlines and accounting.
+- September28 UTC baseline about91k production +4k staging writes is source-reported dashboard evidence. Forecast30–50k/day remains unmeasured. Acceptance requires reproducible before/after storage profiles, recovery/deadline tests and the owner's staging scenarios.
+- Scope: four full semantic sources; 39 added concepts, 98 net links. Previously supported source IDs/relationships and unrelated nodes/edges/manifest entries are preserved. Existing community identities retained; one design community added. Older detailed analysis below is historical.
+- Integrity: zero missing/dangling endpoints. Existing 102 self-loop records and 3 undirected same-endpoint collapse warnings are unchanged, not repaired. Fresh fragment normalized via Graphify; global normalization avoided because it changes unrelated historical facts. Unrelated incremental backlog remains unstamped. Semantic subagent usage unavailable.
 
 ## Pricing loading correction: local checkpoint — 2026-09-29
 
