@@ -1,5 +1,14 @@
 # Current Development State
 
+## Local website counter checkpoint, September 30, 2026
+
+The owner chose a historical signup baseline of 1,409 (555 production accounts
+plus 854 waitlist records, without deduplication). The local homepage counter
+adds only accounts created after the fixed measurement timestamp. It reads an
+aggregate from its own environment and exposes no account rows. CRM waitlist
+statistics remain separate. See the [definition and delivery boundary](public-community-count.md).
+This website change has not been deployed to staging or production.
+
 ## Latest checkpoint: staging model activated, 2026-09-29 15:48 UTC
 
 The owner explicitly authorized the staged transition rehearsal after the DO
