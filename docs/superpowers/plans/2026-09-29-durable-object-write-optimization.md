@@ -112,16 +112,16 @@ between ordinary events, uses `roomUsageSummary(meter, now)` for display and
 settles/persists before `roomUsageBuckets` + `storage.sync` + external renewal.
 Existing acknowledgeRoomUsageDay and bounded pending ledger stay authoritative.
 
-- [ ] RED: consecutive HOST_STATE keeps the original activeSince and does not
+- [x] RED: consecutive HOST_STATE keeps the original activeSince and does not
   rewrite meter; the next renewal delivers the full interval exactly once.
-- [ ] Add/retain literal boundary expectations for host alone, join/leave,
+- [x] Add/retain literal boundary expectations for host alone, join/leave,
   10.5s + 5.7s intervals = 16s, UTC midnight and late exhausted-day alarms.
-- [ ] Implement conditional settlement at real transitions/external checkpoints.
+- [x] Implement conditional settlement at real transitions/external checkpoints.
   Re-evaluate access and live metering after asynchronous authority work.
-- [ ] Run API unit/runtime tests for pending ACK, forced wake, exact exhaustion,
+- [x] Run API unit/runtime tests for pending ACK, forced wake, exact exhaustion,
   unavailable authority, closure while callback waits, terminal idempotency.
   Expected: no changed functional outcomes; steady meter writes removed.
-- [ ] Commit verified interval change and record evidence.
+- [x] Commit verified interval change and record evidence.
 
 ### Task 4: Snapshot/denial writes and wake recovery
 
@@ -190,3 +190,8 @@ changed. SQL rows, KV calls and alarm calls are separate metrics, not a billing 
 Task 2: API types and all 252 unit tests pass. Runtime profile now has zero
 policy KV puts and alarm writes; SQL40 for Free solo/Plus/Pro, SQL80 for active
 Free. Four final-budget failures remain intentionally until Tasks 3–4.
+
+Task 3: runtime regression first reproduced activeSince moving 30 seconds on
+ordinary frames, then passed with a stable anchor and a 60-second durable
+checkpoint before the Web callback. All 87 functional runtime tests pass; four
+write budgets remain RED solely for duplicate snapshots (SQL40 in all profiles).

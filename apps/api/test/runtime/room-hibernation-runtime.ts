@@ -18,6 +18,8 @@ import { jwtVerify } from "jose";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { signRoomTokenForTest } from "../../src/auth";
 import { observeRoomStorage } from "../helpers/room-storage-profile";
+import { readStoredRoomMeter } from "../../src/room-persistence";
+import { roomUsageSummary } from "../../src/room-metering";
 
 const TEST_SECRET_ENV = { ANIDACHI_JWT_SECRET: "anidachi-runtime-test-secret" };
 const INTERNAL_SECRET = "anidachi-runtime-internal-secret";
@@ -3347,6 +3349,49 @@ describe("RoomDurableObject media v2", () => {
       profile.restore();
       clock.mockRestore();
     }
+  });
+
+  it("keeps the active anchor between frames and durably settles it before renewal", async () => {
+    const start = Date.parse("2026-09-29T12:00:00Z");
+    const clock = vi.spyOn(Date, "now").mockReturnValue(start);
+    const f = await fixture("free", 3);
+    const host = await f.join(0);
+    await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "meter host");
+    const guest = await f.join(1);
+    await guest.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT" && e.participants.length === 2, "meter guest");
+    const initial = playbackState("crunchyroll|watch/meter-profile", "https://www.crunchyroll.com/watch/meter-profile");
+    for (const elapsed of [1500, 30_000]) {
+      clock.mockReturnValue(start + elapsed);
+      host.send({ type: "HOST_STATE", roomId: f.roomId,
+        state: { ...initial, hostTime: elapsed / 1000 },
+        source: sourceDescriptor(initial.videoFingerprint, "Meter profile", initial.sourceUrl) });
+      await guest.waitFor(e => e.type === "HOST_STATE" && e.state.hostTime === elapsed / 1000, "meter frame");
+    }
+    let storage!: DurableObjectStorage;
+    const meter = await runInDurableObject(f.stub, (instance, state) => {
+      storage = state.storage;
+      return (instance as any).roomMeter;
+    });
+    expect(meter.activeSince).toBe(start);
+    expect(meter.accumulatedMs).toBe(0);
+    expect(roomUsageSummary(meter, start + 30_000).seconds).toBe(30);
+    const callback = fetch;
+    let durableAtDelivery: unknown;
+    vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (JSON.parse(String(init?.body ?? "{}")).operation === "room_policy_v2")
+        durableAtDelivery = readStoredRoomMeter(storage);
+      return callback(input, init);
+    });
+    clock.mockReturnValue(start + 60_000);
+    await runInDurableObject(f.stub, async instance => {
+      const room = instance as any;
+      room.roomPolicy.refreshAt = start + 60_000;
+      await room.serviceRoomPolicy(start + 60_000);
+    });
+    expect(durableAtDelivery).toMatchObject({ accumulatedMs: 60_000, activeSince: start + 60_000 });
+    expect(f.ledger.get("2026-09-29")).toBe(60);
+    await runInDurableObject(f.stub, async instance => { await (instance as any).serviceRoomPolicy(start + 60_000); });
+    expect(f.ledger.get("2026-09-29")).toBe(60);
   });
 
 it("v3 durably fences revocation, receiver-only sessions and two grants for the last seat", async () => {

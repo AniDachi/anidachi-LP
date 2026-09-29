@@ -984,12 +984,11 @@ export class RoomDurableObject {
 				return;
 			}
 		}
-		this.updateRoomMeter(reconcileRoomMeter(this.roomMeter, false, now), now);
-		const usage = roomUsageSummary(this.roomMeter, now);
 		this.updateRoomMeter(
       reconcileRoomMeter(this.roomMeter, this.shouldMeterRoom(), now),
       now,
     );
+		const usage = roomUsageSummary(this.roomMeter, now);
 		const leaseExpiry = Date.parse(
 			policy.lease.capabilities.capabilitiesValidUntil,
 		);
@@ -1009,6 +1008,10 @@ export class RoomDurableObject {
 		if (policy.closingAt === null && (now >= policy.refreshAt || needsBudget)) {
 			try {
 				// Cumulative usage is persisted locally before the bounded external call.
+				// Ordinary frames retain their durable activeSince anchor; only this
+				// delivery checkpoint materializes elapsed time into the usage buckets.
+				this.updateRoomMeter(reconcileRoomMeter(this.roomMeter, false, now), now);
+				this.updateRoomMeter(reconcileRoomMeter(this.roomMeter, this.shouldMeterRoom(), now), now);
 				await this.state.storage.sync();
 				const result = await notifyWebRoomPolicy(
 					this.env,
