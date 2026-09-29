@@ -17,6 +17,7 @@ import {
 import { jwtVerify } from "jose";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { signRoomTokenForTest } from "../../src/auth";
+import { observeRoomStorage } from "../helpers/room-storage-profile";
 
 const TEST_SECRET_ENV = { ANIDACHI_JWT_SECRET: "anidachi-runtime-test-secret" };
 const INTERNAL_SECRET = "anidachi-runtime-internal-secret";
@@ -60,6 +61,7 @@ function stubSuccessfulWebFinalization() {
 }
 
 afterEach(async () => {
+	vi.restoreAllMocks();
 	vi.unstubAllGlobals();
 	await reset();
 });
@@ -3196,6 +3198,9 @@ describe("RoomDurableObject media v2", () => {
 		stubWebFetch(vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
 				const body = JSON.parse(String(init?.body));
 				calls.push(body);
+				if (String(input).endsWith("/source")) {
+					return Response.json({ ok: true, outcome: "persisted", sourceGeneration: body.sourceGeneration });
+				}
 				if (body.operation === "room_policy_v2") {
           if(body.settleOnly && settlementGate) await settlementGate;
 					if (fail) return Response.json({ error: "outage" }, { status: 503 });
@@ -3282,6 +3287,67 @@ describe("RoomDurableObject media v2", () => {
 		};
 	}
 
+
+  it.each([
+    ["free", 1], ["free", 2], ["plus", 2], ["pro", 2],
+  ] as const)("storage write profile: %s with %i participants", async (plan, participants) => {
+    const f = await fixture(plan, 3);
+    const host = await f.join(0);
+    await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "profile host joined");
+    const observer = participants === 2 ? await f.join(1) : host;
+    await observer.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT" && e.participants.length === participants, "profile ready");
+    const initial = playbackState("crunchyroll|watch/storage-profile", "https://www.crunchyroll.com/watch/storage-profile");
+    host.send({ type: "HOST_STATE", roomId: f.roomId, state: { ...initial, hostTime: 0 },
+      source: sourceDescriptor(initial.videoFingerprint, "Storage profile", initial.sourceUrl) });
+    // Establish the source before measuring repeated playback state writes.
+    await host.waitFor(e => e.type === "SOURCE_CHANGED", "profile source established");
+    await runInDurableObject(f.stub, async (instance) => {
+      await (instance as any).runRoomSourceDeliveryExclusively(false);
+    });
+    let profile!: ReturnType<typeof observeRoomStorage>;
+    const before = await runInDurableObject(f.stub, (instance, state) => {
+      profile = observeRoomStorage(state.storage);
+      return (instance as any).room.serverSeq as number;
+    });
+    const start = Date.now();
+    const clock = vi.spyOn(Date, "now").mockReturnValue(start);
+    const frames = 20;
+    try {
+      for (let n = 1; n <= frames; n++) {
+        clock.mockReturnValue(start + n * 1500);
+        host.send({ type: "HOST_STATE", roomId: f.roomId, state: { ...initial, hostTime: n, updatedAt: start + n * 1500 } });
+        // Flush the actual WS handler; don't call the private playback method.
+        await runInDurableObject(f.stub, async (_instance, state) => { await state.storage.sync(); });
+        if (participants === 2) {
+          await observer.waitFor(e => e.type === "HOST_STATE" && e.state.hostTime === n, `profile frame ${n}`);
+        } else {
+          // A host does not receive its own HOST_STATE broadcast.
+          for (let retry = 0; retry < 100; retry++) {
+            const current = await runInDurableObject(f.stub, instance => (instance as any).room.serverSeq as number);
+            if (current === before + n) break;
+            await sleep(5);
+          }
+        }
+      }
+      const final = await runInDurableObject(f.stub, async (instance, state) => {
+        await state.storage.sync();
+        const room = instance as any;
+        return { seq: room.room.serverSeq, meter: room.roomMeter, counts: profile.snapshot() };
+      });
+      expect(final.seq).toBe(before + frames);
+      expect(final.meter.activeSince === null).toBe(plan !== "free" || participants === 1);
+      console.info("ROOM_STORAGE_PROFILE", JSON.stringify({ plan, participants, frames, ...final.counts }));
+      expect(final.counts, JSON.stringify({ plan, participants, frames, ...final.counts })).toMatchObject({
+        sqlRowsWritten: frames,
+        kvPuts: 0,
+        alarmSets: 0,
+        alarmDeletes: 0,
+      });
+    } finally {
+      profile.restore();
+      clock.mockRestore();
+    }
+  });
 
 it("v3 durably fences revocation, receiver-only sessions and two grants for the last seat", async () => {
 	const f = await fixture("pro", 3);
