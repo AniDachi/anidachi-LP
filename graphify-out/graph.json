@@ -175135,7 +175135,7 @@
     },
     {
       "id": "docs_releases_paid_hosting_trial_staging_rehearsal_2026_09_29_rehearsal_receipt",
-      "label": "Staging rehearsal active; old-ZIP Free gates confirmed and 72-hour Plus trial enrollment verified",
+      "label": "Staging rehearsal active; Plus trial and old-ZIP trial-host room creation with Free guest confirmed",
       "file_type": "document",
       "source_file": "docs/releases/paid-hosting-trial/staging-rehearsal-2026-09-29.md",
       "source_location": "L1-L87",
@@ -175143,20 +175143,20 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "rationale": "Owner successfully enrolled Plus trial through the website. Source-reported readonly Stripe Sandbox and Supabase agree on trialing and effective Plus rights at16:30UTC. This proves trial start and server rights, not future successful payment or actual room creation after trial.",
+      "rationale": "Source-reported Stripe Sandbox/Supabase agree on 72-hour Plus trial and server rights. Owner subsequently confirmed room creation on the old ZIP after trial and Free participant entry. Future successful payment and full lifecycle acceptance remain unverified.",
       "_origin": "semantic",
-      "evidence_excerpt": "# Репетиция перехода на staging — 29 сентября 2026\n\nВладелец явно разрешил включение новой модели для ручной репетиции и подготовил\nкомнаты на Free и платном аккаунтах. Это отдельная операция после поставки\nоптимизации Durable Objects. Полная ручная матрица не объявляется принятой.\n\n## Переключение и проверенное окружение\n\n- Staging Supabase: `cyppqpprkygjloyfvvvj`.\n- Web: `dpl_4pPLCVC4CiK6x6TXhBvEQvTD62ww`, READY, staging alias,\n  source `73ea22d5f021b4650ad2cb83acd24a91435f4b76`.\n- Worker: `f7942d07-cb7a-473e-9484-c26768ea04c2`, 100% staging traffic.\n- Операция: `e58cd271-ce00-4916-a074-e3a184175d48`, ожидаемая revision 1\n  записана до SQL. Активация штатной `activate_paid_hosting_v1`, без ручного\n  изменения комнат или сброса trial.\n- **T: 2026-09-29 15:48:48.800820 UTC**, revision 2, trials enabled.\n- Scheduler enabled, environment строго staging. Personal history policy active.\n- Секреты не выгружались и не ротировались. Перед T настоящий pg_net запрос\n  получил HTTP 200 и точное `{\"ok\":true}` от staging drain.\n\n## Комнаты и аккаунты\n\nПри первом чтении были две открытые Free-комнаты и одна Plus-комната.\nОдна Free-комната завершилась в 15:46:00.415 UTC, до T; причина этого завершения\nв рамках репетиции не устанавливалась, и оно не засчитывается как эффект cutover.\nНа момент T оставалась одна открытая Free-комната: target_count = 1.\n\n- Выбранная Free-комната: durable fence/ended в 15:48:50.273 UTC,\n  **1.472180 секунды после T**; finalized в 15:48:52.503 UTC,\n  **3.702180 секунды после T**.\n- Outbox: одна попытка, одна завершенная цель, нет pending targets/leases.\n  Активных назначений в закрытой комнате нет.\n- Plus-комната осталась live, ended_at NULL, два активных назначения в момент\n  readback. Это серверное состояние, не самостоятельное доказательство\n  непрерывности видео/аудио в браузерах.\n- Распределение аккаунтов до и после: 61 Free, 1 Plus. Полный отсортированный\n  fingerprint строк subscriptions совпал; подписки не изменились.\n- Trial rows после переключения: 0. Включение предложения не запускает пробный\n  период автоматически и не списывает деньги с Free-аккаунтов.\n\nVercel в окне 15:48:40–15:50:00 UTC: drain HTTP 200,\n`claimed: 1, completed: 1, pending: 0, errors: 0`; error/fatal logs отсутствуют.\nScheduler прочитал успешный ACK в 15:49:00 UTC. Это первая успешная реальная\nцепочка pg_net → Web → Worker → Web/PostgREST для одной открытой комнаты;\nодин замер не устанавливает гарантированную задержку при нагрузке/отказах.\n\n## Старые платежные сессии\n\nДо T проверены две pre-T reservation в AniDachi sandbox, livemode false.\nОдна старая неоплаченная сессия была еще open: она завершена штатным Stripe\n`checkout sessions expire`, повторное API-чтение подтвердило expired/unpaid,\nsubscription NULL. Другая была complete/paid и уже соответствовала активной\nPlus-подписке. Обе reservation приведены к подтвержденным состояниям штатной\n`complete_subscription_checkout_reservation_v1`; подписка сохранена.\nStripe MCP не предоставил операцию expire в результатах поиска, поэтому для\nэтого использована Stripe Shell внутри явно выбранного AniDachi sandbox.\nЛокальный операционный receipt хранит точные ссылки и исходный fingerprint;\nконтактные данные и платежные ссылки в этот документ не включены.\n\n## Ручная приемка продолжается\n\n- [x] Разрешение владельца и проверка окружения перед T.\n- [x] Активация staging, выбор только оставшейся Free-комнаты, durable closure\n  и сверка всех целей с отсутствием активных назначений.\n- [x] Серверное сохранение Plus-комнаты, аккаунтов и подписок.\n- [x] Владелец подтвердил: «да плюс осталась а фри закрылись». Это ручное\n  подтверждение сохранения Plus и закрытия Free на старом расширении; отдельная\n  проверка очистки каждого аудио/видеотрека этим ответом не установлена.\n- [x] Отказ повторного Free-create и разрешенный Free-join к Plus на старом ZIP.\n  Владелец подтвердил оба действия: «да, все работает как нужно». Точный текст\n  отказа и отдельный вход к Pro этим ответом не проверены.\n- [x] Владелец оформил trial Plus через сайт и сообщил об успешном результате.\n  Read-only проверка 29 сентября 16:30 UTC: Stripe Sandbox и Supabase согласованы,\n  status trialing, account plan/effective grant Plus, ровно 72 часа — с\n  29 сентября 16:00:51 UTC до 2 октября 16:00:51 UTC. Способ оплаты сохранен;\n  charge_automatically, cancel_at_period_end false, затем $7.99 USD/месяц.\n  Это подтверждает начало trial и серверные права, не будущую успешную оплату.\n- [ ] Создание комнаты после trial на старом ZIP и вход бесплатного участника.\n  На момент readback у trial-аккаунта не было комнат, созданных после trial start.\n- [ ] Отдельный checkout trial Pro и остальные платежные переходы.\n- [ ] Новый ZIP, полная lifecycle/P11/история/ошибки оплаты и recovery-матрица.\n\nДизайн сайта и годовой план обсуждаются следующим отдельным блоком на staging;\nв эту операцию не входили. Новый код, ZIP, main/production и Store не выпускались.\nНе сбрасывать T и не воскрешать закрытые Free-комнаты ради повторения: следовать\n[runbook восстановления](cutover-operations.md). Следующие испытания идут при\nуже включенной модели; повторная активация с новым UUID запрещена.",
-      "source_file_sha256": "282c607d0f1f9553b174ae4da44db6498f1b65fff0d778660dc35cb899809c41",
+      "evidence_excerpt": "# Репетиция перехода на staging — 29 сентября 2026\n\nВладелец явно разрешил включение новой модели для ручной репетиции и подготовил\nкомнаты на Free и платном аккаунтах. Это отдельная операция после поставки\nоптимизации Durable Objects. Полная ручная матрица не объявляется принятой.\n\n## Переключение и проверенное окружение\n\n- Staging Supabase: `cyppqpprkygjloyfvvvj`.\n- Web: `dpl_4pPLCVC4CiK6x6TXhBvEQvTD62ww`, READY, staging alias,\n  source `73ea22d5f021b4650ad2cb83acd24a91435f4b76`.\n- Worker: `f7942d07-cb7a-473e-9484-c26768ea04c2`, 100% staging traffic.\n- Операция: `e58cd271-ce00-4916-a074-e3a184175d48`, ожидаемая revision 1\n  записана до SQL. Активация штатной `activate_paid_hosting_v1`, без ручного\n  изменения комнат или сброса trial.\n- **T: 2026-09-29 15:48:48.800820 UTC**, revision 2, trials enabled.\n- Scheduler enabled, environment строго staging. Personal history policy active.\n- Секреты не выгружались и не ротировались. Перед T настоящий pg_net запрос\n  получил HTTP 200 и точное `{\"ok\":true}` от staging drain.\n\n## Комнаты и аккаунты\n\nПри первом чтении были две открытые Free-комнаты и одна Plus-комната.\nОдна Free-комната завершилась в 15:46:00.415 UTC, до T; причина этого завершения\nв рамках репетиции не устанавливалась, и оно не засчитывается как эффект cutover.\nНа момент T оставалась одна открытая Free-комната: target_count = 1.\n\n- Выбранная Free-комната: durable fence/ended в 15:48:50.273 UTC,\n  **1.472180 секунды после T**; finalized в 15:48:52.503 UTC,\n  **3.702180 секунды после T**.\n- Outbox: одна попытка, одна завершенная цель, нет pending targets/leases.\n  Активных назначений в закрытой комнате нет.\n- Plus-комната осталась live, ended_at NULL, два активных назначения в момент\n  readback. Это серверное состояние, не самостоятельное доказательство\n  непрерывности видео/аудио в браузерах.\n- Распределение аккаунтов до и после: 61 Free, 1 Plus. Полный отсортированный\n  fingerprint строк subscriptions совпал; подписки не изменились.\n- Trial rows после переключения: 0. Включение предложения не запускает пробный\n  период автоматически и не списывает деньги с Free-аккаунтов.\n\nVercel в окне 15:48:40–15:50:00 UTC: drain HTTP 200,\n`claimed: 1, completed: 1, pending: 0, errors: 0`; error/fatal logs отсутствуют.\nScheduler прочитал успешный ACK в 15:49:00 UTC. Это первая успешная реальная\nцепочка pg_net → Web → Worker → Web/PostgREST для одной открытой комнаты;\nодин замер не устанавливает гарантированную задержку при нагрузке/отказах.\n\n## Старые платежные сессии\n\nДо T проверены две pre-T reservation в AniDachi sandbox, livemode false.\nОдна старая неоплаченная сессия была еще open: она завершена штатным Stripe\n`checkout sessions expire`, повторное API-чтение подтвердило expired/unpaid,\nsubscription NULL. Другая была complete/paid и уже соответствовала активной\nPlus-подписке. Обе reservation приведены к подтвержденным состояниям штатной\n`complete_subscription_checkout_reservation_v1`; подписка сохранена.\nStripe MCP не предоставил операцию expire в результатах поиска, поэтому для\nэтого использована Stripe Shell внутри явно выбранного AniDachi sandbox.\nЛокальный операционный receipt хранит точные ссылки и исходный fingerprint;\nконтактные данные и платежные ссылки в этот документ не включены.\n\n## Ручная приемка продолжается\n\n- [x] Разрешение владельца и проверка окружения перед T.\n- [x] Активация staging, выбор только оставшейся Free-комнаты, durable closure\n  и сверка всех целей с отсутствием активных назначений.\n- [x] Серверное сохранение Plus-комнаты, аккаунтов и подписок.\n- [x] Владелец подтвердил: «да плюс осталась а фри закрылись». Это ручное\n  подтверждение сохранения Plus и закрытия Free на старом расширении; отдельная\n  проверка очистки каждого аудио/видеотрека этим ответом не установлена.\n- [x] Отказ повторного Free-create и разрешенный Free-join к Plus на старом ZIP.\n  Владелец подтвердил оба действия: «да, все работает как нужно». Точный текст\n  отказа и отдельный вход к Pro этим ответом не проверены.\n- [x] Владелец оформил trial Plus через сайт и сообщил об успешном результате.\n  Read-only проверка 29 сентября 16:30 UTC: Stripe Sandbox и Supabase согласованы,\n  status trialing, account plan/effective grant Plus, ровно 72 часа — с\n  29 сентября 16:00:51 UTC до 2 октября 16:00:51 UTC. Способ оплаты сохранен;\n  charge_automatically, cancel_at_period_end false, затем $7.99 USD/месяц.\n  Это подтверждает начало trial и серверные права, не будущую успешную оплату.\n- [x] Создание комнаты после trial на старом ZIP и вход бесплатного участника.\n  Владелец подтвердил оба действия: «проверил, все работает».\n- [ ] Отдельный checkout trial Pro и остальные платежные переходы.\n- [ ] Новый ZIP, полная lifecycle/P11/история/ошибки оплаты и recovery-матрица.\n\nДизайн сайта и годовой план обсуждаются следующим отдельным блоком на staging;\nв эту операцию не входили. Новый код, ZIP, main/production и Store не выпускались.\nНе сбрасывать T и не воскрешать закрытые Free-комнаты ради повторения: следовать\n[runbook восстановления](cutover-operations.md). Следующие испытания идут при\nуже включенной модели; повторная активация с новым UUID запрещена.",
+      "source_file_sha256": "481cc46fd052bde1725f6f3244d31dc064a5ddede889643f8832315eb3dd810d",
       "extraction_scope": "full_document",
       "extracted_ranges": [
         {
           "start": 1,
           "end": 87,
-          "sha256": "82c4d3ce350c949a0c90fe20fcddc1c1b51fa00b170faaefcc8413b6aed7d4d0"
+          "sha256": "e3480282ccb46acdd366e0fef2158c095b740868ccb791fed7ba5dc581ef560f"
         }
       ],
       "full_file_freshness_claim": true,
-      "status": "staging_active_plus_trial_verified_post_trial_room_and_full_matrix_pending",
+      "status": "plus_trial_and_owner_old_zip_trial_room_free_guest_confirmed_full_matrix_pending",
       "community": 830,
       "community_name": "Trial transition plan",
       "historical_versions": [
@@ -175219,6 +175219,55 @@
             "community": 830,
             "community_name": "Trial transition plan"
           }
+        },
+        {
+          "superseded_by_checkpoint": "owner_confirms_old_zip_trial_room_and_free_guest",
+          "record": {
+            "id": "docs_releases_paid_hosting_trial_staging_rehearsal_2026_09_29_rehearsal_receipt",
+            "label": "Staging rehearsal active; old-ZIP Free gates confirmed and 72-hour Plus trial enrollment verified",
+            "file_type": "document",
+            "source_file": "docs/releases/paid-hosting-trial/staging-rehearsal-2026-09-29.md",
+            "source_location": "L1-L87",
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null,
+            "rationale": "Owner successfully enrolled Plus trial through the website. Source-reported readonly Stripe Sandbox and Supabase agree on trialing and effective Plus rights at16:30UTC. This proves trial start and server rights, not future successful payment or actual room creation after trial.",
+            "_origin": "semantic",
+            "evidence_excerpt": "# Репетиция перехода на staging — 29 сентября 2026\n\nВладелец явно разрешил включение новой модели для ручной репетиции и подготовил\nкомнаты на Free и платном аккаунтах. Это отдельная операция после поставки\nоптимизации Durable Objects. Полная ручная матрица не объявляется принятой.\n\n## Переключение и проверенное окружение\n\n- Staging Supabase: `cyppqpprkygjloyfvvvj`.\n- Web: `dpl_4pPLCVC4CiK6x6TXhBvEQvTD62ww`, READY, staging alias,\n  source `73ea22d5f021b4650ad2cb83acd24a91435f4b76`.\n- Worker: `f7942d07-cb7a-473e-9484-c26768ea04c2`, 100% staging traffic.\n- Операция: `e58cd271-ce00-4916-a074-e3a184175d48`, ожидаемая revision 1\n  записана до SQL. Активация штатной `activate_paid_hosting_v1`, без ручного\n  изменения комнат или сброса trial.\n- **T: 2026-09-29 15:48:48.800820 UTC**, revision 2, trials enabled.\n- Scheduler enabled, environment строго staging. Personal history policy active.\n- Секреты не выгружались и не ротировались. Перед T настоящий pg_net запрос\n  получил HTTP 200 и точное `{\"ok\":true}` от staging drain.\n\n## Комнаты и аккаунты\n\nПри первом чтении были две открытые Free-комнаты и одна Plus-комната.\nОдна Free-комната завершилась в 15:46:00.415 UTC, до T; причина этого завершения\nв рамках репетиции не устанавливалась, и оно не засчитывается как эффект cutover.\nНа момент T оставалась одна открытая Free-комната: target_count = 1.\n\n- Выбранная Free-комната: durable fence/ended в 15:48:50.273 UTC,\n  **1.472180 секунды после T**; finalized в 15:48:52.503 UTC,\n  **3.702180 секунды после T**.\n- Outbox: одна попытка, одна завершенная цель, нет pending targets/leases.\n  Активных назначений в закрытой комнате нет.\n- Plus-комната осталась live, ended_at NULL, два активных назначения в момент\n  readback. Это серверное состояние, не самостоятельное доказательство\n  непрерывности видео/аудио в браузерах.\n- Распределение аккаунтов до и после: 61 Free, 1 Plus. Полный отсортированный\n  fingerprint строк subscriptions совпал; подписки не изменились.\n- Trial rows после переключения: 0. Включение предложения не запускает пробный\n  период автоматически и не списывает деньги с Free-аккаунтов.\n\nVercel в окне 15:48:40–15:50:00 UTC: drain HTTP 200,\n`claimed: 1, completed: 1, pending: 0, errors: 0`; error/fatal logs отсутствуют.\nScheduler прочитал успешный ACK в 15:49:00 UTC. Это первая успешная реальная\nцепочка pg_net → Web → Worker → Web/PostgREST для одной открытой комнаты;\nодин замер не устанавливает гарантированную задержку при нагрузке/отказах.\n\n## Старые платежные сессии\n\nДо T проверены две pre-T reservation в AniDachi sandbox, livemode false.\nОдна старая неоплаченная сессия была еще open: она завершена штатным Stripe\n`checkout sessions expire`, повторное API-чтение подтвердило expired/unpaid,\nsubscription NULL. Другая была complete/paid и уже соответствовала активной\nPlus-подписке. Обе reservation приведены к подтвержденным состояниям штатной\n`complete_subscription_checkout_reservation_v1`; подписка сохранена.\nStripe MCP не предоставил операцию expire в результатах поиска, поэтому для\nэтого использована Stripe Shell внутри явно выбранного AniDachi sandbox.\nЛокальный операционный receipt хранит точные ссылки и исходный fingerprint;\nконтактные данные и платежные ссылки в этот документ не включены.\n\n## Ручная приемка продолжается\n\n- [x] Разрешение владельца и проверка окружения перед T.\n- [x] Активация staging, выбор только оставшейся Free-комнаты, durable closure\n  и сверка всех целей с отсутствием активных назначений.\n- [x] Серверное сохранение Plus-комнаты, аккаунтов и подписок.\n- [x] Владелец подтвердил: «да плюс осталась а фри закрылись». Это ручное\n  подтверждение сохранения Plus и закрытия Free на старом расширении; отдельная\n  проверка очистки каждого аудио/видеотрека этим ответом не установлена.\n- [x] Отказ повторного Free-create и разрешенный Free-join к Plus на старом ZIP.\n  Владелец подтвердил оба действия: «да, все работает как нужно». Точный текст\n  отказа и отдельный вход к Pro этим ответом не проверены.\n- [x] Владелец оформил trial Plus через сайт и сообщил об успешном результате.\n  Read-only проверка 29 сентября 16:30 UTC: Stripe Sandbox и Supabase согласованы,\n  status trialing, account plan/effective grant Plus, ровно 72 часа — с\n  29 сентября 16:00:51 UTC до 2 октября 16:00:51 UTC. Способ оплаты сохранен;\n  charge_automatically, cancel_at_period_end false, затем $7.99 USD/месяц.\n  Это подтверждает начало trial и серверные права, не будущую успешную оплату.\n- [ ] Создание комнаты после trial на старом ZIP и вход бесплатного участника.\n  На момент readback у trial-аккаунта не было комнат, созданных после trial start.\n- [ ] Отдельный checkout trial Pro и остальные платежные переходы.\n- [ ] Новый ZIP, полная lifecycle/P11/история/ошибки оплаты и recovery-матрица.\n\nДизайн сайта и годовой план обсуждаются следующим отдельным блоком на staging;\nв эту операцию не входили. Новый код, ZIP, main/production и Store не выпускались.\nНе сбрасывать T и не воскрешать закрытые Free-комнаты ради повторения: следовать\n[runbook восстановления](cutover-operations.md). Следующие испытания идут при\nуже включенной модели; повторная активация с новым UUID запрещена.",
+            "source_file_sha256": "282c607d0f1f9553b174ae4da44db6498f1b65fff0d778660dc35cb899809c41",
+            "extraction_scope": "full_document",
+            "extracted_ranges": [
+              {
+                "start": 1,
+                "end": 87,
+                "sha256": "82c4d3ce350c949a0c90fe20fcddc1c1b51fa00b170faaefcc8413b6aed7d4d0"
+              }
+            ],
+            "full_file_freshness_claim": true,
+            "status": "staging_active_plus_trial_verified_post_trial_room_and_full_matrix_pending",
+            "community": 830,
+            "community_name": "Trial transition plan",
+            "trial_enrollment": {
+              "plan": "plus",
+              "status": "trialing",
+              "trial_start": "2026-09-29T16:00:51Z",
+              "trial_end": "2026-10-02T16:00:51Z",
+              "duration_hours": 72,
+              "payment_method_saved": true,
+              "collection_method": "charge_automatically",
+              "cancel_at_period_end": false,
+              "renewal_currency": "usd",
+              "renewal_unit_amount": 799,
+              "renewal_interval": "month",
+              "account_plan": "plus",
+              "effective_grant": "plus",
+              "readback_at": "2026-09-29 16:30 UTC (minute precision)",
+              "post_trial_room_creation_verified": false,
+              "future_successful_payment_verified": false,
+              "source_location": "L72-L79"
+            }
+          }
         }
       ],
       "trial_enrollment": {
@@ -175236,9 +175285,11 @@
         "account_plan": "plus",
         "effective_grant": "plus",
         "readback_at": "2026-09-29 16:30 UTC (minute precision)",
-        "post_trial_room_creation_verified": false,
+        "post_trial_room_creation_verified": true,
         "future_successful_payment_verified": false,
-        "source_location": "L72-L79"
+        "source_location": "L72-L79",
+        "free_guest_entry_verified": true,
+        "room_acceptance_evidence": "Later owner confirmation: проверил, все работает; receipt L78-L79"
       }
     },
     {
@@ -175254,7 +175305,7 @@
       "rationale": "Expected revision 1 and operation identity were recorded before the standard activation RPC; no manual room modification or trial reset.",
       "_origin": "semantic",
       "evidence_excerpt": "- Staging Supabase: `cyppqpprkygjloyfvvvj`.\n- Web: `dpl_4pPLCVC4CiK6x6TXhBvEQvTD62ww`, READY, staging alias,\n  source `73ea22d5f021b4650ad2cb83acd24a91435f4b76`.\n- Worker: `f7942d07-cb7a-473e-9484-c26768ea04c2`, 100% staging traffic.\n- Операция: `e58cd271-ce00-4916-a074-e3a184175d48`, ожидаемая revision 1\n  записана до SQL. Активация штатной `activate_paid_hosting_v1`, без ручного\n  изменения комнат или сброса trial.\n- **T: 2026-09-29 15:48:48.800820 UTC**, revision 2, trials enabled.\n- Scheduler enabled, environment строго staging. Personal history policy active.\n- Секреты не выгружались и не ротировались. Перед T настоящий pg_net запрос\n  получил HTTP 200 и точное `{\"ok\":true}` от staging drain.",
-      "source_file_sha256": "282c607d0f1f9553b174ae4da44db6498f1b65fff0d778660dc35cb899809c41",
+      "source_file_sha256": "481cc46fd052bde1725f6f3244d31dc064a5ddede889643f8832315eb3dd810d",
       "extraction_scope": "full_document",
       "extracted_ranges": [
         {
@@ -175286,7 +175337,7 @@
       "rationale": "Pre-T real pg_net returned HTTP 200 and exact ok:true; secrets were neither exported nor rotated.",
       "_origin": "semantic",
       "evidence_excerpt": "- Staging Supabase: `cyppqpprkygjloyfvvvj`.\n- Web: `dpl_4pPLCVC4CiK6x6TXhBvEQvTD62ww`, READY, staging alias,\n  source `73ea22d5f021b4650ad2cb83acd24a91435f4b76`.\n- Worker: `f7942d07-cb7a-473e-9484-c26768ea04c2`, 100% staging traffic.\n- Операция: `e58cd271-ce00-4916-a074-e3a184175d48`, ожидаемая revision 1\n  записана до SQL. Активация штатной `activate_paid_hosting_v1`, без ручного\n  изменения комнат или сброса trial.\n- **T: 2026-09-29 15:48:48.800820 UTC**, revision 2, trials enabled.\n- Scheduler enabled, environment строго staging. Personal history policy active.\n- Секреты не выгружались и не ротировались. Перед T настоящий pg_net запрос\n  получил HTTP 200 и точное `{\"ok\":true}` от staging drain.",
-      "source_file_sha256": "282c607d0f1f9553b174ae4da44db6498f1b65fff0d778660dc35cb899809c41",
+      "source_file_sha256": "481cc46fd052bde1725f6f3244d31dc064a5ddede889643f8832315eb3dd810d",
       "extraction_scope": "full_document",
       "extracted_ranges": [
         {
@@ -175317,7 +175368,7 @@
       "rationale": "The pre-T closure cause was not established; only one Free room remained open at activation.",
       "_origin": "semantic",
       "evidence_excerpt": "При первом чтении были две открытые Free-комнаты и одна Plus-комната.\nОдна Free-комната завершилась в 15:46:00.415 UTC, до T; причина этого завершения\nв рамках репетиции не устанавливалась, и оно не засчитывается как эффект cutover.\nНа момент T оставалась одна открытая Free-комната: target_count = 1.",
-      "source_file_sha256": "282c607d0f1f9553b174ae4da44db6498f1b65fff0d778660dc35cb899809c41",
+      "source_file_sha256": "481cc46fd052bde1725f6f3244d31dc064a5ddede889643f8832315eb3dd810d",
       "extraction_scope": "full_document",
       "extracted_ranges": [
         {
@@ -175345,7 +175396,7 @@
       "rationale": "One attempt completed the sole target with no pending targets or leases and no active assignments.",
       "_origin": "semantic",
       "evidence_excerpt": "- Выбранная Free-комната: durable fence/ended в 15:48:50.273 UTC,\n  **1.472180 секунды после T**; finalized в 15:48:52.503 UTC,\n  **3.702180 секунды после T**.\n- Outbox: одна попытка, одна завершенная цель, нет pending targets/leases.\n  Активных назначений в закрытой комнате нет.",
-      "source_file_sha256": "282c607d0f1f9553b174ae4da44db6498f1b65fff0d778660dc35cb899809c41",
+      "source_file_sha256": "481cc46fd052bde1725f6f3244d31dc064a5ddede889643f8832315eb3dd810d",
       "extraction_scope": "full_document",
       "extracted_ranges": [
         {
@@ -175375,7 +175426,7 @@
       "rationale": "Server liveness and ended_at NULL alone do not prove uninterrupted browser video or audio.",
       "_origin": "semantic",
       "evidence_excerpt": "- Plus-комната осталась live, ended_at NULL, два активных назначения в момент\n  readback. Это серверное состояние, не самостоятельное доказательство\n  непрерывности видео/аудио в браузерах.",
-      "source_file_sha256": "282c607d0f1f9553b174ae4da44db6498f1b65fff0d778660dc35cb899809c41",
+      "source_file_sha256": "481cc46fd052bde1725f6f3244d31dc064a5ddede889643f8832315eb3dd810d",
       "extraction_scope": "full_document",
       "extracted_ranges": [
         {
@@ -175403,7 +175454,7 @@
       "rationale": "At the activation readback, subscription fingerprints were unchanged and zero trial rows demonstrated no automatic trial or charges. This historical snapshot precedes the later user-initiated Plus trial enrollment.",
       "_origin": "semantic",
       "evidence_excerpt": "- Распределение аккаунтов до и после: 61 Free, 1 Plus. Полный отсортированный\n  fingerprint строк subscriptions совпал; подписки не изменились.\n- Trial rows после переключения: 0. Включение предложения не запускает пробный\n  период автоматически и не списывает деньги с Free-аккаунтов.",
-      "source_file_sha256": "282c607d0f1f9553b174ae4da44db6498f1b65fff0d778660dc35cb899809c41",
+      "source_file_sha256": "481cc46fd052bde1725f6f3244d31dc064a5ddede889643f8832315eb3dd810d",
       "extraction_scope": "full_document",
       "extracted_ranges": [
         {
@@ -175469,7 +175520,7 @@
       "rationale": "Drain claimed1/completed1/pending0/errors0 with no error/fatal logs and scheduler ACK at15:49UTC. One measurement is not a load or failure latency guarantee.",
       "_origin": "semantic",
       "evidence_excerpt": "Vercel в окне 15:48:40–15:50:00 UTC: drain HTTP 200,\n`claimed: 1, completed: 1, pending: 0, errors: 0`; error/fatal logs отсутствуют.\nScheduler прочитал успешный ACK в 15:49:00 UTC. Это первая успешная реальная\nцепочка pg_net → Web → Worker → Web/PostgREST для одной открытой комнаты;\nодин замер не устанавливает гарантированную задержку при нагрузке/отказах.",
-      "source_file_sha256": "282c607d0f1f9553b174ae4da44db6498f1b65fff0d778660dc35cb899809c41",
+      "source_file_sha256": "481cc46fd052bde1725f6f3244d31dc064a5ddede889643f8832315eb3dd810d",
       "extraction_scope": "full_document",
       "extracted_ranges": [
         {
@@ -175499,7 +175550,7 @@
       "rationale": "Standard Stripe expire and reservation-completion operations reconciled the verified states. Exact links and contact data remain outside this document.",
       "_origin": "semantic",
       "evidence_excerpt": "До T проверены две pre-T reservation в AniDachi sandbox, livemode false.\nОдна старая неоплаченная сессия была еще open: она завершена штатным Stripe\n`checkout sessions expire`, повторное API-чтение подтвердило expired/unpaid,\nsubscription NULL. Другая была complete/paid и уже соответствовала активной\nPlus-подписке. Обе reservation приведены к подтвержденным состояниям штатной\n`complete_subscription_checkout_reservation_v1`; подписка сохранена.\nStripe MCP не предоставил операцию expire в результатах поиска, поэтому для\nэтого использована Stripe Shell внутри явно выбранного AniDachi sandbox.\nЛокальный операционный receipt хранит точные ссылки и исходный fingerprint;\nконтактные данные и платежные ссылки в этот документ не включены.",
-      "source_file_sha256": "282c607d0f1f9553b174ae4da44db6498f1b65fff0d778660dc35cb899809c41",
+      "source_file_sha256": "481cc46fd052bde1725f6f3244d31dc064a5ddede889643f8832315eb3dd810d",
       "extraction_scope": "full_document",
       "extracted_ranges": [
         {
@@ -175527,7 +175578,7 @@
       "rationale": "Owner confirmed both requested old-ZIP actions. Exact denial wording, separate join to Pro and every audio/video track cleanup are not established.",
       "_origin": "semantic",
       "evidence_excerpt": "- [x] Разрешение владельца и проверка окружения перед T.\n- [x] Активация staging, выбор только оставшейся Free-комнаты, durable closure\n  и сверка всех целей с отсутствием активных назначений.\n- [x] Серверное сохранение Plus-комнаты, аккаунтов и подписок.\n- [x] Владелец подтвердил: «да плюс осталась а фри закрылись». Это ручное\n  подтверждение сохранения Plus и закрытия Free на старом расширении; отдельная\n  проверка очистки каждого аудио/видеотрека этим ответом не установлена.\n- [x] Отказ повторного Free-create и разрешенный Free-join к Plus на старом ZIP.\n  Владелец подтвердил оба действия: «да, все работает как нужно». Точный текст\n  отказа и отдельный вход к Pro этим ответом не проверены.",
-      "source_file_sha256": "282c607d0f1f9553b174ae4da44db6498f1b65fff0d778660dc35cb899809c41",
+      "source_file_sha256": "481cc46fd052bde1725f6f3244d31dc064a5ddede889643f8832315eb3dd810d",
       "extraction_scope": "full_document",
       "extracted_ranges": [
         {
@@ -175575,7 +175626,7 @@
     },
     {
       "id": "docs_releases_paid_hosting_trial_staging_rehearsal_2026_09_29_remaining_manual_matrix",
-      "label": "Post-trial old-ZIP room creation Free guest entry Pro checkout and full Sandbox P11 lifecycle remain unverified",
+      "label": "Pro join exact denial wording Pro trial checkout new ZIP and full Sandbox P11 lifecycle remain unverified",
       "file_type": "concept",
       "source_file": "docs/releases/paid-hosting-trial/staging-rehearsal-2026-09-29.md",
       "source_location": "L71-L81",
@@ -175583,20 +175634,20 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "rationale": "Plus trial enrollment and server rights are verified. At16:30UTC no room had been created by the trial account after trial start. Exact denial copy, separate Pro join/checkout, new ZIP, history, payment failures and recovery remain unverified.",
+      "rationale": "Owner confirmed post-trial old-ZIP room creation and Free participant entry. Separate Pro join/checkout, exact denial copy, new ZIP, history, payment failures and full lifecycle/recovery remain open.",
       "_origin": "semantic",
-      "evidence_excerpt": "  отказа и отдельный вход к Pro этим ответом не проверены.\n- [x] Владелец оформил trial Plus через сайт и сообщил об успешном результате.\n  Read-only проверка 29 сентября 16:30 UTC: Stripe Sandbox и Supabase согласованы,\n  status trialing, account plan/effective grant Plus, ровно 72 часа — с\n  29 сентября 16:00:51 UTC до 2 октября 16:00:51 UTC. Способ оплаты сохранен;\n  charge_automatically, cancel_at_period_end false, затем $7.99 USD/месяц.\n  Это подтверждает начало trial и серверные права, не будущую успешную оплату.\n- [ ] Создание комнаты после trial на старом ZIP и вход бесплатного участника.\n  На момент readback у trial-аккаунта не было комнат, созданных после trial start.\n- [ ] Отдельный checkout trial Pro и остальные платежные переходы.\n- [ ] Новый ZIP, полная lifecycle/P11/история/ошибки оплаты и recovery-матрица.",
-      "source_file_sha256": "282c607d0f1f9553b174ae4da44db6498f1b65fff0d778660dc35cb899809c41",
+      "evidence_excerpt": "  отказа и отдельный вход к Pro этим ответом не проверены.\n- [x] Владелец оформил trial Plus через сайт и сообщил об успешном результате.\n  Read-only проверка 29 сентября 16:30 UTC: Stripe Sandbox и Supabase согласованы,\n  status trialing, account plan/effective grant Plus, ровно 72 часа — с\n  29 сентября 16:00:51 UTC до 2 октября 16:00:51 UTC. Способ оплаты сохранен;\n  charge_automatically, cancel_at_period_end false, затем $7.99 USD/месяц.\n  Это подтверждает начало trial и серверные права, не будущую успешную оплату.\n- [x] Создание комнаты после trial на старом ZIP и вход бесплатного участника.\n  Владелец подтвердил оба действия: «проверил, все работает».\n- [ ] Отдельный checkout trial Pro и остальные платежные переходы.\n- [ ] Новый ZIP, полная lifecycle/P11/история/ошибки оплаты и recovery-матрица.",
+      "source_file_sha256": "481cc46fd052bde1725f6f3244d31dc064a5ddede889643f8832315eb3dd810d",
       "extraction_scope": "full_document",
       "extracted_ranges": [
         {
           "start": 71,
           "end": 81,
-          "sha256": "37f8e68a12e811cfba81af005029b99d55a21c1077717eef98b53eb629e226e9"
+          "sha256": "6201b8de4457c4a7a30dfd0d29e593d101e07d1d64088565ba7ff44b6dcec2fc"
         }
       ],
       "full_file_freshness_claim": true,
-      "status": "plus_trial_verified_post_trial_creation_guest_entry_pro_and_full_matrix_pending",
+      "status": "old_zip_trial_room_free_guest_confirmed_pro_new_zip_full_matrix_pending",
       "community": 830,
       "community_name": "Trial transition plan",
       "historical_versions": [
@@ -175659,6 +175710,36 @@
             "community": 830,
             "community_name": "Trial transition plan"
           }
+        },
+        {
+          "superseded_by_checkpoint": "owner_confirms_old_zip_trial_room_and_free_guest",
+          "record": {
+            "id": "docs_releases_paid_hosting_trial_staging_rehearsal_2026_09_29_remaining_manual_matrix",
+            "label": "Post-trial old-ZIP room creation Free guest entry Pro checkout and full Sandbox P11 lifecycle remain unverified",
+            "file_type": "concept",
+            "source_file": "docs/releases/paid-hosting-trial/staging-rehearsal-2026-09-29.md",
+            "source_location": "L71-L81",
+            "source_url": null,
+            "captured_at": null,
+            "author": null,
+            "contributor": null,
+            "rationale": "Plus trial enrollment and server rights are verified. At16:30UTC no room had been created by the trial account after trial start. Exact denial copy, separate Pro join/checkout, new ZIP, history, payment failures and recovery remain unverified.",
+            "_origin": "semantic",
+            "evidence_excerpt": "  отказа и отдельный вход к Pro этим ответом не проверены.\n- [x] Владелец оформил trial Plus через сайт и сообщил об успешном результате.\n  Read-only проверка 29 сентября 16:30 UTC: Stripe Sandbox и Supabase согласованы,\n  status trialing, account plan/effective grant Plus, ровно 72 часа — с\n  29 сентября 16:00:51 UTC до 2 октября 16:00:51 UTC. Способ оплаты сохранен;\n  charge_automatically, cancel_at_period_end false, затем $7.99 USD/месяц.\n  Это подтверждает начало trial и серверные права, не будущую успешную оплату.\n- [ ] Создание комнаты после trial на старом ZIP и вход бесплатного участника.\n  На момент readback у trial-аккаунта не было комнат, созданных после trial start.\n- [ ] Отдельный checkout trial Pro и остальные платежные переходы.\n- [ ] Новый ZIP, полная lifecycle/P11/история/ошибки оплаты и recovery-матрица.",
+            "source_file_sha256": "282c607d0f1f9553b174ae4da44db6498f1b65fff0d778660dc35cb899809c41",
+            "extraction_scope": "full_document",
+            "extracted_ranges": [
+              {
+                "start": 71,
+                "end": 81,
+                "sha256": "37f8e68a12e811cfba81af005029b99d55a21c1077717eef98b53eb629e226e9"
+              }
+            ],
+            "full_file_freshness_claim": true,
+            "status": "plus_trial_verified_post_trial_creation_guest_entry_pro_and_full_matrix_pending",
+            "community": 830,
+            "community_name": "Trial transition plan"
+          }
         }
       ]
     },
@@ -175675,7 +175756,7 @@
       "rationale": "Repeat tests under the enabled model; resetting T or resurrecting closed Free rooms would violate the recovery boundary.",
       "_origin": "semantic",
       "evidence_excerpt": "Не сбрасывать T и не воскрешать закрытые Free-комнаты ради повторения: следовать\n[runbook восстановления](cutover-operations.md). Следующие испытания идут при\nуже включенной модели; повторная активация с новым UUID запрещена.",
-      "source_file_sha256": "282c607d0f1f9553b174ae4da44db6498f1b65fff0d778660dc35cb899809c41",
+      "source_file_sha256": "481cc46fd052bde1725f6f3244d31dc064a5ddede889643f8832315eb3dd810d",
       "extraction_scope": "full_document",
       "extracted_ranges": [
         {
@@ -175761,7 +175842,7 @@
       "rationale": "These topics were outside this activation operation.",
       "_origin": "semantic",
       "evidence_excerpt": "Дизайн сайта и годовой план обсуждаются следующим отдельным блоком на staging;\nв эту операцию не входили. Новый код, ZIP, main/production и Store не выпускались.",
-      "source_file_sha256": "282c607d0f1f9553b174ae4da44db6498f1b65fff0d778660dc35cb899809c41",
+      "source_file_sha256": "481cc46fd052bde1725f6f3244d31dc064a5ddede889643f8832315eb3dd810d",
       "extraction_scope": "full_document",
       "extracted_ranges": [
         {
@@ -555699,6 +555780,38 @@
         "undirected_same_endpoint_collapsed_edges": 3
       },
       "token_accounting": "Active Codex semantic subagent token usage unavailable."
+    },
+    {
+      "date": "2026-09-29",
+      "topic": "Owner confirms old-ZIP room creation after Plus trial and Free participant entry",
+      "sources": {
+        "docs/releases/paid-hosting-trial/staging-rehearsal-2026-09-29.md": "481cc46fd052bde1725f6f3244d31dc064a5ddede889643f8832315eb3dd810d"
+      },
+      "full_source": "docs/releases/paid-hosting-trial/staging-rehearsal-2026-09-29.md",
+      "full_source_manifest_refreshed": true,
+      "changed_ranges": {
+        "docs/releases/paid-hosting-trial/staging-rehearsal-2026-09-29.md": [
+          [
+            78,
+            79
+          ]
+        ]
+      },
+      "read_scope": "Changed acceptance block read; complete87-line receipt validated against prior fully extracted source with exact differences only at lines78-79.",
+      "nodes_semantically_updated": 2,
+      "nodes_source_hash_refreshed": 13,
+      "nodes_added": 0,
+      "edges_added": 0,
+      "edge_updates": 0,
+      "status": "Owner confirms both requested old-ZIP actions. Pro checkout, new ZIP and full Sandbox/P11/payment/history/recovery remain open; no future payment success claimed.",
+      "scope": "Receipt-only semantic meanings/hash/manifest update. All source spans, nodes, edges, communities, hyperedges, other documents and unrelated manifest entries preserved. Prior node states retained in historical_versions. No scans, external calls or runtime tests.",
+      "health": {
+        "missing_endpoint_edges": 0,
+        "dangling_endpoint_edges": 0,
+        "self_loop_edges": 102,
+        "undirected_same_endpoint_collapsed_edges": 3
+      },
+      "token_accounting": "Active Codex semantic subagent usage unavailable."
     }
   ]
 }
