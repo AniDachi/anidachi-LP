@@ -3,15 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Check, Star, Lock } from "lucide-react";
+import { ArrowRight, Check, Lock } from "lucide-react";
 import {
 	inferPageTemplateFromPath,
 	trackConversion,
@@ -20,6 +12,8 @@ import {
 	PRICING_PLAN_MATRIX_COLUMNS,
 	PRICING_PLAN_MATRIX_ROWS,
 	PRICING_TIERS,
+	PRICING_PLUS_MONTHLY,
+	PRICING_PRO_MONTHLY,
 	type CheckoutTier,
 	type PricingTierId,
 } from "@/lib/pricing-tiers";
@@ -29,17 +23,27 @@ import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getSeoAttributionFields } from "@/lib/seo-landing-path";
 import type { PricingOffer, PricingPrices } from "@/lib/pricing-offer";
 import { formatMonthlyPrice } from "@/lib/billing-view";
+import "./pricing.css";
+
+type BillingPeriod = "monthly" | "yearly";
+
+// Approved design amounts only. Never used as checkout authority or sent to Stripe.
+const previewPrices: PricingPrices = {
+	plus: { unitAmount: Math.round(PRICING_PLUS_MONTHLY * 100), currency: "usd" },
+	pro: { unitAmount: Math.round(PRICING_PRO_MONTHLY * 100), currency: "usd" },
+};
+
+function annualPreviewPrice(monthly: PricingPrices[CheckoutTier]) {
+	return { ...monthly, unitAmount: Math.round(monthly.unitAmount * 12 * 0.8) };
+}
 
 function FeatureList({ features }: { features: string[] }) {
 	return (
-		<ul className="mb-6 flex-1 space-y-2">
+		<ul className="pricing-plans__features">
 			{features.map((feature) => (
-				<li key={feature} className="flex items-start gap-3">
-					<Check
-						className="mt-0.5 h-5 w-5 flex-shrink-0 text-ani-progress"
-						aria-hidden="true"
-					/>
-					<span className="text-sm text-ani-muted">{feature}</span>
+				<li key={feature}>
+					<Check size={17} aria-hidden="true" />
+					<span>{feature}</span>
 				</li>
 			))}
 		</ul>
@@ -50,13 +54,19 @@ export function Pricing({
 	headingLevel = 2,
 	showPlanMatrix = false,
 	initialPrices = null,
+	// Annual billing is a local design preview until the server catalog supports it.
+	annualPreview = process.env.NODE_ENV === "development",
 }: {
 	/** Use 1 on the dedicated /pricing page so the page has a single H1. */
 	headingLevel?: 1 | 2;
 	/** Full plan-limits table — keep on `/pricing`, omit from homepage `#pricing`. */
 	showPlanMatrix?: boolean;
 	initialPrices?: PricingPrices | null;
+	annualPreview?: boolean;
 } = {}) {
+	const [period, setPeriod] = useState<BillingPeriod>(
+		annualPreview ? "yearly" : "monthly",
+	);
 	const [checkoutError, setCheckoutError] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [submittingTier, setSubmittingTier] = useState<CheckoutTier | null>(
@@ -72,6 +82,16 @@ export function Pricing({
 	const offerVersion = useRef(0);
 	const [reload, setReload] = useState(0);
 	const checkoutLock = useRef(false);
+	const displayPrices = prices ?? (annualPreview ? previewPrices : null);
+
+	useEffect(() => {
+		// Preserve the explicitly chosen monthly flow across the sign-in return.
+		if (
+			new URLSearchParams(window.location.search).get("billing") === "monthly"
+		) {
+			setPeriod("monthly");
+		}
+	}, []);
 
 	useEffect(() => {
 		let refreshTimer: ReturnType<typeof setTimeout> | undefined;
@@ -197,6 +217,8 @@ export function Pricing({
 
 	const handleSubscribe = async (tier: CheckoutTier) => {
 		if (!offer || checkingOfferRef.current || checkoutLock.current) return;
+		// The server still sells monthly plans. A yearly preview must never use it.
+		if (period === "yearly" && offer.action !== "manage") return;
 		if (offerDeadline.current <= Date.now()) {
 			setOffer(null);
 			setReload((n) => n + 1);
@@ -207,7 +229,7 @@ export function Pricing({
 			return;
 		}
 		if (offer.action === "sign_in") {
-			window.location.href = `/login?next=${encodeURIComponent(`/pricing?plan=${tier}`)}`;
+			window.location.href = `/login?next=${encodeURIComponent(`/pricing?plan=${tier}&billing=monthly`)}`;
 			return;
 		}
 		checkoutLock.current = true;
@@ -331,7 +353,7 @@ export function Pricing({
 		<section
 			ref={sectionRef}
 			id="pricing"
-			className="relative overflow-hidden bg-ani-canvas py-16 lg:py-20"
+			className="pricing-plans relative bg-ani-canvas py-16 lg:py-20"
 		>
 			<div className="container relative mx-auto px-4">
 				<HomeSectionHeader
@@ -345,8 +367,36 @@ export function Pricing({
 								: "Join friends for free. Choose Plus or Pro to host your own room and save your watch history."
 					}
 				/>
+				{annualPreview ? (
+					<>
+						<div
+							className="pricing-plans__period"
+							role="group"
+							aria-label="Billing period"
+						>
+							{(["monthly", "yearly"] as const).map((value) => (
+								<button
+									key={value}
+									type="button"
+									aria-pressed={period === value}
+									disabled={isSubmitting}
+									onClick={() => {
+										if (!checkoutLock.current) setPeriod(value);
+									}}
+								>
+									{value === "monthly" ? "Monthly" : "Yearly"}
+									{value === "yearly" ? <span>Save 20%</span> : null}
+								</button>
+							))}
+						</div>
+						<p className="pricing-plans__preview-note">
+							Yearly pricing preview. Yearly subscriptions are not available
+							yet.
+						</p>
+					</>
+				) : null}
 
-				{checkoutError ? (
+				{checkoutError && period === "monthly" ? (
 					<div
 						className="mx-auto mb-8 max-w-lg rounded-[12px] border border-ani-error-text/30 bg-[var(--ani-error-bg)] px-4 py-3 text-center text-sm text-ani-error-text"
 						role="alert"
@@ -362,7 +412,7 @@ export function Pricing({
 					</div>
 				) : null}
 
-				<div className="mx-auto mb-12 grid max-w-6xl items-stretch gap-6 pt-2 lg:grid-cols-3 lg:gap-8">
+				<div className="pricing-plans__grid">
 					{PRICING_TIERS.map((baseTier) => {
 						const tier =
 							baseTier.id === "free" && offer?.paidHostingActive !== false
@@ -385,28 +435,33 @@ export function Pricing({
 						const paidTier = tier.id !== "free" ? tier.id : null;
 
 						return (
-							<div key={tier.id} className="flex h-full flex-col">
-								<Card
-									className={`flex h-full flex-1 flex-col gap-0 rounded-[20px] border bg-ani-panel p-6 shadow-none ${
-										highlighted ? "border-ani-primary" : "border-ani-line"
-									}`}
-								>
-									<TierCardBody
-										tier={tier}
-										highlighted={highlighted}
-										isSubmitting={isSubmitting}
-										submittingTier={submittingTier}
-										paidTier={paidTier}
-										onSubscribe={handleSubscribe}
-										offer={offer}
-										prices={prices}
-										checkingOffer={checkingOffer}
-									/>
-								</Card>
-							</div>
+							<article
+								key={tier.id}
+								aria-labelledby={`pricing-${tier.id}-title`}
+								className={`pricing-plans__card ${highlighted ? "pricing-plans__card--featured" : ""}`}
+							>
+								<TierCardBody
+									tier={tier}
+									highlighted={highlighted}
+									isSubmitting={isSubmitting}
+									submittingTier={submittingTier}
+									paidTier={paidTier}
+									onSubscribe={handleSubscribe}
+									offer={offer}
+									prices={displayPrices}
+									checkingOffer={checkingOffer}
+									period={period}
+									headingLevel={headingLevel === 1 ? 2 : 3}
+								/>
+							</article>
 						);
 					})}
 				</div>
+				<p className="pricing-plans__terms">
+					<Lock size={14} aria-hidden="true" />
+					Monthly checkout is secured by Stripe. Final total, taxes and
+					discounts are shown before confirmation.
+				</p>
 
 				{showPlanMatrix ? (
 					<div className="mx-auto max-w-4xl">
@@ -421,11 +476,15 @@ export function Pricing({
 											...row,
 											values: {
 												...row.values,
-												plus: prices
-													? `${formatMonthlyPrice(prices.plus)}/mo`
+												plus: displayPrices
+													? period === "yearly"
+														? `${formatMonthlyPrice(annualPreviewPrice(displayPrices.plus))}/year (preview)`
+														: `${formatMonthlyPrice(displayPrices.plus)}/mo`
 													: "—",
-												pro: prices
-													? `${formatMonthlyPrice(prices.pro)}/mo`
+												pro: displayPrices
+													? period === "yearly"
+														? `${formatMonthlyPrice(annualPreviewPrice(displayPrices.pro))}/year (preview)`
+														: `${formatMonthlyPrice(displayPrices.pro)}/mo`
 													: "—",
 											},
 										}
@@ -468,6 +527,8 @@ function TierCardBody({
 	offer,
 	prices,
 	checkingOffer,
+	period,
+	headingLevel,
 }: {
 	tier: (typeof PRICING_TIERS)[number];
 	highlighted: boolean;
@@ -478,10 +539,22 @@ function TierCardBody({
 	offer: PricingOffer | null;
 	prices: PricingPrices | null;
 	checkingOffer: boolean;
+	period: BillingPeriod;
+	headingLevel: 2 | 3;
 }) {
-	const badgeLabel = tier.id === "plus" ? "Regular watch nights" : null;
-	const ctaLabel =
-		offer?.action === "trial"
+	const Heading = headingLevel === 2 ? "h2" : "h3";
+	const yearly = period === "yearly" && !!paidTier;
+	const monthlyPrice = paidTier && prices ? prices[paidTier] : null;
+	const annualPrice = monthlyPrice ? annualPreviewPrice(monthlyPrice) : null;
+	const amount =
+		yearly && annualPrice
+			? { ...annualPrice, unitAmount: annualPrice.unitAmount / 12 }
+			: monthlyPrice;
+	const price = amount ? formatMonthlyPrice(amount) : paidTier ? "—" : "$0";
+	const unavailableYearly = yearly && offer?.action !== "manage";
+	const ctaLabel = unavailableYearly
+		? "Yearly coming soon"
+		: offer?.action === "trial"
 			? "Start 3-day free trial"
 			: offer?.action === "manage"
 				? "Manage subscription"
@@ -490,110 +563,117 @@ function TierCardBody({
 					: offer?.action === "subscribe"
 						? `Subscribe to ${tier.label}`
 						: `Choose ${tier.label}`;
-	const price =
-		paidTier && prices
-			? formatMonthlyPrice(prices[paidTier])
-			: paidTier
-				? "—"
-				: "$0";
+	const description =
+		tier.id === "free"
+			? tier.audience
+			: tier.id === "plus"
+				? "Make watch nights a regular thing."
+				: "More room for your whole crew.";
+	const billingNote = !paidTier
+		? "Free to join. No card needed."
+		: yearly
+			? "One payment for the whole year."
+			: offer?.action === "trial"
+				? "Billed monthly after your 3-day trial."
+				: "Billed monthly.";
+	const terms = unavailableYearly
+		? "Choose Monthly to check your available subscription options."
+		: !offer
+			? "Your available options will appear here before checkout."
+			: offer.action === "trial"
+				? `Card required. 3 days free, then ${price}/month automatically. Cancel before your trial ends to avoid a charge.`
+				: offer.action === "manage"
+					? "Manage your current plan and renewal in Account → Subscription."
+					: offer.action === "sign_in"
+						? "Sign in to check your trial availability before checkout."
+						: `Renews at ${price}/month. Cancel renewal in Account → Subscription. No new free trial is included.`;
 
 	return (
 		<>
-			<div
-				className={`mb-5 flex min-h-8 items-center justify-center ${
-					badgeLabel ? "" : "opacity-0 pointer-events-none"
-				}`}
-				aria-hidden={!badgeLabel}
-			>
-				{badgeLabel ? (
-					<Badge
-						className={`px-3 py-1.5 text-sm font-semibold ${
-							highlighted
-								? "rounded-full border-transparent bg-ani-primary text-ani-on-primary shadow-none"
-								: "rounded-full border border-ani-control-border bg-transparent text-ani-text"
-						}`}
-					>
-						{highlighted ? (
-							<Star className="mr-1 h-3 w-3" aria-hidden="true" />
-						) : null}
-						{badgeLabel}
-					</Badge>
-				) : (
-					<Badge className="px-5 py-1.5 text-sm font-semibold">
-						Placeholder
-					</Badge>
-				)}
-			</div>
-
-			<CardHeader className="space-y-2 p-0 pb-5 text-center">
-				<CardTitle className="text-2xl font-semibold text-ani-text">
-					{tier.label}
-				</CardTitle>
-				<p className="min-h-[4.5rem] text-sm font-medium leading-snug text-ani-muted">
-					{tier.audience}
-				</p>
-				<div className="flex items-baseline justify-center pt-1">
-					<span className="text-5xl font-semibold text-ani-text">{price}</span>
-					{tier.priceSuffix ? (
-						<span className="ml-1 text-lg text-ani-muted">
-							{tier.priceSuffix}
+			{highlighted ? (
+				<span className="pricing-plans__badge">For your watch nights</span>
+			) : null}
+			<div className="pricing-plans__top">
+				<Heading id={`pricing-${tier.id}-title`}>{tier.label}</Heading>
+				<p className="pricing-plans__description">{description}</p>
+				<div
+					className="pricing-plans__price-block"
+					aria-live="polite"
+					aria-atomic="true"
+				>
+					<div className="pricing-plans__price-line">
+						<span className="pricing-plans__amount">{price}</span>
+						<span className="pricing-plans__suffix">
+							{yearly ? "/mo, approx." : "/month"}
 						</span>
-					) : null}
-				</div>
-				<CardDescription className="min-h-[4.5rem] text-base text-ani-muted">
-					{tier.summary}
-				</CardDescription>
-			</CardHeader>
-
-			<CardContent className="flex flex-1 flex-col p-0">
-				<div className="border-b border-ani-line pb-6 mb-6">
-					{paidTier ? (
-						<Button
-							className="w-full"
-							variant={tier.id === "plus" ? "cream" : "creamOutline"}
-							size="control"
-							onClick={() => onSubscribe(paidTier)}
-							disabled={isSubmitting || checkingOffer || !offer}
-							aria-busy={isSubmitting || checkingOffer}
-						>
-							{isSubmitting && submittingTier === paidTier
-								? "Redirecting to Stripe…"
-								: ctaLabel}
-						</Button>
-					) : (
-						<Button asChild variant="cream" size="control" className="w-full">
-							<Link href={INSTALL_HUB_PATH}>{INSTALL_CTA_LABEL}</Link>
-						</Button>
-					)}
-					<p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-ani-muted">
-						{paidTier ? (
+					</div>
+					<p className="pricing-plans__billing">
+						{yearly && annualPrice && monthlyPrice ? (
 							<>
-								<Lock className="h-3.5 w-3.5" aria-hidden="true" />
-								Secured by Stripe
+								<strong>{formatMonthlyPrice(annualPrice)} / year</strong>
+								<del
+									aria-label={`12 months at monthly rate: ${formatMonthlyPrice({ ...monthlyPrice, unitAmount: monthlyPrice.unitAmount * 12 })}`}
+								>
+									{formatMonthlyPrice({
+										...monthlyPrice,
+										unitAmount: monthlyPrice.unitAmount * 12,
+									})}
+								</del>
 							</>
 						) : (
-							"Install the extension, then sign in"
+							billingNote
 						)}
 					</p>
-					{paidTier ? (
-						<p className="mt-3 min-h-32 text-center text-xs leading-relaxed text-ani-muted">
-							{!offer
-								? "Choose a plan. Your available options will appear here before checkout."
-								: offer.action === "trial"
-									? `Card required. 3 days free, then ${price}/month automatically. Cancel renewal in Account → Subscription before your trial ends to avoid the first charge.`
-									: offer.action === "manage"
-										? "Your existing subscription is managed in your account."
-										: offer.action === "sign_in"
-											? "Sign in to check your trial availability. Review the price and payment schedule before confirming in Stripe."
-											: `Billed monthly at ${price}. Cancel renewal in Account → Subscription. No new free trial is included.`}
-							{offer && offer.action !== "manage"
-								? " Final total and applicable taxes or discounts are shown in Stripe."
-								: ""}
-						</p>
-					) : null}
 				</div>
+				{paidTier ? (
+					<Button
+						className="pricing-plans__button"
+						variant={highlighted ? "cream" : "creamOutline"}
+						size="control"
+						onClick={() => onSubscribe(paidTier)}
+						disabled={
+							unavailableYearly || isSubmitting || checkingOffer || !offer
+						}
+						aria-busy={!unavailableYearly && (isSubmitting || checkingOffer)}
+						aria-describedby={`pricing-${tier.id}-terms`}
+					>
+						{isSubmitting && submittingTier === paidTier
+							? "Redirecting to Stripe…"
+							: ctaLabel}
+						{!unavailableYearly ? (
+							<ArrowRight size={17} aria-hidden="true" />
+						) : null}
+					</Button>
+				) : (
+					<Button
+						asChild
+						variant="creamOutline"
+						size="control"
+						className="pricing-plans__button"
+					>
+						<Link href={INSTALL_HUB_PATH}>
+							{INSTALL_CTA_LABEL}
+							<ArrowRight size={17} aria-hidden="true" />
+						</Link>
+					</Button>
+				)}
+				<p
+					className="pricing-plans__button-note"
+					id={`pricing-${tier.id}-terms`}
+				>
+					{paidTier ? terms : "Install the extension, then sign in."}
+				</p>
+			</div>
+			<div className="pricing-plans__details">
+				<p className="pricing-plans__feature-heading">
+					{tier.id === "free"
+						? "Watch together, for free"
+						: tier.id === "plus"
+							? "Your room, your watch night"
+							: "Everything in Plus, with more room"}
+				</p>
 				<FeatureList features={tier.features} />
-			</CardContent>
+			</div>
 		</>
 	);
 }

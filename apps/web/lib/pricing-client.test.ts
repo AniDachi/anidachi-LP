@@ -41,11 +41,18 @@ test("an open pricing tab retires pre-cutover hosting at the server deadline", a
 	assert.equal(requests, 2);
 	assert.doesNotMatch(el.textContent!, /30 min|4 people/);
 });
-async function mount() {
+async function mount(props: NonNullable<Parameters<typeof Pricing>[0]> = {}) {
 	const el = document.createElement("div");
 	document.body.append(el);
 	root = createRoot(el);
-	await act(async () => root!.render(React.createElement(Pricing)));
+	await act(async () =>
+		root!.render(
+			React.createElement<NonNullable<Parameters<typeof Pricing>[0]>>(Pricing, {
+				annualPreview: false,
+				...props,
+			}),
+		),
+	);
 	return el;
 }
 test("eligible Free sees card-required trial and cannot mistake Free for hosting", async () => {
@@ -104,12 +111,26 @@ function plusButton(el: HTMLElement) {
 test("server-rendered pricing shows verified catalog prices before the account request", () => {
 	const html = renderToStaticMarkup(
 		React.createElement<NonNullable<Parameters<typeof Pricing>[0]>>(Pricing, {
+			annualPreview: false,
 			initialPrices: offer.prices,
 		}),
 	);
 	assert.match(html, /\$7\.99/);
 	assert.match(html, /\$14\.99/);
 	assert.match(html, /Choose Plus/);
+	assert.doesNotMatch(html, /Start 3-day free trial/);
+	assert.doesNotMatch(html, /Yearly|Save 20%/);
+});
+
+test("the local yearly design is present in server HTML before account availability loads", () => {
+	const html = renderToStaticMarkup(
+		React.createElement<NonNullable<Parameters<typeof Pricing>[0]>>(Pricing, {
+			annualPreview: true,
+		}),
+	);
+	assert.match(html, /\$76\.70/);
+	assert.match(html, /\$143\.90/);
+	assert.match(html, /Yearly coming soon/);
 	assert.doesNotMatch(html, /Start 3-day free trial/);
 });
 
@@ -231,4 +252,120 @@ test("an account change while checkout is pending cannot redirect the replacemen
 	);
 	await act(async () => {});
 	assert.equal(window.location.origin, "http://localhost");
+});
+
+function periodButton(el: HTMLElement, period: "Monthly" | "Yearly") {
+	const button = [
+		...el.querySelectorAll<HTMLButtonElement>(
+			'[aria-label="Billing period"] button',
+		),
+	].find((entry) => entry.textContent?.startsWith(period));
+	assert.ok(button);
+	return button;
+}
+
+test("local annual preview defaults to yearly, shows the full charge, and never starts monthly checkout", async () => {
+	const urls: string[] = [];
+	globalThis.fetch = async (url) => {
+		urls.push(String(url));
+		return Response.json(offer);
+	};
+	const el = await mount({
+		annualPreview: true,
+		initialPrices: offer.prices,
+		showPlanMatrix: true,
+	});
+	assert.equal(periodButton(el, "Yearly").getAttribute("aria-pressed"), "true");
+	assert.match(el.textContent!, /Save 20%/);
+	assert.match(el.textContent!, /\$6\.39/);
+	assert.match(el.textContent!, /\$11\.99/);
+	assert.match(el.textContent!, /\$76\.70 \/ year/);
+	assert.match(el.textContent!, /\$143\.90 \/ year/);
+	assert.match(el.textContent!, /\$76\.70\/year \(preview\)/);
+	assert.match(el.textContent!, /Yearly subscriptions are not available yet/);
+	assert.doesNotMatch(el.textContent!, /Start 3-day free trial/);
+	const buttons = [...el.querySelectorAll("button")].filter(
+		(button) => button.textContent === "Yearly coming soon",
+	);
+	assert.equal(buttons.length, 2);
+	await act(async () => {
+		for (const button of buttons) {
+			assert.ok(button.disabled);
+			// Even a forced event on an enabled DOM element must not reach monthly checkout.
+			button.disabled = false;
+			button.click();
+		}
+	});
+	assert.deepEqual(urls, ["/api/billing/offer"]);
+});
+
+test("local design amounts remain visible without granting trial or checkout during an outage", async () => {
+	globalThis.fetch = async () =>
+		Response.json({ error: "unavailable" }, { status: 503 });
+	const el = await mount({ annualPreview: true });
+	assert.match(el.textContent!, /\$76\.70/);
+	await act(async () => periodButton(el, "Monthly").click());
+	assert.match(el.textContent!, /\$7\.99/);
+	assert.doesNotMatch(el.textContent!, /Start 3-day free trial/);
+	assert.ok(plusButton(el).disabled);
+});
+
+test("switching to monthly uses verified prices and locks the period during checkout", async () => {
+	const checkout = deferred<Response>();
+	const requests: Record<string, unknown>[] = [];
+	globalThis.fetch = async (url, init) => {
+		if (String(url) === "/api/billing/offer") return Response.json(offer);
+		requests.push(JSON.parse(String(init?.body)));
+		return checkout.promise;
+	};
+	const el = await mount({ annualPreview: true });
+	await act(async () => periodButton(el, "Monthly").click());
+	assert.match(el.textContent!, /Card required/);
+	await act(async () => plusButton(el).click());
+	assert.ok(periodButton(el, "Yearly").disabled);
+	await act(async () => periodButton(el, "Yearly").click());
+	assert.equal(
+		periodButton(el, "Monthly").getAttribute("aria-pressed"),
+		"true",
+	);
+	assert.equal(requests.length, 1);
+	assert.deepEqual(requests[0].expectedPrice, offer.prices.plus);
+	checkout.resolve(
+		Response.json({ url: "https://checkout.stripe.com/monthly" }),
+	);
+	await act(async () => {});
+	assert.equal(window.location.href, "https://checkout.stripe.com/monthly");
+});
+
+test("monthly sign-in preserves the selected period on the pricing return", async () => {
+	globalThis.fetch = async () =>
+		Response.json({ ...offer, ownerUserId: null, action: "sign_in" });
+	const el = await mount({ annualPreview: true });
+	await act(async () => periodButton(el, "Monthly").click());
+	const signIn = [...el.querySelectorAll("button")].find((button) =>
+		button.textContent?.includes("Sign in to choose"),
+	);
+	assert.ok(signIn);
+	await act(async () => signIn.click());
+	const next = new URL(window.location.href).searchParams.get("next");
+	assert.equal(next, "/pricing?plan=plus&billing=monthly");
+	await act(async () => root?.unmount());
+	root = null;
+	dom.happyDOM.setURL(`http://localhost${next}`);
+	const returned = await mount({ annualPreview: true });
+	assert.equal(
+		periodButton(returned, "Monthly").getAttribute("aria-pressed"),
+		"true",
+	);
+});
+
+test("an existing subscriber can still open account management from the annual preview", async () => {
+	globalThis.fetch = async () => Response.json({ ...offer, action: "manage" });
+	const el = await mount({ annualPreview: true });
+	const manage = [...el.querySelectorAll("button")].find((button) =>
+		button.textContent?.includes("Manage subscription"),
+	);
+	assert.ok(manage);
+	await act(async () => manage.click());
+	assert.equal(window.location.pathname, "/account/billing");
 });
