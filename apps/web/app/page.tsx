@@ -6,18 +6,13 @@ import {
 	HowToJsonLd,
 } from "@/components/json-ld";
 import { homeFAQ } from "@/lib/home-faq";
-import { initialPricingPrices } from "@/lib/anidachi-auth/pricing-catalog";
 
 export const revalidate = 300;
 
-export default async function Home() {
-	const [prices, yearlyPrices] = await Promise.all([
-		initialPricingPrices(),
-		initialPricingPrices("yearly"),
-	]);
+export default function Home() {
 	return (
 		<>
-			<HomeClient initialPrices={prices} initialYearlyPrices={yearlyPrices} />
+			<HomeClient />
 			<SoftwareApplicationJsonLd />
 			<FAQPageJsonLd questions={homeFAQ} />
 			<HowToJsonLd

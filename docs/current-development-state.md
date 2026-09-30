@@ -1,5 +1,18 @@
 # Current Development State
 
+## Local public pricing correction, September 30, 2026
+
+The owner requires plan cards and prices to be regular site content. Homepage and
+`/pricing` now render the published monthly/yearly USD catalog directly, with
+Yearly selected by default and no Stripe call during page rendering. Private offer
+prefetch may adjust account actions but cannot replace the amounts, hide the
+period selector, disable browsing, or show a page-load error. An explicit checkout
+attempt reuses or awaits fresh account verification; price mismatch, changed
+eligibility and account changes cannot silently start a different purchase.
+This supersedes the earlier server-fetched public-price approach below. Local
+billing configuration and real Checkout acceptance remain open. See the
+[annual checklist and pricing correction](releases/paid-hosting-trial/annual-billing-2026-09-30.md).
+
 ## Local annual billing checkpoint, September 30, 2026
 
 Annual Plus/Pro checkout and explicit monthly-to-yearly conversion are implemented
