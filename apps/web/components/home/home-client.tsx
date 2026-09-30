@@ -9,6 +9,7 @@ import { MainAppFeatures } from "@/components/main-app-features";
 import { ChromeExtensionDemo } from "@/components/chrome-extension-demo";
 import { CompareTable } from "@/components/compare-table";
 import { SocialProof } from "@/components/social-proof";
+import { StoreReviews } from "@/components/store-reviews";
 import { FAQSection } from "@/components/faq-section";
 import { homeFAQ } from "@/lib/home-faq";
 import { useHomeScrollAssist } from "@/lib/use-home-scroll-assist";
@@ -31,6 +32,7 @@ export function HomeClient() {
 			<MainAppFeatures />
 			<Pricing />
 			<SocialProof />
+			<StoreReviews />
 			<FAQSection questions={homeFAQ} />
 		</main>
 	);

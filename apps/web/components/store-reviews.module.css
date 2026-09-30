@@ -1,0 +1,69 @@
+.section {
+  padding: 76px 24px 64px;
+  background: var(--ani-canvas);
+  color: var(--ani-text);
+  scroll-margin-top: 88px;
+}
+
+.container { max-width: 1144px; margin: 0 auto; }
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 42px;
+}
+
+.header h2 {
+  font-size: clamp(30px, 3.5vw, 44px);
+  font-weight: 550;
+  line-height: 1.13;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.header a {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  color: var(--ani-muted);
+  font-size: 14px;
+  transition: color 140ms;
+}
+
+.header a:hover { color: var(--ani-progress); }
+.header a:focus-visible { outline: 2px solid var(--ani-focus); outline-offset: 4px; }
+.header a svg { flex-shrink: 0; }
+
+.reviews { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+.review {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+  padding: 0 32px;
+}
+
+.review:first-child { padding-left: 0; }
+.review:last-child { padding-right: 0; }
+.review + .review { border-left: 1px solid var(--ani-line); }
+.stars { display: flex; gap: 4px; color: var(--ani-progress); margin-bottom: 20px; }
+.review blockquote { margin: 0 0 28px; font-size: 20px; line-height: 1.6; letter-spacing: -0.02em; }
+.review figcaption { display: flex; flex-direction: column; gap: 6px; margin-top: auto; }
+.review figcaption span { font-size: 14px; font-weight: 550; }
+.review time { font-size: 13px; color: var(--ani-muted); }
+
+@media (max-width: 767px) {
+  .section { padding: 48px 24px; }
+  .header { flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 28px; }
+  .header h2 { font-size: 34px; }
+  .reviews { grid-template-columns: 1fr; }
+  .review, .review:first-child, .review:last-child { padding: 28px 0; }
+  .review:first-child { padding-top: 0; }
+  .review:last-child { padding-bottom: 0; }
+  .review + .review { border-left: 0; border-top: 1px solid var(--ani-line); }
+  .review blockquote { margin-bottom: 22px; }
+}

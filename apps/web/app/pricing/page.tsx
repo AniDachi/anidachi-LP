@@ -5,6 +5,7 @@ import { Pricing } from "@/components/pricing";
 import { FAQSection } from "@/components/faq-section";
 import { BreadcrumbJsonLd, FAQPageJsonLd } from "@/components/json-ld";
 import { SocialProof } from "@/components/social-proof";
+import { StoreReviews } from "@/components/store-reviews";
 import { getPlanPolicy } from "@anidachi/protocol";
 
 export const revalidate = 300;
@@ -106,6 +107,7 @@ export default function PricingPage() {
 
 				<Pricing headingLevel={1} showPlanMatrix />
 				<SocialProof />
+				<StoreReviews />
 				<FAQSection
 					title="Pricing FAQ"
 					questions={faq}
