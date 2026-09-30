@@ -76,7 +76,7 @@ test("used trial and current subscribers get paid or management actions", async 
 		globalThis.fetch = async () =>
 			Response.json({ ...offer, action, trialAvailable: false });
 		const el = await mount();
-		assert.doesNotMatch(el.textContent!, /Start 3-day free trial/);
+		assert.doesNotMatch(el.textContent!, /Start 3-day free trial|Try 3 days free/);
 		assert.match(
 			el.textContent!,
 			action === "manage" ? /Manage subscription/ : /Subscribe to Plus/,
@@ -115,7 +115,10 @@ test("public monthly and annual plans render without any server catalog", async 
 	assert.match(html, /\$76\.70/);
 	assert.match(html, /\$143\.90/);
 	assert.match(html, /Yearly/);
-	assert.match(html, /Choose Plus/);
+	assert.match(html, /Try 3 days free/);
+	assert.match(html, /One trial per account/);
+	assert.match(html, /Card required/);
+	assert.match(html, /\$76\.70\/year automatically/);
 	globalThis.fetch = async () => Response.json({}, { status: 503 });
 	const el = await mount();
 	assert.equal(el.querySelector('[role="alert"]'), null);
@@ -123,6 +126,39 @@ test("public monthly and annual plans render without any server catalog", async 
 	await act(async () => periodButton(el, "Monthly").click());
 	assert.match(el.textContent!, /\$7\.99/);
 	assert.match(el.textContent!, /\$14\.99/);
+	assert.match(el.textContent!, /Try 3 days free/);
+	assert.match(el.textContent!, /\$7\.99\/month automatically/);
+});
+
+test("a public trial click cannot silently start a paid subscription for an ineligible account", async () => {
+	const lookup = deferred<Response>();
+	let checkouts = 0;
+	const requests: Record<string, unknown>[] = [];
+	globalThis.fetch = async (url, init) => {
+		if (String(url) === "/api/billing/offer") return lookup.promise;
+		checkouts++;
+		requests.push(JSON.parse(String(init?.body)));
+		return Response.json({
+			url: "https://checkout.stripe.com/explicit-paid-choice",
+		});
+	};
+	const el = await mount();
+	assert.match(plusButton(el).textContent!, /Try 3 days free/);
+	await act(async () => plusButton(el).click());
+	lookup.resolve(
+		Response.json({ ...offer, action: "subscribe", trialAvailable: false }),
+	);
+	await act(async () => {});
+	assert.equal(checkouts, 0);
+	assert.match(
+		el.textContent!,
+		/A free trial is not available for this account/,
+	);
+	assert.match(plusButton(el).textContent!, /Subscribe to Plus/);
+	assert.doesNotMatch(el.textContent!, /Try 3 days free/);
+	await act(async () => plusButton(el).click());
+	assert.equal(checkouts, 1);
+	assert.equal(requests[0].expectedTrialOffered, false);
 });
 
 test("availability errors appear only after purchase intent and can be retried", async () => {
@@ -237,7 +273,7 @@ test("server-rendered pricing shows published prices before the account request"
 	);
 	assert.match(html, /\$76\.70/);
 	assert.match(html, /\$143\.90/);
-	assert.match(html, /Choose Plus/);
+	assert.match(html, /Try 3 days free/);
 	assert.doesNotMatch(html, /Start 3-day free trial/);
 	assert.match(html, /Yearly|Save 20%/);
 });
@@ -251,7 +287,7 @@ test("published yearly pricing is present in server HTML before account availabi
 	);
 	assert.match(html, /\$76\.70/);
 	assert.match(html, /\$143\.90/);
-	assert.match(html, /Choose Plus/);
+	assert.match(html, /Try 3 days free/);
 	assert.doesNotMatch(html, /Start 3-day free trial/);
 });
 
@@ -461,10 +497,8 @@ test("monthly sign-in preserves the selected period on the pricing return", asyn
 		});
 	const el = await mount({});
 	await act(async () => periodButton(el, "Monthly").click());
-	const signIn = [...el.querySelectorAll("button")].find((button) =>
-		button.textContent?.includes("Sign in to choose"),
-	);
-	assert.ok(signIn);
+	const signIn = plusButton(el);
+	assert.match(signIn.textContent!, /Try 3 days free/);
 	await act(async () => signIn.click());
 	const next = new URL(window.location.href).searchParams.get("next");
 	assert.equal(next, "/pricing?plan=plus&billing=monthly");

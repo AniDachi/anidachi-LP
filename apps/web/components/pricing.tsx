@@ -260,6 +260,14 @@ export function Pricing({
 				window.location.href = `/login?next=${encodeURIComponent(`/pricing?plan=${tier}&billing=${period}`)}`;
 				return;
 			}
+			if (!offer && currentOffer.action === "subscribe") {
+				// The public button offered a trial before account eligibility loaded.
+				// Show the verified paid terms and require a new, explicit choice.
+				setCheckoutError(
+					"A free trial is not available for this account. Review the subscription terms below before continuing.",
+				);
+				return;
+			}
 			const checkoutPrice = (
 				period === "yearly" ? currentOffer.yearlyPrices : currentOffer.prices
 			)?.[tier];
@@ -586,11 +594,9 @@ function TierCardBody({
 			? "Start 3-day free trial"
 			: offer?.action === "manage"
 				? "Manage subscription"
-				: offer?.action === "sign_in"
-					? "Sign in to choose this plan"
-					: offer?.action === "subscribe"
-						? `Subscribe to ${tier.label}`
-						: `Choose ${tier.label}`;
+				: offer?.action === "subscribe"
+					? `Subscribe to ${tier.label}`
+					: "Try 3 days free";
 	const description =
 		tier.id === "free"
 			? tier.audience
@@ -608,14 +614,13 @@ function TierCardBody({
 		? formatMonthlyPrice(selectedPrice)
 		: "—";
 	const unit = yearly ? "year" : "month";
-	const terms = !offer
-		? `Renews at ${recurringAmount}/${unit}. Trial availability is checked before checkout. Cancel renewal anytime.`
-		: offer.action === "trial"
-			? `Card required. 3 days free, then ${recurringAmount}/${unit} automatically. Cancel before your trial ends to avoid a charge.`
-			: offer.action === "manage"
-				? "Manage your current plan and renewal in Account → Subscription."
-				: offer.action === "sign_in"
-					? "Sign in to check your trial availability before checkout."
+	const terms =
+		!offer || offer.action === "sign_in"
+			? `Card required. One trial per account. Then ${recurringAmount}/${unit} automatically. Cancel before your trial ends to avoid a charge.`
+			: offer.action === "trial"
+				? `Card required. 3 days free, then ${recurringAmount}/${unit} automatically. Cancel before your trial ends to avoid a charge.`
+				: offer.action === "manage"
+					? "Manage your current plan and renewal in Account → Subscription."
 					: `Renews at ${recurringAmount}/${unit}. Cancel renewal in Account → Subscription. No new free trial is included.`;
 
 	return (

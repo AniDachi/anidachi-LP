@@ -26,6 +26,9 @@ prefetch may adjust account actions but cannot replace the amounts, hide the
 period selector, disable browsing, or show a page-load error. An explicit checkout
 attempt reuses or awaits fresh account verification; price mismatch, changed
 eligibility and account changes cannot silently start a different purchase.
+The public Plus/Pro buttons also show the three-day trial immediately, with card,
+one-trial and renewal terms. If an unknown account proves ineligible after that
+click, paid Checkout waits for a new explicit choice after the terms update.
 This supersedes the earlier server-fetched public-price approach below. Real
 Checkout acceptance remains open and will take place on staging as agreed above. See the
 [annual checklist and pricing correction](releases/paid-hosting-trial/annual-billing-2026-09-30.md).
