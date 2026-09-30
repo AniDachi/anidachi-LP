@@ -1,5 +1,12 @@
 # Current Development State
 
+## Local homepage comparison, September 30, 2026
+
+“How AniDachi compares” now uses a flat desktop table and a compact competitor
+selector on phones, with shorter copy and linked primary product information.
+Local checks pass; owner visual acceptance remains open. This is not deployed.
+See the [comparison scope and evidence](releases/website-comparison-2026-09-30.md).
+
 ## Annual billing acceptance environment, September 30, 2026
 
 The owner chose staging with AniDachi Sandbox for annual billing configuration
