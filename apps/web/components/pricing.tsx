@@ -485,7 +485,6 @@ export function Pricing({
 									onSubscribe={handleSubscribe}
 									offer={offer}
 									prices={displayPrices}
-									monthlyPrices={PUBLISHED_PRICING.monthly}
 									period={period}
 									headingLevel={headingLevel === 1 ? 2 : 3}
 								/>
@@ -562,7 +561,6 @@ function TierCardBody({
 	onSubscribe,
 	offer,
 	prices,
-	monthlyPrices,
 	period,
 	headingLevel,
 }: {
@@ -574,14 +572,11 @@ function TierCardBody({
 	onSubscribe: (tier: CheckoutTier) => void;
 	offer: PricingOffer | null;
 	prices: PricingPrices | null;
-	monthlyPrices: PricingPrices | null;
 	period: BillingPeriod;
 	headingLevel: 2 | 3;
 }) {
 	const Heading = headingLevel === 2 ? "h2" : "h3";
 	const yearly = period === "yearly" && !!paidTier;
-	const monthlyPrice =
-		paidTier && monthlyPrices ? monthlyPrices[paidTier] : null;
 	const selectedPrice = paidTier && prices ? prices[paidTier] : null;
 	const annualPrice = yearly ? selectedPrice : null;
 	const amount =
@@ -603,34 +598,32 @@ function TierCardBody({
 			: tier.id === "plus"
 				? "Make watch nights a regular thing."
 				: "More room for your whole crew.";
-	const billingNote = !paidTier
-		? "Free to join. No card needed."
-		: yearly
-			? "One payment for the whole year."
-			: offer?.action === "trial"
-				? "Billed monthly after your 3-day trial."
-				: "Billed monthly.";
 	const recurringAmount = selectedPrice
 		? formatMonthlyPrice(selectedPrice)
 		: "—";
 	const unit = yearly ? "year" : "month";
-	const terms =
+	const termsSummary =
 		!offer || offer.action === "sign_in"
-			? `Card required. One trial per account. Then ${recurringAmount}/${unit} automatically. Cancel before your trial ends to avoid a charge.`
+			? `Then ${recurringAmount}/${unit} automatically.`
 			: offer.action === "trial"
-				? `Card required. 3 days free, then ${recurringAmount}/${unit} automatically. Cancel before your trial ends to avoid a charge.`
+				? `3 days free, then ${recurringAmount}/${unit} automatically.`
 				: offer.action === "manage"
-					? "Manage your current plan and renewal in Account → Subscription."
-					: `Renews at ${recurringAmount}/${unit}. Cancel renewal in Account → Subscription. No new free trial is included.`;
+					? null
+					: `Renews at ${recurringAmount}/${unit}.`;
+	const termsDetail =
+		!offer || offer.action === "sign_in" || offer.action === "trial"
+			? "Card required. One trial per account. Cancel before your trial ends to avoid a charge."
+			: offer.action === "manage"
+				? "Manage your current plan and renewal in Account → Subscription."
+				: "Cancel renewal in Account → Subscription. No new free trial is included.";
 
 	return (
 		<>
-			{highlighted ? (
-				<span className="pricing-plans__badge">For your watch nights</span>
-			) : null}
 			<div className="pricing-plans__top">
-				<Heading id={`pricing-${tier.id}-title`}>{tier.label}</Heading>
-				<p className="pricing-plans__description">{description}</p>
+				<header className="pricing-plans__card-header">
+					<Heading id={`pricing-${tier.id}-title`}>{tier.label}</Heading>
+					<p className="pricing-plans__description">{description}</p>
+				</header>
 				<div
 					className="pricing-plans__price-block"
 					aria-live="polite"
@@ -639,24 +632,23 @@ function TierCardBody({
 					<div className="pricing-plans__price-line">
 						<span className="pricing-plans__amount">{price}</span>
 						<span className="pricing-plans__suffix">
-							{yearly ? "/mo, approx." : "/month"}
+							{!paidTier
+								? "Free to join"
+								: yearly
+									? "per month, approx."
+									: "per month"}
 						</span>
 					</div>
 					<p className="pricing-plans__billing">
-						{yearly && annualPrice && monthlyPrice ? (
+						{yearly ? (
 							<>
-								<strong>{formatMonthlyPrice(annualPrice)} / year</strong>
-								<del
-									aria-label={`12 months at monthly rate: ${formatMonthlyPrice({ ...monthlyPrice, unitAmount: monthlyPrice.unitAmount * 12 })}`}
-								>
-									{formatMonthlyPrice({
-										...monthlyPrice,
-										unitAmount: monthlyPrice.unitAmount * 12,
-									})}
-								</del>
+								Billed{" "}
+								<strong>{recurringAmount} / year</strong>
 							</>
+						) : paidTier ? (
+							"Billed monthly."
 						) : (
-							billingNote
+							"No card needed."
 						)}
 					</p>
 				</div>
@@ -692,7 +684,14 @@ function TierCardBody({
 					className="pricing-plans__button-note"
 					id={`pricing-${tier.id}-terms`}
 				>
-					{paidTier ? terms : "Install the extension, then sign in."}
+					{paidTier ? (
+						<>
+							{termsSummary ? <strong>{termsSummary}</strong> : null}
+							<span>{termsDetail}</span>
+						</>
+					) : (
+						"Install the extension, then sign in."
+					)}
 				</p>
 			</div>
 			<div className="pricing-plans__details">
