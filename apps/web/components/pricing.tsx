@@ -399,13 +399,11 @@ export function Pricing({
 			<div className="container relative mx-auto px-4">
 				<HomeSectionHeader
 					titleAs={headingLevel === 1 ? "h1" : "h2"}
-					title="Your next watch night starts here."
+					title="Watch together. Choose your plan."
 					description={
-						!offer
-							? "Join friends for free. Explore Plus and Pro for your own watch nights."
-							: offer.paidHostingActive === false
-								? "Join friends for free. Choose Plus or Pro for more hosting and personal watch history."
-								: "Join friends for free. Choose Plus or Pro to host your own room and save your watch history."
+						offer?.paidHostingActive === false
+							? "Join friends for free. Choose Plus or Pro for more hosting and personal watch history."
+							: "Join friends for free, or host your own room with Plus or Pro."
 					}
 				/>
 				<div
@@ -458,7 +456,7 @@ export function Pricing({
 							baseTier.id === "free" && offer?.paidHostingActive !== false
 								? {
 										...baseTier,
-										audience: "Join your friends’ watch nights.",
+										audience: "Join a friend’s room for free.",
 										summary: "Join a Plus, Pro or trial host for free.",
 										features: [
 											"Join rooms on Crunchyroll + YouTube",
@@ -611,12 +609,7 @@ function TierCardBody({
 				: offer?.action === "subscribe"
 					? `Subscribe to ${tier.label}`
 					: "Try 3 days free";
-	const description =
-		tier.id === "free"
-			? tier.audience
-			: tier.id === "plus"
-				? "Host watch nights with friends."
-				: "Bring your whole group together.";
+	const description = tier.audience;
 	const recurringAmount = selectedPrice
 		? formatMonthlyPrice(selectedPrice)
 		: "—";
