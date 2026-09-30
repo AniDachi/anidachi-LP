@@ -5,6 +5,7 @@ import { Pricing } from "@/components/pricing";
 import { FAQSection } from "@/components/faq-section";
 import { BreadcrumbJsonLd, FAQPageJsonLd } from "@/components/json-ld";
 import { SocialProof } from "@/components/social-proof";
+import { StoreReviews } from "@/components/store-reviews";
 import { getPlanPolicy } from "@anidachi/protocol";
 
 export const revalidate = 300;
@@ -35,7 +36,7 @@ export const metadata: Metadata = {
 		card: "summary_large_image",
 		title: "AniDachi Pricing — Free Chrome Watch Party",
 		description:
-			"Join friends for free. Compare Plus and Pro for your next watch night.",
+			"Join friends for free, or host your own room with Plus or Pro.",
 	},
 };
 
@@ -57,7 +58,7 @@ const faq = [
 	{
 		question: "How does the free trial work?",
 		answer:
-			"If your account is eligible, you can try Plus or Pro once for 3 days with a card. After that, the subscription renews monthly at the price shown before you confirm in Stripe. Cancel renewal before the trial ends to avoid the first charge. Switching plans during the trial does not restart it.",
+			"If your account is eligible, you can try Plus or Pro once for 3 days with a card. After that, you are charged for your chosen monthly or yearly plan, which renews automatically at the price shown in checkout. Cancel renewal before the trial ends to avoid the first charge. Switching plans during the trial does not restart it.",
 	},
 	{
 		question: "How do I cancel my subscription?",
@@ -106,6 +107,7 @@ export default function PricingPage() {
 
 				<Pricing headingLevel={1} showPlanMatrix />
 				<SocialProof />
+				<StoreReviews />
 				<FAQSection
 					title="Pricing FAQ"
 					questions={faq}

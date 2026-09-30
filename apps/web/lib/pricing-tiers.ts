@@ -184,7 +184,7 @@ export const PRICING_TIERS: PricingTierMarketing[] = [
     label: "Plus",
     priceDisplay: PRICING_PLUS_LABEL,
     priceSuffix: "/month",
-    audience: "Regular watch nights and your personal watch progress",
+    audience: "Your room. Your favorite people.",
     summary: "No daily host limit — record progress on both platforms",
     features: [
       "Crunchyroll + YouTube",
@@ -203,7 +203,7 @@ export const PRICING_TIERS: PricingTierMarketing[] = [
     label: "Pro",
     priceDisplay: PRICING_PRO_LABEL,
     priceSuffix: "/month",
-    audience: "Bigger groups, clubs, and hosts who need priority support",
+    audience: "More room for everyone.",
     summary: `Same as Plus — up to ${proPolicy.maxParticipants} people and ${proPolicy.maxMicrophones} mics, plus priority support`,
     features: [
       "Everything in Plus",
