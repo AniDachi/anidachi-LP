@@ -431,7 +431,7 @@ test("annual checkout defaults to yearly and submits the verified full yearly am
 		showPlanMatrix: true,
 	});
 	assert.equal(periodButton(el, "Yearly").getAttribute("aria-pressed"), "true");
-	assert.match(el.textContent!, /Save 20%/);
+	assert.match(el.textContent!, /−20%/);
 	assert.match(el.textContent!, /\$6\.39/);
 	assert.match(el.textContent!, /\$11\.99/);
 	assert.match(el.textContent!, /\$76\.70 \/ year/);

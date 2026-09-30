@@ -424,10 +424,13 @@ export function Pricing({
 							}}
 						>
 							{value === "monthly" ? "Monthly" : "Yearly"}
-							{value === "yearly" ? <span>Save 20%</span> : null}
+							{value === "yearly" ? <span>−20%</span> : null}
 						</button>
 					))}
 				</div>
+				<p className="pricing-plans__yearly-benefit">
+					<strong>2+ months free</strong> with yearly billing
+				</p>
 
 				{checkoutError ? (
 					<div

@@ -8,7 +8,7 @@
   max-width: 100%;
   gap: 4px;
   padding: 5px;
-  margin: -10px auto 32px;
+  margin: -10px auto 12px;
   border: 1px solid var(--ani-line);
   border-radius: 999px;
   background: var(--ani-panel);
@@ -40,7 +40,29 @@
 }
 
 .pricing-plans__period button:disabled { cursor: wait; }
-.pricing-plans__period span { font-size: 11px; font-weight: 600; white-space: nowrap; }
+.pricing-plans__period span {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--pricing-accent);
+  color: #17110b;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.pricing-plans__yearly-benefit {
+  margin: 0 0 32px;
+  color: var(--ani-muted);
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.pricing-plans__yearly-benefit strong {
+  color: var(--ani-primary);
+  font-weight: 500;
+}
 
 .pricing-plans__grid {
   display: grid;
