@@ -1,5 +1,23 @@
 # Current Development State
 
+## Website and annual billing delivered to staging, September 30, 2026
+
+[PR #383](https://github.com/AniDachi/anidachi-LP/pull/383) delivered the approved
+homepage/pricing design, signup counter and annual billing as `d64f6e8a` at
+12:44:57 UTC. Vercel deployment `dpl_5HfezoKU9Mb2Y79TP2Qq72cLqxnZ` is READY on
+**https://staging.anidachi.app**. Annual Sandbox prices and the dedicated yearly
+conversion Portal are configured for Vercel Preview / exact branch `staging`.
+CI, room/P2P checks, deployed staging smoke, Worker smoke and desktop/mobile UI
+inspection passed. A date-dependent room-test fixture was corrected; Worker
+runtime source, extension and database schema did not change in this release.
+
+The owner still performs annual Checkout, trial, proration and payment-failure
+acceptance. Main remains `a5a0134e`; promotion PR #376 is manual. LIVE Stripe and
+Chrome Store release are not part of this delivery. See the
+[deployment evidence, remaining checks and rollback](releases/website-annual-staging-2026-09-30.md).
+The September 30 local-only statements below are earlier checkpoints superseded
+by this delivery; their detailed test history is retained.
+
 ## Local homepage comparison, September 30, 2026
 
 “How AniDachi compares” now uses a flat desktop table and a compact competitor
