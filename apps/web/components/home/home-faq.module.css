@@ -1,6 +1,6 @@
 .section { padding: 64px 24px; background: var(--ani-canvas); color: var(--ani-text); scroll-margin-top: 88px; }
 .container { max-width: 1144px; margin-inline: auto; }
-.container h2 { margin: 0 0 34px; font-size: clamp(30px, 3.5vw, 44px); font-weight: 550; line-height: 1.13; letter-spacing: -0.045em; }
+.container h2 { margin: 0 0 34px; font-size: clamp(30px, 3.5vw, 44px); font-weight: 550; line-height: 1.13; letter-spacing: -0.045em; text-align: center; }
 .container h2 span { color: var(--ani-progress); }
 .columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 64px; }
 .question { border-bottom: 1px solid var(--ani-line); }
