@@ -2,7 +2,12 @@ import type { HostingAccess, PlanCode } from "@anidachi/protocol";
 
 export const BILLING_OWNER_HEADER = "X-Anidachi-Billing-Owner";
 
+export type BillingPeriod = "monthly" | "yearly";
 export type MonthlyPrice = { unitAmount: number; currency: string };
+export type BillingPrice = MonthlyPrice & { billingPeriod: BillingPeriod };
+export function billingPeriodUnit(period: BillingPeriod): "month" | "year" {
+	return period === "yearly" ? "year" : "month";
+}
 export type BillingTrial = {
 	endsAt: string;
 	stage: "trial" | "processing" | "payment_required" | "ended" | "paid";
@@ -32,6 +37,8 @@ export type BillingSubscription = {
 	trial?: BillingTrial;
 	canChangeTrialPlan?: boolean;
 	monthlyPrice?: MonthlyPrice | null;
+	price?: BillingPrice | null;
+	canSwitchToYearly?: boolean;
 };
 
 export type BillingOverview = {

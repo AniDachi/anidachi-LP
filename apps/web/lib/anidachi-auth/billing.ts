@@ -10,7 +10,12 @@ import {
 	listSubscriptionsForUser,
 } from "./db";
 import { readBillingPrice } from "./billing-price";
-import { createStripeClient, resolveStripeMode } from "./stripe-env";
+import {
+	createStripeClient,
+	resolveStripeMode,
+	stripeEnvForMode,
+} from "./stripe-env";
+import { stripePriceIdForPlanCode } from "./stripe-plans";
 import { syncStripeSubscriptionById } from "./stripe-subscription-sync";
 
 export class BillingError extends Error {
@@ -212,7 +217,7 @@ export function createBillingService(deps: BillingDeps = defaultDeps) {
 				rows
 					.sort((a, b) => b.created_at.localeCompare(a.created_at))
 					.map(async (row) => {
-						const [record, monthlyPrice] = await Promise.all([
+						const [record, price] = await Promise.all([
 							access.hosting?.trialEndsAt
 								? deps.readTrial(row.stripe_subscription_id)
 								: null,
@@ -268,7 +273,21 @@ export function createBillingService(deps: BillingDeps = defaultDeps) {
 								row.current_period_end,
 								Date.parse(access.history?.serverTime ?? ""),
 							),
-							monthlyPrice,
+							price,
+							canSwitchToYearly:
+								price?.billingPeriod === "monthly" &&
+								row.plan_code !== "free" &&
+								!!stripePriceIdForPlanCode(row.plan_code, "yearly") &&
+								!row.cancel_at_period_end &&
+								((row.status === "trialing" && trial?.stage === "trial") ||
+									(row.status === "active" &&
+										(!trial || trial.stage === "paid") &&
+										Date.parse(row.current_period_end ?? "") >
+											Date.parse(access.history.serverTime) &&
+										!!stripeEnvForMode(
+											"STRIPE_YEARLY_PORTAL_CONFIGURATION_ID",
+										))),
+							monthlyPrice: price?.billingPeriod === "monthly" ? price : null,
 							...(trial ? { trial } : {}),
 							canChangeTrialPlan:
 								trial?.stage === "trial" && row.status === "trialing",

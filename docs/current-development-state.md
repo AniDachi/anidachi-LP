@@ -1,5 +1,17 @@
 # Current Development State
 
+## Local annual billing checkpoint, September 30, 2026
+
+Annual Plus/Pro checkout and explicit monthly-to-yearly conversion are implemented
+locally. The owner chose $76.70/$143.90 yearly, Yearly selected by default, and
+immediate conversion of a paid monthly subscription with Stripe proration and
+customer confirmation. Trial period changes preserve the original 72-hour end.
+AniDachi Sandbox annual prices and a separate conversion portal configuration
+exist; their public IDs are connected only to the local worktree. Local billing
+still returns 503, so authenticated Checkout/webhook and visual acceptance are
+**not complete**. No staging/main/production/Store delivery occurred. See the
+[annual implementation and acceptance checklist](releases/paid-hosting-trial/annual-billing-2026-09-30.md).
+
 ## Local website counter checkpoint, September 30, 2026
 
 The owner chose a historical signup baseline of 1,409 (555 production accounts

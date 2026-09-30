@@ -176,3 +176,33 @@ test("active subscriptions require an unexpired known period; cancellation flag 
 		"plus",
 	);
 });
+
+test("annual price configuration is mode-aware and never falls back to monthly", () => {
+	const names = [
+		"VERCEL_ENV",
+		"STRIPE_PRICE_ID_PLUS_YEARLY_TEST",
+		"STRIPE_PRICE_ID_PLUS_YEARLY_LIVE",
+		"STRIPE_PRICE_ID_PLUS_YEARLY",
+	];
+	const original = names.map((key) => [key, process.env[key]] as const);
+	try {
+		process.env.VERCEL_ENV = "preview";
+		delete process.env.STRIPE_PRICE_ID_PLUS_YEARLY_TEST;
+		delete process.env.STRIPE_PRICE_ID_PLUS_YEARLY;
+		assert.equal(stripePriceIdForPlanCode("plus", "yearly"), null);
+		process.env.STRIPE_PRICE_ID_PLUS_YEARLY_TEST = "price_sandbox_year";
+		process.env.STRIPE_PRICE_ID_PLUS_YEARLY_LIVE = "price_live_year";
+		assert.equal(
+			stripePriceIdForPlanCode("plus", "yearly"),
+			"price_sandbox_year",
+		);
+		assert.equal(stripePlanCodeForPriceId("price_sandbox_year"), "plus");
+		process.env.VERCEL_ENV = "production";
+		assert.equal(stripePriceIdForPlanCode("plus", "yearly"), "price_live_year");
+	} finally {
+		for (const [key, value] of original) {
+			if (value === undefined) delete process.env[key];
+			else process.env[key] = value;
+		}
+	}
+});

@@ -258,3 +258,21 @@ test("flexible portal cancellation persists pending renewal and never extends pa
 		assert.equal(synced?.effectivePlan, "plus");
 	}
 });
+
+test("annual renewal and cancellation sync use Stripe's actual end date, never a synthetic month", async () => {
+	const sub = subscriptionFixture({ priceId: "price_year", planCode: "plus" });
+	const end = Date.parse("2032-10-01T00:00:00Z") / 1000;
+	sub.items.data[0].current_period_end = end;
+	sub.cancel_at_period_end = true;
+	const result = await syncStripeSubscriptionById(fakeStripe(sub), sub.id, {
+		...deps,
+		resolveUserId: async () => "owner",
+		commit: async (p) => {
+			assert.equal(p.stripePriceId, "price_year");
+			assert.equal(p.currentPeriodEnd, "2032-10-01T00:00:00.000Z");
+			assert.equal(p.cancelAtPeriodEnd, true);
+			return "plus";
+		},
+	});
+	assert.equal(result?.currentPeriodEnd, "2032-10-01T00:00:00.000Z");
+});

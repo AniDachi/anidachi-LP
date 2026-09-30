@@ -8,6 +8,7 @@ import {
 import { REFRESH_TOKEN_COOKIE } from "./cookies";
 import { resolveWebsiteSession } from "./website-session";
 import { paymentRecoveryLink } from "./payment-recovery";
+import { yearlyBillingPortal } from "./yearly-billing";
 import {
 	createTrialPlanChangeService,
 	type TrialPlanChangeService,
@@ -24,6 +25,7 @@ export function createBillingHandlers(
 		trialPlans?: TrialPlanChangeService;
 		getUser?: (request: NextRequest) => Promise<{ id: string } | null>;
 		paymentLink?: typeof paymentRecoveryLink;
+		yearlyPortal?: typeof yearlyBillingPortal;
 	} = {},
 ) {
 	const service = deps.service ?? createBillingService();
@@ -41,6 +43,7 @@ export function createBillingHandlers(
 			| "cancel"
 			| "restore"
 			| "trial-plan"
+			| "yearly"
 			| "payment",
 	) {
 		try {
@@ -68,6 +71,7 @@ export function createBillingHandlers(
 				action === "cancel" ||
 				action === "restore" ||
 				action === "trial-plan" ||
+				action === "yearly" ||
 				action === "payment"
 			) {
 				const body = await request.json().catch(() => null);
@@ -94,6 +98,9 @@ export function createBillingHandlers(
 				if (action === "trial-plan") {
 					if (
 						(body.action !== "quote" && body.action !== "confirm") ||
+						(body.billingPeriod !== undefined &&
+							body.billingPeriod !== "monthly" &&
+							body.billingPeriod !== "yearly") ||
 						(body.planCode !== "plus" && body.planCode !== "pro") ||
 						(body.action === "confirm" &&
 							(!body.quote ||
@@ -113,6 +120,7 @@ export function createBillingHandlers(
 										user.id,
 										body.subscriptionId,
 										body.planCode,
+										body.billingPeriod,
 									),
 								}
 							: await trialPlans.confirm(
@@ -121,6 +129,7 @@ export function createBillingHandlers(
 									body.planCode,
 									body.quote,
 									body.requestId,
+									body.billingPeriod,
 								);
 					return NextResponse.json(result, { headers: PRIVATE_HEADERS });
 				}
@@ -129,9 +138,11 @@ export function createBillingHandlers(
 					request.nextUrl.origin,
 				).toString();
 				const portal =
-					action === "restore"
-						? service.renewalPortal
-						: service.cancellationPortal;
+					action === "yearly"
+						? (deps.yearlyPortal ?? yearlyBillingPortal)
+						: action === "restore"
+							? service.renewalPortal
+							: service.cancellationPortal;
 				const url = await portal(user.id, body.subscriptionId, returnUrl);
 				return NextResponse.json(
 					{ url, ownerUserId: user.id },
@@ -164,5 +175,6 @@ export function createBillingHandlers(
 		renewalPortal: (request: NextRequest) => handle(request, "restore"),
 		trialPlan: (request: NextRequest) => handle(request, "trial-plan"),
 		paymentLink: (request: NextRequest) => handle(request, "payment"),
+		yearlyPortal: (request: NextRequest) => handle(request, "yearly"),
 	};
 }

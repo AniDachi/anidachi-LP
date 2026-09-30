@@ -22,20 +22,36 @@ import { HomeSectionHeader } from "@/components/home-section-header";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getSeoAttributionFields } from "@/lib/seo-landing-path";
 import type { PricingOffer, PricingPrices } from "@/lib/pricing-offer";
-import { formatMonthlyPrice } from "@/lib/billing-view";
+import { formatMonthlyPrice, type BillingPeriod } from "@/lib/billing-view";
 import "./pricing.css";
 
-type BillingPeriod = "monthly" | "yearly";
-
-// Approved design amounts only. Never used as checkout authority or sent to Stripe.
-const previewPrices: PricingPrices = {
-	plus: { unitAmount: Math.round(PRICING_PLUS_MONTHLY * 100), currency: "usd" },
-	pro: { unitAmount: Math.round(PRICING_PRO_MONTHLY * 100), currency: "usd" },
-};
-
-function annualPreviewPrice(monthly: PricingPrices[CheckoutTier]) {
-	return { ...monthly, unitAmount: Math.round(monthly.unitAmount * 12 * 0.8) };
-}
+// Preserve the approved local design while integration credentials are absent.
+// These amounts are display-only; purchases require a fresh server offer below.
+const localMonthlyPreview: PricingPrices | null =
+	process.env.NODE_ENV === "development"
+		? {
+				plus: {
+					unitAmount: Math.round(PRICING_PLUS_MONTHLY * 100),
+					currency: "usd",
+				},
+				pro: {
+					unitAmount: Math.round(PRICING_PRO_MONTHLY * 100),
+					currency: "usd",
+				},
+			}
+		: null;
+const localYearlyPreview: PricingPrices | null = localMonthlyPreview
+	? {
+			plus: {
+				...localMonthlyPreview.plus,
+				unitAmount: Math.round(localMonthlyPreview.plus.unitAmount * 12 * 0.8),
+			},
+			pro: {
+				...localMonthlyPreview.pro,
+				unitAmount: Math.round(localMonthlyPreview.pro.unitAmount * 12 * 0.8),
+			},
+		}
+	: null;
 
 function FeatureList({ features }: { features: string[] }) {
 	return (
@@ -54,19 +70,21 @@ export function Pricing({
 	headingLevel = 2,
 	showPlanMatrix = false,
 	initialPrices = null,
-	// Annual billing is a local design preview until the server catalog supports it.
-	annualPreview = process.env.NODE_ENV === "development",
+	initialYearlyPrices = null,
 }: {
 	/** Use 1 on the dedicated /pricing page so the page has a single H1. */
 	headingLevel?: 1 | 2;
 	/** Full plan-limits table — keep on `/pricing`, omit from homepage `#pricing`. */
 	showPlanMatrix?: boolean;
 	initialPrices?: PricingPrices | null;
-	annualPreview?: boolean;
+	initialYearlyPrices?: PricingPrices | null;
 } = {}) {
-	const [period, setPeriod] = useState<BillingPeriod>(
-		annualPreview ? "yearly" : "monthly",
+	const [selectedPeriod, setPeriod] = useState<BillingPeriod>("yearly");
+	const [yearlyPrices, setYearlyPrices] = useState<PricingPrices | null>(
+		initialYearlyPrices ?? localYearlyPreview,
 	);
+	const annualEnabled = !!yearlyPrices;
+	const period: BillingPeriod = annualEnabled ? selectedPeriod : "monthly";
 	const [checkoutError, setCheckoutError] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [submittingTier, setSubmittingTier] = useState<CheckoutTier | null>(
@@ -75,14 +93,16 @@ export function Pricing({
 	const sectionRef = useRef<HTMLElement | null>(null);
 	const pricingViewFired = useRef(false);
 	const [offer, setOffer] = useState<PricingOffer | null>(null);
-	const [prices, setPrices] = useState<PricingPrices | null>(initialPrices);
+	const [prices, setPrices] = useState<PricingPrices | null>(
+		initialPrices ?? localMonthlyPreview,
+	);
 	const [checkingOffer, setCheckingOffer] = useState(true);
 	const checkingOfferRef = useRef(true);
 	const offerDeadline = useRef(0);
 	const offerVersion = useRef(0);
 	const [reload, setReload] = useState(0);
 	const checkoutLock = useRef(false);
-	const displayPrices = prices ?? (annualPreview ? previewPrices : null);
+	const displayPrices = period === "yearly" ? yearlyPrices : prices;
 
 	useEffect(() => {
 		// Preserve the explicitly chosen monthly flow across the sign-in return.
@@ -131,6 +151,8 @@ export function Pricing({
 					Math.min(60_000, next.validForMs) - (Date.now() - started);
 				if (!(remaining > 0)) throw new Error("Offer expired");
 				setPrices(next.prices);
+				// Keep the selected period and last public amounts during a catalog outage.
+				if (next.yearlyPrices) setYearlyPrices(next.yearlyPrices);
 				setOffer(next);
 				setCheckoutError((error) =>
 					error?.startsWith("We could not load current plans") ? null : error,
@@ -217,8 +239,9 @@ export function Pricing({
 
 	const handleSubscribe = async (tier: CheckoutTier) => {
 		if (!offer || checkingOfferRef.current || checkoutLock.current) return;
-		// The server still sells monthly plans. A yearly preview must never use it.
-		if (period === "yearly" && offer.action !== "manage") return;
+		const checkoutPrices =
+			period === "yearly" ? offer.yearlyPrices : offer.prices;
+		if (!checkoutPrices && offer.action !== "manage") return;
 		if (offerDeadline.current <= Date.now()) {
 			setOffer(null);
 			setReload((n) => n + 1);
@@ -229,7 +252,7 @@ export function Pricing({
 			return;
 		}
 		if (offer.action === "sign_in") {
-			window.location.href = `/login?next=${encodeURIComponent(`/pricing?plan=${tier}&billing=monthly`)}`;
+			window.location.href = `/login?next=${encodeURIComponent(`/pricing?plan=${tier}&billing=${period}`)}`;
 			return;
 		}
 		checkoutLock.current = true;
@@ -256,10 +279,11 @@ export function Pricing({
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
 					planCode: tier,
+					billingPeriod: period,
 					requestId: crypto.randomUUID(),
 					expectedOwnerUserId: offer.ownerUserId,
 					expectedTrialOffered: offer.action === "trial",
-					expectedPrice: offer.prices[tier],
+					expectedPrice: checkoutPrices![tier],
 					seoLandingPath: attribution.seo_landing_path,
 					checkoutPagePath: pagePath,
 					seoReferrer: attribution.seo_referrer,
@@ -367,7 +391,7 @@ export function Pricing({
 								: "Join friends for free. Choose Plus or Pro to host your own room and save your watch history."
 					}
 				/>
-				{annualPreview ? (
+				{annualEnabled ? (
 					<>
 						<div
 							className="pricing-plans__period"
@@ -389,14 +413,10 @@ export function Pricing({
 								</button>
 							))}
 						</div>
-						<p className="pricing-plans__preview-note">
-							Yearly pricing preview. Yearly subscriptions are not available
-							yet.
-						</p>
 					</>
 				) : null}
 
-				{checkoutError && period === "monthly" ? (
+				{checkoutError ? (
 					<div
 						className="mx-auto mb-8 max-w-lg rounded-[12px] border border-ani-error-text/30 bg-[var(--ani-error-bg)] px-4 py-3 text-center text-sm text-ani-error-text"
 						role="alert"
@@ -449,6 +469,7 @@ export function Pricing({
 									onSubscribe={handleSubscribe}
 									offer={offer}
 									prices={displayPrices}
+									monthlyPrices={prices}
 									checkingOffer={checkingOffer}
 									period={period}
 									headingLevel={headingLevel === 1 ? 2 : 3}
@@ -459,8 +480,8 @@ export function Pricing({
 				</div>
 				<p className="pricing-plans__terms">
 					<Lock size={14} aria-hidden="true" />
-					Monthly checkout is secured by Stripe. Final total, taxes and
-					discounts are shown before confirmation.
+					Checkout is secured by Stripe. Final total, taxes and discounts are
+					shown before confirmation.
 				</p>
 
 				{showPlanMatrix ? (
@@ -478,12 +499,12 @@ export function Pricing({
 												...row.values,
 												plus: displayPrices
 													? period === "yearly"
-														? `${formatMonthlyPrice(annualPreviewPrice(displayPrices.plus))}/year (preview)`
+														? `${formatMonthlyPrice(displayPrices.plus)}/year`
 														: `${formatMonthlyPrice(displayPrices.plus)}/mo`
 													: "—",
 												pro: displayPrices
 													? period === "yearly"
-														? `${formatMonthlyPrice(annualPreviewPrice(displayPrices.pro))}/year (preview)`
+														? `${formatMonthlyPrice(displayPrices.pro)}/year`
 														: `${formatMonthlyPrice(displayPrices.pro)}/mo`
 													: "—",
 											},
@@ -526,6 +547,7 @@ function TierCardBody({
 	onSubscribe,
 	offer,
 	prices,
+	monthlyPrices,
 	checkingOffer,
 	period,
 	headingLevel,
@@ -538,31 +560,37 @@ function TierCardBody({
 	onSubscribe: (tier: CheckoutTier) => void;
 	offer: PricingOffer | null;
 	prices: PricingPrices | null;
+	monthlyPrices: PricingPrices | null;
 	checkingOffer: boolean;
 	period: BillingPeriod;
 	headingLevel: 2 | 3;
 }) {
 	const Heading = headingLevel === 2 ? "h2" : "h3";
 	const yearly = period === "yearly" && !!paidTier;
-	const monthlyPrice = paidTier && prices ? prices[paidTier] : null;
-	const annualPrice = monthlyPrice ? annualPreviewPrice(monthlyPrice) : null;
+	const monthlyPrice =
+		paidTier && monthlyPrices ? monthlyPrices[paidTier] : null;
+	const selectedPrice = paidTier && prices ? prices[paidTier] : null;
+	const annualPrice = yearly ? selectedPrice : null;
 	const amount =
 		yearly && annualPrice
 			? { ...annualPrice, unitAmount: annualPrice.unitAmount / 12 }
-			: monthlyPrice;
+			: selectedPrice;
 	const price = amount ? formatMonthlyPrice(amount) : paidTier ? "—" : "$0";
-	const unavailableYearly = yearly && offer?.action !== "manage";
-	const ctaLabel = unavailableYearly
-		? "Yearly coming soon"
-		: offer?.action === "trial"
-			? "Start 3-day free trial"
-			: offer?.action === "manage"
-				? "Manage subscription"
-				: offer?.action === "sign_in"
-					? "Sign in to choose this plan"
-					: offer?.action === "subscribe"
-						? `Subscribe to ${tier.label}`
-						: `Choose ${tier.label}`;
+	const unavailablePrice =
+		(!selectedPrice || (yearly && !offer?.yearlyPrices)) &&
+		offer?.action !== "manage";
+	const ctaLabel =
+		yearly && offer && unavailablePrice
+			? "Yearly currently unavailable"
+			: offer?.action === "trial"
+				? "Start 3-day free trial"
+				: offer?.action === "manage"
+					? "Manage subscription"
+					: offer?.action === "sign_in"
+						? "Sign in to choose this plan"
+						: offer?.action === "subscribe"
+							? `Subscribe to ${tier.label}`
+							: `Choose ${tier.label}`;
 	const description =
 		tier.id === "free"
 			? tier.audience
@@ -576,17 +604,19 @@ function TierCardBody({
 			: offer?.action === "trial"
 				? "Billed monthly after your 3-day trial."
 				: "Billed monthly.";
-	const terms = unavailableYearly
-		? "Choose Monthly to check your available subscription options."
-		: !offer
-			? "Your available options will appear here before checkout."
-			: offer.action === "trial"
-				? `Card required. 3 days free, then ${price}/month automatically. Cancel before your trial ends to avoid a charge.`
-				: offer.action === "manage"
-					? "Manage your current plan and renewal in Account → Subscription."
-					: offer.action === "sign_in"
-						? "Sign in to check your trial availability before checkout."
-						: `Renews at ${price}/month. Cancel renewal in Account → Subscription. No new free trial is included.`;
+	const recurringAmount = selectedPrice
+		? formatMonthlyPrice(selectedPrice)
+		: "—";
+	const unit = yearly ? "year" : "month";
+	const terms = !offer
+		? "Your available options will appear here before checkout."
+		: offer.action === "trial"
+			? `Card required. 3 days free, then ${recurringAmount}/${unit} automatically. Cancel before your trial ends to avoid a charge.`
+			: offer.action === "manage"
+				? "Manage your current plan and renewal in Account → Subscription."
+				: offer.action === "sign_in"
+					? "Sign in to check your trial availability before checkout."
+					: `Renews at ${recurringAmount}/${unit}. Cancel renewal in Account → Subscription. No new free trial is included.`;
 
 	return (
 		<>
@@ -632,17 +662,15 @@ function TierCardBody({
 						size="control"
 						onClick={() => onSubscribe(paidTier)}
 						disabled={
-							unavailableYearly || isSubmitting || checkingOffer || !offer
+							unavailablePrice || isSubmitting || checkingOffer || !offer
 						}
-						aria-busy={!unavailableYearly && (isSubmitting || checkingOffer)}
+						aria-busy={isSubmitting || checkingOffer}
 						aria-describedby={`pricing-${tier.id}-terms`}
 					>
 						{isSubmitting && submittingTier === paidTier
 							? "Redirecting to Stripe…"
 							: ctaLabel}
-						{!unavailableYearly ? (
-							<ArrowRight size={17} aria-hidden="true" />
-						) : null}
+						<ArrowRight size={17} aria-hidden="true" />
 					</Button>
 				) : (
 					<Button

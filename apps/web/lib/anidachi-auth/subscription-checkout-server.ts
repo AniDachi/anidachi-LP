@@ -14,12 +14,12 @@ import {
 export function subscriptionCheckoutService(stripe: Stripe) {
 	return createSubscriptionCheckoutService({
 		stripe,
-		async offer(userId, priceId) {
+		async offer(userId, priceId, billingPeriod) {
 			const [offer, price] = await Promise.all([
 				getPricingOffer(userId),
 				// Checkout always validates the selected price directly with Stripe.
 				// Cached public catalog values only accelerate display.
-				readBillingPrice(priceId, true),
+				readBillingPrice(priceId, true, billingPeriod),
 			]);
 			return { action: offer.action, price };
 		},

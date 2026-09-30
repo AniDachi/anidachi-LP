@@ -25,6 +25,16 @@ export async function getPricingOffer(
 	userId: string | null,
 	deps = defaults,
 ): Promise<PricingOffer> {
+	// Annual configuration is independent: its absence cannot disable monthly sales.
+	const yearly = Promise.all(
+		(["plus", "pro"] as const).map(async (plan) => {
+			const id = deps.priceId(plan, "yearly");
+			if (!id) throw new Error("Yearly price unavailable");
+			return deps.readPrice(id, true, "yearly");
+		}),
+	)
+		.then(([plus, pro]) => ({ plus, pro }))
+		.catch(() => null);
 	const [plus, pro] = await Promise.all(
 		(["plus", "pro"] as const).map(async (plan) => {
 			const id = deps.priceId(plan);
@@ -33,9 +43,10 @@ export async function getPricingOffer(
 		}),
 	);
 	if (userId) {
-		const [access, subscriptions] = await Promise.all([
+		const [access, subscriptions, yearlyPrices] = await Promise.all([
 			deps.access(userId, new Date(deps.now())),
 			deps.subscriptions(userId),
+			yearly,
 		]);
 		if (subscriptions.some((s) => s.user_id !== userId) || !access.hosting)
 			throw new Error("Offer authority unavailable");
@@ -62,6 +73,7 @@ export async function getPricingOffer(
 			validForMs,
 			ownerUserId: userId,
 			prices: { plus, pro },
+			yearlyPrices,
 			paidHostingActive:
 				access.hosting.hostingActivationAt !== null &&
 				Date.parse(access.hosting.hostingActivationAt) <=
@@ -87,6 +99,7 @@ export async function getPricingOffer(
 				: 60_000,
 		ownerUserId: null,
 		prices: { plus, pro },
+		yearlyPrices: await yearly,
 		paidHostingActive:
 			data.activation_at !== null && Date.parse(data.activation_at) <= now,
 		action: "sign_in",

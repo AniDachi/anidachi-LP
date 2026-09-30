@@ -397,6 +397,7 @@ test("return from renewal restoration rereads Stripe and retains the original tr
 					...active.subscriptions[0],
 					status: "trialing",
 					canRestoreRenewal: false,
+					price: { unitAmount: 799, currency: "usd", billingPeriod: "monthly" },
 					trial: {
 						stage: "trial",
 						endsAt: "2030-02-01T12:00:00Z",
@@ -415,5 +416,93 @@ test("return from renewal restoration rereads Stripe and retains the original tr
 	assert.doesNotMatch(
 		container.textContent!,
 		/Restore renewal|Renewal canceled/,
+	);
+});
+
+test("yearly billing shows the full yearly trial charge, never a monthly label", async () => {
+	globalThis.fetch = async () =>
+		Response.json({
+			...active,
+			subscriptions: [
+				{
+					...active.subscriptions[0],
+					status: "trialing",
+					price: { unitAmount: 7670, currency: "usd", billingPeriod: "yearly" },
+					trial: {
+						stage: "trial",
+						endsAt: "2030-01-03T00:00:00Z",
+						pendingUntil: "2030-01-03T02:00:00Z",
+					},
+				},
+			],
+		});
+	await mount();
+	assert.match(container.textContent!, /first yearly payment/);
+	assert.match(container.textContent!, /\$76\.70\/year/);
+	assert.doesNotMatch(
+		container.textContent!,
+		/\$76\.70\/month|first monthly payment/,
+	);
+});
+test("manual paid conversion uses the dedicated owner-bound yearly portal endpoint", async () => {
+	const requests: { path: string; init?: RequestInit }[] = [];
+	globalThis.fetch = async (path, init) => {
+		requests.push({ path: String(path), init });
+		if (String(path).endsWith("yearly-portal"))
+			return Response.json(
+				{ error: "Fixture stops before Stripe navigation" },
+				{ status: 503 },
+			);
+		return Response.json({
+			...active,
+			subscriptions: [
+				{
+					...active.subscriptions[0],
+					canSwitchToYearly: true,
+					price: { unitAmount: 799, currency: "usd", billingPeriod: "monthly" },
+				},
+			],
+		});
+	};
+	await mount();
+	const button = [...container.querySelectorAll("button")].find((b) =>
+		b.textContent?.includes("Switch to yearly billing"),
+	)!;
+	assert.ok(button);
+	assert.match(container.textContent!, /Stripe credits unused monthly time/);
+	await act(async () => button.click());
+	assert.equal(requests[1].path, "/api/billing/yearly-portal");
+	assert.equal(
+		new Headers(requests[1].init?.headers).get(BILLING_OWNER_HEADER),
+		"owner",
+	);
+	assert.deepEqual(JSON.parse(String(requests[1].init?.body)), {
+		subscriptionId: "local-sub",
+	});
+});
+
+test("price lookup failure uses neutral trial payment copy, not an invented monthly period", async () => {
+	globalThis.fetch = async () =>
+		Response.json({
+			...active,
+			subscriptions: [
+				{
+					...active.subscriptions[0],
+					status: "trialing",
+					price: null,
+					monthlyPrice: null,
+					trial: {
+						stage: "trial",
+						endsAt: "2030-01-03T00:00:00Z",
+						pendingUntil: "2030-01-03T02:00:00Z",
+					},
+				},
+			],
+		});
+	await mount();
+	assert.match(container.textContent!, /first subscription payment/);
+	assert.doesNotMatch(
+		container.textContent!,
+		/first monthly payment|first yearly payment/,
 	);
 });

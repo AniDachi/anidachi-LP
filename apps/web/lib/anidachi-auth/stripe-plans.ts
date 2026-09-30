@@ -1,4 +1,5 @@
 import type Stripe from "stripe";
+import type { BillingPeriod } from "../billing-view";
 import {
 	FREE_PLAN_CODE,
 	maxPlanCode,
@@ -19,7 +20,15 @@ export type SubscriptionPlanSnapshot = {
 
 export function stripePriceIdForPlanCode(
 	planCode: PaidPlanCode,
+	billingPeriod: BillingPeriod = "monthly",
 ): string | null {
+	if (billingPeriod === "yearly") {
+		// An unavailable annual price must never fall back to monthly billing.
+		return (
+			stripeEnvForMode(`STRIPE_PRICE_ID_${planCode.toUpperCase()}_YEARLY`) ??
+			null
+		);
+	}
 	// Mode-aware: on staging/preview `stripeEnvForMode` resolves the *_TEST price,
 	// on production the *_LIVE price, with the unsuffixed var as transition
 	// fallback. Legacy CRUNCHYROLL_SUBSCRIBER/ANIME_JUNKIE vars remain a fallback.
@@ -49,6 +58,9 @@ export function stripePlanCodeForPriceId(
 	// Match against every known plus/pro price id (both modes + legacy) so the
 	// webhook resolves the plan regardless of which env mode produced the event.
 	const plusIds = [
+		process.env.STRIPE_PRICE_ID_PLUS_YEARLY_TEST,
+		process.env.STRIPE_PRICE_ID_PLUS_YEARLY_LIVE,
+		process.env.STRIPE_PRICE_ID_PLUS_YEARLY,
 		process.env.STRIPE_PRICE_ID_PLUS_TEST,
 		process.env.STRIPE_PRICE_ID_PLUS_LIVE,
 		process.env.STRIPE_PRICE_ID_PLUS,
@@ -59,6 +71,9 @@ export function stripePlanCodeForPriceId(
 	if (plusIds.includes(priceId)) return "plus";
 
 	const proIds = [
+		process.env.STRIPE_PRICE_ID_PRO_YEARLY_TEST,
+		process.env.STRIPE_PRICE_ID_PRO_YEARLY_LIVE,
+		process.env.STRIPE_PRICE_ID_PRO_YEARLY,
 		process.env.STRIPE_PRICE_ID_PRO_TEST,
 		process.env.STRIPE_PRICE_ID_PRO_LIVE,
 		process.env.STRIPE_PRICE_ID_PRO,

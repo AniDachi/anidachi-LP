@@ -179,7 +179,11 @@ function fixture(
 			options.access ??
 			({ policy: { planCode: "free" } } as AccountEntitlements),
 		readTrial: async () => options.trial ?? null,
-		readPrice: async () => ({ unitAmount: 799, currency: "usd" }),
+		readPrice: async () => ({
+			unitAmount: 799,
+			currency: "usd",
+			billingPeriod: "monthly",
+		}),
 		createStripe: () => {
 			calls.push("client");
 			return stripe;

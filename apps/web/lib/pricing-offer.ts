@@ -7,4 +7,5 @@ export type PricingOffer = {
 	validForMs: number;
 	action: "sign_in" | "trial" | "subscribe" | "manage";
 	prices: PricingPrices;
+	yearlyPrices?: PricingPrices | null;
 };

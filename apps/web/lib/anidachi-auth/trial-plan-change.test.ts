@@ -19,10 +19,17 @@ function fixture() {
 			livemode: false,
 			type: "recurring",
 			billing_scheme: "per_unit",
-			unit_amount: plan === "plus" ? 799 : 1499,
+			unit_amount:
+				plan === "plus"
+					? 799
+					: plan === "pro"
+						? 1499
+						: plan === "plus_yearly"
+							? 7670
+							: 14390,
 			currency: "usd",
 			recurring: {
-				interval: "month",
+				interval: plan.endsWith("_yearly") ? "year" : "month",
 				interval_count: 1,
 				usage_type: "licensed",
 			},
@@ -94,7 +101,8 @@ function fixture() {
 			({ user_id: "owner", stripe_customer_id: "cus_owner" }) as never,
 		readTrial: async () => trial,
 		createStripe: () => stripe,
-		priceId: (plan) => `price_${plan}`,
+		priceId: (plan, period = "monthly") =>
+			`price_${plan}${period === "yearly" ? "_yearly" : ""}`,
 		mode: () => "test",
 		now: () => now,
 		sync: async () => {
@@ -105,7 +113,9 @@ function fixture() {
 				stripeCustomerId: "cus_owner",
 				stripeSubscriptionId: sub.id,
 				stripePriceId: sub.items.data[0].price.id,
-				planCode: sub.items.data[0].price.id === "price_pro" ? "pro" : "plus",
+				planCode: sub.items.data[0].price.id.startsWith("price_pro")
+					? "pro"
+					: "plus",
 			} as never;
 		},
 	});
@@ -255,4 +265,60 @@ test("mutation cannot claim success before durable fresh synchronization", async
 		f.service.confirm("owner", "local-row", "pro", quote, requestId),
 	);
 	assert.equal(f.updates.length, 1);
+});
+
+test("monthly trial can switch to yearly without charging early or extending the trial", async () => {
+	const f = fixture();
+	const quote = await f.service.quote("owner", "local-row", "plus", "yearly");
+	assert.equal(quote.billingPeriod, "yearly");
+	assert.equal(quote.currentBillingPeriod, "monthly");
+	assert.equal(quote.unitAmount, 7670);
+	await f.service.confirm(
+		"owner",
+		"local-row",
+		"plus",
+		quote,
+		requestId,
+		"yearly",
+	);
+	assert.equal(f.updates[0].params.items![0].price, "price_plus_yearly");
+	assert.equal(f.updates[0].params.trial_end, end);
+	assert.equal(f.updates[0].params.proration_behavior, "none");
+	await f.service.confirm(
+		"owner",
+		"local-row",
+		"plus",
+		quote,
+		requestId,
+		"yearly",
+	);
+	assert.equal(f.updates.length, 1);
+});
+test("changing Plus to Pro during an annual trial preserves annual billing", async () => {
+	const f = fixture();
+	f.sub.items.data[0].price = f.price("plus_yearly");
+	const quote = await f.service.quote("owner", "local-row", "pro");
+	assert.equal(quote.billingPeriod, "yearly");
+	assert.equal(quote.unitAmount, 14390);
+	await f.service.confirm("owner", "local-row", "pro", quote, requestId);
+	assert.equal(f.sub.items.data[0].price.id, "price_pro_yearly");
+	assert.equal(f.sub.trial_end, end);
+});
+test("annual trial confirmation rejects a stale or tampered period before any change", async () => {
+	const f = fixture();
+	const q = await f.service.quote("owner", "local-row", "plus", "yearly");
+	await assert.rejects(
+		f.service.confirm(
+			"owner",
+			"local-row",
+			"plus",
+			{ ...q, billingPeriod: "monthly" },
+			requestId,
+			"yearly",
+		),
+	);
+	await assert.rejects(
+		f.service.confirm("owner", "local-row", "plus", q, requestId, "monthly"),
+	);
+	assert.equal(f.updates.length, 0);
 });

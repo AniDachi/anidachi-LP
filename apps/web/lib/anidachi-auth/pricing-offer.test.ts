@@ -3,6 +3,7 @@ import test from "node:test";
 import type { AccountEntitlements } from "./account-entitlements";
 import type { SubscriptionRow } from "./db";
 import { getPricingOffer } from "./pricing-offer";
+import type { BillingPeriod } from "../billing-view";
 const time = "2030-01-01T00:00:00Z";
 const access = {
 	policy: { planCode: "free" },
@@ -10,10 +11,19 @@ const access = {
 	hosting: { hostingActivationAt: time, trialEligibility: "eligible" },
 } as AccountEntitlements;
 const deps = {
-	priceId: (plan: string) => `price_${plan}`,
-	readPrice: async (id: string, requireActive = false) => {
+	priceId: (plan: string, period: BillingPeriod = "monthly") =>
+		period === "monthly" ? `price_${plan}` : null,
+	readPrice: async (
+		id: string,
+		requireActive = false,
+		billingPeriod: BillingPeriod = "monthly",
+	) => {
 		assert.equal(requireActive, true);
-		return { unitAmount: id === "price_plus" ? 799 : 1499, currency: "usd" };
+		return {
+			unitAmount: id === "price_plus" ? 799 : 1499,
+			currency: "usd",
+			billingPeriod,
+		};
 	},
 	access: async () => access,
 	subscriptions: async () => [] as SubscriptionRow[],
@@ -97,4 +107,41 @@ test("existing payment problems and paid access go to management, not a second c
 			access: async () => ({ ...access, hosting: undefined }),
 		}),
 	);
+});
+
+test("annual catalog outage does not remove monthly offers or invent annual prices", async () => {
+	const result = await getPricingOffer("owner", deps);
+	assert.equal(result.yearlyPrices, null);
+	assert.equal(result.prices.plus.unitAmount, 799);
+	const result2 = await getPricingOffer("owner", {
+		...deps,
+		priceId: (plan, period = "monthly") => `price_${plan}_${period}`,
+		readPrice: async (id, active, period = "monthly") => {
+			if (period === "yearly") throw Error("unavailable");
+			return deps.readPrice(id, active, period);
+		},
+	});
+	assert.equal(result2.action, "trial");
+	assert.equal(result2.yearlyPrices, null);
+});
+test("verified yearly prices share the same account trial eligibility as monthly", async () => {
+	const result = await getPricingOffer("owner", {
+		...deps,
+		priceId: (plan, period = "monthly") => `price_${plan}_${period}`,
+		readPrice: async (id, active, period = "monthly") => ({
+			unitAmount:
+				period === "yearly"
+					? id.includes("plus")
+						? 7670
+						: 14390
+					: id.includes("plus")
+						? 799
+						: 1499,
+			currency: "usd",
+			billingPeriod: period,
+		}),
+	});
+	assert.equal(result.action, "trial");
+	assert.equal(result.yearlyPrices?.plus.unitAmount, 7670);
+	assert.equal(result.yearlyPrices?.pro.unitAmount, 14390);
 });

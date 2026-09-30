@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
 		const body = (await request.json()) as {
 			tier?: CheckoutTier;
 			planCode?: unknown;
+			billingPeriod?: unknown;
 			requestId?: unknown;
 			expectedOwnerUserId?: unknown;
 			expectedTrialOffered?: unknown;
@@ -92,7 +93,19 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		const priceId = stripePriceIdForPlanCode(planCode);
+		const billingPeriod =
+			body.billingPeriod === undefined ? "monthly" : body.billingPeriod;
+		if (billingPeriod !== "monthly" && billingPeriod !== "yearly")
+			return NextResponse.json(
+				{ error: "Select monthly or yearly billing." },
+				{ status: 400 },
+			);
+		if (billingPeriod === "yearly" && body.expectedPrice === undefined)
+			return NextResponse.json(
+				{ error: "Review the yearly price before checkout." },
+				{ status: 400 },
+			);
+		const priceId = stripePriceIdForPlanCode(planCode, billingPeriod);
 		if (!priceId) {
 			return NextResponse.json(
 				{ error: "This plan is not configured for checkout yet." },
@@ -131,6 +144,7 @@ export async function POST(request: NextRequest) {
 		const attributionMeta: Record<string, string> = {
 			userId: authSession.userId,
 			planCode,
+			billingPeriod,
 		};
 		if (seoLandingPath) attributionMeta.seoLandingPath = seoLandingPath;
 		if (checkoutPagePath) attributionMeta.checkoutPagePath = checkoutPagePath;
@@ -144,6 +158,7 @@ export async function POST(request: NextRequest) {
 			email: authSession.email,
 			planCode,
 			priceId,
+			billingPeriod,
 			...(body.expectedPrice !== undefined
 				? {
 						displayedOffer: {

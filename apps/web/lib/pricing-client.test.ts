@@ -8,6 +8,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { Pricing } from "../components/pricing";
 let root: Root | null = null;
 const originalFetch = globalThis.fetch;
+const yearlyPrices = {
+	plus: { unitAmount: 7670, currency: "usd" },
+	pro: { unitAmount: 14390, currency: "usd" },
+};
 const offer = {
 	ownerUserId: "owner",
 	paidHostingActive: true,
@@ -48,7 +52,6 @@ async function mount(props: NonNullable<Parameters<typeof Pricing>[0]> = {}) {
 	await act(async () =>
 		root!.render(
 			React.createElement<NonNullable<Parameters<typeof Pricing>[0]>>(Pricing, {
-				annualPreview: false,
 				...props,
 			}),
 		),
@@ -111,7 +114,6 @@ function plusButton(el: HTMLElement) {
 test("server-rendered pricing shows verified catalog prices before the account request", () => {
 	const html = renderToStaticMarkup(
 		React.createElement<NonNullable<Parameters<typeof Pricing>[0]>>(Pricing, {
-			annualPreview: false,
 			initialPrices: offer.prices,
 		}),
 	);
@@ -122,15 +124,16 @@ test("server-rendered pricing shows verified catalog prices before the account r
 	assert.doesNotMatch(html, /Yearly|Save 20%/);
 });
 
-test("the local yearly design is present in server HTML before account availability loads", () => {
+test("verified yearly pricing is present in server HTML before account availability loads", () => {
 	const html = renderToStaticMarkup(
 		React.createElement<NonNullable<Parameters<typeof Pricing>[0]>>(Pricing, {
-			annualPreview: true,
+			initialPrices: offer.prices,
+			initialYearlyPrices: yearlyPrices,
 		}),
 	);
 	assert.match(html, /\$76\.70/);
 	assert.match(html, /\$143\.90/);
-	assert.match(html, /Yearly coming soon/);
+	assert.match(html, /Choose Plus/);
 	assert.doesNotMatch(html, /Start 3-day free trial/);
 });
 
@@ -264,15 +267,17 @@ function periodButton(el: HTMLElement, period: "Monthly" | "Yearly") {
 	return button;
 }
 
-test("local annual preview defaults to yearly, shows the full charge, and never starts monthly checkout", async () => {
-	const urls: string[] = [];
-	globalThis.fetch = async (url) => {
-		urls.push(String(url));
-		return Response.json(offer);
+test("annual checkout defaults to yearly and submits the verified full yearly amount", async () => {
+	const requests: Record<string, unknown>[] = [];
+	globalThis.fetch = async (url, init) => {
+		if (String(url) === "/api/billing/offer")
+			return Response.json({ ...offer, yearlyPrices });
+		requests.push(JSON.parse(String(init?.body)));
+		return Response.json({ url: "https://checkout.stripe.com/yearly" });
 	};
 	const el = await mount({
-		annualPreview: true,
 		initialPrices: offer.prices,
+		initialYearlyPrices: yearlyPrices,
 		showPlanMatrix: true,
 	});
 	assert.equal(periodButton(el, "Yearly").getAttribute("aria-pressed"), "true");
@@ -280,29 +285,26 @@ test("local annual preview defaults to yearly, shows the full charge, and never 
 	assert.match(el.textContent!, /\$6\.39/);
 	assert.match(el.textContent!, /\$11\.99/);
 	assert.match(el.textContent!, /\$76\.70 \/ year/);
-	assert.match(el.textContent!, /\$143\.90 \/ year/);
-	assert.match(el.textContent!, /\$76\.70\/year \(preview\)/);
-	assert.match(el.textContent!, /Yearly subscriptions are not available yet/);
-	assert.doesNotMatch(el.textContent!, /Start 3-day free trial/);
-	const buttons = [...el.querySelectorAll("button")].filter(
-		(button) => button.textContent === "Yearly coming soon",
+	assert.match(
+		el.textContent!,
+		/3 days free, then \$76\.70\/year automatically/,
 	);
-	assert.equal(buttons.length, 2);
-	await act(async () => {
-		for (const button of buttons) {
-			assert.ok(button.disabled);
-			// Even a forced event on an enabled DOM element must not reach monthly checkout.
-			button.disabled = false;
-			button.click();
-		}
-	});
-	assert.deepEqual(urls, ["/api/billing/offer"]);
+	assert.match(el.textContent!, /\$143\.90\/year/);
+	assert.doesNotMatch(el.textContent!, /preview|coming soon/i);
+	await act(async () => plusButton(el).click());
+	assert.equal(requests.length, 1);
+	assert.equal(requests[0].billingPeriod, "yearly");
+	assert.deepEqual(requests[0].expectedPrice, yearlyPrices.plus);
+	assert.equal(window.location.href, "https://checkout.stripe.com/yearly");
 });
 
-test("local design amounts remain visible without granting trial or checkout during an outage", async () => {
+test("verified server amounts remain visible without granting trial or checkout during an outage", async () => {
 	globalThis.fetch = async () =>
 		Response.json({ error: "unavailable" }, { status: 503 });
-	const el = await mount({ annualPreview: true });
+	const el = await mount({
+		initialPrices: offer.prices,
+		initialYearlyPrices: yearlyPrices,
+	});
 	assert.match(el.textContent!, /\$76\.70/);
 	await act(async () => periodButton(el, "Monthly").click());
 	assert.match(el.textContent!, /\$7\.99/);
@@ -314,11 +316,15 @@ test("switching to monthly uses verified prices and locks the period during chec
 	const checkout = deferred<Response>();
 	const requests: Record<string, unknown>[] = [];
 	globalThis.fetch = async (url, init) => {
-		if (String(url) === "/api/billing/offer") return Response.json(offer);
+		if (String(url) === "/api/billing/offer")
+			return Response.json({ ...offer, yearlyPrices });
 		requests.push(JSON.parse(String(init?.body)));
 		return checkout.promise;
 	};
-	const el = await mount({ annualPreview: true });
+	const el = await mount({
+		initialPrices: offer.prices,
+		initialYearlyPrices: yearlyPrices,
+	});
 	await act(async () => periodButton(el, "Monthly").click());
 	assert.match(el.textContent!, /Card required/);
 	await act(async () => plusButton(el).click());
@@ -339,8 +345,16 @@ test("switching to monthly uses verified prices and locks the period during chec
 
 test("monthly sign-in preserves the selected period on the pricing return", async () => {
 	globalThis.fetch = async () =>
-		Response.json({ ...offer, ownerUserId: null, action: "sign_in" });
-	const el = await mount({ annualPreview: true });
+		Response.json({
+			...offer,
+			yearlyPrices,
+			ownerUserId: null,
+			action: "sign_in",
+		});
+	const el = await mount({
+		initialPrices: offer.prices,
+		initialYearlyPrices: yearlyPrices,
+	});
 	await act(async () => periodButton(el, "Monthly").click());
 	const signIn = [...el.querySelectorAll("button")].find((button) =>
 		button.textContent?.includes("Sign in to choose"),
@@ -352,20 +366,58 @@ test("monthly sign-in preserves the selected period on the pricing return", asyn
 	await act(async () => root?.unmount());
 	root = null;
 	dom.happyDOM.setURL(`http://localhost${next}`);
-	const returned = await mount({ annualPreview: true });
+	const returned = await mount({
+		initialPrices: offer.prices,
+		initialYearlyPrices: yearlyPrices,
+	});
 	assert.equal(
 		periodButton(returned, "Monthly").getAttribute("aria-pressed"),
 		"true",
 	);
 });
 
-test("an existing subscriber can still open account management from the annual preview", async () => {
-	globalThis.fetch = async () => Response.json({ ...offer, action: "manage" });
-	const el = await mount({ annualPreview: true });
+test("an existing subscriber can still open account management from yearly pricing", async () => {
+	globalThis.fetch = async () =>
+		Response.json({ ...offer, yearlyPrices, action: "manage" });
+	const el = await mount({
+		initialPrices: offer.prices,
+		initialYearlyPrices: yearlyPrices,
+	});
 	const manage = [...el.querySelectorAll("button")].find((button) =>
 		button.textContent?.includes("Manage subscription"),
 	);
 	assert.ok(manage);
 	await act(async () => manage.click());
 	assert.equal(window.location.pathname, "/account/billing");
+});
+
+test("losing annual availability does not silently submit a monthly checkout", async () => {
+	let reads = 0;
+	let checkout = 0;
+	globalThis.fetch = async (url) => {
+		if (String(url) !== "/api/billing/offer") {
+			checkout++;
+			throw Error("unexpected checkout");
+		}
+		return Response.json({
+			...offer,
+			yearlyPrices: ++reads === 1 ? yearlyPrices : null,
+		});
+	};
+	const el = await mount({
+		initialPrices: offer.prices,
+		initialYearlyPrices: yearlyPrices,
+	});
+	await act(async () => window.dispatchEvent(new Event("focus")));
+	assert.equal(periodButton(el, "Yearly").getAttribute("aria-pressed"), "true");
+	assert.match(el.textContent!, /Yearly currently unavailable/);
+	const button = el.querySelector<HTMLButtonElement>(
+		'[aria-labelledby="pricing-plus-title"] .pricing-plans__button',
+	)!;
+	assert.ok(button.disabled);
+	await act(async () => {
+		button.disabled = false;
+		button.click();
+	});
+	assert.equal(checkout, 0);
 });

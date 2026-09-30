@@ -73,7 +73,10 @@ const faq = [
 ];
 
 export default async function PricingPage() {
-	const prices = await initialPricingPrices();
+	const [prices, yearlyPrices] = await Promise.all([
+		initialPricingPrices(),
+		initialPricingPrices("yearly"),
+	]);
 	return (
 		<>
 			<BreadcrumbJsonLd
@@ -106,7 +109,12 @@ export default async function PricingPage() {
 					</div>
 				</nav>
 
-				<Pricing headingLevel={1} showPlanMatrix initialPrices={prices} />
+				<Pricing
+					headingLevel={1}
+					showPlanMatrix
+					initialPrices={prices}
+					initialYearlyPrices={yearlyPrices}
+				/>
 				<SocialProof />
 				<FAQSection
 					title="Pricing FAQ"

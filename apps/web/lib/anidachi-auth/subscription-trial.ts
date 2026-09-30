@@ -1,5 +1,5 @@
 import type Stripe from "stripe";
-import type { MonthlyPrice } from "../billing-view";
+import type { BillingPeriod, MonthlyPrice } from "../billing-view";
 import type { PaidPlanCode } from "./plan-entitlements";
 
 export type CheckoutReservation = {
@@ -18,6 +18,7 @@ export type CheckoutReservation = {
 	state: "pending" | "open" | "complete" | "expired";
 };
 export type CheckoutInput = {
+	billingPeriod?: BillingPeriod;
 	displayedOffer?: { trial: unknown; price: unknown };
 	userId: string;
 	email: string;
@@ -38,6 +39,7 @@ export type CheckoutDeps = {
 	offer?: (
 		userId: string,
 		priceId: string,
+		billingPeriod: BillingPeriod,
 	) => Promise<{ action: string; price: MonthlyPrice }>;
 	now?: () => number;
 	reserve: (input: CheckoutInput) => Promise<CheckoutReservation>;
@@ -286,7 +288,11 @@ export function createSubscriptionCheckoutService(deps: CheckoutDeps) {
 				}
 				if (!deps.offer)
 					throw new SubscriptionCheckoutError("Checkout offer unavailable.");
-				const current = await deps.offer(input.userId, input.priceId);
+				const current = await deps.offer(
+					input.userId,
+					input.priceId,
+					input.billingPeriod ?? "monthly",
+				);
 				if (
 					current.action !== (trial ? "trial" : "subscribe") ||
 					current.price.unitAmount !== shown.unitAmount ||
@@ -393,7 +399,12 @@ export function createSubscriptionCheckoutService(deps: CheckoutDeps) {
 								line_items: [{ price: r.price_id, quantity: 1 }],
 								success_url:
 									r.origin + "/success?session_id={CHECKOUT_SESSION_ID}",
-								cancel_url: r.origin + "/pricing",
+								cancel_url:
+									r.origin +
+									"/pricing" +
+									(["monthly", "yearly"].includes(r.attribution.billingPeriod)
+										? `?billing=${r.attribution.billingPeriod}`
+										: ""),
 								allow_promotion_codes: true,
 								billing_address_collection: "required",
 								metadata,
