@@ -1,21 +1,58 @@
-# Graph Report - anidachi-LP-monorepo  (2026-09-29)
+# Graph Report - anidachi-LP-monorepo  (2026-09-30)
 
-## Corpus Check (current detection; scoped extraction)
+## Corpus Check (historical detection; latest extraction scoped)
 - 1497 files · ~1,499,576 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 - Unclassified: 30 file(s) not represented in the graph (top: .css 12, (none) 11, .toml 2)
 
 ## Summary
-- 14159 nodes · 32506 edges · 853 retained communities (historical detailed analysis below)
+- 14198 nodes · 32582 edges · 853 retained communities plus one scoped counter community (historical detailed analysis below)
 - Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 1081 edges (avg confidence: 0.87)
 - Token accounting: AST uses no LLM; active Codex semantic subagent usage is unavailable.
 
-## Graph Freshness
-- Latest scoped update: DO optimization delivered in staging1d50432c; one full receipt and changed ranges of seven partial sources. Owner acceptance remains open; older global build marker retained.
+## Graph Freshness — concise homepage guide, 2026-09-30
+
+- HowItWorks presents five current actions: install from the canonical Chrome Web Store link, sign in, open a supported video, create/join a room, and watch together. Plus/Pro hosting and free guest admission remain explicit. History is outside this startup guide. Async catch-up is retained as the separate sixth item with its Coming soon label and original description, restored after owner correction.
+- The same steps feed homepage HowToJsonLd, whose summary now matches this sequence. Browser inspection confirmed five visible steps match all five structured-data steps exactly. Local TypeScript passed.
+- Code-only extraction refreshed only HowItWorks and app/page.tsx nodes, outgoing edges and manifest entries. Removed the unused INSTALL_HOWTO_STEP_TEXT dependency; retained foreign graph data. No runtime, entitlement or deployment changes.
+
+## Graph Freshness — homepage hosting explanation, 2026-09-30
+
+- Strict typography follow-up: avatars and nested panels replaced with host/guest counts; removed the next/image import. Re-extracted this component's three nodes and eight edges, retaining foreign graph state. Plus/Pro selection and shared capacity policy remain unchanged.
+
+- Owner-approved local replacement of Your watchroom hub with One subscription / Friends join free, preserving homepage #features immediately before #pricing. Interactive Plus/Pro room sizes use getPlanPolicy, subtracting the host from 6/15 total participants. This is a presentation change; billing, entitlements and room admission are unchanged.
+- Standard AST update was run. Its unrelated global normalization/reclustering was excluded from this scoped receipt: retain all foreign nodes, links, communities, hyperedges and historical metadata. Replace only this component's 3 AST nodes / 5 outgoing edges with its 4 nodes / 9 edges, including the CSS import placeholder. Only its manifest row is refreshed; CSS is outside the AST graph corpus.
+- Source verification: web TypeScript passed; 821 web tests passed, six prior skips; dev-check passed. Local browser checked Plus/Pro, the preserved Features anchor, pricing link and responsive section. No staging/production deployment. No LLM extraction required.
+
+## Graph Freshness — public community counter, 2026-09-30
+
+- Owner-approved historical baseline 1,409 = 555 accounts + 854 waitlist records, without deduplication or test-account exclusion. Add only account rows with created_at after fixed 2026-09-29T18:03:46.456294Z; frozen waitlist contribution, all plans, repeat logins and subscription changes do not add rows. This is a signup figure, not unique or active people.
+- Server-only exact HEAD aggregate from each environment's own database reaches GET /api/community-stats as { count }. No account rows/emails, schema migration, auth, Worker or extension change. Homepage sign-up copy; five-minute shared cache plus five-minute stale revalidation; staging protection can impose no-store. Timeout/error/null count returns 503/no-store and hides the figure.
+- Source-reported verification: TypeScript and 821 tests passed with six existing skips; stubbed HTTP route tests cover filters/repeated reads/failure. Read-only production SQL at September 29, 18:14:14 UTC found 0 post-boundary accounts, yielding 1,409. No account writes. Local server lacks database credentials and hides its 503; browser-local mocked 1,409 renders at 1280px/390px, then override removed. This is rendering proof; deployed account/login/cache acceptance remains open. Local branch only, no staging/production deployment; website rollback restores the old counter with no migration undo.
+- Scope: four code files, 7 AST nodes/18 edges; full 67-line new domain document and only current-state L1–11. 25 added nodes/44 net links; all 14,172 prior IDs, foreign directed pairs, 853 communities, existing hyperedges and historical evidence retained. Only four AST rows and the full document semantic row stamped; current-state whole-file freshness and unrelated backlog remain unchanged. Prior out-of-scope line references remain recorded historical evidence.
+- Standard build_merge refused whole-graph normalization because it would drop an unrelated historical media-seats node. Fresh-fragment normalization and asserted scoped merge preserved it. No global reclustering or HTML export. Integrity: zero missing/dangling endpoints; inherited 102 selfloops and 3 undirected-pair warnings unchanged. Serialized source→target directions and directed:false container metadata retained.
+- Token accounting: AST requires no LLM; active Codex semantic subagent usage is unavailable. Source hashes and exact ranges are recorded in semantic_updates. Earlier sections below are dated historical checkpoints.
+
+## Historical Graph Freshness — through 2026-09-29
+- Latest scoped update: staging rehearsal activated revision 2 at 2026-09-29T15:48:48.800820Z. Owner confirmed Plus stayed and Free closed; full Sandbox/P11/media acceptance remains open. One full new receipt and added headers in four partial sources; older global build marker retained.
 - Built from commit: `80fefde3`
-- Includes the verified dormant staging runtime checkpoint50a054b3: schema375/Web377/runtime378,69migrations, configured Sandbox/drain, signed admission and technical CI/deploy/extension/smoke evidence. Owner acceptance/T/main/Store remain open. One full source and five partial sources including planTask7 technical checklist; no AST/full-corpus freshness. Exact six hashes/ranges are recorded in semantic_updates.
+- Historical evidence retained for the verified dormant staging runtime checkpoint50a054b3: schema375/Web377/runtime378,69migrations, configured Sandbox/drain, signed admission and technical CI/deploy/extension/smoke evidence. Owner acceptance/T/main/Store remain open. One full source and five partial sources including planTask7 technical checklist; no AST/full-corpus freshness. Exact six hashes/ranges are recorded in semantic_updates.
 - Run `graphify update .` after code changes (no API cost).
+
+## Staging cutover rehearsal: activated with partial manual confirmation — 2026-09-29
+
+- Latest baseline acceptance: owner confirms new staging ZIP59d6e80e Free plan prompt, trial Plus display/creation, Free guest join and synchronization; the source reports matching artifact SHA-256. Old ZIP and72-hour Plus trial evidence remain. Cancellation, trial end/subsequent charge, Pro checkout, payment failures, history/recovery and full P11 are still open; no blanket media/quota acceptance.
+- Latest scope: full92-line receipt and only current-state top23lines. Five node meanings/two moved spans/eight relationship spans updated, no new nodes/links; historical versions retained. Only the receipt semantic manifest hash advanced; current-state partial freshness/backlog and all other records are preserved. Earlier follow-ups below are dated evidence.
+- Latest owner confirmation: room creation after the Plus trial on the old ZIP and Free participant entry both work. The two changed receipt lines78–79 update two node meanings and the full receipt hash/manifest; all87line positions and graph structures remain unchanged. At that earlier checkpoint Pro checkout, new ZIP and full Sandbox/P11/lifecycle/payment/history/recovery remained open; the latest baseline acceptance above supersedes only the new-ZIP basic-flow gap.
+- Latest follow-up: owner enrolled Plus trial through the site. Source-reported readonly Stripe Sandbox/Supabase check at16:30UTC confirms trialing, effective Plus, exactly72hours from2026-09-29T16:00:51Z to2026-10-02T16:00:51Z, saved payment method, charge_automatically and cancel_at_period_end=false, then799USDcents/month. This proves trial start/server rights, not a future successful charge. No post-trial room existed at that earlier readback; the subsequent owner confirmation now establishes old-ZIP creation and Free guest entry.
+- Scope of latest follow-up: full87-line receipt reread,3node meanings/2moved spans/5relationship spans updated, receipt-only manifest advanced. No nodes/edges added; every prior structure and historical checkpoint preserved. Previous follow-up and initial scope below remain dated records.
+- Follow-up: the complete79-line receipt was reread after the owner confirmed Free-create denial and Free-join to Plus. Three node meanings and two moved node spans updated; six relationship spans realigned. No new nodes or links. Only this receipt hash/manifest row advanced; previous scoped extraction below retains its historical scope.
+- T2026-09-29T15:48:48.800820Z, revision2, trials/scheduler ON in staging. Exact Web deployment dpl_4pPLCVC4CiK6x6TXhBvEQvTD62ww at source73ea22d5f021b4650ad2cb83acd24a91435f4b76 and Worker f7942d07-cb7a-473e-9484-c26768ea04c2 identify this receipt.
+- One remaining Free target fenced1.472180s/finalized3.702180s after T; one attempt, completed1/pending0, no active assignments. Another Free room ended before T and is excluded. At cutover, Plus live and subscriptions/account distribution61Free/1Plus preserved; zero trial rows in that earlier snapshot, before the later user-initiated trial. Real pg_net → Web → Worker → Web/PostgREST chain acknowledged; a single measurement is not a latency guarantee.
+- Owner confirmed Plus stayed and Free closed on the old extension, then confirmed old-ZIP Free-create denial and Free-join to Plus. Plus trial enrollment is now verified. Exact denial text, separate Pro join/trial checkout, individual audio/video track cleanup and full Sandbox/P11/history/payment/recovery remain unverified; the new ZIP basic flow is now owner-confirmed. Two pre-T Sandbox reservations reconciled without changing the paid subscription. Website design and annual plan are a separate future staging block. No code, ZIP, main/production or Store release; recovery preserves original T/operation and closed rooms.
+- Scope: full77-line new receipt and added headers only in four sources.13new nodes,12updated current meanings,31new directed links; prior node evidence retained in historical_versions. All prior14159nodes/32506links,853community identities and hyperedges preserved. Only the new full receipt receives a semantic manifest stamp; partial whole-file hashes/backlog unchanged. No AST, whole-corpus extraction/reclustering, runtime test or external verification. Active Codex semantic token usage unavailable.
+- Integrity: zero missing/dangling endpoints; inherited102selfloops and3undirected collapse warnings unchanged. Existing directed:false container metadata retained while every serialized source→target pair is preserved. Earlier sections below are historical checkpoints; their OFF/T-pending statements do not describe the current staging state. Exact source hashes and read ranges are in semantic_updates.
 
 ## DO write optimization: verified staging delivery — 2026-09-29
 

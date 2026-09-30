@@ -1,5 +1,77 @@
 # Current Development State
 
+## Local homepage comparison, September 30, 2026
+
+“How AniDachi compares” now uses a flat desktop table and a compact competitor
+selector on phones, with shorter copy and linked primary product information.
+Local checks pass; owner visual acceptance remains open. This is not deployed.
+See the [comparison scope and evidence](releases/website-comparison-2026-09-30.md).
+
+## Annual billing acceptance environment, September 30, 2026
+
+The owner chose staging with AniDachi Sandbox for annual billing configuration
+and manual payment acceptance. Restoring local billing credentials is no longer
+a prerequisite for this work. After staging acceptance, prepare the separate
+LIVE Stripe annual prices/Portal configuration and promote the tested release to
+main. Localhost remains the website development preview. This checkpoint records
+the sequence; staging and production configuration/delivery have not changed.
+See the [annual checklist](releases/paid-hosting-trial/annual-billing-2026-09-30.md).
+
+## Local public pricing correction, September 30, 2026
+
+The owner requires plan cards and prices to be regular site content. Homepage and
+`/pricing` now render the published monthly/yearly USD catalog directly, with
+Yearly selected by default and no Stripe call during page rendering. Private offer
+prefetch may adjust account actions but cannot replace the amounts, hide the
+period selector, disable browsing, or show a page-load error. An explicit checkout
+attempt reuses or awaits fresh account verification; price mismatch, changed
+eligibility and account changes cannot silently start a different purchase.
+The public Plus/Pro buttons also show the three-day trial immediately, with card,
+one-trial and renewal terms. If an unknown account proves ineligible after that
+click, paid Checkout waits for a new explicit choice after the terms update.
+This supersedes the earlier server-fetched public-price approach below. Real
+Checkout acceptance remains open and will take place on staging as agreed above. See the
+[annual checklist and pricing correction](releases/paid-hosting-trial/annual-billing-2026-09-30.md).
+
+## Local annual billing checkpoint, September 30, 2026
+
+Annual Plus/Pro checkout and explicit monthly-to-yearly conversion are implemented
+locally. The owner chose $76.70/$143.90 yearly, Yearly selected by default, and
+immediate conversion of a paid monthly subscription with Stripe proration and
+customer confirmation. Trial period changes preserve the original 72-hour end.
+AniDachi Sandbox annual prices and a separate conversion portal configuration
+exist; their public IDs are connected only to the local worktree. Local billing
+still returns 503, so authenticated Checkout/webhook and visual acceptance are
+**not complete**. No staging/main/production/Store delivery occurred. See the
+[annual implementation and acceptance checklist](releases/paid-hosting-trial/annual-billing-2026-09-30.md).
+
+## Local website counter checkpoint, September 30, 2026
+
+The owner chose a historical signup baseline of 1,409 (555 production accounts
+plus 854 waitlist records, without deduplication). The local homepage counter
+adds only accounts created after the fixed measurement timestamp. It reads an
+aggregate from its own environment and exposes no account rows. CRM waitlist
+statistics remain separate. See the [definition and delivery boundary](public-community-count.md).
+This website change has not been deployed to staging or production.
+
+## Latest checkpoint: staging model activated, 2026-09-29 15:48 UTC
+
+The owner explicitly authorized the staged transition rehearsal after the DO
+optimization delivery and a manual baseline room test. Staging activation committed
+at **15:48:48.800820 UTC**, revision 2, trials/scheduler ON. One still-open Free
+room was durably fenced in 1.472s and finalized in 3.702s; all targets completed.
+The Plus room remained live; account plan counts and subscription fingerprints
+were preserved. One other Free room ended before T and is excluded from this
+cutover result. The owner confirmed the old-client cutover, Free-create denial,
+Free-join to Plus, successful Plus trial enrollment and trial-host room creation.
+Stripe/Supabase agree on the 72-hour Plus trial. The owner subsequently confirmed
+the new staging ZIP: Free plan prompt, correct trial plan/creation, guest join and
+synchronization. Full billing lifecycle/P11/history/recovery acceptance remains
+open; these results do not cover every media/quota scenario. See the
+[staging rehearsal receipt](releases/paid-hosting-trial/staging-rehearsal-2026-09-29.md).
+The dormant/OFF states below are earlier dated checkpoints, superseded for staging
+by this rehearsal. Main/production and Store were not changed in this operation.
+
 Last updated: 2026-09-29.
 
 Latest owner decision: complete Durable Object write optimization, deliver it

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { initialPricingPrices } from "@/lib/anidachi-auth/pricing-catalog";
 
 import Link from "next/link";
 import { Pricing } from "@/components/pricing";
@@ -72,8 +71,7 @@ const faq = [
 	},
 ];
 
-export default async function PricingPage() {
-	const prices = await initialPricingPrices();
+export default function PricingPage() {
 	return (
 		<>
 			<BreadcrumbJsonLd
@@ -106,7 +104,7 @@ export default async function PricingPage() {
 					</div>
 				</nav>
 
-				<Pricing headingLevel={1} showPlanMatrix initialPrices={prices} />
+				<Pricing headingLevel={1} showPlanMatrix />
 				<SocialProof />
 				<FAQSection
 					title="Pricing FAQ"

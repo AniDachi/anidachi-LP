@@ -3212,12 +3212,15 @@ describe("RoomDurableObject media v2", () => {
 							usage.day,
 							Math.max(ledger.get(usage.day) ?? 0, usage.seconds),
 						);
+					// Date.now is controlled by the quota tests; new Date() is not.
+					const now = Date.now();
+					const day = new Date(now).toISOString().slice(0, 10);
 					const policy = body.settleOnly
 						? null
 						: deny
 							? {
 									denied: true,
-									closingAt: new Date(Date.now() + 300000).toISOString(),
+									closingAt: new Date(now + 300000).toISOString(),
 								}
 							: {
 									denied: false,
@@ -3225,14 +3228,11 @@ describe("RoomDurableObject media v2", () => {
 									quota:
 										plan === "free"
 											? {
-													day: new Date().toISOString().slice(0, 10),
+													day,
 													remainingSeconds:
-														1800 -
-														(ledger.get(
-															new Date().toISOString().slice(0, 10),
-														) ?? 0),
+														1800 - (ledger.get(day) ?? 0),
 													resetAt: new Date(
-														(Math.floor(Date.now() / 86400000) + 1) * 86400000,
+														(Math.floor(now / 86400000) + 1) * 86400000,
 													).toISOString(),
 												}
 											: null,
@@ -3352,7 +3352,10 @@ describe("RoomDurableObject media v2", () => {
   });
 
   it("keeps the active anchor between frames and durably settles it before renewal", async () => {
-    const start = Date.parse("2026-09-29T12:00:00Z");
+    // Workerd's alarm clock is real even when Date.now is mocked. Keep the
+    // synthetic noon safely in the future so native alarms cannot fire early.
+    const start = (Math.floor(Date.now() / 86_400_000) + 1) * 86_400_000 + 43_200_000;
+    const day = new Date(start).toISOString().slice(0, 10);
     const clock = vi.spyOn(Date, "now").mockReturnValue(start);
     const f = await fixture("free", 3);
     const host = await f.join(0);
@@ -3389,15 +3392,18 @@ describe("RoomDurableObject media v2", () => {
       await room.serviceRoomPolicy(start + 60_000);
     });
     expect(durableAtDelivery).toMatchObject({ accumulatedMs: 60_000, activeSince: start + 60_000 });
-    expect(f.ledger.get("2026-09-29")).toBe(60);
+    expect(f.ledger.get(day)).toBe(60);
     await runInDurableObject(f.stub, async instance => { await (instance as any).serviceRoomPolicy(start + 60_000); });
-    expect(f.ledger.get("2026-09-29")).toBe(60);
+    expect(f.ledger.get(day)).toBe(60);
   });
 
   it.each([true, false])("wake retains an overdue quota across UTC (alarm present: %s)", async (alarmPresent) => {
-    const midnight = Date.parse("2026-09-30T00:00:00Z");
+    // Keep even the pre-midnight deadline ahead of Workerd's real clock.
+    const midnight = (Math.floor(Date.now() / 86_400_000) + 2) * 86_400_000;
     const start = midnight - 120_000;
     const due = midnight - 60_000;
+    const previousDay = new Date(start).toISOString().slice(0, 10);
+    const day = new Date(midnight).toISOString().slice(0, 10);
     const clock = vi.spyOn(Date, "now").mockReturnValue(start);
     const f = await fixture("free", 3);
     const host = await f.join(0);
@@ -3407,7 +3413,7 @@ describe("RoomDurableObject media v2", () => {
     await runInDurableObject(f.stub, async (instance, state) => {
       const room = instance as any;
       room.roomPolicy.budget.allowedSeconds = 60;
-      room.roomPolicy.quotaWarnedDay = "2026-09-29";
+      room.roomPolicy.quotaWarnedDay = previousDay;
       room.roomPolicy.alarmAt = due;
       await state.storage.put("room_policy_v2", room.roomPolicy);
       if (alarmPresent) await state.storage.setAlarm(due);
@@ -3421,14 +3427,14 @@ describe("RoomDurableObject media v2", () => {
       policy: await state.storage.get<any>("room_policy_v2"),
       alarm: await state.storage.getAlarm(),
     }));
-    expect(restored.meter).toMatchObject({ day: "2026-09-29", activeSince: start, accumulatedMs: 0 });
+    expect(restored.meter).toMatchObject({ day: previousDay, activeSince: start, accumulatedMs: 0 });
     expect(restored.policy.alarmAt).toBe(due);
     expect(restored.alarm).toBe(due);
     await runDurableObjectAlarm(f.stub);
     const ended = await host.waitFor(e => e.type === "ROOM_ENDED", "original exhaustion after wake");
     expect(ended).toMatchObject({ reason: "quota_exhausted", endedAt: due });
-    expect(f.ledger.get("2026-09-29")).toBe(60);
-    expect(f.ledger.get("2026-09-30") ?? 0).toBe(0);
+    expect(f.ledger.get(previousDay)).toBe(60);
+    expect(f.ledger.get(day) ?? 0).toBe(0);
   });
 
 it("v3 durably fences revocation, receiver-only sessions and two grants for the last seat", async () => {

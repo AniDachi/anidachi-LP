@@ -130,7 +130,7 @@ function fixture(
 		stripe,
 		offer: readOffer,
 		now: () => clock,
-		reserve: async () => {
+		reserve: async (next) => {
 			if (!reserved) {
 				reservation.created_at = new Date(
 					Date.parse(reservation.created_at) + clock - now,
@@ -143,6 +143,9 @@ function fixture(
 					["canceled", "incomplete_expired"].includes(syncedStatus))
 			) {
 				Object.assign(reservation, {
+					price_id: next.priceId,
+					plan_code: next.planCode,
+					attribution: next.attribution,
 					id: "33333333-3333-4333-8333-333333333333",
 					created_at: new Date(clock).toISOString(),
 					stripe_subscription_id: null,
@@ -638,4 +641,50 @@ test("a matching displayed offer uses the server-configured Stripe price and ori
 		{ price: "price_plus", quantity: 1 },
 	]);
 	assert.equal(f.params?.subscription_data?.trial_period_days, 3);
+});
+
+test("changing an open monthly checkout to yearly expires it before creating a card-backed annual trial", async () => {
+	const f = fixture(true, async () => ({
+		action: "trial",
+		price: { unitAmount: 7670, currency: "usd" },
+	}));
+	await f.service.prepareSubscriptionCheckout(input);
+	const result = await f.service.prepareSubscriptionCheckout({
+		...input,
+		priceId: "price_plus_year",
+		billingPeriod: "yearly",
+		attribution: { billingPeriod: "yearly" },
+		displayedOffer: {
+			trial: true,
+			price: { unitAmount: 7670, currency: "usd" },
+		},
+	});
+	assert.equal(result.trialOffered, true);
+	assert.deepEqual(f.params?.line_items, [
+		{ price: "price_plus_year", quantity: 1 },
+	]);
+	assert.equal(f.params?.subscription_data?.trial_period_days, 3);
+	assert.equal(f.params?.payment_method_collection, "always");
+	assert.equal(f.params?.cancel_url, input.origin + "/pricing?billing=yearly");
+	assert.equal(f.expiredSessions.length, 1);
+});
+test("used trial cannot get another trial by selecting yearly billing", async () => {
+	const f = fixture(false, async () => ({
+		action: "subscribe",
+		price: { unitAmount: 7670, currency: "usd" },
+	}));
+	const result = await f.service.prepareSubscriptionCheckout({
+		...input,
+		priceId: "price_plus_year",
+		billingPeriod: "yearly",
+		displayedOffer: {
+			trial: false,
+			price: { unitAmount: 7670, currency: "usd" },
+		},
+	});
+	assert.equal(result.trialOffered, false);
+	assert.equal(f.params?.subscription_data?.trial_period_days, undefined);
+	assert.deepEqual(f.params?.line_items, [
+		{ price: "price_plus_year", quantity: 1 },
+	]);
 });

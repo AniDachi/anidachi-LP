@@ -1,4 +1,5 @@
 import type Stripe from "stripe";
+import type { BillingPeriod } from "../billing-view";
 import { BillingError } from "./billing";
 import {
 	getBillingCustomerByUserId,
@@ -13,7 +14,7 @@ import {
 } from "./stripe-plans";
 import { syncStripeSubscriptionById } from "./stripe-subscription-sync";
 
-/** Monthly list price; existing discounts, tax and credits remain with Stripe. */
+/** Recurring list price; existing discounts, tax and credits remain with Stripe. */
 export type TrialPlanQuote = {
 	planCode: PaidPlanCode;
 	currentPlanCode: PaidPlanCode;
@@ -21,6 +22,8 @@ export type TrialPlanQuote = {
 	currency: string;
 	trialEndsAt: string;
 	renewalCanceled: boolean;
+	billingPeriod: BillingPeriod;
+	currentBillingPeriod: BillingPeriod;
 };
 type Deps = {
 	listSubscriptions: typeof listSubscriptionsForUser;
@@ -51,7 +54,14 @@ export function createTrialPlanChangeService(deps: Deps = defaults) {
 		userId: string,
 		rowId: string,
 		planCode: PaidPlanCode,
+		requestedPeriod?: BillingPeriod,
 	) {
+		if (
+			requestedPeriod !== undefined &&
+			requestedPeriod !== "monthly" &&
+			requestedPeriod !== "yearly"
+		)
+			throw new BillingError(400, "Select monthly or yearly billing.");
 		if (planCode !== "plus" && planCode !== "pro")
 			throw new BillingError(400, "Select Plus or Pro.");
 		const [rows, customer] = await Promise.all([
@@ -121,20 +131,25 @@ export function createTrialPlanChangeService(deps: Deps = defaults) {
 				409,
 				"This subscription needs review before changing its plan.",
 			);
+		const currentBillingPeriod: BillingPeriod =
+			item.price.recurring?.interval === "year" ? "yearly" : "monthly";
+		const billingPeriod = requestedPeriod ?? currentBillingPeriod;
 		const currentPlanCode = (["plus", "pro"] as const).find(
-			(plan) => deps.priceId(plan) === item.price.id,
+			(plan) => deps.priceId(plan, currentBillingPeriod) === item.price.id,
 		);
-		const targetPriceId = deps.priceId(planCode);
+		const targetPriceId = deps.priceId(planCode, billingPeriod);
 		if (!currentPlanCode || !targetPriceId)
 			throw new BillingError(503, "Plan pricing is unavailable.");
 		const target = await stripe.prices.retrieve(targetPriceId, {}, REQUEST);
-		function validPrice(p: Stripe.Price) {
+		function validPrice(p: Stripe.Price, period: BillingPeriod) {
 			return (
 				p.type === "recurring" &&
 				p.billing_scheme === "per_unit" &&
 				!p.transform_quantity &&
 				p.livemode === sub.livemode &&
-				p.recurring?.interval === "month" &&
+				p.recurring?.interval === (period === "yearly" ? "year" : "month") &&
+				["month", "year"].includes(p.recurring?.interval ?? "") &&
+				!!p.recurring &&
 				p.recurring.interval_count === 1 &&
 				p.recurring.usage_type === "licensed" &&
 				Number.isSafeInteger(p.unit_amount) &&
@@ -144,15 +159,17 @@ export function createTrialPlanChangeService(deps: Deps = defaults) {
 		if (
 			target.id !== targetPriceId ||
 			!target.active ||
-			!validPrice(target) ||
-			!validPrice(item.price) ||
+			!validPrice(target, billingPeriod) ||
+			!validPrice(item.price, currentBillingPeriod) ||
 			target.currency !== item.price.currency
 		)
 			throw new BillingError(
 				503,
-				"The monthly plan price could not be verified.",
+				"The recurring plan price could not be verified.",
 			);
 		const quote: TrialPlanQuote = {
+			billingPeriod,
+			currentBillingPeriod,
 			planCode,
 			currentPlanCode,
 			unitAmount: target.unit_amount!,
@@ -167,8 +184,9 @@ export function createTrialPlanChangeService(deps: Deps = defaults) {
 			userId: string,
 			rowId: string,
 			planCode: PaidPlanCode,
+			billingPeriod?: BillingPeriod,
 		): Promise<TrialPlanQuote> {
-			return (await prepare(userId, rowId, planCode)).quote;
+			return (await prepare(userId, rowId, planCode, billingPeriod)).quote;
 		},
 		async confirm(
 			userId: string,
@@ -176,16 +194,21 @@ export function createTrialPlanChangeService(deps: Deps = defaults) {
 			planCode: PaidPlanCode,
 			accepted: TrialPlanQuote,
 			requestId: string,
+			billingPeriod?: BillingPeriod,
 		) {
 			if (!UUID.test(requestId))
 				throw new BillingError(400, "Refresh the plan change and try again.");
-			const p = await prepare(userId, rowId, planCode),
+			const p = await prepare(userId, rowId, planCode, billingPeriod),
 				q = p.quote;
 			if (
 				!accepted ||
 				accepted.planCode !== q.planCode ||
 				accepted.unitAmount !== q.unitAmount ||
 				accepted.currency !== q.currency ||
+				(accepted.billingPeriod ?? "monthly") !== q.billingPeriod ||
+				((accepted.currentBillingPeriod ?? "monthly") !==
+					q.currentBillingPeriod &&
+					p.item.price.id !== p.targetPriceId) ||
 				accepted.trialEndsAt !== q.trialEndsAt ||
 				accepted.renewalCanceled !== q.renewalCanceled ||
 				(accepted.currentPlanCode !== q.currentPlanCode &&
@@ -195,7 +218,7 @@ export function createTrialPlanChangeService(deps: Deps = defaults) {
 					409,
 					"Subscription terms changed. Review the new price before confirming.",
 				);
-			if (q.currentPlanCode !== planCode) {
+			if (p.item.price.id !== p.targetPriceId) {
 				// Sending the immutable future end makes a request arriving after expiry
 				// fail at Stripe instead of silently changing an ordinary paid subscription.
 				// Never send cancel_at/cancel_at_period_end: concurrent cancellation wins.

@@ -1,43 +1,33 @@
-import { Chrome, Search, Users, MessageSquare, History, Clock3 } from "lucide-react";
-import Link from "next/link";
+import { Chrome, LogIn, Play, Users, MessageSquare, Clock3 } from "lucide-react";
 import { HomeSectionHeader } from "@/components/home-section-header";
-import {
-  INSTALL_HOWTO_STEP_TEXT_VIA_HUB,
-  INSTALL_HUB_PATH,
-} from "@/lib/install-cta";
-
-const INSTALL_STEP_TAIL =
-  "(~2 minutes) — works with your Crunchyroll or YouTube session.";
+import { CHROME_WEB_STORE_URL } from "@/lib/install-cta";
 
 const steps = [
   {
     icon: Chrome,
-    title: "Install the Chrome Extension",
-    description: `${INSTALL_HOWTO_STEP_TEXT_VIA_HUB} ${INSTALL_STEP_TAIL}`,
+    title: "Install AniDachi",
+    description: "Get the extension from the Chrome Web Store.",
   },
   {
-    icon: Search,
-    title: "Detect What You’re Watching",
-    description:
-      "Open a Crunchyroll anime or a YouTube video and AniDachi identifies the title and episode (or video) for the room.",
+    icon: LogIn,
+    title: "Sign in",
+    description: "Open the extension and sign in to your AniDachi account.",
+  },
+  {
+    icon: Play,
+    title: "Open a video",
+    description: "Choose something to watch on YouTube or Crunchyroll.",
   },
   {
     icon: Users,
-    title: "Create a Watchroom",
+    title: "Create or join a room",
     description:
-      "Create a room and share the invite link. Each friend joins in desktop Chrome with the AniDachi extension installed.",
+      "Host with Plus or Pro and share the link. Friends join free.",
   },
   {
     icon: MessageSquare,
     title: "Watch together",
-    description:
-      "Watch in sync, chat, and send reactions while everyone is in the room together.",
-  },
-  {
-    icon: History,
-    title: "Keep your watch history",
-    description:
-      "With Plus or Pro, save your progress on Crunchyroll and YouTube as you watch. Resume from AniDachi’s menu in Chrome, or manage watched episodes in your account.",
+    description: "Watch in sync, chat and share reactions.",
   },
 ];
 
@@ -45,10 +35,7 @@ export function HowItWorks() {
   return (
     <section id="how-it-works" className="bg-ani-canvas py-16 lg:py-24">
       <div className="container mx-auto px-4">
-        <HomeSectionHeader
-          title="How AniDachi works"
-          description="From install to your first shared episode in under two minutes."
-        />
+        <HomeSectionHeader title="How AniDachi works" />
 
         <ol id="extension" className="mx-auto max-w-2xl space-y-0">
           {steps.map((step, i) => (
@@ -80,15 +67,15 @@ export function HowItWorks() {
                 <p className="text-[0.95rem] leading-relaxed text-ani-muted">
                   {i === 0 ? (
                     <>
-                      Open{" "}
-                      <Link
-                        href={INSTALL_HUB_PATH}
+                      Get the extension from the{" "}
+                      <a
+                        href={CHROME_WEB_STORE_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="font-medium text-ani-progress underline-offset-4 hover:underline"
                       >
-                        /extension
-                      </Link>
-                      , then choose Add to Chrome from the official AniDachi
-                      Chrome Web Store listing. {INSTALL_STEP_TAIL}
+                        Chrome Web Store
+                      </a>.
                     </>
                   ) : (
                     step.description

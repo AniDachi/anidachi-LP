@@ -40,6 +40,8 @@ function fixture(user: { id: string } | null = { id: "owner" }, fail = false) {
 			calls.push(`quote:${userId}:${rowId}:${plan}`);
 			return {
 				planCode: plan,
+				billingPeriod: "monthly",
+				currentBillingPeriod: "monthly",
 				currentPlanCode: "plus",
 				unitAmount: 1499,
 				currency: "usd",
@@ -62,6 +64,14 @@ function fixture(user: { id: string } | null = { id: "owner" }, fail = false) {
 			service,
 			trialPlans,
 			getUser: async () => user,
+			yearlyPortal: async (userId, rowId, returnUrl) => {
+				calls.push(`yearly:${userId}:${rowId}`);
+				assert.equal(
+					returnUrl,
+					"https://staging.anidachi.app/account/billing?billing=return",
+				);
+				return "https://billing.stripe.com/p/session/yearly";
+			},
 			paymentLink: async (userId: string, rowId: string) => {
 				calls.push(`payment:${userId}:${rowId}`);
 				return "https://invoice.stripe.com/i/test";
@@ -104,6 +114,7 @@ test("cookie billing mutations reject cross-site, sibling origins, missing Origi
 		assert.deepEqual(f.calls, []);
 		assert.equal((await f.handlers.refresh(request(headers))).status, 403);
 		assert.equal((await f.handlers.trialPlan(request(headers))).status, 403);
+		assert.equal((await f.handlers.yearlyPortal(request(headers))).status, 403);
 		assert.equal((await f.handlers.paymentLink(request(headers))).status, 403);
 		assert.equal(
 			(await f.handlers.renewalPortal(request(headers))).status,
@@ -140,6 +151,7 @@ test("revoked sessions and changed account tabs cannot read, sync, or open cance
 			f.handlers.refresh,
 			f.handlers.getOverview,
 			f.handlers.trialPlan,
+			f.handlers.yearlyPortal,
 		]) {
 			assert.equal((await handler(request())).status, user ? 409 : 401);
 		}
@@ -274,4 +286,25 @@ test("renewal portal uses an authenticated local selection and fixed return URL"
 	);
 	assert.equal(failure.status, 503);
 	assert.doesNotMatch(await failure.text(), /secret_upstream_payload/);
+});
+
+test("yearly conversion route forwards only the authenticated owner and local subscription ID", async () => {
+	const f = fixture();
+	const response = await f.handlers.yearlyPortal(
+		request(
+			{},
+			{
+				subscriptionId: "local-id",
+				priceId: "untrusted",
+				customerId: "foreign",
+			},
+		),
+	);
+	assert.equal(response.status, 200);
+	assert.deepEqual(f.calls, ["yearly:owner:local-id"]);
+	assert.deepEqual(await response.json(), {
+		ownerUserId: "owner",
+		url: "https://billing.stripe.com/p/session/yearly",
+	});
+	assert.equal(response.headers.get("cache-control"), "private, no-store");
 });

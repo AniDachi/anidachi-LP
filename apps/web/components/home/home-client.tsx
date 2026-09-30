@@ -2,7 +2,6 @@
 
 import { useRef } from "react";
 import { Pricing } from "@/components/pricing";
-import type { PricingPrices } from "@/lib/pricing-offer";
 import { Hero } from "@/components/hero";
 import { HowItWorks } from "@/components/how-it-works";
 import { MainAppFeatures } from "@/components/main-app-features";
@@ -14,21 +13,23 @@ import { homeFAQ } from "@/lib/home-faq";
 import { useHomeScrollAssist } from "@/lib/use-home-scroll-assist";
 import styles from "./home-sections.module.css";
 
-export function HomeClient({ initialPrices }: {
-  initialPrices: PricingPrices | null;
-}) {
-  const pageRef = useRef<HTMLElement>(null);
-  useHomeScrollAssist(pageRef);
-  return (
-    <main ref={pageRef} id="main-content" className={`${styles.page} min-h-screen bg-ani-canvas`}>
-      <Hero />
-      <ChromeExtensionDemo />
-      <HowItWorks />
-      <CompareTable />
-      <MainAppFeatures />
-      <Pricing initialPrices={initialPrices} />
-      <SocialProof />
-      <FAQSection questions={homeFAQ} />
-    </main>
-  );
+export function HomeClient() {
+	const pageRef = useRef<HTMLElement>(null);
+	useHomeScrollAssist(pageRef);
+	return (
+		<main
+			ref={pageRef}
+			id="main-content"
+			className={`${styles.page} min-h-screen bg-ani-canvas`}
+		>
+			<Hero />
+			<ChromeExtensionDemo />
+			<HowItWorks />
+			<CompareTable />
+			<MainAppFeatures />
+			<Pricing />
+			<SocialProof />
+			<FAQSection questions={homeFAQ} />
+		</main>
+	);
 }

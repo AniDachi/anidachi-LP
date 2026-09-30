@@ -1,0 +1,244 @@
+/* Flat, typographic explanation: one paid host, free guests. */
+.section {
+	background: var(--ani-canvas);
+	color: var(--ani-text);
+	padding: 76px 24px 58px;
+	scroll-margin-top: 88px;
+}
+.container {
+	max-width: 1144px;
+	margin: 0 auto;
+}
+.main {
+	display: grid;
+	grid-template-columns: 1.12fr 1fr;
+	gap: 84px;
+	align-items: center;
+}
+.copy {
+	min-width: 0;
+}
+.copy h2 {
+	font-size: clamp(38px, 4.1vw, 58px);
+	font-weight: 550;
+	line-height: 1.09;
+	letter-spacing: -0.045em;
+}
+.copy h2 span {
+	color: var(--ani-progress);
+}
+.description {
+	font-size: 16px;
+	line-height: 1.75;
+	text-wrap: balance;
+	color: #b6b0a8;
+	max-width: 360px;
+	margin-top: 25px;
+}
+.planLink {
+	display: inline-flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 52px;
+	background: var(--ani-primary);
+	color: var(--ani-on-primary);
+	padding: 16px 22px;
+	font-size: 14px;
+	font-weight: 550;
+	margin-top: 31px;
+	min-height: 52px;
+	transition: background 140ms;
+}
+.planLink:hover {
+	background: var(--ani-primary-hover);
+}
+.room {
+	--number-size: clamp(110px, 11.5vw, 164px);
+	min-width: 0;
+	width: 100%;
+	max-width: 440px;
+	justify-self: end;
+	margin: 0;
+}
+.selector,
+.equation {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 32px minmax(0, 1fr);
+	column-gap: 14px;
+}
+.selector button {
+	justify-self: center;
+	min-height: 56px;
+	min-width: 104px;
+	border: 0;
+	border-bottom: 2px solid var(--ani-control-border-hover);
+	border-radius: 0;
+	background: transparent;
+	text-align: center;
+	padding: 4px 8px 10px;
+	color: var(--ani-text);
+	cursor: pointer;
+	transition: color 140ms, border-color 140ms;
+}
+.selector button:last-child {
+	grid-column: 3;
+}
+.selector button:hover {
+	color: var(--ani-progress);
+	border-bottom-color: var(--ani-muted);
+}
+.selector button[aria-pressed="true"] {
+	color: var(--ani-progress);
+	border-bottom-color: var(--ani-progress);
+}
+.selector strong {
+	font-size: 44px;
+	font-weight: 550;
+	line-height: 1.1;
+	letter-spacing: -0.045em;
+	padding-inline-end: 0.045em;
+	display: block;
+}
+.equation {
+	row-gap: 18px;
+	padding: 36px 0 0;
+	align-items: center;
+	text-align: center;
+}
+.number {
+	grid-row: 1;
+	font-size: var(--number-size);
+	font-weight: 450;
+	letter-spacing: -0.07em;
+	padding-inline-end: 0.07em;
+	line-height: 0.96;
+	font-variant-numeric: tabular-nums;
+}
+.countLabel {
+	grid-column: 1;
+	grid-row: 2;
+	justify-self: center;
+	text-align: center;
+	font-size: 15px;
+	font-weight: 500;
+	/* Share the plan buttons' column centers, independent of the numeral width. */
+	white-space: nowrap;
+}
+.friendsLabel {
+	grid-column: 3;
+}
+.friendsLabel span {
+	color: var(--ani-progress);
+}
+.friendsCount {
+	color: var(--ani-progress);
+}
+.plusSign {
+	grid-column: 2;
+	grid-row: 1;
+	justify-self: center;
+	width: 32px;
+	height: 32px;
+	color: #9e978d;
+}
+.accessNote {
+	max-width: 340px;
+	font-size: 12px;
+	line-height: 1.65;
+	color: #a39d95;
+	margin-top: 24px;
+}
+.planLink:focus-visible,
+.selector button:focus-visible {
+	outline: 2px solid var(--ani-focus);
+	outline-offset: 5px;
+}
+@media (max-width: 1100px) {
+	.main {
+		gap: 40px;
+	}
+	.room {
+		--number-size: 116px;
+	}
+	.selector,
+	.equation {
+		column-gap: 8px;
+	}
+}
+@media (max-width: 850px) {
+	.section {
+		padding: 54px 28px;
+	}
+	.main {
+		grid-template-columns: 1fr;
+		gap: 48px;
+		max-width: 560px;
+		margin: auto;
+	}
+	.copy h2 {
+		font-size: 54px;
+	}
+	.room {
+		--number-size: 152px;
+		justify-self: center;
+	}
+	.selector,
+	.equation {
+		grid-template-columns: minmax(0, 1fr) 40px minmax(0, 1fr);
+		column-gap: 22px;
+	}
+}
+@media (max-width: 580px) {
+	.section {
+		padding: 44px 20px;
+	}
+	.copy h2 {
+		font-size: clamp(30px, 9.3vw, 48px);
+	}
+	.description {
+		font-size: 14px;
+		margin-top: 23px;
+	}
+	.planLink {
+		font-size: 13px;
+		margin-top: 26px;
+	}
+	.main {
+		gap: 38px;
+	}
+	.selector button {
+		min-height: 48px;
+	}
+	.selector strong {
+		font-size: 32px;
+	}
+	.selector,
+	.equation {
+		grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr);
+		column-gap: 12px;
+	}
+	.equation {
+		row-gap: 16px;
+		padding: 31px 0 0;
+	}
+	.room {
+		--number-size: clamp(88px, 27vw, 144px);
+	}
+	.plusSign {
+		width: 24px;
+		height: 24px;
+	}
+	.countLabel {
+		font-size: 13px;
+	}
+	.accessNote {
+		font-size: 12px;
+		max-width: 300px;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.planLink,
+	.selector button {
+		transition: none;
+	}
+}

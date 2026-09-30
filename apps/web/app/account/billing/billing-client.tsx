@@ -1,6 +1,12 @@
 "use client";
 
-import { formatBillingTime, formatMonthlyPrice } from "@/lib/billing-view";
+import {
+	formatBillingTime,
+	formatMonthlyPrice,
+	billingPeriodUnit,
+	type BillingSubscription,
+	type BillingPeriod,
+} from "@/lib/billing-view";
 import type { TrialPlanQuote } from "@/lib/anidachi-auth/trial-plan-change";
 
 import { ArrowRight, CreditCard, ExternalLink, RefreshCw } from "lucide-react";
@@ -19,6 +25,15 @@ import { EXTENSION_USING_HASH } from "@/lib/extension-using-guide";
 import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
 
 const PLAN_NAMES = { free: "Free", plus: "Plus", pro: "Pro" };
+
+function subscriptionPriceLabel(
+	subscription: BillingSubscription,
+): string | null {
+	const price = subscription.price ?? subscription.monthlyPrice;
+	return price
+		? `${formatMonthlyPrice(price)}/${billingPeriodUnit(subscription.price?.billingPeriod ?? "monthly")}`
+		: null;
+}
 
 function formatDate(value: string | null) {
 	if (!value || !Number.isFinite(Date.parse(value))) return "Date unavailable";
@@ -109,6 +124,7 @@ export function BillingClient({
 		subscriptionId: string,
 		planCode: "plus" | "pro",
 		confirm = false,
+		billingPeriod?: BillingPeriod,
 	) {
 		if (actionLock.current) return;
 		actionLock.current = true;
@@ -125,6 +141,9 @@ export function BillingClient({
 						action: confirm ? "confirm" : "quote",
 						subscriptionId,
 						planCode,
+						billingPeriod: confirm
+							? planQuote?.quote.billingPeriod
+							: billingPeriod,
 						...(confirm && planQuote
 							? { quote: planQuote.quote, requestId: planQuote.requestId }
 							: {}),
@@ -162,7 +181,7 @@ export function BillingClient({
 
 	async function openStripe(
 		subscriptionId: string,
-		action: "cancel" | "payment" | "restore",
+		action: "cancel" | "payment" | "restore" | "yearly",
 	) {
 		if (actionLock.current) return;
 		actionLock.current = true;
@@ -176,6 +195,7 @@ export function BillingClient({
 					payment: "/api/billing/payment-link",
 					cancel: "/api/billing/cancellation-portal",
 					restore: "/api/billing/renewal-portal",
+					yearly: "/api/billing/yearly-portal",
 				}[action],
 				{
 					method: "POST",
@@ -326,13 +346,13 @@ export function BillingClient({
 											<p>
 												{subscription.cancelAtPeriodEnd
 													? "Renewal is canceled. Access continues until this trial ends; no first subscription charge is scheduled."
-													: `Your first monthly payment is scheduled after the trial ends${subscription.monthlyPrice ? ` at ${formatMonthlyPrice(subscription.monthlyPrice)}/month` : ""}. Cancel renewal before then to avoid that charge.`}
+													: `Your first ${subscription.price?.billingPeriod ?? (subscription.monthlyPrice ? "monthly" : "subscription")} payment is scheduled after the trial ends${subscriptionPriceLabel(subscription) ? ` at ${subscriptionPriceLabel(subscription)}` : ""}. Cancel renewal before then to avoid that charge.`}
 											</p>
 										) : null}
 										{subscription.trial.stage === "processing" ? (
 											<p>
 												Your first payment is being confirmed. This is not yet a
-												paid month. Temporary access lasts at most until{" "}
+												paid period. Temporary access lasts at most until{" "}
 												{formatBillingTime(subscription.trial.pendingUntil)}.
 											</p>
 										) : null}
@@ -350,11 +370,10 @@ export function BillingClient({
 										) : null}
 									</div>
 								) : null}
-								{subscription.monthlyPrice ? (
+								{subscriptionPriceLabel(subscription) ? (
 									<p className="ac-muted">
-										{formatMonthlyPrice(subscription.monthlyPrice)}/month.
-										Taxes, discounts and credits may change the final invoice
-										total.
+										{subscriptionPriceLabel(subscription)}. Taxes, discounts and
+										credits may change the final invoice total.
 									</p>
 								) : null}
 								{(["past_due", "unpaid", "incomplete"].includes(
@@ -399,6 +418,33 @@ export function BillingClient({
 										unavailable; contact support if you need help.
 									</p>
 								) : null}
+								{subscription.canSwitchToYearly &&
+								subscription.planCode !== "free" ? (
+									<div className="ac-renewal-action">
+										<button
+											className="ac-button"
+											type="button"
+											disabled={busy}
+											onClick={() =>
+												subscription.canChangeTrialPlan
+													? void changeTrial(
+															subscription.id,
+															subscription.planCode as "plus" | "pro",
+															false,
+															"yearly",
+														)
+													: void openStripe(subscription.id, "yearly")
+											}
+										>
+											Switch to yearly billing
+										</button>
+										<p className="ac-muted">
+											{subscription.canChangeTrialPlan
+												? "Keep your remaining trial days. Review the full yearly charge before confirming."
+												: "Starts immediately. Stripe credits unused monthly time and shows the amount due before you confirm."}
+										</p>
+									</div>
+								) : null}
 								{subscription.canChangeTrialPlan ? (
 									<div className="ac-renewal-action">
 										<button
@@ -423,9 +469,12 @@ export function BillingClient({
 											>
 												<p>
 													{PLAN_NAMES[planQuote.quote.planCode]}:{" "}
-													{formatMonthlyPrice(planQuote.quote)}/month after your
-													trial. Taxes, discounts and credits may change the
-													final total.
+													{formatMonthlyPrice(planQuote.quote)}/
+													{billingPeriodUnit(
+														planQuote.quote.billingPeriod ?? "monthly",
+													)}{" "}
+													after your trial. Taxes, discounts and credits may
+													change the final total.
 												</p>
 												<p>
 													Your trial still ends{" "}

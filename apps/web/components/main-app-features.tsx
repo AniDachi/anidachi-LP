@@ -1,93 +1,94 @@
 "use client";
 
-import { History, LayoutGrid, Play } from "lucide-react";
-import { HomeSectionHeader } from "@/components/home-section-header";
+import { useState } from "react";
+import { getPlanPolicy } from "@anidachi/protocol";
+import styles from "./main-app-features.module.css";
+import { ArrowDown, Plus } from "lucide-react";
 
-const features = [
-  {
-    id: "live-sync",
-    icon: Play,
-    title: "Live sync on your player",
-    benefit: "Same episode, same moment — on your own stream",
-    description:
-      "AniDachi detects the Crunchyroll or YouTube title, you create a room, and friends join on their own player. Playback stays synced without screen share.",
-    featured: true,
-  },
-  {
-    id: "overlay",
-    icon: LayoutGrid,
-    title: "Overlay chat, reactions, and layout",
-    benefit: "Everything stays on the video",
-    description:
-      "Chat and reactions sit on the player. Drag cameras and chat where you want them — no Discord window dance beside a compressed share.",
-  },
-  {
-    id: "history",
-    icon: History,
-    title: "Watch history that sticks",
-    benefit: "Always know where you left off",
-    description:
-      "Personal watch history and Resume keep your place across rooms — pick up the right episode next time, whether you host or join.",
-  },
+const roomPlans = [
+	{ id: "plus", label: "Plus", people: getPlanPolicy("plus").maxParticipants },
+	{ id: "pro", label: "Pro", people: getPlanPolicy("pro").maxParticipants },
 ] as const;
 
 export function MainAppFeatures() {
-  const featured = features.find((f) => "featured" in f && f.featured)!;
-  const secondary = features.filter((f) => !("featured" in f && f.featured));
+	const [roomPlan, setRoomPlan] = useState<"plus" | "pro">("plus");
+	const plan = roomPlans.find((option) => option.id === roomPlan)!;
+	const guestCount = plan.people - 1;
+	const planName = plan.label;
 
-  return (
-    <section id="features" className="bg-ani-canvas py-16 lg:py-24">
-      <div className="container mx-auto px-4">
-        <HomeSectionHeader
-          title="Your watchroom hub"
-          description="Crunchyroll anime nights and YouTube hangs — synced playback, overlay chat, cameras, and push-to-talk on your real player."
-        />
+	return (
+		<section
+			className={styles.section}
+			id="features"
+			aria-labelledby="hosting-title"
+		>
+			<div className={styles.container}>
+				<div className={styles.main}>
+					<div className={styles.copy}>
+						<h2 id="hosting-title">
+							One subscription.
+							<br />
+							<span>Friends join free.</span>
+						</h2>
+						<p className={styles.description}>
+							You choose Plus or Pro. Your friends only need a free account.
+						</p>
+						<a className={styles.planLink} href="#pricing">
+							Find your plan <ArrowDown size={17} aria-hidden="true" />
+						</a>
+						<p className={styles.accessNote}>
+							Everyone needs the AniDachi extension and their own access to the
+							video.
+						</p>
+					</div>
 
-        <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-12 lg:gap-6">
-          <article
-            id={featured.id}
-            className="rounded-[20px] border border-ani-line bg-ani-panel p-6 sm:p-8 lg:col-span-7 lg:p-10"
-          >
-            <featured.icon
-              className="mb-5 h-7 w-7 text-ani-progress"
-              aria-hidden="true"
-            />
-            <h3 className="mb-2 text-2xl font-semibold tracking-[-0.02em] text-ani-text md:text-3xl">
-              {featured.title}
-            </h3>
-            <p className="mb-3 text-sm font-medium text-ani-muted">
-              {featured.benefit}
-            </p>
-            <p className="max-w-xl text-[0.95rem] leading-relaxed text-ani-muted md:text-base">
-              {featured.description}
-            </p>
-          </article>
+					<figure
+						className={styles.room}
+						aria-label="Explore a room with one host subscription and free guests"
+					>
+						<div
+							className={styles.selector}
+							role="group"
+							aria-label="Explore room sizes"
+						>
+							{roomPlans.map((option) => (
+								<button
+									key={option.id}
+									type="button"
+									aria-pressed={roomPlan === option.id}
+									onClick={() => setRoomPlan(option.id)}
+								>
+									<strong>{option.label}</strong>
+								</button>
+							))}
+						</div>
 
-          <div className="flex flex-col gap-5 lg:col-span-5">
-            {secondary.map((feature) => (
-              <article
-                key={feature.id}
-                id={feature.id}
-                className="rounded-[20px] border border-ani-line p-6"
-              >
-                <feature.icon
-                  className="mb-3 h-5 w-5 text-ani-progress"
-                  aria-hidden="true"
-                />
-                <h3 className="mb-1 text-lg font-semibold tracking-[-0.02em] text-ani-text">
-                  {feature.title}
-                </h3>
-                <p className="mb-2 text-sm font-medium text-ani-muted">
-                  {feature.benefit}
-                </p>
-                <p className="text-sm leading-relaxed text-ani-muted">
-                  {feature.description}
-                </p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
+						<div className={styles.equation}>
+							<span className={styles.number}>1</span>
+							<Plus
+								className={styles.plusSign}
+								strokeWidth={1}
+								aria-hidden="true"
+							/>
+							<span className={`${styles.number} ${styles.friendsCount}`}>
+								{guestCount}
+							</span>
+							<strong className={styles.countLabel}>Host</strong>
+							<strong className={`${styles.countLabel} ${styles.friendsLabel}`}>
+								Friends join <span>free</span>
+							</strong>
+						</div>
+
+						<figcaption
+							className="sr-only"
+							aria-live="polite"
+							aria-atomic="true"
+						>
+							{planName}: one host and up to {guestCount} friends joining free.
+						</figcaption>
+					</figure>
+				</div>
+			</div>
+		</section>
+	);
 }
