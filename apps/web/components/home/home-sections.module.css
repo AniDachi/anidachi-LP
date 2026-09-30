@@ -33,7 +33,7 @@
 
   .page > section[id="faq"] {
     min-height: 0;
-    padding-block: 64px;
+    padding-block: 104px 64px;
   }
 }
 

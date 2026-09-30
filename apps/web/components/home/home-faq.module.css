@@ -1,4 +1,4 @@
-.section { padding: 64px 24px; background: var(--ani-canvas); color: var(--ani-text); scroll-margin-top: 88px; }
+.section { padding: 104px 24px 64px; background: var(--ani-canvas); color: var(--ani-text); scroll-margin-top: 88px; }
 .container { max-width: 1144px; margin-inline: auto; }
 .container h2 { margin: 0 0 34px; font-size: clamp(30px, 3.5vw, 44px); font-weight: 550; line-height: 1.13; letter-spacing: -0.045em; text-align: center; }
 .container h2 span { color: var(--ani-progress); }
@@ -19,7 +19,7 @@
 .more > .columns { margin-top: 16px; }
 
 @media (max-width: 767px) {
-  .section { padding: 48px 24px; }
+  .section { padding: 72px 24px 48px; }
   .container h2 { font-size: 34px; margin-bottom: 24px; }
   .columns { grid-template-columns: 1fr; }
   .question summary { min-height: 72px; gap: 20px; }
