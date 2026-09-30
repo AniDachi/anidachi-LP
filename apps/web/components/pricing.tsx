@@ -589,6 +589,12 @@ function TierCardBody({
 	const yearly = period === "yearly" && !!paidTier;
 	const selectedPrice = paidTier && prices ? prices[paidTier] : null;
 	const annualPrice = yearly ? selectedPrice : null;
+	const yearlySavings = paidTier && annualPrice
+		? formatMonthlyPrice({
+				...annualPrice,
+				unitAmount: PUBLISHED_PRICING.monthly[paidTier].unitAmount * 12 - annualPrice.unitAmount,
+			})
+		: null;
 	const amount =
 		yearly && annualPrice
 			? { ...annualPrice, unitAmount: annualPrice.unitAmount / 12 }
@@ -629,6 +635,7 @@ function TierCardBody({
 
 	return (
 		<>
+			{highlighted ? <span className="pricing-plans__badge">Recommended</span> : null}
 			<div className="pricing-plans__top">
 				<header className="pricing-plans__card-header">
 					<Heading id={`pricing-${tier.id}-title`}>{tier.label}</Heading>
@@ -661,6 +668,11 @@ function TierCardBody({
 							"No card needed."
 						)}
 					</p>
+					{yearlySavings ? (
+						<p className="pricing-plans__savings">
+							Save <strong>{yearlySavings} / year</strong> vs monthly
+						</p>
+					) : null}
 				</div>
 				{paidTier ? (
 					<Button

@@ -49,7 +49,7 @@
   row-gap: 0;
   max-width: 1200px;
   margin: 0 auto;
-  padding-top: 8px;
+  padding-top: 16px;
 }
 
 .pricing-plans__card {
@@ -65,6 +65,22 @@
 }
 
 .pricing-plans__card--featured { border-color: var(--pricing-accent); }
+.pricing-plans__badge {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: var(--pricing-accent);
+  color: var(--ani-canvas);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
 
 /* Shared rows keep headings, prices, actions and features aligned across plans. */
 .pricing-plans__top {
@@ -103,6 +119,8 @@
 .pricing-plans__suffix { font-size: 13px; color: var(--ani-muted); }
 .pricing-plans__billing { margin-top: 12px; font-size: 14px; line-height: 1.5; color: var(--ani-muted); }
 .pricing-plans__billing strong { color: var(--ani-text); font-weight: 500; white-space: nowrap; }
+.pricing-plans__savings { margin-top: 8px; color: var(--pricing-accent); font-size: 13px; line-height: 1.5; }
+.pricing-plans__savings strong { font-weight: 600; white-space: nowrap; }
 .pricing-plans__button { position: relative; width: 100%; min-height: 48px; padding-inline: 38px; justify-content: center; font-size: 14px; }
 .pricing-plans__button svg { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); transition: transform 160ms; }
 .pricing-plans__button:hover:not(:disabled) svg { transform: translate(3px, -50%); }
