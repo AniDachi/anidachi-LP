@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check, Lock } from "lucide-react";
+import { getPlanPolicy } from "@anidachi/protocol";
 import {
 	inferPageTemplateFromPath,
 	trackConversion,
@@ -454,16 +455,13 @@ export function Pricing({
 							baseTier.id === "free" && offer?.paidHostingActive !== false
 								? {
 										...baseTier,
-										audience: "A seat in your friends’ watch rooms",
+										audience: "Join your friends’ watch nights.",
 										summary: "Join a Plus, Pro or trial host for free.",
 										features: [
-											"Join friends on Crunchyroll + YouTube",
-											"Sync, chat & reactions",
-											"Room size and media limits follow the host",
-											"View saved history & resume",
-											...(offer
-												? ["Creating rooms & recording need Plus or Pro"]
-												: []),
+											"Join rooms on Crunchyroll + YouTube",
+											"Synced video, chat & reactions",
+											"Voice & video within your host’s limits",
+											"Read saved history & resume",
 										],
 									}
 								: baseTier;
@@ -576,6 +574,18 @@ function TierCardBody({
 	headingLevel: 2 | 3;
 }) {
 	const Heading = headingLevel === 2 ? "h2" : "h3";
+	const policy = getPlanPolicy(tier.id);
+	const features = paidTier
+		? [
+				"No daily hosting limit",
+				"Crunchyroll + YouTube",
+				"Synced video, chat & reactions",
+				`Up to ${policy.maxCameras} cameras & ${policy.maxMicrophones} mics`,
+				"Save, edit & resume watch progress",
+				"Friend groups & direct invitations",
+				...(tier.id === "pro" ? ["Priority support"] : []),
+			]
+		: tier.features;
 	const yearly = period === "yearly" && !!paidTier;
 	const selectedPrice = paidTier && prices ? prices[paidTier] : null;
 	const annualPrice = yearly ? selectedPrice : null;
@@ -596,8 +606,8 @@ function TierCardBody({
 		tier.id === "free"
 			? tier.audience
 			: tier.id === "plus"
-				? "Make watch nights a regular thing."
-				: "More room for your whole crew.";
+				? "Host watch nights with friends."
+				: "Bring your whole group together.";
 	const recurringAmount = selectedPrice
 		? formatMonthlyPrice(selectedPrice)
 		: "—";
@@ -696,13 +706,22 @@ function TierCardBody({
 			</div>
 			<div className="pricing-plans__details">
 				<p className="pricing-plans__feature-heading">
-					{tier.id === "free"
-						? "Watch together, for free"
-						: tier.id === "plus"
-							? "Your room, your watch night"
-							: "Everything in Plus, with more room"}
+					{tier.id === "free" ? (
+						"Everything you need to join"
+					) : (
+						<>Up to <strong>{policy.maxParticipants - 1} friends</strong> join free</>
+					)}
 				</p>
-				<FeatureList features={tier.features} />
+				<div>
+					<FeatureList features={features} />
+					{tier.id === "free" && offer?.paidHostingActive !== false ? (
+						<p className="pricing-plans__free-note">
+							{offer
+								? "Creating rooms and saving new watch progress require Plus or Pro."
+								: "Create your own rooms and save watch progress with Plus or Pro."}
+						</p>
+					) : null}
+				</div>
 			</div>
 		</>
 	);
