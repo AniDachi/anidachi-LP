@@ -10,8 +10,7 @@ import { ChromeExtensionDemo } from "@/components/chrome-extension-demo";
 import { CompareTable } from "@/components/compare-table";
 import { SocialProof } from "@/components/social-proof";
 import { StoreReviews } from "@/components/store-reviews";
-import { FAQSection } from "@/components/faq-section";
-import { homeFAQ } from "@/lib/home-faq";
+import { HomeFAQ } from "./home-faq";
 import { useHomeScrollAssist } from "@/lib/use-home-scroll-assist";
 import styles from "./home-sections.module.css";
 
@@ -33,7 +32,7 @@ export function HomeClient() {
 			<Pricing />
 			<SocialProof />
 			<StoreReviews />
-			<FAQSection questions={homeFAQ} />
+			<HomeFAQ />
 		</main>
 	);
 }

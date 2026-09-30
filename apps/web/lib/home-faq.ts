@@ -1,8 +1,4 @@
-import {
-  PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER,
-  PRICING_IS_ANIDACHI_FREE_ANSWER,
-  PRICING_PLUS_VS_PRO_ANSWER,
-} from "@/lib/pricing-copy";
+import { getPlanPolicy } from "@anidachi/protocol";
 
 export const homeFAQ = [
   {
@@ -37,15 +33,18 @@ export const homeFAQ = [
   },
   {
     question: "Is AniDachi free?",
-    answer: PRICING_IS_ANIDACHI_FREE_ANSWER,
+    answer:
+      "Yes. You can join a Plus, Pro or trial host's room with a Free account. To create your own rooms and save personal watch progress, choose Plus or Pro. If you haven't used a trial before, you can try either plan for 3 days with a card. After that, your chosen monthly or yearly plan renews automatically unless you cancel.",
   },
   {
     question: "Do all my friends need an AniDachi subscription?",
-    answer: PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER,
+    answer:
+      "No. Only the host needs Plus or Pro, including during a trial. Friends join with Free accounts, and the host's plan sets the room size. Everyone needs the AniDachi extension and their own access to the video. Recording personal watch progress requires each viewer's own Plus or Pro plan.",
   },
   {
     question: "What's the difference between Plus and Pro?",
-    answer: PRICING_PLUS_VS_PRO_ANSWER,
+    answer:
+      `Plus lets you invite up to ${getPlanPolicy("plus").maxParticipants - 1} friends for free; Pro supports up to ${getPlanPolicy("pro").maxParticipants - 1}. Both include hosting without a daily time limit, chat, reactions, voice and video calls, and personal watch progress. Pro also includes more microphones and priority support. You can choose monthly or yearly billing for either plan.`,
   },
   {
     question: "How is AniDachi different from Teleparty or Crunchyroll Party?",
