@@ -8,7 +8,6 @@ import { UpcomingPlatforms } from "@/components/upcoming-platforms";
 import { MainAppFeatures } from "@/components/main-app-features";
 import { ChromeExtensionDemo } from "@/components/chrome-extension-demo";
 import { CompareTable } from "@/components/compare-table";
-import { SocialProof } from "@/components/social-proof";
 import { StoreReviews } from "@/components/store-reviews";
 import { HomeFAQ } from "./home-faq";
 import { useHomeScrollAssist } from "@/lib/use-home-scroll-assist";
@@ -30,7 +29,6 @@ export function HomeClient() {
 			<CompareTable />
 			<MainAppFeatures />
 			<Pricing />
-			<SocialProof />
 			<StoreReviews />
 			<HomeFAQ />
 		</main>
