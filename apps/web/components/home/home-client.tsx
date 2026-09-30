@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { Pricing } from "@/components/pricing";
 import { Hero } from "@/components/hero";
 import { HowItWorks } from "@/components/how-it-works";
+import { UpcomingPlatforms } from "@/components/upcoming-platforms";
 import { MainAppFeatures } from "@/components/main-app-features";
 import { ChromeExtensionDemo } from "@/components/chrome-extension-demo";
 import { CompareTable } from "@/components/compare-table";
@@ -25,6 +26,7 @@ export function HomeClient() {
 			<Hero />
 			<ChromeExtensionDemo />
 			<HowItWorks />
+			<UpcomingPlatforms />
 			<CompareTable />
 			<MainAppFeatures />
 			<Pricing />
