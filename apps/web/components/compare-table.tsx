@@ -113,7 +113,6 @@ export function CompareTable() {
 			<div className={styles.container}>
 				<header className={styles.header}>
 					<h2 id="compare-title">How AniDachi compares</h2>
-					<p>Synced video, chat and calls — right on your player.</p>
 				</header>
 				<div
 					className={styles.selector}

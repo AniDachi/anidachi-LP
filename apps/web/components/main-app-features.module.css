@@ -54,15 +54,11 @@
 }
 .room {
 	--number-size: clamp(110px, 11.5vw, 164px);
-	--guest-caption-offset: 0.013;
 	min-width: 0;
 	width: 100%;
 	max-width: 440px;
 	justify-self: end;
 	margin: 0;
-}
-.room:has(.selector button:last-child[aria-pressed="true"]) {
-	--guest-caption-offset: 0.042;
 }
 .selector,
 .equation {
@@ -75,28 +71,32 @@
 	min-height: 56px;
 	min-width: 104px;
 	border: 0;
+	border-bottom: 2px solid var(--ani-control-border-hover);
 	border-radius: 0;
 	background: transparent;
 	text-align: center;
-	padding: 4px 8px;
+	padding: 4px 8px 10px;
 	color: var(--ani-text);
 	cursor: pointer;
-	transition: color 140ms;
+	transition: color 140ms, border-color 140ms;
 }
 .selector button:last-child {
 	grid-column: 3;
 }
 .selector button:hover {
 	color: var(--ani-progress);
+	border-bottom-color: var(--ani-muted);
 }
 .selector button[aria-pressed="true"] {
 	color: var(--ani-progress);
+	border-bottom-color: var(--ani-progress);
 }
 .selector strong {
 	font-size: 44px;
 	font-weight: 550;
 	line-height: 1.1;
 	letter-spacing: -0.045em;
+	padding-inline-end: 0.045em;
 	display: block;
 }
 .equation {
@@ -121,12 +121,11 @@
 	text-align: center;
 	font-size: 15px;
 	font-weight: 500;
-	/* Match visible numeral ink, including the font's asymmetric side bearings. */
-	transform: translateX(calc(var(--number-size) * -0.039));
+	/* Share the plan buttons' column centers, independent of the numeral width. */
+	white-space: nowrap;
 }
 .friendsLabel {
 	grid-column: 3;
-	transform: translateX(calc(var(--number-size) * var(--guest-caption-offset)));
 }
 .friendsLabel span {
 	color: var(--ani-progress);

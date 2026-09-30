@@ -6,10 +6,6 @@
 }
 .container { max-width: 1144px; margin-inline: auto; }
 .header {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 32px;
   margin-bottom: 36px;
 }
 .header h2 {
@@ -18,13 +14,6 @@
   line-height: 1.13;
   letter-spacing: -0.045em;
   text-wrap: balance;
-}
-.header p {
-  max-width: 275px;
-  color: var(--ani-muted);
-  font-size: 15px;
-  line-height: 1.65;
-  text-wrap: pretty;
 }
 .selector, .selectionStatus { display: none; }
 .table {
@@ -96,8 +85,6 @@
   .table tbody tr:hover .ours { background: #27221b; }
 }
 @media (max-width: 1023px) {
-  .header { display: block; }
-  .header p { max-width: none; margin-top: 14px; }
   .table th, .table td { padding-inline: 14px; }
   .table thead th { font-size: 16px; }
 }
@@ -105,7 +92,6 @@
   .section { padding: 56px 20px; }
   .header { margin-bottom: 25px; }
   .header h2 { max-width: 380px; font-size: 34px; }
-  .header p { font-size: 14px; }
   .selector { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 22px; border-bottom: 1px solid var(--ani-control-border); }
   .selector button {
     min-height: 48px;
