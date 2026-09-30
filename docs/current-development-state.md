@@ -1,5 +1,15 @@
 # Current Development State
 
+## Annual billing acceptance environment, September 30, 2026
+
+The owner chose staging with AniDachi Sandbox for annual billing configuration
+and manual payment acceptance. Restoring local billing credentials is no longer
+a prerequisite for this work. After staging acceptance, prepare the separate
+LIVE Stripe annual prices/Portal configuration and promote the tested release to
+main. Localhost remains the website development preview. This checkpoint records
+the sequence; staging and production configuration/delivery have not changed.
+See the [annual checklist](releases/paid-hosting-trial/annual-billing-2026-09-30.md).
+
 ## Local public pricing correction, September 30, 2026
 
 The owner requires plan cards and prices to be regular site content. Homepage and
@@ -9,8 +19,8 @@ prefetch may adjust account actions but cannot replace the amounts, hide the
 period selector, disable browsing, or show a page-load error. An explicit checkout
 attempt reuses or awaits fresh account verification; price mismatch, changed
 eligibility and account changes cannot silently start a different purchase.
-This supersedes the earlier server-fetched public-price approach below. Local
-billing configuration and real Checkout acceptance remain open. See the
+This supersedes the earlier server-fetched public-price approach below. Real
+Checkout acceptance remains open and will take place on staging as agreed above. See the
 [annual checklist and pricing correction](releases/paid-hosting-trial/annual-billing-2026-09-30.md).
 
 ## Local annual billing checkpoint, September 30, 2026
