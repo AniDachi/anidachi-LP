@@ -108,6 +108,15 @@ export function Footer() {
                   How to Watch with Friends
                 </Link>
               </li>
+            </ul>
+            <details className="group mt-2 text-sm">
+              <summary className="flex min-h-11 w-fit cursor-pointer list-none items-center gap-2 text-ani-text hover:text-ani-progress focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ani-focus [&::-webkit-details-marker]:hidden">
+                <span className="group-open:hidden">More guides</span>
+                <span className="hidden group-open:inline">Fewer guides</span>
+                <span className="text-ani-progress group-open:hidden" aria-hidden="true">+</span>
+                <span className="hidden text-ani-progress group-open:inline" aria-hidden="true">−</span>
+              </summary>
+              <ul className="mt-2 space-y-2 text-ani-muted text-sm">
               <li>
                 <Link
                   href="/guides/how-to-watch-anime-with-friends-on-discord"
@@ -236,7 +245,8 @@ export function Footer() {
                   Best Anime for Beginners
                 </Link>
               </li>
-            </ul>
+              </ul>
+            </details>
           </div>
 
           <div>
