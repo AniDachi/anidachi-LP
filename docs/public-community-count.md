@@ -47,9 +47,11 @@ fresh count during an outage.
 
 ## Delivery
 
-Implementation is local on `codex/staging-trial-rehearsal`. No staging or
-production deployment is included. Before release, verify one new account adds
-one, repeat login adds nothing, and the homepage displays the cached value.
+Delivered to staging in PR #383 (`d64f6e8a`), with the live homepage showing
+1,409 during read-only browser inspection. No production delivery is included.
+See the [staging receipt](releases/website-annual-staging-2026-09-30.md). Owner
+acceptance still verifies one new account adds one and repeat login adds nothing;
+no account was created or changed by deployment verification.
 Rollback the website change to restore the old waitlist-only homepage counter;
 there is no data migration to undo.
 

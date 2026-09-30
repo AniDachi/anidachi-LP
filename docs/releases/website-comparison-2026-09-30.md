@@ -1,4 +1,4 @@
-# Homepage comparison — local design, September 30, 2026
+# Homepage comparison — September 30, 2026
 
 Owner request: make “How AniDachi compares” clear and visually consistent with
 the accepted restrained website design. This changes only the homepage comparison
@@ -54,5 +54,8 @@ workaround was used.
 Graphify was queried for navigation. Its existing unrelated-node merge guard
 remains the documented update blocker; tracked graph artifacts are unchanged
 (see the [annual checkpoint](paid-hosting-trial/annual-billing-2026-09-30.md)).
-This is local only. No staging/main/Stripe configuration or deployment occurred.
+The earlier local-only checkpoint is superseded by PR #383 on staging. The real
+staging domain was inspected at 1470px and 390px, including mobile competitor
+switching. Owner acceptance remains separate. See the
+[staging release receipt](website-annual-staging-2026-09-30.md). Main remains unchanged.
 Rollback: revert the comparison component/CSS change; no data or config recovery.
