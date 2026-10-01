@@ -811,6 +811,182 @@ describe("privileged overlay wiring", () => {
 		await unmount(view.root);
 	});
 
+	it.each([
+		"Enter",
+		"button",
+		"Escape",
+	])("keeps Crunchyroll quiet after closing the composer with %s, then releases on real player intent", async (method) => {
+		const sendMessage = vi.fn(
+			async (message: { type?: string; command?: string }) => {
+				if (message.type === "ANIDACHI_AUTH")
+					return { ok: true, tokens: sessionFor("user-a") };
+				if (
+					message.type === "ANIDACHI_ROOM_HTTP" &&
+					message.command === "create-room"
+				) {
+					return {
+						ok: true,
+						room: {
+							roomId: "room-a",
+							roomToken: "room-token-a",
+							shareableLink: "http://localhost:3003/room/room-a",
+							privilegedRoomAuthority: roomAuthority(),
+							roomSession: confirmedRoomSession(),
+						},
+					};
+				}
+				if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE") {
+					const response = roomSessionStorageResponse(message.command);
+					if (response) return response;
+				}
+				throw new Error(
+					`Unexpected runtime message ${message.type}:${message.command}`,
+				);
+			},
+		);
+		installOverlayRuntime(sendMessage);
+		vi.spyOn(RoomClient.prototype, "connect").mockImplementation((options) => {
+			options.onStatus("connected");
+			options.onEvent({
+				type: "ROOM_SNAPSHOT",
+				roomId: "room-a",
+				roomGeneration: 1,
+				sourceGeneration: 1,
+				serverSeq: 1,
+				participants: [hostParticipant()],
+			});
+		});
+		const view = await renderOverlayInClosedShadow();
+		try {
+			await click(button(view.container, "Open Anidachi controls"));
+			await click(button(view.container, "Create room"));
+			await flushRoomActionWork();
+			await flushMountedWork();
+			await act(async () => {
+				window.dispatchEvent(
+					new KeyboardEvent("keydown", {
+						bubbles: true,
+						cancelable: true,
+						code: "Enter",
+						composed: true,
+						key: "Enter",
+					}),
+				);
+				await Promise.resolve();
+			});
+
+			const send = vi
+				.spyOn(RoomClient.prototype, "send")
+				.mockReturnValue("sent");
+			await click(button(view.container, "Choose emoji"));
+			const emoji = [
+				...view.container.querySelectorAll<HTMLButtonElement>(
+					".message-composer-emoji-popover button",
+				),
+			].find((el) => el.textContent === "🎬")!;
+			await click(emoji);
+			const input = view.container.querySelector<HTMLInputElement>(
+				'input[aria-label="Anidachi message"]',
+			)!;
+			await act(async () => {
+				input.dispatchEvent(
+					new KeyboardEvent("keydown", {
+						key: "Enter",
+						code: "Enter",
+						isComposing: true,
+						bubbles: true,
+						composed: true,
+						cancelable: true,
+					}),
+				);
+				input.dispatchEvent(
+					new KeyboardEvent("keydown", {
+						key: "Enter",
+						code: "Enter",
+						repeat: true,
+						bubbles: true,
+						composed: true,
+						cancelable: true,
+					}),
+				);
+			});
+			expect(send).not.toHaveBeenCalled();
+			expect(view.container.querySelector(".message-composer")).not.toBeNull();
+			await act(async () => {
+				input.focus();
+				if (method === "button") button(view.container, "Send message").click();
+				else
+					input.dispatchEvent(
+						new KeyboardEvent("keydown", {
+							key: method,
+							code: method,
+							bubbles: true,
+							composed: true,
+							cancelable: true,
+						}),
+					);
+			});
+			expect(view.container.querySelector(".message-composer")).toBeNull();
+			expect(
+				view.container.querySelector(".message-composer-shield"),
+			).toBeNull();
+			expect(document.documentElement.dataset.anidachiComposerOpen).toBe(
+				"quiet",
+			);
+			if (method !== "Escape") expect(send).toHaveBeenCalledOnce();
+			await act(async () => {
+				window.dispatchEvent(
+					new KeyboardEvent("keydown", {
+						key: "v",
+						code: "KeyV",
+						repeat: true,
+						bubbles: true,
+						cancelable: true,
+					}),
+				);
+				window.dispatchEvent(
+					new KeyboardEvent("keydown", {
+						key: "1",
+						code: "Digit1",
+						repeat: true,
+						bubbles: true,
+						cancelable: true,
+					}),
+				);
+			});
+			expect(document.documentElement.dataset.anidachiComposerOpen).toBe(
+				"quiet",
+			);
+			const host = (view.container.getRootNode() as ShadowRoot).host;
+			const player = host.parentElement!;
+			// Focus loss and hover retargeting after removal are not a new user gesture.
+			await act(async () => {
+				player.dispatchEvent(new Event("focusin", { bubbles: true }));
+				player.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+			});
+			expect(document.documentElement.dataset.anidachiComposerOpen).toBe(
+				"quiet",
+			);
+			const native = vi.fn();
+			player.addEventListener("pointerdown", native);
+			await act(async () =>
+				player.dispatchEvent(
+					new PointerEvent("pointerdown", {
+						bubbles: true,
+						composed: true,
+						cancelable: true,
+					}),
+				),
+			);
+			expect(
+				document.documentElement.dataset.anidachiComposerOpen,
+			).toBeUndefined();
+			expect(native).toHaveBeenCalledOnce();
+		} finally {
+			await unmount(view.root);
+		}
+	});
+
 	it("opens the emoji picker and inserts an emoji inside a closed overlay", async () => {
 		const sendMessage = vi.fn(
 			async (message: { type?: string; command?: string }) => {

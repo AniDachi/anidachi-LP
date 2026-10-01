@@ -324,69 +324,83 @@ function providerFromUrl(pageUrl: string): SourceProvider {
 }
 
 function installMessageComposerKeyboardGuard(): () => void {
+  const consumedKeys = new Set<string>();
+  let releasePageGuard: (() => void) | undefined;
   const isComposerOpen = () =>
-    document.documentElement.dataset[ANIDACHI_COMPOSER_OPEN_ATTR] !== undefined;
-
+    document.documentElement.dataset[ANIDACHI_COMPOSER_OPEN_ATTR] === "true";
+  const keyId = (event: KeyboardEvent) => event.code || event.key;
+  const consume = (event: KeyboardEvent) => {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  };
   const handleKeyDown = (event: KeyboardEvent) => {
-    if (isMessageComposerShortcutEvent(event)) {
-      setPageComposerGuard(true);
-      event.preventDefault();
-      event.stopImmediatePropagation();
+    if (event.repeat && consumedKeys.has(keyId(event))) {
+      consume(event);
+      return;
+    }
+    if (isMessageComposerShortcutEvent(event) && !event.isComposing) {
+      consumedKeys.add(keyId(event));
+      releasePageGuard?.();
+      releasePageGuard = setPageComposerGuard();
+      consume(event);
       window.dispatchEvent(
         new CustomEvent(ANIDACHI_MESSAGE_COMPOSER_SHORTCUT_EVENT),
       );
       return;
     }
-
     if (isComposerOpen() && event.key === "Enter" && !event.shiftKey) {
-      setPageComposerGuard(true);
-      event.preventDefault();
+      consumedKeys.add(keyId(event));
+      // Let the IME finish its composition without submitting the message.
       event.stopImmediatePropagation();
-      window.dispatchEvent(
-        new CustomEvent(ANIDACHI_MESSAGE_COMPOSER_SUBMIT_EVENT),
-      );
+      if (event.isComposing || event.keyCode === 229) return;
+      event.preventDefault();
+      if (!event.repeat) {
+        window.dispatchEvent(
+          new CustomEvent(ANIDACHI_MESSAGE_COMPOSER_SUBMIT_EVENT),
+        );
+      }
     }
   };
-
+  const handleKeyUp = (event: KeyboardEvent) => {
+    // Submission removes the input before keyup; its new target can be the player.
+    const wasConsumed = consumedKeys.delete(keyId(event));
+    if (wasConsumed || (isComposerOpen() && event.key === "Enter"))
+      consume(event);
+  };
+  const clearConsumedKeys = () => consumedKeys.clear();
   window.addEventListener("keydown", handleKeyDown, true);
-
+  window.addEventListener("keyup", handleKeyUp, true);
+  window.addEventListener("blur", clearConsumedKeys);
   return () => {
     window.removeEventListener("keydown", handleKeyDown, true);
+    window.removeEventListener("keyup", handleKeyUp, true);
+    window.removeEventListener("blur", clearConsumedKeys);
+    releasePageGuard?.();
+    consumedKeys.clear();
   };
 }
 
-function setPageComposerGuard(active: boolean): void {
-  const targets = document.querySelectorAll<HTMLElement>(
-    '[data-anidachi-fullscreen-target="true"][data-anidachi-adapter="crunchyroll"]',
-  );
-
-  if (active) {
-    document.documentElement.dataset[ANIDACHI_COMPOSER_OPEN_ATTR] = "guard";
+function setPageComposerGuard(): () => void {
+  const targets = [
+    document.documentElement,
+    ...document.querySelectorAll<HTMLElement>(
+      '[data-anidachi-fullscreen-target="true"][data-anidachi-adapter="crunchyroll"]',
+    ),
+  ];
+  for (const target of targets)
+    target.dataset[ANIDACHI_COMPOSER_OPEN_ATTR] = "guard";
+  const release = () => {
     for (const target of targets) {
-      target.dataset[ANIDACHI_COMPOSER_OPEN_ATTR] = "guard";
+      if (target.dataset[ANIDACHI_COMPOSER_OPEN_ATTR] === "guard") {
+        delete target.dataset[ANIDACHI_COMPOSER_OPEN_ATTR];
+      }
     }
-
-    window.setTimeout(() => {
-      if (
-        document.documentElement.dataset[ANIDACHI_COMPOSER_OPEN_ATTR] ===
-        "guard"
-      ) {
-        delete document.documentElement.dataset[ANIDACHI_COMPOSER_OPEN_ATTR];
-      }
-
-      for (const target of targets) {
-        if (target.dataset[ANIDACHI_COMPOSER_OPEN_ATTR] === "guard") {
-          delete target.dataset[ANIDACHI_COMPOSER_OPEN_ATTR];
-        }
-      }
-    }, 1400);
-    return;
-  }
-
-  delete document.documentElement.dataset[ANIDACHI_COMPOSER_OPEN_ATTR];
-  for (const target of targets) {
-    delete target.dataset[ANIDACHI_COMPOSER_OPEN_ATTR];
-  }
+  };
+  const timer = window.setTimeout(release, 1400);
+  return () => {
+    window.clearTimeout(timer);
+    release();
+  };
 }
 
 export function mountOverlay(

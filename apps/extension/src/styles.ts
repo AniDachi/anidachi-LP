@@ -1588,14 +1588,6 @@ ${extensionThemeTokens}
     touch-action: none;
   }
 
-  .message-composer-shield.latched {
-    cursor: default;
-  }
-
-  .message-composer-shield.releasing {
-    cursor: default;
-  }
-
   .message-composer {
     position: absolute;
     left: 0;
