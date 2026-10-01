@@ -31,6 +31,7 @@ import type {
 } from "../src/source-adapters/core/types";
 import { startCrunchyrollStudyIfEnabled } from "../src/source-adapters/crunchyroll/study";
 import { detectSourceAdapter } from "../src/source-adapters/registry";
+import { YOUTUBE_COMPOSER_CHROME_STYLES } from "../src/source-adapters/youtube/composer-chrome";
 
 export interface MountedOverlay {
   readonly adapter: VideoAdapter;
@@ -676,6 +677,8 @@ function ensurePageStyles(): void {
   const style = document.createElement("style");
   style.id = "anidachi-page-style";
   style.textContent = `
+    ${YOUTUBE_COMPOSER_CHROME_STYLES}
+
     [data-anidachi-adapter="generic-html5-video"] video[data-anidachi-video="true"]::-webkit-media-controls-fullscreen-button {
       display: none !important;
     }

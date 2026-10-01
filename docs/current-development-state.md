@@ -39,9 +39,19 @@ not release it; the first real player click/key remains untouched. The early
 keyboard guard consumes the release of a submitted Enter, avoids IME/repeat
 submission and cleans up its listeners/timer. No playback, room/P2P, Worker or
 permission contract changes are included. Extension typecheck and all 2,144 tests
-pass. Real Crunchyroll normal/fullscreen acceptance still belongs to the owner
-after reloading the updated unpacked extension and the existing player tab.
+pass. The owner subsequently confirmed the Crunchyroll behavior works as intended;
+normal/fullscreen coverage was not separately enumerated in that confirmation.
 See [composer interaction notes](crunchyroll-adapter-notes.md#message-composer-interaction-local-candidate-october-1-2026).
+
+The subsequent local YouTube follow-up applies the same composer guard to native
+controls, progress, gradients, tooltips and the central control animation. These
+selectors live in the YouTube provider folder and are included by the content
+entrypoint. Video, captions, buffering/errors and ad UI remain outside the rule;
+controls are not suppressed in `ad-showing` mode. Layout measurement follows the
+composer marker so hidden chrome does not leave a stale reserved area. Typecheck
+and all 2,150 extension tests pass. Current YouTube DOM was inspected read-only;
+owner acceptance in normal, theater and fullscreen mode is still pending on the
+updated local unpacked staging artifact. See [YouTube composer notes](youtube-adapter-notes.md#message-composer-interaction-local-candidate-october-1-2026).
 
 Before publication, deploy matching privacy text and align Store disclosures.
 See [release-channel behavior](extension-release-channels.md#local-default-on-history-candidate-october-1-2026).

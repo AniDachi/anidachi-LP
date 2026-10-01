@@ -222,9 +222,9 @@
     "semantic_hash": ""
   },
   "apps/extension/entrypoints/content.tsx": {
-    "mtime": 1790866301.0050755,
-    "seen": 1790866335.294695,
-    "ast_hash": "074dbcfc6c219bec6b79d8f203987b92",
+    "mtime": 1790871201.8137205,
+    "seen": 1790871470.045239,
+    "ast_hash": "41b69d66d39582663bb2d7c60c02de27",
     "semantic_hash": ""
   },
   "apps/extension/entrypoints/crunchyroll.content.ts": {
@@ -3498,16 +3498,16 @@
     "semantic_hash": "a8e2ac5a7857993560a839b04be5bf25"
   },
   "docs/crunchyroll-adapter-notes.md": {
-    "mtime": 1790866089.127963,
-    "seen": 1790866335.3424819,
+    "mtime": 1790871465.9174404,
+    "seen": 1790871783.754346,
     "ast_hash": "773034b218ba95d0712867ff35698f20",
-    "semantic_hash": "318b028271b1436ab43a56711964f473"
+    "semantic_hash": "0d3c69842eaf252148dbd0b56e3a67b1"
   },
   "docs/current-development-state.md": {
-    "mtime": 1790866089.127476,
-    "seen": 1790866335.342483,
+    "mtime": 1790871465.916428,
+    "seen": 1790871783.754348,
     "ast_hash": "bd18f6e9e42a1dfbd1bd595407ee6e2c",
-    "semantic_hash": "5721a9bc45da26e87b15ced9c7315c5b"
+    "semantic_hash": "1ae18ea3a2df492aed0d0634ee412a30"
   },
   "docs/development-environments.md": {
     "mtime": 1789490459.0048413,
@@ -4344,10 +4344,10 @@
     "semantic_hash": "ff612305dac9bddf4dbb5afbe490e893"
   },
   "apps/extension/src/source-adapters/youtube/player-chrome.ts": {
-    "mtime": 1789490458.891552,
-    "seen": 1789807056.436525,
-    "ast_hash": "5d2bb2cb2ffd5fd265ae166311b48603",
-    "semantic_hash": "5d2bb2cb2ffd5fd265ae166311b48603"
+    "mtime": 1790871354.3457048,
+    "seen": 1790871470.0452428,
+    "ast_hash": "0a1ef9b39f21bd025bfe84de5858623f",
+    "semantic_hash": ""
   },
   "apps/extension/test/source-adapters/core/overlay-geometry.test.ts": {
     "mtime": 1789490458.9040043,
@@ -4356,16 +4356,16 @@
     "semantic_hash": "547779fe4742088e8cdeec43107df3b9"
   },
   "apps/extension/test/source-adapters/youtube/player-chrome.test.ts": {
-    "mtime": 1789490458.9051433,
-    "seen": 1789807056.436599,
-    "ast_hash": "18563b98958a92c6dcc5914e1244457d",
-    "semantic_hash": "18563b98958a92c6dcc5914e1244457d"
+    "mtime": 1790871465.9152951,
+    "seen": 1790871470.045245,
+    "ast_hash": "d1048bb5d7b20441f40d7df28714cc11",
+    "semantic_hash": ""
   },
   "docs/youtube-adapter-notes.md": {
-    "mtime": 1789490459.0205858,
-    "seen": 1789807056.437801,
+    "mtime": 1790871465.9179304,
+    "seen": 1790871783.754349,
     "ast_hash": "bfb6916fbcd6d631b8520db46a5d8f5a",
-    "semantic_hash": "bfb6916fbcd6d631b8520db46a5d8f5a"
+    "semantic_hash": "b72265a10c5a35158f690b52b35bd4c5"
   },
   "apps/extension/src/overlay-interaction-boundary.ts": {
     "mtime": 1789490458.8793268,
@@ -9357,6 +9357,18 @@
     "mtime": 1790866202.972839,
     "seen": 1790866335.2947001,
     "ast_hash": "a61b24db01a03680a862e9bc02bdda9f",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/source-adapters/youtube/composer-chrome.ts": {
+    "mtime": 1790871354.7317574,
+    "seen": 1790871470.045242,
+    "ast_hash": "688e18c6432d631f281012fbd2edb693",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/source-adapters/youtube/composer-chrome.test.ts": {
+    "mtime": 1790871354.7338154,
+    "seen": 1790871470.045244,
+    "ast_hash": "d818b4d3b82fb3f8c80d13ea266caa84",
     "semantic_hash": ""
   }
 }

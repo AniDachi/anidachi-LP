@@ -486,8 +486,8 @@ pass afterwards; focused component/lifecycle checks, extension typecheck and all
 harnesses are not required for this input-only change. A local staging artifact
 must be built/validated for owner Reload; nothing is deployed by this task.
 
-Owner acceptance remains outstanding on an actual Crunchyroll player, both normal
-and fullscreen: open with Enter/Alt+C, type, use emoji, send by Enter/button,
+The owner confirmed the fix works as intended after the local delivery. Separate
+normal/fullscreen coverage was not enumerated. The regression checklist remains: open with Enter/Alt+C, type, use emoji, send by Enter/button,
 reopen and close. Native controls should stay hidden through those actions;
 move/click the video and check that normal controls respond on the first gesture.
 Verify native Escape/fullscreen behavior and playback shortcuts as well. Unit
