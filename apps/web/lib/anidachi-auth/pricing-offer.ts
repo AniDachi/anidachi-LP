@@ -13,12 +13,12 @@ const defaults = {
 	async policy() {
 		const { data, error } = await db()
 			.from("hosting_commercial_policy")
-			.select("activation_at")
+			.select("activation_at,trials_enabled")
 			.eq("singleton", true)
 			.abortSignal(AbortSignal.timeout(8000))
 			.single();
 		if (error || !data) throw new Error("Pricing policy unavailable");
-		return data as { activation_at: string | null };
+		return data as { activation_at: string | null; trials_enabled: boolean };
 	},
 };
 export async function getPricingOffer(
@@ -71,6 +71,7 @@ export async function getPricingOffer(
 		);
 		return {
 			validForMs,
+			trialAvailable: !manage && access.hosting.trialEligibility === "eligible",
 			ownerUserId: userId,
 			prices: { plus, pro },
 			yearlyPrices,
@@ -92,6 +93,8 @@ export async function getPricingOffer(
 	)
 		throw new Error("Pricing policy unavailable");
 	const now = deps.now();
+	const paidHostingActive =
+		data.activation_at !== null && Date.parse(data.activation_at) <= now;
 	return {
 		validForMs:
 			data.activation_at && Date.parse(data.activation_at) > now
@@ -100,8 +103,8 @@ export async function getPricingOffer(
 		ownerUserId: null,
 		prices: { plus, pro },
 		yearlyPrices: await yearly,
-		paidHostingActive:
-			data.activation_at !== null && Date.parse(data.activation_at) <= now,
+		paidHostingActive,
+		trialAvailable: paidHostingActive && data.trials_enabled === true,
 		action: "sign_in",
 	};
 }

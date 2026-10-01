@@ -21,7 +21,7 @@ import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
 import { HomeSectionHeader } from "@/components/home-section-header";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getSeoAttributionFields } from "@/lib/seo-landing-path";
-import type { PricingOffer, PricingPrices } from "@/lib/pricing-offer";
+import { hasConfirmedTrialOffer, type PricingOffer, type PricingPrices } from "@/lib/pricing-offer";
 import { formatMonthlyPrice, type BillingPeriod } from "@/lib/billing-view";
 import { checkoutLoginPath, checkoutSessionRecoveryPath } from "@/lib/checkout-selection";
 import "./pricing.css";
@@ -67,8 +67,7 @@ export function Pricing({
 	const checkoutLock = useRef(false);
 	const lastAttemptedTier = useRef<CheckoutTier | null>(null);
 	const displayPrices = PUBLISHED_PRICING[period];
-	const showTrialTerms =
-		!offer || offer.action === "sign_in" || offer.action === "trial";
+	const showTrialTerms = hasConfirmedTrialOffer(offer);
 
 	useEffect(() => {
 		// Preserve the explicitly chosen monthly flow across the sign-in return.
@@ -265,7 +264,7 @@ export function Pricing({
 				return;
 			}
 			if (!offer && currentOffer.action === "subscribe") {
-				// The public button offered a trial before account eligibility loaded.
+				// An unconfirmed public choice is not consent to an immediate charge.
 				// Show the verified paid terms and require a new, explicit choice.
 				setCheckoutError(
 					"A free trial is not available for this account. Review the subscription terms below before continuing.",
@@ -614,6 +613,7 @@ function TierCardBody({
 			? { ...annualPrice, unitAmount: annualPrice.unitAmount / 12 }
 			: selectedPrice;
 	const price = amount ? formatMonthlyPrice(amount) : paidTier ? "—" : "$0";
+	const trialOffered = hasConfirmedTrialOffer(offer);
 	const ctaLabel =
 		offer?.action === "trial"
 			? "Start 3-day free trial"
@@ -621,18 +621,20 @@ function TierCardBody({
 				? "Manage subscription"
 				: offer?.action === "subscribe"
 					? `Subscribe to ${tier.label}`
-					: "Try 3 days free";
+					: trialOffered
+						? "Try 3 days free"
+						: `Choose ${tier.label}`;
 	const description = tier.audience;
 	const recurringAmount = selectedPrice
 		? formatMonthlyPrice(selectedPrice)
 		: "—";
 	const unit = yearly ? "year" : "month";
 	const termsSummary =
-		!offer || offer.action === "sign_in"
+		offer?.action === "sign_in" && trialOffered
 			? `Then ${recurringAmount}/${unit} automatically.`
-			: offer.action === "trial"
+			: offer?.action === "trial"
 				? `3 days free, then ${recurringAmount}/${unit} automatically.`
-				: offer.action === "manage"
+				: offer?.action === "manage"
 					? null
 					: `Renews at ${recurringAmount}/${unit}.`;
 	const termsDetail =
@@ -691,7 +693,7 @@ function TierCardBody({
 						onClick={() => onSubscribe(paidTier)}
 						disabled={isSubmitting}
 						aria-busy={isSubmitting && submittingTier === paidTier}
-						aria-describedby={`pricing-${tier.id}-terms${termsDetail ? "" : " pricing-trial-terms"}`}
+						aria-describedby={`pricing-${tier.id}-terms${trialOffered ? " pricing-trial-terms" : ""}`}
 					>
 						{isSubmitting && submittingTier === paidTier
 							? "Opening checkout…"
