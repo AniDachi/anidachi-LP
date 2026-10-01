@@ -1,5 +1,26 @@
 # Current Development State
 
+## Production release safeguards prepared locally, October 2, 2026
+
+The local `codex/production-release-guards` work continues from welcome commit
+`89eb1deb`. The owner requires existing purchased subscriptions to retain their
+price, plan, interval and renewal/cancellation settings. No production, LIVE
+Stripe, main promotion, Store publication or activation is part of this block.
+
+Pricing retains static prices and usable buttons, with a neutral plan choice
+until the server confirms trial availability. Existing subscribers reach
+management. Production Worker delivery is changed locally to an explicit manual
+dispatch acknowledging the exact commit after schema/compatible Web verification;
+staging remains automatic. Production package builders require an explicit Store
+version instead of falling back to `0.1.0`.
+
+These controls are not deployed. A compatible pre-activation Web/content package,
+LIVE setup/reconciliation, matching push key, Store/privacy preparation and the
+exact production ZIP remain open. Old Worker rollback is not automatically safe
+even before T because ordinary terminal intents already require compatible
+recovery. See the [preservation and delivery procedure](releases/paid-hosting-trial/production-preparation-2026-10-02.md)
+and [local implementation plan](superpowers/plans/2026-10-02-production-release-guards.md).
+
 ## Welcome acknowledgement follow-up, October 2, 2026
 
 The local follow-up to staging PR #396 keeps the Watch welcome visible until
@@ -1833,9 +1854,12 @@ Worker release guardrails:
 - Staging Worker smoke can be run with `pnpm smoke:worker:staging`.
 - Staging and production Worker names must stay distinct.
 
-Normal deploy path is PR merge. Manual workflow dispatch is for retries or
-emergencies only; release workflows must not be manually dispatched from feature
-branches.
+Code promotion follows PR merge. In the October 2 local release candidate,
+staging Worker delivery remains automatic; production Worker delivery requires
+manual dispatch from main with the exact verified `production_ready_sha` after
+schema and compatible Web are ready. This guard is not yet deployed. Other
+release workflows retain their documented triggers; never dispatch a release
+from a feature branch. See the production preparation section above.
 
 ## Extension Channels
 
@@ -1871,6 +1895,8 @@ Build commands:
 pnpm build:extension:staging
 pnpm validate:extension:staging
 pnpm build:extension:staging:local-broad
+WXT_EXTENSION_VERSION="<reviewed-store-version>" \
+WXT_BUILD_ID="<full-approved-main-sha>-production-<release-id>" \
 WXT_VAPID_PUBLIC_KEY="<production-public-key>" pnpm build:extension:public
 pnpm validate:extension:production
 ```

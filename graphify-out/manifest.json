@@ -2142,9 +2142,9 @@
     "semantic_hash": ""
   },
   "apps/web/components/pricing.tsx": {
-    "mtime": 1790853908.003888,
-    "seen": 1790854426.0510101,
-    "ast_hash": "fbac9474f33a58222fac54507d8ea0c8",
+    "mtime": 1790894622.0442636,
+    "seen": 1790895793.619555,
+    "ast_hash": "7e5fe690d013822c4435e361878d7dc7",
     "semantic_hash": ""
   },
   "apps/web/components/primary-checkout-cta.tsx": {
@@ -3174,10 +3174,10 @@
     "semantic_hash": "6729d746c679243def0694e3f956ab6a"
   },
   "scripts/build-extension-public.sh": {
-    "mtime": 1789490459.0450516,
-    "seen": 1789807056.437533,
-    "ast_hash": "3fac4af9ba08480c5c964ac22b1afa68",
-    "semantic_hash": "3fac4af9ba08480c5c964ac22b1afa68"
+    "mtime": 1790894558.355556,
+    "seen": 1790895793.6195588,
+    "ast_hash": "68724af0c1f2af6cc0c299185e2254e1",
+    "semantic_hash": ""
   },
   "scripts/build-extension-staging.sh": {
     "mtime": 1789490459.0451124,
@@ -3504,10 +3504,10 @@
     "semantic_hash": "0d3c69842eaf252148dbd0b56e3a67b1"
   },
   "docs/current-development-state.md": {
-    "mtime": 1790892022.4310925,
-    "seen": 1790892355.508977,
+    "mtime": 1790895408.517621,
+    "seen": 1790895793.66799,
     "ast_hash": "bd18f6e9e42a1dfbd1bd595407ee6e2c",
-    "semantic_hash": "25a9b5addb3ba2e980612f86ebca0bad"
+    "semantic_hash": "9c83feb3afd60b52a768b65a2df8a51f"
   },
   "docs/development-environments.md": {
     "mtime": 1789490459.0048413,
@@ -3534,10 +3534,10 @@
     "semantic_hash": "349c1f6db9421f91fba5dc7888d11ed5"
   },
   "docs/extension-release-channels.md": {
-    "mtime": 1790892022.4315257,
-    "seen": 1790892355.508978,
+    "mtime": 1790894841.340768,
+    "seen": 1790896105.3127859,
     "ast_hash": "705f1f7b1c05633819590bfed842034f",
-    "semantic_hash": "8ef5525663de4ed672c0a2c1666900e0"
+    "semantic_hash": "dd2f4408a4fbce99319d9c81329e5c36"
   },
   "docs/new-chat-project-context.md": {
     "mtime": 1789490459.0054903,
@@ -3552,10 +3552,10 @@
     "semantic_hash": "816771011a43e6458031004aba8d35d6"
   },
   "docs/project-architecture-and-development.md": {
-    "mtime": 1790853575.2327023,
-    "seen": 1790854426.0990012,
+    "mtime": 1790895408.5554767,
+    "seen": 1790896105.312788,
     "ast_hash": "55633098330483d3c2e4efbbc2d1ccd9",
-    "semantic_hash": "c121481a2423494e6cc505e7e03a6656"
+    "semantic_hash": "b4f8c350858028fef189144114452f43"
   },
   "docs/project-knowledge-map.md": {
     "mtime": 1789490459.0058722,
@@ -3564,10 +3564,10 @@
     "semantic_hash": "74a0b81767a7bcfc393c9ae7075aacfd"
   },
   "docs/project-operating-manual.md": {
-    "mtime": 1789490459.005954,
-    "seen": 1789807056.437676,
+    "mtime": 1790895408.536271,
+    "seen": 1790896105.312789,
     "ast_hash": "79179d527c1ce337a05b019f1a6b3647",
-    "semantic_hash": "79179d527c1ce337a05b019f1a6b3647"
+    "semantic_hash": "160e93e5d5e1c2315a78df982833f634"
   },
   "docs/release-and-rollback-runbook.md": {
     "mtime": 1789490459.006036,
@@ -5550,9 +5550,9 @@
     "semantic_hash": "5362da4b458d1c32c5ecfe6661e0a9d4"
   },
   "apps/extension/test/release-channel-build.test.ts": {
-    "mtime": 1789496354.5605097,
-    "seen": 1789807056.4365802,
-    "ast_hash": "b77868b153741ee447fb700cb295d49d",
+    "mtime": 1790894558.3889415,
+    "seen": 1790895793.619553,
+    "ast_hash": "0d5e73fdc6efffdf97b0a6337d555f72",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/extension-codes.test.ts": {
@@ -8814,10 +8814,10 @@
     "semantic_hash": ""
   },
   "docs/releases/paid-hosting-trial/cutover-operations.md": {
-    "mtime": 1790626464.9250672,
-    "seen": 1790845878.699737,
+    "mtime": 1790894841.3229723,
+    "seen": 1790896105.31279,
     "ast_hash": "73ea3b2efb3bc8ac29179ded5fb05b94",
-    "semantic_hash": "8fa678a3e8dc019590504195d262b3ee"
+    "semantic_hash": "3c0211586f0db8a7b27d43a072d09617"
   },
   "apps/extension/test/hosting-paywall.test.tsx": {
     "mtime": 1790584561.8034644,
@@ -8916,27 +8916,27 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/pricing-offer.test.ts": {
-    "mtime": 1790758381.8557777,
-    "seen": 1790844799.913155,
-    "ast_hash": "a68d606072d893a57d86af86475bc23a",
+    "mtime": 1790894716.723628,
+    "seen": 1790895793.6195571,
+    "ast_hash": "af856bae04221dcbee23db576d51c0a6",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/pricing-offer.ts": {
-    "mtime": 1790758381.8573334,
-    "seen": 1790844799.913155,
-    "ast_hash": "590654fa08ee4234d13e233215c53e47",
+    "mtime": 1790894024.2101018,
+    "seen": 1790895793.6195571,
+    "ast_hash": "ce9f04f89708e4d88f1eb52f005731ab",
     "semantic_hash": ""
   },
   "apps/web/lib/pricing-client.test.ts": {
-    "mtime": 1790854153.0465112,
-    "seen": 1790854426.051015,
-    "ast_hash": "2eec9ac93c13821b1d6051f7e36f9d8a",
+    "mtime": 1790894229.548877,
+    "seen": 1790895793.6195579,
+    "ast_hash": "e93ae6e69314439f8283d528dea1bf22",
     "semantic_hash": ""
   },
   "apps/web/lib/pricing-offer.ts": {
-    "mtime": 1790757435.009135,
-    "seen": 1790844799.913167,
-    "ast_hash": "77776786ab8e40dc87b9c56828b0fe75",
+    "mtime": 1790894622.0672126,
+    "seen": 1790895793.6195579,
+    "ast_hash": "3bb3dbf38ff4a71dbab5f8f97dee2ef8",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/room-connect-route.test.ts": {
@@ -9370,5 +9370,29 @@
     "seen": 1790871470.045244,
     "ast_hash": "d818b4d3b82fb3f8c80d13ea266caa84",
     "semantic_hash": ""
+  },
+  "scripts/worker-deploy-gate.mjs": {
+    "mtime": 1790894558.2814996,
+    "seen": 1790895793.61956,
+    "ast_hash": "77b1b8b7bd95917331dd3467c3a52d09",
+    "semantic_hash": ""
+  },
+  "scripts/worker-deploy-gate.test.mjs": {
+    "mtime": 1790894558.3028553,
+    "seen": 1790895793.619561,
+    "ast_hash": "147f3e3158b6a77199ffda5739512427",
+    "semantic_hash": ""
+  },
+  "docs/releases/paid-hosting-trial/production-preparation-2026-10-02.md": {
+    "mtime": 1790895249.73906,
+    "seen": 1790896105.312791,
+    "ast_hash": "",
+    "semantic_hash": "a839f7b119fa2f935956f1f5d398147b"
+  },
+  "docs/superpowers/plans/2026-10-02-production-release-guards.md": {
+    "mtime": 1790896305.5573585,
+    "seen": 1790896408.045669,
+    "ast_hash": "",
+    "semantic_hash": "ba0fd02acaa7da48517a840c44987848"
   }
 }

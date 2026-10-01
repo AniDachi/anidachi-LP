@@ -265,7 +265,9 @@ Build commands:
 
 ```bash
 pnpm build:extension:staging
-pnpm build:extension:public
+WXT_EXTENSION_VERSION="<reviewed-store-version>" \
+WXT_BUILD_ID="<full-approved-main-sha>-production-<release-id>" \
+WXT_VAPID_PUBLIC_KEY="<production-public-key>" pnpm build:extension:public
 ```
 
 Channel rules:

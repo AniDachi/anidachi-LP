@@ -171,6 +171,8 @@ Local-broad outputs:
 Generate the production extension artifact:
 
 ```bash
+WXT_EXTENSION_VERSION="<reviewed-store-version>" \
+WXT_BUILD_ID="<full-approved-main-sha>-production-<release-id>" \
 WXT_VAPID_PUBLIC_KEY="<production-public-key>" pnpm build:extension:public
 pnpm validate:extension:production
 ```
@@ -181,6 +183,13 @@ Vercel Production. GitHub Actions reads the public key from the
 `WXT_VAPID_PUBLIC_KEY` variable in the `production` environment and refuses to
 build the `main` artifact when that variable is missing. Staging uses its own
 key and remains isolated from production subscriptions.
+
+The local builder and CI also require an explicit `WXT_EXTENSION_VERSION` for
+production; package/CI fallback `0.1.0` is not a release decision. Check the Store
+dashboard's highest uploaded version before selecting a larger version, and
+verify the final manifest and ZIP hash. Build-test fixtures are never release
+artifacts. Staging retains its existing version default. These October 2 safeguards
+are local until their PR is delivered.
 
 The release manifest includes Chrome's `notifications` permission. This lets
 the default-on invitation preference register a Web Push subscription after
@@ -220,10 +229,11 @@ Do not distribute the broad staging build as a tester or release artifact.
 3. Build and validate `AniDachi Staging` as an unpacked tester artifact.
 4. Test that exact artifact with founders/testers against staging web/API infrastructure.
 5. If staging is accepted, merge/promote the same code path to `main`.
-6. Do not enable production extension auth until a separate production identity
-   and cutover are explicitly approved.
-
-There is no Chrome Web Store dependency in the current pre-release flow.
+6. Prepare and validate the exact production artifact with the existing approved
+   Store identity. Upload, publication and server activation are distinct gates.
+   For the paid-hosting transition follow the
+   [production preparation procedure](releases/paid-hosting-trial/production-preparation-2026-10-02.md);
+   a single staging-to-main merge is not an ordered schema/Web/Worker rollout.
 
 ## Important Invariant
 
@@ -231,8 +241,8 @@ Staging and production must not share runtime endpoints accidentally.
 
 Before distributing an artifact, inspect `manifest.json` and the debug panel build id:
 
-- Chrome shows `AniDachi Staging` or `AniDachi`, followed by the release version
-  (currently `0.1.0`). `version_name` is omitted so internal build identifiers
+- Chrome shows `AniDachi Staging` or `AniDachi`, followed by the selected release
+  version. `version_name` is omitted so internal build identifiers
   cannot crowd out the extension name.
 - Diagnostics retain the full `WXT_BUILD_ID`: `*-staging-*` for staging and
   `*-production-*` for production.
