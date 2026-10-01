@@ -148,6 +148,7 @@
 .pricing-plans__button:hover:not(:disabled) svg { transform: translate(3px, -50%); }
 .pricing-plans__button-note { margin-top: 16px; font-size: 13px; line-height: 1.6; color: var(--ani-muted); }
 .pricing-plans__button-note strong { display: block; margin-bottom: 6px; color: var(--ani-text); font-weight: 500; }
+.pricing-plans__button-note strong:last-child { margin-bottom: 0; }
 .pricing-plans__button-note span { display: block; max-width: 36ch; margin-inline: auto; }
 .pricing-plans__details { display: grid; grid-template-rows: subgrid; grid-row: span 2; row-gap: 0; align-items: start; padding: 24px 28px 28px; border-top: 1px solid var(--ani-line); }
 .pricing-plans__feature-heading { margin-bottom: 22px; color: var(--ani-text); font-size: 16px; line-height: 1.5; font-weight: 500; text-align: center; }
@@ -156,7 +157,9 @@
 .pricing-plans__features li { display: flex; align-items: flex-start; gap: 10px; color: var(--ani-text); font-size: 14px; line-height: 1.55; }
 .pricing-plans__features svg { margin-top: 1px; flex-shrink: 0; color: var(--pricing-accent); }
 .pricing-plans__free-note { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--ani-line); font-size: 13px; line-height: 1.6; color: var(--ani-muted); }
-.pricing-plans__terms { display: flex; align-items: flex-start; justify-content: center; gap: 7px; max-width: 42rem; margin: 24px auto 44px; font-size: 11px; line-height: 1.6; text-align: center; color: var(--ani-muted); }
+.pricing-plans__footer { max-width: 1200px; margin: 24px auto 44px; text-align: center; color: var(--ani-muted); }
+.pricing-plans__trial-terms { margin: 0 auto 12px; font-size: 13px; line-height: 1.7; text-wrap: balance; }
+.pricing-plans__terms { display: flex; align-items: flex-start; justify-content: center; gap: 7px; max-width: 42rem; margin-inline: auto; font-size: 11px; line-height: 1.6; }
 .pricing-plans__terms svg { flex-shrink: 0; margin-top: 2px; }
 
 @media (max-width: 1100px) {
