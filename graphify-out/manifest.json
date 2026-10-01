@@ -3504,10 +3504,10 @@
     "semantic_hash": "0d3c69842eaf252148dbd0b56e3a67b1"
   },
   "docs/current-development-state.md": {
-    "mtime": 1790872902.529702,
-    "seen": 1790873144.165189,
+    "mtime": 1790892022.4310925,
+    "seen": 1790892355.508977,
     "ast_hash": "bd18f6e9e42a1dfbd1bd595407ee6e2c",
-    "semantic_hash": "e11320cb0f8e0b6cad50203460a9fa3e"
+    "semantic_hash": "25a9b5addb3ba2e980612f86ebca0bad"
   },
   "docs/development-environments.md": {
     "mtime": 1789490459.0048413,
@@ -3534,10 +3534,10 @@
     "semantic_hash": "349c1f6db9421f91fba5dc7888d11ed5"
   },
   "docs/extension-release-channels.md": {
-    "mtime": 1790861022.6400874,
-    "seen": 1790861652.051018,
+    "mtime": 1790892022.4315257,
+    "seen": 1790892355.508978,
     "ast_hash": "705f1f7b1c05633819590bfed842034f",
-    "semantic_hash": "dcaef63d74328f6b136e0b3409187794"
+    "semantic_hash": "8ef5525663de4ed672c0a2c1666900e0"
   },
   "docs/new-chat-project-context.md": {
     "mtime": 1789490459.0054903,
@@ -9312,15 +9312,15 @@
     "semantic_hash": "582b3b2bdb26df6f28187b5e71c67685"
   },
   "apps/extension/src/popup-welcome.tsx": {
-    "mtime": 1790862084.2835655,
-    "seen": 1790862436.8218281,
-    "ast_hash": "990817e0b835a86ba385d86d34de9b71",
+    "mtime": 1790892022.429516,
+    "seen": 1790892355.45734,
+    "ast_hash": "b1af707b0e2529dcb5da77b3c549694b",
     "semantic_hash": ""
   },
   "apps/extension/test/popup-welcome.test.tsx": {
-    "mtime": 1790860983.2449589,
-    "seen": 1790861167.2627132,
-    "ast_hash": "9c78cb8e6df3b91d1fa583bf52b5b049",
+    "mtime": 1790892022.4296467,
+    "seen": 1790892355.457342,
+    "ast_hash": "d280256860a9b0062f8c8eceee9487f0",
     "semantic_hash": ""
   },
   "apps/extension/src/popup-setting-row.tsx": {
