@@ -19,7 +19,9 @@ import {
 	subscriptionDateLabel,
 	subscriptionStatusLabel,
 } from "@/lib/billing-view";
-import { api } from "@/lib/client-api";
+import { serverSnapshotRemainingMs } from "@/lib/server-snapshot-age";
+import { takeAccountPreload } from "@/lib/account-navigation-preload";
+import { api, ApiError } from "@/lib/client-api";
 import { EXTENSION_USING_HASH } from "@/lib/extension-using-guide";
 import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
 
@@ -41,18 +43,22 @@ function formatDate(value: string | null) {
 	);
 }
 
-export function BillingClient({
-	ownerUserId,
-	returnedFromPortal,
-}: {
-	ownerUserId: string;
-	returnedFromPortal: boolean;
-}) {
-	const [overview, setOverview] = useState<BillingOverview | null>(null);
-	const [busy, setBusy] = useState(true);
+type BillingClientProps = {
+  ownerUserId: string;
+  returnedFromPortal: boolean;
+  initial?: { overview: BillingOverview; remainingMs: number };
+};
+export function BillingClient(props: BillingClientProps) {
+  return <BillingWorkspace key={props.ownerUserId} {...props} />;
+}
+function BillingWorkspace({ ownerUserId, returnedFromPortal, initial }: BillingClientProps) {
+  const [snapshot] = useState(() => !returnedFromPortal && initial?.overview.ownerUserId === ownerUserId ? initial : undefined);
+  const [overview, setOverview] = useState<BillingOverview | null>(snapshot?.overview ?? null);
+  const [busy, setBusy] = useState(!snapshot);
 	const [error, setError] = useState<string | null>(null);
 	const [notice, setNotice] = useState<string | null>(null);
 	const version = useRef(0);
+	const validUntil = useRef(0);
 	const [planQuote, setPlanQuote] = useState<{
 		subscriptionId: string;
 		quote: TrialPlanQuote;
@@ -64,17 +70,17 @@ export function BillingClient({
 	);
 
 	const load = useCallback(
-		async (refresh: boolean) => {
-			clearTimeout(displayTimer.current);
-			const started = Date.now();
+		async (refresh: boolean, useNavigationRequest = false) => {
+      const pending = !refresh && useNavigationRequest ? takeAccountPreload(ownerUserId, "/api/billing/subscription") : null;
+			const started = pending?.started ?? Date.now();
 			const current = ++version.current;
 			setBusy(true);
-			setOverview(null);
+			if (refresh || Date.now() >= validUntil.current) setOverview(null);
 			setPlanQuote(null);
 			setError(null);
 			setNotice(null);
 			try {
-				const result = await api<BillingOverview>(
+				const result = await (pending ? pending.response as Promise<BillingOverview> : api<BillingOverview>(
 					refresh ? "/api/billing/refresh" : "/api/billing/subscription",
 					{
 						method: refresh ? "POST" : "GET",
@@ -83,19 +89,29 @@ export function BillingClient({
 						cache: "no-store",
 						signal: AbortSignal.timeout(15_000),
 					},
-				);
+				));
 				if (current !== version.current) return;
 				if (result.ownerUserId !== ownerUserId)
-					throw new Error("Your signed-in account changed. Reload this page.");
+          throw new ApiError("Your signed-in account changed. Reload this page.", "ACCOUNT_CHANGED", 409);
 				const remaining =
 					billingDisplayValidityMs(result) - (Date.now() - started);
 				if (!(remaining > 0))
 					throw new Error("Subscription status expired. Please refresh.");
 				setOverview(result);
-				displayTimer.current = setTimeout(() => void load(false), remaining);
+				validUntil.current = Date.now() + remaining;
+				clearTimeout(displayTimer.current);
+				displayTimer.current = setTimeout(() => {
+					validUntil.current = 0;
+					setOverview(null);
+					void load(false);
+				}, remaining);
 				if (refresh) setNotice("Subscription status updated.");
 			} catch (failure) {
 				if (current !== version.current) return;
+				if (failure instanceof ApiError && [401, 403, 409].includes(failure.status)) {
+					validUntil.current = 0;
+					setOverview(null);
+				}
 				setError(
 					failure instanceof Error
 						? failure.message
@@ -109,15 +125,23 @@ export function BillingClient({
 	);
 
 	useEffect(() => {
-		void load(returnedFromPortal);
-		const onFocus = () => void load(true);
+    const remaining = snapshot ? serverSnapshotRemainingMs(snapshot.remainingMs) : 0;
+    if (remaining > 0) {
+      validUntil.current = Date.now() + remaining;
+      displayTimer.current = setTimeout(() => {
+        validUntil.current = 0;
+        setOverview(null);
+        void load(false);
+      }, remaining);
+    } else void load(returnedFromPortal, true);
+		const onFocus = () => { if (!actionLock.current) void load(false); };
 		window.addEventListener("focus", onFocus);
 		return () => {
 			clearTimeout(displayTimer.current);
 			version.current += 1;
 			window.removeEventListener("focus", onFocus);
 		};
-	}, [load, returnedFromPortal]);
+	}, [load, returnedFromPortal, snapshot]);
 
 	async function changeTrial(
 		subscriptionId: string,

@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { getUserById } from "@/lib/anidachi-auth/db";
+import { getAccountIdentity } from "@/lib/anidachi-auth/account-identity";
 import { getSession } from "@/lib/anidachi-auth/session";
-import { ensureProfileForUser } from "@/lib/anidachi-auth/social";
 import { ProfileClient } from "./profile-client";
 import "./profile.css";
 
@@ -15,10 +14,7 @@ export const metadata: Metadata = {
 export default async function ProfilePage() {
   const session = await getSession();
   if (!session) redirect("/login?next=%2Faccount%2Fprofile");
-  const [user, profile] = await Promise.all([
-    getUserById(session.userId),
-    ensureProfileForUser(session.userId),
-  ]);
+  const { user, profile } = await getAccountIdentity(session.userId);
   return (
     <ProfileClient
       key={session.userId}

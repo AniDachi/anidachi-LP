@@ -28,18 +28,36 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   return body as T;
 }
 
+// Share only an in-flight cookie refresh, never account data or an access decision.
+let sessionRefresh: Promise<boolean> | null = null;
+let refreshGeneration = 0;
+
+function refreshSession(): Promise<boolean> {
+  if (!sessionRefresh) {
+    sessionRefresh = fetch("/api/auth/refresh", { method: "POST" })
+      .then(response => {
+        if (response.ok) refreshGeneration++;
+        return response.ok;
+      })
+      .finally(() => { sessionRefresh = null; });
+  }
+  return sessionRefresh;
+}
+
 async function fetchWithSessionRefresh(
   path: string,
   init?: RequestInit,
 ): Promise<Response> {
+  init?.signal?.throwIfAborted();
+  const startedGeneration = refreshGeneration;
   const response = await fetch(path, withJsonHeaders(init));
   if (response.status !== 401) return response;
 
-  const refreshResponse = await fetch("/api/auth/refresh", {
-    method: "POST",
-  });
-  if (!refreshResponse.ok) return response;
-
+  init?.signal?.throwIfAborted();
+  // A concurrent request may already have refreshed while this 401 was in flight.
+  const refreshed = startedGeneration !== refreshGeneration || await refreshSession();
+  init?.signal?.throwIfAborted();
+  if (!refreshed) return response;
   return fetch(path, withJsonHeaders(init));
 }
 

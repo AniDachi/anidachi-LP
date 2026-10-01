@@ -181,37 +181,43 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
   const cancelButton = useRef<HTMLButtonElement>(null);
   const wasEditing = useRef(false);
   const requestId = useRef(0);
+  const readController = useRef<AbortController | null>(null);
+  const latestEpisode = useRef(item.latestActivity.episodeKey);
+  latestEpisode.current = item.latestActivity.episodeKey;
   const mounted = useRef(true);
   const sending = useRef(false);
   const retryRequest = useRef<WatchHistoryEditRequest | null>(null);
   const dirty = Object.keys(draft).length > 0;
   const leaveGuard = useRef(false);
   leaveGuard.current = dirty || saving;
-  const canonicalSignature = `${item.lastWatchedAt}:${item.latestActivity.currentTime}:${item.completedEpisodeCount}`;
+  const canonicalSignature = `${item.lastWatchedAt}:${item.latestActivity.episodeKey}:${item.latestActivity.currentTime}:${item.completedEpisodeCount}`;
   const previousCanonical = useRef(canonicalSignature);
   const single = item.provider === "youtube" || item.itemKind === "movie";
   const load = useCallback(async () => {
     const id = ++requestId.current;
+    readController.current?.abort();
+    const controller = new AbortController();
+    readController.current = controller;
     const handleAccessError = captureAccessFailure();
     setLoading(true); setError(null);
     try {
       const query = new URLSearchParams({ provider: item.provider, titleKey: item.titleKey, accountGeneration: String(generation) });
-      const next = WatchHistoryEditorResponseSchema.parse(await api<unknown>(`/api/watch-history/v3/editor?${query}`, { headers: { [WATCH_HISTORY_OWNER_HEADER]: owner } }));
+      const next = WatchHistoryEditorResponseSchema.parse(await api<unknown>(`/api/watch-history/v3/editor?${query}`, { headers: { [WATCH_HISTORY_OWNER_HEADER]: owner }, signal: controller.signal }));
       if (next.meta.ownerUserId !== owner || next.meta.accountGeneration !== generation || next.titleKey !== item.titleKey || next.provider !== item.provider)
         throw new Error("The signed-in account or history changed. Reload this page.");
       if (!mounted.current || id !== requestId.current) return;
       setData(next);
       setUndo(null);
-      const initial = next.episodes.find(ep => ep.episodeKey === item.latestActivity.episodeKey) ?? next.episodes[0];
+      const initial = next.episodes.find(ep => ep.episodeKey === latestEpisode.current) ?? next.episodes[0];
       setSeason(value => next.episodes.some(ep => ep.seasonKey === value) ? value : initial.seasonKey);
       setEpisodeKey(value => next.episodes.some(ep => ep.episodeKey === value) ? value : initial.episodeKey);
       return next;
     } catch (cause) { if (mounted.current && id === requestId.current && !handleAccessError(cause)) setError(cause instanceof Error ? cause.message : "Could not load progress. Please retry."); }
     finally { if (mounted.current && id === requestId.current) setLoading(false); }
-  }, [owner, generation, item.provider, item.titleKey, item.latestActivity.episodeKey, captureAccessFailure]);
+  }, [owner, generation, item.provider, item.titleKey, captureAccessFailure]);
   useEffect(() => {
     mounted.current = true; void load();
-    return () => { mounted.current = false; onDraftChange(false); handle.current = null; };
+    return () => { mounted.current = false; requestId.current++; readController.current?.abort(); onDraftChange(false); handle.current = null; };
   }, [load, onDraftChange, handle]);
   useEffect(() => { onDraftChange(dirty || saving); }, [dirty, saving, onDraftChange]);
   useEffect(() => {

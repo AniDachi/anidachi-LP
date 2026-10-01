@@ -1,5 +1,19 @@
 # Current Development State
 
+## Account loading optimization verified locally, October 1, 2026
+
+The accepted account UI is on staging via PR #386 (`5dc2a4a7`). Account loading
+changes are implemented and verified locally on `codex/account-loading-performance`:
+independent social resources, explicit-navigation reads in parallel with the
+route, direct-document server snapshots with the existing billing authorization,
+quiet subscription refresh, single-flight session refresh, and parallel history
+reads with unchanged authority fences. Web typecheck, 896 passing tests (6 existing
+skips), production build and independent review passed. Graphify refresh was
+attempted but its merge failed the integrity check; tracked graph artifacts remain
+unchanged, with an explicit exception recorded in the plan. No optimization
+deployment or real-user speed acceptance is claimed yet. See the
+[implementation and verification plan](superpowers/plans/2026-10-01-account-loading-performance.md).
+
 ## Website and annual billing delivered to staging, September 30, 2026
 
 [PR #383](https://github.com/AniDachi/anidachi-LP/pull/383) delivered the approved

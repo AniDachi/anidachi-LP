@@ -36,7 +36,9 @@ import {
   AccountSectionSwitch,
 } from "@/components/account/account-ui";
 import { useAccountViewState } from "@/components/account/account-workspace-state";
-import { api } from "@/lib/client-api";
+import { serverSnapshotRemainingMs } from "@/lib/server-snapshot-age";
+import { takeAccountPreload } from "@/lib/account-navigation-preload";
+import { api, ApiError } from "@/lib/client-api";
 import {
   parseFriendDirectory,
   parseGroupDirectory,
@@ -178,12 +180,17 @@ function Options({ label, children }: { label: string; children: ReactNode }) {
 
 // Remount account-bound data and drafts on identity change. View state alone is
 // retained by the surrounding account workspace; late operations cannot cross it.
-export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
+type FriendsProps = { currentUser: CurrentUser; initial?: { ownerUserId: string; directory: unknown } };
+export function FriendsClient({ currentUser, initial }: FriendsProps) {
   return (
-    <FriendsWorkspace key={currentUser.userId} currentUser={currentUser} />
+    <FriendsWorkspace key={currentUser.userId} currentUser={currentUser} initial={initial} />
   );
 }
-function FriendsWorkspace({ currentUser }: { currentUser: CurrentUser }) {
+function FriendsWorkspace({ currentUser, initial }: FriendsProps) {
+  const [initialDirectory] = useState(() => {
+    if (initial?.ownerUserId !== currentUser.userId) return null;
+    try { return parseFriendDirectory(initial.directory); } catch { return null; }
+  });
   const [view, setView] = useAccountViewState<"friends" | "groups">(
     `${currentUser.userId}:social-view`,
     "friends",
@@ -192,9 +199,11 @@ function FriendsWorkspace({ currentUser }: { currentUser: CurrentUser }) {
     `${currentUser.userId}:social-search`,
     "",
   );
-  const [directory, setDirectory] = useState<Directory>(EMPTY);
+  const [directory, setDirectory] = useState<Directory>(initialDirectory ?? EMPTY);
   const [groups, setGroups] = useState<FriendGroup[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  const [friendsLoaded, setFriendsLoaded] = useState(!!initialDirectory);
+  const [groupsLoaded, setGroupsLoaded] = useState(false);
+  const loaded = view === "friends" ? friendsLoaded : groupsLoaded;
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
@@ -241,7 +250,7 @@ function FriendsWorkspace({ currentUser }: { currentUser: CurrentUser }) {
     };
   }, []);
   const refresh = useCallback(
-    async (showLoading = true) => {
+    async (showLoading = true, skipFriends = false, useNavigationRequest = false) => {
       if (working.current) {
         reconcilePending.current = true;
         return;
@@ -250,14 +259,25 @@ function FriendsWorkspace({ currentUser }: { currentUser: CurrentUser }) {
       reads.current++;
       if (showLoading) setLoading(true);
       try {
-        const [friends, groupList] = await Promise.all([
-          request<unknown>("/api/friends").then(parseFriendDirectory),
-          request<unknown>("/api/groups").then(parseGroupDirectory),
+        const current = () => mounted.current && ticket === sequence.current;
+        const failed = (error: unknown) => {
+          if (!current()) return;
+          if (error instanceof ApiError && [401, 403, 409].includes(error.status)) {
+            sequence.current++;
+            setDirectory(EMPTY); setGroups([]);
+            setFriendsLoaded(false); setGroupsLoaded(false); setLoading(false);
+          }
+          setNotice({ error: true, text: error instanceof Error ? error.message : "Could not load your people." });
+        };
+        const read = (path: string) => (useNavigationRequest ? takeAccountPreload(currentUser.userId, path)?.response : null) ?? request<unknown>(path);
+        await Promise.all([
+          (skipFriends ? Promise.resolve(initialDirectory!) : read("/api/friends").then(parseFriendDirectory)).then(friends => {
+            if (current()) { setDirectory(friends); setFriendsLoaded(true); }
+          }).catch(failed),
+          read("/api/groups").then(parseGroupDirectory).then(groupList => {
+            if (current()) { setGroups(groupList.groups); setGroupsLoaded(true); }
+          }).catch(failed),
         ]);
-        if (!mounted.current || ticket !== sequence.current) return;
-        setDirectory(friends);
-        setGroups(groupList.groups);
-        setLoaded(true);
       } catch (error) {
         if (mounted.current && ticket === sequence.current)
           setNotice({
@@ -272,11 +292,12 @@ function FriendsWorkspace({ currentUser }: { currentUser: CurrentUser }) {
         if (mounted.current && ticket === sequence.current) setLoading(false);
       }
     },
-    [request],
+    [request, initialDirectory, currentUser.userId],
   );
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    // The RSC payload is request-scoped. Do not repeat its friend read on mount.
+    void refresh(true, !!initialDirectory && serverSnapshotRemainingMs(30_000) > 0, true);
+  }, [refresh, initialDirectory]);
   useEffect(() => {
     const hash = () => {
       if (window.location.hash === "#groups") setView("groups");
@@ -581,7 +602,7 @@ function FriendsWorkspace({ currentUser }: { currentUser: CurrentUser }) {
               icon={
                 view === "groups" ? <Plus size={18} /> : <Link2 size={18} />
               }
-              disabled={busy || !loaded}
+              disabled={busy || !loaded || (view === "groups" && !friendsLoaded)}
               onClick={() =>
                 view === "groups"
                   ? editGroup(null)
@@ -609,12 +630,12 @@ function FriendsWorkspace({ currentUser }: { currentUser: CurrentUser }) {
           {
             value: "friends",
             label: "Friends",
-            count: loaded ? directory.friends.length : undefined,
+            count: friendsLoaded ? directory.friends.length : undefined,
           },
           {
             value: "groups",
             label: "Groups",
-            count: loaded ? activeGroups.length : undefined,
+            count: groupsLoaded ? activeGroups.length : undefined,
           },
         ]}
       />

@@ -1,10 +1,9 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { getUserById } from "@/lib/anidachi-auth/db";
+import { getAccountIdentity } from "@/lib/anidachi-auth/account-identity";
 import { getPlanEntitlements } from "@/lib/anidachi-auth/plan-entitlements";
 import { getSession } from "@/lib/anidachi-auth/session";
-import { ensureProfileForUser } from "@/lib/anidachi-auth/social";
 import { AccountNav } from "./account-nav";
 import { AnidachiLogoLink } from "@/components/anidachi-logo";
 import { UserMenu } from "@/components/nav-bar-client";
@@ -30,10 +29,7 @@ export default async function AccountLayout({
     redirect("/login?next=%2Faccount");
   }
 
-  const [user, profile] = await Promise.all([
-    getUserById(session.userId),
-    ensureProfileForUser(session.userId),
-  ]);
+  const { user, profile } = await getAccountIdentity(session.userId);
   const displayName =
     profile?.display_name ?? user?.display_name ?? "AniDachi user";
   const effectivePlan = user?.plan ?? session.plan;
@@ -53,7 +49,7 @@ export default async function AccountLayout({
       </header>
       <div className="account-frame">
           <aside className="account-sidebar">
-            <AccountNav />
+            <AccountNav ownerUserId={session.userId} />
           </aside>
           <section className="account-content min-w-0">{children}</section>
       </div>
