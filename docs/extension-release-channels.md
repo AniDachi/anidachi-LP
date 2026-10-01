@@ -117,9 +117,12 @@ configuration are unchanged; no `unsafe-eval` permission is added.
 ### Local default-on history candidate, October 1, 2026
 
 The local `codex/extension-welcome-history` candidate replaces the earlier
-explicit-choice prompt with a once-per-installation welcome in Watch and a
-Settings switch. The welcome is marked seen only while visible in the popup;
-Got it only dismisses it. Recording does not depend on opening or dismissing it.
+explicit-choice prompt with a welcome in Watch and a Settings switch. The
+October 2 local follow-up shows it on every opening until Got it is clicked.
+Only that button saves an installation-local acknowledgement. Existing automatic
+seen flags are not migrated into acknowledgements, so upgraded installations see
+the notice again. Switching tabs, opening Settings and scrolling never acknowledge
+it. Recording does not depend on opening or dismissing it.
 
 A missing account/browser recording preference now defaults to enabled. Existing
 explicit off choices are preserved; malformed or unreadable preferences remain

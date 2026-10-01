@@ -1,9 +1,22 @@
 # Current Development State
 
+## Welcome acknowledgement follow-up, October 2, 2026
+
+The local follow-up to staging PR #396 keeps the Watch welcome visible until
+Got it is clicked. Popup reopening, Watch/People/Inbox navigation, scrolling and
+Settings do not acknowledge it. A separate installation-local acknowledgement
+key replaces the automatic seen flag; existing installations see the notice again
+because the old flag cannot distinguish viewing from clicking Got it. Recording
+preferences and paid/trial eligibility are unchanged. Read failures still show the
+informational notice; a failed acknowledgement save does not block the popup and
+allows it to reappear on the next opening. This follow-up is local pending staging
+and owner acceptance on the rebuilt unpacked artifact.
+
 ## Extension welcome and history preference prepared locally, October 1, 2026
 
 The local `codex/extension-welcome-history` candidate starts from staging
-`73df5668`. Watch now has a compact introduction shown once per installation.
+`73df5668`. Watch initially had a compact introduction shown once per installation.
+The October 2 follow-up above supersedes this automatic seen behavior.
 It explains hosting with Plus/Pro, free joining, and saved account history;
 Settings opens the existing settings panel and Got it only dismisses the notice.
 A restored scroll position cannot mark an offscreen welcome as seen.
