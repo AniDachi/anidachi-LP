@@ -9,7 +9,7 @@ import {
 } from "@/lib/billing-view";
 import type { TrialPlanQuote } from "@/lib/anidachi-auth/trial-plan-change";
 
-import { ArrowRight, CreditCard, ExternalLink, RefreshCw } from "lucide-react";
+import { ArrowRight, ChevronDown, ExternalLink, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -19,7 +19,6 @@ import {
 	subscriptionDateLabel,
 	subscriptionStatusLabel,
 } from "@/lib/billing-view";
-import { AccountPageHeader } from "@/components/account/account-ui";
 import { api } from "@/lib/client-api";
 import { EXTENSION_USING_HASH } from "@/lib/extension-using-guide";
 import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
@@ -221,203 +220,210 @@ export function BillingClient({
 	}
 
 	return (
-		<div className="ac-page ac-billing" aria-busy={busy}>
-			<AccountPageHeader
-				title="Subscription"
-				description="Your plan, billing status, and renewal settings."
-				action={
-					<button
-						type="button"
-						className="ac-button ac-button-quiet"
-						onClick={() => void load(true)}
-						disabled={busy}
-					>
-						<RefreshCw
-							size={16}
-							className={busy ? "ac-spinning" : ""}
-							aria-hidden
-						/>
-						Refresh status
-					</button>
-				}
-			/>
-			{error ? (
+		<BillingView
+			ownerUserId={ownerUserId}
+			overview={overview}
+			busy={busy}
+			error={error}
+			notice={notice}
+			planQuote={planQuote}
+			load={load}
+			changeTrial={changeTrial}
+			openStripe={openStripe}
+			setPlanQuote={setPlanQuote}
+		/>
+	);
+}
+
+/** Presentation shared with the development-only preview; no requests or effects. */
+export function BillingView({
+	ownerUserId,
+	overview,
+	busy,
+	error,
+	notice,
+	planQuote,
+	load,
+	changeTrial,
+	openStripe,
+	setPlanQuote,
+}: {
+	ownerUserId: string;
+	overview: BillingOverview | null;
+	busy: boolean;
+	error: string | null;
+	notice: string | null;
+	planQuote: {
+		subscriptionId: string;
+		quote: TrialPlanQuote;
+		requestId: string;
+	} | null;
+	load: (refresh: boolean) => Promise<void>;
+	changeTrial: (
+		subscriptionId: string,
+		planCode: "plus" | "pro",
+		confirm?: boolean,
+		billingPeriod?: BillingPeriod,
+	) => Promise<void>;
+	openStripe: (
+		subscriptionId: string,
+		action: "cancel" | "payment" | "restore" | "yearly",
+	) => Promise<void>;
+	setPlanQuote: (quote: null) => void;
+}) {
+	const owned = overview?.ownerUserId === ownerUserId ? overview : null;
+	const current =
+		owned?.subscriptions.filter((s) => !isPastSubscription(s)) ?? [];
+	const previous = owned?.subscriptions.filter(isPastSubscription) ?? [];
+	return (
+		<div className="ac-page ac-billing ac-billing-clean" aria-busy={busy}>
+			<header className="billing-header">
+				<h1>Subscription</h1>
+				<button
+					type="button"
+					className="ac-button ac-button-quiet"
+					onClick={() => void load(true)}
+					disabled={busy}
+				>
+					<RefreshCw
+						size={15}
+						className={busy ? "ac-spinning" : ""}
+						aria-hidden
+					/>
+					Refresh status
+				</button>
+			</header>
+			{error && (
 				<div role="alert" className="ac-notice ac-notice-error">
 					<p>{error}</p>
 					<a href="mailto:anidachi.app@gmail.com">Contact support</a>
 				</div>
-			) : null}
-			{notice ? (
+			)}
+			{notice && (
 				<p role="status" className="ac-notice">
 					{notice}
 				</p>
-			) : null}
-			{busy && !overview ? (
+			)}
+			{busy && !overview && (
 				<p role="status" className="ac-loading">
 					Loading your subscription…
 				</p>
-			) : null}
-			{overview?.ownerUserId === ownerUserId ? (
-				<div className="ac-detail-layout">
-					<div className="ac-plan-panel">
-						<div className="ac-plan-heading">
-							<div>
-								<p className="ac-eyebrow">
-									<CreditCard size={16} aria-hidden />
-									CURRENT PLAN
-								</p>
-								<h2>
-									AniDachi <span>{PLAN_NAMES[overview.planCode]}</span>
-								</h2>
-							</div>
-							{overview.planCode === "free" ? (
-								<div className="ac-plan-actions">
-									<Link
-										href={`${INSTALL_HUB_PATH}#${EXTENSION_USING_HASH}`}
-										className="ac-button ac-button-primary"
-									>
-										{INSTALL_CTA_LABEL}
-									</Link>
-									<Link href="/pricing" className="ac-button">
-										View plans <ArrowRight size={16} aria-hidden />
-									</Link>
-								</div>
-							) : null}
-						</div>
-						{overview.planCode === "free" ? (
-							<ul className="ac-plan-limits">
-								{overview.hosting &&
-								overview.serverTime &&
-								overview.hosting.hostingActivationAt &&
-								Date.parse(overview.hosting.hostingActivationAt) <=
-									Date.parse(overview.serverTime) ? (
-									<li>
-										Join a Plus, Pro or trial host for free. Creating your own
-										room needs Plus or Pro.
-									</li>
-								) : overview.hosting && overview.serverTime ? (
-									<>
-										<li>
-											Host for 30 minutes a day once a guest joins. Waiting
-											alone does not use that time, and pausing the video does
-											not stop it. A warning appears with five minutes left.
-										</li>
-										<li>Up to 4 people in a room, including you.</li>
-									</>
-								) : (
-									<li>
-										Join friends for free. Refresh to check your current hosting
-										access.
-									</li>
-								)}
-								<li>
-									No new watch history. You can still view and delete anything
-									already saved.
-								</li>
-								<li>
-									Invite by link. Push invites, room names, and more than one
-									group need Plus or Pro.
-								</li>
-							</ul>
-						) : overview.subscriptions.length === 0 ? (
-							<p className="ac-plan-empty">
-								No recurring subscription is linked to this account.
-							</p>
-						) : null}
-						{overview.subscriptions.map((subscription) => (
-							<section
-								key={subscription.id}
-								className="ac-subscription-record"
-								aria-label={`${PLAN_NAMES[subscription.planCode]} subscription`}
-							>
-								<div className="ac-section-heading">
-									<h3>{PLAN_NAMES[subscription.planCode]} subscription</h3>
-									<span className="ac-status">
-										{subscriptionStatusLabel(subscription)}
-									</span>
-								</div>
-								{subscription.trial ? (
-									<div className="ac-notice">
-										<p>
-											Trial ends: {formatBillingTime(subscription.trial.endsAt)}{" "}
-											(your local time).
-										</p>
-										{subscription.trial.stage === "trial" ? (
-											<p>
-												{subscription.cancelAtPeriodEnd
-													? "Renewal is canceled. Access continues until this trial ends; no first subscription charge is scheduled."
-													: `Your first ${subscription.price?.billingPeriod ?? (subscription.monthlyPrice ? "monthly" : "subscription")} payment is scheduled after the trial ends${subscriptionPriceLabel(subscription) ? ` at ${subscriptionPriceLabel(subscription)}` : ""}. Cancel renewal before then to avoid that charge.`}
-											</p>
-										) : null}
-										{subscription.trial.stage === "processing" ? (
-											<p>
-												Your first payment is being confirmed. This is not yet a
-												paid period. Temporary access lasts at most until{" "}
-												{formatBillingTime(subscription.trial.pendingUntil)}.
-											</p>
-										) : null}
-										{subscription.trial.stage === "payment_required" ? (
-											<p>
-												Your first payment needs attention. Complete payment to
-												restore this subscription’s paid access.
-											</p>
-										) : null}
-										{subscription.trial.stage === "ended" ? (
-											<p>
-												Your trial has ended. Check the current access shown
-												above before creating a room.
-											</p>
-										) : null}
+			)}
+			{owned && (
+				<>
+					{(owned.planCode === "free" || current.length === 0) && (
+						<section className="billing-access" aria-label="Current access">
+							<h2>{PLAN_NAMES[owned.planCode]}</h2>
+							{owned.planCode === "free" ? (
+								<>
+									<div className="billing-actions">
+										<Link
+											href={`${INSTALL_HUB_PATH}#${EXTENSION_USING_HASH}`}
+											className="ac-button"
+										>
+											{INSTALL_CTA_LABEL}
+										</Link>
+										<Link
+											href="/pricing"
+											className="ac-button ac-button-primary"
+										>
+											View plans
+											<ArrowRight size={16} aria-hidden />
+										</Link>
 									</div>
-								) : null}
-								{subscriptionPriceLabel(subscription) ? (
-									<p className="ac-muted">
-										{subscriptionPriceLabel(subscription)}. Taxes, discounts and
-										credits may change the final invoice total.
-									</p>
-								) : null}
-								{(["past_due", "unpaid", "incomplete"].includes(
-									subscription.status,
-								) ||
-									subscription.trial?.stage === "payment_required" ||
-									subscription.trial?.stage === "ended") &&
+									<ul className="ac-plan-limits">
+										{owned.hosting &&
+										owned.serverTime &&
+										owned.hosting.hostingActivationAt &&
+										Date.parse(owned.hosting.hostingActivationAt) <=
+											Date.parse(owned.serverTime) ? (
+											<li>
+												Join a Plus, Pro or trial host for free. Creating your
+												own room needs Plus or Pro.
+											</li>
+										) : owned.hosting && owned.serverTime ? (
+											<>
+												<li>
+													Host for 30 minutes a day once a guest joins. Waiting
+													alone does not use that time, and pausing the video
+													does not stop it. A warning appears with five minutes
+													left.
+												</li>
+												<li>Up to 4 people in a room, including you.</li>
+											</>
+										) : (
+											<li>
+												Join friends for free. Refresh to check your current
+												hosting access.
+											</li>
+										)}
+										<li>
+											No new watch history. You can still view and delete
+											anything already saved.
+										</li>
+										<li>
+											Invite by link. Push invites, room names, and more than
+											one group need Plus or Pro.
+										</li>
+									</ul>
+								</>
+							) : (
+								<p className="ac-muted">
+									No recurring subscription is linked to this account.
+								</p>
+							)}
+						</section>
+					)}
+					{current.map((subscription) => (
+						<section
+							key={subscription.id}
+							className="billing-subscription"
+							aria-label={`${PLAN_NAMES[subscription.planCode]} subscription`}
+						>
+							<div className="billing-plan-heading">
+								<div>
+									<div className="billing-plan-title">
+										<h2>
+											{PLAN_NAMES[subscription.planCode]}
+											<span className="sr-only"> subscription</span>
+										</h2>
+										<span className="billing-status">
+											{subscriptionStatusLabel(subscription)}
+										</span>
+									</div>
+									{(subscription.price || subscription.monthlyPrice) && (
+										<p>
+											{subscription.price?.billingPeriod === "yearly"
+												? "Yearly billing"
+												: "Monthly billing"}
+										</p>
+									)}
+								</div>
+							</div>
+							{subscription.planCode !== owned.planCode && (
+								<p className="ac-muted">
+									Current account access: {PLAN_NAMES[owned.planCode]}.
+								</p>
+							)}
+							<SubscriptionFacts subscription={subscription} />
+							{(["past_due", "unpaid", "incomplete"].includes(
+								subscription.status,
+							) ||
+								subscription.trial?.stage === "payment_required" ||
+								subscription.trial?.stage === "ended") &&
 								!subscription.cancelAtPeriodEnd &&
-								!["canceled", "incomplete_expired"].includes(
-									subscription.status,
-								) ? (
+								!isPastSubscription(subscription) && (
 									<button
 										type="button"
-										className="ac-button"
+										className="ac-button ac-button-primary"
 										disabled={busy}
 										onClick={() => void openStripe(subscription.id, "payment")}
 									>
-										Complete payment in Stripe{" "}
+										Complete payment in Stripe
 										<ExternalLink size={15} aria-hidden />
 									</button>
-								) : null}
-								{subscription.status !== "canceled" &&
-								subscription.status !== "incomplete_expired" ? (
-									<dl className="ac-billing-date">
-										<div>
-											<dt>{subscriptionDateLabel(subscription)}</dt>
-											<dd>{formatDate(subscription.currentPeriodEnd)}</dd>
-										</div>
-									</dl>
-								) : null}
-								{subscription.cancelAtPeriodEnd &&
-								subscription.status !== "canceled" ? (
-									<p className="ac-muted">
-										Renewal is canceled. Your subscription will end
-										automatically on the date shown.
-									</p>
-								) : null}
-								{subscription.status === "past_due" ||
-								subscription.status === "unpaid" ? (
-									<p className="ac-notice ac-notice-error">
-										Your payment needs attention. Paid features may be
-										unavailable; contact support if you need help.
-									</p>
-								) : null}
+								)}
+							<div className="billing-actions">
 								{subscription.canSwitchToYearly &&
 								subscription.planCode !== "free" ? (
 									<div className="ac-renewal-action">
@@ -512,28 +518,18 @@ export function BillingClient({
 								) : null}
 								{subscription.canCancel ? (
 									<div className="ac-renewal-action">
-										<p>
-											Confirm cancellation securely with Stripe. Renewal stops;
-											access continues until the end of your current trial or
-											paid period.
-										</p>
 										<button
 											type="button"
 											disabled={busy}
 											onClick={() => void openStripe(subscription.id, "cancel")}
 											className="ac-button"
 										>
-											Cancel subscription <ExternalLink size={15} aria-hidden />
+											Cancel renewal <ExternalLink size={15} aria-hidden />
 										</button>
 									</div>
 								) : null}
 								{subscription.canRestoreRenewal ? (
 									<div className="ac-renewal-action">
-										<p>
-											Confirm renewal in Stripe before the end date shown. Your
-											current trial or paid period keeps its original end date;
-											future payments resume automatically. No extra trial days.
-										</p>
 										<button
 											type="button"
 											className="ac-button"
@@ -546,34 +542,156 @@ export function BillingClient({
 										</button>
 									</div>
 								) : null}
-							</section>
-						))}
-					</div>
-					<aside className="ac-context" aria-label="Subscription help">
-						<h2>Make it yours</h2>
-						<p>Compare the available plans and choose what works for you.</p>
-						<Link href="/pricing" className="ac-text-link">
-							Compare plans <ArrowRight size={15} aria-hidden />
+							</div>
+							{(subscription.canCancel || subscription.canRestoreRenewal) && (
+								<p className="billing-action-note">
+									{subscription.canCancel
+										? subscription.trial?.stage === "trial"
+											? "Cancel before your trial ends to avoid a charge. Access stays until then."
+											: subscription.status === "active" &&
+													(!subscription.trial || subscription.trial.stage === "paid")
+												? "Cancel renewal in Stripe. Access stays until the end of your paid period."
+												: "Confirm cancellation in Stripe to stop future renewals."
+										: "Restore renewal in Stripe. Your current end date stays the same."}
+								</p>
+							)}
+						</section>
+					))}
+					{previous.length > 0 && (
+						<details className="billing-history">
+							<summary>
+								Subscription history{" "}
+								<span>
+									{previous.length}
+									<ChevronDown size={16} aria-hidden />
+								</span>
+							</summary>
+							<div className="billing-history-list">
+								{previous.map((subscription) => (
+									<div key={subscription.id} className="billing-history-row">
+										<div>
+											<h3>{PLAN_NAMES[subscription.planCode]} subscription</h3>
+											<p>
+												{subscriptionPriceLabel(subscription) ??
+													"Price unavailable"}
+											</p>
+										</div>
+										<span>{subscriptionStatusLabel(subscription)}</span>
+									</div>
+								))}
+							</div>
+						</details>
+					)}
+					<footer className="billing-footer">
+						<Link href="/pricing">
+							Compare plans
+							<ArrowRight size={15} aria-hidden />
 						</Link>
-						<div className="ac-context-section">
-							<h2>Your history stays</h2>
-							<p>
-								On Free, you can view and delete saved history. Recording and
-								editing progress need Plus or Pro.
-							</p>
-							<Link href="/account/watch-library" className="ac-text-link">
-								Open watch library <ArrowRight size={15} aria-hidden />
-							</Link>
-						</div>
-						<div className="ac-context-section">
-							<h2>Need a hand?</h2>
-							<a className="ac-text-link" href="mailto:anidachi.app@gmail.com">
-								Contact support <ArrowRight size={15} aria-hidden />
-							</a>
-						</div>
-					</aside>
-				</div>
-			) : null}
+						<a href="mailto:anidachi.app@gmail.com">
+							Contact support
+							<ArrowRight size={15} aria-hidden />
+						</a>
+					</footer>
+				</>
+			)}
 		</div>
+	);
+}
+
+function isPastSubscription(subscription: BillingSubscription) {
+	return (
+		subscription.status === "canceled" ||
+		subscription.status === "incomplete_expired"
+	);
+}
+
+function SubscriptionFacts({
+	subscription,
+}: {
+	subscription: BillingSubscription;
+}) {
+	const trial = subscription.trial;
+	const inTrial = trial?.stage === "trial";
+	const price = subscriptionPriceLabel(subscription);
+	const paymentPeriod =
+		subscription.price?.billingPeriod ??
+		(subscription.monthlyPrice ? "monthly" : "subscription");
+	const priceTitle =
+		inTrial && !subscription.cancelAtPeriodEnd
+			? `First ${paymentPeriod} payment`
+			: "Plan price";
+	return (
+		<>
+			<dl className="billing-facts">
+				<div>
+					<dt>
+						{inTrial ? "Trial ends" : subscriptionDateLabel(subscription)}
+					</dt>
+					<dd>
+						{inTrial
+							? formatBillingTime(trial.endsAt)
+							: formatDate(subscription.currentPeriodEnd)}
+					</dd>
+					{inTrial && <dd className="billing-timezone">Your local time</dd>}
+				</div>
+				<div>
+					<dt>{priceTitle}</dt>
+					<dd>{price ?? "Amount unavailable"}</dd>
+				</div>
+			</dl>
+			<div className="billing-terms">
+				{inTrial && (
+					<p>
+						{subscription.cancelAtPeriodEnd
+							? "No payment scheduled. Access continues until your trial ends."
+							: "Renews automatically after your trial."}
+					</p>
+				)}
+				{!inTrial && subscription.cancelAtPeriodEnd && (
+					<p>Renewal is canceled. Access continues until the date shown.</p>
+				)}
+				{!trial &&
+					subscription.status === "active" &&
+					!subscription.cancelAtPeriodEnd && (
+						<p>Renews automatically.</p>
+					)}
+				{trial?.stage === "paid" &&
+					subscription.status === "active" &&
+					!subscription.cancelAtPeriodEnd && (
+						<p>Renews automatically.</p>
+					)}
+				{trial?.stage === "processing" && (
+					<p className="billing-warning">
+						Your first payment is being confirmed. This is not yet a paid
+						period. Temporary access lasts at most until{" "}
+						{formatBillingTime(trial.pendingUntil)} (your local time).
+					</p>
+				)}
+				{trial?.stage === "payment_required" && (
+					<p className="billing-warning">
+						Your first payment needs attention. Complete payment to restore this
+						subscription’s paid access.
+					</p>
+				)}
+				{trial?.stage === "ended" && (
+					<p className="billing-warning">
+						Your trial has ended. Check your current account access before
+						creating a room.
+					</p>
+				)}
+				{["past_due", "unpaid"].includes(subscription.status) &&
+					trial?.stage !== "payment_required" && (
+						<p className="billing-warning">
+							Your payment needs attention. Paid features may be unavailable;
+							contact support if you need help.
+						</p>
+					)}
+				{price && (
+					<p className="billing-tax-note">
+						Taxes, discounts and credits may change the final total.
+					</p>
+				)}
+			</div>
+		</>
 	);
 }

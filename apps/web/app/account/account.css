@@ -229,3 +229,49 @@ body:has(.account-notifications:modal) { overflow: hidden; }
 .ac-social .social-group-heading { display: grid; grid-template-columns: minmax(0,1fr) 44px 44px; align-items: center; gap: 8px; }
 .ac-social .social-group-heading > form { grid-column: span 2; }
 .ac-social .social-create-group { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; }
+
+/* Subscription: current billing first; completed subscriptions stay in history. */
+.ac-billing-clean { max-width: 880px; gap: 32px; }
+.billing-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.billing-header h1 { font-size: clamp(24px, 2.4vw, 30px); line-height: 1.2; font-weight: 600; letter-spacing: -.035em; }
+.ac-billing-clean .ac-button { border-radius: 7px; }
+.billing-subscription { padding-top: 30px; border-top: 1px solid var(--account-line); }
+.billing-plan-title { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.billing-plan-heading h2, .billing-access h2 { font-size: 38px; font-weight: 500; letter-spacing: -.045em; line-height: 1.15; }
+.billing-plan-heading p { color: var(--account-muted); font-size: 14px; margin-top: 8px; }
+.billing-status { color: var(--color-brand-orange); font-size: 14px; line-height: 1.5; }
+.billing-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 32px 0 0; }
+.billing-facts dt { color: var(--account-muted); font-size: 13px; margin-bottom: 10px; }
+.billing-facts dd { font-size: clamp(18px, 2vw, 23px); font-weight: 500; letter-spacing: -.025em; overflow-wrap: anywhere; }
+.billing-facts .billing-timezone { font-size: 13px; color: var(--account-muted); margin-top: 6px; }
+.billing-terms { margin: 24px 0 0; font-size: 14px; line-height: 1.65; color: var(--account-cream); }
+.billing-terms p + p { margin-top: 6px; }
+.billing-terms .billing-tax-note { font-size: 13px; color: var(--account-muted); }
+.billing-terms .billing-warning { color: #edb5a4; }
+.billing-actions { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px; margin-top: 26px; }
+.billing-actions .ac-renewal-action { margin: 0; gap: 10px; }
+.billing-actions .ac-renewal-action:has(.ac-notice) { flex-basis: 100%; }
+.billing-action-note { margin-top: 14px; font-size: 14px; line-height: 1.7; color: var(--account-muted); max-width: 530px; }
+.billing-subscription > .ac-button { margin-top: 20px; }
+.billing-history { border-top: 1px solid var(--account-line); }
+.billing-history summary { display: flex; align-items: center; justify-content: space-between; min-height: 62px; font-size: 14px; cursor: pointer; list-style: none; }
+.billing-history summary::-webkit-details-marker { display: none; }
+.billing-history summary > span { display: inline-flex; align-items: center; gap: 12px; color: var(--account-muted); }
+.billing-history[open] summary svg { transform: rotate(180deg); }
+.billing-history-list { padding-bottom: 4px; }
+.billing-history-row { display: flex; justify-content: space-between; gap: 20px; padding: 16px 0; font-size: 13px; color: var(--account-muted); }
+.billing-history-row + .billing-history-row { border-top: 1px solid var(--account-line); }
+.billing-history-row h3 { color: var(--account-cream); font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+.billing-footer { display: flex; gap: 24px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid var(--account-line); }
+.billing-footer a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-size: 13px; color: var(--account-muted); }
+.billing-footer a:hover { color: var(--account-cream); }
+@media (max-width: 560px) {
+ .ac-billing-clean { gap: 24px; }
+ .billing-header .ac-button { padding: 8px; font-size: 12px; }
+ .billing-subscription { padding-top: 24px; }
+ .billing-plan-heading h2 { font-size: 32px; }
+ .billing-facts { grid-template-columns: 1fr; gap: 22px; margin-top: 26px; }
+ .billing-facts dt { margin-bottom: 6px; }
+ .billing-facts dd { font-size: 20px; }
+ .billing-terms { font-size: 13px; }
+}
