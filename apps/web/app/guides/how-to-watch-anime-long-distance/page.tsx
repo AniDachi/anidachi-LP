@@ -37,7 +37,7 @@ const faq = [
   {
     question: "Is screen sharing good enough for long-distance anime dates?",
     answer:
-      "It works for casual viewing but depends on one person's upload speed and often reduces resolution. Per-user streaming with a sync or async watchroom usually looks sharper for everyone.",
+      "It works for casual viewing but depends on one person's upload speed and often reduces resolution. Per-user streaming with live sync usually looks sharper for everyone.",
   },
   {
     question: "How do we avoid spoilers when we are long distance and on different schedules?",
@@ -57,7 +57,7 @@ const faq = [
   {
     question: "Can long-distance couples watch anime together for free?",
     answer:
-      `Yes — for free, Discord screen share works over any distance. For full video quality without one person's stream limiting the other, Crunchyroll Party (free) or AniDachi (Free limited hosting; Plus for unlimited hosting) give everyone independent full-quality streams. ${PRICING_COMPARE_OVERVIEW} AniDachi Async catch-up is planned; current rooms are live.`,
+      `Discord screen share is one free option, with quality and playback restrictions. Sync tools let everyone use their own full-quality stream. ${PRICING_COMPARE_OVERVIEW} Current AniDachi rooms need a shared start time.`,
   },
 ];
 
@@ -81,7 +81,7 @@ const howToSteps = [
   },
   {
     name: "Create a shared watchroom",
-    text: "Open the first episode, detect the anime in AniDachi, and create a room.",
+    text: "Open the episode; AniDachi detects it automatically. With your own Plus or Pro access, including an active trial, choose Create room. Your partner can join on Free.",
   },
   {
     name: "Share the invite",
@@ -118,7 +118,7 @@ export default function HowToWatchAnimeLongDistancePage() {
         description="Watch anime long distance with scheduled live watchrooms or Discord."
         url="/guides/how-to-watch-anime-long-distance"
         datePublished="2026-04-27"
-        dateModified="2026-06-23"
+        dateModified="2026-10-01"
         faq={faq}
         headings={tocHeadings}
       >

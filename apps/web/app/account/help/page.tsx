@@ -26,7 +26,7 @@ export default function AccountHelpPage() {
           <li>Sign in on Crunchyroll or YouTube with your own account. AniDachi does not share logins.</li>
           <li>Use a Crunchyroll title or a full youtube.com/watch page. Shorts, embeds, and the homepage do not sync.</li>
           <li>If the browser blocked autoplay, or an ad paused sync, click Resume sync in the player.</li>
-          <li>On Free, a room you host lasts 30 minutes a day once a guest joins. Waiting alone does not use that time. Pausing the video does not stop it. A warning appears with five minutes left.</li>
+          <li>Join a Plus, Pro, or trial host for free. Creating your own room requires your own Plus or Pro access, including during an active trial.</li>
         </ul>
         <div className="help-links">
           <Link href="/account/friends">Friends &amp; Groups</Link>

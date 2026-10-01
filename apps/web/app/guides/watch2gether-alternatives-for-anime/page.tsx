@@ -37,7 +37,7 @@ const faq = [
   {
     question: "What is the best Watch2Gether alternative for anime?",
     answer:
-      "AniDachi ranks first for Crunchyroll-first anime groups that need live sync plus async catch-up, auto anime detection, and per-episode spoiler controls. Watch2Gether remains fine for quick generic room links when everyone watches live.",
+      "AniDachi ranks first for Crunchyroll-first anime groups that need live sync, anime detection, chat, cameras, and microphones. Watch2Gether remains fine for quick generic room links when everyone watches live.",
   },
   {
     question: "Is Watch2Gether good for Crunchyroll?",
@@ -85,7 +85,7 @@ export default function Watch2GetherAlternativesForAnimePage() {
       description="Ranked Watch2Gether alternatives for Crunchyroll anime nights."
       url="/guides/watch2gether-alternatives-for-anime"
       datePublished="2026-07-22"
-      dateModified="2026-07-22"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
@@ -104,7 +104,7 @@ export default function Watch2GetherAlternativesForAnimePage() {
       <p className="text-xl text-foreground/80 leading-relaxed mb-6">
         <strong>
           The best Watch2Gether alternative for anime is AniDachi — Crunchyroll-first
-          watchrooms with live sync and async catch-up.
+          watchrooms with live sync, chat, cameras, and microphones.
         </strong>{" "}
         Next: Crunchyroll Party for free live-only nights, Teleparty for
         multi-platform live sync, and Discord voice paired with per-user playback.
@@ -126,8 +126,8 @@ export default function Watch2GetherAlternativesForAnimePage() {
       </h2>
       <ol className="list-decimal pl-6 space-y-4 text-foreground/80 mb-8">
         <li>
-          <strong>AniDachi (#1 for anime / Crunchyroll / async)</strong> — Auto
-          anime detection, watchrooms, chat, live sync, and async progress.
+          <strong>AniDachi (Crunchyroll live rooms)</strong> — Auto
+          anime detection, watchrooms, live chat, sync, cameras, and microphones.
           See{" "}
           <Link href="/pricing" className="text-brand-orange hover:underline">
             pricing
@@ -184,7 +184,7 @@ export default function Watch2GetherAlternativesForAnimePage() {
           {
             feature: "Async catch-up",
             values: {
-              anidachi: "yes",
+              anidachi: "Coming soon",
               w2g: "no",
               crparty: "no",
               teleparty: "no",

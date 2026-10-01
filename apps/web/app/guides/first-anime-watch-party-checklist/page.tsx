@@ -45,12 +45,12 @@ const faq = [
   {
     question: "Do we have to start the anime at the same time?",
     answer:
-      "No. Live sync is great for premiers, but async-friendly watchrooms let people catch up on their own schedule while keeping chat anchored to episodes. Decide up front whether you are locking a start time or using flexible pacing.",
+      "For a live AniDachi room, yes. Agree on a shared start time. Friends who miss it can watch independently and discuss later in a separate chat. Async catch-up with replayed reactions is coming soon.",
   },
   {
     question: "What if one person is one episode ahead?",
     answer:
-      "Pause public chat reactions until everyone passes the same episode marker, use thread labels for late viewers, or split into spoiler-safe and caught-up channels. Async watchrooms make it easier to see who finished which episode before you post twists.",
+      "Agree on a safe episode before posting reactions. Keep later-episode discussion in a separate labeled chat. Personal history belongs to each viewer; it does not show the group’s progress or automatically hide spoilers.",
   },
   {
     question: "Is AniDachi free or paid?",
@@ -96,7 +96,7 @@ const howToSteps = [
   },
   {
     name: "Choose pacing",
-    text: "Agree on live premiere times or async catch-up windows so chat stays spoiler-safe.",
+    text: "Agree on a shared start time for a live AniDachi room, and choose an episode boundary for spoiler discussions.",
   },
   {
     name: "Install AniDachi",
@@ -123,7 +123,7 @@ export default function FirstAnimeWatchPartyChecklistPage() {
     <>
       <HowToJsonLd
         name="Start your first anime watch party with AniDachi"
-        description="Prep accounts and pacing on Crunchyroll, then create a synced or async-friendly watchroom for your crew."
+        description="Prepare accounts and a shared start time on Crunchyroll, then create a live watchroom for your group."
         steps={howToSteps}
       />
       <SeoPageLayout
@@ -139,7 +139,7 @@ export default function FirstAnimeWatchPartyChecklistPage() {
         description="Prep accounts, pacing, and etiquette before your crew presses play on Crunchyroll."
         url="/guides/first-anime-watch-party-checklist"
         datePublished="2026-05-08"
-        dateModified="2026-05-08"
+        dateModified="2026-10-01"
         faq={faq}
         headings={tocHeadings}
         itemList={prepItemList}

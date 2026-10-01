@@ -23,7 +23,7 @@ export const extensionUsingSteps = [
   },
   {
     name: "Create a room",
-    text: "AniDachi detects the title. Click Create room — the orange button under your name. After the room starts, click the copy icon next to End room and send that invite. Friends open it on their own player.",
+    text: "Hosting requires your own Plus or Pro access, including an active trial. To join for free, open an invite from a Plus, Pro, or trial host. If you are hosting, AniDachi detects the title. Click Create room — the orange button under your name. After the room starts, click the copy icon next to End room and send that invite. Friends open it on their own player.",
   },
   {
     name: "Invite a friend",

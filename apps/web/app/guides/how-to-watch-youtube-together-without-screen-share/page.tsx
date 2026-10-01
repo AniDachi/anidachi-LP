@@ -70,7 +70,7 @@ const faq = [
   },
   {
     question: "Is AniDachi free?",
-    answer: `Free to join with limited hosting. ${PRICING_YT_PRICING_SNIPPET}`,
+    answer: `Free accounts can join an active Plus or Pro host, including a trial host. ${PRICING_YT_PRICING_SNIPPET}`,
   },
 ];
 
@@ -109,7 +109,7 @@ export default function HowToWatchYoutubeTogetherWithoutScreenSharePage() {
         description="Skip screen share — sync local YouTube playback with AniDachi watchrooms."
         url="/guides/how-to-watch-youtube-together-without-screen-share"
         datePublished="2026-07-26"
-        dateModified="2026-07-26"
+        dateModified="2026-10-01"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}

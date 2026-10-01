@@ -87,7 +87,7 @@ export default function CrunchyrollPartyAlternativePage() {
       description="Upgrade from free Crunchyroll Party live sync to AniDachi live watchrooms."
       url="/guides/crunchyroll-party-alternative"
       datePublished="2026-07-19"
-      dateModified="2026-08-11"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
@@ -138,10 +138,7 @@ export default function CrunchyrollPartyAlternativePage() {
         What AniDachi adds
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
-        Watchrooms with live sync and personal history, auto anime detection, chat
-        tied to the room, and host entitlements that scale from Free limited
-        hosting to Plus ({PRICING_PLUS_SHORT}) or Pro ({PRICING_PRO_SHORT}).
-        Guests can stay Free while the host upgrades.
+        AniDachi adds live sync, anime detection, chat, cameras, and microphones. Hosts need active Plus ({PRICING_PLUS_SHORT}) or Pro ({PRICING_PRO_SHORT}) access, including an active trial; friends can join on Free accounts. Viewers with their own Plus or Pro access can enable personal history.
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
         Review plans on{" "}

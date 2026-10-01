@@ -64,12 +64,12 @@ const faq = [
   {
     question: "How do you host an anime watch party online?",
     answer:
-      "Install AniDachi, navigate to any anime on Crunchyroll, click Detect Anime, and create a watchroom. Share the invite link with friends. Everyone watches in full quality on their own account with synced playback and live chat. The whole setup takes under two minutes.",
+      "Install AniDachi on desktop Chrome and open a Crunchyroll episode; the extension detects the player automatically. A Plus, Pro, or trial host chooses Create room and shares its invite. Free friends can join using their own Crunchyroll access for synced playback and live chat.",
   },
   {
     question: "Can you watch anime together long distance for free?",
     answer:
-      "Yes — for free, Discord screen sharing works over any distance. For a more polished long-distance anime watch party, Crunchyroll Party (free) or AniDachi (Free limited hosting; Plus for unlimited hosting) give everyone playback on their own streaming accounts with live sync. AniDachi currently requires a shared start time for live rooms. Async catch-up is planned. Dedicated hub: /best-apps-watch-anime-together-long-distance.",
+      "Yes — for free, Discord screen sharing works over any distance. Crunchyroll Party or AniDachi give everyone playback on their own streaming accounts with live sync. AniDachi requires a Plus, Pro, or trial host; Free friends can join. Live rooms need a shared start time and async catch-up is coming soon. Dedicated hub: /best-apps-watch-anime-together-long-distance.",
   },
   {
     question: "How do you stream anime together online?",
@@ -79,7 +79,7 @@ const faq = [
   {
     question: "Can you watch anime together without being online at the same time?",
     answer:
-      "Not yet. AniDachi rooms currently run live. Each viewer can keep personal progress with Plus or Pro; replaying friends' reactions through Async catch-up is planned.",
+      "Not yet. AniDachi rooms currently run live. Each viewer can record personal progress with their own Plus/Pro access and recording permission; replaying friends' reactions through async catch-up is coming soon.",
   },
   {
     question: "What anime are best to watch with friends?",
@@ -141,7 +141,7 @@ export default function WatchAnimeTogetherPage() {
       description="Compare every way to watch anime together online — AniDachi watchrooms, free options, long-distance tips, and genre hubs."
       url="/watch-anime-together"
       datePublished="2026-04-23"
-      dateModified="2026-09-21"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       itemList={genreHubItemList(1)}
@@ -179,7 +179,7 @@ export default function WatchAnimeTogetherPage() {
       <p className="text-foreground/80 mb-8">
         Ready to try the Crunchyroll-first option?{" "}
         <Link href="/pricing" className="text-brand-orange font-medium hover:underline">
-          See AniDachi pricing — Free limited hosting, Plus unlimited
+          See AniDachi pricing — Free to join, Plus or Pro to host
         </Link>{" "}
         — with a clear refund path, then create your first
         watchroom in minutes.

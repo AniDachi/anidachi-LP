@@ -44,7 +44,7 @@ const howToSteps = [
   },
   {
     name: "Host creates a watchroom",
-    text: "Open the episode on Crunchyroll, let AniDachi detect the series, and create a new watchroom.",
+    text: "Open the Crunchyroll episode; AniDachi detects it automatically. The host needs Plus or Pro access, including an active trial, to choose Create room. Friends can join on Free accounts.",
   },
   {
     name: "Paste the invite into Discord",
@@ -117,7 +117,7 @@ export default function SwitchFromDiscordScreenSharePage() {
         description="Migration playbook: keep Discord voice, replace Go Live with AniDachi watchrooms."
         url="/guides/switch-from-discord-screen-share"
         datePublished="2026-07-19"
-        dateModified="2026-09-21"
+        dateModified="2026-10-01"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
@@ -192,10 +192,10 @@ export default function SwitchFromDiscordScreenSharePage() {
         <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-4">
           <li>Pin the AniDachi invite next to the voice channel topic.</li>
           <li>Mute Discord video permissions so nobody restarts Go Live by habit.</li>
-          <li>Agree on spoilers for past episodes before async catch-up starts.</li>
+          <li>Agree on a safe episode boundary before discussing past episodes.</li>
         </ul>
         <p className="text-foreground/80 leading-relaxed mb-8">
-          When the host needs higher room limits, open{" "}
+          To choose Plus or Pro access for hosting, including trial options, open{" "}
           <Link href="/pricing" className="text-brand-orange font-medium hover:underline">
             AniDachi pricing
           </Link>

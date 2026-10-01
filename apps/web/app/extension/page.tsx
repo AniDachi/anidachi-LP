@@ -54,7 +54,7 @@ const howToSteps = [
   },
   {
     name: "Pin and open Crunchyroll or YouTube",
-    text: "Click the puzzle-piece icon in Chrome’s toolbar, find AniDachi, and pin it. Then open a Crunchyroll title or a full YouTube watch page and sign in when the extension asks.",
+    text: "Click the puzzle-piece icon in Chrome’s toolbar, find AniDachi, and pin it. Open a Crunchyroll episode or a full YouTube watch page and sign in when asked. Join a friend for free, or create a room with Plus or Pro, including during a trial.",
   },
 ];
 
@@ -77,7 +77,7 @@ export default function ExtensionInstallPage() {
       />
       <HowToJsonLd
         name="How to Watch Together"
-        description="Live sync on Crunchyroll or YouTube: open the overlay bubble, create a room, assign media seats, then set Reactions, Layout, Voice, Interface, and Room defaults."
+        description="Host a live Crunchyroll or YouTube room with Plus or Pro, including during a trial. Friends join for free. Use the overlay for invites, calls, reactions, and room settings."
         steps={extensionUsingSteps.map(({ name, text }) => ({ name, text }))}
       />
       <main id="main-content" className="min-h-screen bg-ani-canvas">

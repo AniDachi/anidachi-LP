@@ -90,22 +90,27 @@ export function HistoryBrowser(props: Props) {
   </div>;
 }
 
-const FIRST_WATCH_STEPS = [
-  "Install AniDachi in desktop Chrome.",
-  "Open a Crunchyroll title or a full youtube.com/watch page.",
-  "Create a room and copy the invite.",
-] as const;
-
 function LibraryFirstWatch({ canEdit }: { canEdit: boolean }) {
+  const steps = canEdit
+    ? [
+        "Install AniDachi in desktop Chrome and sign in.",
+        "Open AniDachi from Chrome’s toolbar. In Settings, choose Allow recording. For YouTube, turn on Track YouTube history too.",
+        "Watch a Crunchyroll title or a full youtube.com/watch page, alone or in a room.",
+      ]
+    : [
+        "Install AniDachi in desktop Chrome and sign in.",
+        "Open a friend’s room invite to join a Plus, Pro, or trial host for free.",
+        "To record your own progress, choose Plus or Pro, or start an eligible trial.",
+      ];
   return (
     <div className="wh-start">
       <p role="status">
         {canEdit
-          ? "Watch something with the AniDachi extension. Your titles will appear here."
-          : "No saved history yet. Plus or Pro records your viewing progress."}
+          ? "Allow recording in the extension to save your progress here, whether you watch alone or with friends."
+          : "No saved history yet. Recording and editing progress need your own Plus or Pro access, including an active trial."}
       </p>
       <ol>
-        {FIRST_WATCH_STEPS.map((step, index) => (
+        {steps.map((step, index) => (
           <li key={step}>
             <span>{index + 1}</span>
             {step}

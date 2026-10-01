@@ -34,7 +34,7 @@ export const metadata: Metadata = {
 
     title: "Best Apps to Watch YouTube Together",
     description:
-      "Ranked YouTube co-watch apps for 2026 — sync, async, and free options.",
+      "Ranked YouTube co-watch apps for 2026 — live sync, calling, and free joining options.",
     url: "/guides/best-apps-to-watch-youtube-together",
   },
   twitter: {
@@ -54,7 +54,7 @@ const faq = [
   {
     question: "Is there a free app to watch YouTube together?",
     answer:
-      "Watch2Gether’s free tier and Discord voice are free. AniDachi has a Free tier for joining and limited hosting — see pricing for unlimited host rooms.",
+      "Watch2Gether has a free tier and Discord voice is free. AniDachi guests join on Free; hosting requires Plus or Pro access, including an active trial. See pricing for current plans.",
   },
   {
     question: "Is AniDachi free?",
@@ -101,7 +101,7 @@ export default function BestAppsToWatchYoutubeTogetherPage() {
       description="Ranked YouTube co-watch apps — AniDachi, Watch2Gether, Teleparty, Discord."
       url="/guides/best-apps-to-watch-youtube-together"
       datePublished="2026-07-25"
-      dateModified="2026-09-21"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}

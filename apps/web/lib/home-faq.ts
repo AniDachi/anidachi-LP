@@ -14,12 +14,12 @@ export const homeFAQ = [
   {
     question: "How do I watch Crunchyroll with friends using AniDachi?",
     answer:
-      "Install AniDachi in desktop Chrome and open an episode on Crunchyroll. AniDachi detects the title automatically. Open the AniDachi panel, click 'Create room,' and share the invite link. Each friend needs the extension and access to the episode on their own Crunchyroll account.",
+      "Install AniDachi in desktop Chrome and open an episode on Crunchyroll. With Plus or Pro, including during a trial, open the AniDachi panel, click 'Create room,' and share the invite link. Friends join for free with the extension and their own access to the episode.",
   },
   {
     question: "Can I watch YouTube together with AniDachi?",
     answer:
-      "Yes. Open a full youtube.com/watch page in desktop Chrome, create a YouTube watchroom, and share the invite. Friends join on their own YouTube sessions for live sync today. Async catch-up is coming soon in a later batch. Shorts, embeds, and the mobile apps are not supported.",
+      "Yes. Open a full youtube.com/watch page in desktop Chrome. A Plus, Pro or trial host creates the room and shares the invite; friends join for free on their own video pages. Shorts, embeds, and the mobile apps are not supported. Async catch-up is coming soon.",
   },
   {
     question: "Can I watch anime with friends asynchronously?",
@@ -34,7 +34,7 @@ export const homeFAQ = [
   {
     question: "Is AniDachi free?",
     answer:
-      "Yes. You can join a Plus, Pro or trial host's room with a Free account. To create your own rooms and save personal watch progress, choose Plus or Pro. If you haven't used a trial before, you can try either plan for 3 days with a card. After that, your chosen monthly or yearly plan renews automatically unless you cancel.",
+      "Yes. You can join a Plus, Pro or trial host's room with a Free account. To create your own rooms and save personal watch progress, choose Plus or Pro. If your Free account has not used a trial before, you can try either plan for 3 days with a card. After that, your chosen monthly or yearly plan renews automatically unless you cancel.",
   },
   {
     question: "Do all my friends need an AniDachi subscription?",

@@ -16,12 +16,12 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "Anime Watch Party — Host on Crunchyroll With Friends (2026)",
   description:
-    "Start an anime watch party on Crunchyroll in under two minutes. AniDachi syncs playback, adds chat, and supports async catch-up when schedules don't align.",
+    "Start a live anime watch party on Crunchyroll with AniDachi. A Plus, Pro, or trial host invites Free friends for synced playback, chat, and reactions.",
   alternates: { canonical: "/anime-watch-party" },
   openGraph: {
     title: "Anime Watch Party — Crunchyroll Group Watching (2026)",
     description:
-      "Host an anime watch party with synced Crunchyroll playback, spoiler-safe chat, and async mode for busy groups.",
+      "Host a live anime watch party with synced Crunchyroll playback, chat, reactions, and voice/video.",
     url: "/anime-watch-party",
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Anime Watch Party — Crunchyroll Group Watching (2026)",
     description:
-      "Host an anime watch party with synced playback, chat, and async catch-up on Crunchyroll.",
+      "Host a live anime watch party with synced playback, chat, reactions, and voice/video on Crunchyroll.",
     images: [BRAND_OG_PATH],
   },
 };
@@ -38,7 +38,7 @@ const faq = [
   {
     question: "What is the best way to host an anime watch party?",
     answer:
-      "Install AniDachi on Chrome, open any Crunchyroll episode, create a watchroom, and share the invite link. Each person streams from their own account at full quality while playback stays synced. For groups in different time zones, use async mode so members catch up at their own pace without spoilers.",
+      "Install AniDachi on desktop Chrome and open the same Crunchyroll episode. A Plus, Pro, or trial host creates a room and shares its invite link; Free friends can join. Each person streams from their own account while playback stays synced, with live chat, reactions, and voice/video.",
   },
   {
     question: "Do you need Crunchyroll for an anime watch party?",
@@ -48,7 +48,7 @@ const faq = [
   {
     question: "Can you run an anime watch party without everyone being online at once?",
     answer:
-      "Yes. AniDachi's async watchrooms let each person watch when they can, mark episodes complete, and leave reactions others see after finishing the same episode. Live sync is still available for premiere nights and finale sessions.",
+      "You can watch independently and discuss later in a separate chat. AniDachi currently supports live rooms that need everyone online together. Built-in async catch-up, shared group progress, and replayed timestamped reactions are coming soon.",
   },
   {
     question: "How is this different from the anime watch party toolkit?",
@@ -90,10 +90,10 @@ export default function AnimeWatchPartyPage() {
         { name: "Anime watch party", url: "/anime-watch-party" },
       ]}
       title="Anime watch party on Crunchyroll"
-      description="Host an anime watch party with synced playback, chat, and async catch-up."
+      description="Host a live anime watch party with synced playback, chat, reactions, and voice/video."
       url="/anime-watch-party"
       datePublished="2026-07-02"
-      dateModified="2026-07-02"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       itemList={[...pillarItemList, ...genreHubItemList(pillarItemList.length + 1).slice(0, 4)]}
@@ -112,18 +112,18 @@ export default function AnimeWatchPartyPage() {
       </h2>
       <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
-          The fastest way to host an anime watch party is AniDachi — open any
-          Crunchyroll episode, create a watchroom, and share the link. Sync
-          playback live or let friends catch up asynchronously without spoilers.
+          With Plus, Pro, or trial access, open a Crunchyroll episode in
+          AniDachi, create a live room, and share the link. Free friends can
+          join for synchronized playback, chat, reactions, and voice/video.
         </strong>{" "}
         Each person streams on their own Crunchyroll account at full quality.
-        Setup takes under two minutes.
+        Choose an episode and a shared start time before sending invitations.
       </p>
 
       <p className="text-foreground/80 mb-8">
         Ready to host?{" "}
         <Link href="/#pricing" className="text-brand-orange font-medium hover:underline">
-          See AniDachi pricing — Free limited hosting, Plus from {PRICING_STARTING_AT}
+          See AniDachi pricing — Free to join, Plus from {PRICING_STARTING_AT} to host
         </Link>
         .
       </p>
@@ -145,15 +145,15 @@ export default function AnimeWatchPartyPage() {
         </li>
         <li>
           <span className="font-medium text-foreground">Create a watchroom</span>{" "}
-          from the AniDachi extension and copy the invite link.
+          with active Plus, Pro, or trial access and copy the invite link.
         </li>
         <li>
           <span className="font-medium text-foreground">Share the link</span>{" "}
           in Discord, group chat, or email so friends can join before you press play.
         </li>
         <li>
-          <span className="font-medium text-foreground">Choose live or async</span>{" "}
-          — sync for premiere nights, async when time zones or schedules diverge.
+          <span className="font-medium text-foreground">Watch live together</span>{" "}
+          — start once everyone has joined and opened the same episode.
         </li>
       </ol>
 
@@ -167,8 +167,8 @@ export default function AnimeWatchPartyPage() {
         <strong>Live watch parties</strong> keep everyone on the same timestamp —
         ideal for season finales, tournament episodes, and premiere drops.{" "}
         <strong>Async watch parties</strong> let each person watch when they can;
-        reactions stay episode-scoped so nobody spoils ahead. AniDachi supports
-        both in the same watchroom.
+        arrange those discussions in a separate chat today. AniDachi&apos;s
+        built-in async catch-up and replayed reactions are coming soon.
       </p>
       <p className="text-foreground/80 mb-8">
         Read the full breakdown:{" "}

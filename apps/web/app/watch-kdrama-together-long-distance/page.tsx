@@ -44,12 +44,12 @@ const faq = [
   {
     question: "What app do long-distance couples use for K-drama night?",
     answer:
-      "Teleparty (for Netflix K-dramas), Rave (multi-platform with voice chat), or just a video call with both pressing play at the same count. For anime content on Crunchyroll, AniDachi handles both live sync and async mode.",
+      "Teleparty (for Netflix K-dramas), Rave (multi-platform with voice chat), or just a video call with both pressing play at the same count. For anime content on Crunchyroll, AniDachi offers live sync, chat, reactions, and voice/video.",
   },
   {
     question: "Can long-distance couples watch the same K-drama at different times?",
     answer:
-      "Yes — the simplest method is to watch independently and discuss on a weekly video call. For anime on Crunchyroll, AniDachi's async mode adds episode-tagged reactions and spoiler protection. Most K-drama platforms don't have an equivalent async tool, so external discussion channels (Discord, WhatsApp) are the fallback.",
+      "Yes — watch independently and discuss on a weekly video call or in a separate, episode-labeled chat. AniDachi's current Crunchyroll rooms also need a shared live time; built-in async catch-up and replayed reactions are coming soon.",
   },
 ];
 
@@ -76,7 +76,7 @@ export default function WatchKdramaTogetherLongDistancePage() {
       description="K-drama watch party guide for long-distance couples — which tools work on each platform."
       url="/watch-kdrama-together-long-distance"
       datePublished="2026-06-23"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       aboveFoldCta
@@ -99,8 +99,8 @@ export default function WatchKdramaTogetherLongDistancePage() {
         For Netflix K-dramas: Teleparty. For multi-platform with voice
         chat: Rave. For Viki: check current Viki watch party support, or
         use the press-play-together method on a video call. For anime on
-        Crunchyroll in your queue: use AniDachi (it also supports async
-        mode for different schedules).
+        Crunchyroll in your queue: AniDachi offers live rooms with sync,
+        chat, reactions, and voice/video.
       </p>
 
       <h2
@@ -120,7 +120,7 @@ export default function WatchKdramaTogetherLongDistancePage() {
           { platform: "Netflix", tool: "Teleparty or Rave", async: "None (watch separately, discuss later)" },
           { platform: "Viki", tool: "Check Viki's current support or Rave", async: "None" },
           { platform: "YouTube", tool: "Watch2Gether", async: "None" },
-          { platform: "Crunchyroll (anime)", tool: "AniDachi", async: "Yes — async mode built in" },
+          { platform: "Crunchyroll (anime)", tool: "AniDachi", async: "Coming soon; live rooms today" },
           { platform: "Any platform", tool: "Discord (screen share) or press-play-together", async: "None" },
         ]}
       />
@@ -188,9 +188,8 @@ export default function WatchKdramaTogetherLongDistancePage() {
         When Your Schedules Never Align
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
-        For K-dramas specifically, there is currently no tool that offers
-        async watching equivalent to AniDachi. The best workaround for
-        different-schedule LDR couples is:
+        For different-schedule LDR couples, independent catch-up and a
+        separate discussion can keep the routine going:
       </p>
       <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li>Set a weekly episode target — 2 or 3 episodes per week.</li>
@@ -201,7 +200,7 @@ export default function WatchKdramaTogetherLongDistancePage() {
       <p className="text-foreground/80 leading-relaxed mb-8">
         For anime on Crunchyroll,{" "}
         <Link href="/timezone-friendly-anime-watch-parties" className="text-brand-orange hover:underline">
-          AniDachi&apos;s async mode handles all of this automatically.
+          use the same scheduling and independent catch-up routine.
         </Link>
       </p>
 
@@ -213,9 +212,9 @@ export default function WatchKdramaTogetherLongDistancePage() {
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
         If your LDR watch list includes anime alongside K-dramas, AniDachi
-        handles the Crunchyroll side with a much better experience than
-        any general watch party tool — including async mode, per-person
-        progress tracking, and episode-level spoiler control. Many couples
+        handles the Crunchyroll side with live sync, chat, reactions, and
+        voice/video. Personal history needs your own Plus/Pro access and
+        recording permission. Many couples
         run both in parallel: K-dramas via Teleparty on Netflix, anime via
         AniDachi on Crunchyroll.
       </p>

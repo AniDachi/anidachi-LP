@@ -73,7 +73,7 @@ export function genreDiscussionTips(genres: string[]): string[] {
 
   if (has(gs, "comedy", "parody")) {
     tips.push(
-      `Timestamp your favorite gag or facial expression so friends can replay the same three seconds without spoiling the next sketch.`
+      `Write your favorite gag's timestamp in your separate group chat so friends can find the same scene after they finish the episode.`
     );
   }
   if (has(gs, "romance", "drama")) {
@@ -93,7 +93,7 @@ export function genreDiscussionTips(genres: string[]): string[] {
   }
   if (has(gs, "horror")) {
     tips.push(
-      `Use spoiler tags for jump-scare timestamps so anxious viewers can mute sound for specific seconds.`
+      `In your separate group chat, use spoiler tags for jump-scare timestamps so anxious viewers can mute sound for specific seconds.`
     );
   }
 
@@ -144,14 +144,14 @@ export function buildWatchPageMetaDescription(anime: AnimeEntry): string {
   let desc: string;
 
   if (movie) {
-    // Movie: "Watch {title} as a group movie night — set up an AniDachi watchroom in seconds, no spoiler risk, {genres}, on Crunchyroll."
+    // Movie: "Watch {title} as a group movie night — live sync and chat, {genres}, via AniDachi on Crunchyroll."
     const genrePart = genreSuffix ? `, ${genreSuffix}` : "";
-    desc = `Watch ${anime.title} as a group movie night — set up an AniDachi watchroom in seconds, no spoiler risk${genrePart}, on Crunchyroll.`;
+    desc = `Watch ${anime.title} as a group movie night — live sync and chat${genrePart}, via AniDachi on Crunchyroll.`;
   } else if (isLong) {
-    // Long-run: "Host a spoiler-safe {title} marathon with friends — {ep_signal}, {genres}, AniDachi watchrooms on Crunchyroll."
+    // Long-run: "Host a live {title} marathon with friends — {ep_signal}, {genres}, AniDachi watchrooms on Crunchyroll."
     const epPart = epSignal ? ` — ${epSignal}` : "";
     const genrePart = genreSuffix ? `, ${genreSuffix}` : "";
-    desc = `Host a spoiler-safe ${anime.title} marathon with friends${epPart}${genrePart}, AniDachi watchrooms on Crunchyroll.`;
+    desc = `Host a live ${anime.title} marathon with friends${epPart}${genrePart}, AniDachi watchrooms on Crunchyroll.`;
   } else if (has(gs, "sports")) {
     // Sports: "Run a {title} watch club with friends — {ep_signal}, {genres}, live sync via AniDachi on Crunchyroll."
     const epPart = epSignal ? ` — ${epSignal}` : "";
@@ -186,11 +186,11 @@ export function buildWatchHowToSteps(anime: AnimeEntry): {
     },
     {
       name: "Open the anime on Crunchyroll",
-      text: `While signed into Crunchyroll, start ${anime.title} in your browser and run AniDachi's anime detection so metadata matches this series.`,
+      text: `While signed into Crunchyroll, open ${anime.title} in desktop Chrome. AniDachi detects the player automatically.`,
     },
     {
       name: "Create and share a watchroom",
-      text: `Create an AniDachi watchroom for ${anime.title}, then share the invite link in Discord, group chat, or email.`,
+      text: `With active Plus, Pro, or trial access, choose Create room for ${anime.title} and share its invite link. Free friends can join.`,
     },
     {
       name: "Watch live together",
@@ -198,7 +198,7 @@ export function buildWatchHowToSteps(anime: AnimeEntry): {
     },
     {
       name: "Track episodes and spoiler boundaries",
-      text: "Plus and Pro save personal history. Agree with friends on a safe episode boundary before the next session; personal progress is not a shared group record.",
+      text: "Your own Plus/Pro access and recording permission enable personal history. Agree with friends on a safe episode boundary; personal progress is not a shared group record.",
     },
   ];
 }
@@ -265,7 +265,7 @@ export function buildWatchPageFaq(
   if (epClass === "movie") {
     slotA = {
       question: `Can we watch ${anime.title} together in one sitting?`,
-      answer: `Yes — ${anime.title} is a feature-length film, making it perfect for a single group movie night. Install AniDachi, open the film on Crunchyroll, create a watchroom, and share the invite link before you press play. No need to coordinate a multi-session schedule.`,
+      answer: `Yes — ${anime.title} is a feature-length film for a single group movie night. Install AniDachi and open it on Crunchyroll. A Plus, Pro, or trial host creates the room and invites Free friends before pressing play.`,
     };
   } else if (epClass === "long") {
     slotA = {
@@ -313,7 +313,7 @@ export function buildWatchPageFaq(
   } else if (epClass === "long") {
     slotC = {
       question: `How do we track who has seen which arc in ${anime.title}?`,
-      answer: `Agree on the last arc everyone has finished in your separate group chat. AniDachi personal history tracks each viewer separately on Plus or Pro; it does not create a shared group progress record.`,
+      answer: `Agree on the last arc everyone has finished in your separate group chat. AniDachi personal history needs each viewer's own Plus/Pro access and recording permission; it does not create a shared group progress record.`,
     };
   } else {
     slotC = {

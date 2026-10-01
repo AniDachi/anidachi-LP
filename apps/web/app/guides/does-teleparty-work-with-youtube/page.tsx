@@ -21,7 +21,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "Does Teleparty Work With YouTube? (2026 Answer)",
   description:
-    "Does Teleparty work with YouTube in 2026? Yes for live sync — no async. Teleparty for YouTube vs AniDachi watchrooms compared. Start free at pricing.",
+    "Does Teleparty work with YouTube in 2026? Compare live YouTube sync with AniDachi rooms, hosting requirements, and free joining for guests.",
   alternates: { canonical: "/guides/does-teleparty-work-with-youtube" },
   openGraph: {
     images: [
@@ -103,7 +103,7 @@ export default function DoesTelepartyWorkWithYoutubePage() {
       description="Yes for live sync; no for async. How Teleparty for YouTube fits — and when AniDachi is better."
       url="/guides/does-teleparty-work-with-youtube"
       datePublished="2026-07-25"
-      dateModified="2026-08-12"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}

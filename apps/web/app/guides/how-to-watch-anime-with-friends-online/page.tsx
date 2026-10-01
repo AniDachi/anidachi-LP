@@ -69,12 +69,12 @@ const howToSteps = [
     text: "Sign in and navigate to the episode everyone will watch.",
   },
   {
-    name: "Detect anime",
-    text: "Use AniDachi to detect the series so the watchroom tracks the correct show.",
+    name: "Open the AniDachi overlay",
+    text: "AniDachi detects the episode automatically. Open its overlay on the Crunchyroll page.",
   },
   {
     name: "Create a watchroom",
-    text: "Create a room and copy the invite link for your friends.",
+    text: "With your own Plus or Pro access, including an active trial, choose Create room and copy the invite link. Friends can join on Free accounts.",
   },
   {
     name: "Invite friends",
@@ -107,7 +107,7 @@ export default function HowToWatchAnimeWithFriendsOnlinePage() {
         description="Watch anime with friends online using watchrooms, extensions, or Discord."
         url="/guides/how-to-watch-anime-with-friends-online"
         datePublished="2026-04-27"
-        dateModified="2026-04-27"
+        dateModified="2026-10-01"
         faq={faq}
         headings={tocHeadings}
       >
@@ -129,7 +129,7 @@ export default function HowToWatchAnimeWithFriendsOnlinePage() {
           Method 1: AniDachi (Crunchyroll watchrooms)
         </h2>
         <p className="text-foreground/80 leading-relaxed mb-4">
-          AniDachi lets friends in different cities meet in a live watchroom. Open the same title, create a room, and share its invite link. Playback, chat, and reactions run live; personal history saves each viewer&apos;s own progress. Async catch-up and replayed chat are planned.
+          AniDachi lets friends in different cities meet in a live watchroom. A host with Plus or Pro access, including an active trial, creates the room and shares its invite. Friends can join on Free accounts. Playback and chat run live; viewers with their own Plus or Pro access can enable personal history. Async catch-up and replayed chat are planned.
         </p>
         <p className="text-foreground/80 leading-relaxed mb-4">
           Everyone keeps their own{" "}

@@ -338,7 +338,8 @@ export function ExtensionInstallHub({
           <p>
             Chrome will install AniDachi and keep it updated automatically. After
             installation, pin it from the extensions menu and open Crunchyroll or
-            YouTube to start a watchroom.
+            YouTube. Join a friend for free, or create a room with Plus or Pro,
+            including during a trial.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {nextPath ? (

@@ -10,7 +10,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "Best Anime to Watch on Crunchyroll With Friends (2026) | AniDachi",
   description:
-    "Best anime to watch on Crunchyroll with friends — Attack on Titan, Demon Slayer, Haikyuu, One Piece & 30+ more picks sorted by group-watch quality. Sync and track progress with AniDachi watchrooms.",
+    "Best anime to watch on Crunchyroll with friends — Attack on Titan, Demon Slayer, Haikyuu, One Piece & 30+ more picks sorted by group-watch quality. Watch in live sync with AniDachi.",
   alternates: {
     canonical: "/guides/best-anime-to-watch-on-crunchyroll-with-friends",
   },
@@ -39,12 +39,12 @@ const faq = [
   {
     question: "Can you watch Crunchyroll together with friends?",
     answer:
-      "Yes — Crunchyroll does not have a native built-in watch party feature, but AniDachi adds synchronized co-watching on top of Crunchyroll. Each person needs their own Crunchyroll subscription; AniDachi handles the sync, shared reactions, and progress tracking across your group. Install the AniDachi Chrome extension, create a watchroom, and share the link with your friends.",
+      "Yes. AniDachi adds live synchronized playback, chat, cameras, and microphones to Crunchyroll. Each person needs their own access to the episode. A host with Plus or Pro access, including an active trial, creates the room; friends can join on Free accounts.",
   },
   {
     question: "Does Crunchyroll have a watch party feature?",
     answer:
-      "Crunchyroll does not currently have a native watch party feature. AniDachi is specifically designed to fill this gap — it adds synchronized playback, shared reaction threads, async progress tracking, and spoiler controls to any Crunchyroll series.",
+      "Crunchyroll does not currently have a native watch party feature. AniDachi adds synchronized playback, live chat, cameras, and microphones. Each viewer with their own Plus or Pro access can enable personal history; it is separate from group chat and does not hide spoilers.",
   },
   {
     question: "What anime on Crunchyroll can we finish in a weekend?",
@@ -59,7 +59,7 @@ const faq = [
   {
     question: "Do we all need a Crunchyroll account to watch together?",
     answer:
-      "Yes — each person in your group needs their own active Crunchyroll subscription to stream video. AniDachi handles the group layer (sync, reactions, progress tracking) but does not provide access to Crunchyroll content itself.",
+      "Each person needs their own access to the selected Crunchyroll episode. AniDachi adds live sync and conversation; it does not provide streaming access or share a Crunchyroll subscription.",
   },
 ];
 
@@ -93,7 +93,7 @@ export default function BestAnimeOnCrunchyrollWithFriendsPage() {
       description="30+ Crunchyroll picks for group watches — sorted by episode count, group energy, and beginner accessibility."
       url="/guides/best-anime-to-watch-on-crunchyroll-with-friends"
       datePublished="2026-06-21"
-      dateModified="2026-06-21"
+      dateModified="2026-10-01"
       faq={faq}
       headings={headings}
       itemList={itemList}
@@ -194,9 +194,7 @@ export default function BestAnimeOnCrunchyrollWithFriendsPage() {
         Best Long Crunchyroll Anime for Dedicated Groups (100+ Episodes)
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
-        Long-run series require scheduling discipline and async catch-up when
-        sessions are missed. AniDachi&apos;s progress tracking ensures no one
-        permanently falls behind.
+        Long-run series benefit from a regular schedule and time to catch up independently after missed sessions. Each viewer with Plus or Pro can enable personal history to save their own place; it does not track the group’s progress.
       </p>
       <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
@@ -206,7 +204,7 @@ export default function BestAnimeOnCrunchyrollWithFriendsPage() {
           <strong><Link href="/watch/naruto-with-friends" className="text-brand-orange hover:underline">Naruto</Link></strong> — 220 episodes (with filler) + 500 episodes of Shippuden. Approach with a filler guide. The canonical content is formative shonen — recommended for groups with at least one member who has seen it before. Available on Crunchyroll.
         </li>
         <li>
-          <strong><Link href="/watch/one-piece-with-friends" className="text-brand-orange hover:underline">One Piece</Link></strong> — 1,100+ episodes and ongoing. A years-long anime club commitment. The Wano arc delivers prestige-TV production if your group reaches it. Use AniDachi async mode and skip filler. Available on Crunchyroll.
+          <strong><Link href="/watch/one-piece-with-friends" className="text-brand-orange hover:underline">One Piece</Link></strong> — 1,100+ episodes and ongoing. A years-long anime club commitment. The Wano arc delivers prestige-TV production if your group reaches it. Set shared arc checkpoints, catch up independently between live sessions, and skip filler. Check Crunchyroll availability in your region.
         </li>
         <li>
           <strong><Link href="/watch/bleach-with-friends" className="text-brand-orange hover:underline">Bleach</Link></strong> — 366 canonical episodes + Thousand-Year Blood War. Skip filler — the canonical content delivers consistent action spectacle. TYBW animation is some of the best in the franchise. Available on Crunchyroll.
@@ -251,8 +249,8 @@ export default function BestAnimeOnCrunchyrollWithFriendsPage() {
         <li>Install the <strong>AniDachi Chrome extension</strong> — every person in your group installs it on their own browser.</li>
         <li>Each person opens the same Crunchyroll series on their own account.</li>
         <li>One person creates a watchroom and shares the invite link with the group.</li>
-        <li>AniDachi syncs playback, hosts a shared reaction thread, and tracks individual episode progress.</li>
-        <li>For async watching, set a spoiler boundary (safe episode number) — members who catch up later can read back without hitting reveals.</li>
+        <li>AniDachi syncs playback and provides live chat. Viewers with Plus or Pro can enable their own personal history.</li>
+        <li>Agree on a safe episode boundary. Keep later discussions in a separate labeled chat for members who watch independently.</li>
       </ol>
 
       {/* ── RELATED ──────────────────────────────────────── */}

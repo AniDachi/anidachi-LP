@@ -6,7 +6,7 @@ import { animeList, getAnimeByGenre, type AnimeEntry } from "@/lib/anime-data";
 export const metadata: Metadata = {
   title: "Watch Shonen Anime With Friends (2026) | AniDachi",
   description:
-    "Watch shonen anime with friends on Crunchyroll — Demon Slayer, Jujutsu Kaisen, Haikyuu, Hunter x Hunter, and more. Synced watchrooms with spoiler-safe chat and async catch-up.",
+    "Watch shonen anime with friends on Crunchyroll — Demon Slayer, Jujutsu Kaisen, Haikyuu, Hunter x Hunter, and more. Live rooms with synced playback, chat, and reactions.",
   alternates: { canonical: "/watch-shonen-anime-with-friends" },
   openGraph: {
     images: [
@@ -82,7 +82,7 @@ const faq = [
   {
     question: "How do we watch long shonen series like One Piece without spoilers?",
     answer:
-      "Pin a safe episode marker in your AniDachi watchroom and use async mode so members who binge ahead post episode-tagged reactions instead of spoiling fight outcomes. Agree on a weekly episode count (3–4 episodes) and skip filler arcs with a shared filler guide.",
+      "Agree on a safe episode boundary and a weekly count, such as 3–4 episodes. Keep later-arc discussion in a separate, labeled chat and let anyone who misses a meeting catch up independently. AniDachi currently supports live rooms; async catch-up is coming soon.",
   },
   {
     question: "Is shonen anime good for groups new to anime?",
@@ -130,7 +130,7 @@ export default function WatchShonenAnimeWithFriendsPage() {
       description="Group watchroom guides for shonen anime on Crunchyroll."
       url="/watch-shonen-anime-with-friends"
       datePublished="2026-07-02"
-      dateModified="2026-07-02"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -149,8 +149,8 @@ export default function WatchShonenAnimeWithFriendsPage() {
       <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           Shonen is built for group reactions — install AniDachi, open any
-          Crunchyroll series below, and create a watchroom. Sync battles live or
-          catch up asynchronously when schedules diverge.
+          Crunchyroll series below, and let a Plus, Pro, or trial host create a
+          live room. Free friends can join to share the battles and reactions.
         </strong>{" "}
         Each person streams from their own Crunchyroll account at full quality.
       </p>
@@ -168,9 +168,9 @@ export default function WatchShonenAnimeWithFriendsPage() {
         prediction games before every match.
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
-        AniDachi watchrooms support live sync for premiere nights and async
-        catch-up for long-run series like One Piece or Naruto — so nobody falls
-        permanently behind the club.
+        AniDachi watchrooms support live sync for premiere nights. For long-run
+        series like One Piece or Naruto, arrange independent catch-up before
+        the next meeting. Built-in async catch-up is coming soon.
       </p>
 
       <h2
@@ -215,11 +215,11 @@ export default function WatchShonenAnimeWithFriendsPage() {
           <span className="font-medium text-foreground">Create a watchroom and share the link.</span>
         </li>
         <li>
-          <span className="font-medium text-foreground">Agree on live or async pacing</span>{" "}
-          — live for finales, async for weekly club episodes.
+          <span className="font-medium text-foreground">Agree on a live start time</span>{" "}
+          and an episode target for anyone catching up independently.
         </li>
         <li>
-          <span className="font-medium text-foreground">Pin your spoiler boundary</span>{" "}
+          <span className="font-medium text-foreground">Agree on a spoiler boundary</span>{" "}
           at the safe episode number before anyone posts fight outcomes.
         </li>
       </ol>

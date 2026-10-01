@@ -4,7 +4,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
 import { getGuideLinks } from "@/lib/guide-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
-import { PRICING_DISCORD_COMPARE_FAQ } from "@/lib/pricing-copy";
+import { PRICING_DISCORD_COMPARE_YOUTUBE_FAQ } from "@/lib/pricing-copy";
 
 const SITE_URL = getResolvedSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
@@ -58,7 +58,7 @@ const faq = [
   },
   {
     question: "How does AniDachi pricing compare to Discord?",
-    answer: PRICING_DISCORD_COMPARE_FAQ,
+    answer: PRICING_DISCORD_COMPARE_YOUTUBE_FAQ,
   },
   {
     question: "Does Discord have Watch Together for YouTube?",
@@ -121,7 +121,7 @@ export default function YoutubeWatchPartyWithDiscordPage() {
         description="Discord voice + AniDachi YouTube sync — hybrid co-watch without Go Live."
         url="/guides/youtube-watch-party-with-discord"
         datePublished="2026-07-25"
-        dateModified="2026-09-21"
+        dateModified="2026-10-01"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}

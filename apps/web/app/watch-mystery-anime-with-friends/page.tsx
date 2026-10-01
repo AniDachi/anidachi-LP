@@ -6,7 +6,7 @@ import { animeList } from "@/lib/anime-data";
 export const metadata: Metadata = {
   title: "Watch Mystery & Psychological Anime With Friends (2026) | AniDachi",
   description:
-    "Mystery anime is the ultimate group watch — theorize together live or async with AniDachi on Crunchyroll. Death Note, Steins;Gate, Erased, and more.",
+    "Watch mystery anime with friends and share theories live with AniDachi on Crunchyroll. Death Note, Steins;Gate, Erased, and more.",
   alternates: { canonical: "/watch-mystery-anime-with-friends" },
   openGraph: {
     images: [
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
     title: "Watch Mystery Anime With Friends (2026) | AniDachi",
     description:
-      "Group watchroom guides for mystery and psychological anime on Crunchyroll — theory threads, spoiler-safe chat, and twist-reaction sessions.",
+      "Group watchroom guides for mystery and psychological anime on Crunchyroll — live chat, twist reactions, and theory discussion tips.",
     url: "/watch-mystery-anime-with-friends",
   },
 };
@@ -34,22 +34,22 @@ const faq = [
   {
     question: "How do we share theories about mystery anime without accidentally spoiling each other?",
     answer:
-      "Create two pinned threads in your AniDachi watchroom: a &quot;theory sandbox&quot; for speculation (anything goes, clearly labeled) and an &quot;episode reactions&quot; thread for confirmed-only discussion tagged by episode number. Members who are ahead can post in the theory sandbox without ruining the confirmed thread for late viewers.",
+      "Create separate, clearly labeled threads in your own group chat for speculation and confirmed episode discussion. Agree on a safe episode boundary before each AniDachi live room. Members who are ahead should keep later details out of the live chat.",
   },
   {
     question: "What is the best way to watch mystery anime asynchronously?",
     answer:
-      "Mystery anime is actually great for async watching — each member posts a &quot;theory after Ep X&quot; reaction before reading anyone else&apos;s, creating an organic record of how the group&apos;s understanding evolved. When everyone catches up, the comparison of theories becomes its own entertainment. AniDachi's episode-scoped threads make this natural.",
+      "Watch independently, write down your theory after each episode, and compare notes in a separate chat after everyone catches up. AniDachi's current rooms are live; built-in async catch-up and replayed reactions are coming soon.",
   },
   {
     question: "How do we handle a group member who has already seen the mystery anime?",
     answer:
-      "Ask the re-watcher to stay out of the theory sandbox until the group finishes, then participate in a separate &quot;hindsight&quot; thread where they can point out foreshadowing everyone missed. This keeps their experience valuable without being a spoiler risk. AniDachi's thread structure makes it easy to keep these conversations separate.",
+      "Ask the re-watcher to hold hints until the group finishes. Then open a separate hindsight thread in your own group chat for foreshadowing everyone missed. During AniDachi live sessions, keep the same agreed episode boundary.",
   },
   {
     question: "Do we all need Crunchyroll to watch mystery anime together?",
     answer:
-      "Yes — each person needs their own active Crunchyroll subscription to stream the video. AniDachi adds the watchroom, theory threads, and episode-scoped chat on top. It does not replace Crunchyroll's catalog or access controls.",
+      "Yes — each person needs their own Crunchyroll access to the video. AniDachi adds live sync, chat, reactions, and voice/video. It does not replace Crunchyroll's catalog or access controls.",
   },
 ];
 
@@ -87,7 +87,7 @@ export default function WatchMysteryAnimeWithFriendsPage() {
       description="Group watchroom guides for mystery and psychological anime on Crunchyroll."
       url="/watch-mystery-anime-with-friends"
       datePublished="2026-05-18"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -106,8 +106,8 @@ export default function WatchMysteryAnimeWithFriendsPage() {
         <strong>
           Mystery anime is the ultimate group experience — theory-crafting
           together is half the show. Install AniDachi, open any series below
-          on Crunchyroll, and set up a watchroom with separate theory and
-          reaction threads before episode one.
+          on Crunchyroll, and let a Plus, Pro, or trial host invite Free
+          friends to a live room. Keep theory notes in a separate chat.
         </strong>
       </p>
 
@@ -125,11 +125,10 @@ export default function WatchMysteryAnimeWithFriendsPage() {
         correct one is a shared triumph.
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
-        AniDachi watchrooms are particularly valuable here: episode-scoped threads
-        prevent theory posts from becoming accidental spoilers, and async mode
-        lets each viewer post their raw theory after each episode before reading
-        anyone else&apos;s — creating a documentary record of the group&apos;s unfolding
-        understanding.
+        AniDachi live rooms let the group share each reveal in sync and pause
+        to compare theories. Keep notes and later-episode discussion in a separate,
+        labeled chat; the current room does not provide episode-scoped threads
+        or automatic spoiler filtering.
       </p>
 
       <h2
@@ -159,11 +158,11 @@ export default function WatchMysteryAnimeWithFriendsPage() {
         id="theory-setup"
         className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
-        How to Set Up Theory Threads in Your Watchroom
+        How to Organize Theories in Your Group Chat
       </h2>
       <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
         <li>
-          <span className="font-medium text-foreground">Create two pinned threads before episode one.</span>{" "}
+          <span className="font-medium text-foreground">Create two threads in your separate group chat.</span>{" "}
           &quot;Theory Sandbox&quot; (speculation, anything goes) and &quot;Episode Reactions&quot; (confirmed facts only, episode-tagged).
         </li>
         <li>

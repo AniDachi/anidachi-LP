@@ -35,7 +35,7 @@ const faq = [
   {
     question: "Does Teleparty work for long-distance anime watching?",
     answer:
-      "Teleparty supports Crunchyroll for live synchronized watching. It does not support async mode, so both people must be online at the same time. For long-distance couples with different schedules or time zones, AniDachi's async feature is more practical.",
+      "Teleparty supports Crunchyroll for live synchronized watching. Both people must be online at the same time. AniDachi's current rooms also sync live playback; async catch-up is coming soon.",
   },
   {
     question: "Is Teleparty better than AniDachi for long distance?",
@@ -90,7 +90,7 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
       description="Every watch-together app compared for long-distance anime couples."
       url="/best-apps-watch-anime-together-long-distance"
       datePublished="2026-06-23"
-      dateModified="2026-09-21"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -147,11 +147,11 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
           },
           {
             feature: "Spoiler control",
-            values: { anidachi: "Episode-level", teleparty: "no", rave: "no", discord: "no", "crunchyroll-party": "no" },
+            values: { anidachi: "Agree a boundary in chat", teleparty: "no", rave: "no", discord: "no", "crunchyroll-party": "no" },
           },
           {
             feature: "Per-person progress tracking",
-            values: { anidachi: "yes", teleparty: "no", rave: "no", discord: "no", "crunchyroll-party": "no" },
+            values: { anidachi: "Own Plus/Pro + recording permission", teleparty: "no", rave: "no", discord: "no", "crunchyroll-party": "no" },
           },
           {
             feature: "Price",
@@ -172,19 +172,19 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
         extension: Add to Chrome, open your own tab, share one invite.{" "}
         <strong>Async catch-up is planned</strong> and is not available yet —
         live rooms still need everyone online together. Personal history on Plus
-        or Pro is what you get today for catching up between sessions.
+        or Pro, with recording permission, helps you resume your own viewing between sessions.
       </p>
       <ul className="list-disc pl-6 space-y-1 text-foreground/80 mb-6">
         <li>Live sync on Crunchyroll and YouTube (async planned)</li>
         <li>Auto anime detection on Crunchyroll</li>
-        <li>Episode-level spoiler control</li>
-        <li>Per-person progress tracking</li>
-        <li>Persistent watchroom chat that survives session gaps</li>
-        <li>Free to join friends&apos; rooms; Plus from $7.99/mo to host — {PRICING_CANCELLATION_NOTE}</li>
+        <li>Live chat and reactions alongside the player</li>
+        <li>Personal progress with your own Plus/Pro access and recording permission</li>
+        <li>Built-in voice and video during the room session</li>
+        <li>Free to join active Plus/Pro/trial hosts; Plus from $7.99/mo to host — {PRICING_CANCELLATION_NOTE}</li>
       </ul>
       <p className="text-foreground/80 mb-8">
         <strong>Best for:</strong> Long-distance couples on Crunchyroll with
-        5+ hour time differences or inconsistent schedules.
+        a shared time for live viewing and a preference for personal history between sessions.
       </p>
 
       <h2
@@ -302,18 +302,18 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
         Use this decision framework:
       </p>
       <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
-        <li><strong>You watch on Crunchyroll + can&apos;t always sync schedules → AniDachi</strong> (async mode solves the time zone problem)</li>
+        <li><strong>You watch live on Crunchyroll or YouTube → AniDachi</strong> (sync, chat, reactions, and voice/video beside the player)</li>
         <li><strong>You watch live together across multiple platforms → Teleparty or Rave</strong></li>
         <li><strong>You want video calling built in → Rave or Scener</strong></li>
         <li><strong>You want completely free + Crunchyroll → Crunchyroll Party or Discord</strong></li>
       </ul>
       <p className="text-foreground/80 leading-relaxed mb-8">
-        For long-distance couples specifically: async support is the most
-        important feature, and{" "}
+        If your schedules do not overlap, arrange independent catch-up and
+        discuss afterward. See the{" "}
         <Link href="/timezone-friendly-anime-watch-parties" className="text-brand-orange hover:underline">
-          AniDachi&apos;s async watching mode
+          guide to watching across time zones
         </Link>{" "}
-        is the only option on this list that provides it.
+        for a routine you can use today. AniDachi&apos;s built-in async mode is coming soon.
       </p>
 
       <h2

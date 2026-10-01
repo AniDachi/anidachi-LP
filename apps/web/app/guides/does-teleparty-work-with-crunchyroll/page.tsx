@@ -52,12 +52,12 @@ const faq = [
   {
     question: "Does Teleparty support async watching on Crunchyroll?",
     answer:
-      "No. Teleparty is built for live sync: everyone presses play together. If a friend is in another time zone or misses the start time, there is no episode-scoped progress or spoiler-safe catch-up layer. AniDachi adds async watchrooms for that Crunchyroll use case.",
+      "No. Teleparty live sync requires everyone online together. AniDachi also provides live rooms today; Async catch-up is coming soon. If schedules differ, watch independently and discuss later in a separate chat.",
   },
   {
     question: "What is the best Teleparty alternative for anime on Crunchyroll?",
     answer:
-      "For Crunchyroll-first anime groups — especially ones that need async catch-up — AniDachi is the strongest Teleparty alternative. See our ranked list of Teleparty alternatives for anime and the full AniDachi vs Teleparty comparison.",
+      "AniDachi is an option for Crunchyroll-first groups that want live rooms, cameras, microphones, and personal history for viewers with Plus or Pro. Compare platform support, hosting requirements, and the features your group actually uses.",
   },
 ];
 
@@ -91,7 +91,7 @@ export default function DoesTelepartyWorkWithCrunchyrollPage() {
       description="Yes for live sync; no for async. How Teleparty for Crunchyroll fits anime groups — and when AniDachi is the better fit."
       url="/guides/does-teleparty-work-with-crunchyroll"
       datePublished="2026-07-19"
-      dateModified="2026-08-12"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
@@ -108,9 +108,7 @@ export default function DoesTelepartyWorkWithCrunchyrollPage() {
           Yes — Teleparty can work with Crunchyroll for live, synchronized watch
           parties when everyone is online together.
         </strong>{" "}
-        It does not offer async catch-up, per-episode progress, or
-        anime-specific spoiler controls. If your group watches Crunchyroll on
-        staggered schedules, you will outgrow Teleparty for Crunchyroll nights.
+        AniDachi also requires everyone online together for live sync. Compare its cameras, microphones, and personal history on Plus or Pro if those features matter to your group.
       
       </SeoGuideAnswer>
 
@@ -147,7 +145,7 @@ export default function DoesTelepartyWorkWithCrunchyrollPage() {
         </li>
         <li>
           <strong>General-purpose, not anime-first</strong> — no auto anime
-          detection or episode-scoped progress the way AniDachi watchrooms work.
+          detection. AniDachi offers personal history with each viewer’s own Plus or Pro access.
         </li>
         <li>
           <strong>Update fragility</strong> — Crunchyroll player changes can
@@ -166,8 +164,7 @@ export default function DoesTelepartyWorkWithCrunchyrollPage() {
       <p className="text-foreground/80 leading-relaxed mb-4">
         Keep Teleparty if your crew only watches live and jumps across Netflix,
         Disney+, and Crunchyroll in the same week. Switch when Crunchyroll is the
-        main destination and schedules rarely align — that is where AniDachi
-        async watchrooms win. For a ranked list, see{" "}
+        main destination and your group wants live chat, cameras, and microphones. For a ranked list, see{" "}
         <Link
           href="/guides/best-teleparty-alternatives-for-anime"
           className="text-brand-orange hover:underline"
@@ -184,12 +181,11 @@ export default function DoesTelepartyWorkWithCrunchyrollPage() {
         .
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
-        Ready to host a Crunchyroll watchroom with sync and async? Check{" "}
+        Ready to host a live Crunchyroll watchroom? Check{" "}
         <Link href="/pricing" className="text-brand-orange font-medium hover:underline">
           AniDachi pricing
         </Link>{" "}
-        — guests can join on Free; hosts upgrade when they need higher room
-        limits.
+        — hosts need Plus or Pro access, including an active trial; guests can join on Free.
       </p>
 
       <h2 id="related" className="scroll-mt-24">

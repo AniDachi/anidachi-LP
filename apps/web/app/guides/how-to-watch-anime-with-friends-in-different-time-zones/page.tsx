@@ -73,15 +73,15 @@ const howToSteps = [
   },
   {
     name: "Agree on pacing",
-    text: "Decide whether you race weekly episodes or allow multi-day buffers for async viewing.",
+    text: "Agree on a shared live viewing time and allow friends to catch up independently after missed sessions.",
   },
   {
     name: "Create the watchroom",
-    text: "Detect the anime on Crunchyroll and generate one shared room for the season.",
+    text: "Open the Crunchyroll episode; AniDachi detects it automatically. A host with Plus or Pro access, including an active trial, chooses Create room for the live session.",
   },
   {
-    name: "Post invite once",
-    text: "Pin the watchroom link in your Discord server or group chat so new joins are easy.",
+    name: "Share the session invite",
+    text: "Post the current session's invite in your group chat. Friends can join on Free accounts with their own episode access.",
   },
   {
     name: "Label spoilers",
@@ -110,7 +110,7 @@ export default function HowToWatchAnimeFriendsTimeZonesPage() {
         description="Watch anime across time zones with scheduled live watchrooms, Discord, or rotating meeting times."
         url="/guides/how-to-watch-anime-with-friends-in-different-time-zones"
         datePublished="2026-04-27"
-        dateModified="2026-04-27"
+        dateModified="2026-10-01"
         faq={faq}
         headings={tocHeadings}
       >

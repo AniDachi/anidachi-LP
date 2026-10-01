@@ -1,5 +1,3 @@
-import fs from "node:fs";
-import path from "node:path";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -46,14 +44,7 @@ function getAnimeBySlug(rawSlug: string): AnimeEntry | undefined {
 }
 
 function getPageLastModified(): string {
-  try {
-    const mtime = fs.statSync(
-      path.join(process.cwd(), "app/watch/[slug]/page.tsx")
-    ).mtime;
-    return mtime.toISOString().split("T")[0];
-  } catch {
-    return "2026-05-18";
-  }
+  return "2026-10-01";
 }
 
 function buildTitleTag(anime: AnimeEntry, episodesDisplay: string): string {
@@ -287,7 +278,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
       <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           {isMovie
-            ? `Yes — you can watch ${anime.title} with friends as a group movie night using AniDachi's watchroom on Crunchyroll. Set up a shared watch party in under 2 minutes: no screen-share, no spoiler risk, everyone streams in sync. Works for ${PRICING_ROOM_SIZE_RANGE}, all on their own Crunchyroll account.`
+            ? `Yes — watch ${anime.title} with friends as a live movie night using AniDachi on Crunchyroll. Everyone streams on their own account with synced playback, chat, reactions, and voice/video. Works for ${PRICING_ROOM_SIZE_RANGE}.`
             : (() => {
                 const isLong =
                   /\+|1100|1000|\b720\b|\b700\b|seasons|multiple seasons|counting/i.test(
@@ -297,7 +288,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
                     anime.slug
                   );
                 return isLong
-                  ? `Yes — you can watch ${anime.title} with friends using AniDachi's watchroom on Crunchyroll. Live sync keeps the room together across ${episodesDisplay}; ${ASYNC_COMING_SOON.toLowerCase()} for members who need to catch up at their own pace without spoilers. Works for ${PRICING_ROOM_SIZE_RANGE}, all on Crunchyroll.`
+                  ? `Yes — you can watch ${anime.title} with friends using AniDachi's watchroom on Crunchyroll. Live sync keeps the room together across ${episodesDisplay}; ${ASYNC_COMING_SOON.toLowerCase()}. Works for ${PRICING_ROOM_SIZE_RANGE}, all on Crunchyroll.`
                   : `Yes — you can watch ${anime.title} with friends using AniDachi's watchroom on Crunchyroll. Sync playback in real time today; ${ASYNC_COMING_SOON.toLowerCase()} when schedules differ. Works for ${PRICING_ROOM_SIZE_RANGE}, all on Crunchyroll.`;
               })()}
         </strong>
@@ -463,7 +454,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
             so nobody accidentally reads finale chatter early.
           </li>
           <li>
-            When life happens, catch up independently before the next meeting. Personal history on Plus or Pro saves your own progress; it does not create a shared room history.
+            When life happens, catch up independently before the next meeting. Your own Plus/Pro access and recording permission enable personal history; it does not create shared room history.
           </li>
         </ul>
       )}
@@ -477,8 +468,8 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
       <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-4">
         <li>Agree on sub vs. dub for the room so reactions line up with audio.</li>
         <li>
-          Use &quot;no spoilers past episode N&quot; in the room title when
-          someone is behind.
+          Agree on &quot;no spoilers past episode N&quot; in your separate group
+          chat when someone is behind.
         </li>
         <li>
           Drop short reaction notes right after the cold open and before the
@@ -501,7 +492,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
       </h2>
       <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li>
-          Split threads into &quot;caught up through Ep X&quot; vs. &quot;free
+          In your separate group chat, split threads into &quot;caught up through Ep X&quot; vs. &quot;free
           chat&quot; once everyone crosses the same cliffhanger.
         </li>
         <li>
@@ -543,10 +534,8 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
         Pillars, Glossary, and Guides
       </h2>
       <p className="text-foreground/70 text-sm mb-4">
-        Same ordered list is emitted as{" "}
-        <strong className="text-foreground/80">ItemList</strong> structured data for
-        crawlers — start at the pillars, then skim glossary terms if your crew is new
-        to watchrooms or async pacing.
+        Start with the setup guides, then explore genre ideas and glossary
+        terms to plan your next live watch party.
       </p>
       <ul className="space-y-2 text-brand-orange mb-8">
         {resourceItemList.map((item) => (

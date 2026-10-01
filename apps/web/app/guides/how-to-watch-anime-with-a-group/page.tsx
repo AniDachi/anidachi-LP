@@ -70,7 +70,7 @@ const howToSteps = [
   },
   {
     name: "Create an AniDachi watchroom",
-    text: "Detect the anime on Crunchyroll and generate a room link shared everywhere announcements live.",
+    text: "Open the Crunchyroll episode; AniDachi detects it automatically. A host with Plus or Pro access, including an active trial, chooses Create room and shares the invite. Friends can join on Free accounts.",
   },
   {
     name: "Pin logistics messages",
@@ -107,7 +107,7 @@ export default function HowToWatchAnimeWithAGroupPage() {
         description="Coordinate larger anime watch groups with hosts, sync choices, and readable chat."
         url="/guides/how-to-watch-anime-with-a-group"
         datePublished="2026-05-01"
-        dateModified="2026-05-01"
+        dateModified="2026-10-01"
         faq={faq}
         headings={tocHeadings}
       >
@@ -197,8 +197,8 @@ export default function HowToWatchAnimeWithAGroupPage() {
         </h2>
         <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
           <li>Open /extension, then choose Add to Chrome from the official AniDachi Chrome Web Store listing on laptops guests use.</li>
-          <li>Open the agreed Crunchyroll episode and detect the anime.</li>
-          <li>Create a watchroom name your club recognizes across invites.</li>
+          <li>Open the agreed Crunchyroll episode; AniDachi detects it automatically.</li>
+          <li>A host with Plus or Pro access, including an active trial, chooses Create room. Friends can join on Free accounts.</li>
           <li>
             Drop the invite link where calendars, Discord pins, and emails stay
             synchronized.
@@ -208,8 +208,8 @@ export default function HowToWatchAnimeWithAGroupPage() {
             screen-share tunnels for dense groups.
           </li>
           <li>
-            Host counts down, launches playback, and switches modes if attendance
-            fractures mid-season.
+            The host starts playback at the agreed time. Members who miss a
+            session can catch up independently before the next meeting.
           </li>
         </ol>
 

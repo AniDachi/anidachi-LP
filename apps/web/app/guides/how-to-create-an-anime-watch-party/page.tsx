@@ -69,12 +69,12 @@ const howToSteps = [
     text: "Open /extension, then choose Add to Chrome from the official AniDachi Chrome Web Store listing on the host machine.",
   },
   {
-    name: "Detect the anime",
-    text: "Let AniDachi read the page metadata so the room title matches the series.",
+    name: "Open the AniDachi overlay",
+    text: "AniDachi detects the episode automatically. Open its overlay on the Crunchyroll page.",
   },
   {
     name: "Create the watchroom",
-    text: "Generate a new room and confirm chat is enabled for guests.",
+    text: "With your own Plus or Pro access, including an active trial, choose Create room. Friends can join on Free accounts.",
   },
   {
     name: "Copy the invite link",
@@ -111,7 +111,7 @@ export default function HowToCreateAnimeWatchPartyPage() {
         description="Create an anime watch party on Crunchyroll with AniDachi, Discord, or calendar-backed sessions."
         url="/guides/how-to-create-an-anime-watch-party"
         datePublished="2026-04-27"
-        dateModified="2026-04-27"
+        dateModified="2026-10-01"
         faq={faq}
         headings={tocHeadings}
       >

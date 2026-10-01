@@ -37,7 +37,7 @@ const faq = [
   {
     question: "What is the best watch party app for anime?",
     answer:
-      "AniDachi ranks first for Crunchyroll-first anime groups that need live sync plus async catch-up. Teleparty and Rave are stronger if you jump across many streaming services live. Discord is best as voice, not as the video pipe.",
+      "AniDachi ranks first for Crunchyroll-first anime groups that need live sync, chat, cameras, and microphones. Teleparty and Rave are stronger if you jump across many streaming services live. Discord is best as voice, not as the video pipe.",
   },
   {
     question: "Is this different from the anime watch party app page?",
@@ -85,7 +85,7 @@ export default function BestWatchPartyAppsForAnimePage() {
       description="Ranked comparison of AniDachi, Teleparty, Crunchyroll Party, Discord, and Rave for anime nights."
       url="/guides/best-watch-party-apps-for-anime"
       datePublished="2026-07-19"
-      dateModified="2026-07-19"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
@@ -104,7 +104,7 @@ export default function BestWatchPartyAppsForAnimePage() {
       <p className="text-xl text-foreground/80 leading-relaxed mb-6">
         <strong>
           AniDachi is the best watch party app for most Crunchyroll anime groups —
-          especially when async catch-up matters.
+          with synced local streams and live conversation.
         </strong>{" "}
         Teleparty and Rave win on multi-platform live breadth. Crunchyroll Party
         is the free live-only CR option. Discord stays for voice. This ranked
@@ -127,7 +127,7 @@ export default function BestWatchPartyAppsForAnimePage() {
       <ol className="list-decimal pl-6 space-y-3 text-foreground/80 mb-8">
         <li>
           <strong>AniDachi</strong> — Crunchyroll-first watchrooms, anime
-          detection, live + async. See{" "}
+          detection, live sync, chat, cameras, and microphones. See{" "}
           <Link href="/pricing" className="text-brand-orange hover:underline">
             pricing
           </Link>
@@ -195,7 +195,7 @@ export default function BestWatchPartyAppsForAnimePage() {
           {
             feature: "Async catch-up",
             values: {
-              anidachi: "yes",
+              anidachi: "Coming soon",
               teleparty: "no",
               crparty: "no",
               discord: "no",

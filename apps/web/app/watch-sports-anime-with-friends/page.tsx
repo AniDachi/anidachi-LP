@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
     title: "Watch Sports Anime With Friends (2026) | AniDachi",
     description:
-      "Group watchroom guides for sports anime on Crunchyroll — match-night scheduling, bracket tracking, and spoiler-free catch-up.",
+      "Group watchroom guides for sports anime on Crunchyroll — match-night scheduling, live reactions, and discussion tips.",
     url: "/watch-sports-anime-with-friends",
   },
 };
@@ -34,12 +34,12 @@ const faq = [
   {
     question: "How do we organize group watch nights around sports anime match episodes?",
     answer:
-      "Treat match-block episodes like real sports events: schedule a watch night for tournament semifinals and finals, pin the current bracket in your AniDachi watchroom, and assign a &quot;commentator&quot; role to whoever posts live reactions during the match. For longer series like Haikyuu, agree on a weekly cadence that follows one game per session.",
+      "Treat match-block episodes like real sports events: schedule a watch night for tournament semifinals and finals, keep a bracket in your own notes, and choose a friend to lead live reactions. For longer series like Haikyuu, agree on a weekly cadence that follows one game per session.",
   },
   {
     question: "Can we avoid match result spoilers when watching sports anime asynchronously?",
     answer:
-      "Yes — use AniDachi's async mode with strict episode tagging. Pin the current safe match number at the top of the room (e.g. &quot;safe through end of Interhigh quarterfinals&quot;). Ask members who finish a match early to react with intensity descriptions only — &quot;that last set was chaos&quot; — not scores or winners.",
+      "Agree on a safe match number in your separate group chat. Let friends catch up independently and ask early viewers to describe the intensity without revealing scores or winners. AniDachi currently supports live rooms; built-in async catch-up is coming soon.",
   },
   {
     question: "How many episodes of sports anime should we watch per session?",
@@ -49,7 +49,7 @@ const faq = [
   {
     question: "Do we all need Crunchyroll to watch sports anime together?",
     answer:
-      "Yes — each person needs their own active Crunchyroll subscription to stream the video. AniDachi adds the watchroom, bracket-tracking notes, and episode chat on top. It does not replace Crunchyroll's catalog or access controls.",
+      "Yes — each person needs their own Crunchyroll access to the video. AniDachi adds live sync, chat, reactions, and voice/video. Keep bracket notes separately; AniDachi does not replace Crunchyroll's catalog or access controls.",
   },
 ];
 
@@ -82,7 +82,7 @@ export default function WatchSportsAnimeWithFriendsPage() {
       description="Group watchroom guides for sports anime on Crunchyroll."
       url="/watch-sports-anime-with-friends"
       datePublished="2026-05-18"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -120,10 +120,9 @@ export default function WatchSportsAnimeWithFriendsPage() {
         scheduling watch nights straightforward.
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
-        AniDachi watchrooms are especially well-suited for sports series: pin the
-        tournament bracket, tag reactions by match episode, and use async mode
-        when someone misses a session so they can catch up before the next game
-        and rejoin without spoilers.
+        AniDachi live rooms let your group share every rally and final point
+        in sync. Keep a tournament bracket in your own notes and let anyone
+        who misses a session catch up independently before the next match.
       </p>
 
       <h2
@@ -158,15 +157,15 @@ export default function WatchSportsAnimeWithFriendsPage() {
       <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
         <li>
           <span className="font-medium text-foreground">Install AniDachi and create a watchroom.</span>{" "}
-          Share the invite before the first match episode.
+          A Plus, Pro, or trial host creates the room and sends an invite before the first match. Free friends can join.
         </li>
         <li>
-          <span className="font-medium text-foreground">Pin the tournament bracket.</span>{" "}
-          Keep a shared note showing current standings so latecomers can orient quickly.
+          <span className="font-medium text-foreground">Keep a tournament bracket.</span>{" "}
+          Use your own shared note showing current standings so latecomers can orient quickly.
         </li>
         <li>
           <span className="font-medium text-foreground">Schedule live sessions for semifinals and finals.</span>{" "}
-          These are the must-watch-together moments. Use async for training arcs.
+          These are the must-watch-together moments. Arrange independent catch-up for training arcs.
         </li>
         <li>
           <span className="font-medium text-foreground">Agree on match-result spoiler rules.</span>{" "}
@@ -193,7 +192,7 @@ export default function WatchSportsAnimeWithFriendsPage() {
         <li>Tag all reactions with the specific match name (e.g. &quot;Karasuno vs Aoba Johsai&quot;) so late viewers know exactly which episodes to avoid.</li>
         <li>React with energy descriptions only — &quot;that rally had me standing&quot; — not scores or winners until everyone finishes.</li>
         <li>Stay off sports anime subreddits and Twitter during active tournament arcs — match results spread fast.</li>
-        <li>For async members, use AniDachi&apos;s episode markers to set &quot;safe through Match X&quot; so they know where to re-enter the group chat.</li>
+        <li>For friends catching up independently, label your separate discussion thread &quot;safe through Match X&quot; so they know when to join.</li>
       </ul>
 
       <p className="text-foreground/80 mb-4">

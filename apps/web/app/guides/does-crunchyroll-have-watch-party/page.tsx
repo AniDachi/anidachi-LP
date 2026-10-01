@@ -38,22 +38,22 @@ const faq = [
   {
     question: "Can you watch Crunchyroll together with friends online?",
     answer:
-      "Yes — but you need a third-party tool to do it. AniDachi is specifically built for Crunchyroll group watching: it syncs playback across all members' browsers, provides a shared reaction thread, and tracks individual episode progress so async viewers don't spoil each other. Each person needs their own Crunchyroll subscription.",
+      "Yes, with a third-party tool. AniDachi syncs playback across viewers’ browsers and adds live chat, cameras, and microphones. Everyone needs their own Crunchyroll access. Personal history is separate for each viewer and requires their own Plus or Pro access.",
   },
   {
     question: "Does Teleparty work with Crunchyroll?",
     answer:
-      "Teleparty (formerly Netflix Party) added Crunchyroll support in 2022. It provides basic synchronized playback and a shared chat panel. However, Teleparty is designed for live watching — it does not support async viewing where members catch up at their own pace. AniDachi supports both live sync and async watchrooms with episode-level spoiler controls.",
+      "Teleparty lists Crunchyroll among its supported services for live viewing. AniDachi also provides live rooms, with chat, cameras, and microphones. Async catch-up with replayed reactions is coming soon in AniDachi.",
   },
   {
     question: "What is the best way to watch Crunchyroll with friends?",
     answer:
-      "The best way to watch Crunchyroll with friends is to use AniDachi — install the Chrome extension, create a watchroom, and share the invite link. AniDachi syncs playback for live sessions and tracks individual progress for async catching-up, so groups with different schedules can still share the same watchroom without spoiling each other.",
+      "Install AniDachi from the Chrome Web Store, open the same episode, and join the same live room. The host needs Plus or Pro access, including an active trial; guests can join on Free. Agree on a shared start time and spoiler boundary.",
   },
   {
     question: "How does AniDachi compare to Crunchyroll's own watch party?",
     answer:
-      "Crunchyroll does not have its own watch party feature, so there is nothing to compare directly. AniDachi is currently the dedicated group-watching solution for Crunchyroll anime — it adds synchronized playback, shared reactions, async progress tracking, and spoiler boundaries that Crunchyroll itself does not provide.",
+      "Crunchyroll does not have its own watch party room. AniDachi adds synchronized playback, live chat, cameras, and microphones on top of each person’s Crunchyroll stream. It does not automatically hide spoilers or provide shared group progress.",
   },
   {
     question: "Can I use Discord to watch Crunchyroll with friends?",
@@ -84,7 +84,7 @@ export default function DoesCrunchyrollHaveWatchPartyPage() {
       description="Crunchyroll does not have a native watch party as of 2026. Here is what it offers and how to watch Crunchyroll together with friends."
       url="/guides/does-crunchyroll-have-watch-party"
       datePublished="2026-06-21"
-      dateModified="2026-07-22"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
     >
@@ -104,9 +104,7 @@ export default function DoesCrunchyrollHaveWatchPartyPage() {
           feature as of 2026.
         </strong>{" "}
         To watch Crunchyroll with friends in sync, you need a third-party tool
-        like AniDachi. AniDachi adds synchronized playback, shared reactions,
-        and progress tracking to any Crunchyroll series — each person still
-        streams from their own Crunchyroll account at full quality.
+        like AniDachi. AniDachi adds live synchronized playback, chat, cameras, and microphones — each person still needs their own access to the Crunchyroll episode.
       </p>
 
       <h2
@@ -156,10 +154,7 @@ export default function DoesCrunchyrollHaveWatchPartyPage() {
         <li>
           <strong>AniDachi</strong> — built for Crunchyroll anime groups
           (and YouTube watchrooms).
-          Adds synchronized live playback, async progress tracking (for different
-          schedules), episode-level spoiler controls, and shared reaction threads.
-          Best for ongoing group watches and anime clubs where members don&apos;t
-          all watch at the same time.
+          Adds synchronized playback, live chat, cameras, and microphones. Viewers with their own Plus or Pro access can enable personal history. Current rooms need everyone online together.
         </li>
         <li>
           <strong>Teleparty</strong> — adds basic live sync and a chat panel to
@@ -196,8 +191,8 @@ export default function DoesCrunchyrollHaveWatchPartyPage() {
       </p>
       <ul className="space-y-3 text-foreground/80 mb-8">
         <li><strong>Live sync:</strong> When your group is all online at the same time, AniDachi plays, pauses, and seeks the video together — if one person pauses, everyone pauses.</li>
-        <li><strong>Async mode:</strong> When group members have different schedules, each person watches at their own time and posts episode-tagged reactions to the shared room thread. No one gets spoiled — the room tracks how far each person has watched.</li>
-        <li><strong>Spoiler controls:</strong> Set a safe episode number at the top of the room. Members who are ahead can still participate in the room, but their reactions are visible only to members who have passed the same episode.</li>
+        <li><strong>Personal history:</strong> Each viewer with Plus or Pro can enable recording of their own progress. Saved history and Resume remain available on Free; this is not a shared group record.</li>
+        <li><strong>Spoiler etiquette:</strong> Agree on a safe episode and keep later discussion in a separate labeled chat. AniDachi live chat does not automatically hide spoilers.</li>
         <li><strong>Auto anime detection:</strong> When you open a Crunchyroll episode, AniDachi automatically detects the series name, season, and episode number and links your playback to the shared room.</li>
       </ul>
 
@@ -236,9 +231,7 @@ export default function DoesCrunchyrollHaveWatchPartyPage() {
         </li>
         <li>
           <span className="font-medium text-foreground">Watch together.</span>{" "}
-          Press play and AniDachi keeps everyone in sync. For async watching,
-          members just open the same series on their own schedule and the
-          room thread updates automatically.
+          Start together and AniDachi keeps playback in sync. React in live chat. If someone misses the session, let them watch independently before the next meeting.
         </li>
       </ol>
 

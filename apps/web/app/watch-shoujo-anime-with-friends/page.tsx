@@ -6,7 +6,7 @@ import { getAnimeByGenre } from "@/lib/anime-data";
 export const metadata: Metadata = {
   title: "Watch Shoujo Anime With Friends (2026) | AniDachi",
   description:
-    "Shoujo anime is made for shared emotional moments — sync heartfelt episodes live or async on Crunchyroll with AniDachi. Fruits Basket, Sailor Moon, Nana, and more.",
+    "Shoujo anime is made for shared emotional moments — sync heartfelt episodes live on Crunchyroll with AniDachi. Fruits Basket, Sailor Moon, Nana, and more.",
   alternates: { canonical: "/watch-shoujo-anime-with-friends" },
   openGraph: {
     images: [
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
     title: "Watch Shoujo Anime With Friends (2026) | AniDachi",
     description:
-      "Group watchroom guides for the best shoujo anime on Crunchyroll — synced playback, emotional reactions, and async catch-up.",
+      "Group watchroom guides for shoujo anime on Crunchyroll — synced playback, emotional reactions, and live chat.",
     url: "/watch-shoujo-anime-with-friends",
   },
 };
@@ -44,7 +44,7 @@ const faq = [
   {
     question: "How do we avoid spoilers for ongoing romance arcs in shoujo anime?",
     answer:
-      "Set a ship-prediction rule before each session: every member writes down their prediction for the episode's romantic development. Reactions and spoilers are banned until after everyone finishes the episode. For slow-burn series like Kimi ni Todoke, create a dedicated &quot;ship update&quot; thread in the AniDachi watchroom that members post to episode-by-episode, so latecomers can scroll back without hitting final-episode reveals.",
+      "Write down ship predictions before each session and wait until everyone finishes before discussing outcomes. For slow-burn series like Kimi ni Todoke, keep updates in separate, episode-labeled threads in your own group chat; AniDachi live chat does not automatically hide later reveals.",
   },
   {
     question: "Do we all need Crunchyroll to watch shoujo anime together?",
@@ -82,7 +82,7 @@ export default function WatchShoujoAnimeWithFriendsPage() {
       description="Group watchroom guides for shoujo anime on Crunchyroll."
       url="/watch-shoujo-anime-with-friends"
       datePublished="2026-06-21"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -100,9 +100,8 @@ export default function WatchShoujoAnimeWithFriendsPage() {
       <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           Shoujo anime is made for shared emotional experiences. Install
-          AniDachi, open any Crunchyroll series below, and create a watchroom
-          — sync the heartfelt moments live or catch up at your own pace while
-          posting episode-tagged reactions your group can find later.
+          AniDachi, open any Crunchyroll series below, and create a live room
+          to share heartfelt moments through chat, reactions, and voice/video.
         </strong>
       </p>
 
@@ -124,8 +123,8 @@ export default function WatchShoujoAnimeWithFriendsPage() {
         AniDachi watchrooms work especially well for shoujo anime because the
         emotional payoffs are spread across episodes — someone who catches up
         a week late still needs to experience the same moments without having
-        the resolution pre-revealed. Episode-scoped reactions keep the group
-        engaged across weeks without spoiling each other.
+        the resolution pre-revealed. Agree on an episode boundary and keep
+        later discussion in a separate, labeled chat.
       </p>
 
       <h2
@@ -168,7 +167,7 @@ export default function WatchShoujoAnimeWithFriendsPage() {
         </li>
         <li>
           <span className="font-medium text-foreground">Create a watchroom and share the link.</span>{" "}
-          Send the invite link via Discord, group chat, or email.
+          With active Plus, Pro, or trial access, create the room and send its invite. Free friends can join.
         </li>
         <li>
           <span className="font-medium text-foreground">Set ship-prediction rules.</span>{" "}
@@ -177,7 +176,7 @@ export default function WatchShoujoAnimeWithFriendsPage() {
           show proved you wrong.
         </li>
         <li>
-          <span className="font-medium text-foreground">Pin your spoiler boundary.</span>{" "}
+          <span className="font-medium text-foreground">Agree on a spoiler boundary.</span>{" "}
           Set the safe episode number so the friend who binged ahead doesn&apos;t
           accidentally confirm the ending of the romance arc.
         </li>
@@ -197,7 +196,7 @@ export default function WatchShoujoAnimeWithFriendsPage() {
         <li>Schedule &quot;debrief time&quot; after emotional episodes — 10–15 minutes of unstructured chat before moving to the next episode. Some scenes need processing out loud before the group can continue.</li>
         <li>For series with multiple romance ships (Ouran, Fruits Basket), have everyone declare their pick before the series starts. Track how opinions shift across the season.</li>
         <li>For longer series like Fruits Basket, break the watch into arcs rather than raw episode counts. Each arc has its own emotional climax — treat arc endings as session boundaries.</li>
-        <li>Use AniDachi&apos;s async mode for members who fall behind during an emotional arc. Let them catch up on their own rather than waiting — the shared reaction thread means they still feel part of the group when they get there.</li>
+        <li>Let anyone who falls behind catch up independently before the next live room. Save discussion in a separate chat until they finish; AniDachi&apos;s built-in async catch-up is coming soon.</li>
       </ul>
 
       <p className="text-foreground/80 mb-4">

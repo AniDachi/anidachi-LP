@@ -48,7 +48,7 @@ const faq = [
   {
     question: "How do I watch Crunchyroll with friends online?",
     answer:
-      "Open /extension, then choose Add to Chrome from the official AniDachi Chrome Web Store listing. Open any anime on Crunchyroll, detect the show, and create a watchroom. Share the invite link so each friend joins on their own Crunchyroll account.",
+      "Install AniDachi from /extension and open the Crunchyroll episode. AniDachi detects it automatically. With your own Plus or Pro access, including an active trial, choose Create room and share the invite. Friends can join on Free accounts with their own access to the episode.",
   },
   {
     question: "How do two people watch Crunchyroll at the same time?",
@@ -102,8 +102,8 @@ const howToSteps = [
     text: "Navigate to any anime episode on Crunchyroll in desktop Chrome.",
   },
   {
-    name: "Detect and create a watchroom",
-    text: "Click Detect Anime, then Create Room so the room is linked to the show and episode.",
+    name: "Create a watchroom",
+    text: "AniDachi detects the episode automatically. With your own Plus or Pro access, including an active trial, open the overlay and choose Create room.",
   },
   {
     name: "Invite friends",
@@ -142,7 +142,7 @@ export default function HowToWatchWithFriendsPage() {
         description="Every method to watch Crunchyroll together, compared and explained."
         url="/guides/how-to-watch-crunchyroll-with-friends"
         datePublished="2026-04-23"
-        dateModified="2026-09-21"
+        dateModified="2026-10-01"
         faq={faq}
         headings={tocHeadings}
         aboveFoldCta

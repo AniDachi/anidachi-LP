@@ -128,7 +128,7 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
         description="Discord anime watch parties with voice, screen share, and AniDachi sync when Go Live lags."
         url="/guides/how-to-watch-anime-with-friends-on-discord"
         datePublished="2026-05-01"
-        dateModified="2026-09-21"
+        dateModified="2026-10-01"
         faq={faq}
         headings={tocHeadings}
         aboveFoldCta
@@ -272,7 +272,7 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
         </ol>
         <p className="text-foreground/80 mb-6">
           Discord anime watch parties work well for casual sessions. For a more
-          polished experience — especially for long series or async groups — see{" "}
+          polished experience — with live rooms, cameras, and microphones — see{" "}
           <Link href="/watch-anime-together" className="text-brand-orange hover:underline">
             dedicated anime watch party tools
           </Link>.

@@ -35,7 +35,7 @@ const faq = [
   {
     question: "How do I watch mecha anime with friends online?",
     answer:
-      "Install AniDachi's Chrome extension, open your chosen mecha series on Crunchyroll, and create a watchroom. Share the invite link with your group. AniDachi syncs playback across all members so nobody accidentally plays past a major robot reveal or war-turning battle while others are still reading the episode title.",
+      "Install AniDachi on desktop Chrome and open the same mecha episode on Crunchyroll. A Plus, Pro, or trial host creates a live room and invites Free friends. AniDachi syncs playback so you can share major robot reveals and battles through chat, reactions, and voice/video.",
   },
   {
     question: "What makes mecha anime good for watch parties?",
@@ -92,7 +92,7 @@ export default function WatchMechaAnimeWithFriendsPage() {
       description="Group watchroom guides for mecha anime on Crunchyroll."
       url="/watch-mecha-anime-with-friends"
       datePublished="2025-06-01"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -181,7 +181,7 @@ export default function WatchMechaAnimeWithFriendsPage() {
           <span className="font-medium text-foreground">
             Create a watchroom and share the link.
           </span>{" "}
-          Send the invite link via Discord, group chat, or email.
+          With active Plus, Pro, or trial access, create the room and send its invite. Free friends can join.
         </li>
         <li>
           <span className="font-medium text-foreground">

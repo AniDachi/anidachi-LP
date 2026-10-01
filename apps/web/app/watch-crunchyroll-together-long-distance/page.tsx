@@ -31,7 +31,7 @@ const faq = [
   {
     question: "How do I watch Crunchyroll together long distance?",
     answer:
-      "Install AniDachi on both devices, open the same Crunchyroll episode, create a watchroom, and share the invite link. For live watching, AniDachi syncs playback in real time. For different schedules, catch up independently before the next session. Async catch-up is planned; personal history is separate for each viewer.",
+      "Install AniDachi on both desktop Chrome browsers and open the same Crunchyroll episode. A Plus, Pro, or trial host creates a room and shares its invite; a Free partner can join. For different schedules, catch up independently before the next live session. Async catch-up is coming soon.",
   },
   {
     question: "Can my long-distance girlfriend or boyfriend watch Crunchyroll with me?",
@@ -82,7 +82,7 @@ const howToSteps = [
   },
   {
     name: "Create a watchroom",
-    text: "One person clicks the AniDachi icon, creates a room, and copies the invite link.",
+    text: "A Plus, Pro, or trial host chooses Create room in AniDachi and copies the invite link. A Free partner can join.",
   },
   {
     name: "Share the invite link",
@@ -116,7 +116,7 @@ export default function WatchCrunchyrollTogetherLongDistancePage() {
         description="How long-distance couples sync Crunchyroll live and plan around different schedules."
         url="/watch-crunchyroll-together-long-distance"
         datePublished="2026-06-23"
-        dateModified="2026-06-23"
+        dateModified="2026-10-01"
         faq={faq}
         headings={tocHeadings}
         aboveFoldCta
@@ -171,7 +171,7 @@ export default function WatchCrunchyrollTogetherLongDistancePage() {
           </li>
         </ul>
         <p className="text-foreground/80 leading-relaxed mb-8">
-          AniDachi syncs live playback when you find a shared window. Personal history on Plus or Pro saves each viewer&apos;s own progress. It does not create shared group progress or automatically hide spoilers. Async catch-up is planned, not available today.
+          AniDachi syncs live playback when you find a shared window. Your own Plus/Pro access and recording permission enable personal history. It does not create shared group progress or automatically hide spoilers. Async catch-up is planned, not available today.
         </p>
 
         <h2
@@ -200,13 +200,13 @@ export default function WatchCrunchyrollTogetherLongDistancePage() {
           What to Do When Your Schedules Never Overlap
         </h2>
         <p className="text-foreground/80 leading-relaxed mb-4">
-          If a 7-hour time difference leaves no shared window, watch independently and discuss later in a separate chat. AniDachi Async catch-up is planned, not available today. The intended experience is:
+          If a 7-hour time difference leaves no shared window, watch independently and discuss later in a separate chat. AniDachi async catch-up is coming soon. Here is a routine you can use today:
         </p>
         <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>You watch episode 4 on Tuesday evening your time.</li>
-          <li>You leave three reactions — timestamped to the exact moments that hit you hardest.</li>
-          <li>Your partner watches episode 4 on Wednesday morning their time and sees your reactions when they hit the same moments.</li>
-          <li>They reply with their own reactions. You read them the next time you open the watchroom.</li>
+          <li>You note three favorite moments in a separate, episode-labeled chat thread.</li>
+          <li>Your partner watches episode 4 on Wednesday morning, then opens the thread.</li>
+          <li>You exchange replies or arrange a short call to discuss the episode.</li>
           <li>Agree on an episode boundary before discussing later events; no tool can guarantee that other viewers will not post spoilers.</li>
         </ul>
         <p className="text-foreground/80 leading-relaxed mb-8">
@@ -262,7 +262,7 @@ export default function WatchCrunchyrollTogetherLongDistancePage() {
             },
             {
               feature: "Spoiler control",
-              values: { anidachi: "Episode-level", teleparty: "None", discord: "None", "press-play": "None" },
+              values: { anidachi: "Agree a boundary in chat", teleparty: "None", discord: "None", "press-play": "None" },
             },
             {
               feature: "Cost",

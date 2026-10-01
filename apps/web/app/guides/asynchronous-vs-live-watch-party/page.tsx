@@ -15,12 +15,12 @@ const faq = [
   {
     question: "What is an asynchronous anime watch party?",
     answer:
-      "An asynchronous watch party lets each person watch episodes on their own schedule. You share a watchroom, mark episodes as watched, leave reactions and comments, and friends see them when they catch up. No scheduling required.",
+      "An asynchronous watch party lets each person watch episodes on their own schedule, then discuss them later. Agree on an episode target and use a separate, clearly labeled group chat so nobody reads ahead.",
   },
   {
     question: "Which tools support asynchronous anime watching?",
     answer:
-      "AniDachi is currently the only Crunchyroll watch-party tool that supports fully asynchronous watching with progress tracking and persistent chat. Teleparty, Crunchyroll Party, and Discord only support live sync.",
+      "You can watch independently and discuss episodes later in a separate group chat. AniDachi currently provides live synchronized rooms on Crunchyroll and YouTube. Async catch-up with replayed reactions is coming soon; personal history is individual and does not track the group's progress.",
   },
   {
     question: "Is live or async better for anime?",
@@ -57,7 +57,7 @@ export default function AsyncVsLivePage() {
       description="When to use async and live watching, and which tools support each."
       url="/guides/asynchronous-vs-live-watch-party"
       datePublished="2026-04-23"
-      dateModified="2026-04-24"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
     >
@@ -97,10 +97,9 @@ export default function AsyncVsLivePage() {
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-6">
         Asynchronous (async) watching means each person watches on their own
-        schedule. A shared watchroom tracks everyone&apos;s progress. You leave
-        reactions, comments, and ratings on each episode, and friends see them
-        when they catch up. Think of it like a book club for anime — everyone
-        reads at their own pace, then discusses.
+        schedule. Agree on an episode target, keep your own notes, and discuss
+        them in a separate group chat after everyone finishes. Think of it like
+        a book club for anime — everyone watches at their own pace, then discusses.
       </p>
 
       <h2
@@ -116,10 +115,10 @@ export default function AsyncVsLivePage() {
         ]}
         rows={[
           { feature: "Scheduling", values: { live: "Everyone must be free", async: "Watch anytime" } },
-          { feature: "Real-time reactions", values: { live: "yes", async: "Delayed but preserved" } },
-          { feature: "Time zones", values: { live: "Painful", async: "No problem" } },
-          { feature: "Progress tracking", values: { live: "no", async: "Per-user" } },
-          { feature: "Spoiler risk", values: { live: "None", async: "Managed by tool" } },
+          { feature: "Real-time reactions", values: { live: "yes", async: "Discuss later" } },
+          { feature: "Time zones", values: { live: "Find a shared time", async: "Set a watch window" } },
+          { feature: "Progress tracking", values: { live: "Personal history if enabled", async: "Personal notes or history" } },
+          { feature: "Spoiler risk", values: { live: "Agree on episode boundaries", async: "Label discussions manually" } },
           { feature: "Best for", values: { live: "Premieres, finales", async: "Ongoing series, marathons" } },
         ]}
       />
@@ -156,9 +155,9 @@ export default function AsyncVsLivePage() {
         Tools for Each Approach
       </h2>
       <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
-        <li><strong>Async:</strong> <Link href="/" className="text-brand-orange hover:underline">AniDachi</Link> (the only async-first tool for Crunchyroll)</li>
-        <li><strong>Live:</strong> Teleparty, Crunchyroll Party, Discord screen sharing</li>
-        <li><strong>Both:</strong> AniDachi supports live sync and async in the same watchroom</li>
+        <li><strong>Independent watching:</strong> Use your streaming service, personal notes, and a separate group chat for later discussion.</li>
+        <li><strong>Live:</strong> <Link href="/" className="text-brand-orange hover:underline">AniDachi</Link>, Teleparty, Crunchyroll Party, or Discord screen sharing.</li>
+        <li><strong>Coming soon:</strong> AniDachi Async catch-up is planned; current rooms need everyone online together.</li>
       </ul>
 
       <h2

@@ -19,7 +19,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "How to Host a Crunchyroll Watch Party (2026 Host Guide)",
   description:
-    "Host framing: create a Crunchyroll watchroom, share invites, and understand who pays (hosts upgrade; guests Free). Plan limits + step-by-step HowTo.",
+    "Host a Crunchyroll watch party with Plus or Pro access, including an active trial. Share invites so friends can join on Free accounts.",
   alternates: { canonical: "/guides/how-to-host-a-crunchyroll-watch-party" },
   openGraph: {
     title: "How to Host a Crunchyroll Watch Party",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "How to Host a Crunchyroll Watch Party",
-    description: "Hosts pay for room limits; guests join Free. Step-by-step.",
+    description: "Plus, Pro, or active trial access for hosts; Free accounts for guests. Step-by-step.",
     images: [BRAND_OG_PATH],
   },
 };
@@ -43,11 +43,11 @@ const howToSteps = [
   },
   {
     name: "Choose your AniDachi host plan",
-    text: "Free hosts get limited daily hosting; Plus and Pro raise room size and remove the free time cap when you host weekly nights.",
+    text: "Hosting requires your own Plus or Pro access, including an active trial. Friends can join your active room on Free accounts.",
   },
   {
     name: "Open the exact Crunchyroll episode",
-    text: "Load the series page so AniDachi can detect the anime title and attach the watchroom to the right show.",
+    text: "Open the episode player so AniDachi can automatically detect the title before you create the room.",
   },
   {
     name: "Create the watchroom as host",
@@ -59,7 +59,7 @@ const howToSteps = [
   },
   {
     name: "Start playback and moderate",
-    text: "Start the live session together. The host manages the room; Plus and Pro provide longer hosting and larger room limits.",
+    text: "Start the live session together. The host manages the room and agrees on pauses or rewinds with the group.",
   },
 ];
 
@@ -103,7 +103,7 @@ export default function HowToHostACrunchyrollWatchPartyPage() {
     <>
       <HowToJsonLd
         name="How to host a Crunchyroll watch party with AniDachi"
-        description="Host a Crunchyroll watchroom with clear entitlements: hosts upgrade for room limits while guests can stay Free."
+        description="Host a Crunchyroll live room with Plus or Pro access, including an active trial, while guests join on Free."
         steps={howToSteps}
       />
       <SeoPageLayout
@@ -119,7 +119,7 @@ export default function HowToHostACrunchyrollWatchPartyPage() {
         description="CR-specific host playbook with plan limits — distinct from general anime watch party creation."
         url="/guides/how-to-host-a-crunchyroll-watch-party"
         datePublished="2026-07-19"
-        dateModified="2026-08-11"
+        dateModified="2026-10-01"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
@@ -167,9 +167,9 @@ export default function HowToHostACrunchyrollWatchPartyPage() {
           .
         </p>
         <p className="text-foreground/80 leading-relaxed mb-8">
-          Free hosting is capped (about 30 minutes/day and smaller rooms). Weekly
-          club hosts usually move to Plus ({PRICING_PLUS_SHORT}) or Pro (
-          {PRICING_PRO_SHORT}).
+          Choose Plus ({PRICING_PLUS_SHORT} on monthly billing) or Pro (
+          {PRICING_PRO_SHORT} on monthly billing) to create rooms. Eligible accounts
+          can start a three-day card trial; see pricing for yearly options and renewal terms.
         </p>
 
         <h2
@@ -196,16 +196,16 @@ export default function HowToHostACrunchyrollWatchPartyPage() {
         </h2>
         <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>
-            <strong>Free:</strong> join anytime; host with daily time and room
-            size caps.
+            <strong>Free:</strong> join an active Plus or Pro host, including a
+            trial host. Free cannot create rooms.
           </li>
           <li>
-            <strong>Plus:</strong> unlimited hosting, up to 6 people, 4 video
-            seats — regular watch nights.
+            <strong>Plus:</strong> up to 6 people including the host, 4 cameras,
+            and 6 microphones, with no daily hosting time limit.
           </li>
           <li>
-            <strong>Pro:</strong> up to 15 people, invite-only rooms, moderator
-            controls — club hosts.
+            <strong>Pro:</strong> up to 15 people including the host, 4 cameras,
+            and 8 microphones, with no daily hosting time limit.
           </li>
         </ul>
 

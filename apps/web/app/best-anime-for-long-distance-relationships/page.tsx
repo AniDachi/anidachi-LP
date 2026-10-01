@@ -48,7 +48,7 @@ const faq = [
   {
     question: "How do I watch these anime with my long-distance partner?",
     answer:
-      "Use AniDachi to create a shared Crunchyroll watchroom. For the same schedule, live sync keeps playback in step. For different time zones, async mode lets each person watch when available and leave episode-tagged reactions — no spoilers, no scheduling pressure.",
+      "A Plus, Pro, or trial host can create a live AniDachi room on Crunchyroll and invite a Free partner. Choose a shared time for synchronized playback. If schedules differ, watch independently and discuss later in a separate chat; built-in async catch-up is coming soon.",
   },
 ];
 
@@ -89,7 +89,7 @@ export default function BestAnimeForLongDistanceRelationshipsPage() {
       description="15 anime picks for LDR couples — series about distance, longing, and bonds that survive geography."
       url="/best-anime-for-long-distance-relationships"
       datePublished="2026-06-23"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -309,12 +309,12 @@ export default function BestAnimeForLongDistanceRelationshipsPage() {
         How to Watch These With Your Long-Distance Partner
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
-        For Crunchyroll series on this list, use AniDachi to create a
-        shared watchroom. If your schedules never align:
+        For Crunchyroll series on this list, a Plus, Pro, or trial host can
+        create an AniDachi live room. If your schedules never align:
       </p>
       <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
-        <li>Enable async mode — each person watches when convenient.</li>
-        <li>Leave reactions at the moments that hit hardest. Your partner sees them when they reach the same point.</li>
+        <li>Agree on an episode target and catch up independently.</li>
+        <li>Keep notes in a separate, episode-labeled chat thread; open it after you both finish.</li>
         <li>Schedule one video call per week to discuss the episodes you both finished.</li>
       </ul>
       <p className="text-foreground/80 leading-relaxed mb-8">

@@ -6,7 +6,7 @@ import { getAnimeByGenre } from "@/lib/anime-data";
 export const metadata: Metadata = {
   title: "Watch Isekai Anime With Friends (2026) | AniDachi",
   description:
-    "Watch isekai anime with friends on Crunchyroll using AniDachi — synced playthroughs, async catch-up, and spoiler controls. Re:Zero, KonoSuba, Mushoku Tensei, and more.",
+    "Watch isekai anime with friends on Crunchyroll using AniDachi — synced playback, live chat, and reactions. Re:Zero, KonoSuba, Mushoku Tensei, and more.",
   alternates: { canonical: "/watch-isekai-anime-with-friends" },
   openGraph: {
     images: [
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
     title: "Watch Isekai Anime With Friends (2026) | AniDachi",
     description:
-      "Group watchroom guides for the best isekai anime on Crunchyroll — synced playback, spoiler-safe reactions, and async catch-up for transported-to-another-world adventures.",
+      "Group watchroom guides for isekai anime on Crunchyroll — synced playback, live reactions, and discussion of transported-to-another-world adventures.",
     url: "/watch-isekai-anime-with-friends",
   },
 };
@@ -34,12 +34,12 @@ const faq = [
   {
     question: "How do I watch isekai anime with friends online?",
     answer:
-      "Install AniDachi's Chrome extension, open your chosen isekai series on Crunchyroll, and create a watchroom. Share the invite link with your group and start watching together with synced playback. AniDachi keeps everyone at the same timestamp so nobody accidentally skips to see whether the protagonist survives a world-ending threat.",
+      "Install AniDachi on desktop Chrome and open the same isekai episode on Crunchyroll. A Plus, Pro, or trial host creates a live room and invites Free friends. AniDachi syncs playback so the group can share each world reveal through chat, reactions, and voice/video.",
   },
   {
     question: "What makes isekai anime good for watch parties?",
     answer:
-      "Isekai series are built around a hero discovering and reacting to a new world — and group watching mirrors that discovery experience perfectly. Every new power reveal, world rule, and character loyalty twist invites immediate group commentary. The genre's common structure of level-ups, guild politics, and arc-based boss fights creates natural pause points and recap discussions that sustain async watchrooms across multiple sessions.",
+      "Isekai series are built around a hero discovering and reacting to a new world — and group watching mirrors that discovery experience. Every new power reveal, world rule, and character loyalty twist invites immediate group commentary. Level-ups, guild politics, and arc-based boss fights create natural pause points and recap discussions between live sessions.",
   },
   {
     question: "Can I watch isekai anime on Crunchyroll with friends?",
@@ -49,12 +49,12 @@ const faq = [
   {
     question: "What isekai anime should I start with for a watch party?",
     answer:
-      "KonoSuba (3 seasons, ~20 episodes) is the easiest entry point — the comedy lands immediately and there is no heavy lore tax. Re:Zero works if your group wants emotional stakes from episode one. For a longer commitment, That Time I Got Reincarnated as a Slime offers 48+ low-stakes episodes ideal for async watchrooms where members catch up at their own pace.",
+      "KonoSuba (3 seasons, ~20 episodes) is the easiest entry point — the comedy lands immediately and there is no heavy lore tax. Re:Zero works if your group wants emotional stakes from episode one. For a longer commitment, That Time I Got Reincarnated as a Slime offers 48+ low-stakes episodes for a regular group routine with independent catch-up between meetings.",
   },
   {
     question: "How do we avoid spoilers watching isekai anime as a group?",
     answer:
-      "Pin a safe episode number in your AniDachi watchroom so nobody posts reactions past the furthest-behind member's progress. Isekai series like Re:Zero and Rising of the Shield Hero have major plot reversals that lose all impact if spoiled — use episode-scoped chat threads and react to feelings ('that was brutal') rather than outcomes ('he resets to episode 3'). For longer series like Overlord, create separate threads per arc so mid-run viewers can participate without reading end-arc conclusions.",
+      "Agree on a safe episode number before the live room. Isekai series like Re:Zero and Rising of the Shield Hero have major plot reversals, so react to feelings rather than outcomes. Keep later-arc discussion in separate, clearly labeled group-chat threads; AniDachi does not automatically hide spoilers.",
   },
 ];
 
@@ -87,7 +87,7 @@ export default function WatchIsekaiAnimeWithFriendsPage() {
       description="Group watchroom guides for isekai anime on Crunchyroll."
       url="/watch-isekai-anime-with-friends"
       datePublished="2025-06-01"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -106,9 +106,8 @@ export default function WatchIsekaiAnimeWithFriendsPage() {
       <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           Yes — you can watch isekai anime with friends using AniDachi on
-          Crunchyroll. Sync playback in real time or use async catch-up so
-          members who binge ahead don&apos;t spoil the next world rule for
-          everyone else.
+          Crunchyroll. Sync playback in real time, react together, and discuss
+          each new world rule after everyone has finished the episode.
         </strong>{" "}
         Each person streams from their own Crunchyroll account at full quality.
       </p>
@@ -131,11 +130,10 @@ export default function WatchIsekaiAnimeWithFriendsPage() {
       <p className="text-foreground/80 leading-relaxed mb-8">
         Most isekai arcs follow a recognizable pattern — arrival, power
         discovery, party formation, boss escalation — that makes it easy to
-        plan async watchrooms. Members who miss a session can catch up across
-        two or three episodes and re-join the group thread before the next arc
-        climax. AniDachi&apos;s episode-scoped spoiler controls ensure that
-        binge-watchers in the group can&apos;t accidentally ruin a key reveal
-        for slower members.
+        plan weekly sessions. Members who miss a meeting can catch up independently
+        before the next arc climax. Keep later-episode discussion in a separate
+        chat and agree on a safe boundary. AniDachi&apos;s built-in async catch-up
+        is coming soon.
       </p>
 
       <h2
@@ -182,18 +180,18 @@ export default function WatchIsekaiAnimeWithFriendsPage() {
           <span className="font-medium text-foreground">
             Create a watchroom and share the link.
           </span>{" "}
-          Send the invite link via Discord, group chat, or email.
+          With active Plus, Pro, or trial access, create the room and send its invite. Free friends can join.
         </li>
         <li>
           <span className="font-medium text-foreground">
-            Agree on a live or async schedule.
+            Agree on a live start time.
           </span>{" "}
-          Live for season premieres and finales, async for weekly episodes —
-          AniDachi supports both modes.
+          Meet live for season premieres and finales, and arrange independent
+          catch-up for anyone who misses a weekly session.
         </li>
         <li>
           <span className="font-medium text-foreground">
-            Pin your spoiler boundary.
+            Agree on a spoiler boundary.
           </span>{" "}
           Set the safe episode number so nobody spoils the next world-rule
           reveal or character death.
