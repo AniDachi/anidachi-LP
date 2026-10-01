@@ -40,7 +40,7 @@ export function WatchingTogetherCount({ className }: { className?: string }) {
       <span className="font-semibold tabular-nums text-ani-text">
         {count.toLocaleString("en-US")}
       </span>{" "}
-      sign-ups to AniDachi and our waitlist
+      people have joined AniDachi
     </p>
   );
 }

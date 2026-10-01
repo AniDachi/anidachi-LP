@@ -1,3 +1,4 @@
+import { checkoutLoginErrorPath } from "../checkout-selection";
 import { NextRequest, NextResponse } from "next/server";
 import { buildDiscordAuthUrl } from "./oauth/discord";
 import { buildGoogleAuthUrl } from "./oauth/google";
@@ -66,7 +67,7 @@ async function handleOAuthStart(
       error,
     });
     return NextResponse.redirect(
-      `${request.nextUrl.origin}/login?error=oauth_failed`,
+      `${request.nextUrl.origin}${checkoutLoginErrorPath("oauth_failed", request.nextUrl.searchParams.get("returnTo"))}`,
     );
   }
 }

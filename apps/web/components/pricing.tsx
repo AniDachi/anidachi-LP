@@ -23,6 +23,7 @@ import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getSeoAttributionFields } from "@/lib/seo-landing-path";
 import type { PricingOffer, PricingPrices } from "@/lib/pricing-offer";
 import { formatMonthlyPrice, type BillingPeriod } from "@/lib/billing-view";
+import { checkoutLoginPath, checkoutSessionRecoveryPath } from "@/lib/checkout-selection";
 import "./pricing.css";
 
 function FeatureList({ features }: { features: string[] }) {
@@ -66,6 +67,8 @@ export function Pricing({
 	const checkoutLock = useRef(false);
 	const lastAttemptedTier = useRef<CheckoutTier | null>(null);
 	const displayPrices = PUBLISHED_PRICING[period];
+	const showTrialTerms =
+		!offer || offer.action === "sign_in" || offer.action === "trial";
 
 	useEffect(() => {
 		// Preserve the explicitly chosen monthly flow across the sign-in return.
@@ -258,7 +261,7 @@ export function Pricing({
 				return;
 			}
 			if (currentOffer.action === "sign_in") {
-				window.location.href = `/login?next=${encodeURIComponent(`/pricing?plan=${tier}&billing=${period}`)}`;
+				window.location.href = checkoutLoginPath({ plan: tier, billing: period });
 				return;
 			}
 			if (!offer && currentOffer.action === "subscribe") {
@@ -322,8 +325,8 @@ export function Pricing({
 			}
 
 			if (!response.ok) {
-				if (response.status === 401 && data.loginUrl) {
-					window.location.href = data.loginUrl;
+				if (response.status === 401) {
+					window.location.href = checkoutSessionRecoveryPath({ plan: tier, billing: period });
 					return;
 				}
 				const message =
@@ -491,11 +494,21 @@ export function Pricing({
 						);
 					})}
 				</div>
-				<p className="pricing-plans__terms">
-					<Lock size={14} aria-hidden="true" />
-					Checkout is secured by Stripe. Final total, taxes and discounts are
-					shown before confirmation.
-				</p>
+				<div className="pricing-plans__footer">
+					{showTrialTerms ? (
+						<p id="pricing-trial-terms" className="pricing-plans__trial-terms">
+							Card required. One trial per account. Cancel before your trial ends
+							to avoid a charge.
+						</p>
+					) : null}
+					<p className="pricing-plans__terms">
+						<Lock size={14} aria-hidden="true" />
+						<span>
+							Checkout is secured by Stripe. Final total, taxes and discounts are
+							shown before confirmation.
+						</span>
+					</p>
+				</div>
 
 				{showPlanMatrix ? (
 					<div className="mx-auto max-w-4xl">
@@ -624,7 +637,7 @@ function TierCardBody({
 					: `Renews at ${recurringAmount}/${unit}.`;
 	const termsDetail =
 		!offer || offer.action === "sign_in" || offer.action === "trial"
-			? "Card required. One trial per account. Cancel before your trial ends to avoid a charge."
+			? null
 			: offer.action === "manage"
 				? "Manage your current plan and renewal in Account → Subscription."
 				: "Cancel renewal in Account → Subscription. No new free trial is included.";
@@ -678,7 +691,7 @@ function TierCardBody({
 						onClick={() => onSubscribe(paidTier)}
 						disabled={isSubmitting}
 						aria-busy={isSubmitting && submittingTier === paidTier}
-						aria-describedby={`pricing-${tier.id}-terms`}
+						aria-describedby={`pricing-${tier.id}-terms${termsDetail ? "" : " pricing-trial-terms"}`}
 					>
 						{isSubmitting && submittingTier === paidTier
 							? "Opening checkout…"
@@ -705,7 +718,7 @@ function TierCardBody({
 					{paidTier ? (
 						<>
 							{termsSummary ? <strong>{termsSummary}</strong> : null}
-							<span>{termsDetail}</span>
+							{termsDetail ? <span>{termsDetail}</span> : null}
 						</>
 					) : (
 						"Install the extension, then sign in."

@@ -1,5 +1,20 @@
 # Current Development State
 
+## Guest checkout continuation prepared locally, October 1, 2026
+
+The local `codex/site-next-pass` candidate continues a guest's selected Plus/Pro
+monthly/yearly trial after Google/Discord sign-in. The new noindex `/checkout`
+page checks the current account and price, requires explicit paid confirmation
+when a trial is unavailable, and routes existing subscriptions to management.
+Validated checkout choices survive provider cancellation and recoverable OAuth
+errors. The existing server payment and auth contracts are preserved.
+
+Focused tests, website typecheck, scoped lint and the full website suite
+(963 passing, 6 existing skips) pass; the contextual signed-out login screen was
+checked locally. Real OAuth → Stripe Sandbox acceptance remains for the owner
+on a later authorized staging delivery. No staging/main, secrets, Stripe or
+schema changes were made. See [scope, evidence and acceptance](releases/checkout-sign-in-continuation-2026-10-01.md).
+
 ## Room runtime test and graph integrity delivered to staging, October 1, 2026
 
 [PR #393](https://github.com/AniDachi/anidachi-LP/pull/393) merged into staging

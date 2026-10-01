@@ -147,6 +147,40 @@ describe("browser OAuth routes", () => {
     assert.match(response.headers.get("set-cookie") ?? "", /Max-Age=0/i);
   });
 
+  it("keeps the chosen checkout after a provider cancellation for either provider", async () => {
+    for (const provider of ["google", "discord"] as const) {
+      const state = secret(15);
+      const request = callbackRequest(provider, state, secret(16), "unused");
+      request.nextUrl.searchParams.set("error", "access_denied");
+      const response = await handleOAuthCallback({
+        provider, request,
+        exchangeFn: async () => { throw new Error("must not exchange canceled login"); },
+        dependencies: {
+          consumeTransaction: async () => ({
+            returnTo: "/checkout?plan=pro&billing=monthly", codeVerifier: "V".repeat(43),
+          }),
+        },
+      });
+      const redirect = new URL(response.headers.get("location")!);
+      assert.equal(redirect.pathname, "/login");
+      assert.equal(redirect.searchParams.get("next"), "/checkout?plan=pro&billing=monthly");
+      assert.equal(redirect.searchParams.get("error"), "oauth_failed");
+      assert.equal(response.cookies.get(oauthCorrelationCookieName(state))?.value, "");
+    }
+  });
+
+  it("preserves a valid checkout on OAuth start failure, never a foreign return URL", async () => {
+    console.error = () => {};
+    for (const returnTo of ["/checkout?plan=plus&billing=yearly", "https://evil.example/checkout?plan=plus&billing=yearly"]) {
+      const response = await handleGoogleOAuthStart(new NextRequest(
+        `https://staging.anidachi.app/api/auth/google?returnTo=${encodeURIComponent(returnTo)}`,
+      ), { createTransaction: async () => { throw new Error("unavailable"); } });
+      const redirect = new URL(response.headers.get("location")!);
+      assert.equal(redirect.origin, "https://staging.anidachi.app");
+      assert.equal(redirect.searchParams.get("next"), returnTo.startsWith("/") ? returnTo : null);
+    }
+  });
+
   it("rejects cross-provider swaps and callback replays before exchange", async () => {
     const state = secret(9);
     const correlationSecret = secret(10);
@@ -359,3 +393,22 @@ function profile(providerId: string) {
 function secret(byte: number): string {
   return Buffer.alloc(32, byte).toString("base64url");
 }
+
+
+it("checkout session recovery clears a stale access cookie before sign-in when refresh is missing", async () => {
+  const { GET } = await import("../../app/api/auth/refresh/route");
+  const { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE } = await import("./cookies");
+  const next = "/checkout?plan=pro&billing=yearly";
+  const response = await GET(new NextRequest(
+    `https://staging.anidachi.app/api/auth/refresh?next=${encodeURIComponent(next)}`,
+    { headers: { cookie: `${ACCESS_TOKEN_COOKIE}=stale-session` } },
+  ));
+  assert.equal(response.status, 303);
+  const redirect = new URL(response.headers.get("location")!);
+  assert.equal(redirect.pathname, "/login");
+  assert.equal(redirect.searchParams.get("next"), next);
+  for (const cookie of [ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE]) {
+    assert.equal(response.cookies.get(cookie)?.value, "");
+    assert.equal(response.cookies.get(cookie)?.maxAge, 0);
+  }
+});

@@ -1,3 +1,4 @@
+import { checkoutLoginErrorPath } from "../checkout-selection";
 import { NextRequest, NextResponse } from "next/server";
 import { upsertUser as defaultUpsertUser } from "./db";
 import {
@@ -86,7 +87,7 @@ export async function handleOAuthCallback({
 
   if (searchParams.has("error")) {
     return redirectAndClearTransaction(
-      `${origin}/login?error=oauth_failed`,
+      `${origin}${checkoutLoginErrorPath("oauth_failed", transaction.returnTo)}`,
       provider,
       correlationCookieName,
     );
@@ -95,7 +96,7 @@ export async function handleOAuthCallback({
   const code = searchParams.get("code");
   if (!code) {
     return redirectAndClearTransaction(
-      `${origin}/login?error=missing_params`,
+      `${origin}${checkoutLoginErrorPath("missing_params", transaction.returnTo)}`,
       provider,
       correlationCookieName,
     );
@@ -106,7 +107,7 @@ export async function handleOAuthCallback({
     profile = await exchangeFn(code, origin, transaction.codeVerifier);
   } catch {
     return redirectAndClearTransaction(
-      `${origin}/login?error=oauth_failed`,
+      `${origin}${checkoutLoginErrorPath("oauth_failed", transaction.returnTo)}`,
       provider,
       correlationCookieName,
     );
@@ -128,7 +129,7 @@ export async function handleOAuthCallback({
     });
   } catch {
     return redirectAndClearTransaction(
-      `${origin}/login?error=db_error`,
+      `${origin}${checkoutLoginErrorPath("db_error", transaction.returnTo)}`,
       provider,
       correlationCookieName,
     );
@@ -140,7 +141,7 @@ export async function handleOAuthCallback({
     tokens = await issueTokenPair(user.id);
   } catch {
     return redirectAndClearTransaction(
-      `${origin}/login?error=token_error`,
+      `${origin}${checkoutLoginErrorPath("token_error", transaction.returnTo)}`,
       provider,
       correlationCookieName,
     );

@@ -1,3 +1,5 @@
+import { checkoutSelectionFromPath } from "./checkout-selection";
+
 export type LoginContext = {
   headline: string;
   subtitle: string;
@@ -8,6 +10,15 @@ export function getLoginContext(
   returnTo: string,
   options?: { isMobile?: boolean },
 ): LoginContext {
+  const checkout = checkoutSelectionFromPath(returnTo);
+  if (checkout) {
+    const plan = checkout.plan === "plus" ? "Plus" : "Pro";
+    return {
+      headline: `Sign in to continue with ${plan}`,
+      subtitle: `Your ${checkout.billing} plan is selected. Continue to secure checkout after sign-in.`,
+    };
+  }
+
   if (returnTo.startsWith("/room/")) {
     return {
       headline: "Sign in to join the watchroom",
