@@ -6948,7 +6948,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						aria-label="Close message"
 						className="message-composer-close"
 						onClick={closeMessageComposer}
-						title="Close without sending (Alt+C)"
+						title={
+							navigator.platform.startsWith("Mac")
+								? "Close without sending (⌥ Option + C)"
+								: "Close without sending (Alt + C)"
+						}
 						type="button"
 					>
 						<X size={16} />
