@@ -137,6 +137,8 @@ export const popupWatchHistoryStyles = `
   .popup-watch-session .popup-session-summary-action { justify-self: start; color: var(--ad-text); }
   .popup-watch-slice-note { margin: 6px 0 6px 14px; font-size: 10px; color: var(--ad-muted); }
   .popup-watch-load-more { display: block; min-height: 28px; margin: 4px auto; }
+  .popup-provider-body > .popup-watch-load-more { width: 100%; min-height: 38px; margin: 12px 0 4px; border-top: 1px solid var(--ad-border); color: var(--ad-accent); font-size: 11px; }
+  .popup-provider-body > .popup-watch-load-more:hover:not(:disabled) { color: var(--ad-text); }
   .popup-watch-footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; border-top: 1px solid rgba(255,255,255,.08); padding-top: 7px; text-align: center; }
   .popup-watch-screen button:disabled { cursor: default; opacity: .5; }
   .popup-watch-summary { display: block; width: fit-content; max-width: 100%; }

@@ -6,8 +6,7 @@ type HistoryView = {
   generation: number;
   branches: Record<string, boolean>;
   seasons: Record<string, string>;
-  titleQuery?: string;
-  titlePages?: number;
+  titleStreams?: Record<string, number>;
 };
 type PopupView = {
   owner: string;
@@ -49,9 +48,8 @@ export function readPopupView(owner: string): PopupView {
         generation: history.generation,
         branches: record(history.branches, boolean),
         seasons: record(history.seasons, string),
-        ...(typeof history.titleQuery === "string" && history.titleQuery.length <= 1024 && Number.isSafeInteger(history.titlePages) ? {
-          titleQuery: history.titleQuery, titlePages: Math.max(1, Math.min(20, history.titlePages)),
-        } : {}),
+        titleStreams: Object.fromEntries(Object.entries(record(history.titleStreams,
+          (value): value is number => Number.isSafeInteger(value) && Number(value) >= 1 && Number(value) <= 20)).slice(-16)),
       } } : {}),
     };
   } catch { return empty; }
@@ -68,8 +66,12 @@ export function writePopupQuery(owner: string, search: string, conditions: Popup
   save({ ...readPopupView(owner), search, conditions });
 }
 export function writePopupTitlePages(owner: string, generation: number | undefined, query: string, pages: number) {
-  if (!generation || !Number.isSafeInteger(pages) || query.length > 1024) return;
-  save({ ...readPopupView(owner), history: { ...readPopupHistoryView(owner, generation), titleQuery: query, titlePages: Math.max(1, Math.min(20, pages)) } });
+  if (!generation || !Number.isSafeInteger(pages) || query.length > 512) return;
+  const history = readPopupHistoryView(owner, generation);
+  const streams = { ...history.titleStreams };
+  delete streams[query];
+  streams[query] = Math.max(1, Math.min(20, pages));
+  save({ ...readPopupView(owner), history: { ...history, titleStreams: Object.fromEntries(Object.entries(streams).slice(-16)) } });
 }
 export function writePopupHistoryChoice(owner: string, generation: number | undefined, kind: "branches" | "seasons", key: string, value: boolean | string) {
   if (!generation || key.length > 512) return;

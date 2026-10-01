@@ -235,6 +235,11 @@ function generationClient(fetch: typeof globalThis.fetch, accessFetch?: typeof g
 		fetch: async (raw, init) => {
 			const url = new URL(String(raw));
 			if (url.pathname.endsWith("/access")) return accessFetch ? accessFetch(raw, init) : Response.json(paidHistoryLease(OWNER, Date.now() - 1000, stored.activeGenerations?.[OWNER] ?? 1).access);
+            if (url.pathname.endsWith("/browse") && url.searchParams.get("provider") === "youtube") {
+              const empty = browse(); empty.history.items = []; empty.matches = []; empty.history.totalTitleCount = 0;
+              empty.history.meta.accountGeneration = stored.activeGenerations?.[OWNER] ?? 1;
+              return Response.json(empty);
+            }
 			if (url.pathname.endsWith("/capacity")) return Response.json({ capacityVersion: 1, ownerUserId: OWNER, accountGeneration: stored.activeGenerations?.[OWNER], serverTime: new Date().toISOString(), providers: { youtube: { used: 0, limit: 100 }, crunchyroll: { used: 1, limit: 200 } } });
 			// Existing history regression fixtures have no accepted catalog roster.
 			if (url.pathname.endsWith("/browse/catalog"))
@@ -361,6 +366,207 @@ async function change(label: string, value: string) {
 }
 
 describe("production watch browsing", () => {
+  function providerLibrary() {
+    const requests: WatchHistoryBrowseQuery[] = [];
+    const sizes = { youtube: 45, crunchyroll: 23 };
+    const client = clientFixture(async message => {
+      if (message.command !== "browse") return { ok: true };
+      const query = message.input as WatchHistoryBrowseQuery;
+      requests.push(query);
+      const provider = query.provider ?? "crunchyroll";
+      const all = Array.from({ length: sizes[provider] }, (_, index) => ({
+        ...item, provider, titleKey: `${provider}:title:${index}`,
+        title: index === 44 ? "Hidden needle" : `${provider} title ${index + 1}`,
+      }));
+      const matches = all.filter(value => !query.search || value.title.toLowerCase().includes(query.search.toLowerCase()));
+      const offset = Number(query.cursor ?? 0);
+      const titles = matches.slice(offset, offset + query.limit);
+      return { ok: true, data: {
+        history: { meta, generatedAt: meta.serverTime, items: titles, totalTitleCount: matches.length,
+          nextCursor: offset + query.limit < matches.length ? String(offset + query.limit) : null },
+        matches: titles.map(value => ({ provider, titleKey: value.titleKey, lastWatchedAt: meta.serverTime,
+          matchingEpisodeCount: 1, matchingSessionCount: 0 })),
+      } };
+    });
+    return { client, requests };
+  }
+
+  it("pages each provider by 20 with full counts and no load-more button outside the provider", async () => {
+    const { client, requests } = providerLibrary();
+    await mount(client, false);
+    for (const [provider, total] of [["youtube", 45], ["crunchyroll", 23]] as const) {
+      const section = required(container.querySelector(`[data-provider="${provider}"]`));
+      expect(section.querySelectorAll(".popup-watch-item")).toHaveLength(20);
+      expect(section.querySelector(".popup-provider-count")?.textContent).toBe(String(total));
+      expect(section.querySelector(".popup-watch-load-more")).not.toBeNull();
+    }
+    expect(container.querySelector(".popup-watch-screen > .popup-watch-load-more")).toBeNull();
+    expect(requests).toHaveLength(2);
+    expect(requests.every(query => query.limit === 20 && query.provider && !query.cursor)).toBe(true);
+    await click("Load more YouTube titles");
+    expect(container.querySelectorAll('[data-provider="youtube"] .popup-watch-item')).toHaveLength(40);
+    expect(container.querySelectorAll('[data-provider="crunchyroll"] .popup-watch-item')).toHaveLength(20);
+    expect(requests.at(-1)).toMatchObject({ provider: "youtube", limit: 20, cursor: "20" });
+    await click("Load more YouTube titles");
+    expect(container.querySelectorAll('[data-provider="youtube"] .popup-watch-item')).toHaveLength(45);
+    expect(container.querySelector('[data-provider="youtube"] .popup-watch-load-more')).toBeNull();
+    await click("Toggle Crunchyroll history");
+    expect(container.querySelector('[data-provider="crunchyroll"] .popup-provider-body')?.hasAttribute("hidden")).toBe(true);
+  });
+
+  it("searches unloaded titles on both providers and restores each independently loaded depth", async () => {
+    const { client, requests } = providerLibrary();
+    await mount(client, false);
+    await click("Load more Crunchyroll titles");
+    await change("Search watch history", "needle");
+    expect(container.textContent).toContain("Hidden needle");
+    expect(container.querySelectorAll(".popup-watch-item")).toHaveLength(1);
+    expect(requests.filter(query => query.search === "needle")).toEqual(expect.arrayContaining([
+      expect.objectContaining({ provider: "youtube", search: "needle", limit: 20 }),
+      expect.objectContaining({ provider: "crunchyroll", search: "needle", limit: 20 }),
+    ]));
+    expect(requests.filter(query => query.search).every(query => !query.cursor)).toBe(true);
+    await click("Clear watch history search");
+    expect(container.querySelectorAll('[data-provider="youtube"] .popup-watch-item')).toHaveLength(20);
+    expect(container.querySelectorAll('[data-provider="crunchyroll"] .popup-watch-item')).toHaveLength(23);
+    await act(async () => root.unmount()); container.remove();
+    await mount(client, false);
+    expect(container.querySelectorAll('[data-provider="youtube"] .popup-watch-item')).toHaveLength(20);
+    expect(container.querySelectorAll('[data-provider="crunchyroll"] .popup-watch-item')).toHaveLength(23);
+  });
+
+  it("keeps each loaded list on failure and prevents duplicate next-page requests", async () => {
+    const library = providerLibrary();
+    let finish!: (response: WatchHistoryMessageResponse) => void;
+    let attempts = 0;
+    const client = clientFixture(async message => {
+      if (message.command === "browse" && (message.input as WatchHistoryBrowseQuery).provider === "youtube"
+        && (message.input as WatchHistoryBrowseQuery).cursor) {
+        attempts++;
+        if (attempts === 1) return new Promise(resolve => { finish = resolve; });
+      }
+      return library.client.request(message);
+    });
+    await mount(client, false);
+    await act(async () => {
+      const more = button("Load more YouTube titles"); more.click(); more.click();
+    });
+    expect(attempts).toBe(1);
+    expect(button("Load more YouTube titles").disabled).toBe(true);
+    await act(async () => finish({ ok: false, status: "retryable" }));
+    expect(container.querySelectorAll('[data-provider="youtube"] .popup-watch-item')).toHaveLength(20);
+    expect(container.querySelectorAll('[data-provider="crunchyroll"] .popup-watch-item')).toHaveLength(20);
+    await click("Load more YouTube titles");
+    expect(container.querySelectorAll('[data-provider="youtube"] .popup-watch-item')).toHaveLength(40);
+    expect(container.querySelector('[role="alert"]')).toBeNull();
+    expect(library.requests.filter(query => query.provider === "crunchyroll")).toHaveLength(1);
+  });
+
+  it.each(["generation-mismatch", "deleted-history", "rejected"] as const)("hides both providers when one loses shared authority: %s", async status => {
+    const library = providerLibrary();
+    let finishProvider!: (response: WatchHistoryMessageResponse) => void;
+    let finishRecovery!: (response: WatchHistoryMessageResponse) => void;
+    const client = clientFixture(async message => {
+      if (message.command === "list") return new Promise(resolve => { finishRecovery = resolve; });
+      if (message.command === "browse" && (message.input as WatchHistoryBrowseQuery).provider === "youtube")
+        return new Promise(resolve => { finishProvider = resolve; });
+      return library.client.request(message);
+    });
+    const event = { ...episode, schemaVersion: 3, clientEventId: GROUP, clientSessionKey: "pending-authority", accountGeneration: 1,
+      provider: "youtube", youtubeVideoId: "pending", titleKey: "youtube:video:pending", episodeKey: "youtube:video:pending", itemKind: "movie",
+      title: "Pending private title", artworkUrl: null, observedAt: meta.serverTime, kind: "heartbeat" } as WatchProgressEvent;
+    client.loadCached = async () => ({ history: browse().history, accountGeneration: 1, preferences: { youtubeHistoryEnabled: true },
+      capturePaused: false, pendingEvents: [event], localObservation: null });
+    let cacheReady = false;
+    client.loadBrowseCached = async message => cacheReady
+      ? { ...await library.client.request(message), cachedAt: Date.now() }
+      : { ok: false, status: "retryable" };
+    await mount(client, false);
+    expect(container.querySelectorAll(".popup-watch-item")).toHaveLength(21);
+    expect(container.textContent).toContain("Pending private title");
+    await act(async () => finishProvider({ ok: false, status }));
+    expect(container.querySelectorAll(".popup-watch-item")).toHaveLength(0);
+    expect(container.querySelector(".popup-provider-count")).toBeNull();
+    if (status === "generation-mismatch") {
+      expect(finishRecovery).toBeTypeOf("function");
+      cacheReady = true; // Fresh cache must not release a known authority failure.
+      await act(async () => finishRecovery({ ok: false, status: "retryable" }));
+      expect(container.querySelectorAll(".popup-watch-item")).toHaveLength(0);
+    } else {
+      await click("Retry watch history");
+      expect(container.querySelectorAll(".popup-watch-item")).toHaveLength(0);
+      expect(library.requests.filter(query => query.provider === "crunchyroll")).toHaveLength(2);
+      await act(async () => finishProvider(await library.client.request({
+        type: "ANIDACHI_WATCH_HISTORY_V3", command: "browse", expectedOwnerUserId: OWNER,
+        input: { mode: "personal", provider: "youtube", limit: 20 },
+      })));
+      expect(container.querySelectorAll(".popup-watch-item")).toHaveLength(40);
+    }
+  });
+
+  it("recovers canonical authority when a rejected provider retry discovers a new generation", async () => {
+    const library = providerLibrary();
+    let attempts = 0;
+    const client = clientFixture(async message => {
+      if (message.command === "list") return new Promise(() => {});
+      if (message.command === "browse" && (message.input as WatchHistoryBrowseQuery).provider === "youtube")
+        return { ok: false, status: attempts++ ? "generation-mismatch" : "rejected" };
+      return library.client.request(message);
+    });
+    await mount(client, false);
+    await click("Retry watch history");
+    expect(vi.mocked(client.request).mock.calls.filter(([message]) => message.command === "list")).toHaveLength(1);
+    expect(container.querySelectorAll(".popup-watch-item")).toHaveLength(0);
+  });
+
+  it.each(["refresh", "query-return"])("releases canceled next-page requests after %s", async changeKind => {
+    const library = providerLibrary();
+    let finish!: (response: WatchHistoryMessageResponse) => void;
+    let attempts = 0;
+    const client = clientFixture(async message => {
+      if (message.command === "browse" && (message.input as WatchHistoryBrowseQuery).provider === "youtube"
+        && (message.input as WatchHistoryBrowseQuery).cursor && ++attempts === 1)
+        return new Promise(resolve => { finish = resolve; });
+      return library.client.request(message);
+    });
+    await mount(client, false);
+    await click("Load more YouTube titles");
+    if (changeKind === "refresh") await act(async () => root.render(<PopupWatchHistoryPanel client={client} ownerUserId={OWNER} refreshSignal={1}/>));
+    else { await change("Search watch history", "needle"); await click("Clear watch history search"); }
+    expect(button("Load more YouTube titles").disabled).toBe(false);
+    await click("Load more YouTube titles");
+    expect(attempts).toBe(2);
+    expect(container.querySelectorAll('[data-provider="youtube"] .popup-watch-item')).toHaveLength(40);
+    await act(async () => finish({ ok: false, status: "retryable" }));
+    expect(container.querySelector('[role="alert"]')).toBeNull();
+    expect(container.querySelectorAll('[data-provider="youtube"] .popup-watch-item')).toHaveLength(40);
+  });
+
+  it("preserves requested provider depth through a partial-cache restore failure", async () => {
+    const library = providerLibrary();
+    await mount(library.client, false);
+    await click("Load more YouTube titles");
+    await act(async () => root.unmount()); container.remove();
+    let fail = true;
+    const client = { ...library.client,
+      loadBrowseCached: async (message: Parameters<PopupWatchHistoryClient["request"]>[0]) => {
+        if (message.command !== "browse" || (message.input as WatchHistoryBrowseQuery).cursor) return { ok: false as const, status: "retryable" as const };
+        const page = await library.client.request(message);
+        return { ...page, cachedAt: Date.now() - 100_000 };
+      },
+      request: async (message: Parameters<PopupWatchHistoryClient["request"]>[0]) => {
+        if (message.command === "browse" && (message.input as WatchHistoryBrowseQuery).provider === "youtube"
+          && (message.input as WatchHistoryBrowseQuery).cursor && fail) return { ok: false as const, status: "retryable" as const };
+        return library.client.request(message);
+      },
+    };
+    await mount(client, false);
+    expect(container.querySelector('[role="alert"]')).not.toBeNull();
+    fail = false;
+    await click("Retry watch history");
+    expect(container.querySelectorAll('[data-provider="youtube"] .popup-watch-item')).toHaveLength(40);
+  });
+
   it("restores all user-loaded title pages when the drawer is recreated", async () => {
     const first = browse("First page", "page-two");
     const second = browse("Second page");
@@ -693,8 +899,8 @@ describe("production watch browsing", () => {
     expect(reads).toBe(2);
   });
   it.each([
-    ["superseded", 2],
-    ["retryable", 1],
+    ["superseded", 4],
+    ["retryable", 2],
   ] as const)("bounds automatic browse recovery for %s and keeps manual Retry", async (status, expectedReads) => {
     let reads = 0;
     const fallback = clientFixture();
@@ -1337,7 +1543,7 @@ describe("production watch browsing", () => {
 			vi
 				.mocked(client.request)
 				.mock.calls.filter(([message]) => message.command === "browse"),
-		).toHaveLength(2);
+		).toHaveLength(4);
 		expect(
 			vi
 				.mocked(client.request)
@@ -1428,7 +1634,7 @@ describe("production watch browsing", () => {
 		).toHaveLength(1);
 		expect(
 			client.request.mock.calls.filter(([m]) => m.command === "browse"),
-		).toHaveLength(2);
+		).toHaveLength(4);
 		expect(container.querySelector('[role="alert"]')).toBeNull();
 	});
 	it("bounds failed generation recovery and manual Retry replays the current filtered query", async () => {
@@ -1653,7 +1859,7 @@ describe("production watch browsing", () => {
 			.mocked(client.request)
 			.mock.calls.map(([m]) => m)
 			.filter((m) => m.command === "browse");
-		expect(calls).toHaveLength(1);
+		expect(calls).toHaveLength(2);
 		expect(calls[0]).toMatchObject({
 			expectedOwnerUserId: OWNER,
 			input: { mode: "personal", limit: 20 },
@@ -1704,16 +1910,16 @@ describe("production watch browsing", () => {
 		);
 		await mount(client);
 		await act(async () =>
-			required(flights[0]).resolve({ ok: true, data: browse("Old query") }),
+			flights.filter(flight => !flight.input.search).forEach(flight => flight.resolve({ ok: true, data: browse("Old query") })),
 		);
 		await change("Search watch history", "new");
 		expect(container.textContent).not.toContain("Old query");
 		await change("Search watch history", "latest");
 		await act(async () =>
-			required(flights[2]).resolve({ ok: true, data: browse("Latest query") }),
+			flights.filter(flight => flight.input.search === "latest").forEach(flight => flight.resolve({ ok: true, data: browse("Latest query") })),
 		);
 		await act(async () =>
-			required(flights[1]).resolve({ ok: true, data: browse("Stale query") }),
+			flights.filter(flight => flight.input.search === "new").forEach(flight => flight.resolve({ ok: true, data: browse("Stale query") })),
 		);
 		expect(container.textContent).toContain("Latest query");
 		expect(container.textContent).not.toContain("Stale query");
@@ -1761,7 +1967,7 @@ describe("production watch browsing", () => {
 		expect(client.request).toHaveBeenCalledWith(
 			expect.objectContaining({
 				command: "browse",
-				input: { mode: "personal", limit: 20, cursor: "title-next" },
+				input: { mode: "personal", limit: 20, provider: "crunchyroll", cursor: "title-next" },
 			}),
 		);
 		expect(container.querySelectorAll(".popup-watch-item")).toHaveLength(1);

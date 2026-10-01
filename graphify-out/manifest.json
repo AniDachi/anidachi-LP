@@ -3504,10 +3504,10 @@
     "semantic_hash": "773034b218ba95d0712867ff35698f20"
   },
   "docs/current-development-state.md": {
-    "mtime": 1790862396.9623725,
-    "seen": 1790862758.2402802,
+    "mtime": 1790864517.7809856,
+    "seen": 1790864666.615765,
     "ast_hash": "bd18f6e9e42a1dfbd1bd595407ee6e2c",
-    "semantic_hash": "60849681b0f843c987712cee65562343"
+    "semantic_hash": "7d82e8873041271a0cd28eb63c9f2385"
   },
   "docs/development-environments.md": {
     "mtime": 1789490459.0048413,
@@ -5376,9 +5376,9 @@
     "semantic_hash": "38cfab0d710519b387ee7d0de8a8274b"
   },
   "apps/extension/test/popup-watch-history.test.tsx": {
-    "mtime": 1790862634.690129,
-    "seen": 1790862758.165518,
-    "ast_hash": "be90ba13b48baed07c14a57f75f61c02",
+    "mtime": 1790863651.2557375,
+    "seen": 1790864591.2375848,
+    "ast_hash": "147ee3fd075098fe9b29c8ab0fbe506c",
     "semantic_hash": ""
   },
   "apps/extension/src/extension-theme.ts": {
@@ -6276,9 +6276,9 @@
     "semantic_hash": "e72148f46d4fffc4357c96aa2449c5a4"
   },
   "apps/extension/src/popup-watch-history-styles.ts": {
-    "mtime": 1790862365.811404,
-    "seen": 1790862436.8218272,
-    "ast_hash": "d6dacce0c329c0aa52edf4ae0e7a2e5b",
+    "mtime": 1790863651.2550545,
+    "seen": 1790864591.2375832,
+    "ast_hash": "304e27f99274da73e83cea60e90b8267",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-09-05-watch-history-crunchyroll-catalog-progress-plan.md": {
@@ -6552,15 +6552,15 @@
     "semantic_hash": ""
   },
   "apps/extension/src/popup-watch-browse.ts": {
-    "mtime": 1789490458.8836083,
-    "seen": 1789807056.436491,
-    "ast_hash": "17a546fd6fd52939a800f7fcb5e08ca7",
-    "semantic_hash": "17a546fd6fd52939a800f7fcb5e08ca7"
+    "mtime": 1790864374.9984388,
+    "seen": 1790864591.237581,
+    "ast_hash": "61b5233fc754df68c2a99a8f9e779ea9",
+    "semantic_hash": ""
   },
   "apps/extension/src/popup-watch-drawer.tsx": {
-    "mtime": 1790538791.9179544,
-    "seen": 1790539296.271573,
-    "ast_hash": "8c393c47ecc6ba1b70fa72a0095cda87",
+    "mtime": 1790864175.197491,
+    "seen": 1790864591.237582,
+    "ast_hash": "2929b96a7dab2fa76aa1d4ff37ee9c24",
     "semantic_hash": ""
   },
   "apps/extension/src/popup-watch-filters.tsx": {
@@ -6582,9 +6582,9 @@
     "semantic_hash": ""
   },
   "apps/extension/test/popup-watch-browse.test.tsx": {
-    "mtime": 1790862634.6904511,
-    "seen": 1790862758.1655161,
-    "ast_hash": "0f4a52ae9a0b46f72de3b82da700b66d",
+    "mtime": 1790864481.726515,
+    "seen": 1790864591.2375848,
+    "ast_hash": "4d8fabde0f5cef6d03c737b493d55f8b",
     "semantic_hash": ""
   },
   "apps/extension/test/watch-history-browse-date.test.ts": {
@@ -7368,10 +7368,10 @@
     "semantic_hash": "3d7e8f0bbf60925eca1d2ecae0e04d5b"
   },
   "apps/extension/src/popup-view-state.ts": {
-    "mtime": 1789490458.8833468,
-    "seen": 1789807056.436491,
-    "ast_hash": "e5e45763cf1558f9027a2532b361ac31",
-    "semantic_hash": "e5e45763cf1558f9027a2532b361ac31"
+    "mtime": 1790863399.9800432,
+    "seen": 1790864591.237578,
+    "ast_hash": "0f7f61280e635aff73467a82447154d4",
+    "semantic_hash": ""
   },
   "apps/extension/src/source-adapters/youtube/artwork.ts": {
     "mtime": 1789490458.8913095,
@@ -7386,9 +7386,9 @@
     "semantic_hash": ""
   },
   "apps/extension/test/popup-view-state.test.tsx": {
-    "mtime": 1790862339.600871,
-    "seen": 1790862436.821832,
-    "ast_hash": "58d746dbd8ca8134fdf1633e949d3b29",
+    "mtime": 1790863651.2560241,
+    "seen": 1790864591.2375839,
+    "ast_hash": "e3615c1e28b592f7746ac2e6b6f39e63",
     "semantic_hash": ""
   },
   "apps/web/app/account/watch-library/history-browser.tsx": {
@@ -9333,6 +9333,12 @@
     "mtime": 1790862716.6536772,
     "seen": 1790862758.165513,
     "ast_hash": "2302e485e84b5b4a009250c22fb59f31",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/use-popup-provider-browse.ts": {
+    "mtime": 1790864518.111075,
+    "seen": 1790864591.2375832,
+    "ast_hash": "242701509bce59c8332f376942c5a39a",
     "semantic_hash": ""
   }
 }

@@ -1,7 +1,7 @@
 import { act, useRef } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { forgetPopupView, readPopupHistoryView, readPopupView, writePopupHistoryChoice, writePopupNavigation, writePopupQuery } from "../src/popup-view-state";
+import { forgetPopupView, readPopupHistoryView, readPopupView, writePopupHistoryChoice, writePopupNavigation, writePopupQuery, writePopupTitlePages } from "../src/popup-view-state";
 import { PopupRetainedPanel, usePopupNavigation } from "../src/use-popup-navigation";
 
 const OWNER = "account-a";
@@ -107,4 +107,19 @@ it("does not save Settings scrolling over the last content position, including c
   await act(async () => root!.unmount()); container.remove(); root = undefined;
   await mount();
   expect(container.querySelector("main")!.scrollTop).toBe(260);
+});
+
+
+it("keeps independent bounded title depths per provider/query and clears them across owners or generations", () => {
+  const youtube = JSON.stringify({ provider: "youtube", limit: 20 });
+  const crunchyroll = JSON.stringify({ provider: "crunchyroll", limit: 20 });
+  writePopupTitlePages(OWNER, 1, youtube, 3);
+  writePopupTitlePages(OWNER, 1, crunchyroll, 1);
+  expect(readPopupHistoryView(OWNER, 1).titleStreams).toEqual({ [youtube]: 3, [crunchyroll]: 1 });
+  expect(readPopupHistoryView("another", 1).titleStreams).toBeUndefined();
+  expect(readPopupHistoryView(OWNER, 2).titleStreams).toBeUndefined();
+  for (let i = 0; i < 25; i++) writePopupTitlePages(OWNER, 1, `search-${i}`, 100);
+  const saved = readPopupHistoryView(OWNER, 1).titleStreams!;
+  expect(Object.keys(saved)).toHaveLength(16);
+  expect(saved["search-24"]).toBe(20);
 });

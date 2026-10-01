@@ -122,6 +122,8 @@ export function usePopupWatchBrowse<T>({
 	const latest = useRef({ key, client, generation });
 	latest.current = { key, client, generation };
 	const sequence = useRef(0);
+	const successRevision = useRef(0);
+	const nextPageFlight = useRef<{ key: string } | null>(null);
 	const initialDepth = Math.max(1, Math.min(20, initialPageCount));
 	const pageCount = useRef(Math.max(initialDepth, restoredPages.length));
 	const queryDepths = useRef(new Map<string, number>());
@@ -151,12 +153,12 @@ export function usePopupWatchBrowse<T>({
 				: seed && !firstCursor
 					? 0
 					: retainedCount - firstPages.length;
-			const rememberPages = (pages: T[]) => {
+			const rememberPages = (pages: T[], minimumDepth = 1) => {
 				queryPages.delete(key);
 				queryPages.set(key, pages);
 				if (queryPages.size > 16)
 					queryPages.delete(queryPages.keys().next().value!);
-				pageCount.current = Math.max(1, pages.length);
+				pageCount.current = Math.max(minimumDepth, 1, pages.length);
 				queryDepths.current.delete(key);
 				queryDepths.current.set(key, pageCount.current);
 				if (queryDepths.current.size > 16)
@@ -252,7 +254,7 @@ export function usePopupWatchBrowse<T>({
 										!fresh
 									? previous.pages
 									: cachedPages;
-						rememberPages(pages);
+						rememberPages(pages, retainedCount);
 						return {
 							key,
 							pages,
@@ -349,6 +351,7 @@ export function usePopupWatchBrowse<T>({
 				seen.add(continuation);
 			}
 			if (!current()) return;
+			successRevision.current += 1;
 			setState((previous) => {
 				const merged =
 					nextCursor && previous.key === key
@@ -389,6 +392,7 @@ export function usePopupWatchBrowse<T>({
 		}
 		return () => {
 			sequence.current += 1;
+			nextPageFlight.current = null;
 		};
 	}, [enabled, discard, key, load, refresh, forceRefresh, retry]);
 	const visible =
@@ -409,6 +413,7 @@ export function usePopupWatchBrowse<T>({
 	}, [visible.errorStatus, recover]);
 	return {
 		...visible,
+		successRevision: successRevision.current,
 		nextCursor,
 		reload: () => {
 			if (visible.errorStatus === "generation-mismatch" && recover)
@@ -416,7 +421,12 @@ export function usePopupWatchBrowse<T>({
 			else setRetry((value) => value + 1);
 		},
 		loadMore: () => {
-			if (!discard && nextCursor && !visible.loading) void load(nextCursor);
+			if (discard || !enabled || !nextCursor || visible.loading || nextPageFlight.current?.key === key) return;
+			const flight = { key };
+			nextPageFlight.current = flight;
+			void load(nextCursor).finally(() => {
+				if (nextPageFlight.current === flight) nextPageFlight.current = null;
+			});
 		},
 	};
 }

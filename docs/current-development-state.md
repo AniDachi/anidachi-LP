@@ -19,6 +19,18 @@ It keeps arrivals unread while Inbox is hidden, preserves content scroll when
 Settings closes or the popup reopens, and removes the welcome heading's dot.
 The updated unpacked staging folder is for owner review; real browser/user
 acceptance remains outstanding.
+The local Watch history follow-up separates YouTube and Crunchyroll browsing:
+20 titles per platform initially, then 20 more through a button inside that
+platform's expanded list. Server search/date filters cover the entire saved
+history before pagination; provider counts are full filtered totals. Loaded depth
+is retained independently per provider/query, account and generation, including
+popup reopening and retry after partial-cache failures. A shared authority failure
+hides both streams and pending rows until validated network recovery; canceled
+loads cannot block a later Load more action. Recording, quotas and server contracts
+are unchanged. Regression checks and a local component preview cover pagination
+and finding an unloaded title; the owner still needs to Reload the unpacked
+staging extension and accept the behavior against their actual history.
+
 Before publication, deploy matching privacy text and align Store disclosures.
 See [release-channel behavior](extension-release-channels.md#local-default-on-history-candidate-october-1-2026).
 
