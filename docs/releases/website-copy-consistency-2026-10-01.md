@@ -2,10 +2,11 @@
 
 ## Scope and authority
 
-The owner approved correcting the website audit findings. This is a local
-website change based on staging `34c4af98`, on `codex/site-copy-consistency`.
-Delivery to staging and production is separate. No runtime billing, entitlement,
-room, extension, database or environment changes are part of this patch.
+The owner approved correcting the website audit findings, then explicitly
+authorized staging delivery. Implementation `2e90cf5c` was prepared from staging
+`34c4af98` on `codex/site-copy-consistency` and delivered through PR #391.
+Production promotion remains separate. No runtime billing, entitlement, room,
+extension, database or environment changes are part of this patch.
 
 Copy follows the [transition rules](paid-hosting-trial/transition-master-plan-ru.md#21-модель-доступа)
 and current access checks: Free joins a Plus/Pro/trial host; hosting and new
@@ -45,8 +46,45 @@ model transition. Existing gated legacy quota code remains unchanged.
 Preserve public paths, canonicals, links, plan prices, layouts and SEO indexing
 settings. No new marketing routes or competitor-product changes are intended.
 Rollback is a revert of this website patch; no migration, secret or flag change
-is involved. Staging smoke and owner acceptance follow any authorized staging
-delivery. No staging/production delivery has happened for this patch.
+is involved. Staging delivery and smoke are recorded below. Owner content
+acceptance and production promotion remain separate; this patch has not been
+delivered to main/production.
+
+## Staging delivery — October 1, 2026
+
+- [PR #391](https://github.com/AniDachi/anidachi-LP/pull/391) merged at
+  08:04:23 UTC as `92a409aad35cadda2a9241e9ee237a477f836660`; implementation
+  `2e90cf5c628f9d09ce64d08ef03f2c6d740ae74a`.
+- Vercel `dpl_2CfJHuvV4wAHXPsJgJtY4CqK6HJj` became READY at 08:06:50 UTC
+  and owns the `staging.anidachi.app` alias. Its source is the exact staging
+  merge above, not the feature-branch preview deployment.
+- The [post-deploy smoke](https://github.com/AniDachi/anidachi-LP/actions/runs/36834328164)
+  started at 08:06:53 UTC and passed: password gate, rejected/accepted access,
+  extension return target, login options, unauthenticated API rejection, noindex,
+  robots and empty sitemap. The earlier preview-triggered smoke checked the old
+  staging version and is not evidence for this deployment.
+- [Staging push CI](https://github.com/AniDachi/anidachi-LP/actions/runs/36834081866),
+  [promotion-candidate CI](https://github.com/AniDachi/anidachi-LP/actions/runs/36834095009)
+  and [E2E P2P Media](https://github.com/AniDachi/anidachi-LP/actions/runs/36834094972)
+  passed. CodeRabbit's PR status was a configured skip for a non-default base
+  branch; the independent source review described below supplies review evidence.
+- [E2E Rooms](https://github.com/AniDachi/anidachi-LP/actions/runs/36834094970)
+  failed on attempt 1 and passed on attempt 2 without any code changes. The
+  existing `retries local terminal cleanup after the Web finalization was already
+  acknowledged` test again returned 409 instead of 410. This matches the
+  [previously recorded failure](../superpowers/plans/2026-10-01-account-loading-performance.md#доставка-на-staging--1-октября-2026).
+  Worker, protocol, workflow and dependency files are unchanged from the base.
+  The repeat is not a fix for the underlying instability; investigate separately
+  before production acceptance.
+- Browser verification on the READY staging alias confirmed the corrected
+  Crunchyroll setup steps, expanded Free FAQ, generated anime instructions and
+  FAQ JSON-LD, comparison rows and homepage prices. The obsolete Detect Anime
+  instruction is absent. Checked pages remain noindex and show no desktop
+  horizontal overflow. This is representative copy verification, not a payment
+  or authenticated account-flow acceptance test.
+- Main remains `a5a0134e1d661324061e10ef611dfb373cbe47bd` and PR #376 remains
+  open without auto-merge. No Worker release, extension artifact, Store upload,
+  Stripe configuration or schema change was included in this delivery.
 
 ## Verification
 
