@@ -487,7 +487,7 @@ test("switching to monthly uses verified prices and locks the period during chec
 	assert.equal(window.location.href, "https://checkout.stripe.com/monthly");
 });
 
-test("monthly sign-in preserves the selected period on the pricing return", async () => {
+test("monthly sign-in carries the selected plan and period into checkout", async () => {
 	globalThis.fetch = async () =>
 		Response.json({
 			...offer,
@@ -501,15 +501,8 @@ test("monthly sign-in preserves the selected period on the pricing return", asyn
 	assert.match(signIn.textContent!, /Try 3 days free/);
 	await act(async () => signIn.click());
 	const next = new URL(window.location.href).searchParams.get("next");
-	assert.equal(next, "/pricing?plan=plus&billing=monthly");
-	await act(async () => root?.unmount());
-	root = null;
-	dom.happyDOM.setURL(`http://localhost${next}`);
-	const returned = await mount({});
-	assert.equal(
-		periodButton(returned, "Monthly").getAttribute("aria-pressed"),
-		"true",
-	);
+	assert.equal(next, "/checkout?plan=plus&billing=monthly");
+	assert.equal(new URL(window.location.href).pathname, "/login");
 });
 
 test("an existing subscriber can still open account management from yearly pricing", async () => {
@@ -552,4 +545,17 @@ test("losing annual availability does not silently submit a monthly checkout", a
 		/Checkout for this price is temporarily unavailable/,
 	);
 	assert.equal(checkout, 0);
+});
+
+
+test("a session that expires after choosing Pro still returns to monthly Pro checkout", async () => {
+  globalThis.fetch = async (url) => String(url) === "/api/billing/offer"
+    ? Response.json(offer)
+    : Response.json({ loginUrl: "/login?next=%2F" }, { status: 401 });
+  const el = await mount();
+  await act(async () => periodButton(el, "Monthly").click());
+  const pro = el.querySelector<HTMLButtonElement>('[aria-describedby^="pricing-pro-terms"]');
+  assert.ok(pro);
+  await act(async () => pro.click());
+  assert.equal(new URL(window.location.href).searchParams.get("next"), "/checkout?plan=pro&billing=monthly");
 });

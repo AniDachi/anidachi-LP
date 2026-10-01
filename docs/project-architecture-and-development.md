@@ -150,6 +150,17 @@ Shared:
 - Biome
 - Vitest
 
+## Guest checkout continuation
+
+The October 1 local candidate preserves the selected Plus/Pro plan and billing
+period through website OAuth using `/checkout?plan=...&billing=...`. That noindex
+page requires the existing session and uses the existing billing offer and
+checkout APIs. Eligible trials resume automatically; an unavailable trial needs
+explicit paid confirmation, and an existing subscriber goes to billing management.
+OAuth errors preserve only validated checkout return targets. No session,
+protocol, entitlement or Stripe lifecycle contract changes are introduced.
+See [implementation, validation limits and staging acceptance](releases/checkout-sign-in-continuation-2026-10-01.md).
+
 ## Environments
 
 Local:

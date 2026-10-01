@@ -23,6 +23,7 @@ import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getSeoAttributionFields } from "@/lib/seo-landing-path";
 import type { PricingOffer, PricingPrices } from "@/lib/pricing-offer";
 import { formatMonthlyPrice, type BillingPeriod } from "@/lib/billing-view";
+import { checkoutLoginPath, checkoutSessionRecoveryPath } from "@/lib/checkout-selection";
 import "./pricing.css";
 
 function FeatureList({ features }: { features: string[] }) {
@@ -260,7 +261,7 @@ export function Pricing({
 				return;
 			}
 			if (currentOffer.action === "sign_in") {
-				window.location.href = `/login?next=${encodeURIComponent(`/pricing?plan=${tier}&billing=${period}`)}`;
+				window.location.href = checkoutLoginPath({ plan: tier, billing: period });
 				return;
 			}
 			if (!offer && currentOffer.action === "subscribe") {
@@ -324,8 +325,8 @@ export function Pricing({
 			}
 
 			if (!response.ok) {
-				if (response.status === 401 && data.loginUrl) {
-					window.location.href = data.loginUrl;
+				if (response.status === 401) {
+					window.location.href = checkoutSessionRecoveryPath({ plan: tier, billing: period });
 					return;
 				}
 				const message =
