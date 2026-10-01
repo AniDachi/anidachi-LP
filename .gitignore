@@ -66,6 +66,7 @@ Maac.json
 .dev.vars.*
 
 # misc
+__pycache__/
 .DS_Store
 .vercel/
 .atom
