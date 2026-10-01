@@ -3234,10 +3234,10 @@
     "semantic_hash": "7111f1819b7d5f6bb54f14e194520847"
   },
   "scripts/smoke-staging-web.mjs": {
-    "mtime": 1789490459.047398,
-    "seen": 1789807056.437588,
-    "ast_hash": "dcb46f3999576c6fb5f15d131f2ad22a",
-    "semantic_hash": "dcb46f3999576c6fb5f15d131f2ad22a"
+    "mtime": 1790856799.8637693,
+    "seen": 1790856803.063537,
+    "ast_hash": "49a1c2af1ef20d8521a5141984a23206",
+    "semantic_hash": ""
   },
   "scripts/smoke-worker.mjs": {
     "mtime": 1789490459.0474644,
