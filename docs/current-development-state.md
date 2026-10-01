@@ -1,20 +1,31 @@
 # Current Development State
 
-## Watch Library follow-up, October 1, 2026 — local fix pending delivery
+## Watch Library filter fix delivered to staging, October 1, 2026
 
-The owner reported remaining latency after the first account patch. Authenticated
-staging measurements at `8b4cf936` reproduced a Crunchyroll filter reading four
-pages of the entire mixed-platform library sequentially (about 9.4 seconds),
-with redundant capacity reads. A local fix on `codex/watch-library-filter-loading`
-uses the existing personal browse API with an optional provider filter and
-preserves owner/generation/access checks and dirty-editor navigation guards.
-No database migration is needed. Delivery and a fresh staging measurement are
-still pending; this does not establish that all account latency is resolved.
+[PR #389](https://github.com/AniDachi/anidachi-LP/pull/389) merged at 03:10:39 UTC
+as `c8f2be59` (implementation `249616d8`). Vercel deployment
+`dpl_4CbwWAFV4S8jugnRKvArxPpbkEWQ` is READY on **https://staging.anidachi.app**.
+The post-deploy [smoke](https://github.com/AniDachi/anidachi-LP/actions/runs/36809500751)
+passed after READY. Authenticated browser checks found all expected Crunchyroll
+results and a paginated YouTube list without errors.
 
-Vercel staging is in `sfo1`; its Supabase database is in `ap-southeast-1`.
-Production database is in `us-west-1`, so changing the shared region setting
-without an environment-specific strategy would be inappropriate. Regions and
-production remain unchanged. See the [follow-up findings and checks](superpowers/plans/2026-10-01-account-loading-performance.md).
+Crunchyroll previously drained four pages of the mixed-platform library in about
+9.4 seconds. It now uses one personal browse request: 2.336 seconds on the first
+selection, 2.438 seconds after switching back from YouTube (2.236 seconds).
+Capacity was read once, not again for each platform. These are individual
+Resource Timing measurements, not p95 or full navigation timings. Owner/manual
+acceptance and the remaining account-page latency are still open.
+
+The optional provider query is backward compatible; owner/generation/access
+checks and dirty-editor guards remain. Web tests (942 passed, 6 existing skips),
+protocol tests (204), affected extension tests (153), all consumer typechecks,
+web lint, independent review and PR CI passed. Graphify remains unchanged under
+the documented integrity exception.
+
+Vercel staging is in `sfo1`; its database is in `ap-southeast-1`. Production's
+database is in `us-west-1`, so a staging-specific region strategy and comparison
+are needed before changing placement. Regions, main/production, SQL and Stripe
+configuration are unchanged. See the [findings, rollout evidence and remaining work](superpowers/plans/2026-10-01-account-loading-performance.md).
 
 ## Account loading optimization delivered to staging, October 1, 2026
 
