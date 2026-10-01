@@ -17,6 +17,7 @@ import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
 export type HistoryPlatform = "all" | WatchHistoryItem["provider"];
 type Props = {
   items: WatchHistoryItem[]; owner: string; generation: number; canEdit: boolean;
+  provider: HistoryPlatform; onProviderChange(provider: HistoryPlatform): void; listReady: boolean; loading: boolean;
   busy: boolean; nextCursor: string | null; loadingMore: boolean; capacity: ReactNode | ((provider: HistoryPlatform) => ReactNode);
   onLoadMore(): void; onEdited(): Promise<void>; onDraftChange(active: boolean): void;
   captureAccessFailure(): (error: unknown) => boolean;
@@ -27,7 +28,7 @@ const itemId = (item: WatchHistoryItem) => `${item.provider}:${item.titleKey}`;
 export function HistoryBrowser(props: Props) {
   useAccountScrollRestoration(`${props.owner}:library:scroll`);
   const [query, setQuery] = useAccountViewState(`${props.owner}:library:query`, "");
-  const [provider, setProvider] = useAccountViewState<HistoryPlatform>(`${props.owner}:library:provider`, "all");
+  const provider = props.provider;
   const [status, setStatus] = useAccountViewState(`${props.owner}:library:status`, "all");
   const [selected, setSelected] = useAccountViewState<string | null>(`${props.owner}:library:selected`, null);
   const [guard, setGuard] = useState<null | (() => void)>(null);
@@ -35,26 +36,26 @@ export function HistoryBrowser(props: Props) {
   const inspector = useRef<InspectorHandle | null>(null);
   const autoPageAttempt = useRef<string | null>(null);
   const { nextCursor, loadingMore, busy, onLoadMore } = props;
-  const selectedItem = props.items.find(item => itemId(item) === selected);
-  const filtered = props.items.filter(item => (provider === "all" || item.provider === provider)
+  const selectedItem = props.listReady ? props.items.find(item => itemId(item) === selected) : undefined;
+  const filtered = props.listReady ? props.items.filter(item => (provider === "all" || item.provider === provider)
     && item.title.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())
-    && (status === "all" || (status === "watched" ? isTitleWatched(item) : !isTitleWatched(item))));
-  // The list API is bounded. Complete its existing pagination before declaring
-  // a filtered search empty; the server-owned quota is never inferred here.
+    && (status === "all" || (status === "watched" ? isTitleWatched(item) : !isTitleWatched(item)))) : [];
+  // Platform filtering happens on the server. Text/progress filters still finish
+  // pagination within that platform before declaring the search empty.
   useEffect(() => {
     const attempt = JSON.stringify([query, provider, status, nextCursor]);
-    if ((query || provider !== "all" || status !== "all" || (selected && !selectedItem)) && nextCursor && !loadingMore && !busy && autoPageAttempt.current !== attempt) {
+    if (props.listReady && (query || status !== "all" || (selected && !selectedItem)) && nextCursor && !loadingMore && !busy && autoPageAttempt.current !== attempt) {
       autoPageAttempt.current = attempt;
       onLoadMore();
     }
-  }, [query, provider, status, selected, selectedItem, nextCursor, loadingMore, busy, onLoadMore]);
+  }, [query, provider, status, selected, selectedItem, nextCursor, loadingMore, busy, onLoadMore, props.listReady]);
   const navigate = (action: () => void) => {
     if (inspector.current?.dirty()) setGuard(() => action);
     else action();
   };
   return <div className={`wh-browser ${selectedItem ? "wh-has-detail" : ""}`}>
     <section className="wh-library" aria-label="Saved titles">
-      <HistoryPlatformSwitch value={provider} onChange={setProvider} />
+      <HistoryPlatformSwitch value={provider} onChange={value => { if (value !== provider) navigate(() => { setSelected(null); props.onProviderChange(value); }); }} />
       <div className="wh-toolbar">
         <label className="wh-search"><Search size={17} aria-hidden /><span className="sr-only">Search your library</span>
           <input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search your library" type="search" /></label>
@@ -72,7 +73,8 @@ export function HistoryBrowser(props: Props) {
           <span className={`wh-provider wh-provider-${item.provider}`}>{item.provider === "youtube" ? "YouTube" : "Crunchyroll"}</span>
         </button>)}
       </div>
-      {!filtered.length && (props.nextCursor && (query || provider !== "all" || status !== "all") ? <p className="wh-empty" role="status">{props.loadingMore ? "Searching your library…" : "No matches in loaded titles. Load more to continue searching."}</p> : !props.items.length ? <LibraryFirstWatch canEdit={props.canEdit} /> : <p className="wh-empty" role="status">No titles match these filters.</p>)}
+      {!props.listReady && props.loading && <p className="wh-empty" role="status">Loading titles…</p>}
+      {props.listReady && !filtered.length && (props.nextCursor && (query || provider !== "all" || status !== "all") ? <p className="wh-empty" role="status">{props.loadingMore ? "Searching your library…" : "No matches in loaded titles. Load more to continue searching."}</p> : !props.items.length ? <LibraryFirstWatch canEdit={props.canEdit} /> : <p className="wh-empty" role="status">No titles match these filters.</p>)}
       {props.nextCursor && <button className="wh-button wh-load-more" disabled={props.loadingMore || props.busy} onClick={props.onLoadMore} type="button">{props.loadingMore ? "Loading…" : "Load more titles"}</button>}
     </section>
     {selectedItem && <TitleInspector key={`${props.owner}:${props.generation}:${selected}`} item={selectedItem} {...props}

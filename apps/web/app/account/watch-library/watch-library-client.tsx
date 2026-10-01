@@ -6,6 +6,7 @@ import {
   WatchHistoryDeletionAckSchema,
   WatchHistoryPreferencesResponseSchema,
   WatchHistoryResponseSchema,
+  WatchHistoryBrowseResponseSchema,
   WatchHistoryAccessSchema,
   buildPersonalHistoryResumeUrl,
   WatchHistoryTitleEpisodesResponseSchema,
@@ -20,7 +21,8 @@ import { RefreshCw, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ApiError } from "@/lib/client-api";
 import { WatchLibraryCapacity } from "./watch-library-capacity";
-import { HistoryBrowser, HistoryActions } from "./history-browser";
+import { HistoryBrowser, HistoryActions, type HistoryPlatform } from "./history-browser";
+import { useAccountViewState } from "@/components/account/account-workspace-state";
 
 type Notice = { tone: "success" | "error"; text: string };
 
@@ -52,6 +54,11 @@ function WatchLibraryOwnerClient({
   const [accessState, setAccessState] = useState<string>(initialAccess);
   const canRead = accessState === "allowed" || accessState === "plan_required";
   const [history, setHistory] = useState(initialHistory);
+  const [provider, setProvider] = useAccountViewState<HistoryPlatform>(`${initialHistory.meta.ownerUserId}:library:provider`, "all");
+  const [historyProvider, setHistoryProvider] = useState<HistoryPlatform>("all");
+  const [capacityRevision, setCapacityRevision] = useState(0);
+  const currentSnapshot = useRef({ history, provider: historyProvider });
+  currentSnapshot.current = { history, provider: historyProvider };
   const loadedTitleCount = useRef(initialHistory.items.length);
   loadedTitleCount.current = history.items.length;
   const [loading, setLoading] = useState(false);
@@ -126,9 +133,49 @@ function WatchLibraryOwnerClient({
       hideInaccessible(error);
   }, [hideInaccessible]);
 
+  const readPage = useCallback(async (cursor: string | null = null, signal?: AbortSignal) => {
+    const query = new URLSearchParams({ limit: "24" });
+    if (cursor) query.set("cursor", cursor);
+    const filtered = provider !== "all";
+    if (filtered) { query.set("mode", "personal"); query.set("provider", provider); }
+    const value = await api<unknown>(`/api/watch-history/v3${filtered ? "/browse" : ""}?${query}`, {
+      signal, headers: { [WATCH_HISTORY_OWNER_HEADER]: ownerUserId },
+    });
+    const page = parseOwnedHistory(filtered ? WatchHistoryBrowseResponseSchema.parse(value).history : value, ownerUserId);
+    if (filtered && page.items.some(item => item.provider !== provider)) throw new Error("History platform changed");
+    return page;
+  }, [provider, ownerUserId]);
+
+  // A platform has its own cursor. Never drain the previous platform's pages to
+  // find these titles, and never let an old response replace the new selection.
+  useEffect(() => {
+    const snapshot = currentSnapshot.current;
+    if (provider === snapshot.provider) { setLoading(false); return; }
+    const revision = ++operationRevision.current;
+    const controller = new AbortController();
+    const current = () => mounted.current && operationRevision.current === revision && !controller.signal.aborted;
+    const generation = snapshot.history.meta.accountGeneration;
+    setLoadingMore(false);
+    setLoading(true);
+    setNotice(null);
+    void readPage(null, controller.signal).then(page => {
+      if (!current()) return;
+      if (page.meta.accountGeneration !== generation) throw new ApiError("History changed", "HISTORY_ACCESS_CHANGED", 409);
+      setHistory(page);
+      setHistoryProvider(provider);
+    }).catch(error => {
+      if (current()) {
+        hideInaccessible(error);
+        setNotice({ tone: "error", text: errorMessage(error, "Could not load titles. Refresh history to try again.") });
+      }
+    }).finally(() => { if (current()) setLoading(false); });
+    return () => { controller.abort(); };
+  }, [provider, readPage, hideInaccessible]);
+
   const refresh = useCallback(async () => {
     if (mutationInFlight.current || editorActive.current) return;
     const revision = ++operationRevision.current;
+    const visibleCount = currentSnapshot.current.provider === provider ? loadedTitleCount.current : 24;
     const current = () =>
       mounted.current && operationRevision.current === revision;
     setLoadingMore(false);
@@ -139,7 +186,7 @@ function WatchLibraryOwnerClient({
       if (!current()) return;
       setAccessState(access.state);
       const [historyValue, preferencesValue] = await Promise.all([
-        api<unknown>("/api/watch-history/v3?limit=24"),
+        readPage(),
         api<unknown>("/api/watch-history/v3/preferences"),
       ]);
       let nextHistory = parseOwnedHistory(historyValue, ownerUserId);
@@ -147,13 +194,11 @@ function WatchLibraryOwnerClient({
       // page. Every retained card comes from the new canonical read.
       while (
         nextHistory.nextCursor &&
-        nextHistory.items.length < loadedTitleCount.current &&
+        nextHistory.items.length < visibleCount &&
         current()
       ) {
         const page = parseOwnedHistory(
-          await api<unknown>(
-            `/api/watch-history/v3?limit=24&cursor=${encodeURIComponent(nextHistory.nextCursor)}`,
-          ),
+          await readPage(nextHistory.nextCursor),
           ownerUserId,
         );
         if (page.meta.accountGeneration !== nextHistory.meta.accountGeneration)
@@ -183,6 +228,8 @@ function WatchLibraryOwnerClient({
         );
       if (!current()) return;
       setHistory(nextHistory);
+      setHistoryProvider(provider);
+      setCapacityRevision(value => value + 1);
     } catch (error) {
       if (current()) {
         hideInaccessible(error);
@@ -194,12 +241,12 @@ function WatchLibraryOwnerClient({
     } finally {
       if (current()) setLoading(false);
     }
-  }, [ownerUserId, readAccess, hideInaccessible]);
+  }, [ownerUserId, readAccess, hideInaccessible, readPage, provider]);
 
   useEffect(() => bindWatchHistoryPageRefresh({ refresh }), [refresh]);
 
   const loadMore = useCallback(async () => {
-    if (!history.nextCursor || loadingMore || mutationInFlight.current) return;
+    if (!history.nextCursor || loadingMore || mutationInFlight.current || provider !== historyProvider) return;
     const revision = ++operationRevision.current;
     const expectedGeneration = history.meta.accountGeneration;
     const current = () =>
@@ -209,9 +256,7 @@ function WatchLibraryOwnerClient({
     setNotice(null);
     try {
       const page = parseOwnedHistory(
-        await api<unknown>(
-          `/api/watch-history/v3?limit=24&cursor=${encodeURIComponent(history.nextCursor)}`,
-        ),
+        await readPage(history.nextCursor),
         ownerUserId,
       );
       if (page.meta.accountGeneration !== expectedGeneration) {
@@ -235,13 +280,14 @@ function WatchLibraryOwnerClient({
     } finally {
       if (current()) setLoadingMore(false);
     }
-  }, [history, loadingMore, ownerUserId, hideInaccessible]);
+  }, [history, loadingMore, ownerUserId, hideInaccessible, readPage, provider, historyProvider]);
 
   const deleteHistory = useCallback(
     async (target: WatchHistoryDeleteScope) => {
       if (
         busyAction ||
         mutationInFlight.current ||
+        provider !== historyProvider ||
         !window.confirm(deleteConfirmation(target))
       )
         return;
@@ -286,11 +332,12 @@ function WatchLibraryOwnerClient({
               )
             : currentHistory,
         );
+        setCapacityRevision(value => value + 1);
         setNotice({ tone: "success", text: "Watch history updated." });
 
         if (!canRead) return;
         const canonical = parseOwnedHistory(
-          await api<unknown>("/api/watch-history/v3?limit=24"),
+          await readPage(),
           ownerUserId,
         );
         if (
@@ -298,7 +345,7 @@ function WatchLibraryOwnerClient({
         ) {
           throw new Error("Watch history generation changed");
         }
-        if (current()) setHistory(canonical);
+        if (current()) { setHistory(canonical); setHistoryProvider(provider); }
       } catch (error) {
         if (current()) {
           hideInaccessible(error);
@@ -320,6 +367,9 @@ function WatchLibraryOwnerClient({
       ownerUserId,
       canRead,
       hideInaccessible,
+      readPage,
+      provider,
+      historyProvider,
     ],
   );
 
@@ -398,11 +448,11 @@ function WatchLibraryOwnerClient({
           </button>
           <HistoryActions
             label="Library options"
-            disabled={Boolean(busyAction) || editorDirty}
+            disabled={Boolean(busyAction) || editorDirty || provider !== historyProvider}
           >
             <button
               className="wh-danger"
-              disabled={Boolean(busyAction) || editorDirty}
+              disabled={Boolean(busyAction) || editorDirty || provider !== historyProvider}
               onClick={() => void deleteHistory({ scope: "all" })}
               type="button"
             >
@@ -443,7 +493,17 @@ function WatchLibraryOwnerClient({
           generation={history.meta.accountGeneration}
           canEdit={accessState === "allowed"}
           busy={Boolean(busyAction)}
-          nextCursor={history.nextCursor}
+          provider={provider}
+          onProviderChange={next => {
+            if (next === provider || mutationInFlight.current) return;
+            operationRevision.current += 1;
+            setLoadingMore(false);
+            setNotice(null);
+            setProvider(next);
+          }}
+          listReady={provider === historyProvider}
+          loading={loading}
+          nextCursor={provider === historyProvider ? history.nextCursor : null}
           loadingMore={loadingMore}
           captureAccessFailure={captureDetailAccessFailure}
           onLoadMore={loadMore}
@@ -456,7 +516,7 @@ function WatchLibraryOwnerClient({
               provider={provider}
               ownerUserId={ownerUserId}
               accountGeneration={history.meta.accountGeneration}
-              revision={`${history.generatedAt}:${history.totalTitleCount}`}
+              revision={String(capacityRevision)}
               recordingAllowed={accessState === "allowed"}
             />
           )}

@@ -2,6 +2,13 @@ import { describe, expect, it } from "vitest";
 import * as protocol from "../src/index";
 
 describe("watch history browse contract", () => {
+  it("bounds optional title platform filters and leaves old queries unchanged", () => {
+    expect(protocol.WatchHistoryBrowseQuerySchema.parse({ mode: "personal", provider: "crunchyroll" }))
+      .toEqual({ mode: "personal", provider: "crunchyroll", limit: 20 });
+    expect(protocol.WatchHistoryBrowseQuerySchema.parse({ mode: "shared" }))
+      .toEqual({ mode: "shared", limit: 20 });
+    expect(protocol.WatchHistoryBrowseQuerySchema.safeParse({ mode: "personal", provider: "all" }).success).toBe(false);
+  });
 	it("accepts optional bounded episode previews without adding a UI filter", () => {
 		const timestamp = "2026-09-05T00:00:00Z";
 		const preview = {

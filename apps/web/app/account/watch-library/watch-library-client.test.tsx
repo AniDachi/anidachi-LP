@@ -791,6 +791,11 @@ function installServer(
           history.meta.accountGeneration,
         ),
       );
+    if (path.startsWith("/api/watch-history/v3/browse?")) {
+      const provider = new URL(path, "https://example.com").searchParams.get("provider");
+      const items = history.items.filter(item => item.provider === provider);
+      return Response.json({ history: { ...history, items, totalTitleCount: items.length, nextCursor: null }, matches: [] });
+    }
     if (path.includes("?limit=24")) return Response.json(history);
     if (path.endsWith("/delete")) {
       const target = (
@@ -972,7 +977,7 @@ it("bulk clearing stays in Library options and requires confirmation on Free", a
     await unmount(view.root);
   }
 });
-it("platform switching completes pagination and keeps the progress filter", async () => {
+it("platform switching loads server results and keeps the progress filter", async () => {
   const history = {
     ...historyFixture(),
     nextCursor: "next-page",
@@ -992,14 +997,11 @@ it("platform switching completes pagination and keeps the progress filter", asyn
   };
   const server = installServer({
     history,
-    intercept: (path) =>
-      path.includes("cursor=next-page")
-        ? Response.json({
-            ...historyFixture(),
-            items: [video],
-            totalTitleCount: 2,
-          })
-        : undefined,
+    intercept: (path) => {
+      if (path.includes("/browse?") && path.includes("provider=youtube")) return Response.json({ history: { ...historyFixture(), items: [video] }, matches: [] });
+      if (path.includes("cursor=next-page")) return Response.json({ ...historyFixture(), items: [video] });
+      return undefined;
+    },
   });
   const view = await renderClient(history);
   try {
@@ -1041,53 +1043,26 @@ it("platform switching completes pagination and keeps the progress filter", asyn
     await unmount(view.root);
   }
 });
-it("keyboard platform selection preserves the open editor draft", async () => {
+it("keyboard platform changes keep a dirty editor until the owner decides", async () => {
   const server = installServer();
   const view = await renderClient();
   try {
     await openTitle(view.container);
     await click(buttonByText(view.container, "Edit"));
     await markFirstEpisode(view.container);
-    assert.equal(
-      view.container
-        .querySelector('summary[aria-label="Library options"]')
-        ?.getAttribute("aria-disabled"),
-      "true",
-    );
     const all = buttonByLabel(view.container, "All platforms");
-    all.focus();
-    await act(async () => {
-      all.dispatchEvent(
-        new KeyboardEvent("keydown", { key: "End", bubbles: true }),
-      );
-    });
-    assert.equal(
-      document.activeElement,
-      buttonByLabel(view.container, "YouTube"),
-    );
-    assert.equal(
-      buttonByLabel(view.container, "YouTube").getAttribute("aria-checked"),
-      "true",
-    );
-    assert.equal(view.container.querySelector(".wh-card"), null);
+    await act(async () => { all.dispatchEvent(new KeyboardEvent("keydown", { key: "End", bubbles: true })); });
     assert.ok(buttonByLabel(view.container, "Save 1 change"));
-    await act(async () => {
-      buttonByLabel(view.container, "YouTube").dispatchEvent(
-        new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }),
-      );
-    });
-    assert.equal(document.activeElement, all);
-    assert.ok(view.container.querySelector('[aria-label="Manage Series One"]'));
+    assert.equal(buttonByLabel(view.container, "All platforms").getAttribute("aria-checked"), "true");
+    assert.equal(server.calls.filter(call => call.path.includes("/browse?")).length, 0);
+    await click(buttonByText(view.container, "Stay here"));
     assert.ok(buttonByLabel(view.container, "Save 1 change"));
-    assert.equal(
-      view.container.querySelectorAll('.wh-platforms [tabindex="0"]').length,
-      1,
-    );
-    await click(buttonByText(view.container, "Cancel"));
-    assert.equal(server.calls.filter((call) => call.body).length, 0);
-  } finally {
-    await unmount(view.root);
-  }
+    await click(buttonByLabel(view.container, "YouTube"));
+    await click(buttonByText(view.container, "Discard"));
+    assert.equal(buttonByLabel(view.container, "YouTube").getAttribute("aria-checked"), "true");
+    assert.equal(view.container.querySelector(".wh-inspector"), null);
+    assert.equal(server.calls.filter(call => call.body).length, 0);
+  } finally { await unmount(view.root); }
 });
 it("a title and episode click only select; Cancel sends no write", async () => {
   const server = installServer();
@@ -1836,5 +1811,123 @@ it("a canonical title update triggers one editor read, not duplicate reads", asy
     history.items[0].latestActivity.currentTime += 5;
     await act(async () => { window.dispatchEvent(new Event("focus")); });
     await waitFor(() => assert.equal(server.calls.filter(call => call.path.includes("/editor?")).length, 2));
+  } finally { await unmount(view.root); }
+});
+
+
+it("Crunchyroll filter requests its own first page without paging through YouTube", async () => {
+  const initial = { ...historyFixture(), items: [], totalTitleCount: 101, nextCursor: "youtube-next-page" };
+  const server = installServer({
+    intercept: (path) => {
+      if (path.startsWith("/api/watch-history/v3/browse?")) return Response.json({ history: historyFixture(), matches: [] });
+      if (path.includes("cursor=youtube-next-page")) return Response.json({ ...historyFixture(), items: [] });
+      return undefined;
+    },
+  });
+  const view = await renderClient(initial);
+  try {
+    await click(buttonByLabel(view.container, "Crunchyroll"));
+    await waitFor(() => assert.ok(view.container.querySelector('[aria-label="Manage Series One"]')));
+    const reads = server.calls.filter(call => call.path.includes("/browse?"));
+    assert.equal(reads.length, 1);
+    const query = new URL(reads[0].path, "https://example.com").searchParams;
+    assert.equal(query.get("provider"), "crunchyroll");
+    assert.equal(query.get("mode"), "personal");
+    assert.equal(query.get("cursor"), null);
+    assert.equal(reads[0].headers.get(WATCH_HISTORY_OWNER_HEADER), OWNER_ID);
+    assert.equal(server.calls.filter(call => call.path.includes("cursor=youtube-next-page")).length, 0);
+    assert.equal(server.calls.filter(call => call.path.endsWith("/capacity")).length, 1);
+  } finally { await unmount(view.root); }
+});
+
+
+it("returning to All aborts an old filter read without leaving refresh disabled", async () => {
+  let finish!: (response: Response) => void;
+  let signal: AbortSignal | null | undefined;
+  installServer({ intercept: (path, init) => {
+    if (path.includes("/browse?")) { signal = init?.signal; return new Promise(resolve => { finish = resolve; }); }
+  } });
+  const view = await renderClient();
+  try {
+    await click(buttonByLabel(view.container, "Crunchyroll"));
+    await click(buttonByLabel(view.container, "All platforms"));
+    assert.equal(signal?.aborted, true);
+    assert.equal(buttonByLabel(view.container, "Refresh history").disabled, false);
+    await act(async () => { finish(Response.json({ history: { ...historyFixture(), items: [] }, matches: [] })); });
+    assert.ok(view.container.querySelector('[aria-label="Manage Series One"]'));
+  } finally { await unmount(view.root); }
+});
+
+
+it("filtered pagination and refresh keep the platform cursor and do not refetch capacity per page", async () => {
+  const next = { ...itemFixture(), titleKey: "second", title: "Second series" };
+  const server = installServer({ intercept: (path) => {
+    if (!path.includes("/browse?")) return;
+    const query = new URL(path, "https://example.com").searchParams;
+    assert.equal(query.get("provider"), "crunchyroll");
+    return Response.json({ history: { ...historyFixture(), totalTitleCount: 2,
+      items: query.has("cursor") ? [next] : [itemFixture()], nextCursor: query.has("cursor") ? null : "crunchyroll-page-two" }, matches: [] });
+  } });
+  const view = await renderClient();
+  try {
+    await click(buttonByLabel(view.container, "Crunchyroll"));
+    assert.equal(server.calls.filter(call => call.path.includes("/browse?")).length, 1);
+    await click(buttonByText(view.container, "Load more titles"));
+    assert.ok(view.container.querySelector('[aria-label="Manage Second series"]'));
+    assert.equal(server.calls.filter(call => call.path.endsWith("/capacity")).length, 1);
+    await click(buttonByLabel(view.container, "Refresh history"));
+    assert.ok(view.container.querySelector('[aria-label="Manage Second series"]'));
+    assert.equal(server.calls.filter(call => call.path.includes("/browse?")).length, 4);
+    assert.equal(server.calls.filter(call => call.path.endsWith("/capacity")).length, 2);
+    assert.equal(server.calls.filter(call => call.path.startsWith("/api/watch-history/v3?")).length, 0);
+  } finally { await unmount(view.root); }
+});
+
+it("late platform results cannot replace a newer selection", async () => {
+  let finish!: (response: Response) => void;
+  installServer({ intercept: (path) => {
+    if (path.includes("provider=crunchyroll")) return new Promise(resolve => { finish = resolve; });
+    if (path.includes("provider=youtube")) return Response.json({ history: { ...historyFixture(), items: [] }, matches: [] });
+  } });
+  const view = await renderClient();
+  try {
+    await click(buttonByLabel(view.container, "Crunchyroll"));
+    await click(buttonByLabel(view.container, "YouTube"));
+    await act(async () => { finish(Response.json({ history: historyFixture(), matches: [] })); });
+    assert.equal(buttonByLabel(view.container, "YouTube").getAttribute("aria-checked"), "true");
+    assert.equal(view.container.querySelector(".wh-card"), null);
+    assert.equal(buttonByLabel(view.container, "Refresh history").disabled, false);
+  } finally { await unmount(view.root); }
+});
+
+it("a platform read with changed authority clears previously visible private cards", async () => {
+  installServer({ intercept: path => path.includes("/browse?")
+    ? Response.json({ code: "HISTORY_ACCESS_CHANGED", error: "History changed" }, { status: 409 }) : undefined });
+  const view = await renderClient();
+  try {
+    await click(buttonByLabel(view.container, "Crunchyroll"));
+    assert.equal(view.container.querySelector(".wh-card"), null);
+    assert.equal(view.container.querySelector(".wh-browser"), null);
+  } finally { await unmount(view.root); }
+});
+
+
+it("platform transitions do not offer stale cards or clear-history actions", async () => {
+  let finish!: (response: Response) => void;
+  installServer({ intercept: path => path.startsWith("/api/watch-history/v3?")
+    ? new Promise(resolve => { finish = resolve; }) : undefined });
+  const view = await renderClient();
+  try {
+    await click(buttonByLabel(view.container, "Crunchyroll"));
+    assert.ok(view.container.querySelector('[aria-label="Manage Series One"]'));
+    await act(async () => { view.container.querySelector<HTMLElement>('summary[aria-label="Library options"]')!.click(); });
+    await click(buttonByLabel(view.container, "All platforms"));
+    assert.equal(Boolean(view.container.querySelector(".wh-card")), false);
+    assert.equal(Boolean(view.container.querySelector(".wh-inspector")), false);
+    assert.equal(view.container.querySelector('summary[aria-label="Library options"]')!.getAttribute("aria-disabled"), "true");
+    assert.equal(buttonByText(view.container, "Clear all history").disabled, true);
+    await act(async () => { finish(Response.json(historyFixture())); });
+    assert.ok(view.container.querySelector('[aria-label="Manage Series One"]'));
+    assert.equal(view.container.querySelector('summary[aria-label="Library options"]')!.getAttribute("aria-disabled"), "false");
   } finally { await unmount(view.root); }
 });
