@@ -419,3 +419,40 @@ test("accepted rooms offer Return after a failed entry without a second Decline 
   );
   assert.ok(!requests.some((url) => url.includes("/seen")));
 });
+
+for (const slow of ["sent", "seen"] as const) {
+  test(`incoming invitations are usable while ${slow} is still pending`, async () => {
+    const page = { meta: { ...meta, ownerUserId: owner }, items: [{
+      kind: "friend-request", friendshipId: peer, sender: user, state: "pending",
+      createdAt: now, activityAt: now, seenAt: slow === "seen" ? null : now,
+    }], counts: { ...counts, actionable: 1, pendingFriendRequests: 1 }, nextCursor: null };
+    globalThis.fetch = async input => {
+      const url = String(input);
+      if (url.includes("/seen") || (slow === "sent" && url === "/api/invites")) return new Promise(() => {});
+      return Response.json(url.startsWith("/api/account/inbox") ? page : { meta, inbox: [], sent: [] });
+    };
+    await mount(React.createElement(InvitesClient, { ownerUserId: owner }));
+    assert.match(container.textContent!, /Maya Thompson/);
+    assert.equal(button("Accept friend request").disabled, false);
+  });
+}
+
+test("a failed incoming action cannot strand the independent sent list", async () => {
+  let finishSent!: (value: Response) => void;
+  const page = { meta: { ...meta, ownerUserId: owner }, items: [{
+    kind: "friend-request", friendshipId: peer, sender: user, state: "pending",
+    createdAt: now, activityAt: now, seenAt: now,
+  }], counts: { ...counts, actionable: 1, pendingFriendRequests: 1 }, nextCursor: null };
+  globalThis.fetch = async input => {
+    const url = String(input);
+    if (url === "/api/invites") return new Promise(resolve => { finishSent = resolve; });
+    if (url.includes("/accept")) return Response.json({ error: "Retry later" }, { status: 503 });
+    return Response.json(page);
+  };
+  await mount(React.createElement(InvitesClient, { ownerUserId: owner }));
+  await click("Accept friend request");
+  await act(async () => finishSent(Response.json({ meta, inbox: [], sent: [] })));
+  await click("Sent");
+  assert.match(container.textContent!, /No sent invitations yet/);
+  assert.equal(container.querySelector('[aria-label="Sent invitations"]')?.getAttribute("aria-busy"), "false");
+});

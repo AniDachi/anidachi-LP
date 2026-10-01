@@ -27,7 +27,7 @@ import {
   AccountPageHeader,
   AccountSectionSwitch,
 } from "@/components/account/account-ui";
-import { api } from "@/lib/client-api";
+import { api, ApiError } from "@/lib/client-api";
 import { requestAccountNavigation } from "@/components/account/account-workspace-state";
 
 type AccountInboxItem = AccountInboxResponse["items"][number];
@@ -162,12 +162,14 @@ export function InvitesClient({ ownerUserId, embedded = false, active = true, on
   const [view, setView] = useState<"incoming" | "sent">("incoming");
   const [inbox, setInbox] = useState<AccountInboxResponse | null>(null);
   const [sentInvites, setSentInvites] = useState<RoomInvite[]>([]);
+  const [sentLoading, setSentLoading] = useState(true);
   const [sentError, setSentError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
   const refreshGenerationRef = useRef(0);
+  const sentGenerationRef = useRef(0);
   const ownerUserIdRef = useRef<string | null>(ownerUserId);
   const onCountsRef = useRef(onCountsChange);
   onCountsRef.current = onCountsChange;
@@ -201,47 +203,53 @@ export function InvitesClient({ ownerUserId, embedded = false, active = true, on
   );
 
   const refresh = useCallback(async () => {
+    const sentGeneration = ++sentGenerationRef.current;
+    const sentIsCurrent = () => sentGenerationRef.current === sentGeneration;
     const generation = ++refreshGenerationRef.current;
     const isCurrent = () => refreshGenerationRef.current === generation;
     setLoading(true);
     setLoadingMore(false);
     setNotice(null);
-    try {
-      const [inboxResult, invitesResult] = await Promise.allSettled([
-        api<unknown>("/api/account/inbox?includeReturnable=true&limit=100"),
-        api<unknown>("/api/invites"),
-      ]);
-      if (!isCurrent()) return;
-      if (invitesResult.status === "fulfilled") {
-        const invites = RoomInvitesResponseSchema.safeParse(invitesResult.value);
-        if (invites.success) { setSentInvites(invites.data.sent); setSentError(null); }
-        else setSentError("Could not refresh sent invitations. Please retry.");
-      } else setSentError("Could not refresh sent invitations. Please retry.");
-      if (inboxResult.status === "rejected") throw inboxResult.reason;
-      const nextInbox = parseOwnedAccountInboxResponse(inboxResult.value, ownerUserId);
-
-      let displayInbox = nextInbox;
-      try {
-        if (activeRef.current) displayInbox = await acknowledgeInboxPageSeen(nextInbox, ownerUserId);
-      } catch {
-        if (!isCurrent()) return;
-        setNotice({
-          tone: "error",
-          text: "Inbox loaded, but read status could not be updated.",
-        });
-      }
-      if (!isCurrent()) return;
-      setInbox(displayInbox);
-      onCountsRef.current?.(displayInbox.counts);
-    } catch (error) {
-      if (!isCurrent()) return;
-      setNotice({
-        tone: "error",
-        text: error instanceof Error ? error.message : "Could not load invites",
-      });
-    } finally {
-      if (isCurrent()) setLoading(false);
-    }
+    setSentLoading(true);
+    await Promise.all([
+      (async () => {
+        try {
+          const value = await api<unknown>("/api/invites");
+          if (!sentIsCurrent()) return;
+          const invites = RoomInvitesResponseSchema.safeParse(value);
+          if (!invites.success) throw new Error("Invalid sent invitations");
+          setSentInvites(invites.data.sent); setSentError(null);
+        } catch {
+          if (sentIsCurrent()) setSentError("Could not refresh sent invitations. Please retry.");
+        } finally { if (sentIsCurrent()) setSentLoading(false); }
+      })(),
+      (async () => {
+        try {
+          const value = await api<unknown>("/api/account/inbox?includeReturnable=true&limit=100");
+          if (!isCurrent()) return;
+          const nextInbox = parseOwnedAccountInboxResponse(value, ownerUserId);
+          setInbox(nextInbox);
+          setLoading(false);
+          onCountsRef.current?.(nextInbox.counts);
+          // Reading the screen must not wait for its read receipt. Mutations
+          // advance generation so this acknowledgement cannot revive old rows.
+          try {
+            if (activeRef.current) {
+              const acknowledged = await acknowledgeInboxPageSeen(nextInbox, ownerUserId);
+              if (!isCurrent() || !activeRef.current) return;
+              setInbox(acknowledged);
+              onCountsRef.current?.(acknowledged.counts);
+            }
+          } catch {
+            if (isCurrent()) setNotice({ tone: "error", text: "Inbox loaded, but read status could not be updated." });
+          }
+        } catch (error) {
+          if (!isCurrent()) return;
+          if (error instanceof ApiError && [401, 403, 409].includes(error.status)) setInbox(null);
+          setNotice({ tone: "error", text: error instanceof Error ? error.message : "Could not load invites" });
+        } finally { if (isCurrent()) setLoading(false); }
+      })(),
+    ]);
   }, [ownerUserId]);
 
   const loadMore = useCallback(async () => {
@@ -284,6 +292,7 @@ export function InvitesClient({ ownerUserId, embedded = false, active = true, on
 
   useEffect(() => {
     ownerUserIdRef.current = ownerUserId;
+    sentGenerationRef.current++;
     refreshGenerationRef.current += 1;
     setInbox(null);
     setSentInvites([]);
@@ -295,6 +304,7 @@ export function InvitesClient({ ownerUserId, embedded = false, active = true, on
     return () => {
       refreshGenerationRef.current += 1;
       ownerUserIdRef.current = null;
+      sentGenerationRef.current++;
     };
   }, [ownerUserId, refresh]);
 
@@ -334,6 +344,7 @@ export function InvitesClient({ ownerUserId, embedded = false, active = true, on
       const actionOwnerUserId = ownerUserId;
       const isCurrentOwner = () => ownerUserIdRef.current === actionOwnerUserId;
       if (!isCurrentOwner()) return;
+      refreshGenerationRef.current += 1;
       setBusyKey(key);
       setNotice(null);
       try {
@@ -534,17 +545,17 @@ export function InvitesClient({ ownerUserId, embedded = false, active = true, on
           ) : null}
         </div>
       ) : (
-        <div aria-label="Sent invitations" aria-busy={loading}>
+        <div aria-label="Sent invitations" aria-busy={sentLoading}>
           {sentError ? (
             <p className="ac-notice ac-notice-error" role="alert">
               {sentError}
             </p>
           ) : null}
-          {loading && !inbox ? (
+          {sentLoading && sentInvites.length === 0 ? (
             <p role="status" className="ac-loading">
               Loading invitations…
             </p>
-          ) : inbox ? (
+          ) : (
             sentInvites.length ? (
               <>
                 <p className="ac-muted">Recent invitations and responses.</p>
@@ -567,7 +578,7 @@ export function InvitesClient({ ownerUserId, embedded = false, active = true, on
                 install, creating a room, and copying that link.
               </AccountEmptyState>
             ) : null
-          ) : null}
+          )}
         </div>
       )}
     </div>

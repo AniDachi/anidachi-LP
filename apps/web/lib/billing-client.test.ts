@@ -4,6 +4,7 @@ import { Window } from "happy-dom";
 import * as React from "react";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { preloadAccountNavigation, clearAccountPreloads } from "./account-navigation-preload";
 import { BillingClient } from "../app/account/billing/billing-client";
 import { BILLING_OWNER_HEADER, type BillingOverview } from "./billing-view";
 
@@ -87,7 +88,7 @@ for (const stage of ["trial", "processing"] as const) {
 		);
 	});
 }
-async function mount(returnedFromPortal = false) {
+async function mount(returnedFromPortal = false, initial?: { overview: BillingOverview; remainingMs: number }) {
 	container = document.createElement("div");
 	document.body.appendChild(container);
 	root = createRoot(container);
@@ -96,6 +97,7 @@ async function mount(returnedFromPortal = false) {
 			React.createElement(BillingClient, {
 				ownerUserId: "owner",
 				returnedFromPortal,
+				initial,
 			}),
 		);
 	});
@@ -597,3 +599,45 @@ for (const status of ["past_due", "unpaid", "incomplete", "paused"]) {
 			assert.match(container.textContent!, /Complete payment in Stripe/);
 	});
 }
+
+test("quiet focus refresh keeps the valid subscription visible and does not reconcile Stripe", async () => {
+  let finish!: (value: Response) => void;
+  const paths: string[] = [];
+  globalThis.fetch = async path => {
+    paths.push(String(path));
+    return paths.length === 1 ? Response.json(active) : new Promise(resolve => { finish = resolve; });
+  };
+  await mount();
+  await act(async () => window.dispatchEvent(new Event("focus")));
+  assert.match(container.textContent!, /Plus/);
+  assert.equal(paths[1], "/api/billing/subscription");
+  await act(async () => finish(Response.json(active)));
+});
+
+ test("server billing data is shown without an immediate duplicate request", async () => {
+  const calls: string[] = [];
+  globalThis.fetch = async path => { calls.push(String(path)); return Response.json(active); };
+  await mount(false, { overview: active, remainingMs: 60_000 });
+  assert.match(container.textContent!, /Plus subscription/);
+  assert.deepEqual(calls, []);
+ });
+ test("Stripe return reconciles even when server billing data is supplied", async () => {
+  const calls: string[] = [];
+  globalThis.fetch = async path => { calls.push(String(path)); return Response.json(active); };
+  await mount(true, { overview: active, remainingMs: 60_000 });
+  assert.deepEqual(calls, ["/api/billing/refresh"]);
+ });
+
+test("billing consumes its click-time request once and includes navigation time in the lease", async t => {
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"] });
+  let calls = 0;
+  globalThis.fetch = async () => { calls++; return Response.json({ ...active, selectedPlanExpiresAt: "2030-01-01T00:00:01Z" }); };
+  try {
+    preloadAccountNavigation("owner", "/account/billing");
+    t.mock.timers.tick(1_100);
+    await mount();
+    assert.equal(calls, 1);
+    assert.doesNotMatch(container.textContent!, /Plus subscription/);
+    assert.match(container.textContent!, /Subscription status expired/);
+  } finally { clearAccountPreloads(); }
+});

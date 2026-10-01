@@ -1,10 +1,12 @@
 import "../../friends/friends.css";
+import { headers } from "next/headers";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { FriendsClient } from "@/app/friends/friends-client";
-import { getUserById } from "@/lib/anidachi-auth/db";
+import { getAccountIdentity } from "@/lib/anidachi-auth/account-identity";
+import { listFriends } from "@/lib/anidachi-auth/social";
+import { createAccountResponseMeta } from "@/lib/anidachi-auth/account-response";
 import { getSession } from "@/lib/anidachi-auth/session";
-import { ensureProfileForUser } from "@/lib/anidachi-auth/social";
 
 export const dynamic = "force-dynamic";
 
@@ -17,14 +19,16 @@ export default async function AccountFriendsPage() {
   const session = await getSession();
   if (!session) redirect("/login?next=%2Faccount%2Ffriends");
 
-  const [user, profile] = await Promise.all([
-    getUserById(session.userId),
-    ensureProfileForUser(session.userId),
+  const clientNavigation = (await headers()).get("rsc") === "1";
+  const [{ user, profile }, directory] = await Promise.all([
+    getAccountIdentity(session.userId),
+    clientNavigation ? null : listFriends(session.userId).then(data => ({ ...data, meta: createAccountResponseMeta() })).catch(() => null),
   ]);
 
   return (
     <FriendsClient
       key={session.userId}
+      initial={directory ? { ownerUserId: session.userId, directory } : undefined}
       currentUser={{
         userId: session.userId,
         displayName: profile?.display_name ?? user?.display_name ?? "AniDachi user",

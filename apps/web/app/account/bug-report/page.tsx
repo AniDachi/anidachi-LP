@@ -5,8 +5,7 @@ import { ArrowRight } from "lucide-react";
 import { AccountPageHeader } from "@/components/account/account-ui";
 import { ContactForm } from "@/components/contact-form";
 import { getSession } from "@/lib/anidachi-auth/session";
-import { getUserById } from "@/lib/anidachi-auth/db";
-import { ensureProfileForUser } from "@/lib/anidachi-auth/social";
+import { getAccountIdentity } from "@/lib/anidachi-auth/account-identity";
 
 export const metadata: Metadata = {
   title: "Report a bug",
@@ -16,10 +15,7 @@ export const metadata: Metadata = {
 export default async function AccountBugReportPage() {
   const session = await getSession();
   if (!session) redirect("/login?next=%2Faccount%2Fbug-report");
-  const [user, profile] = await Promise.all([
-    getUserById(session.userId),
-    ensureProfileForUser(session.userId),
-  ]);
+  const { user, profile } = await getAccountIdentity(session.userId);
 
   return (
     <div className="ac-page">

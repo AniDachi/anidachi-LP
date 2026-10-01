@@ -1807,3 +1807,34 @@ it("joining from notifications waits for the history editor decision", async () 
     await unmount(view.root);
   }
 });
+
+it("SSR starts history while preferences are pending and still checks access afterwards", async () => {
+  let finish!: (value: typeof preferencesFixture) => void;
+  let historyStarted = false;
+  let accessChecks = 0;
+  const result = loadWatchLibraryData(OWNER_ID, {
+    access: async () => { accessChecks++; return accessFixture(); },
+    preferences: () => new Promise(resolve => { finish = resolve; }),
+    history: async () => { historyStarted = true; return historyFixture(); },
+  });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(historyStarted, true);
+  assert.equal(accessChecks, 1);
+  finish(preferencesFixture);
+  await result;
+  assert.equal(accessChecks, 2);
+});
+
+it("a canonical title update triggers one editor read, not duplicate reads", async () => {
+  const history = historyFixture();
+  const server = installServer({ history });
+  const view = await renderClient(history);
+  try {
+    await openTitle(view.container);
+    assert.equal(server.calls.filter(call => call.path.includes("/editor?")).length, 1);
+    history.items[0].latestActivity.episodeKey = "another-episode";
+    history.items[0].latestActivity.currentTime += 5;
+    await act(async () => { window.dispatchEvent(new Event("focus")); });
+    await waitFor(() => assert.equal(server.calls.filter(call => call.path.includes("/editor?")).length, 2));
+  } finally { await unmount(view.root); }
+});

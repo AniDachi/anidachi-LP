@@ -4,8 +4,7 @@ import { redirect } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { AccountPageHeader } from "@/components/account/account-ui";
 import { getSession } from "@/lib/anidachi-auth/session";
-import { getUserById } from "@/lib/anidachi-auth/db";
-import { ensureProfileForUser } from "@/lib/anidachi-auth/social";
+import { getAccountIdentity } from "@/lib/anidachi-auth/account-identity";
 import { FeatureRequestForm } from "@/components/feature-request-form";
 
 export const metadata: Metadata = {
@@ -16,10 +15,7 @@ export const metadata: Metadata = {
 export default async function AccountFeatureRequestsPage() {
   const session = await getSession();
   if (!session) redirect("/login?next=%2Faccount%2Ffeature-requests");
-  const [user, profile] = await Promise.all([
-    getUserById(session.userId),
-    ensureProfileForUser(session.userId),
-  ]);
+  const { user, profile } = await getAccountIdentity(session.userId);
   return (
     <div className="ac-page">
       <AccountPageHeader
