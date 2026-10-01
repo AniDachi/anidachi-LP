@@ -1,5 +1,21 @@
 # Current Development State
 
+## Watch Library follow-up, October 1, 2026 — local fix pending delivery
+
+The owner reported remaining latency after the first account patch. Authenticated
+staging measurements at `8b4cf936` reproduced a Crunchyroll filter reading four
+pages of the entire mixed-platform library sequentially (about 9.4 seconds),
+with redundant capacity reads. A local fix on `codex/watch-library-filter-loading`
+uses the existing personal browse API with an optional provider filter and
+preserves owner/generation/access checks and dirty-editor navigation guards.
+No database migration is needed. Delivery and a fresh staging measurement are
+still pending; this does not establish that all account latency is resolved.
+
+Vercel staging is in `sfo1`; its Supabase database is in `ap-southeast-1`.
+Production database is in `us-west-1`, so changing the shared region setting
+without an environment-specific strategy would be inappropriate. Regions and
+production remain unchanged. See the [follow-up findings and checks](superpowers/plans/2026-10-01-account-loading-performance.md).
+
 ## Account loading optimization delivered to staging, October 1, 2026
 
 [PR #387](https://github.com/AniDachi/anidachi-LP/pull/387) delivered the account

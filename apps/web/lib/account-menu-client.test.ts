@@ -210,7 +210,7 @@ async function dirtyHistory(save?: (init: RequestInit) => Promise<Response>) {
     return Response.json(editorData);
   };
   await mount(React.createElement(HistoryBrowser, {
-    items: [title], owner, generation: 1, canEdit: true, busy: false, nextCursor: null, loadingMore: false,
+    items: [title], owner, generation: 1, provider: "all", onProviderChange() {}, listReady: true, loading: false, canEdit: true, busy: false, nextCursor: null, loadingMore: false,
     capacity: null, onLoadMore() {}, onEdited: async () => undefined, onDraftChange() {},
     captureAccessFailure: () => () => false, onResume() {}, onDelete() {},
   }));

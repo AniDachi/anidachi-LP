@@ -49,7 +49,7 @@ function validateFilters(
 		});
 }
 export const WatchHistoryBrowseQuerySchema = z
-	.strictObject(filters)
+	.strictObject({ ...filters, provider: Provider.optional() })
 	.superRefine(validateFilters);
 export const WatchHistoryBrowseTitleEpisodesQuerySchema = z
 	.strictObject({ ...filters, provider: Provider, titleKey: Key })
